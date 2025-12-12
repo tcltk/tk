@@ -39,19 +39,19 @@ typedef BOOL WINAPI (*DrawFunc) (
 #endif
 
 /* Real functions. */
-static Tcl_ObjCmdProc2 GdiArc;
-static Tcl_ObjCmdProc2 GdiBitmap;
-static Tcl_ObjCmdProc2 GdiCharWidths;
-static Tcl_ObjCmdProc2 GdiImage;
-static Tcl_ObjCmdProc2 GdiPhoto;
-static Tcl_ObjCmdProc2 GdiLine;
-static Tcl_ObjCmdProc2 GdiOval;
-static Tcl_ObjCmdProc2 GdiPolygon;
-static Tcl_ObjCmdProc2 GdiRectangle;
-static Tcl_ObjCmdProc2 GdiText;
-static Tcl_ObjCmdProc2 GdiTextPlain;
-static Tcl_ObjCmdProc2 GdiMap;
-static Tcl_ObjCmdProc2 GdiCopyBits;
+static Tcl_ObjCmdProc GdiArc;
+static Tcl_ObjCmdProc GdiBitmap;
+static Tcl_ObjCmdProc GdiCharWidths;
+static Tcl_ObjCmdProc GdiImage;
+static Tcl_ObjCmdProc GdiPhoto;
+static Tcl_ObjCmdProc GdiLine;
+static Tcl_ObjCmdProc GdiOval;
+static Tcl_ObjCmdProc GdiPolygon;
+static Tcl_ObjCmdProc GdiRectangle;
+static Tcl_ObjCmdProc GdiText;
+static Tcl_ObjCmdProc GdiTextPlain;
+static Tcl_ObjCmdProc GdiMap;
+static Tcl_ObjCmdProc GdiCopyBits;
 
 /* Local copies of similar routines elsewhere in Tcl/Tk. */
 static int GdiGetColor(Tcl_Obj *nameObj, COLORREF *color);
@@ -88,13 +88,13 @@ static HPALETTE		GetSystemPalette(void);
 static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
 			    Tcl_Obj *const *objv, Tcl_Size argc);
-static Tcl_ObjCmdProc2 PrintSelectPrinter;
-static Tcl_ObjCmdProc2 PrintOpenPrinter;
-static Tcl_ObjCmdProc2 PrintClosePrinter;
-static Tcl_ObjCmdProc2 PrintOpenDoc;
-static Tcl_ObjCmdProc2 PrintCloseDoc;
-static Tcl_ObjCmdProc2 PrintOpenPage;
-static Tcl_ObjCmdProc2 PrintClosePage;
+static Tcl_ObjCmdProc PrintSelectPrinter;
+static Tcl_ObjCmdProc PrintOpenPrinter;
+static Tcl_ObjCmdProc PrintClosePrinter;
+static Tcl_ObjCmdProc PrintOpenDoc;
+static Tcl_ObjCmdProc PrintCloseDoc;
+static Tcl_ObjCmdProc PrintOpenPage;
+static Tcl_ObjCmdProc PrintClosePage;
 
 /*
  * Global state.
@@ -119,7 +119,7 @@ typedef struct WinprintData {
 
 static const struct gdi_command {
     const char *command_string;
-    Tcl_ObjCmdProc2 *command;
+    Tcl_ObjCmdProc *command;
 } gdi_commands[] = {
     { "arc",        GdiArc },
     { "bitmap",     GdiBitmap },
@@ -379,7 +379,7 @@ static Tcl_Size ParseStyle (
 static int GdiArc(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -517,7 +517,7 @@ static int GdiArc(
 static int GdiBitmap(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int),
     Tcl_Obj *const *objv)
 {
     /*
@@ -550,7 +550,7 @@ static int GdiBitmap(
 static int GdiImage(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int),
     Tcl_Obj *const *objv)
 {
     /* Skip this for now..... */
@@ -583,7 +583,7 @@ static int GdiImage(
 static int GdiPhoto(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -1034,7 +1034,7 @@ static Tcl_Size ParseSmooth(
 static int GdiLine(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -1262,7 +1262,7 @@ static int GdiLine(
 static int GdiOval(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -1371,7 +1371,7 @@ static int GdiOval(
 static int GdiPolygon(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -1511,7 +1511,7 @@ static int GdiPolygon(
 static int GdiRectangle(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -1624,7 +1624,7 @@ static int GdiRectangle(
 static int GdiCharWidths(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     /*
@@ -1808,7 +1808,7 @@ static Tcl_Size ParseJustify (
 static int GdiText(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -2023,7 +2023,7 @@ static int GdiText(
 static int GdiTextPlain(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -2209,7 +2209,7 @@ static const char *GdiModeToName(
 static int GdiMap(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -2396,7 +2396,7 @@ static int GdiMap(
 static int GdiCopyBits(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -3918,7 +3918,7 @@ int Winprint_Init(
 	char buffer[100];
 
 	snprintf(buffer, sizeof(buffer), "%s::%s", gdiName, gdi_commands[i].command_string);
-	Tcl_CreateObjCommand2(interp, buffer, gdi_commands[i].command,
+	Tcl_CreateObjCommand(interp, buffer, gdi_commands[i].command,
 	    dataPtr, NULL);
 	Tcl_Export(interp, namespacePtr, gdi_commands[i].command_string, 0);
     }
@@ -3928,19 +3928,19 @@ int Winprint_Init(
      * The other printing-related commands.
      */
 
-    Tcl_CreateObjCommand2(interp, "::tk::print::_selectprinter",
+    Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter",
 	    PrintSelectPrinter, dataPtr, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::print::_openprinter",
+    Tcl_CreateObjCommand(interp, "::tk::print::_openprinter",
 	    PrintOpenPrinter, dataPtr, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::print::_closeprinter",
+    Tcl_CreateObjCommand(interp, "::tk::print::_closeprinter",
 	    PrintClosePrinter, dataPtr, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::print::_opendoc",
+    Tcl_CreateObjCommand(interp, "::tk::print::_opendoc",
 	    PrintOpenDoc, dataPtr, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::print::_closedoc",
+    Tcl_CreateObjCommand(interp, "::tk::print::_closedoc",
 	    PrintCloseDoc, dataPtr, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::print::_openpage",
+    Tcl_CreateObjCommand(interp, "::tk::print::_openpage",
 	    PrintOpenPage, dataPtr, NULL);
-    Tcl_CreateObjCommand2(interp, "::tk::print::_closepage",
+    Tcl_CreateObjCommand(interp, "::tk::print::_closepage",
 	    PrintClosePage, dataPtr, NULL);
 
     dataPtr->printDC = NULL;
@@ -3965,7 +3965,7 @@ int Winprint_Init(
 static int PrintSelectPrinter(
     void *clientData,
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj* const*))
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -4087,7 +4087,7 @@ static int PrintSelectPrinter(
 int PrintOpenPrinter(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const objv[])
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -4137,7 +4137,7 @@ int PrintOpenPrinter(
 int PrintClosePrinter(
     void *clientData,
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -4165,7 +4165,7 @@ int PrintClosePrinter(
 int PrintOpenDoc(
     void *clientData,
     Tcl_Interp *interp,
-    Tcl_Size objc,
+    int objc,
     Tcl_Obj *const *objv)
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -4250,7 +4250,7 @@ int PrintOpenDoc(
 int PrintCloseDoc(
     void *clientData,
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -4288,7 +4288,7 @@ int PrintCloseDoc(
 int PrintOpenPage(
     void *clientData,
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
@@ -4322,7 +4322,7 @@ int PrintOpenPage(
 int PrintClosePage(
     void *clientData,
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     WinprintData *dataPtr = (WinprintData *)clientData;
