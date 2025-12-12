@@ -63,25 +63,30 @@ Controls how the built-in class bindings manage the selection. Options are:
 .IP \fBnone\fR
 The selection cannot be changed. Focus and item/cell navigation is still allowed.
 .IP \fBbrowse\fR
-Only one item will be selected at a time.
+Only one item or cell will be selected at a time.
+Items and cells are selected via Button-1 press.
+Selecting an item/cell deselects all other items/cells.
+The selection follows the mouse when Button 1 is kept pressed.
 The selection follows the focus during keyboard traversal.
 In this mode, the selection cannot be removed via the keyboard bindings.
 .IP \fBsingle\fR
-Only a single item can be selected at a time.
-Selecting an item unselects all other items.
+Only a single item or cell can be selected at a time.
+Items and cells are selected via Button-1 press.
+Selecting an item/cell deselects all other items/cells.
 The selection follows the focus during keyboard traversal.
 The selection can be cleared via the keyboard bindings.
 .IP \fBmultiple\fR
-Multiple items can be selected.
-Selecting an item does not change the selection state of other items.
+Multiple items or cells can be selected.
+The selection state of items and cells is toggled via a Button-1 press.
+Selecting an item/cell does not change the selection state of other items/cells.
 In this mode, the focus and selection are independent which allows for
 keyboard traversal to change the focus without changing the selection.
 The selection can be cleared via the keyboard bindings.
 .IP \fBextended\fR
-Multiple items can be selected, but the default is for only one item to be
-selected at a time. More items can be selected by extending the selection
-using the Shift and Control/Command keys in combination with the mouse and
-keyboard traversal.
+Multiple items or cells can be selected, but the default is for only one
+item/cell to be selected at a time. More items can be selected by extending
+the selection using the Shift and Control/Command keys in combination with
+Button 1 press or keyboard traversal.
 The selection follows the focus during keyboard traversal.
 The selection can be cleared via the keyboard bindings.
 This is the default.
@@ -92,7 +97,7 @@ however they wish, regardless of the value of \fB\-selectmode\fR.
 .OP \-selecttype selectType SelectType
 Controls how the built-in class bindings manage the selection.
 Options are \fBitem\fR or \fBcell\fR.
-The selection should be cleared when switching modes.
+The selection should be cleared before switching modes.
 .OP \-show show Show
 Controls which elements of the tree to display. May be a list containing zero or
 more of the following values. The default is \fBtree headings\fR.

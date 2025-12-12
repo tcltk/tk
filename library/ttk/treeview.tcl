@@ -658,6 +658,16 @@ proc ::ttk::treeview::SelectNone {w} {
     if {$mode ne "browse"} {
 	$w cellselection set {}
 	$w selection set {}
+    } else {
+	set item [$w focus]
+	set cell [$w cellfocus]
+	$w cellselection set {}
+	$w selection set {}
+	if {$item ne ""} {
+	    $w selection set [list $item]
+	} elseif {$cell ne ""} {
+	    $w cellselection set [list $cell]
+	}
     }
 }
 
@@ -674,8 +684,8 @@ proc ::ttk::treeview::Motion {w x y} {
     set activeHeading {}
 
     switch -- [$w identify region $x $y] {
-	separator { set cursor hresize }
 	heading { set activeHeading [$w identify column $x $y] }
+	separator { set cursor hresize }
     }
 
     ttk::setCursor $w $cursor
@@ -714,7 +724,7 @@ proc ::ttk::treeview::ActivateHeading {w heading} {
 # MouseSelect -- Select item or cell using button 1
 #
 proc ::ttk::treeview::MouseSelect {w x y op} {
-    if {[$w cget -selectmode] ni [list "extended" "multiple"]} {
+    if {[$w cget -selectmode] ni [list "single" "extended" "multiple"]} {
 	return
     }
 
@@ -807,7 +817,7 @@ proc ttk::treeview::Select.press {w x y} {
 	*indicator -
 	*disclosure { ToggleOpenState $w $item }
 	default {
-	    if {[$w cget -selectmode] in [list multiple extended]} {
+	    if {[$w cget -selectmode] in [list browse multiple extended]} {
 		set State(pressMode) "selection"
 	    }
 	}
@@ -819,9 +829,12 @@ proc ttk::treeview::Select.drag {w x y} {
     if {$State(pressMode) ne "selection"} return
 
     if {[$w cget -selecttype] eq "cell"} {
-	set cell [$w identify cell $x $y]
-	if {$cell eq ""} {
-	    if {[$w identify region $x $y] in [list heading separator] || $y < 0} {
+	lassign [$w current] item column
+	if {$column ne ""} {
+	    set cell [list $item $column]
+	} else {
+	    set cell ""
+	    if {[$w identify region $x $y] in [list heading separator] || $y <= 0} {
 		$w yview scroll -1 units
 		set item [::ttk::treeview::PageTop $w]
 		set column [$w identify column $x 5]
@@ -830,22 +843,39 @@ proc ttk::treeview::Select.drag {w x y} {
 		}
 	    }
 	}
-	if {$cell ne ""} {
-	    $w cellselection set [$w cellselection anchor] $cell
-	    $w see {*}$cell
+	if {[llength $cell] == 2} {
+	    set mode [$w cget -selectmode]
+	    if {$mode eq "browse"} {
+		$w cellselection set [list $cell]
+		$w cellfocus $cell
+		$w see {*}$cell
+	    } elseif {$mode eq "multiple" || $mode eq "extended"} {
+		$w cellselection set [$w cellselection anchor] $cell
+		$w see {*}$cell
+	    }
 	}
 
     } else {
-	set item [$w identify item $x $y]
+	lassign [$w current] item column
 	if {$item eq ""} {
-	    if {[$w identify region $x $y] in [list heading separator] || $y < 0} {
+	    if {[$w identify region $x $y] in [list heading separator] || $y <= 0} {
 		$w yview scroll -1 units
 		set item [::ttk::treeview::PageTop $w]
+	    } else {
+		$w yview scroll 1 units
+		set item [::ttk::treeview::PageBottom $w]
 	    }
 	}
 	if {$item ne ""} {
-	    $w selection set [$w selection anchor] $item
-	    $w see $item
+	    set mode [$w cget -selectmode]
+	    if {$mode eq "browse"} {
+		$w selection set [list $item]
+		$w focus $item
+		$w see $item
+	    } elseif {$mode eq "multiple" || $mode eq "extended"} {
+		$w selection set [$w selection anchor] $item
+		$w see $item
+	    }
 	}
     }
 }
