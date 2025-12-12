@@ -1560,14 +1560,14 @@ DrawTab11(
 	 */
 
 	if (!(state & TTK_STATE_FIRST)) {
-	    clipRect.origin.x -= 5;
-	    bounds.origin.x -= 5;
-	    clipRect.size.width += 5;
-	    bounds.size.width += 5;
+        clipRect.origin.x += 0.5;
+        clipRect.size.width -= 0.5;
+        bounds.origin.x += 0.5;
+        bounds.size.width -= 0.5;
 	}
 	if (!(state & TTK_STATE_LAST)) {
-	    clipRect.size.width += 5;
-	    bounds.size.width += 5;
+        clipRect.size.width -= 0.5;
+        bounds.size.width -= 0.5;
 	}
 	CGContextSaveGState(context);
 	CGContextClipToRect(context, clipRect);
