@@ -518,8 +518,6 @@ image create photo ::tk::icons::audio -format {svg -scaletoheight 32} -data {
    inkscape:export-filename="..\..\256x256\mimetypes\audio-x-generic.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96">
-}
-
   <title
      id="title29">Generic Audio Icon</title>
   <defs
@@ -8307,6 +8305,7 @@ image create photo ::tk::icons::text -format {svg -scaletoheight 32} -data {
     </g>
   </g>
 </svg>
+}
 
 image create photo ::tk::icons::video -format {svg -scaletoheight 32} -data {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -8643,6 +8642,7 @@ image create photo ::tk::icons::video -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
+image create photo ::tk::icons::word -format {svg -scaletoheight 32} -data {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -8664,8 +8664,6 @@ image create photo ::tk::icons::video -format {svg -scaletoheight 32} -data {
    width="256px"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.1">
-
-image create photo ::tk::icons::word -format {svg -scaletoheight 32} -data {
   <title
      id="title158">Office Document Icon</title>
   <defs

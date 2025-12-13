@@ -225,7 +225,8 @@ CreateIcoFromPhoto(
  * GetFileIcon --
  *
  * Given a file path, retrieves the system-defined icon for that file.
- * Source: Mark Janssen, https://wiki.tcl-lang.org/page/Retrieve+file+icon+using+the+Win32+API 
+ * Source: Mark Janssen, https://wiki.tcl-lang.org/page/Retrieve+file+icon+using+the+Win32+API
+ * Updated for Tk 9 by Paul Obermeier
  *
  * Results:
  *	Icon image is created from a file path. 
@@ -236,14 +237,23 @@ CreateIcoFromPhoto(
  *----------------------------------------------------------------------
  */
 
-static int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj * const objv[]) {
+int
+GetFileIcon(
+    void *dummy,                /* Not used. */
+    Tcl_Interp *interp,         /* Current interpreter */
+    int objc,                   /* Number of arguments */
+    Tcl_Obj *const objv[]       /* Argument strings */
+    )
+{
     SHFILEINFOW shfi;
-    ICONINFO iconInfo ;
+    ICONINFO iconInfo;
     BITMAP bmp;
-    long imageSize ;
-    char * bitBuffer , * byteBuffer ;
+    long imageSize;
+    char * bitBuffer;
+    unsigned char * byteBuffer;
     int i, index;
     int result, hasAlpha;
+    DWORD_PTR resultFileInfo;
     const char * image_name;
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
@@ -252,66 +262,59 @@ static int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj 
     unsigned int uFlags;
 
     static const char *options[] = {
-	"-large", NULL};
+        "-large", NULL};
     enum IOption {
-	ILARGE
+        ILARGE
     };
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp,1,objv,"?options? fileName");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp,1,objv,"?options? fileName");
+        return TCL_ERROR;
     }
 
-    /* SHGFI_ICON == SHGFI_LARGEICON so large is the default, select small instead
-     * then remove the flag if -large is specified.
+    /* 
+     * SHGFI_ICON == SHGFI_LARGEICON so large is the default,
+     * select small instead. Then remove the flag if
+     * -large is specified.
      */
 
     uFlags = SHGFI_ICON | SHGFI_SMALLICON;
 
     for (i=1 ; i < objc-1 ; i++) {
-	result = Tcl_GetIndexFromObj(interp, objv[i], options, "option", 0,
-				     (int *) &index);
-	if (result != TCL_OK) {
-	    return result;
-	}
-	switch (index) {
+        result = Tcl_GetIndexFromObj(interp, objv[i], options, "option", 0, (int *) &index);
+        if (result != TCL_OK) {
+            return result;
+        }
+        switch (index) {
 	case ILARGE:
 	    /* Setting LARGE is equivalent to unsetting SMALL. */
 	    uFlags ^= SHGFI_SMALLICON;
 	    break;
 	default:
 	    Tcl_Panic("option lookup failed");
-	}
+        }
     }
 
     /* Normalize the filename. */
     file_name = Tcl_FSGetNativePath(objv[objc-1]);
     if (file_name == NULL) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
+	
+    ZeroMemory(&shfi, sizeof(shfi));
 
-    result = SHGetFileInfoW(
-			    (LPCWSTR) file_name,
-			    0,
-			    &shfi,
-			    sizeof(SHFILEINFO),
-			    uFlags
-			    );
+    resultFileInfo = SHGetFileInfoW(
+				    (LPCWSTR)file_name,
+				    0,
+				    &shfi,
+				    sizeof(shfi),
+				    uFlags
+				    );
 
-    if (result == 0) {
-	WCHAR msg[255];
-	int l;
-	Tcl_SetResult(interp, "failed to load icon: ",NULL);
-	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,0,GetLastError(),0,msg,255,0);
-
-	/* Lose the newline. */
-	l = 0;
-	while (msg[l]!='\r' && msg[l]!='\n' && msg[l]!='\0') {
-	    l++;
-	}
-	msg[l]='\0';
-	Tcl_AppendResult(interp, msg,NULL);
-	return TCL_ERROR;
+    if (resultFileInfo == 0 || shfi.hIcon == NULL) {
+	Tcl_SetObjResult(interp,
+			 Tcl_NewStringObj("Unable to retrieve icon\n", -1));
+        return TCL_ERROR;
     }
 
     GetIconInfo(shfi.hIcon, &iconInfo);
@@ -325,7 +328,7 @@ static int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj 
     bitSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
 
     bitBuffer = ckalloc(bitSize);
-    GetBitmapBits(iconInfo.hbmMask,bitSize,bitBuffer);
+    GetBitmapBits(iconInfo.hbmMask, bitSize, bitBuffer);
 
     result = GetObject(
 		       iconInfo.hbmColor,
@@ -335,50 +338,53 @@ static int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj 
 
     imageSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
     byteBuffer = ckalloc(imageSize);
-    GetBitmapBits(iconInfo.hbmColor,imageSize,byteBuffer);
+    GetBitmapBits(iconInfo. hbmColor, imageSize, byteBuffer);
 
     /* 
-     * Do some mask and Alpha channel voodoo, because not all Icons define an alpha channel
-     * and MS has decided to make completely transparent the default in that case.
+     * Do some mask and Alpha channel voodoo, because not all
+     * icons define an alpha channel and MS has decided to make
+     * completely transparent the default in that case.
      */
 
     hasAlpha = 0;
     for (i = 0 ; i < imageSize ; i+=4) {
-	if (byteBuffer[i+offsetof(RGBQUAD,rgbReserved)]!=0) {
-	    hasAlpha = 1;
-	    break;
-	}
+        if (byteBuffer[i+offsetof(RGBQUAD,rgbReserved)]!=0) {
+            hasAlpha = 1;
+            break;
+        }
     }
 
 #define BIT_SET(x,y) (((x) >> (8-(y)) ) & 1 )
 
     for (i=0;i<bitSize;i++) {
-	if (hasAlpha) break;
-	int bit = 0;
-	for (bit=0; bit < 8 ; bit++) {
-	    if (BIT_SET(bitBuffer[i],bit)) {
-		byteBuffer[(i*8+bit)*4+3] = 0;
-	    } else {
-		byteBuffer[(i*8+bit)*4+3] = 255;
-	    }
-	}
+        if (hasAlpha) {
+            break;
+        }
+        int bit = 0;
+        for (bit=0; bit < 8 ; bit++) {
+            if (BIT_SET(bitBuffer[i],bit)) {
+                byteBuffer[(i*8+bit)*4+3] = 0;
+            } else {
+                byteBuffer[(i*8+bit)*4+3] = 255;
+            }
+        }
     }
 
     /* Setup the Tk block structure. */
-    block.pixelPtr = byteBuffer;
-    block.width = bmp.bmWidth;
-    block.height = bmp.bmHeight;
-    block.pitch = bmp.bmWidthBytes;
+    block.pixelPtr  = byteBuffer;
+    block.width     = bmp.bmWidth;
+    block.height    = bmp.bmHeight;
+    block.pitch     = bmp.bmWidthBytes;
     block.pixelSize = bmp.bmBitsPixel/8;
-    block.offset[0]  = offsetof(RGBQUAD,rgbRed);
-    block.offset[1]  = offsetof(RGBQUAD,rgbGreen);
-    block.offset[2]  = offsetof(RGBQUAD,rgbBlue);
+    block.offset[0] = offsetof(RGBQUAD,rgbRed);
+    block.offset[1] = offsetof(RGBQUAD,rgbGreen);
+    block.offset[2] = offsetof(RGBQUAD,rgbBlue);
     block.offset[3] = offsetof(RGBQUAD,rgbReserved);
 
     /* Create the image. */
     result = Tcl_Eval(interp,"image create photo");
     if (result != TCL_OK) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     image_name = Tcl_GetStringResult(interp);
     photo = Tk_FindPhoto(interp, image_name);
@@ -386,7 +392,7 @@ static int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj 
     result = Tk_PhotoPutBlock( interp,photo, &block ,0,0,block.width, block.height,TK_PHOTO_COMPOSITE_SET);
 
     if (result != TCL_OK) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     /* Cleanup. */
@@ -400,6 +406,7 @@ static int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj 
     Tcl_SetResult(interp, image_name, NULL);
     return TCL_OK;
 }
+
 
 /*
  * Local Variables:
