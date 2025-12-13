@@ -343,6 +343,8 @@ proc ::ttk::treeview::PageRight {w} {
 # op = moveto or extend
 #
 proc ::ttk::treeview::KeyNav {w fn {op moveto}} {
+    if {[$w instate disabled]} return
+
     # Get current item and cell
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     set unsel [expr {$op eq "moveto" ? 1 : 0}]
@@ -459,6 +461,8 @@ proc ::ttk::treeview::KeyNav {w fn {op moveto}} {
 # PageNav -- Scroll view and move focus/selected item
 #
 proc ::ttk::treeview::PageNav {w fn} {
+    if {[$w instate disabled]} return
+
     # Get current item and cell
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
@@ -611,6 +615,8 @@ proc ::ttk::treeview::PageNav {w fn} {
 # SelectionSet -- Set special selection types
 #
 proc ::ttk::treeview::SelectionSet {w fn} {
+    if {[$w instate disabled]} return
+
     set mode [$w cget -selectmode]
     if {$mode ni [list "extended" "multiple"]} {
 	return
@@ -656,6 +662,8 @@ proc ::ttk::treeview::SelectionSet {w fn} {
 # SelectNone -- Clear selection
 #
 proc ::ttk::treeview::SelectNone {w} {
+    if {[$w instate disabled]} return
+
     set mode [$w cget -selectmode]
     if {$mode ne "browse"} {
 	$w cellselection set {}
@@ -726,6 +734,8 @@ proc ::ttk::treeview::ActivateHeading {w heading} {
 # MouseSelect -- Select item or cell using button 1
 #
 proc ::ttk::treeview::MouseSelect {w x y op} {
+    if {[$w instate disabled]} return
+
     if {[$w cget -selectmode] ni [list "single" "extended" "multiple"]} {
 	return
     }
@@ -752,6 +762,8 @@ proc ::ttk::treeview::MouseSelect {w x y op} {
 # DoubleClick -- Double-Button-1 binding.
 #
 proc ::ttk::treeview::DoubleClick {w x y} {
+    if {[$w instate disabled]} return
+
     if {[set item [$w identify item $x $y]] ne ""} {
 	set element [$w identify element $x $y]
 	if {$element eq "Treeitem.indicator"} {
@@ -769,6 +781,8 @@ proc ::ttk::treeview::DoubleClick {w x y} {
 # Interactive column resize, column move, and expand selection handlers
 #
 proc ::ttk::treeview::Press {w x y} {
+    if {[$w instate disabled]} return
+
     focus $w
     switch -- [$w identify region $x $y] {
 	nothing { }
@@ -781,6 +795,8 @@ proc ::ttk::treeview::Press {w x y} {
 
 proc ::ttk::treeview::Drag {w x y} {
     variable State
+    if {[$w instate disabled]} return
+
     switch $State(pressMode) {
 	heading	{ Heading.drag $w $x $y }
 	resize	{ Resize.drag $w $x }
@@ -790,6 +806,8 @@ proc ::ttk::treeview::Drag {w x y} {
 
 proc ::ttk::treeview::Release {w x y} {
     variable State
+    if {[$w instate disabled]} return
+
     switch $State(pressMode) {
 	heading	{ Heading.release $w $x $y }
 	resize	{ Resize.release $w $x }
@@ -1122,6 +1140,8 @@ proc ::ttk::treeview::ExtendTo {w item cell {op set}} {
 # Doesn't change selection state.
 #
 proc ::ttk::treeview::OpenItem {w item args} {
+    if {[$w instate disabled]} return
+
     # If no item, use focus
     if {$item eq ""} {
 	if {[$w cget -selecttype] eq "item"} {
@@ -1140,6 +1160,8 @@ proc ::ttk::treeview::OpenItem {w item args} {
 }
 
 proc ::ttk::treeview::CloseItem {w item} {
+    if {[$w instate disabled]} return
+
     # If no item, use focus
     if {$item eq ""} {
 	if {[$w cget -selecttype] eq "item"} {
@@ -1195,6 +1217,8 @@ proc ::ttk::treeview::ToggleOpenState {w item} {
 # ToggleSelected -- toggle selected state of item
 #
 proc ::ttk::treeview::ToggleSelected {w op} {
+    if {[$w instate disabled]} return
+
     if {[$w cget -selectmode] in [list "none" "browse"]} {
 	return
     }
@@ -1216,6 +1240,8 @@ proc ::ttk::treeview::ToggleSelected {w op} {
 # Default action for invoke
 #
 proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
+    if {[$w instate disabled]} return
+
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     set skip 0
 
@@ -1263,6 +1289,8 @@ proc ::ttk::treeview::EncodeValue {string} {
 proc ::ttk::treeview::CopyToClipboard {w} {
     set data ""
     set format [expr {$::tcl_platform(platform) ne "windows" ? "UTF8_STRING" : "STRING"}]
+
+    if {[$w instate disabled]} return
 
     # Determine which columns are shown
     set columns [$w cget -displaycolumns]
