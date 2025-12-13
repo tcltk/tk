@@ -1154,7 +1154,7 @@ Other cells can have images through the cell tag -image option.
 .PP
 .SH "DEFAULT BINDINGS"
 .PP
-The following bindings are implemented by Treeview class. The current item is
+The following bindings are implemented by the Treeview class. The current item is
 the item with the focus and the current cell is the cell with the cell focus.
 Unless otherwise stated, on the Mac the Option key is used in place of the
 Control key in the descriptions below.
@@ -1194,11 +1194,12 @@ The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selectio
 The \fB<Shift-Next>\fR key will scroll right 1 screenful.
 The \fB<Control-Next>\fR key will move to the bottom-most on-screen item and select it.
 .IP \(bu
-The \fB<Return>\fR key will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, the open state of the current item will be toggled.
+The \fB<Return>\fR and \fBF2\fR keys will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, the open state of the current item will be toggled.
 The \fB<Control-Return>\fR key will toggle the open/close state of the current item.
 .IP \(bu
 The \fB<space>\fR key will toggle the selection state of the current item (single, multiple, and extended select modes only).
 The \fB<Shift-space>\fR key will select the current item (single, multiple, and extended select modes only).
+The \fB<Control-Shift-space>\fR key will select all items (multiple and extended select modes only).
 .IP \(bu
 The \fB<Tab>\fR and \fB<plus>\fR keys will open the current item.
 The \fB<Shift-Tab>\fR and \fB<minus>\fR keys will close the current item.
@@ -1248,7 +1249,7 @@ The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selectio
 \fB<Control-Next>\fR will move the focus to the cell at the bottom of the screen in the same column and select it.
 \fB<Control-Shift-Next>\fR will move the focus to the cell at the left side of the screen in the same row and select it.
 .IP \(bu
-The \fB<Return>\fR key will activate the current cell by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, same as \fB<Down>\fR.
+The \fB<Return>\fR and \fBF2\fR keys will activate the current cell by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, same as \fB<Down>\fR.
 \fB<Shift-Return>\fR is same as \fBUp\fR.
 \fB<Tab>\fR is same as \fBRight\fR.
 \fB<Shift-Tab>\fR is same as \fBLeft\fR.
@@ -1256,6 +1257,7 @@ The \fB<Return>\fR key will activate the current cell by calling \fB::ttk::treev
 The \fB<space>\fR key will toggle the selection state of the current cell (single, multiple, and extended select modes only).
 \fB<Shift-space>\fR will select all cells in the row (multiple and extended select modes only).
 \fB<Control-space>\fR will select all cells in the column (multiple and extended select modes only).
+\fB<Control-Shift-space>\fR will select all cells (multiple and extended select modes only).
 .RE
 .PP
 Applies to all:
@@ -1263,9 +1265,9 @@ Applies to all:
 .IP \(bu
 \fB<Button-1>\fR will set the focus (all modes) and selection (all except none select mode) to the item or cell under the mouse pointer.
 .IP \(bu
-\fB<B1-Motion>\fR will drag a column divider for resize, a column header for a column move, or selection for expanding the selection (multiple or extended select modes only).
+\fB<B1-Motion>\fR will drag a column separator for resize, a column header for a column move, or selection for expanding the selection (multiple or extended select modes only).
 .IP \(bu
-\fB<ButtonRelease-1>\fR will drop a column divider for resize, column header for a move, or set the selection.
+\fB<ButtonRelease-1>\fR will drop a column separator for resize, column header for a move, or set the selection.
 .IP \(bu
 \fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::EditItem.
 .IP \(bu

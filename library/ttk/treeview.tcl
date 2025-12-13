@@ -127,6 +127,7 @@ bind Treeview	<Mod3-${ckey}-Home>	{ %W xview moveto 0.0 }
 bind Treeview	<Mod3-${ckey}-End>	{ %W xview moveto 1.0 }
 
 # Other keys
+bind Treeview	<F2>			{ ::ttk::treeview::ActivateItem %W }
 bind Treeview	<Return>		{ ::ttk::treeview::ActivateItem %W }
 bind Treeview	<Shift-Return>		{ ::ttk::treeview::KeyNav %W up }
 bind Treeview	<${ckey}-Return>	{ ::ttk::treeview::ActivateItem %W }
@@ -135,6 +136,7 @@ bind Treeview	<<Invoke>>		{ ::ttk::treeview::ActivateItem %W }
 bind Treeview	<space>			{ ::ttk::treeview::ToggleSelected %W select }
 bind Treeview	<Shift-space>		{ ::ttk::treeview::SelectionSet %W row }
 bind Treeview	<${ckey}-space>		{ ::ttk::treeview::SelectionSet %W column }
+bind Treeview	<${ckey}-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
 
 bind Treeview	<Tab>			{ ::ttk::treeview::KeyNav %W right; break }
 bind Treeview	<Shift-Tab>		{ ::ttk::treeview::KeyNav %W left; break }
@@ -812,11 +814,11 @@ proc ttk::treeview::Select.press {w x y} {
 	set cell ""
     }
 
-    SelectOp $w $item $cell choose
     switch -glob -- [$w identify element $x $y] {
 	*indicator -
 	*disclosure { ToggleOpenState $w $item }
 	default {
+	    SelectOp $w $item $cell choose
 	    if {[$w cget -selectmode] in [list browse multiple extended]} {
 		set State(pressMode) "selection"
 	    }
@@ -1007,8 +1009,8 @@ proc ::ttk::treeview::Heading.release {w x y} {
 #	depending on current value of -selectmode.
 #
 # Where:moveto = Keyboard traverse move to cell and select it
-#	choose = Select item or cell
-#	toggle = Button or keyboard open/close item and select it
+#	choose = Button select item or cell
+#	toggle = Button or keyboard toggle open/close item and select it
 #	extend = Extend selection to include item or cell
 #
 proc ::ttk::treeview::SelectOp {w item cell op} {
@@ -1056,18 +1058,72 @@ proc ::ttk::treeview::select.toggle.extended {w item cell} { BrowseTo $w $item $
 proc ::ttk::treeview::select.extend.extended {w item cell} { ExtendTo $w $item $cell }
 
 #
+# BrowseTo -- navigate to specified item; set focus and selection
+#
+proc ::ttk::treeview::BrowseTo {w item cell {op set}} {
+    variable State
+
+    if {$op ne "none"} {
+	if {$cell ne ""} {
+	    $w cellselection anchor $cell
+	    $w cellselection $op [list $cell]
+	    $w cellfocus $cell
+	    $w see {*}$cell
+	} else {
+	    $w selection anchor $item
+	    $w selection $op [list $item]
+	    $w focus $item
+	    $w see $item
+	}
+    } else {
+	if {$cell ne ""} {
+	    $w cellfocus $cell
+	    $w see {*}$cell
+	} else {
+	    $w focus $item
+	    $w see $item
+	}
+    }
+    array set State [list current $item currentCell $cell]
+}
+
+#
+# ExtendTo -- Extend selection
+#
+proc ::ttk::treeview::ExtendTo {w item cell {op set}} {
+    variable State
+
+    if {$cell ne ""} {
+	set anchor [$w cellselection anchor]
+	if {$anchor ne ""} {
+	    $w cellselection $op $anchor $cell
+	    $w see {*}$cell
+	} else {
+	    BrowseTo $w $item $cell $op
+	}
+    } else {
+	set anchor [$w selection anchor]
+	if {$anchor ne ""} {
+	    $w selection $op $anchor $item
+	    $w see $item
+	} else {
+	    BrowseTo $w $item $cell $op
+	}
+    }
+    array set State [list current $item currentCell $cell]
+}
+
+#
 # User interaction utilities.
 #
 
 #
 # OpenItem, CloseItem -- Set the open state of an item, generate event
+# Doesn't change selection state.
 #
 proc ::ttk::treeview::OpenItem {w item args} {
-    if {$item ne ""} {
-	if {[$w cget -selecttype] eq "item"} {
-	    $w focus $item
-	}
-    } else {
+    # If no item, use focus
+    if {$item eq ""} {
 	if {[$w cget -selecttype] eq "item"} {
 	    set item [$w focus]
 	} else {
@@ -1075,17 +1131,17 @@ proc ::ttk::treeview::OpenItem {w item args} {
 	    lassign $cell item column
 	}
     }
-    if {$item eq ""} return
-    event generate $w <<TreeviewOpen>>
-    $w expand {*}$args [list $item]
+
+    # Open item
+    if {$item ne ""} {
+	event generate $w <<TreeviewOpen>>
+	$w expand {*}$args [list $item]
+    }
 }
 
 proc ::ttk::treeview::CloseItem {w item} {
-    if {$item ne ""} {
-	if {[$w cget -selecttype] eq "item"} {
-	    $w focus $item
-	}
-    } else {
+    # If no item, use focus
+    if {$item eq ""} {
 	if {[$w cget -selecttype] eq "item"} {
 	    set item [$w focus]
 	} else {
@@ -1093,9 +1149,29 @@ proc ::ttk::treeview::CloseItem {w item} {
 	    lassign $cell item column
 	}
     }
-    if {$item eq ""} return
-    $w collapse [list $item]
-    event generate $w <<TreeviewClose>>
+
+    # Close item
+    if {$item ne ""} {
+	$w collapse [list $item]
+	event generate $w <<TreeviewClose>>
+    } else {
+	return
+    }
+    
+    # If focus item is not visible, move focus to item
+    if {[$w cget -selecttype] eq "item"} {
+	set focus [$w focus]
+	set column ""
+    } else {
+	lassign [$w cellfocus] focus column
+    }
+    if {$focus ne "" && ![$w visible $focus]} {
+	if {[$w cget -selecttype] eq "item"} {
+	    SelectOp $w $item {} moveto
+	} else {
+	    SelectOp $w $item [list $item #0] moveto
+	}
+    }
 }
 
 #
@@ -1168,62 +1244,6 @@ proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
 	    $w focus $item
 	}
     }
-}
-
-#
-# BrowseTo -- navigate to specified item; set focus and selection
-#
-proc ::ttk::treeview::BrowseTo {w item cell {op set}} {
-    variable State
-
-    if {$op ne "none"} {
-	if {$cell ne ""} {
-	    $w cellselection anchor $cell
-	    $w cellselection $op [list $cell]
-	    $w cellfocus $cell
-	    $w see {*}$cell
-	} else {
-	    $w selection anchor $item
-	    $w selection $op [list $item]
-	    $w focus $item
-	    $w see $item
-	}
-    } else {
-	if {$cell ne ""} {
-	    $w cellfocus $cell
-	    $w see {*}$cell
-	} else {
-	    $w focus $item
-	    $w see $item
-	}
-    }
-    array set State [list current $item currentCell $cell]
-}
-
-#
-# ExtendTo -- Extend selection
-#
-proc ::ttk::treeview::ExtendTo {w item cell {op set}} {
-    variable State
-
-    if {$cell ne ""} {
-	set anchor [$w cellselection anchor]
-	if {$anchor ne ""} {
-	    $w cellselection $op $anchor $cell
-	    $w see {*}$cell
-	} else {
-	    BrowseTo $w $item $cell $op
-	}
-    } else {
-	set anchor [$w selection anchor]
-	if {$anchor ne ""} {
-	    $w selection $op $anchor $item
-	    $w see $item
-	} else {
-	    BrowseTo $w $item $cell $op
-	}
-    }
-    array set State [list current $item currentCell $cell]
 }
 
 #
