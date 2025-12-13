@@ -1038,25 +1038,25 @@ ExposeRestrictProc(
 - (void) updateLayer {
     CGContextRef context = self.tkLayerBitmapContext;
     if (context && ![NSApp tkWillExit]) {
-    /*
-     * Create a CGImage by copying (probably using copy-on-write) the
-     * bitmap data of the CGBitmapContext that we have been using for
-     * drawing.  Then render that CGImage into the CALayer of this view by
-     * assigning a reference to the CGImage to the contents property of the
-     * layer. This will cause all drawing done since the last call to this
-     * function to become visible.
-     */
+	/*
+	 * Create a CGImage by copying (probably using copy-on-write) the
+	 * bitmap data of the CGBitmapContext that we have been using for
+	 * drawing.  Then render that CGImage into the CALayer of this view by
+	 * assigning a reference to the CGImage to the contents property of the
+	 * layer. This will cause all drawing done since the last call to this
+	 * function to become visible.
+	 */
 
-    CGImageRef newImg = CGBitmapContextCreateImage(context);
-    self.layer.contents = (__bridge id) newImg;
-    CGImageRelease(newImg); // will quickly leak memory if this is missing
+	CGImageRef newImg = CGBitmapContextCreateImage(context);
+	self.layer.contents = (__bridge id) newImg;
+	CGImageRelease(newImg); // will quickly leak memory if this is missing
 
-    /*
-     * Run any pending widget display procs as part of the update.
-     * Without this there are black flashes when a window opens.
-     */
+	/*
+	 * Run any pending widget display procs as part of the update.
+	 * Without this there are black flashes when a window opens.
+	 */
 
-    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
     }
 }
 
