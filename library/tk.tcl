@@ -546,6 +546,7 @@ if {$::tk_library ne ""} {
 		![string match -nocase "*warning*" $r]} {
 	    SourceLibFile accessibility
 	}
+	SourceLibFile fileicon
 	SourceLibFile icons
 	SourceLibFile iconbadges
 	SourceLibFile button

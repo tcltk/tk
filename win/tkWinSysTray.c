@@ -1219,6 +1219,8 @@ WinIcoInit(
 	    icoInterpPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
 	    icoInterpPtr, NULL);
+	Tcl_CreateObjCommand2(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
+	    NULL, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
 	    WinIcoDestroy, icoInterpPtr);
