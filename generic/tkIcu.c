@@ -81,7 +81,7 @@ startEndOfCmd(
     const uint16_t *ustr;
     char locale[128];
 
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
