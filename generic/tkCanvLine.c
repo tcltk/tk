@@ -724,7 +724,7 @@ ComputeLineBbox(
 		coordPtr = linePtr->firstArrowPtr;
 	    }
 	}
-	if (tsoffset->flags > (linePtr->numPoints * 2)) {
+	if (tsoffset->flags > (int)(linePtr->numPoints * 2)) {
 	    coordPtr = linePtr->coordPtr + (linePtr->numPoints * 2);
 	    if ((linePtr->arrow == ARROWS_LAST)
 		    || (linePtr->arrow == ARROWS_BOTH)) {
