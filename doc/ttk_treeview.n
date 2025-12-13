@@ -1279,6 +1279,8 @@ Applies to all:
 .IP \(bu
 \fB<<SelectNone>>\fR virtual event will unselect all items or cells (except browse mode).
 .IP \(bu
+\fB<<SelectInvert>>\fR virtual event will invert or toggle the selection state of all items or cells (except browse mode).
+.IP \(bu
 The \fB<<Copy>>\fR virtual event will copy the selected items or cells to the clipboard.
 .RE
 .PP

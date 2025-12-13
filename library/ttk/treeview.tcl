@@ -145,6 +145,7 @@ bind Treeview	<${ckey}-Shift-Tab>	[bind all <<PrevWindow>>]
 
 # Other selection functions
 bind Treeview	<<SelectAll>>		{ ::ttk::treeview::SelectionSet %W all }
+bind Treeview	<<SelectInvert>>	{ ::ttk::treeview::SelectionSet %W invert }
 bind Treeview	<<SelectNone>>		{ ::ttk::treeview::SelectNone %W }
 bind Treeview	<minus>			{ ::ttk::treeview::CloseItem %W {} }
 bind Treeview	<plus>			{ ::ttk::treeview::OpenItem %W {} }
@@ -629,7 +630,7 @@ proc ::ttk::treeview::SelectionSet {w fn} {
     } else {
 	set item [$w focus]
     }
-    if {$item eq "" && $fn ni [list all none]} {return}
+    if {$item eq "" && $fn ni [list all invert]} {return}
 
     switch -- $fn {
 	all {
@@ -646,6 +647,16 @@ proc ::ttk::treeview::SelectionSet {w fn} {
 		$w cellselection set -nohidden -recurse \
 		    [list [TopItem $w] $column] [list [BottomItem $w] $column]
 	    }
+	}
+	invert {
+	    if {$cellmode} {
+		$w cellselection toggle -nohidden -recurse \
+		    [list [TopItem $w] [FirstColumnId $w]] \
+		    [list [BottomItem $w] [LastColumnId $w]]
+	    } else {
+		$w selection toggle -nohidden -recurse [TopItem $w] [BottomItem $w]
+	    }
+	    
 	}
 	row {
 	    if {$cellmode} {
