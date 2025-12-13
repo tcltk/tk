@@ -1559,16 +1559,6 @@ DrawTab11(
 	 * rounded rectangle behind the entire tab bar.
 	 */
 
-	if (!(state & TTK_STATE_FIRST)) {
-        clipRect.origin.x += 0.5;
-        clipRect.size.width -= 0.5;
-        bounds.origin.x += 0.5;
-        bounds.size.width -= 0.5;
-	}
-	if (!(state & TTK_STATE_LAST)) {
-        clipRect.size.width -= 0.5;
-        bounds.size.width -= 0.5;
-	}
 	CGContextSaveGState(context);
 	CGContextClipToRect(context, clipRect);
 	DrawGroupBox(bounds, context, tkwin, 3, NO);
