@@ -1061,7 +1061,7 @@ LineInsert(
 		 * of the line, include a third point.
 		 */
 
-		if (beforeThis == (Tcl_Size)-4) {
+		if (beforeThis == -4) {
 		    objc += 2;
 		}
 		if (beforeThis + 4 == length - (objc - 8)) {
@@ -1878,8 +1878,8 @@ GetLineIndex(
     if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 1, &idx)) {
 	if (idx < 0) {
 	    idx = 0;
-	} else if (idx > (2*(Tcl_Size)linePtr->numPoints)) {
-	    idx = 2*linePtr->numPoints;
+	} else if (idx > (2 * linePtr->numPoints)) {
+	    idx = 2 * linePtr->numPoints;
 	} else {
 	    idx &= (Tcl_Size)-2;	/* If index is odd, make it even. */
 	}
