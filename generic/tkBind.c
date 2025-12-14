@@ -2466,7 +2466,7 @@ Tk_BindEvent(
 	for (psEntry = PSList_First(psList); psEntry; psEntry = psNext) {
 	    const TkPattern *patPtr;
 
-	    assert(i + 1 < (Tcl_Size)psEntry->psPtr->numPats);
+	    assert(i + 1 < psEntry->psPtr->numPats);
 
 	    psNext = PSList_Next(psEntry);
 	    patPtr = &psEntry->psPtr->pats[i + 1];
@@ -3328,10 +3328,11 @@ int
 Tk_EventObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int index, i;
+    int index;
+    Tcl_Size i;
     char *name;
     const char *event;
     Tk_Window tkwin;

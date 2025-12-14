@@ -448,7 +448,7 @@ startOfClusterObjCmd(
     TKNSString *S;
     const char *stringArg;
     Tcl_Size len, idx;
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
@@ -507,7 +507,7 @@ endOfClusterObjCmd(
     char *stringArg;
     Tcl_Size idx, len;
 
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
