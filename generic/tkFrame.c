@@ -389,7 +389,7 @@ int
 Tk_FrameObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return TkCreateFrame(clientData, interp, objc, objv, TYPE_FRAME, NULL);
@@ -399,7 +399,7 @@ int
 Tk_ToplevelObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return TkCreateFrame(clientData, interp, objc, objv, TYPE_TOPLEVEL, NULL);
@@ -409,7 +409,7 @@ int
 Tk_LabelframeObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return TkCreateFrame(clientData, interp, objc, objv, TYPE_LABELFRAME, NULL);

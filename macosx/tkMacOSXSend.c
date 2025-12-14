@@ -334,7 +334,8 @@ Tk_SendObjCmd(
     };
     const char *stringRep, *destName;
     /*int async = 0;*/
-    int i, firstArg, index;
+    Tcl_Size i, firstArg;
+    int index;
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;
@@ -397,7 +398,7 @@ Tk_SendObjCmd(
 	Tcl_Preserve(riPtr);
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
-	if (firstArg == (objc - 1)) {
+	if (firstArg + 1 == objc) {
 	    /*
 	     * This might be one of those cases where the new parser is
 	     * faster.
