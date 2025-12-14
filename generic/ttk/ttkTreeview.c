@@ -1551,12 +1551,7 @@ static int ConfigureColumn(
      * geometry jumping during interactive column resize.
      */
     if (mask & GEOMETRY_CHANGED) {
-	if (!Tk_IsMapped(tv->core.tkwin)) {
-	    TtkResizeWidget(&tv->core);
-	} else {
-	    RecomputeSlack(tv);
-	    ResizeColumns(tv, TreeWidth(tv));
-	}
+	TtkResizeWidget(&tv->core);
     }
     TtkRedisplayWidget(&tv->core);
 
