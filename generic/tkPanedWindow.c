@@ -147,7 +147,7 @@ typedef struct PanedWindow {
     Tcl_Obj *proxyBorderWidthObj; /* Tcl_Obj rep for proxyBorderWidth */
     int proxyRelief;		/* Relief used to draw proxy, if TK_RELIEF_NULL then use relief. */
     Pane **panes;		/* Pointer to array of Panes. */
-    int numPanes;		/* Number of panes. */
+    Tcl_Size numPanes;		/* Number of panes. */
     int sizeofPanes;		/* Number of elements in the panes array. */
     int flags;			/* Flags for widget; see below. */
 } PanedWindow;
@@ -536,7 +536,8 @@ PanedWindowWidgetObjCmd(
 	PW_PANECONFIGURE, PW_PANES, PW_PROXY, PW_SASH
     };
     Tcl_Obj *resultObj;
-    int index, count, i, x, y;
+    int index, x, y;
+    Tcl_Size count, i;
     Tk_Window tkwin;
     Pane *panePtr;
 
@@ -604,7 +605,7 @@ PanedWindowWidgetObjCmd(
 	/*
 	 * Clean up each window named in the arg list.
 	 */
-	for (count = 0, i = 2; i < (int)objc; i++) {
+	for (count = 0, i = 2; i < objc; i++) {
 	    Tk_Window pane = Tk_NameToWindow(interp, Tcl_GetString(objv[i]),
 		    pwPtr->tkwin);
 
@@ -759,9 +760,8 @@ ConfigurePanes(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int firstOptionArg, j, found, doubleBw, index, numNewPanes, haveLoc;
-    Tcl_Size i;
-    int insertIndex;
+    int found, doubleBw, numNewPanes, haveLoc;
+    Tcl_Size index, insertIndex, i, j, firstOptionArg;
     Tk_Window tkwin = NULL, ancestor, parent;
     Pane *panePtr, **inserts, **newPanes;
     Pane options;
@@ -855,7 +855,7 @@ ConfigurePanes(
     if (options.after != NULL) {
 	tkwin = options.after;
 	haveLoc = 1;
-	for (i = 0; i < (Tcl_Size)pwPtr->numPanes; i++) {
+	for (i = 0; i < pwPtr->numPanes; i++) {
 	    if (options.after == pwPtr->panes[i]->tkwin) {
 		index = i + 1;
 		break;
@@ -864,7 +864,7 @@ ConfigurePanes(
     } else if (options.before != NULL) {
 	tkwin = options.before;
 	haveLoc = 1;
-	for (i = 0; i < (Tcl_Size)pwPtr->numPanes; i++) {
+	for (i = 0; i < pwPtr->numPanes; i++) {
 	    if (options.before == pwPtr->panes[i]->tkwin) {
 		index = i;
 		break;
@@ -903,7 +903,7 @@ ConfigurePanes(
      * pre-existing pane structures).
      */
 
-    for (i = 0, numNewPanes = 0; i < (Tcl_Size)firstOptionArg - 2; i++) {
+    for (i = 0, numNewPanes = 0; i < firstOptionArg - 2; i++) {
 	/*
 	 * We don't check that tkwin is NULL here, because the pre-pass above
 	 * guarantees that the input at this stage is good.
@@ -1023,7 +1023,7 @@ ConfigurePanes(
 	 * array.
 	 */
 
-	for (i = 0, j = 0; i < (Tcl_Size)index; i++) {
+	for (i = 0, j = 0; i < index; i++) {
 	    if (pwPtr->panes[i] != NULL) {
 		newPanes[j] = pwPtr->panes[i];
 		j++;
@@ -1033,7 +1033,7 @@ ConfigurePanes(
 	memcpy(&newPanes[j], inserts, sizeof(Pane *)*insertIndex);
 	j += firstOptionArg - 2;
 
-	for (i = index; i < (Tcl_Size)pwPtr->numPanes; i++) {
+	for (i = index; i < pwPtr->numPanes; i++) {
 	    if (pwPtr->panes[i] != NULL) {
 		newPanes[j] = pwPtr->panes[i];
 		j++;
@@ -1353,7 +1353,7 @@ PanedWindowEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     PanedWindow *pwPtr = (PanedWindow *)clientData;
-    int i;
+    Tcl_Size i;
 
     if (eventPtr->type == Expose) {
 	if (pwPtr->tkwin != NULL && !(pwPtr->flags & REDRAW_PENDING)) {
@@ -1446,10 +1446,11 @@ DisplayPanedWindow(
     Pane *panePtr;
     Pixmap pixmap;
     Tk_Window tkwin = pwPtr->tkwin;
-    int i, sashWidth, sashHeight;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    int sashWidth, sashHeight;
+    const bool horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int first, last;
     int borderWidth;
+    Tcl_Size i;
 
     pwPtr->flags &= ~REDRAW_PENDING;
     if ((pwPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1551,7 +1552,7 @@ static void
 DestroyPanedWindow(
     PanedWindow *pwPtr)		/* Info about paned window widget. */
 {
-    int i;
+    Tcl_Size i;
 
     /*
      * First mark the widget as in the process of being deleted, so that any
@@ -1720,7 +1721,7 @@ ArrangePanes(
 {
     PanedWindow *pwPtr = (PanedWindow *)clientData;
     Pane *panePtr;
-    int i, newPaneWidth, newPaneHeight, paneX, paneY;
+    int newPaneWidth, newPaneHeight, paneX, paneY;
     int paneWidth, paneHeight, paneSize, paneMinSize;
     int doubleBw;
     int x, y;
@@ -1732,6 +1733,7 @@ ArrangePanes(
     int stretchReserve, stretchAmount;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int handleSize, sashPad, handlePad;
+    Tcl_Size i;
 
     pwPtr->flags &= ~(REQUESTED_RELAYOUT|RESIZE_PENDING);
 
@@ -2033,7 +2035,7 @@ Unlink(
     Pane *panePtr)		/* Window to unlink. */
 {
     PanedWindow *containerPtr;
-    int i, j;
+    Tcl_Size i, j;
 
     containerPtr = panePtr->containerPtr;
     if (containerPtr == NULL) {
@@ -2106,7 +2108,7 @@ GetPane(
     PanedWindow *pwPtr,		/* Pointer to the paned window info. */
     Tk_Window tkwin)		/* Window to search for. */
 {
-    int i;
+    Tcl_Size i;
 
     for (i = 0; i < pwPtr->numPanes; i++) {
 	if (pwPtr->panes[i]->tkwin == tkwin) {
@@ -2139,7 +2141,7 @@ GetFirstLastVisiblePane(
     int *firstPtr,		/* Returned index for first. */
     int *lastPtr)		/* Returned index for last. */
 {
-    int i;
+    Tcl_Size i;
 
     for (i = 0, *lastPtr = 0, *firstPtr = -1; i < pwPtr->numPanes; i++) {
 	if (pwPtr->panes[i]->hide == 0) {
@@ -2208,13 +2210,14 @@ static void
 ComputeGeometry(
     PanedWindow *pwPtr)		/* Pointer to the Paned Window structure. */
 {
-    int i, x, y, doubleBw, internalBw;
+    int x, y, doubleBw, internalBw;
     int sashWidth, sashOffset, handleOffset;
     int reqWidth, reqHeight, dim, handleSize;
     Pane *panePtr;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    const bool horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int sashPad;
     int width = -1, height = -1;
+    Tcl_Size i;
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
@@ -2638,7 +2641,7 @@ MoveSash(
     int sash,
     int diff)
 {
-    int i;
+    Tcl_Size i;
     int expandPane, reduceFirst, reduceLast, reduceIncr, paneSize, sashOffset;
     Pane *panePtr;
     int stretchReserve = 0;
@@ -3071,10 +3074,11 @@ PanedWindowIdentifyCoords(
     Tcl_Interp *interp,		/* Interpreter in which to store result. */
     int x, int y)		/* Coordinates of the point to identify. */
 {
-    int i, sashHeight, sashWidth, thisx, thisy;
+    int sashHeight, sashWidth, thisx, thisy;
     int found, lpad, rpad, tpad, bpad;
     int first, last, handleSize, sashPad;
-	bool isHandle;
+    bool isHandle;
+    Tcl_Size i;
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);

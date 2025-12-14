@@ -6051,7 +6051,7 @@ SearchCore(
 			     * exact searches.
 			     */
 
-			    if ((Tcl_Size)lastTotal - skipFirst >= matchLength) {
+			    if (lastTotal - skipFirst >= matchLength) {
 				/*
 				 * We now have enough text to match, so we
 				 * make a final test and break whatever the
@@ -6133,7 +6133,7 @@ SearchCore(
 			}
 		    } else {
 			firstOffset = matchLength ? p - startOfLine + matchLength
-						  : p - startOfLine + (Tcl_Size)1;
+						  : p - startOfLine + 1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find
@@ -6191,7 +6191,7 @@ SearchCore(
 
 		if (!match ||
 			((info.extendStart == info.matches[0].start)
-			&& (info.matches[0].end == (Tcl_Size) (lastOffset - firstOffset)))) {
+			&& (info.matches[0].end == (lastOffset - firstOffset)))) {
 		    int extraLines = 0;
 		    Tcl_Size prevFullLine;
 
@@ -6306,7 +6306,7 @@ SearchCore(
 			 */
 
 			if ((match &&
-				firstOffset + info.matches[0].end != (Tcl_Size) lastTotal &&
+				firstOffset + info.matches[0].end != lastTotal &&
 				firstOffset + info.matches[0].end < prevFullLine)
 				|| info.extendStart < 0) {
 			    break;
@@ -6368,7 +6368,7 @@ SearchCore(
 			     * Possible overlap or inclusion.
 			     */
 
-			    int thisOffset = firstOffset + info.matches[0].end
+			    Tcl_Size thisOffset = firstOffset + info.matches[0].end
 				    - info.matches[0].start;
 
 			    if (lastNonOverlap != -1) {
@@ -6376,7 +6376,7 @@ SearchCore(
 				 * Possible overlap or enclosure.
 				 */
 
-				if ((Tcl_Size)thisOffset - lastNonOverlap >=
+				if (thisOffset - lastNonOverlap >=
 					lastBackwardsMatchOffset + matchLength + 1){
 				    /*
 				     * Totally encloses previous match, so

@@ -992,7 +992,7 @@ GridRowColumnConfigureCommand(
     Tk_Window container, content;
     Gridder *containerPtr, *contentPtr;
     SlotInfo *slotPtr = NULL;
-    int slot;			/* the column or row number */
+    Tcl_Size slot;		/* the column or row number */
     int slotType;		/* COLUMN or ROW */
     int size;			/* the configuration value */
     Tcl_Size lObjc;		/* Number of items in index list */
@@ -1049,7 +1049,7 @@ GridRowColumnConfigureCommand(
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
+	if (Tcl_GetSizeIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
 		    " (when retrieving options only integer indices are "
 		    "allowed)", NULL);
@@ -1131,7 +1131,7 @@ GridRowColumnConfigureCommand(
     for (j = 0; j < lObjc; j++) {
 	int allContent = 0;
 
-	if (Tcl_GetIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
+	if (Tcl_GetSizeIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
 	    first = slot;
 	    last = slot;
 	    contentPtr = NULL;
@@ -1184,7 +1184,7 @@ GridRowColumnConfigureCommand(
 			contentPtr->numCols : contentPtr->numRows);
 	    }
 
-	    for (slot = first; (Tcl_Size)slot <= last; slot++) {
+	    for (slot = first; slot <= last; slot++) {
 		ok = CheckSlotData(containerPtr, slot, slotType, /*checkOnly*/ 0);
 		if (ok != TCL_OK) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(

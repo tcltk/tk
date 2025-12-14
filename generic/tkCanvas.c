@@ -1970,7 +1970,7 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	    if (canvasPtr->textInfo.selItemPtr == itemPtr) {
-		if ((Tcl_Size)index + 1 <= ((canvasPtr->textInfo.selectFirst
+		if (index + 1 <= ((canvasPtr->textInfo.selectFirst
 			+ canvasPtr->textInfo.selectLast)/2)) {
 		    canvasPtr->textInfo.selectAnchor =
 			    canvasPtr->textInfo.selectLast + 1;
