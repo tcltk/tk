@@ -115,10 +115,7 @@ proc ::ttk::configureNotebookStyle {style} {
 #	To be invoked from within the library files for the built-in themes.
 #
 proc ::ttk::setTreeviewRowHeight {} {
-    set font [::ttk::style lookup Treeview -font]
-    if {$font eq {}} {
-	set font TkDefaultFont
-    }
+    set font [::ttk::style lookup Treeview -font {} TkDefaultFont]
 
     ::ttk::style configure Treeview -rowheight \
 	    [expr {[font metrics $font -linespace] + 2}]
