@@ -56,14 +56,13 @@ static void		InitColorObj(Tcl_Obj *objPtr);
  * of the Tcl_Obj points to a TkColor object.
  */
 
-const TkObjType tkColorObjType = {
-    {"color",			/* name */
+const Tcl_ObjType tkColorObjType = {
+    "color",			/* name */
     FreeColorObjProc,		/* freeIntRepProc */
     DupColorObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V1(TkLengthOne)},
-    0
+    TCL_OBJTYPE_V1(TkLengthOne)
 };
 
 /*
@@ -101,7 +100,7 @@ Tk_AllocColorFromObj(
 {
     TkColor *tkColPtr;
 
-    if (objPtr->typePtr != &tkColorObjType.objType) {
+    if (objPtr->typePtr != &tkColorObjType) {
 	InitColorObj(objPtr);
     }
     tkColPtr = (TkColor *) objPtr->internalRep.twoPtrValue.ptr1;
@@ -523,7 +522,7 @@ Tk_FreeColor(
      */
 
     if (tkColPtr->objRefCount == 0) {
-	ckfree(tkColPtr);
+	Tcl_Free(tkColPtr);
     }
 }
 
@@ -594,7 +593,7 @@ FreeColorObj(
     if (tkColPtr != NULL) {
 	if ((tkColPtr->objRefCount-- <= 1)
 		&& (tkColPtr->resourceRefCount == 0)) {
-	    ckfree(tkColPtr);
+	    Tcl_Free(tkColPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }
@@ -663,7 +662,7 @@ Tk_GetColorFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkColorObjType.objType) {
+    if (objPtr->typePtr != &tkColorObjType) {
 	InitColorObj(objPtr);
     }
 
@@ -751,7 +750,7 @@ InitColorObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkColorObjType.objType;
+    objPtr->typePtr = &tkColorObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
