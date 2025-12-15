@@ -501,7 +501,7 @@ CreateWidget(
      * and 'insert', 'current' mark pointers are all NULL to start.
      */
 
-    textPtr = (TkText *)ckalloc(sizeof(TkText));
+    textPtr = (TkText *)Tcl_Alloc(sizeof(TkText));
     memset(textPtr, 0, sizeof(TkText));
 
     textPtr->tkwin = newWin;
@@ -512,7 +512,7 @@ CreateWidget(
 	    textPtr, TextCmdDeletedProc);
 
     if (sharedPtr == NULL) {
-	sharedPtr = (TkSharedText *)ckalloc(sizeof(TkSharedText));
+	sharedPtr = (TkSharedText *)Tcl_Alloc(sizeof(TkSharedText));
 	memset(sharedPtr, 0, sizeof(TkSharedText));
 
 	sharedPtr->refCount = 0;
@@ -1101,7 +1101,7 @@ TextWidgetObjCmd(
 
 		objc -= 2;
 		objv += 2;
-		indices = (TkTextIndex *)ckalloc((objc + 1) * sizeof(TkTextIndex));
+		indices = (TkTextIndex *)Tcl_Alloc((objc + 1) * sizeof(TkTextIndex));
 
 		/*
 		 * First pass verifies that all indices are valid.
@@ -1113,7 +1113,7 @@ TextWidgetObjCmd(
 
 		    if (indexPtr == NULL) {
 			result = TCL_ERROR;
-			ckfree(indices);
+			Tcl_Free(indices);
 			goto done;
 		    }
 		    indices[i] = *indexPtr;
@@ -1129,7 +1129,7 @@ TextWidgetObjCmd(
 			    COUNT_INDICES);
 		    objc++;
 		}
-		useIdx = (char *)ckalloc(objc);
+		useIdx = (char *)Tcl_Alloc(objc);
 		memset(useIdx, 0, objc);
 
 		/*
@@ -1193,7 +1193,7 @@ TextWidgetObjCmd(
 				&indices[i+1], 1);
 		    }
 		}
-		ckfree(indices);
+		Tcl_Free(indices);
 	    }
 	}
 	break;
@@ -1554,7 +1554,7 @@ TextWidgetObjCmd(
 
   done:
     if (textPtr->refCount-- <= 1) {
-	ckfree(textPtr);
+	Tcl_Free(textPtr);
     }
     return result;
 }
@@ -1933,10 +1933,10 @@ DestroyText(
     TkTextDeleteTag(textPtr, textPtr->selTagPtr);
     TkBTreeUnlinkSegment(textPtr->insertMarkPtr,
 	    textPtr->insertMarkPtr->body.mark.linePtr);
-    ckfree(textPtr->insertMarkPtr);
+    Tcl_Free(textPtr->insertMarkPtr);
     TkBTreeUnlinkSegment(textPtr->currentMarkPtr,
 	    textPtr->currentMarkPtr->body.mark.linePtr);
-    ckfree(textPtr->currentMarkPtr);
+    Tcl_Free(textPtr->currentMarkPtr);
 
     /*
      * Now we've cleaned up everything of relevance to us in the B-tree, so we
@@ -2000,7 +2000,7 @@ DestroyText(
 	Tcl_DeleteHashTable(&sharedTextPtr->tagTable);
 	for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->markTable, &search);
 	     hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    ckfree(Tcl_GetHashValue(hPtr));
+	    Tcl_Free(Tcl_GetHashValue(hPtr));
 	}
 	Tcl_DeleteHashTable(&sharedTextPtr->markTable);
 	TkUndoFreeStack(sharedTextPtr->undoStack);
@@ -2011,11 +2011,11 @@ DestroyText(
 	if (sharedTextPtr->bindingTable != NULL) {
 	    Tk_DeleteBindingTable(sharedTextPtr->bindingTable);
 	}
-	ckfree(sharedTextPtr);
+	Tcl_Free(sharedTextPtr);
     }
 
     if (textPtr->tabArrayPtr != NULL) {
-	ckfree(textPtr->tabArrayPtr);
+	Tcl_Free(textPtr->tabArrayPtr);
     }
     if (textPtr->insertBlinkHandler != NULL) {
 	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
@@ -2028,7 +2028,7 @@ DestroyText(
 	textPtr->afterSyncCmd = NULL;
     }
     if (textPtr->refCount-- <= 1) {
-	ckfree(textPtr);
+	Tcl_Free(textPtr);
     }
 }
 
@@ -2202,7 +2202,7 @@ ConfigureText(
      */
 
     if (textPtr->tabArrayPtr != NULL) {
-	ckfree(textPtr->tabArrayPtr);
+	Tcl_Free(textPtr->tabArrayPtr);
 	textPtr->tabArrayPtr = NULL;
     }
     if (textPtr->tabOptionObj != NULL) {
@@ -2640,7 +2640,7 @@ InsertChars(
 
     resetViewCount = 0;
     if (sharedTextPtr->refCount > PIXEL_CLIENTS) {
-	lineAndByteIndex = (int *)ckalloc(sizeof(int) * 2 * sharedTextPtr->refCount);
+	lineAndByteIndex = (int *)Tcl_Alloc(sizeof(int) * 2 * sharedTextPtr->refCount);
     } else {
 	lineAndByteIndex = pixels;
     }
@@ -2702,7 +2702,7 @@ InsertChars(
 	resetViewCount += 2;
     }
     if (sharedTextPtr->refCount > PIXEL_CLIENTS) {
-	ckfree(lineAndByteIndex);
+	Tcl_Free(lineAndByteIndex);
     }
 
     /*
@@ -3166,7 +3166,7 @@ DeleteIndexRange(
 	    for (i = 0; i < arraySize; i++) {
 		TkBTreeTag(&index2, &oldIndex2, arrayPtr[i], 0);
 	    }
-	    ckfree(arrayPtr);
+	    Tcl_Free(arrayPtr);
 	}
     }
 
@@ -3212,7 +3212,7 @@ DeleteIndexRange(
 
     resetViewCount = 0;
     if (sharedTextPtr->refCount > PIXEL_CLIENTS) {
-	lineAndByteIndex = (int *)ckalloc(sizeof(int) * 2 * sharedTextPtr->refCount);
+	lineAndByteIndex = (int *)Tcl_Alloc(sizeof(int) * 2 * sharedTextPtr->refCount);
     } else {
 	lineAndByteIndex = pixels;
     }
@@ -3345,7 +3345,7 @@ DeleteIndexRange(
 	resetViewCount += 2;
     }
     if (sharedTextPtr->refCount > PIXEL_CLIENTS) {
-	ckfree(lineAndByteIndex);
+	Tcl_Free(lineAndByteIndex);
     }
 
     if (line1 >= line2) {
@@ -3725,7 +3725,7 @@ TextInsertCmd(
 		for (i = 0; i < numTags; i++) {
 		    TkBTreeTag(&index1, &index2, oldTagArrayPtr[i], 0);
 		}
-		ckfree(oldTagArrayPtr);
+		Tcl_Free(oldTagArrayPtr);
 	    }
 	    if (Tcl_ListObjGetElements(interp, objv[j+1], &numTags,
 		    &tagNamePtrs) != TCL_OK) {
@@ -4512,7 +4512,7 @@ TkTextGetTabs(
      * Parse the elements of the list one at a time to fill in the array.
      */
 
-    tabArrayPtr = (TkTextTabArray *)ckalloc(offsetof(TkTextTabArray, tabs)
+    tabArrayPtr = (TkTextTabArray *)Tcl_Alloc(offsetof(TkTextTabArray, tabs)
 	    + count * sizeof(TkTextTab));
     tabArrayPtr->numTabs = 0;
     prevStop = 0.0;
@@ -4599,7 +4599,7 @@ TkTextGetTabs(
     return tabArrayPtr;
 
   error:
-    ckfree(tabArrayPtr);
+    Tcl_Free(tabArrayPtr);
     return NULL;
 }
 
@@ -4861,7 +4861,7 @@ DumpLine(
 		 */
 
 		int length = last - first;
-		char *range = (char *)ckalloc(length + 1);
+		char *range = (char *)Tcl_Alloc(length + 1);
 
 		memcpy(range, segPtr->body.chars + first, length);
 		range[length] = '\0';
@@ -4870,7 +4870,7 @@ DumpLine(
 			lineno, offset + first, &index);
 		lineChanged = DumpSegment(textPtr, interp, "text", range,
 			command, &index, what);
-		ckfree(range);
+		Tcl_Free(range);
 	    } else {
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset + first, &index);
@@ -5574,7 +5574,7 @@ TkTextRunAfterSyncCmd(
 	*/
 
 	if (textPtr->refCount-- <= 1) {
-	    ckfree(textPtr);
+	    Tcl_Free(textPtr);
 	}
 	return;
     }
@@ -6482,12 +6482,12 @@ SearchCore(
 			     */
 
 			    Tcl_Size *newArray = (Tcl_Size *)
-				    ckalloc(4 * matchNum * sizeof(Tcl_Size));
+				    Tcl_Alloc(4 * matchNum * sizeof(Tcl_Size));
 			    memcpy(newArray, storeMatch, matchNum*sizeof(Tcl_Size));
 			    memcpy(newArray + 2*matchNum, storeLength,
 				    matchNum * sizeof(Tcl_Size));
 			    if (storeMatch != smArray) {
-				ckfree(storeMatch);
+				Tcl_Free(storeMatch);
 			    }
 			    matchNum *= 2;
 			    storeMatch = newArray;
@@ -6717,7 +6717,7 @@ SearchCore(
      */
 
     if (storeMatch != smArray) {
-	ckfree(storeMatch);
+	Tcl_Free(storeMatch);
     }
 
     return code;

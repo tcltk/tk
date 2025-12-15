@@ -99,7 +99,7 @@ Tk_SetAccessibleRole(
    */
   hPtr=Tcl_CreateHashEntry(TkAccessibilityObject, win, &isNew);
   if (isNew) {
-    AccessibleAttributes = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+    AccessibleAttributes = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(AccessibleAttributes,TCL_STRING_KEYS);
     Tcl_SetHashValue(hPtr, AccessibleAttributes);
     Tk_CreateEventHandler(win, StructureNotifyMask, WindowDestroyHandler, win);
@@ -932,7 +932,7 @@ static void WindowDestroyHandler(
 	Tcl_DeleteHashEntry(hPtr2);
     }
     Tcl_DeleteHashTable(AccessibleAttributes);
-    ckfree(AccessibleAttributes);
+    Tcl_Free(AccessibleAttributes);
     Tcl_DeleteHashEntry(hPtr);
     return;
 }
@@ -1000,7 +1000,7 @@ TkAccessibility_Cleanup(
 
 	    /* Delete the per-window hash table and free its memory. */
 	    Tcl_DeleteHashTable(perWin);
-	    ckfree((char *) perWin);
+	    Tcl_Free(perWin);
 	}
 
 	hPtr = Tcl_NextHashEntry(&search);
@@ -1008,7 +1008,7 @@ TkAccessibility_Cleanup(
 
     /* Now free the main table safely. */
     Tcl_DeleteHashTable(table);
-    ckfree((char *) table);
+    Tcl_Free(table);
 }
 
 
@@ -1037,7 +1037,7 @@ TkAccessibility_Init(
   Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_help", Tk_GetAccessibleHelp, NULL, NULL);
 
   if (!TkAccessibilityObject) {
-      TkAccessibilityObject = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+      TkAccessibilityObject = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
       Tcl_InitHashTable(TkAccessibilityObject, TCL_ONE_WORD_KEYS);
   }
 

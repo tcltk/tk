@@ -254,13 +254,13 @@ Tk_InitConsoleChannels(
      * interp for it to live in.
      */
 
-    info = (ConsoleInfo *) ckalloc(sizeof(ConsoleInfo));
+    info = (ConsoleInfo *)Tcl_Alloc(sizeof(ConsoleInfo));
     info->consoleInterp = NULL;
     info->interp = NULL;
     info->refCount = 0;
 
     if (doIn) {
-	ChannelData *data = (ChannelData *)ckalloc(sizeof(ChannelData));
+	ChannelData *data = (ChannelData *)Tcl_Alloc(sizeof(ChannelData));
 
 	data->info = info;
 	data->info->refCount++;
@@ -277,7 +277,7 @@ Tk_InitConsoleChannels(
     }
 
     if (doOut) {
-	ChannelData *data = (ChannelData *)ckalloc(sizeof(ChannelData));
+	ChannelData *data = (ChannelData *)Tcl_Alloc(sizeof(ChannelData));
 
 	data->info = info;
 	data->info->refCount++;
@@ -294,7 +294,7 @@ Tk_InitConsoleChannels(
     }
 
     if (doErr) {
-	ChannelData *data = (ChannelData *)ckalloc(sizeof(ChannelData));
+	ChannelData *data = (ChannelData *)Tcl_Alloc(sizeof(ChannelData));
 
 	data->info = info;
 	data->info->refCount++;
@@ -376,7 +376,7 @@ Tk_CreateConsoleWindow(
 	     * New ConsoleInfo for a new console window.
 	     */
 
-	    info = (ConsoleInfo *)ckalloc(sizeof(ConsoleInfo));
+	    info = (ConsoleInfo *)Tcl_Alloc(sizeof(ConsoleInfo));
 	    info->refCount = 0;
 
 	    /*
@@ -406,7 +406,7 @@ Tk_CreateConsoleWindow(
 	    }
 	}
     } else {
-	info = (ConsoleInfo *)ckalloc(sizeof(ConsoleInfo));
+	info = (ConsoleInfo *)Tcl_Alloc(sizeof(ConsoleInfo));
 	info->refCount = 0;
     }
 
@@ -456,7 +456,7 @@ Tk_CreateConsoleWindow(
 	    Tk_DeleteEventHandler(mainWindow, StructureNotifyMask,
 		    ConsoleEventProc, info);
 	    if (info->refCount-- <= 1) {
-		ckfree(info);
+		Tcl_Free(info);
 	    }
 	}
 	goto error;
@@ -597,10 +597,10 @@ ConsoleClose(
 	     * Assuming the Tcl_Interp * fields must already be NULL.
 	     */
 
-	    ckfree(info);
+	    Tcl_Free(info);
 	}
     }
-    ckfree(data);
+    Tcl_Free(data);
     return 0;
 }
 
@@ -892,7 +892,7 @@ InterpDeleteProc(
 	info->consoleInterp = NULL;
     }
     if (info->refCount-- <= 1) {
-	ckfree(info);
+	Tcl_Free(info);
     }
 }
 
@@ -923,7 +923,7 @@ ConsoleDeleteProc(
 	Tcl_DeleteInterp(info->consoleInterp);
     }
     if (info->refCount-- <= 1) {
-	ckfree(info);
+	Tcl_Free(info);
     }
 }
 
@@ -960,7 +960,7 @@ ConsoleEventProc(
 	}
 
 	if (info->refCount-- <= 1) {
-	    ckfree(info);
+	    Tcl_Free(info);
 	}
     }
 }

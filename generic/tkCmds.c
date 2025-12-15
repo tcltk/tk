@@ -292,7 +292,7 @@ TkBindEventProc(
 	 */
 
 	if (winPtr->numTags > MAX_OBJS) {
-	    objPtr = (void **)ckalloc(winPtr->numTags * sizeof(void *));
+	    objPtr = (void **)Tcl_Alloc(winPtr->numTags * sizeof(void *));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
 	    p = (char *)winPtr->tagPtr[i];
@@ -326,7 +326,7 @@ TkBindEventProc(
     Tk_BindEvent(winPtr->mainPtr->bindingTable, eventPtr, (Tk_Window) winPtr,
 	    count, objPtr);
     if (objPtr != objects) {
-	ckfree(objPtr);
+	Tcl_Free(objPtr);
     }
 }
 
@@ -406,7 +406,7 @@ Tk_BindtagsObjCmd(
     }
 
     winPtr->numTags = length;
-    winPtr->tagPtr = (void **)ckalloc(length * sizeof(void *));
+    winPtr->tagPtr = (void **)Tcl_Alloc(length * sizeof(void *));
     for (i = 0; i < length; i++) {
 	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
@@ -419,7 +419,7 @@ Tk_BindtagsObjCmd(
 	     * is one.
 	     */
 
-	    copy = (char *)ckalloc(strlen(p) + 1);
+	    copy = (char *)Tcl_Alloc(strlen(p) + 1);
 	    strcpy(copy, p);
 	    winPtr->tagPtr[i] = copy;
 	} else {
@@ -462,10 +462,10 @@ TkFreeBindingTags(
 	     * have to be freed.
 	     */
 
-	    ckfree(p);
+	    Tcl_Free(p);
 	}
     }
-    ckfree(winPtr->tagPtr);
+    Tcl_Free(winPtr->tagPtr);
     winPtr->numTags = 0;
     winPtr->tagPtr = NULL;
 }
@@ -765,8 +765,8 @@ AttribtableCmd(
      * Create an attribute table command of the name cmdName
      */
 
-    tblData = (AttribTableData *)ckalloc(sizeof(AttribTableData));
-    tblData->tablePtr = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+    tblData = (AttribTableData *)Tcl_Alloc(sizeof(AttribTableData));
+    tblData->tablePtr = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(tblData->tablePtr, TCL_ONE_WORD_KEYS);
 
     Tcl_CreateObjCommand2(interp, cmdName,
@@ -842,7 +842,7 @@ AttribTableProc(
 	     * Create an AttribTableValue struct and insert it into the table.
 	     */
 
-	    value = (AttribTableValue *)ckalloc(sizeof(AttribTableValue));
+	    value = (AttribTableValue *)Tcl_Alloc(sizeof(AttribTableValue));
 	    value->tkwin = tkwin;
 	    value->tablePtr = tblData->tablePtr;
 	    value->dictPtr = Tcl_NewDictObj();
@@ -964,7 +964,7 @@ AttribTableProc(
 
 	Tcl_DecrRefCount(value->dictPtr);
 	Tcl_DeleteHashEntry(entryPtr);
-	ckfree(value);
+	Tcl_Free(value);
 	break;
     }
 
@@ -1090,7 +1090,7 @@ AttribTableDeleteProc(
 
 	Tcl_DecrRefCount(value->dictPtr);
 	Tcl_DeleteHashEntry(entryPtr);
-	ckfree(value);
+	Tcl_Free(value);
     }
 
     /*
@@ -1098,8 +1098,8 @@ AttribTableDeleteProc(
      */
 
     Tcl_DeleteHashTable(tblData->tablePtr);
-    ckfree(tblData->tablePtr);
-    ckfree(tblData);
+    Tcl_Free(tblData->tablePtr);
+    Tcl_Free(tblData);
 }
 
 /*
@@ -1129,7 +1129,7 @@ AttribTableDestroyHandler(
 
     Tcl_DecrRefCount(value->dictPtr);
     Tcl_DeleteHashEntry(entryPtr);
-    ckfree(value);
+    Tcl_Free(value);
 }
 
 int

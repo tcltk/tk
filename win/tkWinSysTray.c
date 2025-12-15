@@ -166,7 +166,7 @@ DrawANDMask(
     }
 
     /* Need a bitmap header for the mono mask */
-    lpbi = Tcl_Alloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
+    lpbi = (LPBITMAPINFO)Tcl_Alloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
     lpbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     lpbi->bmiHeader.biWidth = lpIcon->lpbi->bmiHeader.biWidth;
     lpbi->bmiHeader.biHeight = lpIcon->lpbi->bmiHeader.biHeight / 2;
@@ -1209,7 +1209,7 @@ WinIcoInit(
 	return TCL_ERROR;
     }
 
-    icoInterpPtr = (IcoInterpInfo*) Tcl_Alloc(sizeof(IcoInterpInfo));
+    icoInterpPtr = (IcoInterpInfo*)Tcl_Alloc(sizeof(IcoInterpInfo));
     icoInterpPtr->counter = 0;
     icoInterpPtr->firstIcoPtr = NULL;
     icoInterpPtr->hwnd = CreateTaskbarHandlerWindow();
