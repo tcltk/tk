@@ -44,7 +44,7 @@ static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
 
     if (clip_mask == NULL) {
-	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
+	clip_mask = (TkpClipMask *)Tcl_Alloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
     } else if (clip_mask->type == TKP_CLIP_REGION) {
 	TkDestroyRegion(clip_mask->value.region);
@@ -78,7 +78,7 @@ static void FreeClipMask(GC gc) {
     if (clip_mask->type == TKP_CLIP_REGION) {
 	TkDestroyRegion(clip_mask->value.region);
     }
-    ckfree(clip_mask);
+    Tcl_Free(clip_mask);
     gc->clip_mask = None;
 }
 
@@ -114,7 +114,7 @@ XCreateGC(
      * initialization.
      */
 
-    gp = (GC)ckalloc(sizeof(XGCValuesWithDash));
+    gp = (GC)Tcl_Alloc(sizeof(XGCValuesWithDash));
 
 #define InitField(name,maskbit,default) \
 	(gp->name = (mask & (maskbit)) ? values->name : (default))
@@ -234,7 +234,7 @@ int XFreeGC(
 {
     if (gc != NULL) {
 	FreeClipMask(gc);
-	ckfree(gc);
+	Tcl_Free(gc);
     }
     return Success;
 }

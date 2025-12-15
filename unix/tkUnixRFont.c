@@ -313,7 +313,7 @@ InitFont(
     Tk_ErrorHandler handler;
 
     if (!fontPtr) {
-	fontPtr = (UnixFtFont *)ckalloc(sizeof(UnixFtFont));
+	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -325,13 +325,13 @@ InitFont(
 
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
-    fontPtr->faces = (UnixFtFace *)ckalloc(set->nfont * sizeof(UnixFtFace));
+    fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
 
     /*
@@ -370,7 +370,7 @@ InitFont(
     if ((ftFont == NULL) || errorFlag) {
 	Tk_DeleteErrorHandler(handler);
 	FinishedWithFont(fontPtr);
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
@@ -379,7 +379,7 @@ InitFont(
     Tk_DeleteErrorHandler(handler);
     if (errorFlag) {
 	FinishedWithFont(fontPtr);
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
 
@@ -413,7 +413,7 @@ InitFont(
 	Tk_DeleteErrorHandler(handler);
 	if (errorFlag) {
 	    FinishedWithFont(fontPtr);
-	    ckfree(fontPtr);
+	    Tcl_Free(fontPtr);
 	    return NULL;
 	}
 	fPtr->underlineHeight = iWidth / 3;
@@ -457,7 +457,7 @@ FinishedWithFont(
 	}
     }
     if (fontPtr->faces) {
-	ckfree(fontPtr->faces);
+	Tcl_Free(fontPtr->faces);
     }
     if (fontPtr->pattern) {
 	FcPatternDestroy(fontPtr->pattern);

@@ -164,7 +164,7 @@ Tk_SetAppName(
     if (riPtr == NULL) {
 	LPUNKNOWN *objPtr;
 
-	riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
+	riPtr = (RegisteredInterp *)Tcl_Alloc(sizeof(RegisteredInterp));
 	memset(riPtr, 0, sizeof(RegisteredInterp));
 	riPtr->interp = interp;
 
@@ -511,7 +511,7 @@ CmdDeleteProc(
 
     Tcl_Release(clientData);
 
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /*
@@ -894,7 +894,7 @@ TkWinSend_QueueCommand(
 
     TRACE("SendQueueCommand()\n");
 
-    evPtr = (SendEvent *)ckalloc(sizeof(SendEvent));
+    evPtr = (SendEvent *)Tcl_Alloc(sizeof(SendEvent));
     evPtr->header.proc = SendEventProc;
     evPtr->header.nextPtr = NULL;
     evPtr->interp = interp;

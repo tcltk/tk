@@ -126,7 +126,7 @@ ServicesEventProc(
 	[generalpasteboard declareTypes:[NSArray arrayWithObjects:pboardType, nil]
 				  owner:nil];
 	[generalpasteboard setString:pboardString forType:pboardType];
-	event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+	event = (Tcl_Event *)Tcl_Alloc(sizeof(Tcl_Event));
 	event->proc = ServicesEventProc;
 	Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     }
