@@ -338,20 +338,20 @@ TkGetCursorByName(
     }
 
     if (cursor != None) {
-	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)Tcl_Alloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
 
   cleanup:
     if (argv != NULL) {
-	ckfree(argv);
+	Tcl_Free(argv);
     }
     return (TkCursor *) cursorPtr;
 
   badString:
     if (argv) {
-	ckfree(argv);
+	Tcl_Free(argv);
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad cursor spec \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", (char *)NULL);
@@ -433,7 +433,7 @@ CreateCursorFromTableOrFile(
 	}
 
 	source = XCreateBitmapFromData(display, drawable, data, (unsigned)width, (unsigned)height);
-	ckfree(data);
+	Tcl_Free(data);
     } else {
 	if (TkReadBitmapFile(display, drawable, &argv[0][1],
 		(unsigned *) &width, (unsigned *) &height,
@@ -533,7 +533,7 @@ CreateCursorFromTableOrFile(
 	mask = XCreateBitmapFromData(display, drawable, data, (unsigned)maskWidth,
 		(unsigned)maskHeight);
 
-	ckfree(data);
+	Tcl_Free(data);
     } else {
 	if (TkReadBitmapFile(display, drawable, argv[1],
 		(unsigned int *) &maskWidth, (unsigned int *) &maskHeight,
@@ -608,7 +608,7 @@ TkCreateCursorFromData(
     Tk_FreePixmap(display, maskPixmap);
 
     if (cursor != None) {
-	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)Tcl_Alloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }

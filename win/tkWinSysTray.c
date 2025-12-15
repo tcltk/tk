@@ -166,7 +166,7 @@ DrawANDMask(
     }
 
     /* Need a bitmap header for the mono mask */
-    lpbi = ckalloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
+    lpbi = Tcl_Alloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
     lpbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     lpbi->bmiHeader.biWidth = lpIcon->lpbi->bmiHeader.biWidth;
     lpbi->bmiHeader.biHeight = lpIcon->lpbi->bmiHeader.biHeight / 2;
@@ -199,7 +199,7 @@ DrawANDMask(
 	    lpIcon->lpAND, lpbi, DIB_RGB_COLORS);
 
     /* clean up */
-    ckfree(lpbi);
+    Tcl_Free(lpbi);
 
     return TRUE;
 }
@@ -284,7 +284,7 @@ NewIcon(
 {
     IcoInfo *icoPtr;
 
-    icoPtr = (IcoInfo *)ckalloc(sizeof(IcoInfo));
+    icoPtr = (IcoInfo *)Tcl_Alloc(sizeof(IcoInfo));
     memset(icoPtr, 0, sizeof(IcoInfo));
     icoPtr->id = ++icoInterpPtr->counter;
     icoPtr->hIcon = hIcon;
@@ -338,7 +338,7 @@ FreeIcoPtr(
     if (icoPtr->taskbar_command != NULL) {
 	Tcl_DecrRefCount(icoPtr->taskbar_command);
     }
-    ckfree(icoPtr);
+    Tcl_Free(icoPtr);
 }
 
 /*
@@ -569,12 +569,12 @@ TaskbarExpandPercents(
 	    char *newspace;
 	    ptrdiff_t dist = dst - after;
 	    size_t alloclen = ALLOCLEN;
-	    newspace = (char *)ckalloc(alloclen);
+	    newspace = (char *)Tcl_Alloc(alloclen);
 	    if (dist>0) {
 		memcpy(newspace, after, dist);
 	    }
 	    if (after && *aftersize) {
-		ckfree(after);
+		Tcl_Free(after);
 	    }
 	    *aftersize = alloclen;
 	    after = newspace;
@@ -703,7 +703,7 @@ TaskbarEval(
 	}
     }
     if (expanded != evalspace) {
-	ckfree(expanded);
+	Tcl_Free(expanded);
     }
 }
 
@@ -890,7 +890,7 @@ WinIcoDestroy(
 	    nextPtr = icoPtr->nextPtr;
 	FreeIcoPtr(icoInterpPtr, icoPtr);
     }
-    ckfree(icoInterpPtr);
+    Tcl_Free(icoInterpPtr);
 }
 
 /*
@@ -1209,7 +1209,7 @@ WinIcoInit(
 	return TCL_ERROR;
     }
 
-    icoInterpPtr = (IcoInterpInfo*) ckalloc(sizeof(IcoInterpInfo));
+    icoInterpPtr = (IcoInterpInfo*) Tcl_Alloc(sizeof(IcoInterpInfo));
     icoInterpPtr->counter = 0;
     icoInterpPtr->firstIcoPtr = NULL;
     icoInterpPtr->hwnd = CreateTaskbarHandlerWindow();

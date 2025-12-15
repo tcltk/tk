@@ -517,11 +517,11 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree(dispPtr->modKeyCodes);
+	Tcl_Free(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = (KeyCode *)ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)Tcl_Alloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -544,10 +544,10 @@ TkpInitKeymapInfo(
 	     */
 
 	    arraySize *= 2;
-	    newKey = (KeyCode *)ckalloc(arraySize * sizeof(KeyCode));
+	    newKey = (KeyCode *)Tcl_Alloc(arraySize * sizeof(KeyCode));
 	    memcpy(newKey, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
-	    ckfree(dispPtr->modKeyCodes);
+	    Tcl_Free(dispPtr->modKeyCodes);
 	    dispPtr->modKeyCodes = newKey;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
@@ -673,10 +673,10 @@ XModifierKeymap	*
 XGetModifierMapping(
     TCL_UNUSED(Display *))
 {
-    XModifierKeymap *map = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
+    XModifierKeymap *map = (XModifierKeymap *)Tcl_Alloc(sizeof(XModifierKeymap));
 
     map->max_keypermod = 1;
-    map->modifiermap = (KeyCode *)ckalloc(sizeof(KeyCode) * 8);
+    map->modifiermap = (KeyCode *)Tcl_Alloc(sizeof(KeyCode) * 8);
     map->modifiermap[ShiftMapIndex] = VK_SHIFT;
     map->modifiermap[LockMapIndex] = VK_CAPITAL;
     map->modifiermap[ControlMapIndex] = VK_CONTROL;
@@ -708,8 +708,8 @@ int
 XFreeModifiermap(
     XModifierKeymap *modmap)
 {
-    ckfree(modmap->modifiermap);
-    ckfree(modmap);
+    Tcl_Free(modmap->modifiermap);
+    Tcl_Free(modmap);
     return Success;
 }
 

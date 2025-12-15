@@ -98,9 +98,9 @@ static void initColorTable()
     for (key in [systemColorList allKeys]) {
 	NSUInteger length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
-	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
+	entry = (SystemColorDatum *)Tcl_Alloc(sizeof(SystemColorDatum));
 	bzero(entry, sizeof(SystemColorDatum));
-	name = (char *)ckalloc(length + 1);
+	name = (char *)Tcl_Alloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = (char)toupper(UCHAR(name[0]));
 	if (!strcmp(name, "WindowBackgroundColor")) {
@@ -130,7 +130,7 @@ static void initColorTable()
      */
 
     numSystemColors = index;
-    systemColorIndex = (SystemColorDatum **)ckalloc(numSystemColors * sizeof(SystemColorDatum *));
+    systemColorIndex = (SystemColorDatum **)Tcl_Alloc(numSystemColors * sizeof(SystemColorDatum *));
     for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
 	 hPtr = Tcl_NextHashEntry(&search)) {
 	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
@@ -717,7 +717,7 @@ TkpGetColor(
 	return NULL;
     }
 
-    tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
+    tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
     tkColPtr->colormap = colormap;
     tkColPtr->color = color;
     return tkColPtr;
@@ -751,7 +751,7 @@ TkpGetColorByValue(
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
-    TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;

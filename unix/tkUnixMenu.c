@@ -1382,7 +1382,7 @@ SetHelpMenu(
 		&& (cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin != NULL)
 		&& (menuPtr->mainMenuPtr->tkwin != NULL)) {
 	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
-	    char *helpMenuName = (char *)ckalloc(strlen(Tk_PathName(
+	    char *helpMenuName = (char *)Tcl_Alloc(strlen(Tk_PathName(
 		    mainMenuPtr->tkwin)) + strlen(".help") + 1);
 
 	    strcpy(helpMenuName, Tk_PathName(mainMenuPtr->tkwin));
@@ -1393,7 +1393,7 @@ SetHelpMenu(
 	    } else {
 		cascadeEntryPtr->entryFlags &= ~ENTRY_HELP_MENU;
 	    }
-	    ckfree(helpMenuName);
+	    Tcl_Free(helpMenuName);
 	}
     }
 }
