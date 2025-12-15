@@ -28,8 +28,8 @@
  * MyList listHdr = TK_DLIST_LIST_INITIALIZER; // or MyList_Init(&listHdr)
  * MyListEntry *p;
  * int i = 0;
- * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
- * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)Tcl_Alloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)Tcl_Alloc(sizeof(MyListEntry)));
  * TK_DLIST_FOREACH(p, &listHdr) { p->value = i++; }
  * // ...
  * MyList_RemoveHead(&listHdr);

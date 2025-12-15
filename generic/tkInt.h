@@ -907,7 +907,7 @@ typedef struct {
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
-				 * allocated with ckalloc(). */
+				 * allocated with Tcl_Alloc(). */
     Tcl_Size charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
@@ -1043,18 +1043,13 @@ typedef struct TkpClipMask {
  * be properly registered with Tcl:
  */
 
-typedef struct {
-    Tcl_ObjType objType;
-    size_t version;
-} TkObjType;
-
-MODULE_SCOPE const TkObjType tkBorderObjType;
-MODULE_SCOPE const TkObjType tkBitmapObjType;
-MODULE_SCOPE const TkObjType tkColorObjType;
-MODULE_SCOPE const TkObjType tkCursorObjType;
-MODULE_SCOPE const TkObjType tkFontObjType;
-MODULE_SCOPE const TkObjType tkStateKeyObjType;
-MODULE_SCOPE const TkObjType tkTextIndexType;
+MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
+MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
+MODULE_SCOPE const Tcl_ObjType tkColorObjType;
+MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
+MODULE_SCOPE const Tcl_ObjType tkFontObjType;
+MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
+MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the

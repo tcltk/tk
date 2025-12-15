@@ -1253,7 +1253,7 @@ static void TkDoDefaultAction(
 	return;
     }
     event->header.proc = ActionEventProc;
-    event->command = Tcl_Alloc(strlen(action) + 1);
+    event->command = (char *)Tcl_Alloc(strlen(action) + 1);
     strcpy(event->command, action);
     event->win = win;
 
