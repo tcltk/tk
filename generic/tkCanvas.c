@@ -1134,98 +1134,100 @@ CanvasWidgetCmd(
 	    }
 	}
 	break;
-
-        case CANV_ITEMID_CONFIGURE_MULTI:
-            if (objc < 3) {
-                Tcl_WrongNumArgs(interp, 2, objv, "?id -option value ...? ?id -option value ...?");
-                result = TCL_ERROR;
-                goto done;
-            }
-
-            for (Tcl_Size i = 2; i < objc; i += 3) {
-                if (i + 2 >= objc) {
-                    Tcl_WrongNumArgs(interp, 2, objv, "?id -option value ...? ?id -option value ...?");
-                    result = TCL_ERROR;
-                    goto done;
-                }
-
-                const char *id_str = Tcl_GetString(objv[i]);
-                if (id_str && *id_str && isdigit(UCHAR(*id_str))) {
-                    long int item_id = strtoul(id_str, NULL, 0);
-                    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, INT2PTR(item_id));
-                    
-                    if (entryPtr != NULL) {
-                        itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
-                        if (itemPtr != NULL) {
-                            EventuallyRedrawItem(canvasPtr, itemPtr);
-                            Tcl_Obj *configArgs[] = {objv[i+1], objv[i+2]};
-                            result = ItemConfigure(canvasPtr, itemPtr, 2, configArgs);
-                            if (result != TCL_OK) {
-                                goto done;
-                            }
-                            EventuallyRedrawItem(canvasPtr, itemPtr);
-                        }
-                    }
-                }
-            }
-            break;
-        case CANV_ITEMID_CONFIGURE:
-            if (objc < 3) {
-                Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?-option value ...?");
-                result = TCL_ERROR;
-                goto done;
-            }
-            
-            const char *l_id_str = Tcl_GetString(objv[2]);
-            if (l_id_str && *l_id_str && isdigit(UCHAR(*l_id_str))) {
-                long int item_id = strtoul(l_id_str, NULL, 0);
-                Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, INT2PTR(item_id));
-                
-                if (entryPtr != NULL) {
-                    itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
-                    if (itemPtr != NULL) {
-                        if (objc == 3) {
-                            result = ItemConfigInfo(canvasPtr, itemPtr, NULL);
-                        } else if (objc == 4) {
-                            result = ItemConfigInfo(canvasPtr, itemPtr, objv[3]);
-                        } else {
-                            EventuallyRedrawItem(canvasPtr, itemPtr);
-                            result = ItemConfigure(canvasPtr, itemPtr, objc-3, objv+3);
-                            EventuallyRedrawItem(canvasPtr, itemPtr);
-                        }
-                    }
-                }
-            }
-            break;
-        case CANV_COORDSID:
-            if (objc < 3) {
-                Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?x y x y ...?");
-                result = TCL_ERROR;
-                goto done;
-            }
-            
-            /* Récupère l'élément à partir de son ID numérique */
-            const char *id_str = Tcl_GetString(objv[2]);
-            if (id_str && *id_str && isdigit(UCHAR(*id_str))) {
-                long int item_id = strtoul(id_str, NULL, 0);
-                Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, INT2PTR(item_id));
-                
-                if (entryPtr != NULL) {
-                    itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
-                    if (itemPtr != NULL) {
-                        if (objc != 3) {
-                            EventuallyRedrawItem(canvasPtr, itemPtr);
-                        }
-                        
-                        result = ItemCoords(canvasPtr, itemPtr, objc-3, objv+3);
-                        
-                        if (objc != 3) {
-                            EventuallyRedrawItem(canvasPtr, itemPtr);
-                        }
-                    }
-                }
-            }
-            break;
+	case CANV_ITEMID_CONFIGURE_MULTI: {
+		if (objc < 3) {
+			Tcl_WrongNumArgs(interp, 2, objv, "?id -option value ...? ?id -option value ...?");
+			result = TCL_ERROR;
+			goto done;
+		}
+		
+		for (Tcl_Size i = 2; i < objc; i += 3) {
+			if (i + 2 >= objc) {
+				Tcl_WrongNumArgs(interp, 2, objv, "?id -option value ...? ?id -option value ...?");
+				result = TCL_ERROR;
+				goto done;
+			}
+			
+			const char *id_str = Tcl_GetString(objv[i]);
+			if (id_str && *id_str && isdigit(UCHAR(*id_str))) {
+				long int item_id = strtoul(id_str, NULL, 0);
+				Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, INT2PTR(item_id));
+				
+				if (entryPtr != NULL) {
+					itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
+					if (itemPtr != NULL) {
+						EventuallyRedrawItem(canvasPtr, itemPtr);
+						Tcl_Obj *configArgs[] = {objv[i+1], objv[i+2]};
+						result = ItemConfigure(canvasPtr, itemPtr, 2, configArgs);
+						if (result != TCL_OK) {
+							goto done;
+						}
+						EventuallyRedrawItem(canvasPtr, itemPtr);
+					}
+				}
+			}
+		}
+		break;
+	}
+	case CANV_ITEMID_CONFIGURE: {
+		if (objc < 3) {
+			Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?-option value ...?");
+			result = TCL_ERROR;
+			goto done;
+		}
+		
+		const char *l_id_str = Tcl_GetString(objv[2]);
+		if (l_id_str && *l_id_str && isdigit(UCHAR(*l_id_str))) {
+			long int item_id = strtoul(l_id_str, NULL, 0);
+			Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, INT2PTR(item_id));
+			
+			if (entryPtr != NULL) {
+				itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
+				if (itemPtr != NULL) {
+					if (objc == 3) {
+						result = ItemConfigInfo(canvasPtr, itemPtr, NULL);
+					} else if (objc == 4) {
+						result = ItemConfigInfo(canvasPtr, itemPtr, objv[3]);
+					} else {
+						EventuallyRedrawItem(canvasPtr, itemPtr);
+						result = ItemConfigure(canvasPtr, itemPtr, objc-3, objv+3);
+						EventuallyRedrawItem(canvasPtr, itemPtr);
+					}
+				}
+			}
+		}
+		break;
+	}
+	case CANV_COORDSID: {
+		if (objc < 3) {
+			Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?x y x y ...?");
+			result = TCL_ERROR;
+			goto done;
+		}
+		
+		/* Récupère l'élément à partir de son ID numérique */
+		const char *id_str = Tcl_GetString(objv[2]);
+		if (id_str && *id_str && isdigit(UCHAR(*id_str))) {
+			long int item_id = strtoul(id_str, NULL, 0);
+			Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, INT2PTR(item_id));
+			
+			if (entryPtr != NULL) {
+				itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
+				if (itemPtr != NULL) {
+					if (objc != 3) {
+						EventuallyRedrawItem(canvasPtr, itemPtr);
+					}
+					
+					result = ItemCoords(canvasPtr, itemPtr, objc-3, objv+3);
+					
+					if (objc != 3) {
+						EventuallyRedrawItem(canvasPtr, itemPtr);
+					}
+				}
+			}
+		}
+		break;
+	}
     case CANV_IMOVE: {
 	double ignored;
 	Tcl_Obj *tmpObj;
