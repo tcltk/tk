@@ -561,7 +561,7 @@ TkCanvasDashPrintProc(
     if (i < 0) {
 	i = -i;
 	*freeProcPtr = TCL_DYNAMIC;
-	buffer = (char *)ckalloc((Tcl_Size)i + 1);
+	buffer = (char *)ckalloc((size_t)i + 1);
 	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
 	memcpy(buffer, p, (unsigned int) i);
 	buffer[i] = 0;
@@ -570,7 +570,7 @@ TkCanvasDashPrintProc(
 	*freeProcPtr = NULL;
 	return "";
     }
-    buffer = (char *)ckalloc(4 * (Tcl_Size)i);
+    buffer = (char *)ckalloc(4 * (size_t)i);
     *freeProcPtr = TCL_DYNAMIC;
 
     p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
