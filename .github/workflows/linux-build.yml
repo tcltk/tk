@@ -24,7 +24,7 @@ jobs:
           - "clang"
         config:
           - ""
-          - "CFLAGS=-DTK_NO_DEPRECATED=1"
+          - "CFLAGS=-DTK_NO_DEPRECATED=1 -DTCL_NO_DEPRECATED=1"
           - "--disable-shared"
           - "--disable-xft"
           - "--disable-xss"
@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: attemptgetstring
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -142,7 +142,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: attemptgetstring
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |

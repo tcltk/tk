@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: attemptgetstring
           path: tcl
       - name: Prepare
         run: |
@@ -91,7 +91,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: attemptgetstring
           path: tcl
       - name: Checkout create-dmg
         uses: actions/checkout@v6
@@ -182,7 +182,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: attemptgetstring
           path: tcl
       - name: Prepare
         run: |
