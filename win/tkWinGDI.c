@@ -3054,7 +3054,7 @@ static int GdiMakePen(
     if (dashstyle != 0 && dashstyledata != 0) {
 	const char *cp;
 	size_t i;
-	char *dup = (char *) Tcl_Alloc(strlen(dashstyledata) + 1);
+	char *dup = (char *)Tcl_Alloc(strlen(dashstyledata) + 1);
 	strcpy(dup, dashstyledata);
 	/* DEBUG. */
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(

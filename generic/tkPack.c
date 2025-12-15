@@ -970,7 +970,7 @@ GetPacker(
     if (!isNew) {
 	return (Packer *)Tcl_GetHashValue(hPtr);
     }
-    packPtr = (Packer *)ckalloc(sizeof(Packer));
+    packPtr = (Packer *)Tcl_Alloc(sizeof(Packer));
     packPtr->tkwin = tkwin;
     packPtr->containerPtr = NULL;
     packPtr->nextPtr = NULL;
@@ -1081,7 +1081,7 @@ DestroyPacker(
     if (packPtr->flags & REQUESTED_REPACK) {
 	Tcl_CancelIdleCall(ArrangePacking, packPtr);
     }
-    ckfree(packPtr);
+    Tcl_Free(packPtr);
 }
 
 /*

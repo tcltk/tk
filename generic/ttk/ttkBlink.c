@@ -41,7 +41,7 @@ static void CursorManagerDeleteProc(
     if (cm->timer) {
 	Tcl_DeleteTimerHandler(cm->timer);
     }
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /* GetCursorManager --
@@ -56,7 +56,7 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
     int intValue;
 
     if (!cm) {
-	cm = (CursorManager *)ckalloc(sizeof(*cm));
+	cm = (CursorManager *)Tcl_Alloc(sizeof(*cm));
 	cm->timer = 0;
 	cm->owner = 0;
 	cm->onTime = DEF_CURSOR_ON_TIME;

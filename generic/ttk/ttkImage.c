@@ -83,7 +83,7 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     Tcl_Size objc;
     Tcl_Obj **objv;
 
-    imageSpec = (Ttk_ImageSpec *)ckalloc(sizeof(*imageSpec));
+    imageSpec = (Ttk_ImageSpec *)Tcl_Alloc(sizeof(*imageSpec));
     imageSpec->baseImage = 0;
     imageSpec->mapCount = 0;
     imageSpec->states = 0;
@@ -106,8 +106,8 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     }
 
     n = (objc - 1) / 2;
-    imageSpec->states = (Ttk_StateSpec *)ckalloc(n * sizeof(Ttk_StateSpec));
-    imageSpec->images = (Tk_Image *)ckalloc(n * sizeof(Tk_Image));
+    imageSpec->states = (Ttk_StateSpec *)Tcl_Alloc(n * sizeof(Ttk_StateSpec));
+    imageSpec->images = (Tk_Image *)Tcl_Alloc(n * sizeof(Tk_Image));
 
     /* Get base image:
     */
@@ -156,10 +156,10 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
     }
 
     if (imageSpec->baseImage) { Tk_FreeImage(imageSpec->baseImage); }
-    if (imageSpec->states) { ckfree(imageSpec->states); }
-    if (imageSpec->images) { ckfree(imageSpec->images); }
+    if (imageSpec->states) { Tcl_Free(imageSpec->states); }
+    if (imageSpec->images) { Tcl_Free(imageSpec->images); }
 
-    ckfree(imageSpec);
+    Tcl_Free(imageSpec);
 }
 
 /* TtkSelectImage --
@@ -284,7 +284,7 @@ static void FreeImageData(void *clientData)
 #ifdef TILE_07_COMPAT
     if (imageData->imageMap)	{ Tcl_DecrRefCount(imageData->imageMap); }
 #endif
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 static void ImageElementSize(
@@ -390,7 +390,7 @@ Ttk_CreateImageElement(
 	return TCL_ERROR;
     }
 
-    imageData = (ImageData *)ckalloc(sizeof(*imageData));
+    imageData = (ImageData *)Tcl_Alloc(sizeof(*imageData));
     imageData->imageSpec = imageSpec;
     imageData->minWidth = imageData->minHeight = -1;
     imageData->sticky = TTK_FILL_BOTH;

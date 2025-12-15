@@ -1415,7 +1415,7 @@ static TkRootAccessible *CreateRootAccessible(
 	Tcl_SetResult(interp, "Memory allocation failed for TkRootAccessible", TCL_STATIC);
 	return NULL;
     }
-    tkAccessible->pathName = Tcl_Alloc(strlen(pathName) + 1);
+    tkAccessible->pathName = (char *)Tcl_Alloc(strlen(pathName) + 1);
     if (!tkAccessible->pathName) {
 	Tcl_Free(tkAccessible);
 	Tcl_SetResult(interp, "Memory allocation failed for pathName", TCL_STATIC);

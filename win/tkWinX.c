@@ -498,7 +498,7 @@ TkpOpenDisplay(
     display = XkbOpenDisplay(display_name, NULL, NULL, NULL, NULL, NULL);
     TkWinDisplayChanged(display);
 
-    tsdPtr->winDisplay =(TkDisplay *) Tcl_Alloc(sizeof(TkDisplay));
+    tsdPtr->winDisplay =(TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
     memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
@@ -1598,7 +1598,7 @@ HandleIMEComposition(
     n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	WCHAR *buff = (WCHAR *) Tcl_Alloc(n);
+	WCHAR *buff = (WCHAR *)Tcl_Alloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;

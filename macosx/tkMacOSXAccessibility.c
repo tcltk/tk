@@ -856,7 +856,7 @@ void TkAccessibility_CleanupHashTables(void)
     Tcl_DeleteHashTable(ElementToTkWindowTable);
 
     Tcl_Free(TkWindowToElementTable);
-     *)ElementToTkWindowTable);
+    Tcl_Free(ElementToTkWindowTable);
 
     TkWindowToElementTable = NULL;
     ElementToTkWindowTable = NULL;
