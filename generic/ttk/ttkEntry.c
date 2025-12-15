@@ -2025,6 +2025,17 @@ static void
 SpinboxInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Spinbox *sb = (Spinbox *)recordPtr;
+
+    /*
+     * Create the WideSpinbox.uparrow and WideSpinbox.downarrow
+     * elements for the Wide.TSpinbox style if necessary
+     */
+    int code = Tcl_EvalEx(interp, "ttk::wideSpinbox::CondMakeElements",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+
     TtkTrackElementState(&sb->core);
     EntryInitialize(interp, recordPtr);
 }
