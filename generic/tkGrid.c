@@ -332,7 +332,7 @@ int
 Tk_GridObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -992,7 +992,7 @@ GridRowColumnConfigureCommand(
     Tk_Window container, content;
     Gridder *containerPtr, *contentPtr;
     SlotInfo *slotPtr = NULL;
-    int slot;			/* the column or row number */
+    Tcl_Size slot;		/* the column or row number */
     int slotType;		/* COLUMN or ROW */
     int size;			/* the configuration value */
     Tcl_Size lObjc;		/* Number of items in index list */
@@ -1049,7 +1049,7 @@ GridRowColumnConfigureCommand(
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
+	if (Tcl_GetSizeIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
 		    " (when retrieving options only integer indices are "
 		    "allowed)", NULL);
@@ -1131,7 +1131,7 @@ GridRowColumnConfigureCommand(
     for (j = 0; j < lObjc; j++) {
 	int allContent = 0;
 
-	if (Tcl_GetIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
+	if (Tcl_GetSizeIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
 	    first = slot;
 	    last = slot;
 	    contentPtr = NULL;
@@ -1382,8 +1382,8 @@ GridContentCommand(
     Tk_Window container;
     Gridder *containerPtr;		/* container grid record */
     Gridder *contentPtr;
-    int i, value, index;
-    int row = -1, column = -1;
+    Tcl_Size i;
+    int row = -1, column = -1, value, index;
     static const char *const optionStrings[] = {
 	"-column", "-row", NULL
     };
@@ -2983,9 +2983,8 @@ ConfigureContent(
     Gridder *contentPtr;
     Tk_Window other, content, parent, ancestor;
     TkWindow *container;
-    int i, j, tmp;
-    int numWindows;
-    int width;
+    Tcl_Size i, j, numWindows;
+    int width, tmp;
     int defaultRow = -1;
     int defaultColumn = 0;	/* Default column number */
     int defaultColumnSpan = 1;	/* Default number of columns */
