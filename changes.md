@@ -20,6 +20,7 @@ to the userbase.
  - [SVG rendering: Correctly paint stroke leftover path](https://core.tcl-lang.org/tk/tktview/c51a56)
  - [Error in ::tk::spinbox::ButtonUp on MacOS](https://core.tcl-lang.org/tk/tktview/fe5549])
  - [crash in text sync subcommand](https://core.tcl-lang.org/tk/tktview/8e4fb0])
+ - [Random semantic color values on macOS 10.15.6 Catalina](https://core.tcl-lang.org/tk/tktview/544140])
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
