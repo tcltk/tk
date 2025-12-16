@@ -8333,4 +8333,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-12-16 (bug) [fe5549] Error in ::tk::spinbox::ButtonUp on MacOS (SVIDevelopment)
 
+2025-12-16 (bug) [8e4fb0] crash in text sync subcommand (emiliano)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details

@@ -1547,6 +1547,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (textPtr->afterSyncCmd) {
+	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
 	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	}
 	textPtr->afterSyncCmd = NULL;
