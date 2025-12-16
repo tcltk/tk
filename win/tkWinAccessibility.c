@@ -374,10 +374,10 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(
 	    }
 	}
 	if (tkAccessible->pathName) {
-	    ckfree(tkAccessible->pathName);
+	    Tcl_Free(tkAccessible->pathName);
 	    tkAccessible->pathName = NULL;
 	}
-	ckfree(tkAccessible);
+	Tcl_Free(tkAccessible);
 	TkGlobalUnlock();
     }
     return count;
@@ -510,17 +510,17 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
 	HWND hwnd = Tk_GetHWND(Tk_WindowId(tkAccessible->toplevel));
 	int wlen = GetWindowTextLengthW(hwnd);
-	WCHAR *wbuf = (WCHAR *)ckalloc((wlen + 1) * sizeof(WCHAR));
+	WCHAR *wbuf = (WCHAR *)Tcl_Alloc((wlen + 1) * sizeof(WCHAR));
 
 	/* Read the actual UTF-16 title. */
 	if (!GetWindowTextW(hwnd, wbuf, wlen + 1)) {
-	    ckfree((char *)wbuf);
+	    Tcl_Free(wbuf);
 	    *pszName = SysAllocString(L"");
 	    TkGlobalUnlock();
 	    return S_OK;
 	}
 	*pszName = SysAllocString(wbuf);
-	ckfree((char *)wbuf);
+	Tcl_Free(wbuf);
 	TkGlobalUnlock();
 	return S_OK;
     }
@@ -1184,7 +1184,7 @@ static int ActionEventProc(
     if (!interp) return 1;
     int code = Tcl_EvalEx(interp, event->command, -1, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) return TCL_ERROR;
-    ckfree(event->command);
+    Tcl_Free(event->command);
     return 1;
 }
 
@@ -1246,14 +1246,14 @@ static void TkDoDefaultAction(
 	mainThreadResult = E_INVALIDARG;
 	return;
     }
-    event = (ActionEvent *)ckalloc(sizeof(ActionEvent));
+    event = (ActionEvent *)Tcl_Alloc(sizeof(ActionEvent));
     if (event == NULL) {
 	TkGlobalUnlock();
 	mainThreadResult = E_OUTOFMEMORY;
 	return;
     }
     event->header.proc = ActionEventProc;
-    event->command = ckalloc(strlen(action) + 1);
+    event->command = (char *)Tcl_Alloc(strlen(action) + 1);
     strcpy(event->command, action);
     event->win = win;
 
@@ -1410,14 +1410,14 @@ static TkRootAccessible *CreateRootAccessible(
 	return NULL;
     }
     Tk_MakeWindowExist(win);
-    TkRootAccessible *tkAccessible = (TkRootAccessible *)ckalloc(sizeof(TkRootAccessible));
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)Tcl_Alloc(sizeof(TkRootAccessible));
     if (!tkAccessible) {
 	Tcl_SetResult(interp, "Memory allocation failed for TkRootAccessible", TCL_STATIC);
 	return NULL;
     }
-    tkAccessible->pathName = ckalloc(strlen(pathName) + 1);
+    tkAccessible->pathName = (char *)Tcl_Alloc(strlen(pathName) + 1);
     if (!tkAccessible->pathName) {
-	ckfree(tkAccessible);
+	Tcl_Free(tkAccessible);
 	Tcl_SetResult(interp, "Memory allocation failed for pathName", TCL_STATIC);
 	return NULL;
     }
@@ -1516,7 +1516,7 @@ static Tcl_HashTable *GetChildIdTableForToplevel(
     TkGlobalLock();
     entry = Tcl_CreateHashEntry(toplevelChildTables, toplevel, &newEntry);
     if (newEntry) {
-	childIdTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	childIdTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	if (!childIdTable) {
 	    TkGlobalUnlock();
 	    return NULL;
@@ -1549,7 +1549,7 @@ Tk_Window GetToplevelOfWidget(
 void InitTkAccessibleTable(void)
 {
     if (!tkAccessibleTableInitialized) {
-	tkAccessibleTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	tkAccessibleTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	if (tkAccessibleTable) {
 	    Tcl_InitHashTable(tkAccessibleTable, TCL_ONE_WORD_KEYS);
 	    tkAccessibleTableInitialized = true;
@@ -1561,7 +1561,7 @@ void InitTkAccessibleTable(void)
 void InitChildIdTable(void)
 {
     if (!toplevelChildTables) {
-	toplevelChildTables = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	toplevelChildTables = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	if (toplevelChildTables) {
 	    Tcl_InitHashTable(toplevelChildTables, TCL_ONE_WORD_KEYS);
 	}
@@ -1583,7 +1583,7 @@ void ClearChildIdTableForToplevel(
 	Tcl_DeleteHashEntry(childEntry);
     }
     Tcl_DeleteHashEntry(entry); /* Remove toplevel entry to prevent memory leaks. */
-    ckfree(childIdTable);
+    Tcl_Free(childIdTable);
     TkGlobalUnlock();
 }
 
@@ -1680,7 +1680,7 @@ int ExecuteOnMainThreadSync(
     case 5: event->func(5, event->args); break;
     }
     SetEvent(event->doneEvent);
-    ckfree(event);
+    Tcl_Free(event);
     return 1;
 }
 
@@ -1700,14 +1700,14 @@ void RunOnMainThreadSync(
 	func(num_args, args);
 	return;
     }
-    MainThreadSyncEvent *event = (MainThreadSyncEvent *)ckalloc(sizeof(MainThreadSyncEvent));
+    MainThreadSyncEvent *event = (MainThreadSyncEvent *)Tcl_Alloc(sizeof(MainThreadSyncEvent));
     if (!event) return;
     event->header.proc = ExecuteOnMainThreadSync;
     event->func = func;
     event->num_args = num_args;
     event->doneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (!event->doneEvent) {
-	ckfree(event);
+	Tcl_Free(event);
 	return;
     }
     va_list ap;
@@ -1721,7 +1721,7 @@ void RunOnMainThreadSync(
     DWORD result = WaitForSingleObject(event->doneEvent, 500);
     if (result == WAIT_TIMEOUT) {
 	CloseHandle(event->doneEvent);
-	ckfree(event);
+	Tcl_Free(event);
     }
     CloseHandle(event->doneEvent);
 }

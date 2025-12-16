@@ -404,7 +404,7 @@ Tk_PanedWindowObjCmd(
 	 * easy access to it in the future.
 	 */
 
-	pwOpts = (OptionTables *)ckalloc(sizeof(OptionTables));
+	pwOpts = (OptionTables *)Tcl_Alloc(sizeof(OptionTables));
 
 	/*
 	 * Set up an exit handler to free the optionTables struct.
@@ -427,7 +427,7 @@ Tk_PanedWindowObjCmd(
      * Allocate and initialize the widget record.
      */
 
-    pwPtr = (PanedWindow *)ckalloc(sizeof(PanedWindow));
+    pwPtr = (PanedWindow *)Tcl_Alloc(sizeof(PanedWindow));
     memset((void *)pwPtr, 0, (sizeof(PanedWindow)));
     pwPtr->tkwin = tkwin;
     pwPtr->display = Tk_Display(tkwin);
@@ -893,7 +893,7 @@ ConfigurePanes(
      * structures may already have existed, some may be new.
      */
 
-    inserts = (Pane **)ckalloc(sizeof(Pane *) * (firstOptionArg - 2));
+    inserts = (Pane **)Tcl_Alloc(sizeof(Pane *) * (firstOptionArg - 2));
     insertIndex = 0;
 
     /*
@@ -960,7 +960,7 @@ ConfigurePanes(
 	 */
 	int minSize;
 
-	panePtr = (Pane *)ckalloc(sizeof(Pane));
+	panePtr = (Pane *)Tcl_Alloc(sizeof(Pane));
 	memset(panePtr, 0, sizeof(Pane));
 	Tk_InitOptions(interp, panePtr, pwPtr->paneOpts,
 		pwPtr->tkwin);
@@ -998,7 +998,7 @@ ConfigurePanes(
      */
 
     i = sizeof(Pane *) * (pwPtr->numPanes + numNewPanes);
-    newPanes = (Pane **)ckalloc(i);
+    newPanes = (Pane **)Tcl_Alloc(i);
     memset(newPanes, 0, i);
     if (index == -1) {
 	/*
@@ -1045,8 +1045,8 @@ ConfigurePanes(
      * Make the new panes array the paned window's pane array, and clean up.
      */
 
-    ckfree(pwPtr->panes);
-    ckfree(inserts);
+    Tcl_Free(pwPtr->panes);
+    Tcl_Free(inserts);
     pwPtr->panes = newPanes;
 
     /*
@@ -1586,11 +1586,11 @@ DestroyPanedWindow(
 	Tk_ManageGeometry(pwPtr->panes[i]->tkwin, NULL, NULL);
 	Tk_FreeConfigOptions(pwPtr->panes[i], pwPtr->paneOpts,
 		pwPtr->tkwin);
-	ckfree(pwPtr->panes[i]);
+	Tcl_Free(pwPtr->panes[i]);
 	pwPtr->panes[i] = NULL;
     }
     if (pwPtr->panes) {
-	ckfree(pwPtr->panes);
+	Tcl_Free(pwPtr->panes);
     }
 
     /*
@@ -1691,7 +1691,7 @@ PanedWindowLostPaneProc(
 	    PaneStructureProc, panePtr);
     Tk_UnmapWindow(panePtr->tkwin);
     panePtr->tkwin = NULL;
-    ckfree(panePtr);
+    Tcl_Free(panePtr);
     ComputeGeometry(pwPtr);
 }
 
@@ -2184,7 +2184,7 @@ PaneStructureProc(
     if (eventPtr->type == DestroyNotify) {
 	Unlink(panePtr);
 	panePtr->tkwin = NULL;
-	ckfree(panePtr);
+	Tcl_Free(panePtr);
 	ComputeGeometry(pwPtr);
     }
 }
@@ -2405,7 +2405,7 @@ DestroyOptionTables(
     void *clientData,	/* Pointer to the OptionTables struct */
     TCL_UNUSED(Tcl_Interp *))		/* Pointer to the calling interp */
 {
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /*

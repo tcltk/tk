@@ -174,7 +174,7 @@ TkpGetColor(
 	    && FindSystemColor(name+6, &color, &index))
 	    || TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), name,
 		    &color)) {
-	winColPtr = (WinColor *)ckalloc(sizeof(WinColor));
+	winColPtr = (WinColor *)Tcl_Alloc(sizeof(WinColor));
 	winColPtr->info.color = color;
 	winColPtr->index = index;
 
@@ -212,7 +212,7 @@ TkpGetColorByValue(
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
-    WinColor *tkColPtr = (WinColor *)ckalloc(sizeof(WinColor));
+    WinColor *tkColPtr = (WinColor *)Tcl_Alloc(sizeof(WinColor));
 
     tkColPtr->info.color.red = colorPtr->red;
     tkColPtr->info.color.green = colorPtr->green;
@@ -437,10 +437,10 @@ XFreeColors(
 		GetPaletteEntries(cmap->palette, index, 1, &entry);
 		if (cref == RGB(entry.peRed, entry.peGreen, entry.peBlue)) {
 		    count = cmap->size - index;
-		    entries = (PALETTEENTRY *)ckalloc(sizeof(PALETTEENTRY) * count);
+		    entries = (PALETTEENTRY *)Tcl_Alloc(sizeof(PALETTEENTRY) * count);
 		    GetPaletteEntries(cmap->palette, index+1, count, entries);
 		    SetPaletteEntries(cmap->palette, index, count, entries);
-		    ckfree(entries);
+		    Tcl_Free(entries);
 		    cmap->size--;
 		} else {
 		    Tcl_Panic("Tried to free a color that isn't allocated");
@@ -497,7 +497,7 @@ XCreateColormap(
     logPalettePtr->palNumEntries = (WORD)GetPaletteEntries(sysPal, 0, 256,
 	    logPalettePtr->palPalEntry);
 
-    cmap = (TkWinColormap *)ckalloc(sizeof(TkWinColormap));
+    cmap = (TkWinColormap *)Tcl_Alloc(sizeof(TkWinColormap));
     cmap->size = logPalettePtr->palNumEntries;
     cmap->stale = 0;
     cmap->palette = CreatePalette(logPalettePtr);
@@ -545,7 +545,7 @@ XFreeColormap(
 	Tcl_Panic("Unable to free colormap, palette is still selected");
     }
     Tcl_DeleteHashTable(&cmap->refCounts);
-    ckfree(cmap);
+    Tcl_Free(cmap);
     return Success;
 }
 

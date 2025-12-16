@@ -74,8 +74,6 @@ typedef struct NameRegistry {
 				 * none. See format description above; this is
 				 * *not* terminated by the first null
 				 * character. Dynamically allocated. */
-    int allocedByX;		/* Non-zero means must free property with
-				 * XFree; zero means use ckfree. */
 } NameRegistry;
 
 static bool initialized = false;	/* A flag to denote if we have initialized
@@ -282,9 +280,9 @@ Tk_SetAppName(
      * We have found a unique name. Now add it to the registry.
      */
 
-    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
+    riPtr = (RegisteredInterp *)Tcl_Alloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
-    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
+    riPtr->name = (char *)Tcl_Alloc(strlen(actualName) + 1);
     riPtr->nextPtr = interpListPtr;
     interpListPtr = riPtr;
     strcpy(riPtr->name, actualName);

@@ -532,7 +532,7 @@ XGetModifierMapping(
 {
     XModifierKeymap *modmap;
 
-    modmap = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
+    modmap = (XModifierKeymap *)Tcl_Alloc(sizeof(XModifierKeymap));
     modmap->max_keypermod = 0;
     modmap->modifiermap = NULL;
     return modmap;
@@ -560,9 +560,9 @@ XFreeModifiermap(
     XModifierKeymap *modmap)
 {
     if (modmap->modifiermap != NULL) {
-	ckfree(modmap->modifiermap);
+	Tcl_Free(modmap->modifiermap);
     }
-    ckfree(modmap);
+    Tcl_Free(modmap);
     return Success;
 }
 
@@ -903,10 +903,10 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree(dispPtr->modKeyCodes);
+	Tcl_Free(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = NUM_MOD_KEYCODES;
-    dispPtr->modKeyCodes = (KeyCode *)ckalloc(NUM_MOD_KEYCODES * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)Tcl_Alloc(NUM_MOD_KEYCODES * sizeof(KeyCode));
     for (int i = 0; i < NUM_MOD_KEYCODES; i++) {
 	dispPtr->modKeyCodes[i] = XKeysymToKeycode(NULL, modKeyArray[i]);
     }

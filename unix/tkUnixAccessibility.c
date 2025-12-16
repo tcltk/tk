@@ -247,7 +247,7 @@ static void Atk_Event_Check(
     }
 
     if (g_main_context_pending(acc_context)) {
-	Tcl_Event *event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+	Tcl_Event *event = (Tcl_Event *)Tcl_Alloc(sizeof(Tcl_Event));
 	event->proc = Atk_Event_Run;
 	Tcl_QueueEvent(event, TCL_QUEUE_TAIL);
     }

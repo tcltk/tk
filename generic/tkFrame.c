@@ -612,10 +612,10 @@ TkCreateFrame(
      */
 
     if (type == TYPE_LABELFRAME) {
-	framePtr = (Frame *)ckalloc(sizeof(Labelframe));
+	framePtr = (Frame *)Tcl_Alloc(sizeof(Labelframe));
 	memset(framePtr, 0, sizeof(Labelframe));
     } else {
-	framePtr = (Frame *)ckalloc(sizeof(Frame));
+	framePtr = (Frame *)Tcl_Alloc(sizeof(Frame));
 	memset(framePtr, 0, sizeof(Frame));
     }
     framePtr->tkwin = newWin;
@@ -845,7 +845,7 @@ DestroyFrame(
     if (framePtr->bgimg) {
 	Tk_FreeImage(framePtr->bgimg);
     }
-    ckfree(framePtr);
+    Tcl_Free(framePtr);
 }
 
 /*

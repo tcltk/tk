@@ -34,7 +34,7 @@ TkMenuButton *
 TkpCreateMenuButton(
     TCL_UNUSED(Tk_Window))
 {
-    return (TkMenuButton *)ckalloc(sizeof(TkMenuButton));
+    return (TkMenuButton *)Tcl_Alloc(sizeof(TkMenuButton));
 }
 
 /*

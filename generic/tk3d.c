@@ -46,14 +46,13 @@ static void		ShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
  * is set.
  */
 
-const TkObjType tkBorderObjType = {
-    {"border",			/* name */
+const Tcl_ObjType tkBorderObjType = {
+    "border",			/* name */
     FreeBorderObjProc,		/* freeIntRepProc */
     DupBorderObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
-    0
+    TCL_OBJTYPE_V0
 };
 
 /*
@@ -89,7 +88,7 @@ Tk_Alloc3DBorderFromObj(
 {
     TkBorder *borderPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType.objType) {
+    if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
     borderPtr = (TkBorder *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -460,7 +459,7 @@ Tk_Free3DBorder(
 	prevPtr->nextPtr = borderPtr->nextPtr;
     }
     if (borderPtr->objRefCount == 0) {
-	ckfree(borderPtr);
+	Tcl_Free(borderPtr);
     }
 }
 
@@ -532,7 +531,7 @@ FreeBorderObj(
 	borderPtr->objRefCount--;
 	if ((borderPtr->objRefCount == 0)
 		&& (borderPtr->resourceRefCount == 0)) {
-	    ckfree(borderPtr);
+	    Tcl_Free(borderPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }
@@ -1251,7 +1250,7 @@ Tk_Get3DBorderFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType.objType) {
+    if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
 
@@ -1343,7 +1342,7 @@ InitBorderObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkBorderObjType.objType;
+    objPtr->typePtr = &tkBorderObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 

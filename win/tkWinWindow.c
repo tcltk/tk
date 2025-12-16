@@ -66,7 +66,7 @@ Tk_AttachHWND(
      */
 
     if (twdPtr == NULL) {
-	twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
+	twdPtr = (TkWinDrawable *)Tcl_Alloc(sizeof(TkWinDrawable));
 	twdPtr->type = TWD_WINDOW;
 	twdPtr->window.winPtr = (TkWindow *) tkwin;
     } else if (twdPtr->window.handle != NULL) {
@@ -320,7 +320,7 @@ XDestroyWindow(
 	Tcl_DeleteHashEntry(entryPtr);
     }
 
-    ckfree(twdPtr);
+    Tcl_Free(twdPtr);
 
     /*
      * Don't bother destroying the window if we are going to destroy the
