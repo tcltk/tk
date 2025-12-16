@@ -1531,6 +1531,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (textPtr->afterSyncCmd) {
+	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
 	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	}
 	textPtr->afterSyncCmd = NULL;
@@ -6377,7 +6378,7 @@ SearchCore(
 				 */
 
 				if (thisOffset - lastNonOverlap >=
-					lastBackwardsMatchOffset + matchLength + 1){
+					lastBackwardsMatchOffset + matchLength){
 				    /*
 				     * Totally encloses previous match, so
 				     * forget the previous match.
