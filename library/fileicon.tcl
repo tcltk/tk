@@ -9213,12 +9213,7 @@ image create photo ::tk::icons::word -format {svg -scaletoheight 32} -data {
 proc ::tk::fileicon {filename size} {
 
     if {[tk windowingsystem] eq "win32"} {
-	
-	if {$size eq 16} {  
-	    return [::tk::fileicon::_getwinicon $filename]
-	} else {
-	    return [::tk::fileicon::_getwinicon -large $filename]
-	}
+		return [::tk::fileicon::_getwinicon $filename $size]
     }
     if {[tk windowingsystem] eq "aqua"} {
 	return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]

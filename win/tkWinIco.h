@@ -14,6 +14,8 @@
 #include "tkWin.h"
 #include <windows.h>
 #include <shellapi.h>
+#include <shlobj.h>
+#include <commoncontrols.h>
 
 /*
  * These structures represent the contents of a icon, in terms of its image

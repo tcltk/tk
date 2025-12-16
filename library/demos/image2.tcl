@@ -69,7 +69,7 @@ proc loadImage {w x y} {
     }
 	
 	set filename [file nativename [file normalize $file]]
-	set icon [tk fileicon $filename 32]
+	set icon [tk fileicon $filename 48]
 	$w.label configure -image $icon -compound top
 }
 
