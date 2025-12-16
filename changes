@@ -8297,38 +8297,40 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 - Released 8.6.17, Aug 15, 2025 - https://core.tcl-lang.org/tk/ for details
 
-2025-08-14 (bug) [07cfc9]: Aqua: Non-menubar menu invisible if toplevel is on another display (chavez).
+2025-08-14 (bug) [07cfc9] Aqua: Non-menubar menu invisible if toplevel is on another display (chavez).
 
 2025-08-15 (bug) [a91b24] Correct macOSVersion on future macOS for older SDK builds (chavez)
 
-2025-08-15 (bug) [d93d96]: Pointer arithmetic with NULL in ImgGetPhoto() (chavez)
+2025-08-15 (bug) [d93d96] Pointer arithmetic with NULL in ImgGetPhoto() (chavez)
 
-2025-09-13 (bug) [6c4795]: leak in XCreateBitmapFromData() in ImgGetPhoto() (chavez)
+2025-09-13 (bug) [6c4795] leak in XCreateBitmapFromData() in ImgGetPhoto() (chavez)
 
-2025-09-18 (new) [04e173]: Add support for Copy/Cut/Paste keys in X11 (nijtmans)
+2025-09-18 (new) [04e173] Add support for Copy/Cut/Paste keys in X11 (nijtmans)
 
-2025-10-01 (bug) [95da0f]: tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP (chavez)
+2025-10-01 (bug) [95da0f] tkpWinRopModes[GXnoop] is R2_NOT, should be R2_NOP (chavez)
 
-2025-10-28 (bug) [2c240b]: Install pkg-config file (oscarfv)
+2025-10-28 (bug) [2c240b] Install pkg-config file (oscarfv)
 
-2025-10-28 (bug) [816739]: Install man pages (oscarfv)
+2025-10-28 (bug) [816739] Install man pages (oscarfv)
 
-2025-10-28 (bug) [8b725d]: Missing border pixels in alt theme on Windows (nemethi)
+2025-10-28 (bug) [8b725d] Missing border pixels in alt theme on Windows (nemethi)
 
-2025-10-31 (bug) [265ff2]: Artifacts in a few themed widgets on x11 and aqua (nemethi)
+2025-10-31 (bug) [265ff2] Artifacts in a few themed widgets on x11 and aqua (nemethi)
 
-2025-11-01 (bug) [a80e5f]: Core dump Tk_GetFontFromObj (werner)
+2025-11-01 (bug) [a80e5f] Core dump Tk_GetFontFromObj (werner)
 
-2025-11-03 (bug) [6051a9]: MS-Win canvas arcs with to small extend are drawn as 360 degrees (chavez,vogel)
+2025-11-03 (bug) [6051a9] MS-Win canvas arcs with to small extend are drawn as 360 degrees (chavez,vogel)
 
-2025-11-03 (bug) [c23f79]: Xft text is unusable for 32-bit visual when default visual is 24-bit (werner)
+2025-11-03 (bug) [c23f79] Xft text is unusable for 32-bit visual when default visual is 24-bit (werner)
 
-2025-11-04 (bug) [6da885]: Aqua: avoid use-after-free during RefocusGrabWindow() (chavez)
+2025-11-04 (bug) [6da885] Aqua: avoid use-after-free during RefocusGrabWindow() (chavez)
 
-2025-11-12 (bug) [44b34c]: Fix crash on exit due to faulty asm code in DllMain (fuentes)
+2025-11-12 (bug) [44b34c] Fix crash on exit due to faulty asm code in DllMain (fuentes)
 
-2025-11-24 (patch) [4d2baa]: Improve the look of the ttk::spinbox widgets in the built-in themes (nemethi)
+2025-11-24 (patch) [4d2baa] Improve the look of the ttk::spinbox widgets in the built-in themes (nemethi)
 
-2025-12-15 (bug) [edd1a6]: Lack of bounds checking in argument parsing for some widgets
+2025-12-15 (bug) [edd1a6] Lack of bounds checking in argument parsing for some widgets
+
+2025-12-16 (bug) [fe5549] Error in ::tk::spinbox::ButtonUp on MacOS (SVIDevelopment)
 
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
