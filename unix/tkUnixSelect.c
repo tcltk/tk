@@ -468,7 +468,7 @@ TkSelPropProc(
 			formatType, 32, PropModeReplace,
 			(unsigned char *) propPtr, numItems);
 		if (propPtr != NULL) {
-		    ckfree(propPtr);
+		    Tcl_Free(propPtr);
 		}
 	    }
 	    Tk_DeleteErrorHandler(errorHandler);
@@ -649,14 +649,14 @@ TkSelEventProc(
 	    }
 
 	    if (propInfo[numItems] != '\0') {
-		propData = (char *)ckalloc(numItems + 1);
+		propData = (char *)Tcl_Alloc(numItems + 1);
 		strcpy(propData, propInfo);
 		propData[numItems] = '\0';
 	    }
 	    retrPtr->result = retrPtr->proc(retrPtr->clientData,
 		    retrPtr->interp, propData);
 	    if (propData != propInfo) {
-		ckfree(propData);
+		Tcl_Free(propData);
 	    }
 
 	} else if (type == dispPtr->incrAtom) {
@@ -893,7 +893,7 @@ ConvertSelection(
      * below).
      */
 
-    incr.converts = (ConvertInfo *)ckalloc(incr.numConversions * sizeof(ConvertInfo));
+    incr.converts = (ConvertInfo *)Tcl_Alloc(incr.numConversions * sizeof(ConvertInfo));
     incr.numIncrs = 0;
     for (i = 0; i < incr.numConversions; i++) {
 	Atom target, property, type;
@@ -1015,7 +1015,7 @@ ConvertSelection(
 	    XChangeProperty(reply.xsel.display, reply.xsel.requestor,
 		    property, type, format, PropModeReplace,
 		    (unsigned char *) propPtr, numItems);
-	    ckfree(propPtr);
+	    Tcl_Free(propPtr);
 	}
     }
 
@@ -1085,7 +1085,7 @@ ConvertSelection(
      * All done. Cleanup and return.
      */
 
-    ckfree(incr.converts);
+    Tcl_Free(incr.converts);
     if (multiple) {
 	XFree(incr.multAtoms);
     }
@@ -1436,7 +1436,7 @@ SelCvtToX(
     if (Tcl_SplitList(NULL, string, &numFields, &field) != TCL_OK) {
 	return NULL;
     }
-    propPtr = (long *)ckalloc(numFields * sizeof(long));
+    propPtr = (long *)Tcl_Alloc(numFields * sizeof(long));
 
     /*
      * Convert the fields one-by-one.
@@ -1461,7 +1461,7 @@ SelCvtToX(
      * Release the parsed list.
      */
 
-    ckfree(field);
+    Tcl_Free(field);
     *numLongsPtr = i;
     return propPtr;
 }

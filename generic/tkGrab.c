@@ -1362,7 +1362,7 @@ QueueGrabWindowChange(
 {
     NewGrabWinEvent *grabEvPtr;
 
-    grabEvPtr = (NewGrabWinEvent *)ckalloc(sizeof(NewGrabWinEvent));
+    grabEvPtr = (NewGrabWinEvent *)Tcl_Alloc(sizeof(NewGrabWinEvent));
     grabEvPtr->header.proc = GrabWinEventProc;
     grabEvPtr->dispPtr = dispPtr;
     if (grabWinPtr == NULL) {

@@ -182,7 +182,7 @@ ImgBmapCreate(
     void **clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
-    BitmapModel *modelPtr = (BitmapModel *)ckalloc(sizeof(BitmapModel));
+    BitmapModel *modelPtr = (BitmapModel *)Tcl_Alloc(sizeof(BitmapModel));
 
     modelPtr->tkModel = model;
     modelPtr->interp = interp;
@@ -249,7 +249,7 @@ ImgBmapConfigureModel(
      */
 
     if (modelPtr->data != NULL) {
-	ckfree(modelPtr->data);
+	Tcl_Free(modelPtr->data);
 	modelPtr->data = NULL;
     }
     if ((modelPtr->fileString != NULL) || (modelPtr->dataString != NULL)) {
@@ -261,7 +261,7 @@ ImgBmapConfigureModel(
 	}
     }
     if (modelPtr->maskData != NULL) {
-	ckfree(modelPtr->maskData);
+	Tcl_Free(modelPtr->maskData);
 	modelPtr->maskData = NULL;
     }
     if ((modelPtr->maskFileString != NULL)
@@ -281,7 +281,7 @@ ImgBmapConfigureModel(
 	}
 	if ((maskWidth != modelPtr->width)
 		|| (maskHeight != modelPtr->height)) {
-	    ckfree(modelPtr->maskData);
+	    Tcl_Free(modelPtr->maskData);
 	    modelPtr->maskData = NULL;
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
 		    "bitmap and mask have different sizes", TCL_INDEX_NONE));
@@ -608,7 +608,7 @@ TkGetBitmapData(
 	goto error;
     }
     numBytes = ((width+7)/8) * height;
-    data = (char *)ckalloc(numBytes);
+    data = (char *)Tcl_Alloc(numBytes);
     for (p = data; numBytes > 0; p++, numBytes--) {
 	if (NextBitmapWord(&pi) != TCL_OK) {
 	    goto error;
@@ -641,7 +641,7 @@ TkGetBitmapData(
 
   errorCleanup:
     if (data != NULL) {
-	ckfree(data);
+	Tcl_Free(data);
     }
     if (pi.chan != NULL) {
 	Tcl_Close(NULL, pi.chan);
@@ -828,7 +828,7 @@ ImgBmapGet(
      * the image.
      */
 
-    instancePtr = (BitmapInstance *)ckalloc(sizeof(BitmapInstance));
+    instancePtr = (BitmapInstance *)Tcl_Alloc(sizeof(BitmapInstance));
     instancePtr->refCount = 1;
     instancePtr->modelPtr = modelPtr;
     instancePtr->tkwin = tkwin;
@@ -972,7 +972,7 @@ ImgBmapFree(
 	}
 	prevPtr->nextPtr = instancePtr->nextPtr;
     }
-    ckfree(instancePtr);
+    Tcl_Free(instancePtr);
 }
 
 /*
@@ -1007,13 +1007,13 @@ ImgBmapDelete(
 	Tcl_DeleteCommandFromToken(modelPtr->interp, modelPtr->imageCmd);
     }
     if (modelPtr->data != NULL) {
-	ckfree(modelPtr->data);
+	Tcl_Free(modelPtr->data);
     }
     if (modelPtr->maskData != NULL) {
-	ckfree(modelPtr->maskData);
+	Tcl_Free(modelPtr->maskData);
     }
     Tk_FreeOptions(configSpecs, modelPtr, NULL, 0);
-    ckfree(modelPtr);
+    Tcl_Free(modelPtr);
 }
 
 /*
