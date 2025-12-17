@@ -422,12 +422,16 @@ static void RefocusGrabWindow(void *data) {
      */
 
     for (NSWindow *win in [NSApp windows]) {
+	if (! [win isKindOfClass:[TKWindow class]]) {
+	    continue;
+	}
 	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
 	if (!winPtr || !winPtr->wmInfoPtr) {
 	    continue;
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    [win orderOut:NSApp];
+	    [[win contentView] setOnScreen:NO];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_Preserve(winPtr);
@@ -1037,8 +1041,18 @@ ExposeRestrictProc(
 }
 - (void) updateLayer {
     CGContextRef context = self.tkLayerBitmapContext;
-    static bool initialized = false;
     if (context && ![NSApp tkWillExit]) {
+	/*
+	 * If this ContentView is off screen, Run any pending widget
+	 * display procs before updating the layer.
+	 */
+
+	if (! [self onScreen]) {
+	    printf("Running event loop\n");
+	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	    [self setOnScreen:YES];
+	}
+
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
@@ -1051,16 +1065,6 @@ ExposeRestrictProc(
 	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
-
-	/*
-	 * Run any pending widget display procs as part of the update.
-	 * Without this there are black flashes when a window opens.
-	 */
-
-	if (!initialized) {
-	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	    initialized = true;
-	}
     }
 }
 
