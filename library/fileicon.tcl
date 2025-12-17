@@ -2765,7 +2765,7 @@ image create photo ::tk::icons::executable -format {svg -scaletoheight 32} -data
 </svg>
 }
 
-image create photo ::tk::icons:folder -format {svg -scaletoheight 32} -data {
+image create photo ::tk::icons::folder -format {svg -scaletoheight 32} -data {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
