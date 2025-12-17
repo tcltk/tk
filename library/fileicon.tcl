@@ -9211,94 +9211,131 @@ image create photo ::tk::icons::word -format {svg -scaletoheight 32} -data {
 
 
 proc ::tk::fileicon {filename size} {
-
     if {[tk windowingsystem] eq "win32"} {
-		return [::tk::fileicon::_getwinicon $filename $size]
+        # Snap to closest standard Windows icon size: 16, 32, 48, 256
+        set sizes {16 32 48 256}
+        set newsize [lindex $sizes 0]
+        set mindiff [expr {abs($size - $newsize)}]
+        foreach s $sizes {
+            set diff [expr {abs($size - $s)}]
+            if {$diff < $mindiff} {
+                set mindiff $diff
+                set newsize $s
+            }
+        }
+        return [::tk::fileicon::_getwinicon $filename $newsize]
     }
+
     if {[tk windowingsystem] eq "aqua"} {
-	return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
+        return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
     }
 
     if {[tk windowingsystem] eq "x11"} {
-	if [file isdirectory $filename] {
-	    set img ::tk::icons::folder
-	    $img configure -height $size
-	    return $img
-	}
-	if [file executable $filename] {
-	    set img ::tk::icons::executable
-	    $img configure -height $size
-	    return $img
-	}
-	set file [file extension $filename]
-	if {[lsearch  {.bmp .gif .ico .icns .jpeg .jpg .png .tif .tiff .webp .pdf} $file ] >= 0} {
-	    set img  ::tk::icons::image
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.aac .aiff .mid .midi .mp3 .wav .oga .opus .weba} $file ] >= 0} {
-	    set img ::tk::icons::audio
-	    $img configure -height $size
-	    return $img
-	}
-	if {$file eq ".svg"} {
-	    set img ::tk::icons::drawing
-	    $img configure -height $size
-	    return $img
-	}
-	if {$file eq ".ics"} {
-	    set img ::tk::icons::calendar
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.abw .odt .doc .docx .rtf} $file ] >= 0} {
-	    set img ::tk::icons::word
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.odp .ppt .pptx} $file ] >= 0} {
-	    set img ::tk::icons::presentation
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.csv .ods .xls .xlsx} $file ] >= 0} {
-	    set img ::tk::icons::spreadsheet
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.arc .bz .bz2 .jar .mpkg .rar .tar .zip .tz .tgz .7z} $file ] >= 0} {
-	    set img ::tk::icons::archive
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.css .js .html .htm .epub .json .swf .xhtml .xml} $file ] >= 0} {
-	    set img ::tk::icons::html
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.csh .php .sh .py .pl .tcl .rb	} $file ] >= 0} {
-	    set img ::tk::icons::script
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.bin .db .so .dll .dylib} $file ] >= 0} {
-	    set img  ::tk::icons::binary
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.eot  .otf .ttf .woff .woff2 } $file ] >= 0} {
-	    set img ::tk::icons::font
-	    $img configure -height $size
-	    return $img
-	}
-	if {[lsearch  {.eml .msg .mbox .pst .oft} $file ] >= 0} {
-	    set img ::tk::icons::mail
-	    $img configure -height $size
-	    return $img
-	}
-	set img ::tk::icons::text
-	$img configure -height $size
-	return $img
+        set img [image create photo]
+
+        # Try to load a real system icon
+        set found 0
+        catch {
+            if {[file exists $filename]} {
+                # Get MIME type
+                set mime [string trim [exec xdg-mime query filetype $filename]]
+
+                # Basic fallbacks for generic types
+                array set fallback {
+                    text/plain         text-x-generic
+                    image/*            image-x-generic
+                    audio/*            audio-x-generic
+                    video/*            video-x-generic
+                    application/pdf    application-pdf
+                }
+                if {[info exists fallback($mime)]} {
+                    set iconName $fallback($mime)
+                } else {
+                    set iconName [string map {/ -} $mime]
+                }
+
+                # Search common icon themes and locations
+                set themes {hicolor Adwaita breeze gnome}
+                set bases [list /usr/share/icons ~/.local/share/icons]
+
+                foreach base $bases {
+                    foreach theme $themes {
+                        foreach dir [list \
+                            $base/$theme/${size}x${size}/mimetypes \
+                            $base/$theme/scalable/mimetypes] {
+                            foreach ext {png svg} {
+                                set f $dir/$iconName.$ext
+                                if {[file exists $f]} {
+                                    $img configure -file $f
+                                    set found 1
+                                    break
+                                }
+                            }
+                            if {$found} break
+                        }
+                        if {$found} break
+                    }
+                    if {$found} break
+                }
+
+                # Absolute last resort in hicolor
+                if {!$found} {
+                    foreach ext {png svg} {
+                        set f /usr/share/icons/hicolor/${size}x${size}/mimetypes/application-octet-stream.$ext
+                        if {[file exists $f]} {
+                            $img configure -file $f
+                            set found 1
+                            break
+                        }
+                    }
+                }
+            }
+        }
+
+        # If no system icon found, fall back to built-in Tk icons
+        if {!$found} {
+            if [file isdirectory $filename] {
+                set img ::tk::icons::folder
+            } elseif [file executable $filename] {
+                set img ::tk::icons::executable
+            } else {
+                set ext [string tolower [file extension $filename]]
+
+                if {[lsearch {.bmp .gif .ico .icns .jpeg .jpg .png .tif .tiff .webp .pdf} $ext] >= 0} {
+                    set img ::tk::icons::image
+                } elseif {[lsearch {.aac .aiff .mid .midi .mp3 .wav .oga .opus .weba} $ext] >= 0} {
+                    set img ::tk::icons::audio
+                } elseif {$ext eq ".svg"} {
+                    set img ::tk::icons::drawing
+                } elseif {$ext eq ".ics"} {
+                    set img ::tk::icons::calendar
+                } elseif {[lsearch {.abw .odt .doc .docx .rtf} $ext] >= 0} {
+                    set img ::tk::icons::word
+                } elseif {[lsearch {.odp .ppt .pptx} $ext] >= 0} {
+                    set img ::tk::icons::presentation
+                } elseif {[lsearch {.csv .ods .xls .xlsx} $ext] >= 0} {
+                    set img ::tk::icons::spreadsheet
+                } elseif {[lsearch {.arc .bz .bz2 .jar .mpkg .rar .tar .zip .tz .tgz .7z} $ext] >= 0} {
+                    set img ::tk::icons::archive
+                } elseif {[lsearch {.css .js .html .htm .epub .json .swf .xhtml .xml} $ext] >= 0} {
+                    set img ::tk::icons::html
+                } elseif {[lsearch {.csh .php .sh .py .pl .tcl .rb} $ext] >= 0} {
+                    set img ::tk::icons::script
+                } elseif {[lsearch {.bin .db .so .dll .dylib} $ext] >= 0} {
+                    set img ::tk::icons::binary
+                } elseif {[lsearch {.eot .otf .ttf .woff .woff2} $ext] >= 0} {
+                    set img ::tk::icons::font
+                } elseif {[lsearch {.eml .msg .mbox .pst .oft} $ext] >= 0} {
+                    set img ::tk::icons::mail
+                } else {
+                    set img ::tk::icons::text
+                }
+            }
+        }
+
+        # Resize the chosen image to the requested height.
+        $img configure -height $size
+        return $img
     }
 }
 
