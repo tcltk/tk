@@ -9235,7 +9235,6 @@ proc ::tk::fileicon {filename size} {
 	set found 0
         # If no system icon found, fall back to built-in Tk icons
         if {!$found} {
-	    puts "not found"
             if [file isdirectory $filename] {
                 $img copy ::tk::icons::folder
             } elseif [file executable $filename] {
