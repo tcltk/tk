@@ -9231,69 +9231,11 @@ proc ::tk::fileicon {filename size} {
     }
 
     if {[tk windowingsystem] eq "x11"} {
-        set img [image create photo]
-
-        # Try to load a real system icon
-        set found 0
-        catch {
-            if {[file exists $filename]} {
-                # Get MIME type
-                set mime [string trim [exec xdg-mime query filetype $filename]]
-
-                # Basic fallbacks for generic types
-                array set fallback {
-                    text/plain         text-x-generic
-                    image/*            image-x-generic
-                    audio/*            audio-x-generic
-                    video/*            video-x-generic
-                    application/pdf    application-pdf
-                }
-                if {[info exists fallback($mime)]} {
-                    set iconName $fallback($mime)
-                } else {
-                    set iconName [string map {/ -} $mime]
-                }
-
-                # Search common icon themes and locations
-                set themes {hicolor Adwaita breeze gnome}
-                set bases [list /usr/share/icons ~/.local/share/icons]
-
-                foreach base $bases {
-                    foreach theme $themes {
-                        foreach dir [list \
-                            $base/$theme/${size}x${size}/mimetypes \
-                            $base/$theme/scalable/mimetypes] {
-                            foreach ext {png svg} {
-                                set f $dir/$iconName.$ext
-                                if {[file exists $f]} {
-                                    $img configure -file $f
-                                    set found 1
-                                    break
-                                }
-                            }
-                            if {$found} break
-                        }
-                        if {$found} break
-                    }
-                    if {$found} break
-                }
-
-                # Absolute last resort in hicolor
-                if {!$found} {
-                    foreach ext {png svg} {
-                        set f /usr/share/icons/hicolor/${size}x${size}/mimetypes/application-octet-stream.$ext
-                        if {[file exists $f]} {
-                            $img configure -file $f
-                            set found 1
-                            break
-                        }
-                    }
-                }
-            }
-        }
-
+	set img [image create photo]
+	set found 0
         # If no system icon found, fall back to built-in Tk icons
         if {!$found} {
+	    puts "not found"
             if [file isdirectory $filename] {
                 $img copy ::tk::icons::folder
             } elseif [file executable $filename] {
