@@ -9295,40 +9295,40 @@ proc ::tk::fileicon {filename size} {
         # If no system icon found, fall back to built-in Tk icons
         if {!$found} {
             if [file isdirectory $filename] {
-                set img ::tk::icons::folder
+                $img copy ::tk::icons::folder
             } elseif [file executable $filename] {
-                set img ::tk::icons::executable
+                $img copy::tk::icons::executable
             } else {
                 set ext [string tolower [file extension $filename]]
 
                 if {[lsearch {.bmp .gif .ico .icns .jpeg .jpg .png .tif .tiff .webp .pdf} $ext] >= 0} {
-                    set img ::tk::icons::image
+                    $img copy ::tk::icons::image
                 } elseif {[lsearch {.aac .aiff .mid .midi .mp3 .wav .oga .opus .weba} $ext] >= 0} {
-                    set img ::tk::icons::audio
+                    $img copy ::tk::icons::audio
                 } elseif {$ext eq ".svg"} {
-                    set img ::tk::icons::drawing
+                    $img copy ::tk::icons::drawing
                 } elseif {$ext eq ".ics"} {
-                    set img ::tk::icons::calendar
+                    $img copy ::tk::icons::calendar
                 } elseif {[lsearch {.abw .odt .doc .docx .rtf} $ext] >= 0} {
-                    set img ::tk::icons::word
+                    $img copy ::tk::icons::word
                 } elseif {[lsearch {.odp .ppt .pptx} $ext] >= 0} {
-                    set img ::tk::icons::presentation
+                    $img copy ::tk::icons::presentation
                 } elseif {[lsearch {.csv .ods .xls .xlsx} $ext] >= 0} {
-                    set img ::tk::icons::spreadsheet
+                    $img copy ::tk::icons::spreadsheet
                 } elseif {[lsearch {.arc .bz .bz2 .jar .mpkg .rar .tar .zip .tz .tgz .7z} $ext] >= 0} {
-                    set img ::tk::icons::archive
+                    $img copy ::tk::icons::archive
                 } elseif {[lsearch {.css .js .html .htm .epub .json .swf .xhtml .xml} $ext] >= 0} {
-                    set img ::tk::icons::html
+                    $img copy ::tk::icons::html
                 } elseif {[lsearch {.csh .php .sh .py .pl .tcl .rb} $ext] >= 0} {
-                    set img ::tk::icons::script
+                    $img copy ::tk::icons::script
                 } elseif {[lsearch {.bin .db .so .dll .dylib} $ext] >= 0} {
-                    set img ::tk::icons::binary
+                    $img copy ::tk::icons::binary
                 } elseif {[lsearch {.eot .otf .ttf .woff .woff2} $ext] >= 0} {
-                    set img ::tk::icons::font
+                    $img copy ::tk::icons::font
                 } elseif {[lsearch {.eml .msg .mbox .pst .oft} $ext] >= 0} {
-                    set img ::tk::icons::mail
+                    $img copy ::tk::icons::mail
                 } else {
-                    set img ::tk::icons::text
+                    $img copy ::tk::icons::text
                 }
             }
         }
