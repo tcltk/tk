@@ -420,13 +420,23 @@ proc ::tk::spinbox::ButtonUp {w x y} {
 
     # Priv(relief) may not exist if the ButtonUp is not paired with
     # a preceding ButtonDown
+    #
     if {[info exists Priv(element)] && [info exists Priv(relief)] && \
 	    [string match "button*" $Priv(element)]} {
 	if {[info exists Priv(repeated)] && !$Priv(repeated)} {
 	    $w invoke $Priv(element)
 	}
-	$w configure -$Priv(element)relief $Priv(relief)
-	$w selection element none
+
+	# If the value of the -command option is a nonempty string then
+	# the "$w invoke $Priv(element)" line above triggers an invocation
+	# of that command, which in turn, as a side effect, might set
+	# Priv(element) to "entry" (see bug [fe5549bad8]).  Guard against
+	# such cases by checking the value of Priv(element) again.
+	#
+	if {[string match "button*" $Priv(element)]} {
+	    $w configure -$Priv(element)relief $Priv(relief)
+	    $w selection element none
+	}
     }
 }
 

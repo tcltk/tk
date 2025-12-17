@@ -1531,6 +1531,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (textPtr->afterSyncCmd) {
+	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
 	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	}
 	textPtr->afterSyncCmd = NULL;
@@ -6463,7 +6464,7 @@ SearchCore(
 				 */
 
 				if ((Tcl_Size)thisOffset - lastNonOverlap >=
-					lastBackwardsMatchOffset + matchLength + 1){
+					lastBackwardsMatchOffset + matchLength){
 				    /*
 				     * Totally encloses previous match, so
 				     * forget the previous match.
@@ -6885,7 +6886,7 @@ SetLineStartEnd(
 	internalPtr = NULL;
     }
 
-    if (flags & TK_OPTION_NULL_OK && TkObjIsEmpty(*value)) {
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	int line;

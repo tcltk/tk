@@ -190,8 +190,7 @@ static void		ProxyWindowEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		DisplayProxyWindow(void *clientData);
 static void		PanedWindowWorldChanged(void *instanceData);
-static int		PanedWindowWidgetObjCmd(void *clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc PanedWindowWidgetObjCmd;
 static void		PanedWindowLostPaneProc(void *clientData,
 			    Tk_Window tkwin);
 static void		PanedWindowReqProc(void *clientData,
@@ -2501,7 +2500,7 @@ SetSticky(
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
 
-    if (flags & TK_OPTION_NULL_OK && TkObjIsEmpty(*value)) {
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
 	/*
@@ -3082,8 +3081,9 @@ PanedWindowIdentifyCoords(
     int x, int y)		/* Coordinates of the point to identify. */
 {
     int i, sashHeight, sashWidth, thisx, thisy;
-    int found, isHandle, lpad, rpad, tpad, bpad;
+    int found, lpad, rpad, tpad, bpad;
     int first, last, handleSize, sashPad;
+	bool isHandle;
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);
@@ -3126,7 +3126,7 @@ PanedWindowIdentifyCoords(
     }
 
     GetFirstLastVisiblePane(pwPtr, &first, &last);
-    isHandle = 0;
+    isHandle = false;
     found = -1;
     for (i = 0; i < pwPtr->numPanes - 1; i++) {
 	if (pwPtr->panes[i]->hide || i == last) {
@@ -3148,11 +3148,11 @@ PanedWindowIdentifyCoords(
 		thisy = pwPtr->panes[i]->handley;
 		if (pwPtr->orient == ORIENT_HORIZONTAL) {
 		    if (thisy <= y && y <= (thisy + handleSize)) {
-			isHandle = 1;
+			isHandle = true;
 		    }
 		} else {
 		    if (thisx <= x && x <= (thisx + handleSize)) {
-			isHandle = 1;
+			isHandle = true;
 		    }
 		}
 	    }
