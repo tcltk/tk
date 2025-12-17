@@ -4535,6 +4535,17 @@ WmWithdrawCmd(
 
     TkpWmSetState(winPtr, WithdrawnState);
 
+	/*
+		* Reset firstDisplayDone so idle events will be processed
+		* when the window is deiconified again.
+		*/
+	NSWindow *nsWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
+	if (nsWin) {
+		TKContentView *contentView = [nsWin contentView];
+		if ([contentView isKindOfClass:[TKContentView class]]) {
+			contentView.firstDisplayDone = NO;
+		}
+	}
     /*
      * If this window has a transient, the transient must also be withdrawn.
      */
