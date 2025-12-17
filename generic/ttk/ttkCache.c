@@ -70,7 +70,7 @@ struct Ttk_ResourceCache_ {
  */
 Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *interp)
 {
-    Ttk_ResourceCache cache = (Ttk_ResourceCache)ckalloc(sizeof(*cache));
+    Ttk_ResourceCache cache = (Ttk_ResourceCache)Tcl_Alloc(sizeof(*cache));
 
     cache->tkwin = NULL;	/* initialized later */
     cache->interp = interp;
@@ -104,7 +104,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    Tcl_DecrRefCount(fontObj);
 	}
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	if (cachedPtr) {
 	    TkWindow fakeWin;
 	    Tcl_Obj *fontObj = cachedPtr->objPtr;
@@ -115,7 +115,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    fakeWin.atts.colormap = cachedPtr->colormap;
 	    Tk_FreeFontFromObj((Tk_Window) &fakeWin, fontObj);
 	    Tcl_DecrRefCount(fontObj);
-	    ckfree(cachedPtr);
+	    Tcl_Free(cachedPtr);
 	}
 #endif
 	entryPtr = Tcl_NextHashEntry(&search);
@@ -135,7 +135,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    Tcl_DecrRefCount(colorObj);
 	}
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	if (cachedPtr) {
 	    TkWindow fakeWin;
 	    Tcl_Obj *colorObj = cachedPtr->objPtr;
@@ -146,7 +146,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    fakeWin.atts.colormap = cachedPtr->colormap;
 	    Tk_FreeColorFromObj((Tk_Window) &fakeWin, colorObj);
 	    Tcl_DecrRefCount(colorObj);
-	    ckfree(cachedPtr);
+	    Tcl_Free(cachedPtr);
 	}
 #endif
 	entryPtr = Tcl_NextHashEntry(&search);
@@ -166,7 +166,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    Tcl_DecrRefCount(borderObj);
 	}
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	if (cachedPtr) {
 	    TkWindow fakeWin;
 	    Tcl_Obj *borderObj = cachedPtr->objPtr;
@@ -177,7 +177,7 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    fakeWin.atts.colormap = cachedPtr->colormap;
 	    Tk_Free3DBorderFromObj((Tk_Window) &fakeWin, borderObj);
 	    Tcl_DecrRefCount(borderObj);
-	    ckfree(cachedPtr);
+	    Tcl_Free(cachedPtr);
 	}
 #endif
 	entryPtr = Tcl_NextHashEntry(&search);
@@ -229,7 +229,7 @@ void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
     }
     Tcl_DeleteHashTable(&cache->namedColors);
 
-    ckfree(cache);
+    Tcl_Free(cache);
 }
 
 /*
@@ -351,7 +351,7 @@ static Tcl_Obj *Ttk_Use(
 #if !NEED_EXTRA_INFO
 	return (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
 #else
-	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_GetHashValue(entryPtr);
 	return cachedPtr ? cachedPtr->objPtr : NULL;
 #endif
     }
@@ -363,7 +363,7 @@ static Tcl_Obj *Ttk_Use(
 #if !NEED_EXTRA_INFO
 	Tcl_SetHashValue(entryPtr, cacheObj);
 #else
-	Ttk_Cached *cachedPtr = ckalloc(sizeof(*cachedPtr));
+	Ttk_Cached *cachedPtr = (Ttk_Cached *)Tcl_Alloc(sizeof(*cachedPtr));
 	cachedPtr->objPtr = cacheObj;
 	cachedPtr->display = Tk_Display(tkwin);
 	cachedPtr->screenNum = Tk_ScreenNumber(tkwin);

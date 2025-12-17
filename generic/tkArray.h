@@ -30,7 +30,7 @@
  *     for (i = 0; i < MyArray_Size(arr); ++i) {
  *         Pair *p = MyArray_Get(arr, i);
  *         printf("%d -> %d\n", p->key, p->value);
- *         ckfree(p);
+ *         Tcl_Free(p);
  *     }
  *     MyArray_Free(&arr);
  *     assert(arr == NULL);
@@ -201,7 +201,7 @@ AT##_BufferSize(size_t numElems)						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_IsEmpty(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -268,12 +268,12 @@ AT##_Resize(AT **arrp, size_t newSize)						\
     assert(!*arrp || (*arrp)->size != 0xdeadbeef);				\
     if (newSize == 0) {								\
 	assert(!*arrp || ((*arrp)->size = 0xdeadbeef));				\
-	ckfree(*arrp);								\
+	Tcl_Free(*arrp);								\
 	*arrp = NULL;								\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newSize - 1) + sizeof(AT);		\
-	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)Tcl_Realloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newSize < (*arrp)->size) {					\
@@ -365,7 +365,7 @@ AT##_Free(AT **arrp)								\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static Tcl_Size									\
 AT##_Find(const AT *arr, const ElemType *elem)					\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -374,7 +374,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 	size_t i;								\
 	for (i = 0; i < arr->size; ++i) {					\
 	    if (memcmp(&buf[i], elem, sizeof(ElemType)) == 0) {			\
-		return (int) i;							\
+		return (Tcl_Size) i;							\
 	    }									\
 	}									\
     }										\
@@ -382,7 +382,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_Contains(const AT *arr, const ElemType *elem)				\
 {										\
     return AT##_Find(arr, elem) != -1;						\
@@ -412,7 +412,7 @@ AT##_BufferSize(size_t numElems)						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_IsEmpty(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -479,12 +479,12 @@ AT##_Resize(AT **arrp, size_t newCapacity)					\
     assert(!*arrp || (*arrp)->size != 0xdeadbeef);				\
     if (newCapacity == 0) {							\
 	assert(!*arrp || ((*arrp)->size = 0xdeadbeef));				\
-	ckfree(*arrp);								\
+	Tcl_Free(*arrp);								\
 	*arrp = NULL;								\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newCapacity - 1) + sizeof(AT);		\
-	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)Tcl_Realloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newCapacity < (*arrp)->size) {				\
@@ -574,7 +574,7 @@ AT##_Free(AT **arrp)								\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static Tcl_Size									\
 AT##_Find(const AT *arr, const ElemType *elem)					\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -583,7 +583,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 	size_t i;								\
 	for (i = 0; i < arr->size; ++i) {					\
 	    if (buf[i] == elem) {						\
-		return (int) i;							\
+		return (Tcl_Size) i;							\
 	    }									\
 	}									\
     }										\
@@ -591,7 +591,7 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static bool									\
 AT##_Contains(const AT *arr, const ElemType *elem)				\
 {										\
     return AT##_Find(arr, elem) != -1;						\

@@ -309,7 +309,7 @@ int
 Tk_ChooseColorObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
@@ -518,7 +518,7 @@ int
 Tk_GetOpenFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return GetFileName(clientData, interp, objc, objv, OFN_FILE_OPEN);
@@ -545,7 +545,7 @@ int
 Tk_GetSaveFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return GetFileName(clientData, interp, objc, objv, OFN_FILE_SAVE);
@@ -1087,11 +1087,11 @@ static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr)
 	DWORD dw;
 	for (dw = 0; dw < count; ++dw) {
 	    if (dlgFilterPtr[dw].pszName != NULL)
-		ckfree((void *)dlgFilterPtr[dw].pszName);
+		Tcl_Free((void *)dlgFilterPtr[dw].pszName);
 	    if (dlgFilterPtr[dw].pszSpec != NULL)
-		ckfree((void *)dlgFilterPtr[dw].pszSpec);
+		Tcl_Free((void *)dlgFilterPtr[dw].pszSpec);
 	}
-	ckfree(dlgFilterPtr);
+	Tcl_Free(dlgFilterPtr);
     }
 }
 
@@ -1150,7 +1150,7 @@ static int MakeFilterVista(
 
     Tcl_DStringInit(&ds);
     Tcl_DStringInit(&patterns);
-    dlgFilterPtr = (COMDLG_FILTERSPEC *)ckalloc(flist.numFilters * sizeof(*dlgFilterPtr));
+    dlgFilterPtr = (COMDLG_FILTERSPEC *)Tcl_Alloc(flist.numFilters * sizeof(*dlgFilterPtr));
 
     for (i = 0, filterPtr = flist.filters;
 	 filterPtr;
@@ -1168,7 +1168,7 @@ static int MakeFilterVista(
 	Tcl_UtfToWCharDString(filterPtr->name, TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
-	dlgFilterPtr[i].pszName = (LPCWSTR)ckalloc(nbytes);
+	dlgFilterPtr[i].pszName = (LPCWSTR)Tcl_Alloc(nbytes);
 	memmove((void *) dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
 	Tcl_DStringFree(&ds);
 
@@ -1197,7 +1197,7 @@ static int MakeFilterVista(
 	Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
-	dlgFilterPtr[i].pszSpec = (LPCWSTR)ckalloc(nbytes);
+	dlgFilterPtr[i].pszSpec = (LPCWSTR)Tcl_Alloc(nbytes);
 	memmove((void *)dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
 	Tcl_DStringFree(&ds);
 	Tcl_DStringSetLength(&patterns, 0);
@@ -1290,7 +1290,7 @@ int
 Tk_ChooseDirectoryObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int result;
@@ -1328,7 +1328,7 @@ int
 Tk_MessageBoxObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData, parent;
@@ -1657,11 +1657,11 @@ ApplyLogfont(
     Tcl_Obj **objv, **tmpv;
 
     Tcl_ListObjGetElements(NULL, cmdObj, &objc, &objv);
-    tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+    tmpv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * (objc + 2));
     memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
     tmpv[objc] = GetFontObj(hdc, logfontPtr);
     TkBackgroundEvalObjv(interp, objc+1, tmpv, TCL_EVAL_GLOBAL);
-    ckfree(tmpv);
+    Tcl_Free(tmpv);
 }
 
 /*
@@ -2134,7 +2134,7 @@ DeleteHookData(
     if (hdPtr->cmdObj) {
 	Tcl_DecrRefCount(hdPtr->cmdObj);
     }
-    ckfree(hdPtr);
+    Tcl_Free(hdPtr);
 }
 
 /*
@@ -2161,7 +2161,7 @@ TkInitFontchooser(
     Tcl_Interp *interp,
     TCL_UNUSED(void *))
 {
-    HookData *hdPtr = (HookData *)ckalloc(sizeof(HookData));
+    HookData *hdPtr = (HookData *)Tcl_Alloc(sizeof(HookData));
 
     memset(hdPtr, 0, sizeof(HookData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteHookData, hdPtr);

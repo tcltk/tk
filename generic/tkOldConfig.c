@@ -382,7 +382,7 @@ DoConfig(
 		Tcl_IncrRefCount(arg);
 		newStr = (char *)arg;
 	    } else {
-		newStr = (char *)ckalloc(strlen(value) + 1);
+		newStr = (char *)Tcl_Alloc(strlen(value) + 1);
 		strcpy(newStr, value);
 	    }
 	    oldStr = *((char **)ptr);
@@ -390,7 +390,7 @@ DoConfig(
 		if (specPtr->specFlags & TK_CONFIG_OBJS) {
 		    Tcl_DecrRefCount((Tcl_Obj *)oldStr);
 		} else {
-		    ckfree(oldStr);
+		    Tcl_Free(oldStr);
 		}
 	    }
 	    *((char **)ptr) = newStr;
@@ -668,7 +668,7 @@ Tk_ConfigureInfo(
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, TCL_INDEX_NONE));
-	ckfree(list);
+	Tcl_Free(list);
 	return TCL_OK;
     }
 
@@ -690,7 +690,7 @@ Tk_ConfigureInfo(
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
 	Tcl_AppendResult(interp, leader, list, "}", (char *)NULL);
-	ckfree(list);
+	Tcl_Free(list);
 	leader = " {";
     }
     return TCL_OK;
@@ -754,7 +754,7 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((void *)argv[4]);
+	    Tcl_Free((void *)argv[4]);
 	} else {
 	    freeProc((void *)argv[4]);
 	}
@@ -985,7 +985,7 @@ Tk_ConfigureValue(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((void *)result);
+	    Tcl_Free((void *)result);
 	} else {
 	    freeProc((void *)result);
 	}
@@ -1044,7 +1044,7 @@ Tk_FreeOptions(
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
 	    if (*((char **)ptr) != NULL) {
-		ckfree(*((char **)ptr));
+		Tcl_Free(*((char **)ptr));
 		*((char **)ptr) = NULL;
 	    }
 	    break;
@@ -1124,7 +1124,7 @@ GetCachedSpecs(
     specCacheTablePtr = (Tcl_HashTable *)
 	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
     if (specCacheTablePtr == NULL) {
-	specCacheTablePtr = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	specCacheTablePtr = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(specCacheTablePtr, TCL_ONE_WORD_KEYS);
 	Tcl_SetAssocData(interp, "tkConfigSpec.threadTable",
 		DeleteSpecCacheTable, specCacheTablePtr);
@@ -1157,7 +1157,7 @@ GetCachedSpecs(
 	 * from the origin.
 	 */
 
-	cachedSpecs = (Tk_ConfigSpec *)ckalloc(entrySpace);
+	cachedSpecs = (Tk_ConfigSpec *)Tcl_Alloc(entrySpace);
 	memcpy(cachedSpecs, staticSpecs, entrySpace);
 	Tcl_SetHashValue(entryPtr, cachedSpecs);
 
@@ -1219,10 +1219,10 @@ DeleteSpecCacheTable(
 	 * Someone else deallocates the Tk_Uids themselves.
 	 */
 
-	ckfree(Tcl_GetHashValue(entryPtr));
+	Tcl_Free(Tcl_GetHashValue(entryPtr));
     }
     Tcl_DeleteHashTable(tablePtr);
-    ckfree(tablePtr);
+    Tcl_Free(tablePtr);
 }
 
 /*

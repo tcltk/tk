@@ -55,7 +55,7 @@ struct ScrollHandleRec
  */
 ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 {
-    ScrollHandle h = (ScrollHandle)ckalloc(sizeof(*h));
+    ScrollHandle h = (ScrollHandle)Tcl_Alloc(sizeof(*h));
 
     h->flags = 0;
     h->corePtr = corePtr;
@@ -279,6 +279,6 @@ void TtkFreeScrollHandle(ScrollHandle h)
     if (h->flags & SCROLL_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateScrollbarBG, h);
     }
-    ckfree(h);
+    Tcl_Free(h);
 }
 

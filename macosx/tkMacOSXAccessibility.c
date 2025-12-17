@@ -47,7 +47,7 @@ static int ActionEventProc(Tcl_Event *ev, int flags);
 char *callback_command;
 static Tcl_HashTable *TkWindowToElementTable = NULL;
 static Tcl_HashTable *ElementToTkWindowTable = NULL;
-static int accessibilityTablesInitialized = 0;
+static bool accessibilityTablesInitialized = false;
 
 /*
  * Map script-level roles to CoreFoundation role constants, which are bridged
@@ -625,7 +625,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 
 
     callback_command = action;
-    event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+    event = (Tcl_Event *)Tcl_Alloc(sizeof(Tcl_Event));
     event->proc = ActionEventProc;
     Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
 
@@ -746,13 +746,13 @@ static int ActionEventProc(
 static void InitAccessibilityHashTables(void)
 {
     if (!accessibilityTablesInitialized) {
-	TkWindowToElementTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
-	ElementToTkWindowTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	TkWindowToElementTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
+	ElementToTkWindowTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 
 	Tcl_InitHashTable(TkWindowToElementTable, TCL_ONE_WORD_KEYS);
 	Tcl_InitHashTable(ElementToTkWindowTable, TCL_ONE_WORD_KEYS);
 
-	accessibilityTablesInitialized = 1;
+	accessibilityTablesInitialized = true;
     }
 }
 
@@ -855,12 +855,12 @@ void TkAccessibility_CleanupHashTables(void)
     Tcl_DeleteHashTable(TkWindowToElementTable);
     Tcl_DeleteHashTable(ElementToTkWindowTable);
 
-    ckfree((char *)TkWindowToElementTable);
-    ckfree((char *)ElementToTkWindowTable);
+    Tcl_Free(TkWindowToElementTable);
+    Tcl_Free(ElementToTkWindowTable);
 
     TkWindowToElementTable = NULL;
     ElementToTkWindowTable = NULL;
-    accessibilityTablesInitialized = 0;
+    accessibilityTablesInitialized = false;
 }
 
 /*

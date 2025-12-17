@@ -242,9 +242,9 @@ ConvertPoints(
 
     if (npoints > tsdPtr->nWinPoints) {
 	if (tsdPtr->winPoints != NULL) {
-	    ckfree(tsdPtr->winPoints);
+	    Tcl_Free(tsdPtr->winPoints);
 	}
-	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * (size_t)npoints);
+	tsdPtr->winPoints = (POINT *)Tcl_Alloc(sizeof(POINT) * (size_t)npoints);
 	if (tsdPtr->winPoints == NULL) {
 	    tsdPtr->nWinPoints = -1;
 	    return NULL;
@@ -536,7 +536,7 @@ TkPutImage(
 		|| (image->bitmap_pad != sizeof(WORD))) {
 	    data = TkAlignImageData(image, sizeof(WORD), MSBFirst);
 	    bitmap = CreateBitmap(image->width, image->height, 1, 1, data);
-	    ckfree(data);
+	    Tcl_Free(data);
 	} else {
 	    bitmap = CreateBitmap(image->width, image->height, 1, 1,
 		    image->data);
@@ -553,10 +553,10 @@ TkPutImage(
 	usePalette = (image->bits_per_pixel < 16);
 
 	if (usePalette) {
-	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER)
+	    infoPtr = (BITMAPINFO *)Tcl_Alloc(sizeof(BITMAPINFOHEADER)
 		    + sizeof(RGBQUAD)*(size_t)ncolors);
 	} else {
-	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER));
+	    infoPtr = (BITMAPINFO *)Tcl_Alloc(sizeof(BITMAPINFOHEADER));
 	}
 
 	infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -583,7 +583,7 @@ TkPutImage(
 	}
 	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);
-	ckfree(infoPtr);
+	Tcl_Free(infoPtr);
     }
     if (!bitmap) {
 	DeleteDC(dcMem);

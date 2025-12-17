@@ -145,7 +145,7 @@ TkButton *
 TkpCreateButton(
     Tk_Window tkwin)
 {
-    MacButton *macButtonPtr = (MacButton *)ckalloc(sizeof(MacButton));
+    MacButton *macButtonPtr = (MacButton *)Tcl_Alloc(sizeof(MacButton));
 
     Tk_CreateEventHandler(tkwin, ActivateMask,
 	    ButtonEventProc, macButtonPtr);

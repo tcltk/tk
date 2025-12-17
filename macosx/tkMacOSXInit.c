@@ -25,7 +25,7 @@
  * This flag is set if tests are being run.
  */
 
-int testsAreRunning = 0;
+bool testsAreRunning = false;
 
 static char tkLibPath[PATH_MAX + 1] = "";
 
@@ -401,18 +401,18 @@ static void closePanels(
  */
 
 #if defined(USE_CUSTOM_EXIT_PROC)
-static Bool doCleanupFromExit = NO;
+static bool doCleanupFromExit = false;
 
 int TkpWantsExitProc(void) {
-    return doCleanupFromExit == YES;
+    return doCleanupFromExit;
 }
 
 TCL_NORETURN void TkpExitProc(
     void *clientdata)
 {
-    Bool doCleanup = doCleanupFromExit;
+    bool doCleanup = doCleanupFromExit;
     if (doCleanupFromExit) {
-	doCleanupFromExit = NO; /* prevent possible recursive call. */
+	doCleanupFromExit = false; /* prevent possible recursive call. */
 	closePanels();
     }
 
@@ -482,7 +482,7 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
-    static int initialized = 0;
+    static bool initialized = false;
 
     /*
      * TkpInit can be called multiple times with different interpreters. But
@@ -491,8 +491,8 @@ TkpInit(
 
     if (!initialized) {
 	struct stat st;
-	Bool shouldOpenConsole = NO;
-	Bool stdinIsNullish = (!isatty(0) &&
+	bool shouldOpenConsole = false;
+	bool stdinIsNullish = (!isatty(0) &&
 	    (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)));
 
 	/*
@@ -503,7 +503,7 @@ TkpInit(
 #   error Mac OS X 10.9 required
 #endif
 
-	initialized = 1;
+	initialized = true;
 
 #ifdef TK_FRAMEWORK
 
@@ -583,7 +583,7 @@ TkpInit(
 	 */
 
 	if (getenv("TK_CONSOLE")) {
-	    shouldOpenConsole = YES;
+	    shouldOpenConsole = true;
 	} else if (stdinIsNullish && Tcl_GetStartupScript(NULL) == NULL) {
 	    const char *intvar = Tcl_GetVar2(interp, "tcl_interactive",
 					     NULL, TCL_GLOBAL_ONLY);
@@ -593,10 +593,10 @@ TkpInit(
 	    }
 
 #if defined(USE_CUSTOM_EXIT_PROC)
-	    doCleanupFromExit = YES;
+	    doCleanupFromExit = true;
 #endif
 
-	    shouldOpenConsole = YES;
+	    shouldOpenConsole = true;
 	}
 	if (shouldOpenConsole) {
 	    Tk_InitConsoleChannels(interp);
@@ -619,7 +619,7 @@ TkpInit(
 	    dup2(fileno(null), STDOUT_FILENO);
 	    dup2(fileno(null), STDERR_FILENO);
 #if defined(USE_CUSTOM_EXIT_PROC)
-	    doCleanupFromExit = YES;
+	    doCleanupFromExit = true;
 #endif
 	} else if (getenv("TK_NO_STDERR") != NULL) {
 	    FILE *null = fopen("/dev/null", "w");
@@ -673,7 +673,7 @@ TkpInit(
 # if defined(USE_CUSTOM_EXIT_PROC)
 
 	if ((isatty(0) && isatty(1))) {
-	    doCleanupFromExit = YES;
+	    doCleanupFromExit = true;
 	}
 
 # endif

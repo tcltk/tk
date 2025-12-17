@@ -20,7 +20,7 @@
 
 /* This is not used for anything at the moment. */
 typedef struct ThreadSpecificData {
-    int initialized;
+    bool initialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -249,7 +249,7 @@ Tk_MacOSXSetupTkNotifier(void)
     TSD_INIT();
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 
 	/*
 	 * Install TkAqua event source in main event loop thread.
@@ -298,7 +298,7 @@ TkMacOSXNotifyExitHandler(
 
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
 	    TkMacOSXEventsCheckProc, NULL);
-    tsdPtr->initialized = 0;
+    tsdPtr->initialized = false;
 }
 
 /*
