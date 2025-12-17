@@ -113,6 +113,7 @@ bind Treeview	<Alt-Prior>		{ ::ttk::treeview::PageNav %W left; break }
 bind Treeview	<Alt-Next>		{ ::ttk::treeview::PageNav %W right; break }
 
 # Scroll Lock bindings
+if {$::tcl_platform(os) ne "Darwin"} {
 bind Treeview	<Mod3-Up>		{ %W yview scroll -1 units }
 bind Treeview	<Mod3-Down>		{ %W yview scroll 1 units }
 bind Treeview	<Mod3-Left>		{ %W xview scroll -10 units }
@@ -125,6 +126,7 @@ bind Treeview	<Mod3-Home>		{ %W xview scroll -1 pages }
 bind Treeview	<Mod3-End>		{ %W xview scroll 1 pages }
 bind Treeview	<Mod3-${ckey}-Home>	{ %W xview moveto 0.0 }
 bind Treeview	<Mod3-${ckey}-End>	{ %W xview moveto 1.0 }
+}
 
 # Other keys
 bind Treeview	<F2>			{ ::ttk::treeview::ActivateItem %W }
