@@ -745,7 +745,7 @@ proc ::ttk::treeview::ActivateHeading {w heading} {
 # MouseSelect -- Select item or cell using button 1
 #
 proc ::ttk::treeview::MouseSelect {w x y op} {
-    if {[$w instate disabled]} return
+    if {![winfo exists $w] || [$w instate disabled]} return
 
     if {[$w cget -selectmode] ni [list "single" "extended" "multiple"]} {
 	return
@@ -773,7 +773,7 @@ proc ::ttk::treeview::MouseSelect {w x y op} {
 # DoubleClick -- Double-Button-1 binding.
 #
 proc ::ttk::treeview::DoubleClick {w x y} {
-    if {[$w instate disabled]} return
+    if {![winfo exists $w] || [$w instate disabled]} return
 
     if {[set item [$w identify item $x $y]] ne ""} {
 	set element [$w identify element $x $y]
@@ -792,7 +792,7 @@ proc ::ttk::treeview::DoubleClick {w x y} {
 # Interactive column resize, column move, and expand selection handlers
 #
 proc ::ttk::treeview::Press {w x y} {
-    if {[$w instate disabled]} return
+    if {![winfo exists $w] || [$w instate disabled]} return
 
     focus $w
     switch -- [$w identify region $x $y] {
@@ -806,7 +806,7 @@ proc ::ttk::treeview::Press {w x y} {
 
 proc ::ttk::treeview::Drag {w x y} {
     variable State
-    if {[$w instate disabled]} return
+    if {![winfo exists $w] || [$w instate disabled]} return
 
     switch $State(pressMode) {
 	heading	{ Heading.drag $w $x $y }
@@ -817,7 +817,7 @@ proc ::ttk::treeview::Drag {w x y} {
 
 proc ::ttk::treeview::Release {w x y} {
     variable State
-    if {[$w instate disabled]} return
+    if {![winfo exists $w] || [$w instate disabled]} return
 
     switch $State(pressMode) {
 	heading	{ Heading.release $w $x $y }
