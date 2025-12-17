@@ -115,10 +115,10 @@ proc ttk::wideSpinbox::CreateElements theme {
 # Wide.TSpinbox layout for a given theme.
 #------------------------------------------------------------------------------
 proc ttk::wideSpinbox::UpdateElements theme {
-    set bg  [NormalizeColor [ttk::style lookup . -background]]
+    set bg  [NormalizeColor [ttk::style lookup . -background {} #d9d9d9]]
     variable onAndroid
     set aBg [expr {$onAndroid ? $bg :
-		   [NormalizeColor [ttk::style lookup . -background active]]}]
+	    [NormalizeColor [ttk::style lookup . -background active #ececec]]}]
     set fg  [NormalizeColor [ttk::style lookup . -foreground {} #000000]]
     set dFg [NormalizeColor [ttk::style lookup . -foreground disabled #a3a3a3]]
 
