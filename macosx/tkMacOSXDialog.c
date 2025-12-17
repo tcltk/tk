@@ -580,7 +580,7 @@ parseFileFilters(
     FileFilterList fl;
 
     TkInitFileFilters(&fl);
-    if (TkGetFileFilters(interp, &fl, fileTypesPtr, 0) != TCL_OK) {
+    if (TkGetFileFilters(interp, &fl, fileTypesPtr, false) != TCL_OK) {
 	TkFreeFileFilters(&fl);
 	return TCL_ERROR;
     }

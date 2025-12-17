@@ -5,7 +5,7 @@
 # layer that presents a consistent API across the three platforms.
 
 # Copyright © 2009 Michael I. Schwartz.
-# Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
+# Copyright © 2021 Kevin Walzer.
 # Copyright © 2021 Harald Oehlmann, Elmicron GmbH
 # Copyright © 2022 Emiliano Gavilan
 #
@@ -1358,7 +1358,7 @@ if {[tk windowingsystem] eq "x11"} {
 		$pw - ($option(margin-left) + $option(margin-right)) / 72.0
 	    }]
 	    # set the wrap length at 98% of computed page width in chars
-	    # the 9.8 constant is the product 10.0 (default cpi) * 0.95
+	    # the 9.8 constant is the product 10.0 (default cpi) * 0.98
 	    set wl [expr {int( 9.8 * $pw / $tzoom )}]
 	    set data [encoding convertto utf-8 \
 		[join [_wrapLines [$w get 1.0 end] $wl] "\n"]]

@@ -18,6 +18,9 @@ to the userbase.
 # Bug fixes
  - [Improve the look of the ttk::spinbox widgets in the built-in themes](https://core.tcl-lang.org/tk/tktview/4d2baa)
  - [SVG rendering: Correctly paint stroke leftover path](https://core.tcl-lang.org/tk/tktview/c51a56)
+ - [Error in ::tk::spinbox::ButtonUp on MacOS](https://core.tcl-lang.org/tk/tktview/fe5549])
+ - [crash in text sync subcommand](https://core.tcl-lang.org/tk/tktview/8e4fb0])
+ - [Random semantic color values on macOS 10.15.6 Catalina](https://core.tcl-lang.org/tk/tktview/544140])
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
@@ -55,6 +58,7 @@ to the userbase.
  - [Aqua: avoid use-after-free during RefocusGrabWindow()](https://core.tcl-lang.org/tk/info/6da885)
  - [Aqua: ttk::notebook tabs](https://core.tcl-lang.org/tk/info/cf296a)
  - [Fix crash on exit due to faulty asm code in DllMain](https://core.tcl-lang.org/tk/info/44b34c)
+ - [::tk::startOfCluster (and friends) only understand ICU locale syntax](https://core.tcl-lang.org/tk/info/095db8)
 
 Release Tk 9.0.2 arises from the check-in with tag `core-9-0-2`.
 

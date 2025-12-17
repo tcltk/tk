@@ -2031,7 +2031,7 @@ MakeFilter(
 	initial = Tcl_GetString(initialPtr);
     }
     TkInitFileFilters(&flist);
-    if (TkGetFileFilters(interp, &flist, valuePtr, 1) != TCL_OK) {
+    if (TkGetFileFilters(interp, &flist, valuePtr, true) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -2219,7 +2219,7 @@ static int MakeFilterVista(
 	initial = Tcl_GetString(optsPtr->initialTypeObj);
 
     TkInitFileFilters(&flist);
-    if (TkGetFileFilters(interp, &flist, optsPtr->filterObj, 1) != TCL_OK)
+    if (TkGetFileFilters(interp, &flist, optsPtr->filterObj, true) != TCL_OK)
 	return TCL_ERROR;
 
     if (flist.filters == NULL) {

@@ -592,7 +592,7 @@ DoObjConfig(
 				 * representation of the value if
 				 * savedOptionPtr is NULL. */
     const Tk_OptionSpec *specPtr;
-    int nullOK;
+    bool nullOK;
 
     /*
      * Save the old object form for the value, if there is one.
@@ -624,7 +624,7 @@ DoObjConfig(
     } else {
 	oldInternalPtr = (char *)&internal.internalForm;
     }
-    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
+    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) != 0;
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN: {
 	int newBool;
@@ -1109,15 +1109,15 @@ DoObjConfig(
 #if defined(USE_TCL_STUBS)
 # undef Tcl_IsEmpty
 # define Tcl_IsEmpty \
-    ((int (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
+    ((bool (*)(Tcl_Obj *))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[690]))
 #endif
 
-int
+bool
 TkObjIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
     if (objPtr == NULL) {
-	return 1;
+	return true;
     }
     if (objPtr->bytes == NULL) {
 #if defined(USE_TCL_STUBS)
