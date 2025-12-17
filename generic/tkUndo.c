@@ -94,7 +94,7 @@ TkUndoInsertSeparator(
     TkUndoAtom *separator;
 
     if (*stack!=NULL && (*stack)->type!=TK_UNDO_SEPARATOR) {
-	separator = (TkUndoAtom *)ckalloc(sizeof(TkUndoAtom));
+	separator = (TkUndoAtom *)Tcl_Alloc(sizeof(TkUndoAtom));
 	separator->type = TK_UNDO_SEPARATOR;
 	TkUndoPushStack(stack,separator);
 	return 1;
@@ -135,7 +135,7 @@ TkUndoClearStack(
 		if (sub->action != NULL) {
 		    Tcl_DecrRefCount(sub->action);
 		}
-		ckfree(sub);
+		Tcl_Free(sub);
 		sub = next;
 	    }
 
@@ -146,11 +146,11 @@ TkUndoClearStack(
 		if (sub->action != NULL) {
 		    Tcl_DecrRefCount(sub->action);
 		}
-		ckfree(sub);
+		Tcl_Free(sub);
 		sub = next;
 	    }
 	}
-	ckfree(elem);
+	Tcl_Free(elem);
     }
     *stack = NULL;
 }
@@ -181,7 +181,7 @@ TkUndoPushAction(
 {
     TkUndoAtom *atom;
 
-    atom = (TkUndoAtom *)ckalloc(sizeof(TkUndoAtom));
+    atom = (TkUndoAtom *)Tcl_Alloc(sizeof(TkUndoAtom));
     atom->type = TK_UNDO_ACTION;
     atom->apply = apply;
     atom->revert = revert;
@@ -237,7 +237,7 @@ TkUndoMakeCmdSubAtom(
 	Tcl_Panic("NULL command and actionScript in TkUndoMakeCmdSubAtom");
     }
 
-    atom = (TkUndoSubAtom *)ckalloc(sizeof(TkUndoSubAtom));
+    atom = (TkUndoSubAtom *)Tcl_Alloc(sizeof(TkUndoSubAtom));
     atom->command = command;
     atom->funcPtr = NULL;
     atom->clientData = NULL;
@@ -299,7 +299,7 @@ TkUndoMakeSubAtom(
 	Tcl_Panic("NULL funcPtr in TkUndoMakeSubAtom");
     }
 
-    atom = (TkUndoSubAtom *)ckalloc(sizeof(TkUndoSubAtom));
+    atom = (TkUndoSubAtom *)Tcl_Alloc(sizeof(TkUndoSubAtom));
     atom->command = NULL;
     atom->funcPtr = funcPtr;
     atom->clientData = clientData;
@@ -341,7 +341,7 @@ TkUndoInitStack(
 {
     TkUndoRedoStack *stack;	/* An Undo/Redo stack */
 
-    stack = (TkUndoRedoStack *)ckalloc(sizeof(TkUndoRedoStack));
+    stack = (TkUndoRedoStack *)Tcl_Alloc(sizeof(TkUndoRedoStack));
     stack->undoStack = NULL;
     stack->redoStack = NULL;
     stack->interp = interp;
@@ -404,7 +404,7 @@ TkUndoSetMaxDepth(
 		    if (sub->action != NULL) {
 			Tcl_DecrRefCount(sub->action);
 		    }
-		    ckfree(sub);
+		    Tcl_Free(sub);
 		    sub = next;
 		}
 		sub = elem->revert;
@@ -414,12 +414,12 @@ TkUndoSetMaxDepth(
 		    if (sub->action != NULL) {
 			Tcl_DecrRefCount(sub->action);
 		    }
-		    ckfree(sub);
+		    Tcl_Free(sub);
 		    sub = next;
 		}
 	    }
 	    elem = elem->next;
-	    ckfree(prevelem);
+	    Tcl_Free(prevelem);
 	}
 	stack->depth = stack->maxdepth;
     }
@@ -472,7 +472,7 @@ TkUndoFreeStack(
     TkUndoRedoStack *stack)	/* An Undo/Redo stack */
 {
     TkUndoClearStacks(stack);
-    ckfree(stack);
+    Tcl_Free(stack);
 }
 
 /*
@@ -587,7 +587,7 @@ TkUndoRevert(
     }
 
     if (elem->type == TK_UNDO_SEPARATOR) {
-	ckfree(elem);
+	Tcl_Free(elem);
 	elem = TkUndoPopStack(&stack->undoStack);
     }
 
@@ -649,7 +649,7 @@ TkUndoApply(
     }
 
     if (elem->type == TK_UNDO_SEPARATOR) {
-	ckfree(elem);
+	Tcl_Free(elem);
 	elem = TkUndoPopStack(&stack->redoStack);
     }
 

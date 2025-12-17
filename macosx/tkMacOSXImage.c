@@ -121,7 +121,7 @@ static void ReleaseData(
     TCL_UNUSED(const void *), /* data */
     TCL_UNUSED(size_t))        /* size */
 {
-    ckfree(info);
+    Tcl_Free(info);
 }
 
 static CGImageRef
@@ -148,7 +148,7 @@ TkMacOSXCreateCGImageWithXImage(
 
 	bitsPerComponent = 1;
 	bitsPerPixel = 1;
-	data = (char *)ckalloc(len);
+	data = (char *)Tcl_Alloc(len);
 	if (data) {
 	    if (image->bitmap_bit_order != MSBFirst) {
 		char *srcPtr = image->data + image->xoffset;
@@ -164,7 +164,7 @@ TkMacOSXCreateCGImageWithXImage(
 	    provider = CGDataProviderCreateWithData(data, data, len,
 		    releaseData);
 	    if (!provider) {
-		ckfree(data);
+		Tcl_Free(data);
 	    }
 	    img = CGImageMaskCreate(image->width, image->height,
 		    bitsPerComponent, bitsPerPixel, image->bytes_per_line,
@@ -188,13 +188,13 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
-	data = (char *)ckalloc(len);
+	data = (char *)Tcl_Alloc(len);
 	if (data) {
 	    memcpy(data, image->data + image->xoffset, len);
 	    provider = CGDataProviderCreateWithData(data, data, len,
 		    releaseData);
 	    if (!provider) {
-		ckfree(data);
+		Tcl_Free(data);
 	    }
 	    img = CGImageCreate(image->width, image->height, bitsPerComponent,
 		    bitsPerPixel, image->bytes_per_line, colorspace, bitmapInfo,
@@ -232,9 +232,9 @@ DestroyImage(
 {
     if (image) {
 	if (image->data) {
-	    ckfree(image->data);
+	    Tcl_Free(image->data);
 	}
-	ckfree(image);
+	Tcl_Free(image);
     }
     return 0;
 }
@@ -404,7 +404,7 @@ XCreateImage(
     XImage *ximage;
 
     LastKnownRequestProcessed(display)++;
-    ximage = (XImage *)ckalloc(sizeof(XImage));
+    ximage = (XImage *)Tcl_Alloc(sizeof(XImage));
 
     ximage->height = height;
     ximage->width = width;
@@ -878,7 +878,7 @@ XGetImage(
 	    [bitmapRep release];
 	    return NULL;
 	}
-	bitmap = (char *)ckalloc(size);
+	bitmap = (char *)Tcl_Alloc(size);
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
 	[bitmapRep release];
 
@@ -1715,10 +1715,10 @@ TkMacOSXNSImageCreate(
     TkMacOSXNSImageModel *modelPtr;
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
 
-    modelPtr = (TkMacOSXNSImageModel *)ckalloc(sizeof(TkMacOSXNSImageModel));
+    modelPtr = (TkMacOSXNSImageModel *)Tcl_Alloc(sizeof(TkMacOSXNSImageModel));
     modelPtr->tkModel = model;
     modelPtr->interp = interp;
-    modelPtr->imageName = (char *)ckalloc(strlen(name) + 1);
+    modelPtr->imageName = (char *)Tcl_Alloc(strlen(name) + 1);
     strcpy(modelPtr->imageName, name);
     modelPtr->flags = 0;
     modelPtr->instancePtr = NULL;
@@ -1766,7 +1766,7 @@ TkMacOSXNSImageGet(
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *) clientData;
     TkMacOSXNSImageInstance *instPtr;
 
-    instPtr = (TkMacOSXNSImageInstance *)ckalloc(sizeof(TkMacOSXNSImageInstance));
+    instPtr = (TkMacOSXNSImageInstance *)Tcl_Alloc(sizeof(TkMacOSXNSImageInstance));
     instPtr->modelPtr = modelPtr;
     return instPtr;
 }
@@ -1881,7 +1881,7 @@ TkMacOSXNSImageFree(
     TCL_UNUSED(Display *))	/* display */
 {
     TkMacOSXNSImageInstance *instPtr = (TkMacOSXNSImageInstance *) clientData;
-    ckfree(instPtr);
+    Tcl_Free(instPtr);
 }
 
 /*
@@ -1909,12 +1909,12 @@ TkMacOSXNSImageDelete(
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *) clientData;
 
     Tcl_DeleteCommand(modelPtr->interp, modelPtr->imageName);
-    ckfree(modelPtr->imageName);
+    Tcl_Free(modelPtr->imageName);
     Tcl_DecrRefCount(modelPtr->sourceObj);
     Tcl_DecrRefCount(modelPtr->asObj);
     [modelPtr->image release];
     [modelPtr->darkModeImage release];
-    ckfree(modelPtr);
+    Tcl_Free(modelPtr);
 }
 
 /*

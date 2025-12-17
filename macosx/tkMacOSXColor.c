@@ -98,9 +98,9 @@ static void initColorTable()
     for (key in [systemColorList allKeys]) {
 	NSUInteger length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
-	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
+	entry = (SystemColorDatum *)Tcl_Alloc(sizeof(SystemColorDatum));
 	bzero(entry, sizeof(SystemColorDatum));
-	name = (char *)ckalloc(length + 1);
+	name = (char *)Tcl_Alloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = (char)toupper(UCHAR(name[0]));
 	if (!strcmp(name, "WindowBackgroundColor")) {
@@ -130,7 +130,7 @@ static void initColorTable()
      */
 
     numSystemColors = index;
-    systemColorIndex = (SystemColorDatum **)ckalloc(numSystemColors * sizeof(SystemColorDatum *));
+    systemColorIndex = (SystemColorDatum **)Tcl_Alloc(numSystemColors * sizeof(SystemColorDatum *));
     for (hPtr = Tcl_FirstHashEntry(&systemColors, &search); hPtr != NULL;
 	 hPtr = Tcl_NextHashEntry(&search)) {
 	entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
@@ -608,11 +608,11 @@ TkpGetColor(
     XColor color;
     Colormap colormap = TK_DYNAMIC_COLORMAP;
     NSView *view = nil;
-    Bool haveValidXColor = False;
-    static Bool initialized = NO;
+    bool haveValidXColor = false;
+    static bool initialized = false;
 
     if (!initialized) {
-	initialized = YES;
+	initialized = true;
 	initColorTable();
     }
     if (tkwin) {
@@ -670,9 +670,6 @@ TkpGetColor(
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
-			color.red   = (unsigned short)(rgba[0] * 65535.0);
-			color.green = (unsigned short)(rgba[1] * 65535.0);
-			color.blue  = (unsigned short)(rgba[2] * 65535.0);
 #endif
 		    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
@@ -687,11 +684,11 @@ TkpGetColor(
 		}
 #else //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		GetRGBA(entry, p.ulong, rgba);
+#endif //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		color.red   = (unsigned short)(rgba[0] * 65535.0);
 		color.green = (unsigned short)(rgba[1] * 65535.0);
 		color.blue  = (unsigned short)(rgba[2] * 65535.0);
-#endif //MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		haveValidXColor = True;
+		haveValidXColor = true;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
@@ -709,7 +706,7 @@ TkpGetColor(
 		    Tcl_Panic("CGColor with %d components", (int) n);
 		}
 		CGColorRelease(c);
-		haveValidXColor = True;
+		haveValidXColor = true;
 	    }
 	}
     }
@@ -717,7 +714,7 @@ TkpGetColor(
 	return NULL;
     }
 
-    tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
+    tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
     tkColPtr->colormap = colormap;
     tkColPtr->color = color;
     return tkColPtr;
@@ -751,7 +748,7 @@ TkpGetColorByValue(
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
-    TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;

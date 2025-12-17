@@ -138,7 +138,7 @@
  *  This is set to 1 if tests are being run. Defined in tkMacOSXInit.c.
  */
 
-extern int testsAreRunning;
+extern bool testsAreRunning;
 
 /*
  *  The structure of a 32-bit XEvent keycode on macOS. It may be viewed as
@@ -247,7 +247,7 @@ MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect dstBounds);
-MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
+MODULE_SCOPE bool	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
@@ -411,6 +411,7 @@ VISIBILITY_HIDDEN
     NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
+@property Bool onScreen;
 @end
 
 @interface TKContentView(TKKeyEvent)

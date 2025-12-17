@@ -428,12 +428,12 @@ Tk_CanvasTagsParseProc(
      */
 
     if (itemPtr->tagSpace < argc) {
-	newPtr = (Tk_Uid *)ckalloc(argc * sizeof(Tk_Uid));
+	newPtr = (Tk_Uid *)Tcl_Alloc(argc * sizeof(Tk_Uid));
 	for (i = itemPtr->numTags - 1; i != TCL_INDEX_NONE; i--) {
 	    newPtr[i] = itemPtr->tagPtr[i];
 	}
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
-	    ckfree(itemPtr->tagPtr);
+	    Tcl_Free(itemPtr->tagPtr);
 	}
 	itemPtr->tagPtr = newPtr;
 	itemPtr->tagSpace = argc;
@@ -442,7 +442,7 @@ Tk_CanvasTagsParseProc(
     for (i = 0; i < argc; i++) {
 	itemPtr->tagPtr[i] = Tk_GetUid(argv[i]);
     }
-    ckfree(argv);
+    Tcl_Free(argv);
     return TCL_OK;
 }
 
@@ -561,7 +561,7 @@ TkCanvasDashPrintProc(
     if (i < 0) {
 	i = -i;
 	*freeProcPtr = TCL_DYNAMIC;
-	buffer = (char *)ckalloc((Tcl_Size)i + 1);
+	buffer = (char *)Tcl_Alloc((size_t)i + 1);
 	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
 	memcpy(buffer, p, (unsigned int) i);
 	buffer[i] = 0;
@@ -570,7 +570,7 @@ TkCanvasDashPrintProc(
 	*freeProcPtr = NULL;
 	return "";
     }
-    buffer = (char *)ckalloc(4 * (Tcl_Size)i);
+    buffer = (char *)Tcl_Alloc(4 * (size_t)i);
     *freeProcPtr = TCL_DYNAMIC;
 
     p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
@@ -606,12 +606,12 @@ InitSmoothMethods(
 {
     SmoothAssocData *methods, *ptr;
 
-    methods = (SmoothAssocData *)ckalloc(sizeof(SmoothAssocData));
+    methods = (SmoothAssocData *)Tcl_Alloc(sizeof(SmoothAssocData));
     methods->smooth.name = tkRawSmoothMethod.name;
     methods->smooth.coordProc = tkRawSmoothMethod.coordProc;
     methods->smooth.postscriptProc = tkRawSmoothMethod.postscriptProc;
 
-    ptr = methods->nextPtr = (SmoothAssocData *)ckalloc(sizeof(SmoothAssocData));
+    ptr = methods->nextPtr = (SmoothAssocData *)Tcl_Alloc(sizeof(SmoothAssocData));
     ptr->smooth.name = tkBezierSmoothMethod.name;
     ptr->smooth.coordProc = tkBezierSmoothMethod.coordProc;
     ptr->smooth.postscriptProc = tkBezierSmoothMethod.postscriptProc;
@@ -667,11 +667,11 @@ Tk_CreateSmoothMethod(
 	    } else {
 		prevPtr->nextPtr = typePtr2->nextPtr;
 	    }
-	    ckfree(typePtr2);
+	    Tcl_Free(typePtr2);
 	    break;
 	}
     }
-    ptr = (SmoothAssocData *)ckalloc(sizeof(SmoothAssocData));
+    ptr = (SmoothAssocData *)Tcl_Alloc(sizeof(SmoothAssocData));
     ptr->smooth.name = smooth->name;
     ptr->smooth.coordProc = smooth->coordProc;
     ptr->smooth.postscriptProc = smooth->postscriptProc;
@@ -707,7 +707,7 @@ SmoothMethodCleanupProc(
     while (methods != NULL) {
 	ptr = methods;
 	methods = methods->nextPtr;
-	ckfree(ptr);
+	Tcl_Free(ptr);
     }
 }
 /*
@@ -882,7 +882,7 @@ Tk_GetDash(
 	}
 	i = (int)strlen(value);
 	if (i > (int) sizeof(char *)) {
-	    dash->pattern.pt = pt = (char *)ckalloc(strlen(value));
+	    dash->pattern.pt = pt = (char *)Tcl_Alloc(strlen(value));
 	} else {
 	    pt = dash->pattern.array;
 	}
@@ -897,10 +897,10 @@ Tk_GetDash(
     }
 
     if ((unsigned) ABS(dash->number) > sizeof(char *)) {
-	ckfree(dash->pattern.pt);
+	Tcl_Free(dash->pattern.pt);
     }
     if (argc > (int) sizeof(char *)) {
-	dash->pattern.pt = pt = (char *)ckalloc(argc);
+	dash->pattern.pt = pt = (char *)Tcl_Alloc(argc);
     } else {
 	pt = dash->pattern.array;
     }
@@ -921,7 +921,7 @@ Tk_GetDash(
     }
 
     if (argv != NULL) {
-	ckfree(argv);
+	Tcl_Free(argv);
     }
     return TCL_OK;
 
@@ -936,10 +936,10 @@ Tk_GetDash(
     Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", (char *)NULL);
   syntaxError:
     if (argv != NULL) {
-	ckfree(argv);
+	Tcl_Free(argv);
     }
     if ((unsigned) ABS(dash->number) > sizeof(char *)) {
-	ckfree(dash->pattern.pt);
+	Tcl_Free(dash->pattern.pt);
     }
     dash->number = 0;
     return TCL_ERROR;
@@ -1014,13 +1014,13 @@ Tk_DeleteOutline(
 	Tk_FreeGC(display, outline->gc);
     }
     if ((unsigned) ABS(outline->dash.number) > sizeof(char *)) {
-	ckfree(outline->dash.pattern.pt);
+	Tcl_Free(outline->dash.pattern.pt);
     }
     if ((unsigned) ABS(outline->activeDash.number) > sizeof(char *)) {
-	ckfree(outline->activeDash.pattern.pt);
+	Tcl_Free(outline->activeDash.pattern.pt);
     }
     if ((unsigned) ABS(outline->disabledDash.number) > sizeof(char *)) {
-	ckfree(outline->disabledDash.pattern.pt);
+	Tcl_Free(outline->disabledDash.pattern.pt);
     }
     if (outline->color != NULL) {
 	Tk_FreeColor(outline->color);
@@ -1242,10 +1242,10 @@ Tk_ChangeOutlineGC(
 	int i = -dash->number;
 
 	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-	q = (char *)ckalloc(2 * i);
+	q = (char *)Tcl_Alloc(2 * i);
 	i = DashConvert(q, p, i, width);
 	XSetDashes(Canvas(canvas)->display, outline->gc, outline->offset, q,i);
-	ckfree(q);
+	Tcl_Free(q);
     } else if (dash->number>2 || (dash->number==2 &&
 	    (dash->pattern.array[0]!=dash->pattern.array[1]))) {
 	p = (dash->number > (int) sizeof(char *))
@@ -1471,7 +1471,7 @@ Tk_CanvasPsOutline(
 	Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", outline->offset);
     } else if (dash->number < 0) {
 	if (dash->number < -5) {
-	    lptr = (char *)ckalloc(1 - 2*dash->number);
+	    lptr = (char *)Tcl_Alloc(1 - 2*dash->number);
 	}
 	i = DashConvert(lptr, ptr, -dash->number, width);
 	if (i > 0) {
@@ -1486,7 +1486,7 @@ Tk_CanvasPsOutline(
 	    Tcl_AppendToObj(psObj, "] 0 setdash\n", TCL_INDEX_NONE);
 	}
 	if (lptr != pattern) {
-	    ckfree(lptr);
+	    Tcl_Free(lptr);
 	}
     } else {
 	Tcl_AppendToObj(psObj, "] 0 setdash\n", TCL_INDEX_NONE);
@@ -1735,7 +1735,7 @@ TkCanvTranslatePath(
     if (numVertex*12 <= (int) (sizeof(staticSpace) / sizeof(double))) {
 	tempArr = staticSpace;
     } else {
-	tempArr = (double *)ckalloc(numVertex * 12 * sizeof(double));
+	tempArr = (double *)Tcl_Alloc(numVertex * 12 * sizeof(double));
     }
     for (i=0; i<numVertex*2; i++){
 	tempArr[i] = coordArr[i];
@@ -1874,7 +1874,7 @@ TkCanvTranslatePath(
 	TranslateAndAppendCoords(canvPtr, a[i*2], a[i*2+1], outArr, i);
     }
     if (tempArr != staticSpace) {
-	ckfree(tempArr);
+	Tcl_Free(tempArr);
     }
     return numOutput;
 }

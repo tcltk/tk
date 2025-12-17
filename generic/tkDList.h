@@ -28,13 +28,13 @@
  * MyList listHdr = TK_DLIST_LIST_INITIALIZER; // or MyList_Init(&listHdr)
  * MyListEntry *p;
  * int i = 0;
- * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
- * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)Tcl_Alloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)Tcl_Alloc(sizeof(MyListEntry)));
  * TK_DLIST_FOREACH(p, &listHdr) { p->value = i++; }
  * // ...
  * MyList_RemoveHead(&listHdr);
  * MyList_RemoveHead(&listHdr);
- * MyList_Clear(MyListEntry, &listHdr); // invokes ckfree() for each element
+ * MyList_Clear(MyListEntry, &listHdr); // invokes Tcl_Free() for each element
  * -------------------------------------------------------------------------------
  * IMPORTANT NOTE: TK_DLIST_LINKS must be used at start of struct!
  */
@@ -253,7 +253,7 @@ LT##_ElemInit(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsEmpty(LT *head)								\
 {										\
     assert(head);								\
@@ -261,7 +261,7 @@ LT##_IsEmpty(LT *head)								\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsLinked(struct ElemType *elem)						\
 {										\
     assert(elem);								\
@@ -269,7 +269,7 @@ LT##_IsLinked(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsFirst(struct ElemType *elem)						\
 {										\
     assert(LT##_IsLinked(elem));						\
@@ -277,7 +277,7 @@ LT##_IsFirst(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static bool									\
 LT##_IsLast(struct ElemType *elem)						\
 {										\
     assert(LT##_IsLinked(elem));						\
@@ -317,11 +317,11 @@ LT##_Prev(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static unsigned									\
+static size_t									\
 LT##_Size(const LT *head)							\
 {										\
     const struct ElemType *elem;						\
-    unsigned size = 0;								\
+    size_t size = 0;								\
     assert(head);								\
     if ((elem = head->first)) {							\
 	for ( ; elem != (void *) head; elem = elem->_dl_.next) {		\
@@ -440,7 +440,7 @@ static void									\
 LT##_Free(struct ElemType *elem)						\
 {										\
     LT##_Remove(elem);								\
-    ckfree((void *)elem);							\
+    Tcl_Free((void *)elem);							\
 }										\
 										\
 __TK_DLIST_UNUSED								\
@@ -508,7 +508,7 @@ LT##_Clear(LT *head)								\
     assert(head);								\
     for (p = head->first; p; p = next) {					\
 	next = LT##_Next(p);							\
-	ckfree((void *)p);							\
+	Tcl_Free((void *)p);							\
     }										\
     LT##_Init(head);								\
 }										\

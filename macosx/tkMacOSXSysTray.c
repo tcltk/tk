@@ -167,7 +167,7 @@ MacSystrayDestroy(
     StatusItemInfo info = (StatusItemInfo)clientData;
     if (info) {
 	[*info release];
-	ckfree(info);
+	Tcl_Free(info);
     }
 }
 
@@ -476,7 +476,7 @@ MacSystrayInit(Tcl_Interp *interp)
      * Initialize the TkStatusItem for this interpreter.
      */
 
-    StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
+    StatusItemInfo info = (StatusItemInfo)Tcl_Alloc(sizeof(StatusItemInfo));
     *info = 0;
 
     Tcl_CreateObjCommand2(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
