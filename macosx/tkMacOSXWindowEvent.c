@@ -308,12 +308,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr) {
 	TKContentView *view = [window contentView];
 	// fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	if (@available(macOS 10.14, *)) {
-	    [view viewDidChangeEffectiveAppearance];
-	}
-#endif
     }
 }
 
@@ -369,8 +363,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
+#if 0
+    // These can be useful for debugging.
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
+#endif
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
