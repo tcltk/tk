@@ -142,6 +142,9 @@ proc ttk::wideSpinbox::UpdateElements theme {
     set idx [string first "bg" $imgData]
     set imgData [string replace $imgData $idx $idx+1 $bg]
     append imgData "stroke='$fg'/>\n</svg>"
+    if {![$img in [image names]]} {
+	return ""
+    }
     $img configure -data $imgData
 
     set imgData $uparrowImgData
