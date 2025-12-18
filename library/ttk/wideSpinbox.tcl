@@ -217,7 +217,7 @@ proc ttk::wideSpinbox::CondMakeElements {} {
 
 	set madeElements 1
     }
-} 
+}
 
 #------------------------------------------------------------------------------
 # ttk::wideSpinbox::MakeOrUpdateElements

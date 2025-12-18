@@ -529,7 +529,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     /* Child widgets - return description. */
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
 	Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-	if (child) {            
+	if (child) {
 	    HRESULT hr = TkAccDescription(child, pszName);
 	    TkGlobalUnlock();
 	    return hr;
