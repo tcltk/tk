@@ -130,19 +130,6 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
 #define TK_MULTI_MAX_PATH	(MAX_PATH*40)
 
 /*
- * The following structure is used to pass information between the directory
- * chooser function, Tk_ChooseDirectoryObjCmd(), and its dialog hook proc.
- */
-
-typedef struct {
-   WCHAR initDir[MAX_PATH];	/* Initial folder to use */
-   WCHAR retDir[MAX_PATH];	/* Returned folder to use */
-   Tcl_Interp *interp;
-   int mustExist;		/* True if file must exist to return from
-				 * callback */
-} ChooseDir;
-
-/*
  * The following structure is used to pass information between GetFileName
  * function and OFN dialog hook procedures. [Bug 2896501, Patch 2898255]
  */
