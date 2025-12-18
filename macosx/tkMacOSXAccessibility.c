@@ -35,12 +35,12 @@ TkAccessibilityElement *TkAccessibility_GetElementForWindow(Tk_Window tkwin);
 Tk_Window TkAccessibility_GetWindowForElement(TkAccessibilityElement *element);
 void TkAccessibility_UnlinkWindowAndElement(Tk_Window tkwin, TkAccessibilityElement *element);
 void TkAccessibility_CleanupHashTables(void);
-static int TkMacOSXAccessibleObjCmd(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+static int TkMacOSXAccessibleObjCmd(void *clientData,Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
 static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *eventPtr);
 void TkMacOSXAccessibility_RegisterForCleanup(Tk_Window tkwin, void *accessibilityElement);
-int IsVoiceOverRunning(void *clientData, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+int IsVoiceOverRunning(void *clientData, Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
-static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
 int TkMacOSXAccessibility_Init(Tcl_Interp * interp);
 static int ActionEventProc(Tcl_Event *ev, int flags);
 
@@ -882,7 +882,7 @@ void TkAccessibility_CleanupHashTables(void)
 int IsVoiceOverRunning(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *ip,
-    TCL_UNUSED(int), /* objc */
+    TCL_UNUSED(Tcl_Size), /* objc */
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
     int result = 0;
@@ -922,7 +922,7 @@ int IsVoiceOverRunning(
 static int EmitSelectionChanged(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *ip,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
@@ -1047,7 +1047,7 @@ static void TkMacOSXAccessibility_DestroyHandler(void *clientData, XEvent *event
 static int TkMacOSXAccessibleObjCmd(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *ip,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
@@ -1105,9 +1105,9 @@ int TkMacOSXAccessibility_Init(Tcl_Interp * interp)
 {
 
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsVoiceOverRunning, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkMacOSXAccessibleObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader", IsVoiceOverRunning, NULL, NULL);
     [pool release];
     return TCL_OK;
 }
