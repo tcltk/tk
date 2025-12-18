@@ -189,11 +189,11 @@ static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr);
 static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr);
 
 /* Tcl command implementations. */
-static int EmitSelectionChanged(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int EmitFocusChanged(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChanged(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
+static int EmitFocusChanged(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
+static int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 static int IsScreenReaderActive(void);
-int TkAtkAccessibleObjCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int TkAtkAccessibleObjCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 int TkAtkAccessibility_Init(Tcl_Interp *interp);
 
 /* Signal IDs for custom AT-SPI signals. */
@@ -2666,7 +2666,7 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 static int EmitSelectionChanged(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     /* Validate arguments. */
@@ -2752,7 +2752,7 @@ static int EmitSelectionChanged(
 static int EmitFocusChanged(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
@@ -2787,7 +2787,7 @@ static int EmitFocusChanged(
 static int IsScreenReaderRunning(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    TCL_UNUSED(int), /* objc */
+    TCL_UNUSED(Tcl_Size), /* objc */
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
     int result = IsScreenReaderActive();
@@ -2834,7 +2834,7 @@ static int IsScreenReaderActive(void)
 int TkAtkAccessibleObjCmd(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc != 2) {
@@ -2951,13 +2951,13 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
 
     /* Register Tcl commands. */
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object",
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object",
 	    TkAtkAccessibleObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change",
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change",
 	    EmitSelectionChanged, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change",
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_focus_change",
 	    EmitFocusChanged, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader",
 	    IsScreenReaderRunning, NULL, NULL);
 
     return TCL_OK;
@@ -2970,7 +2970,7 @@ static int
 TkAccessibleStubObjCmd(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    TCL_UNUSED(int), /* objc */
+    TCL_UNUSED(Tcl_Size), /* objc */
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
     static int warned = 0;
@@ -2989,10 +2989,10 @@ TkAccessibleStubObjCmd(
 
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkAccessibleStubObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", TkAccessibleStubObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change", TkAccessibleStubObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", TkAccessibleStubObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkAccessibleStubObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change", TkAccessibleStubObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_focus_change", TkAccessibleStubObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader", TkAccessibleStubObjCmd, NULL, NULL);
     return TCL_OK;
 }
 #endif
