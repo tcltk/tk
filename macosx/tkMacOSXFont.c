@@ -1341,7 +1341,7 @@ TkpDrawAngledCharsInContext(
     }
 
     context = drawingContext.context;
-    TkSetMacColor(gc->foreground, &fg);
+    TkSetMacColor2(gc->foreground, &fg, TkMacOSXInDarkMode((Tk_Window)macWin->winPtr));
     attributes = [fontPtr->nsAttributes mutableCopy];
     if (fg) {
 	[attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
