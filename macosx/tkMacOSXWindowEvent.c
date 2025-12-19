@@ -301,23 +301,24 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     return (winPtr ? NO : YES);
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
-	TKContentView *view = [window contentView];
-	// fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
+        fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
     }
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	// fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
+	fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
     }
 }
 
