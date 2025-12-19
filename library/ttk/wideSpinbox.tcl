@@ -132,9 +132,17 @@ proc ttk::wideSpinbox::UpdateElements theme {
 	set pFg [NormalizeColor $pFg]
     }
 
+    set imgList [image names]
+
     # Update the WideSpinbox.uparrow element
 
     variable uparrowImgsArr
+    foreach img $uparrowImgsArr($theme) {
+	if {$img ni $imgList} {
+	    return ""
+	}
+    }
+
     lassign $uparrowImgsArr($theme) img dImg pImg aImg
     variable uparrowImgData
 
@@ -142,9 +150,6 @@ proc ttk::wideSpinbox::UpdateElements theme {
     set idx [string first "bg" $imgData]
     set imgData [string replace $imgData $idx $idx+1 $bg]
     append imgData "stroke='$fg'/>\n</svg>"
-    if {![$img in [image names]]} {
-	return ""
-    }
     $img configure -data $imgData
 
     set imgData $uparrowImgData
@@ -165,6 +170,12 @@ proc ttk::wideSpinbox::UpdateElements theme {
     # Update the WideSpinbox.downarrow element
 
     variable downarrowImgsArr
+    foreach img $downarrowImgsArr($theme) {
+	if {$img ni $imgList} {
+	    return ""
+	}
+    }
+
     lassign $downarrowImgsArr($theme) img dImg pImg aImg
     variable downarrowImgData
 
