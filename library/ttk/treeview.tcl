@@ -44,7 +44,7 @@ namespace eval ttk::treeview {
 	}
     }
 }
-    
+
 if {$::tcl_platform(os) ne "Darwin"} {
     set ckey Control
 } else {
@@ -190,7 +190,6 @@ proc ::ttk::treeview::LastColumnId {w} {
 #
 proc ::ttk::treeview::GetCurrentItem {w skip} {
     variable State
-    set anchor [$w selection anchor]
     set focus [$w focus]
 
     if {$State(current) ne "" && !$skip} {
@@ -198,11 +197,6 @@ proc ::ttk::treeview::GetCurrentItem {w skip} {
     } elseif {$focus ne ""} {
 	set item $focus
     } else {
-	set item $anchor
-    }
-
-    # Just in case, give it a valid value
-    if {$item eq ""} {
 	set item [$w identifier {} 0]
     }
     return $item
@@ -213,21 +207,15 @@ proc ::ttk::treeview::GetCurrentItem {w skip} {
 #
 proc ::ttk::treeview::GetCurrentCell {w skip} {
     variable State
-    lassign [$w cellselection anchor] anchor colAnchor
     lassign [$w cellfocus] focus colFocus
 
-    if {$State(currentCell) ne "" && !$skip} {
+    if {[llength $State(currentCell)] == 2 && !$skip} {
 	lassign $State(currentCell) item column
-    } elseif {$colFocus ne ""} {
+    } elseif {$focus ne "" && $colFocus ne ""} {
 	set item $focus
 	set column $colFocus
     } else {
-	set item $anchor
-	set column $colAnchor
-    }
-
-    # Just in case, give it a valid value
-    if {$column eq ""} {
+	set item [$w identifier {} 0]
 	set column [FirstColumnId $w]
     }
 
@@ -628,9 +616,9 @@ proc ::ttk::treeview::SelectionSet {w fn} {
     # Get current item and cell
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
-	lassign [$w cellfocus] item column
+	lassign [GetCurrentCell $w 1] item column colNum
     } else {
-	set item [$w focus]
+	set item [GetCurrentItem $w 1]
     }
     if {$item eq "" && $fn ni [list all invert]} {return}
 
@@ -738,8 +726,7 @@ proc ::ttk::treeview::ActivateHeading {w heading} {
 	if {$heading != {}} {
 	    $w heading $heading state active
 	}
-	set State(activeHeading) $heading
-	set State(activeWidget) $w
+	array set State [list activeHeading $heading activeWidget $w]
     }
 }
 
@@ -850,11 +837,12 @@ proc ttk::treeview::Select.press {w x y} {
 	*disclosure { ToggleOpenState $w $item }
 	default {
 	    SelectOp $w $item $cell choose
-	    if {[$w cget -selectmode] in [list browse multiple extended]} {
+	    if {[$w cget -selectmode] in [list browse extended]} {
 		set State(pressMode) "selection"
 	    }
 	}
     }
+    array set State [list current $item currentCell $cell]
 }
 
 proc ttk::treeview::Select.drag {w x y} {
@@ -910,6 +898,7 @@ proc ttk::treeview::Select.drag {w x y} {
 		$w see $item
 	    }
 	}
+	array set State [list current $item currentCell {}]
     }
 }
 
@@ -918,8 +907,7 @@ proc ttk::treeview::Select.drag {w x y} {
 #
 proc ::ttk::treeview::Resize.press {w x y} {
     variable State
-    set State(pressMode) "resize"
-    set State(resizeColumn) [$w identify column $x $y]
+    array set State [list pressMode "resize" resizeColumn [$w identify column $x $y]]
 }
 
 proc ::ttk::treeview::Resize.drag {w x} {
@@ -1192,7 +1180,7 @@ proc ::ttk::treeview::CloseItem {w item} {
     } else {
 	return
     }
-    
+
     # If focus item is not visible, move focus to item
     if {[$w cget -selecttype] eq "item"} {
 	set focus [$w focus]
@@ -1250,7 +1238,13 @@ proc ::ttk::treeview::ToggleSelected {w op} {
 }
 
 #
-# Default action for invoke
+# ActivateItem -- Default action for invoke
+#
+# Order:
+# 1. If ::ttk::treeview::EditItem exists, call it.
+# 2. If in cell mode, move down 1 cell.
+# 3. If item has children, open it.
+# 4. If not, select it.
 #
 proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
     if {[$w instate disabled]} return
@@ -1275,13 +1269,15 @@ proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
 	EditItem $w $item $column
     } elseif {$cellmode && !$skip} {
 	KeyNav $w down
-    } else {
+    } elseif {[$w haschildren $item]} {
 	ToggleOpenState $w $item
 	if {$cellmode} {
 	    $w cellfocus $cell
 	} else {
 	    $w focus $item
 	}
+    } else {
+	SelectOp $w $item $cell choose
     }
 }
 
