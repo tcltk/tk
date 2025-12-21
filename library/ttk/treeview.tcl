@@ -237,47 +237,52 @@ proc ::ttk::treeview::GetCurrentCell {w skip} {
 }
 
 #
-# Get top most visible item
+# Get top-most fully visible item
 #
 proc ::ttk::treeview::PageTop {w} {
-    set item ""
-    set rh [ttk::style configure Treeview -rowheight]
-    set y [expr {"headings" in [$w cget -show] ? $rh : 1}]
-    for {} {$y < [winfo height $w]} {incr y $rh} {
-	set item [$w identify item 10 $y]
-	if {$item ne ""} break
-    }
-    return $item
+    set offset [expr {"headings" in [$w cget -show] ? [$w cget -headingheight] : 0}]
+    incr offset [expr {[ttk::style configure Treeview -rowheight] * [$w cget -titleitems]}]
+    return [$w identify item 10 [expr {$offset + 5}]]
 }
 
 #
-# Get bottom most visible item
+# Get bottom-most fully visible item
 #
 proc ::ttk::treeview::PageBottom {w} {
     set item ""
     set rh [expr {[ttk::style configure Treeview -rowheight] * -1}]
-    set y [expr {[winfo height $w] + $rh}]
-    for {} {$y > 0} {incr y $rh} {
+    for {set y [expr {[winfo height $w] + $rh + 5}]} {$y > 0} {incr y $rh} {
 	set item [$w identify item 10 $y]
-	if {$item ne ""} break
+	if {$item eq ""} continue
+	lassign [$w bbox $item] x y wd ht
+	if {$y + $ht <= [winfo height $w]} {
+	    break
+	}
     }
     return $item
 }
 
 #
-# Get top item in widget
+# Get first item in widget
 #
-proc ::ttk::treeview::TopItem {w} {
-    return [$w id {} 0]
+proc ::ttk::treeview::GetFirstItem {w} {
+    set item [$w identifier {} first]
+    if {[$w item $item -hidden]} {
+	set item [$w after $item]
+    }
+    return $item
 }
 
 #
-# Get bottom item in widget
+# Get last item in widget
 #
-proc ::ttk::treeview::BottomItem {w} {
-    set item [$w id {} last]
+proc ::ttk::treeview::GetLastItem {w} {
+    set item [$w identifier {} last]
     while {[$w item $item -open] && [$w haschildren $item]} {
-	set item [$w id $item last]
+	set item [$w identifier $item last]
+    }
+    if {[$w item $item -hidden]} {
+	set item [$w before $item]
     }
     return $item
 }
@@ -296,7 +301,7 @@ proc ::ttk::treeview::GetWidth {w} {
 }
 
 #
-# Get left most visible column
+# Get left-most fully visible column
 #
 proc ::ttk::treeview::PageLeft {w} {
     lassign [$w xview] start end
@@ -312,7 +317,7 @@ proc ::ttk::treeview::PageLeft {w} {
 }
 
 #
-# Get right most visible column
+# Get right-most fully visible column
 #
 proc ::ttk::treeview::PageRight {w} {
     lassign [$w xview] start end
@@ -396,25 +401,25 @@ proc ::ttk::treeview::KeyNav {w fn {op moveto}} {
 	}
 	top {
 	    # Move/extend to top item in tree
-	    set item [TopItem $w]
+	    set item [GetFirstItem $w]
 	}
 	bottom {
 	    # Move/extend to bottom item in tree
-	    set item [BottomItem $w]
+	    set item [GetLastItem $w]
 	}
 	topleft {
 	    # Move/extend to tree top-left cell
 	    if {$cellmode} {
 		set colNum [FirstColumnNum $w]
 	    }
-	    set item [TopItem $w]
+	    set item [GetFirstItem $w]
 	}
 	bottomright {
 	    # Move/extend to tree bottom-right cell
 	    if {$cellmode} {
 		set colNum [LastColumnNum $w]
 	    }
-	    set item [BottomItem $w]
+	    set item [GetLastItem $w]
 	}
 	pageLeft {
 	    # Move/extend to left most visible column
@@ -563,12 +568,12 @@ proc ::ttk::treeview::PageNav {w fn} {
 	top {
 	    # Move to & select topmost item/cell
 	    $w yview moveto 0
-	    set item [TopItem $w]
+	    set item [GetFirstItem $w]
 	}
 	bottom {
 	    # Move to & select bottom-most item/cell
 	    $w yview moveto 1
-	    set item [BottomItem $w]
+	    set item [GetLastItem $w]
 	}
 	pageLeft {
 	    # Move to & select leftmost item/cell in current screen view
@@ -626,27 +631,26 @@ proc ::ttk::treeview::SelectionSet {w fn} {
 	all {
 	    if {$cellmode} {
 		$w cellselection set -nohidden -recurse \
-		    [list [TopItem $w] [FirstColumnId $w]] \
-		    [list [BottomItem $w] [LastColumnId $w]]
+		    [list [GetFirstItem $w] [FirstColumnId $w]] \
+		    [list [GetLastItem $w] [LastColumnId $w]]
 	    } else {
-		$w selection set -nohidden -recurse [TopItem $w] [BottomItem $w]
+		$w selection set -nohidden -recurse [GetFirstItem $w] [GetLastItem $w]
 	    }
 	}
 	column {
 	    if {$cellmode} {
 		$w cellselection set -nohidden -recurse \
-		    [list [TopItem $w] $column] [list [BottomItem $w] $column]
+		    [list [GetFirstItem $w] $column] [list [GetLastItem $w] $column]
 	    }
 	}
 	invert {
 	    if {$cellmode} {
 		$w cellselection toggle -nohidden -recurse \
-		    [list [TopItem $w] [FirstColumnId $w]] \
-		    [list [BottomItem $w] [LastColumnId $w]]
+		    [list [GetFirstItem $w] [FirstColumnId $w]] \
+		    [list [GetLastItem $w] [LastColumnId $w]]
 	    } else {
-		$w selection toggle -nohidden -recurse [TopItem $w] [BottomItem $w]
+		$w selection toggle -nohidden -recurse [GetFirstItem $w] [GetLastItem $w]
 	    }
-	    
 	}
 	row {
 	    if {$cellmode} {
@@ -848,54 +852,55 @@ proc ttk::treeview::Select.press {w x y} {
 proc ttk::treeview::Select.drag {w x y} {
     variable State
     if {$State(pressMode) ne "selection"} return
+    lassign [$w current] item column
 
+    # Autoscroll equivalent
+    set hh [expr {"headings" in [$w cget -show] ? [ttk::style configure Treeview -rowheight] : 0}]
+    set ht [winfo height $w]
+    set wd [winfo width $w]
+    if {$y >= $ht} {
+	$w yview scroll 1 units
+	set y [expr {$ht - 5}]
+    } elseif {$y < $hh} {
+	$w yview scroll -1 units
+	set y [expr {$hh + 5}]
+    } elseif {$x >= $wd} {
+	$w xview scroll 5 units
+	set x [expr {$wd - 5}]
+    } elseif {$x <= 0} {
+	$w xview scroll -5 units
+	set x 5
+    }
+
+    if {$item eq "" || $column eq ""} {
+	set item [$w identify item $x $y]
+	set column [$w identify column $x $y]
+    }
+    if {$item eq ""} {
+	return
+    }
+
+    # Adjust selection for cell or item mode
     if {[$w cget -selecttype] eq "cell"} {
-	lassign [$w current] item column
-	if {$column ne ""} {
-	    set cell [list $item $column]
-	} else {
-	    set cell ""
-	    if {[$w identify region $x $y] in [list heading separator] || $y <= 0} {
-		$w yview scroll -1 units
-		set item [::ttk::treeview::PageTop $w]
-		set column [$w identify column $x 5]
-		if {$item ne "" && $column ne ""} {
-		    set cell [list $item $column]
-		}
-	    }
-	}
-	if {[llength $cell] == 2} {
+	if {$column eq ""} return
+	set cell [list $item $column]
 	    set mode [$w cget -selectmode]
 	    if {$mode eq "browse"} {
 		$w cellselection set [list $cell]
 		$w cellfocus $cell
-		$w see {*}$cell
-	    } elseif {$mode eq "multiple" || $mode eq "extended"} {
+	    } elseif {$mode eq "extended"} {
 		$w cellselection set [$w cellselection anchor] $cell
-		$w see {*}$cell
 	    }
-	}
+	array set State [list current $item currentCell $cell]
 
     } else {
-	lassign [$w current] item column
-	if {$item eq ""} {
-	    if {[$w identify region $x $y] in [list heading separator] || $y <= 0} {
-		$w yview scroll -1 units
-		set item [::ttk::treeview::PageTop $w]
-	    } else {
-		$w yview scroll 1 units
-		set item [::ttk::treeview::PageBottom $w]
-	    }
-	}
-	if {$item ne ""} {
+	if {$item ne $State(current)} {
 	    set mode [$w cget -selectmode]
 	    if {$mode eq "browse"} {
 		$w selection set [list $item]
 		$w focus $item
-		$w see $item
-	    } elseif {$mode eq "multiple" || $mode eq "extended"} {
+	    } elseif {$mode eq "extended"} {
 		$w selection set [$w selection anchor] $item
-		$w see $item
 	    }
 	}
 	array set State [list current $item currentCell {}]
