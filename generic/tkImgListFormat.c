@@ -555,7 +555,7 @@ StringReadDef(
     srcBlock.offset[1] = 1;
     srcBlock.offset[2] = 2;
     srcBlock.offset[3] = 3;
-    srcBlock.pixelPtr = (unsigned char *)attemptckalloc(srcBlock.pitch * srcBlock.height);
+    srcBlock.pixelPtr = (unsigned char *)Tcl_AttemptAlloc(srcBlock.pitch * srcBlock.height);
     if (srcBlock.pixelPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(TK_PHOTO_ALLOC_FAILURE_MESSAGE));
 	Tcl_SetErrorCode(interp, "TK", "MALLOC", (char *)NULL);
@@ -592,12 +592,12 @@ StringReadDef(
 	goto errorExit;
     }
 
-    ckfree(srcBlock.pixelPtr);
+    Tcl_Free(srcBlock.pixelPtr);
 
     return TCL_OK;
 
   errorExit:
-    ckfree(srcBlock.pixelPtr);
+    Tcl_Free(srcBlock.pixelPtr);
 
     return TCL_ERROR;
 }

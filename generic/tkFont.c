@@ -353,14 +353,13 @@ static void		UpdateDependentFonts(TkFontInfo *fiPtr,
  * font object points to the TkFont structure for the font, or NULL.
  */
 
-const TkObjType tkFontObjType = {
-    {"font",			/* name */
+const Tcl_ObjType tkFontObjType = {
+    "font",			/* name */
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
-    0
+    TCL_OBJTYPE_V0
 };
 
 /*
@@ -386,7 +385,7 @@ void
 TkFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    TkFontInfo *fiPtr = (TkFontInfo *)ckalloc(sizeof(TkFontInfo));
+    TkFontInfo *fiPtr = (TkFontInfo *)Tcl_Alloc(sizeof(TkFontInfo));
 
     Tcl_InitHashTable(&fiPtr->fontCache, TCL_STRING_KEYS);
     Tcl_InitHashTable(&fiPtr->namedTable, TCL_STRING_KEYS);
@@ -448,14 +447,14 @@ TkFontPkgFree(
 
     hPtr = Tcl_FirstHashEntry(&fiPtr->namedTable, &search);
     while (hPtr != NULL) {
-	ckfree(Tcl_GetHashValue(hPtr));
+	Tcl_Free(Tcl_GetHashValue(hPtr));
 	hPtr = Tcl_NextHashEntry(&search);
     }
     Tcl_DeleteHashTable(&fiPtr->namedTable);
     if (fiPtr->updatePending) {
 	Tcl_CancelIdleCall(TheWorldHasChanged, fiPtr);
     }
-    ckfree(fiPtr);
+    Tcl_Free(fiPtr);
 }
 
 /*
@@ -997,7 +996,7 @@ TkCreateNamedFont(
 	return TCL_OK;
     }
 
-    nfPtr = (NamedFont *)ckalloc(sizeof(NamedFont));
+    nfPtr = (NamedFont *)Tcl_Alloc(sizeof(NamedFont));
     nfPtr->deletePending = 0;
     Tcl_SetHashValue(namedHashPtr, nfPtr);
     nfPtr->fa = *faPtr;
@@ -1041,7 +1040,7 @@ TkDeleteNamedFont(
 	nfPtr->deletePending = 1;
     } else {
 	Tcl_DeleteHashEntry(namedHashPtr);
-	ckfree(nfPtr);
+	Tcl_Free(nfPtr);
     }
     return TCL_OK;
 }
@@ -1120,7 +1119,7 @@ Tk_AllocFontFromObj(
     int isNew, descent;
     NamedFont *nfPtr;
 
-    if (objPtr->typePtr != &tkFontObjType.objType
+    if (objPtr->typePtr != &tkFontObjType
 	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(interp, objPtr);
     }
@@ -1317,7 +1316,7 @@ Tk_GetFontFromObj(
     TkFont *fontPtr;
     Tcl_HashEntry *hashPtr;
 
-    if (objPtr->typePtr != &tkFontObjType.objType
+    if (objPtr->typePtr != &tkFontObjType
 	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(NULL, objPtr);
     }
@@ -1408,7 +1407,7 @@ SetFontFromAny(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkFontObjType.objType;
+    objPtr->typePtr = &tkFontObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->internalRep.twoPtrValue.ptr2 = NULL;
 
@@ -1482,7 +1481,7 @@ Tk_FreeFont(
 	nfPtr = (NamedFont *)Tcl_GetHashValue(fontPtr->namedHashPtr);
 	if ((nfPtr->refCount-- <= 1) && nfPtr->deletePending) {
 	    Tcl_DeleteHashEntry(fontPtr->namedHashPtr);
-	    ckfree(nfPtr);
+	    Tcl_Free(nfPtr);
 	}
     }
 
@@ -1502,7 +1501,7 @@ Tk_FreeFont(
 
     TkpDeleteFont(fontPtr);
     if (fontPtr->objRefCount == 0) {
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
     }
 }
 
@@ -1568,7 +1567,7 @@ FreeFontObj(
 
     if (fontPtr != NULL) {
 	if ((fontPtr->objRefCount-- <= 1) && (fontPtr->resourceRefCount == 0)) {
-	    ckfree(fontPtr);
+	    Tcl_Free(fontPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 	objPtr->internalRep.twoPtrValue.ptr2 = NULL;
@@ -2034,7 +2033,7 @@ Tk_ComputeTextLayout(
 
     maxChunks = 1;
 
-    layoutPtr = (TextLayout *)ckalloc(offsetof(TextLayout, chunks)
+    layoutPtr = (TextLayout *)Tcl_Alloc(offsetof(TextLayout, chunks)
 	    + maxChunks * sizeof(LayoutChunk));
     layoutPtr->tkfont = tkfont;
     layoutPtr->string = string;
@@ -2291,7 +2290,7 @@ Tk_FreeTextLayout(
     TextLayout *layoutPtr = (TextLayout *) textLayout;
 
     if (layoutPtr != NULL) {
-	ckfree(layoutPtr);
+	Tcl_Free(layoutPtr);
     }
 }
 
@@ -3867,7 +3866,7 @@ NewChunk(
     if (layoutPtr->numChunks == maxChunks) {
 	maxChunks *= 2;
 	s = offsetof(TextLayout, chunks) + (maxChunks * sizeof(LayoutChunk));
-	layoutPtr = (TextLayout *)ckrealloc(layoutPtr, s);
+	layoutPtr = (TextLayout *)Tcl_Realloc(layoutPtr, s);
 
 	*layoutPtrPtr = layoutPtr;
 	*maxPtr = maxChunks;

@@ -114,7 +114,7 @@ TkGetCursorByName(
 	goto badCursorSpec;
     }
 
-    cursorPtr = (TkWinCursor *)ckalloc(sizeof(TkWinCursor));
+    cursorPtr = (TkWinCursor *)Tcl_Alloc(sizeof(TkWinCursor));
     cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
     cursorPtr->winCursor = NULL;
     cursorPtr->system = 0;
@@ -134,8 +134,8 @@ TkGetCursorByName(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "cannot get cursor from a file in a safe interpreter", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", (char *)NULL);
-	    ckfree(argv);
-	    ckfree(cursorPtr);
+	    Tcl_Free(argv);
+	    Tcl_Free(cursorPtr);
 	    return NULL;
 	}
 	cursorPtr->winCursor = LoadCursorFromFileA(&(argv[0][1]));
@@ -164,15 +164,15 @@ TkGetCursorByName(
     }
 
     if (cursorPtr->winCursor == NULL) {
-	ckfree(cursorPtr);
+	Tcl_Free(cursorPtr);
     badCursorSpec:
-	ckfree(argv);
+	Tcl_Free(argv);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad cursor spec \"%s\"", string));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", (char *)NULL);
 	return NULL;
     }
-    ckfree(argv);
+    Tcl_Free(argv);
     return (TkCursor *) cursorPtr;
 }
 

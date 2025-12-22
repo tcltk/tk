@@ -75,7 +75,7 @@ TkWinCleanupContainerList(void)
     for (; tsdPtr->firstContainerPtr != NULL;
 	    tsdPtr->firstContainerPtr = nextPtr) {
 	nextPtr = tsdPtr->firstContainerPtr->nextPtr;
-	ckfree(tsdPtr->firstContainerPtr);
+	Tcl_Free(tsdPtr->firstContainerPtr);
     }
     tsdPtr->firstContainerPtr = NULL;
 }
@@ -375,7 +375,7 @@ Tk_MakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = (Container *)ckalloc(sizeof(Container));
+    containerPtr = (Container *)Tcl_Alloc(sizeof(Container));
     containerPtr->parentPtr = winPtr;
     containerPtr->parentHWnd = Tk_GetHWND(Tk_WindowId(tkwin));
     containerPtr->embeddedHWnd = NULL;
@@ -1120,7 +1120,7 @@ EmbedWindowDeleted(
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}
-	ckfree(containerPtr);
+	Tcl_Free(containerPtr);
     }
 }
 

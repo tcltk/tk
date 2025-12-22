@@ -252,7 +252,7 @@ MODULE_SCOPE bool	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
-			    CGContextRef context);
+			    CGContextRef context, BOOL useDarkAppearance);
 MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
 MODULE_SCOPE void       TkMacOSXUpdateViewIdleTask(void *clientData);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
@@ -286,6 +286,13 @@ MODULE_SCOPE void	TkMacOSXDrawAllViews(void *clientData);
 MODULE_SCOPE NSColor*   controlAccentColor(void);
 MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
+MODULE_SCOPE int	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
+			    BOOL useDarkAppearance);
+MODULE_SCOPE CGColorRef	TkMacOSXGetCGColorFromNSColorUsingAppearance(
+			    NSColor *color, BOOL useDarkAppearance);
+MODULE_SCOPE NSColor*	TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+			    NSColor *color, NSColorSpace *colorSpace,
+			    BOOL useDarkAppearance);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
 MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
@@ -343,6 +350,10 @@ VISIBILITY_HIDDEN
 - (void)_resetAutoreleasePool;
 - (void)_lockAutoreleasePool;
 - (void)_unlockAutoreleasePool;
+@end
+@interface TKApplication(TKColor)
+- (void) performAsCurrentDrawingAppearance:(void (^)(void))block
+		       usingDarkAppearance:(BOOL)useDarkAppearance;
 @end
 @interface TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification;
@@ -411,6 +422,7 @@ VISIBILITY_HIDDEN
     NSTrackingArea *trackingArea;
 }
 @property CGContextRef tkLayerBitmapContext;
+@property Bool onScreen;
 @end
 
 @interface TKContentView(TKKeyEvent)

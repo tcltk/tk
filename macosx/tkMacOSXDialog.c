@@ -306,12 +306,12 @@ getFileURL(
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
 			TCL_EVAL_GLOBAL);
-		ckfree(tmpv);
+		Tcl_Free(tmpv);
 	    }
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
@@ -339,12 +339,12 @@ getFileURL(
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
 			TCL_EVAL_GLOBAL);
-		ckfree(tmpv);
+		Tcl_Free(tmpv);
 	    }
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
@@ -1768,12 +1768,12 @@ FontchooserEvent(
 		result = Tcl_ListObjGetElements(fontchooserInterp,
 			fcdPtr->cmdObj, &objc, &objv);
 		if (result == TCL_OK) {
-		    tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		    tmpv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * (objc + 2));
 		    memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		    tmpv[objc] = fontObj;
 		    TkBackgroundEvalObjv(fontchooserInterp, objc + 1, tmpv,
 			    TCL_EVAL_GLOBAL);
-		    ckfree(tmpv);
+		    Tcl_Free(tmpv);
 		}
 	    }
 	    Tk_SendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged", NULL);
@@ -2155,7 +2155,7 @@ DeleteFontchooserData(
     if (fcdPtr->cmdObj) {
 	Tcl_DecrRefCount(fcdPtr->cmdObj);
     }
-    ckfree(fcdPtr);
+    Tcl_Free(fcdPtr);
 
     if (fontchooserInterp == interp) {
 	fontchooserInterp = NULL;
@@ -2184,7 +2184,7 @@ TkInitFontchooser(
     Tcl_Interp *interp,
     TCL_UNUSED(void *))
 {
-    FontchooserData *fcdPtr = (FontchooserData *)ckalloc(sizeof(FontchooserData));
+    FontchooserData *fcdPtr = (FontchooserData *)Tcl_Alloc(sizeof(FontchooserData));
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

@@ -17,8 +17,9 @@ ttk::toggleswitch \- Create and manipulate a toggleswitch widget
 A \fBttk::toggleswitch\fR widget is used to show or change a binary setting.
 It consists of a horizontal \fItrough\fR (a fully rounded filled rectangle)
 and a \fIslider\fR (a filled circle contained in the trough).  Their
-dimensions depend on the display's scaling level, the current theme, and the
-value of the \fB-size\fR configuration option.
+dimensions depend on the value of the \fB-size\fR configuration option, the
+current theme, the display's scaling level, and Tk's scaling factor given by
+\fB[tk scaling]\fR at the time the first toggleswitch widget is created.
 .PP
 Just like a light switch, a toggleswitch widget can have one of two possible
 \fIswitch state\fRs: on or off.  In the on state the slider is placed at the

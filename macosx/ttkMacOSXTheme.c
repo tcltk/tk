@@ -40,7 +40,7 @@ MODULE_SCOPE NSColor *controlAccentColor(void) {
     if (accentPixel == -1) {
 	TkColor *temp = TkpGetColor(NULL, "systemControlAccentColor");
 	accentPixel = temp->color.pixel;
-	ckfree(temp);
+	Tcl_Free(temp);
     }
     return TkMacOSXGetNSColor(NULL, accentPixel);
 }
@@ -324,8 +324,9 @@ static void GetBackgroundColorRGBA(
     } else {
 	if ([NSApp macOSVersion] >= 101400) {
 	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	    NSColor *windowColor = [[NSColor windowBackgroundColor]
-		colorUsingColorSpace: deviceRGB];
+	    int isDark = TkMacOSXInDarkMode(tkwin);
+	    NSColor *windowColor = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+		    [NSColor windowBackgroundColor], deviceRGB, isDark);
 	    [windowColor getComponents: rgba];
 	} else {
 	    for (int i = 0; i < 4; i++) {
@@ -670,18 +671,21 @@ static void DrawDownArrow(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    int state)
+    int state,
+    int isDark)
 {
     CGColorRef strokeColor;
     CGFloat x, y;
 
 
     if (state & TTK_STATE_DISABLED) {
-	strokeColor = CGCOLOR([NSColor disabledControlTextColor]);
+	strokeColor = TkMacOSXGetCGColorFromNSColorUsingAppearance(
+		[NSColor disabledControlTextColor], isDark);
     } else if (state & TTK_STATE_IS_ACCENTED) {
 	strokeColor = CG_WHITE;
     } else {
-	strokeColor = CGCOLOR([NSColor controlTextColor]);
+	strokeColor = TkMacOSXGetCGColorFromNSColorUsingAppearance(
+		[NSColor controlTextColor], isDark);
     }
     CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextSetLineWidth(context, 1.5);
@@ -707,7 +711,8 @@ static void DrawUpArrow(
     CGRect bounds,
     CGFloat inset,
     CGFloat size,
-    int state)
+    int state,
+    int isDark)
 {
     NSColor *strokeColor;
     CGFloat x, y;
@@ -717,7 +722,7 @@ static void DrawUpArrow(
     } else {
 	strokeColor = [NSColor controlTextColor];
     }
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    CGContextSetStrokeColorWithColor(context, TkMacOSXGetCGColorFromNSColorUsingAppearance(strokeColor, isDark));
     CGContextSetLineWidth(context, 1.5);
     x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height / 2);
@@ -743,7 +748,8 @@ static void DrawUpDownArrows(
     CGFloat size,
     CGFloat gap,
     int state,
-    ThemeDrawState drawState)
+    ThemeDrawState drawState,
+    int isDark)
 {
     CGFloat x, y;
     NSColor *topStrokeColor, *bottomStrokeColor;
@@ -767,13 +773,13 @@ static void DrawUpDownArrows(
     CGPoint bottomArrow[3] =
 	{{x, y + gap}, {x + size / 2, y + gap + size / 2}, {x + size, y + gap}};
     CGContextAddLines(context, bottomArrow, 3);
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(bottomStrokeColor));
+    CGContextSetStrokeColorWithColor(context, TkMacOSXGetCGColorFromNSColorUsingAppearance(bottomStrokeColor, isDark));
     CGContextStrokePath(context);
     CGContextBeginPath(context);
     CGPoint topArrow[3] =
 	{{x, y - gap}, {x + size / 2, y - gap - size / 2}, {x + size, y - gap}};
     CGContextAddLines(context, topArrow, 3);
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(topStrokeColor));
+    CGContextSetStrokeColorWithColor(context, TkMacOSXGetCGColorFromNSColorUsingAppearance(topStrokeColor, isDark));
     CGContextStrokePath(context);
 }
 
@@ -850,7 +856,8 @@ static CGColorRef IndicatorColor(
 	       !(state & TTK_STATE_BACKGROUND)) {
 	return CG_WHITE;
     } else {
-	return CGCOLOR([NSColor controlTextColor]);
+	// Q: how to reach this?
+	return TkMacOSXGetCGColorFromNSColorUsingAppearance([NSColor controlTextColor], isDark);
     }
 }
 
@@ -916,13 +923,14 @@ static void
 DrawHelpSymbol(
     CGContextRef context,
     CGRect bounds,
-    int state)
+    int state,
+    int isDark)
 {
     NSFont *font = [NSFont controlContentFontOfSize:15];
     NSColor *foreground = state & TTK_STATE_DISABLED ?
 	[NSColor disabledControlTextColor] : [NSColor controlTextColor];
     NSDictionary *attrs = @{
-	NSForegroundColorAttributeName : foreground,
+	NSForegroundColorAttributeName : TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(foreground, [NSColorSpace deviceRGBColorSpace], isDark),
 	NSFontAttributeName : font
     };
     NSAttributedString *attributedString = [[NSAttributedString alloc]
@@ -1221,7 +1229,7 @@ static void DrawButton(
 	break;
     case kThemeRoundButtonHelp:
 	DrawGrayButton(context, bounds, &helpDesign, state, tkwin);
-	DrawHelpSymbol(context, bounds, state);
+	DrawHelpSymbol(context, bounds, state, isDark);
 	break;
     case kThemePopupButton:
 	drawState = 0;
@@ -1243,7 +1251,7 @@ static void DrawButton(
 	    drawState = BOTH_ARROWS;
 	}
 	arrowBounds.origin.x += 2;
-	DrawUpDownArrows(context, arrowBounds, 3, 7, 2, state, drawState);
+	DrawUpDownArrows(context, arrowBounds, 3, 7, 2, state, drawState, isDark);
 	break;
     case kThemeComboBox:
 	if (state & TTK_STATE_DISABLED) {
@@ -1267,7 +1275,7 @@ static void DrawButton(
 	if (!(state & TTK_STATE_BACKGROUND)) {
 	    state |= TTK_STATE_IS_ACCENTED;
 	}
-	DrawDownArrow(context, arrowBounds, 6, 6, state);
+	DrawDownArrow(context, arrowBounds, 6, 6, state, isDark);
 	break;
     case kThemeCheckBox:
 	bounds = CGRectOffset(CGRectMake(0, bounds.size.height / 2 - 8, 16, 16),
@@ -1307,9 +1315,9 @@ static void DrawButton(
 	arrowBounds.size.width = 16;
 	arrowBounds.origin.y -= 1;
 	if (state & TTK_STATE_SELECTED) {
-	    DrawUpArrow(context, arrowBounds, 5, 6, state);
+	    DrawUpArrow(context, arrowBounds, 5, 6, state, isDark);
 	} else {
-	    DrawDownArrow(context, arrowBounds, 5, 6, state);
+	    DrawDownArrow(context, arrowBounds, 5, 6, state, isDark);
 	}
 	break;
     case kThemeIncDecButton:
@@ -1333,7 +1341,7 @@ static void DrawButton(
 	}
 	{
 	    CGFloat inset = (bounds.size.width - 5) / 2;
-	    DrawUpDownArrows(context, bounds, inset, 5, 3, state, drawState);
+	    DrawUpDownArrows(context, bounds, inset, 5, 3, state, drawState, isDark);
 	}
 	break;
     default:
@@ -1447,9 +1455,9 @@ static void DrawListHeader(
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
 	arrowBounds.size.width = 16;
 	if (state & TTK_STATE_ALTERNATE) {
-	    DrawUpArrow(context, arrowBounds, 3, 8, state);
+	    DrawUpArrow(context, arrowBounds, 3, 8, state, isDark);
 	} else if (state & TTK_STATE_SELECTED) {
-	    DrawDownArrow(context, arrowBounds, 3, 8, state);
+	    DrawDownArrow(context, arrowBounds, 3, 8, state, isDark);
 	}
     }
 }
@@ -2167,8 +2175,8 @@ static void EntryElementDraw(
 	}
 	BEGIN_DRAWING(d)
 	if (backgroundPtr == NULL) {
-	    if ([NSApp macOSVersion] > 100800) {
-		background = CGCOLOR([NSColor textBackgroundColor]);
+	    if ([NSApp macOSVersion] > 100800) { // unreachable?
+		background = TkMacOSXGetCGColorFromNSColorUsingAppearance([NSColor textBackgroundColor], TkMacOSXInDarkMode(tkwin));
 		CGContextSetFillColorWithColor(dc.context, background);
 	    } else {
 		CGContextSetRGBFillColor(dc.context, 1.0, 1.0, 1.0, 1.0);
@@ -3358,8 +3366,8 @@ static void DisclosureElementDraw(
 	if ([NSApp macOSVersion] >= 110000) {
 	    CGFloat rgba[4];
 	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	    NSColor *stroke = [[NSColor textColor]
-		colorUsingColorSpace: deviceRGB];
+	    NSColor *stroke = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+		[NSColor textColor], deviceRGB, TkMacOSXInDarkMode(tkwin));
 	    [stroke getComponents: rgba];
 	    if (state & TTK_STATE_OPEN) {
 		DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);

@@ -125,14 +125,13 @@ static void		InitBitmapObj(Tcl_Obj *objPtr);
  * field of the Tcl_Obj points to a TkBitmap object.
  */
 
-const TkObjType tkBitmapObjType = {
-    {"bitmap",			/* name */
+const Tcl_ObjType tkBitmapObjType = {
+    "bitmap",			/* name */
     FreeBitmapObjProc,		/* freeIntRepProc */
     DupBitmapObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
-    0
+    TCL_OBJTYPE_V0
 };
 
 /*
@@ -170,7 +169,7 @@ Tk_AllocBitmapFromObj(
 {
     TkBitmap *bitmapPtr;
 
-    if (objPtr->typePtr != &tkBitmapObjType.objType) {
+    if (objPtr->typePtr != &tkBitmapObjType) {
 	InitBitmapObj(objPtr);
     }
     bitmapPtr = (TkBitmap *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -422,7 +421,7 @@ GetBitmap(
      * Add information about this bitmap to our database.
      */
 
-    bitmapPtr = (TkBitmap *)ckalloc(sizeof(TkBitmap));
+    bitmapPtr = (TkBitmap *)Tcl_Alloc(sizeof(TkBitmap));
     bitmapPtr->bitmap = bitmap;
     bitmapPtr->width = width;
     bitmapPtr->height = height;
@@ -503,7 +502,7 @@ Tk_DefineBitmap(
 	Tcl_SetErrorCode(interp, "TK", "BITMAP", "EXISTS", (char *)NULL);
 	return TCL_ERROR;
     }
-    predefPtr = (TkPredefBitmap *)ckalloc(sizeof(TkPredefBitmap));
+    predefPtr = (TkPredefBitmap *)Tcl_Alloc(sizeof(TkPredefBitmap));
     predefPtr->source = source;
     predefPtr->width = width;
     predefPtr->height = height;
@@ -638,7 +637,7 @@ FreeBitmap(
 	prevPtr->nextPtr = bitmapPtr->nextPtr;
     }
     if (bitmapPtr->objRefCount == 0) {
-	ckfree(bitmapPtr);
+	Tcl_Free(bitmapPtr);
     }
 }
 
@@ -746,7 +745,7 @@ FreeBitmapObj(
 	bitmapPtr->objRefCount--;
 	if ((bitmapPtr->objRefCount == 0)
 		&& (bitmapPtr->resourceRefCount == 0)) {
-	    ckfree(bitmapPtr);
+	    Tcl_Free(bitmapPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }
@@ -911,7 +910,7 @@ GetBitmapFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkBitmapObjType.objType) {
+    if (objPtr->typePtr != &tkBitmapObjType) {
 	InitBitmapObj(objPtr);
     }
 
@@ -986,7 +985,7 @@ InitBitmapObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkBitmapObjType.objType;
+    objPtr->typePtr = &tkBitmapObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -1117,7 +1116,7 @@ TkReadBitmapFile(
 
     *bitmap_return = XCreateBitmapFromData(display, d, data, *width_return,
 	    *height_return);
-    ckfree(data);
+    Tcl_Free(data);
     return BitmapSuccess;
 }
 

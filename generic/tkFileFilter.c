@@ -172,10 +172,10 @@ TkFreeFileFilters(
 	     */
 
 	    for (globPtr = clausePtr->patterns; globPtr != NULL; ) {
-		ckfree(globPtr->pattern);
+		Tcl_Free(globPtr->pattern);
 		toFree = globPtr;
 		globPtr = globPtr->next;
-		ckfree(toFree);
+		Tcl_Free(toFree);
 	    }
 
 	    /*
@@ -185,21 +185,21 @@ TkFreeFileFilters(
 	    for (mfPtr = clausePtr->macTypes; mfPtr != NULL; ) {
 		toFree = mfPtr;
 		mfPtr = mfPtr->next;
-		ckfree(toFree);
+		Tcl_Free(toFree);
 	    }
 	    toFree = clausePtr;
 	    clausePtr = clausePtr->next;
-	    ckfree(toFree);
+	    Tcl_Free(toFree);
 	}
 
 	/*
 	 * Squelch the name of the filter and the overall structure.
 	 */
 
-	ckfree(filterPtr->name);
+	Tcl_Free(filterPtr->name);
 	toFree = filterPtr;
 	filterPtr = filterPtr->next;
-	ckfree(toFree);
+	Tcl_Free(toFree);
     }
     flistPtr->filters = NULL;
 }
@@ -305,7 +305,7 @@ AddClause(
      * Add the clause into the list of clauses
      */
 
-    clausePtr = (FileFilterClause *)ckalloc(sizeof(FileFilterClause));
+    clausePtr = (FileFilterClause *)Tcl_Alloc(sizeof(FileFilterClause));
     clausePtr->patterns = NULL;
     clausePtr->patternsTail = NULL;
     clausePtr->macTypes = NULL;
@@ -321,7 +321,7 @@ AddClause(
 
     if (globCount > 0 && globList != NULL) {
 	for (i=0; i<globCount; i++) {
-	    GlobPattern *globPtr = (GlobPattern *)ckalloc(sizeof(GlobPattern));
+	    GlobPattern *globPtr = (GlobPattern *)Tcl_Alloc(sizeof(GlobPattern));
 	    Tcl_Size len;
 	    const char *str = Tcl_GetStringFromObj(globList[i], &len);
 
@@ -331,12 +331,12 @@ AddClause(
 		 * Prepend a "*" to patterns that do not have a leading "*"
 		 */
 
-		globPtr->pattern = (char *)ckalloc(len + 1);
+		globPtr->pattern = (char *)Tcl_Alloc(len + 1);
 		globPtr->pattern[0] = '*';
 		strcpy(globPtr->pattern+1, str);
 	    } else if (isWindows) {
 		if (strcmp(str, "*") == 0) {
-		    globPtr->pattern = (char *)ckalloc(4);
+		    globPtr->pattern = (char *)Tcl_Alloc(4);
 		    strcpy(globPtr->pattern, "*.*");
 		} else if (strcmp(str, "") == 0) {
 		    /*
@@ -345,14 +345,14 @@ AddClause(
 		     * TODO: "*." actually matches with all files on Win95
 		     */
 
-		    globPtr->pattern = (char *)ckalloc(3);
+		    globPtr->pattern = (char *)Tcl_Alloc(3);
 		    strcpy(globPtr->pattern, "*.");
 		} else {
-		    globPtr->pattern = (char *)ckalloc(len);
+		    globPtr->pattern = (char *)Tcl_Alloc(len);
 		    strcpy(globPtr->pattern, str);
 		}
 	    } else {
-		globPtr->pattern = (char *)ckalloc(len);
+		globPtr->pattern = (char *)Tcl_Alloc(len);
 		strcpy(globPtr->pattern, str);
 	    }
 
@@ -376,7 +376,7 @@ AddClause(
 	for (i=0; i<ostypeCount; i++) {
 	    Tcl_DString osTypeDS;
 	    Tcl_Size len;
-	    MacFileType *mfPtr = (MacFileType *)ckalloc(sizeof(MacFileType));
+	    MacFileType *mfPtr = (MacFileType *)Tcl_Alloc(sizeof(MacFileType));
 	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 	    char *string;
 
@@ -444,11 +444,11 @@ GetFilter(
 	}
     }
 
-    filterPtr = (FileFilter *)ckalloc(sizeof(FileFilter));
+    filterPtr = (FileFilter *)Tcl_Alloc(sizeof(FileFilter));
     filterPtr->clauses = NULL;
     filterPtr->clausesTail = NULL;
     len = strlen(name) + 1;
-    filterPtr->name = (char *)ckalloc(len);
+    filterPtr->name = (char *)Tcl_Alloc(len);
     memcpy(filterPtr->name, name, len);
 
     if (flistPtr->filters == NULL) {
