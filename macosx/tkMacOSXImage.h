@@ -20,3 +20,5 @@
 
 MODULE_SCOPE CFDataRef CreatePDFFromDrawableRect( Drawable drawable,
 	   int x, int y, unsigned int width, unsigned int height);
+MODULE_SCOPE CGImageRef CreateCGImageFromDrawableRect( Drawable drawable, int force_1x_scale,
+     int x, int y, unsigned int width, unsigned int height, CGFloat *scale);

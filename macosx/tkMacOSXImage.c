@@ -20,8 +20,6 @@
 #include "xbytes.h"
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
-static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable, int force_1x_scale,
-     int x, int y, unsigned int width, unsigned int height, CGFloat *scale);
 static inline CGRect ClipCopyRects(CGRect srcBounds, CGRect dstBounds,
      int src_x, int src_y, unsigned int width,  unsigned int height);
 
@@ -642,7 +640,7 @@ int TkpPutRGBAImage(
  *----------------------------------------------------------------------
  */
 
-static CGImageRef
+CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
     int force_1x_scale,

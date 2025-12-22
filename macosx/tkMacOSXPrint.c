@@ -351,7 +351,6 @@ int MakePDF(
     Tk_Window path;
     Drawable d;
     unsigned int width, height;
-    CFDataRef pdfData;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(ip, 1, objv, "path?");
@@ -370,11 +369,37 @@ int MakePDF(
     d = Tk_WindowId(path);
     width = Tk_Width(path);
     height = Tk_Height(path);
+    MacDrawable *mac_drawable = (MacDrawable *)d;
 
-    pdfData = CreatePDFFromDrawableRect(d, 0, 0, width, height);
+    CGImageRef canvas = CreateCGImageFromDrawableRect(d, 0, 0, 0, width, height, NULL);
+    CGRect rect = CGRectMake( mac_drawable->xOff, mac_drawable->yOff,
+			     width, height);
 
-    NSData *viewData = (NSData*)pdfData;
-    [viewData writeToFile:@"/tmp/tk_canvas.pdf" atomically:YES];
+    /*Render image to PDF file.*/
+    if (canvas) {
+	CFURLRef url = CFURLCreateWithFileSystemPath (NULL, CFSTR("/tmp/tk_canvas.pdf"),
+					     kCFURLPOSIXPathStyle, 0);
+	CFMutableDictionaryRef imgDictionary = CFDictionaryCreateMutable(NULL, 0,
+						  &kCFTypeDictionaryKeyCallBacks,
+						  &kCFTypeDictionaryValueCallBacks);
+	CFDictionarySetValue(imgDictionary, kCGPDFContextTitle, CFSTR("tk_canvas"));
+	CFDictionarySetValue(imgDictionary, kCGPDFContextCreator, CFSTR("Tk"));
+	CGContextRef pdfContext = CGPDFContextCreateWithURL (url, &rect, imgDictionary);
+	CFRelease(imgDictionary);
+	CFRelease(url);
+	CFMutableDictionaryRef pageDictionary = CFDictionaryCreateMutable(NULL, 0,
+						   &kCFTypeDictionaryKeyCallBacks,
+						   &kCFTypeDictionaryValueCallBacks);
+	CFDataRef boxData = CFDataCreate(NULL,(const UInt8 *)&rect, sizeof (CGRect));
+	CFDictionarySetValue(pageDictionary, kCGPDFContextMediaBox, boxData);
+	CGPDFContextBeginPage (pdfContext, pageDictionary);
+	CGContextDrawImage (pdfContext, rect,canvas);
+	CGImageRelease (canvas);
+	CGPDFContextEndPage (pdfContext);
+	CGContextRelease (pdfContext);
+	CFRelease(pageDictionary);
+	CFRelease(boxData);
+    }
     return TCL_OK;
 
 }
