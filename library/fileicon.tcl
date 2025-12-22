@@ -9263,20 +9263,51 @@ proc ::tk::fileicon {filename size} {
 	if {[file executable $filename]} {
 	    return [::tk::icons::svgPhoto executable $size]
 	}
-
-	switch -regexp -- $ext {
-	    {\.svg$}                     { set icon drawing }
-	    {\.pdf$|\.png$|\.jpg$}       { set icon image }
-	    {\.mp3$|\.wav$|\.ogg$}       { set icon audio }
-	    {\.docx?$|\.rtf$|\.odt$}     { set icon word }
-	    {\.pptx?$|\.odp$}            { set icon presentation }
-	    {\.xlsx?$|\.ods$|\.csv$}     { set icon spreadsheet }
-	    {\.zip$|\.tar$|\.7z$}        { set icon archive }
-	    {\.html?$|\.xml$|\.json$}    { set icon html }
-	    {\.tcl$|\.py$|\.sh$}         { set icon script }
-	    default                      { set icon text }
+	set ext [string tolower [file extension $filename]]
+	switch -glob -- $ext {
+	    .svg {
+		set icon drawing
+	    }
+	    .bmp - .gif - .ico - .icns - .jpg - .jpeg - .png - .tif - .tiff - .webp - .pdf {
+		set icon image
+	    }
+	    .aac - .aiff - .mid - .midi - .mp3 - .wav - .oga - .opus - .weba {
+		set icon audio
+	    }
+	    .ics {
+		set icon calendar
+	    }
+	    .abw - .odt - .doc - .docx - .rtf {
+		set icon word
+	    }
+	    .odp - .ppt - .pptx {
+		set icon presentation
+	    }
+	    .csv - .ods - .xls - .xlsx {
+		set icon spreadsheet
+	    }
+	    .arc - .bz - .bz2 - .jar - .mpkg - .rar - .tar - .zip - .tz - .tgz - .7z {
+		set icon archive
+	    }
+	    .css - .js - .html - .htm - .epub - .json - .swf - .xhtml - .xml {
+		set icon html
+	    }
+	    .csh - .php - .sh - .py - .pl - .tcl - .rb {
+		set icon script
+	    }
+	    .bin - .db - .so - .dll - .dylib {
+		set icon binary
+	    }
+	    .eot - .otf - .ttf - .woff - .woff2 {
+		set icon font
+	    }
+	    .eml - .msg - .mbox - .pst - .oft {
+		set icon mail
+	    }
+	    default {
+		set icon text
+	    }
 	}
-
 	return [::tk::icons::svgPhoto $icon $size]
     }
 }
