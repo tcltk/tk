@@ -458,8 +458,8 @@ typedef struct {
     Ttk_Layout rowLayout;
     Ttk_Layout separatorLayout;
 
-    int headingHeight;		/* Space for headings */
-    int rowHeight;		/* Height of each item */
+    int headingHeight;		/* Space for headings. -headingheight option. */
+    int rowHeight;		/* Height of each item. -rowheight option. */
     int colSeparatorWidth;	/* Width of column separator, if used (screen units) */
     int indent;			/* Horizontal offset for child items (screen units) */
 
@@ -567,6 +567,13 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
 	NULL, offsetof(Treeview, tree.yscroll.scrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
+
+    {TK_OPTION_INT, "-headingheight", "headingHeight", "Height",
+	"0", TCL_INDEX_NONE, offsetof(Treeview,tree.headingHeight),
+	0, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_INT, "-rowheight", "rowHeight", "Height",
+	"0", TCL_INDEX_NONE, offsetof(Treeview,tree.rowHeight),
+	0, 0, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -1311,12 +1318,10 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr) {
     InitColumn(&tv->tree.column0);
     tv->tree.column0.idObj = Tcl_NewStringObj("#0", 2);
     Tcl_IncrRefCount(tv->tree.column0.idObj);
-    Tk_InitOptions(
-	interp, &tv->tree.column0,
-	tv->tree.columnOptionTable, tv->core.tkwin);
-    Tk_InitOptions(
-	interp, &tv->tree.column0,
-	tv->tree.headingOptionTable, tv->core.tkwin);
+    Tk_InitOptions(interp, &tv->tree.column0, tv->tree.columnOptionTable,
+	tv->core.tkwin);
+    Tk_InitOptions(interp, &tv->tree.column0, tv->tree.headingOptionTable,
+	tv->core.tkwin);
 
     Tcl_InitHashTable(&tv->tree.items, TCL_STRING_KEYS);
     tv->tree.serial = 0;
@@ -1330,8 +1335,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr) {
 
     /* Create root item "": */
     tv->tree.root = NewItem();
-    Tk_InitOptions(interp, tv->tree.root,
-	tv->tree.itemOptionTable, tv->core.tkwin);
+    Tk_InitOptions(interp, tv->tree.root, tv->tree.itemOptionTable, tv->core.tkwin);
     tv->tree.root->tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
     tv->tree.root->entryPtr = Tcl_CreateHashEntry(&tv->tree.items, "", &unused);
     Tcl_SetHashValue(tv->tree.root->entryPtr, tv->tree.root);

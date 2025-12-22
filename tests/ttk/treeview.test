@@ -154,55 +154,59 @@ test Cget-2.4 {Get display columns defaults} -body {
 	.tv cget -displaycolumns
     } -result {#all}
 
-test Cget-2.5 {Height} -body {
+test Cget-2.5 {Heading Height} -body {
+	.tv cget -headingheight
+    } -result {24}
+
+test Cget-2.6 {Height} -body {
 	.tv cget -height
     } -result {10}
 
-test Cget-2.6 {Padding} -body {
+test Cget-2.7 {Padding} -body {
 	.tv cget -padding
     } -result ""
 
-test Cget-2.7 {Select Mode} -body {
+test Cget-2.8 {Select Mode} -body {
 	.tv cget -selectmode
     } -result {extended}
 
-test Cget-2.8 {Select type} -body {
+test Cget-2.9 {Select type} -body {
 	.tv cget -selecttype
     } -result {item}
 
-test Cget-2.9 {Show} -body {
+test Cget-2.10 {Show} -body {
 	.tv cget -show
     } -result {tree headings}
 
-test Cget-2.10 {Striped} -body {
+test Cget-2.11 {Striped} -body {
 	.tv cget -striped
     } -result {0}
 
-test Cget-2.11 {Style} -body {
+test Cget-2.12 {Style} -body {
 	.tv cget -style
     }
 
-test Cget-2.12 {Takefocus} -body {
+test Cget-2.13 {Takefocus} -body {
 	.tv cget -takefocus
     } -result {ttk::takefocus}
 
-test Cget-2.13 {Titlecolumns} -body {
+test Cget-2.14 {Titlecolumns} -body {
 	.tv cget -titlecolumns
     } -result {0}
 
-test Cget-2.14 {Titleitems} -body {
+test Cget-2.15 {Titleitems} -body {
 	.tv cget -titleitems
     } -result {0}
 
-test Cget-2.15 {Xscrollcommand} -body {
+test Cget-2.16 {Xscrollcommand} -body {
 	.tv cget -xscrollcommand
     }
 
-test Cget-2.16 {Yscrollcommand} -body {
+test Cget-2.17 {Yscrollcommand} -body {
 	.tv cget -yscrollcommand
     }
 
-test Cget-2.17 {Cleanup} -body {
+test Cget-2.18 {Cleanup} -body {
 	destroy .tv
     }
 
@@ -269,148 +273,166 @@ test Configure-3.14 {Reset to Default} -body {
 	.tv cget -displaycolumns
     } -result {#all}
 
-test Configure-3.15 {Get Height} -body {
+test Configure-3.15 {Get Heading Height} -body {
+	.tv configure -headingheight
+    } -result {-headingheight headingHeight Height 0 24}
+
+test Configure-3.16 {Set Heading Height} -body {
+	.tv configure -headingheight 30
+	.tv cget -headingheight
+    } -result {30}
+
+test Configure-3.17 {Get Height} -body {
 	.tv configure -height
     } -result {-height height Height 10 10}
 
-test Configure-3.16 {Set Height} -body {
+test Configure-3.18 {Set Height} -body {
 	.tv configure -height 15
 	.tv cget -height
     } -result {15}
 
-test Configure-3.17 {Get Padding} -body {
+test Configure-3.19 {Get Padding} -body {
 	.tv configure -padding
     } -result {-padding padding Pad {} {}}
 
-test Configure-3.18 {Set Padding} -body {
+test Configure-3.20 {Set Padding} -body {
 	.tv configure -padding 1
 	.tv cget -padding
     } -result {1}
 
-test Configure-3.19 {Set Multiple Padding} -body {
+test Configure-3.21 {Set Multiple Padding} -body {
 	.tv configure -padding {2 4 6 8}
 	.tv cget -padding
     } -result {2 4 6 8}
 
-test Configure-3.20 {Get Select Mode} -body {
+test Configure-3.22 {Get Row Height} -body {
+	.tv configure -rowheight
+    } -result {-rowheight rowHeight Height 0 17}
+
+test Configure-3.23 {Set Row Height} -body {
+	.tv configure -rowheight 30
+	.tv cget -rowheight
+    } -result {30}
+
+test Configure-3.24 {Get Select Mode} -body {
 	.tv configure -selectmode
     } -result {-selectmode selectMode SelectMode extended extended}
 
-test Configure-3.21 {Set Select Mode} -body {
+test Configure-3.25 {Set Select Mode} -body {
 	.tv configure -selectmode multiple
 	.tv cget -selectmode
     } -result {multiple}
 
-test Configure-3.22 {Invalid Select Mode} -body {
+test Configure-3.26 {Invalid Select Mode} -body {
 	.tv configure -selectmode bogus
     } -result {bad selectmode "bogus": must be none, single, browse, extended, or multiple} -returnCodes {1}
 
-test Configure-3.23 {Get Select Type} -body {
+test Configure-3.27 {Get Select Type} -body {
 	.tv configure -selecttype
     } -result {-selecttype selectType SelectType item item}
 
-test Configure-3.24 {Set Select Type} -body {
+test Configure-3.28 {Set Select Type} -body {
 	.tv configure -selecttype cell
 	.tv cget -selecttype
     } -result {cell}
 
-test Configure-3.25 {Invalid Select Type} -body {
+test Configure-3.29 {Invalid Select Type} -body {
 	.tv configure -selecttype bogus
     } -result {bad selecttype "bogus": must be item or cell} -returnCodes {1}
 
-test Configure-3.26 {Get Show Components} -body {
+test Configure-3.30 {Get Show Components} -body {
 	.tv configure -show
     } -result {-show show Show {tree headings} {tree headings}}
 
-test Configure-3.27 {Set Show Components} -body {
+test Configure-3.31 {Set Show Components} -body {
 	.tv configure -show tree
 	.tv cget -show
     } -result {tree}
 
-test Configure-3.28 {Invalid Show Components} -body {
+test Configure-3.32 {Invalid Show Components} -body {
 	.tv configure -show bogus
     } -result {bad value "bogus": must be tree or headings} -returnCodes {1}
 
-test Configure-3.29 {Get Striped} -body {
+test Configure-3.33 {Get Striped} -body {
 	.tv configure -striped
     } -result {-striped striped Striped 0 0}
 
-test Configure-3.30 {Set Striped} -body {
+test Configure-3.34 {Set Striped} -body {
 	.tv configure -striped 1
 	.tv cget -striped
     } -result {1}
 
-test Configure-3.31 {Invalid Striped} -body {
+test Configure-3.35 {Invalid Striped} -body {
 	.tv configure -striped bogus
     } -result {expected boolean value but got "bogus"} -returnCodes {1}
 
-test Configure-3.32 {Get Style} -body {
+test Configure-3.36 {Get Style} -body {
 	.tv configure -style
     } -result {-style style Style {} {}}
 
-test Configure-3.33 {Set Style} -body {
+test Configure-3.37 {Set Style} -body {
 	.tv configure -style CheckTreeview
 	.tv cget -style
     } -result {CheckTreeview}
 
-test Configure-3.34 {Invalid Style} -body {
+test Configure-3.38 {Invalid Style} -body {
 	.tv configure -style bogus
     } -result {Layout bogus not found} -returnCodes {1}
 
-test Configure-3.35 {Get Takefocus} -body {
+test Configure-3.39 {Get Takefocus} -body {
 	.tv configure -takefocus
     } -result {-takefocus takeFocus TakeFocus ttk::takefocus ttk::takefocus}
 
-test Configure-3.36 {Set Takefocus} -body {
+test Configure-3.40 {Set Takefocus} -body {
 	.tv configure -takefocus 1
 	.tv cget -takefocus
     } -result {1}
 
-test Configure-3.37 {Get Title Columns} -body {
+test Configure-3.41 {Get Title Columns} -body {
 	.tv configure -titlecolumns
     } -result {-titlecolumns titlecolumns Titlecolumns 0 0}
 
-test Configure-3.38 {Set Title Columns} -body {
+test Configure-3.42 {Set Title Columns} -body {
 	.tv configure -titlecolumns 1
 	.tv cget -titlecolumns
     } -result {1}
 
-test Configure-3.39 {Invalid Title Columns} -body {
+test Configure-3.43 {Invalid Title Columns} -body {
 	.tv configure -titlecolumns -1
     } -result {"#-1" is out of range} -returnCodes {1}
 
-test Configure-3.40 {Get Title Items} -body {
+test Configure-3.44 {Get Title Items} -body {
 	.tv configure -titleitems
     } -result {-titleitems titleitems Titleitems 0 0}
 
-test Configure-3.41 {Set Title Items} -body {
+test Configure-3.45 {Set Title Items} -body {
 	.tv configure -titleitems 2
 	.tv cget -titleitems
     } -result {2}
 
-test Configure-3.42 {Invalid Title Items} -body {
+test Configure-3.46 {Invalid Title Items} -body {
 	.tv configure -titleitems -1
     } -result {"-1" is out of range} -returnCodes {1}
 
-test Configure-3.43 {Get Xscrollcommand} -body {
+test Configure-3.47 {Get Xscrollcommand} -body {
 	.tv configure -xscrollcommand
     } -result {-xscrollcommand xScrollCommand ScrollCommand {} {}}
 
-test Configure-3.44 {Set Xscrollcommand} -body {
+test Configure-3.48 {Set Xscrollcommand} -body {
 	.tv configure -xscrollcommand new_command
 	lindex [.tv configure -xscrollcommand] end
     } -result {new_command}
 
-test Configure-3.45 {Get Yscrollcommand} -body {
+test Configure-3.49 {Get Yscrollcommand} -body {
 	.tv configure -yscrollcommand
     } -result {-yscrollcommand yScrollCommand ScrollCommand {} {}}
 
-test Configure-3.46 {Set Yscrollcommand} -body {
+test Configure-3.50 {Set Yscrollcommand} -body {
 	.tv configure -xscrollcommand new_command
 	lindex [.tv configure -xscrollcommand] end
     } -result {new_command}
 
-test Configure-3.47 {Cleanup} -body {
+test Configure-3.51 {Cleanup} -body {
 	destroy .tv
     }
 
@@ -7102,7 +7124,7 @@ test Sort-75.31 {Ignore Empty Integer Fail} -setup {
     } -body {
 	.tv sort {} -column Decimal -integer
 	.tv children {}
-    } -result {expected integer but got a list} -returnCodes {1}
+    } -match {glob} -result {expected integer but got *} -returnCodes {1}
 
 test Sort-75.32 {Ignore Empty Integer} -setup {
 	.tv children {} $children
@@ -7116,7 +7138,7 @@ test Sort-75.33 {Ignore Empty Real Fail} -setup {
     } -body {
 	.tv sort {} -column Float -real
 	.tv children {}
-    } -result {expected floating-point number but got a list} -returnCodes {1}
+    } -match {glob} -result {expected floating-point number but got *} -returnCodes {1}
 
 test Sort-75.34 {Ignore Empty Real} -setup {
 	.tv children {} $children

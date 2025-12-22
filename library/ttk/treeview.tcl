@@ -241,7 +241,7 @@ proc ::ttk::treeview::GetCurrentCell {w skip} {
 #
 proc ::ttk::treeview::PageTop {w} {
     set offset [expr {"headings" in [$w cget -show] ? [$w cget -headingheight] : 0}]
-    incr offset [expr {[ttk::style configure Treeview -rowheight] * [$w cget -titleitems]}]
+    incr offset [expr {[$w cget -rowheight] * [$w cget -titleitems]}]
     return [$w identify item 10 [expr {$offset + 5}]]
 }
 
@@ -250,7 +250,7 @@ proc ::ttk::treeview::PageTop {w} {
 #
 proc ::ttk::treeview::PageBottom {w} {
     set item ""
-    set rh [expr {[ttk::style configure Treeview -rowheight] * -1}]
+    set rh [expr {[$w cget -rowheight] * -1}]
     for {set y [expr {[winfo height $w] + $rh + 5}]} {$y > 0} {incr y $rh} {
 	set item [$w identify item 10 $y]
 	if {$item eq ""} continue
@@ -855,7 +855,7 @@ proc ttk::treeview::Select.drag {w x y} {
     lassign [$w current] item column
 
     # Autoscroll equivalent
-    set hh [expr {"headings" in [$w cget -show] ? [ttk::style configure Treeview -rowheight] : 0}]
+    set hh [expr {"headings" in [$w cget -show] ? [$w cget -headingheight] : 0}]
     set ht [winfo height $w]
     set wd [winfo width $w]
     if {$y >= $ht} {

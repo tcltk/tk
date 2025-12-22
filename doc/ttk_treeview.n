@@ -53,9 +53,15 @@ A list of column identifiers (either symbolic names or integer indices)
 specifying which columns are to be displayed and the order in which they appear,
 or the string \fB#all\fR to display all columns in \fB-columns\fR order.
 The default is \fB#all\fR.
+.OP \-headingheight headingHeight Height
+Specifies the height of the heading in pixels. The height will be dynamically
+adjusted based on the header font.
 .OP \-height height Height
 Specifies the number of rows which should be visible. Note that
 the requested width is determined from the sum of the column widths.
+.OP \-rowheight rowHeight Height
+Specifies the row height in pixels. Default value is defined by
+\fBttk::style configure Treeview -rowheight\fR.
 .OP \-selectmode selectMode SelectMode
 Controls how the built-in class bindings manage the selection. Options are:
 .RS
@@ -1013,7 +1019,7 @@ bindings for the cell's \fB\-tags\fR are evaluated as well.
 \fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events are sent to the focus item.
 The \fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events are sent
 to the item under the mouse pointer.
-The \fBEnter\fR and \fBLeave\fR events are sent to the item under the mouse
+The \fB<Enter>\fR and \fB<Leave>\fR events are sent to the item under the mouse
 pointer or the last item under the mouse pointer, respectively. They are used
 to detect when the mouse pointer enters or leaves a cell.
 No other event types are supported.
@@ -1194,7 +1200,7 @@ The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selectio
 The \fB<Shift-Next>\fR key will scroll right 1 screenful.
 The \fB<Control-Next>\fR key will move to the bottom-most on-screen item and select it.
 .IP \(bu
-The \fB<Return>\fR and \fBF2\fR keys will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, the open state of the current item will be toggled.
+The \fB<Return>\fR and \fBF2\fR keys will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not and item has children, the open state of the current item will be toggled. Else, the item will be selected.
 The \fB<Control-Return>\fR key will toggle the open/close state of the current item.
 .IP \(bu
 The \fB<space>\fR key will toggle the selection state of the current item (single, multiple, and extended select modes only).
@@ -1265,7 +1271,7 @@ Applies to all:
 .IP \(bu
 \fB<Button-1>\fR will set the focus (all modes) and selection (all except none select mode) to the item or cell under the mouse pointer.
 .IP \(bu
-\fB<B1-Motion>\fR will drag a column separator for resize, a column header for a column move, or selection for expanding the selection (multiple or extended select modes only).
+\fB<B1-Motion>\fR will drag a column separator for resize, a column header for a column move, selected item/cell when in browse select mode, or extend the selection when in extended select mode.
 .IP \(bu
 \fB<ButtonRelease-1>\fR will drop a column separator for resize, column header for a move, or set the selection.
 .IP \(bu
