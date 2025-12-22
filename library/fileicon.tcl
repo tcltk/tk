@@ -7,8 +7,11 @@
 #   domain: http://creativecommons.org/publicdomain/zero/1.0/
 #
 
+namespace eval ::tk::icons {
+    variable svgData
+}
 
-image create photo ::tk::icons::archive -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(archive) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -496,7 +499,7 @@ image create photo ::tk::icons::archive -format {svg -scaletoheight 32} -data {
 }
 
 
-image create photo ::tk::icons::audio -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(audio) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -703,7 +706,7 @@ image create photo ::tk::icons::audio -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::binary -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(binary) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -1353,7 +1356,7 @@ image create photo ::tk::icons::binary -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::calendar -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(calendar) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -2055,7 +2058,7 @@ image create photo ::tk::icons::calendar -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::drawing -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(drawing) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -2546,7 +2549,7 @@ image create photo ::tk::icons::drawing -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::executable -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(executable) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -2765,7 +2768,7 @@ image create photo ::tk::icons::executable -format {svg -scaletoheight 32} -data
 </svg>
 }
 
-image create photo ::tk::icons::folder -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(folder) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -3184,7 +3187,7 @@ image create photo ::tk::icons::folder -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::font -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(font) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -3743,7 +3746,7 @@ image create photo ::tk::icons::font -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::html -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(html) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -5165,7 +5168,7 @@ image create photo ::tk::icons::html -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::image -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(image) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -5661,7 +5664,7 @@ image create photo ::tk::icons::image -format {svg -scaletoheight 32} -data {
      sodipodi:nodetypes="ccccc" /></g></svg>
 }
 
-image create photo ::tk::icons::mail -format {svg -scaletoheight 32} -data {	 
+set ::tk::icons::svgData(mail) {	 
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -6083,7 +6086,7 @@ image create photo ::tk::icons::mail -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::presentation -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(presentation) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -6680,7 +6683,7 @@ image create photo ::tk::icons::presentation -format {svg -scaletoheight 32} -da
 </svg>
 }
 
-image create photo ::tk::icons::script -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(script) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -7190,7 +7193,7 @@ image create photo ::tk::icons::script -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::spreadsheet -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(spreadsheet) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -7740,7 +7743,7 @@ image create photo ::tk::icons::spreadsheet -format {svg -scaletoheight 32} -dat
 </svg>
 }
 
-image create photo ::tk::icons::text -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(text) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -8307,7 +8310,7 @@ image create photo ::tk::icons::text -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::video -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(video) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -8642,7 +8645,7 @@ image create photo ::tk::icons::video -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
-image create photo ::tk::icons::word -format {svg -scaletoheight 32} -data {
+set ::tk::icons::svgData(word) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -9209,6 +9212,28 @@ image create photo ::tk::icons::word -format {svg -scaletoheight 32} -data {
 </svg>
 }
 
+proc ::tk::icons::svgPhoto {name size} {
+    variable svgData
+    variable cache
+
+    if {![info exists svgData($name)]} {
+        error "No SVG icon named \"$name\""
+    }
+
+    set key "${name}@${size}"
+
+    if {[info exists cache($key)] && [lsearch [image names] $cache($key)] >= 0} {
+        return $cache($key)
+    }
+
+    set img [image create photo \
+        -format [list svg -scaletoheight $size] \
+        -data $svgData($name)
+    ]
+
+    set cache($key) $img
+    return $img
+}
 
 proc ::tk::fileicon {filename size} {
     if {[tk windowingsystem] eq "win32"} {
@@ -9229,51 +9254,30 @@ proc ::tk::fileicon {filename size} {
         return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
     }
     if {[tk windowingsystem] eq "x11"} {
-	set img [image create photo]
-	set found 0
-        # If no system icon found, fall back to built-in Tk icons
-        if {!$found} {
-            if [file isdirectory $filename] {
-                $img copy ::tk::icons::folder
-            } elseif [file executable $filename] {
-                $img copy::tk::icons::executable
-            } else {
-                set ext [string tolower [file extension $filename]]
+	set ext [string tolower [file extension $filename]]
 
-                if {[lsearch {.bmp .gif .ico .icns .jpeg .jpg .png .tif .tiff .webp .pdf} $ext] >= 0} {
-                    $img copy ::tk::icons::image
-                } elseif {[lsearch {.aac .aiff .mid .midi .mp3 .wav .oga .opus .weba} $ext] >= 0} {
-                    $img copy ::tk::icons::audio
-                } elseif {$ext eq ".svg"} {
-                    $img copy ::tk::icons::drawing
-                } elseif {$ext eq ".ics"} {
-                    $img copy ::tk::icons::calendar
-                } elseif {[lsearch {.abw .odt .doc .docx .rtf} $ext] >= 0} {
-                    $img copy ::tk::icons::word
-                } elseif {[lsearch {.odp .ppt .pptx} $ext] >= 0} {
-                    $img copy ::tk::icons::presentation
-                } elseif {[lsearch {.csv .ods .xls .xlsx} $ext] >= 0} {
-                    $img copy ::tk::icons::spreadsheet
-                } elseif {[lsearch {.arc .bz .bz2 .jar .mpkg .rar .tar .zip .tz .tgz .7z} $ext] >= 0} {
-                    $img copy ::tk::icons::archive
-                } elseif {[lsearch {.css .js .html .htm .epub .json .swf .xhtml .xml} $ext] >= 0} {
-                    $img copy ::tk::icons::html
-                } elseif {[lsearch {.csh .php .sh .py .pl .tcl .rb} $ext] >= 0} {
-                    $img copy ::tk::icons::script
-                } elseif {[lsearch {.bin .db .so .dll .dylib} $ext] >= 0} {
-                    $img copy ::tk::icons::binary
-                } elseif {[lsearch {.eot .otf .ttf .woff .woff2} $ext] >= 0} {
-                    $img copy ::tk::icons::font
-                } elseif {[lsearch {.eml .msg .mbox .pst .oft} $ext] >= 0} {
-                    $img copy ::tk::icons::mail
-                } else {
-                    $img copy ::tk::icons::text
-                }
-            }
-        }
-        # Resize the chosen image to the requested height.
-        $img configure -height $size
-        return $img
+	if {[file isdirectory $filename]} {
+	    return [::tk::icons::svgPhoto folder $size]
+	}
+
+	if {[file executable $filename]} {
+	    return [::tk::icons::svgPhoto executable $size]
+	}
+
+	switch -regexp -- $ext {
+	    {\.svg$}                     { set icon drawing }
+	    {\.pdf$|\.png$|\.jpg$}       { set icon image }
+	    {\.mp3$|\.wav$|\.ogg$}       { set icon audio }
+	    {\.docx?$|\.rtf$|\.odt$}     { set icon word }
+	    {\.pptx?$|\.odp$}            { set icon presentation }
+	    {\.xlsx?$|\.ods$|\.csv$}     { set icon spreadsheet }
+	    {\.zip$|\.tar$|\.7z$}        { set icon archive }
+	    {\.html?$|\.xml$|\.json$}    { set icon html }
+	    {\.tcl$|\.py$|\.sh$}         { set icon script }
+	    default                      { set icon text }
+	}
+
+	return [::tk::icons::svgPhoto $icon $size]
     }
 }
 
