@@ -112,7 +112,7 @@ Release(
     do {
 	MyUndoAtom *next = atom->next;
 	FreeItems(stack, &atom->data);
-	ckfree(atom);
+	Tcl_Free(atom);
 	atom = next;
     } while (atom != root);
 
@@ -142,7 +142,7 @@ ResetCurrent(
 
     if (force || !current || current->capacity > InitialCapacity) {
 	static unsigned Size = ATOM_SIZE(InitialCapacity);
-	current = stack->current = (TkTextUndoMyAtom *)ckrealloc(current, Size);
+	current = stack->current = (TkTextUndoMyAtom *)Tcl_Realloc(current, Size);
 	memset((void *)current, 0, Size);
 	current->capacity = InitialCapacity;
     }
@@ -163,7 +163,7 @@ SwapCurrent(
     assert(atom != current);
 
     if (current->capacity != current->data.size) {
-	current = stack->current = (MyUndoAtom *)ckrealloc(current, ATOM_SIZE(current->data.arraySize));
+	current = stack->current = (MyUndoAtom *)Tcl_Realloc(current, ATOM_SIZE(current->data.arraySize));
 	current->capacity = current->data.arraySize;
     }
 
@@ -410,7 +410,7 @@ TkTextUndoCreateStack(
     assert(undoProc);
 #endif
 
-    stack = (TkTextUndoStack)ckalloc(sizeof(*stack));
+    stack = (TkTextUndoStack)Tcl_Alloc(sizeof(*stack));
     memset(stack, 0, sizeof(*stack));
     stack->undoProc = undoProc;
     stack->freeProc = freeProc;
@@ -436,7 +436,7 @@ TkTextUndoDestroyStack(
 	    if (stack->current) {
 		FreeItems(stack, &stack->current->data);
 	    }
-	    ckfree(stack);
+	    Tcl_Free(stack);
 	    *stackPtr = NULL;
 	}
     }
@@ -752,7 +752,7 @@ TkTextUndoPushItem(
 	atom = stack->current;
     } else if (atom->data.arraySize == atom->capacity) {
 	atom->capacity *= 2;
-	atom = stack->current = (TkTextUndoMyAtom *)ckrealloc(atom, ATOM_SIZE(atom->capacity));
+	atom = stack->current = (TkTextUndoMyAtom *)Tcl_Realloc(atom, ATOM_SIZE(atom->capacity));
     }
 
     subAtom = ((TkTextUndoSubAtom *) atom->data.array) + atom->data.arraySize++;

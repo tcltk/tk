@@ -223,7 +223,7 @@ UndoLinkSegmentPerform(
 
     if (redoInfo) {
 	RedoTokenLinkSegment *redoToken;
-	redoToken = (RedoTokenLinkSegment *)ckalloc(sizeof(RedoTokenLinkSegment));
+	redoToken = (RedoTokenLinkSegment *)Tcl_Alloc(sizeof(RedoTokenLinkSegment));
 	redoToken->undoType = &redoTokenLinkSegmentType;
 	TkBTreeMakeUndoIndex(sharedTextPtr, segPtr, &redoToken->index);
 	redoInfo->token = (TkTextUndoToken *) redoToken;
@@ -509,7 +509,7 @@ TkTextImageCmd(
 		assert(sharedTextPtr->undoStack);
 		assert(eiPtr->typePtr == &tkTextEmbImageType);
 
-		token = (UndoTokenLinkSegment *)ckalloc(sizeof(UndoTokenLinkSegment));
+		token = (UndoTokenLinkSegment *)Tcl_Alloc(sizeof(UndoTokenLinkSegment));
 		token->undoType = &undoTokenLinkSegmentType;
 		token->segPtr = eiPtr;
 		eiPtr->refCount += 1;
@@ -563,7 +563,7 @@ MakeImage(
 {
     TkTextSegment *eiPtr;
 
-    eiPtr = (TkTextSegment *)ckalloc(SEG_SIZE(TkTextEmbImage));
+    eiPtr = (TkTextSegment *)Tcl_Alloc(SEG_SIZE(TkTextEmbImage));
     memset(eiPtr, 0, SEG_SIZE(TkTextEmbImage));
     NEW_SEGMENT(eiPtr);
     eiPtr->typePtr = &tkTextEmbImageType;
@@ -673,7 +673,7 @@ SetImageName(
     img->hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name, &dummy);
     textPtr->sharedTextPtr->numImages += 1;
     Tcl_SetHashValue(img->hPtr, eiPtr);
-    img->name = (char *)ckalloc(length + 1);
+    img->name = (char *)Tcl_Alloc(length + 1);
     memcpy(img->name, name, length + 1);
     Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
     Tcl_DStringFree(&newName);
@@ -833,7 +833,7 @@ ReleaseImage(
 
     Tk_FreeConfigOptions(img, img->optionTable, NULL);
     if (img->name) {
-	ckfree(img->name);
+	Tcl_Free(img->name);
     }
     TkBTreeFreeSegment(eiPtr);
 }

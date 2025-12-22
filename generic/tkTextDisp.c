@@ -1594,7 +1594,7 @@ TkTextCreateDInfo(
     XGCValues gcValues;
     int isMonospaced;
 
-    dInfoPtr = (TextDInfo *)ckalloc(sizeof(TextDInfo));
+    dInfoPtr = (TextDInfo *)Tcl_Alloc(sizeof(TextDInfo));
     memset(dInfoPtr, 0, sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     gcValues.graphics_exposures = True;
@@ -1613,7 +1613,7 @@ TkTextCreateDInfo(
     dInfoPtr->lastLineNo = TkBTreeLinesTo(tree, NULL, TkBTreeGetLastLine(textPtr), NULL);
     dInfoPtr->lineMetricUpdateEpoch = 1;
     dInfoPtr->strBufferSize = 512;
-    dInfoPtr->strBuffer = (char *)ckalloc(dInfoPtr->strBufferSize);
+    dInfoPtr->strBuffer = (char *)Tcl_Alloc(dInfoPtr->strBufferSize);
     ClearRegion(&dInfoPtr->invalidRegion);
     TkTextIndexClear(&dInfoPtr->metricIndex, textPtr);
     TkTextIndexClear(&dInfoPtr->currChunkIndex, textPtr);
@@ -1701,8 +1701,8 @@ TkTextDeleteBreakInfoTableEntries(
 
 	assert(breakInfo->brks);
 	DEBUG(memset(breakInfo->brks, 0xff, breakInfo->brksSize));
-	ckfree(breakInfo->brks);
-	ckfree(breakInfo);
+	Tcl_Free(breakInfo->brks);
+	Tcl_Free(breakInfo);
 	DEBUG_ALLOC(tkTextCountDestroyBreakInfo++);
     }
 }
@@ -1782,28 +1782,28 @@ TkTextFreeDInfo(
     ciPtr = dInfoPtr->charInfoPoolPtr;
     while (ciPtr) {
 	CharInfo *nextPtr = ciPtr->u.next;
-	ckfree(ciPtr);
+	Tcl_Free(ciPtr);
 	DEBUG_ALLOC(tkTextCountDestroyCharInfo++);
 	ciPtr = nextPtr;
     }
     sectionPtr = dInfoPtr->sectionPoolPtr;
     while (sectionPtr) {
 	TkTextDispChunkSection *nextPtr = sectionPtr->nextPtr;
-	ckfree(sectionPtr);
+	Tcl_Free(sectionPtr);
 	DEBUG_ALLOC(tkTextCountDestroySection++);
 	sectionPtr = nextPtr;
     }
     chunkPtr = dInfoPtr->chunkPoolPtr;
     while (chunkPtr) {
 	TkTextDispChunk *nextPtr = chunkPtr->nextPtr;
-	ckfree(chunkPtr);
+	Tcl_Free(chunkPtr);
 	DEBUG_ALLOC(tkTextCountDestroyChunk++);
 	chunkPtr = nextPtr;
     }
     dlPtr = dInfoPtr->dLinePoolPtr;
     while (dlPtr) {
 	DLine *nextPtr = dlPtr->nextPtr;
-	ckfree(dlPtr);
+	Tcl_Free(dlPtr);
 	DEBUG_ALLOC(tkTextCountDestroyDLine++);
 	dlPtr = nextPtr;
     }
@@ -1821,8 +1821,8 @@ TkTextFreeDInfo(
     TkRangeListDestroy(&dInfoPtr->lineMetricUpdateRanges);
     TkBTreeFreeSegment(dInfoPtr->endOfLineSegPtr);
     TkBTreeFreeSegment(dInfoPtr->endOfTextSegPtr);
-    ckfree(dInfoPtr->strBuffer);
-    ckfree(dInfoPtr);
+    Tcl_Free(dInfoPtr->strBuffer);
+    Tcl_Free(dInfoPtr);
 }
 
 /*
@@ -2114,7 +2114,7 @@ MakeStyle(
      * No existing style matched. Make a new one.
      */
 
-    stylePtr = (TextStyle *)ckalloc(sizeof(TextStyle));
+    stylePtr = (TextStyle *)Tcl_Alloc(sizeof(TextStyle));
     stylePtr->refCount = 0;
     if (styleValues.border) {
 	gcValues.foreground = Tk_3DBorderColor(styleValues.border)->pixel;
@@ -2278,7 +2278,7 @@ FreeStyle(
 	    Tk_FreeGC(textPtr->display, stylePtr->hyphenGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
-	ckfree(stylePtr);
+	Tcl_Free(stylePtr);
 	DEBUG_ALLOC(tkTextCountDestroyStyle++);
     }
 }
@@ -2426,7 +2426,7 @@ LayoutSetupDispLineInfo(
     unsigned oldNumDispLines = TkBTreeGetNumberOfDisplayLines(pixelInfo);
 
     if (!dispLineInfo) {
-	dispLineInfo = (TkTextDispLineInfo *)ckalloc(TEXT_DISPLINEINFO_SIZE(2));
+	dispLineInfo = (TkTextDispLineInfo *)Tcl_Alloc(TEXT_DISPLINEINFO_SIZE(2));
 	DEBUG(memset(dispLineInfo, 0xff, TEXT_DISPLINEINFO_SIZE(2)));
 	DEBUG_ALLOC(tkTextCountNewDispInfo++);
 	pixelInfo->dispLineInfo = dispLineInfo;
@@ -2490,7 +2490,7 @@ LayoutUpdateLineHeightInformation(
 	if (dlPtr->displayLineNo >= dispLineInfo->numDispLines
 		&& !IsPowerOf2(dlPtr->displayLineNo + 2)) {
 	    unsigned size = NextPowerOf2(dlPtr->displayLineNo + 2);
-	    dispLineInfo = (TkTextDispLineInfo *)ckrealloc(dispLineInfo, TEXT_DISPLINEINFO_SIZE(size));
+	    dispLineInfo = (TkTextDispLineInfo *)Tcl_Realloc(dispLineInfo, TEXT_DISPLINEINFO_SIZE(size));
 	    DEBUG(memset(dispLineInfo->entry + dlPtr->displayLineNo + 1, 0xff,
 		    (size - dlPtr->displayLineNo - 1)*sizeof(dispLineInfo->entry[0])));
 	    pixelInfo->dispLineInfo = dispLineInfo;
@@ -2549,7 +2549,7 @@ LayoutUpdateLineHeightInformation(
 	     * this before TkBTreeAdjustPixelHeight has been called, because the latter
 	     * function needs the old display line count.
 	     */
-	    ckfree(dispLineInfo);
+	    Tcl_Free(dispLineInfo);
 	    DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	    pixelInfo->dispLineInfo = NULL;
 	}
@@ -2560,7 +2560,7 @@ LayoutUpdateLineHeightInformation(
 	    pixelInfo = TkBTreeLinePixelInfo(textPtr, linePtr = linePtr->nextPtr);
 	    pixelInfo->epoch = epoch;
 	    if (pixelInfo->dispLineInfo) {
-		ckfree(pixelInfo->dispLineInfo);
+		Tcl_Free(pixelInfo->dispLineInfo);
 		DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 		pixelInfo->dispLineInfo = NULL;
 	    }
@@ -2622,7 +2622,7 @@ LayoutComputeBreakLocations(
 		}
 		if ((newSize = size + segPtr->size) >= capacity) {
 		    capacity = MAX(2*capacity, newSize + 1);
-		    str = (char *)ckrealloc(str, newSize);
+		    str = (char *)Tcl_Realloc(str, newSize);
 		}
 		memcpy(str + size, segPtr->body.chars, segPtr->size);
 		size = newSize;
@@ -2654,7 +2654,7 @@ LayoutComputeBreakLocations(
 		/* The language variable doesn't matter here. */
 		if (size + 1 >= capacity) {
 		    assert(2*capacity > size + 1);
-		    str = (char *)ckrealloc(str, capacity *= 2);
+		    str = (char *)Tcl_Realloc(str, capacity *= 2);
 		}
 		/* Substitute with a TAB, so we can break at this point. */
 		str[size++] = '\t';
@@ -2673,7 +2673,7 @@ LayoutComputeBreakLocations(
 		 * one additional byte for trailing NUL (see below).
 		 */
 		textPtr->brksBufferSize = MAX(newTotalSize, textPtr->brksBufferSize + 512);
-		textPtr->brksBuffer = (char *)ckrealloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
+		textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
 		brks = textPtr->brksBuffer;
 	    }
 
@@ -3112,7 +3112,7 @@ LayoutNewSection(
 	dInfoPtr->sectionPoolPtr = dInfoPtr->sectionPoolPtr->nextPtr;
     } else {
 	DEBUG_ALLOC(tkTextCountNewSection++);
-	sectionPtr = (TkTextDispChunkSection *)ckalloc(sizeof(TkTextDispChunkSection));
+	sectionPtr = (TkTextDispChunkSection *)Tcl_Alloc(sizeof(TkTextDispChunkSection));
     }
 
     memset(sectionPtr, 0, sizeof(TkTextDispChunkSection));
@@ -3130,7 +3130,7 @@ LayoutMakeNewChunk(
     if ((newChunkPtr = dInfoPtr->chunkPoolPtr)) {
 	dInfoPtr->chunkPoolPtr = newChunkPtr->nextPtr;
     } else {
-	newChunkPtr = (TkTextDispChunk *)ckalloc(sizeof(TkTextDispChunk));
+	newChunkPtr = (TkTextDispChunk *)Tcl_Alloc(sizeof(TkTextDispChunk));
 	DEBUG_ALLOC(tkTextCountNewChunk++);
     }
     memset(newChunkPtr, 0, sizeof(TkTextDispChunk));
@@ -3183,7 +3183,7 @@ LayoutSetupChunk(
 		    (void *) data->logicalLinePtr, &isNew);
 
 	    if (isNew) {
-		breakInfo = (TkTextBreakInfo *)ckalloc(sizeof(TkTextBreakInfo));
+		breakInfo = (TkTextBreakInfo *)Tcl_Alloc(sizeof(TkTextBreakInfo));
 		breakInfo->refCount = 1;
 		breakInfo->brks = NULL;
 		data->logicalLinePtr->changed = 0;
@@ -3220,7 +3220,7 @@ LayoutSetupChunk(
 		 */
 
 		brksSize = LayoutComputeBreakLocations(data);
-		breakInfo->brks = (char *)ckrealloc(breakInfo->brks, brksSize);
+		breakInfo->brks = (char *)Tcl_Realloc(breakInfo->brks, brksSize);
 		memcpy(breakInfo->brks, textPtr->brksBuffer, brksSize);
 		DEBUG(breakInfo->brksSize = brksSize);
 		DEBUG(stats.breakInfo += 1);
@@ -4439,7 +4439,7 @@ LayoutDLine(
 	dlPtr = dInfoPtr->dLinePoolPtr;
 	dInfoPtr->dLinePoolPtr = dlPtr->nextPtr;
     } else {
-	dlPtr = (DLine *)ckalloc(sizeof(DLine));
+	dlPtr = (DLine *)Tcl_Alloc(sizeof(DLine));
 	DEBUG_ALLOC(tkTextCountNewDLine++);
     }
     dlPtr = (DLine *)memset(dlPtr, 0, sizeof(DLine));
@@ -5976,10 +5976,10 @@ ReleaseLines(
 		    && (action != DLINE_UNLINK_KEEP_BRKS || LineIsOutsideOfPeer(textPtr, &dlPtr->index))
 		    && --dlPtr->breakInfo->refCount == 0) {
 		assert(dlPtr->breakInfo->brks);
-		ckfree(dlPtr->breakInfo->brks);
+		Tcl_Free(dlPtr->breakInfo->brks);
 		DEBUG(dlPtr->breakInfo->brks = NULL);
 		DEBUG(dlPtr->breakInfo->brksSize = 0);
-		ckfree(dlPtr->breakInfo);
+		Tcl_Free(dlPtr->breakInfo);
 		Tcl_DeleteHashEntry(Tcl_FindHashEntry(
 			&textPtr->sharedTextPtr->breakInfoTable,
 			(void *) TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr,
@@ -12989,7 +12989,7 @@ MeasureBackwards(
 		int fit;
 
 		if ((size_t) length > sizeof(buffer)) {
-		    str = (char *)ckalloc(length);
+		    str = (char *)Tcl_Alloc(length);
 		}
 		memcpy(str, p, length);
 
@@ -13023,7 +13023,7 @@ MeasureBackwards(
 		    maxX -= nextX;
 		}
 		if (str != buffer) {
-		    ckfree(str);
+		    Tcl_Free(str);
 		}
 		if (maxX <= 0) {
 		    return;
@@ -13774,7 +13774,7 @@ AllocCharInfo(
     if ((ciPtr = dInfoPtr->charInfoPoolPtr)) {
 	dInfoPtr->charInfoPoolPtr = dInfoPtr->charInfoPoolPtr->u.next;
     } else {
-	ciPtr = (CharInfo *)ckalloc(sizeof(CharInfo));
+	ciPtr = (CharInfo *)Tcl_Alloc(sizeof(CharInfo));
 	DEBUG_ALLOC(tkTextCountNewCharInfo++);
     }
 

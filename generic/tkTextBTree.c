@@ -1186,7 +1186,7 @@ MakeSegment(
 
     assert(segType != &tkTextCharType);
 
-    segPtr = (TkTextSegment *)ckalloc(segByteSize);
+    segPtr = (TkTextSegment *)Tcl_Alloc(segByteSize);
     memset(segPtr, 0, segByteSize);
     NEW_SEGMENT(segPtr);
     segPtr->typePtr = segType;
@@ -1512,7 +1512,7 @@ UndoDeletePerform(
      * This also makes the token reusable.
      */
 
-    ckfree(undoToken->segments);
+    Tcl_Free(undoToken->segments);
     undoToken->segments = NULL;
     undoToken->numSegments = 0;
 
@@ -1595,7 +1595,7 @@ UndoDeleteDestroy(
 	    }
 
 	    tokDel->numSegments = 0;
-	    ckfree(tokDel->segments);
+	    Tcl_Free(tokDel->segments);
 	}
     }
 }
@@ -1646,7 +1646,7 @@ RedoDeletePerform(
 	if (redoInfo) {
 	    UndoTokenDelete *redoToken;
 
-	    redoToken = (UndoTokenDelete *)ckalloc(sizeof(UndoTokenDelete));
+	    redoToken = (UndoTokenDelete *)Tcl_Alloc(sizeof(UndoTokenDelete));
 	    redoToken->undoType = &undoTokenDeleteType;
 	    redoToken->segments = NULL;
 	    redoToken->numSegments = 0;
@@ -1815,7 +1815,7 @@ UndoTagDestroy(
 
 	UNMARK_POINTER(token->tagPtr);
 	TkTextReleaseTag(sharedTextPtr, token->tagPtr, NULL);
-	ckfree(token->lengths);
+	Tcl_Free(token->lengths);
 	token->lengths = NULL;
     }
 }
@@ -1996,7 +1996,7 @@ UndoClearTagsPerform(
     TkTextRedrawTag(sharedTextPtr, NULL, &startIndex, &endIndex, NULL, affectsDisplayGeometry);
 
     if (redoInfo) {
-	RedoTokenClearTags *redoToken = (RedoTokenClearTags *)ckalloc(sizeof(RedoTokenClearTags));
+	RedoTokenClearTags *redoToken = (RedoTokenClearTags *)Tcl_Alloc(sizeof(RedoTokenClearTags));
 	redoToken->undoType = &redoTokenClearTagsType;
 	redoToken->startIndex = token->startIndex;
 	redoToken->endIndex = token->endIndex;
@@ -2023,7 +2023,7 @@ UndoClearTagsDestroy(
 	    TkTextTagSetDecrRefCount(changeList[i].tagInfoPtr);
 	}
 
-	ckfree(changeList);
+	Tcl_Free(changeList);
     }
 }
 
@@ -2081,11 +2081,11 @@ TkBTreeCreate(
      * pointers are simply NULL.
      */
 
-    rootPtr = (Node *)ckalloc(sizeof(Node));
+    rootPtr = (Node *)Tcl_Alloc(sizeof(Node));
     memset(rootPtr, 0, sizeof(Node));
     DEBUG_ALLOC(tkTextCountNewNode++);
 
-    treePtr = (BTree *)ckalloc(sizeof(BTree));
+    treePtr = (BTree *)Tcl_Alloc(sizeof(BTree));
     memset(treePtr, 0, sizeof(BTree));
     treePtr->rootPtr = rootPtr;
     treePtr->sharedTextPtr = sharedTextPtr;
@@ -2263,7 +2263,7 @@ TkBTreeAddClient(
 
 	textPtr->pixelReference = useReference;
 	treePtr->numPixelReferences += 1;
-	treePtr->pixelInfoBuffer = (NodePixelInfo *)ckrealloc(treePtr->pixelInfoBuffer,
+	treePtr->pixelInfoBuffer = (NodePixelInfo *)Tcl_Realloc(treePtr->pixelInfoBuffer,
 		sizeof(treePtr->pixelInfoBuffer[0])*treePtr->numPixelReferences);
     } else {
 	textPtr->pixelReference = -1;
@@ -2339,7 +2339,7 @@ TkBTreeRemoveClient(
 	 */
 
 	DestroyNode(tree, treePtr->rootPtr);
-	ckfree(treePtr);
+	Tcl_Free(treePtr);
 	return;
     }
 
@@ -2383,7 +2383,7 @@ TkBTreeRemoveClient(
 
 	treePtr->numPixelReferences -= 1;
 	treePtr->clients -= 1;
-	treePtr->pixelInfoBuffer = (NodePixelInfo *)ckrealloc(treePtr->pixelInfoBuffer,
+	treePtr->pixelInfoBuffer = (NodePixelInfo *)Tcl_Realloc(treePtr->pixelInfoBuffer,
 		sizeof(treePtr->pixelInfoBuffer[0])*treePtr->numPixelReferences);
     }
 }
@@ -2458,11 +2458,11 @@ AdjustPixelClient(
 
 	    if (newPixelReferences > treePtr->numPixelReferences) {
 		DEBUG_ALLOC(if (!linePtr->pixelInfo) tkTextCountNewPixelInfo++);
-		linePtr->pixelInfo = (TkTextPixelInfo *)ckrealloc(linePtr->pixelInfo,
+		linePtr->pixelInfo = (TkTextPixelInfo *)Tcl_Realloc(linePtr->pixelInfo,
 			sizeof(linePtr->pixelInfo[0])*newPixelReferences);
 		memset(&linePtr->pixelInfo[useReference], 0, sizeof(TkTextPixelInfo));
 	    } else if (linePtr->pixelInfo[useReference].dispLineInfo) {
-		ckfree(linePtr->pixelInfo[useReference].dispLineInfo);
+		Tcl_Free(linePtr->pixelInfo[useReference].dispLineInfo);
 		linePtr->pixelInfo[useReference].dispLineInfo = NULL;
 		DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	    }
@@ -2475,7 +2475,7 @@ AdjustPixelClient(
 
     if (newPixelReferences > treePtr->numPixelReferences) {
 	DEBUG_ALLOC(if (!nodePtr->pixelInfo) tkTextCountNewPixelInfo++);
-	nodePtr->pixelInfo = (NodePixelInfo *)ckrealloc(nodePtr->pixelInfo,
+	nodePtr->pixelInfo = (NodePixelInfo *)Tcl_Realloc(nodePtr->pixelInfo,
 		sizeof(nodePtr->pixelInfo[0])*newPixelReferences);
     }
     assert((int) pixelCount >= 0);
@@ -2526,11 +2526,11 @@ RemovePixelClient(
 	nodePtr->pixelInfo[overwriteWithLast] = nodePtr->pixelInfo[treePtr->numPixelReferences - 1];
     }
     if (treePtr->numPixelReferences == 1) {
-	ckfree(nodePtr->pixelInfo);
+	Tcl_Free(nodePtr->pixelInfo);
 	nodePtr->pixelInfo = NULL;
 	DEBUG_ALLOC(tkTextCountDestroyPixelInfo++);
     } else {
-	nodePtr->pixelInfo = (NodePixelInfo *)ckrealloc(nodePtr->pixelInfo,
+	nodePtr->pixelInfo = (NodePixelInfo *)Tcl_Realloc(nodePtr->pixelInfo,
 		sizeof(nodePtr->pixelInfo[0])*(treePtr->numPixelReferences - 1));
     }
     if (nodePtr->level != 0) {
@@ -2545,7 +2545,7 @@ RemovePixelClient(
 
 	while (linePtr != lastPtr) {
 	    if (linePtr->pixelInfo[useReference].dispLineInfo) {
-		ckfree(linePtr->pixelInfo[useReference].dispLineInfo);
+		Tcl_Free(linePtr->pixelInfo[useReference].dispLineInfo);
 		DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	    }
 	    if (overwriteWithLast != -1) {
@@ -2553,11 +2553,11 @@ RemovePixelClient(
 			linePtr->pixelInfo[treePtr->numPixelReferences - 1];
 	    }
 	    if (treePtr->numPixelReferences == 1) {
-		ckfree(linePtr->pixelInfo);
+		Tcl_Free(linePtr->pixelInfo);
 		linePtr->pixelInfo = NULL;
 		DEBUG_ALLOC(tkTextCountDestroyPixelInfo++);
 	    } else {
-		linePtr->pixelInfo = (TkTextPixelInfo *)ckrealloc(linePtr->pixelInfo,
+		linePtr->pixelInfo = (TkTextPixelInfo *)Tcl_Realloc(linePtr->pixelInfo,
 			sizeof(linePtr->pixelInfo[0])*(treePtr->numPixelReferences - 1));
 	    }
 	    linePtr = linePtr->nextPtr;
@@ -2653,11 +2653,11 @@ TkBTreeJoinUndoDelete(
 	}
 
 	myToken1->numSegments += myToken2->numSegments;
-	myToken1->segments = (TkTextSegment **)ckrealloc(myToken1->segments,
+	myToken1->segments = (TkTextSegment **)Tcl_Realloc(myToken1->segments,
 		myToken1->numSegments*sizeof(myToken1->segments[0]));
 	memcpy(myToken1->segments + numSegments1, myToken2->segments,
 		myToken2->numSegments*sizeof(myToken2->segments[0]));
-	ckfree(myToken2->segments);
+	Tcl_Free(myToken2->segments);
 	myToken2->numSegments = 0;
     } else if (UndoIndexIsEqual(&myToken1->startIndex, &myToken2->endIndex)) {
 	unsigned numSegments1 = myToken1->numSegments;
@@ -2677,12 +2677,12 @@ TkBTreeJoinUndoDelete(
 	}
 
 	myToken1->numSegments += myToken2->numSegments;
-	segments = (TkTextSegment **)ckalloc(myToken1->numSegments*sizeof(segments[0]));
+	segments = (TkTextSegment **)Tcl_Alloc(myToken1->numSegments*sizeof(segments[0]));
 	memcpy(segments, myToken2->segments, myToken2->numSegments*sizeof(myToken2->segments[0]));
 	memcpy(segments + myToken2->numSegments, myToken1->segments,
 		numSegments1*sizeof(myToken1->segments[0]));
-	ckfree(myToken1->segments);
-	ckfree(myToken2->segments);
+	Tcl_Free(myToken1->segments);
+	Tcl_Free(myToken2->segments);
 	myToken1->segments = segments;
 	myToken2->numSegments = 0;
     } else {
@@ -2721,8 +2721,8 @@ TkBTreeDestroy(
      */
 
     DestroyNode(tree, treePtr->rootPtr);
-    ckfree(treePtr->pixelInfoBuffer);
-    ckfree(treePtr);
+    Tcl_Free(treePtr->pixelInfoBuffer);
+    Tcl_Free(treePtr);
 }
 
 /*
@@ -2771,9 +2771,9 @@ FreeNode(
     assert(nodePtr->level > 0 || nodePtr->linePtr);
     TkTextTagSetDecrRefCount(nodePtr->tagonPtr);
     TkTextTagSetDecrRefCount(nodePtr->tagoffPtr);
-    ckfree(nodePtr->pixelInfo);
+    Tcl_Free(nodePtr->pixelInfo);
     DEBUG(nodePtr->linePtr = NULL); /* guarded deallocation */
-    ckfree(nodePtr);
+    Tcl_Free(nodePtr);
     DEBUG_ALLOC(tkTextCountDestroyPixelInfo++);
     DEBUG_ALLOC(tkTextCountDestroyNode++);
 }
@@ -2895,7 +2895,7 @@ TkBTreeResetDisplayLineCounts(
 	linePtr = linePtr->nextPtr;
 
 	if (pixelInfo->dispLineInfo) {
-	    ckfree(pixelInfo->dispLineInfo);
+	    Tcl_Free(pixelInfo->dispLineInfo);
 	    pixelInfo->dispLineInfo = NULL;
 	    DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	}
@@ -3054,7 +3054,7 @@ TkBTreeUpdatePixelHeights(
 		changeToDispLines += 1;
 	    }
 	    if (pixelInfo->dispLineInfo) {
-		ckfree(pixelInfo->dispLineInfo);
+		Tcl_Free(pixelInfo->dispLineInfo);
 		pixelInfo->dispLineInfo = NULL;
 		DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	    }
@@ -3218,7 +3218,7 @@ AddPixelCount(
      * We need to do this for each referenced widget.
      */
 
-    linePtr->pixelInfo = (TkTextPixelInfo *)ckalloc(sizeof(TkTextPixelInfo)*treePtr->numPixelReferences);
+    linePtr->pixelInfo = (TkTextPixelInfo *)Tcl_Alloc(sizeof(TkTextPixelInfo)*treePtr->numPixelReferences);
     DEBUG_ALLOC(tkTextCountNewPixelInfo++);
 
     for (ref = 0; ref < treePtr->numPixelReferences; ++ref) {
@@ -3415,7 +3415,7 @@ InsertNewLine(
 	segPtr->prevPtr = NULL;
     }
 
-    newLinePtr = (TkTextLine *)ckalloc(sizeof(TkTextLine));
+    newLinePtr = (TkTextLine *)Tcl_Alloc(sizeof(TkTextLine));
     memset(newLinePtr, 0, sizeof(TkTextLine));
     newLinePtr->parentPtr = nodePtr;
     newLinePtr->prevPtr = prevLinePtr;
@@ -4427,7 +4427,7 @@ TkBTreeInsertChars(
     sharedTextPtr = treePtr->sharedTextPtr;
 
     if (undoInfo) {
-	undoToken = (UndoTokenInsert *)ckalloc(sizeof(UndoTokenInsert));
+	undoToken = (UndoTokenInsert *)Tcl_Alloc(sizeof(UndoTokenInsert));
 	undoToken->undoType = &undoTokenInsertType;
 	undoInfo->token = (TkTextUndoToken *) undoToken;
 	undoInfo->byteSize = 0;
@@ -5305,7 +5305,7 @@ LinkSegment(
 	if (linePtr->segPtr->typePtr == &tkTextLinkType) {
 	    TkTextSection *newSectionPtr;
 
-	    newSectionPtr = (TkTextSection *)ckalloc(sizeof(TkTextSection));
+	    newSectionPtr = (TkTextSection *)Tcl_Alloc(sizeof(TkTextSection));
 	    newSectionPtr->linePtr = linePtr;
 	    newSectionPtr->segPtr = succPtr;
 	    newSectionPtr->nextPtr = linePtr->segPtr->sectionPtr->nextPtr;
@@ -5390,7 +5390,7 @@ FreeSection(
 {
     assert(sectionPtr->linePtr);
     assert(!(sectionPtr->linePtr = NULL));
-    ckfree(sectionPtr);
+    Tcl_Free(sectionPtr);
     DEBUG_ALLOC(tkTextCountDestroySection++);
 }
 
@@ -5615,7 +5615,7 @@ SplitSection(
 	assert(splitSegPtr);
 	assert(lengthRHS == 0 || length - capacityLHS >= MIN_TEXT_SEGS);
 
-	newSectionPtr = (TkTextSection *)ckalloc(sizeof(TkTextSection));
+	newSectionPtr = (TkTextSection *)Tcl_Alloc(sizeof(TkTextSection));
 	newSectionPtr->linePtr = sectionPtr->linePtr;
 	newSectionPtr->segPtr = splitSegPtr;
 	newSectionPtr->nextPtr = sectionPtr->nextPtr;
@@ -5937,7 +5937,7 @@ RebuildSections(
 	if (!sectionPtr) {
 	    TkTextSection *newSectionPtr;
 
-	    newSectionPtr = (TkTextSection *)ckalloc(sizeof(TkTextSection));
+	    newSectionPtr = (TkTextSection *)Tcl_Alloc(sizeof(TkTextSection));
 	    memset(newSectionPtr, 0, sizeof(TkTextSection));
 	    if (prevSectionPtr) {
 		prevSectionPtr->nextPtr = newSectionPtr;
@@ -6099,16 +6099,16 @@ FreeLine(
 	TkTextDispLineInfo *dispLineInfo = linePtr->pixelInfo[i].dispLineInfo;
 
 	if (dispLineInfo) {
-	    ckfree(dispLineInfo);
+	    Tcl_Free(dispLineInfo);
 	    DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	}
     }
 
     TkTextTagSetDecrRefCount(linePtr->tagoffPtr);
     TkTextTagSetDecrRefCount(linePtr->tagonPtr);
-    ckfree(linePtr->pixelInfo);
+    Tcl_Free(linePtr->pixelInfo);
     DEBUG(linePtr->pixelInfo = NULL);
-    ckfree(linePtr);
+    Tcl_Free(linePtr);
     DEBUG_ALLOC(tkTextCountDestroyPixelInfo++);
     DEBUG_ALLOC(tkTextCountDestroyLine++);
 }
@@ -6143,7 +6143,7 @@ MakeCharSeg(
     assert(length <= newSize);
 
     capacity = CSEG_CAPACITY(newSize);
-    newPtr = (TkTextSegment *)ckalloc(CSEG_SIZE(capacity));
+    newPtr = (TkTextSegment *)Tcl_Alloc(CSEG_SIZE(capacity));
     memset(newPtr, 0, CSEG_SIZE(capacity));
     NEW_SEGMENT(newPtr);
     newPtr->typePtr = &tkTextCharType;
@@ -6641,7 +6641,7 @@ TkBTreeMakeCharSegment(
     assert(string);
     assert(tagInfoPtr);
 
-    newPtr = (TkTextSegment *)ckalloc(memsize);
+    newPtr = (TkTextSegment *)Tcl_Alloc(memsize);
     memset(newPtr, 0, memsize);
     NEW_SEGMENT(newPtr);
     newPtr->typePtr = &tkTextCharType;
@@ -7021,7 +7021,7 @@ DeleteRange(
 	/* reserve the first entry if needed */
 	numSegments = 0;
 	maxSegments = 32;
-	segments = (TkTextSegment **)ckalloc(maxSegments * sizeof(TkTextSegment *));
+	segments = (TkTextSegment **)Tcl_Alloc(maxSegments * sizeof(TkTextSegment *));
 	DEBUG(segments[0] = NULL);
 	if (deleteFirst) {
 	    segments[numSegments++] = prevSavePtr = firstSegPtr;
@@ -7254,7 +7254,7 @@ DeleteRange(
 		} else {
 		    if (numSegments == maxSegments) {
 			maxSegments *= 2u;
-			segments = (TkTextSegment **)ckrealloc(segments, maxSegments * sizeof(TkTextSegment *));
+			segments = (TkTextSegment **)Tcl_Realloc(segments, maxSegments * sizeof(TkTextSegment *));
 		    }
 		    segments[numSegments++] = savePtr;
 		}
@@ -7432,7 +7432,7 @@ DeleteRange(
 		} else {
 		    if (numSegments == maxSegments) {
 			maxSegments += 1;
-			segments = (TkTextSegment **)ckrealloc(segments, maxSegments * sizeof(TkTextSegment *));
+			segments = (TkTextSegment **)Tcl_Realloc(segments, maxSegments * sizeof(TkTextSegment *));
 		    }
 		    segments[numSegments++] = lastSegPtr;
 		}
@@ -7481,7 +7481,7 @@ DeleteRange(
 	assert(deleteFirst == (segments[0] == firstSegPtr));
 
 	if (numSegments != maxSegments) {
-	    segments = (TkTextSegment **)ckrealloc(segments, (numSegments + 1)*sizeof(TkTextSegment *));
+	    segments = (TkTextSegment **)Tcl_Realloc(segments, (numSegments + 1)*sizeof(TkTextSegment *));
 	}
 	undoToken->segments = segments;
 	undoToken->numSegments = numSegments;
@@ -7674,7 +7674,7 @@ DeleteIndexRange(
     if (redoInfo) {
 	UndoTokenDelete *redoToken;
 
-	redoToken = (UndoTokenDelete *)ckalloc(sizeof(UndoTokenDelete));
+	redoToken = (UndoTokenDelete *)Tcl_Alloc(sizeof(UndoTokenDelete));
 	redoToken->undoType = &undoTokenDeleteType;
 	redoToken->segments = NULL;
 	redoToken->numSegments = 0;
@@ -9107,10 +9107,10 @@ ResizeLengths(
     unsigned bufSize = capacity * sizeof(data->lengths[0]);
 
     if (data->lengths == data->lengthsBuf) {
-	data->lengths = (int32_t *)ckalloc(bufSize);
+	data->lengths = (int32_t *)Tcl_Alloc(bufSize);
 	memcpy(data->lengths, data->lengthsBuf, MIN(sizeof(data->lengthsBuf), bufSize));
     } else {
-	data->lengths = (int32_t *)ckrealloc(data->lengths, bufSize);
+	data->lengths = (int32_t *)Tcl_Realloc(data->lengths, bufSize);
     }
     data->capacityOfLengths = capacity;
 }
@@ -9202,7 +9202,7 @@ MergeTagUndoToken(
     if (data->add == remove) {
 	if (cmp1 <= 0 && cmp2 >= 0) {
 	    if (!data->add || wholeRange) {
-		ckfree(prevToken->lengths);
+		Tcl_Free(prevToken->lengths);
 		prevToken->lengths = NULL;
 		return UNDO_ANNIHILATED;
 	    }
@@ -9896,7 +9896,7 @@ TkBTreeTag(
 		tagPtr->recentTagAddRemoveToken = NULL;
 	    }
 	    if (!tagPtr->recentTagAddRemoveToken) {
-		tagPtr->recentTagAddRemoveToken = (TkTextUndoToken *)ckalloc(sizeof(UndoTokenTagChange));
+		tagPtr->recentTagAddRemoveToken = (TkTextUndoToken *)Tcl_Alloc(sizeof(UndoTokenTagChange));
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
 	    }
 
@@ -9928,7 +9928,7 @@ TkBTreeTag(
 	}
 
 	if (data.lengths != data.lengthsBuf) {
-	    ckfree(data.lengths);
+	    Tcl_Free(data.lengths);
 	    DEBUG(data.lengths = data.lengthsBuf);
 	}
     }
@@ -10103,7 +10103,7 @@ ClearTagsFromLine(
 			} else {
 			    if (undoToken->changeListSize == data->capacity) {
 				data->capacity = MAX(2u*data->capacity, 50u);
-				undoToken->changeList = (UndoTagChange *)ckrealloc(undoToken->changeList,
+				undoToken->changeList = (UndoTagChange *)Tcl_Realloc(undoToken->changeList,
 					data->capacity * sizeof(undoToken->changeList[0]));
 			    }
 			    tagChangePtr = undoToken->changeList + undoToken->changeListSize++;
@@ -10666,7 +10666,7 @@ TkBTreeClearTags(
 	    unsigned lineNo1, lineNo2;
 
 	    if (undoInfo) {
-		undoToken = (UndoTokenTagClear *)ckalloc(sizeof(UndoTokenTagClear));
+		undoToken = (UndoTokenTagClear *)Tcl_Alloc(sizeof(UndoTokenTagClear));
 		undoInfo->token = (TkTextUndoToken *) undoToken;
 		undoInfo->byteSize = 0;
 		undoToken->undoType = &undoTokenClearTagsType;
@@ -10752,12 +10752,12 @@ TkBTreeClearTags(
 
     if (undoToken) {
 	if (undoToken->changeListSize == 0) {
-	    ckfree(undoToken->changeList);
-	    ckfree(undoToken);
+	    Tcl_Free(undoToken->changeList);
+	    Tcl_Free(undoToken);
 	    undoInfo->token = NULL;
 	    DEBUG_ALLOC(tkTextCountNewUndoToken--);
 	} else {
-	    undoToken->changeList = (UndoTagChange *)ckrealloc(undoToken->changeList,
+	    undoToken->changeList = (UndoTagChange *)Tcl_Realloc(undoToken->changeList,
 		    undoToken->changeListSize * sizeof(undoToken->changeList[0]));
 	}
     }
@@ -12745,7 +12745,7 @@ TkBTreeGetSegmentTags(
 		    }
 		}
 		if (count == sizeof(tagBuf)/sizeof(tagBuf[0])) {
-		    tagArray = (TkTextTag **)ckalloc(TkTextTagSetCount(tagInfoPtr) * sizeof(tagArray[0]));
+		    tagArray = (TkTextTag **)Tcl_Alloc(TkTextTagSetCount(tagInfoPtr) * sizeof(tagArray[0]));
 		    memcpy(tagArray, tagBuf, sizeof(tagBuf));
 		}
 		tagArray[count++] = tagPtr;
@@ -12781,7 +12781,7 @@ TkBTreeGetSegmentTags(
     tagPtr1 = tagArray[0];
 
     if (tagArray != tagBuf) {
-	ckfree(tagArray);
+	Tcl_Free(tagArray);
     }
 
     return tagPtr1;
@@ -13230,7 +13230,7 @@ CheckNodeConsistency(
     numChildren = numLines = numLogicalLines = numBranches = size = 0;
 
     memsize = sizeof(pixelInfo[0])*references;
-    pixelInfo = (references > PIXEL_CLIENTS) ? (NodePixelInfo *) ckalloc(memsize) : pixelInfoBuf;
+    pixelInfo = (references > PIXEL_CLIENTS) ? (NodePixelInfo *) Tcl_Alloc(memsize) : pixelInfoBuf;
     memset(pixelInfo, 0, memsize);
 
     TkTextTagSetIncrRefCount(tagonPtr = sharedTextPtr->emptyTagInfoPtr);
@@ -13382,7 +13382,7 @@ CheckNodeConsistency(
 	}
     }
     if (pixelInfo != pixelInfoBuf) {
-	ckfree(pixelInfo);
+	Tcl_Free(pixelInfo);
     }
 }
 
@@ -13923,7 +13923,7 @@ Rebalance(
 		 */
 
 		if (!nodePtr->parentPtr) {
-		    Node *newRootPtr = (Node *)ckalloc(sizeof(Node));
+		    Node *newRootPtr = (Node *)Tcl_Alloc(sizeof(Node));
 		    newRootPtr->parentPtr = NULL;
 		    newRootPtr->nextPtr = NULL;
 		    newRootPtr->childPtr = nodePtr;
@@ -13937,14 +13937,14 @@ Rebalance(
 		    newRootPtr->numBranches = nodePtr->numBranches;
 		    newRootPtr->level = nodePtr->level + 1;
 		    newRootPtr->size = nodePtr->size;
-		    newRootPtr->pixelInfo = (NodePixelInfo *)memcpy(ckalloc(pixelSize), nodePtr->pixelInfo, pixelSize);
+		    newRootPtr->pixelInfo = (NodePixelInfo *)memcpy(Tcl_Alloc(pixelSize), nodePtr->pixelInfo, pixelSize);
 		    nodePtr->parentPtr = newRootPtr;
 		    treePtr->rootPtr = newRootPtr;
 		    DEBUG_ALLOC(tkTextCountNewNode++);
 		    DEBUG_ALLOC(tkTextCountNewPixelInfo++);
 		}
 
-		newPtr = (Node *)ckalloc(sizeof(Node));
+		newPtr = (Node *)Tcl_Alloc(sizeof(Node));
 		newPtr->parentPtr = nodePtr->parentPtr;
 		newPtr->nextPtr = nodePtr->nextPtr;
 		newPtr->lastPtr = nodePtr->lastPtr;
@@ -13961,7 +13961,7 @@ Rebalance(
 		newPtr->numBranches = nodePtr->numBranches;
 		nodePtr->nextPtr = newPtr;
 		nodePtr->numChildren = MIN_CHILDREN;
-		nodePtr->pixelInfo = (NodePixelInfo *)ckalloc(pixelSize);
+		nodePtr->pixelInfo = (NodePixelInfo *)Tcl_Alloc(pixelSize);
 		memset(nodePtr->pixelInfo, 0, pixelSize);
 		TagSetAssign(&nodePtr->tagonPtr, treePtr->sharedTextPtr->emptyTagInfoPtr);
 		TagSetAssign(&nodePtr->tagoffPtr, treePtr->sharedTextPtr->emptyTagInfoPtr);
