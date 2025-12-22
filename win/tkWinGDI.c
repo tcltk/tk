@@ -202,7 +202,7 @@ static Tcl_Size ParseDash (
     }
 
     dashspec = Tcl_GetString(objv[0]);
-    /* Tk_GetDash might potentially call ckfree() on dash.pattern.pt if
+    /* Tk_GetDash might potentially call Tcl_Free() on dash.pattern.pt if
      * dash.number is not initialized to 0
      */
     dash.number = 0;
@@ -217,7 +217,7 @@ static Tcl_Size ParseDash (
 
     /* free the possibly allocated space */
     if (dash.number > staticsize || dash.number < -staticsize) {
-	ckfree(dash.pattern.pt);
+	Tcl_Free(dash.pattern.pt);
     }
 
     *(const char **)dstPtr = dashspec;
@@ -675,7 +675,7 @@ static int GdiPhoto(
      * recoverable.
      */
 
-    pbuf = (char *)attemptckalloc(sll * ny * sizeof(char));
+    pbuf = (char *)Tcl_AttemptAlloc(sll * ny * sizeof(char));
     if (! pbuf) { /* Memory allocation failure. */
 	Tcl_AppendResult(interp,
 		"::tk::print::_gdi photo failed--out of memory", (char *)NULL);
@@ -768,7 +768,7 @@ static int GdiPhoto(
 	SetBrushOrgEx(hDC, pt.x, pt.y, &pt);
     }
 
-    ckfree(pbuf);
+    Tcl_Free(pbuf);
 
     if (retval == TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -807,7 +807,7 @@ static int Smoothize(
     int nbpoints = 0;
     POINT* bpoints;
 
-    inPointList = (double *)attemptckalloc(2 * sizeof(double) * npoly);
+    inPointList = (double *)Tcl_AttemptAlloc(2 * sizeof(double) * npoly);
     if (inPointList == 0) {
 	/* TODO: unreachable */
 	return nbpoints; /* 0. */
@@ -819,10 +819,10 @@ static int Smoothize(
     }
 
     nbpoints = 1 + npoly * nStep; /* this is the upper limit. */
-    outPointList = (double *)attemptckalloc(2 * sizeof(double) * nbpoints);
+    outPointList = (double *)Tcl_AttemptAlloc(2 * sizeof(double) * nbpoints);
     if (outPointList == 0) {
 	/* TODO: unreachable */
-	ckfree(inPointList);
+	Tcl_Free(inPointList);
 	return 0;
     }
 
@@ -834,11 +834,11 @@ static int Smoothize(
 		NULL, outPointList);
     }
 
-    ckfree(inPointList);
-    bpoints = (POINT *)attemptckalloc(sizeof(POINT)*nbpoints);
+    Tcl_Free(inPointList);
+    bpoints = (POINT *)Tcl_AttemptAlloc(sizeof(POINT)*nbpoints);
     if (bpoints == 0) {
 	/* TODO: unreachable */
-	ckfree(outPointList);
+	Tcl_Free(outPointList);
 	return 0;
     }
 
@@ -846,7 +846,7 @@ static int Smoothize(
 	bpoints[n].x = (long)outPointList[2*n];
 	bpoints[n].y = (long)outPointList[2*n + 1];
     }
-    ckfree(outPointList);
+    Tcl_Free(outPointList);
     *bpointptr = bpoints;
     return nbpoints;
 }
@@ -1077,7 +1077,7 @@ static int GdiLine(
 	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    polypoints = (POINT *)attemptckalloc((objc - 2)/2 * sizeof(POINT));
+    polypoints = (POINT *)Tcl_AttemptAlloc((objc - 2)/2 * sizeof(POINT));
     if (polypoints == NULL) {
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", (char *)NULL);
 	return TCL_ERROR;
@@ -1121,13 +1121,13 @@ static int GdiLine(
 
 	if (Tcl_ParseArgsObjv(interp, lineArgvInfo, &argc, objv, NULL )
 		!= TCL_OK) {
-	    ckfree(polypoints);
+	    Tcl_Free(polypoints);
 	    return TCL_ERROR;
 	}
     }
 
     if (fill.isempty) {
-	ckfree(polypoints);
+	Tcl_Free(polypoints);
 	return TCL_OK;
     }
     if (arrow != ARROW_NONE) {
@@ -1142,7 +1142,7 @@ static int GdiLine(
 	nspoints = Smoothize(polypoints, npoly, nStep, smooth, &spoints);
 	if (nspoints > 0) {
 	    /* replace the old point list with the new one */
-	    ckfree(polypoints);
+	    Tcl_Free(polypoints);
 	    polypoints = spoints;
 	    npoly = nspoints;
 	}
@@ -1242,7 +1242,7 @@ static int GdiLine(
     Polyline(hDC, polypoints, npoly);
     GdiFreePen(interp, hDC, oldpen);
 
-    ckfree(polypoints);
+    Tcl_Free(polypoints);
     return TCL_OK;
 }
 
@@ -1409,7 +1409,7 @@ static int GdiPolygon(
 	    || (Tcl_GetDoubleFromObj(interp, objv[5], &p2y) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    polypoints = (POINT *)attemptckalloc((objc - 2)/2 * sizeof(POINT));
+    polypoints = (POINT *)Tcl_AttemptAlloc((objc - 2)/2 * sizeof(POINT));
     if (polypoints == NULL) {
 	/* TODO: unreachable */
 	Tcl_AppendResult(interp, "Out of memory in GdiPolygon", (char *)NULL);
@@ -1451,7 +1451,7 @@ static int GdiPolygon(
 
 	if (Tcl_ParseArgsObjv(interp, polyArgvInfo, &argc, objv, NULL )
 		!= TCL_OK) {
-	    ckfree(polypoints);
+	    Tcl_Free(polypoints);
 	    return TCL_ERROR;
 	}
     }
@@ -1480,7 +1480,7 @@ static int GdiPolygon(
 	nspoints = Smoothize(polypoints, npoly, nStep, smooth, &spoints);
 	if (nspoints > 0) {
 	    /* replace the old point list with the new one */
-	    ckfree(polypoints);
+	    Tcl_Free(polypoints);
 	    polypoints = spoints;
 	    npoly = nspoints;
 	}
@@ -1491,7 +1491,7 @@ static int GdiPolygon(
     GdiFreePen(interp, hDC, oldpen);
     GdiFreeBrush(interp, hDC, oldbrush);
 
-    ckfree(polypoints);
+    Tcl_Free(polypoints);
     return TCL_OK;
 }
 
@@ -3054,7 +3054,7 @@ static int GdiMakePen(
     if (dashstyle != 0 && dashstyledata != 0) {
 	const char *cp;
 	size_t i;
-	char *dup = (char *) ckalloc(strlen(dashstyledata) + 1);
+	char *dup = (char *)Tcl_Alloc(strlen(dashstyledata) + 1);
 	strcpy(dup, dashstyledata);
 	/* DEBUG. */
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3097,7 +3097,7 @@ static int GdiMakePen(
 	    dashstyle = 0;
 	}
 	if (dup) {
-	    ckfree(dup);
+	    Tcl_Free(dup);
 	}
     }
 
@@ -3882,7 +3882,7 @@ static void WinprintDeleted(
 	DeleteDC(dataPtr->printDC);
 	Tcl_DStringFree(&dataPtr->jobNameW);
     }
-    ckfree(dataPtr);
+    Tcl_Free(dataPtr);
 }
 
 
@@ -3907,7 +3907,7 @@ int Winprint_Init(
     static const char *gdiName = "::tk::print::_gdi";
     static const size_t numCommands =
 	    sizeof(gdi_commands) / sizeof(struct gdi_command);
-    WinprintData *dataPtr = (WinprintData *)ckalloc(sizeof(WinprintData));
+    WinprintData *dataPtr = (WinprintData *)Tcl_Alloc(sizeof(WinprintData));
 
     /*
      * Set up the low-level [_gdi] command.

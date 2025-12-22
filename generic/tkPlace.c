@@ -388,7 +388,7 @@ CreateContent(
      * populate it with some default values.
      */
 
-    contentPtr = (Content *)ckalloc(sizeof(Content));
+    contentPtr = (Content *)Tcl_Alloc(sizeof(Content));
     memset(contentPtr, 0, sizeof(Content));
     contentPtr->tkwin = tkwin;
     contentPtr->inTkwin = NULL;
@@ -430,7 +430,7 @@ FreeContent(
     }
     Tk_FreeConfigOptions(contentPtr, contentPtr->optionTable,
 	    contentPtr->tkwin);
-    ckfree(contentPtr);
+    Tcl_Free(contentPtr);
 }
 
 /*
@@ -541,7 +541,7 @@ CreateContainer(
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->containerTable, (char *)tkwin, &isNew);
     if (isNew) {
-	containerPtr = (Container *)ckalloc(sizeof(Container));
+	containerPtr = (Container *)Tcl_Alloc(sizeof(Container));
 	containerPtr->tkwin = tkwin;
 	containerPtr->contentPtr = NULL;
 	containerPtr->abortPtr = NULL;

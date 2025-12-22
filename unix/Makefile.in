@@ -174,8 +174,8 @@ PROTO_FLAGS		=
 # To enable memory debugging reverse the comment characters on the following
 # lines or call configure with --enable-symbols=mem
 # Warning:  if you enable memory debugging, you must do it *everywhere*,
-# including all the code that calls Tcl, and you must use ckalloc and
-# ckfree everywhere instead of malloc and free.
+# including all the code that calls Tcl, and you must use Tcl_Alloc and
+# Tcl_Free everywhere instead of malloc and free.
 MEM_DEBUG_FLAGS		=
 #MEM_DEBUG_FLAGS	= -DTCL_MEM_DEBUG
 

@@ -21,8 +21,8 @@ static int		PutPixel(XImage *image, int x, int y,
  *
  * DestroyImage --
  *
- *	This is a trivial wrapper around ckfree to make it possible to pass
- *	ckfree as a pointer.
+ *	This is a trivial wrapper around Tcl_Free to make it possible to pass
+ *	Tcl_Free as a pointer.
  *
  * Results:
  *	None.
@@ -39,9 +39,9 @@ DestroyImage(
 {
     if (imagePtr) {
 	if (imagePtr->data) {
-	    ckfree(imagePtr->data);
+	    Tcl_Free(imagePtr->data);
 	}
-	ckfree(imagePtr);
+	Tcl_Free(imagePtr);
     }
     return 0;
 }
@@ -212,7 +212,7 @@ XCreateImage(
     int bitmap_pad,
     int bytes_per_line)
 {
-    XImage* imagePtr = (XImage*)ckalloc(sizeof(XImage));
+    XImage* imagePtr = (XImage*)Tcl_Alloc(sizeof(XImage));
 
     imagePtr->width = width;
     imagePtr->height = height;
@@ -351,7 +351,7 @@ XGetImageZPixmap(
     if (depth <= 8) {
 	size += sizeof(unsigned short) << depth;
     }
-    bmInfo = (BITMAPINFO *)ckalloc(size);
+    bmInfo = (BITMAPINFO *)Tcl_Alloc(size);
 
     bmInfo->bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
     bmInfo->bmiHeader.biWidth		= width;
@@ -369,7 +369,7 @@ XGetImageZPixmap(
 	unsigned char *p, *pend;
 
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)Tcl_Alloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -378,7 +378,7 @@ XGetImageZPixmap(
 	ret_image = XCreateImage(display, NULL, depth, ZPixmap, 0, (char *) data,
 		width, height, 32, (int) ((width + 31) >> 3) & ~1);
 	if (ret_image == NULL) {
-	    ckfree(data);
+	    Tcl_Free(data);
 	    goto cleanup;
 	}
 
@@ -388,8 +388,8 @@ XGetImageZPixmap(
 
 	if (GetDIBits(hdcMem, hbmp, 0, height, data, bmInfo,
 		DIB_PAL_COLORS) == 0) {
-	    ckfree(ret_image->data);
-	    ckfree(ret_image);
+	    Tcl_Free(ret_image->data);
+	    Tcl_Free(ret_image);
 	    ret_image = NULL;
 	    goto cleanup;
 	}
@@ -405,7 +405,7 @@ XGetImageZPixmap(
 	unsigned char *p;
 
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)Tcl_Alloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -414,7 +414,7 @@ XGetImageZPixmap(
 	ret_image = XCreateImage(display, NULL, 8, ZPixmap, 0, (char *) data,
 		width, height, 8, (int) width);
 	if (ret_image == NULL) {
-	    ckfree(data);
+	    Tcl_Free(data);
 	    goto cleanup;
 	}
 
@@ -424,8 +424,8 @@ XGetImageZPixmap(
 
 	if (GetDIBits(hdcMem, hbmp, 0, height, data, bmInfo,
 		DIB_PAL_COLORS) == 0) {
-	    ckfree(ret_image->data);
-	    ckfree(ret_image);
+	    Tcl_Free(ret_image->data);
+	    Tcl_Free(ret_image);
 	    ret_image = NULL;
 	    goto cleanup;
 	}
@@ -436,7 +436,7 @@ XGetImageZPixmap(
 	}
     } else if (depth == 16) {
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS);
-	data = (unsigned char *)ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *)Tcl_Alloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -445,7 +445,7 @@ XGetImageZPixmap(
 	ret_image = XCreateImage(display, NULL, 16, ZPixmap, 0, (char *) data,
 		width, height, 16, 0 /* will be calc'ed from bitmap_pad */);
 	if (ret_image == NULL) {
-	    ckfree(data);
+	    Tcl_Free(data);
 	    goto cleanup;
 	}
 
@@ -455,14 +455,14 @@ XGetImageZPixmap(
 
 	if (GetDIBits(hdcMem, hbmp, 0, height, ret_image->data, bmInfo,
 		DIB_RGB_COLORS) == 0) {
-	    ckfree(ret_image->data);
-	    ckfree(ret_image);
+	    Tcl_Free(ret_image->data);
+	    Tcl_Free(ret_image);
 	    ret_image = NULL;
 	    goto cleanup;
 	}
     } else {
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS);
-	data = (unsigned char *)ckalloc(width * height * 4);
+	data = (unsigned char *)Tcl_Alloc(width * height * 4);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
@@ -471,7 +471,7 @@ XGetImageZPixmap(
 	ret_image = XCreateImage(display, NULL, 32, ZPixmap, 0, (char *) data,
 		width, height, 0, (int) width * 4);
 	if (ret_image == NULL) {
-	    ckfree(data);
+	    Tcl_Free(data);
 	    goto cleanup;
 	}
 
@@ -485,10 +485,10 @@ XGetImageZPixmap(
 	    unsigned int byte_width, h, w;
 
 	    byte_width = ((width * 3 + 3) & ~(unsigned)3);
-	    smallBitBase = (unsigned char *)ckalloc(byte_width * height);
+	    smallBitBase = (unsigned char *)Tcl_Alloc(byte_width * height);
 	    if (!smallBitBase) {
-		ckfree(ret_image->data);
-		ckfree(ret_image);
+		Tcl_Free(ret_image->data);
+		Tcl_Free(ret_image);
 		ret_image = NULL;
 		goto cleanup;
 	    }
@@ -500,9 +500,9 @@ XGetImageZPixmap(
 
 	    if (GetDIBits(hdcMem, hbmp, 0, height, smallBitData, bmInfo,
 		    DIB_RGB_COLORS) == 0) {
-		ckfree(ret_image->data);
-		ckfree(ret_image);
-		ckfree(smallBitBase);
+		Tcl_Free(ret_image->data);
+		Tcl_Free(ret_image);
+		Tcl_Free(smallBitBase);
 		ret_image = NULL;
 		goto cleanup;
 	    }
@@ -527,7 +527,7 @@ XGetImageZPixmap(
 	     * Free the Device contexts, and the Bitmap.
 	     */
 
-	    ckfree(smallBitBase);
+	    Tcl_Free(smallBitBase);
 	} else {
 	    /*
 	     * Get the BITMAP info directly into the Image.
@@ -535,8 +535,8 @@ XGetImageZPixmap(
 
 	    if (GetDIBits(hdcMem, hbmp, 0, height, ret_image->data, bmInfo,
 		    DIB_RGB_COLORS) == 0) {
-		ckfree(ret_image->data);
-		ckfree(ret_image);
+		Tcl_Free(ret_image->data);
+		Tcl_Free(ret_image);
 		ret_image = NULL;
 		goto cleanup;
 	    }
@@ -545,7 +545,7 @@ XGetImageZPixmap(
 
   cleanup:
     if (bmInfo) {
-	ckfree(bmInfo);
+	Tcl_Free(bmInfo);
     }
     if (hPal) {
 	SelectPalette(hdcMem, hPalPrev1, FALSE);
@@ -615,7 +615,7 @@ XGetImage(
 	imagePtr = XCreateImage(display, NULL, 32, format, 0, NULL,
 		width, height, 32, 0);
 	size = imagePtr->bytes_per_line * imagePtr->height;
-	imagePtr->data = (char *)ckalloc(size);
+	imagePtr->data = (char *)Tcl_Alloc(size);
 	memset(imagePtr->data, 0, size);
 
 	for (yy = 0; yy < height; yy++) {
@@ -662,7 +662,7 @@ XGetImage(
 
 	imagePtr = XCreateImage(display, NULL, 1, XYBitmap, 0, NULL,
 		width, height, 32, 0);
-	imagePtr->data = (char *)ckalloc(imagePtr->bytes_per_line * imagePtr->height);
+	imagePtr->data = (char *)Tcl_Alloc(imagePtr->bytes_per_line * imagePtr->height);
 
 	dc = GetDC(NULL);
 

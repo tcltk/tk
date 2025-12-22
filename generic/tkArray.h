@@ -30,7 +30,7 @@
  *     for (i = 0; i < MyArray_Size(arr); ++i) {
  *         Pair *p = MyArray_Get(arr, i);
  *         printf("%d -> %d\n", p->key, p->value);
- *         ckfree(p);
+ *         Tcl_Free(p);
  *     }
  *     MyArray_Free(&arr);
  *     assert(arr == NULL);
@@ -268,12 +268,12 @@ AT##_Resize(AT **arrp, size_t newSize)						\
     assert(!*arrp || (*arrp)->size != 0xdeadbeef);				\
     if (newSize == 0) {								\
 	assert(!*arrp || ((*arrp)->size = 0xdeadbeef));				\
-	ckfree(*arrp);								\
+	Tcl_Free(*arrp);								\
 	*arrp = NULL;								\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newSize - 1) + sizeof(AT);		\
-	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)Tcl_Realloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newSize < (*arrp)->size) {					\
@@ -479,12 +479,12 @@ AT##_Resize(AT **arrp, size_t newCapacity)					\
     assert(!*arrp || (*arrp)->size != 0xdeadbeef);				\
     if (newCapacity == 0) {							\
 	assert(!*arrp || ((*arrp)->size = 0xdeadbeef));				\
-	ckfree(*arrp);								\
+	Tcl_Free(*arrp);								\
 	*arrp = NULL;								\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newCapacity - 1) + sizeof(AT);		\
-	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)Tcl_Realloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newCapacity < (*arrp)->size) {				\

@@ -186,7 +186,7 @@ static void ContentLostEventHandler(void *clientData, XEvent *eventPtr)
 static Ttk_Content *NewContent(
     Ttk_Manager *mgr, Tk_Window window, void *data)
 {
-    Ttk_Content *content = (Ttk_Content *)ckalloc(sizeof(Ttk_Content));
+    Ttk_Content *content = (Ttk_Content *)Tcl_Alloc(sizeof(Ttk_Content));
 
     content->window = window;
     content->manager = mgr;
@@ -198,7 +198,7 @@ static Ttk_Content *NewContent(
 
 static void DeleteContent(Ttk_Content *content)
 {
-    ckfree(content);
+    Tcl_Free(content);
 }
 
 /*------------------------------------------------------------------------
@@ -208,7 +208,7 @@ static void DeleteContent(Ttk_Content *content)
 Ttk_Manager *Ttk_CreateManager(
     const Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window window)
 {
-    Ttk_Manager *mgr = (Ttk_Manager *)ckalloc(sizeof(*mgr));
+    Ttk_Manager *mgr = (Ttk_Manager *)Tcl_Alloc(sizeof(*mgr));
 
     mgr->managerSpec	= managerSpec;
     mgr->managerData	= managerData;
@@ -232,12 +232,12 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 	Ttk_ForgetContent(mgr, mgr->nContent - 1);
     }
     if (mgr->content) {
-	ckfree(mgr->content);
+	Tcl_Free(mgr->content);
     }
 
     Tcl_CancelIdleCall(ManagerIdleProc, mgr);
 
-    ckfree(mgr);
+    Tcl_Free(mgr);
 }
 
 /*------------------------------------------------------------------------
@@ -250,7 +250,7 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 static void InsertContent(Ttk_Manager *mgr, Ttk_Content *content, Tcl_Size index)
 {
     Tcl_Size endIndex = mgr->nContent++;
-    mgr->content = (Ttk_Content **)ckrealloc(mgr->content, mgr->nContent * sizeof(Ttk_Content *));
+    mgr->content = (Ttk_Content **)Tcl_Realloc(mgr->content, mgr->nContent * sizeof(Ttk_Content *));
 
     while (endIndex > index) {
 	mgr->content[endIndex] = mgr->content[endIndex - 1];

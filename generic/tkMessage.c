@@ -236,7 +236,7 @@ Tk_MessageObjCmd(
 
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
-    msgPtr = (Message *)ckalloc(sizeof(Message));
+    msgPtr = (Message *)Tcl_Alloc(sizeof(Message));
     memset(msgPtr, 0, sizeof(Message));
 
     /*
@@ -406,7 +406,7 @@ DestroyMessage(
     }
     Tk_FreeConfigOptions(msgPtr, msgPtr->optionTable, msgPtr->tkwin);
     msgPtr->tkwin = NULL;
-    ckfree(msgPtr);
+    Tcl_Free(msgPtr);
 }
 
 /*

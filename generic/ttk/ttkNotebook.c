@@ -199,11 +199,11 @@ static void NotebookStyleOptions(
 static Tab *CreateTab(Tcl_Interp *interp, Notebook *nb, Tk_Window window)
 {
     Tk_OptionTable optionTable = nb->notebook.paneOptionTable;
-    Tab *record = (Tab *)ckalloc(sizeof(Tab));
+    Tab *record = (Tab *)Tcl_Alloc(sizeof(Tab));
     memset(record, 0, sizeof(Tab));
 
     if (Tk_InitOptions(interp, record, optionTable, window) != TCL_OK) {
-	ckfree(record);
+	Tcl_Free(record);
 	return NULL;
     }
 
@@ -214,7 +214,7 @@ static void DestroyTab(Notebook *nb, Tab *tab)
 {
     void *record = tab;
     Tk_FreeConfigOptions(record, nb->notebook.paneOptionTable, nb->core.tkwin);
-    ckfree(record);
+    Tcl_Free(record);
 }
 
 static int ConfigureTab(
