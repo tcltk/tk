@@ -739,27 +739,70 @@ CreatePDFFromDrawableRect(
 			  unsigned int width,
 			  unsigned int height)
 {
-    MacDrawable *mac_drawable = (MacDrawable *)drawable;
+    MacDrawable *mac_drawable = (MacDrawable *) drawable;
     NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
-    if (view == nil) {
-	TkMacOSXDbgMsg("Invalid source drawable");
-	return NULL;
+    if (!view) {
+        TkMacOSXDbgMsg("Invalid source drawable");
+        return NULL;
     }
-    NSRect bounds, viewSrcRect;
+
+    if (![view wantsLayer] || !view.layer) {
+        TkMacOSXDbgMsg("View is not layer-backed");
+        return NULL;
+    }
+
+    NSRect bounds = view.bounds;
 
     /*
-     * Get the child window area in NSView coordinates
-     * (origin at bottom left).
+     * Convert to NSView coordinates (origin bottom-left).
      */
+    CGRect viewSrcRect = CGRectMake(
+				    mac_drawable->xOff + x,
+				    bounds.size.height - height - (mac_drawable->yOff + y),
+				    width,
+				    height
+				    );
 
-    bounds = [view bounds];
-    viewSrcRect = NSMakeRect(mac_drawable->xOff + x,
-			     bounds.size.height - height - (mac_drawable->yOff + y),
-			     width, height);
-    NSData *viewData = [view dataWithPDFInsideRect:viewSrcRect];
-    CFDataRef result = (CFDataRef)viewData;
-    return result;
+    NSMutableData *pdfData = [NSMutableData data];
+
+    CGDataConsumerRef consumer =
+        CGDataConsumerCreateWithCFData((__bridge CFMutableDataRef) pdfData);
+
+    CGRect pdfBounds = CGRectMake(0, 0, width, height);
+
+    CGContextRef ctx =
+        CGPDFContextCreate(consumer, &pdfBounds, NULL);
+
+    CGPDFContextBeginPage(ctx, NULL);
+
+    CGContextSaveGState(ctx);
+
+    /*
+     * Translate so the requested rect maps to (0,0).
+     */
+    CGContextTranslateCTM(ctx,
+			  -viewSrcRect.origin.x,
+			  -viewSrcRect.origin.y);
+
+    /*
+     * Render CALayer tree.
+     */
+    [view.layer renderInContext:ctx];
+
+    CGContextRestoreGState(ctx);
+
+    CGPDFContextEndPage(ctx);
+
+    CGContextRelease(ctx);
+    CGDataConsumerRelease(consumer);
+
+    /*
+     * Caller owns returned CFDataRef.
+     */
+    return CFBridgingRetain(pdfData);
 }
+
+
 
 
 /*
