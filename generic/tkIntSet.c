@@ -129,7 +129,7 @@ TkIntSetLowerBound(
 TkIntSet *
 TkIntSetNew()
 {
-    TkIntSet *set = (TkIntSet *)ckalloc(SET_SIZE(0));
+    TkIntSet *set = (TkIntSet *)Tcl_Alloc(SET_SIZE(0));
     set->end = set->buf;
     set->refCount = 0;
     set->isSetFlag = 1;
@@ -147,7 +147,7 @@ TkIntSetFromBits(
     unsigned index = 0, i;
 
     size = TkBitCount(bf);
-    set = (TkIntSet *)ckalloc(SET_SIZE(NextPowerOf2(size)));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(NextPowerOf2(size)));
     set->end = set->buf + size;
     set->refCount = 1;
     set->isSetFlag = 1;
@@ -168,7 +168,7 @@ TkIntSetDestroy(
     assert(setPtr);
 
     if (*setPtr) {
-	ckfree(*setPtr);
+	Tcl_Free(*setPtr);
 	*setPtr = NULL;
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
@@ -185,7 +185,7 @@ TkIntSetCopy(
     assert(set);
 
     size = TkIntSetSize(set);
-    newSet = (TkIntSet *)ckalloc(SET_SIZE(NextPowerOf2(size)));
+    newSet = (TkIntSet *)Tcl_Alloc(SET_SIZE(NextPowerOf2(size)));
     newSet->end = newSet->buf + size;
     newSet->refCount = 1;
     newSet->isSetFlag = 1;
@@ -240,7 +240,7 @@ TkIntSetJoin(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(src));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = Join(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -248,12 +248,12 @@ TkIntSetJoin(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -315,7 +315,7 @@ TkIntSetJoinBits(
 	unsigned capacity1, capacity2, size;
 
 	capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkBitSize(src));
-	set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+	set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
 	set->end = JoinBits(set->buf, dst->buf, dst->end, src);
 	size = set->end - set->buf;
 	capacity2 = NextPowerOf2(size);
@@ -323,13 +323,13 @@ TkIntSetJoinBits(
 	DEBUG_ALLOC(tkIntSetCountNew++);
 
 	if (capacity2 < capacity1) {
-	    set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	    set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	    set->end = set->buf + size;
 	}
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -403,7 +403,7 @@ TkIntSetJoin2(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(set1) + TkIntSetSize(set2));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = Join2(set->buf, dst->buf, dst->end, set1->buf, set1->end, set2->buf, set2->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -411,12 +411,12 @@ TkIntSetJoin2(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -462,7 +462,7 @@ TkIntSetIntersect(
 
     size = MIN(TkIntSetSize(src), TkIntSetSize(dst));
     capacity1 = NextPowerOf2(size);
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = Intersect(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -470,12 +470,12 @@ TkIntSetIntersect(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -523,7 +523,7 @@ TkIntSetIntersectBits(
 
     size = MIN(TkIntSetSize(dst), TkBitCount(src));
     capacity1 = NextPowerOf2(size);
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = IntersectBits(set->buf, dst->buf, dst->end, src);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -531,12 +531,12 @@ TkIntSetIntersectBits(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -587,7 +587,7 @@ TkIntSetRemove(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = Remove(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -595,12 +595,12 @@ TkIntSetRemove(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -650,7 +650,7 @@ TkIntSetRemoveBits(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = RemoveBits(set->buf, dst->buf, dst->end, src);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -658,12 +658,12 @@ TkIntSetRemoveBits(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -697,7 +697,7 @@ TkIntSetComplementTo(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(src));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = ComplementTo(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -705,12 +705,12 @@ TkIntSetComplementTo(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -764,7 +764,7 @@ TkIntSetComplementToBits(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkBitSize(src));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = ComplementToBits(set->buf, dst->buf, dst->end, src);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -772,12 +772,12 @@ TkIntSetComplementToBits(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -852,7 +852,7 @@ TkIntSetJoinComplementTo(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(set1));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = JoinComplementTo(
 	    set->buf, dst->buf, dst->end, set1->buf, set1->end, set2->buf, set2->end);
     size = set->end - set->buf;
@@ -861,12 +861,12 @@ TkIntSetJoinComplementTo(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -969,7 +969,7 @@ TkIntSetJoinNonIntersection(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(set1) + TkIntSetSize(set2));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = JoinNonIntersection(
 	    set->buf, dst->buf, dst->end, set1->buf, set1->end, set2->buf, set2->end);
     size = set->end - set->buf;
@@ -978,12 +978,12 @@ TkIntSetJoinNonIntersection(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -1024,7 +1024,7 @@ TkIntSetJoin2ComplementToIntersection(
     size1 = TkIntSetSize(set1) + TkIntSetSize(set2);
     size2 = MIN(TkIntSetSize(set1), TkIntSetSize(set2));
     size = size1 + 2*size2;
-    res1 = size <= sizeof(buffer)/sizeof(buffer[0]) ? buffer : (TkIntSetType *)ckalloc(size*sizeof(TkIntSetType));
+    res1 = size <= sizeof(buffer)/sizeof(buffer[0]) ? buffer : (TkIntSetType *)Tcl_Alloc(size*sizeof(TkIntSetType));
     res2 = res1 + size1;
     res3 = res2 + size2;
 
@@ -1033,7 +1033,7 @@ TkIntSetJoin2ComplementToIntersection(
     res3End = ComplementTo(res3, res1, res1End, res2, res2End);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(add) + (res3End - res3));
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     set->end = Join2(set->buf, dst->buf, dst->end, add->buf, add->end, res3, res3End);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -1041,17 +1041,17 @@ TkIntSetJoin2ComplementToIntersection(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
     if (res1 != buffer) {
-	ckfree(res1);
+	Tcl_Free(res1);
     }
     set->refCount = 1;
     set->isSetFlag = 1;
@@ -1077,7 +1077,7 @@ TkIntSetJoinOfDifferences(
 
     capacity2 = TkIntSetSize(dst) + TkIntSetSize(set1);
     capacity1 = NextPowerOf2(2*capacity2);
-    set = (TkIntSet *)ckalloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)Tcl_Alloc(SET_SIZE(capacity1));
     buf1 = set->buf + capacity2;
     buf2 = buf1 + TkIntSetSize(dst);
     end1 = Remove(buf1, dst->buf, dst->end, set1->buf, set1->end);
@@ -1089,12 +1089,12 @@ TkIntSetJoinOfDifferences(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = (TkIntSet *)ckrealloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -1262,7 +1262,7 @@ Add(
     unsigned size = set->end - set->buf;
 
     if (IsPowerOf2(size)) {
-	TkIntSet *newSet = (TkIntSet *)ckalloc(SET_SIZE(MAX(2*size, 1)));
+	TkIntSet *newSet = (TkIntSet *)Tcl_Alloc(SET_SIZE(MAX(2*size, 1)));
 	unsigned offs = pos - set->buf;
 
 	assert(offs <= size);
@@ -1274,7 +1274,7 @@ Add(
 	DEBUG_ALLOC(tkIntSetCountNew++);
 
 	if (--set->refCount == 0) {
-	    ckfree(set);
+	    Tcl_Free(set);
 	    DEBUG_ALLOC(tkIntSetCountDestroy++);
 	}
 
@@ -1320,7 +1320,7 @@ Erase(
     (void)n;
 
     if (IsPowerOf2(size)) {
-	TkIntSet *newSet = (TkIntSet *)ckalloc(SET_SIZE(size));
+	TkIntSet *newSet = (TkIntSet *)Tcl_Alloc(SET_SIZE(size));
 	unsigned offs = pos - set->buf;
 
 	memcpy(newSet->buf, set->buf, offs*sizeof(TkIntSetType));
@@ -1331,7 +1331,7 @@ Erase(
 	DEBUG_ALLOC(tkIntSetCountNew++);
 
 	if (--set->refCount == 0) {
-	    ckfree(set);
+	    Tcl_Free(set);
 	    DEBUG_ALLOC(tkIntSetCountDestroy++);
 	}
 
@@ -1418,14 +1418,14 @@ TkIntSetClear(
 	return set;
     }
 
-    newSet = (TkIntSet *)ckalloc(SET_SIZE(0));
+    newSet = (TkIntSet *)Tcl_Alloc(SET_SIZE(0));
     newSet->end = newSet->buf;
     newSet->refCount = 1;
     newSet->isSetFlag = 1;
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (--set->refCount == 0) {
-	ckfree(set);
+	Tcl_Free(set);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -1615,7 +1615,7 @@ TkIntSetInnerJoinDifference(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(add));
-    set = ckalloc(SET_SIZE(capacity1));
+    set = Tcl_Alloc(SET_SIZE(capacity1));
     set->end = InnerJoinDifference(set->buf, dst->buf, dst->end, add->buf, add->end, sub->buf, sub->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -1623,12 +1623,12 @@ TkIntSetInnerJoinDifference(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = ckrealloc(set, SET_SIZE(capacity2));
+	set = Tcl_Realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
     if (--dst->refCount == 0) {
-	ckfree(dst);
+	Tcl_Free(dst);
 	DEBUG_ALLOC(tkIntSetCountDestroy++);
     }
 
@@ -1929,14 +1929,14 @@ TkIntSetIsEqualToInnerJoinDifference(
 
     diffSize = TkIntSetSize(add2);
     inscSize = MIN(TkIntSetSize(set2), diffSize);
-    inscBuf = inscSize <= sizeof(buf1)/sizeof(buf1[0]) ? buf1 : ckalloc(inscSize*sizeof(buf1[0]));
+    inscBuf = inscSize <= sizeof(buf1)/sizeof(buf1[0]) ? buf1 : Tcl_Alloc(inscSize*sizeof(buf1[0]));
     inscEnd = Intersect(inscP = inscBuf, set2->buf, set2->end, add2->buf, add2->end);
 
     if (inscP == inscEnd) {
 	/* set1 == (add2 - sub2) */
 	isEqual = TkIntSetIsEqualToDifference(set1, add2, sub2);
     } else {
-	diffBuf = diffSize <= sizeof(buf2)/sizeof(buf2[0]) ? buf2 : ckalloc(diffSize*sizeof(buf2[0]));
+	diffBuf = diffSize <= sizeof(buf2)/sizeof(buf2[0]) ? buf2 : Tcl_Alloc(diffSize*sizeof(buf2[0]));
 	diffEnd = Remove(diffP = diffBuf, add2->buf, add2->end, sub2->buf, sub2->end);
 
 	if (diffP == diffEnd) {
@@ -1947,10 +1947,10 @@ TkIntSetIsEqualToInnerJoinDifference(
 	    isEqual = EqualToJoin(set1->buf, set1->end, inscP, inscEnd, diffP, diffEnd);
 	}
 
-	if (diffBuf != buf2) { ckfree(diffBuf); }
+	if (diffBuf != buf2) { Tcl_Free(diffBuf); }
     }
 
-    if (inscBuf != buf1) { ckfree(inscBuf); }
+    if (inscBuf != buf1) { Tcl_Free(inscBuf); }
 
     return isEqual;
 }
