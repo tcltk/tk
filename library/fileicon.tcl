@@ -9225,11 +9225,9 @@ proc ::tk::fileicon {filename size} {
         }
         return [::tk::fileicon::_getwinicon $filename $newsize]
     }
-
     if {[tk windowingsystem] eq "aqua"} {
         return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
     }
-
     if {[tk windowingsystem] eq "x11"} {
 	set img [image create photo]
 	set found 0
@@ -9273,7 +9271,6 @@ proc ::tk::fileicon {filename size} {
                 }
             }
         }
-
         # Resize the chosen image to the requested height.
         $img configure -height $size
         return $img
