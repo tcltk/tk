@@ -775,8 +775,7 @@ CreatePDFFromDrawableRect(
      * Translate so the requested rect maps to (0,0).
      */
     
-    CGContextTranslateCTM(ctx,
-			  -viewSrcRect.origin.x,
+    CGContextTranslateCTM(ctx, -viewSrcRect.origin.x,
 			  -viewSrcRect.origin.y);
 
     /*
