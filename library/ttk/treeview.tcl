@@ -128,12 +128,19 @@ bind Treeview	<Mod3-${ckey}-Home>	{ %W xview moveto 0.0 }
 bind Treeview	<Mod3-${ckey}-End>	{ %W xview moveto 1.0 }
 }
 
+
+if {$::tcl_platform(os) ne "Darwin"} {
+    set ckey Control
+} else {
+    set ckey Command
+}
+
 # Other keys
-bind Treeview	<F2>			{ ::ttk::treeview::ActivateItem %W }
-bind Treeview	<Return>		{ ::ttk::treeview::KeyNav %W down }
+bind Treeview	<Return>		{ ::ttk::treeview::ActivateItem %W }
 bind Treeview	<Shift-Return>		{ ::ttk::treeview::KeyNav %W up }
-bind Treeview	<${ckey}-Return>	{ ::ttk::treeview::ActivateItem %W }
-bind Treeview	<<Invoke>>		{ ::ttk::treeview::ActivateItem %W }
+bind Treeview	<${ckey}-Return>	{ ::ttk::treeview::InvokeItem %W }
+bind Treeview	<F2>			{ ::ttk::treeview::InvokeItem %W }
+bind Treeview	<<Invoke>>		{ ::ttk::treeview::InvokeItem %W }
 
 bind Treeview	<space>			{ ::ttk::treeview::ToggleSelected %W select }
 bind Treeview	<Shift-space>		{ ::ttk::treeview::SelectionSet %W row }
@@ -353,7 +360,7 @@ proc ::ttk::treeview::KeyNav {w fn {op moveto}} {
 
     switch -- $fn {
 	left {
-	    # Move/extend left one cell or close item if open
+	    # Move/extend left one cell or close item if open, go to parent
 	    if {$cellmode} {
 		if {$colNum > [FirstColumnNum $w]} {
 		    incr colNum -1
@@ -366,13 +373,15 @@ proc ::ttk::treeview::KeyNav {w fn {op moveto}} {
 	    }
 	}
 	right {
-	    # Move/extend right one cell or open item if closed
+	    # Move/extend right one cell or open item if closed, go to first child
 	    if {$cellmode} {
 		if {$colNum < [LastColumnNum $w]} {
 		    incr colNum
 		}
 	    } elseif {![$w item $item -open] && [$w haschildren $item]} {
 		OpenItem $w $item
+	    } elseif {[$w item $item -open] && [$w haschildren $item]} {
+		set item [$w identifier $item first]
 	    }
 	}
 	up {
@@ -610,7 +619,7 @@ proc ::ttk::treeview::PageNav {w fn} {
 #
 # SelectionSet -- Set special selection types
 #
-proc ::ttk::treeview::SelectionSet {w fn} {
+proc ::ttk::treeview::SelectionSet {w fn {item {}} {column {}}} {
     if {[$w instate disabled]} return
 
     set mode [$w cget -selectmode]
@@ -620,12 +629,16 @@ proc ::ttk::treeview::SelectionSet {w fn} {
 
     # Get current item and cell
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
-    if {$cellmode} {
-	lassign [GetCurrentCell $w 1] item column colNum
-    } else {
-	set item [GetCurrentItem $w 1]
+    if {$item eq ""} {
+	if {$cellmode} {
+	    lassign [GetCurrentCell $w 1] item column colNum
+	} else {
+	    set item [GetCurrentItem $w 1]
+	}
+	if {$item eq "" && $fn ni [list all invert]} {
+	    return
+	}
     }
-    if {$item eq "" && $fn ni [list all invert]} {return}
 
     switch -- $fn {
 	all {
@@ -740,11 +753,16 @@ proc ::ttk::treeview::ActivateHeading {w heading} {
 proc ::ttk::treeview::MouseSelect {w x y op} {
     if {![winfo exists $w] || [$w instate disabled]} return
 
-    if {[$w cget -selectmode] ni [list "single" "extended" "multiple"]} {
+    if {[$w cget -selectmode] ni [list "single" "multiple" "extended"]} {
 	return
     }
 
-    if {[$w cget -selecttype] eq "cell"} {
+    if {[$w identify region $x $y] eq "heading"} {
+	set column [$w identify column $x $y]
+	SelectionSet $w column none $column
+	return
+
+    } elseif {[$w cget -selecttype] eq "cell"} {
 	set item [$w identify item $x $y]
 	set column [$w identify column $x $y]
 	if {$column ne ""} {
@@ -752,6 +770,7 @@ proc ::ttk::treeview::MouseSelect {w x y op} {
 	} else {
 	    set cell ""
 	}
+
     } else {
 	set item [$w identify item $x $y]
 	set cell ""
@@ -763,7 +782,7 @@ proc ::ttk::treeview::MouseSelect {w x y op} {
 }
 
 #
-# DoubleClick -- Double-Button-1 binding.
+# DoubleClick -- Toggle open/close state, edit, or activate item
 #
 proc ::ttk::treeview::DoubleClick {w x y} {
     if {![winfo exists $w] || [$w instate disabled]} return
@@ -772,12 +791,77 @@ proc ::ttk::treeview::DoubleClick {w x y} {
 	set element [$w identify element $x $y]
 	if {$element eq "Treeitem.indicator"} {
 	    ToggleOpenState $w $item
+	} elseif {[info procs EditItem] ne ""} {
+	    set column [$w identify column $x $y]
+	    InvokeItem $w $item $column
 	} else {
 	    set column [$w identify column $x $y]
 	    ActivateItem $w $item $column
 	}
+    }
+}
+
+#
+# ActivateItem -- Perform default action (open/close, etc.)
+#
+# Order:
+# 1. If in cell mode, move down 1 cell.
+# 2. If item has children, open it.
+# 3. If not, select it.
+#
+proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
+    if {[$w instate disabled]} return
+
+    set cellmode [expr {[$w cget -selecttype] eq "cell"}]
+    set skip 0
+
+    if {$item eq ""} {
+	if {$cellmode} {
+	    set cell [$w cellfocus]
+	    lassign $cell item column
+	} else {
+	    set item [$w focus]
+	    set cell ""
+	}
     } else {
-	Press $w $x $y;# perform single-click action
+	set skip 1
+	set cell [list $item $column]
+    }
+
+    if {$cellmode && !$skip} {
+	KeyNav $w down
+    } elseif {[$w haschildren $item]} {
+	ToggleOpenState $w $item
+	if {$cellmode} {
+	    $w cellfocus $cell
+	} else {
+	    $w focus $item
+	}
+    } else {
+	SelectOp $w $item $cell choose
+    }
+}
+
+#
+# InvokeItem -- Perform edit/exec action
+#
+# Order:
+# 1. If ::ttk::treeview::EditItem exists, call it.
+#
+proc ::ttk::treeview::InvokeItem {w {item {}} {column {}}} {
+    if {[$w instate disabled]} return
+
+    if {$item eq ""} {
+	set cellmode [expr {[$w cget -selecttype] eq "cell"}]
+	if {$cellmode} {
+	    lassign [$w cellfocus] item column
+	} else {
+	    set item [$w focus]
+	}
+    }
+
+    if {[info procs EditItem] ne ""} {
+	EditItem $w $item $column
     }
 }
 
@@ -792,7 +876,13 @@ proc ::ttk::treeview::Press {w x y} {
 	nothing { }
 	heading { Heading.press $w $x $y }
 	separator { Resize.press $w $x $y }
-	tree -
+	tree {
+	    if {[$w identify element $x $y] eq "Treeitem.indicator"} {
+	        ToggleOpenState $w [$w identify item $x $y]
+	    } else {
+	        Select.press $w $x $y
+	    }
+	}
 	cell { Select.press $w $x $y }
     }
 }
@@ -822,7 +912,7 @@ proc ::ttk::treeview::Release {w x y} {
 }
 
 #
-# Interactive item/cell expand selection
+# Interactive expand item/cell selection
 #
 proc ttk::treeview::Select.press {w x y} {
     variable State
@@ -835,16 +925,10 @@ proc ttk::treeview::Select.press {w x y} {
     } else {
 	set cell ""
     }
+    SelectOp $w $item $cell choose
 
-    switch -glob -- [$w identify element $x $y] {
-	*indicator -
-	*disclosure { ToggleOpenState $w $item }
-	default {
-	    SelectOp $w $item $cell choose
-	    if {[$w cget -selectmode] in [list browse extended]} {
-		set State(pressMode) "selection"
-	    }
-	}
+    if {[$w cget -selectmode] in [list browse extended]} {
+	set State(pressMode) "selection"
     }
     array set State [list current $item currentCell $cell]
 }
@@ -1239,50 +1323,6 @@ proc ::ttk::treeview::ToggleSelected {w op} {
 
     if {$item ne ""} {
 	SelectOp $w $item $cell toggle
-    }
-}
-
-#
-# ActivateItem -- Default action for invoke
-#
-# Order:
-# 1. If ::ttk::treeview::EditItem exists, call it.
-# 2. If in cell mode, move down 1 cell.
-# 3. If item has children, open it.
-# 4. If not, select it.
-#
-proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
-    if {[$w instate disabled]} return
-
-    set cellmode [expr {[$w cget -selecttype] eq "cell"}]
-    set skip 0
-
-    if {$item eq ""} {
-	if {$cellmode} {
-	    set cell [$w cellfocus]
-	    lassign $cell item column
-	} else {
-	    set item [$w focus]
-	    set cell ""
-	}
-    } else {
-	set skip 1
-	set cell [list $item $column]
-    }
-
-    if {[info procs EditItem] ne ""} {
-	EditItem $w $item $column
-    } elseif {$cellmode && !$skip} {
-	KeyNav $w down
-    } elseif {[$w haschildren $item]} {
-	ToggleOpenState $w $item
-	if {$cellmode} {
-	    $w cellfocus $cell
-	} else {
-	    $w focus $item
-	}
-    } else {
-	SelectOp $w $item $cell choose
     }
 }
 

@@ -1278,8 +1278,10 @@ Applies to all:
 \fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::EditItem.
 .IP \(bu
 \fB<Shift-Button-1>\fR will select a range of items or cells from the anchor to the selected item/cell (multiple and extended select modes only).
+If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multiple or extended select mode, then the column cells will be selected.
 .IP \(bu
 \fB<Control-Button-1>\fR will toggle the selection state of an item or cell (single, multiple, and extended select modes only).
+If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multiple or extended select mode, then the column cells will be selected.
 .IP \(bu
 \fB<<SelectAll>>\fR virtual event will select all items or cells in the widget (multiple and extended select modes only).
 .IP \(bu
