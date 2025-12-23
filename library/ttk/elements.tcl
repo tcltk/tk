@@ -104,8 +104,6 @@ proc ttk::toggleswitch::IsColorLight color {
     return [expr {5 * ($g >> 8) + 2 * ($r >> 8) + ($b >> 8) > 8 * 192}]
 }
 
-interp alias {} ttk::toggleswitch::CreateImg \
-	     {} image create photo -format $::tk::svgFmt
 interp alias {} ttk::toggleswitch::CreateElem {} ttk::style element create
 
 namespace eval ttk::toggleswitch {
@@ -776,7 +774,16 @@ proc ttk::toggleswitch::CreateElements_aqua {} {
 proc ttk::toggleswitch::UpdateElements_aqua {} {
     variable troughImgArr
     variable sliderImgArr
+
     set darkMode [tk::unsupported::MacWindowStyle isdark .]
+    scan $::tcl_platform(osVersion) "%d" majorOSVersion
+    if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
+	set selectBg    systemSelectedContentBackgroundColor
+	set accentColor systemControlAccentColor
+    } else {
+	set selectBg    systemHighlightAlternate
+	set accentColor systemHighlightAlternate
+    }
 
     set troughOffData(1) {
 <svg width="26" height="15" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -842,8 +849,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 
 	# troughImgArr(on$n)
 	set imgData $troughOnData($n)
-	set fill [expr {$darkMode ? "systemSelectedContentBackgroundColor"
-				  : "systemControlAccentColor"}]
+	set fill [expr {$darkMode ? $selectBg : $accentColor}]
 	set fill [NormalizeColor $fill]
 	if {$darkMode} {
 	    # For the colors blue, purple, pink, red, orange, yellow, green,
@@ -865,8 +871,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 
 	# troughImgArr(onPressed$n)
 	set imgData $troughOnData($n)
-	set fill [expr {$darkMode ? "systemControlAccentColor"
-				  : "systemSelectedContentBackgroundColor"}]
+	set fill [expr {$darkMode ? $accentColor : $selectBg}]
 	set fill [NormalizeColor $fill]
 	if {$darkMode} {
 	    # For the colors purple, red, yellow, and graphite
@@ -950,9 +955,6 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 	]
     }
 }
-
-# Public procedures
-# =================
 
 #------------------------------------------------------------------------------
 # ttk::toggleswitch::CreateElements
@@ -1040,6 +1042,9 @@ proc ttk::toggleswitch::CreateElements {} {
     }
 }
 
+# Public procedures
+# =================
+
 #------------------------------------------------------------------------------
 # ttk::toggleswitch::CondMakeElements
 #
@@ -1050,6 +1055,12 @@ proc ttk::toggleswitch::CreateElements {} {
 proc ttk::toggleswitch::CondMakeElements {} {
     variable madeElements
     if {!$madeElements} {
+	# If Tk's scaling factor was changed via "tk scaling"
+	# then $::tk::svgFmt now has the updated value.
+
+	interp alias {} ::ttk::toggleswitch::CreateImg \
+		     {} image create photo -format $::tk::svgFmt
+
 	CreateElements
 	set madeElements 1
     }
@@ -1059,9 +1070,8 @@ proc ttk::toggleswitch::CondMakeElements {} {
 # ttk::toggleswitch::CondUpdateElements
 #
 # Updates the Tglswitch*.trough and Tglswitch*.slider elements for the
-# Toggleswitch* styles if necessary.  Invoked from within the proc
-# ttk::ThemeChanged (see ttk.tcl) and the C code for macOSX, after sending the
-# virtual events <<LightAqua>>/<<DarkAqua>> and <<AppearanceChanged>>.
+# Toggleswitch* styles if necessary.  Invoked from within the procedures
+# ttk::ThemeChanged and ttk::AppearanceChanged (see ttk.tcl).
 #------------------------------------------------------------------------------
 proc ttk::toggleswitch::CondUpdateElements {} {
     variable madeElements

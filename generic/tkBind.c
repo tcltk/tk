@@ -269,7 +269,7 @@ typedef struct PatSeq {
     unsigned added:1;		/* Is this pattern sequence already added to lookup table? */
     unsigned modMaskUsed:1;	/* Does at least one pattern contain a non-zero modifier mask? */
     DEBUG(unsigned owned:1;)	/* For debugging purposes. */
-    char *script;		/* Binding script to evaluate when sequence matches (ckalloc()ed) */
+    char *script;		/* Binding script to evaluate when sequence matches (Tcl_Alloc()ed) */
     Tcl_Obj* object;		/* Token for object with which binding is associated. For virtual
 				 * event table this is NULL. */
     struct PatSeq *nextSeqPtr;	/* Next in list of all pattern sequences that have the same initial
@@ -888,11 +888,11 @@ FreePatSeq(
     assert(psPtr);
     assert(!psPtr->owned);
     DEBUG(MARK_PSENTRY(psPtr);)
-    ckfree(psPtr->script);
+    Tcl_Free(psPtr->script);
     if (!psPtr->object) {
 	VirtOwners_Free(&psPtr->ptr.owners);
     }
-    ckfree(psPtr);
+    Tcl_Free(psPtr);
     DEBUG(countSeqItems -= 1;)
 }
 
@@ -943,7 +943,7 @@ FreePatSeqEntry(
     PSEntry *next = PSList_Next(entry);
 
     PSModMaskArr_Free(&entry->lastModMaskArr);
-    ckfree(entry);
+    Tcl_Free(entry);
     return next;
 }
 
@@ -1043,7 +1043,7 @@ MakeListEntry(
     assert(TEST_PSENTRY(psPtr));
 
     if (PSList_IsEmpty(pool)) {
-	newEntry = (PSEntry *)ckalloc(sizeof(PSEntry));
+	newEntry = (PSEntry *)Tcl_Alloc(sizeof(PSEntry));
 	newEntry->lastModMaskArr = NULL;
 	DEBUG(countEntryItems += 1;)
     } else {
@@ -1166,7 +1166,7 @@ ClearLookupTable(
 
 	psList = (PSList *)Tcl_GetHashValue(hPtr);
 	PSList_Move(pool, psList);
-	ckfree(psList);
+	Tcl_Free(psList);
 	DEBUG(countListItems -= 1;)
 	Tcl_DeleteHashEntry(hPtr);
     }
@@ -1374,7 +1374,7 @@ TkBindInit(
 
     mainPtr->bindingTable = Tk_CreateBindingTable(mainPtr->interp);
 
-    bindInfoPtr = (BindInfo *)ckalloc(sizeof(BindInfo));
+    bindInfoPtr = (BindInfo *)Tcl_Alloc(sizeof(BindInfo));
     InitVirtualEventTable(&bindInfoPtr->virtualEventTable);
     bindInfoPtr->screenInfo.curDispPtr = NULL;
     bindInfoPtr->screenInfo.curScreenIndex = -1;
@@ -1450,7 +1450,7 @@ Tk_CreateBindingTable(
     Tcl_Interp *interp)		/* Interpreter to associate with the binding table: commands are
 				 * executed in this interpreter. */
 {
-    BindingTable *bindPtr = (BindingTable *)ckalloc(sizeof(BindingTable));
+    BindingTable *bindPtr = (BindingTable *)Tcl_Alloc(sizeof(BindingTable));
     unsigned i;
 
     assert(interp);
@@ -1534,7 +1534,7 @@ Tk_DeleteBindingTable(
     Tcl_DeleteHashTable(&bindPtr->lookupTables.listTable);
     Tcl_DeleteHashTable(&bindPtr->objectTable);
 
-    ckfree(bindPtr);
+    Tcl_Free(bindPtr);
     DEBUG(countTableItems -= 1;)
 }
 
@@ -1576,7 +1576,7 @@ InsertPatSeq(
 	hPtr = Tcl_CreateHashEntry(&lookupTables->listTable, (char *) &key, &isNew);
 
 	if (isNew) {
-	    psList = (PSList *)ckalloc(sizeof(PSList));
+	    psList = (PSList *)Tcl_Alloc(sizeof(PSList));
 	    PSList_Init(psList);
 	    Tcl_SetHashValue(hPtr, psList);
 	    DEBUG(countListItems += 1;)
@@ -1679,17 +1679,17 @@ Tk_CreateBinding(
 	size_t length1 = strlen(oldStr);
 	size_t length2 = strlen(script);
 
-	newStr = (char *)ckalloc(length1 + length2 + 2);
+	newStr = (char *)Tcl_Alloc(length1 + length2 + 2);
 	memcpy(newStr, oldStr, length1);
 	newStr[length1] = '\n';
 	memcpy(newStr + length1 + 1, script, length2 + 1);
     } else {
 	size_t length = strlen(script);
 
-	newStr = (char *)ckalloc(length + 1);
+	newStr = (char *)Tcl_Alloc(length + 1);
 	memcpy(newStr, script, length + 1);
     }
-    ckfree(oldStr);
+    Tcl_Free(oldStr);
     psPtr->script = newStr;
     return eventMask;
 }
@@ -2344,7 +2344,7 @@ Tk_BindEvent(
 
     if ((size_t) numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
 	/* It's unrealistic that the buffer size is too small, but who knows? */
-	matchPtrArr = (PatSeq **)ckalloc(numObjects*sizeof(matchPtrArr[0]));
+	matchPtrArr = (PatSeq **)Tcl_Alloc(numObjects*sizeof(matchPtrArr[0]));
     }
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
@@ -2466,7 +2466,7 @@ Tk_BindEvent(
 	for (psEntry = PSList_First(psList); psEntry; psEntry = psNext) {
 	    const TkPattern *patPtr;
 
-	    assert(i + 1 < (Tcl_Size)psEntry->psPtr->numPats);
+	    assert(i + 1 < psEntry->psPtr->numPats);
 
 	    psNext = PSList_Next(psEntry);
 	    patPtr = &psEntry->psPtr->pats[i + 1];
@@ -2520,7 +2520,7 @@ Tk_BindEvent(
     PromArr_SetSize(bindPtr->promArr, newArraySize);
 
     if (matchPtrArr != matchPtrBuf) {
-	ckfree(matchPtrArr);
+	Tcl_Free(matchPtrArr);
     }
 
     if (Tcl_DStringLength(&scripts) == 0) {
@@ -3328,10 +3328,11 @@ int
 Tk_EventObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int index, i;
+    int index;
+    Tcl_Size i;
     char *name;
     const char *event;
     Tk_Window tkwin;
@@ -3503,7 +3504,7 @@ DeleteVirtualEventTable(
 
     hPtr = Tcl_FirstHashEntry(&vetPtr->nameTable, &search);
     for ( ; hPtr; hPtr = Tcl_NextHashEntry(&search)) {
-	ckfree(Tcl_GetHashValue(hPtr));
+	Tcl_Free(Tcl_GetHashValue(hPtr));
     }
     Tcl_DeleteHashTable(&vetPtr->nameTable);
 
@@ -4678,7 +4679,7 @@ FindSequence(
     assert(lookupTables);
     assert(eventString);
 
-    psPtr = (PatSeq *)ckalloc(PATSEQ_MEMSIZE(patsBufSize));
+    psPtr = (PatSeq *)Tcl_Alloc(PATSEQ_MEMSIZE(patsBufSize));
 
     /*
      *------------------------------------------------------------------
@@ -4690,13 +4691,13 @@ FindSequence(
 	if (numPats >= patsBufSize) {
 	    unsigned pos = patPtr - psPtr->pats;
 	    patsBufSize += patsBufSize;
-	    psPtr = (PatSeq *)ckrealloc(psPtr, PATSEQ_MEMSIZE(patsBufSize));
+	    psPtr = (PatSeq *)Tcl_Realloc(psPtr, PATSEQ_MEMSIZE(patsBufSize));
 	    patPtr = psPtr->pats + pos;
 	}
 
 	if ((count = ParseEventDescription(interp, &p, patPtr, &eventMask)) == 0) {
 	    /* error encountered */
-	    ckfree(psPtr);
+	    Tcl_Free(psPtr);
 	    return NULL;
 	}
 
@@ -4705,7 +4706,7 @@ FindSequence(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"virtual event not allowed in definition of another virtual event", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER", (char *)NULL);
-		ckfree(psPtr);
+		Tcl_Free(psPtr);
 		return NULL;
 	    }
 	    virtualFound = 1;
@@ -4729,17 +4730,17 @@ FindSequence(
     if (numPats == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("no events specified in binding", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", (char *)NULL);
-	ckfree(psPtr);
+	Tcl_Free(psPtr);
 	return NULL;
     }
     if (numPats > 1u && virtualFound) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("virtual events may not be composed", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", (char *)NULL);
-	ckfree(psPtr);
+	Tcl_Free(psPtr);
 	return NULL;
     }
     if (patsBufSize > numPats) {
-	psPtr = (PatSeq *)ckrealloc(psPtr, PATSEQ_MEMSIZE(numPats));
+	psPtr = (PatSeq *)Tcl_Realloc(psPtr, PATSEQ_MEMSIZE(numPats));
     }
 
     patPtr = psPtr->pats;
@@ -4753,7 +4754,7 @@ FindSequence(
 	for (psPtr2 = (PatSeq *)Tcl_GetHashValue(hPtr); psPtr2; psPtr2 = psPtr2->nextSeqPtr) {
 	    assert(TEST_PSENTRY(psPtr2));
 	    if (numPats == psPtr2->numPats && memcmp(patPtr, psPtr2->pats, sequenceSize) == 0) {
-		ckfree(psPtr);
+		Tcl_Free(psPtr);
 		if (maskPtr) {
 		    *maskPtr = eventMask;
 		}
@@ -4774,7 +4775,7 @@ FindSequence(
 	 * silently ignore missing bindings.
 	 */
 
-	ckfree(psPtr);
+	Tcl_Free(psPtr);
 	return NULL;
     }
 
@@ -4928,7 +4929,7 @@ ParseEventDescription(
 
 	    size = p - field;
 	    if (size >= sizeof(buf)) {
-		bufPtr = (char *)ckalloc(size + 1);
+		bufPtr = (char *)Tcl_Alloc(size + 1);
 	    }
 	    strncpy(bufPtr, field, size);
 	    bufPtr[size] = '\0';
@@ -4936,7 +4937,7 @@ ParseEventDescription(
 	    patPtr->eventType = VirtualEvent;
 	    patPtr->name = Tk_GetUid(bufPtr);
 	    if (bufPtr != buf) {
-		ckfree(bufPtr);
+		Tcl_Free(bufPtr);
 	    }
 	    p += 2;
 	} else {

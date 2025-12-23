@@ -121,7 +121,7 @@ TkpCreateScrollbar(
 	Tcl_MutexUnlock(&winScrlbrMutex);
     }
 
-    scrollPtr = (WinScrollbar *)ckalloc(sizeof(WinScrollbar));
+    scrollPtr = (WinScrollbar *)Tcl_Alloc(sizeof(WinScrollbar));
     scrollPtr->winFlags = 0;
     scrollPtr->hwnd = NULL;
 

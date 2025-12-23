@@ -160,7 +160,7 @@ UnderlinePrintProc(
 	*freeProcPtr = TCL_STATIC;
 	return p;
     }
-    p = (char *)ckalloc(32);
+    p = (char *)Tcl_Alloc(32);
     if (underline < 0) {
 	snprintf(p, 32, "end%d", 1 + underline);
     } else {

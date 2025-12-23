@@ -55,6 +55,18 @@
 */
 
 #if defined(MAC_OSX_TK) && defined(TK_FRAMEWORK)
+  #undef CFG_INSTALL_LIBDIR
+  #undef CFG_RUNTIME_LIBDIR
+  #undef CFG_INSTALL_BINDIR
+  #undef CFG_RUNTIME_BINDIR
+  #undef CFG_INSTALL_DOCDIR
+  #undef CFG_RUNTIME_DOCDIR
+  #undef CFG_INSTALL_SCRDIR
+  #undef CFG_RUNTIME_SCRDIR
+  #undef CFG_INSTALL_INCDIR
+  #undef CFG_RUNTIME_INCDIR
+  #undef CFG_INSTALL_DEMODIR
+  #undef CFG_RUNTIME_DEMODIR
   #define VERSION_DIR "/Library/Frameworks/Tk.framework/Versions/"TK_VERSION
   #define CFG_INSTALL_LIBDIR VERSION_DIR
   #define CFG_RUNTIME_LIBDIR CFG_INSTALL_LIBDIR
@@ -93,7 +105,7 @@ static const Tcl_Config cfg[] = {
 #ifdef CFG_RUNTIME_DEMODIR
     {"demodir,runtime",		CFG_RUNTIME_DEMODIR},
 #endif
-#if !defined(STATIC_BUILD)
+#if !defined(STATIC_BUILD) && defined(CFG_RUNTIME_DLLFILE)
     {"dllfile,runtime",		CFG_RUNTIME_DLLFILE},
 #endif
 

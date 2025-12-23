@@ -206,7 +206,7 @@ TkpOpenDisplay(
 
     TkMacOSXDisplayChanged(display);
 
-    gMacDisplay = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+    gMacDisplay = (TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
 
     /*
      * This is the quickest way to make sure that all the *Init flags get
@@ -234,8 +234,8 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
-    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
+    _XPrivDisplay display = (_XPrivDisplay)Tcl_Alloc(sizeof(Display));
+    Screen *screen = (Screen *)Tcl_Alloc(sizeof(Screen));
     int fd = 0;
     NSArray *cgVers;
     static char vendor[25] = "";
@@ -262,7 +262,7 @@ XkbOpenDisplay(
     screen->white_pixel = 0x00FFFFFF;
     screen->ext_data	= (XExtData *) &maxBounds;
 
-    screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
+    screen->root_visual = (Visual *)Tcl_Alloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
     screen->root_visual->c_class      = TrueColor;
     screen->root_visual->red_mask     = 0x00FF0000;
@@ -340,11 +340,11 @@ TkpCloseDisplay(
     gMacDisplay = NULL;
     if (display->screens != NULL) {
 	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
-	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
+	    Tcl_Free(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	ckfree(display->screens);
+	Tcl_Free(display->screens);
     }
-    ckfree(display);
+    Tcl_Free(display);
 }
 
 /*
@@ -1105,7 +1105,7 @@ XFree(
     void *data)
 {
 	if ((data) != NULL) {
-		ckfree(data);
+		Tcl_Free(data);
 	}
     return 0;
 }

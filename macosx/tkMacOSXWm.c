@@ -901,7 +901,7 @@ void
 TkWmNewWindow(
     TkWindow *winPtr)		/* Newly-created top-level window. */
 {
-    WmInfo *wmPtr = (WmInfo *)ckalloc(sizeof(WmInfo));
+    WmInfo *wmPtr = (WmInfo *)Tcl_Alloc(sizeof(WmInfo));
 
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
@@ -1173,10 +1173,10 @@ TkWmDeadWindow(
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
     }
     if (wmPtr->iconName != NULL) {
-	ckfree(wmPtr->iconName);
+	Tcl_Free(wmPtr->iconName);
     }
     if (wmPtr->leaderName != NULL) {
-	ckfree(wmPtr->leaderName);
+	Tcl_Free(wmPtr->leaderName);
     }
     if (wmPtr->icon != NULL) {
 	wmPtr2 = ((TkWindow *)wmPtr->icon)->wmInfoPtr;
@@ -1196,7 +1196,7 @@ TkWmDeadWindow(
 	Tcl_DecrRefCount(wmPtr->commandObj);
     }
     if (wmPtr->clientMachine != NULL) {
-	ckfree(wmPtr->clientMachine);
+	Tcl_Free(wmPtr->clientMachine);
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
@@ -1221,7 +1221,7 @@ TkWmDeadWindow(
 	Transient *transientPtr = wmPtr->transientPtr;
 
 	wmPtr->transientPtr = transientPtr->nextPtr;
-	ckfree(transientPtr);
+	Tcl_Free(transientPtr);
     }
 
     /*
@@ -1354,7 +1354,7 @@ TkWmDeadWindow(
      * Deallocate the wmInfo and clear the wmInfoPtr.
      */
 
-    ckfree(wmPtr);
+    Tcl_Free(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
 
@@ -1405,7 +1405,7 @@ int
 Tk_WmObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -2129,7 +2129,7 @@ WmAttributesCmd(
 	    }
 	} else if (strcmp(Tcl_GetString(objv[3]), "-tabbingid") == 0) {
 	    char *identifier = Tcl_GetStringFromObj(objv[4], &length);
-	    char *value = (char *)ckalloc(length + 1);
+	    char *value = (char *)Tcl_Alloc(length + 1);
 	    strncpy(value, identifier, length + 1);
 	    Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToTabbingId,
 				      Tcl_GetString(objv[2]), &isNew);
@@ -2245,15 +2245,15 @@ WmClientCmd(
     argv3 = Tcl_GetStringFromObj(objv[3], &length);
     if (argv3[0] == 0) {
 	if (wmPtr->clientMachine != NULL) {
-	    ckfree(wmPtr->clientMachine);
+	    Tcl_Free(wmPtr->clientMachine);
 	    wmPtr->clientMachine = NULL;
 	}
 	return TCL_OK;
     }
     if (wmPtr->clientMachine != NULL) {
-	ckfree(wmPtr->clientMachine);
+	Tcl_Free(wmPtr->clientMachine);
     }
-    wmPtr->clientMachine = (char *)ckalloc(length + 1);
+    wmPtr->clientMachine = (char *)Tcl_Alloc(length + 1);
     strcpy(wmPtr->clientMachine, argv3);
     return TCL_OK;
 }
@@ -2311,11 +2311,11 @@ WmColormapwindowsCmd(
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    cmapList = (TkWindow **)ckalloc((windowObjc+1) * sizeof(TkWindow*));
+    cmapList = (TkWindow **)Tcl_Alloc((windowObjc+1) * sizeof(TkWindow*));
     for (i = 0; i < windowObjc; i++) {
 	if (TkGetWindowFromObj(interp, tkwin, windowObjv[i],
 		(Tk_Window *) &winPtr2) != TCL_OK) {
-	    ckfree(cmapList);
+	    Tcl_Free(cmapList);
 	    return TCL_ERROR;
 	}
 	if (winPtr2 == winPtr) {
@@ -2335,7 +2335,7 @@ WmColormapwindowsCmd(
     }
     wmPtr->flags |= WM_COLORMAPS_EXPLICIT;
     if (wmPtr->cmapList != NULL) {
-	ckfree(wmPtr->cmapList);
+	Tcl_Free(wmPtr->cmapList);
     }
     wmPtr->cmapList = cmapList;
     wmPtr->cmapCount = windowObjc;
@@ -2861,7 +2861,7 @@ WmGroupCmd(
     if (*argv3 == '\0') {
 	wmPtr->hints.flags &= ~WindowGroupHint;
 	if (wmPtr->leaderName != NULL) {
-	    ckfree(wmPtr->leaderName);
+	    Tcl_Free(wmPtr->leaderName);
 	}
 	wmPtr->leaderName = NULL;
     } else {
@@ -2870,11 +2870,11 @@ WmGroupCmd(
 	}
 	Tk_MakeWindowExist(tkwin2);
 	if (wmPtr->leaderName != NULL) {
-	    ckfree(wmPtr->leaderName);
+	    Tcl_Free(wmPtr->leaderName);
 	}
 	wmPtr->hints.window_group = Tk_WindowId(tkwin2);
 	wmPtr->hints.flags |= WindowGroupHint;
-	wmPtr->leaderName = (char *)ckalloc(length + 1);
+	wmPtr->leaderName = (char *)Tcl_Alloc(length + 1);
 	strcpy(wmPtr->leaderName, argv3);
     }
     return TCL_OK;
@@ -3200,10 +3200,10 @@ WmIconnameCmd(
     }
 
     if (wmPtr->iconName != NULL) {
-	ckfree(wmPtr->iconName);
+	Tcl_Free(wmPtr->iconName);
     }
     argv3 = Tcl_GetStringFromObj(objv[3], &length);
-    wmPtr->iconName = (char *)ckalloc(length + 1);
+    wmPtr->iconName = (char *)Tcl_Alloc(length + 1);
     strcpy(wmPtr->iconName, argv3);
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	XSetIconName(winPtr->display, winPtr->window, wmPtr->iconName);
@@ -3444,6 +3444,7 @@ WmIconwindowCmd(
 		}
 	    }
 	    [win orderOut:NSApp];
+	    [[win contentView] setOnScreen: NO];
 	    [win setExcludedFromWindowsMenu:YES];
 	}
 	Tk_MakeWindowExist(tkwin2);
@@ -3864,7 +3865,7 @@ WmProtocolCmd(
 	}
     }
     if (Tcl_GetString(objv[4])[0]) {
-	protPtr = (ProtocolHandler *)ckalloc(sizeof(ProtocolHandler));
+	protPtr = (ProtocolHandler *)Tcl_Alloc(sizeof(ProtocolHandler));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
@@ -4067,7 +4068,7 @@ WmStackorderCmd(
 			Tk_NewWindowObj((Tk_Window)*windowPtr));
 	    }
 	    Tcl_SetObjResult(interp, resultObj);
-	    ckfree(windows);
+	    Tcl_Free(windows);
 	    return TCL_OK;
 	} else {
 	    return TCL_ERROR;
@@ -4128,7 +4129,7 @@ WmStackorderCmd(
 	    Tcl_Panic("winPtr2 window not found");
 	}
 
-	ckfree(windows);
+	Tcl_Free(windows);
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
 		sizeof(char *), "argument", 0, &index) != TCL_OK) {
@@ -4412,7 +4413,7 @@ WmTransientCmd(
 	     transient != NULL && transient->winPtr != winPtr;
 	     transient = transient->nextPtr) {}
 	if (transient == NULL) {
-	    transient = (Transient *)ckalloc(sizeof(Transient));
+	    transient = (Transient *)Tcl_Alloc(sizeof(Transient));
 	    transient->winPtr = winPtr;
 	    transient->flags = 0;
 	    transient->nextPtr = wmPtr2->transientPtr;
@@ -4478,7 +4479,7 @@ RemoveTransient(
 	    break;
 	}
 	temp = transPtr->nextPtr;
-	ckfree(transPtr);
+	Tcl_Free(transPtr);
 	transPtr = temp;
     }
     wmPtr2->transientPtr = transPtr;
@@ -4486,7 +4487,7 @@ RemoveTransient(
 	if (transPtr->nextPtr && transPtr->nextPtr->winPtr == winPtr) {
 	    temp = transPtr->nextPtr;
 	    transPtr->nextPtr = temp->nextPtr;
-	    ckfree(temp);
+	    Tcl_Free(temp);
 	} else {
 	    transPtr = transPtr->nextPtr;
 	}
@@ -5816,7 +5817,7 @@ TkWmAddToColormapWindows(
      * add the toplevel itself as the last element of the list.
      */
 
-    newPtr = (TkWindow **)ckalloc((count+2) * sizeof(TkWindow *));
+    newPtr = (TkWindow **)Tcl_Alloc((count+2) * sizeof(TkWindow *));
     if (count > 0) {
 	memcpy(newPtr, oldPtr, count * sizeof(TkWindow *));
     }
@@ -5826,7 +5827,7 @@ TkWmAddToColormapWindows(
     newPtr[count-1] = winPtr;
     newPtr[count] = topPtr;
     if (oldPtr != NULL) {
-	ckfree(oldPtr);
+	Tcl_Free(oldPtr);
     }
 
     topPtr->wmInfoPtr->cmapList = newPtr;
@@ -6265,7 +6266,7 @@ int
 TkUnsupported1ObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
@@ -6828,7 +6829,7 @@ TkMacOSXMakeRealWindowExist(
     [window setTabbingMode: tabbingMode];
 #endif
     if (tabbingId) {
-	ckfree(tabbingId);
+	Tcl_Free(tabbingId);
     }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
@@ -7350,7 +7351,7 @@ TkWmStackorderToplevel(
     NSArray* backToFront = [[macWindows reverseObjectEnumerator] allObjects];
     NSInteger windowCount = [macWindows count];
 
-    windows = windowPtr = (TkWindow **)ckalloc((windowCount + 1) * sizeof(TkWindow *));
+    windows = windowPtr = (TkWindow **)Tcl_Alloc((windowCount + 1) * sizeof(TkWindow *));
     if (windows != NULL) {
 	Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
 	WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);

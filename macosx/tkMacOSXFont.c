@@ -448,7 +448,7 @@ startOfClusterObjCmd(
     TKNSString *S;
     const char *stringArg;
     Tcl_Size len, idx;
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
@@ -507,7 +507,7 @@ endOfClusterObjCmd(
     char *stringArg;
     Tcl_Size idx, len;
 
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
@@ -702,7 +702,7 @@ TkpGetNativeFont(
     ctFont = CTFontCreateUIFontForLanguage(
 	    HIThemeGetUIFontType(themeFontId), 0, NULL);
     if (ctFont) {
-	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)Tcl_Alloc(sizeof(MacFont));
 	InitFont((NSFont*) ctFont, NULL, fontPtr);
     }
 
@@ -770,7 +770,7 @@ TkpGetFontFromAttributes(
 	Tcl_Panic("Could not determine NSFont from TkFontAttributes");
     }
     if (tkFontPtr == NULL) {
-	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
+	fontPtr = (MacFont *)Tcl_Alloc(sizeof(MacFont));
     } else {
 	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
@@ -1341,7 +1341,7 @@ TkpDrawAngledCharsInContext(
     }
 
     context = drawingContext.context;
-    TkSetMacColor(gc->foreground, &fg);
+    TkSetMacColor2(gc->foreground, &fg, TkMacOSXInDarkMode((Tk_Window)macWin->winPtr));
     attributes = [fontPtr->nsAttributes mutableCopy];
     if (fg) {
 	[attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];

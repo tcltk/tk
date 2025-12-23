@@ -302,7 +302,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
 
     Tcl_UtfToUniChar(showChar, &ch);
     size = Tcl_UniCharToUtf(ch, buf);
-    p = displayString = (char *)ckalloc(numChars * size + 1);
+    p = displayString = (char *)Tcl_Alloc(numChars * size + 1);
 
     while (numChars--) {
 	memcpy(p, buf, size);
@@ -756,13 +756,13 @@ EntryStoreValue(Entry *entryPtr, const char *value)
     /* Free old value:
      */
     if (entryPtr->entry.displayString != entryPtr->entry.string) {
-	ckfree(entryPtr->entry.displayString);
+	Tcl_Free(entryPtr->entry.displayString);
     }
-    ckfree(entryPtr->entry.string);
+    Tcl_Free(entryPtr->entry.string);
 
     /* Store new value:
      */
-    entryPtr->entry.string = (char *)ckalloc(numBytes + 1);
+    entryPtr->entry.string = (char *)Tcl_Alloc(numBytes + 1);
     strcpy(entryPtr->entry.string, value);
     entryPtr->entry.numBytes = numBytes;
     entryPtr->entry.numChars = numChars;
@@ -861,7 +861,7 @@ InsertChars(
 	return TCL_OK;
     }
 
-    newBytes =  (char *)ckalloc(newByteCount);
+    newBytes =  (char *)Tcl_Alloc(newByteCount);
     memcpy(newBytes, string, byteIndex);
     strcpy(newBytes + byteIndex, value);
     strcpy(newBytes + byteIndex + byteCount, string + byteIndex);
@@ -876,7 +876,7 @@ InsertChars(
 	code = TCL_OK;
     }
 
-    ckfree(newBytes);
+    Tcl_Free(newBytes);
     return code;
 }
 
@@ -908,7 +908,7 @@ DeleteChars(
     byteCount = Tcl_UtfAtIndex(string+byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->entry.numBytes + 1 - byteCount;
-    newBytes =  (char *)ckalloc(newByteCount);
+    newBytes =  (char *)Tcl_Alloc(newByteCount);
     memcpy(newBytes, string, byteIndex);
     strcpy(newBytes + byteIndex, string + byteIndex + byteCount);
 
@@ -921,7 +921,7 @@ DeleteChars(
     } else if (code == TCL_BREAK) {
 	code = TCL_OK;
     }
-    ckfree(newBytes);
+    Tcl_Free(newBytes);
 
     return code;
 }
@@ -973,7 +973,7 @@ EntryInitialize(
 	EntryFetchSelection, entryPtr, XA_STRING);
     TtkBlinkCursor(&entryPtr->core);
 
-    entryPtr->entry.string		= (char *)ckalloc(1);
+    entryPtr->entry.string		= (char *)Tcl_Alloc(1);
     *entryPtr->entry.string		= '\0';
     entryPtr->entry.displayString	= entryPtr->entry.string;
     entryPtr->entry.textVariableTrace	= 0;
@@ -1006,9 +1006,9 @@ EntryCleanup(void *recordPtr)
 
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if (entryPtr->entry.displayString != entryPtr->entry.string) {
-	ckfree(entryPtr->entry.displayString);
+	Tcl_Free(entryPtr->entry.displayString);
     }
-    ckfree(entryPtr->entry.string);
+    Tcl_Free(entryPtr->entry.string);
 }
 
 /* EntryConfigure --
@@ -1064,7 +1064,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     /* Recompute the displayString, in case showChar changed:
      */
     if (entryPtr->entry.displayString != entryPtr->entry.string) {
-	ckfree(entryPtr->entry.displayString);
+	Tcl_Free(entryPtr->entry.displayString);
     }
 
     entryPtr->entry.displayString
@@ -2025,6 +2025,17 @@ static void
 SpinboxInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Spinbox *sb = (Spinbox *)recordPtr;
+
+    /*
+     * Create the WideSpinbox.uparrow and WideSpinbox.downarrow
+     * elements for the Wide.TSpinbox style if necessary
+     */
+    int code = Tcl_EvalEx(interp, "ttk::wideSpinbox::CondMakeElements",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
+
     TtkTrackElementState(&sb->core);
     EntryInitialize(interp, recordPtr);
 }

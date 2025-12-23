@@ -28,13 +28,13 @@
  * MyList listHdr = TK_DLIST_LIST_INITIALIZER; // or MyList_Init(&listHdr)
  * MyListEntry *p;
  * int i = 0;
- * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
- * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)Tcl_Alloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)Tcl_Alloc(sizeof(MyListEntry)));
  * TK_DLIST_FOREACH(p, &listHdr) { p->value = i++; }
  * // ...
  * MyList_RemoveHead(&listHdr);
  * MyList_RemoveHead(&listHdr);
- * MyList_Clear(MyListEntry, &listHdr); // invokes ckfree() for each element
+ * MyList_Clear(MyListEntry, &listHdr); // invokes Tcl_Free() for each element
  * -------------------------------------------------------------------------------
  * IMPORTANT NOTE: TK_DLIST_LINKS must be used at start of struct!
  */
@@ -440,7 +440,7 @@ static void									\
 LT##_Free(struct ElemType *elem)						\
 {										\
     LT##_Remove(elem);								\
-    ckfree((void *)elem);							\
+    Tcl_Free((void *)elem);							\
 }										\
 										\
 __TK_DLIST_UNUSED								\
@@ -508,7 +508,7 @@ LT##_Clear(LT *head)								\
     assert(head);								\
     for (p = head->first; p; p = next) {					\
 	next = LT##_Next(p);							\
-	ckfree((void *)p);							\
+	Tcl_Free((void *)p);							\
     }										\
     LT##_Init(head);								\
 }										\
