@@ -741,9 +741,9 @@ CreatePDFFromDrawableRect(
 {
     MacDrawable *mac_drawable = (MacDrawable *) drawable;
     NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
-    if (!view) {
-        TkMacOSXDbgMsg("Invalid source drawable");
-        return NULL;
+    if (view == nil) {
+	TkMacOSXDbgMsg("Invalid source drawable");
+	return NULL;
     }
 
     if (![view wantsLayer] || !view.layer) {
@@ -751,27 +751,26 @@ CreatePDFFromDrawableRect(
         return NULL;
     }
 
-    NSRect bounds = view.bounds;
+    NSRect bounds;
+    CGRect viewSrcRect;
 
     /*
-     * Convert to NSView coordinates (origin bottom-left).
+     * Get the child window area in NSView coordinates
+     * (origin at bottom left).
      */
-    CGRect viewSrcRect = CGRectMake(
-				    mac_drawable->xOff + x,
-				    bounds.size.height - height - (mac_drawable->yOff + y),
-				    width,
-				    height
-				    );
+
+    bounds = [view bounds];
+    viewSrcRect = CGRectMake(mac_drawable->xOff + x,
+			     bounds.size.height - height - (mac_drawable->yOff + y),
+			     width, height);
 
     NSMutableData *pdfData = [NSMutableData data];
 
-    CGDataConsumerRef consumer =
-        CGDataConsumerCreateWithCFData((__bridge CFMutableDataRef) pdfData);
+    CGDataConsumerRef consumer = CGDataConsumerCreateWithCFData((__bridge CFMutableDataRef) pdfData);
 
     CGRect pdfBounds = CGRectMake(0, 0, width, height);
 
-    CGContextRef ctx =
-        CGPDFContextCreate(consumer, &pdfBounds, NULL);
+    CGContextRef ctx = CGPDFContextCreate(consumer, &pdfBounds, NULL);
 
     CGPDFContextBeginPage(ctx, NULL);
 
@@ -780,6 +779,7 @@ CreatePDFFromDrawableRect(
     /*
      * Translate so the requested rect maps to (0,0).
      */
+    
     CGContextTranslateCTM(ctx,
 			  -viewSrcRect.origin.x,
 			  -viewSrcRect.origin.y);
@@ -787,6 +787,7 @@ CreatePDFFromDrawableRect(
     /*
      * Render CALayer tree.
      */
+    
     [view.layer renderInContext:ctx];
 
     CGContextRestoreGState(ctx);
@@ -799,6 +800,7 @@ CreatePDFFromDrawableRect(
     /*
      * Caller owns returned CFDataRef.
      */
+    
     return CFBridgingRetain(pdfData);
 }
 
