@@ -123,7 +123,12 @@ proc ttk::wideSpinbox::UpdateElements theme {
     set dFg [NormalizeColor [ttk::style lookup . -foreground disabled #a3a3a3]]
 
     if {$theme eq "aqua"} {
-	set pBg [NormalizeColor systemControlAccentColor]
+	scan $::tcl_platform(osVersion) "%d" majorOSVersion
+	if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
+	    set pBg [NormalizeColor systemControlAccentColor]
+	} else {
+	    set pBg [NormalizeColor systemHighlightAlternate]
+	}
 	set pFg #ffffff
     } else {
 	set pBg [ttk::style lookup . -selectbackground focus #000000]

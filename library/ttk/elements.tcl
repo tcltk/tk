@@ -774,7 +774,16 @@ proc ttk::toggleswitch::CreateElements_aqua {} {
 proc ttk::toggleswitch::UpdateElements_aqua {} {
     variable troughImgArr
     variable sliderImgArr
+
     set darkMode [tk::unsupported::MacWindowStyle isdark .]
+    scan $::tcl_platform(osVersion) "%d" majorOSVersion
+    if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
+	set selectBg    systemSelectedContentBackgroundColor
+	set accentColor systemControlAccentColor
+    } else {
+	set selectBg    systemHighlightAlternate
+	set accentColor systemHighlightAlternate
+    }
 
     set troughOffData(1) {
 <svg width="26" height="15" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -840,8 +849,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 
 	# troughImgArr(on$n)
 	set imgData $troughOnData($n)
-	set fill [expr {$darkMode ? "systemSelectedContentBackgroundColor"
-				  : "systemControlAccentColor"}]
+	set fill [expr {$darkMode ? $selectBg : $accentColor}]
 	set fill [NormalizeColor $fill]
 	if {$darkMode} {
 	    # For the colors blue, purple, pink, red, orange, yellow, green,
@@ -863,8 +871,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 
 	# troughImgArr(onPressed$n)
 	set imgData $troughOnData($n)
-	set fill [expr {$darkMode ? "systemControlAccentColor"
-				  : "systemSelectedContentBackgroundColor"}]
+	set fill [expr {$darkMode ? $accentColor : $selectBg}]
 	set fill [NormalizeColor $fill]
 	if {$darkMode} {
 	    # For the colors purple, red, yellow, and graphite
