@@ -415,7 +415,7 @@ CleanupPNGImage(
     }
 
     if (pngPtr->block.pixelPtr) {
-	ckfree(pngPtr->block.pixelPtr);
+	Tcl_Free(pngPtr->block.pixelPtr);
     }
     if (pngPtr->thisLineObj) {
 	Tcl_DecrRefCount(pngPtr->thisLineObj);
@@ -2674,7 +2674,7 @@ DecodePNG(
     pngPtr->thisLineObj = Tcl_NewObj();
     Tcl_IncrRefCount(pngPtr->thisLineObj);
 
-    pngPtr->block.pixelPtr = (unsigned char *)attemptckalloc(pngPtr->blockLen);
+    pngPtr->block.pixelPtr = (unsigned char *)Tcl_AttemptAlloc(pngPtr->blockLen);
     if (!pngPtr->block.pixelPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"memory allocation failed", TCL_INDEX_NONE));

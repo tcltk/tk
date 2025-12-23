@@ -17,9 +17,9 @@
  */
 
 #include "tkInt.h"
-#define NANOSVG_malloc	ckalloc
-#define NANOSVG_realloc	ckrealloc
-#define NANOSVG_free	ckfree
+#define NANOSVG_malloc	Tcl_Alloc
+#define NANOSVG_realloc	Tcl_Realloc
+#define NANOSVG_free	Tcl_Free
 #define NANOSVG_SCOPE MODULE_SCOPE
 #define NANOSVG_ALL_COLOR_KEYWORDS
 #define NANOSVG_IMPLEMENTATION
@@ -403,7 +403,7 @@ ParseSVGWithOptions(
      * therefore first duplicate.
      */
 
-    inputCopy = (char *)attemptckalloc(length+1);
+    inputCopy = (char *)Tcl_AttemptAlloc(length+1);
     if (inputCopy == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", (char *)NULL);
@@ -440,7 +440,7 @@ ParseSVGWithOptions(
 	}
 
 	if (objc < 2) {
-	    ckfree(inputCopy);
+	    Tcl_Free(inputCopy);
 	    inputCopy = NULL;
 	    Tcl_WrongNumArgs(interp, 1, objv, "value");
 	    goto error;
@@ -533,12 +533,12 @@ ParseSVGWithOptions(
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", (char *)NULL);
 	goto error;
     }
-    ckfree(inputCopy);
+    Tcl_Free(inputCopy);
     return nsvgImage;
 
 error:
     if (inputCopy != NULL) {
-	ckfree(inputCopy);
+	Tcl_Free(inputCopy);
     }
     return NULL;
 }
@@ -590,7 +590,7 @@ RasterizeSVG(
 	goto cleanAST;
     }
 
-    /* Tk Ticket [822330269b] Check potential int overflow in following ckalloc */
+    /* Tk Ticket [822330269b] Check potential int overflow in following Tcl_Alloc */
     wh = (Tcl_WideUInt)w * (Tcl_WideUInt)h;
     if ( w < 0 || h < 0 || wh > INT_MAX / 4) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("image size overflow", TCL_INDEX_NONE));
@@ -598,7 +598,7 @@ RasterizeSVG(
 	goto cleanRAST;
     }
 
-    imgData = (unsigned char *)attemptckalloc(wh * 4);
+    imgData = (unsigned char *)Tcl_AttemptAlloc(wh * 4);
     if (imgData == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", (char *)NULL);
@@ -623,13 +623,13 @@ RasterizeSVG(
 		width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
 	goto cleanimg;
     }
-    ckfree(imgData);
+    Tcl_Free(imgData);
     nsvgDeleteRasterizer(rast);
     nsvgDelete(nsvgImage);
     return TCL_OK;
 
 cleanimg:
-    ckfree(imgData);
+    Tcl_Free(imgData);
 
 cleanRAST:
     nsvgDeleteRasterizer(rast);
@@ -722,7 +722,7 @@ GetCachePtr(
 ) {
     NSVGcache *cachePtr = (NSVGcache *)Tcl_GetAssocData(interp, "tksvgnano", NULL);
     if (cachePtr == NULL) {
-	cachePtr = (NSVGcache *)ckalloc(sizeof(NSVGcache));
+	cachePtr = (NSVGcache *)Tcl_Alloc(sizeof(NSVGcache));
 	cachePtr->dataOrChan = NULL;
 	Tcl_DStringInit(&cachePtr->formatString);
 	cachePtr->nsvgImage = NULL;
@@ -871,6 +871,6 @@ FreeCache(void *clientData, TCL_UNUSED(Tcl_Interp *))
     if (cachePtr->nsvgImage != NULL) {
 	nsvgDelete(cachePtr->nsvgImage);
     }
-    ckfree(cachePtr);
+    Tcl_Free(cachePtr);
 }
 

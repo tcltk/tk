@@ -54,21 +54,20 @@ static void StateSpecDupIntRep(Tcl_Obj *, Tcl_Obj *);
 static void StateSpecUpdateString(Tcl_Obj *);
 
 static const
-TkObjType StateSpecObjType =
+Tcl_ObjType StateSpecObjType =
 {
-    {"StateSpec",
-    0,
-    StateSpecDupIntRep,
-    StateSpecUpdateString,
-    StateSpecSetFromAny,
-    TCL_OBJTYPE_V0},
-    0
+    "StateSpec",		/* name */
+    NULL,			/* freeIntRepProc */
+    StateSpecDupIntRep,	/* dupIntRepProc */
+    StateSpecUpdateString,	/* updateStringProc */
+    StateSpecSetFromAny,	/* setFromAnyProc */
+    TCL_OBJTYPE_V0
 };
 
 static void StateSpecDupIntRep(Tcl_Obj *srcPtr, Tcl_Obj *copyPtr)
 {
     copyPtr->internalRep.wideValue = srcPtr->internalRep.wideValue;
-    copyPtr->typePtr = &StateSpecObjType.objType;
+    copyPtr->typePtr = &StateSpecObjType;
 }
 
 static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
@@ -125,7 +124,7 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	}
     }
 
-    objPtr->typePtr = &StateSpecObjType.objType;
+    objPtr->typePtr = &StateSpecObjType;
     objPtr->internalRep.wideValue = ((Tcl_WideInt)onbits << 32) | offbits;
 
     return TCL_OK;
@@ -155,14 +154,14 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
     len = Tcl_DStringLength(&result);
     if (len) {
 	/* 'len' includes extra trailing ' ' */
-	objPtr->bytes = (char *)ckalloc(len);
+	objPtr->bytes = (char *)Tcl_Alloc(len);
 	objPtr->length = len-1;
 	strncpy(objPtr->bytes, Tcl_DStringValue(&result), len-1);
 	objPtr->bytes[len-1] = '\0';
     } else {
 	/* empty string */
 	objPtr->length = 0;
-	objPtr->bytes = (char *)ckalloc(1);
+	objPtr->bytes = (char *)Tcl_Alloc(1);
 	*objPtr->bytes = '\0';
     }
 
@@ -174,7 +173,7 @@ Tcl_Obj *Ttk_NewStateSpecObj(unsigned int onbits, unsigned int offbits)
     Tcl_Obj *objPtr = Tcl_NewObj();
 
     Tcl_InvalidateStringRep(objPtr);
-    objPtr->typePtr = &StateSpecObjType.objType;
+    objPtr->typePtr = &StateSpecObjType;
     objPtr->internalRep.wideValue = ((Tcl_WideInt)onbits << 32) | offbits;
 
     return objPtr;
@@ -185,7 +184,7 @@ int Ttk_GetStateSpecFromObj(
     Tcl_Obj *objPtr,
     Ttk_StateSpec *spec)
 {
-    if (objPtr->typePtr != &StateSpecObjType.objType) {
+    if (objPtr->typePtr != &StateSpecObjType) {
 	int status = StateSpecSetFromAny(interp, objPtr);
 	if (status != TCL_OK) {
 	    return status;

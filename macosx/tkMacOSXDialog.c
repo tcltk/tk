@@ -306,12 +306,12 @@ getFileURL(
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
 			TCL_EVAL_GLOBAL);
-		ckfree(tmpv);
+		Tcl_Free(tmpv);
 	    }
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
@@ -339,12 +339,12 @@ getFileURL(
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
 			TCL_EVAL_GLOBAL);
-		ckfree(tmpv);
+		Tcl_Free(tmpv);
 	    }
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
@@ -470,13 +470,13 @@ int
 Tk_ChooseColorObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int result = TCL_ERROR;
     Tk_Window parent, tkwin = (Tk_Window)clientData;
     const char *title = NULL;
-    int i;
+    Tcl_Size i;
     NSColor *color = nil, *initialColor = nil;
     NSColorPanel *colorPanel;
     NSInteger returnCode, numberOfComponents = 0;
@@ -726,12 +726,13 @@ int
 Tk_GetOpenFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    Tcl_Size i;
+    int result = TCL_ERROR, haveParentOption = 0;
     int index, multiple = 0;
     Tcl_Size len;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL, *fileTypesPtr = NULL;
@@ -1011,12 +1012,13 @@ int
 Tk_GetSaveFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    Tcl_Size i;
+    int result = TCL_ERROR, haveParentOption = 0;
     int confirmOverwrite = 1;
     int index;
     Tcl_Size len;
@@ -1254,14 +1256,15 @@ int
 Tk_ChooseDirectoryObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR, haveParentOption = 0;
     int index, mustexist = 0;
     Tcl_Size len;
+    Tcl_Size i;
     Tcl_Obj *cmdObj = NULL;
     NSString *directory = nil;
     NSString *message, *title;
@@ -1435,12 +1438,13 @@ int
 Tk_MessageBoxObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    Tcl_Size i;
+    int result = TCL_ERROR, haveParentOption = 0;
     int index, typeIndex, iconIndex, indexDefaultOption = 0;
     int defaultNativeButtonIndex = 1; /* 1, 2, 3: right to left */
     Tcl_Obj *cmdObj = NULL;
@@ -1764,12 +1768,12 @@ FontchooserEvent(
 		result = Tcl_ListObjGetElements(fontchooserInterp,
 			fcdPtr->cmdObj, &objc, &objv);
 		if (result == TCL_OK) {
-		    tmpv = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		    tmpv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * (objc + 2));
 		    memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		    tmpv[objc] = fontObj;
 		    TkBackgroundEvalObjv(fontchooserInterp, objc + 1, tmpv,
 			    TCL_EVAL_GLOBAL);
-		    ckfree(tmpv);
+		    Tcl_Free(tmpv);
 		}
 	    }
 	    Tk_SendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged", NULL);
@@ -2151,7 +2155,7 @@ DeleteFontchooserData(
     if (fcdPtr->cmdObj) {
 	Tcl_DecrRefCount(fcdPtr->cmdObj);
     }
-    ckfree(fcdPtr);
+    Tcl_Free(fcdPtr);
 
     if (fontchooserInterp == interp) {
 	fontchooserInterp = NULL;
@@ -2180,7 +2184,7 @@ TkInitFontchooser(
     Tcl_Interp *interp,
     TCL_UNUSED(void *))
 {
-    FontchooserData *fcdPtr = (FontchooserData *)ckalloc(sizeof(FontchooserData));
+    FontchooserData *fcdPtr = (FontchooserData *)Tcl_Alloc(sizeof(FontchooserData));
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

@@ -147,7 +147,7 @@ typedef struct PanedWindow {
     Tcl_Obj *proxyBorderWidthObj; /* Tcl_Obj rep for proxyBorderWidth */
     int proxyRelief;		/* Relief used to draw proxy, if TK_RELIEF_NULL then use relief. */
     Pane **panes;		/* Pointer to array of Panes. */
-    int numPanes;		/* Number of panes. */
+    Tcl_Size numPanes;		/* Number of panes. */
     int sizeofPanes;		/* Number of elements in the panes array. */
     int flags;			/* Flags for widget; see below. */
 } PanedWindow;
@@ -180,7 +180,7 @@ typedef struct PanedWindow {
 
 static void		PanedWindowCmdDeletedProc(void *clientData);
 static int		ConfigurePanedWindow(Tcl_Interp *interp,
-			    PanedWindow *pwPtr, int objc,
+			    PanedWindow *pwPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		DestroyPanedWindow(PanedWindow *pwPtr);
 static void		DisplayPanedWindow(void *clientData);
@@ -203,14 +203,14 @@ static void		GetFirstLastVisiblePane(PanedWindow *pwPtr,
 static void		PaneStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static int		PanedWindowSashCommand(PanedWindow *pwPtr,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 static int		PanedWindowProxyCommand(PanedWindow *pwPtr,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 static void		ComputeGeometry(PanedWindow *pwPtr);
 static int		ConfigurePanes(PanedWindow *pwPtr,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 static void		DestroyOptionTables(void *clientData,
 			    Tcl_Interp *interp);
@@ -375,7 +375,7 @@ int
 Tk_PanedWindowObjCmd(
     TCL_UNUSED(void *),	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
     PanedWindow *pwPtr;
@@ -404,7 +404,7 @@ Tk_PanedWindowObjCmd(
 	 * easy access to it in the future.
 	 */
 
-	pwOpts = (OptionTables *)ckalloc(sizeof(OptionTables));
+	pwOpts = (OptionTables *)Tcl_Alloc(sizeof(OptionTables));
 
 	/*
 	 * Set up an exit handler to free the optionTables struct.
@@ -427,7 +427,7 @@ Tk_PanedWindowObjCmd(
      * Allocate and initialize the widget record.
      */
 
-    pwPtr = (PanedWindow *)ckalloc(sizeof(PanedWindow));
+    pwPtr = (PanedWindow *)Tcl_Alloc(sizeof(PanedWindow));
     memset((void *)pwPtr, 0, (sizeof(PanedWindow)));
     pwPtr->tkwin = tkwin;
     pwPtr->display = Tk_Display(tkwin);
@@ -536,7 +536,8 @@ PanedWindowWidgetObjCmd(
 	PW_PANECONFIGURE, PW_PANES, PW_PROXY, PW_SASH
     };
     Tcl_Obj *resultObj;
-    int index, count, i, x, y;
+    int index, x, y;
+    Tcl_Size count, i;
     Tk_Window tkwin;
     Pane *panePtr;
 
@@ -756,11 +757,11 @@ static int
 ConfigurePanes(
     PanedWindow *pwPtr,		/* Information about paned window. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int i, firstOptionArg, j, found, doubleBw, index, numNewPanes, haveLoc;
-    int insertIndex;
+    int found, doubleBw, numNewPanes, haveLoc;
+    Tcl_Size index, insertIndex, i, j, firstOptionArg;
     Tk_Window tkwin = NULL, ancestor, parent;
     Pane *panePtr, **inserts, **newPanes;
     Pane options;
@@ -892,7 +893,7 @@ ConfigurePanes(
      * structures may already have existed, some may be new.
      */
 
-    inserts = (Pane **)ckalloc(sizeof(Pane *) * (firstOptionArg - 2));
+    inserts = (Pane **)Tcl_Alloc(sizeof(Pane *) * (firstOptionArg - 2));
     insertIndex = 0;
 
     /*
@@ -959,7 +960,7 @@ ConfigurePanes(
 	 */
 	int minSize;
 
-	panePtr = (Pane *)ckalloc(sizeof(Pane));
+	panePtr = (Pane *)Tcl_Alloc(sizeof(Pane));
 	memset(panePtr, 0, sizeof(Pane));
 	Tk_InitOptions(interp, panePtr, pwPtr->paneOpts,
 		pwPtr->tkwin);
@@ -997,7 +998,7 @@ ConfigurePanes(
      */
 
     i = sizeof(Pane *) * (pwPtr->numPanes + numNewPanes);
-    newPanes = (Pane **)ckalloc(i);
+    newPanes = (Pane **)Tcl_Alloc(i);
     memset(newPanes, 0, i);
     if (index == -1) {
 	/*
@@ -1044,8 +1045,8 @@ ConfigurePanes(
      * Make the new panes array the paned window's pane array, and clean up.
      */
 
-    ckfree(pwPtr->panes);
-    ckfree(inserts);
+    Tcl_Free(pwPtr->panes);
+    Tcl_Free(inserts);
     pwPtr->panes = newPanes;
 
     /*
@@ -1081,7 +1082,7 @@ static int
 PanedWindowSashCommand(
     PanedWindow *pwPtr,		/* Pointer to paned window information. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const sashOptionStrings[] = {
@@ -1234,7 +1235,7 @@ static int
 ConfigurePanedWindow(
     Tcl_Interp *interp,		/* Used for error reporting. */
     PanedWindow *pwPtr,		/* Information about widget. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;
@@ -1352,7 +1353,7 @@ PanedWindowEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     PanedWindow *pwPtr = (PanedWindow *)clientData;
-    int i;
+    Tcl_Size i;
 
     if (eventPtr->type == Expose) {
 	if (pwPtr->tkwin != NULL && !(pwPtr->flags & REDRAW_PENDING)) {
@@ -1445,10 +1446,11 @@ DisplayPanedWindow(
     Pane *panePtr;
     Pixmap pixmap;
     Tk_Window tkwin = pwPtr->tkwin;
-    int i, sashWidth, sashHeight;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    int sashWidth, sashHeight;
+    const bool horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int first, last;
     int borderWidth;
+    Tcl_Size i;
 
     pwPtr->flags &= ~REDRAW_PENDING;
     if ((pwPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1550,7 +1552,7 @@ static void
 DestroyPanedWindow(
     PanedWindow *pwPtr)		/* Info about paned window widget. */
 {
-    int i;
+    Tcl_Size i;
 
     /*
      * First mark the widget as in the process of being deleted, so that any
@@ -1584,11 +1586,11 @@ DestroyPanedWindow(
 	Tk_ManageGeometry(pwPtr->panes[i]->tkwin, NULL, NULL);
 	Tk_FreeConfigOptions(pwPtr->panes[i], pwPtr->paneOpts,
 		pwPtr->tkwin);
-	ckfree(pwPtr->panes[i]);
+	Tcl_Free(pwPtr->panes[i]);
 	pwPtr->panes[i] = NULL;
     }
     if (pwPtr->panes) {
-	ckfree(pwPtr->panes);
+	Tcl_Free(pwPtr->panes);
     }
 
     /*
@@ -1689,7 +1691,7 @@ PanedWindowLostPaneProc(
 	    PaneStructureProc, panePtr);
     Tk_UnmapWindow(panePtr->tkwin);
     panePtr->tkwin = NULL;
-    ckfree(panePtr);
+    Tcl_Free(panePtr);
     ComputeGeometry(pwPtr);
 }
 
@@ -1719,7 +1721,7 @@ ArrangePanes(
 {
     PanedWindow *pwPtr = (PanedWindow *)clientData;
     Pane *panePtr;
-    int i, newPaneWidth, newPaneHeight, paneX, paneY;
+    int newPaneWidth, newPaneHeight, paneX, paneY;
     int paneWidth, paneHeight, paneSize, paneMinSize;
     int doubleBw;
     int x, y;
@@ -1731,6 +1733,7 @@ ArrangePanes(
     int stretchReserve, stretchAmount;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int handleSize, sashPad, handlePad;
+    Tcl_Size i;
 
     pwPtr->flags &= ~(REQUESTED_RELAYOUT|RESIZE_PENDING);
 
@@ -2032,7 +2035,7 @@ Unlink(
     Pane *panePtr)		/* Window to unlink. */
 {
     PanedWindow *containerPtr;
-    int i, j;
+    Tcl_Size i, j;
 
     containerPtr = panePtr->containerPtr;
     if (containerPtr == NULL) {
@@ -2105,7 +2108,7 @@ GetPane(
     PanedWindow *pwPtr,		/* Pointer to the paned window info. */
     Tk_Window tkwin)		/* Window to search for. */
 {
-    int i;
+    Tcl_Size i;
 
     for (i = 0; i < pwPtr->numPanes; i++) {
 	if (pwPtr->panes[i]->tkwin == tkwin) {
@@ -2138,7 +2141,7 @@ GetFirstLastVisiblePane(
     int *firstPtr,		/* Returned index for first. */
     int *lastPtr)		/* Returned index for last. */
 {
-    int i;
+    Tcl_Size i;
 
     for (i = 0, *lastPtr = 0, *firstPtr = -1; i < pwPtr->numPanes; i++) {
 	if (pwPtr->panes[i]->hide == 0) {
@@ -2181,7 +2184,7 @@ PaneStructureProc(
     if (eventPtr->type == DestroyNotify) {
 	Unlink(panePtr);
 	panePtr->tkwin = NULL;
-	ckfree(panePtr);
+	Tcl_Free(panePtr);
 	ComputeGeometry(pwPtr);
     }
 }
@@ -2207,13 +2210,14 @@ static void
 ComputeGeometry(
     PanedWindow *pwPtr)		/* Pointer to the Paned Window structure. */
 {
-    int i, x, y, doubleBw, internalBw;
+    int x, y, doubleBw, internalBw;
     int sashWidth, sashOffset, handleOffset;
     int reqWidth, reqHeight, dim, handleSize;
     Pane *panePtr;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    const bool horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
     int sashPad;
     int width = -1, height = -1;
+    Tcl_Size i;
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
@@ -2401,7 +2405,7 @@ DestroyOptionTables(
     void *clientData,	/* Pointer to the OptionTables struct */
     TCL_UNUSED(Tcl_Interp *))		/* Pointer to the calling interp */
 {
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /*
@@ -2637,7 +2641,7 @@ MoveSash(
     int sash,
     int diff)
 {
-    int i;
+    Tcl_Size i;
     int expandPane, reduceFirst, reduceLast, reduceIncr, paneSize, sashOffset;
     Pane *panePtr;
     int stretchReserve = 0;
@@ -2891,7 +2895,7 @@ static int
 PanedWindowProxyCommand(
     PanedWindow *pwPtr,		/* Pointer to paned window information. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const optionStrings[] = {
@@ -3070,10 +3074,11 @@ PanedWindowIdentifyCoords(
     Tcl_Interp *interp,		/* Interpreter in which to store result. */
     int x, int y)		/* Coordinates of the point to identify. */
 {
-    int i, sashHeight, sashWidth, thisx, thisy;
+    int sashHeight, sashWidth, thisx, thisy;
     int found, lpad, rpad, tpad, bpad;
     int first, last, handleSize, sashPad;
-	bool isHandle;
+    bool isHandle;
+    Tcl_Size i;
 
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, pwPtr->tkwin, pwPtr->sashPadObj, &sashPad);

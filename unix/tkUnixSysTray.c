@@ -1603,7 +1603,7 @@ TrayIconCreateCmd(
     Tk_Window mainWindow = (Tk_Window)cd;
     DockIcon *icon;
 
-    icon = (DockIcon*)attemptckalloc(sizeof(DockIcon));
+    icon = (DockIcon*)Tcl_AttemptAlloc(sizeof(DockIcon));
     if (!icon) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", TCL_INDEX_NONE));
 	goto handleErrors;
@@ -1691,7 +1691,7 @@ handleErrors:
 	    /* Resources will be freed by DestroyNotify handler */
 	    Tk_DestroyWindow(icon->tkwin);
 	}
-	ckfree(icon);
+	Tcl_Free(icon);
     }
     return TCL_ERROR;
 }

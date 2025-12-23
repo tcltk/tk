@@ -249,14 +249,14 @@ static int GetChildIdForTkWindow(Tk_Window win, Tcl_HashTable *childIdTable);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 static Tcl_HashTable *GetChildIdTableForToplevel(Tk_Window toplevel);
 Tk_Window GetTkWindowForChildId(int id, Tk_Window toplevel);
-int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const argv[]);
-static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
-static int EmitFocusChanged(void *cd, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int IsScreenReaderRunning(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChanged(void *clientData,Tcl_Interp *ip, Tcl_Size objc, Tcl_Obj *const objv[]);
+static int EmitFocusChanged(void *cd, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 void TkRootAccessible_RegisterForCleanup(Tk_Window tkwin, void *tkAccessible);
 static void TkRootAccessible_DestroyHandler(void *clientData, XEvent *eventPtr);
 static void AssignChildIdsRecursive(Tk_Window win, int *nextId, Tcl_Interp *interp, Tk_Window toplevel);
 void InitAccessibilityMainThread(void);
-int TkRootAccessibleObjCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+int TkRootAccessibleObjCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 int TkWinAccessiblity_Init(Tcl_Interp *interp);
 
 /*
@@ -374,10 +374,10 @@ static ULONG STDMETHODCALLTYPE TkRootAccessible_Release(
 	    }
 	}
 	if (tkAccessible->pathName) {
-	    ckfree(tkAccessible->pathName);
+	    Tcl_Free(tkAccessible->pathName);
 	    tkAccessible->pathName = NULL;
 	}
-	ckfree(tkAccessible);
+	Tcl_Free(tkAccessible);
 	TkGlobalUnlock();
     }
     return count;
@@ -510,17 +510,17 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     if (varChild.vt == VT_I4 && varChild.lVal == CHILDID_SELF) {
 	HWND hwnd = Tk_GetHWND(Tk_WindowId(tkAccessible->toplevel));
 	int wlen = GetWindowTextLengthW(hwnd);
-	WCHAR *wbuf = (WCHAR *)ckalloc((wlen + 1) * sizeof(WCHAR));
+	WCHAR *wbuf = (WCHAR *)Tcl_Alloc((wlen + 1) * sizeof(WCHAR));
 
 	/* Read the actual UTF-16 title. */
 	if (!GetWindowTextW(hwnd, wbuf, wlen + 1)) {
-	    ckfree((char *)wbuf);
+	    Tcl_Free(wbuf);
 	    *pszName = SysAllocString(L"");
 	    TkGlobalUnlock();
 	    return S_OK;
 	}
 	*pszName = SysAllocString(wbuf);
-	ckfree((char *)wbuf);
+	Tcl_Free(wbuf);
 	TkGlobalUnlock();
 	return S_OK;
     }
@@ -529,7 +529,7 @@ static HRESULT STDMETHODCALLTYPE TkRootAccessible_get_accName(
     /* Child widgets - return description. */
     if (varChild.vt == VT_I4 && varChild.lVal > 0) {
 	Tk_Window child = GetTkWindowForChildId(varChild.lVal, tkAccessible->toplevel);
-	if (child) {            
+	if (child) {
 	    HRESULT hr = TkAccDescription(child, pszName);
 	    TkGlobalUnlock();
 	    return hr;
@@ -1184,7 +1184,7 @@ static int ActionEventProc(
     if (!interp) return 1;
     int code = Tcl_EvalEx(interp, event->command, -1, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) return TCL_ERROR;
-    ckfree(event->command);
+    Tcl_Free(event->command);
     return 1;
 }
 
@@ -1246,14 +1246,14 @@ static void TkDoDefaultAction(
 	mainThreadResult = E_INVALIDARG;
 	return;
     }
-    event = (ActionEvent *)ckalloc(sizeof(ActionEvent));
+    event = (ActionEvent *)Tcl_Alloc(sizeof(ActionEvent));
     if (event == NULL) {
 	TkGlobalUnlock();
 	mainThreadResult = E_OUTOFMEMORY;
 	return;
     }
     event->header.proc = ActionEventProc;
-    event->command = ckalloc(strlen(action) + 1);
+    event->command = (char *)Tcl_Alloc(strlen(action) + 1);
     strcpy(event->command, action);
     event->win = win;
 
@@ -1410,14 +1410,14 @@ static TkRootAccessible *CreateRootAccessible(
 	return NULL;
     }
     Tk_MakeWindowExist(win);
-    TkRootAccessible *tkAccessible = (TkRootAccessible *)ckalloc(sizeof(TkRootAccessible));
+    TkRootAccessible *tkAccessible = (TkRootAccessible *)Tcl_Alloc(sizeof(TkRootAccessible));
     if (!tkAccessible) {
 	Tcl_SetResult(interp, "Memory allocation failed for TkRootAccessible", TCL_STATIC);
 	return NULL;
     }
-    tkAccessible->pathName = ckalloc(strlen(pathName) + 1);
+    tkAccessible->pathName = (char *)Tcl_Alloc(strlen(pathName) + 1);
     if (!tkAccessible->pathName) {
-	ckfree(tkAccessible);
+	Tcl_Free(tkAccessible);
 	Tcl_SetResult(interp, "Memory allocation failed for pathName", TCL_STATIC);
 	return NULL;
     }
@@ -1516,7 +1516,7 @@ static Tcl_HashTable *GetChildIdTableForToplevel(
     TkGlobalLock();
     entry = Tcl_CreateHashEntry(toplevelChildTables, toplevel, &newEntry);
     if (newEntry) {
-	childIdTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	childIdTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	if (!childIdTable) {
 	    TkGlobalUnlock();
 	    return NULL;
@@ -1549,7 +1549,7 @@ Tk_Window GetToplevelOfWidget(
 void InitTkAccessibleTable(void)
 {
     if (!tkAccessibleTableInitialized) {
-	tkAccessibleTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	tkAccessibleTable = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	if (tkAccessibleTable) {
 	    Tcl_InitHashTable(tkAccessibleTable, TCL_ONE_WORD_KEYS);
 	    tkAccessibleTableInitialized = true;
@@ -1561,7 +1561,7 @@ void InitTkAccessibleTable(void)
 void InitChildIdTable(void)
 {
     if (!toplevelChildTables) {
-	toplevelChildTables = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
+	toplevelChildTables = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
 	if (toplevelChildTables) {
 	    Tcl_InitHashTable(toplevelChildTables, TCL_ONE_WORD_KEYS);
 	}
@@ -1583,7 +1583,7 @@ void ClearChildIdTableForToplevel(
 	Tcl_DeleteHashEntry(childEntry);
     }
     Tcl_DeleteHashEntry(entry); /* Remove toplevel entry to prevent memory leaks. */
-    ckfree(childIdTable);
+    Tcl_Free(childIdTable);
     TkGlobalUnlock();
 }
 
@@ -1680,7 +1680,7 @@ int ExecuteOnMainThreadSync(
     case 5: event->func(5, event->args); break;
     }
     SetEvent(event->doneEvent);
-    ckfree(event);
+    Tcl_Free(event);
     return 1;
 }
 
@@ -1700,14 +1700,14 @@ void RunOnMainThreadSync(
 	func(num_args, args);
 	return;
     }
-    MainThreadSyncEvent *event = (MainThreadSyncEvent *)ckalloc(sizeof(MainThreadSyncEvent));
+    MainThreadSyncEvent *event = (MainThreadSyncEvent *)Tcl_Alloc(sizeof(MainThreadSyncEvent));
     if (!event) return;
     event->header.proc = ExecuteOnMainThreadSync;
     event->func = func;
     event->num_args = num_args;
     event->doneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (!event->doneEvent) {
-	ckfree(event);
+	Tcl_Free(event);
 	return;
     }
     va_list ap;
@@ -1721,7 +1721,7 @@ void RunOnMainThreadSync(
     DWORD result = WaitForSingleObject(event->doneEvent, 500);
     if (result == WAIT_TIMEOUT) {
 	CloseHandle(event->doneEvent);
-	ckfree(event);
+	Tcl_Free(event);
     }
     CloseHandle(event->doneEvent);
 }
@@ -1771,7 +1771,7 @@ void EnsureGlobalLockInitialized(void)
 int IsScreenReaderRunning(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    TCL_UNUSED(int), /* objc */
+    TCL_UNUSED(Tcl_Size), /* objc */
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
     BOOL screenReader = FALSE;
@@ -1820,7 +1820,7 @@ int IsScreenReaderRunning(
 static int EmitSelectionChanged(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *ip,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
@@ -1943,7 +1943,7 @@ static void TkRootAccessible_DestroyHandler(
 static int EmitFocusChanged(
     TCL_UNUSED(void *), /* cd */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc < 2) {
@@ -2002,7 +2002,7 @@ static int EmitFocusChanged(
 int TkRootAccessibleObjCmd(
     TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc != 2) {
@@ -2075,10 +2075,10 @@ int TkWinAccessiblity_Init(
     TkGlobalUnlock();
 
     /* Initialize Tcl commands. */
-    Tcl_CreateObjCommand(interp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::emit_focus_change", EmitFocusChanged, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::add_acc_object", TkRootAccessibleObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_selection_change", EmitSelectionChanged, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::emit_focus_change", EmitFocusChanged, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::accessible::check_screenreader", IsScreenReaderRunning, NULL, NULL);
     return TCL_OK;
 }
 

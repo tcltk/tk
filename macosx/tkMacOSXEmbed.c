@@ -94,7 +94,7 @@ Tk_MakeWindow(
 	 * Allocate sub window
 	 */
 
-	macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
+	macWin = (MacDrawable *)Tcl_Alloc(sizeof(MacDrawable));
 	if (macWin == NULL) {
 	    winPtr->privatePtr = NULL;
 	    return None;
@@ -266,7 +266,7 @@ Tk_UseWindow(
      * Make the embedded window.
      */
 
-    macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
+    macWin = (MacDrawable *)Tcl_Alloc(sizeof(MacDrawable));
     if (macWin == NULL) {
 	winPtr->privatePtr = NULL;
 	return TCL_ERROR;
@@ -352,7 +352,7 @@ Tk_MakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = (Container *)ckalloc(sizeof(Container));
+    containerPtr = (Container *)Tcl_Alloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentPtr = winPtr;
     containerPtr->embedded = None;
@@ -1119,7 +1119,7 @@ EmbedWindowDeleted(
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}
-	ckfree(containerPtr);
+	Tcl_Free(containerPtr);
     }
 }
 

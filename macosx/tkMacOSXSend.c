@@ -74,8 +74,6 @@ typedef struct NameRegistry {
 				 * none. See format description above; this is
 				 * *not* terminated by the first null
 				 * character. Dynamically allocated. */
-    int allocedByX;		/* Non-zero means must free property with
-				 * XFree; zero means use ckfree. */
 } NameRegistry;
 
 static bool initialized = false;	/* A flag to denote if we have initialized
@@ -282,9 +280,9 @@ Tk_SetAppName(
      * We have found a unique name. Now add it to the registry.
      */
 
-    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
+    riPtr = (RegisteredInterp *)Tcl_Alloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
-    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
+    riPtr->name = (char *)Tcl_Alloc(strlen(actualName) + 1);
     riPtr->nextPtr = interpListPtr;
     interpListPtr = riPtr;
     strcpy(riPtr->name, actualName);
@@ -334,7 +332,8 @@ Tk_SendObjCmd(
     };
     const char *stringRep, *destName;
     /*int async = 0;*/
-    int i, firstArg, index;
+    Tcl_Size i, firstArg;
+    int index;
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;
@@ -397,7 +396,7 @@ Tk_SendObjCmd(
 	Tcl_Preserve(riPtr);
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
-	if (firstArg == (objc - 1)) {
+	if (firstArg + 1 == objc) {
 	    /*
 	     * This might be one of those cases where the new parser is
 	     * faster.

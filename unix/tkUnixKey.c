@@ -217,7 +217,7 @@ TkpGetString(
      */
 
 done:
-    kePtr->charValuePtr = (char *)ckalloc(len + 1);
+    kePtr->charValuePtr = (char *)Tcl_Alloc(len + 1);
     kePtr->charValueLen = len;
     memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), len + 1);
     return Tcl_DStringValue(dsPtr);
@@ -484,11 +484,11 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree(dispPtr->modKeyCodes);
+	Tcl_Free(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = (KeyCode *)ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)Tcl_Alloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -515,10 +515,10 @@ TkpInitKeymapInfo(
 	     */
 
 	    arraySize *= 2;
-	    newCodes = (KeyCode *)ckalloc(arraySize * sizeof(KeyCode));
+	    newCodes = (KeyCode *)Tcl_Alloc(arraySize * sizeof(KeyCode));
 	    memcpy(newCodes, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
-	    ckfree(dispPtr->modKeyCodes);
+	    Tcl_Free(dispPtr->modKeyCodes);
 	    dispPtr->modKeyCodes = newCodes;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;

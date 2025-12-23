@@ -116,7 +116,7 @@ ImageTypeThreadExitProc(
     while (tsdPtr->imageTypeList != NULL) {
 	freePtr = tsdPtr->imageTypeList;
 	tsdPtr->imageTypeList = tsdPtr->imageTypeList->nextPtr;
-	ckfree(freePtr);
+	Tcl_Free(freePtr);
     }
 }
 
@@ -154,7 +154,7 @@ Tk_CreateImageType(
 	tsdPtr->initialized = true;
 	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
     }
-    copyPtr = (Tk_ImageType *)ckalloc(sizeof(Tk_ImageType));
+    copyPtr = (Tk_ImageType *)Tcl_Alloc(sizeof(Tk_ImageType));
     *copyPtr = *typePtr;
     copyPtr->nextPtr = tsdPtr->imageTypeList;
     tsdPtr->imageTypeList = copyPtr;
@@ -181,7 +181,7 @@ int
 Tk_ImageObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     static const char *const imageOptions[] = {
@@ -193,7 +193,8 @@ Tk_ImageObjCmd(
 	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *)clientData;
-    int i, isNew, firstOption, index;
+    Tcl_Size i, firstOption;
+    int isNew, index;
     Tk_ImageType *typePtr;
     ImageModel *modelPtr;
     Image *imagePtr;
@@ -284,7 +285,7 @@ Tk_ImageObjCmd(
 
 	hPtr = Tcl_CreateHashEntry(&winPtr->mainPtr->imageTable, name, &isNew);
 	if (isNew) {
-	    modelPtr = (ImageModel *)ckalloc(sizeof(ImageModel));
+	    modelPtr = (ImageModel *)Tcl_Alloc(sizeof(ImageModel));
 	    modelPtr->typePtr = NULL;
 	    modelPtr->modelData = NULL;
 	    modelPtr->width = modelPtr->height = 1;
@@ -571,7 +572,7 @@ Tk_GetImage(
     if (modelPtr->deleted) {
 	goto noSuchImage;
     }
-    imagePtr = (Image *)ckalloc(sizeof(Image));
+    imagePtr = (Image *)Tcl_Alloc(sizeof(Image));
     imagePtr->tkwin = tkwin;
     imagePtr->display = Tk_Display(tkwin);
     imagePtr->modelPtr = modelPtr;
@@ -641,7 +642,7 @@ Tk_FreeImage(
 	    modelPtr->instancePtr->prevPtr = NULL;
 	}
     }
-    ckfree(imagePtr);
+    Tcl_Free(imagePtr);
 
     /*
      * If there are no more instances left for the model, and if the model
@@ -653,7 +654,7 @@ Tk_FreeImage(
 	    Tcl_DeleteHashEntry(modelPtr->hPtr);
 	}
 	Tcl_Release(modelPtr->winPtr);
-	ckfree(modelPtr);
+	Tcl_Free(modelPtr);
     }
 }
 
@@ -931,7 +932,7 @@ DeleteImage(
 	    Tcl_DeleteHashEntry(modelPtr->hPtr);
 	}
 	Tcl_Release(modelPtr->winPtr);
-	ckfree(modelPtr);
+	Tcl_Free(modelPtr);
     } else {
 	modelPtr->deleted = 1;
     }
