@@ -746,11 +746,6 @@ CreatePDFFromDrawableRect(
 	return NULL;
     }
 
-    if (![view wantsLayer] || !view.layer) {
-        TkMacOSXDbgMsg("View is not layer-backed");
-        return NULL;
-    }
-
     NSRect bounds;
     CGRect viewSrcRect;
 
