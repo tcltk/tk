@@ -130,7 +130,7 @@ bind Treeview	<Mod3-${ckey}-End>	{ %W xview moveto 1.0 }
 
 # Other keys
 bind Treeview	<F2>			{ ::ttk::treeview::ActivateItem %W }
-bind Treeview	<Return>		{ ::ttk::treeview::ActivateItem %W }
+bind Treeview	<Return>		{ ::ttk::treeview::KeyNav %W down }
 bind Treeview	<Shift-Return>		{ ::ttk::treeview::KeyNav %W up }
 bind Treeview	<${ckey}-Return>	{ ::ttk::treeview::ActivateItem %W }
 bind Treeview	<<Invoke>>		{ ::ttk::treeview::ActivateItem %W }
