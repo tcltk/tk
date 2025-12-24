@@ -96,11 +96,13 @@ namespace eval ttk::theme::alt {
 	    -expand {selected {1.5p 1.5p 0.75p 0}}
 
 	# Treeview:
-	ttk::style configure Heading -font TkHeadingFont -relief raised
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style map Item -indicatorcolor [list disabled $colors(-frame)]
-	ttk::style configure Treeview -background $colors(-window) \
+	ttk::style configure Treeview \
+	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) -indent 15p \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::setTreeviewRowHeight

@@ -51,7 +51,6 @@ if {$::tcl_platform(os) ne "Darwin"} {
     set ckey Option
 }
 
-
 #
 # Widget bindings.
 #

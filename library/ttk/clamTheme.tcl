@@ -138,7 +138,8 @@ namespace eval ttk::theme::clam {
 	ttk::style map Item \
 	    -indicatorbackground [list disabled $colors(-frame)] \
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
-	ttk::style configure Treeview -background $colors(-window) \
+	ttk::style configure Treeview \
+	    -background $colors(-window) \
 	    -stripedbackground $colors(-lighter) -indent 15p
 	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \

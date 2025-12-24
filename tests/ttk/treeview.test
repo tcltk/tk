@@ -22,7 +22,8 @@ proc insert {w parent color} {
 }
 proc create {w} {
     ::ttk::treeview .tv -columns [lrange $::columns 1 end] -show {tree headings} \
-        -height 10 -xscrollcommand [list .sx set] -yscrollcommand [list .sy set]
+        -height 10 -xscrollcommand [list .sx set] -yscrollcommand [list .sy set] \
+        -rowheight 17 -headingheight 17
     ::ttk::scrollbar .sx -orient horizontal -command [list .tv xview]
     ::ttk::scrollbar .sy -orient vertical -command [list .tv yview]
     grid .tv .sy -sticky nsew

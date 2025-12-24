@@ -106,14 +106,16 @@ namespace eval ttk::theme::classic {
 	ttk::style map TNotebook.Tab -background [list selected $colors(-frame)]
 
 	# Treeview:
-	ttk::style configure Heading -font TkHeadingFont -relief raised
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised
 	ttk::style configure Row -focuswidth 1
 	ttk::style configure Item -indicatorsize 9p \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style map Item \
             -indicatorcolor [list selected $colors(-indicator)] \
             -indicatorrelief {selected sunken} 
-	ttk::style configure Treeview -background $colors(-window) \
+	ttk::style configure Treeview \
+	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) -indent 15p
 	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
