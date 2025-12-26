@@ -45,12 +45,6 @@ namespace eval ttk::treeview {
     }
 }
 
-if {$::tcl_platform(os) ne "Darwin"} {
-    set ckey Control
-} else {
-    set ckey Option
-}
-
 #
 # Widget bindings.
 #
@@ -88,12 +82,18 @@ bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W pageTop }
 bind Treeview	<<NextPara>>		{ ::ttk::treeview::KeyNav %W pageBottom }
 bind Treeview	<<SelectPrevPara>>	{ ::ttk::treeview::KeyNav %W pageTop extend }
 bind Treeview	<<SelectNextPara>>	{ ::ttk::treeview::KeyNav %W pageBottom extend }
+set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Alt" : "Option"}]
+bind Treeview	<${ckey}-Up>		{ ::ttk::treeview::KeyNav %W top }
+bind Treeview	<${ckey}-Shift-Up>	{ ::ttk::treeview::KeyNav %W top extend }
+bind Treeview	<${ckey}-Down>		{ ::ttk::treeview::KeyNav %W bottom }
+bind Treeview	<${ckey}-Shift-Down>	{ ::ttk::treeview::KeyNav %W bottom extend }
 
 # Home/End key bindings (none, shift, control, control+shift)
 bind Treeview	<<LineStart>>		{ ::ttk::treeview::KeyNav %W first }
 bind Treeview	<<LineEnd>>		{ ::ttk::treeview::KeyNav %W last }
 bind Treeview	<<SelectLineStart>>	{ ::ttk::treeview::KeyNav %W first extend }
 bind Treeview	<<SelectLineEnd>>	{ ::ttk::treeview::KeyNav %W last extend }
+set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Control" : "Command"}]
 bind Treeview	<${ckey}-Home>		{ ::ttk::treeview::KeyNav %W topleft }
 bind Treeview	<${ckey}-End>		{ ::ttk::treeview::KeyNav %W bottomright }
 bind Treeview	<${ckey}-Shift-Home>	{ ::ttk::treeview::KeyNav %W topleft extend }
@@ -104,12 +104,15 @@ bind Treeview	<Prior>			{ ::ttk::treeview::PageNav %W up }
 bind Treeview	<Next>			{ ::ttk::treeview::PageNav %W down }
 bind Treeview	<Shift-Prior>		{ ::ttk::treeview::PageNav %W left }
 bind Treeview	<Shift-Next>		{ ::ttk::treeview::PageNav %W right }
+set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Control" : "Command"}]
 bind Treeview	<${ckey}-Prior>		{ ::ttk::treeview::PageNav %W pageTop }
 bind Treeview	<${ckey}-Next>		{ ::ttk::treeview::PageNav %W pageBottom }
 bind Treeview	<${ckey}-Shift-Prior>	{ ::ttk::treeview::PageNav %W pageLeft }
 bind Treeview	<${ckey}-Shift-Next>	{ ::ttk::treeview::PageNav %W pageRight }
+if {$::tcl_platform(os) ne "Darwin"} {
 bind Treeview	<Alt-Prior>		{ ::ttk::treeview::PageNav %W left; break }
 bind Treeview	<Alt-Next>		{ ::ttk::treeview::PageNav %W right; break }
+}
 
 # Scroll Lock bindings
 if {$::tcl_platform(os) ne "Darwin"} {
@@ -127,29 +130,27 @@ bind Treeview	<Mod3-${ckey}-Home>	{ %W xview moveto 0.0 }
 bind Treeview	<Mod3-${ckey}-End>	{ %W xview moveto 1.0 }
 }
 
-
-if {$::tcl_platform(os) ne "Darwin"} {
-    set ckey Control
-} else {
-    set ckey Command
-}
-
 # Other keys
 bind Treeview	<Return>		{ ::ttk::treeview::ActivateItem %W }
 bind Treeview	<Shift-Return>		{ ::ttk::treeview::KeyNav %W up }
-bind Treeview	<${ckey}-Return>	{ ::ttk::treeview::InvokeItem %W }
 bind Treeview	<F2>			{ ::ttk::treeview::InvokeItem %W }
 bind Treeview	<<Invoke>>		{ ::ttk::treeview::InvokeItem %W }
+if {$::tcl_platform(os) ne "Darwin"} {
+bind Treeview	<Control-Return>	{ ::ttk::treeview::InvokeItem %W }
+} else {
+bind Treeview	<Command-Down>		{ ::ttk::treeview::ActivateItem %W }
+bind Treeview	<Option-Return>		{ ::ttk::treeview::InvokeItem %W }
+}
 
 bind Treeview	<space>			{ ::ttk::treeview::ToggleSelected %W select }
 bind Treeview	<Shift-space>		{ ::ttk::treeview::SelectionSet %W row }
-bind Treeview	<${ckey}-space>		{ ::ttk::treeview::SelectionSet %W column }
-bind Treeview	<${ckey}-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
+bind Treeview	<Control-space>		{ ::ttk::treeview::SelectionSet %W column }
+bind Treeview	<Control-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
 
 bind Treeview	<Tab>			{ ::ttk::treeview::KeyNav %W right; break }
 bind Treeview	<Shift-Tab>		{ ::ttk::treeview::KeyNav %W left; break }
-bind Treeview	<${ckey}-Tab>		[bind all <<NextWindow>>]
-bind Treeview	<${ckey}-Shift-Tab>	[bind all <<PrevWindow>>]
+bind Treeview	<Control-Tab>		[bind all <<NextWindow>>]
+bind Treeview	<Control-Shift-Tab>	[bind all <<PrevWindow>>]
 
 # Other selection functions
 bind Treeview	<<SelectAll>>		{ ::ttk::treeview::SelectionSet %W all }
@@ -159,6 +160,7 @@ bind Treeview	<minus>			{ ::ttk::treeview::CloseItem %W {} }
 bind Treeview	<plus>			{ ::ttk::treeview::OpenItem %W {} }
 bind Treeview	<asterisk>		{ ::ttk::treeview::OpenItem %W {} -recurse }
 unset ckey
+
 
 # Mousewheel and TouchpadScroll
 ttk::copyBindings TtkScrollable Treeview
