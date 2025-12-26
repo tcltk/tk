@@ -115,10 +115,7 @@ proc ::ttk::configureNotebookStyle {style} {
 #	To be invoked from within the library files for the built-in themes.
 #
 proc ::ttk::setTreeviewRowHeight {} {
-    set font [::ttk::style lookup Treeview -font]
-    if {$font eq {}} {
-	set font TkDefaultFont
-    }
+    set font [::ttk::style lookup Treeview -font {} TkDefaultFont]
 
     ::ttk::style configure Treeview -rowheight \
 	    [expr {[font metrics $font -linespace] + 2}]
@@ -219,5 +216,8 @@ ttk::setTheme [ttk::DefaultTheme] ; rename ttk::DefaultTheme {}
 # Scale the default ttk::scale and ttk::progressbar length
 option add *TScale.length	75p widgetDefault
 option add *TProgressbar.length	75p widgetDefault
+
+# Create CheckTreeview style. Must be done after themes are loaded.
+::ttk::treeview::Create_CheckTreeview_Style
 
 #*EOF*

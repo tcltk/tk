@@ -24,25 +24,6 @@ namespace eval ttk::treeview {
 
     set State(current)		{}
     set State(currentCell)	{}
-
-    # Copy the layouts from Treeview to CheckTreeview
-    foreach _from {Treeview Item Cell Heading Row Separator}  {
-	set _to [expr {$_from ne "Treeview" ? "CheckTreeview.$_from" : "CheckTreeview"}]
-	ttk::style layout $_to [ttk::style layout $_from]
-	ttk::style configure $_to {*}[ttk::style configure $_from]
-	ttk::style map $_to {*}[ttk::style map $_from]
-    }
-    unset _from _to
-
-    # Create CheckTreeview Item
-    ttk::style layout CheckTreeview.Item {
-	Treeitem.padding -sticky nswe -children {
-	    Treeitem.indicator -side left -sticky {}
-	    Checkbutton.indicator -side left -sticky {}
-	    Treeitem.image -side left -sticky {}
-	    Treeitem.text -side left -sticky {}
-	}
-    }
 }
 
 #
@@ -1413,6 +1394,55 @@ proc ::ttk::treeview::CopyToClipboard {w} {
     # Append data to clipboard
     clipboard clear -displayof $w
     clipboard append -displayof $w -format $format -type STRING -- $data
+}
+
+#
+# ::ttk::treeview::Create_CheckTreeview_Style
+#	Create CheckTreeview style from Treeview style. 
+#
+proc ::ttk::treeview::Create_CheckTreeview_Style {} {
+    # Copy theme configuration
+    foreach theme [ttk::style theme names] {
+	ttk::style theme settings $theme {
+	    foreach element [list Treeview Item Cell Heading Row Separator] {
+		if {$element ne "Treeview"} {
+		    set new [format "CheckTreeview.%s" $element]
+		} else {
+		    set new "CheckTreeview"
+		}
+		ttk::style layout $new [ttk::style layout $element]
+		ttk::style configure $new {*}[ttk::style configure $element]
+		
+		# Removed selected state from -background and -foreground
+		set list [list]
+		foreach {opt spec} [ttk::style map $element] {
+		    if {[llength $spec] > 1 && $opt in [list -background -foreground]} {
+			set temp [list]
+			foreach {state val} $spec {
+			    if {$state ne "selected"} {
+				lappend temp $state $val
+			    }
+			}
+			lappend list $opt $temp
+		    } else {
+		        lappend list $opt $spec
+		    }
+		}
+		ttk::style map $new {*}$list
+	    }
+
+	    # Override item layout
+	    ttk::style layout CheckTreeview.Item {
+		Treeitem.padding -sticky nswe -children {
+		    Treeitem.indicator -side left -sticky {}
+		    Checkbutton.indicator -side left -sticky {}
+		    Treeitem.image -side left -sticky {}
+		    Treeitem.text -side left -sticky {}
+		}
+	    }
+	}
+    }
+    ttk::setTreeviewRowHeight
 }
 
 #*EOF*
