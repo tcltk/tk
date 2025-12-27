@@ -1924,6 +1924,7 @@ static Ttk_Layout TreeviewGetLayout(
     /* Compute heading height. */
     Ttk_RebindSublayout(tv->tree.headingLayout, &tv->tree.column0);
     Ttk_LayoutSize(tv->tree.headingLayout, 0, &unused, &tv->tree.headingHeight);
+    tv->tree.headingHeight += 2;
 
     /* Get row height from style, or compute it to fit Item and Cell.
      * Pick up default font from the Treeview style. */

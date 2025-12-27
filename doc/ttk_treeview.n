@@ -55,7 +55,7 @@ or the string \fB#all\fR to display all columns in \fB-columns\fR order.
 The default is \fB#all\fR.
 .OP \-headingheight headingHeight Height
 Specifies the height of the heading in pixels. The height will be dynamically
-adjusted based on the header font.
+adjusted based on the heading font.
 .OP \-height height Height
 Specifies the number of rows which should be visible. Note that
 the requested width is determined from the sum of the column widths.
@@ -1271,11 +1271,13 @@ Applies to all:
 .IP \(bu
 \fB<Button-1>\fR will set the focus (all modes) and selection (all except none select mode) to the item or cell under the mouse pointer.
 .IP \(bu
-\fB<B1-Motion>\fR will drag a column separator for resize, a column header for a column move, selected item/cell when in browse select mode, or extend the selection when in extended select mode.
+\fB<B1-Motion>\fR will drag a column separator for resize, a column heading for a column move, selected item/cell when in browse select mode, or extend the selection when in extended select mode.
 .IP \(bu
-\fB<ButtonRelease-1>\fR will drop a column separator for resize, column header for a move, or set the selection.
+\fB<ButtonRelease-1>\fR will drop a column separator for resize, column heading for a move, or set the selection.
 .IP \(bu
-\fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::EditItem.
+\fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::EditItem. If pressed over a column divider, will auto size the column to its contents. This works best if columnm \fB-stretch\fR is 0. Auto size will honor the column \fB-minwidth\fR value.
+.IP \(bu
+\fB<Alt-Double-Button-1>\fR on a column divider or \fB<Option-Double-Button-1>\fR for a Mac will auto size all columns to their contents. This works best if all columns have \fB-stretch\fR set to 0. Auto size will honor the \fB-minwidth\fR value for each column.
 .IP \(bu
 \fB<Shift-Button-1>\fR will select a range of items or cells from the anchor to the selected item/cell (multiple and extended select modes only).
 If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multiple or extended select mode, then the column cells will be selected.
@@ -1287,7 +1289,7 @@ If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multi
 .IP \(bu
 \fB<<SelectNone>>\fR virtual event will unselect all items or cells (except browse mode).
 .IP \(bu
-\fB<<SelectInvert>>\fR virtual event will invert or toggle the selection state of all items or cells (except browse mode).
+\fB<<SelectInvert>>\fR virtual event will invert or toggle the selection state of all items or cells (multiple or extended select modes only).
 .IP \(bu
 The \fB<<Copy>>\fR virtual event will copy the selected items or cells to the clipboard.
 .RE
@@ -1328,7 +1330,7 @@ The following are the widget components for the \fBttk::style\fR command:
 .IP \(bu
 The class name for a \fBttk::treeview\fR is \fBTreeview\fR.
 .IP \(bu
-The treeview header class name is \fBHeading\fR.
+The treeview heading class name is \fBHeading\fR.
 .IP \(bu
 The treeview row class name is \fBRow\fR.
 .IP \(bu
@@ -1420,8 +1422,8 @@ The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .
 Specifies the relief to use for the heading.
 .PP
-Example of how to set the current sorted column header font to bold black and
-all other column header fonts to normal gray similar to how the Mac Finder works:
+Example of how to set the current sorted column heading font to bold black and
+all other column heading fonts to normal gray similar to how the Mac Finder works:
 .PP
 .CS
 ttk::style map Heading -foreground {selected black alternate black}
