@@ -24,6 +24,9 @@ namespace eval ttk::treeview {
 
     set State(current)		{}
     set State(currentCell)	{}
+    
+    # Scaling default
+    variable scaling [tk scaling]
 }
 
 #
@@ -1394,6 +1397,68 @@ proc ::ttk::treeview::CopyToClipboard {w} {
     # Append data to clipboard
     clipboard clear -displayof $w
     clipboard append -displayof $w -format $format -type STRING -- $data
+}
+
+#
+# ::ttk::treeview::setTreeviewRowHeight --
+#	Sets the default height of the ttk::treeview rows for the current theme.
+#	To be invoked from within the library files for the built-in themes.
+#
+proc ::ttk::treeview::setTreeviewRowHeight {} {
+    set scaling [expr {[tk scaling] / $::ttk::treeview::scaling}]
+    set scaling 1
+
+    set font [::ttk::style lookup Treeview -font]
+    if {$font eq {}} {
+	set font TkDefaultFont
+    }
+
+    # Get font and indicator sizes, use largest of the two
+    set size [expr {[font metrics $font -linespace] + 2}]
+    set isize [::ttk::style lookup Item -indicatorsize]
+    if {$isize eq ""} {
+        set isize 0
+    }
+    set isize [winfo pixels . $isize]
+    foreach {l t r b} [::ttk::style lookup Item -indicatormargins] {
+	if {$l eq ""} break
+	if {$t eq ""} {set t $l}
+	if {$r eq ""} {set r $l}
+	incr isize [winfo pixels . $t]
+	incr isize [winfo pixels . $b]
+    }
+    set height [expr {round(max($size,$isize) * $scaling)}]
+    ::ttk::style configure Treeview -rowheight $height
+
+    # Refresh the widgets
+    set lst1 [winfo children .]
+    while {[llength $lst1] != 0} {
+	set lst2 {}
+	foreach w $lst1 {
+	    if {[winfo class $w] in [list Treeview]} {
+		$w configure -rowheight $height
+	    }
+
+	    foreach child [winfo children $w] {
+		lappend lst2 $child
+	    }
+	}
+	set lst1 $lst2
+    }
+}
+
+#
+# Applications should make sure that the setTreeviewRowHeight
+# procedure will be invoked whenever the virtual event <<ThemeChanged>>
+# is received (e.g., because the value of the Treeview style's -font
+# option has changed), or the virtual event <<TkWorldChanged>> with
+# the user_data field (%d) set to "FontChanged" is received.  Example:
+#
+bind Treeview <<ThemeChanged>> ::ttk::treeview::setTreeviewRowHeight
+bind Treeview <<TkWorldChanged>> {
+    if {"%d" eq "FontChanged"} {
+	::ttk::treeview::setTreeviewRowHeight
+    }
 }
 
 #

@@ -117,7 +117,7 @@ namespace eval ttk::theme::classic {
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) -indent 15p
-	ttk::setTreeviewRowHeight
+	ttk::treeview::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
 	ttk::style map Treeview \

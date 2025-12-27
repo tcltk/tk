@@ -115,25 +115,8 @@ proc ::ttk::configureNotebookStyle {style} {
 #	To be invoked from within the library files for the built-in themes.
 #
 proc ::ttk::setTreeviewRowHeight {} {
-    set font [::ttk::style lookup Treeview -font {} TkDefaultFont]
-
-    ::ttk::style configure Treeview -rowheight \
-	    [expr {[font metrics $font -linespace] + 2}]
+    ::ttk::treeview::setTreeviewRowHeight
 }
-
-# Applications should make sure that the ttk::setTreeviewRowHeight
-# procedure will be invoked whenever the virtual event <<ThemeChanged>>
-# is received (e.g., because the value of the Treeview style's -font
-# option has changed), or the virtual event <<TkWorldChanged>> with
-# the user_data field (%d) set to "FontChanged" is received.  Example:
-#
-# bindtags . [linsert [bindtags .] 1 MyMainWin]
-# bind MyMainWin <<ThemeChanged>> ttk::setTreeviewRowHeight
-# bind MyMainWin <<TkWorldChanged>> {
-#     if {"%d" eq "FontChanged"} {
-#         ttk::setTreeviewRowHeight
-#     }
-# }
 
 ### Load widget bindings.
 #

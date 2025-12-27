@@ -141,7 +141,7 @@ namespace eval ttk::theme::clam {
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-lighter) -indent 15p
-	ttk::setTreeviewRowHeight
+	ttk::treeview::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-lighter)
 	ttk::style map Treeview \

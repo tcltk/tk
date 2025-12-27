@@ -1424,13 +1424,11 @@ Example of how to set the current sorted column header font to bold black and
 all other column header fonts to normal gray similar to how the Mac Finder works:
 .PP
 .CS
-font create TkSelectedFont {*}[font configure TkHeadingFont] -weight bold
-ttk::style map Heading -foreground [list selected black alternate black "" gray30] \\
-    -font [list selected TkSelectedFont alternate TkSelectedFont "" TkHeadingFont]
+ttk::style map Heading -foreground {selected black alternate black}
 .CE
 .RE
 .PP
-The \fBRow\fR styling options configurable with \fBttk::style\fR are:
+The \fBRow\fR (Item and Cell) styling options configurable with \fBttk::style\fR are:
 .RS
 .TP
 \fB\-background\fR \fIcolor\fR
@@ -1454,7 +1452,7 @@ ttk::style configure Row -focuscolor #008000 -focuswidth 2
 .CE
 .RE
 .PP
-The \fBItem\fR styling options configurable with \fBttk::style\fR are:
+The \fBItem\fR (tree column only) styling options configurable with \fBttk::style\fR are:
 .RS
 .TP
 \fB\-foreground\fR \fIcolor\fR
@@ -1463,7 +1461,7 @@ Specifies the foreground color of the tree items. The default is same as Treevie
 .TP
 \fB\-indicatormargins\fR \fIamount\fR
 .
-Specifies the additional padding to include inside the border of the tree items.
+Specifies the additional padding to include around the indicator.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 The default is "2 2 4 2".
 .TP
@@ -1473,16 +1471,16 @@ Specifies the size of the indicator in pixels. The default is 12 pixels.
 .TP
 \fB\-padding\fR \fIamount\fR
 .
-Specifies the additional padding to include around the indicator.
+Specifies the additional padding to include inside the border of the tree items.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .PP
-The \fBCell\fR styling options configurable with \fBttk::style\fR are:
+The \fBCell\fR (non-tree columns) styling options configurable with \fBttk::style\fR are:
 .RS
 .TP
 \fB\-padding\fR \fIamount\fR
 .
-Specifies the additional padding to include around the indicator.
+Specifies the additional padding to include inside the border of the cell.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .PP
