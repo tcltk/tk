@@ -1400,8 +1400,9 @@ proc ::ttk::treeview::EncodeValue {string} {
 #
 proc ::ttk::treeview::CopyToClipboard {w} {
     set data ""
-    set format [expr {$::tcl_platform(platform) ne "windows" ? "UTF8_STRING" : "STRING"}]
-    set headers 0
+    set format "STRING"
+    set type [expr {$::tcl_platform(platform) ne "windows" ? "UTF8_STRING" : "STRING"}]
+    set headers [expr {"headings" in [$w cget -show]}]
 
     if {[$w instate disabled]} return
 
@@ -1409,9 +1410,6 @@ proc ::ttk::treeview::CopyToClipboard {w} {
     set columns [$w cget -displaycolumns]
     if {[lindex $columns 0] eq "#all"} {
 	set columns [$w cget -columns]
-	set use_values 1
-    } else {
-	set use_values 0
     }
     if {"tree" in [$w cget -show]} {
         set columns [concat [list #0] $columns]
@@ -1419,29 +1417,18 @@ proc ::ttk::treeview::CopyToClipboard {w} {
 
     # Get selected items or cells in display column order
     if {[$w cget -selecttype] eq "item"} {
-	set inc_tree [expr {"tree" in [$w cget -show]}]
-
 	if {$headers} {
 	    set list [list]
 	    foreach column $columns {
-	        lappend list [$w heading $column -text]
+	        lappend list [EncodeValue [$w heading $column -text]]
 	    }
 	    append data [join $list "\t"] "\n"
 	}
 
 	foreach item [$w selection] {
 	    set list [list]
-	    if {$inc_tree} {
-		lappend list [EncodeValue [$w item $item -text]]
-	    }
-	    if {$use_values} {
-		foreach val [$w item $item -value] {
-		    lappend list [EncodeValue $val]
-		}
-	    } else {
-		foreach col $columns {
-		    lappend list [EncodeValue [$w set $item $col]]
-		}
+	    foreach column $columns {
+	        lappend list [EncodeValue [$w set $item $column]]
 	    }
 	    append data [join $list "\t"] "\n"
 	}
@@ -1471,10 +1458,10 @@ proc ::ttk::treeview::CopyToClipboard {w} {
 	}
 
 	# Get cell value and append to data in clipboard format
-	foreach {item cols} $list {
+	foreach {item columns} $list {
 	    set temp [list]
-	    foreach col $cols {
-		lappend temp [EncodeValue [$w set $item $col]]
+	    foreach column $columns {
+		lappend temp [EncodeValue [$w set $item $column]]
 	    }
 	    append data [join $temp "\t"] "\n"
 	}
@@ -1482,7 +1469,7 @@ proc ::ttk::treeview::CopyToClipboard {w} {
 
     # Append data to clipboard
     clipboard clear -displayof $w
-    clipboard append -displayof $w -format $format -type STRING -- $data
+    clipboard append -displayof $w -format $format -type $type -- $data
 }
 
 #
