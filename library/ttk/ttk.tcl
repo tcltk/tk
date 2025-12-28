@@ -112,10 +112,9 @@ proc ::ttk::configureNotebookStyle {style} {
 
 ## ttk::setTreeviewRowHeight --
 #	Sets the default height of the ttk::treeview rows for the current theme.
-#	To be invoked from within the library files for the built-in themes.
+#	Obsolete, no longer needed since autocalculated.
 #
 proc ::ttk::setTreeviewRowHeight {} {
-    ::ttk::treeview::setTreeviewRowHeight
 }
 
 ### Load widget bindings.

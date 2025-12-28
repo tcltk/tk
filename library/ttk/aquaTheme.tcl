@@ -158,7 +158,6 @@ namespace eval ttk::theme::aqua {
 	    -stripedbackground systemControlAlternatingRowColor \
 	    -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
-	ttk::treeview::setTreeviewRowHeight
 	ttk::style map Treeview \
 	    -background {
 		selected systemSelectedTextBackgroundColor

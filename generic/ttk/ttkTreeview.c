@@ -1902,7 +1902,7 @@ static Ttk_Layout TreeviewGetLayout(
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Layout treeLayout = TtkWidgetGetLayout(interp, themePtr, recordPtr);
     Tcl_Obj *objPtr;
-    int unused, cellHeight;
+    int width, cellHeight, height = 0;
     DisplayItem displayItem;
     Ttk_Style style;
 
@@ -1923,8 +1923,18 @@ static Ttk_Layout TreeviewGetLayout(
 
     /* Compute heading height. */
     Ttk_RebindSublayout(tv->tree.headingLayout, &tv->tree.column0);
-    Ttk_LayoutSize(tv->tree.headingLayout, 0, &unused, &tv->tree.headingHeight);
+    Ttk_LayoutSize(tv->tree.headingLayout, 0, &width, &tv->tree.headingHeight);
     tv->tree.headingHeight += 2;
+
+    if ((objPtr = Ttk_QueryOption(treeLayout, "-headingheight", 0))) {
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &height);
+    }
+    if (height > 0) {
+	tv->tree.headingHeight = height;
+    }
+    if (tv->tree.headingHeight <= 0) {
+	tv->tree.headingHeight = 25;
+    }
 
     /* Get row height from style, or compute it to fit Item and Cell.
      * Pick up default font from the Treeview style. */
@@ -1932,20 +1942,25 @@ static Ttk_Layout TreeviewGetLayout(
     Ttk_TagSetDefaults(tv->tree.tagTable, style, &displayItem);
 
     Ttk_RebindSublayout(tv->tree.itemLayout, &displayItem);
-    Ttk_LayoutSize(tv->tree.itemLayout, 0, &unused, &tv->tree.rowHeight);
+    Ttk_LayoutSize(tv->tree.itemLayout, 0, &width, &tv->tree.rowHeight);
+    tv->tree.rowHeight += 2; /* Focus ring */
 
     Ttk_RebindSublayout(tv->tree.cellLayout, &displayItem);
-    Ttk_LayoutSize(tv->tree.cellLayout, 0, &unused, &cellHeight);
+    Ttk_LayoutSize(tv->tree.cellLayout, 0, &width, &cellHeight);
+    cellHeight += 2; /* Focus ring */
 
     if (cellHeight > tv->tree.rowHeight) {
 	tv->tree.rowHeight = cellHeight;
     }
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
-	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.rowHeight);
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &height);
     }
-    if (tv->tree.rowHeight < 1) {
-	tv->tree.rowHeight = 1;
+    if (height > 0) {
+	tv->tree.rowHeight = height;
+    }
+    if (tv->tree.rowHeight <= 0) {
+	tv->tree.rowHeight = 20;
     }
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
@@ -1957,7 +1972,6 @@ static Ttk_Layout TreeviewGetLayout(
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.indent);
     }
-
     return treeLayout;
 }
 

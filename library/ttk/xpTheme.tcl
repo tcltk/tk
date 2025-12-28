@@ -54,7 +54,6 @@ namespace eval ttk::theme::xpnative {
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
-	ttk::treeview::setTreeviewRowHeight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \

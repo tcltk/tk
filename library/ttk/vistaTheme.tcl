@@ -216,7 +216,6 @@ namespace eval ttk::theme::vista {
 	    -stripedbackground System3dLight -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background System3dLight
-	ttk::treeview::setTreeviewRowHeight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \

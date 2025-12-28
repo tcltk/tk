@@ -54,14 +54,18 @@ specifying which columns are to be displayed and the order in which they appear,
 or the string \fB#all\fR to display all columns in \fB-columns\fR order.
 The default is \fB#all\fR.
 .OP \-headingheight headingHeight Height
-Specifies the height of the heading in pixels. The height will be dynamically
-adjusted based on the heading font.
+Specifies the heading height in pixels. The default value is auto calculated
+based on the theme and font. It can be overridden by this option until the next
+theme or font change. It can be permanently overridden via ttk::style option:
+\fBttk::style configure Treeview -headingheight \fIpixels\fR.
 .OP \-height height Height
 Specifies the number of rows which should be visible. Note that
 the requested width is determined from the sum of the column widths.
 .OP \-rowheight rowHeight Height
-Specifies the row height in pixels. Default value is defined by
-\fBttk::style configure Treeview -rowheight\fR.
+Specifies the row height in pixels. The default value is auto calculated
+based on the theme and font. It can be overridden by this option until the next
+theme or font change. It can be permanently overridden via ttk::style option:
+\fBttk::style configure Treeview -rowheight \fIpixels\fR.
 .OP \-selectmode selectMode SelectMode
 Controls how the built-in class bindings manage the selection. Options are:
 .RS
@@ -1319,10 +1323,10 @@ widget subcommands can be used to determine the affected item(s) or cell(s).
 .PP
 \fBTtk::treeview\fR widgets support the \fBCheckTreeview\fR style in all
 standard themes. This style adds a checkbutton after the open/close indicator
-and before the item image to better show which items are selected. Combine
-this style with the \fB\-selectmode multiple\fR option to create a check list
-widget where the user can easily select multiple entries without the need to
-use the keyboard.
+and before the item image to better show which items are selected. Combine this
+style with the \fB\-selectmode multiple\fR option to create a check list widget
+where the user can easily select multiple entries without the need to use the
+keyboard. This style works best with \fBitem\fR select type, not \fBcell\fR.
 .SH "STYLING OPTIONS"
 .PP
 The following are the widget components for the \fBttk::style\fR command:
@@ -1365,6 +1369,12 @@ Specifies the the font for the contents of the tree (not heading).
 .
 Specifies the foreground color of rows that contain data values.
 .TP
+\fB\-headingheight\fR \fIamount\fR
+.
+This is the default height for heading cells. If set to 0, the value will be
+auto calculated by measuring the heading layout with the style's settings.
+This thus picks up the font and any focus ring or padding from the theme's layout.
+.TP
 \fB\-indent\fR \fIamount\fR
 .
 Specifies the indentation amount of child elements below parent elements
@@ -1383,11 +1393,9 @@ This is the background color to use for the \fB-striped\fR option.
 .TP
 \fB\-rowheight\fR \fIamount\fR
 .
-This is the standard height for an item. The default is 20 pixels.
-If \fB\-rowheight\fR is not set by the style, it is set by measuring an
-item and a cell layout with the style's settings. This thus picks up the font
-and any focus ring or padding from the theme's layout. The \fB\-rowheight\fR
-may need to be set to make sure that a row is large enough to contain any images.
+This is the default height for items and cells. If set to 0, the value will be
+auto calculated by measuring the item and a cell layout with the style's settings.
+This thus picks up the font and any focus ring or padding from the theme's layout.
 .PP
 Example of how to set \fB\-rowheight\fR, adapting to a font in a similar
 way to how the default value is set:
@@ -1395,6 +1403,8 @@ way to how the default value is set:
 .CS
 ttk::style configure Treeview \\
      -rowheight [expr {[font metrics \fIfont\fR -linespace] + 2}]
+ttk::style configure Treeview \\
+     -headingheight [expr {[font metrics \fIfont\fR -linespace] + 2}]
 .CE
 .RE
 .PP
