@@ -3351,32 +3351,38 @@ static void DisclosureElementDraw(
     Ttk_State state)
 {
     if (!(state & TTK_STATE_LEAF)) {
-	int triangleState = TkMacOSXInDarkMode(tkwin) ?
-	    kThemeStateInactive : kThemeStateActive;
+	int isDark = TkMacOSXInDarkMode(tkwin);
 	CGRect bounds = BoxToRect(d, b);
-	const HIThemeButtonDrawInfo info = {
-	    .version = 0,
-	    .state = triangleState,
-	    .kind = kThemeDisclosureTriangle,
-	    .value = Ttk_StateTableLookup(DisclosureValueTable, state),
-	    .adornment = kThemeAdornmentDrawIndicatorOnly,
-	};
 
 	BEGIN_DRAWING(d)
 	if ([NSApp macOSVersion] >= 110000) {
-	    CGFloat rgba[4];
+	    NSColor *color = (state & TTK_STATE_SELECTED) ?
+		[NSColor whiteColor] : [NSColor textColor];
 	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	    NSColor *stroke = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
-		[NSColor textColor], deviceRGB, TkMacOSXInDarkMode(tkwin));
-	    [stroke getComponents: rgba];
+	    NSColor *strokeColor =
+		TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+		    color, deviceRGB, isDark);
+	    CGFloat rgba[4];
+	    [strokeColor getComponents: rgba];
+
 	    if (state & TTK_STATE_OPEN) {
 		DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);
 	    } else {
 		DrawClosedDisclosure(dc.context, bounds, 2, 12, rgba);
 	    }
 	} else {
-	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
-	    NULL);
+	    int triangleState = isDark || (state & TTK_STATE_SELECTED) ?
+		kThemeStateInactive : kThemeStateActive;
+	    const HIThemeButtonDrawInfo info = {
+		.version = 0,
+		.state = triangleState,
+		.kind = kThemeDisclosureTriangle,
+		.value = Ttk_StateTableLookup(DisclosureValueTable, state),
+		.adornment = kThemeAdornmentDrawIndicatorOnly,
+	    };
+
+	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context,
+		HIOrientation, NULL);
 	}
 	END_DRAWING
     }
