@@ -43,7 +43,9 @@ assert {"testutils" in [info procs testutils]}
 # Testutils domain "generic"
 #
 
-test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -body {
+test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -setup {
+    unset -nocomplain result
+} -body {
     . configure -width 123 -height 123
     wm geometry . +123+123
     update
@@ -51,8 +53,12 @@ test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4
     lappend result [wm geometry .]
     pack [frame .f -width 50 -height 30 -bg blue]
     update
-    lappend result [expr {[lindex $result 0] eq [wm geometry .]}]
-} -result {200x200+100+100 0}
+    lappend result [winfo width .] [winfo height .] [expr {[lindex $result 0] eq [wm geometry .]}]
+} -cleanup {
+    unset -nocomplain result
+    destroy .f
+    resetWindows
+} -result {200x200+100+100 50 30 0}
 
 #
 # testutils command section 1: invalid invocations
