@@ -117,6 +117,8 @@ If there are multiple lines of text, specifies how
 the lines are laid out relative to one another.
 One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 See also \fB\-anchor\fR (for widgets supporting this option).
+.OP \-locale locale Locale
+Specifies which locale is used for determining character or word boundaries.
 .OP \-padding padding Padding
 Specifies the internal padding for the widget.
 The padding is a list of up to four length specifications

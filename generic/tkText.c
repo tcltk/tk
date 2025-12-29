@@ -176,6 +176,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_TEXT_INSERT_WIDTH, offsetof(TkText, insertWidthObj), TCL_INDEX_NONE,
 	0, 0, 0},
+    {TK_OPTION_STRING, "-locale", "locale", "Locale",
+	NULL, offsetof(TkText, localeObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndo),
 	TK_OPTION_DONT_SET_DEFAULT, 0, 0},
@@ -681,14 +684,14 @@ TextWidgetObjCmd(
     static const char *const optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
 	"dlineinfo", "dump", "edit", "get", "image", "index", "insert",
-	"mark", "peer", "pendingsync", "replace", "scan", "search",
+	"locale", "mark", "peer", "pendingsync", "replace", "scan", "search",
 	"see", "sync", "tag", "window", "xview", "yview", NULL
     };
     enum options {
 	TEXT_BBOX, TEXT_CGET, TEXT_COMPARE, TEXT_CONFIGURE, TEXT_COUNT,
 	TEXT_DEBUG, TEXT_DELETE, TEXT_DLINEINFO, TEXT_DUMP, TEXT_EDIT,
-	TEXT_GET, TEXT_IMAGE, TEXT_INDEX, TEXT_INSERT, TEXT_MARK,
-	TEXT_PEER, TEXT_PENDINGSYNC, TEXT_REPLACE, TEXT_SCAN,
+	TEXT_GET, TEXT_IMAGE, TEXT_INDEX, TEXT_INSERT, TEXT_LOCALE,
+	TEXT_MARK, TEXT_PEER, TEXT_PENDINGSYNC, TEXT_REPLACE, TEXT_SCAN,
 	TEXT_SEARCH, TEXT_SEE, TEXT_SYNC, TEXT_TAG, TEXT_WINDOW,
 	TEXT_XVIEW, TEXT_YVIEW
     };
@@ -1363,6 +1366,26 @@ TextWidgetObjCmd(
 	if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	    result = TextInsertCmd(NULL, textPtr, interp, objc-3, objv+3,
 		    indexPtr, 1);
+	}
+	break;
+    }
+    case TEXT_LOCALE: {
+	Tcl_Obj *localeObj;
+	const TkTextIndex *indexPtr;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "index");
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	indexPtr = TkTextGetIndexFromObj(interp, textPtr, objv[2]);
+	if (indexPtr == NULL) {
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	localeObj = TkTextIndexLocale(textPtr, indexPtr);
+	if (localeObj) {
+	    Tcl_SetObjResult(interp, localeObj);
 	}
 	break;
     }
