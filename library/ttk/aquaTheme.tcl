@@ -3,6 +3,33 @@
 #
 
 namespace eval ttk::theme::aqua {
+
+    # ttk::theme::aqua::setTreeviewAndListboxSelectColors --
+    #
+    # This procedure sets the default selection background and foreground
+    # colors for ttk::treeview and listbox widgets.
+    #
+    # Arguments:
+    # None.
+
+    proc setTreeviewAndListboxSelectColors {} {
+	scan $::tcl_platform(osVersion) "%d" majorOSVersion
+	if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
+	    set selectBg systemSelectedContentBackgroundColor
+	    set selectFg systemAlternateSelectedControlTextColor
+	} else {
+	    set selectBg systemHighlightAlternate
+	    set selectFg white
+	}
+
+	ttk::style map Treeview \
+	    -background [list selected $selectBg] \
+	    -foreground [list selected $selectFg]
+
+	option add *Listbox.selectBackground	$selectBg widgetDefault
+	option add *Listbox.selectForeground	$selectFg widgetDefault
+    }
+
     ttk::style theme settings aqua {
 
 	ttk::style configure . \
@@ -154,10 +181,7 @@ namespace eval ttk::theme::aqua {
 	    -stripedbackground systemControlAlternatingRowColor \
 	    -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
-	ttk::style map Treeview \
-	    -background {
-		selected systemSelectedTextBackgroundColor
-	    }
+	setTreeviewAndListboxSelectColors
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 120
