@@ -30,14 +30,6 @@ typedef struct {
     HICON hIcon;		/* DAS ICON */
 } ICONIMAGE, *LPICONIMAGE;
 
-typedef struct {
-    BOOL         bHasChanged;                     // Has image changed?
-    TCHAR        szOriginalICOFileName[MAX_PATH]; // Original name
-    TCHAR        szOriginalDLLFileName[MAX_PATH]; // Original name
-    int          nNumImages;                      // How many images?
-    ICONIMAGE    IconImages[1];                   // Image entries
-} ICONRESOURCE, *LPICONRESOURCE;
-
 /*
  * This structure is how we represent a block of the above items. We will
  * reallocate these structures according to how many images they need to
