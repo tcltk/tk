@@ -772,9 +772,165 @@ proc ttk::toggleswitch::CreateElements_aqua {} {
 # ttk::toggleswitch::UpdateElements_aqua
 #------------------------------------------------------------------------------
 proc ttk::toggleswitch::UpdateElements_aqua {} {
+    scan $::tcl_platform(osVersion) "%d" majorOSVersion
+    if {$majorOSVersion >= 25} {			;# macOS 26 or later
+	UpdateElements_aqua_macos26
+    } else {						;# macOS 15 or earlier
+	UpdateElements_aqua_macos15
+    }
+
+    foreach n {1 2 3} {
+	ttk::style layout Toggleswitch$n [list \
+	    Tglswitch.padding -sticky nswe -children [list \
+		Tglswitch$n.trough -sticky {} -children [list \
+		    Tglswitch$n.slider -side left -sticky {} \
+		]
+	    ]
+	]
+    }
+}
+
+#------------------------------------------------------------------------------
+# ttk::toggleswitch::UpdateElements_aqua_macos26
+#------------------------------------------------------------------------------
+proc ttk::toggleswitch::UpdateElements_aqua_macos26 {} {
     variable troughImgArr
     variable sliderImgArr
-    set darkMode [tk::unsupported::MacWindowStyle isdark .]
+
+    set troughOffData(1) {
+<svg width="29" height="13" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="0" y="0" width="29" height="13" rx="6.5" }
+    set troughOffData(2) {
+<svg width="36" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="0" y="0" width="36" height="16" rx="8" }
+    set troughOffData(3) {
+<svg width="44" height="20" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="0" y="0" width="44" height="20" rx="10" }
+
+    set troughOnData(1) $troughOffData(1)
+    set troughOnData(2) $troughOffData(2)
+    set troughOnData(3) $troughOffData(3)
+
+    set sliderOffData(1) {
+<svg width="19" height="13" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="0.5" y="0.5" width="18" height="12" rx="6" }
+    set sliderOffData(2) {
+<svg width="23" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="0.5" y="0.5" width="22" height="15" rx="7.5" }
+    set sliderOffData(3) {
+<svg width="30" height="20" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="1" y="1" width="28" height="18" rx="9" stroke-width="2" }
+
+    set sliderOnData(1) {
+<svg width="19" height="13" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="1" y="1" width="17" height="11" rx="5.5" }
+    set sliderOnData(2) {
+<svg width="23" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="1" y="1" width="21" height="14" rx="7" }
+    set sliderOnData(3) {
+<svg width="30" height="20" version="1.1" xmlns="http://www.w3.org/2000/svg">
+ <rect x="2" y="2" width="26" height="16" rx="8" }
+
+    set darkMode    [tk::unsupported::MacWindowStyle isdark .]
+    set selectBg    [NormalizeColor systemSelectedContentBackgroundColor]
+    set accentColor [NormalizeColor systemControlAccentColor]
+
+    foreach n {1 2 3} {
+	# troughImgArr(off$n)
+	set imgData $troughOffData($n)
+	set fill [expr {$darkMode ? "#3e4345" : "#dddddd"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(off$n) configure -data $imgData
+
+	# troughImgArr(offPressed$n)
+	set imgData $troughOffData($n)
+	set fill [expr {$darkMode ? "#525759" : "#c5c6c7"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(offPressed$n) configure -data $imgData
+
+	# troughImgArr(offDisabled$n)
+	set imgData $troughOffData($n)
+	set fill [expr {$darkMode ? "#343938" : "#e9e9e9"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(offDisabled$n) configure -data $imgData
+
+	# troughImgArr(on$n)
+	set imgData $troughOnData($n)
+	set fill $accentColor
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(on$n) configure -data $imgData
+
+	# troughImgArr(onPressed$n)
+	set imgData $troughOnData($n)
+	set fill $selectBg
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(onPressed$n) configure -data $imgData
+
+	# troughImgArr(onDisabled$n)
+	set imgData $troughOnData($n)
+	set fill [NormalizeColor systemSelectedControlColor]
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(onDisabled$n) configure -data $imgData
+
+	# troughImgArr(onBg$n)
+	set imgData $troughOnData($n)
+	set fill [expr {$darkMode ? "#4b4c4d" : "#d2d2d2"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(onBg$n) configure -data $imgData
+
+	# troughImgArr(onDisabledBg$n)
+	set imgData $troughOnData($n)
+	set fill [expr {$darkMode ? "#393e3f" : "#e3e3e3"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$troughImgArr(onDisabledBg$n) configure -data $imgData
+
+	# sliderImgArr(off$n)
+	set imgData $sliderOffData($n)
+	set fill [expr {$darkMode ? "#e2e3e3" : "#ffffff"}]
+	set strk [expr {$darkMode ? "#3c4041" : "#d4d4d4"}]
+	append imgData "fill='$fill' stroke='$strk'/>\n</svg>"
+	$sliderImgArr(off$n) configure -data $imgData
+
+	# sliderImgArr(offPressed$n)
+	set imgData $sliderOffData($n)
+	set fill [expr {$darkMode ? "#c2c3c3" : "#efefef"}]
+	set strk [expr {$darkMode ? "#1c2021" : "#c4c4c4"}]
+	append imgData "fill='$fill' stroke='$strk'/>\n</svg>"
+	$sliderImgArr(offPressed$n) configure -data $imgData
+
+	# sliderImgArr(offDisabled$n)
+	set imgData $sliderOffData($n)
+	set fill [expr {$darkMode ? "#e1e2e2" : "#ffffff"}]
+	set strk [expr {$darkMode ? "#323739" : "#e0e0e0"}]
+	append imgData "fill='$fill' stroke='$strk'/>\n</svg>"
+	$sliderImgArr(offDisabled$n) configure -data $imgData
+
+	# sliderImgArr(on$n)
+	set imgData $sliderOnData($n)
+	set fill [expr {$darkMode ? "#d9ecff" : "#ffffff"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$sliderImgArr(on$n) configure -data $imgData
+
+	# sliderImgArr(onPressed$n)
+	set imgData $sliderOnData($n)
+	set fill [expr {$darkMode ? "#c2c3c3" : "#efefef"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$sliderImgArr(onPressed$n) configure -data $imgData
+
+	# sliderImgArr(onDisabled$n)
+	set imgData $sliderOnData($n)
+	set fill [expr {$darkMode ? "#dde5ee" : "#ffffff"}]
+	append imgData "fill='$fill'/>\n</svg>"
+	$sliderImgArr(onDisabled$n) configure -data $imgData
+    }
+}
+
+#------------------------------------------------------------------------------
+# ttk::toggleswitch::UpdateElements_aqua_macos15
+#------------------------------------------------------------------------------
+proc ttk::toggleswitch::UpdateElements_aqua_macos15 {} {
+    variable troughImgArr
+    variable sliderImgArr
 
     set troughOffData(1) {
 <svg width="26" height="15" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -816,6 +972,18 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 <svg width="22" height="22" version="1.1" xmlns="http://www.w3.org/2000/svg">
  <circle cx="11" cy="11" r="10" }
 
+    set darkMode [tk::unsupported::MacWindowStyle isdark .]
+    scan $::tcl_platform(osVersion) "%d" majorOSVersion
+    if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
+	set selectBg    systemSelectedContentBackgroundColor
+	set accentColor systemControlAccentColor
+    } else {
+	set selectBg    systemHighlightAlternate
+	set accentColor systemHighlightAlternate
+    }
+    set selectBg    [NormalizeColor $selectBg]
+    set accentColor [NormalizeColor $accentColor]
+
     foreach n {1 2 3} {
 	# troughImgArr(off$n)
 	set imgData $troughOffData($n)
@@ -840,9 +1008,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 
 	# troughImgArr(on$n)
 	set imgData $troughOnData($n)
-	set fill [expr {$darkMode ? "systemSelectedContentBackgroundColor"
-				  : "systemControlAccentColor"}]
-	set fill [NormalizeColor $fill]
+	set fill [expr {$darkMode ? $selectBg : $accentColor}]
 	if {$darkMode} {
 	    # For the colors blue, purple, pink, red, orange, yellow, green,
 	    # and graphite replace $fill with its counterpart for LightAqua
@@ -863,9 +1029,7 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 
 	# troughImgArr(onPressed$n)
 	set imgData $troughOnData($n)
-	set fill [expr {$darkMode ? "systemControlAccentColor"
-				  : "systemSelectedContentBackgroundColor"}]
-	set fill [NormalizeColor $fill]
+	set fill [expr {$darkMode ? $accentColor : $selectBg}]
 	if {$darkMode} {
 	    # For the colors purple, red, yellow, and graphite
 	    # replace $fill with its counterpart for LightAqua
@@ -938,14 +1102,6 @@ proc ttk::toggleswitch::UpdateElements_aqua {} {
 	set fill [expr {$darkMode ? "#595959" : "#fdfdfd"}]
 	append imgData "fill='$fill'/>\n</svg>"
 	$sliderImgArr(onDisabled$n) configure -data $imgData
-
-	ttk::style layout Toggleswitch$n [list \
-	    Tglswitch.padding -sticky nswe -children [list \
-		Tglswitch$n.trough -sticky {} -children [list \
-		    Tglswitch$n.slider -side left -sticky {} \
-		]
-	    ]
-	]
     }
 }
 

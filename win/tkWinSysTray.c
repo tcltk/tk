@@ -50,7 +50,7 @@ typedef struct IcoInfo {
     struct IcoInfo *nextPtr;
 } IcoInfo;
 
-/* Per-interp struture */
+/* Per-interp structure */
 typedef struct IcoInterpInfo {
     HWND hwnd;                  /* Handler window */
     int counter;                /* Counter for IcoInfo id generation */
