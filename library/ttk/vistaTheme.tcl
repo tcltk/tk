@@ -212,6 +212,9 @@ namespace eval ttk::theme::vista {
 	ttk::style map Heading \
 	    -foreground [list selected black alternate black]
 	ttk::style configure Item -padding {3p 0 0 0}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
 	ttk::style configure Treeview.Separator \

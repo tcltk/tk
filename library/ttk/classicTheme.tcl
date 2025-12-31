@@ -114,6 +114,9 @@ namespace eval ttk::theme::classic {
 	ttk::style map Item \
             -indicatorcolor [list selected $colors(-indicator)] \
             -indicatorrelief {selected sunken} 
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) -indent 15p

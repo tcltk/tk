@@ -52,6 +52,9 @@ namespace eval ttk::theme::xpnative {
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 0 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
 	ttk::style map Treeview \

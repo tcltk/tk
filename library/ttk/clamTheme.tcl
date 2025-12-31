@@ -138,6 +138,9 @@ namespace eval ttk::theme::clam {
 	ttk::style map Item \
 	    -indicatorbackground [list disabled $colors(-frame)] \
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-lighter) -indent 15p

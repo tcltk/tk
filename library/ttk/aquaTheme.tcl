@@ -150,18 +150,17 @@ namespace eval ttk::theme::aqua {
 	    -foreground systemControlTextColor \
 	    -background systemWindowBackgroundColor
 	ttk::style map Heading \
-	    -foreground {
-	        selected black alternate black
-	    }
+	    -foreground {selected black alternate black}
+	ttk::style configure Row -focuscolor systemSelectedTextBackgroundColor \
+	    -focussolid 1 -focusthickness 0 -padding 1
+	ttk::style map Row -focusthickness {focus 1}
 	ttk::style configure Treeview \
 	    -background systemControlBackgroundColor \
 	    -stripedbackground systemControlAlternatingRowColor \
 	    -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
 	ttk::style map Treeview \
-	    -background {
-		selected systemSelectedTextBackgroundColor
-	    }
+	    -background {selected systemSelectedTextBackgroundColor}
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 120

@@ -108,6 +108,7 @@ however they wish, regardless of the value of \fB\-selectmode\fR.
 Controls how the built-in class bindings manage the selection.
 Options are \fBitem\fR or \fBcell\fR.
 The selection should be cleared before switching modes.
+The \fBCheckTreeview\fR style works best with \fBitem\fR select type.
 .OP \-show show Show
 Controls which elements of the tree to display. May be a list containing zero or
 more of the following values. The default is \fBtree headings\fR.
@@ -1440,7 +1441,7 @@ ttk::style map Heading -foreground {selected black alternate black}
 .CE
 .RE
 .PP
-The \fBRow\fR (Item and Cell) styling options configurable with \fBttk::style\fR are:
+The \fBRow\fR styling options configurable with \fBttk::style\fR are:
 .RS
 .TP
 \fB\-background\fR \fIcolor\fR
@@ -1452,15 +1453,27 @@ Specifies the background color of the tree entries. The default is same as Treev
 Specifies the color of the focus ring for tree entries. The default is #000000.
 Some themes may change the default focus color.
 .TP
-\fB\-focuswidth\fR \fIpixels\fR
+\fB\-focussolid\fR \fIboolean\fR
 .
-Specifies the thickness of the focus ring for tree entries in pixels. The
-default is 1 pixel. Some themes may change the default focus width.
+Specifies whether to draw the focus ring as a dotbox (false) or solid ring (true).
+The default is true.
+.TP
+\fB\-focusthickness\fR \fIamount\fR
+.
+Specifies the thickness of the focus ring for tree entries.
+The default is 1 for the focus element.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
+.TP
+\fB\-padding\fR \fIamount\fR
+.
+Specifies the additional padding to include between the focus ring and row contents.
+The default is 0.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .PP
 Example of how to set focus ring options for a spreadsheet-style focus ring:
 .PP
 .CS
-ttk::style configure Row -focuscolor #008000 -focuswidth 2
+ttk::style configure Row -focuscolor #008000 -focussolid 1 -focusthickness 2
 .CE
 .RE
 .PP

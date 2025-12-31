@@ -188,13 +188,15 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    [list {selected disabled}	$colors(-disabledindicator) \
 		  selected		$colors(-indicator) \
 		  disabled		$colors(-frame)]
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
-	    -indent 15p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
 	ttk::style map Treeview \

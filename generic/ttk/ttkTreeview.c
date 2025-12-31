@@ -2669,6 +2669,7 @@ static int TreeviewChildrenCommand(
 
 	/* If focus item is detached, unset it */
 	if (tv->tree.focus && (tv->tree.focus)->parent == NULL) {
+	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	    tv->tree.focus = NULL;
 	    tv->tree.focusCol = NULL;
 	}
@@ -4088,6 +4089,7 @@ static int TreeviewDetachCommand(
 
     /* If focus item is detached, unset it */
     if (tv->tree.focus && (tv->tree.focus)->parent == NULL) {
+	(tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	tv->tree.focus = NULL;
 	tv->tree.focusCol = NULL;
     }
@@ -4219,6 +4221,7 @@ static int TreeviewDeleteCommand(
 
 	/* If item has focus, unset it */
 	if (tv->tree.focus == delq) {
+	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	    tv->tree.focus = NULL;
 	    tv->tree.focusCol = NULL;
 	}
@@ -4538,9 +4541,15 @@ static int TreeviewFocusCommand(
 	    return TCL_ERROR;
 	}
 
+	if (tv->tree.focus) {
+	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
+	}
 	changed = (tv->tree.focus != newFocus);
 	tv->tree.focus = newFocus;
 	tv->tree.focusCol = NULL;
+	if (tv->tree.focus) {
+	    (tv->tree.focus)->state |= TTK_STATE_FOCUS;
+	}
 	TtkRedisplayWidget(&tv->core);
 
 	if (changed) {
@@ -4600,6 +4609,9 @@ static int TreeviewCellFocusCommand(
 	    return TCL_ERROR;
 	}
 
+	if (tv->tree.focus) {
+	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
+	}
 	changed = (tv->tree.focus != cell.item || tv->tree.focusCol != cell.column);
 	tv->tree.focus = cell.item;
 	tv->tree.focusCol = cell.column;
@@ -7092,7 +7104,9 @@ TTK_LAYOUT("Heading",
 	    TTK_NODE("Treeheading.text", TTK_FILL_X))))
 
 TTK_LAYOUT("Row",
-	TTK_NODE("Treeitem.row", TTK_FILL_BOTH))
+    TTK_GROUP("Treeitem.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeitem.row", TTK_FILL_BOTH))))
 
 TTK_LAYOUT("Separator",
     TTK_NODE("Treeitem.separator", TTK_FILL_BOTH))
@@ -7219,10 +7233,6 @@ static const Ttk_ElementOptionSpec RowElementOptions[] = {
 	offsetof(RowElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-rownumber", TK_OPTION_INT,
 	offsetof(RowElement,rowNumberObj), "0" },
-    { "-focuswidth", TK_OPTION_PIXELS,
-	offsetof(RowElement,focusWidthObj), "1" },
-    { "-focuscolor", TK_OPTION_COLOR,
-	offsetof(RowElement,focusColorObj), "#000000" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7232,49 +7242,14 @@ static void RowElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    Ttk_State state) {
+    TCL_UNUSED(Ttk_State)) { /*state*/
 
     Display *disp = Tk_Display(tkwin);
     RowElement *row = (RowElement *)elementRecord;
     XColor *color = Tk_GetColorFromObj(tkwin, row->backgroundObj);
     GC gc = Tk_GCForColor(color, d);
-    int focusWidth = 2;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, row->focusWidthObj, &focusWidth);
-
-    if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
-	XColor *focusColor = Tk_GetColorFromObj(tkwin, row->focusColorObj);
-	GC focusGC = Tk_GCForColor(focusColor, d);
-
-	if (focusWidth > 1) {
-	    int x1 = b.x, x2 = b.x + b.width - 1;
-	    int y1 = b.y, y2 = b.y + b.height - 1;
-	    int w = WIN32_XDRAWLINE_HACK;
-
-	    /* Draw the outer rounded rectangle */
-	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
-	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
-	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
-	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
-
-	    /* Draw the inner rectangle */
-	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
-	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
-
-	    /* Fill the inner rectangle */
-	    XFillRectangle(disp, d, gc, b.x+1, b.y+1, b.width-2, b.height-2);
-
-	} else {
-	    /* Draw the row as usual */
-	    XFillRectangle(disp, d, gc, b.x, b.y, b.width, b.height);
-
-	    /* Change the color of the border's outermost pixels */
-	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
-	}
-
-    } else {
-	XFillRectangle(disp, d, gc, b.x, b.y, b.width, b.height);
-    }
+    XFillRectangle(disp, d, gc, b.x, b.y, b.width, b.height);
 }
 
 static const Ttk_ElementSpec RowElementSpec = {
