@@ -147,12 +147,13 @@ namespace eval ttk::theme::aqua {
 	# Treeview:
 	ttk::style configure Heading \
 	    -font TkHeadingFont \
-	    -foreground systemControlTextColor \
+	    -foreground systemDisabledControlTextColor \
 	    -background systemWindowBackgroundColor
 	ttk::style map Heading \
-	    -foreground {selected black alternate black}
+	    -foreground {selected systemControlTextColor alternate systemControlTextColor} \
+	    -background {selected systemListViewSortColumnBackground alternate systemListViewSortColumnBackground}
 	ttk::style configure Row -focuscolor systemSelectedTextBackgroundColor \
-	    -focussolid 1 -focusthickness 0 -padding 1
+	    -focussolid 1 -focusthickness 0 -padding 1p
 	ttk::style map Row -focusthickness {focus 1}
 	ttk::style configure Treeview \
 	    -background systemControlBackgroundColor \

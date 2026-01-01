@@ -38,7 +38,7 @@ bind Treeview	<Leave>			{ ::ttk::treeview::ActivateHeading {} {}}
 bind Treeview	<Button-1>		{ ::ttk::treeview::Press %W %x %y }
 bind Treeview	<Double-Button-1>	{ ::ttk::treeview::DoubleClick %W %x %y }
 set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Alt" : "Option"}]
-bind Treeview	<${ckey}-Double-Button-1>	{ ::ttk::treeview::DoubleClick %W %x %y all }
+bind Treeview	<${ckey}-Double-Button-1>	{ ::ttk::treeview::AutoSizeAllColumns %W }
 bind Treeview	<B1-Motion>		{ ::ttk::treeview::Drag %W %x %y }
 bind Treeview	<ButtonRelease-1>	{ ::ttk::treeview::Release %W %x %y }
 bind Treeview	<Shift-Button-1>	{ ::ttk::treeview::MouseSelect %W %x %y extend }
@@ -797,29 +797,16 @@ proc ::ttk::treeview::MouseSelect {w x y op} {
 }
 
 #
-# DoubleClick -- Toggle open/close state, edit, or activate item
+# DoubleClick -- Auto size column, toggle open/close state, edit, or activate item
 #
-proc ::ttk::treeview::DoubleClick {w x y {opt {}}} {
+proc ::ttk::treeview::DoubleClick {w x y} {
     if {![winfo exists $w] || [$w instate disabled]} return
 
     set region [$w identify region $x $y]
     set column [$w identify column $x $y]
 
     if {$region eq "separator"} {
-	if {$opt eq ""} {
-	    AutoSizeColumn $w $column
-	} else {
-	    set columns [$w cget -displaycolumns]
-	    if {[lindex $columns 0] eq "#all"} {
-		set columns [$w cget -columns]
-	    }
-	    if {"tree" in [$w cget -show]} {
-	        set columns [concat [list #0] $columns]
-	    }
-	    foreach column $columns {
-	        AutoSizeColumn $w $column
-	    }
-	}
+	AutoSizeColumn $w $column
 
     } elseif {$region in [list cell tree]} {
 	set item [$w identify item $x $y]
@@ -837,44 +824,67 @@ proc ::ttk::treeview::DoubleClick {w x y {opt {}}} {
 }
 
 #
+# Auto size all columns
+#
+proc ::ttk::treeview::AutoSizeAllColumns {w} {
+    set columns [$w cget -displaycolumns]
+    if {[lindex $columns 0] eq "#all"} {
+	set columns [$w cget -columns]
+    }
+    if {"tree" in [$w cget -show]} {
+	set columns [concat [list #0] $columns]
+    }
+    foreach column $columns {
+	AutoSizeColumn $w $column
+    }
+}
+
+#
+#
 # AutoSizeColumn -- Set column size based on contents.
 # Honors -minwidth value and works best if -stretch is 0.
 #
 proc ::ttk::treeview::AutoSizeColumn {w column} {
-    # Get heading width in pixels
     set font [::ttk::style lookup Heading -font]
     if {$font eq ""} {
 	set font TkHeadingFont
     }
-    set text [$w heading $column -text]
-    set width [font measure $font -displayof $w $text]
+
+    # Get heading width in pixels
+    set width [font measure $font -displayof $w [$w heading $column -text]]
     set image [$w heading $column -image]
     if {$image ne ""} {
 	incr width [image width $image]
     }
     incr width 10; # Cell padding
 
-    # Check each cell width
     set font [::ttk::style lookup Treeview -font]
     if {$font eq ""} {
 	set font TkDefaultFont
     }
-    set item [$w identifier {} first]
-    set indent 0
-    set idw 0
     if {$column eq "#0"} {
+	set i [ttk::style configure Item -indicatorsize]
+	if {$i eq ""} {set i 12}
+	lassign [ttk::style configure Item -indicatormargins] l t r b
+	if {$l eq ""} {set l 2}
+	if {$r eq ""} {set r $l}
+	set indent [expr {[winfo pixels $w $i] + [winfo pixels $w $l] + [winfo pixels $w $r]}]
 	if {[$w cget -style] eq "CheckTreeview"} {
-	    set idw 14; # Indicator width
-	    set indent [winfo pixels $w [ttk::style configure CheckTreeview -indent]]
-	} else {
-	    set indent [winfo pixels $w [ttk::style configure Treeview -indent]]
+	    set indent [expr {$indent * 2}]
 	}
     }
+    
+    # Check each cell width
+    set item [$w identifier {} first]
     while {$item ne ""} {
+	if {$column eq "#0"} {
+	    set offset [expr {$indent + ([$w depth $item] - 1) * 20 + 10}]
+	} else {
+	    set offset 10
+	}
 	set text [$w set $item $column]
 	set size [font measure $font -displayof $w $text]
-	incr size [expr {$indent * [$w depth $item] + $idw}]
-	incr size 10; # Cell padding
+	incr size $offset
 	if {$size > $width} {
 	    set width $size
 	}
