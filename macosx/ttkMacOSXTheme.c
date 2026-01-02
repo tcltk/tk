@@ -786,7 +786,7 @@ static void DrawUpDownArrows(
 /*----------------------------------------------------------------------
  * DrawClosedDisclosure --
  *
- * Draws a disclosure chevron in the Big Sur style, for Treeviews.
+ * Draws a closed disclosure chevron or filled triangle for Treeviews.
  */
 
 static void DrawClosedDisclosure(
@@ -796,24 +796,37 @@ static void DrawClosedDisclosure(
     CGFloat size,
     CGFloat *rgba)
 {
-    CGFloat x, y;
+    int OSVersion = [NSApp macOSVersion];
+    CGFloat x = bounds.origin.x + inset;
+    CGFloat y = bounds.origin.y + trunc(bounds.size.height / 2) + 1;
 
-    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
-    CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    if (OSVersion >= 110000) {
+	CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+	CGContextSetLineWidth(context, 1.5);
+    } else {
+	CGContextSetRGBFillColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    }
+
     CGContextBeginPath(context);
     CGPoint arrow[3] = {
 	{x, y - size / 4 - 1}, {x + size / 2, y}, {x, y + size / 4 + 1}
     };
+    if (OSVersion < 110000) {
+	arrow[1].x += 1;
+    }
     CGContextAddLines(context, arrow, 3);
-    CGContextStrokePath(context);
+
+    if (OSVersion >= 110000) {
+	CGContextStrokePath(context);
+    } else {
+	CGContextFillPath(context);
+    }
 }
 
 /*----------------------------------------------------------------------
  * DrawOpenDisclosure --
  *
- * Draws an open disclosure chevron in the Big Sur style, for Treeviews.
+ * Draws an open disclosure chevron or filled triangle for Treeviews.
  */
 
 static void DrawOpenDisclosure(
@@ -823,18 +836,31 @@ static void DrawOpenDisclosure(
     CGFloat size,
     CGFloat *rgba)
 {
-    CGFloat x, y;
+    int OSVersion = [NSApp macOSVersion];
+    CGFloat x = bounds.origin.x + inset;
+    CGFloat y = bounds.origin.y + trunc(bounds.size.height / 2);
 
-    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
-    CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    if (OSVersion >= 110000) {
+	CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+	CGContextSetLineWidth(context, 1.5);
+    } else {
+	CGContextSetRGBFillColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    }
+
     CGContextBeginPath(context);
     CGPoint arrow[3] = {
 	{x, y - size / 4}, {x + size / 2, y + size / 2}, {x + size, y - size / 4}
     };
+    if (OSVersion < 110000) {
+	arrow[0].y -= 1; arrow[2].y -= 1;
+    }
     CGContextAddLines(context, arrow, 3);
-    CGContextStrokePath(context);
+
+    if (OSVersion >= 110000) {
+	CGContextStrokePath(context);
+    } else {
+	CGContextFillPath(context);
+    }
 }
 
 /*----------------------------------------------------------------------
@@ -3319,13 +3345,9 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
 };
 
 /*----------------------------------------------------------------------
- * +++ Disclosure triangles --
+ * +++ Disclosure element --
  */
 
-static const Ttk_StateTable DisclosureValueTable[] = {
-    {kThemeDisclosureDown, TTK_STATE_OPEN, 0},
-    {kThemeDisclosureRight, 0, 0},
-};
 static void DisclosureElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
@@ -3351,38 +3373,22 @@ static void DisclosureElementDraw(
     Ttk_State state)
 {
     if (!(state & TTK_STATE_LEAF)) {
-	int isDark = TkMacOSXInDarkMode(tkwin);
 	CGRect bounds = BoxToRect(d, b);
+	NSColor *color = (state & TTK_STATE_SELECTED) ?
+	    [NSColor whiteColor] : [NSColor textColor];
+	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	int isDark = TkMacOSXInDarkMode(tkwin);
+	color = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
+		color, deviceRGB, isDark);
+	CGFloat rgba[4];
+
+	[color getComponents: rgba];
 
 	BEGIN_DRAWING(d)
-	if ([NSApp macOSVersion] >= 110000) {
-	    NSColor *color = (state & TTK_STATE_SELECTED) ?
-		[NSColor whiteColor] : [NSColor textColor];
-	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	    NSColor *strokeColor =
-		TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
-		    color, deviceRGB, isDark);
-	    CGFloat rgba[4];
-	    [strokeColor getComponents: rgba];
-
-	    if (state & TTK_STATE_OPEN) {
-		DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);
-	    } else {
-		DrawClosedDisclosure(dc.context, bounds, 2, 12, rgba);
-	    }
+	if (state & TTK_STATE_OPEN) {
+	    DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);
 	} else {
-	    int triangleState = isDark || (state & TTK_STATE_SELECTED) ?
-		kThemeStateInactive : kThemeStateActive;
-	    const HIThemeButtonDrawInfo info = {
-		.version = 0,
-		.state = triangleState,
-		.kind = kThemeDisclosureTriangle,
-		.value = Ttk_StateTableLookup(DisclosureValueTable, state),
-		.adornment = kThemeAdornmentDrawIndicatorOnly,
-	    };
-
-	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context,
-		HIOrientation, NULL);
+	    DrawClosedDisclosure(dc.context, bounds, 3, 12, rgba);
 	}
 	END_DRAWING
     }
