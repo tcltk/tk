@@ -719,7 +719,7 @@ static TreeColumn *FindColumn(
 static TreeItem *FindItem(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *itemNameObj) {
     const char *itemName = Tcl_GetString(itemNameObj);
-    Tcl_HashEntry *entryPtr =  Tcl_FindHashEntry(&tv->tree.items, itemName);
+    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&tv->tree.items, itemName);
 
     if (entryPtr) {
 	return (TreeItem *)Tcl_GetHashValue(entryPtr);
@@ -4694,7 +4694,7 @@ static int TreeviewSelectionIncludes(
     Tcl_Size i, len;
     TreeItem *item;
     Tcl_Obj *idObj;
-    int result = 0;
+    int result;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 3, objv, "items");
@@ -4705,17 +4705,19 @@ static int TreeviewSelectionIncludes(
 	return TCL_ERROR;
     }
 
+    result = len > 0 ? 1 : 0;
     for (i = 0; i < len; i++) {
 	if (Tcl_ListObjIndex(interp, objv[3], i, &idObj) != TCL_OK ||
 	    !(item = FindItem(interp, tv, idObj))) {
 	    return TCL_ERROR;
 	}
 
-	if (!(result = (item->state & TTK_STATE_SELECTED))) {
+	if (!(item->state & TTK_STATE_SELECTED)) {
+	    result = 0;
 	    break;
 	}
     }
-    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result ? 1 : 0));
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
     return TCL_OK;
 }
 
@@ -4826,6 +4828,9 @@ static int TreeviewSelectionSet(
     }
 
     if (!items) {
+	if (listObj) {
+	    Tcl_DecrRefCount(listObj);
+	}
 	return TCL_ERROR;
     }
 
@@ -5691,7 +5696,7 @@ static int TreeviewSearchCommand(
 				pattern, nocase ? TCL_MATCH_NOCASE : 0);
 
 		    } else if (matchType == SEARCH_REGEXP) {
-			match =  Tcl_RegExpExecObj(interp, regexp, valObj, 0, 0, 0);
+			match = Tcl_RegExpExecObj(interp, regexp, valObj, 0, 0, 0);
 			if (match < 0) {
 			    goto abort;
 			}
@@ -5820,6 +5825,10 @@ static int TreeviewSearchCommand(
 	    Tcl_BounceRefCount(resultObj);
 	} else {
 	    Tcl_SetObjResult(interp, resultObj);
+	}
+     } else {
+	if (resultObj) {
+	    Tcl_BounceRefCount(resultObj);
 	}
     }
     return TCL_OK;
