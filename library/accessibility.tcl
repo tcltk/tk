@@ -2,7 +2,7 @@
 
 # This file defines the 'tk accessible' command for screen reader support
 # on X11, Windows, and macOS. It implements an abstraction layer that
-# presents a consistent API across the three platforms.
+# presents a consistent API across the three plataforms.
 
 # Copyright © 2009 Allen B. Taylor.
 # Copyright © 2024-2025 Kevin Walzer.
@@ -87,10 +87,14 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
     namespace eval ::tk::accessible {
 
 	if {[tk windowingsystem] eq "x11" } {
-	    # ATK/Orca has trouble with some data, especially with fine-grained
-	    # text operations. In those cases when Orca is not picking up on
-	    # text/selection updates from Tk, try shelling out to the
-	    # command-line voice that comes with Orca.
+	    # ATK/Orca's API does not align well with Tk text, entry, and menu widgets. 
+	    # There is too much of a mismatch between how Tk is structured and what ATK
+	    # expects. In these cases, we do not address those widgets in C but instead 
+	    # use Tk's script-level bindings to manage the interaction shell out to
+	    # Speech Dispatcher (the same engine powering Orca's voice) to vocalize text 
+	    # data and communicate state/data changes. Windows and macOS have functions built
+	    # in to their accessibility API's to post custom announcements, but ATK does not, so we
+	    # must use this as a fallback. 
 	    proc speak {text} {
 		if {[::tk::accessible::check_screenreader] eq "1"} {
 		    # Escape quotes in the text.
@@ -121,12 +125,6 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    if {[winfo exists $w]} {
 		::tk::accessible::_updateselection $w
 	    }
-	}
-
-	# Get button text
-	proc _getbuttontext {w} {
-	    set txt [$w cget -text]
-	    ::tk::accessible::speak $txt
 	}
 
 	# Check message text on dialog.
@@ -289,9 +287,6 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set description [::tk::accessible::get_acc_description $w]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11"} {
-		    ::tk::accessible::speak "$role $description $data"
-		}
 	    }
 	    if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton" || [winfo class $w] eq "Toggleswitch"} {
 		set data [::tk::accessible::_getcheckdata $w]
@@ -299,9 +294,6 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set description [::tk::accessible::get_acc_description $w]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		if {[tk windowingsystem] eq "x11"} {
-		    ::tk::accessible::speak "$role $description $data"
-		}
 	    }
 
 	    if {[winfo class $w] eq "Listbox"} {
@@ -336,7 +328,11 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    if {[winfo class $w] eq "Text"}  {
 		set data [::tk::accessible::_gettext $w]
 		::tk::accessible::set_acc_value $w $data
-		::tk::accessible::emit_selection_change $w
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		} else {
+		    ::tk::accessible::emit_selection_change $w
+		}
 	    }
 	    if {[winfo class $w] eq "TProgressbar"}  {
 		set data [::tk::accessible::_getpbvalue $w]
@@ -1051,6 +1047,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	# Capture text selection in entry widgets.
 	bind Entry <KeyPress> {+::tk::accessible::_updateselection %W}
 	bind TEntry <KeyPress> {+::tk::accessible::_updateselection %W}
+	bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
+	bind TEntry {+::tk::accessible::_updateselection %W}
 	bind Entry <Left> {+::tk::accessible::_updateselection %W}
 	bind TEntry <Left> {+::tk::accessible::_updateselection %W}
 	bind Entry <Right> {+::tk::accessible::_updateselection %W}
@@ -1100,11 +1098,6 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	if {[tk windowingsystem] eq "win32"} {
 	    bind all <FocusIn> {+::tk::accessible::_forceTkFocus %W}
-	}
-
-	if {[tk windowingsystem] eq "x11"} {
-	    bind Button <FocusIn> {+::tk::accessible::_getbuttontext %W}
-	    bind TButton <FocusIn> {+::tk::accessible::_getbuttontext %W}
 	}
 
 	# Finally, export the main commands.
