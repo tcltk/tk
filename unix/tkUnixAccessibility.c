@@ -906,53 +906,45 @@ static const gchar *tk_get_description(AtkObject *obj)
     return GetAtkDescriptionForWidget(acc->tkwin);
 }
 
-static AtkStateSet *tk_ref_state_set(AtkObject *obj)
+static AtkStateSet *
+tk_ref_state_set(AtkObject *obj)
 {
-    if (!obj) return atk_state_set_new();
+    AtkStateSet *state_set = atk_state_set_new();
+    TkAtkAccessible *acc = (TkAtkAccessible *) obj;
 
-    TkAtkAccessible *acc = (TkAtkAccessible *)obj;
-    AtkStateSet *set = atk_state_set_new();
-
-    /* Virtual child: tkwin == NULL. */
-    if (!acc->tkwin) {
-	atk_state_set_add_state(set, ATK_STATE_ENABLED);
-	atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-	atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-	atk_state_set_add_state(set, ATK_STATE_SHOWING);
-	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
-	/* Check selection and focus states. */
-	AtkObject *parent_obj = atk_object_get_parent(obj);
-	if (parent_obj && ATK_IS_SELECTION(parent_obj)) {
-	    gint index = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(obj), "tk-index"));
-
-	    /* Check if selected. */
-	    if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
-		atk_state_set_add_state(set, ATK_STATE_SELECTED);
-	    }
-
-	    /* Check if focused (active item). */
-	    if (tk_selection_is_child_selected(ATK_SELECTION(parent_obj), index)) {
-		atk_state_set_add_state(set, ATK_STATE_FOCUSED);
-	    }
-	}
-	return set;
-    }
-    /* Real widget. */
-    atk_state_set_add_state(set, ATK_STATE_ENABLED);
-    atk_state_set_add_state(set, ATK_STATE_SENSITIVE);
-
-    if (Tk_IsMapped(acc->tkwin)) {
-	atk_state_set_add_state(set, ATK_STATE_VISIBLE);
-	atk_state_set_add_state(set, ATK_STATE_SHOWING);
-	atk_state_set_add_state(set, ATK_STATE_FOCUSABLE);
+    if (!acc || !acc->tkwin) {
+        return state_set;
     }
 
+    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+
+    atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+    atk_state_set_add_state(state_set, ATK_STATE_SENSITIVE);
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+
+    /*
+     * Focus: must come from tracked state (set on FocusIn/Out)
+     */
     if (acc->is_focused) {
-	atk_state_set_add_state(set, ATK_STATE_FOCUSED);
+        atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
     }
 
-    return set;
+    /*
+     * Toggle state: checkbutton / radiobutton only
+     */
+    if (role == ATK_ROLE_CHECK_BOX ||
+        role == ATK_ROLE_RADIO_BUTTON) {
+
+        const char *value = GetAtkValueForWidget(acc->tkwin);
+        if (value && value[0] != '0') {
+            atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
+        }
+    }
+
+    return state_set;
 }
+
+
 
 /*
  * ATK value interface.
@@ -1140,156 +1132,109 @@ static void tk_atk_value_interface_init(AtkValueIface *iface)
  * ATK action interface.
  */
 
-static gboolean tk_action_do_action(AtkAction *action, gint i)
+static gboolean
+tk_action_do_action(AtkAction *action, gint i)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)action;
+    TkAtkAccessible *acc = (TkAtkAccessible *) action;
+    Tcl_Interp *interp;
+    Tcl_Obj *cmd[2];
+    int result;
 
-    if (!acc || !acc->tkwin || !acc->interp) {
-	return FALSE;
+    if (!acc || !acc->tkwin || i != 0) {
+        return FALSE;
     }
 
+    interp = acc->interp;
+    if (!interp) {
+        return FALSE;
+    }
+
+    /*
+     * Call: <widgetPath> invoke
+     * This is the ONLY supported way to activate a Tk button from C.
+     */
+    cmd[0] = Tcl_NewStringObj(Tk_PathName(acc->tkwin), -1);
+    cmd[1] = Tcl_NewStringObj("invoke", -1);
+
+    Tcl_IncrRefCount(cmd[0]);
+    Tcl_IncrRefCount(cmd[1]);
+
+    result = Tcl_EvalObjv(interp, 2, cmd, TCL_EVAL_GLOBAL);
+
+    Tcl_DecrRefCount(cmd[0]);
+    Tcl_DecrRefCount(cmd[1]);
+
+    if (result != TCL_OK) {
+        Tcl_ResetResult(interp);
+        return FALSE;
+    }
+
+    /*
+     * INLINE toggle state notification (no fake helpers)
+     */
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-    AtkObject *obj = GetAtkObjectForTkWindow(acc->tkwin);
+    if (role == ATK_ROLE_CHECK_BOX ||
+        role == ATK_ROLE_RADIO_BUTTON) {
 
-    if (role == ATK_ROLE_SPIN_BUTTON) {
-	if (i < 0 || i > 1) return FALSE;  /* Only support 0 and 1. */
+        const char *value = GetAtkValueForWidget(acc->tkwin);
+        gboolean checked = (value && value[0] != '0');
 
-	/* Retrieve current value that was updated at script level. */
-	GValue gval = G_VALUE_INIT;
-	tk_get_current_value(ATK_VALUE(obj), &gval);
-
-	/* Notify ATK clients. */
-	g_signal_emit_by_name(obj, "value-changed");
-	g_object_notify(G_OBJECT(obj), "accessible-value");
-
-	g_value_unset(&gval);
-	return TRUE;
+        atk_object_notify_state_change(
+            ATK_OBJECT(acc),
+            ATK_STATE_CHECKED,
+            checked
+        );
     }
 
-    /* Handle toggle action for toggle buttons, checkboxes, and radio buttons. */
-    if ((role == ATK_ROLE_TOGGLE_BUTTON || role == ATK_ROLE_CHECK_BOX ||
-        role == ATK_ROLE_RADIO_BUTTON) && i == 0) {
-    
-    /* Execute the widget's command to toggle it. */
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-    if (hPtr) {
-        Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-        if (attrs) {
-            Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
-            if (actionEntry) {
-                const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
-                if (actionString) {
-                    Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL);
-                }
-            }
-        }
-    }
-    
-    /* Force ATK notification of value change. */
-    if (TkAccessibilityObject) {
-        Tcl_HashEntry *hEnt = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-        if (hEnt) {
-            Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-            if (attrs) {
-                /* Clear cached value. */
-                Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
-                if (valueEntry) {
-                    Tcl_DeleteHashEntry(valueEntry);
-                }
-            }
-        }
-    }
-    
-    /* Emit notifications. */
-    g_signal_emit_by_name(obj, "value-changed");
-    g_object_notify(G_OBJECT(obj), "accessible-value");
-    
-    /* If radio button, update selection. */
-    if (role == ATK_ROLE_RADIO_BUTTON) {
-        AtkObject *parent = atk_object_get_parent(obj);
-        if (parent && ATK_IS_SELECTION(parent)) {
-            TkAtkNotifySelectionChanged(acc->tkwin);
-        }
-    }
-    
-    return TRUE;
-    }
-
-    /* Fallback: Generic "click" action for other roles. */
-    if (i == 0) {
-	/* Retrieve the command string.  */
-	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
-	if (!hPtr) return FALSE;
-
-	Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-	if (!attrs) return FALSE;
-
-	Tcl_HashEntry *actionEntry = Tcl_FindHashEntry(attrs, "action");
-	if (!actionEntry) return FALSE;
-
-	const char *actionString = Tcl_GetString(Tcl_GetHashValue(actionEntry));
-	if (!actionString) return FALSE;
-
-	/* Finally, execute command.  */
-	if (Tcl_EvalEx(acc->interp, actionString, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
-	    return FALSE;
-	}
-    }
     return TRUE;
 }
 
 
-
-static gint tk_action_get_n_actions(AtkAction *action)
+static gint
+tk_action_get_n_actions(AtkAction *action)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)action;
-    if (!acc || !acc->tkwin) return 0;
+    TkAtkAccessible *acc = (TkAtkAccessible *) action;
+    if (!acc || !acc->tkwin) {
+        return 0;
+    }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
 
     switch (role) {
     case ATK_ROLE_PUSH_BUTTON:
-    case ATK_ROLE_TOGGLE_BUTTON:
-	return 1;  /* Click/activate/toggle. */
-    case ATK_ROLE_SPIN_BUTTON:
-	return 2;  /* Increment + decrement. */
     case ATK_ROLE_CHECK_BOX:
     case ATK_ROLE_RADIO_BUTTON:
-	return 1;  /* Toggle/select. */
-    case ATK_ROLE_SLIDER:
-    case ATK_ROLE_SCROLL_BAR:
-    case ATK_ROLE_PROGRESS_BAR:
-	return 0;  /* Value-only controls, no actions. */
+    case ATK_ROLE_TOGGLE_BUTTON:
+        return 1;
     default:
-	return 0;
+        return 0;
     }
 }
 
-
-static const gchar *tk_action_get_name(AtkAction *action, gint i)
+static const gchar *
+tk_action_get_name(AtkAction *action, gint i)
 {
-    TkAtkAccessible *acc = (TkAtkAccessible *)action;
-    if (!acc || !acc->tkwin) return NULL;
+    if (i != 0) {
+        return NULL;
+    }
+
+    TkAtkAccessible *acc = (TkAtkAccessible *) action;
+    if (!acc || !acc->tkwin) {
+        return NULL;
+    }
 
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
 
     switch (role) {
     case ATK_ROLE_PUSH_BUTTON:
-	if (i == 0) return "click";
-	break;
-    case ATK_ROLE_SPIN_BUTTON:
-	if (i == 0) return "increment";
-	if (i == 1) return "decrement";
-	break;
+        return "press";
     case ATK_ROLE_CHECK_BOX:
     case ATK_ROLE_RADIO_BUTTON:
     case ATK_ROLE_TOGGLE_BUTTON:
-	if (i == 0) return "toggle";
-	break;
+        return "toggle";
     default:
-	break;
+        return NULL;
     }
-    return NULL;
 }
 
 static void tk_atk_action_interface_init(AtkActionIface *iface)
@@ -2356,25 +2301,6 @@ static int EmitSelectionChanged(
 
     AtkRole role = tk_get_role(obj);
 
-    /* Handle text/entry widgets separately. */
-    if (role == ATK_ROLE_TEXT || role == ATK_ROLE_ENTRY) {
-	/* Emit a proper "insert" text change and caret-move for typing. */
-	g_signal_emit_by_name(obj, "text-changed::insert", 0, 0, NULL);
-
-	/* Compute or estimate caret position */
-	int caret_offset = 0;
-	if (ATK_IS_TEXT(obj)) {
-	    caret_offset = atk_text_get_caret_offset(ATK_TEXT(obj));
-	}
-
-	g_signal_emit_by_name(obj, "text-caret-moved", caret_offset);
-	return TCL_OK;
-    }
-
-
-    /* Call the robust selection-change notifier. */
-    TkAtkNotifySelectionChanged(tkwin);
-
     /* Handle value-changed for sliders, spin buttons, scrollbars, and progress bars. */
     if (role == ATK_ROLE_SCROLL_BAR || role == ATK_ROLE_SLIDER ||
 	role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_PROGRESS_BAR)
@@ -2389,64 +2315,52 @@ static int EmitSelectionChanged(
 	    g_value_unset(&gval);
 	}
 
-    /* Handle toggle widget value changes. */
+      /* Handle toggle widget value changes (checkbutton, radiobutton, toggleswitch). */
     if (role == ATK_ROLE_CHECK_BOX || 
         role == ATK_ROLE_RADIO_BUTTON || 
         role == ATK_ROLE_TOGGLE_BUTTON) {
     
-    /* Force re-computation of the value. */
-    if (TkAccessibilityObject) {
-        Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
-        if (hPtr) {
-            Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
-            if (attrs) {
-                /* Remove cached value to force re-computation. */
-                Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
-                if (valueEntry) {
-                    Tcl_DeleteHashEntry(valueEntry);
-                }
-            }
-        }
-    }
-    
-    /* Get fresh value (which will be computed and cached). */
-    gchar *val = GetAtkValueForWidget(tkwin);
-    if (val) {
-        /* Update ATK object's name if needed. */
-        atk_object_set_name(obj, val);
-        g_free(val);
-    }
-    
-    /* Emit value-changed signal. */
-    g_signal_emit_by_name(obj, "value-changed");
-    g_object_notify(G_OBJECT(obj), "accessible-value");
-    
-    /* For radio buttons, also update selection. */
-    if (role == ATK_ROLE_RADIO_BUTTON) {
-        AtkObject *parent = atk_object_get_parent(obj);
-        if (parent && ATK_IS_SELECTION(parent)) {
-            /* Find child index and update selection. */
-            gint n_children = atk_object_get_n_accessible_children(parent);
-            for (gint i = 0; i < n_children; i++) {
-                AtkObject *child = atk_object_ref_accessible_child(parent, i);
-                if (child == obj) {
-                    /* Check if this radio button is now selected. */
-                    gchar *current_val = GetAtkValueForWidget(tkwin);
-                    if (current_val && strcmp(current_val, "1") == 0) {
-                        /* Select this one, clear others. */
-                        tk_selection_clear_selection(ATK_SELECTION(parent));
-                        tk_selection_add_selection(ATK_SELECTION(parent), i);
+        /* Force re-computation of the value. */
+        if (TkAccessibilityObject) {
+            Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)tkwin);
+            if (hPtr) {
+                Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+                if (attrs) {
+                    Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
+                    if (valueEntry) {
+                        Tcl_DeleteHashEntry(valueEntry);
                     }
-                    g_free(current_val);
-                    g_object_unref(child);
-                    break;
                 }
-                g_object_unref(child);
+            }
+        }
+    
+        /* Get fresh value and update name if desired. */
+        gchar *val = GetAtkValueForWidget(tkwin);
+        if (val) {
+            /* Optional: use value as name for unlabeled toggles. */
+            // atk_object_set_name(obj, val);
+            g_free(val);
+        }
+    
+        /* NEW: Get fresh checked state and emit state change. */
+        gchar *new_val = GetAtkValueForWidget(tkwin);
+        gboolean new_checked = (new_val && strcmp(new_val, "1") == 0);
+        atk_object_notify_state_change(obj, ATK_STATE_CHECKED, new_checked);
+        g_free(new_val);
+    
+        /* Emit value-changed signal.*/
+        g_signal_emit_by_name(obj, "value-changed");
+        g_object_notify(G_OBJECT(obj), "accessible-value");
+    
+        /* For radio buttons, update selection in parent if applicable. */
+        if (role == ATK_ROLE_RADIO_BUTTON) {
+            AtkObject *parent = atk_object_get_parent(obj);
+            if (parent && ATK_IS_SELECTION(parent)) {
+                TkAtkNotifySelectionChanged(tkwin);
             }
         }
     }
-}
-
+    
     /* Invalidate virtual children if needed (e.g., for spinbox-linked lists). */
     InvalidateVirtualChildren(tkwin);
 
