@@ -322,36 +322,22 @@ static gboolean tk_contains(AtkComponent *component, gint x, gint y, AtkCoordTyp
 static gboolean tk_grab_focus(AtkComponent *component)
 {
    TkAtkAccessible *acc = (TkAtkAccessible *)component;
-   if (!acc || !acc->tkwin || !acc->interp) {
-       return FALSE;
-   }
 
-   /* Let Tk set its internal focus on this widget. */
+   /* Actually give Tk focus to the widget. */
    char cmd[256];
    snprintf(cmd, sizeof(cmd), "focus %s", Tk_PathName(acc->tkwin));
+   Tcl_Eval(acc->interp, cmd);
 
-   if (Tcl_Eval(acc->interp, cmd) != TCL_OK) {
-       return FALSE;
-   }
-
-   /* Tk now considers this widget focused.
-    * Manually update our accessible state and emit the necessary signals
-    * so Orca knows the focus has moved here.
-    */
+   /* Update internal state. */
    acc->is_focused = 1;
 
-   AtkObject *obj = ATK_OBJECT(acc);
-
-   /* Notify state change. */
+   /* Notify ATK clients of the state change. */
    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, TRUE);
 
-   /* Emit focus event (critical for Orca). */
+   /* Emit the critical focus-event signal (Orca listens for this). */
    g_signal_emit_by_name(obj, "focus-event", TRUE);
 
-   /* If this widget is inside a container that uses active-descendant
-    * (e.g., a custom toolbar or panel), notify the parent.
-    * This helps Orca track focus in flat hierarchies.
-    */
+   /* Help Orca with flat hierarchies (active-descendant). */
    AtkObject *parent = atk_object_get_parent(obj);
    if (parent) {
        g_signal_emit_by_name(parent, "active-descendant-changed", obj);
@@ -1844,13 +1830,11 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
 
     g_object_ref(accessible);
 
-    /* Set parent hierarchy */
     AtkObject *parentAcc = NULL;
+
     if (Tk_IsTopLevel(tkwin)) {
-        /* True toplevels get root as parent. */
         parentAcc = tk_root_accessible;
 
-        /* Add to toplevel list only for real toplevels. */
         if (!g_list_find(toplevel_accessible_objects, accessible)) {
             toplevel_accessible_objects = g_list_append(toplevel_accessible_objects, accessible);
             gint index = g_list_index(toplevel_accessible_objects, accessible);
@@ -1859,13 +1843,10 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
             }
         }
     } else {
-        /* Non-toplevels: find and ensure parent is registered first. */
         Tk_Window parentWin = Tk_Parent(tkwin);
         if (parentWin) {
-            /* NEW: Recursively ensure parent is registered */
             AtkObject *parentObj = GetAtkObjectForTkWindow(parentWin);
             if (!parentObj) {
-                /* Create parent accessible if it doesn't exist */
                 parentObj = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
                 if (parentObj) {
                     RegisterAtkObjectForTkWindow(parentWin, parentObj);
@@ -1878,40 +1859,31 @@ static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObjec
         }
 
         if (!parentAcc) {
-            /* Last resort fallback. */
             parentAcc = tk_root_accessible;
         }
 
-        /* NEW: Always register non-toplevel windows */
-        RegisterAtkObjectForTkWindow(tkwin, accessible);
-        
-        /* Emit child-added signal on the actual parent. */
-        if (parentAcc && parentAcc != tk_root_accessible) {
-            /* Get current child count before adding. */
-            gint child_count = atk_object_get_n_accessible_children(parentAcc);
-            g_signal_emit_by_name(parentAcc, "children-changed::add", child_count, accessible);
-        }
-    }
-
-    /* Set parent relationship in ATK. */
-    if (parentAcc) {
         atk_object_set_parent(accessible, parentAcc);
+        RegisterAtkObjectForTkWindow(tkwin, accessible);
+
+        /* Always emit children-changed::add for non-toplevel children. */
+        gint child_count = atk_object_get_n_accessible_children(parentAcc);
+        g_signal_emit_by_name(parentAcc, "children-changed::add", child_count, accessible);
     }
 
-    /* Set accessible properties. */
     const gchar *name = tk_get_name(accessible);
-    if (name) {
-        tk_set_name(accessible, name);
-    } else {
+    if (!name || !*name) {
         tk_set_name(accessible, Tk_PathName(tkwin));
     }
 
     AtkRole role = GetAtkRoleForWidget(tkwin);
     atk_object_set_role(accessible, role);
-    atk_object_set_description(accessible, name ? name : ((TkAtkAccessible *)accessible)->path);
 
     TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)accessible);
-    atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_SHOWING, TRUE);
+
+    if (Tk_IsMapped(tkwin)) {
+        atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_VISIBLE, TRUE);
+        atk_object_notify_state_change(ATK_OBJECT(accessible), ATK_STATE_SHOWING, TRUE);
+    }
 }
 
 /* Remove toplevel window from ATK object list. */
@@ -1931,7 +1903,7 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
     }
 }
 
-/* Recursively register widget and all its children.*/
+/* Recursively register widget and all its children with proper events. */
 static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 {
     if (!tkwin) return;
@@ -1943,39 +1915,44 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
         acc = TkCreateAccessibleAtkObject(interp, tkwin, Tk_PathName(tkwin));
         if (!acc) return;
 
-        /* Register with proper hierarchy. */
+        AtkObject *parentAcc = NULL;
+
         if (Tk_IsTopLevel(tkwin)) {
             RegisterToplevelWindow(interp, tkwin, acc);
         } else {
             /* Ensure parent is registered first. */
             Tk_Window parent = Tk_Parent(tkwin);
             if (parent) {
-                AtkObject *parentAcc = GetAtkObjectForTkWindow(parent);
-                if (!parentAcc) {
+                AtkObject *parentObj = GetAtkObjectForTkWindow(parent);
+                if (!parentObj) {
                     RegisterWidgetRecursive(interp, parent);
-                    parentAcc = GetAtkObjectForTkWindow(parent);
+                    parentObj = GetAtkObjectForTkWindow(parent);
                 }
-                
-                if (parentAcc) {
-                    atk_object_set_parent(acc, parentAcc);
-                    RegisterAtkObjectForTkWindow(tkwin, acc);
-                    
-                    /* Notify ATK about new child. */
-                    gint childCount = atk_object_get_n_accessible_children(parentAcc);
-                    g_signal_emit_by_name(parentAcc, "children-changed::add", childCount - 1, acc);
-                } else {
-                    /* Fallback to root */
-                    atk_object_set_parent(acc, tk_root_accessible);
-                    RegisterAtkObjectForTkWindow(tkwin, acc);
-                }
+                parentAcc = parentObj;
             }
+
+            if (!parentAcc) {
+                parentAcc = tk_root_accessible;
+            }
+
+            atk_object_set_parent(acc, parentAcc);
+            RegisterAtkObjectForTkWindow(tkwin, acc);
+
+            /* Emit children-changed::add on parent for native child. */
+            gint child_index = atk_object_get_n_accessible_children(parentAcc);
+            g_signal_emit_by_name(parentAcc, "children-changed::add", child_index, acc);
+
+            TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)acc);
         }
-        
-        /* Register event handlers. */
-        TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)acc);
+
+        /* Notify visibility if already mapped. */
+        if (Tk_IsMapped(tkwin)) {
+            atk_object_notify_state_change(acc, ATK_STATE_VISIBLE, TRUE);
+            atk_object_notify_state_change(acc, ATK_STATE_SHOWING, TRUE);
+        }
     }
 
-    /* Always recursively register children, even if parent exists. */
+    /* Recursively register all children. */
     TkWindow *child;
     for (child = ((TkWindow*)tkwin)->childList; 
          child != NULL; 
@@ -2140,38 +2117,23 @@ static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
         return;
     }
 
-    /* clientData is the PARENT window that received SubstructureNotifyMask. */
     Tk_Window parentWin = (Tk_Window)clientData;
-    if (!parentWin) {
-        return;
-    }
+    if (!parentWin) return;
 
     Tcl_Interp *interp = Tk_Interp(parentWin);
-    if (!interp) {
-        return;
-    }
+    if (!interp) return;
 
-    /* Get the actual child window from the event. */
     Window childWindow = eventPtr->xcreatewindow.window;
-    
-    /* Find the Tk_Window for this X Window. */
     Tk_Window childWin = Tk_IdToWindow(Tk_Display(parentWin), childWindow);
-    if (!childWin) {
-        return;
-    }
+    if (!childWin) return;
 
-    /* Don't recreate if we already have an accessible for the child. */
     if (GetAtkObjectForTkWindow(childWin)) {
-        return;
+        return; /* Already registered. */
     }
 
-    /* Create a new accessible object for the child widget. */
     AtkObject *childAcc = TkCreateAccessibleAtkObject(interp, childWin, Tk_PathName(childWin));
-    if (!childAcc) {
-        return;
-    }
+    if (!childAcc) return;
 
-    /* Get or create parent accessible. */
     AtkObject *parentAcc = GetAtkObjectForTkWindow(parentWin);
     if (!parentAcc) {
         parentAcc = TkCreateAccessibleAtkObject(interp, parentWin, Tk_PathName(parentWin));
@@ -2183,24 +2145,22 @@ static void TkAtkAccessible_CreateHandler(void *clientData, XEvent *eventPtr)
         }
     }
 
-    /* Set up parent-child relationship. */
-    if (parentAcc) {
-        atk_object_set_parent(childAcc, parentAcc);
-    } else {
-        atk_object_set_parent(childAcc, tk_root_accessible);
+    if (!parentAcc) {
+        parentAcc = tk_root_accessible;
     }
 
-    /* Register the child. */
+    atk_object_set_parent(childAcc, parentAcc);
     RegisterAtkObjectForTkWindow(childWin, childAcc);
-    
-    /* Register event handlers for the child */
     TkAtkAccessible_RegisterEventHandlers(childWin, (TkAtkAccessible *)childAcc);
 
-    /* Notify AT clients that a child was added. */
-    if (parentAcc) {
-        gint idx = atk_object_get_n_accessible_children(parentAcc) - 1;
-        if (idx < 0) idx = 0;
-        g_signal_emit_by_name(parentAcc, "children-changed::add", idx, childAcc);
+    /* Emit children-changed::add.*/
+    gint idx = atk_object_get_n_accessible_children(parentAcc);
+    g_signal_emit_by_name(parentAcc, "children-changed::add", idx, childAcc);
+
+    /* Notify visibility if mapped. */
+    if (Tk_IsMapped(childWin)) {
+        atk_object_notify_state_change(childAcc, ATK_STATE_VISIBLE, TRUE);
+        atk_object_notify_state_change(childAcc, ATK_STATE_SHOWING, TRUE);
     }
 }
 
@@ -2675,6 +2635,22 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
     
     /* Recursively register ALL existing widgets. */
     RegisterWidgetRecursive(interp, mainWin);
+
+        /* Force initial children-changed signals for all toplevels (helps Orca at startup).  */
+    GList *l;
+    for (l = toplevel_accessible_objects; l != NULL; l = l->next) {
+        AtkObject *top = ATK_OBJECT(l->data);
+        gint idx = g_list_index(toplevel_accessible_objects, top);
+        if (idx >= 0 && tk_root_accessible) {
+            g_signal_emit_by_name(tk_root_accessible, "children-changed::add", idx, top);
+        }
+
+        /* Also notify showing if mapped */
+        if (Tk_IsMapped(((TkAtkAccessible*)top)->tkwin)) {
+            atk_object_notify_state_change(top, ATK_STATE_SHOWING, TRUE);
+            atk_object_notify_state_change(top, ATK_STATE_VISIBLE, TRUE);
+        }
+    }
 
     /* Register X event handlers for main window. */
     TkAtkAccessible_RegisterEventHandlers(mainWin, (TkAtkAccessible *)main_acc);
