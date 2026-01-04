@@ -183,7 +183,7 @@ typedef struct {
     int placeholderX;		/* Origin for layout. */
     int placeholderLeftIndex;	/* Character index of left-most character
 				 * visible in window. */
-    Tcl_Obj *localeObj;	/* locale, defaults to {}. */
+    Tcl_Obj *localeObj;		/* locale. */
 } Entry;
 
 /*
