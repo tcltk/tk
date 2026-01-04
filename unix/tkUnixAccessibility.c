@@ -156,6 +156,9 @@ static void tk_atk_accessible_finalize(GObject *gobject);
 /* Registration and mapping functions. */
 static void RegisterToplevelWindow(Tcl_Interp *interp, Tk_Window tkwin, AtkObject *accessible);
 static void UnregisterToplevelWindow(AtkObject *accessible);
+static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
+static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin);
+static void UpdateAtkFocusChain(Tk_Window focused);
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, const char *path);
 void InitAtkTkMapping(void);
@@ -720,13 +723,12 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
         }
     }
 
-    /* Handle native children - adjust index for virtual children. */
+     /* Handle native children. */
     gint native_index = i - virtual_count;
     if (native_index >= 0) {
         TkWindow *childPtr;
         gint index = 0;
         
-        /* NEW: Count ALL native children including those without accessible objects yet */
         for (childPtr = ((TkWindow*)acc->tkwin)->childList; 
              childPtr != NULL; 
              childPtr = childPtr->nextPtr, index++) {
@@ -735,17 +737,20 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
                 Tk_Window child_tkwin = (Tk_Window)childPtr;
                 AtkObject *child_obj = GetAtkObjectForTkWindow(child_tkwin);
                 
-                /* NEW: Always create accessible object if it doesn't exist */
+                /* Always create accessible object if it doesn't exist. */
                 if (!child_obj) {
-                    child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin, Tk_PathName(child_tkwin));
+                    child_obj = TkCreateAccessibleAtkObject(acc->interp, child_tkwin, 
+                                                           Tk_PathName(child_tkwin));
                     if (child_obj) {
                         atk_object_set_parent(child_obj, obj);
                         RegisterAtkObjectForTkWindow(child_tkwin, child_obj);
-                        TkAtkAccessible_RegisterEventHandlers(child_tkwin, (TkAtkAccessible *)child_obj);
+                        TkAtkAccessible_RegisterEventHandlers(child_tkwin, 
+                                                              (TkAtkAccessible *)child_obj);
                         
-                        /* NEW: Notify ATK about the new child */
-                        gint childCount = atk_object_get_n_accessible_children(obj);
-                        g_signal_emit_by_name(obj, "children-changed::add", childCount - 1, child_obj);
+                        /* Notify ATK about the new child. */
+                        g_signal_emit_by_name(obj, "children-changed::add", 
+                                              atk_object_get_n_accessible_children(obj) - 1, 
+                                              child_obj);
                     }
                 }
                 
@@ -756,10 +761,10 @@ static AtkObject *tk_ref_child(AtkObject *obj, gint i)
                 break;
             }
         }
-    }
-
+    } 
     return NULL;
 }
+
 static AtkRole GetAtkRoleForWidget(Tk_Window win)
 {
     if (!win) return ATK_ROLE_UNKNOWN;
@@ -849,6 +854,7 @@ static const gchar *tk_get_name(AtkObject *obj)
     if (!acc) return NULL;
 
     if (!acc->tkwin) {
+	
 	/*
 	 * Virtual child: Return the name set in GetAtkValueForWidget.
 	 * This is written via selection events at the script levels.
@@ -858,11 +864,14 @@ static const gchar *tk_get_name(AtkObject *obj)
 	 * the accessible selection API. Here it's simpler to retrieve
 	 * the string from the value field in the hash table.
 	 */
+	
 	AtkObject *parent_obj = atk_object_get_parent(obj);
 	TkAtkAccessible *parent = (TkAtkAccessible*)parent_obj;
-	Tk_Window parentwin = parent->tkwin;
-	gchar *name = GetAtkValueForWidget(parentwin);
-	return name;
+	if (parent) {
+	    Tk_Window parentwin = parent->tkwin;
+	    gchar *name = GetAtkValueForWidget(parentwin);
+	    return name;
+	}
     }
 
     /* Real widget: Existing logic. */
@@ -906,39 +915,63 @@ tk_ref_state_set(AtkObject *obj)
     AtkStateSet *state_set = atk_state_set_new();
     TkAtkAccessible *acc = (TkAtkAccessible *) obj;
 
-    if (!acc || !acc->tkwin) {
+    if (!acc) {
         return state_set;
     }
 
-    AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-
+    /* Always add these basic states. */
     atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
     atk_state_set_add_state(state_set, ATK_STATE_SENSITIVE);
-    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+    
+    /* Only add FOCUSABLE if widget can receive focus. */
+    if (acc->tkwin) {
+        AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+        switch (role) {
+	case ATK_ROLE_PUSH_BUTTON:
+	case ATK_ROLE_CHECK_BOX:
+	case ATK_ROLE_RADIO_BUTTON:
+	case ATK_ROLE_ENTRY:
+	case ATK_ROLE_TEXT:
+	case ATK_ROLE_COMBO_BOX:
+	case ATK_ROLE_SPIN_BUTTON:
+	case ATK_ROLE_SLIDER:
+	case ATK_ROLE_TOGGLE_BUTTON:
+	case ATK_ROLE_LIST_BOX:
+	case ATK_ROLE_TREE:
+	    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
+	    break;        
+	default: 
+	    break;
+        }
+    }
 
-    /*
-     * Focus: must come from tracked state (set on FocusIn/Out)
-     */
+    /* Add FOCUSED if widget has focus. */
     if (acc->is_focused) {
         atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
     }
 
-    /*
-     * Toggle state: checkbutton / radiobutton only
-     */
-    if (role == ATK_ROLE_CHECK_BOX ||
-        role == ATK_ROLE_RADIO_BUTTON) {
+    /* Add VISIBLE/SHOWING if widget is mapped. */
+    if (acc->tkwin && Tk_IsMapped(acc->tkwin)) {
+        atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
+        atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+    }
 
-        const char *value = GetAtkValueForWidget(acc->tkwin);
-        if (value && value[0] != '0') {
-            atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
+    /* Toggle state for checkboxes/radiobuttons. */
+    if (acc->tkwin) {
+        AtkRole role = GetAtkRoleForWidget(acc->tkwin);
+        if (role == ATK_ROLE_CHECK_BOX ||
+            role == ATK_ROLE_RADIO_BUTTON ||
+            role == ATK_ROLE_TOGGLE_BUTTON) {
+
+            const char *value = GetAtkValueForWidget(acc->tkwin);
+            if (value && value[0] != '0') {
+                atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
+            }
         }
     }
 
     return state_set;
 }
-
-
 /*
  * ATK value interface.
  */
@@ -1963,6 +1996,109 @@ static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
     }
 }
 
+ /*  Function to ensure a widget and all its ancestors are in the ATK hierarchy. */
+static void EnsureWidgetInAtkHierarchy(Tcl_Interp *interp, Tk_Window tkwin)
+{
+    if (!tkwin) return;
+    
+    /* First ensure all ancestors exist. */
+    Tk_Window current = tkwin;
+    GList *widgets_to_process = NULL;
+    
+    /* Collect all widgets from leaf to root. */
+    while (current) {
+        widgets_to_process = g_list_prepend(widgets_to_process, current);
+        if (Tk_IsTopLevel(current)) break;
+        current = Tk_Parent(current);
+    }
+    
+    /* Process from root to leaf to ensure proper parent-child relationships. */
+    GList *iter;
+    for (iter = widgets_to_process; iter != NULL; iter = iter->next) {
+        Tk_Window win = (Tk_Window)iter->data;
+        AtkObject *acc = GetAtkObjectForTkWindow(win);
+        
+        if (!acc) {
+            acc = TkCreateAccessibleAtkObject(interp, win, Tk_PathName(win));
+            if (acc) {
+                /* Set up parent relationship. */
+                if (!Tk_IsTopLevel(win)) {
+                    Tk_Window parent = Tk_Parent(win);
+                    AtkObject *parentAcc = GetAtkObjectForTkWindow(parent);
+                    if (parentAcc) {
+                        atk_object_set_parent(acc, parentAcc);
+                        
+                        /* Notify ATK about the new child. */
+                        gint childCount = atk_object_get_n_accessible_children(parentAcc);
+                        g_signal_emit_by_name(parentAcc, "children-changed::add", childCount - 1, acc);
+                    }
+                }
+                
+                RegisterAtkObjectForTkWindow(win, acc);
+                TkAtkAccessible_RegisterEventHandlers(win, (TkAtkAccessible *)acc);
+                
+                /* Update state if widget is mapped. */
+                if (Tk_IsMapped(win)) {
+                    atk_object_notify_state_change(acc, ATK_STATE_VISIBLE, TRUE);
+                    atk_object_notify_state_change(acc, ATK_STATE_SHOWING, TRUE);
+                }
+            }
+        }
+    }
+    
+    g_list_free(widgets_to_process);
+}
+
+
+ /*  Function to update the ATK focus chain when a widget receives focus. */
+ static void UpdateAtkFocusChain(Tk_Window focused)
+{
+    if (!focused) return;
+    
+    Tcl_Interp *interp = Tk_Interp(focused);
+    if (!interp) return;
+    
+    /* Ensure widget is in ATK hierarchy. */
+    EnsureWidgetInAtkHierarchy(interp, focused);
+    
+    AtkObject *focusedAcc = GetAtkObjectForTkWindow(focused);
+    if (!focusedAcc) return;
+    
+    TkAtkAccessible *focusedTkAcc = (TkAtkAccessible *)focusedAcc;
+    
+    /* Update focus state. */
+    focusedTkAcc->is_focused = 1;
+    atk_object_notify_state_change(focusedAcc, ATK_STATE_FOCUSED, TRUE);
+    g_signal_emit_by_name(focusedAcc, "focus-event", TRUE);
+    
+    /* Walk up the hierarchy and update parent focus states. */
+    Tk_Window current = focused;
+    while (current && !Tk_IsTopLevel(current)) {
+        Tk_Window parent = Tk_Parent(current);
+        if (parent) {
+            AtkObject *parentAcc = GetAtkObjectForTkWindow(parent);
+            if (parentAcc) {
+                /* Notify parent about active descendant. */
+                AtkObject *childAcc = GetAtkObjectForTkWindow(current);
+                if (childAcc) {
+                    g_signal_emit_by_name(parentAcc, "active-descendant-changed", childAcc);
+                }
+                
+                /* Also emit children-changed to refresh ATK's view. */
+                g_signal_emit_by_name(parentAcc, "children-changed::add", 
+                                      atk_object_get_n_accessible_children(parentAcc) - 1, 
+                                      childAcc);
+            }
+        }
+        current = parent;
+    }
+    
+    /* If this is a toplevel, emit window activation. */
+    if (Tk_IsTopLevel(focused)) {
+        g_signal_emit_by_name(focusedAcc, "window-activate");
+    }
+}
+
 /* Function to return the toplevel window that contains a given Tk widget. */
 Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
@@ -2224,22 +2360,35 @@ static void TkAtkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr)
     }
 }
 
-
-
-/* Respond to <FocusIn/Out> events. */
 /* Respond to <FocusIn/Out> events. */
 static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *)clientData;
-    if (!acc || !acc->tkwin || !Tk_IsMapped(acc->tkwin)) return;
-
-    AtkObject *obj = ATK_OBJECT(acc);
+    if (!acc || !acc->tkwin) return;
+    
     gboolean focused = (eventPtr->type == FocusIn);
+    AtkObject *obj = ATK_OBJECT(acc);
+    
+    /* Clear all focus states first. */
+    if (focused) {
+        /* Find which widget actually has Tk focus. */
+        TkWindow *focusPtr = TkGetFocusWin((TkWindow*)acc->tkwin);
+        Tk_Window focusedWin = (focusPtr) ? (Tk_Window)focusPtr : acc->tkwin;
+        
+        /* If focus is elsewhere, update that widget instead. */
+        if (focusedWin != acc->tkwin) {
+            UpdateAtkFocusChain(focusedWin);
+            return;
+        }
+    }
+    
+    /* Update this widget's focus state. */
+    acc->is_focused = focused ? 1 : 0;
+    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, focused);
+    g_signal_emit_by_name(obj, "focus-event", focused);
+    
+    /* Handle window activation/deactivation for toplevels. */
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
-
-    InvalidateVirtualChildren(acc->tkwin);
-
-    /* Emit window-level signals for toplevels. */
     if (role == ATK_ROLE_WINDOW) {
         if (focused) {
             g_signal_emit_by_name(obj, "window-activate");
@@ -2247,71 +2396,18 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
             g_signal_emit_by_name(obj, "window-deactivate");
         }
     }
-
-    /* Update focus state for this widget */
-    acc->is_focused = focused ? 1 : 0;
-    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, focused);
-    g_signal_emit_by_name(obj, "focus-event", focused);
-
-    /* NEW: Ensure focused child widgets have accessible objects */
-    if (focused) {
-        /* Check if a child widget actually has focus */
-        TkWindow *focusPtr = TkGetFocusWin((TkWindow*)acc->tkwin);
-        
-        /* If focus is on a different widget, ensure it has an accessible object */
-        if (focusPtr && focusPtr != (TkWindow*)acc->tkwin) {
-            Tk_Window focusedWin = (Tk_Window)focusPtr;
-            AtkObject *focusedAcc = GetAtkObjectForTkWindow(focusedWin);
-            
-            if (!focusedAcc) {
-                /* Create accessible for the focused widget */
-                focusedAcc = TkCreateAccessibleAtkObject(acc->interp, focusedWin, Tk_PathName(focusedWin));
-                if (focusedAcc) {
-                    /* Find and set parent */
-                    Tk_Window parentWin = Tk_Parent(focusedWin);
-                    AtkObject *parentAcc = GetAtkObjectForTkWindow(parentWin);
-                    if (!parentAcc && parentWin) {
-                        /* Create parent if needed */
-                        parentAcc = TkCreateAccessibleAtkObject(acc->interp, parentWin, Tk_PathName(parentWin));
-                        if (parentAcc) {
-                            RegisterAtkObjectForTkWindow(parentWin, parentAcc);
-                        }
-                    }
-                    
-                    if (parentAcc) {
-                        atk_object_set_parent(focusedAcc, parentAcc);
-                    }
-                    
-                    RegisterAtkObjectForTkWindow(focusedWin, focusedAcc);
-                    TkAtkAccessible_RegisterEventHandlers(focusedWin, (TkAtkAccessible *)focusedAcc);
-                    
-                    /* Notify focus on the actual focused widget */
-                    TkAtkAccessible *focusedTkAcc = (TkAtkAccessible *)focusedAcc;
-                    focusedTkAcc->is_focused = 1;
-                    atk_object_notify_state_change(focusedAcc, ATK_STATE_FOCUSED, TRUE);
-                    g_signal_emit_by_name(focusedAcc, "focus-event", TRUE);
-                    
-                    /* Notify parent of active descendant for containers */
-                    if (parentAcc) {
-                        g_signal_emit_by_name(parentAcc, "active-descendant-changed", focusedAcc);
-                    }
-                }
-            } else {
-                /* Focused widget already has accessible - update its state */
-                TkAtkAccessible *focusedTkAcc = (TkAtkAccessible *)focusedAcc;
-                focusedTkAcc->is_focused = 1;
-                atk_object_notify_state_change(focusedAcc, ATK_STATE_FOCUSED, TRUE);
-                g_signal_emit_by_name(focusedAcc, "focus-event", TRUE);
-                
-                /* Notify parent */
-                AtkObject *parentAcc = atk_object_get_parent(focusedAcc);
-                if (parentAcc) {
-                    g_signal_emit_by_name(parentAcc, "active-descendant-changed", focusedAcc);
-                }
-            }
+    
+    /* Notify parent about active descendant. */
+    if (focused && role != ATK_ROLE_WINDOW) {
+        AtkObject *parent = atk_object_get_parent(obj);
+        if (parent) {
+            g_signal_emit_by_name(parent, "active-descendant-changed", obj);
         }
     }
+    
+    InvalidateVirtualChildren(acc->tkwin);
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2555,19 +2651,20 @@ int TkAtkAccessibleObjCmd(
         return TCL_ERROR;
     }
 
-    /* Recursively register widget and all its children. */
+    /* Use the recursive registration. */
     RegisterWidgetRecursive(interp, tkwin);
 
-    /* Ensure the widget is visible if it's mapped */
-    AtkObject *acc = GetAtkObjectForTkWindow(tkwin);
-    if (acc && Tk_IsMapped(tkwin)) {
-        atk_object_notify_state_change(acc, ATK_STATE_VISIBLE, TRUE);
-        atk_object_notify_state_change(acc, ATK_STATE_SHOWING, TRUE);
+    /* Also ensure the entire hierarchy is in ATK. */
+    EnsureWidgetInAtkHierarchy(interp, tkwin);
+
+    /* If widget has focus, update ATK focus chain. */
+    TkWindow *focusPtr = TkGetFocusWin((TkWindow*)tkwin);
+    if (focusPtr == (TkWindow*)tkwin) {
+        UpdateAtkFocusChain(tkwin);
     }
 
     return TCL_OK;
 }
-
 #endif
 
 /*
