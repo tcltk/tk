@@ -330,6 +330,8 @@ static gboolean tk_grab_focus(AtkComponent *component)
 
    /* Update internal state. */
    acc->is_focused = 1;
+   
+   AtkObject *obj = ATK_OBJECT(acc);
 
    /* Notify ATK clients of the state change. */
    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, TRUE);
