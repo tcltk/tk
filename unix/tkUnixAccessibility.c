@@ -971,43 +971,56 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
  * script level for virtual widgets. 
  */
 
-/*
- * ATK selection interface - simplified stubs since we handle
- * selection at script level for virtual widgets.
- */
-
 static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
 {
+	(void) selection;
+	(void) i;
+	
     return FALSE;
 }
 
 static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
 {
+	(void) selection;
+	(void) i;
+	
     return FALSE;
 }
 
 static gboolean tk_selection_clear_selection(AtkSelection *selection)
 {
+	(void) selection;
+	
     return FALSE;
 }
 
 static gint tk_selection_get_selection_count(AtkSelection *selection)
 {
+	(void) selection;
+
     return 0;
 }
 
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 {
+	(void) selection;
+	(void) i;
+	
     return FALSE;
 }
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
 {
+	(void) selection;
+	(void) i;
+	
     return NULL; 
 }
 
 static gboolean tk_selection_select_all_selection(AtkSelection *selection)
 {
+	(void) selection;
+	
     return FALSE;
 }
 
@@ -1202,21 +1215,6 @@ static void UnregisterToplevelWindow(AtkObject *accessible)
 }
 
 /* Recursively register widget and all its children with proper events. */
-/*
- * RegisterWidgetRecursive --
- *
- *  Recursively registers a widget and all its children with the accessibility system.
- *
- * Results:
- *  All widgets in the hierarchy have accessible objects created and properly linked.
- *
- * Side effects:
- *  Accessible objects are created, parent-child relationships established,
- *  and ATK signals are emitted.
- *
- *----------------------------------------------------------------------
- */
-
 static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin)
 {
     if (!tkwin) return;
