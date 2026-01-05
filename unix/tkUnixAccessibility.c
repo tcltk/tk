@@ -863,21 +863,21 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
  */
 
 static gchar *tk_text_get_text(
-    TCL_UNUSED(AtkText *text),
-    TCL_UNUSED(gint start_offset),
-    TCL_UNUSED(gint end_offset))
+    TCL_UNUSED(AtkText *),
+    TCL_UNUSED(gint),
+    TCL_UNUSED(gint))
 {
     return NULL;
 }
 
 static gint tk_text_get_caret_offset(
-    TCL_UNUSED(AtkText *text))
+    TCL_UNUSED(AtkText *))
 {
     return -1;
 }
 
 static gint tk_text_get_character_count(
-    TCL_UNUSED(AtkText *text))
+    TCL_UNUSED(AtkText *))
 {
     return 0;
 }
@@ -909,51 +909,50 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
  */
 
 static gboolean tk_selection_add_selection(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return FALSE;
 }
 
 static gboolean tk_selection_remove_selection(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return FALSE;
 }
 
 static gboolean tk_selection_clear_selection(
-    TCL_UNUSED(AtkSelection *selection))
+    TCL_UNUSED(AtkSelection *))
 {
     return FALSE;
 }
 
 static gint tk_selection_get_selection_count(
-    TCL_UNUSED(AtkSelection *selection))
+    TCL_UNUSED(AtkSelection *))
 {
     return 0;
 }
 
 static gboolean tk_selection_is_child_selected(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return FALSE;
 }
 
 static AtkObject *tk_selection_ref_selection(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return NULL;
 }
 
 static gboolean tk_selection_select_all_selection(
-    TCL_UNUSED(AtkSelection *selection))
+    TCL_UNUSED(AtkSelection *))
 {
     return FALSE;
 }
-
 
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
 {
