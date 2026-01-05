@@ -264,6 +264,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    set var [$w cget -variable]
 	    if {$var ne "" && [uplevel #0 info exists $var]} {
 		set value [uplevel #0 set $var]
+		::tk::accessible::set_acc_value $w $value
 		set result [expr {$value eq [$w cget -value]}]
 		if {$result eq 1} {
 		    return "selected"
@@ -279,6 +280,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    set var [$w cget -variable]
 	    if {$var ne "" && [uplevel #0 info exists $var]} {
 		set value [uplevel #0 set $var]
+		::tk::accessible::set_acc_value $w $value
 		set result [expr {$value eq [$w cget -onvalue]}]
 		if {$result eq 1} {
 		    return "selected"
@@ -382,6 +384,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			    [winfo class $w] eq "TScale" ||\
 			    [winfo class $w] eq "TCombobox"} {
 			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::speak $data
 		    }
 		}
@@ -1070,17 +1073,17 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind TCheckbutton <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Toggleswitch <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Listbox <FocusIn> {+::tk::accessible::_updateselection %W} 
-	    bind  Treeview <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind Treeview <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind TEntry <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind TNotebook <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind TCombobox <FocusIn> {+::tk::accessible::_updateselection %W}
-	    bind Text <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind TProgressbar <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind Spinbox <FocusIn> {+:tk::accessible::_updateselection %W}
-	    bind TSpinbox <FocusIn> {+:tk::accessible::_updateselection %W}
-	    bind Scale <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind TScale <FocusIn> {+ :tk::accessible::_updateselection %W}
+	    bind Text <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TProgressbar <FocusIn> {+:tk::accessible::_updateselection %W}
+	    bind Spinbox <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TSpinbox <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind Scale <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TScale <FocusIn> {+::tk::accessible::_updateselection %W}
 	}
 
 
