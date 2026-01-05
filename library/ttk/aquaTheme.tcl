@@ -18,7 +18,7 @@ namespace eval ttk::theme::aqua {
 	    set selectedBg    systemHighlightAlternate
 	    set inactiveSelBg systemWindowBackgroundColor2
 	}
-	set selectedFg   systemAlternateSelectedControlTextColor
+	set selectedFg    systemAlternateSelectedControlTextColor
 	set inactiveSelFg systemSelectedControlTextColor
 
 	ttk::style map Treeview \
