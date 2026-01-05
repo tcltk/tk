@@ -353,7 +353,7 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 {
     iface->get_extents = tk_get_extents;
     iface->contains    = tk_contains;
-    iface->grab_focus  = tk_grab_focus;   /* <--- NEW */
+    iface->grab_focus  = tk_grab_focus;
 }
 
 /*
