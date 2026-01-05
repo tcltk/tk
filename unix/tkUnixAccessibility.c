@@ -642,9 +642,9 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             role == ATK_ROLE_TOGGLE_BUTTON) {
 
             const char *value = GetAtkValueForWidget(acc->tkwin);
-            /* CRITICAL FIX: Check for proper state values */
+            /* Check for proper state values. */
             if (value) {
-                /* For checkboxes/radiobuttons, check if value equals "selected" or "1" or onvalue */
+                /* For checkboxes/radiobuttons, check if value equals "selected" or "1" or onvalue. */
                 if (strcmp(value, "selected") == 0 || 
                     strcmp(value, "1") == 0 ||
                     (value[0] != '0' && value[0] != '\0')) {
