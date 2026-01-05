@@ -1976,6 +1976,7 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 
     /* Shut off GLib warnings. */
     g_log_set_handler("Atk", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
+    g_log_set_handler("GLib-GObject", G_LOG_LEVEL_CRITICAL, ignore_atk_critical, NULL);
 
     /* Initialize main window */
     Tk_Window mainWin = Tk_MainWindow(interp);
