@@ -353,7 +353,7 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
 {
     iface->get_extents = tk_get_extents;
     iface->contains    = tk_contains;
-    iface->grab_focus  = tk_grab_focus;   /* <--- NEW */
+    iface->grab_focus  = tk_grab_focus;
 }
 
 /*
@@ -361,9 +361,6 @@ static void tk_atk_component_interface_init(AtkComponentIface *iface)
  * objects from native Tk widgets (buttons, entries, etc.), map them them to 
  * the appropriate role, and track them.
  */
-
-
-
 
 static gint tk_get_n_children(AtkObject *obj)
 {
@@ -559,8 +556,7 @@ static const gchar *tk_get_description(AtkObject *obj)
     return GetAtkDescriptionForWidget(acc->tkwin);
 }
 
-static AtkStateSet *
-tk_ref_state_set(AtkObject *obj)
+static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 {
     AtkStateSet *state_set = atk_state_set_new();
     TkAtkAccessible *acc = (TkAtkAccessible *) obj;
@@ -752,8 +748,7 @@ static void tk_atk_value_interface_init(AtkValueIface *iface)
  * ATK action interface.
  */
 
-static gboolean
-tk_action_do_action(AtkAction *action, gint i)
+static gboolean tk_action_do_action(AtkAction *action, gint i)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *) action;
     Tcl_Interp *interp;
@@ -790,7 +785,7 @@ tk_action_do_action(AtkAction *action, gint i)
     }
 
     /*
-     * INLINE toggle state notification (no fake helpers)
+     * Toggle state notification.
      */
     AtkRole role = GetAtkRoleForWidget(acc->tkwin);
     if (role == ATK_ROLE_CHECK_BOX ||
@@ -810,8 +805,7 @@ tk_action_do_action(AtkAction *action, gint i)
 }
 
 
-static gint
-tk_action_get_n_actions(AtkAction *action)
+static gint tk_action_get_n_actions(AtkAction *action)
 {
     TkAtkAccessible *acc = (TkAtkAccessible *) action;
     if (!acc || !acc->tkwin) {
@@ -831,8 +825,7 @@ tk_action_get_n_actions(AtkAction *action)
     }
 }
 
-static const gchar *
-tk_action_get_name(AtkAction *action, gint i)
+static const gchar *tk_action_get_name(AtkAction *action, gint i)
 {
     if (i != 0) {
         return NULL;
@@ -916,53 +909,53 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
 
 static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
 {
-	(void) selection;
-	(void) i;
+    (void) selection;
+    (void) i;
 	
     return FALSE;
 }
 
 static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
 {
-	(void) selection;
-	(void) i;
+    (void) selection;
+    (void) i;
 	
     return FALSE;
 }
 
 static gboolean tk_selection_clear_selection(AtkSelection *selection)
 {
-	(void) selection;
+    (void) selection;
 	
     return FALSE;
 }
 
 static gint tk_selection_get_selection_count(AtkSelection *selection)
 {
-	(void) selection;
+    (void) selection;
 
     return 0;
 }
 
 static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
 {
-	(void) selection;
-	(void) i;
+    (void) selection;
+    (void) i;
 	
     return FALSE;
 }
 
 static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
 {
-	(void) selection;
-	(void) i;
+    (void) selection;
+    (void) i;
 	
     return NULL; 
 }
 
 static gboolean tk_selection_select_all_selection(AtkSelection *selection)
 {
-	(void) selection;
+    (void) selection;
 	
     return FALSE;
 }
