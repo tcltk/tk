@@ -310,218 +310,221 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak [list $data $role $description]
 		}
-
-		if {[winfo class $w] eq "Listbox"} {
-		    set data [$w get [$w curselection]]
+	    }
+	    if {[winfo class $w] eq "Listbox"} {
+		set data [$w get [$w curselection]]
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		}
+	    }
+	    if {[winfo class $w] eq "Treeview"} {
+		set data [::tk::accessible::_gettreeviewdata $w]
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		}
+	    }
+	    if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"}  {
+		set data [::tk::accessible::_getentrytext $w]
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		}
+	    }
+	    if {[winfo class $w] eq "TCombobox"} {
+		set data [$w get]
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		}
+	    }
+	    if {[winfo class $w] eq "TNotebook"}  {
+		set data  [$w tab current -text]
+		::tk::accessible::set_acc_value $w $data
+		::tk::accessible::emit_selection_change $w
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		}
+	    }
+	    if {[winfo class $w] eq "Text"}  {
+		set data [::tk::accessible::_gettext $w]
+		::tk::accessible::set_acc_value $w $data
+		if {[tk windowingsystem] eq "x11"} {
+		    ::tk::accessible::speak $data
+		}
+		if {[winfo class $w] eq "TProgressbar"}  {
+		    set data [::tk::accessible::_getpbvalue $w]
 		    ::tk::accessible::set_acc_value $w $data
 		    ::tk::accessible::emit_selection_change $w
 		    if {[tk windowingsystem] eq "x11"} {
 			::tk::accessible::speak $data
 		    }
-		    if {[winfo class $w] eq "Treeview"} {
-			set data [::tk::accessible::_gettreeviewdata $w]
+		}
+		
+		# Some widgets need special handling on X11
+		# because ATK does not align well with their
+		# configuration. 
+		
+		if {[tk windowingsystem] eq "x11"} {
+		    if {[winfo class $w] eq "Menu"} {
+			set data [$w entrycget active -label]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::speak $data
+		    }
+		    if {[winfo class $w] eq "Spinbox" || \
+			    [winfo class $w] eq "TSpinbox" \
+			    || [winfo class $w] eq "Scale" || \
+			    [winfo class $w] eq "TScale" ||\
+			    [winfo class $w] eq "TCombobox"} {
+			set data [$w get]
+			::tk::accessible::speak $data
+		    }
+		}
+	    }
+	}
+
+	# Increment values in various widgets in response to keypress events.
+	proc _updatescale {w key} {
+	    if {[winfo class $w] eq "Scale"} {
+		switch -- $key {
+		    Right {
+			tk::ScaleIncrement $w down little noRepeat
+			set data [$w get]
 			::tk::accessible::set_acc_value $w $data
 			::tk::accessible::emit_selection_change $w
 			if {[tk windowingsystem] eq "x11"} {
 			    ::tk::accessible::speak $data
 			}
-			if {[winfo class $w] eq "Entry" || [winfo class $w] eq "TEntry"}  {
-			    set data [::tk::accessible::_getentrytext $w]
-			    ::tk::accessible::set_acc_value $w $data
-			    ::tk::accessible::emit_selection_change $w
-			    if {[tk windowingsystem] eq "x11"} {
-				::tk::accessible::speak $data
-			    }
+		    }
+		    Left {
+			tk::ScaleIncrement $w up little noRepeat
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
 			}
-			if {[winfo class $w] eq "TCombobox"} {
-			    set data [$w get]
-			    ::tk::accessible::set_acc_value $w $data
-			    ::tk::accessible::emit_selection_change $w
-			    if {[tk windowingsystem] eq "x11"} {
-				::tk::accessible::speak $data
-			    }
+		    }
+		}
+	    }
+	    if {[winfo class $w] eq "TScale"} {
+		switch -- $key {
+		    Right {
+			ttk::scale::Increment $w 1
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
 			}
-			if {[winfo class $w] eq "TNotebook"}  {
-			    set data  [$w tab current -text]
-			    ::tk::accessible::set_acc_value $w $data
-			    ::tk::accessible::emit_selection_change $w
-			    if {[tk windowingsystem] eq "x11"} {
-				::tk::accessible::speak $data
-			    }
+		    }
+		    Left {
+			ttk::scale::Increment $w -1
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
 			}
-			if {[winfo class $w] eq "Text"}  {
-			    set data [::tk::accessible::_gettext $w]
-			    ::tk::accessible::set_acc_value $w $data
-			    if {[tk windowingsystem] eq "x11"} {
-				::tk::accessible::speak $data
-			    }
-			    if {[winfo class $w] eq "TProgressbar"}  {
-				set data [::tk::accessible::_getpbvalue $w]
-				::tk::accessible::set_acc_value $w $data
-				::tk::accessible::emit_selection_change $w
-				if {[tk windowingsystem] eq "x11"} {
-				    ::tk::accessible::speak $data
-				}
-			    }
-			    
-			    # Some widgets need special handling on X11
-			    # because ATK does not align well with their
-			    # configuration. 
-			    
-			    if {[tk windowingsystem] eq "x11"} {
-				if {[winfo class $w] eq "Menu"} {
-				    set data [$w entrycget active -label]
-				    ::tk::accessible::set_acc_value $w $data
-				    ::tk::accessible::speak $data
-				}
-			    }
-			    if {[winfo class $w] eq "Spinbox" || \
-				    [winfo class $w] eq "TSpinbox" \
-				    || [winfo class $w] eq "Scale" || \
-				    [winfo class $w] eq "TScale" ||\
-				    [winfo class $w] eq "TCombobox"} {
-				set data [$w get]
-				::tk::accessible::speak $data
-			    }
-			}
+		    }
+		}
+	    }
 
-			# Increment values in various widgets in response to keypress events.
-			proc _updatescale {w key} {
-			    if {[winfo class $w] eq "Scale"} {
-				switch -- $key {
-				    Right {
-					tk::ScaleIncrement $w down little noRepeat
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				    Left {
-					tk::ScaleIncrement $w up little noRepeat
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				}
-			    }
-			    if {[winfo class $w] eq "TScale"} {
-				switch -- $key {
-				    Right {
-					ttk::scale::Increment $w 1
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				    Left {
-					ttk::scale::Increment $w -1
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				}
-			    }
-
-			    if {[winfo class $w] eq "Spinbox"} {
-				switch -- $key {
-				    Up {
-					$w invoke buttonup
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				    Down {
-					$w invoke buttondown
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				}
-			    }
-			    if {[winfo class $w] eq "TSpinbox"} {
-				switch -- $key {
-				    Up {
-					ttk::spinbox::Spin $w +1
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				    Down {
-					ttk::spinbox::Spin $w -1
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				}
-			    }
-			    if {[winfo class $w] eq "TCombobox"} {
-				switch -- $key {
-				    Down {
-					ttk::combobox::Post $w
-					set data [$w get]
-				    }
-				    Escape {
-					ttk::combobox::Unpost $w
-					$w selection range 0 end
-					if {[tk windowingsystem] eq "aqua"} {
-					    event generate <Command-a>
-					} else {
-					    event generate <Control-a>
-					}
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				}
-			    }
-			    if {[winfo class $w] eq "TNotebook"} {
-				switch -- $key {
-				    Right {
-					{ ttk::notebook::CycleTab %W  1; break }
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				    Left {
-					ttk::scale::Increment $w -1
-					set data [$w get]
-					::tk::accessible::set_acc_value $w $data
-					::tk::accessible::emit_selection_change $w
-					if {[tk windowingsystem] eq "x11"} {
-					    ::tk::accessible::speak $data
-					}
-				    }
-				}
-			    }
+	    if {[winfo class $w] eq "Spinbox"} {
+		switch -- $key {
+		    Up {
+			$w invoke buttonup
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
 			}
+		    }
+		    Down {
+			$w invoke buttondown
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
+			}
+		    }
+		}
+	    }
+	    if {[winfo class $w] eq "TSpinbox"} {
+		switch -- $key {
+		    Up {
+			ttk::spinbox::Spin $w +1
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
+			}
+		    }
+		    Down {
+			ttk::spinbox::Spin $w -1
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
+			}
+		    }
+		}
+	    }
+	    if {[winfo class $w] eq "TCombobox"} {
+		switch -- $key {
+		    Down {
+			ttk::combobox::Post $w
+			set data [$w get]
+		    }
+		    Escape {
+			ttk::combobox::Unpost $w
+			$w selection range 0 end
+			if {[tk windowingsystem] eq "aqua"} {
+			    event generate <Command-a>
+			} else {
+			    event generate <Control-a>
+			}
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
+			}
+		    }
+		}
+	    }
+	    if {[winfo class $w] eq "TNotebook"} {
+		switch -- $key {
+		    Right {
+			{ ttk::notebook::CycleTab %W  1; break }
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
+			}
+		    }
+		    Left {
+			ttk::scale::Increment $w -1
+			set data [$w get]
+			::tk::accessible::set_acc_value $w $data
+			::tk::accessible::emit_selection_change $w
+			if {[tk windowingsystem] eq "x11"} {
+			    ::tk::accessible::speak $data
+			}
+		    }
+		}
+	    }
+	}
 
 	# Get value of progress bar.
 	proc _getpbvalue  {pb} {
@@ -1061,21 +1064,21 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind TCheckbutton  <Map> {+::tk::accessible::_attach_trace %W}
 	    bind Toggleswitch  <Map> {+::tk::accessible::_attach_trace %W}
 	    #  Bind widgets on X11 to announce their data when they receive focus. 
-	    bind Radiobutton <FocusIn> {+ :tk::accessible::_updateselection %W} 
-	    bind TRadiobutton <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind Checkbutton <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind TCheckbutton <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind Toggleswitch <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind Listbox <FocusIn> {+ :tk::accessible::_updateselection %W} 
-	    bind  Treeview <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind Entry <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind TEntry <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind TNotebook <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind TCombobox <FocusIn> {+ :tk::accessible::_updateselection %W}
+	    bind Radiobutton <FocusIn> {+::tk::accessible::_updateselection %W} 
+	    bind TRadiobutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind Checkbutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TCheckbutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind Toggleswitch <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind Listbox <FocusIn> {+::tk::accessible::_updateselection %W} 
+	    bind  Treeview <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TEntry <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TNotebook <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TCombobox <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Text <FocusIn> {+ :tk::accessible::_updateselection %W}
 	    bind TProgressbar <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind Spinbox <FocusIn> {+ :tk::accessible::_updateselection %W}
-	    bind TSpinbox <FocusIn> {+ :tk::accessible::_updateselection %W}
+	    bind Spinbox <FocusIn> {+:tk::accessible::_updateselection %W}
+	    bind TSpinbox <FocusIn> {+:tk::accessible::_updateselection %W}
 	    bind Scale <FocusIn> {+ :tk::accessible::_updateselection %W}
 	    bind TScale <FocusIn> {+ :tk::accessible::_updateselection %W}
 	}
@@ -1191,8 +1194,8 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	namespace export set_acc_role set_acc_name set_acc_description set_acc_value set_acc_state set_acc_action set_acc_help get_acc_role get_acc_name get_acc_description get_acc_value get_acc_state get_acc_action get_acc_help add_acc_object emit_selection_change check_screenreader emit_focus_change
 	namespace ensemble create
     }
-
 }
+
 # Add these commands to the tk command ensemble: tk accessible.
 namespace ensemble configure tk -map \
     [dict merge [namespace ensemble configure tk -map] \
