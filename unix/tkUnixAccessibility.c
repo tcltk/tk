@@ -330,7 +330,7 @@ static gboolean tk_grab_focus(AtkComponent *component)
    acc->is_focused = 1;
    AtkObject *obj = ATK_OBJECT(acc);
 
-   /* CRITICAL: Force ATK notifications for focus change */
+   /* Force ATK notifications for focus change. */
    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, TRUE);
    g_signal_emit_by_name(obj, "focus-event", TRUE);
 
@@ -565,15 +565,15 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
         return state_set;
     }
 
-    /* Always add these basic states */
+    /* Always add these basic states. */
     atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
     atk_state_set_add_state(state_set, ATK_STATE_SENSITIVE);
     
-    /* Only add FOCUSABLE if widget can receive focus */
+    /* Only add FOCUSABLE if widget can receive focus. */
     if (acc->tkwin) {
         AtkRole role = GetAtkRoleForWidget(acc->tkwin);
         
-        /* Use if-else to avoid switch warning and handle all roles */
+        /* Use if-else to avoid switch warning and handle all roles. */
         if (role == ATK_ROLE_PUSH_BUTTON ||
             role == ATK_ROLE_CHECK_BOX ||
             role == ATK_ROLE_RADIO_BUTTON ||
@@ -596,7 +596,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
         atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
     }
 
-    /* CRITICAL: Always add VISIBLE/SHOWING if widget is mapped. */
+    /* Always add VISIBLE/SHOWING if widget is mapped. */
     if (acc->tkwin && Tk_IsMapped(acc->tkwin)) {
         atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
         atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
@@ -634,64 +634,7 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
     if (!attrs) return NULL;
 
     Tcl_HashEntry *valueEntry = Tcl_FindHashEntry(attrs, "value");
-    
-    /* If no value cached yet, compute it for toggle widgets. */
-    if (!valueEntry) {
-        AtkRole role = GetAtkRoleForWidget(win);
         
-        /* Only compute for toggle widgets. */
-        if (role == ATK_ROLE_CHECK_BOX || 
-            role == ATK_ROLE_RADIO_BUTTON || 
-            role == ATK_ROLE_TOGGLE_BUTTON) {
-            
-            Tcl_Interp *interp = Tk_Interp(win);
-            if (interp) {
-                const char *path = Tk_PathName(win);
-                if (path) {
-                    int stateValue = 0;
-                    char cmd[256];
-                    
-                    /* Get the variable name bound to this widget. */
-                    snprintf(cmd, sizeof(cmd), "%s cget -variable", path);
-                    if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                        const char *varName = Tcl_GetStringResult(interp);
-                        
-                        if (varName && *varName) {
-                            const char *varVal = Tcl_GetVar(interp, varName, TCL_GLOBAL_ONLY);
-                            
-                            if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_TOGGLE_BUTTON) {
-                                /* Checkbox or toggle switch. */
-                                if (varVal && strcmp(varVal, "1") == 0) {
-                                    stateValue = 1;
-                                }
-                            } else if (role == ATK_ROLE_RADIO_BUTTON) {
-                                /* Radio button: compare with -value. */
-                                snprintf(cmd, sizeof(cmd), "%s cget -value", path);
-                                if (Tcl_Eval(interp, cmd) == TCL_OK) {
-                                    const char *rbValue = Tcl_GetStringResult(interp);
-                                    if (varVal && rbValue && strcmp(varVal, rbValue) == 0) {
-                                        stateValue = 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    /* Cache the computed value. */
-                    int newEntry;
-                    valueEntry = Tcl_CreateHashEntry(attrs, "value", &newEntry);
-                    if (valueEntry) {
-                        char buf[2];
-                        snprintf(buf, sizeof(buf), "%d", stateValue);
-                        Tcl_Obj *valObj = Tcl_NewStringObj(buf, -1);
-                        Tcl_IncrRefCount(valObj);
-                        Tcl_SetHashValue(valueEntry, valObj);
-                    }
-                }
-            }
-        }
-    }
-    
     if (!valueEntry) return NULL;
     
     const char *value = Tcl_GetString(Tcl_GetHashValue(valueEntry));
