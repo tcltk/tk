@@ -1091,7 +1091,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind Toggleswitch  <Map> {+::tk::accessible::_attach_trace %W}
 	    #  Bind widgets on X11 to announce their data when they receive focus
 	    #  or are invoked. 
-		bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W} 
+	    bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W} 
 	    bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
 	    bind Checkbutton <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
