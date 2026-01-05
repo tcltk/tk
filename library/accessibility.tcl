@@ -2,7 +2,7 @@
 
 # This file defines the 'tk accessible' command for screen reader support
 # on X11, Windows, and macOS. It implements an abstraction layer that
-# presents a consistent API across the three plataforms.
+# presents a consistent API across the three platforms.
 
 # Copyright © 2009 Allen B. Taylor.
 # Copyright © 2024-2025 Kevin Walzer.
@@ -260,36 +260,59 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	}
 
 	# Get selection status from radiobuttons.
+	variable _radio_idle_id
+
 	proc _getradiodata {w} {
-	    set var [$w cget -variable]
-	    if {$var ne "" && [uplevel #0 info exists $var]} {
-		set value [uplevel #0 set $var]
-		::tk::accessible::set_acc_value $w $value
-		set result [expr {$value eq [$w cget -value]}]
-		if {$result eq 1} {
-		    return "selected"
-		} else {
-		    return "not selected"
-		}
-		return 0
+	    variable _radio_idle_id
+
+	    # Cancel any pending idle callback
+	    if {[info exists _radio_idle_id]} {
+		after cancel $_radio_idle_id
+		unset _radio_idle_id
 	    }
+
+	    # Schedule the new one
+	    set _radio_idle_id [after idle [list ::tk::accessible::_getradiodata_idle $w]]
 	}
 
+
+	proc _getradiodata_idle {w} {
+	    if {![winfo exists $w]} {
+		return
+	    }
+
+	    set var [$w cget -variable]
+	    if {$var eq "" || ![uplevel #0 info exists $var]} {
+		return
+	    }
+
+	    set value [uplevel #0 set $var]
+
+	    ::tk::accessible::set_acc_value $w $value
+
+	    if {$value eq [$w cget -value]} {
+		return "selected"
+	    } else {
+		return "not selected"
+	    }
+	}
+	
 	# Get selection status from checkbuttons.
 	proc _getcheckdata {w} {
 	    set var [$w cget -variable]
 	    if {$var ne "" && [uplevel #0 info exists $var]} {
 		set value [uplevel #0 set $var]
-		::tk::accessible::set_acc_value $w $value
-		set result [expr {$value eq [$w cget -onvalue]}]
-		if {$result eq 1} {
+
+		# Predict post-invoke state (<<Invoke>> fires before update)
+		if {$value eq [$w cget -onvalue]} {
 		    return "selected"
 		} else {
 		    return "not selected"
 		}
-		return 0
 	    }
+	    return 0
 	}
+
 
 	# Update data selection for various widgets.
 	proc _updateselection {w} {
@@ -300,7 +323,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
 		if {[tk windowingsystem] eq "x11"} {
-		    ::tk::accessible::speak [list $data $role $description]
+		     ::tk::accessible::speak [list $data $role $description]
 		}
 	    }
 	    if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton" || [winfo class $w] eq "Toggleswitch"} {
@@ -1066,11 +1089,14 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind Checkbutton   <Map> {+::tk::accessible::_attach_trace %W}
 	    bind TCheckbutton  <Map> {+::tk::accessible::_attach_trace %W}
 	    bind Toggleswitch  <Map> {+::tk::accessible::_attach_trace %W}
-	    #  Bind widgets on X11 to announce their data when they receive focus. 
-	    bind Radiobutton <FocusIn> {+::tk::accessible::_updateselection %W} 
-	    bind TRadiobutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	    #  Bind widgets on X11 to announce their data when they receive focus
+	    #  or are invoked. 
+		bind Radiobutton <<Invoke>> {+::tk::accessible::_updateselection %W} 
+	    bind TRadiobutton <<Invoke>> {+::tk::accessible::_updateselection %W}
 	    bind Checkbutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind Checkbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
 	    bind TCheckbutton <FocusIn> {+::tk::accessible::_updateselection %W}
+	    bind TCheckbutton <<Invoke>> {+::tk::accessible::_updateselection %W}
 	    bind Toggleswitch <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Listbox <FocusIn> {+::tk::accessible::_updateselection %W} 
 	    bind Treeview <FocusIn> {+::tk::accessible::_updateselection %W}
