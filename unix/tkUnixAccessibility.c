@@ -334,13 +334,13 @@ static gboolean tk_grab_focus(AtkComponent *component)
    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, TRUE);
    g_signal_emit_by_name(obj, "focus-event", TRUE);
 
-   /* Help Orca with container navigation */
+   /* Help Orca with container navigation. */
    AtkObject *parent = atk_object_get_parent(obj);
    if (parent) {
        /* Notify parent about active descendant */
        g_signal_emit_by_name(parent, "active-descendant-changed", obj);
        
-       /* Also emit children-changed to ensure ATK hierarchy is refreshed */
+       /* Also emit children-changed to ensure ATK hierarchy is refreshed. */
        g_signal_emit_by_name(parent, "children-changed::add", 
                              atk_object_get_n_accessible_children(parent) - 1, 
                              obj);
@@ -589,6 +589,38 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             role == ATK_ROLE_TREE_ITEM) {      
             atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
         }
+        
+        /* Entry widgets should be EDITABLE, not read-only. */
+        if (role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT) {
+            /* Check if widget has -state normal or is not disabled */
+            Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+            int is_editable = 1; /* Default to editable. */
+            
+            if (hPtr) {
+                Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+                if (attrs) {
+                    Tcl_HashEntry *stateEntry = Tcl_FindHashEntry(attrs, "state");
+                    if (stateEntry) {
+                        const char *state = Tcl_GetString(Tcl_GetHashValue(stateEntry));
+                        if (state && (strcmp(state, "disabled") == 0 || strcmp(state, "readonly") == 0)) {
+                            is_editable = 0;
+                        }
+                    }
+                }
+            }
+            
+            /* Add EDITABLE state for normal entry widgets. */
+            if (is_editable) {
+                atk_state_set_add_state(state_set, ATK_STATE_EDITABLE);
+            }
+            
+            /* Add SINGLE_LINE for entry widgets (not multiline text). */
+            if (role == ATK_ROLE_ENTRY) {
+                atk_state_set_add_state(state_set, ATK_STATE_SINGLE_LINE);
+            } else if (role == ATK_ROLE_TEXT) {
+                atk_state_set_add_state(state_set, ATK_STATE_MULTI_LINE);
+            }
+        }
     }
 
     /* Add FOCUSED if widget has focus. */
@@ -610,14 +642,20 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             role == ATK_ROLE_TOGGLE_BUTTON) {
 
             const char *value = GetAtkValueForWidget(acc->tkwin);
-            if (value && value[0] != '0') {
-                atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
+            /* CRITICAL FIX: Check for proper state values */
+            if (value) {
+                /* For checkboxes/radiobuttons, check if value equals "selected" or "1" or onvalue */
+                if (strcmp(value, "selected") == 0 || 
+                    strcmp(value, "1") == 0 ||
+                    (value[0] != '0' && value[0] != '\0')) {
+                    atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
+                }
             }
         }
     }
-
     return state_set;
 }
+
 
 /*
  * ATK value interface.
@@ -862,25 +900,26 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
  * text widgets. All accessibility in text data is managed at the script level. 
  */
 
-static gchar *tk_text_get_text(AtkText *text, gint start_offset, gint end_offset)
+static gchar *tk_text_get_text(
+    TCL_UNUSED(AtkText *text),
+    TCL_UNUSED(gint start_offset),
+    TCL_UNUSED(gint end_offset))
 {
-    (void) text;
-    (void) start_offset;
-    (void) end_offset;
-    return NULL;  
+    return NULL;
 }
 
-static gint tk_text_get_caret_offset(AtkText *text)
+static gint tk_text_get_caret_offset(
+    TCL_UNUSED(AtkText *text))
 {
-    (void) text;
-    return -1;  
+    return -1;
 }
 
-static gint tk_text_get_character_count(AtkText *text)
+static gint tk_text_get_character_count(
+    TCL_UNUSED(AtkText *text))
 {
-    (void) text;
-    return 0;  
+    return 0;
 }
+
 
 static void tk_atk_text_interface_init(AtkTextIface *iface)
 {
@@ -907,58 +946,52 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
  * script level for virtual widgets. 
  */
 
-static gboolean tk_selection_add_selection(AtkSelection *selection, gint i)
+static gboolean tk_selection_add_selection(
+    TCL_UNUSED(AtkSelection *selection),
+    TCL_UNUSED(gint i))
 {
-    (void) selection;
-    (void) i;
-	
     return FALSE;
 }
 
-static gboolean tk_selection_remove_selection(AtkSelection *selection, gint i)
+static gboolean tk_selection_remove_selection(
+    TCL_UNUSED(AtkSelection *selection),
+    TCL_UNUSED(gint i))
 {
-    (void) selection;
-    (void) i;
-	
     return FALSE;
 }
 
-static gboolean tk_selection_clear_selection(AtkSelection *selection)
+static gboolean tk_selection_clear_selection(
+    TCL_UNUSED(AtkSelection *selection))
 {
-    (void) selection;
-	
     return FALSE;
 }
 
-static gint tk_selection_get_selection_count(AtkSelection *selection)
+static gint tk_selection_get_selection_count(
+    TCL_UNUSED(AtkSelection *selection))
 {
-    (void) selection;
-
     return 0;
 }
 
-static gboolean tk_selection_is_child_selected(AtkSelection *selection, gint i)
+static gboolean tk_selection_is_child_selected(
+    TCL_UNUSED(AtkSelection *selection),
+    TCL_UNUSED(gint i))
 {
-    (void) selection;
-    (void) i;
-	
     return FALSE;
 }
 
-static AtkObject *tk_selection_ref_selection(AtkSelection *selection, gint i)
+static AtkObject *tk_selection_ref_selection(
+    TCL_UNUSED(AtkSelection *selection),
+    TCL_UNUSED(gint i))
 {
-    (void) selection;
-    (void) i;
-	
-    return NULL; 
+    return NULL;
 }
 
-static gboolean tk_selection_select_all_selection(AtkSelection *selection)
+static gboolean tk_selection_select_all_selection(
+    TCL_UNUSED(AtkSelection *selection))
 {
-    (void) selection;
-	
     return FALSE;
 }
+
 
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
 {
@@ -1711,7 +1744,7 @@ static int EmitSelectionChanged(
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
     if (!tkwin) return TCL_OK;
 
-    /* Ensure AtkObject exists */
+    /* Ensure AtkObject exists. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) {
         obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
@@ -1719,16 +1752,32 @@ static int EmitSelectionChanged(
         TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
     }
 
-    /* Simply emit value-changed signal for all widget types */
+    AtkRole role = GetAtkRoleForWidget(tkwin);
+    
+    /* For checkboxes and radiobuttons, emit state-changed signal. */
+    if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
+        const char *value = GetAtkValueForWidget(tkwin);
+        gboolean checked = FALSE;
+        
+        if (value) {
+            if (strcmp(value, "selected") == 0 || strcmp(value, "1") == 0) {
+                checked = TRUE;
+            }
+        }
+        
+        /* Emit the state change notification. */
+        atk_object_notify_state_change(obj, ATK_STATE_CHECKED, checked);
+    }
+
+    /* Emit value-changed signal for all widget types. */
     g_signal_emit_by_name(obj, "value-changed");
     g_object_notify(G_OBJECT(obj), "accessible-value");
 
-    /* Also emit selection-changed for compatibility */
+    /* Also emit selection-changed for compatibility. */
     g_signal_emit_by_name(obj, "selection-changed");
 
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
