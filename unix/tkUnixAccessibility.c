@@ -901,21 +901,21 @@ static void tk_atk_action_interface_init(AtkActionIface *iface)
  */
 
 static gchar *tk_text_get_text(
-    TCL_UNUSED(AtkText *text),
-    TCL_UNUSED(gint start_offset),
-    TCL_UNUSED(gint end_offset))
+    TCL_UNUSED(AtkText *),
+    TCL_UNUSED(gint),
+    TCL_UNUSED(gint))
 {
     return NULL;
 }
 
 static gint tk_text_get_caret_offset(
-    TCL_UNUSED(AtkText *text))
+    TCL_UNUSED(AtkText *))
 {
     return -1;
 }
 
 static gint tk_text_get_character_count(
-    TCL_UNUSED(AtkText *text))
+    TCL_UNUSED(AtkText *))
 {
     return 0;
 }
@@ -947,51 +947,50 @@ static void tk_atk_text_interface_init(AtkTextIface *iface)
  */
 
 static gboolean tk_selection_add_selection(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return FALSE;
 }
 
 static gboolean tk_selection_remove_selection(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return FALSE;
 }
 
 static gboolean tk_selection_clear_selection(
-    TCL_UNUSED(AtkSelection *selection))
+    TCL_UNUSED(AtkSelection *))
 {
     return FALSE;
 }
 
 static gint tk_selection_get_selection_count(
-    TCL_UNUSED(AtkSelection *selection))
+    TCL_UNUSED(AtkSelection *))
 {
     return 0;
 }
 
 static gboolean tk_selection_is_child_selected(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return FALSE;
 }
 
 static AtkObject *tk_selection_ref_selection(
-    TCL_UNUSED(AtkSelection *selection),
-    TCL_UNUSED(gint i))
+    TCL_UNUSED(AtkSelection *),
+    TCL_UNUSED(gint))
 {
     return NULL;
 }
 
 static gboolean tk_selection_select_all_selection(
-    TCL_UNUSED(AtkSelection *selection))
+    TCL_UNUSED(AtkSelection *))
 {
     return FALSE;
 }
-
 
 static void tk_atk_selection_interface_init(AtkSelectionIface *iface)
 {
@@ -1710,7 +1709,6 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
  *----------------------------------------------------------------------
  */
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1755,7 +1753,7 @@ static int EmitSelectionChanged(
     AtkRole role = GetAtkRoleForWidget(tkwin);
     
     /* For checkboxes and radiobuttons, emit state-changed signal. */
-    if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON) {
+    if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) {
         const char *value = GetAtkValueForWidget(tkwin);
         gboolean checked = FALSE;
         
@@ -1765,16 +1763,21 @@ static int EmitSelectionChanged(
             }
         }
         
-        /* Emit the state change notification. */
+        /* Emit the state change notification */
         atk_object_notify_state_change(obj, ATK_STATE_CHECKED, checked);
     }
 
-    /* Emit value-changed signal for all widget types. */
-    g_signal_emit_by_name(obj, "value-changed");
-    g_object_notify(G_OBJECT(obj), "accessible-value");
-
-    /* Also emit selection-changed for compatibility. */
-    g_signal_emit_by_name(obj, "selection-changed");
+    /* For value-supporting widgets, emit text-changed or value-changed */
+    if (role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT || role == ATK_ROLE_COMBO_BOX) {
+        /* Use text-changed for text-based widgets. */
+        g_signal_emit_by_name(obj, "text-changed::insert", 0, 0);
+    } else if (role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_SLIDER || 
+               role == ATK_ROLE_PROGRESS_BAR || role == ATK_ROLE_SCROLL_BAR) {
+        /* For numeric widgets, emit value-changed on the AtkValue interface. */
+        if (ATK_IS_VALUE(obj)) {
+            g_object_notify(G_OBJECT(obj), "accessible-value");
+        }
+    }
 
     return TCL_OK;
 }
