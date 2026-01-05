@@ -37,7 +37,7 @@ Tcl_Obj *
 \fBTk_FreeConfigOptions\fR(\fIrecordPtr, optionTable, tkwin\fR)
 .fi
 .SH ARGUMENTS
-.AS Tk_SavedOptions "*const objv[]" in/out
+.AS Tk_SavedOptions "*const *objv" in/out
 .AP Tcl_Interp *interp in
 A Tcl interpreter.  Most procedures use this only for returning error
 messages; if it is NULL then no error messages are returned.  For
