@@ -334,13 +334,13 @@ static gboolean tk_grab_focus(AtkComponent *component)
    atk_object_notify_state_change(obj, ATK_STATE_FOCUSED, TRUE);
    g_signal_emit_by_name(obj, "focus-event", TRUE);
 
-   /* Help Orca with container navigation */
+   /* Help Orca with container navigation. */
    AtkObject *parent = atk_object_get_parent(obj);
    if (parent) {
        /* Notify parent about active descendant */
        g_signal_emit_by_name(parent, "active-descendant-changed", obj);
        
-       /* Also emit children-changed to ensure ATK hierarchy is refreshed */
+       /* Also emit children-changed to ensure ATK hierarchy is refreshed. */
        g_signal_emit_by_name(parent, "children-changed::add", 
                              atk_object_get_n_accessible_children(parent) - 1, 
                              obj);
@@ -589,6 +589,38 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             role == ATK_ROLE_TREE_ITEM) {      
             atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
         }
+        
+        /* Entry widgets should be EDITABLE, not read-only. */
+        if (role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT) {
+            /* Check if widget has -state normal or is not disabled */
+            Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (char *)acc->tkwin);
+            int is_editable = 1; /* Default to editable. */
+            
+            if (hPtr) {
+                Tcl_HashTable *attrs = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
+                if (attrs) {
+                    Tcl_HashEntry *stateEntry = Tcl_FindHashEntry(attrs, "state");
+                    if (stateEntry) {
+                        const char *state = Tcl_GetString(Tcl_GetHashValue(stateEntry));
+                        if (state && (strcmp(state, "disabled") == 0 || strcmp(state, "readonly") == 0)) {
+                            is_editable = 0;
+                        }
+                    }
+                }
+            }
+            
+            /* Add EDITABLE state for normal entry widgets. */
+            if (is_editable) {
+                atk_state_set_add_state(state_set, ATK_STATE_EDITABLE);
+            }
+            
+            /* Add SINGLE_LINE for entry widgets (not multiline text). */
+            if (role == ATK_ROLE_ENTRY) {
+                atk_state_set_add_state(state_set, ATK_STATE_SINGLE_LINE);
+            } else if (role == ATK_ROLE_TEXT) {
+                atk_state_set_add_state(state_set, ATK_STATE_MULTI_LINE);
+            }
+        }
     }
 
     /* Add FOCUSED if widget has focus. */
@@ -610,14 +642,20 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
             role == ATK_ROLE_TOGGLE_BUTTON) {
 
             const char *value = GetAtkValueForWidget(acc->tkwin);
-            if (value && value[0] != '0') {
-                atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
+            /* CRITICAL FIX: Check for proper state values */
+            if (value) {
+                /* For checkboxes/radiobuttons, check if value equals "selected" or "1" or onvalue */
+                if (strcmp(value, "selected") == 0 || 
+                    strcmp(value, "1") == 0 ||
+                    (value[0] != '0' && value[0] != '\0')) {
+                    atk_state_set_add_state(state_set, ATK_STATE_CHECKED);
+                }
             }
         }
     }
-
     return state_set;
 }
+
 
 /*
  * ATK value interface.
@@ -1671,7 +1709,6 @@ static void TkAtkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
  *----------------------------------------------------------------------
  */
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1705,7 +1742,7 @@ static int EmitSelectionChanged(
     Tk_Window tkwin = Tk_NameToWindow(interp, windowName, Tk_MainWindow(interp));
     if (!tkwin) return TCL_OK;
 
-    /* Ensure AtkObject exists */
+    /* Ensure AtkObject exists. */
     AtkObject *obj = GetAtkObjectForTkWindow(tkwin);
     if (!obj) {
         obj = TkCreateAccessibleAtkObject(interp, tkwin, windowName);
@@ -1713,16 +1750,37 @@ static int EmitSelectionChanged(
         TkAtkAccessible_RegisterEventHandlers(tkwin, (TkAtkAccessible *)obj);
     }
 
-    /* Simply emit value-changed signal for all widget types */
-    g_signal_emit_by_name(obj, "value-changed");
-    g_object_notify(G_OBJECT(obj), "accessible-value");
+    AtkRole role = GetAtkRoleForWidget(tkwin);
+    
+    /* For checkboxes and radiobuttons, emit state-changed signal. */
+    if (role == ATK_ROLE_CHECK_BOX || role == ATK_ROLE_RADIO_BUTTON || role == ATK_ROLE_TOGGLE_BUTTON) {
+        const char *value = GetAtkValueForWidget(tkwin);
+        gboolean checked = FALSE;
+        
+        if (value) {
+            if (strcmp(value, "selected") == 0 || strcmp(value, "1") == 0) {
+                checked = TRUE;
+            }
+        }
+        
+        /* Emit the state change notification */
+        atk_object_notify_state_change(obj, ATK_STATE_CHECKED, checked);
+    }
 
-    /* Also emit selection-changed for compatibility */
-    g_signal_emit_by_name(obj, "selection-changed");
+    /* For value-supporting widgets, emit text-changed or value-changed */
+    if (role == ATK_ROLE_ENTRY || role == ATK_ROLE_TEXT || role == ATK_ROLE_COMBO_BOX) {
+        /* Use text-changed for text-based widgets. */
+        g_signal_emit_by_name(obj, "text-changed::insert", 0, 0);
+    } else if (role == ATK_ROLE_SPIN_BUTTON || role == ATK_ROLE_SLIDER || 
+               role == ATK_ROLE_PROGRESS_BAR || role == ATK_ROLE_SCROLL_BAR) {
+        /* For numeric widgets, emit value-changed on the AtkValue interface. */
+        if (ATK_IS_VALUE(obj)) {
+            g_object_notify(G_OBJECT(obj), "accessible-value");
+        }
+    }
 
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
