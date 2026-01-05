@@ -3374,7 +3374,8 @@ static void DisclosureElementDraw(
 {
     if (!(state & TTK_STATE_LEAF)) {
 	CGRect bounds = BoxToRect(d, b);
-	NSColor *color = (state & TTK_STATE_SELECTED) ?
+	NSColor *color =
+	    (state & TTK_STATE_SELECTED) && (state & TTK_STATE_FOCUS) ?
 	    [NSColor whiteColor] : [NSColor textColor];
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	int isDark = TkMacOSXInDarkMode(tkwin);
@@ -3383,6 +3384,15 @@ static void DisclosureElementDraw(
 	CGFloat rgba[4];
 
 	[color getComponents: rgba];
+	if (rgba[0] == 0) {
+	    rgba[0] = rgba[1] = rgba[2] = 0.5;
+	} else if ((state & TTK_STATE_SELECTED) && (state & TTK_STATE_FOCUS)) {
+	    if (isDark) {
+		rgba[0] = rgba[1] = rgba[2] = 0.9;
+	    }
+	} else {
+	    rgba[0] = rgba[1] = rgba[2] = 0.6;
+	}
 
 	BEGIN_DRAWING(d)
 	if (state & TTK_STATE_OPEN) {
