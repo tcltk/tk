@@ -1545,15 +1545,26 @@ proc ::ttk::treeview::Create_CheckTreeview_Style {} {
 		ttk::style map $new {*}$list
 	    }
 
-	    # Override item layout
-	    ttk::style layout CheckTreeview.Item {
-		Treeitem.padding -sticky nswe -children {
-		    Treeitem.indicator -side left -sticky {}
-		    Checkbutton.indicator -side left -sticky {}
-		    Treeitem.image -side left -sticky {}
-		    Treeitem.text -side left -sticky {}
-		}
-	    }
+            # Override item layout
+            if {$theme eq "aqua"} {
+                ttk::style layout CheckTreeview.Item {
+                    Treeitem.padding -sticky nswe -children {
+                        Treeitem.indicator -side left -sticky {}
+                        Checkbutton.button -side left -sticky {}
+                        Treeitem.image -side left -sticky {}
+                        Treeitem.text -side left -sticky {}
+                    }
+                }
+            } else {
+                ttk::style layout CheckTreeview.Item {
+                    Treeitem.padding -sticky nswe -children {
+                        Treeitem.indicator -side left -sticky {}
+                        Checkbutton.indicator -side left -sticky {}
+                        Treeitem.image -side left -sticky {}
+                        Treeitem.text -side left -sticky {}
+                    }
+                }
+            }
 	}
     }
 }
