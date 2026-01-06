@@ -93,7 +93,7 @@ proc ttk::wideSpinbox::CreateElements theme {
 	}
     } else {
 	ttk::style layout Wide.TSpinbox {
-	    Entry.field -side top -sticky we -children {
+	    Entry.field -sticky nswe -children {
 		WideSpinbox.uparrow -side right -sticky e
 		WideSpinbox.gap -side right -sticky e
 		WideSpinbox.downarrow -side right -sticky e
