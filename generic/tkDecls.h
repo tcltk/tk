@@ -1830,6 +1830,9 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 	int, const char **, char *, int))(void *)(tkStubsPtr->tk_ConfigureWidget)) \
 	(((flags & TK_CONFIG_OBJS) ? interp : (Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory in Tk_ConfigureWidget"), \
 	NULL)), tkwin, specs, argc, argv, widgRec, flags)
+#undef Tk_UnderlineCharsInContext
+#undef Tk_DrawCharsInContext
+#undef Tk_MeasureCharsInContext
 #endif
 
 #undef TCL_STORAGE_CLASS

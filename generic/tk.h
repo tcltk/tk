@@ -17,7 +17,7 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION < 9)
+#if (TCL_MAJOR_VERSION < 9) && defined(BUILD_tk)
 #	error Tk 9.0 must be compiled with tcl.h from Tcl 9.0 or better
 #endif
 
