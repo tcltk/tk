@@ -3373,9 +3373,15 @@ static void DisclosureElementDraw(
     Ttk_State state)
 {
     if (!(state & TTK_STATE_LEAF)) {
+	/*
+	 * The ttk::treeview implementation uses the state
+	 * TTK_STATE_FOCUS for the items and sets the state
+	 * TTK_STATE_USER1 if the widget has the input focus.
+	 */
+
 	CGRect bounds = BoxToRect(d, b);
 	NSColor *color =
-	    (state & TTK_STATE_SELECTED) && (state & TTK_STATE_FOCUS) ?
+	    (state & TTK_STATE_SELECTED) && (state & TTK_STATE_USER1) ?
 	    [NSColor whiteColor] : [NSColor textColor];
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	int isDark = TkMacOSXInDarkMode(tkwin);
@@ -3386,7 +3392,7 @@ static void DisclosureElementDraw(
 	[color getComponents: rgba];
 	if (rgba[0] == 0) {
 	    rgba[0] = rgba[1] = rgba[2] = 0.5;
-	} else if ((state & TTK_STATE_SELECTED) && (state & TTK_STATE_FOCUS)) {
+	} else if ((state & TTK_STATE_SELECTED) && (state & TTK_STATE_USER1)) {
 	    if (isDark) {
 		rgba[0] = rgba[1] = rgba[2] = 0.9;
 	    }
