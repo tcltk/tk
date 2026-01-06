@@ -193,7 +193,7 @@ namespace eval ttk::theme::aqua {
 	    -font TkHeadingFont \
 	    -foreground systemTextColor \
 	    -background systemWindowBackgroundColor
-	ttk::style configure Treeview \
+	ttk::style configure Treeview -rowheight 18 \
 	    -background systemControlBackgroundColor \
 	    -stripedbackground systemControlAlternatingRowColor \
 	    -foreground systemTextColor \
