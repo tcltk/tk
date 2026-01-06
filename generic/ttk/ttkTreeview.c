@@ -2056,6 +2056,9 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item)
     if (item != tv->tree.focus) {
 	state &= ~TTK_STATE_FOCUS;
     }
+    if (tv->core.state & TTK_STATE_FOCUS) {
+	state |= TTK_STATE_USER1;
+    }
     return state;
 }
 
