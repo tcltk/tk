@@ -205,7 +205,7 @@ typedef struct TkTextIndex {
 } TkTextIndex;
 
 /*
- * Types for procedure pointers stored in TkTextDispChunk strutures:
+ * Types for procedure pointers stored in TkTextDispChunk structures:
  */
 
 typedef struct TkTextDispChunk TkTextDispChunk;

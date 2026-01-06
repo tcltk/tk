@@ -76,6 +76,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 		TkMacOSXAssignNewKeyWindow(NULL, NULL);
 	    }
 	}
+	if (winPtr && Tk_IsMapped(winPtr)) {
+	    GenerateActivateEvents(winPtr, false);
+	}
     }
     /*
      * On older systems the system dialogs do not send DidResignKey
