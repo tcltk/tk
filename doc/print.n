@@ -27,7 +27,7 @@ and
 Unix commands, and the \fBtk print\fR command does not supersede that
 functionality; it builds on it. The \fBtk print\fR command is a fuller
 implementation that uses native dialogs on macOS and Windows, and a Tk-based
-dialog that provides parallel functionality on X11.
+dialog that provides parallel functionality on X11. 
 .SH PLATFORM NOTES
 .TP
 \fBmacOS\fR
@@ -50,7 +50,7 @@ printer via the
 .QW "lpr"
 or
 .QW "lp"
-commands. While these commands have a large number of parameters for
+commands or via the Common Unix Printing System (CUPS) API if libcups is installed. While these commands have a large number of parameters for
 configuring print jobs, printers vary widely in how they support these
 parameters. As a result, only printer selection and number of copies are
 configured as arguments to the print command; many aspects of print rendering,
