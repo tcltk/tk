@@ -708,7 +708,6 @@ static TreeColumn *FindColumn(
 	    return NULL;
 	}
     }
-
     return GetColumn(interp, tv, columnIDObj);
 }
 
@@ -827,7 +826,6 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv) {
 	Tcl_IncrRefCount(columnName);
 	tv->tree.columns[i].idObj = columnName;
     }
-
     return TCL_OK;
 }
 
@@ -882,7 +880,6 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv) {
     }
     tv->tree.displayColumns = displayColumns;
     tv->tree.nDisplayColumns = ndcols + 1;
-
     return TCL_OK;
 }
 
@@ -1708,7 +1705,6 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1) {
 	    xpos -= tv->tree.xscroll.first;
 	}
     }
-
     return -1;
 }
 
@@ -2212,11 +2208,6 @@ static void DrawCells(
 	xPad = tv->tree.colSeparatorWidth/2;
     }
 
-    /* Make sure that the cells won't overlap the border's bottom edge */
-    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
-	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
-    }
-
     /* An Item's image should not propagate to a Cell.
        A Cell's image can only be set by cell tags. */
     displayItemCell = *displayItem;
@@ -2313,11 +2304,6 @@ static void DrawItem(
     x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     xTitle = tv->tree.treeArea.x;
     y = tv->tree.treeArea.y + h;
-
-    /* Make sure that the item won't overlap the border's bottom edge: */
-    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
-	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
-    }
 
     PrepareItem(tv, item, &displayItem, state);
     PrepareItem(tv, item, &displayItemSel, state | TTK_STATE_SELECTED);
@@ -2695,7 +2681,6 @@ static int TreeviewChildrenCommand(
 	tv->tree.rowPosNeedsUpdate = 1;
 	TtkRedisplayWidget(&tv->core);
     }
-
     return TCL_OK;
 }
 
@@ -2818,10 +2803,9 @@ static int TreeviewParentCommand(
 	return TCL_ERROR;
     }
 
-    if (item->parent && (item->parent)->idObj) {
-	Tcl_SetObjResult(interp, (item->parent)->idObj);
+    if (item->parent && item->parent->idObj) {
+	Tcl_SetObjResult(interp, item->parent->idObj);
     } /* This is the root item.  Leave interp-result empty */
-
     return TCL_OK;
 }
 
@@ -2864,9 +2848,8 @@ static int TreeviewNextCommand(
     }
 
     if (item->next) {
-	Tcl_SetObjResult(interp, (item->next)->idObj);
+	Tcl_SetObjResult(interp, item->next->idObj);
     } /* else -- leave interp-result empty */
-
     return TCL_OK;
 }
 
@@ -2888,9 +2871,8 @@ static int TreeviewPrevCommand(
     }
 
     if (item->prev) {
-	Tcl_SetObjResult(interp, (item->prev)->idObj);
+	Tcl_SetObjResult(interp, item->prev->idObj);
     } /* else -- leave interp-result empty */
-
     return TCL_OK;
 }
 
@@ -3306,7 +3288,6 @@ static int TreeviewBBoxCommand(
     if (BoundingBox(tv, item, column, &bbox)) {
 	Tcl_SetObjResult(interp, Ttk_NewBoxObj(bbox));
     }
-
     return TCL_OK;
 }
 
@@ -6632,7 +6613,6 @@ static int TreeviewTagDeleteCommand(
     Tk_DeleteAllBindings(tv->tree.bindingTable, tag);
     Ttk_DeleteTagFromTable(tagTable, tag);
     TtkRedisplayWidget(&tv->core);
-
     return TCL_OK;
 }
 
@@ -6750,7 +6730,6 @@ static int TreeviewTagNamesCommand(
 	Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	return TCL_ERROR;
     }
-
     return Ttk_EnumerateTags(interp, tv->tree.tagTable);
 }
 
@@ -6796,13 +6775,13 @@ static int TreeviewTagAddCommand(
     ckfree(items);
 
     TtkRedisplayWidget(&tv->core);
-
     return TCL_OK;
 }
 
 /* Make sure tagset at column is allocated and initialized */
 static void AllocCellTagSets(Treeview *tv, TreeItem *item, Tcl_Size columnNumber) {
     Tcl_Size i, newSize = columnNumber + 1;
+
     if (newSize < tv->tree.nColumns + 1) {
 	newSize = tv->tree.nColumns + 1;
     }
@@ -6870,7 +6849,6 @@ static int TreeviewCtagAddCommand(
 
     ckfree(cells);
     TtkRedisplayWidget(&tv->core);
-
     return TCL_OK;
 }
 
@@ -6935,7 +6913,6 @@ static int TreeviewTagRemoveCommand(
     }
 
     TtkRedisplayWidget(&tv->core);
-
     return TCL_OK;
 }
 
@@ -6987,7 +6964,6 @@ static int TreeviewCtagRemoveCommand(
     }
 
     TtkRedisplayWidget(&tv->core);
-
     return TCL_OK;
 }
 
