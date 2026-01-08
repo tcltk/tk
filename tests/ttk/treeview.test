@@ -6,7 +6,7 @@ if {[lsearch [namespace children] ::tcltest] == -1} {
 	namespace import ::tcltest::*
 }
 
-set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_path]
+set ::auto_path [concat [list [file dirname [file dirname [info script]]]] $::auto_path]
 
 package require Tk
 
@@ -55,9 +55,9 @@ proc fixed_table {w} {
     ttk::style configure Treeview -font {Arial 10} -rowheight 20 -padding 0
     ttk::style configure Row -headingheight 0 -rowheight 0
     if {$::tcl_platform(platform) ne "windows"} {
- ttk::style configure Treeview.Heading -font {Arial 11} -padding 0
+	ttk::style configure Treeview.Heading -font {Arial 11} -padding 0
     } else {
- ttk::style configure Treeview.Heading -font {Arial 10} -padding 0
+	ttk::style configure Treeview.Heading -font {Arial 10} -padding 0
     }
     $w configure -padding 0 -height 10 -rowheight 20 -headingheight 20
     update
@@ -107,8 +107,9 @@ proc ButtonPress {w item {column {#0}} {offset 0}} {
     update
     update idletasks
 }
-proc KeyPress {w item column keysym {modifier {}}} {
+proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
     focus -force $w
+
     if {$column eq {}} {
 	$w focus $item
     } else {
@@ -117,6 +118,15 @@ proc KeyPress {w item column keysym {modifier {}}} {
     update
     update idletasks
 
+    if {$mac_mod ne "" && $::tcl_platform(os) eq "Darwin"} {
+	set modifier $mac_mod
+    }
+    if {$modifier ne "" && $::tcl_platform(os) eq "Darwin"} {
+	switch -- $modifier {
+	    "Alt" {set modifier "Option"}
+	    "Control" {set modifier "Command"}
+	}
+    }
     set mod [expr {$modifier ne "" ? [format "%s-" $modifier] : ""}]
     event generate $w [format "<%sKeyPress-%s>" $mod $keysym]
     update idletasks
@@ -587,37 +597,37 @@ test Xview-6.5 {Get current} -setup {
 	update
     } -body {
 	.tv xview
-    } -result {0.25 0.72625}
+    } -result {0.25 0.72875}
 
 test Xview-6.6 {Moveto min} -body {
 	.tv xview moveto 0.0
 	update
 	.tv xview
-    } -result {0.0 0.47625}
+    } -result {0.0 0.47875}
 
 test Xview-6.7 {Moveto mid} -body {
 	.tv xview moveto 0.25
 	update
 	.tv xview
-    } -result {0.25 0.72625}
+    } -result {0.25 0.72875}
 
 test Xview-6.8 {Moveto max} -body {
 	.tv xview moveto 1.0
 	update
 	.tv xview
-    } -result {0.52375 1.0}
+    } -result {0.52125 1.0}
 
 test Xview-6.9 {Moveto before first} -body {
 	.tv xview moveto -1.0
 	update
 	.tv xview
-    } -result {0.0 0.47625}
+    } -result {0.0 0.47875}
 
 test Xview-6.10 {Moveto after last} -body {
 	.tv xview moveto 2.0
 	update
 	.tv xview
-    } -result {0.52375 1.0}
+    } -result {0.52125 1.0}
 
 test Xview-6.11 {Scroll too many args} -body {
 	.tv xview scroll x y z
@@ -635,13 +645,13 @@ test Xview-6.14 {Scroll pages} -body {
 	.tv xview scroll 1 pages
 	update
 	.tv xview
-    } -result {0.52375 1.0}
+    } -result {0.52125 1.0}
 
 test Xview-6.15 {Scroll units} -body {
 	.tv xview scroll -1 units
 	update
 	.tv xview
-    } -result {0.5225 0.99875}
+    } -result {0.52 0.99875}
 
 test Xview-6.16 {Xscrollcommand} -setup {
 	.tv configure -xscrollcommand scrollcallback
@@ -649,7 +659,7 @@ test Xview-6.16 {Xscrollcommand} -setup {
 	.tv delete [.tv children {}]
 	update
 	set ::scrolldata
-    } -result {0.5225 0.99875}
+    } -result {0.52 0.99875}
 
 test Xview-6.17 {Cleanup} -body {
 	destroy .tv .sx .sy
@@ -1015,7 +1025,7 @@ test Drag_and_Drop-11.6 {Resize by display column} -body {
 	.tv drag #0 75
 	.tv drop
 	.tv column #0 -width
-    } -result {73}
+    } -result {74}
 
 test Drag_and_Drop-11.7 {Resize by column number} -body {
 	.tv drag 0 125
@@ -1067,7 +1077,7 @@ test Drag_and_Drop-11.15 {Drag beyond right edge is allowed} -setup {
 	update
 	lappend res [.tv column #0 -width]
 	set res
-    } -result {200 998}
+    } -result {200 999}
 
 test Drag_and_Drop-11.16 {Drag beyond left edge is not allowed} -setup {
 	columns_stretch .tv
@@ -1087,7 +1097,7 @@ test Drag_and_Drop-11.17 {Drag First Column} -setup {
 	update
 	lappend res [.tv column #0 -width]
 	set res
-    } -result {195 20}
+    } -result {196 20}
 
 test Drag_and_Drop-11.18 {Drag Last Column} -setup {
 	columns_stretch .tv
@@ -1097,7 +1107,7 @@ test Drag_and_Drop-11.18 {Drag Last Column} -setup {
 	update
 	lappend res [.tv column #3 -width]
 	set res
-    } -result {196 413}
+    } -result {196 412}
 
 test Drag_and_Drop-11.19 {Shrink Column In Stretch Mode Adds Space to Next Column} -setup {
 	columns_stretch .tv
@@ -1107,7 +1117,7 @@ test Drag_and_Drop-11.19 {Shrink Column In Stretch Mode Adds Space to Next Colum
 	update
 	lappend res [.tv column #2 -width]
 	set res
-    } -result {200 283}
+    } -result {200 284}
 
 test Drag_and_Drop-11.20 {Expand Column In Stretch Mode Reduces Space in Next Column} -body {
 	set res [list [.tv column #2 -width]]
@@ -1115,7 +1125,7 @@ test Drag_and_Drop-11.20 {Expand Column In Stretch Mode Reduces Space in Next Co
 	update
 	lappend res [.tv column #2 -width]
 	set res
-    } -result {283 83}
+    } -result {284 84}
 
 test Drag_and_Drop-11.21 {Shrink Column Not In Stretch Mode Does Not Change Next Column} -setup {
 	columns_no_stretch .tv
@@ -1173,15 +1183,15 @@ test Bbox-12.5 {Invalid column} -body {
 
 test Bbox-12.6 {Get Item Coords} -body {
 	.tv bbox red
-    } -result {2 22 800 20}
+    } -result {1 21 800 20}
 
 test Bbox-12.7 {Get Item and Column Coords} -body {
 	.tv bbox red #0
-    } -result {2 22 200 20}
+    } -result {1 21 200 20}
 
 test Bbox-12.8 {Get Cell Coords} -body {
 	.tv bbox {*}[list pink #0]
-    } -result {22 42 180 20}
+    } -result {21 41 180 20}
 
 test Bbox-12.9 {Root} -body {
 	.tv bbox {}
@@ -1199,7 +1209,7 @@ test Bbox-12.11 {Item in Y view} -setup {
 	update
     } -body {
 	.tv bbox red
-    } -result {2 22 800 20}
+    } -result {1 21 800 20}
 
 test Bbox-12.12 {Y view scroll item out of view} -body {
 	.tv yview 0
@@ -1211,7 +1221,7 @@ test Bbox-12.12 {Y view scroll item out of view} -body {
 	set res
     } -cleanup {
 	.tv yview 0
-    } -result {{2 22 200 20} {}}
+    } -result {{1 21 200 20} {}}
 
 test Bbox-12.13 {Y view scroll item into view} -body {
 	.tv yview 400
@@ -1223,7 +1233,7 @@ test Bbox-12.13 {Y view scroll item into view} -body {
 	set res
     } -cleanup {
 	.tv yview 0
-    } -result {{} {2 22 200 20}}
+    } -result {{} {1 21 200 20}}
 
 test Bbox-12.14 {Column in X view} -setup {
 	columns_no_stretch .tv
@@ -1231,7 +1241,7 @@ test Bbox-12.14 {Column in X view} -setup {
 	update
     } -body {
 	.tv bbox red #0
-    } -result {2 22 200 20}
+    } -result {1 21 200 20}
 
 test Bbox-12.15 {X view scroll cell out of view Bug #2381555} -body {
 	.tv xview 0
@@ -1243,7 +1253,7 @@ test Bbox-12.15 {X view scroll cell out of view Bug #2381555} -body {
 	set res
     } -cleanup {
 	.tv xview 0
-    } -result {{2 22 200 20} {-198 22 200 20}}
+    } -result {{1 21 200 20} {-199 21 200 20}}
 
 test Bbox-12.16 {X view scroll cell into view Bug #2381555} -body {
 	.tv xview 400
@@ -1255,7 +1265,7 @@ test Bbox-12.16 {X view scroll cell into view Bug #2381555} -body {
 	set res
     } -cleanup {
 	.tv xview 0
-    } -result {{-398 22 200 20} {2 22 200 20}}
+    } -result {{-399 21 200 20} {1 21 200 20}}
 
 test Bbox-12.17 {Title Columns No Scroll} -setup {
 	.tv configure -titlecolumns 1
@@ -1267,7 +1277,7 @@ test Bbox-12.17 {Title Columns No Scroll} -setup {
 	update
 	lappend res [cell_bbox .tv red]
 	return $res
-    } -result {{{2 22 200 20} {202 22 200 20} {402 22 200 20} {602 22 200 20}} {{2 22 200 20} {-198 22 200 20} {2 22 200 20} {202 22 200 20}}}
+    } -result {{{1 21 200 20} {201 21 200 20} {401 21 200 20} {601 21 200 20}} {{1 21 200 20} {-199 21 200 20} {1 21 200 20} {201 21 200 20}}}
 
 test Bbox-12.18 {Title Columns Scroll} -setup {
 	.tv configure -titlecolumns 1
@@ -1279,7 +1289,7 @@ test Bbox-12.18 {Title Columns Scroll} -setup {
 	update
 	lappend res [cell_bbox .tv blue]
 	return $res
-    } -result {{{2 222 200 20} {202 222 200 20} {402 222 200 20} {602 222 200 20}} {{2 222 200 20} {-198 222 200 20} {2 222 200 20} {202 222 200 20}}}
+    } -result {{{1 221 200 20} {201 221 200 20} {401 221 200 20} {601 221 200 20}} {{1 221 200 20} {-199 221 200 20} {1 221 200 20} {201 221 200 20}}}
 
 test Bbox-12.19 {Title Rows No Scroll} -setup {
 	.tv configure -titleitems 1
@@ -1292,7 +1302,7 @@ test Bbox-12.19 {Title Rows No Scroll} -setup {
 	
 	lappend res [cell_bbox .tv red]
 	return $res
-    } -result {{{2 22 200 20} {-198 22 200 20} {2 22 200 20} {202 22 200 20}} {{2 22 200 20} {-198 22 200 20} {2 22 200 20} {202 22 200 20}}}
+    } -result {{{1 21 200 20} {-199 21 200 20} {1 21 200 20} {201 21 200 20}} {{1 21 200 20} {-199 21 200 20} {1 21 200 20} {201 21 200 20}}}
 
 test Bbox-12.20 {Title Rows Scroll} -setup {
 	.tv configure -titleitems 1
@@ -1304,7 +1314,7 @@ test Bbox-12.20 {Title Rows Scroll} -setup {
 	update
 	lappend res [cell_bbox .tv blue]
 	return $res
-    } -result {{{2 222 200 20} {-198 222 200 20} {2 222 200 20} {202 222 200 20}} {{} {} {} {}}}
+    } -result {{{1 221 200 20} {-199 221 200 20} {1 221 200 20} {201 221 200 20}} {{} {} {} {}}}
 
 test Bbox-12.21 {Title Columns > Number of Columns} -setup {
 	.tv configure -titlecolumns 5
@@ -4487,12 +4497,12 @@ test Item_Events-45.5 {Item Key Down} -body {
     } -result {cyan}
 
 test Item_Events-45.6 {Item Key Page Top} -body {
-	KeyPress .tv blue {} Up Control
+	KeyPress .tv blue {} Up Control Option
 	.tv focus
     } -result {maroon}
 
 test Item_Events-45.7 {Item Key Page Bottom} -body {
-	KeyPress .tv blue {} Down Control
+	KeyPress .tv blue {} Down Control Option
 	.tv focus
     } -result {cyan}
 

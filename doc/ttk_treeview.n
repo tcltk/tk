@@ -1191,24 +1191,25 @@ The \fB<Control-Shift-Down>\fR key will extend the selection to the bottom-most 
 .IP \(bu
 The \fB<Home>\fR key will move the focus to the first child of the current item's parent.
 The \fB<Shift-Home>\fR key will extend the selection to the first child of the current item's parent (multiple and extended select modes only).
-The \fB<Control-Home>\fR key will move the focus to the first item in the tree.
-The \fB<Control-Shift-Home>\fR key will extend the selection to the first item in the tree (multiple and extended select modes only).
+The \fB<Control-Home>\fR key (or \fB<Command-Home>\fR on Mac) will move the focus to the first item in the tree.
+The \fB<Control-Shift-Home>\fR (or \fB<Command-Shift Home>\fR on Mac) key will extend the selection to the first item in the tree (multiple and extended select modes only).
 .IP \(bu
 The \fB<End>\fR key will move the focus to the last child of the current item's parent.
 The \fB<Shift-End>\fR key will extend the selection to the last child of the current item's parent (multiple and extended select modes only).
-The \fB<Control-End>\fR key will move the focus to the last item in the tree.
-The \fB<Control-Shift-End>\fR key will extend the selection to the last item in the tree (multiple and extended select modes only).
+The \fB<Control-End>\fR key (or \fB<Command-End>\fR on Mac) will move the focus to the last item in the tree.
+The \fB<Control-Shift-End>\fR (or \fB<Command-Shift-End>\fR on Mac) key will extend the selection to the last item in the tree (multiple and extended select modes only).
 .IP \(bu
 The \fB<Prior>\fR key will scroll up 1 screenful and set the focus and selection to the item at the same location.
 The \fB<Shift-Prior>\fR key will scroll left 1 screenful.
-The \fB<Control-Prior>\fR key will move to the top-most on-screen item and select it.
+The \fB<Control-Prior>\fR key (or \fB<Command-Prior>\fR on Mac) will move to the top-most on-screen item and select it.
 .IP \(bu
 The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selection to the item at the same location.
 The \fB<Shift-Next>\fR key will scroll right 1 screenful.
-The \fB<Control-Next>\fR key will move to the bottom-most on-screen item and select it.
+The \fB<Control-Next>\fR key (or \fB<Command-Next>\fR on Mac) will move to the bottom-most on-screen item and select it.
 .IP \(bu
-The \fB<Return>\fR and \fBF2\fR keys will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not and item has children, the open state of the current item will be toggled. Else, the item will be selected.
-The \fB<Control-Return>\fR key will toggle the open/close state of the current item.
+The \fB<Return>\fR key will invoke the current item. 
+The \fB<Shift-Return>\fR key will move to the first child in the current item's parent.
+The \fB<Control-Return>\fR and \fBF2\fR keys will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not and item has children, the open state of the current item will be toggled. Else, the item will be selected.
 .IP \(bu
 The \fB<space>\fR key will toggle the selection state of the current item (single, multiple, and extended select modes only).
 The \fB<Shift-space>\fR key will select the current item (single, multiple, and extended select modes only).
@@ -1244,13 +1245,13 @@ The \fB<Down>\fR key will move the focus to the below cell in the column and sel
 .IP \(bu
 The \fB<Home>\fR key will move the focus to the first cell in the row and select it.
 \fB<Shift-Home>\fR will extend the selection to the first cell in the row (multiple and extended select modes only).
-\fB<Control-Home>\fR will move the focus to the top-left cell in the tree and select it.
-\fB<Control-Shift-Home>\fR will extend the selection to the top-left cell in the tree (multiple and extended select modes only).
+\fB<Control-Home>\fR (or \fB<Command-Home>\fR on Mac) will move the focus to the top-left cell in the tree and select it.
+\fB<Control-Shift-Home>\fR (or \fB<Command-Shift-Home>\fR on Mac) will extend the selection to the top-left cell in the tree (multiple and extended select modes only).
 .IP \(bu
 The \fB<End>\fR key will move the focus to the last cell in the row and select it.
 \fB<Shift-End>\fR will extend the selection to the last cell in the row (multiple and extended select modes only).
-\fB<Control-End>\fR will move the focus to the bottom-right cell in the tree and select it.
-\fB<Control-Shift-End>\fR will extend the selection to the bottom-right cell in the tree (multiple and extended select modes only).
+\fB<Control-End>\fR (or \fB<Command-End>\fR on Mac) will move the focus to the bottom-right cell in the tree and select it.
+\fB<Control-Shift-End>\fR (or \fB<Command-Shift-End>\fR on Mac) will extend the selection to the bottom-right cell in the tree (multiple and extended select modes only).
 .IP \(bu
 The \fB<Prior>\fR key will scroll up 1 screenful and set the focus and selection to the cell at the same location.
 \fB<Shift-Prior>\fR will scroll left 1 screenful and set the focus and selection to the cell at the same location.

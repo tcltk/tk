@@ -63,11 +63,12 @@ bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W pageTop }
 bind Treeview	<<NextPara>>		{ ::ttk::treeview::KeyNav %W pageBottom }
 bind Treeview	<<SelectPrevPara>>	{ ::ttk::treeview::KeyNav %W pageTop extend }
 bind Treeview	<<SelectNextPara>>	{ ::ttk::treeview::KeyNav %W pageBottom extend }
-set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Alt" : "Option"}]
-bind Treeview	<${ckey}-Up>		{ ::ttk::treeview::KeyNav %W top }
-bind Treeview	<${ckey}-Shift-Up>	{ ::ttk::treeview::KeyNav %W top extend }
-bind Treeview	<${ckey}-Down>		{ ::ttk::treeview::KeyNav %W bottom }
-bind Treeview	<${ckey}-Shift-Down>	{ ::ttk::treeview::KeyNav %W bottom extend }
+if {$::tcl_platform(os) ne "Darwin"} {
+bind Treeview	<Alt-Up>		{ ::ttk::treeview::KeyNav %W top }
+bind Treeview	<Alt-Shift-Up>		{ ::ttk::treeview::KeyNav %W top extend }
+bind Treeview	<Alt-Down>		{ ::ttk::treeview::KeyNav %W bottom }
+bind Treeview	<Alt-Shift-Down>	{ ::ttk::treeview::KeyNav %W bottom extend }
+}
 
 # Home/End key bindings (none, shift, control, control+shift)
 bind Treeview	<<LineStart>>		{ ::ttk::treeview::KeyNav %W first }
@@ -112,9 +113,9 @@ bind Treeview	<Mod3-${ckey}-End>	{ %W xview moveto 1.0 }
 }
 
 # Other keys
-bind Treeview	<Return>		{ ::ttk::treeview::InvokeItem %W }
+bind Treeview	<Return>		{ ::ttk::treeview::ActivateInvoke %W after }
 bind Treeview	<<Invoke>>		{ ::ttk::treeview::InvokeItem %W }
-bind Treeview	<Shift-Return>		{ ::ttk::treeview::TabHandler %W before }
+bind Treeview	<Shift-Return>		{ ::ttk::treeview::ActivateInvoke %W before }
 bind Treeview	<F2>			{ ::ttk::treeview::ActivateItem %W }
 if {$::tcl_platform(os) ne "Darwin"} {
 bind Treeview	<Control-Return>	{ ::ttk::treeview::ActivateItem %W }
@@ -128,13 +129,13 @@ bind Treeview	<Shift-space>		{ ::ttk::treeview::SelectionSet %W row }
 bind Treeview	<Control-space>		{ ::ttk::treeview::SelectionSet %W column }
 bind Treeview	<Control-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
 
-bind Treeview	<Tab>			{ ::ttk::treeview::TabHandler %W next; break }
-bind Treeview	<Shift-Tab>		{ ::ttk::treeview::TabHandler %W prev; break }
+bind Treeview	<Tab>			{ ::ttk::treeview::ActivateInvoke %W next; break }
+bind Treeview	<Shift-Tab>		{ ::ttk::treeview::ActivateInvoke %W prev; break }
 bind Treeview	<Control-Tab>		[bind all <<NextWindow>>]
 bind Treeview	<Control-Shift-Tab>	[bind all <<PrevWindow>>]
 
 if {[tk windowingsystem] eq "x11"} {
-bind Treeview	<ISO_Left_Tab>		{ ::ttk::treeview::TabHandler %W prev; break }
+bind Treeview	<ISO_Left_Tab>		{ ::ttk::treeview::ActivateInvoke %W prev; break }
 bind Treeview	<Control-ISO_Left_Tab>	[bind all <<PrevWindow>>]
 }
 
@@ -688,22 +689,31 @@ proc ::ttk::treeview::SelectionSet {w fn {item {}} {column {}}} {
 #
 # Tab key handler
 #
-proc ::ttk::treeview::TabHandler {w fn} {
+proc ::ttk::treeview::ActivateInvoke {w fn} {
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
     if {$cellmode} {
 	switch $fn {
+	    "after" {
+		KeyNav $w down
+	    }
+	    "before" {
+		KeyNav $w up
+	    }
 	    "next" {
 		KeyNav $w right
 	    }
 	    "prev" {
 		KeyNav $w left
 	    }
-	    "before" {
-		KeyNav $w up
-	    }
 	}
     } else {
 	switch $fn {
+	    "after" {
+	        InvokeItem $w
+	    }
+	    "before" {
+	        InvokeItem $w
+	    }
 	    "next" {
 		return -code continue
 	    }
