@@ -15,14 +15,13 @@
 	<string>@TK_LIB_FILE@</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Tk @TK_WINDOWINGSYSTEM@ @TK_VERSION@@TK_PATCH_LEVEL@,
-Copyright © 1989-@TK_YEAR@ Tcl Core Team,
-Copyright © 2002-@TK_YEAR@ Daniel A. Steffen,
+	Copyright © 1989-@TK_YEAR@ Tcl Core Team,
+	Copyright © 2002-@TK_YEAR@ Daniel A. Steffen,
 	Copyright © 1989-@TK_YEAR@ Contributors,
-	Copyright © 2011-@TK_YEAR@ Kevin Walzer/WordTech
-	Communications LLC,
+	Copyright © 2011-@TK_YEAR@ Kevin Walzer,
 	Copyright © 2014-@TK_YEAR@ Marc Culler,
-Copyright © 2001-2009 Apple Inc.,
-Copyright © 2001-2002 Jim Ingham &amp; Ian Reid</string>
+	Copyright © 2001-2009 Apple Inc.,
+	Copyright © 2001-2002 Jim Ingham &amp; Ian Reid</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.tcltk.tklibrary</string>
 	<key>CFBundleInfoDictionaryVersion</key>
