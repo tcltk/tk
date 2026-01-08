@@ -271,7 +271,7 @@ GetFileIcon(
     }
 
     if (Tcl_GetIntFromObj(interp, objv[2], &pixelSize) != TCL_OK) {
-		Tcl_NewStringObj("Unable to parse icon size", -1));
+		Tcl_NewStringObj("Unable to parse icon size", -1);
         return TCL_ERROR;
     }
 
