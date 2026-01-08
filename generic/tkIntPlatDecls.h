@@ -138,7 +138,7 @@ EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
 EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
-				Tcl_Size objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const *objv);
 /* Slot 46 is reserved */
 /* 47 */
 EXTERN Tk_Window	TkpGetCapture(void);
@@ -307,7 +307,7 @@ EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
 EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
-				Tcl_Size objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const *objv);
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {
@@ -360,7 +360,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv); /* 45 */
     void (*reserved46)(void);
     Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
@@ -464,7 +464,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv); /* 45 */
 #endif /* X11 */
 } TkIntPlatStubs;
 
