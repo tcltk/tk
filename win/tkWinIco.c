@@ -250,16 +250,17 @@ GetFileIcon(
     ICONINFO iconInfo;
     BITMAP bmp;
     long imageSize;
-    char *bitBuffer;
-    unsigned char *byteBuffer;
+    char *bitBuffer = NULL;
+    unsigned char *byteBuffer = NULL;
     int i, hasAlpha;
-    const char *image_name;
+    const wchar_t *iconPath;
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    const char *file_name;
     int bitSize;
     int pixelSize;
     int shil;
+    DWORD attrs = 0;
+    DWORD flags = SHGFI_SYSICONINDEX;
 
     IImageList *iml = NULL;
     HICON hIcon = NULL;
@@ -269,50 +270,47 @@ GetFileIcon(
         return TCL_ERROR;
     }
 
-    /* Normalize filename. */
-    file_name = Tcl_FSGetNativePath(objv[1]);
-    if (file_name == NULL) {
-        return TCL_ERROR;
-    }
-
     if (Tcl_GetIntFromObj(interp, objv[2], &pixelSize) != TCL_OK) {
+		Tcl_NewStringObj("Unable to parse icon size", -1));
         return TCL_ERROR;
     }
 
-    /* Inline size → SHIL mapping. */
-    if (pixelSize <= 16) {
-        shil = SHIL_SMALL;
-    } else if (pixelSize <= 32) {
-        shil = SHIL_LARGE;
-    } else if (pixelSize <= 48) {
-        shil = SHIL_EXTRALARGE;
-    } else {
-        shil = SHIL_JUMBO;   /* 256 */
-    }
+    /* Size → SHIL mapping. */
+    if (pixelSize <= 16) shil = SHIL_SMALL;
+    else if (pixelSize <= 32) shil = SHIL_LARGE;
+    else if (pixelSize <= 48) shil = SHIL_EXTRALARGE;
+    else shil = SHIL_JUMBO;
 
     ZeroMemory(&shfi, sizeof(shfi));
 
-    /* Get system image list index. */
+    /* Try native filesystem path. */
+    iconPath = (const wchar_t *)Tcl_FSGetNativePath(objv[1]);
+
+    if (iconPath == NULL) {
+        /* Virtual filesystem fallback. */
+        flags |= SHGFI_USEFILEATTRIBUTES;
+        attrs = FILE_ATTRIBUTE_DIRECTORY;
+        iconPath = L"dummy";
+    }
+
     if (!SHGetFileInfoW(
-            (LPCWSTR)file_name,
-            0,
+            iconPath,
+            attrs,
             &shfi,
             sizeof(shfi),
-            SHGFI_SYSICONINDEX))
+            flags))
     {
         Tcl_SetObjResult(interp,
-            Tcl_NewStringObj("Unable to retrieve icon index", -1));
+            Tcl_NewStringObj("Unable to retrieve system icon index", -1));
         return TCL_ERROR;
     }
 
-    /* Retrieve shell image list. */
     if (FAILED(SHGetImageList(shil, &IID_IImageList, (void **)&iml))) {
         Tcl_SetObjResult(interp,
             Tcl_NewStringObj("Unable to retrieve system image list", -1));
         return TCL_ERROR;
     }
 
-    /* Extract icon. */
     if (FAILED(iml->lpVtbl->GetIcon(
             iml, shfi.iIcon, ILD_TRANSPARENT, &hIcon)))
     {
@@ -324,31 +322,29 @@ GetFileIcon(
 
     iml->lpVtbl->Release(iml);
 
-    /* Bitmap + alpha handling. */
+    /* Bitmap extraction. */
 
     GetIconInfo(hIcon, &iconInfo);
 
     GetObject(iconInfo.hbmMask, sizeof(BITMAP), &bmp);
     bitSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
-
     bitBuffer = ckalloc(bitSize);
     GetBitmapBits(iconInfo.hbmMask, bitSize, bitBuffer);
 
     GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmp);
     imageSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
-
     byteBuffer = ckalloc(imageSize);
     GetBitmapBits(iconInfo.hbmColor, imageSize, byteBuffer);
 
     hasAlpha = 0;
     for (i = 0; i < imageSize; i += 4) {
-        if (byteBuffer[i + offsetof(RGBQUAD, rgbReserved)] != 0) {
+        if (byteBuffer[i + 3] != 0) {
             hasAlpha = 1;
             break;
         }
     }
 
-#define BIT_SET(x,y) (((x) >> (8-(y))) & 1)
+#define BIT_SET(x,y) (((x) >> (7-(y))) & 1)
 
     if (!hasAlpha) {
         for (i = 0; i < bitSize; i++) {
@@ -360,40 +356,38 @@ GetFileIcon(
         }
     }
 
-    /* Setup Tk photo block. */
     block.pixelPtr  = byteBuffer;
     block.width     = bmp.bmWidth;
     block.height    = bmp.bmHeight;
     block.pitch     = bmp.bmWidthBytes;
     block.pixelSize = bmp.bmBitsPixel / 8;
-    block.offset[0] = offsetof(RGBQUAD, rgbRed);
-    block.offset[1] = offsetof(RGBQUAD, rgbGreen);
-    block.offset[2] = offsetof(RGBQUAD, rgbBlue);
-    block.offset[3] = offsetof(RGBQUAD, rgbReserved);
+    block.offset[0] = 2;
+    block.offset[1] = 1;
+    block.offset[2] = 0;
+    block.offset[3] = 3;
 
     if (Tcl_Eval(interp, "image create photo") != TCL_OK) {
-        return TCL_ERROR;
+        goto cleanup;
     }
 
-    image_name = Tcl_GetStringResult(interp);
-    photo = Tk_FindPhoto(interp, image_name);
+    photo = Tk_FindPhoto(interp, Tcl_GetStringResult(interp));
 
     Tk_PhotoPutBlock(
         interp, photo, &block,
         0, 0, block.width, block.height,
         TK_PHOTO_COMPOSITE_SET);
 
-    /* Cleanup. */
-    ckfree(bitBuffer);
-    ckfree(byteBuffer);
+cleanup:
+    if (bitBuffer) ckfree(bitBuffer);
+    if (byteBuffer) ckfree(byteBuffer);
 
     DeleteObject(iconInfo.hbmMask);
     DeleteObject(iconInfo.hbmColor);
     DestroyIcon(hIcon);
 
-    Tcl_SetResult(interp, (char *)image_name, TCL_VOLATILE);
     return TCL_OK;
 }
+
 
 
 /*
