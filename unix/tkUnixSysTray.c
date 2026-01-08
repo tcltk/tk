@@ -5,8 +5,8 @@
  *	change the system tray/taskbar icon of a Tk toplevel window and
  *	to post system notifications.
  *
- * Copyright © 2005 Anton Kovalenko.
- * Copyright © 2020 Kevin Walzer.
+ * Copyright © 2005 Anton Kovalenko
+ * Copyright © 2020 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

@@ -210,7 +210,7 @@ typedef int \fBTk_ItemCreateProc\fR(
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
         int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[]);
+        Tcl_Obj *const *\fIobjv\fR);
 .CE
 .PP
 The \fIinterp\fR argument is the interpreter in which the canvas's
@@ -269,7 +269,7 @@ typedef int \fBTk_ItemConfigureProc\fR(
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
         int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[],
+        Tcl_Obj *const *\fIobjv\fR,
         int \fIflags\fR);
 .CE
 .PP
@@ -307,7 +307,7 @@ typedef int \fBTk_ItemCoordProc\fR(
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
         int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[]);
+        Tcl_Obj *const *\fIobjv\fR);
 .CE
 .PP
 The arguments \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR

@@ -4,7 +4,7 @@
  *	tkUnixSysNotify.c implements a "sysnotify" Tcl command which
  *	permits one to post system notifications based on the libnotify API.
  *
- * Copyright © 2020 Kevin Walzer.
+ * Copyright © 2020 Kevin Walzer
  * Copyright © 2020 Christian Werner for runtime linking
  *
  * See the file "license.terms" for information on usage and redistribution of
