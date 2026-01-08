@@ -4,8 +4,8 @@
 # on X11, Windows, and macOS. It implements an abstraction layer that
 # presents a consistent API across the three platforms.
 
-# Copyright © 2009 Allen B. Taylor.
-# Copyright © 2024-2025 Kevin Walzer.
+# Copyright © 2009 Allen B. Taylor
+# Copyright © 2024-2025 Kevin Walzer
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -98,7 +98,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    # vocalize text data and communicate state/data changes.
 	    # Windows and macOS have functions built in to their accessibility
 	    # API's to post custom announcements, but ATK does not, so we
-	    # must use this as a fallback. 
+	    # must use this as a fallback.
 	    proc speak {text} {
 		if {[::tk::accessible::check_screenreader] eq "1"} {
 		    # Escape quotes in the text.
@@ -129,7 +129,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    if {![winfo exists $w]} {
 		return
 	    }
-	    
+
 	    # Use after idle to ensure variable has been updated
 	    after idle [list ::tk::accessible::_announce_button_state $w]
 	}
@@ -139,26 +139,26 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    if {![winfo exists $w]} {
 		return
 	    }
-	    
+
 	    set class [winfo class $w]
-	    
+
 	    if {$class eq "Radiobutton" || $class eq "TRadiobutton"} {
 		set state [::tk::accessible::_getradiodata $w]
 		set description [::tk::accessible::get_acc_description $w]
-		
+
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
-		
+
 		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak "$description $state"
 		}
 	    } elseif {$class eq "Checkbutton" || $class eq "TCheckbutton" || $class eq "Toggleswitch"} {
 		set state [::tk::accessible::_getcheckdata $w]
 		set description [::tk::accessible::get_acc_description $w]
-		
+
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
-		
+
 		if {[tk windowingsystem] eq "x11"} {
 		    ::tk::accessible::speak "$description $state"
 		}
@@ -306,7 +306,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	    set currentValue [uplevel #0 set $var]
 	    set buttonValue [$w cget -value]
-	    
+
 	    # Return the actual state
 	    if {$currentValue eq $buttonValue} {
 		return "selected"
@@ -314,13 +314,13 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		return "not selected"
 	    }
 	}
-	
+
 	# Get selection status from checkbuttons.
 	proc _getcheckdata {w} {
 	    if {![winfo exists $w]} {
 		return ""
 	    }
-	    
+
 	    set var [$w cget -variable]
 	    if {$var eq "" || ![uplevel #0 info exists $var]} {
 		return "not selected"
@@ -328,7 +328,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 
 	    set currentValue [uplevel #0 set $var]
 	    set onValue [$w cget -onvalue]
-	    
+
 	    # Check current state (not predicted state)
 	    if {$currentValue eq $onValue} {
 		return "selected"
@@ -342,10 +342,10 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    if {[winfo class $w] eq "Radiobutton" || [winfo class $w] eq "TRadiobutton"} {
 		set state [::tk::accessible::_getradiodata $w]
 		set description [::tk::accessible::get_acc_description $w]
-		
+
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
-		
+
 		if {[tk windowingsystem] eq "x11"} {
 		    # Announce: description, role, state
 		    ::tk::accessible::speak "$description radiobutton $state"
@@ -354,10 +354,10 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    if {[winfo class $w] eq "Checkbutton" || [winfo class $w] eq "TCheckbutton" || [winfo class $w] eq "Toggleswitch"} {
 		set state [::tk::accessible::_getcheckdata $w]
 		set description [::tk::accessible::get_acc_description $w]
-		
+
 		::tk::accessible::set_acc_value $w $state
 		::tk::accessible::emit_selection_change $w
-		
+
 		if {[tk windowingsystem] eq "x11"} {
 		    # Announce: description, role, state
 		    if {[winfo class $w] eq "Toggleswitch"} {
@@ -387,7 +387,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 		set data [::tk::accessible::_getentrytext $w]
 		::tk::accessible::set_acc_value $w $data
 		::tk::accessible::emit_selection_change $w
-		
+
 		if {[tk windowingsystem] eq "x11"} {
 		    # Only speak if there's content
 		    if {$data ne ""} {
@@ -427,11 +427,11 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 			::tk::accessible::speak $data
 		    }
 		}
-		
+
 		# Some widgets need special handling on X11
 		# because ATK does not align well with their
-		# configuration. 
-		
+		# configuration.
+
 		if {[tk windowingsystem] eq "x11"} {
 		    if {[winfo class $w] eq "Menu"} {
 			set data [$w entrycget active -label]
@@ -1124,14 +1124,14 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind Checkbutton   <Map> {+::tk::accessible::_attach_trace %W}
 	    bind TCheckbutton  <Map> {+::tk::accessible::_attach_trace %W}
 	    bind Toggleswitch  <Map> {+::tk::accessible::_attach_trace %W}
-	    
+
 	    # Announce state on focus (initial state)
 	    bind Radiobutton <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind TRadiobutton <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Checkbutton <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind TCheckbutton <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Toggleswitch <FocusIn> {+::tk::accessible::_updateselection %W}
-	    
+
 	    # Announce state on invoke (after button press)
 	    # Use after idle to ensure variable has been updated
 	    bind Radiobutton <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
@@ -1139,11 +1139,11 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    bind Checkbutton <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
 	    bind TCheckbutton <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
 	    bind Toggleswitch <<Invoke>> {+after idle [list ::tk::accessible::_announce_button_state %W]}
-	    
+
 	    # Entry widgets - announce content on focus
 	    bind Entry <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind TEntry <FocusIn> {+::tk::accessible::_updateselection %W}
-	    
+
 	    # Other X11 focus bindings
 	    bind Listbox <FocusIn> {+::tk::accessible::_updateselection %W}
 	    bind Treeview <FocusIn> {+::tk::accessible::_updateselection %W}

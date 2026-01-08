@@ -4,9 +4,9 @@
  *      This module implements access to the Win32 GDI API.
  *
  * Copyright © 1991-2018 Microsoft Corp.
- * Copyright © 2009, Michael I. Schwartz.
+ * Copyright © 2009, Michael I. Schwartz
  * Copyright © 1998-2019 Harald Oehlmann, Elmicron GmbH
- * Copyright © 2021 Kevin Walzer.
+ * Copyright © 2021 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
