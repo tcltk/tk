@@ -2927,7 +2927,7 @@ WmAspectCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->sizeHintsFlags &= ~PAspect;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[3], &numer1) != TCL_OK)
@@ -3799,7 +3799,7 @@ WmGridCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	/*
 	 * Turn off gridding and reset the width and height to make sense as
 	 * ungridded numbers.
@@ -4493,7 +4493,7 @@ WmIconpositionCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->hints.flags &= ~IconPositionHint;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
@@ -4547,7 +4547,7 @@ WmIconwindowCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->hints.flags &= ~IconWindowHint;
 	if (wmPtr->icon != NULL) {
 	    /*
@@ -4894,7 +4894,7 @@ WmPositionfromCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, TCL_INDEX_NONE));
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->sizeHintsFlags &= ~(USPosition|PPosition);
     } else {
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
@@ -5121,7 +5121,7 @@ WmSizefromCmd(
 	return TCL_OK;
     }
 
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->sizeHintsFlags &= ~(USSize|PSize);
     } else {
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,

@@ -138,7 +138,7 @@ static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Tcl_Obj *varName = scale->scale.variableObj;
     Ttk_TraceHandle *vt = 0;
 
-    if (varName != NULL && *Tcl_GetString(varName) != '\0') {
+    if (!TkObjIsEmpty(varName)) {
 	vt = Ttk_TraceVariable(interp,varName, ScaleVariableChanged,recordPtr);
 	if (!vt) return TCL_ERROR;
     }

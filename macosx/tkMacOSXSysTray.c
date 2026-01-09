@@ -6,9 +6,9 @@
  *      window and a "sysnotify" command to post system notifications.
  *      In macOS the icon appears on the right hand side of the menu bar.
  *
- * Copyright © 2020 Kevin Walzer.
- * Copyright © 2020 Jan Nijtmans.
- * Copyright © 2020 Marc Culler.
+ * Copyright © 2020 Kevin Walzer
+ * Copyright © 2020 Jan Nijtmans
+ * Copyright © 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
