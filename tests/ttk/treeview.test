@@ -2883,7 +2883,7 @@ test Item-31.5 {Setup item} -body {
 
 test Item-31.6 {item get all} -body {
 	.tv item testitem
-    } -result {-text {} -height 1 -hidden 0 -id testitem -image {} -imageanchor {} -values {} -open 0 -tags {}}
+    } -result {-text {} -height 1 -hidden 0 -id testitem -image {} -imageanchor {} -values {} -open 0 -tags {} state {}}
 
 test Item-31.7 {item get height} -body {
 	.tv item testitem -height
@@ -3032,7 +3032,7 @@ test Item-31.38 {Item set invalid values} -body {
 
 test Item-31.39 {Root item} -body {
 	.tv item {}
-    } -result {-text {} -height 1 -hidden 0 -id {} -image {} -imageanchor {} -values {} -open 1 -tags {}}
+    } -result {-text {} -height 1 -hidden 0 -id {} -image {} -imageanchor {} -values {} -open 1 -tags {} state {}}
 
 test Item-31.40 {Root get} -body {
 	.tv item {} -text

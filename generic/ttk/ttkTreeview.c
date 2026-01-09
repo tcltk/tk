@@ -51,6 +51,7 @@ struct TreeItemRec {
      * Options and instance data:
      */
     Ttk_State	state;
+    Tcl_Obj	*stateObj;	/* Item state as an object */
     Tcl_Obj	*idObj;
     Tcl_Obj	*textObj;
     Tcl_Obj	*imageObj;
@@ -106,6 +107,9 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_STRING, "-tags", "tags", "Tags",
 	NULL, offsetof(TreeItem,tagsObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,ITEM_OPTION_TAGS_CHANGED },
+    {TK_OPTION_STRING, "state", "", "",
+	"", offsetof(TreeItem,stateObj), TCL_INDEX_NONE,
+	0,0,STATE_CHANGED },
 
     {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
 };
@@ -128,6 +132,7 @@ static TreeItem *NewItem(void) {
     item->next = item->prev = NULL;
 
     item->state = 0ul;
+    item->stateObj = NULL;
     item->idObj = NULL;
     item->textObj = NULL;
     item->imageObj = NULL;
@@ -155,6 +160,7 @@ static TreeItem *NewItem(void) {
  */
 static void FreeItem(TreeItem *item) {
     Tcl_Size i;
+    if (item->stateObj) { Tcl_DecrRefCount(item->stateObj); }
     if (item->idObj) { Tcl_DecrRefCount(item->idObj); }
     if (item->textObj) { Tcl_DecrRefCount(item->textObj); }
     if (item->imageObj) { Tcl_DecrRefCount(item->imageObj); }
@@ -312,8 +318,8 @@ typedef struct {
     Tcl_Obj	*headingImageObj;	/* Heading image */
     Tcl_Obj	*headingAnchorObj;	/* -anchor for heading label */
     Tcl_Obj	*headingCommandObj;	/* Command to execute */
-    Tcl_Obj	*headingStateObj;	/* @@@ testing ... */
-    Ttk_State	headingState;		/* ... */
+    Tcl_Obj	*headingStateObj;	/* Heading state as an object */
+    Ttk_State	headingState;		/* Heading state as a bitfield */
 
     /* Temporary storage for cell data */
     Tcl_Obj	*data;
@@ -1502,6 +1508,24 @@ static int ConfigureItem(
 	} else {
 	    item->state &= ~TTK_STATE_OPEN;
 	}
+    }
+
+    /* Set item state but preserve current focus, selected, and open states. */
+    if ((mask & STATE_CHANGED) && item->stateObj) {
+	Ttk_StateSpec stateSpec;
+	Ttk_State state, preserve;
+
+	if (Ttk_GetStateSpecFromObj(
+		interp, item->stateObj, &stateSpec) != TCL_OK) {
+	    goto error;
+	}
+	preserve = item->state & (TTK_STATE_FOCUS | TTK_STATE_SELECTED | TTK_STATE_OPEN);
+	state = Ttk_ModifyState(item->state,&stateSpec);
+	state &= ~(TTK_STATE_FOCUS | TTK_STATE_SELECTED | TTK_STATE_OPEN);
+	item->state = state | preserve;
+	Tcl_DecrRefCount(item->stateObj);
+	item->stateObj = Ttk_NewStateSpecObj(item->state,0);
+	Tcl_IncrRefCount(item->stateObj);
     }
 
     /* All OK. */
@@ -7211,8 +7235,6 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
 typedef struct {
     Tcl_Obj *backgroundObj;
     Tcl_Obj *rowNumberObj;
-    Tcl_Obj *focusWidthObj;
-    Tcl_Obj *focusColorObj;
 } RowElement;
 
 static const Ttk_ElementOptionSpec RowElementOptions[] = {
