@@ -41,6 +41,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, lMargin2Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-locale", NULL, NULL,
+	NULL, offsetof(TkTextTag, localeObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
 	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
@@ -956,6 +958,7 @@ TkTextCreateTag(
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
     textPtr->sharedTextPtr->numTags++;
+    tagPtr->localeObj = NULL;
     if (!strcmp(tagName, "sel")) {
 	tagPtr->textPtr = textPtr;
 	textPtr->refCount++;
