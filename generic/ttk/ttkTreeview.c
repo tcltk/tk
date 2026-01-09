@@ -2066,8 +2066,13 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     if (item != tv->tree.focus || tv->tree.focusCol) {
 	state &= ~TTK_STATE_FOCUS;
     }
-    if (tv->core.state & TTK_STATE_FOCUS) {
-	state |= TTK_STATE_USER1;
+    if (!(tv->core.state & TTK_STATE_FOCUS) && (item->state & TTK_STATE_SELECTED)) {
+	state |= TTK_STATE_BACKGROUND;
+    } else {
+	state &= ~TTK_STATE_BACKGROUND;
+    }
+    if (!strcmp(Tcl_GetString(tv->core.styleObj), "CheckTreeview")) {
+	state &= ~TTK_STATE_BACKGROUND;
     }
     return state;
 }

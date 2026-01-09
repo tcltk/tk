@@ -12,25 +12,21 @@ namespace eval ttk::theme::aqua {
     proc setTreeviewAndListboxSelectColors {} {
 	scan $::tcl_platform(osVersion) "%d" majorOSVersion
 	if {$majorOSVersion >= 18 && $::tk_version >= 9.1} {	;# OS X 10.14 or later
-	    set selectedBg    systemSelectedContentBackgroundColor
-	    set inactiveSelBg systemUnemphasizedSelectedContentBackgroundColor
+	    set selectedBg	systemSelectedContentBackgroundColor
+	    set inactiveSelBg	systemUnemphasizedSelectedContentBackgroundColor
 	} else {
-	    set selectedBg    systemHighlightAlternate
-	    set inactiveSelBg systemWindowBackgroundColor2
+	    set selectedBg	systemHighlightAlternate
+	    set inactiveSelBg	systemWindowBackgroundColor2
 	}
-	set selectedFg    systemAlternateSelectedControlTextColor
-	set inactiveSelFg systemSelectedControlTextColor
+	set selectedFg		systemAlternateSelectedControlTextColor
+	set inactiveSelFg	systemSelectedControlTextColor
 
-	# The ttk::treeview implementation uses the "focus" state for the
-	# items and sets the "user1" state if the widget has the input focus.
-	# Hence the following code sets different default selection colors
-	# depending on whether the widget has the input focus or not.
+	# Treeview uses the background state for selected items when the widget
+	# has lost the focus.
 	#
 	ttk::style map Treeview \
-	    -background [list {selected !user1} $inactiveSelBg \
-		selected $selectedBg] \
-	    -foreground [list {selected !user1} $inactiveSelFg \
-		selected $selectedFg]
+	    -background [list background $inactiveSelBg selected $selectedBg] \
+	    -foreground [list background $inactiveSelFg selected $selectedFg]
 
 	option add *Listbox.selectBackground	$selectedBg widgetDefault
 	option add *Listbox.selectForeground	$selectedFg widgetDefault
