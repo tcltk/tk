@@ -773,7 +773,7 @@ declare 209 {
 }
 declare 210 {
     int	 Tk_GetScrollInfoObj(Tcl_Interp *interp,
-	    Tcl_Size objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
+	    Tcl_Size objc, Tcl_Obj *const *objv, double *dblPtr, int *intPtr)
 }
 declare 211 {
     int	 Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
@@ -785,7 +785,7 @@ declare 213 {
 declare 214 {
     int	 Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionTable, Tcl_Size objc,
-	    Tcl_Obj *const objv[], Tk_Window tkwin,
+	    Tcl_Obj *const *objv, Tk_Window tkwin,
 	    Tk_SavedOptions *savePtr, int *maskPtr)
 }
 declare 215 {
