@@ -1180,44 +1180,47 @@ The \fB<Left>\fR key will close an item if it has children or if not, move the f
 The \fB<Right>\fR key will open an item if it has children.
 .IP \(bu
 The \fB<Up>\fR key will move the focus to the previous visible item and select it.
-The \fB<Shift-Up>\fR key will extend the selection to the previous visible item (multiple and extended select modes only).
-The \fB<Control-Up>\fR key will move the focus to the top-most on-screen item and select it.
-The \fB<Control-Shift-Up>\fR key will extend the selection to the top-most on-screen item (multiple and extended select modes only).
+The \fB<Shift-Up>\fR will extend the selection to the previous visible item (multiple and extended select modes only).
+The \fB<Control-Up>\fR will move the focus to the top-most on-screen item and select it.
+The \fB<Control-Shift-Up>\fR will extend the selection to the top-most on-screen item (multiple and extended select modes only).
 .IP \(bu
 The \fB<Down>\fR key will move the focus to the next visible item and select it.
-The \fB<Shift-Down>\fR key will extend the selection to the next visible item (multiple and extended select modes only).
-The \fB<Control-Down>\fR key will move the focus to the bottom-most on-screen item and select it.
-The \fB<Control-Shift-Down>\fR key will extend the selection to the bottom-most on-screen item (multiple and extended select modes only).
+The \fB<Shift-Down>\fR will extend the selection to the next visible item (multiple and extended select modes only).
+The \fB<Control-Down>\fR will move the focus to the bottom-most on-screen item and select it.
+The \fB<Control-Shift-Down>\fR will extend the selection to the bottom-most on-screen item (multiple and extended select modes only).
 .IP \(bu
 The \fB<Home>\fR key will move the focus to the first child of the current item's parent.
-The \fB<Shift-Home>\fR key will extend the selection to the first child of the current item's parent (multiple and extended select modes only).
-The \fB<Control-Home>\fR key (or \fB<Command-Home>\fR on Mac) will move the focus to the first item in the tree.
-The \fB<Control-Shift-Home>\fR (or \fB<Command-Shift Home>\fR on Mac) key will extend the selection to the first item in the tree (multiple and extended select modes only).
+The \fB<Shift-Home>\fR will extend the selection to the first child of the current item's parent (multiple and extended select modes only).
+The \fB<Control-Home>\fR (or \fB<Command-Home>\fR on Mac) will move the focus to the first item in the tree.
+The \fB<Control-Shift-Home>\fR (or \fB<Command-Shift Home>\fR on Mac) will extend the selection to the first item in the tree (multiple and extended select modes only).
 .IP \(bu
 The \fB<End>\fR key will move the focus to the last child of the current item's parent.
-The \fB<Shift-End>\fR key will extend the selection to the last child of the current item's parent (multiple and extended select modes only).
-The \fB<Control-End>\fR key (or \fB<Command-End>\fR on Mac) will move the focus to the last item in the tree.
-The \fB<Control-Shift-End>\fR (or \fB<Command-Shift-End>\fR on Mac) key will extend the selection to the last item in the tree (multiple and extended select modes only).
+The \fB<Shift-End>\fR will extend the selection to the last child of the current item's parent (multiple and extended select modes only).
+The \fB<Control-End>\fR (or \fB<Command-End>\fR on Mac) will move the focus to the last item in the tree.
+The \fB<Control-Shift-End>\fR (or \fB<Command-Shift-End>\fR on Mac) will extend the selection to the last item in the tree (multiple and extended select modes only).
 .IP \(bu
 The \fB<Prior>\fR key will scroll up 1 screenful and set the focus and selection to the item at the same location.
-The \fB<Shift-Prior>\fR key will scroll left 1 screenful.
-The \fB<Control-Prior>\fR key (or \fB<Command-Prior>\fR on Mac) will move to the top-most on-screen item and select it.
+The \fB<Shift-Prior>\fR will scroll left 1 screenful.
+The \fB<Control-Prior>\fR (or \fB<Command-Prior>\fR on Mac) will move to the top-most on-screen item and select it.
 .IP \(bu
 The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selection to the item at the same location.
-The \fB<Shift-Next>\fR key will scroll right 1 screenful.
-The \fB<Control-Next>\fR key (or \fB<Command-Next>\fR on Mac) will move to the bottom-most on-screen item and select it.
+The \fB<Shift-Next>\fR will scroll right 1 screenful.
+The \fB<Control-Next>\fR (or \fB<Command-Next>\fR on Mac) will move to the bottom-most on-screen item and select it.
 .IP \(bu
-The \fB<Return>\fR key will invoke the current item. 
-The \fB<Shift-Return>\fR key will move to the first child in the current item's parent.
-The \fB<Control-Return>\fR and \fBF2\fR keys will activate the current item by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not and item has children, the open state of the current item will be toggled. Else, the item will be selected.
+The \fB<Return>\fR key will invoke the current item. For an item with children, will toggle open/close state or if no children toggle the selection state.
+The \fB<Shift-Return>\fR is the same as the \fB<Return>\fR key.
+The \fB<Control-Return>\fR and \fBF2\fR keys (or \fBspace\fR and \fB<Option-Return>\fR on Mac) will activate the current item by calling \fB::ttk::treeview::ActivateItem\fR, if it exists, with the widget name, item, and column id arguments. If not and item has children, the open state of the current item will be toggled. Else, the item will be selected.
 .IP \(bu
 The \fB<space>\fR key will toggle the selection state of the current item (single, multiple, and extended select modes only).
-The \fB<Shift-space>\fR key will select the current item (single, multiple, and extended select modes only).
-The \fB<Control-Shift-space>\fR key will select all items (multiple and extended select modes only).
+The \fB<Shift-space>\fR will select the current item (single, multiple, and extended select modes only).
+The \fB<Control-Shift-space>\fR will select all items (multiple and extended select modes only).
 .IP \(bu
-The \fB<Tab>\fR and \fB<plus>\fR keys will open the current item.
-The \fB<Shift-Tab>\fR and \fB<minus>\fR keys will close the current item.
-The \fB<asterisk>\fR key will open the current item and all of its descendants.
+The \fB<Tab>\fR and \fB<Shift-Tab>\fR keys will move the focus to the next and previous widgets, respectively.
+The \fB<Control-Tab>\fR and \fB<Control-Shift-Tab>\fR keys (including Mac) will move the focus to the next and previous widgets, respectively.
+.IP \(bu
+The \fB<plus>\fR keys will open the current item, if it has children.
+The \fB<minus>\fR keys will close the current item, if it has children.
+The \fB<asterisk>\fR key will open the current item and all of its descendants, it it has children.
 .RE
 .PP
 When \fB-selecttype\fR is set to \fBcell\fR:
@@ -1243,35 +1246,37 @@ The \fB<Down>\fR key will move the focus to the below cell in the column and sel
 \fB<Control-Down>\fR will move the focus to the cell at the bottom of the screen in the same column and select it.
 \fB<Control-Shift-Down>\fR will extend the selection to the cell at the bottom of the screen in the same column (multiple and extended select modes only).
 .IP \(bu
-The \fB<Home>\fR key will move the focus to the first cell in the row and select it.
-\fB<Shift-Home>\fR will extend the selection to the first cell in the row (multiple and extended select modes only).
+The \fB<Home>\fR key (and \fB<Command-Left>\fR on Mac) will move the focus to the first cell in the row and select it.
+\fB<Shift-Home>\fR (and \fB<Command-Shift-Left>\fR on Mac) will extend the selection to the first cell in the row (multiple and extended select modes only).
 \fB<Control-Home>\fR (or \fB<Command-Home>\fR on Mac) will move the focus to the top-left cell in the tree and select it.
 \fB<Control-Shift-Home>\fR (or \fB<Command-Shift-Home>\fR on Mac) will extend the selection to the top-left cell in the tree (multiple and extended select modes only).
 .IP \(bu
-The \fB<End>\fR key will move the focus to the last cell in the row and select it.
-\fB<Shift-End>\fR will extend the selection to the last cell in the row (multiple and extended select modes only).
+The \fB<End>\fR key (and (\fB<Command-Right>\fR on Mac) will move the focus to the last cell in the row and select it.
+\fB<Shift-End>\fR (and \fB<Command-Shift-Right>\fR on Mac) will extend the selection to the last cell in the row (multiple and extended select modes only).
 \fB<Control-End>\fR (or \fB<Command-End>\fR on Mac) will move the focus to the bottom-right cell in the tree and select it.
 \fB<Control-Shift-End>\fR (or \fB<Command-Shift-End>\fR on Mac) will extend the selection to the bottom-right cell in the tree (multiple and extended select modes only).
 .IP \(bu
 The \fB<Prior>\fR key will scroll up 1 screenful and set the focus and selection to the cell at the same location.
 \fB<Shift-Prior>\fR will scroll left 1 screenful and set the focus and selection to the cell at the same location.
-\fB<Control-Prior>\fR will move the focus to the cell at the top of the screen in the same column and select it.
-\fB<Control-Shift-Prior>\fR will move the focus to the cell at the right side of the screen in the same row and select it.
+\fB<Control-Prior>\fR (or \fB<Command-Prior>\fR on Mac) will move the focus to the cell at the top of the screen in the same column and select it.
+\fB<Control-Shift-Prior>\fR (or \fB<Command-Shift-Prior>\fR on Mac) will move the focus to the cell at the right side of the screen in the same row and select it.
 .IP \(bu
 The \fB<Next>\fR key will scroll down 1 screenful and set the focus and selection to the cell at the same location.
 \fB<Shift-Next>\fR will scroll right 1 screenful and set the focus and selection to the cell at the same location.
-\fB<Control-Next>\fR will move the focus to the cell at the bottom of the screen in the same column and select it.
-\fB<Control-Shift-Next>\fR will move the focus to the cell at the left side of the screen in the same row and select it.
+\fB<Control-Next>\fR (or \fB<Command-Next>\fR on Mac) will move the focus to the cell at the bottom of the screen in the same column and select it.
+\fB<Control-Shift-Next>\fR (or \fB<Command-Shift-Next>\fR on Mac) will move the focus to the cell at the left side of the screen in the same row and select it.
 .IP \(bu
-The \fB<Return>\fR and \fBF2\fR keys will activate the current cell by calling \fB::ttk::treeview::EditItem\fR with the widget name, item, and column id arguments, if it exists. If not, same as \fB<Down>\fR.
+The \fB<Return>\fR and \fBF2\fR keys will activate the current cell by calling \fB::ttk::treeview::ActivateItem\fR, if it exists, with the widget name, item, and column id arguments. If not, same as \fB<Down>\fR.
 \fB<Shift-Return>\fR is same as \fBUp\fR.
-\fB<Tab>\fR is same as \fBRight\fR.
-\fB<Shift-Tab>\fR is same as \fBLeft\fR.
 .IP \(bu
 The \fB<space>\fR key will toggle the selection state of the current cell (single, multiple, and extended select modes only).
 \fB<Shift-space>\fR will select all cells in the row (multiple and extended select modes only).
-\fB<Control-space>\fR will select all cells in the column (multiple and extended select modes only).
-\fB<Control-Shift-space>\fR will select all cells (multiple and extended select modes only).
+\fB<Control-space>\fR (or \fB<Command-space>\fR on Mac) will select all cells in the column (multiple and extended select modes only).
+\fB<Control-Shift-space>\fR (or \fB<Command-Shift-space>\fR on Mac) will select all cells (multiple and extended select modes only).
+.IP \(bu
+\fB<Tab>\fR is same as \fBRight\fR.
+\fB<Shift-Tab>\fR is same as \fBLeft\fR.
+The \fB<Control-Tab>\fR and \fB<Control-Shift-Tab>\fR keys (including Mac) will move the focus to the next and previous widgets, respectively.
 .RE
 .PP
 Applies to all:
@@ -1283,15 +1288,15 @@ Applies to all:
 .IP \(bu
 \fB<ButtonRelease-1>\fR will drop a column separator for resize, column heading for a move, or set the selection.
 .IP \(bu
-\fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::EditItem. If pressed over a column divider, will auto size the column to its contents. This works best if columnm \fB-stretch\fR is 0. Auto size will honor the column \fB-minwidth\fR value.
+\fB<Double-Button-1>\fR will activate an item or cell by calling ::ttk::treeview::ActivateItem. If pressed over a column divider, will auto size the column to its contents. This works best if columnm \fB-stretch\fR is 0. Auto size will honor the column \fB-minwidth\fR value.
 .IP \(bu
-\fB<Alt-Double-Button-1>\fR on a column divider or \fB<Option-Double-Button-1>\fR for a Mac will auto size all columns to their contents. This works best if all columns have \fB-stretch\fR set to 0. Auto size will honor the \fB-minwidth\fR value for each column.
+\fB<Alt-Double-Button-1>\fR (or \fB<Option-Double-Button-1>\fR for a Mac) on a column divider will auto size all columns to their contents. This works best if all columns have \fB-stretch\fR set to 0. Auto size will honor the \fB-minwidth\fR value for each column.
 .IP \(bu
 \fB<Shift-Button-1>\fR will select a range of items or cells from the anchor to the selected item/cell (multiple and extended select modes only).
-If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multiple or extended select mode, then the column cells will be selected.
+If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multiple or extended select mode, then all of the column cells will be selected.
 .IP \(bu
 \fB<Control-Button-1>\fR will toggle the selection state of an item or cell (single, multiple, and extended select modes only).
-If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multiple or extended select mode, then the column cells will be selected.
+If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multiple or extended select mode, then all of the column cells will be selected.
 .IP \(bu
 \fB<<SelectAll>>\fR virtual event will select all items or cells in the widget (multiple and extended select modes only).
 .IP \(bu

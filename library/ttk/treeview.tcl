@@ -113,21 +113,22 @@ bind Treeview	<Mod3-${ckey}-End>	{ %W xview moveto 1.0 }
 }
 
 # Other keys
-bind Treeview	<Return>		{ ::ttk::treeview::ActivateInvoke %W after }
 bind Treeview	<<Invoke>>		{ ::ttk::treeview::InvokeItem %W }
+bind Treeview	<F2>			{ ::ttk::treeview::ActivateHandler %W }
+bind Treeview	<Return>		{ ::ttk::treeview::ActivateInvoke %W after }
 bind Treeview	<Shift-Return>		{ ::ttk::treeview::ActivateInvoke %W before }
-bind Treeview	<F2>			{ ::ttk::treeview::ActivateItem %W }
 if {$::tcl_platform(os) ne "Darwin"} {
-bind Treeview	<Control-Return>	{ ::ttk::treeview::ActivateItem %W }
+bind Treeview	<Control-Return>	{ ::ttk::treeview::ActivateHandler %W }
+bind Treeview	<Control-space>		{ ::ttk::treeview::ActivateInvoke %W column }
+bind Treeview	<Command-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
 } else {
-bind Treeview	<Command-Down>		{ ::ttk::treeview::ActivateItem %W }
-bind Treeview	<Option-Return>		{ ::ttk::treeview::ActivateItem %W }
+bind Treeview	<Command-Down>		{ ::ttk::treeview::ActivateHandler %W }
+bind Treeview	<Option-Return>		{ ::ttk::treeview::ActivateHandler %W }
+bind Treeview	<Command-space>		{ ::ttk::treeview::ActivateInvoke %W column }
+bind Treeview	<Command-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
 }
-
 bind Treeview	<space>			{ ::ttk::treeview::ToggleSelected %W }
 bind Treeview	<Shift-space>		{ ::ttk::treeview::SelectionSet %W row }
-bind Treeview	<Control-space>		{ ::ttk::treeview::SelectionSet %W column }
-bind Treeview	<Control-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
 
 bind Treeview	<Tab>			{ ::ttk::treeview::ActivateInvoke %W next; break }
 bind Treeview	<Shift-Tab>		{ ::ttk::treeview::ActivateInvoke %W prev; break }
@@ -687,7 +688,7 @@ proc ::ttk::treeview::SelectionSet {w fn {item {}} {column {}}} {
 }
 
 #
-# Tab key handler
+# Return/space/Tab key handler
 #
 proc ::ttk::treeview::ActivateInvoke {w fn} {
     set cellmode [expr {[$w cget -selecttype] eq "cell"}]
@@ -699,6 +700,9 @@ proc ::ttk::treeview::ActivateInvoke {w fn} {
 	    "before" {
 		KeyNav $w up
 	    }
+	    "column" {
+		SelectionSet $w column
+	    }
 	    "next" {
 		KeyNav $w right
 	    }
@@ -708,16 +712,13 @@ proc ::ttk::treeview::ActivateInvoke {w fn} {
 	}
     } else {
 	switch $fn {
-	    "after" {
+	    "after" - "before" {
 	        InvokeItem $w
 	    }
-	    "before" {
-	        InvokeItem $w
+	    "column" {
+		ToggleSelected $w
 	    }
-	    "next" {
-		return -code continue
-	    }
-	    "prev" {
+	    "next" - "prev" {
 		return -code continue
 	    }
 	}
@@ -825,8 +826,8 @@ proc ::ttk::treeview::DoubleClick {w x y} {
 
 	if {$element eq "Treeitem.indicator"} {
 	    ToggleOpenState $w $item
-	} elseif {[info procs EditItem] ne ""} {
-	    ActivateItem $w $item $column
+	} elseif {[info procs ActivateItem] ne ""} {
+	    ActivateHandler $w $item $column
 	} else {
 	    InvokeItem $w $item $column
 	}
@@ -949,12 +950,12 @@ proc ::ttk::treeview::InvokeItem {w {item {}} {column {}}} {
 }
 
 #
-# ActivateItem -- Perform edit/exec action
+# ActivateHandler -- Perform edit/exec action
 #
 # Order:
-# 1. If ::ttk::treeview::EditItem exists, call it.
+# 1. If ::ttk::treeview::ActivateItem exists, call it.
 #
-proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
+proc ::ttk::treeview::ActivateHandler {w {item {}} {column {}}} {
     if {[$w instate disabled]} return
 
     if {$item eq ""} {
@@ -966,8 +967,8 @@ proc ::ttk::treeview::ActivateItem {w {item {}} {column {}}} {
 	}
     }
 
-    if {[info procs EditItem] ne ""} {
-	EditItem $w $item $column
+    if {[info procs ActivateItem] ne ""} {
+	ActivateItem $w $item $column
     }
 }
 
