@@ -21,8 +21,10 @@ namespace eval ttk::theme::aqua {
 	set selectedFg		systemAlternateSelectedControlTextColor
 	set inactiveSelFg	systemSelectedControlTextColor
 
-	# Treeview uses the background state for selected items when the widget
-	# has lost the focus.
+	# The treeview uses the "background" state for selected
+	# items when the the widget has lost the focus.  Hence the
+	# following code sets different default selection colors
+	# depending on whether the widget has lost the focus or not.
 	#
 	ttk::style map Treeview \
 	    -background [list background $inactiveSelBg selected $selectedBg] \
@@ -127,7 +129,8 @@ namespace eval ttk::theme::aqua {
 	    }
 
 	# Sidebar (radio) button
-	font create SidebarFont -family .AppleSystemUIFont -size 11 -weight normal
+	font create SidebarFont -family .AppleSystemUIFont -size 11 \
+	    -weight normal
 	ttk::style configure SidebarButton \
 	    -foreground systemControlTextColor \
 	    -font SidebarFont
@@ -190,8 +193,12 @@ namespace eval ttk::theme::aqua {
 	    -foreground systemDisabledControlTextColor \
 	    -background systemWindowBackgroundColor
 	ttk::style map Heading \
-	    -foreground {selected systemControlTextColor alternate systemControlTextColor} \
-	    -background {selected systemListViewSortColumnBackground alternate systemListViewSortColumnBackground}
+	    -foreground {
+		selected systemControlTextColor
+		alternate systemControlTextColor} \
+	    -background {
+		selected systemListViewSortColumnBackground
+		alternate systemListViewSortColumnBackground}
 	ttk::style configure Row -focuscolor systemSelectedTextBackgroundColor \
 	    -focussolid 1 -focusthickness 0 -padding 1p
 	ttk::style map Row -focusthickness {focus 1}

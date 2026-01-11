@@ -1461,7 +1461,7 @@ proc ::ttk::treeview::CopyToClipboard {w} {
 	set columns [$w cget -columns]
     }
     if {"tree" in [$w cget -show]} {
-        set columns [concat [list #0] $columns]
+	set columns [concat [list #0] $columns]
     }
 
     # Get selected items or cells in display column order
@@ -1538,13 +1538,14 @@ proc ::ttk::treeview::Create_CheckTreeview_Style {} {
 		ttk::style layout $new [ttk::style layout $element]
 		ttk::style configure $new {*}[ttk::style configure $element]
 		
-		# Removed selected state from -background and -foreground
+		# Remove the background and selected states
+		# from -background and -foreground
 		set list [list]
 		foreach {opt spec} [ttk::style map $element] {
 		    if {[llength $spec] > 1 && $opt in [list -background -foreground]} {
 			set temp [list]
 			foreach {state val} $spec {
-			    if {$state ne "selected"} {
+			    if {$state ni [list background selected]} {
 				lappend temp $state $val
 			    }
 			}
@@ -1556,26 +1557,26 @@ proc ::ttk::treeview::Create_CheckTreeview_Style {} {
 		ttk::style map $new {*}$list
 	    }
 
-            # Override item layout
-            if {$theme eq "aqua"} {
-                ttk::style layout CheckTreeview.Item {
-                    Treeitem.padding -sticky nswe -children {
-                        Treeitem.indicator -side left -sticky {}
-                        Checkbutton.button -side left -sticky {}
-                        Treeitem.image -side left -sticky {}
-                        Treeitem.text -side left -sticky {}
-                    }
-                }
-            } else {
-                ttk::style layout CheckTreeview.Item {
-                    Treeitem.padding -sticky nswe -children {
-                        Treeitem.indicator -side left -sticky {}
-                        Checkbutton.indicator -side left -sticky {}
-                        Treeitem.image -side left -sticky {}
-                        Treeitem.text -side left -sticky {}
-                    }
-                }
-            }
+	    # Override item layout
+	    if {$theme eq "aqua"} {
+		ttk::style layout CheckTreeview.Item {
+		    Treeitem.padding -sticky nswe -children {
+			Treeitem.indicator -side left -sticky {}
+			Checkbutton.button -side left -sticky {}
+			Treeitem.image -side left -sticky {}
+			Treeitem.text -side left -sticky {}
+		    }
+		}
+	    } else {
+		ttk::style layout CheckTreeview.Item {
+		    Treeitem.padding -sticky nswe -children {
+			Treeitem.indicator -side left -sticky {}
+			Checkbutton.indicator -side left -sticky {}
+			Treeitem.image -side left -sticky {}
+			Treeitem.text -side left -sticky {}
+		    }
+		}
+	    }
 	}
     }
 }
