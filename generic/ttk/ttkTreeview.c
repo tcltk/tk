@@ -528,6 +528,7 @@ typedef struct {
 #define DCOLUMNS_CHANGED	(USER_MASK<<1)
 #define SCROLLCMD_CHANGED	(USER_MASK<<2)
 #define SHOW_CHANGED		(USER_MASK<<3)
+#define HEIGHT_CHANGED		(USER_MASK<<4)
 
 static const char *const SelectModeStrings[] = {
 	"none", "single", "browse", "extended", "multiple", NULL };
@@ -576,10 +577,10 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 
     {TK_OPTION_INT, "-headingheight", "headingHeight", "Height",
 	"0", TCL_INDEX_NONE, offsetof(Treeview,tree.headingHeight),
-	0, 0, GEOMETRY_CHANGED},
+	0, 0, HEIGHT_CHANGED | GEOMETRY_CHANGED},
     {TK_OPTION_INT, "-rowheight", "rowHeight", "Height",
 	"0", TCL_INDEX_NONE, offsetof(Treeview,tree.rowHeight),
-	0, 0, GEOMETRY_CHANGED},
+	0, 0, HEIGHT_CHANGED | GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -1384,6 +1385,9 @@ static void TreeviewCleanup(void *recordPtr) {
     TtkFreeScrollHandle(tv->tree.yscrollHandle);
 }
 
+/* Forward Declaration */
+static Ttk_Layout TreeviewGetLayout(Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr);
+
 /* + TreeviewConfigure --
  *	Configuration widget hook.
  *
@@ -1394,6 +1398,13 @@ static int
 TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask) {
     Treeview *tv = (Treeview *)recordPtr;
     unsigned showFlags = tv->tree.showFlags;
+
+    if (mask & HEIGHT_CHANGED) {
+	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
+	if (tv->tree.headingHeight <= 0 || tv->tree.rowHeight <= 0) {
+	    TreeviewGetLayout(interp, currentTheme, recordPtr);
+	}
+    }
 
     if (mask & COLUMNS_CHANGED) {
 	if (TreeviewInitColumns(interp, tv) != TCL_OK) {
