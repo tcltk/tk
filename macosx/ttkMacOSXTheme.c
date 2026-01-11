@@ -3364,6 +3364,25 @@ static void DisclosureElementSize(
     *minHeight = s;
 }
 
+static const char * GetWinStyleName(
+    Tk_Window tkwin)
+{
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_DString dsCmd;
+    Tcl_Obj *cmdObj;
+
+    Tcl_DStringInit(&dsCmd);
+    Tcl_DStringAppend(&dsCmd, Tk_PathName(tkwin), -1);
+    Tcl_DStringAppend(&dsCmd, " style", -1);
+
+    cmdObj = Tcl_DStringToObj(&dsCmd);
+    Tcl_IncrRefCount(cmdObj);
+    Tcl_EvalObjEx(interp, cmdObj, TCL_EVAL_GLOBAL);
+    Tcl_DecrRefCount(cmdObj);
+
+    return Tcl_GetStringResult(interp);
+}
+
 static void DisclosureElementDraw(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
@@ -3374,14 +3393,15 @@ static void DisclosureElementDraw(
 {
     if (!(state & TTK_STATE_LEAF)) {
 	/*
-	 * The ttk::treeview implementation uses the state
-	 * TTK_STATE_FOCUS for the items and sets the state
-	 * TTK_STATE_USER1 if the widget has the input focus.
+	 * The treeview uses the TTK_STATE_BACKGROUND state for
+	 * selected items when the widget has lost the focus.
 	 */
 
 	CGRect bounds = BoxToRect(d, b);
-	NSColor *color =
-	    (state & TTK_STATE_SELECTED) && (state & TTK_STATE_USER1) ?
+	int isSelected = (state & TTK_STATE_SELECTED);
+	int isActive = !(state & TTK_STATE_BACKGROUND);
+	int isCheckTreeview = !strcmp(GetWinStyleName(tkwin), "CheckTreeview");
+	NSColor *color = isSelected && isActive && !isCheckTreeview ?
 	    [NSColor whiteColor] : [NSColor textColor];
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	int isDark = TkMacOSXInDarkMode(tkwin);
@@ -3392,7 +3412,7 @@ static void DisclosureElementDraw(
 	[color getComponents: rgba];
 	if (rgba[0] == 0) {
 	    rgba[0] = rgba[1] = rgba[2] = 0.5;
-	} else if ((state & TTK_STATE_SELECTED) && (state & TTK_STATE_USER1)) {
+	} else if (isSelected && isActive && !isCheckTreeview) {
 	    if (isDark) {
 		rgba[0] = rgba[1] = rgba[2] = 0.9;
 	    }
