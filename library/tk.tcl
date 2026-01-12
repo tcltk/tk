@@ -809,12 +809,10 @@ proc ::tk::mcmaxamp {args} {
 if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
-	uplevel #0 $file
-	source $file
+	uplevel #0 source -encoding utf-8 $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
-	eval $script
     }
     #This procedure is required to silence warnings generated
     #by inline AppleScript execution.
