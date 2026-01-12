@@ -13,9 +13,9 @@
 
 #include "tkWin.h"
 #include <windows.h>
-#include <shellapi.h>
 #include <shlobj.h>
 #include <initguid.h>
+#include <shellapi.h>
 #include <commoncontrols.h>
 
 /*
