@@ -24,6 +24,9 @@
 #include "tkWinInt.h"
 #include "tkWinIco.h"
 
+#ifndef NOTIFYICON_VERSION_4
+#   define NOTIFYICON_VERSION_4 4
+#endif
 
 /*
  * Based extensively on the winico extension and sample code from Microsoft.
