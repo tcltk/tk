@@ -26,6 +26,7 @@ necessarily in Tk 8.
  - [Scroll entry with mouse wheel](https://core.tcl-lang.org/tips/doc/trunk/tip/736.md)
  - [Add a Wide.TSpinbox style to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/739.md)
  - [Add support for native file icons to the core]((https://core.tcl-lang.org/tips/doc/trunk/tip/743.md))
+ - [Re-implement the Aqua send command so that it can communicate with other processes and has the features documented in the manual.] (https://core.tcl-lang.org/tk/info/1574913cc772201e)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
