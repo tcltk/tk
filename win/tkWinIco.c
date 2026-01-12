@@ -14,6 +14,10 @@
 #include "tkInt.h"
 #include "tkWinIco.h"
 
+#ifndef SHIL_JUMBO
+#   define SHIL_JUMBO 0x4
+#endif
+
 /*
  *----------------------------------------------------------------------
  *
