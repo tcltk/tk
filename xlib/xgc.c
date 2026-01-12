@@ -44,7 +44,7 @@ static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
 
     if (clip_mask == NULL) {
-	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
+	clip_mask = (TkpClipMask *)Tcl_Alloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
     } else if (clip_mask->type == TKP_CLIP_REGION) {
 	TkDestroyRegion(clip_mask->value.region);
@@ -78,7 +78,7 @@ static void FreeClipMask(GC gc) {
     if (clip_mask->type == TKP_CLIP_REGION) {
 	TkDestroyRegion(clip_mask->value.region);
     }
-    ckfree(clip_mask);
+    Tcl_Free(clip_mask);
     gc->clip_mask = None;
 }
 
@@ -114,7 +114,7 @@ XCreateGC(
      * initialization.
      */
 
-    gp = (GC)ckalloc(sizeof(XGCValuesWithDash));
+    gp = (GC)Tcl_Alloc(sizeof(XGCValuesWithDash));
 
 #define InitField(name,maskbit,default) \
 	(gp->name = (mask & (maskbit)) ? values->name : (default))
@@ -234,7 +234,7 @@ int XFreeGC(
 {
     if (gc != NULL) {
 	FreeClipMask(gc);
-	ckfree(gc);
+	Tcl_Free(gc);
     }
     return Success;
 }
@@ -381,7 +381,7 @@ XSetLineAttributes(
     int cap_style,
     int join_style)
 {
-    gc->line_width = line_width;
+    gc->line_width = (int)line_width;
     gc->line_style = line_style;
     gc->cap_style = cap_style;
     gc->join_style = join_style;
@@ -473,8 +473,8 @@ XSetClipRectangles(
     while (n--) {
 	XRectangle rect = *rectangles;
 
-	rect.x += clip_x_origin;
-	rect.y += clip_y_origin;
+	rect.x += (short)clip_x_origin;
+	rect.y += (short)clip_y_origin;
 	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
@@ -660,24 +660,6 @@ XCreateWindow(
     TCL_UNUSED(Visual *),
     TCL_UNUSED(unsigned long),
     TCL_UNUSED(XSetWindowAttributes *))
-{
-	return 0;
-}
-
-int
-XPointInRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-	return 0;
-}
-
-int
-XUnionRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region))
 {
 	return 0;
 }

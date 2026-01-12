@@ -220,10 +220,12 @@ static void ProgressbarInitialize(
 static void ProgressbarCleanup(void *recordPtr)
 {
     Progressbar *pb = (Progressbar *)recordPtr;
-    if (pb->progress.variableTrace)
+    if (pb->progress.variableTrace) {
 	Ttk_UntraceVariable(pb->progress.variableTrace);
-    if (pb->progress.timer)
+    }
+    if (pb->progress.timer) {
 	Tcl_DeleteTimerHandler(pb->progress.timer);
+    }
 }
 
 /*
@@ -237,7 +239,7 @@ static int ProgressbarConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Tcl_Obj *varName = pb->progress.variableObj;
     Ttk_TraceHandle *vt = 0;
 
-    if (varName != NULL && *Tcl_GetString(varName) != '\0') {
+    if (!TkObjIsEmpty(varName)) {
 	vt = Ttk_TraceVariable(interp, varName, VariableChanged, recordPtr);
 	if (!vt) return TCL_ERROR;
     }
@@ -405,10 +407,12 @@ static Ttk_Layout ProgressbarGetLayout(
     if (layout) {
 	Tcl_Obj *periodObj = Ttk_QueryOption(layout, "-period", 0);
 	Tcl_Obj *maxPhaseObj = Ttk_QueryOption(layout, "-maxphase", 0);
-	if (periodObj)
+	if (periodObj) {
 	    Tcl_GetIntFromObj(NULL, periodObj, &pb->progress.period);
-	if (maxPhaseObj)
+	}
+	if (maxPhaseObj) {
 	    Tcl_GetIntFromObj(NULL, maxPhaseObj, &pb->progress.maxPhase);
+	}
     }
 
     return layout;

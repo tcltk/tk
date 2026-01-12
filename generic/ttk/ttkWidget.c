@@ -202,8 +202,9 @@ WidgetInstanceObjCmdDeleted(void *clientData)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     corePtr->widgetCmd = NULL;
-    if (corePtr->tkwin != NULL)
+    if (corePtr->tkwin != NULL) {
 	Tk_DestroyWindow(corePtr->tkwin);
+    }
 }
 
 /* DestroyWidget --
@@ -288,10 +289,11 @@ static void CoreEventProc(void *clientData, XEvent *eventPtr)
 		|| eventPtr->xfocus.detail == NotifyAncestor
 		|| eventPtr->xfocus.detail == NotifyNonlinear)
 	    {
-		if (eventPtr->type == FocusIn)
+		if (eventPtr->type == FocusIn) {
 		    corePtr->state |= TTK_STATE_FOCUS;
-		else
+		} else {
 		    corePtr->state &= ~TTK_STATE_FOCUS;
+		}
 		TtkRedisplayWidget(corePtr);
 	    }
 	    break;
@@ -367,13 +369,14 @@ int TtkWidgetConstructorObjCmd(
 
     tkwin = Tk_CreateWindowFromPath(
 	interp, Tk_MainWindow(interp), Tcl_GetString(objv[1]), NULL);
-    if (tkwin == NULL)
+    if (tkwin == NULL) {
 	return TCL_ERROR;
+    }
 
     /*
      * Allocate and initialize the widget record.
      */
-    recordPtr = ckalloc(widgetSpec->recordSize);
+    recordPtr = Tcl_Alloc(widgetSpec->recordSize);
     memset(recordPtr, 0, widgetSpec->recordSize);
     corePtr = (WidgetCore *)recordPtr;
 
@@ -411,13 +414,16 @@ int TtkWidgetConstructorObjCmd(
     } else {
 	Tk_FreeSavedOptions(&savedOptions);
     }
-    if (widgetSpec->configureProc(interp, recordPtr, ~0) != TCL_OK)
+    if (widgetSpec->configureProc(interp, recordPtr, ~0) != TCL_OK) {
 	goto error;
-    if (widgetSpec->postConfigureProc(interp, recordPtr, ~0) != TCL_OK)
+    }
+    if (widgetSpec->postConfigureProc(interp, recordPtr, ~0) != TCL_OK) {
 	goto error;
+    }
 
-    if (WidgetDestroyed(corePtr))
+    if (WidgetDestroyed(corePtr)) {
 	goto error;
+    }
 
     Tcl_Release(corePtr);
 
@@ -453,11 +459,13 @@ Ttk_Layout TtkWidgetGetLayout(
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
     const char *styleName = 0;
 
-    if (corePtr->styleObj)
+    if (corePtr->styleObj) {
 	styleName = Tcl_GetString(corePtr->styleObj);
+    }
 
-    if (!styleName || *styleName == '\0')
+    if (!styleName || *styleName == '\0') {
 	styleName = corePtr->widgetSpec->className;
+    }
 
     return Ttk_CreateLayout(interp, themePtr, styleName,
 	recordPtr, corePtr->optionTable, corePtr->tkwin);
@@ -483,17 +491,20 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
     /* Prefix:
      */
     Ttk_GetOrientFromObj(NULL, orientObj, &orient);
-    if (orient == TTK_ORIENT_HORIZONTAL)
+    if (orient == TTK_ORIENT_HORIZONTAL) {
 	Tcl_DStringAppend(&styleName, "Horizontal.", TCL_INDEX_NONE);
-    else
+    } else {
 	Tcl_DStringAppend(&styleName, "Vertical.", TCL_INDEX_NONE);
+    }
 
     /* Add base style name:
      */
-    if (corePtr->styleObj)
+    if (corePtr->styleObj) {
 	baseStyleName = Tcl_GetString(corePtr->styleObj);
-    if (!baseStyleName || *baseStyleName == '\0')
+    }
+    if (!baseStyleName || *baseStyleName == '\0') {
 	baseStyleName = corePtr->widgetSpec->className;
+    }
 
     Tcl_DStringAppend(&styleName, baseStyleName, TCL_INDEX_NONE);
 
@@ -598,8 +609,9 @@ int TtkWidgetCgetCommand(
     }
     result = Tk_GetOptionValue(interp, recordPtr,
 		corePtr->optionTable, objv[2], corePtr->tkwin);
-    if (result == NULL)
+    if (result == NULL) {
 	return TCL_ERROR;
+    }
     Tcl_SetObjResult(interp, result);
     return TCL_OK;
 }
@@ -626,8 +638,9 @@ int TtkWidgetConfigureCommand(
 	status = Tk_SetOptions(interp, recordPtr,
 		corePtr->optionTable, objc - 2, objv + 2,
 		corePtr->tkwin, &savedOptions, &mask);
-	if (status != TCL_OK)
+	if (status != TCL_OK) {
 	    return status;
+	}
 
 	if (mask & READONLY_OPTION) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -695,8 +708,9 @@ int TtkWidgetStateCommand(
 	return TCL_ERROR;
     }
     status = Ttk_GetStateSpecFromObj(interp, objv[2], &spec);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return status;
+    }
 
     oldState = corePtr->state;
     corePtr->state = Ttk_ModifyState(corePtr->state, &spec);
@@ -729,8 +743,9 @@ int TtkWidgetInstateCommand(
 	return TCL_ERROR;
     }
     status = Ttk_GetStateSpecFromObj(interp, objv[2], &spec);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return status;
+    }
 
     if (objc == 3) {
 	Tcl_SetObjResult(interp,

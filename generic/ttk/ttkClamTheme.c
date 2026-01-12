@@ -378,8 +378,8 @@ static void IndicatorElementSize(
     double scalingLevel = TkScalingLevel(tkwin);
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = spec->width * scalingLevel + Ttk_PaddingWidth(margins);
-    *heightPtr = spec->height * scalingLevel + Ttk_PaddingHeight(margins);
+    *widthPtr = (int)(spec->width * scalingLevel) + Ttk_PaddingWidth(margins);
+    *heightPtr = (int)(spec->height * scalingLevel) + Ttk_PaddingHeight(margins);
 }
 
 static void ColorToStr(
@@ -408,8 +408,8 @@ static void IndicatorElementDraw(
     Ttk_Padding padding;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     double scalingLevel = TkScalingLevel(tkwin);
-    int width = spec->width * scalingLevel;
-    int height = spec->height * scalingLevel;
+    int width = (int)(spec->width * scalingLevel);
+    int height = (int)(spec->height * scalingLevel);
 
     char upperBdColorStr[7], lowerBdColorStr[7], bgColorStr[7], fgColorStr[7];
     unsigned int selected = (state & TTK_STATE_SELECTED);
@@ -477,7 +477,7 @@ static void IndicatorElementDraw(
 	 * a newly allocated memory area svgDataCopy
 	 */
 	svgDataLen = strlen(svgDataPtr);
-	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
+	svgDataCopy = (char *)Tcl_AttemptAlloc(svgDataLen + 1);
 	if (svgDataCopy == NULL) {
 	    return;
 	}
@@ -509,15 +509,15 @@ static void IndicatorElementDraw(
 	 */
 	cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
 	scriptSize = strlen(cmdFmt) + strlen(imgName) + svgDataLen;
-	script = (char *)attemptckalloc(scriptSize);
+	script = (char *)Tcl_AttemptAlloc(scriptSize);
 	if (script == NULL) {
-	    ckfree(svgDataCopy);
+	    Tcl_Free(svgDataCopy);
 	    return;
 	}
 	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
-	ckfree(svgDataCopy);
+	Tcl_Free(svgDataCopy);
 	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
-	ckfree(script);
+	Tcl_Free(script);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
 	    return;
@@ -675,8 +675,8 @@ static void TroughElementDraw(
     GC gcb = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
     GC gct = Ttk_GCForColor(tkwin,sb->troughColorObj,d);
 
-    XFillRectangle(Tk_Display(tkwin), d, gct, b.x, b.y, b.width-1, b.height-1);
-    XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y, b.width-1, b.height-1);
+    XFillRectangle(Tk_Display(tkwin), d, gct, b.x, b.y, (unsigned)b.width-1, (unsigned)b.height-1);
+    XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y, (unsigned)b.width-1, (unsigned)b.height-1);
 }
 
 static const Ttk_ElementSpec TroughElementSpec = {
@@ -721,7 +721,7 @@ static void ThumbElementDraw(
 	sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
     XFillRectangle(
 	Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
-	b.x+2, b.y+2, b.width-4, b.height-4);
+	b.x+2, b.y+2, (unsigned)b.width-4, (unsigned)b.height-4);
 
     /*
      * Draw grip:
@@ -824,7 +824,7 @@ static void PbarElementDraw(
 	    sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
 	XFillRectangle(Tk_Display(tkwin), d,
 	    BackgroundGC(tkwin, sb->backgroundObj),
-	    b.x+2, b.y+2, b.width-4, b.height-4);
+	    b.x+2, b.y+2, (unsigned)b.width-4, (unsigned)b.height-4);
     }
 }
 
@@ -847,7 +847,7 @@ static void ArrowElementSize(
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     double scalingLevel = TkScalingLevel(tkwin);
-    Ttk_Padding padding = Ttk_UniformPadding(round(3 * scalingLevel));
+    Ttk_Padding padding = Ttk_UniformPadding((short)round(3 * scalingLevel));
     int size = SCROLLBAR_THICKNESS;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
@@ -870,7 +870,7 @@ static void ArrowElementDraw(
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     double scalingLevel = TkScalingLevel(tkwin);
-    Ttk_Padding padding = Ttk_UniformPadding(round(3 * scalingLevel));
+    Ttk_Padding padding = Ttk_UniformPadding((short)round(3 * scalingLevel));
     int cx, cy;
     GC gc = Ttk_GCForColor(tkwin, sb->arrowColorObj, d);
 
@@ -879,7 +879,7 @@ static void ArrowElementDraw(
 
     XFillRectangle(
 	Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
-	b.x+2, b.y+2, b.width-4, b.height-4);
+	b.x+2, b.y+2, (unsigned)b.width-4, (unsigned)b.height-4);
 
     b = Ttk_PadBox(b, padding);
 
@@ -925,11 +925,12 @@ static void SpinboxArrowElementSize(
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     double scalingLevel = TkScalingLevel(tkwin);
-    Ttk_Padding padding = Ttk_UniformPadding(round(3 * scalingLevel));
+    Ttk_Padding padding = Ttk_UniformPadding((short)round(3 * scalingLevel));
     int size = 10;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
     size -= Ttk_PaddingWidth(padding);
+    size += 2 * round(scalingLevel);
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);

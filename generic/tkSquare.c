@@ -23,7 +23,6 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
-#include <stdbool.h>
 
 /*
  * A data structure of the following type is kept for each square widget
@@ -159,7 +158,7 @@ SquareObjCmd(
      * just the non-NULL/0 items.
      */
 
-    squarePtr = (Square *)ckalloc(sizeof(Square));
+    squarePtr = (Square *)Tcl_Alloc(sizeof(Square));
     memset(squarePtr, 0, sizeof(Square));
 
     squarePtr->tkwin = tkwin;
@@ -174,7 +173,7 @@ SquareObjCmd(
     if (Tk_InitOptions(interp, squarePtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(squarePtr->tkwin);
-	ckfree(squarePtr);
+	Tcl_Free(squarePtr);
 	return TCL_ERROR;
     }
 

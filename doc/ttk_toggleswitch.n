@@ -1,0 +1,270 @@
+.\"
+.\" Copyright (c) 2025 Csaba Nemethi
+.\"
+.\" See the file "license.terms" for information on usage and redistribution
+.\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+.\"
+.TH ttk::toggleswitch n 9.1 Tk "Tk Themed Widget"
+.so man.macros
+.BS
+.SH NAME
+ttk::toggleswitch \- Create and manipulate a toggleswitch widget
+.SH SYNOPSIS
+\fBttk::toggleswitch \fIpathName \fR?\fIoptions...\fR?
+.BE
+.SH DESCRIPTION
+.PP
+A \fBttk::toggleswitch\fR widget is used to show or change a binary setting.
+It consists of a horizontal \fItrough\fR (a fully rounded filled rectangle)
+and a \fIslider\fR (a filled circle or fully rounded filled rectangle
+contained in the trough).  Their dimensions depend on the value of the
+\fB-size\fR configuration option, the current theme, the display's scaling
+level, and Tk's scaling factor given by \fB[tk scaling]\fR at the time the
+first toggleswitch widget is created.
+.PP
+Just like a light switch, a toggleswitch widget can have one of two possible
+\fIswitch state\fRs: on or off.  In the on state the slider is placed at the
+end of the trough, and in the off state at its beginning.  The user can toggle
+between these two states with the mouse or the space key.
+.PP
+The colors used when drawing the trough and slider in the various widget
+states depend on the current theme.  If the theme is \fBaqua\fR then they also
+depend on the system appearance (light mode or dark mode) and the accent
+color, and are automatically adapted whenever one of these global system
+settings changes.
+.PP
+The implementation creates these elements when needed with the aid of generic
+code for arbitrary themes and theme-specific one for a few built-in themes.
+Applications can add \fIexplicit\fR support for any theme \fItheme\fR by
+providing an appropriate command of the name
+\fBttk::toggleswitch::CreateElements_\fR\fItheme\fR.
+.SO ttk_widget
+\-class	\-cursor	\-style
+\-takefocus
+.SE
+.PP
+The default value of the \fB-class\fR option is \fBToggleswitch\fR.  The value
+of the \fB-style\fR option defaults to \fBToggleswitch2\fR, corresponding to
+the \fB-size\fR option's default value \fB2\fR (see below).
+.SH "WIDGET-SPECIFIC OPTIONS"
+.OP \-command command Command
+Specifies a Tcl script to be evaluated at global scope whenever the switch
+state of the widget is toggled (programmatically, by invoking the
+\fBswitchstate\fR or \fBtoggle\fR subcommand, or interactively).  The default
+is an empty string.
+.OP \-offvalue offValue OffValue
+The value to store in the associated \fB\-variable\fR
+when the widget's switch state is set to off.  Defaults to \fB0\fR.
+.OP \-onvalue onValue OnValue
+The value to store in the associated \fB\-variable\fR
+when the widget's switch state is set to on.  Defaults to \fB1\fR.
+.OP \-size size Size
+Specifies the size identifier of the toggleswitch widget.  The supported
+values are the strings \fB1\fR, \fB2\fR (the default), and \fB3\fR.  In the
+case of the \fBaqua\fR theme, these size IDs correspond to the control sizes
+"mini", "small", and "large" of the native toggle switches on macOS.
+.RS
+.PP
+Note that by setting this option to a value \fIsize\fR, the \fB-style\fR
+option's value will automatically change to \fBToggleswitch\fR\fIsize\fR if
+its previous or requested value was \fBToggleswitch1\fR, \fBToggleswitch2\fR,
+or \fBToggleswitch3\fR, and to \fIprefix\fR.\fBToggleswitch\fR\fIsize\fR if
+its previous or requested value was \fIprefix\fR.\fBToggleswitch1\fR,
+\fIprefix\fR.\fBToggleswitch2\fR, or \fIprefix\fR.\fBToggleswitch3\fR.
+Conversely, by setting the \fB-style\fR option to a value of the form
+\fBToggleswitch\fR\fIsize\fR or \fIprefix\fR.\fBToggleswitch\fR\fIsize\fR
+(where \fIsize\fR is one of \fB1\fR, \fB2\fR, or \fB3\fR), the \fB-size\fR
+option will automatically be set to \fIsize\fR.  When configuring both options
+\fB-size\fR and \fB-style\fR, the former will take precedence over the latter,
+regardless of the order in which they were specified.
+.PP
+For example, if you create the widget with
+.PP
+.CS
+\fBttk::toggleswitch\fR \fIpathName\fR \fB-size 3 -style\fR My.\fBToggleswitch3\fR
+.CE
+.PP
+or invoke
+.PP
+.CS
+\fIpathName\fR \fBconfigure -style\fR My.\fBToggleswitch3\fR
+.CE
+.PP
+then the \fB-style\fR option will be set to My.\fBToggleswitch3\fR (and the
+\fB-size\fR option will have the value \fB3\fR).  On the other hand, if you
+create the widget with
+.PP
+.CS
+\fBttk::toggleswitch\fR \fIpathName\fR \fB-style\fR My.\fBToggleswitch3\fR
+.CE
+.PP
+then the \fB-style\fR option will have the value My.\fBToggleswitch2\fR rather
+than My.\fBToggleswitch3\fR, because the widget creation triggers the default
+\fB-size 2\fR setting, which takes precedence over \fB-style\fR
+My.\fBToggleswitch3\fR.
+.RE
+.OP \-variable variable Variable
+The name of a global variable whose value is linked to the toggleswitch.  The
+widget's switch state changes to on when this variable is set to the value
+specified by the \fB-onvalue\fR option and to off otherwise.  Defaults to the
+widget's pathname if not specified.
+.RS
+.PP
+Note that, just like in the case of the (ttk::)checkbutton, toggling the
+widget's switch state by changing the value of this variable will \fInot\fR
+cause the script specified by the \fB-command\fR option to get executed.
+.RE
+.SH "WIDGET COMMAND"
+.PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR, and \fBstyle\fR commands (see \fBttk::widget\fR), toggleswitch
+widgets support the following additional commands:
+.\" METHOD: switchstate
+.TP
+\fIpathName \fBswitchstate \fR?\fIboolean\fR?
+.
+Modifies or inquires the widget's switch state.  If the optional argument is
+present then it must be a boolean (a numeric value, where 0 is false and
+anything else is true, or a string such as \fBtrue\fR/\fByes\fR/\fBon\fR or
+\fBfalse\fR/\fBno\fR/\fBoff\fR).  If the widget's \fBdisabled\fR state flag is
+set then the command returns an empty string immediately after checking the
+argument.  Otherwise, if the argument is true then the command sets the
+widget's switch state to on by setting its \fBselected\fR flag, moving the
+slider to the end of the trough, and setting the associated \fB-variable\fR to
+the value specified by the \fB-onvalue\fR option; if the argument is false
+then the command sets the widget's switch state to off by clearing the
+\fBselected\fR flag, moving the slider to the beginning of the trough, and
+setting the associated variable to the value specified by the \fB-offvalue\fR
+option.
+.RS
+.PP
+If the argument's value causes the widget's switch state to get toggled and
+the script specified as the value of the \fB-command\fR option is a nonempty
+string then the command evaluates that script at global scope and returns its
+result; otherwise the return value is an empty string.
+.PP
+If the optional argument is not present then the command returns the widget's
+current switch state as \fB0\fR (off) or \fB1\fR (on).  When a toggleswitch
+widget is created, its switch state is initialized with \fB0\fR.
+.RE
+.\" METHOD: toggle
+.TP
+\fIpathName \fBtoggle\fR
+.
+This convenience subcommand toggles the widget's switch state.  It is
+logically equivalent to invoking the \fBswitchstate\fR command with the
+argument \fB0\fR if the current switch state is on and with the argument
+\fB1\fR otherwise.
+.SH "INTERNAL COMMANDS"
+.PP
+The following widget commands are used internally by the \fBToggleswitch\fR
+widget class bindings.  They provide a means to access the widget's internal
+value, which is a real number within a certain invariant interval.
+.\" METHOD: get
+.TP
+\fIpathName \fBget \fR?\fBmin\fR|\fBmax\fR|\fIx\fR?
+.
+Returns the current/minimum/maximum internal value, or the one corresponding
+to the coordinate \fIx\fR relative to the widget origin if it is specified.
+.\" METHOD: set
+.TP
+\fIpathName \fBset \fIvalue\fR
+.
+Sets the widget's internal value to \fIvalue\fR.  The value will be clipped to
+the range given by the minimum and maximum values, as returned by
+\fBget min\fR and \fBget max\fR.
+.PP
+.\" METHOD: xcoord
+.TP
+\fIpathName \fBxcoord \fR?\fIvalue\fR?
+.
+Returns the x coordinate corresponding to \fIvalue\fR, or to the current
+internal value if \fIvalue\fR is omitted.
+.SH "DEFAULT BINDINGS"
+.PP
+The toggleswitch widget's default bindings enable the following behavior.
+.PP
+If the current theme is \fBaqua\fR:
+.IP \0\(bu 4
+By pressing mouse button 1 over the slider and then dragging the mouse with
+button 1 down until the pointer enters the trough, the slider moves smoothly
+to the opposite edge of the trough and the widget's switch state gets
+toggled.  The same happens if mouse button 1 is pressed outside the slider and
+then the pointer leaves the widget horizontally with button 1 down.
+.IP \0\(bu 4
+By pressing mouse button 1 anywhere within the widget and then releasing it
+over the widget without previously moving the slider, the latter moves
+smoothly to the opposite edge of the trough and the widget's switch state gets
+toggled.
+.IP \0\(bu 4
+When the widget has the input focus, the space key causes its switch state to
+get toggled.
+.PP
+If the current theme is different from \fBaqua\fR:
+.IP \0\(bu 4
+By pressing mouse button 1 anywhere within the widget and then dragging the
+mouse with button 1 down, the slider moves in the same (horizontal) direction
+as the pointer.  By releasing the button, the switch state is set to off or
+on, depending on the slider's position relative to the middle of the widget.
+.IP \0\(bu 4
+By pressing mouse button 1 anywhere within the widget and then releasing it
+over the widget without previously dragging the mouse horizontally, the
+widget's switch state gets toggled.
+.IP \0\(bu 4
+When the widget has the input focus, the space key causes its switch state to
+get toggled.
+.PP
+If the widget's \fBdisabled\fR state flag is set then none of the above
+actions occur.
+.SH "WIDGET STATES"
+.PP
+The widget sets the \fBselected\fR state whenever the switch state changes to
+on and clears it otherwise.  The widget sets the \fBinvalid\fR state whenever
+the linked \fB\-variable\fR is unset.  The defalt bindings set and clear the
+\fBactive\fR and \fBpressed\fR state flags.
+.SH "STYLING OPTIONS"
+.PP
+The default class name for a \fBttk::toggleswitch\fP is \fBToggleswitch\fP.
+.PP
+Dynamic states: \fBactive\fP, \fBbackground\fP, \fBdisabled\fP, \fBinvalid\fP,
+\fBpressed\fP, \fBselected\fP.
+.PP
+\fBToggleswitch1\fP, \fBToggleswitch2\fP, and \fBToggleswitch3\fP styling
+options configurable with \fBttk::style\fP are:
+.PP
+\fB\-focuscolor\fP \fIcolor\fP
+.RS
+The default is theme-specific.
+.RE
+.br
+\fB\-focussolid\fP \fIboolean\fP
+.RS
+Defaults to true for the \fBclassic\fP theme and false for all the others.
+.RE
+.br
+\fB\-focusthickness\fP \fIamount\fP
+.RS
+The default is 1.  The value may have any of the forms acceptable to
+\fBTk_GetPixels\fP.
+.RE
+.br
+\fB\-padding\fP \fIpadding\fP
+.RS
+Defaults to 1.5p for the \fBaqua\fP theme (for which the three above-mentioned
+styles have no \fBfocus\fP element) and 0.75p for all the other themes.
+.RE
+.PP
+For the \fBaqua\fP theme only the \fB\-padding\fP option is available, the
+others are simply ignored.
+.PP
+See the \fBttk_style\fP manual page for information on how to configure ttk
+styles.
+.SH "SEE ALSO"
+ttk::widget(n), ttk::style(n), ttk::checkbutton(n), checkbutton(n).
+.SH KEYWORDS
+toggleswitch, trough, slider, widget
+.\" Local Variables:
+.\" mode: nroff
+.\" fill-column: 78
+.\" End:

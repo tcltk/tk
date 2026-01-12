@@ -55,7 +55,7 @@ struct ScrollHandleRec
  */
 ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 {
-    ScrollHandle h = (ScrollHandle)ckalloc(sizeof(*h));
+    ScrollHandle h = (ScrollHandle)Tcl_Alloc(sizeof(*h));
 
     h->flags = 0;
     h->corePtr = corePtr;
@@ -258,12 +258,15 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
 	TtkUpdateScrollInfo(h);
     }
 
-    if (newFirst >= s->total)
+    if (newFirst >= s->total) {
 	newFirst = s->total - 1;
-    if (newFirst > s->first && s->last >= s->total) /* don't scroll past end */
+    }
+    if (newFirst > s->first && s->last >= s->total) {/* don't scroll past end */
 	newFirst = s->first;
-    if (newFirst < 0)
+    }
+    if (newFirst < 0) {
 	newFirst = 0;
+    }
 
     if (newFirst != s->first) {
 	s->first = newFirst;
@@ -276,6 +279,6 @@ void TtkFreeScrollHandle(ScrollHandle h)
     if (h->flags & SCROLL_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateScrollbarBG, h);
     }
-    ckfree(h);
+    Tcl_Free(h);
 }
 

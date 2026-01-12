@@ -54,21 +54,20 @@ static void StateSpecDupIntRep(Tcl_Obj *, Tcl_Obj *);
 static void StateSpecUpdateString(Tcl_Obj *);
 
 static const
-TkObjType StateSpecObjType =
+Tcl_ObjType StateSpecObjType =
 {
-    {"StateSpec",
-    0,
-    StateSpecDupIntRep,
-    StateSpecUpdateString,
-    StateSpecSetFromAny,
-    TCL_OBJTYPE_V0},
-    0
+    "StateSpec",		/* name */
+    NULL,			/* freeIntRepProc */
+    StateSpecDupIntRep,	/* dupIntRepProc */
+    StateSpecUpdateString,	/* updateStringProc */
+    StateSpecSetFromAny,	/* setFromAnyProc */
+    TCL_OBJTYPE_V0
 };
 
 static void StateSpecDupIntRep(Tcl_Obj *srcPtr, Tcl_Obj *copyPtr)
 {
     copyPtr->internalRep.wideValue = srcPtr->internalRep.wideValue;
-    copyPtr->typePtr = &StateSpecObjType.objType;
+    copyPtr->typePtr = &StateSpecObjType;
 }
 
 static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
@@ -79,8 +78,9 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
     unsigned int onbits = 0, offbits = 0;
 
     status = Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return status;
+    }
 
     for (i = 0; i < objc; ++i) {
 	const char *stateName = Tcl_GetString(objv[i]);
@@ -94,8 +94,9 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	}
 
 	for (j = 0; stateNames[j].value; ++j) {
-	    if (strcmp(stateName, stateNames[j].name) == 0)
+	    if (strcmp(stateName, stateNames[j].name) == 0) {
 		break;
+	    }
 	}
 
 	if (stateNames[j].value == 0) {
@@ -123,7 +124,7 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	}
     }
 
-    objPtr->typePtr = &StateSpecObjType.objType;
+    objPtr->typePtr = &StateSpecObjType;
     objPtr->internalRep.wideValue = ((Tcl_WideInt)onbits << 32) | offbits;
 
     return TCL_OK;
@@ -153,14 +154,14 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
     len = Tcl_DStringLength(&result);
     if (len) {
 	/* 'len' includes extra trailing ' ' */
-	objPtr->bytes = (char *)ckalloc(len);
+	objPtr->bytes = (char *)Tcl_Alloc(len);
 	objPtr->length = len-1;
 	strncpy(objPtr->bytes, Tcl_DStringValue(&result), len-1);
 	objPtr->bytes[len-1] = '\0';
     } else {
 	/* empty string */
 	objPtr->length = 0;
-	objPtr->bytes = (char *)ckalloc(1);
+	objPtr->bytes = (char *)Tcl_Alloc(1);
 	*objPtr->bytes = '\0';
     }
 
@@ -172,7 +173,7 @@ Tcl_Obj *Ttk_NewStateSpecObj(unsigned int onbits, unsigned int offbits)
     Tcl_Obj *objPtr = Tcl_NewObj();
 
     Tcl_InvalidateStringRep(objPtr);
-    objPtr->typePtr = &StateSpecObjType.objType;
+    objPtr->typePtr = &StateSpecObjType;
     objPtr->internalRep.wideValue = ((Tcl_WideInt)onbits << 32) | offbits;
 
     return objPtr;
@@ -183,10 +184,11 @@ int Ttk_GetStateSpecFromObj(
     Tcl_Obj *objPtr,
     Ttk_StateSpec *spec)
 {
-    if (objPtr->typePtr != &StateSpecObjType.objType) {
+    if (objPtr->typePtr != &StateSpecObjType) {
 	int status = StateSpecSetFromAny(interp, objPtr);
-	if (status != TCL_OK)
+	if (status != TCL_OK) {
 	    return status;
+	}
     }
 
     spec->onbits = objPtr->internalRep.wideValue >> 32;
@@ -212,16 +214,19 @@ Tcl_Obj *Ttk_StateMapLookup(
     int status;
 
     status = Tcl_ListObjGetElements(interp, map, &nSpecs, &specs);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return NULL;
+    }
 
     for (j = 0; j < nSpecs; j += 2) {
 	Ttk_StateSpec spec;
 	status = Ttk_GetStateSpecFromObj(interp, specs[j], &spec);
-	if (status != TCL_OK)
+	if (status != TCL_OK) {
 	    return NULL;
-	if (Ttk_StateMatches(state, &spec))
+	}
+	if (Ttk_StateMatches(state, &spec)) {
 	    return specs[j+1];
+	}
     }
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("No match in state map", -1));
@@ -244,8 +249,9 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
     int status;
 
     status = Tcl_ListObjGetElements(interp, mapObj, &nSpecs, &specs);
-    if (status != TCL_OK)
+    if (status != TCL_OK) {
 	return NULL;
+    }
 
     if (nSpecs % 2 != 0) {
 	if (interp) {
@@ -258,8 +264,9 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
 
     for (j = 0; j < nSpecs; j += 2) {
 	Ttk_StateSpec spec;
-	if (Ttk_GetStateSpecFromObj(interp, specs[j], &spec) != TCL_OK)
+	if (Ttk_GetStateSpecFromObj(interp, specs[j], &spec) != TCL_OK) {
 	    return NULL;
+	}
     }
 
     return mapObj;

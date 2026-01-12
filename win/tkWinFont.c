@@ -300,7 +300,7 @@ TkpGetNativeFont(
     }
 
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->mainPtr->winPtr;
-    fontPtr = (WinFont *)ckalloc(sizeof(WinFont));
+    fontPtr = (WinFont *)Tcl_Alloc(sizeof(WinFont));
     InitFont(tkwin, (HFONT)GetStockObject(object), 0, fontPtr);
 
     return (TkFont *) fontPtr;
@@ -558,7 +558,7 @@ TkpGetFontFromAttributes(
     hFont = GetScreenFont(faPtr, faceName,
 	    (int)(TkFontGetPixels(tkwin, faPtr->size) + 0.5), 0.0);
     if (tkFontPtr == NULL) {
-	fontPtr = (WinFont *)ckalloc(sizeof(WinFont));
+	fontPtr = (WinFont *)Tcl_Alloc(sizeof(WinFont));
     } else {
 	fontPtr = (WinFont *) tkFontPtr;
 	ReleaseFont(fontPtr);
@@ -853,7 +853,7 @@ Tk_MeasureChars(
 		    p - start, &runString);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc, wstr,
-		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
+		    (int)(Tcl_DStringLength(&runString) >> familyPtr->isWideFont),
 		    &size);
 	    Tcl_DStringFree(&runString);
 	    if (maxLength >= 0 && (curX+size.cx) > maxLength) {
@@ -880,7 +880,7 @@ Tk_MeasureChars(
 		p - start, &runString);
 	size.cx = 0;
 	familyPtr->getTextExtentPoint32Proc(hdc, wstr,
-		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
+		(int)(Tcl_DStringLength(&runString) >> familyPtr->isWideFont),
 		&size);
 	Tcl_DStringFree(&runString);
 	if (maxLength >= 0 && (curX+size.cx) > maxLength) {
@@ -914,7 +914,7 @@ Tk_MeasureChars(
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
 		    (WCHAR *) Tcl_DStringValue(&runString),
-		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
+		    (int)(Tcl_DStringLength(&runString) >> familyPtr->isWideFont),
 		    &size);
 	    if ((curX+size.cx) > maxLength) {
 		break;
@@ -1128,7 +1128,7 @@ Tk_DrawChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
@@ -1143,11 +1143,11 @@ Tk_DrawChars(
 	 */
 
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, 0.0);
+	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
 	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0xEA02E9);
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, 0.0);
+	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
 	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0x8A0E06);
 
@@ -1164,7 +1164,7 @@ Tk_DrawChars(
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, 0.0);
+	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
@@ -1182,13 +1182,13 @@ Tk_DrawChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
-	MultiFontTextOut(dcMem, fontPtr, source, numBytes, 0, tm.tmAscent,
+	MultiFontTextOut(dcMem, fontPtr, source, (int)numBytes, 0, tm.tmAscent,
 		0.0);
 	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, (DWORD) tkpWinBltModes[gc->function]);
@@ -1276,7 +1276,7 @@ TkDrawAngledChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
@@ -1291,11 +1291,11 @@ TkDrawAngledChars(
 	 */
 
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
+	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0xEA02E9);
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
+	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0x8A0E06);
 
@@ -1312,7 +1312,7 @@ TkDrawAngledChars(
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
+	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
@@ -1330,13 +1330,13 @@ TkDrawAngledChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
-	MultiFontTextOut(dcMem, fontPtr, source, numBytes, 0, tm.tmAscent,
+	MultiFontTextOut(dcMem, fontPtr, source, (int)numBytes, 0, tm.tmAscent,
 		angle);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, (DWORD) tkpWinBltModes[gc->function]);
@@ -1493,10 +1493,10 @@ MultiFontTextOut(
 		familyPtr = lastSubFontPtr->familyPtr;
 		WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
-		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
-			wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
+		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), (int)y,
+			wstr, (int)(Tcl_DStringLength(&runString) >> familyPtr->isWideFont));
 		familyPtr->getTextExtentPoint32Proc(hdc,
-			wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
+			wstr, (int)(Tcl_DStringLength(&runString) >> familyPtr->isWideFont),
 			&size);
 		x += cosA*size.cx;
 		y -= sinA*size.cx;
@@ -1513,8 +1513,8 @@ MultiFontTextOut(
 	familyPtr = lastSubFontPtr->familyPtr;
 	WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, source,
 		p - source, &runString);
-	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
-		wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
+	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), (int)y,
+		wstr, (int)(Tcl_DStringLength(&runString) >> familyPtr->isWideFont));
 	Tcl_DStringFree(&runString);
     }
     SelectObject(hdc, oldFont);
@@ -1665,7 +1665,7 @@ ReleaseFont(
 	ReleaseSubFont(&fontPtr->subFontArray[i]);
     }
     if (fontPtr->subFontArray != fontPtr->staticSubFonts) {
-	ckfree(fontPtr->subFontArray);
+	Tcl_Free(fontPtr->subFontArray);
     }
 }
 
@@ -1790,7 +1790,7 @@ AllocFontFamily(
 	}
     }
 
-    familyPtr = (FontFamily *)ckalloc(sizeof(FontFamily));
+    familyPtr = (FontFamily *)Tcl_Alloc(sizeof(FontFamily));
     memset(familyPtr, 0, sizeof(FontFamily));
     familyPtr->nextPtr = tsdPtr->fontFamilyList;
     tsdPtr->fontFamilyList = familyPtr;
@@ -1887,14 +1887,14 @@ FreeFontFamily(
     }
     for (i = 0; i < FONTMAP_PAGES; i++) {
 	if (familyPtr->fontMap[i] != NULL) {
-	    ckfree(familyPtr->fontMap[i]);
+	    Tcl_Free(familyPtr->fontMap[i]);
 	}
     }
     if (familyPtr->startCount != NULL) {
-	ckfree(familyPtr->startCount);
+	Tcl_Free(familyPtr->startCount);
     }
     if (familyPtr->endCount != NULL) {
-	ckfree(familyPtr->endCount);
+	Tcl_Free(familyPtr->endCount);
     }
     if (familyPtr->encoding != TkWinGetUnicodeEncoding()) {
 	Tcl_FreeEncoding(familyPtr->encoding);
@@ -1912,7 +1912,7 @@ FreeFontFamily(
 	familyPtrPtr = &(*familyPtrPtr)->nextPtr;
     }
 
-    ckfree(familyPtr);
+    Tcl_Free(familyPtr);
 }
 
 /*
@@ -2212,7 +2212,7 @@ FontMapLoadPage(
     USHORT *startCount, *endCount;
     char buf[16], src[6];
 
-    subFontPtr->fontMap[row] = (char *)ckalloc(FONTMAP_BITSPERPAGE / 8);
+    subFontPtr->fontMap[row] = (char *)Tcl_Alloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
 
     familyPtr = subFontPtr->familyPtr;
@@ -2443,11 +2443,11 @@ CanUseFallback(
     if (fontPtr->numSubFonts >= SUBFONT_SPACE) {
 	SubFont *newPtr;
 
-	newPtr = (SubFont *)ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
+	newPtr = (SubFont *)Tcl_Alloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
 	memcpy(newPtr, fontPtr->subFontArray,
 		fontPtr->numSubFonts * sizeof(SubFont));
 	if (fontPtr->subFontArray != fontPtr->staticSubFonts) {
-	    ckfree(fontPtr->subFontArray);
+	    Tcl_Free(fontPtr->subFontArray);
 	}
 
 	/*
@@ -2500,9 +2500,9 @@ GetScreenFont(
     lf.lfEscapement	= ROUND16(angle * 10);
     lf.lfOrientation	= ROUND16(angle * 10);
     lf.lfWeight = (faPtr->weight == TK_FW_NORMAL) ? FW_NORMAL : FW_BOLD;
-    lf.lfItalic		= faPtr->slant;
-    lf.lfUnderline	= faPtr->underline;
-    lf.lfStrikeOut	= faPtr->overstrike;
+    lf.lfItalic		= (BYTE)faPtr->slant;
+    lf.lfUnderline	= (BYTE)faPtr->underline;
+    lf.lfStrikeOut	= (BYTE)faPtr->overstrike;
     lf.lfCharSet	= DEFAULT_CHARSET;
     lf.lfOutPrecision	= OUT_TT_PRECIS;
     lf.lfClipPrecision	= CLIP_DEFAULT_PRECIS;
@@ -2796,13 +2796,13 @@ LoadFontRanges(
 		segCount = subTable.segment.segCountX2 / 2;
 		cbData = segCount * sizeof(USHORT);
 
-		startCount = (USHORT *)ckalloc(cbData);
-		endCount = (USHORT *)ckalloc(cbData);
+		startCount = (USHORT *)Tcl_Alloc(cbData);
+		endCount = (USHORT *)Tcl_Alloc(cbData);
 
 		offset = encTable.offset + sizeof(subTable.segment);
-		GetFontData(hdc, cmapKey, (DWORD) offset, endCount, cbData);
+		GetFontData(hdc, cmapKey, (DWORD) offset, endCount, (DWORD)cbData);
 		offset += cbData + sizeof(USHORT);
-		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, cbData);
+		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, (DWORD)cbData);
 		if (swapped) {
 		    for (j = 0; j < segCount; j++) {
 			SwapShort(&endCount[j]);
@@ -2840,8 +2840,8 @@ LoadFontRanges(
 
 	segCount = 1;
 	cbData = segCount * sizeof(USHORT);
-	startCount = (USHORT *)ckalloc(cbData);
-	endCount = (USHORT *)ckalloc(cbData);
+	startCount = (USHORT *)Tcl_Alloc(cbData);
+	endCount = (USHORT *)Tcl_Alloc(cbData);
 	startCount[0] = 0x0000;
 	endCount[0] = 0x00ff;
     }

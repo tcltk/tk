@@ -1286,7 +1286,7 @@ TkPostscriptImage(
      */
 
     ncolors = visual->map_entries;
-    cdata.colors = (XColor *)ckalloc(sizeof(XColor) * ncolors);
+    cdata.colors = (XColor *)Tcl_Alloc(sizeof(XColor) * ncolors);
     cdata.ncolors = ncolors;
 
     if (visual->c_class == DirectColor || visual->c_class == TrueColor) {
@@ -1361,7 +1361,7 @@ TkPostscriptImage(
 		"can't generate Postscript for images more than %d pixels wide",
 		maxWidth));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
-	ckfree(cdata.colors);
+	Tcl_Free(cdata.colors);
 	return TCL_ERROR;
     }
 
@@ -1468,7 +1468,7 @@ TkPostscriptImage(
 	}
 	Tcl_AppendPrintfToObj(psObj, "0 %d translate\n", rows);
     }
-    ckfree(cdata.colors);
+    Tcl_Free(cdata.colors);
     return TCL_OK;
 }
 

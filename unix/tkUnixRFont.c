@@ -48,6 +48,8 @@ typedef struct {
 
     Display *display;
     int screen;
+    Colormap colormap;
+    Visual *visual;
     XftDraw *ftDraw;
     int ncolors;
     int firstColor;
@@ -311,7 +313,7 @@ InitFont(
     Tk_ErrorHandler handler;
 
     if (!fontPtr) {
-	fontPtr = (UnixFtFont *)ckalloc(sizeof(UnixFtFont));
+	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -323,13 +325,13 @@ InitFont(
 
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
-    fontPtr->faces = (UnixFtFace *)ckalloc(set->nfont * sizeof(UnixFtFace));
+    fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
 
     /*
@@ -351,6 +353,8 @@ InitFont(
 
     fontPtr->display = Tk_Display(tkwin);
     fontPtr->screen = Tk_ScreenNumber(tkwin);
+    fontPtr->colormap = Tk_Colormap(tkwin);
+    fontPtr->visual = Tk_Visual(tkwin);
     fontPtr->ftDraw = 0;
     fontPtr->ncolors = 0;
     fontPtr->firstColor = -1;
@@ -366,7 +370,7 @@ InitFont(
     if ((ftFont == NULL) || errorFlag) {
 	Tk_DeleteErrorHandler(handler);
 	FinishedWithFont(fontPtr);
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
@@ -375,7 +379,7 @@ InitFont(
     Tk_DeleteErrorHandler(handler);
     if (errorFlag) {
 	FinishedWithFont(fontPtr);
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
 
@@ -409,7 +413,7 @@ InitFont(
 	Tk_DeleteErrorHandler(handler);
 	if (errorFlag) {
 	    FinishedWithFont(fontPtr);
-	    ckfree(fontPtr);
+	    Tcl_Free(fontPtr);
 	    return NULL;
 	}
 	fPtr->underlineHeight = iWidth / 3;
@@ -453,7 +457,7 @@ FinishedWithFont(
 	}
     }
     if (fontPtr->faces) {
-	ckfree(fontPtr->faces);
+	Tcl_Free(fontPtr->faces);
     }
     if (fontPtr->pattern) {
 	FcPatternDestroy(fontPtr->pattern);
@@ -907,7 +911,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
      * Translate the pixel value to a color.  Needs a server round-trip.
      */
     xcolor.pixel = pixel;
-    XQueryColor(display, DefaultColormap(display, fontPtr->screen), &xcolor);
+    XQueryColor(display, fontPtr->colormap, &xcolor);
 
     fontPtr->colors[last].color.color.red = xcolor.red;
     fontPtr->colors[last].color.color.green = xcolor.green;
@@ -961,9 +965,8 @@ Tk_DrawChars(
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
-    } else {
+		fontPtr->visual, fontPtr->colormap);
+} else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
@@ -1098,10 +1101,9 @@ TkDrawAngledChars(
     int originX, originY;
 
     if (fontPtr->ftDraw == 0) {
-	DEBUG(("Switch to drawable 0x%x\n", drawable));
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
+		fontPtr->visual, fontPtr->colormap);
     } else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
@@ -1217,8 +1219,7 @@ TkDrawAngledChars(
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
+		fontPtr->visual, fontPtr->colormap);
     } else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);

@@ -636,7 +636,7 @@ FileReadGIF(
 		    goto error;
 		}
 		nBytes = fileWidth * fileHeight * 3;
-		trashBuffer = (unsigned char *)ckalloc(nBytes);
+		trashBuffer = (unsigned char *)Tcl_Alloc(nBytes);
 		if (trashBuffer) {
 		    memset(trashBuffer, 0, nBytes);
 		}
@@ -743,7 +743,7 @@ FileReadGIF(
 	    goto error;
 	}
 	nBytes = block.pitch * imageHeight;
-	pixelPtr = (unsigned char*)ckalloc(nBytes);
+	pixelPtr = (unsigned char*)Tcl_Alloc(nBytes);
 	if (pixelPtr) {
 	    memset(pixelPtr, 0, nBytes);
 	}
@@ -752,16 +752,16 @@ FileReadGIF(
 	if (ReadImage(gifConfPtr, interp, block.pixelPtr, chan, imageWidth,
 		imageHeight, colorMap, srcX, srcY, BitSet(buf[8], INTERLACE),
 		transparent) != TCL_OK) {
-	    ckfree(pixelPtr);
+	    Tcl_Free(pixelPtr);
 	    goto error;
 	}
 	block.pixelPtr += srcX * block.pixelSize + srcY * block.pitch;
 	if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY,
 		width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
-	    ckfree(pixelPtr);
+	    Tcl_Free(pixelPtr);
 	    goto error;
 	}
-	ckfree(pixelPtr);
+	Tcl_Free(pixelPtr);
     }
 
     /*
@@ -897,7 +897,7 @@ error:
      */
 
     if (trashBuffer != NULL) {
-	ckfree(trashBuffer);
+	Tcl_Free(trashBuffer);
     }
     return result;
 }

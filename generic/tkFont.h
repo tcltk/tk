@@ -131,6 +131,8 @@ typedef struct TkFont {
 				 * that was used to create this font. */
     TkFontMetrics fm;		/* Font metrics determined when font was
 				 * created. */
+    Colormap colormap; /* Only used with HAVE_XFT */
+    Visual* visual; /* Only used with HAVE_XFT */
     struct TkFont *nextPtr;	/* Points to the next TkFont structure with
 				 * the same name. All fonts with the same name
 				 * (but different displays) are chained

@@ -498,6 +498,74 @@ TkMacOSHIShapeDifferenceWithRect(
     return result;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * XEqualRegion --
+ *
+ *	Although the undocumented function
+ *
+ *	    Boolean __attribute__((overloadable))
+ *	    __HIShapeEqual(void const *inShape1, void const *inShape2)
+ *
+ *	is probably more optimal than the approach used here,
+ *	it is "non-external" and so not easily usable by Tk Aqua.
+ *
+ *----------------------------------------------------------------------
+ */
+Bool
+XEqualRegion(
+    Region r1,
+    Region r2)
+{
+    HIShapeRef hsa = (HIShapeRef)r1, hsb = (HIShapeRef)r2;
+    if (hsa == hsb) {
+	return True;
+    }
+    CGRect ba, bb;
+    HIShapeGetBounds(hsa, &ba);
+    HIShapeGetBounds(hsb, &bb);
+    if (!CGRectEqualToRect(ba, bb)) {
+	return False;
+    }
+    HIShapeRef hsx = HIShapeCreateXor(hsa, hsb);
+    Bool result = HIShapeIsEmpty(hsx);
+    CFRelease(hsx);
+    return result;
+}
+
+int
+XUnionRegion(
+    Region srca,
+    Region srcb,
+    Region dr_return)
+{
+    ChkErr(HIShapeUnion, (HIShapeRef)srca, (HIShapeRef)srcb,
+	    (HIMutableShapeRef)dr_return);
+    return 1;
+}
+
+int
+XXorRegion(
+    Region sra,
+    Region srb,
+    Region dr_return)
+{
+    ChkErr(HIShapeXor, (HIShapeRef)sra, (HIShapeRef)srb,
+	    (HIMutableShapeRef)dr_return);
+    return 0;
+}
+
+Bool
+XPointInRegion(
+    Region r,
+    int x,
+    int y)
+{
+    CGPoint p = CGPointMake(x, y);
+    return HIShapeContainsPoint((HIShapeRef)r, &p);
+}
+
 static OSStatus
 rectCounter(
     TCL_UNUSED(int),

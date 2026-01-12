@@ -1,0 +1,154 @@
+.\"
+.\" Copyright (c) 2025 Csaba Nemethi
+.\"
+.\" See the file "license.terms" for information on usage and redistribution
+.\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+.\"
+.TH tk attribtable n 9.1 "" Tk "Tk Built-in Commands"
+.so man.macros
+.BS
+'\" Note:  do not modify the .SH NAME line immediately below!
+.SH NAME
+attribtable \- Create an attribute table, used to query and modify
+arbitrary data attached to any widget.
+.SH SYNOPSIS
+\fBtk attribtable \fItableName\fR
+.BE
+.SH DESCRIPTION
+.PP
+This command creates an attribute table of the name \fItableName\fR,
+implemented as a hash table and accessible as a command in the namespace of
+the calling context if not fully qualified, and returns the fully qualified
+name of the command just created.
+.PP
+An attribute table is used to query and modify arbitrary data attached to any
+widget.  These data are commonly called \fIattributes\fR.
+.PP
+If an attribute table of the given name already exists then it is replaced
+with the new one and all the attributes of all widgets set using the old table
+instance will be unset.
+.PP
+\fBREMARK 1:\fR  When the \fItableName\fR command is deleted (via \fBrename\fR
+\fItableName\fR "" or by deleting the containing namespace), all the
+attributes of all widgets set using this command are automatically unset and
+the underlying hash table is deleted.  This will free all the memory used by
+the table.
+.PP
+\fBREMARK 2:\fR  When a widget is destroyed, all of its attributes set by all
+attribute table commands are automatically unset.  This will free all the
+memory used by the widget's attributes.
+.PP
+The command \fItableName\fR created by this command has the signature
+.PP
+.CS
+\fItableName\fR \fBset\fR|\fBget\fR|\fBunset\fR|\fBclear\fR|\fBexists\fR|\fBnames\fR|\fBpathnames\fR \fIargs\fR
+.CE
+.PP
+In the description of the supported forms below, \fIpathName\fR specifies a
+widget whose attributes are being queried or modified via the \fItableName\fR
+command.
+.\" METHOD: set
+.TP
+\fItableName\fR \fBset\fR \fIpathName name value\fR ?\fIname value\fR ...?
+.
+Sets (i.e., adds or updates) the attributes identified by the \fIname\fR
+arguments to the values given by the \fIvalue\fR arguments.  Returns an empty
+string.  Example:
+.RS
+.PP
+.CS
+# Save and then change the button's text
+\fBtk attribtable\fR table
+table \fBset\fR .btn prevText [.btn cget -text]
+\&.btn configure -text "NewText"
+.CE
+.RE
+.\" METHOD: get
+.TP
+\fItableName\fR \fBget\fR \fIpathName\fR ?\fIname\fR ?\fIdefaultValue\fR??
+.
+If \fIname\fR is specified then returns the corresponding attribute value, or
+an empty string or \fIdefaultValue\fR (if given) if no corresponding value
+exists.  Otherwise returns a list consisting of all attribute names and values
+of the widget \fIpathName\fR.  Example:
+.RS
+.PP
+.CS
+# Restore the button's previous text
+\&.btn configure -text [table \fBget\fR .btn prevText]
+.CE
+.RE
+.\" METHOD: unset
+.TP
+\fItableName\fR \fBunset\fR \fIpathName name\fR ?\fIname\fR ...?
+.
+Unsets the attributes identified by the \fIname\fR arguments.  Returns an
+empty string.  Example:
+.RS
+.PP
+.CS
+table \fBunset\fR .btn prevText
+.CE
+.RE
+.\" METHOD: clear
+.TP
+\fItableName\fR \fBclear\fR \fIpathName\fR
+.
+Unsets all attributes and removes \fIpathName\fR from the list of those
+widgets that have attributes set via \fItableName\fR \fBset\fR.  Returns an
+empty string.  Example:
+.RS
+.PP
+.CS
+table \fBclear\fR .btn
+.CE
+.RE
+.\" METHOD: exists
+.TP
+\fItableName\fR \fBexists\fR \fIpathName\fR ?\fIname\fR?
+.
+If the optional argument is present then returns \fB1\fR if the attribute
+identified by \fIname\fR exists and \fB0\fR otherwise.  Without the optional
+argument the return value is \fB1\fR if the widget \fIpathName\fR has at
+least one attribute set via \fItableName\fR \fBset\fR and \fB0\fR otherwise.
+Example:
+.RS
+.PP
+.CS
+if [table \fBexists\fR .btn prevText] {
+    # Restore the button's previous text
+    \&.btn configure -text [table \fBget\fR .btn prevText]
+}
+.CE
+.RE
+.\" METHOD: names
+.TP
+\fItableName\fR \fBnames\fR \fIpathName\fR
+.
+Returns a list consisting of all attribute names of the widget
+\fIpathName\fR.  Example:
+.RS
+.PP
+.CS
+puts "attribute names for .btn: [table \fBnames\fR .btn]"
+.CE
+.RE
+.\" METHOD: pathnames
+.TP
+\fItableName\fR \fBpathnames\fR
+.
+Returns a list consisting of the path names of all widgets that have
+attributes set via \fItableName\fR \fBset\fR.
+Example:
+.RS
+.PP
+.CS
+puts "widgets in table: [table \fBpathnames\fR]"
+.CE
+.RE
+.SH KEYWORDS
+widget, attribute, attribute table
+.\" Local Variables:
+.\" mode: nroff
+.\" fill-column: 78
+.\" End:

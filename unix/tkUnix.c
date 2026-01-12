@@ -201,9 +201,9 @@ TkpBuildRegionFromAlphaData(
 		lineDataPtr += pixelStride;
 	    }
 	    if (end > x1) {
-		rect.x = x + x1;
-		rect.y = y + y1;
-		rect.width = end - x1;
+		rect.x = (short)(x + x1);
+		rect.y = (short)(y + y1);
+		rect.width = (unsigned short)(end - x1);
 		rect.height = 1;
 		TkUnionRectWithRegion(&rect, region, region);
 	    }
@@ -261,7 +261,7 @@ Tk_GetUserInactiveTime(
 	    Tcl_Panic("Out of memory: XScreenSaverAllocInfo failed in Tk_GetUserInactiveTime");
 	}
 	if (XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info)) {
-	    inactiveTime = info->idle;
+	    inactiveTime = (long)info->idle;
 	}
 	XFree(info);
     }

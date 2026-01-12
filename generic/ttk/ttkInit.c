@@ -201,6 +201,7 @@ MODULE_SCOPE void TtkProgressbar_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkScale_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkScrollbar_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkSeparator_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkToggleswitch_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkTreeview_Init(Tcl_Interp *);
 
 #ifdef TTK_SQUARE_WIDGET
@@ -218,6 +219,7 @@ static void RegisterWidgets(Tcl_Interp *interp)
     TtkScale_Init(interp);
     TtkScrollbar_Init(interp);
     TtkSeparator_Init(interp);
+    TtkToggleswitch_Init(interp);
     TtkTreeview_Init(interp);
 #ifdef TTK_SQUARE_WIDGET
     TtkSquareWidget_Init(interp);

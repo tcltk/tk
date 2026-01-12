@@ -75,7 +75,7 @@ EXTERN COLORREF		TkWinGetBorderPixels(Tk_Window tkwin,
 EXTERN HDC		TkWinGetDrawableDC(Display *display, Drawable d,
 				TkWinDCState *state);
 /* 17 */
-EXTERN int		TkWinGetModifierState(void);
+EXTERN unsigned int	TkWinGetModifierState(void);
 /* 18 */
 EXTERN HPALETTE		TkWinGetSystemPalette(void);
 /* 19 */
@@ -138,7 +138,7 @@ EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
 EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
-				Tcl_Size objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const *objv);
 /* Slot 46 is reserved */
 /* 47 */
 EXTERN Tk_Window	TkpGetCapture(void);
@@ -219,7 +219,7 @@ EXTERN void		TkMacOSXWindowOffset(void *wRef, int *xOffset,
 /* 38 */
 EXTERN int		TkSetMacColor(unsigned long pixel, void *macColor);
 /* 39 */
-EXTERN void		TkSetWMName(TkWindow *winPtr, Tk_Uid titleUid);
+EXTERN void		TkSetWMName(TkWindow *winPtr, const char *title);
 /* Slot 40 is reserved */
 /* 41 */
 EXTERN int		TkMacOSXZoomToplevel(void *whichWindow,
@@ -307,7 +307,7 @@ EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
 EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
-				Tcl_Size objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const *objv);
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {
@@ -332,7 +332,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWinFillRect) (HDC dc, int x, int y, int width, int height, int pixel); /* 14 */
     COLORREF (*tkWinGetBorderPixels) (Tk_Window tkwin, Tk_3DBorder border, int which); /* 15 */
     HDC (*tkWinGetDrawableDC) (Display *display, Drawable d, TkWinDCState *state); /* 16 */
-    int (*tkWinGetModifierState) (void); /* 17 */
+    unsigned int (*tkWinGetModifierState) (void); /* 17 */
     HPALETTE (*tkWinGetSystemPalette) (void); /* 18 */
     HWND (*tkWinGetWrapperWindow) (Tk_Window tkwin); /* 19 */
     int (*tkWinHandleMenuEvent) (HWND *phwnd, UINT *pMessage, WPARAM *pwParam, LPARAM *plParam, LRESULT *plResult); /* 20 */
@@ -360,7 +360,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv); /* 45 */
     void (*reserved46)(void);
     Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
@@ -404,7 +404,7 @@ typedef struct TkIntPlatStubs {
     void (*tkMacOSXWinBounds) (TkWindow *winPtr, void *geometry); /* 36 */
     void (*tkMacOSXWindowOffset) (void *wRef, int *xOffset, int *yOffset); /* 37 */
     int (*tkSetMacColor) (unsigned long pixel, void *macColor); /* 38 */
-    void (*tkSetWMName) (TkWindow *winPtr, Tk_Uid titleUid); /* 39 */
+    void (*tkSetWMName) (TkWindow *winPtr, const char *title); /* 39 */
     void (*reserved40)(void);
     int (*tkMacOSXZoomToplevel) (void *whichWindow, short zoomPart); /* 41 */
     Tk_Window (*tk_TopCoordsToWindow) (Tk_Window tkwin, int rootX, int rootY, int *newX, int *newY); /* 42 */
@@ -464,7 +464,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv); /* 45 */
 #endif /* X11 */
 } TkIntPlatStubs;
 

@@ -101,7 +101,7 @@ typedef struct NameRegistry {
     int modified;		/* Non-zero means that the property has been
 				 * modified, so it needs to be written out
 				 * when the NameRegistry is closed. */
-    Tcl_Obj *appNameDict;      /* Tcl dict mapping interpreter names to
+    Tcl_Obj *appNameDict;       /* Tcl dict mapping interpreter names to
 				 * a Tcl list {pid, clientData}
 				 */
 } NameRegistry;
@@ -910,7 +910,7 @@ Tk_SendObjCmd(
 	Tcl_Preserve(riPtr);
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
-	if (firstArg == (objc - 1)) {
+	if (firstArg + 1 == objc) {
 	    result = Tcl_EvalEx(localInterp, Tcl_GetString(objv[firstArg]),
 				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	} else {
