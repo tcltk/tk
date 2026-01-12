@@ -55,9 +55,6 @@ testutils forget child
 
 testConstraint failsOnXQuartz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
-testConstraint aquaOrSecureserver [expr {
-     [testConstraint aqua] || [testConstraint secureserver]
-}]
 
 #
 # FONTS
