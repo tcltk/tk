@@ -17,7 +17,6 @@
 
 #include "tkInt.h"
 #include <windows.h>
-#include <shellapi.h>
 #include <shobjidl.h>
 #include <propvarutil.h>
 #include <propkey.h>
