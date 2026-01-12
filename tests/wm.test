@@ -630,7 +630,7 @@ test wm-deiconify-1.5 {usage} -constraints win -setup {
     destroy .t.f .embed
 } -result {can't deiconify .embed: the container does not support the request}
 # test embedded window for other platforms
-test wm-deiconify-1.6 {usage} -constraints !win -setup {
+test wm-deiconify-1.6 {usage} -constraints macOrUnix -setup {
     destroy .embed
 } -body {
     frame .t.f -container 1
@@ -969,7 +969,7 @@ test wm-iconify-2.4.1 {Misc errors} -constraints win -setup {
     destroy .t2 .r.f
 } -result {can't iconify ".t2": the container does not support the request}
 # test embedded window for other platforms
-test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
+test wm-iconify-2.4.2 {Misc errors} -constraints macOrUnix -setup {
     destroy .t2
 } -body {
     frame .t.f -container 1
