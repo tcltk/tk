@@ -1219,9 +1219,9 @@ WinIcoInit(
 	    icoInterpPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
 	    icoInterpPtr, NULL);
-	/* 
-	* This command is defined in tkWinIco.c, but that file does not have 
-	* any hooks for script command creation. 
+	/*
+	* This command is defined in tkWinIco.c, but that file does not have
+	* any hooks for script command creation.
 	*/
 	Tcl_CreateObjCommand(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
 	    NULL, NULL);

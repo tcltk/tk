@@ -152,7 +152,7 @@ static const char *getError(OSStatus status) {
 /* Macros for checking OSStatus values. */
 #define CHECK(func)							\
     if (status != noErr) {						\
-        char msg[512];							\
+	char msg[512];							\
 	snprintf(msg, 512, "%s returned error %s",			\
 		   func, getError(status));				\
 	Tcl_AddErrorInfo(interp, msg);					\
@@ -162,7 +162,7 @@ static const char *getError(OSStatus status) {
 
 #define CHECK2(func)							\
     if (status != noErr && status != errAEDescNotFound) {		\
-        char msg[512];							\
+	char msg[512];							\
 	snprintf(msg, 512, "%s returned error %s",			\
 		   func, getError(status));				\
 	Tcl_AddErrorInfo(interp, msg);					\
@@ -225,7 +225,7 @@ sendAEDoScript(
 {
     AppleEvent event, reply;
     OSStatus status;
-    
+
     // Build an AppleEvent targeting the provided pid.
     status = AEBuildAppleEvent(kAEMiscStandards, // NOT kAECoreSuite!!!
 			       kAEDoScript,
@@ -252,9 +252,9 @@ sendAEDoScript(
 
 	/*
 	 * Otherwise we call AESendMessage from an NSThread and run
-	 * an event loop until the status changes.  
+	 * an event loop until the status changes.
 	 */
-     
+
 	status = 1;  /* impossible OSStatus */
 	AEReplyThread *replyThread = [[AEReplyThread alloc] init];
 	replyThread.eventPtr = &event;
@@ -262,12 +262,12 @@ sendAEDoScript(
 	replyThread.statusPtr = &status;
 	[replyThread start];
 	while (status == 1) {
-	    // check if the target interpreter is alive. 
+	    // check if the target interpreter is alive.
 	    Tcl_DoOneEvent(TCL_ALL_EVENTS);
 	}
 	if (status) {
 	    const char *msg = "target application died";
-	    Tcl_AddErrorInfo(interp, msg); 
+	    Tcl_AddErrorInfo(interp, msg);
 	    Tcl_SetResult(interp, msg, (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -295,7 +295,7 @@ sendAEDoScript(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(resultBuffer,
 							  TCL_INDEX_NONE));
 	    }
-	    
+
 	    result = TCL_OK;
 	    ckfree(resultBuffer);
 	    AEDisposeDesc(&reply);
@@ -333,7 +333,7 @@ sendAEDoScript(
 static struct {
     int sendSerial;		      /* The serial number that was used * in
 				       * the last "send" command. */
-    int sendDebug;		      /* This can be set while debugging to 
+    int sendDebug;		      /* This can be set while debugging to
 				       * add print statements, for example. */
     int initialized;                  /* Set when SendInit is called. */
     RegisteredInterp *interpListPtr;  /* List of all interpreters registered
@@ -392,7 +392,7 @@ loadAppNameRegistry(
     size_t length, bytesRead;
     char *bytes = NULL;
     Tcl_Obj *result;
-    
+
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
 	Tcl_Panic("fopen failed on %s", path);
@@ -462,12 +462,12 @@ SendInit()
     /*
      * Intialize the path used for the appname registry.
      */
-    
+
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(
 		 NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachesDirectory = [searchPaths objectAtIndex:0];
     NSString *RegistryPath = [cachesDirectory
-        stringByAppendingPathComponent:@"com.tcltk.appnames"];
+	stringByAppendingPathComponent:@"com.tcltk.appnames"];
     size_t length = 1 + strlen(RegistryPath.UTF8String);
     appNameRegistryPath = ckalloc(length);
     strlcpy(appNameRegistryPath, RegistryPath.UTF8String, length);
@@ -731,11 +731,11 @@ Tk_SetAppName(
     for (riPtr = staticData.interpListPtr; ; riPtr = riPtr->nextPtr) {
 	if (riPtr == NULL) {
 	    /*
-             * This interpreter isn't currently registered; create the data
-             * structure that will be used to register it, plus add
-             * the "send" command to the interpreter.  The name gets added
-             * to the structure later.
-             */
+	     * This interpreter isn't currently registered; create the data
+	     * structure that will be used to register it, plus add
+	     * the "send" command to the interpreter.  The name gets added
+	     * to the structure later.
+	     */
 
 	    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
 	    riPtr->interp = interp;
@@ -971,7 +971,7 @@ Tk_SendObjCmd(
 		NULL);
 	return TCL_ERROR;
     }
-    
+
     /*
      * Send the command with args to the target interpreter
      */

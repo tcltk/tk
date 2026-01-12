@@ -230,7 +230,7 @@ CreateIcoFromPhoto(
  * Updated for Tk 9 by Paul Obermeier
  *
  * Results:
- *	Icon image is created from a file path. 
+ *	Icon image is created from a file path.
  *
  * Side effects:
  *	Icon is created.
@@ -267,13 +267,13 @@ GetFileIcon(
     HICON hIcon = NULL;
 
     if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "fileName pixelSize");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "fileName pixelSize");
+	return TCL_ERROR;
     }
 
     if (Tcl_GetIntFromObj(interp, objv[2], &pixelSize) != TCL_OK) {
 		Tcl_NewStringObj("Unable to parse icon size", -1);
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     /* Size → SHIL mapping. */
@@ -288,37 +288,37 @@ GetFileIcon(
     iconPath = (const wchar_t *)Tcl_FSGetNativePath(objv[1]);
 
     if (iconPath == NULL) {
-        /* Virtual filesystem fallback. */
-        flags |= SHGFI_USEFILEATTRIBUTES;
-        attrs = FILE_ATTRIBUTE_DIRECTORY;
-        iconPath = L"dummy";
+	/* Virtual filesystem fallback. */
+	flags |= SHGFI_USEFILEATTRIBUTES;
+	attrs = FILE_ATTRIBUTE_DIRECTORY;
+	iconPath = L"dummy";
     }
 
     if (!SHGetFileInfoW(
-            iconPath,
-            attrs,
-            &shfi,
-            sizeof(shfi),
-            flags))
+	    iconPath,
+	    attrs,
+	    &shfi,
+	    sizeof(shfi),
+	    flags))
     {
-        Tcl_SetObjResult(interp,
-            Tcl_NewStringObj("Unable to retrieve system icon index", -1));
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp,
+	    Tcl_NewStringObj("Unable to retrieve system icon index", -1));
+	return TCL_ERROR;
     }
 
     if (FAILED(SHGetImageList(shil, &IID_IImageList, (void **)&iml))) {
-        Tcl_SetObjResult(interp,
-            Tcl_NewStringObj("Unable to retrieve system image list", -1));
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp,
+	    Tcl_NewStringObj("Unable to retrieve system image list", -1));
+	return TCL_ERROR;
     }
 
     if (FAILED(iml->lpVtbl->GetIcon(
-            iml, shfi.iIcon, ILD_TRANSPARENT, &hIcon)))
+	    iml, shfi.iIcon, ILD_TRANSPARENT, &hIcon)))
     {
-        iml->lpVtbl->Release(iml);
-        Tcl_SetObjResult(interp,
-            Tcl_NewStringObj("Unable to extract icon", -1));
-        return TCL_ERROR;
+	iml->lpVtbl->Release(iml);
+	Tcl_SetObjResult(interp,
+	    Tcl_NewStringObj("Unable to extract icon", -1));
+	return TCL_ERROR;
     }
 
     iml->lpVtbl->Release(iml);
@@ -339,22 +339,22 @@ GetFileIcon(
 
     hasAlpha = 0;
     for (i = 0; i < imageSize; i += 4) {
-        if (byteBuffer[i + 3] != 0) {
-            hasAlpha = 1;
-            break;
-        }
+	if (byteBuffer[i + 3] != 0) {
+	    hasAlpha = 1;
+	    break;
+	}
     }
 
 #define BIT_SET(x,y) (((x) >> (7-(y))) & 1)
 
     if (!hasAlpha) {
-        for (i = 0; i < bitSize; i++) {
-            int bit;
-            for (bit = 0; bit < 8; bit++) {
-                byteBuffer[(i*8 + bit)*4 + 3] =
-                    BIT_SET(bitBuffer[i], bit) ? 0 : 255;
-            }
-        }
+	for (i = 0; i < bitSize; i++) {
+	    int bit;
+	    for (bit = 0; bit < 8; bit++) {
+		byteBuffer[(i*8 + bit)*4 + 3] =
+		    BIT_SET(bitBuffer[i], bit) ? 0 : 255;
+	    }
+	}
     }
 
     block.pixelPtr  = byteBuffer;
@@ -368,15 +368,15 @@ GetFileIcon(
     block.offset[3] = 3;
 
     if (Tcl_Eval(interp, "image create photo") != TCL_OK) {
-        goto cleanup;
+	goto cleanup;
     }
 
     photo = Tk_FindPhoto(interp, Tcl_GetStringResult(interp));
 
     Tk_PhotoPutBlock(
-        interp, photo, &block,
-        0, 0, block.width, block.height,
-        TK_PHOTO_COMPOSITE_SET);
+	interp, photo, &block,
+	0, 0, block.width, block.height,
+	TK_PHOTO_COMPOSITE_SET);
 
 cleanup:
     if (bitBuffer) ckfree(bitBuffer);

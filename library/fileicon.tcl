@@ -1,8 +1,8 @@
 #   fileicons.tcl --
 #
 #   Procedures for retrieving system-native file icons if
-#   such functions are available, and a fallback set set 
-#   of stock file icons for use in Tk. The SVG icons 
+#   such functions are available, and a fallback set set
+#   of stock file icons for use in Tk. The SVG icons
 #   are from the Tango Project and have been placed in the public
 #   domain: http://creativecommons.org/publicdomain/zero/1.0/
 #
@@ -5221,7 +5221,7 @@ set ::tk::icons::svgData(image) {
 
 
 
-  
+
 <cc:License
    rdf:about="http://creativecommons.org/publicdomain/zero/1.0/"><cc:permits
      rdf:resource="http://creativecommons.org/ns#Reproduction" /><cc:permits
@@ -5475,8 +5475,8 @@ set ::tk::icons::svgData(image) {
 
 
 
-	
-	
+
+
 
 
 
@@ -5664,7 +5664,7 @@ set ::tk::icons::svgData(image) {
      sodipodi:nodetypes="ccccc" /></g></svg>
 }
 
-set ::tk::icons::svgData(mail) {	 
+set ::tk::icons::svgData(mail) {
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
