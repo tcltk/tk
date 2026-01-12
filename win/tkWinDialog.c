@@ -25,25 +25,6 @@
 #   pragma comment (lib, "uuid.lib")
 #endif
 
-/* These needed for compilation with VC++ 5.2 */
-/* XXX - remove these since need at least VC 6 */
-#ifndef BIF_EDITBOX
-#define BIF_EDITBOX 0x10
-#endif
-
-#ifndef BIF_VALIDATE
-#define BIF_VALIDATE 0x0020
-#endif
-
-/* This "new" dialog style is now actually the "old" dialog style post-Vista */
-#ifndef BIF_NEWDIALOGSTYLE
-#define BIF_NEWDIALOGSTYLE 0x0040
-#endif
-
-#ifndef BFFM_VALIDATEFAILEDW
-#define BFFM_VALIDATEFAILEDW 4
-#endif /* BFFM_VALIDATEFAILEDW */
-
 typedef struct {
     int debugFlag;		/* Flags whether we should output debugging
 				 * information while displaying a builtin
@@ -119,17 +100,6 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
 	SetWindowLongPtrW((to), GWLP_USERDATA, (LPARAM)(what))
 
 /*
- * The value of TK_MULTI_MAX_PATH dictates how many files can be retrieved
- * with tk_get*File -multiple 1. It must be allocated on the stack, so make it
- * large enough but not too large. - hobbs
- *
- * The data is stored as <dir>\0<file1>\0<file2>\0...<fileN>\0\0. Since
- * MAX_PATH == 260 on Win2K/NT, *40 is ~10Kbytes.
- */
-
-#define TK_MULTI_MAX_PATH	(MAX_PATH*40)
-
-/*
  * The following structure is used to pass information between GetFileName
  * function and OFN dialog hook procedures. [Bug 2896501, Patch 2898255]
  */
@@ -159,10 +129,7 @@ typedef struct OFNOpts {
     int multi;                  /* Multiple selection enabled */
     int confirmOverwrite;       /* Confirm before overwriting */
     int mustExist;              /* Used only for  */
-    WCHAR file[TK_MULTI_MAX_PATH]; /* File name
-				      XXX - fixed size because it was so
-				      historically. Why not malloc'ed ?
-				   */
+    Tcl_DString utf16FileName;  /* File name */
 } OFNOpts;
 
 /* Define the operation for which option parsing is to be done. */
@@ -555,6 +522,7 @@ Tk_GetSaveFileObjCmd(
 static void CleanupOFNOptions(OFNOpts *optsPtr)
 {
     Tcl_DStringFree(&optsPtr->utfDirString);
+    Tcl_DStringFree(&optsPtr->utf16FileName);
 }
 
 
@@ -637,7 +605,7 @@ ParseOFNOptions(
     optsPtr->tkwin = (Tk_Window)clientData;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
     Tcl_DStringInit(&optsPtr->utfDirString);
-    optsPtr->file[0] = 0;
+    Tcl_DStringInit(&optsPtr->utf16FileName);
 
     for (i = 1; i < objc; i += 2) {
 	int index;
@@ -672,10 +640,9 @@ ParseOFNOptions(
 	case FILE_INITFILE:
 	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
 		goto error_return;
-	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(),
-			      Tcl_DStringValue(&ds), Tcl_DStringLength(&ds),
-			      TCL_ENCODING_PROFILE_TCL8, NULL, (char *)&optsPtr->file[0],
-			      sizeof(optsPtr->file), NULL, NULL, NULL);
+	    Tcl_UtfToExternalDStringEx(interp, TkWinGetUnicodeEncoding(),
+		Tcl_DStringValue(&ds), Tcl_DStringLength(&ds),
+		TCL_ENCODING_PROFILE_REPLACE, &optsPtr->utf16FileName, NULL);
 	    Tcl_DStringFree(&ds);
 	    break;
 	case FILE_PARENT:
@@ -865,8 +832,9 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 	    goto vamoose;
     }
 
-    if (optsPtr->file[0]) {
-	hr = fdlgIf->lpVtbl->SetFileName(fdlgIf, optsPtr->file);
+    WCHAR *fileNamePtr = (WCHAR *)Tcl_DStringValue(&optsPtr->utf16FileName);
+    if (*fileNamePtr) {
+	hr = fdlgIf->lpVtbl->SetFileName(fdlgIf, fileNamePtr);
 	if (FAILED(hr))
 	    goto vamoose;
     }
