@@ -173,10 +173,10 @@ TkGetServerInfo(
 
     os.dwOSVersionInfoSize = sizeof(os);
     if (getVersion == NULL || getVersion(&os) != 0) {
-        /* Should never happen but ... */
+	/* Should never happen but ... */
 	if (!GetVersionExW(&os)) {
-            memset(&os, 0, sizeof(os));
-        }
+	    memset(&os, 0, sizeof(os));
+	}
     }
     if (os.dwMajorVersion == 10 &&
 	os.dwBuildNumber >= 22000) {

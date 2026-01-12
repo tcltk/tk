@@ -67,7 +67,7 @@ proc loadImage {w x y} {
 	# Mark the file as not loadable
 	$w.f.list itemconfigure @$x,$y -bg \#c00000 -selectbackground \#ff0000
     }
-	
+
 	set filename [file nativename [file normalize $file]]
 	set icon [tk fileicon $filename 48]
 	$w.label configure -image $icon -compound top
