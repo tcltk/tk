@@ -1017,6 +1017,9 @@ TkCreateMainWindow(
 #ifdef USE_NMAKE
 		".nmake"
 #endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(USE_ATK)
+		".no-atk"
+#endif
 #ifdef TK_NO_DEPRECATED
 		".no-deprecate"
 #endif
