@@ -169,6 +169,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
     destroy .t
 } -result 1
 
+testutils import child
 
 test winfo-5.1 {"winfo interps" command} -body {
     winfo interps a
@@ -180,12 +181,39 @@ test winfo-5.3 {"winfo interps" command} -body {
     winfo interps -displayof geek
 } -returnCodes error -result {bad window path name "geek"}
 test winfo-5.4 {"winfo interps" command} -constraints unix -body {
-    expr {[lsearch -exact [winfo interps] [tk appname]] >= 0}
-} -result 1
+    childTkInterp child
+    set appname [child eval tk appname]
+    set res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
+    interp delete child
+    lappend res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
+    set res
+} -result {1 0}
 test winfo-5.5 {"winfo interps" command} -constraints unix -body {
-    expr {[lsearch -exact [winfo interps -displayof .] [tk appname]] >= 0}
-} -result 1
+    childTkInterp child
+    set appname [child eval tk appname]
+    set res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
+    interp delete child
+    lappend res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
+    set res
+} -result {1 0}
+test winfo-5.6 {"winfo interps" command} -constraints unix -body {
+    childTkProcess create
+    set appname [childTkProcess eval [list tk appname]]
+    set res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
+    childTkProcess exit
+    lappend res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
+    set res
+} -result {1 0}
+test winfo-5.7 {"winfo interps" command} -constraints unix -body {
+    childTkProcess create
+    set appname [childTkProcess eval [list tk appname]]
+    set res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
+    childTkProcess exit
+    lappend res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
+    set res
+} -result {1 0}
 
+testutils forget child
 
 test winfo-6.1 {"winfo exists" command} -body {
     winfo exists
