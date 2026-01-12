@@ -39,8 +39,8 @@
 
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
-    unsigned id;                /* Identifier for command;  used to
-				 * cancel it. */
+    int id;						/* Identifier for command;  used to
+								* cancel it. */
     Tcl_Obj *taskbar_txt;       /* text to display in the taskbar */
     Tcl_Interp *interp;         /* interp which created the icon */
     Tcl_Obj *taskbar_command;   /* command to eval if events in the taskbar
@@ -290,7 +290,7 @@ NewIcon(
     icoPtr->hIcon = hIcon;
     icoPtr->taskbar_txt = NULL;
     icoPtr->interp = interp;
-    icoPtr->taskbar_command = NULL;
+	icoPtr->taskbar_command = NULL;
     icoPtr->taskbar_flags = 0;
     icoPtr->hwndFocus = NULL;
     icoPtr->nextPtr = icoInterpPtr->firstIcoPtr;
@@ -1219,6 +1219,12 @@ WinIcoInit(
 	    icoInterpPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
 	    icoInterpPtr, NULL);
+	/* 
+	* This command is defined in tkWinIco.c, but that file does not have 
+	* any hooks for script command creation. 
+	*/
+	Tcl_CreateObjCommand(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
+	    NULL, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
 	    WinIcoDestroy, icoInterpPtr);
