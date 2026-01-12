@@ -3863,7 +3863,7 @@ test textDisp-24.4 {TkTextCharLayoutProc, newline not visible} {
 } [list [list [xchar 19] [yline 1] $fixedWidth $fixedHeight] \
 	[list [xchar 20] [yline 1] 0 $fixedHeight] \
 	[list [xchar 0] [yline 3] $fixedWidth $fixedHeight]]
-test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} {nonwin} {
+test textDisp-24.5 {TkTextCharLayoutProc, char doesn't fit, newline not visible} macOrUnix {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 0\n1\n
