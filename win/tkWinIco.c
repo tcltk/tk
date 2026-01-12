@@ -11,6 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkInt.h"
 #include "tkWinIco.h"
 
 /*
@@ -240,7 +241,7 @@ CreateIcoFromPhoto(
 
 int
 GetFileIcon(
-    void *dummy,                /* Not used. */
+    TCL_UNUSED(void *),         /* Not used. */
     Tcl_Interp *interp,         /* Current interpreter */
     int objc,                   /* Number of arguments */
     Tcl_Obj *const objv[]       /* Argument strings */
