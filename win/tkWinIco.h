@@ -15,6 +15,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <shlobj.h>
+#include <initguid.h>
 #include <commoncontrols.h>
 
 /*
