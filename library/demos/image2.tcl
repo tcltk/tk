@@ -67,6 +67,10 @@ proc loadImage {w x y} {
 	# Mark the file as not loadable
 	$w.f.list itemconfigure @$x,$y -bg \#c00000 -selectbackground \#ff0000
     }
+
+	set filename [file nativename [file normalize $file]]
+	set icon [tk fileicon $filename 48]
+	$w.label configure -image $icon -compound top
 }
 
 set w .image2
@@ -102,6 +106,9 @@ ttk::scrollbar $w.f.scroll -command "$w.f.list yview"
 pack $w.f.list $w.f.scroll -side left -fill y -expand 1
 $w.f.list insert 0 earth.gif earthris.gif teapot.ppm Tcl.svg
 bind $w.f.list <Double-Button-1> "loadImage $w %x %y"
+
+label $w.label -text "Icon for Selected Image" -relief groove
+pack $w.label -side bottom -fill both -expand 1
 
 catch {image delete image2a}
 image create photo image2a

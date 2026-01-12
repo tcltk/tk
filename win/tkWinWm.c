@@ -18,7 +18,6 @@
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
-#include <shellapi.h>
 #include "tkWinIco.h"
 /*
  * These next two defines are only valid on Win2K/XP+.
