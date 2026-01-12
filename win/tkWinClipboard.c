@@ -15,6 +15,30 @@
 #include <shlobj.h>    /* for DROPFILES */
 
 static void		UpdateClipboard(HWND hwnd);
+
+
+static BOOL
+OpenClipboardWithRetry(HWND hwnd)
+{
+    /*
+     * Clipboard may be in use by other applications or clipboard monitors.
+     * So retry a few times. The numbers below are based on experimentation
+     * on my system to get the clipboard test suite to pass without
+     * clipboard busy failures.
+     */
+    const int maxRetries = 10;
+    const DWORD delayMs = 100;
+    for (int i = 0; i < maxRetries; ++i) {
+	if (OpenClipboard(hwnd)) {
+	    return TRUE;
+	}
+        if (GetLastError() != ERROR_ACCESS_DENIED) {
+	    break;
+	}
+	Sleep(delayMs);
+    }
+    return FALSE;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -59,9 +83,11 @@ TkSelGetSelection(
 	    || (target != XA_STRING)) {
 	goto error;
     }
-    if (!OpenClipboard(NULL)) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"clipboard cannot be opened, another application grabbed it"));
+    if (!OpenClipboardWithRetry(NULL)) {
+	Tcl_SetObjResult(interp,
+	    Tcl_NewStringObj(
+		"clipboard cannot be opened, another application grabbed it",
+		-1));
 	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", (char *)NULL);
 	return TCL_ERROR;
     }
@@ -397,7 +423,7 @@ UpdateClipboard(
     HWND hwnd)
 {
     TkWinUpdatingClipboard(TRUE);
-    OpenClipboard(hwnd);
+    OpenClipboardWithRetry(hwnd);
     EmptyClipboard();
 
     SetClipboardData(CF_UNICODETEXT, NULL);
