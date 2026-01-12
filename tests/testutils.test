@@ -8,7 +8,7 @@
 
 # NOTE
 #
-# All tests in this testfile have been constrained with test constraint "testutils".
+# All tests in this test file have been constrained with test constraint "testutils".
 # This constraint isn't set anywhere, and therefore false by default. Therefore,
 # the tests in this file are skipped in a regular invocation of the Tk test suite.
 # In order to run these test, you need to use the tcltest option
@@ -20,15 +20,18 @@
 # TESTFILE INITIALIZATION
 #
 
-package require tcltest 2.2; # needed for "-singleproc 0"
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-# Load the main script "main.tcl", which takes care of:
+# Load the main script main.tcl, which takes care of:
 # - setup for the application and the root window
-# - loading and configuration of the tcltest test harness
-# - loading of the testutils mechanism together with its utility procs
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
-tcltest::loadTestedCommands
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
 
 assert {"testutils" in [info procs testutils]}
 

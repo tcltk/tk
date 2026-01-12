@@ -332,7 +332,7 @@ int
 Tk_GridObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -992,7 +992,7 @@ GridRowColumnConfigureCommand(
     Tk_Window container, content;
     Gridder *containerPtr, *contentPtr;
     SlotInfo *slotPtr = NULL;
-    int slot;			/* the column or row number */
+    Tcl_Size slot;		/* the column or row number */
     int slotType;		/* COLUMN or ROW */
     int size;			/* the configuration value */
     Tcl_Size lObjc;		/* Number of items in index list */
@@ -1049,7 +1049,7 @@ GridRowColumnConfigureCommand(
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
+	if (Tcl_GetSizeIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
 		    " (when retrieving options only integer indices are "
 		    "allowed)", NULL);
@@ -1131,7 +1131,7 @@ GridRowColumnConfigureCommand(
     for (j = 0; j < lObjc; j++) {
 	int allContent = 0;
 
-	if (Tcl_GetIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
+	if (Tcl_GetSizeIntFromObj(NULL, lObjv[j], &slot) == TCL_OK) {
 	    first = slot;
 	    last = slot;
 	    contentPtr = NULL;
@@ -1382,8 +1382,8 @@ GridContentCommand(
     Tk_Window container;
     Gridder *containerPtr;		/* container grid record */
     Gridder *contentPtr;
-    int i, value, index;
-    int row = -1, column = -1;
+    Tcl_Size i;
+    int row = -1, column = -1, value, index;
     static const char *const optionStrings[] = {
 	"-column", "-row", NULL
     };
@@ -1988,7 +1988,7 @@ ResolveConstraints(
 
     gridCount = MAX(constraintCount, slotCount);
     if (gridCount >= TYPICAL_SIZE) {
-	layoutPtr = (GridLayout *)ckalloc(sizeof(GridLayout) * (1+gridCount));
+	layoutPtr = (GridLayout *)Tcl_Alloc(sizeof(GridLayout) * (1+gridCount));
     } else {
 	layoutPtr = layoutData;
     }
@@ -2111,12 +2111,12 @@ ResolveConstraints(
 			    * sizeof(UniformGroup);
 		    size_t newSize = (uniformGroupsAlloced + UNIFORM_PREALLOC)
 			    * sizeof(UniformGroup);
-		    UniformGroup *newUG = (UniformGroup *)ckalloc(newSize);
+		    UniformGroup *newUG = (UniformGroup *)Tcl_Alloc(newSize);
 		    UniformGroup *oldUG = uniformGroupPtr;
 
 		    memcpy(newUG, oldUG, oldSize);
 		    if (oldUG != uniformPre) {
-			ckfree(oldUG);
+			Tcl_Free(oldUG);
 		    }
 		    uniformGroupPtr = newUG;
 		    uniformGroupsAlloced += UNIFORM_PREALLOC;
@@ -2156,7 +2156,7 @@ ResolveConstraints(
     }
 
     if (uniformGroupPtr != uniformPre) {
-	ckfree(uniformGroupPtr);
+	Tcl_Free(uniformGroupPtr);
     }
 
     /*
@@ -2426,7 +2426,7 @@ ResolveConstraints(
 
     --layoutPtr;
     if (layoutPtr != layoutData) {
-	ckfree(layoutPtr);
+	Tcl_Free(layoutPtr);
     }
     return requiredSize;
 }
@@ -2479,7 +2479,7 @@ GetGrid(
     if (!isNew) {
 	return (Gridder *)Tcl_GetHashValue(hPtr);
     }
-    gridPtr = (Gridder *)ckalloc(sizeof(Gridder));
+    gridPtr = (Gridder *)Tcl_Alloc(sizeof(Gridder));
     gridPtr->tkwin = tkwin;
     gridPtr->containerPtr = NULL;
     gridPtr->containerDataPtr = NULL;
@@ -2688,14 +2688,14 @@ CheckSlotData(
 	    int newNumSlot = slot + PREALLOC;
 	    size_t oldSize = numSlot * sizeof(SlotInfo);
 	    size_t newSize = newNumSlot * sizeof(SlotInfo);
-	    SlotInfo *newSI = (SlotInfo *)ckalloc(newSize);
+	    SlotInfo *newSI = (SlotInfo *)Tcl_Alloc(newSize);
 	    SlotInfo *oldSI = (slotType == ROW)
 		    ? containerPtr->containerDataPtr->rowPtr
 		    : containerPtr->containerDataPtr->columnPtr;
 
 	    memcpy(newSI, oldSI, oldSize);
 	    memset(newSI+numSlot, 0, newSize - oldSize);
-	    ckfree(oldSI);
+	    Tcl_Free(oldSI);
 	    if (slotType == ROW) {
 		containerPtr->containerDataPtr->rowPtr = newSI;
 		containerPtr->containerDataPtr->rowSpace = newNumSlot;
@@ -2739,16 +2739,16 @@ InitContainerData(
 {
     if (containerPtr->containerDataPtr == NULL) {
 	GridContainer *gridPtr = containerPtr->containerDataPtr = (GridContainer *)
-		ckalloc(sizeof(GridContainer));
+		Tcl_Alloc(sizeof(GridContainer));
 	size_t size = sizeof(SlotInfo) * TYPICAL_SIZE;
 
 	gridPtr->columnEnd = 0;
 	gridPtr->columnMax = 0;
-	gridPtr->columnPtr = (SlotInfo *)ckalloc(size);
+	gridPtr->columnPtr = (SlotInfo *)Tcl_Alloc(size);
 	gridPtr->columnSpace = TYPICAL_SIZE;
 	gridPtr->rowEnd = 0;
 	gridPtr->rowMax = 0;
-	gridPtr->rowPtr = (SlotInfo *)ckalloc(size);
+	gridPtr->rowPtr = (SlotInfo *)Tcl_Alloc(size);
 	gridPtr->rowSpace = TYPICAL_SIZE;
 	gridPtr->startX = 0;
 	gridPtr->startY = 0;
@@ -2857,17 +2857,17 @@ DestroyGrid(
     }
     if (gridPtr->containerDataPtr != NULL) {
 	if (gridPtr->containerDataPtr->rowPtr != NULL) {
-	    ckfree(gridPtr->containerDataPtr -> rowPtr);
+	    Tcl_Free(gridPtr->containerDataPtr -> rowPtr);
 	}
 	if (gridPtr->containerDataPtr->columnPtr != NULL) {
-	    ckfree(gridPtr->containerDataPtr -> columnPtr);
+	    Tcl_Free(gridPtr->containerDataPtr -> columnPtr);
 	}
-	ckfree(gridPtr->containerDataPtr);
+	Tcl_Free(gridPtr->containerDataPtr);
     }
     if (gridPtr->in != NULL) {
 	Tcl_DecrRefCount(gridPtr->in);
     }
-    ckfree(gridPtr);
+    Tcl_Free(gridPtr);
 }
 
 /*
@@ -2983,9 +2983,8 @@ ConfigureContent(
     Gridder *contentPtr;
     Tk_Window other, content, parent, ancestor;
     TkWindow *container;
-    int i, j, tmp;
-    int numWindows;
-    int width;
+    Tcl_Size i, j, numWindows;
+    int width, tmp;
     int defaultRow = -1;
     int defaultColumn = 0;	/* Default column number */
     int defaultColumnSpan = 1;	/* Default number of columns */

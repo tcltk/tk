@@ -20,16 +20,16 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Checkout Tcl 9.1
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: main
           path: tcl
-      - name: Setup Environment
+      - name: Prepare
         run: |
           sudo apt-get install libxss-dev libxft-dev
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
@@ -64,7 +64,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.tar
@@ -75,7 +75,7 @@ jobs:
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
-    runs-on: macos-13
+    runs-on: macos-15
     defaults:
       run:
         shell: bash
@@ -84,26 +84,29 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Checkout Tcl 9.1
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: main
           path: tcl
       - name: Checkout create-dmg
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: create-dmg/create-dmg
-          ref: v1.0.8
+          ref: v1.2.2
           path: create-dmg
-      - name: Setup Environment
+      - name: Prepare
         run: |
           mkdir -p install/contents
-          touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
-          touch tk/generic/tkStubInit.c
+          touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c || true
+          touch tk/generic/tkStubInit.c || true
+          wget https://github.com/culler/macher/releases/download/v1.8/macher
+          sudo cp macher /usr/local/bin
+          sudo chmod a+x /usr/local/bin/macher
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
           echo "VER_PATH=$(cd tcl/tools; pwd)/addVerToFile.tcl" >> $GITHUB_ENV
           echo "CREATE_DMG=$(cd create-dmg;pwd)/create-dmg" >> $GITHUB_ENV
@@ -152,7 +155,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.dmg
@@ -172,16 +175,16 @@ jobs:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: tk
       - name: Checkout Tcl 9.1
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: main
           path: tcl
-      - name: Setup Environment
+      - name: Prepare
         run: |
           mkdir -p install/combined
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
@@ -215,7 +218,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (snapshot)
           path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_snapshot.exe

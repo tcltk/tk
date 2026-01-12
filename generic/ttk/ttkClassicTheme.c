@@ -67,7 +67,7 @@ static void HighlightElementDraw(
 	GC gc = Tk_GCForColor(highlightColor, d);
 	if (defaultState == TTK_BUTTON_DEFAULT_NORMAL) {
 	    TkDrawInsetFocusHighlight(tkwin, gc, highlightThickness, d,
-		round(5 * TkScalingLevel(tkwin)));
+		(int)round(5 * TkScalingLevel(tkwin)));
 	} else {
 	    Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
 	}
@@ -129,7 +129,7 @@ static void ButtonBorderElementSize(
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
-	borderWidth += round(5 * TkScalingLevel(tkwin));
+	borderWidth += (int)round(5 * TkScalingLevel(tkwin));
     }
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -169,7 +169,7 @@ static void ButtonBorderElementDraw(
 	case TTK_BUTTON_DEFAULT_DISABLED :
 	    break;
 	case TTK_BUTTON_DEFAULT_NORMAL :
-	    inset += round(5 * TkScalingLevel(tkwin));
+	    inset += (int)round(5 * TkScalingLevel(tkwin));
 	    break;
 	case TTK_BUTTON_DEFAULT_ACTIVE :
 	    Tk_Draw3DRectangle(tkwin, d, border,
@@ -342,14 +342,14 @@ static void DiamondIndicatorElementDraw(
     diameter = b.width < b.height ? b.width : b.height;
     radius = diameter / 2;
 
-    points[0].x = b.x;
-    points[0].y = b.y + radius;
-    points[1].x = b.x + radius;
-    points[1].y = b.y + 2*radius;
-    points[2].x = b.x + 2*radius;
-    points[2].y = b.y + radius;
-    points[3].x = b.x + radius;
-    points[3].y = b.y;
+    points[0].x = (short)b.x;
+    points[0].y = (short)(b.y + radius);
+    points[1].x = (short)(b.x + radius);
+    points[1].y = (short)(b.y + 2*radius);
+    points[2].x = (short)(b.x + 2*radius);
+    points[2].y = (short)(b.y + radius);
+    points[3].x = (short)(b.x + radius);
+    points[3].y = (short)b.y;
 
     Tk_Fill3DPolygon(tkwin,d,interior,points,4,borderWidth,TK_RELIEF_FLAT);
     Tk_Draw3DPolygon(tkwin,d,border,points,4,borderWidth,relief);
@@ -518,24 +518,24 @@ static void ArrowElementDraw(
     switch (direction)
     {
 	case ARROW_UP:
-	    points[2].x = b.x;		points[2].y = b.y + size;
-	    points[1].x = b.x + size/2;	points[1].y = b.y;
-	    points[0].x = b.x + size;	points[0].y = b.y + size;
+	    points[2].x = (short)b.x;		points[2].y = (short)(b.y + size);
+	    points[1].x = (short)(b.x + size/2);	points[1].y = (short)b.y;
+	    points[0].x = (short)(b.x + size);	points[0].y = (short)(b.y + size);
 	    break;
 	case ARROW_DOWN:
-	    points[0].x = b.x;		points[0].y = b.y;
-	    points[1].x = b.x + size/2;	points[1].y = b.y + size;
-	    points[2].x = b.x + size;	points[2].y = b.y;
+	    points[0].x = (short)b.x;		points[0].y = (short)b.y;
+	    points[1].x = (short)(b.x + size/2);	points[1].y = (short)(b.y + size);
+	    points[2].x = (short)(b.x + size);	points[2].y = (short)b.y;
 	    break;
 	case ARROW_LEFT:
-	    points[0].x = b.x;		points[0].y = b.y + size / 2;
-	    points[1].x = b.x + size;	points[1].y = b.y + size;
-	    points[2].x = b.x + size;	points[2].y = b.y;
+	    points[0].x = (short)b.x;		points[0].y = (short)(b.y + size / 2);
+	    points[1].x = (short)(b.x + size);	points[1].y = (short)(b.y + size);
+	    points[2].x = (short)(b.x + size);	points[2].y = (short)b.y;
 	    break;
 	case ARROW_RIGHT:
-	    points[0].x = b.x + size;	points[0].y = b.y + size / 2;
-	    points[1].x = b.x;		points[1].y = b.y;
-	    points[2].x = b.x;		points[2].y = b.y + size;
+	    points[0].x = (short)(b.x + size);	points[0].y = (short)(b.y + size / 2);
+	    points[1].x = (short)b.x;		points[1].y = (short)b.y;
+	    points[2].x = (short)b.x;		points[2].y = (short)(b.y + size);
 	    break;
     }
 
@@ -718,13 +718,15 @@ static void SashElementSize(
     Tk_GetPixelsFromObj(NULL, tkwin, sash->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, tkwin, sash->sashPadObj, &sashPad);
 
-    if (sashThickness < handleSize + 2*sashPad)
+    if (sashThickness < handleSize + 2*sashPad) {
 	sashThickness = handleSize + 2*sashPad;
+    }
 
-    if (orient == TTK_ORIENT_HORIZONTAL)
+    if (orient == TTK_ORIENT_HORIZONTAL) {
 	*heightPtr = sashThickness;
-    else
+    } else {
 	*widthPtr = sashThickness;
+    }
 }
 
 static void SashElementDraw(

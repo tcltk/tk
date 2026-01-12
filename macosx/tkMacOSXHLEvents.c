@@ -7,7 +7,7 @@
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2015-2019 Marc Culler
- * Copyright © 2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2019 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -98,7 +98,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 	 * quickly as possible.
 	 */
 
-	eventPtr = (KillEvent *)ckalloc(sizeof(KillEvent));
+	eventPtr = (KillEvent *)Tcl_Alloc(sizeof(KillEvent));
 	eventPtr->header.proc = ReallyKillMe;
 	eventPtr->interp = _eventInterp;
 
@@ -208,7 +208,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
      * procedure, passing the paths contained in the AppleEvent as arguments.
      */
 
-    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)Tcl_Alloc(sizeof(AppleEventInfo));
     Tcl_DString *openCommand = &AEInfo->command;
     Tcl_DStringInit(openCommand);
     Tcl_DStringAppend(openCommand, openDocumentProc, TCL_INDEX_NONE);
@@ -252,7 +252,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     NSString* file = [[event paramDescriptorForKeyword:keyDirectObject]
 			 stringValue];
     const char *printFile = [file UTF8String];
-    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)Tcl_Alloc(sizeof(AppleEventInfo));
     Tcl_DString *printCommand = &AEInfo->command;
     (void)replyEvent;
 
@@ -316,7 +316,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 		URLBuffer[actual] = '\0';
 		NSString *urlString = [NSString stringWithUTF8String:(char*)URLBuffer];
 		NSURL *fileURL = [NSURL URLWithString:urlString];
-		AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+		AppleEventInfo *AEInfo = (AppleEventInfo *)Tcl_Alloc(sizeof(AppleEventInfo));
 		Tcl_DString *scriptFileCommand = &AEInfo->command;
 		Tcl_DStringInit(scriptFileCommand);
 		Tcl_DStringAppend(scriptFileCommand, scriptFileProc, TCL_INDEX_NONE);
@@ -337,12 +337,12 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 	 */
 
 	if (actual > 0) {
-	    char *data = (char *)ckalloc(actual + 1);
+	    char *data = (char *)Tcl_Alloc(actual + 1);
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
 		data[actual] = '\0';
-		AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+		AppleEventInfo *AEInfo = (AppleEventInfo *)Tcl_Alloc(sizeof(AppleEventInfo));
 		Tcl_DString *scriptTextCommand = &AEInfo->command;
 		Tcl_DStringInit(scriptTextCommand);
 		Tcl_DStringAppend(scriptTextCommand, scriptTextProc, TCL_INDEX_NONE);
@@ -368,7 +368,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     NSString* url = [[event paramDescriptorForKeyword:keyDirectObject]
 			stringValue];
     const char *cURL=[url UTF8String];
-    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)Tcl_Alloc(sizeof(AppleEventInfo));
     Tcl_DString *launchCommand = &AEInfo->command;
     (void)replyEvent;
 
@@ -383,7 +383,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 }
 
 - (void)handleGetSDEFEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
-     AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+     AppleEventInfo *AEInfo = (AppleEventInfo *)Tcl_Alloc(sizeof(AppleEventInfo));
     Tcl_DString *sdefCommand = &AEInfo->command;
     (void)event;
     (void)replyEvent;
@@ -448,7 +448,7 @@ static void ProcessAppleEvent(
 	    AEInfo->retryCount++;
 	    Tcl_CreateTimerHandler(200, ProcessAppleEvent, clientData);
 	} else {
-	    ckfree(clientData);
+	    Tcl_Free(clientData);
 	}
 	return;
     }
@@ -475,7 +475,7 @@ static void ProcessAppleEvent(
     }
 
     Tcl_DStringFree(&AEInfo->command);
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /*
@@ -500,10 +500,10 @@ TkMacOSXInitAppleEvents(
     TCL_UNUSED(Tcl_Interp *))
 {
     NSAppleEventManager *aeManager = [NSAppleEventManager sharedAppleEventManager];
-    static Boolean initialized = FALSE;
+    static bool initialized = false;
 
     if (!initialized) {
-	initialized = TRUE;
+	initialized = true;
 
 	[aeManager setEventHandler:NSApp
 	    andSelector:@selector(handleQuitApplicationEvent:withReplyEvent:)

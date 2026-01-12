@@ -107,7 +107,7 @@ int
 Tk_FocusObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const focusOptions[] = {
@@ -415,7 +415,7 @@ TkFocusFilterEvent(
 	}
     }
     if (tlFocusPtr == NULL) {
-	tlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
+	tlFocusPtr = (ToplevelFocusInfo *)Tcl_Alloc(sizeof(ToplevelFocusInfo));
 	tlFocusPtr->topLevelPtr = tlFocusPtr->focusWinPtr = winPtr;
 	tlFocusPtr->nextPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tlFocusPtr;
@@ -623,7 +623,7 @@ TkSetFocusWin(
 	}
     }
     if (tlFocusPtr == NULL) {
-	tlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
+	tlFocusPtr = (ToplevelFocusInfo *)Tcl_Alloc(sizeof(ToplevelFocusInfo));
 	tlFocusPtr->topLevelPtr = topLevelPtr;
 	tlFocusPtr->nextPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tlFocusPtr;
@@ -857,7 +857,7 @@ TkFocusDeadWindow(
 	    } else {
 		prevPtr->nextPtr = tlFocusPtr->nextPtr;
 	    }
-	    ckfree(tlFocusPtr);
+	    Tcl_Free(tlFocusPtr);
 	    noMatch = 0;
 	    break;
 	} else if (winPtr == tlFocusPtr->focusWinPtr) {
@@ -1028,7 +1028,7 @@ FindDisplayFocusInfo(
      * The record doesn't exist yet. Make a new one.
      */
 
-    displayFocusPtr = (DisplayFocusInfo *)ckalloc(sizeof(DisplayFocusInfo));
+    displayFocusPtr = (DisplayFocusInfo *)Tcl_Alloc(sizeof(DisplayFocusInfo));
     displayFocusPtr->dispPtr = dispPtr;
     displayFocusPtr->focusWinPtr = NULL;
     displayFocusPtr->focusOnMapPtr = NULL;
@@ -1064,13 +1064,13 @@ TkFocusFree(
 	DisplayFocusInfo *displayFocusPtr = mainPtr->displayFocusPtr;
 
 	mainPtr->displayFocusPtr = mainPtr->displayFocusPtr->nextPtr;
-	ckfree(displayFocusPtr);
+	Tcl_Free(displayFocusPtr);
     }
     while (mainPtr->tlFocusPtr != NULL) {
 	ToplevelFocusInfo *tlFocusPtr = mainPtr->tlFocusPtr;
 
 	mainPtr->tlFocusPtr = mainPtr->tlFocusPtr->nextPtr;
-	ckfree(tlFocusPtr);
+	Tcl_Free(tlFocusPtr);
     }
 }
 
@@ -1156,7 +1156,7 @@ TkFocusSplit(
 	 * Move focus to new toplevel.
 	 */
 
-	ToplevelFocusInfo *newTlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
+	ToplevelFocusInfo *newTlFocusPtr = (ToplevelFocusInfo *)Tcl_Alloc(sizeof(ToplevelFocusInfo));
 
 	newTlFocusPtr->topLevelPtr = winPtr;
 	newTlFocusPtr->focusWinPtr = tlFocusPtr->focusWinPtr;
@@ -1205,7 +1205,7 @@ TkFocusJoin(
 	    && winPtr->mainPtr->tlFocusPtr->topLevelPtr == winPtr) {
 	tmpPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tmpPtr->nextPtr;
-	ckfree(tmpPtr);
+	Tcl_Free(tmpPtr);
     } else if (winPtr && winPtr->mainPtr) {
 	for (tlFocusPtr = winPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 		tlFocusPtr = tlFocusPtr->nextPtr) {
@@ -1213,7 +1213,7 @@ TkFocusJoin(
 		    tlFocusPtr->nextPtr->topLevelPtr == winPtr) {
 		tmpPtr = tlFocusPtr->nextPtr;
 		tlFocusPtr->nextPtr = tmpPtr->nextPtr;
-		ckfree(tmpPtr);
+		Tcl_Free(tmpPtr);
 		break;
 	    }
 	}

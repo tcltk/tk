@@ -15,6 +15,8 @@ namespace eval ::ttk {
 source -encoding utf-8 [file join $::ttk::library fonts.tcl]
 source -encoding utf-8 [file join $::ttk::library cursors.tcl]
 source -encoding utf-8 [file join $::ttk::library utils.tcl]
+source -encoding utf-8 [file join $::ttk::library elements.tcl]
+source -encoding utf-8 [file join $::ttk::library wideSpinbox.tcl]
 
 ## ttk::deprecated $old $new --
 #	Define $old command as a deprecated alias for $new command
@@ -54,9 +56,13 @@ package ifneeded tile 0.8.6 { package provide tile 0.8.6 }
 
 ### ::ttk::ThemeChanged --
 #	Called from [::ttk::style theme use].
-#	Sends a <<ThemeChanged>> virtual event to all widgets.
+#	Updates the elements of the Toggleswitch* and Wide.TSpinbox styles,
+#	and sends a <<ThemeChanged>> virtual event to all widgets.
 #
 proc ::ttk::ThemeChanged {} {
+    toggleswitch::CondUpdateElements			;# see elements.tcl
+    wideSpinbox::MakeOrUpdateElements			;# see wideSpinbox.tcl
+
     set Q .
     while {[llength $Q]} {
 	set QN [list]
@@ -68,6 +74,17 @@ proc ::ttk::ThemeChanged {} {
 	}
 	set Q $QN
     }
+}
+
+### ::ttk::AppearanceChanged --
+#	Called from the C code for macOSX, after sending the virtual events
+#	<<LightAqua>>/<<DarkAqua>> and <<AppearanceChanged>> to "." and the
+#	toplevel windows.
+#	Updates the elements of the Toggleswitch* and Wide.TSpinbox styles.
+#
+proc ::ttk::AppearanceChanged {} {
+    toggleswitch::CondUpdateElements			;# see elements.tcl
+    wideSpinbox::MakeOrUpdateElements			;# see wideSpinbox.tcl
 }
 
 ### Public API.
@@ -115,10 +132,7 @@ proc ::ttk::configureNotebookStyle {style} {
 #	To be invoked from within the library files for the built-in themes.
 #
 proc ::ttk::setTreeviewRowHeight {} {
-    set font [::ttk::style lookup Treeview -font]
-    if {$font eq {}} {
-	set font TkDefaultFont
-    }
+    set font [::ttk::style lookup Treeview -font {} TkDefaultFont]
 
     ::ttk::style configure Treeview -rowheight \
 	    [expr {[font metrics $font -linespace] + 2}]
@@ -142,6 +156,7 @@ proc ::ttk::setTreeviewRowHeight {} {
 #
 source -encoding utf-8 [file join $::ttk::library button.tcl]
 source -encoding utf-8 [file join $::ttk::library menubutton.tcl]
+source -encoding utf-8 [file join $::ttk::library toggleswitch.tcl]
 source -encoding utf-8 [file join $::ttk::library scrollbar.tcl]
 source -encoding utf-8 [file join $::ttk::library scale.tcl]
 source -encoding utf-8 [file join $::ttk::library progress.tcl]

@@ -535,6 +535,18 @@ if {$::tk_library ne ""} {
 	namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
+
+	# Do not load accessibility.tcl if running in a safe interpreter,
+	# under XQuartz on macOS, or if Tk on X11 was compiled without
+	# accessibility support. These cause interpreter failures or Tk to
+	# crash.
+	if {![interp issafe] &&
+		!($::tcl_platform(os) eq "Darwin" && [tk windowingsystem] eq "x11") &&
+		![catch {tk::accessible::check_screenreader} r] &&
+		![string match -nocase "*warning*" $r]} {
+	    SourceLibFile accessibility
+	}
+	SourceLibFile fileicon
 	SourceLibFile icons
 	SourceLibFile iconbadges
 	SourceLibFile button
@@ -737,17 +749,17 @@ proc ::tk::WMFrameWidth {} {
 	variable dpi
 	if {$dpi < 140} {
 	    set frameWidth 6
-    	} elseif {$dpi < 190} {
+	} elseif {$dpi < 190} {
 	    set frameWidth 9
-    	} elseif {$dpi < 240} {
+	} elseif {$dpi < 240} {
 	    set frameWidth 12
-    	} elseif {$dpi < 320} {
+	} elseif {$dpi < 320} {
 	    set frameWidth 15
-    	} elseif {$dpi < 420} {
+	} elseif {$dpi < 420} {
 	    set frameWidth 21
-    	} else {
+	} else {
 	    set frameWidth 27
-   	}
+	}
     }
     return $frameWidth
 }
@@ -763,17 +775,17 @@ proc ::tk::WMTitleHeight {} {
 	variable dpi
 	if {$dpi < 140} {
 	    set titleHeight 20
-    	} elseif {$dpi < 190} {
+	} elseif {$dpi < 190} {
 	    set titleHeight 30
-    	} elseif {$dpi < 240} {
+	} elseif {$dpi < 240} {
 	    set titleHeight 38
-    	} elseif {$dpi < 320} {
+	} elseif {$dpi < 320} {
 	    set titleHeight 46
-    	} elseif {$dpi < 420} {
+	} elseif {$dpi < 420} {
 	    set titleHeight 60
-    	} else {
+	} else {
 	    set titleHeight 78
-   	}
+	}
     }
     return $titleHeight
 }

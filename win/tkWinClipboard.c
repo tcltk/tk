@@ -314,7 +314,7 @@ TkWinClipboardRender(
      * Copy the data and change EOL characters.
      */
 
-    buffer = rawText = (char *)ckalloc(length + 1);
+    buffer = rawText = (char *)Tcl_Alloc(length + 1);
     if (targetPtr != NULL) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = cbPtr->nextPtr) {
@@ -331,7 +331,7 @@ TkWinClipboardRender(
 
 	Tcl_DStringInit(&ds);
 	Tcl_UtfToWCharDString(rawText, TCL_INDEX_NONE, &ds);
-	ckfree(rawText);
+	Tcl_Free(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 		Tcl_DStringLength(&ds) + 2);
 	if (!handle) {

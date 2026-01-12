@@ -251,7 +251,6 @@ test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay} {
     set result
 } {altDisplay homeDisplay}
 
-# Since macOS has no registry of interpreters, 8.3 and 8.10 will fail.
 test send-8.3 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -- -async foo bar baz} msg] $msg
 } {1 {no application named "-async"}}
@@ -629,7 +628,7 @@ test send-13.1 {DeleteProc procedure} {secureserver} {
     set result [list [catch {send $app foo} msg] $msg [winfo interps]]
     childTkProcess exit
     set result
-} {1 {no application named "tktest #2"} tktest}
+} -result {1 {no application named "tktest[0-9]+"} tktest} -match regexp
 test send-13.2 {DeleteProc procedure} {secureserver} {
     winfo interps
     tk appname tktest

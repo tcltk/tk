@@ -735,13 +735,13 @@ TkpConfigureMenuEntry(
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
     Tcl_Obj *fontPtr = (mePtr->fontPtr ?
 			mePtr->fontPtr : mePtr->menuPtr->fontPtr);
-    static int initialized = 0;
+    static bool initialized = 0;
 
     if (!initialized) {
 	TkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
-	ckfree(tkColPtr);
+	Tcl_Free(tkColPtr);
 	tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
-	ckfree(tkColPtr);
+	Tcl_Free(tkColPtr);
     }
 
     if (mePtr->image) {
@@ -786,12 +786,12 @@ TkpConfigureMenuEntry(
     if (defaultBg == 0) {
 	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
 	defaultBg = tkColPtr->color.pixel;
-	ckfree(tkColPtr);
+	Tcl_Free(tkColPtr);
     }
     if (defaultFg == 0) {
 	tkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
 	defaultFg = tkColPtr->color.pixel;
-	ckfree(tkColPtr);
+	Tcl_Free(tkColPtr);
     }
     if (gc->foreground != defaultFg) {
 	NSColor *fgcolor = TkMacOSXGetNSColor(gc, gc->foreground);

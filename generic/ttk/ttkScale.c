@@ -138,7 +138,7 @@ static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Tcl_Obj *varName = scale->scale.variableObj;
     Ttk_TraceHandle *vt = 0;
 
-    if (varName != NULL && *Tcl_GetString(varName) != '\0') {
+    if (!TkObjIsEmpty(varName)) {
 	vt = Ttk_TraceVariable(interp,varName, ScaleVariableChanged,recordPtr);
 	if (!vt) return TCL_ERROR;
     }
@@ -271,8 +271,9 @@ ScaleGetCommand(
 	Tcl_SetObjResult(interp, scalePtr->scale.valueObj);
     } else if (objc == 4) {
 	r = Tcl_GetIntFromObj(interp, objv[2], &x);
-	if (r == TCL_OK)
+	if (r == TCL_OK) {
 	    r = Tcl_GetIntFromObj(interp, objv[3], &y);
+	}
 	if (r == TCL_OK) {
 	    value = PointToValue(scalePtr, x, y);
 	    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(value));

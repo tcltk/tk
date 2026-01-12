@@ -6,9 +6,9 @@
  *      window and a "sysnotify" command to post system notifications.
  *      In macOS the icon appears on the right hand side of the menu bar.
  *
- * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
- * Copyright © 2020 Jan Nijtmans.
- * Copyright © 2020 Marc Culler.
+ * Copyright © 2020 Kevin Walzer
+ * Copyright © 2020 Jan Nijtmans
+ * Copyright © 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -167,7 +167,7 @@ MacSystrayDestroy(
     StatusItemInfo info = (StatusItemInfo)clientData;
     if (info) {
 	[*info release];
-	ckfree(info);
+	Tcl_Free(info);
     }
 }
 
@@ -476,7 +476,7 @@ MacSystrayInit(Tcl_Interp *interp)
      * Initialize the TkStatusItem for this interpreter.
      */
 
-    StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
+    StatusItemInfo info = (StatusItemInfo)Tcl_Alloc(sizeof(StatusItemInfo));
     *info = 0;
 
     Tcl_CreateObjCommand2(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,

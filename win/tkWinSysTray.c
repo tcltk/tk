@@ -7,9 +7,9 @@
  *
  * Copyright © 1995-1996 Microsoft Corp.
  * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
- * Copyright © 2020 Kevin Walzer/WordTech Communications LLC.
- * Copyright © 2020 Eric Boudaillier.
- * Copyright © 2020 Francois Vogel.
+ * Copyright © 2020 Kevin Walzer
+ * Copyright © 2020 Eric Boudaillier
+ * Copyright © 2020 Francois Vogel
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,9 +18,13 @@
 #include "tkInt.h"
 #include <windows.h>
 #include <shellapi.h>
+#include <shobjidl.h>
+#include <propvarutil.h>
+#include <propkey.h>
 #include "tkWin.h"
 #include "tkWinInt.h"
 #include "tkWinIco.h"
+
 
 /*
  * Based extensively on the winico extension and sample code from Microsoft.
@@ -35,8 +39,8 @@
 
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
-    unsigned id;                /* Identifier for command;  used to
-				 * cancel it. */
+    int id;						/* Identifier for command;  used to
+								* cancel it. */
     Tcl_Obj *taskbar_txt;       /* text to display in the taskbar */
     Tcl_Interp *interp;         /* interp which created the icon */
     Tcl_Obj *taskbar_command;   /* command to eval if events in the taskbar
@@ -46,7 +50,7 @@ typedef struct IcoInfo {
     struct IcoInfo *nextPtr;
 } IcoInfo;
 
-/* Per-interp struture */
+/* Per-interp structure */
 typedef struct IcoInterpInfo {
     HWND hwnd;                  /* Handler window */
     int counter;                /* Counter for IcoInfo id generation */
@@ -101,10 +105,12 @@ DrawXORMask(
     int x, y;
 
     /* Sanity checks */
-    if (lpIcon == NULL)
+    if (lpIcon == NULL) {
 	return FALSE;
-    if (lpIcon->lpBits == NULL)
+    }
+    if (lpIcon->lpBits == NULL) {
 	return FALSE;
+    }
 
     /* Account for height*2 thing */
     lpIcon->lpbi->bmiHeader.biHeight /= 2;
@@ -152,13 +158,15 @@ DrawANDMask(
     int x, y;
 
     /* Sanity checks */
-    if (lpIcon == NULL)
+    if (lpIcon == NULL) {
 	return FALSE;
-    if (lpIcon->lpBits == NULL)
+    }
+    if (lpIcon->lpBits == NULL) {
 	return FALSE;
+    }
 
     /* Need a bitmap header for the mono mask */
-    lpbi = ckalloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
+    lpbi = (LPBITMAPINFO)Tcl_Alloc(sizeof(BITMAPINFO) + (2 * sizeof(RGBQUAD)));
     lpbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     lpbi->bmiHeader.biWidth = lpIcon->lpbi->bmiHeader.biWidth;
     lpbi->bmiHeader.biHeight = lpIcon->lpbi->bmiHeader.biHeight / 2;
@@ -191,7 +199,7 @@ DrawANDMask(
 	    lpIcon->lpAND, lpbi, DIB_RGB_COLORS);
 
     /* clean up */
-    ckfree(lpbi);
+    Tcl_Free(lpbi);
 
     return TRUE;
 }
@@ -276,13 +284,13 @@ NewIcon(
 {
     IcoInfo *icoPtr;
 
-    icoPtr = (IcoInfo *)ckalloc(sizeof(IcoInfo));
+    icoPtr = (IcoInfo *)Tcl_Alloc(sizeof(IcoInfo));
     memset(icoPtr, 0, sizeof(IcoInfo));
     icoPtr->id = ++icoInterpPtr->counter;
     icoPtr->hIcon = hIcon;
     icoPtr->taskbar_txt = NULL;
     icoPtr->interp = interp;
-    icoPtr->taskbar_command = NULL;
+	icoPtr->taskbar_command = NULL;
     icoPtr->taskbar_flags = 0;
     icoPtr->hwndFocus = NULL;
     icoPtr->nextPtr = icoInterpPtr->firstIcoPtr;
@@ -330,7 +338,7 @@ FreeIcoPtr(
     if (icoPtr->taskbar_command != NULL) {
 	Tcl_DecrRefCount(icoPtr->taskbar_command);
     }
-    ckfree(icoPtr);
+    Tcl_Free(icoPtr);
 }
 
 /*
@@ -397,15 +405,15 @@ notfound:
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 GetInt(
-    long theint,
+    Tcl_Size theint,
     char *buffer,
     size_t len)
 {
-    snprintf(buffer, len, "0x%lx", theint);
+    snprintf(buffer, len, "0x%" TCL_SIZE_MODIFIER "x", theint);
     buffer[len - 1] = 0;
-    return (int) strlen(buffer);
+    return strlen(buffer);
 }
 
 /*
@@ -459,7 +467,7 @@ TaskbarExpandPercents(
     LPARAM lParam,
     char *before,
     char *after,
-    int *aftersize)
+    size_t *aftersize)
 {
 #define SPACELEFT (*aftersize-(dst-after)-1)
 #define AFTERLEN ((*aftersize>0)?(*aftersize*2):1024)
@@ -469,7 +477,7 @@ TaskbarExpandPercents(
     dst = after;
     while (*before) {
 	const char *ptr = before;
-	int len = 1;
+	size_t len = 1;
 	if(*before == '%') {
 	    switch(before[1]){
 		case 'M':
@@ -481,7 +489,7 @@ TaskbarExpandPercents(
 		}
 		/* case 'W': {
 		   before++;
-		   len = (int)strlen(winstring);
+		   len = strlen(winstring);
 		   ptr = winstring;
 		   break;
 		   }
@@ -560,14 +568,15 @@ TaskbarExpandPercents(
 	if (SPACELEFT < len) {
 	    char *newspace;
 	    ptrdiff_t dist = dst - after;
-	    int alloclen = ALLOCLEN;
-	    newspace = (char *)ckalloc(alloclen);
-	    if (dist>0)
+	    size_t alloclen = ALLOCLEN;
+	    newspace = (char *)Tcl_Alloc(alloclen);
+	    if (dist>0) {
 		memcpy(newspace, after, dist);
-	    if (after && *aftersize) {
-		ckfree(after);
 	    }
-	    *aftersize =alloclen;
+	    if (after && *aftersize) {
+		Tcl_Free(after);
+	    }
+	    *aftersize = alloclen;
 	    after = newspace;
 	    dst = after + dist;
 	}
@@ -575,7 +584,7 @@ TaskbarExpandPercents(
 	    memcpy(dst, ptr, len);
 	}
 	dst += len;
-	if ((dst-after)>(*aftersize-1)) {
+	if ((dst-after)>((Tcl_Size)*aftersize-1)) {
 	    printf("oops\n");
 	}
 	before++;
@@ -608,7 +617,7 @@ TaskbarEval(
 {
     const char *msgstring = "none";
     char evalspace[200];
-    int evalsize = 200;
+    size_t evalsize = 200;
     char *expanded;
     int fixup = 0;
 
@@ -694,7 +703,7 @@ TaskbarEval(
 	}
     }
     if (expanded != evalspace) {
-	ckfree(expanded);
+	Tcl_Free(expanded);
     }
 }
 
@@ -825,8 +834,9 @@ CreateTaskbarHandlerWindow(void) {
     static int registered = 0;
     HINSTANCE hInstance = GETHINSTANCE;
     if (!registered) {
-	if (!RegisterHandlerClass(hInstance))
+	if (!RegisterHandlerClass(hInstance)) {
 	    return 0;
+	}
 	registered = 1;
     }
     return CreateWindow(HANDLER_CLASS, "", WS_OVERLAPPED, 0, 0,
@@ -880,7 +890,7 @@ WinIcoDestroy(
 	    nextPtr = icoPtr->nextPtr;
 	FreeIcoPtr(icoInterpPtr, icoPtr);
     }
-    ckfree(icoInterpPtr);
+    Tcl_Free(icoInterpPtr);
 }
 
 /*
@@ -917,7 +927,7 @@ WinSystrayCmd(
     int cmd, opt;
 
     HICON hIcon;
-    int i;
+    Tcl_Size i;
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr = NULL;
 
@@ -1069,19 +1079,14 @@ WinSysNotifyCmd(
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
     IcoInfo *icoPtr;
-    NOTIFYICONDATAW ni;
 
-    if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "command ...");
+    if (objc != 5) {
+	Tcl_WrongNumArgs(interp, 1, objv, "notify id title detail");
 	return TCL_ERROR;
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
-	Tcl_AppendResult(interp, "unknown subcommand \"", Tcl_GetString(objv[1]),
-		"\": must be notify", NULL);
-	return TCL_ERROR;
-    }
-    if (objc != 5) {
-	Tcl_WrongNumArgs(interp, 2, objv, "id title detail");
+	Tcl_AppendResult(interp, "unknown subcommand \"",
+	    Tcl_GetString(objv[1]), "\": must be notify", NULL);
 	return TCL_ERROR;
     }
 
@@ -1090,29 +1095,90 @@ WinSysNotifyCmd(
 	return TCL_ERROR;
     }
 
-    ni.cbSize = sizeof(NOTIFYICONDATAW);
-    ni.hWnd = icoInterpPtr->hwnd;
-    ni.uID = icoPtr->id;
+    /*
+     *  AppUserModelID setup.
+     *  We only set the AppID *once* the first time this routine runs.
+     *  Setting it after the tray icon exists breaks callbacks + image.
+     */
+    static int appidSet = 0;
+    if (!appidSet) {
+	Tk_Window mainWin = Tk_MainWindow(interp);
+	if (mainWin == NULL) {
+	    Tcl_AppendResult(interp, "No main window available", NULL);
+	    return TCL_ERROR;
+	}
+
+	if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
+	    Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
+	    return TCL_ERROR;
+	}
+
+	const char *titleUtf = Tcl_GetStringResult(interp);
+	Tcl_DString dsTitle;
+	Tcl_DStringInit(&dsTitle);
+	WCHAR *titleW = Tcl_UtfToWCharDString(titleUtf, TCL_INDEX_NONE, &dsTitle);
+
+	WCHAR appid[256];
+	if (titleW[0]) {
+	    wcsncpy_s(appid, 256, titleW, _TRUNCATE);
+	} else {
+	    wcscpy_s(appid, 256, L"TclApp");
+	}
+	Tcl_DStringFree(&dsTitle);
+
+	/* Sanitize the title string. appID cannot support spaces. */
+	for (WCHAR *p = appid; *p; p++) {
+	    if (*p == L' ' || *p == L'\t')
+		*p = L'_';
+	}
+
+	SetCurrentProcessExplicitAppUserModelID(appid);
+	appidSet = 1;
+    }
+
+    /*
+     * Send the notification balloon.   DO NOT touch uCallbackMessage
+     * or NIF_MESSAGE - keep callbacks alive. Display
+     * the system tray icon with the NIIF_USER flag - it will
+     * display in the body of the notification window but NOT
+     * the titlebar. This is a limitation of this API when customizing
+     * the titlebar string with AppUserModelID.
+     */
+
+    NOTIFYICONDATAW ni;
+    ZeroMemory(&ni, sizeof(ni));
+    ni.cbSize = sizeof(ni);
+    ni.hWnd  = icoInterpPtr->hwnd;
+    ni.uID   = icoPtr->id;
     ni.uFlags = NIF_INFO;
-    ni.uCallbackMessage = ICON_MESSAGE;
-    ni.hIcon = icoPtr->hIcon;
-    ni.dwInfoFlags = NIIF_INFO; /* Use a sane platform-specific icon here.*/
+    ni.dwInfoFlags = NIIF_USER;
 
-    /* Balloon notification for system tray icon. */
-    Tcl_DString dst;
-    Tcl_DStringInit(&dst);
-    WCHAR *title = Tcl_UtfToWCharDString(Tcl_GetString(objv[3]), TCL_INDEX_NONE, &dst);
-    wcsncpy(ni.szInfoTitle, title, sizeof(ni.szInfoTitle) / sizeof(WCHAR) - 1);
-    ni.szInfoTitle[sizeof(ni.szInfoTitle) / sizeof(WCHAR) - 1] = '\0';
-    Tcl_DStringSetLength(&dst, 0);
-    WCHAR *info = Tcl_UtfToWCharDString(Tcl_GetString(objv[4]), TCL_INDEX_NONE, &dst);
-    wcsncpy(ni.szInfo, info, sizeof(ni.szInfo) / sizeof(WCHAR) - 1);
-    ni.szInfo[sizeof(ni.szInfo) / sizeof(WCHAR) - 1] = '\0';
-    Tcl_DStringFree(&dst);
+    Tcl_DString ds;
+    Tcl_DStringInit(&ds);
 
-    Shell_NotifyIconW(NIM_MODIFY, &ni);
+    WCHAR *wtitle = Tcl_UtfToWCharDString(Tcl_GetString(objv[3]), TCL_INDEX_NONE, &ds);
+    wcsncpy_s(ni.szInfoTitle, ARRAYSIZE(ni.szInfoTitle), wtitle, _TRUNCATE);
+    Tcl_DStringSetLength(&ds, 0);
+
+    WCHAR *wtext = Tcl_UtfToWCharDString(Tcl_GetString(objv[4]), TCL_INDEX_NONE, &ds);
+    wcsncpy_s(ni.szInfo, ARRAYSIZE(ni.szInfo), wtext, _TRUNCATE);
+    Tcl_DStringFree(&ds);
+
+    ni.uVersion = NOTIFYICON_VERSION_4;
+
+    if (!Shell_NotifyIconW(NIM_MODIFY, &ni)) {
+	char buf[64];
+	sprintf_s(buf, sizeof(buf),
+		  "Notification failed (error %lu)",
+		  GetLastError());
+	Tcl_AppendResult(interp, buf, NULL);
+	return TCL_ERROR;
+    }
+
     return TCL_OK;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -1143,7 +1209,7 @@ WinIcoInit(
 	return TCL_ERROR;
     }
 
-    icoInterpPtr = (IcoInterpInfo*) ckalloc(sizeof(IcoInterpInfo));
+    icoInterpPtr = (IcoInterpInfo*)Tcl_Alloc(sizeof(IcoInterpInfo));
     icoInterpPtr->counter = 0;
     icoInterpPtr->firstIcoPtr = NULL;
     icoInterpPtr->hwnd = CreateTaskbarHandlerWindow();
@@ -1153,6 +1219,12 @@ WinIcoInit(
 	    icoInterpPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
 	    icoInterpPtr, NULL);
+	/* 
+	* This command is defined in tkWinIco.c, but that file does not have 
+	* any hooks for script command creation. 
+	*/
+	Tcl_CreateObjCommand(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
+	    NULL, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
 	    WinIcoDestroy, icoInterpPtr);
@@ -1161,8 +1233,9 @@ WinIcoInit(
 }
 
 /*
- * Local variables:
+ * Local Variables:
  * mode: c
- * indent-tabs-mode: nil
+ * c-basic-offset: 4
+ * fill-column: 78
  * End:
  */

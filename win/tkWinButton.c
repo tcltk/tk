@@ -40,7 +40,7 @@ typedef struct WinButton {
  */
 
 typedef struct {
-    BOOLEAN initialized;
+    bool initialized;
     int boxSize;		/* Width & height of the box. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -156,7 +156,7 @@ InitBoxes(Tk_Window tkwin)
     double scalingLevel = TkScalingLevel(tkwin);
 
     tsdPtr->boxSize = (int)(16.0 * scalingLevel);
-    tsdPtr->initialized = TRUE;
+    tsdPtr->initialized = true;
 }
 
 /*
@@ -208,7 +208,7 @@ TkpCreateButton(
 {
     WinButton *butPtr;
 
-    butPtr = (WinButton *)ckalloc(sizeof(WinButton));
+    butPtr = (WinButton *)Tcl_Alloc(sizeof(WinButton));
     butPtr->hwnd = NULL;
     return (TkButton *) butPtr;
 }
@@ -448,7 +448,7 @@ TkpDrawIndicator(
 	 */
 
 	svgDataLen = strlen(svgDataPtr);
-	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
+	svgDataCopy = (char *)Tcl_AttemptAlloc(svgDataLen + 1);
 	if (svgDataCopy == NULL) {
 	    return;
 	}
@@ -487,15 +487,15 @@ TkpDrawIndicator(
 
 	cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
 	scriptSize = strlen(cmdFmt) + strlen(imgName) + svgDataLen;
-	script = (char *)attemptckalloc(scriptSize);
+	script = (char *)Tcl_AttemptAlloc(scriptSize);
 	if (script == NULL) {
-	    ckfree(svgDataCopy);
+	    Tcl_Free(svgDataCopy);
 	    return;
 	}
 	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
-	ckfree(svgDataCopy);
+	Tcl_Free(svgDataCopy);
 	code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
-	ckfree(script);
+	Tcl_Free(script);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
 	    return;

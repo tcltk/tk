@@ -266,14 +266,14 @@ Tk_ClipboardClear(
 	    targetPtr = nextTargetPtr) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = nextCbPtr) {
-	    ckfree(cbPtr->buffer);
+	    Tcl_Free(cbPtr->buffer);
 	    nextCbPtr = cbPtr->nextPtr;
-	    ckfree(cbPtr);
+	    Tcl_Free(cbPtr);
 	}
 	nextTargetPtr = targetPtr->nextPtr;
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
 		targetPtr->type);
-	ckfree(targetPtr);
+	Tcl_Free(targetPtr);
     }
     dispPtr->clipTargetPtr = NULL;
 
@@ -359,7 +359,7 @@ Tk_ClipboardAppend(
 	}
     }
     if (targetPtr == NULL) {
-	targetPtr = (TkClipboardTarget *)ckalloc(sizeof(TkClipboardTarget));
+	targetPtr = (TkClipboardTarget *)Tcl_Alloc(sizeof(TkClipboardTarget));
 	targetPtr->type = type;
 	targetPtr->format = format;
 	targetPtr->firstBufferPtr = targetPtr->lastBufferPtr = NULL;
@@ -381,7 +381,7 @@ Tk_ClipboardAppend(
      * Append a new buffer to the buffer chain.
      */
 
-    cbPtr = (TkClipboardBuffer *)ckalloc(sizeof(TkClipboardBuffer));
+    cbPtr = (TkClipboardBuffer *)Tcl_Alloc(sizeof(TkClipboardBuffer));
     cbPtr->nextPtr = NULL;
     if (targetPtr->lastBufferPtr != NULL) {
 	targetPtr->lastBufferPtr->nextPtr = cbPtr;
@@ -391,7 +391,7 @@ Tk_ClipboardAppend(
     targetPtr->lastBufferPtr = cbPtr;
 
     cbPtr->length = strlen(buffer);
-    cbPtr->buffer = (char *)ckalloc(cbPtr->length + 1);
+    cbPtr->buffer = (char *)Tcl_Alloc(cbPtr->length + 1);
     strcpy(cbPtr->buffer, buffer);
 
     TkSelUpdateClipboard((TkWindow *) dispPtr->clipWindow, CLIPBOARD_APPEND);
@@ -420,7 +420,7 @@ int
 Tk_ClipboardObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -428,7 +428,8 @@ Tk_ClipboardObjCmd(
     Atom selection;
     static const char *const optionStrings[] = {
 	"append", "clear", "get", NULL };
-    int index, i, result;
+    int index;
+    Tcl_Size i, result;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");

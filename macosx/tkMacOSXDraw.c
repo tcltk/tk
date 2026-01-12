@@ -53,7 +53,7 @@ static unsigned long transparentColor;
 
 static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 static NSImage *CreateNSImageFromPixmap(Pixmap pixmap, int width, int height);
-
+static HIShapeRef GetClipRgn(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------
@@ -77,10 +77,10 @@ TkMacOSXInitCGDrawing(
     TCL_UNUSED(int),
     int limit)
 {
-    static Boolean initialized = FALSE;
+    static bool initialized = false;
 
     if (!initialized) {
-	initialized = TRUE;
+	initialized = true;
 
 	if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
 	    Tcl_ResetResult(interp);
@@ -324,10 +324,12 @@ TkMacOSXDrawCGImage(
 		CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
 	    } else {
 		if (imageBackground != transparentColor) {
-		    TkMacOSXSetColorInContext(gc, imageBackground, context);
+		    TkMacOSXSetColorInContext(gc, imageBackground, context,
+			    TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 		    CGContextFillRect(context, dstBounds);
 		}
-		TkMacOSXSetColorInContext(gc, imageForeground, context);
+		TkMacOSXSetColorInContext(gc, imageForeground, context,
+			TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	    }
 	}
 
@@ -1112,14 +1114,14 @@ TkMacOSXSetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
-Bool
+bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
     TkMacOSXDrawingContext *dcPtr)
 {
     MacDrawable *macDraw = (MacDrawable *)d;
-    Bool canDraw = true;
+    bool canDraw = true;
     TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
     CGFloat drawingHeight;
@@ -1146,7 +1148,7 @@ TkMacOSXSetupDrawingContext(
      * X GC.  If the resulting region is empty, don't do any drawing.
      */
 //#if 0 // disable clipping (almost works, but windows can open up blank)
-    dc.clipRgn = TkMacOSXGetClipRgn(d);
+    dc.clipRgn = GetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
 	/*
@@ -1172,54 +1174,6 @@ TkMacOSXSetupDrawingContext(
 				    .ty = [view bounds].size.height};
 	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
 	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
-	}
-
-	/*
-	 * Workaround for an Apple bug.
-	 *
-	 * Without the block below, ttk frames, labelframes and labels do not
-	 * get the correct background color on macOS 12.5 after the appearance
-	 * changes.  This function is only called when drawing, so we know that
-	 * our view is the focus view. Even though the effective appearance of
-	 * the view has been changed, the currentAppearance, i.e. the
-	 * appearance that will be used for drawing, may not have been changed
-	 * to match.
-	 *
-	 * Prior to macOS 12.0 the currentAppearance property of NSAppearance
-	 * was settable.  In macOS 12.0 currentAppearance was deprecated and
-	 * replaced by the read-only property currentDrawingAppearance.  The
-	 * ttk color issues are fixed by setting the currentAppearance to
-	 * the effectiveAppearance of the view.  So we are forced to use this
-	 * deprecated function until Apple fixes this.
-	 *
-	 * It is a mystery why this only affects the ttk widgets.  A possible
-	 * clue is that when drawing a ttk widget this function is called with
-	 * a NULL gc, whereas the gc is non-null when it is called for drawing
-	 * a Tk widget.  This means that the CGContext setup below is not done
-	 * for ttk widgets.  Perhaps that setup triggers an update of the
-	 * currentAppearance property, but that has not been verified.
-	 */
-
-	if (@available(macOS 12.0, *)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 120000
-	    NSAppearance *current = NSAppearance.currentDrawingAppearance;
-	    NSAppearance *effective = view.effectiveAppearance;
-	    if( current != effective) {
-		// printf("Appearances are out of sync!\n");
-		// Deprecations be damned!
-		NSAppearance.currentAppearance = effective;
-	    }
-#endif
-	} else {
-	    /*
-	     *It is not clear if this is a problem before macos 12.0, but
-	     * we might as well do the update anyway.
-	     */
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 120000
-/* currentAppearance is not deprecated. */
-	    NSAppearance.currentAppearance = view.effectiveAppearance;
-#endif
 	}
     }
 
@@ -1308,7 +1262,8 @@ TkMacOSXSetupDrawingContext(
 	bool shouldAntialias = !notAA(gc->line_width);
 	double w = gc->line_width;
 
-	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
+	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context,
+		TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	if (view) {
 	    CGSize size = NSSizeToCGSize([view bounds].size);
 	    CGContextSetPatternPhase(dc.context, size);
@@ -1351,7 +1306,7 @@ TkMacOSXSetupDrawingContext(
 end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    if (!canDraw && macDraw->winPtr != NULL) {
+    if (!canDraw && (macDraw->winPtr != NULL)) {
 	fprintf(stderr, "Cannot draw in %s - postponing.\n",
 		Tk_PathName(macDraw->winPtr));
     }
@@ -1432,7 +1387,7 @@ TkMacOSXRestoreDrawingContext(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetClipRgn --
+ * GetClipRgn --
  *
  *	Get the clipping region needed to restrict drawing to the given
  *	drawable.
@@ -1447,7 +1402,7 @@ TkMacOSXRestoreDrawingContext(
  */
 
 HIShapeRef
-TkMacOSXGetClipRgn(
+GetClipRgn(
     Drawable drawable)		/* Drawable. */
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;
