@@ -849,7 +849,7 @@ test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.2 {SelCvtToX and SelCvtFromX procedures} -setup {
     selectionSetup
     childTkProcess create
-} -constraints {x11 failsOnUbuntu} -body {
+} -constraints {x11 failsOnCILinux} -body {
     set selValue "1024 0xffff  2048 -2  "
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -862,7 +862,7 @@ test select-9.2 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.3 {SelCvtToX and SelCvtFromX procedures} -setup {
     selectionSetup
     childTkProcess create
-} -constraints {x11 failsOnUbuntu} -body {
+} -constraints {x11 failsOnCILinux} -body {
     set selValue "   "
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -875,7 +875,7 @@ test select-9.3 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.4 {SelCvtToX and SelCvtFromX procedures} -setup {
     selectionSetup
     childTkProcess create
-} -constraints {x11 failsOnUbuntu} -body {
+} -constraints {x11 failsOnCILinux} -body {
     set selValue "16 foobar 32"
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -963,7 +963,7 @@ test select-10.3 {ConvertSelection procedure} -constraints x11 -setup {
 
 # This one hangs in Exceed
 test select-10.4 {ConvertSelection procedure} -constraints {
-    x11 failsOnUbuntu
+    x11 failsOnCILinux
 } -setup {
     selectionSetup
     childTkProcess create
@@ -978,7 +978,7 @@ test select-10.4 {ConvertSelection procedure} -constraints {
     lappend result $selInfo
 } -result {{selection owner didn't respond} {STRING 0 4000 STRING 4000 4000 STRING 8000 4000 STRING 12000 4000 STRING 16000 4000 STRING 0 4000 STRING 4000 4000}}
 test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
-    x11 failsOnUbuntu
+    x11 failsOnCILinux
 } -setup {
     selectionSetup
     childTkProcess create
@@ -993,7 +993,7 @@ test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
     lappend result $selInfo
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000}}
 test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
-    x11 failsOnUbuntu
+    x11 failsOnCILinux
 } -setup {
     selectionSetup
     childTkProcess create
@@ -1016,7 +1016,7 @@ test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
 ##############################################################################
 
 # testing reentrancy
-test select-11.1 {TkSelPropProc procedure} -constraints {x11 failsOnUbuntu} -setup {
+test select-11.1 {TkSelPropProc procedure} -constraints {x11 failsOnCILinux} -setup {
     selectionSetup
     childTkProcess create
 } -body {
@@ -1088,7 +1088,7 @@ test select-12.6 {DefaultSelection procedure} -body {
 } -result {{Targets value} {TARGETS.f1 0 4000} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 
 test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
-    x11 failsOnUbuntu
+    x11 failsOnCILinux
 } -setup {
     selectionSetup
     childTkProcess create

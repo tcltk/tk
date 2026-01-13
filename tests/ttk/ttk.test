@@ -2,6 +2,21 @@
 # Diverse tests for ttk
 #
 
+# NOTES
+#
+# * Many tests in this test file build upon a previous one. This occurs
+#   systematically for groups of contiguous tests sharing the same major
+#   test number. All test files for ttk widgets exhibit this practice.
+#
+#   As a consequence, attempts to run tests selectively/individually using the
+#   tcltest options "-match", "-skip" or "-limitconstraints 1" lead to
+#   unexpected failures. Therefore, invocations using these options should be
+#   considered as "de facto invalid" for the ttk test suite.
+#
+#   As an exception, using "-match" or "-skip" to select or deselect entire
+#   groups of contiguous tests does not seem to raise problems.
+#
+
 #
 # TESTFILE INITIALIZATION
 #

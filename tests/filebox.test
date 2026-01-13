@@ -33,7 +33,7 @@ set tk_strictMotif_old $tk_strictMotif
 
 proc EnterFileByKey {parent fileName fileDir} {
     global tk_strictMotif
-    if {$parent == "."} {
+    if {$parent eq "."} {
 	set w .__tk_filedialog
     } else {
 	set w $parent.__tk_filedialog
@@ -142,7 +142,7 @@ foreach mode $modes {
     # COMMON TEST SETUP
     #
     set addedExtensions {}
-    if {$tcl_platform(platform) == "unix"} {
+    if {$tcl_platform(platform) eq "unix"} {
 	set tk_strictMotif $mode
 	# Extension adding is only done when using the non-motif file
 	# box with an extension-less filename

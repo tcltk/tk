@@ -2,6 +2,19 @@
 # Tests for tags in the ttk::treeview widget
 #
 
+# NOTES
+#
+# * The ttk test suite holds many tests that build upon a previous one. This
+#   is not incidental; it occurs systematically for groups of contiguous tests
+#   in most ttk test files.
+#
+#   A consequence of this practice is that attempts to run tests selectively/
+#   individually using the tcltest options "-match", "-skip" or "-limitconstraints 1"
+#   lead to unintended failures. Therefore, invocations using these options
+#   may be considered invalid for the ttk test suite (but not for the
+#   corresponding core Tk tests).
+#
+
 #
 # TESTFILE INITIALIZATION
 #
@@ -48,18 +61,17 @@ proc treeConstraints {tv} {
 }
 
 #
-# COMMON TEST SETUP
-#
-# For all tests in this test file
-#
-set tv [ttk::treeview .tv -columns "A B C"]
-.tv insert {} end -id item1 -text "Item 1"
-pack .tv
-treeConstraints $tv
-
-#
 # TESTS
 #
+
+test treetags-1.0 "Setup" -body {
+
+    set tv [ttk::treeview .tv -columns "A B C"]
+    .tv insert {} end -id item1 -text "Item 1"
+    pack .tv
+} -cleanup {
+    treeConstraints $tv
+}
 
 test treetags-1.1 "Bad tag list" -body {
     $tv item item1 -tags {bad {list}here bad}
@@ -288,9 +300,10 @@ test treetags-3.4 "stomp tags in tag binding procedure" -body {
     treeConstraints $tv
 } -result [list rm1 item1 <<Remove>> rm2 item1 <<Remove>> rm3 item1 <<Remove>>]
 
+test treetags-end "Cleanup" -body { destroy $tv }
+
 #
 # TESTFILE CLEANUP
 #
 
-destroy $tv
 tcltest::cleanupTests

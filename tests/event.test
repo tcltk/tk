@@ -84,12 +84,12 @@ proc _keypress {win key} {
     # a focus follows mouse will not steal away
     # the focus if the mouse is moved around.
 
-    if {[focus] != $win} {
+    if {[focus] ne $win} {
 	focus -force $win
     }
     event generate $win <Key-$keysym>
     pause 50
-    if {[focus] != $win} {
+    if {[focus] ne $win} {
 	focus -force $win
     }
     event generate $win <KeyRelease-$keysym>
@@ -114,7 +114,7 @@ proc _keypress_lookup {char} {
 	_init_keypress_lookup
     }
 
-    if {$char == ""} {
+    if {$char eq ""} {
 	error "empty char"
     }
 
