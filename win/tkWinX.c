@@ -154,22 +154,42 @@ TkGetServerInfo(
     TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
-    static char buffer[32]; /* Empty string means not initialized yet. */
+    char buffer[80];
     OSVERSIONINFOW os;
+    typedef int(__stdcall getVersionProc)(void *);
 
-    if (!buffer[0]) {
-	GetVersionExW(&os);
-	/* Write the first character last, preventing multi-thread issues. */
-	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
-		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
-#ifdef _WIN64
-		"Win64"
-#else
-		"Win32"
-#endif
-	);
-	buffer[0] = 'W';
+    /*
+     * Not a performance critical so don't bother with static cache and MT
+     * synchronization
+     */
+
+    /*
+     * GetVersionExW will not return the "real" Windows version so use
+     * RtlGetVersion if available and falling back.
+     */
+    HMODULE handle = GetModuleHandleW(L"NTDLL"); /* No need to free this */
+    getVersionProc *getVersion =
+	(getVersionProc *)(void *)GetProcAddress(handle, "RtlGetVersion");
+
+    os.dwOSVersionInfoSize = sizeof(os);
+    if (getVersion == NULL || getVersion(&os) != 0) {
+	/* Should never happen but ... */
+	if (!GetVersionExW(&os)) {
+	    memset(&os, 0, sizeof(os));
+	}
     }
+    if (os.dwMajorVersion == 10 &&
+	os.dwBuildNumber >= 22000) {
+	os.dwMajorVersion = 11;
+    }
+    snprintf(buffer, sizeof(buffer), "Windows %d.%d %d %s",
+	(int)os.dwMajorVersion, (int)os.dwMinorVersion, (int)os.dwBuildNumber,
+#ifdef _WIN64
+	"Win64"
+#else
+	"Win32"
+#endif
+    );
     Tcl_AppendResult(interp, buffer, NULL);
 }
 

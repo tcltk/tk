@@ -7,7 +7,7 @@
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2015-2019 Marc Culler
- * Copyright © 2019 Kevin Walzer.
+ * Copyright © 2019 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -461,12 +461,14 @@ static void ProcessAppleEvent(
 						  &reslen);
 	if (code == TCL_OK) {
 	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
+			  keyErrorNumber, typeSInt32, &code, 4);
+	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
 			  keyDirectObject, typeChar, result, reslen);
 	} else {
 	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
-			  keyErrorString, typeChar, result, reslen);
+			  keyErrorNumber, typeSInt32, &code, 4);
 	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
-			  keyErrorNumber, typeSInt32, (Ptr) &code, sizeof(int));
+	    			  keyErrorString, typeUTF8Text, result, reslen);
 	}
     } else if (code != TCL_OK) {
 	Tcl_BackgroundException(AEInfo->interp, code);

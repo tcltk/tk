@@ -13,7 +13,10 @@
 
 #include "tkWin.h"
 #include <windows.h>
+#include <shlobj.h>
+#include <initguid.h>
 #include <shellapi.h>
+#include <commoncontrols.h>
 
 /*
  * These structures represent the contents of a icon, in terms of its image
@@ -29,14 +32,6 @@ typedef struct {
     LPBYTE lpAND;		/* Ptr to AND image bits */
     HICON hIcon;		/* DAS ICON */
 } ICONIMAGE, *LPICONIMAGE;
-
-typedef struct {
-    BOOL         bHasChanged;                     // Has image changed?
-    TCHAR        szOriginalICOFileName[MAX_PATH]; // Original name
-    TCHAR        szOriginalDLLFileName[MAX_PATH]; // Original name
-    int          nNumImages;                      // How many images?
-    ICONIMAGE    IconImages[1];                   // Image entries
-} ICONRESOURCE, *LPICONRESOURCE;
 
 /*
  * This structure is how we represent a block of the above items. We will
@@ -87,6 +82,7 @@ typedef struct {
 DWORD BytesPerLine(LPBITMAPINFOHEADER lpBMIH);
 LPSTR FindDIBBits(LPSTR lpbi);
 HICON CreateIcoFromPhoto(int width, int height, Tk_PhotoImageBlock block);
+int GetFileIcon(ClientData cdata, Tcl_Interp *interp, int objc,  Tcl_Obj * const objv[]);
 
 
 /*

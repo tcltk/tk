@@ -100,6 +100,12 @@ the timer is reset and an empty string is returned.  Resetting the
 inactivity time is forbidden in safe interpreters and will throw an
 error if tried.
 .RE
+.\" METHOD: fileicon
+.TP
+\fBtk fileicon \fIfile size\fR
+.
+Displays a system-native file icon.  For more details see the
+\fBfileicon\fR manual page.
 .\" METHOD: fontchooser
 .TP
 \fBtk fontchooser \fIsubcommand\fR ...
