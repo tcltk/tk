@@ -11,6 +11,12 @@
 
 # NOTES
 #
+# This test file is platform-indifferent. Tests regarding the send command
+# that are specific to the windows platform go into the test file winSend.test.
+#
+
+# NOTES
+#
 # * This test file is platform-indifferent. Tests regarding the send command
 #   that are specific to the windows platform go into the test file winSend.test.
 # * Under macOS/aqua, the send command works only with interpreters that exist in
