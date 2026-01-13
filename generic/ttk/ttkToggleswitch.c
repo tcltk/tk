@@ -221,7 +221,7 @@ static int TglswitchConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	}
     }
 
-    if (variableObj != NULL && *Tcl_GetString(variableObj) != '\0') {
+    if (!TkObjIsEmpty(variableObj)) {
 	varTrace = Ttk_TraceVariable(interp, variableObj,
 		TglswitchVariableChanged, recordPtr);
 	if (!varTrace) {
@@ -514,7 +514,7 @@ static int TglswitchSwitchstateCommand(
 	}
 	Tcl_IncrRefCount(tglswPtr->tglsw.curValObj);
 
-	if (variableObj != NULL && *Tcl_GetString(variableObj) != '\0') {
+	if (!TkObjIsEmpty(variableObj)) {
 	    /*
 	     * Update the associated variable
 	     */

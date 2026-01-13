@@ -26,7 +26,6 @@ testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint x11 [expr {[tk windowingsystem] eq "x11"}]
 testConstraint win32 [expr {[tk windowingsystem] eq "win32"}]
-testConstraint nonwin [expr {[tk windowingsystem] ne "win32"}]
 testConstraint aquaOrWin32 [expr {
     ([tk windowingsystem] eq "win32") || [testConstraint aqua]
 }]
