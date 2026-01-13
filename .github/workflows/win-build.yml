@@ -4,7 +4,6 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
-    - "remaining_test_suite_issues"
     tags:
     - "core-**"
 permissions:
