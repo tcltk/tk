@@ -694,7 +694,7 @@ test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
 } {tktest {t_s_2 t_s_1 tktest} {t_s_2 tktest} tktest}
 
 
-test send-16.1 {set variable - app in child interpreter} {} {
+test send-16.1 {set variable - app in child interpreter} nonwin {
     set a "a"
     childTkInterp t_s_1 -class Test
     set app [t_s_1 eval {tk appname}]
@@ -707,10 +707,10 @@ test send-16.1 {set variable - app in child interpreter} {} {
     set result
 } {{can't read "a": no such variable} 25 a}
 
-test send-16.2 {recursive send - app in child process} {} {
+test send-16.2 {recursive send - app in child process} nonwin {
 } {}
 
-test send-17.1 {set variable - app in child process} {} {
+test send-17.1 {set variable - app in child process} nonwin {
     set a "a"
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
