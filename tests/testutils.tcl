@@ -148,8 +148,16 @@ namespace eval ::tk::test::generic {
     #
     proc resetWindows {} {
 	deleteWindows
+
+	# Reset the geometry of the Tk root window:
+	# - use 200x200 as a standard size
+	# - use a fixed position on the screen where we expect no interference of
+	#   areas with a special function provided by a desktop environment
+	#   (dock, hotspots, ...), i.e. away from screen borders and corners.
+	# - make it adapt its size to its children
+	. configure -width 200 -height 200
+	wm geometry . +100+100
 	wm geometry . {}
-	raise .
 	update
     }
 
@@ -396,7 +404,7 @@ namespace eval ::tk::test::child {
 		    set interpCount 1
 		}
 		set fd [open "|[list [::tcltest::interpreter] \
-			-geometry +0+0 -name tktest[incr interpCount]] $args" r+]
+			-name tktest[incr interpCount]] $args" r+]
 		puts $fd "puts foo; flush stdout"
 		flush $fd
 		if {[gets $fd data] < 0} {
