@@ -323,7 +323,7 @@ test send-8.14 {Tk_SendCmd procedure, local interp killed by send} -constraints 
 } -cleanup {
     catch {interp delete t_s_2}
 } -result {0 result}
-test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver testsend failsOnUbuntu} {
+test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver testsend failsOnCILinux} {
     catch {error foo}
     list [catch {send t_s_1 {if 1 {open bogus_file_name}}} msg] $msg $errorInfo $errorCode
 } {1 {couldn't open "bogus_file_name": no such file or directory} {couldn't open "bogus_file_name": no such file or directory
@@ -333,7 +333,7 @@ test send-8.15 {Tk_SendCmd procedure, local interp, error info} {secureserver te
 "if 1 {open bogus_file_name}"
     invoked from within
 "send t_s_1 {if 1 {open bogus_file_name}}"} {POSIX ENOENT {no such file or directory}}}
-test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnUbuntu failsOnXQuartz} {
+test send-8.16 {Tk_SendCmd procedure, bogusCommWindow} {secureserver testsend failsOnCILinux failsOnXQuartz} {
     testsend prop root InterpRegistry "10234 bogus\n"
     set result [list [catch {send bogus bogus command} msg] $msg]
     winfo interps

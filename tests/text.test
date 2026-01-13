@@ -3517,7 +3517,7 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # menubar height (as reported by [[NSApp mainMenu] menuBarHeight]).
 #
 if {[tk windowingsystem] eq "aqua"} {
-    set minY [expr [testmenubarheight] + 11]
+    set minY [expr {[testmenubarheight] + 11}]
 } else {
     set minY 0
 }

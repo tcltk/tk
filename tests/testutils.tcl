@@ -1,8 +1,8 @@
 # testutils.tcl --
 #
-# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It implements the testutils mechanism which is used to import utility procs
-# into test files that need them.
+# This file is sourced into each test file by "main.tcl". It implements the
+# testutils mechanism which is used to import utility procs into test files
+# that need them.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -920,7 +920,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc handler {type offset count} {
@@ -931,7 +931,7 @@ namespace eval ::tk::test::select {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
 
     proc reallyBadHandler {path type offset count} {

@@ -51,8 +51,8 @@ proc c255 {vals} {
 
 proc closest {w r g b} {
     set vals [winfo rgb $w [cname $r $g $b]]
-    list [expr [lindex $vals 0]/256] [expr [lindex $vals 1]/256] \
-	    [expr [lindex $vals 2]/256]
+    list [expr {[lindex $vals 0]/256}] [expr {[lindex $vals 1]/256}] \
+	    [expr {[lindex $vals 2]/256}]
 }
 
 # cname --
@@ -84,10 +84,10 @@ proc mkColors {c width height r g b rx gx bx ry gy by} {
     canvas $c -width 400 -height 200 -bd 0
     for {set y 0} {$y < $height} {incr y} {
 	for {set x 0} {$x < $width} {incr x} {
-	    set color [format #%02x%02x%02x [expr $r + $y*$ry + $x*$rx] \
-		    [expr $g + $y*$gy + $x*$gx] [expr $b + $y*$by + $x*$bx]]
-	    $c create rectangle [expr 10*$x] [expr 20*$y] \
-		    [expr 10*$x + 10] [expr 20*$y + 20] -outline {} \
+	    set color [format #%02x%02x%02x [expr {$r + $y*$ry + $x*$rx}] \
+		    [expr {$g + $y*$gy + $x*$gx}] [expr {$b + $y*$by + $x*$bx}]]
+	    $c create rectangle [expr {10*$x}] [expr {20*$y}] \
+		    [expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
 		    -fill $color
 	}
     }
@@ -174,9 +174,9 @@ test color-1.5 {Color table} nonPortable {
     set fd [open ../xlib/rgb.txt]
     set result {}
     while {[gets $fd line] >= 0} {
-	if {[string index $line 0] == "!"} continue
+	if {[string index $line 0] eq "!"} continue
 	set rgb [c255 [winfo rgb . [lrange $line 3 end]]]
-	if {$rgb != [lrange $line 0 2] } {
+	if {$rgb ne [lrange $line 0 2] } {
 		append result $line\n
 	}
 
