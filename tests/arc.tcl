@@ -55,7 +55,7 @@ set outline black
 .t.c bind arc <Enter> {
     set prevFill [lindex [.t.c itemconf current -fill] 4]
     set prevOutline [lindex [.t.c itemconf current -outline] 4]
-    if {($prevFill ne "") || ($prevOutline ne "")} {
+    if {($prevFill ne "") || ($prevOutline eq "")} {
 	.t.c itemconf current -fill $fill3
     }
     if {$prevOutline ne ""} {
