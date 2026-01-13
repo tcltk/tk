@@ -28,7 +28,7 @@ resetWindows
 #
 
 proc setup1 w {
-    if {$w == "."} {
+    if {$w eq "."} {
 	set w ""
     }
     foreach i {a b c d} {
@@ -48,7 +48,7 @@ proc setup1 w {
 }
 
 proc cleanup1 w {
-    if {$w == "."} {
+    if {$w eq "."} {
 	set w ""
     }
     foreach i {a b c d} {
@@ -398,9 +398,9 @@ test focusTcl-5.2 {tkFocusOK procedure, -takefocus 1} -body {
 } -result {.c .c}
 test focusTcl-5.3 {tkFocusOK procedure, -takefocus procedure} -body {
     proc t w {
-    if {$w == ".b.x"} {
+    if {$w eq ".b.x"} {
 	return 1
-    } elseif {$w == ".b.y"} {
+    } elseif {$w eq ".b.y"} {
 	return ""
     }
     return 0
