@@ -254,7 +254,7 @@ test pack-2.22 {x padding and filling} -setup {
 } -body {
     pack .pack.a -padx 1c
     set x [pack info .pack.a]
-    set res1 [lindex $x [expr [lsearch -exact $x -padx]+1]]
+    set res1 [lindex $x [expr {[lsearch -exact $x -padx]+1}]]
     set res2 [winfo pixels .pack 1c]
     expr {$res1 eq $res2}
 } -result 1
@@ -263,7 +263,7 @@ test pack-2.23 {x padding and filling} -setup {
 } -body {
     pack .pack.a -ipadx 1c
     set x [pack info .pack.a]
-    set res1 [lindex $x [expr [lsearch -exact $x -ipadx]+1]]
+    set res1 [lindex $x [expr {[lsearch -exact $x -ipadx]+1}]]
     set res2 [winfo pixels .pack 1c]
     expr {$res1 eq $res2}
 } -result 1
@@ -441,7 +441,7 @@ test pack-3.22 {y padding and filling} -setup {
 } -body {
     pack .pack.a -pady 1c
     set x [pack info .pack.a]
-    set res1 [lindex $x [expr [lsearch -exact $x -pady]+1]]
+    set res1 [lindex $x [expr {[lsearch -exact $x -pady]+1}]]
     set res2 [winfo pixels .pack 1c]
     expr {$res1 eq $res2}
 } -result 1
@@ -450,7 +450,7 @@ test pack-3.23 {y padding and filling} -setup {
 } -body {
     pack .pack.a -ipady 1c
     set x [pack info .pack.a]
-    set res1 [lindex $x [expr [lsearch -exact $x -ipady]+1]]
+    set res1 [lindex $x [expr {[lsearch -exact $x -ipady]+1}]]
     set res2 [winfo pixels .pack 1c]
     expr {$res1 eq $res2}
 } -result 1
@@ -1051,133 +1051,133 @@ test pack-11.1 {info option} -setup {
 } -body {
     pack .pack.a -in .pack
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -in]+1]
+    lindex $i [expr {[lsearch -exact $i -in]+1}]
 } -result .pack
 test pack-11.2 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -anchor n
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -anchor]+1]
+    lindex $i [expr {[lsearch -exact $i -anchor]+1}]
 } -result n
 test pack-11.3 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -anchor sw
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -anchor]+1]
+    lindex $i [expr {[lsearch -exact $i -anchor]+1}]
 } -result sw
 test pack-11.4 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -expand yes
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -expand]+1]
+    lindex $i [expr {[lsearch -exact $i -expand]+1}]
 } -result 1
 test pack-11.5 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -expand no
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -expand]+1]
+    lindex $i [expr {[lsearch -exact $i -expand]+1}]
 } -result 0
 test pack-11.6 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -fill x
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -fill]+1]
+    lindex $i [expr {[lsearch -exact $i -fill]+1}]
 } -result x
 test pack-11.7 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -fill y
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -fill]+1]
+    lindex $i [expr {[lsearch -exact $i -fill]+1}]
 } -result y
 test pack-11.8 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -fill both
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -fill]+1]
+    lindex $i [expr {[lsearch -exact $i -fill]+1}]
 } -result both
 test pack-11.9 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -fill none
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -fill]+1]
+    lindex $i [expr {[lsearch -exact $i -fill]+1}]
 } -result none
 test pack-11.10 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -ipadx 14
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -ipadx]+1]
+    lindex $i [expr {[lsearch -exact $i -ipadx]+1}]
 } -result 14
 test pack-11.11 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -ipady 22
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -ipady]+1]
+    lindex $i [expr {[lsearch -exact $i -ipady]+1}]
 } -result 22
 test pack-11.12 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -padx 2
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -padx]+1]
+    lindex $i [expr {[lsearch -exact $i -padx]+1}]
 } -result 2
 test pack-11.13 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -padx {2 9}
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -padx]+1]
+    lindex $i [expr {[lsearch -exact $i -padx]+1}]
 } -result {2 9}
 test pack-11.14 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -pady 3
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -pady]+1]
+    lindex $i [expr {[lsearch -exact $i -pady]+1}]
 } -result 3
 test pack-11.15 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -pady {3 11}
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -pady]+1]
+    lindex $i [expr {[lsearch -exact $i -pady]+1}]
 } -result {3 11}
 test pack-11.16 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -side top
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -side]+1]
+    lindex $i [expr {[lsearch -exact $i -side]+1}]
 } -result top
 test pack-11.17 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -side bottom
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -side]+1]
+    lindex $i [expr {[lsearch -exact $i -side]+1}]
 } -result bottom
 test pack-11.18 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -side left
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -side]+1]
+    lindex $i [expr {[lsearch -exact $i -side]+1}]
 } -result left
 test pack-11.19 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -side right
     set i [pack info .pack.a]
-    lindex $i [expr [lsearch -exact $i -side]+1]
+    lindex $i [expr {[lsearch -exact $i -side]+1}]
 } -result right
 
 test pack-12.1 {command options and errors} -body {
@@ -1590,7 +1590,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
     pack info .pack.a
 } -returnCodes error -result {window ".pack.a" isn't packed}
 
-# Tests pack-18.1.1 and pack-18.2 are constrained with failsOnUbuntu
+# Tests pack-18.1.1 and pack-18.2 are constrained with failsOnCILinux
 # because they are failing in the GitHub CI environment, using Linux Ubuntu.
 # These tests are also constrained with failsOnXQuartz because they fail
 # on macOS when building with clang --disable-aqua (which uses XQuartz)
@@ -1615,7 +1615,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 # colored.  So, evidently, even though the size changes are honored,
 # the window is sometimes not completely configured.
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
-    macOrUnix failsOnUbuntu failsOnXQuartz
+    macOrUnix failsOnCILinux failsOnXQuartz
 } -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
@@ -1661,7 +1661,7 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
     lappend result [winfo ismapped .pack.a]
 } -result {1 0 200 75 1}
 
-test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
+test pack-18.2 {unmap content when container unmapped} -constraints {failsOnCILinux failsOnXQuartz} -setup {
     destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big

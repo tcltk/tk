@@ -979,7 +979,7 @@ test wm-iconify-2.4.2 {Misc errors} -constraints macOrUnix -setup {
     destroy .t2 .r.f
 } -result {can't iconify ".t2": it is an embedded window}
 
-test wm-iconify-3.1 {iconify behavior} -constraints {failsOnUbuntu failsOnXQuartz} -body {
+test wm-iconify-3.1 {iconify behavior} -constraints {failsOnCILinux failsOnXQuartz} -body {
     toplevel .t2
     wm geom .t2 -0+0
     update idletasks
@@ -1617,7 +1617,7 @@ test wm-stackorder-2.7 {stacking order: no children returns self} -setup {
 #
 deleteWindows
 
-test wm-stackorder-3.1 {unmapped toplevel} -constraints {failsOnUbuntu failsOnXQuartz} -body {
+test wm-stackorder-3.1 {unmapped toplevel} -constraints {failsOnCILinux failsOnXQuartz} -body {
     toplevel .t1 ; update
     raiseDelay
     toplevel .t2 ; update
@@ -1744,7 +1744,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
     destroy .t
 } -result {.t .}
 test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
-    overrideredirect toplevel on unix} -constraints {x11 failsOnUbuntu failsOnXQuartz} -body {
+    overrideredirect toplevel on unix} -constraints {x11 failsOnCILinux failsOnXQuartz} -body {
     toplevel .t
     wm overrideredirect .t 1
     tkwait visibility .t
@@ -1952,7 +1952,7 @@ test wm-transient-3.3 {withdraw/deiconify on the toplevel
 } -result {withdrawn 0 normal 1}
 
 test wm-transient-4.1 {transient toplevel is withdrawn
-	when mapped if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuartz} -body {
+	when mapped if toplevel is iconic} -constraints {failsOnCILinux failsOnXQuartz} -body {
     toplevel .top
     wm iconify .top
     update
@@ -1964,7 +1964,7 @@ test wm-transient-4.1 {transient toplevel is withdrawn
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.2 {already mapped transient toplevel
-	is withdrawn if toplevel is iconic} -constraints {failsOnUbuntu failsOnXQuartz} -body {
+	is withdrawn if toplevel is iconic} -constraints {failsOnCILinux failsOnXQuartz} -body {
     toplevel .top
     raiseDelay
     wm iconify .top
@@ -1978,7 +1978,7 @@ test wm-transient-4.2 {already mapped transient toplevel
     deleteWindows
 } -result {withdrawn 0}
 test wm-transient-4.3 {iconify/deiconify on the toplevel
-	does a withdraw/deiconify on the transient} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
+	does a withdraw/deiconify on the transient} -constraints {failsOnCILinux failsOnXQuartz} -setup {
     set results [list]
 } -body {
     toplevel .top
@@ -2154,7 +2154,7 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
     deleteWindows
 }
 
-test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints {failsOnUbuntu failsOnXQuartz} -setup {
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -constraints {failsOnCILinux failsOnXQuartz} -setup {
     deleteWindows
     set result {}
 } -body {
@@ -2235,7 +2235,7 @@ test wm-state-2.7 {state change before map} -body {
 } -cleanup {
     deleteWindows
 } -result {iconic}
-test wm-state-2.8 {state change after map} -constraints {failsOnUbuntu failsOnXQuartz} -body {
+test wm-state-2.8 {state change after map} -constraints {failsOnCILinux failsOnXQuartz} -body {
     toplevel .t
     update
     wm state .t iconic
@@ -2243,7 +2243,7 @@ test wm-state-2.8 {state change after map} -constraints {failsOnUbuntu failsOnXQ
 } -cleanup {
     deleteWindows
 } -result {iconic}
-test wm-state-2.9 {state change after map} -constraints {failsOnUbuntu failsOnXQuartz} -body {
+test wm-state-2.9 {state change after map} -constraints {failsOnCILinux failsOnXQuartz} -body {
     toplevel .t
     update
     wm iconify .t
@@ -2550,7 +2550,7 @@ test wm-forget-1.5 {check wm forget for unmapped parent (ref. #3205464,#2967911,
     # Moved here from winWm.test, test winWm-9.2 (cf. ticket #83eed90f93).
     #
 } -constraints {
-    failsOnUbuntu failsOnXQuartz
+    failsOnCILinux failsOnXQuartz
 } -setup {
     destroy .t
     toplevel .t
