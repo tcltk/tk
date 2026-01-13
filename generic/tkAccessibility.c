@@ -6,8 +6,8 @@
  *      in hash tables that can be accessed on any platform. This core Tk API
  *      is backed by platform-specific implementations.
  *
- * Copyright (c) 2024-2025 Kevin Walzer.
- * Copyright (c) 2024 Emiliano Gavilan.
+ * Copyright (c) 2024-2025 Kevin Walzer
+ * Copyright (c) 2024 Emiliano Gavilan
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -21,33 +21,33 @@
 Tcl_HashTable *TkAccessibilityObject = NULL;
 
 int     Tk_SetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+			     Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleName(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+			     Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleDescription(TCL_UNUSED(void *),Tcl_Interp *ip,
-				    int objc, Tcl_Obj *const objv[]);
+				    Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleState (TCL_UNUSED(void *),Tcl_Interp *ip,
-			       int objc, Tcl_Obj *const objv[]);
+			       Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
-			      int objc, Tcl_Obj *const objv[]);
+			      Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
-			       int objc, Tcl_Obj *const objv[]);
+			       Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_SetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+			     Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleRole(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+			     Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleName(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+			     Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleDescription(TCL_UNUSED(void *),Tcl_Interp *ip,
-				    int objc, Tcl_Obj *const objv[]);
+				    Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleState(TCL_UNUSED(void *),Tcl_Interp *ip,
-			      int objc, Tcl_Obj *const objv[]);
+			      Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleValue(TCL_UNUSED(void *),Tcl_Interp *ip,
-			      int objc, Tcl_Obj *const objv[]);
+			      Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
-			       int objc, Tcl_Obj *const objv[]);
+			       Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
-			     int objc, Tcl_Obj *const objv[]);
+			     Tcl_Size objc, Tcl_Obj *const objv[]);
 void    TkAccessibility_Cleanup(ClientData clientData);
 /* Cleanup proc when the window is destroyed. */
 static  Tk_EventProc WindowDestroyHandler;
@@ -74,7 +74,7 @@ int
 Tk_SetAccessibleRole(
 		     TCL_UNUSED(void *),
 		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
+		     Tcl_Size objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 3) {
@@ -143,7 +143,7 @@ int
 Tk_SetAccessibleName(
 		     TCL_UNUSED(void *),
 		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
+		     Tcl_Size objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 3) {
@@ -204,7 +204,7 @@ int
 Tk_SetAccessibleDescription(
 			    TCL_UNUSED(void *),
 			    Tcl_Interp *ip,		/* Current interpreter. */
-			    int objc,			/* Number of arguments. */
+			    Tcl_Size objc,			/* Number of arguments. */
 			    Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 3) {
@@ -265,7 +265,7 @@ int
 Tk_SetAccessibleValue(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
+		      Tcl_Size objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 3) {
@@ -324,7 +324,7 @@ int
 Tk_SetAccessibleState(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
+		      Tcl_Size objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 3) {
@@ -383,7 +383,7 @@ int
 Tk_SetAccessibleAction(
 		       TCL_UNUSED(void *),
 		       Tcl_Interp *ip,		/* Current interpreter. */
-		       int objc,			/* Number of arguments. */
+		       Tcl_Size objc,			/* Number of arguments. */
 		       Tcl_Obj *const objv[])	/* Argument objects. */
 
 {
@@ -442,7 +442,7 @@ int
 Tk_SetAccessibleHelp(
 		     TCL_UNUSED(void *),
 		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
+		     Tcl_Size objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
 
 {
@@ -504,7 +504,7 @@ int
 Tk_GetAccessibleRole(
 		     TCL_UNUSED(void *),
 		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
+		     Tcl_Size objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 2) {
@@ -561,7 +561,7 @@ int
 Tk_GetAccessibleName(
 		     TCL_UNUSED(void *),
 		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
+		     Tcl_Size objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 2) {
@@ -620,7 +620,7 @@ int
 Tk_GetAccessibleDescription(
 			    TCL_UNUSED(void *),
 			    Tcl_Interp *ip,		/* Current interpreter. */
-			    int objc,			/* Number of arguments. */
+			    Tcl_Size objc,			/* Number of arguments. */
 			    Tcl_Obj *const objv[])	/* Argument objects. */
 {
   if (objc < 2) {
@@ -679,7 +679,7 @@ int
 Tk_GetAccessibleValue(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
+		      Tcl_Size objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
 
 {
@@ -737,7 +737,7 @@ int
 Tk_GetAccessibleState(
 		      TCL_UNUSED(void *),
 		      Tcl_Interp *ip,		/* Current interpreter. */
-		      int objc,			/* Number of arguments. */
+		      Tcl_Size objc,			/* Number of arguments. */
 		      Tcl_Obj *const objv[])	/* Argument objects. */
 
 {
@@ -796,7 +796,7 @@ int
 Tk_GetAccessibleAction(
 		       TCL_UNUSED(void *),
 		       Tcl_Interp *ip,		/* Current interpreter. */
-		       int objc,			/* Number of arguments. */
+		       Tcl_Size objc,			/* Number of arguments. */
 		       Tcl_Obj *const objv[])	/* Argument objects. */
 
 {
@@ -853,7 +853,7 @@ int
 Tk_GetAccessibleHelp(
 		     TCL_UNUSED(void *),
 		     Tcl_Interp *ip,		/* Current interpreter. */
-		     int objc,			/* Number of arguments. */
+		     Tcl_Size objc,			/* Number of arguments. */
 		     Tcl_Obj *const objv[])	/* Argument objects. */
 
 {
@@ -1021,20 +1021,20 @@ int
 TkAccessibility_Init(
 		     Tcl_Interp *interp)
 {
-  Tcl_CreateObjCommand(interp, "::tk::accessible::set_acc_role", Tk_SetAccessibleRole, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::set_acc_name", Tk_SetAccessibleName, NULL,NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::set_acc_description", Tk_SetAccessibleDescription, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::set_acc_value", Tk_SetAccessibleValue, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::set_acc_state", Tk_SetAccessibleState, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::set_acc_action", Tk_SetAccessibleAction, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::set_acc_help", Tk_SetAccessibleHelp, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_role", Tk_GetAccessibleRole, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_name", Tk_GetAccessibleName, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_description", Tk_GetAccessibleDescription, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_value", Tk_GetAccessibleValue, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, NULL);
-  Tcl_CreateObjCommand(interp, "::tk::accessible::get_acc_help", Tk_GetAccessibleHelp, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::set_acc_role", Tk_SetAccessibleRole, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::set_acc_name", Tk_SetAccessibleName, NULL,NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::set_acc_description", Tk_SetAccessibleDescription, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::set_acc_value", Tk_SetAccessibleValue, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::set_acc_state", Tk_SetAccessibleState, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::set_acc_action", Tk_SetAccessibleAction, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::set_acc_help", Tk_SetAccessibleHelp, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::get_acc_role", Tk_GetAccessibleRole, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::get_acc_name", Tk_GetAccessibleName, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::get_acc_description", Tk_GetAccessibleDescription, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::get_acc_value", Tk_GetAccessibleValue, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::get_acc_state", Tk_GetAccessibleState, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::get_acc_action", Tk_GetAccessibleAction, NULL, NULL);
+  Tcl_CreateObjCommand2(interp, "::tk::accessible::get_acc_help", Tk_GetAccessibleHelp, NULL, NULL);
 
   if (!TkAccessibilityObject) {
       TkAccessibilityObject = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));

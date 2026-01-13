@@ -229,20 +229,11 @@ TkGetIntForIndex(
     int lastOK,
     Tcl_Size *indexPtr)
 {
-    if (indexObj == NULL) {
-	*indexPtr = TCL_INDEX_NONE;
+    if (TkObjIsEmpty(indexObj)) {
+	*indexPtr = (end == -1) ? -1 - TCL_SIZE_MAX : TCL_INDEX_NONE;
 	return TCL_OK;
     }
-    if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, indexPtr) != TCL_OK) {
-	const char *value = Tcl_GetString(indexObj);
-	if (!*value) {
-	    /* empty string */
-	    *indexPtr = (end == -1) ? -1 - TCL_SIZE_MAX : TCL_INDEX_NONE;
-	    return TCL_OK;
-	}
-	return TCL_ERROR;
-    }
-    return TCL_OK;
+    return Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, indexPtr);
 }
 
 /*

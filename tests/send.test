@@ -9,31 +9,25 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-# NOTES
-#
-# * This test file is platform-indifferent. Tests regarding the send command
-#   that are specific to the windows platform go into the test file winSend.test.
-# * Under macOS/aqua, the send command works only with interpreters that exist in
-#   the same process. Tests in this test file that target an interpreter in another
-#   process carry a constraint "notAqua" so that they are skipped under macos/aqua.
-#
-
 #
 # TESTFILE INITIALIZATION
 #
 
-package require tcltest 2.2; # needed in mode -singleproc 0
+package require tcltest 2.2; # needed for "-singleproc 0"
 
-# Load the main script main.tcl, which takes care of:
+# Load the main script "main.tcl", which takes care of:
 # - setup for the application and the root window
-# - importing commands from the tcltest namespace
-# - loading of the testutils mechanism along with its utility procs
+# - loading and configuration of the tcltest test harness
+# - loading of the testutils mechanism together with its utility procs
 # - loading of Tk specific test constraints (additionally to constraints
 #   provided by the package tcltest)
+
 source [file join [tcltest::configure -testdir] main.tcl]
 
 # Ensure a pristine initial window state
 resetWindows
+
+tcltest::loadTestedCommands
 
 # Import utility procs for specific functional areas
 testutils import child
@@ -190,16 +184,21 @@ if {[testConstraint nonPortable] && [testConstraint xhost] && [testConstraint no
     }
 }
 
-test send-6.1 {ServerSecure procedure} {nonPortable secureserver notAqua} {
+# For aqua, just start the child Tk process.
+if {[testConstraint aqua]} {
+    childTkProcess create
+}
+
+test send-6.1 {ServerSecure procedure} {nonPortable secureserver} {
     set a 44
     list [childTkProcess eval [list send [tk appname] set a 55]] $a
 } {55 55}
-test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
+test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a 22
     exec xhost [exec hostname]
     list [catch {childTkProcess eval [list send [tk appname] set a 33]} msg] $a $msg
 } {0 22 {X server insecure (must use xauth-style authorization); command ignored}}
-test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
+test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost} {
     set a abc
     exec xhost - [exec hostname]
     list [childTkProcess eval [list send [tk appname] set a new]] $a
@@ -230,8 +229,9 @@ test send-7.4 {Tk_SetAppName procedure, name in use} {secureserver testsend} {
     list [tk appname foo] [testsend prop root InterpRegistry]
 } "{foo #4} {$commId foo #4\n$id foo\n$id foo #2\n$id foo #3\n}"
 
-#macOS does not send to other processes
-test send-8.1 {Tk_SendCmd procedure, options} {secureserver notAqua} {
+# This passes on real macOS systems but fails on macOS CI runners because
+# of a timeout when sending the AEDoScript event.  So it is nonPortable.
+test send-8.1 {Tk_SendCmd procedure, options} {secureserver nonPortable} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set a 66
@@ -242,7 +242,7 @@ test send-8.1 {Tk_SendCmd procedure, options} {secureserver notAqua} {
     childTkProcess exit
     lappend result $a
 } {66 77}
-test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay notAqua} {
+test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay} {
     childTkProcess create -display $env(TK_ALT_DISPLAY)
     tk appname xyzgorp
     set a homeDisplay
@@ -257,8 +257,7 @@ test send-8.2 {Tk_SendCmd procedure, options} {secureserver altDisplay notAqua} 
     set result
 } {altDisplay homeDisplay}
 
-# Since macOS has no registry of interpreters, 8.3 and 8.10 will fail.
-test send-8.3 {Tk_SendCmd procedure, options} {secureserver notAqua} {
+test send-8.3 {Tk_SendCmd procedure, options} {secureserver} {
     list [catch {send -- -async foo bar baz} msg] $msg
 } {1 {no application named "-async"}}
 test send-8.4 {Tk_SendCmd procedure, options} {secureserver} {
@@ -289,7 +288,7 @@ test send-8.9 {Tk_SendCmd procedure, local execution} {secureserver} {
 "open bad_file"
     invoked from within
 "send [tk appname] open bad_file"} {posix enoent {no such file or directory}}}
-test send-8.10 {Tk_SendCmd procedure, no such interpreter} {secureserver notAqua} {
+test send-8.10 {Tk_SendCmd procedure, no such interpreter} {secureserver} {
     list [catch {send bogus_name bogus_command} msg] $msg
 } {1 {no application named "bogus_name"}}
 
@@ -366,19 +365,33 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
     childTkProcess exit
     lappend result $a
 } {{no event yet} {no event yet} exposed}
-test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver notAqua} {
+
+if {[testConstraint aqua]} {
+    set result_8_18 {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
+    invoked from within
+"send $app open bad_name"} {couldn't open "bad_name": no such file or directory}}
+} else {
+    set result_8_18 {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
+    while executing
+"open bad_name"
+    invoked from within
+"send $app open bad_name"} {posix enoent {no such file or directory}}}
+}
+
+# This passes on real macOS systems but fails on macOS CI runners because
+# of a timeout when sending the AEDoScript event.  So it is nonPortable.
+test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver nonPortable} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set result [string tolower [list [catch {send $app open bad_name} msg] \
 	    $msg $errorInfo $errorCode]]
     childTkProcess exit
     set result
-} {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
-    while executing
-"open bad_name"
-    invoked from within
-"send $app open bad_name"} {posix enoent {no such file or directory}}}
-test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver notAqua} {
+} $result_8_18
+
+# This passes on real macOS systems but fails on macOS CI runners because
+# of a timeout when sending the AEDoScript event.  So it is nonPortable.
+test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver nonPortable} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set x no
@@ -545,14 +558,14 @@ test send-10.17 {SendEventProc procedure, errorCode and errorInfo} {secureserver
     set errorInfo oldErrorInfo
     list [catch {send dummy foo} msg] $msg $errorInfo $errorCode
 } {4 {} oldErrorInfo oldErrorCode}
-test send-10.18 {SendEventProc procedure, send kills application} {secureserver testsend notAqua} {
+test send-10.18 {SendEventProc procedure, send kills application} {secureserver testsend} {
     childTkProcess create
     childTkProcess eval {tk appname t_s_3}
     set x [list [catch {send t_s_3 destroy .} msg] $msg]
     childTkProcess exit
     set x
 } {0 {}}
-test send-10.19 {SendEventProc procedure, send exits} {secureserver testsend notAqua} {
+test send-10.19 {SendEventProc procedure, send exits} {secureserver testsend} {
     childTkProcess create
     childTkProcess eval {tk appname t_s_3}
     set x [list [catch {send t_s_3 exit} msg] $msg]
@@ -593,8 +606,7 @@ test send-12.1 {TimeoutProc procedure} -constraints {secureserver testsend} -set
 
 catch {testsend prop root InterpRegistry ""}
 
-#macOS does not send to other processes
-test send-12.2 {TimeoutProc procedure} {secureserver notAqua} {
+test send-12.2 {TimeoutProc procedure} {secureserver} {
     winfo interps
     tk appname tktest
     update
@@ -616,15 +628,15 @@ test send-12.2 {TimeoutProc procedure} {secureserver notAqua} {
 winfo interps
 tk appname tktest
 
-#macOS does not send to other processes
-test send-13.1 {DeleteProc procedure} -constraints {secureserver notAqua} -body {
+test send-13.1 {DeleteProc procedure} -constraints {secureserver} -body {
     childTkProcess create
     set app [childTkProcess eval {rename send {}; tk appname}]
     set result [list [catch {send $app foo} msg] $msg [winfo interps]]
     childTkProcess exit
     set result
-} -result {1 {no application named "tktest[0-9]+"} tktest} -match regexp
-test send-13.2 {DeleteProc procedure} {secureserver notAqua} {
+}  -match regexp -result {1 {no application named "tktest[0-9]+"} tktest}
+
+test send-13.2 {DeleteProc procedure} {secureserver} {
     winfo interps
     tk appname tktest
     rename send {}
@@ -634,7 +646,7 @@ test send-13.2 {DeleteProc procedure} {secureserver notAqua} {
     lappend result [winfo interps] [info commands send]
 } {{} {} foo send}
 
-test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {secureserver altDisplay notAqua} {
+test send-14.1 {SendRestrictProc procedure, sends crossing from different displays} {secureserver altDisplay} {
     childTkProcess create -display $env(TK_ALT_DISPLAY)
     set result [childTkProcess eval "
     toplevel .t -screen [winfo screen .]
@@ -674,6 +686,36 @@ test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
     interp delete t_s_2
     lappend x [testsend prop comm TK_APPLICATION]
 } {tktest {t_s_2 t_s_1 tktest} {t_s_2 tktest} tktest}
+
+
+test send-16.1 {set variable - app in child interpreter} {} {
+    set a "a"
+    childTkInterp t_s_1 -class Test
+    set app [t_s_1 eval {tk appname}]
+    set result {}
+    catch {send $app {set a}} msg
+    lappend result $msg
+    lappend result [send $app {set a 25}]
+    lappend result [set a]
+    interp delete t_s_1
+    set result
+} {{can't read "a": no such variable} 25 a}
+
+test send-16.2 {recursive send - app in child process} {} {
+} {}
+
+test send-17.1 {set variable - app in child process} {} {
+    set a "a"
+    childTkProcess create
+    set app [childTkProcess eval {tk appname}]
+    set result {}
+    catch {send $app {set a}} msg
+    lappend result $msg
+    lappend result [send $app {set a 25}]
+    lappend result [set a]
+    childTkProcess exit
+    set result
+} {{can't read "a": no such variable} 25 a}
 
 #
 # TESTFILE CLEANUP

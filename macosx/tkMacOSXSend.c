@@ -1,34 +1,18 @@
 /*
  * tkMacOSXSend.c --
  *
- *	This file provides procedures that implement the "send" command,
- *	allowing commands to be passed from interpreter to interpreter. This
- *	current implementation for the Mac has most functionality stubbed out.
- *
- *	The current plan, which we have not had time to implement, is for the
- *	first Wish app to create a gestalt of type 'WIsH'. This gestalt will
- *	point to a table, in system memory, of Tk apps. Each Tk app, when it
- *	starts up, will register their name, and process ID, in this table.
- *	This will allow us to implement "tk appname".
- *
- *	Then the send command will look up the process id of the target app in
- *	this table, and send an AppleEvent to that process. The AppleEvent
- *	handler is much like the do script handler, except that you have to
- *	specify the name of the tk app as well, since there may be many
- *	interps in one wish app, and you need to send it to the right one.
- *
- *	Implementing this has been on our list of things to do, but what with
- *	the demise of Tcl at Sun, and the lack of resources at Scriptics it
- *	may not get done for awhile. So this sketch is offered for the brave
- *	to attempt if they need the functionality...
+ * This file implements the "send" command, which allows commands to be passed
+ * from interpreter to interpreter.  This implementation uses Apple for
+ * interprocess communication, in place of the XProperties in the original
+ * unix implementation.
  *
  * Copyright © 1989-1994 The Regents of the University of California.
- * Copyright © 1994-1998 Sun Microsystems, Inc.
- * Copyright © 2001-2009 Apple Inc.
- * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
+ * Copyright © 2025 Marc Culler
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkMacOSXInt.h"
@@ -39,8 +23,11 @@
  */
 
 typedef struct RegisteredInterp {
-    char *name;			/* Interpreter's name (malloc-ed). */
-    Tcl_Interp *interp;		/* Interpreter associated with name. */
+    char *name;                 /* Interpreter's name (malloc'ed).*/
+    Tcl_Interp *interp;		/* Interpreter associated with name. NULL
+				 * means that the application was unregistered
+				 * or deleted while a send was in progress to
+				 * it. */
     struct RegisteredInterp *nextPtr;
 				/* Next in list of names associated with
 				 * interps in this process. NULL means end of
@@ -48,135 +35,653 @@ typedef struct RegisteredInterp {
 } RegisteredInterp;
 
 /*
- * A registry of all interpreters for a display is kept in a property
- * "InterpRegistry" on the root window of the display. It is organized as a
- * series of zero or more concatenated strings (in no particular order), each
- * of the form:
- *	window space name '\0'
- * where "window" is the hex id of the comm. window to use to talk to an
- * interpreter named "name".
- *
- * When the registry is being manipulated by an application (e.g. to add or
- * remove an entry), it is loaded into memory using a structure of the
+ * A registry of all interpreters owned by the current user is maintained in
+ * the file ~/Library/Caches/com.tcltk.appnames. The file contains the string
+ * representation of a TclDictObj.  The dictionary keys are appname strings
+ * and the value assigned to a key is a Tcl list containing two Tcl_IntObj
+ * items whose integer values are, respectively, the pid of the process which
+ * registered the interpreter and a currently unused void *.
+ */
+
+static char *appNameRegistryPath;
+
+/*
+ * Information that we record about an application.
+ * RegFindName returns a struct of this type.
+ */
+
+typedef struct AppInfo {
+    pid_t pid;
+    void *clientData;
+} AppInfo;
+
+/*
+ * Construct an AppInfo from a ListObj value of the appNameDict.
+ */
+
+static AppInfo
+ObjToAppInfo(
+    Tcl_Obj *value)
+{
+    AppInfo result = {0};
+    Tcl_Size objc;
+    Tcl_Obj **objvPtr;
+    static const char *failure = "AppName registry is corrupted.  Try deleting %s";
+    if (TCL_OK != Tcl_ConvertToType(NULL, value, Tcl_GetObjType("list"))) {
+	Tcl_Panic(failure, appNameRegistryPath);
+    } else if (Tcl_ListObjGetElements(NULL, value, &objc, &objvPtr) == TCL_OK) {
+	if (objc != 2) {
+	    Tcl_Panic(failure, appNameRegistryPath);
+	}
+	Tcl_GetIntFromObj(NULL, objvPtr[0], &result.pid);
+	Tcl_GetLongFromObj(NULL, objvPtr[1], (long *) &result.clientData);
+    }
+    return result;
+}
+
+/*
+ * Construct a ListObj value for the appNameDict from an AppInfo.
+ */
+
+static Tcl_Obj*
+AppInfoToObj(
+    AppInfo info)
+{
+    Tcl_Obj *objv[2] = {Tcl_NewIntObj(info.pid),
+			Tcl_NewLongObj(info.clientData)};
+    return Tcl_NewListObj(2, objv);
+}
+
+/* When the AppName registry is being manipulated by an application (e.g. to
+ * add or remove an entry), it is loaded into memory using a structure of the
  * following type:
  */
 
 typedef struct NameRegistry {
-    TkDisplay *dispPtr;		/* Display from which the registry was
-				 * read. */
-    int locked;			/* Non-zero means that the display was locked
-				 * when the property was read in. */
     int modified;		/* Non-zero means that the property has been
 				 * modified, so it needs to be written out
 				 * when the NameRegistry is closed. */
-    unsigned long propLength;	/* Length of the property, in bytes. */
-    char *property;		/* The contents of the property, or NULL if
-				 * none. See format description above; this is
-				 * *not* terminated by the first null
-				 * character. Dynamically allocated. */
+    Tcl_Obj *appNameDict;       /* Tcl dict mapping interpreter names to
+				 * a Tcl list {pid, clientData}
+				 */
 } NameRegistry;
 
-static bool initialized = false;	/* A flag to denote if we have initialized
-				 * yet. */
-
-static RegisteredInterp *interpListPtr = NULL;
-				/* List of all interpreters registered by this
-				 * process. */
-
 /*
- * The information below is used for communication between processes during
- * "send" commands. Each process keeps a private window, never even mapped,
- * with one property, "Comm". When a command is sent to an interpreter, the
- * command is appended to the comm property of the communication window
- * associated with the interp's process. Similarly, when a result is returned
- * from a sent command, it is also appended to the comm property.
- *
- * Each command and each result takes the form of ASCII text. For a command,
- * the text consists of a zero character followed by several null-terminated
- * ASCII strings. The first string consists of the single letter "c".
- * Subsequent strings have the form "option value" where the following options
- * are supported:
- *
- * -r commWindow serial
- *
- *	This option means that a response should be sent to the window whose X
- *	identifier is "commWindow" (in hex), and the response should be
- *	identified with the serial number given by "serial" (in decimal). If
- *	this option isn't specified then the send is asynchronous and no
- *	response is sent.
- *
- * -n name
- *
- *	"Name" gives the name of the application for which the command is
- *	intended. This option must be present.
- *
- * -s script
- *
- *	"Script" is the script to be executed. This option must be present.
- *
- * The options may appear in any order. The -n and -s options must be present,
- * but -r may be omitted for asynchronous RPCs. For compatibility with future
- * releases that may add new features, there may be additional options
- * present; as long as they start with a "-" character, they will be ignored.
- *
- *
- * A result also consists of a zero character followed by several null-
- * terminated ASCII strings. The first string consists of the single letter
- * "r". Subsequent strings have the form "option value" where the following
- * options are supported:
- *
- * -s serial
- *
- *	Identifies the command for which this is the result. It is the same as
- *	the "serial" field from the -s option in the command. This option must
- *	be present.
- *
- * -c code
- *
- *	"Code" is the completion code for the script, in decimal. If the code
- *	is omitted it defaults to TCL_OK.
- *
- * -r result
- *
- *	"Result" is the result string for the script, which may be either a
- *	result or an error message. If this field is omitted then it defaults
- *	to an empty string.
- *
- * -i errorInfo
- *
- *	"ErrorInfo" gives a string with which to initialize the errorInfo
- *	variable. This option may be omitted; it is ignored unless the
- *	completion code is TCL_ERROR.
- *
- * -e errorCode
- *
- *	"ErrorCode" gives a string with with to initialize the errorCode
- *	variable. This option may be omitted; it is ignored unless the
- *	completion code is TCL_ERROR.
- *
- * Options may appear in any order, and only the -s option must be present. As
- * with commands, there may be additional options besides these; unknown
- * options are ignored.
+ * When sending to a different process we use the AppleEvent DoScript handler
+ * to evaluate the command in the target interpreter.  (Note: The AppleEvent
+ * tools are part of the Carbon framework, so we need to deal with status
+ * codes of type OSStatus.)
  */
 
+/* Translate some common OSStatus values to strings. */
+static const char *getError(OSStatus status) {
+    static char aeErrorString[30];
+    const char *errorName;
+    switch (status) {
+    case -50:
+      errorName = "paramError";
+      break;
+    case -600:
+      errorName = "procNotFound";
+      break;
+    case -609:
+      errorName = "connectionInvalid";
+    case -1700:
+      errorName = "errAECoercionFail";
+      break;
+    case -1701:
+      errorName = "errAEDescNotFound";
+      break;
+    case -1704:
+      errorName = "errAENotAEDesc";
+      break;
+    case -1708:
+      errorName = "errAEEventNotHandled";
+      break;
+    case -1712:
+      errorName = "errAETimeout";
+      break;
+    default:
+      errorName = aeErrorString;
+      snprintf(aeErrorString, 30, "%d", status);
+      break;
+    }
+    return errorName;
+}
+
+/* Macros for checking OSStatus values. */
+#define CHECK(func)							\
+    if (status != noErr) {						\
+	char msg[512];							\
+	snprintf(msg, 512, "%s returned error %s",			\
+		   func, getError(status));				\
+	Tcl_AddErrorInfo(interp, msg);					\
+	Tcl_AppendResult(interp, msg, (char *)NULL);			\
+	return TCL_ERROR;						\
+    }
+
+#define CHECK2(func)							\
+    if (status != noErr && status != errAEDescNotFound) {		\
+	char msg[512];							\
+	snprintf(msg, 512, "%s returned error %s",			\
+		   func, getError(status));				\
+	Tcl_AddErrorInfo(interp, msg);					\
+	Tcl_AppendResult(interp, msg, (char *)NULL);			\
+	return TCL_ERROR;						\
+    }
+
 /*
- * Maximum size property that can be read at one time by this module:
+ * For the implementation of the synchronous send command we need to be able
+ * to process incoming Apple Events while we are waiting for a reply to an
+ * Apple Event sent earlier.  For example, if we have two Tk applications
+ * Wish and Wish #2 running in different processes and we issue the command:
+ * `send Wish {send {Wish #2} set a 5}` on Wish #2, then Wish #2 must wait for
+ * a reply to the full send command, but Wish cannot issue that reply until
+ * Wish $2 has run the command `set a 5` sent to it by Wish.  So Wish #2 needs
+ * to respond to the message from Wish concurrently with waiting for a
+ * reply from Wish.
+ *
+ * To deal with this we create a separate thread to send the command while
+ * condurrently running the Tk event loop in the main thread.  The following
+ * Objective C class implements the thread.
  */
 
-#define MAX_PROP_WORDS 100000
+@interface AEReplyThread: NSThread
+{
+}
+@property AppleEvent *eventPtr;
+@property AppleEvent *replyPtr;
+@property int *statusPtr;
+@end
+
+@implementation AEReplyThread
+- (void) main
+{
+    /*
+     * The original unix implementation of the send command would wait
+     * arbitrarily long for the command to return, unless the target
+     * interpreter died.  So we request no timeout in our call to
+     * AESendMessage.  If the call returns a non-zero status we know that the
+     * target process has died.
+     */
+
+    *_statusPtr = AESendMessage(_eventPtr, _replyPtr, kAEWaitReply,
+				    kNoTimeOut);
+    [NSThread exit];
+}
+@end
+
 
 /*
- * Forward declarations for procedures defined later in this file:
+ * Sends an AppleEvent of type DoScript to a Tk app identified by its pid.
  */
 
-static int SendInit(Tcl_Interp *interp);
+static int
+sendAEDoScript(
+    Tcl_Interp *interp,
+    const pid_t pid,
+    const char *command,
+    int async)
+{
+    AppleEvent event, reply;
+    OSStatus status;
+
+    // Build an AppleEvent targeting the provided pid.
+    status = AEBuildAppleEvent(kAEMiscStandards, // NOT kAECoreSuite!!!
+			       kAEDoScript,
+			       typeKernelProcessID, &pid, sizeof(pid_t),
+			       kAutoGenerateReturnID,
+			       kAnyTransactionID,
+			       &event,
+			       NULL,             // No error struct is needed.
+			       "'----':utf8(@)", // direct parameter: utf8 bytes
+			       strlen(command),
+			       command);
+    CHECK("AEBuildAppleEvent")
+
+    // Send the event.
+    if (async) {
+
+	/*
+	 * If the async parameter is true then no result is produced and
+	 * errors are ignored.  So we do not need a reply to our AppleEvent.
+	 */
+	status = AESendMessage(&event, nil, kAENoReply, 0);
+	CHECK("AESendMessage")
+    } else {
+
+	/*
+	 * Otherwise we call AESendMessage from an NSThread and run
+	 * an event loop until the status changes.
+	 */
+
+	status = 1;  /* impossible OSStatus */
+	AEReplyThread *replyThread = [[AEReplyThread alloc] init];
+	replyThread.eventPtr = &event;
+	replyThread.replyPtr = &reply;
+	replyThread.statusPtr = &status;
+	[replyThread start];
+	while (status == 1) {
+	    // check if the target interpreter is alive.
+	    Tcl_DoOneEvent(TCL_ALL_EVENTS);
+	}
+	if (status) {
+	    const char *msg = "target application died";
+	    Tcl_AddErrorInfo(interp, msg);
+	    Tcl_SetResult(interp, msg, (char *)NULL);
+	    return TCL_ERROR;
+	}
+    }
+    int result = TCL_OK;
+    if (async == 0) {
+	// Read the reply and extract relevant info.
+	int code = 0;
+	DescType actualType = 0;
+	AEGetParamPtr(&reply, keyErrorNumber, typeSInt32, &actualType,
+		      &code, 4, NULL);
+	CHECK2("AEGetParamPtr")
+	if (code == TCL_OK) {
+	    // Get the result string.
+	    Size resultSize = 0;
+	    status = AESizeOfParam(&reply, keyDirectObject, &actualType,
+				   &resultSize);
+	    CHECK2("AESizeOfParam")
+	    char *resultBuffer = ckalloc(resultSize + 1);
+	    AEGetParamPtr(&reply, keyDirectObject, typeUTF8Text, &actualType,
+			  resultBuffer, resultSize, NULL);
+	    CHECK2("AEGetParamPtr")
+	    if (resultSize > 0) {
+		resultBuffer[resultSize] = '\0';
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(resultBuffer,
+							  TCL_INDEX_NONE));
+	    }
+
+	    result = TCL_OK;
+	    ckfree(resultBuffer);
+	    AEDisposeDesc(&reply);
+	} else {
+	    // Get the error string.
+	    Size errorSize;
+	    status = AESizeOfParam(&reply, keyErrorString,
+				   &actualType, &errorSize);
+	    CHECK2("AESizeOfParam")
+	    char *errorBuffer = ckalloc(errorSize + 1);
+	    AEGetParamPtr(&reply, keyErrorString, typeUTF8Text, &actualType,
+			  errorBuffer, errorSize, NULL);
+	    CHECK2("AEGetParamPtr")
+	    if (errorSize > 0) {
+		errorBuffer[errorSize] = '\0';
+		Tcl_AddErrorInfo(interp, errorBuffer);
+	    }
+	    Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(errorBuffer,
+						      TCL_INDEX_NONE));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(errorBuffer,
+						      TCL_INDEX_NONE));
+	    result = TCL_ERROR;
+	    ckfree(errorBuffer);
+	}
+	AEDisposeDesc(&reply);
+    }
+    AEDisposeDesc(&event);
+    return result;
+}
+
+/*
+ * The following struct contains  per-process data:
+ */
+
+static struct {
+    int sendSerial;		      /* The serial number that was used * in
+				       * the last "send" command. */
+    int sendDebug;		      /* This can be set while debugging to
+				       * add print statements, for example. */
+    int initialized;                  /* Set when SendInit is called. */
+    RegisteredInterp *interpListPtr;  /* List of all interpreters registered
+				       * in this process. */
+
+} staticData = {0, 0, 0, 0};
+
+/*
+ * Forward declarations for static functions defined later in this file:
+ */
+
+static Tcl_CmdDeleteProc DeleteProc;
+static NameRegistry*	RegOpen(Tcl_Interp *interp);
+static void		RegClose(NameRegistry *regPtr);
+static void		RegAddName(NameRegistry *regPtr, const char *name,
+				    Window commWindow);
+static void		RegDeleteName(NameRegistry *regPtr, const char *name);
+static AppInfo		RegFindName(NameRegistry *regPtr, const char *name);
+static int		SendInit();
+
+static void
+saveAppNameRegistry(
+    Tcl_Obj *dict,
+    const char *path)
+{
+    Tcl_Size length, bytesWritten;
+    /* Open the file ab+ to avoid truncating it before flocking it. */
+    FILE *appNameFile = fopen(path, "ab+");
+    char *bytes;
+    if (appNameFile == NULL) {
+	Tcl_Panic("fopen failed on %s", path);
+	return;
+    }
+    if (flock(fileno(appNameFile), LOCK_EX)) {
+	Tcl_Panic("flock failed on %s", path);
+    }
+    /* Now we can truncate the file. */
+    if (ftruncate(fileno(appNameFile), 0) != 0) {
+	Tcl_Panic("ftruncate failed on %s", path);
+    }
+    bytes = Tcl_GetStringFromObj(dict, &length);
+    bytesWritten = (Tcl_Size) fwrite(bytes, 1, length, appNameFile);
+    flock(fileno(appNameFile), LOCK_UN);
+    fclose(appNameFile);
+    if (bytesWritten != length) {
+	Tcl_Panic("write failed on %s: length: %lu wrote: %lu", path,
+		length, bytesWritten);
+	return;
+    }
+}
+
+static Tcl_Obj*
+loadAppNameRegistry(
+    const char *path)
+{
+    size_t length, bytesRead;
+    char *bytes = NULL;
+    Tcl_Obj *result;
+
+    FILE *appNameFile = fopen(path, "ab+");
+    if (appNameFile == NULL) {
+	Tcl_Panic("fopen failed on %s", path);
+    }
+    if (flock(fileno(appNameFile), LOCK_EX)) {
+	Tcl_Panic("flock failed on %s", path);
+    }
+    /*
+     * In macOS, "ab+" sets read and write position at the end.
+     * But this is not a posix requirement and does not happen
+     * on linux.  So we seek to the end anyway.
+     */
+    fseek(appNameFile, 0, SEEK_END);
+    length = ftell(appNameFile);
+    if (length > 0) {
+	bytes = ckalloc(length);
+	if (bytes) {
+	    fseek(appNameFile, 0, SEEK_SET);
+	    bytesRead = fread(bytes, 1, length, appNameFile);
+	} else {
+	    Tcl_Panic("Out of memory");
+	}
+    }
+    flock(fileno(appNameFile), LOCK_UN);
+    fclose(appNameFile);
+    if (length == 0) {
+	return Tcl_NewDictObj();
+    }
+    if (bytesRead != length) {
+	Tcl_Panic("read failed on %s: length %lu; read %lu,\n", path,
+		length, bytesRead);
+    }
+    result = Tcl_NewStringObj(bytes, length);
+    ckfree(bytes);
+    /*
+     * Convert the string object to a dict. If that fails the file
+     * must be corrupt, so all we can do is return an empty dict.
+     */
+    Tcl_Size size;
+    if (TCL_OK != Tcl_DictObjSize(NULL, result, &size)){
+	result = Tcl_NewDictObj();
+    }
+    return result;
+}
+
 
 /*
  *--------------------------------------------------------------
  *
+ * SendInit --
+ *
+ *	This function is called to initialize the objects needed
+ *	for sending commands and receiving results.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets up various data structures and windows.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+SendInit()
+{
+    /*
+     * Intialize the path used for the appname registry.
+     */
+
+    NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(
+		 NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachesDirectory = [searchPaths objectAtIndex:0];
+    NSString *RegistryPath = [cachesDirectory
+	stringByAppendingPathComponent:@"com.tcltk.appnames"];
+    size_t length = 1 + strlen(RegistryPath.UTF8String);
+    appNameRegistryPath = ckalloc(length);
+    strlcpy(appNameRegistryPath, RegistryPath.UTF8String, length);
+    return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegOpen --
+ *
+ *	This function loads the name registry into memory so that it can be
+ *	manipulated.  It reads a string representation of a Tcl dict from a
+ *	file and constructs the dict.
+ *
+ * Results:
+ *	The return value is a pointer to a NameRegistry structure.
+ *
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NameRegistry *
+RegOpen(
+    Tcl_Interp *interp)		/* Interpreter to use for error reporting
+				 * (errors cause a panic so in fact no error
+				 * is ever returned, but the interpreter is
+				 * needed anyway). */
+{
+    NameRegistry *regPtr;
+    regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
+    regPtr->modified = 0;
+
+    /*
+     * Deserialize the registry file as a Tcl dict.
+     */
+
+    Tcl_Obj *dict = loadAppNameRegistry(appNameRegistryPath);
+    if (dict) {
+	regPtr->appNameDict = dict;
+    } else {
+	regPtr->appNameDict = Tcl_NewDictObj();
+    }
+
+    /*
+     * Find and remove any interpreter name for which the process is no longer
+     * running.  This cleans up after a crash of some other wish process.
+     */
+
+    Tcl_Size dictSize;
+    Tcl_DictObjSize(NULL, regPtr->appNameDict, &dictSize);
+    Tcl_Obj **deadinterps = (Tcl_Obj**) ckalloc(dictSize * sizeof(Tcl_Obj*));
+    int count = 0;
+    Tcl_DictSearch search;
+    Tcl_Obj *key, *value;
+    int done = 0, i;
+    for (Tcl_DictObjFirst(
+	  interp, regPtr->appNameDict, &search, &key, &value, &done) ;
+	     !done ;
+	     Tcl_DictObjNext(&search, &key, &value, &done)) {
+	AppInfo info = ObjToAppInfo(value);
+	if (kill(info.pid, 0)) {
+	    deadinterps[count++] = key;
+	}
+    }
+    for (i = 0; i < count; i++) {
+	Tcl_DictObjRemove(NULL, regPtr->appNameDict, deadinterps[i]);
+    }
+    ckfree(deadinterps);
+    return regPtr;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegClose --
+ *
+ *	This function is called to end a series of operations on a name
+ *	registry.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *      The registry is written back if it has been modified, Memory for the
+ *	registry is freed, so the caller should never use regPtr again.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RegClose(
+    NameRegistry *regPtr)	/* Pointer to a registry opened with a
+				 * previous call to RegOpen. */
+{
+    if (regPtr->modified) {
+	saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
+    }
+    ckfree(regPtr);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegFindName --
+ *
+ *	Given an open name registry, this function finds an entry with a given
+ *	name, if there is one, and returns information about that entry.
+ *
+ * Results:
+ *      The return value is an AppInfo struct containing the pid and the
+ *	clientData for the application named "name", or nil if there is no
+ *	such entry in the registry.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+AppInfo
+RegFindName(
+    NameRegistry *regPtr,	/* Pointer to a registry opened with a
+				 * previous call to RegOpen. */
+    const char *name)		/* Name of an application. */
+{
+    Tcl_Obj *valuePtr = NULL, *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
+    Tcl_DictObjGet(NULL, regPtr->appNameDict, keyPtr, &valuePtr);
+    // Maybe using pid 0 as the default is a bad idea?
+    AppInfo resultTcl = {0};
+    if (valuePtr) {
+	resultTcl = ObjToAppInfo(valuePtr);
+    }
+    return resultTcl;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegDeleteName --
+ *
+ *	This function deletes the entry for a given name from an open
+ *	registry.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	If there used to be an entry named "name" in the registry, then it is
+ *	deleted and the registry is marked as modified so it will be written
+ *	back when closed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RegDeleteName(
+    NameRegistry *regPtr,	/* Pointer to a registry opened with a
+				 * previous call to RegOpen. */
+    const char *name)		/* Name of an application. */
+{
+    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
+    Tcl_DictObjRemove(NULL, regPtr->appNameDict, keyPtr);
+    regPtr->modified = 1;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegAddName --
+ *
+ *	Add a new entry to an open registry.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The open registry is expanded; it is marked as modified so that it
+ *	will be written back when closed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RegAddName(
+    NameRegistry *regPtr,	/* Pointer to a registry opened with a
+				 * previous call to RegOpen. */
+    const char *name,		/* Name of an application. The caller must
+				 * ensure that this name isn't already
+				 * registered. */
+    Window commWindow)		/* X identifier for comm. window of
+				 * application. */
+{
+    (void) commWindow; /////
+    Tcl_Obj *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
+    AppInfo valueTcl = {getpid(), 0};
+    Tcl_Obj *valuePtr = AppInfoToObj(valueTcl);
+    Tcl_DictObjPut(NULL, regPtr->appNameDict, keyPtr, valuePtr);
+    regPtr->modified = 1;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_SetAppName --
  *
- *	This procedure is called to associate an ASCII name with a Tk
+ *	This function is called to associate an ASCII name with a Tk
  *	application. If the application has already been named, the name
  *	replaces the old one.
  *
@@ -193,45 +698,66 @@ static int SendInit(Tcl_Interp *interp);
  *	registration will be removed automatically if the interpreter is
  *	deleted or the "send" command is removed.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 const char *
 Tk_SetAppName(
     Tk_Window tkwin,		/* Token for any window in the application to
 				 * be named: it is just used to identify the
-				 * application and the display. */
+				 * application. */
     const char *name)		/* The name that will be used to refer to the
 				 * interpreter in later "send" commands. Must
 				 * be globally unique. */
 {
+    RegisteredInterp *riPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
-    Tcl_Interp *interp = winPtr->mainPtr->interp;
-    int suffix, result;
-    Tcl_Size i, offset;
-    RegisteredInterp *riPtr, *prevPtr;
+    NameRegistry *regPtr;
+    Tcl_Interp *interp;
     const char *actualName;
     Tcl_DString dString;
-    Tcl_Obj *resultObjPtr, *interpNamePtr;
-    char *interpName;
-
-    if (!initialized) {
-	SendInit(interp);
+    int offset, i;
+    interp = winPtr->mainPtr->interp;
+    if (!staticData.initialized) {
+	SendInit();
     }
 
     /*
      * See if the application is already registered; if so, remove its current
-     * name from the registry. The deletion of the command will take care of
-     * disposing of this entry.
+     * name from the registry.
      */
 
-    for (riPtr = interpListPtr, prevPtr = NULL; riPtr != NULL;
-	    prevPtr = riPtr, riPtr = riPtr->nextPtr) {
+    regPtr = RegOpen(interp);
+    for (riPtr = staticData.interpListPtr; ; riPtr = riPtr->nextPtr) {
+	if (riPtr == NULL) {
+	    /*
+	     * This interpreter isn't currently registered; create the data
+	     * structure that will be used to register it, plus add
+	     * the "send" command to the interpreter.  The name gets added
+	     * to the structure later.
+	     */
+
+	    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
+	    riPtr->interp = interp;
+	    riPtr->nextPtr = staticData.interpListPtr;
+	    staticData.interpListPtr = riPtr;
+	    riPtr->name = NULL;
+	    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr,
+				  DeleteProc);
+	    if (Tcl_IsSafe(interp)) {
+		Tcl_HideCommand(interp, "send", "send");
+	    }
+	    break;
+	}
 	if (riPtr->interp == interp) {
-	    if (prevPtr == NULL) {
-		interpListPtr = interpListPtr->nextPtr;
-	    } else {
-		prevPtr->nextPtr = riPtr->nextPtr;
+	    /*
+	     * The interpreter is currently registered; remove it from the
+	     * name registry.
+	     */
+
+	    if (riPtr->name) {
+		RegDeleteName(regPtr, riPtr->name);
+		ckfree(riPtr->name);
 	    }
 	    break;
 	}
@@ -244,68 +770,49 @@ Tk_SetAppName(
      */
 
     actualName = name;
-    suffix = 1;
-    offset = 0;
-    Tcl_DStringInit(&dString);
-
-    TkGetInterpNames(interp, tkwin);
-    resultObjPtr = Tcl_GetObjResult(interp);
-    Tcl_IncrRefCount(resultObjPtr);
-    for (i = 0; ; ) {
-	result = Tcl_ListObjIndex(NULL, resultObjPtr, i, &interpNamePtr);
-	if (result != TCL_OK || interpNamePtr == NULL) {
-	    break;
-	}
-	interpName = Tcl_GetString(interpNamePtr);
-	if (strcmp(actualName, interpName) == 0) {
-	    if (suffix == 1) {
+    offset = 0;				/* Needed only to avoid "used before
+					 * set" compiler warnings. */
+    for (i = 1; ; i++) {
+	if (i > 1) {
+	    if (i == 2) {
+		Tcl_DStringInit(&dString);
 		Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
-		Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
+		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
 		actualName = Tcl_DStringValue(&dString);
 	    }
-	    suffix++;
-	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", suffix);
-	    i = 0;
-	} else {
-	    i++;
+	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE,
+		     "%d", i);
+	}
+	AppInfo info = RegFindName(regPtr, actualName);
+	if (info.pid == 0) {
+	    break;
 	}
     }
 
-    Tcl_DecrRefCount(resultObjPtr);
-    Tcl_ResetResult(interp);
-
     /*
-     * We have found a unique name. Now add it to the registry.
+     * We've now got a name to use. Store it in the name registry and in the
+     * local entry for this application.
      */
 
-    riPtr = (RegisteredInterp *)Tcl_Alloc(sizeof(RegisteredInterp));
-    riPtr->interp = interp;
-    riPtr->name = (char *)Tcl_Alloc(strlen(actualName) + 1);
-    riPtr->nextPtr = interpListPtr;
-    interpListPtr = riPtr;
+    RegAddName(regPtr, actualName, None);
+    RegClose(regPtr);
+    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
     strcpy(riPtr->name, actualName);
-
-    /*
-     * TODO: DeleteProc
-     */
-
-    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr, NULL);
-    if (Tcl_IsSafe(interp)) {
-	Tcl_HideCommand(interp, "send", "send");
+    if (actualName != name) {
+	Tcl_DStringFree(&dString);
     }
-    Tcl_DStringFree(&dString);
-
     return riPtr->name;
 }
+
 
 /*
  *--------------------------------------------------------------
  *
  * Tk_SendObjCmd --
  *
- *	This procedure is invoked to process the "send" Tcl command. See the
+ *	This function is invoked to process the "send" Tcl command. See the
  *	user documentation for details on what it does.
  *
  * Results:
@@ -319,10 +826,10 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    TCL_UNUSED(void *),	/* Not used */
-    Tcl_Interp *interp,		/* The interp we are sending from */
-    Tcl_Size objc,			/* Number of arguments */
-    Tcl_Obj *const objv[])	/* The arguments */
+    TCL_UNUSED(void *),	    /* Information about sender */
+    Tcl_Interp *interp,	    /* Current interpreter. */
+    Tcl_Size objc,	    /* Number of arguments. */
+    Tcl_Obj *const objv[])  /* Argument strings. */
 {
     enum {
 	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
@@ -331,12 +838,24 @@ Tk_SendObjCmd(
 	"-async",   "-displayof",   "--",  NULL
     };
     const char *stringRep, *destName;
-    /*int async = 0;*/
-    Tcl_Size i, firstArg;
-    int index;
+    TkWindow *winPtr;
+    //    Window commWindow;
     RegisteredInterp *riPtr;
-    Tcl_Obj *listObjPtr;
-    int result = TCL_OK;
+    int result, async, i, firstArg, index;
+    NameRegistry *regPtr;
+    Tcl_DString request, request2;
+    Tcl_Interp *localInterp;	/* Used when the interpreter to send the
+				 * command to is within the same process. */
+
+    /*
+     * Process options, if any.
+     */
+
+    async = 0;
+    winPtr = (TkWindow *) Tk_MainWindow(interp);
+    if (winPtr == NULL) {
+	return TCL_ERROR;
+    }
 
     /*
      * Process the command options.
@@ -350,9 +869,14 @@ Tk_SendObjCmd(
 		return TCL_ERROR;
 	    }
 	    if (index == SEND_ASYNC) {
-		/*async = 1;*/
+		++async;
 	    } else if (index == SEND_DISPLAYOF) {
-		i++;
+		winPtr = (TkWindow *) Tk_NameToWindow(interp,
+					  Tcl_GetString(objv[++i]),
+			(Tk_Window) winPtr);
+		if (winPtr == NULL) {
+		    return TCL_ERROR;
+		}
 	    } else /* if (index == SEND_LAST) */ {
 		i++;
 		break;
@@ -367,55 +891,45 @@ Tk_SendObjCmd(
 		"?-option value ...? interpName arg ?arg ...?");
 	return TCL_ERROR;
     }
-
     destName = Tcl_GetString(objv[i]);
-    firstArg = i + 1;
+    firstArg = i+1;
 
     /*
      * See if the target interpreter is local. If so, execute the command
-     * directly without going through the DDE server. The only tricky thing is
+     * directly without going through the X server. The only tricky thing is
      * passing the result from the target interpreter to the invoking
      * interpreter. Watch out: they could be the same!
      */
 
-    for (riPtr = interpListPtr; (riPtr != NULL)
-	    && (strcmp(destName, riPtr->name)); riPtr = riPtr->nextPtr) {
-	/*
-	 * Empty loop body.
-	 */
-    }
-
-    if (riPtr != NULL) {
-	/*
-	 * This command is to a local interp. No need to go through the
-	 * server.
-	 */
-
-	Tcl_Interp *localInterp;
-
+    for (riPtr = staticData.interpListPtr; riPtr != NULL;
+	    riPtr = riPtr->nextPtr) {
+	if (strcmp(riPtr->name, destName) != 0) {
+	    continue;
+	}
+	/* We have found our target interpreter */
 	Tcl_Preserve(riPtr);
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
 	if (firstArg + 1 == objc) {
-	    /*
-	     * This might be one of those cases where the new parser is
-	     * faster.
-	     */
-
-	    result = Tcl_EvalObjEx(localInterp, objv[firstArg],
-		    TCL_EVAL_DIRECT);
+	    result = Tcl_EvalEx(localInterp, Tcl_GetString(objv[firstArg]),
+				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	} else {
-	    listObjPtr = Tcl_NewListObj(0, NULL);
-	    for (i = firstArg; i < objc; i++) {
-		Tcl_ListObjAppendList(interp, listObjPtr, objv[i]);
+	    Tcl_DStringInit(&request);
+	    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]),
+			      TCL_INDEX_NONE);
+	    for (i = firstArg+1; i < objc; i++) {
+		Tcl_DStringAppend(&request, " ", 1);
+		Tcl_DStringAppend(&request, Tcl_GetString(objv[i]),
+				  TCL_INDEX_NONE);
 	    }
-	    Tcl_IncrRefCount(listObjPtr);
-	    result = Tcl_EvalObjEx(localInterp, listObjPtr, TCL_EVAL_DIRECT);
-	    Tcl_DecrRefCount(listObjPtr);
+	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request),
+				TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	    Tcl_DStringFree(&request);
+
 	}
 	if (interp != localInterp) {
 	    if (result == TCL_ERROR) {
-		/* Tcl_Obj *errorObjPtr; */
+		Tcl_Obj *errorObjPtr;
 
 		/*
 		 * An error occurred, so transfer error information from the
@@ -429,37 +943,71 @@ Tk_SendObjCmd(
 		Tcl_ResetResult(interp);
 		Tcl_AddErrorInfo(interp, Tcl_GetVar2(localInterp,
 			"errorInfo", NULL, TCL_GLOBAL_ONLY));
-		/* errorObjPtr = Tcl_GetObjVar2(localInterp, "errorCode", NULL,
+		errorObjPtr = Tcl_GetVar2Ex(localInterp, "errorCode", NULL,
 			TCL_GLOBAL_ONLY);
-		Tcl_SetObjErrorCode(interp, errorObjPtr); */
+		Tcl_SetObjErrorCode(interp, errorObjPtr);
 	    }
 	    Tcl_SetObjResult(interp, Tcl_GetObjResult(localInterp));
+	    Tcl_ResetResult(localInterp);
 	}
 	Tcl_Release(riPtr);
 	Tcl_Release(localInterp);
-    } else {
-	/*
-	 * TODO: This is a non-local request. Send the script to the server
-	 * and poll it for a result.
-	 */
+	return result;
     }
 
-    return result;
+    /*
+     * We are targetng an interpreter in another process.  First make sure the
+     * interpreter is registered.
+     */
+
+    regPtr = RegOpen(interp);
+    AppInfo info = RegFindName(regPtr, destName);
+    RegClose(regPtr);
+
+    if (info.pid == 0) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"no application named \"%s\"", destName));
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION", destName,
+		NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Send the command with args to the target interpreter
+     */
+
+    Tcl_DStringInit(&request2);
+    Tcl_DStringAppend(&request2, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
+    if (firstArg < objc - 1) {
+	for (i = firstArg+1; i < objc; i++) {
+	    Tcl_DStringAppend(&request2, " ", 1);
+	    Tcl_DStringAppend(&request2, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
+	}
+    }
+
+     // When async is 0, the call below blocks until a reply is received.
+     // Perhaps we should run a background thread to process timer events?
+
+    int code = sendAEDoScript(interp, info.pid, Tcl_DStringValue(&request2),
+			      async);
+    staticData.sendSerial++;
+    return code;
 }
+
 
 /*
  *----------------------------------------------------------------------
  *
  * TkGetInterpNames --
  *
- *	This procedure is invoked to fetch a list of all the interpreter names
- *	currently registered for the display of a particular window.
+ *	This function is invoked to fetch a list of all the interpreter names
+ *	currently registered on this host.
  *
  * Results:
- *	A standard Tcl return value. Interp->result will be set to hold a list
- *	of all the interpreter names defined for tkwin's display. If an error
- *	occurs, then TCL_ERROR is returned and interp->result will hold an
- *	error message.
+ *	A standard Tcl return value. The interp's result will be set to hold a
+ *	list of all the interpreter names defined on this host. If an
+ *	error occurs, then TCL_ERROR is returned and the interp's result will
+ *	hold an error message.
  *
  * Side effects:
  *	None.
@@ -470,53 +1018,224 @@ Tk_SendObjCmd(
 int
 TkGetInterpNames(
     Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    TCL_UNUSED(Tk_Window))		/* Window whose display is to be used for the
-				 * lookup. */
+    TCL_UNUSED(Tk_Window))
 {
-    Tcl_Obj *listObjPtr;
-    RegisteredInterp *riPtr;
-
-    listObjPtr = Tcl_NewListObj(0, NULL);
-    riPtr = interpListPtr;
-    while (riPtr != NULL) {
-	Tcl_ListObjAppendElement(interp, listObjPtr,
-		Tcl_NewStringObj(riPtr->name, TCL_INDEX_NONE));
-	riPtr = riPtr->nextPtr;
+    NameRegistry *regPtr;
+    Tcl_Obj *resultObj = Tcl_NewObj();
+    regPtr = RegOpen(interp);
+    Tcl_DictSearch search;
+    Tcl_Obj *keyTcl, *value;
+    int done = 0;
+    for (Tcl_DictObjFirst(
+	  interp, regPtr->appNameDict, &search, &keyTcl, &value, &done) ;
+	     !done ;
+	     Tcl_DictObjNext(&search, &keyTcl, &value, &done)) {
+	Tcl_ListObjAppendElement(NULL, resultObj, keyTcl);
     }
-
-    Tcl_SetObjResult(interp, listObjPtr);
+    RegClose(regPtr);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
+
 
 /*
  *--------------------------------------------------------------
  *
- * SendInit --
+ * TkSendCleanup --
  *
- *	This procedure is called to initialize the communication channels for
- *	sending commands and receiving results.
+ *	This function is called to free resources used by the communication
+ *	channels for sending commands and receiving results.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Sets up various data structures and windows.
+ *	Frees various data structures and windows.
  *
  *--------------------------------------------------------------
  */
 
-static int
-SendInit(
-    TCL_UNUSED(Tcl_Interp *))		/* Not used */
+void
+TkSendCleanup(
+    TCL_UNUSED(TkDisplay *)) /* dispPtr */
 {
+	ckfree((char *) appNameRegistryPath);
+}
+
+
+/*
+ *--------------------------------------------------------------
+ *
+ * DeleteProc --
+ *
+ *	This function is invoked by Tcl when the "send" command is deleted in
+ *	an interpreter. It unregisters the interpreter.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The interpreter given by riPtr is unregistered.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+DeleteProc(
+    void *clientData)	/* Info about registration */
+{
+    RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
+    RegisteredInterp *riPtr2;
+    NameRegistry *regPtr;
+    regPtr = RegOpen(riPtr->interp);
+    RegDeleteName(regPtr, riPtr->name);
+    RegClose(regPtr);
+
+    if (staticData.interpListPtr == riPtr) {
+	staticData.interpListPtr = riPtr->nextPtr;
+    } else {
+	for (riPtr2 = staticData.interpListPtr; riPtr2 != NULL;
+		riPtr2 = riPtr2->nextPtr) {
+	    if (riPtr2->nextPtr == riPtr) {
+		riPtr2->nextPtr = riPtr->nextPtr;
+		break;
+	    }
+	}
+    }
+    ckfree(riPtr->name);
+    riPtr->interp = NULL;
+    Tcl_EventuallyFree(riPtr, TCL_DYNAMIC);
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpTestsendCmd --
+ *
+ *	This function implements the "testsend" command. It provides a set of
+ *	functions for testing the "send" command and support function in
+ *	tkSend.c.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	Depends on option; see below.
+ *
+ *----------------------------------------------------------------------
+ */
+
+// We are not ready for the TestSendCmd yet.  The unix code is
+// below.  Much of it seems to involve inspecting X properties
+// which aren't being used here.
+#if 0
+
+int
+TkpTestsendCmd(
+    void *clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
+{
+    enum {
+	TESTSEND_BOGUS, TESTSEND_PROP, TESTSEND_SERIAL
+    };
+    static const char *const testsendOptions[] = {
+	"bogus",   "prop",   "serial",  NULL
+    };
+    TkWindow *winPtr = (TkWindow *)clientData;
+    int index;
+
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv,
+		"option ?arg ...?");
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], testsendOptions,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (index == TESTSEND_BOGUS) {
+	handler = Tk_CreateErrorHandler(winPtr->dispPtr->display, -1, -1, -1,
+		NULL, NULL);
+	Tk_DeleteErrorHandler(handler);
+    } else if (index == TESTSEND_PROP) {
+	int result, actualFormat;
+	unsigned long length, bytesAfter;
+	Atom actualType, propName;
+	char *property, **propertyPtr = &property, *p, *end;
+	Window w;
+
+	if ((objc != 4) && (objc != 5)) {
+		Tcl_WrongNumArgs(interp, 1, objv,
+			"prop window name ?value ?");
+	    return TCL_ERROR;
+	}
+	if (strcmp(Tcl_GetString(objv[2]), "root") == 0) {
+	    w = RootWindow(winPtr->dispPtr->display, 0);
+	} else if (strcmp(Tcl_GetString(objv[2]), "comm") == 0) {
+	    w = Tk_WindowId(winPtr->dispPtr->commTkwin);
+	} else {
+	    w = strtoul(Tcl_GetString(objv[2]), &end, 0);
+	}
+	propName = Tk_InternAtom((Tk_Window) winPtr, Tcl_GetString(objv[3]));
+	if (objc == 4) {
+	    property = NULL;
+	    result = GetWindowProperty(winPtr->dispPtr->display, w, propName,
+		    0, 100000, False, XA_STRING, &actualType, &actualFormat,
+		    &length, &bytesAfter, (unsigned char **) propertyPtr);
+	    if ((result == Success) && (actualType != None)
+		    && (actualFormat == 8) && (actualType == XA_STRING)) {
+		for (p = property; (unsigned long)(p-property) < length; p++) {
+		    if (*p == 0) {
+			*p = '\n';
+		    }
+		}
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, TCL_INDEX_NONE));
+	    }
+	    if (property != NULL) {
+		XFree(property);
+	    }
+	} else if (Tcl_GetString(objv[4])[0] == 0) {
+	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+		    -1, -1, -1, NULL, NULL);
+	    DeleteProperty(winPtr->dispPtr->display, w, propName);
+	    Tk_DeleteErrorHandler(handler);
+	} else {
+	    Tcl_DString tmp;
+
+	    Tcl_DStringInit(&tmp);
+	    for (p = Tcl_DStringAppend(&tmp, Tcl_GetString(objv[4]),
+		    (int) strlen(Tcl_GetString(objv[4]))); *p != 0; p++) {
+		if (*p == '\n') {
+		    *p = 0;
+		}
+	    }
+	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+		    -1, -1, -1, NULL, NULL);
+	    ChangeProperty(winPtr->dispPtr->display, w, propName, XA_STRING,
+		    8, PropModeReplace, (unsigned char*)Tcl_DStringValue(&tmp),
+		    p-Tcl_DStringValue(&tmp));
+	    Tk_DeleteErrorHandler(handler);
+	    Tcl_DStringFree(&tmp);
+	}
+    } else if (index == TESTSEND_SERIAL) {
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(staticData.sendSerial+1));
+    }
     return TCL_OK;
 }
+#endif
+
 
 /*
  * Local Variables:
  * mode: objc
+ * c-file-style: "k&r"
  * c-basic-offset: 4
- * fill-column: 79
- * coding: utf-8
+ * c-file-offsets: ((arglist-cont . 0))
+ * fill-column: 78
  * End:
  */
+

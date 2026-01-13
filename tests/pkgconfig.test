@@ -29,7 +29,7 @@ resetWindows
 # TESTS
 #
 
-test pkgconfig-1.1 {query keys} -constraints {nonwin} -body {
+test pkgconfig-1.1 {query keys} -constraints macOrUnix -body {
     lsort [::tk::pkgconfig list]
 } -match glob -result [list \
     *bindir,install bindir,runtime *demodir,install \

@@ -6,8 +6,8 @@
  *
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2015 Kevin Walzer.
- * Copyright © 2015 Marc Culler.
+ * Copyright © 2015 Kevin Walzer
+ * Copyright © 2015 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -75,6 +75,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 		TkMacOSXAssignNewKeyWindow(NULL, NULL);
 	    }
+	}
+	if (winPtr && Tk_IsMapped(winPtr)) {
+	    GenerateActivateEvents(winPtr, false);
 	}
     }
     /*
@@ -301,29 +304,24 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     return (winPtr ? NO : YES);
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
-	TKContentView *view = [window contentView];
-	// fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	if (@available(macOS 10.14, *)) {
-	    [view viewDidChangeEffectiveAppearance];
-	}
-#endif
+	fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
     }
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	// fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
+	fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
     }
 }
 
@@ -369,8 +367,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
+#if 0
+    // These can be useful for debugging.
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
+#endif
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
