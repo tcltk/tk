@@ -682,7 +682,7 @@ fixfocus
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
     unix  testwrapper
 } -setup {
-    eval interp delete [interp slaves]
+    eval interp delete [interp children]
 } -body {
     toplevel .t
     wm geometry .t +0+0
