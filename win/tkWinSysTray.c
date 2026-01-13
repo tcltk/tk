@@ -7,9 +7,9 @@
  *
  * Copyright © 1995-1996 Microsoft Corp.
  * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
- * Copyright © 2020 Kevin Walzer.
- * Copyright © 2020 Eric Boudaillier.
- * Copyright © 2020 Francois Vogel.
+ * Copyright © 2020 Kevin Walzer
+ * Copyright © 2020 Eric Boudaillier
+ * Copyright © 2020 Francois Vogel
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -17,14 +17,16 @@
 
 #include "tkInt.h"
 #include <windows.h>
-#include <shellapi.h>
 #include <shobjidl.h>
-#include <propvarutil.h> 
+#include <propvarutil.h>
 #include <propkey.h>
 #include "tkWin.h"
 #include "tkWinInt.h"
 #include "tkWinIco.h"
 
+#ifndef NOTIFYICON_VERSION_4
+#   define NOTIFYICON_VERSION_4 4
+#endif
 
 /*
  * Based extensively on the winico extension and sample code from Microsoft.
@@ -39,8 +41,8 @@
 
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
-    unsigned id;                /* Identifier for command;  used to
-				 * cancel it. */
+    int id;						/* Identifier for command;  used to
+								* cancel it. */
     Tcl_Obj *taskbar_txt;       /* text to display in the taskbar */
     Tcl_Interp *interp;         /* interp which created the icon */
     Tcl_Obj *taskbar_command;   /* command to eval if events in the taskbar
@@ -50,7 +52,7 @@ typedef struct IcoInfo {
     struct IcoInfo *nextPtr;
 } IcoInfo;
 
-/* Per-interp struture */
+/* Per-interp structure */
 typedef struct IcoInterpInfo {
     HWND hwnd;                  /* Handler window */
     int counter;                /* Counter for IcoInfo id generation */
@@ -290,7 +292,7 @@ NewIcon(
     icoPtr->hIcon = hIcon;
     icoPtr->taskbar_txt = NULL;
     icoPtr->interp = interp;
-    icoPtr->taskbar_command = NULL;
+	icoPtr->taskbar_command = NULL;
     icoPtr->taskbar_flags = 0;
     icoPtr->hwndFocus = NULL;
     icoPtr->nextPtr = icoInterpPtr->firstIcoPtr;
@@ -364,7 +366,7 @@ GetIcoPtr(
     Tcl_Obj *obj)
 {
     IcoInfo *icoPtr;
-    unsigned id;
+    int id;
     const char *string = Tcl_GetString(obj);
     const char *start;
     char *end;
@@ -744,7 +746,7 @@ TaskbarHandlerProc(
 	for (icoInterpPtr = firstIcoInterpPtr; icoInterpPtr != NULL; icoInterpPtr = icoInterpPtr->nextPtr) {
 	    if (icoInterpPtr->hwnd == hwnd) {
 		for (icoPtr = icoInterpPtr->firstIcoPtr; icoPtr != NULL; icoPtr = icoPtr->nextPtr) {
-		    if (icoPtr->id == wParam) {
+		    if (icoPtr->id == (int)wParam) {
 			if (icoPtr->taskbar_command != NULL) {
 			    TaskbarEval(icoPtr, wParam, lParam);
 			}
@@ -1081,76 +1083,76 @@ WinSysNotifyCmd(
     IcoInfo *icoPtr;
 
     if (objc != 5) {
-        Tcl_WrongNumArgs(interp, 1, objv, "notify id title detail");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "notify id title detail");
+	return TCL_ERROR;
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
-        Tcl_AppendResult(interp, "unknown subcommand \"",
-            Tcl_GetString(objv[1]), "\": must be notify", NULL);
-        return TCL_ERROR;
+	Tcl_AppendResult(interp, "unknown subcommand \"",
+	    Tcl_GetString(objv[1]), "\": must be notify", NULL);
+	return TCL_ERROR;
     }
 
     icoPtr = GetIcoPtr(interp, icoInterpPtr, objv[2]);
     if (icoPtr == NULL) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     /*
-     *  AppUserModelID setup. 
+     *  AppUserModelID setup.
      *  We only set the AppID *once* the first time this routine runs.
-     *  Setting it after the tray icon exists breaks callbacks + image. 
+     *  Setting it after the tray icon exists breaks callbacks + image.
      */
     static int appidSet = 0;
     if (!appidSet) {
-        Tk_Window mainWin = Tk_MainWindow(interp);
-        if (mainWin == NULL) {
-            Tcl_AppendResult(interp, "No main window available", NULL);
-            return TCL_ERROR;
-        }
+	Tk_Window mainWin = Tk_MainWindow(interp);
+	if (mainWin == NULL) {
+	    Tcl_AppendResult(interp, "No main window available", NULL);
+	    return TCL_ERROR;
+	}
 
-        if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
-            Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
-            return TCL_ERROR;
-        }
+	if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
+	    Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
+	    return TCL_ERROR;
+	}
 
-        const char *titleUtf = Tcl_GetStringResult(interp);
-        Tcl_DString dsTitle;
-        Tcl_DStringInit(&dsTitle);
-        WCHAR *titleW = Tcl_UtfToWCharDString(titleUtf, TCL_INDEX_NONE, &dsTitle);
+	const char *titleUtf = Tcl_GetStringResult(interp);
+	Tcl_DString dsTitle;
+	Tcl_DStringInit(&dsTitle);
+	WCHAR *titleW = Tcl_UtfToWCharDString(titleUtf, TCL_INDEX_NONE, &dsTitle);
 
-        WCHAR appid[256];
-        if (titleW[0]) {
-            wcsncpy_s(appid, 256, titleW, _TRUNCATE);
-        } else {
-            wcscpy_s(appid, 256, L"TclApp");
-        }
-        Tcl_DStringFree(&dsTitle);
+	WCHAR appid[256];
+	if (titleW[0]) {
+	    wcsncpy_s(appid, 256, titleW, _TRUNCATE);
+	} else {
+	    wcscpy_s(appid, 256, L"TclApp");
+	}
+	Tcl_DStringFree(&dsTitle);
 
-        /* Sanitize the title string. appID cannot support spaces. */
-        for (WCHAR *p = appid; *p; p++) {
-            if (*p == L' ' || *p == L'\t')
-                *p = L'_';
-        }
+	/* Sanitize the title string. appID cannot support spaces. */
+	for (WCHAR *p = appid; *p; p++) {
+	    if (*p == L' ' || *p == L'\t')
+		*p = L'_';
+	}
 
-        SetCurrentProcessExplicitAppUserModelID(appid);
-        appidSet = 1;
+	SetCurrentProcessExplicitAppUserModelID(appid);
+	appidSet = 1;
     }
 
     /*
-     * Send the notification balloon.   DO NOT touch uCallbackMessage 
+     * Send the notification balloon.   DO NOT touch uCallbackMessage
      * or NIF_MESSAGE - keep callbacks alive. Display
      * the system tray icon with the NIIF_USER flag - it will
      * display in the body of the notification window but NOT
      * the titlebar. This is a limitation of this API when customizing
      * the titlebar string with AppUserModelID.
      */
-	 
+
     NOTIFYICONDATAW ni;
     ZeroMemory(&ni, sizeof(ni));
     ni.cbSize = sizeof(ni);
     ni.hWnd  = icoInterpPtr->hwnd;
     ni.uID   = icoPtr->id;
-    ni.uFlags = NIF_INFO;        
+    ni.uFlags = NIF_INFO;
     ni.dwInfoFlags = NIIF_USER;
 
     Tcl_DString ds;
@@ -1167,12 +1169,12 @@ WinSysNotifyCmd(
     ni.uVersion = NOTIFYICON_VERSION_4;
 
     if (!Shell_NotifyIconW(NIM_MODIFY, &ni)) {
-        char buf[64];
-        sprintf_s(buf, sizeof(buf),
-                  "Notification failed (error %lu)",
-                  GetLastError());
-        Tcl_AppendResult(interp, buf, NULL);
-        return TCL_ERROR;
+	char buf[64];
+	sprintf_s(buf, sizeof(buf),
+		  "Notification failed (error %lu)",
+		  GetLastError());
+	Tcl_AppendResult(interp, buf, NULL);
+	return TCL_ERROR;
     }
 
     return TCL_OK;
@@ -1219,6 +1221,12 @@ WinIcoInit(
 	    icoInterpPtr, NULL);
     Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
 	    icoInterpPtr, NULL);
+	/*
+	* This command is defined in tkWinIco.c, but that file does not have
+	* any hooks for script command creation.
+	*/
+	Tcl_CreateObjCommand(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
+	    NULL, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
 	    WinIcoDestroy, icoInterpPtr);

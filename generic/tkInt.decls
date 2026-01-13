@@ -29,10 +29,10 @@ declare 0 {
 	    TkWindow *parentPtr)
 }
 declare 1 {
-    void TkBezierPoints(double control[], int numSteps, double *coordPtr)
+    void TkBezierPoints(double *control, int numSteps, double *coordPtr)
 }
 declare 2 {
-    void TkBezierScreenPoints(Tk_Canvas canvas, double control[],
+    void TkBezierScreenPoints(Tk_Canvas canvas, double *control,
 	    int numSteps, XPoint *xPointPtr)
 }
 #
@@ -68,7 +68,7 @@ declare 12 {
 }
 declare 13 {
     int TkCreateFrame(void *clientData, Tcl_Interp *interp,
-	    Tcl_Size objc, Tcl_Obj *const objv[], int type, const char *appName)
+	    Tcl_Size objc, Tcl_Obj *const *objv, int type, const char *appName)
 }
 declare 14 {
     Tk_Window TkCreateMainWindow(Tcl_Interp *interp,
@@ -130,8 +130,8 @@ declare 30 {
 	    int *hotXPtr, int *hotYPtr)
 }
 declare 31 {
-    void TkGetButtPoints(double p1[], double p2[],
-	    double width, int project, double m1[], double m2[])
+    void TkGetButtPoints(double *p1, double *p2,
+	    double width, int project, double *m1, double *m2)
 }
 declare 32 {
     TkCursor *TkGetCursorByName(Tcl_Interp *interp,
@@ -145,7 +145,7 @@ declare 34 {
     TkDisplay *TkGetDisplay(Display *display)
 }
 declare 35 {
-    Tcl_Size TkGetDisplayOf(Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[],
+    Tcl_Size TkGetDisplayOf(Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv,
 	    Tk_Window *tkwinPtr)
 }
 declare 36 {
@@ -155,8 +155,8 @@ declare 37 {
     int TkGetInterpNames(Tcl_Interp *interp, Tk_Window tkwin)
 }
 declare 38 {
-    int TkGetMiterPoints(double p1[], double p2[], double p3[],
-	    double width, double m1[], double m2[])
+    int TkGetMiterPoints(double *p1, double *p2, double *p3,
+	    double width, double *m1, double *m2)
 }
 declare 39 {
     void TkGetPointerCoords(Tk_Window tkwin, int *xPtr, int *yPtr)
@@ -185,14 +185,14 @@ declare 46 {
     const char *TkKeysymToString(KeySym keysym)
 }
 declare 47 {
-    int TkLineToArea(double end1Ptr[], double end2Ptr[], double rectPtr[])
+    int TkLineToArea(double *end1Ptr, double *end2Ptr, double *rectPtr)
 }
 declare 48 {
-    double TkLineToPoint(double end1Ptr[], double end2Ptr[], double pointPtr[])
+    double TkLineToPoint(double *end1Ptr, double *end2Ptr, double *pointPtr)
 }
 declare 49 {
     int TkMakeBezierCurve(Tk_Canvas canvas, double *pointPtr, int numPoints,
-	    int numSteps, XPoint xPoints[], double dblPoints[])
+	    int numSteps, XPoint *xPoints, double *dblPoints)
 }
 declare 50 {
     void TkMakeBezierPostscript(Tcl_Interp *interp,
@@ -208,8 +208,8 @@ declare 53 {
     int TkOvalToArea(double *ovalPtr, double *rectPtr)
 }
 declare 54 {
-    double TkOvalToPoint(double ovalPtr[],
-	    double width, int filled, double pointPtr[])
+    double TkOvalToPoint(double *ovalPtr,
+	    double width, int filled, double *pointPtr)
 }
 declare 55 {
     size_t TkpChangeFocus(TkWindow *winPtr, int force)
@@ -451,7 +451,7 @@ declare 149 {
 # TIP#168
 declare 150 {
     int TkMakeRawCurve(Tk_Canvas canvas, double *pointPtr, int numPoints,
-	    int numSteps, XPoint xPoints[], double dblPoints[])
+	    int numSteps, XPoint *xPoints, double *dblPoints)
 }
 declare 151 {
     void TkMakeRawCurvePostscript(Tcl_Interp *interp,
@@ -471,11 +471,11 @@ declare 154 {
 # entries needed only by tktest:
 declare 156 {
     int TkpTestembedCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
-	    Tcl_Obj *const objv[])
+	    Tcl_Obj *const *objv)
 }
 declare 157 {
     int TkpTesttextCmd(void *dummy, Tcl_Interp *interp, Tcl_Size objc,
-	    Tcl_Obj *const objv[])
+	    Tcl_Obj *const *objv)
 }
 declare 158 {
     int TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
@@ -511,7 +511,7 @@ declare 164 {
 }
 declare 165 {
     int TkTextXviewCmd(struct TkText *textPtr, Tcl_Interp *interp,
-	    Tcl_Size objc, Tcl_Obj *const objv[])
+	    Tcl_Size objc, Tcl_Obj *const *objv)
 }
 declare 166 {
     void TkTextChanged(struct TkSharedText *sharedTextPtr,
@@ -661,7 +661,7 @@ declare 44 x11 {
 # only needed by tktest:
 declare 45 x11 {
     int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
-	    Tcl_Obj *const objv[])
+	    Tcl_Obj *const *objv)
 }
 
 ################################
@@ -816,7 +816,7 @@ declare 44 win {
 # only needed by tktest:
 declare 45 win {
     int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
-	    Tcl_Obj *const objv[])
+	    Tcl_Obj *const *objv)
 }
 declare 47 win {
     Tk_Window TkpGetCapture(void)
@@ -1247,7 +1247,7 @@ declare 80 win {
 }
 declare 81 win {
     int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
-	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+	    int clip_y_origin, XRectangle *rectangles, int n, int ordering)
 }
 declare 82 win {
     Status XParseColor(Display *display, Colormap map,
@@ -1759,7 +1759,7 @@ declare 80 macosx {
 }
 declare 81 macosx {
     int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
-	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+	    int clip_y_origin, XRectangle *rectangles, int n, int ordering)
 }
 declare 82 macosx {
     Status XParseColor(Display *display, Colormap map,
