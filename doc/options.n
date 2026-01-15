@@ -195,6 +195,9 @@ Must be one of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 \fBLeft\fR means that the lines' left edges all line up, \fBcenter\fR
 means that the lines' centers are aligned, and \fBright\fR means
 that the lines' right edges line up.
+.OP \-locale locale Locale
+The locale which is used for determining word and character
+boundaries within the text. The default is "C".
 .OP \-orient orient Orient
 For widgets that can lay themselves out with either a horizontal
 or vertical orientation, such as scrollbars, this option specifies
