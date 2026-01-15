@@ -3368,14 +3368,9 @@ static const char * GetWinStyleName(
     Tk_Window tkwin)
 {
     Tcl_Interp *interp = Tk_Interp(tkwin);
-    Tcl_DString dsCmd;
-    Tcl_Obj *cmdObj;
+    Tcl_Obj *cmdObj = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
+    Tcl_AppendToObj(cmdObj, " style", -1);
 
-    Tcl_DStringInit(&dsCmd);
-    Tcl_DStringAppend(&dsCmd, Tk_PathName(tkwin), -1);
-    Tcl_DStringAppend(&dsCmd, " style", -1);
-
-    cmdObj = Tcl_DStringToObj(&dsCmd);
     Tcl_IncrRefCount(cmdObj);
     Tcl_EvalObjEx(interp, cmdObj, TCL_EVAL_GLOBAL);
     Tcl_DecrRefCount(cmdObj);

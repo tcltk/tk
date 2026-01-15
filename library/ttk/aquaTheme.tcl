@@ -12,14 +12,14 @@ namespace eval ttk::theme::aqua {
     proc setTreeviewAndListboxSelectColors {} {
 	scan $::tcl_platform(osVersion) "%d" majorOSVersion
 	if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
-	    set selectedBg    systemSelectedContentBackgroundColor
-	    set inactiveSelBg systemUnemphasizedSelectedContentBackgroundColor
+	    set selectedBg	systemSelectedContentBackgroundColor
+	    set inactiveSelBg	systemUnemphasizedSelectedContentBackgroundColor
 	} else {
-	    set selectedBg    systemHighlightAlternate
-	    set inactiveSelBg systemWindowBackgroundColor2
+	    set selectedBg	systemHighlightAlternate
+	    set inactiveSelBg	systemWindowBackgroundColor2
 	}
-	set selectedFg    systemAlternateSelectedControlTextColor
-	set inactiveSelFg systemSelectedControlTextColor
+	set selectedFg		systemAlternateSelectedControlTextColor
+	set inactiveSelFg	systemSelectedControlTextColor
 
 	# The treeview uses the "background" state for selected
 	# items when the the widget has lost the focus.  Hence the
