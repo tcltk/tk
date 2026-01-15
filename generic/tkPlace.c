@@ -719,6 +719,20 @@ ConfigureContent(
 
     if (containerWin == NULL) {
 	containerWin = Tk_Parent(contentPtr->tkwin);
+
+	/*
+	 * Tk bug 9ab6e37e: pack . after wm forget
+	 */
+
+	if (containerWin == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "no container window for %s",
+	            Tk_PathName(contentPtr->tkwin)));
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY",
+		    (char *) NULL);
+	    goto error;
+	}
+	
 	contentPtr->inTkwin = containerWin;
     }
 
