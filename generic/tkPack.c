@@ -949,11 +949,20 @@ GetPacker(
     Packer *packPtr;
     Tcl_HashEntry *hPtr;
     int isNew;
-    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    TkDisplay *dispPtr;
+
+    /*
+     * Tk bug 9ab6e37e: pack . after wm forget
+     */
+
+    if (tkwin == NULL) {
+	return NULL;
+    }
 
     if (((TkWindow *) tkwin)->flags & TK_ALREADY_DEAD) {
 	return NULL;
     }
+    dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (!dispPtr->packInit) {
 	dispPtr->packInit = 1;
