@@ -342,7 +342,7 @@ test grid-6.6 {location (x)} -body {
     set result ""
     for {set x -10} { $x < 220} { incr x} {
 	set a [grid location . $x 0]
-	if {$a != $got} {
+	if {$a ne $got} {
 	    lappend result $x->$a
 	    set got $a
 	}
@@ -359,7 +359,7 @@ test grid-6.7 {location (y)} -body {
     set result ""
     for {set y -10} { $y < 110} { incr y} {
 	set a [grid location . 0 $y]
-	if {$a != $got} {
+	if {$a ne $got} {
 	    lappend result $y->$a
 	    set got $a
 	}
@@ -382,7 +382,7 @@ test grid-6.8 {location (weights)} -body {
     set result ""
     for {set y -10} { $y < 210} { incr y} {
 	set a [grid location . $y $y]
-	if {$a != $got} {
+	if {$a ne $got} {
 	    lappend result $y->$a
 	    set got $a
 	}
@@ -1438,8 +1438,8 @@ test grid-16.2 {layout weights (expanding)} -body {
     foreach i {0 1 2} {
 	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1]
-	grid columnconfigure . $i -weight [expr $i + 1]
+	grid rowconfigure . $i -weight [expr {$i + 1}]
+	grid columnconfigure . $i -weight [expr {$i + 1}]
     }
     grid propagate . 0
     . configure -width 500 -height 300
@@ -1456,8 +1456,8 @@ test grid-16.3 {layout weights (shrinking)} -body {
     foreach i {0 1 2} {
 	frame .$i -bg gray -width 100 -height 75 -bd 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1]
-	grid columnconfigure . $i -weight [expr $i + 1]
+	grid rowconfigure . $i -weight [expr {$i + 1}]
+	grid columnconfigure . $i -weight [expr {$i + 1}]
     }
     grid propagate . 0
     . configure -width 200 -height 150
@@ -1474,8 +1474,8 @@ test grid-16.4 {layout weights (shrinking with minsize)} -body {
     foreach i {0 1 2} {
 	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1] -minsize 45
-	grid columnconfigure . $i -weight [expr $i + 1] -minsize 65
+	grid rowconfigure . $i -weight [expr {$i + 1}] -minsize 45
+	grid columnconfigure . $i -weight [expr {$i + 1}] -minsize 65
     }
     grid propagate . 0
     . configure -width 200 -height 150
@@ -1510,8 +1510,8 @@ test grid-16.6 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2} {
 	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1] -minsize 52
-	grid columnconfigure . $i -weight [expr $i + 1] -minsize 69
+	grid rowconfigure . $i -weight [expr {$i + 1}] -minsize 52
+	grid columnconfigure . $i -weight [expr {$i + 1}] -minsize 69
     }
     grid propagate . 0
     . configure -width 200 -height 150

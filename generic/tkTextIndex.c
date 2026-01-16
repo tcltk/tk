@@ -1730,14 +1730,14 @@ TkTextIndex *
 TkrTextMakeByteIndex(
     TkTextBTree tree,		/* Tree that lineIndex and byteIndex refer TkTextBTree tree, to. */
     const TkText *textPtr,	/* Client that lineIndex and byteIndex refer to, can be NULL. */
-    int lineIndex,		/* Index of desired line (0 means first line of text). */
+    Tcl_Size lineIndex,		/* Index of desired line (0 means first line of text). */
     Tcl_Size byteIndex,		/* Byte index of desired character. */
     TkTextIndex *indexPtr)	/* Structure to fill in. */
 {
     TkTextSegment *segPtr;
     TkTextSection *sectionPtr;
     TkTextLine *linePtr;
-    int index, nextIndex;
+    Tcl_Size index, nextIndex;
 
     TkTextIndexClear2(indexPtr, (TkText *) textPtr, tree);
 

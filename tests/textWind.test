@@ -786,7 +786,7 @@ test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -setup
     destroy .t.f
     proc bgerror args {
 	global msg
-	if {$msg == ""} {
+	if {$msg eq ""} {
 	    lappend msg $args
 	}
     }

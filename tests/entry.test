@@ -3030,7 +3030,7 @@ test entry-18.1 {Entry widget vs hiding} -setup {
     destroy .e
     set res1 [list [winfo children .] [interp hidden]]
     set res2 [list {} $l]
-    expr {$res1 == $res2}
+    expr {$res1 eq $res2}
 } -result 1
 
 ##

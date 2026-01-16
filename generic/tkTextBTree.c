@@ -2197,12 +2197,12 @@ GetLastLine(
  *----------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkrBTreeNumLines(
     TkTextBTree tree,		/* Information about tree. */
     const TkText *textPtr)	/* Relative to this client of the B-tree. */
 {
-    int count;
+    Tcl_Size count;
 
     if (textPtr) {
 	count = TkBTreeLinesTo(tree, NULL, TkBTreeGetLastLine(textPtr), NULL);

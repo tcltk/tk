@@ -316,7 +316,7 @@ test canvText-6.3 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor w; .c bbox test] \
-	      eq "-1 [expr -$ay/2] [expr $ax+1] [expr $ay/2]"}
+	      eq "-1 [expr {-$ay/2}] [expr {$ax+1}] [expr {$ay/2}]"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -329,7 +329,7 @@ test canvText-6.4 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor sw; .c bbox test] \
-	      eq "-1 -$ay [expr $ax+1] 0"}
+	      eq "-1 -$ay [expr {$ax+1}] 0"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -342,7 +342,7 @@ test canvText-6.5 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuartz
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor s; .c bbox test] \
-	      eq "[expr -$ax/2-1] -$ay [expr $ax/2+1] 0"}
+	      eq "[expr {-$ax/2-1}] -$ay [expr {$ax/2+1}] 0"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -355,7 +355,7 @@ test canvText-6.6 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor se; .c bbox test] \
-	      eq "[expr -$ax-1] -$ay 1 0"}
+	      eq "[expr {-$ax-1}] -$ay 1 0"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -368,7 +368,7 @@ test canvText-6.7 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor e; .c bbox test]\
-	      eq "[expr -$ax-1] [expr -$ay/2] 1 [expr $ay/2]"}
+	      eq "[expr {-$ax-1}] [expr {-$ay/2}] 1 [expr {$ay/2}]"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -381,7 +381,7 @@ test canvText-6.8 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor ne; .c bbox test] \
-	      eq "[expr -$ax-1] 0 1 $ay"}
+	      eq "[expr {-$ax-1}] 0 1 $ay"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -394,7 +394,7 @@ test canvText-6.9 {ComputeTextBbox procedure} -constraints {fonts failsOnXQuartz
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor center; .c bbox test] \
-	      eq "[expr -$ax/2-1] [expr -$ay/2] [expr $ax/2+1] [expr $ay/2]"}
+	      eq "[expr {-$ax/2-1}] [expr {-$ay/2}] [expr {$ax/2+1}] [expr {$ay/2}]"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -900,7 +900,7 @@ end
     .c config -height 300 -highlightthickness 0 -bd 0
     update
     .c create text 100 100 -tags test
-    .c itemconfig test -font $font -text "00000000" -width [expr 3*$ax]
+    .c itemconfig test -font $font -text "00000000" -width [expr {3*$ax}]
     .c itemconfig test -anchor n -fill black
     set x [.c postscript]
     set x [string range $x [string first "findfont " $x] end]
@@ -917,7 +917,7 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} -setup {
     set y2 [lindex $bbox 3]
     incr y2
     update
-    .c find enclosed 99 99 [expr $x2 + 1] [expr $y2 + 1]
+    .c find enclosed 99 99 [expr {$x2 + 1}] [expr {$y2 + 1}]
 } -cleanup {
     destroy .c
     unset -nocomplain bbox x2 y2
