@@ -702,7 +702,7 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
     .m2 add command -label foo
     . configure -menu .m1
     foreach w [winfo children .] {
-	if {[$w cget -type] == "menubar"} {
+	if {[$w cget -type] eq "menubar"} {
 	    break
 	}
     }

@@ -966,7 +966,7 @@ TkCreateMainWindow(
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
 #ifndef TCL_NO_DEPRECATED
 	    } else if (!cmdInfo.objClientData) {
-		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+		mainPtr->tclUpdateObjProc = (void *)cmdInfo.objProc;
 #endif /* TCL_NO_DEPRECATED */
 	    }
 	}

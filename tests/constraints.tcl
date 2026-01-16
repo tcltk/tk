@@ -1,8 +1,7 @@
 # constraints.tcl --
 #
-# This file is sourced by each test file when invoking "tcltest::loadTestedCommands".
-# It defines test constraints that are used by several test files in the
-# Tk test suite.
+# This file is sourced into each test file by "main.tcl". It defines test
+# constraints that are used by several test files in the Tk test suite.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -12,7 +11,7 @@ namespace import -force tcltest::testConstraint
 #
 # OPERATING SYSTEM
 #
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnCILinux [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 if {$tcl_platform(os) eq "Darwin"} {
     scan $tcl_platform(osVersion) "%d" macosVersion
 }
@@ -77,7 +76,6 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
 }
 
 testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
-testConstraint withoutXft [expr {![testConstraint withXft]}]
 unset fs
 
 # Expected results of some tests on Linux rely on availability of the "times"
@@ -152,7 +150,6 @@ testConstraint defaultPseudocolor8 [expr {
 #
 # VARIOUS
 #
-testConstraint userInteraction 0
 testConstraint nonUnixUserInteraction [expr {
     [testConstraint userInteraction] ||
     ([testConstraint unix] && [testConstraint notAqua])

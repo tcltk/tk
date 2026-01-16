@@ -6,8 +6,8 @@
 
 # NOTE
 #
-# This test file is platform-indifferent. Tests regarding the message boxes
-# that are specific to the windows platform go into the test file winMsgBox.test.
+# This test file is platform-indifferent. Tests regarding message boxes that
+# are specific to the windows platform go into the test file winMsgBox.test.
 #
 
 #

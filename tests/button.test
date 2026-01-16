@@ -6,6 +6,14 @@
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
+# NOTE
+#
+# This test file is platform-indifferent. Tests regarding these widgets that
+# are specific to the unix platform (this includes macOS) go into the test file
+# unixButton.test. Tests regarding these widgets that are specific to the windows
+# platform go into the test file winButton.test.
+#
+
 #
 # TESTFILE INITIALIZATION
 #
