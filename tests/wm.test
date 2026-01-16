@@ -2609,6 +2609,13 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     unset res
 } -result {pack {} wm {}}
 
+test wm-forget-3 {bug [9ab6e37e1ac] - [wm forget] segfault} -setup {
+    destroy .l .f.b .f
+    set res {}
+} -body {
+    wm forget .
+} -returnCodes error -result {window "." can not be forgotten}
+
 #
 # TESTFILE CLEANUP
 #
