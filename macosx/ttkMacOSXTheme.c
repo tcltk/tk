@@ -3369,9 +3369,9 @@ static const char * GetWinStyleName(
 {
     Tcl_Interp *interp = Tk_Interp(tkwin);
     Tcl_Obj *cmdObj = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
-    Tcl_AppendToObj(cmdObj, " style", -1);
 
     Tcl_IncrRefCount(cmdObj);
+    Tcl_AppendToObj(cmdObj, " style", -1);
     Tcl_EvalObjEx(interp, cmdObj, TCL_EVAL_GLOBAL);
     Tcl_DecrRefCount(cmdObj);
 
