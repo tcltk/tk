@@ -3622,8 +3622,17 @@ WmForgetCmd(
     if (Tk_IsTopLevel(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
-	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
-	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+
+	/*
+	 * Tk bug 9ab6e37e: pack . after wm forget
+	 */
+
+	if ((Tk_Window)winPtr->parentPtr != NULL) {
+	    Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+	    RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	} else {
+	    RemapWindows(winPtr, NULL);
+	}
 
 	/*
 	 * Make sure wm no longer manages this window
