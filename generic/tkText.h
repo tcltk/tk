@@ -443,7 +443,7 @@ typedef struct TkTextSearch {
 				 * this segment. */
     TkTextTag *tagPtr;		/* Tag to search for (or tag found, if allTags
 				 * is non-zero). */
-    int linesLeft;		/* Lines left to search (including curIndex
+    Tcl_Size linesLeft;		/* Lines left to search (including curIndex
 				 * and stopIndex). When this becomes <= 0 the
 				 * search is over. */
     int allTags;		/* Non-zero means ignore tag check: search for
@@ -895,7 +895,7 @@ typedef struct TkTextElideInfo {
     int elide;			/* Is the state currently elided. */
     Tcl_Size elidePriority;			/* Tag priority controlling elide state. */
     TkTextSegment *segPtr;	/* Segment to look at next. */
-    int segOffset;		/* Offset of segment within line. */
+    Tcl_Size segOffset;		/* Offset of segment within line. */
     int deftagCnts[LOTSA_TAGS];
     TkTextTag *deftagPtrs[LOTSA_TAGS];
     int *tagCnts;		/* 0 or 1 depending if the tag with that
@@ -997,7 +997,7 @@ MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkTextBTree tree,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr);
 MODULE_SCOPE Tcl_Size	TkBTreeEpoch(TkTextBTree tree);
 MODULE_SCOPE TkTextLine *TkBTreeFindLine(TkTextBTree tree,
-			    const TkText *textPtr, int line);
+			    const TkText *textPtr, Tcl_Size line);
 MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,
 			    const TkText *textPtr, int pixels,
 			    int *pixelOffset);
@@ -1005,7 +1005,7 @@ MODULE_SCOPE TkTextTag **TkBTreeGetTags(const TkTextIndex *indexPtr,
 			    const TkText *textPtr, Tcl_Size *numTagsPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree,
 			    TkTextIndex *indexPtr, const char *string);
-MODULE_SCOPE int	TkBTreeLinesTo(const TkText *textPtr,
+MODULE_SCOPE Tcl_Size	TkBTreeLinesTo(const TkText *textPtr,
 			    TkTextLine *linePtr);
 MODULE_SCOPE int	TkBTreePixelsTo(const TkText *textPtr,
 			    TkTextLine *linePtr);
@@ -1066,7 +1066,7 @@ MODULE_SCOPE TkTextTabArray *TkTextGetTabs(Tcl_Interp *interp,
 MODULE_SCOPE void	TkTextFindDisplayLineEnd(TkText *textPtr,
 			    TkTextIndex *indexPtr, int end, int *xOffset);
 MODULE_SCOPE void	TkTextIndexBackChars(const TkText *textPtr,
-			    const TkTextIndex *srcPtr, int count,
+			    const TkTextIndex *srcPtr, Tcl_Size count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE int	TkTextIndexCmp(const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
@@ -1078,7 +1078,7 @@ MODULE_SCOPE int	TkTextIndexCount(const TkText *textPtr,
 			    const TkTextIndex *index2Ptr,
 			    TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexForwChars(const TkText *textPtr,
-			    const TkTextIndex *srcPtr, int count,
+			    const TkTextIndex *srcPtr, Tcl_Size count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x,
 			    TkTextIndex *indexPtr);
@@ -1101,8 +1101,8 @@ MODULE_SCOPE int	TkTextMakePixelIndex(TkText *textPtr,
 MODULE_SCOPE void	TkTextInvalidateLineMetrics(
 			    TkSharedText *sharedTextPtr, TkText *textPtr,
 			    TkTextLine *linePtr, int lineCount, TkTextInvalidateAction action);
-MODULE_SCOPE int	TkTextUpdateLineMetrics(TkText *textPtr, int lineNum,
-			    int endLine, int doThisMuch);
+MODULE_SCOPE int	TkTextUpdateLineMetrics(TkText *textPtr, Tcl_Size lineNum,
+			    Tcl_Size endLine, int doThisMuch);
 MODULE_SCOPE int	TkTextUpdateOneLine(TkText *textPtr,
 			    TkTextLine *linePtr, int pixelHeight,
 			    TkTextIndex *indexPtr, int partialCalc);

@@ -3198,8 +3198,8 @@ GenerateWidgetViewSyncEvent(
 int
 TkTextUpdateLineMetrics(
     TkText *textPtr,		/* Information about widget. */
-    int lineNum,		/* Start at this line. */
-    int endLine,		/* Go no further than this line. */
+    Tcl_Size lineNum,		/* Start at this line. */
+    Tcl_Size endLine,		/* Go no further than this line. */
     int doThisMuch)		/* How many lines to check, or how many 10s of
 				 * lines to recalculate. If '-1' then do
 				 * everything in the range (which may take a
@@ -3262,7 +3262,7 @@ TkTextUpdateLineMetrics(
 	    if (tkTextDebug) {
 		char buffer[4 * TCL_INTEGER_SPACE + 3];
 
-		snprintf(buffer, sizeof(buffer), "%d %d %d %d",
+		snprintf(buffer, sizeof(buffer), "%" TCL_SIZE_MODIFIER "d %" TCL_SIZE_MODIFIER "d %d %d",
 			lineNum, endLine, totalLines, count);
 		LOG("tk_textInvalidateLine", buffer);
 	    }
@@ -4132,7 +4132,7 @@ TkTextUpdateOneLine(
 	    Tcl_Panic("Mustn't ever update line height of last artificial line");
 	}
 
-	snprintf(buffer, sizeof(buffer), "%d %d", TkBTreeLinesTo(textPtr,linePtr), pixelHeight);
+	snprintf(buffer, sizeof(buffer), "%" TCL_SIZE_MODIFIER "d %d", TkBTreeLinesTo(textPtr,linePtr), pixelHeight);
 	LOG("tk_textNumPixels", buffer);
     }
     if (textPtr->dInfoPtr->scrollbarTimer == NULL) {

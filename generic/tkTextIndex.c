@@ -29,9 +29,11 @@
  * Modifiers for index parsing: 'display', 'any' or nothing.
  */
 
-#define TKINDEX_NONE	0
-#define TKINDEX_DISPLAY	1
-#define TKINDEX_ANY	2
+typedef enum {
+    TKINDEX_NONE,
+    TKINDEX_DISPLAY,
+    TKINDEX_ANY
+} indexModifier;
 
 /*
  * Forward declarations for functions defined later in this file:
@@ -384,15 +386,15 @@ TkTextMakeByteIndex(
     TkTextBTree tree,	/* Tree that lineIndex and byteIndex refer
 				 * to. */
     const TkText *textPtr,
-    int lineIndex,		/* Index of desired line (0 means first line
+    Tcl_Size lineIndex,		/* Index of desired line (0 means first line
 				 * of text). */
     Tcl_Size byteIndex,		/* Byte index of desired character. */
     TkTextIndex *indexPtr)	/* Structure to fill in. */
 {
     TkTextSegment *segPtr;
-    int index;
+    Tcl_Size index;
     const char *p, *start;
-    int ch;
+    Tcl_UniChar ch;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -1133,7 +1135,7 @@ TkTextPrintIndex(
 	charIndex += numBytes;
     }
 
-    return snprintf(string, TK_POS_CHARS, "%d.%" TCL_SIZE_MODIFIER "d",
+    return snprintf(string, TK_POS_CHARS, "%" TCL_SIZE_MODIFIER "d.%" TCL_SIZE_MODIFIER "d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
 
@@ -1220,7 +1222,8 @@ ForwBack(
 {
     const char *p, *units;
     char *end;
-    int count, lineIndex, modifier;
+    int count, lineIndex;
+    indexModifier modifier;
     size_t length;
 
     /*
@@ -1547,7 +1550,7 @@ void
 TkTextIndexForwChars(
     const TkText *textPtr,	/* Overall information about text widget. */
     const TkTextIndex *srcPtr,	/* Source index. */
-    int charCount,		/* How many characters forward to move. May
+    Tcl_Size charCount,		/* How many characters forward to move. May
 				 * be negative. */
     TkTextIndex *dstPtr,	/* Destination index: gets modified. */
     TkTextCountType type)	/* The type of item to count */
@@ -1557,9 +1560,9 @@ TkTextIndexForwChars(
     TkTextElideInfo *infoPtr = NULL;
     Tcl_Size byteOffset;
     char *start, *end, *p;
-    int ch;
+    Tcl_UniChar ch;
     bool elide = false;
-    int checkElided = (type & COUNT_DISPLAY);
+    bool checkElided = (type & COUNT_DISPLAY) != 0;
 
     if (charCount < 0) {
 	TkTextIndexBackChars(textPtr, srcPtr, -charCount, dstPtr, type);
@@ -2076,7 +2079,7 @@ void
 TkTextIndexBackChars(
     const TkText *textPtr,	/* Overall information about text widget. */
     const TkTextIndex *srcPtr,	/* Source index. */
-    int charCount,		/* How many characters backward to move. May
+    Tcl_Size charCount,		/* How many characters backward to move. May
 				 * be negative. */
     TkTextIndex *dstPtr,	/* Destination index: gets modified. */
     TkTextCountType type)	/* The type of item to count */
@@ -2299,7 +2302,7 @@ StartEnd(
     const char *p;
     size_t length;
     TkTextSegment *segPtr;
-    int modifier;
+    indexModifier modifier;
 
     /*
      * Find the end of the modifier word.
