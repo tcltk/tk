@@ -74,7 +74,7 @@ struct AtkRoleMap roleMap[] = {
     {"Canvas", ATK_ROLE_CANVAS},
     {"Scrollbar", ATK_ROLE_SCROLL_BAR},
     {"Toggleswitch", ATK_ROLE_TOGGLE_BUTTON},
-    {NULL, 0}
+    {NULL, ATK_ROLE_INVALID }
 };
 
 
@@ -444,7 +444,7 @@ static AtkRole GetAtkRoleForWidget(Tk_Window win)
 	if (attrs) {
 	    Tcl_HashEntry *roleEntry = Tcl_FindHashEntry(attrs, "role");
 	    if (roleEntry) {
-		const char *result = Tcl_GetString(Tcl_GetHashValue(roleEntry));
+		const char *result = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(roleEntry));
 		if (result) {
 		    for (int i = 0; roleMap[i].tkrole != NULL; i++) {
 			if (strcmp(roleMap[i].tkrole, result) == 0) {
@@ -509,7 +509,7 @@ static gchar *GetAtkNameForWidget(Tk_Window win)
     Tcl_HashEntry *nameEntry = Tcl_FindHashEntry(attrs, "name");
     if (!nameEntry) return NULL;
 
-    const char *name = Tcl_GetString(Tcl_GetHashValue(nameEntry));
+    const char *name = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(nameEntry));
     return name ? g_utf8_make_valid(name, -1) : NULL;
 }
 
@@ -546,7 +546,7 @@ static gchar *GetAtkDescriptionForWidget(Tk_Window win)
     Tcl_HashEntry *descriptionEntry = Tcl_FindHashEntry(attrs, "description");
     if (!descriptionEntry) return NULL;
 
-    const char *description = Tcl_GetString(Tcl_GetHashValue(descriptionEntry));
+    const char *description = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(descriptionEntry));
     return description ? g_utf8_make_valid(description, -1) : NULL;
 }
 
@@ -601,7 +601,7 @@ static AtkStateSet *tk_ref_state_set(AtkObject *obj)
 		if (attrs) {
 		    Tcl_HashEntry *stateEntry = Tcl_FindHashEntry(attrs, "state");
 		    if (stateEntry) {
-			const char *state = Tcl_GetString(Tcl_GetHashValue(stateEntry));
+			const char *state = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(stateEntry));
 			if (state && (strcmp(state, "disabled") == 0 || strcmp(state, "readonly") == 0)) {
 			    is_editable = 0;
 			}
@@ -675,7 +675,7 @@ static gchar *GetAtkValueForWidget(Tk_Window win)
 
     if (!valueEntry) return NULL;
 
-    const char *value = Tcl_GetString(Tcl_GetHashValue(valueEntry));
+    const char *value = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(valueEntry));
     return value ? g_utf8_make_valid(value, -1) : NULL;
 }
 
@@ -1417,7 +1417,7 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 static AtkObject *tk_util_get_root(void)
 {
     if (!tk_root_accessible) {
-	TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
+	TkAtkAccessible *acc = (TkAtkAccessible *)g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
 	tk_root_accessible = ATK_OBJECT(acc);
 	atk_object_initialize(tk_root_accessible, NULL);
 	/* Set proper name and role.  */
@@ -1441,7 +1441,7 @@ AtkObject *TkCreateAccessibleAtkObject(Tcl_Interp *interp, Tk_Window tkwin, cons
     AtkObject *existing = GetAtkObjectForTkWindow(tkwin);
     if (existing) return existing;
 
-    TkAtkAccessible *acc = g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
+    TkAtkAccessible *acc = (TkAtkAccessible *)g_object_new(TK_ATK_TYPE_ACCESSIBLE, NULL);
     acc->interp = interp;
     acc->tkwin = tkwin;
     acc->path = g_utf8_make_valid(path, -1);

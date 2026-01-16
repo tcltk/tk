@@ -884,7 +884,7 @@ AttribTableProc(
 
 	entryPtr = Tcl_FindHashEntry(tblData->tablePtr, tkwin);
 	if (entryPtr != NULL) {
-	    value = Tcl_GetHashValue(entryPtr);
+	    value = (AttribTableValue *)Tcl_GetHashValue(entryPtr);
 	}
 
 	if (objc == 3) {
@@ -983,7 +983,7 @@ AttribTableProc(
 	    if (entryPtr == NULL) {
 		resultPtr = Tcl_NewIntObj(0);
 	    } else {
-		value = Tcl_GetHashValue(entryPtr);
+		value = (AttribTableValue *)Tcl_GetHashValue(entryPtr);
 		if (objc == 3) {
 		    Tcl_Size size;
 
@@ -1019,7 +1019,7 @@ AttribTableProc(
 	}
 
 	resultPtr = Tcl_NewObj();
-	value = Tcl_GetHashValue(entryPtr);
+	value = (AttribTableValue *)Tcl_GetHashValue(entryPtr);
 	Tcl_DictObjFirst(interp, value->dictPtr, &search, &key, NULL, &done);
 	while (!done) {
 	    Tcl_ListObjAppendElement(NULL, resultPtr, key);
@@ -1045,7 +1045,7 @@ AttribTableProc(
 		entryPtr != NULL; entryPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_Size size;
 
-	    value = Tcl_GetHashValue(entryPtr);
+	    value = (AttribTableValue *)Tcl_GetHashValue(entryPtr);
 	    Tcl_DictObjSize(interp, value->dictPtr, &size);
 	    if (size != 0) {
 		Tcl_ListObjAppendElement(NULL, resultPtr,
@@ -1075,7 +1075,7 @@ AttribTableDeleteProc(
 
     for (entryPtr = Tcl_FirstHashEntry(tblData->tablePtr, &search);
 	    entryPtr != NULL; entryPtr = Tcl_NextHashEntry(&search)) {
-	AttribTableValue *value = Tcl_GetHashValue(entryPtr);
+	AttribTableValue *value = (AttribTableValue *)Tcl_GetHashValue(entryPtr);
 
 	/*
 	 * Delete the event handler associated with value->tkwin.
