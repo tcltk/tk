@@ -47,7 +47,8 @@ test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4
     unset -nocomplain result
     # Beware that some window managers don't allow toplevel sizes less than a
     # certain minimum. Among the following windowing systems/window managers:
-    # x11: no wm, e16, fluxbox, fvwm, icewm, KDE/Plasma, metacity, WindowMaker, Xvwm
+    # x11: no wm (i.e. the bare dsiplay server), e16, fluxbox, fvwm, icewm,
+    #      KDE/Plasma, metacity, Openbox, TWM, WindowMaker, Xvwm
     # win32, macOS/aqua, those exhibiting such a minimum sizes are:
     #
     # ws/wm		width	height
