@@ -158,6 +158,7 @@ namespace eval ::tk::test::generic {
 	. configure -width 200 -height 200
 	wm geometry . +100+100
 	wm geometry . {}
+	pack propagate . 1
 	update
     }
 

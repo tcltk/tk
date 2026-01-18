@@ -45,20 +45,32 @@ assert {"testutils" in [info procs testutils]}
 
 test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -setup {
     unset -nocomplain result
+    # Beware that some window managers don't allow toplevel sizes less than a
+    # certain minimum. Among the following windowing systems/window managers:
+    # x11: no wm, e16, fluxbox, fvwm, icewm, KDE/Plasma, metacity, WindowMaker, Xvwm
+    # win32, macOS/aqua, those exhibiting such a minimum sizes are:
+    #
+    # ws/wm		width	height
+    # -------------------------------------------------
+    # win32		116	1
+    # x11, KDE/Plasma	8	33
+    # x11, WindowMaker	5	5
+    #
+    # Don't use anything less than these for this test.
+    #
 } -body {
-    . configure -width 123 -height 123
+    . configure -width 151 -height 94
     wm geometry . +123+123
-    update
     resetWindows
     lappend result [wm geometry .]
-    pack [frame .f -width 50 -height 30 -bg blue]
+    pack [frame .f -width 137 -height 109 -bg blue]
     update
     lappend result [winfo width .] [winfo height .]
 } -cleanup {
     unset -nocomplain result
     destroy .f
     resetWindows
-} -result {200x200+100+100 50 30}
+} -result {200x200+100+100 137 109}
 
 #
 # testutils command section 1: invalid invocations
