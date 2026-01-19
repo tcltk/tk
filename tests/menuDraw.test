@@ -691,6 +691,26 @@ test menuDraw-16.6 {TkPostSubMenu} -constraints {
 } -cleanup {
     deleteWindows
 } -result {}
+test menuDraw-16.7 {TkPostSubMenu [bug 7f67bb4054]} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    .m1 add cascade -label test -menu .m1
+    .m1 post 100 100
+    .m1 postcascade 0
+} -returnCodes error -cleanup {
+    deleteWindows
+} -result {can not post cascade menu ".m1"}
+test menuDraw-16.8 {TkPostSubMenu [bug 7f67bb4054]} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    .m1 add cascade -label test -menu .m5
+    .m1 post 100 100
+    .m1 postcascade 0
+} -returnCodes error -cleanup {
+    deleteWindows
+} -result {cascade submenu ".m5" does not exist}
 
 
 test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
