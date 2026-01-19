@@ -937,39 +937,6 @@ MenuWidgetObjCmd(
 	if ((index < 0) || (menuPtr->entries[index]->type != CASCADE_ENTRY)) {
 	    result = TkPostSubmenu(interp, menuPtr, NULL);
 	} else {
-
-	    /*
-	     * Tk Ticket [7f67bb4054d6d7d9]: Recursive menu path check
-	     */
-
-	    const char *menuName = Tcl_GetString(objv[0]);
-	    const char *submenuName;
-	    Tcl_Obj *namePtr = menuPtr->entries[index]->namePtr;
-	    Tk_Window submenuWin;
-
-	    if (! namePtr) {
-		/* there's no "-menu" option set; return */
-		return TCL_OK;
-	    }
-
-	    submenuName = Tcl_GetString(namePtr);
-	    submenuWin = Tk_NameToWindow(NULL, submenuName, menuPtr->tkwin);
-
-	    if (! submenuWin) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"unknown cascade menu \"%s\"", submenuName));
-		Tcl_SetErrorCode(interp, "TK", "MENU", "CASCADE", "UNKNOWN",
-			menuName, NULL);
-		return TCL_ERROR;
-	    }
-	    if (Tk_Parent(submenuWin) != menuPtr->tkwin) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"cascade menu \"%s\" is not a child of \"%s\"",
-			 submenuName, menuName));
-		Tcl_SetErrorCode(interp, "TK", "MENU", "CASCADE", "NOCHILD",
-			menuName, NULL);
-		return TCL_ERROR;
-	    }
 	    result = TkPostSubmenu(interp, menuPtr, menuPtr->entries[index]);
 	}
 	break;

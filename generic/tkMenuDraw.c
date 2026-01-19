@@ -936,6 +936,30 @@ TkPostSubmenu(
 	 * Windows. [Bug 873613]
 	 */
 
+	/*
+	 * Tk Ticket [7f67bb4054d6d7d9]: Recursive menu path checks
+	 */
+	Tk_Window submenuWin = Tk_NameToWindow(interp,
+		Tcl_GetString(mePtr->namePtr), menuPtr->tkwin);
+	/* first, check that the cascade menu exists */
+	if (! submenuWin) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "cascade submenu \"%s\" does not exist",
+		    Tcl_GetString(mePtr->namePtr)));
+	    Tcl_SetErrorCode(interp, "TK", "MENU", "CASCADE", "NOWINDOW",
+		    Tk_PathName(menuPtr->tkwin), NULL);
+	    return TCL_ERROR;
+	}
+	/* then, check that the cascade menu is not the menu itself */
+	if (submenuWin == menuPtr->tkwin) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can not post cascade menu \"%s\"",
+		    Tk_PathName(submenuWin)));
+	    Tcl_SetErrorCode(interp, "TK", "MENU", "CASCADE", "SAMEWINDOW",
+		    Tk_PathName(menuPtr->tkwin), NULL);
+	    return TCL_ERROR;
+	}
+
 	Tk_GetRootCoords(menuPtr->tkwin, &x, &y);
 	AdjustMenuCoords(menuPtr, mePtr, &x, &y);
 
