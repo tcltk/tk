@@ -2036,9 +2036,9 @@ CheckLoop0(
 	    if (strcmp(name, parentName) == 0) {
 		return 1;
 	    }
-	    if ((menuPtr->masterMenuPtr != menuPtr) &&
-		    (menuPtr->masterMenuPtr->tkwin != NULL)) {
-		parentName = Tk_PathName(menuPtr->masterMenuPtr->tkwin);
+	    if ((menuPtr->mainMenuPtr != menuPtr) &&
+		    (menuPtr->mainMenuPtr->tkwin != NULL)) {
+		parentName = Tk_PathName(menuPtr->mainMenuPtr->tkwin);
 		if (strcmp(name, parentName) == 0) {
 		    return 1;
 		}
@@ -2064,12 +2064,12 @@ CheckLoop0(
 		}
 	    }
 	    if (cascadePtr->menuPtr != NULL) {
-		TkMenu *masterMenuPtr = cascadePtr->menuPtr->masterMenuPtr;
+		TkMenu *mainMenuPtr = cascadePtr->menuPtr->mainMenuPtr;
 
-		if ((masterMenuPtr != cascadePtr->menuPtr) &&
-			(masterMenuPtr->tkwin != NULL)) {
+		if ((mainMenuPtr != cascadePtr->menuPtr) &&
+			(mainMenuPtr->tkwin != NULL)) {
 		}
-		cascadeName = Tk_PathName(masterMenuPtr->tkwin);
+		cascadeName = Tk_PathName(mainMenuPtr->tkwin);
 		if ((strcmp(pathName, cascadeName) != 0) &&
 			CheckLoop0(interp, cascadeName, name)) {
 		    return 1;
@@ -2102,9 +2102,9 @@ if (CheckLoop0(interp, pathName, name)) {
 	}
     }
     pathName = NULL;
-    if ((menuPtr->masterMenuPtr != menuPtr) &&
-	    (menuPtr->masterMenuPtr->tkwin != NULL)) {
-	pathName = Tk_PathName(menuPtr->masterMenuPtr->tkwin);
+    if ((menuPtr->mainMenuPtr != menuPtr) &&
+	    (menuPtr->mainMenuPtr->tkwin != NULL)) {
+	pathName = Tk_PathName(menuPtr->mainMenuPtr->tkwin);
 	if (strcmp(name, pathName) == 0) {
 	    return 1;
 	}
