@@ -2036,6 +2036,13 @@ CheckLoop0(
 	    if (strcmp(name, parentName) == 0) {
 		return 1;
 	    }
+	    if ((menuPtr->masterMenuPtr != menuPtr) &&
+		    (menuPtr->masterMenuPtr->tkwin != NULL)) {
+		parentName = Tk_PathName(menuPtr->masterMenuPtr->tkwin);
+		if (strcmp(name, parentName) == 0) {
+		    return 1;
+		}
+	    }
 	}
     }
     if (menuRefPtr->parentEntryPtr != NULL) {
@@ -2056,6 +2063,19 @@ CheckLoop0(
 		    return 1;
 		}
 	    }
+	    if (cascadePtr->menuPtr != NULL) {
+		TkMenu *masterMenuPtr = cascadePtr->menuPtr->masterMenuPtr;
+
+		if ((masterMenuPtr != cascadePtr->menuPtr) &&
+			(masterMenuPtr->tkwin != NULL)) {
+		}
+		cascadeName = Tk_PathName(masterMenuPtr->tkwin);
+		if ((strcmp(pathName, cascadeName) != 0) &&
+			CheckLoop0(interp, cascadeName, name)) {
+		    return 1;
+		}
+	    }
+
 	    cascadePtr = cascadePtr->nextCascadePtr;
 	}
     }
@@ -2077,7 +2097,22 @@ CheckLoop(
 	}
     }
     if (pathName != NULL) {
-	return CheckLoop0(interp, pathName, name);
+if (CheckLoop0(interp, pathName, name)) {
+	    return 1;
+	}
+    }
+    pathName = NULL;
+    if ((menuPtr->masterMenuPtr != menuPtr) &&
+	    (menuPtr->masterMenuPtr->tkwin != NULL)) {
+	pathName = Tk_PathName(menuPtr->masterMenuPtr->tkwin);
+	if (strcmp(name, pathName) == 0) {
+	    return 1;
+	}
+    }
+    if (pathName != NULL) {
+	if (CheckLoop0(interp, pathName, name)) {
+	    return 1;
+	}
     }
     return 0;
 }
