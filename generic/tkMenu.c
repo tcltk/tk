@@ -320,11 +320,15 @@ enum options {
  * Prototypes for static functions in this file:
  */
 
+static int		CheckLoop(Tcl_Interp *interp, const char *name,
+			    TkMenu *menuPtr);
+static int		CheckLoop0(Tcl_Interp *interp, const char *pathName,
+			    const char *name);
 static int		CloneMenu(TkMenu *menuPtr, Tcl_Obj *newMenuName,
 			    Tcl_Obj *newMenuTypeString);
 static int		ConfigureMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
-static int		ConfigureMenuCloneEntries(TkMenu *menuPtr, int index,
+static int		ConfigureMenuCloneEntries(Tcl_Interp *interp, TkMenu *menuPtr, int index,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ConfigureMenuEntry(TkMenuEntry *mePtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
@@ -816,7 +820,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else {
-	    result = ConfigureMenuCloneEntries(menuPtr, index,
+	    result = ConfigureMenuCloneEntries(interp, menuPtr, index,
 		    objc-3, objv+3);
 	}
 	Tcl_Release(mePtr);
@@ -2001,6 +2005,86 @@ ConfigureMenuEntry(
 /*
  *----------------------------------------------------------------------
  *
+ * CheckLoop0, CheckLoop --
+ *
+ *	Checks for loops in use of -menu option in cascades.
+ *
+ * Results:
+ *	True when loop detected.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CheckLoop0(
+    Tcl_Interp *interp,		/* Used for lookups. */
+    const char *pathName,	/* Current menu to look for cascade. */
+    const char *name)		/* Value of -menu option to check. */
+{
+    TkMenuReferences *menuRefPtr;
+
+    menuRefPtr = TkFindMenuReferences(interp, pathName);
+    if (menuRefPtr == NULL) {
+	return 0;
+    }
+    if (menuRefPtr->menuPtr != NULL) {
+	TkMenu *menuPtr = menuRefPtr->menuPtr;
+	const char *parentName;
+
+	if (menuPtr->tkwin != NULL) {
+	    parentName = Tk_PathName(menuPtr->tkwin);
+	    if (strcmp(name, parentName) == 0) {
+		return 1;
+	    }
+	}
+    }
+    if (menuRefPtr->parentEntryPtr != NULL) {
+	TkMenuEntry *cascadePtr = menuRefPtr->parentEntryPtr;
+	const char *cascadeName;
+
+	while (cascadePtr != NULL) {
+	    cascadeName = Tcl_GetString(cascadePtr->namePtr);
+	    if ((strcmp(pathName, cascadeName) != 0) &&
+		    CheckLoop0(interp, cascadeName, name)) {
+		return 1;
+	    }
+	    if ((cascadePtr->menuPtr != NULL) &&
+		    (cascadePtr->menuPtr->tkwin != NULL)) {
+		cascadeName = Tk_PathName(cascadePtr->menuPtr->tkwin);
+		if ((strcmp(pathName, cascadeName) != 0) &&
+			CheckLoop0(interp, cascadeName, name)) {
+		    return 1;
+		}
+	    }
+	    cascadePtr = cascadePtr->nextCascadePtr;
+	}
+    }
+    return 0;
+}
+
+static int
+CheckLoop(
+    Tcl_Interp *interp,		/* Used for lookups. */
+    const char *name,		/* Value of -menu option to check. */
+    TkMenu *menuPtr)		/* Information about menu. */
+{
+    const char *pathName = NULL;
+
+    if (menuPtr->tkwin != NULL) {
+	pathName = Tk_PathName(menuPtr->tkwin);
+	if (strcmp(name, pathName) == 0) {
+	    return 1;
+	}
+    }
+    if (pathName != NULL) {
+	return CheckLoop0(interp, pathName, name);
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * ConfigureMenuCloneEntries --
  *
  *	Calls ConfigureMenuEntry for each menu in the clone chain.
@@ -2017,6 +2101,7 @@ ConfigureMenuEntry(
 
 static int
 ConfigureMenuCloneEntries(
+    Tcl_Interp *interp,		/* Current interpreter */
     TkMenu *menuPtr,		/* Information about whole menu. */
     int index,			/* Index of mePtr within menuPtr's entries. */
     Tcl_Size objc,			/* Number of valid entries in argv. */
@@ -2057,6 +2142,23 @@ ConfigureMenuCloneEntries(
 	    newCascadeName = Tcl_GetString(mePtr->namePtr);
 	} else {
 	    newCascadeName = NULL;
+	}
+
+	/*
+	 * Tk ticket 7f67bb4054d6d7d9: avoid menu loops
+	 */
+
+	if (newCascadeName != NULL) {
+	    if (CheckLoop(interp, newCascadeName, menuPtr)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"cannot add recursive cascade menu \"%s\"",
+			newCascadeName));
+		Tcl_SetErrorCode(interp, "TK", "MENU", "RECURSION",
+			(char *) NULL);
+		Tcl_DecrRefCount(mePtr->namePtr);
+		mePtr->namePtr = oldCascadePtr;
+		return TCL_ERROR;
+	    }
 	}
 
 	if ((oldCascadePtr == NULL) && (mePtr->namePtr == NULL)) {
@@ -2457,15 +2559,14 @@ MenuAddOrInsert(
      */
     for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
-
+	TkMenu *errorMenuPtr;
+	int i;
 	mePtr = MenuNewEntry(menuListPtr, index, type);
 	if (mePtr == NULL) {
 	    return TCL_ERROR;
 	}
 	if (ConfigureMenuEntry(mePtr, objc - offs, objv + offs) != TCL_OK) {
-	    TkMenu *errorMenuPtr;
-	    Tcl_Size i;
-
+meError:
 	    for (errorMenuPtr = menuPtr->mainMenuPtr;
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
@@ -2510,6 +2611,22 @@ MenuAddOrInsert(
 	 * cloned for every clone the main menu has. This is special case #2
 	 * in the comment at the top of this file.
 	 */
+
+	/*
+	 * Tk ticket 7f67bb4054d6d7d9: avoid menu loops
+	 */
+
+	if ((type == CASCADE_ENTRY) && (mePtr->namePtr != NULL)) {
+	    char *name = Tcl_GetString(mePtr->namePtr);
+
+	    if (CheckLoop(interp, name, menuListPtr)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"cannot add recursive cascade menu \"%s\"", name));
+		Tcl_SetErrorCode(interp, "TK", "MENU", "RECURSION",
+			(char *) NULL);
+		goto meError;
+	    }
+	}
 
 	if ((menuPtr != menuListPtr) && (type == CASCADE_ENTRY)) {
 	    if ((mePtr->namePtr != NULL)
@@ -3460,7 +3577,7 @@ TkGetMenuHashTable(
  *
  * Results:
  *	Returns a pointer to a menu reference structure. Should not be freed
- *	by calller; when a field of the reference is cleared,
+ *	by caller; when a field of the reference is cleared,
  *	TkFreeMenuReferences should be called.
  *
  * Side effects:
