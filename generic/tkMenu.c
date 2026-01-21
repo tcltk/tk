@@ -2068,11 +2068,11 @@ CheckLoop0(
 
 		if ((mainMenuPtr != cascadePtr->menuPtr) &&
 			(mainMenuPtr->tkwin != NULL)) {
-		}
-		cascadeName = Tk_PathName(mainMenuPtr->tkwin);
-		if ((strcmp(pathName, cascadeName) != 0) &&
-			CheckLoop0(interp, cascadeName, name)) {
-		    return 1;
+		    cascadeName = Tk_PathName(mainMenuPtr->tkwin);
+		    if ((strcmp(pathName, cascadeName) != 0) &&
+			    CheckLoop0(interp, cascadeName, name)) {
+			return 1;
+		    }
 		}
 	    }
 
