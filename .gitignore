@@ -58,6 +58,7 @@ unix/tk.pc
 unix/tclIndex
 win/Debug*
 win/Release*
+win/tk.pc
 win/*.manifest
 win/nmakehlp.out
 win/nmhlp-out.txt
