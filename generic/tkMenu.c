@@ -328,7 +328,7 @@ static int		CloneMenu(TkMenu *menuPtr, Tcl_Obj *newMenuName,
 			    Tcl_Obj *newMenuTypeString);
 static int		ConfigureMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
-static int		ConfigureMenuCloneEntries(Tcl_Interp *interp, TkMenu *menuPtr, int index,
+static int		ConfigureMenuCloneEntries(TkMenu *menuPtr, int index,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ConfigureMenuEntry(TkMenuEntry *mePtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
@@ -820,7 +820,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else {
-	    result = ConfigureMenuCloneEntries(interp, menuPtr, index,
+	    result = ConfigureMenuCloneEntries(menuPtr, index,
 		    objc-3, objv+3);
 	}
 	Tcl_Release(mePtr);
@@ -2136,7 +2136,6 @@ if (CheckLoop0(interp, pathName, name)) {
 
 static int
 ConfigureMenuCloneEntries(
-    Tcl_Interp *interp,		/* Current interpreter */
     TkMenu *menuPtr,		/* Information about whole menu. */
     int index,			/* Index of mePtr within menuPtr's entries. */
     Tcl_Size objc,			/* Number of valid entries in argv. */
@@ -2184,6 +2183,7 @@ ConfigureMenuCloneEntries(
 	 */
 
 	if (newCascadeName != NULL) {
+	    Tcl_Interp *interp = menuPtr->interp;
 	    if (CheckLoop(interp, newCascadeName, menuPtr)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"cannot add recursive cascade menu \"%s\"",
