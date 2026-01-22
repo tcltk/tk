@@ -13,6 +13,7 @@
 *.sl
 *.so
 .fslckout
+_FOSSIL_
 Makefile
 Tk-Info.plist
 Wish-Info.plist
