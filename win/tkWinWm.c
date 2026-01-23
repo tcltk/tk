@@ -3620,7 +3620,11 @@ WmForgetCmd(
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
 
-    if (Tk_IsTopLevel(frameWin)) {
+    /*
+     * Tk ticket c77b426d: avoid panic on usage after wm forget
+     */
+
+    if (Tk_IsTopLevel(frameWin) && Tk_IsManageable(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);

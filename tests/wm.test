@@ -2609,6 +2609,24 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     unset res
 } -result {pack {} wm {}}
 
+test wm-forget-2.1 {bug [c77b426dc9] - panic with [menu]+[wm forget]} -constraints {
+    x11
+} -setup {
+    catch {destroy .l .f.b .f}
+    set res {}
+} -body {
+    menu .m
+    .m post 100 100
+    update
+    lappend res [winfo ismapped .m]
+    wm forget .m
+    update
+    lappend res [winfo ismapped .m]
+} -cleanup {
+    destroy .m
+    unset res
+} -result {1 1}
+
 #
 # TESTFILE CLEANUP
 #
