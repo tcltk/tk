@@ -22,6 +22,7 @@ to the userbase.
  - [crash in text sync subcommand](https://core.tcl-lang.org/tk/tktview/8e4fb0])
  - [Random semantic color values on macOS 10.15.6 Catalina](https://core.tcl-lang.org/tk/tktview/544140])
  - [Widgets on aqua no longer receive <Deactivate> events](https://core.tcl-lang.org/tk/tktview/9654e3])
+ - [X11: crash by wm forget on menu](https://core.tcl-lang.org/tk/tktview/c77b42)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
