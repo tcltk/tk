@@ -132,8 +132,7 @@ namespace eval ttk::theme::vista {
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText]
 
-
-	# SCROLLBAR elements (Vista includes a state for 'hover')
+	# Scrollbar elements (Vista includes a state for 'hover')
 	ttk::style element create Vertical.Scrollbar.uparrow vsapi \
 	    SCROLLBAR 1 {disabled 4 pressed 3 active 2 hover 17 {} 1} \
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
@@ -219,10 +218,14 @@ namespace eval ttk::theme::vista {
 	    -stripedbackground System3dLight -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background System3dLight
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
+				background #d9d9d9 \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
+				background SystemWindowText \
 				selected SystemHighlightText]
 
 	package provide ttk::theme::vista 1.0

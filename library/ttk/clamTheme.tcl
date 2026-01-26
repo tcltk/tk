@@ -146,11 +146,15 @@ namespace eval ttk::theme::clam {
 	    -stripedbackground $colors(-lighter) -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-lighter)
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
+	    -background [list disabled $colors(-frame) \
+			     background $colors(-darkest) \
+			     selected $colors(-selectbg)] \
 	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)] \
+			     background $colors(-selectfg) \
+			     selected $colors(-selectfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TLabelframe \
