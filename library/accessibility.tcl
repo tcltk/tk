@@ -93,7 +93,7 @@ if {[info commands ::tk::accessible::check_screenreader] eq "" || [::tk::accessi
 	    # structured and what ATK expects. Managing this data at the
 	    # C level is fragile and complex.  In these cases, we do not
 	    # address those widgets in C but instead use Tk's script-level
-	    # bindings to manage the interaction shell out to
+	    # bindings to manage the interaction by shelling out to
 	    # Speech Dispatcher (the same engine powering Orca's voice) to
 	    # vocalize text data and communicate state/data changes.
 	    # Windows and macOS have functions built in to their accessibility
