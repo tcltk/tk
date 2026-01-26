@@ -1601,7 +1601,7 @@ TkTextLine *
 TkBTreeFindLine(
     TkTextBTree tree,		/* B-tree in which to find line. */
     const TkText *textPtr,	/* Relative to this client of the B-tree. */
-    int line)			/* Index of desired line. */
+    Tcl_Size line)			/* Index of desired line. */
 {
     BTree *treePtr = (BTree *) tree;
     Node *nodePtr;
@@ -1980,14 +1980,14 @@ TkBTreePixelsTo(
  *----------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkBTreeLinesTo(
     const TkText *textPtr,	/* Relative to this client of the B-tree. */
     TkTextLine *linePtr)	/* Pointer to existing line in B-tree. */
 {
     TkTextLine *linePtr2;
     Node *nodePtr, *parentPtr, *nodePtr2;
-    int index;
+    Tcl_Size index;
 
     /*
      * First count how many lines precede this one in its level-0 node.
@@ -4505,13 +4505,13 @@ RecomputeNodeCounts(
  *----------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkBTreeNumLines(
     TkTextBTree tree,		/* Information about tree. */
     const TkText *textPtr)	/* Relative to this client of the B-tree. */
 {
     BTree *treePtr = (BTree *) tree;
-    int count;
+    Tcl_Size count;
 
     if (textPtr != NULL && textPtr->end != NULL) {
 	count = TkBTreeLinesTo(NULL, textPtr->end);
