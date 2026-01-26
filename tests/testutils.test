@@ -45,21 +45,22 @@ assert {"testutils" in [info procs testutils]}
 
 test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -setup {
     unset -nocomplain result
-    # Beware that some window managers don't allow toplevel sizes less than a
-    # certain minimum. Among the following windowing systems/window managers:
-    # x11: no wm (i.e. the bare display server), e16, fluxbox, fvwm, icewm,
-    #      KDE/Plasma, metacity, Openbox, TWM, WindowMaker, Xvwm
-    # win32, macOS/aqua, those exhibiting such a minimum size are:
+    # Beware that some windowing systems / window managers impose a minimum
+    # width or height on toplevels. The following windowing systems/window managers
+    # have been investigated for imposing such a minimum size:
+    # x11: no wm (i.e. the bare display server), e16, Fluxbox, Fvwm, Icewm,
+    #      KDE/Plasma, Metacity, Openbox, TWM, WindowMaker, Xvwm
+    # win32 and macOS/aqua. Those exhibiting such a minimum size are:
     #
-    # ws/wm		width	height
+    # ws-wm		width	height
     # ----------------------------------
     # win32		116	1
-    # x11, KDE/Plasma	8	33
-    # x11, WindowMaker	5	5
+    # x11-KDE/Plasma	8	33
+    # x11-WindowMaker	5	5
     # ----------------------------------
     #
     # Therefore, don't use a width less than 116, or a height less than 33 for
-    # the size propagation part of this test.
+    # this test.
     #
 } -body {
     . configure -width 151 -height 94
