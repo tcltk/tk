@@ -4,6 +4,37 @@
 
 namespace eval ttk::theme::aqua {
 
+    # ttk::theme::aqua::setInactiveSelectBgColor --
+    #
+    # Sets the default selection background color for the widget styles
+    # TEntry, TCombobox, and TSpinbox in the "!focus" state.
+
+    proc setInactiveSelectBgColor {} {
+	scan $::tcl_platform(osVersion) "%d" majorOSVersion
+	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
+	    set inactiveSelBg systemUnemphasizedSelectedTextBackgroundColor
+	} else {
+	    set inactiveSelBg systemWindowBackgroundColor2
+	}
+
+	# For Entry, Combobox and Spinbox widgets the selected text background
+	# is the "Highlight color" selected in preferences when the widget has
+	# focus.  It is a light gray color when the widget does not have focus
+	# or is in background state.  (The background state implies !focus so
+	# we only need to specify !focus.)
+	#
+	foreach style {TEntry TCombobox TSpinbox} {
+	    ttk::style map $style -selectbackground [list !focus $inactiveSelBg]
+	}
+
+	# Override the dark gray color produced on macOS 10.13 by the
+	# default value systemUnemphasizedSelectedTextBackgroundColor
+	# of the text widget's -inactiveselectbackground option
+	#
+	option add *Text.inactiveSelectBackground \
+	    $inactiveSelBg widgetDefault
+    }
+
     # ttk::theme::aqua::setTreeviewAndListboxSelectColors --
     #
     # Sets the default selection background and foreground colors for
@@ -11,7 +42,7 @@ namespace eval ttk::theme::aqua {
 
     proc setTreeviewAndListboxSelectColors {} {
 	scan $::tcl_platform(osVersion) "%d" majorOSVersion
-	if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
+	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
 	    set selectedBg	systemSelectedContentBackgroundColor
 	    set inactiveSelBg	systemUnemphasizedSelectedContentBackgroundColor
 	} else {
@@ -22,9 +53,9 @@ namespace eval ttk::theme::aqua {
 	set inactiveSelFg	systemSelectedControlTextColor
 
 	# The treeview uses the "background" state for selected
-	# items when the the widget has lost the focus.  Hence the
+	# items when the widget has lost the focus.  Hence the
 	# following code sets different default selection colors
-	# depending on whether the widget has lost the focus or not.
+	# depending on whether the widget has the focus or not.
 	#
 	ttk::style map Treeview \
 	    -background [list background $inactiveSelBg selected $selectedBg] \
@@ -32,29 +63,6 @@ namespace eval ttk::theme::aqua {
 
 	option add *Listbox.selectBackground	$selectedBg widgetDefault
 	option add *Listbox.selectForeground	$selectedFg widgetDefault
-    }
-
-    # ttk::theme::aqua::setInactiveSelectBgColor --
-    #
-    # Sets the default selection background color for a given widget style in
-    # the "!focus" state.
-
-    proc setInactiveSelectBgColor {style} {
-	scan $::tcl_platform(osVersion) "%d" majorOSVersion
-	if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
-	    set inactiveSelBg systemUnemphasizedSelectedTextBackgroundColor
-	} else {
-	    set inactiveSelBg systemWindowBackgroundColor2
-
-	    # Override the dark gray color produced on OS X 10.13 by the
-	    # default value systemUnemphasizedSelectedTextBackgroundColor
-	    # of the text widget's -inactiveselectbackground option
-	    #
-	    option add *Text.inactiveSelectBackground \
-		$inactiveSelBg widgetDefault
-	}
-
-	ttk::style map $style -selectbackground [list !focus $inactiveSelBg]
     }
 
     ttk::style theme settings aqua {
@@ -143,24 +151,16 @@ namespace eval ttk::theme::aqua {
 		pressed systemTextColor
 	    }
 
-	# For Entry, Combobox and Spinbox widgets the selected text background
-	# is the "Highlight color" selected in preferences when the widget
-	# has focus.  It is a gray color when the widget does not have focus or
-	# the window does not have focus. (The background state implies !focus
-	# so we only need to specify !focus.)
-
 	# Entry
 	ttk::style configure TEntry \
 	    -foreground systemTextColor \
 	    -background systemTextBackgroundColor
 	ttk::style map TEntry \
 	    -foreground {disabled systemDisabledControlTextColor}
-	setInactiveSelectBgColor TEntry
 
 	# Combobox
 	ttk::style map TCombobox \
 	    -foreground {disabled systemDisabledControlTextColor}
-	setInactiveSelectBgColor TCombobox
 
 	# Spinbox
 	ttk::style configure TSpinbox \
@@ -168,7 +168,8 @@ namespace eval ttk::theme::aqua {
 	    -background systemTextBackgroundColor
 	ttk::style map TSpinbox \
 	    -foreground {disabled systemDisabledControlTextColor}
-	setInactiveSelectBgColor TSpinbox
+
+	setInactiveSelectBgColor	;# for TEntry, TCombobox, and TSpinbox
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
