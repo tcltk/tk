@@ -268,7 +268,7 @@ sendAEDoScript(
 	if (status) {
 	    const char *msg = "target application died";
 	    Tcl_AddErrorInfo(interp, msg);
-	    Tcl_SetResult(interp, msg, (char *)NULL);
+	    Tcl_SetResult(interp, msg, NULL);
 	    return TCL_ERROR;
 	}
     }
