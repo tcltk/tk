@@ -31,12 +31,6 @@ resetWindows
 testutils import colors
 
 #
-# LOCAL TEST CONSTRAINTS
-#
-
-testConstraint notMacCI [expr {[testConstraint notAqua] || ![info exists ::env(CI)]}]
-
-#
 # TESTS
 #
 
