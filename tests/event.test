@@ -29,12 +29,6 @@ source [file join [tcltest::configure -testdir] main.tcl]
 resetWindows
 
 #
-# LOCAL TEST CONSTRAINTS
-#
-
-testConstraint notMacCI [expr {[testConstraint notAqua] || ![info exists ::env(CI)]}]
-
-#
 # LOCAL UTILITY PROCS
 #
 
