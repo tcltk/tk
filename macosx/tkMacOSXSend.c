@@ -35,15 +35,21 @@ typedef struct RegisteredInterp {
 } RegisteredInterp;
 
 /*
- * A registry of all interpreters owned by the current user is maintained in
- * the file ~/Library/Caches/com.tcltk.appnames. The file contains the string
- * representation of a TclDictObj.  The dictionary keys are appname strings
- * and the value assigned to a key is a Tcl list containing two Tcl_IntObj
- * items whose integer values are, respectively, the pid of the process which
- * registered the interpreter and a currently unused void *.
+ * When running in an environment where user interaction is possible, i.e not
+ * on a CI runner, a registry of all interpreters owned by the current user is
+ * maintained in the file ~/Library/Caches/com.tcltk.appnames. The file
+ * contains the string representation of a TclDictObj.  The dictionary keys
+ * are appname strings and the value assigned to a key is a Tcl list
+ * containing two Tcl_IntObj items whose integer values are, respectively, the
+ * pid of the process which registered the interpreter and a currently unused
+ * void *.
+ *
+ * The static variable below is set for the case of a CI runner, to avoid
+ * panics when fopen fails.  When user interaction is available it will
+ * be reassigned to the path in the user's Library/Caches directory.
  */
 
-static char *appNameRegistryPath;
+static char *appNameRegistryPath = "/tmp/TkAppnames";
 
 /*
  * Information that we record about an application.
@@ -359,6 +365,10 @@ saveAppNameRegistry(
     Tcl_Obj *dict,
     const char *path)
 {
+    if (path == NULL) {
+	/* We are running in a CI runner */
+	return;
+    }
     Tcl_Size length, bytesWritten;
     /* Open the file ab+ to avoid truncating it before flocking it. */
     FILE *appNameFile = fopen(path, "ab+");
@@ -392,6 +402,10 @@ loadAppNameRegistry(
     size_t length, bytesRead;
     char *bytes = NULL;
     Tcl_Obj *result;
+    if (path == NULL) {
+	/* We are running in a CI runner. */
+	return "";
+    }
 
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
@@ -459,6 +473,10 @@ loadAppNameRegistry(
 static int
 SendInit()
 {
+    if (getenv("CI")) {
+	return TCL_OK;
+    }
+
     /*
      * Intialize the path used for the appname registry.
      */
@@ -693,7 +711,7 @@ RegAddName(
  *      A crucial exception to the behavior described above arises when Tk is
  *      being run on a Continuous Integration runner.  The file-based App
  *      registry which is used to ensure uniqueness cannot be used on CI
- *      runners because macOS will post a system privacy dialog requesing
+ *      runners because macOS will post a system privacy dialog requesting
  *      permission to write files.  This causes Wish to hang, since it is not
  *      possible to dismiss the dialog without user interaction.  We use the
  *      environment variable CI to determine whether we are being run on a CI
