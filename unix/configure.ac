@@ -475,7 +475,7 @@ fi
 
 if test "$tk_aqua" = no; then
   # Combined manual check for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI using pkg-config
-  AC_MSG_CHECKING([for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI (manual pkg-config check)])
+  AC_MSG_CHECKING([for ATK, Atk-bridge, D-Bus, and AT-SPI])
 
   if pkg-config --exists atk \
      && pkg-config --exists atk-bridge-2.0 \
