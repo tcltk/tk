@@ -236,7 +236,7 @@ test send-7.4 {Tk_SetAppName procedure, name in use} {secureserver testsend} {
 } "{foo #4} {$commId foo #4\n$id foo\n$id foo #2\n$id foo #3\n}"
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.
+# AppleScript cannot be enabled on the runner.
 test send-8.1 {Tk_SendCmd procedure, options} {secureserver notMacCI} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
@@ -385,7 +385,7 @@ if {[testConstraint aqua]} {
 }
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.
+# AppleScript cannot be enabled on the runner.
 test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver notMacCI} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
@@ -395,20 +395,31 @@ test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver notMacC
     set result
 } $result_8_18
 
-# This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.
+# This passes on real macOS systems but fails on macOS CI runners
+# because AppleScript cannot be enabled on the runner.  However, on
+# real macOS systems it produces a different result than on X11
+# because the event loop is re-entered when running the send command
+# on macOS.
+
+if {[tk windowingsystem] eq "aqua"} {
+    set result_8_19 {{x y z} yes yes}
+} else {
+    set result_8_19 {{x y z} no yes}
+}
+
 test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver notMacCI} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set x no
     set result ""
     after 0 {set x yes}
+    # On X11 the after 0 command runs after these calls.
     lappend result [send $app {concat x y z}]
     lappend result $x
     update
     childTkProcess exit
     lappend result $x
-} {{x y z} no yes}
+} $result_8_19
 
 #
 # COMMON TEST SETUP
@@ -694,7 +705,7 @@ test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
 } {tktest {t_s_2 t_s_1 tktest} {t_s_2 tktest} tktest}
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.
+# AppleScript cannot be enabled on the runner.
 test send-16.1 {set variable - app in child interpreter} {unix notMacCI} {
     set a "a"
     childTkInterp t_s_1 -class Test
@@ -709,7 +720,7 @@ test send-16.1 {set variable - app in child interpreter} {unix notMacCI} {
 } {{can't read "a": no such variable} 25 a}
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.
+# AppleScript cannot be enabled on the runner.
 test send-16.2 {recursive send - app in child process} {unix notMacCI} {
     childTkProcess create
     set a no
@@ -721,7 +732,7 @@ test send-16.2 {recursive send - app in child process} {unix notMacCI} {
 } {yes}
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.
+# AppleScript cannot be enabled on the runner.
 test send-17.1 {set variable - app in child process} {unix notMacCI} {
     set a "a"
     childTkProcess create
