@@ -468,6 +468,72 @@ if test $tk_aqua = no; then
     AC_SUBST(CUPS_LIBS)
 fi
 
+#--------------------------------------------------------------------
+#       Check for Wayland support (non-X11 backend)
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    AC_MSG_CHECKING([whether to use Wayland])
+    AC_ARG_ENABLE(wayland,
+        AS_HELP_STRING([--enable-wayland],
+            [use Wayland (with GLFW/libdecor) instead of X11 (default: off)]),
+        [enable_wayland=$enableval], [enable_wayland=no])
+    AC_MSG_RESULT([$enable_wayland])
+
+    WAYLAND_CFLAGS=""
+    WAYLAND_LIBS=""
+    HAVE_WAYLAND=0
+
+    if test "$enable_wayland" = "yes"; then
+        # Check for required Wayland libraries
+        PKG_CHECK_MODULES([WAYLAND], [wayland-client >= 1.18 wayland-cursor >= 1.18],
+            [found_wayland=yes], [found_wayland=no])
+        PKG_CHECK_MODULES([XKBCOMMON], [xkbcommon >= 0.5.0],
+            [found_xkbcommon=yes], [found_xkbcommon=no])
+        PKG_CHECK_MODULES([GLFW], [glfw3 >= 3.4],
+            [found_glfw=yes], [found_glfw=no])
+        PKG_CHECK_MODULES([LIBDECOR], [libdecor-0 >= 0.1],
+            [found_libdecor=yes], [found_libdecor=no])
+
+        # Font libraries (same as used in X11 build but without X11 deps)
+        PKG_CHECK_MODULES([FONTCONFIG], [fontconfig >= 2.12],
+            [found_fontconfig=yes], [found_fontconfig=no])
+        PKG_CHECK_MODULES([FREETYPE2], [freetype2 >= 2.8],
+            [found_freetype=yes], [found_freetype=no])
+
+        if test "$found_wayland" = yes \
+           && test "$found_xkbcommon" = yes \
+           && test "$found_glfw" = yes \
+           && test "$found_fontconfig" = yes \
+           && test "$found_freetype" = yes; then
+            HAVE_WAYLAND=1
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS"
+
+            if test "$found_libdecor" = yes; then
+                WAYLAND_CFLAGS="$WAYLAND_CFLAGS $LIBDECOR_CFLAGS"
+                WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
+                AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
+            fi
+
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $FONTCONFIG_CFLAGS $FREETYPE2_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $FONTCONFIG_LIBS $FREETYPE2_LIBS"
+
+            AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
+            TK_WINDOWINGSYSTEM=WAYLAND
+            UNIX_FONT_OBJS=tkUnixRFont.o  # reuse Xft-like font rendering if available
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW and fontconfig])
+        else
+            AC_MSG_ERROR([Wayland backend requested but required libraries not found.
+Please install: wayland-client, wayland-cursor, xkbcommon, glfw3, fontconfig, freetype2.
+Optional: libdecor-0.])
+        fi
+    fi
+
+    AC_SUBST([WAYLAND_CFLAGS])
+    AC_SUBST([WAYLAND_LIBS])
+    AC_SUBST([HAVE_WAYLAND])
+fi
 
 #--------------------------------------------------------------------
 #	Check for Atk support
