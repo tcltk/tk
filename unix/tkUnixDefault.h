@@ -19,7 +19,6 @@
  * NORMAL_BG -		Normal background color.
  * ACTIVE_BG -		Background color when widget is active.
  * SELECT_BG -		Background color for selected text.
- * SELECT_FG -		Foreground color for selected text.
  * TROUGH -		Background color for troughs in scales and scrollbars.
  * INDICATOR -		Color for indicator when button is selected.
  * DISABLED -		Foreground color when widget is disabled.
@@ -32,7 +31,6 @@
 #define NORMAL_BG	"#d9d9d9"
 #define ACTIVE_BG	"#ececec"
 #define SELECT_BG	"#c3c3c3"
-#define SELECT_FG	BLACK
 #define TROUGH		"#b3b3b3"
 #define INDICATOR	WHITE
 #define DISABLED	"#a3a3a3"
@@ -493,7 +491,7 @@
 #define DEF_TEXT_PADY			"1"
 #define DEF_TEXT_RELIEF			"sunken"
 #define DEF_TEXT_INACTIVE_SELECT_BG_COLOR	SELECT_BG
-#define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	SELECT_FG
+#define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	BLACK
 #define DEF_TEXT_SELECT_COLOR		SELECT_BG
 #define DEF_TEXT_SELECT_MONO		BLACK
 #define DEF_TEXT_SELECT_BD_COLOR	"0"
