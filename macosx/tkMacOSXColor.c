@@ -572,7 +572,7 @@ TkSetMacColor(
     // seem to depend on appearance
     BOOL useDarkAppearance = NO;
 
-    return TkSetMacColor2(pixel, macColor, useDarkAppearance);
+    return TkSetMacColor2(pixel, (CGColorRef *)macColor, useDarkAppearance);
 }
 int
 TkSetMacColor2(
