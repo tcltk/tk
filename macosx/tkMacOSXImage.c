@@ -795,7 +795,7 @@ CreatePDFFromDrawableRect(
      * Caller owns returned CFDataRef.
      */
 
-    return CFBridgingRetain(pdfData);
+    return (CFDataRef)CFBridgingRetain(pdfData);
 }
 
 
