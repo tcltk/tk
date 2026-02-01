@@ -111,6 +111,8 @@ namespace eval ttk::theme::classic {
 	ttk::style configure Row -focuswidth 1
 	ttk::style configure Item -indicatorsize 9p \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item \
             -indicatorcolor [list selected $colors(-indicator)] \
             -indicatorrelief {selected sunken} 

@@ -135,6 +135,8 @@ namespace eval ttk::theme::clam {
 	    -font TkHeadingFont -relief raised -padding 2.25p
 	ttk::style configure Item -indicatorsize 9p \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item \
 	    -indicatorbackground [list disabled $colors(-frame)] \
 	    -indicatorforeground [list disabled $colors(-disabledfg)]

@@ -72,6 +72,8 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]

@@ -100,6 +100,8 @@ namespace eval ttk::theme::alt {
 	    -font TkHeadingFont -relief raised
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item -indicatorcolor [list disabled $colors(-frame)]
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
