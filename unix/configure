@@ -8549,8 +8549,8 @@ fi
 
 if test "$tk_aqua" = no; then
   # Combined manual check for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI using pkg-config
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI (manual pkg-config check)" >&5
-printf %s "checking for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI (manual pkg-config check)... " >&6; }
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ATK, Atk-bridge, D-Bus, and AT-SPI" >&5
+printf %s "checking for ATK, Atk-bridge, D-Bus, and AT-SPI... " >&6; }
 
   if pkg-config --exists atk \
      && pkg-config --exists atk-bridge-2.0 \
