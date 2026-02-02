@@ -15,10 +15,6 @@
 static int clipboardChangeCount = 0;
 static Tk_Window tkClipboardOwner = NULL;
 
-/* ----------------------------------------------------------------------
- *   GLFW-based clipboard implementation
- * ----------------------------------------------------------------------
- */
 
 /*
  *----------------------------------------------------------------------
@@ -87,7 +83,7 @@ XSetSelectionOwner(
 
     tkClipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 
-    // Any time ownership changes → treat as clipboard content change
+    /* Any time ownership changes → treat as clipboard content change. */
     if (tkClipboardOwner || owner == None) {
         clipboardChangeCount++;
     }
@@ -133,7 +129,7 @@ TkSelUpdateClipboard(
         return;
     }
 
-    // We only care about string-like targets
+    /* We only care about string-like targets. */
     if (option != CLIPBOARD_APPEND && option != CLIPBOARD_CLEAR) {
         return;
     }
@@ -145,7 +141,7 @@ TkSelUpdateClipboard(
         return;
     }
 
-    // Try to find string/utf8 content in Tk's clipboard buffers
+    /* Try to find string/utf8 content in Tk's clipboard buffers. */
     if (!dispPtr->clipTargetPtr) {
         return;
     }
@@ -174,10 +170,10 @@ TkSelUpdateClipboard(
         }
 
         Tcl_DStringFree(&ds);
-        return;   // only push the first matching string target
+        return;   /* Only push the first matching string target. */
     }
 
-    // If we get here and it was CLEAR, already handled above
+    /* If we get here and it was CLEAR, already handled above. */
 }
 
 /*
@@ -213,7 +209,7 @@ TkSelEventProc(
 void
 TkSelPropProc(XEvent *eventPtr TCL_UNUSED)
 {
-    // No-op
+    /* No-op */
 }
 
 /*

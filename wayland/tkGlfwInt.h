@@ -5,7 +5,7 @@
  *	GLFW/Wayland-specific parts of Tk but aren't used by the rest of Tk.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2026 Wayland/GLFW Port
+ * Copyright © Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -31,17 +31,7 @@ typedef struct TkGlfwContext {
     int initialized;
 } TkGlfwContext;
 
-/*
- * Prototypes for procedures that are referenced in files other than the ones
- * they're defined in.
- */
 
-#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
-
-MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp);
-MODULE_SCOPE  int       SysNotify_Init (Tcl_Interp* interp);
-MODULE_SCOPE  int       Cups_Init (Tcl_Interp* interp);
-MODULE_SCOPE  int       TkAtkAccessibility_Init (Tcl_Interp *interp);
 
 /*
  * GLFW/Wayland-specific internal functions
