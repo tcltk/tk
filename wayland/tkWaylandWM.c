@@ -3,14 +3,13 @@
  *
  *	This module takes care of the interactions between a Tk-based
  *	application and the window manager. Among other things, it implements
- *	the "wm" command and passes geometry information to the window
- *	manager.
+ *	the "wm" command and passes geometry information to the Wayland 
+ *      compositor via GLFW. 
  *
- *	Ported from X11 (tkUnixWm.c) to Wayland/GLFW implementation.
- *	All X11-specific code has been removed and replaced with GLFW equivalents.
  *
  * Copyright © 1991-1994 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -3718,16 +3717,10 @@ WmUpdateGeom(
     }
 }
 
-/* 
- * End of file.
- * 
- * Missing pieces that would normally be here in a full port:
- *   - full clipboard / selection support
- *   - drag & drop
- *   - IME / input method support
- *   - proper multi-monitor / DPI awareness
- *   - session management (WM_SAVE_YOURSELF)
- * 
- * These usually live in other Tk files or require Wayland-specific compositor
- * protocols that GLFW does not expose.
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
  */
