@@ -154,6 +154,8 @@ X11_INCLUDES		= @XINCLUDES@
 
 AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 
+WAYLAND_INCLUDES    = -I$(WAYLAND_DIR)
+
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
@@ -325,6 +327,7 @@ TOOL_DIR		= $(TCLDIR)/tools
 TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
+WAYLAND_DIR		= $(TOP_DIR)/wayland
 
 #----------------------------------------------------------------
 # The information below should be usable as is.  The configure
@@ -339,10 +342,10 @@ MAN_FLAGS               = @MAN_FLAGS@
 CC			= @CC@
 
 CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
-${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
-${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
-${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+    ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
+    ${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
+    ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
+    ${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -419,6 +422,22 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 	ttkMacOSXTheme.o
 
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
+
+WAYLAND_OBJS            = \
+    tkWayland.o             tkWayland3D.o          tkWaylandFont.o \
+    tkWaylandClipboard.o    tkWaylandImage.o        tkWaylandColor.o \
+    tkWaylandKey.o          tkWaylandConfig.o       tkWaylandMenu.o \
+    tkWaylandCursor.o       tkWaylandNotify.o       tkWaylandSend.o \
+    tkWaylandDefaults.o     tkWaylandDraw.o         tkWaylandSysTray.o \
+    tkWaylandEmbed.o        tkWaylandEvent.o        tkWaylandFocus.o \
+    tkWaylandXId.o          tkGlfwInit.o            \
+    nanovg.o      
+
+# Re-use some unix files (the ones that are backend-agnostic)
+WAYLAND_UNIX_OBJS       = \
+    tkAppInit.o             tkUnixConfig.o          tkUnixPrint.o \
+    tkUnixSysNotify.o       tkUnixAccessibility.o   tkUnixButton.o \
+    tkUnixMenubu.o          tkUnixScale.o           tkUnixScrlbr.o          
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(TTK_OBJS) \
@@ -555,8 +574,34 @@ AQUA_SRCS = \
 	$(UNIX_DIR)/tkUnixScale.c $(XLIB_DIR)/xcolors.c $(XLIB_DIR)/xdraw.c \
 	$(XLIB_DIR)/xgc.c $(XLIB_DIR)/ximage.c $(XLIB_DIR)/xutil.c \
 	$(TTK_DIR)/ttkMacOSXTheme.c
+	
+WAYLAND_SRCS = \
+    $(WAYLAND_DIR)/tkWayland.c              $(WAYLAND_DIR)/tkWayland3D.c \
+    $(WAYLAND_DIR)/tkWaylandFont.c          $(WAYLAND_DIR)/tkWaylandClipboard.c \
+    $(WAYLAND_DIR)/tkWaylandImage.c         $(WAYLAND_DIR)/tkWaylandColor.c \
+    $(WAYLAND_DIR)/tkWaylandKey.c           $(WAYLAND_DIR)/tkWaylandConfig.c \
+    $(WAYLAND_DIR)/tkWaylandMenu.c          $(WAYLAND_DIR)/tkWaylandCursor.c \
+    $(WAYLAND_DIR)/tkWaylandNotify.c        $(WAYLAND_DIR)/tkWaylandSend.c \
+    $(WAYLAND_DIR)/tkWaylandDraw.c          $(WAYLAND_DIR)/tkWaylandSysTray.c \
+    $(WAYLAND_DIR)/tkWaylandEmbed.c         $(WAYLAND_DIR)/tkWaylandEvent.c \
+    $(WAYLAND_DIR)/tkWaylandFocus.c         $(WAYLAND_DIR)/tkWaylandXId.c \
+    $(WAYLAND_DIR)/tkGlfwInit.c             \
+    $(WAYLAND_DIR)/nanovg.c
+    
+WAYLAND_PRIVATE_HDRS = \
+    $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
+    $(WAYLAND_DIR)/tkGlfwInt.h
+
+WAYLAND_UNIX_SRCS = \
+    $(UNIX_DIR)/tkAppInit.c     $(UNIX_DIR)/tkUnixConfig.c \
+    $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c \
+    $(UNIX_DIR)/tkUnixAccessibility.c \
+    $(UNIX_DIR)/tkUnixButton.c  $(UNIX_DIR)/tkUnixMenubu.c \
+    $(UNIX_DIR)/tkUnixScale.c   $(UNIX_DIR)/tkUnixScrlbr.c
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
+
+
 
 ###
 # Tip 430 - ZipFS Modifications
