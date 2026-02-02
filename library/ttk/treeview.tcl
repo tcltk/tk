@@ -984,10 +984,13 @@ proc ::ttk::treeview::Press {w x y} {
 	heading { Heading.press $w $x $y }
 	separator { Resize.press $w $x $y }
 	tree {
-	    if {[$w identify element $x $y] eq "Treeitem.indicator"} {
-	        ToggleOpenState $w [$w identify item $x $y]
-	    } else {
-	        Select.press $w $x $y
+	    switch -- [$w identify element $x $y] {
+		Treeitem.indicator {
+		    ToggleOpenState $w [$w identify item $x $y]
+		}
+		Checkbutton.button -
+		Checkbutton.indicator { ToggleSelected $w $x $y }
+		default { Select.press $w $x $y }
 	    }
 	}
 	cell { Select.press $w $x $y }
@@ -1413,19 +1416,28 @@ proc ::ttk::treeview::ToggleOpenState {w item} {
 #
 # ToggleSelected -- toggle selected state of item
 #
-proc ::ttk::treeview::ToggleSelected {w} {
+proc ::ttk::treeview::ToggleSelected {w {x ""} {y ""}} {
     if {[$w instate disabled]} return
 
-    if {[$w cget -selectmode] in [list "none" "browse"]} {
-	return
-    }
+    if {$x eq "" || $y eq ""} {
+	if {[$w cget -selectmode] in [list "none" "browse"]} {
+	    return
+	}
 
-    if {[$w cget -selecttype] eq "cell"} {
-	set cell [$w cellfocus]
-	lassign $cell item column
+	if {[$w cget -selecttype] eq "cell"} {
+	    set cell [$w cellfocus]
+	    lassign $cell item column
+	} else {
+	    set item [$w focus]
+	    set cell ""
+	}
     } else {
-	set item [$w focus]
-	set cell ""
+	set item [$w identify item $x $y]
+	if {[$w cget -selecttype] eq "cell"} {
+	    set cell [$w identify cell $x $y]
+	} else {
+	    set cell ""
+	}
     }
 
     if {$item ne ""} {
