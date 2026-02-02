@@ -1,12 +1,12 @@
 /*
- * tkGlfwScrollbar.c --
+ * tkWaylandScrollbar.c --
  *
- *	This file implements the GLFW/Wayland specific portion of the scrollbar
- *	widget. Ported from tkUnixScrollbar.c
+ *	This file implements the wayland specific portion of the scrollbar
+ *	widget.
  *
  * Copyright © 1996 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
- *
+ 
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
@@ -23,24 +23,31 @@
 #define MIN_SLIDER_LENGTH	5
 
 /*
- * Declaration of GLFW specific scrollbar structure.
+ * Declaration of Wayland specific scrollbar structure.
  */
 
-typedef struct GlfwScrollbar {
+typedef struct WaylandScrollbar {
     TkScrollbar info;		/* Generic scrollbar info. */
-    GLFWwindow *glfwWindow;	/* GLFW window handle */
-    int needsRedraw;		/* Flag for pending redraws */
-    void *renderContext;	/* NanoVG or other rendering context */
-} GlfwScrollbar;
+    GC troughGC;		/* For drawing trough. */
+    GC copyGC;			/* Used for copying from pixmap onto screen. */
+    int dragStartX;             /* X position when drag started */
+    int dragStartY;             /* Y position when drag started */
+    int dragStartFirst;         /* sliderFirst when drag started */
+} WaylandScrollbar;
 
 /*
- * Forward declarations for GLFW event callbacks
+ * Structure to manage scrollbars within a GLFW window
  */
-static void GlfwExposeCallback(GLFWwindow *window);
-static void GlfwResizeCallback(GLFWwindow *window, int width, int height);
-static void GlfwFocusCallback(GLFWwindow *window, int focused);
-static void GlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-static void GlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos);
+typedef struct {
+    Tk_Window tkwin;
+    WaylandScrollbar **scrollbars;
+    int scrollbarCount;
+} WaylandWindowData;
+
+/*
+ * Additional scrollbar flags
+ */
+#define SLIDER_DRAGGING  0x1000
 
 /*
  * The class procedure table for the scrollbar widget. All fields except size
@@ -56,6 +63,19 @@ const Tk_ClassProcs tkpScrollbarProcs = {
 };
 
 /*
+ * Forward declarations for GLFW callbacks
+ */
+static void GLFW_FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+static void GLFW_WindowSizeCallback(GLFWwindow* window, int width, int height);
+static void GLFW_WindowFocusCallback(GLFWwindow* window, int focused);
+static void GLFW_CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+static void GLFW_MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+static void GLFW_ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+static void WaylandScrollbar_AddToWindow(GLFWwindow *glfwWindow, WaylandScrollbar *scrollbar);
+static void WaylandScrollbar_RemoveFromWindow(GLFWwindow *glfwWindow, WaylandScrollbar *scrollbar);
+static GLFWwindow *GetGLFWWindowFromTkWindow(Tk_Window tkwin);
+
+/*
  *----------------------------------------------------------------------
  *
  * TkpCreateScrollbar --
@@ -66,7 +86,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
  *	Returns a newly allocated TkScrollbar structure.
  *
  * Side effects:
- *	Registers event handlers for the widget using GLFW callbacks.
+ *	Registers an event handler for the widget.
  *
  *----------------------------------------------------------------------
  */
@@ -75,122 +95,601 @@ TkScrollbar *
 TkpCreateScrollbar(
     Tk_Window tkwin)
 {
-    GlfwScrollbar *scrollPtr = (GlfwScrollbar *)Tcl_Alloc(sizeof(GlfwScrollbar));
+    WaylandScrollbar *scrollPtr = (WaylandScrollbar *)Tcl_Alloc(sizeof(WaylandScrollbar));
 
-    scrollPtr->glfwWindow = NULL;
-    scrollPtr->needsRedraw = 1;
-    scrollPtr->renderContext = NULL;
+    scrollPtr->troughGC = NULL;
+    scrollPtr->copyGC = NULL;
+    scrollPtr->dragStartX = 0;
+    scrollPtr->dragStartY = 0;
+    scrollPtr->dragStartFirst = 0;
 
-    /*
-     * Get or create GLFW window for this Tk_Window
-     * This assumes you have a function to get the GLFWwindow* from Tk_Window
+    /* 
+     * Find the GLFW window for this Tk window and add scrollbar to it.
+     * The GLFW callbacks are set up once per window in the window creation code.
      */
-    scrollPtr->glfwWindow = (GLFWwindow *)Tk_GetNativeWindow(tkwin);
-    
-    if (scrollPtr->glfwWindow != NULL) {
-        /*
-         * Set up GLFW event callbacks
-         * Store scrollPtr as user pointer for callback access
-         */
-        glfwSetWindowUserPointer(scrollPtr->glfwWindow, scrollPtr);
-        
-        /*
-         * Register callbacks equivalent to:
-         * ExposureMask|StructureNotifyMask|FocusChangeMask
-         */
-        glfwSetWindowRefreshCallback(scrollPtr->glfwWindow, GlfwExposeCallback);
-        glfwSetWindowSizeCallback(scrollPtr->glfwWindow, GlfwResizeCallback);
-        glfwSetWindowFocusCallback(scrollPtr->glfwWindow, GlfwFocusCallback);
-        glfwSetMouseButtonCallback(scrollPtr->glfwWindow, GlfwMouseButtonCallback);
-        glfwSetCursorPosCallback(scrollPtr->glfwWindow, GlfwCursorPosCallback);
+    GLFWwindow *glfwWindow = GetGLFWWindowFromTkWindow(tkwin);
+    if (glfwWindow) {
+        WaylandScrollbar_AddToWindow(glfwWindow, scrollPtr);
     }
 
     return (TkScrollbar *) scrollPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
- * GLFW Event Callbacks --
+ * WaylandScrollbar_SetupGLFWCallbacks --
  *
- *	These functions handle GLFW events and translate them to Tk events.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-GlfwExposeCallback(GLFWwindow *window)
-{
-    GlfwScrollbar *scrollPtr = (GlfwScrollbar *)glfwGetWindowUserPointer(window);
-    if (scrollPtr != NULL) {
-        scrollPtr->needsRedraw = 1;
-        /* Trigger TkScrollbarEventProc equivalent for expose events */
-        TkpDisplayScrollbar((TkScrollbar *)scrollPtr);
-    }
-}
-
-static void
-GlfwResizeCallback(GLFWwindow *window, int width, int height)
-{
-    GlfwScrollbar *scrollPtr = (GlfwScrollbar *)glfwGetWindowUserPointer(window);
-    if (scrollPtr != NULL) {
-        /* Trigger geometry recomputation */
-        TkpComputeScrollbarGeometry((TkScrollbar *)scrollPtr);
-        scrollPtr->needsRedraw = 1;
-    }
-}
-
-static void
-GlfwFocusCallback(GLFWwindow *window, int focused)
-{
-    GlfwScrollbar *scrollPtr = (GlfwScrollbar *)glfwGetWindowUserPointer(window);
-    TkScrollbar *tkScrollPtr = (TkScrollbar *)scrollPtr;
-    
-    if (scrollPtr != NULL && tkScrollPtr != NULL) {
-        if (focused) {
-            tkScrollPtr->flags |= GOT_FOCUS;
-        } else {
-            tkScrollPtr->flags &= ~GOT_FOCUS;
-        }
-        scrollPtr->needsRedraw = 1;
-    }
-}
-
-static void
-GlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
-{
-    GlfwScrollbar *scrollPtr = (GlfwScrollbar *)glfwGetWindowUserPointer(window);
-    if (scrollPtr != NULL) {
-        /* Handle mouse button events for scrollbar interaction */
-        /* This would typically call into TkScrollbarEventProc or similar */
-        scrollPtr->needsRedraw = 1;
-    }
-}
-
-static void
-GlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos)
-{
-    GlfwScrollbar *scrollPtr = (GlfwScrollbar *)glfwGetWindowUserPointer(window);
-    if (scrollPtr != NULL) {
-        /* Handle mouse motion for hover effects */
-        scrollPtr->needsRedraw = 1;
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * TkpDisplayScrollbar --
- *
- *	This procedure redraws the contents of a scrollbar window using
- *	NanoVG rendering calls. It is invoked as a do-when-idle handler,
- *	so it only runs when there's nothing else for the application to do.
+ *	Set up GLFW callbacks for a window containing scrollbar widgets.
+ *	This should be called once per GLFW window, not per scrollbar.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Information appears on the screen via NanoVG/GLFW rendering.
+ *	GLFW callbacks are registered.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+WaylandScrollbar_SetupGLFWCallbacks(
+    GLFWwindow *glfwWindow,
+    Tk_Window tkwin)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)Tcl_Alloc(sizeof(WaylandWindowData));
+    
+    windowData->tkwin = tkwin;
+    windowData->scrollbars = NULL;
+    windowData->scrollbarCount = 0;
+    
+    glfwSetWindowUserPointer(glfwWindow, windowData);
+    
+    glfwSetFramebufferSizeCallback(glfwWindow, GLFW_FramebufferSizeCallback);
+    glfwSetWindowSizeCallback(glfwWindow, GLFW_WindowSizeCallback);
+    glfwSetWindowFocusCallback(glfwWindow, GLFW_WindowFocusCallback);
+    glfwSetCursorPosCallback(glfwWindow, GLFW_CursorPosCallback);
+    glfwSetMouseButtonCallback(glfwWindow, GLFW_MouseButtonCallback);
+    glfwSetScrollCallback(glfwWindow, GLFW_ScrollCallback);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLFW_FramebufferSizeCallback --
+ *
+ *	Handle framebuffer size changes.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbars are resized and redrawn.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GLFW_FramebufferSizeCallback(
+    GLFWwindow* window,
+    int width,
+    int height)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(window);
+    
+    if (!windowData) return;
+    
+    for (int i = 0; i < windowData->scrollbarCount; i++) {
+        WaylandScrollbar *scrollPtr = windowData->scrollbars[i];
+        if (scrollPtr && scrollPtr->info.tkwin == windowData->tkwin) {
+            TkpComputeScrollbarGeometry((TkScrollbar *)scrollPtr);
+            if (!(scrollPtr->info.flags & REDRAW_PENDING)) {
+                scrollPtr->info.flags |= REDRAW_PENDING;
+                Tk_DoWhenIdle(TkpDisplayScrollbar, (void *)scrollPtr);
+            }
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLFW_WindowSizeCallback --
+ *
+ *	Handle window size changes.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbars are resized.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GLFW_WindowSizeCallback(
+    GLFWwindow* window,
+    int width,
+    int height)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(window);
+    
+    if (!windowData) return;
+    
+    for (int i = 0; i < windowData->scrollbarCount; i++) {
+        WaylandScrollbar *scrollPtr = windowData->scrollbars[i];
+        if (scrollPtr && scrollPtr->info.tkwin == windowData->tkwin) {
+            TkpComputeScrollbarGeometry((TkScrollbar *)scrollPtr);
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLFW_WindowFocusCallback --
+ *
+ *	Handle window focus changes.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbar focus state is updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GLFW_WindowFocusCallback(
+    GLFWwindow* window,
+    int focused)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(window);
+    
+    if (!windowData) return;
+    
+    for (int i = 0; i < windowData->scrollbarCount; i++) {
+        WaylandScrollbar *scrollPtr = windowData->scrollbars[i];
+        if (scrollPtr && scrollPtr->info.tkwin == windowData->tkwin) {
+            if (focused) {
+                scrollPtr->info.flags |= GOT_FOCUS;
+            } else {
+                scrollPtr->info.flags &= ~GOT_FOCUS;
+            }
+            
+            if (!(scrollPtr->info.flags & REDRAW_PENDING)) {
+                scrollPtr->info.flags |= REDRAW_PENDING;
+                Tk_DoWhenIdle(TkpDisplayScrollbar, (void *)scrollPtr);
+            }
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLFW_CursorPosCallback --
+ *
+ *	Handle mouse movement.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbar hover state may change.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GLFW_CursorPosCallback(
+    GLFWwindow* window,
+    double xpos,
+    double ypos)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(window);
+    
+    if (!windowData) return;
+    
+    for (int i = 0; i < windowData->scrollbarCount; i++) {
+        WaylandScrollbar *scrollPtr = windowData->scrollbars[i];
+        if (scrollPtr && scrollPtr->info.tkwin == windowData->tkwin) {
+            int element = TkpScrollbarPosition((TkScrollbar *)scrollPtr, 
+                                              (int)xpos, (int)ypos);
+            
+            if (element != scrollPtr->info.activeField) {
+                scrollPtr->info.activeField = element;
+                
+                if (!(scrollPtr->info.flags & REDRAW_PENDING)) {
+                    scrollPtr->info.flags |= REDRAW_PENDING;
+                    Tk_DoWhenIdle(TkpDisplayScrollbar, (void *)scrollPtr);
+                }
+            }
+            
+            /* Handle slider dragging */
+            if (scrollPtr->info.flags & SLIDER_DRAGGING) {
+                int delta;
+                int fieldLength;
+                
+                if (scrollPtr->info.vertical) {
+                    fieldLength = Tk_Height(scrollPtr->info.tkwin) - 
+                                  2 * (scrollPtr->info.arrowLength + scrollPtr->info.inset);
+                    delta = (int)ypos - scrollPtr->dragStartY;
+                } else {
+                    fieldLength = Tk_Width(scrollPtr->info.tkwin) - 
+                                  2 * (scrollPtr->info.arrowLength + scrollPtr->info.inset);
+                    delta = (int)xpos - scrollPtr->dragStartX;
+                }
+                
+                if (fieldLength > 0) {
+                    double fractionDelta = (double)delta / fieldLength;
+                    double newFirst = scrollPtr->info.firstFraction + fractionDelta;
+                    double newLast = scrollPtr->info.lastFraction + fractionDelta;
+                    
+                    if (newFirst < 0.0) {
+                        newFirst = 0.0;
+                        newLast = scrollPtr->info.lastFraction - scrollPtr->info.firstFraction;
+                    }
+                    if (newLast > 1.0) {
+                        newLast = 1.0;
+                        newFirst = 1.0 - (scrollPtr->info.lastFraction - scrollPtr->info.firstFraction);
+                    }
+                    
+                    scrollPtr->info.firstFraction = newFirst;
+                    scrollPtr->info.lastFraction = newLast;
+                    
+                    TkpComputeScrollbarGeometry((TkScrollbar *)scrollPtr);
+                    
+                    /* Invoke Tcl command if configured */
+                    if (scrollPtr->info.commandObj) {
+                        Tcl_Obj *resultObj;
+                        char string[200];
+                        
+                        sprintf(string, "%g %g", newFirst, newLast);
+                        resultObj = Tcl_NewStringObj(string, -1);
+                        Tcl_IncrRefCount(resultObj);
+                        
+                        if (Tcl_EvalObjEx(scrollPtr->info.interp, resultObj, 0) != TCL_OK) {
+                            /* Handle error */
+                        }
+                        
+                        Tcl_DecrRefCount(resultObj);
+                    }
+                    
+                    if (!(scrollPtr->info.flags & REDRAW_PENDING)) {
+                        scrollPtr->info.flags |= REDRAW_PENDING;
+                        Tk_DoWhenIdle(TkpDisplayScrollbar, (void *)scrollPtr);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLFW_MouseButtonCallback --
+ *
+ *	Handle mouse button events.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbar may trigger scroll actions.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GLFW_MouseButtonCallback(
+    GLFWwindow* window,
+    int button,
+    int action,
+    int mods)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(window);
+    
+    if (!windowData || button != GLFW_MOUSE_BUTTON_LEFT) return;
+    
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    
+    for (int i = 0; i < windowData->scrollbarCount; i++) {
+        WaylandScrollbar *scrollPtr = windowData->scrollbars[i];
+        if (scrollPtr && scrollPtr->info.tkwin == windowData->tkwin) {
+            int element = TkpScrollbarPosition((TkScrollbar *)scrollPtr, 
+                                              (int)xpos, (int)ypos);
+            
+            if (action == GLFW_PRESS) {
+                scrollPtr->info.activeField = element;
+                scrollPtr->info.flags |= BUTTON_PRESSED;
+                
+                /* Store drag start position */
+                scrollPtr->dragStartX = (int)xpos;
+                scrollPtr->dragStartY = (int)ypos;
+                scrollPtr->dragStartFirst = scrollPtr->info.sliderFirst;
+                
+                /* Trigger scroll action based on element */
+                switch (element) {
+                    case TOP_ARROW:
+                        /* Scroll up/left - invoke Tcl command */
+                        if (scrollPtr->info.commandObj) {
+                            Tcl_Obj *resultObj = Tcl_NewStringObj("scroll", -1);
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("-1", -1));
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("units", -1));
+                            Tcl_IncrRefCount(resultObj);
+                            
+                            if (Tcl_EvalObjEx(scrollPtr->info.interp, resultObj, 0) != TCL_OK) {
+                                /* Handle error */
+                            }
+                            
+                            Tcl_DecrRefCount(resultObj);
+                        }
+                        break;
+                        
+                    case BOTTOM_ARROW:
+                        /* Scroll down/right - invoke Tcl command */
+                        if (scrollPtr->info.commandObj) {
+                            Tcl_Obj *resultObj = Tcl_NewStringObj("scroll", -1);
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("1", -1));
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("units", -1));
+                            Tcl_IncrRefCount(resultObj);
+                            
+                            if (Tcl_EvalObjEx(scrollPtr->info.interp, resultObj, 0) != TCL_OK) {
+                                /* Handle error */
+                            }
+                            
+                            Tcl_DecrRefCount(resultObj);
+                        }
+                        break;
+                        
+                    case TOP_GAP:
+                        /* Page up/left - invoke Tcl command */
+                        if (scrollPtr->info.commandObj) {
+                            Tcl_Obj *resultObj = Tcl_NewStringObj("scroll", -1);
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("-1", -1));
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("pages", -1));
+                            Tcl_IncrRefCount(resultObj);
+                            
+                            if (Tcl_EvalObjEx(scrollPtr->info.interp, resultObj, 0) != TCL_OK) {
+                                /* Handle error */
+                            }
+                            
+                            Tcl_DecrRefCount(resultObj);
+                        }
+                        break;
+                        
+                    case BOTTOM_GAP:
+                        /* Page down/right - invoke Tcl command */
+                        if (scrollPtr->info.commandObj) {
+                            Tcl_Obj *resultObj = Tcl_NewStringObj("scroll", -1);
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("1", -1));
+                            Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("pages", -1));
+                            Tcl_IncrRefCount(resultObj);
+                            
+                            if (Tcl_EvalObjEx(scrollPtr->info.interp, resultObj, 0) != TCL_OK) {
+                                /* Handle error */
+                            }
+                            
+                            Tcl_DecrRefCount(resultObj);
+                        }
+                        break;
+                        
+                    case SLIDER:
+                        /* Start dragging */
+                        scrollPtr->info.flags |= SLIDER_DRAGGING;
+                        break;
+                }
+            } else if (action == GLFW_RELEASE) {
+                scrollPtr->info.flags &= ~(BUTTON_PRESSED | SLIDER_DRAGGING);
+                scrollPtr->info.activeField = OUTSIDE;
+            }
+            
+            if (!(scrollPtr->info.flags & REDRAW_PENDING)) {
+                scrollPtr->info.flags |= REDRAW_PENDING;
+                Tk_DoWhenIdle(TkpDisplayScrollbar, (void *)scrollPtr);
+            }
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLFW_ScrollCallback --
+ *
+ *	Handle scroll wheel events.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbar may scroll.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GLFW_ScrollCallback(
+    GLFWwindow* window,
+    double xoffset,
+    double yoffset)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(window);
+    
+    if (!windowData) return;
+    
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    
+    for (int i = 0; i < windowData->scrollbarCount; i++) {
+        WaylandScrollbar *scrollPtr = windowData->scrollbars[i];
+        if (scrollPtr && scrollPtr->info.tkwin == windowData->tkwin) {
+            int element = TkpScrollbarPosition((TkScrollbar *)scrollPtr, 
+                                              (int)xpos, (int)ypos);
+            
+            if (element != OUTSIDE) {
+                /* Handle wheel scrolling */
+                if (scrollPtr->info.commandObj) {
+                    Tcl_Obj *resultObj = Tcl_NewStringObj("scroll", -1);
+                    
+                    if (yoffset > 0) {
+                        /* Scroll up/left */
+                        Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("-1", -1));
+                    } else if (yoffset < 0) {
+                        /* Scroll down/right */
+                        Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("1", -1));
+                    }
+                    
+                    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("units", -1));
+                    Tcl_IncrRefCount(resultObj);
+                    
+                    if (Tcl_EvalObjEx(scrollPtr->info.interp, resultObj, 0) != TCL_OK) {
+                        /* Handle error */
+                    }
+                    
+                    Tcl_DecrRefCount(resultObj);
+                }
+            }
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WaylandScrollbar_AddToWindow --
+ *
+ *	Add a scrollbar to a window's scrollbar list.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbar is added to window data.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+WaylandScrollbar_AddToWindow(
+    GLFWwindow *glfwWindow,
+    WaylandScrollbar *scrollbar)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(glfwWindow);
+    
+    if (!windowData) return;
+    
+    /* Reallocate scrollbar array */
+    WaylandScrollbar **newScrollbars = (WaylandScrollbar **)Tcl_Realloc(
+        windowData->scrollbars, 
+        sizeof(WaylandScrollbar *) * (windowData->scrollbarCount + 1));
+    
+    if (!newScrollbars) return;
+    
+    windowData->scrollbars = newScrollbars;
+    windowData->scrollbars[windowData->scrollbarCount] = scrollbar;
+    windowData->scrollbarCount++;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WaylandScrollbar_RemoveFromWindow --
+ *
+ *	Remove a scrollbar from a window's scrollbar list.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Scrollbar is removed from window data.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+WaylandScrollbar_RemoveFromWindow(
+    GLFWwindow *glfwWindow,
+    WaylandScrollbar *scrollbar)
+{
+    WaylandWindowData *windowData = (WaylandWindowData *)glfwGetWindowUserPointer(glfwWindow);
+    
+    if (!windowData) return;
+    
+    for (int i = 0; i < windowData->scrollbarCount; i++) {
+        if (windowData->scrollbars[i] == scrollbar) {
+            /* Shift remaining elements */
+            for (int j = i; j < windowData->scrollbarCount - 1; j++) {
+                windowData->scrollbars[j] = windowData->scrollbars[j + 1];
+            }
+            windowData->scrollbarCount--;
+            
+            if (windowData->scrollbarCount == 0) {
+                Tcl_Free(windowData->scrollbars);
+                windowData->scrollbars = NULL;
+            } else {
+                WaylandScrollbar **newScrollbars = (WaylandScrollbar **)Tcl_Realloc(
+                    windowData->scrollbars, 
+                    sizeof(WaylandScrollbar *) * windowData->scrollbarCount);
+                
+                if (newScrollbars) {
+                    windowData->scrollbars = newScrollbars;
+                }
+            }
+            break;
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetGLFWWindowFromTkWindow --
+ *
+ *	Get the GLFW window associated with a Tk window.
+ *	This is a stub that needs to be implemented by the windowing system.
+ *
+ * Results:
+ *	Returns GLFW window handle or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static GLFWwindow *
+GetGLFWWindowFromTkWindow(
+    Tk_Window tkwin)
+{
+    /* 
+     * This needs to be implemented by the windowing system to map
+     * Tk windows to GLFW windows. For now, return NULL.
+     * In a real implementation, you might store the GLFW window
+     * in the TkWindow structure or maintain a mapping table.
+     */
+    return NULL;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkpDisplayScrollbar --
+ *
+ *	This procedure redraws the contents of a scrollbar window. It is
+ *	invoked as a do-when-idle handler, so it only runs when there's
+ *	nothing else for the application to do.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information appears on the screen.
  *
  *--------------------------------------------------------------
  */
@@ -200,28 +699,22 @@ TkpDisplayScrollbar(
     void *clientData)	/* Information about window. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
-    GlfwScrollbar *glfwScrollPtr = (GlfwScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->tkwin;
-    int width, elementBorderWidth;
+    XPoint points[7];
+    Tk_3DBorder border;
+    int relief, width, elementBorderWidth;
     int borderWidth, highlightWidth;
+    Pixmap pixmap;
 
     if ((scrollPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	goto done;
     }
-
-    if (glfwScrollPtr->glfwWindow == NULL) {
-        goto done;
-    }
-
-    /* Make context current for rendering */
-    glfwMakeContextCurrent(glfwScrollPtr->glfwWindow);
 
     if (scrollPtr->vertical) {
 	width = Tk_Width(tkwin) - 2 * scrollPtr->inset;
     } else {
 	width = Tk_Height(tkwin) - 2 * scrollPtr->inset;
     }
-    
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
     if (scrollPtr->elementBorderWidthObj) {
 	Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->elementBorderWidthObj, &elementBorderWidth);
@@ -230,82 +723,145 @@ TkpDisplayScrollbar(
     }
 
     /*
-     * All rendering is now done via NanoVG calls (assumed to be implemented)
-     * The actual NanoVG rendering calls would replace the X11 drawing code.
-     * This section assumes those are implemented elsewhere as per your requirements.
+     * In order to avoid screen flashes, this procedure redraws the scrollbar
+     * in a pixmap, then copies the pixmap to the screen in a single
+     * operation. This means that there's no point in time where the on-sreen
+     * image has been cleared.
      */
 
-    /* Get window dimensions */
-    int winWidth, winHeight;
-    glfwGetWindowSize(glfwScrollPtr->glfwWindow, &winWidth, &winHeight);
-
-    /*
-     * NOTE: The actual rendering calls (nvgBeginFrame, nvgFillRect, etc.)
-     * are assumed to be implemented in your NanoVG integration layer.
-     * The structure and logic remain the same as the original X11 version,
-     * but using NanoVG primitives instead of X11 primitives.
-     */
-
-    /* Begin frame */
-    // nvgBeginFrame(vg, winWidth, winHeight, 1.0f);
+    pixmap = Tk_GetPixmap(scrollPtr->display, Tk_WindowId(tkwin),
+	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
 
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
-    
-    /* Draw focus highlight */
     if (highlightWidth > 0) {
-        /* Use NanoVG to draw focus highlight */
+	GC gc;
+
+	if (scrollPtr->flags & GOT_FOCUS) {
+	    gc = Tk_GCForColor(scrollPtr->highlightColorPtr, pixmap);
+	} else {
+	    gc = Tk_GCForColor(scrollPtr->highlightBgColorPtr, pixmap);
+	}
+	Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, pixmap);
     }
+    Tk_Draw3DRectangle(tkwin, pixmap, scrollPtr->bgBorder,
+	    highlightWidth, highlightWidth,
+	    Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth,
+	    borderWidth, scrollPtr->relief);
+    XFillRectangle(scrollPtr->display, pixmap,
+	    ((WaylandScrollbar*)scrollPtr)->troughGC,
+	    scrollPtr->inset, scrollPtr->inset,
+	    (unsigned) (Tk_Width(tkwin) - 2 * scrollPtr->inset),
+	    (unsigned) (Tk_Height(tkwin) - 2 * scrollPtr->inset));
 
-    /* Draw background border */
-    // nvgBeginPath(vg);
-    // nvgRect(vg, highlightWidth, highlightWidth, 
-    //         winWidth - 2*highlightWidth, winHeight - 2*highlightWidth);
-    // Draw 3D border effect with NanoVG
+    /*
+     * Draw the top or left arrow. The coordinates of the polygon points
+     * probably seem odd, but they were carefully chosen with respect to X's
+     * rules for filling polygons. These point choices cause the arrows to
+     * just fill the narrow dimension of the scrollbar and be properly
+     * centered.
+     */
 
-    /* Draw trough */
-    // nvgBeginPath(vg);
-    // nvgRect(vg, scrollPtr->inset, scrollPtr->inset,
-    //         winWidth - 2*scrollPtr->inset, winHeight - 2*scrollPtr->inset);
-    // nvgFill(vg);
-
-    /* Draw top/left arrow */
-    if (scrollPtr->vertical) {
-        /* Draw upward pointing triangle */
+    if (scrollPtr->activeField == TOP_ARROW) {
+	border = scrollPtr->activeBorder;
+	relief = scrollPtr->activeField == TOP_ARROW ? scrollPtr->activeRelief
+		: TK_RELIEF_RAISED;
     } else {
-        /* Draw leftward pointing triangle */
+	border = scrollPtr->bgBorder;
+	relief = TK_RELIEF_RAISED;
     }
-
-    /* Draw bottom/right arrow */
     if (scrollPtr->vertical) {
-        /* Draw downward pointing triangle */
+	points[0].x = scrollPtr->inset - 1;
+	points[0].y = scrollPtr->arrowLength + scrollPtr->inset - 1;
+	points[1].x = width + scrollPtr->inset;
+	points[1].y = points[0].y;
+	points[2].x = width/2 + scrollPtr->inset;
+	points[2].y = scrollPtr->inset - 1;
+	Tk_Fill3DPolygon(tkwin, pixmap, border, points, 3,
+		elementBorderWidth, relief);
     } else {
-        /* Draw rightward pointing triangle */
+	points[0].x = scrollPtr->arrowLength + scrollPtr->inset - 1;
+	points[0].y = scrollPtr->inset - 1;
+	points[1].x = scrollPtr->inset;
+	points[1].y = width/2 + scrollPtr->inset;
+	points[2].x = points[0].x;
+	points[2].y = width + scrollPtr->inset;
+	Tk_Fill3DPolygon(tkwin, pixmap, border, points, 3,
+		elementBorderWidth, relief);
     }
 
-    /* Draw slider */
+    /*
+     * Display the bottom or right arrow.
+     */
+
+    if (scrollPtr->activeField == BOTTOM_ARROW) {
+	border = scrollPtr->activeBorder;
+	relief = scrollPtr->activeField == BOTTOM_ARROW
+		? scrollPtr->activeRelief : TK_RELIEF_RAISED;
+    } else {
+	border = scrollPtr->bgBorder;
+	relief = TK_RELIEF_RAISED;
+    }
     if (scrollPtr->vertical) {
-        /* Draw vertical slider rectangle */
-        // nvgBeginPath(vg);
-        // nvgRect(vg, scrollPtr->inset, scrollPtr->sliderFirst,
-        //         width, scrollPtr->sliderLast - scrollPtr->sliderFirst);
-        // nvgFill(vg);
+	points[0].x = scrollPtr->inset;
+	points[0].y = Tk_Height(tkwin) - scrollPtr->arrowLength
+		- scrollPtr->inset + 1;
+	points[1].x = width/2 + scrollPtr->inset;
+	points[1].y = Tk_Height(tkwin) - scrollPtr->inset;
+	points[2].x = width + scrollPtr->inset;
+	points[2].y = points[0].y;
+	Tk_Fill3DPolygon(tkwin, pixmap, border,
+		points, 3, elementBorderWidth, relief);
     } else {
-        /* Draw horizontal slider rectangle */
-        // nvgBeginPath(vg);
-        // nvgRect(vg, scrollPtr->sliderFirst, scrollPtr->inset,
-        //         scrollPtr->sliderLast - scrollPtr->sliderFirst, width);
-        // nvgFill(vg);
+	points[0].x = Tk_Width(tkwin) - scrollPtr->arrowLength
+		- scrollPtr->inset + 1;
+	points[0].y = scrollPtr->inset - 1;
+	points[1].x = points[0].x;
+	points[1].y = width + scrollPtr->inset;
+	points[2].x = Tk_Width(tkwin) - scrollPtr->inset;
+	points[2].y = width/2 + scrollPtr->inset;
+	Tk_Fill3DPolygon(tkwin, pixmap, border,
+		points, 3, elementBorderWidth, relief);
     }
 
-    /* End frame and swap buffers */
-    // nvgEndFrame(vg);
-    glfwSwapBuffers(glfwScrollPtr->glfwWindow);
+    /*
+     * Display the slider.
+     */
+
+    if (scrollPtr->activeField == SLIDER) {
+	border = scrollPtr->activeBorder;
+	relief = scrollPtr->activeField == SLIDER ? scrollPtr->activeRelief
+		: TK_RELIEF_RAISED;
+    } else {
+	border = scrollPtr->bgBorder;
+	relief = TK_RELIEF_RAISED;
+    }
+    if (scrollPtr->vertical) {
+	Tk_Fill3DRectangle(tkwin, pixmap, border,
+		scrollPtr->inset, scrollPtr->sliderFirst,
+		width, scrollPtr->sliderLast - scrollPtr->sliderFirst,
+		elementBorderWidth, relief);
+    } else {
+	Tk_Fill3DRectangle(tkwin, pixmap, border,
+		scrollPtr->sliderFirst, scrollPtr->inset,
+		scrollPtr->sliderLast - scrollPtr->sliderFirst, width,
+		elementBorderWidth, relief);
+    }
+
+    /*
+     * Copy the information from the off-screen pixmap onto the screen, then
+     * delete the pixmap.
+     */
+
+    XCopyArea(scrollPtr->display, pixmap, Tk_WindowId(tkwin),
+	    ((WaylandScrollbar*)scrollPtr)->copyGC, 0, 0,
+	    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin), 0, 0);
+    Tk_FreePixmap(scrollPtr->display, pixmap);
 
   done:
     scrollPtr->flags &= ~REDRAW_PENDING;
-    glfwScrollPtr->needsRedraw = 0;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -393,7 +949,7 @@ TkpComputeScrollbarGeometry(
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -405,7 +961,7 @@ TkpComputeScrollbarGeometry(
  *	None.
  *
  * Side effects:
- *	Frees GLFW resources and callbacks associated with the scrollbar.
+ *	Frees the GCs associated with the scrollbar.
  *
  *----------------------------------------------------------------------
  */
@@ -414,31 +970,24 @@ void
 TkpDestroyScrollbar(
     TkScrollbar *scrollPtr)
 {
-    GlfwScrollbar *glfwScrollPtr = (GlfwScrollbar *)scrollPtr;
+    WaylandScrollbar *waylandScrollPtr = (WaylandScrollbar *)scrollPtr;
 
-    if (glfwScrollPtr->glfwWindow != NULL) {
-        /*
-         * Clear callbacks to prevent dangling pointer access
-         */
-        glfwSetWindowUserPointer(glfwScrollPtr->glfwWindow, NULL);
-        glfwSetWindowRefreshCallback(glfwScrollPtr->glfwWindow, NULL);
-        glfwSetWindowSizeCallback(glfwScrollPtr->glfwWindow, NULL);
-        glfwSetWindowFocusCallback(glfwScrollPtr->glfwWindow, NULL);
-        glfwSetMouseButtonCallback(glfwScrollPtr->glfwWindow, NULL);
-        glfwSetCursorPosCallback(glfwScrollPtr->glfwWindow, NULL);
-        
-        /*
-         * Note: We don't destroy the GLFW window here as it may be shared
-         * with other Tk widgets. Window lifetime is managed by Tk.
-         */
+    /* Remove scrollbar from window data */
+    GLFWwindow *glfwWindow = GetGLFWWindowFromTkWindow(scrollPtr->tkwin);
+    if (glfwWindow) {
+        WaylandScrollbar_RemoveFromWindow(glfwWindow, waylandScrollPtr);
     }
 
-    if (glfwScrollPtr->renderContext != NULL) {
-        /* Free any NanoVG or rendering context resources */
-        glfwScrollPtr->renderContext = NULL;
+    if (waylandScrollPtr->troughGC != NULL) {
+	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->troughGC);
     }
+    if (waylandScrollPtr->copyGC != NULL) {
+	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->copyGC);
+    }
+    
+    Tcl_Free((char *)waylandScrollPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -452,7 +1001,7 @@ TkpDestroyScrollbar(
  *	None.
  *
  * Side effects:
- *	Configuration info may get changed. Rendering context updated.
+ *	Configuration info may get changed.
  *
  *----------------------------------------------------------------------
  */
@@ -460,26 +1009,26 @@ TkpDestroyScrollbar(
 void
 TkpConfigureScrollbar(
     TkScrollbar *scrollPtr)
-				/* Information about widget; may or may not
-				 * already have values for some fields. */
 {
-    GlfwScrollbar *glfwScrollPtr = (GlfwScrollbar *) scrollPtr;
+    XGCValues gcValues;
+    GC newGC;
+    WaylandScrollbar *waylandScrollPtr = (WaylandScrollbar *) scrollPtr;
 
     Tk_SetBackgroundFromBorder(scrollPtr->tkwin, scrollPtr->bgBorder);
 
-    /*
-     * Update rendering context with new colors/settings
-     * This replaces the X11 GC creation with NanoVG style/color updates
-     */
-    if (glfwScrollPtr->renderContext != NULL) {
-        /* Update NanoVG colors and styles based on scrollPtr configuration */
-        /* Example: nvgFillColor(vg, nvgRGBA(r, g, b, a)); */
+    gcValues.foreground = scrollPtr->troughColorPtr->pixel;
+    newGC = Tk_GetGC(scrollPtr->tkwin, GCForeground, &gcValues);
+    if (waylandScrollPtr->troughGC != NULL) {
+	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->troughGC);
     }
-
-    /* Mark for redraw with new configuration */
-    glfwScrollPtr->needsRedraw = 1;
+    waylandScrollPtr->troughGC = newGC;
+    if (waylandScrollPtr->copyGC == NULL) {
+	gcValues.graphics_exposures = False;
+	waylandScrollPtr->copyGC = Tk_GetGC(scrollPtr->tkwin,
+		GCGraphicsExposures, &gcValues);
+    }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -541,7 +1090,7 @@ TkpScrollbarPosition(
     }
     return BOTTOM_GAP;
 }
-
+
 /*
  * Local Variables:
  * mode: c
