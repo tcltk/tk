@@ -858,8 +858,9 @@ static void IndicatorElementDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+#if 0
     /*
-     * Sanity check
+     * Sanity check -- not needed and no longer used
      */
     if (   b.x < 0
 	|| b.y < 0
@@ -871,6 +872,7 @@ static void IndicatorElementDraw(
 	 */
 	return;
     }
+#endif
 
     /*
      * Construct the color strings bgColorStr, fgColorStr, and borderColorStr
@@ -1115,6 +1117,7 @@ static void BoxArrowElementSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
     size -= Ttk_PaddingWidth(padding);
+    size += 2 * round(scalingLevel);
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -1496,8 +1499,9 @@ static void SliderElementDraw(
     char *script;
     int code;
 
+#if 0
     /*
-     * Sanity check
+     * Sanity check -- not needed and no longer used
      */
     if (   b.x < 0
 	|| b.y < 0
@@ -1509,6 +1513,7 @@ static void SliderElementDraw(
 	 */
 	return;
     }
+#endif
 
     /*
      * Fill the thin trough area preceding the
