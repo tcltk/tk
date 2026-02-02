@@ -11,7 +11,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkUnixInt.h"
 #include "tkColor.h"
 #include <stdlib.h>
 #include <string.h>
@@ -30,12 +29,12 @@ struct TkStressedCmap {
     struct TkStressedCmap *nextPtr;
 };
 
-/* NanoVG uses RGBA colors in float format (0.0-1.0) */
+/* NanoVG uses RGBA colors in float format (0.0-1.0). */
 typedef struct {
     float r, g, b, a;
 } NVGcolor;
 
-/* Convert XColor (16-bit) to NVGcolor (float) */
+/* Convert XColor (16-bit) to NVGcolor (float). */
 static NVGcolor XColorToNVG(const XColor *xc) {
     NVGcolor color;
     color.r = (float)xc->red / 65535.0f;
@@ -45,7 +44,7 @@ static NVGcolor XColorToNVG(const XColor *xc) {
     return color;
 }
 
-/* Convert NVGcolor to XColor */
+/* Convert NVGcolor to XColor. */
 static void NVGToXColor(const NVGcolor *nc, XColor *xc) {
     xc->red = (unsigned short)(nc->r * 65535.0f);
     xc->green = (unsigned short)(nc->g * 65535.0f);
@@ -84,8 +83,10 @@ void
 TkpFreeColor(
     TkColor *tkColPtr)
 {
-    /* In NanoVG, colors are just values, no allocation needed */
-    /* We still maintain the stressed colormap cache for compatibility */
+    /* 
+     * In NanoVG, colors are just values, no allocation needed.
+     * We still maintain the stressed colormap cache for compatibility. 
+     */
     DeleteStressedCmap(NULL, tkColPtr->colormap);
 }
 
@@ -119,15 +120,15 @@ TkpGetColor(
         return NULL;
     }
     
-    /* Parse color name to NVGcolor */
+    /* Parse color name to NVGcolor. */
     if (ParseColorString(name, &nvgcolor) == 0) {
         return NULL;
     }
     
-    /* Convert to XColor for compatibility */
+    /* Convert to XColor for compatibility. */
     NVGToXColor(&nvgcolor, &xcolor);
     
-    /* Create TkColor structure */
+    /* Create TkColor structure. */
     tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
     if (!tkColPtr) {
         return NULL;
@@ -139,9 +140,9 @@ TkpGetColor(
     tkColPtr->visual = NULL;
     tkColPtr->resourceRefCount = 1;
     
-    /* Store NVG color in extension field if available */
+    /* Store NVG color in extension field if available. */
     if (sizeof(TkColor) > sizeof(struct TkColor_)) {
-        /* Assuming TkColor has an extension field */
+        /* Assuming TkColor has an extension field. */
         memcpy(((char*)tkColPtr) + sizeof(struct TkColor_), 
                &nvgcolor, sizeof(NVGcolor));
     }
@@ -180,14 +181,14 @@ TkpGetColorByValue(
         return NULL;
     }
     
-    /* In NanoVG, we can always use the exact color */
+    /* In NanoVG, we can always use the exact color. */
     tkColPtr->color = *colorPtr;
     tkColPtr->colormap = NULL;
     tkColPtr->screen = NULL;
     tkColPtr->visual = NULL;
     tkColPtr->resourceRefCount = 1;
     
-    /* Convert to NVGcolor and store in extension */
+    /* Convert to NVGcolor and store in extension. */
     NVGcolor nvgcolor = XColorToNVG(colorPtr);
     if (sizeof(TkColor) > sizeof(struct TkColor_)) {
         memcpy(((char*)tkColPtr) + sizeof(struct TkColor_), 
@@ -222,13 +223,13 @@ FindClosestColor(
     XColor *desiredColorPtr,
     XColor *actualColorPtr)
 {
-    /* Convert to NVGcolor */
+    /* Convert to NVGcolor. */
     NVGcolor desired = XColorToNVG(desiredColorPtr);
     
-    /* Find closest color (simulated for compatibility) */
+    /* Find closest color (simulated for compatibility). */
     NVGcolor actual = FindClosestNVGColor(tkwin, &desired);
     
-    /* Convert back to XColor */
+    /* Convert back to XColor. */
     NVGToXColor(&actual, actualColorPtr);
 }
 
@@ -255,8 +256,11 @@ DeleteStressedCmap(
     Display *display,
     void *colormap)
 {
-    /* Implementation depends on how TkDisplay is structured in port */
-    /* For now, simple placeholder */
+    /* 
+     * Implementation depends on how TkDisplay is structured in port.
+     *  For now, simple placeholder.
+     */
+    
     TkDisplay *dispPtr = TkGetDisplay(display);
     TkStressedCmap *prevPtr = NULL;
     TkStressedCmap *stressPtr;
@@ -322,8 +326,9 @@ TkpCmapStressed(
  * Helper functions for Wayland/GLFW/NanoVG
  */
 
-static int ParseColorString(const char *name, NVGcolor *color) {
-    /* Simplified color parsing for NanoVG */
+static int ParseColorString(const char *name, NVGcolor *color)
+{
+    /* Simplified color parsing for NanoVG. */
     if (name[0] == '#') {
         unsigned int hex;
         if (sscanf(name + 1, "%x", &hex) == 1) {
@@ -344,7 +349,7 @@ static int ParseColorString(const char *name, NVGcolor *color) {
         }
     }
     
-    /* Named colors */
+    /* Named colors. */
     struct ColorName {
         const char *name;
         NVGcolor color;
@@ -370,9 +375,12 @@ static int ParseColorString(const char *name, NVGcolor *color) {
     return 0;
 }
 
-static NVGcolor FindClosestNVGColor(Tk_Window tkwin, const NVGcolor *desired) {
-    /* In NanoVG, we can always return the desired color */
-    /* This function maintains compatibility with the X11 interface */
+static NVGcolor FindClosestNVGColor(Tk_Window tkwin, const NVGcolor *desired)
+{
+    /* 
+     * In NanoVG, we can always return the desired color. 
+     * This function maintains compatibility with the X11 interface.
+     */
     return *desired;
 }
 
@@ -380,7 +388,7 @@ static NVGcolor FindClosestNVGColor(Tk_Window tkwin, const NVGcolor *desired) {
  * Additional NanoVG-specific functions
  */
 
-/* Get NVGcolor from TkColor */
+/* Get NVGcolor from TkColor. */
 NVGcolor TkColorToNVG(TkColor *tkColPtr) {
     if (sizeof(TkColor) > sizeof(struct TkColor_)) {
         /* Retrieve from extension field */
@@ -389,7 +397,7 @@ NVGcolor TkColorToNVG(TkColor *tkColPtr) {
                sizeof(NVGcolor));
         return color;
     } else {
-        /* Fall back to conversion from XColor */
+        /* Fall back to conversion from XColor. */
         return XColorToNVG(&tkColPtr->color);
     }
 }

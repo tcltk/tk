@@ -430,14 +430,14 @@ WAYLAND_OBJS            = \
     tkWaylandCursor.o       tkWaylandNotify.o       tkWaylandSend.o \
     tkWaylandDefaults.o     tkWaylandDraw.o         tkWaylandSysTray.o \
     tkWaylandEmbed.o        tkWaylandEvent.o        tkWaylandFocus.o \
-    tkWaylandXId.o          tkGlfwInit.o            \
+    tkWaylandXId.o          tkGlfwInit.o            tkWaylandScrlbr.o \
     nanovg.o      
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
     tkAppInit.o             tkUnixConfig.o          tkUnixPrint.o \
     tkUnixSysNotify.o       tkUnixAccessibility.o   tkUnixButton.o \
-    tkUnixMenubu.o          tkUnixScale.o           tkUnixScrlbr.o          
+    tkUnixMenubu.o          tkUnixScale.o           
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(TTK_OBJS) \
@@ -585,7 +585,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandDraw.c          $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandEmbed.c         $(WAYLAND_DIR)/tkWaylandEvent.c \
     $(WAYLAND_DIR)/tkWaylandFocus.c         $(WAYLAND_DIR)/tkWaylandXId.c \
-    $(WAYLAND_DIR)/tkGlfwInit.c             \
+    $(WAYLAND_DIR)/tkGlfwInit.c             $(WAYLAND_DIR)/tkWaylandScrlbr.c \
     $(WAYLAND_DIR)/nanovg.c
     
 WAYLAND_PRIVATE_HDRS = \
@@ -597,7 +597,7 @@ WAYLAND_UNIX_SRCS = \
     $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c \
     $(UNIX_DIR)/tkUnixAccessibility.c \
     $(UNIX_DIR)/tkUnixButton.c  $(UNIX_DIR)/tkUnixMenubu.c \
-    $(UNIX_DIR)/tkUnixScale.c   $(UNIX_DIR)/tkUnixScrlbr.c
+    $(UNIX_DIR)/tkUnixScale.c   
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
 
@@ -1403,6 +1403,69 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
+	
+tkWayland.o: $(WAYLAND_DIR)/tkWayland.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland.c
+
+tkWayland3D.o: $(WAYLAND_DIR)/tkWayland3D.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland3D.c
+
+tkWaylandFont.o: $(WAYLAND_DIR)/tkWaylandFont.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFont.c
+
+tkWaylandClipboard.o: $(WAYLAND_DIR)/tkWaylandClipboard.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandClipboard.c
+
+tkWaylandImage.o: $(WAYLAND_DIR)/tkWaylandImage.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandImage.c
+
+tkWaylandColor.o: $(WAYLAND_DIR)/tkWaylandColor.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandColor.c
+
+tkWaylandKey.o: $(WAYLAND_DIR)/tkWaylandKey.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandKey.c
+
+tkWaylandConfig.o: $(WAYLAND_DIR)/tkWaylandConfig.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandConfig.c
+
+tkWaylandMenu.o: $(WAYLAND_DIR)/tkWaylandMenu.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenu.c
+
+tkWaylandCursor.o: $(WAYLAND_DIR)/tkWaylandCursor.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandCursor.c
+
+tkWaylandNotify.o: $(WAYLAND_DIR)/tkWaylandNotify.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandNotify.c
+
+tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c
+
+tkWaylandDraw.o: $(WAYLAND_DIR)/tkWaylandDraw.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandDraw.c
+
+tkWaylandSysTray.o: $(WAYLAND_DIR)/tkWaylandSysTray.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSysTray.c
+
+tkWaylandEmbed.o: $(WAYLAND_DIR)/tkWaylandEmbed.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandEmbed.c
+
+tkWaylandEvent.o: $(WAYLAND_DIR)/tkWaylandEvent.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandEvent.c
+
+tkWaylandFocus.o: $(WAYLAND_DIR)/tkWaylandFocus.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFocus.c
+
+tkWaylandXId.o: $(WAYLAND_DIR)/tkWaylandXId.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXId.c
+
+tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c
+
+tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScrlbr.c
+
+nanovg.o: $(WAYLAND_DIR)/nanovg.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
@@ -1635,7 +1698,7 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
-
+	
 tkUuid.h: $(TOP_DIR)/manifest.uuid
 	echo "#define TK_VERSION_UUID \\" >$@
 	cat $(TOP_DIR)/manifest.uuid >>$@

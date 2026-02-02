@@ -44,9 +44,9 @@ TkGetServerInfo(
     /* Try to detect if we're actually running on X11 through GLFW */
     if (glfwGetCurrentContext()) {
         if (glfwGetPlatform() == GLFW_PLATFORM_X11) {
-            platform = "X11";
+            platform = "x11";
         } else if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
-            platform = "Wayland";
+            platform = "wayland";
         }
     }
     
@@ -119,7 +119,7 @@ Tk_UpdatePointer(
    * in some edge cases. */
   
   if (tkwin && Tk_WindowId(tkwin)) {
-      /* If we have a GLFW window handle, we could potentially set cursor position */
+      /* If we have a GLFW window handle, we could potentially set cursor position. */
       GLFWwindow *window = (GLFWwindow *)Tk_WindowId(tkwin);
       /* Note: glfwSetCursorPos sets window-relative coordinates, not root */
   }
@@ -150,7 +150,7 @@ TkpCopyRegion(
     TkRegion dst,
     TkRegion src)
 {
-    /* For GLFW, we just copy the region data */
+    /* For GLFW, we just copy the region data. */
     if (dst != src) {
         memcpy(dst, src, sizeof(TkRegion));
     }
@@ -223,7 +223,7 @@ TkpBuildRegionFromAlphaData(
 		rect.y = (short)(y + y1);
 		rect.width = (unsigned short)(end - x1);
 		rect.height = 1;
-		/* Use the existing TkUnionRectWithRegion function */
+		/* Use the existing TkUnionRectWithRegion function. */
 		TkUnionRectWithRegion((XRectangle*)&rect, region, region);
 	    }
 	}
@@ -253,7 +253,7 @@ Tk_GetUserInactiveTime(
 {
     long inactiveTime = -1;
     
-    /* With GLFW, we need platform-specific idle time detection */
+    /* With GLFW, we need platform-specific idle time detection. */
 #if defined(__linux__)
     /* On Linux with GLFW, we might use DBus or read from /proc */
     FILE *fp = fopen("/proc/uptime", "r");
@@ -264,12 +264,6 @@ Tk_GetUserInactiveTime(
         }
         fclose(fp);
     }
-#elif defined(__APPLE__)
-    /* macOS specific idle time detection */
-    /* This would require IOKit or CoreGraphics APIs */
-#elif defined(_WIN32)
-    /* Windows specific idle time detection */
-    /* This would require GetLastInputInfo() */
 #endif
     
     return inactiveTime;
@@ -296,20 +290,7 @@ void
 Tk_ResetUserInactiveTime(
     TCL_UNUSED(Display *dpy))
 {
-    /* With GLFW, there's no direct way to reset system idle time.
-     * This could be a no-op or we could simulate user activity. */
-    
-    /* On X11 systems, we could still call XResetScreenSaver if available */
-#ifdef HAVE_X11
-    if (dpy) {
-        /* Check if we're running on X11 */
-        Display *xdisplay = (Display *)dpy;
-        XResetScreenSaver(xdisplay);
-    }
-#endif
-    
-    /* Alternative: simulate user activity by moving mouse slightly */
-    /* This is hacky and may not work on all systems */
+    /* With GLFW, there's no direct way to reset system idle time. */
 }
 
 /*
@@ -334,7 +315,7 @@ Tk_GetDisplay(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
     
-    /* In GLFW context, we might return the monitor or window handle */
+    /* In GLFW context, we might return the monitor or window handle. */
     GLFWwindow *window = (GLFWwindow *)Tk_WindowId(tkwin);
     if (window) {
         return glfwGetWindowMonitor(window);

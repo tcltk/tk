@@ -28,7 +28,7 @@ typedef struct {
 } WaylandBorder;
 
 /*
- * Forward declarations for helper functions
+ * Forward declarations for helper functions.
  */
 static NVGcolor ColorToNVGColor(XColor *color);
 static NVGcolor GetShadowColor(NVGcolor base, float factor);
@@ -80,8 +80,10 @@ void
 TkpFreeBorder(
     TkBorder *borderPtr)
 {
-    /* NanoVG colors are just structs, no explicit freeing needed */
-    /* This function kept for compatibility */
+    /* 
+     * NanoVG colors are just structs, no explicit freeing needed.
+     * This function kept for compatibility.
+     */
 }
 /*
  *--------------------------------------------------------------
@@ -134,7 +136,7 @@ Tk_3DVerticalBevel(
 	TkpGetShadows(borderPtr, tkwin);
     }
 
-    /* Convert X colors to NVG colors */
+    /* Convert X colors to NVG colors. */
     NVGcolor bgColor = ColorToNVGColor(borderPtr->bgColorPtr);
     NVGcolor lightColor = (borderPtr->lightColorPtr) ? 
                           ColorToNVGColor(borderPtr->lightColorPtr) : bgColor;
@@ -256,7 +258,7 @@ Tk_3DHorizontalBevel(
 	TkpGetShadows(borderPtr, tkwin);
     }
 
-    /* Convert X colors to NVG colors */
+    /* Convert X colors to NVG colors. */
     NVGcolor bgColor = ColorToNVGColor(borderPtr->bgColorPtr);
     NVGcolor lightColor = (borderPtr->lightColorPtr) ? 
                           ColorToNVGColor(borderPtr->lightColorPtr) : bgColor;
@@ -301,7 +303,7 @@ Tk_3DHorizontalBevel(
     }
 
     /*
-     * Compute various other geometry-related stuff.
+     * Compute various other geometry-related details.
      */
 
     x1 = x;
@@ -366,7 +368,7 @@ TkpGetShadows(
     Tk_Window tkwin)		/* Window where border will be used for
 				 * drawing. */
 {
-    /* For NanoVG, we need to create colors rather than GCs */
+    /* For NanoVG, we need to create colors rather than GCs. */
     XColor lightColor, darkColor;
     int stressed, tmp1, tmp2;
     int r, g, b;
@@ -396,16 +398,16 @@ TkpGetShadows(
         g = (int) borderPtr->bgColorPtr->green;
         b = (int) borderPtr->bgColorPtr->blue;
 
-        /* For NanoVG, we'll use a simplified approach */
+        /* For NanoVG, we'll use a simplified approach. */
         float darkFactor = 0.6f;  /* 40% darker */
         float lightFactor = 1.4f; /* 40% brighter */
 
-        /* Create dark color */
+        /* Create dark color. */
         darkColor.red = (unsigned short)(r * darkFactor);
         darkColor.green = (unsigned short)(g * darkFactor);
         darkColor.blue = (unsigned short)(b * darkFactor);
 
-        /* Create light color */
+        /* Create light color. */
         tmp1 = (int)(r * lightFactor);
         if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;
         tmp2 = (MAX_INTENSITY + r) / 2;
@@ -422,19 +424,19 @@ TkpGetShadows(
         lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
 
         /*
-         * Allocate the shadow colors - for NanoVG we store them directly
+         * Allocate the shadow colors - for NanoVG we store them directly.
          */
         borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
         borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
         
-        /* For NanoVG, we don't need GCs, but we keep the fields for compatibility */
+        /* For NanoVG, we don't need GCs, but we keep the fields for compatibility. */
         borderPtr->darkGC = (GC)1;  /* Dummy non-NULL value */
         borderPtr->lightGC = (GC)1; /* Dummy non-NULL value */
         
         return;
     }
 
-    /* For simpler displays, use stippled patterns */
+    /* For simpler displays, use stippled patterns. */
     if (borderPtr->shadow == None) {
         borderPtr->shadow = Tk_GetBitmap(NULL, tkwin, "gray50");
         if (borderPtr->shadow == None) {
@@ -442,17 +444,17 @@ TkpGetShadows(
         }
     }
     
-    /* For NanoVG/Wayland, we'll use simple color variations even for monochrome */
+    /* For NanoVG/Wayland, we'll use simple color variations even for monochrome. */
     r = (int) borderPtr->bgColorPtr->red;
     g = (int) borderPtr->bgColorPtr->green;
     b = (int) borderPtr->bgColorPtr->blue;
     
-    /* Dark shadow - 30% darker */
+    /* Dark shadow - 30% darker. */
     darkColor.red = (unsigned short)(r * 0.7f);
     darkColor.green = (unsigned short)(g * 0.7f);
     darkColor.blue = (unsigned short)(b * 0.7f);
     
-    /* Light shadow - 30% lighter */
+    /* Light shadow - 30% lighter. */
     lightColor.red = (unsigned short)(r * 1.3f);
     if (lightColor.red > MAX_INTENSITY) lightColor.red = MAX_INTENSITY;
     lightColor.green = (unsigned short)(g * 1.3f);
@@ -463,13 +465,13 @@ TkpGetShadows(
     borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
     borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
     
-    /* Dummy GC values for compatibility */
+    /* Dummy GC values for compatibility. */
     borderPtr->darkGC = (GC)1;
     borderPtr->lightGC = (GC)1;
 }
 
 /*
- * Helper functions for NanoVG integration
+ * Helper functions for NanoVG integration.
  */
 
 static NVGcolor
@@ -477,7 +479,7 @@ ColorToNVGColor(XColor *color)
 {
     if (!color) return nvgRGB(0, 0, 0);
     
-    /* Convert XColor (0-65535) to NVGcolor (0.0-1.0) */
+    /* Convert XColor (0-65535) to NVGcolor (0.0-1.0). */
     return nvgRGBf(
         color->red / 65535.0f,
         color->green / 65535.0f,
@@ -488,7 +490,7 @@ ColorToNVGColor(XColor *color)
 static NVGcolor
 GetShadowColor(NVGcolor base, float factor)
 {
-    /* Multiply each component by factor, clamping to [0,1] */
+    /* Multiply each component by factor, clamping to [0,1]. */
     float r = base.r * factor;
     float g = base.g * factor;
     float b = base.b * factor;

@@ -5,6 +5,7 @@
  *	for Wayland/GLFW/nanovg.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -121,7 +122,7 @@ static const struct CursorName {
  * These are X11 XBM format strings converted to binary data.
  */
 
-/* X_cursor bitmap (16x16) */
+/* X_cursor bitmap (16x16). */
 static unsigned char x_cursor_bits[] = {
     0x00, 0x00, 0x18, 0x18, 0x3c, 0x3c, 0x7e, 0x7e,
     0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18,
@@ -129,7 +130,7 @@ static unsigned char x_cursor_bits[] = {
     0x3c, 0x3c, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00
 };
 
-/* based_arrow_down bitmap (16x16) */
+/* based_arrow_down bitmap (16x16). */
 static unsigned char based_arrow_down_bits[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -137,7 +138,7 @@ static unsigned char based_arrow_down_bits[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-/* cross_reverse bitmap (16x16) */
+/* cross_reverse bitmap (16x16). */
 static unsigned char cross_reverse_bits[] = {
     0x80, 0x01, 0x40, 0x02, 0x20, 0x04, 0x10, 0x08,
     0x08, 0x10, 0x04, 0x20, 0x02, 0x40, 0x01, 0x80,
@@ -145,7 +146,7 @@ static unsigned char cross_reverse_bits[] = {
     0x08, 0x10, 0x04, 0x20, 0x02, 0x40, 0x01, 0x80
 };
 
-/* watch bitmap (16x16) */
+/* watch bitmap (16x16). */
 static unsigned char watch_bits[] = {
     0x00, 0x00, 0xf0, 0x0f, 0x08, 0x10, 0x04, 0x20,
     0x04, 0x20, 0x02, 0x40, 0x02, 0x40, 0x01, 0x80,
@@ -153,7 +154,7 @@ static unsigned char watch_bits[] = {
     0x04, 0x20, 0x08, 0x10, 0xf0, 0x0f, 0x00, 0x00
 };
 
-/* Mask for watch cursor */
+/* Mask for watch cursor. */
 static unsigned char watch_mask_bits[] = {
     0xf0, 0x0f, 0xf8, 0x1f, 0xfc, 0x3f, 0xfe, 0x7f,
     0xfe, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -161,7 +162,7 @@ static unsigned char watch_mask_bits[] = {
     0xfe, 0x7f, 0xfc, 0x3f, 0xf8, 0x1f, 0xf0, 0x0f
 };
 
-/* Built-in cursor database */
+/* Built-in cursor database. */
 static const struct BuiltinCursor {
     const char *name;
     unsigned char *bits;
@@ -202,7 +203,7 @@ static const struct TkCursorName {
     {NULL,	NULL,			NULL}
 };
 
-/* Forward declarations */
+/* Forward declarations. */
 static GLFWcursor* CreateCursorFromBitmapData(const unsigned char* source,
     const unsigned char* mask, int width, int height, int xHot, int yHot,
     unsigned int fgColor, unsigned int bgColor);
@@ -263,13 +264,13 @@ ConvertXBMToRGBA(
                 rgba[rgbaIndex+2] = 0;   /* B */
                 rgba[rgbaIndex+3] = 0;   /* A */
             } else if (srcBit == 1) {
-                /* Foreground color */
+                /* Foreground color. */
                 rgba[rgbaIndex] = (fgColor >> 16) & 0xFF;   /* R */
                 rgba[rgbaIndex+1] = (fgColor >> 8) & 0xFF;  /* G */
                 rgba[rgbaIndex+2] = fgColor & 0xFF;         /* B */
                 rgba[rgbaIndex+3] = (fgColor >> 24) & 0xFF; /* A */
             } else {
-                /* Background color */
+                /* Background color. */
                 rgba[rgbaIndex] = (bgColor >> 16) & 0xFF;   /* R */
                 rgba[rgbaIndex+1] = (bgColor >> 8) & 0xFF;  /* G */
                 rgba[rgbaIndex+2] = bgColor & 0xFF;         /* B */
@@ -354,7 +355,7 @@ LoadImageFile(
         }
     }
     
-    /* Try as XBM file */
+    /* Try as XBM file. */
     FILE* fp = fopen(filename, "r");
     if (!fp) {
         return 0;
@@ -373,7 +374,7 @@ LoadImageFile(
         return 0;
     }
     
-    /* Convert XBM to RGBA */
+    /* Convert XBM to RGBA. */
     *pixels = ConvertXBMToRGBA(xbmBits, NULL, *width, *height, 
                                0xFF000000, 0xFFFFFFFF);
     Tcl_Free(xbmBits);
@@ -405,7 +406,7 @@ ParseXBMData(
     int* xHot,
     int* yHot)
 {
-    /* Simple XBM parser - looks for width, height, and data */
+    /* Simple XBM parser - looks for width, height, and data. */
     const char* ptr = data;
     char name[256];
     
@@ -427,7 +428,7 @@ ParseXBMData(
         ptr++;
     }
     
-    /* Look for hotspot */
+    /* Look for hotspot. */
     ptr = data;
     while (*ptr) {
         if (sscanf(ptr, "#define %255s %d", name, xHot) == 2) {
@@ -444,7 +445,7 @@ ParseXBMData(
         ptr++;
     }
     
-    /* Find bitmap data */
+    /* Find bitmap data. */
     ptr = strstr(data, "static char");
     if (!ptr) ptr = strstr(data, "static unsigned char");
     if (!ptr) return NULL;
@@ -500,7 +501,7 @@ LoadXBMFile(
         return 0;
     }
     
-    /* Read entire file */
+    /* Read entire file. */
     fseek(fp, 0, SEEK_END);
     long fileSize = ftell(fp);
     fseek(fp, 0, SEEK_SET);
@@ -521,7 +522,7 @@ LoadXBMFile(
     
     fileData[fileSize] = '\0';
     
-    /* Parse XBM data */
+    /* Parse XBM data. */
     int xHot, yHot;
     unsigned char* xbmBits = ParseXBMData(fileData, width, height, &xHot, &yHot);
     Tcl_Free(fileData);
@@ -530,7 +531,7 @@ LoadXBMFile(
         return 0;
     }
     
-    /* Convert XBM to RGBA (black on white by default for XBM) */
+    /* Convert XBM to RGBA (black on white by default for XBM). */
     *pixels = ConvertXBMToRGBA(xbmBits, NULL, *width, *height, 
                                0xFF000000, 0xFFFFFFFF);
     Tcl_Free(xbmBits);
@@ -558,7 +559,7 @@ static unsigned int
 ParseColor(
     const char* colorName)
 {
-    /* Simple color parser - supports named colors and hex */
+    /* Simple color parser - supports named colors and hex. */
     static struct {
         const char* name;
         unsigned int value;
@@ -580,7 +581,7 @@ ParseColor(
         }
     }
     
-    /* Try hex format */
+    /* Try hex format. */
     if (colorName[0] == '#') {
         unsigned int rgb = 0;
         if (sscanf(colorName + 1, "%x", &rgb) == 1) {
@@ -592,7 +593,7 @@ ParseColor(
         }
     }
     
-    /* Default to black */
+    /* Default to black. */
     return 0xFF000000;
 }
 
@@ -688,7 +689,7 @@ TkGetCursorByName(
 	}
     }
 
-    /* Check built-in cursor database */
+    /* Check built-in cursor database. */
     for (builtinPtr = builtinCursors; builtinPtr->name; builtinPtr++) {
         if (strcmp(builtinPtr->name, argv[0]) == 0) {
             break;
@@ -696,7 +697,7 @@ TkGetCursorByName(
     }
 
     if ((argv[0][0] != '@') && (tkCursorPtr == NULL) && (!builtinPtr->name)) {
-        /* Look for standard cursor shape */
+        /* Look for standard cursor shape. */
         const struct CursorName *namePtr;
 
         if (argc > 3) {
@@ -705,7 +706,7 @@ TkGetCursorByName(
         
         for (namePtr = cursorNames; ; namePtr++) {
             if (namePtr->name == NULL) {
-                /* Not found, use default arrow cursor */
+                /* Not found, use default arrow cursor. */
                 standardShape = GLFW_ARROW_CURSOR;
                 break;
             }
@@ -716,7 +717,7 @@ TkGetCursorByName(
             }
         }
         
-        /* Parse colors if provided */
+        /* Parse colors if provided. */
         if (argc >= 2) {
             fgColor = ParseColor(argv[1]);
         }
@@ -725,14 +726,14 @@ TkGetCursorByName(
         }
         
         if (standardShape != -1) {
-            /* Create standard cursor (GLFW standard cursors ignore colors) */
+            /* Create standard cursor (GLFW standard cursors ignore colors). */
             glfwCursor = glfwCreateStandardCursor(standardShape);
         } else {
-            /* Should have been caught by builtin check */
+            /* Should have been caught by builtin check. */
             goto badString;
         }
     } else if (builtinPtr->name) {
-        /* Create from built-in bitmap data */
+        /* Create from built-in bitmap data. */
         if (argc >= 2) {
             fgColor = ParseColor(argv[1]);
         }
@@ -749,7 +750,7 @@ TkGetCursorByName(
                                                 fgColor,
                                                 bgColor);
     } else if (argv[0][0] == '@') {
-        /* File-based cursor */
+        /* File-based cursor. */
         if (Tcl_IsSafe(interp)) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj(
                     "cannot get cursor from a file in a safe interpreter",
@@ -762,7 +763,7 @@ TkGetCursorByName(
             goto badString;
         }
 
-        /* Parse colors */
+        /* Parse colors. */
         if (argc == 2) {
             fgColor = ParseColor(argv[1]);
             bgColor = fgColor;
@@ -771,7 +772,7 @@ TkGetCursorByName(
             bgColor = ParseColor(argv[3]);
         }
 
-        /* Load image file */
+        /* Load image file. */
         unsigned char* pixels = NULL;
         int width, height;
         
@@ -782,7 +783,7 @@ TkGetCursorByName(
             goto cleanup;
         }
 
-        /* Create cursor (hotspot defaults to center) */
+        /* Create cursor (hotspot defaults to center). */
         GLFWimage image;
         image.width = width;
         image.height = height;
@@ -791,7 +792,7 @@ TkGetCursorByName(
         glfwCursor = glfwCreateCursor(&image, width/2, height/2);
         Tcl_Free(pixels);
     } else if (tkCursorPtr != NULL) {
-        /* Custom cursor from embedded XBM data */
+        /* Custom cursor from embedded XBM data. */
         if (strcmp(argv[0], "none") == 0) {
             /* Create invisible cursor */
             unsigned char transparent[4] = {0, 0, 0, 0};
@@ -801,19 +802,19 @@ TkGetCursorByName(
             image.pixels = transparent;
             glfwCursor = glfwCreateCursor(&image, 0, 0);
         } else {
-            /* Parse XBM data */
+            /* Parse XBM data. */
             int width, height, xHot, yHot;
             unsigned char* bits = ParseXBMData(tkCursorPtr->data, 
                                               &width, &height, &xHot, &yHot);
             if (bits) {
-                /* Parse colors if provided */
+                /* Parse colors if provided. */
                 if (argc >= 2) {
                     fgColor = ParseColor(argv[1]);
                 }
                 if (argc >= 3) {
                     bgColor = ParseColor(argv[2]);
                 } else {
-                    bgColor = 0; /* Transparent background */
+                    bgColor = 0; /* Transparent background. */
                 }
                 
                 unsigned char* mask = NULL;
@@ -843,7 +844,7 @@ TkGetCursorByName(
         cursorPtr->width = 0;
         cursorPtr->height = 0;
         
-        /* Store dimensions for built-in cursors */
+        /* Store dimensions for built-in cursors. */
         if (builtinPtr->name) {
             cursorPtr->width = builtinPtr->width;
             cursorPtr->height = builtinPtr->height;
@@ -891,7 +892,7 @@ TkCreateCursorFromData(
     XColor fgColor,		/* Foreground color for cursor. */
     XColor bgColor)		/* Background color for cursor. */
 {
-    /* Convert XColor to ARGB format */
+    /* Convert XColor to ARGB format. */
     unsigned int fgARGB = 0xFF000000 |
                          ((fgColor.red >> 8) << 16) |
                          ((fgColor.green >> 8) << 8) |
@@ -980,7 +981,7 @@ TkpSetCursor(
         if (unixCursorPtr != NULL && unixCursorPtr->cursor != NULL) {
             glfwSetCursor(window, unixCursorPtr->cursor);
         } else {
-            /* Set to default arrow cursor */
+            /* Set to default arrow cursor. */
             glfwSetCursor(window, NULL);
         }
     }

@@ -5,7 +5,7 @@
  *	GLFW, and NanoVG. Many of these functions emulate Xlib functions.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2024 Tk/Wayland Port
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -16,19 +16,19 @@
 #include "tkButton.h"
 #include "nanovg.h"
 
-/* GLFW Integration */
+/* GLFW Integration. */
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WAYLAND
 #include <GLFW/glfw3native.h>
 
-/* OpenGL for NanoVG */
+/* OpenGL for NanoVG. */
 #include <GL/gl.h>
 
 #define radians(d)	((d) * (M_PI/180.0))
 
 /*
- * Structure to hold Wayland/NanoVG drawing context with GLFW
+ * Structure to hold Wayland/NanoVG drawing context with GLFW.
  */
 typedef struct {
     NVGcontext* vg;             /* NanoVG context */
@@ -40,7 +40,7 @@ typedef struct {
 } WaylandDrawable;
 
 /*
- * Structure for Wayland drawing context
+ * Structure for Wayland drawing context.
  */
 typedef struct {
     NVGcontext* vg;             /* NanoVG context */
@@ -51,7 +51,7 @@ typedef struct {
 } TkWaylandDrawingContext;
 
 /*
- * Structure to map Tk windows to GLFW windows
+ * Structure to map Tk windows to GLFW windows.
  */
 typedef struct DrawableMap {
     Drawable tkDrawable;
@@ -60,7 +60,7 @@ typedef struct DrawableMap {
 } DrawableMap;
 
 /*
- * Global state
+ * Global state.
  */
 static NVGcontext* globalVGContext = NULL;
 static GLFWwindow* globalGLFWWindow = NULL;
@@ -80,14 +80,14 @@ typedef struct WaylandDrawable WaylandDrawable;
 typedef struct TkWaylandDrawingContext TkWaylandDrawingContext;
 
 /*
- * Initialization and cleanup
+ * Initialization and cleanup.
  */
 MODULE_SCOPE int TkWaylandInitDrawing(Tcl_Interp *interp, 
                                        struct wl_display* display);
 MODULE_SCOPE void TkWaylandCleanupDrawing(void);
 
 /*
- * Window/Drawable management
+ * Window/Drawable management.
  */
 MODULE_SCOPE WaylandDrawable* TkWaylandCreateDrawable(Drawable tkDrawable,
                                                        int width,
@@ -97,19 +97,19 @@ MODULE_SCOPE GLFWwindow* Tk_WaylandGetGLFWWindow(Drawable drawable);
 MODULE_SCOPE void* Tk_WaylandGetContextForDrawable(Drawable drawable);
 
 /*
- * Drawing context management
+ * Drawing context management.
  */
 MODULE_SCOPE bool TkWaylandSetupDrawingContext(Drawable d, GC gc,
                                                 TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE void TkWaylandRestoreDrawingContext(TkWaylandDrawingContext *dcPtr);
 
 /*
- * Event handling
+ * Event handling.
  */
 MODULE_SCOPE void TkWaylandPollEvents(void);
 
 /*
- * Xlib emulation functions 
+ * Xlib emulation functions. 
  */
 int XDrawLines(Display *display, Drawable d, GC gc, XPoint *points,
                int npoints, int mode);
@@ -131,7 +131,7 @@ int XFillArc(Display *display, Drawable d, GC gc, int x, int y,
 int XFillArcs(Display *display, Drawable d, GC gc, XArc *arcArr, int nArcs);
 
 /*
- * Tk-specific drawing functions
+ * Tk-specific drawing functions.
  */
 void Tk_DrawHighlightBorder(Tk_Window tkwin, GC fgGC, GC bgGC,
                             int highlightWidth, Drawable drawable);
@@ -227,7 +227,7 @@ TkWaylandInitDrawing(
     Tcl_Interp *interp,
     struct wl_display* display)
 {
-    /* Initialize GLFW */
+    /* Initialize GLFW. */
     if (!glfwInitialized) {
         glfwSetErrorCallback(GLFWErrorCallback);
         
@@ -237,7 +237,7 @@ TkWaylandInitDrawing(
         }
         glfwInitialized = 1;
         
-        /* Configure GLFW for Wayland */
+        /* Configure GLFW for Wayland. */
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -245,7 +245,7 @@ TkWaylandInitDrawing(
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_SAMPLES, 4); /* 4x MSAA */
         
-        /* Create a hidden global window for context sharing */
+        /* Create a hidden global window for context sharing. */
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         globalGLFWWindow = glfwCreateWindow(1, 1, "Tk Global Context", NULL, NULL);
         if (!globalGLFWWindow) {
@@ -257,7 +257,7 @@ TkWaylandInitDrawing(
         
         glfwMakeContextCurrent(globalGLFWWindow);
         
-        /* Enable VSync */
+        /* Enable VSync. */
         glfwSwapInterval(1);
     }
     
@@ -265,7 +265,7 @@ TkWaylandInitDrawing(
     if (!globalVGContext) {
         glfwMakeContextCurrent(globalGLFWWindow);
         
-        /* Create NanoVG context with OpenGL 3 backend */
+        /* Create NanoVG context with OpenGL 3 backend. */
         globalVGContext = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (!globalVGContext) {
             Tcl_SetResult(interp, "Failed to create NanoVG context", TCL_STATIC);
@@ -298,7 +298,7 @@ TkWaylandCleanupDrawing(void)
     DrawableMap* current = drawableMap;
     DrawableMap* next;
     
-    /* Clean up all registered drawables */
+    /* Clean up all registered drawables. */
     while (current) {
         next = current->next;
         if (current->waylandDrawable) {
@@ -312,13 +312,13 @@ TkWaylandCleanupDrawing(void)
     }
     drawableMap = NULL;
     
-    /* Clean up NanoVG */
+    /* Clean up NanoVG. */
     if (globalVGContext) {
         nvgDeleteGL3(globalVGContext);
         globalVGContext = NULL;
     }
     
-    /* Clean up GLFW */
+    /* Clean up GLFW. */
     if (globalGLFWWindow) {
         glfwDestroyWindow(globalGLFWWindow);
         globalGLFWWindow = NULL;
