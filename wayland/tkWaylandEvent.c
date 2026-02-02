@@ -5,7 +5,7 @@
  *	of Tk.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- *      Copyright © 2026 Kevin Walzer
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -85,10 +85,8 @@ static void ProcessPendingEvents(TkDisplay *dispPtr);
 static int lastGLFWError = 0;
 static char lastGLFWErrorMsg[512] = {0};
 
-/* -------------------------------------------------------------------------
-   Error handling
-   ------------------------------------------------------------------------- */
 
+/* Error handling. */
 static void
 ErrorCallback(int error, const char *description)
 {
@@ -98,9 +96,7 @@ ErrorCallback(int error, const char *description)
     fprintf(stderr, "%s\n", lastGLFWErrorMsg);
 }
 
-/* -------------------------------------------------------------------------
-   Event queue management
-   ------------------------------------------------------------------------- */
+/* Event queue management. */
 
 static void
 InitEventQueue(TkEventQueue *queue)
@@ -171,9 +167,7 @@ DequeueEvent(TkEventQueue *queue, XEvent *event)
 }
 
 
-/* -------------------------------------------------------------------------
-   Initialization / creation
-   ------------------------------------------------------------------------- */
+/* Initialization / creation. */
 
 void
 TkCreateXEventSource(void)
@@ -196,7 +190,7 @@ TkCreateXEventSource(void)
         
         tsdPtr->glfwInitialized = 1;
 
-    /* Create Tcl event source */
+    /* Create Tcl event source. */
     if (!tsdPtr->eventSourceCreated) {
         Tcl_CreateEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
         TkCreateExitHandler(DisplayExitHandler, NULL);
@@ -230,9 +224,7 @@ DisplayExitHandler(void *dummy)
     tsdPtr->initialized = 0;
 }
 
-/* -------------------------------------------------------------------------
-   Open / close display
-   ------------------------------------------------------------------------- */
+/*  Open / close display. */
 
 TkDisplay *
 TkpOpenDisplay(const char *displayNameStr)
@@ -240,13 +232,13 @@ TkpOpenDisplay(const char *displayNameStr)
     TkDisplay *dispPtr = NULL;
     GLFWDisplayData *glfwData = NULL;
     
-    /* GLFW ignores display names - uses default display */
+    /* GLFW ignores display names - uses default display. */
     (void)displayNameStr;
 
-    /* Ensure event source is created */
+    /* Ensure event source is created. */
     TkCreateXEventSource();
     
-    /* Allocate display structure */
+    /* Allocate display structure. */
     dispPtr = (TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
     if (!dispPtr) {
         fprintf(stderr, "Failed to allocate TkDisplay\n");
@@ -254,7 +246,7 @@ TkpOpenDisplay(const char *displayNameStr)
     }
     memset(dispPtr, 0, sizeof(TkDisplay));
 
-    /* Allocate GLFW-specific data */
+    /* Allocate GLFW-specific data. */
     glfwData = (GLFWDisplayData *)Tcl_Alloc(sizeof(GLFWDisplayData));
     if (!glfwData) {
         fprintf(stderr, "Failed to allocate GLFWDisplayData\n");
@@ -264,10 +256,10 @@ TkpOpenDisplay(const char *displayNameStr)
     memset(glfwData, 0, sizeof(GLFWDisplayData));
     dispPtr->glfw = glfwData;
 
-    /* Initialize event queue */
+    /* Initialize event queue. */
     InitEventQueue(&glfwData->eventQueue);
 
-    /* Create invisible dummy window for event processing */
+    /* Create invisible dummy window for event processing. */
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
@@ -288,19 +280,22 @@ TkpOpenDisplay(const char *displayNameStr)
     glfwData->isWayland = (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND);
     
 
-    /* Hook into Tcl event loop */
-    /* Note: GLFW doesn't expose file descriptors on all platforms */
-    /* We use timer-based polling instead */
+    /* 
+     * Hook into Tcl event loop.
+     * Note: GLFW doesn't expose file descriptors on all platforms. 
+     * We use timer-based polling instead.
+     */
+    
     Tcl_CreateTimerHandler(10, (Tcl_TimerProc *)DisplayCheckProc, dispPtr);
 
-    /* Initialize keymap (see tkWaylandKey.c) */
+    /* Initialize keymap. */
     TkpInitKeymapInfo(dispPtr);
     
-    /* Initialize clipboard */
+    /* Initialize clipboard. */
     glfwData->clipboardText = NULL;
     glfwData->clipboardLen = 0;
     
-    /* Initialize timing */
+    /* Initialize timing. */
     glfwData->lastPollTime = glfwGetTime();
     glfwData->pollCount = 0;
 
@@ -318,26 +313,26 @@ TkpCloseDisplay(TkDisplay *dispPtr)
 
     glfwData = (GLFWDisplayData *)dispPtr->glfw;
 
-    /* Clean up Tk internals */
+    /* Clean up Tk internal. */
     TkSendCleanup(dispPtr);
     TkWmCleanup(dispPtr);
     TkClipCleanup(dispPtr);
     
-    /* Clean up keymap info */
+    /* Clean up keymap info. */
     TkpCleanupKeymapInfo(dispPtr);
 
     if (glfwData) {
-        /* Destroy GLFW window */
+        /* Destroy GLFW window. */
         if (glfwData->dummyWindow) {
             glfwDestroyWindow(glfwData->dummyWindow);
             glfwData->dummyWindow = NULL;
         }
         
-        /* Clean up event queue */
+        /* Clean up event queue. */
         CleanupEventQueue(&glfwData->eventQueue);
         
 
-        /* Free clipboard cache */
+        /* Free clipboard cache. */
         if (glfwData->clipboardText) {
             Tcl_Free(glfwData->clipboardText);
             glfwData->clipboardText = NULL;
@@ -350,9 +345,7 @@ TkpCloseDisplay(TkDisplay *dispPtr)
     Tcl_Free((char *)dispPtr);
 }
 
-/* -------------------------------------------------------------------------
-   Event loop integration
-   ------------------------------------------------------------------------- */
+/* Event loop integration.  */
 
 static void
 DisplaySetupProc(void *dummy, int flags)
@@ -365,24 +358,199 @@ DisplaySetupProc(void *dummy, int flags)
         return;
     }
 
-    /* Set maximum block time for event loop */
+    /* Set maximum block time for event loo. */
     Tcl_SetMaxBlockTime(&blockTime);
 }
 
 static void
-DisplayCheckProc(void *dummy, int flags)
+DisplayCheckProc(void *clientData, int flags)
 {
-    (void)dummy;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
+    GLFWDisplayData *glfwData;
+    
+    (void)flags;
     
     if (!(flags & TCL_WINDOW_EVENTS)) {
         return;
     }
+    
+    if (!dispPtr) {
+        return;
+    }
+    
+    glfwData = (GLFWDisplayData *)dispPtr->glfw;
+    if (!glfwData || !glfwData->dummyWindow) {
+        return;
+    }
 
-    /* Poll GLFW events non-blocking */
+    /* Poll GLFW events non-blocking. */
     glfwPollEvents();
+    
+    /* Update timing statistics. */
+    double currentTime = glfwGetTime();
+    double elapsed = currentTime - glfwData->lastPollTime;
+    glfwData->lastPollTime = currentTime;
+    glfwData->pollCount++;
+    
+    /* Check for window close events. */
+    if (glfwWindowShouldClose(glfwData->dummyWindow)) {
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = ClientMessage;
+        event.xclient.message_type = XInternAtom(Tk_Display(Tk_MainWindow(dispPtr)), 
+                                                "WM_DELETE_WINDOW", False);
+        event.xclient.format = 32;
+        QueueEvent(&glfwData->eventQueue, &event);
+    }
+    
+    /* Check for window focus changes. */
+    int focused = glfwGetWindowAttrib(glfwData->dummyWindow, GLFW_FOCUSED);
+    static int lastFocused = 0;
+    
+    if (focused != lastFocused) {
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = (focused) ? FocusIn : FocusOut;
+        event.xfocus.mode = NotifyNormal;
+        event.xfocus.detail = NotifyDetailNone;
+        QueueEvent(&glfwData->eventQueue, &event);
+        lastFocused = focused;
+    }
+    
+    /* Check for window size changes. */
+    int width, height;
+    glfwGetWindowSize(glfwData->dummyWindow, &width, &height);
+    static int lastWidth = 0, lastHeight = 0;
+    
+    if (width != lastWidth || height != lastHeight) {
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = ConfigureNotify;
+        event.xconfigure.width = width;
+        event.xconfigure.height = height;
+        event.xconfigure.x = 0;
+        event.xconfigure.y = 0;
+        QueueEvent(&glfwData->eventQueue, &event);
+        
+        lastWidth = width;
+        lastHeight = height;
+    }
+    
+    /* Check for mouse button events. */
+    for (int button = 0; button <= GLFW_MOUSE_BUTTON_LAST; button++) {
+        static int lastButtonStates[GLFW_MOUSE_BUTTON_LAST + 1] = {0};
+        int state = glfwGetMouseButton(glfwData->dummyWindow, button);
+        
+        if (state != lastButtonStates[button]) {
+            XEvent event;
+            memset(&event, 0, sizeof(XEvent));
+            event.type = (state == GLFW_PRESS) ? ButtonPress : ButtonRelease;
+            event.xbutton.button = button + 1; /* GLFW buttons are 0-based, X11 are 1-based. */
+            event.xbutton.state = 0;
+            
+            double x, y;
+            glfwGetCursorPos(glfwData->dummyWindow, &x, &y);
+            event.xbutton.x = (int)x;
+            event.xbutton.y = (int)y;
+            
+            QueueEvent(&glfwData->eventQueue, &event);
+            lastButtonStates[button] = state;
+        }
+    }
+    
+    /* Check for mouse motion. */
+    static double lastX = 0, lastY = 0;
+    double x, y;
+    glfwGetCursorPos(glfwData->dummyWindow, &x, &y);
+    
+    if (x != lastX || y != lastY) {
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = MotionNotify;
+        event.xmotion.x = (int)x;
+        event.xmotion.y = (int)y;
+        event.xmotion.state = 0;
+        
+        /* Check which buttons are pressed. */
+        for (int button = 0; button <= GLFW_MOUSE_BUTTON_LAST; button++) {
+            if (glfwGetMouseButton(glfwData->dummyWindow, button) == GLFW_PRESS) {
+                event.xmotion.state |= (1 << button);
+            }
+        }
+        
+        QueueEvent(&glfwData->eventQueue, &event);
+        lastX = x;
+        lastY = y;
+    }
+    
+    /* Check for key events. */
+    static int lastKeyStates[GLFW_KEY_LAST + 1] = {0};
+    
+    for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; key++) {
+        int state = glfwGetKey(glfwData->dummyWindow, key);
+        
+        if (state != lastKeyStates[key]) {
+            XEvent event;
+            memset(&event, 0, sizeof(XEvent));
+            event.type = (state == GLFW_PRESS) ? KeyPress : KeyRelease;
+            event.xkey.keycode = key;
+            event.xkey.state = 0;
+            
+            /* Set modifier state. */
+            if (glfwGetKey(glfwData->dummyWindow, GLFW_KEY_LEFT_SHIFT) || 
+                glfwGetKey(glfwData->dummyWindow, GLFW_KEY_RIGHT_SHIFT)) {
+                event.xkey.state |= ShiftMask;
+            }
+            if (glfwGetKey(glfwData->dummyWindow, GLFW_KEY_LEFT_CONTROL) || 
+                glfwGetKey(glfwData->dummyWindow, GLFW_KEY_RIGHT_CONTROL)) {
+                event.xkey.state |= ControlMask;
+            }
+            if (glfwGetKey(glfwData->dummyWindow, GLFW_KEY_LEFT_ALT) || 
+                glfwGetKey(glfwData->dummyWindow, GLFW_KEY_RIGHT_ALT)) {
+                event.xkey.state |= Mod1Mask;
+            }
+            
+            QueueEvent(&glfwData->eventQueue, &event);
+            lastKeyStates[key] = state;
+        }
+    }
+    
+    /* Check for clipboard updates. */
+    const char *clipboardText = glfwGetClipboardString(glfwData->dummyWindow);
+    static char *lastClipboardText = NULL;
+    
+    if ((clipboardText == NULL && lastClipboardText != NULL) ||
+        (clipboardText != NULL && lastClipboardText == NULL) ||
+        (clipboardText != NULL && lastClipboardText != NULL && 
+         strcmp(clipboardText, lastClipboardText) != 0)) {
+        
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = SelectionClear; 
+        QueueEvent(&glfwData->eventQueue, &event);
+        
+        if (lastClipboardText) {
+            Tcl_Free(lastClipboardText);
+        }
+        if (clipboardText) {
+            lastClipboardText = Tcl_Alloc(strlen(clipboardText) + 1);
+            strcpy(lastClipboardText, clipboardText);
+        } else {
+            lastClipboardText = NULL;
+        }
+    }
 
-    /* Process any pending events from our queue */
-    /* In a full implementation, GLFW callbacks would populate this queue */
+    /* Process any pending events from our queue. */
+    ProcessPendingEvents(dispPtr);
+    
+    /* Check for GLFW errors. */
+    if (lastGLFWError != 0) {
+        fprintf(stderr, "GLFW error in DisplayCheckProc: %s\n", lastGLFWErrorMsg);
+        lastGLFWError = 0;
+    }
+    
+    /* Re-schedule ourselves for continuous polling. */
+    Tcl_CreateTimerHandler(10, (Tcl_TimerProc *)DisplayCheckProc, dispPtr);
 }
 
 static void
@@ -402,19 +570,19 @@ DisplayFileProc(void *clientData, int flags)
         return;
     }
 
-    /* Update poll timing statistics */
+    /* Update poll timing statistics. */
     double currentTime = glfwGetTime();
     double elapsed = currentTime - glfwData->lastPollTime;
     glfwData->lastPollTime = currentTime;
     glfwData->pollCount++;
 
-    /* Poll GLFW for events */
+    /* Poll GLFW for events. */
     glfwPollEvents();
     
-    /* Process queued events */
+    /* Process queued events. */
     ProcessPendingEvents(dispPtr);
     
-    /* Check for errors */
+    /* Check for errors. */
     if (lastGLFWError != 0) {
         fprintf(stderr, "GLFW error during event processing: %s\n", 
                 lastGLFWErrorMsg);
@@ -438,22 +606,20 @@ ProcessPendingEvents(TkDisplay *dispPtr)
         return;
     }
 
-    /* Process all queued events */
+    /* Process all queued events. */
     while (DequeueEvent(&glfwData->eventQueue, &event)) {
-        /* Queue event to Tk */
+        /* Queue event to Tk. */
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         processed++;
         
-        /* Prevent infinite loops - process max 100 events per call */
+        /* Prevent infinite loops - process max 100 events per call. */
         if (processed >= 100) {
             break;
         }
     }
 }
 
-/* -------------------------------------------------------------------------
-   Clipboard management
-   ------------------------------------------------------------------------- */
+/* Clipboard management. */
 
 void
 TkClipCleanup(TkDisplay *dispPtr)
@@ -469,7 +635,7 @@ TkClipCleanup(TkDisplay *dispPtr)
         return;
     }
 
-    /* Free cached clipboard text */
+    /* Free cached clipboard text. */
     if (glfwData->clipboardText) {
         Tcl_Free(glfwData->clipboardText);
         glfwData->clipboardText = NULL;
@@ -491,10 +657,10 @@ TkpClipboardSetText(TkDisplay *dispPtr, const char *text)
         return 0;
     }
 
-    /* Set clipboard via GLFW */
+    /* Set clipboard via GLFW. */
     glfwSetClipboardString(glfwData->dummyWindow, text);
     
-    /* Update cache */
+    /* Update cache. */
     if (glfwData->clipboardText) {
         Tcl_Free(glfwData->clipboardText);
     }
@@ -521,13 +687,13 @@ TkpClipboardGetText(TkDisplay *dispPtr)
         return NULL;
     }
 
-    /* Get clipboard from GLFW */
+    /* Get clipboard from GLFW. */
     text = glfwGetClipboardString(glfwData->dummyWindow);
     if (!text) {
         return NULL;
     }
     
-    /* Update cache */
+    /* Update cache. */
     if (glfwData->clipboardText) {
         Tcl_Free(glfwData->clipboardText);
     }
@@ -539,9 +705,7 @@ TkpClipboardGetText(TkDisplay *dispPtr)
     return glfwData->clipboardText;
 }
 
-/* -------------------------------------------------------------------------
-   Event processing utilities
-   ------------------------------------------------------------------------- */
+/* Event processing utilities. */
 
 int
 TkUnixDoOneXEvent(Tcl_Time *timePtr)
@@ -562,18 +726,18 @@ TkUnixDoOneXEvent(Tcl_Time *timePtr)
         }
     }
 
-    /* Wait for or poll events */
+    /* Wait for or poll events. */
     if (timeout_sec <= 0.0) {
         glfwPollEvents();
     } else {
-        /* Cap timeout at reasonable value (1 second) */
+        /* Cap timeout at reasonable value (1 second). */
         if (timeout_sec > 1.0) {
             timeout_sec = 1.0;
         }
         glfwWaitEventsTimeout(timeout_sec);
     }
 
-    /* Service Tcl events */
+    /* Service Tcl events. */
     result = Tcl_ServiceAll();
     
     return result;
@@ -584,14 +748,14 @@ TkpSync(Display *display)
 {
     (void)display;
     
-    /* GLFW doesn't have a direct sync equivalent */
-    /* Poll events to ensure all pending events are processed */
+    /* 
+     * GLFW doesn't have a direct sync equivalent.
+     * Poll events to ensure all pending events are processed.
+     */
     glfwPollEvents();
 }
 
-/* -------------------------------------------------------------------------
-   Pointer/cursor management
-   ------------------------------------------------------------------------- */
+/* Pointer/cursor management. */
 
 void
 TkpWarpPointer(TkDisplay *dispPtr)
@@ -622,7 +786,7 @@ TkpGetCursorPosition(TkDisplay *dispPtr, int *xPtr, int *yPtr)
         return 0;
     }
 
-    /* Get cursor position relative to dummy window */
+    /* Get cursor position relative to dummy window. */
     glfwGetCursorPos(glfwData->dummyWindow, &x, &y);
     
     *xPtr = (int)x;
@@ -633,9 +797,7 @@ TkpGetCursorPosition(TkDisplay *dispPtr, int *xPtr, int *yPtr)
 
 
 
-/* -------------------------------------------------------------------------
-   Platform detection
-   ------------------------------------------------------------------------- */
+/* Platform detection.  */
 
 int
 TkpIsWayland(TkDisplay *dispPtr)
