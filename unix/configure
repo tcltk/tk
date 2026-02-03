@@ -8427,9 +8427,9 @@ printf "%s\n" "$enable_wayland" >&6; }
         enable_xft=no
         UNIX_FONT_OBJS=tkUnixFont.o   # fallback / non-antialiased unless you later add fontconfig-based rendering
 
-		# ───────────────────────────────────────────────────────────────
+		# ─────────────────────────────────────────────────────────────
 		# Wayland-related dependencies (most are required nowadays)
-		# ───────────────────────────────────────────────────────────────
+		# ─────────────────────────────────────────────────────────────
 
 		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for wayland-client and wayland-cursor ≥ 1.18" >&5
 printf %s "checking for wayland-client and wayland-cursor ≥ 1.18... " >&6; }
