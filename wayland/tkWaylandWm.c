@@ -269,6 +269,9 @@ static int		WmGridCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int		WmIconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -766,6 +769,484 @@ TkWmSetClass(
      */
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmCleanup --
+ *
+ *	Cleanup remaining wm resources associated with a display.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	All WmInfo structure resources are freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWmCleanup(
+    TkDisplay *dispPtr)
+{
+    WmInfo *wmPtr, *nextPtr;
+
+    for (wmPtr = firstWmPtr; wmPtr != NULL; wmPtr = nextPtr) {
+        nextPtr = wmPtr->nextPtr;
+        
+        if (wmPtr->title != NULL) {
+            ckfree(wmPtr->title);
+        }
+        if (wmPtr->iconName != NULL) {
+            ckfree(wmPtr->iconName);
+        }
+        if (wmPtr->iconDataPtr != NULL) {
+            ckfree((char *)wmPtr->iconDataPtr);
+        }
+        if (wmPtr->leaderName != NULL) {
+            ckfree(wmPtr->leaderName);
+        }
+        if (wmPtr->menubar != NULL) {
+            Tk_DestroyWindow(wmPtr->menubar);
+        }
+        if (wmPtr->wrapperPtr != NULL) {
+            Tk_DestroyWindow((Tk_Window) wmPtr->wrapperPtr);
+        }
+        while (wmPtr->protPtr != NULL) {
+            ProtocolHandler *protPtr = wmPtr->protPtr;
+            wmPtr->protPtr = protPtr->nextPtr;
+            Tcl_EventuallyFree((ClientData) protPtr, TCL_DYNAMIC);
+        }
+        if (wmPtr->cmdArgv != NULL) {
+            ckfree((char *)wmPtr->cmdArgv);
+        }
+        if (wmPtr->clientMachine != NULL) {
+            ckfree(wmPtr->clientMachine);
+        }
+        if (wmPtr->glfwIcon != NULL) {
+            for (int i = 0; i < wmPtr->glfwIconCount; i++) {
+                if (wmPtr->glfwIcon[i].pixels != NULL) {
+                    ckfree((char *)wmPtr->glfwIcon[i].pixels);
+                }
+            }
+            ckfree((char *)wmPtr->glfwIcon);
+        }
+        
+        DestroyGlfwWindow(wmPtr);
+        ckfree((char *)wmPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetGrid --
+ *
+ *	Set grid coordinate system for top-level window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetGrid(
+    Tk_Window tkwin,
+    int reqWidth,
+    int reqHeight,
+    int widthInc,
+    int heightInc)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    WmInfo *wmPtr;
+
+    if (widthInc <= 0) {
+        widthInc = 1;
+    }
+    if (heightInc <= 0) {
+        heightInc = 1;
+    }
+
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
+        winPtr = winPtr->parentPtr;
+        if (winPtr == NULL) {
+            return;
+        }
+    }
+    wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+        return;
+    }
+
+    if ((wmPtr->gridWin != NULL) && (wmPtr->gridWin != tkwin)) {
+        return;
+    }
+
+    if ((wmPtr->reqGridWidth == reqWidth)
+            && (wmPtr->reqGridHeight == reqHeight)
+            && (wmPtr->widthInc == widthInc)
+            && (wmPtr->heightInc == heightInc)
+            && ((wmPtr->sizeHintsFlags & PBaseSize) == PBaseSize)) {
+        return;
+    }
+
+    if ((wmPtr->gridWin == NULL) && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+        wmPtr->width = -1;
+        wmPtr->height = -1;
+    }
+
+    wmPtr->gridWin = tkwin;
+    wmPtr->reqGridWidth = reqWidth;
+    wmPtr->reqGridHeight = reqHeight;
+    wmPtr->widthInc = widthInc;
+    wmPtr->heightInc = heightInc;
+    wmPtr->sizeHintsFlags |= PBaseSize;
+    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+    
+    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+        wmPtr->flags |= WM_UPDATE_PENDING;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_UnsetGrid --
+ *
+ *	Cancel gridding for top-level window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_UnsetGrid(
+    Tk_Window tkwin)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    WmInfo *wmPtr;
+
+    while (!(winPtr->flags & TK_TOP_HIERARCHY)) {
+        winPtr = winPtr->parentPtr;
+        if (winPtr == NULL) {
+            return;
+        }
+    }
+    wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+        return;
+    }
+
+    if (tkwin != wmPtr->gridWin) {
+        return;
+    }
+
+    wmPtr->gridWin = NULL;
+    wmPtr->sizeHintsFlags &= ~PBaseSize;
+    if (wmPtr->width != -1) {
+        wmPtr->width = winPtr->reqWidth + (wmPtr->width
+                - wmPtr->reqGridWidth)*wmPtr->widthInc;
+        wmPtr->height = winPtr->reqHeight + (wmPtr->height
+                - wmPtr->reqGridHeight)*wmPtr->heightInc;
+    }
+    wmPtr->widthInc = 1;
+    wmPtr->heightInc = 1;
+
+    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+        wmPtr->flags |= WM_UPDATE_PENDING;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetRootCoords --
+ *
+ *	Get root window coordinates of a point in tkwin.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_GetRootCoords(
+    Tk_Window tkwin,
+    int *xPtr,
+    int *yPtr)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    int x = 0, y = 0;
+
+    while (1) {
+        x += winPtr->changes.x + winPtr->changes.border_width;
+        y += winPtr->changes.y + winPtr->changes.border_width;
+        
+        if ((winPtr->wmInfoPtr != NULL) &&
+            (winPtr->wmInfoPtr->menubar == (Tk_Window) winPtr)) {
+            y -= winPtr->wmInfoPtr->menuHeight;
+            winPtr = winPtr->wmInfoPtr->winPtr;
+            continue;
+        }
+        
+        if (winPtr->flags & TK_TOP_LEVEL) {
+            if (winPtr->flags & TK_EMBEDDED) {
+                Tk_Window container = Tk_GetOtherWindow(tkwin);
+                if (container == NULL) {
+                    break;
+                }
+                winPtr = (TkWindow *) container;
+                continue;
+            }
+            break;
+        }
+        
+        winPtr = winPtr->parentPtr;
+        if (winPtr == NULL) {
+            break;
+        }
+    }
+    
+    *xPtr = x;
+    *yPtr = y;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_CoordsToWindow --
+ *
+ *	Find top-most window covering a point.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tk_Window
+Tk_CoordsToWindow(
+    int rootX,
+    int rootY,
+    Tk_Window tkwin)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *nextPtr, *childPtr;
+    int x = rootX, y = rootY;
+
+    /* Find topmost window at coordinates */
+    while (winPtr != NULL) {
+        nextPtr = NULL;
+        
+        for (childPtr = winPtr->childList; childPtr != NULL;
+                childPtr = childPtr->nextPtr) {
+            if (!Tk_IsMapped((Tk_Window) childPtr) ||
+                    (childPtr->flags & TK_TOP_HIERARCHY)) {
+                continue;
+            }
+            
+            int tmpx = x - childPtr->changes.x;
+            int tmpy = y - childPtr->changes.y;
+            int bd = childPtr->changes.border_width;
+            
+            if ((tmpx >= -bd) && (tmpy >= -bd) &&
+                    (tmpx < (childPtr->changes.width + bd)) &&
+                    (tmpy < (childPtr->changes.height + bd))) {
+                nextPtr = childPtr;
+            }
+        }
+        
+        if (nextPtr == NULL) {
+            break;
+        }
+        
+        x -= nextPtr->changes.x;
+        y -= nextPtr->changes.y;
+        winPtr = nextPtr;
+    }
+    
+    return (Tk_Window) winPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetVRootGeometry --
+ *
+ *	Get virtual root geometry (screen dimensions in Wayland).
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_GetVRootGeometry(
+    Tk_Window tkwin,
+    int *xPtr,
+    int *yPtr,
+    int *widthPtr,
+    int *heightPtr)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    WmInfo *wmPtr;
+
+    while (!(winPtr->flags & TK_TOP_HIERARCHY) && (winPtr->parentPtr != NULL)) {
+        winPtr = winPtr->parentPtr;
+    }
+    
+    wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+        *xPtr = 0;
+        *yPtr = 0;
+        *widthPtr = 1920;
+        *heightPtr = 1080;
+        return;
+    }
+
+    *xPtr = wmPtr->vRootX;
+    *yPtr = wmPtr->vRootY;
+    *widthPtr = wmPtr->vRootWidth;
+    *heightPtr = wmPtr->vRootHeight;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MoveToplevelWindow --
+ *
+ *	Move a top-level window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_MoveToplevelWindow(
+    Tk_Window tkwin,
+    int x,
+    int y)
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+        Tcl_Panic("Tk_MoveToplevelWindow called with non-toplevel window");
+    }
+    
+    wmPtr->x = x;
+    wmPtr->y = y;
+    wmPtr->flags |= WM_MOVE_PENDING;
+    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
+    
+    if (!(wmPtr->sizeHintsFlags & (USPosition|PPosition))) {
+        wmPtr->sizeHintsFlags |= USPosition;
+        wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+    }
+
+    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+        if (wmPtr->flags & WM_UPDATE_PENDING) {
+            Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
+        }
+        UpdateGeometryInfo((ClientData) winPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmRestackToplevel --
+ *
+ *	Restack a top-level window (no-op in Wayland).
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWmRestackToplevel(
+    TkWindow *winPtr,
+    int aboveBelow,
+    TkWindow *otherPtr)
+{
+    /* Window stacking is controlled by compositor in Wayland */
+    /* This is a no-op for compatibility */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmProtocolEventProc --
+ *
+ *	Handle WM protocol events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWmProtocolEventProc(
+    TkWindow *winPtr,
+    XEvent *eventPtr)
+{
+    /* In GLFW/Wayland, protocols are handled via callbacks */
+    /* This is kept as a no-op for API compatibility */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpMakeMenuWindow --
+ *
+ *	Configure window as a menu (no-op in Wayland).
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpMakeMenuWindow(
+    Tk_Window tkwin,
+    int transient)
+{
+    /* Menu windows handled differently in Wayland */
+    /* No special configuration needed */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmFocusToplevel --
+ *
+ *	Return toplevel for focus events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkWindow *
+TkWmFocusToplevel(
+    TkWindow *winPtr)
+{
+    if (!(winPtr->flags & TK_WRAPPER)) {
+        return NULL;
+    }
+    return winPtr->wmInfoPtr->winPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetPointerCoords --
+ *
+ *	Get mouse pointer coordinates (no-op in GLFW/Wayland).
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkGetPointerCoords(
+    Tk_Window tkwin,
+    int *xPtr,
+    int *yPtr)
+{
+    /* GLFW doesn't provide global cursor position */
+    /* Return -1 to indicate unavailable */
+    *xPtr = -1;
+    *yPtr = -1;
+}
+
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -793,7 +1274,7 @@ Tk_WmObjCmd(
     static const char *const optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "forget",
-	"frame", "geometry", "grid", "group",
+	"frame", "geometry", "grid", "group", "iconbadge",
 	"iconbitmap", "iconify", "iconmask", "iconname",
 	"iconphoto", "iconposition", "iconwindow",
 	"manage", "maxsize", "minsize", "overrideredirect",
@@ -804,7 +1285,7 @@ Tk_WmObjCmd(
     enum options {
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FORGET,
-	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP,
+	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBADGE, 
 	WMOPT_ICONBITMAP, WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
 	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION, WMOPT_ICONWINDOW,
 	WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
@@ -892,6 +1373,8 @@ Tk_WmObjCmd(
 	return WmGridCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GROUP:
 	return WmGroupCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_ICONBADGE:
+	return WmIconbadgeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONBITMAP:
 	return WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONIFY:
@@ -1503,6 +1986,44 @@ WmGroupCmd(
     }
     wmPtr->leaderName = (char *)ckalloc(strlen(path) + 1);
     strcpy(wmPtr->leaderName, path);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmIconbadgeCmd --
+ *
+ *	This function is invoked to process the "wm iconbadge" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconbadgeCmd(
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    TkWindow *tkWin,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    (void) tkWin;
+    char cmd[4096];
+
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window badge");
+	return TCL_ERROR;
+    }
+
+    /* No-op on Wayland. *
+
     return TCL_OK;
 }
 
