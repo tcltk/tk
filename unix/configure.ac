@@ -353,9 +353,6 @@ if test $tk_aqua = no -a "$enable_wayland" = no; then
     XFT_LIBS=""
     if test "$enable_xft" = "no" ; then
 	AC_MSG_RESULT([$enable_xft])
-    else
-        # … rest of the original Xft checking code remains unchanged …
-        # (xft-config, pkg-config, header checks, library checks, etc.)
     fi
 
     if test $enable_xft = "yes" ; then
@@ -440,21 +437,110 @@ if test $tk_aqua = no; then
         enable_xft=no
         UNIX_FONT_OBJS=tkUnixFont.o   # fallback / non-antialiased unless you later add fontconfig-based rendering
 
-        # Check for required Wayland libraries
-        PKG_CHECK_MODULES([WAYLAND], [wayland-client >= 1.18 wayland-cursor >= 1.18],
-            [found_wayland=yes], [found_wayland=no])
-        PKG_CHECK_MODULES([XKBCOMMON], [xkbcommon >= 0.5.0],
-            [found_xkbcommon=yes], [found_xkbcommon=no])
-        PKG_CHECK_MODULES([GLFW], [glfw3 >= 3.4],
-            [found_glfw=yes], [found_glfw=no])
-
-        # libdecor is now **required** — especially for GNOME/Mutter which does not provide server-side decorations
-        PKG_CHECK_MODULES([LIBDECOR], [libdecor-0 >= 0.1],
-            [found_libdecor=yes], [found_libdecor=no])
-
-        # Font support for Wayland: only fontconfig required
-        PKG_CHECK_MODULES([FONTCONFIG], [fontconfig >= 2.12],
-            [found_fontconfig=yes], [found_fontconfig=no])
+		# ───────────────────────────────────────────────────────────────
+		# Wayland-related dependencies (most are required nowadays)
+		# ───────────────────────────────────────────────────────────────
+		
+		AC_MSG_CHECKING([for wayland-client and wayland-cursor ≥ 1.18])
+		if pkg-config --exists "wayland-client >= 1.18" \
+		   && pkg-config --exists "wayland-cursor >= 1.18"; then
+		    AC_MSG_RESULT([yes])
+		    WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
+			WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
+		    found_wayland=yes
+		    AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
+		else
+		    AC_MSG_RESULT([no])
+		    WAYLAND_CFLAGS=""
+		    WAYLAND_LIBS=""
+		    found_wayland=no
+		    AC_MSG_NOTICE([Wayland client libraries >= 1.18 not found])
+		fi
+		AC_SUBST([WAYLAND_CFLAGS])
+		AC_SUBST([WAYLAND_LIBS])
+		
+			
+		AC_MSG_CHECKING([for xkbcommon ≥ 0.5.0])
+		if pkg-config --exists "xkbcommon >= 0.5.0"; then
+		    AC_MSG_RESULT([yes])
+		    XKBCOMMON_CFLAGS="`pkg-config --cflags xkbcommon`"
+		    XKBCOMMON_LIBS="`pkg-config --libs xkbcommon`"
+		    found_xkbcommon=yes
+		    AC_DEFINE([HAVE_XKBCOMMON], [1], [Define if xkbcommon is available])
+		else
+		    AC_MSG_RESULT([no])
+		    XKBCOMMON_CFLAGS=""
+		    XKBCOMMON_LIBS=""
+		    found_xkbcommon=no
+		    AC_MSG_NOTICE([xkbcommon >= 0.5.0 not found])
+		fi
+		AC_SUBST([XKBCOMMON_CFLAGS])
+		AC_SUBST([XKBCOMMON_LIBS])
+		
+		
+		AC_MSG_CHECKING([for glfw3 >= 3.4 with Wayland support])
+		
+		if pkg-config --exists "glfw3 >= 3.4"; then
+		    AC_MSG_RESULT([glfw3 found])
+		    GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
+		    GLFW_LIBS="$(pkg-config --libs glfw3)"
+		
+		    # Check for required Wayland client libraries
+		    if pkg-config --exists wayland-client; then
+		        found_glfw=yes
+		        AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
+		    else
+		        found_glfw=no
+		        AC_MSG_NOTICE([GLFW found but Wayland support not detected (missing wayland-client)])
+		        GLFW_CFLAGS=""
+		        GLFW_LIBS=""
+		    fi
+		else
+		    AC_MSG_RESULT([glfw3 not found])
+		    found_glfw=no
+		    GLFW_CFLAGS=""
+		    GLFW_LIBS=""
+		    AC_MSG_NOTICE([glfw3 >= 3.4 not found — backend will be disabled])
+		fi
+		
+		AC_SUBST([GLFW_CFLAGS])
+		AC_SUBST([GLFW_LIBS])
+		
+		# libdecor is now **required** (especially for GNOME/Mutter client-side decorations)
+		AC_MSG_CHECKING([for libdecor-0 ≥ 0.1])
+		if pkg-config --exists "libdecor-0 >= 0.1"; then
+		    AC_MSG_RESULT([yes])
+		    LIBDECOR_CFLAGS="`pkg-config --cflags libdecor-0`"
+		    LIBDECOR_LIBS="`pkg-config --libs libdecor-0`"
+		    found_libdecor=yes
+		    AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
+		else
+		    AC_MSG_RESULT([no])
+		    LIBDECOR_CFLAGS=""
+		    LIBDECOR_LIBS=""
+		    found_libdecor=no
+		    AC_MSG_NOTICE([libdecor-0 >= 0.1 not found — client-side decorations will not work properly on GNOME])
+		fi
+		AC_SUBST([LIBDECOR_CFLAGS])
+		AC_SUBST([LIBDECOR_LIBS])
+		
+		
+		AC_MSG_CHECKING([for fontconfig ≥ 2.12 (Wayland font support)])
+		if pkg-config --exists "fontconfig >= 2.12"; then
+		    AC_MSG_RESULT([yes])
+		    FONTCONFIG_CFLAGS="`pkg-config --cflags fontconfig`"
+		    FONTCONFIG_LIBS="`pkg-config --libs fontconfig`"
+		    found_fontconfig=yes
+		    AC_DEFINE([HAVE_FONTCONFIG], [1], [Define if fontconfig is available for Wayland])
+		else
+		    AC_MSG_RESULT([no])
+		    FONTCONFIG_CFLAGS=""
+		    FONTCONFIG_LIBS=""
+		    found_fontconfig=no
+		    AC_MSG_NOTICE([fontconfig >= 2.12 not found — font support on Wayland may be limited])
+		fi
+		AC_SUBST([FONTCONFIG_CFLAGS])
+		AC_SUBST([FONTCONFIG_LIBS])
 
         if test "$found_wayland" = yes \
            && test "$found_xkbcommon" = yes \
@@ -481,7 +567,7 @@ Required packages (all mandatory):
   - wayland-client >= 1.18
   - wayland-cursor >= 1.18
   - xkbcommon >= 0.5.0
-  - glfw3 >= 3.4
+  - glfw3 >= 3.3
   - libdecor-0 >= 0.1          ← critical for proper window decorations on GNOME/Mutter
   - fontconfig >= 2.12
 
