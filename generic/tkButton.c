@@ -60,6 +60,9 @@ char tkDefLabelPady[TCL_INTEGER_SPACE] = DEF_LABCHKRAD_PADY;
  */
 
 static const Tk_OptionSpec labelOptionSpecs[] = {
+    {TK_OPTION_DOUBLE, "-angle", "angle", "Angle",
+	"0.0", TCL_INDEX_NONE, offsetof(TkButton, angle),
+	0, 0, 0},
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_BUTTON_ACTIVE_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeBorder),
 	0, DEF_BUTTON_ACTIVE_BG_MONO, 0},
