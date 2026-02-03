@@ -2161,43 +2161,6 @@ WmIconbadgeCmd(
 	return TCL_ERROR;
     }
 
-    /* No-op on Wayland. */
-
-    return TCL_OK;
-}
-/*
- *----------------------------------------------------------------------
- *
- * WmIconbadgeCmd --
- *
- *	This function is invoked to process the "wm iconbadge" Tcl command.
- *	See the user documentation for details on what it does.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	See the user documentation.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-WmIconbadgeCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
-    TkWindow *tkWin,		/* Toplevel to work with */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
-{
-    (void) tkWin;
-    char cmd[4096];
-
-    if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "window badge");
-	return TCL_ERROR;
-    }
-
     snprintf(cmd, sizeof(cmd), "::tk::icons::IconBadge {%s} {%s}",
 	    Tcl_GetString(objv[2]),
 	    Tcl_GetString(objv[3]));
