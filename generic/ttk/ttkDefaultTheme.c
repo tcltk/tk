@@ -522,9 +522,9 @@ typedef struct {
 } IndicatorElement;
 
 static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
-    { "-background", TK_OPTION_COLOR,
+    { "-indicatorbackground", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
-    { "-foreground", TK_OPTION_COLOR,
+    { "-indicatorforeground", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,foregroundObj), DEFAULT_FOREGROUND },
     { "-indicatorcolor", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,colorObj), "#FFFFFF" },

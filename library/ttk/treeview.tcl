@@ -1550,21 +1550,9 @@ proc ::ttk::treeview::Create_CheckTreeview_Style {} {
 		ttk::style layout $new [ttk::style layout $element]
 		ttk::style configure $new {*}[ttk::style configure $element]
 		
-		# Remove the background and selected states
-		# from -background and -foreground
 		set list [list]
 		foreach {opt spec} [ttk::style map $element] {
-		    if {[llength $spec] > 1 && $opt in [list -background -foreground]} {
-			set temp [list]
-			foreach {state val} $spec {
-			    if {$state ni [list background selected]} {
-				lappend temp $state $val
-			    }
-			}
-			lappend list $opt $temp
-		    } else {
-		        lappend list $opt $spec
-		    }
+		    lappend list $opt $spec
 		}
 		ttk::style map $new {*}$list
 	    }
