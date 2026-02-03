@@ -64,6 +64,10 @@ typedef struct {
      * Information about what's in the button.
      */
 
+    double angle;		/* Value of -angle option. */
+    double xoffset;		/* offset for drawing text when angle != 0 */
+    double yoffset;
+
     Tcl_Obj *textPtr;		/* Value of -text option: specifies text to
 				 * display in button. */
     int underline;		/* Value of -underline option: specifies index

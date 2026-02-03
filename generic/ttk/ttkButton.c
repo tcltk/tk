@@ -232,6 +232,7 @@ typedef struct
     Tcl_Obj *reliefObj;
     Tcl_Obj *anchorObj;
     Tcl_Obj *wrapLengthObj;
+    Tcl_Obj *angleObj;
 } LabelPart;
 
 typedef struct
@@ -243,6 +244,9 @@ typedef struct
 
 static const Tk_OptionSpec LabelOptionSpecs[] =
 {
+    {TK_OPTION_DOUBLE, "-angle", "angle", "Angle",
+	NULL, offsetof(Label,label.angleObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED },
     {TK_OPTION_BORDER, "-background", "frameColor", "FrameColor",
 	NULL, offsetof(Label,label.backgroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },

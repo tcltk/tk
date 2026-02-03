@@ -330,6 +330,31 @@ TkpComputeButtonGeometry(
 		text, TCL_INDEX_NONE, wrapLength, butPtr->justify, 0,
 		&butPtr->textWidth, &butPtr->textHeight);
 
+	if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    double sinA = sin(-butPtr->angle * 0.017453292519943295);
+	    double cosA = cos(-butPtr->angle * 0.017453292519943295);
+	    double xo[4] = {0, butPtr->textWidth, butPtr->textWidth, 0};
+	    double yo[4] = {0, 0, butPtr->textHeight, butPtr->textHeight};
+	    double xt, yt;
+	    double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+	    size_t i;
+
+	    for (i = 0; i < 4; i++) {
+		xt = xo[i] * cosA - yo[i] * sinA;
+		if (xt > xmax) xmax = xt;
+		if (xt < xmin) xmin = xt;
+
+		yt = xo[i] * sinA +  yo[i] * cosA;
+		if (yt > ymax) ymax = yt;
+		if (yt < ymin) ymin = yt;
+	    }
+
+	    butPtr->textWidth = (xmax - xmin);
+	    butPtr->textHeight = (ymax - ymin);
+	    butPtr->xoffset = -xmin;
+	    butPtr->yoffset = -ymin;
+	}
+
 	txtWidth = butPtr->textWidth + 2 * padX;
 	txtHeight = butPtr->textHeight + 2 * padY;
 	haveText = 1;
@@ -583,12 +608,25 @@ DrawButtonImageAndText(
 	    XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
 	}
 	y += 1; /* Tweak to match native buttons. */
-	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
-			  x + textXOffset, y + textYOffset, 0, -1);
-	Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
-		butPtr->textLayout,
-		x + textXOffset, y + textYOffset,
-		butPtr->underline);
+
+	if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkDrawAngledTextLayout(butPtr->display, pixmap, dpPtr->gc,
+		    butPtr->textLayout,
+		    x + textXOffset + butPtr->xoffset,
+		    y + textYOffset + butPtr->yoffset, butPtr->angle, 0, -1);
+	    TkUnderlineAngledTextLayout(butPtr->display, pixmap, dpPtr->gc,
+		    butPtr->textLayout,
+		    x + textXOffset + butPtr->xoffset,
+		    y + textYOffset + butPtr->yoffset,
+		    butPtr->angle, butPtr->underline);
+	} else {
+	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
+		    butPtr->textLayout, x + textXOffset, y + textYOffset,
+		    0, -1);
+	    Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
+		    butPtr->textLayout, x + textXOffset,
+		    y + textYOffset, butPtr->underline);
+	}
     } else if (haveImage) { /* Image only */
 	int x = 0, y;
 
@@ -631,8 +669,15 @@ DrawButtonImageAndText(
 		butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 	y += 1; /* Tweak to match native buttons */
-	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
-			  x, y, 0, -1);
+
+	if (butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkDrawAngledTextLayout(butPtr->display, pixmap, dpPtr->gc,
+		    butPtr->textLayout, x + butPtr->xoffset,
+		    y + butPtr->yoffset, butPtr->angle, 0, -1);
+	} else {
+	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
+		    butPtr->textLayout, x, y, 0, -1);
+	}
     }
 
     /*
