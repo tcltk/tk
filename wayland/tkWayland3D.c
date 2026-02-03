@@ -15,8 +15,6 @@
 #include "tk3d.h"
 #include "nanovg.h"
 
-#include "tkWaylandInt.h"
-
 /*
  * This structure is used to keep track of the extra colors used by Unix 3D
  * borders. Now also includes NanoVG context.

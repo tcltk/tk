@@ -35,7 +35,7 @@ void
 TkGetServerInfo(
     Tcl_Interp *interp,		/* The server information is returned in this
 				 * interpreter's result. */
-    Tk_Window tkwin)		/* Token for window; this selects a particular
+    TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
     const char *backend = "GLFW";
@@ -109,24 +109,16 @@ TkGetDefaultScreenName(
 
 void
 Tk_UpdatePointer(
-    Tk_Window tkwin,		/* Window to which pointer event is reported.
-				 * May be NULL. */
-    int x, int y,		/* Pointer location in root coords. */
-    int state)			/* Modifier state mask. */
+    TCL_UNUSED(Tk_Window),	/* Window to which pointer event is reported.*/
+    TCL_UNUSED(int), 
+    TCL_UNUSED(int),		/* Pointer location in x, y root coords. */
+    TCL_UNUSED(int))		/* Modifier state mask. */
 {
   /* In GLFW, pointer position is managed by GLFW callbacks.
    * This function might be used to manually update cursor position
-   * in some edge cases. */
+   * in some edge cases. 
+   */
   
-  if (tkwin && Tk_WindowId(tkwin)) {
-      /* If we have a GLFW window handle, we could potentially set cursor position. */
-      GLFWwindow *window = (GLFWwindow *)Tk_WindowId(tkwin);
-      /* Note: glfwSetCursorPos sets window-relative coordinates, not root */
-  }
-  
-  (void)x;
-  (void)y;
-  (void)state;
 }
 
 /*
@@ -150,9 +142,15 @@ TkpCopyRegion(
     TkRegion dst,
     TkRegion src)
 {
-    /* For GLFW, we just copy the region data. */
-    if (dst != src) {
-        memcpy(dst, src, sizeof(TkRegion));
+    if (dst != src && src != NULL) {
+        /* Free the old dst if necessary.  */
+        TkDestroyRegion(dst);
+
+        /* Create a new region for dst. */
+        dst = TkCreateRegion();
+
+        /* Copy src into dst using API function. */
+        TkUnionRectWithRegion(NULL, src, dst);
     }
 }
 
@@ -249,7 +247,7 @@ TkpBuildRegionFromAlphaData(
 
 long
 Tk_GetUserInactiveTime(
-    TCL_UNUSED(Display *dpy))	/* Unused with GLFW */
+    TCL_UNUSED(Display*))	/* Unused with GLFW */
 {
     long inactiveTime = -1;
     
@@ -288,7 +286,7 @@ Tk_GetUserInactiveTime(
 
 void
 Tk_ResetUserInactiveTime(
-    TCL_UNUSED(Display *dpy))
+    TCL_UNUSED(Display*))
 {
     /* With GLFW, there's no direct way to reset system idle time. */
 }
