@@ -437,9 +437,9 @@ if test $tk_aqua = no; then
         enable_xft=no
         UNIX_FONT_OBJS=tkUnixFont.o   # fallback / non-antialiased unless you later add fontconfig-based rendering
 
-		# ───────────────────────────────────────────────────────────────
+		# ─────────────────────────────────────────────────────────────
 		# Wayland-related dependencies (most are required nowadays)
-		# ───────────────────────────────────────────────────────────────
+		# ─────────────────────────────────────────────────────────────
 		
 		AC_MSG_CHECKING([for wayland-client and wayland-cursor ≥ 1.18])
 		if pkg-config --exists "wayland-client >= 1.18" \
