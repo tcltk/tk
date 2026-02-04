@@ -10,8 +10,9 @@
  * See the file "license.terms" for information on usage and redistribution.
  */
 
+#include "tkInt.h"
 #include "tkFont.h"
-#include "tkUnixInt.h"          /* If still needed for some defines */
+#include "tkUnixInt.h"          
 
 #include <fontconfig/fontconfig.h>
 #include <stb_truetype.h>
@@ -23,21 +24,12 @@
 #include <string.h>
 #include <unistd.h>
 
-/* -------------------------------------------------------------------------
-   Forward declarations & helpers
-   ------------------------------------------------------------------------- */
-
+/* Forward declarations and helpers. */
 static NVGcontext *GetNanoVGContext(Tk_Window tkwin);
 static NVGcolor    GetColorFromGC(GC gc);
 
-/* Assume these are provided by the higher-level integration layer */
-extern NVGcontext *GetNanoVGContext(Tk_Window tkwin);
-extern NVGcolor    GetColorFromGC(GC gc);
 
-/* -------------------------------------------------------------------------
-   Constants & structures
-   ------------------------------------------------------------------------- */
-
+/* Constants and structures. */
 #define FONTMAP_SHIFT       10
 #define FONTMAP_BITSPERPAGE (1 << FONTMAP_SHIFT)
 #define FONTMAP_NUMCHARS    0x40000
@@ -50,41 +42,39 @@ typedef struct FontFamily {
     struct FontFamily  *nextPtr;
     size_t              refCount;
     Tk_Uid              faceName;
-    char               *filePath;           /* full path from fontconfig */
-    unsigned char      *fontBuffer;         /* owned TTF/OTF file content */
+    char               *filePath;           /* Full path from fontconfig. */
+    unsigned char      *fontBuffer;         /* Owned TTF/OTF file content. */
     int                 bufferSize;
     stbtt_fontinfo      fontInfo;
     char               *fontMap[FONTMAP_PAGES];
-    int                 ascent, descent;    /* in pixels at nominal size */
+    int                 ascent, descent;    /* In pixels at nominal size. */
 } FontFamily;
 
 typedef struct SubFont {
-    char              **fontMap;            /* cached pointer to family->fontMap */
+    char              **fontMap;            /* Cached pointer to family->fontMap. */
     FontFamily         *familyPtr;
 } SubFont;
 
 typedef struct UnixFont {
-    TkFont              font;               /* generic part — must be first */
+    TkFont              font;               /* Generic part — must be first. */
     SubFont             staticSubFonts[SUBFONT_SPACE];
     int                 numSubFonts;
     SubFont            *subFontArray;
     SubFont             controlSubFont;
-    int                 pixelSize;          /* requested pixel size */
-    int                 widths[BASE_CHARS]; /* fast path for ASCII */
+    int                 pixelSize;          /* Requested pixel size. */
+    int                 widths[BASE_CHARS]; /* Fast path for ASCII */
     int                 underlinePos;
     int                 barHeight;
 } UnixFont;
 
-/* Thread-specific data */
+/* Thread-specific data. */
 typedef struct {
     FontFamily         *fontFamilyList;
     FontFamily          controlFamily;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-/* -------------------------------------------------------------------------
-   Forward declarations of static functions
-   ------------------------------------------------------------------------- */
+/* Forward declaration of static functions. */
 
 static void         FontPkgCleanup(void *clientData);
 static FontFamily  *AllocFontFamily(const char *faceName, int pixelSize);
@@ -101,12 +91,9 @@ static void         ReleaseFont(UnixFont *uf);
 static void         ReleaseSubFont(SubFont *sf);
 static char       **ListFonts(const char *pattern, int *countPtr);
 
-/* -------------------------------------------------------------------------
-   Package initialization / cleanup
-   ------------------------------------------------------------------------- */
-
+/* -Package initialization / cleanup. */
 void
-TkpFontPkgInit(TkMainInfo *mainPtr)
+TkpFontPkgInit(TCL_UNUSED(TkMainInfo*)) /* mainPtr */
 {
     ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     if (tsd->controlFamily.faceName != NULL) return;
@@ -144,7 +131,7 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
         }
     }
 
-    /* Mark control chars + hex digits as present */
+    /* Mark control chars + hex digits as present. */
     SubFont dummy = { tsd->controlFamily.fontMap, &tsd->controlFamily };
     int i;
     for (i = 0; i < 0x20; i++)          FontMapInsert(&dummy, i);
@@ -158,7 +145,7 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
 }
 
 static void
-FontPkgCleanup(void *clientData)
+FontPkgCleanup(TCL_UNUSED(void*)) /* clientData */
 {
     ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     FontFamily *f = tsd->fontFamilyList;
@@ -171,9 +158,7 @@ FontPkgCleanup(void *clientData)
     FreeFontFamily(&tsd->controlFamily);
 }
 
-/* -------------------------------------------------------------------------
-   Core font creation
-   ------------------------------------------------------------------------- */
+/* Core font creation. */
 
 TkFont *
 TkpGetNativeFont(Tk_Window tkwin, const char *name)
@@ -201,7 +186,7 @@ TkpGetFontFromAttributes(TkFont *existing, Tk_Window tkwin,
 
     InitFont(tkwin, want, uf);
 
-    /* Always have at least the control subfont */
+    /* Always have at least the control subfont. */
     InitSubFont(&uf->controlSubFont,
                 &((ThreadSpecificData*)Tcl_GetThreadData(&dataKey,sizeof(ThreadSpecificData)))->controlFamily,
                 uf->pixelSize);
@@ -210,11 +195,11 @@ TkpGetFontFromAttributes(TkFont *existing, Tk_Window tkwin,
 }
 
 static void
-InitFont(Tk_Window tkwin, const TkFontAttributes *fa, UnixFont *uf)
+InitFont(TCL_UNUSED(Tk_Window), const TkFontAttributes *fa, UnixFont *uf)
 {
     uf->font.fa = *fa;
 
-    /* Create primary subfont */
+    /* Create primary subfont. */
     FontFamily *primary = AllocFontFamily(fa->family ? fa->family : "sans-serif", uf->pixelSize);
     if (primary) {
         uf->subFontArray = uf->staticSubFonts;
@@ -222,21 +207,21 @@ InitFont(Tk_Window tkwin, const TkFontAttributes *fa, UnixFont *uf)
         uf->numSubFonts = 1;
     }
 
-    /* Calculate font metrics */
+    /* Calculate font metrics. */
     if (primary && primary->fontInfo.userdata) {
         uf->font.fm.ascent  = primary->ascent;
         uf->font.fm.descent = primary->descent;
-        uf->font.fm.maxWidth = uf->pixelSize * 2;  /* conservative estimate */
-        uf->font.fm.fixed = 0;  /* TrueType fonts are generally not fixed-width */
+        uf->font.fm.maxWidth = uf->pixelSize * 2;  /* Conservative estimate. */
+        uf->font.fm.fixed = 0;  /* TrueType fonts are generally not fixed-width. */
     } else {
-        /* Fallback metrics */
+        /* Fallback metrics. */
         uf->font.fm.ascent  = (int)(uf->pixelSize * 0.8 + 0.5);
         uf->font.fm.descent = (int)(uf->pixelSize * 0.2 + 0.5);
         uf->font.fm.maxWidth = uf->pixelSize;
         uf->font.fm.fixed = 0;
     }
 
-    /* Underline / overstrike geometry (approximation) */
+    /* Underline / overstrike geometry (approximation). */
     uf->underlinePos = -2;
     uf->barHeight    = 1;
     if (primary) {
@@ -245,7 +230,7 @@ InitFont(Tk_Window tkwin, const TkFontAttributes *fa, UnixFont *uf)
         if (uf->barHeight < 1) uf->barHeight = 1;
     }
 
-    /* Fast-path ASCII widths */
+    /* Fast-path ASCII widths. */
     memset(uf->widths, 0, sizeof(uf->widths));
     if (uf->numSubFonts > 0) {
         SubFont *sf = &uf->subFontArray[0];
@@ -263,16 +248,14 @@ InitFont(Tk_Window tkwin, const TkFontAttributes *fa, UnixFont *uf)
 }
 
 static void
-InitSubFont(SubFont *sf, FontFamily *family, int pixelSize)
+InitSubFont(SubFont *sf, FontFamily *family, TCL_UNUSED(int) /*pixelSize*/)
 {
     sf->familyPtr = family;
     sf->fontMap   = family->fontMap;
     family->refCount++;
 }
 
-/* -------------------------------------------------------------------------
-   Font release
-   ------------------------------------------------------------------------- */
+/* Font release. */
 
 void
 TkpDeleteFont(TkFont *tkf)
@@ -303,9 +286,7 @@ ReleaseSubFont(SubFont *sf)
     }
 }
 
-/* -------------------------------------------------------------------------
-   Font family cache & loading
-   ------------------------------------------------------------------------- */
+/* Font family cache & loading. */
 
 static FontFamily *
 AllocFontFamily(const char *faceName, int pixelSize)
@@ -393,17 +374,13 @@ FreeFontFamily(FontFamily *f)
     Tcl_Free(f);
 }
 
-/* -------------------------------------------------------------------------
-   Character → SubFont mapping & glyph existence cache
-   ------------------------------------------------------------------------- */
+/* Character → SubFont mapping & glyph existence cache. */
 
 static SubFont *
 FindSubFontForChar(UnixFont *uf, int ch, SubFont **fixPtr)
 {
     if (ch < 0 || ch >= FONTMAP_NUMCHARS) ch = 0xFFFD;
-
-    ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
+    
     if (FontMapLookup(&uf->controlSubFont, ch)) {
         return &uf->controlSubFont;
     }
@@ -418,7 +395,7 @@ FindSubFontForChar(UnixFont *uf, int ch, SubFont **fixPtr)
     Tcl_DString tried;
     Tcl_DStringInit(&tried);
 
-    /* 1. Try same family different encoding/style variant */
+    /* Try same family different encoding/style variant. */
     if (SeenName(uf->font.fa.family, &tried) == 0) {
         SubFont *sf = CanUseFallback(uf, uf->font.fa.family, ch, fixPtr);
         if (sf) {
@@ -427,8 +404,8 @@ FindSubFontForChar(UnixFont *uf, int ch, SubFont **fixPtr)
         }
     }
 
-    /* 2. Try known fallback families */
-    const char *const *fallbacks = TkFontGetFallbacks()[0]; /* simplistic */
+    /* Try known fallback families. */
+    const char *const *fallbacks = TkFontGetFallbacks()[0]; /* Simplistic. */
     for (i = 0; fallbacks && fallbacks[i]; i++) {
         if (SeenName(fallbacks[i], &tried) == 0) {
             SubFont *sf = CanUseFallback(uf, fallbacks[i], ch, fixPtr);
@@ -439,7 +416,7 @@ FindSubFontForChar(UnixFont *uf, int ch, SubFont **fixPtr)
         }
     }
 
-    /* 3. Last resort — give up and use control font */
+    /* Last resort — give up and use control font. */
     FontMapInsert(&uf->controlSubFont, ch);
     Tcl_DStringFree(&tried);
     return &uf->controlSubFont;
@@ -485,9 +462,7 @@ FontMapLoadPage(SubFont *sf, int page)
     }
 }
 
-/* -------------------------------------------------------------------------
-   Fallback logic stubs (can be expanded later)
-   ------------------------------------------------------------------------- */
+/* Fallback logic stubs (can be expanded later). */
 
 static SubFont *
 CanUseFallback(UnixFont *uf, const char *face, int ch, SubFont **fix)
@@ -498,7 +473,7 @@ CanUseFallback(UnixFont *uf, const char *face, int ch, SubFont **fix)
         return NULL;
     }
 
-    /* Quick check if this font probably contains the glyph */
+    /* Quick check if this font probably contains the glyph. */
     if (stbtt_FindGlyphIndex(&fam->fontInfo, ch) == 0) {
         FreeFontFamily(fam);
         return NULL;
@@ -516,7 +491,7 @@ CanUseFallback(UnixFont *uf, const char *face, int ch, SubFont **fix)
 
     SubFont *sf = &uf->subFontArray[uf->numSubFonts++];
     InitSubFont(sf, fam, uf->pixelSize);
-    FontMapInsert(sf, ch);      /* mark it usable */
+    FontMapInsert(sf, ch);      /* Mark it usable. */
     return sf;
 }
 
@@ -536,18 +511,25 @@ SeenName(const char *name, Tcl_DString *ds)
     return 0;
 }
 
-/* -------------------------------------------------------------------------
-   Drawing
-   ------------------------------------------------------------------------- */
+/* Drawing. */
 
 void
-Tk_DrawChars(Display *display, Drawable d, GC gc, Tk_Font tkfont,
-             const char *text, Tcl_Size numBytes, int x, int y)
+Tk_DrawChars(
+	TCL_UNUSED(Display *), 
+	TCL_UNUSED(Drawable), 
+	GC gc, 
+	Tk_Font tkfont,
+    const char *text, 
+    Tcl_Size numBytes, 
+    int x, 
+    int y)
 {
     UnixFont *uf = (UnixFont *) tkfont;
     
-    /* Get NanoVG context - we need a proper Tk_Window for this */
-    /* In real implementation, this would be extracted from the drawable/display */
+    /* 
+     * Get NanoVG context. TO DO: We need a proper Tk_Window for this.
+     * This should be extracted from the drawable/display.
+     */
     NVGcontext *vg = GetNanoVGContext(NULL);
     if (!vg) return;
 
@@ -568,7 +550,7 @@ Tk_DrawChars(Display *display, Drawable d, GC gc, Tk_Font tkfont,
         SubFont *sf = FindSubFontForChar(uf, ch, NULL);
 
         if (sf != last) {
-            /* flush previous run */
+            /* Flush previous run. */
             if (p > runStart && last->familyPtr && last->familyPtr->fontBuffer) {
                 int fontId = nvgFindFont(vg, last->familyPtr->faceName);
                 if (fontId < 0) {
@@ -587,7 +569,7 @@ Tk_DrawChars(Display *display, Drawable d, GC gc, Tk_Font tkfont,
         p = next;
     }
 
-    /* flush final run */
+    /* Flush final run. */
     if (p > runStart && last->familyPtr && last->familyPtr->fontBuffer) {
         int fontId = nvgFindFont(vg, last->familyPtr->faceName);
         if (fontId < 0) {
@@ -601,7 +583,7 @@ Tk_DrawChars(Display *display, Drawable d, GC gc, Tk_Font tkfont,
         }
     }
 
-    /* underline */
+    /* Underline */
     if (uf->font.fa.underline) {
         nvgBeginPath(vg);
         nvgStrokeColor(vg, GetColorFromGC(gc));
@@ -611,7 +593,7 @@ Tk_DrawChars(Display *display, Drawable d, GC gc, Tk_Font tkfont,
         nvgStroke(vg);
     }
     
-    /* overstrike */
+    /* Overstrike. */
     if (uf->font.fa.overstrike) {
         int oy = y - (uf->font.fm.ascent / 2);
         nvgBeginPath(vg);
@@ -625,9 +607,7 @@ Tk_DrawChars(Display *display, Drawable d, GC gc, Tk_Font tkfont,
     nvgRestore(vg);
 }
 
-/* -------------------------------------------------------------------------
-   Measurement
-   ------------------------------------------------------------------------- */
+/* Measurement. */
 
 int
 Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
@@ -645,7 +625,7 @@ Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
         int ch;
         const char *next = p + Tcl_UtfToUniChar(p, &ch);
         
-        /* Check for line break opportunities */
+        /* Check for line break opportunities. */
         if (ch == ' ' || ch == '\t' || ch == '\n') {
             lastBreak = next;
             lastBreakX = curX;
@@ -653,7 +633,7 @@ Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
         
         SubFont *sf = FindSubFontForChar(uf, ch, NULL);
         if (!sf || !sf->familyPtr || !sf->familyPtr->fontInfo.userdata) {
-            /* Use reasonable default width */
+            /* Use reasonable default width. */
             curX += uf->pixelSize / 2;
             p = next;
             continue;
@@ -678,9 +658,9 @@ Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
                     curX = lastBreakX;
                 }
             } else if (!(flags & TK_PARTIAL_OK)) {
-                /* Don't include this character */
+                /* Don't include this character. */
             } else {
-                /* Include partial character */
+                /* Include partial character. */
                 curX += w;
                 p = next;
             }
@@ -696,32 +676,43 @@ Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
     return p - source;
 }
 
-/* -------------------------------------------------------------------------
-   Text layout - more advanced measurement with context
-   ------------------------------------------------------------------------- */
+/* Text layout - more advanced measurement with context. */
 
-void
+
+int
 Tk_MeasureCharsInContext(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
-                         int rangeStart, Tcl_Size rangeLength, int maxLength,
-                         int flags, int *lengthPtr)
+                         Tcl_Size rangeStart, Tcl_Size rangeLength,
+                         int maxLength, int flags, int *lengthPtr)
 {
-    /* For simple implementation, delegate to Tk_MeasureChars on the range */
-    if (rangeStart < 0) rangeStart = 0;
-    if (rangeStart + rangeLength > numBytes) rangeLength = numBytes - rangeStart;
-    
-    Tk_MeasureChars(tkfont, source + rangeStart, rangeLength, maxLength, flags, lengthPtr);
+    /* Clip range. */
+    if (rangeStart < 0) {
+        rangeStart = 0;
+    }
+    if (rangeStart > numBytes) {
+        rangeStart = numBytes;
+    }
+    if (rangeLength < 0 || rangeStart + rangeLength > numBytes) {
+        rangeLength = numBytes - rangeStart;
+    }
+
+    return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
+                           maxLength, flags, lengthPtr);
 }
 
 void
 Tk_DrawCharsInContext(Display *display, Drawable drawable, GC gc,
                       Tk_Font tkfont, const char *source, Tcl_Size numBytes,
-                      int rangeStart, Tcl_Size rangeLength, int x, int y)
+                      Tcl_Size rangeStart, Tcl_Size rangeLength,
+                      int x, int y)
 {
-    /* For simple implementation, just draw the range */
     if (rangeStart < 0) rangeStart = 0;
-    if (rangeStart + rangeLength > numBytes) rangeLength = numBytes - rangeStart;
-    
-    Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart, rangeLength, x, y);
+    if (rangeStart > numBytes) rangeStart = numBytes;
+    if (rangeLength < 0 || rangeStart + rangeLength > numBytes) {
+        rangeLength = numBytes - rangeStart;
+    }
+
+    Tk_DrawChars(display, drawable, gc, tkfont,
+                 source + rangeStart, rangeLength, x, y);
 }
 
 /* -------------------------------------------------------------------------
@@ -736,84 +727,38 @@ Tk_TextWidth(Tk_Font tkfont, const char *string, Tcl_Size numBytes)
     return length;
 }
 
-/* -------------------------------------------------------------------------
-   Character position to X coordinate
-   ------------------------------------------------------------------------- */
 
-void
-Tk_CharBbox(Tk_Font tkfont, const char *string, Tcl_Size index,
-            int *xPtr, int *yPtr, int *widthPtr, int *heightPtr)
-{
-    UnixFont *uf = (UnixFont *) tkfont;
-    
-    /* Calculate X position up to index */
-    int xPos = 0;
-    if (index > 0) {
-        Tk_MeasureChars(tkfont, string, index, -1, 0, &xPos);
-    }
-    
-    /* Calculate width of character at index */
-    int charWidth = 0;
-    if (string[index] != '\0') {
-        int ch;
-        int len = Tcl_UtfToUniChar(string + index, &ch);
-        Tk_MeasureChars(tkfont, string + index, len, -1, 0, &charWidth);
-    }
-    
-    if (xPtr) *xPtr = xPos;
-    if (yPtr) *yPtr = -uf->font.fm.ascent;
-    if (widthPtr) *widthPtr = charWidth;
-    if (heightPtr) *heightPtr = uf->font.fm.ascent + uf->font.fm.descent;
-}
-
-/* -------------------------------------------------------------------------
-   X coordinate to character position
-   ------------------------------------------------------------------------- */
-
-Tcl_Size
-Tk_PointToChar(Tk_Font tkfont, const char *string, Tcl_Size numBytes, int x)
-{
-    if (x <= 0) return 0;
-    
-    const char *p = string;
-    const char *end = string + numBytes;
-    int curX = 0;
-    
-    while (p < end) {
-        int charWidth = 0;
-        int ch;
-        const char *next = p + Tcl_UtfToUniChar(p, &ch);
-        Tk_MeasureChars(tkfont, p, next - p, -1, 0, &charWidth);
-        
-        if (curX + charWidth/2 >= x) {
-            return p - string;
-        }
-        
-        curX += charWidth;
-        p = next;
-    }
-    
-    return numBytes;
-}
-
-/* -------------------------------------------------------------------------
-   Distance from character to X coordinate  
-   ------------------------------------------------------------------------- */
+/* X coordinate to character position .*/
 
 int
-Tk_DistanceToTextLayout(Tk_TextLayout layout, int x, int y)
+Tk_PointToChar(
+	TCL_UNUSED(Tk_TextLayout), /* layout */
+	TCL_UNUSED(int), /* x */
+	TCL_UNUSED(int)) /* y */
 {
-    /* Simplified - would need full TextLayout implementation */
+    /* Stub / not yet implemented. */
+    return 0;
+}
+
+/*   Distance from character to X coordinate. */
+
+int
+Tk_DistanceToTextLayout(	
+	TCL_UNUSED(Tk_TextLayout), /* layout */
+	int x,
+	TCL_UNUSED(int)) /* y */
+{
+    /* Simplified - would need full TextLayout implementation. */
     if (x < 0) return -x;
     return x;
 }
 
-/* -------------------------------------------------------------------------
-   Font enumeration
-   ------------------------------------------------------------------------- */
+/*  Font enumeration. */
 
 void
-TkpGetFontFamilies(Tcl_Interp *interp, Tk_Window tkwin)
+TkpGetFontFamilies(
+	Tcl_Interp *interp, 
+	TCL_UNUSED(Tk_Window)) /* tkwin */
 {
     FcPattern *pat = FcPatternCreate();
     FcObjectSet *os = FcObjectSetBuild(FC_FAMILY, NULL);
@@ -862,77 +807,85 @@ TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
 }
 
 void
-TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont, int c, TkFontAttributes *faPtr)
+TkpGetFontAttrsForChar(
+	TCL_UNUSED(Tk_Window), 
+	Tk_Font tkfont, 
+	int c, 
+	TkFontAttributes *faPtr)
 {
     UnixFont *uf = (UnixFont *) tkfont;
     *faPtr = uf->font.fa;
     
-    /* Optionally find which subfont would handle this character */
+    /* Optionally find which subfont would handle this character. */
     SubFont *sf = FindSubFontForChar(uf, c, NULL);
     if (sf && sf->familyPtr && sf->familyPtr->faceName) {
         faPtr->family = sf->familyPtr->faceName;
     }
 }
 
-/* -------------------------------------------------------------------------
-   Font listing (legacy X11 pattern matching)
-   ------------------------------------------------------------------------- */
+/* Font listing (legacy X11 pattern matching). */
 
 static char **
-ListFonts(const char *pattern, int *countPtr)
+ListFonts(
+	TCL_UNUSED(const char *), /* pattern */
+	int *countPtr)
 {
-    /* Simplified implementation - return empty list */
+    /* Simplified implementation - return empty list. */
     char **result = Tcl_Alloc(sizeof(char*));
     result[0] = NULL;
     *countPtr = 0;
     return result;
 }
 
-/* -------------------------------------------------------------------------
-   Angle support (rotated text)
-   ------------------------------------------------------------------------- */
+/* Angle support (rotated text). */
 
-int
+void
 TkDrawAngledChars(Display *display, Drawable drawable, GC gc, Tk_Font tkfont,
-                  const char *source, Tcl_Size numBytes, double x, double y,
-                  double angle)
+                  const char *source, Tcl_Size numBytes,
+                  double x, double y, double angle)
 {
-    UnixFont *uf = (UnixFont *) tkfont;
     NVGcontext *vg = GetNanoVGContext(NULL);
-    if (!vg) return 0;
+    if (!vg) {
+        return;
+    }
 
     nvgSave(vg);
-    
-    /* Apply rotation transform */
+
+    /* Apply rotation transform. */
     nvgTranslate(vg, (float)x, (float)y);
     nvgRotate(vg, (float)(angle * NVG_PI / 180.0));
-    
-    /* Draw at origin after transform */
+
+    /* Draw at origin after transform .*/
     Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, 0, 0);
-    
+
     nvgRestore(vg);
-    return 1;
 }
 
-int
 TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc,
-                       Tk_TextLayout layout, int x, int y, double angle,
-                       int firstChar, int lastChar)
+                       Tk_TextLayout layout,
+                       int x, int y, double angle,
+                       Tcl_Size firstChar, Tcl_Size lastChar)
 {
-    /* Would need full TextLayout support */
-    return 0;
-}
+    (void)display;
+    (void)drawable;
+    (void)gc;
+    (void)layout;
+    (void)x;
+    (void)y;
+    (void)angle;
+    (void)firstChar;
+    (void)lastChar;
 
-/* -------------------------------------------------------------------------
-   PostScript output (stub)
-   ------------------------------------------------------------------------- */
+    /* Not implemented for Wayland yet. */
+}
+/* PostScript output (stub). */
 
 int
 TkPostscriptFontName(Tk_Font tkfont, Tcl_DString *dsPtr)
 {
     UnixFont *uf = (UnixFont *) tkfont;
     
-    /* Generate a PostScript-compatible font name */
+    /* Generate a PostScript-compatible font name. */
     const char *family = uf->font.fa.family ? uf->font.fa.family : "Helvetica";
     Tcl_DStringAppend(dsPtr, family, -1);
     
@@ -946,16 +899,14 @@ TkPostscriptFontName(Tk_Font tkfont, Tcl_DString *dsPtr)
     return 0;
 }
 
-/* -------------------------------------------------------------------------
-   Utility functions
-   ------------------------------------------------------------------------- */
+/*  Utility functions .*/
 
 void
 TkpDrawCharsInContext(Display *display, Drawable drawable, GC gc,
                       Tk_Font tkfont, const char *source, Tcl_Size numBytes,
                       int rangeStart, Tcl_Size rangeLength, int x, int y)
 {
-    /* Simple delegation to DrawChars with range */
+    /* Simple delegation to DrawChars with range. */
     Tk_DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
                          rangeStart, rangeLength, x, y);
 }
@@ -965,7 +916,7 @@ TkpMeasureCharsInContext(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
                          int rangeStart, Tcl_Size rangeLength, int maxLength,
                          int flags, int *lengthPtr)
 {
-    /* Simple delegation */
+    /* Simple delegation. */
     if (rangeStart < 0) rangeStart = 0;
     if (rangeStart + rangeLength > numBytes) rangeLength = numBytes - rangeStart;
     
@@ -973,9 +924,7 @@ TkpMeasureCharsInContext(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
                           maxLength, flags, lengthPtr);
 }
 
-/* -------------------------------------------------------------------------
-   Compatibility stubs
-   ------------------------------------------------------------------------- */
+/* Compatibility stubs. */
 
 void
 TkUnixSetXftClipRegion(Region clipRegion)
