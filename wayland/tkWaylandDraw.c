@@ -21,43 +21,13 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WAYLAND
 #include <GLFW/glfw3native.h>
+#include "tkGlfwInt.h"
 
 /* OpenGL for NanoVG. */
 #include <GL/gl.h>
 
 #define radians(d)	((d) * (M_PI/180.0))
 
-/*
- * Structure to hold Wayland/NanoVG drawing context with GLFW.
- */
-typedef struct {
-    NVGcontext* vg;             /* NanoVG context */
-    GLFWwindow* glfwWindow;     /* GLFW window handle */
-    struct wl_surface* surface; /* Wayland surface from GLFW */
-    int width;                  /* Surface width */
-    int height;                 /* Surface height */
-    int needsSwap;              /* Whether buffer swap is needed */
-} WaylandDrawable;
-
-/*
- * Structure for Wayland drawing context.
- */
-typedef struct {
-    NVGcontext* vg;             /* NanoVG context */
-    GLFWwindow* glfwWindow;     /* GLFW window for this context */
-    int clip_x, clip_y;         /* Clip origin */
-    int clip_width, clip_height;/* Clip dimensions */
-    int frameActive;            /* Whether NanoVG frame is active */
-} TkWaylandDrawingContext;
-
-/*
- * Structure to map Tk windows to GLFW windows.
- */
-typedef struct DrawableMap {
-    Drawable tkDrawable;
-    WaylandDrawable* waylandDrawable;
-    struct DrawableMap* next;
-} DrawableMap;
 
 /*
  * Global state.

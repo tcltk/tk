@@ -16,12 +16,6 @@
 #include <nanovg.h>
 #include <nanovg_gl.h>
 
-#ifdef HAVE_COREFOUNDATION
-static int		GetLibraryPath(Tcl_Interp *interp);
-#else
-#define GetLibraryPath(dummy)	(void)dummy
-#endif /* HAVE_COREFOUNDATION */
-
 /*
  * Global GLFW/Wayland context
  */
