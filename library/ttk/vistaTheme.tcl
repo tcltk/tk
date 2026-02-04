@@ -212,7 +212,7 @@ namespace eval ttk::theme::vista {
 	    -foreground [list selected black alternate black]
 	ttk::style configure Item -padding {3p 0 0 0}
 	ttk::style configure CheckTreeview.Item \
-	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator
+	    -padding {3p 0.75p 0 0.75p}	;# because of Checkbutton.indicator
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
