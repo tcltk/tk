@@ -22,7 +22,7 @@
 #include <nanovg.h>
 
 /*
- * Platform-specific data structures for GLFW/Wayland
+ * Platform-specific data structures for GLFW/Wayland.
  */
 
 typedef struct TkGlfwContext {
@@ -34,7 +34,7 @@ typedef struct TkGlfwContext {
 
 
 /*
- * GLFW/Wayland-specific internal functions
+ * GLFW/Wayland-specific internal functions.
  */
 
 MODULE_SCOPE  void      TkGlfwErrorCallback(int error, const char* description);
@@ -43,6 +43,43 @@ MODULE_SCOPE  int       TkGlfwInitializeContext(void);
 MODULE_SCOPE  void      TkGlfwCleanupContext(void);
 
 #endif /* _TKGLFWINT */
+
+/* 
+ * Platform specific structures for nanovg. 
+ */
+ 
+ /*
+ * Structure to hold Wayland/NanoVG drawing context with GLFW.
+ */
+typedef struct {
+    NVGcontext* vg;             /* NanoVG context */
+    GLFWwindow* glfwWindow;     /* GLFW window handle */
+    struct wl_surface* surface; /* Wayland surface from GLFW */
+    int width;                  /* Surface width */
+    int height;                 /* Surface height */
+    int needsSwap;              /* Whether buffer swap is needed */
+} WaylandDrawable;
+
+/*
+ * Structure for Wayland drawing context.
+ */
+typedef struct {
+    NVGcontext* vg;             /* NanoVG context */
+    GLFWwindow* glfwWindow;     /* GLFW window for this context */
+    int clip_x, clip_y;         /* Clip origin */
+    int clip_width, clip_height;/* Clip dimensions */
+    int frameActive;            /* Whether NanoVG frame is active */
+} TkWaylandDrawingContext;
+
+/*
+ * Structure to map Tk windows to GLFW windows.
+ */
+typedef struct DrawableMap {
+    Drawable tkDrawable;
+    WaylandDrawable* waylandDrawable;
+    struct DrawableMap* next;
+} DrawableMap;
+
 
 
 /*
