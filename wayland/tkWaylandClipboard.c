@@ -9,6 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution.
  */
 
+#include "tkInt.h"
 #include "tkSelect.h"
 #include <GLFW/glfw3.h>
 
@@ -74,7 +75,7 @@ XSetSelectionOwner(
     Display *display,
     Atom selection,
     Window owner,
-    Time time TCL_UNUSED)
+    TCL_UNUSED(Time))
 {
     TkDisplay *dispPtr = TkGetDisplayList();
     if (!dispPtr || selection != dispPtr->clipboardAtom) {
@@ -119,6 +120,10 @@ TkMacOSXSelDeadWindow(TkWindow *winPtr)
  *
  *----------------------------------------------------------------------
  */
+ 
+#ifdef TkSelUpdateClipboard
+#undef TkSelUpdateClipboard
+#endif
 void
 TkSelUpdateClipboard(
     TkWindow *winPtr,
@@ -207,7 +212,8 @@ TkSelEventProc(
  *----------------------------------------------------------------------
  */
 void
-TkSelPropProc(XEvent *eventPtr TCL_UNUSED)
+TkSelPropProc( 
+TCL_UNUSED(XEvent *))
 {
     /* No-op */
 }
