@@ -77,7 +77,7 @@ static const char *const WmAttributeNames[] = {
 /*
  * A data structure of the following type holds window-manager-related
  * information for each top-level window in an application.
-. */
+ */
 
 typedef struct TkWmInfo {
     TkWindow *winPtr;		/* Pointer to main Tk information for this window. */
@@ -91,16 +91,16 @@ typedef struct TkWmInfo {
     int withdrawn;		/* Non-zero means window has been withdrawn. */
 
     /*
-     * Wrapper and menubar support
-    . */
+     * Wrapper and menubar support.
+     */
 
     TkWindow *wrapperPtr;	/* Wrapper window pointer. NULL means not created yet. */
     Tk_Window menubar;		/* Menubar window, or NULL. */
     int menuHeight;		/* Vertical space for menubar in pixels. */
 
     /*
-     * Size hints information
-    . */
+     * Size hints information.
+     */
 
     int sizeHintsFlags;		/* Flags for size hints. */
     int minWidth, minHeight;	/* Minimum dimensions. */
@@ -116,8 +116,8 @@ typedef struct TkWmInfo {
     int gravity;		/* Desired window gravity. */
 
     /*
-     * Size and location management
-    . */
+     * Size and location management.
+    * /
 
     int width, height;		/* Desired dimensions in pixels or grid units. */
     int x, y;			/* Desired X and Y coordinates. */
@@ -128,15 +128,15 @@ typedef struct TkWmInfo {
 				/* Last requested wrapper dimensions. */
 
     /*
-     * Virtual root information (kept for compatibility but mostly unused in Wayland)
-    . */
+     * Virtual root information (kept for compatibility but mostly unused in Wayland).
+     */
 
     int vRootX, vRootY;		/* Virtual root position (unused in Wayland). */
     int vRootWidth, vRootHeight;/* Virtual root/screen dimensions. */
 
     /*
-     * Miscellaneous information
-    . */
+     * Miscellaneous information.
+     */
 
     WmAttributes attributes;	/* Current [wm attributes] state. */
     WmAttributes reqState;	/* Requested [wm attributes] state. */
@@ -155,7 +155,7 @@ typedef struct TkWmInfo {
 
 /*
  * Flag values for WmInfo structures (same as X11 version for compatibility)
-. */
+ */
 
 #define WM_NEVER_MAPPED			(1<<0)
 #define WM_UPDATE_PENDING		(1<<1)
@@ -174,8 +174,8 @@ typedef struct TkWmInfo {
 #define WM_FULLSCREEN_PENDING		(1<<16)
 
 /*
- * Size hint flags (from X11, kept for compatibility)
-. */
+ * Size hint flags (from X11, kept for compatibility).
+ */
 
 #define USPosition	(1 << 0)
 #define USSize		(1 << 1)
@@ -197,8 +197,8 @@ typedef struct TkWmInfo {
 #define IconicState 3
 
 /*
- * Gravity constants (from X11, kept for compatibility)
-. */
+ * Gravity constants (from X11, kept for compatibility).
+ */
 
 #define NorthWestGravity 1
 #define NorthGravity 2
@@ -211,15 +211,11 @@ typedef struct TkWmInfo {
 #define SouthEastGravity 9
 #define StaticGravity 10
 
-/*
- * Global list of all top-level windows
-. */
+/* Global list of all top-level windows. */
 
 static WmInfo *firstWmPtr = NULL;
 
-/*
- * GLFW callback function pointers
-. */
+/* GLFW callback function pointers. */
 
 static void (*glfwCloseCallback)(GLFWwindow*);
 static void (*glfwFocusCallback)(GLFWwindow*, int);
@@ -228,9 +224,7 @@ static void (*glfwMaximizeCallback)(GLFWwindow*, int);
 static void (*glfwFramebufferSizeCallback)(GLFWwindow*, int, int);
 static void (*glfwWindowPosCallback)(GLFWwindow*, int, int);
 
-/*
- * Forward declarations
-. */
+/* Forward declarations .*/
 
 static void		TopLevelEventProc(ClientData clientData, XEvent *eventPtr);
 static void		TopLevelReqProc(ClientData clientData, Tk_Window tkwin);
@@ -312,9 +306,7 @@ static int		WmTransientCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 
-/*
- * New forward declarations for GLFW integration.
-. */
+/* New forward declarations for GLFW integration. */
 static void		GlfwCloseCallback(GLFWwindow *window);
 static void		GlfwFocusCallback(GLFWwindow *window, int focused);
 static void		GlfwIconifyCallback(GLFWwindow *window, int iconified);
@@ -339,9 +331,7 @@ static void		GenerateMapEvent(TkWindow *winPtr);
 static void		GenerateUnmapEvent(TkWindow *winPtr);
 static void		GenerateActivateEvents(TkWindow *winPtr, int active);
 
-/*
- * Geometry manager type.
-. */
+/* Geometry manager type. */
 
 static Tk_GeomMgr wmMgrType = {
     "wm",			/* name. */
@@ -439,7 +429,7 @@ TkWmNewWindow(
 
     /*
      * Arrange for geometry requests to be reflected to the window manager.
-    . */
+     */
 
     Tk_ManageGeometry((Tk_Window) winPtr, &wmMgrType, (ClientData) 0);
 }
@@ -458,7 +448,7 @@ TkWmNewWindow(
  *	GLFW window is created and callbacks are set up.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 CreateGlfwWindow(
@@ -544,7 +534,7 @@ CreateGlfwWindow(
  *	GLFW window is destroyed.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 DestroyGlfwWindow(
@@ -632,7 +622,7 @@ TkWmMapWindow(
  *	Window is unmapped.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 void
 TkWmUnmapWindow(
@@ -661,7 +651,7 @@ TkWmUnmapWindow(
  *	WmInfo structure is freed.
  *
  *--------------------------------------------------------------
-. */
+  */
 
 void
 TkWmDeadWindow(
@@ -766,7 +756,7 @@ TkWmDeadWindow(
  *	Window class is set (no-op in Wayland/GLFW).
  *
  *--------------------------------------------------------------
-. */
+ */
 
 void
 TkWmSetClass(
@@ -793,7 +783,7 @@ TkWmSetClass(
  *	All WmInfo structure resources are freed.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkWmCleanup(
@@ -855,7 +845,7 @@ TkWmCleanup(
  *	Set grid coordinate system for top-level window.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 Tk_SetGrid(
@@ -925,7 +915,7 @@ Tk_SetGrid(
  *	Cancel gridding for top-level window.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 Tk_UnsetGrid(
@@ -975,7 +965,7 @@ Tk_UnsetGrid(
  *	Get root window coordinates of a point in tkwin.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 Tk_GetRootCoords(
@@ -1027,7 +1017,7 @@ Tk_GetRootCoords(
  *	Find top-most window covering a point.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 Tk_Window
 Tk_CoordsToWindow(
@@ -1081,7 +1071,7 @@ Tk_CoordsToWindow(
  *	Get virtual root geometry (screen dimensions in Wayland).
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 Tk_GetVRootGeometry(
@@ -1121,7 +1111,7 @@ Tk_GetVRootGeometry(
  *	Move a top-level window.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 Tk_MoveToplevelWindow(
@@ -1162,7 +1152,7 @@ Tk_MoveToplevelWindow(
  *	Restack a top-level window (no-op in Wayland).
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkWmRestackToplevel(
@@ -1182,7 +1172,7 @@ TkWmRestackToplevel(
  *	Handle WM protocol events.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkWmProtocolEventProc(
@@ -1201,7 +1191,7 @@ TkWmProtocolEventProc(
  *	Configure window as a menu (no-op in Wayland).
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkpMakeMenuWindow(
@@ -1220,7 +1210,7 @@ TkpMakeMenuWindow(
  *	Return toplevel for focus events.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 TkWindow *
 TkWmFocusToplevel(
@@ -1240,7 +1230,7 @@ TkWmFocusToplevel(
  *	Get mouse pointer coordinates (no-op in GLFW/Wayland).
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkGetPointerCoords(
@@ -1270,7 +1260,7 @@ TkGetPointerCoords(
  *	See the user documentation.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 int
 Tk_WmObjCmd(
@@ -1437,7 +1427,7 @@ Tk_WmObjCmd(
  *	Processes the "wm aspect" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmAspectCmd(
@@ -1500,7 +1490,7 @@ WmAspectCmd(
  *	Processes the "wm attributes" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmAttributesCmd(
@@ -1635,7 +1625,7 @@ WmAttributesCmd(
  *	Processes the "wm client" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmClientCmd(
@@ -1675,7 +1665,7 @@ WmClientCmd(
  *	Processes the "wm colormapwindows" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmColormapwindowsCmd(
@@ -1698,7 +1688,7 @@ WmColormapwindowsCmd(
  *	Processes the "wm command" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmCommandCmd(
@@ -1748,7 +1738,7 @@ WmCommandCmd(
  *	Processes the "wm deiconify" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmDeiconifyCmd(
@@ -1774,7 +1764,7 @@ WmDeiconifyCmd(
  *	Processes the "wm focusmodel" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmFocusmodelCmd(
@@ -1799,7 +1789,7 @@ WmFocusmodelCmd(
  *	Processes the "wm forget" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmForgetCmd(
@@ -1825,7 +1815,7 @@ WmForgetCmd(
  *	Processes the "wm frame" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmFrameCmd(
@@ -1852,7 +1842,7 @@ WmFrameCmd(
  *	Processes the "wm geometry" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmGeometryCmd(
@@ -1894,7 +1884,7 @@ WmGeometryCmd(
  *	Processes the "wm grid" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmGridCmd(
@@ -1966,7 +1956,7 @@ WmGridCmd(
  *	Processes the "wm group" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmGroupCmd(
@@ -2013,7 +2003,7 @@ WmGroupCmd(
  *	See the user documentation.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconbadgeCmd(
@@ -2031,7 +2021,7 @@ WmIconbadgeCmd(
 	return TCL_ERROR;
     }
 
-    /* No-op on Wayland. *
+    /* No-op on Wayland. */
 
     return TCL_OK;
 }
@@ -2044,7 +2034,7 @@ WmIconbadgeCmd(
  *	Processes the "wm iconbitmap" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconbitmapCmd(
@@ -2066,7 +2056,7 @@ WmIconbitmapCmd(
  *	Processes the "wm iconify" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconifyCmd(
@@ -2092,7 +2082,7 @@ WmIconifyCmd(
  *	Processes the "wm iconmask" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconmaskCmd(
@@ -2114,7 +2104,7 @@ WmIconmaskCmd(
  *	Processes the "wm iconname" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconnameCmd(
@@ -2155,7 +2145,7 @@ WmIconnameCmd(
  *	Processes the "wm iconphoto" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconphotoCmd(
@@ -2224,7 +2214,7 @@ WmIconphotoCmd(
  *	Processes the "wm iconposition" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconpositionCmd(
@@ -2246,7 +2236,7 @@ WmIconpositionCmd(
  *	Processes the "wm iconwindow" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmIconwindowCmd(
@@ -2268,7 +2258,7 @@ WmIconwindowCmd(
  *	Processes the "wm manage" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmManageCmd(
@@ -2294,7 +2284,7 @@ WmManageCmd(
  *	Processes the "wm maxsize" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmMaxsizeCmd(
@@ -2337,7 +2327,7 @@ WmMaxsizeCmd(
  *	Processes the "wm minsize" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmMinsizeCmd(
@@ -2380,7 +2370,7 @@ WmMinsizeCmd(
  *	Processes the "wm overrideredirect" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmOverrideredirectCmd(
@@ -2425,7 +2415,7 @@ WmOverrideredirectCmd(
  *	Processes the "wm positionfrom" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmPositionfromCmd(
@@ -2481,7 +2471,7 @@ WmPositionfromCmd(
  *	Processes the "wm protocol" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmProtocolCmd(
@@ -2597,7 +2587,7 @@ WmProtocolCmd(
  *	Processes the "wm resizable" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmResizableCmd(
@@ -2656,7 +2646,7 @@ WmResizableCmd(
  *	Processes the "wm sizefrom" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmSizefromCmd(
@@ -2712,7 +2702,7 @@ WmSizefromCmd(
  *	Processes the "wm stackorder" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmStackorderCmd(
@@ -2757,8 +2747,6 @@ WmStackorderCmd(
 	return TCL_ERROR;
     }
     
-    /* Note: Proper implementation would check actual stacking order. */
-    /* This is a simplified placeholder. */
     Tcl_SetObjResult(interp, Tcl_NewBooleanObj(0));
     return TCL_OK;
 }
@@ -2771,7 +2759,7 @@ WmStackorderCmd(
  *	Processes the "wm state" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmStateCmd(
@@ -2850,7 +2838,7 @@ WmStateCmd(
  *	Processes the "wm title" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmTitleCmd(
@@ -2894,7 +2882,7 @@ WmTitleCmd(
  *	Processes the "wm transient" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmTransientCmd(
@@ -2961,7 +2949,7 @@ WmTransientCmd(
  *	Processes the "wm withdraw" Tcl command.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 WmWithdrawCmd(
@@ -2994,7 +2982,7 @@ WmWithdrawCmd(
  *	Handles WM_DELETE_WINDOW protocol.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 GlfwCloseCallback(
@@ -3004,67 +2992,6 @@ GlfwCloseCallback(
     
     if (wmPtr != NULL) {
 	HandleProtocol(wmPtr, WM_DELETE_WINDOW);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GlfwFocusCallback --
- *
- *	Called when a GLFW window gains or loses focus.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Handles WM_TAKE_FOCUS protocol if focused.
- *
- *--------------------------------------------------------------
-. */
-
-static void
-GlfwFocusCallback(
-    GLFWwindow *window,
-    int focused)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL && focused) {
-	HandleProtocol(wmPtr, WM_TAKE_FOCUS);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GlfwIconifyCallback --
- *
- *	Called when a GLFW window is iconified or restored.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates window state.
- *
- *--------------------------------------------------------------
-. */
-
-static void
-GlfwIconifyCallback(
-    GLFWwindow *window,
-    int iconified)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL) {
-	wmPtr->attributes.zoomed = 0;
-	if (iconified) {
-	    TkpWmSetState(wmPtr->winPtr, IconicState);
-	} else {
-	    TkpWmSetState(wmPtr->winPtr, NormalState);
-	}
     }
 }
 
@@ -3082,7 +3009,7 @@ GlfwIconifyCallback(
  *	Updates window state.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 GlfwMaximizeCallback(
@@ -3259,7 +3186,7 @@ GlfwIconifyCallback(
  *	Pointer to WmInfo, or NULL if not found.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static WmInfo*
 FindWmInfoByGlfwWindow(
@@ -3295,7 +3222,7 @@ FindWmInfoByGlfwWindow(
  *	Allocates memory for GLFW icon.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 ConvertPhotoToGlfwIcon(
@@ -3379,7 +3306,7 @@ ConvertPhotoToGlfwIcon(
  *	GLFW window hints are set.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 ApplyWindowHints(
@@ -3430,7 +3357,7 @@ ApplyWindowHints(
  *	Tcl command is executed.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 HandleProtocol(
@@ -3477,9 +3404,8 @@ HandleProtocol(
  * Side effects:
  *   ConfigureNotify event is queued.
  * 
-
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 GenerateConfigureEvent(
@@ -3530,7 +3456,6 @@ GenerateConfigureEvent(
 /*
  *--------------------------------------------------------------
  *
-
  * GenerateFocusEvent –
  * 
  *   Generates FocusIn or FocusOut events.
@@ -3541,9 +3466,8 @@ GenerateConfigureEvent(
  * Side effects:
  *   Focus event is queued.
  * 
-
  *--------------------------------------------------------------–
-. */
+ */
 
 static void
 GenerateFocusEvent(
@@ -3574,7 +3498,6 @@ GenerateFocusEvent(
 /*
  *--------------------------------------------------------------
  *
-
  * GenerateExposeEvent –
  * 
  *   Generates an Expose event for a damaged region.
@@ -3585,9 +3508,8 @@ GenerateFocusEvent(
  * Side effects:
  *   Expose event is queued.
  * 
-
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 GenerateExposeEvent(
@@ -3633,7 +3555,7 @@ GenerateExposeEvent(
  *   MapNotify event is queued, window marked as mapped.
  * 
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 GenerateMapEvent(
@@ -3684,7 +3606,7 @@ GenerateMapEvent(
  * 
 
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 GenerateUnmapEvent(
@@ -3722,7 +3644,6 @@ GenerateUnmapEvent(
 /*
  *--------------------------------------------------------------
  *
-
  * GenerateActivateEvents –
  * 
  * Generates ActivateNotify and DeactivateNotify events.
@@ -3734,9 +3655,8 @@ GenerateUnmapEvent(
  * Side effects:
  *   Activate/Deactivate events are generated via TkGenerateActivateEvents.
  * 
-
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 GenerateActivateEvents(
@@ -3768,7 +3688,7 @@ GenerateActivateEvents(
  *	Window enters or exits fullscreen mode.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 static void
 ApplyFullscreenState(
@@ -3812,7 +3732,7 @@ ApplyFullscreenState(
  *	Menubar is associated with the window.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkpSetMainMenubar(
@@ -3849,7 +3769,7 @@ TkpSetMainMenubar(
  *	Window menu state is updated.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkpUseWindowMenu(
@@ -3871,7 +3791,7 @@ TkpUseWindowMenu(
  *	The default value, or NULL if not found.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 const char *
 TkpGetSystemDefault(
@@ -3915,7 +3835,7 @@ TkpGetSystemDefault(
  *	None.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkWmAddToColormapWindows(
@@ -3936,7 +3856,7 @@ TkWmAddToColormapWindows(
  *	None.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkWmRemoveFromColormapWindows(
@@ -3959,7 +3879,7 @@ TkWmRemoveFromColormapWindows(
  *	May delay window mapping.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 WmWaitMapProc(
@@ -3988,7 +3908,7 @@ WmWaitMapProc(
  *	1 if successful, 0 otherwise.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 int
 TkpWmGetWindowParams(
@@ -4024,7 +3944,7 @@ TkpWmGetWindowParams(
  *	None.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 void
 TkpWmSetWindowParams(
@@ -4062,7 +3982,7 @@ TkpWmSetWindowParams(
  *	May minimize, restore, or withdraw a window.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 int
 TkpWmSetState(
@@ -4122,7 +4042,7 @@ TkpWmSetState(
  *	The wrapper window, or NULL.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 TkWindow *
 TkpGetWrapperWindow(
@@ -4148,7 +4068,7 @@ TkpGetWrapperWindow(
  *	Array of TkWindow pointers, terminated by NULL.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 TkWindow **
 TkWmStackorderToplevel(
@@ -4198,7 +4118,7 @@ TkWmStackorderToplevel(
  *	Updates window geometry and state.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 TopLevelEventProc(
@@ -4246,7 +4166,7 @@ TopLevelEventProc(
  *	May update size hints and geometry.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 TopLevelReqProc(
@@ -4279,7 +4199,7 @@ TopLevelReqProc(
  *	Window size/position is updated via GLFW if needed.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 UpdateGeometryInfo(
@@ -4332,7 +4252,7 @@ UpdateGeometryInfo(
  *	GLFW window attributes may be changed.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 UpdateHints(
@@ -4363,7 +4283,7 @@ UpdateHints(
  *	GLFW size limits / aspect ratio set.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 UpdateSizeHints(
@@ -4402,7 +4322,7 @@ UpdateSizeHints(
  *	Window title updated.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 UpdateTitle(
@@ -4430,7 +4350,7 @@ UpdateTitle(
  *	None (kept for API compatibility).
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 UpdatePhotoIcon(
@@ -4454,7 +4374,7 @@ UpdatePhotoIcon(
  *	vRootWidth/vRootHeight updated.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 UpdateVRootGeometry(
@@ -4486,7 +4406,7 @@ UpdateVRootGeometry(
  *	Compatibility no-op (GLFW visibility is synchronous).
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 WaitForMapNotify(
@@ -4504,7 +4424,7 @@ WaitForMapNotify(
  *	Called when the menubar geometry changes.
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 MenubarReqProc(
@@ -4533,7 +4453,7 @@ MenubarReqProc(
  *	TCL_OK or TCL_ERROR
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static int
 ParseGeometry(
@@ -4612,7 +4532,7 @@ ParseGeometry(
  *	Arrange for geometry info to be updated later (idle callback).
  *
  *----------------------------------------------------------------------
-. */
+ */
 
 static void
 WmUpdateGeom(
@@ -4631,4 +4551,4 @@ WmUpdateGeom(
  * c-basic-offset: 4
  * fill-column: 78
  * End:
-. */
+ */
