@@ -338,7 +338,7 @@ GetFileIcon(
 
     GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmp);
     imageSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
-    byteBuffer = (char *)Tcl_Alloc(imageSize);
+    byteBuffer = (unsigned char *)Tcl_Alloc(imageSize);
     GetBitmapBits(iconInfo.hbmColor, imageSize, byteBuffer);
 
     hasAlpha = 0;

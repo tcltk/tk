@@ -41,9 +41,9 @@ typedef struct {
     int		width;
     int		height;
     double	angle;
-    double	xoffset;
-    double	yoffset;
-    int			embossed;
+    int		xoffset;
+    int		yoffset;
+    int		embossed;
 
 } TextElement;
 
@@ -51,7 +51,7 @@ typedef struct {
  * NB: Keep in sync with label element option table.
  */
 static const Ttk_ElementOptionSpec TextElementOptions[] = {
-    { "-angle", TK_OPTION_DOUBLE,
+    { "-textangle", TK_OPTION_DOUBLE,
 	offsetof(TextElement,angleObj), "0.0"},
     { "-text", TK_OPTION_STRING,
 	offsetof(TextElement,textObj), "" },
@@ -91,30 +91,9 @@ static int TextSetup(TextElement *text, Tk_Window tkwin)
     text->textLayout = Tk_ComputeTextLayout(
 	    text->tkfont, string, -1/*numChars*/, wrapLength, justify,
 	    0/*flags*/, &text->width, &text->height);
-
     if (text->angle != 0.0) {
-	double sinA = sin(-text->angle * 0.017453292519943295);
-	double cosA = cos(-text->angle * 0.017453292519943295);
-	double xo[4] = {0, text->width, text->width, 0};
-	double yo[4] = {0, 0, text->height, text->height};
-	double xt, yt;
-	double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-	size_t i;
-
-	for (i = 0; i < 4; i++) {
-	    xt = xo[i] * cosA - yo[i] * sinA;
-	    if (xt > xmax) xmax = xt;
-	    if (xt < xmin) xmin = xt;
-
-	    yt = xo[i] * sinA +  yo[i] * cosA;
-	    if (yt > ymax) ymax = yt;
-	    if (yt < ymin) ymin = yt;
-	}
-
-	text->width = (xmax - xmin);
-	text->height = (ymax - ymin);
-	text->xoffset = -xmin;
-	text->yoffset = -ymin;
+	TkAdjustAngledTextLayout(text->angle, &text->width, &text->height,
+		&text->xoffset, &text->yoffset);
     }
 
     return 1;
@@ -581,7 +560,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     /* Text element part:
      * NB: Keep in sync with TextElementOptions.
      */
-    { "-angle", TK_OPTION_DOUBLE,
+    { "-textangle", TK_OPTION_DOUBLE,
 	offsetof(LabelElement,text.angleObj), "0.0"},
     { "-text", TK_OPTION_STRING,
 	offsetof(LabelElement,text.textObj), "" },
