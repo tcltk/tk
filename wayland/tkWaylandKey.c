@@ -1,9 +1,8 @@
 /*
  * tkWaylandKey.c --
  *
- *
-*  This file contains routines for dealing with international keyboard
- * input. Ported to Wayland.
+ * This file contains routines for dealing with international keyboard
+ * input using GLFW.
  *
  * Copyright © 1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -16,22 +15,13 @@
 #include "tkUnixInt.h"
 #include <stdlib.h>
 #include <string.h>
+#include <GLFW/glfw3.h>
 
-#ifdef TK_USE_WAYLAND
-#include <wayland-client.h>
-#include <xkbcommon/xkbcommon.h>
-#include <xkbcommon/xkbcommon-keysyms.h>
-#endif
 
 /*
- * Wayland-specific structures
+ * GLFW-specific structures
  */
 typedef struct {
-#ifdef TK_USE_WAYLAND
-    struct xkb_context *xkb_context;
-    struct xkb_keymap *xkb_keymap;
-    struct xkb_state *xkb_state;
-#endif
     int mode_mod_mask;
     int meta_mod_mask;
     int alt_mod_mask;
@@ -39,21 +29,23 @@ typedef struct {
     KeyCode *mod_key_codes;
     Tcl_Size num_mod_key_codes;
     int bind_info_stale;
-} WaylandKeymapInfo;
+} GLFWKeymapInfo;
 
-/*
- * Prototypes for local functions defined in this file:
- */
+/* Global GLFW keymap info. */
+static GLFWKeymapInfo *glfwKeymapInfo = NULL;
+
+/* Function prototypes. */
+int GLFW_KeyToXKeycode(int glfw_key);
+KeySym GLFW_KeyToKeysym(int glfw_key, int mods);
+void GLFW_ProcessKeyEvent(TkWindow *winPtr, int glfw_key, int scancode, int action, int mods);
 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_SetCaretPos --
  *
- *
-This enables correct placement of the text input caret.
- *
-This is called by widgets to indicate their cursor placement.
+ * This enables correct placement of the text input caret.
+ * This is called by widgets to indicate their cursor placement.
  *
  *----------------------------------------------------------------------
  */
@@ -68,7 +60,7 @@ Tk_SetCaretPos(
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     
-    /* Check if position has changed */
+    /* Check if position has changed. */
     if ((dispPtr->caret.winPtr == winPtr)
     && (dispPtr->caret.x == x)
     && (dispPtr->caret.y == y)
@@ -82,11 +74,10 @@ Tk_SetCaretPos(
     dispPtr->caret.height = height;
 
     /*
-     * Update Wayland text input caret position
+     * Update GLFW text input caret position.
      */
 #ifdef TK_USE_INPUT_METHODS
-    /* In Wayland, we'd update the text input context */
-    /* This is handled at the compositor level */
+    /* For GLFW, caret position might be used for IME positioning */
 #endif
 }
 
@@ -95,16 +86,13 @@ Tk_SetCaretPos(
  *
  * TkpGetString --
  *
- *
-Retrieve the UTF string associated with a keyboard event.
+ * Retrieve the UTF string associated with a keyboard event.
  *
  * Results:
- *
-Returns the UTF string.
+ * Returns the UTF string.
  *
  * Side effects:
- *
-Stores the input string in the specified Tcl_DString.
+ * Stores the input string in the specified Tcl_DString.
  *
  *----------------------------------------------------------------------
  */
@@ -112,15 +100,11 @@ Stores the input string in the specified Tcl_DString.
 const char *
 TkpGetString(
     TkWindow *winPtr,
-/* Window where event occurred */
     XEvent *eventPtr,
-/* X keyboard event. */
     Tcl_DString *dsPtr)
-/* Initialized, empty string to hold result. */
 {
     Tcl_Size len;
     TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
-    TkDisplay *dispPtr = winPtr->dispPtr;
 
     /*
      * If we have the value cached already, use it now.
@@ -133,7 +117,7 @@ TkpGetString(
     }
 
     /*
-     * Only do this for KeyPress events
+     * Only do this for KeyPress events.
      */
     if (eventPtr->type != KeyPress) {
         len = 0;
@@ -142,13 +126,11 @@ TkpGetString(
     }
 
 #ifdef TK_USE_INPUT_METHODS
-    if (dispPtr->flags & TK_DISPLAY_USE_IM) {
+    if (winPtr->dispPtr->flags & TK_DISPLAY_USE_IM) {
         /*
-         * For Wayland with input methods, text comes from compositor
-         * via text-input protocol. We need to check if there's pending text.
+         * For GLFW with input methods, text comes from character callback.
          */
-        /* Note: winPtr->pendingText would need to be added to TkWindow struct */
-        char *pendingText = NULL; /* Temporary placeholder */
+        char *pendingText = NULL; /* Would come from GLFW character callback. */
         if (pendingText) {
             len = strlen(pendingText);
             Tcl_DStringAppend(dsPtr, pendingText, len);
@@ -160,37 +142,69 @@ TkpGetString(
 #endif /* TK_USE_INPUT_METHODS */
     {
         /*
-         * Fallback: convert keysym to string using xkbcommon or X11
+         * For GLFW, we get the character from the key event
+         * GLFW provides Unicode code points in its character callback.
+         * For now, we'll use the keysym-to-character mapping.
          */
-        KeySym keysym = TkpGetKeySym(dispPtr, eventPtr);
-        char buffer[32];
+        KeySym keysym = TkpGetKeySym(winPtr->dispPtr, eventPtr);
+        char buffer[8];  /* UTF-8 can use up to 4 bytes, plus null. */
         
         if (keysym != NoSymbol) {
-            /* Map keysym to UTF-8 string */
+            /* Simple ASCII mapping for common keys. */
             if (keysym >= XK_space && keysym <= XK_asciitilde) {
-                /* ASCII printable characters */
+                /* ASCII printable characters. */
                 buffer[0] = (char)(keysym & 0xFF);
                 buffer[1] = '\0';
                 len = 1;
             } else if (keysym >= XK_A && keysym <= XK_Z) {
-                /* Uppercase letters */
-                buffer[0] = 'A' + (keysym - XK_A);
+                /* Uppercase letters - check shift state. */
+                int shift_pressed = (eventPtr->xkey.state & ShiftMask) ? 1 : 0;
+                if (shift_pressed) {
+                    buffer[0] = 'A' + (keysym - XK_A);
+                } else {
+                    buffer[0] = 'a' + (keysym - XK_A);
+                }
                 buffer[1] = '\0';
                 len = 1;
             } else if (keysym >= XK_a && keysym <= XK_z) {
-                /* Lowercase letters */
-                buffer[0] = 'a' + (keysym - XK_a);
+                /* Lowercase letters - check shift state. */
+                int shift_pressed = (eventPtr->xkey.state & ShiftMask) ? 1 : 0;
+                if (shift_pressed) {
+                    buffer[0] = 'A' + (keysym - XK_a);
+                } else {
+                    buffer[0] = 'a' + (keysym - XK_a);
+                }
+                buffer[1] = '\0';
+                len = 1;
+            } else if (keysym >= XK_0 && keysym <= XK_9) {
+                /* Numbers */
+                buffer[0] = '0' + (keysym - XK_0);
                 buffer[1] = '\0';
                 len = 1;
             } else {
-                /* For other keysyms, try to convert to UTF-8 */
-#ifdef TK_USE_WAYLAND
-                len = xkb_keysym_to_utf8(keysym, buffer, sizeof(buffer));
-#else
-                /* Fallback for non-Wayland: use simple mapping */
-                buffer[0] = '\0';
-                len = 0;
-#endif
+                /* Special keys */
+                switch (keysym) {
+                    case XK_Return:
+                    case XK_KP_Enter:
+                        buffer[0] = '\n';
+                        buffer[1] = '\0';
+                        len = 1;
+                        break;
+                    case XK_Tab:
+                        buffer[0] = '\t';
+                        buffer[1] = '\0';
+                        len = 1;
+                        break;
+                    case XK_BackSpace:
+                        buffer[0] = '\b';
+                        buffer[1] = '\0';
+                        len = 1;
+                        break;
+                    default:
+                        buffer[0] = '\0';
+                        len = 0;
+                        break;
+                }
             }
             
             if (len > 0) {
@@ -204,7 +218,7 @@ TkpGetString(
     }
 
     /*
-     * Cache the string in the event
+     * Cache the string in the event.
      */
 done:
     if (len > 0) {
@@ -221,36 +235,20 @@ done:
 }
 
 /*
- * When mapping from a keysym to key information for Wayland
+ * When mapping from a keysym to key information.
  */
 
 void
 TkpSetKeycodeAndState(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window), /* tkwin */
     KeySym keySym,
     XEvent *eventPtr)
 {
-    TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    /* For GLFW, keycodes and states come from GLFW events. */
     
     if (keySym == NoSymbol) {
         eventPtr->xkey.keycode = 0;
         return;
-    }
-
-    /*
-     * In Wayland, we can't arbitrarily set keycodes.
-     * We store the keysym and let the compositor handle keycodes.
-     * Note: XKeyEvent doesn't have a keysym field, so we need to handle this differently
-     */
-    /* eventPtr->xkey.keysym = keySym; */ /* XKeyEvent doesn't have keysym field */
-    
-    /*
-     * For modifier state, we need to track what modifiers are active
-     * based on xkbcommon state
-     */
-    if (dispPtr->keymapInfo) {
-        /* Use existing keymap info if available */
-        /* Modifier state would be handled by the window system */
     }
 }
 
@@ -259,20 +257,15 @@ TkpSetKeycodeAndState(
  *
  * TkpGetKeySym --
  *
- *
-Given an X KeyPress or KeyRelease event, map the keycode in the event
- *
-into a KeySym.
+ * Given an X KeyPress or KeyRelease event, map the keycode in the event
+ * into a KeySym.
  *
  * Results:
- *
-The return value is the KeySym corresponding to eventPtr, or NoSymbol
- *
-if no matching Keysym could be found.
+ * The return value is the KeySym corresponding to eventPtr, or NoSymbol
+ * if no matching Keysym could be found.
  *
  * Side effects:
- *
-In the first call for a given display, keymap info gets loaded.
+ * In the first call for a given display, keymap info gets loaded.
  *
  *----------------------------------------------------------------------
  */
@@ -280,9 +273,7 @@ In the first call for a given display, keymap info gets loaded.
 KeySym
 TkpGetKeySym(
     TkDisplay *dispPtr,
-/* Display in which to map keycode. */
     XEvent *eventPtr)
-/* Description of X event. */
 {
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
     
@@ -302,40 +293,17 @@ TkpGetKeySym(
     }
 
     /*
-     * Use existing keymap handling for non-Wayland systems
-     * For Wayland, we would use xkbcommon
+     * For GLFW, we need to map GLFW key codes to X11 keysyms.
+     * This mapping would typically be done when GLFW events are converted to X events.
      */
-#ifdef TK_USE_WAYLAND
-    if (dispPtr->keymapInfo) {
-        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
-        if (info->xkb_state) {
-            xkb_keycode_t keycode = eventPtr->xkey.keycode;
-            
-            /* Map keycode to keysym using xkbcommon */
-            xkb_keysym_t sym = xkb_state_key_get_one_sym(info->xkb_state, keycode);
-            
-            /*
-             * Special handling for Lock key (Caps Lock)
-             */
-            if (info->lock_usage == LU_CAPS) {
-                /* If Caps Lock is active and sym is alphabetic, adjust case */
-                if (xkb_state_mod_name_is_active(info->xkb_state, XKB_MOD_NAME_CAPS,
-                        XKB_STATE_MODS_EFFECTIVE)) {
-                    if (sym >= XK_a && sym <= XK_z) {
-                        sym = XK_A + (sym - XK_a);
-                    } else if (sym >= XK_A && sym <= XK_Z) {
-                        sym = XK_a + (sym - XK_A);
-                    }
-                }
-            }
-            
-            return (KeySym)sym;
-        }
-    }
-#endif /* TK_USE_WAYLAND */
     
-    /* Fallback to standard X11 keysym lookup */
-    return XLookupKeysym(&eventPtr->xkey, 0);
+    /* If the event already has a keysym cached, use it. */
+    if (kePtr->keysym != NoSymbol) {
+        return kePtr->keysym;
+    }
+    
+    /* Default: return the keycode as keysym (simplified). */
+    return (KeySym)eventPtr->xkey.keycode;
 }
 
 /*
@@ -343,18 +311,14 @@ TkpGetKeySym(
  *
  * TkpInitKeymapInfo --
  *
- *
-This function is invoked to scan keymap information to recompute stuff
- *
-that's important for binding, such as modifier keys.
+ * This function is invoked to scan keymap information to recompute stuff
+ * that's important for binding, such as modifier keys.
  *
  * Results:
- *
-None.
+ * None.
  *
  * Side effects:
- *
-Keymap-related information in dispPtr is updated.
+ * Keymap-related information in dispPtr is updated.
  *
  *--------------------------------------------------------------
  */
@@ -362,101 +326,48 @@ Keymap-related information in dispPtr is updated.
 void
 TkpInitKeymapInfo(
     TkDisplay *dispPtr)
-/* Display for which to recompute keymap
- * information. */
 {
-    if (!dispPtr->keymapInfo) {
-        dispPtr->keymapInfo = (WaylandKeymapInfo *)
-            Tcl_Alloc(sizeof(WaylandKeymapInfo));
-        memset(dispPtr->keymapInfo, 0, sizeof(WaylandKeymapInfo));
+    if (!glfwKeymapInfo) {
+        glfwKeymapInfo = (GLFWKeymapInfo *)Tcl_Alloc(sizeof(GLFWKeymapInfo));
+        memset(glfwKeymapInfo, 0, sizeof(GLFWKeymapInfo));
     }
     
-    WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
-    
-#ifdef TK_USE_WAYLAND
-    /* Initialize xkbcommon context if needed */
-    if (!info->xkb_context) {
-        info->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-        if (!info->xkb_context) {
-            dispPtr->bindInfoStale = 0;
-            return;
-        }
-    }
+    GLFWKeymapInfo *info = glfwKeymapInfo;
     
     /*
-     * In Wayland, we get keymap from compositor via wl_keyboard.keymap event.
-     * This is typically set up elsewhere in the Wayland initialization.
-     * For now, we'll create a default keymap.
+     * For GLFW, we set up default modifier masks.
      */
-    if (!info->xkb_keymap && info->xkb_context) {
-        struct xkb_rule_names names = {
-            .rules = NULL,
-            .model = "pc105",
-            .layout = "us",
-            .variant = "",
-            .options = ""
-        };
-        
-        info->xkb_keymap = xkb_keymap_new_from_names(info->xkb_context, &names,
-                                                     XKB_KEYMAP_COMPILE_NO_FLAGS);
-        
-        if (info->xkb_keymap) {
-            info->xkb_state = xkb_state_new(info->xkb_keymap);
-        }
-    }
-    
-    if (!info->xkb_state) {
-        dispPtr->bindInfoStale = 0;
-        return;
-    }
-    
-    /*
-     * Determine lock usage from xkbcommon
-     */
-    info->lock_usage = LU_IGNORE;
-    
-    /* Check for Caps Lock */
-    xkb_mod_index_t caps_index = xkb_keymap_mod_get_index(info->xkb_keymap, 
-                                                         XKB_MOD_NAME_CAPS);
-    if (caps_index != XKB_MOD_INVALID) {
-        info->lock_usage = LU_CAPS;
-    }
-#endif /* TK_USE_WAYLAND */
-    
-    /*
-     * Look for modifier masks
-     */
-    info->mode_mod_mask = 0;
-    info->meta_mod_mask = 0;
-    info->alt_mod_mask = 0;
-    
-    /* For now, use default values */
     info->mode_mod_mask = Mod5Mask;
     info->alt_mod_mask = Mod1Mask;
     info->meta_mod_mask = Mod2Mask;
+    info->lock_usage = LU_CAPS;
     
     /*
-     * Build array of modifier keycodes
+     * Build array of modifier keycodes.
      */
     if (info->mod_key_codes != NULL) {
         Tcl_Free(info->mod_key_codes);
     }
     
-    /* Simplified: allocate small array for common modifier keys */
+    /* Allocate array for modifier keycodes. */
     info->mod_key_codes = (KeyCode *)Tcl_Alloc(8 * sizeof(KeyCode));
     info->num_mod_key_codes = 0;
     
-    /* Add some common modifier keycodes (these are typical X11 keycodes) */
+    /*
+     * Add typical modifier keycodes.
+     */
     if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 66;  /* Caps Lock */
-    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 50;  /* Shift */
-    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 62;  /* Shift */
-    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 37;  /* Control */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 50;  /* Left Shift */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 62;  /* Right Shift */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 37;  /* Left Control */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 105; /* Right Control */
     if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 64;  /* Alt */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 108; /* Alt Gr */
     
     dispPtr->bindInfoStale = 0;
     info->bind_info_stale = 0;
     
-    /* Update TkDisplay fields for compatibility */
+    /* Update TkDisplay fields for compatibility. */
     dispPtr->modeModMask = info->mode_mod_mask;
     dispPtr->metaModMask = info->meta_mod_mask;
     dispPtr->altModMask = info->alt_mod_mask;
@@ -468,169 +379,258 @@ TkpInitKeymapInfo(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GetKeymapInfo --
+ * GLFW_ProcessKeyEvent --
  *
- *
-Helper function to get Wayland keymap information
- *
- *----------------------------------------------------------------------
- */
-
-#ifdef TK_USE_WAYLAND
-void
-Tk_GetKeymapInfo(
-    TkDisplay *dispPtr,
-    struct xkb_keymap **keymap,
-    struct xkb_state **state)
-{
-    if (dispPtr->keymapInfo) {
-        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
-        if (keymap) *keymap = info->xkb_keymap;
-        if (state) *state = info->xkb_state;
-    } else {
-        if (keymap) *keymap = NULL;
-        if (state) *state = NULL;
-    }
-}
-#endif
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_SetKeymapInfo --
- *
- *
-Set Wayland keymap information (called from Wayland event handler)
+ * Helper function to process GLFW key events and convert to Tk events
  *
  *----------------------------------------------------------------------
  */
 
-#ifdef TK_USE_WAYLAND
 void
-Tk_SetKeymapInfo(
-    TkDisplay *dispPtr,
-    struct xkb_keymap *keymap)
+GLFW_ProcessKeyEvent(
+    TkWindow *winPtr,
+    int glfw_key,
+    int scancode,
+    int action,
+    int mods)
 {
-    if (!dispPtr->keymapInfo) {
-        dispPtr->keymapInfo = (WaylandKeymapInfo *)
-            Tcl_Alloc(sizeof(WaylandKeymapInfo));
-        memset(dispPtr->keymapInfo, 0, sizeof(WaylandKeymapInfo));
+    /* Convert GLFW key event to Tk/X event. */
+    XEvent event;
+    memset(&event, 0, sizeof(XEvent));
+    
+    /* Set event type */
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        event.type = KeyPress;
+    } else if (action == GLFW_RELEASE) {
+        event.type = KeyRelease;
     }
     
-    WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
+    /* Convert GLFW key to X keycode. */
+    event.xkey.keycode = GLFW_KeyToXKeycode(glfw_key);
     
-    /* Clean up old state */
-    if (info->xkb_state) {
-        xkb_state_unref(info->xkb_state);
-    }
-    if (info->xkb_keymap && info->xkb_keymap != keymap) {
-        xkb_keymap_unref(info->xkb_keymap);
-    }
+    /* Convert GLFW modifiers to X modifier state. */
+    event.xkey.state = 0;
+    if (mods & GLFW_MOD_SHIFT) event.xkey.state |= ShiftMask;
+    if (mods & GLFW_MOD_CONTROL) event.xkey.state |= ControlMask;
+    if (mods & GLFW_MOD_ALT) event.xkey.state |= Mod1Mask;
+    if (mods & GLFW_MOD_SUPER) event.xkey.state |= Mod4Mask;
+    if (mods & GLFW_MOD_CAPS_LOCK) event.xkey.state |= LockMask;
+    if (mods & GLFW_MOD_NUM_LOCK) event.xkey.state |= Mod2Mask;
     
-    /* Set new keymap */
-    info->xkb_keymap = keymap;
-    if (keymap) {
-        xkb_keymap_ref(keymap);
-        info->xkb_state = xkb_state_new(keymap);
-    } else {
-        info->xkb_state = NULL;
-    }
+    /* Convert GLFW key to X keysym.*/
+    KeySym keysym = GLFW_KeyToKeysym(glfw_key, mods);
     
-    /* Mark bind info as stale so it gets reinitialized */
-    dispPtr->bindInfoStale = 1;
-    info->bind_info_stale = 1;
+    /* Store keysym in the event for TkpGetKeySym. */
+    ((TkKeyEvent *)&event)->keysym = keysym;
+    
+    /* Process the event in Tk.*/
+    Tk_QueueWindowEvent(&event, Tk_WindowId((Tk_Window)winPtr));
 }
-#endif
 
 /*
- *----------------------------------------------------------------------
- *
- * Tk_UpdateKeyState --
- *
- *
-Update keyboard state from Wayland key events
- *
- *----------------------------------------------------------------------
+ * Helper function to map GLFW keys to X keycodes
  */
-
-#ifdef TK_USE_WAYLAND
-void
-Tk_UpdateKeyState(
-    TkDisplay *dispPtr,
-    xkb_keycode_t keycode,
-    int pressed)
+int
+GLFW_KeyToXKeycode(int glfw_key)
 {
-    if (dispPtr->keymapInfo) {
-        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
-        if (info->xkb_state) {
-            if (pressed) {
-                xkb_state_update_key(info->xkb_state, keycode, XKB_KEY_DOWN);
-            } else {
-                xkb_state_update_key(info->xkb_state, keycode, XKB_KEY_UP);
-            }
-        }
+    /* Simple mapping.  */
+    switch (glfw_key) {
+        case GLFW_KEY_SPACE: return 65;
+        case GLFW_KEY_APOSTROPHE: return 48;
+        case GLFW_KEY_COMMA: return 59;
+        case GLFW_KEY_MINUS: return 20;
+        case GLFW_KEY_PERIOD: return 60;
+        case GLFW_KEY_SLASH: return 61;
+        case GLFW_KEY_0: return 19;
+        case GLFW_KEY_1: return 10;
+        case GLFW_KEY_2: return 11;
+        case GLFW_KEY_3: return 12;
+        case GLFW_KEY_4: return 13;
+        case GLFW_KEY_5: return 14;
+        case GLFW_KEY_6: return 15;
+        case GLFW_KEY_7: return 16;
+        case GLFW_KEY_8: return 17;
+        case GLFW_KEY_9: return 18;
+        case GLFW_KEY_SEMICOLON: return 47;
+        case GLFW_KEY_EQUAL: return 21;
+        case GLFW_KEY_A: return 38;
+        case GLFW_KEY_B: return 56;
+        case GLFW_KEY_C: return 54;
+        case GLFW_KEY_D: return 40;
+        case GLFW_KEY_E: return 26;
+        case GLFW_KEY_F: return 41;
+        case GLFW_KEY_G: return 42;
+        case GLFW_KEY_H: return 43;
+        case GLFW_KEY_I: return 31;
+        case GLFW_KEY_J: return 44;
+        case GLFW_KEY_K: return 45;
+        case GLFW_KEY_L: return 46;
+        case GLFW_KEY_M: return 58;
+        case GLFW_KEY_N: return 57;
+        case GLFW_KEY_O: return 32;
+        case GLFW_KEY_P: return 33;
+        case GLFW_KEY_Q: return 24;
+        case GLFW_KEY_R: return 27;
+        case GLFW_KEY_S: return 39;
+        case GLFW_KEY_T: return 28;
+        case GLFW_KEY_U: return 30;
+        case GLFW_KEY_V: return 55;
+        case GLFW_KEY_W: return 25;
+        case GLFW_KEY_X: return 53;
+        case GLFW_KEY_Y: return 29;
+        case GLFW_KEY_Z: return 52;
+        case GLFW_KEY_ESCAPE: return 9;
+        case GLFW_KEY_ENTER: return 36;
+        case GLFW_KEY_TAB: return 23;
+        case GLFW_KEY_BACKSPACE: return 22;
+        case GLFW_KEY_INSERT: return 118;
+        case GLFW_KEY_DELETE: return 119;
+        case GLFW_KEY_RIGHT: return 114;
+        case GLFW_KEY_LEFT: return 113;
+        case GLFW_KEY_DOWN: return 116;
+        case GLFW_KEY_UP: return 111;
+        case GLFW_KEY_PAGE_UP: return 112;
+        case GLFW_KEY_PAGE_DOWN: return 117;
+        case GLFW_KEY_HOME: return 110;
+        case GLFW_KEY_END: return 115;
+        case GLFW_KEY_CAPS_LOCK: return 66;
+        case GLFW_KEY_SCROLL_LOCK: return 78;
+        case GLFW_KEY_NUM_LOCK: return 77;
+        case GLFW_KEY_PRINT_SCREEN: return 107;
+        case GLFW_KEY_PAUSE: return 127;
+        case GLFW_KEY_F1: return 67;
+        case GLFW_KEY_F2: return 68;
+        case GLFW_KEY_F3: return 69;
+        case GLFW_KEY_F4: return 70;
+        case GLFW_KEY_F5: return 71;
+        case GLFW_KEY_F6: return 72;
+        case GLFW_KEY_F7: return 73;
+        case GLFW_KEY_F8: return 74;
+        case GLFW_KEY_F9: return 75;
+        case GLFW_KEY_F10: return 76;
+        case GLFW_KEY_F11: return 95;
+        case GLFW_KEY_F12: return 96;
+        case GLFW_KEY_LEFT_SHIFT: return 50;
+        case GLFW_KEY_LEFT_CONTROL: return 37;
+        case GLFW_KEY_LEFT_ALT: return 64;
+        case GLFW_KEY_LEFT_SUPER: return 133;
+        case GLFW_KEY_RIGHT_SHIFT: return 62;
+        case GLFW_KEY_RIGHT_CONTROL: return 105;
+        case GLFW_KEY_RIGHT_ALT: return 108;
+        case GLFW_KEY_RIGHT_SUPER: return 134;
+        case GLFW_KEY_MENU: return 135;
+        default: return 0;
     }
 }
-#endif
 
 /*
- *----------------------------------------------------------------------
- *
- * Tk_UpdateModifierState --
- *
- *
-Update modifier state from Wayland events
- *
- *----------------------------------------------------------------------
+ * Helper function to map GLFW keys to X keysyms.
  */
-
-#ifdef TK_USE_WAYLAND
-void
-Tk_UpdateModifierState(
-    TkDisplay *dispPtr,
-    uint32_t depressed,
-    uint32_t latched,
-    uint32_t locked,
-    uint32_t group)
+KeySym
+GLFW_KeyToKeysym(int glfw_key, int mods)
 {
-    if (dispPtr->keymapInfo) {
-        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
-        if (info->xkb_state) {
-            xkb_state_update_mask(info->xkb_state, depressed, latched, locked,
-                                 0, 0, group);
-        }
+    /* Simple mapping. */
+    switch (glfw_key) {
+        case GLFW_KEY_SPACE: return XK_space;
+        case GLFW_KEY_APOSTROPHE: return (mods & GLFW_MOD_SHIFT) ? XK_quotedbl : XK_apostrophe;
+        case GLFW_KEY_COMMA: return (mods & GLFW_MOD_SHIFT) ? XK_less : XK_comma;
+        case GLFW_KEY_MINUS: return (mods & GLFW_MOD_SHIFT) ? XK_underscore : XK_minus;
+        case GLFW_KEY_PERIOD: return (mods & GLFW_MOD_SHIFT) ? XK_greater : XK_period;
+        case GLFW_KEY_SLASH: return (mods & GLFW_MOD_SHIFT) ? XK_question : XK_slash;
+        case GLFW_KEY_0: return (mods & GLFW_MOD_SHIFT) ? XK_parenright : XK_0;
+        case GLFW_KEY_1: return (mods & GLFW_MOD_SHIFT) ? XK_exclam : XK_1;
+        case GLFW_KEY_2: return (mods & GLFW_MOD_SHIFT) ? XK_at : XK_2;
+        case GLFW_KEY_3: return (mods & GLFW_MOD_SHIFT) ? XK_numbersign : XK_3;
+        case GLFW_KEY_4: return (mods & GLFW_MOD_SHIFT) ? XK_dollar : XK_4;
+        case GLFW_KEY_5: return (mods & GLFW_MOD_SHIFT) ? XK_percent : XK_5;
+        case GLFW_KEY_6: return (mods & GLFW_MOD_SHIFT) ? XK_asciicircum : XK_6;
+        case GLFW_KEY_7: return (mods & GLFW_MOD_SHIFT) ? XK_ampersand : XK_7;
+        case GLFW_KEY_8: return (mods & GLFW_MOD_SHIFT) ? XK_asterisk : XK_8;
+        case GLFW_KEY_9: return (mods & GLFW_MOD_SHIFT) ? XK_parenleft : XK_9;
+        case GLFW_KEY_SEMICOLON: return (mods & GLFW_MOD_SHIFT) ? XK_colon : XK_semicolon;
+        case GLFW_KEY_EQUAL: return (mods & GLFW_MOD_SHIFT) ? XK_plus : XK_equal;
+        case GLFW_KEY_A: return (mods & GLFW_MOD_SHIFT) ? XK_A : XK_a;
+        case GLFW_KEY_B: return (mods & GLFW_MOD_SHIFT) ? XK_B : XK_b;
+        case GLFW_KEY_C: return (mods & GLFW_MOD_SHIFT) ? XK_C : XK_c;
+        case GLFW_KEY_D: return (mods & GLFW_MOD_SHIFT) ? XK_D : XK_d;
+        case GLFW_KEY_E: return (mods & GLFW_MOD_SHIFT) ? XK_E : XK_e;
+        case GLFW_KEY_F: return (mods & GLFW_MOD_SHIFT) ? XK_F : XK_f;
+        case GLFW_KEY_G: return (mods & GLFW_MOD_SHIFT) ? XK_G : XK_g;
+        case GLFW_KEY_H: return (mods & GLFW_MOD_SHIFT) ? XK_H : XK_h;
+        case GLFW_KEY_I: return (mods & GLFW_MOD_SHIFT) ? XK_I : XK_i;
+        case GLFW_KEY_J: return (mods & GLFW_MOD_SHIFT) ? XK_J : XK_j;
+        case GLFW_KEY_K: return (mods & GLFW_MOD_SHIFT) ? XK_K : XK_k;
+        case GLFW_KEY_L: return (mods & GLFW_MOD_SHIFT) ? XK_L : XK_l;
+        case GLFW_KEY_M: return (mods & GLFW_MOD_SHIFT) ? XK_M : XK_m;
+        case GLFW_KEY_N: return (mods & GLFW_MOD_SHIFT) ? XK_N : XK_n;
+        case GLFW_KEY_O: return (mods & GLFW_MOD_SHIFT) ? XK_O : XK_o;
+        case GLFW_KEY_P: return (mods & GLFW_MOD_SHIFT) ? XK_P : XK_p;
+        case GLFW_KEY_Q: return (mods & GLFW_MOD_SHIFT) ? XK_Q : XK_q;
+        case GLFW_KEY_R: return (mods & GLFW_MOD_SHIFT) ? XK_R : XK_r;
+        case GLFW_KEY_S: return (mods & GLFW_MOD_SHIFT) ? XK_S : XK_s;
+        case GLFW_KEY_T: return (mods & GLFW_MOD_SHIFT) ? XK_T : XK_t;
+        case GLFW_KEY_U: return (mods & GLFW_MOD_SHIFT) ? XK_U : XK_u;
+        case GLFW_KEY_V: return (mods & GLFW_MOD_SHIFT) ? XK_V : XK_v;
+        case GLFW_KEY_W: return (mods & GLFW_MOD_SHIFT) ? XK_W : XK_w;
+        case GLFW_KEY_X: return (mods & GLFW_MOD_SHIFT) ? XK_X : XK_x;
+        case GLFW_KEY_Y: return (mods & GLFW_MOD_SHIFT) ? XK_Y : XK_y;
+        case GLFW_KEY_Z: return (mods & GLFW_MOD_SHIFT) ? XK_Z : XK_z;
+        case GLFW_KEY_ESCAPE: return XK_Escape;
+        case GLFW_KEY_ENTER: return XK_Return;
+        case GLFW_KEY_TAB: return XK_Tab;
+        case GLFW_KEY_BACKSPACE: return XK_BackSpace;
+        case GLFW_KEY_INSERT: return XK_Insert;
+        case GLFW_KEY_DELETE: return XK_Delete;
+        case GLFW_KEY_RIGHT: return XK_Right;
+        case GLFW_KEY_LEFT: return XK_Left;
+        case GLFW_KEY_DOWN: return XK_Down;
+        case GLFW_KEY_UP: return XK_Up;
+        case GLFW_KEY_PAGE_UP: return XK_Page_Up;
+        case GLFW_KEY_PAGE_DOWN: return XK_Page_Down;
+        case GLFW_KEY_HOME: return XK_Home;
+        case GLFW_KEY_END: return XK_End;
+        case GLFW_KEY_CAPS_LOCK: return XK_Caps_Lock;
+        case GLFW_KEY_SCROLL_LOCK: return XK_Scroll_Lock;
+        case GLFW_KEY_NUM_LOCK: return XK_Num_Lock;
+        case GLFW_KEY_PRINT_SCREEN: return XK_Print;
+        case GLFW_KEY_PAUSE: return XK_Pause;
+        case GLFW_KEY_F1: return XK_F1;
+        case GLFW_KEY_F2: return XK_F2;
+        case GLFW_KEY_F3: return XK_F3;
+        case GLFW_KEY_F4: return XK_F4;
+        case GLFW_KEY_F5: return XK_F5;
+        case GLFW_KEY_F6: return XK_F6;
+        case GLFW_KEY_F7: return XK_F7;
+        case GLFW_KEY_F8: return XK_F8;
+        case GLFW_KEY_F9: return XK_F9;
+        case GLFW_KEY_F10: return XK_F10;
+        case GLFW_KEY_F11: return XK_F11;
+        case GLFW_KEY_F12: return XK_F12;
+        default: return NoSymbol;
     }
 }
-#endif
 
 /*
- * Cleanup function
+ * Cleanup function.
  */
 
 void
 TkpCleanupKeymapInfo(
     TkDisplay *dispPtr)
 {
-    if (dispPtr->keymapInfo) {
-        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
+    if (glfwKeymapInfo) {
+        GLFWKeymapInfo *info = glfwKeymapInfo;
         
-#ifdef TK_USE_WAYLAND
-        if (info->xkb_state) {
-            xkb_state_unref(info->xkb_state);
-        }
-        if (info->xkb_keymap) {
-            xkb_keymap_unref(info->xkb_keymap);
-        }
-        if (info->xkb_context) {
-            xkb_context_unref(info->xkb_context);
-        }
-#endif
         if (info->mod_key_codes) {
             Tcl_Free(info->mod_key_codes);
         }
         
         Tcl_Free(info);
-        dispPtr->keymapInfo = NULL;
+        glfwKeymapInfo = NULL;
+        
+        /* Clear TkDisplay fields */
+        dispPtr->modKeyCodes = NULL;
+        dispPtr->numModKeyCodes = 0;
     }
 }
 
