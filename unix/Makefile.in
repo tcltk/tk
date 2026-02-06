@@ -574,19 +574,19 @@ AQUA_SRCS = \
 	$(UNIX_DIR)/tkUnixScale.c $(XLIB_DIR)/xcolors.c $(XLIB_DIR)/xdraw.c \
 	$(XLIB_DIR)/xgc.c $(XLIB_DIR)/ximage.c $(XLIB_DIR)/xutil.c \
 	$(TTK_DIR)/ttkMacOSXTheme.c
-	
+
 WAYLAND_SRCS = \
-    $(WAYLAND_DIR)/tkWayland.c              $(WAYLAND_DIR)/tkWayland3D.c \
-    $(WAYLAND_DIR)/tkWaylandFont.c          $(WAYLAND_DIR)/tkWaylandClipboard.c \
-    $(WAYLAND_DIR)/tkWaylandImage.c         $(WAYLAND_DIR)/tkWaylandColor.c \
-    $(WAYLAND_DIR)/tkWaylandKey.c           $(WAYLAND_DIR)/tkWaylandConfig.c \
-    $(WAYLAND_DIR)/tkWaylandMenu.c          $(WAYLAND_DIR)/tkWaylandCursor.c \
-    $(WAYLAND_DIR)/tkWaylandNotify.c        $(WAYLAND_DIR)/tkWaylandSend.c \
-    $(WAYLAND_DIR)/tkWaylandDraw.c          $(WAYLAND_DIR)/tkWaylandSysTray.c \
-    $(WAYLAND_DIR)/tkWaylandEmbed.c         $(WAYLAND_DIR)/tkWaylandEvent.c \
-    $(WAYLAND_DIR)/tkWaylandFocus.c         $(WAYLAND_DIR)/tkWaylandXId.c \
-    $(WAYLAND_DIR)/tkGlfwInit.c             $(WAYLAND_DIR)/tkWaylandScrlbr.c \
-    $(WAYLAND_DIR)/nanovg.c
+    $(WAYLAND_DIR)/tkWayland.c $(WAYLAND_DIR)/tkWayland3D.c \
+    $(WAYLAND_DIR)/tkWaylandFont.c  $(WAYLAND_DIR)/tkWaylandClipboard.c \
+    $(WAYLAND_DIR)/tkWaylandImage.c $(WAYLAND_DIR)/tkWaylandColor.c \
+    $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandConfig.c \
+    $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandCursor.c \
+    $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandSend.c \
+    $(WAYLAND_DIR)/tkWaylandDraw.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
+    $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
+    $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandXId.c \
+    $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandMouseEvent.c \
+    $(WAYLAND_DIR)/nanovg.c 	
     
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
@@ -1403,7 +1403,7 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
-	
+
 tkWayland.o: $(WAYLAND_DIR)/tkWayland.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland.c
 
@@ -1463,6 +1463,9 @@ tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
 
 tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScrlbr.c
+
+tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMouseEvent.c
 
 nanovg.o: $(WAYLAND_DIR)/nanovg.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
@@ -1698,7 +1701,7 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
-	
+
 tkUuid.h: $(TOP_DIR)/manifest.uuid
 	echo "#define TK_VERSION_UUID \\" >$@
 	cat $(TOP_DIR)/manifest.uuid >>$@
