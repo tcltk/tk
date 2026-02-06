@@ -187,32 +187,69 @@ TkGlfwCleanupContext(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkCreateXEventSource --
+ * TkWaylandGetTkWindow --
  *
- *	GLFW/Wayland replacement for X11 event source creation.
- *	Sets up GLFW event polling mechanism.
+ *	Get Tk window from GLFW window.
  *
  * Results:
- *	None.
+ *	TkWindow pointer or NULL.
  *
  * Side effects:
- *	Initializes GLFW event handling system.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
-static void
-TkCreateXEventSource(void)
+TkWindow*
+TkWaylandGetTkWindow(
+    GLFWwindow* glfwWindow)
 {
-    /* Initialize GLFW context if not already done */
-    if (TkGlfwInitializeContext() != TCL_OK) {
-        fprintf(stderr, "Warning: Failed to initialize GLFW context\n");
-        return;
+    if (!glfwWindow) {
+        return NULL;
     }
+    
+    /* First check user pointer */
+    TkWindow* tkWin = (TkWindow*)glfwGetWindowUserPointer(glfwWindow);
+    if (tkWin) {
+        return tkWin;
+    }
+    
+    /* Fall back to mapping table */
+    for (int i = 0; i < numWindowMappings; i++) {
+        if (windowMappings[i].glfwWindow == glfwWindow) {
+            return windowMappings[i].tkWindow;
+        }
+    }
+    
+    return NULL;
+}
 
-    /* GLFW event polling will be integrated with Tcl event loop
-     * This is a stub that would be expanded to properly integrate
-     * GLFW events with Tcl's event system */
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGetGLFWWindow --
+ *
+ *	Get GLFW window from Tk window.
+ *
+ * Results:
+ *	GLFWwindow pointer or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+GLFWwindow*
+TkWaylandGetGLFWWindow(
+    Tk_Window tkWindow)
+{
+    for (int i = 0; i < numWindowMappings; i++) {
+        if (windowMappings[i].tkWindow == (TkWindow*)tkWindow) {
+            return windowMappings[i].glfwWindow;
+        }
+    }
+    return NULL;
 }
 
 /*
@@ -238,11 +275,12 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
-    /* Initialize GLFW event source (replaces X11 event source) */
-    TkCreateXEventSource();
     
     /* Get library path */
     GetLibraryPath(interp);
+
+    /* Initialize event loop. */
+    Tk_WaylandSetupTkNotifier();
     
     /* Initialize subsystems */
     Tktray_Init(interp);
@@ -323,50 +361,6 @@ TkpDisplayWarning(
     }
 }
 
-#ifdef HAVE_COREFOUNDATION
-
-/*
- *----------------------------------------------------------------------
- *
- * GetLibraryPath --
- *
- *	If we have a bundle structure for the Tk installation, then check
- *	there first to see if we can find the libraries there.
- *
- * Results:
- *	TCL_OK if we have found the tk library; TCL_ERROR otherwise.
- *
- * Side effects:
- *	Same as for Tcl_MacOSXOpenVersionedBundleResources.
- *
- *----------------------------------------------------------------------
- */
-
-#ifdef TK_FRAMEWORK
-static int
-GetLibraryPath(
-    Tcl_Interp *interp)
-{
-    int foundInFramework = TCL_ERROR;
-    char tkLibPath[PATH_MAX + 1];
-
-    foundInFramework = Tcl_MacOSXOpenVersionedBundleResources(interp,
-	    "com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
-	    tkLibPath);
-    if (tkLibPath[0] != '\0') {
-	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
-    }
-    return foundInFramework;
-}
-#else
-static int
-GetLibraryPath(
-    TCL_UNUSED(Tcl_Interp *))
-{
-    return TCL_ERROR;
-}
-#endif
-#endif /* HAVE_COREFOUNDATION */
 
 /*
  * Local Variables:

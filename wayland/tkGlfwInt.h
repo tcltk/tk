@@ -31,7 +31,11 @@ typedef struct TkGlfwContext {
     int initialized;
 } TkGlfwContext;
 
-
+/* GLFW window to Tk window mapping */
+typedef struct {
+    GLFWwindow* glfwWindow;
+    TkWindow* tkWindow;
+} WindowMapping;
 
 /*
  * GLFW/Wayland-specific internal functions.
@@ -41,6 +45,10 @@ MODULE_SCOPE  void      TkGlfwErrorCallback(int error, const char* description);
 MODULE_SCOPE  void      TkGlfwFramebufferSizeCallback(GLFWwindow* window, int width, int height);
 MODULE_SCOPE  int       TkGlfwInitializeContext(void);
 MODULE_SCOPE  void      TkGlfwCleanupContext(void);
+
+GLFWwindow* TkWaylandGetGLFWWindow(Tk_Window tkWindow);
+TkWindow* TkWaylandGetTkWindow( GLFWwindow* glfwWindow);
+void Tk_WaylandSetupTkNotifier(void);
 
 #endif /* _TKGLFWINT */
 
@@ -72,7 +80,7 @@ typedef struct {
 } TkWaylandDrawingContext;
 
 /*
- * Structure to map Tk windows to GLFW windows.
+ * Structure to map Tk drawable to GLFW drawable.
  */
 typedef struct DrawableMap {
     Drawable tkDrawable;
