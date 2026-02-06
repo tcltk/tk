@@ -1049,7 +1049,6 @@ MODULE_SCOPE const Tcl_ObjType tkColorObjType;
 MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
 MODULE_SCOPE const Tcl_ObjType tkFontObjType;
 MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
-MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the
@@ -1169,7 +1168,6 @@ MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ScrollbarObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SelectionObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SendObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SpinboxObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc2 Tk_TextObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_TkwaitObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ToplevelObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_UpdateObjCmd;

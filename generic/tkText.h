@@ -20,6 +20,10 @@
 # include "tkInt.h"
 #endif
 
+#if defined(_MSC_VER)
+#   pragma warning(disable:5287) /* See [1dcda0e862] in the Tcl repository */
+#endif
+
 /* Support of assertion handler. */
 #define CATCH_ASSERTION_FAILED 0
 
@@ -75,6 +79,22 @@
 #ifdef _MSC_VER
 /* earlier versions of MSVC don't know snprintf, but _snprintf is compatible. */
 # define snprintf _snprintf
+#endif
+
+/* These defaults should be placed in tkMacOSXDefault.h, tkUnixDefault.h
+ * and tkWinDefault.h of Tk if this extension would be integrated in Tk.
+ * As an extension, here is a not so bad place.
+ */
+#ifdef _WIN32
+#   define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	NULL
+#else
+#   if defined(MAC_OSX_TK)
+#	define INACTIVE_SELECT_FG	"systemSelectedTextColor"
+#	define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	INACTIVE_SELECT_FG
+#   else
+#	define SELECT_FG	BLACK
+#	define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	SELECT_FG
+#   endif
 #endif
 
 /*
@@ -547,7 +567,7 @@ typedef struct TkTextIndex {
 } TkTextIndex;
 
 /*
- * Types for procedure pointers stored in TkTextDispChunk structures:
+ * Types for procedure pointers stored in TkTextDispChunk strutures:
  */
 
 typedef struct TkTextDispChunk TkTextDispChunk;
@@ -2266,6 +2286,7 @@ MODULE_SCOPE void		TkrTextInsertDisplayProc(struct TkText *textPtr,
 				struct TkTextDispChunk *chunkPtr, int x,
 				int y, int height, int baseline,
 				Display *display, Drawable dst, int screenY);
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_RTextObjCmd;
 
 /*
  * Debugging info macros:
