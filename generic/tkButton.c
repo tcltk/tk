@@ -728,6 +728,9 @@ ButtonCreate(
     butPtr->takeFocusPtr = NULL;
     butPtr->commandPtr = NULL;
     butPtr->flags = 0;
+    butPtr->angle = 0.0;
+    butPtr->xoffset = 0;
+    butPtr->yoffset = 0;
 
     Tk_CreateEventHandler(butPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,

@@ -2485,10 +2485,8 @@ TkAdjustAngledTextLayout(
     int *xoffset,	/* x offset from origin (out) */
     int *yoffset)	/* y offset from origin (out) */
 {
-#define DEG2RAD(a) ((a) * 0.017453292519943295)
 #define ROUND32(d) (floor((d) + 0.5))
-    double sinA = sin(DEG2RAD(fmod(angle, 360.0)));
-    double cosA = cos(DEG2RAD(fmod(angle, 360.0)));
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
     double x[3] = {*width, *width, 0};
     double y[3] = {0, *height, *height};
     double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
