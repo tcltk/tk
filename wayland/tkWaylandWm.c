@@ -13,7 +13,7 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
-. */
+ */
 
 #include "tkInt.h"
 #include "tkPort.h"
@@ -34,7 +34,7 @@
  * A data structure of the following type holds information for each window
  * manager protocol (such as WM_DELETE_WINDOW) for which a handler (i.e. a Tcl
  * command) has been defined for a particular top-level window.
-. */
+ */
 
 typedef struct ProtocolHandler {
     int protocol;		/* Protocol identifier (replaces Atom). */
@@ -55,7 +55,7 @@ typedef struct ProtocolHandler {
 
 /*
  * Data for [wm attributes] command:
-. */
+ */
 
 typedef struct {
     double alpha;		/* Transparency; 0.0=transparent, 1.0=opaque. */
@@ -117,7 +117,7 @@ typedef struct TkWmInfo {
 
     /*
      * Size and location management.
-    * /
+     * /
 
     int width, height;		/* Desired dimensions in pixels or grid units. */
     int x, y;			/* Desired X and Y coordinates. */
@@ -154,7 +154,7 @@ typedef struct TkWmInfo {
 } WmInfo;
 
 /*
- * Flag values for WmInfo structures (same as X11 version for compatibility)
+ * Flag values for WmInfo structures (same as X11 version for compatibility).
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -189,8 +189,8 @@ typedef struct TkWmInfo {
 #define PWinGravity	(1 << 9)
 
 /*
- * Window states
-. */
+ * Window states.
+ */
 
 #define WithdrawnState 0
 #define NormalState 1
@@ -306,7 +306,7 @@ static int		WmTransientCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 
-/* New forward declarations for GLFW integration. */
+/* Forward declarations for GLFW integration. */
 static void		GlfwCloseCallback(GLFWwindow *window);
 static void		GlfwFocusCallback(GLFWwindow *window, int focused);
 static void		GlfwIconifyCallback(GLFWwindow *window, int iconified);
@@ -570,7 +570,7 @@ DestroyGlfwWindow(
  *	The window may be mapped.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 void
 TkWmMapWindow(
@@ -651,7 +651,7 @@ TkWmUnmapWindow(
  *	WmInfo structure is freed.
  *
  *--------------------------------------------------------------
-  */
+ */
 
 void
 TkWmDeadWindow(
@@ -765,7 +765,7 @@ TkWmSetClass(
     /* 
      * Note: Wayland/GLFW handles window class differently.
      * This is kept as a no-op for API compatibility.
-    . */
+     */
 }
 
 
@@ -1991,16 +1991,9 @@ WmGroupCmd(
 /*
  *----------------------------------------------------------------------
  *
- * WmIconbadgeCmd --
+ * WmIconBadgeCmd --
  *
- *	This function is invoked to process the "wm iconbadge" Tcl command.
- *	See the user documentation for details on what it does.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	See the user documentation.
+ *	Processes the "wm iconbadge" Tcl command.
  *
  *----------------------------------------------------------------------
  */
@@ -3543,7 +3536,6 @@ GenerateExposeEvent(
 
 /*
  *--------------------------------------------------------------*
-
  * GenerateMapEvent –
  * 
  * Generates a MapNotify event.
@@ -3593,7 +3585,6 @@ GenerateMapEvent(
 /*
  *--------------------------------------------------------------
  *
-
  * GenerateUnmapEvent –
  * 
  * Generates an UnmapNotify event.
@@ -3604,7 +3595,6 @@ GenerateMapEvent(
  * Side effects:
  *   UnmapNotify event is queued, window marked as unmapped.
  * 
-
  *--------------------------------------------------------------
  */
 
