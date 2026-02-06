@@ -106,8 +106,12 @@ TkGlfwInitializeContext(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     
-    /* Prefer Wayland over X11 if available */
+    /* Use libdecor if available, otherwise no platform preference */
+#ifdef GLFW_PLATFORM_LIBDECOR
+    glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_LIBDECOR);
+#else
     glfwWindowHint(GLFW_PLATFORM, GLFW_ANY_PLATFORM);
+#endif
 
     /* Create a hidden main window for context */
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
