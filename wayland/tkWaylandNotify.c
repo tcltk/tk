@@ -8,8 +8,8 @@
  * See the file "license.terms" for information on usage and redistribution.
  */
 
-#include "tkWaylandPrivate.h"   /* adjust to your actual internal header */
 #include "tkInt.h"
+#include "tkGlfwint.h"
 #include <GLFW/glfw3.h>
 
 #ifdef TK_WAYLAND_DEBUG_EVENTS
@@ -38,36 +38,7 @@ static void HeartbeatTimerProc(void *clientData);
 /* Heartbeat timer constants */
 #define HEARTBEAT_INTERVAL 50   /* ms */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWayland_Initialize --
- *
- *      Initialize the Wayland/GLFW backend (called once per thread/process).
- *
- * Results:
- *      TCL_OK or TCL_ERROR.
- *
- *----------------------------------------------------------------------
- */
-int
-TkWayland_Initialize(void)
-{
-    TSD_INIT();
 
-    if (!tsdPtr->waylandInitialized) {
-        if (!glfwInit()) {                  // or wayland init equivalent
-            Tcl_SetResult(Tk_MainInterp(Tk_MainWindow(NULL)),
-                         (char *)"Failed to initialize GLFW/Wayland", TCL_STATIC);
-            return TCL_ERROR;
-        }
-
-        glfwSetErrorCallback(WaylandErrorCallback);
-        tsdPtr->waylandInitialized = true;
-    }
-
-    return TCL_OK;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -123,7 +94,7 @@ HeartbeatTimerProc(
                                                     NULL);
 
     /* Pump Wayland/GLFW events */
-    glfwPollEvents();   // or wl_display_dispatch_pending() etc.
+    glfwPollEvents();   s
 }
 
 /*
@@ -145,7 +116,6 @@ TkWaylandEventsSetupProc(
 {
     if (flags & TCL_WINDOW_EVENTS) {
         /* For now we always want quick response when windows exist */
-        /* (In a real Wayland backend you'd check wl_display_prepare_read etc.) */
         Tcl_SetMaxBlockTime(&zeroBlockTime);
     }
 }
@@ -165,16 +135,7 @@ TkWaylandEventsCheckProc(
     int flags)
 {
     if (flags & TCL_WINDOW_EVENTS) {
-        glfwPollEvents();   // or equivalent Wayland dispatch
-
-        /* 
-         * In a fuller implementation:
-         *   - read Wayland events
-         *   - convert to XEvent-style structures
-         *   - Tk_QueueWindowEvent(...)
-         *
-         * For emergency/minimal version we just keep polling alive.
-         */
+        glfwPollEvents();  
     }
 }
 
@@ -228,11 +189,6 @@ WaylandErrorCallback(int error, const char* description)
     fprintf(stderr, "Wayland/GLFW Error %d: %s\n", error, description);
 }
 
-/* 
- * End of file.
- * The real event conversion logic (KeyPress, ConfigureNotify, etc.)
- * should live here or in helper files once window mapping is restored.
- */
  
  /*
  * Local Variables:
