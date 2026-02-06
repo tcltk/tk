@@ -752,7 +752,7 @@ GetByteLength(
 /*
  *--------------------------------------------------------------
  *
- * Tk_TextObjCmd --
+ * Tk_RTextObjCmd --
  *
  *	This function is invoked to process the "text" Tcl command. See the
  *	user documentation for details on what it does.
@@ -767,7 +767,7 @@ GetByteLength(
  */
 
 int
-Tk_TextObjCmd(
+Tk_RTextObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
@@ -901,7 +901,7 @@ TkTextPushRedoToken(
  * CreateWidget --
  *
  *	This function is invoked to process the "text" Tcl command, (when
- *	called by Tk_TextObjCmd) and the "$text peer create" text widget
+ *	called by Tk_RTextObjCmd) and the "$text peer create" text widget
  *	sub-command (called from TextPeerCmd).
  *
  *	See the user documentation for details on what it does.

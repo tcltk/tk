@@ -48,25 +48,6 @@ static TkTextSegment *	IndexToSeg(const TkTextIndex *indexPtr, Tcl_Size *offsetP
 static int		SegToIndex(const TkTextLine *linePtr, const TkTextSegment *segPtr);
 
 /*
- * This object was used by the legacy text widget but is no longer in use.
- *
- * The cache of indices has been eliminated, because it has worked in only
- * one case: the user has given a numeric index. But this case is quite seldom,
- * and the overhead for caching is not considerably faster than the mapping
- * to an internal index. And the trivial indices, like 1.0 or 1.end, will be
- * mapped very fast. Furthermore the revised version is using a section
- * structure for acceleration.
- */
-const Tcl_ObjType tkTextIndexType = {
-    "textindex",/* name */
-    NULL,	/* freeIntRepProc */
-    NULL,	/* dupIntRepProc */
-    NULL,	/* updateStringProc */
-    NULL,	/* setFromAnyProc */
-    TCL_OBJTYPE_V0
-};
-
-/*
  * A note about sizeof(char). Due to the specification of sizeof in C99,
  * sizeof(char) is always 1, see section 6.5.3.4:
  *
