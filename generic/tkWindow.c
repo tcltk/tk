@@ -1050,7 +1050,7 @@ TkCreateMainWindow(
 #if defined(_WIN32)
 		".win32"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND)
 		".x11"
 #endif
 		;
