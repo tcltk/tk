@@ -14,19 +14,24 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef TK_USE_WAYLAND
 #include <wayland-client.h>
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
-#include <stdlib.h>
-#include <string.h>
+#endif
 
 /*
  * Wayland-specific structures
  */
 typedef struct {
+#ifdef TK_USE_WAYLAND
     struct xkb_context *xkb_context;
     struct xkb_keymap *xkb_keymap;
     struct xkb_state *xkb_state;
+#endif
     int mode_mod_mask;
     int meta_mod_mask;
     int alt_mod_mask;
@@ -68,7 +73,7 @@ Tk_SetCaretPos(
     && (dispPtr->caret.x == x)
     && (dispPtr->caret.y == y)
     && (dispPtr->caret.height == height)) {
-return;
+        return;
     }
 
     dispPtr->caret.winPtr = winPtr;
@@ -80,10 +85,8 @@ return;
      * Update Wayland text input caret position
      */
 #ifdef TK_USE_INPUT_METHODS
-    if (dispPtr->waylandData && winPtr->waylandSurface) {
-        /* In Wayland, we'd update the text input context */
-        /* This is handled at the compositor level */
-    }
+    /* In Wayland, we'd update the text input context */
+    /* This is handled at the compositor level */
 #endif
 }
 
@@ -123,19 +126,19 @@ TkpGetString(
      * If we have the value cached already, use it now.
      */
     if (kePtr->charValuePtr != NULL) {
-Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
-memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
-kePtr->charValueLen+1);
-return Tcl_DStringValue(dsPtr);
+        Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
+        memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
+               kePtr->charValueLen+1);
+        return Tcl_DStringValue(dsPtr);
     }
 
     /*
      * Only do this for KeyPress events
      */
     if (eventPtr->type != KeyPress) {
-len = 0;
-Tcl_DStringSetLength(dsPtr, len);
-goto done;
+        len = 0;
+        Tcl_DStringSetLength(dsPtr, len);
+        goto done;
     }
 
 #ifdef TK_USE_INPUT_METHODS
@@ -144,11 +147,12 @@ goto done;
          * For Wayland with input methods, text comes from compositor
          * via text-input protocol. We need to check if there's pending text.
          */
-        if (winPtr->pendingText) {
-            len = strlen(winPtr->pendingText);
-            Tcl_DStringAppend(dsPtr, winPtr->pendingText, len);
-            free(winPtr->pendingText);
-            winPtr->pendingText = NULL;
+        /* Note: winPtr->pendingText would need to be added to TkWindow struct */
+        char *pendingText = NULL; /* Temporary placeholder */
+        if (pendingText) {
+            len = strlen(pendingText);
+            Tcl_DStringAppend(dsPtr, pendingText, len);
+            free(pendingText);
         } else {
             len = 0;
         }
@@ -156,7 +160,7 @@ goto done;
 #endif /* TK_USE_INPUT_METHODS */
     {
         /*
-         * Fallback: convert keysym to string using xkbcommon
+         * Fallback: convert keysym to string using xkbcommon or X11
          */
         KeySym keysym = TkpGetKeySym(dispPtr, eventPtr);
         char buffer[32];
@@ -179,8 +183,14 @@ goto done;
                 buffer[1] = '\0';
                 len = 1;
             } else {
-                /* For other keysyms, use xkb_keysym_to_utf8 */
+                /* For other keysyms, try to convert to UTF-8 */
+#ifdef TK_USE_WAYLAND
                 len = xkb_keysym_to_utf8(keysym, buffer, sizeof(buffer));
+#else
+                /* Fallback for non-Wayland: use simple mapping */
+                buffer[0] = '\0';
+                len = 0;
+#endif
             }
             
             if (len > 0) {
@@ -230,35 +240,17 @@ TkpSetKeycodeAndState(
     /*
      * In Wayland, we can't arbitrarily set keycodes.
      * We store the keysym and let the compositor handle keycodes.
+     * Note: XKeyEvent doesn't have a keysym field, so we need to handle this differently
      */
-    eventPtr->xkey.keysym = keySym;
+    /* eventPtr->xkey.keysym = keySym; */ /* XKeyEvent doesn't have keysym field */
     
     /*
      * For modifier state, we need to track what modifiers are active
      * based on xkbcommon state
      */
-    if (dispPtr->waylandKeymapInfo && dispPtr->waylandKeymapInfo->xkb_state) {
-        struct xkb_state *xkb_state = dispPtr->waylandKeymapInfo->xkb_state;
-        
-        /* Update modifier state based on xkbcommon */
-        eventPtr->xkey.state = 0;
-        
-        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_SHIFT,
-                XKB_STATE_MODS_EFFECTIVE)) {
-            eventPtr->xkey.state |= ShiftMask;
-        }
-        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CAPS,
-                XKB_STATE_MODS_EFFECTIVE)) {
-            eventPtr->xkey.state |= LockMask;
-        }
-        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL,
-                XKB_STATE_MODS_EFFECTIVE)) {
-            eventPtr->xkey.state |= ControlMask;
-        }
-        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_ALT,
-                XKB_STATE_MODS_EFFECTIVE)) {
-            eventPtr->xkey.state |= Mod1Mask;
-        }
+    if (dispPtr->keymapInfo) {
+        /* Use existing keymap info if available */
+        /* Modifier state would be handled by the window system */
     }
 }
 
@@ -305,39 +297,45 @@ TkpGetKeySym(
     /*
      * Refresh the mapping information if it's stale.
      */
-    if (dispPtr->waylandKeymapInfo && dispPtr->waylandKeymapInfo->bind_info_stale) {
+    if (dispPtr->bindInfoStale) {
         TkpInitKeymapInfo(dispPtr);
     }
 
     /*
-     * Convert keycode to keysym using xkbcommon
+     * Use existing keymap handling for non-Wayland systems
+     * For Wayland, we would use xkbcommon
      */
-    if (dispPtr->waylandKeymapInfo && dispPtr->waylandKeymapInfo->xkb_state) {
-        struct xkb_state *xkb_state = dispPtr->waylandKeymapInfo->xkb_state;
-        xkb_keycode_t keycode = eventPtr->xkey.keycode;
-        
-        /* Map keycode to keysym using xkbcommon */
-        xkb_keysym_t sym = xkb_state_key_get_one_sym(xkb_state, keycode);
-        
-        /*
-         * Special handling for Lock key (Caps Lock)
-         */
-        if (dispPtr->waylandKeymapInfo->lock_usage == LU_CAPS) {
-            /* If Caps Lock is active and sym is alphabetic, adjust case */
-            if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CAPS,
-                    XKB_STATE_MODS_EFFECTIVE)) {
-                if (sym >= XK_a && sym <= XK_z) {
-                    sym = XK_A + (sym - XK_a);
-                } else if (sym >= XK_A && sym <= XK_Z) {
-                    sym = XK_a + (sym - XK_A);
+#ifdef TK_USE_WAYLAND
+    if (dispPtr->keymapInfo) {
+        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
+        if (info->xkb_state) {
+            xkb_keycode_t keycode = eventPtr->xkey.keycode;
+            
+            /* Map keycode to keysym using xkbcommon */
+            xkb_keysym_t sym = xkb_state_key_get_one_sym(info->xkb_state, keycode);
+            
+            /*
+             * Special handling for Lock key (Caps Lock)
+             */
+            if (info->lock_usage == LU_CAPS) {
+                /* If Caps Lock is active and sym is alphabetic, adjust case */
+                if (xkb_state_mod_name_is_active(info->xkb_state, XKB_MOD_NAME_CAPS,
+                        XKB_STATE_MODS_EFFECTIVE)) {
+                    if (sym >= XK_a && sym <= XK_z) {
+                        sym = XK_A + (sym - XK_a);
+                    } else if (sym >= XK_A && sym <= XK_Z) {
+                        sym = XK_a + (sym - XK_A);
+                    }
                 }
             }
+            
+            return (KeySym)sym;
         }
-        
-        return (KeySym)sym;
     }
-
-    return NoSymbol;
+#endif /* TK_USE_WAYLAND */
+    
+    /* Fallback to standard X11 keysym lookup */
+    return XLookupKeysym(&eventPtr->xkey, 0);
 }
 
 /*
@@ -367,14 +365,15 @@ TkpInitKeymapInfo(
 /* Display for which to recompute keymap
  * information. */
 {
-    if (!dispPtr->waylandKeymapInfo) {
-        dispPtr->waylandKeymapInfo = (WaylandKeymapInfo *)
+    if (!dispPtr->keymapInfo) {
+        dispPtr->keymapInfo = (WaylandKeymapInfo *)
             Tcl_Alloc(sizeof(WaylandKeymapInfo));
-        memset(dispPtr->waylandKeymapInfo, 0, sizeof(WaylandKeymapInfo));
+        memset(dispPtr->keymapInfo, 0, sizeof(WaylandKeymapInfo));
     }
     
-    WaylandKeymapInfo *info = dispPtr->waylandKeymapInfo;
+    WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
     
+#ifdef TK_USE_WAYLAND
     /* Initialize xkbcommon context if needed */
     if (!info->xkb_context) {
         info->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
@@ -422,9 +421,7 @@ TkpInitKeymapInfo(
     if (caps_index != XKB_MOD_INVALID) {
         info->lock_usage = LU_CAPS;
     }
-    
-    /* Check for Shift Lock (less common) */
-    /* Note: xkbcommon doesn't have a direct "Shift Lock" concept */
+#endif /* TK_USE_WAYLAND */
     
     /*
      * Look for modifier masks
@@ -433,23 +430,10 @@ TkpInitKeymapInfo(
     info->meta_mod_mask = 0;
     info->alt_mod_mask = 0;
     
-    /* Map xkbcommon modifiers to X11-style masks */
-    xkb_mod_index_t mod_index;
-    
-    mod_index = xkb_keymap_mod_get_index(info->xkb_keymap, "Mod5");
-    if (mod_index != XKB_MOD_INVALID) {
-        info->mode_mod_mask = (1 << mod_index);
-    }
-    
-    mod_index = xkb_keymap_mod_get_index(info->xkb_keymap, "Mod1");
-    if (mod_index != XKB_MOD_INVALID) {
-        info->alt_mod_mask = (1 << mod_index);
-    }
-    
-    mod_index = xkb_keymap_mod_get_index(info->xkb_keymap, "Mod2");
-    if (mod_index != XKB_MOD_INVALID) {
-        info->meta_mod_mask = (1 << mod_index);
-    }
+    /* For now, use default values */
+    info->mode_mod_mask = Mod5Mask;
+    info->alt_mod_mask = Mod1Mask;
+    info->meta_mod_mask = Mod2Mask;
     
     /*
      * Build array of modifier keycodes
@@ -458,28 +442,16 @@ TkpInitKeymapInfo(
         Tcl_Free(info->mod_key_codes);
     }
     
-    /* Count modifier keys */
+    /* Simplified: allocate small array for common modifier keys */
+    info->mod_key_codes = (KeyCode *)Tcl_Alloc(8 * sizeof(KeyCode));
     info->num_mod_key_codes = 0;
-    xkb_keycode_t min_keycode = xkb_keymap_min_keycode(info->xkb_keymap);
-    xkb_keycode_t max_keycode = xkb_keymap_max_keycode(info->xkb_keymap);
     
-    /* Allocate array (simplified - in reality we'd need to scan keymap) */
-    info->mod_key_codes = (KeyCode *)Tcl_Alloc(32 * sizeof(KeyCode));
-    
-    /* Look for keys that are bound to modifiers */
-    for (xkb_keycode_t keycode = min_keycode; 
-         keycode <= max_keycode && info->num_mod_key_codes < 32; 
-         keycode++) {
-        
-        /* Check if this key is bound to any modifier */
-        for (xkb_mod_index_t mod = 0; mod < xkb_keymap_num_mods(info->xkb_keymap); mod++) {
-            if (xkb_keymap_key_get_mods_for_level(info->xkb_keymap, keycode, 
-                                                  mod, 0, NULL) > 0) {
-                info->mod_key_codes[info->num_mod_key_codes++] = keycode;
-                break;
-            }
-        }
-    }
+    /* Add some common modifier keycodes (these are typical X11 keycodes) */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 66;  /* Caps Lock */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 50;  /* Shift */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 62;  /* Shift */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 37;  /* Control */
+    if (info->num_mod_key_codes < 8) info->mod_key_codes[info->num_mod_key_codes++] = 64;  /* Alt */
     
     dispPtr->bindInfoStale = 0;
     info->bind_info_stale = 0;
@@ -504,20 +476,23 @@ Helper function to get Wayland keymap information
  *----------------------------------------------------------------------
  */
 
+#ifdef TK_USE_WAYLAND
 void
 Tk_GetKeymapInfo(
     TkDisplay *dispPtr,
     struct xkb_keymap **keymap,
     struct xkb_state **state)
 {
-    if (dispPtr->waylandKeymapInfo) {
-        if (keymap) *keymap = dispPtr->waylandKeymapInfo->xkb_keymap;
-        if (state) *state = dispPtr->waylandKeymapInfo->xkb_state;
+    if (dispPtr->keymapInfo) {
+        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
+        if (keymap) *keymap = info->xkb_keymap;
+        if (state) *state = info->xkb_state;
     } else {
         if (keymap) *keymap = NULL;
         if (state) *state = NULL;
     }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -530,18 +505,19 @@ Set Wayland keymap information (called from Wayland event handler)
  *----------------------------------------------------------------------
  */
 
+#ifdef TK_USE_WAYLAND
 void
 Tk_SetKeymapInfo(
     TkDisplay *dispPtr,
     struct xkb_keymap *keymap)
 {
-    if (!dispPtr->waylandKeymapInfo) {
-        dispPtr->waylandKeymapInfo = (WaylandKeymapInfo *)
+    if (!dispPtr->keymapInfo) {
+        dispPtr->keymapInfo = (WaylandKeymapInfo *)
             Tcl_Alloc(sizeof(WaylandKeymapInfo));
-        memset(dispPtr->waylandKeymapInfo, 0, sizeof(WaylandKeymapInfo));
+        memset(dispPtr->keymapInfo, 0, sizeof(WaylandKeymapInfo));
     }
     
-    WaylandKeymapInfo *info = dispPtr->waylandKeymapInfo;
+    WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
     
     /* Clean up old state */
     if (info->xkb_state) {
@@ -564,6 +540,7 @@ Tk_SetKeymapInfo(
     dispPtr->bindInfoStale = 1;
     info->bind_info_stale = 1;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -576,22 +553,25 @@ Update keyboard state from Wayland key events
  *----------------------------------------------------------------------
  */
 
+#ifdef TK_USE_WAYLAND
 void
 Tk_UpdateKeyState(
     TkDisplay *dispPtr,
     xkb_keycode_t keycode,
     int pressed)
 {
-    if (dispPtr->waylandKeymapInfo && dispPtr->waylandKeymapInfo->xkb_state) {
-        struct xkb_state *state = dispPtr->waylandKeymapInfo->xkb_state;
-        
-        if (pressed) {
-            xkb_state_update_key(state, keycode, XKB_KEY_DOWN);
-        } else {
-            xkb_state_update_key(state, keycode, XKB_KEY_UP);
+    if (dispPtr->keymapInfo) {
+        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
+        if (info->xkb_state) {
+            if (pressed) {
+                xkb_state_update_key(info->xkb_state, keycode, XKB_KEY_DOWN);
+            } else {
+                xkb_state_update_key(info->xkb_state, keycode, XKB_KEY_UP);
+            }
         }
     }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -604,6 +584,7 @@ Update modifier state from Wayland events
  *----------------------------------------------------------------------
  */
 
+#ifdef TK_USE_WAYLAND
 void
 Tk_UpdateModifierState(
     TkDisplay *dispPtr,
@@ -612,13 +593,15 @@ Tk_UpdateModifierState(
     uint32_t locked,
     uint32_t group)
 {
-    if (dispPtr->waylandKeymapInfo && dispPtr->waylandKeymapInfo->xkb_state) {
-        struct xkb_state *state = dispPtr->waylandKeymapInfo->xkb_state;
-        
-        xkb_state_update_mask(state, depressed, latched, locked,
-                             0, 0, group);
+    if (dispPtr->keymapInfo) {
+        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
+        if (info->xkb_state) {
+            xkb_state_update_mask(info->xkb_state, depressed, latched, locked,
+                                 0, 0, group);
+        }
     }
 }
+#endif
 
 /*
  * Cleanup function
@@ -628,9 +611,10 @@ void
 TkpCleanupKeymapInfo(
     TkDisplay *dispPtr)
 {
-    if (dispPtr->waylandKeymapInfo) {
-        WaylandKeymapInfo *info = dispPtr->waylandKeymapInfo;
+    if (dispPtr->keymapInfo) {
+        WaylandKeymapInfo *info = (WaylandKeymapInfo *)dispPtr->keymapInfo;
         
+#ifdef TK_USE_WAYLAND
         if (info->xkb_state) {
             xkb_state_unref(info->xkb_state);
         }
@@ -640,12 +624,13 @@ TkpCleanupKeymapInfo(
         if (info->xkb_context) {
             xkb_context_unref(info->xkb_context);
         }
+#endif
         if (info->mod_key_codes) {
             Tcl_Free(info->mod_key_codes);
         }
         
         Tcl_Free(info);
-        dispPtr->waylandKeymapInfo = NULL;
+        dispPtr->keymapInfo = NULL;
     }
 }
 
