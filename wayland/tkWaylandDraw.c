@@ -30,6 +30,11 @@
 /* X11 region headers for BoxPtr and Region types */
 #include <X11/Xutil.h>
 
+/* Explicit declarations for NanoVG GL3 functions */
+NVGcontext* nvgCreateGL3(int flags);
+void nvgDeleteGL3(NVGcontext* ctx);
+
+
 #define radians(d)	((d) * (M_PI/180.0))
 
 
