@@ -4,17 +4,20 @@
  *	This file contains GLFW/Wayland-specific interpreter initialization functions.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2026 Wayland/GLFW Port
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkGlfwInt.h"
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#include <GL/glext.h>
+
 #include <GLFW/glfw3.h>
-#define NANOVG_GL3_IMPLEMENTATION
-#include <nanovg.h>
-#include <nanovg_gl.h>
+#include "nanovg.h"
+#include "nanovg_gl.h"
+#include "tkGlfwInt.h"
 
 /*
  * Global GLFW/Wayland context
@@ -63,7 +66,7 @@ TkGlfwErrorCallback(
 
 void
 TkGlfwFramebufferSizeCallback(
-    GLFWwindow* window,
+    TCL_UNUSED(GLFWwindow *),  /* window */
     int width,
     int height)
 {
@@ -171,11 +174,7 @@ TkGlfwCleanupContext(void)
     }
 
     if (glfwContext.vg) {
-#ifdef NANOVG_GL3
         nvgDeleteGL3(glfwContext.vg);
-#else
-        nvgDeleteGL2(glfwContext.vg);
-#endif
         glfwContext.vg = NULL;
     }
 
@@ -211,6 +210,9 @@ TkWaylandGetTkWindow(
     if (!glfwWindow) {
         return NULL;
     }
+    
+    windowMappings = NULL;
+    numWindowMappings = 0;
     
     /* First check user pointer */
     TkWindow* tkWin = (TkWindow*)glfwGetWindowUserPointer(glfwWindow);
@@ -280,9 +282,6 @@ TkpInit(
     Tcl_Interp *interp)
 {
     
-    /* Get library path */
-    GetLibraryPath(interp);
-
     /* Initialize event loop. */
     Tk_WaylandSetupTkNotifier();
     

@@ -21,6 +21,13 @@
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
+
+MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp);
+MODULE_SCOPE  int       SysNotify_Init (Tcl_Interp* interp);
+MODULE_SCOPE  int       Cups_Init (Tcl_Interp* interp);
+MODULE_SCOPE  int       TkAtkAccessibility_Init (Tcl_Interp *interp) ;
+
 /*
  * Platform-specific data structures for GLFW/Wayland.
  */
@@ -37,6 +44,8 @@ typedef struct {
     TkWindow* tkWindow;
 } WindowMapping;
 
+WindowMapping* windowMappings;
+int numWindowMappings;
 /*
  * GLFW/Wayland-specific internal functions.
  */
