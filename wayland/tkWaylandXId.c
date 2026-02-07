@@ -1,5 +1,5 @@
 /*
- * tkUnixXId.c --
+ * tkWaylandXId.c --
  *
  * Copyright © 1993 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.
@@ -8,8 +8,13 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkUnixInt.h"
-#include <nanovg.h>
+#include "tkInt.h"           
+#include <stddef.h>          
+#include <X11/Xlib.h>        
+#include <GL/gl.h>
+#include "nanovg.h"
+#include "nanovg_gl.h"
+#include "nanovg_gl_utils.h"   
 
 /*
  * In Wayland with NanoVG, we need to track pixmap/bitmap data.
@@ -23,15 +28,15 @@ typedef struct {
     int width;
     int height;
     int depth;
-    int type;              /* 0 = image, 1 = paint, 2 = framebuffer */
-    NVGframebuffer* fb;    /* For FBO-based pixmaps */
+    int type;              	 /* 0 = image, 1 = paint, 2 = framebuffer */
+    NVGLUframebuffer* fb;    /* For FBO-based pixmaps - CHANGED from NVGLUframebuffer */
 } TkPixmap;
 
 static TkPixmap *pixmapStore = NULL;
 static int pixmapCount = 0;
 static int pixmapCapacity = 0;
 static NVGcontext* nvgContext = NULL;
-
+ 
 /*
  *----------------------------------------------------------------------
  *
@@ -74,19 +79,19 @@ Tk_SetNanoVGContext(NVGcontext* vg)
 
 Pixmap
 Tk_GetPixmap(
-    Display *display,		/* Display for new pixmap (unused in Wayland). */
-    Drawable d,			/* Drawable where pixmap will be used (unused). */
+    TCL_UNUSED(Display *),		/* Display for new pixmap (unused in Wayland). */
+    TCL_UNUSED(Drawable),		/* Drawable where pixmap will be used (unused). */
     int width, int height,	/* Dimensions of pixmap. */
     int depth)			/* Bits per pixel for pixmap. */
 {
     TkPixmap *pixmap;
     
     if (nvgContext == NULL) {
-        /* Fallback: return a simple identifier */
+        /* Fallback: return a simple identifier. */
         return (Pixmap)(width + (height << 16));
     }
     
-    /* Allocate new pixmap structure */
+    /* Allocate new pixmap structure. */
     if (pixmapCount >= pixmapCapacity) {
         pixmapCapacity = pixmapCapacity == 0 ? 16 : pixmapCapacity * 2;
         pixmapStore = (TkPixmap *)realloc(pixmapStore, 
@@ -95,24 +100,24 @@ Tk_GetPixmap(
     
     pixmap = &pixmapStore[pixmapCount];
     
-    /* Initialize the pixmap structure */
+    /* Initialize the pixmap structure. */
     memset(pixmap, 0, sizeof(TkPixmap));
     pixmap->width = width;
     pixmap->height = height;
     pixmap->depth = depth;
     
-    /* Default to creating an empty image in NanoVG */
+    /* Default to creating an empty image in NanoVG. */
     if (width > 0 && height > 0) {
-        /* Create empty RGBA image data */
+        /* Create empty RGBA image data. */
         unsigned char* data = (unsigned char*)calloc(width * height * 4, 1);
         if (data) {
             pixmap->imageId = nvgCreateImageRGBA(nvgContext, width, height, 
                                                 NVG_IMAGE_NEAREST, data);
-            free(data);
+            ckfree(data);
             pixmap->type = 0; /* Image type */
         }
     } else {
-        /* For zero-size pixmaps, create a simple paint */
+        /* For zero-size pixmaps, create a simple paint. */
         pixmap->paint = nvgLinearGradient(nvgContext, 0, 0, 1, 1,
                                          nvgRGBA(0, 0, 0, 0),
                                          nvgRGBA(0, 0, 0, 0));
@@ -121,7 +126,7 @@ Tk_GetPixmap(
     
     pixmapCount++;
     
-    /* Return the pointer as the pixmap ID */
+    /* Return the pointer as the pixmap ID. */
     return (Pixmap)pixmap;
 }
 
@@ -143,7 +148,7 @@ Tk_GetPixmap(
 
 Pixmap
 Tk_GetPixmapAsFramebuffer(
-    Display *display,
+    TCL_UNUSED(Display *),
     int width, int height,
     int imageFlags)
 {
@@ -153,7 +158,7 @@ Tk_GetPixmapAsFramebuffer(
         return 0;
     }
     
-    /* Allocate new pixmap structure */
+    /* Allocate new pixmap structure. */
     if (pixmapCount >= pixmapCapacity) {
         pixmapCapacity = pixmapCapacity == 0 ? 16 : pixmapCapacity * 2;
         pixmapStore = (TkPixmap *)realloc(pixmapStore, 
@@ -162,16 +167,16 @@ Tk_GetPixmapAsFramebuffer(
     
     pixmap = &pixmapStore[pixmapCount];
     
-    /* Initialize the pixmap structure */
+    /* Initialize the pixmap structure. */
     memset(pixmap, 0, sizeof(TkPixmap));
     pixmap->width = width;
     pixmap->height = height;
     pixmap->depth = 32; /* FBOs are typically 32-bit RGBA */
     
-    /* Create framebuffer */
-    pixmap->fb = nvgCreateFramebuffer(nvgContext, width, height, imageFlags);
+    /* Create framebuffer. */
+    pixmap->fb = nvgluCreateFramebuffer(nvgContext, width, height, imageFlags);
     if (pixmap->fb == NULL) {
-        /* Clean up the slot */
+        /* Clean up the slot. */
         return 0;
     }
     
@@ -199,7 +204,7 @@ Tk_GetPixmapAsFramebuffer(
 
 void
 Tk_FreePixmap(
-    Display *display,		/* Display for which pixmap was allocated (unused). */
+    TCL_UNUSED(Display *),		/* Display for which pixmap was allocated (unused). */
     Pixmap pixmap)		/* Identifier for pixmap. */
 {
     TkPixmap *pix = (TkPixmap *)pixmap;
@@ -208,24 +213,24 @@ Tk_FreePixmap(
         return;
     }
     
-    /* Free resources based on type */
+    /* Free resources based on type. */
     switch (pix->type) {
         case 0: /* Image type */
             if (pix->imageId != 0) {
                 nvgDeleteImage(nvgContext, pix->imageId);
             }
             break;
-        case 2: /* Framebuffer type */
-            if (pix->fb != NULL) {
-                nvgDeleteFramebuffer(nvgContext, pix->fb);
-            }
-            break;
+       case 2: /* Framebuffer type */
+		    if (pix->fb != NULL) {
+		        nvgluDeleteFramebuffer(pix->fb);
+		    }
+		    break;
         case 1: /* Paint type - nothing to free */
         default:
             break;
     }
     
-    /* Clear the structure */
+    /* Clear the structure. */
     memset(pix, 0, sizeof(TkPixmap));
 }
 
@@ -265,7 +270,7 @@ TkpScanWindowId(
     obj.typePtr = NULL;
 
     /* Parse as a long integer - in Wayland this might represent
-     * a file descriptor or other resource ID */
+     * a file descriptor or other resource ID. */
     code = Tcl_GetLongFromObj(interp, &obj, (long *)idPtr);
 
     if (obj.refCount > 1) {
@@ -278,7 +283,7 @@ TkpScanWindowId(
 }
 
 /*
- * Helper function to get NanoVG image ID from pixmap
+ * Helper function to get NanoVG image ID from pixmap.
  */
 int
 Tk_GetPixmapImageId(Pixmap pixmap)
@@ -291,7 +296,7 @@ Tk_GetPixmapImageId(Pixmap pixmap)
 }
 
 /*
- * Helper function to get NanoVG paint from pixmap
+ * Helper function to get NanoVG paint from pixmap.
  */
 NVGpaint*
 Tk_GetPixmapPaint(Pixmap pixmap)
@@ -304,9 +309,9 @@ Tk_GetPixmapPaint(Pixmap pixmap)
 }
 
 /*
- * Helper function to get NanoVG framebuffer from pixmap
+ * Helper function to get NanoVG framebuffer from pixmap.
  */
-NVGframebuffer*
+NVGLUframebuffer*
 Tk_GetPixmapFramebuffer(Pixmap pixmap)
 {
     TkPixmap *pix = (TkPixmap *)pixmap;
@@ -317,7 +322,7 @@ Tk_GetPixmapFramebuffer(Pixmap pixmap)
 }
 
 /*
- * Helper function to get pixmap type
+ * Helper function to get pixmap type.
  */
 int
 Tk_GetPixmapType(Pixmap pixmap)
@@ -330,7 +335,7 @@ Tk_GetPixmapType(Pixmap pixmap)
 }
 
 /*
- * Helper function to get pixmap dimensions
+ * Helper function to get pixmap dimensions.
  */
 void
 Tk_GetPixmapDimensions(Pixmap pixmap, int *width, int *height, int *depth)
@@ -344,7 +349,7 @@ Tk_GetPixmapDimensions(Pixmap pixmap, int *width, int *height, int *depth)
 }
 
 /*
- * Update pixmap image data
+ * Update pixmap image data.
  */
 int
 Tk_UpdatePixmapImage(Pixmap pixmap, const unsigned char* data)
@@ -364,19 +369,18 @@ Tk_UpdatePixmapImage(Pixmap pixmap, const unsigned char* data)
 }
 
 /*
- * Bind pixmap framebuffer for drawing
+ * Bind pixmap framebuffer for drawing.
  */
 void
 Tk_BindPixmapFramebuffer(Pixmap pixmap)
 {
     TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix && pix->type == 2 && pix->fb && nvgContext) {
-        nvgBindFramebuffer(nvgContext, pix->fb);
+    if (pix && pix->type == 2 && pix->fb) {
+        nvgluBindFramebuffer(pix->fb);
     }
 }
-
 /*
- * Cleanup function for pixmap store
+ * Cleanup function for pixmap store.
  */
 void
 Tk_CleanupPixmapStore(void)
@@ -396,17 +400,17 @@ Tk_CleanupPixmapStore(void)
                     nvgDeleteImage(nvgContext, pix->imageId);
                 }
                 break;
-            case 2: /* Framebuffer type */
-                if (pix->fb != NULL) {
-                    nvgDeleteFramebuffer(nvgContext, pix->fb);
-                }
-                break;
+			 case 2: /* Framebuffer type */
+			    if (pix->fb != NULL) {
+			        nvgluDeleteFramebuffer(pix->fb);
+			    }
+			    break;
             default:
                 break;
         }
     }
     
-    free(pixmapStore);
+    ckfree(pixmapStore);
     pixmapStore = NULL;
     pixmapCount = 0;
     pixmapCapacity = 0;
