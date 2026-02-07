@@ -11,8 +11,7 @@
  */
 
 #define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
-#include <GL/glext.h>
+
 
 #include <GLFW/glfw3.h>
 #include "nanovg.h"
@@ -23,6 +22,10 @@
  * Global GLFW/Wayland context
  */
 static TkGlfwContext glfwContext = {NULL, NULL, 0};
+
+/* Explicit declarations for NanoVG GL3 functions */
+NVGcontext* nvgCreateGL3(int flags);
+void nvgDeleteGL3(NVGcontext* ctx);
 
 /*
  *----------------------------------------------------------------------
@@ -103,20 +106,20 @@ TkGlfwInitializeContext(void)
         return TCL_ERROR;
     }
 
-    /* Request OpenGL 3.3 core profile for nanovg */
+    /* Request OpenGL 3.3 core profile for nanovg. */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     
-    /* Use libdecor if available, otherwise no platform preference */
+    /* Use libdecor if available, otherwise no platform preference. */
 #ifdef GLFW_PLATFORM_LIBDECOR
     glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_LIBDECOR);
 #else
     glfwWindowHint(GLFW_PLATFORM, GLFW_ANY_PLATFORM);
 #endif
 
-    /* Create a hidden main window for context */
+    /* Create a hidden main window for context. */
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwContext.mainWindow = glfwCreateWindow(640, 480, "Tk Main", NULL, NULL);
     
@@ -129,15 +132,11 @@ TkGlfwInitializeContext(void)
     glfwMakeContextCurrent(glfwContext.mainWindow);
     glfwSetFramebufferSizeCallback(glfwContext.mainWindow, TkGlfwFramebufferSizeCallback);
     
-    /* Enable vsync */
+    /* Enable vsync. */
     glfwSwapInterval(1);
 
-    /* Initialize nanovg */
-#ifdef NANOVG_GL3
+    /* Initialize nanovg. */
     glfwContext.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-#else
-    glfwContext.vg = nvgCreateGL2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-#endif
 
     if (!glfwContext.vg) {
         fprintf(stderr, "Failed to initialize nanovg\n");
@@ -214,7 +213,7 @@ TkWaylandGetTkWindow(
     windowMappings = NULL;
     numWindowMappings = 0;
     
-    /* First check user pointer */
+    /* First check user pointer. */
     TkWindow* tkWin = (TkWindow*)glfwGetWindowUserPointer(glfwWindow);
     if (tkWin) {
         return tkWin;
@@ -285,7 +284,7 @@ TkpInit(
     /* Initialize event loop. */
     Tk_WaylandSetupTkNotifier();
     
-    /* Initialize subsystems */
+    /* Initialize subsystems. */
     Tktray_Init(interp);
     (void)SysNotify_Init(interp);
     Icu_Init(interp);
