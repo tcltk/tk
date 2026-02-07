@@ -41,7 +41,7 @@ TkpChangeFocus(
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
-    TkDisplay *dispPtr = winPtr->dispPtr;
+	
     size_t serial = 0;
 
     /*
@@ -106,7 +106,8 @@ TkpChangeFocus(
      * For compatibility, we return a non-zero value to indicate a focus change.
      * Here we use a simple incrementing counter per display.
      */
-    serial = ++(dispPtr->focusChangeSerial);
+     
+	serial++;
 
     /*
      * Flush any pending GLFW events to ensure the focus request is processed.
