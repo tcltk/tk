@@ -15,6 +15,7 @@
 #include "tkPort.h"
 #include "tkButton.h"
 #include "nanovg.h"
+#include "nanovg_gl.h"  /* Add GL implementation header for nvgCreateGL3/nvgDeleteGL3 */
 
 /* GLFW Integration. */
 #define GLFW_INCLUDE_NONE
@@ -25,6 +26,14 @@
 
 /* OpenGL for NanoVG. */
 #include <GL/gl.h>
+
+/* X11 region headers for BoxPtr and Region types */
+#include <X11/Xutil.h>
+
+/* Explicit declarations for NanoVG GL3 functions */
+NVGcontext* nvgCreateGL3(int flags);
+void nvgDeleteGL3(NVGcontext* ctx);
+
 
 #define radians(d)	((d) * (M_PI/180.0))
 
@@ -42,12 +51,6 @@ static int glfwInitialized = 0;
 
 #include "tkInt.h"
 #include <GLFW/glfw3.h>
-
-/*
- * Forward declarations
- */
-typedef struct WaylandDrawable WaylandDrawable;
-typedef struct TkWaylandDrawingContext TkWaylandDrawingContext;
 
 /*
  * Initialization and cleanup.
@@ -113,12 +116,9 @@ void TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable, Tk_3DBorder border,
 /*
  * Prototypes for functions used only in this file.
  */
-static void ClipToGC(Drawable d, GC gc, int* clip_x, int* clip_y,
-                     int* clip_width, int* clip_height);
 static NVGcontext* GetNVGContextForDrawable(Drawable drawable);
 static WaylandDrawable* GetWaylandDrawable(Drawable drawable);
 static void RegisterDrawable(Drawable tkDrawable, WaylandDrawable* waylandDrawable);
-static void UnregisterDrawable(Drawable tkDrawable);
 static void GLFWErrorCallback(int error, const char* description);
 static void GLFWFramebufferSizeCallback(GLFWwindow* window, int width, int height);
 
@@ -197,6 +197,8 @@ TkWaylandInitDrawing(
     Tcl_Interp *interp,
     struct wl_display* display)
 {
+    (void)display;  /* Mark unused parameter to suppress warning */
+    
     /* Initialize GLFW. */
     if (!glfwInitialized) {
         glfwSetErrorCallback(GLFWErrorCallback);
@@ -303,75 +305,9 @@ TkWaylandCleanupDrawing(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandCreateDrawable --
- *
- *	Creates a new Wayland drawable with GLFW window.
- *
- * Results:
- *	Pointer to WaylandDrawable or NULL on failure.
- *
- * Side effects:
- *	Creates GLFW window and maps it to Tk drawable.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE WaylandDrawable*
-TkWaylandCreateDrawable(
-    Drawable tkDrawable,
-    int width,
-    int height,
-    const char* title)
-{
-    WaylandDrawable* wd;
-    GLFWwindow* window;
-    
-    if (!glfwInitialized || !globalVGContext) {
-        return NULL;
-    }
-    
-    /* Configure window hints */
-    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    
-    /* Create GLFW window sharing context with global window */
-    window = glfwCreateWindow(width, height, title ? title : "Tk Window",
-                              NULL, globalGLFWWindow);
-    if (!window) {
-        return NULL;
-    }
-    
-    /* Allocate drawable structure */
-    wd = (WaylandDrawable*)ckalloc(sizeof(WaylandDrawable));
-    wd->glfwWindow = window;
-    wd->vg = globalVGContext;
-    wd->width = width;
-    wd->height = height;
-    wd->needsSwap = 0;
-    
-    /* Get native Wayland surface */
-    wd->surface = glfwGetWaylandWindow(window);
-    
-    /* Set up callbacks */
-    glfwSetWindowUserPointer(window, wd);
-    glfwSetFramebufferSizeCallback(window, GLFWFramebufferSizeCallback);
-    
-    /* Make context current and set up viewport */
-    glfwMakeContextCurrent(window);
-    glViewport(0, 0, width, height);
-    
-    /* Register drawable mapping */
-    RegisterDrawable(tkDrawable, wd);
-    
-    return wd;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * RegisterDrawable --
  *
- *	Registers mapping between Tk drawable and WaylandDrawable.
+ *	Register a Wayland drawable in the global map.
  *
  * Results:
  *	None.
@@ -387,45 +323,11 @@ RegisterDrawable(
     Drawable tkDrawable,
     WaylandDrawable* waylandDrawable)
 {
-    DrawableMap* map = (DrawableMap*)ckalloc(sizeof(DrawableMap));
-    map->tkDrawable = tkDrawable;
-    map->waylandDrawable = waylandDrawable;
-    map->next = drawableMap;
-    drawableMap = map;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * UnregisterDrawable --
- *
- *	Removes drawable mapping.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Removes entry from drawable map.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-UnregisterDrawable(
-    Drawable tkDrawable)
-{
-    DrawableMap** mapPtr = &drawableMap;
-    DrawableMap* current;
-    
-    while (*mapPtr) {
-        current = *mapPtr;
-        if (current->tkDrawable == tkDrawable) {
-            *mapPtr = current->next;
-            ckfree((char*)current);
-            return;
-        }
-        mapPtr = &current->next;
-    }
+    DrawableMap* newEntry = (DrawableMap*)ckalloc(sizeof(DrawableMap));
+    newEntry->tkDrawable = tkDrawable;
+    newEntry->waylandDrawable = waylandDrawable;
+    newEntry->next = drawableMap;
+    drawableMap = newEntry;
 }
 
 /*
@@ -433,10 +335,10 @@ UnregisterDrawable(
  *
  * GetWaylandDrawable --
  *
- *	Gets WaylandDrawable structure from X Drawable.
+ *	Retrieve Wayland drawable from Tk drawable.
  *
  * Results:
- *	Pointer to WaylandDrawable or NULL.
+ *	WaylandDrawable pointer or NULL if not found.
  *
  * Side effects:
  *	None.
@@ -465,13 +367,13 @@ GetWaylandDrawable(
  *
  * GetNVGContextForDrawable --
  *
- *	Get NanoVG context for given Drawable.
+ *	Get the NanoVG context for a drawable.
  *
  * Results:
  *	NanoVG context or NULL.
  *
  * Side effects:
- *	None.
+ *	May make the drawable's GLFW window current.
  *
  *----------------------------------------------------------------------
  */
@@ -481,33 +383,63 @@ GetNVGContextForDrawable(
     Drawable drawable)
 {
     WaylandDrawable* wd = GetWaylandDrawable(drawable);
-    if (wd && wd->vg) {
-        return wd->vg;
+    
+    if (wd && wd->glfwWindow) {
+        glfwMakeContextCurrent(wd->glfwWindow);
+        return globalVGContext;
     }
-    return globalVGContext;
+    
+    return NULL;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * Tk_WaylandGetContextForDrawable --
+ * TkWaylandCreateDrawable --
  *
- *	Get drawing context for given Drawable.
+ *	Create a new Wayland drawable with GLFW window.
  *
  * Results:
- *	Drawing context.
+ *	WaylandDrawable pointer or NULL on failure.
  *
  * Side effects:
- *	None.
+ *	Creates GLFW window and registers drawable.
  *
  *----------------------------------------------------------------------
  */
 
-void*
-Tk_WaylandGetContextForDrawable(
-    Drawable drawable)
+MODULE_SCOPE WaylandDrawable*
+TkWaylandCreateDrawable(
+    Drawable tkDrawable,
+    int width,
+    int height,
+    const char* title)
 {
-    return GetNVGContextForDrawable(drawable);
+    WaylandDrawable* wd;
+    
+    if (!glfwInitialized) {
+        return NULL;
+    }
+    
+    wd = (WaylandDrawable*)ckalloc(sizeof(WaylandDrawable));
+    wd->width = width;
+    wd->height = height;
+    
+    /* Create GLFW window sharing context with global window. */
+    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    wd->glfwWindow = glfwCreateWindow(width, height, title, NULL, globalGLFWWindow);
+    
+    if (!wd->glfwWindow) {
+        ckfree((char*)wd);
+        return NULL;
+    }
+    
+    glfwSetWindowUserPointer(wd->glfwWindow, wd);
+    glfwSetFramebufferSizeCallback(wd->glfwWindow, GLFWFramebufferSizeCallback);
+    
+    RegisterDrawable(tkDrawable, wd);
+    
+    return wd;
 }
 
 /*
@@ -515,10 +447,10 @@ Tk_WaylandGetContextForDrawable(
  *
  * Tk_WaylandGetGLFWWindow --
  *
- *	Get GLFW window for given Drawable.
+ *	Get GLFW window for a drawable.
  *
  * Results:
- *	GLFW window handle or NULL.
+ *	GLFWwindow pointer or NULL.
  *
  * Side effects:
  *	None.
@@ -537,150 +469,24 @@ Tk_WaylandGetGLFWWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandSetupDrawingContext --
+ * Tk_WaylandGetContextForDrawable --
  *
- *	Set up a drawing context for the given drawable from an X GC.
+ *	Get NanoVG context for a drawable.
  *
  * Results:
- *	Boolean indicating whether it is ok to draw.
+ *	NVGcontext pointer or NULL.
  *
  * Side effects:
- *	Sets up NanoVG state for drawing and makes GLFW context current.
+ *	May make the drawable's GLFW window current.
  *
  *----------------------------------------------------------------------
  */
 
-bool
-TkWaylandSetupDrawingContext(
-    Drawable d,
-    GC gc,
-    TkWaylandDrawingContext *dcPtr)
+MODULE_SCOPE void*
+Tk_WaylandGetContextForDrawable(
+    Drawable drawable)
 {
-    NVGcontext* vg = GetNVGContextForDrawable(d);
-    WaylandDrawable* wd = GetWaylandDrawable(d);
-    
-    if (!vg || !wd || !wd->glfwWindow) {
-        return false;
-    }
-    
-    /* Make GLFW context current */
-    glfwMakeContextCurrent(wd->glfwWindow);
-    
-    /* Initialize drawing context */
-    dcPtr->vg = vg;
-    dcPtr->glfwWindow = wd->glfwWindow;
-    dcPtr->clip_x = 0;
-    dcPtr->clip_y = 0;
-    dcPtr->clip_width = wd->width;
-    dcPtr->clip_height = wd->height;
-    dcPtr->frameActive = 0;
-    
-    /* Apply GC clipping */
-    ClipToGC(d, gc, &dcPtr->clip_x, &dcPtr->clip_y,
-             &dcPtr->clip_width, &dcPtr->clip_height);
-    
-    /* Begin NanoVG frame */
-    nvgBeginFrame(vg, wd->width, wd->height, 1.0f);
-    dcPtr->frameActive = 1;
-    
-    /* Set up clipping */
-    if (dcPtr->clip_width > 0 && dcPtr->clip_height > 0) {
-        nvgScissor(vg, dcPtr->clip_x, dcPtr->clip_y,
-                   dcPtr->clip_width, dcPtr->clip_height);
-    }
-    
-    /* Apply GC properties to NanoVG */
-    if (gc) {
-        /* Convert X color to NanoVG color */
-        XColor xcolor;
-        Tk_GetColorFromObj(NULL, (Tk_Uid)gc->foreground, &xcolor);
-        NVGcolor color = nvgRGB(xcolor.red >> 8, xcolor.green >> 8,
-                                xcolor.blue >> 8);
-        
-        nvgStrokeColor(vg, color);
-        nvgFillColor(vg, color);
-        nvgStrokeWidth(vg, gc->line_width > 0 ? gc->line_width : 1.0f);
-        
-        /* Set line style */
-        switch (gc->line_style) {
-            case LineSolid:
-                nvgLineCap(vg, NVG_BUTT);
-                break;
-            case LineOnOffDash:
-            case LineDoubleDash:
-                /* TODO: Implement dash patterns using nvgDashPattern */
-                break;
-        }
-        
-        /* Set line cap */
-        switch (gc->cap_style) {
-            case CapNotLast:
-            case CapButt:
-                nvgLineCap(vg, NVG_BUTT);
-                break;
-            case CapRound:
-                nvgLineCap(vg, NVG_ROUND);
-                break;
-            case CapProjecting:
-                nvgLineCap(vg, NVG_SQUARE);
-                break;
-        }
-        
-        /* Set line join */
-        switch (gc->join_style) {
-            case JoinMiter:
-                nvgLineJoin(vg, NVG_MITER);
-                break;
-            case JoinRound:
-                nvgLineJoin(vg, NVG_ROUND);
-                break;
-            case JoinBevel:
-                nvgLineJoin(vg, NVG_BEVEL);
-                break;
-        }
-    }
-    
-    /* Mark that buffer swap will be needed */
-    wd->needsSwap = 1;
-    
-    return true;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandRestoreDrawingContext --
- *
- *	Restore drawing context and swap buffers.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Ends NanoVG frame and swaps GLFW buffers.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandRestoreDrawingContext(
-    TkWaylandDrawingContext *dcPtr)
-{
-    if (dcPtr->vg && dcPtr->frameActive) {
-        nvgEndFrame(dcPtr->vg);
-        dcPtr->frameActive = 0;
-    }
-    
-    if (dcPtr->glfwWindow) {
-        /* Swap buffers to display the rendered content */
-        glfwSwapBuffers(dcPtr->glfwWindow);
-        
-        /* Poll events to keep window responsive */
-        glfwPollEvents();
-    }
-    
-    dcPtr->vg = NULL;
-    dcPtr->glfwWindow = NULL;
+    return GetNVGContextForDrawable(drawable);
 }
 
 /*
@@ -688,13 +494,13 @@ TkWaylandRestoreDrawingContext(
  *
  * TkWaylandPollEvents --
  *
- *	Poll GLFW events. Should be called periodically.
+ *	Poll for Wayland/GLFW events.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Processes pending window events.
+ *	Processes pending GLFW events.
  *
  *----------------------------------------------------------------------
  */
@@ -710,33 +516,181 @@ TkWaylandPollEvents(void)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandSetupDrawingContext --
+ *
+ *	Set up drawing context for a drawable with a GC.
+ *
+ * Results:
+ *	true if successful, false otherwise.
+ *
+ * Side effects:
+ *	Initializes drawing context, sets up NanoVG state.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE bool
+TkWaylandSetupDrawingContext(
+    Drawable d,
+    GC gc,
+    TkWaylandDrawingContext *dcPtr)
+{
+    NVGcontext* vg;
+    XColor xcolor;
+    XGCValues gcValues;
+    Tcl_Obj *colorObj;
+    
+    if (!dcPtr) {
+        return false;
+    }
+    
+    dcPtr->vg = GetNVGContextForDrawable(d);
+    dcPtr->drawable = d;  /* Now this will work with the added field */
+    vg = dcPtr->vg;
+    
+    if (!vg) {
+        return false;
+    }
+    
+    /* Get GC values using XGetGCValues instead of direct struct access */
+    if (!XGetGCValues(NULL, gc, 
+                      GCForeground | GCLineWidth | GCLineStyle | 
+                      GCCapStyle | GCJoinStyle | GCFillRule | GCArcMode,
+                      &gcValues)) {
+        return false;
+    }
+    
+    /* Begin NanoVG frame. */
+    WaylandDrawable* wd = GetWaylandDrawable(d);
+    if (wd) {
+        nvgBeginFrame(vg, wd->width, wd->height, 1.0f);
+    }
+    
+    /* Set up foreground color using Tk_GetColorFromObj correctly */
+    if (gcValues.foreground) {
+        /* Create a Tcl_Obj for the pixel value */
+        char colorString[32];
+        snprintf(colorString, sizeof(colorString), "#%06lx", gcValues.foreground);
+        colorObj = Tcl_NewStringObj(colorString, -1);
+        Tcl_IncrRefCount(colorObj);
+        
+        XColor *colorPtr = Tk_GetColorFromObj(NULL, colorObj);
+        if (colorPtr) {
+            xcolor = *colorPtr;
+            nvgFillColor(vg, nvgRGBA(xcolor.red >> 8, xcolor.green >> 8,
+                                      xcolor.blue >> 8, 255));
+            nvgStrokeColor(vg, nvgRGBA(xcolor.red >> 8, xcolor.green >> 8,
+                                        xcolor.blue >> 8, 255));
+        }
+        Tcl_DecrRefCount(colorObj);
+    }
+    
+    /* Set stroke width */
+    if (gcValues.line_width > 0) {
+        nvgStrokeWidth(vg, gcValues.line_width);
+    } else {
+        nvgStrokeWidth(vg, 1.0f);
+    }
+    
+    /* Set line style */
+    switch (gcValues.line_style) {
+        case LineSolid:
+            /* Solid line - no special handling needed */
+            break;
+        case LineOnOffDash:
+        case LineDoubleDash:
+            /* TODO: Implement dashed lines if needed */
+            break;
+    }
+    
+    /* Set cap style */
+    switch (gcValues.cap_style) {
+        case CapButt:
+            nvgLineCap(vg, NVG_BUTT);
+            break;
+        case CapRound:
+            nvgLineCap(vg, NVG_ROUND);
+            break;
+        case CapProjecting:
+            nvgLineCap(vg, NVG_SQUARE);
+            break;
+    }
+    
+    /* Set join style */
+    switch (gcValues.join_style) {
+        case JoinMiter:
+            nvgLineJoin(vg, NVG_MITER);
+            break;
+        case JoinRound:
+            nvgLineJoin(vg, NVG_ROUND);
+            break;
+        case JoinBevel:
+            nvgLineJoin(vg, NVG_BEVEL);
+            break;
+    }
+    
+    return true;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandRestoreDrawingContext --
+ *
+ *	Clean up drawing context.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Ends NanoVG frame and swaps buffers.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandRestoreDrawingContext(
+    TkWaylandDrawingContext *dcPtr)
+{
+    if (dcPtr && dcPtr->vg) {
+        nvgEndFrame(dcPtr->vg);
+        
+        WaylandDrawable* wd = GetWaylandDrawable(dcPtr->drawable);  /* Now this will work */
+        if (wd && wd->glfwWindow) {
+            glfwSwapBuffers(wd->glfwWindow);
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawLines --
  *
- *	Draw connected lines.
+ *	Draw connected line segments.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Renders a series of connected lines.
+ *	Draws lines on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XDrawLines(
-    Display *display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    XPoint *points,		/* Array of points. */
-    int npoints,		/* Number of points. */
-    int mode)			/* Line drawing mode. */
+    Display *display,
+    Drawable d,
+    GC gc,
+    XPoint *points,
+    int npoints,
+    int mode)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
     int i;
     
-    if (npoints < 2 || !wd) {
+    if (npoints < 2) {
         return BadValue;
     }
     
@@ -747,21 +701,14 @@ XDrawLines(
     
     if (dc.vg) {
         nvgBeginPath(dc.vg);
+        nvgMoveTo(dc.vg, points[0].x, points[0].y);
         
-        if (mode == CoordModeOrigin) {
-            nvgMoveTo(dc.vg, points[0].x, points[0].y);
-            for (i = 1; i < npoints; i++) {
+        for (i = 1; i < npoints; i++) {
+            if (mode == CoordModeOrigin) {
                 nvgLineTo(dc.vg, points[i].x, points[i].y);
-            }
-        } else {
-            /* Relative mode */
-            float x = points[0].x;
-            float y = points[0].y;
-            nvgMoveTo(dc.vg, x, y);
-            for (i = 1; i < npoints; i++) {
-                x += points[i].x;
-                y += points[i].y;
-                nvgLineTo(dc.vg, x, y);
+            } else {  /* CoordModePrevious */
+                nvgLineTo(dc.vg, points[i-1].x + points[i].x,
+                          points[i-1].y + points[i].y);
             }
         }
         
@@ -777,13 +724,13 @@ XDrawLines(
  *
  * XDrawSegments --
  *
- *	Draw unconnected lines.
+ *	Draw multiple unconnected line segments.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Renders a series of unconnected lines.
+ *	Draws line segments on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
@@ -797,7 +744,6 @@ XDrawSegments(
     int nsegments)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
     int i;
     
     LastKnownRequestProcessed(display)++;
@@ -823,7 +769,7 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Draws a filled polygon.
+ *	Fill a polygon.
  *
  * Results:
  *	Success.
@@ -836,46 +782,47 @@ XDrawSegments(
 
 int
 XFillPolygon(
-    Display *display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    XPoint *points,		/* Array of points. */
-    int npoints,		/* Number of points. */
-    TCL_UNUSED(int),		/* Shape to draw. */
-    int mode)			/* Drawing mode. */
+    Display *display,
+    Drawable d,
+    GC gc,
+    XPoint *points,
+    int npoints,
+    int shape,
+    int mode)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
+    XGCValues gcValues;
     int i;
+    
+    if (npoints < 3) {
+        return BadValue;
+    }
     
     LastKnownRequestProcessed(display)++;
     if (!TkWaylandSetupDrawingContext(d, gc, &dc)) {
         return BadDrawable;
     }
     
+    /* Get GC values for fill rule */
+    XGetGCValues(NULL, gc, GCFillRule, &gcValues);
+    
     if (dc.vg) {
         nvgBeginPath(dc.vg);
+        nvgMoveTo(dc.vg, points[0].x, points[0].y);
         
-        if (mode == CoordModeOrigin) {
-            nvgMoveTo(dc.vg, points[0].x, points[0].y);
-            for (i = 1; i < npoints; i++) {
+        for (i = 1; i < npoints; i++) {
+            if (mode == CoordModeOrigin) {
                 nvgLineTo(dc.vg, points[i].x, points[i].y);
-            }
-        } else {
-            /* Relative mode */
-            float x = points[0].x;
-            float y = points[0].y;
-            nvgMoveTo(dc.vg, x, y);
-            for (i = 1; i < npoints; i++) {
-                x += points[i].x;
-                y += points[i].y;
-                nvgLineTo(dc.vg, x, y);
+            } else {  /* CoordModePrevious */
+                nvgLineTo(dc.vg, points[i-1].x + points[i].x,
+                          points[i-1].y + points[i].y);
             }
         }
         
         nvgClosePath(dc.vg);
         
-        if (gc->fill_rule == EvenOddRule) {
+        /* Set winding based on fill rule */
+        if (gcValues.fill_rule == EvenOddRule) {
             nvgPathWinding(dc.vg, NVG_HOLE);
         } else {
             nvgPathWinding(dc.vg, NVG_SOLID);
@@ -884,6 +831,7 @@ XFillPolygon(
         nvgFill(dc.vg);
     }
     
+    (void)shape;  /* Suppress unused warning */
     TkWaylandRestoreDrawingContext(&dc);
     return Success;
 }
@@ -893,31 +841,30 @@ XFillPolygon(
  *
  * XDrawRectangle --
  *
- *	Draws a rectangle.
+ *	Draw a rectangle outline.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Draws a rectangle on the specified drawable.
+ *	Draws a rectangle outline on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XDrawRectangle(
-    Display *display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    int x, int y,		/* Upper left corner. */
-    unsigned int width,		/* Width & height of rect. */
+    Display *display,
+    Drawable d,
+    GC gc,
+    int x, int y,
+    unsigned int width,
     unsigned int height)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
     
-    if (width == 0 || height == 0 || !wd) {
-        return BadDrawable;
+    if (width == 0 || height == 0) {
+        return BadValue;
     }
     
     LastKnownRequestProcessed(display)++;
@@ -940,13 +887,13 @@ XDrawRectangle(
  *
  * XDrawRectangles --
  *
- *	Draws the outlines of the specified rectangles.
+ *	Draw multiple rectangle outlines.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Draws rectangles on the specified drawable.
+ *	Draws rectangle outlines on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
@@ -960,7 +907,6 @@ XDrawRectangles(
     int nRects)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
     int i;
     
     LastKnownRequestProcessed(display)++;
@@ -970,9 +916,6 @@ XDrawRectangles(
     
     if (dc.vg) {
         for (i = 0; i < nRects; i++) {
-            if (rectArr[i].width == 0 || rectArr[i].height == 0) {
-                continue;
-            }
             nvgBeginPath(dc.vg);
             nvgRect(dc.vg, rectArr[i].x, rectArr[i].y,
                     rectArr[i].width, rectArr[i].height);
@@ -989,27 +932,26 @@ XDrawRectangles(
  *
  * XFillRectangles --
  *
- *	Fill multiple rectangular areas in the given drawable.
+ *	Fill multiple rectangles.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Draws onto the specified drawable.
+ *	Draws filled rectangles on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XFillRectangles(
-    Display *display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    XRectangle *rectangles,	/* Rectangle array. */
-    int n_rectangles)		/* Number of rectangles. */
+    Display *display,
+    Drawable d,
+    GC gc,
+    XRectangle *rectangles,
+    int n_rectangles)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
     int i;
     
     LastKnownRequestProcessed(display)++;
@@ -1019,9 +961,6 @@ XFillRectangles(
     
     if (dc.vg) {
         for (i = 0; i < n_rectangles; i++) {
-            if (rectangles[i].width == 0 || rectangles[i].height == 0) {
-                continue;
-            }
             nvgBeginPath(dc.vg);
             nvgRect(dc.vg, rectangles[i].x, rectangles[i].y,
                     rectangles[i].width, rectangles[i].height);
@@ -1051,20 +990,19 @@ XFillRectangles(
 
 int
 XDrawArc(
-    Display *display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    int x, int y,		/* Upper left of bounding rect. */
-    unsigned int width,		/* Width & height. */
+    Display *display,
+    Drawable d,
+    GC gc,
+    int x, int y,
+    unsigned int width,
     unsigned int height,
-    int angle1,			/* Starting angle of arc. */
-    int angle2)			/* Extent of arc. */
+    int angle1,
+    int angle2)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
     
-    if (width == 0 || height == 0 || angle2 == 0 || !wd) {
-        return BadDrawable;
+    if (width == 0 || height == 0 || angle2 == 0) {
+        return BadValue;
     }
     
     LastKnownRequestProcessed(display)++;
@@ -1078,19 +1016,15 @@ XDrawArc(
         float rx = width / 2.0f;
         float ry = height / 2.0f;
         
-        /* Convert X angles (1/64 degree units, clockwise from 3 o'clock)
-           to NanoVG angles (radians, clockwise from 3 o'clock) */
         float startAngle = -radians(angle1 / 64.0);
         float endAngle = -radians((angle1 + angle2) / 64.0);
         
         nvgBeginPath(dc.vg);
         
         if (width == height) {
-            /* Circular arc */
             nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
         } else {
-            /* Elliptical arc - NanoVG doesn't have direct elliptical arc,
-               so we use a transformed circle */
+            /* Ellipse: scale transform */
             nvgSave(dc.vg);
             nvgTranslate(dc.vg, cx, cy);
             nvgScale(dc.vg, 1.0f, ry / rx);
@@ -1111,13 +1045,13 @@ XDrawArc(
  *
  * XDrawArcs --
  *
- *	Draws multiple circular or elliptical arcs.
+ *	Draw multiple arcs.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Draws an arc for each array element on the specified drawable.
+ *	Draws arcs on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
@@ -1131,7 +1065,6 @@ XDrawArcs(
     int nArcs)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
     int i;
     
     LastKnownRequestProcessed(display)++;
@@ -1204,6 +1137,7 @@ XFillArc(
 {
     TkWaylandDrawingContext dc;
     WaylandDrawable* wd = GetWaylandDrawable(d);
+    XGCValues gcValues;
     
     if (width == 0 || height == 0 || angle2 == 0 || !wd) {
         return BadDrawable;
@@ -1213,6 +1147,9 @@ XFillArc(
     if (!TkWaylandSetupDrawingContext(d, gc, &dc)) {
         return BadDrawable;
     }
+    
+    /* Get GC values for arc mode */
+    XGetGCValues(NULL, gc, GCArcMode, &gcValues);
     
     if (dc.vg) {
         float cx = x + width / 2.0f;
@@ -1225,7 +1162,7 @@ XFillArc(
         
         nvgBeginPath(dc.vg);
         
-        if (gc->arc_mode == ArcPieSlice) {
+        if (gcValues.arc_mode == ArcPieSlice) {
             /* Pie slice: line from center to start, arc, line back to center */
             nvgMoveTo(dc.vg, cx, cy);
         }
@@ -1241,7 +1178,7 @@ XFillArc(
             nvgRestore(dc.vg);
         }
         
-        if (gc->arc_mode == ArcPieSlice) {
+        if (gcValues.arc_mode == ArcPieSlice) {
             nvgLineTo(dc.vg, cx, cy);
         }
         
@@ -1278,13 +1215,16 @@ XFillArcs(
     int nArcs)
 {
     TkWaylandDrawingContext dc;
-    WaylandDrawable* wd = GetWaylandDrawable(d);
+    XGCValues gcValues;
     int i;
     
     LastKnownRequestProcessed(display)++;
     if (!TkWaylandSetupDrawingContext(d, gc, &dc)) {
         return BadDrawable;
     }
+    
+    /* Get GC values for arc mode */
+    XGetGCValues(NULL, gc, GCArcMode, &gcValues);
     
     if (dc.vg) {
         for (i = 0; i < nArcs; i++) {
@@ -1303,7 +1243,7 @@ XFillArcs(
             
             nvgBeginPath(dc.vg);
             
-            if (gc->arc_mode == ArcPieSlice) {
+            if (gcValues.arc_mode == ArcPieSlice) {
                 nvgMoveTo(dc.vg, cx, cy);
             }
             
@@ -1318,7 +1258,7 @@ XFillArcs(
                 nvgRestore(dc.vg);
             }
             
-            if (gc->arc_mode == ArcPieSlice) {
+            if (gcValues.arc_mode == ArcPieSlice) {
                 nvgLineTo(dc.vg, cx, cy);
             }
             
@@ -1329,66 +1269,6 @@ XFillArcs(
     
     TkWaylandRestoreDrawingContext(&dc);
     return Success;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ClipToGC --
- *
- *	Helper function to intersect given region with gc clip region.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Modifies clip parameters.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-ClipToGC(
-    Drawable d,
-    GC gc,
-    int* clip_x,
-    int* clip_y,
-    int* clip_width,
-    int* clip_height)
-{
-    if (gc && gc->clip_mask &&
-        ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
-        Region gcClip = ((TkpClipMask *)gc->clip_mask)->value.region;
-        
-        /* Calculate intersection of current clip with GC clip */
-        /* This is simplified - actual region intersection needed */
-        BoxPtr extents = RegionExtents(gcClip);
-        
-        if (extents) {
-            int gc_x1 = extents->x1 + gc->clip_x_origin;
-            int gc_y1 = extents->y1 + gc->clip_y_origin;
-            int gc_x2 = extents->x2 + gc->clip_x_origin;
-            int gc_y2 = extents->y2 + gc->clip_y_origin;
-            
-            /* Intersect rectangles */
-            int x1 = (*clip_x > gc_x1) ? *clip_x : gc_x1;
-            int y1 = (*clip_y > gc_y1) ? *clip_y : gc_y1;
-            int x2 = ((*clip_x + *clip_width) < gc_x2) ?
-                     (*clip_x + *clip_width) : gc_x2;
-            int y2 = ((*clip_y + *clip_height) < gc_y2) ?
-                     (*clip_y + *clip_height) : gc_y2;
-            
-            if (x1 < x2 && y1 < y2) {
-                *clip_x = x1;
-                *clip_y = y1;
-                *clip_width = x2 - x1;
-                *clip_height = y2 - y1;
-            } else {
-                *clip_width = 0;
-                *clip_height = 0;
-            }
-        }
-    }
 }
 
 /*

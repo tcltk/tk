@@ -215,7 +215,7 @@ static unsigned char* ParseXBMData(const char* data, int* width, int* height,
     int* xHot, int* yHot);
 static unsigned int ParseColor(const char* colorName);
 static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
-      int width, int height, int xHot, int yHot)   
+      int width, int height, int xHot, int yHot);
 
 /*
  *----------------------------------------------------------------------
@@ -251,7 +251,7 @@ ConvertXBMToRGBA(
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int byteIndex = y * ((width + 7) / 8) + (x / 8);
-            int bitIndex = 7 - (x % 7);
+            int bitIndex = 7 - (x % 8);  /* Fixed: Changed from 7 to 8 */
             int srcBit = (source[byteIndex] >> bitIndex) & 1;
             int maskBit = mask ? ((mask[byteIndex] >> bitIndex) & 1) : 1;
             
@@ -351,35 +351,22 @@ LoadImageFile(
     const char* ext = strrchr(filename, '.');
     if (ext) {
         if (strcasecmp(ext, ".png") == 0) {
-            return LoadPNGCursor(filename, pixels, width, height);
+            /* Use stb_image for PNG files */
+            int channels;
+            *pixels = stbi_load(filename, width, height, &channels, 4);
+            if (*pixels) {
+                /* stbi_load returns RGBA, which is what we need */
+                return 1;
+            }
+            return 0;
+        } else if (strcasecmp(ext, ".xbm") == 0) {
+            /* Use LoadXBMFile for .xbm files */
+            return LoadXBMFile(filename, pixels, width, height);
         }
     }
     
-    /* Try as XBM file. */
-    FILE* fp = fopen(filename, "r");
-    if (!fp) {
-        return 0;
-    }
-    
-    char line[256];
-    char xbmData[4096] = "";
-    while (fgets(line, sizeof(line), fp)) {
-        strcat(xbmData, line);
-    }
-    fclose(fp);
-    
-    int xHot, yHot;
-    unsigned char* xbmBits = ParseXBMData(xbmData, width, height, &xHot, &yHot);
-    if (!xbmBits) {
-        return 0;
-    }
-    
-    /* Convert XBM to RGBA. */
-    *pixels = ConvertXBMToRGBA(xbmBits, NULL, *width, *height, 
-                               0xFF000000, 0xFFFFFFFF);
-    Tcl_Free(xbmBits);
-    
-    return (*pixels != NULL);
+    /* Try as XBM file by default */
+    return LoadXBMFile(filename, pixels, width, height);
 }
 
 /*
@@ -473,6 +460,7 @@ ParseXBMData(
     
     return bits;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -502,11 +490,31 @@ LoadXBMFile(
     }
     
     /* Read entire file. */
-    fseek(fp, 0, SEEK_END);
-    long fileSize = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fclose(fp);
+        return 0;
+    }
     
-    char* fileData = Tcl_Alloc(fileSize + 1);
+    long fileSizeLong = ftell(fp);
+    if (fileSizeLong < 0) {
+        fclose(fp);
+        return 0;
+    }
+    
+    if (fseek(fp, 0, SEEK_SET) != 0) {
+        fclose(fp);
+        return 0;
+    }
+    
+    /* Prevent overflow */
+    if ((unsigned long)fileSizeLong > SIZE_MAX - 1) {
+        fclose(fp);
+        return 0;
+    }
+    
+    size_t fileSize = (size_t)fileSizeLong;
+    
+    char *fileData = Tcl_Alloc(fileSize + 1);
     if (!fileData) {
         fclose(fp);
         return 0;
@@ -651,7 +659,7 @@ CreateCursorFromImageData(
 TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    Tk_Window tkwin,		/* Window in which cursor will be used. */
+    TCL_UNUSED(Tk_Window),	/* Window in which cursor will be used. */
     const char *string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
@@ -783,13 +791,8 @@ TkGetCursorByName(
             goto cleanup;
         }
 
-        /* Create cursor (hotspot defaults to center). */
-        GLFWimage image;
-        image.width = width;
-        image.height = height;
-        image.pixels = pixels;
-        
-        glfwCursor = glfwCreateCursor(&image, width/2, height/2);
+        /* Create cursor using CreateCursorFromImageData (hotspot defaults to center). */
+        glfwCursor = CreateCursorFromImageData(pixels, width, height, width/2, height/2);
         Tcl_Free(pixels);
     } else if (tkCursorPtr != NULL) {
         /* Custom cursor from embedded XBM data. */
@@ -884,7 +887,7 @@ TkGetCursorByName(
 
 TkCursor *
 TkCreateCursorFromData(
-    Tk_Window tkwin,		/* Window in which cursor will be used. */
+    TCL_UNUSED(Tk_Window),	/* Window in which cursor will be used. */
     const char *source,		/* Bitmap data for cursor shape. */
     const char *mask,		/* Bitmap data for cursor mask. */
     int width, int height,	/* Dimensions of cursor. */

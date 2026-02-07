@@ -428,7 +428,7 @@ WAYLAND_OBJS            = \
     tkWaylandClipboard.o    tkWaylandImage.o        tkWaylandColor.o \
     tkWaylandKey.o          tkWaylandConfig.o       tkWaylandMenu.o \
     tkWaylandCursor.o       tkWaylandNotify.o       tkWaylandSend.o \
-    tkWaylandDefaults.o     tkWaylandDraw.o         tkWaylandSysTray.o \
+	tkWaylandDraw.o         tkWaylandSysTray.o \
     tkWaylandEmbed.o        tkWaylandEvent.o        tkWaylandFocus.o \
     tkWaylandXId.o          tkGlfwInit.o            tkWaylandScrlbr.o \
     nanovg.o      
