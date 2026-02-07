@@ -35,9 +35,6 @@ static void glfwCursorEnterCallback(GLFWwindow* window, int entered);
 static void glfwScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 
-static WindowMapping* windowMappings = NULL;
-static int numWindowMappings = 0;
-
 /*
  *----------------------------------------------------------------------
  *
