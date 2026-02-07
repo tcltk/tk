@@ -9,7 +9,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwint.h"
+#include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 
 #ifdef TK_WAYLAND_DEBUG_EVENTS
@@ -32,7 +32,6 @@ static Tcl_ThreadDataKey dataKey;
 static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
-static void WaylandErrorCallback(int error, const char* description);
 static void HeartbeatTimerProc(void *clientData);
 
 /* Heartbeat timer constants */
@@ -58,10 +57,6 @@ Tk_WaylandSetupTkNotifier(void)
     if (!tsdPtr->initialized) {
         tsdPtr->initialized = true;
 
-        if (TkWayland_Initialize() != TCL_OK) {
-            Tcl_Panic("Tk_WaylandSetupTkNotifier: backend init failed");
-        }
-
         Tcl_CreateEventSource(TkWaylandEventsSetupProc,
                               TkWaylandEventsCheckProc, NULL);
 
@@ -82,19 +77,20 @@ Tk_WaylandSetupTkNotifier(void)
  *
  *----------------------------------------------------------------------
  */
+ 
 static void
 HeartbeatTimerProc(
-    TCL_UNUSED(void *clientData))
+    TCL_UNUSED(void *)) /* clientData */
 {
     TSD_INIT();
 
-    /* Reschedule ourselves */
+    /* Reschedule ourselves. */
     tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
                                                     HeartbeatTimerProc,
                                                     NULL);
 
-    /* Pump Wayland/GLFW events */
-    glfwPollEvents();   s
+    /* Pump Wayland/GLFW events. */
+    glfwPollEvents();   
 }
 
 /*
@@ -107,15 +103,14 @@ HeartbeatTimerProc(
  *----------------------------------------------------------------------
  */
 static const Tcl_Time zeroBlockTime  = { 0, 0 };
-static const Tcl_Time shortBlockTime = { 0, 10000 };  /* 10 ms */
 
 static void
 TkWaylandEventsSetupProc(
-    TCL_UNUSED(void *clientData),
+    TCL_UNUSED(void *), /* clientData */
     int flags)
 {
     if (flags & TCL_WINDOW_EVENTS) {
-        /* For now we always want quick response when windows exist */
+        /* For now we always want quick response when windows exist. */
         Tcl_SetMaxBlockTime(&zeroBlockTime);
     }
 }
@@ -131,7 +126,7 @@ TkWaylandEventsSetupProc(
  */
 static void
 TkWaylandEventsCheckProc(
-    TCL_UNUSED(void *clientData),
+    TCL_UNUSED(void *), /* clientData */
     int flags)
 {
     if (flags & TCL_WINDOW_EVENTS) {
@@ -150,7 +145,7 @@ TkWaylandEventsCheckProc(
  */
 static void
 TkWaylandNotifyExitHandler(
-    TCL_UNUSED(void *clientData))
+    TCL_UNUSED(void *)) /* clientData */
 {
     TSD_INIT();
 
@@ -167,26 +162,11 @@ TkWaylandNotifyExitHandler(
     }
 
     if (tsdPtr->waylandInitialized) {
-        glfwTerminate();    // or wayland cleanup
+        glfwTerminate();
         tsdPtr->waylandInitialized = false;
     }
 
     tsdPtr->initialized = false;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * WaylandErrorCallback --
- *
- *      GLFW/Wayland error handler.
- *
- *----------------------------------------------------------------------
- */
-static void
-WaylandErrorCallback(int error, const char* description)
-{
-    fprintf(stderr, "Wayland/GLFW Error %d: %s\n", error, description);
 }
 
  

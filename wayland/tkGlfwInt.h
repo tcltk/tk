@@ -77,6 +77,7 @@ typedef struct {
     int clip_x, clip_y;         /* Clip origin */
     int clip_width, clip_height;/* Clip dimensions */
     int frameActive;            /* Whether NanoVG frame is active */
+    Drawable drawable;  /* Add missing drawable field */
 } TkWaylandDrawingContext;
 
 /*
