@@ -22,6 +22,11 @@ MODULE_SCOPE void TkpDrawCheckIndicator(Tk_Window tkwin,
     Tk_3DBorder bgBorder, XColor *indicatorColor,
     XColor *selectColor, XColor *disColor, int on,
     int disabled, int mode);
+    
+void ImageChanged(			/* to be passed to Tk_GetImage() */
+    void *clientData,
+    int x, int y, int width, int height,
+    int imageWidth, int imageHeight);
 
 /*
  * Wayland specific button structure.
@@ -149,14 +154,14 @@ ColorToStr(const XColor *colorPtr, char *colorStr)
  * ------------------------------------------------------------------------ 
  */
 
-static void
-ImageChanged(void *clientData,
-             TCL_UNUSED(int x),
-             TCL_UNUSED(int y),
-             TCL_UNUSED(int width),
-             TCL_UNUSED(int height),
-             TCL_UNUSED(int imageWidth),
-             TCL_UNUSED(int imageHeight))
+void
+ImageChanged(TCL_UNUSED(void *),
+             TCL_UNUSED(int), /* x */
+             TCL_UNUSED(int), /* y */
+             TCL_UNUSED(int), /* width */
+             TCL_UNUSED(int), /* height */
+             TCL_UNUSED(int), /*imageWidth*/
+             TCL_UNUSED(int)) /*imageHeight */
 {
   
   /* No-op. */
@@ -178,10 +183,18 @@ ImageChanged(void *clientData,
 */
 
 void
-TkpDrawCheckIndicator(Tk_Window tkwin, Display *display, Drawable d,
-                      int x, int y, Tk_3DBorder bgBorder,
-                      XColor *indicatorColor, XColor *selectColor,
-                      XColor *disableColor, int on, int disabled, int mode)
+TkpDrawCheckIndicator(Tk_Window tkwin, 
+						TCL_UNUSED(Display *), 
+						Drawable d,
+						int x,
+						int y, 
+						Tk_3DBorder bgBorder,
+						XColor *indicatorColor, 
+						XColor *selectColor,
+						XColor *disableColor, 
+						int on, 
+						int disabled, 
+						int mode)
 {
     const char *svgDataPtr;
     int hasBorder = 0, hasInterior = 0, dim;
@@ -301,7 +314,8 @@ TkpDrawCheckIndicator(Tk_Window tkwin, Display *display, Drawable d,
 */
 
 TkButton *
-TkpCreateButton(TCL_UNUSED(Tk_Window)) /* window */
+TkpCreateButton(
+	TCL_UNUSED(Tk_Window)) /* window */
 {
     return (TkButton *) ckalloc(sizeof(WaylandButton));
 }
@@ -361,10 +375,10 @@ TkpDisplayButton(void *clientData)
   int x = 0, y = 0, relief;
   Tk_Window tkwin = butPtr->tkwin;
   int width = 0, height = 0;
-  int fullWidth, fullHeight;
+  int imageWidth = 0, imageHeight = 0;
+  int fullWidth = 0, fullHeight = 0;
   int textXOffset = 0, textYOffset = 0;
   int haveImage = 0, haveText = 0;
-  int imageWidth = 0, imageHeight = 0;
   int imageXOffset = 0, imageYOffset = 0;
   int padX, padY, bd, hl;
 	
@@ -422,18 +436,27 @@ TkpDisplayButton(void *clientData)
     case COMPOUND_TOP:
       textYOffset = height + padY;
       fullHeight = height + butPtr->textHeight + padY;
-      fullWidth  = MAX(width, butPtr->textWidth);
+      fullWidth = (width > butPtr->textWidth ? width :
+		    butPtr->textWidth);
       textXOffset = (fullWidth - butPtr->textWidth) / 2;
       imageXOffset = (fullWidth - width) / 2;
       break;
     case COMPOUND_LEFT:
-    case COMPOUND_RIGHT:
-      textXOffset = width + padX;
-      fullWidth = width + butPtr->textWidth + padX;
-      fullHeight = MAX(height, butPtr->textHeight);
-      textYOffset = (fullHeight - butPtr->textHeight) / 2;
-      imageYOffset = (fullHeight - height) / 2;
-      break;
+	case COMPOUND_RIGHT:
+	    /*
+	     * Image is left or right of text.
+	     */
+	    if (butPtr->compound == COMPOUND_LEFT) {
+		textXOffset = width + padX;
+	    } else {
+		imageXOffset = butPtr->textWidth + padX;
+	    }
+	    fullWidth = butPtr->textWidth + padX + width;
+	    fullHeight = (height > butPtr->textHeight ? height :
+		    butPtr->textHeight);
+	    textYOffset = (fullHeight - butPtr->textHeight)/2;
+	    imageYOffset = (fullHeight - height)/2;
+	    break;
     case COMPOUND_CENTER:
       /*
        * Image and text are superimposed.
@@ -769,5 +792,4 @@ TkpComputeButtonGeometry(
  * mode: c
  * c-basic-offset: 4
  * fill-column: 78
- *
-/
+ */
