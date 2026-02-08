@@ -49,7 +49,7 @@ bind TMenubutton <Leave>	{ %W state !active }
 bind TMenubutton <space>	{ ttk::menubutton::Popdown %W }
 bind TMenubutton <<Invoke>>	{ ttk::menubutton::Popdown %W }
 
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     bind TMenubutton <Button-1>		{ ttk::menubutton::Pulldown %W }
     bind TMenubutton <ButtonRelease-1>	{ ttk::menubutton::TransferGrab %W }
     bind TMenubutton <B1-Leave>		{ ttk::menubutton::TransferGrab %W }

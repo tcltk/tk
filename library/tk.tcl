@@ -458,6 +458,57 @@ switch -exact -- [tk windowingsystem] {
 	# regardless of which window has focus
 	set ::tk::AlwaysShowSelection 1
     }
+    "wayland" {
+	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
+	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
+	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> <Undo>
+	event add <<Redo>>		<Control-Z> <Control-Lock-z> <Redo>
+	event add <<SelectAll>>		<Control-/>
+	event add <<SelectNone>>	<Control-backslash>
+	event add <<NextChar>>		<Right>
+	event add <<SelectNextChar>>	<Shift-Right>
+	event add <<PrevChar>>		<Left>
+	event add <<SelectPrevChar>>	<Shift-Left>
+	event add <<NextWord>>		<Control-Right>
+	event add <<SelectNextWord>>	<Control-Shift-Right>
+	event add <<PrevWord>>		<Control-Left>
+	event add <<SelectPrevWord>>	<Control-Shift-Left>
+	event add <<LineStart>>		<Home>
+	event add <<SelectLineStart>>	<Shift-Home>
+	event add <<LineEnd>>		<End>
+	event add <<SelectLineEnd>>	<Shift-End>
+	event add <<PrevLine>>		<Up>
+	event add <<NextLine>>		<Down>
+	event add <<SelectPrevLine>>	<Shift-Up>
+	event add <<SelectNextLine>>	<Shift-Down>
+	event add <<PrevPara>>		<Control-Up>
+	event add <<NextPara>>		<Control-Down>
+	event add <<SelectPrevPara>>	<Control-Shift-Up>
+	event add <<SelectNextPara>>	<Control-Shift-Down>
+	event add <<ToggleSelection>>	<Control-Button-1>
+
+	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
+	# returned when the user presses <Shift-Tab>. In order for tab
+	# traversal to work, we have to add these keysyms to the PrevWindow
+	# event. We use catch just in case the keysym isn't recognized.
+
+	# This is needed for XFree86 systems
+	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
+	catch {
+	    event add <<Cut>> <XF86Cut>
+	    event add <<Copy>> <XF86Copy>
+	    event add <<Paste>> <XF86Paste>
+	}
+	# This seems to be correct on *some* HP systems.
+	catch { event add <<PrevWindow>> <hpBackTab> }
+
+	trace add variable ::tk_strictMotif write ::tk::EventMotifBindings
+	set ::tk_strictMotif $::tk_strictMotif
+	# On unix, we want to always display entry/text selection,
+	# regardless of which window has focus
+	set ::tk::AlwaysShowSelection 1
+    }
     "win32" {
 	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X> <XF86Cut>
 	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C> <XF86Copy>
@@ -537,11 +588,11 @@ if {$::tk_library ne ""} {
     namespace eval ::tk {
 
 	# Do not load accessibility.tcl if running in a safe interpreter,
-	# under XQuartz on macOS, or if Tk on X11 was compiled without
+	# under XQuartz on macOS, or if Tk on X11 or Wayland was compiled without
 	# accessibility support. These cause interpreter failures or Tk to
 	# crash.
 	if {![interp issafe] &&
-		!($::tcl_platform(os) eq "Darwin" && [tk windowingsystem] eq "x11") &&
+		!($::tcl_platform(os) eq "Darwin" && ([tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland")) &&
 		![catch {tk::accessible::check_screenreader} r] &&
 		![string match -nocase "*warning*" $r]} {
 	    SourceLibFile accessibility
@@ -929,8 +980,8 @@ option add *Scale.length		75p widgetDefault
 option add *Scale.sliderLength		22.5p widgetDefault
 option add *Scale.width			11.25p widgetDefault
 
-# Scale the default scrollbar width on X11
-if {[tk windowingsystem] eq "x11"} {
+# Scale the default scrollbar width on X11 and Wayland
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "Wayland"} {
     option add *Scrollbar.width		8.25p widgetDefault
 }
 

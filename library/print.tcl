@@ -799,7 +799,7 @@ namespace eval ::tk::print {
 
 # Some output configuration that on other platforms is managed through
 # the printer driver/dialog is configured through the canvas postscript command.
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     if {[info commands ::tk::print::cups] eq ""} {
 	namespace eval ::tk::print::cups {
 	    # Pure Tcl cups ensemble command implementation

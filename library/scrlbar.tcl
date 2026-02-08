@@ -15,7 +15,7 @@
 #-------------------------------------------------------------------------
 
 # Standard Motif bindings:
-if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "x11" || || [tk windowingsystem] eq "wayland" || [tk windowingsystem] eq "aqua"} {
 
 bind Scrollbar <Enter> {
     if {$tk_strictMotif} {

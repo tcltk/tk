@@ -70,7 +70,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
 /*
  * Forward declarations for GLFW callbacks.
  */
-static void GLFW_FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+static void GLFW_ScrollFramebufferSizeCallback(GLFWwindow* window, int width, int height);
 static void GLFW_WindowSizeCallback(GLFWwindow* window, int width, int height);
 static void GLFW_WindowFocusCallback(GLFWwindow* window, int focused);
 static void GLFW_CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
@@ -174,7 +174,7 @@ WaylandScrollbar_SetupGLFWCallbacks(
  */
 
 static void
-GLFW_FramebufferSizeCallback(
+GLFW_ScrollFramebufferSizeCallback(
     GLFWwindow* window,
     TCL_UNUSED(int), /* width */
     TCL_UNUSED(int)) /* height*/
