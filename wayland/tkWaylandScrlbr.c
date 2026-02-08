@@ -149,7 +149,7 @@ WaylandScrollbar_SetupGLFWCallbacks(
     
     glfwSetWindowUserPointer(glfwWindow, windowData);
     
-    glfwSetFramebufferSizeCallback(glfwWindow, GLFW_FramebufferSizeCallback);
+    glfwSetFramebufferSizeCallback(glfwWindow, GLFW_ScrollFramebufferSizeCallback);
     glfwSetWindowSizeCallback(glfwWindow, GLFW_WindowSizeCallback);
     glfwSetWindowFocusCallback(glfwWindow, GLFW_WindowFocusCallback);
     glfwSetCursorPosCallback(glfwWindow, GLFW_CursorPosCallback);
