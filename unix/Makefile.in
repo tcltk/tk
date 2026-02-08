@@ -425,7 +425,7 @@ AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
     tkWayland.o tkWayland3D.o tkWaylandFont.o \
-    tkWaylandClipboard.o tkWaylandImag tkWaylandColor.o \
+    tkWaylandClipboard.o tkWaylandImage.o tkWaylandColor.o \
     tkWaylandKey.o tkWaylandConfig.o tkWaylandMenu.o \
     tkWaylandCursor.o tkWaylandNotify.o  tkWaylandSend.o \
     tkWaylandDraw.o  tkWaylandSysTray.o \
