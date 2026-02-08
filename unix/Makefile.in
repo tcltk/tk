@@ -424,20 +424,19 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
-    tkWayland.o             tkWayland3D.o          tkWaylandFont.o \
-    tkWaylandClipboard.o    tkWaylandImage.o        tkWaylandColor.o \
-    tkWaylandKey.o          tkWaylandConfig.o       tkWaylandMenu.o \
-    tkWaylandCursor.o       tkWaylandNotify.o       tkWaylandSend.o \
-	tkWaylandDraw.o         tkWaylandSysTray.o \
-    tkWaylandEmbed.o        tkWaylandEvent.o        tkWaylandFocus.o \
-    tkWaylandXId.o          tkGlfwInit.o            tkWaylandScrlbr.o \
-    nanovg.o      
+    tkWayland.o tkWayland3D.o tkWaylandFont.o \
+    tkWaylandClipboard.o tkWaylandImag tkWaylandColor.o \
+    tkWaylandKey.o tkWaylandConfig.o tkWaylandMenu.o \
+    tkWaylandCursor.o tkWaylandNotify.o  tkWaylandSend.o \
+    tkWaylandDraw.o  tkWaylandSysTray.o \
+    tkWaylandEmbed.o  tkWaylandEvent.o  tkWaylandFocus.o \
+    tkWaylandXId.o tkGlfwInit.o tkWaylandScrlbr.o \
+    tkWaylandButton.o tkWaylandScale.o tkWaylandMenub.o nanovg.o      
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
     tkAppInit.o             tkUnixConfig.o          tkUnixPrint.o \
-    tkUnixSysNotify.o       tkUnixAccessibility.o   tkUnixButton.o \
-    tkUnixMenubu.o          tkUnixScale.o           
+    tkUnixSysNotify.o       tkUnixAccessibility.o                     
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(TTK_OBJS) \
@@ -585,9 +584,10 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandDraw.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
     $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandXId.c \
-    $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandMouseEvent.c \
-    $(WAYLAND_DIR)/nanovg.c 	
-    
+    $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandMouseEvent.c  $(WAYLAND_DIR)/tkWaylandButton.c \
+     $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandMenub.c\
+     $(WAYLAND_DIR)/nanovg.c 	
+
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
     $(WAYLAND_DIR)/tkGlfwInt.h
@@ -595,9 +595,7 @@ WAYLAND_PRIVATE_HDRS = \
 WAYLAND_UNIX_SRCS = \
     $(UNIX_DIR)/tkAppInit.c     $(UNIX_DIR)/tkUnixConfig.c \
     $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c \
-    $(UNIX_DIR)/tkUnixAccessibility.c \
-    $(UNIX_DIR)/tkUnixButton.c  $(UNIX_DIR)/tkUnixMenubu.c \
-    $(UNIX_DIR)/tkUnixScale.c   
+    $(UNIX_DIR)/tkUnixAccessibility.c  
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
 
@@ -1466,6 +1464,15 @@ tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 
 tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMouseEvent.c
+
+tkWaylandButton.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandButton.c
+
+tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScale.c
+
+tkWaylandMenub.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenub.c
 
 nanovg.o: $(WAYLAND_DIR)/nanovg.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c

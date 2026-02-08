@@ -37,7 +37,7 @@ foreach i {open save} {
 grid columnconfigure $f 1 -weight 1
 pack $f -fill x -padx 1c
 
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     ttk::checkbutton $w.strict -text "Use Motif Style Dialog" \
 	-variable tk_strictMotif -onvalue 1 -offvalue 0
     pack $w.strict -anchor c

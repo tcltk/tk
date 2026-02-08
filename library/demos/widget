@@ -24,7 +24,7 @@ if {[::tk::accessible::check_screenreader] eq "1"} {
 }
 
 wm title . [mc "Widget Demonstration"]
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     # This won't work everywhere, but there's no other way in core Tk at the
     # moment to display a coloured icon.
     image create photo TclPowered \

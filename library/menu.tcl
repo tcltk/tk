@@ -124,7 +124,7 @@ bind Menu <Enter> {
     set tk::Priv(window) %W
     if {[%W cget -type] eq "tearoff"} {
 	if {"%m" ne "NotifyUngrab"} {
-	    if {[tk windowingsystem] eq "x11"} {
+	    if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
 		tk_menuSetFocus %W
 	    }
 	}
@@ -176,7 +176,7 @@ bind Menu <Key> {
 # The following bindings apply to all windows, and are used to
 # implement keyboard menu traversal.
 
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     bind all <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
@@ -568,7 +568,7 @@ proc ::tk::MenuButtonDown menu {
 	# Must re-grab even if the grab window hasn't changed, in order
 	# to release the implicit grab from the button press.
 
-	if {[tk windowingsystem] eq "x11"} {
+	if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
 	    grab -global $menu
 	}
     }
@@ -1365,7 +1365,7 @@ proc ::tk_popup {menu x y {entry {}}} {
 	tk::MenuUnpost {}
     }
     tk::PostOverPoint $menu $x $y $entry
-    if {[tk windowingsystem] eq "x11" && [winfo viewable $menu]} {
+    if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland" && [winfo viewable $menu]} {
 	tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu
