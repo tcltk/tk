@@ -4414,39 +4414,41 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * We only allow warping if the window is mapped.
+	 * We allow warping relative to the screen's root window, or relative to a
+	 * Tk window provided that it is mapped.
 	 */
 
-	if (warp && Tk_IsMapped(tkwin)) {
+	if (warp) {
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
+	    if (! dispPtr->warpWindow || Tk_IsMapped(tkwin)) {
+		Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
 
-	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
-
-	    if (warpWindow != dispPtr->warpWindow) {
-		if (warpWindow) {
-		    Tcl_Preserve(warpWindow);
+		if (warpWindow != dispPtr->warpWindow) {
+		    if (warpWindow) {
+			Tcl_Preserve(warpWindow);
+		    }
+		    if (dispPtr->warpWindow) {
+			Tcl_Release(dispPtr->warpWindow);
+		    }
+		    dispPtr->warpWindow = warpWindow;
 		}
-		if (dispPtr->warpWindow) {
-		    Tcl_Release(dispPtr->warpWindow);
+		dispPtr->warpMainwin = mainWin;
+		dispPtr->warpX = event.general.xmotion.x;
+		dispPtr->warpY = event.general.xmotion.y;
+
+		/*
+		 * Warping with respect to a window will be done when Tk_handleEvent
+		 * below will run the event handlers and in particular TkPointerEvent.
+		 * This allows to make grabs and warping work together robustly, that
+		 * is without depending on a precise sequence of events.
+		 * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
+		 * is NULL) is run directly here.
+		 */
+
+		if (!dispPtr->warpWindow) {
+		    TkpWarpPointer(dispPtr);
+		    XForceScreenSaver(dispPtr->display, ScreenSaverReset);
 		}
-		dispPtr->warpWindow = warpWindow;
-	    }
-	    dispPtr->warpMainwin = mainWin;
-	    dispPtr->warpX = event.general.xmotion.x;
-	    dispPtr->warpY = event.general.xmotion.y;
-
-	    /*
-	     * Warping with respect to a window will be done when Tk_handleEvent
-	     * below will run the event handlers and in particular TkPointerEvent.
-	     * This allows to make grabs and warping work together robustly, that
-	     * is without depending on a precise sequence of events.
-	     * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
-	     * is NULL) is run directly here.
-	     */
-
-	    if (!dispPtr->warpWindow) {
-		TkpWarpPointer(dispPtr);
-		XForceScreenSaver(dispPtr->display, ScreenSaverReset);
 	    }
 	}
 
