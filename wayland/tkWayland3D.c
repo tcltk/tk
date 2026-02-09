@@ -14,7 +14,7 @@
 #include "tkInt.h"
 #include "tk3d.h"
 #include "nanovg.h"
-include "tkGlfwInt.h"
+#include "tkGlfwInt.h"
 
 /*
  * This structure is used to keep track of the extra colors used by Unix 3D
@@ -25,12 +25,6 @@ typedef struct {
     TkBorder info;
     NVGcolor solidColor;	/* Used to draw solid relief. */
 } WaylandBorder;
-
-/*
- * Forward declarations for helper functions.
- */
-static NVGcolor ColorToNVGColor(XColor *color);
-static NVGcolor GetShadowColor(NVGcolor base, float factor);
 
 /*
  *----------------------------------------------------------------------
@@ -77,7 +71,7 @@ TkpGetBorder(void)
 
 void
 TkpFreeBorder(
-    TkBorder *borderPtr)
+    TCL_UNUSED(TkBorder *))  /* borderPtr */
 {
     /* 
      * NanoVG colors are just structs, no explicit freeing needed.
@@ -112,100 +106,103 @@ TkpFreeBorder(
 
 void
 Tk_3DVerticalBevel(
-    Tk_Window tkwin,		/* Window for which border was allocated. */
-    Drawable drawable,		/* X window or pixmap in which to draw. */
-    Tk_3DBorder border,		/* Token for border to draw. */
-    int x, int y, int width, int height,
-				/* Area of vertical bevel. */
-    int leftBevel,		/* Non-zero means this bevel forms the left
-				 * side of the object; 0 means it forms the
-				 * right side. */
-    int relief)			/* Kind of bevel to draw. For example,
-				 * TK_RELIEF_RAISED means interior of object
-				 * should appear higher than exterior. */
+     Tk_Window tkwin,        /* Window for which border was allocated. */
+     Drawable drawable,        /* X window or pixmap in which to draw. */
+     Tk_3DBorder border,        /* Token for border to draw. */
+     int x, int y, int width, int height,
+                 /* Area of vertical bevel. */
+     int leftBevel,        /* Non-zero means this bevel forms the left
+                  * side of the object; 0 means it forms the
+                  * right side. */
+     int relief)            /* Kind of bevel to draw. For example,
+                  * TK_RELIEF_RAISED means interior of object
+                  * should appear higher than exterior. */
 {
-    TkBorder *borderPtr = (TkBorder *) border;
-    NVGcolor leftColor, rightColor;
-    WaylandBorder *WaylandBorderPtr = (WaylandBorder *) borderPtr;
-    TkWaylandDrawingContext dc;
-    XGCValues gcValues;
+     TkBorder *borderPtr = (TkBorder *) border;
+     NVGcolor leftColor, rightColor;
+     WaylandBorder *waylandBorderPtr = (WaylandBorder *) borderPtr;
+     TkWaylandDrawingContext dc;
+     Display *display = Tk_Display(tkwin);
+     GC gc;
 
-    LastKnownRequestProcessed(display)++;
-   
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
-        return BadDrawable;
-    }
+     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT)) {
+     TkpGetShadows(borderPtr, tkwin);
+     }
 
-    if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT)) {
-	TkpGetShadows(borderPtr, tkwin);
-    }
+     /* Use the background GC for drawing */
+     gc = borderPtr->bgGC;
 
-    /* Convert X colors to NVG colors. */
-    NVGcolor bgColor = ColorToNVGColor(borderPtr->bgColorPtr);
-    NVGcolor lightColor = (borderPtr->lightColorPtr) ? 
-	ColorToNVGColor(borderPtr->lightColorPtr) : bgColor;
-    NVGcolor darkColor = (borderPtr->darkColorPtr) ? 
-	ColorToNVGColor(borderPtr->darkColorPtr) : bgColor;
-     
-    switch (relief) {
-    case TK_RELIEF_RAISED:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, leftBevel ? lightColor : darkColor);
-        nvgFill(dc.vg);
-        break;
-        
-    case TK_RELIEF_SUNKEN:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, leftBevel ? darkColor : lightColor);
-        nvgFill(dc.vg);
-        break;
-        
-    case TK_RELIEF_RIDGE:
-        leftColor = lightColor;
-        rightColor = darkColor;
-        goto ridgeGroove;
-        
-    case TK_RELIEF_GROOVE:
-        leftColor = darkColor;
-        rightColor = lightColor;
-    ridgeGroove: {
-	    int half = width/2;
-	    if (!leftBevel && (width & 1)) {
-		half++;
-	    }
-	    nvgBeginPath(vg);
-	    nvgRect(dc.vg, x, y, half, height);
-	    nvgFillColor(dc.vg, leftColor);
-	    nvgFill(dc.vg);
-        
-	    nvgBeginPath(dc.vg);
-	    nvgRect(dc.vg, x + half, y, width - half, height);
-	    nvgFillColor(dc.vg, rightColor);
-	    nvgFill(dc.vg);
-	    break;
-	}
-        
-    case TK_RELIEF_FLAT:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, bgColor);
-        nvgFill(dc.vg);
-        break;
-        
-    case TK_RELIEF_SOLID:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, WaylandBorderPtr->solidColor);
-        nvgFill(dc.vg);
-        break;
-    }
+     LastKnownRequestProcessed(display)++;
 
-    nvgRestore(dc.vg);
-    TkGlfwEndDraw(&dc);
-    return Success;
+     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+         return;  /* void function - just return */
+     }
+
+     /* Convert X colors to NVG colors. */
+     NVGcolor bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
+     NVGcolor lightColor = (borderPtr->lightColorPtr) ?
+     TkGlfwXColorToNVG(borderPtr->lightColorPtr) : bgColor;
+     NVGcolor darkColor = (borderPtr->darkColorPtr) ?
+     TkGlfwXColorToNVG(borderPtr->darkColorPtr) : bgColor;
+
+     switch (relief) {
+     case TK_RELIEF_RAISED:
+         nvgBeginPath(dc.vg);
+         nvgRect(dc.vg, x, y, width, height);
+         nvgFillColor(dc.vg, leftBevel ? lightColor : darkColor);
+         nvgFill(dc.vg);
+         break;
+
+     case TK_RELIEF_SUNKEN:
+         nvgBeginPath(dc.vg);
+         nvgRect(dc.vg, x, y, width, height);
+         nvgFillColor(dc.vg, leftBevel ? darkColor : lightColor);
+         nvgFill(dc.vg);
+         break;
+
+     case TK_RELIEF_RIDGE:
+         leftColor = lightColor;
+         rightColor = darkColor;
+         goto ridgeGroove;
+
+     case TK_RELIEF_GROOVE:
+         leftColor = darkColor;
+         rightColor = lightColor;
+     ridgeGroove: {
+         int half = width/2;
+         if (!leftBevel && (width & 1)) {
+         half++;
+         }
+         nvgBeginPath(dc.vg);  /* Fixed: was 'vg' */
+         nvgRect(dc.vg, x, y, half, height);
+         nvgFillColor(dc.vg, leftColor);
+         nvgFill(dc.vg);
+
+         nvgBeginPath(dc.vg);
+         nvgRect(dc.vg, x + half, y, width - half, height);
+         nvgFillColor(dc.vg, rightColor);
+         nvgFill(dc.vg);
+         break;
+     }
+
+     case TK_RELIEF_FLAT:
+         nvgBeginPath(dc.vg);
+         nvgRect(dc.vg, x, y, width, height);
+         nvgFillColor(dc.vg, bgColor);
+         nvgFill(dc.vg);
+         break;
+
+     case TK_RELIEF_SOLID:
+         nvgBeginPath(dc.vg);
+         nvgRect(dc.vg, x, y, width, height);
+         nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
+         nvgFill(dc.vg);
+         break;
+     }
+
+     TkGlfwEndDraw(&dc);
 }
+
 
 /*
  *--------------------------------------------------------------
@@ -227,128 +224,128 @@ Tk_3DVerticalBevel(
 
 void
 Tk_3DHorizontalBevel(
-    Tk_Window tkwin,		/* Window for which border was allocated. */
-    Drawable drawable,		/* X window or pixmap in which to draw. */
-    Tk_3DBorder border,		/* Token for border to draw. */
-    int x, int y, int width, int height,
-				/* Bounding box of area of bevel. Height gives
-				 * width of border. */
-    int leftIn, int rightIn,	/* Describes whether the left and right edges
-				 * of the bevel angle in or out as they go
-				 * down. For example, if "leftIn" is true, the
-				 * left side of the bevel looks like this:
-				 *	___________
-				 *	 __________
-				 *	  _________
-				 *	   ________
-				 */
-    int topBevel,		/* Non-zero means this bevel forms the top
-				 * side of the object; 0 means it forms the
-				 * bottom side. */
-    int relief)			/* Kind of bevel to draw. For example,
-				 * TK_RELIEF_RAISED means interior of object
-				 * should appear higher than exterior. */
+     Tk_Window tkwin,        /* Window for which border was allocated. */
+     Drawable drawable,        /* X window or pixmap in which to draw. */
+     Tk_3DBorder border,        /* Token for border to draw. */
+     int x, int y, int width, int height,
+                 /* Bounding box of area of bevel. Height gives
+                  * width of border. */
+     int leftIn, int rightIn,    /* Describes whether the left and right
+edges
+                  * of the bevel angle in or out as they go
+                  * down. For example, if "leftIn" is true, the
+                  * left side of the bevel looks like this:
+                  *    ___________
+                  *     __________
+                  *      _________
+                  *       ________
+                  */
+     int topBevel,        /* Non-zero means this bevel forms the top
+                  * side of the object; 0 means it forms the
+                  * bottom side. */
+     int relief)            /* Kind of bevel to draw. For example,
+                  * TK_RELIEF_RAISED means interior of object
+                  * should appear higher than exterior. */
 {
-    TkBorder *borderPtr = (TkBorder *) border;
-    WaylandBorder *WaylandBorderPtr = (WaylandBorder *) borderPtr;
-    NVGcolor topColor, bottomColor;
-    int bottom, halfway, x1, x2, x1Delta, x2Delta;
-    TkWaylandDrawingContext dc;
-    XGCValues gcValues;
+     TkBorder *borderPtr = (TkBorder *) border;
+     WaylandBorder *waylandBorderPtr = (WaylandBorder *) borderPtr;
+     NVGcolor topColor, bottomColor;
+     int bottom, halfway, x1, x2, x1Delta, x2Delta;
+     TkWaylandDrawingContext dc;
+     Display *display = Tk_Display(tkwin);
+     GC gc;
 
-    LastKnownRequestProcessed(display)++;
-   
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
-        return BadDrawable;
-    }
+     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT) &&
+         (relief != TK_RELIEF_SOLID)) {
+     TkpGetShadows(borderPtr, tkwin);
+     }
 
+     /* Use the background GC for drawing */
+     gc = borderPtr->bgGC;
 
-    if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT) &&
-	    (relief != TK_RELIEF_SOLID)) {
-	TkpGetShadows(borderPtr, tkwin);
-    }
+     LastKnownRequestProcessed(display)++;
 
-    /* Convert X colors to NVG colors. */
-    NVGcolor bgColor = ColorToNVGColor(borderPtr->bgColorPtr);
-    NVGcolor lightColor = (borderPtr->lightColorPtr) ? 
-                          ColorToNVGColor(borderPtr->lightColorPtr) : bgColor;
-    NVGcolor darkColor = (borderPtr->darkColorPtr) ? 
-                         ColorToNVGColor(borderPtr->darkColorPtr) : bgColor;
+     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+         return;  /* void function - just return */
+     }
 
-    /*
-     * Compute a color for the top half of the bevel and a color for the bottom half
-     * (they're the same in many cases).
-     */
+     /* Convert X colors to NVG colors. */
+     NVGcolor bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
+     NVGcolor lightColor = (borderPtr->lightColorPtr) ?
+TkGlfwXColorToNVG(borderPtr->lightColorPtr) : bgColor;
+     NVGcolor darkColor = (borderPtr->darkColorPtr) ?
+  TkGlfwXColorToNVG(borderPtr->darkColorPtr) : bgColor;
 
-    switch (relief) {
-    case TK_RELIEF_FLAT:
-        topColor = bottomColor = bgColor;
-        break;
-    case TK_RELIEF_GROOVE:
-        topColor = darkColor;
-        bottomColor = lightColor;
-        break;
-    case TK_RELIEF_RAISED:
-        topColor = bottomColor = topBevel ? lightColor : darkColor;
-        break;
-    case TK_RELIEF_RIDGE:
-        topColor = lightColor;
-        bottomColor = darkColor;
-        break;
-    case TK_RELIEF_SOLID:
-        nvgBeginPath(vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, WaylandBorderPtr->solidColor);
-        nvgFill(dc.vg);
-        nvgRestore(dc.vg);
-        return;
-    case TK_RELIEF_SUNKEN:
-        topColor = bottomColor = topBevel ? darkColor : lightColor;
-        break;
-    default:
-        topColor = bottomColor = bgColor;
-        break;
-    }
+     /*
+      * Compute a color for the top half of the bevel and a color for
+the bottom half
+      * (they're the same in many cases).
+      */
+     switch (relief) {
+     case TK_RELIEF_FLAT:
+         topColor = bottomColor = bgColor;
+         break;
+     case TK_RELIEF_GROOVE:
+         topColor = darkColor;
+         bottomColor = lightColor;
+         break;
+     case TK_RELIEF_RAISED:
+         topColor = bottomColor = topBevel ? lightColor : darkColor;
+         break;
+     case TK_RELIEF_RIDGE:
+         topColor = lightColor;
+         bottomColor = darkColor;
+         break;
+     case TK_RELIEF_SOLID:
+         nvgBeginPath(dc.vg);  /* Fixed: was 'vg' */
+         nvgRect(dc.vg, x, y, width, height);
+         nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
+         nvgFill(dc.vg);
+         TkGlfwEndDraw(&dc);
+         return;
+     case TK_RELIEF_SUNKEN:
+         topColor = bottomColor = topBevel ? darkColor : lightColor;
+         break;
+     default:
+         topColor = bottomColor = bgColor;
+         break;
+     }
 
-    /*
-     * Compute various other geometry-related details.
-     */
+     /*
+      * Compute various other geometry-related details.
+      */
+     x1 = x;
+     if (!leftIn) {
+         x1 += height;
+     }
+     x2 = x + width;
+     if (!rightIn) {
+         x2 -= height;
+     }
+     x1Delta = leftIn ? 1 : -1;
+     x2Delta = rightIn ? -1 : 1;
+     halfway = y + height / 2;
+     if (!topBevel && (height & 1)) {
+         halfway++;
+     }
+     bottom = y + height;
 
-    x1 = x;
-    if (!leftIn) {
-        x1 += height;
-    }
-    x2 = x + width;
-    if (!rightIn) {
-        x2 -= height;
-    }
-    x1Delta = leftIn ? 1 : -1;
-    x2Delta = rightIn ? -1 : 1;
-    halfway = y + height / 2;
-    if (!topBevel && (height & 1)) {
-        halfway++;
-    }
-    bottom = y + height;
+     /*
+      * Draw one line for each y-coordinate covered by the bevel.
+      */
+     for ( ; y < bottom; y++) {
+         NVGcolor currentColor = (y < halfway) ? topColor : bottomColor;
 
-    /*
-     * Draw one line for each y-coordinate covered by the bevel.
-     */
+         nvgBeginPath(dc.vg);
+         nvgRect(dc.vg, x1, y, x2 - x1, 1);  /* Fixed: was 'vg' */
+         nvgFillColor(dc.vg, currentColor);
+         nvgFill(dc.vg);
 
-    for ( ; y < bottom; y++) {
-        NVGcolor currentColor = (y < halfway) ? topColor : bottomColor;
-        
-        nvgBeginPath(dc.vg);
-        nvgRect(vg, x1, y, x2 - x1, 1);
-        nvgFillColor(dc.vg, currentColor);
-        nvgFill(dc.vg);
-        
-        x1 += x1Delta;
-        x2 += x2Delta;
-    }
-    
-    nvgRestore(dc.vg);
-    TkGlfwEndDraw(&dc);
-    return Success;
+         x1 += x1Delta;
+         x2 += x2Delta;
+     }
+
+     TkGlfwEndDraw(&dc);
 }
 
 /*
@@ -418,20 +415,28 @@ TkpGetShadows(
         darkColor.blue = (unsigned short)(b * darkFactor);
 
         /* Create light color. */
-        tmp1 = (int)(r * lightFactor);
-        if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;
-        tmp2 = (MAX_INTENSITY + r) / 2;
-        lightColor.red = (tmp1 > tmp2) ? tmp1 : tmp2;
+        int result;
 
-        tmp1 = (int)(g * lightFactor);
-        if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;
-        tmp2 = (MAX_INTENSITY + g) / 2;
-        lightColor.green = (tmp1 > tmp2) ? tmp1 : tmp2;
-
-        tmp1 = (int)(b * lightFactor);
-        if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;
-        tmp2 = (MAX_INTENSITY + b) / 2;
-        lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
+	   /* Red */
+	   tmp1 = (int)(r * lightFactor);
+	   if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;
+	   tmp2 = (MAX_INTENSITY + r) / 2;
+	   result = (tmp1 > tmp2) ? tmp1 : tmp2;
+	   lightColor.red = (unsigned short)result;
+		
+		/* Green */
+		tmp1 = (int)(g * lightFactor);
+		if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;
+		tmp2 = (MAX_INTENSITY + g) / 2;
+		result = (tmp1 > tmp2) ? tmp1 : tmp2;
+		lightColor.green = (unsigned short)result;
+		
+		/* Blue */
+		tmp1 = (int)(b * lightFactor);
+		if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;
+		tmp2 = (MAX_INTENSITY + b) / 2;
+		result = (tmp1 > tmp2) ? tmp1 : tmp2;
+		lightColor.blue = (unsigned short)result;
 
         /*
          * Allocate the shadow colors - for NanoVG we store them directly.
@@ -464,14 +469,22 @@ TkpGetShadows(
     darkColor.green = (unsigned short)(g * 0.7f);
     darkColor.blue = (unsigned short)(b * 0.7f);
     
-    /* Light shadow - 30% lighter. */
-    lightColor.red = (unsigned short)(r * 1.3f);
-    if (lightColor.red > MAX_INTENSITY) lightColor.red = MAX_INTENSITY;
-    lightColor.green = (unsigned short)(g * 1.3f);
-    if (lightColor.green > MAX_INTENSITY) lightColor.green = MAX_INTENSITY;
-    lightColor.blue = (unsigned short)(b * 1.3f);
-    if (lightColor.blue > MAX_INTENSITY) lightColor.blue = MAX_INTENSITY;
-    
+	/* Light shadow - 30% lighter. */
+	int tmp;
+
+	/* Light shadow - 30% lighter. */
+	tmp = (int)(r * 1.3f);
+	if (tmp > MAX_INTENSITY) tmp = MAX_INTENSITY;
+	lightColor.red = (unsigned short)tmp;
+	
+	tmp = (int)(g * 1.3f);
+	if (tmp > MAX_INTENSITY) tmp = MAX_INTENSITY;
+	lightColor.green = (unsigned short)tmp;
+	
+	tmp = (int)(b * 1.3f);
+	if (tmp > MAX_INTENSITY) tmp = MAX_INTENSITY;
+	lightColor.blue = (unsigned short)tmp;
+
     borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
     borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
     
@@ -480,40 +493,6 @@ TkpGetShadows(
     borderPtr->lightGC = (GC)1;
 }
 
-/*
- * Helper functions for NanoVG integration.
- */
-
-static NVGcolor
-ColorToNVGColor(XColor *color)
-{
-    if (!color) return nvgRGB(0, 0, 0);
-    
-    /* Convert XColor (0-65535) to NVGcolor (0.0-1.0). */
-    return nvgRGBf(
-        color->red / 65535.0f,
-        color->green / 65535.0f,
-        color->blue / 65535.0f
-    );
-}
-
-static NVGcolor
-GetShadowColor(NVGcolor base, float factor)
-{
-    /* Multiply each component by factor, clamping to [0,1]. */
-    float r = base.r * factor;
-    float g = base.g * factor;
-    float b = base.b * factor;
-    
-    if (r > 1.0f) r = 1.0f;
-    if (g > 1.0f) g = 1.0f;
-    if (b > 1.0f) b = 1.0f;
-    if (r < 0.0f) r = 0.0f;
-    if (g < 0.0f) g = 0.0f;
-    if (b < 0.0f) b = 0.0f;
-    
-    return nvgRGBf(r, g, b);
-}
 
 /*
  * Local Variables:
