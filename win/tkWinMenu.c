@@ -1400,7 +1400,7 @@ TkWinHandleMenuEvent(
 		    itemPtr->rcItem.left, itemPtr->rcItem.top,
 		    itemPtr->rcItem.right - itemPtr->rcItem.left,
 		    itemPtr->rcItem.bottom - itemPtr->rcItem.top,
-		    0, drawingParameters);
+		    false, drawingParameters);
 
 	    Tcl_Free(twdPtr);
 	}
@@ -2663,7 +2663,7 @@ TkpDrawMenuEntry(
     int y,			/* Y-coordinate of topleft of entry */
     int width,			/* Width of the entry rectangle */
     int height,			/* Height of the current rectangle */
-    int strictMotif,		/* Boolean flag */
+    bool strictMotif,		/* Boolean flag */
     int drawingParameters)	/* Whether or not to draw the cascade arrow
 				 * for cascade items and accelerator
 				 * cues. */
