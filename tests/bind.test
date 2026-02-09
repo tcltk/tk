@@ -6986,8 +6986,7 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     set res
 } -cleanup {
 } -result {ok ok ok ok}
-
-test bug-e2418ce5fe-1 {pointer warp relative to the root window of the screen when the Tk root window is unmapped} -setup {
+test bind-34.4 {Pointer warp relative to the root window of the screen when the Tk root window is unmapped. (Ticket e2418ce5fe)} -setup {
     deleteWindows
     if {! [winfo ismapped .]} {
 	wm deiconify .
@@ -7005,8 +7004,7 @@ test bug-e2418ce5fe-1 {pointer warp relative to the root window of the screen wh
 } -cleanup {
     wm deiconify .
 } -result {360 250}
-
-test bug-e2418ce5fe-2 {pointer warp relative to an arbitrary toplevel when the Tk root window is unmapped} -setup {
+test bind-34.5 {Pointer warp relative to an arbitrary toplevel when the Tk root window is unmapped. (Ticket e2418ce5fe)} -setup {
     deleteWindows
     if {! [winfo ismapped .]} {
 	wm deiconify .
