@@ -12,9 +12,6 @@
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 
-#ifdef TK_WAYLAND_DEBUG_EVENTS
-static const char *Tk_EventName[] = { /* ... same as before ... */ };
-#endif
 
 /* Thread-specific data */
 typedef struct ThreadSpecificData {
@@ -159,11 +156,6 @@ TkWaylandNotifyExitHandler(
     if (tsdPtr->heartbeatTimer) {
         Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
         tsdPtr->heartbeatTimer = NULL;
-    }
-
-    if (tsdPtr->waylandInitialized) {
-        glfwTerminate();
-        tsdPtr->waylandInitialized = false;
     }
 
     tsdPtr->initialized = false;
