@@ -304,8 +304,9 @@ Corresponds to the \fB%t\fR substitution for binding scripts.
 \fIboolean\fR must be a boolean value;  it specifies whether
 the screen pointer should be warped as well.
 Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
-\fBButtonRelease\fR, and \fBMotion\fR events.  The pointer will
-only warp to a window if it is mapped.
+\fBButtonRelease\fR, and \fBMotion\fR events.  Pointer warping is only
+supported if it is done relative to the screen's root window or relative to
+a Tk window, provided that it is mapped.
 .\" OPTION: -width
 .TP
 \fB\-width\fI size\fR
