@@ -12,7 +12,7 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
-#include "tkUnixInt.h"          
+#include "tkGlfwInt.h"
 
 #include <fontconfig/fontconfig.h>
 #include <stb_truetype.h>
@@ -25,7 +25,6 @@
 #include <unistd.h>
 
 /* Forward declarations and helpers. */
-static NVGcontext *GetNanoVGContext(Tk_Window tkwin);
 static NVGcolor    GetColorFromGC(GC gc);
 
 
@@ -776,18 +775,17 @@ Tk_DrawChars(
 	TCL_UNUSED(Drawable), 
 	GC gc, 
 	Tk_Font tkfont,
-    const char *text, 
-    Tcl_Size numBytes, 
-    int x, 
-    int y)
+	const char *text, 
+	Tcl_Size numBytes, 
+	int x, 
+	int y)
 {
     UnixFont *uf = (UnixFont *) tkfont;
     
     /* 
-     * Get NanoVG context. TO DO: We need a proper Tk_Window for this.
-     * This should be extracted from the drawable/display.
+     * Get NanoVG context.
      */
-    NVGcontext *vg = GetNanoVGContext(NULL);
+    NVGcontext *vg = TkGlfwGetNVGContext();
     if (!vg) return;
 
     nvgSave(vg);
@@ -1172,7 +1170,7 @@ TkDrawAngledChars(Display *display, Drawable drawable, GC gc, Tk_Font tkfont,
                   const char *source, Tcl_Size numBytes,
                   double x, double y, double angle)
 {
-    NVGcontext *vg = GetNanoVGContext(NULL);
+    NVGcontext *vg = TkGlfwGetNVGContext();
     if (!vg) {
         return;
     }
@@ -1295,28 +1293,6 @@ void
 TkUnixSetXftClipRegion(Region clipRegion)
 {
     /* No-op for NanoVG - clipping handled differently */
-}
-
-/*----------------------------------------------------------------------
- *
- * GetNanoVGContext --
- *
- *	Get NanoVG context for a Tk window (stub implementation).
- *
- * Results:
- *	Returns NULL (needs proper implementation).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
- 
-static NVGcontext *
-GetNanoVGContext(Tk_Window tkwin)
-{
-    /* TO DO: Implement proper way to get NanoVG context from Tk window */
-    return NULL;
 }
 
 /*----------------------------------------------------------------------

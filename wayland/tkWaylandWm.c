@@ -17,6 +17,7 @@
 
 #include "tkInt.h"
 #include "tkPort.h"
+#include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #include <string.h>
 #include <stdlib.h>
@@ -24,7 +25,7 @@
 
 /*
  * Protocol identifiers - these replace X11 Atoms
-. */
+ */
 
 #define WM_DELETE_WINDOW    1
 #define WM_TAKE_FOCUS      2
@@ -117,7 +118,7 @@ typedef struct TkWmInfo {
 
     /*
      * Size and location management.
-     * /
+     */
 
     int width, height;		/* Desired dimensions in pixels or grid units. */
     int x, y;			/* Desired X and Y coordinates. */
@@ -150,6 +151,9 @@ typedef struct TkWmInfo {
     unsigned char *iconDataPtr;	/* Icon image data. */
     GLFWimage *glfwIcon;	/* GLFW icon images. */
     int glfwIconCount;		/* Number of GLFW icon images. */
+    int isMapped;               /* Track if window is mapped */
+    int lastX, lastY;           /* Last known position */
+    int lastWidth, lastHeight;  /* Last known dimensions */
     struct TkWmInfo *nextPtr;	/* Next in list of top-level windows. */
 } WmInfo;
 
@@ -214,15 +218,6 @@ typedef struct TkWmInfo {
 /* Global list of all top-level windows. */
 
 static WmInfo *firstWmPtr = NULL;
-
-/* GLFW callback function pointers. */
-
-static void (*glfwCloseCallback)(GLFWwindow*);
-static void (*glfwFocusCallback)(GLFWwindow*, int);
-static void (*glfwIconifyCallback)(GLFWwindow*, int);
-static void (*glfwMaximizeCallback)(GLFWwindow*, int);
-static void (*glfwFramebufferSizeCallback)(GLFWwindow*, int, int);
-static void (*glfwWindowPosCallback)(GLFWwindow*, int, int);
 
 /* Forward declarations .*/
 
@@ -307,12 +302,6 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 
 /* Forward declarations for GLFW integration. */
-static void		GlfwCloseCallback(GLFWwindow *window);
-static void		GlfwFocusCallback(GLFWwindow *window, int focused);
-static void		GlfwIconifyCallback(GLFWwindow *window, int iconified);
-static void		GlfwMaximizeCallback(GLFWwindow *window, int maximized);
-static void		GlfwFramebufferSizeCallback(GLFWwindow *window, int width, int height);
-static void		GlfwWindowPosCallback(GLFWwindow *window, int x, int y);
 static WmInfo*		FindWmInfoByGlfwWindow(GLFWwindow *window);
 static void		CreateGlfwWindow(TkWindow *winPtr);
 static void		DestroyGlfwWindow(WmInfo *wmPtr);
@@ -320,16 +309,6 @@ static void		ConvertPhotoToGlfwIcon(TkWindow *winPtr, Tk_PhotoHandle photo, int 
 static void		ApplyWindowHints(TkWindow *winPtr);
 static void		HandleProtocol(WmInfo *wmPtr, int protocol);
 static void		ApplyFullscreenState(TkWindow *winPtr);
-
-/* Forward declarations for X event generation. */
-static void		GenerateConfigureEvent(TkWindow *winPtr, int x, int y,
-					       int width, int height, int flags);
-static void		GenerateFocusEvent(TkWindow *winPtr, int focusIn);
-static void		GenerateExposeEvent(TkWindow *winPtr, int x, int y,
-					    int width, int height);
-static void		GenerateMapEvent(TkWindow *winPtr);
-static void		GenerateUnmapEvent(TkWindow *winPtr);
-static void		GenerateActivateEvents(TkWindow *winPtr, int active);
 
 /* Geometry manager type. */
 
@@ -354,7 +333,7 @@ static Tk_GeomMgr wmMgrType = {
  *	A WmInfo structure gets allocated and initialized.
  *
  *--------------------------------------------------------------
-. */
+ */
 
 void
 TkWmNewWindow(
@@ -420,6 +399,11 @@ TkWmNewWindow(
     wmPtr->iconDataPtr = NULL;
     wmPtr->glfwIcon = NULL;
     wmPtr->glfwIconCount = 0;
+    wmPtr->isMapped = 0;
+    wmPtr->lastX = 0;
+    wmPtr->lastY = 0;
+    wmPtr->lastWidth = 0;
+    wmPtr->lastHeight = 0;
     
     wmPtr->nextPtr = firstWmPtr;
     firstWmPtr = wmPtr;
@@ -458,6 +442,7 @@ CreateGlfwWindow(
     TkWindow *parentPtr = (TkWindow *)Tk_Parent((Tk_Window)winPtr);
     int width, height;
     GLFWwindow *share = NULL;
+    Drawable drawable;
     
     if (wmPtr->glfwWindow != NULL) {
 	return;
@@ -483,20 +468,15 @@ CreateGlfwWindow(
     /* Apply window hints before creation. */
     ApplyWindowHints(winPtr);
     
-    /* Create the window. */
-    wmPtr->glfwWindow = glfwCreateWindow(width, height, "", NULL, share);
+    /* Create the window using standardized API. */
+    wmPtr->glfwWindow = TkGlfwCreateWindow(winPtr, width, height, "", &drawable);
     if (wmPtr->glfwWindow == NULL) {
 	Tcl_Panic("Failed to create GLFW window");
 	return;
     }
     
-    /* Set up callbacks. */
-    glfwSetWindowCloseCallback(wmPtr->glfwWindow, GlfwCloseCallback);
-    glfwSetWindowFocusCallback(wmPtr->glfwWindow, GlfwFocusCallback);
-    glfwSetWindowIconifyCallback(wmPtr->glfwWindow, GlfwIconifyCallback);
-    glfwSetWindowMaximizeCallback(wmPtr->glfwWindow, GlfwMaximizeCallback);
-    glfwSetFramebufferSizeCallback(wmPtr->glfwWindow, GlfwFramebufferSizeCallback);
-    glfwSetWindowPosCallback(wmPtr->glfwWindow, GlfwWindowPosCallback);
+    /* Set up callbacks using standardized API. */
+    TkGlfwSetupCallbacks(wmPtr->glfwWindow, winPtr);
     
     /* Set initial properties. */
     UpdateTitle(winPtr);
@@ -516,7 +496,7 @@ CreateGlfwWindow(
 	glfwMaximizeWindow(wmPtr->glfwWindow);
     }
     
-    /* Store user pointer for finding WmInfo later. */
+    /* Store WmInfo pointer for finding later. */
     glfwSetWindowUserPointer(wmPtr->glfwWindow, wmPtr);
 }
 
@@ -544,15 +524,8 @@ DestroyGlfwWindow(
 	return;
     }
     
-    /* Remove callbacks first. */
-    glfwSetWindowCloseCallback(wmPtr->glfwWindow, NULL);
-    glfwSetWindowFocusCallback(wmPtr->glfwWindow, NULL);
-    glfwSetWindowIconifyCallback(wmPtr->glfwWindow, NULL);
-    glfwSetWindowMaximizeCallback(wmPtr->glfwWindow, NULL);
-    glfwSetFramebufferSizeCallback(wmPtr->glfwWindow, NULL);
-    glfwSetWindowPosCallback(wmPtr->glfwWindow, NULL);
-    
-    glfwDestroyWindow(wmPtr->glfwWindow);
+    /* Destroy using standardized API. */
+    TkGlfwDestroyWindow(wmPtr->glfwWindow);
     wmPtr->glfwWindow = NULL;
 }
 
@@ -760,12 +733,10 @@ TkWmDeadWindow(
 
 void
 TkWmSetClass(
-    TkWindow *winPtr)		/* Top-level window. */
+    TCL_UNUSED(TkWindow *))		/* Newly-created top-level window. */
 {
-    /* 
-     * Note: Wayland/GLFW handles window class differently.
-     * This is kept as a no-op for API compatibility.
-     */
+    /* No-op on Wayland. */
+    return;
 }
 
 
@@ -2964,213 +2935,6 @@ WmWithdrawCmd(
 /*
  *--------------------------------------------------------------
  *
- * GlfwCloseCallback --
- *
- *	Called when a GLFW window is requested to close.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Handles WM_DELETE_WINDOW protocol.
- *
- *--------------------------------------------------------------
- */
-
-static void
-GlfwCloseCallback(
-    GLFWwindow *window)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL) {
-	HandleProtocol(wmPtr, WM_DELETE_WINDOW);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GlfwMaximizeCallback --
- *
- *	Called when a GLFW window is maximized or restored.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates window state.
- *
- *--------------------------------------------------------------
- */
-
-static void
-GlfwMaximizeCallback(
-    GLFWwindow *window,
-    int maximized)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL) {
-	wmPtr->attributes.zoomed = maximized;
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GlfwFramebufferSizeCallback --
- *
- *	Called when the framebuffer size changes.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates window geometry and generates ConfigureNotify event.
- *
- *--------------------------------------------------------------
- */
-
-static void
-GlfwFramebufferSizeCallback(
-    GLFWwindow *window,
-    int width,
-    int height)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL) {
-        TkWindow *winPtr = wmPtr->winPtr;
-        winPtr->changes.width = width;
-        winPtr->changes.height = height;
-        
-        /* Update Tk's internal geometry. */
-        Tk_GeometryRequest((Tk_Window)winPtr, width, height);
-        
-        /* Generate ConfigureNotify event for Tk. */
-        GenerateConfigureEvent(winPtr, winPtr->changes.x, winPtr->changes.y,
-                               width, height, 0);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GlfwWindowPosCallback --
- *
- *	Called when the window position changes.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates window position and generates ConfigureNotify event.
- *
- *--------------------------------------------------------------
- */
-
-static void
-GlfwWindowPosCallback(
-    GLFWwindow *window,
-    int x,
-    int y)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL) {
-        TkWindow *winPtr = wmPtr->winPtr;
-        winPtr->changes.x = x;
-        winPtr->changes.y = y;
-        wmPtr->x = x;
-        wmPtr->y = y;
-        
-        /* Generate ConfigureNotify event for Tk. */
-        GenerateConfigureEvent(winPtr, x, y, winPtr->changes.width,
-                               winPtr->changes.height, 0);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GlfwFocusCallback --
- *
- *	Called when a GLFW window gains or loses focus.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Handles WM_TAKE_FOCUS protocol if focused, and generates
- *	FocusIn/FocusOut events.
- *
- *--------------------------------------------------------------
- */
-
-static void
-GlfwFocusCallback(
-    GLFWwindow *window,
-    int focused)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL) {
-        /* Handle WM_TAKE_FOCUS protocol if focused. */
-        if (focused) {
-            HandleProtocol(wmPtr, WM_TAKE_FOCUS);
-        }
-        
-        /* Generate FocusIn/FocusOut events for Tk. */
-        GenerateFocusEvent(wmPtr->winPtr, focused);
-        
-        /* Also generate activate/deactivate events for Tk's internal handling. */
-        GenerateActivateEvents(wmPtr->winPtr, focused);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GlfwIconifyCallback --
- *
- *	Called when a GLFW window is iconified or restored.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates window state and generates Map/Unmap events.
- *
- *--------------------------------------------------------------
- */
-
-static void
-GlfwIconifyCallback(
-    GLFWwindow *window,
-    int iconified)
-{
-    WmInfo *wmPtr = FindWmInfoByGlfwWindow(window);
-    
-    if (wmPtr != NULL) {
-        wmPtr->attributes.zoomed = 0;
-        
-        if (iconified) {
-            /* Window minimized/iconified. */
-            TkpWmSetState(wmPtr->winPtr, IconicState);
-            GenerateUnmapEvent(wmPtr->winPtr);
-        } else {
-            /* Window restored. */
-            TkpWmSetState(wmPtr->winPtr, NormalState);
-            GenerateMapEvent(wmPtr->winPtr);
-        }
-    }
-}
-
-
-/*
- *--------------------------------------------------------------
- *
  * FindWmInfoByGlfwWindow --
  *
  *	Finds the WmInfo structure for a GLFW window.
@@ -3379,289 +3143,6 @@ HandleProtocol(
     if (Tcl_GlobalEval(interp, protPtr->command) != TCL_OK) {
 	Tcl_BackgroundError(interp);
     }
-}
-
-
-/* Generate X Events. */
-
-/*
- *–––--------------------------------------------------------------–
- *
- * GenerateConfigureEvent –
- * 
- *   Generates a ConfigureNotify event for window geometry changes.
- * 
- * Results:
- *   None.
- * 
- * Side effects:
- *   ConfigureNotify event is queued.
- * 
- *--------------------------------------------------------------
- */
-
-static void
-GenerateConfigureEvent(
-		       TkWindow *winPtr,
-		       int x, int y,
-		       int width, int height,
-		       int flags)
-{
-    XEvent event;
-    WmInfo *wmPtr = winPtr*>wmInfoPtr;
-
-
-    if (winPtr == NULL || wmPtr == NULL) {
-	return;
-    }
-
-    memset(&event, 0, sizeof(XEvent));
-    event.type = ConfigureNotify;
-    event.xconfigure.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-    event.xconfigure.send_event = False;
-    event.xconfigure.display = Tk_Display(winPtr);
-    event.xconfigure.event = Tk_WindowId(winPtr);
-    event.xconfigure.window = Tk_WindowId(winPtr);
-    event.xconfigure.x = x;
-    event.xconfigure.y = y;
-    event.xconfigure.width = width;
-    event.xconfigure.height = height;
-    event.xconfigure.border_width = winPtr*>changes.border_width;
-    event.xconfigure.above = None;
-    event.xconfigure.override_redirect = winPtr*>atts.override_redirect;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    /* Update internal state. */
-    winPtr*>changes.x = x;
-    winPtr*>changes.y = y;
-    winPtr*>changes.width = width;
-    winPtr*>changes.height = height;
-
-    wmPtr*>lastX = x;
-    wmPtr*>lastY = y;
-    wmPtr*>lastWidth = width;
-    wmPtr*>lastHeight = height;
-
-
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GenerateFocusEvent –
- * 
- *   Generates FocusIn or FocusOut events.
- * 
- * Results:
- *   None.
- * 
- * Side effects:
- *   Focus event is queued.
- * 
- *--------------------------------------------------------------–
- */
-
-static void
-GenerateFocusEvent(
-		   TkWindow *winPtr,
-		   int focusIn)
-{
-    XEvent event;
-
-
-    if (winPtr == NULL) {
-	return;
-    }
-
-    memset(&event, 0, sizeof(XEvent));
-    event.type = focusIn ? FocusIn : FocusOut;
-    event.xfocus.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-    event.xfocus.send_event = False;
-    event.xfocus.display = Tk_Display(winPtr);
-    event.xfocus.window = Tk_WindowId(winPtr);
-    event.xfocus.mode = NotifyNormal;
-    event.xfocus.detail = NotifyAncestor;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GenerateExposeEvent –
- * 
- *   Generates an Expose event for a damaged region.
- * 
- * Results:
- *   None.
- * 
- * Side effects:
- *   Expose event is queued.
- * 
- *--------------------------------------------------------------
- */
-
-static void
-GenerateExposeEvent(
-		    TkWindow *winPtr,
-		    int x, int y,
-		    int width, int height)
-{
-    XEvent event;
-
-
-    if (winPtr == NULL || !Tk_IsMapped((Tk_Window)winPtr)) {
-	return;
-    }
-
-    memset(&event, 0, sizeof(XEvent));
-    event.type = Expose;
-    event.xexpose.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-    event.xexpose.send_event = False;
-    event.xexpose.display = Tk_Display(winPtr);
-    event.xexpose.window = Tk_WindowId(winPtr);
-    event.xexpose.x = x;
-    event.xexpose.y = y;
-    event.xexpose.width = width;
-    event.xexpose.height = height;
-    event.xexpose.count = 0;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-
-}
-
-/*
- *--------------------------------------------------------------*
- * GenerateMapEvent –
- * 
- * Generates a MapNotify event.
- * 
- * Results:
- *   None.
- * 
- * Side effects:
- *   MapNotify event is queued, window marked as mapped.
- * 
- *--------------------------------------------------------------
- */
-
-static void
-GenerateMapEvent(
-		 TkWindow *winPtr)
-{
-    XEvent event;
-    WmInfo *wmPtr = winPtr*>wmInfoPtr;
-
-
-    if (winPtr == NULL || wmPtr == NULL) {
-	return;
-    }
-
-    if (wmPtr*>isMapped) {
-	return;  /* Already mapped. */
-    }
-
-    memset(&event, 0, sizeof(XEvent));
-    event.type = MapNotify;
-    event.xmap.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-    event.xmap.send_event = False;
-    event.xmap.display = Tk_Display(winPtr);
-    event.xmap.event = Tk_WindowId(winPtr);
-    event.xmap.window = Tk_WindowId(winPtr);
-    event.xmap.override_redirect = winPtr*>atts.override_redirect;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    wmPtr*>isMapped = 1;
-    winPtr*>flags |= TK_MAPPED;
-
-
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GenerateUnmapEvent –
- * 
- * Generates an UnmapNotify event.
- * 
- * Results:
- *   None.
- * 
- * Side effects:
- *   UnmapNotify event is queued, window marked as unmapped.
- * 
- *--------------------------------------------------------------
- */
-
-static void
-GenerateUnmapEvent(
-		   TkWindow *winPtr)
-{
-    XEvent event;
-    WmInfo *wmPtr = winPtr*>wmInfoPtr;
-
-
-    if (winPtr == NULL || wmPtr == NULL) {
-	return;
-    }
-
-    if (!wmPtr*>isMapped) {
-	return;  /* Already unmapped. */
-    }
-
-    memset(&event, 0, sizeof(XEvent));
-    event.type = UnmapNotify;
-    event.xunmap.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-    event.xunmap.send_event = False;
-    event.xunmap.display = Tk_Display(winPtr);
-    event.xunmap.event = Tk_WindowId(winPtr);
-    event.xunmap.window = Tk_WindowId(winPtr);
-    event.xunmap.from_configure = False;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    wmPtr*>isMapped = 0;
-    winPtr*>flags &= ~TK_MAPPED;
-
-
-}
-
-/*
- *--------------------------------------------------------------
- *
- * GenerateActivateEvents –
- * 
- * Generates ActivateNotify and DeactivateNotify events.
- *   These are Tk-specific virtual events.
- * 
- * Results:
- *   None.
- * 
- * Side effects:
- *   Activate/Deactivate events are generated via TkGenerateActivateEvents.
- * 
- *--------------------------------------------------------------
- */
-
-static void
-GenerateActivateEvents(
-		       TkWindow *winPtr,
-		       int active)
-{
-    if (winPtr == NULL) {
-	return;
-    }
-
-
-    /* Use Tk's built*in activate event generator. */
-    TkGenerateActivateEvents(winPtr, active);
-
-
 }
 
 /*
@@ -4172,7 +3653,9 @@ TopLevelReqProc(
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData    wmPtr->flags |= WM_UPDATE_PENDING;
+	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	wmPtr->flags |= WM_UPDATE_PENDING;
+    }
 }
 
 /*
