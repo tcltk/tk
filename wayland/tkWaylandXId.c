@@ -3,6 +3,7 @@
  *
  * Copyright © 1993 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -215,17 +216,17 @@ Tk_FreePixmap(
     
     /* Free resources based on type. */
     switch (pix->type) {
-        case 0: /* Image type */
+        case 0: /* Image type. */
             if (pix->imageId != 0) {
                 nvgDeleteImage(nvgContext, pix->imageId);
             }
             break;
-       case 2: /* Framebuffer type */
+       case 2: /* Framebuffer type. */
 		    if (pix->fb != NULL) {
 		        nvgluDeleteFramebuffer(pix->fb);
 		    }
 		    break;
-        case 1: /* Paint type - nothing to free */
+        case 1: /* Paint type - nothing to free. */
         default:
             break;
     }
@@ -395,12 +396,12 @@ Tk_CleanupPixmapStore(void)
         TkPixmap *pix = &pixmapStore[i];
         
         switch (pix->type) {
-            case 0: /* Image type */
+            case 0: /* Image type. */
                 if (pix->imageId != 0) {
                     nvgDeleteImage(nvgContext, pix->imageId);
                 }
                 break;
-			 case 2: /* Framebuffer type */
+			 case 2: /* Framebuffer type. */
 			    if (pix->fb != NULL) {
 			        nvgluDeleteFramebuffer(pix->fb);
 			    }

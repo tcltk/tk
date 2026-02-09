@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tk3d.h"
+#include <GLES3/gl3.h>
 #include "nanovg.h"
 #include "tkGlfwInt.h"
 
@@ -47,7 +48,7 @@ TkpGetBorder(void)
 {
     WaylandBorder *borderPtr = (WaylandBorder *)Tcl_Alloc(sizeof(WaylandBorder));
     
-    /* Initialize solidColor to black */
+    /* Initialize solidColor to black. */
     borderPtr->solidColor = nvgRGB(0, 0, 0);
     return (TkBorder *) borderPtr;
 }
@@ -129,7 +130,7 @@ Tk_3DVerticalBevel(
      TkpGetShadows(borderPtr, tkwin);
      }
 
-     /* Use the background GC for drawing */
+     /* Use the background GC for drawing. */
      gc = borderPtr->bgGC;
 
      LastKnownRequestProcessed(display)++;
@@ -173,7 +174,7 @@ Tk_3DVerticalBevel(
          if (!leftBevel && (width & 1)) {
          half++;
          }
-         nvgBeginPath(dc.vg);  /* Fixed: was 'vg' */
+         nvgBeginPath(dc.vg); 
          nvgRect(dc.vg, x, y, half, height);
          nvgFillColor(dc.vg, leftColor);
          nvgFill(dc.vg);
@@ -260,13 +261,13 @@ edges
      TkpGetShadows(borderPtr, tkwin);
      }
 
-     /* Use the background GC for drawing */
+     /* Use the background GC for drawing. */
      gc = borderPtr->bgGC;
 
      LastKnownRequestProcessed(display)++;
 
      if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
-         return;  /* void function - just return */
+         return;  /* Void function - just return. */
      }
 
      /* Convert X colors to NVG colors. */
@@ -277,9 +278,8 @@ TkGlfwXColorToNVG(borderPtr->lightColorPtr) : bgColor;
   TkGlfwXColorToNVG(borderPtr->darkColorPtr) : bgColor;
 
      /*
-      * Compute a color for the top half of the bevel and a color for
-the bottom half
-      * (they're the same in many cases).
+      * Compute a color for the top half of the bevel and a color 
+	  * for the bottom half  (they're the same in many cases).
       */
      switch (relief) {
      case TK_RELIEF_FLAT:
@@ -297,7 +297,7 @@ the bottom half
          bottomColor = darkColor;
          break;
      case TK_RELIEF_SOLID:
-         nvgBeginPath(dc.vg);  /* Fixed: was 'vg' */
+         nvgBeginPath(dc.vg);
          nvgRect(dc.vg, x, y, width, height);
          nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
          nvgFill(dc.vg);

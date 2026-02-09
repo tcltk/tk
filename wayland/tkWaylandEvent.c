@@ -2,7 +2,7 @@
  * tkWaylandEvent.c --
  *
  *	This file implements an event management functionality for the Wayland 
- *  backend of Tk.
+ *  backend of Tk. (GLFW adaptation)
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2001-2009 Apple Inc.
@@ -17,6 +17,7 @@
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
+#include <GLES3/gl3.h>
 #include <errno.h>
 #include <signal.h>
 #include <time.h>
@@ -46,20 +47,20 @@ unsigned int glfwModifierState = 0;
 MODULE_SCOPE void
 TkGlfwSetupCallbacks(
     GLFWwindow *glfwWindow,
-    TkWindow *tkWin)
+    TCL_UNUSED(TkWindow *tkWin))
 {
-    glfwSetWindowCloseCallback(glfwWindow, TkGlfwWindowCloseCallback);
-    glfwSetWindowSizeCallback(glfwWindow, TkGlfwWindowSizeCallback);
-    glfwSetFramebufferSizeCallback(glfwWindow, TkGlfwFramebufferSizeCallback);
-    glfwSetWindowPosCallback(glfwWindow, TkGlfwWindowPosCallback);
-    glfwSetWindowFocusCallback(glfwWindow, TkGlfwWindowFocusCallback);
-    glfwSetWindowIconifyCallback(glfwWindow, TkGlfwWindowIconifyCallback);
-    glfwSetWindowMaximizeCallback(glfwWindow, TkGlfwWindowMaximizeCallback);
-    glfwSetCursorPosCallback(glfwWindow, TkGlfwCursorPosCallback);
-    glfwSetMouseButtonCallback(glfwWindow, TkGlfwMouseButtonCallback);
-    glfwSetScrollCallback(glfwWindow, TkGlfwScrollCallback);
-    glfwSetKeyCallback(glfwWindow, TkGlfwKeyCallback);
-    glfwSetCharCallback(glfwWindow, TkGlfwCharCallback);
+    glfwSetWindowCloseCallback     (glfwWindow, TkGlfwWindowCloseCallback);
+    glfwSetWindowSizeCallback      (glfwWindow, TkGlfwWindowSizeCallback);
+    glfwSetFramebufferSizeCallback (glfwWindow, TkGlfwFramebufferSizeCallback);
+    glfwSetWindowPosCallback       (glfwWindow, TkGlfwWindowPosCallback);
+    glfwSetWindowFocusCallback     (glfwWindow, TkGlfwWindowFocusCallback);
+    glfwSetWindowIconifyCallback   (glfwWindow, TkGlfwWindowIconifyCallback);
+    glfwSetWindowMaximizeCallback  (glfwWindow, TkGlfwWindowMaximizeCallback);
+    glfwSetCursorPosCallback       (glfwWindow, TkGlfwCursorPosCallback);
+    glfwSetMouseButtonCallback     (glfwWindow, TkGlfwMouseButtonCallback);
+    glfwSetScrollCallback          (glfwWindow, TkGlfwScrollCallback);
+    glfwSetKeyCallback             (glfwWindow, TkGlfwKeyCallback);
+    glfwSetCharCallback            (glfwWindow, TkGlfwCharCallback);
 }
 
 /*
@@ -77,14 +78,14 @@ TkGlfwSetupCallbacks(
  *
  *----------------------------------------------------------------------
  */
-
+ 
+ 
 MODULE_SCOPE void
 TkGlfwWindowCloseCallback(GLFWwindow *window)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     
     if (winPtr) {
-        /* Generate destroy event - Tk will handle WM_DELETE_WINDOW protocol. */
         Tk_DestroyWindow((Tk_Window)winPtr);
     }
 }
@@ -118,27 +119,24 @@ TkGlfwWindowSizeCallback(
         return;
     }
 
-    /* Update mapping. */
     TkGlfwUpdateWindowSize(window, width, height);
 
-    /* Update Tk geometry. */
-    winPtr->changes.width = width;
+    winPtr->changes.width  = width;
     winPtr->changes.height = height;
 
-    /* Generate ConfigureNotify event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = ConfigureNotify;
-    event.xconfigure.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xconfigure.send_event = False;
-    event.xconfigure.display = winPtr->display;
-    event.xconfigure.event = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.x = winPtr->changes.x;
-    event.xconfigure.y = winPtr->changes.y;
-    event.xconfigure.width = width;
-    event.xconfigure.height = height;
-    event.xconfigure.border_width = winPtr->changes.border_width;
-    event.xconfigure.above = None;
+    event.xconfigure.serial          = LastKnownRequestProcessed(winPtr->display);
+    event.xconfigure.send_event       = False;
+    event.xconfigure.display          = winPtr->display;
+    event.xconfigure.event            = Tk_WindowId((Tk_Window)winPtr);
+    event.xconfigure.window           = Tk_WindowId((Tk_Window)winPtr);
+    event.xconfigure.x                = winPtr->changes.x;
+    event.xconfigure.y                = winPtr->changes.y;
+    event.xconfigure.width            = width;
+    event.xconfigure.height           = height;
+    event.xconfigure.border_width     = winPtr->changes.border_width;
+    event.xconfigure.above            = None;
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -162,7 +160,7 @@ TkGlfwWindowSizeCallback(
 
 MODULE_SCOPE void
 TkGlfwFramebufferSizeCallback(
-    GLFWwindow *window,
+    TCL_UNUSED(GLFWwindow *window),
     int width,
     int height)
 {
@@ -184,7 +182,7 @@ TkGlfwFramebufferSizeCallback(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwWindowPosCallback(
     GLFWwindow *window,
@@ -198,24 +196,22 @@ TkGlfwWindowPosCallback(
         return;
     }
 
-    /* Update Tk geometry. */
     winPtr->changes.x = xpos;
     winPtr->changes.y = ypos;
 
-    /* Generate ConfigureNotify event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = ConfigureNotify;
-    event.xconfigure.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xconfigure.send_event = False;
-    event.xconfigure.display = winPtr->display;
-    event.xconfigure.event = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.x = xpos;
-    event.xconfigure.y = ypos;
-    event.xconfigure.width = winPtr->changes.width;
-    event.xconfigure.height = winPtr->changes.height;
-    event.xconfigure.border_width = winPtr->changes.border_width;
-    event.xconfigure.above = None;
+    event.xconfigure.serial          = LastKnownRequestProcessed(winPtr->display);
+    event.xconfigure.send_event       = False;
+    event.xconfigure.display          = winPtr->display;
+    event.xconfigure.event            = Tk_WindowId((Tk_Window)winPtr);
+    event.xconfigure.window           = Tk_WindowId((Tk_Window)winPtr);
+    event.xconfigure.x                = xpos;
+    event.xconfigure.y                = ypos;
+    event.xconfigure.width            = winPtr->changes.width;
+    event.xconfigure.height           = winPtr->changes.height;
+    event.xconfigure.border_width     = winPtr->changes.border_width;
+    event.xconfigure.above            = None;
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -236,7 +232,7 @@ TkGlfwWindowPosCallback(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwWindowFocusCallback(
     GLFWwindow *window,
@@ -249,21 +245,20 @@ TkGlfwWindowFocusCallback(
         return;
     }
 
-    /* Generate focus event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = focused ? FocusIn : FocusOut;
-    event.xfocus.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xfocus.send_event = False;
-    event.xfocus.display = winPtr->display;
-    event.xfocus.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xfocus.mode = NotifyNormal;
-    event.xfocus.detail = NotifyAncestor;
+    event.xfocus.serial     = LastKnownRequestProcessed(winPtr->display);
+    event.xfocus.send_event  = False;
+    event.xfocus.display     = winPtr->display;
+    event.xfocus.window      = Tk_WindowId((Tk_Window)winPtr);
+    event.xfocus.mode        = NotifyNormal;
+    event.xfocus.detail      = NotifyAncestor;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Also generate activate/deactivate events. */
     TkGenerateActivateEvents(winPtr, focused);
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -281,6 +276,7 @@ TkGlfwWindowFocusCallback(
  *----------------------------------------------------------------------
  */
 
+
 MODULE_SCOPE void
 TkGlfwWindowIconifyCallback(
     GLFWwindow *window,
@@ -294,27 +290,25 @@ TkGlfwWindowIconifyCallback(
     }
 
     if (iconified) {
-        /* Generate UnmapNotify. */
         memset(&event, 0, sizeof(XEvent));
         event.type = UnmapNotify;
-        event.xunmap.serial = LastKnownRequestProcessed(winPtr->display);
-        event.xunmap.send_event = False;
-        event.xunmap.display = winPtr->display;
-        event.xunmap.event = Tk_WindowId((Tk_Window)winPtr);
-        event.xunmap.window = Tk_WindowId((Tk_Window)winPtr);
+        event.xunmap.serial     = LastKnownRequestProcessed(winPtr->display);
+        event.xunmap.send_event  = False;
+        event.xunmap.display     = winPtr->display;
+        event.xunmap.event       = Tk_WindowId((Tk_Window)winPtr);
+        event.xunmap.window      = Tk_WindowId((Tk_Window)winPtr);
         event.xunmap.from_configure = False;
 
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         winPtr->flags &= ~TK_MAPPED;
     } else {
-        /* Generate MapNotify. */
         memset(&event, 0, sizeof(XEvent));
         event.type = MapNotify;
-        event.xmap.serial = LastKnownRequestProcessed(winPtr->display);
-        event.xmap.send_event = False;
-        event.xmap.display = winPtr->display;
-        event.xmap.event = Tk_WindowId((Tk_Window)winPtr);
-        event.xmap.window = Tk_WindowId((Tk_Window)winPtr);
+        event.xmap.serial       = LastKnownRequestProcessed(winPtr->display);
+        event.xmap.send_event    = False;
+        event.xmap.display       = winPtr->display;
+        event.xmap.event         = Tk_WindowId((Tk_Window)winPtr);
+        event.xmap.window        = Tk_WindowId((Tk_Window)winPtr);
         event.xmap.override_redirect = winPtr->atts.override_redirect;
 
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -337,20 +331,13 @@ TkGlfwWindowIconifyCallback(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwWindowMaximizeCallback(
-    GLFWwindow *window,
-    int maximized)
+    TCL_UNUSED(GLFWwindow *window),
+    TCL_UNUSED(int maximized))
 {
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    
-    if (!winPtr || !winPtr->wmInfoPtr) {
-        return;
-    }
-
-    /* Update WM state - implementation depends on WM integration */
-    /* This is handled in tkWaylandWm.c */
+    /* Currently a no-op — implemented in tkWaylandWm.c. */
 }
 
 /*
@@ -368,7 +355,7 @@ TkGlfwWindowMaximizeCallback(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwCursorPosCallback(
     GLFWwindow *window,
@@ -381,29 +368,27 @@ TkGlfwCursorPosCallback(
     static double lastX = -1, lastY = -1;
 
     if (!winPtr) {
-        /* Mouse left all Tk windows. */
         if (lastWindow) {
             TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
             if (lastWinPtr) {
-                /* Send LeaveNotify for previous window. */
                 memset(&event, 0, sizeof(XEvent));
                 event.type = LeaveNotify;
-                event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display);
-                event.xcrossing.send_event = False;
-                event.xcrossing.display = lastWinPtr->display;
-                event.xcrossing.window = Tk_WindowId((Tk_Window)lastWinPtr);
-                event.xcrossing.root = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
-                event.xcrossing.subwindow = None;
-                event.xcrossing.time = CurrentTime;
-                event.xcrossing.x = (int)lastX;
-                event.xcrossing.y = (int)lastY;
-                event.xcrossing.x_root = lastWinPtr->changes.x + (int)lastX;
-                event.xcrossing.y_root = lastWinPtr->changes.y + (int)lastY;
-                event.xcrossing.mode = NotifyNormal;
-                event.xcrossing.detail = NotifyAncestor;
+                event.xcrossing.serial     = LastKnownRequestProcessed(lastWinPtr->display);
+                event.xcrossing.send_event  = False;
+                event.xcrossing.display     = lastWinPtr->display;
+                event.xcrossing.window      = Tk_WindowId((Tk_Window)lastWinPtr);
+                event.xcrossing.root        = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
+                event.xcrossing.subwindow   = None;
+                event.xcrossing.time        = CurrentTime;
+                event.xcrossing.x           = (int)lastX;
+                event.xcrossing.y           = (int)lastY;
+                event.xcrossing.x_root      = lastWinPtr->changes.x + (int)lastX;
+                event.xcrossing.y_root      = lastWinPtr->changes.y + (int)lastY;
+                event.xcrossing.mode        = NotifyNormal;
+                event.xcrossing.detail      = NotifyAncestor;
                 event.xcrossing.same_screen = True;
-                event.xcrossing.focus = False;
-                event.xcrossing.state = glfwButtonState | glfwModifierState;
+                event.xcrossing.focus       = False;
+                event.xcrossing.state       = glfwButtonState | glfwModifierState;
                 Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
             }
             lastWindow = NULL;
@@ -411,7 +396,7 @@ TkGlfwCursorPosCallback(
         return;
     }
 
-    /* Check if mouse entered/exited window. */
+  /* Check if mouse entered/exited window. */
     if (lastWindow != window) {
         /* Send LeaveNotify for previous window if any. */
         if (lastWindow) {
@@ -488,6 +473,7 @@ TkGlfwCursorPosCallback(
     lastY = ypos;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -503,7 +489,7 @@ TkGlfwCursorPosCallback(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwMouseButtonCallback(
     GLFWwindow *window,
@@ -521,10 +507,10 @@ TkGlfwMouseButtonCallback(
         return;
     }
 
-    /* Get cursor position */
+    /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Update modifier state */
+    /* Update modifier state. */
     glfwModifierState = 0;
 
     if (mods & GLFW_MOD_SHIFT)
@@ -539,7 +525,7 @@ TkGlfwMouseButtonCallback(
     if (mods & GLFW_MOD_SUPER)
         glfwModifierState |= Mod4Mask;
 
-    /* Map GLFW button → X11 button and mask */
+    /* Map GLFW button → X11 button and mask. */
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
             xbutton = Button1;
@@ -557,13 +543,13 @@ TkGlfwMouseButtonCallback(
             break;
 
         default:
-            /* Buttons 4+ are typically scroll wheel, but map safely */
+            /* Buttons 4+ are typically scroll wheel, but map safely. */
             xbutton = button + 1;
             buttonMask = 0;
             break;
     }
 
-    /* Update button state */
+    /* Update button state. */
     if (action == GLFW_PRESS) {
         glfwButtonState |= buttonMask;
         event.type = ButtonPress;
@@ -689,7 +675,7 @@ TkGlfwScrollCallback(
 MODULE_SCOPE void
 TkGlfwKeyCallback(
     GLFWwindow *window,
-    int key,
+    TCL_UNUSED(int key),
     int scancode,
     int action,
     int mods)
@@ -702,33 +688,28 @@ TkGlfwKeyCallback(
         return;
     }
 
-    /* Skip repeat events for now. */
     if (action == GLFW_REPEAT) {
         return;
     }
 
-    /* Update keyboard modifiers for xkbcommon. */
     TkWaylandUpdateKeyboardModifiers(mods);
 
-    /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Generate key event */
     memset(&event, 0, sizeof(XEvent));
     event.type = (action == GLFW_PRESS) ? KeyPress : KeyRelease;
-    event.xkey.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xkey.send_event = False;
-    event.xkey.display = winPtr->display;
-    event.xkey.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
-    event.xkey.subwindow = None;
-    event.xkey.time = CurrentTime;
-    event.xkey.x = (int)xpos;
-    event.xkey.y = (int)ypos;
-    event.xkey.x_root = winPtr->changes.x + (int)xpos;
-    event.xkey.y_root = winPtr->changes.y + (int)ypos;
+    event.xkey.serial     = LastKnownRequestProcessed(winPtr->display);
+    event.xkey.send_event  = False;
+    event.xkey.display     = winPtr->display;
+    event.xkey.window      = Tk_WindowId((Tk_Window)winPtr);
+    event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
+    event.xkey.subwindow   = None;
+    event.xkey.time        = CurrentTime;
+    event.xkey.x           = (int)xpos;
+    event.xkey.y           = (int)ypos;
+    event.xkey.x_root      = winPtr->changes.x + (int)xpos;
+    event.xkey.y_root      = winPtr->changes.y + (int)ypos;
     
-    /* Convert GLFW modifiers to X11 state. */
     event.xkey.state = 0;
     if (mods & GLFW_MOD_SHIFT)     event.xkey.state |= ShiftMask;
     if (mods & GLFW_MOD_CONTROL)   event.xkey.state |= ControlMask;
@@ -737,8 +718,7 @@ TkGlfwKeyCallback(
     if (mods & GLFW_MOD_CAPS_LOCK) event.xkey.state |= LockMask;
     if (mods & GLFW_MOD_NUM_LOCK)  event.xkey.state |= Mod2Mask;
     
-    /* Use scancode as keycode - xkbcommon will handle the translation. */
-    event.xkey.keycode = scancode;
+    event.xkey.keycode     = scancode;
     event.xkey.same_screen = True;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -759,13 +739,12 @@ TkGlfwKeyCallback(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwCharCallback(
-    GLFWwindow *window,
+    TCL_UNUSED(GLFWwindow *window),
     unsigned int codepoint)
 {
-    /* Store the character for retrieval by TkpGetString(). */
     TkWaylandStoreCharacterInput(codepoint);
 }
 
@@ -773,7 +752,7 @@ TkGlfwCharCallback(
 /*
  *----------------------------------------------------------------------
  *
- * Xsync --
+ * XSync --
  *
  *      Supports "update" command, kept here for compatibility.
  *
@@ -791,24 +770,9 @@ XSync(
     Display *display,
     TCL_UNUSED(Bool))
 {
-    /*
-     *  The main use of XSync is by the update command, which alternates
-     *  between running an event loop to process all events without waiting and
-     *  calling XSync on all displays until no events are left.  On X11 the
-     *  call to XSync might cause the window manager to generate more events
-     *  which would then get processed. Apparently this process stabilizes on
-     *  X11, leaving the window manager in a state where all events have been
-     *  generated and no additional events can be genereated by updating widgets.
-     *
-     *  It is not clear what the Wayland port should do when XSync is called, but
-     *  currently the best option seems to be to do nothing.  (See ticket
-     *  [da5f2266df].)
-     */
-
     LastKnownRequestProcessed(display)++;
     return 0;
 }
-
 
 /* Local Variables:
  * mode: c

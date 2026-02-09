@@ -6,13 +6,14 @@
  *
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Ported to Wayland/GLFW in 2024
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkGlfwint.h"
+#include "tkInt.h"
+#include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 
 typedef struct {
@@ -26,526 +27,7 @@ typedef struct {
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
-static int		GenerateButtonEvent(MouseEventData *medPtr);
-
-/* GLFW callback functions. */
-static void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
-static void glfwCursorPosCallback(GLFWwindow* window, double xpos, double ypos);
-static void glfwCursorEnterCallback(GLFWwindow* window, int entered);
-static void glfwScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandInitializeMouseHandling --
- *
- *	Initialize GLFW mouse callbacks for a window.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Sets up GLFW callbacks.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandInitializeMouseHandling(
-    GLFWwindow* glfwWindow,
-    TkWindow* tkWindow)
-{
-    /* Store the mapping. */
-    windowMappings = (WindowMapping*)realloc(windowMappings, 
-        (numWindowMappings + 1) * sizeof(WindowMapping));
-    windowMappings[numWindowMappings].glfwWindow = glfwWindow;
-    windowMappings[numWindowMappings].tkWindow = tkWindow;
-    numWindowMappings++;
-    
-    /* Set up GLFW callbacks. */
-    glfwSetMouseButtonCallback(glfwWindow, glfwMouseButtonCallback);
-    glfwSetCursorPosCallback(glfwWindow, glfwCursorPosCallback);
-    glfwSetCursorEnterCallback(glfwWindow, glfwCursorEnterCallback);
-    glfwSetScrollCallback(glfwWindow, glfwScrollCallback);
-    
-    /* Store user pointer to Tk window. */
-    glfwSetWindowUserPointer(glfwWindow, tkWindow);
-}
-
-
-
-/* GLFW Callback Implementations */
-
-/*
- *----------------------------------------------------------------------
- *
- * glfwMouseButtonCallback --
- *
- *	GLFW mouse button callback.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Processes mouse button events.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-glfwMouseButtonCallback(
-    GLFWwindow* window,
-    int button,
-    int action,
-    int mods)
-{
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    
-    WaylandProcessMouseEvent(window, GLFW_MOUSE_BUTTON, button, action, mods, 
-                           xpos, ypos, 0.0, 0.0);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * glfwCursorPosCallback --
- *
- *	GLFW cursor position callback.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Processes mouse motion events.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-glfwCursorPosCallback(
-    GLFWwindow* window,
-    double xpos,
-    double ypos)
-{
-    /* Get current mouse button states. */
-    int mods = 0;
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        mods |= GLFW_MOD_MOUSE_BUTTON_LEFT;
-    }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        mods |= GLFW_MOD_MOUSE_BUTTON_RIGHT;
-    }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
-        mods |= GLFW_MOD_MOUSE_BUTTON_MIDDLE;
-    }
-    
-    /* Get keyboard modifiers. */
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
-        mods |= GLFW_MOD_SHIFT;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
-        mods |= GLFW_MOD_CONTROL;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS) {
-        mods |= GLFW_MOD_ALT;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SUPER) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_SUPER) == GLFW_PRESS) {
-        mods |= GLFW_MOD_SUPER;
-    }
-    
-    WaylandProcessMouseEvent(window, GLFW_CURSOR_MOVED, 0, 0, mods, 
-                           xpos, ypos, 0.0, 0.0);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * glfwCursorEnterCallback --
- *
- *	GLFW cursor enter/leave callback.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Processes enter/leave events.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-glfwCursorEnterCallback(
-    GLFWwindow* window,
-    int entered)
-{
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    
-    int mods = 0;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
-        mods |= GLFW_MOD_SHIFT;
-    }
-    
-    if (entered) {
-        WaylandProcessMouseEvent(window, GLFW_CURSOR_ENTER, 0, 0, mods, 
-                               xpos, ypos, 0.0, 0.0);
-    } else {
-        WaylandProcessMouseEvent(window, GLFW_CURSOR_LEAVE, 0, 0, mods, 
-                               xpos, ypos, 0.0, 0.0);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * glfwScrollCallback --
- *
- *	GLFW scroll callback.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Processes scroll events.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-glfwScrollCallback(
-    GLFWwindow* window,
-    double xoffset,
-    double yoffset)
-{
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    
-    int mods = 0;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
-        mods |= GLFW_MOD_SHIFT;
-    }
-    
-    WaylandProcessMouseEvent(window, GLFW_SCROLL, 0, 0, mods, 
-                           xpos, ypos, xoffset, yoffset);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * WaylandProcessMouseEvent --
- *
- *	Process mouse events from GLFW and convert them to Tk events.
- *
- * Results:
- *	Processes the event and generates Tk events.
- *
- * Side effects:
- *	May generate Tk events and update internal state.
- *
- *----------------------------------------------------------------------
- */
-
-int
-WaylandProcessMouseEvent(
-    GLFWwindow* glfwWindow,
-    int eventType,
-    int button,
-    int action,
-    int mods,
-    double x,
-    double y,
-    double scrollX,
-    double scrollY)
-{
-    TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
-    Tk_Window tkwin = NULL, capture, target;
-    double localX, localY;
-    double globalX, globalY;
-    TkWindow *newFocus = NULL;
-    int win_x, win_y;
-    unsigned int buttonState = 0;
-    int isTestingEvent = 0;
-    int isMotionEvent = 0;
-    int isOutside = 0;
-    int firstDrag = 0;
-    static int ignoreDrags = 0;
-    static int ignoreUpDown = 0;
-    static double timestamp = 0;
-    static unsigned int lastButtonState = 0;
-
-    /* Get the Tk window associated with this GLFW window. */
-    winPtr = TkWaylandGetTkWindow(glfwWindow);
-    if (!winPtr && !isTestingEvent) {
-        /* If no window, ignore event. */
-        return 0;
-    }
-
-    /* Check if pointer is outside window bounds. */
-    int width, height;
-    glfwGetWindowSize(glfwWindow, &width, &height);
-    if (x < 0 || x >= width || y < 0 || y >= height) {
-        isOutside = 1;
-    }
-
-    /* Map GLFW button numbers to Tk button numbers. */
-    int tkButton = button + 1; /* GLFW buttons are 0-based, Tk buttons are 1-based */
-    if ((tkButton & -2) == 2) {
-        tkButton ^= 1; /* Swap buttons 2/3 */
-    }
-
-    /* Update button state based on event. */
-    unsigned int buttonMask = Tk_GetButtonMask(tkButton);
-    
-    switch (eventType) {
-        case GLFW_MOUSE_BUTTON:
-            if (action == GLFW_PRESS) {
-                buttonState = lastButtonState | buttonMask;
-                
-                /* Work-around for missing button up events. */
-                if (tkButton == 1 && (lastButtonState & buttonMask)) {
-                    int fakeState = lastButtonState & ~buttonMask;
-                    Tk_UpdatePointer((Tk_Window)winPtr, x, y, fakeState);
-                }
-                
-                /* Check for double-click. */
-                double currentTime = glfwGetTime();
-                if (currentTime - timestamp < 0.5) { /* 500ms double-click threshold */
-                    if (ignoreUpDown == 1) {
-                        return 0;
-                    } else {
-                        timestamp = currentTime;
-                        ignoreUpDown = 1;
-                    }
-                } else {
-                    ignoreUpDown = 0;
-                }
-                
-                /* Ignore clicks on window edges/resize areas. */
-                if (!isTestingEvent) {
-                    if (x < 2 || x >= width - 2 || y < 2 || y >= height - 2) {
-                        return 0;
-                    }
-                    /* Check for resize grip area. */
-                    if (x >= width - 10 && y < 10) {
-                        return 0;
-                    }
-                }
-                
-            } else if (action == GLFW_RELEASE) {
-                buttonState = lastButtonState & ~buttonMask;
-                if (tkButton == 1) {
-                    /* Left button release. */
-                    if (ignoreUpDown && ignoreDrags) {
-                        ignoreDrags = 0;
-                        return 0;
-                    }
-                }
-            }
-            break;
-            
-        case GLFW_CURSOR_ENTER:
-            if (isOutside) {
-                return 0;
-            }
-            /* Pointer entered window. */
-            break;
-            
-        case GLFW_CURSOR_LEAVE:
-            if (!isOutside) {
-                return 0;
-            }
-            /* Pointer left window. */
-            break;
-            
-        case GLFW_CURSOR_MOVED:
-            isMotionEvent = 1;
-            buttonState = lastButtonState;
-            break;
-            
-        case GLFW_SCROLL:
-            /* Scroll wheel events. */
-            scrollTarget = winPtr;
-            buttonState = lastButtonState;
-            break;
-            
-        default:
-            return 0;
-    }
-    
-    /* Store the updated button state. */
-    lastButtonState = buttonState;
-
-    /* Get window position for global coordinates. */
-    int winPosX, winPosY;
-    glfwGetWindowPos(glfwWindow, &winPosX, &winPosY);
-    
-    /* Convert to global and local coordinates. */
-    globalX = winPosX + x;
-    globalY = winPosY + y;
-    localX = x;
-    localY = y;
-
-    /* Adjust coordinates for embedded windows. */
-    if (winPtr && Tk_IsEmbedded(winPtr)) {
-        TkWindow *contPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
-        if (Tk_IsTopLevel(contPtr)) {
-            localX -= contPtr->wmInfoPtr->xInParent;
-            localY -= contPtr->wmInfoPtr->yInParent;
-        }
-    } else if (winPtr && winPtr->wmInfoPtr) {
-        localX -= winPtr->wmInfoPtr->xInParent;
-        localY -= winPtr->wmInfoPtr->yInParent;
-    }
-
-    /* Find the target window for the event. */
-    if (eventType == GLFW_SCROLL) {
-        target = (Tk_Window)scrollTarget;
-    } else {
-        target = Tk_TopCoordsToWindow((Tk_Window)winPtr, localX, localY, &win_x, &win_y);
-    }
-
-    /* Check grab state. */
-    grabWinPtr = winPtr->dispPtr->grabWinPtr;
-    
-    if (grabWinPtr && !winPtr->dispPtr->grabFlags && 
-        grabWinPtr->mainPtr == winPtr->mainPtr) {
-        /* Local grab check. */
-        if (!target) {
-            return 0;
-        }
-        Tk_Window w;
-        for (w = target; !Tk_IsTopLevel(w); w = Tk_Parent(w)) {
-            if (w == (Tk_Window)grabWinPtr) {
-                break;
-            }
-        }
-        if (w != (Tk_Window)grabWinPtr) {
-            return 0;
-        }
-    }
-
-    if (grabWinPtr && winPtr->dispPtr->grabFlags && 
-        grabWinPtr->mainPtr == winPtr->mainPtr) {
-        /* Global grab check. */
-        if (!target) {
-            return 0;
-        }
-        Tk_Window w;
-        for (w = target; !Tk_IsTopLevel(w); w = Tk_Parent(w)) {
-            if (w == (Tk_Window)grabWinPtr) {
-                break;
-            }
-        }
-        if (w != (Tk_Window)grabWinPtr) {
-            TkpChangeFocus(grabWinPtr, 1);
-        }
-    }
-
-    /* Translate modifier keys. */
-    unsigned int state = buttonState;
-    if (mods & GLFW_MOD_CAPS_LOCK) {
-        state |= LockMask;
-    }
-    if (mods & GLFW_MOD_SHIFT) {
-        state |= ShiftMask;
-    }
-    if (mods & GLFW_MOD_CONTROL) {
-        state |= ControlMask;
-    }
-    if (mods & GLFW_MOD_ALT) {
-        state |= Mod1Mask;  /* Alt key. */
-    }
-    if (mods & GLFW_MOD_SUPER) {
-        state |= Mod2Mask;  /* Super/Windows key. */
-    }
-    if (mods & GLFW_MOD_NUM_LOCK) {
-        state |= Mod3Mask;
-    }
-
-    /* Generate XEvents. */
-    if (eventType != GLFW_SCROLL) {
-        if (eventType == GLFW_CURSOR_ENTER) {
-            Tk_UpdatePointer(target, globalX, globalY, state);
-        } else if (eventType == GLFW_CURSOR_LEAVE) {
-            Tk_UpdatePointer(NULL, globalX, globalY, state);
-        } else if (eventType == GLFW_CURSOR_MOVED) {
-            if (target) {
-                Tk_UpdatePointer(target, globalX, globalY, state);
-            } else {
-                /* Generate MotionNotify event for outside window. */
-                XEvent xEvent = {0};
-                xEvent.type = MotionNotify;
-                xEvent.xany.send_event = 0;
-                xEvent.xany.display = Tk_Display((Tk_Window)winPtr);
-                xEvent.xany.window = Tk_WindowId((Tk_Window)winPtr);
-                xEvent.xmotion.x = win_x;
-                xEvent.xmotion.y = win_y;
-                xEvent.xmotion.x_root = globalX;
-                xEvent.xmotion.y_root = globalY;
-                xEvent.xmotion.state = state;
-                Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-            }
-        } else {
-            Tk_UpdatePointer(target, globalX, globalY, state);
-        }
-    } else {
-        /* Scroll wheel events. */
-        XEvent xEvent = {0};
-        xEvent.xbutton.x = win_x;
-        xEvent.xbutton.y = win_y;
-        xEvent.xbutton.x_root = globalX;
-        xEvent.xbutton.y_root = globalY;
-        xEvent.xany.send_event = 0;
-        xEvent.xany.display = Tk_Display(target);
-        xEvent.xany.window = Tk_WindowId(target);
-        
-        if (scrollX != 0.0 || scrollY != 0.0) {
-            /* High-precision scrolling (touchpad). */
-            xEvent.type = TouchpadScroll;
-            xEvent.xbutton.state = state;
-            /* Encode scroll deltas in keycode field.*/
-            unsigned deltaX = (unsigned)(scrollX * 120); /* Convert to wheel units. */
-            unsigned deltaY = (unsigned)(scrollY * 120);
-            unsigned delta = (deltaX << 16) | (deltaY & 0xffff);
-            xEvent.xkey.keycode = delta;
-            Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-        } else {
-            /* Regular mouse wheel. */
-            xEvent.type = MouseWheelEvent;
-            xEvent.xbutton.state = state;
-            if (scrollY > 0.0) {
-                xEvent.xkey.keycode = 120;
-            } else if (scrollY < 0.0) {
-                xEvent.xkey.keycode = -120;
-            }
-            Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-        }
-    }
-
-    /* Check capture state for button events. */
-    capture = TkpGetCapture();
-    if (capture && eventType == GLFW_MOUSE_BUTTON && action == GLFW_PRESS) {
-        Tk_Window w;
-        for (w = target; w != NULL; w = Tk_Parent(w)) {
-            if (w == capture) {
-                break;
-            }
-        }
-        if (w != capture) {
-            return 0;
-        }
-    }
-    
-    return 1;
-}
+static int GenerateButtonEvent(MouseEventData *medPtr);
 
 /*
  *----------------------------------------------------------------------
@@ -637,17 +119,23 @@ XQueryPointer(
     int *win_y_return,
     unsigned int *mask_return)
 {
+    GLFWwindow* glfwWindow;
+    double cursorX, cursorY;
     int getGlobal = (root_x_return && root_y_return);
     int getLocal = (win_x_return && win_y_return && w != None);
+    TkWindow *winPtr = (TkWindow *)w;
     
-    /* Get the GLFW window for the given X window. */
-    GLFWwindow* glfwWindow = TkWaylandGetGLFWWindow((Tk_Window)w);
+    if (!winPtr) {
+        return False;
+    }
+    
+    /* Get the GLFW window using unified architecture. */
+    glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
     if (!glfwWindow) {
         return False;
     }
     
     if (getGlobal || getLocal) {
-        double cursorX, cursorY;
         glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
         
         if (getGlobal) {
@@ -804,22 +292,24 @@ void
 TkpWarpPointer(
     TkDisplay *dispPtr)
 {
+    GLFWwindow* glfwWindow;
+    int x, y;
+    int winX, winY;
+    double targetX, targetY;
+    
     if (dispPtr->warpWindow) {
-	int x, y;
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	
-	/* Warp cursor to new position. */
-	GLFWwindow* glfwWindow = TkWaylandGetGLFWWindow(dispPtr->warpWindow);
+	/* Warp cursor to new position using unified architecture. */
+	glfwWindow = TkGlfwGetGLFWWindow(dispPtr->warpWindow);
 	if (glfwWindow) {
-	    int winX, winY;
 	    glfwGetWindowPos(glfwWindow, &winX, &winY);
-	    double targetX = x + dispPtr->warpX - winX;
-	    double targetY = y + dispPtr->warpY - winY;
+	    targetX = x + dispPtr->warpX - winX;
+	    targetY = y + dispPtr->warpY - winY;
 	    glfwSetCursorPos(glfwWindow, targetX, targetY);
 	}
     } else {
-	/* Global warp - not directly supported by GLFW */
-	/* Would need platform-specific code for this */
+	/* Global warp - not directly supported by GLFW. */
     }
 
     if (dispPtr->warpWindow) {
@@ -851,13 +341,15 @@ void
 TkpSetCapture(
     TkWindow *winPtr)		/* Capture window, or NULL. */
 {
+    GLFWwindow* glfwWindow;
+    
     while (winPtr && !Tk_IsTopLevel(winPtr)) {
 	winPtr = winPtr->parentPtr;
     }
     captureWinPtr = (Tk_Window)winPtr;
     
-    /* Set GLFW cursor mode. */
-    GLFWwindow* glfwWindow = TkWaylandGetGLFWWindow((Tk_Window)winPtr);
+    /* Set GLFW cursor mode using unified architecture. */
+    glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
     if (glfwWindow) {
 	if (winPtr) {
 	    glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

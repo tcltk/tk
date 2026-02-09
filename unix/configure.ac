@@ -505,7 +505,45 @@ if test $tk_aqua = no; then
 		
 		AC_SUBST([GLFW_CFLAGS])
 		AC_SUBST([GLFW_LIBS])
+
+		# ─────────────────────────────────────────────────────────────
+		# OpenGL ES support (required for NanoVG rendering)
+		# ─────────────────────────────────────────────────────────────
 		
+		AC_MSG_CHECKING([for OpenGL ES 3.0 (glesv2)])
+		
+		# First try pkg-config
+		if pkg-config --exists glesv2; then
+		    AC_MSG_RESULT([yes (via pkg-config)])
+		    GLES_CFLAGS="$(pkg-config --cflags glesv2)"
+		    GLES_LIBS="$(pkg-config --libs glesv2)"
+		    found_gles=yes
+		    AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
+		else
+		    # Fallback: try to find the library directly
+		    AC_MSG_RESULT([pkg-config not found, checking for library directly])
+		    
+		    AC_CHECK_HEADER([GLES3/gl3.h], [have_gles_header=yes], [have_gles_header=no])
+		    AC_CHECK_LIB([GLESv2], [glGetString], [have_gles_lib=yes], [have_gles_lib=no])
+		    
+		    if test "$have_gles_header" = yes && test "$have_gles_lib" = yes; then
+		        AC_MSG_NOTICE([OpenGL ES library found])
+		        GLES_CFLAGS=""
+		        GLES_LIBS="-lGLESv2"
+		        found_gles=yes
+		        AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
+		    else
+		        AC_MSG_RESULT([no])
+		        GLES_CFLAGS=""
+		        GLES_LIBS=""
+		        found_gles=no
+		        AC_MSG_NOTICE([OpenGL ES not found — NanoVG rendering will not work])
+		    fi
+		fi
+		
+		AC_SUBST([GLES_CFLAGS])
+		AC_SUBST([GLES_LIBS])
+
 		# libdecor is now **required** (especially for GNOME/Mutter client-side decorations)
 		AC_MSG_CHECKING([for libdecor-0 ≥ 0.1])
 		if pkg-config --exists "libdecor-0 >= 0.1"; then
@@ -545,13 +583,14 @@ if test $tk_aqua = no; then
         if test "$found_wayland" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
+           && test "$found_gles" = yes \
            && test "$found_libdecor" = yes \
            && test "$found_fontconfig" = yes; then
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS"
 
             # Still useful if some code paths check for extra libdecor features
             AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
@@ -559,7 +598,7 @@ if test $tk_aqua = no; then
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor (required for GNOME) + fontconfig (Xft disabled)])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor (required for GNOME) + fontconfig (Xft disabled)])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required libraries not found.
 
@@ -567,11 +606,12 @@ Required packages (all mandatory):
   - wayland-client >= 1.18
   - wayland-cursor >= 1.18
   - xkbcommon >= 0.5.0
-  - glfw3 >= 3.3
+  - glfw3 >= 3.4
+  - glesv2 (OpenGL ES 3.0)     ← required for NanoVG rendering
   - libdecor-0 >= 0.1          ← critical for proper window decorations on GNOME/Mutter
   - fontconfig >= 2.12
 
-Install missing packages (e.g. on Debian/Ubuntu: libwayland-dev libxkbcommon-dev libglfw3-dev libdecor-0-dev libfontconfig-dev)
+Install missing packages (e.g. on Debian/Ubuntu: libwayland-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev libdecor-0-dev libfontconfig-dev)
 ])
         fi
     fi
