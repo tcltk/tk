@@ -1290,7 +1290,7 @@ TkpMeasureCharsInContext(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
  */
  
 void
-TkUnixSetXftClipRegion(Region clipRegion)
+TkUnixSetXftClipRegion(TCL_UNUSED(Region)) /* clipRegion */
 {
     /* No-op for NanoVG - clipping handled differently */
 }
@@ -1313,8 +1313,21 @@ TkUnixSetXftClipRegion(Region clipRegion)
 static NVGcolor
 GetColorFromGC(GC gc)
 {
-    /* TO DO: Extract actual color from GC */
-    NVGcolor color = {0, 0, 0, 1};  /* Black */
+    NVGcolor color;
+    XGCValues gcValues;
+    
+    /* Get foreground color from GC */
+    if (gc && XGetGCValues(NULL, gc, GCForeground, &gcValues)) {
+        /* Use utility function from unified architecture */
+        color = TkGlfwPixelToNVG(gcValues.foreground);
+    } else {
+        /* Fallback to black with full opacity */
+        color.r = 0;
+        color.g = 0;
+        color.b = 0;
+        color.a = 255;
+    }
+    
     return color;
 }
 
