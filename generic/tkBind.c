@@ -4420,7 +4420,7 @@ HandleEventGenerate(
 
 	if (warp) {
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
-	    if (! dispPtr->warpWindow || Tk_IsMapped(tkwin)) {
+	    if (! windowName[0] || Tk_IsMapped(tkwin)) {
 		Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
 
 		if (warpWindow != dispPtr->warpWindow) {
