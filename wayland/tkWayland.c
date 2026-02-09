@@ -12,6 +12,7 @@
 
 #include "tkInt.h"
 #include <GLFW/glfw3.h>
+#include <GLES3/gl3.h>
 
 /*
  *----------------------------------------------------------------------
@@ -307,7 +308,7 @@ Tk_ResetUserInactiveTime(
  *----------------------------------------------------------------------
  */
 
-/* This is a new helper function for GLFW integration */
+/* This is a new helper function for GLFW integration. */
 void *
 Tk_GetDisplay(Tk_Window tkwin)
 {

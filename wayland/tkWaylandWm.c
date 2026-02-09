@@ -4,7 +4,7 @@
  *	This module takes care of the interactions between a Tk-based
  *	application and the window manager. Among other things, it implements
  *	the "wm" command and passes geometry information to the Wayland 
- *      compositor via GLFW. 
+ *  compositor via GLFW. 
  *
  *
  * Copyright © 1991-1994 The Regents of the University of California.
@@ -19,12 +19,13 @@
 #include "tkPort.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
+#include <GLES3/gl3.h>
 #include <string.h>
 #include <stdlib.h>
 
 
 /*
- * Protocol identifiers - these replace X11 Atoms
+ * Protocol identifiers - these replace X11 Atoms.
  */
 
 #define WM_DELETE_WINDOW    1
@@ -219,7 +220,7 @@ typedef struct TkWmInfo {
 
 static WmInfo *firstWmPtr = NULL;
 
-/* Forward declarations .*/
+/* Forward declarations. */
 
 static void		TopLevelEventProc(ClientData clientData, XEvent *eventPtr);
 static void		TopLevelReqProc(ClientData clientData, Tk_Window tkwin);
@@ -3864,7 +3865,7 @@ UpdateVRootGeometry(
         }
     }
 
-    /* fallback. */
+    /* Fallback. */
     wmPtr->vRootX      = 0;
     wmPtr->vRootY      = 0;
     wmPtr->vRootWidth  = 1920;

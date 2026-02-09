@@ -3,14 +3,17 @@
  *
  *      Tcl event source for integrating Wayland/GLFW event loop with Tk.
  *
- *  Copyright © 2026 Kevin Walzer
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2015 Marc Culler.
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution.
  */
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
-#include <GLFW/glfw3.h>
+
 
 
 /* Thread-specific data */
@@ -35,7 +38,6 @@ static void HeartbeatTimerProc(void *clientData);
 #define HEARTBEAT_INTERVAL 50   /* ms */
 
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -46,6 +48,7 @@ static void HeartbeatTimerProc(void *clientData);
  *
  *----------------------------------------------------------------------
  */
+ 
 void
 Tk_WaylandSetupTkNotifier(void)
 {
@@ -99,6 +102,7 @@ HeartbeatTimerProc(
  *
  *----------------------------------------------------------------------
  */
+ 
 static const Tcl_Time zeroBlockTime  = { 0, 0 };
 
 static void
@@ -121,6 +125,7 @@ TkWaylandEventsSetupProc(
  *
  *----------------------------------------------------------------------
  */
+ 
 static void
 TkWaylandEventsCheckProc(
     TCL_UNUSED(void *), /* clientData */
@@ -140,6 +145,7 @@ TkWaylandEventsCheckProc(
  *
  *----------------------------------------------------------------------
  */
+ 
 static void
 TkWaylandNotifyExitHandler(
     TCL_UNUSED(void *)) /* clientData */

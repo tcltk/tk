@@ -17,6 +17,7 @@
 
 #include "tkInt.h"
 #include <GLFW/glfw3.h>
+#include <GLES3/gl3.h>
 #include "nanovg.h"
 #include "tkIntPlatDecls.h" 
 
@@ -81,7 +82,7 @@ typedef struct {
  *----------------------------------------------------------------------
  */
 
-/* Get the global GLFW/NanoVG context */
+/* Get the global GLFW/NanoVG context. */
 MODULE_SCOPE TkGlfwContext* TkGlfwGetContext(void);
 
 /*
@@ -92,10 +93,10 @@ MODULE_SCOPE TkGlfwContext* TkGlfwGetContext(void);
  *----------------------------------------------------------------------
  */
 
-/* Initialize GLFW and NanoVG */
+/* Initialize GLFW and NanoVG. */
 MODULE_SCOPE int TkGlfwInitialize(void);
 
-/* Clean up all GLFW/NanoVG resources */
+/* Clean up all GLFW/NanoVG resources. */
 MODULE_SCOPE void TkGlfwCleanup(void);
 
 /*
@@ -106,7 +107,7 @@ MODULE_SCOPE void TkGlfwCleanup(void);
  *----------------------------------------------------------------------
  */
 
-/* Create a new GLFW window and register mapping */
+/* Create a new GLFW window and register mapping. */
 MODULE_SCOPE GLFWwindow* TkGlfwCreateWindow(
     TkWindow *tkWin,
     int width,
@@ -114,19 +115,19 @@ MODULE_SCOPE GLFWwindow* TkGlfwCreateWindow(
     const char *title,
     Drawable *drawableOut);
 
-/* Destroy a GLFW window and remove mapping */
+/* Destroy a GLFW window and remove mapping. */
 MODULE_SCOPE void TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
 
-/* Get GLFW window from Tk window */
+/* Get GLFW window from Tk window. */
 MODULE_SCOPE GLFWwindow* TkGlfwGetGLFWWindow(Tk_Window tkwin);
 
-/* Get Tk window from GLFW window */
+/* Get Tk window from GLFW window. */
 MODULE_SCOPE TkWindow* TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
 
-/* Get GLFW window from Drawable ID */
+/* Get GLFW window from Drawable ID. */
 MODULE_SCOPE GLFWwindow* TkGlfwGetWindowFromDrawable(Drawable drawable);
 
-/* Update window size in mapping */
+/* Update window size in mapping. */
 MODULE_SCOPE void TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, 
                                           int width, int height);
 
@@ -138,16 +139,16 @@ MODULE_SCOPE void TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow,
  *----------------------------------------------------------------------
  */
 
-/* Set up drawing context for a drawable */
+/* Set up drawing context for a drawable. */
 MODULE_SCOPE int TkGlfwBeginDraw(
     Drawable drawable,
     GC gc,
     TkWaylandDrawingContext *dcPtr);
 
-/* Clean up and present drawing context */
+/* Clean up and present drawing context. */
 MODULE_SCOPE void TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
 
-/* Get NanoVG context for current drawing */
+/* Get NanoVG context for current drawing. */
 MODULE_SCOPE NVGcontext* TkGlfwGetNVGContext(void);
 
 /*
@@ -158,12 +159,15 @@ MODULE_SCOPE NVGcontext* TkGlfwGetNVGContext(void);
  *----------------------------------------------------------------------
  */
 
-/* Process pending GLFW events */
+/* Process pending GLFW events. */
 MODULE_SCOPE void TkGlfwProcessEvents(void);
 
-/* Set up standard GLFW callbacks for a window */
+/* Set up standard GLFW callbacks for a window. */
 MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow, 
                                         TkWindow *tkWin);
+
+/* Set up event loop notifier. */										
+void Tk_WaylandSetupTkNotifier(void);
 
 /*
  *----------------------------------------------------------------------
@@ -173,13 +177,13 @@ MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow,
  *----------------------------------------------------------------------
  */
 
-/* Convert XColor to NVGcolor */
+/* Convert XColor to NVGcolor. */
 MODULE_SCOPE NVGcolor TkGlfwXColorToNVG(XColor *xcolor);
 
-/* Convert pixel value to NVGcolor */
+/* Convert pixel value to NVGcolor. */
 MODULE_SCOPE NVGcolor TkGlfwPixelToNVG(unsigned long pixel);
 
-/* Apply GC settings to NanoVG context */
+/* Apply GC settings to NanoVG context. */
 MODULE_SCOPE void TkGlfwApplyGC(NVGcontext *vg, GC gc);
 
 /*

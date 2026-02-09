@@ -17,9 +17,10 @@
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
+#include <GLES3/gl3.h>
+
 #include "nanovg.h"
 #include "nanovg_gl.h"
-#include <GL/gl.h>
 
 /* Explicit declarations for NanoVG GL3 functions */
 extern NVGcontext* nvgCreateGL3(int flags);
@@ -127,14 +128,13 @@ TkGlfwInitialize(void)
         return TCL_ERROR;
     }
 
-    /* Request OpenGL 3.3 core profile for NanoVG */
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_SAMPLES, 4);  /* 4x MSAA */
+    /* Request GLES 3.0 profile for NanoVG. */
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
     
-    /* Try to use libdecor if available */
+    /* Try to use libdecor if available. */
 #ifdef GLFW_PLATFORM_WAYLAND
     glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 #endif
@@ -629,21 +629,21 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
         return;
     }
 
-    /* Get GC values */
+    /* Get GC values. */
     XGetGCValues(NULL, gc, 
                  GCForeground | GCLineWidth | GCLineStyle | 
                  GCCapStyle | GCJoinStyle,
                  &values);
 
-    /* Set colors */
+    /* Set colors. */
     color = TkGlfwPixelToNVG(values.foreground);
     nvgFillColor(vg, color);
     nvgStrokeColor(vg, color);
 
-    /* Set line width */
+    /* Set line width. */
     nvgStrokeWidth(vg, values.line_width > 0 ? values.line_width : 1.0f);
 
-    /* Set cap style */
+    /* Set cap style. */
     switch (values.cap_style) {
     case CapButt:
         nvgLineCap(vg, NVG_BUTT);
@@ -656,7 +656,7 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
         break;
     }
 
-    /* Set join style */
+    /* Set join style. */
     switch (values.join_style) {
     case JoinMiter:
         nvgLineJoin(vg, NVG_MITER);
