@@ -959,10 +959,10 @@ TkWmProtocolEventProc(
  *
  * Tk_MacOSXIsAppInFront --
  *
- *	Returns 1 if this app is the foreground app.
+ *	Returns true if this app is the foreground app.
  *
  * Results:
- *	1 if app is in front, 0 otherwise.
+ *	true if app is in front, false otherwise.
  *
  * Side effects:
  *	None.
@@ -970,10 +970,10 @@ TkWmProtocolEventProc(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 Tk_MacOSXIsAppInFront(void)
 {
-    return ([NSRunningApplication currentApplication].active == true);
+    return [NSRunningApplication currentApplication].active;
 }
 
 #pragma mark TKContentView

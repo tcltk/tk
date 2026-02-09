@@ -534,7 +534,7 @@ MODULE_SCOPE void	TkpDestroyMenuEntry(TkMenuEntry *mEntryPtr);
 MODULE_SCOPE void	TkpDrawMenuEntry(TkMenuEntry *mePtr,
 			    Drawable d, Tk_Font tkfont,
 			    const Tk_FontMetrics *menuMetricsPtr, int x,
-			    int y, int width, int height, int strictMotif,
+			    int y, int width, int height, bool strictMotif,
 			    int drawingParameters);
 MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);

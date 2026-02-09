@@ -13,7 +13,7 @@ Tk_StrictMotif \- Return value of tk_strictMotif variable
 .nf
 \fB#include <tk.h>\fR
 .sp
-int
+bool
 \fBTk_StrictMotif\fR(\fItkwin\fR)
 .fi
 .SH ARGUMENTS
@@ -25,10 +25,10 @@ Token for window.
 .PP
 This procedure returns the current value of the \fBtk_strictMotif\fR
 variable in the interpreter associated with \fItkwin\fR's application.
-The value is returned as an integer that is either 0 or 1.
-1 means that strict Motif compliance has been requested, so anything
+The value is returned as aboolean that is either false or true.
+true means that strict Motif compliance has been requested, so anything
 that is not part of the Motif specification should be avoided.
-0 means that
+false means that
 .QW Motif-like
 is good enough, and extra features are welcome.
 .PP

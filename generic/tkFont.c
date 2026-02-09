@@ -2508,7 +2508,7 @@ Tk_UnderlineTextLayout(
 {
     int xx, yy, width, height;
 
-    if ((Tk_CharBbox(layout, underline, &xx, &yy, &width, &height) != 0)
+    if ((Tk_CharBbox(layout, underline, &xx, &yy, &width, &height))
 	    && (width != 0)) {
 	TextLayout *layoutPtr = (TextLayout *) layout;
 	TkFont *fontPtr = (TkFont *) layoutPtr->tkfont;
@@ -2540,7 +2540,7 @@ TkUnderlineAngledTextLayout(
 	return;
     }
 
-    if ((Tk_CharBbox(layout, underline, &xx, &yy, &width, &height) != 0)
+    if ((Tk_CharBbox(layout, underline, &xx, &yy, &width, &height))
 	    && (width != 0)) {
 	TextLayout *layoutPtr = (TextLayout *) layout;
 	TkFont *fontPtr = (TkFont *) layoutPtr->tkfont;
@@ -2744,7 +2744,7 @@ Tk_PointToChar(
  *	single zero-width placeholder character.
  *
  * Results:
- *	The return value is 0 if the index did not specify a character in the
+ *	The return value is false if the index did not specify a character in the
  *	text layout, or non-zero otherwise. In that case, *bbox is filled with
  *	the bounding box of the character.
  *
@@ -2754,7 +2754,7 @@ Tk_PointToChar(
  *---------------------------------------------------------------------------
  */
 
-int
+bool
 Tk_CharBbox(
     Tk_TextLayout layout,	/* Layout information, from a previous call to
 				 * Tk_ComputeTextLayout(). */
@@ -2781,7 +2781,7 @@ Tk_CharBbox(
 	    index += (chunkPtr + i)->numChars;
 	}
 	if (index < 0) {
-	    return 0;
+	    return false;
 	}
     }
 
@@ -2812,7 +2812,7 @@ Tk_CharBbox(
 	chunkPtr++;
     }
     if (index != 0) {
-	return 0;
+	return false;
     }
 
     /*
@@ -2851,7 +2851,7 @@ Tk_CharBbox(
 	*widthPtr = w;
     }
 
-    return 1;
+    return true;
 }
 
 /*

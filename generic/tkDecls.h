@@ -118,7 +118,7 @@ EXTERN void		Tk_ChangeWindowAttributes(Tk_Window tkwin,
 				unsigned long valueMask,
 				XSetWindowAttributes *attsPtr);
 /* 23 */
-EXTERN int		Tk_CharBbox(Tk_TextLayout layout, Tcl_Size index,
+EXTERN bool		Tk_CharBbox(Tk_TextLayout layout, Tcl_Size index,
 				int *xPtr, int *yPtr, int *widthPtr,
 				int *heightPtr);
 /* 24 */
@@ -542,7 +542,7 @@ EXTERN void		Tk_SetWindowBorderPixmap(Tk_Window tkwin,
 EXTERN void		Tk_SetWindowColormap(Tk_Window tkwin,
 				Colormap colormap);
 /* 171 */
-EXTERN int		Tk_SetWindowVisual(Tk_Window tkwin, Visual *visual,
+EXTERN bool		Tk_SetWindowVisual(Tk_Window tkwin, Visual *visual,
 				int depth, Colormap colormap);
 /* 172 */
 EXTERN void		Tk_SizeOfBitmap(Display *display, Pixmap bitmap,
@@ -551,7 +551,7 @@ EXTERN void		Tk_SizeOfBitmap(Display *display, Pixmap bitmap,
 EXTERN void		Tk_SizeOfImage(Tk_Image image, int *widthPtr,
 				int *heightPtr);
 /* 174 */
-EXTERN int		Tk_StrictMotif(Tk_Window tkwin);
+EXTERN bool		Tk_StrictMotif(Tk_Window tkwin);
 /* 175 */
 EXTERN void		Tk_TextLayoutToPostscript(Tcl_Interp *interp,
 				Tk_TextLayout layout);
@@ -765,7 +765,7 @@ EXTERN void		Tk_SetCaretPos(Tk_Window tkwin, int x, int y,
 /* Slot 246 is reserved */
 /* Slot 247 is reserved */
 /* 248 */
-EXTERN int		Tk_CollapseMotionEvents(Display *display,
+EXTERN bool		Tk_CollapseMotionEvents(Display *display,
 				int collapse);
 /* 249 */
 EXTERN Tk_StyleEngine	Tk_RegisterStyleEngine(const char *name,
@@ -841,7 +841,7 @@ EXTERN Tcl_Interp *	Tk_Interp(Tk_Window tkwin);
 /* Slot 272 is reserved */
 /* Slot 273 is reserved */
 /* 274 */
-EXTERN int		Tk_AlwaysShowSelection(Tk_Window tkwin);
+EXTERN bool		Tk_AlwaysShowSelection(Tk_Window tkwin);
 /* 275 */
 EXTERN unsigned		Tk_GetButtonMask(unsigned button);
 /* 276 */
@@ -941,7 +941,7 @@ typedef struct TkStubs {
     Tk_Window (*tk_CanvasTkwin) (Tk_Canvas canvas); /* 20 */
     void (*tk_CanvasWindowCoords) (Tk_Canvas canvas, double x, double y, short *screenXPtr, short *screenYPtr); /* 21 */
     void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes *attsPtr); /* 22 */
-    int (*tk_CharBbox) (Tk_TextLayout layout, Tcl_Size index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 23 */
+    bool (*tk_CharBbox) (Tk_TextLayout layout, Tcl_Size index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 23 */
     void (*tk_ClearSelection) (Tk_Window tkwin, Atom selection); /* 24 */
     int (*tk_ClipboardAppend) (Tcl_Interp *interp, Tk_Window tkwin, Atom target, Atom format, const char *buffer); /* 25 */
     int (*tk_ClipboardClear) (Tcl_Interp *interp, Tk_Window tkwin); /* 26 */
@@ -1089,10 +1089,10 @@ typedef struct TkStubs {
     void (*tk_SetWindowBorderWidth) (Tk_Window tkwin, int width); /* 168 */
     void (*tk_SetWindowBorderPixmap) (Tk_Window tkwin, Pixmap pixmap); /* 169 */
     void (*tk_SetWindowColormap) (Tk_Window tkwin, Colormap colormap); /* 170 */
-    int (*tk_SetWindowVisual) (Tk_Window tkwin, Visual *visual, int depth, Colormap colormap); /* 171 */
+    bool (*tk_SetWindowVisual) (Tk_Window tkwin, Visual *visual, int depth, Colormap colormap); /* 171 */
     void (*tk_SizeOfBitmap) (Display *display, Pixmap bitmap, int *widthPtr, int *heightPtr); /* 172 */
     void (*tk_SizeOfImage) (Tk_Image image, int *widthPtr, int *heightPtr); /* 173 */
-    int (*tk_StrictMotif) (Tk_Window tkwin); /* 174 */
+    bool (*tk_StrictMotif) (Tk_Window tkwin); /* 174 */
     void (*tk_TextLayoutToPostscript) (Tcl_Interp *interp, Tk_TextLayout layout); /* 175 */
     int (*tk_TextWidth) (Tk_Font font, const char *str, Tcl_Size numBytes); /* 176 */
     void (*tk_UndefineCursor) (Tk_Window window); /* 177 */
@@ -1166,7 +1166,7 @@ typedef struct TkStubs {
     void (*tk_SetCaretPos) (Tk_Window tkwin, int x, int y, int height); /* 245 */
     void (*reserved246)(void);
     void (*reserved247)(void);
-    int (*tk_CollapseMotionEvents) (Display *display, int collapse); /* 248 */
+    bool (*tk_CollapseMotionEvents) (Display *display, int collapse); /* 248 */
     Tk_StyleEngine (*tk_RegisterStyleEngine) (const char *name, Tk_StyleEngine parent); /* 249 */
     Tk_StyleEngine (*tk_GetStyleEngine) (const char *name); /* 250 */
     int (*tk_RegisterStyledElement) (Tk_StyleEngine engine, Tk_ElementSpec *templatePtr); /* 251 */
@@ -1192,7 +1192,7 @@ typedef struct TkStubs {
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*reserved272)(void);
     void (*reserved273)(void);
-    int (*tk_AlwaysShowSelection) (Tk_Window tkwin); /* 274 */
+    bool (*tk_AlwaysShowSelection) (Tk_Window tkwin); /* 274 */
     unsigned (*tk_GetButtonMask) (unsigned button); /* 275 */
     int (*tk_GetDoublePixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 276 */
     Tcl_Obj * (*tk_NewWindowObj) (Tk_Window tkwin); /* 277 */
