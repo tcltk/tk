@@ -99,6 +99,9 @@ extern "C" {
 #   endif
 #endif
 #include <stddef.h>
+#if defined(_MSC_VER) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ < 202311L))
+#include <stdbool.h>
+#endif
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
