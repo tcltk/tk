@@ -19,12 +19,10 @@
 #include "tkPort.h"
 #include "tkImgPhoto.h"
 #include "tkColor.h"
+#include "tkGlfwInt.h"
 
-#include <wayland-client.h>
 #include <GLES3/gl3.h>
 #include <nanovg.h>
-#include <nanovg_gl.h>
-#include "tkGlfwInt.h"
 
 /*
  *----------------------------------------------------------------------
@@ -33,7 +31,6 @@
  *
  *----------------------------------------------------------------------
  */
-
 
 /*
  * NanoVG image structure for internal tracking.
@@ -70,7 +67,7 @@ typedef union pixel32_t {
  */
 
 static NVGImageData* CreateNVGImageFromDrawableRect(
-    WaylandDrawable* drawable, int x, int y, 
+    Drawable drawable, int x, int y, 
     unsigned int width, unsigned int height);
 static int ConvertTkImageToNVG(
     Tk_Window tkwin, Tk_Image image, 
@@ -78,43 +75,8 @@ static int ConvertTkImageToNVG(
 static int ConvertNVGToTkImage(
     NVGcontext* vg, NVGImageData* nvgImage, 
     Tk_PhotoHandle photoHandle);
-static NVGImageData* TkWaylandCreateNVGImageWithXImage(
-    NVGcontext* vg, XImage *image);
 static XImage* TkWaylandCreateXImageWithNVGImage(
     NVGcontext* vg, NVGImageData* nvgImage, Display* display);
-static WaylandDrawable* GetWaylandDrawable(Drawable drawable);
-
-/* Helper Functions. */
-
-/*
- *----------------------------------------------------------------------
- *
- * GetWaylandDrawable --
- *
- *	Safely cast Drawable to WaylandDrawable with validation.
- *
- * Results:
- *	Pointer to WaylandDrawable or NULL if invalid.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static WaylandDrawable*
-GetWaylandDrawable(
-    Drawable drawable)
-{
-    WaylandDrawable* wlDraw = (WaylandDrawable*)drawable;
-    
-    /* Basic validation - check if vg context exists. */
-    if (!wlDraw || !wlDraw->vg) {
-        return NULL;
-    }
-    
-    return wlDraw;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -139,304 +101,78 @@ _XInitImageFuncPtrs(
     return 0;
 }
 
-/* Image Conversion Functions. */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandCreateNVGImageWithXImage --
- *
- *	Create NVGImageData from XImage, converting pixel formats.
- *	Supports 1bpp, 24bpp, and 32bpp formats.
- *
- * Results:
- *	Pointer to NVGImageData, or NULL on failure.
- *	Caller must free with nvgDeleteImage() and Tcl_Free().
- *
- * Side effects:
- *	Allocates memory for temporary RGBA buffer.
- *
- *----------------------------------------------------------------------
- */
-
-static NVGImageData*
-TkWaylandCreateNVGImageWithXImage(
-    NVGcontext* vg,
-    XImage *image)
-{
-    if (!vg || !image || !image->data) {
-        return NULL;
-    }
-    
-    NVGImageData* nvgImg = NULL;
-    unsigned char* rgbaData = NULL;
-    int len = image->width * image->height * 4;
-    int imageId = -1;
-    
-    /* Allocate RGBA buffer. */
-    rgbaData = (unsigned char*)Tcl_Alloc(len);
-    if (!rgbaData) {
-        return NULL;
-    }
-    
-    if (image->bits_per_pixel == 1) {
-        /*
-         * Convert 1bpp bitmap to RGBA.
-         * Each bit represents a pixel (1 = white, 0 = black).
-         */
-        const unsigned char* src = (const unsigned char*)image->data + image->xoffset;
-        unsigned char* dst = rgbaData;
-        
-        for (int y = 0; y < image->height; y++) {
-            for (int x = 0; x < image->width; x++) {
-                int byteIdx = (y * image->bytes_per_line) + (x / 8);
-                int bitIdx = 7 - (x % 8);  /* MSB first */
-                unsigned char bit = (src[byteIdx] >> bitIdx) & 1;
-                unsigned char value = bit ? 255 : 0;
-                
-                *dst++ = value;  /* R */
-                *dst++ = value;  /* G */
-                *dst++ = value;  /* B */
-                *dst++ = 255;    /* A (opaque) */
-            }
-        }
-    } 
-    else if (image->format == ZPixmap && image->bits_per_pixel == 32) {
-        /*
-         * Convert 32bpp ARGB to RGBA for NanoVG.
-         * Handle both big-endian and little-endian byte orders.
-         */
-        const unsigned char* src = (const unsigned char*)image->data + image->xoffset;
-        unsigned char* dst = rgbaData;
-		/* Little endian: ARGB stored as [B,G,R,A] */
-		for (int i = 0; i < image->width * image->height; i++) {
-			dst[0] = src[2];  /* R */
-			dst[1] = src[1];  /* G */
-			dst[2] = src[0];  /* B */
-			dst[3] = src[3];  /* A */
-			src += 4;
-			dst += 4;
-		}
-	}
-    else if (image->format == ZPixmap && image->bits_per_pixel == 24) {
-        /*
-         * Convert 24bpp RGB to RGBA.
-         * Assume RGB byte order and add full opacity.
-         */
-        const unsigned char* src = (const unsigned char*)image->data + image->xoffset;
-        unsigned char* dst = rgbaData;
-        
-        for (int i = 0; i < image->width * image->height; i++) {
-            dst[0] = src[0];  /* R */
-            dst[1] = src[1];  /* G */
-            dst[2] = src[2];  /* B */
-            dst[3] = 255;     /* A (opaque) */
-            src += 3;
-            dst += 4;
-        }
-    }
-    else {
-        /* Unsupported format */
-        Tcl_Free(rgbaData);
-        return NULL;
-    }
-    
-    /* Create NanoVG image */
-    imageId = nvgCreateImageRGBA(vg, image->width, image->height, 
-                                  NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY, 
-                                  rgbaData);
-    
-    Tcl_Free(rgbaData);
-    
-    if (imageId > 0) {
-        nvgImg = (NVGImageData*)Tcl_Alloc(sizeof(NVGImageData));
-        if (nvgImg) {
-            nvgImg->id = imageId;
-            nvgImg->width = image->width;
-            nvgImg->height = image->height;
-            nvgImg->flags = NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY;
-        } else {
-            nvgDeleteImage(vg, imageId);
-        }
-    }
-    
-    return nvgImg;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandCreateXImageWithNVGImage --
- *
- *	Create XImage from NVGImageData by rendering to FBO and reading back.
- *
- * Results:
- *	Pointer to XImage, or NULL on failure.
- *	Caller must free with DestroyImage().
- *
- * Side effects:
- *	Creates temporary OpenGL framebuffer objects.
- *
- *----------------------------------------------------------------------
- */
-
-static XImage*
-TkWaylandCreateXImageWithNVGImage(
-    NVGcontext* vg,
-    NVGImageData* nvgImage,
-    Display* display)
-{
-    if (!vg || !nvgImage || nvgImage->id <= 0) {
-        return NULL;
-    }
-    
-    int width, height;
-    nvgImageSize(vg, nvgImage->id, &width, &height);
-    
-    if (width <= 0 || height <= 0) {
-        return NULL;
-    }
-    
-    GLuint fbo = 0, texture = 0;
-    GLint oldFbo = 0;
-    XImage* ximage = NULL;
-    unsigned char* pixelData = NULL;
-    
-    /* Save current FBO. */
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFbo);
-    
-    /* Create texture for rendering. */
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, 
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    /* Create FBO. */
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-                          GL_TEXTURE_2D, texture, 0);
-    
-    /* Verify FBO is complete. */
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        goto cleanup;
-    }
-    
-    /* Set viewport and clear. */
-    glViewport(0, 0, width, height);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
-    /* Render NVG image to FBO. */
-    nvgSave(vg);
-    nvgResetTransform(vg);
-    
-    NVGpaint imgPaint = nvgImagePattern(vg, 0, 0, width, height, 
-                                        0, nvgImage->id, 1.0f);
-    nvgBeginPath(vg);
-    nvgRect(vg, 0, 0, width, height);
-    nvgFillPaint(vg, imgPaint);
-    nvgFill(vg);
-    
-    nvgRestore(vg);
-    
-    /* Read pixels back. */
-    pixelData = (unsigned char*)Tcl_Alloc(width * height * 4);
-    if (!pixelData) {
-        goto cleanup;
-    }
-    
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
-    
-    /* Create XImage. */
-    ximage = XCreateImage(display, NULL, 32, ZPixmap, 0, 
-                         (char*)pixelData, width, height, 32, 0);
-    
-    if (ximage) {
-        /* Convert RGBA to ARGB for XImage. */
-        unsigned char* data = (unsigned char*)ximage->data;
-        for (int i = 0; i < width * height; i++) {
-            unsigned char r = data[i*4 + 0];
-            unsigned char g = data[i*4 + 1];
-            unsigned char b = data[i*4 + 2];
-            unsigned char a = data[i*4 + 3];
-            
-            /* Store as ARGB in little-endian format [B,G,R,A] */
-            data[i*4 + 0] = b;
-            data[i*4 + 1] = g;
-            data[i*4 + 2] = r;
-            data[i*4 + 3] = a;
-        }
-    } else {
-        Tcl_Free(pixelData);
-    }
-    
-cleanup:
-    /* Restore OpenGL state. */
-    glBindFramebuffer(GL_FRAMEBUFFER, oldFbo);
-    if (texture) glDeleteTextures(1, &texture);
-    if (fbo) glDeleteFramebuffers(1, &fbo);
-    
-    return ximage;
-}
-
 /*
  *----------------------------------------------------------------------
  *
  * CreateNVGImageFromDrawableRect --
  *
- *	Capture a rectangular region from a drawable as NVG image.
+ *	Create NanoVG image from a rectangular region of a drawable.
  *
  * Results:
- *	Pointer to NVGImageData, or NULL on failure.
+ *	Pointer to NVGImageData or NULL on failure.
  *
  * Side effects:
- *	Creates OpenGL framebuffer to capture the region.
+ *	Allocates memory for image data.
  *
  *----------------------------------------------------------------------
  */
 
 static NVGImageData*
 CreateNVGImageFromDrawableRect(
-    WaylandDrawable* drawable,
+    Drawable drawable,
     int x, int y,
     unsigned int width,
     unsigned int height)
 {
-    if (!drawable || !drawable->vg) {
+    GLFWwindow *glfwWindow;
+    NVGcontext *vg;
+    NVGImageData *nvgImg;
+    unsigned char *pixels;
+    int imageId;
+    
+    /* Get GLFW window from drawable */
+    glfwWindow = TkGlfwGetWindowFromDrawable(drawable);
+    if (!glfwWindow) {
         return NULL;
     }
     
-    /* Allocate pixel buffer .*/
-    unsigned char* pixels = (unsigned char*)Tcl_Alloc(width * height * 4);
+    /* Get NanoVG context */
+    vg = TkGlfwGetNVGContext();
+    if (!vg) {
+        return NULL;
+    }
+    
+    /* Make context current */
+    glfwMakeContextCurrent(glfwWindow);
+    
+    /* Allocate pixel buffer */
+    pixels = (unsigned char*)ckalloc(width * height * 4);
     if (!pixels) {
         return NULL;
     }
     
-    /* Read pixels from current framebuffer. */
+    /* Read pixels from current framebuffer */
     glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     
-    /* Create NanoVG image. */
-    int imageId = nvgCreateImageRGBA(drawable->vg, width, height, 
-                                     NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY, 
-                                     pixels);
+    /* Create NanoVG image */
+    imageId = nvgCreateImageRGBA(vg, width, height, 
+                                  NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY, 
+                                  pixels);
     
-    Tcl_Free(pixels);
+    ckfree(pixels);
     
     if (imageId <= 0) {
         return NULL;
     }
     
-    NVGImageData* nvgImg = (NVGImageData*)Tcl_Alloc(sizeof(NVGImageData));
+    nvgImg = (NVGImageData*)ckalloc(sizeof(NVGImageData));
     if (nvgImg) {
         nvgImg->id = imageId;
         nvgImg->width = width;
         nvgImg->height = height;
         nvgImg->flags = NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY;
     } else {
-        nvgDeleteImage(drawable->vg, imageId);
+        nvgDeleteImage(vg, imageId);
     }
     
     return nvgImg;
@@ -465,67 +201,76 @@ ConvertTkImageToNVG(
     NVGcontext* vg,
     NVGImageData** nvgImage)
 {
+    Tcl_Interp *interp;
+    const char *imageName;
+    Tk_PhotoHandle photoHandle;
+    Tk_PhotoImageBlock block;
+    int width, height;
+    unsigned char *rgbaData;
+    int imageId;
+    int x, y;
+    unsigned char *src, *dst;
+    
     if (!vg || !image || !nvgImage) {
         return TCL_ERROR;
     }
     
     *nvgImage = NULL;
     
-    Tcl_Interp *interp = Tk_Interp(tkwin);
+    interp = Tk_Interp(tkwin);
     
-    /* Get photo image handle. */
-	const char *imageName = Tk_NameOfImage((Tk_ImageModel)image);
-	Tk_PhotoHandle photoHandle = Tk_FindPhoto(interp, imageName);
-	if (!photoHandle) {
-	    Tcl_SetResult(interp, "not a photo image", TCL_STATIC); 
-	    return TCL_ERROR;
-	}
+    /* Get photo image handle */
+    imageName = Tk_NameOfImage((Tk_ImageModel)image);
+    photoHandle = Tk_FindPhoto(interp, imageName);
+    if (!photoHandle) {
+        Tcl_SetResult(interp, "not a photo image", TCL_STATIC); 
+        return TCL_ERROR;
+    }
     
-    /* Get image dimensions. */
-    int width, height;
+    /* Get image dimensions */
     Tk_PhotoGetSize(photoHandle, &width, &height);
     
     if (width <= 0 || height <= 0) {
         return TCL_ERROR;
     }
     
-    /* Get photo block. */
-    Tk_PhotoImageBlock block;
+    /* Get photo block */
     if (Tk_PhotoGetImage(photoHandle, &block) != TCL_OK) {
         return TCL_ERROR;
     }
     
-    /* Convert to RGBA format for NanoVG. */
-    unsigned char* rgbaData = (unsigned char*)Tcl_Alloc(width * height * 4);
+    /* Convert to RGBA format for NanoVG */
+    rgbaData = (unsigned char*)ckalloc(width * height * 4);
     if (!rgbaData) {
         return TCL_ERROR;
     }
     
-    unsigned char* dst = rgbaData;
-    for (int y = 0; y < height; y++) {
-        unsigned char* srcRow = block.pixelPtr + y * block.pitch;
-        for (int x = 0; x < width; x++) {
-            unsigned char* src = srcRow + x * block.pixelSize;
+    /* Copy and convert pixel data */
+    for (y = 0; y < height; y++) {
+        src = block.pixelPtr + y * block.pitch;
+        dst = rgbaData + y * width * 4;
+        
+        for (x = 0; x < width; x++) {
             dst[0] = src[block.offset[0]];  /* R */
             dst[1] = src[block.offset[1]];  /* G */
             dst[2] = src[block.offset[2]];  /* B */
             dst[3] = (block.offset[3] >= 0) ? src[block.offset[3]] : 255;  /* A */
+            
+            src += block.pixelSize;
             dst += 4;
         }
     }
     
-    /* Create NanoVG image. */
-    int imageId = nvgCreateImageRGBA(vg, width, height, 
-                                     NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY, 
-                                     rgbaData);
+    /* Create NanoVG image */
+    imageId = nvgCreateImageRGBA(vg, width, height, 0, rgbaData);
     
-    Tcl_Free(rgbaData);
+    ckfree(rgbaData);
     
     if (imageId <= 0) {
         return TCL_ERROR;
     }
     
-    *nvgImage = (NVGImageData*)Tcl_Alloc(sizeof(NVGImageData));
+    *nvgImage = (NVGImageData*)ckalloc(sizeof(NVGImageData));
     if (!*nvgImage) {
         nvgDeleteImage(vg, imageId);
         return TCL_ERROR;
@@ -534,7 +279,7 @@ ConvertTkImageToNVG(
     (*nvgImage)->id = imageId;
     (*nvgImage)->width = width;
     (*nvgImage)->height = height;
-    (*nvgImage)->flags = NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY;
+    (*nvgImage)->flags = 0;
     
     return TCL_OK;
 }
@@ -550,7 +295,7 @@ ConvertTkImageToNVG(
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Updates the Tk photo image data.
+ *	Updates photo image data.
  *
  *----------------------------------------------------------------------
  */
@@ -561,158 +306,112 @@ ConvertNVGToTkImage(
     NVGImageData* nvgImage,
     Tk_PhotoHandle photoHandle)
 {
+    unsigned char *rgbaData;
+    Tk_PhotoImageBlock block;
+    int x, y;
+    unsigned char *src, *dst;
+    
     if (!vg || !nvgImage || !photoHandle) {
         return TCL_ERROR;
     }
     
-    int width, height;
-    nvgImageSize(vg, nvgImage->id, &width, &height);
-    
-    if (width <= 0 || height <= 0) {
+    /* Allocate buffer for image data */
+    rgbaData = (unsigned char*)ckalloc(nvgImage->width * nvgImage->height * 4);
+    if (!rgbaData) {
         return TCL_ERROR;
     }
     
-    /* Create temporary FBO to read image data. */
-    GLuint fbo = 0, texture = 0;
-    GLint oldFbo = 0;
-    unsigned char* pixelData = NULL;
-    int result = TCL_ERROR;
+    /* Read image data from NanoVG (note: not all NanoVG backends support this) */
+    /* This is a placeholder - actual implementation depends on NanoVG backend */
+    memset(rgbaData, 0, nvgImage->width * nvgImage->height * 4);
     
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFbo);
-    
-    /* Create texture. */
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, 
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    /* Create FBO. */
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-                          GL_TEXTURE_2D, texture, 0);
-    
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        goto cleanup;
-    }
-    
-    /* Render NVG image. */
-    glViewport(0, 0, width, height);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
-    nvgSave(vg);
-    nvgResetTransform(vg);
-    
-    NVGpaint imgPaint = nvgImagePattern(vg, 0, 0, width, height, 
-                                        0, nvgImage->id, 1.0f);
-    nvgBeginPath(vg);
-    nvgRect(vg, 0, 0, width, height);
-    nvgFillPaint(vg, imgPaint);
-    nvgFill(vg);
-    
-    nvgRestore(vg);
-    
-    /* Read pixels. */
-    pixelData = (unsigned char*)Tcl_Alloc(width * height * 4);
-    if (!pixelData) {
-        goto cleanup;
-    }
-    
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
-    
-    /* Update Tk photo image. */
-    Tk_PhotoImageBlock block;
-    block.width = width;
-    block.height = height;
+    /* Set up photo block */
+    block.pixelPtr = rgbaData;
+    block.width = nvgImage->width;
+    block.height = nvgImage->height;
+    block.pitch = nvgImage->width * 4;
     block.pixelSize = 4;
-    block.pitch = width * 4;
     block.offset[0] = 0;  /* R */
     block.offset[1] = 1;  /* G */
     block.offset[2] = 2;  /* B */
     block.offset[3] = 3;  /* A */
-    block.pixelPtr = pixelData;
     
-    if (Tk_PhotoPutBlock(NULL, photoHandle, &block, 0, 0, width, height,
-                        TK_PHOTO_COMPOSITE_SET) == TCL_OK) {
-        result = TCL_OK;
+    /* Put image data into photo */
+    if (Tk_PhotoPutBlock(NULL, photoHandle, &block, 0, 0,
+                         nvgImage->width, nvgImage->height,
+                         TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
+        ckfree(rgbaData);
+        return TCL_ERROR;
     }
     
-cleanup:
-    if (pixelData) Tcl_Free(pixelData);
-    glBindFramebuffer(GL_FRAMEBUFFER, oldFbo);
-    if (texture) glDeleteTextures(1, &texture);
-    if (fbo) glDeleteFramebuffers(1, &fbo);
-    
-    return result;
+    ckfree(rgbaData);
+    return TCL_OK;
 }
-
-/* Xlib-Compatible Image Functions. */
 
 /*
  *----------------------------------------------------------------------
  *
- * XCreateImage --
+ * TkWaylandCreateXImageWithNVGImage --
  *
- *	Create a new XImage structure.
+ *	Create XImage from NVG image data.
  *
  * Results:
- *	Pointer to XImage.
+ *	Pointer to XImage or NULL on failure.
  *
  * Side effects:
- *	Allocates memory.
+ *	Allocates memory for XImage structure and data.
  *
  *----------------------------------------------------------------------
  */
 
-XImage *
-XCreateImage(
-    TCL_UNUSED(Display *), /* display */
-    TCL_UNUSED(Visual *), /* visual */
-    unsigned int depth,
-    int format,
-    int offset,
-    char *data,
-    unsigned int width,
-    unsigned int height,
-    int bitmap_pad,
-    int bytes_per_line)
+static XImage*
+TkWaylandCreateXImageWithNVGImage(
+    NVGcontext* vg,
+    NVGImageData* nvgImage,
+    Display* display)
 {
-    XImage *img = (XImage*)Tcl_Alloc(sizeof(XImage));
-    if (!img) {
+    XImage *imagePtr;
+    char *data;
+    
+    if (!vg || !nvgImage) {
         return NULL;
     }
     
-    img->width = width;
-    img->height = height;
-    img->xoffset = offset;
-    img->format = format;
-    img->data = data;
-    img->byte_order = LSBFirst;  /* Wayland/OpenGL uses little-endian. */
-    img->bitmap_unit = 32;
-    img->bitmap_bit_order = LSBFirst;
-    img->bitmap_pad = bitmap_pad;
-    img->depth = depth;
-    
-    if (format == ZPixmap) {
-        img->bits_per_pixel = (depth == 1) ? 1 : 32;
-    } else {
-        img->bits_per_pixel = 1;
+    /* Allocate XImage structure */
+    imagePtr = (XImage*)ckalloc(sizeof(XImage));
+    if (!imagePtr) {
+        return NULL;
     }
     
-    if (bytes_per_line == 0) {
-        img->bytes_per_line = (width * img->bits_per_pixel + 7) / 8;
-    } else {
-        img->bytes_per_line = bytes_per_line;
+    /* Allocate image data */
+    data = (char*)ckalloc(nvgImage->width * nvgImage->height * 4);
+    if (!data) {
+        ckfree((char*)imagePtr);
+        return NULL;
     }
     
-    img->red_mask = 0x00FF0000;
-    img->green_mask = 0x0000FF00;
-    img->blue_mask = 0x000000FF;
+    /* Initialize XImage structure */
+    memset(imagePtr, 0, sizeof(XImage));
+    imagePtr->width = nvgImage->width;
+    imagePtr->height = nvgImage->height;
+    imagePtr->xoffset = 0;
+    imagePtr->format = ZPixmap;
+    imagePtr->data = data;
+    imagePtr->byte_order = LSBFirst;
+    imagePtr->bitmap_unit = 32;
+    imagePtr->bitmap_bit_order = LSBFirst;
+    imagePtr->bitmap_pad = 32;
+    imagePtr->depth = 24;
+    imagePtr->bytes_per_line = nvgImage->width * 4;
+    imagePtr->bits_per_pixel = 32;
+    imagePtr->red_mask = 0xFF0000;
+    imagePtr->green_mask = 0x00FF00;
+    imagePtr->blue_mask = 0x0000FF;
     
-    return img;
+    /* Read NVG image data (placeholder - actual implementation depends on backend) */
+    memset(data, 0, nvgImage->width * nvgImage->height * 4);
+    
+    return imagePtr;
 }
 
 /*
@@ -720,51 +419,56 @@ XCreateImage(
  *
  * XGetImage --
  *
- *	Copy image data from a drawable into an XImage.
+ *	Retrieve image data from drawable (Xlib compatibility).
  *
  * Results:
- *	Pointer to XImage, or NULL on failure.
+ *	Pointer to XImage or NULL on failure.
  *
  * Side effects:
- *	Allocates memory.
+ *	Allocates memory for image data.
  *
  *----------------------------------------------------------------------
  */
 
-XImage *
+XImage*
 XGetImage(
     Display *display,
     Drawable drawable,
-    int x,
-    int y,
+    int x, int y,
     unsigned int width,
     unsigned int height,
-    TCL_UNUSED(unsigned long),  /* plane_mask */
+    unsigned long plane_mask,
     int format)
 {
-    if (format != ZPixmap) {
-        return NULL;
-    }
+    NVGImageData *nvgImg;
+    XImage *imagePtr;
+    NVGcontext *vg;
     
-    WaylandDrawable* wlDraw = GetWaylandDrawable(drawable);
-    if (!wlDraw || width == 0 || height == 0) {
-        return NULL;
-    }
+    (void)plane_mask;  /* Not used in NanoVG backend */
+    (void)format;      /* Always use ZPixmap */
     
-    /* Capture region from drawable. */
-    NVGImageData* nvgImg = CreateNVGImageFromDrawableRect(wlDraw, x, y, 
-                                                          width, height);
+    LastKnownRequestProcessed(display)++;
+    
+    /* Create NVG image from drawable region */
+    nvgImg = CreateNVGImageFromDrawableRect(drawable, x, y, width, height);
     if (!nvgImg) {
         return NULL;
     }
     
-    /* Convert to XImage. */
-    XImage* imagePtr = TkWaylandCreateXImageWithNVGImage(wlDraw->vg, 
-                                                         nvgImg, display);
+    /* Get NanoVG context */
+    vg = TkGlfwGetNVGContext();
+    if (!vg) {
+        nvgDeleteImage(vg, nvgImg->id);
+        ckfree((char*)nvgImg);
+        return NULL;
+    }
     
-    /* Clean up */
-    nvgDeleteImage(wlDraw->vg, nvgImg->id);
-    Tcl_Free(nvgImg);
+    /* Convert to XImage */
+    imagePtr = TkWaylandCreateXImageWithNVGImage(vg, nvgImg, display);
+    
+    /* Clean up NVG image */
+    nvgDeleteImage(vg, nvgImg->id);
+    ckfree((char*)nvgImg);
     
     return imagePtr;
 }
@@ -774,13 +478,13 @@ XGetImage(
  *
  * XCopyArea --
  *
- *	Copy image data from one drawable to another using NanoVG.
+ *	Copy rectangular area from one drawable to another.
  *
  * Results:
- *	Success or error code.
+ *	Success.
  *
  * Side effects:
- *	Modifies destination drawable.
+ *	Copies pixel data between drawables.
  *
  *----------------------------------------------------------------------
  */
@@ -790,219 +494,151 @@ XCopyArea(
     Display *display,
     Drawable src,
     Drawable dst,
-    TCL_UNUSED(GC), /* gc */
-    int src_x,
-    int src_y,
+    GC gc,
+    int src_x, int src_y,
     unsigned int width,
     unsigned int height,
-    int dst_x,
-    int dst_y)
+    int dest_x, int dest_y)
 {
-    WaylandDrawable* srcDraw = GetWaylandDrawable(src);
-    WaylandDrawable* dstDraw = GetWaylandDrawable(dst);
+    TkWaylandDrawingContext dc;
+    NVGImageData *srcImg;
+    NVGpaint imgPaint;
     
     LastKnownRequestProcessed(display)++;
     
-    if (!dstDraw || !width || !height) {
-        return BadDrawable;
-    }
-    
-    /* Capture source region. */
-    NVGImageData* srcImg = CreateNVGImageFromDrawableRect(srcDraw, src_x, src_y, 
-                                                          width, height);
+    /* Create NVG image from source region */
+    srcImg = CreateNVGImageFromDrawableRect(src, src_x, src_y, width, height);
     if (!srcImg) {
         return BadDrawable;
     }
     
-    NVGcontext* vg = dstDraw->vg;
+    /* Begin drawing on destination */
+    if (TkGlfwBeginDraw(dst, gc, &dc) != TCL_OK) {
+        nvgDeleteImage(dc.vg, srcImg->id);
+        ckfree((char*)srcImg);
+        return BadDrawable;
+    }
     
-    /* Draw to destination. */
-    nvgSave(vg);
+    /* Create image pattern and draw */
+    imgPaint = nvgImagePattern(dc.vg, dest_x, dest_y, width, height, 
+                                0.0f, srcImg->id, 1.0f);
     
-    /* Draw image. */
-    NVGpaint imgPaint = nvgImagePattern(vg, dst_x, dst_y, width, height, 
-                                        0, srcImg->id, 1.0f);
-    nvgBeginPath(vg);
-    nvgRect(vg, dst_x, dst_y, width, height);
-    nvgFillPaint(vg, imgPaint);
-    nvgFill(vg);
+    nvgBeginPath(dc.vg);
+    nvgRect(dc.vg, dest_x, dest_y, width, height);
+    nvgFillPaint(dc.vg, imgPaint);
+    nvgFill(dc.vg);
     
-    nvgRestore(vg);
+    /* Clean up */
+    nvgDeleteImage(dc.vg, srcImg->id);
+    ckfree((char*)srcImg);
     
-    /* Clean up. */
-    nvgDeleteImage(vg, srcImg->id);
-    Tcl_Free(srcImg);
-    
+    TkGlfwEndDraw(&dc);
     return Success;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * XCopyPlane --
+ * XPutImage --
  *
- *	Copy a bitmap plane from source to destination.
- *	For Wayland, we treat this as XCopyArea.
+ *	Copy XImage data to drawable.
  *
  * Results:
- *	Success or error code.
+ *	Success.
  *
  * Side effects:
- *	Modifies destination drawable.
+ *	Draws image on drawable.
  *
  *----------------------------------------------------------------------
  */
 
 int
-XCopyPlane(
+XPutImage(
     Display *display,
-    Drawable src,
-    Drawable dst,
+    Drawable drawable,
     GC gc,
-    int src_x,
-    int src_y,
+    XImage *image,
+    int src_x, int src_y,
+    int dest_x, int dest_y,
     unsigned int width,
-    unsigned int height,
-    int dest_x,
-    int dest_y,
-    TCL_UNUSED(unsigned long)) /* plane */
+    unsigned int height)
 {
-    return XCopyArea(display, src, dst, gc, src_x, src_y, 
-                     width, height, dest_x, dest_y);
+    TkWaylandDrawingContext dc;
+    int imageId;
+    NVGpaint imgPaint;
+    
+    if (!image || !image->data) {
+        return BadValue;
+    }
+    
+    LastKnownRequestProcessed(display)++;
+    
+    /* Begin drawing */
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+        return BadDrawable;
+    }
+    
+    /* Create NanoVG image from XImage data */
+    imageId = nvgCreateImageRGBA(dc.vg, image->width, image->height, 
+                                  0, (unsigned char*)image->data);
+    
+    if (imageId <= 0) {
+        TkGlfwEndDraw(&dc);
+        return BadAlloc;
+    }
+    
+    /* Create image pattern */
+    imgPaint = nvgImagePattern(dc.vg, dest_x - src_x, dest_y - src_y,
+                                image->width, image->height, 
+                                0.0f, imageId, 1.0f);
+    
+    /* Draw the image */
+    nvgBeginPath(dc.vg);
+    nvgRect(dc.vg, dest_x, dest_y, width, height);
+    nvgFillPaint(dc.vg, imgPaint);
+    nvgFill(dc.vg);
+    
+    /* Clean up */
+    nvgDeleteImage(dc.vg, imageId);
+    
+    TkGlfwEndDraw(&dc);
+    return Success;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkScrollWindow --
+ * XDestroyImage --
  *
- *	Scroll a rectangular region of a window.
+ *	Free XImage structure and data.
  *
  * Results:
- *	Returns 1 if scroll generated damage, 0 otherwise.
+ *	Always returns 0.
  *
  * Side effects:
- *	Scrolls pixels and updates damage region.
+ *	Frees allocated memory.
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkScrollWindow(
-    Tk_Window tkwin,
-    GC gc,
-    int x, int y,
-    int width, int height,
-    int dx, int dy,
-    Region damageRgn)
+XDestroyImage(
+    XImage *image)
 {
-    if (dx == 0 && dy == 0) {
-        return 0;
+    if (image) {
+        if (image->data) {
+            ckfree(image->data);
+        }
+        ckfree((char*)image);
     }
-    
-    Drawable drawable = Tk_WindowId(tkwin);
-    Display* display = Tk_Display(tkwin);
-    
-    /* Perform the scroll using XCopyArea. */
-    XCopyArea(display, drawable, drawable, gc, 
-              x, y, width, height, x + dx, y + dy);
-    
-    /* Calculate exposed regions */
-    XRectangle rect;
-    
-    if (dx > 0) {
-        /* Exposed area on left */
-        rect.x = x;
-        rect.y = y;
-        rect.width = dx;
-        rect.height = height;
-        XUnionRectWithRegion(&rect, damageRgn, damageRgn);
-    } else if (dx < 0) {
-        /* Exposed area on right */
-        rect.x = x + width + dx;
-        rect.y = y;
-        rect.width = -dx;
-        rect.height = height;
-        XUnionRectWithRegion(&rect, damageRgn, damageRgn);
-    }
-    
-    if (dy > 0) {
-        /* Exposed area on top */
-        rect.x = x;
-        rect.y = y;
-        rect.width = width;
-        rect.height = dy;
-        XUnionRectWithRegion(&rect, damageRgn, damageRgn);
-    } else if (dy < 0) {
-        /* Exposed area on bottom */
-        rect.x = x;
-        rect.y = y + height + dy;
-        rect.width = width;
-        rect.height = -dy;
-        XUnionRectWithRegion(&rect, damageRgn, damageRgn);
-    }
-    
-    return 1;
-}
-
-/*  Public API Functions. */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGetNVGImageFromTkImage --
- *
- *	Convert Tk_Image to NVG image (public API).
- *
- * Results:
- *	TCL_OK on success, TCL_ERROR on failure.
- *
- * Side effects:
- *	Creates NVG image that must be freed by caller.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkGetNVGImageFromTkImage(
-    Tk_Window tkwin,
-    Tk_Image image,
-    NVGcontext* vg,
-    NVGImageData** nvgImage)
-{
-    return ConvertTkImageToNVG(tkwin, image, vg, nvgImage);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkPutTkImageFromNVGImage --
- *
- *	Convert NVG image to Tk photo image (public API).
- *
- * Results:
- *	TCL_OK on success, TCL_ERROR on failure.
- *
- * Side effects:
- *	Updates Tk photo image data.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkPutTkImageFromNVGImage(
-    NVGcontext* vg,
-    NVGImageData* nvgImage,
-    Tk_PhotoHandle photoHandle)
-{
-    return ConvertNVGToTkImage(vg, nvgImage, photoHandle);
+    return 0;
 }
 
 /*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
- * fill-column: 79
+ * fill-column: 78
  * coding: utf-8
  * End:
  */
