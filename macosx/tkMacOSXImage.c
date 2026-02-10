@@ -982,8 +982,8 @@ ClipCopyRects(
  *	region.
  *
  * Results:
- *	Returns 0 if the scroll generated no additional damage. Otherwise, sets
- *	the region that needs to be repainted after scrolling and returns 1.
+ *	Returns false if the scroll generated no additional damage. Otherwise, sets
+ *	the region that needs to be repainted after scrolling and returns true.
  *      When drawRect was in use, this function used the now deprecated
  *      scrollRect method of NSView.  With the current updateLayer
  *      implementation, using a CGImage as the view's backing layer, we are
@@ -1008,7 +1008,7 @@ ClipCopyRects(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
     GC gc,			/* GC for window to be scrolled. */
@@ -1021,7 +1021,7 @@ TkScrollWindow(
     HIShapeRef srcRgn, dstRgn;
     HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
     NSRect srcRect, dstRect;
-    int result = 0;
+    bool result = false;
     NSView *view = TkMacOSXGetNSViewForDrawable(drawable);
     CGRect viewBounds = [view bounds];
 
@@ -1050,7 +1050,7 @@ TkScrollWindow(
 	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
 	CFRelease(dstRgn);
 	CFRelease(srcRgn);
-	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
+	result = !HIShapeIsEmpty(dmgRgn);
 
     }
 

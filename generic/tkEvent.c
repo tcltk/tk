@@ -242,7 +242,7 @@ InvokeFocusHandlers(
     XEvent *eventPtr)
 {
     if ((mask & (FocusChangeMask|EnterWindowMask|LeaveWindowMask))
-	    && (TkFocusFilterEvent(*winPtrPtr, eventPtr) == 0)) {
+	    && (!TkFocusFilterEvent(*winPtrPtr, eventPtr))) {
 	return 1;
     }
 

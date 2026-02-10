@@ -722,7 +722,7 @@ XQueryPointer(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+MODULE_SCOPE bool
 TkGenerateButtonEventForXPointer(
     Window window)		/* X Window containing button event. */
 {
@@ -760,7 +760,7 @@ TkGenerateButtonEventForXPointer(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkGenerateButtonEvent(
     int x,			/* X location of mouse, */
     int y,			/* Y location of mouse. */
@@ -812,7 +812,7 @@ TkGenerateButtonEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 GenerateButtonEvent(
     MouseEventData *medPtr)
 {

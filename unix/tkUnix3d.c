@@ -342,7 +342,8 @@ TkpGetShadows(
 				 * drawing. */
 {
     XColor lightColor, darkColor;
-    int stressed, tmp1, tmp2;
+    bool stressed;
+	int tmp1, tmp2;
     int r, g, b;
     XGCValues gcValues;
 
