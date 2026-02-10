@@ -50,13 +50,9 @@ doNothing(void)
     /* dummy implementation, no need to do anything */
     return 0;
 }
-#   undef TkpWillDrawWidget
-#   undef TkpRedrawWidget
 #   undef TkpDefineNativeBitmaps
 #   undef TkpCreateNativeBitmap
 #   undef TkpGetNativeAppBitmap
-#   define TkpWillDrawWidget ((bool (*)(Tk_Window))(void *)doNothing)
-#   define TkpRedrawWidget ((void (*)(Tk_Window))(void *)doNothing)
 #   define TkpDefineNativeBitmaps ((void (*)(void))(void *)doNothing)
 #   define TkpCreateNativeBitmap ((Pixmap (*)(Display *, const void *))(void *)doNothing)
 #   define TkpGetNativeAppBitmap ((Pixmap (*)(Display *, const char *, int *, int *))(void *)doNothing)
@@ -438,8 +434,8 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-    TkpRedrawWidget, /* 185 */
-    TkpWillDrawWidget, /* 186 */
+    0, /* 185 */
+    0, /* 186 */
     TkDebugPhotoStringMatchDef, /* 187 */
 };
 
