@@ -563,27 +563,27 @@ if test $tk_aqua = no; then
 		AC_SUBST([LIBDECOR_CFLAGS])
 		AC_SUBST([LIBDECOR_LIBS])
 
-		# Check for Ayatana AppIndicator3 (modern system tray/status icon support)
-		AC_MSG_CHECKING([for libayatana-appindicator3])
-		APPINDICATOR_CFLAGS=""
-		APPINDICATOR_LIBS=""
-		found_appindicator=no
+# Check for sd-bus (libsystemd) → enables direct StatusNotifierItem / D-Bus system tray support on Wayland
+		AC_MSG_CHECKING([for sd-bus (system tray/status notifier support)])
+		SDBUSD_CFLAGS=""
+		SDBUSD_LIBS=""
+		found_sdbus=no
 
-		if pkg-config --exists "ayatana-appindicator3-0.1" 2>/dev/null; then
+		if pkg-config --exists "libsystemd" 2>/dev/null; then
 		    AC_MSG_RESULT([yes])
-		    APPINDICATOR_CFLAGS="`pkg-config --cflags ayatana-appindicator3-0.1`"
-		    APPINDICATOR_LIBS="`pkg-config --libs ayatana-appindicator3-0.1`"
-		    found_appindicator=yes
-		    AC_DEFINE([HAVE_AYATANA_APPINDICATOR], 1,
-		        [Define to 1 if libayatana-appindicator3 is available (system tray support)])
+		    SDBUSD_CFLAGS="`pkg-config --cflags libsystemd`"
+		    SDBUSD_LIBS="`pkg-config --libs libsystemd`"
+		    found_sdbus=yes
+		    AC_DEFINE([HAVE_SD_BUS], 1,
+		        [Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)])
 		else
 		    AC_MSG_RESULT([no])
-		    AC_MSG_NOTICE([libayatana-appindicator3 not found — system tray icon support will be unavailable on Wayland])
+		    AC_MSG_NOTICE([sd-bus not found — system tray icon support will be unavailable on Wayland])
 		fi
-		AC_SUBST([APPINDICATOR_CFLAGS])
-		AC_SUBST([APPINDICATOR_LIBS])
+		AC_SUBST([SDBUSD_CFLAGS])
+		AC_SUBST([SDBUSD_LIBS])
 
-		
+
 		AC_MSG_CHECKING([for fontconfig ≥ 2.12 (Wayland font support)])
 		if pkg-config --exists "fontconfig >= 2.12"; then
 		    AC_MSG_RESULT([yes])
@@ -606,12 +606,13 @@ if test $tk_aqua = no; then
            && test "$found_glfw" = yes \
            && test "$found_gles" = yes \
            && test "$found_libdecor" = yes \
-           && test "$found_fontconfig" = yes; then
+           && test "$found_fontconfig" = yes \
+           && test "$found_sdbus" = yes; then
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $APPINDICATOR_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $APPINDICATOR_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS"
 
             # Still useful if some code paths check for extra libdecor features
             AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
@@ -619,8 +620,8 @@ if test $tk_aqua = no; then
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor (required for GNOME) + fontconfig (Xft disabled)])
-              else
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor (required for GNOME) + fontconfig (Xft disabled) + sd-bus (StatusNotifierItem)])
+        else
             AC_MSG_ERROR([Wayland backend requested but one or more required libraries not found.
 
 Required packages (all mandatory):
@@ -631,11 +632,11 @@ Required packages (all mandatory):
   - glesv2 (OpenGL ES 3.0)          ← required for NanoVG rendering
   - libdecor-0 >= 0.1               ← critical for proper window decorations on GNOME/Mutter
   - fontconfig >= 2.12
-  - ayatana-appindicator3-0.1       ← required for system tray / status icon support
+  - libsystemd                       ← required for sd-bus / D-Bus StatusNotifierItem system tray support
 
 Install missing packages (e.g. on Debian/Ubuntu:
   libwayland-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev
-  libdecor-0-dev libfontconfig-dev libayatana-appindicator3-dev)
+  libdecor-0-dev libfontconfig-dev libsystemd-dev)
 ])
         fi
     fi
