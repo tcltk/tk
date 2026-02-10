@@ -527,12 +527,11 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
 
 int
 Tk_SendObjCmd(
-    void *clientData,
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    (void)clientData;   /* unused */
 
     enum { SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST };
     static const char *const sendOptions[] = {
@@ -710,7 +709,8 @@ Tk_SendObjCmd(
  */
 
 static void
-SocketEventProc(ClientData clientData, int mask)
+SocketEventProc(ClientData clientData, 
+	TCL)UNUSED(int)) /* mask */
 {
     (void)mask;     /* unused */
 
@@ -909,9 +909,9 @@ DeleteProc(void *clientData)
  */
 
 int
-TkGetInterpNames(Tcl_Interp *interp, Tk_Window tkwin)
+TkGetInterpNames(Tcl_Interp *interp, 
+	TCL_UNUSED(Tk_Window)) /* tkwin */
 {
-    (void)tkwin;        /* unused */
 
     char *registryDir;
     DIR *dir;
@@ -966,9 +966,8 @@ TkGetInterpNames(Tcl_Interp *interp, Tk_Window tkwin)
  */
 
 void
-TkSendCleanup(TkDisplay *dispPtr)
+TkSendCleanup(TCL_UNUSED(TkDisplay *)) /* dispPtr */
 {
-    (void)dispPtr;      /* unused */
 
     ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     RegisteredInterp *riPtr, *next;
@@ -1012,12 +1011,11 @@ TkSendCleanup(TkDisplay *dispPtr)
 
 int
 TkpTestsendCmd(
-    void *clientData,
+    TCL_UNUSED(void *), /* clientData */
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    (void)clientData;   /* unused */
 
     static const char *const options[] = { "serial", NULL };
     int index;
