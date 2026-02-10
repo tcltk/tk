@@ -535,10 +535,8 @@ EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
 				const char *source, Tcl_Size numBytes,
 				double x, double y, double angle);
-/* 185 */
-EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
-/* 186 */
-EXTERN bool		TkpWillDrawWidget(Tk_Window tkwin);
+/* Slot 185 is reserved */
+/* Slot 186 is reserved */
 /* 187 */
 EXTERN bool		TkDebugPhotoStringMatchDef(Tcl_Interp *inter,
 				Tcl_Obj *data, Tcl_Obj *formatString,
@@ -733,8 +731,8 @@ typedef struct TkIntStubs {
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x, double y, double angle); /* 184 */
-    void (*tkpRedrawWidget) (Tk_Window tkwin); /* 185 */
-    bool (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
+    void (*reserved185)(void);
+    void (*reserved186)(void);
     bool (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 187 */
 } TkIntStubs;
 
@@ -1094,10 +1092,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkIntersectAngledTextLayout) /* 183 */
 #define TkDrawAngledChars \
 	(tkIntStubsPtr->tkDrawAngledChars) /* 184 */
-#define TkpRedrawWidget \
-	(tkIntStubsPtr->tkpRedrawWidget) /* 185 */
-#define TkpWillDrawWidget \
-	(tkIntStubsPtr->tkpWillDrawWidget) /* 186 */
+/* Slot 185 is reserved */
+/* Slot 186 is reserved */
 #define TkDebugPhotoStringMatchDef \
 	(tkIntStubsPtr->tkDebugPhotoStringMatchDef) /* 187 */
 
@@ -1109,13 +1105,9 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define TCL_STORAGE_CLASS DLLIMPORT
 
 #if !defined(MAC_OSX_TK) && !defined(USE_TK_STUBS)
-#   undef TkpWillDrawWidget
-#   undef TkpRedrawWidget
 #   undef TkpDefineNativeBitmaps
 #   undef TkpCreateNativeBitmap
 #   undef TkpGetNativeAppBitmap
-#   define TkpWillDrawWidget(w) 0
-#   define TkpRedrawWidget(w)
 #   define TkpDefineNativeBitmaps()
 #   define TkpCreateNativeBitmap(display, source) None
 #   define TkpGetNativeAppBitmap(display, name, w, h) None

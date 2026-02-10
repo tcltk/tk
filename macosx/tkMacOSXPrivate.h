@@ -281,12 +281,12 @@ MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 MODULE_SCOPE int	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
 MODULE_SCOPE int	TkMacOSXNSImage_Init(Tcl_Interp *interp);
-MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
+MODULE_SCOPE bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(void *clientData);
 MODULE_SCOPE NSColor*   controlAccentColor(void);
 MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
-MODULE_SCOPE int	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
+MODULE_SCOPE bool	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
 			    BOOL useDarkAppearance);
 MODULE_SCOPE CGColorRef	TkMacOSXGetCGColorFromNSColorUsingAppearance(
 			    NSColor *color, BOOL useDarkAppearance);

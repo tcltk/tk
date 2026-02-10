@@ -28,7 +28,7 @@ typedef struct {
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
-static int		GenerateButtonEvent(MouseEventData *medPtr);
+static bool		GenerateButtonEvent(MouseEventData *medPtr);
 
 #pragma mark TKApplication(TKMouseEvent)
 

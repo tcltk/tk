@@ -529,38 +529,6 @@ static void RefocusGrabWindow(void *data) {
 /*
  *----------------------------------------------------------------------
  *
- * TkpWillDrawWidget --
- *
- *      A widget display procedure can call this to determine whether it is
- *      being run inside of the drawRect method. If not, it may be desirable
- *      for the display procedure to simply clear the REDRAW_PENDING flag
- *      and return.  The widget can be recorded in order to schedule a
- *      redraw, via an Expose event, from within drawRect.
- *
- *      This is also needed for some tests, especially of the Text widget,
- *      which record data in a global Tcl variable and assume that display
- *      procedures will be run in a predictable sequence as Tcl idle tasks.
- *
- * Results:
- *      True if called from the drawRect method of a TKContentView with
- *      tkwin NULL or pointing to a widget in the current focusView.
- *
- * Side effects:
- *	Currently none.  One day the tkwin parameter may be recorded to
- *      handle redrawing the widget later.
- *
- *----------------------------------------------------------------------
- */
-// This stub is no longer used, but is expected by the stub mechanism.
-int
-TkpWillDrawWidget(Tk_Window tkwin) {
-    (void) tkwin;
-    return false;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * GenerateUpdates --
  *
  *	Given an update rectangle and a Tk window, this function generates
