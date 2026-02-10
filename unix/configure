@@ -699,6 +699,8 @@ ATK_CFLAGS
 HAVE_WAYLAND
 FONTCONFIG_LIBS
 FONTCONFIG_CFLAGS
+APPINDICATOR_LIBS
+APPINDICATOR_CFLAGS
 LIBDECOR_LIBS
 LIBDECOR_CFLAGS
 GLES_LIBS
@@ -8379,7 +8381,7 @@ printf "%s\n" "$found_cups" >&6; }
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $CUPS_LIBS $XLIBSW"
 	    ac_fn_c_check_header_compile "$LINENO" "cups/cups.h" "ac_cv_header_cups_cups_h" "#include <cups/cups.h>
 "
 if test "x$ac_cv_header_cups_cups_h" = xyes
@@ -8401,6 +8403,7 @@ fi
 
 
 fi
+
 #--------------------------------------------------------------------
 #       Check for Wayland support (non-X11 backend)
 #--------------------------------------------------------------------
@@ -8647,6 +8650,31 @@ printf "%s\n" "$as_me: libdecor-0 >= 0.1 not found — client-side decorations w
 
 
 
+		# Check for Ayatana AppIndicator3 (modern system tray/status icon support)
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libayatana-appindicator3" >&5
+printf %s "checking for libayatana-appindicator3... " >&6; }
+		APPINDICATOR_CFLAGS=""
+		APPINDICATOR_LIBS=""
+		found_appindicator=no
+
+		if pkg-config --exists "ayatana-appindicator3-0.1" 2>/dev/null; then
+		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+		    APPINDICATOR_CFLAGS="`pkg-config --cflags ayatana-appindicator3-0.1`"
+		    APPINDICATOR_LIBS="`pkg-config --libs ayatana-appindicator3-0.1`"
+		    found_appindicator=yes
+
+printf "%s\n" "#define HAVE_AYATANA_APPINDICATOR 1" >>confdefs.h
+
+		else
+		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: libayatana-appindicator3 not found — system tray icon support will be unavailable on Wayland" >&5
+printf "%s\n" "$as_me: libayatana-appindicator3 not found — system tray icon support will be unavailable on Wayland" >&6;}
+		fi
+
+
+
 
 		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for fontconfig ≥ 2.12 (Wayland font support)" >&5
 printf %s "checking for fontconfig ≥ 2.12 (Wayland font support)... " >&6; }
@@ -8680,8 +8708,8 @@ printf "%s\n" "$as_me: fontconfig >= 2.12 not found — font support on Wayland 
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $APPINDICATOR_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $APPINDICATOR_LIBS"
 
             # Still useful if some code paths check for extra libdecor features
 
@@ -8695,7 +8723,7 @@ printf "%s\n" "#define TK_USE_WAYLAND 1" >>confdefs.h
 
             { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + OpenGL ES + libdecor (required for GNOME) + fontconfig (Xft disabled)" >&5
 printf "%s\n" "$as_me: Wayland backend enabled with GLFW + OpenGL ES + libdecor (required for GNOME) + fontconfig (Xft disabled)" >&6;}
-        else
+              else
             as_fn_error $? "Wayland backend requested but one or more required libraries not found.
 
 Required packages (all mandatory):
@@ -8703,11 +8731,14 @@ Required packages (all mandatory):
   - wayland-cursor >= 1.18
   - xkbcommon >= 0.5.0
   - glfw3 >= 3.4
-  - glesv2 (OpenGL ES 3.0)     ← required for NanoVG rendering
-  - libdecor-0 >= 0.1          ← critical for proper window decorations on GNOME/Mutter
+  - glesv2 (OpenGL ES 3.0)          ← required for NanoVG rendering
+  - libdecor-0 >= 0.1               ← critical for proper window decorations on GNOME/Mutter
   - fontconfig >= 2.12
+  - ayatana-appindicator3-0.1       ← required for system tray / status icon support
 
-Install missing packages (e.g. on Debian/Ubuntu: libwayland-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev libdecor-0-dev libfontconfig-dev)
+Install missing packages (e.g. on Debian/Ubuntu:
+  libwayland-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev
+  libdecor-0-dev libfontconfig-dev libayatana-appindicator3-dev)
 " "$LINENO" 5
         fi
     fi

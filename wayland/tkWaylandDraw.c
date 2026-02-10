@@ -2,7 +2,8 @@
  * tkWaylandDraw.c --
  *
  *	This file contains functions that draw to windows using Wayland,
- *	GLFW, and NanoVG. Many of these functions emulate Xlib functions.
+ *	GLFW, and NanoVG. Many of these functions emulate Xlib functions
+ *      for compatibility with Tk's traditional API.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -14,12 +15,10 @@
 #include "tkInt.h"
 #include "tkPort.h"
 #include "tkGlfwInt.h"
+#include <GLES3/gl3.h>
 #include "nanovg.h"
 
-/* OpenGL for viewport management */
-#include <GL/gl.h>
-
-/* X11 region headers for BoxPtr and Region types */
+/* X11 region headers for BoxPtr and Region types. */
 #include <X11/Xutil.h>
 
 #define radians(d)	((d) * (M_PI/180.0))
@@ -164,7 +163,7 @@ XFillPolygon(
         return BadDrawable;
     }
     
-    /* Get GC values for fill rule */
+    /* Get GC values for fill rule. */
     XGetGCValues(NULL, gc, GCFillRule, &gcValues);
     
     nvgBeginPath(dc.vg);
@@ -181,7 +180,7 @@ XFillPolygon(
     
     nvgClosePath(dc.vg);
     
-    /* Set winding based on fill rule */
+    /* Set winding based on fill rule. */
     if (gcValues.fill_rule == EvenOddRule) {
         nvgPathWinding(dc.vg, NVG_HOLE);
     } else {
@@ -190,7 +189,7 @@ XFillPolygon(
     
     nvgFill(dc.vg);
     
-    (void)shape;  /* Suppress unused warning */
+    (void)shape;  /* Suppress unused warning. */
     
     TkGlfwEndDraw(&dc);
     return Success;
@@ -383,7 +382,7 @@ XDrawArc(
     if (width == height) {
         nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
     } else {
-        /* Ellipse: scale transform */
+        /* Ellipse: scale transform. */
         nvgSave(dc.vg);
         nvgTranslate(dc.vg, cx, cy);
         nvgScale(dc.vg, 1.0f, ry / rx);
@@ -510,7 +509,7 @@ XFillArc(
         return BadDrawable;
     }
     
-    /* Get GC values for arc mode */
+    /* Get GC values for arc mode. */
     XGetGCValues(NULL, gc, GCArcMode, &gcValues);
     
     cx = x + width / 2.0f;
@@ -524,7 +523,7 @@ XFillArc(
     nvgBeginPath(dc.vg);
     
     if (gcValues.arc_mode == ArcPieSlice) {
-        /* Pie slice: line from center to start, arc, line back to center */
+        /* Pie slice: line from center to start, arc, line back to center. */
         nvgMoveTo(dc.vg, cx, cy);
     }
     

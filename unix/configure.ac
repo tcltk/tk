@@ -403,7 +403,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $CUPS_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(cups/cups.h, [], [
 		found_cups=no
 		CUPS_CFLAGS=""
@@ -416,6 +416,7 @@ if test $tk_aqua = no; then
     AC_SUBST(CUPS_CFLAGS)
     AC_SUBST(CUPS_LIBS)
 fi
+
 #--------------------------------------------------------------------
 #       Check for Wayland support (non-X11 backend)
 #--------------------------------------------------------------------
@@ -561,7 +562,27 @@ if test $tk_aqua = no; then
 		fi
 		AC_SUBST([LIBDECOR_CFLAGS])
 		AC_SUBST([LIBDECOR_LIBS])
-		
+
+		# Check for Ayatana AppIndicator3 (modern system tray/status icon support)
+		AC_MSG_CHECKING([for libayatana-appindicator3])
+		APPINDICATOR_CFLAGS=""
+		APPINDICATOR_LIBS=""
+		found_appindicator=no
+
+		if pkg-config --exists "ayatana-appindicator3-0.1" 2>/dev/null; then
+		    AC_MSG_RESULT([yes])
+		    APPINDICATOR_CFLAGS="`pkg-config --cflags ayatana-appindicator3-0.1`"
+		    APPINDICATOR_LIBS="`pkg-config --libs ayatana-appindicator3-0.1`"
+		    found_appindicator=yes
+		    AC_DEFINE([HAVE_AYATANA_APPINDICATOR], 1,
+		        [Define to 1 if libayatana-appindicator3 is available (system tray support)])
+		else
+		    AC_MSG_RESULT([no])
+		    AC_MSG_NOTICE([libayatana-appindicator3 not found — system tray icon support will be unavailable on Wayland])
+		fi
+		AC_SUBST([APPINDICATOR_CFLAGS])
+		AC_SUBST([APPINDICATOR_LIBS])
+
 		
 		AC_MSG_CHECKING([for fontconfig ≥ 2.12 (Wayland font support)])
 		if pkg-config --exists "fontconfig >= 2.12"; then
@@ -589,8 +610,8 @@ if test $tk_aqua = no; then
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $APPINDICATOR_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $APPINDICATOR_LIBS"
 
             # Still useful if some code paths check for extra libdecor features
             AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
@@ -599,7 +620,7 @@ if test $tk_aqua = no; then
             TK_WINDOWINGSYSTEM=WAYLAND
 
             AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor (required for GNOME) + fontconfig (Xft disabled)])
-        else
+              else
             AC_MSG_ERROR([Wayland backend requested but one or more required libraries not found.
 
 Required packages (all mandatory):
@@ -607,11 +628,14 @@ Required packages (all mandatory):
   - wayland-cursor >= 1.18
   - xkbcommon >= 0.5.0
   - glfw3 >= 3.4
-  - glesv2 (OpenGL ES 3.0)     ← required for NanoVG rendering
-  - libdecor-0 >= 0.1          ← critical for proper window decorations on GNOME/Mutter
+  - glesv2 (OpenGL ES 3.0)          ← required for NanoVG rendering
+  - libdecor-0 >= 0.1               ← critical for proper window decorations on GNOME/Mutter
   - fontconfig >= 2.12
+  - ayatana-appindicator3-0.1       ← required for system tray / status icon support
 
-Install missing packages (e.g. on Debian/Ubuntu: libwayland-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev libdecor-0-dev libfontconfig-dev)
+Install missing packages (e.g. on Debian/Ubuntu:
+  libwayland-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev
+  libdecor-0-dev libfontconfig-dev libayatana-appindicator3-dev)
 ])
         fi
     fi

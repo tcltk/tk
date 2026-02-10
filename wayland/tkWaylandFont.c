@@ -88,7 +88,6 @@ static void         InitFont(Tk_Window tkwin, const TkFontAttributes *fa, UnixFo
 static void         InitSubFont(SubFont *sf, FontFamily *family, int pixelSize);
 static void         ReleaseFont(UnixFont *uf);
 static void         ReleaseSubFont(SubFont *sf);
-static char       **ListFonts(const char *pattern, int *countPtr);
 
 /*----------------------------------------------------------------------
  *
@@ -1123,32 +1122,6 @@ TkpGetFontAttrsForChar(
     }
 }
 
-/*----------------------------------------------------------------------
- *
- * ListFonts --
- *
- *	List fonts matching a pattern (stub implementation).
- *
- * Results:
- *	Returns empty font list.
- *
- * Side effects:
- *	Allocates empty result array.
- *
- *----------------------------------------------------------------------
- */
- 
-static char **
-ListFonts(
-	TCL_UNUSED(const char *), /* pattern */
-	int *countPtr)
-{
-    /* Simplified implementation - return empty list. */
-    char **result = Tcl_Alloc(sizeof(char*));
-    result[0] = NULL;
-    *countPtr = 0;
-    return result;
-}
 
 /*----------------------------------------------------------------------
  *

@@ -258,7 +258,7 @@ ConvertXBMToRGBA(
             int rgbaIndex = (y * width + x) * 4;
             
             if (maskBit == 0) {
-                /* Transparent */
+                /* Transparent. */
                 rgba[rgbaIndex] = 0;     /* R */
                 rgba[rgbaIndex+1] = 0;   /* G */
                 rgba[rgbaIndex+2] = 0;   /* B */
@@ -351,16 +351,16 @@ LoadImageFile(
     const char* ext = strrchr(filename, '.');
     if (ext) {
         if (strcasecmp(ext, ".png") == 0) {
-            /* Use stb_image for PNG files */
+            /* Use stb_image for PNG files. */
             int channels;
             *pixels = stbi_load(filename, width, height, &channels, 4);
             if (*pixels) {
-                /* stbi_load returns RGBA, which is what we need */
+                /* stbi_load returns RGBA, which is what we need. */
                 return 1;
             }
             return 0;
         } else if (strcasecmp(ext, ".xbm") == 0) {
-            /* Use LoadXBMFile for .xbm files */
+            /* Use LoadXBMFile for .xbm files. */
             return LoadXBMFile(filename, pixels, width, height);
         }
     }
@@ -506,7 +506,7 @@ LoadXBMFile(
         return 0;
     }
     
-    /* Prevent overflow */
+    /* Prevent overflow. */
     if ((unsigned long)fileSizeLong > SIZE_MAX - 1) {
         fclose(fp);
         return 0;

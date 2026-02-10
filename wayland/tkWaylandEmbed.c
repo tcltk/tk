@@ -44,6 +44,9 @@ Tk_UseWindow(
     Tk_Window tkwin,
     const char *string)
 {
+    TCL_UNUSED(tkwin);
+    TCL_UNUSED(string);
+    
     /* Embedding not supported in this build/configuration. */
     if (interp) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -75,6 +78,7 @@ void
 Tk_MakeContainer(
     Tk_Window tkwin)
 {
+    TCL_UNUSED(tkwin);
     /* No-op — container mode is not implemented. */
 }
 
@@ -101,6 +105,7 @@ Tk_Window
 Tk_GetOtherWindow(
     Tk_Window tkwin)
 {
+    TCL_UNUSED(tkwin);
     return NULL;   /* No other half exists. */
 }
 
@@ -109,7 +114,7 @@ Tk_GetOtherWindow(
  *
  * TkUnixContainerId --
  *
-s *	Given an embedded window, this function returns the X window
+ *	Given an embedded window, this function returns the X window
  *	identifier for the associated container window.
  *
  * Results:
@@ -126,6 +131,7 @@ Window
 TkUnixContainerId(
     TkWindow *winPtr)
 {
+    TCL_UNUSED(winPtr);
     return None;   /* No container window. */
 }
 
@@ -157,6 +163,8 @@ TkpRedirectKeyEvent(
     TkWindow *winPtr,
     XEvent *eventPtr)
 {
+    TCL_UNUSED(winPtr);
+    TCL_UNUSED(eventPtr);
     /* No embedding → no redirection needed. */
 }
 
@@ -182,6 +190,8 @@ TkpClaimFocus(
     TkWindow *topLevelPtr,
     int force)
 {
+    TCL_UNUSED(topLevelPtr);
+    TCL_UNUSED(force);
     /* No embedding → cannot claim focus via container. */
 }
 

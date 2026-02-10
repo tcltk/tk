@@ -18,27 +18,27 @@
 #include <string.h>
 
 /*
- * Keyboard state management
+ * Keyboard state management.
  */
 typedef struct {
     struct xkb_context *xkb_context;
     struct xkb_keymap *xkb_keymap;
     struct xkb_state *xkb_state;
     
-    /* Modifier masks for Tk */
+    /* Modifier masks for Tk. */
     int mode_mod_mask;
     int meta_mod_mask;
     int alt_mod_mask;
     int lock_usage;
     
-    /* Pending text input from character callback */
+    /* Pending text input from character callback. */
     char *pending_text;
     int pending_text_len;
 } KeyboardState;
 
 static KeyboardState keyboardState = {NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0};
 
-/* Forward declarations */
+/* Forward declarations. */
 static void InitializeXKB(void);
 static void CleanupXKB(void);
 static KeySym XKBKeySymToX11KeySym(xkb_keysym_t xkb_sym);
@@ -65,7 +65,7 @@ TkpInitKeymapInfo(TkDisplay *dispPtr)
 {
     InitializeXKB();
     
-    /* Initialize display keymap info */
+    /* Initialize display keymap info. */
     dispPtr->bindInfoStale = 1;
     dispPtr->modeModMask = 0;
     dispPtr->metaModMask = Mod1Mask;
@@ -93,17 +93,17 @@ static void
 InitializeXKB(void)
 {
     if (keyboardState.xkb_context) {
-        return;  /* Already initialized */
+        return;  /* Already initialized. */
     }
 
-    /* Create XKB context */
+    /* Create XKB context. */
     keyboardState.xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!keyboardState.xkb_context) {
         fprintf(stderr, "Failed to create XKB context\n");
         return;
     }
 
-    /* Create keymap from names (uses system defaults) */
+    /* Create keymap from names (uses system defaults). */
     struct xkb_rule_names names = {
         .rules = NULL,
         .model = NULL,
@@ -122,7 +122,7 @@ InitializeXKB(void)
         return;
     }
 
-    /* Create XKB state */
+    /* Create XKB state. */
     keyboardState.xkb_state = xkb_state_new(keyboardState.xkb_keymap);
     if (!keyboardState.xkb_state) {
         fprintf(stderr, "Failed to create XKB state\n");
@@ -223,7 +223,7 @@ TkpGetKeySym(
     TkKeyEvent *kePtr = (TkKeyEvent *)eventPtr;
     KeyCode keycode;
     
-    /* Check if already cached */
+    /* Check if already cached. */
     if (kePtr->keysym != NoSymbol) {
         return kePtr->keysym;
     }
@@ -238,15 +238,15 @@ TkpGetKeySym(
         return NoSymbol;
     }
     
-    /* Use XKB to get keysym from scancode */
+    /* Use XKB to get keysym from scancode. */
     xkb_keycode_t xkb_keycode = keycode + 8;  /* XKB uses keycode + 8 */
     xkb_keysym_t xkb_sym = xkb_state_key_get_one_sym(
         keyboardState.xkb_state, xkb_keycode);
     
-    /* Convert XKB keysym to X11 keysym */
+    /* Convert XKB keysym to X11 keysym. */
     KeySym keysym = XKBKeySymToX11KeySym(xkb_sym);
     
-    /* Cache it */
+    /* Cache it. */
     kePtr->keysym = keysym;
     
     return keysym;
@@ -276,7 +276,7 @@ TkpGetString(
 {
     TkKeyEvent *kePtr = (TkKeyEvent *)eventPtr;
     
-    /* Check cache */
+    /* Check cache. */
     if (kePtr->charValuePtr) {
         Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
         memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
@@ -284,25 +284,25 @@ TkpGetString(
         return Tcl_DStringValue(dsPtr);
     }
     
-    /* Only for KeyPress */
+    /* Only for KeyPress. */
     if (eventPtr->type != KeyPress) {
         Tcl_DStringSetLength(dsPtr, 0);
         return Tcl_DStringValue(dsPtr);
     }
     
-    /* Check for pending text from character callback */
+    /* Check for pending text from character callback. */
     if (keyboardState.pending_text && keyboardState.pending_text_len > 0) {
         Tcl_DStringAppend(dsPtr, keyboardState.pending_text, 
                          keyboardState.pending_text_len);
         
-        /* Cache it */
+        /* Cache it. */
         kePtr->charValuePtr = (char *)ckalloc(keyboardState.pending_text_len + 1);
         kePtr->charValueLen = keyboardState.pending_text_len;
         memcpy(kePtr->charValuePtr, keyboardState.pending_text,
                keyboardState.pending_text_len);
         kePtr->charValuePtr[keyboardState.pending_text_len] = '\0';
         
-        /* Clear pending */
+        /* Clear pending. */
         ckfree(keyboardState.pending_text);
         keyboardState.pending_text = NULL;
         keyboardState.pending_text_len = 0;
@@ -310,7 +310,7 @@ TkpGetString(
         return Tcl_DStringValue(dsPtr);
     }
     
-    /* Use XKB to get UTF-8 string */
+    /* Use XKB to get UTF-8 string. */
     if (keyboardState.xkb_state) {
         xkb_keycode_t xkb_keycode = eventPtr->xkey.keycode + 8;
         char buffer[32];
@@ -321,7 +321,7 @@ TkpGetString(
         if (len > 0) {
             Tcl_DStringAppend(dsPtr, buffer, len);
             
-            /* Cache it */
+            /* Cache it. */
             kePtr->charValuePtr = (char *)ckalloc(len + 1);
             kePtr->charValueLen = len;
             memcpy(kePtr->charValuePtr, buffer, len);
@@ -331,7 +331,7 @@ TkpGetString(
         }
     }
     
-    /* No string */
+    /* No string. */
     Tcl_DStringSetLength(dsPtr, 0);
     return Tcl_DStringValue(dsPtr);
 }
@@ -360,7 +360,7 @@ TkWaylandUpdateKeyboardModifiers(int glfw_mods)
         return;
     }
     
-    /* Update XKB state based on GLFW modifiers */
+    /* Update XKB state based on GLFW modifiers. */
     xkb_mod_mask_t depressed = 0;
     
     if (glfw_mods & GLFW_MOD_SHIFT) {
@@ -421,7 +421,7 @@ TkWaylandStoreCharacterInput(unsigned int codepoint)
     char utf8[8];
     int len;
     
-    /* Convert Unicode codepoint to UTF-8 */
+    /* Convert Unicode codepoint to UTF-8. */
     if (codepoint < 0x80) {
         utf8[0] = (char)codepoint;
         len = 1;
@@ -443,7 +443,7 @@ TkWaylandStoreCharacterInput(unsigned int codepoint)
     }
     utf8[len] = '\0';
     
-    /* Store for next TkpGetString() call */
+    /* Store for next TkpGetString() call. */
     if (keyboardState.pending_text) {
         ckfree(keyboardState.pending_text);
     }
@@ -503,7 +503,7 @@ Tk_SetCaretPos(
 static KeySym
 XKBKeySymToX11KeySym(xkb_keysym_t xkb_sym)
 {
-    /* XKB keysyms are compatible with X11 keysyms */
+    /* XKB keysyms are compatible with X11 keysyms. */
     return (KeySym)xkb_sym;
 }
 
