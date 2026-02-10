@@ -108,6 +108,13 @@ proc ::tk::ConsoleInit {} {
 	bind Console <FocusIn>  [list ::tk::console::FontchooserFocus %W 1]
 	bind Console <FocusOut> [list ::tk::console::FontchooserFocus %W 0]
     }
+    bind Console <$mod-MouseWheel> {
+	if {%D > 0} {
+	    event generate .console <<Console_FontSizeIncr>>
+	} else {
+	    event generate .console <<Console_FontSizeDecr>>
+	}
+    }
     AmpMenuArgs .menubar.edit add command -label [mc "&Increase Font Size"] \
 	-accel "$mod++" -command {event generate .console <<Console_FontSizeIncr>>}
     AmpMenuArgs .menubar.edit add command -label [mc "&Decrease Font Size"] \
