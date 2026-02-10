@@ -1,7 +1,8 @@
 /*
  * tkWaylandClipboard.c --
  *
- *	This file manages the clipboard for the Tk toolkit when using GLFW on Wayland.
+ *	This file manages the clipboard for the Tk toolkit when using GLFW 
+ *      on Wayland.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -84,7 +85,7 @@ XSetSelectionOwner(
 
     tkClipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 
-    /* Any time ownership changes → treat as clipboard content change. */
+    /* Any time ownership changes, treat as clipboard content change. */
     if (tkClipboardOwner || owner == None) {
         clipboardChangeCount++;
     }
@@ -95,14 +96,14 @@ XSetSelectionOwner(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSelDeadWindow --
+ * TkSelDeadWindow --
  *
  *	Cleanup when a window that owned the clipboard is being destroyed.
  *
  *----------------------------------------------------------------------
  */
 void
-TkMacOSXSelDeadWindow(TkWindow *winPtr)
+TkSelDeadWindow(TkWindow *winPtr)
 {
     if (winPtr && (Tk_Window)winPtr == tkClipboardOwner) {
         tkClipboardOwner = NULL;

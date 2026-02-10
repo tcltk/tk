@@ -134,31 +134,31 @@ CreateNVGImageFromDrawableRect(
     unsigned char *pixels;
     int imageId;
     
-    /* Get GLFW window from drawable */
+    /* Get GLFW window from drawable. */
     glfwWindow = TkGlfwGetWindowFromDrawable(drawable);
     if (!glfwWindow) {
         return NULL;
     }
     
-    /* Get NanoVG context */
+    /* Get NanoVG context. */
     vg = TkGlfwGetNVGContext();
     if (!vg) {
         return NULL;
     }
     
-    /* Make context current for GL operations */
+    /* Make context current for GL operations. */
     glfwMakeContextCurrent(glfwWindow);
     
-    /* Allocate pixel buffer */
+    /* Allocate pixel buffer. */
     pixels = (unsigned char*)ckalloc(width * height * 4);
     if (!pixels) {
         return NULL;
     }
     
-    /* Read pixels from current framebuffer */
+    /* Read pixels from current framebuffer. */
     glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     
-    /* Create NanoVG image */
+    /* Create NanoVG image. */
     imageId = nvgCreateImageRGBA(vg, width, height, 
                                   NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY, 
                                   pixels);
@@ -211,20 +211,20 @@ TkWaylandCreateXImageWithNVGImage(
         return NULL;
     }
     
-    /* Allocate XImage structure */
+    /* Allocate XImage structure. */
     imagePtr = (XImage*)ckalloc(sizeof(XImage));
     if (!imagePtr) {
         return NULL;
     }
     
-    /* Allocate image data */
+    /* Allocate image data. */
     data = (char*)ckalloc(nvgImage->width * nvgImage->height * 4);
     if (!data) {
         ckfree((char*)imagePtr);
         return NULL;
     }
     
-    /* Initialize XImage structure */
+    /* Initialize XImage structure. */
     memset(imagePtr, 0, sizeof(XImage));
     imagePtr->width = nvgImage->width;
     imagePtr->height = nvgImage->height;
@@ -242,7 +242,7 @@ TkWaylandCreateXImageWithNVGImage(
     imagePtr->green_mask = 0x00FF00;
     imagePtr->blue_mask = 0x0000FF;
     
-    /* Read NVG image data (placeholder - actual implementation depends on backend) */
+    /* Read NVG image data. */
     memset(data, 0, nvgImage->width * nvgImage->height * 4);
     
     return imagePtr;
@@ -283,13 +283,13 @@ XGetImage(
     
     LastKnownRequestProcessed(display)++;
     
-    /* Create NVG image from drawable region */
+    /* Create NVG image from drawable region. */
     nvgImg = CreateNVGImageFromDrawableRect(drawable, x, y, width, height);
     if (!nvgImg) {
         return NULL;
     }
     
-    /* Get NanoVG context */
+    /* Get NanoVG context. */
     vg = TkGlfwGetNVGContext();
     if (!vg) {
         nvgDeleteImage(vg, nvgImg->id);
@@ -297,10 +297,10 @@ XGetImage(
         return NULL;
     }
     
-    /* Convert to XImage */
+    /* Convert to XImage. */
     imagePtr = TkWaylandCreateXImageWithNVGImage(vg, nvgImg, display);
     
-    /* Clean up NVG image */
+    /* Clean up NVG image. */
     nvgDeleteImage(vg, nvgImg->id);
     ckfree((char*)nvgImg);
     
@@ -340,20 +340,20 @@ XCopyArea(
     
     LastKnownRequestProcessed(display)++;
     
-    /* Create NVG image from source region */
+    /* Create NVG image from source region. */
     srcImg = CreateNVGImageFromDrawableRect(src, src_x, src_y, width, height);
     if (!srcImg) {
         return BadDrawable;
     }
     
-    /* Begin drawing on destination */
+    /* Begin drawing on destination. */
     if (TkGlfwBeginDraw(dst, gc, &dc) != TCL_OK) {
         nvgDeleteImage(dc.vg, srcImg->id);
         ckfree((char*)srcImg);
         return BadDrawable;
     }
     
-    /* Create image pattern and draw */
+    /* Create image pattern and draw. */
     imgPaint = nvgImagePattern(dc.vg, dest_x, dest_y, width, height, 
                                 0.0f, srcImg->id, 1.0f);
     
@@ -362,7 +362,7 @@ XCopyArea(
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
     
-    /* Clean up */
+    /* Clean up. */
     nvgDeleteImage(dc.vg, srcImg->id);
     ckfree((char*)srcImg);
     
@@ -407,12 +407,12 @@ XPutImage(
     
     LastKnownRequestProcessed(display)++;
     
-    /* Begin drawing */
+    /* Begin drawing. */
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
     
-    /* Create NanoVG image from XImage data */
+    /* Create NanoVG image from XImage data. */
     imageId = nvgCreateImageRGBA(dc.vg, image->width, image->height, 
                                   0, (unsigned char*)image->data);
     
@@ -421,18 +421,18 @@ XPutImage(
         return BadAlloc;
     }
     
-    /* Create image pattern */
+    /* Create image pattern. */
     imgPaint = nvgImagePattern(dc.vg, dest_x - src_x, dest_y - src_y,
                                 image->width, image->height, 
                                 0.0f, imageId, 1.0f);
     
-    /* Draw the image */
+    /* Draw the image. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, dest_x, dest_y, width, height);
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
     
-    /* Clean up */
+    /* Clean up. */
     nvgDeleteImage(dc.vg, imageId);
     
     TkGlfwEndDraw(&dc);

@@ -21,7 +21,7 @@
 /*
  * In Wayland/GLFW/NanoVG, we don't have X-style colormaps.
  * We use RGBA colors directly with NanoVG.
- * We simulate minimal colormap stress behaviour for Tk compatibility.
+ * We simulate minimal colormap stress behavior for Tk compatibility.
  */
 
 struct TkStressedCmap {

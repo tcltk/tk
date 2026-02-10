@@ -479,6 +479,7 @@ TkpComputeMenuButtonGeometry(
     Tk_SetInternalBorder(mbPtr->tkwin, mbPtr->inset);
 }
 
+
 /*
  * Local Variables:
  * mode: c
