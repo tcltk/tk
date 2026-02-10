@@ -8335,6 +8335,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2025-12-16 (bug) [8e4fb0] crash in text sync subcommand (emiliano)
 
-2026-01-24 (bug) [c77b42] X11: crash by wm forget on menu] (emiliano)
+2026-01-24 (bug) [c77b42] X11: crash by wm forget on menu (emiliano)
+
+2026-02-10 (bug) [5d2061] fails to build with glibc 2.43 (emiliano)
 
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
