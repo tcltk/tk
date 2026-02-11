@@ -1589,8 +1589,8 @@ LineToPoint(
 	    TkGetButtPoints(coordPtr, coordPtr+2, width,
 		    linePtr->capStyle == CapProjecting, poly+4, poly+6);
 	} else if (linePtr->joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
-		    width, poly+4, poly+6) == 0) {
+	    if (!TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
+		    width, poly+4, poly+6)) {
 		changedMiterToBevel = 1;
 		TkGetButtPoints(coordPtr, coordPtr+2, width, 0,
 			poly+4, poly+6);

@@ -6898,51 +6898,6 @@ TkMacOSXMakeRealWindowExist(
 /*
  *----------------------------------------------------------------------
  *
- * TkpRedrawWidget --
- *
- *      This is a stub called only from tkTextDisp.c.  It was introduced
- *      to deal with an issue in macOS 10.14 and is not needed
- *      even for that OS with updateLayer in use.  It would add the widget bounds
- *      to the dirtyRect, which is not currently used, and set the
- *      TkNeedsDisplay flag.  Now it is a no-op.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The widget's bounding rectangle is marked as dirty.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpRedrawWidget(Tk_Window tkwin) {
-    (void) tkwin;
-#if 0
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    NSWindow *w = nil;
-    Rect tkBounds;
-    NSRect bounds;
-
-    if (winPtr && winPtr->window) {
-	w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    }
-    if (w) {
-	TKContentView *view = [w contentView];
-	TkMacOSXWinBounds(winPtr, &tkBounds);
-	bounds = NSMakeRect(tkBounds.left,
-			    [view bounds].size.height - tkBounds.bottom,
-			    tkBounds.right - tkBounds.left,
-			    tkBounds.bottom - tkBounds.top);
-	[view setNeedsDisplay:YES];
-    }
-#endif
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXSetScrollbarGrow --
  *
  *	Sets a flag for a toplevel window indicating that the passed Tk

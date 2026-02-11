@@ -37,7 +37,8 @@ extern "C" {
 #if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN void		TkCreateXEventSource(void);
-/* Slot 1 is reserved */
+/* 1 */
+EXTERN void		TkAboutDlg(void);
 /* 2 */
 EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
 				int active);
@@ -159,18 +160,16 @@ EXTERN void		TkpSetCursor(TkpCursor cursor);
 /* 6 */
 EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
-/* 7 */
-EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
+/* Slot 7 is reserved */
 /* 8 */
 EXTERN unsigned int	TkMacOSXButtonKeyState(void);
 /* 9 */
-EXTERN void		TkMacOSXClearMenubarActive(void);
+EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
 /* 10 */
-EXTERN int		TkMacOSXDispatchMenuEvent(int menuID, int index);
+EXTERN void		TkMacOSXClearMenubarActive(void);
 /* 11 */
 EXTERN void		TkpSetCapture(TkWindow *winPtr);
-/* 12 */
-EXTERN void		TkMacOSXHandleTearoffMenu(void);
+/* Slot 12 is reserved */
 /* Slot 13 is reserved */
 /* 14 */
 EXTERN int		TkMacOSXDoHLEvent(void *theEvent);
@@ -179,9 +178,7 @@ EXTERN int		TkMacOSXDoHLEvent(void *theEvent);
 EXTERN Window		TkMacOSXGetXWindow(void *macWinPtr);
 /* 17 */
 EXTERN int		TkMacOSXGrowToplevel(void *whichWindow, XPoint start);
-/* 18 */
-EXTERN void		TkMacOSXHandleMenuSelect(short theMenu,
-				unsigned short theItem, int optionKeyPressed);
+/* Slot 18 is reserved */
 /* Slot 19 is reserved */
 /* Slot 20 is reserved */
 /* 21 */
@@ -192,23 +189,19 @@ EXTERN void		TkMacOSXInvalidateWindow(MacDrawable *macWin,
 EXTERN void		TkMacOSXMakeRealWindowExist(TkWindow *winPtr);
 /* 24 */
 EXTERN void *		TkMacOSXMakeStippleMap(Drawable d1, Drawable d2);
-/* 25 */
-EXTERN void		TkMacOSXMenuClick(void);
+/* Slot 25 is reserved */
 /* Slot 26 is reserved */
 /* 27 */
 EXTERN int		TkMacOSXResizable(TkWindow *winPtr);
-/* 28 */
-EXTERN void		TkMacOSXSetHelpMenuItemCount(void);
+/* Slot 28 is reserved */
 /* 29 */
 EXTERN void		TkMacOSXSetScrollbarGrow(TkWindow *winPtr, int flag);
 /* Slot 30 is reserved */
-/* 31 */
-EXTERN void		TkMacOSXSetUpGraphicsPort(GC gc, void *destPort);
+/* Slot 31 is reserved */
 /* 32 */
 EXTERN void		TkMacOSXUpdateClipRgn(TkWindow *winPtr);
 /* Slot 33 is reserved */
-/* 34 */
-EXTERN int		TkMacOSXUseMenuID(short macID);
+/* Slot 34 is reserved */
 /* 35 */
 EXTERN Region		TkMacOSXVisableClipRgn(TkWindow *winPtr);
 /* 36 */
@@ -231,8 +224,7 @@ EXTERN Tk_Window	Tk_TopCoordsToWindow(Tk_Window tkwin, int rootX,
 EXTERN MacDrawable *	TkMacOSXContainerId(TkWindow *winPtr);
 /* 44 */
 EXTERN MacDrawable *	TkMacOSXGetHostToplevel(TkWindow *winPtr);
-/* 45 */
-EXTERN void		TkMacOSXPreprocessMenu(void);
+/* Slot 45 is reserved */
 /* 46 */
 EXTERN int		TkpIsWindowFloating(void *window);
 /* 47 */
@@ -249,7 +241,8 @@ EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
 EXTERN void		TkCreateXEventSource(void);
-/* Slot 1 is reserved */
+/* 1 */
+EXTERN void		TkAboutDlg(void);
 /* 2 */
 EXTERN void		TkGenerateActivateEvents(TkWindow *winPtr,
 				int active);
@@ -316,7 +309,7 @@ typedef struct TkIntPlatStubs {
 
 #if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     void (*tkCreateXEventSource) (void); /* 0 */
-    void (*reserved1)(void);
+    void (*tkAboutDlg) (void); /* 1 */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
     unsigned long (*tkpGetMS) (void); /* 3 */
     void (*tkPointerDeadWindow) (TkWindow *winPtr); /* 4 */
@@ -372,34 +365,34 @@ typedef struct TkIntPlatStubs {
     void (*tkPointerDeadWindow) (TkWindow *winPtr); /* 4 */
     void (*tkpSetCursor) (TkpCursor cursor); /* 5 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
-    int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 7 */
+    void (*reserved7)(void);
     unsigned int (*tkMacOSXButtonKeyState) (void); /* 8 */
-    void (*tkMacOSXClearMenubarActive) (void); /* 9 */
-    int (*tkMacOSXDispatchMenuEvent) (int menuID, int index); /* 10 */
+    int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 9 */
+    void (*tkMacOSXClearMenubarActive) (void); /* 10 */
     void (*tkpSetCapture) (TkWindow *winPtr); /* 11 */
-    void (*tkMacOSXHandleTearoffMenu) (void); /* 12 */
+    void (*reserved12)(void);
     void (*reserved13)(void);
     int (*tkMacOSXDoHLEvent) (void *theEvent); /* 14 */
     void (*reserved15)(void);
     Window (*tkMacOSXGetXWindow) (void *macWinPtr); /* 16 */
     int (*tkMacOSXGrowToplevel) (void *whichWindow, XPoint start); /* 17 */
-    void (*tkMacOSXHandleMenuSelect) (short theMenu, unsigned short theItem, int optionKeyPressed); /* 18 */
+    void (*reserved18)(void);
     void (*reserved19)(void);
     void (*reserved20)(void);
     void (*tkMacOSXInvalidateWindow) (MacDrawable *macWin, int flag); /* 21 */
     void (*reserved22)(void);
     void (*tkMacOSXMakeRealWindowExist) (TkWindow *winPtr); /* 23 */
     void * (*tkMacOSXMakeStippleMap) (Drawable d1, Drawable d2); /* 24 */
-    void (*tkMacOSXMenuClick) (void); /* 25 */
+    void (*reserved25)(void);
     void (*reserved26)(void);
     int (*tkMacOSXResizable) (TkWindow *winPtr); /* 27 */
-    void (*tkMacOSXSetHelpMenuItemCount) (void); /* 28 */
+    void (*reserved28)(void);
     void (*tkMacOSXSetScrollbarGrow) (TkWindow *winPtr, int flag); /* 29 */
     void (*reserved30)(void);
-    void (*tkMacOSXSetUpGraphicsPort) (GC gc, void *destPort); /* 31 */
+    void (*reserved31)(void);
     void (*tkMacOSXUpdateClipRgn) (TkWindow *winPtr); /* 32 */
     void (*reserved33)(void);
-    int (*tkMacOSXUseMenuID) (short macID); /* 34 */
+    void (*reserved34)(void);
     Region (*tkMacOSXVisableClipRgn) (TkWindow *winPtr); /* 35 */
     void (*tkMacOSXWinBounds) (TkWindow *winPtr, void *geometry); /* 36 */
     void (*tkMacOSXWindowOffset) (void *wRef, int *xOffset, int *yOffset); /* 37 */
@@ -410,7 +403,7 @@ typedef struct TkIntPlatStubs {
     Tk_Window (*tk_TopCoordsToWindow) (Tk_Window tkwin, int rootX, int rootY, int *newX, int *newY); /* 42 */
     MacDrawable * (*tkMacOSXContainerId) (TkWindow *winPtr); /* 43 */
     MacDrawable * (*tkMacOSXGetHostToplevel) (TkWindow *winPtr); /* 44 */
-    void (*tkMacOSXPreprocessMenu) (void); /* 45 */
+    void (*reserved45)(void);
     int (*tkpIsWindowFloating) (void *window); /* 46 */
     Tk_Window (*tkpGetCapture) (void); /* 47 */
     void (*reserved48)(void);
@@ -420,7 +413,7 @@ typedef struct TkIntPlatStubs {
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
-    void (*reserved1)(void);
+    void (*tkAboutDlg) (void); /* 1 */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
     void (*reserved3)(void);
     void (*reserved4)(void);
@@ -483,7 +476,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
-/* Slot 1 is reserved */
+#define TkAboutDlg \
+	(tkIntPlatStubsPtr->tkAboutDlg) /* 1 */
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 2 */
 #define TkpGetMS \
@@ -588,18 +582,16 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpSetCursor) /* 5 */
 #define TkpScanWindowId \
 	(tkIntPlatStubsPtr->tkpScanWindowId) /* 6 */
-#define TkpWmSetState \
-	(tkIntPlatStubsPtr->tkpWmSetState) /* 7 */
+/* Slot 7 is reserved */
 #define TkMacOSXButtonKeyState \
 	(tkIntPlatStubsPtr->tkMacOSXButtonKeyState) /* 8 */
+#define TkpWmSetState \
+	(tkIntPlatStubsPtr->tkpWmSetState) /* 9 */
 #define TkMacOSXClearMenubarActive \
-	(tkIntPlatStubsPtr->tkMacOSXClearMenubarActive) /* 9 */
-#define TkMacOSXDispatchMenuEvent \
-	(tkIntPlatStubsPtr->tkMacOSXDispatchMenuEvent) /* 10 */
+	(tkIntPlatStubsPtr->tkMacOSXClearMenubarActive) /* 10 */
 #define TkpSetCapture \
 	(tkIntPlatStubsPtr->tkpSetCapture) /* 11 */
-#define TkMacOSXHandleTearoffMenu \
-	(tkIntPlatStubsPtr->tkMacOSXHandleTearoffMenu) /* 12 */
+/* Slot 12 is reserved */
 /* Slot 13 is reserved */
 #define TkMacOSXDoHLEvent \
 	(tkIntPlatStubsPtr->tkMacOSXDoHLEvent) /* 14 */
@@ -608,8 +600,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkMacOSXGetXWindow) /* 16 */
 #define TkMacOSXGrowToplevel \
 	(tkIntPlatStubsPtr->tkMacOSXGrowToplevel) /* 17 */
-#define TkMacOSXHandleMenuSelect \
-	(tkIntPlatStubsPtr->tkMacOSXHandleMenuSelect) /* 18 */
+/* Slot 18 is reserved */
 /* Slot 19 is reserved */
 /* Slot 20 is reserved */
 #define TkMacOSXInvalidateWindow \
@@ -619,23 +610,19 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkMacOSXMakeRealWindowExist) /* 23 */
 #define TkMacOSXMakeStippleMap \
 	(tkIntPlatStubsPtr->tkMacOSXMakeStippleMap) /* 24 */
-#define TkMacOSXMenuClick \
-	(tkIntPlatStubsPtr->tkMacOSXMenuClick) /* 25 */
+/* Slot 25 is reserved */
 /* Slot 26 is reserved */
 #define TkMacOSXResizable \
 	(tkIntPlatStubsPtr->tkMacOSXResizable) /* 27 */
-#define TkMacOSXSetHelpMenuItemCount \
-	(tkIntPlatStubsPtr->tkMacOSXSetHelpMenuItemCount) /* 28 */
+/* Slot 28 is reserved */
 #define TkMacOSXSetScrollbarGrow \
 	(tkIntPlatStubsPtr->tkMacOSXSetScrollbarGrow) /* 29 */
 /* Slot 30 is reserved */
-#define TkMacOSXSetUpGraphicsPort \
-	(tkIntPlatStubsPtr->tkMacOSXSetUpGraphicsPort) /* 31 */
+/* Slot 31 is reserved */
 #define TkMacOSXUpdateClipRgn \
 	(tkIntPlatStubsPtr->tkMacOSXUpdateClipRgn) /* 32 */
 /* Slot 33 is reserved */
-#define TkMacOSXUseMenuID \
-	(tkIntPlatStubsPtr->tkMacOSXUseMenuID) /* 34 */
+/* Slot 34 is reserved */
 #define TkMacOSXVisableClipRgn \
 	(tkIntPlatStubsPtr->tkMacOSXVisableClipRgn) /* 35 */
 #define TkMacOSXWinBounds \
@@ -655,8 +642,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkMacOSXContainerId) /* 43 */
 #define TkMacOSXGetHostToplevel \
 	(tkIntPlatStubsPtr->tkMacOSXGetHostToplevel) /* 44 */
-#define TkMacOSXPreprocessMenu \
-	(tkIntPlatStubsPtr->tkMacOSXPreprocessMenu) /* 45 */
+/* Slot 45 is reserved */
 #define TkpIsWindowFloating \
 	(tkIntPlatStubsPtr->tkpIsWindowFloating) /* 46 */
 #define TkpGetCapture \
@@ -672,7 +658,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
-/* Slot 1 is reserved */
+#define TkAboutDlg \
+	(tkIntPlatStubsPtr->tkAboutDlg) /* 1 */
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 2 */
 /* Slot 3 is reserved */
