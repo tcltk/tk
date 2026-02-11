@@ -250,8 +250,9 @@ Corresponds to the \fB%t\fR substitution for binding scripts.
 \fIboolean\fR must be a boolean value;  it specifies whether
 the screen pointer should be warped as well.
 Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
-\fBButtonRelease\fR, and \fBMotion\fR events.  The pointer will
-only warp to a window if it is mapped.
+\fBButtonRelease\fR, and \fBMotion\fR events.  Tk supports pointer warping
+relative to the screen's root window, and relative to a Tk window. In the
+latter case, the pointer will only warp if the window is mapped.
 .TP
 \fB\-width\fI size\fR
 \fISize\fR must be a screen distance;  it specifies the \fIwidth\fR field
