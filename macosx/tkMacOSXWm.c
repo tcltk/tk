@@ -6216,7 +6216,7 @@ TkMacOSXIsWindowZoomed(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkMacOSXZoomToplevel(
     void *whichWindow,		/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
@@ -7007,7 +7007,7 @@ TkpGetWrapperWindow(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -7065,7 +7065,7 @@ TkpWmSetState(
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 setStateEnd:
-    return 1;
+    return true;
 }
 
 /*
@@ -7084,7 +7084,7 @@ setStateEnd:
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpIsWindowFloating(
     void *wRef)
 {

@@ -61,14 +61,14 @@ doNothing(void)
 
 #ifdef _WIN32
 
-int
+bool
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 {
     (void)tkwin;
     (void)colormap;
 
     /* dummy implementation, no need to do anything */
-    return 0;
+    return false;
 }
 void
 TkpSync(Display *display)
@@ -212,6 +212,23 @@ TkPutImage(
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 #endif /* MAC_OSX_TCL */
+
+/* Wrapper-functions restoring binary compatibility of bool functions */
+
+static int TkCharBbox(Tk_TextLayout layout, Tcl_Size index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr) {return Tk_CharBbox(layout, index, xPtr, yPtr, widthPtr, heightPtr);}
+#define Tk_CharBbox (bool (*)(Tk_TextLayout, Tcl_Size, int *, int *, int *, int *))(void *)TkCharBbox
+static int TkSetWindowVisual(Tk_Window tkwin, Visual *visual, int depth, Colormap colormap) {return Tk_SetWindowVisual(tkwin, visual, depth, colormap);}
+#define Tk_SetWindowVisual (bool (*)(Tk_Window, Visual *, int, Colormap))(void *)TkSetWindowVisual
+static int TkStrictMotif(Tk_Window tkwin) {return Tk_StrictMotif(tkwin);}
+#define Tk_StrictMotif (bool (*)(Tk_Window))(void *)TkStrictMotif
+static int TkCollapseMotionEvents(Display *display, int collapse) {return Tk_CollapseMotionEvents(display, collapse);}
+#define Tk_CollapseMotionEvents (bool (*)(Display *, int))(void *)TkCollapseMotionEvents
+static int TkAlwaysShowSelection(Tk_Window tkwin) {return Tk_AlwaysShowSelection(tkwin);}
+#define Tk_AlwaysShowSelection (bool (*)(Tk_Window))(void *)TkAlwaysShowSelection
+#ifdef MAC_OSX_TK
+static int TkMacOSXIsAppInFront(void) {return Tk_MacOSXIsAppInFront();}
+#define Tk_MacOSXIsAppInFront (bool (*)(void))(void *)TkMacOSXIsAppInFront
+#endif /* MAC_OSX_TK */
 
 
 /*
@@ -487,7 +504,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 7 */
     TkMacOSXButtonKeyState, /* 8 */
     TkpWmSetState, /* 9 */
-    TkMacOSXClearMenubarActive, /* 10 */
+    TkMacOSXDispatchMenuEvent, /* 10 */
     TkpSetCapture, /* 11 */
     0, /* 12 */
     0, /* 13 */

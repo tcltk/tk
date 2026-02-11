@@ -120,7 +120,7 @@ declare 22 {
 	    XSetWindowAttributes *attsPtr)
 }
 declare 23 {
-    int Tk_CharBbox(Tk_TextLayout layout, Tcl_Size index, int *xPtr,
+    bool Tk_CharBbox(Tk_TextLayout layout, Tcl_Size index, int *xPtr,
 	    int *yPtr, int *widthPtr, int *heightPtr)
 }
 declare 24 {
@@ -629,7 +629,7 @@ declare 170 {
     void Tk_SetWindowColormap(Tk_Window tkwin, Colormap colormap)
 }
 declare 171 {
-    int Tk_SetWindowVisual(Tk_Window tkwin, Visual *visual, int depth,
+    bool Tk_SetWindowVisual(Tk_Window tkwin, Visual *visual, int depth,
 	    Colormap colormap)
 }
 declare 172 {
@@ -640,7 +640,7 @@ declare 173 {
     void Tk_SizeOfImage(Tk_Image image, int *widthPtr, int *heightPtr)
 }
 declare 174 {
-    int Tk_StrictMotif(Tk_Window tkwin)
+    bool Tk_StrictMotif(Tk_Window tkwin)
 }
 declare 175 {
     void Tk_TextLayoutToPostscript(Tcl_Interp *interp, Tk_TextLayout layout)
@@ -911,7 +911,7 @@ declare 245 {
     void Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 }
 declare 248 {
-    int Tk_CollapseMotionEvents(Display *display, int collapse)
+    bool Tk_CollapseMotionEvents(Display *display, int collapse)
 }
 
 # Style engine
@@ -1008,7 +1008,7 @@ declare 271 {
 
 # TIP#580
 declare 274 {
-    int Tk_AlwaysShowSelection(Tk_Window tkwin)
+    bool Tk_AlwaysShowSelection(Tk_Window tkwin)
 }
 declare 275 {
     unsigned Tk_GetButtonMask(unsigned button)
@@ -1139,7 +1139,7 @@ declare 9 aqua {
     void Tk_MacOSXSetupTkNotifier(void)
 }
 declare 10 aqua {
-    int Tk_MacOSXIsAppInFront(void)
+    bool Tk_MacOSXIsAppInFront(void)
 }
 declare 11 aqua {
     Tk_Window Tk_MacOSXGetTkWindow(void *w)

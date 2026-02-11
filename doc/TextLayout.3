@@ -198,10 +198,10 @@ ascent to the bottom of the descent; information about the actual height
 of individual letters is not available.  For measurement purposes, a
 \fIlayout\fR that contains no characters is considered to contain a
 single zero-width placeholder character at index 0.  If \fIindex\fR was
-not a valid character index, the return value is 0 and \fI*xPtr\fR,
+not a valid character index, the return value is false and \fI*xPtr\fR,
 \fI*yPtr\fR, \fI*widthPtr\fR, and \fI*heightPtr\fR are unmodified.
 Otherwise, if \fIindex\fR did specify a valid, the return value is
-non-zero, and \fI*xPtr\fR, \fI*yPtr\fR, \fI*widthPtr\fR, and
+true, and \fI*xPtr\fR, \fI*yPtr\fR, \fI*widthPtr\fR, and
 \fI*heightPtr\fR are filled with the bounding box information for the
 character.  If any of \fIxPtr\fR, \fIyPtr\fR, \fIwidthPtr\fR, or
 \fIheightPtr\fR are NULL, the corresponding value is not calculated or
