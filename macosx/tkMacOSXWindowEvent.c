@@ -542,6 +542,7 @@ static void RefocusGrabWindow(void *data) {
  *----------------------------------------------------------------------
  */
 // This stub is no longer used, but is expected by the stub mechanism.
+#undef TkpWillDrawWidget
 int
 TkpWillDrawWidget(Tk_Window tkwin) {
     (void) tkwin;
