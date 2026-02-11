@@ -601,7 +601,7 @@ declare 184 {
 
 # Debugging / testing functions for photo images
 declare 187 {
-    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
+    bool TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
 	    Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
@@ -629,10 +629,10 @@ declare 6 x11 {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 declare 9 x11 {
-    int TkpWmSetState(TkWindow *winPtr, int state)
+    bool TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 38 x11 {
-    int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
+    bool TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 }
 declare 39 x11 {
     void TkpSync(Display *display)
@@ -641,7 +641,7 @@ declare 40 x11 {
     Window TkUnixContainerId(TkWindow *winPtr)
 }
 declare 41 x11 {
-    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+    bool TkUnixDoOneXEvent(Tcl_Time *timePtr)
 }
 declare 42 x11 {
     void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
@@ -689,7 +689,7 @@ declare 8 win {
     void TkpSetCursor(TkpCursor cursor)
 }
 declare 9 win {
-    int TkpWmSetState(TkWindow *winPtr, int state)
+    bool TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 10 win {
     void TkSetPixmapColormap(Pixmap pixmap, Colormap colormap)
@@ -724,7 +724,7 @@ declare 19 win {
     HWND TkWinGetWrapperWindow(Tk_Window tkwin)
 }
 declare 20 win {
-    int TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
+    bool TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
 	    LPARAM *plParam, LRESULT *plResult)
 }
 declare 21 win {
@@ -790,7 +790,7 @@ declare 36 win {
 }
 
 declare 38 win {
-    int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
+    bool TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 }
 declare 39 win {
     void TkpSync(Display *display)
@@ -799,7 +799,7 @@ declare 40 win {
     Window TkUnixContainerId(TkWindow *winPtr)
 }
 declare 41 win {
-    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+    bool TkUnixDoOneXEvent(Tcl_Time *timePtr)
 }
 declare 42 win {
     void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
@@ -844,10 +844,10 @@ declare 8 aqua {
     unsigned int TkMacOSXButtonKeyState(void)
 }
 declare 9 aqua {
-    int TkpWmSetState(TkWindow *winPtr, int state)
+    bool TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 10 aqua {
-    void TkMacOSXClearMenubarActive(void)
+    int TkMacOSXDispatchMenuEvent(int menuID, int index)
 }
 declare 11 aqua {
     void TkpSetCapture(TkWindow *winPtr)
@@ -889,13 +889,13 @@ declare 37 aqua {
     void TkMacOSXWindowOffset(void *wRef, int *xOffset, int *yOffset)
 }
 declare 38 aqua {
-    int TkSetMacColor(unsigned long pixel, void *macColor)
+    bool TkSetMacColor(unsigned long pixel, void *macColor)
 }
 declare 39 aqua {
     void TkSetWMName(TkWindow *winPtr, const char *title)
 }
 declare 41 aqua {
-    int TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
+    bool TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
 }
 declare 42 aqua {
     Tk_Window Tk_TopCoordsToWindow(Tk_Window tkwin, int rootX, int rootY,
@@ -908,7 +908,7 @@ declare 44 aqua {
     MacDrawable *TkMacOSXGetHostToplevel(TkWindow *winPtr)
 }
 declare 46 aqua {
-    int TkpIsWindowFloating(void *window)
+    bool TkpIsWindowFloating(void *window)
 }
 declare 47 aqua {
     Tk_Window TkpGetCapture(void)
@@ -917,7 +917,7 @@ declare 49 aqua {
     Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
 }
 declare 50 aqua {
-    int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
+    bool TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
 }
 declare 51 aqua {
     void TkGenWMDestroyEvent(Tk_Window tkwin)

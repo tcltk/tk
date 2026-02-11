@@ -2289,7 +2289,7 @@ WmIconifyCmd(
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "EMBEDDED", (char *)NULL);
 	return TCL_ERROR;
     }
-    if (TkpWmSetState(winPtr, IconicState) == 0) {
+    if (!TkpWmSetState(winPtr, IconicState)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"couldn't send iconify message to window manager", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
@@ -3446,7 +3446,7 @@ WmStateCmd(
 
 	if (index == OPT_NORMAL) {
 	    wmPtr->flags &= ~WM_WITHDRAWN;
-	    (void) TkpWmSetState(winPtr, NormalState);
+	    TkpWmSetState(winPtr, NormalState);
 	} else if (index == OPT_ICONIC) {
 	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3464,7 +3464,7 @@ WmStateCmd(
 			NULL);
 		return TCL_ERROR;
 	    }
-	    if (TkpWmSetState(winPtr, IconicState) == 0) {
+	    if (!TkpWmSetState(winPtr, IconicState)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send iconify message to window manager",
 			-1));
@@ -3473,7 +3473,7 @@ WmStateCmd(
 	    }
 	} else { /* OPT_WITHDRAWN */
 	    wmPtr->flags |= WM_WITHDRAWN;
-	    if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
+	    if (!TkpWmSetState(winPtr, WithdrawnState)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send withdraw message to window manager",
 			-1));
@@ -3681,7 +3681,7 @@ WmTransientCmd(
     }
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	if (wmPtr->containerPtr != NULL && !Tk_IsMapped(wmPtr->containerPtr)) {
-	    if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
+	    if (!TkpWmSetState(winPtr, WithdrawnState)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send withdraw message to window manager",
 			-1));
@@ -3741,7 +3741,7 @@ WmWithdrawCmd(
 	return TCL_ERROR;
     }
     wmPtr->flags |= WM_WITHDRAWN;
-    if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
+    if (!TkpWmSetState(winPtr, WithdrawnState)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"couldn't send withdraw message to window manager", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
@@ -3785,10 +3785,10 @@ WmWaitMapProc(
 
     if (eventPtr->type == MapNotify) {
 	if (!(winPtr->wmInfoPtr->flags & WM_WITHDRAWN)) {
-	    (void) TkpWmSetState(winPtr, NormalState);
+	    TkpWmSetState(winPtr, NormalState);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	(void) TkpWmSetState(winPtr, WithdrawnState);
+	TkpWmSetState(winPtr, WithdrawnState);
     }
 }
 
@@ -7421,7 +7421,7 @@ UpdateCommand(
  *	toplevel window.
  *
  * Results:
- *	0 on error, 1 otherwise
+ *	false on error, true otherwise
  *
  * Side effects:
  *	May minimize, restore, or withdraw a window.
@@ -7429,7 +7429,7 @@ UpdateCommand(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
      TkWindow *winPtr,		/* Toplevel window to operate on. */
      int state)			/* One of IconicState, NormalState, or
@@ -7441,25 +7441,25 @@ TkpWmSetState(
 	wmPtr->hints.initial_state = WithdrawnState;
 	wmPtr->withdrawn = 1;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		winPtr->screenNum) == 0) {
-	    return 0;
+	    return false;
 	}
 	WaitForMapNotify(winPtr, 0);
     } else if (state == NormalState) {
 	wmPtr->hints.initial_state = NormalState;
 	wmPtr->withdrawn = 0;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	UpdateHints(winPtr);
 	Tk_MapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (wmPtr->withdrawn) {
 	    UpdateHints(winPtr);
@@ -7468,13 +7468,13 @@ TkpWmSetState(
 	} else {
 	    if (XIconifyWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		    winPtr->screenNum) == 0) {
-		return 0;
+		return false;
 	    }
 	    WaitForMapNotify(winPtr, 0);
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*

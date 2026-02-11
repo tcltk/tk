@@ -63,7 +63,7 @@ EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
 /* 9 */
 EXTERN void		Tk_MacOSXSetupTkNotifier(void);
 /* 10 */
-EXTERN int		Tk_MacOSXIsAppInFront(void);
+EXTERN bool		Tk_MacOSXIsAppInFront(void);
 /* 11 */
 EXTERN Tk_Window	Tk_MacOSXGetTkWindow(void *w);
 /* 12 */
@@ -98,7 +98,7 @@ typedef struct TkPlatStubs {
     void (*reserved7)(void);
     void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
-    int (*tk_MacOSXIsAppInFront) (void); /* 10 */
+    bool (*tk_MacOSXIsAppInFront) (void); /* 10 */
     Tk_Window (*tk_MacOSXGetTkWindow) (void *w); /* 11 */
     void * (*tk_MacOSXGetCGContextForDrawable) (Drawable drawable); /* 12 */
     void * (*tk_MacOSXGetNSWindowForDrawable) (Drawable drawable); /* 13 */

@@ -242,7 +242,7 @@ InvokeFocusHandlers(
     XEvent *eventPtr)
 {
     if ((mask & (FocusChangeMask|EnterWindowMask|LeaveWindowMask))
-	    && (TkFocusFilterEvent(*winPtrPtr, eventPtr) == 0)) {
+	    && (!TkFocusFilterEvent(*winPtrPtr, eventPtr))) {
 	return 1;
     }
 
@@ -1453,14 +1453,14 @@ Tk_RestrictEvents(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 Tk_CollapseMotionEvents(
     Display *display,		/* Display handling these events. */
     int collapse)		/* Boolean value that specifies whether motion
 				 * events should be collapsed. */
 {
     TkDisplay *dispPtr = (TkDisplay *) display;
-    int prev = (dispPtr->flags & TK_DISPLAY_COLLAPSE_MOTION_EVENTS);
+    bool prev = (dispPtr->flags & TK_DISPLAY_COLLAPSE_MOTION_EVENTS) != 0;
 
     if (collapse) {
 	dispPtr->flags |= TK_DISPLAY_COLLAPSE_MOTION_EVENTS;
