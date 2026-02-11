@@ -105,7 +105,7 @@ declare 23 {
     void TkFocusDeadWindow(TkWindow *winPtr)
 }
 declare 24 {
-    int TkFocusFilterEvent(TkWindow *winPtr, XEvent *eventPtr)
+    bool TkFocusFilterEvent(TkWindow *winPtr, XEvent *eventPtr)
 }
 declare 25 {
     TkWindow *TkFocusKeyEvent(TkWindow *winPtr, XEvent *eventPtr)
@@ -155,7 +155,7 @@ declare 37 {
     int TkGetInterpNames(Tcl_Interp *interp, Tk_Window tkwin)
 }
 declare 38 {
-    int TkGetMiterPoints(double *p1, double *p2, double *p3,
+    bool TkGetMiterPoints(double *p1, double *p2, double *p3,
 	    double width, double *m1, double *m2)
 }
 declare 39 {
@@ -246,7 +246,7 @@ declare 68 {
     TkDisplay *TkpOpenDisplay(const char *display_name)
 }
 declare 69 {
-    int TkPointerEvent(XEvent *eventPtr, TkWindow *winPtr)
+    bool TkPointerEvent(XEvent *eventPtr, TkWindow *winPtr)
 }
 declare 70 {
     int TkPolygonToArea(double *polyPtr, int numPoints, double *rectPtr)
@@ -269,7 +269,7 @@ declare 78 {
 	    Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return)
 }
 declare 79 {
-    int TkScrollWindow(Tk_Window tkwin, GC gc, int x, int y,
+    bool TkScrollWindow(Tk_Window tkwin, GC gc, int x, int y,
 	    int width, int height, int dx, int dy, Region damageRgn)
 }
 declare 80 {
@@ -487,12 +487,12 @@ declare 159 {
 	    const char *string, struct TkTextIndex *indexPtr)
 }
 declare 160 {
-    int TkTextIndexBackBytes(const struct TkText *textPtr,
+    bool TkTextIndexBackBytes(const struct TkText *textPtr,
 	    const struct TkTextIndex *srcPtr, Tcl_Size count,
 	    struct TkTextIndex *dstPtr)
 }
 declare 161 {
-    int TkTextIndexForwBytes(const struct TkText *textPtr,
+    bool TkTextIndexForwBytes(const struct TkText *textPtr,
 	    const struct TkTextIndex *srcPtr, Tcl_Size count,
 	    struct TkTextIndex *dstPtr)
 }
@@ -599,14 +599,6 @@ declare 184 {
 	    double y, double angle)
 }
 
-# Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 {
-    void TkpRedrawWidget(Tk_Window tkwin)
-}
-declare 186 {
-    int TkpWillDrawWidget(Tk_Window tkwin)
-}
-
 # Debugging / testing functions for photo images
 declare 187 {
     int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
@@ -627,6 +619,9 @@ interface tkIntPlat
 declare 0 x11 {
     void TkCreateXEventSource(void)
 }
+declare 1 x11 {
+    void TkAboutDlg(void)
+}
 declare 2 x11 {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
@@ -636,7 +631,6 @@ declare 6 x11 {
 declare 9 x11 {
     int TkpWmSetState(TkWindow *winPtr, int state)
 }
-# only needed by tktest:
 declare 38 x11 {
     int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 }
@@ -669,6 +663,9 @@ declare 45 x11 {
 
 declare 0 win {
     void TkCreateXEventSource(void)
+}
+declare 1 win {
+    void TkAboutDlg(void)
 }
 declare 2 win {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
@@ -843,23 +840,17 @@ declare 5 aqua {
 declare 6 aqua {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
-declare 7 aqua {
-    int TkpWmSetState(TkWindow *winPtr, int state)
-}
 declare 8 aqua {
     unsigned int TkMacOSXButtonKeyState(void)
 }
 declare 9 aqua {
-    void TkMacOSXClearMenubarActive(void)
+    int TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 10 aqua {
-    int TkMacOSXDispatchMenuEvent(int menuID, int index)
+    void TkMacOSXClearMenubarActive(void)
 }
 declare 11 aqua {
     void TkpSetCapture(TkWindow *winPtr)
-}
-declare 12 aqua {
-    void TkMacOSXHandleTearoffMenu(void)
 }
 declare 14 aqua {
     int TkMacOSXDoHLEvent(void *theEvent)
@@ -870,10 +861,6 @@ declare 16 aqua {
 declare 17 aqua {
     int TkMacOSXGrowToplevel(void *whichWindow, XPoint start)
 }
-declare 18 aqua {
-    void TkMacOSXHandleMenuSelect(short theMenu, unsigned short theItem,
-	    int optionKeyPressed)
-}
 declare 21 aqua {
     void TkMacOSXInvalidateWindow(MacDrawable *macWin, int flag)
 }
@@ -883,26 +870,14 @@ declare 23 aqua {
 declare 24 aqua {
     void *TkMacOSXMakeStippleMap(Drawable d1, Drawable d2)
 }
-declare 25 aqua {
-    void TkMacOSXMenuClick(void)
-}
 declare 27 aqua {
     int TkMacOSXResizable(TkWindow *winPtr)
-}
-declare 28 aqua {
-    void TkMacOSXSetHelpMenuItemCount(void)
 }
 declare 29 aqua {
     void TkMacOSXSetScrollbarGrow(TkWindow *winPtr, int flag)
 }
-declare 31 aqua {
-    void TkMacOSXSetUpGraphicsPort(GC gc, void *destPort)
-}
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
-}
-declare 34 aqua {
-    int TkMacOSXUseMenuID(short macID)
 }
 declare 35 aqua {
     Region TkMacOSXVisableClipRgn(TkWindow *winPtr)
@@ -931,9 +906,6 @@ declare 43 aqua {
 }
 declare 44 aqua {
     MacDrawable *TkMacOSXGetHostToplevel(TkWindow *winPtr)
-}
-declare 45 aqua {
-    void TkMacOSXPreprocessMenu(void)
 }
 declare 46 aqua {
     int TkpIsWindowFloating(void *window)

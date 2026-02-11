@@ -110,7 +110,7 @@ EXTERN const char *	TkFindStateString(const TkStateMap *mapPtr,
 /* 23 */
 EXTERN void		TkFocusDeadWindow(TkWindow *winPtr);
 /* 24 */
-EXTERN int		TkFocusFilterEvent(TkWindow *winPtr,
+EXTERN bool		TkFocusFilterEvent(TkWindow *winPtr,
 				XEvent *eventPtr);
 /* 25 */
 EXTERN TkWindow *	TkFocusKeyEvent(TkWindow *winPtr, XEvent *eventPtr);
@@ -146,7 +146,7 @@ EXTERN TkWindow *	TkGetFocusWin(TkWindow *winPtr);
 /* 37 */
 EXTERN int		TkGetInterpNames(Tcl_Interp *interp, Tk_Window tkwin);
 /* 38 */
-EXTERN int		TkGetMiterPoints(double *p1, double *p2, double *p3,
+EXTERN bool		TkGetMiterPoints(double *p1, double *p2, double *p3,
 				double width, double *m1, double *m2);
 /* 39 */
 EXTERN void		TkGetPointerCoords(Tk_Window tkwin, int *xPtr,
@@ -218,7 +218,7 @@ EXTERN void		TkpMenuNotifyToplevelCreate(Tcl_Interp *interp,
 /* 68 */
 EXTERN TkDisplay *	TkpOpenDisplay(const char *display_name);
 /* 69 */
-EXTERN int		TkPointerEvent(XEvent *eventPtr, TkWindow *winPtr);
+EXTERN bool		TkPointerEvent(XEvent *eventPtr, TkWindow *winPtr);
 /* 70 */
 EXTERN int		TkPolygonToArea(double *polyPtr, int numPoints,
 				double *rectPtr);
@@ -244,7 +244,7 @@ EXTERN int		TkReadBitmapFile(Display *display, Drawable d,
 				Pixmap *bitmap_return, int *x_hot_return,
 				int *y_hot_return);
 /* 79 */
-EXTERN int		TkScrollWindow(Tk_Window tkwin, GC gc, int x, int y,
+EXTERN bool		TkScrollWindow(Tk_Window tkwin, GC gc, int x, int y,
 				int width, int height, int dx, int dy,
 				Region damageRgn);
 /* 80 */
@@ -424,11 +424,11 @@ EXTERN int		TkTextGetIndex(Tcl_Interp *interp,
 				struct TkText *textPtr, const char *string,
 				struct TkTextIndex *indexPtr);
 /* 160 */
-EXTERN int		TkTextIndexBackBytes(const struct TkText *textPtr,
+EXTERN bool		TkTextIndexBackBytes(const struct TkText *textPtr,
 				const struct TkTextIndex *srcPtr,
 				Tcl_Size count, struct TkTextIndex *dstPtr);
 /* 161 */
-EXTERN int		TkTextIndexForwBytes(const struct TkText *textPtr,
+EXTERN bool		TkTextIndexForwBytes(const struct TkText *textPtr,
 				const struct TkTextIndex *srcPtr,
 				Tcl_Size count, struct TkTextIndex *dstPtr);
 /* 162 */
@@ -535,10 +535,8 @@ EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
 				const char *source, Tcl_Size numBytes,
 				double x, double y, double angle);
-/* 185 */
-EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
-/* 186 */
-EXTERN int		TkpWillDrawWidget(Tk_Window tkwin);
+/* Slot 185 is reserved */
+/* Slot 186 is reserved */
 /* 187 */
 EXTERN int		TkDebugPhotoStringMatchDef(Tcl_Interp *inter,
 				Tcl_Obj *data, Tcl_Obj *formatString,
@@ -572,7 +570,7 @@ typedef struct TkIntStubs {
     int (*tkFindStateNum) (Tcl_Interp *interp, const char *option, const TkStateMap *mapPtr, const char *strKey); /* 21 */
     const char * (*tkFindStateString) (const TkStateMap *mapPtr, int numKey); /* 22 */
     void (*tkFocusDeadWindow) (TkWindow *winPtr); /* 23 */
-    int (*tkFocusFilterEvent) (TkWindow *winPtr, XEvent *eventPtr); /* 24 */
+    bool (*tkFocusFilterEvent) (TkWindow *winPtr, XEvent *eventPtr); /* 24 */
     TkWindow * (*tkFocusKeyEvent) (TkWindow *winPtr, XEvent *eventPtr); /* 25 */
     void (*tkFontPkgInit) (TkMainInfo *mainPtr); /* 26 */
     void (*tkFontPkgFree) (TkMainInfo *mainPtr); /* 27 */
@@ -586,7 +584,7 @@ typedef struct TkIntStubs {
     Tcl_Size (*tkGetDisplayOf) (Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv, Tk_Window *tkwinPtr); /* 35 */
     TkWindow * (*tkGetFocusWin) (TkWindow *winPtr); /* 36 */
     int (*tkGetInterpNames) (Tcl_Interp *interp, Tk_Window tkwin); /* 37 */
-    int (*tkGetMiterPoints) (double *p1, double *p2, double *p3, double width, double *m1, double *m2); /* 38 */
+    bool (*tkGetMiterPoints) (double *p1, double *p2, double *p3, double width, double *m1, double *m2); /* 38 */
     void (*tkGetPointerCoords) (Tk_Window tkwin, int *xPtr, int *yPtr); /* 39 */
     void (*tkGetServerInfo) (Tcl_Interp *interp, Tk_Window tkwin); /* 40 */
     void (*tkGrabDeadWindow) (TkWindow *winPtr); /* 41 */
@@ -617,7 +615,7 @@ typedef struct TkIntStubs {
     void (*reserved66)(void);
     void (*tkpMenuNotifyToplevelCreate) (Tcl_Interp *interp, const char *menuName); /* 67 */
     TkDisplay * (*tkpOpenDisplay) (const char *display_name); /* 68 */
-    int (*tkPointerEvent) (XEvent *eventPtr, TkWindow *winPtr); /* 69 */
+    bool (*tkPointerEvent) (XEvent *eventPtr, TkWindow *winPtr); /* 69 */
     int (*tkPolygonToArea) (double *polyPtr, int numPoints, double *rectPtr); /* 70 */
     double (*tkPolygonToPoint) (double *polyPtr, int numPoints, double *pointPtr); /* 71 */
     int (*tkPositionInTree) (TkWindow *winPtr, TkWindow *treePtr); /* 72 */
@@ -627,7 +625,7 @@ typedef struct TkIntStubs {
     void (*reserved76)(void);
     void (*tkQueueEventForAllChildren) (TkWindow *winPtr, XEvent *eventPtr); /* 77 */
     int (*tkReadBitmapFile) (Display *display, Drawable d, const char *filename, unsigned int *width_return, unsigned int *height_return, Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return); /* 78 */
-    int (*tkScrollWindow) (Tk_Window tkwin, GC gc, int x, int y, int width, int height, int dx, int dy, Region damageRgn); /* 79 */
+    bool (*tkScrollWindow) (Tk_Window tkwin, GC gc, int x, int y, int width, int height, int dx, int dy, Region damageRgn); /* 79 */
     void (*tkSelDeadWindow) (TkWindow *winPtr); /* 80 */
     void (*tkSelEventProc) (Tk_Window tkwin, XEvent *eventPtr); /* 81 */
     void (*tkSelInit) (Tk_Window tkwin); /* 82 */
@@ -708,8 +706,8 @@ typedef struct TkIntStubs {
     int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv); /* 157 */
     int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, void *clientData); /* 158 */
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
-    int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 160 */
-    int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 161 */
+    bool (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 160 */
+    bool (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 161 */
     struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, Tcl_Size lineIndex, Tcl_Size byteIndex, struct TkTextIndex *indexPtr); /* 162 */
     Tcl_Size (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
@@ -733,8 +731,8 @@ typedef struct TkIntStubs {
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x, double y, double angle); /* 184 */
-    void (*tkpRedrawWidget) (Tk_Window tkwin); /* 185 */
-    int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
+    void (*reserved185)(void);
+    void (*reserved186)(void);
     int (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 187 */
 } TkIntStubs;
 
@@ -1094,10 +1092,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkIntersectAngledTextLayout) /* 183 */
 #define TkDrawAngledChars \
 	(tkIntStubsPtr->tkDrawAngledChars) /* 184 */
-#define TkpRedrawWidget \
-	(tkIntStubsPtr->tkpRedrawWidget) /* 185 */
-#define TkpWillDrawWidget \
-	(tkIntStubsPtr->tkpWillDrawWidget) /* 186 */
+/* Slot 185 is reserved */
+/* Slot 186 is reserved */
 #define TkDebugPhotoStringMatchDef \
 	(tkIntStubsPtr->tkDebugPhotoStringMatchDef) /* 187 */
 
@@ -1109,13 +1105,9 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define TCL_STORAGE_CLASS DLLIMPORT
 
 #if !defined(MAC_OSX_TK) && !defined(USE_TK_STUBS)
-#   undef TkpWillDrawWidget
-#   undef TkpRedrawWidget
 #   undef TkpDefineNativeBitmaps
 #   undef TkpCreateNativeBitmap
 #   undef TkpGetNativeAppBitmap
-#   define TkpWillDrawWidget(w) 0
-#   define TkpRedrawWidget(w)
 #   define TkpDefineNativeBitmaps()
 #   define TkpCreateNativeBitmap(display, source) None
 #   define TkpGetNativeAppBitmap(display, name, w, h) None
