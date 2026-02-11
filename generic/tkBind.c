@@ -4414,10 +4414,11 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * We only allow warping if the window is mapped.
+	 * We allow warping relative to the screen's root window, or relative to a
+	 * Tk window provided that it is mapped.
 	 */
 
-	if (warp && Tk_IsMapped(tkwin)) {
+	if (warp && (! windowName[0] || Tk_IsMapped(tkwin))) {
 	    TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);

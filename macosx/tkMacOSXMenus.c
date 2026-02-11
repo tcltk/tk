@@ -350,31 +350,6 @@ GetWidgetDemoPath(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXHandleMenuSelect --
- *
- *	Handles events that occur in the Menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXHandleMenuSelect(
-    TCL_UNUSED(short),
-    TCL_UNUSED(unsigned short),
-    TCL_UNUSED(int))
-{
-    Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * GenerateEditEvent --
  *
  *	Takes an edit menu item and posts the corasponding a virtual event to

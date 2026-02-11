@@ -1069,30 +1069,6 @@ XFillArcs(
     return Success;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXSetUpGraphicsPort --
- *
- *	Set up the graphics port from the given GC.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetUpGraphicsPort(
-    TCL_UNUSED(GC),			/* GC to apply to current port. */
-    TCL_UNUSED(void *))
-{
-    Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
-}
-
 
 /*
  *----------------------------------------------------------------------

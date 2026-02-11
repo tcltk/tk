@@ -43,8 +43,8 @@ static Tk_RestrictProc ScrollRestrictProc;
  *	information in the specified Region.
  *
  * Results:
- *	Returns 0 if no damage additional damage was generated. Sets damageRgn
- *	to contain the damaged areas and returns 1 if GraphicsExpose events
+ *	Returns false if no damage additional damage was generated. Sets damageRgn
+ *	to contain the damaged areas and returns true if GraphicsExpose events
  *	were detected.
  *
  * Side effects:
@@ -54,7 +54,7 @@ static Tk_RestrictProc ScrollRestrictProc;
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
     GC gc,			/* GC for window to be scrolled. */
@@ -90,11 +90,7 @@ TkScrollWindow(
     }
     Tk_RestrictEvents(prevProc, prevArg, &prevArg);
 
-    if (XEmptyRegion(damageRgn)) {
-	return 0;
-    } else {
-	return 1;
-    }
+    return !XEmptyRegion(damageRgn);
 }
 
 /*

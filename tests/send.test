@@ -195,16 +195,16 @@ if {[testConstraint aqua]} {
     childTkProcess create
 }
 
-test send-6.1 {ServerSecure procedure} {notMacCI secureserver} {
+test send-6.1 {ServerSecure procedure} {nonPortable secureserver notAqua} {
     set a 44
     list [childTkProcess eval [list send [tk appname] set a 55]] $a
 } {55 55}
-test send-6.2 {ServerSecure procedure} {notMacCI secureserver xhost} {
+test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
     set a 22
     exec xhost [exec hostname]
     list [catch {childTkProcess eval [list send [tk appname] set a 33]} msg] $a $msg
 } {0 22 {X server insecure (must use xauth-style authorization); command ignored}}
-test send-6.3 {ServerSecure procedure} {notMacCI secureserver xhost} {
+test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
     set a abc
     exec xhost - [exec hostname]
     list [childTkProcess eval [list send [tk appname] set a new]] $a
