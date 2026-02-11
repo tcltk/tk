@@ -1572,7 +1572,7 @@ TkMakeRawCurvePostscript(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkGetMiterPoints(
     double p1[],		/* Points to x- and y-coordinates of point
 				 * before vertex. */
@@ -1639,7 +1639,7 @@ TkGetMiterPoints(
     }
 
     if ((theta < elevenDegrees) && (theta > -elevenDegrees)) {
-	return 0;
+	return false;
     }
 
     dist = 0.5*width/sin(0.5*theta);
@@ -1663,7 +1663,7 @@ TkGetMiterPoints(
     m1[1] = p2y + deltaY;
     m2[1] = p2y - deltaY;
 
-    return 1;
+    return true;
 }
 
 /*
