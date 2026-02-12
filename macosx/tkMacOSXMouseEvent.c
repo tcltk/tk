@@ -797,6 +797,29 @@ TkGenerateButtonEvent(
 /*
  *----------------------------------------------------------------------
  *
+ * IsWindowFloating --
+ *
+ *	Returns true if a window is floating, false otherwise.
+ *
+ * Results:
+ *	true or false depending on window's floating attribute.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+IsWindowFloating(
+    void *wRef)
+{
+    return [(NSWindow *)wRef level] == kCGFloatingWindowLevel;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * GenerateButtonEvent --
  *
  *	Generate an X button event from a MouseEventData structure. Handles
@@ -830,7 +853,7 @@ GenerateButtonEvent(
      */
 
     if ((medPtr->activeNonFloating == NULL)
-	    || ((!(TkpIsWindowFloating(medPtr->whichWin))
+	    || ((!(IsWindowFloating(medPtr->whichWin))
 	    && (medPtr->activeNonFloating != medPtr->whichWin))
 	    && TkpGetCapture() == NULL)) {
 	return false;

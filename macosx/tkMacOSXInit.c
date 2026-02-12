@@ -478,6 +478,12 @@ static void showRootWindow(void *clientData) {
     [NSApp activateIgnoringOtherApps: YES];
 }
 
+void
+TkCreateXEventSource(void)
+{
+    /* do nothing */
+}
+
 int
 TkpInit(
     Tcl_Interp *interp)

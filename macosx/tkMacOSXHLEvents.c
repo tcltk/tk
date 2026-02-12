@@ -552,53 +552,6 @@ TkMacOSXInitAppleEvents(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXDoHLEvent --
- *
- *	Dispatch an AppleEvent.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Depend on the AppleEvent.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXDoHLEvent(
-    void *theEvent)
-{
-    /* According to the NSAppleEventManager reference:
-     *   "The theReply parameter always specifies a reply Apple event, never
-     *   nil.  However, the handler should not fill out the reply if the
-     *   descriptor type for the reply event is typeNull, indicating the sender
-     *   does not want a reply."
-     * The specified way to build such a non-nil descriptor is used here.  But
-     * on OSX 10.11, the compiler nonetheless generates a warning.  I am
-     * supressing the warning here -- maybe the warnings will stop in a future
-     * compiler release.
-     */
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnonnull"
-#endif
-
-    NSAppleEventDescriptor* theReply = [NSAppleEventDescriptor nullDescriptor];
-    NSAppleEventManager *aeManager = [NSAppleEventManager sharedAppleEventManager];
-
-    return [aeManager dispatchRawAppleEvent:(const AppleEvent*)theEvent
-		      withRawReply: (AppleEvent *)theReply
-		      handlerRefCon: (SRefCon)0];
-
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * ReallyKillMe --
  *
  *	This procedure tries to kill the shell by running exit, called from

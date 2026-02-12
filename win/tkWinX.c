@@ -1777,7 +1777,7 @@ TkWinResendEvent(
  *----------------------------------------------------------------------
  */
 
-unsigned long
+unsigned long long
 TkpGetMS(void)
 {
     return GetTickCount();
