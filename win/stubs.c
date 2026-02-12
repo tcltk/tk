@@ -44,7 +44,7 @@ XChangeProperty(
     TCL_UNUSED(Atom),
     TCL_UNUSED(int),
     TCL_UNUSED(int),
-    TCL_UNUSED(_Xconst unsigned char *),
+    TCL_UNUSED(const unsigned char *),
     TCL_UNUSED(int))
 {
     return Success;
@@ -145,7 +145,7 @@ int
 XLookupColor(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Colormap),
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(XColor *),
     TCL_UNUSED(XColor *))
 {
@@ -246,7 +246,7 @@ int
 XSetIconName(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Window),
-    TCL_UNUSED(_Xconst char *))
+    TCL_UNUSED(const char *))
 {
     return Success;
 }

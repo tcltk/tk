@@ -732,7 +732,7 @@ XFreeModifiermap(
 
 KeySym
 XStringToKeysym(
-    TCL_UNUSED(_Xconst char *))
+    TCL_UNUSED(const char *))
 {
     return NoSymbol;
 }

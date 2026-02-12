@@ -281,7 +281,7 @@ XSetDashes(
     TCL_UNUSED(Display *),
     GC gc,
     int dash_offset,
-    _Xconst char *dash_list,
+    const char *dash_list,
     int n)
 {
     char *p = &(gc->dashes);
@@ -501,7 +501,7 @@ XDrawImageString(
     GC gc,
     int x,
     int y,
-    _Xconst char *string,
+    const char *string,
     int length)
 {
 }
@@ -590,7 +590,7 @@ int
 XQueryTextExtents(
     TCL_UNUSED(Display *),
     TCL_UNUSED(XID),
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(int),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
@@ -717,8 +717,8 @@ XCreateGlyphCursor(
     TCL_UNUSED(Font),
     TCL_UNUSED(unsigned int),
     TCL_UNUSED(unsigned int),
-    TCL_UNUSED(XColor _Xconst *),
-    TCL_UNUSED(XColor _Xconst *))
+    TCL_UNUSED(XColor const *),
+    TCL_UNUSED(XColor const *))
 {
     return (Cursor) NULL;
 }
@@ -726,7 +726,7 @@ XCreateGlyphCursor(
 XFontSet
 XCreateFontSet(
     TCL_UNUSED(Display *)		/* display */,
-    TCL_UNUSED(_Xconst char *)	/* base_font_name_list */,
+    TCL_UNUSED(const char *)	/* base_font_name_list */,
     TCL_UNUSED(char ***)		/* missing_charset_list */,
     TCL_UNUSED(int *)		/* missing_charset_count */,
     TCL_UNUSED(char **)		/* def_string */
