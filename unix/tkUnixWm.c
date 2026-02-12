@@ -7429,7 +7429,7 @@ UpdateCommand(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
      TkWindow *winPtr,		/* Toplevel window to operate on. */
      int state)			/* One of IconicState, NormalState, or
@@ -7441,25 +7441,25 @@ TkpWmSetState(
 	wmPtr->hints.initial_state = WithdrawnState;
 	wmPtr->withdrawn = 1;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		winPtr->screenNum) == 0) {
-	    return 0;
+	    return false;
 	}
 	WaitForMapNotify(winPtr, 0);
     } else if (state == NormalState) {
 	wmPtr->hints.initial_state = NormalState;
 	wmPtr->withdrawn = 0;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	UpdateHints(winPtr);
 	Tk_MapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (wmPtr->withdrawn) {
 	    UpdateHints(winPtr);
@@ -7468,13 +7468,13 @@ TkpWmSetState(
 	} else {
 	    if (XIconifyWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		    winPtr->screenNum) == 0) {
-		return 0;
+		return false;
 	    }
 	    WaitForMapNotify(winPtr, 0);
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*

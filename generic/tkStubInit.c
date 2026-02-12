@@ -61,14 +61,14 @@ doNothing(void)
 
 #ifdef _WIN32
 
-int
+bool
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 {
     (void)tkwin;
     (void)colormap;
 
     /* dummy implementation, no need to do anything */
-    return 0;
+    return false;
 }
 void
 TkpSync(Display *display)
@@ -426,45 +426,187 @@ static const TkIntStubs tkIntStubs = {
 static const TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     TkCreateXEventSource, /* 0 */
     TkAboutDlg, /* 1 */
     TkGenerateActivateEvents, /* 2 */
     TkpGetMS, /* 3 */
     TkPointerDeadWindow, /* 4 */
-    TkpPrintWindowId, /* 5 */
+    TkpSetCursor, /* 5 */
     TkpScanWindowId, /* 6 */
     TkpSetCapture, /* 7 */
-    TkpSetCursor, /* 8 */
+    TkpPrintWindowId, /* 8 */
     TkpWmSetState, /* 9 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 10 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkSetPixmapColormap, /* 10 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 10 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXClearMenubarActive, /* 10 */
+#endif /* AQUA */
     TkWinCancelMouseTimer, /* 11 */
     TkWinClipboardRender, /* 12 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 13 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinEmbeddedEventProc, /* 13 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 13 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXButtonKeyState, /* 13 */
+#endif /* AQUA */
     TkWinFillRect, /* 14 */
     TkWinGetBorderPixels, /* 15 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 16 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinGetDrawableDC, /* 16 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 16 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXGetXWindow, /* 16 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 17 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinGetModifierState, /* 17 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 17 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXGrowToplevel, /* 17 */
+#endif /* AQUA */
     TkWinGetSystemPalette, /* 18 */
     TkWinGetWrapperWindow, /* 19 */
     TkWinHandleMenuEvent, /* 20 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 21 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinIndexOfColor, /* 21 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 21 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXInvalidateWindow, /* 21 */
+#endif /* AQUA */
     TkWinReleaseDrawableDC, /* 22 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 23 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinResendEvent, /* 23 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 23 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXMakeRealWindowExist, /* 23 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 24 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinSelectPalette, /* 24 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 24 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXMakeStippleMap, /* 24 */
+#endif /* AQUA */
     TkWinSetMenu, /* 25 */
     TkWinSetWindowPos, /* 26 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 27 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinWmCleanup, /* 27 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 27 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXResizable, /* 27 */
+#endif /* AQUA */
     TkWinXCleanup, /* 28 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 29 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinXInit, /* 29 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 29 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXSetScrollbarGrow, /* 29 */
+#endif /* AQUA */
     TkWinSetForegroundWindow, /* 30 */
     TkWinDialogDebug, /* 31 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 32 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinGetMenuSystemDefault, /* 32 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 32 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXUpdateClipRgn, /* 32 */
+#endif /* AQUA */
     TkAlignImageData, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     0, /* 35 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 35 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 35 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXVisableClipRgn, /* 35 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 36 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
     TkWinChildProc, /* 36 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 36 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXWinBounds, /* 36 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     0, /* 37 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 37 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 37 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
+    TkMacOSXWindowOffset, /* 37 */
+#endif /* AQUA */
     TkpCmapStressed, /* 38 */
     TkpSync, /* 39 */
     TkUnixContainerId, /* 40 */
@@ -475,109 +617,32 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpTestsendCmd, /* 45 */
     0, /* 46 */
     TkpGetCapture, /* 47 */
+    0, /* 48 */
+    0, /* 49 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 50 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 50 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    0, /* 0 */
-    TkAboutDlg, /* 1 */
-    TkGenerateActivateEvents, /* 2 */
-    TkpGetMS, /* 3 */
-    TkPointerDeadWindow, /* 4 */
-    TkpSetCursor, /* 5 */
-    TkpScanWindowId, /* 6 */
-    0, /* 7 */
-    TkMacOSXButtonKeyState, /* 8 */
-    TkpWmSetState, /* 9 */
-    TkMacOSXClearMenubarActive, /* 10 */
-    TkpSetCapture, /* 11 */
-    0, /* 12 */
-    0, /* 13 */
-    TkMacOSXDoHLEvent, /* 14 */
-    0, /* 15 */
-    TkMacOSXGetXWindow, /* 16 */
-    TkMacOSXGrowToplevel, /* 17 */
-    0, /* 18 */
-    0, /* 19 */
-    0, /* 20 */
-    TkMacOSXInvalidateWindow, /* 21 */
-    0, /* 22 */
-    TkMacOSXMakeRealWindowExist, /* 23 */
-    TkMacOSXMakeStippleMap, /* 24 */
-    0, /* 25 */
-    0, /* 26 */
-    TkMacOSXResizable, /* 27 */
-    0, /* 28 */
-    TkMacOSXSetScrollbarGrow, /* 29 */
-    0, /* 30 */
-    0, /* 31 */
-    TkMacOSXUpdateClipRgn, /* 32 */
-    0, /* 33 */
-    0, /* 34 */
-    TkMacOSXVisableClipRgn, /* 35 */
-    TkMacOSXWinBounds, /* 36 */
-    TkMacOSXWindowOffset, /* 37 */
-    TkSetMacColor, /* 38 */
-    TkSetWMName, /* 39 */
-    0, /* 40 */
-    TkMacOSXZoomToplevel, /* 41 */
-    Tk_TopCoordsToWindow, /* 42 */
-    TkMacOSXContainerId, /* 43 */
-    TkMacOSXGetHostToplevel, /* 44 */
-    0, /* 45 */
-    TkpIsWindowFloating, /* 46 */
-    TkpGetCapture, /* 47 */
-    0, /* 48 */
-    TkMacOSXGetContainer, /* 49 */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 50 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
     TkGenerateButtonEvent, /* 50 */
+#endif /* AQUA */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+    0, /* 51 */
+#endif /* X11 */
+#if defined(_WIN32) /* WIN */
+    0, /* 51 */
+#endif /* WIN */
+#ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
+    0, /* 51 */ /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
     TkGenWMDestroyEvent, /* 51 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-    TkCreateXEventSource, /* 0 */
-    TkAboutDlg, /* 1 */
-    TkGenerateActivateEvents, /* 2 */
-    0, /* 3 */
-    0, /* 4 */
-    0, /* 5 */
-    TkpScanWindowId, /* 6 */
-    0, /* 7 */
-    0, /* 8 */
-    TkpWmSetState, /* 9 */
-    0, /* 10 */
-    0, /* 11 */
-    0, /* 12 */
-    0, /* 13 */
-    0, /* 14 */
-    0, /* 15 */
-    0, /* 16 */
-    0, /* 17 */
-    0, /* 18 */
-    0, /* 19 */
-    0, /* 20 */
-    0, /* 21 */
-    0, /* 22 */
-    0, /* 23 */
-    0, /* 24 */
-    0, /* 25 */
-    0, /* 26 */
-    0, /* 27 */
-    0, /* 28 */
-    0, /* 29 */
-    0, /* 30 */
-    0, /* 31 */
-    0, /* 32 */
-    0, /* 33 */
-    0, /* 34 */
-    0, /* 35 */
-    0, /* 36 */
-    0, /* 37 */
-    TkpCmapStressed, /* 38 */
-    TkpSync, /* 39 */
-    TkUnixContainerId, /* 40 */
-    TkUnixDoOneXEvent, /* 41 */
-    TkUnixSetMenubar, /* 42 */
-    TkWmCleanup, /* 43 */
-    TkSendCleanup, /* 44 */
-    TkpTestsendCmd, /* 45 */
-#endif /* X11 */
 };
 
 static const TkIntXlibStubs tkIntXlibStubs = {

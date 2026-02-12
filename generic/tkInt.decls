@@ -601,7 +601,7 @@ declare 184 {
 
 # Debugging / testing functions for photo images
 declare 187 {
-    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
+    bool TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
 	    Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
@@ -616,100 +616,121 @@ interface tkIntPlat
 ################################
 # Unix specific functions
 
-declare 0 x11 {
+declare 0 {
     void TkCreateXEventSource(void)
 }
-declare 1 x11 {
+declare 1 {
     void TkAboutDlg(void)
 }
-declare 2 x11 {
+declare 2 {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
-declare 6 x11 {
+declare 3 {
+    unsigned long long TkpGetMS(void)
+}
+declare 4 {
+    void TkPointerDeadWindow(TkWindow *winPtr)
+}
+declare 5 {
+    void TkpSetCursor(TkpCursor cursor)
+}
+declare 6 {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
-declare 9 x11 {
-    int TkpWmSetState(TkWindow *winPtr, int state)
+declare 7 {
+    void TkpSetCapture(TkWindow *winPtr)
 }
-declare 38 x11 {
-    int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
+declare 8 {
+    void TkpPrintWindowId(char *buf, Window window)
 }
-declare 39 x11 {
+declare 9 {
+    bool TkpWmSetState(TkWindow *winPtr, int state)
+}
+declare 11 {
+    void TkWinCancelMouseTimer(void)
+}
+declare 12 {
+    void TkWinClipboardRender(TkDisplay *dispPtr, UINT format)
+}
+declare 14 {
+    void TkWinFillRect(HDC dc, int x, int y, int width, int height, int pixel)
+}
+declare 15 {
+    COLORREF TkWinGetBorderPixels(Tk_Window tkwin, Tk_3DBorder border,
+	    int which)
+}
+declare 18 {
+    HPALETTE TkWinGetSystemPalette(void)
+}
+declare 19 {
+    HWND TkWinGetWrapperWindow(Tk_Window tkwin)
+}
+declare 20 {
+    bool TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
+	    LPARAM *plParam, LRESULT *plResult)
+}
+declare 22 {
+    void TkWinReleaseDrawableDC(Drawable d, HDC hdc, TkWinDCState *state)
+}
+declare 25 {
+    void TkWinSetMenu(Tk_Window tkwin, HMENU hMenu)
+}
+declare 26 {
+    void TkWinSetWindowPos(HWND hwnd, HWND siblingHwnd, int pos)
+}
+declare 28 {
+    void TkWinXCleanup(void *clientData)
+}
+declare 30 {
+    void TkWinSetForegroundWindow(TkWindow *winPtr)
+}
+declare 31 {
+    void TkWinDialogDebug(int debug)
+}
+declare 33 {
+    char *TkAlignImageData(XImage *image, int alignment, int bitOrder)
+}
+declare 34 {
+    void TkWinSetHINSTANCE(HINSTANCE hInstance)
+}
+declare 38 {
+    bool TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
+}
+declare 39 {
     void TkpSync(Display *display)
 }
-declare 40 x11 {
+declare 40 {
     Window TkUnixContainerId(TkWindow *winPtr)
 }
-declare 41 x11 {
-    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+declare 41 {
+    bool TkUnixDoOneXEvent(Tcl_Time *timePtr)
 }
-declare 42 x11 {
+declare 42 {
     void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
 }
-declare 43 x11 {
+declare 43 {
     void TkWmCleanup(TkDisplay *dispPtr)
 }
-declare 44 x11 {
+declare 44 {
     void TkSendCleanup(TkDisplay *dispPtr)
 }
-# only needed by tktest:
-declare 45 x11 {
+declare 45 {
     int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
 	    Tcl_Obj *const *objv)
+}
+declare 47 {
+    Tk_Window TkpGetCapture(void)
 }
 
 ################################
 # Windows specific functions
 
-declare 0 win {
-    void TkCreateXEventSource(void)
-}
-declare 1 win {
-    void TkAboutDlg(void)
-}
-declare 2 win {
-    void TkGenerateActivateEvents(TkWindow *winPtr, int active)
-}
-declare 3 win {
-    unsigned long TkpGetMS(void)
-}
-declare 4 win {
-    void TkPointerDeadWindow(TkWindow *winPtr)
-}
-declare 5 win {
-    void TkpPrintWindowId(char *buf, Window window)
-}
-declare 6 win {
-    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
-}
-declare 7 win {
-    void TkpSetCapture(TkWindow *winPtr)
-}
-declare 8 win {
-    void TkpSetCursor(TkpCursor cursor)
-}
-declare 9 win {
-    int TkpWmSetState(TkWindow *winPtr, int state)
-}
 declare 10 win {
     void TkSetPixmapColormap(Pixmap pixmap, Colormap colormap)
-}
-declare 11 win {
-    void TkWinCancelMouseTimer(void)
-}
-declare 12 win {
-    void TkWinClipboardRender(TkDisplay *dispPtr, UINT format)
 }
 declare 13 win {
     LRESULT TkWinEmbeddedEventProc(HWND hwnd, UINT message,
 	    WPARAM wParam, LPARAM lParam)
-}
-declare 14 win {
-    void TkWinFillRect(HDC dc, int x, int y, int width, int height, int pixel)
-}
-declare 15 win {
-    COLORREF TkWinGetBorderPixels(Tk_Window tkwin, Tk_3DBorder border,
-	    int which)
 }
 declare 16 win {
     HDC TkWinGetDrawableDC(Display *display, Drawable d, TkWinDCState *state)
@@ -717,21 +738,8 @@ declare 16 win {
 declare 17 win {
     unsigned int TkWinGetModifierState(void)
 }
-declare 18 win {
-    HPALETTE TkWinGetSystemPalette(void)
-}
-declare 19 win {
-    HWND TkWinGetWrapperWindow(Tk_Window tkwin)
-}
-declare 20 win {
-    int TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
-	    LPARAM *plParam, LRESULT *plResult)
-}
 declare 21 win {
     int TkWinIndexOfColor(XColor *colorPtr)
-}
-declare 22 win {
-    void TkWinReleaseDrawableDC(Drawable d, HDC hdc, TkWinDCState *state)
 }
 declare 23 win {
     LRESULT TkWinResendEvent(WNDPROC wndproc, HWND hwnd, XEvent *eventPtr)
@@ -739,127 +747,35 @@ declare 23 win {
 declare 24 win {
     HPALETTE TkWinSelectPalette(HDC dc, Colormap colormap)
 }
-declare 25 win {
-    void TkWinSetMenu(Tk_Window tkwin, HMENU hMenu)
-}
-declare 26 win {
-    void TkWinSetWindowPos(HWND hwnd, HWND siblingHwnd, int pos)
-}
 declare 27 win {
     void TkWinWmCleanup(HINSTANCE hInstance)
 }
-declare 28 win {
-    void TkWinXCleanup(void *clientData)
-}
 declare 29 win {
     void TkWinXInit(HINSTANCE hInstance)
-}
-
-# new for 8.1
-
-declare 30 win {
-    void TkWinSetForegroundWindow(TkWindow *winPtr)
-}
-declare 31 win {
-    void TkWinDialogDebug(int debug)
 }
 declare 32 win {
     Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window tkwin,
 	    const char *dbName, const char *className)
 }
-declare 33 win {
-    char *TkAlignImageData(XImage *image, int alignment, int bitOrder)
-}
-
-# new for 8.4.1
-
-declare 34 win {
-    void TkWinSetHINSTANCE(HINSTANCE hInstance)
-}
-
-# removed in Tk 9.1
-#declare 35 win {
-#    int TkWinGetPlatformTheme(void)
-#}
-
-# Exported through stub table since Tk 8.4.20/8.5.9
-
 declare 36 win {
     LRESULT __stdcall TkWinChildProc(HWND hwnd,
 	    UINT message, WPARAM wParam, LPARAM lParam)
 }
 
-declare 38 win {
-    int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
-}
-declare 39 win {
-    void TkpSync(Display *display)
-}
-declare 40 win {
-    Window TkUnixContainerId(TkWindow *winPtr)
-}
-declare 41 win {
-    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
-}
-declare 42 win {
-    void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
-}
-declare 43 win {
-    void TkWmCleanup(TkDisplay *dispPtr)
-}
-declare 44 win {
-    void TkSendCleanup(TkDisplay *dispPtr)
-}
-# only needed by tktest:
-declare 45 win {
-    int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
-	    Tcl_Obj *const *objv)
-}
-declare 47 win {
-    Tk_Window TkpGetCapture(void)
-}
-
 ################################
 # Aqua specific functions
 
-declare 1 aqua {
-    void TkAboutDlg(void)
-}
-declare 2 aqua {
-    void TkGenerateActivateEvents(TkWindow *winPtr, int active)
-}
-declare 3 aqua {
-    unsigned long TkpGetMS(void)
-}
-declare 4 aqua {
-    void TkPointerDeadWindow(TkWindow *winPtr)
-}
-declare 5 aqua {
-    void TkpSetCursor(TkpCursor cursor)
-}
-declare 6 aqua {
-    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
-}
-declare 8 aqua {
-    unsigned int TkMacOSXButtonKeyState(void)
-}
-declare 9 aqua {
-    int TkpWmSetState(TkWindow *winPtr, int state)
-}
 declare 10 aqua {
     void TkMacOSXClearMenubarActive(void)
 }
-declare 11 aqua {
-    void TkpSetCapture(TkWindow *winPtr)
-}
-declare 14 aqua {
-    int TkMacOSXDoHLEvent(void *theEvent)
+declare 13 aqua {
+    unsigned int TkMacOSXButtonKeyState(void)
 }
 declare 16 aqua {
     Window TkMacOSXGetXWindow(void *macWinPtr)
 }
 declare 17 aqua {
-    int TkMacOSXGrowToplevel(void *whichWindow, XPoint start)
+    bool TkMacOSXGrowToplevel(void *whichWindow, XPoint start)
 }
 declare 21 aqua {
     void TkMacOSXInvalidateWindow(MacDrawable *macWin, int flag)
@@ -888,47 +804,12 @@ declare 36 aqua {
 declare 37 aqua {
     void TkMacOSXWindowOffset(void *wRef, int *xOffset, int *yOffset)
 }
-declare 38 aqua {
-    int TkSetMacColor(unsigned long pixel, void *macColor)
-}
-declare 39 aqua {
-    void TkSetWMName(TkWindow *winPtr, const char *title)
-}
-declare 41 aqua {
-    int TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
-}
-declare 42 aqua {
-    Tk_Window Tk_TopCoordsToWindow(Tk_Window tkwin, int rootX, int rootY,
-	    int *newX, int *newY)
-}
-declare 43 aqua {
-    MacDrawable *TkMacOSXContainerId(TkWindow *winPtr)
-}
-declare 44 aqua {
-    MacDrawable *TkMacOSXGetHostToplevel(TkWindow *winPtr)
-}
-declare 46 aqua {
-    int TkpIsWindowFloating(void *window)
-}
-declare 47 aqua {
-    Tk_Window TkpGetCapture(void)
-}
-declare 49 aqua {
-    Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
-}
 declare 50 aqua {
-    int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
+    bool TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
 }
 declare 51 aqua {
     void TkGenWMDestroyEvent(Tk_Window tkwin)
 }
-#
-# Slot 52 unused (WAS: TkMacOSXSetDrawingEnabled)
-#
-# Made public as Tk_MacOSXGetNSWindowForDrawable
-#declare 54 aqua {
-#    void *TkMacOSXDrawable(Drawable drawable)
-#}
 
 ##############################################################################
 

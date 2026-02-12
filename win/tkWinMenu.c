@@ -1158,7 +1158,7 @@ TkWinEmbeddedMenuProc(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkWinHandleMenuEvent(
     TCL_UNUSED(HWND *),
     UINT *pMessage,
@@ -1167,11 +1167,11 @@ TkWinHandleMenuEvent(
     LRESULT *plResult)
 {
     Tcl_HashEntry *hashEntryPtr;
-    int returnResult = 0;
     TkMenu *menuPtr;
     TkMenuEntry *mePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    bool returnResult = false;
 
     switch (*pMessage) {
     case WM_UNINITMENUPOPUP:
@@ -1212,7 +1212,7 @@ TkWinHandleMenuEvent(
 	    }
 	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	    *plResult = 0;
-	    returnResult = 1;
+	    returnResult = true;
 	} else {
 	    tsdPtr->modalMenuPtr = NULL;
 	}
@@ -1271,7 +1271,7 @@ TkWinHandleMenuEvent(
 	    Tcl_Release(menuPtr);
 	    Tcl_Release(interp);
 	    *plResult = 0;
-	    returnResult = 1;
+	    returnResult = true;
 	}
 	break;
 
@@ -1310,7 +1310,7 @@ TkWinHandleMenuEvent(
 		    if ((underline < len) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
-			returnResult = 1;
+			returnResult = true;
 			break;
 		    }
 		}
@@ -1340,7 +1340,7 @@ TkWinHandleMenuEvent(
 		itemPtr->itemWidth += 2 * activeBorderWidth;
 	    }
 	    *plResult = 1;
-	    returnResult = 1;
+	    returnResult = true;
 	}
 	break;
     }
@@ -1405,7 +1405,7 @@ TkWinHandleMenuEvent(
 	    Tcl_Free(twdPtr);
 	}
 	*plResult = 1;
-	returnResult = 1;
+	returnResult = true;
 	break;
     }
 
@@ -1466,7 +1466,7 @@ TkWinHandleMenuEvent(
 		MenuSelectEvent(menuPtr);
 		Tcl_ServiceAll();
 		*plResult = 0;
-		returnResult = 1;
+		returnResult = true;
 	    }
 	}
 	break;

@@ -1128,6 +1128,33 @@ TkWmUnmapWindow(
 /*
  *----------------------------------------------------------------------
  *
+ * GetContainer --
+ *
+ *	If the passed window has the TRANSIENT_FOR property set this will
+ *	return the container window. Otherwise it will return None.
+ *
+ * Results:
+ *	The container window or None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkWindow *
+GetContainer(
+    TkWindow *winPtr)
+{
+    if (Tk_PathName(winPtr)) {
+	return winPtr->wmInfoPtr->container;
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWmDeadWindow --
  *
  *	This procedure is invoked when a top-level window is about to be
@@ -1209,7 +1236,7 @@ TkWmDeadWindow(
 
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
-	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(
+	TkWindow *containerPtr = GetContainer(
 	    transientPtr->winPtr);
 	if (containerPtr == winPtr) {
 	    wmPtr2 = transientPtr->winPtr->wmInfoPtr;
@@ -2473,7 +2500,7 @@ WmDeiconifyCmd(
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
 	TkWindow *winPtr2 = transientPtr->winPtr;
 	WmInfo *wmPtr2 = winPtr2->wmInfoPtr;
-	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
+	TkWindow *containerPtr = GetContainer(winPtr2);
 
 	if (containerPtr == winPtr) {
 	    if ((wmPtr2->hints.initial_state == WithdrawnState) &&
@@ -3092,7 +3119,7 @@ WmIconifyCmd(
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
 	TkWindow *winPtr2 = transientPtr->winPtr;
-	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
+	TkWindow *containerPtr = GetContainer(winPtr2);
 	if (containerPtr == winPtr &&
 		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
 	    TkpWmSetState(winPtr2, WithdrawnState);
@@ -4547,7 +4574,7 @@ WmWithdrawCmd(
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
 	TkWindow *winPtr2 = transientPtr->winPtr;
-	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
+	TkWindow *containerPtr = GetContainer(winPtr2);
 
 	if (containerPtr == winPtr &&
 		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
@@ -6039,7 +6066,7 @@ TkMacOSXResizable(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkMacOSXGrowToplevel(
     TCL_UNUSED(void *),
     TCL_UNUSED(XPoint))
@@ -6076,33 +6103,6 @@ TkSetWMName(
     NSString *nstitle = [[TKNSString alloc] initWithTclUtfBytes:title length:TCL_INDEX_NONE];
     [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:nstitle];
     [nstitle release];
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetContainer --
- *
- *	If the passed window has the TRANSIENT_FOR property set this will
- *	return the container window. Otherwise it will return None.
- *
- * Results:
- *	The container window or None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Tk_Window
-TkMacOSXGetContainer(
-    TkWindow *winPtr)
-{
-    if (Tk_PathName(winPtr)) {
-	return (Tk_Window)winPtr->wmInfoPtr->container;
-    }
-    return NULL;
 }
 
 /*
@@ -6216,7 +6216,7 @@ TkMacOSXIsWindowZoomed(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkMacOSXZoomToplevel(
     void *whichWindow,		/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
@@ -7007,7 +7007,7 @@ TkpGetWrapperWindow(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -7065,30 +7065,7 @@ TkpWmSetState(
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 setStateEnd:
-    return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpIsWindowFloating --
- *
- *	Returns 1 if a window is floating, 0 otherwise.
- *
- * Results:
- *	1 or 0 depending on window's floating attribute.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpIsWindowFloating(
-    void *wRef)
-{
-    return [(NSWindow *)wRef level] == kCGFloatingWindowLevel;
+    return true;
 }
 
 /*
@@ -7143,13 +7120,13 @@ TkMacOSXWindowOffset(
  *----------------------------------------------------------------------
  */
 
-unsigned long
+unsigned long long
 TkpGetMS(void)
 {
     Tcl_Time now;
 
     Tcl_GetTime(&now);
-    return (long) now.sec * 1000 + now.usec / 1000;
+    return now.sec * 1000 + now.usec / 1000;
 }
 
 /*
