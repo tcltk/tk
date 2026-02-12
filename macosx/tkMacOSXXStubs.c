@@ -520,7 +520,7 @@ XChangeProperty(
     TCL_UNUSED(Atom),
     TCL_UNUSED(int),
     TCL_UNUSED(int),
-    TCL_UNUSED(_Xconst unsigned char *),
+    TCL_UNUSED(const unsigned char *),
     TCL_UNUSED(int))
 {
     Debugger();
@@ -728,7 +728,7 @@ int
 XLookupColor(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Colormap),
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(XColor *),
     TCL_UNUSED(XColor *))
 {
