@@ -47,7 +47,7 @@ unsigned int glfwModifierState = 0;
 MODULE_SCOPE void
 TkGlfwSetupCallbacks(
     GLFWwindow *glfwWindow,
-    TCL_UNUSED(TkWindow *tkWin))
+    TCL_UNUSED(TkWindow *))
 {
     glfwSetWindowCloseCallback     (glfwWindow, TkGlfwWindowCloseCallback);
     glfwSetWindowSizeCallback      (glfwWindow, TkGlfwWindowSizeCallback);
@@ -160,7 +160,7 @@ TkGlfwWindowSizeCallback(
 
 MODULE_SCOPE void
 TkGlfwFramebufferSizeCallback(
-    TCL_UNUSED(GLFWwindow *window),
+    TCL_UNUSED(GLFWwindow *),
     int width,
     int height)
 {
@@ -334,8 +334,8 @@ TkGlfwWindowIconifyCallback(
  
 MODULE_SCOPE void
 TkGlfwWindowMaximizeCallback(
-    TCL_UNUSED(GLFWwindow *window),
-    TCL_UNUSED(int maximized))
+    TCL_UNUSED(GLFWwindow *), /* window */
+    TCL_UNUSED(int)) /*  maximized */
 {
     /* Currently a no-op — implemented in tkWaylandWm.c. */
 }
@@ -675,7 +675,7 @@ TkGlfwScrollCallback(
 MODULE_SCOPE void
 TkGlfwKeyCallback(
     GLFWwindow *window,
-    TCL_UNUSED(int key),
+    TCL_UNUSED(int), /* key */
     int scancode,
     int action,
     int mods)
@@ -742,7 +742,7 @@ TkGlfwKeyCallback(
  
 MODULE_SCOPE void
 TkGlfwCharCallback(
-    TCL_UNUSED(GLFWwindow *window),
+    TCL_UNUSED(GLFWwindow *), /* window */
     unsigned int codepoint)
 {
     TkWaylandStoreCharacterInput(codepoint);
