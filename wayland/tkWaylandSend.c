@@ -46,6 +46,7 @@ typedef struct PendingCommand {
 typedef struct {
     PendingCommand *pendingCommands;
     RegisteredInterp *interpListPtr;
+    Tcl_Interp *interp;
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
@@ -55,7 +56,7 @@ static struct {
     int sendDebug;
 } localData = {0, 0};
 
-/* Forward declarations */
+/* Forward declarations. */
 static char *   GetRegistryDir(void);
 static char *   GetSocketPathFromRegistry(const char *name);
 static int      AddToRegistry(const char *name, const char *socketPath);
@@ -65,6 +66,7 @@ static int      ValidateSocket(const char *socketPath);
 static int      SendViaSocket(const char *socketPath, const char *data, int length);
 static char *   CreateUniqueSocketPath(const char *baseName);
 static char *   GetMySocketPath(void);
+static void     DeleteProc(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -132,6 +134,8 @@ GetSocketPathFromRegistry(const char *name)
     Tcl_Channel chan;
     Tcl_Obj *contentObj = NULL;
     char *socketPath = NULL;
+    Tcl_Size len;
+    const char *str;
 
     registryDir = GetRegistryDir();
     if (registryDir == NULL) {
@@ -148,9 +152,8 @@ GetSocketPathFromRegistry(const char *name)
     }
 
     contentObj = Tcl_NewObj();
-    if (Tcl_ReadFile(chan, contentObj) == TCL_OK) {
-        Tcl_Size len;
-        const char *str = Tcl_GetStringFromObj(contentObj, &len);
+    if (Tcl_ReadChars(chan, contentObj, -1, 0) == TCL_OK) {
+        str = Tcl_GetStringFromObj(contentObj, &len);
         if (len > 0) {
             socketPath = Tcl_Alloc(len + 1);
             memcpy(socketPath, str, len);
@@ -294,10 +297,14 @@ static char *
 GetMySocketPath(void)
 {
     ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    RegisteredInterp *riPtr;
 
+    if (tsdPtr->interp == NULL) {
+        return NULL;
+    }
+
+    RegisteredInterp *riPtr;
     for (riPtr = tsdPtr->interpListPtr; riPtr != NULL; riPtr = riPtr->nextPtr) {
-        if (riPtr->interp == Tcl_GetCurrentThread()->interp) {
+        if (riPtr->interp == tsdPtr->interp) {
             return riPtr->socketPath;
         }
     }
@@ -425,20 +432,21 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
     char *socketPath;
     ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    /* Check if already registered */
+    /* Check if already registered. */
     for (riPtr = tsdPtr->interpListPtr; riPtr != NULL; riPtr = riPtr->nextPtr) {
         if (riPtr->interp == interp) {
             if (riPtr->name != NULL) {
                 RemoveFromRegistry(riPtr->name);
                 Tcl_Free(riPtr->name);
             }
-            riPtr->name = Tcl_Strdup(name);
+            riPtr->name = Tcl_Alloc(strlen(name) + 1);
+            strcpy(riPtr->name, name);
             AddToRegistry(name, riPtr->socketPath);
             return riPtr->name;
         }
     }
 
-    /* New registration */
+    /* New registration. */
     riPtr = Tcl_Alloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
     riPtr->nextPtr = tsdPtr->interpListPtr;
@@ -471,9 +479,9 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
         }
     }
 
-    Tcl_CreateFileHandler(riPtr->sockfd, TCL_READABLE, SocketEventProc, riPtr);
+    Tcl_CreateFileHandler(riPtr->sockfd, TCL_READABLE, SocketEventProc, (ClientData)riPtr);
 
-    /* Find unique name */
+    /* Find unique name. */
     Tcl_DStringInit(&dString);
     for (i = 1; ; i++) {
         char *existing = GetSocketPathFromRegistry(actualName);
@@ -493,14 +501,15 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
         } else {
             Tcl_DStringSetLength(&dString, Tcl_DStringLength(&dString) - 3);
         }
-        Tcl_DStringAppend(&dString, Tcl_IntToString(i), -1);
+        Tcl_DStringAppend(&dString, Tcl_GetString(Tcl_NewIntObj(i)), -1);
         actualName = Tcl_DStringValue(&dString);
     }
 
-    riPtr->name = Tcl_Strdup(actualName);
+    riPtr->name = Tcl_Alloc(strlen(actualName) + 1);
+    strcpy(riPtr->name, actualName);
     AddToRegistry(actualName, socketPath);
 
-    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr, DeleteProc);
+    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, (ClientData)riPtr, DeleteProc);
     if (Tcl_IsSafe(interp)) {
         Tcl_HideCommand(interp, "send", "send");
     }
@@ -527,12 +536,11 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
 
 int
 Tk_SendObjCmd(
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(ClientData),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-
     enum { SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST };
     static const char *const sendOptions[] = {
         "-async", "-displayof", "--", NULL
@@ -545,9 +553,10 @@ Tk_SendObjCmd(
     Tcl_Size i, firstArg;
     Tcl_DString request;
     char *socketPath;
+
     ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    /* Parse options */
+    /* Parse options. */
     for (i = 1; i < objc - 1; i++) {
         const char *opt = Tcl_GetString(objv[i]);
         if (opt[0] != '-') {
@@ -560,7 +569,7 @@ Tk_SendObjCmd(
         if (index == SEND_ASYNC) {
             async = 1;
         } else if (index == SEND_DISPLAYOF) {
-            i++;        /* ignored under Wayland */
+            i++; /* ignored under Wayland. */
         } else {
             i++;
             break;
@@ -601,7 +610,7 @@ Tk_SendObjCmd(
         }
     }
 
-    /* Remote send */
+    /* Remote send. */
     socketPath = GetSocketPathFromRegistry(destName);
     if (socketPath == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("no application named \"%s\"", destName));
@@ -645,15 +654,16 @@ Tk_SendObjCmd(
     Tcl_DStringAppend(&request, "\0", 1);
 
     if (!async) {
-        pending.serial      = localData.sendSerial;
-        pending.target      = destName;
-        pending.socketPath  = socketPath;
-        pending.interp      = interp;
-        pending.result      = NULL;
-        pending.errorInfo   = NULL;
-        pending.errorCode   = NULL;
+        memset(&pending, 0, sizeof(pending));
+        pending.serial = localData.sendSerial;
+        pending.target = destName;
+        pending.socketPath = socketPath;
+        pending.interp = interp;
+        pending.result = NULL;
+        pending.errorInfo = NULL;
+        pending.errorCode = NULL;
         pending.gotResponse = 0;
-        pending.nextPtr     = tsdPtr->pendingCommands;
+        pending.nextPtr = tsdPtr->pendingCommands;
         tsdPtr->pendingCommands = &pending;
     }
 
@@ -672,7 +682,7 @@ Tk_SendObjCmd(
         return TCL_OK;
     }
 
-    /* Wait for reply */
+    /* Wait for reply. */
     while (!pending.gotResponse) {
         Tcl_DoOneEvent(TCL_ALL_EVENTS);
     }
@@ -710,9 +720,8 @@ Tk_SendObjCmd(
 
 static void
 SocketEventProc(ClientData clientData, 
-	TCL)UNUSED(int)) /* mask */
+	TCL_UNUSED(int)) /* mask */
 {
-    (void)mask;     /* unused */
 
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
     char buffer[65536];
@@ -730,7 +739,7 @@ SocketEventProc(ClientData clientData,
         }
 
         if (p[0] == 'c' && p[1] == '\0') {
-            /* Command received */
+            /* Command received. */
             const char *interpName = NULL, *script = NULL;
             const char *replySocket = NULL, *serial = NULL;
             const char *q = p + 2;
@@ -800,7 +809,7 @@ SocketEventProc(ClientData clientData,
             p = q;
         }
         else if (p[0] == 'r' && p[1] == '\0') {
-            /* Result received */
+            /* Result received. */
             int serial = 0, code = TCL_OK;
             const char *resultStr = NULL, *errorInfo = NULL, *errorCode = NULL;
             int gotSerial = 0;
@@ -829,11 +838,18 @@ SocketEventProc(ClientData clientData,
                 if (pcPtr->serial == serial && pcPtr->result == NULL) {
                     pcPtr->code = code;
                     if (resultStr) {
-                        pcPtr->result = Tcl_Strdup(resultStr);
+                        pcPtr->result = Tcl_Alloc(strlen(resultStr) + 1);
+                        strcpy(pcPtr->result, resultStr);
                     }
                     if (code == TCL_ERROR) {
-                        if (errorInfo) pcPtr->errorInfo = Tcl_Strdup(errorInfo);
-                        if (errorCode) pcPtr->errorCode = Tcl_Strdup(errorCode);
+                        if (errorInfo) {
+                            pcPtr->errorInfo = Tcl_Alloc(strlen(errorInfo) + 1);
+                            strcpy(pcPtr->errorInfo, errorInfo);
+                        }
+                        if (errorCode) {
+                            pcPtr->errorCode = Tcl_Alloc(strlen(errorCode) + 1);
+                            strcpy(pcPtr->errorCode, errorCode);
+                        }
                     }
                     pcPtr->gotResponse = 1;
                     break;
@@ -863,7 +879,7 @@ SocketEventProc(ClientData clientData,
  */
 
 static void
-DeleteProc(void *clientData)
+DeleteProc(ClientData clientData)
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
     RegisteredInterp **prevPtr;
@@ -966,9 +982,10 @@ TkGetInterpNames(Tcl_Interp *interp,
  */
 
 void
-TkSendCleanup(TCL_UNUSED(TkDisplay *)) /* dispPtr */
+TkSendCleanup(
+	TCL_UNUSED(TkDisplay *))  /*dispPtr */
 {
-
+	
     ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     RegisteredInterp *riPtr, *next;
 
@@ -1011,12 +1028,11 @@ TkSendCleanup(TCL_UNUSED(TkDisplay *)) /* dispPtr */
 
 int
 TkpTestsendCmd(
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(ClientData),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-
     static const char *const options[] = { "serial", NULL };
     int index;
 
@@ -1027,11 +1043,17 @@ TkpTestsendCmd(
         return TCL_ERROR;
     }
 
-    if (index == 0) {   /* serial */
+    if (index == 0) { /* serial */
         Tcl_SetObjResult(interp, Tcl_NewIntObj(localData.sendSerial + 1));
     }
 
     return TCL_OK;
 }
 
-/* End of file */
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
