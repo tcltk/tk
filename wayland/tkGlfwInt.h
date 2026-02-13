@@ -255,10 +255,10 @@ MODULE_SCOPE void TkGlfwErrorCallback(int error, const char *description);
  *
  *----------------------------------------------------------------------
  */
-MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp);
-MODULE_SCOPE  int       SysNotify_Init (Tcl_Interp* interp);
-MODULE_SCOPE  int       Cups_Init (Tcl_Interp* interp);
-MODULE_SCOPE  int       TkAtkAccessibility_Init (Tcl_Interp *interp) ;
+extern  int Tktray_Init (Tcl_Interp* interp);
+extern  int SysNotify_Init (Tcl_Interp* interp);
+extern int Cups_Init (Tcl_Interp* interp);
+extern int TkAtkAccessibility_Init (Tcl_Interp *interp) ;
 
 
 #endif /* _TKGLFWINT_H */
