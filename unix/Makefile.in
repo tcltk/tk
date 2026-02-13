@@ -431,7 +431,7 @@ WAYLAND_OBJS            = \
     tkWaylandDraw.o  tkWaylandSysTray.o \
     tkWaylandEmbed.o  tkWaylandEvent.o  tkWaylandFocus.o \
     tkWaylandXId.o tkGlfwInit.o tkWaylandScrlbr.o \
-    tkWaylandButton.o tkWaylandScale.o tkWaylandMenub.o nanovg.o      
+    tkWaylandButton.o tkWaylandScale.o tkWaylandMenubu.o nanovg.o      
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
@@ -585,7 +585,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
     $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandXId.c \
     $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandMouseEvent.c  $(WAYLAND_DIR)/tkWaylandButton.c \
-     $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandMenub.c\
+     $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandMenubu.c\
      $(WAYLAND_DIR)/nanovg.c 	
 
 WAYLAND_PRIVATE_HDRS = \
@@ -1471,8 +1471,8 @@ tkWaylandButton.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScale.c
 
-tkWaylandMenub.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenub.c
+tkWaylandMenubu.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenubu.c
 
 nanovg.o: $(WAYLAND_DIR)/nanovg.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
