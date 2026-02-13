@@ -380,6 +380,64 @@ TkpGetCapture(void)
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpWarpPointer --
+ *
+ *	Move the mouse cursor to the screen location specified by the warpX and
+ *	warpY fields of a TkDisplay.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The mouse cursor is moved.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpWarpPointer(
+    TkDisplay *dispPtr)
+{
+    GLFWwindow *glfwWindow;
+    int x, y;
+    int winX, winY;
+    double targetX, targetY;
+    
+    if (dispPtr->warpWindow) {
+        /* Warp to a specific window. */
+        Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
+        
+        /* Get GLFW window using unified architecture. */
+        glfwWindow = TkGlfwGetGLFWWindow(dispPtr->warpWindow);
+        if (glfwWindow) {
+            /* Get window position. */
+            glfwGetWindowPos(glfwWindow, &winX, &winY);
+            
+            /* Calculate target position relative to window. */
+            targetX = (x + dispPtr->warpX) - winX;
+            targetY = (y + dispPtr->warpY) - winY;
+            
+            /* Set cursor position within the window. */
+            glfwSetCursorPos(glfwWindow, targetX, targetY);
+        }
+    } else {
+        
+        /* Note: On Wayland, global cursor warping is not supported
+         * by design for security reasons. This is a compositor
+         * restriction, not a GLFW limitation. */
+    }
+
+    /* Generate pointer event at new position. */
+    if (dispPtr->warpWindow) {
+        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+    } else {
+        TkGenerateButtonEventForXPointer(None);
+    }
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
