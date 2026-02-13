@@ -93,23 +93,6 @@ XSetSelectionOwner(
     return Success;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkSelDeadWindow --
- *
- *	Cleanup when a window that owned the clipboard is being destroyed.
- *
- *----------------------------------------------------------------------
- */
-void
-TkSelDeadWindow(TkWindow *winPtr)
-{
-    if (winPtr && (Tk_Window)winPtr == tkClipboardOwner) {
-        tkClipboardOwner = NULL;
-        clipboardChangeCount++;
-    }
-}
 
 /*
  *----------------------------------------------------------------------

@@ -215,6 +215,10 @@ distribute, and modify this file as you see fit.
 
 */
 
+/* Suppress numerous warnings on indentation. */
+#pragma GCC system_header
+#pragma clang system_header
+
 #ifndef STBI_INCLUDE_STB_IMAGE_H
 #define STBI_INCLUDE_STB_IMAGE_H
 
