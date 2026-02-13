@@ -8,23 +8,21 @@
  * Copyright © 1996-1998 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
  * 
- * See the file “license.terms” for information on usage and redistribution of
+ * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-
-#include “tkInt.h” 
-#include “tkGlfwInt.h” 
-#include “tkMenu.h” 
+#include <tcl.h>
+#include "tkInt.h" 
+#include "tkGlfwInt.h" 
+#include "tkMenu.h" 
 #include <nanovg.h> 
 /* Default font settings. */ 
-#define DEFAULT_FONT “sans” 
+#define DEFAULT_FONT "sans" 
 #define DEFAULT_FONT_SIZE 14.0f 
 /* Menu constants. */ 
 #define MENU_MARGIN_WIDTH	2 
 #define MENU_DIVIDER_HEIGHT	2 
-#define CASCADE_ARROW_WIDTH	10 
-#define CASCADE_ARROW_HEIGHT	8 
 #define ENTRY_HELP_MENU		ENTRY_PLATFORM_FLAG1
 
 /* 
@@ -117,7 +115,7 @@ static void GetTearoffEntryGeometry(TkMenu *menuPtr,
 
 static Simple3DBorder 
 GetSimple3DBorder( 
-		 TCL_UNUSED(Tk_3DBorder) border) 
+		 TCL_UNUSED(Tk_3DBorder)) /* border */ 
 { 
  Simple3DBorder s; 
  /* Dummy colors; in real implementation, extract from Tk_3DBorder. */ 
@@ -228,8 +226,8 @@ UnderlineChars(
 	 int end, 
 	 float x, 
 	 float y, 
-	 TCL_UNUSED(float) ascent, 
-	 TCL_UNUSED(float) descent, 
+	 TCL_UNUSED(float), /* ascent */
+	 TCL_UNUSED(float), /* descent */
 	 NVGcolor color) 
 { 
  float bounds[4]; 
@@ -384,8 +382,8 @@ TkpMenuNewEntry(
 
 void 
 TkpSetWindowMenuBar( 
-		 TCL_UNUSED(Tk_Window) tkwin, 
-		 TCL_UNUSED(TkMenu *) menuPtr) 
+		 TCL_UNUSED(Tk_Window), /* tkwin */ 
+		 TCL_UNUSED(TkMenu *)) /* menuPtr */ 
 { 
  /* 
  * In GLFW, no native menubar support. 
@@ -1323,8 +1321,6 @@ TkpComputeMenubarGeometry(
  int height; 
  int width; 
  int i; 
- int labelWidth; 
- int indicatorSpace; 
  int borderWidth; 
  int activeBorderWidth; 
  TkMenuEntry *mePtr; 
@@ -1334,7 +1330,6 @@ TkpComputeMenubarGeometry(
  tkfont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr); 
  Tk_GetFontMetrics(tkfont, &menuMetrics); 
  x = y = borderWidth = activeBorderWidth = 0; 
- indicatorSpace = labelWidth = 0; 
  Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj, 
 			&borderWidth); 
  Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, 
@@ -1521,14 +1516,14 @@ void
 TkpDrawMenuEntry( 
 		 TkMenuEntry *mePtr, 
 		 Drawable d, 
-		 Tk_Font tkfont, 
-		 const Tk_FontMetrics *menuMetricsPtr, 
+		 TCL_UNUSED(Tk_Font),
+		 TCL_UNUSED(const Tk_FontMetrics *), /*menuMetricsPtr */ 
 		 int x, 
 		 int y, 
 		 int width, 
 		 int height, 
-		 TCL_UNUSED(int) strictMotif, 
-		 int drawArrow) 
+		 TCL_UNUSED(int), /* strictMotif */
+		 int drawArrow)
 { 
  NVGcontext *vg = TkGlfwGetNVGContext(); 
  Tk_3DBorder bgBorder = NULL; 
@@ -1582,6 +1577,7 @@ TkpDrawMenuEntry(
  *     Sets or clears the ENTRY_HELP_MENU flag.
  * --------------------------------------------------------------------------------
  */ 
+ 
 static void 
 SetHelpMenu( 
 	 TkMenu *menuPtr) 
@@ -1611,7 +1607,7 @@ SetHelpMenu(
 	 strcat(helpMenuName, ".help"); 
 	 if (strcmp(helpMenuName, 
 		 Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) { 
-		cascadeEntryPtr->entryFlags ||= ENTRY_HELP_MENU; 
+		cascadeEntryPtr->entryFlags |= ENTRY_HELP_MENU; 
 	 } else { 
 		cascadeEntryPtr->entryFlags &= ~ENTRY_HELP_MENU; 
 	 } 
@@ -1716,15 +1712,15 @@ TkpDrawCheckIndicator(
 		 TCL_UNUSED(Tk_Window), 
 		 TCL_UNUSED(Display *), 
 		 TCL_UNUSED(Drawable), 
-		 TCL_UNUSED(int) x, 
-		 TCL_UNUSED(int) y, 
+		 TCL_UNUSED(int), /* x */ 
+		 TCL_UNUSED(int), /* y */
 		 TCL_UNUSED(Tk_3DBorder), 
 		 TCL_UNUSED(XColor *), 
 		 TCL_UNUSED(XColor *), 
 		 TCL_UNUSED(XColor *), 
-		 TCL_UNUSED(int) on, 
-		 TCL_UNUSED(int) disabled, 
-		 TCL_UNUSED(int) mode) 
+		 TCL_UNUSED(int), /* on */ 
+		 TCL_UNUSED(int), /* disabled */
+		 TCL_UNUSED(int)) /* mode */ 
 { 
  /* Already handled in DrawMenuEntryIndicator. */ 
 } 
