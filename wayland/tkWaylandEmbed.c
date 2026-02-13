@@ -185,6 +185,61 @@ TkpClaimFocus(
     /* No embedding → cannot claim focus via container. */
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpShowBusyWindow, TkpHideBusyWindow, TkpMakeTransparentWindowExist,
+ * TkpCreateBusy --
+ *
+ *	Portability layer for busy windows. Holds platform-specific gunk for
+ *	the [tk busy] command, which is currently a dummy implementation for
+ *	Wayland. The individual functions are supposed to do the following:
+ *
+ * TkpShowBusyWindow --
+ *	Make the busy window appear.
+ *
+ * TkpHideBusyWindow --
+ *	Make the busy window go away.
+ *
+ * TkpMakeTransparentWindowExist --
+ *	Actually make a transparent window.
+ *
+ * TkpCreateBusy --
+ *	Creates the platform-specific part of a busy window structure.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpShowBusyWindow(
+    TCL_UNUSED(TkBusy))
+{
+}
+
+void
+TkpHideBusyWindow(
+    TCL_UNUSED(TkBusy))
+{
+}
+
+void
+TkpMakeTransparentWindowExist(
+    TCL_UNUSED(Tk_Window),		/* Token for window. */
+    TCL_UNUSED(Window))		/* Parent window. */
+{
+}
+
+void
+TkpCreateBusy(
+    TCL_UNUSED(Tk_FakeWin *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(TkBusy))
+{
+}
+
 /*
  * Local Variables:
  * mode: c
