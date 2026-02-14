@@ -789,6 +789,9 @@ TkpInit(
     if (TkGlfwInitialize() != TCL_OK) {
         return TCL_ERROR;
     }
+
+    /* Initialize menu. */
+    TkWaylandMenuInit();
     
     
     /* Initialize event loop. */
