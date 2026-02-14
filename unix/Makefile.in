@@ -424,15 +424,16 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
-    tkWayland.o tkWayland3D.o tkWaylandFont.o \
-    tkWaylandClipboard.o tkWaylandImage.o tkWaylandColor.o \
-    tkWaylandKey.o tkWaylandConfig.o tkWaylandMenu.o \
-    tkWaylandCursor.o tkWaylandNotify.o  tkWaylandSend.o \
-    tkWaylandDraw.o  tkWaylandSysTray.o \
-    tkWaylandEmbed.o  tkWaylandEvent.o  tkWaylandFocus.o \
-    tkWaylandXId.o tkGlfwInit.o tkWaylandScrlbr.o \
-    tkWaylandButton.o tkWaylandScale.o tkWaylandMenubu.o nanovg.o      
-
+	nanovg.o tkGlfwInit.o tkWayland.o \
+    tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
+    tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o \
+    tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
+    tkWaylandFocus.o tkWaylandFont.o tkWaylandImage.o \
+    tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
+    tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
+    tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
+    tkWaylandXId.o tkWaylandWm.o
+    
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
     tkAppInit.o             tkUnixConfig.o          tkUnixPrint.o \
@@ -575,18 +576,15 @@ AQUA_SRCS = \
 	$(TTK_DIR)/ttkMacOSXTheme.c
 
 WAYLAND_SRCS = \
-    $(WAYLAND_DIR)/tkWayland.c $(WAYLAND_DIR)/tkWayland3D.c \
-    $(WAYLAND_DIR)/tkWaylandFont.c  $(WAYLAND_DIR)/tkWaylandClipboard.c \
-    $(WAYLAND_DIR)/tkWaylandImage.c $(WAYLAND_DIR)/tkWaylandColor.c \
-    $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandConfig.c \
-    $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandCursor.c \
-    $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandSend.c \
-    $(WAYLAND_DIR)/tkWaylandDraw.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
-    $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
-    $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandXId.c \
-    $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandMouseEvent.c  $(WAYLAND_DIR)/tkWaylandButton.c \
-     $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandMenubu.c\
-     $(WAYLAND_DIR)/nanovg.c 	
+	$(WAYLAND_DIR)/nanovg.c $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWayland.c \
+    $(WAYLAND_DIR)/tkWayland3D.c $(WAYLAND_DIR)/tkWaylandButton.c $(WAYLAND_DIR)/tkWaylandClipboard.c \
+    $(WAYLAND_DIR)/tkWaylandColor.c $(WAYLAND_DIR)/tkWaylandConfig.c $(WAYLAND_DIR)/tkWaylandCursor.c \
+    $(WAYLAND_DIR)/tkWaylandDraw.c $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
+    $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandFont.c $(WAYLAND_DIR)/tkWaylandImage.c \
+    $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
+    $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
+    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
+    $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandWm.c 
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
@@ -1402,47 +1400,35 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
 
+nanovg.o: $(WAYLAND_DIR)/nanovg.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
+
+tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c
+
 tkWayland.o: $(WAYLAND_DIR)/tkWayland.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland.c
 
 tkWayland3D.o: $(WAYLAND_DIR)/tkWayland3D.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland3D.c
 
-tkWaylandFont.o: $(WAYLAND_DIR)/tkWaylandFont.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFont.c
+tkWaylandButton.o: $(WAYLAND_DIR)/tkWaylandButton.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandButton.c
 
 tkWaylandClipboard.o: $(WAYLAND_DIR)/tkWaylandClipboard.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandClipboard.c
 
-tkWaylandImage.o: $(WAYLAND_DIR)/tkWaylandImage.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandImage.c
-
 tkWaylandColor.o: $(WAYLAND_DIR)/tkWaylandColor.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandColor.c
-
-tkWaylandKey.o: $(WAYLAND_DIR)/tkWaylandKey.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandKey.c
 
 tkWaylandConfig.o: $(WAYLAND_DIR)/tkWaylandConfig.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandConfig.c
 
-tkWaylandMenu.o: $(WAYLAND_DIR)/tkWaylandMenu.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenu.c
-
 tkWaylandCursor.o: $(WAYLAND_DIR)/tkWaylandCursor.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandCursor.c
 
-tkWaylandNotify.o: $(WAYLAND_DIR)/tkWaylandNotify.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandNotify.c
-
-tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c
-
 tkWaylandDraw.o: $(WAYLAND_DIR)/tkWaylandDraw.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandDraw.c
-
-tkWaylandSysTray.o: $(WAYLAND_DIR)/tkWaylandSysTray.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSysTray.c
 
 tkWaylandEmbed.o: $(WAYLAND_DIR)/tkWaylandEmbed.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandEmbed.c
@@ -1453,30 +1439,45 @@ tkWaylandEvent.o: $(WAYLAND_DIR)/tkWaylandEvent.c
 tkWaylandFocus.o: $(WAYLAND_DIR)/tkWaylandFocus.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFocus.c
 
-tkWaylandXId.o: $(WAYLAND_DIR)/tkWaylandXId.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXId.c
+tkWaylandFont.o: $(WAYLAND_DIR)/tkWaylandFont.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFont.c
 
-tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c
+tkWaylandImage.o: $(WAYLAND_DIR)/tkWaylandImage.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandImage.c
+
+tkWaylandKey.o: $(WAYLAND_DIR)/tkWaylandKey.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandKey.c
+
+tkWaylandMenu.o: $(WAYLAND_DIR)/tkWaylandMenu.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenu.c
+
+tkWaylandMenubu.o: $(WAYLAND_DIR)/tkWaylandMenubu.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenubu.c
+
+tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandMouseEvent.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMouseEvent.c
+
+tkWaylandNotify.o: $(WAYLAND_DIR)/tkWaylandNotify.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandNotify.c
+
+tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScale.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScale.c
 
 tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScrlbr.c
 
-tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMouseEvent.c
+tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c
 
-tkWaylandButton.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandButton.c
+tkWaylandSysTray.o: $(WAYLAND_DIR)/tkWaylandSysTray.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSysTray.c
 
-tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScale.c
+tkWaylandXId.o: $(WAYLAND_DIR)/tkWaylandXId.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXId.c
 
-tkWaylandMenubu.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenubu.c
-
-nanovg.o: $(WAYLAND_DIR)/nanovg.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
-
+tkWaylandWm.o: $(WAYLAND_DIR)/tkWaylandWm.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandWm.c
+    
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 

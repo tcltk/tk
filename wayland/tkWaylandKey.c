@@ -42,8 +42,6 @@ static KeyboardState keyboardState = {NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0};
 static void InitializeXKB(void);
 static void CleanupXKB(void);
 static KeySym XKBKeySymToX11KeySym(xkb_keysym_t xkb_sym);
-static unsigned int GLFWModsToX11State(int glfw_mods);
-
 /*
  *----------------------------------------------------------------------
  *
@@ -217,7 +215,7 @@ TkpCleanupKeymapInfo(TkDisplay *dispPtr)
 
 KeySym
 TkpGetKeySym(
-    TkDisplay *dispPtr,
+    TCL_UNUSED(TkDisplay *), /*dispPtr*/
     XEvent *eventPtr)
 {
     TkKeyEvent *kePtr = (TkKeyEvent *)eventPtr;
@@ -270,7 +268,7 @@ TkpGetKeySym(
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,
+    TCL_UNUSED(TkWindow *), /* winPtr */
     XEvent *eventPtr,
     Tcl_DString *dsPtr)
 {
@@ -507,20 +505,6 @@ XKBKeySymToX11KeySym(xkb_keysym_t xkb_sym)
     return (KeySym)xkb_sym;
 }
 
-static unsigned int
-GLFWModsToX11State(int glfw_mods)
-{
-    unsigned int state = 0;
-    
-    if (glfw_mods & GLFW_MOD_SHIFT)     state |= ShiftMask;
-    if (glfw_mods & GLFW_MOD_CONTROL)   state |= ControlMask;
-    if (glfw_mods & GLFW_MOD_ALT)       state |= Mod1Mask;
-    if (glfw_mods & GLFW_MOD_SUPER)     state |= Mod4Mask;
-    if (glfw_mods & GLFW_MOD_CAPS_LOCK) state |= LockMask;
-    if (glfw_mods & GLFW_MOD_NUM_LOCK)  state |= Mod2Mask;
-    
-    return state;
-}
 
 /*
  * Local Variables:
