@@ -1557,6 +1557,113 @@ TkpDrawMenuEntry(
  } 
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDisplayMenu --
+ *
+ *	Called by Tk's display system to render a posted menu.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders menu using NanoVG.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkpDisplayMenu(
+    ClientData clientData)
+{
+    TkMenu *menuPtr = (TkMenu *)clientData;
+    TkWindow *winPtr;
+    GLFWwindow *glfwWindow;
+    NVGcontext *vg;
+    Drawable drawable;
+    int i;
+    
+    if (!menuPtr || !menuPtr->tkwin) {
+        return;
+    }
+    
+    winPtr = (TkWindow *)menuPtr->tkwin;
+    
+    /* Get parent window's GLFW window (menus are toplevels). */
+    if (winPtr->parentPtr) {
+        glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr->parentPtr);
+    } else {
+        glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    }
+    
+    if (!glfwWindow) {
+        return;
+    }
+    
+    drawable = Tk_WindowId(menuPtr->tkwin);
+    if (!drawable) {
+        return;
+    }
+    
+    /* Begin NanoVG drawing. */
+    if (!TkGlfwBeginDraw(drawable, &vg)) {
+        return;
+    }
+    
+    /* Get menu position (already computed by TkpPostMenu). */
+    int menuX = Tk_X(menuPtr->tkwin);
+    int menuY = Tk_Y(menuPtr->tkwin);
+    int menuW = menuPtr->totalWidth;
+    int menuH = menuPtr->totalHeight;
+    
+    /* Draw menu background/border. */
+    nvgSave(vg);
+    nvgBeginPath(vg);
+    nvgRect(vg, menuX, menuY, menuW, menuH);
+    nvgFillColor(vg, nvgRGB(240, 240, 240));
+    nvgFill(vg);
+    nvgStrokeColor(vg, nvgRGB(0, 0, 0));
+    nvgStroke(vg);
+    nvgRestore(vg);
+    
+    /* Draw each menu entry. */
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        
+        TkpDrawMenuEntry(mePtr, drawable, NULL, NULL,
+            menuX + mePtr->x, menuY + mePtr->y,
+            mePtr->width, mePtr->height,
+            0, 1);
+    }
+    
+    TkGlfwEndDraw(drawable);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenuInit --
+ *
+ *	Initialize menu display handling.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets up display procedure.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandMenuInit(void)
+{
+    /* Register display handler for Menu class */
+    Tk_CreateClassProc(Tk_GetUid("Menu"), TkpDisplayMenu);
+}
+
 /* 
  *––––––––––––––––––––––––––––––––––– 
  * 
@@ -1723,7 +1830,465 @@ TkpDrawCheckIndicator(
 		 TCL_UNUSED(int)) /* mode */ 
 { 
  /* Already handled in DrawMenuEntryIndicator. */ 
-} 
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPostTearoffMenu --
+ *
+ *	Posts a tearoff menu on the screen at the specified coordinates.
+ *	This is the platform-specific implementation for Wayland/GLFW.
+ *
+ * Results:
+ *	Returns a standard Tcl result code. TCL_OK if the menu was
+ *	successfully posted, TCL_ERROR otherwise.
+ *
+ * Side effects:
+ *	The menu window is mapped at the computed screen position.
+ *	Menu entries are recomputed for proper layout. Mouse event
+ *	callbacks are registered for the menu window. The menu is
+ *	scheduled for display via the NanoVG rendering system.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpPostTearoffMenu(
+    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    TkMenu *menuPtr,		/* The menu to post. */
+    int x,			/* Screen X coordinate. */
+    int y,			/* Screen Y coordinate. */
+    Tcl_Size index)		/* Index of entry to position at x,y.
+				 * Use -1 to position menu's top-left
+				 * corner at x,y. */
+{
+    int result;
+    int reqW, reqH;
+    GLFWmonitor *monitor;
+    const GLFWvidmode *mode;
+    int screenW = 1920;  /* Fallback values. */
+    int screenH = 1080;
+    
+    /* Deactivate any currently active entry. */
+    TkActivateMenuEntry(menuPtr, -1);
+    
+    /* Recompute menu geometry. */
+    TkRecomputeMenu(menuPtr);
+    
+    /* Execute the post command if one exists. */
+    result = TkPostCommand(menuPtr);
+    if (result != TCL_OK) {
+        return result;
+    }
+
+    /* Menu window must exist. */
+    if (menuPtr->tkwin == NULL) {
+        return TCL_OK;
+    }
+
+    /* Adjust y coordinate if posting relative to a specific entry. */
+    if (index >= menuPtr->numEntries) {
+        index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+        y -= menuPtr->entries[index]->y;
+    }
+
+    /* Get actual screen dimensions from GLFW. */
+    monitor = glfwGetPrimaryMonitor();
+    if (monitor) {
+        mode = glfwGetVideoMode(monitor);
+        if (mode) {
+            screenW = mode->width;
+            screenH = mode->height;
+        }
+    }
+
+    /* Get menu's requested size. */
+    reqW = Tk_ReqWidth(menuPtr->tkwin);
+    reqH = Tk_ReqHeight(menuPtr->tkwin);
+
+    /* Clamp menu position to screen boundaries. */
+    if (x + reqW > screenW) {
+        x = screenW - reqW;
+    }
+    if (x < 0) {
+        x = 0;
+    }
+    if (y + reqH > screenH) {
+        y = screenH - reqH;
+    }
+    if (y < 0) {
+        y = 0;
+    }
+
+    /* Position and size the menu window. */
+    Tk_MoveWindow(menuPtr->tkwin, x, y);
+    Tk_ResizeWindow(menuPtr->tkwin, reqW, reqH);
+    
+    /* Map the window to make it visible. */
+    Tk_MapWindow(menuPtr->tkwin);
+    
+    /* Set up mouse event callbacks for menu interaction. */
+    TkWaylandSetupMenuCallbacks(menuPtr->tkwin);
+    
+    /* Schedule the menu for display via NanoVG. */
+    Tk_DoWhenIdle(TkpDisplayMenu, menuPtr);
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuMouseClick --
+ *
+ *	Handle mouse click events in a menu.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May invoke menu entry, post cascade, or toggle check/radio.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MenuMouseClick(
+    TkMenu *menuPtr,
+    int x,
+    int y,
+    int button)
+{
+    int i;
+    
+    if (button != 1) {
+        return;  /* Only handle left-click. */
+    }
+    
+    /* Find which entry was clicked. */
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        int entryX = Tk_X(menuPtr->tkwin) + mePtr->x;
+        int entryY = Tk_Y(menuPtr->tkwin) + mePtr->y;
+        
+        if (x >= entryX && x < entryX + mePtr->width &&
+            y >= entryY && y < entryY + mePtr->height) {
+            
+            /* Skip disabled entries and separators. */
+            if (mePtr->state == ENTRY_DISABLED || 
+                mePtr->type == SEPARATOR_ENTRY ||
+                mePtr->type == TEAROFF_ENTRY) {
+                return;
+            }
+            
+            /* Handle different entry types. */
+            switch (mePtr->type) {
+            case COMMAND_ENTRY:
+                /* Invoke command and unpost menu. */
+                TkInvokeMenuEntry(menuPtr, i);
+                TkUnpostCascade(menuPtr);
+                break;
+                
+            case CASCADE_ENTRY:
+                /* Post the cascade menu. */
+                if (mePtr->namePtr != NULL) {
+                    TkMenuReferences *menuRefPtr;
+                    int cascadeX, cascadeY;
+                    
+                    menuRefPtr = TkFindMenuReferencesObj(
+                        menuPtr->interp, mePtr->namePtr);
+                    
+                    if (menuRefPtr && menuRefPtr->menuPtr) {
+                        TkMenu *cascadePtr = menuRefPtr->menuPtr;
+                        
+                        /* Calculate cascade position.
+                         * Position to the right of the parent entry. */
+                        cascadeX = Tk_X(menuPtr->tkwin) + 
+                                   Tk_Width(menuPtr->tkwin);
+                        cascadeY = Tk_Y(menuPtr->tkwin) + mePtr->y;
+                        
+                        /* Mark this as the posted cascade. */
+                        menuPtr->postedCascade = mePtr;
+                        
+                        /* Post the cascade menu. */
+                        TkPostSubmenu(menuPtr->interp, menuPtr, cascadePtr);
+                        TkpPostMenu(menuPtr->interp, cascadePtr, 
+                                   cascadeX, cascadeY, 0);
+                        
+                        /* Redraw parent to show active state. */
+                        Tk_EventuallyRedraw(menuPtr->tkwin);
+                    }
+                }
+                break;
+                
+            case CHECK_BUTTON_ENTRY:
+                /* Toggle check state. */
+                if (mePtr->entryFlags & ENTRY_SELECTED) {
+                    mePtr->entryFlags &= ~ENTRY_SELECTED;
+                } else {
+                    mePtr->entryFlags |= ENTRY_SELECTED;
+                }
+                
+                /* Invoke the entry to run its command. */
+                TkInvokeMenuEntry(menuPtr, i);
+                
+                /* Redraw to show new state. */
+                Tk_EventuallyRedraw(menuPtr->tkwin);
+                break;
+                
+            case RADIO_BUTTON_ENTRY:
+                /* Select this radio button, deselect others. */
+                if (!(mePtr->entryFlags & ENTRY_SELECTED)) {
+                    /* Deselect all other radio buttons with same variable. */
+                    if (mePtr->namePtr != NULL) {
+                        int j;
+                        for (j = 0; j < menuPtr->numEntries; j++) {
+                            TkMenuEntry *otherPtr = menuPtr->entries[j];
+                            if (otherPtr->type == RADIO_BUTTON_ENTRY &&
+                                otherPtr->namePtr != NULL &&
+                                strcmp(Tcl_GetString(otherPtr->namePtr),
+                                      Tcl_GetString(mePtr->namePtr)) == 0) {
+                                otherPtr->entryFlags &= ~ENTRY_SELECTED;
+                            }
+                        }
+                    }
+                    
+                    /* Select this one. */
+                    mePtr->entryFlags |= ENTRY_SELECTED;
+                    
+                    /* Invoke the entry. */
+                    TkInvokeMenuEntry(menuPtr, i);
+                    
+                    /* Redraw to show new state. */
+                    Tk_EventuallyRedraw(menuPtr->tkwin);
+                }
+                break;
+            }
+            
+            return;
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuMouseMotion --
+ *
+ *	Handle mouse motion in a menu.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May activate/deactivate entries, post/unpost cascades.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MenuMouseMotion(
+    TkMenu *menuPtr,
+    int x,
+    int y)
+{
+    int i;
+    int foundEntry = 0;
+    
+    /* Find which entry the mouse is over. */
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        int entryX = Tk_X(menuPtr->tkwin) + mePtr->x;
+        int entryY = Tk_Y(menuPtr->tkwin) + mePtr->y;
+        
+        if (x >= entryX && x < entryX + mePtr->width &&
+            y >= entryY && y < entryY + mePtr->height) {
+            
+            foundEntry = 1;
+            
+            /* Skip disabled entries and separators. */
+            if (mePtr->state == ENTRY_DISABLED ||
+                mePtr->type == SEPARATOR_ENTRY ||
+                mePtr->type == TEAROFF_ENTRY) {
+                continue;
+            }
+            
+            /* Activate this entry if not already active. */
+            if (menuPtr->active != i) {
+                /* Unpost any existing cascade if moving to different entry. */
+                if (menuPtr->postedCascade != NULL && 
+                    menuPtr->postedCascade != mePtr) {
+                    TkUnpostCascade(menuPtr);
+                    menuPtr->postedCascade = NULL;
+                }
+                
+                TkActivateMenuEntry(menuPtr, i);
+                
+                /* Auto-post cascade on hover. */
+                if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
+                    TkMenuReferences *menuRefPtr;
+                    int cascadeX, cascadeY;
+                    
+                    menuRefPtr = TkFindMenuReferencesObj(
+                        menuPtr->interp, mePtr->namePtr);
+                    
+                    if (menuRefPtr && menuRefPtr->menuPtr) {
+                        TkMenu *cascadePtr = menuRefPtr->menuPtr;
+                        
+                        /* Position cascade to the right. */
+                        cascadeX = Tk_X(menuPtr->tkwin) + 
+                                   Tk_Width(menuPtr->tkwin);
+                        cascadeY = Tk_Y(menuPtr->tkwin) + mePtr->y;
+                        
+                        menuPtr->postedCascade = mePtr;
+                        
+                        TkPostSubmenu(menuPtr->interp, menuPtr, cascadePtr);
+                        TkpPostMenu(menuPtr->interp, cascadePtr,
+                                   cascadeX, cascadeY, 0);
+                    }
+                }
+                
+                Tk_EventuallyRedraw(menuPtr->tkwin);
+            }
+            return;
+        }
+    }
+    
+    /* Mouse not over any entry. */
+    if (!foundEntry && menuPtr->active != -1) {
+        TkActivateMenuEntry(menuPtr, -1);
+        Tk_EventuallyRedraw(menuPtr->tkwin);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuMouseLeave --
+ *
+ *	Handle mouse leaving a menu window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Deactivates current entry, may unpost cascade.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MenuMouseLeave(
+    TkMenu *menuPtr)
+{
+    /* Only deactivate if not moving into a cascade. */
+    if (menuPtr->postedCascade == NULL) {
+        if (menuPtr->active != -1) {
+            TkActivateMenuEntry(menuPtr, -1);
+            Tk_EventuallyRedraw(menuPtr->tkwin);
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSetupMenuCallbacks --
+ *
+ *	Register mouse event callbacks for a menu window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets up GLFW callbacks for the menu window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandSetupMenuCallbacks(
+    Tk_Window tkwin)
+{
+    GLFWwindow *glfwWindow;
+    
+    glfwWindow = TkGlfwGetGLFWWindow(tkwin);
+    if (!glfwWindow) {
+        return;
+    }
+    
+    /* Store tkwin in GLFW window user pointer for callbacks. */
+    glfwSetWindowUserPointer(glfwWindow, tkwin);
+    
+    /* Set up mouse callbacks. */
+    glfwSetCursorPosCallback(glfwWindow, MenuCursorPosCallback);
+    glfwSetMouseButtonCallback(glfwWindow, MenuMouseButtonCallback);
+    glfwSetCursorEnterCallback(glfwWindow, MenuCursorEnterCallback);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GLFW Callback Wrappers --
+ *
+ *	These translate GLFW events to menu operations.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MenuCursorPosCallback(
+    GLFWwindow *glfwWindow,
+    double xpos,
+    double ypos)
+{
+    Tk_Window tkwin = (Tk_Window)glfwGetWindowUserPointer(glfwWindow);
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    
+    if (winPtr && winPtr->instanceData) {
+        TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
+        MenuMouseMotion(menuPtr, (int)xpos, (int)ypos);
+    }
+}
+
+static void
+MenuMouseButtonCallback(
+    GLFWwindow *glfwWindow,
+    int button,
+    int action,
+    TCL_UNUSED(int) mods)
+{
+    Tk_Window tkwin = (Tk_Window)glfwGetWindowUserPointer(glfwWindow);
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    
+    if (action == GLFW_PRESS && winPtr && winPtr->instanceData) {
+        TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
+        double xpos, ypos;
+        
+        glfwGetCursorPos(glfwWindow, &xpos, &ypos);
+        MenuMouseClick(menuPtr, (int)xpos, (int)ypos, 
+                      button == GLFW_MOUSE_BUTTON_LEFT ? 1 : 3);
+    }
+}
+
+static void
+MenuCursorEnterCallback(
+    GLFWwindow *glfwWindow,
+    int entered)
+{
+    Tk_Window tkwin = (Tk_Window)glfwGetWindowUserPointer(glfwWindow);
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    
+    if (!entered && winPtr && winPtr->instanceData) {
+        TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
+        MenuMouseLeave(menuPtr);
+    }
+}
+
+
 /* 
  * Local Variables: 
  * mode: c 
