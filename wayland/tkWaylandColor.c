@@ -264,18 +264,18 @@ ParseColorString(const char *name, NVGcolor *color)
     }
 
     /* Minimal set of named colors. */
-	  static const struct {
+	static const struct {
 	    const char *name;
-	    NVGcolor    color;
+	    NVGcolor color;
 	} colors[] = {
-	    {"red",    {{1.0f, 0.0f, 0.0f, 1.0f}}},
-	    {"green",  {{0.0f, 1.0f, 0.0f, 1.0f}}},
-	    {"blue",   {{0.0f, 0.0f, 1.0f, 1.0f}}},
-	    {"white",  {{1.0f, 1.0f, 1.0f, 1.0f}}},
-	    {"black",  {{0.0f, 0.0f, 0.0f, 1.0f}}},
-	    {"gray",   {{0.5f, 0.5f, 0.5f, 1.0f}}},
-	    {"grey",   {{0.5f, 0.5f, 0.5f, 1.0f}}},
-	    {NULL,     {{0.0f, 0.0f, 0.0f, 0.0f}}}
+	    { "red",   { 1.0f, 0.0f, 0.0f, 1.0f } },
+	    { "green", { 0.0f, 1.0f, 0.0f, 1.0f } },
+	    { "blue",  { 0.0f, 0.0f, 1.0f, 1.0f } },
+	    { "white", { 1.0f, 1.0f, 1.0f, 1.0f } },
+	    { "black", { 0.0f, 0.0f, 0.0f, 1.0f } },
+	    { "gray",  { 0.5f, 0.5f, 0.5f, 1.0f } },
+	    { "grey",  { 0.5f, 0.5f, 0.5f, 1.0f } },
+	    { NULL,    { 0.0f, 0.0f, 0.0f, 0.0f } }
 	};
 
 
