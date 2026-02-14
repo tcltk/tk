@@ -264,24 +264,26 @@ ParseColorString(const char *name, NVGcolor *color)
     }
 
     /* Minimal set of named colors. */
-	static const struct {
-	    const char *name;
-	    NVGcolor color;
-	} colors[] = {
-	    { "red",   { 1.0f, 0.0f, 0.0f, 1.0f } },
-	    { "green", { 0.0f, 1.0f, 0.0f, 1.0f } },
-	    { "blue",  { 0.0f, 0.0f, 1.0f, 1.0f } },
-	    { "white", { 1.0f, 1.0f, 1.0f, 1.0f } },
-	    { "black", { 0.0f, 0.0f, 0.0f, 1.0f } },
-	    { "gray",  { 0.5f, 0.5f, 0.5f, 1.0f } },
-	    { "grey",  { 0.5f, 0.5f, 0.5f, 1.0f } },
-	    { NULL,    { 0.0f, 0.0f, 0.0f, 0.0f } }
-	};
+    static const char *color_names[] = {
+        "red", "green", "blue", "white", "black", "gray", "grey", NULL
+    };
+    
+    static const float color_values[][4] = {
+        {1.0f, 0.0f, 0.0f, 1.0f},  /* red */
+        {0.0f, 1.0f, 0.0f, 1.0f},  /* green */
+        {0.0f, 0.0f, 1.0f, 1.0f},  /* blue */
+        {1.0f, 1.0f, 1.0f, 1.0f},  /* white */
+        {0.0f, 0.0f, 0.0f, 1.0f},  /* black */
+        {0.5f, 0.5f, 0.5f, 1.0f},  /* gray */
+        {0.5f, 0.5f, 0.5f, 1.0f},  /* grey */
+    };
 
-
-    for (int i = 0; colors[i].name != NULL; i++) {
-        if (strcasecmp(name, colors[i].name) == 0) {
-            *color = colors[i].color;
+    for (int i = 0; color_names[i] != NULL; i++) {
+        if (strcasecmp(name, color_names[i]) == 0) {
+            color->r = color_values[i][0];
+            color->g = color_values[i][1];
+            color->b = color_values[i][2];
+            color->a = color_values[i][3];
             return 1;
         }
     }
