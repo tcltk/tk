@@ -20,8 +20,8 @@ typedef struct {
     unsigned int state;
     long delta;
     Window window;
-    Point global;
-    Point local;
+    int globalX, globalY;	/* Global screen coordinates */
+    int localX, localY;		/* Local window coordinates */
 } MouseEventData;
 
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
@@ -187,10 +187,10 @@ TkGenerateButtonEventForXPointer(
     memset(&med, 0, sizeof(MouseEventData));
     XQueryPointer(NULL, window, NULL, NULL, &global_x, &global_y,
 	    &local_x, &local_y, &med.state);
-    med.global.h = global_x;
-    med.global.v = global_y;
-    med.local.h = local_x;
-    med.local.v = local_y;
+    med.globalX = global_x;
+    med.globalY = global_y;
+    med.localX = local_x;
+    med.localY = local_y;
     med.window = window;
 
     return GenerateButtonEvent(&med);
@@ -227,9 +227,10 @@ TkGenerateButtonEvent(
     memset(&med, 0, sizeof(MouseEventData));
     med.state = state;
     med.window = window;
-    med.global.h = x;
-    med.global.v = y;
-    med.local = med.global;
+    med.globalX = x;
+    med.globalY = y;
+    med.localX = x;
+    med.localY = y;
 
     return GenerateButtonEvent(&med);
 }
@@ -264,10 +265,9 @@ GenerateButtonEvent(
     tkwin = Tk_IdToWindow(dispPtr->display, medPtr->window);
 
     if (tkwin != NULL) {
-	tkwin = Tk_TopCoordsToWindow(tkwin, medPtr->local.h, medPtr->local.v,
-		&dummy, &dummy);
+	tkwin = Tk_CoordsToWindow(medPtr->localX, medPtr->localY, tkwin);
     }
-    Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
+    Tk_UpdatePointer(tkwin, medPtr->globalX, medPtr->globalY, medPtr->state);
     return 1;
 }
 
@@ -377,64 +377,6 @@ Tk_Window
 TkpGetCapture(void)
 {
     return captureWinPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWarpPointer --
- *
- *	Move the mouse cursor to the screen location specified by the warpX and
- *	warpY fields of a TkDisplay.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The mouse cursor is moved.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpWarpPointer(
-    TkDisplay *dispPtr)
-{
-    GLFWwindow *glfwWindow;
-    int x, y;
-    int winX, winY;
-    double targetX, targetY;
-    
-    if (dispPtr->warpWindow) {
-        /* Warp to a specific window. */
-        Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
-        
-        /* Get GLFW window using unified architecture. */
-        glfwWindow = TkGlfwGetGLFWWindow(dispPtr->warpWindow);
-        if (glfwWindow) {
-            /* Get window position. */
-            glfwGetWindowPos(glfwWindow, &winX, &winY);
-            
-            /* Calculate target position relative to window. */
-            targetX = (x + dispPtr->warpX) - winX;
-            targetY = (y + dispPtr->warpY) - winY;
-            
-            /* Set cursor position within the window. */
-            glfwSetCursorPos(glfwWindow, targetX, targetY);
-        }
-    } else {
-        
-        /* Note: On Wayland, global cursor warping is not supported
-         * by design for security reasons. This is a compositor
-         * restriction, not a GLFW limitation. */
-    }
-
-    /* Generate pointer event at new position. */
-    if (dispPtr->warpWindow) {
-        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
-    } else {
-        TkGenerateButtonEventForXPointer(None);
-    }
 }
 
 /*
