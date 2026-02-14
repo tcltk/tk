@@ -199,7 +199,7 @@ static int
 method_activate(
     sd_bus_message *m,
     void *userdata,
-    sd_bus_error *ret_error)
+    TCL_UNUSED(sd_bus_error *))
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
@@ -218,7 +218,7 @@ static int
 method_secondary_activate(
     sd_bus_message *m,
     void *userdata,
-    sd_bus_error *ret_error)
+    TCL_UNUSED(sd_bus_error *))
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
@@ -237,7 +237,7 @@ static int
 method_context_menu(
     sd_bus_message *m,
     void *userdata,
-    sd_bus_error *ret_error)
+    TCL_UNUSED(sd_bus_error *))
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
@@ -255,8 +255,8 @@ method_context_menu(
 static int
 method_scroll(
     sd_bus_message *m,
-    void *userdata,
-    sd_bus_error *ret_error)
+    TCL_UNUSED(void *),
+     TCL_UNUSED(sd_bus_error *))
 {
     int delta;
     const char *orientation;
@@ -280,13 +280,13 @@ method_scroll(
 
 static int
 property_get_category(
-    sd_bus *bus,
-    const char *path,
-    const char *interface,
-    const char *property,
+    TCL_UNUSED(sd_bus *), /* bus */
+    TCL_UNUSED(const char *), /* path */
+    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    sd_bus_error *error)
+    TCL_UNUSED(sd_bus_error *)) /*error */
 {
     DockIcon *icon = userdata;
     const char *category_str;
@@ -313,13 +313,13 @@ property_get_category(
 
 static int
 property_get_status(
-    sd_bus *bus,
-    const char *path,
-    const char *interface,
-    const char *property,
+    TCL_UNUSED(sd_bus *), /* bus */
+    TCL_UNUSED(const char *), /* path */
+    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    sd_bus_error *error)
+    TCL_UNUSED(sd_bus_error *)) /*error */
 {
     DockIcon *icon = userdata;
     const char *status_str;
@@ -343,13 +343,13 @@ property_get_status(
 
 static int
 property_get_icon_name(
-    sd_bus *bus,
-    const char *path,
-    const char *interface,
-    const char *property,
+    TCL_UNUSED(sd_bus *), /* bus */
+    TCL_UNUSED(const char *), /* path */
+    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    sd_bus_error *error)
+    TCL_UNUSED(sd_bus_error *)) /*error */
 {
     DockIcon *icon = userdata;
     const char *name = "";
@@ -366,13 +366,13 @@ property_get_icon_name(
 
 static int
 property_get_icon_pixmap(
-    sd_bus *bus,
-    const char *path,
-    const char *interface,
-    const char *property,
+    TCL_UNUSED(sd_bus *), /* bus */
+    TCL_UNUSED(const char *), /* path */
+    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    sd_bus_error *error)
+    TCL_UNUSED(sd_bus_error *)) /*error */
 {
     DockIcon *icon = userdata;
     int r;
@@ -439,13 +439,13 @@ property_get_icon_pixmap(
 
 static int
 property_get_tooltip(
-    sd_bus *bus,
-    const char *path,
-    const char *interface,
-    const char *property,
+    TCL_UNUSED(sd_bus *), /* bus */
+    TCL_UNUSED(const char *), /* path */
+    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    sd_bus_error *error)
+    TCL_UNUSED(sd_bus_error *)) /*error */
 {
     DockIcon *icon = userdata;
     int r;
@@ -475,13 +475,13 @@ property_get_tooltip(
 
 static int
 property_get_menu(
-    sd_bus *bus,
-    const char *path,
-    const char *interface,
-    const char *property,
+    TCL_UNUSED(sd_bus *), /* bus */
+    TCL_UNUSED(const char *), /* path */
+    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    sd_bus_error *error)
+    TCL_UNUSED(sd_bus_error *)) /*error */
 {
     /* No menu support for now - return empty object path. */
     return sd_bus_message_append(reply, "o", "/");
