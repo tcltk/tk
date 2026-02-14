@@ -157,7 +157,7 @@ struct PhotoModel {
     unsigned char *pix32;	/* Local storage for 32-bit image. */
     int ditherX, ditherY;	/* Location of first incorrectly dithered
 				 * pixel in image. */
-    TkRegion validRegion;	/* Tk region indicating which parts of the
+    Region validRegion;	/* Tk region indicating which parts of the
 				 * image have valid image data. */
     PhotoInstance *instancePtr;	/* First in the list of instances associated
 				 * with this model. */

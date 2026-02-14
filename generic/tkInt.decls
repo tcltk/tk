@@ -686,7 +686,7 @@ declare 7 win {
     void TkpSetCapture(TkWindow *winPtr)
 }
 declare 8 win {
-    void TkpSetCursor(TkpCursor cursor)
+    void TkpSetCursor(Cursor cursor)
 }
 declare 9 win {
     int TkpWmSetState(TkWindow *winPtr, int state)
@@ -694,16 +694,18 @@ declare 9 win {
 declare 10 win {
     void TkSetPixmapColormap(Pixmap pixmap, Colormap colormap)
 }
-declare 11 win {
-    void TkWinCancelMouseTimer(void)
-}
+# removed in Tk 9.1
+#declare 11 win {
+#   void TkWinCancelMouseTimer(void)
+#}
 declare 12 win {
     void TkWinClipboardRender(TkDisplay *dispPtr, UINT format)
 }
-declare 13 win {
-    LRESULT TkWinEmbeddedEventProc(HWND hwnd, UINT message,
-	    WPARAM wParam, LPARAM lParam)
-}
+# removed in Tk 9.1
+#declare 13 win {
+#   LRESULT TkWinEmbeddedEventProc(HWND hwnd, UINT message,
+#	    WPARAM wParam, LPARAM lParam)
+#}
 declare 14 win {
     void TkWinFillRect(HDC dc, int x, int y, int width, int height, int pixel)
 }
@@ -714,34 +716,41 @@ declare 15 win {
 declare 16 win {
     HDC TkWinGetDrawableDC(Display *display, Drawable d, TkWinDCState *state)
 }
-declare 17 win {
-    unsigned int TkWinGetModifierState(void)
-}
-declare 18 win {
-    HPALETTE TkWinGetSystemPalette(void)
-}
-declare 19 win {
-    HWND TkWinGetWrapperWindow(Tk_Window tkwin)
-}
-declare 20 win {
-    int TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
-	    LPARAM *plParam, LRESULT *plResult)
-}
-declare 21 win {
-    int TkWinIndexOfColor(XColor *colorPtr)
-}
+# removed in Tk 9.1
+#declare 17 win {
+#   unsigned int TkWinGetModifierState(void)
+#}
+# removed in Tk 9.1
+#declare 18 win {
+#   HPALETTE TkWinGetSystemPalette(void)
+#}
+# removed in Tk 9.1
+#declare 19 win {
+#   HWND TkWinGetWrapperWindow(Tk_Window tkwin)
+#}
+# removed in Tk 9.1
+#declare 20 win {
+#   int TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
+#	    LPARAM *plParam, LRESULT *plResult)
+#}
+# removed in Tk 9.1
+#declare 21 win {
+#   int TkWinIndexOfColor(XColor *colorPtr)
+#}
 declare 22 win {
     void TkWinReleaseDrawableDC(Drawable d, HDC hdc, TkWinDCState *state)
 }
 declare 23 win {
     LRESULT TkWinResendEvent(WNDPROC wndproc, HWND hwnd, XEvent *eventPtr)
 }
-declare 24 win {
-    HPALETTE TkWinSelectPalette(HDC dc, Colormap colormap)
-}
-declare 25 win {
-    void TkWinSetMenu(Tk_Window tkwin, HMENU hMenu)
-}
+# removed in Tk 9.1
+#declare 24 win {
+#   HPALETTE TkWinSelectPalette(HDC dc, Colormap colormap)
+#}
+# removed in Tk 9.1
+#declare 25 win {
+#   void TkWinSetMenu(Tk_Window tkwin, HMENU hMenu)
+#}
 declare 26 win {
     void TkWinSetWindowPos(HWND hwnd, HWND siblingHwnd, int pos)
 }
@@ -763,10 +772,11 @@ declare 30 win {
 declare 31 win {
     void TkWinDialogDebug(int debug)
 }
-declare 32 win {
-    Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window tkwin,
-	    const char *dbName, const char *className)
-}
+# removed in Tk 9.1
+#declare 32 win {
+#   Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window tkwin,
+#	    const char *dbName, const char *className)
+#}
 declare 33 win {
     char *TkAlignImageData(XImage *image, int alignment, int bitOrder)
 }
@@ -779,7 +789,7 @@ declare 34 win {
 
 # removed in Tk 9.1
 #declare 35 win {
-#    int TkWinGetPlatformTheme(void)
+#   int TkWinGetPlatformTheme(void)
 #}
 
 # Exported through stub table since Tk 8.4.20/8.5.9
@@ -834,21 +844,23 @@ declare 3 aqua {
 declare 4 aqua {
     void TkPointerDeadWindow(TkWindow *winPtr)
 }
-declare 5 aqua {
-    void TkpSetCursor(TkpCursor cursor)
-}
 declare 6 aqua {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 declare 8 aqua {
-    unsigned int TkMacOSXButtonKeyState(void)
+    void TkpSetCursor(Cursor cursor)
 }
+# removed in Tk 9.1
+#declare 8 aqua {
+#   unsigned int TkMacOSXButtonKeyState(void)
+#}
 declare 9 aqua {
     int TkpWmSetState(TkWindow *winPtr, int state)
 }
-declare 10 aqua {
-    void TkMacOSXClearMenubarActive(void)
-}
+# removed in Tk 9.1
+#declare 10 aqua {
+#   void TkMacOSXClearMenubarActive(void)
+#}
 declare 11 aqua {
     void TkpSetCapture(TkWindow *winPtr)
 }
@@ -858,24 +870,30 @@ declare 14 aqua {
 declare 16 aqua {
     Window TkMacOSXGetXWindow(void *macWinPtr)
 }
-declare 17 aqua {
-    int TkMacOSXGrowToplevel(void *whichWindow, XPoint start)
-}
-declare 21 aqua {
-    void TkMacOSXInvalidateWindow(MacDrawable *macWin, int flag)
-}
-declare 23 aqua {
-    void TkMacOSXMakeRealWindowExist(TkWindow *winPtr)
-}
-declare 24 aqua {
-    void *TkMacOSXMakeStippleMap(Drawable d1, Drawable d2)
-}
-declare 27 aqua {
-    int TkMacOSXResizable(TkWindow *winPtr)
-}
-declare 29 aqua {
-    void TkMacOSXSetScrollbarGrow(TkWindow *winPtr, int flag)
-}
+# removed in Tk 9.1
+#declare 17 aqua {
+#   int TkMacOSXGrowToplevel(void *whichWindow, XPoint start)
+#}
+# removed in Tk 9.1
+#declare 21 aqua {
+#   void TkMacOSXInvalidateWindow(MacDrawable *macWin, int flag)
+#}
+# removed in Tk 9.1
+#declare 23 aqua {
+#   void TkMacOSXMakeRealWindowExist(TkWindow *winPtr)
+#}
+# removed in Tk 9.1
+#declare 24 aqua {
+#   void *TkMacOSXMakeStippleMap(Drawable d1, Drawable d2)
+#}
+# removed in Tk 9.1
+#declare 27 aqua {
+#    int TkMacOSXResizable(TkWindow *winPtr)
+#}
+# removed in Tk 9.1
+#declare 29 aqua {
+#    void TkMacOSXSetScrollbarGrow(TkWindow *winPtr, int flag)
+#}
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
 }
@@ -907,27 +925,30 @@ declare 43 aqua {
 declare 44 aqua {
     MacDrawable *TkMacOSXGetHostToplevel(TkWindow *winPtr)
 }
-declare 46 aqua {
-    int TkpIsWindowFloating(void *window)
-}
+# removed in Tk 9.1
+#declare 46 aqua {
+#   int TkpIsWindowFloating(void *window)
+#}
 declare 47 aqua {
     Tk_Window TkpGetCapture(void)
 }
 declare 49 aqua {
     Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
 }
-declare 50 aqua {
-    int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
-}
-declare 51 aqua {
-    void TkGenWMDestroyEvent(Tk_Window tkwin)
-}
+# removed in Tk 9.1
+#declare 50 aqua {
+#   int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
+#}
+# removed in Tk 9.1
+#declare 51 aqua {
+#   void TkGenWMDestroyEvent(Tk_Window tkwin)
+#}
 #
 # Slot 52 unused (WAS: TkMacOSXSetDrawingEnabled)
 #
 # Made public as Tk_MacOSXGetNSWindowForDrawable
 #declare 54 aqua {
-#    void *TkMacOSXDrawable(Drawable drawable)
+#   void *TkMacOSXDrawable(Drawable drawable)
 #}
 
 ##############################################################################
@@ -942,7 +963,7 @@ interface tkIntXlib
 
 declare 0 win {
     int XSetDashes(Display *display, GC gc, int dash_offset,
-	    _Xconst char *dash_list, int n)
+	    const char *dash_list, int n)
 }
 declare 1 win {
     XModifierKeymap *XGetModifierMapping(Display *d)
@@ -971,8 +992,8 @@ declare 7 win {
 }
 declare 8 win {
     Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
-	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
-	    XColor _Xconst *x2)
+	    unsigned int ui1, unsigned int ui2, XColor const *x1,
+	    XColor const *x2)
 }
 declare 9 win {
     GContext XGContextFromGC(GC g)
@@ -985,7 +1006,7 @@ declare 11 win {
     KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
 }
 declare 12 win {
-    KeySym XStringToKeysym(_Xconst char *c)
+    KeySym XStringToKeysym(const char *c)
 }
 declare 13 win {
     Window XRootWindow(Display *d, int i)
@@ -1010,7 +1031,7 @@ declare 19 win {
 }
 declare 20 win {
     int XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
-	    int i2, _Xconst unsigned char *c, int i3)
+	    int i2, const unsigned char *c, int i3)
 }
 declare 21 win {
     int XChangeWindowAttributes(Display *d, Window w, unsigned long ul,
@@ -1034,7 +1055,7 @@ declare 25 win {
 }
 declare 26 win {
     Pixmap XCreateBitmapFromData(Display *display, Drawable d,
-	    _Xconst char *data, unsigned int width, unsigned int height)
+	    const char *data, unsigned int width, unsigned int height)
 }
 declare 27 win {
     int XDefineCursor(Display *d, Window w, Cursor c)
@@ -1110,7 +1131,7 @@ declare 47 win {
     KeyCode XKeysymToKeycode(Display *d, KeySym k)
 }
 declare 48 win {
-    Status XLookupColor(Display *d, Colormap c1, _Xconst char *c2,
+    Status XLookupColor(Display *d, Colormap c1, const char *c2,
 	    XColor *x1, XColor *x2)
 }
 declare 49 win {
@@ -1160,7 +1181,7 @@ declare 62 win {
     int XSetCommand(Display *d, Window w, char **c, int i)
 }
 declare 63 win {
-    int XSetIconName(Display *d, Window w, _Xconst char *c)
+    int XSetIconName(Display *d, Window w, const char *c)
 }
 declare 64 win {
     int XSetInputFocus(Display *d, Window w, int i, Time t)
@@ -1223,7 +1244,7 @@ declare 81 win {
 }
 declare 82 win {
     Status XParseColor(Display *display, Colormap map,
-	    _Xconst char *spec, XColor *colorPtr)
+	    const char *spec, XColor *colorPtr)
 }
 declare 83 win {
     GC XCreateGC(Display *display, Drawable d,
@@ -1233,7 +1254,7 @@ declare 84 win {
     int XFreeGC(Display *display, GC gc)
 }
 declare 85 win {
-    Atom XInternAtom(Display *display, _Xconst char *atom_name,
+    Atom XInternAtom(Display *display, const char *atom_name,
 	    Bool only_if_exists)
 }
 declare 86 win {
@@ -1435,7 +1456,7 @@ declare 154 win {
     char *XSetIMValues(XIM im, ...)
 }
 declare 155 win {
-    XFontSet XCreateFontSet(Display *display, _Xconst char *base_font_name_list,
+    XFontSet XCreateFontSet(Display *display, const char *base_font_name_list,
 	    char ***missing_charset_list, int *missing_charset_count, char **def_string)
 }
 declare 156 win {
@@ -1454,7 +1475,7 @@ declare 158 win {
 
 declare 0 macosx {
     int XSetDashes(Display *display, GC gc, int dash_offset,
-	    _Xconst char *dash_list, int n)
+	    const char *dash_list, int n)
 }
 declare 1 macosx {
     XModifierKeymap *XGetModifierMapping(Display *d)
@@ -1483,8 +1504,8 @@ declare 7 macosx {
 }
 declare 8 macosx {
     Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
-	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
-	    XColor _Xconst *x2)
+	    unsigned int ui1, unsigned int ui2, XColor const *x1,
+	    XColor const *x2)
 }
 declare 9 macosx {
     GContext XGContextFromGC(GC g)
@@ -1497,7 +1518,7 @@ declare 11 macosx {
     KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
 }
 declare 12 macosx {
-    KeySym XStringToKeysym(_Xconst char *c)
+    KeySym XStringToKeysym(const char *c)
 }
 declare 13 macosx {
     Window XRootWindow(Display *d, int i)
@@ -1522,7 +1543,7 @@ declare 19 macosx {
 }
 declare 20 macosx {
     int XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
-	    int i2, _Xconst unsigned char *c, int i3)
+	    int i2, const unsigned char *c, int i3)
 }
 declare 21 macosx {
     int XChangeWindowAttributes(Display *d, Window w, unsigned long ul,
@@ -1546,7 +1567,7 @@ declare 25 macosx {
 }
 declare 26 macosx {
     Pixmap XCreateBitmapFromData(Display *display, Drawable d,
-	    _Xconst char *data, unsigned int width, unsigned int height)
+	    const char *data, unsigned int width, unsigned int height)
 }
 declare 27 macosx {
     int XDefineCursor(Display *d, Window w, Cursor c)
@@ -1622,7 +1643,7 @@ declare 47 macosx {
     KeyCode XKeysymToKeycode(Display *d, KeySym k)
 }
 declare 48 macosx {
-    Status XLookupColor(Display *d, Colormap c1, _Xconst char *c2,
+    Status XLookupColor(Display *d, Colormap c1, const char *c2,
 	    XColor *x1, XColor *x2)
 }
 declare 49 macosx {
@@ -1672,7 +1693,7 @@ declare 62 macosx {
     int XSetCommand(Display *d, Window w, char **c, int i)
 }
 declare 63 macosx {
-    int XSetIconName(Display *d, Window w, _Xconst char *c)
+    int XSetIconName(Display *d, Window w, const char *c)
 }
 declare 64 macosx {
     int XSetInputFocus(Display *d, Window w, int i, Time t)
@@ -1735,7 +1756,7 @@ declare 81 macosx {
 }
 declare 82 macosx {
     Status XParseColor(Display *display, Colormap map,
-	    _Xconst char *spec, XColor *colorPtr)
+	    const char *spec, XColor *colorPtr)
 }
 declare 83 macosx {
     GC XCreateGC(Display *display, Drawable d,
@@ -1745,7 +1766,7 @@ declare 84 macosx {
     int XFreeGC(Display *display, GC gc)
 }
 declare 85 macosx {
-    Atom XInternAtom(Display *display, _Xconst char *atom_name,
+    Atom XInternAtom(Display *display, const char *atom_name,
 	    Bool only_if_exists)
 }
 declare 86 macosx {
@@ -1947,7 +1968,7 @@ declare 154 macosx {
     char *XSetIMValues(XIM im, ...)
 }
 declare 155 macosx {
-    XFontSet XCreateFontSet(Display *display, _Xconst char *base_font_name_list,
+    XFontSet XCreateFontSet(Display *display, const char *base_font_name_list,
 	    char ***missing_charset_list, int *missing_charset_count, char **def_string)
 }
 declare 156 macosx {
