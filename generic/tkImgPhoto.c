@@ -374,7 +374,7 @@ ImgPhotoCreate(
     modelPtr->palette = NULL;
     modelPtr->pix32 = NULL;
     modelPtr->instancePtr = NULL;
-    modelPtr->validRegion = TkCreateRegion();
+    modelPtr->validRegion = XCreateRegion();
 
     /*
      * Process configuration options given in the image create command.
@@ -1241,7 +1241,7 @@ readCleanup:
 	case PHOTO_TRANS_SET: {
 	    int newVal, boolMode;
 	    XRectangle setBox;
-	    TkRegion modRegion;
+	    Region modRegion;
 
 	    /*
 	     * Parse args and option, check for valid values
@@ -1322,16 +1322,16 @@ readCleanup:
 	    setBox.y = y;
 	    setBox.width = 1;
 	    setBox.height = 1;
-	    modRegion = TkCreateRegion();
-	    TkUnionRectWithRegion(&setBox, modRegion, modRegion);
+	    modRegion = XCreateRegion();
+	    XUnionRectWithRegion(&setBox, modRegion, modRegion);
 	    if (pixelPtr[3]) {
-		TkUnionRectWithRegion(&setBox, modelPtr->validRegion,
+		XUnionRectWithRegion(&setBox, modelPtr->validRegion,
 			modelPtr->validRegion);
 	    } else {
-		TkSubtractRegion(modelPtr->validRegion, modRegion,
+		XSubtractRegion(modelPtr->validRegion, modRegion,
 			modelPtr->validRegion);
 	    }
-	    TkDestroyRegion(modRegion);
+	    XDestroyRegion(modRegion);
 
 	    /*
 	     * Inform the generic image code that the image
@@ -2367,7 +2367,7 @@ ImgPhotoDelete(
 	Tcl_Free(modelPtr->pix32);
     }
     if (modelPtr->validRegion != NULL) {
-	TkDestroyRegion(modelPtr->validRegion);
+	XDestroyRegion(modelPtr->validRegion);
     }
     if (modelPtr->dataObj != NULL) {
 	Tcl_DecrRefCount(modelPtr->dataObj);
@@ -2440,7 +2440,7 @@ ImgPhotoSetSize(
     int h, offset, pitch;
     unsigned char *srcPtr, *destPtr;
     XRectangle validBox, clipBox;
-    TkRegion clipRegion;
+    Region clipRegion;
     PhotoInstance *instancePtr;
 
     if (modelPtr->userWidth > 0) {
@@ -2489,19 +2489,19 @@ ImgPhotoSetSize(
      * image size.
      */
 
-    TkClipBox(modelPtr->validRegion, &validBox);
+    XClipBox(modelPtr->validRegion, &validBox);
     if ((validBox.x + validBox.width > width)
 	    || (validBox.y + validBox.height > height)) {
 	clipBox.x = 0;
 	clipBox.y = 0;
 	clipBox.width = width;
 	clipBox.height = height;
-	clipRegion = TkCreateRegion();
-	TkUnionRectWithRegion(&clipBox, clipRegion, clipRegion);
-	TkIntersectRegion(modelPtr->validRegion, clipRegion,
+	clipRegion = XCreateRegion();
+	XUnionRectWithRegion(&clipBox, clipRegion, clipRegion);
+	XIntersectRegion(modelPtr->validRegion, clipRegion,
 		modelPtr->validRegion);
-	TkDestroyRegion(clipRegion);
-	TkClipBox(modelPtr->validRegion, &validBox);
+	XDestroyRegion(clipRegion);
+	XClipBox(modelPtr->validRegion, &validBox);
     }
 
     /*
@@ -3364,7 +3364,7 @@ Tk_PhotoPutBlock(
 	 */
 
 	if (compRule != TK_PHOTO_COMPOSITE_OVERLAY) {
-	    TkRegion workRgn;
+	    Region workRgn;
 
 	    /*
 	     * Don't need this when using the OVERLAY compositing rule, which
@@ -3372,15 +3372,15 @@ Tk_PhotoPutBlock(
 	     */
 
 	recalculateValidRegion:
-	    workRgn = TkCreateRegion();
+	    workRgn = XCreateRegion();
 	    rect.x = x;
 	    rect.y = y;
 	    rect.width = width;
 	    rect.height = height;
-	    TkUnionRectWithRegion(&rect, workRgn, workRgn);
-	    TkSubtractRegion(modelPtr->validRegion, workRgn,
+	    XUnionRectWithRegion(&rect, workRgn, workRgn);
+	    XSubtractRegion(modelPtr->validRegion, workRgn,
 		    modelPtr->validRegion);
-	    TkDestroyRegion(workRgn);
+	    XDestroyRegion(workRgn);
 	}
 
 	/*
@@ -3397,7 +3397,7 @@ Tk_PhotoPutBlock(
 	rect.y = y;
 	rect.width = width;
 	rect.height = height;
-	TkUnionRectWithRegion(&rect, modelPtr->validRegion,
+	XUnionRectWithRegion(&rect, modelPtr->validRegion,
 		modelPtr->validRegion);
     }
 
@@ -3739,16 +3739,16 @@ Tk_PhotoPutZoomedBlock(
 	     * always strictly increases the valid region.
 	     */
 
-	    TkRegion workRgn = TkCreateRegion();
+	    Region workRgn = XCreateRegion();
 
 	    rect.x = x;
 	    rect.y = y;
 	    rect.width = width;
 	    rect.height = 1;
-	    TkUnionRectWithRegion(&rect, workRgn, workRgn);
-	    TkSubtractRegion(modelPtr->validRegion, workRgn,
+	    XUnionRectWithRegion(&rect, workRgn, workRgn);
+	    XSubtractRegion(modelPtr->validRegion, workRgn,
 		    modelPtr->validRegion);
-	    TkDestroyRegion(workRgn);
+	    XDestroyRegion(workRgn);
 	}
 
 	TkpBuildRegionFromAlphaData(modelPtr->validRegion,
@@ -3760,7 +3760,7 @@ Tk_PhotoPutZoomedBlock(
 	rect.y = y;
 	rect.width = width;
 	rect.height = height;
-	TkUnionRectWithRegion(&rect, modelPtr->validRegion,
+	XUnionRectWithRegion(&rect, modelPtr->validRegion,
 		modelPtr->validRegion);
     }
 
@@ -3928,9 +3928,9 @@ Tk_PhotoBlank(
      */
 
     if (modelPtr->validRegion != NULL) {
-	TkDestroyRegion(modelPtr->validRegion);
+	XDestroyRegion(modelPtr->validRegion);
     }
-    modelPtr->validRegion = TkCreateRegion();
+    modelPtr->validRegion = XCreateRegion();
 
     /*
      * Clear out the 32-bit pixel storage array. Clear out the dithering error
@@ -4089,7 +4089,7 @@ Tk_PhotoSetSize(
  *	transparent.
  *
  * Results:
- *	A TkRegion value that indicates the current area of the photo that is
+ *	A Region value that indicates the current area of the photo that is
  *	valid. This value should not be used after any modification to the
  *	photo image.
  *
@@ -4099,7 +4099,7 @@ Tk_PhotoSetSize(
  *----------------------------------------------------------------------
  */
 
-TkRegion
+Region
 TkPhotoGetValidRegion(
     Tk_PhotoHandle handle)	/* Handle for the image whose valid region is
 				 * to obtained. */

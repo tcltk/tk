@@ -162,20 +162,12 @@ TkPutImage(
 #	define TkPointerDeadWindow 0
 #	define TkpSetCapture 0
 #	define TkpSetCursor 0
-#	define TkWinCancelMouseTimer 0
 #	define TkWinClipboardRender 0
-#	define TkWinEmbeddedEventProc 0
 #	define TkWinFillRect 0
 #	define TkWinGetBorderPixels 0
 #	define TkWinGetDrawableDC 0
-#	define TkWinGetModifierState 0
-#	define TkWinGetSystemPalette 0
-#	define TkWinGetWrapperWindow 0
-#	define TkWinHandleMenuEvent 0
-#	define TkWinIndexOfColor 0
 #	define TkWinReleaseDrawableDC 0
 #	define TkWinResendEvent 0
-#	define TkWinSelectPalette 0
 #	define TkWinSetMenu 0
 #	define TkWinSetWindowPos 0
 #	define TkWinWmCleanup 0
@@ -183,7 +175,6 @@ TkPutImage(
 #	define TkWinXInit 0
 #	define TkWinSetForegroundWindow 0
 #	define TkWinDialogDebug 0
-#	define TkWinGetMenuSystemDefault 0
 #	define TkWinSetHINSTANCE 0
 #	define TkWinChildProc 0
 
@@ -438,28 +429,28 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpSetCursor, /* 8 */
     TkpWmSetState, /* 9 */
     TkSetPixmapColormap, /* 10 */
-    TkWinCancelMouseTimer, /* 11 */
+    0, /* 11 */
     TkWinClipboardRender, /* 12 */
-    TkWinEmbeddedEventProc, /* 13 */
+    0, /* 13 */
     TkWinFillRect, /* 14 */
     TkWinGetBorderPixels, /* 15 */
     TkWinGetDrawableDC, /* 16 */
-    TkWinGetModifierState, /* 17 */
-    TkWinGetSystemPalette, /* 18 */
-    TkWinGetWrapperWindow, /* 19 */
-    TkWinHandleMenuEvent, /* 20 */
-    TkWinIndexOfColor, /* 21 */
+    0, /* 17 */
+    0, /* 18 */
+    0, /* 19 */
+    0, /* 20 */
+    0, /* 21 */
     TkWinReleaseDrawableDC, /* 22 */
     TkWinResendEvent, /* 23 */
-    TkWinSelectPalette, /* 24 */
-    TkWinSetMenu, /* 25 */
+    0, /* 24 */
+    0, /* 25 */
     TkWinSetWindowPos, /* 26 */
     TkWinWmCleanup, /* 27 */
     TkWinXCleanup, /* 28 */
     TkWinXInit, /* 29 */
     TkWinSetForegroundWindow, /* 30 */
     TkWinDialogDebug, /* 31 */
-    TkWinGetMenuSystemDefault, /* 32 */
+    0, /* 32 */
     TkAlignImageData, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
     0, /* 35 */
@@ -482,31 +473,31 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkGenerateActivateEvents, /* 2 */
     TkpGetMS, /* 3 */
     TkPointerDeadWindow, /* 4 */
-    TkpSetCursor, /* 5 */
+    0, /* 5 */
     TkpScanWindowId, /* 6 */
     0, /* 7 */
-    TkMacOSXButtonKeyState, /* 8 */
+    TkpSetCursor, /* 8 */
     TkpWmSetState, /* 9 */
-    TkMacOSXClearMenubarActive, /* 10 */
+    0, /* 10 */
     TkpSetCapture, /* 11 */
     0, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
     0, /* 15 */
     TkMacOSXGetXWindow, /* 16 */
-    TkMacOSXGrowToplevel, /* 17 */
+    0, /* 17 */
     0, /* 18 */
     0, /* 19 */
     0, /* 20 */
-    TkMacOSXInvalidateWindow, /* 21 */
+    0, /* 21 */
     0, /* 22 */
-    TkMacOSXMakeRealWindowExist, /* 23 */
-    TkMacOSXMakeStippleMap, /* 24 */
+    0, /* 23 */
+    0, /* 24 */
     0, /* 25 */
     0, /* 26 */
-    TkMacOSXResizable, /* 27 */
+    0, /* 27 */
     0, /* 28 */
-    TkMacOSXSetScrollbarGrow, /* 29 */
+    0, /* 29 */
     0, /* 30 */
     0, /* 31 */
     TkMacOSXUpdateClipRgn, /* 32 */
@@ -523,12 +514,10 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXContainerId, /* 43 */
     TkMacOSXGetHostToplevel, /* 44 */
     0, /* 45 */
-    TkpIsWindowFloating, /* 46 */
+    0, /* 46 */
     TkpGetCapture, /* 47 */
     0, /* 48 */
     TkMacOSXGetContainer, /* 49 */
-    TkGenerateButtonEvent, /* 50 */
-    TkGenWMDestroyEvent, /* 51 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */

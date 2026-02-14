@@ -260,7 +260,7 @@ TkpFreeCursor(
 
 void
 TkpSetCursor(
-    TkpCursor cursor)
+    Cursor cursor)
 {
     HCURSOR hcursor;
     TkWinCursor *winCursor = (TkWinCursor *) cursor;
