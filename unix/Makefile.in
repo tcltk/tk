@@ -156,10 +156,6 @@ AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 
 WAYLAND_INCLUDES    = -I$(WAYLAND_DIR)
 
-# Wayland text-input protocol for IME (vendored files in wayland/ directory)
-# Files: wayland/text-input-unstable-v3-client-protocol.h
-#        wayland/text-input-unstable-v3-protocol.c
-
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
@@ -665,13 +661,6 @@ SHELL_ENV = \
 
 all: binaries libraries
 
-#--------------------------------------------------------------------
-# Generate text-input-unstable-v3 protocol files (hard requirement for IME)
-#--------------------------------------------------------------------
-
-# Wayland text-input protocol files are vendored (pre-generated) in unix/ directory
-# No build-time generation needed
-
 binaries: ${LIB_FILE} ${WISH_EXE}
 
 libraries:
@@ -1036,8 +1025,6 @@ clean:
 	rm -f *.a *.o libtk* libtcl9tk* cygtcl9tk* core errs *~ \#* TAGS *.E a.out \
 		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
 		 *.zip
-	rm -f $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER) \
-	      $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C)
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
