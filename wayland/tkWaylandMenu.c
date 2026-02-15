@@ -89,6 +89,14 @@ static void GetTearoffEntryGeometry(TkMenu *menuPtr,
 				 TkMenuEntry *mePtr, Tk_Font tkfont, 
 				 const Tk_FontMetrics *fmPtr, int *widthPtr, 
 				 int *heightPtr); 
+static void TkpDisplayMenu(ClientData clientData);
+static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
+static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
+static void MenuMouseLeave(TkMenu *menuPtr);
+static void MenuCursorPosCallback(GLFWwindow *glfwWindow, double xpos, double ypos);
+static void MenuMouseButtonCallback(GLFWwindow *glfwWindow, int button, int action, int mods);
+static void MenuCursorEnterCallback(GLFWwindow *glfwWindow, int entered);
+void TkWaylandSetupMenuCallbacks(Tk_Window tkwin);
 /* 
  *––––––––––––––––––––––––––––––––––– 
  * 
@@ -1240,53 +1248,6 @@ TkpPostMenu(
  * --------------------------------------------------------------------------------
  */
 
-int 
-TkpPostTearoffMenu( 
-		 TCL_UNUSED(Tcl_Interp *), 
-		 TkMenu *menuPtr, 
-		 int x, 
-		 int y, 
-		 Tcl_Size index) 
-{ 
- int result; 
- int reqW; 
- int reqH; 
- int screenW = 1920; 
- int screenH = 1080; 
- TkActivateMenuEntry(menuPtr, -1); 
- TkRecomputeMenu(menuPtr); 
- result = TkPostCommand(menuPtr); 
- if (result != TCL_OK) { 
-	return result; 
- } 
- if (menuPtr->tkwin == NULL) { 
-	return TCL_OK; 
- } 
- /* Adjust position. */ 
- if (index >= menuPtr->numEntries) { 
-	index = menuPtr->numEntries - 1; 
- } 
- if (index >= 0) { 
-	y -= menuPtr->entries[index]->y; 
- } 
- /* Clamp to screen. */ 
- reqW = Tk_ReqWidth(menuPtr->tkwin); 
- reqH = Tk_ReqHeight(menuPtr->tkwin); 
- if (x + reqW > screenW) { 
-	x = screenW - reqW; 
- } 
- if (x < 0) { 
-	x = 0; 
- } 
- if (y + reqH > screenH) { 
-	y = screenH - reqH; 
- } 
- if (y < 0) { 
-	y = 0; 
- } 
- /* Set position for drawing (application must handle). */ 
- return TCL_OK; 
-} 
 /* 
  *––––––––––––––––––––––––––––––––––– 
  * 
@@ -1607,10 +1568,13 @@ TkpDisplayMenu(
         return;
     }
     
-    /* Begin NanoVG drawing. */
-    if (!TkGlfwBeginDraw(drawable, &vg)) {
+   TkWaylandDrawingContext dc;
+    
+    /* Begin NanoVG drawing using unified API. */
+    if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
         return;
     }
+
     
     /* Get menu position (already computed by TkpPostMenu). */
     int menuX = Tk_X(menuPtr->tkwin);
@@ -1638,7 +1602,7 @@ TkpDisplayMenu(
             0, 1);
     }
     
-    TkGlfwEndDraw(drawable);
+    TkGlfwEndDraw(&dc);
 }
 
 /*
@@ -1660,8 +1624,8 @@ TkpDisplayMenu(
 void
 TkWaylandMenuInit(void)
 {
-    /* Register display handler for Menu class */
-    Tk_CreateClassProc(Tk_GetUid("Menu"), TkpDisplayMenu);
+    /* Menu display is handled via TkpDisplayMenu which is called
+     * from the generic Tk menu code. No additional setup needed. */
 }
 
 /* 
@@ -1855,7 +1819,7 @@ TkpDrawCheckIndicator(
 
 int
 TkpPostTearoffMenu(
-    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    TCL_UNUSED(Tcl_Interp *),	/* Interpreter for error reporting. */
     TkMenu *menuPtr,		/* The menu to post. */
     int x,			/* Screen X coordinate. */
     int y,			/* Screen Y coordinate. */
@@ -1934,7 +1898,7 @@ TkpPostTearoffMenu(
     TkWaylandSetupMenuCallbacks(menuPtr->tkwin);
     
     /* Schedule the menu for display via NanoVG. */
-    Tk_DoWhenIdle(TkpDisplayMenu, menuPtr);
+    Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
 
     return TCL_OK;
 }
@@ -1988,8 +1952,8 @@ MenuMouseClick(
             switch (mePtr->type) {
             case COMMAND_ENTRY:
                 /* Invoke command and unpost menu. */
-                TkInvokeMenuEntry(menuPtr, i);
-                TkUnpostCascade(menuPtr);
+                TkInvokeMenu(menuPtr->interp, menuPtr, i);
+                TkPostTearoffMenu(menuPtr->interp, menuPtr, 0, 0);
                 break;
                 
             case CASCADE_ENTRY:
@@ -2014,12 +1978,12 @@ MenuMouseClick(
                         menuPtr->postedCascade = mePtr;
                         
                         /* Post the cascade menu. */
-                        TkPostSubmenu(menuPtr->interp, menuPtr, cascadePtr);
+                        TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
                         TkpPostMenu(menuPtr->interp, cascadePtr, 
                                    cascadeX, cascadeY, 0);
                         
                         /* Redraw parent to show active state. */
-                        Tk_EventuallyRedraw(menuPtr->tkwin);
+                        TkEventuallyRedrawMenu(menuPtr, NULL);
                     }
                 }
                 break;
@@ -2033,10 +1997,10 @@ MenuMouseClick(
                 }
                 
                 /* Invoke the entry to run its command. */
-                TkInvokeMenuEntry(menuPtr, i);
+                TkInvokeMenu(menuPtr->interp, menuPtr, i);
                 
                 /* Redraw to show new state. */
-                Tk_EventuallyRedraw(menuPtr->tkwin);
+                TkEventuallyRedrawMenu(menuPtr, NULL);
                 break;
                 
             case RADIO_BUTTON_ENTRY:
@@ -2060,10 +2024,10 @@ MenuMouseClick(
                     mePtr->entryFlags |= ENTRY_SELECTED;
                     
                     /* Invoke the entry. */
-                    TkInvokeMenuEntry(menuPtr, i);
+                    TkInvokeMenu(menuPtr->interp, menuPtr, i);
                     
                     /* Redraw to show new state. */
-                    Tk_EventuallyRedraw(menuPtr->tkwin);
+                    TkEventuallyRedrawMenu(menuPtr, NULL);
                 }
                 break;
             }
@@ -2118,10 +2082,10 @@ MenuMouseMotion(
             
             /* Activate this entry if not already active. */
             if (menuPtr->active != i) {
+				
                 /* Unpost any existing cascade if moving to different entry. */
                 if (menuPtr->postedCascade != NULL && 
                     menuPtr->postedCascade != mePtr) {
-                    TkUnpostCascade(menuPtr);
                     menuPtr->postedCascade = NULL;
                 }
                 
@@ -2145,13 +2109,13 @@ MenuMouseMotion(
                         
                         menuPtr->postedCascade = mePtr;
                         
-                        TkPostSubmenu(menuPtr->interp, menuPtr, cascadePtr);
+                        TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
                         TkpPostMenu(menuPtr->interp, cascadePtr,
                                    cascadeX, cascadeY, 0);
                     }
                 }
                 
-                Tk_EventuallyRedraw(menuPtr->tkwin);
+                TkEventuallyRedrawMenu(menuPtr, NULL);
             }
             return;
         }
@@ -2160,7 +2124,7 @@ MenuMouseMotion(
     /* Mouse not over any entry. */
     if (!foundEntry && menuPtr->active != -1) {
         TkActivateMenuEntry(menuPtr, -1);
-        Tk_EventuallyRedraw(menuPtr->tkwin);
+        TkEventuallyRedrawMenu(menuPtr, NULL);
     }
 }
 
@@ -2188,7 +2152,7 @@ MenuMouseLeave(
     if (menuPtr->postedCascade == NULL) {
         if (menuPtr->active != -1) {
             TkActivateMenuEntry(menuPtr, -1);
-            Tk_EventuallyRedraw(menuPtr->tkwin);
+            TkEventuallyRedrawMenu(menuPtr, NULL);
         }
     }
 }
@@ -2259,7 +2223,7 @@ MenuMouseButtonCallback(
     GLFWwindow *glfwWindow,
     int button,
     int action,
-    TCL_UNUSED(int) mods)
+    TCL_UNUSED(int)) /* mods */
 {
     Tk_Window tkwin = (Tk_Window)glfwGetWindowUserPointer(glfwWindow);
     TkWindow *winPtr = (TkWindow *)tkwin;

@@ -258,7 +258,6 @@ GenerateButtonEvent(
     MouseEventData *medPtr)
 {
     Tk_Window tkwin;
-    int dummy;
     TkDisplay *dispPtr;
 
     dispPtr = TkGetDisplayList();
