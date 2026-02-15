@@ -156,11 +156,9 @@ AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 
 WAYLAND_INCLUDES    = -I$(WAYLAND_DIR)
 
-# Wayland text-input protocol (IME)
-TEXT_INPUT_XML          = @TEXT_INPUT_XML@
-WAYLAND_SCANNER         = @WAYLAND_SCANNER@
-TEXT_INPUT_CLIENT_HEADER = text-input-unstable-v3-client-protocol.h
-TEXT_INPUT_PROTOCOL_C   = text-input-unstable-v3-protocol.c
+# Wayland text-input protocol for IME (vendored files in wayland/ directory)
+# Files: wayland/text-input-unstable-v3-client-protocol.h
+#        wayland/text-input-unstable-v3-protocol.c
 
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
@@ -671,16 +669,10 @@ all: binaries libraries
 # Generate text-input-unstable-v3 protocol files (hard requirement for IME)
 #--------------------------------------------------------------------
 
-$(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER): $(TEXT_INPUT_XML)
-	@echo "  GEN     $@"
-	$(WAYLAND_SCANNER) client-header $(TEXT_INPUT_XML) $@
+# Wayland text-input protocol files are vendored (pre-generated) in unix/ directory
+# No build-time generation needed
 
-$(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C): $(TEXT_INPUT_XML)
-	@echo "  GEN     $@"
-	$(WAYLAND_SCANNER) private-code $(TEXT_INPUT_XML) $@
-
-
-binaries: $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER) $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C) ${LIB_FILE} ${WISH_EXE}
+binaries: ${LIB_FILE} ${WISH_EXE}
 
 libraries:
 

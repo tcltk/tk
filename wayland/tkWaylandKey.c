@@ -1,9 +1,9 @@
 /*
  * tkWaylandKey.c --
  *
- *	This file contains functions for keyboard input handling on Wayland,
- *	including comprehensive IME (Input Method Editor) support for
- *	complex text input (Chinese, Japanese, Korean, etc.).
+ * This file contains functions for keyboard input handling on Wayland/GLFW,
+ * including comprehensive IME (Input Method Editor) support for
+ * complex text input (Chinese, Japanese, Korean, etc.).
  *
  * Copyright © 2026 Kevin Walzer
  *
@@ -15,6 +15,11 @@
 #include "tkUnixInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
+
+/* GLFW Wayland native access for getting wl_surface. */
+#define GLFW_EXPOSE_NATIVE_WAYLAND
+#include <GLFW/glfw3native.h>
+
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>
 #include <wayland-client.h>
@@ -22,16 +27,15 @@
 #include <ctype.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <errno.h>
 #include "text-input-unstable-v3-client-protocol.h"
 
-
-
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * Keyboard State Management
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 /*
@@ -43,16 +47,20 @@ typedef struct {
     struct xkb_state *state;
     struct xkb_compose_table *compose_table;
     struct xkb_compose_state *compose_state;
+    uint32_t modifiers_depressed;
+    uint32_t modifiers_latched;
+    uint32_t modifiers_locked;
+    uint32_t group;
 } TkXKBState;
 
-static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL};
+static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * IME (Input Method Editor) Support
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 /*
@@ -60,6 +68,8 @@ static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL};
  */
 typedef struct TkIMEState {
     struct zwp_text_input_v3 *text_input;
+    struct wl_surface *surface;  /* Wayland surface from GLFW */
+    struct wl_keyboard *keyboard; /* Keyboard object for this seat */
     
     int enabled;
     int preedit_active;
@@ -77,24 +87,6 @@ typedef struct TkIMEState {
     struct TkIMEState *next;  /* For hash table collision chain */
 } TkIMEState;
 
-/*
- * Global Wayland connection for IME - separate from GLFW.
- */
-typedef struct {
-    struct wl_display *display;
-    struct wl_registry *registry;
-    struct wl_seat *seat;
-    struct zwp_text_input_manager_v3 *text_input_manager;
-    
-    int fd;
-    Tcl_Channel channel;
-    
-    /* Hash table for IME state lookup by Tk_Window */
-    TkIMEState **ime_hash;
-    int hash_size;
-} WaylandIMEConnection;
-
-static WaylandIMEConnection wlIME = {NULL, NULL, NULL, NULL, -1, NULL, NULL, 0};
 static TkIMEState *currentIME = NULL;
 
 /* Hash table functions */
@@ -102,55 +94,77 @@ static unsigned int HashWindow(Tk_Window tkwin);
 static TkIMEState *FindIMEState(Tk_Window tkwin);
 static void StoreIMEState(Tk_Window tkwin, TkIMEState *ime);
 static void RemoveIMEState(Tk_Window tkwin);
+static void ResizeHashTableIfNeeded(void);
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * Forward Declarations
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 /* XKB functions. */
 static int InitializeXKB(void);
 static void CleanupXKB(void);
 static void UpdateXKBModifiers(unsigned int mods_depressed,
-    unsigned int mods_latched, unsigned int mods_locked,
-    unsigned int group);
+        unsigned int mods_latched, unsigned int mods_locked,
+        unsigned int group);
 static KeySym XKBKeycodeToKeysym(unsigned int keycode);
 static int XKBKeysymToString(KeySym keysym, char *buffer, int buflen);
+static int XKBKeycodeToX11Keycode(unsigned int keycode);
+static unsigned int XKBGetModifierState(void);
 
 /* IME functions. */
 static int InitializeIME(void);
 static void CleanupIME(void);
 static void WaylandIMEEventHandler(ClientData clientData, int mask);
+static int WaylandIMEDispatchEvents(void);
 static TkIMEState *CreateIMEState(Tk_Window tkwin);
 static void DestroyIMEState(TkIMEState *ime);
 static void SendIMECommitEvent(TkIMEState *ime);
+static void SendIMEPreeditEvent(TkIMEState *ime);
 
 /* Wayland callbacks. */
 static void RegistryHandleGlobal(void *data, struct wl_registry *registry,
-    uint32_t name, const char *interface, uint32_t version);
+        uint32_t name, const char *interface, uint32_t version);
 static void RegistryHandleGlobalRemove(void *data,
-    struct wl_registry *registry, uint32_t name);
+        struct wl_registry *registry, uint32_t name);
 static void SeatHandleCapabilities(void *data, struct wl_seat *seat,
-    uint32_t capabilities);
+        uint32_t capabilities);
 static void SeatHandleName(void *data, struct wl_seat *seat,
-    const char *name);
+        const char *name);
+
+/* Keyboard callbacks. */
+static void KeyboardHandleKeymap(void *data, struct wl_keyboard *keyboard,
+        uint32_t format, int32_t fd, uint32_t size);
+static void KeyboardHandleEnter(void *data, struct wl_keyboard *keyboard,
+        uint32_t serial, struct wl_surface *surface, struct wl_array *keys);
+static void KeyboardHandleLeave(void *data, struct wl_keyboard *keyboard,
+        uint32_t serial, struct wl_surface *surface);
+static void KeyboardHandleKey(void *data, struct wl_keyboard *keyboard,
+        uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
+static void KeyboardHandleModifiers(void *data, struct wl_keyboard *keyboard,
+        uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched,
+        uint32_t mods_locked, uint32_t group);
+static void KeyboardHandleRepeatInfo(void *data, struct wl_keyboard *keyboard,
+        int32_t rate, int32_t delay);
+
+/* IME callbacks. */
 static void IMETextInputEnter(void *data,
-    struct zwp_text_input_v3 *text_input, struct wl_surface *surface);
+        struct zwp_text_input_v3 *text_input, struct wl_surface *surface);
 static void IMETextInputLeave(void *data,
-    struct zwp_text_input_v3 *text_input, struct wl_surface *surface);
+        struct zwp_text_input_v3 *text_input, struct wl_surface *surface);
 static void IMETextInputPreeditString(void *data,
-    struct zwp_text_input_v3 *text_input, const char *text,
-    int32_t cursor_begin, int32_t cursor_end);
+        struct zwp_text_input_v3 *text_input, const char *text,
+        int32_t cursor_begin, int32_t cursor_end);
 static void IMETextInputCommitString(void *data,
-    struct zwp_text_input_v3 *text_input, const char *text);
+        struct zwp_text_input_v3 *text_input, const char *text);
 static void IMETextInputDeleteSurroundingText(void *data,
-    struct zwp_text_input_v3 *text_input,
-    uint32_t before_length, uint32_t after_length);
+        struct zwp_text_input_v3 *text_input,
+        uint32_t before_length, uint32_t after_length);
 static void IMETextInputDone(void *data,
-    struct zwp_text_input_v3 *text_input, uint32_t serial);
+        struct zwp_text_input_v3 *text_input, uint32_t serial);
 
 /*
  * Wayland protocol listeners.
@@ -165,6 +179,15 @@ static const struct wl_seat_listener seat_listener = {
     .name = SeatHandleName,
 };
 
+static const struct wl_keyboard_listener keyboard_listener = {
+    .keymap = KeyboardHandleKeymap,
+    .enter = KeyboardHandleEnter,
+    .leave = KeyboardHandleLeave,
+    .key = KeyboardHandleKey,
+    .modifiers = KeyboardHandleModifiers,
+    .repeat_info = KeyboardHandleRepeatInfo,
+};
+
 static const struct zwp_text_input_v3_listener text_input_listener = {
     .enter = IMETextInputEnter,
     .leave = IMETextInputLeave,
@@ -175,19 +198,19 @@ static const struct zwp_text_input_v3_listener text_input_listener = {
 };
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandKeyInit --
  *
- *	Initialize keyboard handling for Wayland, including XKB and IME.
+ *      Initialize keyboard handling for Wayland, including XKB and IME.
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *      Returns 1 on success, 0 on failure.
  *
  * Side effects:
- *	Initializes XKB context and IME connection.
+ *      Initializes XKB context and IME connection.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 int
@@ -204,19 +227,19 @@ TkWaylandKeyInit(void)
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandKeyCleanup --
  *
- *	Clean up keyboard and IME resources.
+ *      Clean up keyboard and IME resources.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Frees XKB and IME resources.
+ *      Frees XKB and IME resources.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
@@ -227,27 +250,27 @@ TkWaylandKeyCleanup(void)
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * XKB Keyboard Handling
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * InitializeXKB --
  *
- *	Initialize XKB context for key translation.
+ *      Initialize XKB context for key translation.
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *      Returns 1 on success, 0 on failure.
  *
  * Side effects:
- *	Creates XKB context and compose table.
+ *      Creates XKB context and compose table.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static int
@@ -275,30 +298,30 @@ InitializeXKB(void)
     
     /* Create compose table. */
     xkbState.compose_table = xkb_compose_table_new_from_locale(
-        xkbState.context, locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
+            xkbState.context, locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
     
     if (xkbState.compose_table) {
         xkbState.compose_state = xkb_compose_state_new(
-            xkbState.compose_table, XKB_COMPOSE_STATE_NO_FLAGS);
+                xkbState.compose_table, XKB_COMPOSE_STATE_NO_FLAGS);
     }
     
     return 1;
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * CleanupXKB --
  *
- *	Clean up XKB resources.
+ *      Clean up XKB resources.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Frees XKB context and compose state.
+ *      Frees XKB context and compose state.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -331,19 +354,19 @@ CleanupXKB(void)
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandSetKeymap --
  *
- *	Set XKB keymap from file descriptor (called by Wayland seat).
+ *      Set XKB keymap from file descriptor (called by Wayland seat).
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *      Returns 1 on success, 0 on failure.
  *
  * Side effects:
- *	Updates XKB keymap and state.
+ *      Updates XKB keymap and state.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 int
@@ -371,8 +394,8 @@ TkWaylandSetKeymap(
     }
     
     xkbState.keymap = xkb_keymap_new_from_string(
-        xkbState.context, map_str, XKB_KEYMAP_FORMAT_TEXT_V1,
-        XKB_KEYMAP_COMPILE_NO_FLAGS);
+            xkbState.context, map_str, XKB_KEYMAP_FORMAT_TEXT_V1,
+            XKB_KEYMAP_COMPILE_NO_FLAGS);
     
     munmap(map_str, size);
     close(fd);
@@ -395,19 +418,19 @@ TkWaylandSetKeymap(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * UpdateXKBModifiers --
  *
- *	Update XKB modifier state.
+ *      Update XKB modifier state.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Updates XKB state with new modifiers.
+ *      Updates XKB state with new modifiers.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -421,25 +444,30 @@ UpdateXKBModifiers(
         return;
     }
     
+    xkbState.modifiers_depressed = mods_depressed;
+    xkbState.modifiers_latched = mods_latched;
+    xkbState.modifiers_locked = mods_locked;
+    xkbState.group = group;
+    
     xkb_state_update_mask(xkbState.state,
-        mods_depressed, mods_latched, mods_locked,
-        0, 0, group);
+            mods_depressed, mods_latched, mods_locked,
+            0, 0, group);
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * XKBKeycodeToKeysym --
  *
- *	Convert XKB keycode to X11 KeySym.
+ *      Convert XKB keycode to X11 KeySym.
  *
  * Results:
- *	Returns KeySym.
+ *      Returns KeySym.
  *
  * Side effects:
- *	None.
+ *      None.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static KeySym
@@ -447,6 +475,7 @@ XKBKeycodeToKeysym(
     unsigned int keycode)
 {
     xkb_keysym_t keysym;
+    enum xkb_compose_feed_result feed_result;
     
     if (!xkbState.state) {
         return NoSymbol;
@@ -456,24 +485,27 @@ XKBKeycodeToKeysym(
     keysym = xkb_state_key_get_one_sym(xkbState.state, keycode + 8);
     
     /* Handle compose sequences. */
-    if (xkbState.compose_state) {
-        if (xkb_compose_state_feed(xkbState.compose_state, keysym) ==
-            XKB_COMPOSE_FEED_ACCEPTED) {
-            
+    if (xkbState.compose_state && keysym != NoSymbol) {
+        feed_result = xkb_compose_state_feed(xkbState.compose_state, keysym);
+        
+        if (feed_result == XKB_COMPOSE_FEED_ACCEPTED) {
             switch (xkb_compose_state_get_status(xkbState.compose_state)) {
             case XKB_COMPOSE_COMPOSED:
                 keysym = xkb_compose_state_get_one_sym(
-                    xkbState.compose_state);
+                        xkbState.compose_state);
                 xkb_compose_state_reset(xkbState.compose_state);
                 break;
             case XKB_COMPOSE_COMPOSING:
-                return NoSymbol;  /* Still composing. */
+                return NoSymbol;  /* Still composing, don't send event yet */
             case XKB_COMPOSE_CANCELLED:
                 xkb_compose_state_reset(xkbState.compose_state);
+                keysym = NoSymbol;
                 break;
             case XKB_COMPOSE_NOTHING:
                 break;
             }
+        } else if (feed_result == XKB_COMPOSE_FEED_IGNORED) {
+            /* Key doesn't affect compose state, proceed normally. */
         }
     }
     
@@ -481,19 +513,103 @@ XKBKeycodeToKeysym(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
+ *
+ * XKBKeycodeToX11Keycode --
+ *
+ *      Convert Wayland keycode to X11 keycode.
+ *
+ * Results:
+ *      Returns X11 keycode.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+XKBKeycodeToX11Keycode(
+    unsigned int keycode)
+{
+    /* Wayland uses evdev keycodes (8-255)
+     * X11 typically uses the same range + 8 offset */
+    return keycode + 8;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * XKBGetModifierState --
+ *
+ *      Get current XKB modifier state as X11 modifier mask.
+ *
+ * Results:
+ *      Returns modifier mask.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static unsigned int
+XKBGetModifierState(void)
+{
+    unsigned int mask = 0;
+    
+    if (!xkbState.state) {
+        return 0;
+    }
+    
+    /* Convert XKB modifier indices to X11 masks. */
+    if (xkb_state_mod_index_is_active(xkbState.state,
+            xkb_keymap_mod_get_index(xkbState.keymap, XKB_MOD_NAME_SHIFT),
+            XKB_STATE_MODS_EFFECTIVE) > 0) {
+        mask |= ShiftMask;
+    }
+    
+    if (xkb_state_mod_index_is_active(xkbState.state,
+            xkb_keymap_mod_get_index(xkbState.keymap, XKB_MOD_NAME_CAPS),
+            XKB_STATE_MODS_EFFECTIVE) > 0) {
+        mask |= LockMask;
+    }
+    
+    if (xkb_state_mod_index_is_active(xkbState.state,
+            xkb_keymap_mod_get_index(xkbState.keymap, XKB_MOD_NAME_CTRL),
+            XKB_STATE_MODS_EFFECTIVE) > 0) {
+        mask |= ControlMask;
+    }
+    
+    if (xkb_state_mod_index_is_active(xkbState.state,
+            xkb_keymap_mod_get_index(xkbState.keymap, XKB_MOD_NAME_ALT),
+            XKB_STATE_MODS_EFFECTIVE) > 0) {
+        mask |= Mod1Mask;
+    }
+    
+    if (xkb_state_mod_index_is_active(xkbState.state,
+            xkb_keymap_mod_get_index(xkbState.keymap, XKB_MOD_NAME_LOGO),
+            XKB_STATE_MODS_EFFECTIVE) > 0) {
+        mask |= Mod4Mask;
+    }
+    
+    return mask;
+}
+
+/*
+ *---------------------------------------------------------------------------
  *
  * XKBKeysymToString --
  *
- *	Convert KeySym to UTF-8 string.
+ *      Convert KeySym to UTF-8 string.
  *
  * Results:
- *	Returns number of bytes written to buffer.
+ *      Returns number of bytes written to buffer.
  *
  * Side effects:
- *	Writes UTF-8 string to buffer.
+ *      Writes UTF-8 string to buffer.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static int
@@ -502,7 +618,10 @@ XKBKeysymToString(
     char *buffer,
     int buflen)
 {
-    if (!xkbState.state) {
+    if (!xkbState.state || keysym == NoSymbol) {
+        if (buflen > 0) {
+            buffer[0] = '\0';
+        }
         return 0;
     }
     
@@ -510,19 +629,19 @@ XKBKeysymToString(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandProcessKey --
  *
- *	Process a key press or release event.
+ *      Process a key press or release event.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Generates Tk KeyPress/KeyRelease events.
+ *      Generates Tk KeyPress/KeyRelease events.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
@@ -536,17 +655,21 @@ TkWaylandProcessKey(
     KeySym keysym;
     char buffer[32];
     int len;
+    TkIMEState *ime;
     
     if (!tkwin) {
         return;
     }
     
+    /* Check if IME is active - if so, let it handle the key. */
+    ime = FindIMEState(tkwin);
+    if (ime && ime->enabled && ime->preedit_active) {
+        /* IME is handling composition, don't send raw key events. */
+        return;
+    }
+    
     /* Convert keycode to keysym. */
     keysym = XKBKeycodeToKeysym(keycode);
-    if (keysym == NoSymbol && !pressed) {
-        /* Key release for composing key - send it. */
-        keysym = XK_VoidSymbol;
-    }
     
     /* Get UTF-8 string for key. */
     len = 0;
@@ -571,35 +694,40 @@ TkWaylandProcessKey(
     event.xkey.y = 0;
     event.xkey.x_root = 0;
     event.xkey.y_root = 0;
-    event.xkey.state = 0;  /* Modifiers - could extract from XKB state. */
-    event.xkey.keycode = keycode;
+    event.xkey.state = XKBGetModifierState();
+    event.xkey.keycode = XKBKeycodeToX11Keycode(keycode);
     event.xkey.same_screen = True;
+    
+    /* For KeyPress, set the string in the event if we have one. */
+    if (pressed && len > 0) {
+        strncpy(event.xkey.data, buffer, sizeof(event.xkey.data));
+    }
     
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * IME (Input Method Editor) Implementation
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * HashWindow --
  *
- *	Simple hash function for Tk_Window pointers.
+ *      Simple hash function for Tk_Window pointers.
  *
  * Results:
- *	Returns hash value.
+ *      Returns hash value.
  *
  * Side effects:
- *	None.
+ *      None.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static unsigned int
@@ -610,19 +738,68 @@ HashWindow(Tk_Window tkwin)
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
+ *
+ * ResizeHashTableIfNeeded --
+ *
+ *      Resize hash table if load factor is too high.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Reallocates and rehashes the hash table.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+ResizeHashTableIfNeeded(void)
+{
+    TkIMEState **new_hash;
+    int new_size, i;
+    unsigned int hash;
+    TkIMEState *ime, *next;
+    
+    if (!wlIME.ime_hash || wlIME.hash_count < wlIME.hash_size * 2) {
+        return;
+    }
+    
+    new_size = wlIME.hash_size * 2;
+    new_hash = (TkIMEState **)ckalloc(sizeof(TkIMEState *) * new_size);
+    memset(new_hash, 0, sizeof(TkIMEState *) * new_size);
+    
+    /* Rehash all entries. */
+    for (i = 0; i < wlIME.hash_size; i++) {
+        ime = wlIME.ime_hash[i];
+        while (ime) {
+            next = ime->next;
+            hash = HashWindow(ime->tkwin) % new_size;
+            ime->next = new_hash[hash];
+            new_hash[hash] = ime;
+            ime = next;
+        }
+    }
+    
+    ckfree((char *)wlIME.ime_hash);
+    wlIME.ime_hash = new_hash;
+    wlIME.hash_size = new_size;
+}
+
+/*
+ *---------------------------------------------------------------------------
  *
  * FindIMEState --
  *
- *	Find IME state for a window in hash table.
+ *      Find IME state for a window in hash table.
  *
  * Results:
- *	Returns IME state or NULL.
+ *      Returns IME state or NULL.
  *
  * Side effects:
- *	None.
+ *      None.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static TkIMEState *
@@ -649,19 +826,19 @@ FindIMEState(Tk_Window tkwin)
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * StoreIMEState --
  *
- *	Store IME state in hash table.
+ *      Store IME state in hash table.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Adds IME state to hash table.
+ *      Adds IME state to hash table.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -676,22 +853,25 @@ StoreIMEState(Tk_Window tkwin, TkIMEState *ime)
     hash = HashWindow(tkwin) % wlIME.hash_size;
     ime->next = wlIME.ime_hash[hash];
     wlIME.ime_hash[hash] = ime;
+    wlIME.hash_count++;
+    
+    ResizeHashTableIfNeeded();
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * RemoveIMEState --
  *
- *	Remove IME state from hash table.
+ *      Remove IME state from hash table.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Removes IME state from hash table.
+ *      Removes IME state from hash table.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -714,6 +894,7 @@ RemoveIMEState(Tk_Window tkwin)
             } else {
                 wlIME.ime_hash[hash] = ime->next;
             }
+            wlIME.hash_count--;
             return;
         }
         prev = ime;
@@ -722,19 +903,19 @@ RemoveIMEState(Tk_Window tkwin)
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * InitializeIME --
  *
- *	Initialize IME support via separate Wayland connection.
+ *      Initialize IME support via separate Wayland connection.
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *      Returns 1 on success, 0 on failure.
  *
  * Side effects:
- *	Opens Wayland connection, registers with Tcl event loop.
+ *      Opens Wayland connection, registers with Tcl event loop.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static int
@@ -756,6 +937,7 @@ InitializeIME(void)
     
     /* Initialize hash table with reasonable size. */
     wlIME.hash_size = 64;
+    wlIME.hash_count = 0;
     wlIME.ime_hash = (TkIMEState **)ckalloc(sizeof(TkIMEState *) * wlIME.hash_size);
     memset(wlIME.ime_hash, 0, sizeof(TkIMEState *) * wlIME.hash_size);
     
@@ -780,32 +962,34 @@ InitializeIME(void)
     
     /* Create Tcl channel. */
     wlIME.channel = Tcl_MakeFileChannel((ClientData)(intptr_t)wlIME.fd,
-        TCL_READABLE);
+            TCL_READABLE);
     if (!wlIME.channel) {
         CleanupIME();
         return 0;
     }
     
     Tcl_CreateChannelHandler(wlIME.channel, TCL_READABLE,
-        WaylandIMEEventHandler, NULL);
+            WaylandIMEEventHandler, NULL);
+    
+    wlIME.display_initialized = 1;
     
     return 1;
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * CleanupIME --
  *
- *	Clean up IME resources.
+ *      Clean up IME resources.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Closes Wayland connection.
+ *      Closes Wayland connection.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -813,11 +997,18 @@ CleanupIME(void)
 {
     int i;
     
+    wlIME.display_initialized = 0;
+    
     if (wlIME.channel) {
         Tcl_DeleteChannelHandler(wlIME.channel,
-            WaylandIMEEventHandler, NULL);
+                WaylandIMEEventHandler, NULL);
         Tcl_Close(NULL, wlIME.channel);
         wlIME.channel = NULL;
+    }
+    
+    if (wlIME.keyboard) {
+        wl_keyboard_destroy(wlIME.keyboard);
+        wlIME.keyboard = NULL;
     }
     
     if (wlIME.text_input_manager) {
@@ -836,7 +1027,7 @@ CleanupIME(void)
     }
     
     if (wlIME.ime_hash) {
-        /* Free any remaining IME states */
+        /* Free any remaining IME states. */
         for (i = 0; i < wlIME.hash_size; i++) {
             TkIMEState *ime = wlIME.ime_hash[i];
             while (ime) {
@@ -856,22 +1047,75 @@ CleanupIME(void)
     
     wlIME.fd = -1;
     wlIME.hash_size = 0;
+    wlIME.hash_count = 0;
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
+ *
+ * WaylandIMEDispatchEvents --
+ *
+ *      Properly read and dispatch Wayland events.
+ *
+ * Results:
+ *      1 if events were processed, 0 otherwise.
+ *
+ * Side effects:
+ *      Processes pending Wayland events.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+WaylandIMEDispatchEvents(void)
+{
+    int ret;
+    
+    if (!wlIME.display || !wlIME.display_initialized) {
+        return 0;
+    }
+    
+    /* Prepare to read events */
+    while (wl_display_prepare_read(wlIME.display) != 0) {
+        ret = wl_display_dispatch_pending(wlIME.display);
+        if (ret < 0) {
+            return 0;
+        }
+    }
+    
+    /* Flush any pending requests. */
+    ret = wl_display_flush(wlIME.display);
+    if (ret < 0 && errno != EAGAIN) {
+        wl_display_cancel_read(wlIME.display);
+        return 0;
+    }
+    
+    /* Read events from the fd. */
+    ret = wl_display_read_events(wlIME.display);
+    if (ret < 0) {
+        return 0;
+    }
+    
+    /* Dispatch all pending events. */
+    ret = wl_display_dispatch_pending(wlIME.display);
+    
+    return (ret >= 0) ? 1 : 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
  *
  * WaylandIMEEventHandler --
  *
- *	Process Wayland IME events.
+ *      Process Wayland IME events.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Dispatches Wayland events.
+ *      Dispatches Wayland events.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -879,21 +1123,15 @@ WaylandIMEEventHandler(
     TCL_UNUSED(ClientData), /* clientData */
     TCL_UNUSED(int)) /* mask */
 {
-    
-    if (!wlIME.display) {
-        return;
-    }
-    
-    wl_display_dispatch_pending(wlIME.display);
-    wl_display_flush(wlIME.display);
+    WaylandIMEDispatchEvents();
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * Wayland Registry Callbacks --
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -904,15 +1142,15 @@ RegistryHandleGlobal(
     const char *interface,
     uint32_t version)
 {
-    
     if (strcmp(interface, "wl_seat") == 0) {
         wlIME.seat = wl_registry_bind(registry, name,
-            &wl_seat_interface, 1);
+                &wl_seat_interface, 1);
         wl_seat_add_listener(wlIME.seat, &seat_listener, NULL);
     } else if (strcmp(interface, zwp_text_input_manager_v3_interface.name) == 0) {
+        /* Use version 1 for maximum compatibility */
         wlIME.text_input_manager = wl_registry_bind(registry, name,
-            &zwp_text_input_manager_v3_interface,
-            version < 1 ? version : 1);
+                &zwp_text_input_manager_v3_interface,
+                (version < 1) ? version : 1);
     }
 }
 
@@ -928,10 +1166,16 @@ RegistryHandleGlobalRemove(
 static void
 SeatHandleCapabilities(
     TCL_UNUSED(void *), /* data */
-    TCL_UNUSED(struct wl_seat *), /*seat */
-    TCL_UNUSED(uint32_t)) /* capabilities */
+    struct wl_seat *seat,
+    uint32_t capabilities)
 {
-    /* Seat capabilities changed. */
+    if ((capabilities & WL_SEAT_CAPABILITY_KEYBOARD) && !wlIME.keyboard) {
+        wlIME.keyboard = wl_seat_get_keyboard(seat);
+        wl_keyboard_add_listener(wlIME.keyboard, &keyboard_listener, NULL);
+    } else if (!(capabilities & WL_SEAT_CAPABILITY_KEYBOARD) && wlIME.keyboard) {
+        wl_keyboard_destroy(wlIME.keyboard);
+        wlIME.keyboard = NULL;
+    }
 }
 
 static void
@@ -944,27 +1188,111 @@ SeatHandleName(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
+ *
+ * Keyboard Callbacks --
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+KeyboardHandleKeymap(
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    uint32_t format,
+    int32_t fd,
+    uint32_t size)
+{
+    if (format == WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
+        TkWaylandSetKeymap(fd, size);
+    } else {
+        close(fd);
+    }
+}
+
+static void
+KeyboardHandleEnter(
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
+    TCL_UNUSED(struct wl_surface *), /* surface */
+    TCL_UNUSED(struct wl_array *)) /* keys */
+{
+    /* Keyboard focus entered. */
+}
+
+static void
+KeyboardHandleLeave(
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
+    TCL_UNUSED(struct wl_surface *)) /* surface */
+{
+    /* Keyboard focus left. */
+}
+
+static void
+KeyboardHandleKey(
+    void *data,
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
+    uint32_t time,
+    uint32_t key,
+    uint32_t state)
+{
+    TkIMEState *ime = (TkIMEState *)data;
+    
+    if (ime && ime->tkwin) {
+        TkWaylandProcessKey(ime->tkwin, key,
+                (state == WL_KEYBOARD_KEY_STATE_PRESSED), time);
+    }
+}
+
+static void
+KeyboardHandleModifiers(
+    void *data,
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
+    uint32_t mods_depressed,
+    uint32_t mods_latched,
+    uint32_t mods_locked,
+    uint32_t group)
+{
+    UpdateXKBModifiers(mods_depressed, mods_latched, mods_locked, group);
+}
+
+static void
+KeyboardHandleRepeatInfo(
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(int32_t), /* rate */
+    TCL_UNUSED(int32_t)) /* delay */
+{
+    /* Key repeat info - could be used for auto-repeat. */
+}
+
+/*
+ *---------------------------------------------------------------------------
  *
  * IME State Management --
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * CreateIMEState --
  *
- *	Create IME state for a window.
+ *      Create IME state for a window and get its Wayland surface from GLFW.
  *
  * Results:
- *	Returns new IME state or NULL.
+ *      Returns new IME state or NULL.
  *
  * Side effects:
- *	Allocates IME state, creates text-input object.
+ *      Allocates IME state, creates text-input object, links to GLFW surface.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static TkIMEState *
@@ -972,8 +1300,22 @@ CreateIMEState(
     Tk_Window tkwin)
 {
     TkIMEState *ime;
+    GLFWwindow *glfwWindow;
+    struct wl_surface *surface;
     
     if (!wlIME.text_input_manager || !wlIME.seat) {
+        return NULL;
+    }
+    
+    /* Get GLFW window to access Wayland surface. */
+    glfwWindow = TkGlfwGetGLFWWindow(tkwin);
+    if (!glfwWindow) {
+        return NULL;
+    }
+    
+    /* Get Wayland surface from GLFW using native access */
+    surface = glfwGetWaylandWindow(glfwWindow);
+    if (!surface) {
         return NULL;
     }
     
@@ -981,36 +1323,42 @@ CreateIMEState(
     memset(ime, 0, sizeof(TkIMEState));
     
     ime->tkwin = tkwin;
+    ime->surface = surface;  /* Store GLFW's Wayland surface. */
     
-    /* Create text-input object. */
-    ime->text_input = zwp_text_input_manager_v3_create_text_input(
-        wlIME.text_input_manager);
+    /* Create text-input object using the seat from our separate connection. */
+    ime->text_input = zwp_text_input_manager_v3_get_text_input(
+            wlIME.text_input_manager, wlIME.seat);
     
     if (!ime->text_input) {
         ckfree((char *)ime);
         return NULL;
     }
     
+    /* Get keyboard for this seat. */
+    if (wlIME.keyboard) {
+        ime->keyboard = wlIME.keyboard;
+    }
+    
     zwp_text_input_v3_add_listener(ime->text_input,
-        &text_input_listener, ime);
+            &text_input_listener, ime);
     
     return ime;
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * DestroyIMEState --
  *
- *	Destroy IME state.
+ *      Destroy IME state.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Frees resources.
+ *      Frees resources.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
@@ -1037,23 +1385,25 @@ DestroyIMEState(
         ckfree(ime->commit_string);
     }
     
+    /* Note: We don't destroy ime->surface or ime->keyboard - they're owned elsewhere. */
+    
     ckfree((char *)ime);
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandIMEEnable --
  *
- *	Enable IME for a window.
+ *      Enable IME for a window.
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *      Returns 1 on success, 0 on failure.
  *
  * Side effects:
- *	Enables text input.
+ *      Enables text input.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 int
@@ -1081,29 +1431,34 @@ TkWaylandIMEEnable(
     }
     
     /* Enable text input. */
-    zwp_text_input_v3_enable(ime->text_input);
-    zwp_text_input_v3_commit(ime->text_input);
+    if (ime->text_input && ime->surface) {
+        zwp_text_input_v3_enable(ime->text_input);
+        zwp_text_input_v3_set_cursor_rectangle(ime->text_input,
+                ime->cursor_x, ime->cursor_y,
+                ime->cursor_width, ime->cursor_height);
+        zwp_text_input_v3_commit(ime->text_input);
+        
+        ime->enabled = 1;
+        currentIME = ime;
+    }
     
-    ime->enabled = 1;
-    currentIME = ime;
-    
-    return 1;
+    return ime->enabled;
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandIMEDisable --
  *
- *	Disable IME for a window.
+ *      Disable IME for a window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Disables text input.
+ *      Disables text input.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
@@ -1125,8 +1480,10 @@ TkWaylandIMEDisable(
         return;
     }
     
-    zwp_text_input_v3_disable(ime->text_input);
-    zwp_text_input_v3_commit(ime->text_input);
+    if (ime->text_input) {
+        zwp_text_input_v3_disable(ime->text_input);
+        zwp_text_input_v3_commit(ime->text_input);
+    }
     
     if (ime->preedit_string) {
         ckfree(ime->preedit_string);
@@ -1142,19 +1499,19 @@ TkWaylandIMEDisable(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandIMESetCursorRect --
  *
- *	Set cursor rectangle for IME positioning.
+ *      Set cursor rectangle for IME positioning.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Updates cursor position for compositor.
+ *      Updates cursor position for compositor.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
@@ -1181,27 +1538,27 @@ TkWaylandIMESetCursorRect(
     ime->cursor_width = width;
     ime->cursor_height = height;
     
-    if (ime->enabled && ime->text_input) {
+    if (ime->enabled && ime->text_input && ime->surface) {
         zwp_text_input_v3_set_cursor_rectangle(ime->text_input,
-            x, y, width, height);
+                x, y, width, height);
         zwp_text_input_v3_commit(ime->text_input);
     }
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandIMEGetPreedit --
  *
- *	Get current preedit string.
+ *      Get current preedit string.
  *
  * Results:
- *	Returns preedit string or NULL.
+ *      Returns preedit string or NULL.
  *
  * Side effects:
- *	None.
+ *      None.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 const char *
@@ -1232,19 +1589,19 @@ TkWaylandIMEGetPreedit(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandIMESetSurroundingText --
  *
- *	Provide surrounding text context to IME.
+ *      Provide surrounding text context to IME.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sends surrounding text to compositor.
+ *      Sends surrounding text to compositor.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
@@ -1265,29 +1622,29 @@ TkWaylandIMESetSurroundingText(
         return;
     }
     
-    if (!ime->enabled || !ime->text_input) {
+    if (!ime->enabled || !ime->text_input || !ime->surface) {
         return;
     }
     
     zwp_text_input_v3_set_surrounding_text(ime->text_input,
-        text ? text : "", cursor_index, anchor_index);
+            text ? text : "", cursor_index, anchor_index);
     zwp_text_input_v3_commit(ime->text_input);
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandIMESetContentType --
  *
- *	Set content type hints for IME.
+ *      Set content type hints for IME.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Notifies compositor of content type.
+ *      Notifies compositor of content type.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
@@ -1307,7 +1664,7 @@ TkWaylandIMESetContentType(
         return;
     }
     
-    if (!ime->enabled || !ime->text_input) {
+    if (!ime->enabled || !ime->text_input || !ime->surface) {
         return;
     }
     
@@ -1316,19 +1673,19 @@ TkWaylandIMESetContentType(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * TkWaylandIMERemove --
  *
- *	Remove IME state for a window (called when window is destroyed).
+ *      Remove IME state for a window (called when window is destroyed).
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Removes IME state from hash table and destroys it.
+ *      Removes IME state from hash table and destroys it.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
@@ -1349,38 +1706,124 @@ TkWaylandIMERemove(
 }
 
 /*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
+ *
+ * SendIMEPreeditEvent --
+ *
+ *      Send preedit change notification.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Generates custom event for preedit update.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+SendIMEPreeditEvent(
+    TkIMEState *ime)
+{
+    if (!ime || !ime->tkwin) {
+        return;
+    }
+    
+    /* Trigger widget redraw to show preedit */
+    Tk_RedrawWindow(ime->tkwin, NULL, 0);
+    
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * SendIMECommitEvent --
+ *
+ *      Send committed text as KeyPress events.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Generates KeyPress events with proper UTF-8 text.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+SendIMECommitEvent(
+    TkIMEState *ime)
+{
+    XEvent event;
+    const char *p;
+    int ch;
+    char utf8_buf[6];  /* Max UTF-8 char length */
+    int utf8_len;
+    
+    if (!ime || !ime->commit_string || !ime->tkwin) {
+        return;
+    }
+    
+    /* Generate KeyPress for each UTF-8 character. */
+    p = ime->commit_string;
+    while (*p) {
+        utf8_len = Tcl_UtfToUniChar(p, &ch);
+        memcpy(utf8_buf, p, utf8_len);
+        utf8_buf[utf8_len] = '\0';
+        
+        memset(&event, 0, sizeof(XEvent));
+        event.xkey.type = KeyPress;
+        event.xkey.display = Tk_Display(ime->tkwin);
+        event.xkey.window = Tk_WindowId(ime->tkwin);
+        event.xkey.keycode = 0;  /* Virtual keycode for IME input */
+        event.xkey.state = XKBGetModifierState();
+        strncpy(event.xkey.data, utf8_buf, sizeof(event.xkey.data));
+        
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+        
+        /* Optionally send KeyRelease if needed */
+        event.xkey.type = KeyRelease;
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+        
+        p += utf8_len;
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
  *
  * Wayland Text-Input Callbacks --
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 static void
 IMETextInputEnter(
     void *data,
     TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
-    TCL_UNUSED(struct wl_surface *)) /* surface */
+    struct wl_surface *surface)
 {
     TkIMEState *ime = (TkIMEState *)data;
     
-    ime->enabled = 1;
-    currentIME = ime;
+    if (ime && ime->surface == surface) {
+        ime->enabled = 1;
+        currentIME = ime;
+    }
 }
 
 static void
 IMETextInputLeave(
     void *data,
     TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
-    TCL_UNUSED(struct wl_surface *)) /* surface */
+    struct wl_surface *surface)
 {
     TkIMEState *ime = (TkIMEState *)data;
-    (void)text_input;
-    (void)surface;
     
-    ime->enabled = 0;
-    if (currentIME == ime) {
-        currentIME = NULL;
+    if (ime && ime->surface == surface) {
+        ime->enabled = 0;
+        if (currentIME == ime) {
+            currentIME = NULL;
+        }
     }
 }
 
@@ -1393,6 +1836,10 @@ IMETextInputPreeditString(
     TCL_UNUSED(int32_t)) /* cursor_end */
 {
     TkIMEState *ime = (TkIMEState *)data;
+    
+    if (!ime) {
+        return;
+    }
     
     if (ime->preedit_string) {
         ckfree(ime->preedit_string);
@@ -1409,10 +1856,8 @@ IMETextInputPreeditString(
         ime->preedit_cursor = 0;
     }
     
-    /* Trigger widget redraw to show preedit. */
-    if (ime->tkwin) {
-        Tk_RedrawWindow(ime->tkwin, NULL, 0);
-    }
+    /* Notify widgets of preedit change. */
+    SendIMEPreeditEvent(ime);
 }
 
 static void
@@ -1422,6 +1867,10 @@ IMETextInputCommitString(
     const char *text)
 {
     TkIMEState *ime = (TkIMEState *)data;
+    
+    if (!ime) {
+        return;
+    }
     
     if (ime->commit_string) {
         ckfree(ime->commit_string);
@@ -1433,7 +1882,7 @@ IMETextInputCommitString(
         strcpy(ime->commit_string, text);
     }
     
-    /* Clear preedit. */
+    /* Clear preedit */
     if (ime->preedit_string) {
         ckfree(ime->preedit_string);
         ime->preedit_string = NULL;
@@ -1448,7 +1897,7 @@ IMETextInputDeleteSurroundingText(
     TCL_UNUSED(uint32_t),  /* before_length */
     TCL_UNUSED(uint32_t)) /* after_length */
 {
-    /* Handle deletion if needed. */
+	/* No-op */
 }
 
 static void
@@ -1458,10 +1907,12 @@ IMETextInputDone(
     TCL_UNUSED(uint32_t)) /* serial */
 {
     TkIMEState *ime = (TkIMEState *)data;
-    (void)text_input;
-    (void)serial;
     
-    /* Process commit. */
+    if (!ime) {
+        return;
+    }
+    
+    /* Process commit */
     if (ime->commit_string) {
         SendIMECommitEvent(ime);
         ckfree(ime->commit_string);
@@ -1470,66 +1921,19 @@ IMETextInputDone(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * SendIMECommitEvent --
- *
- *	Send committed text as KeyPress events.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Generates KeyPress events for each character.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-SendIMECommitEvent(
-    TkIMEState *ime)
-{
-    XEvent event;
-    const char *p;
-    int ch;
-    
-    if (!ime || !ime->commit_string || !ime->tkwin) {
-        return;
-    }
-    
-    /* Generate KeyPress for each UTF-8 character. */
-    p = ime->commit_string;
-    while (*p) {
-        p += Tcl_UtfToUniChar(p, &ch);
-        
-        memset(&event, 0, sizeof(XEvent));
-        event.xkey.type = KeyPress;
-        event.xkey.display = Tk_Display(ime->tkwin);
-        event.xkey.window = Tk_WindowId(ime->tkwin);
-        event.xkey.keycode = ch;
-        event.xkey.state = 0;
-        
-        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-        
-        event.xkey.type = KeyRelease;
-        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  *
  * Tk_SetCaretPos --
  *
- *	Standard Tk API for setting caret position (for IME).
+ *      Standard Tk API for setting caret position (for IME).
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Updates IME cursor rectangle.
+ *      Updates IME cursor rectangle.
  *
- *----------------------------------------------------------------------
+ *---------------------------------------------------------------------------
  */
 
 void
