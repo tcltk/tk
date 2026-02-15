@@ -1542,7 +1542,6 @@ TkpDisplayMenu(
     TkMenu *menuPtr = (TkMenu *)clientData;
     TkWindow *winPtr;
     GLFWwindow *glfwWindow;
-    NVGcontext *vg;
     Drawable drawable;
     int i;
     
@@ -1583,14 +1582,14 @@ TkpDisplayMenu(
     int menuH = menuPtr->totalHeight;
     
     /* Draw menu background/border. */
-    nvgSave(vg);
-    nvgBeginPath(vg);
-    nvgRect(vg, menuX, menuY, menuW, menuH);
-    nvgFillColor(vg, nvgRGB(240, 240, 240));
-    nvgFill(vg);
-    nvgStrokeColor(vg, nvgRGB(0, 0, 0));
-    nvgStroke(vg);
-    nvgRestore(vg);
+    nvgSave(dc.vg);
+    nvgBeginPath(dc.vg);
+    nvgRect(dc.vg, menuX, menuY, menuW, menuH);
+    nvgFillColor(dc.vg, nvgRGB(240, 240, 240));
+    nvgFill(dc.vg);
+    nvgStrokeColor(dc.vg, nvgRGB(0, 0, 0));
+    nvgStroke(dc.vg);
+    nvgRestore(dc.vg);
     
     /* Draw each menu entry. */
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -2086,6 +2085,7 @@ MenuMouseMotion(
                 /* Unpost any existing cascade if moving to different entry. */
                 if (menuPtr->postedCascade != NULL && 
                     menuPtr->postedCascade != mePtr) {
+					TkPostSubmenu(menuPtr->interp, menuPtr, NULL);
                     menuPtr->postedCascade = NULL;
                 }
                 
