@@ -429,28 +429,18 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
-WAYLAND_OBJS            = \
-	nanovg.o tkGlfwInit.o tkWayland.o \
-    tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
-    tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o \
-    tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
-    tkWaylandFocus.o tkWaylandFont.o tkWaylandImage.o \
-    tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
-    tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
-    tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
-    tkWaylandXId.o tkWaylandWm.o
+ WAYLAND_OBJS            = \
+ 	nanovg.o tkGlfwInit.o tkWayland.o \
+     tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
+     tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o \
+     tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
+     tkWaylandFocus.o tkWaylandFont.o tkWaylandImage.o \
+     tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
+     tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
+     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
+     tkWaylandXId.o tkWaylandWm.o \
+     text-input-unstable-v3-protocol.o
     
-#--------------------------------------------------------------------
-# Generate text-input-unstable-v3 protocol files (for IME)
-#--------------------------------------------------------------------
-
-$(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER): $(TEXT_INPUT_XML)
-	@echo "  GEN     $@"
-	$(WAYLAND_SCANNER) client-header $(TEXT_INPUT_XML) $@
-
-$(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C): $(TEXT_INPUT_XML)
-	@echo "  GEN     $@"
-	$(WAYLAND_SCANNER) private-code $(TEXT_INPUT_XML) $@
     
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
@@ -676,6 +666,21 @@ SHELL_ENV = \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
 all: binaries libraries
+
+#--------------------------------------------------------------------
+# Generate text-input-unstable-v3 protocol files (hard requirement for IME)
+#--------------------------------------------------------------------
+
+$(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER): $(TEXT_INPUT_XML)
+	@echo "  GEN     $@"
+	$(WAYLAND_SCANNER) client-header $(TEXT_INPUT_XML) $@
+
+$(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C): $(TEXT_INPUT_XML)
+	@echo "  GEN     $@"
+	$(WAYLAND_SCANNER) private-code $(TEXT_INPUT_XML) $@
+
+# Make sure the generated .c is compiled (the .o is already in WAYLAND_OBJS)
+text-input-unstable-v3-protocol.o: $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C)
 
 binaries: ${LIB_FILE} ${WISH_EXE}
 

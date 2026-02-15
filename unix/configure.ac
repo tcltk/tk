@@ -436,239 +436,253 @@ if test $tk_aqua = no; then
     if test "$enable_wayland" = "yes"; then
         # When Wayland is enabled → disable Xft explicitly
         enable_xft=no
-        UNIX_FONT_OBJS=tkUnixFont.o   # fallback / non-antialiased unless you later add fontconfig-based rendering
+        UNIX_FONT_OBJS=tkUnixFont.o
 
-		# ─────────────────────────────────────────────────────────────
-		# Wayland-related dependencies (most are required nowadays)
-		# ─────────────────────────────────────────────────────────────
-		
-		AC_MSG_CHECKING([for wayland-client and wayland-cursor ≥ 1.18])
-		if pkg-config --exists "wayland-client >= 1.18" \
-		   && pkg-config --exists "wayland-cursor >= 1.18"; then
-		    AC_MSG_RESULT([yes])
-		    WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-			WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
-		    found_wayland=yes
-		    AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
-		else
-		    AC_MSG_RESULT([no])
-		    WAYLAND_CFLAGS=""
-		    WAYLAND_LIBS=""
-		    found_wayland=no
-		    AC_MSG_NOTICE([Wayland client libraries >= 1.18 not found])
-		fi
-		AC_SUBST([WAYLAND_CFLAGS])
-		AC_SUBST([WAYLAND_LIBS])
-		
-			
-		AC_MSG_CHECKING([for xkbcommon ≥ 0.5.0])
-		if pkg-config --exists "xkbcommon >= 0.5.0"; then
-		    AC_MSG_RESULT([yes])
-		    XKBCOMMON_CFLAGS="`pkg-config --cflags xkbcommon`"
-		    XKBCOMMON_LIBS="`pkg-config --libs xkbcommon`"
-		    found_xkbcommon=yes
-		    AC_DEFINE([HAVE_XKBCOMMON], [1], [Define if xkbcommon is available])
-		else
-		    AC_MSG_RESULT([no])
-		    XKBCOMMON_CFLAGS=""
-		    XKBCOMMON_LIBS=""
-		    found_xkbcommon=no
-		    AC_MSG_NOTICE([xkbcommon >= 0.5.0 not found])
-		fi
-		AC_SUBST([XKBCOMMON_CFLAGS])
-		AC_SUBST([XKBCOMMON_LIBS])
-		
-		
-		AC_MSG_CHECKING([for glfw3 >= 3.4 with Wayland support])
-		
-		if pkg-config --exists "glfw3 >= 3.4"; then
-		    AC_MSG_RESULT([glfw3 found])
-		    GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
-		    GLFW_LIBS="$(pkg-config --libs glfw3)"
-		
-		    # Check for required Wayland client libraries
-		    if pkg-config --exists wayland-client; then
-		        found_glfw=yes
-		        AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
-		    else
-		        found_glfw=no
-		        AC_MSG_NOTICE([GLFW found but Wayland support not detected (missing wayland-client)])
-		        GLFW_CFLAGS=""
-		        GLFW_LIBS=""
-		    fi
-		else
-		    AC_MSG_RESULT([glfw3 not found])
-		    found_glfw=no
-		    GLFW_CFLAGS=""
-		    GLFW_LIBS=""
-		    AC_MSG_NOTICE([glfw3 >= 3.4 not found — backend will be disabled])
-		fi
-		
-		AC_SUBST([GLFW_CFLAGS])
-		AC_SUBST([GLFW_LIBS])
+        # ─────────────────────────────────────────────────────────────
+        # Wayland-related dependencies (most are required nowadays)
+        # ─────────────────────────────────────────────────────────────
 
-		# ─────────────────────────────────────────────────────────────
-		# OpenGL ES support (required for NanoVG rendering)
-		# ─────────────────────────────────────────────────────────────
-		
-		AC_MSG_CHECKING([for OpenGL ES 3.0 (glesv2)])
-		
-		# First try pkg-config
-		if pkg-config --exists glesv2; then
-		    AC_MSG_RESULT([yes (via pkg-config)])
-		    GLES_CFLAGS="$(pkg-config --cflags glesv2)"
-		    GLES_LIBS="$(pkg-config --libs glesv2)"
-		    found_gles=yes
-		    AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
-		else
-		    # Fallback: try to find the library directly
-		    AC_MSG_RESULT([pkg-config not found, checking for library directly])
-		    
-		    AC_CHECK_HEADER([GLES3/gl3.h], [have_gles_header=yes], [have_gles_header=no])
-		    AC_CHECK_LIB([GLESv2], [glGetString], [have_gles_lib=yes], [have_gles_lib=no])
-		    
-		    if test "$have_gles_header" = yes && test "$have_gles_lib" = yes; then
-		        AC_MSG_NOTICE([OpenGL ES library found])
-		        GLES_CFLAGS=""
-		        GLES_LIBS="-lGLESv2"
-		        found_gles=yes
-		        AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
-		    else
-		        AC_MSG_RESULT([no])
-		        GLES_CFLAGS=""
-		        GLES_LIBS=""
-		        found_gles=no
-		        AC_MSG_NOTICE([OpenGL ES not found — NanoVG rendering will not work])
-		    fi
-		fi
-		
-		AC_SUBST([GLES_CFLAGS])
-		AC_SUBST([GLES_LIBS])
-
-		# libdecor is now **required** (especially for GNOME/Mutter client-side decorations)
-		AC_MSG_CHECKING([for libdecor-0 ≥ 0.1])
-		if pkg-config --exists "libdecor-0 >= 0.1"; then
-		    AC_MSG_RESULT([yes])
-		    LIBDECOR_CFLAGS="`pkg-config --cflags libdecor-0`"
-		    LIBDECOR_LIBS="`pkg-config --libs libdecor-0`"
-		    found_libdecor=yes
-		    AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
-		else
-		    AC_MSG_RESULT([no])
-		    LIBDECOR_CFLAGS=""
-		    LIBDECOR_LIBS=""
-		    found_libdecor=no
-		    AC_MSG_NOTICE([libdecor-0 >= 0.1 not found — client-side decorations will not work properly on GNOME])
-		fi
-		AC_SUBST([LIBDECOR_CFLAGS])
-		AC_SUBST([LIBDECOR_LIBS])
-
-# Check for sd-bus (libsystemd) → enables direct StatusNotifierItem / D-Bus system tray support on Wayland
-		AC_MSG_CHECKING([for sd-bus (system tray/status notifier support)])
-		SDBUSD_CFLAGS=""
-		SDBUSD_LIBS=""
-		found_sdbus=no
-
-		if pkg-config --exists "libsystemd" 2>/dev/null; then
-		    AC_MSG_RESULT([yes])
-		    SDBUSD_CFLAGS="`pkg-config --cflags libsystemd`"
-		    SDBUSD_LIBS="`pkg-config --libs libsystemd`"
-		    found_sdbus=yes
-		    AC_DEFINE([HAVE_SD_BUS], 1,
-		        [Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)])
-		else
-		    AC_MSG_RESULT([no])
-		    AC_MSG_NOTICE([sd-bus not found — system tray icon support will be unavailable on Wayland])
-		fi
-		AC_SUBST([SDBUSD_CFLAGS])
-		AC_SUBST([SDBUSD_LIBS])
+        AC_MSG_CHECKING([for wayland-client and wayland-cursor ≥ 1.18])
+        if pkg-config --exists "wayland-client >= 1.18" \
+           && pkg-config --exists "wayland-cursor >= 1.18"; then
+            AC_MSG_RESULT([yes])
+            WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
+            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
+            found_wayland=yes
+            AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
+        else
+            AC_MSG_RESULT([no])
+            WAYLAND_CFLAGS=""
+            WAYLAND_LIBS=""
+            found_wayland=no
+            AC_MSG_NOTICE([Wayland client libraries >= 1.18 not found])
+        fi
+        AC_SUBST([WAYLAND_CFLAGS])
+        AC_SUBST([WAYLAND_LIBS])
 
 
-		AC_MSG_CHECKING([for fontconfig ≥ 2.12 (Wayland font support)])
-		if pkg-config --exists "fontconfig >= 2.12"; then
-		    AC_MSG_RESULT([yes])
-		    FONTCONFIG_CFLAGS="`pkg-config --cflags fontconfig`"
-		    FONTCONFIG_LIBS="`pkg-config --libs fontconfig`"
-		    found_fontconfig=yes
-		    AC_DEFINE([HAVE_FONTCONFIG], [1], [Define if fontconfig is available for Wayland])
-		else
-		    AC_MSG_RESULT([no])
-		    FONTCONFIG_CFLAGS=""
-		    FONTCONFIG_LIBS=""
-		    found_fontconfig=no
-		    AC_MSG_NOTICE([fontconfig >= 2.12 not found — font support on Wayland may be limited])
-		fi
-		AC_SUBST([FONTCONFIG_CFLAGS])
-		AC_SUBST([FONTCONFIG_LIBS])
+        AC_MSG_CHECKING([for xkbcommon ≥ 0.5.0])
+        if pkg-config --exists "xkbcommon >= 0.5.0"; then
+            AC_MSG_RESULT([yes])
+            XKBCOMMON_CFLAGS="`pkg-config --cflags xkbcommon`"
+            XKBCOMMON_LIBS="`pkg-config --libs xkbcommon`"
+            found_xkbcommon=yes
+            AC_DEFINE([HAVE_XKBCOMMON], [1], [Define if xkbcommon is available])
+        else
+            AC_MSG_RESULT([no])
+            XKBCOMMON_CFLAGS=""
+            XKBCOMMON_LIBS=""
+            found_xkbcommon=no
+            AC_MSG_NOTICE([xkbcommon >= 0.5.0 not found])
+        fi
+        AC_SUBST([XKBCOMMON_CFLAGS])
+        AC_SUBST([XKBCOMMON_LIBS])
 
-		# ─────────────────────────────────────────────────────────────
-		# wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
-		# ─────────────────────────────────────────────────────────────
-		
-		AC_MSG_CHECKING([for wayland-scanner])
-		AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
-		if test "x$WAYLAND_SCANNER" = x; then
-			AC_MSG_ERROR([wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)])
-		fi
-		AC_MSG_RESULT([yes])
-		
-		# text-input-unstable-v3 protocol XML (required for proper IME)
-		AC_MSG_CHECKING([for text-input-unstable-v3 protocol XML])
-		TEXT_INPUT_XML=""
-		if pkg-config --exists wayland-protocols; then
-			WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
-			TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
-			if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
-				TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
-				AC_MSG_RESULT([yes])
-				AC_DEFINE([HAVE_TEXT_INPUT_V3], [1],
-					[Define if text-input-unstable-v3 protocol is available (required for IME on Wayland)])
-			else
-				AC_MSG_RESULT([no])
-				AC_MSG_ERROR([text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
-		Wayland backend now requires proper IME support via text-input-unstable-v3.
-		Install/update wayland-protocols package.])
-			fi
-		else
-			AC_MSG_RESULT([no])
-			AC_MSG_ERROR([pkg-config package 'wayland-protocols' not found.
-		Wayland backend now requires text-input-unstable-v3 for IME support.])
-		fi
-		
-		AC_SUBST([WAYLAND_SCANNER])
-		AC_SUBST([TEXT_INPUT_XML])
-		
-				if test "$found_wayland" = yes \
-				   && test "$found_xkbcommon" = yes \
-				   && test "$found_glfw" = yes \
-				   && test "$found_gles" = yes \
-				   && test "$found_libdecor" = yes \
-				   && test "$found_fontconfig" = yes \
-				   && test "$found_sdbus" = yes \
-		           && test -n "$TEXT_INPUT_XML"; then
-		
-					HAVE_WAYLAND=1
 
-					AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
-				else
-					AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
-		
-					Required (all mandatory when --enable-wayland is used):
-					  - wayland-client >= 1.18
-					  - wayland-cursor >= 1.18
-					  - xkbcommon >= 0.5.0
-					  - glfw3 >= 3.4 with Wayland support
-					  - glesv2 (OpenGL ES 3.0)          ← required for NanoVG
-					  - libdecor-0 >= 0.1               ← critical for GNOME/Mutter decorations
-					  - fontconfig >= 2.12
-					  - libsystemd (sd-bus)             ← for StatusNotifierItem tray
-					 - wayland-scanner
-					 - wayland-protocols package containing unstable/text-input/text-input-unstable-v3.xml  ← required for IME
-					
-					On Debian/Ubuntu try:
-					  sudo apt install wayland-protocols wayland-scanner libwayland-dev ...
-					])
-				fi
+        AC_MSG_CHECKING([for glfw3 >= 3.4 with Wayland support])
+
+        if pkg-config --exists "glfw3 >= 3.4"; then
+            AC_MSG_RESULT([glfw3 found])
+            GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
+            GLFW_LIBS="$(pkg-config --libs glfw3)"
+
+            if pkg-config --exists wayland-client; then
+                found_glfw=yes
+                AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
+            else
+                found_glfw=no
+                AC_MSG_NOTICE([GLFW found but Wayland support not detected (missing wayland-client)])
+                GLFW_CFLAGS=""
+                GLFW_LIBS=""
+            fi
+        else
+            AC_MSG_RESULT([glfw3 not found])
+            found_glfw=no
+            GLFW_CFLAGS=""
+            GLFW_LIBS=""
+            AC_MSG_NOTICE([glfw3 >= 3.4 not found — backend will be disabled])
+        fi
+
+        AC_SUBST([GLFW_CFLAGS])
+        AC_SUBST([GLFW_LIBS])
+
+        # ─────────────────────────────────────────────────────────────
+        # OpenGL ES support (required for NanoVG rendering)
+        # ─────────────────────────────────────────────────────────────
+
+        AC_MSG_CHECKING([for OpenGL ES 3.0 (glesv2)])
+
+        if pkg-config --exists glesv2; then
+            AC_MSG_RESULT([yes (via pkg-config)])
+            GLES_CFLAGS="$(pkg-config --cflags glesv2)"
+            GLES_LIBS="$(pkg-config --libs glesv2)"
+            found_gles=yes
+            AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
+        else
+            AC_MSG_RESULT([pkg-config not found, checking for library directly])
+
+            AC_CHECK_HEADER([GLES3/gl3.h], [have_gles_header=yes], [have_gles_header=no])
+            AC_CHECK_LIB([GLESv2], [glGetString], [have_gles_lib=yes], [have_gles_lib=no])
+
+            if test "$have_gles_header" = yes && test "$have_gles_lib" = yes; then
+                AC_MSG_NOTICE([OpenGL ES library found])
+                GLES_CFLAGS=""
+                GLES_LIBS="-lGLESv2"
+                found_gles=yes
+                AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
+            else
+                AC_MSG_RESULT([no])
+                GLES_CFLAGS=""
+                GLES_LIBS=""
+                found_gles=no
+                AC_MSG_NOTICE([OpenGL ES not found — NanoVG rendering will not work])
+            fi
+        fi
+
+        AC_SUBST([GLES_CFLAGS])
+        AC_SUBST([GLES_LIBS])
+
+        # libdecor is now **required**
+        AC_MSG_CHECKING([for libdecor-0 ≥ 0.1])
+        if pkg-config --exists "libdecor-0 >= 0.1"; then
+            AC_MSG_RESULT([yes])
+            LIBDECOR_CFLAGS="`pkg-config --cflags libdecor-0`"
+            LIBDECOR_LIBS="`pkg-config --libs libdecor-0`"
+            found_libdecor=yes
+            AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
+        else
+            AC_MSG_RESULT([no])
+            LIBDECOR_CFLAGS=""
+            LIBDECOR_LIBS=""
+            found_libdecor=no
+            AC_MSG_NOTICE([libdecor-0 >= 0.1 not found — client-side decorations will not work properly on GNOME])
+        fi
+        AC_SUBST([LIBDECOR_CFLAGS])
+        AC_SUBST([LIBDECOR_LIBS])
+
+        # sd-bus (system tray)
+        AC_MSG_CHECKING([for sd-bus (system tray/status notifier support)])
+        SDBUSD_CFLAGS=""
+        SDBUSD_LIBS=""
+        found_sdbus=no
+
+        if pkg-config --exists "libsystemd" 2>/dev/null; then
+            AC_MSG_RESULT([yes])
+            SDBUSD_CFLAGS="`pkg-config --cflags libsystemd`"
+            SDBUSD_LIBS="`pkg-config --libs libsystemd`"
+            found_sdbus=yes
+            AC_DEFINE([HAVE_SD_BUS], 1,
+                [Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)])
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_NOTICE([sd-bus not found — system tray icon support will be unavailable on Wayland])
+        fi
+        AC_SUBST([SDBUSD_CFLAGS])
+        AC_SUBST([SDBUSD_LIBS])
+
+        # fontconfig
+        AC_MSG_CHECKING([for fontconfig ≥ 2.12 (Wayland font support)])
+        if pkg-config --exists "fontconfig >= 2.12"; then
+            AC_MSG_RESULT([yes])
+            FONTCONFIG_CFLAGS="`pkg-config --cflags fontconfig`"
+            FONTCONFIG_LIBS="`pkg-config --libs fontconfig`"
+            found_fontconfig=yes
+            AC_DEFINE([HAVE_FONTCONFIG], [1], [Define if fontconfig is available for Wayland])
+        else
+            AC_MSG_RESULT([no])
+            FONTCONFIG_CFLAGS=""
+            FONTCONFIG_LIBS=""
+            found_fontconfig=no
+            AC_MSG_NOTICE([fontconfig >= 2.12 not found — font support on Wayland may be limited])
+        fi
+        AC_SUBST([FONTCONFIG_CFLAGS])
+        AC_SUBST([FONTCONFIG_LIBS])
+
+        # ─────────────────────────────────────────────────────────────
+        # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
+        # ─────────────────────────────────────────────────────────────
+
+        AC_MSG_CHECKING([for wayland-scanner])
+        AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
+        if test "x$WAYLAND_SCANNER" = x; then
+            AC_MSG_ERROR([wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)])
+        fi
+        AC_MSG_RESULT([yes])
+
+        # text-input-unstable-v3 protocol XML (required for proper IME)
+        AC_MSG_CHECKING([for text-input-unstable-v3 protocol XML])
+        TEXT_INPUT_XML=""
+        if pkg-config --exists wayland-protocols; then
+            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
+TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
+            if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
+                TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
+                AC_MSG_RESULT([yes])
+                AC_DEFINE([HAVE_TEXT_INPUT_V3], [1],
+                    [Define if text-input-unstable-v3 protocol is available (required for IME on Wayland)])
+            else
+                AC_MSG_RESULT([no])
+                AC_MSG_ERROR([text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
+Wayland backend now requires proper IME support via text-input-unstable-v3.
+Install/update wayland-protocols package.])
+            fi
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([pkg-config package 'wayland-protocols' not found.
+Wayland backend now requires text-input-unstable-v3 for IME support.])
+        fi
+
+        AC_SUBST([WAYLAND_SCANNER])
+        AC_SUBST([TEXT_INPUT_XML])
+
+        # ─────────────────────────────────────────────────────────────
+        # Final check — everything must be present (IME is now mandatory)
+        # ─────────────────────────────────────────────────────────────
+        if test "$found_wayland" = yes \
+           && test "$found_xkbcommon" = yes \
+           && test "$found_glfw" = yes \
+           && test "$found_gles" = yes \
+           && test "$found_libdecor" = yes \
+           && test "$found_fontconfig" = yes \
+           && test "$found_sdbus" = yes \
+           && test -n "$TEXT_INPUT_XML"; then
+
+            HAVE_WAYLAND=1
+
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS"
+
+            AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
+            TK_WINDOWINGSYSTEM=WAYLAND
+
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
+        else
+            AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
+
+Required (all mandatory when --enable-wayland is used):
+  - wayland-client >= 1.18
+  - wayland-cursor >= 1.18
+  - xkbcommon >= 0.5.0
+  - glfw3 >= 3.4 with Wayland support
+  - glesv2 (OpenGL ES 3.0)
+  - libdecor-0 >= 0.1
+  - fontconfig >= 2.12
+  - libsystemd (sd-bus)
+  - wayland-scanner
+  - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
+
+On Debian/Ubuntu:
+  sudo apt install wayland-protocols wayland-scanner libwayland-dev \
+    libxkbcommon-dev libglfw3-dev libgles2-mesa-dev libdecor-0-dev \
+    libfontconfig-dev libsystemd-dev
+])
+        fi
+    fi
+
+    AC_SUBST([WAYLAND_CFLAGS])
+    AC_SUBST([WAYLAND_LIBS])
+    AC_SUBST([HAVE_WAYLAND])
+fi  
 
 #--------------------------------------------------------------------
 #	Check for Atk support
