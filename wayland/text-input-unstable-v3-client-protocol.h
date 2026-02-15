@@ -243,12 +243,12 @@ zwp_text_input_manager_v3_get_text_input(struct zwp_text_input_manager_v3 *zwp_t
 {
 struct wl_proxy *id;
 
-```
+
 id = wl_proxy_marshal_flags((struct wl_proxy *) zwp_text_input_manager_v3,
 		ZWP_TEXT_INPUT_MANAGER_V3_GET_TEXT_INPUT, &zwp_text_input_v3_interface, wl_proxy_get_version((struct wl_proxy *) zwp_text_input_manager_v3), 0, NULL, seat);
 
 return (struct zwp_text_input_v3 *) id;
-```
+
 
 }
 

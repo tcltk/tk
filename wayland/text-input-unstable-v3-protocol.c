@@ -36,11 +36,12 @@ DEALINGS IN THE SOFTWARE.
 
 #endif
 
-#if (__has_attribute(visibility) || defined(**GNUC**) && **GNUC** >= 4)
-#define WL_PRIVATE **attribute** ((visibility("hidden")))
+#if (__has_attribute(visibility) || (defined(__GNUC__) && __GNUC__ >= 4))
+#define WL_PRIVATE __attribute__((visibility("hidden")))
 #else
 #define WL_PRIVATE
 #endif
+
 
 extern const struct wl_interface wl_seat_interface;
 extern const struct wl_interface wl_surface_interface;
