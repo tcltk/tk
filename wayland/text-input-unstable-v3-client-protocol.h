@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 #include <stddef.h>
-#include “wayland-client.h”
+#include "wayland-client.h"
 
 #ifdef  __cplusplus
-extern “C” {
+extern "C" {
 #endif
 
 struct zwp_text_input_v3;
