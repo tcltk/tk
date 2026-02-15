@@ -236,6 +236,9 @@ MODULE_SCOPE void TkWaylandUpdateKeyboardModifiers(int glfw_mods);
 /* Store character input from GLFW character callback. */
 MODULE_SCOPE void TkWaylandStoreCharacterInput(unsigned int codepoint);
 
+/* Init GLFW menu drawing. */
+void TkWaylandMenuInit(void);
+
 
 /*
  *----------------------------------------------------------------------
@@ -258,7 +261,7 @@ MODULE_SCOPE void TkGlfwErrorCallback(int error, const char *description);
 extern  int Tktray_Init (Tcl_Interp* interp);
 extern  int SysNotify_Init (Tcl_Interp* interp);
 extern int Cups_Init (Tcl_Interp* interp);
-extern int TkAtkAccessibility_Init (Tcl_Interp *interp) ;
+extern int TkAtkAccessibility_Init (Tcl_Interp *interp); 
 
 
 #endif /* _TKGLFWINT_H */

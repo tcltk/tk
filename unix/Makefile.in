@@ -593,7 +593,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
     $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandWm.c \
-    $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C)
+    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
@@ -679,10 +679,8 @@ $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C): $(TEXT_INPUT_XML)
 	@echo "  GEN     $@"
 	$(WAYLAND_SCANNER) private-code $(TEXT_INPUT_XML) $@
 
-# Make sure the generated .c is compiled (the .o is already in WAYLAND_OBJS)
-text-input-unstable-v3-protocol.o: $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C)
 
-binaries: ${LIB_FILE} ${WISH_EXE}
+binaries: $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER) $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C) ${LIB_FILE} ${WISH_EXE}
 
 libraries:
 
@@ -1429,6 +1427,9 @@ tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 
 nanovg.o: $(WAYLAND_DIR)/nanovg.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
+
+text-input-unstable-v3-protocol.o: $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
 
 tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c

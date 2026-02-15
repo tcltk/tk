@@ -792,8 +792,7 @@ TkpInit(
 
     /* Initialize menu. */
     TkWaylandMenuInit();
-    
-    
+       
     /* Initialize event loop. */
     Tk_WaylandSetupTkNotifier();
     

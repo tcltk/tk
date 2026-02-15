@@ -12,6 +12,7 @@
  */
 
 #include "tkInt.h"
+#include "tkUnixInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #include <xkbcommon/xkbcommon.h>
@@ -19,14 +20,10 @@
 #include <wayland-client.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include "text-input-unstable-v3-client-protocol.h"
 
-/*
- * Wayland text-input protocol for IME support.
- * Generated at build time from text-input-unstable-v3.xml.
- */
-#ifdef HAVE_TEXT_INPUT_V3
-#  include "text-input-unstable-v3-client-protocol.h"
-#endif
 
 
 /*
@@ -76,6 +73,8 @@ typedef struct TkIMEState {
     int cursor_y;
     int cursor_width;
     int cursor_height;
+    
+    struct TkIMEState *next;  /* For hash table collision chain */
 } TkIMEState;
 
 /*
@@ -89,10 +88,20 @@ typedef struct {
     
     int fd;
     Tcl_Channel channel;
+    
+    /* Hash table for IME state lookup by Tk_Window */
+    TkIMEState **ime_hash;
+    int hash_size;
 } WaylandIMEConnection;
 
-static WaylandIMEConnection wlIME = {NULL, NULL, NULL, NULL, -1, NULL};
+static WaylandIMEConnection wlIME = {NULL, NULL, NULL, NULL, -1, NULL, NULL, 0};
 static TkIMEState *currentIME = NULL;
+
+/* Hash table functions */
+static unsigned int HashWindow(Tk_Window tkwin);
+static TkIMEState *FindIMEState(Tk_Window tkwin);
+static void StoreIMEState(Tk_Window tkwin, TkIMEState *ime);
+static void RemoveIMEState(Tk_Window tkwin);
 
 /*
  *----------------------------------------------------------------------
@@ -345,6 +354,7 @@ TkWaylandSetKeymap(
     char *map_str;
     
     if (!xkbState.context) {
+        close(fd);
         return 0;
     }
     
@@ -526,7 +536,6 @@ TkWaylandProcessKey(
     KeySym keysym;
     char buffer[32];
     int len;
-    TkWindow *winPtr = (TkWindow *)tkwin;
     
     if (!tkwin) {
         return;
@@ -542,7 +551,7 @@ TkWaylandProcessKey(
     /* Get UTF-8 string for key. */
     len = 0;
     if (pressed && keysym != NoSymbol) {
-        len = XKBKeysymToString(keysym, buffer, sizeof(buffer));
+        len = XKBKeysymToString(keysym, buffer, sizeof(buffer) - 1);
         if (len > 0) {
             buffer[len] = '\0';
         }
@@ -551,7 +560,7 @@ TkWaylandProcessKey(
     /* Build X event. */
     memset(&event, 0, sizeof(XEvent));
     event.xkey.type = pressed ? KeyPress : KeyRelease;
-    event.xkey.serial = NextRequest(Tk_Display(tkwin));
+    event.xkey.serial = 0;
     event.xkey.send_event = False;
     event.xkey.display = Tk_Display(tkwin);
     event.xkey.window = Tk_WindowId(tkwin);
@@ -566,9 +575,6 @@ TkWaylandProcessKey(
     event.xkey.keycode = keycode;
     event.xkey.same_screen = True;
     
-    /* Store keysym and string in Tk event structure. */
-    /* Note: Tk core will handle keysym lookup via XLookupString equivalent. */
-    
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
 
@@ -579,6 +585,141 @@ TkWaylandProcessKey(
  *
  *----------------------------------------------------------------------
  */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * HashWindow --
+ *
+ *	Simple hash function for Tk_Window pointers.
+ *
+ * Results:
+ *	Returns hash value.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static unsigned int
+HashWindow(Tk_Window tkwin)
+{
+    uintptr_t ptr = (uintptr_t)tkwin;
+    return (unsigned int)((ptr >> 4) ^ (ptr));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FindIMEState --
+ *
+ *	Find IME state for a window in hash table.
+ *
+ * Results:
+ *	Returns IME state or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkIMEState *
+FindIMEState(Tk_Window tkwin)
+{
+    unsigned int hash;
+    TkIMEState *ime;
+    
+    if (!wlIME.ime_hash || !tkwin) {
+        return NULL;
+    }
+    
+    hash = HashWindow(tkwin) % wlIME.hash_size;
+    ime = wlIME.ime_hash[hash];
+    
+    while (ime) {
+        if (ime->tkwin == tkwin) {
+            return ime;
+        }
+        ime = ime->next;
+    }
+    
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StoreIMEState --
+ *
+ *	Store IME state in hash table.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Adds IME state to hash table.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+StoreIMEState(Tk_Window tkwin, TkIMEState *ime)
+{
+    unsigned int hash;
+    
+    if (!wlIME.ime_hash || !tkwin || !ime) {
+        return;
+    }
+    
+    hash = HashWindow(tkwin) % wlIME.hash_size;
+    ime->next = wlIME.ime_hash[hash];
+    wlIME.ime_hash[hash] = ime;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemoveIMEState --
+ *
+ *	Remove IME state from hash table.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Removes IME state from hash table.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RemoveIMEState(Tk_Window tkwin)
+{
+    unsigned int hash;
+    TkIMEState *ime, *prev = NULL;
+    
+    if (!wlIME.ime_hash || !tkwin) {
+        return;
+    }
+    
+    hash = HashWindow(tkwin) % wlIME.hash_size;
+    ime = wlIME.ime_hash[hash];
+    
+    while (ime) {
+        if (ime->tkwin == tkwin) {
+            if (prev) {
+                prev->next = ime->next;
+            } else {
+                wlIME.ime_hash[hash] = ime->next;
+            }
+            return;
+        }
+        prev = ime;
+        ime = ime->next;
+    }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -612,6 +753,11 @@ InitializeIME(void)
         wlIME.display = NULL;
         return 0;
     }
+    
+    /* Initialize hash table with reasonable size. */
+    wlIME.hash_size = 64;
+    wlIME.ime_hash = (TkIMEState **)ckalloc(sizeof(TkIMEState *) * wlIME.hash_size);
+    memset(wlIME.ime_hash, 0, sizeof(TkIMEState *) * wlIME.hash_size);
     
     /* Listen for globals. */
     wl_registry_add_listener(wlIME.registry, &registry_listener, NULL);
@@ -665,6 +811,8 @@ InitializeIME(void)
 static void
 CleanupIME(void)
 {
+    int i;
+    
     if (wlIME.channel) {
         Tcl_DeleteChannelHandler(wlIME.channel,
             WaylandIMEEventHandler, NULL);
@@ -687,12 +835,27 @@ CleanupIME(void)
         wlIME.registry = NULL;
     }
     
+    if (wlIME.ime_hash) {
+        /* Free any remaining IME states */
+        for (i = 0; i < wlIME.hash_size; i++) {
+            TkIMEState *ime = wlIME.ime_hash[i];
+            while (ime) {
+                TkIMEState *next = ime->next;
+                DestroyIMEState(ime);
+                ime = next;
+            }
+        }
+        ckfree((char *)wlIME.ime_hash);
+        wlIME.ime_hash = NULL;
+    }
+    
     if (wlIME.display) {
         wl_display_disconnect(wlIME.display);
         wlIME.display = NULL;
     }
     
     wlIME.fd = -1;
+    wlIME.hash_size = 0;
 }
 
 /*
@@ -713,9 +876,10 @@ CleanupIME(void)
 
 static void
 WaylandIMEEventHandler(
-    ClientData clientData,
-    int mask)
+    TCL_UNUSED(ClientData), /* clientData */
+    TCL_UNUSED(int)) /* mask */
 {
+    
     if (!wlIME.display) {
         return;
     }
@@ -734,12 +898,13 @@ WaylandIMEEventHandler(
 
 static void
 RegistryHandleGlobal(
-    void *data,
+    TCL_UNUSED(void *), /* data */
     struct wl_registry *registry,
     uint32_t name,
     const char *interface,
     uint32_t version)
 {
+    
     if (strcmp(interface, "wl_seat") == 0) {
         wlIME.seat = wl_registry_bind(registry, name,
             &wl_seat_interface, 1);
@@ -753,27 +918,27 @@ RegistryHandleGlobal(
 
 static void
 RegistryHandleGlobalRemove(
-    void *data,
-    struct wl_registry *registry,
-    uint32_t name)
+    TCL_UNUSED(void*), /* data */
+    TCL_UNUSED(struct wl_registry *), /* registry */
+    TCL_UNUSED(uint32_t)) /* name */
 {
     /* Handle removal if needed. */
 }
 
 static void
 SeatHandleCapabilities(
-    void *data,
-    struct wl_seat *seat,
-    uint32_t capabilities)
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_seat *), /*seat */
+    TCL_UNUSED(uint32_t)) /* capabilities */
 {
     /* Seat capabilities changed. */
 }
 
 static void
 SeatHandleName(
-    void *data,
-    struct wl_seat *seat,
-    const char *name)
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_seat *), /*seat */
+    TCL_UNUSED(const char *)) /* name */
 {
     /* Seat name received. */
 }
@@ -818,8 +983,8 @@ CreateIMEState(
     ime->tkwin = tkwin;
     
     /* Create text-input object. */
-    ime->text_input = zwp_text_input_manager_v3_get_text_input(
-        wlIME.text_input_manager, wlIME.seat);
+    ime->text_input = zwp_text_input_manager_v3_create_text_input(
+        wlIME.text_input_manager);
     
     if (!ime->text_input) {
         ckfree((char *)ime);
@@ -895,21 +1060,20 @@ int
 TkWaylandIMEEnable(
     Tk_Window tkwin)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     TkIMEState *ime;
     
-    if (!winPtr) {
+    if (!tkwin) {
         return 0;
     }
     
     /* Get or create IME state. */
-    ime = (TkIMEState *)winPtr->imeData;
+    ime = FindIMEState(tkwin);
     if (!ime) {
         ime = CreateIMEState(tkwin);
         if (!ime) {
             return 0;
         }
-        winPtr->imeData = ime;
+        StoreIMEState(tkwin, ime);
     }
     
     if (ime->enabled) {
@@ -946,14 +1110,16 @@ void
 TkWaylandIMEDisable(
     Tk_Window tkwin)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     TkIMEState *ime;
     
-    if (!winPtr || !winPtr->imeData) {
+    if (!tkwin) {
         return;
     }
     
-    ime = (TkIMEState *)winPtr->imeData;
+    ime = FindIMEState(tkwin);
+    if (!ime) {
+        return;
+    }
     
     if (!ime->enabled) {
         return;
@@ -999,14 +1165,16 @@ TkWaylandIMESetCursorRect(
     int width,
     int height)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     TkIMEState *ime;
     
-    if (!winPtr || !winPtr->imeData) {
+    if (!tkwin) {
         return;
     }
     
-    ime = (TkIMEState *)winPtr->imeData;
+    ime = FindIMEState(tkwin);
+    if (!ime) {
+        return;
+    }
     
     ime->cursor_x = x;
     ime->cursor_y = y;
@@ -1041,14 +1209,16 @@ TkWaylandIMEGetPreedit(
     Tk_Window tkwin,
     int *cursorPos)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     TkIMEState *ime;
     
-    if (!winPtr || !winPtr->imeData) {
+    if (!tkwin) {
         return NULL;
     }
     
-    ime = (TkIMEState *)winPtr->imeData;
+    ime = FindIMEState(tkwin);
+    if (!ime) {
+        return NULL;
+    }
     
     if (!ime->preedit_active || !ime->preedit_string) {
         return NULL;
@@ -1084,14 +1254,16 @@ TkWaylandIMESetSurroundingText(
     int cursor_index,
     int anchor_index)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     TkIMEState *ime;
     
-    if (!winPtr || !winPtr->imeData) {
+    if (!tkwin) {
         return;
     }
     
-    ime = (TkIMEState *)winPtr->imeData;
+    ime = FindIMEState(tkwin);
+    if (!ime) {
+        return;
+    }
     
     if (!ime->enabled || !ime->text_input) {
         return;
@@ -1124,14 +1296,16 @@ TkWaylandIMESetContentType(
     uint32_t hint,
     uint32_t purpose)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     TkIMEState *ime;
     
-    if (!winPtr || !winPtr->imeData) {
+    if (!tkwin) {
         return;
     }
     
-    ime = (TkIMEState *)winPtr->imeData;
+    ime = FindIMEState(tkwin);
+    if (!ime) {
+        return;
+    }
     
     if (!ime->enabled || !ime->text_input) {
         return;
@@ -1139,6 +1313,39 @@ TkWaylandIMESetContentType(
     
     zwp_text_input_v3_set_content_type(ime->text_input, hint, purpose);
     zwp_text_input_v3_commit(ime->text_input);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandIMERemove --
+ *
+ *	Remove IME state for a window (called when window is destroyed).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Removes IME state from hash table and destroys it.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandIMERemove(
+    Tk_Window tkwin)
+{
+    TkIMEState *ime;
+    
+    if (!tkwin) {
+        return;
+    }
+    
+    ime = FindIMEState(tkwin);
+    if (ime) {
+        RemoveIMEState(tkwin);
+        DestroyIMEState(ime);
+    }
 }
 
 /*
@@ -1152,10 +1359,11 @@ TkWaylandIMESetContentType(
 static void
 IMETextInputEnter(
     void *data,
-    struct zwp_text_input_v3 *text_input,
-    struct wl_surface *surface)
+    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    TCL_UNUSED(struct wl_surface *)) /* surface */
 {
     TkIMEState *ime = (TkIMEState *)data;
+    
     ime->enabled = 1;
     currentIME = ime;
 }
@@ -1163,10 +1371,13 @@ IMETextInputEnter(
 static void
 IMETextInputLeave(
     void *data,
-    struct zwp_text_input_v3 *text_input,
-    struct wl_surface *surface)
+    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    TCL_UNUSED(struct wl_surface *)) /* surface */
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)text_input;
+    (void)surface;
+    
     ime->enabled = 0;
     if (currentIME == ime) {
         currentIME = NULL;
@@ -1176,10 +1387,10 @@ IMETextInputLeave(
 static void
 IMETextInputPreeditString(
     void *data,
-    struct zwp_text_input_v3 *text_input,
+    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
     const char *text,
     int32_t cursor_begin,
-    int32_t cursor_end)
+    TCL_UNUSED(int32_t)) /* cursor_end */
 {
     TkIMEState *ime = (TkIMEState *)data;
     
@@ -1189,7 +1400,7 @@ IMETextInputPreeditString(
     }
     
     if (text && *text) {
-        ime->preedit_string = ckalloc(strlen(text) + 1);
+        ime->preedit_string = (char *)ckalloc(strlen(text) + 1);
         strcpy(ime->preedit_string, text);
         ime->preedit_cursor = cursor_begin;
         ime->preedit_active = 1;
@@ -1200,14 +1411,14 @@ IMETextInputPreeditString(
     
     /* Trigger widget redraw to show preedit. */
     if (ime->tkwin) {
-        Tk_EventuallyRedraw(ime->tkwin);
+        Tk_RedrawWindow(ime->tkwin, NULL, 0);
     }
 }
 
 static void
 IMETextInputCommitString(
     void *data,
-    struct zwp_text_input_v3 *text_input,
+    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
     const char *text)
 {
     TkIMEState *ime = (TkIMEState *)data;
@@ -1218,7 +1429,7 @@ IMETextInputCommitString(
     }
     
     if (text && *text) {
-        ime->commit_string = ckalloc(strlen(text) + 1);
+        ime->commit_string = (char *)ckalloc(strlen(text) + 1);
         strcpy(ime->commit_string, text);
     }
     
@@ -1232,10 +1443,10 @@ IMETextInputCommitString(
 
 static void
 IMETextInputDeleteSurroundingText(
-    void *data,
-    struct zwp_text_input_v3 *text_input,
-    uint32_t before_length,
-    uint32_t after_length)
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    TCL_UNUSED(uint32_t),  /* before_length */
+    TCL_UNUSED(uint32_t)) /* after_length */
 {
     /* Handle deletion if needed. */
 }
@@ -1243,10 +1454,12 @@ IMETextInputDeleteSurroundingText(
 static void
 IMETextInputDone(
     void *data,
-    struct zwp_text_input_v3 *text_input,
-    uint32_t serial)
+    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    TCL_UNUSED(uint32_t)) /* serial */
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)text_input;
+    (void)serial;
     
     /* Process commit. */
     if (ime->commit_string) {
