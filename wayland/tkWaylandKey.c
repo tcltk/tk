@@ -64,6 +64,30 @@ static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
  */
 
 /*
+ * Global Wayland IME connection state - separate from GLFW's connection.
+ */
+typedef struct {
+    struct wl_display *display;
+    struct wl_registry *registry;
+    struct wl_seat *seat;
+    struct wl_keyboard *keyboard;
+    struct zwp_text_input_manager_v3 *text_input_manager;
+    
+    int fd;                         /* File descriptor for event loop */
+    Tcl_Channel channel;             /* Tcl channel for event handling */
+    int display_initialized;         /* Flag for connection state */
+    
+    /* Hash table for window -> IME state mapping */
+    TkIMEState **ime_hash;
+    int hash_size;
+    int hash_count;
+} WaylandIMEConnection;
+
+static WaylandIMEConnection wlIME = {
+    NULL, NULL, NULL, NULL, NULL, -1, NULL, 0, NULL, 0, 0
+};
+
+/*
  * IME state per Tk window.
  */
 typedef struct TkIMEState {
@@ -653,8 +677,6 @@ TkWaylandProcessKey(
 {
     XEvent event;
     KeySym keysym;
-    char buffer[32];
-    int len;
     TkIMEState *ime;
     
     if (!tkwin) {
@@ -670,15 +692,6 @@ TkWaylandProcessKey(
     
     /* Convert keycode to keysym. */
     keysym = XKBKeycodeToKeysym(keycode);
-    
-    /* Get UTF-8 string for key. */
-    len = 0;
-    if (pressed && keysym != NoSymbol) {
-        len = XKBKeysymToString(keysym, buffer, sizeof(buffer) - 1);
-        if (len > 0) {
-            buffer[len] = '\0';
-        }
-    }
     
     /* Build X event. */
     memset(&event, 0, sizeof(XEvent));
@@ -698,10 +711,7 @@ TkWaylandProcessKey(
     event.xkey.keycode = XKBKeycodeToX11Keycode(keycode);
     event.xkey.same_screen = True;
     
-    /* For KeyPress, set the string in the event if we have one. */
-    if (pressed && len > 0) {
-        strncpy(event.xkey.data, buffer, sizeof(event.xkey.data));
-    }
+    /* For KeyPress, we can't directly set string data in XKeyEvent */
     
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
@@ -1120,9 +1130,11 @@ WaylandIMEDispatchEvents(void)
 
 static void
 WaylandIMEEventHandler(
-    TCL_UNUSED(ClientData), /* clientData */
-    TCL_UNUSED(int)) /* mask */
+    ClientData clientData,
+    int mask)
 {
+    (void)clientData;
+    (void)mask;
     WaylandIMEDispatchEvents();
 }
 
@@ -1136,12 +1148,14 @@ WaylandIMEEventHandler(
 
 static void
 RegistryHandleGlobal(
-    TCL_UNUSED(void *), /* data */
+    void *data,
     struct wl_registry *registry,
     uint32_t name,
     const char *interface,
     uint32_t version)
 {
+    (void)data;
+    
     if (strcmp(interface, "wl_seat") == 0) {
         wlIME.seat = wl_registry_bind(registry, name,
                 &wl_seat_interface, 1);
@@ -1156,19 +1170,25 @@ RegistryHandleGlobal(
 
 static void
 RegistryHandleGlobalRemove(
-    TCL_UNUSED(void*), /* data */
-    TCL_UNUSED(struct wl_registry *), /* registry */
-    TCL_UNUSED(uint32_t)) /* name */
+    void *data,
+    struct wl_registry *registry,
+    uint32_t name)
 {
+    (void)data;
+    (void)registry;
+    (void)name;
     /* Handle removal if needed. */
 }
 
 static void
 SeatHandleCapabilities(
-    TCL_UNUSED(void *), /* data */
+    void *data,
     struct wl_seat *seat,
     uint32_t capabilities)
 {
+    (void)data;
+    (void)seat;
+    
     if ((capabilities & WL_SEAT_CAPABILITY_KEYBOARD) && !wlIME.keyboard) {
         wlIME.keyboard = wl_seat_get_keyboard(seat);
         wl_keyboard_add_listener(wlIME.keyboard, &keyboard_listener, NULL);
@@ -1180,10 +1200,13 @@ SeatHandleCapabilities(
 
 static void
 SeatHandleName(
-    TCL_UNUSED(void *), /* data */
-    TCL_UNUSED(struct wl_seat *), /*seat */
-    TCL_UNUSED(const char *)) /* name */
+    void *data,
+    struct wl_seat *seat,
+    const char *name)
 {
+    (void)data;
+    (void)seat;
+    (void)name;
     /* Seat name received. */
 }
 
@@ -1197,12 +1220,15 @@ SeatHandleName(
 
 static void
 KeyboardHandleKeymap(
-    TCL_UNUSED(void *), /* data */
-    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    void *data,
+    struct wl_keyboard *keyboard,
     uint32_t format,
     int32_t fd,
     uint32_t size)
 {
+    (void)data;
+    (void)keyboard;
+    
     if (format == WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
         TkWaylandSetKeymap(fd, size);
     } else {
@@ -1212,35 +1238,46 @@ KeyboardHandleKeymap(
 
 static void
 KeyboardHandleEnter(
-    TCL_UNUSED(void *), /* data */
-    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
-    TCL_UNUSED(uint32_t), /* serial */
-    TCL_UNUSED(struct wl_surface *), /* surface */
-    TCL_UNUSED(struct wl_array *)) /* keys */
+    void *data,
+    struct wl_keyboard *keyboard,
+    uint32_t serial,
+    struct wl_surface *surface,
+    struct wl_array *keys)
 {
+    (void)data;
+    (void)keyboard;
+    (void)serial;
+    (void)surface;
+    (void)keys;
     /* Keyboard focus entered. */
 }
 
 static void
 KeyboardHandleLeave(
-    TCL_UNUSED(void *), /* data */
-    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
-    TCL_UNUSED(uint32_t), /* serial */
-    TCL_UNUSED(struct wl_surface *)) /* surface */
+    void *data,
+    struct wl_keyboard *keyboard,
+    uint32_t serial,
+    struct wl_surface *surface)
 {
+    (void)data;
+    (void)keyboard;
+    (void)serial;
+    (void)surface;
     /* Keyboard focus left. */
 }
 
 static void
 KeyboardHandleKey(
     void *data,
-    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
-    TCL_UNUSED(uint32_t), /* serial */
+    struct wl_keyboard *keyboard,
+    uint32_t serial,
     uint32_t time,
     uint32_t key,
     uint32_t state)
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)keyboard;
+    (void)serial;
     
     if (ime && ime->tkwin) {
         TkWaylandProcessKey(ime->tkwin, key,
@@ -1251,23 +1288,30 @@ KeyboardHandleKey(
 static void
 KeyboardHandleModifiers(
     void *data,
-    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
-    TCL_UNUSED(uint32_t), /* serial */
+    struct wl_keyboard *keyboard,
+    uint32_t serial,
     uint32_t mods_depressed,
     uint32_t mods_latched,
     uint32_t mods_locked,
     uint32_t group)
 {
+    (void)data;
+    (void)keyboard;
+    (void)serial;
     UpdateXKBModifiers(mods_depressed, mods_latched, mods_locked, group);
 }
 
 static void
 KeyboardHandleRepeatInfo(
-    TCL_UNUSED(void *), /* data */
-    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
-    TCL_UNUSED(int32_t), /* rate */
-    TCL_UNUSED(int32_t)) /* delay */
+    void *data,
+    struct wl_keyboard *keyboard,
+    int32_t rate,
+    int32_t delay)
 {
+    (void)data;
+    (void)keyboard;
+    (void)rate;
+    (void)delay;
     /* Key repeat info - could be used for auto-repeat. */
 }
 
@@ -1777,7 +1821,6 @@ SendIMECommitEvent(
         event.xkey.window = Tk_WindowId(ime->tkwin);
         event.xkey.keycode = 0;  /* Virtual keycode for IME input */
         event.xkey.state = XKBGetModifierState();
-        strncpy(event.xkey.data, utf8_buf, sizeof(event.xkey.data));
         
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         
@@ -1800,10 +1843,11 @@ SendIMECommitEvent(
 static void
 IMETextInputEnter(
     void *data,
-    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    struct zwp_text_input_v3 *text_input,
     struct wl_surface *surface)
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)text_input;
     
     if (ime && ime->surface == surface) {
         ime->enabled = 1;
@@ -1814,10 +1858,11 @@ IMETextInputEnter(
 static void
 IMETextInputLeave(
     void *data,
-    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    struct zwp_text_input_v3 *text_input,
     struct wl_surface *surface)
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)text_input;
     
     if (ime && ime->surface == surface) {
         ime->enabled = 0;
@@ -1830,12 +1875,14 @@ IMETextInputLeave(
 static void
 IMETextInputPreeditString(
     void *data,
-    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    struct zwp_text_input_v3 *text_input,
     const char *text,
     int32_t cursor_begin,
-    TCL_UNUSED(int32_t)) /* cursor_end */
+    int32_t cursor_end)
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)text_input;
+    (void)cursor_end;
     
     if (!ime) {
         return;
@@ -1863,10 +1910,11 @@ IMETextInputPreeditString(
 static void
 IMETextInputCommitString(
     void *data,
-    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
+    struct zwp_text_input_v3 *text_input,
     const char *text)
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)text_input;
     
     if (!ime) {
         return;
@@ -1892,21 +1940,27 @@ IMETextInputCommitString(
 
 static void
 IMETextInputDeleteSurroundingText(
-    TCL_UNUSED(void *), /* data */
-    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
-    TCL_UNUSED(uint32_t),  /* before_length */
-    TCL_UNUSED(uint32_t)) /* after_length */
+    void *data,
+    struct zwp_text_input_v3 *text_input,
+    uint32_t before_length,
+    uint32_t after_length)
 {
-	/* No-op */
+    (void)data;
+    (void)text_input;
+    (void)before_length;
+    (void)after_length;
+    /* No-op */
 }
 
 static void
 IMETextInputDone(
     void *data,
-    TCL_UNUSED(struct zwp_text_input_v3 *), /* text_input */
-    TCL_UNUSED(uint32_t)) /* serial */
+    struct zwp_text_input_v3 *text_input,
+    uint32_t serial)
 {
     TkIMEState *ime = (TkIMEState *)data;
+    (void)text_input;
+    (void)serial;
     
     if (!ime) {
         return;
