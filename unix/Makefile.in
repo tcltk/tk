@@ -156,6 +156,12 @@ AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 
 WAYLAND_INCLUDES    = -I$(WAYLAND_DIR)
 
+# Wayland text-input protocol (IME)
+TEXT_INPUT_XML          = @TEXT_INPUT_XML@
+WAYLAND_SCANNER         = @WAYLAND_SCANNER@
+TEXT_INPUT_CLIENT_HEADER = text-input-unstable-v3-client-protocol.h
+TEXT_INPUT_PROTOCOL_C   = text-input-unstable-v3-protocol.c
+
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
@@ -434,6 +440,18 @@ WAYLAND_OBJS            = \
     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
     tkWaylandXId.o tkWaylandWm.o
     
+#--------------------------------------------------------------------
+# Generate text-input-unstable-v3 protocol files (for IME)
+#--------------------------------------------------------------------
+
+$(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER): $(TEXT_INPUT_XML)
+	@echo "  GEN     $@"
+	$(WAYLAND_SCANNER) client-header $(TEXT_INPUT_XML) $@
+
+$(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C): $(TEXT_INPUT_XML)
+	@echo "  GEN     $@"
+	$(WAYLAND_SCANNER) private-code $(TEXT_INPUT_XML) $@
+    
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
     tkAppInit.o             tkUnixConfig.o          tkUnixPrint.o \
@@ -584,11 +602,13 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
     $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
-    $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandWm.c 
+    $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandWm.c \
+    $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C)
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
-    $(WAYLAND_DIR)/tkGlfwInt.h
+    $(WAYLAND_DIR)/tkGlfwInt.h \
+    $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)
 
 WAYLAND_UNIX_SRCS = \
     $(UNIX_DIR)/tkAppInit.c     $(UNIX_DIR)/tkUnixConfig.c \
@@ -1021,6 +1041,8 @@ clean:
 	rm -f *.a *.o libtk* libtcl9tk* cygtcl9tk* core errs *~ \#* TAGS *.E a.out \
 		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
 		 *.zip
+	rm -f $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER) \
+	      $(WAYLAND_DIR)/$(TEXT_INPUT_PROTOCOL_C)
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \

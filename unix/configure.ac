@@ -601,50 +601,74 @@ if test $tk_aqua = no; then
 		AC_SUBST([FONTCONFIG_CFLAGS])
 		AC_SUBST([FONTCONFIG_LIBS])
 
-        if test "$found_wayland" = yes \
-           && test "$found_xkbcommon" = yes \
-           && test "$found_glfw" = yes \
-           && test "$found_gles" = yes \
-           && test "$found_libdecor" = yes \
-           && test "$found_fontconfig" = yes \
-           && test "$found_sdbus" = yes; then
+		# ─────────────────────────────────────────────────────────────
+		# wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
+		# ─────────────────────────────────────────────────────────────
+		
+		AC_MSG_CHECKING([for wayland-scanner])
+		AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
+		if test "x$WAYLAND_SCANNER" = x; then
+			AC_MSG_ERROR([wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)])
+		fi
+		AC_MSG_RESULT([yes])
+		
+		# text-input-unstable-v3 protocol XML (required for proper IME)
+		AC_MSG_CHECKING([for text-input-unstable-v3 protocol XML])
+		TEXT_INPUT_XML=""
+		if pkg-config --exists wayland-protocols; then
+			WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
+			TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
+			if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
+				TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
+				AC_MSG_RESULT([yes])
+				AC_DEFINE([HAVE_TEXT_INPUT_V3], [1],
+					[Define if text-input-unstable-v3 protocol is available (required for IME on Wayland)])
+			else
+				AC_MSG_RESULT([no])
+				AC_MSG_ERROR([text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
+		Wayland backend now requires proper IME support via text-input-unstable-v3.
+		Install/update wayland-protocols package.])
+			fi
+		else
+			AC_MSG_RESULT([no])
+			AC_MSG_ERROR([pkg-config package 'wayland-protocols' not found.
+		Wayland backend now requires text-input-unstable-v3 for IME support.])
+		fi
+		
+		AC_SUBST([WAYLAND_SCANNER])
+		AC_SUBST([TEXT_INPUT_XML])
+		
+				if test "$found_wayland" = yes \
+				   && test "$found_xkbcommon" = yes \
+				   && test "$found_glfw" = yes \
+				   && test "$found_gles" = yes \
+				   && test "$found_libdecor" = yes \
+				   && test "$found_fontconfig" = yes \
+				   && test "$found_sdbus" = yes \
+		           && test -n "$TEXT_INPUT_XML"; then
+		
+					HAVE_WAYLAND=1
 
-            HAVE_WAYLAND=1
-
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS"
-
-            # Still useful if some code paths check for extra libdecor features
-            AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
-
-            AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
-            TK_WINDOWINGSYSTEM=WAYLAND
-
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor (required for GNOME) + fontconfig (Xft disabled) + sd-bus (StatusNotifierItem)])
-        else
-            AC_MSG_ERROR([Wayland backend requested but one or more required libraries not found.
-
-Required packages (all mandatory):
-  - wayland-client >= 1.18
-  - wayland-cursor >= 1.18
-  - xkbcommon >= 0.5.0
-  - glfw3 >= 3.4
-  - glesv2 (OpenGL ES 3.0)          ← required for NanoVG rendering
-  - libdecor-0 >= 0.1               ← critical for proper window decorations on GNOME/Mutter
-  - fontconfig >= 2.12
-  - libsystemd                       ← required for sd-bus / D-Bus StatusNotifierItem system tray support
-
-Install missing packages (e.g. on Debian/Ubuntu:
-  libwayland-dev libxkbcommon-dev libglfw3-dev libgles2-mesa-dev
-  libdecor-0-dev libfontconfig-dev libsystemd-dev)
-])
-        fi
-    fi
-
-    AC_SUBST([WAYLAND_CFLAGS])
-    AC_SUBST([WAYLAND_LIBS])
-    AC_SUBST([HAVE_WAYLAND])
-fi
+					AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + libdecor + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
+				else
+					AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
+		
+					Required (all mandatory when --enable-wayland is used):
+					  - wayland-client >= 1.18
+					  - wayland-cursor >= 1.18
+					  - xkbcommon >= 0.5.0
+					  - glfw3 >= 3.4 with Wayland support
+					  - glesv2 (OpenGL ES 3.0)          ← required for NanoVG
+					  - libdecor-0 >= 0.1               ← critical for GNOME/Mutter decorations
+					  - fontconfig >= 2.12
+					  - libsystemd (sd-bus)             ← for StatusNotifierItem tray
+					 - wayland-scanner
+					 - wayland-protocols package containing unstable/text-input/text-input-unstable-v3.xml  ← required for IME
+					
+					On Debian/Ubuntu try:
+					  sudo apt install wayland-protocols wayland-scanner libwayland-dev ...
+					])
+				fi
 
 #--------------------------------------------------------------------
 #	Check for Atk support
