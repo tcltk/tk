@@ -696,6 +696,7 @@ EXEEXT_FOR_BUILD
 CC_FOR_BUILD
 ATK_LIBS
 ATK_CFLAGS
+HAVE_WAYLAND
 TEXT_INPUT_XML
 WAYLAND_SCANNER
 FONTCONFIG_LIBS
@@ -8431,119 +8432,116 @@ printf "%s\n" "$enable_wayland" >&6; }
     if test "$enable_wayland" = "yes"; then
         # When Wayland is enabled → disable Xft explicitly
         enable_xft=no
-        UNIX_FONT_OBJS=tkUnixFont.o   # fallback / non-antialiased unless you later add fontconfig-based rendering
+        UNIX_FONT_OBJS=tkUnixFont.o
 
-		# ─────────────────────────────────────────────────────────────
-		# Wayland-related dependencies (most are required nowadays)
-		# ─────────────────────────────────────────────────────────────
+        # ─────────────────────────────────────────────────────────────
+        # Wayland-related dependencies (most are required nowadays)
+        # ─────────────────────────────────────────────────────────────
 
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for wayland-client and wayland-cursor ≥ 1.18" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for wayland-client and wayland-cursor ≥ 1.18" >&5
 printf %s "checking for wayland-client and wayland-cursor ≥ 1.18... " >&6; }
-		if pkg-config --exists "wayland-client >= 1.18" \
-		   && pkg-config --exists "wayland-cursor >= 1.18"; then
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        if pkg-config --exists "wayland-client >= 1.18" \
+           && pkg-config --exists "wayland-cursor >= 1.18"; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-		    WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-			WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
-		    found_wayland=yes
+            WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
+            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
+            found_wayland=yes
 
 printf "%s\n" "#define HAVE_WAYLAND 1" >>confdefs.h
 
-		else
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-		    WAYLAND_CFLAGS=""
-		    WAYLAND_LIBS=""
-		    found_wayland=no
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Wayland client libraries >= 1.18 not found" >&5
+            WAYLAND_CFLAGS=""
+            WAYLAND_LIBS=""
+            found_wayland=no
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Wayland client libraries >= 1.18 not found" >&5
 printf "%s\n" "$as_me: Wayland client libraries >= 1.18 not found" >&6;}
-		fi
+        fi
 
 
 
 
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for xkbcommon ≥ 0.5.0" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for xkbcommon ≥ 0.5.0" >&5
 printf %s "checking for xkbcommon ≥ 0.5.0... " >&6; }
-		if pkg-config --exists "xkbcommon >= 0.5.0"; then
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        if pkg-config --exists "xkbcommon >= 0.5.0"; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-		    XKBCOMMON_CFLAGS="`pkg-config --cflags xkbcommon`"
-		    XKBCOMMON_LIBS="`pkg-config --libs xkbcommon`"
-		    found_xkbcommon=yes
+            XKBCOMMON_CFLAGS="`pkg-config --cflags xkbcommon`"
+            XKBCOMMON_LIBS="`pkg-config --libs xkbcommon`"
+            found_xkbcommon=yes
 
 printf "%s\n" "#define HAVE_XKBCOMMON 1" >>confdefs.h
 
-		else
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-		    XKBCOMMON_CFLAGS=""
-		    XKBCOMMON_LIBS=""
-		    found_xkbcommon=no
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: xkbcommon >= 0.5.0 not found" >&5
+            XKBCOMMON_CFLAGS=""
+            XKBCOMMON_LIBS=""
+            found_xkbcommon=no
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: xkbcommon >= 0.5.0 not found" >&5
 printf "%s\n" "$as_me: xkbcommon >= 0.5.0 not found" >&6;}
-		fi
+        fi
 
 
 
 
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for glfw3 >= 3.4 with Wayland support" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for glfw3 >= 3.4 with Wayland support" >&5
 printf %s "checking for glfw3 >= 3.4 with Wayland support... " >&6; }
 
-		if pkg-config --exists "glfw3 >= 3.4"; then
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: glfw3 found" >&5
+        if pkg-config --exists "glfw3 >= 3.4"; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: glfw3 found" >&5
 printf "%s\n" "glfw3 found" >&6; }
-		    GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
-		    GLFW_LIBS="$(pkg-config --libs glfw3)"
+            GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
+            GLFW_LIBS="$(pkg-config --libs glfw3)"
 
-		    # Check for required Wayland client libraries
-		    if pkg-config --exists wayland-client; then
-		        found_glfw=yes
+            if pkg-config --exists wayland-client; then
+                found_glfw=yes
 
 printf "%s\n" "#define HAVE_GLFW 1" >>confdefs.h
 
-		    else
-		        found_glfw=no
-		        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: GLFW found but Wayland support not detected (missing wayland-client)" >&5
+            else
+                found_glfw=no
+                { printf "%s\n" "$as_me:${as_lineno-$LINENO}: GLFW found but Wayland support not detected (missing wayland-client)" >&5
 printf "%s\n" "$as_me: GLFW found but Wayland support not detected (missing wayland-client)" >&6;}
-		        GLFW_CFLAGS=""
-		        GLFW_LIBS=""
-		    fi
-		else
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: glfw3 not found" >&5
+                GLFW_CFLAGS=""
+                GLFW_LIBS=""
+            fi
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: glfw3 not found" >&5
 printf "%s\n" "glfw3 not found" >&6; }
-		    found_glfw=no
-		    GLFW_CFLAGS=""
-		    GLFW_LIBS=""
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: glfw3 >= 3.4 not found — backend will be disabled" >&5
+            found_glfw=no
+            GLFW_CFLAGS=""
+            GLFW_LIBS=""
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: glfw3 >= 3.4 not found — backend will be disabled" >&5
 printf "%s\n" "$as_me: glfw3 >= 3.4 not found — backend will be disabled" >&6;}
-		fi
+        fi
 
 
 
 
-		# ─────────────────────────────────────────────────────────────
-		# OpenGL ES support (required for NanoVG rendering)
-		# ─────────────────────────────────────────────────────────────
+        # ─────────────────────────────────────────────────────────────
+        # OpenGL ES support (required for NanoVG rendering)
+        # ─────────────────────────────────────────────────────────────
 
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OpenGL ES 3.0 (glesv2)" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OpenGL ES 3.0 (glesv2)" >&5
 printf %s "checking for OpenGL ES 3.0 (glesv2)... " >&6; }
 
-		# First try pkg-config
-		if pkg-config --exists glesv2; then
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes (via pkg-config)" >&5
+        if pkg-config --exists glesv2; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes (via pkg-config)" >&5
 printf "%s\n" "yes (via pkg-config)" >&6; }
-		    GLES_CFLAGS="$(pkg-config --cflags glesv2)"
-		    GLES_LIBS="$(pkg-config --libs glesv2)"
-		    found_gles=yes
+            GLES_CFLAGS="$(pkg-config --cflags glesv2)"
+            GLES_LIBS="$(pkg-config --libs glesv2)"
+            found_gles=yes
 
 printf "%s\n" "#define HAVE_GLES 1" >>confdefs.h
 
-		else
-		    # Fallback: try to find the library directly
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: pkg-config not found, checking for library directly" >&5
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: pkg-config not found, checking for library directly" >&5
 printf "%s\n" "pkg-config not found, checking for library directly" >&6; }
 
-		    ac_fn_c_check_header_compile "$LINENO" "GLES3/gl3.h" "ac_cv_header_GLES3_gl3_h" "$ac_includes_default"
+            ac_fn_c_check_header_compile "$LINENO" "GLES3/gl3.h" "ac_cv_header_GLES3_gl3_h" "$ac_includes_default"
 if test "x$ac_cv_header_GLES3_gl3_h" = xyes
 then :
   have_gles_header=yes
@@ -8552,7 +8550,7 @@ else case e in #(
 esac
 fi
 
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for glGetString in -lGLESv2" >&5
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for glGetString in -lGLESv2" >&5
 printf %s "checking for glGetString in -lGLESv2... " >&6; }
 if test ${ac_cv_lib_GLESv2_glGetString+y}
 then :
@@ -8604,109 +8602,109 @@ esac
 fi
 
 
-		    if test "$have_gles_header" = yes && test "$have_gles_lib" = yes; then
-		        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: OpenGL ES library found" >&5
+            if test "$have_gles_header" = yes && test "$have_gles_lib" = yes; then
+                { printf "%s\n" "$as_me:${as_lineno-$LINENO}: OpenGL ES library found" >&5
 printf "%s\n" "$as_me: OpenGL ES library found" >&6;}
-		        GLES_CFLAGS=""
-		        GLES_LIBS="-lGLESv2"
-		        found_gles=yes
+                GLES_CFLAGS=""
+                GLES_LIBS="-lGLESv2"
+                found_gles=yes
 
 printf "%s\n" "#define HAVE_GLES 1" >>confdefs.h
 
-		    else
-		        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+            else
+                { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-		        GLES_CFLAGS=""
-		        GLES_LIBS=""
-		        found_gles=no
-		        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: OpenGL ES not found — NanoVG rendering will not work" >&5
+                GLES_CFLAGS=""
+                GLES_LIBS=""
+                found_gles=no
+                { printf "%s\n" "$as_me:${as_lineno-$LINENO}: OpenGL ES not found — NanoVG rendering will not work" >&5
 printf "%s\n" "$as_me: OpenGL ES not found — NanoVG rendering will not work" >&6;}
-		    fi
-		fi
+            fi
+        fi
 
 
 
 
-		# libdecor is now **required** (especially for GNOME/Mutter client-side decorations)
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libdecor-0 ≥ 0.1" >&5
+        # libdecor is now **required**
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libdecor-0 ≥ 0.1" >&5
 printf %s "checking for libdecor-0 ≥ 0.1... " >&6; }
-		if pkg-config --exists "libdecor-0 >= 0.1"; then
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        if pkg-config --exists "libdecor-0 >= 0.1"; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-		    LIBDECOR_CFLAGS="`pkg-config --cflags libdecor-0`"
-		    LIBDECOR_LIBS="`pkg-config --libs libdecor-0`"
-		    found_libdecor=yes
+            LIBDECOR_CFLAGS="`pkg-config --cflags libdecor-0`"
+            LIBDECOR_LIBS="`pkg-config --libs libdecor-0`"
+            found_libdecor=yes
 
 printf "%s\n" "#define HAVE_LIBDECOR 1" >>confdefs.h
 
-		else
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-		    LIBDECOR_CFLAGS=""
-		    LIBDECOR_LIBS=""
-		    found_libdecor=no
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: libdecor-0 >= 0.1 not found — client-side decorations will not work properly on GNOME" >&5
+            LIBDECOR_CFLAGS=""
+            LIBDECOR_LIBS=""
+            found_libdecor=no
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: libdecor-0 >= 0.1 not found — client-side decorations will not work properly on GNOME" >&5
 printf "%s\n" "$as_me: libdecor-0 >= 0.1 not found — client-side decorations will not work properly on GNOME" >&6;}
-		fi
+        fi
 
 
 
-# Check for sd-bus (libsystemd) → enables direct StatusNotifierItem / D-Bus system tray support on Wayland
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sd-bus (system tray/status notifier support)" >&5
+        # sd-bus (system tray)
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sd-bus (system tray/status notifier support)" >&5
 printf %s "checking for sd-bus (system tray/status notifier support)... " >&6; }
-		SDBUSD_CFLAGS=""
-		SDBUSD_LIBS=""
-		found_sdbus=no
+        SDBUSD_CFLAGS=""
+        SDBUSD_LIBS=""
+        found_sdbus=no
 
-		if pkg-config --exists "libsystemd" 2>/dev/null; then
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        if pkg-config --exists "libsystemd" 2>/dev/null; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-		    SDBUSD_CFLAGS="`pkg-config --cflags libsystemd`"
-		    SDBUSD_LIBS="`pkg-config --libs libsystemd`"
-		    found_sdbus=yes
+            SDBUSD_CFLAGS="`pkg-config --cflags libsystemd`"
+            SDBUSD_LIBS="`pkg-config --libs libsystemd`"
+            found_sdbus=yes
 
 printf "%s\n" "#define HAVE_SD_BUS 1" >>confdefs.h
 
-		else
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: sd-bus not found — system tray icon support will be unavailable on Wayland" >&5
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: sd-bus not found — system tray icon support will be unavailable on Wayland" >&5
 printf "%s\n" "$as_me: sd-bus not found — system tray icon support will be unavailable on Wayland" >&6;}
-		fi
+        fi
 
 
 
-
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for fontconfig ≥ 2.12 (Wayland font support)" >&5
+        # fontconfig
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for fontconfig ≥ 2.12 (Wayland font support)" >&5
 printf %s "checking for fontconfig ≥ 2.12 (Wayland font support)... " >&6; }
-		if pkg-config --exists "fontconfig >= 2.12"; then
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        if pkg-config --exists "fontconfig >= 2.12"; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-		    FONTCONFIG_CFLAGS="`pkg-config --cflags fontconfig`"
-		    FONTCONFIG_LIBS="`pkg-config --libs fontconfig`"
-		    found_fontconfig=yes
+            FONTCONFIG_CFLAGS="`pkg-config --cflags fontconfig`"
+            FONTCONFIG_LIBS="`pkg-config --libs fontconfig`"
+            found_fontconfig=yes
 
 printf "%s\n" "#define HAVE_FONTCONFIG 1" >>confdefs.h
 
-		else
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-		    FONTCONFIG_CFLAGS=""
-		    FONTCONFIG_LIBS=""
-		    found_fontconfig=no
-		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: fontconfig >= 2.12 not found — font support on Wayland may be limited" >&5
+            FONTCONFIG_CFLAGS=""
+            FONTCONFIG_LIBS=""
+            found_fontconfig=no
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: fontconfig >= 2.12 not found — font support on Wayland may be limited" >&5
 printf "%s\n" "$as_me: fontconfig >= 2.12 not found — font support on Wayland may be limited" >&6;}
-		fi
+        fi
 
 
 
-		# ─────────────────────────────────────────────────────────────
-		# wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
-		# ─────────────────────────────────────────────────────────────
+        # ─────────────────────────────────────────────────────────────
+        # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
+        # ─────────────────────────────────────────────────────────────
 
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for wayland-scanner" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for wayland-scanner" >&5
 printf %s "checking for wayland-scanner... " >&6; }
-		# Extract the first word of "wayland-scanner", so it can be a program name with args.
+        # Extract the first word of "wayland-scanner", so it can be a program name with args.
 set dummy wayland-scanner; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
@@ -8752,75 +8750,94 @@ printf "%s\n" "no" >&6; }
 fi
 
 
-		if test "x$WAYLAND_SCANNER" = x; then
-			as_fn_error $? "wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)" "$LINENO" 5
-		fi
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        if test "x$WAYLAND_SCANNER" = x; then
+            as_fn_error $? "wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)" "$LINENO" 5
+        fi
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
-		# text-input-unstable-v3 protocol XML (required for proper IME)
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for text-input-unstable-v3 protocol XML" >&5
+        # text-input-unstable-v3 protocol XML (required for proper IME)
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for text-input-unstable-v3 protocol XML" >&5
 printf %s "checking for text-input-unstable-v3 protocol XML... " >&6; }
-		TEXT_INPUT_XML=""
-		if pkg-config --exists wayland-protocols; then
-			WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
-			TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
-			if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
-				TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
-				{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        TEXT_INPUT_XML=""
+        if pkg-config --exists wayland-protocols; then
+            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
+TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
+            if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
+                TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
+                { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
 
 printf "%s\n" "#define HAVE_TEXT_INPUT_V3 1" >>confdefs.h
 
-			else
-				{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+            else
+                { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-				as_fn_error $? "text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
-		Wayland backend now requires proper IME support via text-input-unstable-v3.
-		Install/update wayland-protocols package." "$LINENO" 5
-			fi
-		else
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+                as_fn_error $? "text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
+Wayland backend now requires proper IME support via text-input-unstable-v3.
+Install/update wayland-protocols package." "$LINENO" 5
+            fi
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-			as_fn_error $? "pkg-config package 'wayland-protocols' not found.
-		Wayland backend now requires text-input-unstable-v3 for IME support." "$LINENO" 5
-		fi
+            as_fn_error $? "pkg-config package 'wayland-protocols' not found.
+Wayland backend now requires text-input-unstable-v3 for IME support." "$LINENO" 5
+        fi
 
 
 
 
-				if test "$found_wayland" = yes \
-				   && test "$found_xkbcommon" = yes \
-				   && test "$found_glfw" = yes \
-				   && test "$found_gles" = yes \
-				   && test "$found_libdecor" = yes \
-				   && test "$found_fontconfig" = yes \
-				   && test "$found_sdbus" = yes \
-		           && test -n "$TEXT_INPUT_XML"; then
+        # ─────────────────────────────────────────────────────────────
+        # Final check — everything must be present (IME is now mandatory)
+        # ─────────────────────────────────────────────────────────────
+        if test "$found_wayland" = yes \
+           && test "$found_xkbcommon" = yes \
+           && test "$found_glfw" = yes \
+           && test "$found_gles" = yes \
+           && test "$found_libdecor" = yes \
+           && test "$found_fontconfig" = yes \
+           && test "$found_sdbus" = yes \
+           && test -n "$TEXT_INPUT_XML"; then
 
-					HAVE_WAYLAND=1
+            HAVE_WAYLAND=1
 
-					{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + OpenGL ES + libdecor + fontconfig + sd-bus + text-input-unstable-v3 (IME)" >&5
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS"
+
+
+printf "%s\n" "#define TK_USE_WAYLAND 1" >>confdefs.h
+
+            TK_WINDOWINGSYSTEM=WAYLAND
+
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + OpenGL ES + libdecor + fontconfig + sd-bus + text-input-unstable-v3 (IME)" >&5
 printf "%s\n" "$as_me: Wayland backend enabled with GLFW + OpenGL ES + libdecor + fontconfig + sd-bus + text-input-unstable-v3 (IME)" >&6;}
-				else
-					as_fn_error $? "Wayland backend requested but one or more required components missing.
+        else
+            as_fn_error $? "Wayland backend requested but one or more required components missing.
 
-					Required (all mandatory when --enable-wayland is used):
-					  - wayland-client >= 1.18
-					  - wayland-cursor >= 1.18
-					  - xkbcommon >= 0.5.0
-					  - glfw3 >= 3.4 with Wayland support
-					  - glesv2 (OpenGL ES 3.0)          ← required for NanoVG
-					  - libdecor-0 >= 0.1               ← critical for GNOME/Mutter decorations
-					  - fontconfig >= 2.12
-					  - libsystemd (sd-bus)             ← for StatusNotifierItem tray
-					 - wayland-scanner
-					 - wayland-protocols package containing unstable/text-input/text-input-unstable-v3.xml  ← required for IME
+Required (all mandatory when --enable-wayland is used):
+  - wayland-client >= 1.18
+  - wayland-cursor >= 1.18
+  - xkbcommon >= 0.5.0
+  - glfw3 >= 3.4 with Wayland support
+  - glesv2 (OpenGL ES 3.0)
+  - libdecor-0 >= 0.1
+  - fontconfig >= 2.12
+  - libsystemd (sd-bus)
+  - wayland-scanner
+  - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
 
-					On Debian/Ubuntu try:
-					  sudo apt install wayland-protocols wayland-scanner libwayland-dev ...
-					" "$LINENO" 5
-				fi
+On Debian/Ubuntu:
+  sudo apt install wayland-protocols wayland-scanner libwayland-dev \
+    libxkbcommon-dev libglfw3-dev libgles2-mesa-dev libdecor-0-dev \
+    libfontconfig-dev libsystemd-dev
+" "$LINENO" 5
+        fi
+    fi
+
+
+
+
+fi
 
 #--------------------------------------------------------------------
 #	Check for Atk support
