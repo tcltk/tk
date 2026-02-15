@@ -423,8 +423,8 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
- WAYLAND_OBJS            = \
- 	nanovg.o tkGlfwInit.o tkWayland.o \
+WAYLAND_OBJS            = \
+ 	 nanovg.o text-input-unstable-v3-protocol.o tkGlfwInit.o tkWayland.o  \
      tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
      tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o \
      tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
@@ -432,9 +432,7 @@ AQUA_TKTEST_OBJS = tkMacOSXTest.o
      tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
      tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
      tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
-     tkWaylandXId.o tkWaylandWm.o \
-     text-input-unstable-v3-protocol.o
-    
+     tkWaylandXId.o tkWaylandWm.o  
     
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
