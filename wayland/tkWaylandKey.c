@@ -30,6 +30,9 @@
 #include <errno.h>
 #include "text-input-unstable-v3-client-protocol.h"
 
+/* Forward declaration of IME state structure */
+typedef struct TkIMEState TkIMEState;
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -134,8 +137,6 @@ static void CleanupXKB(void);
 static void UpdateXKBModifiers(unsigned int mods_depressed,
         unsigned int mods_latched, unsigned int mods_locked,
         unsigned int group);
-static KeySym XKBKeycodeToKeysym(unsigned int keycode);
-static int XKBKeysymToString(KeySym keysym, char *buffer, int buflen);
 static int XKBKeycodeToX11Keycode(unsigned int keycode);
 static unsigned int XKBGetModifierState(void);
 
@@ -478,63 +479,6 @@ UpdateXKBModifiers(
             0, 0, group);
 }
 
-/*
- *---------------------------------------------------------------------------
- *
- * XKBKeycodeToKeysym --
- *
- *      Convert XKB keycode to X11 KeySym.
- *
- * Results:
- *      Returns KeySym.
- *
- * Side effects:
- *      None.
- *
- *---------------------------------------------------------------------------
- */
-
-static KeySym
-XKBKeycodeToKeysym(
-    unsigned int keycode)
-{
-    xkb_keysym_t keysym;
-    enum xkb_compose_feed_result feed_result;
-    
-    if (!xkbState.state) {
-        return NoSymbol;
-    }
-    
-    /* XKB keycode is evdev keycode + 8. */
-    keysym = xkb_state_key_get_one_sym(xkbState.state, keycode + 8);
-    
-    /* Handle compose sequences. */
-    if (xkbState.compose_state && keysym != NoSymbol) {
-        feed_result = xkb_compose_state_feed(xkbState.compose_state, keysym);
-        
-        if (feed_result == XKB_COMPOSE_FEED_ACCEPTED) {
-            switch (xkb_compose_state_get_status(xkbState.compose_state)) {
-            case XKB_COMPOSE_COMPOSED:
-                keysym = xkb_compose_state_get_one_sym(
-                        xkbState.compose_state);
-                xkb_compose_state_reset(xkbState.compose_state);
-                break;
-            case XKB_COMPOSE_COMPOSING:
-                return NoSymbol;  /* Still composing, don't send event yet */
-            case XKB_COMPOSE_CANCELLED:
-                xkb_compose_state_reset(xkbState.compose_state);
-                keysym = NoSymbol;
-                break;
-            case XKB_COMPOSE_NOTHING:
-                break;
-            }
-        } else if (feed_result == XKB_COMPOSE_FEED_IGNORED) {
-            /* Key doesn't affect compose state, proceed normally. */
-        }
-    }
-    
-    return (KeySym)keysym;
-}
 
 /*
  *---------------------------------------------------------------------------
@@ -636,22 +580,6 @@ XKBGetModifierState(void)
  *---------------------------------------------------------------------------
  */
 
-static int
-XKBKeysymToString(
-    KeySym keysym,
-    char *buffer,
-    int buflen)
-{
-    if (!xkbState.state || keysym == NoSymbol) {
-        if (buflen > 0) {
-            buffer[0] = '\0';
-        }
-        return 0;
-    }
-    
-    return xkb_keysym_to_utf8(keysym, buffer, buflen);
-}
-
 /*
  *---------------------------------------------------------------------------
  *
@@ -676,7 +604,6 @@ TkWaylandProcessKey(
     unsigned int time)
 {
     XEvent event;
-    KeySym keysym;
     TkIMEState *ime;
     
     if (!tkwin) {
@@ -689,9 +616,6 @@ TkWaylandProcessKey(
         /* IME is handling composition, don't send raw key events. */
         return;
     }
-    
-    /* Convert keycode to keysym. */
-    keysym = XKBKeycodeToKeysym(keycode);
     
     /* Build X event. */
     memset(&event, 0, sizeof(XEvent));
@@ -1774,7 +1698,8 @@ SendIMEPreeditEvent(
     }
     
     /* Trigger widget redraw to show preedit */
-    Tk_RedrawWindow(ime->tkwin, NULL, 0);
+	Tcl_DoOneEvent(TCL_ALL_EVENTS);
+
     
 }
 
