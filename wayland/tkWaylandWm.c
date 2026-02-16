@@ -23,6 +23,19 @@
 #include <string.h>
 #include <stdlib.h>
 
+/*
+ * Undefine X11 macros that might conflict with our definitions
+ */
+#undef USPosition
+#undef USSize
+#undef PPosition
+#undef PSize
+#undef PMinSize
+#undef PMaxSize
+#undef PResizeInc
+#undef PAspect
+#undef PBaseSize
+#undef PWinGravity
 
 /*
  * Protocol identifiers - these replace X11 Atoms.
@@ -67,8 +80,12 @@ typedef struct {
 } WmAttributes;
 
 typedef enum {
-    WMATT_ALPHA, WMATT_FULLSCREEN, WMATT_TOPMOST, WMATT_TYPE,
-    WMATT_ZOOMED, _WMATT_LAST_ATTRIBUTE
+    WMATT_ALPHA, 
+    WMATT_FULLSCREEN, 
+    WMATT_TOPMOST, 
+    WMATT_TYPE,
+    WMATT_ZOOMED, 
+    _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
@@ -144,7 +161,7 @@ typedef struct TkWmInfo {
     WmAttributes reqState;	/* Requested [wm attributes] state. */
     ProtocolHandler *protPtr;	/* Protocol handlers list, or NULL. */
     Tcl_Size cmdArgc;		/* Number of command arguments. */
-    const char **cmdArgv;	/* Command arguments array. */
+    Tcl_Obj **cmdArgv;		/* Command arguments array (as Tcl_Obj*). */
     char *clientMachine;	/* Client machine name, or NULL. */
     int flags;			/* Miscellaneous flags. */
     int numTransients;		/* Number of transients. */
@@ -182,16 +199,16 @@ typedef struct TkWmInfo {
  * Size hint flags (from X11, kept for compatibility).
  */
 
-#define USPosition	(1 << 0)
-#define USSize		(1 << 1)
-#define PPosition	(1 << 2)
-#define PSize		(1 << 3)
-#define PMinSize	(1 << 4)
-#define PMaxSize	(1 << 5)
-#define PResizeInc	(1 << 6)
-#define PAspect		(1 << 7)
-#define PBaseSize	(1 << 8)
-#define PWinGravity	(1 << 9)
+#define WM_USPosition	(1 << 0)
+#define WM_USSize	(1 << 1)
+#define WM_PPosition	(1 << 2)
+#define WM_PSize	(1 << 3)
+#define WM_PMinSize	(1 << 4)
+#define WM_PMaxSize	(1 << 5)
+#define WM_PResizeInc	(1 << 6)
+#define WM_PAspect	(1 << 7)
+#define WM_PBaseSize	(1 << 8)
+#define WM_PWinGravity	(1 << 9)
 
 /*
  * Window states.
@@ -231,7 +248,6 @@ static void		UpdateTitle(TkWindow *winPtr);
 static void		UpdatePhotoIcon(TkWindow *winPtr);
 static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		WaitForMapNotify(TkWindow *winPtr, int mapped);
-static void		MenubarReqProc(ClientData clientData, Tk_Window tkwin);
 static int		ParseGeometry(Tcl_Interp *interp, char *string, TkWindow *winPtr);
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -301,14 +317,13 @@ static int		WmTransientCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static void             WmWaitMapProc(ClientData clientData, XEvent *eventPtr);
 
 /* Forward declarations for GLFW integration. */
-static WmInfo*		FindWmInfoByGlfwWindow(GLFWwindow *window);
 static void		CreateGlfwWindow(TkWindow *winPtr);
 static void		DestroyGlfwWindow(WmInfo *wmPtr);
-static void		ConvertPhotoToGlfwIcon(TkWindow *winPtr, Tk_PhotoHandle photo, int index);
+static void		ConvertPhotoToGlfwIcon(TkWindow *winPtr, Tk_PhotoHandle photo);
 static void		ApplyWindowHints(TkWindow *winPtr);
-static void		HandleProtocol(WmInfo *wmPtr, int protocol);
 static void		ApplyFullscreenState(TkWindow *winPtr);
 
 /* Geometry manager type. */
@@ -440,9 +455,7 @@ CreateGlfwWindow(
     TkWindow *winPtr)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    TkWindow *parentPtr = (TkWindow *)Tk_Parent((Tk_Window)winPtr);
     int width, height;
-    GLFWwindow *share = NULL;
     Drawable drawable;
     
     if (wmPtr->glfwWindow != NULL) {
@@ -456,14 +469,6 @@ CreateGlfwWindow(
     } else {
 	width = winPtr->reqWidth;
 	height = winPtr->reqHeight;
-    }
-    
-    /* Find a window to share resources with. */
-    for (WmInfo *other = firstWmPtr; other != NULL; other = other->nextPtr) {
-	if (other->glfwWindow != NULL && other != wmPtr) {
-	    share = other->glfwWindow;
-	    break;
-	}
     }
     
     /* Apply window hints before creation. */
@@ -759,7 +764,7 @@ TkWmSetClass(
 
 void
 TkWmCleanup(
-    TkDisplay *dispPtr)
+    TCL_UNUSED(TkDisplay *))   /* Display pointer (unused) */
 {
     WmInfo *wmPtr, *nextPtr;
 
@@ -856,7 +861,7 @@ Tk_SetGrid(
             && (wmPtr->reqGridHeight == reqHeight)
             && (wmPtr->widthInc == widthInc)
             && (wmPtr->heightInc == heightInc)
-            && ((wmPtr->sizeHintsFlags & PBaseSize) == PBaseSize)) {
+            && ((wmPtr->sizeHintsFlags & WM_PBaseSize) == WM_PBaseSize)) {
         return;
     }
 
@@ -870,7 +875,7 @@ Tk_SetGrid(
     wmPtr->reqGridHeight = reqHeight;
     wmPtr->widthInc = widthInc;
     wmPtr->heightInc = heightInc;
-    wmPtr->sizeHintsFlags |= PBaseSize;
+    wmPtr->sizeHintsFlags |= WM_PBaseSize;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
@@ -912,7 +917,7 @@ Tk_UnsetGrid(
     }
 
     wmPtr->gridWin = NULL;
-    wmPtr->sizeHintsFlags &= ~PBaseSize;
+    wmPtr->sizeHintsFlags &= ~WM_PBaseSize;
     if (wmPtr->width != -1) {
         wmPtr->width = winPtr->reqWidth + (wmPtr->width
                 - wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -1103,8 +1108,8 @@ Tk_MoveToplevelWindow(
     wmPtr->flags |= WM_MOVE_PENDING;
     wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
     
-    if (!(wmPtr->sizeHintsFlags & (USPosition|PPosition))) {
-        wmPtr->sizeHintsFlags |= USPosition;
+    if (!(wmPtr->sizeHintsFlags & (WM_USPosition|WM_PPosition))) {
+        wmPtr->sizeHintsFlags |= WM_USPosition;
         wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     }
 
@@ -1128,9 +1133,9 @@ Tk_MoveToplevelWindow(
 
 void
 TkWmRestackToplevel(
-    TkWindow *winPtr,
-    int aboveBelow,
-    TkWindow *otherPtr)
+    TCL_UNUSED(TkWindow *),   /* winPtr - unused */
+    TCL_UNUSED(int),          /* aboveBelow - unused */
+    TCL_UNUSED(TkWindow *))   /* otherPtr - unused */
 {
     /* Window stacking is controlled by compositor in Wayland. */
     /* This is a no-op for compatibility. */
@@ -1148,8 +1153,8 @@ TkWmRestackToplevel(
 
 void
 TkWmProtocolEventProc(
-    TkWindow *winPtr,
-    XEvent *eventPtr)
+    TCL_UNUSED(TkWindow *),   /* winPtr - unused */
+    TCL_UNUSED(XEvent *))     /* eventPtr - unused */
 {
     /* In GLFW/Wayland, protocols are handled via callbacks. */
     /* This is kept as a no-op for API compatibility. */
@@ -1167,8 +1172,8 @@ TkWmProtocolEventProc(
 
 void
 TkpMakeMenuWindow(
-    Tk_Window tkwin,
-    int transient)
+    TCL_UNUSED(Tk_Window),    /* tkwin - unused */
+    TCL_UNUSED(int))          /* transient - unused */
 {
     /* Menu windows handled differently in Wayland. */
     /* No special configuration needed. */
@@ -1206,7 +1211,7 @@ TkWmFocusToplevel(
 
 void
 TkGetPointerCoords(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     int *xPtr,
     int *yPtr)
 {
@@ -1216,14 +1221,14 @@ TkGetPointerCoords(
     *yPtr = -1;
 }
 
-
-
 /*
  *----------------------------------------------------------------------
  *
  * Tk_WmObjCmd --
  *
  *	This function is invoked to process the "wm" Tcl command.
+ *	Note: This uses the Tcl_ObjCmdProc signature (not Tcl_ObjCmdProc2)
+ *	to match the declaration in tkInt.h for this port.
  *
  * Results:
  *	A standard Tcl result.
@@ -1238,7 +1243,7 @@ int
 Tk_WmObjCmd(
     ClientData clientData,	/* Main window. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1403,7 +1408,7 @@ Tk_WmObjCmd(
 
 static int
 WmAspectCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1418,7 +1423,7 @@ WmAspectCmd(
 	return TCL_ERROR;
     }
     if (objc == 0) {
-	if (wmPtr->sizeHintsFlags & PAspect) {
+	if (wmPtr->sizeHintsFlags & WM_PAspect) {
 	    Tcl_Obj *results[4];
 	    results[0] = Tcl_NewIntObj(wmPtr->minAspect.x);
 	    results[1] = Tcl_NewIntObj(wmPtr->minAspect.y);
@@ -1429,7 +1434,7 @@ WmAspectCmd(
 	return TCL_OK;
     }
     if (*Tcl_GetString(objv[0]) == '\0') {
-	wmPtr->sizeHintsFlags &= ~PAspect;
+	wmPtr->sizeHintsFlags &= ~WM_PAspect;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[0], &numer1) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[1], &denom1) != TCL_OK)
@@ -1447,7 +1452,7 @@ WmAspectCmd(
 	wmPtr->minAspect.y = denom1;
 	wmPtr->maxAspect.x = numer2;
 	wmPtr->maxAspect.y = denom2;
-	wmPtr->sizeHintsFlags |= PAspect;
+	wmPtr->sizeHintsFlags |= WM_PAspect;
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     WmUpdateGeom(wmPtr, winPtr);
@@ -1466,7 +1471,7 @@ WmAspectCmd(
 
 static int
 WmAttributesCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1494,7 +1499,7 @@ WmAttributesCmd(
 		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	switch ((enum WmAttribute) attribute) {
+	switch ((WmAttribute) attribute) {
 	case WMATT_ALPHA:
 	    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(wmPtr->attributes.alpha));
 	    break;
@@ -1527,7 +1532,7 @@ WmAttributesCmd(
 	    return TCL_ERROR;
 	}
 
-	switch ((enum WmAttribute) attribute) {
+	switch ((WmAttribute) attribute) {
 	case WMATT_ALPHA: {
 	    double dval;
 	    if (Tcl_GetDoubleFromObj(interp, objv[i+1], &dval) != TCL_OK) {
@@ -1601,7 +1606,7 @@ WmAttributesCmd(
 
 static int
 WmClientCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1641,11 +1646,11 @@ WmClientCmd(
 
 static int
 WmColormapwindowsCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
     Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),         /* objc - unused */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv - unused */
 {
     /* Colormaps are an X11 concept - no-op in Wayland. */
     Tcl_SetObjResult(interp, Tcl_NewObj());
@@ -1664,7 +1669,7 @@ WmColormapwindowsCmd(
 
 static int
 WmCommandCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1680,9 +1685,9 @@ WmCommandCmd(
     if (objc == 0) {
 	if (wmPtr->cmdArgc > 0) {
 	    listObj = Tcl_NewObj();
-	    Tcl_SetObjLength(listObj, wmPtr->cmdArgc);
 	    for (Tcl_Size i = 0; i < wmPtr->cmdArgc; i++) {
-		Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewStringObj(wmPtr->cmdArgv[i], -1));
+		Tcl_Obj *strObj = Tcl_NewStringObj(Tcl_GetString(wmPtr->cmdArgv[i]), -1);
+		Tcl_ListObjAppendElement(NULL, listObj, strObj);
 	    }
 	    Tcl_SetObjResult(interp, listObj);
 	}
@@ -1692,13 +1697,21 @@ WmCommandCmd(
     if (wmPtr->cmdArgv != NULL) {
 	ckfree((char *) wmPtr->cmdArgv);
     }
-    if (Tcl_ListObjGetElements(interp, objv[0], &wmPtr->cmdArgc, (Tcl_Obj ***) &wmPtr->cmdArgv) != TCL_OK) {
+    
+    /* Get list elements as Tcl_Obj pointers */
+    if (Tcl_ListObjGetElements(interp, objv[0], &wmPtr->cmdArgc, &wmPtr->cmdArgv) != TCL_OK) {
 	return TCL_ERROR;
     }
-    wmPtr->cmdArgv = (const char **)ckalloc(wmPtr->cmdArgc * sizeof(const char *));
+    
+    /* We need to keep our own copy of the Tcl_Obj pointers */
+    wmPtr->cmdArgv = (Tcl_Obj **)ckalloc(wmPtr->cmdArgc * sizeof(Tcl_Obj *));
     for (Tcl_Size i = 0; i < wmPtr->cmdArgc; i++) {
-	wmPtr->cmdArgv[i] = Tcl_GetString(wmPtr->cmdArgv[i]);
+	Tcl_Obj *lObj;
+	Tcl_ListObjIndex(interp, objv[0], i, &lObj);
+	wmPtr->cmdArgv[i] = lObj;
+	Tcl_IncrRefCount(lObj);
     }
+    
     return TCL_OK;
 }
 
@@ -1714,7 +1727,7 @@ WmCommandCmd(
 
 static int
 WmDeiconifyCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1740,11 +1753,11 @@ WmDeiconifyCmd(
 
 static int
 WmFocusmodelCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
     Tcl_Interp *interp,
     int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv - unused */
 {
     /* Focus models are X11-specific - return "passive" for compatibility. */
     if (objc == 0) {
@@ -1765,8 +1778,8 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -1791,8 +1804,8 @@ WmForgetCmd(
 
 static int
 WmFrameCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -1818,7 +1831,7 @@ WmFrameCmd(
 
 static int
 WmGeometryCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1860,7 +1873,7 @@ WmGeometryCmd(
 
 static int
 WmGridCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1875,7 +1888,7 @@ WmGridCmd(
 	return TCL_ERROR;
     }
     if (objc == 0) {
-	if (wmPtr->sizeHintsFlags & PBaseSize) {
+	if (wmPtr->sizeHintsFlags & WM_PBaseSize) {
 	    Tcl_Obj *results[4];
 	    results[0] = Tcl_NewIntObj(wmPtr->reqGridWidth);
 	    results[1] = Tcl_NewIntObj(wmPtr->reqGridHeight);
@@ -1886,7 +1899,7 @@ WmGridCmd(
 	return TCL_OK;
     }
     if (*Tcl_GetString(objv[0]) == '\0') {
-	wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+	wmPtr->sizeHintsFlags &= ~(WM_PBaseSize|WM_PResizeInc);
 	wmPtr->widthInc = 1;
 	wmPtr->heightInc = 1;
 	wmPtr->reqGridWidth = wmPtr->reqGridHeight = 0;
@@ -1909,7 +1922,7 @@ WmGridCmd(
 	    Tcl_SetErrorCode(interp, "TK", "WM", "GRID", "POSITIVE", NULL);
 	    return TCL_ERROR;
 	}
-	wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
+	wmPtr->sizeHintsFlags |= WM_PBaseSize|WM_PResizeInc;
 	wmPtr->reqGridWidth = reqGridWidth;
 	wmPtr->reqGridHeight = reqGridHeight;
 	wmPtr->widthInc = widthInc;
@@ -1932,7 +1945,7 @@ WmGridCmd(
 
 static int
 WmGroupCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -1963,7 +1976,7 @@ WmGroupCmd(
 /*
  *----------------------------------------------------------------------
  *
- * WmIconBadgeCmd --
+ * WmIconbadgeCmd --
  *
  *	Processes the "wm iconbadge" Tcl command.
  *
@@ -1972,22 +1985,18 @@ WmGroupCmd(
 
 static int
 WmIconbadgeCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
-    TkWindow *tkWin,		/* Toplevel to work with. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
 {
-    (void) tkWin;
-    char cmd[4096];
-
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window badge");
 	return TCL_ERROR;
     }
 
     /* No-op on Wayland. */
-
     return TCL_OK;
 }
 
@@ -2003,11 +2012,11 @@ WmIconbadgeCmd(
 
 static int
 WmIconbitmapCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
+    TCL_UNUSED(Tcl_Interp *), /* interp - unused */
+    TCL_UNUSED(int),         /* objc - unused */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv - unused */
 {
     /* Icon bitmaps are X11-specific - no-op in Wayland. */
     return TCL_OK;
@@ -2025,7 +2034,7 @@ WmIconbitmapCmd(
 
 static int
 WmIconifyCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2051,11 +2060,11 @@ WmIconifyCmd(
 
 static int
 WmIconmaskCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
+    TCL_UNUSED(Tcl_Interp *), /* interp - unused */
+    TCL_UNUSED(int),         /* objc - unused */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv - unused */
 {
     /* Icon masks are X11-specific - no-op in Wayland. */
     return TCL_OK;
@@ -2073,7 +2082,7 @@ WmIconmaskCmd(
 
 static int
 WmIconnameCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2114,7 +2123,7 @@ WmIconnameCmd(
 
 static int
 WmIconphotoCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2122,7 +2131,7 @@ WmIconphotoCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_PhotoHandle photo;
-    int i, isDefault = 0;
+    int i;
 
     if (objc < 1) {
 	Tcl_WrongNumArgs(interp, 0, objv,
@@ -2130,8 +2139,8 @@ WmIconphotoCmd(
 	return TCL_ERROR;
     }
 
+    /* Skip -default flag if present */
     if (strcmp(Tcl_GetString(objv[0]), "-default") == 0) {
-	isDefault = 1;
 	objv++;
 	objc--;
     }
@@ -2165,7 +2174,7 @@ WmIconphotoCmd(
 	    return TCL_ERROR;
 	}
 	
-	ConvertPhotoToGlfwIcon(winPtr, photo, i);
+	ConvertPhotoToGlfwIcon(winPtr, photo);
     }
 
     return TCL_OK;
@@ -2183,11 +2192,11 @@ WmIconphotoCmd(
 
 static int
 WmIconpositionCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
+    TCL_UNUSED(Tcl_Interp *), /* interp - unused */
+    TCL_UNUSED(int),         /* objc - unused */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv - unused */
 {
     /* Icon positions are X11-specific - no-op in Wayland. */
     return TCL_OK;
@@ -2205,11 +2214,11 @@ WmIconpositionCmd(
 
 static int
 WmIconwindowCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
+    TCL_UNUSED(Tcl_Interp *), /* interp - unused */
+    TCL_UNUSED(int),         /* objc - unused */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv - unused */
 {
     /* Icon windows are X11-specific - no-op in Wayland. */
     return TCL_OK;
@@ -2227,8 +2236,8 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-    Tk_Window tkwin,
-    TkWindow *winPtr,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -2253,7 +2262,7 @@ WmManageCmd(
 
 static int
 WmMaxsizeCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2296,7 +2305,7 @@ WmMaxsizeCmd(
 
 static int
 WmMinsizeCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2384,7 +2393,7 @@ WmOverrideredirectCmd(
 
 static int
 WmPositionfromCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2400,15 +2409,15 @@ WmPositionfromCmd(
 	return TCL_ERROR;
     }
     if (objc == 0) {
-	if (wmPtr->sizeHintsFlags & USPosition) {
+	if (wmPtr->sizeHintsFlags & WM_USPosition) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("user", -1));
-	} else if (wmPtr->sizeHintsFlags & PPosition) {
+	} else if (wmPtr->sizeHintsFlags & WM_PPosition) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("program", -1));
 	}
 	return TCL_OK;
     }
     if (*Tcl_GetString(objv[0]) == '\0') {
-	wmPtr->sizeHintsFlags &= ~(USPosition|PPosition);
+	wmPtr->sizeHintsFlags &= ~(WM_USPosition|WM_PPosition);
     } else {
 	int index;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[0], sourceStrings,
@@ -2416,11 +2425,11 @@ WmPositionfromCmd(
 	    return TCL_ERROR;
 	}
 	if (index == 0) {
-	    wmPtr->sizeHintsFlags &= ~USPosition;
-	    wmPtr->sizeHintsFlags |= PPosition;
+	    wmPtr->sizeHintsFlags &= ~WM_USPosition;
+	    wmPtr->sizeHintsFlags |= WM_PPosition;
 	} else {
-	    wmPtr->sizeHintsFlags &= ~PPosition;
-	    wmPtr->sizeHintsFlags |= USPosition;
+	    wmPtr->sizeHintsFlags &= ~WM_PPosition;
+	    wmPtr->sizeHintsFlags |= WM_USPosition;
 	}
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -2440,7 +2449,7 @@ WmPositionfromCmd(
 
 static int
 WmProtocolCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2556,7 +2565,7 @@ WmProtocolCmd(
 
 static int
 WmResizableCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2615,7 +2624,7 @@ WmResizableCmd(
 
 static int
 WmSizefromCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2631,15 +2640,15 @@ WmSizefromCmd(
 	return TCL_ERROR;
     }
     if (objc == 0) {
-	if (wmPtr->sizeHintsFlags & USSize) {
+	if (wmPtr->sizeHintsFlags & WM_USSize) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("user", -1));
-	} else if (wmPtr->sizeHintsFlags & PSize) {
+	} else if (wmPtr->sizeHintsFlags & WM_PSize) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("program", -1));
 	}
 	return TCL_OK;
     }
     if (*Tcl_GetString(objv[0]) == '\0') {
-	wmPtr->sizeHintsFlags &= ~(USSize|PSize);
+	wmPtr->sizeHintsFlags &= ~(WM_USSize|WM_PSize);
     } else {
 	int index;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[0], sourceStrings,
@@ -2647,11 +2656,11 @@ WmSizefromCmd(
 	    return TCL_ERROR;
 	}
 	if (index == 0) {
-	    wmPtr->sizeHintsFlags &= ~USSize;
-	    wmPtr->sizeHintsFlags |= PSize;
+	    wmPtr->sizeHintsFlags &= ~WM_USSize;
+	    wmPtr->sizeHintsFlags |= WM_PSize;
 	} else {
-	    wmPtr->sizeHintsFlags &= ~PSize;
-	    wmPtr->sizeHintsFlags |= USSize;
+	    wmPtr->sizeHintsFlags &= ~WM_PSize;
+	    wmPtr->sizeHintsFlags |= WM_USSize;
 	}
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -2671,7 +2680,7 @@ WmSizefromCmd(
 
 static int
 WmStackorderCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2728,7 +2737,7 @@ WmStackorderCmd(
 
 static int
 WmStateCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2807,7 +2816,7 @@ WmStateCmd(
 
 static int
 WmTitleCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2918,7 +2927,7 @@ WmTransientCmd(
 
 static int
 WmWithdrawCmd(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     TkWindow *winPtr,
     Tcl_Interp *interp,
     int objc,
@@ -2931,39 +2940,6 @@ WmWithdrawCmd(
     
     TkpWmSetState(winPtr, WithdrawnState);
     return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * FindWmInfoByGlfwWindow --
- *
- *	Finds the WmInfo structure for a GLFW window.
- *
- * Results:
- *	Pointer to WmInfo, or NULL if not found.
- *
- *--------------------------------------------------------------
- */
-
-static WmInfo*
-FindWmInfoByGlfwWindow(
-    GLFWwindow *window)
-{
-    /* First try the user pointer. */
-    WmInfo *wmPtr = (WmInfo *)glfwGetWindowUserPointer(window);
-    if (wmPtr != NULL && wmPtr->glfwWindow == window) {
-	return wmPtr;
-    }
-    
-    /* Fall back to searching the list. */
-    for (WmInfo *w = firstWmPtr; w != NULL; w = w->nextPtr) {
-	if (w->glfwWindow == window) {
-	    return w;
-	}
-    }
-    
-    return NULL;
 }
 
 /*
@@ -2985,8 +2961,7 @@ FindWmInfoByGlfwWindow(
 static void
 ConvertPhotoToGlfwIcon(
     TkWindow *winPtr,
-    Tk_PhotoHandle photo,
-    int index)
+    Tk_PhotoHandle photo)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_PhotoImageBlock block;
@@ -3104,51 +3079,6 @@ ApplyWindowHints(
 /*
  *--------------------------------------------------------------
  *
- * HandleProtocol --
- *
- *	Invokes a protocol handler command.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Tcl command is executed.
- *
- *--------------------------------------------------------------
- */
-
-static void
-HandleProtocol(
-    WmInfo *wmPtr,
-    int protocol)
-{
-    ProtocolHandler *protPtr;
-    
-    /* Find the protocol handler. */
-    for (protPtr = wmPtr->protPtr; protPtr != NULL; protPtr = protPtr->nextPtr) {
-	if (protPtr->protocol == protocol) {
-	    break;
-	}
-    }
-    
-    if (protPtr == NULL) {
-	/* No handler - perform default action. */
-	if (protocol == WM_DELETE_WINDOW) {
-	    Tk_DestroyWindow((Tk_Window)wmPtr->winPtr);
-	}
-	return;
-    }
-    
-    /* Execute the handler command. */
-    Tcl_Interp *interp = protPtr->interp;
-    if (Tcl_GlobalEval(interp, protPtr->command) != TCL_OK) {
-	Tcl_BackgroundError(interp);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
  * ApplyFullscreenState --
  *
  *	Applies fullscreen state to a window.
@@ -3245,8 +3175,8 @@ TkpSetMainMenubar(
 
 void
 TkpUseWindowMenu(
-    TkWindow *winPtr,
-    int useWindowMenu)
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
+    TCL_UNUSED(int))         /* useWindowMenu - unused */
 {
     /* Window menus are handled by the compositor in Wayland. */
     /* This is a no-op for compatibility. */
@@ -3267,7 +3197,7 @@ TkpUseWindowMenu(
 
 const char *
 TkpGetSystemDefault(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),   /* tkwin - unused */
     const char *dbClass,
     const char *dbName)
 {
@@ -3311,7 +3241,7 @@ TkpGetSystemDefault(
 
 void
 TkWmAddToColormapWindows(
-    TkWindow *winPtr)
+    TCL_UNUSED(TkWindow *))  /* winPtr - unused */
 {
     /* Colormaps are an X11 concept - no-op in Wayland. */
 }
@@ -3332,7 +3262,7 @@ TkWmAddToColormapWindows(
 
 void
 TkWmRemoveFromColormapWindows(
-    TkWindow *winPtr)
+    TCL_UNUSED(TkWindow *))  /* winPtr - unused */
 {
     /* Colormaps are an X11 concept - no-op in Wayland. */
 }
@@ -3642,7 +3572,7 @@ TopLevelEventProc(
 
 static void
 TopLevelReqProc(
-    ClientData clientData,
+    TCL_UNUSED(ClientData),  /* clientData - unused */
     Tk_Window tkwin)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -3775,7 +3705,7 @@ UpdateSizeHints(
         (wmPtr->maxHeight > 0) ? wmPtr->maxHeight : GLFW_DONT_CARE);
 
     /* Aspect ratio support (GLFW 3.3+). */
-    if (wmPtr->sizeHintsFlags & PAspect) {
+    if (wmPtr->sizeHintsFlags & WM_PAspect) {
         glfwSetWindowAspectRatio(wmPtr->glfwWindow,
             wmPtr->minAspect.x, wmPtr->minAspect.y);
             /* Note: GLFW only supports one aspect ratio constraint. */
@@ -3828,7 +3758,7 @@ UpdateTitle(
 
 static void
 UpdatePhotoIcon(
-    TkWindow *winPtr)
+    TCL_UNUSED(TkWindow *))  /* winPtr - unused */
 {
     /* Most work already done when wm iconphoto is called. */
 }
@@ -3884,37 +3814,12 @@ UpdateVRootGeometry(
 
 static void
 WaitForMapNotify(
-    TkWindow *winPtr,
-    int mapped)
+    TCL_UNUSED(TkWindow *),  /* winPtr - unused */
+    TCL_UNUSED(int))         /* mapped - unused */
 {
     /* No-op on GLFW/Wayland — visibility state is immediate. */
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * MenubarReqProc --
- *
- *	Called when the menubar geometry changes.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-MenubarReqProc(
-    ClientData clientData,
-    Tk_Window tkwin)
-{
-    WmInfo *wmPtr = (WmInfo *) clientData;
-
-    wmPtr->menuHeight = Tk_ReqHeight(tkwin);
-    if (wmPtr->menuHeight <= 0) {
-        wmPtr->menuHeight = 1;
-    }
-
-    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr, wmPtr->winPtr);
-}
 
 /*
  *----------------------------------------------------------------------
@@ -3945,7 +3850,7 @@ ParseGeometry(
         return result;
     }
 
-    string = Tcl_UtfNext(string);   /* skip possible 'x'. */
+    string = (char *)Tcl_UtfNext(string);   /* skip possible 'x'. */
     result = Tk_GetPixels(interp, (Tk_Window)winPtr, string, &height);
     if (result != TCL_OK) {
         return result;
