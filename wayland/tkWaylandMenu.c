@@ -14,6 +14,16 @@
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include "tkMenu.h"
+#include <GLFW/glfw3.h>
+
+/* Default font definitions for NanoVG */
+#ifndef DEFAULT_FONT_SIZE
+#define DEFAULT_FONT_SIZE 16.0f
+#endif
+
+#ifndef DEFAULT_FONT
+#define DEFAULT_FONT "sans"
+#endif
 
 /* Menu constants. */
 #define MENU_MARGIN_WIDTH	2
@@ -124,7 +134,7 @@ TkpNewMenu(TkMenu *menuPtr)
  */
 
 void
-TkpDestroyMenu(TCL_UNUSED(TkMenu *))
+TkpDestroyMenu(TCL_UNUSED(TkMenu *)) /* menuPtr */
 {
     /* Nothing to do on Wayland. */
 }
@@ -146,7 +156,7 @@ TkpDestroyMenu(TCL_UNUSED(TkMenu *))
  */
 
 void
-TkpDestroyMenuEntry(TCL_UNUSED(TkMenuEntry *))
+TkpDestroyMenuEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
 {
     /* Nothing to do on Wayland. */
 }
@@ -198,7 +208,7 @@ TkpConfigureMenuEntry(TkMenuEntry *mePtr)
  */
 
 int
-TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *))
+TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
 {
     return TCL_OK;
 }
@@ -220,7 +230,8 @@ TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *))
  */
 
 void
-TkpSetWindowMenuBar(TCL_UNUSED(Tk_Window), TCL_UNUSED(TkMenu *))
+TkpSetWindowMenuBar(TCL_UNUSED(Tk_Window), /* tkwin */
+	TCL_UNUSED(TkMenu *)) /* menuPtr */
 {
     /* In GLFW, no native menubar support. */
 }
@@ -245,8 +256,8 @@ static void
 GetMenuIndicatorGeometry(
 			 TkMenu *menuPtr,
 			 TkMenuEntry *mePtr,
-			 TCL_UNUSED(Tk_Font),
-			 TCL_UNUSED(const Tk_FontMetrics *),
+			 TCL_UNUSED(Tk_Font), /* tkfont */
+			 TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 			 int *widthPtr,
 			 int *heightPtr)
 {
@@ -309,7 +320,7 @@ GetMenuAccelGeometry(
 		     TkMenu *menuPtr,
 		     TkMenuEntry *mePtr,
 		     Tk_Font tkfont,
-		     TCL_UNUSED(const Tk_FontMetrics *),
+		     TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		     int *widthPtr,
 		     int *heightPtr)
 {
@@ -346,10 +357,10 @@ GetMenuAccelGeometry(
 
 static void
 GetMenuSeparatorGeometry(
-			 TCL_UNUSED(TkMenu *),
-			 TCL_UNUSED(TkMenuEntry *),
+			 TCL_UNUSED(TkMenu *), /* menuPtr */
+			 TCL_UNUSED(TkMenuEntry *), /* mePtr */
 			 Tk_Font tkfont,
-			 TCL_UNUSED(const Tk_FontMetrics *),
+			 TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 			 int *widthPtr,
 			 int *heightPtr)
 {
@@ -379,9 +390,9 @@ GetMenuSeparatorGeometry(
 static void
 GetTearoffEntryGeometry(
 			TkMenu *menuPtr,
-			TCL_UNUSED(TkMenuEntry *),
+			TCL_UNUSED(TkMenuEntry *), /* mePtr */
 			Tk_Font tkfont,
-			TCL_UNUSED(const Tk_FontMetrics *),
+			TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 			int *widthPtr,
 			int *heightPtr)
 {
@@ -417,7 +428,7 @@ static void
 GetMenuLabelGeometry(
 		     TkMenuEntry *mePtr,
 		     Tk_Font tkfont,
-		     TCL_UNUSED(const Tk_FontMetrics *),
+		     TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		     int *widthPtr,
 		     int *heightPtr)
 {
@@ -508,7 +519,7 @@ DrawMenuEntryBackground(
 			TkMenu *menuPtr,
 			TkMenuEntry *mePtr,
 			Drawable d,
-			GC gc,
+			TCL_UNUSED(GC), /* gc */
 			Tk_3DBorder activeBorder,
 			Tk_3DBorder bgBorder,
 			int x,
@@ -587,7 +598,6 @@ DrawMenuEntryAccelerator(
 
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) { 
 	int px, py;
-	Tk_3DBorder border;
 	
 	px = x + width - borderWidth - activeBorderWidth - CASCADE_ARROW_WIDTH; 
 	py = y + (height - CASCADE_ARROW_HEIGHT)/2; 
@@ -600,9 +610,17 @@ DrawMenuEntryAccelerator(
 	points[2].x = px + CASCADE_ARROW_WIDTH;
 	points[2].y = py + CASCADE_ARROW_HEIGHT/2;
 	
-	border = (mePtr->state == ENTRY_ACTIVE) ? activeBorder : bgBorder; 
+	/* Use appropriate color based on active state */
+	if (mePtr->state == ENTRY_ACTIVE) {
+	    /* Use active border color */
+	    XSetForeground(menuPtr->display, gc, 
+			   Tk_3DBorderColor(activeBorder)->pixel);
+	} else {
+	    /* Use normal border color */
+	    XSetForeground(menuPtr->display, gc,
+			   Tk_3DBorderColor(bgBorder)->pixel);
+	}
 	
-	/* Use XFillPolygon from X11 emulation */
 	XFillPolygon(menuPtr->display, d, gc, points, 3, Convex, CoordModeOrigin);
 	
     } else if (mePtr->accelPtr != NULL) { 
@@ -617,7 +635,6 @@ DrawMenuEntryAccelerator(
 	
 	ty = y + (height + fmPtr->ascent - fmPtr->descent) / 2; 
 	
-	/* Use Tk_DrawChars from X11 emulation */
 	Tk_DrawChars(menuPtr->display, d, gc, tkfont, 
 		     accel, mePtr->accelLength, left, ty);
     } 
@@ -645,14 +662,14 @@ DrawMenuEntryIndicator(
 		       TkMenuEntry *mePtr,
 		       Drawable d,
 		       GC gc,
-		       TCL_UNUSED(Tk_3DBorder),
+		       TCL_UNUSED(Tk_3DBorder), /* border */
 		       XColor *indicatorColor,
 		       XColor *disableColor,
-		       TCL_UNUSED(Tk_Font),
-		       TCL_UNUSED(const Tk_FontMetrics *),
+		       TCL_UNUSED(Tk_Font), /* tkfont */
+		       TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		       int x,
 		       int y,
-		       TCL_UNUSED(int),
+		       TCL_UNUSED(int), /* width */
 		       int height)
 {
     /* Draw check-button indicator. */
@@ -693,7 +710,6 @@ DrawMenuEntryIndicator(
 	int top, left, radius; 
 	int activeBorderWidth; 
 	XColor *color;
-	XArc arc;
 	
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, 
 			    menuPtr->activeBorderWidthPtr, &activeBorderWidth); 
@@ -705,13 +721,6 @@ DrawMenuEntryIndicator(
 	
 	/* Draw radio circle using XDrawArc */
 	XSetForeground(menuPtr->display, gc, color->pixel);
-	arc.x = left - radius;
-	arc.y = top - radius;
-	arc.width = radius * 2;
-	arc.height = radius * 2;
-	arc.angle1 = 0;
-	arc.angle2 = 360 * 64;
-	
 	XDrawArc(menuPtr->display, d, gc, 
 		 left - radius, top - radius, radius * 2, radius * 2,
 		 0, 360 * 64);
@@ -744,11 +753,11 @@ DrawMenuEntryIndicator(
 static void
 DrawMenuSeparator(
 		  TkMenu *menuPtr,
-		  TCL_UNUSED(TkMenuEntry *),
+		  TCL_UNUSED(TkMenuEntry *), /* mePtr */
 		  Drawable d,
 		  GC gc,
-		  TCL_UNUSED(Tk_Font),
-		  TCL_UNUSED(const Tk_FontMetrics *),
+		  TCL_UNUSED(Tk_Font), /* tkfont */
+		  TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		  int x,
 		  int y,
 		  int width,
@@ -943,7 +952,7 @@ DrawMenuUnderline(
 		  const Tk_FontMetrics *fmPtr,
 		  int x,
 		  int y,
-		  TCL_UNUSED(int),
+		  TCL_UNUSED(int), /* width */
 		  int height)
 {
     if (mePtr->labelPtr != NULL) {
@@ -1006,11 +1015,11 @@ DrawMenuUnderline(
 static void
 DrawTearoffEntry(
 		 TkMenu *menuPtr,
-		 TCL_UNUSED(TkMenuEntry *),
+		 TCL_UNUSED(TkMenuEntry *), /* mePtr */
 		 Drawable d,
 		 GC gc,
-		 TCL_UNUSED(Tk_Font),
-		 TCL_UNUSED(const Tk_FontMetrics *),
+		 TCL_UNUSED(Tk_Font), /* tkfont */
+		 TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		 int x,
 		 int y,
 		 int width,
@@ -1064,68 +1073,6 @@ TkpPostMenu(
 {
     return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
 }
-
-/*
- * --------------------------------------------------------------------------------
- * TkpPostTearoffMenu –
- *
- *     Posts a tearoff menu at the given screen location.
- *
- * Results:
- *     Standard Tcl result.
- *
- * Side effects:
- *     Computes position, clamps to screen, and records placement.
- * --------------------------------------------------------------------------------
- */
-
-int 
-TkpPostTearoffMenu( 
-		   TCL_UNUSED(Tcl_Interp *), 
-		   TkMenu *menuPtr, 
-		   int x, 
-		   int y, 
-		   Tcl_Size index) 
-{ 
-    int result; 
-    int reqW; 
-    int reqH; 
-    int screenW = 1920; 
-    int screenH = 1080; 
-    TkActivateMenuEntry(menuPtr, -1); 
-    TkRecomputeMenu(menuPtr); 
-    result = TkPostCommand(menuPtr); 
-    if (result != TCL_OK) { 
-	return result; 
-    } 
-    if (menuPtr->tkwin == NULL) { 
-	return TCL_OK; 
-    } 
-    /* Adjust position. */ 
-    if (index >= menuPtr->numEntries) { 
-	index = menuPtr->numEntries - 1; 
-    } 
-    if (index >= 0) { 
-	y -= menuPtr->entries[index]->y; 
-    } 
-    /* Clamp to screen. */ 
-    reqW = Tk_ReqWidth(menuPtr->tkwin); 
-    reqH = Tk_ReqHeight(menuPtr->tkwin); 
-    if (x + reqW > screenW) { 
-	x = screenW - reqW; 
-    } 
-    if (x < 0) { 
-	x = 0; 
-    } 
-    if (y + reqH > screenH) { 
-	y = screenH - reqH; 
-    } 
-    if (y < 0) { 
-	y = 0; 
-    } 
-    /* Set position for drawing (application must handle). */ 
-    return TCL_OK; 
-} 
 
 /* 
  *––––––––––––––––––––––––––––––––––– 
@@ -1358,43 +1305,57 @@ void
 TkpDrawMenuEntry( 
 		 TkMenuEntry *mePtr, 
 		 Drawable d, 
-		 TCL_UNUSED(Tk_Font),
-		 TCL_UNUSED(const Tk_FontMetrics *), /*menuMetricsPtr */ 
+		 Tk_Font tkfont,
+		 const Tk_FontMetrics *fmPtr,
 		 int x, 
 		 int y, 
 		 int width, 
 		 int height, 
-		 TCL_UNUSED(int), /* strictMotif */
+		 int strictMotif,
 		 int drawArrow)
 { 
-    NVGcontext *vg = TkGlfwGetNVGContext(); 
     Tk_3DBorder bgBorder = NULL; 
     Tk_3DBorder activeBorder = NULL; 
+    GC gc = NULL;  /* We'll use NanoVG directly, not X GC */
     int padY = (mePtr->menuPtr->menuType == MENUBAR) ? 3 : 0; 
     int adjustedY = y + padY; 
     int adjustedHeight = height - 2 * padY; 
-    nvgFontSize(vg, DEFAULT_FONT_SIZE); 
-    nvgFontFace(vg, DEFAULT_FONT); 
-    DrawMenuEntryBackground(mePtr->menuPtr, mePtr, d, activeBorder, 
-			    bgBorder, x, y, width, height); 
+    
+    (void)strictMotif;
+    
+    /* Get the actual borders from the menu */
+    if (mePtr->menuPtr->borderPtr != NULL) {
+        bgBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin, 
+                                          mePtr->menuPtr->borderPtr);
+    }
+    if (mePtr->menuPtr->activeBorderPtr != NULL) {
+        activeBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
+                                              mePtr->menuPtr->activeBorderPtr);
+    }
+    
+    DrawMenuEntryBackground(mePtr->menuPtr, mePtr, d, gc, 
+			    activeBorder, bgBorder, x, y, width, height); 
+    
     if (mePtr->type == SEPARATOR_ENTRY) { 
-	DrawMenuSeparator(mePtr->menuPtr, mePtr, d, NULL, NULL, 
-			  NULL, x, adjustedY, width, adjustedHeight); 
+	DrawMenuSeparator(mePtr->menuPtr, mePtr, d, gc, 
+			  tkfont, fmPtr, x, adjustedY, width, adjustedHeight); 
     } else if (mePtr->type == TEAROFF_ENTRY) { 
-	DrawTearoffEntry(mePtr->menuPtr, mePtr, d, NULL, NULL, NULL, 
-			 x, adjustedY, width, adjustedHeight); 
+	DrawTearoffEntry(mePtr->menuPtr, mePtr, d, gc, 
+			 tkfont, fmPtr, x, adjustedY, width, adjustedHeight); 
     } else { 
-	DrawMenuEntryLabel(mePtr->menuPtr, mePtr, d, NULL, NULL, NULL, 
+	DrawMenuEntryLabel(mePtr->menuPtr, mePtr, d, gc, tkfont, fmPtr, 
 			   x, adjustedY, width, adjustedHeight); 
-	DrawMenuEntryAccelerator(mePtr->menuPtr, mePtr, d, NULL, NULL, NULL, 
+	DrawMenuEntryAccelerator(mePtr->menuPtr, mePtr, d, gc, tkfont, fmPtr, 
 				 activeBorder, bgBorder, x, adjustedY, width, adjustedHeight, 
 				 drawArrow);	 
 	if (!mePtr->hideMargin) { 
-	    if (mePtr->state == ENTRY_ACTIVE) { 
-		bgBorder = activeBorder; 
-	    } 
-	    DrawMenuEntryIndicator(mePtr->menuPtr, mePtr, d, bgBorder, NULL, 
-				   NULL, NULL, NULL, x, adjustedY, width, adjustedHeight); 
+	    /* For indicator, we need proper colors - get them from the borders */
+	    XColor *indicatorColor = NULL;
+	    XColor *disableColor = NULL;
+	    
+	    DrawMenuEntryIndicator(mePtr->menuPtr, mePtr, d, gc, 
+				   bgBorder, indicatorColor, disableColor,
+				   tkfont, fmPtr, x, adjustedY, width, adjustedHeight); 
 	} 
     } 
 }
@@ -1582,8 +1543,8 @@ SetHelpMenu(
  */ 
 void 
 TkpInitializeMenuBindings( 
-			  TCL_UNUSED(Tcl_Interp *), 
-			  TCL_UNUSED(Tk_BindingTable)) 
+			  TCL_UNUSED(Tcl_Interp *), /* interp */
+			  TCL_UNUSED(Tk_BindingTable)) /* bindingTable */
 { 
     /* Nothing to do on Wayland. */ 
 } 
@@ -1602,8 +1563,8 @@ TkpInitializeMenuBindings(
  */ 
 void 
 TkpMenuNotifyToplevelCreate( 
-			    TCL_UNUSED(Tcl_Interp *), 
-			    TCL_UNUSED(const char *)) 
+			    TCL_UNUSED(Tcl_Interp *), /* interp */
+			    TCL_UNUSED(const char *)) /* name */
 { 
     /* Nothing to do on Wayland. */ 
 } 
@@ -1660,18 +1621,18 @@ TkpMenuThreadInit(void)
 
 void 
 TkpDrawCheckIndicator( 
-		      TCL_UNUSED(Tk_Window), 
-		      TCL_UNUSED(Display *), 
-		      TCL_UNUSED(Drawable), 
-		      TCL_UNUSED(int), /* x */ 
+		      TCL_UNUSED(Tk_Window), /* tkwin */
+		      TCL_UNUSED(Display *), /* display */
+		      TCL_UNUSED(Drawable), /* d */
+		      TCL_UNUSED(int), /* x */
 		      TCL_UNUSED(int), /* y */
-		      TCL_UNUSED(Tk_3DBorder), 
-		      TCL_UNUSED(XColor *), 
-		      TCL_UNUSED(XColor *), 
-		      TCL_UNUSED(XColor *), 
-		      TCL_UNUSED(int), /* on */ 
+		      TCL_UNUSED(Tk_3DBorder), /* border */
+		      TCL_UNUSED(XColor *), /* fg */
+		      TCL_UNUSED(XColor *), /* bg */
+		      TCL_UNUSED(XColor *), /* active */
+		      TCL_UNUSED(int), /* on */
 		      TCL_UNUSED(int), /* disabled */
-		      TCL_UNUSED(int)) /* mode */ 
+		      TCL_UNUSED(int)) /* mode */
 { 
     /* Already handled in DrawMenuEntryIndicator. */ 
 }
@@ -1703,9 +1664,7 @@ TkpPostTearoffMenu(
 		   TkMenu *menuPtr,		/* The menu to post. */
 		   int x,			/* Screen X coordinate. */
 		   int y,			/* Screen Y coordinate. */
-		   Tcl_Size index)		/* Index of entry to position at x,y.
-						 * Use -1 to position menu's top-left
-						 * corner at x,y. */
+		   Tcl_Size index)		/* Index of entry to position at x,y. */
 {
     int result;
     int reqW, reqH;

@@ -23,6 +23,9 @@
 
 #define radians(d)	((d) * (M_PI/180.0))
 
+extern void InitializeXKBKeymap(TkDisplay *dispPtr);
+extern void CleanupXKBKeymap(TkDisplay *dispPtr);
+
 /*
  *----------------------------------------------------------------------
  *
@@ -721,7 +724,7 @@ TkpDrawFrameEx(
 
 TkDisplay *
 TkpOpenDisplay(
-	       const char *displayName)	/* Display name (ignored on Wayland). */
+	       TCL_UNUSED(const char *))	/* Display name (ignored on Wayland). */
 {
     TkDisplay *dispPtr;
     Display *display;
@@ -754,9 +757,9 @@ TkpOpenDisplay(
      * Create a minimal X11-compatible Display structure. While we're
      * on Wayland, Tk's core still expects certain X11-style structures.
      */
-    display = (Display *)ckalloc(sizeof(Display));
-    memset(display, 0, sizeof(Display));
-    dispPtr->display = display;
+    display = (Display *)ckalloc(sizeof(TkDisplay));
+    memset(display, 0, sizeof(TkDisplay));
+    dispPtr->display = NULL; /* Do not assign a "dummy" diplay. */
 
     /*
      * Set up basic display properties.
@@ -770,14 +773,7 @@ TkpOpenDisplay(
      */
     InitializeXKBKeymap(dispPtr);
 
-    /*
-     * Initialize platform-specific data structure.
-     */
-    dispPtr->winPtr = NULL;  /* Will be set when first window is created. */
-
     return dispPtr;
-
-
 }
 
 /*
