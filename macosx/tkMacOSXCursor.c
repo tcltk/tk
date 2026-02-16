@@ -536,7 +536,7 @@ TkpSetCursor(
 {
     bool cursorChanged = true;
 
-    if (cursor == NULL) {
+    if (cursor == None) {
 	/*
 	 * This is a little tricky. We can't really tell whether
 	 * gCurrentCursor is NULL because it was NULL last time around or
