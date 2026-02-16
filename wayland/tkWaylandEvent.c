@@ -841,11 +841,47 @@ TkWaylandStoreCharacterInput(unsigned int codepoint)
 
 int
 XSync(
-    Display *display,
-    TCL_UNUSED(Bool))
+      Display *display,
+      TCL_UNUSED(Bool))
 {
-    LastKnownRequestProcessed(display)++;
-    return 0;
+  LastKnownRequestProcessed(display)++;
+  return 0;
+}
+
+/*
+ * --------------------------------------------------------------------------------
+ *
+ * TkpSync -
+ * 
+ *     Synchronizes with the display server to ensure all pending
+ *     requests have been processed.
+ * 
+ * Results:
+ *     None.
+ * 
+ * Side effects:
+ *     On Wayland/GLFW, we poll events to process any pending callbacks.
+ *
+ * --------------------------------------------------------------------------------
+ */
+
+void
+TkpSync(
+	Display *display)		/* Display to sync. */
+{
+  /*
+   * On Wayland, we need to process pending events from the compositor.
+   * GLFW provides glfwPollEvents() for this purpose.
+   */
+  glfwPollEvents();
+
+
+  /*
+   * For compatibility with X11 semantics, we might also want to
+   * ensure any pending rendering is complete. However, GLFW handles
+   * this internally, so no additional action is needed.
+   */
+
 }
 
 /* Local Variables:

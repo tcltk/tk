@@ -19,6 +19,7 @@
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
 
+#define NANOVG_GL3_IMPLEMENTATION
 #include "nanovg.h"
 #include "nanovg_gl.h"
 
