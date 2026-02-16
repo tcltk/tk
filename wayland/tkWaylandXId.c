@@ -465,18 +465,19 @@ TkScrollWindow(
 	       TCL_UNUSED(int), /* height */
 	       TCL_UNUSED(int), /* dx */
 	       TCL_UNUSED(int), /* dy */
-	       TCL_UNUSED(TkRegion), /* damageRgn */)
+	       TCL_UNUSED(TkRegion)) /* damageRgn */
 {
     /* no-op */
     return 0;
 }
 
 void
-Tk_SetMainMenubar(TCL_UNUSED(Tk_Window), /* tkwin */
-		  TCL_UNUSED(Tk_Window)) /* menubar */
+Tk_SetMainMenubar(TCL_UNUSED(Tcl_Interp *), /* interp */
+		  TCL_UNUSED(Tk_Window), /* tkwin */
+		  TCL_UNUSED(const char *)) /* menu name */
 {
     /* no-op */
-    return 0;
+    return;
 }
 
 

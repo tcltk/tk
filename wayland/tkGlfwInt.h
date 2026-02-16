@@ -16,7 +16,7 @@
 #define _TKGLFWINT_H
 
 #include "tkInt.h"
-#include "tkUnixInt.c"
+#include "tkUnixInt.h"
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
 #include "nanovg.h"

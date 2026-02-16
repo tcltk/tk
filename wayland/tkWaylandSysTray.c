@@ -480,7 +480,7 @@ property_get_menu(
     TCL_UNUSED(const char *), /*interface */
     TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
-    void *userdata,
+    TCL_UNUSED(void *), /* userdat */
     TCL_UNUSED(sd_bus_error *)) /*error */
 {
     /* No menu support for now - return empty object path. */
@@ -673,6 +673,17 @@ TrayIconObjectCmd(
         
         message = Tcl_GetString(objv[2]);
         title = (objc >= 4) ? Tcl_GetString(objv[3]) : "Notification";
+        
+		/* Free old strings if they exist to prevent memory leaks. */
+		if (icon->title) ckfree(icon->title);
+		if (icon->tooltip) ckfree(icon->tooltip);
+		
+		/* Allocate and copy new values.*/
+		icon->title = ckalloc(strlen(title) + 1);
+		strcpy(icon->title, title);
+		
+		icon->tooltip = ckalloc(strlen(message) + 1);
+		strcpy(icon->tooltip, message);
         
         /* Update indicator status to "attention". */
         if (icon->status) {
