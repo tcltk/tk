@@ -700,6 +700,149 @@ TkpDrawFrameEx(
 }
 
 /*
+ * --------------------------------------------------------------------------------
+ *
+ * TkpOpenDisplay -
+ * 
+ *     Allocates a new TkDisplay, opens the display, and returns
+ *     a pointer to a display.
+ * 
+ * Results:
+ *     A pointer to a TkDisplay structure, or NULL if the display
+ *     could not be opened.
+ * 
+ * Side effects:
+ *     Allocates memory for the TkDisplay structure and initializes
+ *     GLFW and Wayland subsystems.
+ *
+ * --------------------------------------------------------------------------------
+
+ */
+
+TkDisplay *
+TkpOpenDisplay(
+	       const char *displayName)	/* Display name (ignored on Wayland). */
+{
+    TkDisplay *dispPtr;
+    Display *display;
+
+
+    /*
+     * Under GLFW/Wayland, we don't use traditional X11 display names.
+     * GLFW handles display connection internally. We just need to
+     * initialize GLFW if not already done.
+     */
+
+    if (!glfwInit()) {
+	return NULL;
+    }
+
+    /*
+     * GLFW must be told to use Wayland. This is platform-specific
+     * initialization that should happen before any window creation.
+     */
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+    /*
+     * Allocate the TkDisplay structure. This structure bridges Tk's
+     * X11-style display management with our GLFW/Wayland implementation.
+     */
+    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+    memset(dispPtr, 0, sizeof(TkDisplay));
+
+    /*
+     * Create a minimal X11-compatible Display structure. While we're
+     * on Wayland, Tk's core still expects certain X11-style structures.
+     */
+    display = (Display *)ckalloc(sizeof(Display));
+    memset(display, 0, sizeof(Display));
+    dispPtr->display = display;
+
+    /*
+     * Set up basic display properties.
+     */
+    dispPtr->name = (char *)ckalloc(strlen("wayland-0") + 1);
+    strcpy(dispPtr->name, "wayland-0");
+
+    /*
+     * Initialize keyboard mapping using XKB (X Keyboard Extension).
+     * XKB is also used on Wayland for keyboard handling.
+     */
+    InitializeXKBKeymap(dispPtr);
+
+    /*
+     * Initialize platform-specific data structure.
+     */
+    dispPtr->winPtr = NULL;  /* Will be set when first window is created. */
+
+    return dispPtr;
+
+
+}
+
+/*
+ * --------------------------------------------------------------------------------
+
+ *
+ * TkpCloseDisplay -
+ * 
+ *     Deallocates a TkDisplay structure and closes the display.
+ * 
+ * Results:
+ *     None.
+ * 
+ * Side effects:
+ *     Frees memory and performs cleanup of GLFW/Wayland resources.
+ *
+ **********************************************************************
+ */
+
+void
+TkpCloseDisplay(
+		TkDisplay *dispPtr)
+{
+    if (dispPtr == NULL) {
+	return;
+    }
+
+
+    /*
+     * Clean up keyboard mapping resources.
+     */
+    CleanupXKBKeymap(dispPtr);
+
+    /*
+     * Free the display name string.
+     */
+    if (dispPtr->name) {
+	ckfree(dispPtr->name);
+	dispPtr->name = NULL;
+    }
+
+    /*
+     * Free the X11-compatible Display structure.
+     */
+    if (dispPtr->display) {
+	ckfree((char *)dispPtr->display);
+	dispPtr->display = NULL;
+    }
+
+    /*
+     * Note: We don't call glfwTerminate() here because other Tk
+     * displays might still be active. GLFW cleanup happens when
+     * the application exits.
+     */
+
+    /*
+     * Free the TkDisplay structure itself.
+     */
+    ckfree((char *)dispPtr);
+
+
+}
+
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

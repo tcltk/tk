@@ -418,6 +418,67 @@ Tk_CleanupPixmapStore(void)
     nvgContext = NULL;
 }
 
+/*
+ * Miscellaneous X11 functions required for compatibility. They are non-
+ * functional on Wayland. 
+ */
+
+
+void
+TkUnixDoOneXEvent(void)
+{
+    /* no-op */
+    return;
+}
+
+void
+TkCreateXEventSource(void)
+{
+    /* no-op */
+    return;
+}
+
+
+void
+TkClipCleanup(TCL_UNUSED(TkDisplay *) /* dispPtr */)
+{
+    /* no-op */
+    return;
+}
+
+/* X11 menubar integration */
+void
+TkUnixSetMenubar(TCL_UNUSED(Tk_Window) /* tkwin */,
+		 TCL_UNUSED(Tk_Window) /* menubar */)
+{
+    /* no-op */
+    return;
+}
+
+int
+TkScrollWindow(
+	       TCL_UNUSED(Tk_Window), /* tkwin */
+	       TCL_UNUSED(GC), /* gc */
+	       TCL_UNUSED(int), /* x */
+	       TCL_UNUSED(int), /* y */
+	       TCL_UNUSED(int), /* width */
+	       TCL_UNUSED(int), /* height */
+	       TCL_UNUSED(int), /* dx */
+	       TCL_UNUSED(int), /* dy */
+	       TCL_UNUSED(TkRegion), /* damageRgn */)
+{
+    /* no-op */
+    return 0;
+}
+
+void
+Tk_SetMainMenubar(TCL_UNUSED(Tk_Window), /* tkwin */
+		  TCL_UNUSED(Tk_Window)) /* menubar */
+{
+    /* no-op */
+    return 0;
+}
+
 
 /*
  * Local Variables:
