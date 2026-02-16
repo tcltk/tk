@@ -188,7 +188,7 @@ TkImgPhotoConfigureInstance(
 
     if ((modelPtr->flags & IMAGE_CHANGED)
 	    || (instancePtr->colorTablePtr != colorTablePtr)) {
-	TkClipBox(modelPtr->validRegion, &validBox);
+	XClipBox(modelPtr->validRegion, &validBox);
 	if ((validBox.width > 0) && (validBox.height > 0)) {
 	    TkImgDitherInstance(instancePtr, validBox.x, validBox.y,
 		    validBox.width, validBox.height);
@@ -722,7 +722,7 @@ TkImgPhotoDisplay(
 	 */
 
     fallBack:
-	TkSetRegion(display, instancePtr->gc,
+	XSetRegion(display, instancePtr->gc,
 		instancePtr->modelPtr->validRegion);
 	XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
 		drawableY - imageY);
@@ -812,7 +812,7 @@ TkImgPhotoInstanceSetSize(
     Pixmap newPixmap;
 
     modelPtr = instancePtr->modelPtr;
-    TkClipBox(modelPtr->validRegion, &validBox);
+    XClipBox(modelPtr->validRegion, &validBox);
 
     if ((instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)

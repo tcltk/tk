@@ -532,9 +532,9 @@ TkMacOSXInstallCursor(
 
 void
 TkpSetCursor(
-    TkpCursor cursor)
+    Cursor cursor)
 {
-    int cursorChanged = 1;
+    bool cursorChanged = true;
 
     if (cursor == NULL) {
 	/*
@@ -548,7 +548,7 @@ TkpSetCursor(
 	gCurrentCursor = NULL;
     } else {
 	if (gCurrentCursor == (TkMacOSXCursor *) cursor) {
-	    cursorChanged = 0;
+	    cursorChanged = false;
 	}
 	gCurrentCursor = (TkMacOSXCursor *) cursor;
     }
