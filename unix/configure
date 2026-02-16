@@ -699,6 +699,7 @@ ATK_CFLAGS
 HAVE_WAYLAND
 TEXT_INPUT_XML
 WAYLAND_SCANNER
+NANOVG_LIBS
 FONTCONFIG_LIBS
 FONTCONFIG_CFLAGS
 SDBUSD_LIBS
@@ -8699,6 +8700,82 @@ printf "%s\n" "$as_me: fontconfig >= 2.12 not found — font support on Wayland 
 
 
         # ─────────────────────────────────────────────────────────────
+        # NanoVG support (required for rendering)
+        # ─────────────────────────────────────────────────────────────
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for NanoVG library" >&5
+printf %s "checking for NanoVG library... " >&6; }
+        # NanoVG is typically not available via pkg-config, so we check manually
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for nvgCreateGL3 in -lnanovg" >&5
+printf %s "checking for nvgCreateGL3 in -lnanovg... " >&6; }
+if test ${ac_cv_lib_nanovg_nvgCreateGL3+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnanovg  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char nvgCreateGL3 (void);
+int
+main (void)
+{
+return nvgCreateGL3 ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_nanovg_nvgCreateGL3=yes
+else case e in #(
+  e) ac_cv_lib_nanovg_nvgCreateGL3=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nanovg_nvgCreateGL3" >&5
+printf "%s\n" "$ac_cv_lib_nanovg_nvgCreateGL3" >&6; }
+if test "x$ac_cv_lib_nanovg_nvgCreateGL3" = xyes
+then :
+
+            have_nanovg_lib=yes
+            NANOVG_LIBS="-lnanovg"
+
+else case e in #(
+  e) have_nanovg_lib=no ;;
+esac
+fi
+
+
+        if test "$have_nanovg_lib" = yes; then
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+            found_nanovg=yes
+        else
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: NanoVG library not found — assuming it will be statically linked or built separately" >&5
+printf "%s\n" "$as_me: NanoVG library not found — assuming it will be statically linked or built separately" >&6;}
+            NANOVG_LIBS=""
+            found_nanovg=no
+        fi
+
+
+        # ─────────────────────────────────────────────────────────────
         # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
         # ─────────────────────────────────────────────────────────────
 
@@ -8802,7 +8879,7 @@ Wayland backend now requires text-input-unstable-v3 for IME support." "$LINENO" 
             HAVE_WAYLAND=1
 
             WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS $NANOVG_LIBS"
 
 
 printf "%s\n" "#define TK_USE_WAYLAND 1" >>confdefs.h

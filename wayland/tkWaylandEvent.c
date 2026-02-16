@@ -748,6 +748,80 @@ TkGlfwCharCallback(
     TkWaylandStoreCharacterInput(codepoint);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandUpdateKeyboardModifiers --
+ *
+ *      Update the internal modifier state from GLFW modifier bits.
+ *      This is called from key callback to keep modifier state in sync.
+ *
+ *      In a full Wayland/xkbcommon backend this would also update the
+ *      xkb_state modifier masks — here we just mirror to our glfwModifierState.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Updates the global glfwModifierState variable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandUpdateKeyboardModifiers(int glfw_mods)
+{
+    glfwModifierState = 0;
+
+    if (glfw_mods & GLFW_MOD_SHIFT)    glfwModifierState |= ShiftMask;
+    if (glfw_mods & GLFW_MOD_CONTROL)  glfwModifierState |= ControlMask;
+    if (glfw_mods & GLFW_MOD_ALT)      glfwModifierState |= Mod1Mask;
+    if (glfw_mods & GLFW_MOD_SUPER)    glfwModifierState |= Mod4Mask;
+    if (glfw_mods & GLFW_MOD_CAPS_LOCK) glfwModifierState |= LockMask;
+    if (glfw_mods & GLFW_MOD_NUM_LOCK) glfwModifierState |= Mod2Mask;
+
+    /* 
+     * Note: GLFW_MOD_ALT is usually Left Alt → Mod1Mask
+     *       Some systems treat AltGr as Mod5 — GLFW doesn't distinguish.
+     */
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandStoreCharacterInput --
+ *
+ *      Store the Unicode codepoint received from glfwSetCharCallback
+ *      for later retrieval by Tk's keyboard input handling code
+ *      (typically used to implement composed / dead-key / text input).
+ *
+ *      Simplest possible implementation: store in a per-thread or
+ *      per-display global variable (you will likely need to make this
+ *      per-window or per-event-loop in a real implementation).
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Overwrites the previous stored codepoint.
+ *      (A production version would usually use a queue or per-window buffer.)
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* 
+ * Very simple single-codepoint buffer — replace with a real queue or
+ * per-window storage when you have multiple characters pending.
+ */
+static unsigned int pendingCodepoint = 0;
+
+MODULE_SCOPE void
+TkWaylandStoreCharacterInput(unsigned int codepoint)
+{
+    pendingCodepoint = codepoint;
+}
+
 
 /*
  *----------------------------------------------------------------------

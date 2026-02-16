@@ -599,6 +599,28 @@ if test $tk_aqua = no; then
         AC_SUBST([FONTCONFIG_LIBS])
 
         # ─────────────────────────────────────────────────────────────
+        # NanoVG support (required for rendering)
+        # ─────────────────────────────────────────────────────────────
+        
+        AC_MSG_CHECKING([for NanoVG library])
+        # NanoVG is typically not available via pkg-config, so we check manually
+        AC_CHECK_LIB([nanovg], [nvgCreateGL3], [
+            have_nanovg_lib=yes
+            NANOVG_LIBS="-lnanovg"
+        ], [have_nanovg_lib=no])
+        
+        if test "$have_nanovg_lib" = yes; then
+            AC_MSG_RESULT([yes])
+            found_nanovg=yes
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_NOTICE([NanoVG library not found — assuming it will be statically linked or built separately])
+            NANOVG_LIBS=""
+            found_nanovg=no
+        fi
+        AC_SUBST([NANOVG_LIBS])
+
+        # ─────────────────────────────────────────────────────────────
         # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
         # ─────────────────────────────────────────────────────────────
 
@@ -650,7 +672,7 @@ Wayland backend now requires text-input-unstable-v3 for IME support.])
             HAVE_WAYLAND=1
 
             WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS $NANOVG_LIBS"
 
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
