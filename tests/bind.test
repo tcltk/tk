@@ -6986,6 +6986,45 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     set res
 } -cleanup {
 } -result {ok ok ok ok}
+test bind-34.4 {Pointer warp relative to the root window of the screen when the Tk root window is unmapped. (Ticket e2418ce5fe)} -setup {
+    deleteWindows
+    if {! [winfo ismapped .]} {
+	wm deiconify .
+	wm geometry . 200x200+100+100
+	after 10; update
+    }
+    event generate {} <Motion> -warp 1 -x 350 -y 200
+    controlPointerWarpTiming
+    wm withdraw .
+    assert {([winfo ismapped .] == 0) && ([winfo pointerx .] == 350) && ([winfo pointery .] == 200)}
+} -body {
+    event generate {} <Motion> -warp 1 -x 360 -y 250
+    controlPointerWarpTiming
+    winfo pointerxy .
+} -cleanup {
+    wm deiconify .
+} -result {360 250}
+test bind-34.5 {Pointer warp relative to an arbitrary toplevel when the Tk root window is unmapped. (Ticket e2418ce5fe)} -setup {
+    deleteWindows
+    if {! [winfo ismapped .]} {
+	wm deiconify .
+	wm geometry . 200x200+100+100
+	after 10; update
+    }
+    event generate {} <Motion> -warp 1 -x 350 -y 200
+    controlPointerWarpTiming
+    toplevel .one
+    wm geometry .one 200x200+100+350
+    after 10; update
+    wm withdraw .
+    assert {([winfo ismapped .] == 0) && ([winfo pointerx .] == 350) && ([winfo pointery .] == 200)}
+} -body {
+    event generate .one <Motion> -warp 1 -x 250 -y 100
+    after 10; update
+    list [expr {[winfo pointerx .one] - [winfo rootx .one]}] [expr {[winfo pointery .one] - [winfo rooty .one]}]
+} -cleanup {
+    wm deiconify .
+} -result {250 100}
 
 test bind-35.0 {Generated and real key events agree} -constraints {aqua} -body {
     foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {

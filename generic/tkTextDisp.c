@@ -748,7 +748,7 @@ static int		NextTabStop(unsigned tabWidth, int x, int tabOrigin);
 static void		UpdateDisplayInfo(TkText *textPtr);
 static void		YScrollByLines(TkText *textPtr, int offset);
 static void		YScrollByPixels(TkText *textPtr, int offset);
-static void		TextInvalidateRegion(TkText *textPtr, TkRegion region);
+static void		TextInvalidateRegion(TkText *textPtr, Region region);
 static void		TextInvalidateLineMetrics(TkText *textPtr, TkTextLine *linePtr,
 			    unsigned lineCount, TkTextInvalidateAction action);
 static int		CalculateDisplayLineHeight(TkText *textPtr, const TkTextIndex *indexPtr,
@@ -6423,7 +6423,7 @@ DisplayDLine(
 	int cxMin, cxMax, cWidth, cOffs;
 	GC bgGC;
 	XRectangle crect;
-	TkRegion clipRegion;
+	Region clipRegion;
 
 	assert(dInfoPtr->insertFgGC != NULL);
 
@@ -6447,8 +6447,8 @@ DisplayDLine(
 	    crect.y = yBase;
 	    crect.width = cWidth;
 	    crect.height = height;
-	    clipRegion = TkCreateRegion();
-	    TkUnionRectWithRegion(&crect, clipRegion, clipRegion);
+	    clipRegion = XCreateRegion();
+	    XUnionRectWithRegion(&crect, clipRegion, clipRegion);
 #ifdef HAVE_XFT
 	    TkUnixSetXftClipRegion(clipRegion);
 #endif
@@ -6456,7 +6456,7 @@ DisplayDLine(
 	    XFillRectangle(display, pixmap, bgGC, crect.x, crect.y, crect.width, crect.height);
 	    dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
 		    baseline, display, pixmap, screenY);
-	    TkSetRegion(display, dInfoPtr->insertFgGC, clipRegion);
+	    XSetRegion(display, dInfoPtr->insertFgGC, clipRegion);
 
 	    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
 		int x = chunkPtr->x + xOffs;
@@ -6490,7 +6490,7 @@ DisplayDLine(
 #ifdef HAVE_XFT
 	    TkUnixSetXftClipRegion(NULL);
 #endif
-	    TkDestroyRegion(clipRegion);
+	    XDestroyRegion(clipRegion);
 	}
     }
 
@@ -8611,7 +8611,7 @@ DisplayText(
     for (dlPtr = dInfoPtr->dLinePtr; dlPtr; dlPtr = dlPtr->nextPtr) {
 	DLine *dlPtr2;
 	int offset, height, y, oldY;
-	TkRegion damageRgn;
+	Region damageRgn;
 
 	/*
 	 * These tests are, in order:
@@ -8722,7 +8722,7 @@ DisplayText(
 	 * calling TextInvalidateRegion to mark the display blocks as stale.
 	 */
 
-	damageRgn = TkCreateRegion();
+	damageRgn = XCreateRegion();
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, MAX(0, dInfoPtr->x - extent1), oldY,
 		dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, height, 0, y - oldY, damageRgn)) {
 #ifndef MACOSX_TK
@@ -8731,7 +8731,7 @@ DisplayText(
 #endif
 	}
 	DEBUG(stats.numCopies += 1);
-	TkDestroyRegion(damageRgn);
+	XDestroyRegion(damageRgn);
     }
 
     /*
@@ -9089,16 +9089,16 @@ TkTextRedrawRegion(
 				 * pixels relative to textPtr's window. */
     int width, int height)	/* Width and height of area to be redrawn. */
 {
-    TkRegion damageRgn = TkCreateRegion();
+    Region damageRgn = XCreateRegion();
     XRectangle rect;
 
     rect.x = x;
     rect.y = y;
     rect.width = width;
     rect.height = height;
-    TkUnionRectWithRegion(&rect, damageRgn, damageRgn);
+    XUnionRectWithRegion(&rect, damageRgn, damageRgn);
     TextInvalidateRegion(textPtr, damageRgn);
-    TkDestroyRegion(damageRgn);
+    XDestroyRegion(damageRgn);
 
     DisplayTextWhenIdle(textPtr);
 }
@@ -9122,7 +9122,7 @@ TkTextRedrawRegion(
 static void
 TextInvalidateRegion(
     TkText *textPtr,		/* Widget record for text widget. */
-    TkRegion region)		/* Region of area to redraw. */
+    Region region)		/* Region of area to redraw. */
 {
     DLine *dlPtr;
     TextDInfo *dInfoPtr;
@@ -9130,7 +9130,7 @@ TextInvalidateRegion(
     XRectangle clipRect;
     DRect textRect;	/* includes cursor extents */
 
-    TkClipBox(region, &clipRect);
+    XClipBox(region, &clipRect);
     if (RectIsEmpty(&clipRect)) {
 	return;
     }
@@ -9151,7 +9151,7 @@ TextInvalidateRegion(
     if (RectIntersects(&clipRect, &textRect)) {
 	for (dlPtr = dInfoPtr->dLinePtr; dlPtr; dlPtr = dlPtr->nextPtr) {
 	    if (!(dlPtr->flags & OLD_Y_INVALID)) {
-		int test = TkRectInRegion(region, clipRect.x, dlPtr->y, clipRect.width, dlPtr->height);
+		int test = XRectInRegion(region, clipRect.x, dlPtr->y, clipRect.width, dlPtr->height);
 
 		if (test != RectangleOut) {
 		    dlPtr->flags |= OLD_Y_INVALID;
