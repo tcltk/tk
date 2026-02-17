@@ -409,7 +409,7 @@ XGetWindowProperty(
     *nitems_return = 0;
     *bytes_after_return = 0;
     *prop_return = NULL;
-    return 1;  /* Success, but no property found. */
+    return Success;  
 }
 
 
@@ -421,6 +421,80 @@ XResourceManagerString(
     return NULL;
 }
 
+int
+XFree(TCL_UNUSED(void *)) /* data */
+{
+    return 0;
+}
+typedef struct _XGC {
+    int dummy;   /* Just so sizeof works */
+} _XGC;
+
+
+GC
+XCreateGC(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Drawable),
+    TCL_UNUSED(unsigned long),
+    TCL_UNUSED(XGCValues *))
+{
+    GC gc;
+
+    gc = (GC)ckalloc(sizeof(struct _XGC));
+    memset(gc, 0, sizeof(struct _XGC));
+
+    return gc;
+}
+
+int
+XFreeGC(
+    TCL_UNUSED(Display *),
+    GC gc)
+{
+    if (gc) {
+        ckfree((char *)gc);
+    }
+    return 0;
+}
+
+int
+XChangeGC(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(GC),
+    TCL_UNUSED(unsigned long),
+    TCL_UNUSED(XGCValues *))
+{
+    return 0;
+}
+
+int
+XCopyGC(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(GC),
+    TCL_UNUSED(unsigned long),
+    TCL_UNUSED(GC))
+{
+    return 0;
+}
+
+int
+XSetForeground(
+    TCL_UNUSED(Display *),		/* display */
+    TCL_UNUSED(GC),			/* gc */
+    TCL_UNUSED(unsigned long))		/* color */
+{
+    return 0;
+}
+
+
+int
+XSetBackground(
+    TCL_UNUSED(Display *),		/* display */
+    TCL_UNUSED(GC),			/* gc */
+    TCL_UNUSED(unsigned long))		/* color */
+{
+    return 0;
+}
 
 Atom
 XInternAtom(

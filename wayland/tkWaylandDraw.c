@@ -740,61 +740,69 @@ TkpOpenDisplay(
 	if (!glfwInit()) {
 	return NULL;
 	}
+    
+	dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+	memset(dispPtr, 0, sizeof(TkDisplay));
+	
+	/*
+	 * Allocate synthetic X Display.
+	 */
+	display = (Display *)ckalloc(sizeof(Display));
+	memset(display, 0, sizeof(Display));
+	
+	/*
+	 * Allocate single Screen (as an array of 1).
+	 */
+	display->screens = (Screen *)ckalloc(sizeof(Screen) * 1);
+	memset(display->screens, 0, sizeof(Screen));
+	
+	display->nscreens = 1;
+	display->default_screen = 0;
+	
+	screen = &display->screens[0];
+	
+	/*
+	 * Allocate Visual.
+	 */
+	visual = (Visual *)ckalloc(sizeof(Visual));
+	memset(visual, 0, sizeof(Visual));
+	
+	/*
+	 * Screen setup.
+	 */
+	screen->display = display;
+	screen->root = 1;              /* MUST NOT be None (0). */
+	screen->width = 1920;          
+	screen->height = 1080;
+	screen->mwidth = 508;
+	screen->mheight = 285;
+	screen->root_visual = visual;
+	screen->root_depth = 24;
+	screen->ndepths = 1;
+	
+	/*
+	 * Visual setup.
+	 */
+	visual->visualid = 1;          /* Non-zero is safer. */
+	visual->class = TrueColor;
+	visual->bits_per_rgb = 8;
+	visual->map_entries = 256;
+	visual->red_mask = 0xFF0000;
+	visual->green_mask = 0x00FF00;
+	visual->blue_mask = 0x0000FF;
+	
+	/*
+	 * Link into TkDisplay.
+	 */
+	dispPtr->display = display;
+	
+	dispPtr->name = (char *)ckalloc(strlen("wayland-0") + 1);
+	strcpy(dispPtr->name, "wayland-0");
+	
+	display->display_name = dispPtr->name;
+	
+	return dispPtr;
 
-    /*
-     * GLFW must be told to use Wayland. This is platform-specific
-     * initialization that should happen before any window creation.
-     */
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    
-    
-    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
-    memset(dispPtr, 0, sizeof(TkDisplay));
-    
-    /* Use the internal X11 display structure size. */
-    display = (Display *)ckalloc(sizeof(_XPrivDisplay));
-    memset(display, 0, sizeof(_XPrivDisplay));
-    
-      screen = (Screen *)ckalloc(sizeof(Screen));
-    memset(screen, 0, sizeof(Screen));
-    
-    visual = (Visual *)ckalloc(sizeof(Visual));
-    memset(visual, 0, sizeof(Visual));
-    
-    /* Set up Display fields. */
-    display->nscreens = 1;
-    display->default_screen = 0;
-    display->screens = screen;
-    
-	/* Set xdefaults to NULL so XResourceManagerString returns NULL.*/
-	((_XPrivDisplay)display)->xdefaults = NULL;
-    
-    /* Set up Screen fields. */
-    screen->display = display;
-    screen->root = None;  /* No root window on Wayland. */
-    screen->width = 1920;   /* Get actual from Wayland/GLFW. */
-    screen->height = 1080;  /* Get actual from Wayland/GLFW. */
-    screen->mwidth = 508;   /* Physical width in mm. */
-    screen->mheight = 285;  /* Physical height in mm. */
-    screen->root_visual = visual;
-    screen->root_depth = 24;
-    screen->ndepths = 1;
-    
-    /* Set up Visual fields. */
-    visual->visualid = 0;
-    visual->class = TrueColor;  /* Or DirectColor. */
-    visual->bits_per_rgb = 8;
-    visual->map_entries = 256;
-    visual->red_mask = 0xFF0000;
-    visual->green_mask = 0x00FF00;
-    visual->blue_mask = 0x0000FF;
-    
-    dispPtr->display = display;
-    
-    dispPtr->name = (char *)ckalloc(strlen("wayland-0") + 1);
-    strcpy(dispPtr->name, "wayland-0");
-    
-    return dispPtr;
 }
 
 /*
