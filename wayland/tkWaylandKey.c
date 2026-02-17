@@ -139,8 +139,6 @@ static void UpdateXKBModifiers(unsigned int mods_depressed,
         unsigned int group);
 static int XKBKeycodeToX11Keycode(unsigned int keycode);
 static unsigned int XKBGetModifierState(void);
-void InitializeXKBKeymap(TkDisplay *dispPtr);
-void CleanupXKBKeymap(TkDisplay *dispPtr);
 
 
 /* IME functions. */

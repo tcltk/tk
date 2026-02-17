@@ -799,7 +799,7 @@ TkpInit(
     
     /* Initialize subsystems. */
     Tktray_Init(interp);
-    (void)SysNotify_Init(interp);
+    SysNotify_Init(interp);
     Cups_Init(interp);
     TkAtkAccessibility_Init(interp);
     

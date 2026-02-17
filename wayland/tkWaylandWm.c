@@ -4259,6 +4259,124 @@ WmUpdateGeom(
 }
 
 /*
+ * --------------------------------------------------------------------------------
+ *
+ *
+ * Tk_MakeWindow –
+ *
+ *   Creates a GLFW window and associates it with a Tk window structure.
+ *   This is the platform-specific window creation function.
+ *
+ * Results:
+ *    Returns the Window (XID) for the newly created window,
+ *    or None if the window could not be created.
+ *
+ * Side effects:
+ *    A new GLFW window is created. The window is not yet mapped.
+ *
+ * --------------------------------------------------------------------------------
+ */
+
+Window
+Tk_MakeWindow(
+          Tk_Window tkwin,        /* Token for window. */
+          TCL_UNUSED(Window))        /* Parent window (ignored for toplevels). */
+{
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    TkWindow *parentWinPtr;
+    GLFWwindow *glfwWindow = NULL;
+    int width, height;
+    Window window;
+
+
+    /*
+     * Determine if this is a toplevel or child window.
+     */
+    if (winPtr->parentPtr == NULL) {
+    /*
+     * This is a toplevel window. Create a new GLFW window.
+     */
+    width = (winPtr->changes.width > 0) ?
+            winPtr->changes.width : 200;
+    height = (winPtr->changes.height > 0) ?
+        winPtr->changes.height : 200;
+
+    /*
+     * Configure GLFW for NanoVG rendering.
+     */
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);  /* Hidden initially. */
+
+    /*
+     * Create the GLFW window.
+     */
+    glfwWindow = glfwCreateWindow(
+                      width, height,
+                      Tk_Name(tkwin),
+                      NULL,  /* Monitor (for fullscreen). */
+                      NULL   /* Share (for context sharing). */
+                      );
+
+    if (glfwWindow == NULL) {
+        return None;
+    }
+
+    /*
+     * Associate the Tk window with the GLFW window.
+     */
+    glfwSetWindowUserPointer(glfwWindow, (void *)winPtr);
+
+    /*
+     * Register GLFW callbacks for this window.
+     */
+    TkGlfwSetupCallbacks(glfwWindow, (TkWindow *)tkwin);
+
+    /*
+     * Generate a unique Window ID (XID) for this window.
+     * We use the GLFW window pointer cast to a Window.
+     */
+    window = (Window)glfwWindow;
+
+    /*
+     * Store the GLFW window in the platform-specific data.
+     */
+    winPtr->window = window;
+
+    } else {
+    /*
+     * This is a child window (frame, canvas, etc.).
+     * Child windows don't get their own GLFW windows.
+     * They share the parent's GLFW window and rendering context.
+     */
+    parentWinPtr = winPtr->parentPtr;
+
+    /*
+     * Find the toplevel ancestor that has the GLFW window.
+     */
+    while (parentWinPtr->parentPtr != NULL) {
+        parentWinPtr = parentWinPtr->parentPtr;
+    }
+
+    /*
+     * Use the parent's window ID as a base and generate
+     * a unique child window ID.
+     */
+    window = parentWinPtr->window | ((Window)winPtr->instanceData << 32);
+
+    winPtr->window = window;
+
+    /*
+     * Child windows share the parent's GLFW window and context.
+     * No additional GLFW setup needed.
+     */
+    }
+
+    return window;
+
+}
+
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

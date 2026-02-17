@@ -240,6 +240,18 @@ TkpCreateBusy(
 {
 }
 
+int
+TkpTestembedCmd(
+    TCL_UNUSED(void *),		/* dummy - Main window for application */
+    Tcl_Interp *interp,		/* Current interpreter */
+    TCL_UNUSED(Tcl_Size),	/* objc - Number of arguments */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv[] - Argument strings */
+{
+    /* Return an empty list result. */
+    Tcl_SetObjResult(interp, Tcl_NewListObj(0, NULL));
+    return TCL_OK;
+}
+
 /*
  * Local Variables:
  * mode: c
