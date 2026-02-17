@@ -16,6 +16,10 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
+/* Suppress numerous warnings. */
+#pragma GCC system_header
+#pragma clang system_header
+
 #ifndef NANOVG_H
 #define NANOVG_H
 

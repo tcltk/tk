@@ -4280,7 +4280,7 @@ WmUpdateGeom(
 Window
 Tk_MakeWindow(
           Tk_Window tkwin,        /* Token for window. */
-          TCL_UNUSED(Window))        /* Parent window (ignored for toplevels). */
+          TCL_UNUSED(Window))     /* Parent window (ignored for toplevels). */
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
     TkWindow *parentWinPtr;
@@ -4309,16 +4309,19 @@ Tk_MakeWindow(
     /*
      * Create the GLFW window.
      */
-    glfwWindow = glfwCreateWindow(
-                      width, height,
-                      Tk_Name(tkwin),
-                      NULL,  /* Monitor (for fullscreen). */
-                      NULL   /* Share (for context sharing). */
-                      );
-
-    if (glfwWindow == NULL) {
-        return None;
-    }
+	Drawable drawable;
+	
+	glfwWindow = TkGlfwCreateWindow(
+	    winPtr,
+	    width,
+	    height,
+	    Tk_Name(tkwin),
+	    &drawable
+	);
+	
+	if (!glfwWindow) {
+	    return None;
+	}
 
     /*
      * Associate the Tk window with the GLFW window.

@@ -108,6 +108,8 @@ static void         ReleaseFontContents(UnixFont *uf);
 void
 TkpFontPkgInit(TCL_UNUSED(TkMainInfo*)) /* mainPtr */
 {
+	printf("TkpFontPkgInit called\n");
+
     ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     if (tsd->controlFamily.faceName != NULL) return;
 

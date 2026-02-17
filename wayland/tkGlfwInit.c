@@ -23,6 +23,7 @@
 #include "nanovg_gl.h"
 #include "nanovg.h"
 
+extern void TkpFontPkgInit(TkMainInfo *);
 
 /*
  *----------------------------------------------------------------------
@@ -119,51 +120,50 @@ TkGlfwInitialize(void)
         return TCL_OK;
     }
 
-    glfwSetErrorCallback(TkGlfwErrorCallback);
-
     if (!glfwInit()) {
-        fprintf(stderr, "Failed to initialize GLFW\n");
+        fprintf(stderr, "GLFW init failed\n");
         return TCL_ERROR;
     }
 
-    /* Request GLES 2.0 profile for NanoVG. */
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-    
-    /* Try to use libdecor if available. */
 #ifdef GLFW_PLATFORM_WAYLAND
     glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 #endif
 
-    /* Create hidden shared context window */
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    glfwContext.mainWindow = glfwCreateWindow(640, 480, 
-                                               "Tk GLFW Context", 
-                                               NULL, NULL);
-    
+    glfwContext.mainWindow =
+        glfwCreateWindow(640, 480, "Tk Shared Context", NULL, NULL);
+
     if (!glfwContext.mainWindow) {
-        fprintf(stderr, "Failed to create GLFW context window\n");
+        fprintf(stderr, "Failed to create shared context window\n");
         glfwTerminate();
         return TCL_ERROR;
     }
 
     glfwMakeContextCurrent(glfwContext.mainWindow);
-    glfwSwapInterval(1);  /* Enable vsync. */
 
-    /* Initialize NanoVG. */
-	glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    glfwSwapInterval(1);
+
+    glfwContext.vg = nvgCreateGLES2(
+        NVG_ANTIALIAS |
+        NVG_STENCIL_STROKES
+    );
+
     if (!glfwContext.vg) {
-        fprintf(stderr, "Failed to initialize NanoVG\n");
+        fprintf(stderr, "Failed to create NanoVG context\n");
         glfwDestroyWindow(glfwContext.mainWindow);
         glfwTerminate();
         return TCL_ERROR;
     }
 
     glfwContext.initialized = 1;
+
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -516,8 +516,20 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 MODULE_SCOPE NVGcontext*
 TkGlfwGetNVGContext(void)
 {
+    if (!glfwContext.initialized) {
+        if (TkGlfwInitialize() != TCL_OK) {
+            return NULL;
+        }
+    }
+
+    /* Ensure shared context is current. */
+    if (glfwGetCurrentContext() == NULL) {
+        glfwMakeContextCurrent(glfwContext.mainWindow);
+    }
+
     return glfwContext.vg;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -787,6 +799,9 @@ TkpInit(
     if (TkGlfwInitialize() != TCL_OK) {
         return TCL_ERROR;
     }
+    
+    /* Initialize fonts. */
+	TkpFontPkgInit(NULL);
 
     /* Initialize menu. */
     TkWaylandMenuInit();
