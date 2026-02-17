@@ -25,6 +25,7 @@ to the userbase.
  - [X11: crash by wm forget on menu](https://core.tcl-lang.org/tk/tktview/c77b42)
  - [fails to build with glibc 2.43](https://core.tcl-lang.org/tk/tktview/5d2061)
  - [Pointer warp relative to the screen's root window fails if the Tk root window is withdrawn](https://core.tcl-lang.org/tk/tktview/e2418c)
+ - [Directory library/demos unexpectedly embedded into tcl9tk9x.dll](https://core.tcl-lang.org/tk/tktview/6a9bae)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
