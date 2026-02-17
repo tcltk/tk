@@ -755,9 +755,9 @@ TkpOpenDisplay(
      * Create a minimal X11-compatible Display structure. While we're
      * on Wayland, Tk's core still expects certain X11-style structures.
      */
-    display = (Display *)ckalloc(sizeof(TkDisplay));
+    display = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     memset(display, 0, sizeof(TkDisplay));
-    dispPtr->display = NULL; /* Do not assign a "dummy" diplay. */
+    dispPtr->display = display;
 
     /*
      * Set up basic display properties.
