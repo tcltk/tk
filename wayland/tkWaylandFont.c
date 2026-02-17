@@ -486,15 +486,7 @@ AllocFontFamily(const char *faceName, int pixelSize)
     f = Tcl_Alloc(sizeof(FontFamily));
     memset(f, 0, sizeof(FontFamily));
     f->faceName   = uid;
-    /*
-     * FIX (Bug 2): Start refCount at 1, not 2.
-     *
-     * A FontFamily in fontFamilyList has one owner: the list itself.
-     * InitSubFont() bumps refCount for each subfont that uses it, and
-     * FreeFontFamily() decrements it, freeing when it hits 0.  Starting at 2
-     * meant the list-removal decrement would leave refCount at 1, so
-     * Tcl_Free() was never reached — every FontFamily ever allocated leaked.
-     */
+
     f->refCount   = 1;
     f->nextPtr    = tsd->fontFamilyList;
     tsd->fontFamilyList = f;
@@ -562,6 +554,12 @@ static void
 FreeFontFamily(FontFamily *f)
 {
     if (!f || --f->refCount > 0) return;
+    
+    if (f == &((ThreadSpecificData*)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData)))->controlFamily) {
+        fprintf(stderr, "WARNING: attempt to free control family!\n");
+        f->refCount = 1; 
+        return;
+    }
 
     if (f->filePath)   free(f->filePath);
     if (f->fontBuffer) Tcl_Free(f->fontBuffer);
