@@ -17,15 +17,12 @@
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
-#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 
-#define NANOVG_GL3_IMPLEMENTATION
-#include "nanovg.h"
+#define NANOVG_GLES2_IMPLEMENTATION
 #include "nanovg_gl.h"
+#include "nanovg.h"
 
-/* Explicit declarations for NanoVG GL3 functions */
-extern NVGcontext* nvgCreateGL3(int flags);
-extern void nvgDeleteGL3(NVGcontext* ctx);
 
 /*
  *----------------------------------------------------------------------
@@ -129,9 +126,9 @@ TkGlfwInitialize(void)
         return TCL_ERROR;
     }
 
-    /* Request GLES 3.0 profile for NanoVG. */
+    /* Request GLES 2.0 profile for NanoVG. */
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
     
@@ -156,7 +153,7 @@ TkGlfwInitialize(void)
     glfwSwapInterval(1);  /* Enable vsync. */
 
     /* Initialize NanoVG. */
-    glfwContext.vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+	glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
     if (!glfwContext.vg) {
         fprintf(stderr, "Failed to initialize NanoVG\n");
         glfwDestroyWindow(glfwContext.mainWindow);
@@ -196,7 +193,7 @@ TkGlfwCleanup(void)
 
     /* Clean up NanoVG. */
     if (glfwContext.vg) {
-        nvgDeleteGL3(glfwContext.vg);
+        nvgDeleteGLES2(glfwContext.vg);
         glfwContext.vg = NULL;
     }
 

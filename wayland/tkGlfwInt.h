@@ -21,6 +21,7 @@
 #include <GLES3/gl3.h>
 #include "nanovg.h"
 #include "tkIntPlatDecls.h" 
+#include "tkWaylandDefaults.h"
 
 /*
  *----------------------------------------------------------------------

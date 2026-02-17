@@ -866,8 +866,7 @@ XSync(
  */
 
 void
-TkpSync(
-	Display *display)		/* Display to sync. */
+TkpSync(TCL_UNUSED(Display *))
 {
   /*
    * On Wayland, we need to process pending events from the compositor.

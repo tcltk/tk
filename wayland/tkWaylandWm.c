@@ -4304,7 +4304,6 @@ Tk_MakeWindow(
     /*
      * Configure GLFW for NanoVG rendering.
      */
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);  /* Hidden initially. */
 
     /*
