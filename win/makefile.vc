@@ -492,9 +492,9 @@ $(TKSCRIPTZIP): .PHONY
 	@if not exist "$(LIBTKVFS)" $(MKDIR) "$(LIBTKVFS)"
 	@if exist "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)" $(RMDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
 	@$(CPYDIR) $(LIBDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
-	@$(RMDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)\demos"
 	@$(TCLSH) <<
 cd {$(OUT_DIR)}
+file delete -force {"$(LIBTKVFS:\=/)/$(TKSCRIPTZIPTOP)/demos"}
 file delete -force {$@}
 zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 <<
@@ -505,6 +505,7 @@ $(WISHSCRIPTZIP): $(TKSCRIPTZIP)
 	@if exist "$(LIBTKVFS)\tcl_library" $(RMDIR) "$(LIBTKVFS)\tcl_library"
 	@$(TCLSH) <<
 cd {$(OUT_DIR)}
+file delete -force {"$(LIBTKVFS:\=/)/$(TKSCRIPTZIPTOP)/demos"}
 file delete -force {$@}
 zipfs mount "$(TCLSCRIPTZIP:\=/)" mnt
 file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)"
