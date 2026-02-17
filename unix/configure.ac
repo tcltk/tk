@@ -257,10 +257,16 @@ else
     #	a list of possible directories.  Under some conditions the
     #	autoconf macro will return an include directory that contains
     #	no include files, so double-check its result just to be safe.
+    #	This is only done when not building with Wayland.
     #--------------------------------------------------------------------
 
-    SC_PATH_X
-    TK_WINDOWINGSYSTEM=X11
+    # Only do X11 checks if we're not building with Wayland
+    if test "$enable_wayland" != "yes"; then
+        SC_PATH_X
+        TK_WINDOWINGSYSTEM=X11
+    else
+        TK_WINDOWINGSYSTEM=WAYLAND
+    fi
 fi
 
 #--------------------------------------------------------------------
@@ -277,11 +283,15 @@ fi
 #	   be replaced by spaces.
 #--------------------------------------------------------------------
 
-if test "x${x_libraries}" != "x"; then
-  if test "x${x_libraries}" != "xNONE"; then
-    LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${x_libraries}"
-  fi
+# Only add X libraries to runtime path if not building with Wayland
+if test "$enable_wayland" != "yes"; then
+    if test "x${x_libraries}" != "x"; then
+      if test "x${x_libraries}" != "xNONE"; then
+        LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${x_libraries}"
+      fi
+    fi
 fi
+
 if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
     LIB_RUNTIME_DIR=`echo ${LIB_RUNTIME_DIR} |sed -e 's/:/ -L/g'`
 fi
@@ -304,7 +314,8 @@ fi
 #	   if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no; then
+# Skip X11-specific library checks when building with Wayland
+if test $tk_aqua = no -a "$enable_wayland" != "yes"; then
     AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
 fi
 
@@ -319,23 +330,26 @@ fi
 # because it can't deal with the "-" in the library name.
 #--------------------------------------------------------------------
 
-if test -d /usr/include/mit -a $tk_aqua = no; then
-    AC_MSG_CHECKING([MIT X libraries])
-    tk_oldCFlags=$CFLAGS
-    CFLAGS="$CFLAGS -I/usr/include/mit"
-    tk_oldLibs=$LIBS
-    LIBS="$LIBS -lX11-mit"
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-	#include <X11/Xlib.h>
-    ]], [[
-	XOpenDisplay(0);
-    ]])],[
-	AC_MSG_RESULT([yes])
-	XLIBSW="-lX11-mit"
-	XINCLUDES="-I/usr/include/mit"
-    ],[AC_MSG_RESULT(no)])
-    CFLAGS=$tk_oldCFlags
-    LIBS=$tk_oldLibs
+# Skip MIT X libraries check when building with Wayland
+if test $tk_aqua = no -a "$enable_wayland" != "yes"; then
+    if test -d /usr/include/mit; then
+        AC_MSG_CHECKING([MIT X libraries])
+        tk_oldCFlags=$CFLAGS
+        CFLAGS="$CFLAGS -I/usr/include/mit"
+        tk_oldLibs=$LIBS
+        LIBS="$LIBS -lX11-mit"
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+            #include <X11/Xlib.h>
+        ]], [[
+            XOpenDisplay(0);
+        ]])],[
+            AC_MSG_RESULT([yes])
+            XLIBSW="-lX11-mit"
+            XINCLUDES="-I/usr/include/mit"
+        ],[AC_MSG_RESULT(no)])
+        CFLAGS=$tk_oldCFlags
+        LIBS=$tk_oldLibs
+    fi
 fi
 
 #--------------------------------------------------------------------
@@ -437,6 +451,10 @@ if test $tk_aqua = no; then
         # When Wayland is enabled → disable Xft explicitly
         enable_xft=no
         UNIX_FONT_OBJS=tkUnixFont.o
+        
+        # Clear any X11-related variables
+        XLIBSW=""
+        XINCLUDES=""
 
         # ─────────────────────────────────────────────────────────────
         # Wayland-related dependencies (most are required nowadays)
@@ -672,8 +690,7 @@ Wayland backend now requires text-input-unstable-v3 for IME support.])
             HAVE_WAYLAND=1
 
             WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $LIBDECOR_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $GLES_LIBS $LIBDECOR_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS $NANOVG_LIBS"
-
+            WAYLAND_LIBS="$WAYLAND_LIBS"
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
@@ -748,7 +765,8 @@ fi
 # XScreenSaver is needed for Tk_GetUserInactiveTime().
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no; then
+# Skip XScreenSaver check when building with Wayland
+if test $tk_aqua = no -a "$enable_wayland" != "yes"; then
     tk_oldCFlags=$CFLAGS
     CFLAGS="$CFLAGS $XINCLUDES"
     tk_oldLibs=$LIBS

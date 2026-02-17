@@ -18,8 +18,10 @@
 #include <GLES3/gl3.h>
 #include "nanovg.h"
 
-/* X11 region headers for BoxPtr and Region types. */
+/* X11 headers for BoxPtr, Region and Display types. */
 #include <X11/Xutil.h>
+#include <X11/Xlib.h>
+#include <X11/Xlibint.h>  
 
 #define radians(d)	((d) * (M_PI/180.0))
 
@@ -722,49 +724,76 @@ TkpDrawFrameEx(
 
 TkDisplay *
 TkpOpenDisplay(
-	       TCL_UNUSED(const char *))	/* Display name (ignored on Wayland). */
+	TCL_UNUSED(const char *)) /* display_name */
 {
     TkDisplay *dispPtr;
     Display *display;
-
-
-    /*
-     * Under GLFW/Wayland, we don't use traditional X11 display names.
-     * GLFW handles display connection internally. We just need to
-     * initialize GLFW if not already done.
-     */
-
-    if (!glfwInit()) {
+    Screen *screen;
+    Visual *visual;
+    
+   /*
+	* Under GLFW/Wayland, we don't use traditional X11 display names.
+	* GLFW handles display connection internally. We just need to
+	* initialize GLFW if not already done.
+	*/
+	
+	if (!glfwInit()) {
 	return NULL;
-    }
+	}
 
     /*
      * GLFW must be told to use Wayland. This is platform-specific
      * initialization that should happen before any window creation.
      */
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    /*
-     * Allocate the TkDisplay structure. This structure bridges Tk's
-     * X11-style display management with our GLFW/Wayland implementation.
-     */
+    
+    
     dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
-
-    /*
-     * Create a minimal X11-compatible Display structure. While we're
-     * on Wayland, Tk's core still expects certain X11-style structures.
-     */
-    display = (TkDisplay *)ckalloc(sizeof(TkDisplay));
-    memset(display, 0, sizeof(TkDisplay));
+    
+    /* Use the internal X11 display structure size. */
+    display = (Display *)ckalloc(sizeof(_XPrivDisplay));
+    memset(display, 0, sizeof(_XPrivDisplay));
+    
+      screen = (Screen *)ckalloc(sizeof(Screen));
+    memset(screen, 0, sizeof(Screen));
+    
+    visual = (Visual *)ckalloc(sizeof(Visual));
+    memset(visual, 0, sizeof(Visual));
+    
+    /* Set up Display fields. */
+    display->nscreens = 1;
+    display->default_screen = 0;
+    display->screens = screen;
+    
+	/* Set xdefaults to NULL so XResourceManagerString returns NULL.*/
+	((_XPrivDisplay)display)->xdefaults = NULL;
+    
+    /* Set up Screen fields. */
+    screen->display = display;
+    screen->root = None;  /* No root window on Wayland. */
+    screen->width = 1920;   /* Get actual from Wayland/GLFW. */
+    screen->height = 1080;  /* Get actual from Wayland/GLFW. */
+    screen->mwidth = 508;   /* Physical width in mm. */
+    screen->mheight = 285;  /* Physical height in mm. */
+    screen->root_visual = visual;
+    screen->root_depth = 24;
+    screen->ndepths = 1;
+    
+    /* Set up Visual fields. */
+    visual->visualid = 0;
+    visual->class = TrueColor;  /* Or DirectColor. */
+    visual->bits_per_rgb = 8;
+    visual->map_entries = 256;
+    visual->red_mask = 0xFF0000;
+    visual->green_mask = 0x00FF00;
+    visual->blue_mask = 0x0000FF;
+    
     dispPtr->display = display;
-
-    /*
-     * Set up basic display properties.
-     */
+    
     dispPtr->name = (char *)ckalloc(strlen("wayland-0") + 1);
     strcpy(dispPtr->name, "wayland-0");
-
+    
     return dispPtr;
 }
 
