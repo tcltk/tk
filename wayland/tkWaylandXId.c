@@ -11,7 +11,8 @@
 
 #include "tkInt.h"           
 #include <stddef.h>          
-#include <X11/Xlib.h>        
+#include <X11/Xlib.h>  
+#include <X11/Xatom.h>      
 #include <GL/gl.h>
 #include "nanovg.h"
 #include "nanovg_gl.h"
@@ -349,7 +350,6 @@ TkClipCleanup(TCL_UNUSED(TkDisplay *) /* dispPtr */)
     return;
 }
 
-/* X11 menubar integration */
 void
 TkUnixSetMenubar(TCL_UNUSED(Tk_Window) /* tkwin */,
 		 TCL_UNUSED(Tk_Window) /* menubar */)
@@ -382,6 +382,67 @@ Tk_SetMainMenubar(TCL_UNUSED(Tcl_Interp *), /* interp */
     /* no-op */
     return;
 }
+
+int
+XGetWindowProperty(
+    Display *display,
+    TCL_UNUSED(Window),			/* w */
+    TCL_UNUSED(Atom),			/* property */
+    TCL_UNUSED(long),			/* long_offset */
+    TCL_UNUSED(long),			/* long_length */
+    TCL_UNUSED(Bool),			/* delete */
+    TCL_UNUSED(Atom),			/* req_type */
+    Atom *actual_type_return,
+    int *actual_format_return,
+    unsigned long *nitems_return,
+    unsigned long *bytes_after_return,
+    unsigned char **prop_return)
+{
+	
+	  if (display == NULL) {
+        fprintf(stderr, "WARNING: XGetWindowProperty called with NULL display!\n");
+        fflush(stderr);
+    }
+    /* Return "property does not exist." */
+    *actual_type_return = None;
+    *actual_format_return = 0;
+    *nitems_return = 0;
+    *bytes_after_return = 0;
+    *prop_return = NULL;
+    return 1;  /* Success, but no property found. */
+}
+
+
+char *
+XResourceManagerString(
+    TCL_UNUSED(Display *))		/* display */
+{
+	/* no-op */
+    return NULL;
+}
+
+
+Atom
+XInternAtom(
+    TCL_UNUSED(Display *),		/* display */
+    TCL_UNUSED(const char *),		/* atom_name */
+    TCL_UNUSED(Bool))			/* only_if_exists */
+{
+	/* return dummy data */
+    static Atom fakeAtom = 1;
+    return fakeAtom++;
+}
+
+
+char *
+XGetAtomName(
+    TCL_UNUSED(Display *),		/* display */
+    TCL_UNUSED(Atom))			/* atom */
+{
+	/* no-op */
+    return NULL;
+}
+
 
 /*
  * Local Variables:
