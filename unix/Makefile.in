@@ -466,11 +466,11 @@ WAYLAND_OBJS            = \
      tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
      tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
      tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
-     tkWaylandXId.o tkWaylandWm.o  
+     tkWaylandXId.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
     
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
-    tkAppInit.o             tkUnixConfig.o          tkUnixPrint.o \
+    tkUnixPrint.o \
     tkUnixSysNotify.o       tkUnixAccessibility.o                     
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
@@ -619,7 +619,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
     $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandWm.c \
-    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
+    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c $(WAYLAND_UNIX_SRCS)
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
@@ -627,7 +627,6 @@ WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)
 
 WAYLAND_UNIX_SRCS = \
-    $(UNIX_DIR)/tkAppInit.c     $(UNIX_DIR)/tkUnixConfig.c \
     $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c \
     $(UNIX_DIR)/tkUnixAccessibility.c  
 

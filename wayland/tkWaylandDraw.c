@@ -23,8 +23,6 @@
 
 #define radians(d)	((d) * (M_PI/180.0))
 
-extern void InitializeXKBKeymap(TkDisplay *dispPtr);
-extern void CleanupXKBKeymap(TkDisplay *dispPtr);
 
 /*
  *----------------------------------------------------------------------
@@ -767,12 +765,6 @@ TkpOpenDisplay(
     dispPtr->name = (char *)ckalloc(strlen("wayland-0") + 1);
     strcpy(dispPtr->name, "wayland-0");
 
-    /*
-     * Initialize keyboard mapping using XKB (X Keyboard Extension).
-     * XKB is also used on Wayland for keyboard handling.
-     */
-    InitializeXKBKeymap(dispPtr);
-
     return dispPtr;
 }
 
@@ -800,12 +792,6 @@ TkpCloseDisplay(
     if (dispPtr == NULL) {
 	return;
     }
-
-
-    /*
-     * Clean up keyboard mapping resources.
-     */
-    CleanupXKBKeymap(dispPtr);
 
     /*
      * Free the display name string.

@@ -19,18 +19,17 @@
 
 /*
  * In Wayland with NanoVG, we need to track pixmap/bitmap data.
- * NanoVG doesn't have direct pixmap support, so we'll use NVGpaint
- * or create offscreen FBOs for complex cases.
+ * NanoVG doesn't have direct pixmap support, so we use NVG images
+ * or simple NVGpaint objects.
  */
 
 typedef struct {
     int imageId;           /* NanoVG image ID for texture-based pixmaps */
-    NVGpaint paint;        /* NanoVG paint for gradient/solid pixmaps */
+    NVGpaint paint;        /* NanoVG paint for gradient/solid/zero-size pixmaps */
     int width;
     int height;
     int depth;
-    int type;              	 /* 0 = image, 1 = paint, 2 = framebuffer */
-    NVGLUframebuffer* fb;    /* For FBO-based pixmaps - CHANGED from NVGLUframebuffer */
+    int type;              /* 0 = image, 1 = paint */
 } TkPixmap;
 
 static TkPixmap *pixmapStore = NULL;
@@ -67,7 +66,7 @@ Tk_SetNanoVGContext(NVGcontext* vg)
  * Tk_GetPixmap --
  *
  *	Creates a pixmap equivalent for Wayland/NanoVG.
- *	For NanoVG, we can create images, paints, or framebuffers.
+ *	Now supports only image-based (type 0) or paint-based (type 1) pixmaps.
  *
  * Results:
  *	Returns a "pixmap" identifier (actually a pointer to TkPixmap struct).
@@ -107,7 +106,6 @@ Tk_GetPixmap(
     pixmap->height = height;
     pixmap->depth = depth;
     
-    /* Default to creating an empty image in NanoVG. */
     if (width > 0 && height > 0) {
         /* Create empty RGBA image data. */
         unsigned char* data = (unsigned char*)calloc(width * height * 4, 1);
@@ -116,9 +114,14 @@ Tk_GetPixmap(
                                                 NVG_IMAGE_NEAREST, data);
             ckfree(data);
             pixmap->type = 0; /* Image type */
+        } else {
+            /* Allocation failed → fallback to paint */
+            pixmap->type = 1;
         }
-    } else {
-        /* For zero-size pixmaps, create a simple paint. */
+    }
+    
+    if (pixmap->type != 0) {
+        /* For zero-size or failed allocation: simple transparent paint */
         pixmap->paint = nvgLinearGradient(nvgContext, 0, 0, 1, 1,
                                          nvgRGBA(0, 0, 0, 0),
                                          nvgRGBA(0, 0, 0, 0));
@@ -128,62 +131,6 @@ Tk_GetPixmap(
     pixmapCount++;
     
     /* Return the pointer as the pixmap ID. */
-    return (Pixmap)pixmap;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_GetPixmapAsFramebuffer --
- *
- *	Creates a pixmap as a NanoVG framebuffer for offscreen rendering.
- *
- * Results:
- *	Returns a pixmap identifier, or 0 on failure.
- *
- * Side effects:
- *	Creates an FBO in NanoVG.
- *
- *----------------------------------------------------------------------
- */
-
-Pixmap
-Tk_GetPixmapAsFramebuffer(
-    TCL_UNUSED(Display *),
-    int width, int height,
-    int imageFlags)
-{
-    TkPixmap *pixmap;
-    
-    if (nvgContext == NULL || width <= 0 || height <= 0) {
-        return 0;
-    }
-    
-    /* Allocate new pixmap structure. */
-    if (pixmapCount >= pixmapCapacity) {
-        pixmapCapacity = pixmapCapacity == 0 ? 16 : pixmapCapacity * 2;
-        pixmapStore = (TkPixmap *)realloc(pixmapStore, 
-                                         pixmapCapacity * sizeof(TkPixmap));
-    }
-    
-    pixmap = &pixmapStore[pixmapCount];
-    
-    /* Initialize the pixmap structure. */
-    memset(pixmap, 0, sizeof(TkPixmap));
-    pixmap->width = width;
-    pixmap->height = height;
-    pixmap->depth = 32; /* FBOs are typically 32-bit RGBA */
-    
-    /* Create framebuffer. */
-    pixmap->fb = nvgluCreateFramebuffer(nvgContext, width, height, imageFlags);
-    if (pixmap->fb == NULL) {
-        /* Clean up the slot. */
-        return 0;
-    }
-    
-    pixmap->type = 2; /* Framebuffer type */
-    pixmapCount++;
-    
     return (Pixmap)pixmap;
 }
 
@@ -215,21 +162,10 @@ Tk_FreePixmap(
     }
     
     /* Free resources based on type. */
-    switch (pix->type) {
-        case 0: /* Image type. */
-            if (pix->imageId != 0) {
-                nvgDeleteImage(nvgContext, pix->imageId);
-            }
-            break;
-       case 2: /* Framebuffer type. */
-		    if (pix->fb != NULL) {
-		        nvgluDeleteFramebuffer(pix->fb);
-		    }
-		    break;
-        case 1: /* Paint type - nothing to free. */
-        default:
-            break;
+    if (pix->type == 0 && pix->imageId != 0) {
+        nvgDeleteImage(nvgContext, pix->imageId);
     }
+    /* type 1 (paint) needs no explicit cleanup */
     
     /* Clear the structure. */
     memset(pix, 0, sizeof(TkPixmap));
@@ -310,19 +246,6 @@ Tk_GetPixmapPaint(Pixmap pixmap)
 }
 
 /*
- * Helper function to get NanoVG framebuffer from pixmap.
- */
-NVGLUframebuffer*
-Tk_GetPixmapFramebuffer(Pixmap pixmap)
-{
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix && pix->type == 2) {
-        return pix->fb;
-    }
-    return NULL;
-}
-
-/*
  * Helper function to get pixmap type.
  */
 int
@@ -350,7 +273,7 @@ Tk_GetPixmapDimensions(Pixmap pixmap, int *width, int *height, int *depth)
 }
 
 /*
- * Update pixmap image data.
+ * Update pixmap image data (only for type 0).
  */
 int
 Tk_UpdatePixmapImage(Pixmap pixmap, const unsigned char* data)
@@ -362,24 +285,17 @@ Tk_UpdatePixmapImage(Pixmap pixmap, const unsigned char* data)
     
     if (pix->imageId != 0) {
         nvgDeleteImage(nvgContext, pix->imageId);
+        pix->imageId = 0;
     }
     
-    pix->imageId = nvgCreateImageRGBA(nvgContext, pix->width, pix->height,
-                                     NVG_IMAGE_NEAREST, data);
+    if (data) {
+        pix->imageId = nvgCreateImageRGBA(nvgContext, pix->width, pix->height,
+                                         NVG_IMAGE_NEAREST, data);
+    }
+    
     return (pix->imageId != 0);
 }
 
-/*
- * Bind pixmap framebuffer for drawing.
- */
-void
-Tk_BindPixmapFramebuffer(Pixmap pixmap)
-{
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix && pix->type == 2 && pix->fb) {
-        nvgluBindFramebuffer(pix->fb);
-    }
-}
 /*
  * Cleanup function for pixmap store.
  */
@@ -395,19 +311,8 @@ Tk_CleanupPixmapStore(void)
     for (i = 0; i < pixmapCount; i++) {
         TkPixmap *pix = &pixmapStore[i];
         
-        switch (pix->type) {
-            case 0: /* Image type. */
-                if (pix->imageId != 0) {
-                    nvgDeleteImage(nvgContext, pix->imageId);
-                }
-                break;
-			 case 2: /* Framebuffer type. */
-			    if (pix->fb != NULL) {
-			        nvgluDeleteFramebuffer(pix->fb);
-			    }
-			    break;
-            default:
-                break;
+        if (pix->type == 0 && pix->imageId != 0) {
+            nvgDeleteImage(nvgContext, pix->imageId);
         }
     }
     
@@ -419,10 +324,9 @@ Tk_CleanupPixmapStore(void)
 }
 
 /*
- * Miscellaneous X11 functions required for compatibility. They are non-
- * functional on Wayland. 
+ * Miscellaneous X11 functions required for compatibility. 
+ * They are non-functional on Wayland. 
  */
-
 
 void
 TkUnixDoOneXEvent(void)
@@ -437,7 +341,6 @@ TkCreateXEventSource(void)
     /* no-op */
     return;
 }
-
 
 void
 TkClipCleanup(TCL_UNUSED(TkDisplay *) /* dispPtr */)
@@ -479,7 +382,6 @@ Tk_SetMainMenubar(TCL_UNUSED(Tcl_Interp *), /* interp */
     /* no-op */
     return;
 }
-
 
 /*
  * Local Variables:
