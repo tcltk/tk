@@ -54,12 +54,14 @@ typedef struct SubFont {
 } SubFont;
 
 typedef struct WaylandFont {
-    TkFont              font;               /* Generic part — must be first. */
+    TkFont              font;               /* Must be first */
+    Font                fid;                /* Must be second for generic code */
+    XFontStruct        *fontStructPtr;      /* Can be NULL */
     SubFont             staticSubFonts[SUBFONT_SPACE];
     int                 numSubFonts;
     SubFont            *subFontArray;
     SubFont             controlSubFont;
-    int                 pixelSize;          /* Requested pixel size. */
+    int                 pixelSize;
     int                 underlinePos;
     int                 barHeight;
 } WaylandFont;
@@ -102,9 +104,18 @@ static void         ReleaseFontContents(WaylandFont *uf);
 void
 TkpFontPkgInit(TCL_UNUSED(TkMainInfo*))
 {
+	
     if (globalInitialized) {
         return;
     }
+    
+    
+    /* Just to force cache table creation. */
+	TkFontAttributes dummyFa = {0};
+	dummyFa.family = Tk_GetUid("dummy");
+	dummyFa.size = -12;
+	TkFont *dummy = TkpGetFontFromAttributes(NULL, NULL, &dummyFa);
+	TkpDeleteFont(dummy);  
 
     /* Initialize control family. */
     memset(&globalControlFamily, 0, sizeof(FontFamily));
@@ -163,7 +174,7 @@ TkpFontPkgInit(TCL_UNUSED(TkMainInfo*))
         dummy.fontMap = globalControlFamily.fontMap;
         FontMapInsert(&dummy, 'A');
     }
-
+    
     globalInitialized = 1;
 }
 
@@ -289,39 +300,77 @@ InitFont(TCL_UNUSED(Tk_Window),
 	 const TkFontAttributes *fa,
 	 WaylandFont *uf)
 {
+  FontFamily *primary;
+
+    /* Store the requested attributes in the generic part. */
     uf->font.fa = *fa;
 
-    /* Create primary subfont. */
-    FontFamily *primary = AllocFontFamily(fa->family ? fa->family : "sans-serif", uf->pixelSize);
-    if (primary) {
+    /* Clear any previous subfont array (in case we're reinitializing). */
+    if (uf->subFontArray != uf->staticSubFonts) {
+        ckfree((char *)uf->subFontArray);
+        uf->subFontArray = NULL;
+    }
+    uf->numSubFonts = 0;
+    
+    /* Tk's font manager on Unix expects this field. */
+    uf->fontStructPtr = NULL; 
+
+    /* Assign a unique fid for the generic Tk font cache
+     * (this prevents segfault in Tk_AllocFontFromObj when looking up cacheHashPtr)
+     */
+    uf->fid = (Font)(uintptr_t)uf;
+
+    /* Try to create/load the primary font family */
+    primary = AllocFontFamily(
+        fa->family ? fa->family : "sans-serif",
+        uf->pixelSize
+    );
+
+    if (primary && primary->fontInfo.data) {
+        /* Primary font loaded successfully */
         uf->subFontArray = uf->staticSubFonts;
         InitSubFont(&uf->subFontArray[0], primary, uf->pixelSize);
         uf->numSubFonts = 1;
-    }
 
-    /* Calculate font metrics. */
-    if (primary && primary->fontInfo.data) {
-        uf->font.fm.ascent  = primary->ascent;
-        uf->font.fm.descent = primary->descent;
-        uf->font.fm.maxWidth = uf->pixelSize * 2;  /* Conservative estimate. */
-        uf->font.fm.fixed = 0;  /* TrueType fonts are generally not fixed-width. */
-    } else {
-        /* Fallback metrics. */
-        uf->font.fm.ascent  = (int)(uf->pixelSize * 0.8 + 0.5);
-        uf->font.fm.descent = (int)(uf->pixelSize * 0.2 + 0.5);
-        uf->font.fm.maxWidth = uf->pixelSize;
-        uf->font.fm.fixed = 0;
-    }
+        /* Use real metrics from the font */
+        uf->font.fm.ascent   = primary->ascent;
+        uf->font.fm.descent  = primary->descent;
+        uf->font.fm.maxWidth = uf->pixelSize * 2;  /* Conservative; could measure 'W' or 'm' */
+        uf->font.fm.fixed    = 0;                  /* Assume proportional unless proven otherwise */
 
-    /* Underline / overstrike geometry (approximation). */
-    uf->underlinePos = -2;
-    uf->barHeight    = 1;
-    if (primary) {
+        /* Underline and overstrike geometry based on real metrics */
         uf->underlinePos = (int)(primary->descent * 0.4);
         uf->barHeight    = (int)(uf->pixelSize * 0.07 + 0.5);
         if (uf->barHeight < 1) uf->barHeight = 1;
     }
+    else {
+        /* Fallback when primary font family could not be loaded */
+        uf->font.fm.ascent   = (int)(uf->pixelSize * 0.80 + 0.5);
+        uf->font.fm.descent  = (int)(uf->pixelSize * 0.20 + 0.5);
+        uf->font.fm.maxWidth = uf->pixelSize;
+        uf->font.fm.fixed    = 0;
 
+        uf->underlinePos = -2;
+        uf->barHeight    = 1;
+
+        /* Still assign control font as fallback subfont if nothing else works */
+        if (!primary) {
+            uf->subFontArray = uf->staticSubFonts;
+            InitSubFont(&uf->subFontArray[0], &globalControlFamily, uf->pixelSize);
+            uf->numSubFonts = 1;
+        }
+    }
+
+    /* Optional: log for debugging (remove or #ifdef later) */
+#ifdef DEBUG_FONT_INIT
+    fprintf(stderr, "InitFont: family=%s, size=%d, fid=%lx, ascent=%d, descent=%d, subfonts=%d\n",
+            fa->family ? fa->family : "(null)",
+            uf->pixelSize,
+            (unsigned long)uf->fid,
+            uf->font.fm.ascent,
+            uf->font.fm.descent,
+            uf->numSubFonts);
+#endif
 }
 
 /*----------------------------------------------------------------------
