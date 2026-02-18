@@ -27,7 +27,6 @@
 /* Forward declarations and helpers. */
 static NVGcolor    GetColorFromGC(GC gc);
 
-
 /* Constants and structures. */
 #define FONTMAP_SHIFT       10
 #define FONTMAP_BITSPERPAGE (1 << FONTMAP_SHIFT)
@@ -37,9 +36,10 @@ static NVGcolor    GetColorFromGC(GC gc);
 #define SUBFONT_SPACE       3
 #define BASE_CHARS          256
 
+/* Global font data - single-threaded, simple management. */
 typedef struct FontFamily {
     struct FontFamily  *nextPtr;
-    size_t              refCount;
+    int                 refCount;
     Tk_Uid              faceName;
     char               *filePath;           /* Full path from fontconfig. */
     unsigned char      *fontBuffer;         /* Owned TTF/OTF file content. */
@@ -54,7 +54,7 @@ typedef struct SubFont {
     FontFamily         *familyPtr;
 } SubFont;
 
-typedef struct UnixFont {
+typedef struct WaylandFont {
     TkFont              font;               /* Generic part — must be first. */
     SubFont             staticSubFonts[SUBFONT_SPACE];
     int                 numSubFonts;
@@ -64,31 +64,29 @@ typedef struct UnixFont {
     int                 widths[BASE_CHARS]; /* Fast path for ASCII */
     int                 underlinePos;
     int                 barHeight;
-} UnixFont;
+} WaylandFont;
 
-/* Thread-specific data. */
-typedef struct {
-    FontFamily         *fontFamilyList;
-    FontFamily          controlFamily;
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
+/* Global state - all static. */
+static FontFamily *globalFontFamilyList = NULL;
+static FontFamily  globalControlFamily = {0};
+static int          globalInitialized = 0;
 
 /* Forward declaration of static functions. */
-
-static void         FontPkgCleanup(void *clientData);
 static FontFamily  *AllocFontFamily(const char *faceName, int pixelSize);
 static void         FreeFontFamily(FontFamily *family);
-static SubFont     *FindSubFontForChar(UnixFont *fontPtr, int ch, SubFont **fixPtr);
+static SubFont     *FindSubFontForChar(WaylandFont *fontPtr, int ch, SubFont **fixPtr);
 static int          FontMapLookup(SubFont *sf, int ch);
 static void         FontMapInsert(SubFont *sf, int ch);
 static void         FontMapLoadPage(SubFont *sf, int page);
-static SubFont     *CanUseFallback(UnixFont *fontPtr, const char *face, int ch, SubFont **fix);
+static SubFont     *CanUseFallback(WaylandFont *fontPtr, const char *face, int ch, SubFont **fix);
 static int          SeenName(const char *name, Tcl_DString *ds);
-static void         InitFont(Tk_Window tkwin, const TkFontAttributes *fa, UnixFont *uf);
+static void         InitFont(Tk_Window tkwin, const TkFontAttributes *fa, WaylandFont *uf);
 static void         InitSubFont(SubFont *sf, FontFamily *family, int pixelSize);
-static void         ReleaseFont(UnixFont *uf);
+static void         ReleaseFont(WaylandFont *uf);
 static void         ReleaseSubFont(SubFont *sf);
-static void         ReleaseFontContents(UnixFont *uf);
+static void         ReleaseFontContents(WaylandFont *uf);
+static void 		ExtraRefFont(WaylandFont *uf);
+static void 		ExtraUnrefFont(WaylandFont *uf);
 
 /*----------------------------------------------------------------------
  *
@@ -106,94 +104,71 @@ static void         ReleaseFontContents(UnixFont *uf);
  */
 
 void
-TkpFontPkgInit(TCL_UNUSED(TkMainInfo*)) /* mainPtr */
+TkpFontPkgInit(TCL_UNUSED(TkMainInfo*))
 {
-	printf("TkpFontPkgInit called\n");
+    if (globalInitialized) {
+        return;
+    }
 
-    ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    if (tsd->controlFamily.faceName != NULL) return;
+    /* Initialize control family. */
+    memset(&globalControlFamily, 0, sizeof(FontFamily));
+    globalControlFamily.faceName = Tk_GetUid("monospace");
+    globalFontFamilyList = NULL;
 
-    tsd->controlFamily.refCount   = 1;
-    tsd->controlFamily.faceName   = Tk_GetUid("monospace");
-    tsd->controlFamily.filePath   = NULL;
-    tsd->controlFamily.fontBuffer = NULL;
-
+    /* Fontconfig - get monospace font. */
     FcPattern *pat = FcPatternCreate();
+    if (!pat) {
+        fprintf(stderr, "CRITICAL: FcPatternCreate failed\n");
+        return;
+    }
+    
     FcPatternAddString(pat, FC_FAMILY, (FcChar8*)"monospace");
     FcConfigSubstitute(NULL, pat, FcMatchPattern);
     FcDefaultSubstitute(pat);
+    
     FcResult result;
     FcPattern *match = FcFontMatch(NULL, pat, &result);
     if (match) {
         FcChar8 *path = NULL;
         if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
-            tsd->controlFamily.filePath = strdup((char*)path);
+            globalControlFamily.filePath = strdup((char*)path);
         }
         FcPatternDestroy(match);
     }
     FcPatternDestroy(pat);
 
-    if (tsd->controlFamily.filePath) {
-        FILE *f = fopen(tsd->controlFamily.filePath, "rb");
+    /* Load font file. */
+    if (globalControlFamily.filePath) {
+        FILE *f = fopen(globalControlFamily.filePath, "rb");
         if (f) {
             fseek(f, 0, SEEK_END);
-            tsd->controlFamily.bufferSize = ftell(f);
+            globalControlFamily.bufferSize = ftell(f);
             fseek(f, 0, SEEK_SET);
-            tsd->controlFamily.fontBuffer = Tcl_Alloc(tsd->controlFamily.bufferSize);
-            fread(tsd->controlFamily.fontBuffer, 1, tsd->controlFamily.bufferSize, f);
+            
+            globalControlFamily.fontBuffer = Tcl_Alloc(globalControlFamily.bufferSize);
+            if (globalControlFamily.fontBuffer) {
+                fread(globalControlFamily.fontBuffer, 1, globalControlFamily.bufferSize, f);
+                
+                /* Initialize stbtt. */
+                if (!stbtt_InitFont(&globalControlFamily.fontInfo, 
+                                    globalControlFamily.fontBuffer, 0)) {
+                    fprintf(stderr, "CRITICAL: stbtt_InitFont failed for %s\n", 
+                            globalControlFamily.filePath);
+                }
+            }
             fclose(f);
-            stbtt_InitFont(&tsd->controlFamily.fontInfo, tsd->controlFamily.fontBuffer, 0);
         }
     }
 
-
-    SubFont dummy;
-    dummy.fontMap   = tsd->controlFamily.fontMap;
-    dummy.familyPtr = &tsd->controlFamily;
-
-    /* Force page 0 (codepoints 0-1023) to be loaded from font first. */
-    FontMapLoadPage(&dummy, 0);
-
-    /* Now set our explicit bits — these survive because the page is already
-     * loaded and FontMapInsert() won't call FontMapLoadPage() again. */
-    int i;
-    for (i = 0; i < 0x20; i++)          FontMapInsert(&dummy, i);
-    for (i = 0x80; i < 0xA0; i++)       FontMapInsert(&dummy, i);
-    for (i = '0'; i <= '9';   i++)      FontMapInsert(&dummy, i);
-    for (i = 'A'; i <= 'F';   i++)      FontMapInsert(&dummy, i);
-    for (i = 'a'; i <= 'f';   i++)      FontMapInsert(&dummy, i);
-    FontMapInsert(&dummy, '\\');
-
-    Tcl_CreateThreadExitHandler(FontPkgCleanup, NULL);
-}
-
-/*----------------------------------------------------------------------
- *
- * FontPkgCleanup --
- *
- *	Clean up thread-specific font data on exit.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees all allocated font family resources.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FontPkgCleanup(TCL_UNUSED(void*)) /* clientData */
-{
-    ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    FontFamily *f = tsd->fontFamilyList;
-    while (f) {
-        FontFamily *next = f->nextPtr;
-        FreeFontFamily(f);
-        f = next;
+    /* Preload a page for the control font. */
+    if (globalControlFamily.fontInfo.data) {
+        SubFont dummy;
+        dummy.familyPtr = &globalControlFamily;
+        dummy.fontMap = globalControlFamily.fontMap;
+        FontMapInsert(&dummy, 'A');
     }
-    tsd->fontFamilyList = NULL;
-    FreeFontFamily(&tsd->controlFamily);
+
+    globalInitialized = 1;
 }
 
 /*----------------------------------------------------------------------
@@ -242,15 +217,25 @@ TkFont *
 TkpGetFontFromAttributes(TkFont *existing, Tk_Window tkwin,
                          const TkFontAttributes *want)
 {
-    UnixFont *uf;
+    WaylandFont *uf;
 
     if (existing) {
-        uf = (UnixFont *) existing;
-        ReleaseFontContents(uf);        /* tear down internals, keep allocation */
-        memset(uf, 0, sizeof(UnixFont));
+        uf = (WaylandFont *) existing;
+    
+        /* Save Tk-managed base struct. */
+        TkFont base = uf->font;
+    
+        ReleaseFontContents(uf);
+    
+        /* Clear only platform-specific fields. */
+        memset(((char *)uf) + sizeof(TkFont), 0,
+               sizeof(WaylandFont) - sizeof(TkFont));
+    
+        /* Restore Tk-managed fields. */
+        uf->font = base;
     } else {
-        uf = Tcl_Alloc(sizeof(UnixFont));
-        memset(uf, 0, sizeof(UnixFont));
+        uf = Tcl_Alloc(sizeof(WaylandFont));
+        memset(uf, 0, sizeof(WaylandFont));
     }
 
     uf->pixelSize = (int) (-want->size + 0.5);
@@ -259,9 +244,10 @@ TkpGetFontFromAttributes(TkFont *existing, Tk_Window tkwin,
     InitFont(tkwin, want, uf);
 
     /* Always have at least the control subfont. */
-    InitSubFont(&uf->controlSubFont,
-                &((ThreadSpecificData*)Tcl_GetThreadData(&dataKey,sizeof(ThreadSpecificData)))->controlFamily,
-                uf->pixelSize);
+    InitSubFont(&uf->controlSubFont, &globalControlFamily, uf->pixelSize);
+
+    /* Prevent generic Tk from freeing via cache when refcount drops to 1. */
+    ExtraRefFont(uf);
 
     return (TkFont *) uf;
 }
@@ -270,7 +256,7 @@ TkpGetFontFromAttributes(TkFont *existing, Tk_Window tkwin,
  *
  * InitFont --
  *
- *	Initialize a UnixFont structure with the given attributes.
+ *	Initialize a WaylandFont structure with the given attributes.
  *
  * Results:
  *	None.
@@ -282,7 +268,9 @@ TkpGetFontFromAttributes(TkFont *existing, Tk_Window tkwin,
  */
 
 static void
-InitFont(TCL_UNUSED(Tk_Window), const TkFontAttributes *fa, UnixFont *uf)
+InitFont(TCL_UNUSED(Tk_Window),
+	 const TkFontAttributes *fa,
+	 WaylandFont *uf)
 {
     uf->font.fa = *fa;
 
@@ -295,7 +283,7 @@ InitFont(TCL_UNUSED(Tk_Window), const TkFontAttributes *fa, UnixFont *uf)
     }
 
     /* Calculate font metrics. */
-    if (primary && primary->fontInfo.userdata) {
+    if (primary && primary->fontInfo.data) {
         uf->font.fm.ascent  = primary->ascent;
         uf->font.fm.descent = primary->descent;
         uf->font.fm.maxWidth = uf->pixelSize * 2;  /* Conservative estimate. */
@@ -322,7 +310,7 @@ InitFont(TCL_UNUSED(Tk_Window), const TkFontAttributes *fa, UnixFont *uf)
     if (uf->numSubFonts > 0) {
         SubFont *sf = &uf->subFontArray[0];
         stbtt_fontinfo *info = &sf->familyPtr->fontInfo;
-        if (info->userdata) {
+        if (info->data) {
             float scale = stbtt_ScaleForPixelHeight(info, (float)uf->pixelSize);
             int i;
             for (i = 32; i < 128; i++) {
@@ -350,7 +338,9 @@ InitFont(TCL_UNUSED(Tk_Window), const TkFontAttributes *fa, UnixFont *uf)
  */
 
 static void
-InitSubFont(SubFont *sf, FontFamily *family, TCL_UNUSED(int) /*pixelSize*/)
+InitSubFont(SubFont *sf,
+	    FontFamily *family,
+	    TCL_UNUSED(int) /*pixelSize*/)
 {
     sf->familyPtr = family;
     sf->fontMap   = family->fontMap;
@@ -375,14 +365,23 @@ InitSubFont(SubFont *sf, FontFamily *family, TCL_UNUSED(int) /*pixelSize*/)
 void
 TkpDeleteFont(TkFont *tkf)
 {
-    ReleaseFont((UnixFont *) tkf);
+    WaylandFont *uf = (WaylandFont *) tkf;
+
+    /* Drop our extra ref; generic Tk already dropped one. */
+    ExtraUnrefFont(uf);
+
+    /* If refcount reached zero after our drop → truly free. */
+    if (uf->font.resourceRefCount == 0) {
+        ReleaseFont(uf);
+    }
+    /* Else: still alive because generic cache or widgets hold it. */
 }
 
 /*----------------------------------------------------------------------
  *
  * ReleaseFontContents --
  *
- *	Release all internal resources of a UnixFont WITHOUT freeing the
+ *	Release all internal resources of a WaylandFont WITHOUT freeing the
  *	struct itself.  Used by TkpGetFontFromAttributes() when re-using an
  *	existing allocation.
  *
@@ -396,7 +395,7 @@ TkpDeleteFont(TkFont *tkf)
  */
 
 static void
-ReleaseFontContents(UnixFont *uf)
+ReleaseFontContents(WaylandFont *uf)
 {
     int i;
     for (i = 0; i < uf->numSubFonts; i++) {
@@ -413,7 +412,7 @@ ReleaseFontContents(UnixFont *uf)
  *
  * ReleaseFont --
  *
- *	Release all resources associated with a UnixFont, including the
+ *	Release all resources associated with a WaylandFont, including the
  *	struct allocation itself.  Called only from TkpDeleteFont().
  *
  * Results:
@@ -426,7 +425,7 @@ ReleaseFontContents(UnixFont *uf)
  */
 
 static void
-ReleaseFont(UnixFont *uf)
+ReleaseFont(WaylandFont *uf)
 {
     ReleaseFontContents(uf);
     Tcl_Free(uf);
@@ -474,25 +473,24 @@ ReleaseSubFont(SubFont *sf)
 static FontFamily *
 AllocFontFamily(const char *faceName, int pixelSize)
 {
-    ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tk_Uid uid = Tk_GetUid(faceName);
 
+    /* Check if already in cache. */
     FontFamily *f;
-    for (f = tsd->fontFamilyList; f; f = f->nextPtr) {
+    for (f = globalFontFamilyList; f; f = f->nextPtr) {
         if (f->faceName == uid) {
             f->refCount++;
             return f;
         }
     }
 
+    /* Allocate new family. */
     f = Tcl_Alloc(sizeof(FontFamily));
     memset(f, 0, sizeof(FontFamily));
     f->faceName   = uid;
-
     f->refCount   = 1;
-    f->nextPtr    = tsd->fontFamilyList;
-    tsd->fontFamilyList = f;
 
+    /* Get font file from fontconfig. */
     FcPattern *pat = FcPatternCreate();
     FcPatternAddString(pat, FC_FAMILY, (FcChar8*)faceName);
     FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)pixelSize);
@@ -508,6 +506,7 @@ AllocFontFamily(const char *faceName, int pixelSize)
     if (match) FcPatternDestroy(match);
     FcPatternDestroy(pat);
 
+    /* Load font file. */
     if (f->filePath) {
         FILE *fd = fopen(f->filePath, "rb");
         if (fd) {
@@ -518,7 +517,8 @@ AllocFontFamily(const char *faceName, int pixelSize)
             fread(f->fontBuffer, 1, f->bufferSize, fd);
             fclose(fd);
 
-            if (!stbtt_InitFont(&f->fontInfo, f->fontBuffer, stbtt_GetFontOffsetForIndex(f->fontBuffer, 0))) {
+            if (!stbtt_InitFont(&f->fontInfo, f->fontBuffer, 
+                                stbtt_GetFontOffsetForIndex(f->fontBuffer, 0))) {
                 Tcl_Free(f->fontBuffer);
                 f->fontBuffer = NULL;
                 f->bufferSize = 0;
@@ -526,13 +526,18 @@ AllocFontFamily(const char *faceName, int pixelSize)
         }
     }
 
-    if (f->fontInfo.userdata) {
+    /* Calculate metrics. */
+    if (f->fontInfo.data) {
         float scale = stbtt_ScaleForPixelHeight(&f->fontInfo, (float)pixelSize);
         int ascent, descent, linegap;
         stbtt_GetFontVMetrics(&f->fontInfo, &ascent, &descent, &linegap);
         f->ascent  = (int)(ascent  * scale + 0.5f);
         f->descent = (int)(-descent * scale + 0.5f);
     }
+
+    /* Add to global list. */
+    f->nextPtr = globalFontFamilyList;
+    globalFontFamilyList = f;
 
     return f;
 }
@@ -557,22 +562,24 @@ FreeFontFamily(FontFamily *f)
 {
     if (!f || --f->refCount > 0) return;
     
-    if (f == &((ThreadSpecificData*)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData)))->controlFamily) {
-        fprintf(stderr, "WARNING: attempt to free control family!\n");
-        f->refCount = 1; 
+    /* Never free the control family. */
+    if (f == &globalControlFamily) {
+        f->refCount = 1;
         return;
     }
 
+    /* Free resources. */
     if (f->filePath)   free(f->filePath);
     if (f->fontBuffer) Tcl_Free(f->fontBuffer);
 
+    /* Free font map pages. */
     int i;
     for (i = 0; i < FONTMAP_PAGES; i++) {
         if (f->fontMap[i]) Tcl_Free(f->fontMap[i]);
     }
 
-    ThreadSpecificData *tsd = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    FontFamily **pp = &tsd->fontFamilyList;
+    /* Remove from global list. */
+    FontFamily **pp = &globalFontFamilyList;
     while (*pp && *pp != f) pp = &(*pp)->nextPtr;
     if (*pp) *pp = f->nextPtr;
 
@@ -595,7 +602,7 @@ FreeFontFamily(FontFamily *f)
  */
 
 static SubFont *
-FindSubFontForChar(UnixFont *uf, int ch, SubFont **fixPtr)
+FindSubFontForChar(WaylandFont *uf, int ch, SubFont **fixPtr)
 {
     if (ch < 0 || ch >= FONTMAP_NUMCHARS) ch = 0xFFFD;
 
@@ -712,7 +719,7 @@ FontMapLoadPage(SubFont *sf, int page)
     memset(sf->fontMap[page], 0, FONTMAP_BITSPERPAGE / 8);
 
     stbtt_fontinfo *info = &sf->familyPtr->fontInfo;
-    if (!info->userdata) return;
+    if (!info->data) return;
 
     int start = page << FONTMAP_SHIFT;
     int end   = start + FONTMAP_BITSPERPAGE;
@@ -741,10 +748,10 @@ FontMapLoadPage(SubFont *sf, int page)
  */
 
 static SubFont *
-CanUseFallback(UnixFont *uf, const char *face, int ch, SubFont **fix)
+CanUseFallback(WaylandFont *uf, const char *face, int ch, SubFont **fix)
 {
     FontFamily *fam = AllocFontFamily(face, uf->pixelSize);
-    if (!fam || !fam->fontInfo.userdata) {
+    if (!fam || !fam->fontInfo.data) {
         if (fam) FreeFontFamily(fam);
         return NULL;
     }
@@ -819,16 +826,16 @@ SeenName(const char *name, Tcl_DString *ds)
 
 void
 Tk_DrawChars(
-	TCL_UNUSED(Display *),
-	TCL_UNUSED(Drawable),
-	GC gc,
-	Tk_Font tkfont,
-	const char *text,
-	Tcl_Size numBytes,
-	int x,
-	int y)
+	     TCL_UNUSED(Display *),
+	     TCL_UNUSED(Drawable),
+	     GC gc,
+	     Tk_Font tkfont,
+	     const char *text,
+	     Tcl_Size numBytes,
+	     int x,
+	     int y)
 {
-    UnixFont *uf = (UnixFont *) tkfont;
+    WaylandFont *uf = (WaylandFont *) tkfont;
 
     /*
      * Get NanoVG context.
@@ -929,7 +936,7 @@ int
 Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
                 int maxLength, int flags, int *lengthPtr)
 {
-    UnixFont *uf = (UnixFont *) tkfont;
+    WaylandFont *uf = (WaylandFont *) tkfont;
     int curX = 0;
     const char *p = source;
     const char *end = source + numBytes;
@@ -948,7 +955,7 @@ Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
         }
 
         SubFont *sf = FindSubFontForChar(uf, ch, NULL);
-        if (!sf || !sf->familyPtr || !sf->familyPtr->fontInfo.userdata) {
+        if (!sf || !sf->familyPtr || !sf->familyPtr->fontInfo.data) {
             /* Use reasonable default width. */
             curX += uf->pixelSize / 2;
             p = next;
@@ -1075,8 +1082,8 @@ Tk_DrawCharsInContext(Display *display, Drawable drawable, GC gc,
 
 void
 TkpGetFontFamilies(
-	Tcl_Interp *interp,
-	TCL_UNUSED(Tk_Window)) /* tkwin */
+		   Tcl_Interp *interp,
+		   TCL_UNUSED(Tk_Window)) /* tkwin */
 {
     FcPattern *pat = FcPatternCreate();
     FcObjectSet *os = FcObjectSetBuild(FC_FAMILY, NULL);
@@ -1093,7 +1100,7 @@ TkpGetFontFamilies(
             if (FcPatternGetString(fs->fonts[i], FC_FAMILY, 0, &family) == FcResultMatch) {
                 if (!SeenName((char*)family, &seen)) {
                     Tcl_ListObjAppendElement(interp, resultObj,
-                                           Tcl_NewStringObj((char*)family, -1));
+					     Tcl_NewStringObj((char*)family, -1));
                 }
             }
         }
@@ -1125,14 +1132,14 @@ TkpGetFontFamilies(
 void
 TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
 {
-    UnixFont *uf = (UnixFont *) tkfont;
+    WaylandFont *uf = (WaylandFont *) tkfont;
     Tcl_Obj *resultObj = Tcl_NewListObj(0, NULL);
 
     int i;
     for (i = 0; i < uf->numSubFonts; i++) {
         if (uf->subFontArray[i].familyPtr) {
             Tcl_ListObjAppendElement(interp, resultObj,
-                Tcl_NewStringObj(uf->subFontArray[i].familyPtr->faceName, -1));
+				     Tcl_NewStringObj(uf->subFontArray[i].familyPtr->faceName, -1));
         }
     }
 
@@ -1156,12 +1163,12 @@ TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
 
 void
 TkpGetFontAttrsForChar(
-	TCL_UNUSED(Tk_Window),
-	Tk_Font tkfont,
-	int c,
-	TkFontAttributes *faPtr)
+		       TCL_UNUSED(Tk_Window),
+		       Tk_Font tkfont,
+		       int c,
+		       TkFontAttributes *faPtr)
 {
-    UnixFont *uf = (UnixFont *) tkfont;
+    WaylandFont *uf = (WaylandFont *) tkfont;
     *faPtr = uf->font.fa;
 
     /* Optionally find which subfont would handle this character. */
@@ -1227,7 +1234,7 @@ TkDrawAngledChars(Display *display, Drawable drawable, GC gc, Tk_Font tkfont,
 int
 TkPostscriptFontName(Tk_Font tkfont, Tcl_DString *dsPtr)
 {
-    UnixFont *uf = (UnixFont *) tkfont;
+    WaylandFont *uf = (WaylandFont *) tkfont;
 
     /* Generate a PostScript-compatible font name. */
     const char *family = uf->font.fa.family ? uf->font.fa.family : "Helvetica";
@@ -1265,7 +1272,7 @@ TkpDrawCharsInContext(Display *display, Drawable drawable, GC gc,
 {
     /* Simple delegation to DrawChars with range. */
     Tk_DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
-                         rangeStart, rangeLength, x, y);
+			  rangeStart, rangeLength, x, y);
 }
 
 /*----------------------------------------------------------------------
@@ -1293,7 +1300,7 @@ TkpMeasureCharsInContext(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
     if (rangeStart + rangeLength > numBytes) rangeLength = numBytes - rangeStart;
 
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
-                          maxLength, flags, lengthPtr);
+			   maxLength, flags, lengthPtr);
 }
 
 /*----------------------------------------------------------------------
@@ -1338,9 +1345,9 @@ GetColorFromGC(GC gc)
     NVGcolor color;
     XGCValues gcValues;
 
-    /* Get foreground color from GC */
+    /* Get foreground color from GC. */
     if (gc && XGetGCValues(NULL, gc, GCForeground, &gcValues)) {
-        /* Use utility function from unified architecture */
+        /* Use utility function from unified architecture. */
         color = TkGlfwPixelToNVG(gcValues.foreground);
     } else {
         /* Fallback to black with full opacity */
@@ -1353,6 +1360,20 @@ GetColorFromGC(GC gc)
     return color;
 }
 
+/* Helpers for managing font reference counts. */
+static void
+ExtraRefFont(WaylandFont *uf)
+{
+    uf->font.resourceRefCount++;
+}
+
+static void
+ExtraUnrefFont(WaylandFont *uf)
+{
+    if (uf->font.resourceRefCount > 0) {
+        uf->font.resourceRefCount--;
+    }
+}
 
 /*
  * Local Variables:
