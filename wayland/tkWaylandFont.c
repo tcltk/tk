@@ -34,7 +34,6 @@ static NVGcolor    GetColorFromGC(GC gc);
 #define FONTMAP_PAGES       (FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
 
 #define SUBFONT_SPACE       3
-#define BASE_CHARS          256
 
 /* Global font data - single-threaded, simple management. */
 typedef struct FontFamily {
@@ -61,7 +60,6 @@ typedef struct WaylandFont {
     SubFont            *subFontArray;
     SubFont             controlSubFont;
     int                 pixelSize;          /* Requested pixel size. */
-    int                 widths[BASE_CHARS]; /* Fast path for ASCII */
     int                 underlinePos;
     int                 barHeight;
 } WaylandFont;
@@ -85,8 +83,6 @@ static void         InitSubFont(SubFont *sf, FontFamily *family, int pixelSize);
 static void         ReleaseFont(WaylandFont *uf);
 static void         ReleaseSubFont(SubFont *sf);
 static void         ReleaseFontContents(WaylandFont *uf);
-static void 		ExtraRefFont(WaylandFont *uf);
-static void 		ExtraUnrefFont(WaylandFont *uf);
 
 /*----------------------------------------------------------------------
  *
@@ -221,33 +217,54 @@ TkpGetFontFromAttributes(TkFont *existing, Tk_Window tkwin,
 
     if (existing) {
         uf = (WaylandFont *) existing;
-    
-        /* Save Tk-managed base struct. */
+
+        /*
+         * Save the Tk-managed base struct and all old platform state before
+         * touching anything.  We must acquire new resources BEFORE releasing
+         * old ones so that any shared FontFamily refcounts never transiently
+         * hit zero (which would free memory still pointed to by other fonts).
+         */
         TkFont base = uf->font;
-    
-        ReleaseFontContents(uf);
-    
-        /* Clear only platform-specific fields. */
+
+        /* Snapshot old platform state. */
+        SubFont  oldControl       = uf->controlSubFont;
+        SubFont *oldSubFontArray  = uf->subFontArray;
+        int      oldNumSubFonts   = uf->numSubFonts;
+        int      oldArrayIsStatic = (uf->subFontArray == uf->staticSubFonts);
+
+        /* Clear platform-specific fields only, preserving Tk base struct. */
         memset(((char *)uf) + sizeof(TkFont), 0,
                sizeof(WaylandFont) - sizeof(TkFont));
-    
-        /* Restore Tk-managed fields. */
         uf->font = base;
+
+        /* Set pixel size before InitFont needs it. */
+        uf->pixelSize = (int)(-want->size + 0.5);
+        if (uf->pixelSize <= 0) uf->pixelSize = 12;
+
+        /* Acquire new resources first. */
+        InitFont(tkwin, want, uf);
+        InitSubFont(&uf->controlSubFont, &globalControlFamily, uf->pixelSize);
+
+        /* Now it is safe to release the old resources. */
+        int i;
+        for (i = 0; i < oldNumSubFonts; i++) {
+            ReleaseSubFont(&oldSubFontArray[i]);
+        }
+        if (!oldArrayIsStatic) {
+            Tcl_Free((char *)oldSubFontArray);
+        }
+        ReleaseSubFont(&oldControl);
+
     } else {
         uf = Tcl_Alloc(sizeof(WaylandFont));
         memset(uf, 0, sizeof(WaylandFont));
+
+        uf->pixelSize = (int)(-want->size + 0.5);
+        if (uf->pixelSize <= 0) uf->pixelSize = 12;
+
+        InitFont(tkwin, want, uf);
+        InitSubFont(&uf->controlSubFont, &globalControlFamily, uf->pixelSize);
     }
-
-    uf->pixelSize = (int) (-want->size + 0.5);
-    if (uf->pixelSize <= 0) uf->pixelSize = 12;
-
-    InitFont(tkwin, want, uf);
-
-    /* Always have at least the control subfont. */
-    InitSubFont(&uf->controlSubFont, &globalControlFamily, uf->pixelSize);
-
-    /* Prevent generic Tk from freeing via cache when refcount drops to 1. */
-    ExtraRefFont(uf);
 
     return (TkFont *) uf;
 }
@@ -305,21 +322,6 @@ InitFont(TCL_UNUSED(Tk_Window),
         if (uf->barHeight < 1) uf->barHeight = 1;
     }
 
-    /* Fast-path ASCII widths. */
-    memset(uf->widths, 0, sizeof(uf->widths));
-    if (uf->numSubFonts > 0) {
-        SubFont *sf = &uf->subFontArray[0];
-        stbtt_fontinfo *info = &sf->familyPtr->fontInfo;
-        if (info->data) {
-            float scale = stbtt_ScaleForPixelHeight(info, (float)uf->pixelSize);
-            int i;
-            for (i = 32; i < 128; i++) {
-                int adv, lsb;
-                stbtt_GetCodepointHMetrics(info, i, &adv, &lsb);
-                uf->widths[i] = (int)(adv * scale + 0.5f);
-            }
-        }
-    }
 }
 
 /*----------------------------------------------------------------------
@@ -366,15 +368,7 @@ void
 TkpDeleteFont(TkFont *tkf)
 {
     WaylandFont *uf = (WaylandFont *) tkf;
-
-    /* Drop our extra ref; generic Tk already dropped one. */
-    ExtraUnrefFont(uf);
-
-    /* If refcount reached zero after our drop → truly free. */
-    if (uf->font.resourceRefCount == 0) {
-        ReleaseFont(uf);
-    }
-    /* Else: still alive because generic cache or widgets hold it. */
+    ReleaseFont(uf);
 }
 
 /*----------------------------------------------------------------------
@@ -756,25 +750,37 @@ CanUseFallback(WaylandFont *uf, const char *face, int ch, SubFont **fix)
         return NULL;
     }
 
-    /* Quick check if this font probably contains the glyph. */
     if (stbtt_FindGlyphIndex(&fam->fontInfo, ch) == 0) {
         FreeFontFamily(fam);
         return NULL;
     }
 
-    if (uf->numSubFonts >= SUBFONT_SPACE && uf->subFontArray == uf->staticSubFonts) {
+    /* Grow subFontArray if needed — whether static or already heap-allocated. */
+    if (uf->subFontArray == uf->staticSubFonts) {
+        /* First overflow: move off the static array. */
         int n = uf->numSubFonts + 1;
         SubFont *newArray = Tcl_Alloc(n * sizeof(SubFont));
-        memcpy(newArray, uf->staticSubFonts, SUBFONT_SPACE * sizeof(SubFont));
-        uf->subFontArray = newArray;
-        if (fix && *fix >= uf->staticSubFonts && *fix < uf->staticSubFonts + SUBFONT_SPACE) {
+        memcpy(newArray, uf->staticSubFonts, uf->numSubFonts * sizeof(SubFont));
+        if (fix && *fix >= uf->staticSubFonts &&
+                   *fix < uf->staticSubFonts + uf->numSubFonts) {
             *fix = newArray + (*fix - uf->staticSubFonts);
         }
+        uf->subFontArray = newArray;
+    } else {
+        /* Already heap-allocated: realloc to add one more slot. */
+        int n = uf->numSubFonts + 1;
+        SubFont *newArray = Tcl_Realloc((char *)uf->subFontArray,
+                                         n * sizeof(SubFont));
+        if (fix && *fix >= uf->subFontArray &&
+                   *fix < uf->subFontArray + uf->numSubFonts) {
+            *fix = newArray + (*fix - uf->subFontArray);
+        }
+        uf->subFontArray = newArray;
     }
 
     SubFont *sf = &uf->subFontArray[uf->numSubFonts++];
     InitSubFont(sf, fam, uf->pixelSize);
-    FontMapInsert(sf, ch);      /* Mark it usable. */
+    FontMapInsert(sf, ch);
     return sf;
 }
 
@@ -1358,21 +1364,6 @@ GetColorFromGC(GC gc)
     }
 
     return color;
-}
-
-/* Helpers for managing font reference counts. */
-static void
-ExtraRefFont(WaylandFont *uf)
-{
-    uf->font.resourceRefCount++;
-}
-
-static void
-ExtraUnrefFont(WaylandFont *uf)
-{
-    if (uf->font.resourceRefCount > 0) {
-        uf->font.resourceRefCount--;
-    }
 }
 
 /*
