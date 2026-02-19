@@ -474,18 +474,16 @@ fi
 #--------------------------------------------------------------------
 
 if test "$tk_aqua" = no; then
-  # Combined manual check for ATK, Atk-bridge, GTK, D-Bus, and AT-SPI using pkg-config
-  AC_MSG_CHECKING([for ATK, Atk-bridge, D-Bus, and AT-SPI])
+  # Combined manual check for ATK and Atk-bridge using pkg-config
+  AC_MSG_CHECKING([for ATK and Atk-bridge])
 
   if pkg-config --exists atk \
-     && pkg-config --exists atk-bridge-2.0 \
-     && pkg-config --exists dbus-1 \
-     && pkg-config --exists glib-2.0; then
+     && pkg-config --exists atk-bridge-2.0; then
 
     AC_MSG_RESULT([yes])
-    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0 dbus-1 glib-2.0`"
-    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0 dbus-1 glib-2.0`"
-    AC_DEFINE([USE_ATK], [1], [Define if ATK, Atk-bridge, D-Bus, and GLib are available])
+    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+    AC_DEFINE([USE_ATK], [1], [Define if ATK and Atk-bridge are available])
     have_atk=yes
     AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
   else

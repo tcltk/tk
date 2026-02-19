@@ -24,11 +24,7 @@
 
 #ifdef USE_ATK
 #include <atk/atk.h>
-#include <atk/atktext.h>
-#include <atk/atkvalue.h>
 #include <atk-bridge.h>
-#include <dbus/dbus.h>
-#include <glib.h>
 
 /* Structs for custom ATK objects bound to Tk. */
 typedef struct _TkAtkAccessible {
@@ -52,7 +48,7 @@ typedef struct AtkRoleMap {
     AtkRole atkrole;
 } AtkRoleMap;
 
-struct AtkRoleMap roleMap[] = {
+static const struct AtkRoleMap roleMap[] = {
     {"Button", ATK_ROLE_PUSH_BUTTON},
     {"Checkbox", ATK_ROLE_CHECK_BOX},
     {"Combobox", ATK_ROLE_COMBO_BOX},
