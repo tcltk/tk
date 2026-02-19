@@ -9,6 +9,7 @@
  */
 
 #include "tkUnixInt.h"
+#include "tkGlfwInt.h"
 
 
 /*

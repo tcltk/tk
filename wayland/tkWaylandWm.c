@@ -4377,6 +4377,124 @@ Tk_MakeWindow(
 
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * XDestroyWindow --
+ *
+ *	Destroys a window and its resources.
+ *
+ * Results:
+ *	Returns 1 on success.
+ *
+ * Side effects:
+ *	Destroys GLFW window if it exists.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XDestroyWindow(TCL_UNUSED(Display *), /*display */
+	       Window window)
+{
+    GLFWwindow *glfwWindow;
+    
+    if (waylandDisplay == NULL || window == 0) {
+        return 0;
+    }
+
+    glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)window);
+    
+    if (glfwWindow != NULL) {
+        /*
+         * Destroy the GLFW window.
+         */
+        glfwDestroyWindow(glfwWindow);
+    }
+    
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XMapWindow --
+ *
+ *	Maps (shows) a window.
+ *
+ * Results:
+ *	Returns 1 on success.
+ *
+ * Side effects:
+ *	Makes the GLFW window visible.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XMapWindow(TCL_UNUSED(Display *), /*display */
+	   Window window)
+{
+    GLFWwindow *glfwWindow; 
+    
+    if (window == 0) {
+        return 0;
+    }
+    
+    /*
+     * Look up the GLFW window.
+     */
+    glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)window);
+    
+    if (glfwWindow != NULL) {
+        glfwShowWindow(glfwWindow);
+    }
+    
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XUnmapWindow --
+ *
+ *	Unmaps (hides) a window.
+ *
+ * Results:
+ *	Returns 1 on success.
+ *
+ * Side effects:
+ *	Hides the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XUnmapWindow(TCL_UNUSED(Display *),
+	     Window window)
+{
+    GLFWwindow *glfwWindow;
+    
+    (void)display;
+    
+    if (window == 0) {
+        return 0;
+    }
+    
+    /*
+     * Look up the GLFW window.
+     */
+    glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)window);
+    
+    if (glfwWindow != NULL) {
+        glfwHideWindow(glfwWindow);
+    }
+    
+    return 1;
+}
+
+
+
 
 /*
  * Local Variables:

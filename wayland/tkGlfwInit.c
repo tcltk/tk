@@ -801,7 +801,7 @@ TkpInit(
     }
     
     /* Initialize fonts. */
-	TkpFontPkgInit(NULL);
+    TkpFontPkgInit(NULL);
 
     /* Initialize menu. */
     TkWaylandMenuInit();
