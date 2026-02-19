@@ -23,8 +23,6 @@
 #include "nanovg_gl.h"
 #include "nanovg.h"
 
-extern void TkpFontPkgInit(TkMainInfo *);
-
 /*
  *----------------------------------------------------------------------
  *
@@ -799,9 +797,6 @@ TkpInit(
     if (TkGlfwInitialize() != TCL_OK) {
         return TCL_ERROR;
     }
-    
-    /* Initialize fonts. */
-    TkpFontPkgInit(NULL);
 
     /* Initialize menu. */
     TkWaylandMenuInit();

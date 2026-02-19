@@ -102,19 +102,12 @@ static void         ReleaseFontContents(WaylandFont *uf);
  */
 
 void
-TkpFontPkgInit(TCL_UNUSED(TkMainInfo*))
+TkpFontPkgInit(TCL_UNUSED(TkMainInfo *)) /* mainPtr */
 {
+
     if (globalInitialized) {
         return;
     }
-    
-    
-    /* Just to force cache table creation. */
-	TkFontAttributes dummyFa = {0};
-	dummyFa.family = Tk_GetUid("dummy");
-	dummyFa.size = -12;
-	TkFont *dummy = TkpGetFontFromAttributes(NULL, NULL, &dummyFa);
-	TkpDeleteFont(dummy);  
 
     /* Initialize control family. */
     memset(&globalControlFamily, 0, sizeof(FontFamily));
