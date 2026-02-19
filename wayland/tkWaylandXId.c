@@ -1,9 +1,15 @@
 /*
  * tkWaylandXId.c --
+ * 
+ *     This file contains Tk and X11 functions implementing the Pixmap data 
+ *     type for Wayland/NanoVG, obtaining window ID's, and implementing 
+ *     the Display functions on Wayland. 
  *
  * Copyright © 1993 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
+ *
+ * 
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -172,6 +178,25 @@ Tk_FreePixmap(
     memset(pix, 0, sizeof(TkPixmap));
 }
 
+/* X11 pixmap functions. */
+
+Pixmap
+XCreatePixmap(Display *display, Drawable d,
+              unsigned int width,
+              unsigned int height,
+              unsigned int depth)
+{
+    return Tk_GetPixmap(display, d, width, height, depth);
+}
+
+
+int
+XFreePixmap(Display *display, Pixmap pixmap)
+{
+    Tk_FreePixmap(display, pixmap);
+    return Success;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -325,197 +350,262 @@ Tk_CleanupPixmapStore(void)
 }
 
 /*
- * Miscellaneous X11 functions required for compatibility. 
- * They are non-functional on Wayland. 
+ * --------------------------------------------------------------------------------
+ *
+ * TkpOpenDisplay -
+ * 
+ *     Allocates a new TkDisplay, opens the display, and returns
+ *     a pointer to a display.
+ * 
+ * Results:
+ *     A pointer to a TkDisplay structure, or NULL if the display
+ *     could not be opened.
+ * 
+ * Side effects:
+ *     Allocates memory for the TkDisplay structure and initializes
+ *     GLFW and Wayland subsystems.
+ *
+ * --------------------------------------------------------------------------------
+
+ */
+
+TkDisplay *
+TkpOpenDisplay(
+	TCL_UNUSED(const char *)) /* display_name */
+{
+    TkDisplay *dispPtr;
+    Display *display;
+    Screen *screen;
+    Visual *visual;
+    
+   /*
+	* Under GLFW/Wayland, we don't use traditional X11 display names.
+	* GLFW handles display connection internally. We just need to
+	* initialize GLFW if not already done.
+	*/
+	
+	if (!glfwInit()) {
+	return NULL;
+	}
+    
+	dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+	memset(dispPtr, 0, sizeof(TkDisplay));
+	
+	/*
+	 * Allocate synthetic X Display.
+	 */
+	display = (Display *)ckalloc(sizeof(Display));
+	memset(display, 0, sizeof(Display));
+	
+	/*
+	 * Allocate single Screen (as an array of 1).
+	 */
+	display->screens = (Screen *)ckalloc(sizeof(Screen) * 1);
+	memset(display->screens, 0, sizeof(Screen));
+	
+	display->nscreens = 1;
+	display->default_screen = 0;
+	
+	screen = &display->screens[0];
+	
+	/*
+	 * Allocate Visual.
+	 */
+	visual = (Visual *)ckalloc(sizeof(Visual));
+	memset(visual, 0, sizeof(Visual));
+	
+	/*
+	 * Screen setup.
+	 */
+	screen->display = display;
+	screen->root = 1;              /* MUST NOT be None (0). */
+	screen->width = 1920;          
+	screen->height = 1080;
+	screen->mwidth = 508;
+	screen->mheight = 285;
+	screen->root_visual = visual;
+	screen->root_depth = 24;
+	screen->ndepths = 1;
+	
+	/*
+	 * Visual setup.
+	 */
+	visual->visualid = 1;          /* Non-zero is safer. */
+	visual->class = TrueColor;
+	visual->bits_per_rgb = 8;
+	visual->map_entries = 256;
+	visual->red_mask = 0xFF0000;
+	visual->green_mask = 0x00FF00;
+	visual->blue_mask = 0x0000FF;
+	
+	/*
+	 * Link into TkDisplay.
+	 */
+	dispPtr->display = display;
+	
+	dispPtr->name = (char *)ckalloc(strlen("wayland-0") + 1);
+	strcpy(dispPtr->name, "wayland-0");
+	
+	display->display_name = dispPtr->name;
+	
+	return dispPtr;
+
+}
+
+/*
+ * --------------------------------------------------------------------------------
+
+ *
+ * TkpCloseDisplay -
+ * 
+ *     Deallocates a TkDisplay structure and closes the display.
+ * 
+ * Results:
+ *     None.
+ * 
+ * Side effects:
+ *     Frees memory and performs cleanup of GLFW/Wayland resources.
+ *
+ **********************************************************************
  */
 
 void
-TkUnixDoOneXEvent(void)
+TkpCloseDisplay(
+		TkDisplay *dispPtr)
 {
-    /* no-op */
-    return;
-}
-
-void
-TkCreateXEventSource(void)
-{
-    /* no-op */
-    return;
-}
-
-void
-TkClipCleanup(TCL_UNUSED(TkDisplay *) /* dispPtr */)
-{
-    /* no-op */
-    return;
-}
-
-void
-TkUnixSetMenubar(TCL_UNUSED(Tk_Window) /* tkwin */,
-		 TCL_UNUSED(Tk_Window) /* menubar */)
-{
-    /* no-op */
-    return;
-}
-
-int
-TkScrollWindow(
-	       TCL_UNUSED(Tk_Window), /* tkwin */
-	       TCL_UNUSED(GC), /* gc */
-	       TCL_UNUSED(int), /* x */
-	       TCL_UNUSED(int), /* y */
-	       TCL_UNUSED(int), /* width */
-	       TCL_UNUSED(int), /* height */
-	       TCL_UNUSED(int), /* dx */
-	       TCL_UNUSED(int), /* dy */
-	       TCL_UNUSED(TkRegion)) /* damageRgn */
-{
-    /* no-op */
-    return 0;
-}
-
-void
-Tk_SetMainMenubar(TCL_UNUSED(Tcl_Interp *), /* interp */
-		  TCL_UNUSED(Tk_Window), /* tkwin */
-		  TCL_UNUSED(const char *)) /* menu name */
-{
-    /* no-op */
-    return;
-}
-
-int
-XGetWindowProperty(
-    Display *display,
-    TCL_UNUSED(Window),			/* w */
-    TCL_UNUSED(Atom),			/* property */
-    TCL_UNUSED(long),			/* long_offset */
-    TCL_UNUSED(long),			/* long_length */
-    TCL_UNUSED(Bool),			/* delete */
-    TCL_UNUSED(Atom),			/* req_type */
-    Atom *actual_type_return,
-    int *actual_format_return,
-    unsigned long *nitems_return,
-    unsigned long *bytes_after_return,
-    unsigned char **prop_return)
-{
-	
-	  if (display == NULL) {
-        fprintf(stderr, "WARNING: XGetWindowProperty called with NULL display!\n");
-        fflush(stderr);
+    if (dispPtr == NULL) {
+	return;
     }
-    /* Return "property does not exist." */
-    *actual_type_return = None;
-    *actual_format_return = 0;
-    *nitems_return = 0;
-    *bytes_after_return = 0;
-    *prop_return = NULL;
-    return Success;  
-}
 
-
-char *
-XResourceManagerString(
-    TCL_UNUSED(Display *))		/* display */
-{
-	/* no-op */
-    return NULL;
-}
-
-int
-XFree(TCL_UNUSED(void *)) /* data */
-{
-    return 0;
-}
-typedef struct _XGC {
-    int dummy;   /* Just so sizeof works */
-} _XGC;
-
-
-GC
-XCreateGC(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
-    TCL_UNUSED(unsigned long),
-    TCL_UNUSED(XGCValues *))
-{
-    GC gc;
-
-    gc = (GC)ckalloc(sizeof(struct _XGC));
-    memset(gc, 0, sizeof(struct _XGC));
-
-    return gc;
-}
-
-int
-XFreeGC(
-    TCL_UNUSED(Display *),
-    GC gc)
-{
-    if (gc) {
-        ckfree((char *)gc);
+    /*
+     * Free the display name string.
+     */
+    if (dispPtr->name) {
+	ckfree(dispPtr->name);
+	dispPtr->name = NULL;
     }
-    return 0;
+
+    /*
+     * Free the X11-compatible Display structure.
+     */
+    if (dispPtr->display) {
+	ckfree((char *)dispPtr->display);
+	dispPtr->display = NULL;
+    }
+
+    /*
+     * Note: We don't call glfwTerminate() here because other Tk
+     * displays might still be active. GLFW cleanup happens when
+     * the application exits.
+     */
+
+    /*
+     * Free the TkDisplay structure itself.
+     */
+    ckfree((char *)dispPtr);
+
+
+}
+
+/* X11 display functions. */
+Display *
+XOpenDisplay(const char *name)
+{
+    TkDisplay *tkDisp = TkpOpenDisplay(name);
+    return tkDisp ? tkDisp->display : NULL;
 }
 
 int
-XChangeGC(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(unsigned long),
-    TCL_UNUSED(XGCValues *))
-{
+XCloseDisplay(Display *display) {
+    TkDisplay *dispPtr, *prevPtr;
+
+    if (display == NULL) {
+        return 0;
+    }
+
+    /* Find the TkDisplay and its predecessor in the linked list. */
+
+    prevPtr = NULL;
+    for (dispPtr = TkGetDisplayList(); dispPtr != NULL; dispPtr = dispPtr->nextPtr) {
+        if (dispPtr->display == display) {
+            break;
+        }
+        prevPtr = dispPtr;
+    }
+
+    /* If not found, nothing to clean up. */
+    if (dispPtr == NULL) {
+        return 0; 
+    }
+
+    /*  
+     * Unhook from the global TkDisplay list.
+     * This prevents other functions from finding a "zombie" display.
+     */
+    if (prevPtr == NULL) {
+
+        TkSetDisplayList(dispPtr->nextPtr); 
+    } else {
+        prevPtr->nextPtr = dispPtr->nextPtr;
+    }
+
+    /* Clean up. */
+     */
+    if (dispPtr->name) {
+        ckfree(dispPtr->name);
+    }
+
+    if (dispPtr->display) {
+        /* Since we are wrapping XCloseDisplay, we free the 
+         * internal pointer here as well. */
+        ckfree((char *)dispPtr->display);
+    }
+
+    /* Final structure free. */
+    ckfree((char *)dispPtr);
+
     return 0;
+}
+
+Screen *
+DefaultScreenOfDisplay(Display *display)
+{
+    return &display->screens[0];
+}
+
+
+int
+DefaultScreen(TCL_UNUSED(Display *)
+{
+ 
+    /* Wayland typically has one logical screen, so always return 0. */
+    return 0;
+ }
+
+Visual *
+DefaultVisual(Display *display,
+	      TCL_UNUSED(int)) /* screen */
+{
+    return display->screens[0].root_visual;
+}
+
+/*
+ * DefaultColormap - Return the default colormap
+ */
+Colormap
+DefaultColormap((TCL_UNUSED(Display *), /* display */
+	      TCL_UNUSED(int)) /* screen */
+{
+    return (Colormap)1;
 }
 
 int
-XCopyGC(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(unsigned long),
-    TCL_UNUSED(GC))
+DefaultDepth(Display *display,
+	     TCL_UNUSED(int)) /* screen */
 {
-    return 0;
+    return display->screens[0].root_depth;
 }
 
-int
-XSetForeground(
-    TCL_UNUSED(Display *),		/* display */
-    TCL_UNUSED(GC),			/* gc */
-    TCL_UNUSED(unsigned long))		/* color */
-{
-    return 0;
-}
-
-
-int
-XSetBackground(
-    TCL_UNUSED(Display *),		/* display */
-    TCL_UNUSED(GC),			/* gc */
-    TCL_UNUSED(unsigned long))		/* color */
-{
-    return 0;
-}
-
-Atom
-XInternAtom(
-    TCL_UNUSED(Display *),		/* display */
-    TCL_UNUSED(const char *),		/* atom_name */
-    TCL_UNUSED(Bool))			/* only_if_exists */
-{
-	/* return dummy data */
-    static Atom fakeAtom = 1;
-    return fakeAtom++;
-}
-
-
-char *
-XGetAtomName(
-    TCL_UNUSED(Display *),		/* display */
-    TCL_UNUSED(Atom))			/* atom */
-{
-	/* no-op */
-    return NULL;
-}
 
 
 /*
