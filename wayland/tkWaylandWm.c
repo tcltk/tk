@@ -4398,10 +4398,6 @@ XDestroyWindow(TCL_UNUSED(Display *), /*display */
 	       Window window)
 {
     GLFWwindow *glfwWindow;
-    
-    if (waylandDisplay == NULL || window == 0) {
-        return 0;
-    }
 
     glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)window);
     
@@ -4474,8 +4470,6 @@ XUnmapWindow(TCL_UNUSED(Display *),
 	     Window window)
 {
     GLFWwindow *glfwWindow;
-    
-    (void)display;
     
     if (window == 0) {
         return 0;
