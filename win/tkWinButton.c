@@ -1377,6 +1377,11 @@ TkpComputeButtonGeometry(
 	    }
 	    }
 	}
+	if (butPtrWidth > 0 && butPtrHeight > 0 &&
+		butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+	    TkAdjustAngledTextLayout(butPtr->angle, &width, &height,
+		    >NULL, NULL);
+	}
 
 	width += 2 * padX;
 	height += 2 * padY;

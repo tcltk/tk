@@ -1050,6 +1050,11 @@ TkpComputeButtonGeometry(
 	    if (butPtrHeight > 0) {
 		height = butPtrHeight * fm.linespace;
 	    }
+	    if (butPtrWidth > 0 && butPtrHeight > 0 &&
+		    butPtr->type == TYPE_LABEL && butPtr->angle != 0.0) {
+		TkAdjustAngledTextLayout(butPtr->angle, &width, &height,
+			NULL, NULL);
+	    }
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 		butPtr->indicatorDiameter = fm.linespace;
 		butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
