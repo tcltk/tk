@@ -11837,7 +11837,7 @@ NextTag(
     return 0; /* never reached */
 }
 
-int
+bool
 TkBTreeNextTag(
     TkTextSearch *searchPtr)	/* Information about search in progress; must
 				 * have been set up by call to TkBTreeStartSearch. */
@@ -11845,16 +11845,16 @@ TkBTreeNextTag(
     if (searchPtr->resultPtr) {
 	searchPtr->segPtr = searchPtr->resultPtr;
 	searchPtr->resultPtr = NULL;
-	return 1;
+	return true;
     }
 
     if (searchPtr->linesLeft <= 0) {
 	searchPtr->segPtr = NULL;
-	return 0;
+	return false;
     }
 
     if (NextTag(searchPtr)) {
-	return 1;
+	return true;
     }
 
     if (searchPtr->endOfText && searchPtr->tagon) {
@@ -11863,10 +11863,10 @@ TkBTreeNextTag(
 		searchPtr->curIndex.textPtr, searchPtr->curIndex.tree);
 	searchPtr->segPtr = TkTextIndexGetContentSegment(&searchPtr->curIndex, NULL);
 	searchPtr->tagon = 0;
-	return 1;
+	return true;
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -11949,7 +11949,7 @@ PrevTagFindPrevNode(
     return NULL;
 }
 
-static int
+static bool
 PrevTag(
     TkTextSearch *searchPtr)	/* Information about search in progress; must
 				 * have been set up by call to TkBTreeStartSearch. */
@@ -12000,7 +12000,7 @@ PrevTag(
 		    searchPtr->segPtr = linePtr->segPtr;
 		}
 		searchPtr->tagon = tagon;
-		return 1;
+		return true;
 	    }
 
 	    prevPtr = firstPtr = NULL;
@@ -12012,14 +12012,14 @@ PrevTag(
 			if (prevPtr) {
 			    TkTextIndexSetByteIndex(&searchPtr->curIndex, offset);
 			    searchPtr->tagon = tagon;
-			    return 1;
+			    return true;
 			}
 			firstPtr = segPtr;
 		    } else if (firstPtr) {
 			TkTextIndexSetByteIndex(&searchPtr->curIndex, offset);
 			searchPtr->segPtr = firstPtr;
 			searchPtr->tagon = tagon;
-			return 1;
+			return true;
 		    } else if (!tagon) {
 			prevPtr = segPtr;
 		    }
@@ -12032,10 +12032,10 @@ PrevTag(
 			TkTextIndexSetByteIndex(&searchPtr->curIndex, offset);
 			searchPtr->segPtr = firstPtr;
 			searchPtr->tagon = tagon;
-			return 1;
+			return true;
 		    }
 		    searchPtr->linesLeft = 0;
-		    return 0;
+		    return false;
 		}
 		if (!(segPtr = segPtr->prevPtr)) {
 		    break;
@@ -12046,7 +12046,7 @@ PrevTag(
 		TkTextIndexSetByteIndex(&searchPtr->curIndex, offset);
 		searchPtr->segPtr = firstPtr;
 		searchPtr->tagon = tagon;
-		return 1;
+		return true;
 	    }
 	} else {
 	    linePtr = TkTextIndexGetLine(&searchPtr->curIndex);
@@ -12062,7 +12062,7 @@ PrevTag(
 
 	do {
 	    if (--searchPtr->linesLeft == 0) {
-		return 0;
+		return false;
 	    }
 	    linePtr = linePtr->prevPtr;
 	} while (linePtr != lastPtr && !LineTestToggleBack(linePtr, tagPtr->index, tagon));
@@ -12074,7 +12074,7 @@ PrevTag(
 
 	if (!(nodePtr = PrevTagFindPrevNode(nodePtr, searchPtr, tagon))) {
 	    searchPtr->linesLeft = 0;
-	    return 0;
+	    return false;
 	}
 
 	/*
@@ -12094,7 +12094,7 @@ PrevTag(
 	    nodePtr = nodeStack[--idx];
 	    while (!NodeTestToggleBack(nodePtr, tagPtr->index, tagon)) {
 		if ((searchPtr->linesLeft -= nodePtr->numLines) <= 0) {
-		    return 0;
+		    return false;
 		}
 		assert(idx > 0);
 		nodePtr = nodeStack[--idx];
@@ -12114,7 +12114,7 @@ PrevTag(
 
 	while (!LineTestToggleBack(linePtr, tagPtr->index, tagon)) {
 	    if (--searchPtr->linesLeft == 0) {
-		return 0;
+		return false;
 	    }
 	    linePtr = linePtr->prevPtr;
 	    assert(linePtr != lastPtr);
@@ -12126,7 +12126,7 @@ PrevTag(
     return 0; /* never reached */
 }
 
-int
+bool
 TkBTreePrevTag(
     TkTextSearch *searchPtr)	/* Information about search in progress; must
 				 * have been set up by call to TkBTreeStartSearch. */
@@ -12134,16 +12134,16 @@ TkBTreePrevTag(
     if (searchPtr->resultPtr) {
 	searchPtr->segPtr = searchPtr->resultPtr;
 	searchPtr->resultPtr = NULL;
-	return 1;
+	return true;
     }
 
     if (searchPtr->linesLeft <= 0) {
 	searchPtr->segPtr = NULL;
-	return 0;
+	return false;
     }
 
     if (PrevTag(searchPtr)) {
-	return 1;
+	return true;
     }
 
     if (searchPtr->endOfText && !searchPtr->tagon) {
@@ -12152,10 +12152,10 @@ TkBTreePrevTag(
 		searchPtr->curIndex.textPtr, searchPtr->curIndex.tree);
 	searchPtr->segPtr = TkTextIndexGetContentSegment(&searchPtr->curIndex, NULL);
 	searchPtr->tagon = 1;
-	return 1;
+	return true;
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -15143,7 +15143,7 @@ TkBTreeCountSize(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkBTreeMoveForward(
     TkTextIndex *indexPtr,
     unsigned byteCount)
@@ -15154,7 +15154,7 @@ TkBTreeMoveForward(
     int byteIndex;
 
     if (byteCount == 0) {
-	return 1;
+	return true;
     }
 
     byteIndex = byteCount + TkTextIndexGetByteIndex(indexPtr);
@@ -15179,7 +15179,7 @@ TkBTreeMoveForward(
 	    byteIndex -= linePtr->size;
 	    if (!(linePtr = TkBTreeNextLine(indexPtr->textPtr, linePtr))) {
 		TkTextIndexSetupToEndOfText(indexPtr, indexPtr->textPtr, indexPtr->tree);
-		return 0;
+		return false;
 	    }
 	}
 
@@ -15214,7 +15214,7 @@ TkBTreeMoveForward(
 			byteIndex -= linePtr->size;
 			if (!(linePtr = TkBTreeNextLine(indexPtr->textPtr, linePtr))) {
 			    TkTextIndexSetupToEndOfText(indexPtr, indexPtr->textPtr, indexPtr->tree);
-			    return 0;
+			    return false;
 			}
 		    }
 		}
@@ -15225,7 +15225,7 @@ TkBTreeMoveForward(
     }
 
     TkTextIndexSetupToEndOfText(indexPtr, indexPtr->textPtr, indexPtr->tree);
-    return 0;
+    return false;
 }
 
 /*
@@ -15250,7 +15250,7 @@ TkBTreeMoveForward(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkBTreeMoveBackward(
     TkTextIndex *indexPtr,
     unsigned byteCount)
@@ -15264,7 +15264,7 @@ TkBTreeMoveBackward(
     int byteIndex;
 
     if (byteCount == 0) {
-	return 1;
+	return true;
     }
 
     linePtr = TkTextIndexGetLine(indexPtr);
@@ -15288,7 +15288,7 @@ TkBTreeMoveBackward(
 	    }
 	    if (!(linePtr = TkBTreePrevLine(indexPtr->textPtr, linePtr))) {
 		TkTextIndexSetupToStartOfText(indexPtr, indexPtr->textPtr, indexPtr->tree);
-		return 0;
+		return false;
 	    }
 	}
     } else {
@@ -15337,7 +15337,7 @@ TkBTreeMoveBackward(
 			}
 			if (!(linePtr = TkBTreePrevLine(indexPtr->textPtr, linePtr))) {
 			    TkTextIndexSetupToStartOfText(indexPtr, indexPtr->textPtr, indexPtr->tree);
-			    return 0;
+			    return false;
 			}
 		    }
 		}
@@ -15348,7 +15348,7 @@ TkBTreeMoveBackward(
     }
 
     TkTextIndexSetupToStartOfText(indexPtr, indexPtr->textPtr, indexPtr->tree);
-    return 0;
+    return false;
 }
 
 /*

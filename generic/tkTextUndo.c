@@ -728,7 +728,7 @@ int
 TkTextUndoPushItem(
     TkTextUndoStack stack,
     TkTextUndoItem item,
-    unsigned size)
+    size_t size)
 {
     MyUndoAtom *atom;
     TkTextUndoSubAtom *subAtom;
@@ -774,7 +774,7 @@ int
 TkTextUndoPushRedoItem(
     TkTextUndoStack stack,
     TkTextUndoItem item,
-    unsigned size)
+    size_t size)
 {
     int rc;
 

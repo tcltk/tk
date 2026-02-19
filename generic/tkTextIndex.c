@@ -3020,7 +3020,7 @@ ForwBack(
  *---------------------------------------------------------------------------
  */
 
-int
+bool
 TkrTextIndexForwBytes(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
@@ -3034,12 +3034,12 @@ TkrTextIndexForwBytes(
 	if (dstPtr != srcPtr) {
 	    *dstPtr = *srcPtr;
 	}
-	return 0;
+	return false;
     }
 
     if (byteCount < 0) {
 	TkrTextIndexBackBytes(textPtr, srcPtr, -byteCount, dstPtr);
-	return 0;
+	return false;
     }
 
     if (dstPtr != srcPtr) {
@@ -3051,7 +3051,7 @@ TkrTextIndexForwBytes(
 
     if (textPtr) {
 	if (linePtr == TkBTreeGetLastLine(textPtr)) {
-	    return 1;
+	    return true;
 	}
 	if (textPtr->endMarker->sectionPtr->linePtr == linePtr) {
 	    /*
@@ -3067,7 +3067,7 @@ TkrTextIndexForwBytes(
 	    return byteIndex <= lineLength ? 0 : 1;
 	}
     } else if (!linePtr->nextPtr) {
-	return 1;
+	return true;
     }
 
     if ((byteIndex = dstPtr->priv.byteIndex + byteCount) > linePtr->size) {
@@ -3075,7 +3075,7 @@ TkrTextIndexForwBytes(
 	DEBUG(TkTextIndex index = *srcPtr);
 	rc = TkBTreeMoveForward(dstPtr, byteCount);
 	assert(!rc || (int) TkTextIndexCountBytes(&index, dstPtr) == byteCount);
-	return rc ? 0 : 1;
+	return !rc;
     }
 
     if (byteIndex == linePtr->size) {
@@ -3085,7 +3085,7 @@ TkrTextIndexForwBytes(
 	TkTextIndexSetByteIndex(dstPtr, byteIndex);
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -3115,7 +3115,7 @@ TkrTextIndexForwBytes(
  *---------------------------------------------------------------------------
  */
 
-int
+bool
 TkTextIndexForwChars(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
@@ -3128,9 +3128,9 @@ TkTextIndexForwChars(
     TkTextSegment *endPtr;
     TkSharedText *sharedTextPtr;
     Tcl_Size byteOffset;
-    int checkElided;
-    int trimmed;
-    int skipSpaces;
+    bool checkElided;
+    bool trimmed;
+    bool skipSpaces;
 
     if (charCount < 0) {
 	return TkTextIndexBackChars(textPtr, srcPtr, -charCount, dstPtr, type);
@@ -3141,18 +3141,18 @@ TkTextIndexForwChars(
     }
 
     if (TkTextIndexIsEndOfText(dstPtr)) {
-	return 0;
+	return false;
     }
 
     sharedTextPtr = TkTextIndexGetShared(srcPtr);
     checkElided = !!(type & COUNT_DISPLAY) && TkBTreeHaveElidedSegments(sharedTextPtr);
 
     if (checkElided && TkTextIsElided(dstPtr) && !TkTextSkipElidedRegion(dstPtr)) {
-	return 0;
+	return false;
     }
 
     if (charCount == 0) {
-	return 0;
+	return false;
     }
 
     assert(dstPtr->priv.byteIndex <= FindEndByteIndex(dstPtr));
@@ -3164,7 +3164,7 @@ TkTextIndexForwChars(
     segPtr = TkTextIndexGetFirstSegment(dstPtr, &byteOffset);
     endPtr = textPtr ? textPtr->endMarker : sharedTextPtr->endMarker;
     trimmed = textPtr && textPtr->spaceMode == TEXT_SPACEMODE_TRIM && !!(type & COUNT_DISPLAY);
-    skipSpaces = 0;
+    skipSpaces = false;
 
     TkTextIndexToByteIndex(dstPtr);
     dstPtr->priv.segPtr = NULL;
@@ -3213,7 +3213,7 @@ TkTextIndexForwChars(
 				charCount -= 1;
 			    }
 			} else {
-			    skipSpaces = 0;
+			    skipSpaces = false;
 			    charCount -= (type & COUNT_INDICES) ? n : 1;
 			}
 		    }
@@ -3233,7 +3233,7 @@ TkTextIndexForwChars(
 	    } else if (checkElided && segPtr->typePtr == &tkTextBranchType) {
 		TkTextIndexSetSegment(dstPtr, segPtr = segPtr->body.branch.nextPtr);
 		if (TkTextIndexRestrictToEndRange(dstPtr) >= 0) {
-		    return 1;
+		    return true;
 		}
 		TkTextIndexToByteIndex(dstPtr);
 	    } else if (segPtr == endPtr) {
@@ -3241,7 +3241,7 @@ TkTextIndexForwChars(
 		    goto forwardCharDone;
 		}
 		TkTextIndexSetupToEndOfText(dstPtr, (TkText *) textPtr, srcPtr->tree);
-		return 1;
+		return true;
 	    }
 	}
 
@@ -3252,7 +3252,7 @@ TkTextIndexForwChars(
 
 	if (!(linePtr = TkBTreeNextLine(textPtr, dstPtr->priv.linePtr))) {
 	    TkTextIndexSetToLastChar(dstPtr);
-	    return 1;
+	    return true;
 	}
 	dstPtr->priv.linePtr = linePtr;
 	dstPtr->priv.byteIndex = 0;
@@ -3263,7 +3263,7 @@ TkTextIndexForwChars(
 
 forwardCharDone:
     dstPtr->stateEpoch = TkBTreeEpoch(dstPtr->tree);
-    return 1;
+    return true;
 }
 
 /*
@@ -3563,7 +3563,7 @@ TkTextIndexCount(
  * type to 'int'.
  */
 
-int
+bool
 TkrTextIndexBackBytes(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
@@ -3577,7 +3577,7 @@ TkrTextIndexBackBytes(
 	if (dstPtr != srcPtr) {
 	    *dstPtr = *srcPtr;
 	}
-	return 0;
+	return false;
     }
 
     if (byteCount < 0) {
@@ -3599,24 +3599,24 @@ TkrTextIndexBackBytes(
 
 	if ((byteIndex -= byteCount) < SegToIndex(linePtr, textPtr->startMarker)) {
 	    TkTextIndexSetupToStartOfText(dstPtr, (TkText *) textPtr, textPtr->sharedTextPtr->tree);
-	    return 1;
+	    return true;
 	}
 
 	TkTextIndexSetByteIndex(dstPtr, byteIndex);
-	return 0;
+	return false;
     }
 
     if (byteCount > byteIndex + 1) {
-	int rc;
+	bool rc;
 	DEBUG(TkTextIndex index = *srcPtr);
 	rc = TkBTreeMoveBackward(dstPtr, byteCount);
 	assert(!rc || (int) TkTextIndexCountBytes(dstPtr, &index) == byteCount);
-	return rc ? 0 : 1;
+	return !rc;
     }
 
     if ((byteIndex -= byteCount) >= 0) {
 	TkTextIndexSetByteIndex(dstPtr, byteIndex);
-	return 0;
+	return false;
     }
 
     /*
@@ -3626,11 +3626,11 @@ TkrTextIndexBackBytes(
 
     if (!(linePtr = TkBTreePrevLine(textPtr, linePtr))) {
 	TkTextIndexSetToStartOfLine(dstPtr);
-	return 1;
+	return true;
     }
 
     TkTextIndexSetToLastChar2(dstPtr, linePtr);
-    return 0;
+    return false;
 }
 
 /*
@@ -3660,7 +3660,7 @@ TkrTextIndexBackBytes(
  *---------------------------------------------------------------------------
  */
 
-int
+bool
 TkTextIndexBackChars(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */

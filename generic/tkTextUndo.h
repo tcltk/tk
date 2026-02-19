@@ -206,7 +206,7 @@ int TkTextUndoStackIsFull(const TkTextUndoStack stack);
  * separator after the action is completed.
  */
 
-int TkTextUndoPushItem(TkTextUndoStack stack, TkTextUndoItem item, unsigned size);
+int TkTextUndoPushItem(TkTextUndoStack stack, TkTextUndoItem item, size_t size);
 void TkTextUndoPushSeparator(TkTextUndoStack stack, int immediately);
 
 /*
@@ -214,7 +214,7 @@ void TkTextUndoPushSeparator(TkTextUndoStack stack, int immediately);
  * is only useful for the reconstruction of the stack.
  */
 
-int TkTextUndoPushRedoItem(TkTextUndoStack stack, TkTextUndoItem item, unsigned size);
+int TkTextUndoPushRedoItem(TkTextUndoStack stack, TkTextUndoItem item, size_t size);
 
 /*
  * Swap newest undo item with given item. Returns the old item. Note that this
