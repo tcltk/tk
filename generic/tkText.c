@@ -847,7 +847,7 @@ void
 TkTextPushUndoToken(
     TkSharedText *sharedTextPtr,
     void *token,
-    unsigned byteSize)
+    size_t byteSize)
 {
     TkTextUndoAction action;
 
@@ -886,7 +886,7 @@ void
 TkTextPushRedoToken(
     TkSharedText *sharedTextPtr,
     void *token,
-    unsigned byteSize)
+    size_t byteSize)
 {
     assert(sharedTextPtr);
     assert(sharedTextPtr->undoStack);

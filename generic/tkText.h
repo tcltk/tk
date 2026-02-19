@@ -1962,10 +1962,10 @@ inline TkTextLine *	TkBTreeGetStartLine(const TkText *textPtr);
 inline TkTextLine *	TkBTreeGetLastLine(const TkText *textPtr);
 inline TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
 inline TkTextLine *	TkBTreePrevLine(const TkText *textPtr, TkTextLine *linePtr);
-MODULE_SCOPE int	TkBTreeMoveForward(TkTextIndex *indexPtr, unsigned byteCount);
-MODULE_SCOPE int	TkBTreeMoveBackward(TkTextIndex *indexPtr, unsigned byteCount);
-MODULE_SCOPE int	TkBTreeNextTag(TkTextSearch *searchPtr);
-MODULE_SCOPE int	TkBTreePrevTag(TkTextSearch *searchPtr);
+MODULE_SCOPE bool	TkBTreeMoveForward(TkTextIndex *indexPtr, unsigned byteCount);
+MODULE_SCOPE bool	TkBTreeMoveBackward(TkTextIndex *indexPtr, unsigned byteCount);
+MODULE_SCOPE bool	TkBTreeNextTag(TkTextSearch *searchPtr);
+MODULE_SCOPE bool	TkBTreePrevTag(TkTextSearch *searchPtr);
 MODULE_SCOPE TkTextSegment * TkBTreeFindNextTagged(const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, const struct TkBitField *discardTags);
 MODULE_SCOPE TkTextSegment * TkBTreeFindPrevTagged(const TkTextIndex *indexPtr1,
@@ -2088,7 +2088,7 @@ MODULE_SCOPE unsigned	TkTextCountDisplayLines(TkText *textPtr, const TkTextIndex
 			    const TkTextIndex *indexTo);
 MODULE_SCOPE void	TkTextFindDisplayIndex(TkText *textPtr, TkTextIndex *indexPtr,
 			    int displayLineOffset, int *xOffset);
-MODULE_SCOPE int	TkTextIndexBackChars(const TkText *textPtr, const TkTextIndex *srcPtr,
+MODULE_SCOPE bool	TkTextIndexBackChars(const TkText *textPtr, const TkTextIndex *srcPtr,
 			    Tcl_Size count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE Tcl_UniChar TkTextIndexGetChar(const TkTextIndex *indexPtr);
 MODULE_SCOPE unsigned	TkTextIndexCountBytes(const TkTextIndex *index1Ptr,
@@ -2096,7 +2096,7 @@ MODULE_SCOPE unsigned	TkTextIndexCountBytes(const TkTextIndex *index1Ptr,
 MODULE_SCOPE unsigned	TkTextIndexCount(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    TkTextCountType type);
-MODULE_SCOPE int	TkTextIndexForwChars(const TkText *textPtr, const TkTextIndex *srcPtr,
+MODULE_SCOPE bool	TkTextIndexForwChars(const TkText *textPtr, const TkTextIndex *srcPtr,
 			    Tcl_Size count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr, const TkTextIndex *indexPtr);
@@ -2105,13 +2105,10 @@ MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *tex
 MODULE_SCOPE int	TkTextTestLangCode(Tcl_Interp *interp, Tcl_Obj *langCodePtr);
 MODULE_SCOPE int	TkTextParseHyphenRules(TkText *textPtr, Tcl_Obj *objPtr, int *rulesPtr);
 MODULE_SCOPE void	TkTextLostSelection(void *clientData);
-MODULE_SCOPE void	TkTextConfigureUndoStack(TkSharedText *sharedTextPtr, int maxUndoDepth,
-			    int maxByteSize);
-MODULE_SCOPE void	TkTextConfigureRedoStack(TkSharedText *sharedTextPtr, int maxRedoDepth);
 MODULE_SCOPE void	TkTextPushUndoToken(TkSharedText *sharedTextPtr, void *token,
-			    unsigned byteSize);
+			    size_t byteSize);
 MODULE_SCOPE void	TkTextPushRedoToken(TkSharedText *sharedTextPtr, void *token,
-			    unsigned byteSize);
+			    size_t byteSize);
 MODULE_SCOPE void	TkTextUndoAddMoveSegmentItem(TkSharedText *sharedTextPtr,
 			    TkTextSegment *oldPos, TkTextSegment *newPos);
 MODULE_SCOPE TkTextIndex * TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
@@ -2258,10 +2255,10 @@ MODULE_SCOPE int		TkrTesttextCmd(void *dummy, Tcl_Interp *interp,
 MODULE_SCOPE int		TkrTextGetIndex(Tcl_Interp *interp,
 				struct TkText *textPtr, const char *string,
 				struct TkTextIndex *indexPtr);
-MODULE_SCOPE int		TkrTextIndexBackBytes(const struct TkText *textPtr,
+MODULE_SCOPE bool		TkrTextIndexBackBytes(const struct TkText *textPtr,
 				const struct TkTextIndex *srcPtr, Tcl_Size count,
 				struct TkTextIndex *dstPtr);
-MODULE_SCOPE int		TkrTextIndexForwBytes(const struct TkText *textPtr,
+MODULE_SCOPE bool		TkrTextIndexForwBytes(const struct TkText *textPtr,
 				const struct TkTextIndex *srcPtr, Tcl_Size count,
 				struct TkTextIndex *dstPtr);
 MODULE_SCOPE struct TkTextIndex * TkrTextMakeByteIndex(TkTextBTree tree,
