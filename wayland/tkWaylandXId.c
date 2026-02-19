@@ -18,11 +18,14 @@
 #include "tkInt.h"           
 #include <stddef.h>          
 #include <X11/Xlib.h>  
-#include <X11/Xatom.h>      
+#include <X11/Xatom.h>    
+#include <X11/Xutil.h>
+#include <X11/Xlibint.h>    
 #include <GL/gl.h>
 #include "nanovg.h"
 #include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"   
+#include "nanovg_gl_utils.h"  
+#include <GLFW/glfw3.h> 
 
 /*
  * In Wayland with NanoVG, we need to track pixmap/bitmap data.
@@ -43,6 +46,28 @@ static TkPixmap *pixmapStore = NULL;
 static int pixmapCount = 0;
 static int pixmapCapacity = 0;
 static NVGcontext* nvgContext = NULL;
+
+#ifdef DefaultScreenOfDisplay
+#undef DefaultScreenOfDisplay
+#endif
+
+#ifdef DefaultScreen
+#undef DefaultScreen
+#endif
+
+#ifdef DefaultVisual
+#undef DefaultVisual
+#endif
+
+#ifdef DefaultColormap
+#undef DefaultColormap
+#endif
+
+#ifdef DefaultDepth
+#undef DefaultDepth
+#endif
+
+
  
 /*
  *----------------------------------------------------------------------
@@ -503,8 +528,6 @@ TkpCloseDisplay(
      * Free the TkDisplay structure itself.
      */
     ckfree((char *)dispPtr);
-
-
 }
 
 /* X11 display functions. */
@@ -524,7 +547,6 @@ XCloseDisplay(Display *display) {
     }
 
     /* Find the TkDisplay and its predecessor in the linked list. */
-
     prevPtr = NULL;
     for (dispPtr = TkGetDisplayList(); dispPtr != NULL; dispPtr = dispPtr->nextPtr) {
         if (dispPtr->display == display) {
@@ -538,19 +560,7 @@ XCloseDisplay(Display *display) {
         return 0; 
     }
 
-    /*  
-     * Unhook from the global TkDisplay list.
-     * This prevents other functions from finding a "zombie" display.
-     */
-    if (prevPtr == NULL) {
-
-        TkSetDisplayList(dispPtr->nextPtr); 
-    } else {
-        prevPtr->nextPtr = dispPtr->nextPtr;
-    }
-
     /* Clean up. */
-     */
     if (dispPtr->name) {
         ckfree(dispPtr->name);
     }
@@ -575,7 +585,7 @@ DefaultScreenOfDisplay(Display *display)
 
 
 int
-DefaultScreen(TCL_UNUSED(Display *)
+DefaultScreen(TCL_UNUSED(Display *))
 {
  
     /* Wayland typically has one logical screen, so always return 0. */
@@ -593,7 +603,7 @@ DefaultVisual(Display *display,
  * DefaultColormap - Return the default colormap
  */
 Colormap
-DefaultColormap((TCL_UNUSED(Display *), /* display */
+DefaultColormap(TCL_UNUSED(Display *), /* display */
 	      TCL_UNUSED(int)) /* screen */
 {
     return (Colormap)1;
@@ -606,7 +616,195 @@ DefaultDepth(Display *display,
     return display->screens[0].root_depth;
 }
 
+/*
+ * Additional X11 functions required for compatibility. 
+ * They are non-functional on Wayland. 
+ */
 
+void
+TkUnixDoOneXEvent(void)
+{
+	/* no-op */
+	return;
+}
+
+void
+TkCreateXEventSource(void)
+{
+	/* no-op */
+	return;
+}
+
+void
+TkClipCleanup(TCL_UNUSED(TkDisplay *) /* dispPtr */)
+{
+	/* no-op */
+	return;
+}
+
+void
+TkUnixSetMenubar(TCL_UNUSED(Tk_Window) /* tkwin */,
+		 TCL_UNUSED(Tk_Window) /* menubar */)
+{
+	/* no-op */
+	return;
+}
+
+int
+TkScrollWindow(
+		   TCL_UNUSED(Tk_Window), /* tkwin */
+		   TCL_UNUSED(GC), /* gc */
+		   TCL_UNUSED(int), /* x */
+		   TCL_UNUSED(int), /* y */
+		   TCL_UNUSED(int), /* width */
+		   TCL_UNUSED(int), /* height */
+		   TCL_UNUSED(int), /* dx */
+		   TCL_UNUSED(int), /* dy */
+		   TCL_UNUSED(TkRegion)) /* damageRgn */
+{
+	/* no-op */
+	return 0;
+}
+
+void
+Tk_SetMainMenubar(TCL_UNUSED(Tcl_Interp *), /* interp */
+		  TCL_UNUSED(Tk_Window), /* tkwin */
+		  TCL_UNUSED(const char *)) /* menu name */
+{
+	/* no-op */
+	return;
+}
+
+int
+XGetWindowProperty(
+	Display *display,
+	TCL_UNUSED(Window),			/* w */
+	TCL_UNUSED(Atom),			/* property */
+	TCL_UNUSED(long),			/* long_offset */
+	TCL_UNUSED(long),			/* long_length */
+	TCL_UNUSED(Bool),			/* delete */
+	TCL_UNUSED(Atom),			/* req_type */
+	Atom *actual_type_return,
+	int *actual_format_return,
+	unsigned long *nitems_return,
+	unsigned long *bytes_after_return,
+	unsigned char **prop_return)
+{
+	
+	  if (display == NULL) {
+		fprintf(stderr, "WARNING: XGetWindowProperty called with NULL display!\n");
+		fflush(stderr);
+	}
+	/* Return "property does not exist." */
+	*actual_type_return = None;
+	*actual_format_return = 0;
+	*nitems_return = 0;
+	*bytes_after_return = 0;
+	*prop_return = NULL;
+	return Success;  
+}
+
+
+char *
+XResourceManagerString(
+	TCL_UNUSED(Display *))		/* display */
+{
+	/* no-op */
+	return NULL;
+}
+
+int
+XFree(TCL_UNUSED(void *)) /* data */
+{
+	return 0;
+}
+
+
+GC
+XCreateGC(
+	TCL_UNUSED(Display *),
+	TCL_UNUSED(Drawable),
+	TCL_UNUSED(unsigned long),
+	TCL_UNUSED(XGCValues *))
+{
+	GC gc;
+
+	gc = (GC)ckalloc(sizeof(struct _XGC));
+	memset(gc, 0, sizeof(struct _XGC));
+
+	return gc;
+}
+
+int
+XFreeGC(
+	TCL_UNUSED(Display *),
+	GC gc)
+{
+	if (gc) {
+		ckfree((char *)gc);
+	}
+	return 0;
+}
+
+int
+XChangeGC(
+	TCL_UNUSED(Display *),
+	TCL_UNUSED(GC),
+	TCL_UNUSED(unsigned long),
+	TCL_UNUSED(XGCValues *))
+{
+	return 0;
+}
+
+int
+XCopyGC(
+	TCL_UNUSED(Display *),
+	TCL_UNUSED(GC),
+	TCL_UNUSED(unsigned long),
+	TCL_UNUSED(GC))
+{
+	return 0;
+}
+
+int
+XSetForeground(
+	TCL_UNUSED(Display *),		/* display */
+	TCL_UNUSED(GC),			/* gc */
+	TCL_UNUSED(unsigned long))		/* color */
+{
+	return 0;
+}
+
+
+int
+XSetBackground(
+	TCL_UNUSED(Display *),		/* display */
+	TCL_UNUSED(GC),			/* gc */
+	TCL_UNUSED(unsigned long))		/* color */
+{
+	return 0;
+}
+
+Atom
+XInternAtom(
+	TCL_UNUSED(Display *),		/* display */
+	TCL_UNUSED(const char *),		/* atom_name */
+	TCL_UNUSED(Bool))			/* only_if_exists */
+{
+	/* return dummy data */
+	static Atom fakeAtom = 1;
+	return fakeAtom++;
+}
+
+
+char *
+XGetAtomName(
+	TCL_UNUSED(Display *),		/* display */
+	TCL_UNUSED(Atom))			/* atom */
+{
+	/* no-op */
+	return NULL;
+}
 
 /*
  * Local Variables:

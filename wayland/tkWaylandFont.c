@@ -104,7 +104,6 @@ static void         ReleaseFontContents(WaylandFont *uf);
 void
 TkpFontPkgInit(TCL_UNUSED(TkMainInfo*))
 {
-	
     if (globalInitialized) {
         return;
     }
