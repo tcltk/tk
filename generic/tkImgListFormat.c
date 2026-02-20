@@ -1028,7 +1028,7 @@ ParseColorAsStandard(
      * added to the colormap.
      */
 
-    if ( ! TkParseColor(display, colormap, colorString, &parsedColor)) {
+    if (TkParseColor(display, colormap, colorString, &parsedColor) == 0) {
 	 Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "invalid color name \"%s\"", specString));
 	 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",

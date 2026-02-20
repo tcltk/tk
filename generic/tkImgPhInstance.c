@@ -1327,7 +1327,7 @@ AllocateColors(
 	pixels = (unsigned long *)Tcl_Alloc(numColors * sizeof(unsigned long));
 	for (i = 0; i < numColors; ++i) {
 	    if (XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
-		    &colors[i]) != Success) {
+		    &colors[i]) == 0) {
 		/*
 		 * Can't get all the colors we want in the default colormap;
 		 * first try freeing colors from other unused color tables.
@@ -1335,7 +1335,7 @@ AllocateColors(
 
 		if (!ReclaimColors(&colorPtr->id, numColors - i)
 			|| XAllocColor(colorPtr->id.display,
-			colorPtr->id.colormap, &colors[i]) != Success) {
+			colorPtr->id.colormap, &colors[i]) == 0) {
 		    /*
 		     * Still can't allocate the color.
 		     */
