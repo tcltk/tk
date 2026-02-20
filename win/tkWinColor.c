@@ -379,7 +379,7 @@ XAllocColor(
     }
 
     ReleaseDC(NULL, dc);
-    return Success;
+    return 1;
 }
 
 /*

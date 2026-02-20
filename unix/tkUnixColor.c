@@ -175,10 +175,10 @@ TkpGetColor(
 	}
     } else {
     gotWebColor:
-	if (TkParseColor(display, colormap, name, &color) == Success) {
+	if (TkParseColor(display, colormap, name, &color) == 0) {
 	    return NULL;
 	}
-	if (XAllocColor(display, colormap, &color) != Success) {
+	if (XAllocColor(display, colormap, &color) != 0) {
 	    DeleteStressedCmap(display, colormap);
 	} else {
 	    FindClosestColor(tkwin, &color, &color);
@@ -225,7 +225,7 @@ TkpGetColorByValue(
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
     tkColPtr->color.blue = colorPtr->blue;
-    if (XAllocColor(display, colormap, &tkColPtr->color) != Success) {
+    if (XAllocColor(display, colormap, &tkColPtr->color) != 0) {
 	DeleteStressedCmap(display, colormap);
     } else {
 	FindClosestColor(tkwin, &tkColPtr->color, &tkColPtr->color);
@@ -342,7 +342,7 @@ FindClosestColor(
 	    }
 	}
 	if (XAllocColor(dispPtr->display, colormap,
-		&stressPtr->colorPtr[closest]) != Success) {
+		&stressPtr->colorPtr[closest]) != 0) {
 	    *actualColorPtr = stressPtr->colorPtr[closest];
 	    return;
 	}
