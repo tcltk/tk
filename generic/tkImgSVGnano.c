@@ -390,7 +390,7 @@ ParseSVGWithOptions(
     double dpi = 96.0;
     char *inputCopy = NULL;
     NSVGimage *nsvgImage;
-    int parameterScaleSeen = 0;
+    bool parameterScaleSeen = false;
     static const char *const fmtOptions[] = {
 	"-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
     };
@@ -463,7 +463,7 @@ ParseSVGWithOptions(
 			NULL);
 		goto error;
 	    }
-	    parameterScaleSeen = 1;
+	    parameterScaleSeen = true;
 	    break;
 	default:
 	    break;

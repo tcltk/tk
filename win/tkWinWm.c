@@ -2119,7 +2119,7 @@ UpdateWrapper(
 		Tk_ReqWidth((Tk_Window) winPtr),
 		Tk_ReqHeight((Tk_Window) winPtr));
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, (WPARAM) wmPtr->hMenu,
-		(LPARAM) Tk_GetMenuHWND((Tk_Window) winPtr));
+		(LPARAM) TkGetMenuHWND((Tk_Window) winPtr));
     }
 
     /*
@@ -7087,7 +7087,7 @@ TkWinSetMenu(
 	}
     } else {
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, (WPARAM) hMenu,
-		(LPARAM) Tk_GetMenuHWND(tkwin));
+		(LPARAM) TkGetMenuHWND(tkwin));
     }
 }
 
@@ -8061,7 +8061,7 @@ WmProc(
     case WM_ENTERIDLE:
     case WM_INITMENUPOPUP:
 	if (winPtr) {
-	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window) winPtr);
+	    HWND hMenuHWnd = TkGetEmbeddedMenuHWND((Tk_Window) winPtr);
 
 	    if (hMenuHWnd) {
 		if (SendMessageW(hMenuHWnd, message, wParam, lParam)) {

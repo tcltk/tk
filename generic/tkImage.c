@@ -67,7 +67,7 @@ typedef struct ImageModel {
 				 * entry). */
     Image *instancePtr;		/* Pointer to first in list of instances
 				 * derived from this name. */
-    int deleted;		/* Flag set when image is being deleted. */
+    bool deleted;		/* Flag set when image is being deleted. */
     TkWindow *winPtr;		/* Main window of interpreter (used to detect
 				 * when the world is falling apart.) */
 } ImageModel;
@@ -75,7 +75,7 @@ typedef struct ImageModel {
 typedef struct {
     Tk_ImageType *imageTypeList;/* First in a list of all known image
 				 * types. */
-    bool initialized;		/* Set to 1 if we've initialized the
+    bool initialized;		/* Set to true if we've initialized the
 				 * structure. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -292,7 +292,7 @@ Tk_ImageObjCmd(
 	    modelPtr->tablePtr = &winPtr->mainPtr->imageTable;
 	    modelPtr->hPtr = hPtr;
 	    modelPtr->instancePtr = NULL;
-	    modelPtr->deleted = 0;
+	    modelPtr->deleted = false;
 	    modelPtr->winPtr = winPtr->mainPtr->winPtr;
 	    Tcl_Preserve(modelPtr->winPtr);
 	    Tcl_SetHashValue(hPtr, modelPtr);
@@ -315,7 +315,7 @@ Tk_ImageObjCmd(
 		modelPtr->typePtr->deleteProc(modelPtr->modelData);
 		modelPtr->typePtr = NULL;
 	    }
-	    modelPtr->deleted = 0;
+	    modelPtr->deleted = false;
 	}
 
 	/*
@@ -934,7 +934,7 @@ DeleteImage(
 	Tcl_Release(modelPtr->winPtr);
 	Tcl_Free(modelPtr);
     } else {
-	modelPtr->deleted = 1;
+	modelPtr->deleted = true;
     }
 }
 
@@ -966,7 +966,7 @@ EventuallyDeleteImage(
 	modelPtr->hPtr = NULL;
     }
     if (!modelPtr->deleted) {
-	modelPtr->deleted = 1;
+	modelPtr->deleted = true;
 	Tcl_EventuallyFree(modelPtr, DeleteImage);
     }
 }

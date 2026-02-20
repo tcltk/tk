@@ -1465,7 +1465,7 @@ ForwBack(
  *	srcPtr, or to the last character in the TkText if there aren't "count"
  *	bytes left.
  *
- *	In this latter case, the function returns '1' to indicate that not all
+ *	In this latter case, the function returns true to indicate that not all
  *	of 'byteCount' could be used.
  *
  * Side effects:
@@ -1474,7 +1474,7 @@ ForwBack(
  *---------------------------------------------------------------------------
  */
 
-int
+bool
 TkTextIndexForwBytes(
     const TkText *textPtr,
     const TkTextIndex *srcPtr,	/* Source index. */
@@ -1488,7 +1488,7 @@ TkTextIndexForwBytes(
 
     if (byteCount < 0) {
 	TkTextIndexBackBytes(textPtr, srcPtr, -byteCount, dstPtr);
-	return 0;
+	return false;
     }
 
     *dstPtr = *srcPtr;
@@ -1510,13 +1510,13 @@ TkTextIndexForwBytes(
 	 */
 
 	if (dstPtr->byteIndex < lineLength) {
-	    return 0;
+	    return false;
 	}
 	dstPtr->byteIndex -= lineLength;
 	linePtr = TkBTreeNextLine(textPtr, dstPtr->linePtr);
 	if (linePtr == NULL) {
 	    dstPtr->byteIndex = lineLength - 1;
-	    return 1;
+	    return true;
 	}
 	dstPtr->linePtr = linePtr;
     }
@@ -2005,7 +2005,7 @@ TkTextIndexCount(
  *---------------------------------------------------------------------------
  */
 
-int
+bool
 TkTextIndexBackBytes(
     const TkText *textPtr,
     const TkTextIndex *srcPtr,	/* Source index. */
@@ -2034,7 +2034,7 @@ TkTextIndexBackBytes(
 	}
 	if (lineIndex == 0) {
 	    dstPtr->byteIndex = 0;
-	    return 1;
+	    return true;
 	}
 	lineIndex--;
 	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, textPtr, lineIndex);
@@ -2048,7 +2048,7 @@ TkTextIndexBackBytes(
 	    dstPtr->byteIndex += segPtr->size;
 	}
     }
-    return 0;
+    return false;
 }
 
 /*
