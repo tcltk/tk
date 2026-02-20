@@ -125,7 +125,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
+          sudo apt-get install xvfb libx11-dev libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
