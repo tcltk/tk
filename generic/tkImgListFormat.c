@@ -1116,7 +1116,7 @@ ParseColorAsStandard(
  *      None
  *----------------------------------------------------------------------
  */
-int
+bool
 TkDebugPhotoStringMatchDef(
     Tcl_Interp *interp,     /* Error messages are left in this interpreter */
     Tcl_Obj *data,          /* The data to check */
@@ -1124,7 +1124,7 @@ TkDebugPhotoStringMatchDef(
     int *widthPtr,          /* Width of image is written to this location */
     int *heightPtr)         /* Height of image is written to this location */
 {
-    return StringMatchDef(data, formatString, widthPtr, heightPtr, interp);
+    return StringMatchDef(data, formatString, widthPtr, heightPtr, interp) != 0;
 }
 
 

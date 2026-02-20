@@ -175,10 +175,10 @@ TkpGetColor(
 	}
     } else {
     gotWebColor:
-	if (TkParseColor(display, colormap, name, &color) == 0) {
+	if (TkParseColor(display, colormap, name, &color) == Success) {
 	    return NULL;
 	}
-	if (XAllocColor(display, colormap, &color) != 0) {
+	if (XAllocColor(display, colormap, &color) != Success) {
 	    DeleteStressedCmap(display, colormap);
 	} else {
 	    FindClosestColor(tkwin, &color, &color);
@@ -225,7 +225,7 @@ TkpGetColorByValue(
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
     tkColPtr->color.blue = colorPtr->blue;
-    if (XAllocColor(display, colormap, &tkColPtr->color) != 0) {
+    if (XAllocColor(display, colormap, &tkColPtr->color) != Success) {
 	DeleteStressedCmap(display, colormap);
     } else {
 	FindClosestColor(tkwin, &tkColPtr->color, &tkColPtr->color);
@@ -342,7 +342,7 @@ FindClosestColor(
 	    }
 	}
 	if (XAllocColor(dispPtr->display, colormap,
-		&stressPtr->colorPtr[closest]) != 0) {
+		&stressPtr->colorPtr[closest]) != Success) {
 	    *actualColorPtr = stressPtr->colorPtr[closest];
 	    return;
 	}
@@ -424,7 +424,7 @@ DeleteStressedCmap(
  */
 
 #undef TkpCmapStressed
-int
+bool
 TkpCmapStressed(
     Tk_Window tkwin,		/* Window that identifies the display
 				 * containing the colormap. */
@@ -435,10 +435,10 @@ TkpCmapStressed(
     for (stressPtr = ((TkWindow *) tkwin)->dispPtr->stressPtr;
 	    stressPtr != NULL; stressPtr = stressPtr->nextPtr) {
 	if (stressPtr->colormap == colormap) {
-	    return 1;
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 
