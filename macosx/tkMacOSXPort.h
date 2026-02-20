@@ -118,7 +118,7 @@
  * The following functions are not used on the Mac, so we stub them out.
  */
 
-#define TkpCmapStressed(tkwin,colormap) (0)
+#define TkpCmapStressed(tkwin,colormap) (false)
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
 #define TkpSync(display)
