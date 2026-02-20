@@ -483,7 +483,7 @@ if test "$tk_aqua" = no; then
     AC_MSG_RESULT([yes])
     ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
     ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-    AC_DEFINE([USE_ATK], [1], [Define if ATK and Atk-bridge are available])
+    AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
     have_atk=yes
     AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
   else

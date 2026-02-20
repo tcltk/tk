@@ -8560,7 +8560,7 @@ printf "%s\n" "yes" >&6; }
     ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
     ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
 
-printf "%s\n" "#define USE_ATK 1" >>confdefs.h
+printf "%s\n" "#define HAVE_ATK 1" >>confdefs.h
 
     have_atk=yes
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: All accessibility dependencies found, enabling support" >&5

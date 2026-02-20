@@ -22,7 +22,7 @@
 #include <tk.h>
 #include "tkInt.h"
 
-#ifdef USE_ATK
+#ifdef HAVE_ATK
 #include <atk/atk.h>
 #include <atk-bridge.h>
 
@@ -1927,7 +1927,7 @@ int TkAtkAccessibleObjCmd(
  *----------------------------------------------------------------------
  */
 
-#ifdef USE_ATK
+#ifdef HAVE_ATK
 int TkAtkAccessibility_Init(Tcl_Interp *interp)
 {
     /* Initialize AT-SPI bridge. */
