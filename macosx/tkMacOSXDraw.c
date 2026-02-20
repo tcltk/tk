@@ -1069,30 +1069,6 @@ XFillArcs(
     return Success;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXSetUpGraphicsPort --
- *
- *	Set up the graphics port from the given GC.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetUpGraphicsPort(
-    TCL_UNUSED(GC),			/* GC to apply to current port. */
-    TCL_UNUSED(void *))
-{
-    Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -1530,32 +1506,6 @@ ClipToGC(
 	CFRelease(gcClipRgn);
 	XOffsetRegion(gcClip, -xOffset, -yOffset);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXMakeStippleMap --
- *
- *	Given a drawable and a stipple pattern this function draws the pattern
- *	repeatedly over the drawable. The drawable can then be used as a mask
- *	for bit-bliting a stipple pattern over an object.
- *
- * Results:
- *	A BitMap data structure.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void *
-TkMacOSXMakeStippleMap(
-    TCL_UNUSED(Drawable),	/* Window to apply stipple. */
-    TCL_UNUSED(Drawable))	/* The stipple pattern. */
-{
-    return NULL;
 }
 
 /*

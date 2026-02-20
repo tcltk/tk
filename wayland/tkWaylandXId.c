@@ -650,7 +650,7 @@ TkUnixSetMenubar(TCL_UNUSED(Tk_Window) /* tkwin */,
 	return;
 }
 
-int
+bool
 TkScrollWindow(
 		   TCL_UNUSED(Tk_Window), /* tkwin */
 		   TCL_UNUSED(GC), /* gc */
