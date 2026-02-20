@@ -26,6 +26,7 @@ to the userbase.
  - [fails to build with glibc 2.43](https://core.tcl-lang.org/tk/tktview/5d2061)
  - [Pointer warp relative to the screen's root window fails if the Tk root window is withdrawn](https://core.tcl-lang.org/tk/tktview/e2418c)
  - [Directory library/demos unexpectedly embedded into tcl9tk9x.dll](https://core.tcl-lang.org/tk/tktview/6a9bae)
+ - [Use the native selection colors for listbox and ttk::treeview widgets on aqua](https://core.tcl-lang.org/tk/tktview/c6292f)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
