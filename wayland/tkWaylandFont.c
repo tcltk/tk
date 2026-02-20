@@ -13,9 +13,9 @@
  */
 
 
-#include “tkInt.h”
-#include “tkFont.h”
-#include “tkGlfwInt.h”
+#include "tkInt.h"
+#include "tkFont.h"
+#include "tkGlfwInt.h"
 
 #include <fontconfig/fontconfig.h>
 #include <nanovg.h>
@@ -808,7 +808,7 @@ TkPostscriptFontName(Tk_Font tkfont, Tcl_DString *dsPtr)
 {
 WaylandFont *fontPtr = (WaylandFont *) tkfont;
 const char  *family  = fontPtr->font.fa.family
-? fontPtr->font.fa.family : “Helvetica”;
+? fontPtr->font.fa.family : "Helvetica";
 
 
 Tcl_DStringAppend(dsPtr, family, -1);
