@@ -33,7 +33,7 @@
  * CoreText). We do NOT maintain our own glyph-coverage bitmaps, SubFont 
  * linked lists, or stbtt rasterization state. NanoVG already wraps 
  * stb_truetype internally and handles fallback at draw time; prior 
- * implemenations Wayland font used Tk's Unix font implementation as the 
+ * implemenations of Wayland fonts used Tk's Unix font implementation as the 
  * source, but removing the X11 mechanisms made font management unstable 
  * and crash-prone. 
  * 
