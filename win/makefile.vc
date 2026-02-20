@@ -488,15 +488,14 @@ $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(GUIEXECMD) -stack:2300000 $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
-TKSCRIPTZIPTOP = tk_library
-#TKSCRIPTZIPTOP = "tk$(DOTVERSION)"
 $(TKSCRIPTZIP): .PHONY
 	@echo Building Tk library zip file
 	@if not exist "$(LIBTKVFS)" $(MKDIR) "$(LIBTKVFS)"
-	@if exist "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)" $(RMDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
-	@$(CPYDIR) $(LIBDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
+	@if exist "$(LIBTKVFS)\tk_library" $(RMDIR) "$(LIBTKVFS)\tk_library"
+	@$(CPYDIR) $(LIBDIR) "$(LIBTKVFS)\tk_library"
 	@$(TCLSH) <<
 cd {$(OUT_DIR)}
+file delete -force {libtk.vfs/tk_library/demos}
 file delete -force {$@}
 zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 <<
@@ -507,6 +506,7 @@ $(WISHSCRIPTZIP): $(TKSCRIPTZIP)
 	@if exist "$(LIBTKVFS)\tcl_library" $(RMDIR) "$(LIBTKVFS)\tcl_library"
 	@$(TCLSH) <<
 cd {$(OUT_DIR)}
+file delete -force {libtk.vfs/tk_library/demos}
 file delete -force {$@}
 zipfs mount "$(TCLSCRIPTZIP:\=/)" mnt
 file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)"

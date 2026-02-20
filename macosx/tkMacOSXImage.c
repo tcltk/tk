@@ -1055,7 +1055,7 @@ TkScrollWindow(
     }
 
     /*
-     * Convert the HIShape dmgRgn into a TkRegion and store it.
+     * Convert the HIShape dmgRgn into a Region and store it.
      */
 
     TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
