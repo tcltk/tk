@@ -162,20 +162,12 @@ TkPutImage(
 #	define TkPointerDeadWindow 0
 #	define TkpSetCapture 0
 #	define TkpSetCursor 0
-#	define TkWinCancelMouseTimer 0
 #	define TkWinClipboardRender 0
-#	define TkWinEmbeddedEventProc 0
 #	define TkWinFillRect 0
 #	define TkWinGetBorderPixels 0
 #	define TkWinGetDrawableDC 0
-#	define TkWinGetModifierState 0
-#	define TkWinGetSystemPalette 0
-#	define TkWinGetWrapperWindow 0
-#	define TkWinHandleMenuEvent 0
-#	define TkWinIndexOfColor 0
 #	define TkWinReleaseDrawableDC 0
 #	define TkWinResendEvent 0
-#	define TkWinSelectPalette 0
 #	define TkWinSetMenu 0
 #	define TkWinSetWindowPos 0
 #	define TkWinWmCleanup 0
@@ -183,7 +175,6 @@ TkPutImage(
 #	define TkWinXInit 0
 #	define TkWinSetForegroundWindow 0
 #	define TkWinDialogDebug 0
-#	define TkWinGetMenuSystemDefault 0
 #	define TkWinSetHINSTANCE 0
 #	define TkWinChildProc 0
 
@@ -215,20 +206,37 @@ TkPutImage(
 
 /* Wrapper-functions restoring binary compatibility of bool functions */
 
-static int TkCharBbox(Tk_TextLayout layout, Tcl_Size index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr) {return Tk_CharBbox(layout, index, xPtr, yPtr, widthPtr, heightPtr);}
+/* WebAssembly always stores a bool as a full integer, so no need for the wrappers */
+#if !defined(__EMSCRIPTEN__) && !defined(__wasm__) && !defined(__wasm32__) && !defined(__wasm64__)
+
+static int TkCharBbox(Tk_TextLayout layout, Tcl_Size index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr) {
+    return Tk_CharBbox(layout, index, xPtr, yPtr, widthPtr, heightPtr);
+}
 #define Tk_CharBbox (bool (*)(Tk_TextLayout, Tcl_Size, int *, int *, int *, int *))(void *)TkCharBbox
-static int TkSetWindowVisual(Tk_Window tkwin, Visual *visual, int depth, Colormap colormap) {return Tk_SetWindowVisual(tkwin, visual, depth, colormap);}
+static int TkSetWindowVisual(Tk_Window tkwin, Visual *visual, int depth, Colormap colormap) {
+    return Tk_SetWindowVisual(tkwin, visual, depth, colormap);
+}
 #define Tk_SetWindowVisual (bool (*)(Tk_Window, Visual *, int, Colormap))(void *)TkSetWindowVisual
-static int TkStrictMotif(Tk_Window tkwin) {return Tk_StrictMotif(tkwin);}
+static int TkStrictMotif(Tk_Window tkwin) {
+    return Tk_StrictMotif(tkwin);
+}
 #define Tk_StrictMotif (bool (*)(Tk_Window))(void *)TkStrictMotif
-static int TkCollapseMotionEvents(Display *display, int collapse) {return Tk_CollapseMotionEvents(display, collapse);}
+static int TkCollapseMotionEvents(Display *display, int collapse) {
+    return Tk_CollapseMotionEvents(display, collapse);
+}
 #define Tk_CollapseMotionEvents (bool (*)(Display *, int))(void *)TkCollapseMotionEvents
-static int TkAlwaysShowSelection(Tk_Window tkwin) {return Tk_AlwaysShowSelection(tkwin);}
+static int TkAlwaysShowSelection(Tk_Window tkwin) {
+    return Tk_AlwaysShowSelection(tkwin);
+}
 #define Tk_AlwaysShowSelection (bool (*)(Tk_Window))(void *)TkAlwaysShowSelection
 #ifdef MAC_OSX_TK
-static int TkMacOSXIsAppInFront(void) {return Tk_MacOSXIsAppInFront();}
+static int TkMacOSXIsAppInFront(void) {
+    return Tk_MacOSXIsAppInFront();
+}
 #define Tk_MacOSXIsAppInFront (bool (*)(void))(void *)TkMacOSXIsAppInFront
 #endif /* MAC_OSX_TK */
+
+#endif /* !defined(__EMSCRIPTEN__) && !defined(__wasm__) && !defined(__wasm32__) && !defined(__wasm64__) */
 
 
 /*
@@ -455,28 +463,28 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpSetCursor, /* 8 */
     TkpWmSetState, /* 9 */
     TkSetPixmapColormap, /* 10 */
-    TkWinCancelMouseTimer, /* 11 */
+    0, /* 11 */
     TkWinClipboardRender, /* 12 */
-    TkWinEmbeddedEventProc, /* 13 */
+    0, /* 13 */
     TkWinFillRect, /* 14 */
     TkWinGetBorderPixels, /* 15 */
     TkWinGetDrawableDC, /* 16 */
-    TkWinGetModifierState, /* 17 */
-    TkWinGetSystemPalette, /* 18 */
-    TkWinGetWrapperWindow, /* 19 */
-    TkWinHandleMenuEvent, /* 20 */
-    TkWinIndexOfColor, /* 21 */
+    0, /* 17 */
+    0, /* 18 */
+    0, /* 19 */
+    0, /* 20 */
+    0, /* 21 */
     TkWinReleaseDrawableDC, /* 22 */
     TkWinResendEvent, /* 23 */
-    TkWinSelectPalette, /* 24 */
-    TkWinSetMenu, /* 25 */
+    0, /* 24 */
+    0, /* 25 */
     TkWinSetWindowPos, /* 26 */
     TkWinWmCleanup, /* 27 */
     TkWinXCleanup, /* 28 */
     TkWinXInit, /* 29 */
     TkWinSetForegroundWindow, /* 30 */
     TkWinDialogDebug, /* 31 */
-    TkWinGetMenuSystemDefault, /* 32 */
+    0, /* 32 */
     TkAlignImageData, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
     0, /* 35 */
@@ -499,31 +507,31 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkGenerateActivateEvents, /* 2 */
     TkpGetMS, /* 3 */
     TkPointerDeadWindow, /* 4 */
-    TkpSetCursor, /* 5 */
+    0, /* 5 */
     TkpScanWindowId, /* 6 */
     0, /* 7 */
-    TkMacOSXButtonKeyState, /* 8 */
+    TkpSetCursor, /* 8 */
     TkpWmSetState, /* 9 */
-    TkMacOSXDispatchMenuEvent, /* 10 */
+    0, /* 10 */
     TkpSetCapture, /* 11 */
     0, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
     0, /* 15 */
     TkMacOSXGetXWindow, /* 16 */
-    TkMacOSXGrowToplevel, /* 17 */
+    0, /* 17 */
     0, /* 18 */
     0, /* 19 */
     0, /* 20 */
-    TkMacOSXInvalidateWindow, /* 21 */
+    0, /* 21 */
     0, /* 22 */
-    TkMacOSXMakeRealWindowExist, /* 23 */
-    TkMacOSXMakeStippleMap, /* 24 */
+    0, /* 23 */
+    0, /* 24 */
     0, /* 25 */
     0, /* 26 */
-    TkMacOSXResizable, /* 27 */
+    0, /* 27 */
     0, /* 28 */
-    TkMacOSXSetScrollbarGrow, /* 29 */
+    0, /* 29 */
     0, /* 30 */
     0, /* 31 */
     TkMacOSXUpdateClipRgn, /* 32 */
@@ -540,12 +548,10 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXContainerId, /* 43 */
     TkMacOSXGetHostToplevel, /* 44 */
     0, /* 45 */
-    TkpIsWindowFloating, /* 46 */
+    0, /* 46 */
     TkpGetCapture, /* 47 */
     0, /* 48 */
     TkMacOSXGetContainer, /* 49 */
-    TkGenerateButtonEvent, /* 50 */
-    TkGenWMDestroyEvent, /* 51 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */

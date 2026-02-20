@@ -47,7 +47,7 @@ static TkpClipMask *AllocClipMask(GC gc) {
 	clip_mask = (TkpClipMask *)Tcl_Alloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
     } else if (clip_mask->type == TKP_CLIP_REGION) {
-	TkDestroyRegion(clip_mask->value.region);
+	XDestroyRegion(clip_mask->value.region);
     }
     clip_mask->type = TKP_CLIP_PIXMAP;
     clip_mask->value.pixmap = None;
@@ -76,7 +76,7 @@ static void FreeClipMask(GC gc) {
 	return;
     }
     if (clip_mask->type == TKP_CLIP_REGION) {
-	TkDestroyRegion(clip_mask->value.region);
+	XDestroyRegion(clip_mask->value.region);
     }
     Tcl_Free(clip_mask);
     gc->clip_mask = None;
@@ -281,7 +281,7 @@ XSetDashes(
     TCL_UNUSED(Display *),
     GC gc,
     int dash_offset,
-    _Xconst char *dash_list,
+    const char *dash_list,
     int n)
 {
     char *p = &(gc->dashes);
@@ -403,7 +403,7 @@ XSetClipOrigin(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetRegion, XSetClipMask, XSetClipRectangles --
+ * XSetRegion, XSetClipMask, XSetClipRectangles --
  *
  *	Sets the clipping region/pixmap for a GC.
  *
@@ -420,19 +420,19 @@ XSetClipOrigin(
  */
 
 int
-TkSetRegion(
+XSetRegion(
     TCL_UNUSED(Display *),
     GC gc,
-    TkRegion r)
+    Region r)
 {
     if (r == NULL) {
-	Tcl_Panic("must not pass NULL to TkSetRegion for compatibility with X11; use XSetClipMask instead");
+	Tcl_Panic("must not pass NULL to XSetRegion for compatibility with X11; use XSetClipMask instead");
     } else {
 	TkpClipMask *clip_mask = AllocClipMask(gc);
 
 	clip_mask->type = TKP_CLIP_REGION;
 	clip_mask->value.region = r;
-	clip_mask->value.region = TkCreateRegion();
+	clip_mask->value.region = XCreateRegion();
 	TkpCopyRegion(clip_mask->value.region, r);
     }
     return Success;
@@ -465,7 +465,7 @@ XSetClipRectangles(
     int n,
     TCL_UNUSED(int))
 {
-    TkRegion clipRgn = TkCreateRegion();
+    Region clipRgn = XCreateRegion();
     TkpClipMask * clip_mask = AllocClipMask(gc);
     clip_mask->type = TKP_CLIP_REGION;
     clip_mask->value.region = clipRgn;
@@ -475,7 +475,7 @@ XSetClipRectangles(
 
 	rect.x += (short)clip_x_origin;
 	rect.y += (short)clip_y_origin;
-	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+	XUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
     return 1;
@@ -501,7 +501,7 @@ XDrawImageString(
     GC gc,
     int x,
     int y,
-    _Xconst char *string,
+    const char *string,
     int length)
 {
 }
@@ -590,7 +590,7 @@ int
 XQueryTextExtents(
     TCL_UNUSED(Display *),
     TCL_UNUSED(XID),
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(int),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
@@ -699,8 +699,8 @@ XCreateGlyphCursor(
     TCL_UNUSED(Font),
     TCL_UNUSED(unsigned int),
     TCL_UNUSED(unsigned int),
-    TCL_UNUSED(XColor _Xconst *),
-    TCL_UNUSED(XColor _Xconst *))
+    TCL_UNUSED(XColor const *),
+    TCL_UNUSED(XColor const *))
 {
     return (Cursor) NULL;
 }
@@ -708,7 +708,7 @@ XCreateGlyphCursor(
 XFontSet
 XCreateFontSet(
     TCL_UNUSED(Display *)		/* display */,
-    TCL_UNUSED(_Xconst char *)	/* base_font_name_list */,
+    TCL_UNUSED(const char *)	/* base_font_name_list */,
     TCL_UNUSED(char ***)		/* missing_charset_list */,
     TCL_UNUSED(int *)		/* missing_charset_count */,
     TCL_UNUSED(char **)		/* def_string */

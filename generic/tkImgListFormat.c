@@ -200,10 +200,9 @@ ParseFormatOptions(
 
 {
     Tcl_Size optIndex, index;
-    int first, typeIndex;
+    bool first = true;
+    int typeIndex;
     const char *option;
-
-    first = 1;
 
     /*
      * Fill in default values
@@ -222,13 +221,13 @@ ParseFormatOptions(
 	if (option[0] != '-') {
 	    if (first) {
 		optPtr->formatName = objv[index];
-		first = 0;
+		first = false;
 		continue;
 	    } else {
 		break;
 	    }
 	}
-	first = 0;
+	first = false;
 
 	/*
 	 * Check if option is known and allowed

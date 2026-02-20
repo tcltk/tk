@@ -883,7 +883,7 @@ ImgBmapDisplay(
 				 * to imageX and imageY. */
 {
     BitmapInstance *instancePtr = (BitmapInstance *)clientData;
-    int masking;
+    bool masking;
 
     /*
      * If there's no graphics context, it means that an error occurred while

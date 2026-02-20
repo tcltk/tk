@@ -131,7 +131,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
-    TkRegion clipRegion = NULL;
+    Region clipRegion = NULL;
 
     gcValues.font = Tk_FontId(text->tkfont);
     gcValues.foreground = color->pixel;
@@ -151,14 +151,14 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     if (b.width < text->width || b.height < text->height) {
 	XRectangle rect;
 
-	clipRegion = TkCreateRegion();
+	clipRegion = XCreateRegion();
 	rect.x = b.x;
 	rect.y = b.y;
 	rect.width = b.width + (text->embossed ? 1 : 0);
 	rect.height = b.height + (text->embossed ? 1 : 0);
-	TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
-	TkSetRegion(Tk_Display(tkwin), gc1, clipRegion);
-	TkSetRegion(Tk_Display(tkwin), gc2, clipRegion);
+	XUnionRectWithRegion(&rect, clipRegion, clipRegion);
+	XSetRegion(Tk_Display(tkwin), gc1, clipRegion);
+	XSetRegion(Tk_Display(tkwin), gc2, clipRegion);
 #ifdef HAVE_XFT
 	TkUnixSetXftClipRegion(clipRegion);
 #endif
@@ -194,7 +194,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 #endif
 	XSetClipMask(Tk_Display(tkwin), gc1, None);
 	XSetClipMask(Tk_Display(tkwin), gc2, None);
-	TkDestroyRegion(clipRegion);
+	XDestroyRegion(clipRegion);
     }
     Tk_FreeGC(Tk_Display(tkwin), gc1);
     Tk_FreeGC(Tk_Display(tkwin), gc2);

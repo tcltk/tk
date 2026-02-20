@@ -103,6 +103,8 @@ static int	GenerateMenuSelectEvent(TKMenu *menu, NSMenuItem *menuItem);
 static void	MenuSelectEvent(TkMenu *menuPtr);
 static void	RecursivelyClearActiveMenu(TkMenu *menuPtr);
 static int	ModifierCharWidth(Tk_Font tkfont);
+static void ClearMenubarActive(void);
+
 
 #pragma mark TkBackgroundLoop
 
@@ -530,7 +532,7 @@ static Bool runMenuCommand = true;
 	backgroundLoop = nil;
     }
     if (!inPostMenu) {
-	TkMacOSXClearMenubarActive();
+	ClearMenubarActive();
     }
 }
 
@@ -1681,7 +1683,7 @@ RecursivelyClearActiveMenu(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXClearMenubarActive --
+ * ClearMenubarActive --
  *
  *	Recursively clears the active entry in the current menubar hierarchy.
  *
@@ -1695,7 +1697,7 @@ RecursivelyClearActiveMenu(
  */
 
 void
-TkMacOSXClearMenubarActive(void)
+ClearMenubarActive(void)
 {
     NSMenu *mainMenu = [NSApp mainMenu];
 
