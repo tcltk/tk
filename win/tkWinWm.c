@@ -378,8 +378,8 @@ static void		GetMinSize(WmInfo *wmPtr,
 			    int *minWidthPtr, int *minHeightPtr);
 static TkWindow *	GetTopLevel(HWND hwnd);
 static void		InitWm(void);
-static int		InstallColormaps(HWND hwnd, int message,
-			    int isForemost);
+static bool		InstallColormaps(HWND hwnd, int message,
+			    bool isForemost);
 static void		InvalidateSubTree(TkWindow *winPtr, Colormap colormap);
 static void		InvalidateSubTreeDepth(TkWindow *winPtr);
 static int		ParseGeometry(Tcl_Interp *interp, const char *string,
@@ -2347,7 +2347,7 @@ TkWmUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -2377,7 +2377,7 @@ TkpWmSetState(
     ShowWindow(wmPtr->wrapper, cmd);
     wmPtr->flags &= ~WM_SYNC_PENDING;
 setStateEnd:
-    return 1;
+    return true;
 }
 
 /*
@@ -3408,9 +3408,9 @@ WmColormapwindowsCmd(
      */
 
     if (wmPtr == winPtr->dispPtr->foregroundWmPtr) {
-	InstallColormaps(wmPtr->wrapper, WM_QUERYNEWPALETTE, 1);
+	InstallColormaps(wmPtr->wrapper, WM_QUERYNEWPALETTE, true);
     } else {
-	InstallColormaps(wmPtr->wrapper, WM_PALETTECHANGED, 0);
+	InstallColormaps(wmPtr->wrapper, WM_PALETTECHANGED, false);
     }
     return TCL_OK;
 }
@@ -6961,9 +6961,9 @@ TkWmAddToColormapWindows(
      */
 
     if (topPtr->wmInfoPtr == winPtr->dispPtr->foregroundWmPtr) {
-	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_QUERYNEWPALETTE, 1);
+	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_QUERYNEWPALETTE, true);
     } else {
-	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_PALETTECHANGED, 0);
+	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_PALETTECHANGED, false);
     }
 }
 
@@ -7354,13 +7354,13 @@ GenerateConfigureNotify(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 InstallColormaps(
     HWND hwnd,			/* Toplevel wrapper window whose colormaps
 				 * should be installed. */
     int message,		/* Either WM_PALETTECHANGED or
 				 * WM_QUERYNEWPALETTE */
-    int isForemost)		/* 1 if window is foremost, else 0 */
+    bool isForemost)		/* true if window is foremost, else false */
 {
     Tcl_Size i;
     HDC dc;
@@ -7371,7 +7371,7 @@ InstallColormaps(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
-	return 0;
+	return false;
     }
 
     wmPtr = winPtr->wmInfoPtr;
@@ -7401,7 +7401,7 @@ InstallColormaps(
 	    RealizePalette(dc);
 	    ReleaseDC(hwnd, dc);
 	    SendMessageW(hwnd, WM_PALETTECHANGED, (WPARAM) hwnd, (LPARAM) NULL);
-	    return TRUE;
+	    return true;
 	}
     } else {
 	/*
@@ -7443,7 +7443,7 @@ InstallColormaps(
     SelectPalette(dc, oldPalette, TRUE);
     RealizePalette(dc);
     ReleaseDC(hwnd, dc);
-    return TRUE;
+    return true;
 }
 
 /*
@@ -7945,7 +7945,7 @@ WmProc(
 	goto done;
 
     case WM_QUERYNEWPALETTE:
-	result = InstallColormaps(hwnd, WM_QUERYNEWPALETTE, TRUE);
+	result = InstallColormaps(hwnd, WM_QUERYNEWPALETTE, true);
 	goto done;
 
     case WM_SETTINGCHANGE:
