@@ -1018,7 +1018,7 @@ TkCreateMainWindow(
 #ifdef USE_NMAKE
 		".nmake"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(USE_ATK)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_ATK)
 		".no-atk"
 #endif
 #ifdef TK_NO_DEPRECATED
@@ -1029,6 +1029,9 @@ TkCreateMainWindow(
 #endif
 #if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_XFT)
 		".no-xft"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_XSS)
+		".no-xss"
 #endif
 #ifdef __OBJC__
 		".objective-c"
