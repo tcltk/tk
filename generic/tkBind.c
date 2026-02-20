@@ -690,7 +690,7 @@ DEBUG(static int countSeqItems = 0;)
  */
 
 static void		ChangeScreen(Tcl_Interp *interp, char *dispName, int screenIndex);
-static int		CreateVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
+static bool		CreateVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    char *virtString, const char *eventString);
 static int		DeleteVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    char *virtString, const char *eventString);
@@ -712,7 +712,7 @@ static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSList *psList,
 			    PSList *psSuccList, unsigned patIndex, const Event *eventPtr,
 			    void *object, PatSeq **physPtrPtr);
-static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
+static bool		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, unsigned *eventMaskPtr);
@@ -2090,19 +2090,19 @@ ResetCounters(
 }
 
 /* helper function */
-static int
+static bool
 IsBetterMatch(
     const PatSeq *fstMatchPtr,
     const PatSeq *sndMatchPtr)	/* this is a better match? */
 {
     int diff;
 
-    if (!sndMatchPtr) { return 0; }
-    if (!fstMatchPtr) { return 1; }
+    if (!sndMatchPtr) { return false; }
+    if (!fstMatchPtr) { return true; }
 
     diff = CountSpecialized(fstMatchPtr, sndMatchPtr);
-    if (diff > 0) { return 1; }
-    if (diff < 0) { return 0; }
+    if (diff > 0) { return true; }
+    if (diff < 0) { return false; }
 
     {	/* local scope */
 #define M 1000000ULL
@@ -2128,8 +2128,8 @@ IsBetterMatch(
 	    assert(GetCount(sndMatchPtr, i) < SIZE_OF_ARRAY(weight));
 	    sndCount += weight[GetCount(sndMatchPtr, i)];
 	}
-	if (sndCount > fstCount) { return 1; }
-	if (sndCount < fstCount) { return 0; }
+	if (sndCount > fstCount) { return true; }
+	if (sndCount < fstCount) { return false; }
     }
 
     return sndMatchPtr->number > fstMatchPtr->number;
@@ -2632,7 +2632,7 @@ Tk_BindEvent(
  */
 
 /* helper function */
-static int
+static bool
 VirtPatIsBound(
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     PatSeq *psPtr,		/* Test this pattern. */
@@ -2655,7 +2655,7 @@ VirtPatIsBound(
 
 	if (physPatPtr->info || !virtPatPtr->info) {
 	    if (IsSubsetOf(virtPatPtr->modMask, physPatPtr->modMask)) {
-		return 0; /* We cannot surpass this match. */
+		return false; /* We cannot surpass this match. */
 	    }
 	}
     }
@@ -2675,11 +2675,11 @@ VirtPatIsBound(
 	if ((hPtr = Tcl_FindHashEntry(&bindPtr->lookupTables.patternTable, (char *) &key))) {
 	    /* The physical event matches this virtual event's definition. */
 	    *physPtrPtr = (PatSeq *) Tcl_GetHashValue(hPtr);
-	    return 1;
+	    return true;
 	}
     }
 
-    return 0;
+    return false;
 }
 
 /* helper function */
@@ -2743,7 +2743,7 @@ CompareModMasks(
 }
 
 /* helper function */
-static int
+static bool
 IsPSInPSList(
     const PatSeq *psPtr,   /* Is this pattern sequence... */
     const PSList *psList)  /* ...an element of this list of patterns sequence? */
@@ -2752,10 +2752,10 @@ IsPSInPSList(
 
     TK_DLIST_FOREACH(psEntry, psList) {
 	if (psEntry->psPtr == psPtr) {
-	    return 1;
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 static PatSeq *
@@ -3535,7 +3535,7 @@ DeleteVirtualEventTable(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 CreateVirtualEvent(
     Tcl_Interp *interp,		/* Used for error reporting. */
     VirtualEventTable *vetPtr,	/* Table in which to augment virtual event. */
@@ -3553,7 +3553,7 @@ CreateVirtualEvent(
     assert(eventString);
 
     if (!(virtUid = GetVirtualEventUid(interp, virtString))) {
-	return 0;
+	return false;
     }
 
     /*
@@ -3561,7 +3561,7 @@ CreateVirtualEvent(
      */
 
     if (!(psPtr = FindSequence(interp, &vetPtr->lookupTables, NULL, eventString, 1, 0, NULL))) {
-	return 0;
+	return false;
     }
     assert(TEST_PSENTRY(psPtr));
 
@@ -3586,7 +3586,7 @@ CreateVirtualEvent(
 	VirtOwners_Append(&psPtr->ptr.owners, vhPtr);
     }
 
-    return 1;
+    return true;
 }
 
 /*
@@ -4483,7 +4483,7 @@ HandleEventGenerate(
  *---------------------------------------------------------------------------
  */
 
-static int
+static bool
 NameToWindow(
     Tcl_Interp *interp,		/* Interp for error return and name lookup. */
     Tk_Window mainWin,		/* Main window of application. */
@@ -4501,7 +4501,7 @@ NameToWindow(
 
     if (name[0] == '.') {
 	if (!(tkwin = Tk_NameToWindow(interp, name, mainWin))) {
-	    return 0;
+	    return false;
 	}
     } else {
 	Window id;
@@ -4520,13 +4520,13 @@ NameToWindow(
 	if (!tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad window name/identifier \"%s\"", name));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, (char *)NULL);
-	    return 0;
+	    return false;
 	}
     }
 
     assert(tkwin);
     *tkwinPtr = tkwin;
-    return 1;
+    return true;
 }
 
 /*

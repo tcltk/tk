@@ -286,7 +286,7 @@ MODULE_SCOPE void	TkMacOSXDrawAllViews(void *clientData);
 MODULE_SCOPE NSColor*   controlAccentColor(void);
 MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
-MODULE_SCOPE int	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
+MODULE_SCOPE bool	TkSetMacColor2(unsigned long pixel, CGColorRef *color,
 			    BOOL useDarkAppearance);
 MODULE_SCOPE CGColorRef	TkMacOSXGetCGColorFromNSColorUsingAppearance(
 			    NSColor *color, BOOL useDarkAppearance);
