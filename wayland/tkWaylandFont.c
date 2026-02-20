@@ -104,7 +104,7 @@ static NVGcolor ColorFromGC(
 
 void
 TkpFontPkgInit(
-    TkMainInfo *mainPtr)
+	       TkMainInfo *mainPtr)
 {
     Tcl_Interp *interp  = mainPtr->interp;
     Tk_Window   tkwin   = (Tk_Window) mainPtr->winPtr;
@@ -113,45 +113,6 @@ TkpFontPkgInit(
     if (!fcInitialized) {
         FcInit();
         fcInitialized = 1;
-    }
-
-    /*
-     * Register the small set of standard named fonts that Tk expects.
-     * We mirror what the macOS implementation does: resolve each logical
-     * name through the platform (Fontconfig here, NSFontManager there),
-     * build a TkFontAttributes record, and hand it to TkCreateNamedFont.
-     *
-     */
-
-    static const struct {
-        const char *tkName;
-        const char *fcFamily;
-        int         bold;
-        int         size;       /* points, negative => pixels */
-    } namedFonts[] = {
-        { "TkDefaultFont",      "sans-serif",   0, -12 },
-        { "TkTextFont",         "sans-serif",   0, -12 },
-        { "TkFixedFont",        "monospace",    0, -12 },
-        { "TkHeadingFont",      "sans-serif",   1, -12 },
-        { "TkCaptionFont",      "sans-serif",   1, -13 },
-        { "TkSmallCaptionFont", "sans-serif",   0, -11 },
-        { "TkIconFont",         "sans-serif",   0, -12 },
-        { "TkMenuFont",         "sans-serif",   0, -12 },
-        { "TkTooltipFont",      "sans-serif",   0, -11 },
-        { NULL, NULL, 0, 0 }
-    };
-
-    int i;
-    for (i = 0; namedFonts[i].tkName != NULL; i++) {
-        TkFontAttributes fa;
-        TkInitFontAttributes(&fa);
-        fa.family = Tk_GetUid(namedFonts[i].fcFamily);
-        fa.size   = (double) namedFonts[i].size;
-        fa.weight = namedFonts[i].bold ? TK_FW_BOLD : TK_FW_NORMAL;
-        fa.slant  = TK_FS_ROMAN;
-
-        TkDeleteNamedFont(NULL, tkwin, namedFonts[i].tkName);
-        TkCreateNamedFont(interp, tkwin, namedFonts[i].tkName, &fa);
     }
 }
 
