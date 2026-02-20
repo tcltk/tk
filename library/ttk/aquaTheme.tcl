@@ -10,7 +10,12 @@ namespace eval ttk::theme::aqua {
     # TEntry, TCombobox, and TSpinbox in the "!focus" state.
 
     proc setInactiveSelectBgColor {} {
-	scan $::tcl_platform(osVersion) "%d" majorOSVersion
+	if {[interp issafe]} {
+	    set majorOSVersion 0
+	} else {
+	    scan $::tcl_platform(osVersion) "%d" majorOSVersion
+	}
+
 	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
 	    set inactiveSelBg systemUnemphasizedSelectedTextBackgroundColor
 	} else {
@@ -41,7 +46,12 @@ namespace eval ttk::theme::aqua {
     # ttk::treeview and listbox widgets.
 
     proc setTreeviewAndListboxSelectColors {} {
-	scan $::tcl_platform(osVersion) "%d" majorOSVersion
+	if {[interp issafe]} {
+	    set majorOSVersion 0
+	} else {
+	    scan $::tcl_platform(osVersion) "%d" majorOSVersion
+	}
+
 	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
 	    set selectedBg	systemSelectedContentBackgroundColor
 	    set inactiveSelBg	systemUnemphasizedSelectedContentBackgroundColor
