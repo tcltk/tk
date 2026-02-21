@@ -32,7 +32,7 @@ struct TkStressedCmap {
 };
 
 /* Forward declarations. */
-static void DeleteStressedCmap(Display *display, void *colormap);
+static void DeleteStressedCmap(Display *display, Colormap colormap);
 static int  ParseColorString(const char *name, NVGcolor *color);
 
 /*
@@ -198,7 +198,7 @@ void
 TkpFreeColor(TkColor *tkColPtr)
 {
     if (tkColPtr->colormap != None) {
-        DeleteStressedCmap(NULL, (Colormap *) tkColPtr->colormap);
+        DeleteStressedCmap(NULL, tkColPtr->colormap);
     }
     Tcl_Free((char *)tkColPtr);
 }
@@ -349,11 +349,12 @@ TkpGetColorByValue(
 static void
 DeleteStressedCmap(
     TCL_UNUSED(Display *), /* display*/
-    void    *colormap)
+    Colormap colormap)          /* Colormap to remove from cache */
 {
     TkDisplay *dispPtr;
     TkStressedCmap *prevPtr = NULL;
     TkStressedCmap *stressPtr;
+    void *cmapPtr = (void *)colormap;
 
     dispPtr = TkGetDisplay(NULL);   /* may need real display later */
     if (dispPtr == NULL || dispPtr->stressPtr == NULL) {
@@ -363,7 +364,7 @@ DeleteStressedCmap(
     for (stressPtr = dispPtr->stressPtr; stressPtr != NULL;
          prevPtr = stressPtr, stressPtr = stressPtr->nextPtr) {
 
-        if (stressPtr->colormap == colormap) {
+        if (stressPtr->colormap == cmapPtr) {
             if (prevPtr == NULL) {
                 dispPtr->stressPtr = stressPtr->nextPtr;
             } else {
@@ -400,7 +401,7 @@ DeleteStressedCmap(
 int
 TkpCmapStressed(
     Tk_Window tkwin,
-    void     *colormap)
+    Colormap colormap)          /* Colormap to check (unsigned long) */
 {
     TkDisplay *dispPtr = ((TkWindow *)tkwin)->dispPtr;
     TkStressedCmap *stressPtr;
@@ -411,7 +412,7 @@ TkpCmapStressed(
 
     for (stressPtr = dispPtr->stressPtr; stressPtr != NULL;
          stressPtr = stressPtr->nextPtr) {
-        if (stressPtr->colormap == colormap) {
+        if (stressPtr->colormap == (void *)colormap) {
             return 1;
         }
     }
