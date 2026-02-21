@@ -1,8 +1,8 @@
 /*
- * tkUnixFocus.c --
+ * tkWaylandFocus.c --
  *
  *	This file contains platform specific functions that manage focus for
- *	Tk.
+ *	Tk on Wayland/GLFW.
  *
  * Copyright © 1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -11,7 +11,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkUnixInt.h"
+#include "tkGlfwInt.h"  /* Changed from tkUnixInt.h */
 #include <GLFW/glfw3.h>
 
 /*
@@ -42,78 +42,57 @@ TkpChangeFocus(
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
-	
+    static size_t serial_counter = 0;  /* Simple counter for serial numbers */
     size_t serial = 0;
 
     /*
      * Don't set the focus to a window that's marked override-redirect.
-     * This is a hack to avoid problems with menus under olvwm: if we move
-     * the focus then the focus can get lost during keyboard traversal.
-     * Fortunately, we don't really need to move the focus for menus: events
-     * will still find their way to the focus window, and menus aren't
-     * decorated anyway so the window manager doesn't need to hear about the
-     * focus change in order to redecorate the menu.
      */
-
     if (winPtr->atts.override_redirect) {
         return serial;
     }
 
     /*
-     * In Wayland/GLFW, we don't have direct access to a global focus tree
-     * like X11's XQueryTree. Instead, we rely on GLFW's window focus APIs.
-     * The force flag is handled by directly focusing the window if allowed.
+     * Get the GLFW window associated with this Tk window using the
+     * accessor function from the header.
      */
+    GLFWwindow *glfwWin = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    if (glfwWin == NULL) {
+        Tcl_Panic("TkpChangeFocus: No GLFW window found for Tk window");
+    }
 
     if (!force) {
         /*
          * Check if the current focused window belongs to the same application.
-         * In GLFW, we can get the currently focused window and compare its
-         * user pointer (which we set to TkWindow* when creating the window).
          */
-        GLFWwindow *currentFocused = glfwGetWindowUserPointer(glfwGetCurrentContext());
+        GLFWwindow *currentFocused = glfwGetCurrentContext();
         if (currentFocused != NULL) {
-            TkWindow *currentWinPtr = (TkWindow*)glfwGetWindowUserPointer(currentFocused);
+            TkWindow *currentWinPtr = TkGlfwGetTkWindow(currentFocused);
             if (currentWinPtr == NULL || currentWinPtr->mainPtr != winPtr->mainPtr) {
                 return serial;
             }
         } else {
             /*
-             * No current focus or it's not our window. Without force, we should
-             * not change focus.
+             * No current focus. Without force, don't change focus.
              */
             return serial;
         }
     }
 
     /*
-     * Change focus to the target window using GLFW.
-     * First, get the GLFWwindow associated with winPtr.
-     * We assume that winPtr->window holds a GLFWwindow* in this port.
-     */
-    GLFWwindow *glfwWin = (GLFWwindow*)winPtr->window;
-    if (glfwWin == NULL) {
-        Tcl_Panic("ChangeFocus got null GLFW window");
-    }
-
-    /*
-     * In GLFW, we request focus for the window.
-     * Note: In Wayland, the compositor may choose to grant or deny focus.
+     * Request focus for the target window.
      */
     glfwFocusWindow(glfwWin);
 
     /*
-     * We don't have an exact equivalent to X11's NextRequest serial in GLFW.
-     * For compatibility, we return a non-zero value to indicate a focus change.
-     * Here we use a simple incrementing counter per display.
+     * Generate a serial number to indicate focus changed.
      */
-     
-	serial++;
+    serial = ++serial_counter;
 
     /*
-     * Flush any pending GLFW events to ensure the focus request is processed.
+     * Process pending events to ensure focus request is handled.
      */
-    glfwPollEvents();
+    TkGlfwProcessEvents();  /* Use the header's event processing function */
 
     return serial;
 }

@@ -17,21 +17,16 @@
 #include "tkGlfwInt.h"
 #include <GLES3/gl3.h>
 #include "nanovg.h"
-
-/* X11 headers for BoxPtr, Region and Display types. */
-#include <X11/Xutil.h>
-#include <X11/Xlib.h>
-#include <X11/Xlibint.h>  
+#include <math.h>
 
 #define radians(d)	((d) * (M_PI/180.0))
-
 
 /*
  *----------------------------------------------------------------------
  *
  * XDrawLines --
  *
- *	Draw connected line segments.
+ *	Draw connected line segments using NanoVG with current GC settings.
  *
  * Results:
  *	Success.
@@ -44,7 +39,7 @@
 
 int
 XDrawLines(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     XPoint *points,
@@ -54,15 +49,16 @@ XDrawLines(
     TkWaylandDrawingContext dc;
     int i;
     
-    if (npoints < 2) {
+    if (npoints < 2 || points == NULL) {
         return BadValue;
     }
-    
-    LastKnownRequestProcessed(display)++;
     
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
+    
+    /* Apply GC settings (line width, color, etc.) */
+    TkGlfwApplyGC(dc.vg, gc);
     
     nvgBeginPath(dc.vg);
     nvgMoveTo(dc.vg, points[0].x, points[0].y);
@@ -100,7 +96,7 @@ XDrawLines(
 
 int
 XDrawSegments(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     XSegment *segments,
@@ -109,11 +105,12 @@ XDrawSegments(
     TkWaylandDrawingContext dc;
     int i;
     
-    LastKnownRequestProcessed(display)++;
-    
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
+    
+    /* Apply GC settings. */
+    TkGlfwApplyGC(dc.vg, gc);
     
     for (i = 0; i < nsegments; i++) {
         nvgBeginPath(dc.vg);
@@ -131,7 +128,7 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Fill a polygon.
+ *	Fill a polygon using NanoVG with current GC settings.
  *
  * Results:
  *	Success.
@@ -144,30 +141,33 @@ XDrawSegments(
 
 int
 XFillPolygon(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     XPoint *points,
     int npoints,
-    int shape,
+    TCL_UNUSED(int),  /* shape - ignored */
     int mode)
 {
     TkWaylandDrawingContext dc;
     XGCValues gcValues;
     int i;
     
-    if (npoints < 3) {
+    if (npoints < 3 || points == NULL) {
         return BadValue;
     }
-    
-    LastKnownRequestProcessed(display)++;
     
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
     
+    /* Apply GC settings (fill color, etc.) */
+    TkGlfwApplyGC(dc.vg, gc);
+    
     /* Get GC values for fill rule. */
-    XGetGCValues(NULL, gc, GCFillRule, &gcValues);
+    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues) == 0) {
+        gcValues.fill_rule = WindingRule; /* Default */
+    }
     
     nvgBeginPath(dc.vg);
     nvgMoveTo(dc.vg, points[0].x, points[0].y);
@@ -192,8 +192,6 @@ XFillPolygon(
     
     nvgFill(dc.vg);
     
-    (void)shape;  /* Suppress unused warning. */
-    
     TkGlfwEndDraw(&dc);
     return Success;
 }
@@ -216,7 +214,7 @@ XFillPolygon(
 
 int
 XDrawRectangle(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     int x, int y,
@@ -229,11 +227,12 @@ XDrawRectangle(
         return BadValue;
     }
     
-    LastKnownRequestProcessed(display)++;
-    
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
+    
+    /* Apply GC settings. */
+    TkGlfwApplyGC(dc.vg, gc);
     
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, x, y, width, height);
@@ -261,7 +260,7 @@ XDrawRectangle(
 
 int
 XDrawRectangles(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     XRectangle *rectArr,
@@ -270,11 +269,12 @@ XDrawRectangles(
     TkWaylandDrawingContext dc;
     int i;
     
-    LastKnownRequestProcessed(display)++;
-    
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
+    
+    /* Apply GC settings. */
+    TkGlfwApplyGC(dc.vg, gc);
     
     for (i = 0; i < nRects; i++) {
         nvgBeginPath(dc.vg);
@@ -305,7 +305,7 @@ XDrawRectangles(
 
 int
 XFillRectangles(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     XRectangle *rectangles,
@@ -314,11 +314,12 @@ XFillRectangles(
     TkWaylandDrawingContext dc;
     int i;
     
-    LastKnownRequestProcessed(display)++;
-    
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
+    
+    /* Apply GC settings (fill color). */
+    TkGlfwApplyGC(dc.vg, gc);
     
     for (i = 0; i < n_rectangles; i++) {
         nvgBeginPath(dc.vg);
@@ -336,7 +337,7 @@ XFillRectangles(
  *
  * XDrawArc --
  *
- *	Draw an arc.
+ *	Draw an arc outline.
  *
  * Results:
  *	Success.
@@ -349,7 +350,7 @@ XFillRectangles(
 
 int
 XDrawArc(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     int x, int y,
@@ -366,11 +367,12 @@ XDrawArc(
         return BadValue;
     }
     
-    LastKnownRequestProcessed(display)++;
-    
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
+    
+    /* Apply GC settings. */
+    TkGlfwApplyGC(dc.vg, gc);
     
     cx = x + width / 2.0f;
     cy = y + height / 2.0f;
@@ -418,7 +420,7 @@ XDrawArc(
 
 int
 XDrawArcs(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     XArc *arcArr,
@@ -427,11 +429,12 @@ XDrawArcs(
     TkWaylandDrawingContext dc;
     int i;
     
-    LastKnownRequestProcessed(display)++;
-    
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
+    
+    /* Apply GC settings. */
+    TkGlfwApplyGC(dc.vg, gc);
     
     for (i = 0; i < nArcs; i++) {
         float cx, cy, rx, ry;
@@ -488,7 +491,7 @@ XDrawArcs(
 
 int
 XFillArc(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     int x, int y,
@@ -503,17 +506,20 @@ XFillArc(
     float startAngle, endAngle;
     
     if (width == 0 || height == 0 || angle2 == 0) {
-        return BadDrawable;
+        return BadValue;
     }
-    
-    LastKnownRequestProcessed(display)++;
     
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
     
+    /* Apply GC settings (fill color) */
+    TkGlfwApplyGC(dc.vg, gc);
+    
     /* Get GC values for arc mode. */
-    XGetGCValues(NULL, gc, GCArcMode, &gcValues);
+    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) == 0) {
+        gcValues.arc_mode = ArcPieSlice; /* Default */
+    }
     
     cx = x + width / 2.0f;
     cy = y + height / 2.0f;
@@ -570,7 +576,7 @@ XFillArc(
 
 int
 XFillArcs(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
     GC gc,
     XArc *arcArr,
@@ -580,14 +586,17 @@ XFillArcs(
     XGCValues gcValues;
     int i;
     
-    LastKnownRequestProcessed(display)++;
-    
     if (TkGlfwBeginDraw(d, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
     
-    /* Get GC values for arc mode */
-    XGetGCValues(NULL, gc, GCArcMode, &gcValues);
+    /* Apply GC settings (fill color). */
+    TkGlfwApplyGC(dc.vg, gc);
+    
+    /* Get GC values for arc mode. */
+    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) == 0) {
+        gcValues.arc_mode = ArcPieSlice; /* Default */
+    }
     
     for (i = 0; i < nArcs; i++) {
         float cx, cy, rx, ry;
@@ -701,7 +710,6 @@ TkpDrawFrameEx(
                        Tk_Height(tkwin) - 2 * highlightWidth,
                        borderWidth, relief);
 }
-
 
 /*
  * Local Variables:

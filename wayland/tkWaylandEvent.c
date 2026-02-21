@@ -1,14 +1,13 @@
 /*
  * tkWaylandEvent.c --
  *
- *	This file implements an event management functionality for the Wayland 
- *  backend of Tk. (GLFW adaptation)
+ *	This file implements event management functionality for the Wayland 
+ *      backend of Tk (GLFW adaptation).
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- *
- * Copyright © 2026 Kevin Walzer
+ * Copyright © 2026 Kevin Walzer/WordTech Communications LLC
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -24,9 +23,22 @@
 #include <string.h>
 #include <stdlib.h>
 
+/*
+ * Global state for mouse buttons and modifiers.
+ * These are used across callbacks to maintain consistent state.
+ */
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
+/*
+ * Simple single-codepoint buffer for character input.
+ * In a production implementation, this should be a queue or per-window buffer.
+ */
+static unsigned int pendingCodepoint = 0;
+
+/* Track last window and position for enter/leave events */
+static GLFWwindow *lastWindow = NULL;
+static double lastX = -1, lastY = -1;
 
 /*
  *----------------------------------------------------------------------
@@ -74,11 +86,10 @@ TkGlfwSetupCallbacks(
  *      None.
  *
  * Side effects:
- *      Generates WM_DELETE_WINDOW protocol event or destroys window.
+ *      Destroys the Tk window.
  *
  *----------------------------------------------------------------------
  */
- 
  
 MODULE_SCOPE void
 TkGlfwWindowCloseCallback(GLFWwindow *window)
@@ -259,7 +270,6 @@ TkGlfwWindowFocusCallback(
     TkGenerateActivateEvents(winPtr, focused);
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -275,7 +285,6 @@ TkGlfwWindowFocusCallback(
  *
  *----------------------------------------------------------------------
  */
-
 
 MODULE_SCOPE void
 TkGlfwWindowIconifyCallback(
@@ -327,17 +336,29 @@ TkGlfwWindowIconifyCallback(
  *      None.
  *
  * Side effects:
- *      Updates window state.
+ *      Updates window state in WmInfo.
  *
  *----------------------------------------------------------------------
  */
- 
+
 MODULE_SCOPE void
 TkGlfwWindowMaximizeCallback(
-    TCL_UNUSED(GLFWwindow *), /* window */
-    TCL_UNUSED(int)) /*  maximized */
+    GLFWwindow *window,
+    int maximized)
 {
-    /* Currently a no-op — implemented in tkWaylandWm.c. */
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    
+    if (!winPtr) {
+        return;
+    }
+    
+    /* Update WmInfo zoomed state if WM info exists */
+    if (winPtr->wmInfoPtr) {
+        WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+        wmPtr->attributes.zoomed = maximized;
+    }
+    
+    /* Note: No X event needed for maximize state changes */
 }
 
 /*
@@ -364,8 +385,6 @@ TkGlfwCursorPosCallback(
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
-    static GLFWwindow *lastWindow = NULL;
-    static double lastX = -1, lastY = -1;
 
     if (!winPtr) {
         if (lastWindow) {
@@ -396,9 +415,9 @@ TkGlfwCursorPosCallback(
         return;
     }
 
-  /* Check if mouse entered/exited window. */
+    /* Check if mouse entered/exited window */
     if (lastWindow != window) {
-        /* Send LeaveNotify for previous window if any. */
+        /* Send LeaveNotify for previous window if any */
         if (lastWindow) {
             TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
             if (lastWinPtr) {
@@ -424,7 +443,7 @@ TkGlfwCursorPosCallback(
             }
         }
         
-        /* Send EnterNotify for current window. */
+        /* Send EnterNotify for current window */
         memset(&event, 0, sizeof(XEvent));
         event.type = EnterNotify;
         event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display);
@@ -448,7 +467,7 @@ TkGlfwCursorPosCallback(
         lastWindow = window;
     }
     
-    /* Generate MotionNotify event. */
+    /* Generate MotionNotify event */
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
     event.xmotion.serial = LastKnownRequestProcessed(winPtr->display);
@@ -462,17 +481,16 @@ TkGlfwCursorPosCallback(
     event.xmotion.y = (int)ypos;
     event.xmotion.x_root = winPtr->changes.x + (int)xpos;
     event.xmotion.y_root = winPtr->changes.y + (int)ypos;
-    /* Critical for drag operations. */
+    /* Critical for drag operations */
     event.xmotion.state = glfwButtonState | glfwModifierState;
     event.xmotion.is_hint = NotifyNormal;
     event.xmotion.same_screen = True;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
-    /* Update last position. */
+    /* Update last position */
     lastX = xpos;
     lastY = ypos;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -485,7 +503,7 @@ TkGlfwCursorPosCallback(
  *      None.
  *
  * Side effects:
- *      Generates ButtonPress/ButtonRelease event.
+ *      Generates ButtonPress/ButtonRelease events.
  *
  *----------------------------------------------------------------------
  */
@@ -507,10 +525,10 @@ TkGlfwMouseButtonCallback(
         return;
     }
 
-    /* Get cursor position. */
+    /* Get cursor position */
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Update modifier state. */
+    /* Update modifier state */
     glfwModifierState = 0;
 
     if (mods & GLFW_MOD_SHIFT)
@@ -525,7 +543,7 @@ TkGlfwMouseButtonCallback(
     if (mods & GLFW_MOD_SUPER)
         glfwModifierState |= Mod4Mask;
 
-    /* Map GLFW button → X11 button and mask. */
+    /* Map GLFW button to X11 button and mask */
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
             xbutton = Button1;
@@ -543,13 +561,13 @@ TkGlfwMouseButtonCallback(
             break;
 
         default:
-            /* Buttons 4+ are typically scroll wheel, but map safely. */
+            /* Buttons 4+ are typically scroll wheel, but map safely */
             xbutton = button + 1;
             buttonMask = 0;
             break;
     }
 
-    /* Update button state. */
+    /* Update button state */
     if (action == GLFW_PRESS) {
         glfwButtonState |= buttonMask;
         event.type = ButtonPress;
@@ -559,28 +577,19 @@ TkGlfwMouseButtonCallback(
     }
 
     memset(&event, 0, sizeof(XEvent));
-
-    event.type = (action == GLFW_PRESS) ? ButtonPress : ButtonRelease;
-
     event.xbutton.serial = LastKnownRequestProcessed(winPtr->display);
     event.xbutton.send_event = False;
     event.xbutton.display = winPtr->display;
     event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
     event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xbutton.subwindow = None;
-
     event.xbutton.time = CurrentTime;
-
     event.xbutton.x = (int)xpos;
     event.xbutton.y = (int)ypos;
-
     event.xbutton.x_root = winPtr->changes.x + (int)xpos;
     event.xbutton.y_root = winPtr->changes.y + (int)ypos;
-
     event.xbutton.state = glfwButtonState | glfwModifierState;
-
     event.xbutton.button = xbutton;
-
     event.xbutton.same_screen = True;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -631,7 +640,7 @@ TkGlfwScrollCallback(
         button = 7;  /* Scroll left */
     }
 
-    /* Generate button press. */
+    /* Generate button press */
     memset(&event, 0, sizeof(XEvent));
     event.type = ButtonPress;
     event.xbutton.serial = LastKnownRequestProcessed(winPtr->display);
@@ -651,7 +660,7 @@ TkGlfwScrollCallback(
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Generate button release. */
+    /* Generate button release */
     event.type = ButtonRelease;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
@@ -754,10 +763,6 @@ TkGlfwCharCallback(
  * TkWaylandUpdateKeyboardModifiers --
  *
  *      Update the internal modifier state from GLFW modifier bits.
- *      This is called from key callback to keep modifier state in sync.
- *
- *      In a full Wayland/xkbcommon backend this would also update the
- *      xkb_state modifier masks — here we just mirror to our glfwModifierState.
  *
  * Results:
  *      None.
@@ -779,42 +784,23 @@ TkWaylandUpdateKeyboardModifiers(int glfw_mods)
     if (glfw_mods & GLFW_MOD_SUPER)    glfwModifierState |= Mod4Mask;
     if (glfw_mods & GLFW_MOD_CAPS_LOCK) glfwModifierState |= LockMask;
     if (glfw_mods & GLFW_MOD_NUM_LOCK) glfwModifierState |= Mod2Mask;
-
-    /* 
-     * Note: GLFW_MOD_ALT is usually Left Alt → Mod1Mask
-     *       Some systems treat AltGr as Mod5 — GLFW doesn't distinguish.
-     */
 }
-
 
 /*
  *----------------------------------------------------------------------
  *
  * TkWaylandStoreCharacterInput --
  *
- *      Store the Unicode codepoint received from glfwSetCharCallback
- *      for later retrieval by Tk's keyboard input handling code
- *      (typically used to implement composed / dead-key / text input).
- *
- *      Simplest possible implementation: store in a per-thread or
- *      per-display global variable (you will likely need to make this
- *      per-window or per-event-loop in a real implementation).
+ *      Store Unicode codepoint from character input callback.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Overwrites the previous stored codepoint.
- *      (A production version would usually use a queue or per-window buffer.)
+ *      Stores codepoint for later retrieval.
  *
  *----------------------------------------------------------------------
  */
-
-/* 
- * Very simple single-codepoint buffer — replace with a real queue or
- * per-window storage when you have multiple characters pending.
- */
-static unsigned int pendingCodepoint = 0;
 
 MODULE_SCOPE void
 TkWaylandStoreCharacterInput(unsigned int codepoint)
@@ -822,68 +808,85 @@ TkWaylandStoreCharacterInput(unsigned int codepoint)
     pendingCodepoint = codepoint;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
- * XSync --
+ * TkWaylandGetPendingCharacter --
  *
- *      Supports "update" command, kept here for compatibility.
+ *      Retrieves and clears the stored Unicode codepoint.
  *
  * Results:
- *      None.
+ *      Returns the stored codepoint, or 0 if none pending.
  *
  * Side effects:
- *      None.
+ *      Clears the pending codepoint.
  *
  *----------------------------------------------------------------------
  */
 
-int
-XSync(
-      Display *display,
-      TCL_UNUSED(Bool))
+unsigned int
+TkWaylandGetPendingCharacter(void)
 {
-  LastKnownRequestProcessed(display)++;
-  return 0;
+    unsigned int codepoint = pendingCodepoint;
+    pendingCodepoint = 0;
+    return codepoint;
 }
 
 /*
- * --------------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
- * TkpSync -
- * 
- *     Synchronizes with the display server to ensure all pending
- *     requests have been processed.
- * 
+ * TkGlfwProcessEvents --
+ *
+ *      Process pending GLFW events.
+ *
  * Results:
- *     None.
- * 
- * Side effects:
- *     On Wayland/GLFW, we poll events to process any pending callbacks.
+ *      None.
  *
- * --------------------------------------------------------------------------------
+ * Side effects:
+ *      GLFW callbacks are invoked for pending events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkGlfwProcessEvents(void)
+{
+    glfwPollEvents();
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_WaylandSetupTkNotifier --
+ *
+ *      Sets up the Tk event notifier for Wayland/GLFW integration.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Configures Tk's event notifier.
+ *
+ *----------------------------------------------------------------------
  */
 
 void
-TkpSync(TCL_UNUSED(Display *))
+Tk_WaylandSetupTkNotifier(void)
 {
-  /*
-   * On Wayland, we need to process pending events from the compositor.
-   * GLFW provides glfwPollEvents() for this purpose.
-   */
-  glfwPollEvents();
-
-
-  /*
-   * For compatibility with X11 semantics, we might also want to
-   * ensure any pending rendering is complete. However, GLFW handles
-   * this internally, so no additional action is needed.
-   */
-
+    /* 
+     * On Wayland with GLFW, we need to integrate with Tk's event loop.
+     * For now, we rely on Tk_DoOneEvent's timeout to call glfwPollEvents
+     * via TkpSync and other entry points.
+     *
+     * A more sophisticated implementation would create a file handler
+     * for the Wayland display connection if we can obtain the FD.
+     */
+    
+    /* Placeholder for future enhancement */
 }
 
-/* Local Variables:
+/*
+ * Local Variables:
  * mode: c
  * c-basic-offset: 4
  * fill-column: 78
