@@ -48,117 +48,6 @@
 #define WM_TAKE_FOCUS       2
 #define WM_SAVE_YOURSELF    3
 
-/*
- *----------------------------------------------------------------------
- *
- * ProtocolHandler – per-protocol Tcl command binding.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct ProtocolHandler {
-    int                    protocol;  /* Protocol identifier. */
-    struct ProtocolHandler *nextPtr;
-    Tcl_Interp            *interp;
-    char                   command[TKFLEXARRAY];
-} ProtocolHandler;
-
-#define HANDLER_SIZE(cmdLength) \
-    (offsetof(ProtocolHandler, command) + 1 + (cmdLength))
-
-/*
- *----------------------------------------------------------------------
- *
- * WmAttributes – per-window wm attribute state.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct {
-    double alpha;       /* 0.0 = transparent, 1.0 = opaque */
-    int    topmost;
-    int    zoomed;
-    int    fullscreen;
-} WmAttributes;
-
-typedef enum {
-    WMATT_ALPHA,
-    WMATT_FULLSCREEN,
-    WMATT_TOPMOST,
-    WMATT_TYPE,
-    WMATT_ZOOMED,
-    _WMATT_LAST_ATTRIBUTE
-} WmAttribute;
-
-static const char *const WmAttributeNames[] = {
-    "-alpha", "-fullscreen", "-topmost", "-type",
-    "-zoomed", NULL
-};
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWmInfo – per-toplevel window manager state.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct TkWmInfo {
-    TkWindow    *winPtr;        /* Tk window. */
-    GLFWwindow  *glfwWindow;    /* GLFW handle (NULL until first map). */
-    char        *title;
-    char        *iconName;
-    char        *leaderName;
-    TkWindow    *containerPtr;  /* Transient-for container. */
-    Tk_Window    icon;
-    Tk_Window    iconFor;
-    int          withdrawn;
-
-    /* Wrapper / menubar. */
-    TkWindow    *wrapperPtr;
-    Tk_Window    menubar;
-    int          menuHeight;
-
-    /* Size hints. */
-    int          sizeHintsFlags;
-    int          minWidth, minHeight;
-    int          maxWidth, maxHeight;
-    Tk_Window    gridWin;
-    int          widthInc, heightInc;
-    struct { int x; int y; } minAspect, maxAspect;
-    int          reqGridWidth, reqGridHeight;
-    int          gravity;
-
-    /* Position / size. */
-    int          width, height;
-    int          x, y;
-    int          parentWidth, parentHeight;
-    int          xInParent, yInParent;
-    int          configWidth, configHeight;
-
-    /* Virtual root (compatibility). */
-    int          vRootX, vRootY;
-    int          vRootWidth, vRootHeight;
-
-    /* Misc. */
-    WmAttributes attributes;
-    WmAttributes reqState;
-    ProtocolHandler *protPtr;
-    Tcl_Size     cmdArgc;
-    Tcl_Obj    **cmdArgv;
-    char        *clientMachine;
-    int          flags;
-    int          numTransients;
-    int          iconDataSize;
-    unsigned char *iconDataPtr;
-    GLFWimage   *glfwIcon;
-    int          glfwIconCount;
-    int          isMapped;
-    int          lastX, lastY;
-    int          lastWidth, lastHeight;
-
-    struct TkWmInfo *nextPtr;
-} WmInfo;
 
 /*
  * WmInfo flag bits.
@@ -202,6 +91,12 @@ typedef struct TkWmInfo {
 
 /* Global toplevel list. */
 static WmInfo *firstWmPtr = NULL;
+
+/* Wm attribute names. */
+const char *const WmAttributeNames[] = {
+    "-alpha", "-fullscreen", "-topmost", "-type",
+    "-zoomed", NULL
+};
 
 /*
  *----------------------------------------------------------------------
@@ -2266,8 +2161,10 @@ WmIconifyCmd(
 
 static int
 WmIconmaskCmd(
-    TCL_UNUSED(Tk_Window), TCL_UNUSED(TkWindow *),
-    TCL_UNUSED(Tcl_Interp *), TCL_UNUSED(int),
+    TCL_UNUSED(Tk_Window), 
+    TCL_UNUSED(TkWindow *),
+    TCL_UNUSED(Tcl_Interp *), 
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 { return TCL_OK; }
 
@@ -2396,8 +2293,10 @@ WmIconphotoCmd(
 
 static int
 WmIconpositionCmd(
-    TCL_UNUSED(Tk_Window), TCL_UNUSED(TkWindow *),
-    TCL_UNUSED(Tcl_Interp *), TCL_UNUSED(int),
+    TCL_UNUSED(Tk_Window), 
+    TCL_UNUSED(TkWindow *),
+    TCL_UNUSED(Tcl_Interp *), 
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 { return TCL_OK; }
 
@@ -2419,8 +2318,10 @@ WmIconpositionCmd(
 
 static int
 WmIconwindowCmd(
-    TCL_UNUSED(Tk_Window), TCL_UNUSED(TkWindow *),
-    TCL_UNUSED(Tcl_Interp *), TCL_UNUSED(int),
+    TCL_UNUSED(Tk_Window), 
+    TCL_UNUSED(TkWindow *),
+    TCL_UNUSED(Tcl_Interp *), 
+    TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))
 { return TCL_OK; }
 
@@ -2442,8 +2343,11 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-    TCL_UNUSED(Tk_Window), TCL_UNUSED(TkWindow *),
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window), 
+    TCL_UNUSED(TkWindow *),
+    Tcl_Interp *interp, 
+    int objc, 
+    Tcl_Obj *const objv[])
 {
     if (objc != 0) {
         Tcl_WrongNumArgs(interp,0,objv,"pathName manage"); return TCL_ERROR;
@@ -3515,7 +3419,6 @@ UpdateGeometryInfo(
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
     int       tw, th;
-    int       needsConfigure = 0;
 
     if (wmPtr == NULL) return;
     
@@ -3546,7 +3449,6 @@ UpdateGeometryInfo(
         TkGlfwUpdateWindowSize(wmPtr->glfwWindow, tw, th);
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
-        needsConfigure = 1;
     }
 
     /* Apply position change if needed. */
@@ -3555,7 +3457,6 @@ UpdateGeometryInfo(
         wmPtr->y != winPtr->changes.y) {
         glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
-        needsConfigure = 1;
     }
     
 }

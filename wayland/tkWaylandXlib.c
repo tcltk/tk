@@ -6,20 +6,12 @@
  *	Implements the X11 window-management API (XCreateWindow,
  *	XDestroyWindow, XMapWindow, XMoveResizeWindow, XRaiseWindow,
  *	XSetInputFocus, XSetWMName, …) as a thin layer over the
- *	TkGlfw* / TkWayland* canonical API declared in tkGlfwInt.h.
+ *	TkGlfw* / TkWayland* API declared in tkGlfwInt.h.
  *
- *	Design principles:
- *	  • Every symbol is implemented exactly once; there are no
- *	    duplicate definitions across the Wayland port source tree.
- *	  • Only the canonical TkGlfw* / TkWayland* entry points are
- *	    called.  No file casts GC / Pixmap pointers directly.
- *	  • Xlib semantics that have no Wayland equivalent (colormaps,
- *	    stacking-order protocols, etc.) are silently no-op'd and
- *	    return Success so that existing Tk code compiles unchanged.
  *
  * Copyright © 1993-1997 The Regents of the University of California /
  *                        Sun Microsystems Inc.
- * Copyright © 2026      Kevin Walzer/WordTech Communications LLC
+ * Copyright © 2026      Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -32,6 +24,31 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+
+/*
+ * The Xlib Display type is intentionally opaque (incomplete struct) in
+ * modern Xlib headers, so we cannot sizeof() it or access its members.
+ * We define our own private layout that holds exactly what this port needs,
+ * and cast to/from Display * only at API boundaries.
+ */
+typedef struct TkWaylandDisplay_ {
+    Screen    *screens;
+    int        nscreens;
+    int        default_screen;
+    char      *display_name;
+} TkWaylandDisplay;
+
+/*
+ * DefaultScreenOfDisplay, DefaultScreen, DefaultVisual, DefaultColormap,
+ * and DefaultDepth are macros in <X11/Xlib.h>.  Undefine them so we can
+ * provide real function implementations below.
+ */
+#undef DefaultScreenOfDisplay
+#undef DefaultScreen
+#undef DefaultVisual
+#undef DefaultColormap
+#undef DefaultDepth
+
 
 /*
  *----------------------------------------------------------------------
@@ -82,7 +99,7 @@ WindowToGLFW(
 /*
  *======================================================================
  *
- * SECTION 1 – Creation and Destruction
+ * Window Creation and Destruction
  *
  *======================================================================
  */
@@ -282,7 +299,7 @@ XDestroySubwindows(
 /*
  *======================================================================
  *
- * SECTION 2 – Mapping / Visibility
+ * Window Mapping / Visibility
  *
  *======================================================================
  */
@@ -432,7 +449,7 @@ XUnmapSubwindows(
 /*
  *======================================================================
  *
- * SECTION 3 – Configuration (position, size, border)
+ * Window Configuration (position, size, border)
  *
  *======================================================================
  */
@@ -631,7 +648,7 @@ XSetWindowBorderWidth(
 /*
  *======================================================================
  *
- * SECTION 4 – Stacking Order
+ * Window stacking Order
  *
  *======================================================================
  */
@@ -777,7 +794,7 @@ XRestackWindows(
         return Success;
     }
 
-    /* Raise each window in order; the compositor may or may not honour this. */
+    /* Raise each window in order; the compositor may or may not honor this. */
     for (i = 0; i < nwindows; i++) {
         GLFWwindow *gw = WindowToGLFW(windows[i]);
         if (gw != NULL) {
@@ -791,7 +808,7 @@ XRestackWindows(
 /*
  *======================================================================
  *
- * SECTION 5 – Attributes and Other Management
+ * Window Attributes and Other Management
  *
  *======================================================================
  */
@@ -998,7 +1015,7 @@ XSetInputFocus(
 /*
  *======================================================================
  *
- * SECTION 6 – ICCCM Text Properties (Window Title / Icon Name)
+ * ICCCM Text Properties (Window Title / Icon Name)
  *
  *======================================================================
  */
@@ -1072,15 +1089,13 @@ XSetWMIconName(
 /*
  *======================================================================
  *
- * SECTION 7 – Display / Screen / Atom Stubs
+ * Display / Screen / Atom Stubs
  *
- *	These stubs were previously scattered across tkWaylandXId.c and
- *	other files.  They are consolidated here so that every Xlib
+ *	These stubs are consolidated here so that every Xlib
  *	compatibility symbol resides in the emulation layer.
  *
  *======================================================================
  */
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1102,10 +1117,10 @@ TkDisplay *
 TkpOpenDisplay(
     TCL_UNUSED(const char *)) /* display_name */
 {
-    TkDisplay *dispPtr;
-    Display   *display;
-    Screen    *screen;
-    Visual    *visual;
+    TkDisplay        *dispPtr;
+    TkWaylandDisplay *display;
+    Screen           *screen;
+    Visual           *visual;
 
     if (!glfwInit()) {
         return NULL;
@@ -1114,8 +1129,8 @@ TkpOpenDisplay(
     dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
 
-    display = (Display *)ckalloc(sizeof(Display));
-    memset(display, 0, sizeof(Display));
+    display = (TkWaylandDisplay *)ckalloc(sizeof(TkWaylandDisplay));
+    memset(display, 0, sizeof(TkWaylandDisplay));
 
     screen = (Screen *)ckalloc(sizeof(Screen));
     memset(screen, 0, sizeof(Screen));
@@ -1137,7 +1152,7 @@ TkpOpenDisplay(
         screen->mheight      = (sh * 254) / 720;
     }
 
-    screen->display      = display;
+    screen->display      = (Display *)display;
     screen->root         = 1;          /* Must not be None. */
     screen->root_visual  = visual;
     screen->root_depth   = 24;
@@ -1155,7 +1170,7 @@ TkpOpenDisplay(
     display->nscreens       = 1;
     display->default_screen = 0;
 
-    dispPtr->display = display;
+    dispPtr->display = (Display *)display;
     dispPtr->name    = (char *)ckalloc(strlen("wayland-0") + 1);
     strcpy(dispPtr->name, "wayland-0");
     display->display_name = dispPtr->name;
@@ -1190,13 +1205,14 @@ TkpCloseDisplay(
         ckfree(dispPtr->name);
     }
     if (dispPtr->display) {
-        if (dispPtr->display->screens) {
-            if (dispPtr->display->screens->root_visual) {
-                ckfree((char *)dispPtr->display->screens->root_visual);
+        TkWaylandDisplay *wd = (TkWaylandDisplay *)dispPtr->display;
+        if (wd->screens) {
+            if (wd->screens->root_visual) {
+                ckfree((char *)wd->screens->root_visual);
             }
-            ckfree((char *)dispPtr->display->screens);
+            ckfree((char *)wd->screens);
         }
-        ckfree((char *)dispPtr->display);
+        ckfree((char *)wd);
     }
     ckfree((char *)dispPtr);
 }
@@ -1261,10 +1277,13 @@ XCloseDisplay(
     }
 
     /* Not found in list – free whatever we can. */
-    if (display->display_name) {
-        ckfree(display->display_name);
+    {
+        TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+        if (wd->display_name) {
+            ckfree(wd->display_name);
+        }
+        ckfree((char *)wd);
     }
-    ckfree((char *)display);
     return 0;
 }
 
@@ -1288,7 +1307,8 @@ Screen *
 DefaultScreenOfDisplay(
     Display *display)
 {
-    return &display->screens[0];
+    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    return &wd->screens[0];
 }
 
 /*
@@ -1335,7 +1355,8 @@ DefaultVisual(
     Display *display,
     TCL_UNUSED(int))
 {
-    return display->screens[0].root_visual;
+    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    return wd->screens[0].root_visual;
 }
 
 /*
@@ -1383,7 +1404,8 @@ DefaultDepth(
     Display *display,
     TCL_UNUSED(int))
 {
-    return display->screens[0].root_depth;
+    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    return wd->screens[0].root_depth;
 }
 
 /*
@@ -1569,10 +1591,12 @@ TkpScanWindowId(
  *----------------------------------------------------------------------
  */
 
-void
-TkUnixDoOneXEvent(void)
+int
+TkUnixDoOneXEvent(
+    TCL_UNUSED(Tcl_Time *))  /* timePtr */
 {
     /* No-op. */
+    return 0;
 }
 
 /*
@@ -1660,7 +1684,7 @@ TkUnixSetMenubar(
  *----------------------------------------------------------------------
  */
 
-Bool
+bool
 TkScrollWindow(
     TCL_UNUSED(Tk_Window),
     TCL_UNUSED(GC),
@@ -1698,6 +1722,14 @@ Tk_SetMainMenubar(
     TCL_UNUSED(const char *))
 {
     /* No-op. */
+}
+
+
+void
+TkpSync(
+    TCL_UNUSED(Display *))	/* Display to sync. */
+{
+    /* No-op */
 }
 
 /*
