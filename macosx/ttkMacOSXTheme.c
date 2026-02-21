@@ -2639,7 +2639,7 @@ static void PbarElementDraw(
     int phase;
     double value = 0, maximum = 100, factor;
     CGRect bounds = BoxToRect(d, b);
-    int isIndeterminate = !strcmp("indeterminate",
+    bool isIndeterminate = !strcmp("indeterminate",
 				  Tcl_GetString(pbar->modeObj));
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);

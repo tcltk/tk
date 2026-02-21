@@ -139,10 +139,8 @@ XPThemeEnabled(
     void *clientData)
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
-    int active = themeData->procs->IsThemeActive();
-    int themed = themeData->procs->IsAppThemed();
 
-    return (active && themed);
+    return (themeData->procs->IsThemeActive() && themeData->procs->IsAppThemed());
 }
 
 /*
@@ -438,12 +436,12 @@ static void DestroyElementData(void *clientData)
  *	also initializes DC.
  *
  * Returns:
- *	1 on success, 0 on error.
+ *	true on success, false on error.
  *	Caller must later call FreeElementData() so this element
  *	can be reused.
  */
 
-static int
+static bool
 InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
@@ -458,7 +456,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hwnd, elementData->info->className);
 
     if (!elementData->hTheme) {
-	return 0;
+	return false;
     }
 
     elementData->drawable = d;
@@ -467,7 +465,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 		&elementData->dcState);
     }
 
-    return 1;
+    return true;
 }
 
 static void
@@ -780,7 +778,7 @@ static void TabElementDraw(
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
-    int isSelected = (state & TTK_STATE_SELECTED);
+    bool isSelected = (state & TTK_STATE_SELECTED) != 0;
     int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     if (mainInfoPtr != NULL) {
