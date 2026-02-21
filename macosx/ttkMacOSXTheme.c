@@ -200,7 +200,7 @@ static inline CGRect BoxToRect(
 static GrayPalette LookupGrayPalette(
     const ButtonDesign *design,
     Ttk_State state,
-    int isDark)
+    bool isDark)
 {
     const PaletteStateTable *entry = design->palettes;
     while ((state & entry->onBits) != entry->onBits ||
@@ -232,7 +232,7 @@ static GrayPalette LookupGrayPalette(
 static CGRect NormalizeButtonBounds(
     ThemeButtonParams *params,
     CGRect bounds,
-    int isDark)
+    bool isDark)
 {
     SInt32 height;
 
@@ -335,7 +335,7 @@ static void GetBackgroundColorRGBA(
     }
 
     if (contrast) {
-	int isDark = (rgba[0] + rgba[1] + rgba[2] < 1.5);
+	bool isDark = (rgba[0] + rgba[1] + rgba[2] < 1.5);
 
 	if (isDark) {
 	    for (int i = 0; i < 3; i++) {
@@ -483,7 +483,7 @@ static void DrawGrayButton(
     Ttk_State state,
     Tk_Window tkwin)
 {
-    int isDark = TkMacOSXInDarkMode(tkwin);
+    bool isDark = TkMacOSXInDarkMode(tkwin);
     GrayPalette palette = LookupGrayPalette(design, state, isDark);
     GrayColor faceGray = {.grayscale = 0.0, .alpha = 1.0};
     if (palette.top <= 255.0) {
@@ -526,7 +526,7 @@ static void DrawAccentedButton(
     CGRect bounds,
     const ButtonDesign *design,
     int state,
-    int isDark)
+    bool isDark)
 {
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGColorRef faceColor = CGCOLOR(controlAccentColor());
@@ -582,7 +582,7 @@ static void DrawAccentedSegment(
      * that the rounded corners on the left will be clipped off.  This assumes
      * that the bounds include room for the focus ring.
      */
-    int isDark = TkMacOSXInDarkMode(tkwin);
+    bool isDark = TkMacOSXInDarkMode(tkwin);
     GrayColor sepGray = isDark ? darkComboSeparator : lightComboSeparator;
     CGColorRef sepColor = CGColorFromGray(sepGray);
     CGRect clip = bounds;
@@ -634,7 +634,7 @@ static void DrawEntry(
     int state,
     Tk_Window tkwin)
 {
-    int isDark = TkMacOSXInDarkMode(tkwin);
+    bool isDark = TkMacOSXInDarkMode(tkwin);
     GrayPalette palette = LookupGrayPalette(design, state, isDark);
     CGColorRef backgroundColor;
     CGFloat bgRGBA[4];
@@ -866,7 +866,7 @@ static void DrawOpenDisclosure(
 
 static CGColorRef IndicatorColor(
    int state,
-   int isDark)
+   bool isDark)
 {
     if (state & TTK_STATE_DISABLED) {
 	return isDark ?
@@ -876,6 +876,7 @@ static CGColorRef IndicatorColor(
 	       !(state & TTK_STATE_BACKGROUND)) {
 	return CG_WHITE;
     } else {
+	// Q: how to reach this?
 	return CGCOLOR([NSColor controlTextColor]);
     }
 }
@@ -890,7 +891,7 @@ static void DrawCheckIndicator(
     CGContextRef context,
     CGRect bounds,
     int state,
-    int isDark)
+    bool isDark)
 {
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGColorRef strokeColor = IndicatorColor(state, isDark);
@@ -921,7 +922,7 @@ static void DrawRadioIndicator(
     CGContextRef context,
     CGRect bounds,
     int state,
-    int isDark)
+    bool isDark)
 {
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGColorRef fillColor = IndicatorColor(state, isDark);
@@ -1133,7 +1134,7 @@ static void DrawSlider(
      */
 
     double fraction = (from < to) ? (value - from) / (to - from) : 0.5;
-    int isDark = TkMacOSXInDarkMode(tkwin);
+    bool isDark = TkMacOSXInDarkMode(tkwin);
 
     if (info.attributes & kThemeTrackHorizontal) {
 	trackBounds = CGRectInset(bounds, 0, bounds.size.height / 2 - 3);
@@ -1212,7 +1213,7 @@ static void DrawButton(
     ThemeButtonKind kind = info.kind;
     ThemeDrawState drawState = info.state;
     CGRect arrowBounds = bounds = CGRectInset(bounds, 1, 1);
-    int hasIndicator, isDark = TkMacOSXInDarkMode(tkwin);
+    bool hasIndicator, isDark = TkMacOSXInDarkMode(tkwin);
 
     switch (kind) {
     case TkRoundedRectButton:
@@ -1423,7 +1424,7 @@ static void DrawListHeader(
     Tk_Window tkwin,
     int state)
 {
-    int isDark = TkMacOSXInDarkMode(tkwin);
+    bool isDark = TkMacOSXInDarkMode(tkwin);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
@@ -1776,7 +1777,7 @@ static void ButtonElementDraw(
     ThemeButtonParams *params = (ThemeButtonParams *)clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = ComputeButtonDrawInfo(params, state, tkwin);
-    int isDark = TkMacOSXInDarkMode(tkwin);
+    bool isDark = TkMacOSXInDarkMode(tkwin);
 
     switch (info.kind) {
 
@@ -2830,7 +2831,7 @@ static void ThumbElementDraw(
 	    thumbBounds.size.height >= Tk_Height(tkwin) - 8)) {
 	    return;
 	}
-	int isDark = TkMacOSXInDarkMode(tkwin);
+	bool isDark = TkMacOSXInDarkMode(tkwin);
 	if ((state & TTK_STATE_PRESSED) ||
 	    (state & TTK_STATE_HOVER)) {
 	    bgGray = isDark ? darkActiveThumb : lightActiveThumb;
@@ -3391,14 +3392,15 @@ static void DisclosureElementDraw(
 	NSColor *color = isSelected && isActive && !isCheckTreeview ?
 	    [NSColor whiteColor] : [NSColor textColor];
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	bool isDark = TkMacOSXInDarkMode(tkwin);
 	color = [color colorUsingColorSpace: deviceRGB];
 	CGFloat rgba[4];
 
 	[color getComponents: rgba];
 	if (rgba[0] == 0) {
 	    rgba[0] = rgba[1] = rgba[2] = 0.5;
-	} else if (isSelected && isActive && !isCheckTreeview)
-	    if (TkMacOSXInDarkMode(tkwin)) {
+	} else if (isSelected && isActive && !isCheckTreeview) {
+	    if (isDark) {
 		rgba[0] = rgba[1] = rgba[2] = 0.9;
 	    }
 	} else {
