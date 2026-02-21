@@ -13,7 +13,7 @@
 
 #include "tkInt.h"
 #include "tkColor.h"
-#include "nanovg.h"
+#include "tkGlfwInt.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -31,35 +31,6 @@ struct TkStressedCmap {
     struct TkStressedCmap *nextPtr;
 };
 
-/* Convert XColor (16-bit) to NVGcolor (float 0..1). */
-static NVGcolor
-XColorToNVG(const XColor *xc)
-{
-    NVGcolor color;
-    color.r = (float)xc->red   / 65535.0f;
-    color.g = (float)xc->green / 65535.0f;
-    color.b = (float)xc->blue  / 65535.0f;
-    color.a = 1.0f;
-    return color;
-}
-
-/* Convert NVGcolor to XColor (for Tk compatibility).
- *
- * IMPORTANT: caller must have zero-initialised xc before calling this,
- * so that xc->pixel and xc->pad are never left as stack garbage.
- * Tk uses the entire XColor struct as a hash key in Tk_GetGC; any
- * uninitialised bytes will corrupt the GC hash table.
- */
-static void
-NVGToXColor(const NVGcolor *nc, XColor *xc)
-{
-    xc->red   = (unsigned short)(nc->r * 65535.0f + 0.5f);
-    xc->green = (unsigned short)(nc->g * 65535.0f + 0.5f);
-    xc->blue  = (unsigned short)(nc->b * 65535.0f + 0.5f);
-    xc->flags = DoRed | DoGreen | DoBlue;
-    /* xc->pixel and xc->pad must be zero — ensured by caller's memset. */
-}
-
 /* Forward declarations. */
 static void DeleteStressedCmap(Display *display, void *colormap);
 static int  ParseColorString(const char *name, NVGcolor *color);
@@ -67,10 +38,158 @@ static int  ParseColorString(const char *name, NVGcolor *color);
 /*
  *----------------------------------------------------------------------
  *
+ * TkGlfwXColorToNVG --
+ *
+ *      Convert an XColor structure to an NVGcolor structure.
+ *
+ * Results:
+ *      Returns an NVGcolor with floating-point components (0.0-1.0)
+ *      derived from the 16-bit XColor components.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE NVGcolor
+TkGlfwXColorToNVG(XColor *xcolor)
+{
+    NVGcolor color;
+    color.r = (float)xcolor->red   / 65535.0f;
+    color.g = (float)xcolor->green / 65535.0f;
+    color.b = (float)xcolor->blue  / 65535.0f;
+    color.a = 1.0f;
+    return color;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwPixelToNVG --
+ *
+ *      Convert a pixel value to an NVGcolor structure.
+ *
+ *      For Wayland/GLFW, pixel values are not used directly; we use
+ *      named colors or RGB values. This function extracts color from
+ *      a pixel value by interpreting it as 0xRRGGBB or 0xRRGGBBAA.
+ *
+ * Results:
+ *      Returns an NVGcolor with floating-point components derived from
+ *      the pixel's RGB (and optional alpha) channels.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE NVGcolor
+TkGlfwPixelToNVG(unsigned long pixel)
+{
+    NVGcolor color;
+    
+    /* Assume pixel is 0xRRGGBB or 0xRRGGBBAA */
+    color.r = ((pixel >> 16) & 0xFF) / 255.0f;
+    color.g = ((pixel >>  8) & 0xFF) / 255.0f;
+    color.b = ((pixel      ) & 0xFF) / 255.0f;
+    
+    /* If high byte is set, treat as alpha, otherwise opaque */
+    if (pixel & 0xFF000000) {
+        color.a = ((pixel >> 24) & 0xFF) / 255.0f;
+    } else {
+        color.a = 1.0f;
+    }
+    
+    return color;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwApplyGC --
+ *
+ *      Apply graphics context settings to the NanoVG context.
+ *
+ *      This function translates Xlib-style GC attributes (line width,
+ *      cap style, join style, etc.) into the corresponding NanoVG
+ *      drawing state.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Modifies the current NanoVG context state.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkGlfwApplyGC(NVGcontext *vg, GC gc)
+{
+    TkWaylandGCImpl *gcImpl;
+    
+    if (vg == NULL || gc == None) {
+        return;
+    }
+    
+    gcImpl = (TkWaylandGCImpl *)gc;
+    
+    /* Apply line width */
+    nvgStrokeWidth(vg, (float)gcImpl->line_width);
+    
+    /* Apply line style (dashing not yet implemented) */
+    if (gcImpl->line_style == LineOnOffDash || 
+        gcImpl->line_style == LineDoubleDash) {
+        /* TODO: Implement dashing */
+    }
+    
+    /* Apply line cap style */
+    switch (gcImpl->cap_style) {
+        case CapRound:
+            nvgLineCap(vg, NVG_ROUND);
+            break;
+        case CapProjecting:
+            nvgLineCap(vg, NVG_SQUARE);
+            break;
+        case CapButt:
+        default:
+            nvgLineCap(vg, NVG_BUTT);
+            break;
+    }
+    
+    /* Apply line join style */
+    switch (gcImpl->join_style) {
+        case JoinRound:
+            nvgLineJoin(vg, NVG_ROUND);
+            break;
+        case JoinBevel:
+            nvgLineJoin(vg, NVG_BEVEL);
+            break;
+        case JoinMiter:
+        default:
+            nvgLineJoin(vg, NVG_MITER);
+            break;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpFreeColor --
  *
- *      Release the specified color back to the system.
- *      In NanoVG nothing needs to be freed, but we clean up stress cache.
+ *      Release a previously allocated TkColor structure.
+ *
+ *      In the NanoVG backend, colors themselves require no special
+ *      freeing, but any associated stress colormap cache entries are
+ *      cleaned up.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Memory associated with the TkColor is freed, and any stress
+ *      colormap entry is removed from the display's cache.
  *
  *----------------------------------------------------------------------
  */
@@ -89,13 +208,17 @@ TkpFreeColor(TkColor *tkColPtr)
  *
  * TkpGetColor --
  *
- *      Allocate a new TkColor for the color with the given name.
+ *      Allocate a new TkColor structure for the color with the given name.
+ *
+ *      The color name may be either a standard X color name or a
+ *      hexadecimal string (#RGB, #RRGGBB, #RRGGBBAA, or #RRRRGGGGBBBB).
  *
  * Results:
- *      Returns a newly allocated TkColor, or NULL on failure.
+ *      Returns a pointer to a newly allocated TkColor structure, or
+ *      NULL if the color name could not be parsed.
  *
  * Side effects:
- *      Allocates memory.
+ *      Memory is allocated for the TkColor structure.
  *
  *----------------------------------------------------------------------
  */
@@ -126,7 +249,13 @@ TkpGetColor(
      * cache).
      */
     memset(&xcolor, 0, sizeof(XColor));
-    NVGToXColor(&nvgcolor, &xcolor);
+    
+    /* Convert NVGcolor back to XColor */
+    xcolor.red   = (unsigned short)(nvgcolor.r * 65535.0f + 0.5f);
+    xcolor.green = (unsigned short)(nvgcolor.g * 65535.0f + 0.5f);
+    xcolor.blue  = (unsigned short)(nvgcolor.b * 65535.0f + 0.5f);
+    xcolor.flags = DoRed | DoGreen | DoBlue;
+    /* pixel and pad remain zero */
 
     tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
     if (tkColPtr == NULL) {
@@ -147,13 +276,18 @@ TkpGetColor(
  *
  * TkpGetColorByValue --
  *
- *      Given desired RGB, return a TkColor (NanoVG always gives exact match).
+ *      Allocate a new TkColor structure for the color described by the
+ *      given XColor structure.
+ *
+ *      In the NanoVG backend, exact RGB values are always available,
+ *      so this function always succeeds (subject to memory allocation).
  *
  * Results:
- *      Returns a newly allocated TkColor, or NULL on failure.
+ *      Returns a pointer to a newly allocated TkColor structure, or
+ *      NULL if memory allocation fails.
  *
  * Side effects:
- *      Allocates memory.
+ *      Memory is allocated for the TkColor structure.
  *
  *----------------------------------------------------------------------
  */
@@ -197,7 +331,17 @@ TkpGetColorByValue(
  *
  * DeleteStressedCmap --
  *
- *      Release cached stress information for a colormap (stub).
+ *      Remove a colormap from the display's stress cache.
+ *
+ *      This is a stub implementation for the NanoVG backend, as
+ *      colormap stress is not a concept in this environment. The
+ *      function exists only for API compatibility.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      The stress cache entry for the given colormap is removed if found.
  *
  *----------------------------------------------------------------------
  */
@@ -239,10 +383,16 @@ DeleteStressedCmap(
  *
  * TkpCmapStressed --
  *
- *      Check whether colormap is known to be out of entries (stub).
+ *      Determine whether a colormap is known to be out of entries.
+ *
+ *      This is a stub implementation for the NanoVG backend, always
+ *      returning 0 (not stressed) as colormaps are not used.
  *
  * Results:
- *      1 if stressed, 0 otherwise.
+ *      0 always (colormap not stressed).
+ *
+ * Side effects:
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -269,7 +419,27 @@ TkpCmapStressed(
 }
 
 /*
- * Helper functions.
+ *----------------------------------------------------------------------
+ *
+ * ParseColorString --
+ *
+ *      Parse a color name or hexadecimal string into an NVGcolor structure.
+ *
+ *      Supported formats:
+ *        - Named colors (e.g., "red", "blue", "SystemButtonFace")
+ *        - #RGB (3-digit hexadecimal)
+ *        - #RRGGBB (6-digit hexadecimal)
+ *        - #RRGGBBAA (8-digit hexadecimal with alpha)
+ *        - #RRRRGGGGBBBB (12-digit hexadecimal, X11 16-bit format)
+ *
+ * Results:
+ *      1 if the color string was successfully parsed, 0 otherwise.
+ *
+ * Side effects:
+ *      The NVGcolor structure pointed to by 'color' is filled with the
+ *      parsed color components.
+ *
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -395,12 +565,28 @@ ParseColorString(const char *name, NVGcolor *color)
 }
 
 /*
- * Get NVGcolor from TkColor (used by drawing code).
+ *----------------------------------------------------------------------
+ *
+ * TkColorToNVG --
+ *
+ *      Extract an NVGcolor from a TkColor structure.
+ *
+ *      This is a convenience helper used by the drawing code to obtain
+ *      NanoVG color values from Tk's internal color representation.
+ *
+ * Results:
+ *      Returns an NVGcolor structure corresponding to the TkColor.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
  */
+
 NVGcolor
 TkColorToNVG(TkColor *tkColPtr)
 {
-    return XColorToNVG(&tkColPtr->color);
+    return TkGlfwXColorToNVG(&tkColPtr->color);
 }
 
 /*
