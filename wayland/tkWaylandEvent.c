@@ -833,59 +833,6 @@ TkWaylandGetPendingCharacter(void)
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * TkGlfwProcessEvents --
- *
- *      Process pending GLFW events.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      GLFW callbacks are invoked for pending events.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwProcessEvents(void)
-{
-    glfwPollEvents();
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_WaylandSetupTkNotifier --
- *
- *      Sets up the Tk event notifier for Wayland/GLFW integration.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Configures Tk's event notifier.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_WaylandSetupTkNotifier(void)
-{
-    /* 
-     * On Wayland with GLFW, we need to integrate with Tk's event loop.
-     * For now, we rely on Tk_DoOneEvent's timeout to call glfwPollEvents
-     * via TkpSync and other entry points.
-     *
-     * A more sophisticated implementation would create a file handler
-     * for the Wayland display connection if we can obtain the FD.
-     */
-    
-    /* Placeholder for future enhancement */
-}
-
-/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
