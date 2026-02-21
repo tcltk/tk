@@ -44,7 +44,17 @@ static void HeartbeatTimerProc(void *clientData);
  * Tk_WaylandSetupTkNotifier --
  *
  *      Called during Tk initialization to install the Wayland/GLFW
- *      event source.
+ *      event source. Creates a timer handler and installs the event
+ *      source callbacks.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Installs TkWaylandEventsSetupProc and TkWaylandEventsCheckProc
+ *      as Tcl event sources. Creates a heartbeat timer to ensure
+ *      regular polling of GLFW events. Registers an exit handler for
+ *      cleanup.
  *
  *----------------------------------------------------------------------
  */
@@ -73,7 +83,15 @@ Tk_WaylandSetupTkNotifier(void)
  *
  * HeartbeatTimerProc --
  *
- *      Periodic timer to keep the event loop responsive.
+ *      Periodic timer to keep the event loop responsive. Reschedules
+ *      itself and pumps GLFW events.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Creates a new timer handler for the next heartbeat. Calls
+ *      glfwPollEvents() to process pending Wayland/GLFW events.
  *
  *----------------------------------------------------------------------
  */
@@ -98,7 +116,15 @@ HeartbeatTimerProc(
  *
  * TkWaylandEventsSetupProc --
  *
- *      Tell Tcl how long we are willing to block.
+ *      Tell Tcl how long we are willing to block. Called by Tcl_DoOneEvent
+ *      before blocking.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Sets the maximum block time to zero when window events are
+ *      requested, ensuring Tcl doesn't block for extended periods.
  *
  *----------------------------------------------------------------------
  */
@@ -122,6 +148,14 @@ TkWaylandEventsSetupProc(
  * TkWaylandEventsCheckProc --
  *
  *      Process pending Wayland/GLFW events and queue synthetic Tk events.
+ *      Called by Tcl_DoOneEvent after events are posted.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Calls glfwPollEvents() to process window events when window
+ *      events are requested.
  *
  *----------------------------------------------------------------------
  */
@@ -141,7 +175,15 @@ TkWaylandEventsCheckProc(
  *
  * TkWaylandNotifyExitHandler --
  *
- *      Clean up at exit.
+ *      Clean up at exit. Removes the event source, deletes the
+ *      heartbeat timer, and marks the notifier as uninitialized.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Removes the Wayland event source from Tcl's event loop.
+ *      Cancels the heartbeat timer if active.
  *
  *----------------------------------------------------------------------
  */

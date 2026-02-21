@@ -1,809 +1,340 @@
 /*
  * tkWaylandXId.c --
- * 
- *     This file contains Tk and X11 functions implementing the Pixmap data 
- *     type for Wayland/NanoVG, obtaining window ID's, and implementing 
- *     the Display functions on Wayland. 
+ *
+ *	Window-ID scanning and legacy compatibility shims for the
+ *	Wayland/GLFW/NanoVG Tk port.
  *
  * Copyright © 1993 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.
- * Copyright © 2026 Kevin Walzer
- *
- * 
+ * Copyright © 2026      Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkInt.h"           
-#include <stddef.h>          
-#include <X11/Xlib.h>  
-#include <X11/Xatom.h>    
-#include <X11/Xutil.h>
-#include <X11/Xlibint.h>    
-#include <GL/gl.h>
-#include "nanovg.h"
-#include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"  
-#include <GLFW/glfw3.h> 
+#include "tkInt.h"
+#include "tkGlfwInt.h"
+#include <string.h>
 
-/*
- * In Wayland with NanoVG, we need to track pixmap/bitmap data.
- * NanoVG doesn't have direct pixmap support, so we use NVG images
- * or simple NVGpaint objects.
- */
-
-typedef struct {
-    int imageId;           /* NanoVG image ID for texture-based pixmaps */
-    NVGpaint paint;        /* NanoVG paint for gradient/solid/zero-size pixmaps */
-    int width;
-    int height;
-    int depth;
-    int type;              /* 0 = image, 1 = paint */
-} TkPixmap;
-
-static TkPixmap *pixmapStore = NULL;
-static int pixmapCount = 0;
-static int pixmapCapacity = 0;
-static NVGcontext* nvgContext = NULL;
-
-#ifdef DefaultScreenOfDisplay
-#undef DefaultScreenOfDisplay
-#endif
-
-#ifdef DefaultScreen
-#undef DefaultScreen
-#endif
-
-#ifdef DefaultVisual
-#undef DefaultVisual
-#endif
-
-#ifdef DefaultColormap
-#undef DefaultColormap
-#endif
-
-#ifdef DefaultDepth
-#undef DefaultDepth
-#endif
-
-
- 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_SetNanoVGContext --
  *
- *	Sets the NanoVG context to be used for pixmap operations.
- *	This must be called before using any pixmap functions.
+ *	Public entry point – registers the NanoVG context that will be
+ *	used for pixmap operations. 
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Sets the global NanoVG context.
+ *	Sets the module-level NVGcontext pointer in tkWaylandGC.c.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_SetNanoVGContext(NVGcontext* vg)
+Tk_SetNanoVGContext(
+    NVGcontext *vg)
 {
-    nvgContext = vg;
+    TkWaylandSetNVGContext(vg);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GetPixmap --
+ * Tk_GetPixmap -- legacy forwarder
  *
- *	Creates a pixmap equivalent for Wayland/NanoVG.
- *	Now supports only image-based (type 0) or paint-based (type 1) pixmaps.
- *
- * Results:
- *	Returns a "pixmap" identifier (actually a pointer to TkPixmap struct).
- *
- * Side effects:
- *	Allocates memory for the pixmap structure.
+ *	Preserved for binary / source compatibility.  New code should
+ *	call TkWaylandCreatePixmap directly.
  *
  *----------------------------------------------------------------------
  */
 
 Pixmap
 Tk_GetPixmap(
-    TCL_UNUSED(Display *),		/* Display for new pixmap (unused in Wayland). */
-    TCL_UNUSED(Drawable),		/* Drawable where pixmap will be used (unused). */
-    int width, int height,	/* Dimensions of pixmap. */
-    int depth)			/* Bits per pixel for pixmap. */
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Drawable),
+    int width,
+    int height,
+    int depth)
 {
-    TkPixmap *pixmap;
-    
-    if (nvgContext == NULL) {
-        /* Fallback: return a simple identifier. */
-        return (Pixmap)(width + (height << 16));
-    }
-    
-    /* Allocate new pixmap structure. */
-    if (pixmapCount >= pixmapCapacity) {
-        pixmapCapacity = pixmapCapacity == 0 ? 16 : pixmapCapacity * 2;
-        pixmapStore = (TkPixmap *)realloc(pixmapStore, 
-                                         pixmapCapacity * sizeof(TkPixmap));
-    }
-    
-    pixmap = &pixmapStore[pixmapCount];
-    
-    /* Initialize the pixmap structure. */
-    memset(pixmap, 0, sizeof(TkPixmap));
-    pixmap->width = width;
-    pixmap->height = height;
-    pixmap->depth = depth;
-    
-    if (width > 0 && height > 0) {
-        /* Create empty RGBA image data. */
-        unsigned char* data = (unsigned char*)calloc(width * height * 4, 1);
-        if (data) {
-            pixmap->imageId = nvgCreateImageRGBA(nvgContext, width, height, 
-                                                NVG_IMAGE_NEAREST, data);
-            ckfree(data);
-            pixmap->type = 0; /* Image type */
-        } else {
-            /* Allocation failed → fallback to paint */
-            pixmap->type = 1;
-        }
-    }
-    
-    if (pixmap->type != 0) {
-        /* For zero-size or failed allocation: simple transparent paint */
-        pixmap->paint = nvgLinearGradient(nvgContext, 0, 0, 1, 1,
-                                         nvgRGBA(0, 0, 0, 0),
-                                         nvgRGBA(0, 0, 0, 0));
-        pixmap->type = 1; /* Paint type */
-    }
-    
-    pixmapCount++;
-    
-    /* Return the pointer as the pixmap ID. */
-    return (Pixmap)pixmap;
+    return TkWaylandCreatePixmap(width, height, depth);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * Tk_FreePixmap --
- *
- *	Frees a pixmap created by Tk_GetPixmap.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The pixmap resources are freed.
+ * Tk_FreePixmap -- legacy forwarder
  *
  *----------------------------------------------------------------------
  */
 
 void
 Tk_FreePixmap(
-    TCL_UNUSED(Display *),		/* Display for which pixmap was allocated (unused). */
-    Pixmap pixmap)		/* Identifier for pixmap. */
+    TCL_UNUSED(Display *),
+    Pixmap pixmap)
 {
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    
-    if (pix == NULL || nvgContext == NULL) {
-        return;
-    }
-    
-    /* Free resources based on type. */
-    if (pix->type == 0 && pix->imageId != 0) {
-        nvgDeleteImage(nvgContext, pix->imageId);
-    }
-    /* type 1 (paint) needs no explicit cleanup */
-    
-    /* Clear the structure. */
-    memset(pix, 0, sizeof(TkPixmap));
-}
-
-/* X11 pixmap functions. */
-
-Pixmap
-XCreatePixmap(Display *display, Drawable d,
-              unsigned int width,
-              unsigned int height,
-              unsigned int depth)
-{
-    return Tk_GetPixmap(display, d, width, height, depth);
-}
-
-
-int
-XFreePixmap(Display *display, Pixmap pixmap)
-{
-    Tk_FreePixmap(display, pixmap);
-    return Success;
+    TkWaylandFreePixmap(pixmap);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkpScanWindowId --
- *
- *	Given a string, produce the corresponding Window Id.
- *	In Wayland, window IDs are typically file descriptors or other
- *	identifiers from the Wayland protocol.
- *
- * Results:
- *	The return value is normally TCL_OK; in this case *idPtr will be set
- *	to the Window value equivalent to string. If string is improperly
- *	formed then TCL_ERROR is returned and an error message will be left in
- *	the interp's result.
- *
- * Side effects:
- *	None.
+ * Tk_GetPixmapImageId -- legacy forwarder
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkpScanWindowId(
-    Tcl_Interp *interp,
-    const char *string,
-    Window *idPtr)
+Tk_GetPixmapImageId(
+    Pixmap pixmap)
 {
-    int code;
-    Tcl_Obj obj;
-
-    obj.refCount = 1;
-    obj.bytes = (char *) string;
-    obj.length = strlen(string);
-    obj.typePtr = NULL;
-
-    /* Parse as a long integer - in Wayland this might represent
-     * a file descriptor or other resource ID. */
-    code = Tcl_GetLongFromObj(interp, &obj, (long *)idPtr);
-
-    if (obj.refCount > 1) {
-	Tcl_Panic("invalid sharing of Tcl_Obj on C stack");
-    }
-    if (obj.typePtr && obj.typePtr->freeIntRepProc) {
-	obj.typePtr->freeIntRepProc(&obj);
-    }
-    return code;
+    return TkWaylandGetPixmapImageId(pixmap);
 }
 
 /*
- * Helper function to get NanoVG image ID from pixmap.
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetPixmapPaint -- legacy forwarder
+ *
+ *----------------------------------------------------------------------
  */
+
+NVGpaint *
+Tk_GetPixmapPaint(
+    Pixmap pixmap)
+{
+    return TkWaylandGetPixmapPaint(pixmap);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetPixmapType -- legacy forwarder
+ *
+ *----------------------------------------------------------------------
+ */
+
 int
-Tk_GetPixmapImageId(Pixmap pixmap)
+Tk_GetPixmapType(
+    Pixmap pixmap)
 {
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix && pix->type == 0) {
-        return pix->imageId;
-    }
-    return 0;
+    return TkWaylandGetPixmapType(pixmap);
 }
 
 /*
- * Helper function to get NanoVG paint from pixmap.
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetPixmapDimensions -- legacy forwarder
+ *
+ *----------------------------------------------------------------------
  */
-NVGpaint*
-Tk_GetPixmapPaint(Pixmap pixmap)
-{
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix && pix->type == 1) {
-        return &pix->paint;
-    }
-    return NULL;
-}
 
-/*
- * Helper function to get pixmap type.
- */
-int
-Tk_GetPixmapType(Pixmap pixmap)
-{
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix) {
-        return pix->type;
-    }
-    return -1;
-}
-
-/*
- * Helper function to get pixmap dimensions.
- */
 void
-Tk_GetPixmapDimensions(Pixmap pixmap, int *width, int *height, int *depth)
+Tk_GetPixmapDimensions(
+    Pixmap pixmap,
+    int   *width,
+    int   *height,
+    int   *depth)
 {
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix) {
-        if (width) *width = pix->width;
-        if (height) *height = pix->height;
-        if (depth) *depth = pix->depth;
-    }
+    TkWaylandGetPixmapDimensions(pixmap, width, height, depth);
 }
 
 /*
- * Update pixmap image data (only for type 0).
+ *----------------------------------------------------------------------
+ *
+ * Tk_UpdatePixmapImage -- legacy forwarder
+ *
+ *----------------------------------------------------------------------
  */
+
 int
-Tk_UpdatePixmapImage(Pixmap pixmap, const unsigned char* data)
+Tk_UpdatePixmapImage(
+    Pixmap               pixmap,
+    const unsigned char *data)
 {
-    TkPixmap *pix = (TkPixmap *)pixmap;
-    if (pix == NULL || nvgContext == NULL || pix->type != 0) {
-        return 0;
-    }
-    
-    if (pix->imageId != 0) {
-        nvgDeleteImage(nvgContext, pix->imageId);
-        pix->imageId = 0;
-    }
-    
-    if (data) {
-        pix->imageId = nvgCreateImageRGBA(nvgContext, pix->width, pix->height,
-                                         NVG_IMAGE_NEAREST, data);
-    }
-    
-    return (pix->imageId != 0);
+    return TkWaylandUpdatePixmapImage(pixmap, data);
 }
 
 /*
- * Cleanup function for pixmap store.
+ *----------------------------------------------------------------------
+ *
+ * Tk_CleanupPixmapStore -- legacy forwarder
+ *
+ *----------------------------------------------------------------------
  */
+
 void
 Tk_CleanupPixmapStore(void)
 {
-    int i;
-    
-    if (nvgContext == NULL) {
-        return;
-    }
-    
-    for (i = 0; i < pixmapCount; i++) {
-        TkPixmap *pix = &pixmapStore[i];
-        
-        if (pix->type == 0 && pix->imageId != 0) {
-            nvgDeleteImage(nvgContext, pix->imageId);
-        }
-    }
-    
-    ckfree(pixmapStore);
-    pixmapStore = NULL;
-    pixmapCount = 0;
-    pixmapCapacity = 0;
-    nvgContext = NULL;
+    TkWaylandCleanupPixmapStore();
 }
 
 /*
- * --------------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
- * TkpOpenDisplay -
- * 
- *     Allocates a new TkDisplay, opens the display, and returns
- *     a pointer to a display.
- * 
- * Results:
- *     A pointer to a TkDisplay structure, or NULL if the display
- *     could not be opened.
- * 
- * Side effects:
- *     Allocates memory for the TkDisplay structure and initializes
- *     GLFW and Wayland subsystems.
+ * Legacy GC forwarders
  *
- * --------------------------------------------------------------------------------
-
- */
-
-TkDisplay *
-TkpOpenDisplay(
-	TCL_UNUSED(const char *)) /* display_name */
-{
-    TkDisplay *dispPtr;
-    Display *display;
-    Screen *screen;
-    Visual *visual;
-    
-   /*
-	* Under GLFW/Wayland, we don't use traditional X11 display names.
-	* GLFW handles display connection internally. We just need to
-	* initialize GLFW if not already done.
-	*/
-	
-	if (!glfwInit()) {
-	return NULL;
-	}
-    
-	dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
-	memset(dispPtr, 0, sizeof(TkDisplay));
-	
-	/*
-	 * Allocate synthetic X Display.
-	 */
-	display = (Display *)ckalloc(sizeof(Display));
-	memset(display, 0, sizeof(Display));
-	
-	/*
-	 * Allocate single Screen (as an array of 1).
-	 */
-	display->screens = (Screen *)ckalloc(sizeof(Screen) * 1);
-	memset(display->screens, 0, sizeof(Screen));
-	
-	display->nscreens = 1;
-	display->default_screen = 0;
-	
-	screen = &display->screens[0];
-	
-	/*
-	 * Allocate Visual.
-	 */
-	visual = (Visual *)ckalloc(sizeof(Visual));
-	memset(visual, 0, sizeof(Visual));
-	
-	/*
-	 * Screen setup.
-	 */
-	screen->display = display;
-	screen->root = 1;              /* MUST NOT be None (0). */
-	screen->width = 1920;          
-	screen->height = 1080;
-	screen->mwidth = 508;
-	screen->mheight = 285;
-	screen->root_visual = visual;
-	screen->root_depth = 24;
-	screen->ndepths = 1;
-	
-	/*
-	 * Visual setup.
-	 */
-	visual->visualid = 1;          /* Non-zero is safer. */
-	visual->class = TrueColor;
-	visual->bits_per_rgb = 8;
-	visual->map_entries = 256;
-	visual->red_mask = 0xFF0000;
-	visual->green_mask = 0x00FF00;
-	visual->blue_mask = 0x0000FF;
-	
-	/*
-	 * Link into TkDisplay.
-	 */
-	dispPtr->display = display;
-	
-	dispPtr->name = (char *)ckalloc(strlen("wayland-0") + 1);
-	strcpy(dispPtr->name, "wayland-0");
-	
-	display->display_name = dispPtr->name;
-	
-	return dispPtr;
-
-}
-
-/*
- * --------------------------------------------------------------------------------
-
+ *	Tk_CreateGC, Tk_FreeGC and friends were declared in this file
+ *	in the original version.  They are now thin forwarders to the
+ *	canonical TkWayland* functions so that any remaining callers
+ *	continue to link.
  *
- * TkpCloseDisplay -
- * 
- *     Deallocates a TkDisplay structure and closes the display.
- * 
- * Results:
- *     None.
- * 
- * Side effects:
- *     Frees memory and performs cleanup of GLFW/Wayland resources.
- *
- **********************************************************************
+ *----------------------------------------------------------------------
  */
-
-void
-TkpCloseDisplay(
-		TkDisplay *dispPtr)
-{
-    if (dispPtr == NULL) {
-	return;
-    }
-
-    /*
-     * Free the display name string.
-     */
-    if (dispPtr->name) {
-	ckfree(dispPtr->name);
-	dispPtr->name = NULL;
-    }
-
-    /*
-     * Free the X11-compatible Display structure.
-     */
-    if (dispPtr->display) {
-	ckfree((char *)dispPtr->display);
-	dispPtr->display = NULL;
-    }
-
-    /*
-     * Note: We don't call glfwTerminate() here because other Tk
-     * displays might still be active. GLFW cleanup happens when
-     * the application exits.
-     */
-
-    /*
-     * Free the TkDisplay structure itself.
-     */
-    ckfree((char *)dispPtr);
-}
-
-/* X11 display functions. */
-Display *
-XOpenDisplay(const char *name)
-{
-    TkDisplay *tkDisp = TkpOpenDisplay(name);
-    return tkDisp ? tkDisp->display : NULL;
-}
-
-int
-XCloseDisplay(Display *display) {
-    TkDisplay *dispPtr, *prevPtr;
-
-    if (display == NULL) {
-        return 0;
-    }
-
-    /* Find the TkDisplay and its predecessor in the linked list. */
-    prevPtr = NULL;
-    for (dispPtr = TkGetDisplayList(); dispPtr != NULL; dispPtr = dispPtr->nextPtr) {
-        if (dispPtr->display == display) {
-            break;
-        }
-        prevPtr = dispPtr;
-    }
-
-    /* If not found, nothing to clean up. */
-    if (dispPtr == NULL) {
-        return 0; 
-    }
-
-    /* Clean up. */
-    if (dispPtr->name) {
-        ckfree(dispPtr->name);
-    }
-
-    if (dispPtr->display) {
-        /* Since we are wrapping XCloseDisplay, we free the 
-         * internal pointer here as well. */
-        ckfree((char *)dispPtr->display);
-    }
-
-    /* Final structure free. */
-    ckfree((char *)dispPtr);
-
-    return 0;
-}
-
-Screen *
-DefaultScreenOfDisplay(Display *display)
-{
-    return &display->screens[0];
-}
-
-
-int
-DefaultScreen(TCL_UNUSED(Display *))
-{
- 
-    /* Wayland typically has one logical screen, so always return 0. */
-    return 0;
- }
-
-Visual *
-DefaultVisual(Display *display,
-	      TCL_UNUSED(int)) /* screen */
-{
-    return display->screens[0].root_visual;
-}
-
-/*
- * DefaultColormap - Return the default colormap
- */
-Colormap
-DefaultColormap(TCL_UNUSED(Display *), /* display */
-	      TCL_UNUSED(int)) /* screen */
-{
-    return (Colormap)1;
-}
-
-int
-DefaultDepth(Display *display,
-	     TCL_UNUSED(int)) /* screen */
-{
-    return display->screens[0].root_depth;
-}
-
-/*
- * Additional X11 functions required for compatibility. 
- * They are non-functional on Wayland. 
- */
-
-void
-TkUnixDoOneXEvent(void)
-{
-	/* no-op */
-	return;
-}
-
-void
-TkCreateXEventSource(void)
-{
-	/* no-op */
-	return;
-}
-
-void
-TkClipCleanup(TCL_UNUSED(TkDisplay *) /* dispPtr */)
-{
-	/* no-op */
-	return;
-}
-
-void
-TkUnixSetMenubar(TCL_UNUSED(Tk_Window) /* tkwin */,
-		 TCL_UNUSED(Tk_Window) /* menubar */)
-{
-	/* no-op */
-	return;
-}
-
-bool
-TkScrollWindow(
-		   TCL_UNUSED(Tk_Window), /* tkwin */
-		   TCL_UNUSED(GC), /* gc */
-		   TCL_UNUSED(int), /* x */
-		   TCL_UNUSED(int), /* y */
-		   TCL_UNUSED(int), /* width */
-		   TCL_UNUSED(int), /* height */
-		   TCL_UNUSED(int), /* dx */
-		   TCL_UNUSED(int), /* dy */
-		   TCL_UNUSED(TkRegion)) /* damageRgn */
-{
-	/* no-op */
-	return 0;
-}
-
-void
-Tk_SetMainMenubar(TCL_UNUSED(Tcl_Interp *), /* interp */
-		  TCL_UNUSED(Tk_Window), /* tkwin */
-		  TCL_UNUSED(const char *)) /* menu name */
-{
-	/* no-op */
-	return;
-}
-
-int
-XGetWindowProperty(
-	Display *display,
-	TCL_UNUSED(Window),			/* w */
-	TCL_UNUSED(Atom),			/* property */
-	TCL_UNUSED(long),			/* long_offset */
-	TCL_UNUSED(long),			/* long_length */
-	TCL_UNUSED(Bool),			/* delete */
-	TCL_UNUSED(Atom),			/* req_type */
-	Atom *actual_type_return,
-	int *actual_format_return,
-	unsigned long *nitems_return,
-	unsigned long *bytes_after_return,
-	unsigned char **prop_return)
-{
-	
-	  if (display == NULL) {
-		fprintf(stderr, "WARNING: XGetWindowProperty called with NULL display!\n");
-		fflush(stderr);
-	}
-	/* Return "property does not exist." */
-	*actual_type_return = None;
-	*actual_format_return = 0;
-	*nitems_return = 0;
-	*bytes_after_return = 0;
-	*prop_return = NULL;
-	return Success;  
-}
-
-
-char *
-XResourceManagerString(
-	TCL_UNUSED(Display *))		/* display */
-{
-	/* no-op */
-	return NULL;
-}
-
-int
-XFree(TCL_UNUSED(void *)) /* data */
-{
-	return 0;
-}
-
 
 GC
-XCreateGC(
-	TCL_UNUSED(Display *),
-	TCL_UNUSED(Drawable),
-	TCL_UNUSED(unsigned long),
-	TCL_UNUSED(XGCValues *))
+Tk_CreateGC(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Drawable),
+    unsigned long  valuemask,
+    XGCValues     *values)
 {
-	GC gc;
-
-	gc = (GC)ckalloc(sizeof(struct _XGC));
-	memset(gc, 0, sizeof(struct _XGC));
-
-	return gc;
+    return TkWaylandCreateGC(valuemask, values);
 }
 
 int
-XFreeGC(
-	TCL_UNUSED(Display *),
-	GC gc)
+Tk_FreeGC(
+    TCL_UNUSED(Display *),
+    GC gc)
 {
-	if (gc) {
-		ckfree((char *)gc);
-	}
-	return 0;
+    TkWaylandFreeGC(gc);
+    return Success;
 }
 
 int
-XChangeGC(
-	TCL_UNUSED(Display *),
-	TCL_UNUSED(GC),
-	TCL_UNUSED(unsigned long),
-	TCL_UNUSED(XGCValues *))
+Tk_SetGCForeground(
+    TCL_UNUSED(Display *),
+    GC            gc,
+    unsigned long foreground)
 {
-	return 0;
+    XGCValues v;
+    v.foreground = foreground;
+    return TkWaylandChangeGC(gc, GCForeground, &v) ? Success : BadGC;
 }
 
 int
-XCopyGC(
-	TCL_UNUSED(Display *),
-	TCL_UNUSED(GC),
-	TCL_UNUSED(unsigned long),
-	TCL_UNUSED(GC))
+Tk_SetGCBackground(
+    TCL_UNUSED(Display *),
+    GC            gc,
+    unsigned long background)
 {
-	return 0;
+    XGCValues v;
+    v.background = background;
+    return TkWaylandChangeGC(gc, GCBackground, &v) ? Success : BadGC;
 }
 
 int
-XSetForeground(
-	TCL_UNUSED(Display *),		/* display */
-	TCL_UNUSED(GC),			/* gc */
-	TCL_UNUSED(unsigned long))		/* color */
+Tk_SetGCLineWidth(
+    TCL_UNUSED(Display *),
+    GC  gc,
+    int line_width)
 {
-	return 0;
+    XGCValues v;
+    v.line_width = line_width;
+    return TkWaylandChangeGC(gc, GCLineWidth, &v) ? Success : BadGC;
 }
-
 
 int
-XSetBackground(
-	TCL_UNUSED(Display *),		/* display */
-	TCL_UNUSED(GC),			/* gc */
-	TCL_UNUSED(unsigned long))		/* color */
+Tk_SetGCLineAttributes(
+    TCL_UNUSED(Display *),
+    GC  gc,
+    int line_style,
+    int cap_style,
+    int join_style)
 {
-	return 0;
+    XGCValues v;
+    v.line_style = line_style;
+    v.cap_style  = cap_style;
+    v.join_style = join_style;
+    return TkWaylandChangeGC(
+        gc, GCLineStyle | GCCapStyle | GCJoinStyle, &v) ? Success : BadGC;
 }
 
-Atom
-XInternAtom(
-	TCL_UNUSED(Display *),		/* display */
-	TCL_UNUSED(const char *),		/* atom_name */
-	TCL_UNUSED(Bool))			/* only_if_exists */
+int
+Tk_GetGCValues(
+    TCL_UNUSED(Display *),
+    GC             gc,
+    unsigned long  valuemask,
+    XGCValues     *values)
 {
-	/* return dummy data */
-	static Atom fakeAtom = 1;
-	return fakeAtom++;
+    return TkWaylandGetGCValues(gc, valuemask, values);
 }
 
-
-char *
-XGetAtomName(
-	TCL_UNUSED(Display *),		/* display */
-	TCL_UNUSED(Atom))			/* atom */
+int
+Tk_ChangeGC(
+    TCL_UNUSED(Display *),
+    GC             gc,
+    unsigned long  valuemask,
+    XGCValues     *values)
 {
-	/* no-op */
-	return NULL;
+    return TkWaylandChangeGC(gc, valuemask, values);
+}
+
+int
+Tk_CopyGC(
+    TCL_UNUSED(Display *),
+    GC            src,
+    unsigned long valuemask,
+    GC            dst)
+{
+    return TkWaylandCopyGC(src, valuemask, dst) ? Success : BadGC;
+}
+
+int
+Tk_GetGCLineWidth(
+    GC gc)
+{
+    XGCValues v;
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v)) {
+        return v.line_width;
+    }
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * NVGcolor helper forwarders
+ *
+ *	Previously defined here; now just forward to the centralised
+ *	helpers in tkGlfwInit.c / tkWaylandGC.c.
+ *
+ *----------------------------------------------------------------------
+ */
+
+NVGcolor
+Tk_PixelToNVGColor(
+    unsigned long pixel)
+{
+    return TkGlfwPixelToNVG(pixel);
+}
+
+NVGcolor
+Tk_GCToNVGColor(
+    GC gc)
+{
+    if (gc) {
+        XGCValues v;
+        if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
+            return TkGlfwPixelToNVG(v.foreground);
+        }
+    }
+    return nvgRGBA(0, 0, 0, 255);
+}
+
+NVGcolor
+Tk_GCToNVGBackground(
+    GC gc)
+{
+    if (gc) {
+        XGCValues v;
+        if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
+            return TkGlfwPixelToNVG(v.background);
+        }
+    }
+    return nvgRGBA(255, 255, 255, 255);
 }
 
 /*
