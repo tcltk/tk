@@ -3397,7 +3397,7 @@ static void DisclosureElementDraw(
 	[color getComponents: rgba];
 	if (rgba[0] == 0) {
 	    rgba[0] = rgba[1] = rgba[2] = 0.5;
-	} else if (isSelected && isActive && !isCheckTreeview)
+	} else if (isSelected && isActive && !isCheckTreeview) {
 	    if (TkMacOSXInDarkMode(tkwin)) {
 		rgba[0] = rgba[1] = rgba[2] = 0.9;
 	    }
