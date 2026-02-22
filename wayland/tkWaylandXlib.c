@@ -26,25 +26,11 @@
 #include <X11/Xutil.h>
 
 /*
- * The Xlib Display type is intentionally opaque (incomplete struct) in
- * modern Xlib headers, so we cannot sizeof() it or access its members.
- * We define our own private layout that holds exactly what this port needs,
- * and cast to/from Display * only at API boundaries.
- */
-typedef struct TkWaylandDisplay_ {
-    Screen    *screens;
-    int        nscreens;
-    int        default_screen;
-    char      *display_name;
-} TkWaylandDisplay;
-
-/*
- * DefaultScreenOfDisplay, DefaultScreen, DefaultVisual, DefaultColormap,
- * and DefaultDepth are macros in <X11/Xlib.h>.  Undefine them so we can
+ * DefaultVisual, DefaultColormap, and DefaultDepth are macros 
+ * in <X11/Xlib.h>.  Undefine them so we can
  * provide real function implementations below.
  */
-#undef DefaultScreenOfDisplay
-#undef DefaultScreen
+
 #undef DefaultVisual
 #undef DefaultColormap
 #undef DefaultDepth
@@ -1118,7 +1104,7 @@ DefaultVisual(
     Display *display,
     TCL_UNUSED(int))
 {
-    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    TkWaylandDisplay *wd = TkWaylandGetWd();
     if (wd == NULL || wd->screens == NULL) {
         return NULL;
     }
