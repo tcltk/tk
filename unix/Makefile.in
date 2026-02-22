@@ -266,14 +266,28 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
+# Libraries to use when linking.  This definition is determined by the
+# configure script.
 LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ \
 	$(WAYLAND_CLIENT_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) $(GLES_LIBS) \
 	$(LIBDECOR_LIBS) $(SDBUSD_LIBS) $(FONTCONFIG_LIBS) $(NANOVG_LIBS)
+
+# Add linker flag to exclude libX11 when building for Wayland to prevent symbol collisions
+# This ensures ATK doesn't pull in X11 dependencies
+ifneq (,$(findstring wayland,$(@TK_WINDOWINGSYSTEM@)))
+    LIBS += -Wl,--exclude-libs,libX11.so.6
+endif
 
 WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ \
 	$(WAYLAND_CLIENT_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) $(GLES_LIBS) \
 	$(LIBDECOR_LIBS) $(SDBUSD_LIBS) $(FONTCONFIG_LIBS) $(NANOVG_LIBS) \
 	@EXTRA_WISH_LIBS@
+
+# Add linker flag to exclude libX11 when building for Wayland to prevent symbol collisions
+# This ensures ATK doesn't pull in X11 dependencies
+ifneq (,$(findstring wayland,$(@TK_WINDOWINGSYSTEM@)))
+    WISH_LIBS += -Wl,--exclude-libs,libX11.so.6
+endif
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the

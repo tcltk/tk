@@ -335,6 +335,41 @@ XFillRectangles(
 /*
  *----------------------------------------------------------------------
  *
+ * XFillRectangle --
+ *
+ *	Fill a rectangle.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Draws filled rectangle on the specified drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+
+int
+XFillRectangle(
+    Display *display,
+    Drawable d,
+    GC gc,
+    int x, int y,
+    unsigned int width,
+    unsigned int height)
+{
+    XRectangle rect;
+    rect.x = x;
+    rect.y = y;
+    rect.width = width;
+    rect.height = height;
+    return XFillRectangles(display, d, gc, &rect, 1);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawArc --
  *
  *	Draw an arc outline.
