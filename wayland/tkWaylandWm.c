@@ -451,6 +451,7 @@ TkWmMapWindow(
 	    /* Process events to ensure window appears */
 	    glfwPollEvents();
 	    
+	    winPtr->flags |= TK_MAPPED; 
 	    
 	}
 
@@ -701,9 +702,6 @@ Tk_MakeWindow(
          */
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
-
-        /* Ensure window is visible. */
-      //  glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
         
         /* Set basic window hints for proper initial state. */
         glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
@@ -711,6 +709,7 @@ Tk_MakeWindow(
 
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                          Tk_Name(tkwin), &drawable);
+                                       
 
         if (glfwWindow == NULL) {
             return None;
@@ -730,7 +729,6 @@ Tk_MakeWindow(
         if (wmPtr) {
             wmPtr->glfwWindow = glfwWindow;
             wmPtr->flags |= WM_NEVER_MAPPED;
-            wmPtr->withdrawn = 1;  /* Start withdrawn as per Tk spec */
         }
 
     } else {
@@ -3458,6 +3456,9 @@ UpdateGeometryInfo(
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
         glfwSetWindowSize(wmPtr->glfwWindow, tw, th);
         TkGlfwUpdateWindowSize(wmPtr->glfwWindow, tw, th);
+        winPtr->changes.width = tw;
+        winPtr->changes.height = th;
+        
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
     }
