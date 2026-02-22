@@ -261,14 +261,11 @@ TkGlfwCreateWindow(
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title ? title : "",
                                NULL, glfwContext.mainWindow);
-    //debug
-    fprintf(stderr, "TkGlfwCreateWindow: created window %p for %s, visible=%d\n", 
-        window, title ? title : "unknown", 
-        glfwGetWindowAttrib(window, GLFW_VISIBLE));
-        if (window) {
-    /* Initial event pump to ensure window is properly initialized */
-    glfwPollEvents();
-}                           
+	if (window) {
+		/* Initial event pump to ensure window is properly initialized */
+		glfwPollEvents();
+	} 
+	                          
     if (!window) {
         fprintf(stderr, "TkGlfwCreateWindow: glfwCreateWindow failed\n");
         return NULL;
@@ -693,7 +690,7 @@ TkGlfwApplyGC(
 /*
  *----------------------------------------------------------------------
  *
- * Platform initialisation entry points (called from TkpInit)
+ * Platform initialization entry points (called from TkpInit)
  *
  *----------------------------------------------------------------------
  */
@@ -703,13 +700,13 @@ TkGlfwApplyGC(
  *
  * TkpInit --
  *
- *	Platform-specific initialisation for Tk on Wayland/GLFW.
+ *	Platform-specific initialization for Tk on Wayland/GLFW.
  *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	initializes GLFW, Wayland menu system, notifier, and various
+ *	Initializes GLFW, Wayland menu system, notifier, and various
  *	Tk extensions (tray, system notification, CUPS, accessibility).
  *
  *----------------------------------------------------------------------
