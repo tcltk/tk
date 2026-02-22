@@ -24,16 +24,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-
-/*
- * DefaultVisual, DefaultColormap, and DefaultDepth are macros 
- * in <X11/Xlib.h>.  Undefine them so we can
- * provide real function implementations below.
- */
-
-#undef DefaultVisual
-#undef DefaultColormap
-#undef DefaultDepth
+#include <X11/Xlibint.h>
 
 
 /*
@@ -1075,95 +1066,13 @@ XSetWMIconName(
 /*
  *======================================================================
  *
- * Display / Screen / Atom Stubs
+ *  Atom Stubs
  *
  *	These stubs are consolidated here so that every Xlib
  *	compatibility symbol resides in the emulation layer.
  *
  *======================================================================
  */
-
-/*
- *----------------------------------------------------------------------
- *
- * DefaultVisual --
- *
- *	Return the default visual for a display.
- *
- * Results:
- *	Pointer to the default Visual structure.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Visual *
-DefaultVisual(
-    Display *display,
-    TCL_UNUSED(int))
-{
-    TkWaylandDisplay *wd = TkWaylandGetWd();
-    if (wd == NULL || wd->screens == NULL) {
-        return NULL;
-    }
-    return wd->screens[0].root_visual;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * DefaultColormap --
- *
- *	Return the default colormap.
- *
- * Results:
- *	Colormap handle (synthesized value 1).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-
-Colormap
-DefaultColormap(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(int))
-{
-    return (Colormap)1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DefaultDepth --
- *
- *	Return the default depth for a display.
- *
- * Results:
- *	Root depth (always 24).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-DefaultDepth(
-    Display *display,
-    TCL_UNUSED(int))
-{
-    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
-    if (wd == NULL || wd->screens == NULL) {
-        return 0;
-    }
-    return wd->screens[0].root_depth;
-}
 
 /*
  *----------------------------------------------------------------------

@@ -57,27 +57,6 @@ typedef struct WindowMapping {
 } WindowMapping;
 
 /*
- * ---------------------------------------------------------------------
- * 
- * Private Display subtype for the Wayland backend.  The embedded Display
- * must be the first member so that a TkWaylandDisplay * can be safely
- * cast to Display * and back at API boundaries.
- * 
- * ---------------------------------------------------------------------
- */
-typedef struct TkWaylandDisplay_ {
-    Display   *display;      
-    Screen    *screens;
-    int        nscreens;
-    int        default_screen;
-    char      *display_name;
-} TkWaylandDisplay;
-
-/* Accessor functions for the Display struct. */
-MODULE_SCOPE TkWaylandDisplay *TkWaylandGetWd(void);
-MODULE_SCOPE TkDisplay        *TkWaylandGetDispPtr(void);
-
-/*
  *----------------------------------------------------------------------
  *
  * ProtocolHandler – per-protocol Tcl command binding.
