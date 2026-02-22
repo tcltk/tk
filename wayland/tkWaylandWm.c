@@ -1916,6 +1916,22 @@ WmFrameCmd(
   *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmGeometryCmd --
+ *
+ *	Implements the "wm geometry" subcommand.
+ *
+ * Results:
+ *	Standard Tcl result.
+ *
+ * Side effects:
+ *	Updates window geometry if new geometry is provided.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static int
 WmGeometryCmd(
     TCL_UNUSED(Tk_Window),
@@ -1928,23 +1944,85 @@ WmGeometryCmd(
     char    buf[64];
 
     if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName geometry ?newGeometry?");
+        Tcl_WrongNumArgs(interp, 0, objv, "pathName geometry ?newGeometry?");
         return TCL_ERROR;
     }
+    
+    /* Return current geometry */
     if (objc == 0) {
+        /* Use actual window dimensions if available, otherwise requested */
+        int width, height;
+        
+        if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+            glfwGetWindowSize(wmPtr->glfwWindow, &width, &height);
+        } else {
+            width = (wmPtr->width >= 0) ? wmPtr->width : winPtr->reqWidth;
+            height = (wmPtr->height >= 0) ? wmPtr->height : winPtr->reqHeight;
+        }
+        
         snprintf(buf, sizeof(buf), "%dx%d+%d+%d",
-            (wmPtr->width  >= 0) ? wmPtr->width  : winPtr->reqWidth,
-            (wmPtr->height >= 0) ? wmPtr->height : winPtr->reqHeight,
+            width, height,
             wmPtr->x, wmPtr->y);
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(buf,-1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
         return TCL_OK;
     }
+    
+    /* Handle empty string - reset to default */
     if (*Tcl_GetString(objv[0]) == '\0') {
         wmPtr->width = wmPtr->height = -1;
-        WmUpdateGeom(wmPtr, winPtr);
+        
+        /* Cancel any pending idle callback */
+        if (wmPtr->flags & WM_UPDATE_PENDING) {
+            Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
+            wmPtr->flags &= ~WM_UPDATE_PENDING;
+        }
+        
+        /* Update immediately if window is mapped */
+        if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+            UpdateGeometryInfo((ClientData)winPtr);
+            TkGlfwProcessEvents(); /* Ensure callback fires */
+        }
+        
         return TCL_OK;
     }
-    return ParseGeometry(interp, Tcl_GetString(objv[0]), winPtr);
+    
+    /* Parse and apply new geometry */
+    if (ParseGeometry(interp, Tcl_GetString(objv[0]), winPtr) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    
+    /* Force immediate update instead of waiting for idle */
+    if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+        /* Cancel any pending idle callback */
+        if (wmPtr->flags & WM_UPDATE_PENDING) {
+            Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
+            wmPtr->flags &= ~WM_UPDATE_PENDING;
+        }
+        
+        /* Update immediately */
+        UpdateGeometryInfo((ClientData)winPtr);
+        
+        /* Process events to ensure callback fires before command returns */
+        TkGlfwProcessEvents();
+        
+        /* Verify the change actually took effect */
+        int newWidth, newHeight;
+        glfwGetWindowSize(wmPtr->glfwWindow, &newWidth, &newHeight);
+        
+        /* If the size didn't change (e.g., constrained by min/max), update wmPtr */
+        if (wmPtr->width > 0 && wmPtr->width != newWidth) {
+            wmPtr->width = newWidth;
+        }
+        if (wmPtr->height > 0 && wmPtr->height != newHeight) {
+            wmPtr->height = newHeight;
+        }
+        
+        /* Update Tk's changes structure */
+        winPtr->changes.width = newWidth;
+        winPtr->changes.height = newHeight;
+    }
+    
+    return TCL_OK;
 }
 
 /*
@@ -3461,6 +3539,7 @@ UpdateGeometryInfo(
         
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
+        TkGlfwProcessEvents();
     }
 
     /* Apply position change if needed. */
@@ -3469,6 +3548,7 @@ UpdateGeometryInfo(
         wmPtr->y != winPtr->changes.y) {
         glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
+        TkGlfwProcessEvents();
     }
     
 }
@@ -3638,13 +3718,11 @@ WaitForMapNotify(
 }
 
 /*
-  *----------------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * ParseGeometry --
  *
  *	Parse a standard X geometry string of the form [WxH][{+-}X{+-}Y].
- *
- *	This is a proper implementation; it does not misuse Tk_GetPixels.
  *
  * Results:
  *	TCL_OK or TCL_ERROR.
@@ -3652,7 +3730,7 @@ WaitForMapNotify(
  * Side effects:
  *	Updates wmPtr geometry fields and schedules an idle update.
  *
-  *----------------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static int
@@ -3670,17 +3748,17 @@ ParseGeometry(
 
     if (*p == '\0') {
         wmPtr->width = wmPtr->height = -1;
-        WmUpdateGeom(wmPtr, winPtr);
         return TCL_OK;
     }
 
-    /* Optional WxH part. */
+    /* Optional WxH part */
     if (*p != '+' && *p != '-') {
         width = (int)strtol(p, &end, 10);
         if (end == p || *end != 'x') {
             goto badGeom;
         }
         p = end + 1; /* skip 'x' */
+        
         height = (int)strtol(p, &end, 10);
         if (end == p) {
             goto badGeom;
@@ -3689,7 +3767,7 @@ ParseGeometry(
         hasSize = 1;
     }
 
-    /* Optional ±X±Y part. */
+    /* Optional ±X±Y part */
     if (*p == '+' || *p == '-') {
         xNeg = (*p == '-');
         p++;
@@ -3711,11 +3789,19 @@ ParseGeometry(
         goto badGeom;
     }
 
+    /* Apply size if specified */
     if (hasSize) {
-        wmPtr->width  = width;
+        /* Ensure size is within min/max constraints */
+        if (width < wmPtr->minWidth) width = wmPtr->minWidth;
+        if (height < wmPtr->minHeight) height = wmPtr->minHeight;
+        if (wmPtr->maxWidth > 0 && width > wmPtr->maxWidth) width = wmPtr->maxWidth;
+        if (wmPtr->maxHeight > 0 && height > wmPtr->maxHeight) height = wmPtr->maxHeight;
+        
+        wmPtr->width = width;
         wmPtr->height = height;
     }
 
+    /* Apply position if specified */
     if (hasPos) {
         wmPtr->x = xNeg ? -x : x;
         wmPtr->y = yNeg ? -y : y;
@@ -3729,7 +3815,7 @@ ParseGeometry(
     }
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    WmUpdateGeom(wmPtr, winPtr);
+
     return TCL_OK;
 
 badGeom:
