@@ -28,11 +28,11 @@
 #include "nanovg.h"
 
 /*
- *======================================================================
+ *----------------------------------------------------------------------
  *
  * Module-level state
  *
- *======================================================================
+ *----------------------------------------------------------------------
  */
 
 static TkGlfwContext  glfwContext        = {NULL, NULL, 0};
@@ -40,11 +40,11 @@ static WindowMapping *windowMappingList  = NULL;
 static Drawable       nextDrawableId     = 1000; /* avoid zero/conflicts */
 
 /*
- *======================================================================
+ *----------------------------------------------------------------------
  *
  * Static helpers – window mapping list
  *
- *======================================================================
+ *----------------------------------------------------------------------
  */
 
 static WindowMapping *FindMappingByGLFW(GLFWwindow *glfwWindow);
@@ -258,9 +258,17 @@ TkGlfwCreateWindow(
     if (width  <= 0) width  = 200;
     if (height <= 0) height = 200;
 
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title ? title : "",
                                NULL, glfwContext.mainWindow);
+    //debug
+    fprintf(stderr, "TkGlfwCreateWindow: created window %p for %s, visible=%d\n", 
+        window, title ? title : "unknown", 
+        glfwGetWindowAttrib(window, GLFW_VISIBLE));
+        if (window) {
+    /* Initial event pump to ensure window is properly initialized */
+    glfwPollEvents();
+}                           
     if (!window) {
         fprintf(stderr, "TkGlfwCreateWindow: glfwCreateWindow failed\n");
         return NULL;
@@ -512,7 +520,7 @@ TkGlfwEndDraw(
  *	Returns the shared NanoVG context, initialising if necessary.
  *
  * Results:
- *	NVGcontext pointer, or NULL on initialisation failure.
+ *	NVGcontext pointer, or NULL on initialization failure.
  *
  * Side effects:
  *	May initialise GLFW and the NanoVG context if not already done.
@@ -561,11 +569,11 @@ TkGlfwProcessEvents(void)
 }
 
 /*
- *======================================================================
+ *----------------------------------------------------------------------
  *
- * Colour conversion utilities
+ * Color conversion utilities
  *
- *======================================================================
+ *----------------------------------------------------------------------
  */
 
 /*
@@ -683,11 +691,11 @@ TkGlfwApplyGC(
 }
 
 /*
- *======================================================================
+ *----------------------------------------------------------------------
  *
  * Platform initialisation entry points (called from TkpInit)
  *
- *======================================================================
+ *----------------------------------------------------------------------
  */
 
 /*
@@ -793,11 +801,11 @@ TkpDisplayWarning(
 }
 
 /*
- *======================================================================
+ *----------------------------------------------------------------------
  *
  * Static helpers – window mapping list implementation
  *
- *======================================================================
+ *----------------------------------------------------------------------
  */
 
 /*

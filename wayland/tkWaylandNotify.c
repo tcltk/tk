@@ -166,7 +166,7 @@ TkWaylandEventsCheckProc(
     int flags)
 {
     if (flags & TCL_WINDOW_EVENTS) {
-        glfwPollEvents();  
+        TkGlfwProcessEvents();
     }
 }
 
