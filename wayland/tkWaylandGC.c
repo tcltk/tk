@@ -55,11 +55,11 @@
  * thin Xlib wrappers find the live TkDisplay without a separate lookup.
  * ----------------------------------------------------------------------- */
 
-static TkDisplay *tkWaylandDispPtr = NULL;  /* Set by TkpOpenDisplay. */
-static TkWaylandDisplay *tkWaylandWd      = NULL; /* Parallel to tkWaylandDispPtr;
-                                                   * used by wrappers that receive
-                                                   * only a Display * and need to
-                                                   * reach our private fields. */
+TkDisplay *tkWaylandDispPtr = NULL;  /* Set by TkpOpenDisplay. */
+TkWaylandDisplay *tkWaylandWd      = NULL; /* Parallel to tkWaylandDispPtr;
+                                            * used by wrappers that receive
+                                            * only a Display * and need to
+                                            * reach our private fields. */
 
 
 /*
@@ -151,6 +151,7 @@ TkpOpenDisplay(
     return dispPtr;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -202,6 +203,7 @@ TkpCloseDisplay(
         tkWaylandDispPtr = NULL;
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
