@@ -104,11 +104,8 @@ static NVGcolor ColorFromGC(
 
 void
 TkpFontPkgInit(
-	       TkMainInfo *mainPtr)
+	       Tcl_UNUSED(TkMainInfo *)) /* mainPtr */
 {
-    Tcl_Interp *interp  = mainPtr->interp;
-    Tk_Window   tkwin   = (Tk_Window) mainPtr->winPtr;
-
 
     if (!fcInitialized) {
         FcInit();
