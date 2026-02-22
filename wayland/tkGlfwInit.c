@@ -258,7 +258,7 @@ TkGlfwCreateWindow(
     if (width  <= 0) width  = 200;
     if (height <= 0) height = 200;
 
-    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     window = glfwCreateWindow(width, height, title ? title : "",
                                NULL, glfwContext.mainWindow);
     if (!window) {
