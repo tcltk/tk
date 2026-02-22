@@ -1096,243 +1096,6 @@ XSetWMIconName(
  *
  *======================================================================
  */
-/*
- *----------------------------------------------------------------------
- *
- * TkpOpenDisplay --
- *
- *	Allocate a TkDisplay and synthesise an X Display structure.
- *
- * Results:
- *	Pointer to newly allocated TkDisplay, or NULL on failure.
- *
- * Side effects:
- *	Allocates memory for TkDisplay, Display, Screen, and Visual structures.
- *	Initializes GLFW.
- *
- *----------------------------------------------------------------------
- */
-
-TkDisplay *
-TkpOpenDisplay(
-    TCL_UNUSED(const char *)) /* display_name */
-{
-    TkDisplay        *dispPtr;
-    TkWaylandDisplay *display;
-    Screen           *screen;
-    Visual           *visual;
-
-    if (!glfwInit()) {
-        return NULL;
-    }
-
-    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
-    memset(dispPtr, 0, sizeof(TkDisplay));
-
-    display = (TkWaylandDisplay *)ckalloc(sizeof(TkWaylandDisplay));
-    memset(display, 0, sizeof(TkWaylandDisplay));
-
-    screen = (Screen *)ckalloc(sizeof(Screen));
-    memset(screen, 0, sizeof(Screen));
-
-    visual = (Visual *)ckalloc(sizeof(Visual));
-    memset(visual, 0, sizeof(Visual));
-
-    /* Screen setup – use primary monitor dimensions when available. */
-    {
-        int sw = 1920, sh = 1080;
-        GLFWmonitor *mon = glfwGetPrimaryMonitor();
-        if (mon != NULL) {
-            const GLFWvidmode *mode = glfwGetVideoMode(mon);
-            if (mode != NULL) { sw = mode->width; sh = mode->height; }
-        }
-        screen->width        = sw;
-        screen->height       = sh;
-        screen->mwidth       = (sw * 254) / 720; /* approx 96 dpi */
-        screen->mheight      = (sh * 254) / 720;
-    }
-
-    screen->display      = (Display *)display;
-    screen->root         = 1;          /* Must not be None. */
-    screen->root_visual  = visual;
-    screen->root_depth   = 24;
-    screen->ndepths      = 1;
-
-    visual->visualid     = 1;
-    visual->class        = TrueColor;
-    visual->bits_per_rgb = 8;
-    visual->map_entries  = 256;
-    visual->red_mask     = 0xFF0000;
-    visual->green_mask   = 0x00FF00;
-    visual->blue_mask    = 0x0000FF;
-
-    display->screens        = screen;
-    display->nscreens       = 1;
-    display->default_screen = 0;
-
-    dispPtr->display = (Display *)display;
-    dispPtr->name    = (char *)ckalloc(strlen("wayland-0") + 1);
-    strcpy(dispPtr->name, "wayland-0");
-    display->display_name = dispPtr->name;
-
-    return dispPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpCloseDisplay --
- *
- *	Close and free a TkDisplay structure and associated resources.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees memory allocated for TkDisplay, Display, Screen, and Visual.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpCloseDisplay(
-    TkDisplay *dispPtr)
-{
-    if (dispPtr == NULL) {
-        return;
-    }
-    if (dispPtr->name) {
-        ckfree(dispPtr->name);
-    }
-    if (dispPtr->display) {
-        TkWaylandDisplay *wd = (TkWaylandDisplay *)dispPtr->display;
-        if (wd->screens) {
-            if (wd->screens->root_visual) {
-                ckfree((char *)wd->screens->root_visual);
-            }
-            ckfree((char *)wd->screens);
-        }
-        ckfree((char *)wd);
-    }
-    ckfree((char *)dispPtr);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XOpenDisplay --
- *
- *	Open a connection to the display server.
- *	Thin wrapper around TkpOpenDisplay.
- *
- * Results:
- *	Display pointer, or NULL on failure.
- *
- * Side effects:
- *	See TkpOpenDisplay.
- *
- *----------------------------------------------------------------------
- */
-
-Display *
-XOpenDisplay(
-    const char *name)
-{
-    TkDisplay *d = TkpOpenDisplay(name);
-    return d ? d->display : NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XCloseDisplay --
- *
- *	Close a connection to the display server.
- *
- * Results:
- *	Always returns 0.
- *
- * Side effects:
- *	Frees display resources via TkpCloseDisplay.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XCloseDisplay(
-    Display *display)
-{
-    TkDisplay *dispPtr;
-
-    if (display == NULL) {
-        return 0;
-    }
-
-    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
-         dispPtr = dispPtr->nextPtr) {
-        if (dispPtr->display == display) {
-            TkpCloseDisplay(dispPtr);
-            return 0;
-        }
-    }
-
-    /* Not found in list – free whatever we can. */
-    {
-        TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
-        if (wd->display_name) {
-            ckfree(wd->display_name);
-        }
-        ckfree((char *)wd);
-    }
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DefaultScreenOfDisplay --
- *
- *	Return the default screen for a display.
- *
- * Results:
- *	Pointer to the default Screen structure.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Screen *
-DefaultScreenOfDisplay(
-    Display *display)
-{
-    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
-    return &wd->screens[0];
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DefaultScreen --
- *
- *	Return the default screen number.
- *
- * Results:
- *	Always returns 0.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-DefaultScreen(
-    TCL_UNUSED(Display *))
-{
-    return 0;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1356,8 +1119,12 @@ DefaultVisual(
     TCL_UNUSED(int))
 {
     TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    if (wd == NULL || wd->screens == NULL) {
+        return NULL;
+    }
     return wd->screens[0].root_visual;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1374,6 +1141,7 @@ DefaultVisual(
  *
  *----------------------------------------------------------------------
  */
+
 
 Colormap
 DefaultColormap(
@@ -1405,6 +1173,9 @@ DefaultDepth(
     TCL_UNUSED(int))
 {
     TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    if (wd == NULL || wd->screens == NULL) {
+        return 0;
+    }
     return wd->screens[0].root_depth;
 }
 

@@ -8,8 +8,12 @@
  *	TkWaylandGCImpl and TkWaylandPixmapImpl and all TkWayland*
  *	entry points declared in tkGlfwInt.h.  The Xlib-compatible
  *	wrappers (XCreateGC, XFreeGC, XCreatePixmap, etc.) forward to
- *	these entry points and live here as well so that there is only
- *	one place to maintain either implementation.
+ *	these entry points and live here as well.
+ *
+ *	Also provides TkpOpenDisplay / TkpCloseDisplay (the Tk platform
+ *	entry points) and thin Xlib wrappers (XOpenDisplay, XCloseDisplay,
+ *	XDefaultScreen, XScreenCount, XScreenOfDisplay) so that Tk can
+ *	resolve screen information at startup.
  *
  * Copyright © 2026 Kevin Walzer
  *
@@ -20,6 +24,161 @@
 #include "tkGlfwInt.h"
 #include <stdlib.h>
 #include <string.h>
+
+/* -----------------------------------------------------------------------
+ * Display / screen initialisation.
+ *
+ * Tk interrogates the Display * returned by XOpenDisplay for screen count
+ * and geometry before any window is created.  If those fields are zero or
+ * the pointer is NULL, Tk rejects screen "0" and aborts with:
+ *
+ *   application-specific initialization failed: bad screen number "0"
+ *
+ * TkpOpenDisplay is the Tk platform entry point that allocates a full
+ * TkDisplay together with a TkWaylandDisplay (our Display subtype), a
+ * Screen, and a Visual.  GLFW is initialized here so that the primary
+ * monitor dimensions can be queried immediately.
+ *
+ * XOpenDisplay delegates to TkpOpenDisplay; XCloseDisplay delegates to
+ * TkpCloseDisplay.  A module-level pointer (tkWaylandDispPtr) lets the
+ * thin Xlib wrappers find the live TkDisplay without a separate lookup.
+ * ----------------------------------------------------------------------- */
+
+static TkDisplay *tkWaylandDispPtr = NULL;  /* Set by TkpOpenDisplay. */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpOpenDisplay --
+ *
+ *	Tk platform entry point: allocate a TkDisplay and synthesise an
+ *	X Display structure backed by a TkWaylandDisplay.  GLFW is
+ *	initialized here so that primary-monitor dimensions are available
+ *	immediately for the Screen struct.
+ *
+ * Results:
+ *	Pointer to a newly allocated TkDisplay, or NULL on failure.
+ *
+ * Side effects:
+ *	Calls glfwInit().  Allocates memory for TkDisplay,
+ *	TkWaylandDisplay, Screen, and Visual.  Sets tkWaylandDispPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkDisplay *
+TkpOpenDisplay(
+    TCL_UNUSED(const char *))   /* display_name */
+{
+    TkDisplay        *dispPtr;
+    TkWaylandDisplay *display;
+    Screen           *screen;
+    Visual           *visual;
+
+    if (!glfwInit()) {
+        return NULL;
+    }
+
+    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+    memset(dispPtr, 0, sizeof(TkDisplay));
+
+    display = (TkWaylandDisplay *)ckalloc(sizeof(TkWaylandDisplay));
+    memset(display, 0, sizeof(TkWaylandDisplay));
+
+    screen = (Screen *)ckalloc(sizeof(Screen));
+    memset(screen, 0, sizeof(Screen));
+
+    visual = (Visual *)ckalloc(sizeof(Visual));
+    memset(visual, 0, sizeof(Visual));
+
+    /* Screen setup – use primary monitor dimensions when available. */
+    {
+        int sw = 1920, sh = 1080;
+        GLFWmonitor *mon = glfwGetPrimaryMonitor();
+        if (mon != NULL) {
+            const GLFWvidmode *mode = glfwGetVideoMode(mon);
+            if (mode != NULL) { sw = mode->width; sh = mode->height; }
+        }
+        screen->width   = sw;
+        screen->height  = sh;
+        screen->mwidth  = (sw * 254) / 720;  /* approx 96 dpi */
+        screen->mheight = (sh * 254) / 720;
+    }
+
+    screen->display     = (Display *)display;
+    screen->root        = 1;            /* Must not be None. */
+    screen->root_visual = visual;
+    screen->root_depth  = 24;
+    screen->ndepths     = 1;
+
+    visual->visualid     = 1;
+    visual->class        = TrueColor;
+    visual->bits_per_rgb = 8;
+    visual->map_entries  = 256;
+    visual->red_mask     = 0xFF0000;
+    visual->green_mask   = 0x00FF00;
+    visual->blue_mask    = 0x0000FF;
+
+    display->screens        = screen;
+    display->nscreens       = 1;
+    display->default_screen = 0;
+
+    dispPtr->display = (Display *)display;
+    dispPtr->name    = (char *)ckalloc(strlen("wayland-0") + 1);
+    strcpy(dispPtr->name, "wayland-0");
+    display->display_name = dispPtr->name;
+
+    tkWaylandDispPtr = dispPtr;
+    return dispPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCloseDisplay --
+ *
+ *	Tk platform entry point: close and free a TkDisplay together with
+ *	its associated TkWaylandDisplay, Screen, and Visual.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees all memory allocated by TkpOpenDisplay.  Resets
+ *	tkWaylandDispPtr to NULL.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCloseDisplay(
+    TkDisplay *dispPtr)
+{
+    if (dispPtr == NULL) {
+        return;
+    }
+
+    if (dispPtr->name != NULL) {
+        ckfree(dispPtr->name);
+    }
+
+    if (dispPtr->display != NULL) {
+        TkWaylandDisplay *wd = (TkWaylandDisplay *)dispPtr->display;
+        if (wd->screens != NULL) {
+            if (wd->screens->root_visual != NULL) {
+                ckfree((char *)wd->screens->root_visual);
+            }
+            ckfree((char *)wd->screens);
+        }
+        ckfree((char *)wd);
+    }
+
+    ckfree((char *)dispPtr);
+
+    if (tkWaylandDispPtr == dispPtr) {
+        tkWaylandDispPtr = NULL;
+    }
+}
 
 /* Graphics context functions. */
 
@@ -514,7 +673,8 @@ TkWaylandUpdatePixmapImage(
  *
  * TkWaylandCleanupPixmapStore --
  *
- *	Release all pixmaps and reset the store.  Call at shutdown.
+ *	Release all pixmaps and reset the store.  Call at shutdown,
+ *	before TkWaylandCleanupDisplay.
  *
  * Results:
  *	None.
@@ -550,7 +710,156 @@ TkWaylandCleanupPixmapStore(void)
     nvgCtx         = NULL;
 }
 
-/* Xlib wrapper functions for graphics operations. */
+/* -----------------------------------------------------------------------
+ * Xlib wrapper functions.
+ *
+ * Drawing wrappers (XCreateGC, XFreeGC, XCreatePixmap, etc.) accept the
+ * Display * for API compatibility but do not need to dereference it for
+ * their own purposes — they delegate to the TkWayland* helpers above.
+ *
+ * Display/screen discovery wrappers (XOpenDisplay, XCloseDisplay,
+ * XDefaultScreen, XScreenCount, XScreenOfDisplay) delegate to
+ * TkpOpenDisplay / TkpCloseDisplay and cast through TkWaylandDisplay so
+ * that Tk can resolve screen "0" at startup.
+ * ----------------------------------------------------------------------- */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XOpenDisplay --
+ *
+ *	Xlib entry point called by Tk at startup to obtain a Display.
+ *	Delegates to TkpOpenDisplay so that GLFW is initialised and
+ *	screen metadata is fully populated before Tk validates screen "0".
+ *
+ * Results:
+ *	The Display * embedded in the TkDisplay returned by TkpOpenDisplay,
+ *	or NULL if initialisation fails.
+ *
+ * Side effects:
+ *	See TkpOpenDisplay.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Display *
+XOpenDisplay(
+    const char *displayName)
+{
+    TkDisplay *dispPtr = TkpOpenDisplay(displayName);
+    return (dispPtr != NULL) ? dispPtr->display : NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCloseDisplay --
+ *
+ *	Xlib entry point called at shutdown.  Locates the owning TkDisplay
+ *	via the module-level pointer and delegates to TkpCloseDisplay.
+ *
+ * Results:
+ *	Always 0.
+ *
+ * Side effects:
+ *	See TkpCloseDisplay.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XCloseDisplay(
+    TCL_UNUSED(Display *))
+{
+    if (tkWaylandDispPtr != NULL) {
+        TkpCloseDisplay(tkWaylandDispPtr);
+        /* tkWaylandDispPtr is reset to NULL inside TkpCloseDisplay. */
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XDefaultScreen --
+ *
+ *	Return the index of the default screen for a Display.
+ *	Casts through TkWaylandDisplay to read the field set by
+ *	TkpOpenDisplay.
+ *
+ * Results:
+ *	0 (the only screen this backend exposes), or 0 on NULL input.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XDefaultScreen(
+    Display *display)
+{
+    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    return (wd != NULL) ? wd->default_screen : 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XScreenCount --
+ *
+ *	Return the number of screens available on a Display.
+ *	Casts through TkWaylandDisplay to read the field set by
+ *	TkpOpenDisplay.
+ *
+ * Results:
+ *	1, or 0 if display is NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XScreenCount(
+    Display *display)
+{
+    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    return (wd != NULL) ? wd->nscreens : 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XScreenOfDisplay --
+ *
+ *	Return the Screen struct for screen index scr on display.
+ *	Only screen 0 is valid; returns NULL for any other index.
+ *	Casts through TkWaylandDisplay to access the Screen array
+ *	allocated by TkpOpenDisplay.
+ *
+ * Results:
+ *	Pointer to the Screen, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Screen *
+XScreenOfDisplay(
+    Display *display,
+    int      scr)
+{
+    TkWaylandDisplay *wd = (TkWaylandDisplay *)display;
+    if (wd == NULL || scr < 0 || scr >= wd->nscreens) {
+        return NULL;
+    }
+    return &wd->screens[scr];
+}
 
 /*
  *----------------------------------------------------------------------
