@@ -126,7 +126,7 @@ TkGlfwInitialize(void)
 	glfwSetErrorCallback(TkGlfwErrorCallback);
 	
 	#ifdef GLFW_PLATFORM_WAYLAND
-	glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
 	#endif
 	
 	if (!glfwInit()) {
@@ -139,9 +139,6 @@ TkGlfwInitialize(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
 
-#ifdef GLFW_PLATFORM_WAYLAND
-    glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-#endif
 
     glfwContext.mainWindow =
         glfwCreateWindow(640, 480, "Tk Shared Context", NULL, NULL);
