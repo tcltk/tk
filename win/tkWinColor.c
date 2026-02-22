@@ -173,7 +173,7 @@ TkpGetColor(
     if (((strncasecmp(name, "system", 6) == 0)
 	    && FindSystemColor(name+6, &color, &index))
 	    || TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), name,
-		    &color)) {
+		    &color) != 0) {
 	winColPtr = (WinColor *)ckalloc(sizeof(WinColor));
 	winColPtr->info.color = color;
 	winColPtr->index = index;
@@ -494,7 +494,7 @@ XCreateColormap(
     logPalettePtr = (LOGPALETTE *) logPalBuf;
     logPalettePtr->palVersion = 0x300;
     sysPal = (HPALETTE) GetStockObject(DEFAULT_PALETTE);
-    logPalettePtr->palNumEntries = GetPaletteEntries(sysPal, 0, 256,
+    logPalettePtr->palNumEntries = (WORD)GetPaletteEntries(sysPal, 0, 256,
 	    logPalettePtr->palPalEntry);
 
     cmap = (TkWinColormap *)ckalloc(sizeof(TkWinColormap));

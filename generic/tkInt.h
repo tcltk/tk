@@ -1302,6 +1302,7 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 /*
  * These macros are just wrappers for the equivalent X Region calls.
  */
+#if 0 
 #define TkClipBox XClipBox
 #define TkCreateRegion XCreateRegion
 #define TkDestroyRegion XDestroyRegion
@@ -1310,6 +1311,7 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #define TkSetRegion XSetRegion
 #define TkSubtractRegion XSubtractRegion
 #define TkUnionRectWithRegion XUnionRectWithRegion
+#endif
 
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
@@ -1319,10 +1321,6 @@ MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class
-#endif
-
-#if defined(_WIN32) && !defined(STATIC_BUILD) && (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION)
-#   define tcl_CreateFileHandler reserved9
 #endif
 
 MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
