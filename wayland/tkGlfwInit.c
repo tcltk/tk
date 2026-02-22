@@ -111,7 +111,7 @@ TkGlfwErrorCallback(
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Initialises GLFW; creates shared context window and NanoVG context.
+ *	initializes GLFW; creates shared context window and NanoVG context.
  *
  *----------------------------------------------------------------------
  */
@@ -523,7 +523,7 @@ TkGlfwEndDraw(
  *	NVGcontext pointer, or NULL on initialization failure.
  *
  * Side effects:
- *	May initialise GLFW and the NanoVG context if not already done.
+ *	May initialize GLFW and the NanoVG context if not already done.
  *
  *----------------------------------------------------------------------
  */
@@ -709,7 +709,7 @@ TkGlfwApplyGC(
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Initialises GLFW, Wayland menu system, notifier, and various
+ *	initializes GLFW, Wayland menu system, notifier, and various
  *	Tk extensions (tray, system notification, CUPS, accessibility).
  *
  *----------------------------------------------------------------------
