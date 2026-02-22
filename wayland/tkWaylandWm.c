@@ -371,20 +371,28 @@ TkWmMapWindow(
     TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    
+    printf("TkWmMapWindow: mapping %s", Tk_PathName((Tk_Window)winPtr));
   
     if (wmPtr == NULL) {
         Tcl_Panic("TkWmMapWindow: No WmInfo for window");
         return;
     }
 
+    printf("  wmPtr state: flags=0x%x, withdrawn=%d, initialState=%d", 
+                wmPtr->flags, wmPtr->withdrawn, wmPtr->initialState);
+    printf("  glfwWindow=%p", wmPtr->glfwWindow);
+
     /* First time mapping this window. */
     if (wmPtr->flags & WM_NEVER_MAPPED) {
+        printf("  First time mapping this window");
         wmPtr->flags &= ~WM_NEVER_MAPPED;
-        wmPtr->withdrawn = 0;  
+        wmPtr->withdrawn = 0;  /* Clear withdrawn flag on first map */
 
         if (!Tk_IsEmbedded(winPtr)) {
             /* Create GLFW window if it doesn't exist yet. */
             if (wmPtr->glfwWindow == NULL) {
+                printf("  Creating GLFW window");
                 CreateGlfwWindow(winPtr);
             }
         }
@@ -396,14 +404,20 @@ TkWmMapWindow(
         
         /* Ensure window is ready to be shown. */
         if (wmPtr->glfwWindow != NULL) {
+            printf("  GLFW window exists, checking state before show");
+            printf("    Before show - GLFW_VISIBLE: %d", 
+                        glfwGetWindowAttrib(wmPtr->glfwWindow, GLFW_VISIBLE));
+            
             /* Apply any pending size/position changes. */
             if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
+                printf("  Updating size hints");
                 UpdateSizeHints(winPtr);
                 wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
             }
             
             /* Set initial position if specified. */
             if (wmPtr->flags & WM_MOVE_PENDING) {
+                printf("  Setting position to (%d,%d)", wmPtr->x, wmPtr->y);
                 glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
                 wmPtr->flags &= ~WM_MOVE_PENDING;
             }
@@ -411,32 +425,50 @@ TkWmMapWindow(
     }
 
     /* Don't map if withdrawn. */
-	if (wmPtr->initialState == WithdrawnState) {
-		return;
-	}
-	if (wmPtr->initialState == IconicState) {
-		return;
-	}
+    if (wmPtr->initialState == WithdrawnState) {
+        printf("  Window is withdrawn, not mapping");
+        return;
+    }
+    if (wmPtr->initialState == IconicState) {
+        printf("  Window is iconic, not mapping");
+        return;
+    }
 
     /* Cancel any pending updates. */
     if (wmPtr->flags & WM_UPDATE_PENDING) {
+        printf("  Cancelling pending update");
         Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
+        wmPtr->flags &= ~WM_UPDATE_PENDING;
     }
     
     /* Apply final geometry before showing. */
     UpdateGeometryInfo((ClientData)winPtr);
 
-    /* Actually show the window. */
-    if (wmPtr->glfwWindow != NULL) {
-        /* Ensure window is visible */
-        glfwShowWindow(wmPtr->glfwWindow);
-        
-        /* Force a flush to ensure window appears. */
-        glfwPollEvents();
-    }
+	 /* Actually show the window. */
+	if (wmPtr->glfwWindow != NULL) {
+	    /* Save the current context */
+	    GLFWwindow *currentContext = glfwGetCurrentContext();
+	    
+	    /* Initialize the window's buffers (required for Wayland). */
+	    glfwMakeContextCurrent(wmPtr->glfwWindow);
+	    glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
+	    glClear(GL_COLOR_BUFFER_BIT);
+	    glfwSwapBuffers(wmPtr->glfwWindow);
+	    
+	    /* Restore the previous context */
+	    if (currentContext) {
+	        glfwMakeContextCurrent(currentContext);
+	    }
+	    
+	    /* Show the window */
+	    glfwShowWindow(wmPtr->glfwWindow);
+	    
+	    /* Process events to ensure window appears */
+	    glfwPollEvents();
+	}
 
     winPtr->flags |= TK_MAPPED;
-    
+    printf("  TK_MAPPED flag set");
 }
 
 /*
@@ -685,7 +717,7 @@ Tk_MakeWindow(
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
 
         /* Ensure window is visible. */
-     //   glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
         
         /* Set basic window hints for proper initial state. */
         glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
