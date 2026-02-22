@@ -105,7 +105,7 @@ TkGlfwErrorCallback(
  *
  * TkGlfwInitialize --
  *
- *	Initialise GLFW and create the shared NanoVG context.
+ *	Initialize GLFW and create the shared NanoVG context.
  *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
@@ -123,12 +123,16 @@ TkGlfwInitialize(void)
         return TCL_OK;
     }
 
-    glfwSetErrorCallback(TkGlfwErrorCallback);
-
-    if (!glfwInit()) {
-        fprintf(stderr, "GLFW init failed\n");
-        return TCL_ERROR;
-    }
+	glfwSetErrorCallback(TkGlfwErrorCallback);
+	
+	#ifdef GLFW_PLATFORM_WAYLAND
+	glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+	#endif
+	
+	if (!glfwInit()) {
+	    fprintf(stderr, "GLFW init failed\n");
+	    return TCL_ERROR;
+	}
 
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
