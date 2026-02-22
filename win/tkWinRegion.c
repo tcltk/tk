@@ -15,7 +15,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * TkCreateRegion --
+ * XCreateRegion --
  *
  *	Construct an empty region.
  *
@@ -29,17 +29,17 @@
  */
 
 TkRegion
-TkCreateRegion(void)
+XCreateRegion(void)
 {
     RECT rect;
     memset(&rect, 0, sizeof(RECT));
-    return (TkRegion) CreateRectRgnIndirect(&rect);
+    return (TkRegion)CreateRectRgnIndirect(&rect);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkDestroyRegion --
+ * XDestroyRegion --
  *
  *	Destroy the specified region.
  *
@@ -53,7 +53,7 @@ TkCreateRegion(void)
  */
 
 int
-TkDestroyRegion(
+XDestroyRegion(
     TkRegion r)
 {
     DeleteObject((HRGN) r);
@@ -63,7 +63,7 @@ TkDestroyRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkClipBox --
+ * XClipBox --
  *
  *	Computes the bounding box of a region.
  *
@@ -77,7 +77,7 @@ TkDestroyRegion(
  */
 
 int
-TkClipBox(
+XClipBox(
     TkRegion r,
     XRectangle* rect_return)
 {
@@ -94,7 +94,7 @@ TkClipBox(
 /*
  *----------------------------------------------------------------------
  *
- * TkIntersectRegion --
+ * XIntersectRegion --
  *
  *	Compute the intersection of two regions.
  *
@@ -108,7 +108,7 @@ TkClipBox(
  */
 
 int
-TkIntersectRegion(
+XIntersectRegion(
     TkRegion sra,
     TkRegion srb,
     TkRegion dr_return)
@@ -120,7 +120,7 @@ TkIntersectRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkUnionRectWithRegion --
+ * XUnionRectWithRegion --
  *
  *	Create the union of a source region and a rectangle.
  *
@@ -134,7 +134,7 @@ TkIntersectRegion(
  */
 
 int
-TkUnionRectWithRegion(
+XUnionRectWithRegion(
     XRectangle *rectangle,
     TkRegion src_region,
     TkRegion dest_region_return)
@@ -222,7 +222,7 @@ TkpBuildRegionFromAlphaData(
 /*
  *----------------------------------------------------------------------
  *
- * TkRectInRegion --
+ * XRectInRegion --
  *
  *	Test whether a given rectangle overlaps with a region.
  *
@@ -237,7 +237,7 @@ TkpBuildRegionFromAlphaData(
  */
 
 int
-TkRectInRegion(
+XRectInRegion(
     TkRegion r,			/* Region to inspect */
     int x, int y,		/* Top-left of rectangle */
     unsigned int width,		/* Width of rectangle */
@@ -254,7 +254,7 @@ TkRectInRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkSubtractRegion --
+ * XSubtractRegion --
  *
  *	Compute the set-difference of two regions.
  *
@@ -268,7 +268,7 @@ TkRectInRegion(
  */
 
 int
-TkSubtractRegion(
+XSubtractRegion(
     TkRegion sra,
     TkRegion srb,
     TkRegion dr_return)

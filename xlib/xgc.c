@@ -47,7 +47,7 @@ static TkpClipMask *AllocClipMask(GC gc) {
 	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
     } else if (clip_mask->type == TKP_CLIP_REGION) {
-	TkDestroyRegion(clip_mask->value.region);
+	XDestroyRegion(clip_mask->value.region);
     }
     clip_mask->type = TKP_CLIP_PIXMAP;
     clip_mask->value.pixmap = None;
@@ -76,7 +76,7 @@ static void FreeClipMask(GC gc) {
 	return;
     }
     if (clip_mask->type == TKP_CLIP_REGION) {
-	TkDestroyRegion(clip_mask->value.region);
+	XDestroyRegion(clip_mask->value.region);
     }
     ckfree(clip_mask);
     gc->clip_mask = None;
@@ -381,7 +381,7 @@ XSetLineAttributes(
     int cap_style,
     int join_style)
 {
-    gc->line_width = line_width;
+    gc->line_width = (int)line_width;
     gc->line_style = line_style;
     gc->cap_style = cap_style;
     gc->join_style = join_style;
@@ -403,7 +403,7 @@ XSetClipOrigin(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetRegion, XSetClipMask, XSetClipRectangles --
+ * XSetRegion, XSetClipMask, XSetClipRectangles --
  *
  *	Sets the clipping region/pixmap for a GC.
  *
@@ -420,19 +420,19 @@ XSetClipOrigin(
  */
 
 int
-TkSetRegion(
+XSetRegion(
     TCL_UNUSED(Display *),
     GC gc,
     TkRegion r)
 {
     if (r == NULL) {
-	Tcl_Panic("must not pass NULL to TkSetRegion for compatibility with X11; use XSetClipMask instead");
+	Tcl_Panic("must not pass NULL to XSetRegion for compatibility with X11; use XSetClipMask instead");
     } else {
 	TkpClipMask *clip_mask = AllocClipMask(gc);
 
 	clip_mask->type = TKP_CLIP_REGION;
 	clip_mask->value.region = r;
-	clip_mask->value.region = TkCreateRegion();
+	clip_mask->value.region = XCreateRegion();
 	TkpCopyRegion(clip_mask->value.region, r);
     }
     return Success;
@@ -465,7 +465,7 @@ XSetClipRectangles(
     int n,
     TCL_UNUSED(int))
 {
-    TkRegion clipRgn = TkCreateRegion();
+    TkRegion clipRgn = XCreateRegion();
     TkpClipMask * clip_mask = AllocClipMask(gc);
     clip_mask->type = TKP_CLIP_REGION;
     clip_mask->value.region = clipRgn;
@@ -473,9 +473,9 @@ XSetClipRectangles(
     while (n--) {
 	XRectangle rect = *rectangles;
 
-	rect.x += clip_x_origin;
-	rect.y += clip_y_origin;
-	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+	rect.x += (short)clip_x_origin;
+	rect.y += (short)clip_y_origin;
+	XUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
     return 1;
