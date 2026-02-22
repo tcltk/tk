@@ -3751,7 +3751,7 @@ ParseGeometry(
         return TCL_OK;
     }
 
-    /* Optional WxH part */
+    /* Optional WxH part. */
     if (*p != '+' && *p != '-') {
         width = (int)strtol(p, &end, 10);
         if (end == p || *end != 'x') {
@@ -3767,7 +3767,7 @@ ParseGeometry(
         hasSize = 1;
     }
 
-    /* Optional ±X±Y part */
+    /* Optional ±X±Y part. */
     if (*p == '+' || *p == '-') {
         xNeg = (*p == '-');
         p++;
@@ -3789,9 +3789,9 @@ ParseGeometry(
         goto badGeom;
     }
 
-    /* Apply size if specified */
+    /* Apply size if specified. */
     if (hasSize) {
-        /* Ensure size is within min/max constraints */
+        /* Ensure size is within min/max constraints. */
         if (width < wmPtr->minWidth) width = wmPtr->minWidth;
         if (height < wmPtr->minHeight) height = wmPtr->minHeight;
         if (wmPtr->maxWidth > 0 && width > wmPtr->maxWidth) width = wmPtr->maxWidth;
