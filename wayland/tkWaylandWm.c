@@ -380,6 +380,7 @@ TkWmMapWindow(
     /* First time mapping this window. */
     if (wmPtr->flags & WM_NEVER_MAPPED) {
         wmPtr->flags &= ~WM_NEVER_MAPPED;
+        wmPtr->withdrawn = 0;  
 
         if (!Tk_IsEmbedded(winPtr)) {
             /* Create GLFW window if it doesn't exist yet. */
@@ -684,7 +685,7 @@ Tk_MakeWindow(
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
 
         /* Ensure window is visible. */
-        glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+     //   glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
         
         /* Set basic window hints for proper initial state. */
         glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
@@ -692,6 +693,7 @@ Tk_MakeWindow(
 
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                          Tk_Name(tkwin), &drawable);
+
         if (glfwWindow == NULL) {
             return None;
         }
