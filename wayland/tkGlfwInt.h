@@ -119,6 +119,7 @@ typedef struct TkWmInfo {
     Tk_Window    icon;
     Tk_Window    iconFor;
     int          withdrawn;
+    int			initialState;	/* NormalState, IconicState, WithdrawnState */
 
     /* Wrapper / menubar. */
     TkWindow    *wrapperPtr;

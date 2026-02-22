@@ -154,9 +154,6 @@ TkpCloseDisplay(
     ckfree(dispPtr);
 }
 
-
-
-
 /* Graphics context functions. */
 
 /*
