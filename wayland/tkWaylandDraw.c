@@ -746,6 +746,148 @@ TkpDrawFrameEx(
                        borderWidth, relief);
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkScrollWindow --
+ *
+ *	Scroll a rectangular area of a window.  Uses glBlitFramebuffer
+ *	to copy pixels, with scissor test enabled to clip the copy to
+ *	the destination rectangle.  The damage region is updated to
+ *	include the area that becomes exposed after the scroll.
+ *
+ * Results:
+ *	Returns 1 (True) on success, 0 (False) on failure.
+ *
+ * Side effects:
+ *	Pixels within the source rectangle are moved to the destination.
+ *	The damage region is enlarged to include the uncovered area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+bool
+TkScrollWindow(
+    Tk_Window tkwin,		/* Window to scroll. */
+    GC gc,			/* GC (not used in this implementation). */
+    int x, int y,		/* Source rectangle origin. */
+    int width, int height,	/* Source rectangle dimensions. */
+    int dx, int dy,		/* Scroll offset (destination = src + (dx,dy)). */
+    TkRegion damageRgn)		/* Region to which exposed area is added. */
+{
+    Display *display = Tk_Display(tkwin);
+    Drawable drawable = Tk_WindowId(tkwin);
+    TkWaylandDrawingContext dc;
+    int srcX, srcY, dstX, dstY;
+    int winWidth, winHeight;
+    GLint oldScissor[4];
+    GLboolean scissorEnabled;
+    int copyWidth, copyHeight;
+    XRectangle destRect, srcRect, overlap, exposed;
+
+    /* Validate parameters. */
+    if (width <= 0 || height <= 0 || drawable == None) {
+        return 0;
+    }
+
+    /* Begin drawing to obtain the GL context and flush any pending NanoVG commands. */
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+        return 0;
+    }
+    nvgFlush(dc.vg);		/* Ensure all NanoVG drawing is submitted. */
+
+    /* Get window dimensions (needed for coordinate conversion). */
+    winWidth = Tk_Width(tkwin);
+    winHeight = Tk_Height(tkwin);
+
+    /* Compute source and destination rectangles (X11 coordinates, top‑left origin). */
+    srcX = x;
+    srcY = y;
+    dstX = x + dx;
+    dstY = y + dy;
+    copyWidth = width;
+    copyHeight = height;
+
+    /* Clip the copy to the window bounds. */
+    if (srcX < 0) { copyWidth += srcX; srcX = 0; }
+    if (srcY < 0) { copyHeight += srcY; srcY = 0; }
+    if (srcX + copyWidth > winWidth)  copyWidth = winWidth - srcX;
+    if (srcY + copyHeight > winHeight) copyHeight = winHeight - srcY;
+    if (copyWidth <= 0 || copyHeight <= 0) {
+        TkGlfwEndDraw(&dc);
+        return 0;
+    }
+
+    /* Convert to OpenGL coordinates (bottom‑left origin). */
+    int srcX_gl = srcX;
+    int srcY_gl = winHeight - (srcY + copyHeight);
+    int dstX_gl = dstX;
+    int dstY_gl = winHeight - (dstY + copyHeight);
+
+    /* Save current scissor state. */
+    scissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+    glGetIntegerv(GL_SCISSOR_BOX, oldScissor);
+
+    /* Enable scissor test and set it to the destination rectangle.
+     * This ensures the blit does not draw outside the destination area.
+     */
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(dstX_gl, dstY_gl, copyWidth, copyHeight);
+
+    /* Perform the blit from source to destination. */
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(srcX_gl, srcY_gl, srcX_gl + copyWidth, srcY_gl + copyHeight,
+                      dstX_gl, dstY_gl, dstX_gl + copyWidth, dstY_gl + copyHeight,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    /* Restore previous scissor state. */
+    if (scissorEnabled) {
+        glScissor(oldScissor[0], oldScissor[1], oldScissor[2], oldScissor[3]);
+    } else {
+        glDisable(GL_SCISSOR_TEST);
+    }
+
+    TkGlfwEndDraw(&dc);
+
+    /*
+     * Update the damage region: the newly exposed area is the part of the
+     * destination rectangle that was not covered by the source rectangle.
+     * We compute this as destRect - (destRect ∩ srcRect) (in X11 coordinates).
+     */
+    destRect.x = dstX;
+    destRect.y = dstY;
+    destRect.width = copyWidth;
+    destRect.height = copyHeight;
+
+    srcRect.x = srcX;
+    srcRect.y = srcY;
+    srcRect.width = copyWidth;
+    srcRect.height = copyHeight;
+
+    /* Compute intersection of source and destination rectangles. */
+    if (XIntersectRectangles(&destRect, &srcRect, &overlap, 1)) {
+        /* Subtract the overlap from the destination to get the exposed area. */
+        XSubtractRegion(XCreateRegionFromRect(&destRect),
+                        XCreateRegionFromRect(&overlap),
+                        &exposed);
+    } else {
+        /* No overlap → entire destination is exposed. */
+        exposed = destRect;
+    }
+
+    /* Add the exposed region to the damage region. */
+    if (damageRgn != None) {
+        TkRegion exposedRgn = XCreateRegionFromRect(&exposed);
+        XUnionRegion(damageRgn, exposedRgn, damageRgn);
+        XDestroyRegion(exposedRgn);
+    }
+
+    return 1;
+}
+
+
 /*
  * Local Variables:
  * mode: c

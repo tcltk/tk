@@ -127,6 +127,7 @@ TkGlfwInitialize(void)
 	
 	#ifdef GLFW_PLATFORM_WAYLAND
 		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+		glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_PREFER_LIBDECOR);
 	#endif
 	
 	if (!glfwInit()) {
@@ -259,6 +260,7 @@ TkGlfwCreateWindow(
     if (height <= 0) height = 200;
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title ? title : "",
                                NULL, glfwContext.mainWindow);
 	if (window) {

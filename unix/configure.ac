@@ -568,6 +568,69 @@ if test $tk_aqua = no; then
             LIBDECOR_LIBS="`pkg-config --libs libdecor-0`"
             found_libdecor=yes
             AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor is available])
+	            AC_SUBST([LIBDECOR_CFLAGS])
+        AC_SUBST([LIBDECOR_LIBS])
+
+        # ─────────────────────────────────────────────────────────────
+        # Optional polite warning: check for recommended GTK plugin
+        # (fallback to Cairo-based decorations if missing)
+        # ─────────────────────────────────────────────────────────────
+
+        AC_MSG_CHECKING([for recommended libdecor GTK plugin (better appearance on GNOME)])
+
+        LIBDECOR_GTK_PLUGIN=""
+
+        # Common plugin locations (multi-arch, distro variations)
+        for dir in \
+            "/usr/lib/${host_cpu}-${host_vendor}-${host_os}/libdecor/plugins-1" \
+            "/usr/lib/libdecor/plugins-1" \
+            "/usr/lib64/libdecor/plugins-1" \
+            "/usr/lib/x86_64-linux-gnu/libdecor/plugins-1" \
+            "/usr/lib/aarch64-linux-gnu/libdecor/plugins-1" \
+            "/usr/local/lib/libdecor/plugins-1" \
+            "${libdir}/libdecor/plugins-1"; do
+            candidate="${dir}/libdecor-gtk.so"
+            if test -f "$candidate"; then
+                LIBDECOR_GTK_PLUGIN="$candidate"
+                break
+            fi
+        done
+
+        if test -n "$LIBDECOR_GTK_PLUGIN"; then
+            AC_MSG_RESULT([found ($LIBDECOR_GTK_PLUGIN)])
+            AC_DEFINE([HAVE_LIBDECOR_GTK_PLUGIN], [1],
+                [Define if the libdecor GTK plugin (libdecor-gtk.so) was found])
+        else
+            AC_MSG_RESULT([not found in common locations])
+            AC_MSG_WARN([
+  ════════════════════════════════════════════════════════════════════════
+   The Wayland backend is being built with libdecor support.
+
+   However, the recommended GTK plugin for libdecor (libdecor-gtk.so)
+   was not found in standard plugin directories.
+
+   Without this plugin, libdecor will fall back to its basic Cairo-based
+   decorations (simple title bar + shadow). This works, but looks less
+   integrated on GNOME compared to the native GTK style.
+
+   Most distributions package this separately as:
+     • Debian / Ubuntu:      libdecor-0-plugin-1-gtk
+     • Fedora / openSUSE:    libdecor (sometimes includes GTK plugin)
+     • Arch Linux:           libdecor (GTK plugin usually included)
+
+   You can usually install it with:
+     sudo apt install libdecor-0-plugin-1-gtk     # Debian/Ubuntu
+     sudo dnf install libdecor                    # Fedora (check if GTK is separate)
+
+   If you prefer the basic decorations or are on a different desktop,
+   this is not a hard requirement — the application should still run.
+  ════════════════════════════════════════════════════════════════════════
+            ])
+            # Optional: you could make it a notice instead of warn if you prefer
+            # AC_MSG_NOTICE([...])
+        fi
+
+        AC_SUBST([LIBDECOR_GTK_PLUGIN])
         else
             AC_MSG_RESULT([no])
             LIBDECOR_CFLAGS=""
