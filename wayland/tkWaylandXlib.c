@@ -1334,36 +1334,6 @@ TkUnixSetMenubar(
     /* No-op. */
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkScrollWindow --
- *
- *	Scroll a window.  Not implemented in Wayland port.
- *
- * Results:
- *	Always returns 0 (False).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-bool
-TkScrollWindow(
-    TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(TkRegion))
-{
-    return 0;
-}
 
 /*
  *----------------------------------------------------------------------

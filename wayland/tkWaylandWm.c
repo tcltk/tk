@@ -3173,25 +3173,33 @@ ApplyWindowHints(
  */
 
 static void
-ApplyFullscreenState(
-		     TkWindow *winPtr)
+ApplyFullscreenState(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-
     if (wmPtr->glfwWindow == NULL) return;
 
-    if (wmPtr->attributes.fullscreen) {
-        GLFWmonitor        *monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode  *mode    = glfwGetVideoMode(monitor);
+    GLFWmonitor *currentMonitor = glfwGetWindowMonitor(wmPtr->glfwWindow);
+    int desiredFullscreen = wmPtr->attributes.fullscreen;
+
+    if (desiredFullscreen && currentMonitor == NULL) {
+        /* Transitioning from windowed to fullscreen: save current geometry. */
+        glfwGetWindowPos(wmPtr->glfwWindow, &wmPtr->x, &wmPtr->y);
+        glfwGetWindowSize(wmPtr->glfwWindow, &wmPtr->width, &wmPtr->height);
+
+        /* Switch to fullscreen on the primary monitor. */
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         glfwSetWindowMonitor(wmPtr->glfwWindow, monitor,
                              0, 0, mode->width, mode->height, mode->refreshRate);
-    } else {
+    }
+    else if (!desiredFullscreen && currentMonitor != NULL) {
+        /* Transitioning from fullscreen to windowed: restore saved geometry. */
         int w = (wmPtr->width  > 0) ? wmPtr->width  : winPtr->reqWidth;
         int h = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
         glfwSetWindowMonitor(wmPtr->glfwWindow, NULL,
                              wmPtr->x, wmPtr->y, w, h, GLFW_DONT_CARE);
     }
-    
+     /* No action needed if already in the desired state. */
 }
 
 /*
