@@ -707,13 +707,10 @@ XQueryPointer(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenerateButtonEventForXPointer --
+ * GenerateButtonEventForXPointer --
  *
  *	This procedure generates an X button event for the current pointer
  *	state as reported by XQueryPointer().
- *
- * Results:
- *	True if event(s) are generated - false otherwise.
  *
  * Side effects:
  *	Additional events may be placed on the Tk event queue. Grab state may
@@ -722,8 +719,8 @@ XQueryPointer(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
-TkGenerateButtonEventForXPointer(
+static void
+GenerateButtonEventForXPointer(
     Window window)		/* X Window containing button event. */
 {
     MouseEventData med;
@@ -738,7 +735,7 @@ TkGenerateButtonEventForXPointer(
     med.local.v = local_y;
     med.window = window;
 
-    return GenerateButtonEvent(&med);
+    GenerateButtonEvent(&med);
 }
 
 /*
@@ -884,9 +881,9 @@ TkpWarpPointer(
     CGWarpMouseCursorPosition(pt);
 
     if (dispPtr->warpWindow) {
-	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+	GenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
     } else {
-	TkGenerateButtonEventForXPointer(None);
+	GenerateButtonEventForXPointer(None);
     }
 }
 
