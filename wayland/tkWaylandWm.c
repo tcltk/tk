@@ -1803,9 +1803,18 @@ WmDeiconifyCmd(
     Tcl_Obj *const objv[])
 {
     if (objc != 0) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName deiconify"); return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 0, objv, "pathName deiconify");
+        return TCL_ERROR;
     }
+    
+    /* Change the window state to NormalState. */
     TkpWmSetState(winPtr, NormalState);
+    
+    /* Now map the window (if it isn't already mapped). */
+    if (!(winPtr->flags & TK_MAPPED)) {
+        TkWmMapWindow(winPtr);
+    }
+    
     return TCL_OK;
 }
 
@@ -1901,22 +1910,6 @@ WmFrameCmd(
 }
 
 /*
-  *----------------------------------------------------------------------
- *
- * WmGeometryCmd --
- *
- *	Implements the "wm geometry" subcommand.
- *
- * Results:
- *	Standard Tcl result.
- *
- * Side effects:
- *	Updates window geometry if new geometry is provided.
- *
-  *----------------------------------------------------------------------
- */
-
-/*
  *----------------------------------------------------------------------
  *
  * WmGeometryCmd --
@@ -1934,11 +1927,11 @@ WmFrameCmd(
 
 static int
 WmGeometryCmd(
-    TCL_UNUSED(Tk_Window),
-    TkWindow   *winPtr,
-    Tcl_Interp *interp,
-    int         objc,
-    Tcl_Obj *const objv[])
+	      TCL_UNUSED(Tk_Window),
+	      TkWindow   *winPtr,
+	      Tcl_Interp *interp,
+	      int         objc,
+	      Tcl_Obj *const objv[])
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     char    buf[64];
@@ -1948,9 +1941,8 @@ WmGeometryCmd(
         return TCL_ERROR;
     }
     
-    /* Return current geometry */
+    /* Return current geometry. */
     if (objc == 0) {
-        /* Use actual window dimensions if available, otherwise requested */
         int width, height;
         
         if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -1961,37 +1953,44 @@ WmGeometryCmd(
         }
         
         snprintf(buf, sizeof(buf), "%dx%d+%d+%d",
-            width, height,
-            wmPtr->x, wmPtr->y);
+		 width, height,
+		 wmPtr->x, wmPtr->y);
         Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
         return TCL_OK;
     }
     
-    /* Handle empty string - reset to default */
+    /* Handle empty string - reset to default. */
     if (*Tcl_GetString(objv[0]) == '\0') {
         wmPtr->width = wmPtr->height = -1;
         
-        /* Cancel any pending idle callback */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
             Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
         
-        /* Update immediately if window is mapped */
         if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
             UpdateGeometryInfo((ClientData)winPtr);
-            TkGlfwProcessEvents(); /* Ensure callback fires */
+            TkGlfwProcessEvents();
         }
         
         return TCL_OK;
     }
     
-    /* Parse and apply new geometry */
+    /* Parse and apply new geometry. */
     if (ParseGeometry(interp, Tcl_GetString(objv[0]), winPtr) != TCL_OK) {
         return TCL_ERROR;
     }
     
-    /* Force immediate update instead of waiting for idle */
+    /* Immediately set GLFW window size and position. */
+    if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+        /* Set size only if positive values were provided */
+        if (wmPtr->width > 0 && wmPtr->height > 0) {
+            glfwSetWindowSize(wmPtr->glfwWindow, wmPtr->width, wmPtr->height);
+        }
+        glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
+    }
+    
+    /* Force immediate update instead of waiting for idle. */
     if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Cancel any pending idle callback */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
@@ -1999,17 +1998,17 @@ WmGeometryCmd(
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
         
-        /* Update immediately */
+        /* Update internal Tk/GLFW state. */
         UpdateGeometryInfo((ClientData)winPtr);
         
         /* Process events to ensure callback fires before command returns */
         TkGlfwProcessEvents();
         
-        /* Verify the change actually took effect */
+        /* Verify the change actually took effect. */
         int newWidth, newHeight;
         glfwGetWindowSize(wmPtr->glfwWindow, &newWidth, &newHeight);
         
-        /* If the size didn't change (e.g., constrained by min/max), update wmPtr */
+        /* If the size didn't change (e.g., constrained by min/max), update wmPtr. */
         if (wmPtr->width > 0 && wmPtr->width != newWidth) {
             wmPtr->width = newWidth;
         }
@@ -2017,7 +2016,7 @@ WmGeometryCmd(
             wmPtr->height = newHeight;
         }
         
-        /* Update Tk's changes structure */
+        /* Update Tk's changes structure. */
         winPtr->changes.width = newWidth;
         winPtr->changes.height = newHeight;
     }
@@ -2217,10 +2216,24 @@ WmIconifyCmd(
     int         objc,
     Tcl_Obj *const objv[])
 {
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
     if (objc != 0) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName iconify"); return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 0, objv, "pathName iconify");
+        return TCL_ERROR;
     }
+
+    /* Update Tk's internal state to IconicState. */
     TkpWmSetState(winPtr, IconicState);
+
+    /* If the window is mapped and has a GLFW window, actually iconify it. */
+    if ((winPtr->flags & TK_MAPPED) && wmPtr->glfwWindow != NULL) {
+        glfwIconifyWindow(wmPtr->glfwWindow);
+
+        /* Optionally, update Tk's mapped flag if iconify implicitly hides the window. */
+        winPtr->flags &= ~TK_MAPPED;  /* Some window managers unmap on iconify. */
+    }
+
     return TCL_OK;
 }
 
