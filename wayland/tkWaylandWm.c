@@ -3029,9 +3029,9 @@ WmWithdrawCmd(
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
   
     wmPtr->withdrawn = 1;
-	wmPtr->initialState = WithdrawnState;
+    wmPtr->initialState = WithdrawnState;
 
-	TkWmUnmapWindow(winPtr);
+    TkWmUnmapWindow(winPtr);
     return TCL_OK;
 }
 
