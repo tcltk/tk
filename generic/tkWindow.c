@@ -1026,10 +1026,10 @@ TkCreateMainWindow(
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_XFT)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XFT)
 		".no-xft"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_XSS)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XSS)
 		".no-xss"
 #endif
 #ifdef __OBJC__
@@ -1053,7 +1053,7 @@ TkCreateMainWindow(
 #if defined(_WIN32)
 		".win32"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND)
 		".x11"
 #endif
 		;
