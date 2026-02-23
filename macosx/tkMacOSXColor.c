@@ -519,7 +519,7 @@ SetCGColorComponents(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE Bool
+MODULE_SCOPE bool
 TkMacOSXInDarkMode(Tk_Window tkwin)
 {
 
