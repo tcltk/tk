@@ -667,9 +667,16 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
+#ifdef _WIN32
+#   undef TkpCmapStressed
+#   undef TkpSync
+#   define TkpCmapStressed(win, colormap) ((void)(win), (void)(colormap), false)
+#   define TkpSync(display) (void)(display)
+#endif
+
 #ifndef TK_NO_DEPRECATED
 #   define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
-#   define TkWinGetPlatformTheme() 3
+#   define TkWinGetPlatformTheme() (3)
 #endif
 
 #undef TCL_STORAGE_CLASS

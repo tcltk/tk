@@ -338,7 +338,7 @@ typedef struct WaitRestrictInfo {
  * Forward declarations for functions defined in this file:
  */
 
-static int		ComputeReparentGeometry(WmInfo *wmPtr);
+static bool		ComputeReparentGeometry(WmInfo *wmPtr);
 static void		ConfigureEvent(WmInfo *wmPtr,
 			    XConfigureEvent *eventPtr);
 static void		CreateWrapper(WmInfo *wmPtr);
@@ -4313,7 +4313,7 @@ ReparentEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ComputeReparentGeometry(
     WmInfo *wmPtr)		/* Information about toplevel window whose
 				 * reparent info is to be recomputed. */
@@ -4342,7 +4342,7 @@ ComputeReparentGeometry(
 
 	wmPtr->reparent = None;
 	wmPtr->xInParent = wmPtr->yInParent = 0;
-	return 0;
+	return false;
     }
     wmPtr->xInParent = xOffset + bd;
     wmPtr->yInParent = yOffset + bd;
@@ -4396,7 +4396,7 @@ ComputeReparentGeometry(
 	printf("     wmPtr %p coords %d,%d, offsets %d %d\n",
 		wmPtr, wmPtr->x, wmPtr->y, wmPtr->xInParent, wmPtr->yInParent);
     }
-    return 1;
+    return true;
 }
 
 /*
