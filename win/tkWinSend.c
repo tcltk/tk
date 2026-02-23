@@ -884,7 +884,7 @@ TkWinSend_SetExcepInfo(
  * ----------------------------------------------------------------------
  */
 
-int
+void
 TkWinSend_QueueCommand(
     Tcl_Interp *interp,
     Tcl_Obj *cmdPtr)
@@ -907,8 +907,6 @@ TkWinSend_QueueCommand(
     }
 
     Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
-
-    return 0;
 }
 
 /*
