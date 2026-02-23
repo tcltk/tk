@@ -366,96 +366,40 @@ DestroyGlfwWindow(
  *----------------------------------------------------------------------
  */
 
-void
-TkWmMapWindow(
-	      TkWindow *winPtr)
+void 
+TkWmMapWindow(TkWindow *winPtr) 
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-  
-    if (wmPtr == NULL) {
-        Tcl_Panic("TkWmMapWindow: No WmInfo for window");
-        return;
-    }
+    if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
 
-    /* First time mapping this window. */
-    if (wmPtr->flags & WM_NEVER_MAPPED) {
-        wmPtr->flags &= ~WM_NEVER_MAPPED;
-        wmPtr->withdrawn = 0;  /* Clear withdrawn flag on first map */
+    wmPtr->withdrawn = 0;
+    wmPtr->initialState = NormalState;
 
-        if (!Tk_IsEmbedded(winPtr)) {
-            /* Create GLFW window if it doesn't exist yet. */
-            if (wmPtr->glfwWindow == NULL) {
-                CreateGlfwWindow(winPtr);
-            }
-        }
-        
-        /* Update all window properties. */
+    if (!Tk_IsEmbedded(winPtr) && !wmPtr->glfwWindow) {
+        CreateGlfwWindow(winPtr);
         UpdateHints(winPtr);
         UpdateTitle(winPtr);
         UpdatePhotoIcon(winPtr);
-        
-        /* Ensure window is ready to be shown. */
-        if (wmPtr->glfwWindow != NULL) {
-           
-            /* Apply any pending size/position changes. */
-            if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
-                UpdateSizeHints(winPtr);
-                wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
-            }
-            
-            /* Set initial position if specified. */
-            if (wmPtr->flags & WM_MOVE_PENDING) {
-                glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
-                wmPtr->flags &= ~WM_MOVE_PENDING;
-            }
-        }
     }
 
-    /* Don't map if withdrawn. */
-    if (wmPtr->initialState == WithdrawnState) {
-        return;
-    }
-    if (wmPtr->initialState == IconicState) {
-        return;
-    }
-
-    /* Cancel any pending updates. */
-    if (wmPtr->flags & WM_UPDATE_PENDING) {
-        Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
-        wmPtr->flags &= ~WM_UPDATE_PENDING;
-    }
-    
-    /* Apply final geometry before showing. */
     UpdateGeometryInfo((ClientData)winPtr);
 
-    /* Actually show the window. */
-    if (wmPtr->glfwWindow != NULL) {
-		
-	/* Save the current context */
-	GLFWwindow *currentContext = glfwGetCurrentContext();
-	    
-	/* Initialize the window's buffers (required for Wayland). */
-	glfwMakeContextCurrent(wmPtr->glfwWindow);
-	glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glfwSwapBuffers(wmPtr->glfwWindow);
-	    
-	/* Restore the previous context */
-	if (currentContext) {
-	    glfwMakeContextCurrent(currentContext);
-	}
-	    	    
-	/* Show the window */
-	glfwShowWindow(wmPtr->glfwWindow);
-	    
-	/* Process events to ensure window appears */
-	glfwPollEvents();
-	    
-	winPtr->flags |= TK_MAPPED; 
-	    
-    }
+    if (wmPtr->glfwWindow) {
+        /* Wayland requires show first. */
+        glfwShowWindow(wmPtr->glfwWindow);
 
-    winPtr->flags |= TK_MAPPED;
+        /* Now safe to draw - Wayland requires buffer to be primed. */
+        GLFWwindow *prev = glfwGetCurrentContext();
+        glfwMakeContextCurrent(wmPtr->glfwWindow);
+        glClearColor(0.9f,0.9f,0.9f,1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glfwSwapBuffers(wmPtr->glfwWindow);
+        if (prev) glfwMakeContextCurrent(prev);
+
+	    /* Run event loop to force update. */
+        TkGlfwProcessEvents();
+        winPtr->flags |= TK_MAPPED;
+    }
 }
 
 /*
@@ -476,16 +420,18 @@ TkWmMapWindow(
  */
 
 void
-TkWmUnmapWindow(
-		TkWindow *winPtr)
+TkWmUnmapWindow(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr) return;
 
-    if (wmPtr->glfwWindow != NULL) {
+    if (wmPtr->glfwWindow) {
         glfwHideWindow(wmPtr->glfwWindow);
     }
+
     winPtr->flags &= ~TK_MAPPED;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1807,14 +1753,12 @@ WmDeiconifyCmd(
         return TCL_ERROR;
     }
     
-    /* Change the window state to NormalState. */
-    TkpWmSetState(winPtr, NormalState);
-    
-    /* Now map the window (if it isn't already mapped). */
-    if (!(winPtr->flags & TK_MAPPED)) {
-        TkWmMapWindow(winPtr);
-    }
-    
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    wmPtr->withdrawn = 0;
+    wmPtr->initialState = NormalState;
+
+    TkWmMapWindow(winPtr);
     return TCL_OK;
 }
 
@@ -3081,7 +3025,13 @@ WmWithdrawCmd(
     if (objc != 0) {
         Tcl_WrongNumArgs(interp,0,objv,"pathName withdraw"); return TCL_ERROR;
     }
-    TkpWmSetState(winPtr, WithdrawnState);
+    
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+  
+    wmPtr->withdrawn = 1;
+	wmPtr->initialState = WithdrawnState;
+
+	TkWmUnmapWindow(winPtr);
     return TCL_OK;
 }
 
