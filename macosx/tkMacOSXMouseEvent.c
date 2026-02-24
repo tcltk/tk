@@ -702,11 +702,9 @@ TkpWarpPointer(
 {
     CGPoint pt;
     Window window;
-    Tk_Window tkwin;
-    int dummy;
-    TkDisplay *dispPtr;
     MouseEventData med;
     int global_x, global_y, local_x, local_y;
+    int dummy;
 
     if (dispPtr->warpWindow) {
 	int x, y;
@@ -747,14 +745,13 @@ TkpWarpPointer(
     }
 #endif
 
-    dispPtr = TkGetDisplayList();
-    tkwin = Tk_IdToWindow(dispPtr->display, medPtr->window);
+    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, med.window);
 
     if (tkwin != NULL) {
-	tkwin = Tk_TopCoordsToWindow(tkwin, medPtr->local.h, medPtr->local.v,
+	tkwin = Tk_TopCoordsToWindow(tkwin, med.local.h, med.local.v,
 		&dummy, &dummy);
     }
-    Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
+    Tk_UpdatePointer(tkwin, med.global.h, med.global.v, med.state);
 }
 
 /*
