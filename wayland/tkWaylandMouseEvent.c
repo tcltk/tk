@@ -29,6 +29,13 @@ static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 
 static int GenerateButtonEvent(MouseEventData *medPtr);
 
+/* Decoration support. */
+typedef struct TkWaylandDecoration TkWaylandDecoration; 
+extern int TkWaylandDecorationMouseButton(TkWaylandDecoration *decor, int button, int action, double x, double y);
+extern int TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x, double y); 
+extern TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -129,7 +136,7 @@ XQueryPointer(
         return False;
     }
     
-    /* Get the GLFW window using unified architecture. */
+    /* Get the GLFW window. */
     glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
     if (!glfwWindow) {
         return False;
@@ -268,6 +275,108 @@ GenerateButtonEvent(
     }
     Tk_UpdatePointer(tkwin, medPtr->globalX, medPtr->globalY, medPtr->state);
     return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandHandleMouseButton --
+ *
+ *   GLFW mouse button callback with decoration support.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Interactions with decoration elements. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+void
+TkWaylandHandleMouseButton(
+			   GLFWwindow *glfwWindow,
+			   int button,
+			   int action,
+			   TCL_UNUSED(int)) /* mods */
+{
+    TkWindow *winPtr;
+    TkWaylandDecoration *decor;
+    double x, y;
+
+    winPtr = TkGlfwGetTkWindow(glfwWindow);
+    if (!winPtr) {
+	return;
+    }
+
+    /* Get cursor position. */
+    glfwGetCursorPos(glfwWindow, &x, &y);
+
+    /* Check if decorations handle the event. */ 
+    decor = TkWaylandGetDecoration(winPtr); 
+    if (decor != NULL) {
+	if (TkWaylandDecorationMouseButton(decor, button, action, x, y)) {
+	    /* Event handled by decorations. */
+	    return;
+	}
+    }
+
+    /* 
+     * Pass to normal Tk event handling. 
+     * Convert GLFW button to Tk button.
+     */
+    unsigned int state = TkWaylandButtonKeyState(); Window window = Tk_WindowId((Tk_Window)winPtr);
+
+    TkGenerateButtonEvent((int)x, (int)y, window, state); 
+
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandHandleMouseButton --
+ *
+ *   GLFW cursor position callback with decoration support.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Interactions with decoration elements. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+void
+TkWaylandHandleMouseMove(
+			 GLFWwindow *glfwWindow,
+			 double x,
+			 double y)
+{
+    TkWindow *winPtr;
+    TkWaylandDecoration *decor;
+
+
+    winPtr = TkGlfwGetTkWindow(glfwWindow);
+    if (!winPtr) {
+	return;
+    }
+
+    /* Check if decorations handle the event. */ 
+    decor = TkWaylandGetDecoration(winPtr); 
+    if (decor != NULL) {
+	if (TkWaylandDecorationMouseMove(decor, x, y)) {
+	    /* Event handled by decorations (dragging/resizing). */
+	    return;
+	}
+    }
+
+    /* Pass to normal Tk motion event handling. */ 
+    unsigned int state = TkWaylandButtonKeyState(); 
+    Window window = Tk_WindowId((Tk_Window)winPtr);
+
+    TkGenerateButtonEvent((int)x, (int)y, window, state); 
 }
 
 /*
