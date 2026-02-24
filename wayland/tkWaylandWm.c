@@ -117,74 +117,112 @@ static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 			  TkWindow *winPtr);
 static void WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
+/* External window decoration functions. */
+extern TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
+extern void TkWaylandSetDecorationTitle(TkWaylandDecoration *decor, const char *title);
+extern void TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized);
+
 /* wm sub-command handlers. */
-static int WmAspectCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                       Tcl_Obj *const []);
-static int WmAttributesCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			   Tcl_Obj *const []);
-static int WmClientCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                       Tcl_Obj *const []);
-static int WmColormapwindowsCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-				Tcl_Obj *const []);
-static int WmCommandCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                        Tcl_Obj *const []);
-static int WmDeiconifyCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			  Tcl_Obj *const []);
-static int WmFocusmodelCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			   Tcl_Obj *const []);
-static int WmForgetCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                       Tcl_Obj *const []);
-static int WmFrameCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                      Tcl_Obj *const []);
-static int WmGeometryCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			 Tcl_Obj *const []);
-static int WmGridCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                     Tcl_Obj *const []);
-static int WmGroupCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                      Tcl_Obj *const []);
-static int WmIconbadgeCmd(Tk_Window, TkWindow *, Tcl_Interp *, Tcl_Size,
-			  Tcl_Obj *const []);
-static int WmIconbitmapCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			   Tcl_Obj *const []);
-static int WmIconifyCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                        Tcl_Obj *const []);
-static int WmIconmaskCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			 Tcl_Obj *const []);
-static int WmIconnameCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			 Tcl_Obj *const []);
-static int WmIconphotoCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			  Tcl_Obj *const []);
-static int WmIconpositionCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			     Tcl_Obj *const []);
-static int WmIconwindowCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			   Tcl_Obj *const []);
-static int WmManageCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                       Tcl_Obj *const []);
-static int WmMaxsizeCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                        Tcl_Obj *const []);
-static int WmMinsizeCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                        Tcl_Obj *const []);
-static int WmOverrideredirectCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-				 Tcl_Obj *const []);
-static int WmPositionfromCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			     Tcl_Obj *const []);
-static int WmProtocolCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			 Tcl_Obj *const []);
-static int WmResizableCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			  Tcl_Obj *const []);
-static int WmSizefromCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			 Tcl_Obj *const []);
-static int WmStackorderCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			   Tcl_Obj *const []);
-static int WmStateCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                      Tcl_Obj *const []);
-static int WmTitleCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-                      Tcl_Obj *const []);
-static int WmTransientCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			  Tcl_Obj *const []);
-static int WmWithdrawCmd(Tk_Window, TkWindow *, Tcl_Interp *, int,
-			 Tcl_Obj *const []);
-static void WmWaitMapProc(ClientData clientData, XEvent *eventPtr);
+static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmAttributesCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmClientCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmColormapwindowsCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmCommandCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmDeiconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmFocusmodelCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmForgetCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmFrameCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmGeometryCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmGridCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconmaskCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconnameCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconphotoCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconpositionCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconwindowCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmManageCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmMaxsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmMinsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmOverrideredirectCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmPositionfromCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmProtocolCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmResizableCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmSizefromCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmStackorderCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmStateCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmTitleCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmTransientCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Obj *const objv[]);
+static void             WmWaitMapProc(ClientData clientData, XEvent *eventPtr);
 
 /* GLFW integration helpers. */
 static void CreateGlfwWindow(TkWindow *winPtr);
@@ -1492,99 +1530,152 @@ WmAspectCmd(
 
 static int
 WmAttributesCmd(
-		TCL_UNUSED(Tk_Window),
-		TkWindow   *winPtr,
-		Tcl_Interp *interp,
-		int         objc,
-		Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),
+    TkWindow *winPtr,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    int     attribute, i;
+    int i;
 
-    if (objc == 0) {
-        Tcl_Obj *result = Tcl_NewObj();
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewStringObj("-alpha",-1));
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewDoubleObj(wmPtr->attributes.alpha));
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewStringObj("-topmost",-1));
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewIntObj(wmPtr->attributes.topmost));
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewStringObj("-zoomed",-1));
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewIntObj(wmPtr->attributes.zoomed));
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewStringObj("-fullscreen",-1));
-        Tcl_ListObjAppendElement(NULL,result,Tcl_NewIntObj(wmPtr->attributes.fullscreen));
-        Tcl_SetObjResult(interp,result);
+    /* No arguments: return all attributes as list. */
+    if (objc == 1) {   /* wm attributes $win */
+        Tcl_Obj *result = Tcl_NewListObj(0, NULL);
+
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-alpha", -1));
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewDoubleObj(wmPtr->attributes.alpha));
+
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-topmost", -1));
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewIntObj(wmPtr->attributes.topmost));
+
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-zoomed", -1));
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewIntObj(wmPtr->attributes.zoomed));
+
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-fullscreen", -1));
+        Tcl_ListObjAppendElement(NULL, result, Tcl_NewIntObj(wmPtr->attributes.fullscreen));
+
+        Tcl_SetObjResult(interp, result);
         return TCL_OK;
     }
 
-    if (objc == 1) {
-        if (Tcl_GetIndexFromObjStruct(interp, objv[0], WmAttributeNames,
-				      sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
+    /* One argument: query single attribute. */
+    if (objc == 2) {
+        int attribute;
+        if (Tcl_GetIndexFromObjStruct(interp, objv[1], WmAttributeNames,
+                                      sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
             return TCL_ERROR;
         }
+
         switch ((WmAttribute)attribute) {
-        case WMATT_ALPHA:
-            Tcl_SetObjResult(interp,Tcl_NewDoubleObj(wmPtr->attributes.alpha)); break;
-        case WMATT_TOPMOST:
-            Tcl_SetObjResult(interp,Tcl_NewIntObj(wmPtr->attributes.topmost)); break;
-        case WMATT_ZOOMED:
-            Tcl_SetObjResult(interp,Tcl_NewIntObj(wmPtr->attributes.zoomed)); break;
-        case WMATT_FULLSCREEN:
-            Tcl_SetObjResult(interp,Tcl_NewIntObj(wmPtr->attributes.fullscreen)); break;
-        case WMATT_TYPE:
-            Tcl_SetObjResult(interp,Tcl_NewStringObj("",-1)); break;
-        default: return TCL_ERROR;
+            case WMATT_ALPHA:
+                Tcl_SetObjResult(interp, Tcl_NewDoubleObj(wmPtr->attributes.alpha));
+                break;
+            case WMATT_TOPMOST:
+                Tcl_SetObjResult(interp, Tcl_NewIntObj(wmPtr->attributes.topmost));
+                break;
+            case WMATT_ZOOMED:
+                Tcl_SetObjResult(interp, Tcl_NewIntObj(wmPtr->attributes.zoomed));
+                break;
+            case WMATT_FULLSCREEN:
+                Tcl_SetObjResult(interp, Tcl_NewIntObj(wmPtr->attributes.fullscreen));
+                break;
+            case WMATT_TYPE:
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("", -1));
+                break;
+            default:
+                return TCL_ERROR;
         }
         return TCL_OK;
     }
 
-    if (objc % 2 == 1) {
-        Tcl_WrongNumArgs(interp,0,objv,
-			 "pathName attributes ?-attribute value ...?");
+    /* Odd number of arguments after window → error. */
+    if (objc % 2 == 0) {
+        Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-attribute value ...?");
         return TCL_ERROR;
     }
 
-    for (i = 0; i < objc; i += 2) {
+    /* Set one or more attributes. */
+    GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
+
+    for (i = 1; i < objc; i += 2) {
+        int attribute;
         if (Tcl_GetIndexFromObjStruct(interp, objv[i], WmAttributeNames,
-				      sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
+                                      sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
             return TCL_ERROR;
         }
+
         switch ((WmAttribute)attribute) {
-        case WMATT_ALPHA: {
-            double d;
-            if (Tcl_GetDoubleFromObj(interp,objv[i+1],&d) != TCL_OK) return TCL_ERROR;
-            d = (d<0.0)?0.0:(d>1.0)?1.0:d;
-            wmPtr->reqState.alpha = wmPtr->attributes.alpha = d;
-            if (wmPtr->glfwWindow) glfwSetWindowOpacity(wmPtr->glfwWindow,(float)d);
-            break;
-        }
-        case WMATT_TOPMOST: {
-            int b;
-            if (Tcl_GetBooleanFromObj(interp,objv[i+1],&b) != TCL_OK) return TCL_ERROR;
-            wmPtr->reqState.topmost = wmPtr->attributes.topmost = b;
-            if (wmPtr->glfwWindow)
-                glfwSetWindowAttrib(wmPtr->glfwWindow,GLFW_FLOATING,b?GLFW_TRUE:GLFW_FALSE);
-            break;
-        }
-        case WMATT_ZOOMED: {
-            int b;
-            if (Tcl_GetBooleanFromObj(interp,objv[i+1],&b) != TCL_OK) return TCL_ERROR;
-            wmPtr->reqState.zoomed = wmPtr->attributes.zoomed = b;
-            if (wmPtr->glfwWindow) {
-                if (b) glfwMaximizeWindow(wmPtr->glfwWindow);
-                else   glfwRestoreWindow(wmPtr->glfwWindow);
+            case WMATT_ALPHA: {
+                double d;
+                if (Tcl_GetDoubleFromObj(interp, objv[i+1], &d) != TCL_OK) {
+                    return TCL_ERROR;
+                }
+                d = (d < 0.0) ? 0.0 : (d > 1.0) ? 1.0 : d;
+                wmPtr->reqState.alpha = wmPtr->attributes.alpha = d;
+                if (glfwWindow != NULL) {
+                    glfwSetWindowOpacity(glfwWindow, (float)d);
+                }
+                /* TODO: Wayland opacity if supported via decor or compositor hint */
+                break;
             }
-            break;
-        }
-        case WMATT_FULLSCREEN: {
-            int b;
-            if (Tcl_GetBooleanFromObj(interp,objv[i+1],&b) != TCL_OK) return TCL_ERROR;
-            wmPtr->reqState.fullscreen = wmPtr->attributes.fullscreen = b;
-            ApplyFullscreenState(winPtr);
-            break;
-        }
-        case WMATT_TYPE: break;
-        default: return TCL_ERROR;
+
+            case WMATT_TOPMOST: {
+                int b;
+                if (Tcl_GetBooleanFromObj(interp, objv[i+1], &b) != TCL_OK) {
+                    return TCL_ERROR;
+                }
+                wmPtr->reqState.topmost = wmPtr->attributes.topmost = b;
+                if (glfwWindow != NULL) {
+                    glfwSetWindowAttrib(glfwWindow, GLFW_FLOATING, b ? GLFW_TRUE : GLFW_FALSE);
+                }
+
+                break;
+            }
+
+            case WMATT_ZOOMED: {
+                int zoomed;
+                if (Tcl_GetBooleanFromObj(interp, objv[i+1], &zoomed) != TCL_OK) {
+                    return TCL_ERROR;
+                }
+                wmPtr->reqState.zoomed = wmPtr->attributes.zoomed = zoomed;
+
+                if (glfwWindow != NULL) {
+                    if (zoomed) {
+                        glfwMaximizeWindow(glfwWindow);
+                    } else {
+                        glfwRestoreWindow(glfwWindow);
+                    }
+                }
+                if (decor != NULL) {
+                    TkWaylandSetWindowMaximized(decor, zoomed);
+                }
+
+                /* Optional: if your WM needs it, you could also call TkpWmSetState()
+                 * or similar here — but usually GLFW + Wayland decoration is enough */
+                break;
+            }
+
+            case WMATT_FULLSCREEN: {
+                int b;
+                if (Tcl_GetBooleanFromObj(interp, objv[i+1], &b) != TCL_OK) {
+                    return TCL_ERROR;
+                }
+                wmPtr->reqState.fullscreen = wmPtr->attributes.fullscreen = b;
+                ApplyFullscreenState(winPtr);
+                break;
+            }
+
+            case WMATT_TYPE:
+                /* Usually ignored / placeholder */
+                break;
+
+            default:
+                return TCL_ERROR;
         }
     }
+
     return TCL_OK;
 }
 
@@ -2844,53 +2935,113 @@ WmStackorderCmd(
 
 static int
 WmStateCmd(
-	   TCL_UNUSED(Tk_Window),
-	   TkWindow   *winPtr,
-	   Tcl_Interp *interp,
-	   int         objc,
-	   Tcl_Obj *const objv[])
+    TCL_UNUSED(Tk_Window),
+    TkWindow *winPtr,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
-    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     static const char *const opts[] = {
-        "normal","iconic","withdrawn","icon","zoomed",NULL
+        "normal", "iconic", "withdrawn", "icon", "zoomed", NULL
     };
-    enum { OPT_NORMAL,OPT_ICONIC,OPT_WITHDRAWN,OPT_ICON,OPT_ZOOMED };
+    enum { OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN, OPT_ICON, OPT_ZOOMED };
     int idx;
 
-    if (objc > 1) {
-        Tcl_WrongNumArgs(interp,0,objv,"pathName state ?state?"); return TCL_ERROR;
+    /* Early argument check. */
+    if (objc > 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "pathName ?state?");
+        return TCL_ERROR;
     }
-    if (objc == 0) {
-        if      (wmPtr->iconFor)           Tcl_SetObjResult(interp,Tcl_NewStringObj("icon",-1));
-        else if (wmPtr->withdrawn)         Tcl_SetObjResult(interp,Tcl_NewStringObj("withdrawn",-1));
-        else if (wmPtr->attributes.zoomed) Tcl_SetObjResult(interp,Tcl_NewStringObj("zoomed",-1));
-        else if (Tk_IsMapped((Tk_Window)winPtr))
-	    Tcl_SetObjResult(interp,Tcl_NewStringObj("normal",-1));
-        else                               Tcl_SetObjResult(interp,Tcl_NewStringObj("iconic",-1));
+
+    /* Query current state. */
+    if (objc == 1) {
+        if (wmPtr->iconFor) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj("icon", -1));
+        }
+        else if (wmPtr->withdrawn) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj("withdrawn", -1));
+        }
+        else if (wmPtr->attributes.zoomed) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj("zoomed", -1));
+        }
+        else if (Tk_IsMapped((Tk_Window)winPtr)) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj("normal", -1));
+        }
+        else {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj("iconic", -1));
+        }
         return TCL_OK;
     }
-    if (Tcl_GetIndexFromObjStruct(interp,objv[0],opts,sizeof(char *),"argument",0,&idx)!=TCL_OK)
+
+    /* Get requested state. */
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], opts, sizeof(char *),
+                                  "state", TCL_EXACT, &idx) != TCL_OK) {
         return TCL_ERROR;
+    }
+
+    /* Cannot change state of an icon-for window. */
     if (wmPtr->iconFor != NULL) {
-        Tcl_SetObjResult(interp,Tcl_ObjPrintf(
-					      "can't change state of %s: it is an icon for %s",
-					      Tk_PathName(winPtr), Tk_PathName(wmPtr->iconFor)));
-        Tcl_SetErrorCode(interp,"TK","WM","STATE","ICON",NULL);
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+            "can't change state of %s: it is an icon for %s",
+            Tk_PathName(winPtr), Tk_PathName(wmPtr->iconFor)));
+        Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
         return TCL_ERROR;
     }
+
+    /* Get platform-specific handles once. */
+    GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
+
     switch (idx) {
-    case OPT_NORMAL:    TkpWmSetState(winPtr,NormalState);   break;
-    case OPT_ICONIC:    TkpWmSetState(winPtr,IconicState);   break;
-    case OPT_WITHDRAWN: TkpWmSetState(winPtr,WithdrawnState);break;
-    case OPT_ICON:
-        Tcl_SetObjResult(interp,Tcl_NewStringObj("can't change state to icon: not implemented",-1));
-        Tcl_SetErrorCode(interp,"TK","WM","STATE","ICON",NULL);
-        return TCL_ERROR;
-    case OPT_ZOOMED:
-        wmPtr->attributes.zoomed = 1;
-        if (wmPtr->glfwWindow) glfwMaximizeWindow(wmPtr->glfwWindow);
-        break;
+        case OPT_NORMAL:
+            wmPtr->hints.initial_state = NormalState;
+            wmPtr->attributes.zoomed = 0;
+
+            if (glfwWindow != NULL) {
+                glfwRestoreWindow(glfwWindow);
+            }
+            if (decor != NULL) {
+                TkWaylandSetWindowMaximized(decor, 0);
+            }
+            TkpWmSetState(winPtr, NormalState);
+            break;
+
+        case OPT_ICONIC:
+            wmPtr->hints.initial_state = IconicState;
+
+            if (glfwWindow != NULL) {
+                glfwIconifyWindow(glfwWindow);
+            }
+            winPtr->flags &= ~TK_MAPPED;
+
+            TkpWmSetState(winPtr, IconicState);
+            break;
+
+        case OPT_WITHDRAWN:
+            TkpWmSetState(winPtr, WithdrawnState);
+            break;
+
+        case OPT_ICON:
+            Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                "can't change state to icon: not implemented", -1));
+            Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
+            return TCL_ERROR;
+
+        case OPT_ZOOMED:
+            wmPtr->attributes.zoomed = 1;
+
+            if (glfwWindow != NULL) {
+                glfwMaximizeWindow(glfwWindow);
+            }
+            if (decor != NULL) {
+                TkWaylandSetWindowMaximized(decor, 1);
+            }
+            /* Note: many WMs ignore attempts to force zoom via hints,
+               so we rely on the GLFW/Wayland calls above. */
+            break;
     }
+
     return TCL_OK;
 }
 
@@ -3603,8 +3754,15 @@ UpdateTitle(TkWindow *winPtr)
     WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     const char *title = wmPtr->title ? wmPtr->title : winPtr->nameUid;
 
+    /* Update GLFW window title, which also updates server-side decorations if active. *?
     if (wmPtr->glfwWindow != NULL) {
         glfwSetWindowTitle(wmPtr->glfwWindow, title);
+    }
+
+      /* Update CSD title if client-side decorations are active */
+    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
+    if (decor != NULL) {
+        TkWaylandSetDecorationTitle(decor, title);
     }
 }
 

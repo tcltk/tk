@@ -56,6 +56,33 @@ static void           CleanupAllMappings(void);
 /*
  *----------------------------------------------------------------------
  *
+ * Decoration support
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+typedef struct TkWaylandDecoration TkWaylandDecoration; 
+extern void TkWaylandInitDecorationPolicy(Tcl_Interp *interp); 
+extern void TkWaylandConfigureWindowDecorations(void);
+extern int TkWaylandShouldUseCSD(void);
+extern TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
+extern void TkWaylandDestroyDecoration(TkWaylandDecoration *decor); 
+extern TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Mouse event handlers
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+ extern void TkWaylandHandleMouseButton(GLFWwindow *glfwWindow, int button, int action, int mods); 
+ extern void TkWaylandHandleMouseMove(GLFWwindow *glfwWindow, double x, double y);
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkGlfwGetContext --
  *
  *	Returns a pointer to the global GLFW context structure.
@@ -127,7 +154,6 @@ TkGlfwInitialize(void)
 	
 	#ifdef GLFW_PLATFORM_WAYLAND
 		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-		glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_PREFER_LIBDECOR);
 	#endif
 	
 	if (!glfwInit()) {
@@ -258,9 +284,12 @@ TkGlfwCreateWindow(
     /* Ensure sensible minimum dimensions. */
     if (width  <= 0) width  = 200;
     if (height <= 0) height = 200;
+	
+	/* Configure decoration hints BEFORE creating window. */ 
+	TkWaylandConfigureWindowDecorations();
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title ? title : "",
                                NULL, glfwContext.mainWindow);
 	if (window) {
@@ -285,6 +314,10 @@ TkGlfwCreateWindow(
     glfwSetWindowUserPointer(window, mapping);
 
     if (tkWin != NULL) {
+		/* Set up mouse event callbacks for decorations.  */
+		glfwSetMouseButtonCallback(window, TkWaylandHandleMouseButton); 
+		glfwSetCursorPosCallback(window, TkWaylandHandleMouseMove);
+		/* Set up other callbacks for client area of window. */
         TkGlfwSetupCallbacks(window, tkWin);
     }
 
@@ -323,11 +356,39 @@ TkGlfwDestroyWindow(
 
     mapping = FindMappingByGLFW(glfwWindow);
     if (mapping) {
+		/* Destroy decorations first. */
+		if (mapping->decoration) {
+			TkWaylandDestroyDecoration(mapping->decoration);
+			mapping->decoration = NULL;
+		}
         RemoveMapping(mapping);
     }
 
     glfwDestroyWindow(glfwWindow);
 }
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGetDecoration --
+ *
+ *	Get the decoration for a Tk window. 
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Returns the window decoration. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+TkWaylandDecoration *
+TkWaylandGetDecoration(TkWindow *winPtr) 
+{
+	WindowMapping *m = FindMappingByTk(winPtr);
+	return m ? m->decoration : NULL;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -722,6 +783,10 @@ TkpInit(
         return TCL_ERROR;
     }
 
+	/* Initialize decoration policy system. */ 
+	TkWaylandInitDecorationPolicy(interp);
+
+
     TkWaylandMenuInit();
     Tk_WaylandSetupTkNotifier();
 
@@ -949,6 +1014,9 @@ CleanupAllMappings(void)
 
     while (cur) {
         next = cur->nextPtr;
+		if (cur->decoration) {
+			TkWaylandDestroyDecoration(cur->decoration);
+		}
         if (cur->glfwWindow) {
             glfwDestroyWindow(cur->glfwWindow);
         }

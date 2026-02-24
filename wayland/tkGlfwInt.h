@@ -59,6 +59,32 @@ typedef struct WindowMapping {
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandDecoration - client-side decoration. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+typedef struct TkWaylandDecoration {
+    TkWindow *winPtr;
+    GLFWwindow *glfwWindow;
+    WmInfo    *wmPtr;           /* Pointer to the WM info for this window */
+    int enabled;
+    int maximized;               /* Current maximized state (for button) */
+    char *title;
+    ButtonState closeState;
+    ButtonState maxState;
+    ButtonState minState;
+    int dragging;
+    double dragStartX, dragStartY;
+    int windowStartX, windowStartY;
+    int resizing;
+    double resizeStartX, resizeStartY;
+    int resizeStartWidth, resizeStartHeight;
+} TkWaylandDecoration;
+
+/*
+ *----------------------------------------------------------------------
+ *
  * ProtocolHandler – per-protocol Tcl command binding.
  *
  *----------------------------------------------------------------------
@@ -163,6 +189,7 @@ typedef struct TkWmInfo {
     int          isMapped;
     int          lastX, lastY;
     int          lastWidth, lastHeight;
+	TkWaylandDecoration *decor; /* Client-side decoration. */
 
     struct TkWmInfo *nextPtr;
 } WmInfo;
