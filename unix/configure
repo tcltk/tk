@@ -8320,7 +8320,7 @@ printf "%s\n" "$found_xft" >&6; }
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    ac_fn_c_check_header_compile "$LINENO" "X11/Xft/Xft.h" "ac_cv_header_X11_Xft_Xft_h" "#include <X11/Xlib.h>
 "
 if test "x$ac_cv_header_X11_Xft_Xft_h" = xyes
@@ -8340,7 +8340,7 @@ fi
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for XftFontOpen in -lXft" >&5
 printf %s "checking for XftFontOpen in -lXft... " >&6; }
 if test ${ac_cv_lib_Xft_XftFontOpen+y}
@@ -8404,7 +8404,7 @@ fi
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
 	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for FcFontSort in -lfontconfig" >&5
 printf %s "checking for FcFontSort in -lfontconfig... " >&6; }
 if test ${ac_cv_lib_fontconfig_FcFontSort+y}
@@ -8519,7 +8519,7 @@ printf "%s\n" "$found_cups" >&6; }
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $CUPS_LIBS $XLIBSW"
 	    ac_fn_c_check_header_compile "$LINENO" "cups/cups.h" "ac_cv_header_cups_cups_h" "#include <cups/cups.h>
 "
 if test "x$ac_cv_header_cups_cups_h" = xyes
@@ -9122,7 +9122,7 @@ printf "%s\n" "yes" >&6; }
      else
 
 printf "%s\n" "#define ZIPFS_BUILD 1" >>confdefs.h
-\
+
        INSTALL_LIBRARIES=install-demos
        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
@@ -9144,9 +9144,8 @@ fi
 #       stub support.
 #--------------------------------------------------------------------
 
-# Replace ${VERSION} with contents of ${TK_VERSION}
-    TK_STUB_LIB_FILE="libtkstub.a"
-    TK_STUB_LIB_FLAG="-ltkstub"
+TK_STUB_LIB_FILE="libtkstub.a"
+TK_STUB_LIB_FLAG="-ltkstub"
 eval "TK_STUB_LIB_DIR=\"${libdir}\""
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
