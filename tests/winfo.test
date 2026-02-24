@@ -180,7 +180,12 @@ test winfo-5.2 {"winfo interps" command} -body {
 test winfo-5.3 {"winfo interps" command} -body {
     winfo interps -displayof geek
 } -returnCodes error -result {bad window path name "geek"}
-test winfo-5.4 {"winfo interps" command} -constraints unix -body {
+
+# The winfo command does not work on macOS CI runnters because it requires writing
+# to a database file, which in turn requires interactively dismissing a system
+# privacy dialog
+
+test winfo-5.4 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkInterp child
     set appname [child eval tk appname]
     set res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
@@ -188,7 +193,7 @@ test winfo-5.4 {"winfo interps" command} -constraints unix -body {
     lappend res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
     set res
 } -result {1 0}
-test winfo-5.5 {"winfo interps" command} -constraints unix -body {
+test winfo-5.5 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkInterp child
     set appname [child eval tk appname]
     set res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
@@ -196,7 +201,7 @@ test winfo-5.5 {"winfo interps" command} -constraints unix -body {
     lappend res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]
     set res
 } -result {1 0}
-test winfo-5.6 {"winfo interps" command} -constraints unix -body {
+test winfo-5.6 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkProcess create
     set appname [childTkProcess eval [list tk appname]]
     set res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
@@ -204,7 +209,7 @@ test winfo-5.6 {"winfo interps" command} -constraints unix -body {
     lappend res [expr {[lsearch -exact [winfo interps] $appname] >= 0}]
     set res
 } -result {1 0}
-test winfo-5.7 {"winfo interps" command} -constraints unix -body {
+test winfo-5.7 {"winfo interps" command} -constraints {unix notMacCI} -body {
     childTkProcess create
     set appname [childTkProcess eval [list tk appname]]
     set res [expr {[lsearch -exact [winfo interps -displayof .] $appname] >= 0}]

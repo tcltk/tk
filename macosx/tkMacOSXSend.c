@@ -35,15 +35,21 @@ typedef struct RegisteredInterp {
 } RegisteredInterp;
 
 /*
- * A registry of all interpreters owned by the current user is maintained in
- * the file ~/Library/Caches/com.tcltk.appnames. The file contains the string
- * representation of a TclDictObj.  The dictionary keys are appname strings
- * and the value assigned to a key is a Tcl list containing two Tcl_IntObj
- * items whose integer values are, respectively, the pid of the process which
- * registered the interpreter and a currently unused void *.
+ * When running in an environment where user interaction is possible, i.e not
+ * on a CI runner, a registry of all interpreters owned by the current user is
+ * maintained in the file ~/Library/Caches/com.tcltk.appnames. The file
+ * contains the string representation of a TclDictObj.  The dictionary keys
+ * are appname strings and the value assigned to a key is a Tcl list
+ * containing two Tcl_IntObj items whose integer values are, respectively, the
+ * pid of the process which registered the interpreter and a currently unused
+ * void *.
+ *
+ * The static variable below is set for the case of a CI runner, to avoid
+ * panics when fopen fails.  When user interaction is available it will
+ * be reassigned to the path in the user's Library/Caches directory.
  */
 
-static char *appNameRegistryPath;
+static char *appNameRegistryPath = "/tmp/TkAppnames";
 
 /*
  * Information that we record about an application.
@@ -63,7 +69,7 @@ static AppInfo
 ObjToAppInfo(
     Tcl_Obj *value)
 {
-    AppInfo result = {0};
+    AppInfo result = {0, NULL};
     Tcl_Size objc;
     Tcl_Obj **objvPtr;
     static const char *failure = "AppName registry is corrupted.  Try deleting %s";
@@ -286,7 +292,7 @@ sendAEDoScript(
 	    status = AESizeOfParam(&reply, keyDirectObject, &actualType,
 				   &resultSize);
 	    CHECK2("AESizeOfParam")
-	    char *resultBuffer = ckalloc(resultSize + 1);
+	    char *resultBuffer = (char *)Tcl_Alloc(resultSize + 1);
 	    AEGetParamPtr(&reply, keyDirectObject, typeUTF8Text, &actualType,
 			  resultBuffer, resultSize, NULL);
 	    CHECK2("AEGetParamPtr")
@@ -297,7 +303,7 @@ sendAEDoScript(
 	    }
 
 	    result = TCL_OK;
-	    ckfree(resultBuffer);
+	    Tcl_Free(resultBuffer);
 	    AEDisposeDesc(&reply);
 	} else {
 	    // Get the error string.
@@ -305,7 +311,7 @@ sendAEDoScript(
 	    status = AESizeOfParam(&reply, keyErrorString,
 				   &actualType, &errorSize);
 	    CHECK2("AESizeOfParam")
-	    char *errorBuffer = ckalloc(errorSize + 1);
+	    char *errorBuffer = (char *)Tcl_Alloc(errorSize + 1);
 	    AEGetParamPtr(&reply, keyErrorString, typeUTF8Text, &actualType,
 			  errorBuffer, errorSize, NULL);
 	    CHECK2("AEGetParamPtr")
@@ -318,7 +324,7 @@ sendAEDoScript(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(errorBuffer,
 						      TCL_INDEX_NONE));
 	    result = TCL_ERROR;
-	    ckfree(errorBuffer);
+	    Tcl_Free(errorBuffer);
 	}
 	AEDisposeDesc(&reply);
     }
@@ -359,6 +365,10 @@ saveAppNameRegistry(
     Tcl_Obj *dict,
     const char *path)
 {
+    if (path == NULL) {
+	/* We are running in a CI runner */
+	return;
+    }
     Tcl_Size length, bytesWritten;
     /* Open the file ab+ to avoid truncating it before flocking it. */
     FILE *appNameFile = fopen(path, "ab+");
@@ -392,6 +402,10 @@ loadAppNameRegistry(
     size_t length, bytesRead;
     char *bytes = NULL;
     Tcl_Obj *result;
+    if (path == NULL) {
+	/* We are running in a CI runner. */
+	return NULL;
+    }
 
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
@@ -408,7 +422,7 @@ loadAppNameRegistry(
     fseek(appNameFile, 0, SEEK_END);
     length = ftell(appNameFile);
     if (length > 0) {
-	bytes = ckalloc(length);
+	bytes = (char *)Tcl_Alloc(length);
 	if (bytes) {
 	    fseek(appNameFile, 0, SEEK_SET);
 	    bytesRead = fread(bytes, 1, length, appNameFile);
@@ -426,7 +440,7 @@ loadAppNameRegistry(
 		length, bytesRead);
     }
     result = Tcl_NewStringObj(bytes, length);
-    ckfree(bytes);
+    Tcl_Free(bytes);
     /*
      * Convert the string object to a dict. If that fails the file
      * must be corrupt, so all we can do is return an empty dict.
@@ -459,18 +473,21 @@ loadAppNameRegistry(
 static int
 SendInit()
 {
+    if (getenv("CI")) {
+	return TCL_OK;
+    }
+
     /*
      * Intialize the path used for the appname registry.
      */
-
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(
 		 NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachesDirectory = [searchPaths objectAtIndex:0];
     NSString *RegistryPath = [cachesDirectory
 	stringByAppendingPathComponent:@"com.tcltk.appnames"];
     size_t length = 1 + strlen(RegistryPath.UTF8String);
-    appNameRegistryPath = ckalloc(length);
-    strlcpy(appNameRegistryPath, RegistryPath.UTF8String, length);
+    appNameRegistryPath = (char *)Tcl_Alloc(length);
+    strlcpy(appNameRegistryPath, (char *)RegistryPath.UTF8String, length);
     return TCL_OK;
 }
 
@@ -500,7 +517,7 @@ RegOpen(
 				 * needed anyway). */
 {
     NameRegistry *regPtr;
-    regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
+    regPtr = (NameRegistry *)Tcl_Alloc(sizeof(NameRegistry));
     regPtr->modified = 0;
 
     /*
@@ -521,7 +538,7 @@ RegOpen(
 
     Tcl_Size dictSize;
     Tcl_DictObjSize(NULL, regPtr->appNameDict, &dictSize);
-    Tcl_Obj **deadinterps = (Tcl_Obj**) ckalloc(dictSize * sizeof(Tcl_Obj*));
+    Tcl_Obj **deadinterps = (Tcl_Obj**) Tcl_Alloc(dictSize * sizeof(Tcl_Obj*));
     int count = 0;
     Tcl_DictSearch search;
     Tcl_Obj *key, *value;
@@ -538,7 +555,7 @@ RegOpen(
     for (i = 0; i < count; i++) {
 	Tcl_DictObjRemove(NULL, regPtr->appNameDict, deadinterps[i]);
     }
-    ckfree(deadinterps);
+    Tcl_Free(deadinterps);
     return regPtr;
 }
 
@@ -569,7 +586,7 @@ RegClose(
     if (regPtr->modified) {
 	saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
     }
-    ckfree(regPtr);
+    Tcl_Free(regPtr);
 }
 
 
@@ -601,7 +618,7 @@ RegFindName(
     Tcl_Obj *valuePtr = NULL, *keyPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     Tcl_DictObjGet(NULL, regPtr->appNameDict, keyPtr, &valuePtr);
     // Maybe using pid 0 as the default is a bad idea?
-    AppInfo resultTcl = {0};
+    AppInfo resultTcl = {0, NULL};
     if (valuePtr) {
 	resultTcl = ObjToAppInfo(valuePtr);
     }
@@ -690,9 +707,21 @@ RegAddName(
  *	will normally be the same as name, but if name was already in use for
  *	an application then a name of the form "name #2" will be chosen, with
  *	a high enough number to make the name unique.
+ *      
+ *      A crucial exception to the behavior described above arises when Tk is
+ *      being run on a Continuous Integration runner.  The file-based App
+ *      registry which is used to ensure uniqueness cannot be used on CI
+ *      runners because macOS will post a system privacy dialog requesting
+ *      permission to write files.  This causes Wish to hang, since it is not
+ *      possible to dismiss the dialog without user interaction.  We use the
+ *      environment variable CI to determine whether we are being run on a CI
+ *      runner.  If so, this command always returns the name provided as an
+ *      argument.  Note that this makes the command winfo interps ignore all
+ *      other interpreteters.
  *
  * Side effects:
- *	Registration info is saved, thereby allowing the "send" command to be
+ *	In normal usage (i.e. when interaction is possible) the app name is
+ *	saved in a registry file, thereby allowing the "send" command to be
  *	used later to invoke commands in the application. In addition, the
  *	"send" command is created in the application's interpreter. The
  *	registration will be removed automatically if the interpreter is
@@ -710,6 +739,9 @@ Tk_SetAppName(
 				 * interpreter in later "send" commands. Must
 				 * be globally unique. */
 {
+    if (getenv("CI")) {
+	return name;
+    }
     RegisteredInterp *riPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
     NameRegistry *regPtr;
@@ -737,7 +769,7 @@ Tk_SetAppName(
 	     * to the structure later.
 	     */
 
-	    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
+	    riPtr = (RegisteredInterp *)Tcl_Alloc(sizeof(RegisteredInterp));
 	    riPtr->interp = interp;
 	    riPtr->nextPtr = staticData.interpListPtr;
 	    staticData.interpListPtr = riPtr;
@@ -757,7 +789,7 @@ Tk_SetAppName(
 
 	    if (riPtr->name) {
 		RegDeleteName(regPtr, riPtr->name);
-		ckfree(riPtr->name);
+		Tcl_Free(riPtr->name);
 	    }
 	    break;
 	}
@@ -798,7 +830,7 @@ Tk_SetAppName(
 
     RegAddName(regPtr, actualName, None);
     RegClose(regPtr);
-    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
+    riPtr->name = (char *)Tcl_Alloc(strlen(actualName) + 1);
     strcpy(riPtr->name, actualName);
     if (actualName != name) {
 	Tcl_DStringFree(&dString);
@@ -1059,7 +1091,7 @@ void
 TkSendCleanup(
     TCL_UNUSED(TkDisplay *)) /* dispPtr */
 {
-	ckfree((char *) appNameRegistryPath);
+	Tcl_Free((char *)appNameRegistryPath);
 }
 
 
@@ -1102,7 +1134,7 @@ DeleteProc(
 	    }
 	}
     }
-    ckfree(riPtr->name);
+    Tcl_Free(riPtr->name);
     riPtr->interp = NULL;
     Tcl_EventuallyFree(riPtr, TCL_DYNAMIC);
 }

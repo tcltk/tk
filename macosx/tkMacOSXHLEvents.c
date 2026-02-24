@@ -468,7 +468,7 @@ static void ProcessAppleEvent(
 	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
 			  keyErrorNumber, typeSInt32, &code, 4);
 	    AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
-	    			  keyErrorString, typeUTF8Text, result, reslen);
+			  keyErrorString, typeUTF8Text, result, reslen);
 	}
     } else if (code != TCL_OK) {
 	Tcl_BackgroundException(AEInfo->interp, code);

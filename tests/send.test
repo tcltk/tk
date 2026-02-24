@@ -195,16 +195,16 @@ if {[testConstraint aqua]} {
     childTkProcess create
 }
 
-test send-6.1 {ServerSecure procedure} {nonPortable secureserver} {
+test send-6.1 {ServerSecure procedure} {nonPortable secureserver notAqua} {
     set a 44
     list [childTkProcess eval [list send [tk appname] set a 55]] $a
 } {55 55}
-test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost} {
+test send-6.2 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
     set a 22
     exec xhost [exec hostname]
     list [catch {childTkProcess eval [list send [tk appname] set a 33]} msg] $a $msg
 } {0 22 {X server insecure (must use xauth-style authorization); command ignored}}
-test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost} {
+test send-6.3 {ServerSecure procedure} {nonPortable secureserver xhost notAqua} {
     set a abc
     exec xhost - [exec hostname]
     list [childTkProcess eval [list send [tk appname] set a new]] $a
@@ -236,8 +236,8 @@ test send-7.4 {Tk_SetAppName procedure, name in use} {secureserver testsend} {
 } "{foo #4} {$commId foo #4\n$id foo\n$id foo #2\n$id foo #3\n}"
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.  So it is marked nonPortable.
-test send-8.1 {Tk_SendCmd procedure, options} {secureserver nonPortable} {
+# AppleScript cannot be enabled on the runner.
+test send-8.1 {Tk_SendCmd procedure, options} {secureserver notMacCI} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set a 66
@@ -385,8 +385,8 @@ if {[testConstraint aqua]} {
 }
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.  So it is marked nonPortable.
-test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver nonPortable} {
+# AppleScript cannot be enabled on the runner.
+test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver notMacCI} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set result [string tolower [list [catch {send $app open bad_name} msg] \
@@ -395,20 +395,31 @@ test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver nonPort
     set result
 } $result_8_18
 
-# This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.  So it is marked nonPortable.
-test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver nonPortable} {
+# This passes on real macOS systems but fails on macOS CI runners
+# because AppleScript cannot be enabled on the runner.  However, on
+# real macOS systems it produces a different result than on X11
+# because the event loop is re-entered when running the send command
+# on macOS.
+
+if {[tk windowingsystem] eq "aqua"} {
+    set result_8_19 {{x y z} yes yes}
+} else {
+    set result_8_19 {{x y z} no yes}
+}
+
+test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver notMacCI} {
     childTkProcess create
     set app [childTkProcess eval {tk appname}]
     set x no
     set result ""
     after 0 {set x yes}
+    # On X11 the after 0 command runs after these calls.
     lappend result [send $app {concat x y z}]
     lappend result $x
     update
     childTkProcess exit
     lappend result $x
-} {{x y z} no yes}
+} $result_8_19
 
 #
 # COMMON TEST SETUP
@@ -694,8 +705,8 @@ test send-15.1 {UpdateCommWindow procedure} {secureserver testsend} {
 } {tktest {t_s_2 t_s_1 tktest} {t_s_2 tktest} tktest}
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.  So it is marked nonPortable.
-test send-16.1 {set variable - app in child interpreter} nonPortable {
+# AppleScript cannot be enabled on the runner.
+test send-16.1 {set variable - app in child interpreter} {unix notMacCI} {
     set a "a"
     childTkInterp t_s_1 -class Test
     set app [t_s_1 eval {tk appname}]
@@ -709,8 +720,8 @@ test send-16.1 {set variable - app in child interpreter} nonPortable {
 } {{can't read "a": no such variable} 25 a}
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.  So it is marked nonPortable.
-test send-16.2 {recursive send - app in child process} nonPortable {
+# AppleScript cannot be enabled on the runner.
+test send-16.2 {recursive send - app in child process} {unix notMacCI} {
     childTkProcess create
     set a no
     set this [tk appname]
@@ -721,8 +732,8 @@ test send-16.2 {recursive send - app in child process} nonPortable {
 } {yes}
 
 # This passes on real macOS systems but fails on macOS CI runners because
-# AppleScript is not enabled on the runner.  So it is marked nonPortable.
-test send-17.1 {set variable - app in child process} nonPortable {
+# AppleScript cannot be enabled on the runner.
+test send-17.1 {set variable - app in child process} {unix notMacCI} {
     set a "a"
     childTkProcess create
     set app [childTkProcess eval {tk appname}]

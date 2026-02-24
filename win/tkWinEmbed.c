@@ -962,7 +962,7 @@ Tk_GetEmbeddedHWnd(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GetEmbeddedMenuHWND --
+ * TkGetEmbeddedMenuHWND --
  *
  *	This function returns the embedded menu window id.
  *
@@ -977,7 +977,7 @@ Tk_GetEmbeddedHWnd(
  */
 
 HWND
-Tk_GetEmbeddedMenuHWND(
+TkGetEmbeddedMenuHWND(
     Tk_Window tkwin)
 {
     TkWindow *winPtr = (TkWindow*)tkwin;
