@@ -578,20 +578,6 @@ MODULE_SCOPE void TkGlfwErrorCallback(int error, const char *description);
 
 /* Creation / destruction. */
 
-MODULE_SCOPE Window XCreateWindow(
-    Display            *display,
-    Window              parent,
-    int                 x,
-    int                 y,
-    unsigned int        width,
-    unsigned int        height,
-    unsigned int        border_width,
-    int                 depth,
-    unsigned int        class_type,
-    Visual             *visual,
-    unsigned long       valuemask,
-    XSetWindowAttributes *attributes);
-
 MODULE_SCOPE Window XCreateSimpleWindow(
     Display     *display,
     Window       parent,
@@ -603,96 +589,19 @@ MODULE_SCOPE Window XCreateSimpleWindow(
     unsigned long border,
     unsigned long background);
 
-MODULE_SCOPE int XDestroyWindow(Display *display, Window window);
 MODULE_SCOPE int XDestroySubwindows(Display *display, Window window);
 
 /* Mapping / visibility. */
 
-MODULE_SCOPE int XMapWindow(Display *display, Window window);
 MODULE_SCOPE int XMapRaised(Display *display, Window window);
 MODULE_SCOPE int XMapSubwindows(Display *display, Window window);
-MODULE_SCOPE int XUnmapWindow(Display *display, Window window);
 MODULE_SCOPE int XUnmapSubwindows(Display *display, Window window);
-
-/* Configuration. */
-
-MODULE_SCOPE int XResizeWindow(
-    Display     *display,
-    Window       window,
-    unsigned int width,
-    unsigned int height);
-
-MODULE_SCOPE int XMoveWindow(
-    Display *display,
-    Window   window,
-    int      x,
-    int      y);
-
-MODULE_SCOPE int XMoveResizeWindow(
-    Display     *display,
-    Window       window,
-    int          x,
-    int          y,
-    unsigned int width,
-    unsigned int height);
-
-MODULE_SCOPE int XConfigureWindow(
-    Display         *display,
-    Window           window,
-    unsigned int     value_mask,
-    XWindowChanges  *values);
-
-MODULE_SCOPE int XSetWindowBorderWidth(
-    Display     *display,
-    Window       window,
-    unsigned int width);
-
-/* Stacking order. */
-
-MODULE_SCOPE int XRaiseWindow(Display *display, Window window);
-MODULE_SCOPE int XLowerWindow(Display *display, Window window);
 MODULE_SCOPE int XCirculateSubwindowsUp(Display *display, Window window);
 MODULE_SCOPE int XCirculateSubwindowsDown(Display *display, Window window);
 MODULE_SCOPE int XRestackWindows(
     Display *display,
     Window  *windows,
     int      nwindows);
-
-/* Window attributes. */
-
-MODULE_SCOPE int XChangeWindowAttributes(
-    Display              *display,
-    Window                window,
-    unsigned long         valuemask,
-    XSetWindowAttributes *attributes);
-
-MODULE_SCOPE int XSetWindowBackground(
-    Display      *display,
-    Window        window,
-    unsigned long background);
-
-MODULE_SCOPE int XSetWindowBackgroundPixmap(
-    Display *display,
-    Window   window,
-    Pixmap   background_pixmap);
-
-MODULE_SCOPE int XSetWindowBorder(
-    Display      *display,
-    Window        window,
-    unsigned long border_pixel);
-
-MODULE_SCOPE int XSetWindowBorderPixmap(
-    Display *display,
-    Window   window,
-    Pixmap   border_pixmap);
-
-/* Focus. */
-
-MODULE_SCOPE int XSetInputFocus(
-    Display *display,
-    Window   focus,
-    int      revert_to,
-    Time     time);
 
 /* ICCCM text properties. */
 
@@ -705,58 +614,6 @@ MODULE_SCOPE void XSetWMIconName(
     Display      *display,
     Window        window,
     XTextProperty *text_prop);
-
-/*
- *----------------------------------------------------------------------
- *
- * GC / Pixmap Xlib Wrappers
- *
- *	These wrap the canonical TkWayland* implementations so that
- *	Xlib-style call sites continue to work unchanged.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE GC  XCreateGC(
-    Display      *display,
-    Drawable      d,
-    unsigned long valuemask,
-    XGCValues    *values);
-
-MODULE_SCOPE int XFreeGC(Display *display, GC gc);
-MODULE_SCOPE int XSetForeground(Display *display, GC gc, unsigned long fg);
-MODULE_SCOPE int XSetBackground(Display *display, GC gc, unsigned long bg);
-MODULE_SCOPE int XSetLineAttributes(
-    Display     *display,
-    GC           gc,
-    unsigned int line_width,
-    int          line_style,
-    int          cap_style,
-    int          join_style);
-MODULE_SCOPE int XGetGCValues(
-    Display      *display,
-    GC            gc,
-    unsigned long valuemask,
-    XGCValues    *values);
-MODULE_SCOPE int XChangeGC(
-    Display      *display,
-    GC            gc,
-    unsigned long valuemask,
-    XGCValues    *values);
-MODULE_SCOPE int XCopyGC(
-    Display      *display,
-    GC            src,
-    unsigned long valuemask,
-    GC            dst);
-
-MODULE_SCOPE Pixmap XCreatePixmap(
-    Display     *display,
-    Drawable     d,
-    unsigned int width,
-    unsigned int height,
-    unsigned int depth);
-
-MODULE_SCOPE int XFreePixmap(Display *display, Pixmap pixmap);
 
 /*
  *----------------------------------------------------------------------

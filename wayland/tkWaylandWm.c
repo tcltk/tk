@@ -3392,7 +3392,7 @@ TkpSetMainMenubar(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
 	      TkWindow *winPtr,
 	      int       state)
@@ -3400,7 +3400,7 @@ TkpWmSetState(
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     wmPtr->initialState = state;
     if (wmPtr->flags & WM_NEVER_MAPPED) {
-	return 1;
+	return true;
     }
     
 
@@ -3429,7 +3429,7 @@ TkpWmSetState(
         }
         WaitForMapNotify(winPtr, 0);
     }
-    return 1;
+    return true;
 }
 
 
