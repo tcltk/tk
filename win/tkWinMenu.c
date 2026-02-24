@@ -1148,7 +1148,7 @@ TkWinEmbeddedMenuProc(
  *	WM_DRAWITEM
  *
  * Result:
- *	Returns true if this handled the message; false if it did not.
+ *	Returns 1 if this handled the message; 0 if it did not.
  *
  * Side effects:
  *	All of the parameters may be modified so that the caller can think it
@@ -1158,7 +1158,7 @@ TkWinEmbeddedMenuProc(
  *----------------------------------------------------------------------
  */
 
-bool
+int
 TkWinHandleMenuEvent(
     TCL_UNUSED(HWND *),
     UINT *pMessage,
@@ -1167,7 +1167,7 @@ TkWinHandleMenuEvent(
     LRESULT *plResult)
 {
     Tcl_HashEntry *hashEntryPtr;
-    bool returnResult = false;
+    int returnResult = 0;
     TkMenu *menuPtr;
     TkMenuEntry *mePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -1212,7 +1212,7 @@ TkWinHandleMenuEvent(
 	    }
 	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	    *plResult = 0;
-	    returnResult = true;
+	    returnResult = 1;
 	} else {
 	    tsdPtr->modalMenuPtr = NULL;
 	}
@@ -1271,7 +1271,7 @@ TkWinHandleMenuEvent(
 	    Tcl_Release(menuPtr);
 	    Tcl_Release(interp);
 	    *plResult = 0;
-	    returnResult = true;
+	    returnResult = 1;
 	}
 	break;
 
@@ -1310,7 +1310,7 @@ TkWinHandleMenuEvent(
 		    if ((underline < len) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
-			returnResult = true;
+			returnResult = 1;
 			break;
 		    }
 		}
@@ -1340,7 +1340,7 @@ TkWinHandleMenuEvent(
 		itemPtr->itemWidth += 2 * activeBorderWidth;
 	    }
 	    *plResult = 1;
-	    returnResult = true;
+	    returnResult = 1;
 	}
 	break;
     }
@@ -1400,12 +1400,12 @@ TkWinHandleMenuEvent(
 		    itemPtr->rcItem.left, itemPtr->rcItem.top,
 		    itemPtr->rcItem.right - itemPtr->rcItem.left,
 		    itemPtr->rcItem.bottom - itemPtr->rcItem.top,
-		    false, drawingParameters);
+		    0, drawingParameters);
 
 	    Tcl_Free(twdPtr);
 	}
 	*plResult = 1;
-	returnResult = true;
+	returnResult = 1;
 	break;
     }
 
@@ -1466,7 +1466,7 @@ TkWinHandleMenuEvent(
 		MenuSelectEvent(menuPtr);
 		Tcl_ServiceAll();
 		*plResult = 0;
-		returnResult = true;
+		returnResult = 1;
 	    }
 	}
 	break;
@@ -2663,7 +2663,7 @@ TkpDrawMenuEntry(
     int y,			/* Y-coordinate of topleft of entry */
     int width,			/* Width of the entry rectangle */
     int height,			/* Height of the current rectangle */
-    bool strictMotif,		/* Boolean flag */
+    int strictMotif,		/* Boolean flag */
     int drawingParameters)	/* Whether or not to draw the cascade arrow
 				 * for cascade items and accelerator
 				 * cues. */

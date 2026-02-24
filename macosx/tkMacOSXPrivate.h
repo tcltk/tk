@@ -243,7 +243,6 @@ MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
 			    int antiAlias);
 MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
-MODULE_SCOPE bool	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect dstBounds);
