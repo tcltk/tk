@@ -286,12 +286,18 @@ TkGlfwCreateWindow(
     if (height <= 0) height = 200;
 	
 	/* Configure decoration hints BEFORE creating window. */ 
-	TkWaylandConfigureWindowDecorations();
+    TkWaylandConfigureWindowDecorations();
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow(width, height, title ? title : "",
                                NULL, glfwContext.mainWindow);
+
+	/* If client-side decorations are needed, draw them now. */                               
+    if (TkWaylandShouldUseCSD() == 1) {                        
+		TkWaylandDecoration *decoration = TkWaylandCreateDecoration(tkWin, window);
+	}
+	
 	if (window) {
 		/* Initial event pump to ensure window is properly initialized */
 		glfwPollEvents();

@@ -117,10 +117,15 @@ static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 			  TkWindow *winPtr);
 static void WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
+
 /* External window decoration functions. */
 extern TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
 extern void TkWaylandSetDecorationTitle(TkWaylandDecoration *decor, const char *title);
 extern void TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized);
+extern void TkWaylandConfigureWindowDecorations(void);
+extern int TkWaylandShouldUseCSD(void);
+extern TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
+
 
 /* wm sub-command handlers. */
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -693,7 +698,10 @@ Tk_MakeWindow(
 
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
 					Tk_Name(tkwin), &drawable);
-                                       
+		/* If client-side decorations are needed, draw them now. */                               
+		if (TkWaylandShouldUseCSD() == 1) {                        
+			TkWaylandDecoration *decoration = TkWaylandCreateDecoration(winPtr, glfwWindow);
+		}                                       
 
         if (glfwWindow == NULL) {
             return None;
