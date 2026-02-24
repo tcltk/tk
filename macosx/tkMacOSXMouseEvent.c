@@ -28,8 +28,6 @@ typedef struct {
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
-static int		GenerateButtonEvent(MouseEventData *medPtr);
-
 #pragma mark TKApplication(TKMouseEvent)
 
 enum {
@@ -684,28 +682,45 @@ XQueryPointer(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenerateButtonEventForXPointer --
+ * TkpWarpPointer --
  *
- *	This procedure generates an X button event for the current pointer
- *	state as reported by XQueryPointer().
+ *	Move the mouse cursor to the screen location specified by the warpX and
+ *	warpY fields of a TkDisplay.
  *
  * Results:
- *	True if event(s) are generated - false otherwise.
+ *	None
  *
  * Side effects:
- *	Additional events may be placed on the Tk event queue. Grab state may
- *	also change.
+ *	The mouse cursor is moved.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
-TkGenerateButtonEventForXPointer(
-    Window window)		/* X Window containing button event. */
+void
+TkpWarpPointer(
+    TkDisplay *dispPtr)
 {
+    CGPoint pt;
+    Window window;
+    Tk_Window tkwin;
+    int dummy;
+    TkDisplay *dispPtr;
     MouseEventData med;
     int global_x, global_y, local_x, local_y;
 
+    if (dispPtr->warpWindow) {
+	int x, y;
+	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
+	pt.x = x + dispPtr->warpX;
+	pt.y = y + dispPtr->warpY;
+	window = Tk_WindowId(dispPtr->warpWindow);
+    } else {
+	pt.x = dispPtr->warpX;
+	pt.y = dispPtr->warpY;
+	window = None;
+    }
+
+    CGWarpMouseCursorPosition(pt);
     bzero(&med, sizeof(MouseEventData));
     XQueryPointer(NULL, window, NULL, NULL, &global_x, &global_y,
 	    &local_x, &local_y, &med.state);
@@ -714,35 +729,6 @@ TkGenerateButtonEventForXPointer(
     med.local.h = local_x;
     med.local.v = local_y;
     med.window = window;
-
-    return GenerateButtonEvent(&med);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GenerateButtonEvent --
- *
- *	Generate an X button event from a MouseEventData structure. Handles
- *	the state changes needed to implement implicit grabs.
- *
- * Results:
- *	True if event(s) are generated - false otherwise.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue. Grab state may
- *	also change.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-GenerateButtonEvent(
-    MouseEventData *medPtr)
-{
-    Tk_Window tkwin;
-    int dummy;
-    TkDisplay *dispPtr;
 
 #ifdef UNUSED
 
@@ -769,49 +755,6 @@ GenerateButtonEvent(
 		&dummy, &dummy);
     }
     Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
-    return true;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWarpPointer --
- *
- *	Move the mouse cursor to the screen location specified by the warpX and
- *	warpY fields of a TkDisplay.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	The mouse cursor is moved.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpWarpPointer(
-    TkDisplay *dispPtr)
-{
-    CGPoint pt;
-
-    if (dispPtr->warpWindow) {
-	int x, y;
-	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
-	pt.x = x + dispPtr->warpX;
-	pt.y = y + dispPtr->warpY;
-    } else {
-	pt.x = dispPtr->warpX;
-	pt.y = dispPtr->warpY;
-    }
-
-    CGWarpMouseCursorPosition(pt);
-
-    if (dispPtr->warpWindow) {
-	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
-    } else {
-	TkGenerateButtonEventForXPointer(None);
-    }
 }
 
 /*
