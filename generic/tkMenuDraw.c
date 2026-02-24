@@ -668,7 +668,7 @@ DisplayMenu(
 
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
 		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
-		mePtr->height, strictMotif, 1);
+		mePtr->height, strictMotif? DRAW_MENU_ENTRY_STRICTMOTIF : DRAW_MENU_ENTRY_DEFAULT);
 
 	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
 
