@@ -154,6 +154,7 @@ TkGlfwInitialize(void)
 	
 	#ifdef GLFW_PLATFORM_WAYLAND
 		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+		glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
 	#endif
 	
 	if (!glfwInit()) {
