@@ -674,8 +674,8 @@ TkWmCleanup(
 
 Window
 Tk_MakeWindow(
-	      Tk_Window tkwin,
-	      TCL_UNUSED(Window))         /* parent – ignored for toplevels */
+    Tk_Window tkwin,
+    TCL_UNUSED(Window))        /* parent – ignored for toplevels */
 {
     TkWindow  *winPtr     = (TkWindow *)tkwin;
     TkWindow  *parentPtr;
@@ -686,37 +686,28 @@ Tk_MakeWindow(
 
     if (winPtr->parentPtr == NULL) {
         /*
-         * Toplevel: create a new GLFW window via the native API.
-         * This sets the GLFW user pointer to the WindowMapping*.
+         * Toplevel: create a new GLFW window via TkGlfwCreateWindow.
+         * Decorations and mapping are handled inside that function.
          */
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
-        
-        /* Set basic window hints for proper initial state. */
-        glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
-        glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
-					Tk_Name(tkwin), &drawable);
-		/* If client-side decorations are needed, draw them now. */                               
-		if (TkWaylandShouldUseCSD() == 1) {                        
-			TkWaylandDecoration *decoration = TkWaylandCreateDecoration(winPtr, glfwWindow);
-		}                                       
-
-        if (glfwWindow == NULL) {
+                                        Tk_Name(tkwin), &drawable);
+        if (!glfwWindow) {
             return None;
         }
 
         /* Store window handle. */
         window = (Window)glfwWindow;
         winPtr->window = window;
-        
-        /* Ensure WmInfo exists and is properly initialized. */
+
+        /* Ensure WmInfo exists. */
         if (winPtr->wmInfoPtr == NULL) {
             TkWmNewWindow(winPtr);
         }
-        
-        /* Mark that window exists but hasn't been mapped yet. */
+
+        /* Mark window as never mapped yet. */
         WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
         if (wmPtr) {
             wmPtr->glfwWindow = glfwWindow;
@@ -725,24 +716,20 @@ Tk_MakeWindow(
 
     } else {
         /*
-         * Child window: share the parent's rendering context.
-         * Walk up to the toplevel to borrow its window ID.
+         * Child window: share parent's rendering context.
+         * Generate a unique ID derived from pathName and toplevel window.
          */
         parentPtr = winPtr->parentPtr;
         while (parentPtr->parentPtr != NULL) {
             parentPtr = parentPtr->parentPtr;
         }
 
-        /* Generate a unique child ID by hashing pathName against the
-         * toplevel window ID. pathName is always set for real TkWindows. */
-        {
-            const char *p;
-            Window      hash = 0;
-            for (p = winPtr->pathName; *p; p++) {
-                hash = hash * 131u + (unsigned char)*p;
-            }
-            window = parentPtr->window ^ hash;
+        const char *p;
+        Window hash = 0;
+        for (p = winPtr->pathName; *p; p++) {
+            hash = hash * 131u + (unsigned char)*p;
         }
+        window = parentPtr->window ^ hash;
         if (window == parentPtr->window || window == None) {
             window = parentPtr->window + 1;
         }
@@ -751,7 +738,6 @@ Tk_MakeWindow(
 
     return window;
 }
-
 /*
  *----------------------------------------------------------------------
  *

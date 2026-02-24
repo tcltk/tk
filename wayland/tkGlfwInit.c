@@ -263,6 +263,7 @@ TkGlfwCreateWindow(
 {
     WindowMapping *mapping;
     GLFWwindow    *window;
+    TkWaylandDecoration *decoration = NULL;
 
     if (!glfwContext.initialized) {
         if (TkGlfwInitialize() != TCL_OK) {
@@ -270,44 +271,43 @@ TkGlfwCreateWindow(
         }
     }
 
-    /* Re-use an existing mapping for this TkWindow if present. */
+    /* Reuse existing mapping if available. */
     if (tkWin != NULL) {
         mapping = FindMappingByTk(tkWin);
         if (mapping != NULL) {
-            if (drawableOut) {
-                *drawableOut = mapping->drawable;
-            }
+            if (drawableOut) *drawableOut = mapping->drawable;
             return mapping->glfwWindow;
         }
     }
 
-    /* Ensure sensible minimum dimensions. */
+    /* Minimum sensible dimensions. */
     if (width  <= 0) width  = 200;
     if (height <= 0) height = 200;
-	
-	/* Configure decoration hints BEFORE creating window. */ 
+
+    /* Configure window decoration mode before creation. */
     TkWaylandConfigureWindowDecorations();
 
-    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    /* Create hidden window first so we can decorate it before mapping. */
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    window = glfwCreateWindow(width, height, title ? title : "",
-                               NULL, glfwContext.mainWindow);
+    glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
 
-	/* If client-side decorations are needed, draw them now. */                               
-    if (TkWaylandShouldUseCSD() == 1) {                        
-		TkWaylandDecoration *decoration = TkWaylandCreateDecoration(tkWin, window);
-	}
-	
-	if (window) {
-		/* Initial event pump to ensure window is properly initialized */
-		glfwPollEvents();
-	} 
-	                          
+    window = glfwCreateWindow(width, height, title ? title : "", NULL, glfwContext.mainWindow);
     if (!window) {
         fprintf(stderr, "TkGlfwCreateWindow: glfwCreateWindow failed\n");
         return NULL;
     }
 
+    /* Create client-side decorations BEFORE showing the window */
+    if (TkWaylandShouldUseCSD() && tkWin != NULL) {
+        decoration = TkWaylandCreateDecoration(tkWin, window);
+    }
+
+    /* Now show the window, it will include decorations. */
+    glfwShowWindow(window);
+
+    /* Set up the mapping. */
     mapping               = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     mapping->tkWindow     = tkWin;
     mapping->glfwWindow   = window;
@@ -315,21 +315,22 @@ TkGlfwCreateWindow(
     mapping->width        = width;
     mapping->height       = height;
     mapping->nextPtr      = windowMappingList;
+    mapping->decoration   = decoration;
     windowMappingList     = mapping;
 
     glfwSetWindowUserPointer(window, mapping);
 
+    /* Setup callbacks after window and decorations exist. */
     if (tkWin != NULL) {
-		/* Set up mouse event callbacks for decorations.  */
-		glfwSetMouseButtonCallback(window, TkWaylandHandleMouseButton); 
-		glfwSetCursorPosCallback(window, TkWaylandHandleMouseMove);
-		/* Set up other callbacks for client area of window. */
+        glfwSetMouseButtonCallback(window, TkWaylandHandleMouseButton); 
+        glfwSetCursorPosCallback(window, TkWaylandHandleMouseMove);
         TkGlfwSetupCallbacks(window, tkWin);
     }
 
-    if (drawableOut) {
-        *drawableOut = mapping->drawable;
-    }
+    if (drawableOut) *drawableOut = mapping->drawable;
+
+    /* Initial event pump to ensure window is properly initialized .*/
+    glfwPollEvents();
 
     return window;
 }
