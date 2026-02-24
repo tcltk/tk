@@ -1424,8 +1424,8 @@ PolygonToPoint(
 	    TkGetButtPoints(coordPtr, coordPtr+2, (double) width, 0, poly+4,
 		    poly+6);
 	} else if (polyPtr->joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
-		    (double) width, poly+4, poly+6) == 0) {
+	    if (!TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
+		    (double) width, poly+4, poly+6)) {
 		changedMiterToBevel = 1;
 		TkGetButtPoints(coordPtr, coordPtr+2, (double) width, 0,
 			poly+4, poly+6);
@@ -1622,8 +1622,8 @@ PolygonToArea(
 	if (count == 2) {
 	    TkGetButtPoints(coordPtr, coordPtr+2, width, 0, poly+4, poly+6);
 	} else if (polyPtr->joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4, width,
-		    poly+4, poly+6) == 0) {
+	    if (!TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4, width,
+		    poly+4, poly+6)) {
 		changedMiterToBevel = 1;
 		TkGetButtPoints(coordPtr, coordPtr+2, width,0, poly+4, poly+6);
 	    }

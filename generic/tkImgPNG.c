@@ -155,7 +155,7 @@ typedef struct {
      */
 
     int paletteLen;		/* Number of PLTE entries (1..256). */
-    int useTRNS;		/* Flag to indicate whether there was a
+    bool useTRNS;		/* Flag to indicate whether there was a
 				 * palette given. */
     struct {
 	unsigned char red;
@@ -1267,7 +1267,7 @@ ReadIHDR(
     Tcl_Size chunkSz;
     unsigned long crc;
     unsigned long width, height;
-    int mismatch;
+    bool mismatch;
 
     /*
      * Read the appropriate number of bytes for the PNG signature.
@@ -1281,7 +1281,7 @@ ReadIHDR(
      * Compare the read bytes to the expected signature.
      */
 
-    mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ);
+    mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ) != 0;
 
     /*
      * If reading from string, reset position and try base64 decode.
@@ -1296,7 +1296,7 @@ ReadIHDR(
 	    return TCL_ERROR;
 	}
 
-	mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ);
+	mismatch = memcmp(sigBuf, pngSignature, PNG_SIG_SZ) != 0;
     }
 
     if (mismatch) {
@@ -1630,7 +1630,7 @@ ReadTRNS(
 	} else {
 	    pngPtr->transVal[0] = buffer[1];
 	}
-	pngPtr->useTRNS = 1;
+	pngPtr->useTRNS = true;
 	break;
 
     case PNG_COLOR_RGB:
@@ -1658,7 +1658,7 @@ ReadTRNS(
 	    pngPtr->transVal[1] = buffer[3];
 	    pngPtr->transVal[2] = buffer[5];
 	}
-	pngPtr->useTRNS = 1;
+	pngPtr->useTRNS = true;
 	break;
     }
 

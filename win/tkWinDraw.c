@@ -1412,9 +1412,9 @@ SetUpGraphicsPort(
  *	region.
  *
  * Results:
- *	Returns 0 if the scroll genereated no additional damage. Otherwise,
+ *	Returns false if the scroll genereated no additional damage. Otherwise,
  *	sets the region that needs to be repainted after scrolling and returns
- *	1.
+ *	true.
  *
  * Side effects:
  *	Scrolls the bits in the window.
@@ -1422,7 +1422,7 @@ SetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
     TCL_UNUSED(GC),			/* GC for window to be scrolled. */
@@ -1439,7 +1439,7 @@ TkScrollWindow(
     scrollRect.right = x + width;
     scrollRect.bottom = y + height;
     return (ScrollWindowEx(hwnd, dx, dy, &scrollRect, NULL, (HRGN) damageRgn,
-	    NULL, 0) == NULLREGION) ? 0 : 1;
+	    NULL, 0) != NULLREGION);
 }
 
 /*
