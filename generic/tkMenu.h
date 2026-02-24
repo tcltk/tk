@@ -44,12 +44,16 @@ enum compound {
  * itself when cascade entry is disabled.
  * DRAW_MENU_ENTRY_NOUNDERLINE forbids underline when ODS_NOACCEL
  * is set, thus obeying the system-wide Windows UI setting.
+ * Additional menu entry drawing parameter for UNIX platform.
+ * DRAW_MENU_ENTRY_STRICTMOTIF.
  */
 
-enum drawingParameters {
+typedef enum {
+    DRAW_MENU_ENTRY_DEFAULT = (0),
     DRAW_MENU_ENTRY_ARROW = (1<<0),
-    DRAW_MENU_ENTRY_NOUNDERLINE = (1<<1)
-};
+    DRAW_MENU_ENTRY_NOUNDERLINE = (1<<1),
+    DRAW_MENU_ENTRY_STRICTMOTIF = (1<<2)
+} DrawMenuFlags;
 
 /*
  * One of the following data structures is kept for each entry of each menu
@@ -534,8 +538,8 @@ MODULE_SCOPE void	TkpDestroyMenuEntry(TkMenuEntry *mEntryPtr);
 MODULE_SCOPE void	TkpDrawMenuEntry(TkMenuEntry *mePtr,
 			    Drawable d, Tk_Font tkfont,
 			    const Tk_FontMetrics *menuMetricsPtr, int x,
-			    int y, int width, int height, bool strictMotif,
-			    int drawingParameters);
+			    int y, int width, int height,
+			    DrawMenuFlags drawingParameters);
 MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);

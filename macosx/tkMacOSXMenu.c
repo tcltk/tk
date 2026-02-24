@@ -1897,9 +1897,7 @@ TkpDrawMenuEntry(
     TCL_UNUSED(int),			/* Y-coordinate of topleft of entry */
     TCL_UNUSED(int),			/* Width of the entry rectangle */
     TCL_UNUSED(int),			/* Height of the current rectangle */
-    TCL_UNUSED(bool),		/* Boolean flag */
-    TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
-				 * for cascade items. */
+    TCL_UNUSED(DrawMenuFlags))		/* flags */
 {
 }
 
