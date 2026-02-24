@@ -188,7 +188,7 @@ typedef enum {
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandDecoration - client-side decoration. 
+ * TkWaylandDecoration - client-side decoration structure and functions. 
  *
  *----------------------------------------------------------------------
  */
@@ -211,8 +211,17 @@ typedef struct TkWaylandDecoration {
     int resizeStartWidth, resizeStartHeight;
 } TkWaylandDecoration;
 
-
-
+TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
+void TkWaylandSetDecorationTitle(TkWaylandDecoration *decor, const char *title);
+void TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized);
+void TkWaylandConfigureWindowDecorations(void);
+int TkWaylandShouldUseCSD(void);
+TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
+void TkWaylandInitDecorationPolicy(Tcl_Interp *interp); 
+TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
+void TkWaylandDestroyDecoration(TkWaylandDecoration *decor); 
+TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
+void TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg);
 /*
  *----------------------------------------------------------------------
  *

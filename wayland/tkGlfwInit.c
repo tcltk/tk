@@ -567,13 +567,23 @@ TkGlfwBeginDraw(
  */
 
 MODULE_SCOPE void
-TkGlfwEndDraw(
-    TkWaylandDrawingContext *dcPtr)
+TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) {
         return;
     }
 
+    if (dcPtr->glfwWindow) {
+        WindowMapping *mapping =
+            (WindowMapping *)glfwGetWindowUserPointer(dcPtr->glfwWindow);
+
+        /* Draw window decoration in same frame. */
+        if (mapping && mapping->decoration) {
+            TkWaylandDrawDecoration(mapping->decoration, dcPtr->vg);
+        }
+    }
+
+    /* End the single NanoVG frame */
     nvgEndFrame(dcPtr->vg);
 
     if (dcPtr->glfwWindow) {

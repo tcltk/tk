@@ -97,6 +97,7 @@ TkWaylandDetectServerDecorations(void)
 	}
     }
 
+	fprintf(stderr, "checking");
     ssdAvailable = 0;
     return 0;
 }
@@ -977,7 +978,8 @@ TkWaylandGetDecorationContentArea(TkWaylandDecoration *decor,
 
 
 /*
- * kWaylandInitDecorationPolicy --
+ *----------------------------------------------------------------------
+ * TkWaylandInitDecorationPolicy --
  *
  *	Initialize the Wayland decoration system. Detects compositor
  *	capabilities, and sets policy from environment.
@@ -987,6 +989,8 @@ TkWaylandGetDecorationContentArea(TkWaylandDecoration *decor,
  *
  * Side effects:
  *	Detects SSD availability, and sets decoration mode.
+ *  
+ *----------------------------------------------------------------------
  */
 
 void
@@ -1002,7 +1006,6 @@ TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
     if (decorEnv != NULL) {
         TkWaylandSetDecorationMode(decorEnv);
     }
-    
 }
 
 
