@@ -1605,37 +1605,7 @@ TkpMenuThreadInit(void)
 { 
     /* Nothing to do on Wayland. */ 
 } 
-/*
- * --------------------------------------------------------------------------------
- * TkpDrawCheckIndicator –
- *
- *     Legacy hook to draw check indicators.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     No-op; indicators are drawn in DrawMenuEntryIndicator.
- * --------------------------------------------------------------------------------
- */
 
-void 
-TkpDrawCheckIndicator( 
-		      TCL_UNUSED(Tk_Window), /* tkwin */
-		      TCL_UNUSED(Display *), /* display */
-		      TCL_UNUSED(Drawable), /* d */
-		      TCL_UNUSED(int), /* x */
-		      TCL_UNUSED(int), /* y */
-		      TCL_UNUSED(Tk_3DBorder), /* border */
-		      TCL_UNUSED(XColor *), /* fg */
-		      TCL_UNUSED(XColor *), /* bg */
-		      TCL_UNUSED(XColor *), /* active */
-		      TCL_UNUSED(int), /* on */
-		      TCL_UNUSED(int), /* disabled */
-		      TCL_UNUSED(int)) /* mode */
-{ 
-    /* Already handled in DrawMenuEntryIndicator. */ 
-}
 
 /*
  *----------------------------------------------------------------------
