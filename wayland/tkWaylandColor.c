@@ -259,8 +259,7 @@ DeleteStressedCmap(
  *
  *----------------------------------------------------------------------
  */
-
-int
+bool
 TkpCmapStressed(
     Tk_Window tkwin,
     Colormap colormap)          /* Colormap to check (unsigned long) */
@@ -269,16 +268,16 @@ TkpCmapStressed(
     TkStressedCmap *stressPtr;
 
     if (dispPtr == NULL) {
-        return 0;
+        return false;
     }
 
     for (stressPtr = dispPtr->stressPtr; stressPtr != NULL;
          stressPtr = stressPtr->nextPtr) {
         if (stressPtr->colormap == (void *)colormap) {
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 /*

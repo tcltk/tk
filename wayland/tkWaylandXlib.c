@@ -1257,12 +1257,12 @@ TkpScanWindowId(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkUnixDoOneXEvent(
     TCL_UNUSED(Tcl_Time *))  /* timePtr */
 {
     /* No-op. */
-    return 0;
+    return false;
 }
 
 /*
