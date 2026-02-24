@@ -41,7 +41,7 @@ MODULE_SCOPE const char *Ttk_StyleName(Ttk_Style);
 
 MODULE_SCOPE void TtkSetBlinkCursorTimes(Tcl_Interp* interp);
 
-MODULE_SCOPE int TtkBoxEqual(Ttk_Box, Ttk_Box);
+MODULE_SCOPE bool TtkBoxEqual(Ttk_Box, Ttk_Box);
 
 #define TTK_OPTION_UNDERLINE_DEF(type, field) NULL, offsetof(type, field), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL
 
