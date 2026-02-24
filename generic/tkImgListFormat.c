@@ -1028,7 +1028,7 @@ ParseColorAsStandard(
      * added to the colormap.
      */
 
-    if ( ! TkParseColor(display, colormap, colorString, &parsedColor)) {
+    if (TkParseColor(display, colormap, colorString, &parsedColor) == 0) {
 	 Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "invalid color name \"%s\"", specString));
 	 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -1116,7 +1116,7 @@ ParseColorAsStandard(
  *      None
  *----------------------------------------------------------------------
  */
-int
+bool
 TkDebugPhotoStringMatchDef(
     Tcl_Interp *interp,     /* Error messages are left in this interpreter */
     Tcl_Obj *data,          /* The data to check */
@@ -1124,7 +1124,7 @@ TkDebugPhotoStringMatchDef(
     int *widthPtr,          /* Width of image is written to this location */
     int *heightPtr)         /* Height of image is written to this location */
 {
-    return StringMatchDef(data, formatString, widthPtr, heightPtr, interp);
+    return StringMatchDef(data, formatString, widthPtr, heightPtr, interp) != 0;
 }
 
 

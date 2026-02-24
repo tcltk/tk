@@ -61,21 +61,10 @@ doNothing(void)
 
 #ifdef _WIN32
 
-int
-TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
-{
-    (void)tkwin;
-    (void)colormap;
-
-    /* dummy implementation, no need to do anything */
-    return 0;
-}
-void
-TkpSync(Display *display)
-{
-    (void)display;
-    /* dummy implementation, no need to do anything */
-}
+#undef TkpCmapStressed
+#define TkpCmapStressed ((bool (*)(Tk_Window, Colormap))(void *)doNothing)
+#undef TkpSync
+#define TkpSync ((void (*)(Display *))(void *)doNothing)
 
 void
 TkCreateXEventSource(void)
@@ -86,8 +75,8 @@ TkCreateXEventSource(void)
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
-#   define TkWmCleanup (void (*)(TkDisplay *))(void *)TkpSync
-#   define TkSendCleanup (void (*)(TkDisplay *))(void *)TkpSync
+#   define TkWmCleanup (void (*)(TkDisplay *))(void *)doNothing
+#   define TkSendCleanup (void (*)(TkDisplay *))(void *)doNothing
 #   define TkpTestsendCmd 0
 
 #else /* !_WIN32 */
