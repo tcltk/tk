@@ -3754,12 +3754,12 @@ UpdateTitle(TkWindow *winPtr)
     WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     const char *title = wmPtr->title ? wmPtr->title : winPtr->nameUid;
 
-    /* Update GLFW window title, which also updates server-side decorations if active. *?
+    /* Update GLFW window title, which also updates server-side decorations if active. */
     if (wmPtr->glfwWindow != NULL) {
-        glfwSetWindowTitle(wmPtr->glfwWindow, title);
+	glfwSetWindowTitle(wmPtr->glfwWindow, title);
     }
 
-      /* Update CSD title if client-side decorations are active */
+    /* Update CSD title if client-side decorations are active. */
     TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
     if (decor != NULL) {
         TkWaylandSetDecorationTitle(decor, title);

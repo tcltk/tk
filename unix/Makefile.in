@@ -474,7 +474,7 @@ AQUA_TKTEST_OBJS = tkMacOSXTest.o
 WAYLAND_OBJS            = \
 	 nanovg.o text-input-unstable-v3-protocol.o tkGlfwInit.o tkWayland.o  \
      tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
-     tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o \
+     tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o tkWaylandDecor.o \
      tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
      tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o tkWaylandImage.o \
      tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
@@ -627,8 +627,10 @@ WAYLAND_SRCS = \
 	$(WAYLAND_DIR)/nanovg.c $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWayland.c \
     $(WAYLAND_DIR)/tkWayland3D.c $(WAYLAND_DIR)/tkWaylandButton.c $(WAYLAND_DIR)/tkWaylandClipboard.c \
     $(WAYLAND_DIR)/tkWaylandColor.c $(WAYLAND_DIR)/tkWaylandConfig.c $(WAYLAND_DIR)/tkWaylandCursor.c \
-    $(WAYLAND_DIR)/tkWaylandDraw.c $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
-    $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandFont.c $(WAYLAND_DIR)/tkWaylandGC.c $(WAYLAND_DIR)/tkWaylandImage.c \
+    $(WAYLAND_DIR)/tkWaylandDecor.c  $(WAYLAND_DIR)/tkWaylandDraw.c \
+    $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
+    $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandFont.c $(WAYLAND_DIR)/tkWaylandGC.c \
+    $(WAYLAND_DIR)/tkWaylandImage.c \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
     $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
@@ -1478,6 +1480,9 @@ tkWaylandConfig.o: $(WAYLAND_DIR)/tkWaylandConfig.c
 
 tkWaylandCursor.o: $(WAYLAND_DIR)/tkWaylandCursor.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandCursor.c
+
+tkWaylandDecor.o: $(WAYLAND_DIR)/tkWaylandDecor.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandDecor.c
 
 tkWaylandDraw.o: $(WAYLAND_DIR)/tkWaylandDraw.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandDraw.c
