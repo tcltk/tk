@@ -97,7 +97,6 @@ TkWaylandDetectServerDecorations(void)
 	}
     }
 
-	fprintf(stderr, "checking");
     ssdAvailable = 0;
     return 0;
 }
@@ -194,7 +193,7 @@ TkWaylandShouldUseCSD(void)
 
     switch (decorationMode) {
     case DECOR_AUTO:
-	return !ssdAvailable;
+	return 1;
     case DECOR_SERVER_ONLY:
 	return 0;
     case DECOR_CLIENT_ONLY:
