@@ -387,6 +387,7 @@ TkWaylandGetDecoration(TkWindow *winPtr)
 {
 	WindowMapping *m = FindMappingByTk(winPtr);
 	return m ? m->decoration : NULL;
+	return NULL;
 }
 
 

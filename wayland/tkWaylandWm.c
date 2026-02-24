@@ -124,103 +124,103 @@ extern void TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximize
 
 /* wm sub-command handlers. */
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmAttributesCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmClientCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmColormapwindowsCmd(Tk_Window tkwin,
-			    TkWindow *winPtr, Tcl_Interp *interp, Tcl_Size objc,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmCommandCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmDeiconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmFocusmodelCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmForgetCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmFrameCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmGeometryCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmGridCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconmaskCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconnameCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconphotoCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconpositionCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconwindowCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmManageCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmMaxsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmMinsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmOverrideredirectCmd(Tk_Window tkwin,
-			    TkWindow *winPtr, Tcl_Interp *interp, Tcl_Size objc,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmPositionfromCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmProtocolCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmResizableCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmSizefromCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmStackorderCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmStateCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmTitleCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmTransientCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, Tcl_Size objc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static void             WmWaitMapProc(ClientData clientData, XEvent *eventPtr);
 
@@ -2191,7 +2191,7 @@ WmIconbadgeCmd(
 	       TCL_UNUSED(Tk_Window),
 	       TCL_UNUSED(TkWindow *),
 	       Tcl_Interp *interp,
-	       Tcl_Size    objc,
+	       int   objc,
 	       Tcl_Obj *const objv[])
 {
     if (objc < 4) {
@@ -2995,7 +2995,7 @@ WmStateCmd(
 
     switch (idx) {
         case OPT_NORMAL:
-            wmPtr->hints.initial_state = NormalState;
+            wmPtr->initialState = NormalState;
             wmPtr->attributes.zoomed = 0;
 
             if (glfwWindow != NULL) {
@@ -3008,7 +3008,7 @@ WmStateCmd(
             break;
 
         case OPT_ICONIC:
-            wmPtr->hints.initial_state = IconicState;
+            wmPtr->initialState= IconicState;
 
             if (glfwWindow != NULL) {
                 glfwIconifyWindow(glfwWindow);

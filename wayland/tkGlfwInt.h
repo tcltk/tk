@@ -46,6 +46,9 @@ typedef struct {
  *
  *----------------------------------------------------------------------
  */
+ 
+typedef struct TkWaylandDecoration TkWaylandDecoration;
+struct WmInfo;
 
 typedef struct WindowMapping {
     TkWindow           *tkWindow;   /* Tk window pointer */
@@ -53,34 +56,9 @@ typedef struct WindowMapping {
     Drawable            drawable;   /* X11-style drawable ID */
     int                 width;      /* Current width */
     int                 height;     /* Current height */
+    TkWaylandDecoration *decoration; /* Window decoration. */ 
     struct WindowMapping *nextPtr;  /* Next in linked list */
 } WindowMapping;
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandDecoration - client-side decoration. 
- *
- *----------------------------------------------------------------------
- */
- 
-typedef struct TkWaylandDecoration {
-    TkWindow *winPtr;
-    GLFWwindow *glfwWindow;
-    WmInfo    *wmPtr;           /* Pointer to the WM info for this window */
-    int enabled;
-    int maximized;               /* Current maximized state (for button) */
-    char *title;
-    ButtonState closeState;
-    ButtonState maxState;
-    ButtonState minState;
-    int dragging;
-    double dragStartX, dragStartY;
-    int windowStartX, windowStartY;
-    int resizing;
-    double resizeStartX, resizeStartY;
-    int resizeStartWidth, resizeStartHeight;
-} TkWaylandDecoration;
 
 /*
  *----------------------------------------------------------------------
@@ -124,7 +102,7 @@ typedef enum {
     _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
-/* Defined in tkWaylandWm.c. */
+
 extern const char *const WmAttributeNames[];
 
 /*
@@ -193,6 +171,46 @@ typedef struct TkWmInfo {
 
     struct TkWmInfo *nextPtr;
 } WmInfo;
+
+typedef enum {
+    BUTTON_NORMAL,
+    BUTTON_HOVER,
+    BUTTON_PRESSED
+} ButtonState;
+
+typedef enum {
+    BUTTON_CLOSE,
+    BUTTON_MAXIMIZE,
+    BUTTON_MINIMIZE
+} ButtonType;
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandDecoration - client-side decoration. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+typedef struct TkWaylandDecoration {
+    TkWindow *winPtr;
+    GLFWwindow *glfwWindow;
+    WmInfo    *wmPtr;           /* Pointer to the WM info for this window */
+    int enabled;
+    int maximized;               /* Current maximized state (for button) */
+    char *title;
+    ButtonState closeState;
+    ButtonState maxState;
+    ButtonState minState;
+    int dragging;
+    double dragStartX, dragStartY;
+    int windowStartX, windowStartY;
+    int resizing;
+    double resizeStartX, resizeStartY;
+    int resizeStartWidth, resizeStartHeight;
+} TkWaylandDecoration;
+
 
 
 /*

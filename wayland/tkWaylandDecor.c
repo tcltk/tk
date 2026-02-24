@@ -7,9 +7,6 @@
  * 
  *  Copyright © 2026 Kevin Walzer
  *
- *  Updated to integrate with tkWaylandWm.c – stores a pointer to WmInfo,
- *  updates the WM’s zoomed/iconified state, and provides functions for
- *  the WM to synchronize decoration state (title, maximized, etc.).
  */
 
 #include "tkInt.h"
@@ -39,17 +36,7 @@ static int ssdAvailable = 0;
 #define CORNER_RADIUS       6.0f
 #define SHADOW_BLUR         20.0f
 
-typedef enum {
-    BUTTON_NORMAL,
-    BUTTON_HOVER,
-    BUTTON_PRESSED
-} ButtonState;
 
-typedef enum {
-    BUTTON_CLOSE,
-    BUTTON_MAXIMIZE,
-    BUTTON_MINIMIZE
-} ButtonType;
 
 #define RESIZE_NONE     0
 #define RESIZE_LEFT     (1 << 0)
@@ -407,8 +394,6 @@ DrawTitleBar(NVGcontext *vg,
     float buttonX;
     int focused;
     NVGcolor bgColor, textColor;
-
-    (void)height;
 
     focused = glfwGetWindowAttrib(decor->glfwWindow, GLFW_FOCUSED);
     bgColor = focused ? nvgRGB(45, 45, 48) : nvgRGB(60, 60, 60);
@@ -989,6 +974,37 @@ TkWaylandGetDecorationContentArea(TkWaylandDecoration *decor,
 	*height = winHeight;
     }
 }
+
+
+/*
+ * kWaylandInitDecorationPolicy --
+ *
+ *	Initialize the Wayland decoration system. Detects compositor
+ *	capabilities, and sets policy from environment.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Detects SSD availability, and sets decoration mode.
+ */
+
+void
+TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
+{
+    const char *decorEnv;
+    
+    /* Detect whether compositor supports server-side decorations. */
+    TkWaylandDetectServerDecorations();
+    
+    /* Check for environment variable override */
+    decorEnv = getenv("TK_WAYLAND_DECORATIONS");
+    if (decorEnv != NULL) {
+        TkWaylandSetDecorationMode(decorEnv);
+    }
+    
+}
+
 
 /*
  * Local Variables:
