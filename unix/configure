@@ -10129,7 +10129,7 @@ echo "${ECHO_T}$found_xft" >&6
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    echo "$as_me:$LINENO: checking for X11/Xft/Xft.h" >&5
 echo $ECHO_N "checking for X11/Xft/Xft.h... $ECHO_C" >&6
 if test "${ac_cv_header_X11_Xft_Xft_h+set}" = set; then
@@ -10194,7 +10194,7 @@ fi
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 
 echo "$as_me:$LINENO: checking for XftFontOpen in -lXft" >&5
 echo $ECHO_N "checking for XftFontOpen in -lXft... $ECHO_C" >&6
@@ -10280,7 +10280,7 @@ fi
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
 	    echo "$as_me:$LINENO: checking for FcFontSort in -lfontconfig" >&5
 echo $ECHO_N "checking for FcFontSort in -lfontconfig... $ECHO_C" >&6
 if test "${ac_cv_lib_fontconfig_FcFontSort+set}" = set; then

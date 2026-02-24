@@ -480,7 +480,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
 		found_xft=no
 	    ],[#include <X11/Xlib.h>])
@@ -492,7 +492,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    AC_CHECK_LIB(Xft, XftFontOpen, [], [
 		found_xft=no
 	    ])
@@ -504,7 +504,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
 	    AC_CHECK_LIB(fontconfig, FcFontSort, [
 		XFT_LIBS="$XFT_LIBS -lfontconfig"
 	    ], [])
