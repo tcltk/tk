@@ -14,7 +14,7 @@
 #include "tkInt.h"
 #include "tk3d.h"
 #include "tkGlfwInt.h"
-#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 #include "nanovg.h"
 
 /*
@@ -124,10 +124,12 @@ Tk_3DVerticalBevel(
 
     /* Use the background GC for drawing. */
     gc = borderPtr->bgGC;
+	
+	NVGcontext *vg = TkGlfwGetNVGContext();
+    if (!vg) return BadDrawable;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
-        return;
-    }
+    TkGlfwApplyGC(vg, gc);
+
 
     /* Convert X colors to NVG colors if needed, or use cached values. */
     if (borderPtr->bgColorPtr) {
@@ -142,19 +144,19 @@ Tk_3DVerticalBevel(
 
     switch (relief) {
     case TK_RELIEF_RAISED:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, leftBevel ? waylandBorderPtr->lightColor : 
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, width, height);
+        nvgFillColor(vg, leftBevel ? waylandBorderPtr->lightColor : 
                                         waylandBorderPtr->darkColor);
-        nvgFill(dc.vg);
+        nvgFill(vg);
         break;
 
     case TK_RELIEF_SUNKEN:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, leftBevel ? waylandBorderPtr->darkColor : 
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, width, height);
+        nvgFillColor(vg, leftBevel ? waylandBorderPtr->darkColor : 
                                         waylandBorderPtr->lightColor);
-        nvgFill(dc.vg);
+        nvgFill(vg);
         break;
 
     case TK_RELIEF_RIDGE:
@@ -170,34 +172,34 @@ Tk_3DVerticalBevel(
         if (!leftBevel && (width & 1)) {
             half++;
         }
-        nvgBeginPath(dc.vg); 
-        nvgRect(dc.vg, x, y, half, height);
-        nvgFillColor(dc.vg, leftColor);
-        nvgFill(dc.vg);
+        nvgBeginPath(vg); 
+        nvgRect(vg, x, y, half, height);
+        nvgFillColor(vg, leftColor);
+        nvgFill(vg);
 
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x + half, y, width - half, height);
-        nvgFillColor(dc.vg, rightColor);
-        nvgFill(dc.vg);
+        nvgBeginPath(vg);
+        nvgRect(vg, x + half, y, width - half, height);
+        nvgFillColor(vg, rightColor);
+        nvgFill(vg);
         break;
     }
 
     case TK_RELIEF_FLAT:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, waylandBorderPtr->bgColor);
-        nvgFill(dc.vg);
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, width, height);
+        nvgFillColor(vg, waylandBorderPtr->bgColor);
+        nvgFill(vg);
         break;
 
     case TK_RELIEF_SOLID:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
-        nvgFill(dc.vg);
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, width, height);
+        nvgFillColor(vg, waylandBorderPtr->solidColor);
+        nvgFill(vg);
         break;
     }
 
-    TkGlfwEndDraw(&dc);
+    return;
 }
 
 /*
@@ -241,9 +243,10 @@ Tk_3DHorizontalBevel(
     /* Use the background GC for drawing. */
     gc = borderPtr->bgGC;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
-        return;
-    }
+	NVGcontext *vg = TkGlfwGetNVGContext();
+    if (!vg) return BadDrawable;
+
+    TkGlfwApplyGC(vg, gc);
 
     /* Convert X colors to NVG colors if needed, or use cached values. */
     if (borderPtr->bgColorPtr) {
@@ -277,10 +280,10 @@ Tk_3DHorizontalBevel(
         bottomColor = waylandBorderPtr->darkColor;
         break;
     case TK_RELIEF_SOLID:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
-        nvgFill(dc.vg);
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, width, height);
+        nvgFillColor(vg, waylandBorderPtr->solidColor);
+        nvgFill(vg);
         TkGlfwEndDraw(&dc);
         return;
     case TK_RELIEF_SUNKEN:
@@ -317,16 +320,16 @@ Tk_3DHorizontalBevel(
     for ( ; y < bottom; y++) {
         NVGcolor currentColor = (y < halfway) ? topColor : bottomColor;
 
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x1, y, x2 - x1, 1);
-        nvgFillColor(dc.vg, currentColor);
-        nvgFill(dc.vg);
+        nvgBeginPath(vg);
+        nvgRect(vg, x1, y, x2 - x1, 1);
+        nvgFillColor(vg, currentColor);
+        nvgFill(vg);
 
         x1 += x1Delta;
         x2 += x2Delta;
     }
 
-    TkGlfwEndDraw(&dc);
+	return;
 }
 
 /*

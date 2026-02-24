@@ -14,7 +14,7 @@
 #include "tkButton.h"
 #include "tk3d.h"
 #include "tkGlfwInt.h"
-#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 #include "nanovg.h"
 #include <X11/Xlib.h>
 

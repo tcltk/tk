@@ -21,7 +21,7 @@
 #include "tkColor.h"
 #include "tkGlfwInt.h"
 
-#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
 #include <nanovg.h>
 
 /*
