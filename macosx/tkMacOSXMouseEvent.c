@@ -28,8 +28,6 @@ typedef struct {
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
-static int		GenerateButtonEvent(MouseEventData *medPtr);
-
 #pragma mark TKApplication(TKMouseEvent)
 
 enum {
@@ -684,97 +682,6 @@ XQueryPointer(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenerateButtonEventForXPointer --
- *
- *	This procedure generates an X button event for the current pointer
- *	state as reported by XQueryPointer().
- *
- * Results:
- *	True if event(s) are generated - false otherwise.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue. Grab state may
- *	also change.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE int
-TkGenerateButtonEventForXPointer(
-    Window window)		/* X Window containing button event. */
-{
-    MouseEventData med;
-    int global_x, global_y, local_x, local_y;
-
-    bzero(&med, sizeof(MouseEventData));
-    XQueryPointer(NULL, window, NULL, NULL, &global_x, &global_y,
-	    &local_x, &local_y, &med.state);
-    med.global.h = global_x;
-    med.global.v = global_y;
-    med.local.h = local_x;
-    med.local.v = local_y;
-    med.window = window;
-
-    return GenerateButtonEvent(&med);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GenerateButtonEvent --
- *
- *	Generate an X button event from a MouseEventData structure. Handles
- *	the state changes needed to implement implicit grabs.
- *
- * Results:
- *	True if event(s) are generated - false otherwise.
- *
- * Side effects:
- *	Additional events may be placed on the Tk event queue. Grab state may
- *	also change.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-GenerateButtonEvent(
-    MouseEventData *medPtr)
-{
-    Tk_Window tkwin;
-    int dummy;
-    TkDisplay *dispPtr;
-
-#ifdef UNUSED
-
-    /*
-     * ButtonDown events will always occur in the front window. ButtonUp
-     * events, however, may occur anywhere on the screen. ButtonUp events
-     * should only be sent to Tk if in the front window or during an implicit
-     * grab.
-     */
-
-    if ((medPtr->activeNonFloating == NULL)
-	    || ((!(TkpIsWindowFloating(medPtr->whichWin))
-	    && (medPtr->activeNonFloating != medPtr->whichWin))
-	    && TkpGetCapture() == NULL)) {
-	return false;
-    }
-#endif
-
-    dispPtr = TkGetDisplayList();
-    tkwin = Tk_IdToWindow(dispPtr->display, medPtr->window);
-
-    if (tkwin != NULL) {
-	tkwin = Tk_TopCoordsToWindow(tkwin, medPtr->local.h, medPtr->local.v,
-		&dummy, &dummy);
-    }
-    Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
-    return true;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpWarpPointer --
  *
  *	Move the mouse cursor to the screen location specified by the warpX and
@@ -794,24 +701,57 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
+    Window window;
+    MouseEventData med;
+    int global_x, global_y, local_x, local_y;
+    int dummy;
 
     if (dispPtr->warpWindow) {
 	int x, y;
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
+	window = Tk_WindowId(dispPtr->warpWindow);
     } else {
 	pt.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
+	window = None;
     }
 
     CGWarpMouseCursorPosition(pt);
+    bzero(&med, sizeof(MouseEventData));
+    XQueryPointer(NULL, window, NULL, NULL, &global_x, &global_y,
+	    &local_x, &local_y, &med.state);
+    med.global.h = global_x;
+    med.global.v = global_y;
+    med.local.h = local_x;
+    med.local.v = local_y;
+    med.window = window;
 
-    if (dispPtr->warpWindow) {
-	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
-    } else {
-	TkGenerateButtonEventForXPointer(None);
+#ifdef UNUSED
+
+    /*
+     * ButtonDown events will always occur in the front window. ButtonUp
+     * events, however, may occur anywhere on the screen. ButtonUp events
+     * should only be sent to Tk if in the front window or during an implicit
+     * grab.
+     */
+
+    if ((medPtr->activeNonFloating == NULL)
+	    || ((!(TkpIsWindowFloating(medPtr->whichWin))
+	    && (medPtr->activeNonFloating != medPtr->whichWin))
+	    && TkpGetCapture() == NULL)) {
+	return false;
     }
+#endif
+
+    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, med.window);
+
+    if (tkwin != NULL) {
+	tkwin = Tk_TopCoordsToWindow(tkwin, med.local.h, med.local.v,
+		&dummy, &dummy);
+    }
+    Tk_UpdatePointer(tkwin, med.global.h, med.global.v, med.state);
 }
 
 /*
