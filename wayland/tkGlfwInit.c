@@ -525,6 +525,8 @@ TkGlfwBeginDraw(
     dcPtr->width      = mapping->width;
     dcPtr->height     = mapping->height;
     dcPtr->vg         = glfwContext.vg;
+    
+    glfwContext.nvgFrameActive = 1;
 
     glfwMakeContextCurrent(mapping->glfwWindow);
 
@@ -569,6 +571,8 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     if (!dcPtr || !dcPtr->vg) {
         return;
     }
+    
+    nvgRestore(dcPtr->vg);
 
     if (dcPtr->glfwWindow) {
         WindowMapping *mapping =
@@ -582,6 +586,8 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 
     /* End the single NanoVG frame */
     nvgEndFrame(dcPtr->vg);
+    
+    glfwContext.nvgFrameActive = 0;
 
     if (dcPtr->glfwWindow) {
         glfwSwapBuffers(dcPtr->glfwWindow);
@@ -617,6 +623,12 @@ TkGlfwGetNVGContext(void)
      * for having made the correct window current via TkGlfwBeginDraw. */
     if (glfwGetCurrentContext() == NULL) {
         fprintf(stderr, "TkGlfwGetNVGContext: No current GLFW context!\n");
+        return NULL;
+    }
+    
+    
+    if (!glfwContext.nvgFrameActive) {
+        fprintf(stderr, "TkGlfwGetNVGContext: No active NanoVG frame!\n");
         return NULL;
     }
 

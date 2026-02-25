@@ -34,6 +34,7 @@ typedef struct {
     GLFWwindow *mainWindow;     /* Shared context window */
     NVGcontext *vg;             /* Global NanoVG context */
     int         initialized;    /* Initialization flag */
+    bool	    nvgFrameActive   /* Active frame */
 } TkGlfwContext;
 
 /*
