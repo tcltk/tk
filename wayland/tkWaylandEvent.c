@@ -931,7 +931,7 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window) {
 
 void
 TkpHandleExpose(
-    Display *display,        /* Not used, but required by Tk's API. */
+    TCL_UNUSED(Display *),    /* Not used, but required by Tk's API. */
     XEvent  *eventPtr,       /* The Expose event. */
     TkWindow *winPtr)        /* Tk window that received the event. */
 {
@@ -939,8 +939,6 @@ TkpHandleExpose(
     TkWaylandDrawingContext dc;
     TkWaylandDecoration *decoration;
 
-    /* Suppress unused parameter warning */
-    (void)display;
 
     /* Begin the frame – NULL GC means no global GC is applied. */
     if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
