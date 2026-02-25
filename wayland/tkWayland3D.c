@@ -126,7 +126,7 @@ Tk_3DVerticalBevel(
     gc = borderPtr->bgGC;
 	
     NVGcontext *vg = TkGlfwGetNVGContext();
-    if (!vg) return BadDrawable;
+    if (!vg) return;
 
     TkGlfwApplyGC(vg, gc);
 
@@ -244,7 +244,7 @@ Tk_3DHorizontalBevel(
     gc = borderPtr->bgGC;
 
     NVGcontext *vg = TkGlfwGetNVGContext();
-    if (!vg) return BadDrawable;
+    if (!vg) return;
 
     TkGlfwApplyGC(vg, gc);
 

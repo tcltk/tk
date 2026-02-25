@@ -60,6 +60,12 @@ typedef struct WindowMapping {
     struct WindowMapping *nextPtr;  /* Next in linked list */
 } WindowMapping;
 
+WindowMapping *FindMappingByGLFW(GLFWwindow *glfwWindow);
+WindowMapping *FindMappingByTk(TkWindow *tkWin);
+WindowMapping *FindMappingByDrawable(Drawable drawable);
+void           RemoveMapping(WindowMapping *mapping);
+void           CleanupAllMappings(void);
+
 /*
  *----------------------------------------------------------------------
  *
@@ -222,6 +228,22 @@ TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glf
 void TkWaylandDestroyDecoration(TkWaylandDecoration *decor); 
 TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
 void TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg);
+
+/* Decoration constants. */
+#define TITLE_BAR_HEIGHT    30
+#define BORDER_WIDTH        1
+#define BUTTON_WIDTH        30
+#define BUTTON_HEIGHT       30
+#define BUTTON_SPACING      5
+#define CORNER_RADIUS       6.0f
+#define SHADOW_BLUR         20.0f
+
+#define RESIZE_NONE     0
+#define RESIZE_LEFT     (1 << 0)
+#define RESIZE_RIGHT    (1 << 1)
+#define RESIZE_TOP      (1 << 2)
+#define RESIZE_BOTTOM   (1 << 3)
+
 /*
  *----------------------------------------------------------------------
  *
@@ -542,6 +564,9 @@ MODULE_SCOPE void TkGlfwKeyCallback(GLFWwindow *window,
     int key, int scancode, int action, int mods);
 MODULE_SCOPE void TkGlfwCharCallback(GLFWwindow *window,
     unsigned int codepoint);
+MODULE_SCOPE void TkGlfwWindowRefreshCallback(GLFWwindow *window);
+MODULE_SCOPE void TkGlfwWindowSizeCallback(
+    GLFWwindow *window, int width, int height);     
 
 /*
  *----------------------------------------------------------------------

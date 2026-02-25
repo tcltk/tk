@@ -41,13 +41,12 @@
 int
 XDrawLines(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     XPoint *points,
     int npoints,
     int mode)
 {
-    TkWaylandDrawingContext dc;
     int i;
     
     if (npoints < 2 || points == NULL) {
@@ -55,7 +54,7 @@ XDrawLines(
     }
     
     NVGcontext *vg = TkGlfwGetNVGContext();
-    if (!vg) return BadDrawable
+    if (!vg) return BadDrawable;
 
     
     /* Apply GC settings (line width, color, etc.) */
@@ -98,12 +97,11 @@ XDrawLines(
 int
 XDrawSegments(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     XSegment *segments,
     int nsegments)
 {
-    TkWaylandDrawingContext dc;
     int i;
     
     NVGcontext *vg = TkGlfwGetNVGContext();
@@ -141,14 +139,14 @@ XDrawSegments(
 int
 XFillPolygon(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     XPoint *points,
     int npoints,
     TCL_UNUSED(int),  /* shape - ignored */
     int mode)
 {
-    TkWaylandDrawingContext dc;
+	
     XGCValues gcValues;
     int i;
     
@@ -212,14 +210,13 @@ XFillPolygon(
 int
 XDrawRectangle(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     int x, int y,
     unsigned int width,
     unsigned int height)
 {
-    TkWaylandDrawingContext dc;
-    
+
     if (width == 0 || height == 0) {
         return BadValue;
     }
@@ -256,12 +253,11 @@ XDrawRectangle(
 int
 XDrawRectangles(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     XRectangle *rectArr,
     int nRects)
 {
-    TkWaylandDrawingContext dc;
     int i;
     
     NVGcontext *vg = TkGlfwGetNVGContext();
@@ -299,12 +295,11 @@ XDrawRectangles(
 int
 XFillRectangles(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     XRectangle *rectangles,
     int n_rectangles)
 {
-    TkWaylandDrawingContext dc;
     int i;
     
     NVGcontext *vg = TkGlfwGetNVGContext();
@@ -377,7 +372,7 @@ XFillRectangle(
 int
 XDrawArc(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     int x, int y,
     unsigned int width,
@@ -385,7 +380,6 @@ XDrawArc(
     int angle1,
     int angle2)
 {
-    TkWaylandDrawingContext dc;
     float cx, cy, rx, ry;
     float startAngle, endAngle;
     
@@ -445,12 +439,11 @@ XDrawArc(
 int
 XDrawArcs(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     XArc *arcArr,
     int nArcs)
 {
-    TkWaylandDrawingContext dc;
     int i;
     
     NVGcontext *vg = TkGlfwGetNVGContext();
@@ -514,7 +507,7 @@ XDrawArcs(
 int
 XFillArc(
     TCL_UNUSED(Display *),
-    Drawable d,
+    TCL_UNUSED(Drawable),
     GC gc,
     int x, int y,
     unsigned int width,
@@ -522,7 +515,6 @@ XFillArc(
     int angle1,
     int angle2)
 {
-    TkWaylandDrawingContext dc;
     XGCValues gcValues;
     float cx, cy, rx, ry;
     float startAngle, endAngle;

@@ -233,7 +233,6 @@ static void             WmWaitMapProc(ClientData clientData, XEvent *eventPtr);
 static void CreateGlfwWindow(TkWindow *winPtr);
 static void DestroyGlfwWindow(WmInfo *wmPtr);
 static void ConvertPhotoToGlfwIcon(TkWindow *winPtr, Tk_PhotoHandle photo);
-static void ApplyWindowHints(TkWindow *winPtr);
 static void ApplyFullscreenState(TkWindow *winPtr);
 
 /* Geometry manager. */
@@ -3248,46 +3247,6 @@ ConvertPhotoToGlfwIcon(
         glfwSetWindowIcon(wmPtr->glfwWindow,
                           wmPtr->glfwIconCount, wmPtr->glfwIcon);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ApplyWindowHints --
- *
- *	Apply GLFW window hints based on current WmInfo state.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Calls glfwWindowHint for various window attributes.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-ApplyWindowHints(
-		 TkWindow *winPtr)
-{
-    WmInfo    *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
-    Tk_Window  tkwin  = (Tk_Window)winPtr;
-
-    glfwWindowHint(GLFW_RESIZABLE,
-		   (wmPtr->flags & (WM_WIDTH_NOT_RESIZABLE|WM_HEIGHT_NOT_RESIZABLE))
-		   ? GLFW_FALSE : GLFW_TRUE);
-
-    glfwWindowHint(GLFW_DECORATED,
-		   Tk_Attributes(tkwin)->override_redirect ? GLFW_FALSE : GLFW_TRUE);
-
-    glfwWindowHint(GLFW_FLOATING,
-		   wmPtr->attributes.topmost ? GLFW_TRUE : GLFW_FALSE);
-
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
-		   (wmPtr->attributes.alpha < 1.0) ? GLFW_TRUE : GLFW_FALSE);
-
-    glfwWindowHint(GLFW_FOCUS_ON_SHOW,  GLFW_TRUE);
-    glfwWindowHint(GLFW_AUTO_ICONIFY,   GLFW_FALSE);
 }
 
 /*

@@ -107,22 +107,6 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
  *
  * TkGlfwWindowSizeCallback --
  *
- *      Called when window size changes.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Updates window geometry, generates ConfigureNotify event.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwWindowSizeCallback --
- *
  *      Called when window size changes. Updates window geometry,
  *      generates ConfigureNotify event, and queues an expose for redraw.
  *
@@ -892,25 +876,6 @@ TkWaylandGetPendingCharacter(void)
  *
  * TkGlfwWindowRefreshCallback --
  *
- *      Called by GLFW when the window content needs to be redrawn
- *      (e.g., after being uncovered or initially shown).  Generates
- *      an Expose event for the entire window, which will be processed
- *      by Tk's normal redrawing mechanism.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Queues an Expose event for the associated Tk window.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwWindowRefreshCallback --
- *
  *      Called by GLFW when window needs redraw. Generates Expose event.
  *
  * Results:
@@ -946,14 +911,13 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window) {
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL); 
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
  * TkpHandleExpose --
  *
  *      Platform‑specific handling of Expose events.
- *      Begins a NanoVG frame, calls the widget’s event handler,
+ *      Begins a NanoVG frame, lets Tk handle the expose,
  *      then ends the frame and swaps buffers.
  *
  * Results:
@@ -968,68 +932,34 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window) {
 void
 TkpHandleExpose(
     Display *display,        /* Not used, but required by Tk's API. */
-    XEvent  *eventPtr,        /* The Expose event. */
-    TkWindow *winPtr)         /* Tk window that received the event. */
+    XEvent  *eventPtr,       /* The Expose event. */
+    TkWindow *winPtr)        /* Tk window that received the event. */
 {
     Drawable drawable = Tk_WindowId((Tk_Window)winPtr);
     TkWaylandDrawingContext dc;
+    TkWaylandDecoration *decoration;
+
+    /* Suppress unused parameter warning */
+    (void)display;
 
     /* Begin the frame – NULL GC means no global GC is applied. */
     if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
         return;                 /* Unable to draw (e.g., window not mapped). */
     }
 
-    /* Let the widget's event handler do all drawing for this expose. */
-    if (winPtr && winPtr->ops && winPtr->ops->handleEventProc) {
-        winPtr->ops->handleEventProc((Tk_Window)winPtr, eventPtr);
+    /* Let Tk handle the expose event - this will call the widget's
+     * display procedure through Tk's normal event dispatching */
+    Tk_HandleEvent(eventPtr);
+
+    /* Draw decorations on top if enabled */
+    decoration = TkWaylandGetDecoration(winPtr);
+    if (decoration && decoration->enabled) {
+        TkWaylandDrawDecoration(decoration, dc.vg);
     }
 
     /* Finish the frame and present the result. */
     TkGlfwEndDraw(&dc);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpHandleExpose --
- *
- *      Platform‑specific handling of Expose events.
- *      Begins a NanoVG frame, calls the widget’s event handler,
- *      then ends the frame and swaps buffers.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The window is redrawn; the framebuffer is swapped.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpHandleExpose(
-    TCL_UNUSED(Display *),    /* display */  
-    XEvent  *eventPtr,        /* The Expose event. */
-    TkWindow *winPtr)         /* Tk window that received the event. */
-{
-    Drawable drawable = Tk_WindowId((Tk_Window)winPtr);
-    TkWaylandDrawingContext dc;
-
-    /* Begin the frame – NULL GC means no global GC is applied. */
-    if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
-        return;                 /* Unable to draw (e.g., window not mapped). */
-    }
-
-    /* Let the widget's event handler do all drawing for this expose. */
-    if (winPtr && winPtr->ops && winPtr->ops->handleEventProc) {
-        winPtr->ops->handleEventProc((Tk_Window)winPtr, eventPtr);
-    }
-
-    /* Finish the frame and present the result. */
-    TkGlfwEndDraw(&dc);
-}
-
-
 
 /*
  * Local Variables:

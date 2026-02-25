@@ -42,20 +42,6 @@ static Drawable       nextDrawableId     = 1000; /* avoid zero/conflicts */
 /*
  *----------------------------------------------------------------------
  *
- * Static helpers – window mapping list
- *
- *----------------------------------------------------------------------
- */
-
-static WindowMapping *FindMappingByGLFW(GLFWwindow *glfwWindow);
-static WindowMapping *FindMappingByTk(TkWindow *tkWin);
-static WindowMapping *FindMappingByDrawable(Drawable drawable);
-static void           RemoveMapping(WindowMapping *mapping);
-static void           CleanupAllMappings(void);
-
-/*
- *----------------------------------------------------------------------
- *
  * Decoration support
  *
  *----------------------------------------------------------------------
@@ -921,7 +907,7 @@ TkpDisplayWarning(
  *----------------------------------------------------------------------
  */
 
-static WindowMapping *
+WindowMapping *
 FindMappingByGLFW(
     GLFWwindow *glfwWindow)
 {
@@ -949,7 +935,7 @@ FindMappingByGLFW(
  *----------------------------------------------------------------------
  */
 
-static WindowMapping *
+WindowMapping *
 FindMappingByTk(
     TkWindow *tkWin)
 {
@@ -977,7 +963,7 @@ FindMappingByTk(
  *----------------------------------------------------------------------
  */
 
-static WindowMapping *
+WindowMapping *
 FindMappingByDrawable(
     Drawable drawable)
 {
@@ -1005,7 +991,7 @@ FindMappingByDrawable(
  *----------------------------------------------------------------------
  */
 
-static void
+void
 RemoveMapping(
     WindowMapping *mapping)
 {
@@ -1039,7 +1025,7 @@ RemoveMapping(
  *----------------------------------------------------------------------
  */
 
-static void
+void
 CleanupAllMappings(void)
 {
     WindowMapping *cur  = windowMappingList;
