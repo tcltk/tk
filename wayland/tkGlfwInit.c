@@ -35,7 +35,7 @@
  *----------------------------------------------------------------------
  */
 
-static TkGlfwContext  glfwContext        = {NULL, NULL, 0};
+static TkGlfwContext  glfwContext        = {NULL, NULL, 0, false};
 static WindowMapping *windowMappingList  = NULL;
 static Drawable       nextDrawableId     = 1000; /* avoid zero/conflicts */
 

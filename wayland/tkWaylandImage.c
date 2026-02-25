@@ -77,7 +77,7 @@ typedef union pixel32_t {
  */
 
 static NVGImageData* CreateNVGImageFromDrawableRect(
-    Drawable drawable, int x, int y, 
+    Drawable drawable, int x, int y,
     unsigned int width, unsigned int height);
 static XImage* TkWaylandCreateXImageWithNVGImage(
     NVGcontext* vg, NVGImageData* nvgImage, Display* display);
@@ -136,46 +136,46 @@ CreateNVGImageFromDrawableRect(
     unsigned char *pixels;
     unsigned char *rgba_pixels;
     int imageId;
-    
+
     /* Get GLFW window from drawable. */
     glfwWindow = TkGlfwGetWindowFromDrawable(drawable);
     if (!glfwWindow) {
         return NULL;
     }
-    
+
     /* Get NanoVG context. */
     vg = TkGlfwGetNVGContext();
     if (!vg) {
         return NULL;
     }
-    
+
     /* Make context current for GL operations. */
     glfwMakeContextCurrent(glfwWindow);
-    
+
     /* Allocate pixel buffers. */
     pixels = (unsigned char*)ckalloc(width * height * 4);
     rgba_pixels = (unsigned char*)ckalloc(width * height * 4);
-    
+
     if (!pixels || !rgba_pixels) {
         if (pixels) ckfree(pixels);
         if (rgba_pixels) ckfree(rgba_pixels);
         return NULL;
     }
-    
+
     /* Read pixels from current framebuffer (OpenGL uses RGBA). */
     glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    
+
     /* NanoVG expects RGBA as well, but we need to handle potential
      * differences in coordinate system (Y inversion). */
-    
+
     /* For now, just copy the data - NanoVG uses same orientation as OpenGL. */
     memcpy(rgba_pixels, pixels, width * height * 4);
-    
+
     /* Create NanoVG image. */
-    imageId = nvgCreateImageRGBA(vg, width, height, 
-                                  NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY, 
+    imageId = nvgCreateImageRGBA(vg, width, height,
+                                  NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY,
                                   rgba_pixels);
-    
+
     ckfree(pixels);
 
 	nvgImg = ckalloc(sizeof(NVGImageData));
@@ -184,13 +184,13 @@ CreateNVGImageFromDrawableRect(
 	    nvgDeleteImage(vg, imageId);
 	    return NULL;
 	}
-	
+
 	nvgImg->id = imageId;
 	nvgImg->width = width;
 	nvgImg->height = height;
 	nvgImg->flags = NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY;
 	nvgImg->pixels = rgba_pixels;   /* ⭐ store CPU copy */
-	
+
 	return nvgImg;
 }
 
@@ -212,7 +212,7 @@ CreateNVGImageFromDrawableRect(
 
 
 XImage* TkWaylandCreateXImageWithNVGImage(
-    NVGcontext* vg,
+    TCL_UNUSED(NVGcontext *),
     NVGImageData* nvgImage,
     TCL_UNUSED(Display *))
 {
@@ -280,22 +280,22 @@ XGetImage(
     NVGImageData *nvgImg;
     XImage *imagePtr;
     NVGcontext *vg;
-    
+
     (void)plane_mask;  /* Not used in NanoVG backend */
     (void)format;      /* Always use ZPixmap */
-    
+
     if (!display || !drawable) {
         return NULL;
     }
-    
+
     LastKnownRequestProcessed(display)++;
-    
+
     /* Create NVG image from drawable region. */
     nvgImg = CreateNVGImageFromDrawableRect(drawable, x, y, width, height);
     if (!nvgImg) {
         return NULL;
     }
-    
+
     /* Get NanoVG context. */
     vg = TkGlfwGetNVGContext();
     if (!vg) {
@@ -304,15 +304,15 @@ XGetImage(
         ckfree((char*)nvgImg);
         return NULL;
     }
-    
+
     /* Convert to XImage. */
     imagePtr = TkWaylandCreateXImageWithNVGImage(vg, nvgImg, display);
-    
+
     /* Clean up NVG image. */
     nvgDeleteImage(vg, nvgImg->id);
     if (nvgImg->pixels) ckfree(nvgImg->pixels);
     ckfree((char*)nvgImg);
-    
+
     return imagePtr;
 }
 
@@ -347,45 +347,45 @@ XCopyArea(
     NVGImageData *srcImg;
     NVGpaint imgPaint;
     int result = Success;
-    
+
     if (!display || !src || !dst) {
         return BadDrawable;
     }
-    
+
     LastKnownRequestProcessed(display)++;
-    
+
     /* Create NVG image from source region. */
     srcImg = CreateNVGImageFromDrawableRect(src, src_x, src_y, width, height);
     if (!srcImg) {
         return BadDrawable;
     }
-    
+
     /* Begin drawing on destination. */
     if (TkGlfwBeginDraw(dst, gc, &dc) != TCL_OK) {
         nvgDeleteImage(TkGlfwGetNVGContext(), srcImg->id);
         ckfree((char*)srcImg);
         return BadDrawable;
     }
-    
+
     /* Apply GC settings to NanoVG context. */
     if (gc) {
         TkGlfwApplyGC(dc.vg, gc);
     }
-    
+
     /* Create image pattern and draw. */
-    imgPaint = nvgImagePattern(dc.vg, dest_x, dest_y, width, height, 
+    imgPaint = nvgImagePattern(dc.vg, dest_x, dest_y, width, height,
                                 0.0f, srcImg->id, 1.0f);
-    
+
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, dest_x, dest_y, width, height);
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
-    
+
     /* Clean up. */
     nvgDeleteImage(dc.vg, srcImg->id);
     if (srcImg->pixels) ckfree(srcImg->pixels);
     ckfree((char*)srcImg);
-    
+
     TkGlfwEndDraw(&dc);
     return result;
 }
@@ -421,48 +421,48 @@ XPutImage(
     int imageId;
     NVGpaint imgPaint;
     unsigned char *rgba_data;
-    
+
     if (!display || !drawable || !image || !image->data) {
         return BadValue;
     }
-    
+
     /* Validate source coordinates */
-    if (src_x < 0 || src_y < 0 || 
-        src_x + (int)width > image->width || 
+    if (src_x < 0 || src_y < 0 ||
+        src_x + (int)width > image->width ||
         src_y + (int)height > image->height) {
         return BadValue;
     }
-    
+
     LastKnownRequestProcessed(display)++;
-    
+
     /* Begin drawing. */
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
     }
-    
+
     /* Apply GC settings. */
     if (gc) {
         TkGlfwApplyGC(dc.vg, gc);
     }
-    
+
     /* Convert ARGB to RGBA if needed */
     rgba_data = (unsigned char*)ckalloc(width * height * 4);
     if (!rgba_data) {
         TkGlfwEndDraw(&dc);
         return BadAlloc;
     }
-    
+
     /* Extract the specified region and convert */
     if (image->bits_per_pixel == 32) {
         int i, j;
         unsigned char *src_ptr, *dst_ptr;
-        
+
         for (j = 0; j < (int)height; j++) {
-            src_ptr = (unsigned char*)image->data + 
-                      ((src_y + j) * image->bytes_per_line) + 
+            src_ptr = (unsigned char*)image->data +
+                      ((src_y + j) * image->bytes_per_line) +
                       (src_x * (image->bits_per_pixel / 8));
             dst_ptr = rgba_data + (j * width * 4);
-            
+
             /* Convert ARGB to RGBA if needed */
             for (i = 0; i < (int)width; i++) {
                 /* Assuming XImage data is ARGB (most common with Tk) */
@@ -470,7 +470,7 @@ XPutImage(
                 unsigned char r = src_ptr[i*4+1];
                 unsigned char g = src_ptr[i*4+2];
                 unsigned char b = src_ptr[i*4+3];
-                
+
                 dst_ptr[i*4] = r;
                 dst_ptr[i*4+1] = g;
                 dst_ptr[i*4+2] = b;
@@ -479,37 +479,37 @@ XPutImage(
         }
     } else {
         /* For other bit depths, we'd need proper conversion */
-        memcpy(rgba_data, (unsigned char*)image->data + 
-               (src_y * image->bytes_per_line) + 
-               (src_x * (image->bits_per_pixel / 8)), 
+        memcpy(rgba_data, (unsigned char*)image->data +
+               (src_y * image->bytes_per_line) +
+               (src_x * (image->bits_per_pixel / 8)),
                width * height * 4);
     }
-    
+
     /* Create NanoVG image from the region data. */
-    imageId = nvgCreateImageRGBA(dc.vg, width, height, 
+    imageId = nvgCreateImageRGBA(dc.vg, width, height,
                                   0, rgba_data);
-    
+
     ckfree(rgba_data);
-    
+
     if (imageId <= 0) {
         TkGlfwEndDraw(&dc);
         return BadAlloc;
     }
-    
+
     /* Create image pattern. */
     imgPaint = nvgImagePattern(dc.vg, dest_x, dest_y,
-                                width, height, 
+                                width, height,
                                 0.0f, imageId, 1.0f);
-    
+
     /* Draw the image. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, dest_x, dest_y, width, height);
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
-    
+
     /* Clean up. */
     nvgDeleteImage(dc.vg, imageId);
-    
+
     TkGlfwEndDraw(&dc);
     return Success;
 }
