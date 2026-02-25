@@ -27,23 +27,6 @@ typedef enum {
 static TkWaylandDecorMode decorationMode = DECOR_AUTO;
 static int ssdAvailable = 0;
 
-/* Decoration constants. */
-#define TITLE_BAR_HEIGHT    30
-#define BORDER_WIDTH        1
-#define BUTTON_WIDTH        30
-#define BUTTON_HEIGHT       30
-#define BUTTON_SPACING      5
-#define CORNER_RADIUS       6.0f
-#define SHADOW_BLUR         20.0f
-
-
-
-#define RESIZE_NONE     0
-#define RESIZE_LEFT     (1 << 0)
-#define RESIZE_RIGHT    (1 << 1)
-#define RESIZE_TOP      (1 << 2)
-#define RESIZE_BOTTOM   (1 << 3)
-
 /* Forward declarations. */
 static void DrawTitleBar(NVGcontext *vg, TkWaylandDecoration *decor, int width, int height);
 static void DrawBorder(NVGcontext *vg, TkWaylandDecoration *decor, int width, int height);
