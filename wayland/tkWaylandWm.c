@@ -1509,7 +1509,6 @@ WmAspectCmd(
  *
  *----------------------------------------------------------------------
  */
-
 static int
 WmAttributesCmd(
     TCL_UNUSED(Tk_Window),
@@ -1521,8 +1520,8 @@ WmAttributesCmd(
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     int i;
 
-    /* No arguments: return all attributes as list. */
-    if (objc == 1) {   /* wm attributes $win */
+    /* No arguments → return all attributes */
+    if (objc == 0) {
         Tcl_Obj *result = Tcl_NewListObj(0, NULL);
 
         Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("-alpha", -1));
@@ -1541,10 +1540,10 @@ WmAttributesCmd(
         return TCL_OK;
     }
 
-    /* One argument: query single attribute. */
-    if (objc == 2) {
+    /* Query single attribute */
+    if (objc == 1) {
         int attribute;
-        if (Tcl_GetIndexFromObjStruct(interp, objv[1], WmAttributeNames,
+        if (Tcl_GetIndexFromObjStruct(interp, objv[0], WmAttributeNames,
                                       sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
             return TCL_ERROR;
         }
@@ -1571,17 +1570,17 @@ WmAttributesCmd(
         return TCL_OK;
     }
 
-    /* Odd number of arguments after window → error. */
-    if (objc % 2 == 0) {
-        Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-attribute value ...?");
+    /* Must be attribute/value pairs */
+    if (objc % 2 != 0) {
+        Tcl_WrongNumArgs(interp, 0, objv, "?-attribute value ...?");
         return TCL_ERROR;
     }
 
-    /* Set one or more attributes. */
     GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
     TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
 
-    for (i = 1; i < objc; i += 2) {
+    /* Set attributes */
+    for (i = 0; i < objc; i += 2) {
         int attribute;
         if (Tcl_GetIndexFromObjStruct(interp, objv[i], WmAttributeNames,
                                       sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
@@ -1596,10 +1595,10 @@ WmAttributesCmd(
                 }
                 d = (d < 0.0) ? 0.0 : (d > 1.0) ? 1.0 : d;
                 wmPtr->reqState.alpha = wmPtr->attributes.alpha = d;
-                if (glfwWindow != NULL) {
+
+                if (glfwWindow) {
                     glfwSetWindowOpacity(glfwWindow, (float)d);
                 }
-                /* TODO: Wayland opacity if supported via decor or compositor hint */
                 break;
             }
 
@@ -1609,10 +1608,11 @@ WmAttributesCmd(
                     return TCL_ERROR;
                 }
                 wmPtr->reqState.topmost = wmPtr->attributes.topmost = b;
-                if (glfwWindow != NULL) {
-                    glfwSetWindowAttrib(glfwWindow, GLFW_FLOATING, b ? GLFW_TRUE : GLFW_FALSE);
-                }
 
+                if (glfwWindow) {
+                    glfwSetWindowAttrib(glfwWindow, GLFW_FLOATING,
+                        b ? GLFW_TRUE : GLFW_FALSE);
+                }
                 break;
             }
 
@@ -1623,19 +1623,17 @@ WmAttributesCmd(
                 }
                 wmPtr->reqState.zoomed = wmPtr->attributes.zoomed = zoomed;
 
-                if (glfwWindow != NULL) {
+                if (glfwWindow) {
                     if (zoomed) {
                         glfwMaximizeWindow(glfwWindow);
                     } else {
                         glfwRestoreWindow(glfwWindow);
                     }
                 }
-                if (decor != NULL) {
+
+                if (decor) {
                     TkWaylandSetWindowMaximized(decor, zoomed);
                 }
-
-                /* Optional: if your WM needs it, you could also call TkpWmSetState()
-                 * or similar here — but usually GLFW + Wayland decoration is enough */
                 break;
             }
 
@@ -1650,7 +1648,7 @@ WmAttributesCmd(
             }
 
             case WMATT_TYPE:
-                /* Usually ignored / placeholder */
+                /* Placeholder / ignored */
                 break;
 
             default:
