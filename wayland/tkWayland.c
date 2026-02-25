@@ -41,16 +41,14 @@ TkGetServerInfo(
 {
     const char *backend = "GLFW";
     const char *platform = "Wayland";
-    
+
     /* Try to detect if we're actually running on X11 through GLFW */
-    if (glfwGetCurrentContext()) {
-        if (glfwGetPlatform() == GLFW_PLATFORM_X11) {
-            platform = "x11";
-        } else if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND) {
-            platform = "wayland";
-        }
+#ifdef GLFW_PLATFORM_X11
+    if (glfwGetCurrentContext() && (glfwGetPlatform() == GLFW_PLATFORM_X11)) {
+        platform = "x11";
     }
-    
+#endif
+
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %s (via GLFW)", backend, platform));
 }
 
@@ -111,15 +109,14 @@ TkGetDefaultScreenName(
 void
 Tk_UpdatePointer(
     TCL_UNUSED(Tk_Window),	/* Window to which pointer event is reported.*/
-    TCL_UNUSED(int), 
+    TCL_UNUSED(int),
     TCL_UNUSED(int),		/* Pointer location in x, y root coords. */
     TCL_UNUSED(int))		/* Modifier state mask. */
 {
   /* In GLFW, pointer position is managed by GLFW callbacks.
    * This function might be used to manually update cursor position
-   * in some edge cases. 
+   * in some edge cases.
    */
-  
 }
 
 /*
@@ -193,7 +190,7 @@ TkpBuildRegionFromAlphaData(
         unsigned short width;
         unsigned short height;
     } Rect;
-    
+
     Rect rect;
 
     for (y1 = 0; y1 < height; y1++) {
@@ -251,7 +248,7 @@ Tk_GetUserInactiveTime(
     TCL_UNUSED(Display*))	/* Unused with GLFW */
 {
     long inactiveTime = -1;
-    
+
     /* With GLFW, we need platform-specific idle time detection. */
 #if defined(__linux__)
     /* On Linux with GLFW, we might use DBus or read from /proc */
@@ -264,7 +261,7 @@ Tk_GetUserInactiveTime(
         fclose(fp);
     }
 #endif
-    
+
     return inactiveTime;
 }
 
@@ -313,7 +310,7 @@ void *
 Tk_GetDisplay(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
-    
+
     /* In GLFW context, we might return the monitor or window handle. */
     GLFWwindow *window = (GLFWwindow *)Tk_WindowId(tkwin);
     if (window) {

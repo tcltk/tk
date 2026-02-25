@@ -4,6 +4,9 @@
     #ifndef _TKCONFIG
     #define _TKCONFIG
 
+/* Define if ATK and Atk-bridge are available */
+#undef HAVE_ATK
+
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
 
@@ -15,6 +18,15 @@
 
 /* Is 'DIR64' in <sys/types.h>? */
 #undef HAVE_DIR64
+
+/* Define if fontconfig is available for Wayland */
+#undef HAVE_FONTCONFIG
+
+/* Define if OpenGL ES is available */
+#undef HAVE_GLES
+
+/* Define if glfw3 with Wayland support is available */
+#undef HAVE_GLFW
 
 /* Compiler support for module scope symbols */
 #undef HAVE_HIDDEN
@@ -46,6 +58,10 @@
 /* Does struct password have a pw_gecos field? */
 #undef HAVE_PW_GECOS
 
+/* Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)
+   */
+#undef HAVE_SD_BUS
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -76,6 +92,10 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define if text-input-unstable-v3 protocol is available (required for IME on
+   Wayland) */
+#undef HAVE_TEXT_INPUT_V3
+
 /* Is off64_t in <sys/types.h>? */
 #undef HAVE_TYPE_OFF64_T
 
@@ -88,8 +108,14 @@
 /* Define to 1 if you have the 'vfork' function. */
 #undef HAVE_VFORK
 
+/* Define if wayland-client and wayland-cursor are available */
+#undef HAVE_WAYLAND
+
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
+
+/* Define if xkbcommon is available */
+#undef HAVE_XKBCOMMON
 
 /* Is XScreenSaver available? */
 #undef HAVE_XSS
@@ -167,6 +193,9 @@
 
 /* Are TkAqua debug messages enabled? */
 #undef TK_MAC_DEBUG
+
+/* Define if building with Wayland backend */
+#undef TK_USE_WAYLAND
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
