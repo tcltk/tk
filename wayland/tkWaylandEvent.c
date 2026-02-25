@@ -606,6 +606,8 @@ TkGlfwMouseButtonCallback(
             break;
     }
 
+    memset(&event, 0, sizeof(XEvent));
+    
     /* Update button state */
     if (action == GLFW_PRESS) {
         glfwButtonState |= buttonMask;
@@ -615,7 +617,6 @@ TkGlfwMouseButtonCallback(
         event.type = ButtonRelease;
     }
 
-    memset(&event, 0, sizeof(XEvent));
     event.xbutton.serial = LastKnownRequestProcessed(winPtr->display);
     event.xbutton.send_event = False;
     event.xbutton.display = winPtr->display;

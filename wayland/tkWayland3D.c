@@ -284,7 +284,6 @@ Tk_3DHorizontalBevel(
         nvgRect(vg, x, y, width, height);
         nvgFillColor(vg, waylandBorderPtr->solidColor);
         nvgFill(vg);
-        TkGlfwEndDraw(&dc);
         return;
     case TK_RELIEF_SUNKEN:
         topColor = bottomColor = topBevel ? waylandBorderPtr->darkColor : 

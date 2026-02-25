@@ -595,7 +595,6 @@ XFillArcs(
     XArc *arcArr,
     int nArcs)
 {
-    TkWaylandDrawingContext dc;
     XGCValues gcValues;
     int i;
     
