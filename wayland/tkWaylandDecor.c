@@ -35,6 +35,7 @@ static void HandleButtonClick(TkWaylandDecoration *decor, ButtonType button);
 static int GetButtonAtPosition(TkWaylandDecoration *decor, double x, double y, int width);
 static int GetResizeEdge(double x, double y, int width, int height);
 static void UpdateButtonStates(TkWaylandDecoration *decor, double x, double y, int width);
+static int TkWaylandResizeEdgeToGLFW(int edge);
  
 /*
  *----------------------------------------------------------------------
@@ -546,16 +547,25 @@ DrawButton(NVGcontext *vg,
  *
  * TkWaylandDecorationMouseButton --
  *
- *      Process mouse button events for the decoration area.
+ *       Process mouse button events for the decoration area.
+ *  
+ *       On press:
+ *       Button hits are recorded (PRESSED state). Title-bar press delegates the drag to the 
+ *       compositor via glfwDragWindow(); no local drag state is maintained. Border-edge press 
+ *       delegates resize to the compositor via glfwResizeWindow(); no local resize state 
+ *       is maintained.
+ * 
+ *       On release:
+ *       A button is activated if it was in PRESSED state and the cursor is still over it. 
+ *       All button states are reset and hover is recomputed.
  *
  * Results:
- *      1 if the event was handled (i.e. occurred in the decoration area),
- *      0 otherwise.
+ *       1 if the event was handled (i.e. occurred in the decoration area),
+ *       0 otherwise.
  *
  * Side effects:
  *      May initiate window dragging, resizing, or button state changes.
- *      May trigger window close, maximise, or minimise actions.
- *
+ *      May trigger window close, maximise, or minimize actions.
  *----------------------------------------------------------------------
  */
  
@@ -570,6 +580,7 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
     int buttonType;
     int resizeEdge;
 
+
     if (decor == NULL || !decor->enabled) {
 	return 0;
     }
@@ -577,58 +588,57 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
+
 	if (action == GLFW_PRESS) {
+
+	    /* Check window control buttons first. */
 	    buttonType = GetButtonAtPosition(decor, x, y, width);
 	    if (buttonType >= 0) {
-		if (buttonType == BUTTON_CLOSE) decor->closeState = BUTTON_PRESSED;
+		if (buttonType == BUTTON_CLOSE)    decor->closeState = BUTTON_PRESSED;
 		else if (buttonType == BUTTON_MAXIMIZE) decor->maxState = BUTTON_PRESSED;
 		else if (buttonType == BUTTON_MINIMIZE) decor->minState = BUTTON_PRESSED;
 		return 1;
 	    }
-        
+
+	    /* Title bar drag — hand off to compositor. */
 	    if (y < TITLE_BAR_HEIGHT) {
-		decor->dragging = 1;
-		/* Store the offset of cursor within the window at drag start. */
-		decor->dragStartX = x;   /* window-relative cursor X. */
-		decor->dragStartY = y;   /* window-relative cursor Y. */
-		glfwGetWindowPos(decor->glfwWindow,
-				 &decor->windowStartX,
-				 &decor->windowStartY);
+		glfwDragWindow(decor->glfwWindow);
 		return 1;
 	    }
-	    
+
+	    /* Border resize — hand off to compositor. */
 	    resizeEdge = GetResizeEdge(x, y, width, height);
 	    if (resizeEdge != RESIZE_NONE) {
-		decor->resizing = resizeEdge;
-		decor->resizeStartX = x;
-		decor->resizeStartY = y;
-		glfwGetWindowSize(decor->glfwWindow, &decor->resizeStartWidth, &decor->resizeStartHeight);
+		glfwResizeWindow(decor->glfwWindow,
+				 TkWaylandResizeEdgeToGLFW(resizeEdge));
 		return 1;
 	    }
-        
+
 	} else if (action == GLFW_RELEASE) {
+
+	    /* Activate a button only if it was pressed and cursor is still on it. */
 	    buttonType = GetButtonAtPosition(decor, x, y, width);
 	    if (buttonType >= 0) {
-		if (buttonType == BUTTON_CLOSE && decor->closeState == BUTTON_PRESSED) {
+		if (buttonType == BUTTON_CLOSE    && decor->closeState == BUTTON_PRESSED)
 		    HandleButtonClick(decor, BUTTON_CLOSE);
-		} else if (buttonType == BUTTON_MAXIMIZE && decor->maxState == BUTTON_PRESSED) {
+		else if (buttonType == BUTTON_MAXIMIZE && decor->maxState  == BUTTON_PRESSED)
 		    HandleButtonClick(decor, BUTTON_MAXIMIZE);
-		} else if (buttonType == BUTTON_MINIMIZE && decor->minState == BUTTON_PRESSED) {
+		else if (buttonType == BUTTON_MINIMIZE && decor->minState  == BUTTON_PRESSED)
 		    HandleButtonClick(decor, BUTTON_MINIMIZE);
-		}
 	    }
-        
+
+	    /* Reset all button states and recompute hover. */
 	    decor->closeState = BUTTON_NORMAL;
-	    decor->maxState = BUTTON_NORMAL;
-	    decor->minState = BUTTON_NORMAL;
-	    decor->dragging = 0;
-	    decor->resizing = RESIZE_NONE;
+	    decor->maxState   = BUTTON_NORMAL;
+	    decor->minState   = BUTTON_NORMAL;
 	    UpdateButtonStates(decor, x, y, width);
 	    return 1;
 	}
     }
 
     return 0;
+
+
 }
 
 /*
@@ -636,15 +646,16 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
  *
  * TkWaylandDecorationMouseMove --
  *
- *      Process mouse motion events for the decoration area.
+ *      Process mouse motion events for the decoration area. Drag and resize are 
+ *      compositor-managed (initiated in TkWaylandDecorationMouseButton) so this function 
+ *      only needs to keep the button hover states current.
  *
  * Results:
- *      1 if the motion caused a window operation (drag/resize) or a
- *      button state change, 0 otherwise.
+ *       Always returns 0 — motion in the decoration area is not
+ *       consumed; Tk still receives MotionNotify for cursor updates.
  *
  * Side effects:
- *      May move the window (dragging) or resize it, or update button
- *      hover states.
+ *      Updates button hover states in the decoration structure.
  *
  *----------------------------------------------------------------------
  */
@@ -655,93 +666,18 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
 			     double y)
 {
     int width, height;
-    int newX, newY;
-    int newWidth, newHeight;
+
 
     if (decor == NULL || !decor->enabled) {
 	return 0;
     }
 
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
-
-    if (decor->dragging) {
-	int winX, winY;
-	glfwGetWindowPos(decor->glfwWindow, &winX, &winY);
-	/* Compute screen-space cursor position. */
-	int screenX = winX + (int)x;
-	int screenY = winY + (int)y;
-	/* New window origin = screen cursor pos minus the drag offset. */
-	newX = screenX - (int)decor->dragStartX;
-	newY = screenY - (int)decor->dragStartY;
-	glfwSetWindowPos(decor->glfwWindow, newX, newY);
-	return 1;
-    }
-
-   if (decor->resizing != RESIZE_NONE) {
-    int winX, winY, curWinWidth, curWinHeight;
-
-    glfwGetWindowPos(decor->glfwWindow, &winX, &winY);
-    glfwGetWindowSize(decor->glfwWindow, &curWinWidth, &curWinHeight);
-
-    /* Convert window-relative cursor to screen space. */
-    int screenX = winX + (int)x;
-    int screenY = winY + (int)y;
-
-    /*
-     * Store the screen-space window origin at resize start,
-     * then compute deltas from there. 
-     */
-
-    newX      = winX;
-    newY      = winY;
-    newWidth  = curWinWidth;
-    newHeight = curWinHeight;
-
-    if (decor->resizing & RESIZE_RIGHT) {
-        /* Right edge moves, left stays: width = screen cursor X - window left. */
-        newWidth = screenX - winX;
-    }
-    if (decor->resizing & RESIZE_BOTTOM) {
-        /* Bottom edge moves, top stays: height = screen cursor Y - window top. */
-        newHeight = screenY - winY;
-    }
-    if (decor->resizing & RESIZE_LEFT) {
-        /* Left edge moves, right stays fixed. */
-        int fixedRight = decor->resizeStartX + decor->resizeStartWidth;
-        newX     = screenX;
-        newWidth = fixedRight - screenX;
-    }
-    if (decor->resizing & RESIZE_TOP) {
-        /* Top edge moves, bottom stays fixed. */
-        int fixedBottom = decor->resizeStartY + decor->resizeStartHeight;
-        newY      = screenY;
-        newHeight = fixedBottom - screenY;
-    }
-
-    if (newWidth  < 100) {
-        /* Clamp: if left-resizing, pin X so right edge doesn't drift. */
-        if (decor->resizing & RESIZE_LEFT) {
-            newX = (decor->resizeStartX + decor->resizeStartWidth) - 100;
-        }
-        newWidth = 100;
-    }
-    if (newHeight < 100) {
-        if (decor->resizing & RESIZE_TOP) {
-            newY = (decor->resizeStartY + decor->resizeStartHeight) - 100;
-        }
-        newHeight = 100;
-    }
-
-    /* Only reposition if an edge that moves the origin is active. */
-    if (decor->resizing & (RESIZE_LEFT | RESIZE_TOP)) {
-        glfwSetWindowPos(decor->glfwWindow, newX, newY);
-    }
-    glfwSetWindowSize(decor->glfwWindow, newWidth, newHeight);
-    return 1;
-   }
-
     UpdateButtonStates(decor, x, y, width);
+
     return 0;
+
+
 }
 
 /*
@@ -1049,6 +985,39 @@ TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
     decorEnv = getenv("TK_WAYLAND_DECORATIONS");
     if (decorEnv != NULL) {
         TkWaylandSetDecorationMode(decorEnv);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandResizeEdgeToGLFW --
+ *
+ *   Map a RESIZE_* bitmask to the corresponding GLFW resize edge
+ *   constant for glfwResizeWindow().
+ *
+ * Results:
+ *      GLFW_RESIZE_* constant.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkWaylandResizeEdgeToGLFW(int edge)
+{
+    switch (edge) {
+    case RESIZE_TOP:                      return GLFW_RESIZE_TOP_EDGE;
+    case RESIZE_BOTTOM:                   return GLFW_RESIZE_BOTTOM_EDGE;
+    case RESIZE_LEFT:                     return GLFW_RESIZE_LEFT_EDGE;
+    case RESIZE_RIGHT:                    return GLFW_RESIZE_RIGHT_EDGE;
+    case RESIZE_TOP    | RESIZE_LEFT:     return GLFW_RESIZE_TOP_LEFT_CORNER;
+    case RESIZE_TOP    | RESIZE_RIGHT:    return GLFW_RESIZE_TOP_RIGHT_CORNER;
+    case RESIZE_BOTTOM | RESIZE_LEFT:     return GLFW_RESIZE_BOTTOM_LEFT_CORNER;
+    case RESIZE_BOTTOM | RESIZE_RIGHT:    return GLFW_RESIZE_BOTTOM_RIGHT_CORNER;
+    default:                              return GLFW_RESIZE_BOTTOM_RIGHT_CORNER;
     }
 }
 

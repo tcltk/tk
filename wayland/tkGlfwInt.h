@@ -213,12 +213,6 @@ typedef struct TkWaylandDecoration {
     ButtonState closeState;
     ButtonState maxState;
     ButtonState minState;
-    int dragging;
-    double dragStartX, dragStartY;
-    int windowStartX, windowStartY;
-    int resizing;
-    double resizeStartX, resizeStartY;
-    int resizeStartWidth, resizeStartHeight;
 } TkWaylandDecoration;
 
 TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
