@@ -428,7 +428,7 @@ MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
 MODULE_SCOPE void TkGlfwFlushAutoFrame(void);
 
 /* Helper function to measure fonts. */
-MODULE_SCOPE NVGcontext * TkGlfwGetNVGContextForMeasure(void)
+MODULE_SCOPE NVGcontext * TkGlfwGetNVGContextForMeasure(void);
 
 /*
  *----------------------------------------------------------------------
