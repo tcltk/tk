@@ -176,6 +176,8 @@ TkGlfwWindowSizeCallback(
     event.xconfigure.above = None;
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
 
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
     TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
 
 }
@@ -379,13 +381,13 @@ TkGlfwWindowMaximizeCallback(
         return;
     }
     
-    /* Update WmInfo zoomed state if WM info exists */
+    /* Update WmInfo zoomed state if WM info exists. */
     if (winPtr->wmInfoPtr) {
         WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
         wmPtr->attributes.zoomed = maximized;
     }
     
-    /* Note: No X event needed for maximize state changes */
+    /* Note: No X event needed for maximize state changes. */
 }
 
 /*
@@ -412,6 +414,12 @@ TkGlfwCursorPosCallback(
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
+
+    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
+    if (decor) {
+	TkWaylandDecorationMouseMove(decor, xpos, ypos);
+	/* Don't return — Tk still needs MotionNotify for cursor updates. */
+    }
 
     if (!winPtr) {
         if (lastWindow) {
@@ -442,9 +450,9 @@ TkGlfwCursorPosCallback(
         return;
     }
 
-    /* Check if mouse entered/exited window */
+    /* Check if mouse entered/exited window. */
     if (lastWindow != window) {
-        /* Send LeaveNotify for previous window if any */
+        /* Send LeaveNotify for previous window if any. */
         if (lastWindow) {
             TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
             if (lastWinPtr) {
@@ -470,7 +478,7 @@ TkGlfwCursorPosCallback(
             }
         }
         
-        /* Send EnterNotify for current window */
+        /* Send EnterNotify for current window. */
         memset(&event, 0, sizeof(XEvent));
         event.type = EnterNotify;
         event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display);
@@ -494,7 +502,7 @@ TkGlfwCursorPosCallback(
         lastWindow = window;
     }
     
-    /* Generate MotionNotify event */
+    /* Generate MotionNotify event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
     event.xmotion.serial = LastKnownRequestProcessed(winPtr->display);
@@ -508,13 +516,13 @@ TkGlfwCursorPosCallback(
     event.xmotion.y = (int)ypos;
     event.xmotion.x_root = winPtr->changes.x + (int)xpos;
     event.xmotion.y_root = winPtr->changes.y + (int)ypos;
-    /* Critical for drag operations */
+    /* Critical for drag operations. */
     event.xmotion.state = glfwButtonState | glfwModifierState;
     event.xmotion.is_hint = NotifyNormal;
     event.xmotion.same_screen = True;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
-    /* Update last position */
+    /* Update last position. */
     lastX = xpos;
     lastY = ypos;
 }
@@ -552,10 +560,17 @@ TkGlfwMouseButtonCallback(
         return;
     }
 
-    /* Get cursor position */
+    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
+    if (decor && TkWaylandDecorationMouseButton(decor, button, action,
+						xpos, ypos)) {
+	return;  /* Decoration consumed the event. */
+    }
+
+
+    /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Update modifier state */
+    /* Update modifier state. */
     glfwModifierState = 0;
 
     if (mods & GLFW_MOD_SHIFT)
@@ -570,7 +585,7 @@ TkGlfwMouseButtonCallback(
     if (mods & GLFW_MOD_SUPER)
         glfwModifierState |= Mod4Mask;
 
-    /* Map GLFW button to X11 button and mask */
+    /* Map GLFW button to X11 button and mask. */
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
             xbutton = Button1;
@@ -588,7 +603,7 @@ TkGlfwMouseButtonCallback(
             break;
 
         default:
-            /* Buttons 4+ are typically scroll wheel, but map safely */
+            /* Buttons 4+ are typically scroll wheel, but map safely. */
             xbutton = button + 1;
             buttonMask = 0;
             break;
@@ -596,7 +611,7 @@ TkGlfwMouseButtonCallback(
 
     memset(&event, 0, sizeof(XEvent));
     
-    /* Update button state */
+    /* Update button state. */
     if (action == GLFW_PRESS) {
         glfwButtonState |= buttonMask;
         event.type = ButtonPress;
@@ -654,10 +669,10 @@ TkGlfwScrollCallback(
         return;
     }
 
-    /* Get cursor position */
+    /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Map scroll direction to button */
+    /* Map scroll direction to button. */
     if (yoffset > 0) {
         button = Button4;  /* Scroll up */
     } else if (yoffset < 0) {
@@ -688,7 +703,7 @@ TkGlfwScrollCallback(
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Generate button release */
+    /* Generate button release. */
     event.type = ButtonRelease;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }

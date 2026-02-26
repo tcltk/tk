@@ -178,7 +178,6 @@ typedef struct TkWmInfo {
     int          lastX, lastY;
     int          lastWidth, lastHeight;
 	TkWaylandDecoration *decor; /* Client-side decoration. */
-
     struct TkWmInfo *nextPtr;
 } WmInfo;
 
@@ -427,8 +426,10 @@ MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
 /* Flush frame at end of drawing. */
 MODULE_SCOPE void TkGlfwFlushAutoFrame(void);
 
-/* Helper function to measure fonts. */
+/* Helper functions to measure fonts. */
 MODULE_SCOPE NVGcontext * TkGlfwGetNVGContextForMeasure(void);
+MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForLoad(void);
+
 
 /*
  *----------------------------------------------------------------------

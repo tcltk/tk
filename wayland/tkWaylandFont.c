@@ -549,15 +549,9 @@ Tk_MeasureCharsInContext(
         int ch;
         const char *next = p + Tcl_UtfToUniChar(p, &ch);
 
-        /*
-         * Width of this glyph is the distance from its x position to
-         * the next glyph's x position, or to the total width for the
-         * last glyph.
-         */
-        float glyphRight = (pi + 1 < npos)
-                ? positions[pi + 1].x
-                : totalWidth;
-        int glyphWidth = (int) ceil(glyphRight - positions[pi].x);
+	float totalWidth = (npos > 0) ? positions[npos - 1].maxx : 0.0f;
+	float glyphRight = positions[pi].maxx;
+	int glyphWidth = (int) ceil(glyphRight - positions[pi].x);
 
         if (maxLength >= 0 && pixelWidth + glyphWidth > maxLength) {
             if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
@@ -941,11 +935,11 @@ TkpMeasureCharsInContext(
     int *lengthPtr)
 {
     if (rangeStart < 0) rangeStart = 0;
-    if (rangeStart + rangeLength > numBytes) {
+    if (rangeStart + rangeLength > numBytes)
         rangeLength = numBytes - rangeStart;
-    }
-    return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
-        maxLength, flags, lengthPtr);
+    /* Pass full source + full numBytes so word-break context is preserved.. */
+    return Tk_MeasureCharsInContext(tkfont, source, numBytes,
+        rangeStart, rangeLength, maxLength, flags, lengthPtr);
 }
 
 /*
@@ -1193,7 +1187,7 @@ EnsureNvgFont(WaylandFont *fontPtr)
     /* Font loading only needs an initialized NVG context and a current
      * GL context. It does NOT need an active frame. Bypass the frame
      * check by going directly to glfwContext. */
-    TkGlfwContext *ctx = TkGlfwGetContext();
+    TkGlfwContext *ctx = TkGlfwGetContextForLoad();
     if (!ctx || !ctx->initialized || !ctx->vg) return -1;
 
     /* Ensure some GL context is current so nvgCreateFont can upload
@@ -1241,16 +1235,13 @@ EnsureNvgFont(WaylandFont *fontPtr)
  */
 
 static NVGcolor
-ColorFromGC(
-    GC gc)
+ColorFromGC(GC gc)
 {
     if (gc) {
         XGCValues vals;
-        if (XGetGCValues(NULL, gc, GCForeground, &vals)) {
-            return TkGlfwPixelToNVG(vals.foreground);
-        }
+        TkWaylandGetGCValues(gc, GCForeground, &vals);
+        return TkGlfwPixelToNVG(vals.foreground);
     }
-    /* Fallback: opaque black. */
     return nvgRGBA(0, 0, 0, 255);
 }
 
