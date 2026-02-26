@@ -40,6 +40,7 @@ static unsigned int pendingCodepoint = 0;
 static GLFWwindow *lastWindow = NULL;
 static double lastX = -1, lastY = -1;
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -175,7 +176,7 @@ TkGlfwWindowSizeCallback(
     event.xconfigure.above = None;
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
 
     /* Queue Expose event for the entire client area. */
     memset(&event, 0, sizeof(XEvent));
@@ -190,7 +191,8 @@ TkGlfwWindowSizeCallback(
     event.xexpose.height = clientHeight;
     event.xexpose.count = 0;
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL); }
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -909,9 +911,9 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window) {
     event.xexpose.height = winPtr->changes.height;
     event.xexpose.count = 0;
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL); 
+    TkWaylandQueueExposeEvent(winPtr, 0, 0,
+    winPtr->changes.width, winPtr->changes.height);
 }
-
 
 /*
  * Local Variables:
