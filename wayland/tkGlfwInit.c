@@ -35,7 +35,7 @@
  *----------------------------------------------------------------------
  */
 
-static TkGlfwContext  glfwContext        = {NULL, NULL, 0, false};
+static TkGlfwContext  glfwContext        = {NULL, NULL, 0, 0, 0, NULL, 0, 0};
 static WindowMapping *windowMappingList  = NULL;
 static Drawable       nextDrawableId     = 1000; /* avoid zero/conflicts */
 
@@ -680,7 +680,6 @@ TkGlfwFlushAutoFrame(void)
      TkGlfwGetNVGContext(void)
  {
      GLFWwindow *current;
-     WindowMapping *mapping;
      int width, height;
 
      if (!glfwContext.initialized) {
@@ -1150,16 +1149,6 @@ TkGlfwGetNVGContextForMeasure(void)
     return ctx->vg;
 }
 
-MODULE_SCOPE NVGcontext *
-TkGlfwGetNVGContextForLoad(void)
-{
-    if (!glfwContext.initialized || !glfwContext.vg) return NULL;
-    /* Make sure some GL context is current for the atlas upload. */
-    if (glfwGetCurrentContext() == NULL) {
-        glfwMakeContextCurrent(glfwContext.mainWindow);
-    }
-    return glfwContext.vg;
-}
 
 /*
  * Local Variables:
