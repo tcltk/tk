@@ -404,7 +404,7 @@ DrawTitleBar(NVGcontext *vg,
     if (decor->title != NULL) {
 	textColor = focused ? nvgRGB(255, 255, 255) : nvgRGB(180, 180, 180);
 	nvgFontSize(vg, 14.0f);
-	nvgFontFace(vg, "sans");
+	nvgFontFaceId(vg, TkGlfwGetContext()->decorFontId);
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 	nvgFillColor(vg, textColor);
 	nvgText(vg, 15, TITLE_BAR_HEIGHT / 2, decor->title, NULL);
@@ -588,12 +588,15 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
         
 	    if (y < TITLE_BAR_HEIGHT) {
 		decor->dragging = 1;
-		decor->dragStartX = x;
-		decor->dragStartY = y;
-		glfwGetWindowPos(decor->glfwWindow, &decor->windowStartX, &decor->windowStartY);
+		/* Store the offset of cursor within the window at drag start. */
+		decor->dragStartX = x;   /* window-relative cursor X. */
+		decor->dragStartY = y;   /* window-relative cursor Y. */
+		glfwGetWindowPos(decor->glfwWindow,
+				 &decor->windowStartX,
+				 &decor->windowStartY);
 		return 1;
 	    }
-        
+	    
 	    resizeEdge = GetResizeEdge(x, y, width, height);
 	    if (resizeEdge != RESIZE_NONE) {
 		decor->resizing = resizeEdge;
@@ -662,35 +665,87 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
 
     if (decor->dragging) {
-	newX = decor->windowStartX + (int)(x - decor->dragStartX);
-	newY = decor->windowStartY + (int)(y - decor->dragStartY);
+	int winX, winY;
+	glfwGetWindowPos(decor->glfwWindow, &winX, &winY);
+	/* Compute screen-space cursor position. */
+	int screenX = winX + (int)x;
+	int screenY = winY + (int)y;
+	/* New window origin = screen cursor pos minus the drag offset. */
+	newX = screenX - (int)decor->dragStartX;
+	newY = screenY - (int)decor->dragStartY;
 	glfwSetWindowPos(decor->glfwWindow, newX, newY);
 	return 1;
     }
 
-    if (decor->resizing != RESIZE_NONE) {
-	newWidth = decor->resizeStartWidth;
-	newHeight = decor->resizeStartHeight;
-    
-	if (decor->resizing & RESIZE_RIGHT) {
-	    newWidth = decor->resizeStartWidth + (int)(x - decor->resizeStartX);
-	}
-	if (decor->resizing & RESIZE_LEFT) {
-	    newWidth = decor->resizeStartWidth - (int)(x - decor->resizeStartX);
-	}
-	if (decor->resizing & RESIZE_BOTTOM) {
-	    newHeight = decor->resizeStartHeight + (int)(y - decor->resizeStartY);
-	}
-	if (decor->resizing & RESIZE_TOP) {
-	    newHeight = decor->resizeStartHeight - (int)(y - decor->resizeStartY);
-	}
-    
-	if (newWidth < 100) newWidth = 100;
-	if (newHeight < 100) newHeight = 100;
-    
-	glfwSetWindowSize(decor->glfwWindow, newWidth, newHeight);
-	return 1;
+   if (decor->resizing != RESIZE_NONE) {
+    int winX, winY, curWinWidth, curWinHeight;
+    int newX, newY, newWidth, newHeight;
+
+    glfwGetWindowPos(decor->glfwWindow, &winX, &winY);
+    glfwGetWindowSize(decor->glfwWindow, &curWinWidth, &curWinHeight);
+
+    /* Convert window-relative cursor to screen space. */
+    int screenX = winX + (int)x;
+    int screenY = winY + (int)y;
+
+    /* Compute screen-space position of each fixed edge. */
+    int rightEdge  = winX + decor->resizeStartWidth;
+    int bottomEdge = winY + decor->resizeStartHeight;
+    int leftEdge   = winX + (int)decor->resizeStartX
+                     - (decor->resizeStartWidth
+                        - (winX + decor->resizeStartWidth - winX));
+    /*
+     * Simpler: store the screen-space window origin at resize start,
+     * then compute deltas from there.  See the press handler below.
+     */
+
+    newX      = winX;
+    newY      = winY;
+    newWidth  = curWinWidth;
+    newHeight = curWinHeight;
+
+    if (decor->resizing & RESIZE_RIGHT) {
+        /* Right edge moves, left stays: width = screen cursor X - window left. */
+        newWidth = screenX - winX;
     }
+    if (decor->resizing & RESIZE_BOTTOM) {
+        /* Bottom edge moves, top stays: height = screen cursor Y - window top. */
+        newHeight = screenY - winY;
+    }
+    if (decor->resizing & RESIZE_LEFT) {
+        /* Left edge moves, right stays fixed. */
+        int fixedRight = decor->resizeStartWinX + decor->resizeStartWidth;
+        newX     = screenX;
+        newWidth = fixedRight - screenX;
+    }
+    if (decor->resizing & RESIZE_TOP) {
+        /* Top edge moves, bottom stays fixed. */
+        int fixedBottom = decor->resizeStartWinY + decor->resizeStartHeight;
+        newY      = screenY;
+        newHeight = fixedBottom - screenY;
+    }
+
+    if (newWidth  < 100) {
+        /* Clamp: if left-resizing, pin X so right edge doesn't drift. */
+        if (decor->resizing & RESIZE_LEFT) {
+            newX = (decor->resizeStartWinX + decor->resizeStartWidth) - 100;
+        }
+        newWidth = 100;
+    }
+    if (newHeight < 100) {
+        if (decor->resizing & RESIZE_TOP) {
+            newY = (decor->resizeStartWinY + decor->resizeStartHeight) - 100;
+        }
+        newHeight = 100;
+    }
+
+    /* Only reposition if an edge that moves the origin is active. */
+    if (decor->resizing & (RESIZE_LEFT | RESIZE_TOP)) {
+        glfwSetWindowPos(decor->glfwWindow, newX, newY);
+    }
+    glfwSetWindowSize(decor->glfwWindow, newWidth, newHeight);
+    return 1;
+   }
 
     UpdateButtonStates(decor, x, y, width);
     return 0;

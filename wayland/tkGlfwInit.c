@@ -174,6 +174,9 @@ TkGlfwInitialize(void)
         glfwTerminate();
         return TCL_ERROR;
     }
+    /* Register font for use in window decorations. */
+    glfwContext.decorFontId = nvgCreateFont(glfwContext.vg, "sans",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
 
     /* Register the NanoVG context for pixmap operations. */
     TkWaylandSetNVGContext(glfwContext.vg);
@@ -309,8 +312,6 @@ TkGlfwCreateWindow(
 
     /* Setup callbacks. */
     if (tkWin != NULL) {
-        glfwSetMouseButtonCallback(window, TkWaylandHandleMouseButton);
-        glfwSetCursorPosCallback(window, TkWaylandHandleMouseMove);
         TkGlfwSetupCallbacks(window, tkWin);
     }
 
@@ -382,7 +383,6 @@ TkWaylandGetDecoration(TkWindow *winPtr)
 {
 	WindowMapping *m = FindMappingByTk(winPtr);
 	return m ? m->decoration : NULL;
-	return NULL;
 }
 
 
@@ -1138,7 +1138,7 @@ CleanupAllMappings(void)
     windowMappingList = NULL;
 }
 
-/* Helper function for use by measurement and font loading only. */
+/* Helper functions for use by measurement and font loading only. */
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContextForMeasure(void)
 {
@@ -1148,6 +1148,17 @@ TkGlfwGetNVGContextForMeasure(void)
         glfwMakeContextCurrent(ctx->mainWindow);
     }
     return ctx->vg;
+}
+
+MODULE_SCOPE NVGcontext *
+TkGlfwGetNVGContextForLoad(void)
+{
+    if (!glfwContext.initialized || !glfwContext.vg) return NULL;
+    /* Make sure some GL context is current for the atlas upload. */
+    if (glfwGetCurrentContext() == NULL) {
+        glfwMakeContextCurrent(glfwContext.mainWindow);
+    }
+    return glfwContext.vg;
 }
 
 /*

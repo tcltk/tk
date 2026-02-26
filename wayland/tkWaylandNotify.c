@@ -37,7 +37,7 @@ static void TkWaylandHandleExposeEvents(void);
 static int TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
 
 /* Heartbeat timer constants */
-#define HEARTBEAT_INTERVAL 50   /* ms */
+#define HEARTBEAT_INTERVAL 16   /* ms */
 
 
 /*
