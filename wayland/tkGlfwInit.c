@@ -1137,6 +1137,18 @@ CleanupAllMappings(void)
     windowMappingList = NULL;
 }
 
+/* Helper function for use by measurement and font loading only. */
+MODULE_SCOPE NVGcontext *
+TkGlfwGetNVGContextForMeasure(void)
+{
+    TkGlfwContext *ctx = TkGlfwGetContext();
+    if (!ctx || !ctx->initialized || !ctx->vg) return NULL;
+    if (glfwGetCurrentContext() == NULL) {
+        glfwMakeContextCurrent(ctx->mainWindow);
+    }
+    return ctx->vg;
+}
+
 /*
  * Local Variables:
  * mode: c

@@ -427,6 +427,9 @@ MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
 /* Flush frame at end of drawing. */
 MODULE_SCOPE void TkGlfwFlushAutoFrame(void);
 
+/* Helper function to measure fonts. */
+MODULE_SCOPE NVGcontext * TkGlfwGetNVGContextForMeasure(void)
+
 /*
  *----------------------------------------------------------------------
  *
