@@ -499,6 +499,7 @@ TkGlfwUpdateWindowSize(
  *
  * Side effects:
  *	Makes the GLFW window current; opens a NanoVG frame; applies GC.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -515,7 +516,7 @@ TkGlfwBeginDraw(
     mapping = FindMappingByDrawable(drawable);
     if (!mapping || !mapping->glfwWindow) return TCL_ERROR;
 
-    /* * If a NanoVG frame is already active, we are likely in a nested 
+    /* If a NanoVG frame is already active, we are likely in a nested 
      * call (e.g., a widget drawing inside an Expose event). 
      * We must NOT clear the buffer or call nvgBeginFrame again.
      */
