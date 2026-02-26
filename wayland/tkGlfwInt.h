@@ -38,6 +38,7 @@ typedef struct {
     int         nvgFrameAutoOpened; /* Auto-opened frame */
     GLFWwindow *activeWindow; /* Current window */
     int nestedFrame; /* Frame within a frame. */
+    int decorFontId; /* NVG font ID */
 } TkGlfwContext;
 
 /*
@@ -231,6 +232,8 @@ TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glf
 void TkWaylandDestroyDecoration(TkWaylandDecoration *decor); 
 TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
 void TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg);
+int TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x,double y);
+int TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,int button,int action,double x,double y);
 
 /* Decoration constants. */
 #define TITLE_BAR_HEIGHT    30
@@ -428,7 +431,6 @@ MODULE_SCOPE void TkGlfwFlushAutoFrame(void);
 
 /* Helper functions to measure fonts. */
 MODULE_SCOPE NVGcontext * TkGlfwGetNVGContextForMeasure(void);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForLoad(void);
 
 
 /*

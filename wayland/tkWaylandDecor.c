@@ -679,7 +679,6 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
 
    if (decor->resizing != RESIZE_NONE) {
     int winX, winY, curWinWidth, curWinHeight;
-    int newX, newY, newWidth, newHeight;
 
     glfwGetWindowPos(decor->glfwWindow, &winX, &winY);
     glfwGetWindowSize(decor->glfwWindow, &curWinWidth, &curWinHeight);
@@ -688,15 +687,9 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
     int screenX = winX + (int)x;
     int screenY = winY + (int)y;
 
-    /* Compute screen-space position of each fixed edge. */
-    int rightEdge  = winX + decor->resizeStartWidth;
-    int bottomEdge = winY + decor->resizeStartHeight;
-    int leftEdge   = winX + (int)decor->resizeStartX
-                     - (decor->resizeStartWidth
-                        - (winX + decor->resizeStartWidth - winX));
     /*
-     * Simpler: store the screen-space window origin at resize start,
-     * then compute deltas from there.  See the press handler below.
+     * Store the screen-space window origin at resize start,
+     * then compute deltas from there. 
      */
 
     newX      = winX;
@@ -714,13 +707,13 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
     }
     if (decor->resizing & RESIZE_LEFT) {
         /* Left edge moves, right stays fixed. */
-        int fixedRight = decor->resizeStartWinX + decor->resizeStartWidth;
+        int fixedRight = decor->resizeStartX + decor->resizeStartWidth;
         newX     = screenX;
         newWidth = fixedRight - screenX;
     }
     if (decor->resizing & RESIZE_TOP) {
         /* Top edge moves, bottom stays fixed. */
-        int fixedBottom = decor->resizeStartWinY + decor->resizeStartHeight;
+        int fixedBottom = decor->resizeStartY + decor->resizeStartHeight;
         newY      = screenY;
         newHeight = fixedBottom - screenY;
     }
@@ -728,13 +721,13 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
     if (newWidth  < 100) {
         /* Clamp: if left-resizing, pin X so right edge doesn't drift. */
         if (decor->resizing & RESIZE_LEFT) {
-            newX = (decor->resizeStartWinX + decor->resizeStartWidth) - 100;
+            newX = (decor->resizeStartX + decor->resizeStartWidth) - 100;
         }
         newWidth = 100;
     }
     if (newHeight < 100) {
         if (decor->resizing & RESIZE_TOP) {
-            newY = (decor->resizeStartWinY + decor->resizeStartHeight) - 100;
+            newY = (decor->resizeStartY + decor->resizeStartHeight) - 100;
         }
         newHeight = 100;
     }

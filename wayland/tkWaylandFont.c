@@ -548,8 +548,7 @@ Tk_MeasureCharsInContext(
     while (p < rangeEnd && pi < npos) {
         int ch;
         const char *next = p + Tcl_UtfToUniChar(p, &ch);
-
-	float totalWidth = (npos > 0) ? positions[npos - 1].maxx : 0.0f;
+        
 	float glyphRight = positions[pi].maxx;
 	int glyphWidth = (int) ceil(glyphRight - positions[pi].x);
 
@@ -1187,8 +1186,8 @@ EnsureNvgFont(WaylandFont *fontPtr)
     /* Font loading only needs an initialized NVG context and a current
      * GL context. It does NOT need an active frame. Bypass the frame
      * check by going directly to glfwContext. */
-    TkGlfwContext *ctx = TkGlfwGetContextForLoad();
-    if (!ctx || !ctx->initialized || !ctx->vg) return -1;
+    TkGlfwContext *ctx = TkGlfwGetContext();
+    if (!ctx) return -1;
 
     /* Ensure some GL context is current so nvgCreateFont can upload
      * the font atlas. Use the main shared window if nothing else is. */
