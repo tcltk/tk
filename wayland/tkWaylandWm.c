@@ -408,13 +408,13 @@ DestroyGlfwWindow(
  *----------------------------------------------------------------------
  */
 
-void 
-TkWmMapWindow(TkWindow *winPtr) 
+void
+TkWmMapWindow(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
 
-    wmPtr->withdrawn = 0;
+    wmPtr->withdrawn   = 0;
     wmPtr->initialState = NormalState;
 
     if (!Tk_IsEmbedded(winPtr) && !wmPtr->glfwWindow) {
@@ -427,23 +427,41 @@ TkWmMapWindow(TkWindow *winPtr)
     UpdateGeometryInfo((ClientData)winPtr);
 
     if (wmPtr->glfwWindow) {
-        /* Wayland requires show first. */
+        WindowMapping *mapping;
+        int w, h;
+
         glfwShowWindow(wmPtr->glfwWindow);
 
-        /* Now safe to draw - Wayland requires buffer to be primed. */
+        /* Get the actual window size after showing. */
+        glfwGetWindowSize(wmPtr->glfwWindow, &w, &h);
+        
+        /* Ensure we have valid dimensions. */
+        if (w <= 0) w = 640;
+        if (h <= 0) h = 480;
+
+        /* Prime the framebuffer with a visible color. */
         GLFWwindow *prev = glfwGetCurrentContext();
         glfwMakeContextCurrent(wmPtr->glfwWindow);
-        glClearColor(0.9f,0.9f,0.9f,1.0f);
+        glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glfwSwapBuffers(wmPtr->glfwWindow);
         if (prev) glfwMakeContextCurrent(prev);
 
-	    /* Run event loop to force update. */
         TkGlfwProcessEvents();
         winPtr->flags |= TK_MAPPED;
+
+        mapping = FindMappingByTk(winPtr);
+        if (mapping != NULL) {
+            w = mapping->width  > 1 ? mapping->width  : 640;
+            h = mapping->height > 1 ? mapping->height : 480;
+
+            winPtr->changes.width  = w;
+            winPtr->changes.height = h;
+
+            TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+        }
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *

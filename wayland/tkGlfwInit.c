@@ -499,7 +499,6 @@ TkGlfwUpdateWindowSize(
  *
  * Side effects:
  *	Makes the GLFW window current; opens a NanoVG frame; applies GC.
- *
  *----------------------------------------------------------------------
  */
 
@@ -516,12 +515,13 @@ TkGlfwBeginDraw(
     mapping = FindMappingByDrawable(drawable);
     if (!mapping || !mapping->glfwWindow) return TCL_ERROR;
 
-    /* If a frame is already active for a DIFFERENT window, end it first.
-     * This handles the case where Tk triggers drawing on two windows
-     * in the same event cycle without an intervening EndDraw. */
+    /* * If a NanoVG frame is already active, we are likely in a nested 
+     * call (e.g., a widget drawing inside an Expose event). 
+     * We must NOT clear the buffer or call nvgBeginFrame again.
+     */
     if (glfwContext.nvgFrameActive) {
         if (glfwContext.activeWindow != mapping->glfwWindow) {
-            /* End the previous window's frame before starting a new one. */
+            /* If the window changed, finish the previous one first. */
             nvgEndFrame(glfwContext.vg);
             if (glfwContext.activeWindow) {
                 glfwSwapBuffers(glfwContext.activeWindow);
@@ -529,20 +529,20 @@ TkGlfwBeginDraw(
             glfwContext.nvgFrameActive = 0;
             glfwContext.activeWindow   = NULL;
         } else {
-            /* Same window — already in a frame, just return the context. */
-            dcPtr->drawable   = drawable;
-            dcPtr->glfwWindow = mapping->glfwWindow;
-            dcPtr->width      = mapping->width;
-            dcPtr->height     = mapping->height;
-            dcPtr->vg         = glfwContext.vg;
-            dcPtr->nestedFrame = 1;
+            /* Stay within the current active frame. */
+            dcPtr->drawable    = drawable;
+            dcPtr->glfwWindow  = mapping->glfwWindow;
+            dcPtr->width       = mapping->width;
+            dcPtr->height      = mapping->height;
+            dcPtr->vg          = glfwContext.vg;
+            dcPtr->nestedFrame = 1; /* Mark as nested to prevent EndDraw swapping */
+            
+            if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
             return TCL_OK;
         }
     }
 
-    /* Make this window's GL context current. All windows share the same
-     * GL context objects (via context sharing at creation time) so the
-     * NanoVG shaders, buffers, and font atlas are all valid here. */
+    /* Start a fresh frame for the window. */
     glfwMakeContextCurrent(mapping->glfwWindow);
 
     dcPtr->drawable    = drawable;
@@ -552,14 +552,25 @@ TkGlfwBeginDraw(
     dcPtr->vg          = glfwContext.vg;
     dcPtr->nestedFrame = 0;
 
+    /*
+     * Set the viewport and clear the background. 
+     * Use a standard Tk-like grey (0.92f) instead of black.
+     */
     glViewport(0, 0, mapping->width, mapping->height);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    /* Open the NanoVG frame for this render cycle. */
     nvgBeginFrame(glfwContext.vg,
                   (float)mapping->width,
                   (float)mapping->height, 1.0f);
+    
     nvgSave(glfwContext.vg);
+    
+    /*
+     * Apply a small translation to ensure 1-pixel lines align 
+     * to the pixel grid, preventing blurriness. 
+     */
     nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
 
     glfwContext.nvgFrameActive = 1;
@@ -591,13 +602,9 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) return;
 
-    /* If this was a nested begin (same window already had an open frame),
-     * do not end the frame — the outer EndDraw will do it. */
     if (dcPtr->nestedFrame) return;
 
-    if (!glfwContext.nvgFrameAutoOpened) {
-        nvgRestore(dcPtr->vg);
-    }
+    nvgRestore(dcPtr->vg);
 
     if (dcPtr->glfwWindow) {
         WindowMapping *mapping =
@@ -668,51 +675,44 @@ TkGlfwFlushAutoFrame(void)
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcontext *
-TkGlfwGetNVGContext(void)
-{
-    GLFWwindow *current;
-    WindowMapping *mapping;
-    int width, height;
+ MODULE_SCOPE NVGcontext *
+     TkGlfwGetNVGContext(void)
+ {
+     GLFWwindow *current;
+     WindowMapping *mapping;
+     int width, height;
 
-    if (!glfwContext.initialized) {
-        if (TkGlfwInitialize() != TCL_OK) {
-            return NULL;
-        }
-    }
+     if (!glfwContext.initialized) {
+	 if (TkGlfwInitialize() != TCL_OK) {
+	     return NULL;
+	 }
+     }
 
-    current = glfwGetCurrentContext();
-    if (current == NULL) {
-        /* No context current - try the main window as fallback. */
-        if (glfwContext.mainWindow) {
-            glfwMakeContextCurrent(glfwContext.mainWindow);
-            current = glfwContext.mainWindow;
-        } else {
-            fprintf(stderr, "TkGlfwGetNVGContext: No current GLFW context\n");
-            return NULL;
-        }
-    }
+     current = glfwGetCurrentContext();
+     if (current == NULL) {
+	 /* No context current - try the main window as fallback. */
+	 if (glfwContext.mainWindow) {
+	     glfwMakeContextCurrent(glfwContext.mainWindow);
+	     current = glfwContext.mainWindow;
+	 } else {
+	     fprintf(stderr, "TkGlfwGetNVGContext: No current GLFW context\n");
+	     return NULL;
+	 }
+     }
 
-    /* If no frame is active, open one now for the current window. */
-    if (!glfwContext.nvgFrameActive) {
-        mapping = FindMappingByGLFW(current);
-        if (mapping) {
-            width  = mapping->width  > 0 ? mapping->width  : 1;
-            height = mapping->height > 0 ? mapping->height : 1;
-        } else {
-            glfwGetWindowSize(current, &width, &height);
-        }
-
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        nvgBeginFrame(glfwContext.vg, (float)width, (float)height, 1.0f);
-        glfwContext.nvgFrameActive = 1;
-        /* Mark that we auto-opened this frame so EndDraw knows. */
-        glfwContext.nvgFrameAutoOpened = 1;
-    }
-
-    return glfwContext.vg;
-}
+     /* If no frame is active, open one now for the current window. */
+     if (!glfwContext.nvgFrameActive) {
+	 /* 
+	  * if we auto-open a frame (for a widget that draws 
+	  * outside an expose event), DO NOT clear the screen to black.
+	  * We want to see what was previously drawn.
+	  */
+	 nvgBeginFrame(glfwContext.vg, (float)width, (float)height, 1.0f);
+	 glfwContext.nvgFrameActive = 1;
+	 glfwContext.nvgFrameAutoOpened = 1;
+     }
+     return glfwContext.vg;
+ }
 
 /*
  *----------------------------------------------------------------------

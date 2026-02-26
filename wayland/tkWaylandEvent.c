@@ -178,20 +178,6 @@ TkGlfwWindowSizeCallback(
 
     TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
 
-    /* Queue Expose event for the entire client area. */
-    memset(&event, 0, sizeof(XEvent));
-    event.type = Expose;
-    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xexpose.send_event = False;
-    event.xexpose.display = winPtr->display;
-    event.xexpose.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xexpose.x = 0;
-    event.xexpose.y = 0;
-    event.xexpose.width = clientWidth;
-    event.xexpose.height = clientHeight;
-    event.xexpose.count = 0;
-
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
 }
 
 /*
@@ -891,30 +877,22 @@ TkWaylandGetPendingCharacter(void)
  */
 
 MODULE_SCOPE void
-TkGlfwWindowRefreshCallback(GLFWwindow *window) {
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    XEvent event;
+TkGlfwWindowRefreshCallback(GLFWwindow *window)
+{
+    TkWindow      *winPtr = TkGlfwGetTkWindow(window);
+    WindowMapping *mapping;
+    int            w, h;
 
-    if (!winPtr) {
-        return;
-    }
+    if (!winPtr) return;
 
-    memset(&event, 0, sizeof(XEvent));
-    event.type = Expose;
-    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xexpose.send_event = False;
-    event.xexpose.display = winPtr->display;
-    event.xexpose.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xexpose.x = 0;
-    event.xexpose.y = 0;
-    event.xexpose.width = winPtr->changes.width;
-    event.xexpose.height = winPtr->changes.height;
-    event.xexpose.count = 0;
+    mapping = FindMappingByTk(winPtr);
+    if (!mapping) return;
 
-    TkWaylandQueueExposeEvent(winPtr, 0, 0,
-    winPtr->changes.width, winPtr->changes.height);
+    w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
+    h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
+
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
-
 /*
  * Local Variables:
  * mode: c

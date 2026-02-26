@@ -226,16 +226,16 @@ TkWaylandNotifyExitHandler(
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandExposeEventProc -- --
+ * TkWaylandExposeEventProc --
  *
  *      Tcl event procedure that handles a single queued expose event.
  *      Installed as a Tcl event handler via Tcl_QueueProcEvent.
  *
  * Results:
- *      None.
+ *      1 if event was processed.
  *
  * Side effects:
- *      Processes expose events.
+ *      Draws the window content using NanoVG.
  *
  *----------------------------------------------------------------------
  */
@@ -247,26 +247,32 @@ TkWaylandExposeEventProc(
 {
     TkWaylandExposeEvent    *exposePtr = (TkWaylandExposeEvent *)evPtr;
     TkWaylandDrawingContext  dc;
-    Drawable                 drawable;
+    WindowMapping           *mapping;
 
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return 0;   /* Leave in queue, not processing window events now. */
+    if (!(flags & TCL_WINDOW_EVENTS)) return 0;
+    if (exposePtr->winPtr == NULL)    return 1;
+
+    mapping = FindMappingByTk(exposePtr->winPtr);
+    if (mapping == NULL) {
+        Tk_HandleEvent(&exposePtr->xEvent);
+        return 1;
     }
 
-    if (exposePtr->winPtr == NULL) {
-        return 1;   /* Window was destroyed; discard. */
+    if (mapping->width > 1 && mapping->height > 1) {
+        exposePtr->winPtr->changes.width  = mapping->width;
+        exposePtr->winPtr->changes.height = mapping->height;
+        exposePtr->xEvent.xexpose.width  = mapping->width;
+        exposePtr->xEvent.xexpose.height = mapping->height;
     }
 
-    drawable = Tk_WindowId((Tk_Window)exposePtr->winPtr);
-
-    if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
-        /* Window not ready to draw yet; let Tk handle it normally. */
+    if (TkGlfwBeginDraw(mapping->drawable, NULL, &dc) != TCL_OK) {
         Tk_HandleEvent(&exposePtr->xEvent);
         return 1;
     }
 
     Tk_HandleEvent(&exposePtr->xEvent);
 
+	/* Draw window decorations. */
     TkWaylandDecoration *decoration =
         TkWaylandGetDecoration(exposePtr->winPtr);
     if (decoration && decoration->enabled) {
@@ -274,8 +280,9 @@ TkWaylandExposeEventProc(
     }
 
     TkGlfwEndDraw(&dc);
-    return 1;   /* Event handled; remove from queue. */
+    return 1;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -339,34 +346,26 @@ TkWaylandHandleExposeEvents(void)
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- *  --
- *
- *      Queue an Expose event as a wrapped Tcl event that will open
- *      a NanoVG frame before dispatching, instead of using
- *      Tk_QueueWindowEvent which puts a raw XEvent into Tcl's queue
- *      with no NanoVG framing.
- *
- *----------------------------------------------------------------------
- */
-
 void
 TkWaylandQueueExposeEvent(
     TkWindow *winPtr,
-    int       x,
-    int       y,
-    int       width,
-    int       height)
+    int x, int y, int width, int height)
 {
     TkWaylandExposeEvent *evPtr;
+    WindowMapping        *mapping;
 
     if (winPtr == NULL) return;
+    if (winPtr->window == None) return;
 
-    evPtr = (TkWaylandExposeEvent *)
-                ckalloc(sizeof(TkWaylandExposeEvent));
+    mapping = FindMappingByTk(winPtr);
+    if (mapping == NULL) return;
 
+    if (width  <= 1 && mapping->width  > 1) width  = mapping->width;
+    if (height <= 1 && mapping->height > 1) height = mapping->height;
+
+    if (width <= 1 || height <= 1) return;
+
+    evPtr = (TkWaylandExposeEvent *)ckalloc(sizeof(TkWaylandExposeEvent));
     evPtr->header.proc = TkWaylandExposeEventProc;
     evPtr->winPtr      = winPtr;
 
@@ -376,7 +375,7 @@ TkWaylandQueueExposeEvent(
         LastKnownRequestProcessed(winPtr->display);
     evPtr->xEvent.xexpose.send_event = False;
     evPtr->xEvent.xexpose.display    = winPtr->display;
-    evPtr->xEvent.xexpose.window     = Tk_WindowId((Tk_Window)winPtr);
+    evPtr->xEvent.xexpose.window     = winPtr->window;
     evPtr->xEvent.xexpose.x          = x;
     evPtr->xEvent.xexpose.y          = y;
     evPtr->xEvent.xexpose.width      = width;
@@ -385,7 +384,6 @@ TkWaylandQueueExposeEvent(
 
     Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
 }
-
  
  /*
  * Local Variables:
