@@ -527,6 +527,17 @@ MODULE_SCOPE void TkGlfwSetupCallbacks(
 /* Set up event loop notifier. */
 void Tk_WaylandSetupTkNotifier(void);
 
+/* Struct for expose events. */
+typedef struct {
+    Tcl_Event      header;   /* Must be first. */
+    XEvent         xEvent;
+    TkWindow      *winPtr;
+} TkWaylandExposeEvent;
+
+/* Helper function for expose event processing. */
+void TkWaylandQueueExposeEvent( TkWindow *winPtr,int x, int y,int width, int  height);
+
+
 /*
  *----------------------------------------------------------------------
  *

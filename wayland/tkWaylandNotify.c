@@ -34,6 +34,7 @@ static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
 static void HeartbeatTimerProc(void *clientData);
 static void TkWaylandHandleExposeEvents(void);
+static int TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
 
 /* Heartbeat timer constants */
 #define HEARTBEAT_INTERVAL 50   /* ms */
@@ -221,21 +222,76 @@ TkWaylandNotifyExitHandler(
     tsdPtr->initialized = false;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandHandleExposeEvents --
+ * TkWaylandExposeEventProc -- --
  *
- *      Drain all pending Expose events from the Tcl event queue and
- *      route each through the NanoVG begin/end frame lifecycle.
- *      Called from TkWaylandEventsCheckProc after GLFW has been polled.
+ *      Tcl event procedure that handles a single queued expose event.
+ *      Installed as a Tcl event handler via Tcl_QueueProcEvent.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Each pending Expose event causes a full NanoVG frame to be
- *      rendered and swapped for the target window.
+ *      Processes expose events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkWaylandExposeEventProc(
+    Tcl_Event *evPtr,
+    int        flags)
+{
+    TkWaylandExposeEvent    *exposePtr = (TkWaylandExposeEvent *)evPtr;
+    TkWaylandDrawingContext  dc;
+    Drawable                 drawable;
+
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return 0;   /* Leave in queue, not processing window events now. */
+    }
+
+    if (exposePtr->winPtr == NULL) {
+        return 1;   /* Window was destroyed; discard. */
+    }
+
+    drawable = Tk_WindowId((Tk_Window)exposePtr->winPtr);
+
+    if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
+        /* Window not ready to draw yet; let Tk handle it normally. */
+        Tk_HandleEvent(&exposePtr->xEvent);
+        return 1;
+    }
+
+    Tk_HandleEvent(&exposePtr->xEvent);
+
+    TkWaylandDecoration *decoration =
+        TkWaylandGetDecoration(exposePtr->winPtr);
+    if (decoration && decoration->enabled) {
+        TkWaylandDrawDecoration(decoration, dc.vg);
+    }
+
+    TkGlfwEndDraw(&dc);
+    return 1;   /* Event handled; remove from queue. */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandHandleExposeEvents --
+ *
+ *      Called after glfwPollEvents(). Routes any Expose XEvents that
+ *      were queued by GLFW callbacks through the NanoVG frame lifecycle
+ *      by re-queuing them as Tcl events processed by
+ *      TkWaylandExposeEventProc.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Processes expose events.
  *
  *----------------------------------------------------------------------
  */
@@ -243,73 +299,92 @@ TkWaylandNotifyExitHandler(
 static void
 TkWaylandHandleExposeEvents(void)
 {
-    TkDisplay   *dispPtr;
-    TkWindow    *winPtr;
-    Drawable     drawable;
-    XEvent       event;
-    TkWaylandDrawingContext dc;
-
     /*
-     * Walk every known Tk display. In practice there is only one
-     * for a Wayland application, but we follow Tk convention.
+     * Service any pending Tcl window events now. This causes Tcl to
+     * dispatch queued XEvents (including the Expose events queued by
+     * TkGlfwWindowRefreshCallback and TkGlfwWindowSizeCallback) through
+     * Tk's normal event handling path.
+     *
+     * We call Tcl_ServiceEvent in a loop until no more window events
+     * are pending, ensuring all expose events queued in this poll
+     * cycle are handled before returning.
      */
-    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
-         dispPtr = dispPtr->nextPtr) {
-
-        /*
-         * XCheckTypedEvent pulls one Expose event at a time from
-         * Xlib's queue. On Wayland we have a synthetic queue, so
-         * we keep draining until there are none left.
-         */
-        while (XCheckTypedEvent(dispPtr->display, Expose, &event)) {
-
-            /*
-             * Locate the Tk window for this event. Skip if the
-             * window has been destroyed in the interim.
-             */
-            winPtr = (TkWindow *)
-                Tk_IdToWindow(dispPtr->display, event.xexpose.window);
-            if (winPtr == NULL) {
-                continue;
-            }
-
-            drawable = Tk_WindowId((Tk_Window)winPtr);
-
-            /*
-             * Open a NanoVG frame for this window.  If we cannot
-             * (window not yet mapped, no GLFW backing, etc.) fall
-             * back to letting Tk handle the event normally so that
-             * at least the event is consumed.
-             */
-            if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
-                Tk_HandleEvent(&event);
-                continue;
-            }
-
-            /*
-             * Let Tk's generic machinery dispatch the Expose event.
-             * This calls the widget's display procedure, which in
-             * turn calls XFillRectangle, XDrawLines, etc. — all of
-             * which are now safe because nvgFrameActive is 1.
-             */
-            Tk_HandleEvent(&event);
-
-            /*
-             * Close the frame and swap buffers.
-             */
-            TkGlfwEndDraw(&dc);
-        }
+    while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
+        /* Keep draining until no more window events are ready. */
     }
 
     /*
-     * Flush any auto-opened NanoVG frame that was opened by a draw
-     * call that occurred outside TkGlfwBeginDraw (e.g., during
-     * widget configuration). This must come after the expose loop
-     * so it does not interfere with the frame just swapped above.
+     * Flush any auto-opened NanoVG frame from draw calls that occurred
+     * outside TkGlfwBeginDraw (e.g., during widget configuration).
      */
     TkGlfwFlushAutoFrame();
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandQueueExposeEvent --
+ *
+ *      Queue an Expose event as a wrapped Tcl event that will open
+ *      a NanoVG frame before dispatching, instead of using
+ *      Tk_QueueWindowEvent which puts a raw XEvent into Tcl's queue
+ *      with no NanoVG framing.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Opens a NanoVG frame as part of expose event processing.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ *  --
+ *
+ *      Queue an Expose event as a wrapped Tcl event that will open
+ *      a NanoVG frame before dispatching, instead of using
+ *      Tk_QueueWindowEvent which puts a raw XEvent into Tcl's queue
+ *      with no NanoVG framing.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandQueueExposeEvent(
+    TkWindow *winPtr,
+    int       x,
+    int       y,
+    int       width,
+    int       height)
+{
+    TkWaylandExposeEvent *evPtr;
+
+    if (winPtr == NULL) return;
+
+    evPtr = (TkWaylandExposeEvent *)
+                ckalloc(sizeof(TkWaylandExposeEvent));
+
+    evPtr->header.proc = TkWaylandExposeEventProc;
+    evPtr->winPtr      = winPtr;
+
+    memset(&evPtr->xEvent, 0, sizeof(XEvent));
+    evPtr->xEvent.type               = Expose;
+    evPtr->xEvent.xexpose.serial     =
+        LastKnownRequestProcessed(winPtr->display);
+    evPtr->xEvent.xexpose.send_event = False;
+    evPtr->xEvent.xexpose.display    = winPtr->display;
+    evPtr->xEvent.xexpose.window     = Tk_WindowId((Tk_Window)winPtr);
+    evPtr->xEvent.xexpose.x          = x;
+    evPtr->xEvent.xexpose.y          = y;
+    evPtr->xEvent.xexpose.width      = width;
+    evPtr->xEvent.xexpose.height     = height;
+    evPtr->xEvent.xexpose.count      = 0;
+
+    Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
+}
 
  
  /*
