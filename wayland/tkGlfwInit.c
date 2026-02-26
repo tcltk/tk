@@ -1137,15 +1137,45 @@ CleanupAllMappings(void)
     windowMappingList = NULL;
 }
 
-/* Helper functions for use by measurement and font loading only. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwGetNVGContextForMeasure --
+ *
+ *      Returns the shared NanoVG context for measurement operations,
+ *      ensuring a GL context is current. This function is specifically
+ *      for font measurement during geometry computation and does not
+ *      require an active NanoVG frame.
+ *
+ * Results:
+ *      NVGcontext pointer, or NULL if not available.
+ *
+ * Side effects:
+ *      May make the main shared context current if no context is current.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContextForMeasure(void)
 {
     TkGlfwContext *ctx = TkGlfwGetContext();
-    if (!ctx || !ctx->initialized || !ctx->vg) return NULL;
-    if (glfwGetCurrentContext() == NULL) {
-        glfwMakeContextCurrent(ctx->mainWindow);
+
+    if (!ctx || !ctx->initialized || !ctx->vg) {
+        return NULL;
     }
+
+    /* For measurement, we don't need a frame, just a current context */
+    if (glfwGetCurrentContext() == NULL) {
+        /* Use the main shared context window */
+        if (ctx->mainWindow) {
+            glfwMakeContextCurrent(ctx->mainWindow);
+        } else {
+            fprintf(stderr, "TkGlfwGetNVGContextForMeasure: No GL context available\n");
+            return NULL;
+        }
+    }
+
     return ctx->vg;
 }
 
