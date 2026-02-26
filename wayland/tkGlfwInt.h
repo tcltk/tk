@@ -34,7 +34,10 @@ typedef struct {
     GLFWwindow *mainWindow;     /* Shared context window */
     NVGcontext *vg;             /* Global NanoVG context */
     int         initialized;    /* Initialization flag */
-    bool	    nvgFrameActive;  /* Active frame */
+    int	        nvgFrameActive;  /* Active frame */
+    int         nvgFrameAutoOpened; /* Auto-opened frame */
+    GLFWwindow *activeWindow; /* Current window */
+    int nestedFrame; /* Frame within a frame. */
 } TkGlfwContext;
 
 /*
@@ -130,7 +133,7 @@ typedef struct TkWmInfo {
     Tk_Window    icon;
     Tk_Window    iconFor;
     int          withdrawn;
-    int			initialState;	/* NormalState, IconicState, WithdrawnState */
+    int		 initialState;	/* NormalState, IconicState, WithdrawnState */
 
     /* Wrapper / menubar. */
     TkWindow    *wrapperPtr;
@@ -262,6 +265,7 @@ typedef struct {
     GLFWwindow *glfwWindow; /* Associated GLFW window */
     int         width;      /* Drawable width */
     int         height;     /* Drawable height */
+    int         nestedFrame; /* Frame within frame */
 } TkWaylandDrawingContext;
 
 /*
@@ -420,6 +424,9 @@ MODULE_SCOPE void TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
 /* Get NanoVG context for current drawing. */
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
 
+/* Flush frame at end of drawing. */
+MODULE_SCOPE void TkGlfwFlushAutoFrame(void);
+
 /*
  *----------------------------------------------------------------------
  *
@@ -567,7 +574,7 @@ MODULE_SCOPE void TkGlfwCharCallback(GLFWwindow *window,
     unsigned int codepoint);
 MODULE_SCOPE void TkGlfwWindowRefreshCallback(GLFWwindow *window);
 MODULE_SCOPE void TkGlfwWindowSizeCallback(
-    GLFWwindow *window, int width, int height);     
+    GLFWwindow *window, int width, int height);
 
 /*
  *----------------------------------------------------------------------

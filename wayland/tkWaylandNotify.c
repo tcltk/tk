@@ -33,6 +33,7 @@ static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
 static void HeartbeatTimerProc(void *clientData);
+static void TkWaylandHandleExposeEvents(void);
 
 /* Heartbeat timer constants */
 #define HEARTBEAT_INTERVAL 50   /* ms */
@@ -98,17 +99,18 @@ Tk_WaylandSetupTkNotifier(void)
  
 static void
 HeartbeatTimerProc(
-    TCL_UNUSED(void *)) /* clientData */
+    TCL_UNUSED(void *))
 {
     TSD_INIT();
 
-    /* Reschedule ourselves. */
     tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
                                                     HeartbeatTimerProc,
                                                     NULL);
 
-    /* Pump Wayland/GLFW events. */
-    glfwPollEvents();   
+    glfwPollEvents();
+
+    /* Flush any expose or auto-opened frames from the poll above. */
+    TkWaylandHandleExposeEvents();
 }
 
 /*
@@ -162,11 +164,21 @@ TkWaylandEventsSetupProc(
  
 static void
 TkWaylandEventsCheckProc(
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *),
     int flags)
 {
     if (flags & TCL_WINDOW_EVENTS) {
+        /*
+         * Poll GLFW first so that window resize, refresh, and input
+         * callbacks fire and queue their synthetic XEvents.
+         */
         TkGlfwProcessEvents();
+
+        /*
+         * Now drain any Expose events that were just queued, routing
+         * them through the NanoVG frame lifecycle.
+         */
+        TkWaylandHandleExposeEvents();
     }
 }
 
@@ -208,6 +220,96 @@ TkWaylandNotifyExitHandler(
 
     tsdPtr->initialized = false;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandHandleExposeEvents --
+ *
+ *      Drain all pending Expose events from the Tcl event queue and
+ *      route each through the NanoVG begin/end frame lifecycle.
+ *      Called from TkWaylandEventsCheckProc after GLFW has been polled.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Each pending Expose event causes a full NanoVG frame to be
+ *      rendered and swapped for the target window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandHandleExposeEvents(void)
+{
+    TkDisplay   *dispPtr;
+    TkWindow    *winPtr;
+    Drawable     drawable;
+    XEvent       event;
+    TkWaylandDrawingContext dc;
+
+    /*
+     * Walk every known Tk display. In practice there is only one
+     * for a Wayland application, but we follow Tk convention.
+     */
+    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
+         dispPtr = dispPtr->nextPtr) {
+
+        /*
+         * XCheckTypedEvent pulls one Expose event at a time from
+         * Xlib's queue. On Wayland we have a synthetic queue, so
+         * we keep draining until there are none left.
+         */
+        while (XCheckTypedEvent(dispPtr->display, Expose, &event)) {
+
+            /*
+             * Locate the Tk window for this event. Skip if the
+             * window has been destroyed in the interim.
+             */
+            winPtr = (TkWindow *)
+                Tk_IdToWindow(dispPtr->display, event.xexpose.window);
+            if (winPtr == NULL) {
+                continue;
+            }
+
+            drawable = Tk_WindowId((Tk_Window)winPtr);
+
+            /*
+             * Open a NanoVG frame for this window.  If we cannot
+             * (window not yet mapped, no GLFW backing, etc.) fall
+             * back to letting Tk handle the event normally so that
+             * at least the event is consumed.
+             */
+            if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
+                Tk_HandleEvent(&event);
+                continue;
+            }
+
+            /*
+             * Let Tk's generic machinery dispatch the Expose event.
+             * This calls the widget's display procedure, which in
+             * turn calls XFillRectangle, XDrawLines, etc. — all of
+             * which are now safe because nvgFrameActive is 1.
+             */
+            Tk_HandleEvent(&event);
+
+            /*
+             * Close the frame and swap buffers.
+             */
+            TkGlfwEndDraw(&dc);
+        }
+    }
+
+    /*
+     * Flush any auto-opened NanoVG frame that was opened by a draw
+     * call that occurred outside TkGlfwBeginDraw (e.g., during
+     * widget configuration). This must come after the expose loop
+     * so it does not interfere with the frame just swapped above.
+     */
+    TkGlfwFlushAutoFrame();
+}
+
 
  
  /*
