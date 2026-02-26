@@ -511,43 +511,64 @@ TkGlfwBeginDraw(
 {
     WindowMapping *mapping;
 
-    if (!dcPtr) {
-        return TCL_ERROR;
-    }
+    if (!dcPtr) return TCL_ERROR;
 
     mapping = FindMappingByDrawable(drawable);
-    if (!mapping || !mapping->glfwWindow) {
-        return TCL_ERROR;
+    if (!mapping || !mapping->glfwWindow) return TCL_ERROR;
+
+    /* If a frame is already active for a DIFFERENT window, end it first.
+     * This handles the case where Tk triggers drawing on two windows
+     * in the same event cycle without an intervening EndDraw. */
+    if (glfwContext.nvgFrameActive) {
+        if (glfwContext.activeWindow != mapping->glfwWindow) {
+            /* End the previous window's frame before starting a new one. */
+            nvgEndFrame(glfwContext.vg);
+            if (glfwContext.activeWindow) {
+                glfwSwapBuffers(glfwContext.activeWindow);
+            }
+            glfwContext.nvgFrameActive = 0;
+            glfwContext.activeWindow   = NULL;
+        } else {
+            /* Same window — already in a frame, just return the context. */
+            dcPtr->drawable   = drawable;
+            dcPtr->glfwWindow = mapping->glfwWindow;
+            dcPtr->width      = mapping->width;
+            dcPtr->height     = mapping->height;
+            dcPtr->vg         = glfwContext.vg;
+            dcPtr->nestedFrame = 1;
+            return TCL_OK;
+        }
     }
 
-    dcPtr->drawable   = drawable;
-    dcPtr->glfwWindow = mapping->glfwWindow;
-    dcPtr->width      = mapping->width;
-    dcPtr->height     = mapping->height;
-    dcPtr->vg         = glfwContext.vg;
-    
-    glfwContext.nvgFrameActive = 1;
-
+    /* Make this window's GL context current. All windows share the same
+     * GL context objects (via context sharing at creation time) so the
+     * NanoVG shaders, buffers, and font atlas are all valid here. */
     glfwMakeContextCurrent(mapping->glfwWindow);
 
-    /* Clear to transparent (widget will draw its background). */
+    dcPtr->drawable    = drawable;
+    dcPtr->glfwWindow  = mapping->glfwWindow;
+    dcPtr->width       = mapping->width;
+    dcPtr->height      = mapping->height;
+    dcPtr->vg          = glfwContext.vg;
+    dcPtr->nestedFrame = 0;
+
+    glViewport(0, 0, mapping->width, mapping->height);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    /* Begin NanoVG frame with pixel-perfect coordinates */
-    nvgBeginFrame(dcPtr->vg, (float)dcPtr->width, (float)dcPtr->height, 1.0f);
+    nvgBeginFrame(glfwContext.vg,
+                  (float)mapping->width,
+                  (float)mapping->height, 1.0f);
+    nvgSave(glfwContext.vg);
+    nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
 
-    /* Set pixel-aligned rendering to avoid blurriness. */
-    nvgSave(dcPtr->vg);
-    nvgTranslate(dcPtr->vg, 0.5f, 0.5f);  /* Helps with crisp lines at pixel boundaries */
+    glfwContext.nvgFrameActive = 1;
+    glfwContext.activeWindow   = mapping->glfwWindow;
 
-    if (gc) {
-        TkGlfwApplyGC(dcPtr->vg, gc);
-    }
+    if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
 
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -568,29 +589,66 @@ TkGlfwBeginDraw(
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    if (!dcPtr || !dcPtr->vg) {
-        return;
+    if (!dcPtr || !dcPtr->vg) return;
+
+    /* If this was a nested begin (same window already had an open frame),
+     * do not end the frame — the outer EndDraw will do it. */
+    if (dcPtr->nestedFrame) return;
+
+    if (!glfwContext.nvgFrameAutoOpened) {
+        nvgRestore(dcPtr->vg);
     }
-    
-    nvgRestore(dcPtr->vg);
 
     if (dcPtr->glfwWindow) {
         WindowMapping *mapping =
             (WindowMapping *)glfwGetWindowUserPointer(dcPtr->glfwWindow);
-
-        /* Draw window decoration in same frame. */
         if (mapping && mapping->decoration) {
             TkWaylandDrawDecoration(mapping->decoration, dcPtr->vg);
         }
     }
 
-    /* End the single NanoVG frame */
     nvgEndFrame(dcPtr->vg);
-    
-    glfwContext.nvgFrameActive = 0;
+    glfwContext.nvgFrameActive    = 0;
+    glfwContext.nvgFrameAutoOpened = 0;
+    glfwContext.activeWindow       = NULL;
 
     if (dcPtr->glfwWindow) {
         glfwSwapBuffers(dcPtr->glfwWindow);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwFlushAutoFrame --
+ *
+ *	Flushes the auto-opened frame.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Force-closes the NanoVG frame; swaps buffers.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkGlfwFlushAutoFrame(void)
+{
+    GLFWwindow *current;
+
+    if (!glfwContext.nvgFrameActive || !glfwContext.nvgFrameAutoOpened) {
+        return;
+    }
+
+    nvgEndFrame(glfwContext.vg);
+    glfwContext.nvgFrameActive = 0;
+    glfwContext.nvgFrameAutoOpened = 0;
+
+    current = glfwGetCurrentContext();
+    if (current && current != glfwContext.mainWindow) {
+        glfwSwapBuffers(current);
     }
 }
 
@@ -613,23 +671,44 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContext(void)
 {
+    GLFWwindow *current;
+    WindowMapping *mapping;
+    int width, height;
+
     if (!glfwContext.initialized) {
         if (TkGlfwInitialize() != TCL_OK) {
             return NULL;
         }
     }
 
-    /* Ensure some context is current – the caller is responsible
-     * for having made the correct window current via TkGlfwBeginDraw. */
-    if (glfwGetCurrentContext() == NULL) {
-        fprintf(stderr, "TkGlfwGetNVGContext: No current GLFW context!\n");
-        return NULL;
+    current = glfwGetCurrentContext();
+    if (current == NULL) {
+        /* No context current - try the main window as fallback. */
+        if (glfwContext.mainWindow) {
+            glfwMakeContextCurrent(glfwContext.mainWindow);
+            current = glfwContext.mainWindow;
+        } else {
+            fprintf(stderr, "TkGlfwGetNVGContext: No current GLFW context\n");
+            return NULL;
+        }
     }
-    
-    
+
+    /* If no frame is active, open one now for the current window. */
     if (!glfwContext.nvgFrameActive) {
-        fprintf(stderr, "TkGlfwGetNVGContext: No active NanoVG frame!\n");
-        return NULL;
+        mapping = FindMappingByGLFW(current);
+        if (mapping) {
+            width  = mapping->width  > 0 ? mapping->width  : 1;
+            height = mapping->height > 0 ? mapping->height : 1;
+        } else {
+            glfwGetWindowSize(current, &width, &height);
+        }
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        nvgBeginFrame(glfwContext.vg, (float)width, (float)height, 1.0f);
+        glfwContext.nvgFrameActive = 1;
+        /* Mark that we auto-opened this frame so EndDraw knows. */
+        glfwContext.nvgFrameAutoOpened = 1;
     }
 
     return glfwContext.vg;
