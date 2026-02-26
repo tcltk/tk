@@ -272,7 +272,7 @@ TkWaylandExposeEventProc(
 
     Tk_HandleEvent(&exposePtr->xEvent);
 
-	/* Draw window decorations. */
+    /* Draw window decorations. */
     TkWaylandDecoration *decoration =
         TkWaylandGetDecoration(exposePtr->winPtr);
     if (decoration && decoration->enabled) {
