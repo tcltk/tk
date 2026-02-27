@@ -560,12 +560,15 @@ TkGlfwMouseButtonCallback(
         return;
     }
 
+ fprintf(stderr, "DEBUG MouseButton: window=%p button=%d action=%d winPtr=%p\n",
+            (void*)window, button, action, (void*)winPtr);
+            
     glfwGetCursorPos(window, &xpos, &ypos);
 
     TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
-    if (decor && TkWaylandDecorationMouseButton(decor, button, action,
-                                                xpos, ypos)) {
-        return;  /* Decoration consumed the event. */
+     if (decor) {
+        int consumed = TkWaylandDecorationMouseButton(decor, button, action, xpos, ypos);
+        if (consumed) return;
     }
 
     /* Update modifier state. */
