@@ -108,8 +108,15 @@ proc ::tk::ConsoleInit {} {
 	bind Console <FocusIn>  [list ::tk::console::FontchooserFocus %W 1]
 	bind Console <FocusOut> [list ::tk::console::FontchooserFocus %W 0]
     }
+    bind Console <Command-MouseWheel> {
+	if {%D > 0} {
+	    event generate .console <<Console_FontSizeIncr>>
+	} else {
+	    event generate .console <<Console_FontSizeDecr>>
+	}
+    }
     AmpMenuArgs .menubar.edit add command -label [mc "&Increase Font Size"] \
-	-accel "$mod++" -command {event generate .console <<Console_FontSizeIncr>>}
+	-accel "$mod+=" -command {event generate .console <<Console_FontSizeIncr>>}
     AmpMenuArgs .menubar.edit add command -label [mc "&Decrease Font Size"] \
 	-accel "$mod+-" -command {event generate .console <<Console_FontSizeDecr>>}
     AmpMenuArgs .menubar.edit add command -label [mc "Fit To Screen Width"] \
@@ -462,9 +469,13 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_ClearLine>>		<Control-u>
 	<<Console_SaveCommand>>		<Control-z>
 	<<Console_FontSizeIncr>>	<Control-+>
+	<<Console_FontSizeIncr>>	<Control-=>
 	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeDecr>>	<Control-_>
 	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeIncr>>	<Command-=>
 	<<Console_FontSizeDecr>>	<Command-minus>
+	<<Console_FontSizeDecr>>	<Command-_>
     } {
 	event add $ev $key
 	bind Console $key {}
