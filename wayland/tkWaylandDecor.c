@@ -43,7 +43,6 @@ static int GetResizeEdge(double x, double y, int width, int height);
 static void UpdateButtonStates(TkWaylandDecoration *decor, double x, double y, int width);
 static void TkWaylandConfigureCallback(void *data, int width, int height);
 static void TkWaylandCloseCallback(void *data);
-MODULE_SCOPE TkWaylandPlatformInfo *TkGetWaylandPlatformInfo(void);
 
 /* Wayland window management function implementations. */
 static void xdg_surface_configure_handler(void *data,
@@ -118,6 +117,7 @@ static const struct wl_registry_listener registry_listener = {
     .global_remove = registry_global_remove_handler
 };
 
+MODULE_SCOPE void TkWaylandInstallPointerSerialListener(struct wl_pointer *pointer);
 /*
  *----------------------------------------------------------------------
  *
@@ -135,18 +135,18 @@ TkWaylandResizeEdge
 TkWaylandResizeEdgeFromInt(int edge)
 {
     switch (edge) {
-    case RESIZE_NONE:      return TK_WAYLAND_RESIZE_EDGE_NONE;
-    case RESIZE_TOP:       return TK_WAYLAND_RESIZE_EDGE_TOP;
-    case RESIZE_BOTTOM:    return TK_WAYLAND_RESIZE_EDGE_BOTTOM;
-    case RESIZE_LEFT:      return TK_WAYLAND_RESIZE_EDGE_LEFT;
-    case RESIZE_TOP | RESIZE_LEFT:     return TK_WAYLAND_RESIZE_EDGE_TOP_LEFT;
-    case RESIZE_TOP | RESIZE_RIGHT:    return TK_WAYLAND_RESIZE_EDGE_TOP_RIGHT;
-    case RESIZE_BOTTOM | RESIZE_LEFT:  return TK_WAYLAND_RESIZE_EDGE_BOTTOM_LEFT;
-    case RESIZE_BOTTOM | RESIZE_RIGHT: return TK_WAYLAND_RESIZE_EDGE_BOTTOM_RIGHT;
-    default:               return TK_WAYLAND_RESIZE_EDGE_NONE;
+    case RESIZE_NONE:                    return TK_WAYLAND_RESIZE_EDGE_NONE;
+    case RESIZE_TOP:                     return TK_WAYLAND_RESIZE_EDGE_TOP;
+    case RESIZE_BOTTOM:                  return TK_WAYLAND_RESIZE_EDGE_BOTTOM;
+    case RESIZE_LEFT:                    return TK_WAYLAND_RESIZE_EDGE_LEFT;
+    case RESIZE_RIGHT:                   return TK_WAYLAND_RESIZE_EDGE_RIGHT;
+    case RESIZE_TOP | RESIZE_LEFT:       return TK_WAYLAND_RESIZE_EDGE_TOP_LEFT;
+    case RESIZE_TOP | RESIZE_RIGHT:      return TK_WAYLAND_RESIZE_EDGE_TOP_RIGHT;
+    case RESIZE_BOTTOM | RESIZE_LEFT:    return TK_WAYLAND_RESIZE_EDGE_BOTTOM_LEFT;
+    case RESIZE_BOTTOM | RESIZE_RIGHT:   return TK_WAYLAND_RESIZE_EDGE_BOTTOM_RIGHT;
+    default:                             return TK_WAYLAND_RESIZE_EDGE_NONE;
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -403,22 +403,22 @@ TkWaylandWmCreateWindow(TkWaylandWmContext *ctx,
                         void *user_data)
 {
     TkWaylandWmWindow *win;
-    
+
     if (!ctx || !surface || !configure) {
         return NULL;
     }
-    
+
     win = (TkWaylandWmWindow *)calloc(1, sizeof(TkWaylandWmWindow));
     if (!win) {
         return NULL;
     }
-    
+
     win->surface = surface;
     win->configure_callback = configure;
     win->close_callback = close;
     win->user_data = user_data;
     win->decoration_mode = ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
-    
+
     /* Create xdg_surface. */
     win->xdg_surface = xdg_wm_base_get_xdg_surface(ctx->xdg_wm_base, surface);
     if (!win->xdg_surface) {
@@ -426,7 +426,7 @@ TkWaylandWmCreateWindow(TkWaylandWmContext *ctx,
         return NULL;
     }
     xdg_surface_add_listener(win->xdg_surface, &xdg_surface_listener, win);
-    
+
     /* Create xdg_toplevel. */
     win->xdg_toplevel = xdg_surface_get_toplevel(win->xdg_surface);
     if (!win->xdg_toplevel) {
@@ -435,10 +435,10 @@ TkWaylandWmCreateWindow(TkWaylandWmContext *ctx,
         return NULL;
     }
     xdg_toplevel_add_listener(win->xdg_toplevel, &xdg_toplevel_listener, win);
-    
+
     /* Set up decorations if available. */
     if (ctx->decoration_manager) {
-        win->toplevel_decoration = 
+        win->toplevel_decoration =
             zxdg_decoration_manager_v1_get_toplevel_decoration(
                 ctx->decoration_manager, win->xdg_toplevel);
         if (win->toplevel_decoration) {
@@ -448,7 +448,12 @@ TkWaylandWmCreateWindow(TkWaylandWmContext *ctx,
                 win);
         }
     }
-    
+
+    /* Commit the surface so the compositor maps this as a real
+     * xdg_toplevel. Without this initial commit the toplevel is never
+     * mapped and xdg_toplevel_move/resize are silently ignored. */
+    wl_surface_commit(surface);
+
     return win;
 }
 
@@ -1429,19 +1434,111 @@ DrawButton(NVGcontext *vg,
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandPointerButtonHandler --
+ *
+ *      Raw wl_pointer button listener installed alongside GLFW's own
+ *      pointer listener.  Its only job is to capture the Wayland serial
+ *      from every button event and write it into platformInfo->last_serial
+ *      before GLFW fires TkGlfwMouseButtonCallback.
+ *
+ *      xdg_toplevel_move and xdg_toplevel_resize both require a valid,
+ *      current input serial.  GLFW swallows the raw wl_pointer events and
+ *      never exposes the serial, so without this hook the serial is always
+ *      0 and every compositor silently rejects the interactive move/resize.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandPointerButtonHandler(void *data,
+                               TCL_UNUSED(struct wl_pointer *),
+                               uint32_t serial,
+                               TCL_UNUSED(uint32_t),  /* time */
+                               TCL_UNUSED(uint32_t),  /* button */
+                               TCL_UNUSED(uint32_t))  /* state */
+{
+    TkWaylandPlatformInfo *platformInfo = (TkWaylandPlatformInfo *)data;
+    if (platformInfo) {
+        platformInfo->last_serial = serial;
+    }
+}
+
+/* Stub listeners — we only care about the button serial. */
+static void TkWaylandPointerEnterHandler(
+    TCL_UNUSED(void *), 
+    TCL_UNUSED(struct wl_pointer *),
+    uint32_t serial,
+    TCL_UNUSED(struct wl_surface *),
+    TCL_UNUSED(wl_fixed_t), 
+    TCL_UNUSED(wl_fixed_t))
+{
+    /* Capture enter serial too — some compositors use it for move. */
+    TkWaylandPlatformInfo *platformInfo = TkGetWaylandPlatformInfo();
+    if (platformInfo) {
+        platformInfo->last_serial = serial;
+    }
+    (void)serial;
+}
+
+static void TkWaylandPointerLeaveHandler(
+    TCL_UNUSED(void *), 
+    TCL_UNUSED(struct wl_pointer *),
+    TCL_UNUSED(uint32_t), 
+    TCL_UNUSED(struct wl_surface *)) {}
+
+static void TkWaylandPointerMotionHandler(
+    TCL_UNUSED(void *), 
+    TCL_UNUSED(struct wl_pointer *),
+    TCL_UNUSED(uint32_t),
+    TCL_UNUSED(wl_fixed_t), 
+    TCL_UNUSED(wl_fixed_t)) {}
+
+static void TkWaylandPointerAxisHandler(
+    TCL_UNUSED(void *), 
+    TCL_UNUSED(struct wl_pointer *),
+    TCL_UNUSED(uint32_t), 
+    TCL_UNUSED(uint32_t), 
+    TCL_UNUSED(wl_fixed_t)) {}
+
+static const struct wl_pointer_listener tk_pointer_serial_listener = {
+    .enter  = TkWaylandPointerEnterHandler,
+    .leave  = TkWaylandPointerLeaveHandler,
+    .motion = TkWaylandPointerMotionHandler,
+    .button = TkWaylandPointerButtonHandler,
+    .axis   = TkWaylandPointerAxisHandler,
+};
+
+/*
+ * Call this once after you have a valid wl_seat, e.g. in your seat
+ * listener's capabilities handler alongside whatever GLFW does.
+ */
+void
+TkWaylandInstallPointerSerialListener(struct wl_pointer *pointer)
+{
+    TkWaylandPlatformInfo *platformInfo = TkGetWaylandPlatformInfo();
+    if (pointer && platformInfo) {
+        wl_pointer_add_listener(pointer, &tk_pointer_serial_listener,
+                                platformInfo);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandDecorationMouseButton --
  *
  *       Process mouse button events for the decoration area.
- *  
+ *
  *       On press:
- *       Button hits are recorded (PRESSED state). Title-bar press delegates the 
- *       drag to the compositor via TkWaylandWmMove(); no local drag state is 
- *       maintained. Border-edge press delegates resize to the compositor via 
- *       TkWaylandWmResize(); no local resize state is maintained.
- * 
+ *       Button hits are recorded (PRESSED state). Title-bar press delegates
+ *       the drag to the compositor via TkWaylandWmMove(); no local drag
+ *       state is maintained. Border-edge press delegates resize to the
+ *       compositor via TkWaylandWmResize(); no local resize state is
+ *       maintained.
+ *
  *       On release:
- *       A button is activated if it was in PRESSED state and the cursor is still 
- *       over it. All button states are reset and hover is recomputed.
+ *       A button is activated if it was in PRESSED state and the cursor is
+ *       still over it. All button states are reset and hover is recomputed.
  *
  * Results:
  *       1 if the event was handled (i.e. occurred in the decoration area),
@@ -1452,13 +1549,13 @@ DrawButton(NVGcontext *vg,
  *      May trigger window close, maximise, or minimize actions.
  *----------------------------------------------------------------------
  */
- 
+
 int
 TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
-			       int button,
-			       int action,
-			       double x,
-			       double y)
+                               int button,
+                               int action,
+                               double x,
+                               double y)
 {
     int width, height;
     int buttonType;
@@ -1468,17 +1565,22 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
     uint32_t serial;
     TkWaylandPlatformInfo *platformInfo;
 
-
     if (decor == NULL || !decor->enabled) {
-	return 0;
+        return 0;
     }
 
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        /* Get seat from global platform info */
         platformInfo = TkGetWaylandPlatformInfo();
-        if (platformInfo) {
+
+        /* FIX: Validate both seat and serial before attempting move/resize.
+         * Previously, if seat was NULL the operations were silently dropped
+         * with no indication. Also, last_serial is now kept current by
+         * TkWaylandPointerButtonHandler; without that listener it was always
+         * 0, causing every compositor to silently reject the interactive
+         * move/resize request. */
+        if (platformInfo && platformInfo->seat) {
             seat = platformInfo->seat;
             serial = platformInfo->last_serial;
         } else {
@@ -1486,62 +1588,61 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
             serial = 0;
         }
 
-	if (action == GLFW_PRESS) {
+        if (action == GLFW_PRESS) {
 
-	    /* Check window control buttons first. */
-	    buttonType = GetButtonAtPosition(decor, x, y, width);
-	    if (buttonType >= 0) {
-		if (buttonType == BUTTON_CLOSE)    decor->closeState = BUTTON_PRESSED;
-		else if (buttonType == BUTTON_MAXIMIZE) decor->maxState = BUTTON_PRESSED;
-		else if (buttonType == BUTTON_MINIMIZE) decor->minState = BUTTON_PRESSED;
-		return 1;
-	    }
+            /* Check window control buttons first. */
+            buttonType = GetButtonAtPosition(decor, x, y, width);
+            if (buttonType >= 0) {
+                if (buttonType == BUTTON_CLOSE)         decor->closeState = BUTTON_PRESSED;
+                else if (buttonType == BUTTON_MAXIMIZE) decor->maxState   = BUTTON_PRESSED;
+                else if (buttonType == BUTTON_MINIMIZE) decor->minState   = BUTTON_PRESSED;
+                return 1;
+            }
 
-	    /* Title bar drag — hand off to compositor via Wayland. */
-	    if (y < TITLE_BAR_HEIGHT) {
+            /* Title bar drag — hand off to compositor via Wayland. */
+            if (y < TITLE_BAR_HEIGHT) {
                 wm_win = decor->wm_win;
-                if (wm_win && seat) {
+                if (wm_win && seat && serial != 0) {
                     TkWaylandWmMove(wm_win, seat, serial);
                 }
-		return 1;
-	    }
+                return 1;
+            }
 
-	    /* Border resize — hand off to compositor via Wayland. */
-	    resizeEdge = GetResizeEdge(x, y, width, height);
-	    if (resizeEdge != RESIZE_NONE) {
+            /* Border resize — hand off to compositor via Wayland. */
+            resizeEdge = GetResizeEdge(x, y, width, height);
+            if (resizeEdge != RESIZE_NONE) {
                 wm_win = decor->wm_win;
-                if (wm_win && seat) {
-                    TkWaylandWmResize(wm_win, seat, serial, 
+                if (wm_win && seat && serial != 0) {
+                    TkWaylandWmResize(wm_win, seat, serial,
                                       TkWaylandResizeEdgeFromInt(resizeEdge));
                 }
-		return 1;
-	    }
+                return 1;
+            }
 
-	} else if (action == GLFW_RELEASE) {
+        } else if (action == GLFW_RELEASE) {
 
-	    /* Activate a button only if it was pressed and cursor is still on it. */
-	    buttonType = GetButtonAtPosition(decor, x, y, width);
-	    if (buttonType >= 0) {
-		if (buttonType == BUTTON_CLOSE    && decor->closeState == BUTTON_PRESSED)
-		    HandleButtonClick(decor, BUTTON_CLOSE);
-		else if (buttonType == BUTTON_MAXIMIZE && decor->maxState  == BUTTON_PRESSED)
-		    HandleButtonClick(decor, BUTTON_MAXIMIZE);
-		else if (buttonType == BUTTON_MINIMIZE && decor->minState  == BUTTON_PRESSED)
-		    HandleButtonClick(decor, BUTTON_MINIMIZE);
-	    }
+            /* Activate a button only if it was pressed and cursor is still on it. */
+            buttonType = GetButtonAtPosition(decor, x, y, width);
+            if (buttonType >= 0) {
+                if (buttonType == BUTTON_CLOSE    && decor->closeState == BUTTON_PRESSED)
+                    HandleButtonClick(decor, BUTTON_CLOSE);
+                else if (buttonType == BUTTON_MAXIMIZE && decor->maxState == BUTTON_PRESSED)
+                    HandleButtonClick(decor, BUTTON_MAXIMIZE);
+                else if (buttonType == BUTTON_MINIMIZE && decor->minState == BUTTON_PRESSED)
+                    HandleButtonClick(decor, BUTTON_MINIMIZE);
+            }
 
-	    /* Reset all button states and recompute hover. */
-	    decor->closeState = BUTTON_NORMAL;
-	    decor->maxState   = BUTTON_NORMAL;
-	    decor->minState   = BUTTON_NORMAL;
-	    UpdateButtonStates(decor, x, y, width);
-	    return 1;
-	}
+            /* Reset all button states and recompute hover. */
+            decor->closeState = BUTTON_NORMAL;
+            decor->maxState   = BUTTON_NORMAL;
+            decor->minState   = BUTTON_NORMAL;
+            UpdateButtonStates(decor, x, y, width);
+            return 1;
+        }
     }
 
     return 0;
 }
-
 /*
  *----------------------------------------------------------------------
  *

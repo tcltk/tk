@@ -477,7 +477,7 @@ WAYLAND_OBJS            = \
      tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o tkWaylandImage.o \
      tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
      tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
-     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
+     tkWaylandScrlbr.o tkWaylandSeat.o tkWaylandSend.o tkWaylandSysTray.o \
      tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
 
 # Re-use some unix files (the ones that are backend-agnostic)
@@ -631,7 +631,7 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandImage.c \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
-    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
+    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSeat.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c $(WAYLAND_DIR)/tkWaylandWm.c \
     $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c $(WAYLAND_DIR)/xdg-shell-protocol.c \
     $(WAYLAND_DIR)/xdg-decoration-client-protocol.c $(WAYLAND_UNIX_SRCS)
@@ -1530,6 +1530,9 @@ tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScale.c
 
 tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScrlbr.c
+
+tkWaylandSeat.o: $(WAYLAND_DIR)/tkWaylandSeat.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSeat.c
 
 tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c

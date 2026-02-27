@@ -318,6 +318,10 @@ void TkWaylandDestroyDecoration(TkWaylandDecoration *decor);
 void TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg);
 int TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x,double y);
 int TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,int button,int action,double x,double y);
+MODULE_SCOPE int  TkWaylandSeatInit(struct wl_display *display);
+MODULE_SCOPE void TkWaylandSeatCleanup(void);
+MODULE_SCOPE TkWaylandPlatformInfo *TkGetWaylandPlatformInfo(void);
+
 
 /* Decoration constants. */
 #define TITLE_BAR_HEIGHT    30

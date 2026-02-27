@@ -470,15 +470,16 @@ Tk_MeasureCharsInContext(
     const char *rangePtr = source + rangeStart;
     const char *rangeEnd = rangePtr + rangeLength;
 
-    /* Count codepoints in range */
-    int nchars = 0;
-    {
-        const char *p = rangePtr;
-        while (p < rangeEnd) {
-            p += Tcl_UtfToUniChar(p, NULL);
-            nchars++;
-        }
-    }
+   /* Count codepoints in range */
+	int nchars = 0;
+	{
+	    const char *p = rangePtr;
+	    Tcl_UniChar ch;                         
+	    while (p < rangeEnd) {
+	        p += Tcl_UtfToUniChar(p, &ch);      
+	        nchars++;
+	    }
+	}
     
     if (nchars == 0) {
         *lengthPtr = 0;
