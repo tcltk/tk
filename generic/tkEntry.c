@@ -2021,7 +2021,7 @@ EntryComputeGeometry(
     if (entryPtr->showCharObj != NULL) {
 	int ch;
 	char buf[6];
-	int size;
+	Tcl_Size size;
 
 	/*
 	 * Normalize the special character so we can safely duplicate it in
@@ -2051,7 +2051,7 @@ EntryComputeGeometry(
 
     Tk_FreeTextLayout(entryPtr->placeholderLayout);
     if (entryPtr->placeholderObj) {
-	entryPtr->placeholderChars = strlen(Tcl_GetString(entryPtr->placeholderObj));
+	entryPtr->placeholderChars = Tcl_GetCharLength(entryPtr->placeholderObj);
 	entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
 		Tcl_GetString(entryPtr->placeholderObj), entryPtr->placeholderChars, 0,
 		entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, NULL);
