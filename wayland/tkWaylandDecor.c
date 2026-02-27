@@ -1568,18 +1568,11 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
     if (decor == NULL || !decor->enabled) {
         return 0;
     }
-
+    
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         platformInfo = TkGetWaylandPlatformInfo();
-
-        /* FIX: Validate both seat and serial before attempting move/resize.
-         * Previously, if seat was NULL the operations were silently dropped
-         * with no indication. Also, last_serial is now kept current by
-         * TkWaylandPointerButtonHandler; without that listener it was always
-         * 0, causing every compositor to silently reject the interactive
-         * move/resize request. */
         if (platformInfo && platformInfo->seat) {
             seat = platformInfo->seat;
             serial = platformInfo->last_serial;
@@ -1596,19 +1589,19 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
                 if (buttonType == BUTTON_CLOSE)         decor->closeState = BUTTON_PRESSED;
                 else if (buttonType == BUTTON_MAXIMIZE) decor->maxState   = BUTTON_PRESSED;
                 else if (buttonType == BUTTON_MINIMIZE) decor->minState   = BUTTON_PRESSED;
-                return 1;
+                return 1;  /* Button click — consumed. */
             }
 
-            /* Title bar drag — hand off to compositor via Wayland. */
-            if (y < TITLE_BAR_HEIGHT) {
+            /* Title bar drag — only if cursor is actually in the title bar. */
+            if (y >= 0 && y < TITLE_BAR_HEIGHT) {
                 wm_win = decor->wm_win;
                 if (wm_win && seat && serial != 0) {
                     TkWaylandWmMove(wm_win, seat, serial);
                 }
-                return 1;
+                return 1;  /* Title bar — consumed. */
             }
 
-            /* Border resize — hand off to compositor via Wayland. */
+            /* Border resize — only if cursor is on a resize edge. */
             resizeEdge = GetResizeEdge(x, y, width, height);
             if (resizeEdge != RESIZE_NONE) {
                 wm_win = decor->wm_win;
@@ -1616,12 +1609,16 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
                     TkWaylandWmResize(wm_win, seat, serial,
                                       TkWaylandResizeEdgeFromInt(resizeEdge));
                 }
-                return 1;
+                return 1;  /* Resize edge — consumed. */
             }
+
+            /* Click is in client area — do not consume. */
+            return 0;
 
         } else if (action == GLFW_RELEASE) {
 
-            /* Activate a button only if it was pressed and cursor is still on it. */
+            /* Only consume release if it's on a decoration button or
+             * in the title bar / border. Client area releases pass through. */
             buttonType = GetButtonAtPosition(decor, x, y, width);
             if (buttonType >= 0) {
                 if (buttonType == BUTTON_CLOSE    && decor->closeState == BUTTON_PRESSED)
@@ -1630,19 +1627,38 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
                     HandleButtonClick(decor, BUTTON_MAXIMIZE);
                 else if (buttonType == BUTTON_MINIMIZE && decor->minState == BUTTON_PRESSED)
                     HandleButtonClick(decor, BUTTON_MINIMIZE);
+
+                decor->closeState = BUTTON_NORMAL;
+                decor->maxState   = BUTTON_NORMAL;
+                decor->minState   = BUTTON_NORMAL;
+                UpdateButtonStates(decor, x, y, width);
+                return 1;  /* Button release — consumed. */
             }
 
-            /* Reset all button states and recompute hover. */
+            /* Reset button states regardless — a drag may have started
+             * on a button and released anywhere. */
             decor->closeState = BUTTON_NORMAL;
             decor->maxState   = BUTTON_NORMAL;
             decor->minState   = BUTTON_NORMAL;
             UpdateButtonStates(decor, x, y, width);
-            return 1;
+
+            /* Only consume if release is in title bar or border area. */
+            if (y >= 0 && y < TITLE_BAR_HEIGHT) {
+                return 1;
+            }
+            resizeEdge = GetResizeEdge(x, y, width, height);
+            if (resizeEdge != RESIZE_NONE) {
+                return 1;
+            }
+
+            /* Release is in client area — do not consume. */
+            return 0;
         }
     }
 
     return 0;
 }
+
 /*
  *----------------------------------------------------------------------
  *
