@@ -38,6 +38,8 @@
 static TkGlfwContext  glfwContext        = {NULL, NULL, 0, 0, 0, NULL, 0, 0};
 static WindowMapping *windowMappingList  = NULL;
 static Drawable       nextDrawableId     = 1000; /* avoid zero/conflicts */
+static TkWaylandPlatformInfo *globalWaylandInfo = NULL;
+MODULE_SCOPE TkWaylandPlatformInfo *TkGetWaylandPlatformInfo(void);
 
 /*
  *----------------------------------------------------------------------
@@ -132,27 +134,34 @@ TkGlfwErrorCallback(
 MODULE_SCOPE int
 TkGlfwInitialize(void)
 {
+    TkWaylandPlatformInfo *platformInfo;
+    Tcl_Interp *interp;
+    Tk_Window mainWin;
+    TkWindow *mainWinPtr;
+    
     if (glfwContext.initialized) {
         return TCL_OK;
     }
+    
+    TkMainInfo *info = TkGetMainInfoList();
+    interp = info->interp;
 
-	glfwSetErrorCallback(TkGlfwErrorCallback);
-	
-	#ifdef GLFW_PLATFORM_WAYLAND
-		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-		glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
-	#endif
-	
-	if (!glfwInit()) {
-	    fprintf(stderr, "GLFW init failed\n");
-	    return TCL_ERROR;
-	}
+    glfwSetErrorCallback(TkGlfwErrorCallback);
+    
+    #ifdef GLFW_PLATFORM_WAYLAND
+        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+        glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
+    #endif
+    
+    if (!glfwInit()) {
+        fprintf(stderr, "GLFW init failed\n");
+        return TCL_ERROR;
+    }
 
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-
 
     glfwContext.mainWindow =
         glfwCreateWindow(640, 480, "Tk Shared Context", NULL, NULL);
@@ -174,15 +183,50 @@ TkGlfwInitialize(void)
         glfwTerminate();
         return TCL_ERROR;
     }
+    
     /* Register font for use in window decorations. */
     glfwContext.decorFontId = nvgCreateFont(glfwContext.vg, "sans",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
 
     /* Register the NanoVG context for pixmap operations. */
     TkWaylandSetNVGContext(glfwContext.vg);
 
+    /* Initialize Wayland platform info. */
+    platformInfo = (TkWaylandPlatformInfo *)calloc(1, sizeof(TkWaylandPlatformInfo));
+    if (platformInfo) {
+        /* Connect directly to Wayland display (don't rely on GLFW). */
+        platformInfo->display = wl_display_connect(NULL);
+        
+        /* Create Wayland window management context. */
+        if (platformInfo->display) {
+            platformInfo->wm_context = TkWaylandWmCreateContext(platformInfo->display);
+        }
+        
+        /* Store in global variable. */
+        globalWaylandInfo = platformInfo;
+        
+        /* Also store in the main window's WmInfo for easy access. */
+        if (interp) {
+            mainWin = Tk_MainWindow(interp);
+            if (mainWin) {
+                mainWinPtr = (TkWindow *)mainWin;
+                if (mainWinPtr && mainWinPtr->wmInfoPtr) {
+                    ((WmInfo *)mainWinPtr->wmInfoPtr)->waylandInfo = platformInfo;
+                }
+            }
+        }
+    }
+
     glfwContext.initialized = 1;
     return TCL_OK;
+}
+
+
+/* Helper function to get the global Wayland info. */
+MODULE_SCOPE TkWaylandPlatformInfo *
+TkGetWaylandPlatformInfo(void)
+{
+    return globalWaylandInfo;
 }
 
 /*

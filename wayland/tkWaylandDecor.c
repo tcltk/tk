@@ -3,8 +3,11 @@
  *  tkWaylandDecor.c – 
  * 
  * Client-side window decorations for Tcl/Tk on Wayland/GLFW using NanoVG.
- * Includes policy management for CSD/SSD priority and automatic detection.
+ * Includes policy management for CSD/SSD priority and automatic detection. 
+ * Incorporates code from the libdecor project.
  * 
+ *  Copyright © 2017-2018 Red Hat Inc.
+ *  Copyright © 2018 Jonas Ådahl
  *  Copyright © 2026 Kevin Walzer
  *
  */
@@ -15,6 +18,9 @@
 #include <nanovg.h>
 #include <string.h>
 #include <stdlib.h>
+#include <wayland-client.h>
+#include "xdg-shell-client-protocol.h"
+#include "xdg-decoration-client-protocol.h"
 
 /* Decoration modes. */
 typedef enum {
@@ -35,8 +41,819 @@ static void HandleButtonClick(TkWaylandDecoration *decor, ButtonType button);
 static int GetButtonAtPosition(TkWaylandDecoration *decor, double x, double y, int width);
 static int GetResizeEdge(double x, double y, int width, int height);
 static void UpdateButtonStates(TkWaylandDecoration *decor, double x, double y, int width);
-static int TkWaylandResizeEdgeToGLFW(int edge);
- 
+static void TkWaylandConfigureCallback(void *data, int width, int height);
+static void TkWaylandCloseCallback(void *data);
+MODULE_SCOPE TkWaylandPlatformInfo *TkGetWaylandPlatformInfo(void);
+
+/* Wayland window management function implementations. */
+static void xdg_surface_configure_handler(void *data,
+                                          struct xdg_surface *xdg_surface,
+                                          uint32_t serial);
+static void xdg_toplevel_configure_handler(void *data,
+                                           struct xdg_toplevel *xdg_toplevel,
+                                           int32_t width, int32_t height,
+                                           struct wl_array *states);
+static void xdg_toplevel_close_handler(void *data,
+                                       struct xdg_toplevel *xdg_toplevel);
+static void toplevel_decoration_configure_handler(void *data,
+                                                  struct zxdg_toplevel_decoration_v1 *decoration,
+                                                  uint32_t mode);
+
+/* XDG Shell listeners. */
+static const struct xdg_surface_listener xdg_surface_listener = {
+    .configure = xdg_surface_configure_handler,
+};
+
+static const struct xdg_toplevel_listener xdg_toplevel_listener = {
+    .configure = xdg_toplevel_configure_handler,
+    .close = xdg_toplevel_close_handler,
+};
+
+static const struct zxdg_toplevel_decoration_v1_listener toplevel_decoration_listener = {
+    .configure = toplevel_decoration_configure_handler,
+};
+
+/* XDG WM Base listener. */
+static void xdg_wm_base_ping_handler(TCL_UNUSED(void *),  /* data */
+                                     struct xdg_wm_base *xdg_wm_base,
+                                     uint32_t serial)
+{
+    xdg_wm_base_pong(xdg_wm_base, serial);
+}
+
+static const struct xdg_wm_base_listener xdg_wm_base_listener = {
+    .ping = xdg_wm_base_ping_handler,
+};
+
+/* Registry listeners. */
+static void registry_global_handler(void *data,
+                                    struct wl_registry *registry,
+                                    uint32_t name,
+                                    const char *interface,
+                                    uint32_t version)
+{
+    TkWaylandWmContext *ctx = (TkWaylandWmContext *)data;
+    
+    if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
+        ctx->xdg_wm_base = wl_registry_bind(registry, name,
+                                            &xdg_wm_base_interface,
+                                            version < 2 ? version : 2);
+        xdg_wm_base_add_listener(ctx->xdg_wm_base, &xdg_wm_base_listener, ctx);
+    } else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0) {
+        ctx->decoration_manager = wl_registry_bind(registry, name,
+                                                   &zxdg_decoration_manager_v1_interface,
+                                                   version < 2 ? version : 2);
+    }
+}
+
+static void registry_global_remove_handler(TCL_UNUSED(void *),  /* data */
+                                           TCL_UNUSED(struct wl_registry *), /* registry */
+                                           TCL_UNUSED(uint32_t)) /* name */
+{
+    /* Nothing to do. */
+}
+
+static const struct wl_registry_listener registry_listener = {
+    .global = registry_global_handler,
+    .global_remove = registry_global_remove_handler
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandResizeEdgeFromInt --
+ *
+ *      Convert from our internal RESIZE_* bitmask to TkWaylandResizeEdge enum.
+ *
+ * Results:
+ *      TkWaylandResizeEdge value.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkWaylandResizeEdge
+TkWaylandResizeEdgeFromInt(int edge)
+{
+    switch (edge) {
+    case RESIZE_NONE:      return TK_WAYLAND_RESIZE_EDGE_NONE;
+    case RESIZE_TOP:       return TK_WAYLAND_RESIZE_EDGE_TOP;
+    case RESIZE_BOTTOM:    return TK_WAYLAND_RESIZE_EDGE_BOTTOM;
+    case RESIZE_LEFT:      return TK_WAYLAND_RESIZE_EDGE_LEFT;
+    case RESIZE_TOP | RESIZE_LEFT:     return TK_WAYLAND_RESIZE_EDGE_TOP_LEFT;
+    case RESIZE_TOP | RESIZE_RIGHT:    return TK_WAYLAND_RESIZE_EDGE_TOP_RIGHT;
+    case RESIZE_BOTTOM | RESIZE_LEFT:  return TK_WAYLAND_RESIZE_EDGE_BOTTOM_LEFT;
+    case RESIZE_BOTTOM | RESIZE_RIGHT: return TK_WAYLAND_RESIZE_EDGE_BOTTOM_RIGHT;
+    default:               return TK_WAYLAND_RESIZE_EDGE_NONE;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Convert from TkWaylandResizeEdge to XDG edge (static inline in header)
+ *
+ *----------------------------------------------------------------------
+ */
+
+static inline enum xdg_toplevel_resize_edge
+TkWaylandResizeEdgeToXdg(TkWaylandResizeEdge edge)
+{
+    switch (edge) {
+    case TK_WAYLAND_RESIZE_EDGE_NONE:
+        return XDG_TOPLEVEL_RESIZE_EDGE_NONE;
+    case TK_WAYLAND_RESIZE_EDGE_TOP:
+        return XDG_TOPLEVEL_RESIZE_EDGE_TOP;
+    case TK_WAYLAND_RESIZE_EDGE_BOTTOM:
+        return XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM;
+    case TK_WAYLAND_RESIZE_EDGE_LEFT:
+        return XDG_TOPLEVEL_RESIZE_EDGE_LEFT;
+    case TK_WAYLAND_RESIZE_EDGE_TOP_LEFT:
+        return XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT;
+    case TK_WAYLAND_RESIZE_EDGE_BOTTOM_LEFT:
+        return XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT;
+    case TK_WAYLAND_RESIZE_EDGE_RIGHT:
+        return XDG_TOPLEVEL_RESIZE_EDGE_RIGHT;
+    case TK_WAYLAND_RESIZE_EDGE_TOP_RIGHT:
+        return XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT;
+    case TK_WAYLAND_RESIZE_EDGE_BOTTOM_RIGHT:
+        return XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT;
+    }
+    return XDG_TOPLEVEL_RESIZE_EDGE_NONE;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmCreateContext --
+ *
+ *      Create a new Wayland window management context.
+ *
+ * Results:
+ *      Pointer to new context, or NULL on failure.
+ *----------------------------------------------------------------------
+ */
+
+TkWaylandWmContext *
+TkWaylandWmCreateContext(struct wl_display *display)
+{
+    TkWaylandWmContext *ctx;
+    
+    if (!display) {
+        return NULL;
+    }
+    
+    ctx = (TkWaylandWmContext *)calloc(1, sizeof(TkWaylandWmContext));
+    if (!ctx) {
+        return NULL;
+    }
+    
+    ctx->display = display;
+    ctx->ref_count = 1;
+    
+    ctx->registry = wl_display_get_registry(display);
+    if (!ctx->registry) {
+        free(ctx);
+        return NULL;
+    }
+    
+    wl_registry_add_listener(ctx->registry, &registry_listener, ctx);
+    wl_display_roundtrip(display);  /* Ensure we get the globals. */
+    
+    if (!ctx->xdg_wm_base) {
+        /* No xdg_wm_base support - incompatible compositor. */
+        wl_registry_destroy(ctx->registry);
+        free(ctx);
+        return NULL;
+    }
+    
+    return ctx;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmDestroyContext --
+ *
+ *      Destroy a Wayland window management context.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmDestroyContext(TkWaylandWmContext *ctx)
+{
+    if (!ctx) {
+        return;
+    }
+    
+    ctx->ref_count--;
+    if (ctx->ref_count > 0) {
+        return;
+    }
+    
+    if (ctx->decoration_manager) {
+        zxdg_decoration_manager_v1_destroy(ctx->decoration_manager);
+    }
+    if (ctx->xdg_wm_base) {
+        xdg_wm_base_destroy(ctx->xdg_wm_base);
+    }
+    if (ctx->registry) {
+        wl_registry_destroy(ctx->registry);
+    }
+    
+    free(ctx);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * xdg_surface_configure_handler --
+ *
+ *      Handle xdg_surface configure event.
+ *----------------------------------------------------------------------
+ */
+
+static void
+xdg_surface_configure_handler(void *data,
+                              struct xdg_surface *xdg_surface,
+                              uint32_t serial)
+{
+    TkWaylandWmWindow *win = (TkWaylandWmWindow *)data;
+    
+    /* Acknowledge the configure. */
+    xdg_surface_ack_configure(xdg_surface, serial);
+    
+    /* Call the user's configure callback if this was a size change. */
+    if (win->configure_callback && win->content_width > 0 && win->content_height > 0) {
+        win->configure_callback(win->user_data, win->content_width, win->content_height);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * parse_window_states --
+ *
+ *      Parse XDG toplevel states into our internal state.
+ *----------------------------------------------------------------------
+ */
+
+static void
+parse_window_states(TkWaylandWmWindow *win, struct wl_array *states)
+{
+    uint32_t *state;
+    
+    win->maximized = 0;
+    win->fullscreen = 0;
+    
+    wl_array_for_each(state, states) {
+        switch (*state) {
+        case XDG_TOPLEVEL_STATE_MAXIMIZED:
+            win->maximized = 1;
+            break;
+        case XDG_TOPLEVEL_STATE_FULLSCREEN:
+            win->fullscreen = 1;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * xdg_toplevel_configure_handler --
+ *
+ *      Handle xdg_toplevel configure event.
+ *----------------------------------------------------------------------
+ */
+
+static void
+xdg_toplevel_configure_handler(void *data,
+                               TCL_UNUSED(struct xdg_toplevel *), /* xdg_toplevel */
+                               int32_t width,
+                               int32_t height,
+                               struct wl_array *states)
+{
+    TkWaylandWmWindow *win = (TkWaylandWmWindow *)data;
+    
+    /* Store the new size. */
+    if (width > 0 && height > 0) {
+        win->content_width = width;
+        win->content_height = height;
+    }
+    
+    /* Parse window states. */
+    parse_window_states(win, states);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * xdg_toplevel_close_handler --
+ *
+ *      Handle xdg_toplevel close event.
+ *----------------------------------------------------------------------
+ */
+
+static void
+xdg_toplevel_close_handler(void *data,
+                           TCL_UNUSED(struct xdg_toplevel *)) /* xdg_toplevel */
+{
+    TkWaylandWmWindow *win = (TkWaylandWmWindow *)data;
+    
+    if (win->close_callback) {
+        win->close_callback(win->user_data);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * toplevel_decoration_configure_handler --
+ *
+ *      Handle decoration manager configure event.
+ *----------------------------------------------------------------------
+ */
+
+static void
+toplevel_decoration_configure_handler(void *data,
+                                      TCL_UNUSED(struct zxdg_toplevel_decoration_v1 *), /* decoration */
+                                      uint32_t mode)
+{
+    TkWaylandWmWindow *win = (TkWaylandWmWindow *)data;
+    
+    win->decoration_mode = mode;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmCreateWindow --
+ *
+ *      Create a new Wayland-managed window with decorations.
+ *----------------------------------------------------------------------
+ */
+
+TkWaylandWmWindow *
+TkWaylandWmCreateWindow(TkWaylandWmContext *ctx,
+                        struct wl_surface *surface,
+                        void (*configure)(void*,int,int),
+                        void (*close)(void*),
+                        void *user_data)
+{
+    TkWaylandWmWindow *win;
+    
+    if (!ctx || !surface || !configure) {
+        return NULL;
+    }
+    
+    win = (TkWaylandWmWindow *)calloc(1, sizeof(TkWaylandWmWindow));
+    if (!win) {
+        return NULL;
+    }
+    
+    win->surface = surface;
+    win->configure_callback = configure;
+    win->close_callback = close;
+    win->user_data = user_data;
+    win->decoration_mode = ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
+    
+    /* Create xdg_surface. */
+    win->xdg_surface = xdg_wm_base_get_xdg_surface(ctx->xdg_wm_base, surface);
+    if (!win->xdg_surface) {
+        free(win);
+        return NULL;
+    }
+    xdg_surface_add_listener(win->xdg_surface, &xdg_surface_listener, win);
+    
+    /* Create xdg_toplevel. */
+    win->xdg_toplevel = xdg_surface_get_toplevel(win->xdg_surface);
+    if (!win->xdg_toplevel) {
+        xdg_surface_destroy(win->xdg_surface);
+        free(win);
+        return NULL;
+    }
+    xdg_toplevel_add_listener(win->xdg_toplevel, &xdg_toplevel_listener, win);
+    
+    /* Set up decorations if available. */
+    if (ctx->decoration_manager) {
+        win->toplevel_decoration = 
+            zxdg_decoration_manager_v1_get_toplevel_decoration(
+                ctx->decoration_manager, win->xdg_toplevel);
+        if (win->toplevel_decoration) {
+            zxdg_toplevel_decoration_v1_add_listener(
+                win->toplevel_decoration,
+                &toplevel_decoration_listener,
+                win);
+        }
+    }
+    
+    return win;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmDestroyWindow --
+ *
+ *      Destroy a Wayland-managed window.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmDestroyWindow(TkWaylandWmWindow *win)
+{
+    if (!win) {
+        return;
+    }
+    
+    if (win->toplevel_decoration) {
+        zxdg_toplevel_decoration_v1_destroy(win->toplevel_decoration);
+    }
+    if (win->xdg_toplevel) {
+        xdg_toplevel_destroy(win->xdg_toplevel);
+    }
+    if (win->xdg_surface) {
+        xdg_surface_destroy(win->xdg_surface);
+    }
+    if (win->title) {
+        free(win->title);
+    }
+    if (win->app_id) {
+        free(win->app_id);
+    }
+    
+    free(win);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmSetTitle --
+ *
+ *      Set the window title.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmSetTitle(TkWaylandWmWindow *win, const char *title)
+{
+    if (!win || !title) {
+        return;
+    }
+    
+    free(win->title);
+    win->title = strdup(title);
+    
+    if (win->xdg_toplevel) {
+        xdg_toplevel_set_title(win->xdg_toplevel, title);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmSetAppId --
+ *
+ *      Set the application ID.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmSetAppId(TkWaylandWmWindow *win, const char *app_id)
+{
+    if (!win || !app_id) {
+        return;
+    }
+    
+    free(win->app_id);
+    win->app_id = strdup(app_id);
+    
+    if (win->xdg_toplevel) {
+        xdg_toplevel_set_app_id(win->xdg_toplevel, app_id);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmSetParent --
+ *
+ *      Set the parent window.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmSetParent(TkWaylandWmWindow *win, TkWaylandWmWindow *parent)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_set_parent(win->xdg_toplevel, 
+                            parent ? parent->xdg_toplevel : NULL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmMove --
+ *
+ *      Start an interactive window move.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmMove(TkWaylandWmWindow *win, struct wl_seat *seat, uint32_t serial)
+{
+    if (!win || !win->xdg_toplevel || !seat) {
+        return;
+    }
+    
+    xdg_toplevel_move(win->xdg_toplevel, seat, serial);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmResize --
+ *
+ *      Start an interactive window resize.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmResize(TkWaylandWmWindow *win, struct wl_seat *seat,
+                  uint32_t serial, TkWaylandResizeEdge edge)
+{
+    enum xdg_toplevel_resize_edge xdg_edge;
+    
+    if (!win || !win->xdg_toplevel || !seat) {
+        return;
+    }
+    
+    xdg_edge = TkWaylandResizeEdgeToXdg(edge);
+    xdg_toplevel_resize(win->xdg_toplevel, seat, serial, xdg_edge);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmMaximize --
+ *
+ *      Maximize the window.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmMaximize(TkWaylandWmWindow *win)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_set_maximized(win->xdg_toplevel);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmUnmaximize --
+ *
+ *      Unmaximize the window.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmUnmaximize(TkWaylandWmWindow *win)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_unset_maximized(win->xdg_toplevel);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmMinimize --
+ *
+ *      Minimize (iconify) the window.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmMinimize(TkWaylandWmWindow *win)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_set_minimized(win->xdg_toplevel);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmFullscreen --
+ *
+ *      Set the window to fullscreen.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmFullscreen(TkWaylandWmWindow *win, struct wl_output *output)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_set_fullscreen(win->xdg_toplevel, output);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmUnfullscreen --
+ *
+ *      Unset fullscreen.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmUnfullscreen(TkWaylandWmWindow *win)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_unset_fullscreen(win->xdg_toplevel);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmClose --
+ *
+ *      Request the window to close.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmClose(TkWaylandWmWindow *win)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    /* No direct close in protocol - rely on close callback from compositor. */
+    xdg_toplevel_destroy(win->xdg_toplevel);
+    win->xdg_toplevel = NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmSetMinSize --
+ *
+ *      Set minimum window size.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmSetMinSize(TkWaylandWmWindow *win, int min_width, int min_height)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_set_min_size(win->xdg_toplevel, min_width, min_height);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmSetMaxSize --
+ *
+ *      Set maximum window size.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmSetMaxSize(TkWaylandWmWindow *win, int max_width, int max_height)
+{
+    if (!win || !win->xdg_toplevel) {
+        return;
+    }
+    
+    xdg_toplevel_set_max_size(win->xdg_toplevel, max_width, max_height);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmSetWindowGeometry --
+ *
+ *      Set the window geometry (excluding decorations).
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmSetWindowGeometry(TkWaylandWmWindow *win, int x, int y,
+                             int width, int height)
+{
+    if (!win || !win->xdg_surface) {
+        return;
+    }
+    
+    xdg_surface_set_window_geometry(win->xdg_surface, x, y, width, height);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmCommit --
+ *
+ *      Commit the surface state.
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmCommit(TkWaylandWmWindow *win)
+{
+    if (!win || !win->surface) {
+        return;
+    }
+    
+    wl_surface_commit(win->surface);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmMap --
+ *
+ *      Map the window (make it visible).
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandWmMap(TkWaylandWmWindow *win)
+{
+    if (!win || !win->surface) {
+        return;
+    }
+    
+    wl_surface_commit(win->surface);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmIsMaximized --
+ *
+ *      Return whether the window is maximized.
+ *----------------------------------------------------------------------
+ */
+
+int
+TkWaylandWmIsMaximized(TkWaylandWmWindow *win)
+{
+    return win ? win->maximized : 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmIsFullscreen --
+ *
+ *      Return whether the window is fullscreen.
+ *----------------------------------------------------------------------
+ */
+
+int
+TkWaylandWmIsFullscreen(TkWaylandWmWindow *win)
+{
+    return win ? win->fullscreen : 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWmGetTitle --
+ *
+ *      Return the window title.
+ *----------------------------------------------------------------------
+ */
+
+const char *
+TkWaylandWmGetTitle(TkWaylandWmWindow *win)
+{
+    return win ? win->title : NULL;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -223,6 +1040,54 @@ TkWaylandConfigureWindowDecorations(void)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandConfigureCallback --
+ *
+ *      Callback for Wayland window configure events.
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandConfigureCallback(void *data, int width, int height)
+{
+    TkWaylandDecoration *decor = (TkWaylandDecoration *)data;
+    
+    if (!decor || !decor->winPtr) {
+        return;
+    }
+    
+    /* Update window size in mapping */
+    if (decor->glfwWindow) {
+        TkGlfwUpdateWindowSize(decor->glfwWindow, width, height);
+    }
+    
+    /* Queue expose event for redraw */
+    TkWaylandQueueExposeEvent(decor->winPtr, 0, 0, width, height);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandCloseCallback --
+ *
+ *      Callback for Wayland window close events.
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWaylandCloseCallback(void *data)
+{
+    TkWaylandDecoration *decor = (TkWaylandDecoration *)data;
+    
+    if (!decor || !decor->glfwWindow) {
+        return;
+    }
+    
+    glfwSetWindowShouldClose(decor->glfwWindow, GLFW_TRUE);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandCreateDecoration --
  *
  *      Allocate and initialise a decoration structure for a Tk window.
@@ -242,6 +1107,7 @@ TkWaylandCreateDecoration(TkWindow *winPtr,
 			  GLFWwindow *glfwWindow)
 {
     TkWaylandDecoration *decor;
+    TkWaylandPlatformInfo *platformInfo;
 
     if (winPtr == NULL || glfwWindow == NULL) {
 	return NULL;
@@ -254,7 +1120,7 @@ TkWaylandCreateDecoration(TkWindow *winPtr,
 
     decor->winPtr = winPtr;
     decor->glfwWindow = glfwWindow;
-    decor->wmPtr = (WmInfo *)winPtr->wmInfoPtr;  /* Link to WM info */
+    decor->wmPtr = (WmInfo *)winPtr->wmInfoPtr;  /* Link to WM info. */
     decor->enabled = 1;
     decor->maximized = 0;
 
@@ -271,9 +1137,23 @@ TkWaylandCreateDecoration(TkWindow *winPtr,
     decor->dragging = 0;
     decor->resizing = RESIZE_NONE;
 
+    /* Create Wayland window management object. */
+    platformInfo = TkGetWaylandPlatformInfo(); 
+    if (platformInfo && platformInfo->wm_context) {
+        /* Get surface from mapping */
+        WindowMapping *mapping = FindMappingByGLFW(glfwWindow);
+        if (mapping && mapping->surface) {
+            decor->wm_win = TkWaylandWmCreateWindow(
+                platformInfo->wm_context,
+                mapping->surface,
+                TkWaylandConfigureCallback,
+                TkWaylandCloseCallback,
+                decor);
+        }
+    }
+
     return decor;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -299,6 +1179,10 @@ TkWaylandDestroyDecoration(TkWaylandDecoration *decor)
 
     if (decor->title != NULL) {
 	free(decor->title);
+    }
+    
+    if (decor->wm_win != NULL) {
+        TkWaylandWmDestroyWindow(decor->wm_win);
     }
 
     free(decor);
@@ -550,14 +1434,14 @@ DrawButton(NVGcontext *vg,
  *       Process mouse button events for the decoration area.
  *  
  *       On press:
- *       Button hits are recorded (PRESSED state). Title-bar press delegates the drag to the 
- *       compositor via glfwDragWindow(); no local drag state is maintained. Border-edge press 
- *       delegates resize to the compositor via glfwResizeWindow(); no local resize state 
- *       is maintained.
+ *       Button hits are recorded (PRESSED state). Title-bar press delegates the 
+ *       drag to the compositor via TkWaylandWmMove(); no local drag state is 
+ *       maintained. Border-edge press delegates resize to the compositor via 
+ *       TkWaylandWmResize(); no local resize state is maintained.
  * 
  *       On release:
- *       A button is activated if it was in PRESSED state and the cursor is still over it. 
- *       All button states are reset and hover is recomputed.
+ *       A button is activated if it was in PRESSED state and the cursor is still 
+ *       over it. All button states are reset and hover is recomputed.
  *
  * Results:
  *       1 if the event was handled (i.e. occurred in the decoration area),
@@ -579,6 +1463,10 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
     int width, height;
     int buttonType;
     int resizeEdge;
+    TkWaylandWmWindow *wm_win;
+    struct wl_seat *seat;
+    uint32_t serial;
+    TkWaylandPlatformInfo *platformInfo;
 
 
     if (decor == NULL || !decor->enabled) {
@@ -588,6 +1476,15 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        /* Get seat from global platform info */
+        platformInfo = TkGetWaylandPlatformInfo();
+        if (platformInfo) {
+            seat = platformInfo->seat;
+            serial = platformInfo->last_serial;
+        } else {
+            seat = NULL;
+            serial = 0;
+        }
 
 	if (action == GLFW_PRESS) {
 
@@ -600,17 +1497,23 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
 		return 1;
 	    }
 
-	    /* Title bar drag — hand off to compositor. */
+	    /* Title bar drag — hand off to compositor via Wayland. */
 	    if (y < TITLE_BAR_HEIGHT) {
-		glfwDragWindow(decor->glfwWindow);
+                wm_win = decor->wm_win;
+                if (wm_win && seat) {
+                    TkWaylandWmMove(wm_win, seat, serial);
+                }
 		return 1;
 	    }
 
-	    /* Border resize — hand off to compositor. */
+	    /* Border resize — hand off to compositor via Wayland. */
 	    resizeEdge = GetResizeEdge(x, y, width, height);
 	    if (resizeEdge != RESIZE_NONE) {
-		glfwResizeWindow(decor->glfwWindow,
-				 TkWaylandResizeEdgeToGLFW(resizeEdge));
+                wm_win = decor->wm_win;
+                if (wm_win && seat) {
+                    TkWaylandWmResize(wm_win, seat, serial, 
+                                      TkWaylandResizeEdgeFromInt(resizeEdge));
+                }
 		return 1;
 	    }
 
@@ -637,8 +1540,6 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
     }
 
     return 0;
-
-
 }
 
 /*
@@ -676,8 +1577,6 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
     UpdateButtonStates(decor, x, y, width);
 
     return 0;
-
-
 }
 
 /*
@@ -693,7 +1592,7 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
  *      None.
  *
  * Side effects:
- *      May close, maximise/restore, or minimise the window via GLFW.
+ *      May close, maximise/restore, or minimise the window via Wayland.
  *      Updates the WmInfo zoomed/iconic flags.
  *
  *----------------------------------------------------------------------
@@ -705,11 +1604,16 @@ HandleButtonClick(TkWaylandDecoration *decor,
 {
     switch (button) {
     case BUTTON_CLOSE:
-	glfwSetWindowShouldClose(decor->glfwWindow, GLFW_TRUE);
+        if (decor->wm_win) {
+            TkWaylandWmClose(decor->wm_win);
+        }
+        glfwSetWindowShouldClose(decor->glfwWindow, GLFW_TRUE);
 	break;
     case BUTTON_MAXIMIZE:
 	if (decor->maximized) {
-	    glfwRestoreWindow(decor->glfwWindow);
+            if (decor->wm_win) {
+                TkWaylandWmUnmaximize(decor->wm_win);
+            }
 	    decor->maximized = 0;
 	    /* Update WM's zoomed attribute. */
 	    if (decor->wmPtr != NULL) {
@@ -717,7 +1621,9 @@ HandleButtonClick(TkWaylandDecoration *decor,
 		decor->wmPtr->reqState.zoomed = 0;
 	    }
 	} else {
-	    glfwMaximizeWindow(decor->glfwWindow);
+            if (decor->wm_win) {
+                TkWaylandWmMaximize(decor->wm_win);
+            }
 	    decor->maximized = 1;
 	    if (decor->wmPtr != NULL) {
 		decor->wmPtr->attributes.zoomed = 1;
@@ -726,7 +1632,9 @@ HandleButtonClick(TkWaylandDecoration *decor,
 	}
 	break;
     case BUTTON_MINIMIZE:
-	glfwIconifyWindow(decor->glfwWindow);
+        if (decor->wm_win) {
+            TkWaylandWmMinimize(decor->wm_win);
+        }
 	/* Update Tk's internal state to IconicState. */
 	if (decor->winPtr != NULL) {
 	    TkpWmSetState(decor->winPtr, IconicState);
@@ -882,6 +1790,11 @@ TkWaylandSetDecorationTitle(TkWaylandDecoration *decor,
     if (decor->title != NULL) {
 	strcpy(decor->title, title);
     }
+    
+    /* Update Wayland window title */
+    if (decor->wm_win != NULL) {
+        TkWaylandWmSetTitle(decor->wm_win, title);
+    }
 }
 
 /*
@@ -909,6 +1822,15 @@ TkWaylandSetWindowMaximized(TkWaylandDecoration *decor,
 	return;
     }
     decor->maximized = maximized ? 1 : 0;
+    
+    /* Update Wayland window state if needed */
+    if (decor->wm_win != NULL) {
+        if (maximized && !TkWaylandWmIsMaximized(decor->wm_win)) {
+            TkWaylandWmMaximize(decor->wm_win);
+        } else if (!maximized && TkWaylandWmIsMaximized(decor->wm_win)) {
+            TkWaylandWmUnmaximize(decor->wm_win);
+        }
+    }
 }
 
 /*
@@ -981,46 +1903,12 @@ TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
     /* Detect whether compositor supports server-side decorations. */
     TkWaylandDetectServerDecorations();
     
-    /* Check for environment variable override */
+    /* Check for environment variable override. */
     decorEnv = getenv("TK_WAYLAND_DECORATIONS");
     if (decorEnv != NULL) {
         TkWaylandSetDecorationMode(decorEnv);
     }
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandResizeEdgeToGLFW --
- *
- *   Map a RESIZE_* bitmask to the corresponding GLFW resize edge
- *   constant for glfwResizeWindow().
- *
- * Results:
- *      GLFW_RESIZE_* constant.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-TkWaylandResizeEdgeToGLFW(int edge)
-{
-    switch (edge) {
-    case RESIZE_TOP:                      return GLFW_RESIZE_TOP_EDGE;
-    case RESIZE_BOTTOM:                   return GLFW_RESIZE_BOTTOM_EDGE;
-    case RESIZE_LEFT:                     return GLFW_RESIZE_LEFT_EDGE;
-    case RESIZE_RIGHT:                    return GLFW_RESIZE_RIGHT_EDGE;
-    case RESIZE_TOP    | RESIZE_LEFT:     return GLFW_RESIZE_TOP_LEFT_CORNER;
-    case RESIZE_TOP    | RESIZE_RIGHT:    return GLFW_RESIZE_TOP_RIGHT_CORNER;
-    case RESIZE_BOTTOM | RESIZE_LEFT:     return GLFW_RESIZE_BOTTOM_LEFT_CORNER;
-    case RESIZE_BOTTOM | RESIZE_RIGHT:    return GLFW_RESIZE_BOTTOM_RIGHT_CORNER;
-    default:                              return GLFW_RESIZE_BOTTOM_RIGHT_CORNER;
-    }
-}
-
 
 /*
  * Local Variables:
