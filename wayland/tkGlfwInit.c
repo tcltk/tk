@@ -204,6 +204,19 @@ TkGlfwInitialize(void)
         
         /* Store in global variable. */
         globalWaylandInfo = platformInfo;
+
+        /* 
+         * Bind wl_seat and install the pointer serial listener so that
+         * xdg_toplevel_move and xdg_toplevel_resize receive a valid serial.
+         * Must be called after wl_display_connect and after globalWaylandInfo
+         * is set (TkWaylandSeatInit calls TkGetWaylandPlatformInfo internally). 
+         */
+        if (platformInfo->display) {
+            if (!TkWaylandSeatInit(platformInfo->display)) {
+                fprintf(stderr, "TkGlfwInitialize: warning: wl_seat unavailable, "
+                                "window move/resize will not work\n");
+            }
+        }
         
         /* Also store in the main window's WmInfo for easy access. */
         if (interp) {
@@ -220,7 +233,6 @@ TkGlfwInitialize(void)
     glfwContext.initialized = 1;
     return TCL_OK;
 }
-
 
 /* Helper function to get the global Wayland info. */
 MODULE_SCOPE TkWaylandPlatformInfo *
@@ -256,6 +268,7 @@ TkGlfwCleanup(void)
     CleanupAllMappings();
 
     TkWaylandCleanupPixmapStore();
+    TkWaylandSeatCleanup();
 
     if (glfwContext.vg) {
         nvgDeleteGLES2(glfwContext.vg);
