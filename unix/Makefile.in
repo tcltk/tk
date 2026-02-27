@@ -470,14 +470,14 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
-	 nanovg.o text-input-unstable-v3-protocol.o xdg-shell-protocol.o xdg-decoration-client-protocol.o\
+	 nanovg.o text-input-unstable-v3-protocol.o \
 	 tkGlfwInit.o tkWayland.o tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
      tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o tkWaylandDecor.o \
      tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
      tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o tkWaylandImage.o \
      tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
      tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
-     tkWaylandScrlbr.o tkWaylandSeat.o tkWaylandSend.o tkWaylandSysTray.o \
+     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
      tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
 
 # Re-use some unix files (the ones that are backend-agnostic)
@@ -631,10 +631,9 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandImage.c \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
-    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSeat.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
+    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c $(WAYLAND_DIR)/tkWaylandWm.c \
-    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c $(WAYLAND_DIR)/xdg-shell-protocol.c \
-    $(WAYLAND_DIR)/xdg-decoration-client-protocol.c $(WAYLAND_UNIX_SRCS)
+    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c $(WAYLAND_UNIX_SRCS)
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
@@ -1455,12 +1454,6 @@ nanovg.o: $(WAYLAND_DIR)/nanovg.c
 
 text-input-unstable-v3-protocol.o: $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
-	
-xdg-shell-protocol.o: $(WAYLAND_DIR)/xdg-shell-protocol.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/xdg-shell-protocol.c
-
-xdg-decoration-client-protocol.o: $(WAYLAND_DIR)/xdg-decoration-client-protocol.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/xdg-decoration-client-protocol.c	
 
 tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c
@@ -1530,9 +1523,6 @@ tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScale.c
 
 tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScrlbr.c
-
-tkWaylandSeat.o: $(WAYLAND_DIR)/tkWaylandSeat.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSeat.c
 
 tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c
