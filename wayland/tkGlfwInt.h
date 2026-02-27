@@ -21,6 +21,20 @@
 #include "nanovg.h"
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
+#include <wayland-client.h>
+#include "xdg-shell-client-protocol.h"
+#include "xdg-decoration-client-protocol.h"
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Forward declarations
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct TkWaylandWmContext TkWaylandWmContext;
+typedef struct TkWaylandWmWindow TkWaylandWmWindow;
 
 /*
  *----------------------------------------------------------------------
@@ -44,6 +58,79 @@ typedef struct {
 /*
  *----------------------------------------------------------------------
  *
+ * Wayland Window Management Context
+ *
+ *----------------------------------------------------------------------
+ */
+
+struct TkWaylandWmContext {
+    struct wl_display *display;
+    struct wl_registry *registry;
+    struct xdg_wm_base *xdg_wm_base;
+    struct zxdg_decoration_manager_v1 *decoration_manager;
+    int ref_count;
+};
+
+/* Edge mapping for resize operations */
+typedef enum {
+    TK_WAYLAND_RESIZE_EDGE_NONE,
+    TK_WAYLAND_RESIZE_EDGE_TOP,
+    TK_WAYLAND_RESIZE_EDGE_BOTTOM,
+    TK_WAYLAND_RESIZE_EDGE_LEFT,
+    TK_WAYLAND_RESIZE_EDGE_TOP_LEFT,
+    TK_WAYLAND_RESIZE_EDGE_BOTTOM_LEFT,
+    TK_WAYLAND_RESIZE_EDGE_RIGHT,
+    TK_WAYLAND_RESIZE_EDGE_TOP_RIGHT,
+    TK_WAYLAND_RESIZE_EDGE_BOTTOM_RIGHT
+} TkWaylandResizeEdge;
+
+/* Per-window decoration state */
+struct TkWaylandWmWindow {
+    struct wl_surface *surface;
+    struct xdg_surface *xdg_surface;
+    struct xdg_toplevel *xdg_toplevel;
+    struct zxdg_toplevel_decoration_v1 *toplevel_decoration;
+    
+    /* Window properties */
+    char *title;
+    char *app_id;
+    
+    /* Window state */
+    int content_width;
+    int content_height;
+    enum zxdg_toplevel_decoration_v1_mode decoration_mode;
+    int maximized;
+    int fullscreen;
+    
+    /* Callbacks */
+    void (*configure_callback)(void *data, int width, int height);
+    void (*close_callback)(void *data);
+    void *user_data;
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Wayland Platform Info Structure
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct TkWaylandPlatformInfo {
+    struct wl_display *display;
+    struct wl_compositor *compositor;
+    struct wl_seat *seat;
+    struct wl_shm *shm;
+    TkWaylandWmContext *wm_context;
+    uint32_t last_serial; 
+    struct xkb_context *xkb_context;
+    struct xkb_keymap *xkb_keymap;
+    struct xkb_state *xkb_state;
+} TkWaylandPlatformInfo;
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Window Mapping Structure
  *
  *	Maintains the bidirectional mapping between Tk windows,
@@ -62,6 +149,7 @@ typedef struct WindowMapping {
     int                 width;      /* Current width */
     int                 height;     /* Current height */
     TkWaylandDecoration *decoration; /* Window decoration. */ 
+    struct wl_surface   *surface;   /* Wayland surface. */ 
     struct WindowMapping *nextPtr;  /* Next in linked list */
 } WindowMapping;
 
@@ -179,6 +267,7 @@ typedef struct TkWmInfo {
     int          lastX, lastY;
     int          lastWidth, lastHeight;
 	TkWaylandDecoration *decor; /* Client-side decoration. */
+	void 		 *waylandInfo;  /* Wayland platform-specific data. */
     struct TkWmInfo *nextPtr;
 } WmInfo;
 
@@ -207,12 +296,15 @@ typedef struct TkWaylandDecoration {
     TkWindow *winPtr;
     GLFWwindow *glfwWindow;
     WmInfo    *wmPtr;           /* Pointer to the WM info for this window */
+    TkWaylandWmWindow *wm_win;   /* Wayland window management object */
     int enabled;
     int maximized;               /* Current maximized state (for button) */
     char *title;
     ButtonState closeState;
     ButtonState maxState;
     ButtonState minState;
+    int dragging;
+    int resizing;
 } TkWaylandDecoration;
 
 TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
@@ -222,9 +314,7 @@ void TkWaylandConfigureWindowDecorations(void);
 int TkWaylandShouldUseCSD(void);
 TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
 void TkWaylandInitDecorationPolicy(Tcl_Interp *interp); 
-TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
 void TkWaylandDestroyDecoration(TkWaylandDecoration *decor); 
-TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
 void TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg);
 int TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x,double y);
 int TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,int button,int action,double x,double y);
@@ -244,6 +334,58 @@ int TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,int button,int act
 #define RESIZE_TOP      (1 << 2)
 #define RESIZE_BOTTOM   (1 << 3)
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Wayland Window Management Function Declarations
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Context management */
+TkWaylandWmContext *TkWaylandWmCreateContext(struct wl_display *display);
+void TkWaylandWmDestroyContext(TkWaylandWmContext *ctx);
+
+/* Window management */
+TkWaylandWmWindow *TkWaylandWmCreateWindow(TkWaylandWmContext *ctx,
+                                           struct wl_surface *surface,
+                                           void (*configure)(void*,int,int),
+                                           void (*close)(void*),
+                                           void *user_data);
+void TkWaylandWmDestroyWindow(TkWaylandWmWindow *win);
+
+void TkWaylandWmSetTitle(TkWaylandWmWindow *win, const char *title);
+void TkWaylandWmSetAppId(TkWaylandWmWindow *win, const char *app_id);
+void TkWaylandWmSetParent(TkWaylandWmWindow *win, TkWaylandWmWindow *parent);
+
+/* Window operations */
+void TkWaylandWmMove(TkWaylandWmWindow *win, struct wl_seat *seat, uint32_t serial);
+void TkWaylandWmResize(TkWaylandWmWindow *win, struct wl_seat *seat, 
+                       uint32_t serial, TkWaylandResizeEdge edge);
+void TkWaylandWmMaximize(TkWaylandWmWindow *win);
+void TkWaylandWmUnmaximize(TkWaylandWmWindow *win);
+void TkWaylandWmMinimize(TkWaylandWmWindow *win);
+void TkWaylandWmFullscreen(TkWaylandWmWindow *win, struct wl_output *output);
+void TkWaylandWmUnfullscreen(TkWaylandWmWindow *win);
+void TkWaylandWmClose(TkWaylandWmWindow *win);
+
+/* Window geometry */
+void TkWaylandWmSetMinSize(TkWaylandWmWindow *win, int min_width, int min_height);
+void TkWaylandWmSetMaxSize(TkWaylandWmWindow *win, int max_width, int max_height);
+void TkWaylandWmSetWindowGeometry(TkWaylandWmWindow *win, int x, int y, 
+                                  int width, int height);
+
+/* Commit and map */
+void TkWaylandWmCommit(TkWaylandWmWindow *win);
+void TkWaylandWmMap(TkWaylandWmWindow *win);
+
+/* State queries */
+int TkWaylandWmIsMaximized(TkWaylandWmWindow *win);
+int TkWaylandWmIsFullscreen(TkWaylandWmWindow *win);
+const char *TkWaylandWmGetTitle(TkWaylandWmWindow *win);
+
+/* Conversion utilities */
+TkWaylandResizeEdge TkWaylandResizeEdgeFromInt(int edge);
 /*
  *----------------------------------------------------------------------
  *
