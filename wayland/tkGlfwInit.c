@@ -574,11 +574,9 @@ MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) return;
-
     if (dcPtr->nestedFrame) return;
 
-    nvgRestore(dcPtr->vg);
-
+    /* Draw decorations INSIDE the saved state, before restoring. */
     if (dcPtr->glfwWindow) {
         WindowMapping *mapping = (WindowMapping *)glfwGetWindowUserPointer(dcPtr->glfwWindow);
         if (mapping && mapping->decoration) {
@@ -586,9 +584,11 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         }
     }
 
+    nvgRestore(dcPtr->vg);  /* Pop the state AFTER decoration draw. */
     nvgEndFrame(dcPtr->vg);
-    glfwContext.nvgFrameActive    = 0;
-    glfwContext.activeWindow       = NULL;
+
+    glfwContext.nvgFrameActive = 0;
+    glfwContext.activeWindow   = NULL;
 
     if (dcPtr->glfwWindow) {
         glfwSwapBuffers(dcPtr->glfwWindow);
