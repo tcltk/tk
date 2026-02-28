@@ -118,6 +118,15 @@ static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 static void WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
 
+/* External window decoration functions. */
+extern TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
+extern void TkWaylandSetDecorationTitle(TkWaylandDecoration *decor, const char *title);
+extern void TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized);
+extern void TkWaylandConfigureWindowDecorations(void);
+extern int TkWaylandShouldUseCSD(void);
+extern TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
+
+
 /* wm sub-command handlers. */
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,

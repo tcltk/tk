@@ -542,7 +542,7 @@ TkGlfwCursorPosCallback(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwMouseButtonCallback(
     GLFWwindow *window,
@@ -560,16 +560,15 @@ TkGlfwMouseButtonCallback(
         return;
     }
 
- fprintf(stderr, "DEBUG MouseButton: window=%p button=%d action=%d winPtr=%p\n",
-            (void*)window, button, action, (void*)winPtr);
-            
-    glfwGetCursorPos(window, &xpos, &ypos);
-
     TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
-     if (decor) {
-        int consumed = TkWaylandDecorationMouseButton(decor, button, action, xpos, ypos);
-        if (consumed) return;
+    if (decor && TkWaylandDecorationMouseButton(decor, button, action,
+						xpos, ypos)) {
+	return;  /* Decoration consumed the event. */
     }
+
+
+    /* Get cursor position. */
+    glfwGetCursorPos(window, &xpos, &ypos);
 
     /* Update modifier state. */
     glfwModifierState = 0;
@@ -611,7 +610,7 @@ TkGlfwMouseButtonCallback(
     }
 
     memset(&event, 0, sizeof(XEvent));
-
+    
     /* Update button state. */
     if (action == GLFW_PRESS) {
         glfwButtonState |= buttonMask;
