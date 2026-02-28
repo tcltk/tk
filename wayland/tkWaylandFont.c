@@ -117,13 +117,48 @@ static int      FallbackMeasurement(
 
 void
 TkpFontPkgInit(
-	       TCL_UNUSED(TkMainInfo *)) /* mainPtr */
+    TkMainInfo *mainPtr)
 {
+    Tk_Window tkwin = (Tk_Window) mainPtr->winPtr;
+    Tcl_Interp *interp = mainPtr->interp;
 
     if (!fcInitialized) {
         FcInit();
         fcInitialized = 1;
     }
+
+    static const struct {
+        const char *name;
+        const char *family;
+        int         size;
+        int         weight;
+        int         slant;
+    } namedFonts[] = {
+        { "TkDefaultFont",      "sans-serif",  12, TK_FW_NORMAL, TK_FS_ROMAN },
+        { "TkFixedFont",        "monospace",   12, TK_FW_NORMAL, TK_FS_ROMAN },
+        { "TkTextFont",         "serif",       12, TK_FW_NORMAL, TK_FS_ROMAN },
+        { "TkMenuFont",         "sans-serif",  12, TK_FW_NORMAL, TK_FS_ROMAN },
+        { "TkHeadingFont",      "sans-serif",  12, TK_FW_BOLD,   TK_FS_ROMAN },
+        { "TkCaptionFont",      "sans-serif",  12, TK_FW_BOLD,   TK_FS_ROMAN },
+        { "TkSmallCaptionFont", "sans-serif",  10, TK_FW_NORMAL, TK_FS_ROMAN },
+        { "TkIconFont",         "sans-serif",  12, TK_FW_NORMAL, TK_FS_ROMAN },
+        { "TkTooltipFont",      "sans-serif",  10, TK_FW_NORMAL, TK_FS_ROMAN },
+        { NULL, NULL, 0, 0, 0 }
+    };
+
+/* This causes Wish to crash on startup - disable for now. */
+#if 0
+    int i;
+    for (i = 0; namedFonts[i].name != NULL; i++) {
+        TkFontAttributes fa;
+        TkInitFontAttributes(&fa);
+        fa.family = Tk_GetUid(namedFonts[i].family);
+        fa.size   = (double) namedFonts[i].size;
+        fa.weight = namedFonts[i].weight;
+        fa.slant  = namedFonts[i].slant;
+        TkCreateNamedFont(interp, tkwin, namedFonts[i].name, &fa);
+    }
+    #endif
 }
 
 /*
