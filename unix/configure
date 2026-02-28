@@ -7811,7 +7811,7 @@ printf %s "checking for wayland-client and wayland-cursor ≥ 1.18... " >&6; }
             { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
             WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
+            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor) -lwayland-client"
             found_wayland=yes
 
 printf "%s\n" "#define HAVE_WAYLAND 1" >>confdefs.h
@@ -7858,6 +7858,7 @@ printf %s "checking for glfw3 >= 3.3 with Wayland support... " >&6; }
 printf "%s\n" "glfw3 found" >&6; }
             GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
             GLFW_LIBS="$(pkg-config --libs glfw3)"
+            GLFW_CFLAGS="$GLFW_CFLAGS -DGLFW_EXPOSE_NATIVE_WAYLAND"
             if pkg-config --exists wayland-client; then
                 found_glfw=yes
 
