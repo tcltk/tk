@@ -5,22 +5,22 @@
  *	management, window mapping, drawing context lifecycle, color
  *	conversion, and platform init/cleanup.
  *
+ *	This file owns the global TkGlfwContext and the WindowMapping
+ *	linked list.  It provides all TkGlfw* entry points declared in
+ *	tkGlfwInt.h.
+ *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2001-2009 Apple Inc.
- * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2026 Kevin Walzer
+ * Copyright © 2026      Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #define GL_GLEXT_PROTOTYPES
-#define GLFW_EXPOSE_NATIVE_WAYLAND
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
 #include <GLES2/gl2.h>
 
 #define NANOVG_GLES2_IMPLEMENTATION
@@ -35,7 +35,7 @@
  *----------------------------------------------------------------------
  */
 
-static TkGlfwContext  glfwContext        = {NULL, NULL, 0, 0, 0, NULL, 0, 0, NULL};
+static TkGlfwContext  glfwContext        = {NULL, NULL, 0, 0, 0, NULL, 0, 0};
 static WindowMapping *windowMappingList  = NULL;
 static Drawable       nextDrawableId     = 1000; /* avoid zero/conflicts */
 
@@ -106,7 +106,9 @@ TkGlfwGetContext(void)
  */
 
 MODULE_SCOPE void
-TkGlfwErrorCallback(int error, const char *description)
+TkGlfwErrorCallback(
+    int         error,
+    const char *description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
@@ -122,7 +124,7 @@ TkGlfwErrorCallback(int error, const char *description)
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Initializes GLFW; creates shared context window and NanoVG context.
+ *	initializes GLFW; creates shared context window and NanoVG context.
  *
  *----------------------------------------------------------------------
  */
@@ -130,35 +132,27 @@ TkGlfwErrorCallback(int error, const char *description)
 MODULE_SCOPE int
 TkGlfwInitialize(void)
 {
-    Tcl_Interp *interp;
-    
     if (glfwContext.initialized) {
         return TCL_OK;
     }
-    
-    TkMainInfo *info = TkGetMainInfoList();
-    interp = info->interp;
 
-    glfwSetErrorCallback(TkGlfwErrorCallback);
-    
-    /* Force Wayland platform. */
-    #ifdef GLFW_PLATFORM_WAYLAND
-        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-        glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
-    #endif
-    
-    if (!glfwInit()) {
-        fprintf(stderr, "GLFW init failed\n");
-        return TCL_ERROR;
-    }
-
-    /* Get the Wayland display from GLFW. */
-    glfwContext.waylandDisplay = glfwGetWaylandDisplay();
+	glfwSetErrorCallback(TkGlfwErrorCallback);
+	
+	#ifdef GLFW_PLATFORM_WAYLAND
+		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+		glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
+	#endif
+	
+	if (!glfwInit()) {
+	    fprintf(stderr, "GLFW init failed\n");
+	    return TCL_ERROR;
+	}
 
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+
 
     glfwContext.mainWindow =
         glfwCreateWindow(640, 480, "Tk Shared Context", NULL, NULL);
@@ -180,6 +174,9 @@ TkGlfwInitialize(void)
         glfwTerminate();
         return TCL_ERROR;
     }
+    /* Register font for use in window decorations. */
+    glfwContext.decorFontId = nvgCreateFont(glfwContext.vg, "sans",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
 
     /* Register the NanoVG context for pixmap operations. */
     TkWaylandSetNVGContext(glfwContext.vg);
@@ -235,7 +232,6 @@ TkGlfwCleanup(void)
  * TkGlfwCreateWindow --
  *
  *	Create a GLFW window and register a mapping entry.
- *	Now stores the Wayland surface from GLFW.
  *
  * Results:
  *	GLFWwindow pointer, or NULL on failure.
@@ -258,7 +254,6 @@ TkGlfwCreateWindow(
     WindowMapping *mapping;
     GLFWwindow    *window;
     TkWaylandDecoration *decoration = NULL;
-    struct wl_surface *surface;
 
     if (!glfwContext.initialized) {
         if (TkGlfwInitialize() != TCL_OK) {
@@ -275,12 +270,12 @@ TkGlfwCreateWindow(
         }
     }
 
-    /* Ensure minimum dimensions */
+    /* Ensure minimum dimensions. */
     if (width <= 0) width = 200;
     if (height <= 0) height = 200;
 
-    /* Configure window hints */
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    /* Configure window hints. */
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);  /* hide until decorated */
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
@@ -294,10 +289,7 @@ TkGlfwCreateWindow(
         return NULL;
     }
 
-    /* Get the Wayland surface from GLFW. */
-    surface = glfwGetWaylandWindow(window);
-
-    /* Create client-side decoration if needed. */
+    /* Create client-side decoration if needed .*/
     if (TkWaylandShouldUseCSD() && tkWin != NULL) {
         decoration = TkWaylandCreateDecoration(tkWin, window);
     }
@@ -305,16 +297,15 @@ TkGlfwCreateWindow(
     /* Show window after decoration exists. */
     glfwShowWindow(window);
 
-    /* Allocate mapping */
+    /* Allocate mapping. */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     mapping->tkWindow   = tkWin;
     mapping->glfwWindow = window;
     mapping->drawable   = nextDrawableId++;
     mapping->width      = width;
     mapping->height     = height;
-    mapping->surface    = surface;  /* Store GLFW's surface */
-    mapping->decoration = decoration;
     mapping->nextPtr    = windowMappingList;
+    mapping->decoration = decoration;
     windowMappingList   = mapping;
 
     glfwSetWindowUserPointer(window, mapping);
@@ -326,11 +317,12 @@ TkGlfwCreateWindow(
 
     if (drawableOut) *drawableOut = mapping->drawable;
 
-    /* Initial event pump */
+    /* Initial event pump. */
     glfwPollEvents();
 
     return window;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -349,7 +341,8 @@ TkGlfwCreateWindow(
  */
 
 MODULE_SCOPE void
-TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
+TkGlfwDestroyWindow(
+    GLFWwindow *glfwWindow)
 {
     WindowMapping *mapping;
 
@@ -359,16 +352,39 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 
     mapping = FindMappingByGLFW(glfwWindow);
     if (mapping) {
-        /* Destroy decorations first */
-        if (mapping->decoration) {
-            TkWaylandDestroyDecoration(mapping->decoration);
-            mapping->decoration = NULL;
-        }
+		/* Destroy decorations first. */
+		if (mapping->decoration) {
+			TkWaylandDestroyDecoration(mapping->decoration);
+			mapping->decoration = NULL;
+		}
         RemoveMapping(mapping);
     }
 
     glfwDestroyWindow(glfwWindow);
 }
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandGetDecoration --
+ *
+ *	Get the decoration for a Tk window. 
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Returns the window decoration. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+TkWaylandDecoration *
+TkWaylandGetDecoration(TkWindow *winPtr) 
+{
+	WindowMapping *m = FindMappingByTk(winPtr);
+	return m ? m->decoration : NULL;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -387,7 +403,8 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
  */
 
 MODULE_SCOPE GLFWwindow *
-TkGlfwGetGLFWWindow(Tk_Window tkwin)
+TkGlfwGetGLFWWindow(
+    Tk_Window tkwin)
 {
     WindowMapping *m = FindMappingByTk((TkWindow *)tkwin);
     return m ? m->glfwWindow : NULL;
@@ -410,7 +427,8 @@ TkGlfwGetGLFWWindow(Tk_Window tkwin)
  */
 
 MODULE_SCOPE TkWindow *
-TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
+TkGlfwGetTkWindow(
+    GLFWwindow *glfwWindow)
 {
     WindowMapping *m = FindMappingByGLFW(glfwWindow);
     return m ? m->tkWindow : NULL;
@@ -433,7 +451,8 @@ TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
  */
 
 MODULE_SCOPE GLFWwindow *
-TkGlfwGetWindowFromDrawable(Drawable drawable)
+TkGlfwGetWindowFromDrawable(
+    Drawable drawable)
 {
     WindowMapping *m = FindMappingByDrawable(drawable);
     return m ? m->glfwWindow : NULL;
@@ -456,7 +475,10 @@ TkGlfwGetWindowFromDrawable(Drawable drawable)
  */
 
 MODULE_SCOPE void
-TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
+TkGlfwUpdateWindowSize(
+    GLFWwindow *glfwWindow,
+    int         width,
+    int         height)
 {
     WindowMapping *m = FindMappingByGLFW(glfwWindow);
     if (m) {
@@ -482,7 +504,10 @@ TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
  */
 
 MODULE_SCOPE int
-TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
+TkGlfwBeginDraw(
+    Drawable                drawable,
+    GC                      gc,
+    TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *mapping;
 
@@ -511,7 +536,7 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
             dcPtr->width       = mapping->width;
             dcPtr->height      = mapping->height;
             dcPtr->vg          = glfwContext.vg;
-            dcPtr->nestedFrame = 1; /* Mark as nested to prevent EndDraw swapping. */
+            dcPtr->nestedFrame = 1; /* Mark as nested to prevent EndDraw swapping */
             
             if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
             return TCL_OK;
@@ -537,7 +562,10 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     /* Open the NanoVG frame for this render cycle. */
-    nvgBeginFrame(glfwContext.vg, (float)mapping->width, (float)mapping->height, 1.0f);
+    nvgBeginFrame(glfwContext.vg,
+                  (float)mapping->width,
+                  (float)mapping->height, 1.0f);
+    
     nvgSave(glfwContext.vg);
     
     /*
@@ -574,21 +602,23 @@ MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) return;
+
     if (dcPtr->nestedFrame) return;
 
-    /* Draw decorations INSIDE the saved state, before restoring. */
+    nvgRestore(dcPtr->vg);
+
     if (dcPtr->glfwWindow) {
-        WindowMapping *mapping = (WindowMapping *)glfwGetWindowUserPointer(dcPtr->glfwWindow);
+        WindowMapping *mapping =
+            (WindowMapping *)glfwGetWindowUserPointer(dcPtr->glfwWindow);
         if (mapping && mapping->decoration) {
             TkWaylandDrawDecoration(mapping->decoration, dcPtr->vg);
         }
     }
 
-    nvgRestore(dcPtr->vg);  /* Pop the state AFTER decoration draw. */
     nvgEndFrame(dcPtr->vg);
-
-    glfwContext.nvgFrameActive = 0;
-    glfwContext.activeWindow   = NULL;
+    glfwContext.nvgFrameActive    = 0;
+    glfwContext.nvgFrameAutoOpened = 0;
+    glfwContext.activeWindow       = NULL;
 
     if (dcPtr->glfwWindow) {
         glfwSwapBuffers(dcPtr->glfwWindow);
@@ -646,87 +676,43 @@ TkGlfwFlushAutoFrame(void)
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcontext *
-TkGlfwGetNVGContext(void)
-{
-    GLFWwindow *current;
-    int width, height;
+ MODULE_SCOPE NVGcontext *
+     TkGlfwGetNVGContext(void)
+ {
+     GLFWwindow *current;
+     int width, height;
 
-    if (!glfwContext.initialized) {
-        if (TkGlfwInitialize() != TCL_OK) {
-            return NULL;
-        }
-    }
+     if (!glfwContext.initialized) {
+	 if (TkGlfwInitialize() != TCL_OK) {
+	     return NULL;
+	 }
+     }
 
-    current = glfwGetCurrentContext();
-    if (current == NULL) {
-        /* No context current - try the main window as fallback. */
-        if (glfwContext.mainWindow) {
-            glfwMakeContextCurrent(glfwContext.mainWindow);
-            current = glfwContext.mainWindow;
-        } else {
-            fprintf(stderr, "TkGlfwGetNVGContext: No current GLFW context\n");
-            return NULL;
-        }
-    }
+     current = glfwGetCurrentContext();
+     if (current == NULL) {
+	 /* No context current - try the main window as fallback. */
+	 if (glfwContext.mainWindow) {
+	     glfwMakeContextCurrent(glfwContext.mainWindow);
+	     current = glfwContext.mainWindow;
+	 } else {
+	     fprintf(stderr, "TkGlfwGetNVGContext: No current GLFW context\n");
+	     return NULL;
+	 }
+     }
 
-    glfwGetWindowSize(current, &width, &height);
-
-    /* If no frame is active, open one now for the current window. */
-    if (!glfwContext.nvgFrameActive) {
-        /* 
-         * if we auto-open a frame (for a widget that draws 
-         * outside an expose event), DO NOT clear the screen to black.
-         * We want to see what was previously drawn.
-         */
-        nvgBeginFrame(glfwContext.vg, (float)width, (float)height, 1.0f);
-        glfwContext.nvgFrameActive = 1;
-        glfwContext.nvgFrameAutoOpened = 1;
-    }
-    return glfwContext.vg;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwGetNVGContextForMeasure --
- *
- *      Returns the shared NanoVG context for measurement operations,
- *      ensuring a GL context is current. This function is specifically
- *      for font measurement during geometry computation and does not
- *      require an active NanoVG frame.
- *
- * Results:
- *      NVGcontext pointer, or NULL if not available.
- *
- * Side effects:
- *      May make the main shared context current if no context is current.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE NVGcontext *
-TkGlfwGetNVGContextForMeasure(void)
-{
-    TkGlfwContext *ctx = TkGlfwGetContext();
-
-    if (!ctx || !ctx->initialized || !ctx->vg) {
-        return NULL;
-    }
-
-    /* For measurement, we don't need a frame, just a current context. */
-    if (glfwGetCurrentContext() == NULL) {
-        /* Use the main shared context window. */
-        if (ctx->mainWindow) {
-            glfwMakeContextCurrent(ctx->mainWindow);
-        } else {
-            fprintf(stderr, "TkGlfwGetNVGContextForMeasure: No GL context available\n");
-            return NULL;
-        }
-    }
-
-    return ctx->vg;
-}
+     /* If no frame is active, open one now for the current window. */
+     if (!glfwContext.nvgFrameActive) {
+	 /* 
+	  * if we auto-open a frame (for a widget that draws 
+	  * outside an expose event), DO NOT clear the screen to black.
+	  * We want to see what was previously drawn.
+	  */
+	 nvgBeginFrame(glfwContext.vg, (float)width, (float)height, 1.0f);
+	 glfwContext.nvgFrameActive = 1;
+	 glfwContext.nvgFrameAutoOpened = 1;
+     }
+     return glfwContext.vg;
+ }
 
 /*
  *----------------------------------------------------------------------
@@ -777,7 +763,8 @@ TkGlfwProcessEvents(void)
  */
 
 MODULE_SCOPE NVGcolor
-TkGlfwXColorToNVG(XColor *xcolor)
+TkGlfwXColorToNVG(
+    XColor *xcolor)
 {
     if (!xcolor) {
         return nvgRGBA(0, 0, 0, 255);
@@ -806,7 +793,8 @@ TkGlfwXColorToNVG(XColor *xcolor)
  */
 
 MODULE_SCOPE NVGcolor
-TkGlfwPixelToNVG(unsigned long pixel)
+TkGlfwPixelToNVG(
+    unsigned long pixel)
 {
     return nvgRGBA(
         (pixel >> 16) & 0xFF,
@@ -835,7 +823,9 @@ TkGlfwPixelToNVG(unsigned long pixel)
  */
 
 MODULE_SCOPE void
-TkGlfwApplyGC(NVGcontext *vg, GC gc)
+TkGlfwApplyGC(
+    NVGcontext *vg,
+    GC          gc)
 {
     XGCValues values;
     NVGcolor  color;
@@ -896,14 +886,16 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
  */
 
 int
-TkpInit(Tcl_Interp *interp)
+TkpInit(
+    Tcl_Interp *interp)
 {
     if (TkGlfwInitialize() != TCL_OK) {
         return TCL_ERROR;
     }
 
-    /* Initialize decoration policy system. */ 
-    TkWaylandInitDecorationPolicy(interp);
+	/* Initialize decoration policy system. */ 
+	TkWaylandInitDecorationPolicy(interp);
+
 
     TkWaylandMenuInit();
     Tk_WaylandSetupTkNotifier();
@@ -933,7 +925,9 @@ TkpInit(Tcl_Interp *interp)
  */
 
 void
-TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
+TkpGetAppName(
+    Tcl_Interp  *interp,
+    Tcl_DString *namePtr)
 {
     const char *p, *name;
 
@@ -966,7 +960,9 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
  */
 
 void
-TkpDisplayWarning(const char *msg, const char *title)
+TkpDisplayWarning(
+    const char *msg,
+    const char *title)
 {
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 
@@ -1003,7 +999,8 @@ TkpDisplayWarning(const char *msg, const char *title)
  */
 
 WindowMapping *
-FindMappingByGLFW(GLFWwindow *glfwWindow)
+FindMappingByGLFW(
+    GLFWwindow *glfwWindow)
 {
     WindowMapping *cur = windowMappingList;
     while (cur) {
@@ -1030,7 +1027,8 @@ FindMappingByGLFW(GLFWwindow *glfwWindow)
  */
 
 WindowMapping *
-FindMappingByTk(TkWindow *tkWin)
+FindMappingByTk(
+    TkWindow *tkWin)
 {
     WindowMapping *cur = windowMappingList;
     while (cur) {
@@ -1057,7 +1055,8 @@ FindMappingByTk(TkWindow *tkWin)
  */
 
 WindowMapping *
-FindMappingByDrawable(Drawable drawable)
+FindMappingByDrawable(
+    Drawable drawable)
 {
     WindowMapping *cur = windowMappingList;
     while (cur) {
@@ -1084,7 +1083,8 @@ FindMappingByDrawable(Drawable drawable)
  */
 
 void
-RemoveMapping(WindowMapping *mapping)
+RemoveMapping(
+    WindowMapping *mapping)
 {
     WindowMapping **prevPtr = &windowMappingList;
     WindowMapping  *cur    = windowMappingList;
@@ -1124,9 +1124,9 @@ CleanupAllMappings(void)
 
     while (cur) {
         next = cur->nextPtr;
-        if (cur->decoration) {
-            TkWaylandDestroyDecoration(cur->decoration);
-        }
+		if (cur->decoration) {
+			TkWaylandDestroyDecoration(cur->decoration);
+		}
         if (cur->glfwWindow) {
             glfwDestroyWindow(cur->glfwWindow);
         }
@@ -1136,6 +1136,19 @@ CleanupAllMappings(void)
 
     windowMappingList = NULL;
 }
+
+/* Helper functions for use by measurement and font loading only. */
+MODULE_SCOPE NVGcontext *
+TkGlfwGetNVGContextForMeasure(void)
+{
+    TkGlfwContext *ctx = TkGlfwGetContext();
+    if (!ctx || !ctx->initialized || !ctx->vg) return NULL;
+    if (glfwGetCurrentContext() == NULL) {
+        glfwMakeContextCurrent(ctx->mainWindow);
+    }
+    return ctx->vg;
+}
+
 
 /*
  * Local Variables:

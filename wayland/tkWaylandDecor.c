@@ -1,17 +1,12 @@
 /*
- * tkWaylandDecor.c --
+ *
+ *  tkWaylandDecor.c – 
  * 
  * Client-side window decorations for Tcl/Tk on Wayland/GLFW using NanoVG.
  * Includes policy management for CSD/SSD priority and automatic detection.
- * Simplified version that relies on GLFW for window management.
  * 
- * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2001-2009 Apple Inc.
- * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2026 Kevin Walzer/WordTech Communications LLC
+ *  Copyright © 2026 Kevin Walzer
  *
- * See the file "license.terms" for information on usage and redistribution of
- * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkInt.h"
@@ -21,7 +16,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-/* Decoration modes */
+/* Decoration modes. */
 typedef enum {
     DECOR_AUTO,         /* Prefer SSD, fallback to CSD */
     DECOR_SERVER_ONLY,  /* SSD only */
@@ -32,7 +27,7 @@ typedef enum {
 static TkWaylandDecorMode decorationMode = DECOR_AUTO;
 static int ssdAvailable = 0;
 
-/* Forward declarations */
+/* Forward declarations. */
 static void DrawTitleBar(NVGcontext *vg, TkWaylandDecoration *decor, int width, int height);
 static void DrawBorder(NVGcontext *vg, TkWaylandDecoration *decor, int width, int height);
 static void DrawButton(NVGcontext *vg, ButtonType type, ButtonState state, float x, float y, float w, float h);
@@ -40,17 +35,21 @@ static void HandleButtonClick(TkWaylandDecoration *decor, ButtonType button);
 static int GetButtonAtPosition(TkWaylandDecoration *decor, double x, double y, int width);
 static int GetResizeEdge(double x, double y, int width, int height);
 static void UpdateButtonStates(TkWaylandDecoration *decor, double x, double y, int width);
-
+ 
 /*
  *----------------------------------------------------------------------
  *
  * TkWaylandDetectServerDecorations --
  *
  *      Detect whether the Wayland compositor supports server‑side
- *      decorations (SSD). The result is cached.
+ *      decorations (SSD).  The result is cached in the static variable
+ *      'ssdAvailable'.
  *
  * Results:
  *      1 if SSD is available, 0 otherwise.
+ *
+ * Side effects:
+ *      Sets the global 'ssdAvailable' flag.
  *
  *----------------------------------------------------------------------
  */
@@ -62,21 +61,23 @@ TkWaylandDetectServerDecorations(void)
     const char *session = getenv("XDG_SESSION_TYPE");
 
     if (session == NULL || strcmp(session, "wayland") != 0) {
-        ssdAvailable = 0;
-        return 0;
+	ssdAvailable = 0;
+	return 0;
     }
 
     if (desktop != NULL) {
-        if (strstr(desktop, "GNOME") != NULL) {
-            ssdAvailable = 0;
-            return 0;
-        }
-        if (strstr(desktop, "KDE") != NULL ||
-            strstr(desktop, "sway") != NULL ||
-            strstr(desktop, "Sway") != NULL) {
-            ssdAvailable = 1;
-            return 1;
-        }
+	if (strstr(desktop, "GNOME") != NULL) {
+	    ssdAvailable = 0;
+	    return 0;
+	}
+	if (strstr(desktop, "KDE") != NULL) {
+	    ssdAvailable = 1;
+	    return 1;
+	}
+	if (strstr(desktop, "sway") != NULL || strstr(desktop, "Sway") != NULL) {
+	    ssdAvailable = 1;
+	    return 1;
+	}
     }
 
     ssdAvailable = 0;
@@ -98,25 +99,24 @@ TkWaylandDetectServerDecorations(void)
  *
  *----------------------------------------------------------------------
  */
-
 void
 TkWaylandSetDecorationMode(const char *mode)
 {
     if (mode == NULL) {
-        decorationMode = DECOR_AUTO;
-        return;
+	decorationMode = DECOR_AUTO;
+	return;
     }
 
     if (strcmp(mode, "auto") == 0) {
-        decorationMode = DECOR_AUTO;
+	decorationMode = DECOR_AUTO;
     } else if (strcmp(mode, "server") == 0 || strcmp(mode, "ssd") == 0) {
-        decorationMode = DECOR_SERVER_ONLY;
+	decorationMode = DECOR_SERVER_ONLY;
     } else if (strcmp(mode, "client") == 0 || strcmp(mode, "csd") == 0) {
-        decorationMode = DECOR_CLIENT_ONLY;
+	decorationMode = DECOR_CLIENT_ONLY;
     } else if (strcmp(mode, "none") == 0 || strcmp(mode, "borderless") == 0) {
-        decorationMode = DECOR_NONE;
+	decorationMode = DECOR_NONE;
     } else {
-        decorationMode = DECOR_AUTO;
+	decorationMode = DECOR_AUTO;
     }
 }
 
@@ -128,11 +128,13 @@ TkWaylandSetDecorationMode(const char *mode)
  *      Return the current decoration mode as a string.
  *
  * Results:
- *      Constant string describing the mode.
+ *      Constant string describing the mode ("auto", "server", "client", "none").
+ *
+ * Side effects:
+ *      None.
  *
  *----------------------------------------------------------------------
  */
-
 const char *
 TkWaylandGetDecorationMode(void)
 {
@@ -156,6 +158,9 @@ TkWaylandGetDecorationMode(void)
  * Results:
  *      1 if CSD should be used, 0 otherwise.
  *
+ * Side effects:
+ *      May trigger the one‑time SSD detection.
+ *
  *----------------------------------------------------------------------
  */
  
@@ -165,21 +170,21 @@ TkWaylandShouldUseCSD(void)
     static int detected = 0;
 
     if (!detected) {
-        TkWaylandDetectServerDecorations();
-        detected = 1;
+	TkWaylandDetectServerDecorations();
+	detected = 1;
     }
 
     switch (decorationMode) {
     case DECOR_AUTO:
-        return 1;  /* Default to CSD */
+	return 1;
     case DECOR_SERVER_ONLY:
-        return 0;
+	return 0;
     case DECOR_CLIENT_ONLY:
-        return 1;
+	return 1;
     case DECOR_NONE:
-        return 0;
+	return 0;
     default:
-        return 1;
+	return 1;
     }
 }
 
@@ -206,43 +211,11 @@ TkWaylandConfigureWindowDecorations(void)
     int useCSD = TkWaylandShouldUseCSD();
 
     if (decorationMode == DECOR_NONE) {
-        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+	glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
     } else if (useCSD) {
-        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+	glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
     } else {
-        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandInitDecorationPolicy --
- *
- *      Initialize the Wayland decoration system. Detects compositor
- *      capabilities and sets policy from environment.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Detects SSD availability and sets decoration mode.
- *  
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
-{
-    const char *decorEnv;
-    
-    /* Detect whether compositor supports server-side decorations */
-    TkWaylandDetectServerDecorations();
-    
-    /* Check for environment variable override */
-    decorEnv = getenv("TK_WAYLAND_DECORATIONS");
-    if (decorEnv != NULL) {
-        TkWaylandSetDecorationMode(decorEnv);
+	glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
     }
 }
 
@@ -251,7 +224,8 @@ TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
  *
  * TkWaylandCreateDecoration --
  *
- *      Allocate and initialize a decoration structure for a Tk window.
+ *      Allocate and initialise a decoration structure for a Tk window.
+ *      The wmPtr is taken from winPtr->wmInfoPtr (must be valid).
  *
  * Results:
  *      Pointer to a new TkWaylandDecoration, or NULL on failure.
@@ -263,17 +237,18 @@ TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
  */
  
 TkWaylandDecoration *
-TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow)
+TkWaylandCreateDecoration(TkWindow *winPtr,
+			  GLFWwindow *glfwWindow)
 {
     TkWaylandDecoration *decor;
 
     if (winPtr == NULL || glfwWindow == NULL) {
-        return NULL;
+	return NULL;
     }
 
     decor = (TkWaylandDecoration *)calloc(1, sizeof(TkWaylandDecoration));
     if (decor == NULL) {
-        return NULL;
+	return NULL;
     }
 
     decor->winPtr = winPtr;
@@ -284,9 +259,9 @@ TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow)
 
     decor->title = (char *)malloc(256);
     if (decor->title != NULL) {
-        const char *name = Tk_PathName((Tk_Window)winPtr);
-        strncpy(decor->title, name ? name : "Tk", 255);
-        decor->title[255] = '\0';
+	const char *name = Tk_PathName((Tk_Window)winPtr);
+	strncpy(decor->title, name ? name : "Tk", 255);
+	decor->title[255] = '\0';
     }
 
     decor->closeState = BUTTON_NORMAL;
@@ -318,96 +293,14 @@ void
 TkWaylandDestroyDecoration(TkWaylandDecoration *decor)
 {
     if (decor == NULL) {
-        return;
+	return;
     }
 
     if (decor->title != NULL) {
-        free(decor->title);
+	free(decor->title);
     }
 
     free(decor);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandGetDecoration --
- *
- *      Get the decoration for a Tk window.
- *
- * Results:
- *      Returns the window decoration.
- *
- *----------------------------------------------------------------------
- */
- 
-TkWaylandDecoration *
-TkWaylandGetDecoration(TkWindow *winPtr) 
-{
-    WindowMapping *m = FindMappingByTk(winPtr);
-    return m ? m->decoration : NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandSetDecorationTitle --
- *
- *      Change the title displayed in the window decoration.
- *      This function should be called by the window manager
- *      whenever the window title changes (e.g., via "wm title").
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The title string is duplicated and stored; next redraw uses it.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandSetDecorationTitle(TkWaylandDecoration *decor, const char *title)
-{
-    if (decor == NULL || title == NULL) {
-        return;
-    }
-
-    if (decor->title != NULL) {
-        free(decor->title);
-    }
-
-    decor->title = (char *)malloc(strlen(title) + 1);
-    if (decor->title != NULL) {
-        strcpy(decor->title, title);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandSetWindowMaximized --
- *
- *      Update the decoration's internal maximized state to match the
- *      WM's zoomed attribute. Called by the WM when the window is
- *      maximized or restored programmatically.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Updates decor->maximized; next redraw will show correct button.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized)
-{
-    if (decor == NULL) {
-        return;
-    }
-    decor->maximized = maximized ? 1 : 0;
 }
 
 /*
@@ -428,7 +321,8 @@ TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized)
  */
  
 void
-TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg)
+TkWaylandDrawDecoration(TkWaylandDecoration *decor,
+                        NVGcontext *vg)
 {
     int width, height;
     WindowMapping *mapping;
@@ -445,7 +339,7 @@ TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg)
 
     nvgSave(vg);
 
-    /* Draw shadow (outside window bounds) */
+    /* Draw shadow (outside window bounds). */
     NVGpaint shadowPaint = nvgBoxGradient(vg,
                                           -BORDER_WIDTH, -TITLE_BAR_HEIGHT,
                                           width + 2*BORDER_WIDTH,
@@ -459,7 +353,7 @@ TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg)
     nvgFillPaint(vg, shadowPaint);
     nvgFill(vg);
 
-    /* Draw border and title bar */
+    /* Draw border and title bar. */
     DrawBorder(vg, decor, width, height);
     DrawTitleBar(vg, decor, width, height);
 
@@ -470,6 +364,7 @@ TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg)
     nvgRestore(vg);
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -477,14 +372,6 @@ TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg)
  *
  *      Draw the title bar background, title text, and window control
  *      buttons.
- *
- *      The decoration font is resolved per-call via nvgFindFont /
- *      nvgCreateFont rather than using the globally cached decorFontId.
- *      That cached ID was registered against the shared context window
- *      during TkGlfwInitialize; when TkGlfwEndDraw calls this function
- *      the per-window GL context is current, making the cached ID
- *      invalid.  Looking up (or lazy-loading) by name is safe across
- *      all GL contexts that share the same NVG instance.
  *
  * Results:
  *      None.
@@ -494,12 +381,12 @@ TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg)
  *
  *----------------------------------------------------------------------
  */
-
 static void
-DrawTitleBar(NVGcontext *vg, 
-	TkWaylandDecoration *decor, 
-	int width, 
-	TCL_UNUSED(int)) /* height */
+DrawTitleBar(NVGcontext *vg,
+	     TkWaylandDecoration *decor,
+	     int width,
+	     TCL_UNUSED(int)) /* height */
+
 {
     float buttonX;
     int focused;
@@ -510,48 +397,33 @@ DrawTitleBar(NVGcontext *vg,
 
     nvgBeginPath(vg);
     nvgRoundedRectVarying(vg, 0, 0, width, TITLE_BAR_HEIGHT,
-                          CORNER_RADIUS, CORNER_RADIUS, 0, 0);
+			  CORNER_RADIUS, CORNER_RADIUS, 0, 0);
     nvgFillColor(vg, bgColor);
     nvgFill(vg);
 
     if (decor->title != NULL) {
-        int decorFontId;
-
-        /*
-         * decorFontId is context-specific; look it up in the current context
-         * and lazy-load from disk if this context hasn't seen it yet.
-         * This is necessary because the ID stored in TkGlfwContext was
-         * registered against the shared context window and is not valid
-         * in any per-window GL context.
-         */
-        decorFontId = nvgFindFont(vg, "sans");
-        if (decorFontId < 0) {
-            decorFontId = nvgCreateFont(vg, "sans",
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
-        }
-
-        textColor = focused ? nvgRGB(255, 255, 255) : nvgRGB(180, 180, 180);
-        nvgFontSize(vg, 14.0f);
-        nvgFontFaceId(vg, decorFontId);
-        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-        nvgFillColor(vg, textColor);
-        nvgText(vg, 15, TITLE_BAR_HEIGHT / 2, decor->title, NULL);
+	textColor = focused ? nvgRGB(255, 255, 255) : nvgRGB(180, 180, 180);
+	nvgFontSize(vg, 14.0f);
+	nvgFontFaceId(vg, TkGlfwGetContext()->decorFontId);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgFillColor(vg, textColor);
+	nvgText(vg, 15, TITLE_BAR_HEIGHT / 2, decor->title, NULL);
     }
 
     buttonX = width - BUTTON_SPACING - BUTTON_WIDTH;
     DrawButton(vg, BUTTON_CLOSE, decor->closeState,
-               buttonX, (TITLE_BAR_HEIGHT - BUTTON_HEIGHT) / 2,
-               BUTTON_WIDTH, BUTTON_HEIGHT);
+	       buttonX, (TITLE_BAR_HEIGHT - BUTTON_HEIGHT) / 2,
+	       BUTTON_WIDTH, BUTTON_HEIGHT);
 
     buttonX -= (BUTTON_WIDTH + BUTTON_SPACING);
     DrawButton(vg, BUTTON_MAXIMIZE, decor->maxState,
-               buttonX, (TITLE_BAR_HEIGHT - BUTTON_HEIGHT) / 2,
-               BUTTON_WIDTH, BUTTON_HEIGHT);
+	       buttonX, (TITLE_BAR_HEIGHT - BUTTON_HEIGHT) / 2,
+	       BUTTON_WIDTH, BUTTON_HEIGHT);
 
     buttonX -= (BUTTON_WIDTH + BUTTON_SPACING);
     DrawButton(vg, BUTTON_MINIMIZE, decor->minState,
-               buttonX, (TITLE_BAR_HEIGHT - BUTTON_HEIGHT) / 2,
-               BUTTON_WIDTH, BUTTON_HEIGHT);
+	       buttonX, (TITLE_BAR_HEIGHT - BUTTON_HEIGHT) / 2,
+	       BUTTON_WIDTH, BUTTON_HEIGHT);
 }
 
 /*
@@ -571,7 +443,10 @@ DrawTitleBar(NVGcontext *vg,
  */
  
 static void
-DrawBorder(NVGcontext *vg, TkWaylandDecoration *decor, int width, int height)
+DrawBorder(NVGcontext *vg,
+	   TkWaylandDecoration *decor,
+	   int width,
+	   int height)
 {
     int focused;
     NVGcolor borderColor;
@@ -604,7 +479,13 @@ DrawBorder(NVGcontext *vg, TkWaylandDecoration *decor, int width, int height)
  */
  
 static void
-DrawButton(NVGcontext *vg, ButtonType type, ButtonState state, float x, float y, float w, float h)
+DrawButton(NVGcontext *vg,
+	   ButtonType type,
+	   ButtonState state,
+	   float x,
+	   float y,
+	   float w,
+	   float h)
 {
     NVGcolor bgColor, iconColor;
     float iconSize = 10.0f;
@@ -613,50 +494,50 @@ DrawButton(NVGcontext *vg, ButtonType type, ButtonState state, float x, float y,
 
     switch (state) {
     case BUTTON_HOVER:
-        bgColor = (type == BUTTON_CLOSE) ? nvgRGB(232, 17, 35) : nvgRGB(80, 80, 80);
-        break;
+	bgColor = (type == BUTTON_CLOSE) ? nvgRGB(232, 17, 35) : nvgRGB(80, 80, 80);
+	break;
     case BUTTON_PRESSED:
-        bgColor = (type == BUTTON_CLOSE) ? nvgRGB(196, 43, 28) : nvgRGB(100, 100, 100);
-        break;
+	bgColor = (type == BUTTON_CLOSE) ? nvgRGB(196, 43, 28) : nvgRGB(100, 100, 100);
+	break;
     case BUTTON_NORMAL:
     default:
-        bgColor = nvgRGBA(0, 0, 0, 0);
-        break;
+	bgColor = nvgRGBA(0, 0, 0, 0);
+	break;
     }
 
     if (state != BUTTON_NORMAL) {
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, x, y, w, h, 3.0f);
-        nvgFillColor(vg, bgColor);
-        nvgFill(vg);
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x, y, w, h, 3.0f);
+	nvgFillColor(vg, bgColor);
+	nvgFill(vg);
     }
 
     iconColor = (state == BUTTON_HOVER || state == BUTTON_PRESSED) ?
-        nvgRGB(255, 255, 255) : nvgRGB(200, 200, 200);
+	nvgRGB(255, 255, 255) : nvgRGB(200, 200, 200);
 
     nvgStrokeColor(vg, iconColor);
     nvgStrokeWidth(vg, 1.5f);
 
     switch (type) {
     case BUTTON_CLOSE:
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, cx - iconSize/2, cy - iconSize/2);
-        nvgLineTo(vg, cx + iconSize/2, cy + iconSize/2);
-        nvgMoveTo(vg, cx + iconSize/2, cy - iconSize/2);
-        nvgLineTo(vg, cx - iconSize/2, cy + iconSize/2);
-        nvgStroke(vg);
-        break;
+	nvgBeginPath(vg);
+	nvgMoveTo(vg, cx - iconSize/2, cy - iconSize/2);
+	nvgLineTo(vg, cx + iconSize/2, cy + iconSize/2);
+	nvgMoveTo(vg, cx + iconSize/2, cy - iconSize/2);
+	nvgLineTo(vg, cx - iconSize/2, cy + iconSize/2);
+	nvgStroke(vg);
+	break;
     case BUTTON_MAXIMIZE:
-        nvgBeginPath(vg);
-        nvgRect(vg, cx - iconSize/2, cy - iconSize/2, iconSize, iconSize);
-        nvgStroke(vg);
-        break;
+	nvgBeginPath(vg);
+	nvgRect(vg, cx - iconSize/2, cy - iconSize/2, iconSize, iconSize);
+	nvgStroke(vg);
+	break;
     case BUTTON_MINIMIZE:
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, cx - iconSize/2, cy);
-        nvgLineTo(vg, cx + iconSize/2, cy);
-        nvgStroke(vg);
-        break;
+	nvgBeginPath(vg);
+	nvgMoveTo(vg, cx - iconSize/2, cy);
+	nvgLineTo(vg, cx + iconSize/2, cy);
+	nvgStroke(vg);
+	break;
     }
 }
 
@@ -667,102 +548,84 @@ DrawButton(NVGcontext *vg, ButtonType type, ButtonState state, float x, float y,
  *
  *      Process mouse button events for the decoration area.
  *
- *      On press: Button hits are recorded (PRESSED state). Title-bar
- *      and border-edge presses delegate to GLFW for window management.
- *
- *      On release: A button is activated if it was in PRESSED state and
- *      the cursor is still over it.
- *
  * Results:
  *      1 if the event was handled (i.e. occurred in the decoration area),
  *      0 otherwise.
  *
  * Side effects:
- *      May trigger window close, maximise, or minimize actions.
+ *      May initiate window dragging, resizing, or button state changes.
+ *      May trigger window close, maximise, or minimise actions.
  *
  *----------------------------------------------------------------------
  */
-
+ 
 int
 TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
-                               int button,
-                               int action,
-                               double x,
-                               double y)
+			       int button,
+			       int action,
+			       double x,
+			       double y)
 {
     int width, height;
     int buttonType;
     int resizeEdge;
 
     if (decor == NULL || !decor->enabled) {
-        return 0;
+	return 0;
     }
-    
+
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        if (action == GLFW_PRESS) {
-            /* Check window control buttons first */
-            buttonType = GetButtonAtPosition(decor, x, y, width);
-            if (buttonType >= 0) {
-                if (buttonType == BUTTON_CLOSE)         decor->closeState = BUTTON_PRESSED;
-                else if (buttonType == BUTTON_MAXIMIZE) decor->maxState   = BUTTON_PRESSED;
-                else if (buttonType == BUTTON_MINIMIZE) decor->minState   = BUTTON_PRESSED;
-                return 1;  /* Button click — consumed */
-            }
-
-            /* Title bar drag — delegate to GLFW */
-            if (y >= 0 && y < TITLE_BAR_HEIGHT) {
-                /* Let GLFW handle the drag via its internal mechanism */
-                return 1;  /* Title bar — consumed */
-            }
-
-            /* Border resize — delegate to GLFW */
-            resizeEdge = GetResizeEdge(x, y, width, height);
-            if (resizeEdge != RESIZE_NONE) {
-                /* Let GLFW handle the resize via its internal mechanism */
-                return 1;  /* Resize edge — consumed */
-            }
-
-            /* Click is in client area — do not consume */
-            return 0;
-
-        } else if (action == GLFW_RELEASE) {
-            /* Only consume release if it's on a decoration button */
-            buttonType = GetButtonAtPosition(decor, x, y, width);
-            if (buttonType >= 0) {
-                if (buttonType == BUTTON_CLOSE && decor->closeState == BUTTON_PRESSED)
-                    HandleButtonClick(decor, BUTTON_CLOSE);
-                else if (buttonType == BUTTON_MAXIMIZE && decor->maxState == BUTTON_PRESSED)
-                    HandleButtonClick(decor, BUTTON_MAXIMIZE);
-                else if (buttonType == BUTTON_MINIMIZE && decor->minState == BUTTON_PRESSED)
-                    HandleButtonClick(decor, BUTTON_MINIMIZE);
-
-                decor->closeState = BUTTON_NORMAL;
-                decor->maxState   = BUTTON_NORMAL;
-                decor->minState   = BUTTON_NORMAL;
-                UpdateButtonStates(decor, x, y, width);
-                return 1;  /* Button release — consumed */
-            }
-
-            /* Reset button states regardless */
-            decor->closeState = BUTTON_NORMAL;
-            decor->maxState   = BUTTON_NORMAL;
-            decor->minState   = BUTTON_NORMAL;
-            UpdateButtonStates(decor, x, y, width);
-
-            /* Only consume if release is in title bar or border area */
-            if (y >= 0 && y < TITLE_BAR_HEIGHT) {
-                return 1;
-            }
-            resizeEdge = GetResizeEdge(x, y, width, height);
-            if (resizeEdge != RESIZE_NONE) {
-                return 1;
-            }
-
-            /* Release is in client area — do not consume */
-            return 0;
-        }
+	if (action == GLFW_PRESS) {
+	    buttonType = GetButtonAtPosition(decor, x, y, width);
+	    if (buttonType >= 0) {
+		if (buttonType == BUTTON_CLOSE) decor->closeState = BUTTON_PRESSED;
+		else if (buttonType == BUTTON_MAXIMIZE) decor->maxState = BUTTON_PRESSED;
+		else if (buttonType == BUTTON_MINIMIZE) decor->minState = BUTTON_PRESSED;
+		return 1;
+	    }
+        
+	    if (y < TITLE_BAR_HEIGHT) {
+		decor->dragging = 1;
+		/* Store the offset of cursor within the window at drag start. */
+		decor->dragStartX = x;   /* window-relative cursor X. */
+		decor->dragStartY = y;   /* window-relative cursor Y. */
+		glfwGetWindowPos(decor->glfwWindow,
+				 &decor->windowStartX,
+				 &decor->windowStartY);
+		return 1;
+	    }
+	    
+	    resizeEdge = GetResizeEdge(x, y, width, height);
+	    if (resizeEdge != RESIZE_NONE) {
+		decor->resizing = resizeEdge;
+		decor->resizeStartX = x;
+		decor->resizeStartY = y;
+		glfwGetWindowSize(decor->glfwWindow, &decor->resizeStartWidth, &decor->resizeStartHeight);
+		return 1;
+	    }
+        
+	} else if (action == GLFW_RELEASE) {
+	    buttonType = GetButtonAtPosition(decor, x, y, width);
+	    if (buttonType >= 0) {
+		if (buttonType == BUTTON_CLOSE && decor->closeState == BUTTON_PRESSED) {
+		    HandleButtonClick(decor, BUTTON_CLOSE);
+		} else if (buttonType == BUTTON_MAXIMIZE && decor->maxState == BUTTON_PRESSED) {
+		    HandleButtonClick(decor, BUTTON_MAXIMIZE);
+		} else if (buttonType == BUTTON_MINIMIZE && decor->minState == BUTTON_PRESSED) {
+		    HandleButtonClick(decor, BUTTON_MINIMIZE);
+		}
+	    }
+        
+	    decor->closeState = BUTTON_NORMAL;
+	    decor->maxState = BUTTON_NORMAL;
+	    decor->minState = BUTTON_NORMAL;
+	    decor->dragging = 0;
+	    decor->resizing = RESIZE_NONE;
+	    UpdateButtonStates(decor, x, y, width);
+	    return 1;
+	}
     }
 
     return 0;
@@ -776,27 +639,108 @@ TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,
  *      Process mouse motion events for the decoration area.
  *
  * Results:
- *       Always returns 0 — motion in the decoration area is not
- *       consumed; Tk still receives MotionNotify for cursor updates.
+ *      1 if the motion caused a window operation (drag/resize) or a
+ *      button state change, 0 otherwise.
  *
  * Side effects:
- *      Updates button hover states in the decoration structure.
+ *      May move the window (dragging) or resize it, or update button
+ *      hover states.
  *
  *----------------------------------------------------------------------
  */
  
 int
-TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x, double y)
+TkWaylandDecorationMouseMove(TkWaylandDecoration *decor,
+			     double x,
+			     double y)
 {
     int width, height;
+    int newX, newY;
+    int newWidth, newHeight;
 
     if (decor == NULL || !decor->enabled) {
-        return 0;
+	return 0;
     }
 
     glfwGetWindowSize(decor->glfwWindow, &width, &height);
-    UpdateButtonStates(decor, x, y, width);
 
+    if (decor->dragging) {
+	int winX, winY;
+	glfwGetWindowPos(decor->glfwWindow, &winX, &winY);
+	/* Compute screen-space cursor position. */
+	int screenX = winX + (int)x;
+	int screenY = winY + (int)y;
+	/* New window origin = screen cursor pos minus the drag offset. */
+	newX = screenX - (int)decor->dragStartX;
+	newY = screenY - (int)decor->dragStartY;
+	glfwSetWindowPos(decor->glfwWindow, newX, newY);
+	return 1;
+    }
+
+   if (decor->resizing != RESIZE_NONE) {
+    int winX, winY, curWinWidth, curWinHeight;
+
+    glfwGetWindowPos(decor->glfwWindow, &winX, &winY);
+    glfwGetWindowSize(decor->glfwWindow, &curWinWidth, &curWinHeight);
+
+    /* Convert window-relative cursor to screen space. */
+    int screenX = winX + (int)x;
+    int screenY = winY + (int)y;
+
+    /*
+     * Store the screen-space window origin at resize start,
+     * then compute deltas from there. 
+     */
+
+    newX      = winX;
+    newY      = winY;
+    newWidth  = curWinWidth;
+    newHeight = curWinHeight;
+
+    if (decor->resizing & RESIZE_RIGHT) {
+        /* Right edge moves, left stays: width = screen cursor X - window left. */
+        newWidth = screenX - winX;
+    }
+    if (decor->resizing & RESIZE_BOTTOM) {
+        /* Bottom edge moves, top stays: height = screen cursor Y - window top. */
+        newHeight = screenY - winY;
+    }
+    if (decor->resizing & RESIZE_LEFT) {
+        /* Left edge moves, right stays fixed. */
+        int fixedRight = decor->resizeStartX + decor->resizeStartWidth;
+        newX     = screenX;
+        newWidth = fixedRight - screenX;
+    }
+    if (decor->resizing & RESIZE_TOP) {
+        /* Top edge moves, bottom stays fixed. */
+        int fixedBottom = decor->resizeStartY + decor->resizeStartHeight;
+        newY      = screenY;
+        newHeight = fixedBottom - screenY;
+    }
+
+    if (newWidth  < 100) {
+        /* Clamp: if left-resizing, pin X so right edge doesn't drift. */
+        if (decor->resizing & RESIZE_LEFT) {
+            newX = (decor->resizeStartX + decor->resizeStartWidth) - 100;
+        }
+        newWidth = 100;
+    }
+    if (newHeight < 100) {
+        if (decor->resizing & RESIZE_TOP) {
+            newY = (decor->resizeStartY + decor->resizeStartHeight) - 100;
+        }
+        newHeight = 100;
+    }
+
+    /* Only reposition if an edge that moves the origin is active. */
+    if (decor->resizing & (RESIZE_LEFT | RESIZE_TOP)) {
+        glfwSetWindowPos(decor->glfwWindow, newX, newY);
+    }
+    glfwSetWindowSize(decor->glfwWindow, newWidth, newHeight);
+    return 1;
+   }
+
+    UpdateButtonStates(decor, x, y, width);
     return 0;
 }
 
@@ -806,6 +750,8 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x, double y)
  * HandleButtonClick --
  *
  *      Perform the action associated with a window control button.
+ *      For maximize, update the WM's zoomed attribute to stay in sync.
+ *      For minimize, update the WM's iconic state.
  *
  * Results:
  *      None.
@@ -818,38 +764,40 @@ TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x, double y)
  */
  
 static void
-HandleButtonClick(TkWaylandDecoration *decor, ButtonType button)
+HandleButtonClick(TkWaylandDecoration *decor,
+		  ButtonType button)
 {
     switch (button) {
     case BUTTON_CLOSE:
-        glfwSetWindowShouldClose(decor->glfwWindow, GLFW_TRUE);
-        break;
+	glfwSetWindowShouldClose(decor->glfwWindow, GLFW_TRUE);
+	break;
     case BUTTON_MAXIMIZE:
-        if (decor->maximized) {
-            glfwRestoreWindow(decor->glfwWindow);
-            decor->maximized = 0;
-            /* Update WM's zoomed attribute */
-            if (decor->wmPtr != NULL) {
-                decor->wmPtr->attributes.zoomed = 0;
-                decor->wmPtr->reqState.zoomed = 0;
-            }
-        } else {
-            glfwMaximizeWindow(decor->glfwWindow);
-            decor->maximized = 1;
-            if (decor->wmPtr != NULL) {
-                decor->wmPtr->attributes.zoomed = 1;
-                decor->wmPtr->reqState.zoomed = 1;
-            }
-        }
-        break;
+	if (decor->maximized) {
+	    glfwRestoreWindow(decor->glfwWindow);
+	    decor->maximized = 0;
+	    /* Update WM's zoomed attribute. */
+	    if (decor->wmPtr != NULL) {
+		decor->wmPtr->attributes.zoomed = 0;
+		decor->wmPtr->reqState.zoomed = 0;
+	    }
+	} else {
+	    glfwMaximizeWindow(decor->glfwWindow);
+	    decor->maximized = 1;
+	    if (decor->wmPtr != NULL) {
+		decor->wmPtr->attributes.zoomed = 1;
+		decor->wmPtr->reqState.zoomed = 1;
+	    }
+	}
+	break;
     case BUTTON_MINIMIZE:
-        glfwIconifyWindow(decor->glfwWindow);
-        /* Update Tk's internal state to IconicState */
-        if (decor->winPtr != NULL) {
-            TkpWmSetState(decor->winPtr, IconicState);
-            decor->winPtr->flags &= ~TK_MAPPED;
-        }
-        break;
+	glfwIconifyWindow(decor->glfwWindow);
+	/* Update Tk's internal state to IconicState. */
+	if (decor->winPtr != NULL) {
+	    TkpWmSetState(decor->winPtr, IconicState);
+	    /* GLFW may not send an UnmapNotify, so clear mapped flag manually. */
+	    decor->winPtr->flags &= ~TK_MAPPED;
+	}
+	break;
     }
 }
 
@@ -871,14 +819,17 @@ HandleButtonClick(TkWaylandDecoration *decor, ButtonType button)
  */
  
 static int
-GetButtonAtPosition(TkWaylandDecoration *decor, double x, double y, int width)
+GetButtonAtPosition(TkWaylandDecoration *decor,
+		    double x,
+		    double y,
+		    int width)
 {
     float buttonX;
 
     (void)decor;
 
     if (y < 0 || y > TITLE_BAR_HEIGHT) {
-        return -1;
+	return -1;
     }
 
     buttonX = width - BUTTON_SPACING - BUTTON_WIDTH;
@@ -911,7 +862,10 @@ GetButtonAtPosition(TkWaylandDecoration *decor, double x, double y, int width)
  */
  
 static int
-GetResizeEdge(double x, double y, int width, int height)
+GetResizeEdge(double x,
+	      double y,
+	      int width,
+	      int height)
 {
     int edge = RESIZE_NONE;
     int margin = 5;
@@ -943,7 +897,10 @@ GetResizeEdge(double x, double y, int width, int height)
  */
  
 static void
-UpdateButtonStates(TkWaylandDecoration *decor, double x, double y, int width)
+UpdateButtonStates(TkWaylandDecoration *decor,
+		   double x,
+		   double y,
+		   int width)
 {
     int button = GetButtonAtPosition(decor, x, y, width);
 
@@ -954,6 +911,68 @@ UpdateButtonStates(TkWaylandDecoration *decor, double x, double y, int width)
     if (button == BUTTON_CLOSE) decor->closeState = BUTTON_HOVER;
     else if (button == BUTTON_MAXIMIZE) decor->maxState = BUTTON_HOVER;
     else if (button == BUTTON_MINIMIZE) decor->minState = BUTTON_HOVER;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSetDecorationTitle --
+ *
+ *      Change the title displayed in the window decoration.
+ *      This function should be called by the window manager (tkWaylandWm.c)
+ *      whenever the window title changes (e.g., via "wm title").
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      The title string is duplicated and stored; next redraw uses it.
+ *
+ *----------------------------------------------------------------------
+ */
+void
+TkWaylandSetDecorationTitle(TkWaylandDecoration *decor,
+			    const char *title)
+{
+    if (decor == NULL || title == NULL) {
+	return;
+    }
+
+    if (decor->title != NULL) {
+	free(decor->title);
+    }
+
+    decor->title = (char *)malloc(strlen(title) + 1);
+    if (decor->title != NULL) {
+	strcpy(decor->title, title);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSetWindowMaximized --
+ *
+ *      Update the decoration's internal maximized state to match the
+ *      WM's zoomed attribute.  Called by the WM when the window is
+ *      maximized or restored programmatically.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Updates decor->maximized; next redraw will show correct button.
+ *
+ *----------------------------------------------------------------------
+ */
+void
+TkWaylandSetWindowMaximized(TkWaylandDecoration *decor,
+			    int maximized)
+{
+    if (decor == NULL) {
+	return;
+    }
+    decor->maximized = maximized ? 1 : 0;
 }
 
 /*
@@ -975,31 +994,64 @@ UpdateButtonStates(TkWaylandDecoration *decor, double x, double y, int width)
  
 void
 TkWaylandGetDecorationContentArea(TkWaylandDecoration *decor,
-                                  int *x,
-                                  int *y,
-                                  int *width,
-                                  int *height)
+				  int *x,
+				  int *y,
+				  int *width,
+				  int *height)
 {
     int winWidth, winHeight;
 
     if (decor == NULL) {
-        return;
+	return;
     }
 
     glfwGetWindowSize(decor->glfwWindow, &winWidth, &winHeight);
 
     if (decor->enabled) {
-        *x = BORDER_WIDTH;
-        *y = TITLE_BAR_HEIGHT;
-        *width = winWidth - 2 * BORDER_WIDTH;
-        *height = winHeight - TITLE_BAR_HEIGHT - BORDER_WIDTH;
+	*x = BORDER_WIDTH;
+	*y = TITLE_BAR_HEIGHT;
+	*width = winWidth - 2 * BORDER_WIDTH;
+	*height = winHeight - TITLE_BAR_HEIGHT - BORDER_WIDTH;
     } else {
-        *x = 0;
-        *y = 0;
-        *width = winWidth;
-        *height = winHeight;
+	*x = 0;
+	*y = 0;
+	*width = winWidth;
+	*height = winHeight;
     }
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandInitDecorationPolicy --
+ *
+ *	Initialize the Wayland decoration system. Detects compositor
+ *	capabilities, and sets policy from environment.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Detects SSD availability, and sets decoration mode.
+ *  
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandInitDecorationPolicy(TCL_UNUSED(Tcl_Interp *))
+{
+    const char *decorEnv;
+    
+    /* Detect whether compositor supports server-side decorations. */
+    TkWaylandDetectServerDecorations();
+    
+    /* Check for environment variable override */
+    decorEnv = getenv("TK_WAYLAND_DECORATIONS");
+    if (decorEnv != NULL) {
+        TkWaylandSetDecorationMode(decorEnv);
+    }
+}
+
 
 /*
  * Local Variables:
