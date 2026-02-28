@@ -471,7 +471,8 @@ AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
 	 nanovg.o text-input-unstable-v3-protocol.o \
-	 tkGlfwInit.o tkWayland.o tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
+     xdg-decoration-unstable-v1.o xdg-shell.o tkGlfwInit.o tkWayland.o  \
+     tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
      tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o tkWaylandDecor.o \
      tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
      tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o tkWaylandImage.o \
@@ -633,7 +634,8 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
     $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c $(WAYLAND_DIR)/tkWaylandWm.c \
-    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c $(WAYLAND_UNIX_SRCS)
+    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c $(WAYLAND_DIR)/xdg-decoration-unstable-v1.c \
+    $(WAYLAND_DIR)/xdg-shell.c $(WAYLAND_UNIX_SRCS)
 
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
@@ -1454,6 +1456,13 @@ nanovg.o: $(WAYLAND_DIR)/nanovg.c
 
 text-input-unstable-v3-protocol.o: $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
+
+xdg-decoration-unstable-v1.o: $(WAYLAND_DIR)/xdg-decoration-unstable-v1.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/xdg-decoration-unstable-v1.c
+
+xdg-shell.o: $(WAYLAND_DIR)/xdg-shell.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/xdg-shell.c
+
 
 tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c
