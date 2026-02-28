@@ -1,4 +1,4 @@
-! /bin/bash -norc
+#!/bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
@@ -270,7 +270,7 @@ if test $tk_aqua = no; then
            && pkg-config --exists "wayland-cursor >= 1.18"; then
             AC_MSG_RESULT([yes])
             WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
+            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor) -lwayland-client"
             found_wayland=yes
             AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
         else
@@ -305,6 +305,7 @@ if test $tk_aqua = no; then
             AC_MSG_RESULT([glfw3 found])
             GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
             GLFW_LIBS="$(pkg-config --libs glfw3)"
+            GLFW_CFLAGS="$GLFW_CFLAGS -DGLFW_EXPOSE_NATIVE_WAYLAND"
             if pkg-config --exists wayland-client; then
                 found_glfw=yes
                 AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
