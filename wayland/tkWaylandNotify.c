@@ -245,9 +245,8 @@ TkWaylandExposeEventProc(
     Tcl_Event *evPtr,
     int        flags)
 {
-    TkWaylandExposeEvent    *exposePtr = (TkWaylandExposeEvent *)evPtr;
-    TkWaylandDrawingContext  dc;
-    WindowMapping           *mapping;
+    TkWaylandExposeEvent *exposePtr = (TkWaylandExposeEvent *)evPtr;
+    WindowMapping        *mapping;
 
     if (!(flags & TCL_WINDOW_EVENTS)) return 0;
     if (exposePtr->winPtr == NULL)    return 1;
@@ -261,18 +260,11 @@ TkWaylandExposeEventProc(
     if (mapping->width > 1 && mapping->height > 1) {
         exposePtr->winPtr->changes.width  = mapping->width;
         exposePtr->winPtr->changes.height = mapping->height;
-        exposePtr->xEvent.xexpose.width  = mapping->width;
-        exposePtr->xEvent.xexpose.height = mapping->height;
-    }
-
-    if (TkGlfwBeginDraw(mapping->drawable, NULL, &dc) != TCL_OK) {
-        Tk_HandleEvent(&exposePtr->xEvent);
-        return 1;
+        exposePtr->xEvent.xexpose.width   = mapping->width;
+        exposePtr->xEvent.xexpose.height  = mapping->height;
     }
 
     Tk_HandleEvent(&exposePtr->xEvent);
-
-    TkGlfwEndDraw(&dc);
     return 1;
 }
 
@@ -299,19 +291,29 @@ TkWaylandExposeEventProc(
 static void
 TkWaylandHandleExposeEvents(void)
 {
+    WindowMapping           *m;
+    TkWaylandDrawingContext  dc;
+    int                      didBegin = 0;
+
     /*
-     * Service any pending Tcl window events now. This causes Tcl to
-     * dispatch queued XEvents (including the Expose events queued by
-     * TkGlfwWindowRefreshCallback and TkGlfwWindowSizeCallback) through
-     * Tk's normal event handling path.
-     *
-     * We call Tcl_ServiceEvent in a loop until no more window events
-     * are pending, ensuring all expose events queued in this poll
-     * cycle are handled before returning.
+     * Open a NanoVG frame on each mapped window before draining.
+     * This clears once and holds the frame open so every child
+     * widget draw call composites into the same buffer.
      */
-    while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
-        /* Keep draining until no more window events are ready. */
+    for (m = TkGlfwGetMappingList(); m; m = m->nextPtr) {
+        if (m->glfwWindow && m->width > 1 && m->height > 1) {
+            if (TkGlfwBeginDraw(m->drawable, NULL, &dc) == TCL_OK)
+                didBegin = 1;
+        }
     }
+
+    while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
+        /* drain */
+    }
+
+    /* Close the frame and swap once, after all widgets have drawn. */
+    if (didBegin)
+        TkGlfwEndDraw(&dc);
 }
 
 /*

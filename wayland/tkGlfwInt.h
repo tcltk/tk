@@ -69,8 +69,10 @@ typedef struct WindowMapping {
 WindowMapping *FindMappingByGLFW(GLFWwindow *glfwWindow);
 WindowMapping *FindMappingByTk(TkWindow *tkWin);
 WindowMapping *FindMappingByDrawable(Drawable drawable);
+WindowMapping *TkGlfwGetMappingList(void);
 void           RemoveMapping(WindowMapping *mapping);
 void           CleanupAllMappings(void);
+
 
 /*
  *----------------------------------------------------------------------
