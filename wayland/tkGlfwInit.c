@@ -468,6 +468,22 @@ TkGlfwCreateWindow(
     WindowMapping *mapping;
     GLFWwindow    *window;
 
+   /* Ensure NanoVG context exists. */
+    if (!glfwContext.vg) {
+         
+        /* Try to obtain context. */
+        glfwContext.vg = TkGlfwGetNVGContext();
+        
+        /* If still NULL, recreate it */
+        if (!glfwContext.vg && glfwContext.mainWindow) {
+            glfwMakeContextCurrent(glfwContext.mainWindow);
+            glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+            if (glfwContext.vg) {
+                TkWaylandSetNVGContext(glfwContext.vg);
+            }
+        }
+    }
+    
     if (!glfwContext.initialized) {
         if (TkGlfwInitialize() != TCL_OK)
             return NULL;
