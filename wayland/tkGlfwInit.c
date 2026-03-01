@@ -801,7 +801,7 @@ TkGlfwGetNVGContext(void)
         }
     }
 
-    /* If NanoVG context is NULL, try to recreate it */
+    /* If NanoVG context is NULL, try to recreate it. */
     if (!glfwContext.vg) {
         fprintf(stderr, "TkGlfwGetNVGContext: NanoVG context NULL, recreating...\n");
         
@@ -818,8 +818,6 @@ TkGlfwGetNVGContext(void)
             return NULL;
         }
         
-        fprintf(stderr, "TkGlfwGetNVGContext: Recreated NanoVG context: %p\n", 
-                glfwContext.vg);
         TkWaylandSetNVGContext(glfwContext.vg);
     }
 
