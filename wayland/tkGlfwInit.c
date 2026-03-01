@@ -177,7 +177,56 @@ TkGlfwInitialize(void)
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
 
     glfwContext.initialized = 1;
+    
+    if (!glfwInit()) {
+    return TCL_ERROR;
+}
+
+	Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
     return TCL_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwShutdown--
+ *
+ *	Orderly cleanup of GLFW resources on app shutdown.
+ *
+ * Results:
+ *	GLFW is closed.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkGlfwShutdown(TCL_UNUSED(ClientData))
+{
+
+    if (!glfwContext.initialized)
+        return;
+
+    CleanupAllMappings();
+    TkWaylandCleanupPixmapStore();
+
+    if (glfwContext.vg) {
+        glfwMakeContextCurrent(glfwContext.mainWindow);
+        nvgDeleteGLES2(glfwContext.vg);
+        glfwContext.vg = NULL;
+        TkWaylandSetNVGContext(NULL);
+    }
+
+    if (glfwContext.mainWindow) {
+        glfwDestroyWindow(glfwContext.mainWindow);
+        glfwContext.mainWindow = NULL;
+    }
+
+    glfwTerminate();
+    glfwContext.initialized = 0;
 }
 
 /*
@@ -302,44 +351,6 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
     if (mapping) RemoveMapping(mapping);
 
     glfwDestroyWindow(glfwWindow);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwCleanup --
- *
- *	Perform global cleanup of all GLFW and Wayland resources.
- *	Called during interpreter shutdown.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Destroys all windows, frees the NanoVG context, destroys
- *	Wayland objects, and terminates GLFW.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwCleanup(void)
-{
-    if (!glfwContext.initialized) return;
-
-    CleanupAllMappings();
-    TkWaylandCleanupPixmapStore();
-
-    if (glfwContext.vg) {
-        glfwMakeContextCurrent(glfwContext.mainWindow);
-        nvgDeleteGLES2(glfwContext.vg);
-        glfwContext.vg = NULL;
-        TkWaylandSetNVGContext(NULL);
-    }
-    if (glfwContext.mainWindow) {
-        glfwDestroyWindow(glfwContext.mainWindow);
-        glfwContext.mainWindow = NULL;
-    }
 }
 
 /*

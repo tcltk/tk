@@ -315,7 +315,7 @@ MODULE_SCOPE TkGlfwContext *TkGlfwGetContext(void);
  */
 
 MODULE_SCOPE int  TkGlfwInitialize(void);
-MODULE_SCOPE void TkGlfwCleanup(void);
+MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------

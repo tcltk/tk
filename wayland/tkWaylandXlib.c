@@ -1360,12 +1360,112 @@ Tk_SetMainMenubar(
     /* No-op. */
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpSync --
+ *
+ *	Syncs displays.  No-op in Wayland port.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 
 void
 TkpSync(
     TCL_UNUSED(Display *))	/* Display to sync. */
 {
     /* No-op */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XOpenDisplay --
+ *
+ *	Connect to X server and build internal Display.  No-op in Wayland port.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+ /* Opaque no-op display structure. */
+typedef struct {
+    int no_op;
+} NoOpDisplay;
+
+
+Display *
+XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
+{
+
+    NoOpDisplay *none = ckalloc(sizeof(NoOpDisplay));
+    if (!none) {
+        return NULL;
+    }
+    memset(none, 0, sizeof(NoOpDisplay));
+
+    return (Display *)none;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCloseDisplay --
+ *
+ *	Tear down X connection and free internals.  No-op in Wayland port.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XCloseDisplay(Display *display)
+{
+    if (display) {
+        ckfree(display);
+    }
+    return 0;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSync --
+ *
+ *	Flush X resources.  No-op in Wayland port.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSync(TCL_UNUSED(Display *), /* display */
+	TCL_UNUSED(Bool))  /* discard */
+{
+    return 0;
 }
 
 /*
