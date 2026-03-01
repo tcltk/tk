@@ -1409,7 +1409,7 @@ typedef struct {
 Display *
 XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
 {
-    static NoOpDisplay *d;
+    static NoOpDisplay d = {0};
     return (Display *)&d;
 }
 
