@@ -391,32 +391,75 @@ TkGlfwBeginDraw(
 {
     WindowMapping *mapping;
     int fbWidth, fbHeight;
+    int offsetX = 0, offsetY = 0;
 
     if (!dcPtr) return TCL_ERROR;
 
     mapping = FindMappingByDrawable(drawable);
     if (!mapping || !mapping->glfwWindow) return TCL_ERROR;
 
+    /*
+     * If the drawable is not the toplevel's own drawable, the match
+     * came from the child-tree walk.  Find the TkWindow for this
+     * drawable and accumulate its position up to the toplevel so
+     * NanoVG draws in the right place.
+     */
+    if (mapping->drawable != drawable) {
+        TkWindow *tw = mapping->tkWindow;
+        TkWindow *stack[256];
+        int top = 0;
+        TkWindow *found = NULL;
+        if (tw) {
+            stack[top++] = tw;
+            while (top > 0 && !found) {
+                TkWindow *cur = stack[--top];
+                if (cur->window == (Window)drawable) {
+                    found = cur;
+                } else {
+                    TkWindow *child;
+                    for (child = cur->childList; child; child = child->nextPtr)
+                        if (top < 255) stack[top++] = child;
+                }
+            }
+        }
+        if (found) {
+            TkWindow *tw2 = found;
+            while (tw2 && tw2->window != (Window)mapping->drawable) {
+                offsetX += tw2->changes.x;
+                offsetY += tw2->changes.y;
+                tw2 = tw2->parentPtr;
+            }
+        }
+    }
+
     /* Populate common fields regardless of nesting. */
-    dcPtr->drawable   = drawable;
-    dcPtr->glfwWindow = mapping->glfwWindow;
-    dcPtr->width      = mapping->width;
-    dcPtr->height     = mapping->height;
-    dcPtr->vg         = glfwContext.vg;
+    dcPtr->drawable    = drawable;
+    dcPtr->glfwWindow  = mapping->glfwWindow;
+    dcPtr->width       = mapping->width;
+    dcPtr->height      = mapping->height;
+    dcPtr->vg          = glfwContext.vg;
+    dcPtr->offsetX     = offsetX;
+    dcPtr->offsetY     = offsetY;
     dcPtr->nestedFrame = 0;
 
-    /* If a frame is already open on this window, nest inside it. */
+    /*
+     * If a frame is already open on this window, nest inside it.
+     * The framebuffer has already been cleared; just apply the GC
+     * and push the offset if needed.
+     */
     if (glfwContext.nvgFrameActive &&
             glfwContext.activeWindow == mapping->glfwWindow) {
         dcPtr->nestedFrame = 1;
+        if (offsetX != 0 || offsetY != 0) {
+            nvgSave(glfwContext.vg);
+            nvgTranslate(glfwContext.vg, (float)offsetX, (float)offsetY);
+        }
         if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
         return TCL_OK;
     }
 
     /*
-     * A frame is active on a *different* window — flush it first.
-     * This is an unusual path (drawing to two windows in the same
-     * call chain) but handle it cleanly.
+     * A frame is active on a different window — flush it first.
      */
     if (glfwContext.nvgFrameActive) {
         nvgEndFrame(glfwContext.vg);
@@ -425,14 +468,16 @@ TkGlfwBeginDraw(
         glfwContext.activeWindow   = NULL;
     }
 
-    /* Make context current and get actual framebuffer dimensions. */
     glfwMakeContextCurrent(mapping->glfwWindow);
     glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
 
-    glViewport(0, 0, fbWidth, fbHeight);
-    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+   glViewport(0, 0, fbWidth, fbHeight);
+	if (glfwContext.clearPending) {
+	    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    glfwContext.clearPending = 0;
+	}
+	
     nvgBeginFrame(glfwContext.vg,
                   (float)mapping->width,
                   (float)mapping->height,
@@ -442,6 +487,11 @@ TkGlfwBeginDraw(
 
     glfwContext.nvgFrameActive = 1;
     glfwContext.activeWindow   = mapping->glfwWindow;
+
+    if (offsetX != 0 || offsetY != 0) {
+        nvgSave(glfwContext.vg);
+        nvgTranslate(glfwContext.vg, (float)offsetX, (float)offsetY);
+    }
 
     if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
 
@@ -468,9 +518,16 @@ TkGlfwBeginDraw(
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    if (!dcPtr || !dcPtr->vg || dcPtr->nestedFrame) return;
+    if (!dcPtr || !dcPtr->vg) return;
 
-    nvgRestore(dcPtr->vg);
+    if (dcPtr->nestedFrame) {
+        /* Pop the per-call offset save pushed in BeginDraw for nested frames. */
+        if (dcPtr->offsetX != 0 || dcPtr->offsetY != 0)
+            nvgRestore(dcPtr->vg);
+        return;
+    }
+
+    nvgRestore(dcPtr->vg);   /* global pixel-snap save */
     nvgEndFrame(dcPtr->vg);
 
     glfwContext.nvgFrameActive = 0;
@@ -767,8 +824,31 @@ FindMappingByTk(TkWindow *w)
 WindowMapping *
 FindMappingByDrawable(Drawable d)
 {
-    WindowMapping *c = windowMappingList;
-    while (c) { if (c->drawable == d) return c; c = c->nextPtr; }
+    WindowMapping *m;
+
+    /* Fast path: direct match on a toplevel drawable. */
+    for (m = windowMappingList; m; m = m->nextPtr)
+        if (m->drawable == d) return m;
+
+    /* Slow path: d belongs to a child widget — walk each toplevel's
+     * Tk window tree looking for a TkWindow whose window ID matches,
+     * then return that toplevel's mapping. */
+    for (m = windowMappingList; m; m = m->nextPtr) {
+        TkWindow *tw = m->tkWindow;
+        /* Iterative depth-first search using the child/sibling pointers. */
+        TkWindow *stack[256];
+        int top = 0;
+        if (!tw) continue;
+        stack[top++] = tw;
+        while (top > 0) {
+            TkWindow *cur = stack[--top];
+            if (cur->window == (Window)d) return m;
+            TkWindow *child;
+            for (child = cur->childList; child; child = child->nextPtr)
+                if (top < 255) stack[top++] = child;
+        }
+    }
+
     return NULL;
 }
 
