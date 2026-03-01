@@ -117,16 +117,6 @@ static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 			  TkWindow *winPtr);
 static void WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
-
-/* External window decoration functions. */
-extern TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
-extern void TkWaylandSetDecorationTitle(TkWaylandDecoration *decor, const char *title);
-extern void TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized);
-extern void TkWaylandConfigureWindowDecorations(void);
-extern int TkWaylandShouldUseCSD(void);
-extern TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
-
-
 /* wm sub-command handlers. */
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
@@ -1595,7 +1585,6 @@ WmAttributesCmd(
     }
 
     GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
-    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
 
     /* Set attributes */
     for (i = 0; i < objc; i += 2) {
@@ -1649,9 +1638,6 @@ WmAttributesCmd(
                     }
                 }
 
-                if (decor) {
-                    TkWaylandSetWindowMaximized(decor, zoomed);
-                }
                 break;
             }
 
@@ -2989,7 +2975,6 @@ WmStateCmd(
 
     /* Get platform-specific handles once. */
     GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
-    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
 
     switch (idx) {
         case OPT_NORMAL:
@@ -2998,9 +2983,6 @@ WmStateCmd(
 
             if (glfwWindow != NULL) {
                 glfwRestoreWindow(glfwWindow);
-            }
-            if (decor != NULL) {
-                TkWaylandSetWindowMaximized(decor, 0);
             }
             TkpWmSetState(winPtr, NormalState);
             break;
@@ -3031,9 +3013,6 @@ WmStateCmd(
 
             if (glfwWindow != NULL) {
                 glfwMaximizeWindow(glfwWindow);
-            }
-            if (decor != NULL) {
-                TkWaylandSetWindowMaximized(decor, 1);
             }
             /* Note: many WMs ignore attempts to force zoom via hints,
                so we rely on the GLFW/Wayland calls above. */
@@ -3712,16 +3691,11 @@ UpdateTitle(TkWindow *winPtr)
     WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     const char *title = wmPtr->title ? wmPtr->title : winPtr->nameUid;
 
-    /* Update GLFW window title, which also updates server-side decorations if active. */
+    /* Update GLFW window title. */
     if (wmPtr->glfwWindow != NULL) {
 	glfwSetWindowTitle(wmPtr->glfwWindow, title);
     }
 
-    /* Update CSD title if client-side decorations are active. */
-    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
-    if (decor != NULL) {
-        TkWaylandSetDecorationTitle(decor, title);
-    }
 }
 
 /*

@@ -320,10 +320,29 @@ if test $tk_aqua = no; then
             found_glfw=no
             GLFW_CFLAGS=""
             GLFW_LIBS=""
-            AC_MSG_NOTICE([glfw3 >= 3.4 not found — backend will be disabled])
+            AC_MSG_NOTICE([glfw3 >= 3.3 not found — backend will be disabled])
         fi
         AC_SUBST([GLFW_CFLAGS])
         AC_SUBST([GLFW_LIBS])
+
+        #--------------------------------------------------------------------
+        # Check for libdecor (client-side decorations) – hard requirement
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for libdecor-0 >= 0.1.0])
+        if pkg-config --exists "libdecor-0 >= 0.1.0"; then
+            AC_MSG_RESULT([yes])
+            LIBDECOR_CFLAGS="$(pkg-config --cflags libdecor-0)"
+            LIBDECOR_LIBS="$(pkg-config --libs libdecor-0)"
+            found_libdecor=yes
+            AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor-0 is available for client-side decorations on Wayland])
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([libdecor-0 >= 0.1.0 is required when building the Wayland backend.
+Please install the libdecor development package (usually libdecor-0-dev on Debian/Ubuntu or libdecor-devel on Fedora).
+Without client-side decorations most Wayland compositors will show broken or missing window decorations.])
+        fi
+        AC_SUBST([LIBDECOR_CFLAGS])
+        AC_SUBST([LIBDECOR_LIBS])
 
         # OpenGL ES support (required for NanoVG rendering)
         AC_MSG_CHECKING([for OpenGL ES 3.0 (glesv2)])
@@ -442,10 +461,11 @@ Wayland backend now requires text-input-unstable-v3 for IME support.])
         AC_SUBST([WAYLAND_SCANNER])
         AC_SUBST([TEXT_INPUT_XML])
 
-        # Final check — everything must be present (IME is mandatory)
+        # Final check — everything must be present (IME + libdecor are mandatory)
         if test "$found_wayland" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
+           && test "$found_libdecor" = yes \
            && test "$found_gles" = yes \
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
@@ -453,12 +473,12 @@ Wayland backend now requires text-input-unstable-v3 for IME support.])
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
 
@@ -466,7 +486,8 @@ Required (all mandatory when --enable-wayland is used):
   - wayland-client >= 1.18
   - wayland-cursor >= 1.18
   - xkbcommon >= 0.5.0
-  - glfw3 >= 3.4 with Wayland support
+  - glfw3 >= 3.3 with Wayland support
+  - libdecor-0 >= 0.1.0             <--- added hard requirement
   - glesv2 (OpenGL ES 3.0)
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
@@ -475,7 +496,7 @@ Required (all mandatory when --enable-wayland is used):
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libfontconfig-dev libsystemd-dev
+    libdecor-0-dev libfontconfig-dev libsystemd-dev
 ])
         fi
     fi
