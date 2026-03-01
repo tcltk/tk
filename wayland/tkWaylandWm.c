@@ -17,6 +17,7 @@
 #include "tkPort.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <string.h>
 #include <stdlib.h>
@@ -406,6 +407,7 @@ TkWmMapWindow(TkWindow *winPtr)
 
     wmPtr->withdrawn   = 0;
     wmPtr->initialState = NormalState;
+    wmPtr->flags &= ~WM_NEVER_MAPPED;
 
     if (!Tk_IsEmbedded(winPtr) && !wmPtr->glfwWindow) {
         CreateGlfwWindow(winPtr);
@@ -3066,6 +3068,7 @@ WmTitleCmd(
     return TCL_OK;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -3688,14 +3691,11 @@ UpdateSizeHints(TkWindow *winPtr)
 static void
 UpdateTitle(TkWindow *winPtr)
 {
-    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    const char *title = wmPtr->title ? wmPtr->title : winPtr->nameUid;
-
-    /* Update GLFW window title. */
-    if (wmPtr->glfwWindow != NULL) {
-	glfwSetWindowTitle(wmPtr->glfwWindow, title);
-    }
-
+    WmInfo     *wmPtr   = (WmInfo *)winPtr->wmInfoPtr;
+    const char *title   = wmPtr->title ? wmPtr->title : winPtr->nameUid;
+    GLFWwindow *glfwWin = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    if (glfwWin)
+        glfwSetWindowTitle(glfwWin, title);
 }
 
 /*
