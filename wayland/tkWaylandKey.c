@@ -16,8 +16,6 @@
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 
-/* GLFW Wayland native access for getting wl_surface. */
-#define GLFW_EXPOSE_NATIVE_WAYLAND
 #include <GLFW/glfw3native.h>
 
 #include <xkbcommon/xkbcommon.h>

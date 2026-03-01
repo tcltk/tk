@@ -18,6 +18,7 @@
 #include "tkUnixInt.h"
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
+#include <libdecor.h>
 #include "nanovg.h"
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
@@ -31,14 +32,14 @@
  */
 
 typedef struct {
-    GLFWwindow *mainWindow;     /* Shared context window */
-    NVGcontext *vg;             /* Global NanoVG context */
-    int         initialized;    /* Initialization flag */
-    int	        nvgFrameActive;  /* Active frame */
-    int         nvgFrameAutoOpened; /* Auto-opened frame */
-    GLFWwindow *activeWindow; /* Current window */
-    int nestedFrame; /* Frame within a frame. */
-    int decorFontId; /* NVG font ID */
+    GLFWwindow *mainWindow;        /* Shared context window */
+    NVGcontext *vg;                /* Global NanoVG context */
+    int         initialized;       /* Initialization flag */
+    int         nvgFrameActive;    /* NanoVG frame is open */
+    int         nvgFrameAutoOpened;/* Frame was opened automatically */
+    GLFWwindow *activeWindow;      /* Window owning the current frame */
+    int         nestedFrame;       /* Frame within a frame */
+    int         decorFontId;       /* NVG font ID for decorations */
 } TkGlfwContext;
 
 /*
@@ -51,18 +52,17 @@ typedef struct {
  *
  *----------------------------------------------------------------------
  */
- 
-typedef struct TkWaylandDecoration TkWaylandDecoration;
+
 struct WmInfo;
 
 typedef struct WindowMapping {
-    TkWindow           *tkWindow;   /* Tk window pointer */
-    GLFWwindow         *glfwWindow; /* Corresponding GLFW window */
-    Drawable            drawable;   /* X11-style drawable ID */
-    int                 width;      /* Current width */
-    int                 height;     /* Current height */
-    TkWaylandDecoration *decoration; /* Window decoration. */ 
-    struct WindowMapping *nextPtr;  /* Next in linked list */
+    TkWindow             *tkWindow;   /* Tk window pointer */
+    GLFWwindow           *glfwWindow; /* Corresponding GLFW window */
+    Drawable              drawable;   /* X11-style drawable ID */
+    int                   width;      /* Current width */
+    int                   height;     /* Current height */
+    struct libdecor_frame *frame;     /* libdecor frame (owned by GLFW) */
+    struct WindowMapping  *nextPtr;   /* Next in linked list */
 } WindowMapping;
 
 WindowMapping *FindMappingByGLFW(GLFWwindow *glfwWindow);
@@ -88,7 +88,7 @@ typedef struct ProtocolHandler {
 
 #define HANDLER_SIZE(cmdLength) \
     (offsetof(ProtocolHandler, command) + 1 + (cmdLength))
-    
+
 /*
  *----------------------------------------------------------------------
  *
@@ -113,7 +113,6 @@ typedef enum {
     _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
-
 extern const char *const WmAttributeNames[];
 
 /*
@@ -134,7 +133,7 @@ typedef struct TkWmInfo {
     Tk_Window    icon;
     Tk_Window    iconFor;
     int          withdrawn;
-    int		 initialState;	/* NormalState, IconicState, WithdrawnState */
+    int          initialState;  /* NormalState, IconicState, WithdrawnState */
 
     /* Wrapper / menubar. */
     TkWindow    *wrapperPtr;
@@ -163,77 +162,27 @@ typedef struct TkWmInfo {
     int          vRootWidth, vRootHeight;
 
     /* Misc. */
-    WmAttributes attributes;
-    WmAttributes reqState;
+    WmAttributes  attributes;
+    WmAttributes  reqState;
     ProtocolHandler *protPtr;
-    Tcl_Size     cmdArgc;
-    Tcl_Obj    **cmdArgv;
-    char        *clientMachine;
-    int          flags;
-    int          numTransients;
-    int          iconDataSize;
+    Tcl_Size      cmdArgc;
+    Tcl_Obj     **cmdArgv;
+    char         *clientMachine;
+    int           flags;
+    int           numTransients;
+    int           iconDataSize;
     unsigned char *iconDataPtr;
-    GLFWimage   *glfwIcon;
-    int          glfwIconCount;
-    int          isMapped;
-    int          lastX, lastY;
-    int          lastWidth, lastHeight;
-	TkWaylandDecoration *decor; /* Client-side decoration. */
+    GLFWimage    *glfwIcon;
+    int           glfwIconCount;
+    int           isMapped;
+    int           lastX, lastY;
+    int           lastWidth, lastHeight;
     struct TkWmInfo *nextPtr;
 } WmInfo;
 
-typedef enum {
-    BUTTON_NORMAL,
-    BUTTON_HOVER,
-    BUTTON_PRESSED
-} ButtonState;
 
-typedef enum {
-    BUTTON_CLOSE,
-    BUTTON_MAXIMIZE,
-    BUTTON_MINIMIZE
-} ButtonType;
-
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandDecoration - client-side decoration structure and functions. 
- *
- *----------------------------------------------------------------------
- */
- 
-typedef struct TkWaylandDecoration {
-    TkWindow *winPtr;
-    GLFWwindow *glfwWindow;
-    WmInfo    *wmPtr;           /* Pointer to the WM info for this window */
-    int enabled;
-    int maximized;               /* Current maximized state (for button) */
-    char *title;
-    ButtonState closeState;
-    ButtonState maxState;
-    ButtonState minState;
-    int dragging;
-    double dragStartX, dragStartY;
-    int windowStartX, windowStartY;
-    int resizing;
-    double resizeStartX, resizeStartY;
-    int resizeStartWidth, resizeStartHeight;
-} TkWaylandDecoration;
-
-TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
-void TkWaylandSetDecorationTitle(TkWaylandDecoration *decor, const char *title);
-void TkWaylandSetWindowMaximized(TkWaylandDecoration *decor, int maximized);
-void TkWaylandConfigureWindowDecorations(void);
-int TkWaylandShouldUseCSD(void);
-TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
-void TkWaylandInitDecorationPolicy(Tcl_Interp *interp); 
-TkWaylandDecoration *TkWaylandCreateDecoration(TkWindow *winPtr, GLFWwindow *glfwWindow); 
-void TkWaylandDestroyDecoration(TkWaylandDecoration *decor); 
-TkWaylandDecoration *TkWaylandGetDecoration(TkWindow *winPtr);
-void TkWaylandDrawDecoration(TkWaylandDecoration *decor, NVGcontext *vg);
-int TkWaylandDecorationMouseMove(TkWaylandDecoration *decor, double x,double y);
-int TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,int button,int action,double x,double y);
+MODULE_SCOPE void TkGlfwStartInteractiveMove(GLFWwindow *glfwWindow);
+MODULE_SCOPE void TkGlfwStartInteractiveResize(GLFWwindow *glfwWindow, uint32_t edges);
 
 /* Decoration constants. */
 #define TITLE_BAR_HEIGHT    30
@@ -262,11 +211,11 @@ int TkWaylandDecorationMouseButton(TkWaylandDecoration *decor,int button,int act
  */
 
 typedef struct {
-    NVGcontext *vg;         /* NanoVG context for this draw */
-    Drawable    drawable;   /* Target drawable */
-    GLFWwindow *glfwWindow; /* Associated GLFW window */
-    int         width;      /* Drawable width */
-    int         height;     /* Drawable height */
+    NVGcontext *vg;          /* NanoVG context for this draw */
+    Drawable    drawable;    /* Target drawable */
+    GLFWwindow *glfwWindow;  /* Associated GLFW window */
+    int         width;       /* Drawable width */
+    int         height;      /* Drawable height */
     int         nestedFrame; /* Frame within frame */
 } TkWaylandDrawingContext;
 
@@ -275,7 +224,7 @@ typedef struct {
  *
  * Minimal Graphics Context Structure
  *
- *	Internal GC used by all drawing operations. 
+ *	Internal GC used by all drawing operations.
  *
  *----------------------------------------------------------------------
  */
@@ -355,7 +304,6 @@ typedef struct TkWaylandPixmapStruct {
  *----------------------------------------------------------------------
  */
 
-/* Get the global GLFW/NanoVG context. */
 MODULE_SCOPE TkGlfwContext *TkGlfwGetContext(void);
 
 /*
@@ -366,10 +314,7 @@ MODULE_SCOPE TkGlfwContext *TkGlfwGetContext(void);
  *----------------------------------------------------------------------
  */
 
-/* Initialize GLFW and NanoVG. */
 MODULE_SCOPE int  TkGlfwInitialize(void);
-
-/* Clean up all GLFW/NanoVG resources. */
 MODULE_SCOPE void TkGlfwCleanup(void);
 
 /*
@@ -380,7 +325,6 @@ MODULE_SCOPE void TkGlfwCleanup(void);
  *----------------------------------------------------------------------
  */
 
-/* Create a new GLFW window and register mapping. */
 MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
     TkWindow   *tkWin,
     int         width,
@@ -388,23 +332,11 @@ MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
     const char *title,
     Drawable   *drawableOut);
 
-/* Destroy a GLFW window and remove mapping. */
-MODULE_SCOPE void TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
-
-/* Get GLFW window from Tk window. */
+MODULE_SCOPE void        TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow *TkGlfwGetGLFWWindow(Tk_Window tkwin);
-
-/* Get Tk window from GLFW window. */
 MODULE_SCOPE TkWindow   *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
-
-/* Get GLFW window from Drawable ID. */
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
-
-/* Update window size in mapping. */
-MODULE_SCOPE void TkGlfwUpdateWindowSize(
-    GLFWwindow *glfwWindow,
-    int         width,
-    int         height);
+MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height);
 
 /*
  *----------------------------------------------------------------------
@@ -414,63 +346,25 @@ MODULE_SCOPE void TkGlfwUpdateWindowSize(
  *----------------------------------------------------------------------
  */
 
-/* Set up drawing context for a drawable. */
-MODULE_SCOPE int  TkGlfwBeginDraw(
-    Drawable                drawable,
-    GC                      gc,
-    TkWaylandDrawingContext *dcPtr);
-
-/* Clean up and present drawing context. */
-MODULE_SCOPE void TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
-
-/* Get NanoVG context for current drawing. */
+MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
+MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
-
-/* Flush frame at end of drawing. */
-MODULE_SCOPE void TkGlfwFlushAutoFrame(void);
-
-/* Helper functions to measure fonts. */
-MODULE_SCOPE NVGcontext * TkGlfwGetNVGContextForMeasure(void);
-
+MODULE_SCOPE void        TkGlfwFlushAutoFrame(void);
+MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
 
 /*
  *----------------------------------------------------------------------
  *
  * GC Internals
  *
- *	These entry points provide low-level access to the GC structure
- *	and are used by both the Xlib emulation layer and the drawing
- *	code. All external code must go through these rather than casting
- *	a GC pointer directly.
- *
  *----------------------------------------------------------------------
  */
 
-/* Allocate and initialise a new GC, optionally applying valuemask/values. */
-MODULE_SCOPE GC   TkWaylandCreateGC(
-    unsigned long  valuemask,
-    XGCValues     *values);
-
-/* Free a GC allocated by TkWaylandCreateGC. */
+MODULE_SCOPE GC   TkWaylandCreateGC(unsigned long valuemask, XGCValues *values);
 MODULE_SCOPE void TkWaylandFreeGC(GC gc);
-
-/* Read fields out of a GC according to valuemask. */
-MODULE_SCOPE int  TkWaylandGetGCValues(
-    GC             gc,
-    unsigned long  valuemask,
-    XGCValues     *values);
-
-/* Write fields into a GC according to valuemask. */
-MODULE_SCOPE int  TkWaylandChangeGC(
-    GC             gc,
-    unsigned long  valuemask,
-    XGCValues     *values);
-
-/* Copy fields from src GC to dst GC according to valuemask. */
-MODULE_SCOPE int  TkWaylandCopyGC(
-    GC            src,
-    unsigned long valuemask,
-    GC            dst);
+MODULE_SCOPE int  TkWaylandGetGCValues(GC gc, unsigned long valuemask, XGCValues *values);
+MODULE_SCOPE int  TkWaylandChangeGC(GC gc, unsigned long valuemask, XGCValues *values);
+MODULE_SCOPE int  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
 
 /*
  *----------------------------------------------------------------------
@@ -480,34 +374,14 @@ MODULE_SCOPE int  TkWaylandCopyGC(
  *----------------------------------------------------------------------
  */
 
-/* Create a pixmap (image or paint depending on size/context). */
-MODULE_SCOPE Pixmap TkWaylandCreatePixmap(
-    int width,
-    int height,
-    int depth);
-
-/* Free a pixmap. */
-MODULE_SCOPE void TkWaylandFreePixmap(Pixmap pixmap);
-
-/* Helpers to inspect a pixmap. */
-MODULE_SCOPE int       TkWaylandGetPixmapImageId(Pixmap pixmap);
-MODULE_SCOPE NVGpaint *TkWaylandGetPixmapPaint(Pixmap pixmap);
-MODULE_SCOPE int       TkWaylandGetPixmapType(Pixmap pixmap);
-MODULE_SCOPE void      TkWaylandGetPixmapDimensions(
-    Pixmap pixmap,
-    int   *width,
-    int   *height,
-    int   *depth);
-
-/* Replace a pixmap's image data (type-0 only). */
-MODULE_SCOPE int TkWaylandUpdatePixmapImage(
-    Pixmap              pixmap,
-    const unsigned char *data);
-
-/* Release all pixmap resources at shutdown. */
-MODULE_SCOPE void TkWaylandCleanupPixmapStore(void);
-
-/* Set / get the NanoVG context used for pixmap operations. */
+MODULE_SCOPE Pixmap     TkWaylandCreatePixmap(int width, int height, int depth);
+MODULE_SCOPE void       TkWaylandFreePixmap(Pixmap pixmap);
+MODULE_SCOPE int        TkWaylandGetPixmapImageId(Pixmap pixmap);
+MODULE_SCOPE NVGpaint  *TkWaylandGetPixmapPaint(Pixmap pixmap);
+MODULE_SCOPE int        TkWaylandGetPixmapType(Pixmap pixmap);
+MODULE_SCOPE void       TkWaylandGetPixmapDimensions(Pixmap pixmap, int *width, int *height, int *depth);
+MODULE_SCOPE int        TkWaylandUpdatePixmapImage(Pixmap pixmap, const unsigned char *data);
+MODULE_SCOPE void       TkWaylandCleanupPixmapStore(void);
 MODULE_SCOPE void       TkWaylandSetNVGContext(NVGcontext *vg);
 MODULE_SCOPE NVGcontext *TkWaylandGetPixmapNVGContext(void);
 
@@ -519,27 +393,17 @@ MODULE_SCOPE NVGcontext *TkWaylandGetPixmapNVGContext(void);
  *----------------------------------------------------------------------
  */
 
-/* Process pending GLFW events. */
 MODULE_SCOPE void TkGlfwProcessEvents(void);
+MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow, TkWindow *tkWin);
+void              Tk_WaylandSetupTkNotifier(void);
 
-/* Set up standard GLFW callbacks for a window. */
-MODULE_SCOPE void TkGlfwSetupCallbacks(
-    GLFWwindow *glfwWindow,
-    TkWindow   *tkWin);
-
-/* Set up event loop notifier. */
-void Tk_WaylandSetupTkNotifier(void);
-
-/* Struct for expose events. */
 typedef struct {
-    Tcl_Event      header;   /* Must be first. */
-    XEvent         xEvent;
-    TkWindow      *winPtr;
+    Tcl_Event  header;  /* Must be first. */
+    XEvent     xEvent;
+    TkWindow  *winPtr;
 } TkWaylandExposeEvent;
 
-/* Helper function for expose event processing. */
-void TkWaylandQueueExposeEvent( TkWindow *winPtr,int x, int y,int width, int  height);
-
+void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int width, int height);
 
 /*
  *----------------------------------------------------------------------
@@ -549,14 +413,9 @@ void TkWaylandQueueExposeEvent( TkWindow *winPtr,int x, int y,int width, int  he
  *----------------------------------------------------------------------
  */
 
-/* Convert XColor to NVGcolor. */
 MODULE_SCOPE NVGcolor TkGlfwXColorToNVG(XColor *xcolor);
-
-/* Convert pixel value to NVGcolor. */
 MODULE_SCOPE NVGcolor TkGlfwPixelToNVG(unsigned long pixel);
-
-/* Apply GC settings to NanoVG context. */
-MODULE_SCOPE void TkGlfwApplyGC(NVGcontext *vg, GC gc);
+MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
 
 /*
  *----------------------------------------------------------------------
@@ -567,36 +426,23 @@ MODULE_SCOPE void TkGlfwApplyGC(NVGcontext *vg, GC gc);
  */
 
 MODULE_SCOPE void TkGlfwWindowCloseCallback(GLFWwindow *window);
-MODULE_SCOPE void TkGlfwWindowSizeCallback(GLFWwindow *window,
-    int width, int height);
-MODULE_SCOPE void TkGlfwFramebufferSizeCallback(GLFWwindow *window,
-    int width, int height);
-MODULE_SCOPE void TkGlfwWindowPosCallback(GLFWwindow *window,
-    int xpos, int ypos);
-MODULE_SCOPE void TkGlfwWindowFocusCallback(GLFWwindow *window,
-    int focused);
-MODULE_SCOPE void TkGlfwWindowIconifyCallback(GLFWwindow *window,
-    int iconified);
-MODULE_SCOPE void TkGlfwWindowMaximizeCallback(GLFWwindow *window,
-    int maximized);
-MODULE_SCOPE void TkGlfwCursorPosCallback(GLFWwindow *window,
-    double xpos, double ypos);
-MODULE_SCOPE void TkGlfwMouseButtonCallback(GLFWwindow *window,
-    int button, int action, int mods);
-MODULE_SCOPE void TkGlfwScrollCallback(GLFWwindow *window,
-    double xoffset, double yoffset);
-MODULE_SCOPE void TkGlfwKeyCallback(GLFWwindow *window,
-    int key, int scancode, int action, int mods);
-MODULE_SCOPE void TkGlfwCharCallback(GLFWwindow *window,
-    unsigned int codepoint);
+MODULE_SCOPE void TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height);
+MODULE_SCOPE void TkGlfwFramebufferSizeCallback(GLFWwindow *window, int width, int height);
+MODULE_SCOPE void TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
+MODULE_SCOPE void TkGlfwWindowFocusCallback(GLFWwindow *window, int focused);
+MODULE_SCOPE void TkGlfwWindowIconifyCallback(GLFWwindow *window, int iconified);
+MODULE_SCOPE void TkGlfwWindowMaximizeCallback(GLFWwindow *window, int maximized);
+MODULE_SCOPE void TkGlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos);
+MODULE_SCOPE void TkGlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+MODULE_SCOPE void TkGlfwScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
+MODULE_SCOPE void TkGlfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+MODULE_SCOPE void TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint);
 MODULE_SCOPE void TkGlfwWindowRefreshCallback(GLFWwindow *window);
-MODULE_SCOPE void TkGlfwWindowSizeCallback(
-    GLFWwindow *window, int width, int height);
 
 /*
  *----------------------------------------------------------------------
  *
- * Keyboard Handling (xkbcommon integration)
+ * Keyboard Handling
  *
  *----------------------------------------------------------------------
  */
@@ -635,8 +481,6 @@ MODULE_SCOPE void TkGlfwErrorCallback(int error, const char *description);
  *----------------------------------------------------------------------
  */
 
-/* Creation / destruction. */
-
 MODULE_SCOPE Window XCreateSimpleWindow(
     Display     *display,
     Window       parent,
@@ -649,30 +493,15 @@ MODULE_SCOPE Window XCreateSimpleWindow(
     unsigned long background);
 
 MODULE_SCOPE int XDestroySubwindows(Display *display, Window window);
-
-/* Mapping / visibility. */
-
 MODULE_SCOPE int XMapRaised(Display *display, Window window);
 MODULE_SCOPE int XMapSubwindows(Display *display, Window window);
 MODULE_SCOPE int XUnmapSubwindows(Display *display, Window window);
 MODULE_SCOPE int XCirculateSubwindowsUp(Display *display, Window window);
 MODULE_SCOPE int XCirculateSubwindowsDown(Display *display, Window window);
-MODULE_SCOPE int XRestackWindows(
-    Display *display,
-    Window  *windows,
-    int      nwindows);
+MODULE_SCOPE int XRestackWindows(Display *display, Window *windows, int nwindows);
 
-/* ICCCM text properties. */
-
-MODULE_SCOPE void XSetWMName(
-    Display      *display,
-    Window        window,
-    XTextProperty *text_prop);
-
-MODULE_SCOPE void XSetWMIconName(
-    Display      *display,
-    Window        window,
-    XTextProperty *text_prop);
+MODULE_SCOPE void XSetWMName(Display *display, Window window, XTextProperty *text_prop);
+MODULE_SCOPE void XSetWMIconName(Display *display, Window window, XTextProperty *text_prop);
 
 /*
  *----------------------------------------------------------------------

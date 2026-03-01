@@ -12,7 +12,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-
 #include "tkInt.h"
 #include "tkFont.h"
 #include "tkGlfwInt.h"
@@ -27,43 +26,42 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* 
- * Architecture note: this file is intentionally modelled after 
- * the macOS font implmentation. Font *discovery* is delegated to Fontconfig 
- * (just as the macOS file delegates it to NSFontManager), and font *rendering* 
- * is delegated entirely to NanoVG (just as the macOS file delegates it to 
- * CoreText). We do NOT maintain our own glyph-coverage bitmaps, SubFont 
- * linked lists, or stbtt rasterization state. NanoVG already wraps 
- * stb_truetype internally and handles fallback at draw time; prior 
- * implemenations of Wayland fonts used Tk's Unix font implementation as the 
- * source, but removing the X11 mechanisms made font management unstable 
- * and crash-prone. 
- * 
- */ 
+/*
+ * Architecture note: this file is intentionally modelled after
+ * the macOS font implementation. Font *discovery* is delegated to Fontconfig
+ * (just as the macOS file delegates it to NSFontManager), and font *rendering*
+ * is delegated entirely to NanoVG (just as the macOS file delegates it to
+ * CoreText). We do NOT maintain our own glyph-coverage bitmaps, SubFont
+ * linked lists, or stbtt rasterization state. NanoVG already wraps
+ * stb_truetype internally and handles fallback at draw time; prior
+ * implementations of Wayland fonts used Tk's Unix font implementation as the
+ * source, but removing the X11 mechanisms made font management unstable
+ * and crash-prone.
+ */
 
-/* 
- *------------------------------------------------------------------------ 
- * 
- * Platform font structure: 
- * 
- * Mirrors the simplicity of macOS implementation: the generic TkFont base 
- * is first, followed only by the platform handles we actually need. 
- * NanoVG manages all the rasteriztion state; we just keep the resolved file 
- * path and the NanoVG font id so we can load the font lazily on first draw. 
- * 
- *------------------------------------------------------------------------ 
- */ 
+/*
+ *------------------------------------------------------------------------
+ *
+ * Platform font structure:
+ *
+ * Mirrors the simplicity of the macOS implementation: the generic TkFont
+ * base is first, followed only by the platform handles we actually need.
+ * NanoVG manages all the rasterization state; we just keep the resolved
+ * file path and the NanoVG font id so we can load the font lazily on
+ * first draw.
+ *
+ *------------------------------------------------------------------------
+ */
 
 typedef struct {
-    TkFont      font;           /* Generic font data — MUST be first. */
+    TkFont      font;           /* Generic font data — MUST be first.        */
     char       *filePath;       /* Absolute path returned by Fontconfig.
-                                  * Owned by this struct; freed on delete. */
-    int         nvgFontId;      /* Handle returned by nvgCreateFontMem / -1. */
+                                 * Owned by this struct; freed on delete.    */
+    int         nvgFontId;      /* Handle returned by nvgCreateFont / -1.    */
     int         pixelSize;      /* Resolved size in pixels.                  */
     int         underlinePos;   /* Pixels below baseline for underline.      */
     int         barHeight;      /* Thickness of under/overstrike bar.        */
 } WaylandFont;
-
 
 /* Whether Fontconfig has been initialized for this process. */
 static int fcInitialized = 0;
@@ -81,7 +79,8 @@ static void     InitFont(
 static void     DeleteFont(
     WaylandFont *fontPtr);
 static int      EnsureNvgFont(
-    WaylandFont *fontPtr);
+    WaylandFont *fontPtr,
+    NVGcontext  *vg);
 static NVGcolor ColorFromGC(
     GC gc);
 
@@ -90,26 +89,115 @@ static NVGcolor ColorFromGC(
  *
  * TkpFontPkgInit --
  *
- *     Initializes the platform font package for a new Tk application and
- *     registers standard named fonts.
+ *     Initializes the platform font package for a new Tk application.
+ *     Registers the standard Tk named fonts (TkDefaultFont, TkFixedFont,
+ *     etc.) so that wish and other Tk applications can resolve them at
+ *     startup without crashing.
+ *
+ *     Named fonts must be registered here, before any widget is created,
+ *     because Tk's generic layer calls TkpFontPkgInit exactly once and
+ *     then immediately tries to resolve TkDefaultFont for the root window.
+ *     If the named fonts are absent at that point, Tk panics.
  *
  * Results:
  *     None.
  *
  * Side effects:
- *     Initializes Fontconfig and creates Tk named fonts.
+ *     Initializes Fontconfig; creates Tk named fonts via Tk_CreateFont.
  *
  *---------------------------------------------------------------------------
- */ 
+ */
 
 void
 TkpFontPkgInit(
-	       TCL_UNUSED(TkMainInfo *)) /* mainPtr */
+    TkMainInfo *mainPtr)
 {
+    Tcl_Interp *interp = mainPtr->interp;
 
     if (!fcInitialized) {
         FcInit();
         fcInitialized = 1;
+    }
+
+    /*
+     * Register the standard Tk named fonts.
+     *
+     * Each entry is: { Tk name, FC family, size-in-points, bold, italic }.
+     *
+     * Sizes match the cross-platform defaults used on X11 and macOS so
+     * that Tk's own test suite and typical application code see consistent
+     * metrics.  We use point sizes (positive) here so that TkFontGetPoints
+     * can apply any per-display DPI correction in InitFont.
+     *
+     * These calls go through Tcl_Eval so that the fonts are registered in
+     * the interpreter's font table exactly as "font create" would do —
+     * which is what Tk's generic layer expects to find.
+     */
+    static const struct {
+        const char *tkName;     /* Name used by Tk internals & scripts.   */
+        const char *family;     /* Fontconfig family preference.          */
+        int         points;     /* Point size (positive).                 */
+        int         bold;
+        int         italic;
+    } namedFonts[] = {
+        { "TkDefaultFont",       "DejaVu Sans",       10, 0, 0 },
+        { "TkTextFont",          "DejaVu Sans",       10, 0, 0 },
+        { "TkFixedFont",         "DejaVu Sans Mono",  10, 0, 0 },
+        { "TkHeadingFont",       "DejaVu Sans",       10, 1, 0 },
+        { "TkCaptionFont",       "DejaVu Sans",       12, 1, 0 },
+        { "TkSmallCaptionFont",  "DejaVu Sans",        8, 0, 0 },
+        { "TkIconFont",          "DejaVu Sans",       10, 0, 0 },
+        { "TkMenuFont",          "DejaVu Sans",       10, 0, 0 },
+        { "TkTooltipFont",       "DejaVu Sans",        9, 0, 0 },
+        { NULL, NULL, 0, 0, 0 }
+    };
+
+    int i;
+    for (i = 0; namedFonts[i].tkName != NULL; i++) {
+        /*
+         * Build a "font create <name> -family ... -size ... ?-weight bold?"
+         * command.  This is the same mechanism used by tkFont.c on all
+         * other platforms and ensures the font is reachable by name from
+         * both C (Tk_GetFont) and Tcl (font configure).
+         *
+         * We ignore errors deliberately: if a named font already exists
+         * (e.g. because the application registered it before us) we do not
+         * want to clobber it.
+         */
+        Tcl_Obj *cmd = Tcl_NewListObj(0, NULL);
+        Tcl_ListObjAppendElement(NULL, cmd,
+            Tcl_NewStringObj("font", -1));
+        Tcl_ListObjAppendElement(NULL, cmd,
+            Tcl_NewStringObj("create", -1));
+        Tcl_ListObjAppendElement(NULL, cmd,
+            Tcl_NewStringObj(namedFonts[i].tkName, -1));
+        Tcl_ListObjAppendElement(NULL, cmd,
+            Tcl_NewStringObj("-family", -1));
+        Tcl_ListObjAppendElement(NULL, cmd,
+            Tcl_NewStringObj(namedFonts[i].family, -1));
+        Tcl_ListObjAppendElement(NULL, cmd,
+            Tcl_NewStringObj("-size", -1));
+        Tcl_ListObjAppendElement(NULL, cmd,
+            Tcl_NewIntObj(namedFonts[i].points));
+        if (namedFonts[i].bold) {
+            Tcl_ListObjAppendElement(NULL, cmd,
+                Tcl_NewStringObj("-weight", -1));
+            Tcl_ListObjAppendElement(NULL, cmd,
+                Tcl_NewStringObj("bold", -1));
+        }
+        if (namedFonts[i].italic) {
+            Tcl_ListObjAppendElement(NULL, cmd,
+                Tcl_NewStringObj("-slant", -1));
+            Tcl_ListObjAppendElement(NULL, cmd,
+                Tcl_NewStringObj("italic", -1));
+        }
+
+        Tcl_IncrRefCount(cmd);
+        /* TCL_EVAL_GLOBAL so the command is not affected by any namespace. */
+        Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+        Tcl_DecrRefCount(cmd);
+        /* Clear any error from a duplicate-font-name attempt. */
+        Tcl_ResetResult(interp);
     }
 }
 
@@ -127,8 +215,8 @@ TkpFontPkgInit(
  *     Allocates a WaylandFont.
  *
  *---------------------------------------------------------------------------
- */ 
- 
+ */
+
 TkFont *
 TkpGetNativeFont(
     Tk_Window tkwin,
@@ -140,7 +228,6 @@ TkpGetNativeFont(
     fa.size   = -12.0;
     fa.weight = TK_FW_NORMAL;
     fa.slant  = TK_FS_ROMAN;
-
 
     return TkpGetFontFromAttributes(NULL, tkwin, &fa);
 }
@@ -159,8 +246,7 @@ TkpGetNativeFont(
  *     May allocate or reuse platform data; defers NVG font creation.
  *
  *---------------------------------------------------------------------------
- */ 
-
+ */
 
 TkFont *
 TkpGetFontFromAttributes(
@@ -170,7 +256,6 @@ TkpGetFontFromAttributes(
 {
     WaylandFont *fontPtr;
 
-
     if (tkFontPtr == NULL) {
         fontPtr = (WaylandFont *) Tcl_Alloc(sizeof(WaylandFont));
         memset(fontPtr, 0, sizeof(WaylandFont));
@@ -178,15 +263,14 @@ TkpGetFontFromAttributes(
         fontPtr = (WaylandFont *) tkFontPtr;
         /*
          * Release only the platform-specific resources; the generic TkFont
-         * base (hashed entries, etc.) is managed by the caller and must not
-         * be touched here. 
+         * base (hashed entries, etc.) is managed by the caller.
          */
         DeleteFont(fontPtr);
     }
 
     /*
-     * nvgFontId == -1 signals "not yet loaded into a NVG context".
-     * We defer the actual nvgCreateFontMem call to first draw so that
+     * nvgFontId == -1 signals "not yet loaded into any NVG context".
+     * We defer the actual nvgCreateFont call to first draw so that
      * this function never needs to touch the NVG context (which may not
      * exist yet when fonts are created at startup).
      */
@@ -210,8 +294,7 @@ TkpGetFontFromAttributes(
  *     Frees WaylandFont resources but not the TkFont struct itself.
  *
  *---------------------------------------------------------------------------
- */ 
-
+ */
 
 void
 TkpDeleteFont(
@@ -235,8 +318,8 @@ TkpDeleteFont(
  *     Queries Fontconfig.
  *
  *---------------------------------------------------------------------------
- */ 
- 
+ */
+
 void
 TkpGetFontFamilies(
     Tcl_Interp *interp,
@@ -247,9 +330,7 @@ TkpGetFontFamilies(
     FcObjectSet*os        = FcObjectSetBuild(FC_FAMILY, NULL);
     FcFontSet  *fs        = FcFontList(NULL, pat, os);
 
-
     if (fs) {
-        /* Deduplicate with a simple hash table via a Tcl dict. */
         Tcl_Obj *seen = Tcl_NewDictObj();
         int i;
         for (i = 0; i < fs->nfont; i++) {
@@ -286,20 +367,16 @@ TkpGetFontFamilies(
  * Results:
  *     Sets the interpreter result to a Tcl list.
  *
- * Side effects:
- *     None.
- *
  *---------------------------------------------------------------------------
- */ 
- 
+ */
+
 void
 TkpGetSubFonts(
     Tcl_Interp *interp,
     Tk_Font tkfont)
 {
-    WaylandFont *fontPtr  = (WaylandFont *) tkfont;
+    WaylandFont *fontPtr   = (WaylandFont *) tkfont;
     Tcl_Obj     *resultPtr = Tcl_NewListObj(0, NULL);
-
 
     if (fontPtr->font.fa.family) {
         Tcl_ListObjAppendElement(NULL, resultPtr,
@@ -313,18 +390,17 @@ TkpGetSubFonts(
  *
  * TkpGetFontAttrsForChar --
  *
- *     Determines the effective font attributes used to render a given Unicode
- *     character.
+ *     Determines the effective font attributes used to render a given
+ *     Unicode character.
  *
  * Results:
  *     None.
  *
  * Side effects:
- *     May update the family in the provided attributes based on Fontconfig
- *     matching.
+ *     May update the family in the provided attributes based on Fontconfig.
  *
  *---------------------------------------------------------------------------
- */ 
+ */
 
 void
 TkpGetFontAttrsForChar(
@@ -334,21 +410,14 @@ TkpGetFontAttrsForChar(
     TkFontAttributes *faPtr)
 {
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
-    *faPtr = fontPtr->font.fa;   /* Start with current attributes. */
+    *faPtr = fontPtr->font.fa;
 
-
-    /*
-     * Ask Fontconfig for a font that covers codepoint c.  If the result
-     * differs from the primary family, update faPtr->family so callers
-     * know which family would actually be used.
-     */
     FcCharSet *cs  = FcCharSetCreate();
     FcCharSetAddChar(cs, (FcChar32) c);
 
     FcPattern  *pat = FcPatternCreate();
     FcPatternAddCharSet(pat, FC_CHARSET, cs);
     if (fontPtr->font.fa.family) {
-        /* Prefer the current family if it covers the char. */
         FcPatternAddString(pat, FC_FAMILY,
                            (FcChar8 *) fontPtr->font.fa.family);
     }
@@ -380,40 +449,42 @@ TkpGetFontAttrsForChar(
  * Results:
  *     Returns the count of bytes that fit; sets *lengthPtr to the pixel width.
  *
- * Side effects:
- *     Delegates to Tk_MeasureCharsInContext.
- *
  *---------------------------------------------------------------------------
- */ 
-int 
+ */
+
+int
 Tk_MeasureChars(
     Tk_Font tkfont,
     const char *source,
     Tcl_Size numBytes,
     int maxLength,
     int flags,
-    int *lengthPtr) 
-{ 
-    return Tk_MeasureCharsInContext(tkfont, source, numBytes, 
-        0, numBytes, maxLength, flags, lengthPtr); 
-} 
+    int *lengthPtr)
+{
+    return Tk_MeasureCharsInContext(tkfont, source, numBytes,
+        0, numBytes, maxLength, flags, lengthPtr);
+}
 
 /*
  *---------------------------------------------------------------------------
  *
  * Tk_MeasureCharsInContext --
  *
- *     Measures a substring in context using NanoVG metrics for accurate
- *     layout. Uses the measurement context which does not require an
- *     active NanoVG frame, allowing this function to be called during
- *     geometry computation outside of expose handling.
+ *     Measures a substring using NanoVG metrics for accurate layout.
+ *
+ *     Uses TkGlfwGetNVGContextForMeasure() which does not require an
+ *     active NanoVG frame, allowing measurement during geometry computation
+ *     outside of expose handling.
+ *
+ *     The per-context lazy font load (same pattern as DrawTitleBar) is
+ *     applied here: nvgFindFont() checks whether the font atlas is present
+ *     in the *current* GL context before attempting a load.
  *
  * Results:
- *     Returns the count of bytes that fit; sets *lengthPtr with the
- *     pixel width.
+ *     Returns the count of bytes that fit; sets *lengthPtr with pixel width.
  *
  * Side effects:
- *     May load the font into the NanoVG context on first call.
+ *     May load the font into the current NanoVG context on first call.
  *
  *---------------------------------------------------------------------------
  */
@@ -431,7 +502,6 @@ Tk_MeasureCharsInContext(
 {
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
 
-    /* Argument validation. */
     if (rangeStart < 0 || rangeLength <= 0 ||
             rangeStart + rangeLength > numBytes ||
             (maxLength == 0 && !(flags & TK_AT_LEAST_ONE))) {
@@ -442,23 +512,17 @@ Tk_MeasureCharsInContext(
         maxLength = 32767;
     }
 
-    /*
-     * Use the measurement context — this bypasses the nvgFrameActive
-     * check so measurement can happen during geometry computation,
-     * widget configuration, and any other path outside expose handling.
-     */
     NVGcontext *vg = TkGlfwGetNVGContextForMeasure();
 
-    /*
-     * If no NVG context is available yet (e.g. measuring during startup
-     * before GLFW is initialized) fall back to a simple per-character
-     * advance estimate based on the stored font metrics.
-     */
-    if (!vg || EnsureNvgFont(fontPtr) < 0) {
+    if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
+        /*
+         * No NVG context yet (startup before GLFW is initialised) — fall
+         * back to a per-character advance estimate from stored metrics.
+         */
         int width = 0;
-        const char *p        = source + rangeStart;
-        const char *end      = source + rangeStart + rangeLength;
-        const char *lastBreak      = p;
+        const char *p          = source + rangeStart;
+        const char *end        = source + rangeStart + rangeLength;
+        const char *lastBreak  = p;
         int         lastBreakWidth = 0;
 
         while (p < end) {
@@ -498,10 +562,6 @@ Tk_MeasureCharsInContext(
     const char *rangePtr = source + rangeStart;
     const char *rangeEnd = rangePtr + rangeLength;
 
-    /*
-     * Count codepoints in range so we can size the glyph positions
-     * array appropriately.
-     */
     int nchars = 0;
     {
         const char *p = rangePtr;
@@ -517,10 +577,6 @@ Tk_MeasureCharsInContext(
         return 0;
     }
 
-    /*
-     * Stack-allocate positions for runs up to 256 codepoints;
-     * heap-allocate for longer runs.
-     */
     NVGglyphPosition  stackPos[256];
     NVGglyphPosition *positions = stackPos;
     if (nchars > 256) {
@@ -531,26 +587,22 @@ Tk_MeasureCharsInContext(
     int npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
                                      positions, nchars);
 
-    /*
-     * Measure the full range to get the right edge of the last glyph,
-     * which nvgTextGlyphPositions does not directly expose.
-     */
     float bounds[4];
     nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
     float totalWidth = bounds[2];
 
-    int         pixelWidth       = 0;
-    const char *lastBreak        = rangePtr;
-    int         lastBreakWidth   = 0;
-    const char *p                = rangePtr;
-    int         pi               = 0;
+    int         pixelWidth     = 0;
+    const char *lastBreak      = rangePtr;
+    int         lastBreakWidth = 0;
+    const char *p              = rangePtr;
+    int         pi             = 0;
 
     while (p < rangeEnd && pi < npos) {
         int ch;
         const char *next = p + Tcl_UtfToUniChar(p, &ch);
-        
-	float glyphRight = positions[pi].maxx;
-	int glyphWidth = (int) ceil(glyphRight - positions[pi].x);
+
+        float glyphRight = positions[pi].maxx;
+        int   glyphWidth = (int) ceil(glyphRight - positions[pi].x);
 
         if (maxLength >= 0 && pixelWidth + glyphWidth > maxLength) {
             if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
@@ -560,7 +612,6 @@ Tk_MeasureCharsInContext(
                 pixelWidth += glyphWidth;
                 p = next;
             }
-            /* else: stop before this character */
             break;
         }
 
@@ -574,10 +625,6 @@ Tk_MeasureCharsInContext(
         pi++;
     }
 
-    /*
-     * Guarantee at least one character when TK_AT_LEAST_ONE is set,
-     * even if that character exceeds maxLength.
-     */
     if ((flags & TK_AT_LEAST_ONE) && p == rangePtr && rangePtr < rangeEnd) {
         int ch;
         const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
@@ -603,15 +650,9 @@ Tk_MeasureCharsInContext(
  *
  *     Draws a UTF-8 string at the specified position using NanoVG.
  *
- * Results:
- *     None.
- *
- * Side effects:
- *     Renders text via NanoVG through the common angled-draw entry point.
- *
  *---------------------------------------------------------------------------
- */ 
- 
+ */
+
 void
 Tk_DrawChars(
     TCL_UNUSED(Display *),
@@ -635,14 +676,8 @@ Tk_DrawChars(
  *
  *     Draws a UTF-8 string rotated by the given angle.
  *
- * Results:
- *     None.
- *
- * Side effects:
- *     Delegates to TkpDrawAngledCharsInContext.
- *
  *---------------------------------------------------------------------------
- */ 
+ */
 
 void
 TkDrawAngledChars(
@@ -668,14 +703,8 @@ TkDrawAngledChars(
  *
  *     Draws a substring of a UTF-8 string.
  *
- * Results:
- *     None.
- *
- * Side effects:
- *     Delegates to TkpDrawAngledCharsInContext.
- *
  *---------------------------------------------------------------------------
- */ 
+ */
 
 void
 Tk_DrawCharsInContext(
@@ -704,14 +733,20 @@ Tk_DrawCharsInContext(
  *     Canonical text rendering entry point; draws a (possibly rotated)
  *     substring.
  *
+ *     Applies the same per-context lazy font load as DrawTitleBar:
+ *     nvgFindFont() is called on the *active* vg context before use, and
+ *     nvgCreateFont() is called if the atlas is not yet populated for
+ *     this context.
+ *
  * Results:
  *     None.
  *
  * Side effects:
- *     Uses NanoVG transforms and renders; draws underline/overstrike when set.
+ *     Loads font into active NVG context on first call per context;
+ *     renders text and optional underline/overstrike.
  *
  *---------------------------------------------------------------------------
- */ 
+ */
 
 void
 TkpDrawAngledCharsInContext(
@@ -729,7 +764,6 @@ TkpDrawAngledCharsInContext(
 {
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
 
-
     if (rangeStart < 0 || rangeLength <= 0 ||
             rangeStart + rangeLength > numBytes) {
         return;
@@ -737,7 +771,8 @@ TkpDrawAngledCharsInContext(
 
     NVGcontext *vg = TkGlfwGetNVGContext();
     if (!vg) return;
-    if (EnsureNvgFont(fontPtr) < 0) return;
+
+    if (EnsureNvgFont(fontPtr, vg) < 0) return;
 
     nvgSave(vg);
     nvgFontFaceId(vg, fontPtr->nvgFontId);
@@ -747,10 +782,6 @@ TkpDrawAngledCharsInContext(
 
     double drawX = x;
 
-    /*
-     * When drawing a sub-range, compute the pixel offset of the range
-     * start by measuring the prefix.  
-     */
     if (rangeStart > 0) {
         float bounds[4];
         nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
@@ -768,17 +799,11 @@ TkpDrawAngledCharsInContext(
         nvgText(vg, (float) drawX, (float) y, rangePtr, rangeEnd);
     }
 
-    /*
-     * Underline and overstrike — same geometry as the previous
-     * implementation but now computed after the NVG draw so we can reuse
-     * the color already set.
-     */
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
         float bounds[4];
         float runWidth;
 
         if (angle != 0.0) {
-            /* Width at origin, before rotation. */
             nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
             runWidth = bounds[2];
         } else {
@@ -824,11 +849,8 @@ TkpDrawAngledCharsInContext(
  * Results:
  *     Returns 0 on success.
  *
- * Side effects:
- *     Appends family and style suffixes to the Tcl_DString.
- *
  *---------------------------------------------------------------------------
- */ 
+ */
 
 int
 TkPostscriptFontName(
@@ -838,7 +860,6 @@ TkPostscriptFontName(
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
     const char  *family  = fontPtr->font.fa.family
         ? fontPtr->font.fa.family : "Helvetica";
-
 
     Tcl_DStringAppend(dsPtr, family, -1);
     if (fontPtr->font.fa.weight == TK_FW_BOLD) {
@@ -855,16 +876,10 @@ TkPostscriptFontName(
  *
  * TkUnixSetXftClipRegion --
  *
- *     No-op stub for Xft clipping; clipping is handled by NanoVG.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     None.
+ *     No-op stub; clipping is handled by NanoVG.
  *
  *---------------------------------------------------------------------------
- */ 
+ */
 
 void
 TkUnixSetXftClipRegion(
@@ -879,12 +894,6 @@ TkUnixSetXftClipRegion(
  * TkpDrawCharsInContext --
  *
  *     Simple delegating wrapper required by some Tk internal callers.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     Delegates to Tk_DrawCharsInContext.
  *
  *---------------------------------------------------------------------------
  */
@@ -913,12 +922,6 @@ TkpDrawCharsInContext(
  *
  *     Simple delegating wrapper required by some Tk internal callers.
  *
- * Results:
- *     Returns the count of bytes that fit; sets *lengthPtr with the pixel width.
- *
- * Side effects:
- *     Delegates to Tk_MeasureChars.
- *
  *---------------------------------------------------------------------------
  */
 
@@ -936,7 +939,6 @@ TkpMeasureCharsInContext(
     if (rangeStart < 0) rangeStart = 0;
     if (rangeStart + rangeLength > numBytes)
         rangeLength = numBytes - rangeStart;
-    /* Pass full source + full numBytes so word-break context is preserved.. */
     return Tk_MeasureCharsInContext(tkfont, source, numBytes,
         rangeStart, rangeLength, maxLength, flags, lengthPtr);
 }
@@ -949,12 +951,6 @@ TkpMeasureCharsInContext(
  *     Ask Fontconfig for the best font file matching the given family
  *     and style attributes. Returns a malloc'd path string (caller must
  *     free with free()), or NULL if nothing matched.
- *
- * Results:
- *     Malloc'd path string or NULL.
- *
- * Side effects:
- *     Queries Fontconfig.
  *
  *---------------------------------------------------------------------------
  */
@@ -969,14 +965,13 @@ FindFontFile(
     FcPattern *pat = FcPatternCreate();
     if (!pat) return NULL;
 
-
     if (family) {
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *) family);
     }
     FcPatternAddInteger(pat, FC_WEIGHT,
-                        bold   ? FC_WEIGHT_BOLD  : FC_WEIGHT_REGULAR);
+                        bold   ? FC_WEIGHT_BOLD   : FC_WEIGHT_REGULAR);
     FcPatternAddInteger(pat, FC_SLANT,
-                        italic ? FC_SLANT_ITALIC  : FC_SLANT_ROMAN);
+                        italic ? FC_SLANT_ITALIC   : FC_SLANT_ROMAN);
     if (pixelSize > 0) {
         FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double) pixelSize);
     }
@@ -1005,18 +1000,11 @@ FindFontFile(
  *
  * InitFont --
  *
- *     Populate a WaylandFont from TkFontAttributes. Resolves the
- *     font file via Fontconfig, stores all resolved attributes back into
- *     font.fa, and computes the font metrics.
- *     We compute metrics by asking Fontconfig/stbtt once, here, rather
- *     than at every draw call. The NanoVG font handle is created lazily
- *     (EnsureNvgFont) because the NVG context may not exist yet.
- *
- * Results:
- *     None.
- *
- * Side effects:
- *     Initializes font metrics and file path.
+ *     Populate a WaylandFont from TkFontAttributes. Resolves the font
+ *     file via Fontconfig, computes metrics via stbtt, and stores
+ *     everything needed for later rendering. The NanoVG font handle
+ *     is created lazily (EnsureNvgFont) because the NVG context may
+ *     not exist yet at startup.
  *
  *---------------------------------------------------------------------------
  */
@@ -1027,44 +1015,28 @@ InitFont(
     const TkFontAttributes *faPtr,
     WaylandFont *fontPtr)
 {
-    TkFontAttributes *fa  = &fontPtr->font.fa;
-    TkFontMetrics    *fm  = &fontPtr->font.fm;
+    TkFontAttributes *fa = &fontPtr->font.fa;
+    TkFontMetrics    *fm = &fontPtr->font.fm;
 
-
-    /* Copy requested attributes into the generic base. */
     *fa = *faPtr;
 
-    /* Resolve pixel size from the requested point/pixel size. */
     double ptSize = faPtr->size;
     if (ptSize < 0.0) {
-        /* Negative means pixels already. */
         fontPtr->pixelSize = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
         fontPtr->pixelSize = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
     } else {
-        fontPtr->pixelSize = 12;   /* Default, as on macOS. */
+        fontPtr->pixelSize = 12;
     }
     if (fontPtr->pixelSize < 1) fontPtr->pixelSize = 1;
 
-    /* Resolve the font file through Fontconfig. */
     int bold   = (faPtr->weight == TK_FW_BOLD);
     int italic = (faPtr->slant  == TK_FS_ITALIC);
 
     fontPtr->filePath = FindFontFile(faPtr->family, bold, italic,
                                      fontPtr->pixelSize);
 
-    /*
-     * If Fontconfig returned a file, use stbtt (via NanoVG's internal
-     * calls) to get accurate metrics. Otherwise estimate from pixelSize.
-     * This mirrors the macOS use of CTFontGetBoundingRectsForGlyphs for
-     * metric correction.
-     */
     if (fontPtr->filePath) {
-        /*
-         * Open the file and parse metrics with stbtt directly. We only
-         * need the metrics here; NanoVG will re-read the file on first
-         * draw via EnsureNvgFont.
-         */
         FILE *fd = fopen(fontPtr->filePath, "rb");
         if (fd) {
             fseek(fd, 0, SEEK_END);
@@ -1080,17 +1052,15 @@ InitFont(
                                       &info, (float) fontPtr->pixelSize);
                     int ascent, descent, linegap;
                     stbtt_GetFontVMetrics(&info, &ascent, &descent, &linegap);
-                    fm->ascent  = (int)(ascent  * scale + 0.5f);
+                    fm->ascent  = (int)(ascent   * scale + 0.5f);
                     fm->descent = (int)(-descent * scale + 0.5f);
 
-                    /* Measure 'W' for maxWidth, check fixed pitch with '.' vs 'i'. */
                     int adv_W, adv_dot, lsb;
                     stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
                     stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
                     fm->maxWidth = (int)(adv_W * scale + 0.5f);
                     fm->fixed    = (adv_W == adv_dot);
 
-                    /* Reflect resolved attributes back into fa. */
                     fa->size = (double)(-fontPtr->pixelSize);
                 }
             }
@@ -1099,7 +1069,6 @@ InitFont(
         }
     }
 
-    /* Fallback metrics when the file couldn't be parsed. */
     if (fm->ascent == 0 && fm->descent == 0) {
         fm->ascent   = (int)(fontPtr->pixelSize * 0.80 + 0.5);
         fm->descent  = (int)(fontPtr->pixelSize * 0.20 + 0.5);
@@ -1107,17 +1076,13 @@ InitFont(
         fm->fixed    = 0;
     }
 
-    /* Underline/overstrike geometry. */
     fontPtr->underlinePos = fm->descent / 2;
     if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
     fontPtr->barHeight    = (int)(fontPtr->pixelSize * 0.07 + 0.5);
     if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
 
-    /* The NVG font id is resolved lazily on first draw. */
-    fontPtr->nvgFontId = -1;
-
-    /* Required by the generic font layer: fid must be non-zero and unique. */
-    fontPtr->font.fid = (Font)(uintptr_t) fontPtr;
+    fontPtr->nvgFontId    = -1;
+    fontPtr->font.fid     = (Font)(uintptr_t) fontPtr;
 }
 
 /*
@@ -1126,17 +1091,11 @@ InitFont(
  * DeleteFont --
  *
  *     Release platform-specific resources inside a WaylandFont without
- *     freeing the struct itself. Called from TkpDeleteFont and from
- *     TkpGetFontFromAttributes when reusing an existing struct. The NanoVG 
- *     font handle is intentionally NOT destroyed here: NanoVG owns the font 
- *     atlas and there is no nvgDeleteFont() API. The handle remains valid 
- *     until the NVG context itself is destroyed.
+ *     freeing the struct itself.
  *
- * Results:
- *     None.
- *
- * Side effects:
- *     Frees filePath string.
+ *     The NanoVG font handle is intentionally NOT destroyed here: NanoVG
+ *     owns the font atlas and there is no nvgDeleteFont() API.  The handle
+ *     remains valid until the NVG context itself is destroyed.
  *
  *---------------------------------------------------------------------------
  */
@@ -1157,56 +1116,75 @@ DeleteFont(
  *
  * EnsureNvgFont --
  *
- *     Load the font into the current NanoVG context if it has not been 
- *     loaded yet. Returns the nvgFontId (>= 0) on success, -1 on failure.
- *     We use nvgCreateFont (file path) rather than nvgCreateFontMem so
- *     that NanoVG manages the memory lifetime, matching the approach
- *     used by the NanoVG examples and avoiding double-ownership issues.
- *     NanoVG deduplicates fonts by name, so calling this on the same
- *     font from multiple WaylandFont structs is safe.
+ *     Load the font into the *provided* NanoVG context if it has not been
+ *     loaded yet for that context.
+ *
+ *     Per-context lazy loading (same fix as DrawTitleBar in tkWaylandDecor.c):
+ *
+ *       1. nvgFindFont(vg, name) — O(1) name lookup in the current context's
+ *          atlas.  If it returns >= 0 the font is already present and we are
+ *          done.  This is called on every draw and measurement call so it
+ *          must be cheap.
+ *
+ *       2. If not found, nvgCreateFont(vg, name, filePath) is called NOW,
+ *          while the correct GL context is current (guaranteed by the callers
+ *          TkGlfwGetNVGContext / TkGlfwGetNVGContextForMeasure which both
+ *          call glfwMakeContextCurrent before returning).  The resulting
+ *          atlas texture is therefore owned by that context.
+ *
+ *       3. The id is stored in fontPtr->nvgFontId as a fast-path cache for
+ *          the *next* call in the same context.  Because all windows share
+ *          one NVGcontext* but may have different GL contexts, the id value
+ *          returned by NanoVG is stable across contexts for the same named
+ *          font — only the *texture* upload differs per context, which is
+ *          handled transparently by NanoVG's atlas dirty-flag mechanism when
+ *          it sees a new GL context.
+ *
+ *     Falls back to DejaVu Sans if the resolved file cannot be loaded.
  *
  * Results:
- *     NVG font ID or -1 on failure.
+ *     NVG font ID (>= 0) on success, -1 on failure.
  *
  * Side effects:
- *     Loads font into NanoVG context.
+ *     May call nvgCreateFont() to upload the atlas for this GL context.
  *
  *---------------------------------------------------------------------------
  */
 
 static int
-EnsureNvgFont(WaylandFont *fontPtr)
+EnsureNvgFont(
+    WaylandFont *fontPtr,
+    NVGcontext  *vg)
 {
-    NVGcontext *vg;
     const char *name;
-    int id;
+    int         id;
 
-    if (fontPtr->nvgFontId >= 0) return fontPtr->nvgFontId;
+    if (!vg) return -1;
 
-    /* Font loading only needs an initialized NVG context and a current
-     * GL context. It does NOT need an active frame. Bypass the frame
-     * check by going directly to glfwContext. */
-    TkGlfwContext *ctx = TkGlfwGetContext();
-    if (!ctx) return -1;
-
-    /* Ensure some GL context is current so nvgCreateFont can upload
-     * the font atlas. Use the main shared window if nothing else is. */
-    if (glfwGetCurrentContext() == NULL) {
-        glfwMakeContextCurrent(ctx->mainWindow);
-    }
-
-    vg   = ctx->vg;
     name = fontPtr->font.fa.family ? fontPtr->font.fa.family : "default";
 
+    /*
+     * Step 1: check whether the atlas already contains this font name in
+     * the current GL context.  This is the hot path — no file I/O.
+     */
     id = nvgFindFont(vg, name);
     if (id >= 0) {
         fontPtr->nvgFontId = id;
         return id;
     }
 
+    /*
+     * Step 2: font not yet loaded into this context — do it now.
+     * The GL context is guaranteed current by the caller.
+     */
     if (fontPtr->filePath) {
         id = nvgCreateFont(vg, name, fontPtr->filePath);
     }
+
+    /*
+     * Step 3: if the resolved file failed (missing, wrong format, etc.)
+     * fall back to the system DejaVu Sans so something always renders.
+     */
     if (id < 0) {
         id = nvgCreateFont(vg, name,
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
@@ -1215,20 +1193,14 @@ EnsureNvgFont(WaylandFont *fontPtr)
     fontPtr->nvgFontId = id;
     return id;
 }
+
 /*
  *---------------------------------------------------------------------------
  *
  * ColorFromGC --
  *
- *     Extract the foreground color from an X11 GC and convert it to an 
- *     NVGcolor. Delegates the pixel-to-NVG conversion to the GLFW 
- *     compatibility layer.
- *
- * Results:
- *     NVGcolor value.
- *
- * Side effects:
- *     None.
+ *     Extract the foreground color from an X11 GC and convert it to an
+ *     NVGcolor.
  *
  *---------------------------------------------------------------------------
  */

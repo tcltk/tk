@@ -124,11 +124,10 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 MODULE_SCOPE void
 TkGlfwWindowSizeCallback(
     GLFWwindow *window,
-    int width,           /* Total window width including decorations. */
-    int height)          /* Total window height including decorations. */
+    int width,         
+    int height)          
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    TkWaylandDecoration *decor;
     XEvent event;
     int clientWidth, clientHeight;
 
@@ -139,22 +138,9 @@ TkGlfwWindowSizeCallback(
     /* Update the mapping with new total window size. */
     TkGlfwUpdateWindowSize(window, width, height);
 
-    /* Calculate client area size (inset from decorations if enabled). */
-    decor = TkWaylandGetDecoration(winPtr);
-    if (decor && decor->enabled) {
-        /* Client area is inset by border width on sides and
-         * title bar height + border width on top. */
-        clientWidth = width - (2 * BORDER_WIDTH);
-        clientHeight = height - TITLE_BAR_HEIGHT - BORDER_WIDTH;
+    clientWidth = width;
+    clientHeight = height;
 
-        /* Ensure minimum size. */
-        if (clientWidth < 1) clientWidth = 1;
-        if (clientHeight < 1) clientHeight = 1;
-    } else {
-        /* No decorations - client area equals total window. */
-        clientWidth = width;
-        clientHeight = height;
-    }
 
     /* Update Tk's window dimensions. */
     winPtr->changes.width = clientWidth;
@@ -415,12 +401,6 @@ TkGlfwCursorPosCallback(
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
 
-    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
-    if (decor) {
-	TkWaylandDecorationMouseMove(decor, xpos, ypos);
-	/* Don't return — Tk still needs MotionNotify for cursor updates. */
-    }
-
     if (!winPtr) {
         if (lastWindow) {
             TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
@@ -559,13 +539,6 @@ TkGlfwMouseButtonCallback(
     if (!winPtr) {
         return;
     }
-
-    TkWaylandDecoration *decor = TkWaylandGetDecoration(winPtr);
-    if (decor && TkWaylandDecorationMouseButton(decor, button, action,
-						xpos, ypos)) {
-	return;  /* Decoration consumed the event. */
-    }
-
 
     /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
