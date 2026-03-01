@@ -393,6 +393,143 @@ XCopyArea(
 /*
  *----------------------------------------------------------------------
  *
+ * XCopyPlane --
+ *
+ *	Copy a single bit-plane from src to dst, mapping 1-bits to the
+ *	GC foreground color and 0-bits to the GC background color.
+ *	Used for bitmap-backed images, stipple patterns, and cursor masks.
+ *
+ * Results:
+ *	Success or error code.
+ *
+ * Side effects:
+ *	Draws the expanded bitmap onto the destination drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XCopyPlane(
+    Display      *display,
+    Drawable      src,
+    Drawable      dst,
+    GC            gc,
+    int           src_x,
+    int           src_y,
+    unsigned int  width,
+    unsigned int  height,
+    int           dest_x,
+    int           dest_y,
+    unsigned long plane)
+{
+    TkWaylandDrawingContext  dc;
+    NVGImageData            *srcImg;
+    XGCValues                gcValues;
+    unsigned char           *expanded;
+    unsigned char           *src_row;
+    unsigned char           *dst_pix;
+    NVGpaint                 imgPaint;
+    NVGcolor                 fg, bg;
+    int                      imageId;
+    unsigned int             x, y;
+
+    (void)plane;   /* We always expand plane 1; other planes unsupported. */
+
+    if (!display || !src || !dst) {
+        return BadDrawable;
+    }
+
+    LastKnownRequestProcessed(display)++;
+
+    /* Read the source bitmap pixels. */
+    srcImg = CreateNVGImageFromDrawableRect(src, src_x, src_y, width, height);
+    if (!srcImg) {
+        return BadDrawable;
+    }
+
+    /* Resolve foreground and background colors from the GC. */
+    if (TkWaylandGetGCValues(gc, GCForeground | GCBackground, &gcValues) == 0) {
+        fg = TkGlfwPixelToNVG(gcValues.foreground);
+        bg = TkGlfwPixelToNVG(gcValues.background);
+    } else {
+        fg = nvgRGBA(0,   0,   0,   255);   /* black */
+        bg = nvgRGBA(255, 255, 255, 255);   /* white */
+    }
+
+    /*
+     * Expand the 1-bit plane into an RGBA image:
+     * any non-zero pixel in the source maps to fg; zero maps to bg.
+     */
+    expanded = (unsigned char *)ckalloc(width * height * 4);
+    if (!expanded) {
+        if (srcImg->pixels) ckfree(srcImg->pixels);
+        ckfree((char *)srcImg);
+        return BadAlloc;
+    }
+
+    for (y = 0; y < height; y++) {
+        src_row = srcImg->pixels + y * width * 4;
+        dst_pix = expanded      + y * width * 4;
+
+        for (x = 0; x < width; x++) {
+            /*
+             * Treat the source as a luminance mask: if any channel
+             * of the source pixel is non-zero, map to foreground.
+             */
+            int lit = src_row[x*4+0] || src_row[x*4+1] ||
+                      src_row[x*4+2] || src_row[x*4+3];
+            NVGcolor c = lit ? fg : bg;
+
+            dst_pix[x*4+0] = (unsigned char)(c.r * 255);
+            dst_pix[x*4+1] = (unsigned char)(c.g * 255);
+            dst_pix[x*4+2] = (unsigned char)(c.b * 255);
+            dst_pix[x*4+3] = (unsigned char)(c.a * 255);
+        }
+    }
+
+    /* Free the raw source pixels; we no longer need them. */
+    if (srcImg->pixels) ckfree(srcImg->pixels);
+    ckfree((char *)srcImg);
+
+    /* Begin drawing on destination. */
+    int rc = TkGlfwBeginDraw(dst, gc, &dc);
+    if (rc != TCL_OK) {
+        ckfree(expanded);
+        return BadDrawable;
+    }
+
+    if (gc) {
+        TkGlfwApplyGC(dc.vg, gc);
+    }
+
+    /* Upload expanded RGBA bitmap to NanoVG. */
+    imageId = nvgCreateImageRGBA(dc.vg, width, height, 0, expanded);
+    ckfree(expanded);
+
+    if (imageId <= 0) {
+        TkGlfwEndDraw(&dc);
+        return BadAlloc;
+    }
+
+    /* Draw the expanded bitmap onto the destination. */
+    imgPaint = nvgImagePattern(dc.vg, dest_x, dest_y, width, height,
+                               0.0f, imageId, 1.0f);
+    nvgBeginPath(dc.vg);
+    nvgRect(dc.vg, dest_x, dest_y, width, height);
+    nvgFillPaint(dc.vg, imgPaint);
+    nvgFill(dc.vg);
+
+    /* Clean up. */
+    nvgDeleteImage(dc.vg, imageId);
+
+    TkGlfwEndDraw(&dc);
+    return Success;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XPutImage --
  *
  *	Copy XImage data to drawable.
