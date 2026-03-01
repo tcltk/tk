@@ -127,16 +127,17 @@ TkGlfwWindowSizeCallback(
     int width,         
     int height)          
 {
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+	TkWindow *winPtr;
     XEvent event;
     int clientWidth, clientHeight;
 
+    /* Always update mapping, even if Tk window isn't ready yet. */
+    TkGlfwUpdateWindowSize(window, width, height);
+
+    winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
         return;
     }
-
-    /* Update the mapping with new total window size. */
-    TkGlfwUpdateWindowSize(window, width, height);
 
     clientWidth = width;
     clientHeight = height;
