@@ -312,12 +312,6 @@ TkWaylandHandleExposeEvents(void)
     while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
         /* Keep draining until no more window events are ready. */
     }
-
-    /*
-     * Flush any auto-opened NanoVG frame from draw calls that occurred
-     * outside TkGlfwBeginDraw (e.g., during widget configuration).
-     */
-    TkGlfwFlushAutoFrame();
 }
 
 /*
