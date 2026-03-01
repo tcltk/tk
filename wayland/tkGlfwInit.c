@@ -382,23 +382,13 @@ TkGlfwInitialize(void)
 
     glfwMakeContextCurrent(glfwContext.mainWindow);
     glfwSwapInterval(1);
-
+    
     if (TkGlfwInitWaylandProtocols() != TCL_OK) {
         glfwDestroyWindow(glfwContext.mainWindow);
         glfwContext.mainWindow = NULL;
         glfwTerminate();
         return TCL_ERROR;
     }
-
-    glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    if (!glfwContext.vg) {
-        fprintf(stderr, "TkGlfwInitialize: nvgCreateGLES2() failed\n");
-        glfwDestroyWindow(glfwContext.mainWindow);
-        glfwContext.mainWindow = NULL;
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-
     glfwContext.decorFontId = -1; /* loaded lazily per-context */
     TkWaylandSetNVGContext(glfwContext.vg);
     glfwContext.initialized = 1;
@@ -620,7 +610,6 @@ TkGlfwCleanup(void)
     waylandDisplay = NULL;
 }
 
-
 /* -----------------------------------------------------------------------
  * TkGlfwBeginDraw --
  *
@@ -643,72 +632,63 @@ TkGlfwBeginDraw(
     TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *mapping;
+    int fbWidth, fbHeight;
 
     if (!dcPtr) return TCL_ERROR;
 
     mapping = FindMappingByDrawable(drawable);
     if (!mapping || !mapping->glfwWindow) return TCL_ERROR;
 
-    /* If a NanoVG frame is already active, we are likely in a nested 
-     * call (e.g., a widget drawing inside an Expose event). 
-     * We must NOT clear the buffer or call nvgBeginFrame again.
-     */
+    /* Handle nested frames */
     if (glfwContext.nvgFrameActive) {
         if (glfwContext.activeWindow != mapping->glfwWindow) {
-            /* If the window changed, finish the previous one first. */
             nvgEndFrame(glfwContext.vg);
             if (glfwContext.activeWindow) {
                 glfwSwapBuffers(glfwContext.activeWindow);
             }
             glfwContext.nvgFrameActive = 0;
-            glfwContext.activeWindow   = NULL;
+            glfwContext.activeWindow = NULL;
         } else {
-            /* Stay within the current active frame. */
-            dcPtr->drawable    = drawable;
-            dcPtr->glfwWindow  = mapping->glfwWindow;
-            dcPtr->width       = mapping->width;
-            dcPtr->height      = mapping->height;
-            dcPtr->vg          = glfwContext.vg;
-            dcPtr->nestedFrame = 1; /* Mark as nested to prevent EndDraw swapping */
+            dcPtr->drawable = drawable;
+            dcPtr->glfwWindow = mapping->glfwWindow;
+            dcPtr->width = mapping->width;
+            dcPtr->height = mapping->height;
+            dcPtr->vg = glfwContext.vg;
+            dcPtr->nestedFrame = 1;
             
             if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
             return TCL_OK;
         }
     }
 
-    /* Start a fresh frame for the window. */
+    /* Make context current and get actual framebuffer size */
     glfwMakeContextCurrent(mapping->glfwWindow);
-  
-    dcPtr->drawable    = drawable;
-    dcPtr->glfwWindow  = mapping->glfwWindow;
-    dcPtr->width       = mapping->width;
-    dcPtr->height      = mapping->height;
-    dcPtr->vg          = glfwContext.vg;
+    glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
+    
+    /* Store dimensions in context */
+    dcPtr->drawable = drawable;
+    dcPtr->glfwWindow = mapping->glfwWindow;
+    dcPtr->width = mapping->width;
+    dcPtr->height = mapping->height;
+    dcPtr->vg = glfwContext.vg;
     dcPtr->nestedFrame = 0;
 
-    /*
-     * Set the viewport and clear the background. 
-     * Use a standard Tk-like grey (0.92f) instead of black.
-     */
-    glViewport(0, 0, mapping->width, mapping->height);
+    /* Clear the buffer BEFORE starting NanoVG frame */
+    glViewport(0, 0, fbWidth, fbHeight);
     glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /* Open the NanoVG frame for this render cycle. */
-    nvgBeginFrame(glfwContext.vg,
-                  (float)mapping->width,
-                  (float)mapping->height, 1.0f);
+    /* Start NanoVG frame with correct dimensions */
+    nvgBeginFrame(glfwContext.vg, 
+                  (float)mapping->width, 
+                  (float)mapping->height, 
+                  (float)fbWidth / (float)mapping->width);  /* Pixel ratio for HiDPI */
     
     nvgSave(glfwContext.vg);
-    
-    /*
-     * Apply a small translation to ensure 1-pixel lines align 
-     * to the pixel grid, preventing blurriness. 
-     */
     nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
 
     glfwContext.nvgFrameActive = 1;
-    glfwContext.activeWindow   = mapping->glfwWindow;
+    glfwContext.activeWindow = mapping->glfwWindow;
 
     if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
 
@@ -747,6 +727,8 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         glfwSwapBuffers(dcPtr->glfwWindow);
     }
 }
+
+
 
 /* -----------------------------------------------------------------------
  * TkGlfwFlushAutoFrame --
@@ -795,24 +777,54 @@ TkGlfwGetNVGContext(void)
     GLFWwindow *cur;
     int w, h;
 
-    if (!glfwContext.initialized && TkGlfwInitialize() != TCL_OK)
-        return NULL;
+    /* First, ensure GLFW is initialized */
+    if (!glfwContext.initialized) {
+        if (TkGlfwInitialize() != TCL_OK) {
+            fprintf(stderr, "TkGlfwGetNVGContext: Failed to initialize\n");
+            return NULL;
+        }
+    }
 
+    /* If NanoVG context is NULL, try to recreate it */
+    if (!glfwContext.vg) {
+        fprintf(stderr, "TkGlfwGetNVGContext: NanoVG context NULL, recreating...\n");
+        
+        if (!glfwContext.mainWindow) {
+            fprintf(stderr, "TkGlfwGetNVGContext: No main window!\n");
+            return NULL;
+        }
+        
+        glfwMakeContextCurrent(glfwContext.mainWindow);
+        glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+        
+        if (!glfwContext.vg) {
+            fprintf(stderr, "TkGlfwGetNVGContext: Failed to recreate NanoVG context\n");
+            return NULL;
+        }
+        
+        fprintf(stderr, "TkGlfwGetNVGContext: Recreated NanoVG context: %p\n", 
+                glfwContext.vg);
+        TkWaylandSetNVGContext(glfwContext.vg);
+    }
+
+    /* Get current context or use main window. */
     cur = glfwGetCurrentContext();
     if (!cur) {
         glfwMakeContextCurrent(glfwContext.mainWindow);
         cur = glfwContext.mainWindow;
     }
 
+    /* Handle frame management. */
     if (!glfwContext.nvgFrameActive) {
         glfwGetFramebufferSize(cur, &w, &h);
         nvgBeginFrame(glfwContext.vg, (float)w, (float)h, 1.0f);
-        glfwContext.nvgFrameActive     = 1;
+        glfwContext.nvgFrameActive = 1;
         glfwContext.nvgFrameAutoOpened = 1;
+        glfwContext.activeWindow = cur;
     }
+
     return glfwContext.vg;
 }
-
 /* -----------------------------------------------------------------------
  * TkGlfwGetNVGContextForMeasure --
  *
@@ -848,6 +860,7 @@ TkGlfwGetNVGContextForMeasure(void)
  *	Dispatches GLFW callbacks for input, window, and other events.
  * --------------------------------------------------------------------
  */
+
 
 MODULE_SCOPE void
 TkGlfwProcessEvents(void)
