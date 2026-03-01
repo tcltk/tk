@@ -40,7 +40,7 @@
  *----------------------------------------------------------------------
  */
 
-static TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, 0, NULL, 0, 0};
+static TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, 0, NULL, 0, 0, 0};
 static WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
 
@@ -800,7 +800,7 @@ TkpDisplayWarning(const char *msg, const char *title)
 /*
  *----------------------------------------------------------------------
  *
- * Window mapping list
+ * Functions to query various WindowMapping details. 
  *
  *----------------------------------------------------------------------
  */
@@ -850,6 +850,12 @@ FindMappingByDrawable(Drawable d)
     }
 
     return NULL;
+}
+
+WindowMapping *
+TkGlfwGetMappingList(void)
+{
+    return windowMappingList;
 }
 
 void
