@@ -461,10 +461,11 @@ TkGlfwStartInteractiveMove(GLFWwindow *glfwWindow)
  *	If drawableOut is non-NULL, it is set to the new drawable ID.
  *
  * Side effects:
- *	Creates a GLFW window, registers the window mapping, sets up
- *	callbacks, and creates client-side decorations if applicable.
+ *	Creates a GLFW window, registers the window mapping, and
+ *  sets up callbacks
  * --------------------------------------------------------------------
  */
+
 
 MODULE_SCOPE GLFWwindow *
 TkGlfwCreateWindow(
@@ -478,59 +479,75 @@ TkGlfwCreateWindow(
     GLFWwindow    *window;
 
     if (!glfwContext.initialized) {
-        if (TkGlfwInitialize() != TCL_OK) return NULL;
+        if (TkGlfwInitialize() != TCL_OK)
+            return NULL;
     }
 
-    /* Window hints. */
+    /* Reuse existing mapping if present. */
+    if (tkWin != NULL) {
+        mapping = FindMappingByTk(tkWin);
+        if (mapping != NULL) {
+            if (drawableOut) *drawableOut = mapping->drawable;
+            return mapping->glfwWindow;
+        }
+    }
+
+    if (width  <= 0) width  = 200;
+    if (height <= 0) height = 200;
+
+    /* Must set GL hints before every glfwCreateWindow call. */
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
 
     window = glfwCreateWindow(width, height, title ? title : "",
                               NULL, glfwContext.mainWindow);
-    if (!window) return NULL;
-
-    /* Create mapping. */
+    if (!window) {
+        return NULL;
+    }
+  
+    /* Allocate and zero mapping. */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
-    mapping->tkWindow  = tkWin;
+    mapping->tkWindow   = tkWin;
     mapping->glfwWindow = window;
-    mapping->drawable  = nextDrawableId++;
-    mapping->nextPtr   = windowMappingList;
-    windowMappingList  = mapping;
+    mapping->drawable   = nextDrawableId++;
+    mapping->width      = width;
+    mapping->height     = height;
+    mapping->nextPtr    = windowMappingList;
+    windowMappingList   = mapping;
 
     glfwSetWindowUserPointer(window, mapping);
 
-    if (tkWin) {
+    if (tkWin != NULL)
         TkGlfwSetupCallbacks(window, tkWin);
-    }
 
-    /* Zero dimensions so the roundtrip loop below spins until the
-     * compositor sends a configure event with real dimensions.
-     * XdgToplevelConfigure (fired by GLFW/libdecor) fills them in. */
-    mapping->width  = 0;
-    mapping->height = 0;
-
-    /* Show window — triggers libdecor window creation and the first
-     * xdg_toplevel configure event. */
+    /* Show window — triggers libdecor configure. */
     glfwShowWindow(window);
 
-    /* Wait for the Wayland compositor to provide dimensions.
-     * Without this, the first draw call in BeginDraw uses invalid
-     * protocol state and produces a black window. */
+    /* Wait for compositor to confirm real dimensions.
+     * Without this BeginDraw uses stale width/height and the
+     * GL viewport is wrong, producing a black window. */
     int timeout = 0;
     while ((mapping->width == 0 || mapping->height == 0) && timeout < 100) {
         wl_display_roundtrip(waylandDisplay);
         glfwPollEvents();
         timeout++;
     }
-    /* Fallback: if compositor never sent dimensions, use requested size. */
+
     if (mapping->width  == 0) mapping->width  = width;
     if (mapping->height == 0) mapping->height = height;
 
     if (drawableOut) *drawableOut = mapping->drawable;
+
+    /* Queue expose only after dimensions are valid. */
+    if (tkWin != NULL)
+        TkWaylandQueueExposeEvent(tkWin, 0, 0, mapping->width, mapping->height);
+
     return window;
 }
 
@@ -603,6 +620,7 @@ TkGlfwCleanup(void)
     waylandDisplay = NULL;
 }
 
+
 /* -----------------------------------------------------------------------
  * TkGlfwBeginDraw --
  *
@@ -620,47 +638,47 @@ TkGlfwCleanup(void)
 
 MODULE_SCOPE int
 TkGlfwBeginDraw(
-    Drawable                 drawable,
-    GC                       gc,
-    TkWaylandDrawingContext  *dcPtr)
+    Drawable                drawable,
+    GC                      gc,
+    TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *mapping;
+
     if (!dcPtr) return TCL_ERROR;
 
     mapping = FindMappingByDrawable(drawable);
     if (!mapping || !mapping->glfwWindow) return TCL_ERROR;
 
-    /*
-     * Guard against zero-sized windows.
-     * Wayland will report 0x0 until the first configure event is handled.
-     * Drawing into 0x0 results in a black window.
+    /* If a NanoVG frame is already active, we are likely in a nested 
+     * call (e.g., a widget drawing inside an Expose event). 
+     * We must NOT clear the buffer or call nvgBeginFrame again.
      */
-    if (mapping->width <= 0 || mapping->height <= 0)
-        return TCL_ERROR;
-
-    /* Handle existing active NanoVG frames. */
     if (glfwContext.nvgFrameActive) {
-        if (glfwContext.activeWindow == mapping->glfwWindow) {
+        if (glfwContext.activeWindow != mapping->glfwWindow) {
+            /* If the window changed, finish the previous one first. */
+            nvgEndFrame(glfwContext.vg);
+            if (glfwContext.activeWindow) {
+                glfwSwapBuffers(glfwContext.activeWindow);
+            }
+            glfwContext.nvgFrameActive = 0;
+            glfwContext.activeWindow   = NULL;
+        } else {
+            /* Stay within the current active frame. */
             dcPtr->drawable    = drawable;
             dcPtr->glfwWindow  = mapping->glfwWindow;
             dcPtr->width       = mapping->width;
             dcPtr->height      = mapping->height;
             dcPtr->vg          = glfwContext.vg;
-            dcPtr->nestedFrame = 1;
+            dcPtr->nestedFrame = 1; /* Mark as nested to prevent EndDraw swapping */
+            
             if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
             return TCL_OK;
         }
-        /* Finish the previous frame if it was for a different window. */
-        nvgEndFrame(glfwContext.vg);
-        if (glfwContext.activeWindow)
-            glfwSwapBuffers(glfwContext.activeWindow);
-        glfwContext.nvgFrameActive = 0;
-        glfwContext.activeWindow   = NULL;
     }
 
-    /* Make the specific window's GL context current. */
+    /* Start a fresh frame for the window. */
     glfwMakeContextCurrent(mapping->glfwWindow);
-
+  
     dcPtr->drawable    = drawable;
     dcPtr->glfwWindow  = mapping->glfwWindow;
     dcPtr->width       = mapping->width;
@@ -668,17 +686,25 @@ TkGlfwBeginDraw(
     dcPtr->vg          = glfwContext.vg;
     dcPtr->nestedFrame = 0;
 
+    /*
+     * Set the viewport and clear the background. 
+     * Use a standard Tk-like grey (0.92f) instead of black.
+     */
     glViewport(0, 0, mapping->width, mapping->height);
-
-    /* Clear to the default Tk gray background. */
     glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    /* Open the NanoVG frame for this render cycle. */
     nvgBeginFrame(glfwContext.vg,
-                  (float)mapping->width, (float)mapping->height, 1.0f);
+                  (float)mapping->width,
+                  (float)mapping->height, 1.0f);
+    
     nvgSave(glfwContext.vg);
-
-    /* 0.5-pixel translation for crisp line rendering. */
+    
+    /*
+     * Apply a small translation to ensure 1-pixel lines align 
+     * to the pixel grid, preventing blurriness. 
+     */
     nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
 
     glfwContext.nvgFrameActive = 1;
@@ -692,36 +718,34 @@ TkGlfwBeginDraw(
 /* -----------------------------------------------------------------------
  * TkGlfwEndDraw --
  *
- *	End a drawing operation. Dnds the NanoVG frame, and swaps buffers.
+ *	End a drawing operation. Ends the NanoVG frame and swaps buffers.
  *
  * Results:
  *	None.
  *
  * Side effects:
  *	Ends the NanoVG frame, swaps buffers, and
- *	clears frame tracking state.
+ *	clears frame tracking state if this is the outer frame.
  * -------------------------------------------------------------------- 
  */
 
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    if (!dcPtr || !dcPtr->vg || dcPtr->nestedFrame) return;
+    if (!dcPtr || !dcPtr->vg) return;
+
+    if (dcPtr->nestedFrame) return;
 
     nvgRestore(dcPtr->vg);
-
-    if (dcPtr->glfwWindow) {
-        WindowMapping *m =
-            (WindowMapping *)glfwGetWindowUserPointer(dcPtr->glfwWindow);
-    }
-
+    
     nvgEndFrame(dcPtr->vg);
-    glfwContext.nvgFrameActive     = 0;
+    glfwContext.nvgFrameActive    = 0;
     glfwContext.nvgFrameAutoOpened = 0;
     glfwContext.activeWindow       = NULL;
 
-    if (dcPtr->glfwWindow)
+    if (dcPtr->glfwWindow) {
         glfwSwapBuffers(dcPtr->glfwWindow);
+    }
 }
 
 /* -----------------------------------------------------------------------
