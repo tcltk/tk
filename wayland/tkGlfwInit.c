@@ -1,9 +1,9 @@
 /*
  * tkGlfwInit.c --
  *
- * GLFW/Wayland-specific interpreter initialization: context
- * management, window mapping, drawing context lifecycle, color
- * conversion, and platform init/cleanup.
+ *   GLFW/Wayland-specific interpreter initialization: context
+ *   management, window mapping, drawing context lifecycle, color
+ *   conversion, and platform init/cleanup.
  *
  * Window architecture
  * -------------------
@@ -12,7 +12,6 @@
  *   - Window decorations (SSD or CSD depending on compositor)
  *   - OpenGL ES context creation and buffer swapping
  *   - Keyboard input, clipboard, IME, and the event loop
-
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 2026  Kevin Walzer
@@ -34,9 +33,11 @@
 #include "nanovg.h"
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * Module-level state
- * ---------------------------------------------------------------
+ *
+ *----------------------------------------------------------------------
  */
 
 static TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, 0, NULL, 0, 0};
@@ -44,9 +45,11 @@ static WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * Forward declarations
- * ---------------------------------------------------------------
+ *
+ *----------------------------------------------------------------------
  */
 
 extern void  TkWaylandSetNVGContext(NVGcontext *);
@@ -66,28 +69,31 @@ WindowMapping *FindMappingByDrawable(Drawable);
 void           RemoveMapping(WindowMapping *);
 void           CleanupAllMappings(void);
 
-
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * Accessors
- * ---------------------------------------------------------------
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE TkGlfwContext *
 TkGlfwGetContext(void) { return &glfwContext; }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwErrorCallback --
  *
- *   GLFW error callback that prints errors to stderr.
+ *	GLFW error callback that prints errors to stderr.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Prints error messages to stderr.
- * ---------------------------------------------------------------
+ *	Prints error messages to stderr.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
@@ -97,23 +103,25 @@ TkGlfwErrorCallback(int error, const char *desc)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwInitialize --
  *
- *   Initialize the GLFW library, create a shared context window,
- *   initialize Wayland protocols, and create the global NanoVG context.
+ *	Initialize the GLFW library, create a shared context window,
+ *	initialize Wayland protocols, and create the global NanoVG context.
  *
- *   NanoVG is created exactly once here, immediately after the shared
- *   GL context is made current. All subsequent windows share this
- *   context and this NVGcontext.
+ *	NanoVG is created exactly once here, immediately after the shared
+ *	GL context is made current. All subsequent windows share this
+ *	context and this NVGcontext.
  *
  * Results:
- *   TCL_OK on success, TCL_ERROR on failure.
+ *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *   Initializes GLFW, creates a hidden shared GL context window,
- *   and creates the global NanoVG context.
- * ---------------------------------------------------------------
+ *	Initializes GLFW, creates a hidden shared GL context window,
+ *	and creates the global NanoVG context.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE int
@@ -135,6 +143,7 @@ TkGlfwInitialize(void)
     /*
      * Shared context window - hidden. All application windows
      * share its GL context so textures and shaders are visible across them.
+     * Window must be large enough to allow context to update correctly.
      */
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -171,23 +180,24 @@ TkGlfwInitialize(void)
     return TCL_OK;
 }
 
-
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwCreateWindow --
  *
- *   Create a new GLFW window sharing the global GL context.
- *   Waits for the compositor's first configure event before returning
- *   so that BeginDraw always has valid dimensions.
+ *	Create a new GLFW window sharing the global GL context.
+ *	Waits for the compositor's first configure event before returning
+ *	so that BeginDraw always has valid dimensions.
  *
  * Results:
- *   Returns the GLFWwindow pointer on success, NULL on failure.
- *   If drawableOut is non-NULL, it is set to the new drawable ID.
+ *	Returns the GLFWwindow pointer on success, NULL on failure.
+ *	If drawableOut is non-NULL, it is set to the new drawable ID.
  *
  * Side effects:
- *   Creates a new GLFW window, adds it to the window mapping list,
- *   and queues an expose event for the associated Tk window.
- * ---------------------------------------------------------------
+ *	Creates a new GLFW window, adds it to the window mapping list,
+ *	and queues an expose event for the associated Tk window.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE GLFWwindow *
@@ -267,17 +277,19 @@ TkGlfwCreateWindow(
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwDestroyWindow --
  *
- *   Destroy a GLFW window and clean up associated resources.
+ *	Destroy a GLFW window and clean up associated resources.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Removes the window from the mapping list and destroys the GLFW window.
- * ---------------------------------------------------------------
+ *	Removes the window from the mapping list and destroys the GLFW window.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
@@ -293,19 +305,21 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwCleanup --
  *
- *   Perform global cleanup of all GLFW and Wayland resources.
- *   Called during interpreter shutdown.
+ *	Perform global cleanup of all GLFW and Wayland resources.
+ *	Called during interpreter shutdown.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Destroys all windows, frees the NanoVG context, destroys
- *   Wayland objects, and terminates GLFW.
- * ---------------------------------------------------------------
+ *	Destroys all windows, frees the NanoVG context, destroys
+ *	Wayland objects, and terminates GLFW.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
@@ -329,24 +343,26 @@ TkGlfwCleanup(void)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwBeginDraw --
  *
- *   Begin a drawing operation on a drawable.  Makes the window's GL
- *   context current, clears the framebuffer, and opens a NanoVG frame.
+ *	Begin a drawing operation on a drawable.  Makes the window's GL
+ *	context current, clears the framebuffer, and opens a NanoVG frame.
  *
- *   Nested calls on the same window are allowed: the inner caller
- *   receives a context marked nestedFrame=1 and must not call
- *   TkGlfwEndDraw (the outer frame owns flush/swap).
+ *	Nested calls on the same window are allowed: the inner caller
+ *	receives a context marked nestedFrame=1 and must not call
+ *	TkGlfwEndDraw (the outer frame owns flush/swap).
  *
  * Results:
- *   TCL_OK on success, TCL_ERROR on failure.
+ *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *   Makes the GL context current, clears the framebuffer, and begins
- *   a NanoVG frame. Updates the drawing context structure with window
- *   dimensions and NanoVG context.
- * ---------------------------------------------------------------
+ *	Makes the GL context current, clears the framebuffer, and begins
+ *	a NanoVG frame. Updates the drawing context structure with window
+ *	dimensions and NanoVG context.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE int
@@ -415,18 +431,20 @@ TkGlfwBeginDraw(
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwEndDraw --
  *
- *   End a drawing operation. Ends the NanoVG frame and swaps buffers.
- *   No-ops for nested frames.
+ *	End a drawing operation. Ends the NanoVG frame and swaps buffers.
+ *	No-ops for nested frames.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Ends the NanoVG frame and swaps buffers for non-nested frames.
- * ---------------------------------------------------------------
+ *	Ends the NanoVG frame and swaps buffers for non-nested frames.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
@@ -445,19 +463,21 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwGetNVGContext --
  *
- *   Return the global NanoVG context.  Callers that need to do font
- *   measurement outside a BeginDraw/EndDraw pair must ensure a GL
- *   context is current themselves (use TkGlfwGetNVGContextForMeasure).
+ *	Return the global NanoVG context.  Callers that need to do font
+ *	measurement outside a BeginDraw/EndDraw pair must ensure a GL
+ *	context is current themselves (use TkGlfwGetNVGContextForMeasure).
  *
  * Results:
- *   The NVGcontext pointer, or NULL if not yet initialized.
+ *	The NVGcontext pointer, or NULL if not yet initialized.
  *
  * Side effects:
- *   None.
- * ---------------------------------------------------------------
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE NVGcontext *
@@ -467,18 +487,20 @@ TkGlfwGetNVGContext(void)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwGetNVGContextForMeasure --
  *
- *   Return the NanoVG context with the shared GL context current,
- *   suitable for font measurement outside a draw frame.
+ *	Return the NanoVG context with the shared GL context current,
+ *	suitable for font measurement outside a draw frame.
  *
  * Results:
- *   Returns the NanoVG context or NULL on failure.
+ *	Returns the NanoVG context or NULL on failure.
  *
  * Side effects:
- *   Makes the shared GL context current if no context is current.
- * ---------------------------------------------------------------
+ *	Makes the shared GL context current if no context is current.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE NVGcontext *
@@ -491,17 +513,19 @@ TkGlfwGetNVGContextForMeasure(void)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwProcessEvents --
  *
- *   Process pending GLFW events. Called from the Tk event loop.
+ *	Process pending GLFW events. Called from the Tk event loop.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Polls and dispatches GLFW events, flushes the Wayland display.
- * ---------------------------------------------------------------
+ *	Polls and dispatches GLFW events.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
@@ -513,23 +537,27 @@ TkGlfwProcessEvents(void)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * Color / GC utilities
- * ---------------------------------------------------------------
+ *
+ *----------------------------------------------------------------------
  */
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwXColorToNVG --
  *
- *   Convert an XColor structure to an NVGcolor.
+ *	Convert an XColor structure to an NVGcolor.
  *
  * Results:
- *   Returns an NVGcolor value.
+ *	Returns an NVGcolor value.
  *
  * Side effects:
- *   None.
- * ---------------------------------------------------------------
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE NVGcolor
@@ -540,17 +568,19 @@ TkGlfwXColorToNVG(XColor *xcolor)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwPixelToNVG --
  *
- *   Convert a 24-bit RGB pixel value to an NVGcolor.
+ *	Convert a 24-bit RGB pixel value to an NVGcolor.
  *
  * Results:
- *   Returns an NVGcolor value.
+ *	Returns an NVGcolor value.
  *
  * Side effects:
- *   None.
- * ---------------------------------------------------------------
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE NVGcolor
@@ -560,18 +590,20 @@ TkGlfwPixelToNVG(unsigned long pixel)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkGlfwApplyGC --
  *
- *   Apply settings from a graphics context to the NanoVG context.
+ *	Apply settings from a graphics context to the NanoVG context.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Modifies the NanoVG context's fill color, stroke color, line
- *   width, line caps, and line joins based on the GC values.
- * ---------------------------------------------------------------
+ *	Modifies the NanoVG context's fill color, stroke color, line
+ *	width, line caps, and line joins based on the GC values.
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
@@ -599,25 +631,29 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * Tk platform entry points
- * ---------------------------------------------------------------
+ *
+ *----------------------------------------------------------------------
  */
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkpInit --
  *
- *   Initialize the Tk platform-specific layer for Wayland/GLFW.
- *   Called during interpreter initialization.
+ *	Initialize the Tk platform-specific layer for Wayland/GLFW.
+ *	Called during interpreter initialization.
  *
  * Results:
- *   TCL_OK on success, TCL_ERROR on failure.
+ *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *   Initializes GLFW, Wayland protocols, NanoVG, and various
- *   Tk extensions (tray, system notifications, printing, accessibility).
- * ---------------------------------------------------------------
+ *	Initializes GLFW, Wayland protocols, NanoVG, and various
+ *	Tk extensions (tray, system notifications, printing, accessibility).
+ *
+ *----------------------------------------------------------------------
  */
 
 int
@@ -634,17 +670,19 @@ TkpInit(Tcl_Interp *interp)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkpGetAppName --
  *
- *   Extract the application name from argv0 for use in window titles.
+ *	Extract the application name from argv0 for use in window titles.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Appends the application name to the Tcl_DString.
- * ---------------------------------------------------------------
+ *	Appends the application name to the Tcl_DString.
+ *
+ *----------------------------------------------------------------------
  */
 
 void
@@ -657,17 +695,19 @@ TkpGetAppName(Tcl_Interp *interp, Tcl_DString *namePtr)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * TkpDisplayWarning --
  *
- *   Display a warning message to stderr.
+ *	Display a warning message to stderr.
  *
  * Results:
- *   None.
+ *	None.
  *
  * Side effects:
- *   Writes the warning message to the standard error channel.
- * ---------------------------------------------------------------
+ *	Writes the warning message to the standard error channel.
+ *
+ *----------------------------------------------------------------------
  */
 
 void
@@ -683,9 +723,11 @@ TkpDisplayWarning(const char *msg, const char *title)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * Window mapping list
- * ---------------------------------------------------------------
+ *
+ *----------------------------------------------------------------------
  */
 
 WindowMapping *
@@ -736,9 +778,11 @@ CleanupAllMappings(void)
 }
 
 /*
- * ---------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * Miscellaneous accessors
- * ---------------------------------------------------------------
+ *
+ *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE GLFWwindow *
