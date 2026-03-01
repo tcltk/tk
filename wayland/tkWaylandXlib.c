@@ -1402,21 +1402,15 @@ TkpSync(
  
  /* Opaque no-op display structure. */
 typedef struct {
-    int no_op;
+	int no_op; 
 } NoOpDisplay;
 
 
 Display *
 XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
 {
-
-    NoOpDisplay *none = ckalloc(sizeof(NoOpDisplay));
-    if (!none) {
-        return NULL;
-    }
-    memset(none, 0, sizeof(NoOpDisplay));
-
-    return (Display *)none;
+    static NoOpDisplay *d;
+    return (Display *)&d;
 }
 
 /*
@@ -1437,11 +1431,8 @@ XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
 
 int
 XCloseDisplay(Display *display)
-{
-    if (display) {
-        ckfree(display);
-    }
-    return 0;
+{ 
+   return 0;
 }
 
 

@@ -1496,7 +1496,7 @@ tkWaylandFocus.o: $(WAYLAND_DIR)/tkWaylandFocus.c
 tkWaylandFont.o: $(WAYLAND_DIR)/tkWaylandFont.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFont.c
 
-tkWaylandGC.o: $(WAYLAND_DIR)/tkWaylandFont.c
+tkWaylandGC.o: $(WAYLAND_DIR)/tkWaylandGC.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandGC.c
 
 tkWaylandImage.o: $(WAYLAND_DIR)/tkWaylandImage.c
@@ -1532,7 +1532,7 @@ tkWaylandSysTray.o: $(WAYLAND_DIR)/tkWaylandSysTray.c
 tkWaylandXId.o: $(WAYLAND_DIR)/tkWaylandXId.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXId.c
 
-tkWaylandXlib.o: $(WAYLAND_DIR)/tkWaylandFont.c
+tkWaylandXlib.o: $(WAYLAND_DIR)/tkWaylandXlib.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXlib.c
 
 tkWaylandWm.o: $(WAYLAND_DIR)/tkWaylandWm.c
