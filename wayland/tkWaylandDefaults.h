@@ -1,36 +1,34 @@
 /*
-
-- tkWaylandDefault.h –
-- 
-- This file defines the defaults for all options for all of
-- the Tk widgets on Wayland systems.
-- 
-- Note: These defaults are identical to tkUnixDefault.h as Tk
-- uses self-drawn widgets on both X11 and Wayland. The widget
-- appearance is determined by the toolkit itself rather than
-- the underlying windowing system.
-- 
-- Copyright © 1991-1994 The Regents of the University of California.
-- Copyright © 1994-1997 Sun Microsystems, Inc.
-- 
-- See the file "license.terms" for information on usage and redistribution
-- of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-  */
+ * tkWaylandDefault.h --
+ *
+ * This file defines the defaults for all options for all of
+ * the Tk widgets on Wayland systems.
+ *
+ * Note: These defaults are identical to tkUnixDefault.h as Tk
+ * uses self-drawn widgets on both X11 and Wayland. The widget
+ * appearance is determined by the toolkit itself rather than
+ * the underlying windowing system.
+ *
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ *
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ */
 
 #ifndef _TKWAYLANDDEFAULT
 #define _TKWAYLANDDEFAULT
 
 /*
-
-- The definitions below provide symbolic names for the default colors.
-- NORMAL_BG -		Normal background color.
-- ACTIVE_BG -		Background color when widget is active.
-- SELECT_BG -		Background color for selected text.
-- TROUGH -		Background color for troughs in scales and scrollbars.
-- INDICATOR -		Color for indicator when button is selected.
-- DISABLED -		Foreground color when widget is disabled.
-- PLACEHOLDER_FG -	Foreground color for placeholder text.
-  */
+ * The definitions below provide symbolic names for the default colors.
+ * NORMAL_BG -		Normal background color.
+ * ACTIVE_BG -		Background color when widget is active.
+ * SELECT_BG -		Background color for selected text.
+ * TROUGH -		Background color for troughs in scales and scrollbars.
+ * INDICATOR -		Color for indicator when button is selected.
+ * DISABLED -		Foreground color when widget is disabled.
+ * PLACEHOLDER_FG -	Foreground color for placeholder text.
+ */
 
 #define BLACK		"#000000"
 #define WHITE		"#ffffff"
@@ -44,9 +42,8 @@
 #define PLACEHOLDER_FG	"#b3b3b3"	/* grey70 */
 
 /*
-
-- Defaults for labels, buttons, checkbuttons, and radiobuttons:
-  */
+ * Defaults for labels, buttons, checkbuttons, and radiobuttons:
+ */
 
 #define DEF_BUTTON_ANCHOR		"center"
 #define DEF_BUTTON_ACTIVE_BG_COLOR	ACTIVE_BG
@@ -104,9 +101,8 @@
 #define DEF_CHECKBUTTON_VARIABLE	""
 
 /*
-
-- Defaults for canvases:
-  */
+ * Defaults for canvases:
+ */
 
 #define DEF_CANVAS_BG_COLOR		NORMAL_BG
 #define DEF_CANVAS_BG_MONO		WHITE
@@ -140,9 +136,8 @@
 #define DEF_CANVAS_Y_SCROLL_INCREMENT	"0"
 
 /*
-
-- Defaults for entries:
-  */
+ * Defaults for entries:
+ */
 
 #define DEF_ENTRY_BG_COLOR		WHITE
 #define DEF_ENTRY_BG_MONO		WHITE
@@ -183,9 +178,8 @@
 #define DEF_ENTRY_WIDTH			"20"
 
 /*
-
-- Defaults for frames:
-  */
+ * Defaults for frames:
+ */
 
 #define DEF_FRAME_BG_COLOR		NORMAL_BG
 #define DEF_FRAME_BG_IMAGE		NULL
@@ -209,9 +203,8 @@
 #define DEF_FRAME_WIDTH			"0"
 
 /*
-
-- Defaults for labelframes:
-  */
+ * Defaults for labelframes:
+ */
 
 #define DEF_LABELFRAME_BORDER_WIDTH	"2"
 #define DEF_LABELFRAME_CLASS		"Labelframe"
@@ -222,9 +215,8 @@
 #define DEF_LABELFRAME_LABELANCHOR	"nw"
 
 /*
-
-- Defaults for listboxes:
-  */
+ * Defaults for listboxes:
+ */
 
 #define DEF_LISTBOX_ACTIVE_STYLE	"dotbox"
 #define DEF_LISTBOX_BG_COLOR		WHITE
@@ -255,9 +247,8 @@
 #define DEF_LISTBOX_WIDTH		"20"
 
 /*
-
-- Defaults for individual entries of menus:
-  */
+ * Defaults for individual entries of menus:
+ */
 
 #define DEF_MENU_ENTRY_ACTIVE_BG	NULL
 #define DEF_MENU_ENTRY_ACTIVE_FG	NULL
@@ -284,9 +275,8 @@
 #define DEF_MENU_ENTRY_SELECT		NULL
 
 /*
-
-- Defaults for menus overall:
-  */
+ * Defaults for menus overall:
+ */
 
 #define DEF_MENU_ACTIVE_BG_COLOR	ACTIVE_BG
 #define DEF_MENU_ACTIVE_BG_MONO		BLACK
@@ -313,9 +303,8 @@
 #define DEF_MENU_TYPE			"normal"
 
 /*
-
-- Defaults for menubuttons:
-  */
+ * Defaults for menubuttons:
+ */
 
 #define DEF_MENUBUTTON_ANCHOR		"center"
 #define DEF_MENUBUTTON_ACTIVE_BG_COLOR	ACTIVE_BG
@@ -352,9 +341,8 @@
 #define DEF_MENUBUTTON_WRAP_LENGTH	"0"
 
 /*
-
-- Defaults for messages:
-  */
+ * Defaults for messages:
+ */
 
 #define DEF_MESSAGE_ANCHOR		"center"
 #define DEF_MESSAGE_ASPECT		"150"
@@ -377,9 +365,8 @@
 #define DEF_MESSAGE_WIDTH		"0"
 
 /*
-
-- Defaults for panedwindows
-  */
+ * Defaults for panedwindows
+ */
 
 #define DEF_PANEDWINDOW_BG_COLOR	NORMAL_BG
 #define DEF_PANEDWINDOW_BG_MONO		WHITE
@@ -400,9 +387,8 @@
 #define DEF_PANEDWINDOW_WIDTH		""
 
 /*
-
-- Defaults for panedwindow panes
-  */
+ * Defaults for panedwindow panes
+ */
 
 #define DEF_PANEDWINDOW_PANE_AFTER	""
 #define DEF_PANEDWINDOW_PANE_BEFORE	""
@@ -416,9 +402,8 @@
 #define DEF_PANEDWINDOW_PANE_STRETCH	"last"
 
 /*
-
-- Defaults for scales:
-  */
+ * Defaults for scales:
+ */
 
 #define DEF_SCALE_ACTIVE_BG_COLOR	ACTIVE_BG
 #define DEF_SCALE_ACTIVE_BG_MONO	BLACK
@@ -457,9 +442,8 @@
 #define DEF_SCALE_WIDTH			"15"
 
 /*
-
-- Defaults for scrollbars:
-  */
+ * Defaults for scrollbars:
+ */
 
 #define DEF_SCROLLBAR_ACTIVE_BG_COLOR	ACTIVE_BG
 #define DEF_SCROLLBAR_ACTIVE_BG_MONO	BLACK
@@ -484,9 +468,8 @@
 #define DEF_SCROLLBAR_WIDTH		"11"
 
 /*
-
-- Defaults for texts:
-  */
+ * Defaults for texts:
+ */
 
 #define DEF_TEXT_AUTO_SEPARATORS	"1"
 #define DEF_TEXT_BG_COLOR		WHITE
@@ -535,26 +518,23 @@
 #define DEF_TEXT_YSCROLL_COMMAND	""
 
 /*
-
-- Defaults for canvas text:
-  */
+ * Defaults for canvas text:
+ */
 
 #define DEF_CANVTEXT_FONT		"TkDefaultFont"
 
 /*
-
-- Defaults for canvas items
-- (arcs, bitmaps, lines, polygons, rectangles, and ovals):
-  */
+ * Defaults for canvas items
+ * (arcs, bitmaps, lines, polygons, rectangles, and ovals):
+ */
 
 #define DEF_CANVBMAP_FG			BLACK
 #define DEF_CANVITEM_OUTLINE		BLACK
 
 /*
-
-- Defaults for toplevels (most of the defaults for frames also apply
-- to toplevels):
-  */
+ * Defaults for toplevels (most of the defaults for frames also apply
+ * to toplevels):
+ */
 
 #define DEF_TOPLEVEL_CLASS		"Toplevel"
 #define DEF_TOPLEVEL_MENU		""
@@ -562,9 +542,8 @@
 #define DEF_TOPLEVEL_USE		""
 
 /*
-
-- Defaults for busy windows:
-  */
+ * Defaults for busy windows:
+ */
 
 #define DEF_BUSY_CURSOR			"watch"
 
