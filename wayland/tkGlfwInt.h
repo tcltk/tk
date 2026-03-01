@@ -40,6 +40,7 @@ typedef struct {
     GLFWwindow *activeWindow;      /* Window owning the current frame */
     int         nestedFrame;       /* Frame within a frame */
     int         decorFontId;       /* NVG font ID for decorations */
+    int         clearPending;/* 1 = next BeginDraw should glClear */
 } TkGlfwContext;
 
 /*
@@ -216,6 +217,8 @@ typedef struct {
     GLFWwindow *glfwWindow;  /* Associated GLFW window */
     int         width;       /* Drawable width */
     int         height;      /* Drawable height */
+    int         offsetX;     /* Offset of child  widget */
+    int         offsetY;     /* Offset of child  widget */
     int         nestedFrame; /* Frame within frame */
 } TkWaylandDrawingContext;
 

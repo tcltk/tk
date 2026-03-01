@@ -369,6 +369,9 @@ TkWaylandQueueExposeEvent(
     evPtr->xEvent.xexpose.height     = height;
     evPtr->xEvent.xexpose.count      = 0;
 
+    TkGlfwContext *ctx = TkGlfwGetContext();
+    ctx->clearPending = 1;
+
     Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
 }
  
