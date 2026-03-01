@@ -99,7 +99,9 @@ TkGlfwGetContext(void) { return &glfwContext; }
 MODULE_SCOPE void
 TkGlfwErrorCallback(int error, const char *desc)
 {
-    fprintf(stderr, "GLFW Error %d: %s\n", error, desc);
+    if (glfwContext.initialized && glfwContext.mainWindow) {
+        fprintf(stderr, "GLFW Error %d: %s\n", error, desc);
+    }
 }
 
 /*
@@ -206,27 +208,32 @@ TkGlfwInitialize(void)
 MODULE_SCOPE void
 TkGlfwShutdown(TCL_UNUSED(ClientData))
 {
-
     if (!glfwContext.initialized)
         return;
 
+    /* Clean up any internal Tk/Wayland resources. */
     CleanupAllMappings();
     TkWaylandCleanupPixmapStore();
 
-    if (glfwContext.vg) {
+    /* Delete NanoVG context if it exists. */
+    if (glfwContext.vg && glfwContext.mainWindow) {
         glfwMakeContextCurrent(glfwContext.mainWindow);
         nvgDeleteGLES2(glfwContext.vg);
         glfwContext.vg = NULL;
         TkWaylandSetNVGContext(NULL);
     }
 
+    /* Destroy main window if it exists. */
     if (glfwContext.mainWindow) {
         glfwDestroyWindow(glfwContext.mainWindow);
         glfwContext.mainWindow = NULL;
     }
 
-    glfwTerminate();
-    glfwContext.initialized = 0;
+    /* Only terminate GLFW if it was initialized. */
+    if (glfwContext.initialized) {
+        glfwTerminate();
+        glfwContext.initialized = 0;
+    }
 }
 
 /*

@@ -47,73 +47,84 @@
  *
  * TkpOpenDisplay --
  *
- *	Tk platform entry point: allocate a TkDisplay.  GLFW is
- *	initialized here so that primary-monitor dimensions are available
- *	immediately for the Screen struct.
+ *  Tk platform entry point: allocate a TkDisplay for Wayland/GLFW.
+ *  Sets up Screen, Visual, and ensures mwidth/mheight are valid.
  *
  * Results:
- *	Pointer to a newly allocated TkDisplay, or NULL on failure.
+ *  Pointer to newly allocated TkDisplay, or NULL on failure.
  *
  * Side effects:
- *	Calls glfwInit().  Allocates memory for TkDisplay.
+ *  Allocates memory for Display, Screen, Visual, TkDisplay.
+ *  Calls glfwInit().
  *
  *----------------------------------------------------------------------
  */
-
 TkDisplay *
-TkpOpenDisplay(
-    TCL_UNUSED(const char *))   /* display_name */
+TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
 {
-   _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
-    Screen           *screen;
-    Visual           *visual;
-    TkDisplay        *dispPtr;
-
+    /* Allocate Display. */
+    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
+    if (!display) return NULL;
     bzero(display, sizeof(Display));
 
-    if (!glfwInit()) {
+    /* Allocate Screen. */
+    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
+    if (!screen) {
+        ckfree(display);
         return NULL;
     }
 
-	screen = (Screen *)ckalloc(sizeof(Screen));
-
-    visual = (Visual *)ckalloc(sizeof(Visual));
+    /* Allocate Visual. */
+    Visual *visual = (Visual *)ckalloc(sizeof(Visual));
+    if (!visual) {
+        ckfree(screen);
+        ckfree(display);
+        return NULL;
+    }
     bzero(visual, sizeof(Visual));
-    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
-  
-    /* Screen setup – use primary monitor dimensions when available. */
-    {
-        int sw = 1920, sh = 1080;
-        GLFWmonitor *mon = glfwGetPrimaryMonitor();
-        if (mon != NULL) {
-            const GLFWvidmode *mode = glfwGetVideoMode(mon);
-            if (mode != NULL) { sw = mode->width; sh = mode->height; }
-        }
-        screen->width   = sw;
-        screen->height  = sh;
-        screen->mwidth  = (sw * 254) / 720;  /* approx 96 dpi */
-        screen->mheight = (sh * 254) / 720;
+
+    /* Initialize GLFW (Wayland support). */
+    if (!glfwInit()) {
+        ckfree(visual);
+        ckfree(screen);
+        ckfree(display);
+        return NULL;
     }
 
+    /* Fill screen dimensions. */
+    int sw = 1920, sh = 1080;
+    GLFWmonitor *mon = glfwGetPrimaryMonitor();
+    if (mon) {
+        const GLFWvidmode *mode = glfwGetVideoMode(mon);
+        if (mode) { sw = mode->width; sh = mode->height; }
+    }
+    screen->width  = sw;
+    screen->height = sh;
+    screen->mwidth  = (sw * 254.0) / 720.0;
+    screen->mheight = (sh * 254.0) / 720.0;
+
+    /* Display. */
     display->screens        = screen;
     display->nscreens       = 1;
     display->default_screen = 0;
     display->display_name   = (char *)"wayland-0";
 
-    screen->display         = (Display *)display;
-    screen->root            = 1;
-    screen->root_visual     = visual;
-    screen->root_depth      = 24;
+    screen->display     = (Display *)display;
+    screen->root        = 1;
+    screen->root_visual = visual;
+    screen->root_depth  = 24;
 
-    visual->visualid        = 1;
-    visual->class           = TrueColor;
-    visual->bits_per_rgb    = 8;
-    visual->map_entries     = 256;
-    visual->red_mask        = 0xFF0000;
-    visual->green_mask      = 0x00FF00;
-    visual->blue_mask       = 0x0000FF;
+    /* Visual. */
+    visual->visualid     = 1;
+    visual->class        = TrueColor;
+    visual->bits_per_rgb = 8;
+    visual->map_entries  = 256;
+    visual->red_mask     = 0xFF0000;
+    visual->green_mask   = 0x00FF00;
+    visual->blue_mask    = 0x0000FF;
 
-    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+    /* Allocate TkDisplay once. */
+    TkDisplay *dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     bzero(dispPtr, sizeof(TkDisplay));
     dispPtr->display = (Display *)display;
 
@@ -139,19 +150,9 @@ TkpOpenDisplay(
  */
 
 void
-TkpCloseDisplay(
-    TkDisplay *dispPtr)
+TkpCloseDisplay(TkDisplay *dispPtr)
 {
-     _XPrivDisplay display = (_XPrivDisplay)dispPtr->display;
-
-    if (display->screens != NULL) {
-        if (display->screens->root_visual != NULL) {
-            ckfree(display->screens->root_visual);
-        }
-        ckfree(display->screens);
-    }
-    ckfree(display);
-    ckfree(dispPtr);
+	/* no-op */
 }
 
 /* Graphics context functions. */
