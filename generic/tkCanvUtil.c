@@ -49,10 +49,10 @@ static const Tk_SmoothMethod tkRawSmoothMethod = {
 static void		SmoothMethodCleanupProc(void *clientData,
 			    Tcl_Interp *interp);
 static SmoothAssocData *InitSmoothMethods(Tcl_Interp *interp);
-static int		DashConvert(char *l, const char *p, int n,
+static int		DashConvert(char *l, const char *p, Tcl_Size n,
 			    double width);
 static void		TranslateAndAppendCoords(TkCanvas *canvPtr,
-			    double x, double y, XPoint *outArr, int numOut);
+			    double x, double y, XPoint *outArr, Tcl_Size numOut);
 static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
 
 #define ABS(a) ((a>=0)?(a):(-(a)))
@@ -899,12 +899,12 @@ Tk_GetDash(
     if ((unsigned) ABS(dash->number) > sizeof(char *)) {
 	Tcl_Free(dash->pattern.pt);
     }
-    if (argc > (int) sizeof(char *)) {
+    if (argc > (int)sizeof(char *)) {
 	dash->pattern.pt = pt = (char *)Tcl_Alloc(argc);
     } else {
 	pt = dash->pattern.array;
     }
-    dash->number = argc;
+    dash->number = (int)argc;
 
     largv = argv;
     while (argc > 0) {
@@ -915,7 +915,7 @@ Tk_GetDash(
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", (char *)NULL);
 	    goto syntaxError;
 	}
-	*pt++ = i;
+	*pt++ = (char)i;
 	argc--;
 	largv++;
     }
@@ -1527,7 +1527,7 @@ DashConvert(
     char *l,			/* Must be at least 2*n chars long, or NULL to
 				 * indicate "just check syntax". */
     const char *p,		/* String to parse. */
-    int n,			/* Length of string to parse, or -1 to
+    Tcl_Size n,			/* Length of string to parse, or -1 to
 				 * indicate that strlen() should be used. */
     double width)		/* Width of line. */
 {
@@ -1546,7 +1546,7 @@ DashConvert(
 	case ' ':
 	    if (result) {
 		if (l) {
-		    l[-1] += intWidth + 1;
+		    l[-1] += (char)(intWidth + 1);
 		}
 		continue;
 	    }
@@ -1567,8 +1567,8 @@ DashConvert(
 	    return -1;
 	}
 	if (l) {
-	    *l++ = size * intWidth;
-	    *l++ = 4 * intWidth;
+	    *l++ = (char)(size * intWidth);
+	    *l++ = (char)(4 * intWidth);
 	}
 	result += 2;
     }
@@ -1602,7 +1602,7 @@ TranslateAndAppendCoords(
     double x,			/* Coordinates in canvas space. */
     double y,
     XPoint *outArr,		/* Write results into this array */
-    int numOut)			/* Num of prior entries in outArr[] */
+    Tcl_Size numOut)			/* Num of prior entries in outArr[] */
 {
     double tmp;
 
@@ -1658,22 +1658,22 @@ TranslateAndAppendCoords(
  *--------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkCanvTranslatePath(
     TkCanvas *canvPtr,		/* The canvas */
-    int numVertex,		/* Number of vertices specified by
+    Tcl_Size numVertex,		/* Number of vertices specified by
 				 * coordArr[] */
     double *coordArr,		/* X and Y coordinates for each vertex */
     TCL_UNUSED(int),		/* True if this is a closed polygon */
     XPoint *outArr)		/* Write results here, if not NULL */
 {
-    int numOutput = 0;		/* Number of output coordinates */
+    Tcl_Size numOutput = 0;		/* Number of output coordinates */
     double lft, rgh;		/* Left and right sides of the bounding box */
     double top, btm;		/* Top and bottom sizes of the bounding box */
     double *tempArr;		/* Temporary storage used by the clipper */
     double *a, *b, *t;		/* Pointers to parts of the temporary
 				 * storage */
-    int i, j;			/* Loop counters */
+    Tcl_Size i, j;			/* Loop counters */
     double limit[4];		/* Boundries at which clipping occurs */
     double staticSpace[480];	/* Temp space from the stack */
 
