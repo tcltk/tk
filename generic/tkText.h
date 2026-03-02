@@ -792,6 +792,8 @@ typedef struct TkText {
     Tcl_Obj *localeObj;	/* locale */
 } TkText;
 
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
+
 /*
  * Flag values for TkText records:
  *

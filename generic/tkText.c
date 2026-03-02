@@ -97,7 +97,6 @@ static const Tk_ObjCustomOption lineOption = {
     NULL,			/* freeProc */
     0
 };
-
 /*
  * Information used to parse text configuration options:
  */
@@ -179,6 +178,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-locale", "locale", "Locale",
 	"C", offsetof(TkText, localeObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_CUSTOM, "-locale1", "locale", "Locale",
+	"C", TCL_INDEX_NONE, offsetof(TkText, locale),
+	TK_OPTION_NULL_OK, &TkLocaleOption, 0},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndo),
 	TK_OPTION_DONT_SET_DEFAULT, 0, 0},

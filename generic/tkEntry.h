@@ -298,6 +298,8 @@ enum selelement {
     SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NONE, SEL_NULL, SEL_ENTRY
 };
 
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
+
 /*
  * Declaration of functions used in the implementation of the native side of
  * the Entry widget.
