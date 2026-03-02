@@ -77,8 +77,14 @@ typedef struct {
     GC textGC;			/* For drawing normal text. */
     Tk_3DBorder selBorder;	/* Borders and backgrounds for selected
 				 * elements. */
+    Tk_3DBorder inactiveSelBorder;
+				/* Borders and backgrounds for selected
+				 * elements when they don't have the focus. */
     Tcl_Obj *selBorderWidthObj;	/* Width of border around selection. */
     XColor *selFgColorPtr;	/* Foreground color for selected elements. */
+    XColor *inactiveSelFgColorPtr;
+				/* Foreground color for selected elements when
+				 * they don't have the focus. */
     GC selTextGC;		/* For drawing selected text. */
     int width;			/* Desired width of window, in characters. */
     int height;			/* Desired height of window, in lines. */
@@ -269,8 +275,17 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH,
 	 offsetof(Listbox, highlightWidthObj), TCL_INDEX_NONE, 0, 0, 0},
+    {TK_OPTION_BORDER, "-inactiveselectbackground", "inactiveSelectBackground",
+	"Foreground", DEF_LISTBOX_INACTIVE_SELECT_COLOR,
+	TCL_INDEX_NONE, offsetof(Listbox, inactiveSelBorder),
+	TK_OPTION_NULL_OK, DEF_LISTBOX_SELECT_MONO, 0},
+    {TK_OPTION_COLOR, "-inactiveselectforeground", "inactiveSelectForeground",
+	"Background", DEF_LISTBOX_INACTIVE_SELECT_FG_COLOR,
+	TCL_INDEX_NONE, offsetof(Listbox, inactiveSelFgColorPtr),
+	TK_OPTION_NULL_OK, DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_LISTBOX_JUSTIFY, TCL_INDEX_NONE, offsetof(Listbox, justify), TK_OPTION_ENUM_VAR, 0, 0},
+	DEF_LISTBOX_JUSTIFY, TCL_INDEX_NONE, offsetof(Listbox, justify),
+	TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	 DEF_LISTBOX_RELIEF, TCL_INDEX_NONE, offsetof(Listbox, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
@@ -516,29 +531,31 @@ Tk_ListboxObjCmd(
     listPtr			 = (Listbox *)Tcl_Alloc(sizeof(Listbox));
     memset(listPtr, 0, sizeof(Listbox));
 
-    listPtr->tkwin		 = tkwin;
-    listPtr->display		 = Tk_Display(tkwin);
-    listPtr->interp		 = interp;
-    listPtr->widgetCmd		 = Tcl_CreateObjCommand2(interp,
+    listPtr->tkwin		   = tkwin;
+    listPtr->display		   = Tk_Display(tkwin);
+    listPtr->interp		   = interp;
+    listPtr->widgetCmd		   = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(listPtr->tkwin), ListboxWidgetObjCmd, listPtr,
 	    ListboxCmdDeletedProc);
-    listPtr->optionTable	 = optionTables->listboxOptionTable;
-    listPtr->itemAttrOptionTable = optionTables->itemAttrOptionTable;
-    listPtr->selection		 = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
+    listPtr->optionTable	   = optionTables->listboxOptionTable;
+    listPtr->itemAttrOptionTable   = optionTables->itemAttrOptionTable;
+    listPtr->selection		   = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->selection, TCL_ONE_WORD_KEYS);
-    listPtr->itemAttrTable	 = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
+    listPtr->itemAttrTable	   = (Tcl_HashTable *)Tcl_Alloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
-    listPtr->relief		 = TK_RELIEF_RAISED;
-    listPtr->textGC		 = NULL;
-    listPtr->selFgColorPtr	 = NULL;
-    listPtr->selTextGC		 = NULL;
-    listPtr->fullLines		 = 1;
-    listPtr->xScrollUnit	 = 1;
-    listPtr->exportSelection	 = 1;
-    listPtr->cursor		 = NULL;
-    listPtr->state		 = STATE_NORMAL;
-    listPtr->gray		 = None;
-    listPtr->justify             = TK_JUSTIFY_LEFT;
+    listPtr->relief		   = TK_RELIEF_RAISED;
+    listPtr->textGC		   = NULL;
+    listPtr->inactiveSelBorder	   = NULL;
+    listPtr->selFgColorPtr	   = NULL;
+    listPtr->inactiveSelFgColorPtr = NULL;
+    listPtr->selTextGC		   = NULL;
+    listPtr->fullLines		   = 1;
+    listPtr->xScrollUnit	   = 1;
+    listPtr->exportSelection	   = 1;
+    listPtr->cursor		   = NULL;
+    listPtr->state		   = STATE_NORMAL;
+    listPtr->gray		   = None;
+    listPtr->justify               = TK_JUSTIFY_LEFT;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the listbox,
@@ -1934,8 +1951,8 @@ DisplayListbox(
 
 	/*
 	 * If the listbox is enabled, items may be drawn differently; they may
-	 * be drawn selected, or they may have special foreground or
-	 * background colors.
+	 * be drawn selected, or they may have special foreground or background
+	 * colors.
 	 */
 
 	if (listPtr->state & STATE_NORMAL) {
@@ -1944,30 +1961,32 @@ DisplayListbox(
 		 * Selected items are drawn differently.
 		 */
 
-		gc = listPtr->selTextGC;
 		width = Tk_Width(tkwin) - 2 * listPtr->inset;
 		selectedBg = listPtr->selBorder;
+		gc = listPtr->selTextGC;
 
 		/*
-		 * If there is attribute information for this item, adjust the
-		 * drawing accordingly.
+		 * If the widget doesn't have the focus and the value of the
+		 * -inactiveselectbackground option is not empty then use this
+		 * value.  Otherwise, if there is attribute information for
+		 * this item, then adjust the drawing accordingly.
 		 */
 
-		if (entry != NULL) {
-		    attrs = (ItemAttr *)Tcl_GetHashValue(entry);
+		if (!(listPtr->flags & GOT_FOCUS) &&
+			listPtr->inactiveSelBorder) {
+		    selectedBg = listPtr->inactiveSelBorder;
 
-		    /*
-		     * Default GC has the values from the widget at large.
-		     */
-
-		    if (listPtr->selFgColorPtr) {
-			gcValues.foreground = listPtr->selFgColorPtr->pixel;
-		    } else {
-			gcValues.foreground = listPtr->fgColorPtr->pixel;
+		    if (listPtr->inactiveSelFgColorPtr) {
+			gcValues.foreground =
+				listPtr->inactiveSelFgColorPtr->pixel;
+			gcValues.font = Tk_FontId(listPtr->tkfont);
+			gcValues.graphics_exposures = False;
+			mask = GCForeground | GCFont | GCGraphicsExposures;
+			gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
+			freeGC = 1;
 		    }
-		    gcValues.font = Tk_FontId(listPtr->tkfont);
-		    gcValues.graphics_exposures = False;
-		    mask = GCForeground | GCFont | GCGraphicsExposures;
+		} else if (entry != NULL) {
+		    attrs = (ItemAttr *)Tcl_GetHashValue(entry);
 
 		    if (attrs->selBorder != NULL) {
 			selectedBg = attrs->selBorder;
@@ -1975,6 +1994,9 @@ DisplayListbox(
 
 		    if (attrs->selFgColor != NULL) {
 			gcValues.foreground = attrs->selFgColor->pixel;
+			gcValues.font = Tk_FontId(listPtr->tkfont);
+			gcValues.graphics_exposures = False;
+			mask = GCForeground | GCFont | GCGraphicsExposures;
 			gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
 			freeGC = 1;
 		    }
@@ -2036,10 +2058,6 @@ DisplayListbox(
 
 		if (entry != NULL) {
 		    attrs = (ItemAttr *)Tcl_GetHashValue(entry);
-		    gcValues.foreground = listPtr->fgColorPtr->pixel;
-		    gcValues.font = Tk_FontId(listPtr->tkfont);
-		    gcValues.graphics_exposures = False;
-		    mask = GCForeground | GCFont | GCGraphicsExposures;
 
 		    /*
 		     * If the item has its own background color, draw it now.
@@ -2059,6 +2077,9 @@ DisplayListbox(
 		    if ((listPtr->state & STATE_NORMAL)
 			    && attrs->fgColor != NULL) {
 			gcValues.foreground = attrs->fgColor->pixel;
+			gcValues.font = Tk_FontId(listPtr->tkfont);
+			gcValues.graphics_exposures = False;
+			mask = GCForeground | GCFont | GCGraphicsExposures;
 			gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
 			freeGC = 1;
 		    }
@@ -2138,7 +2159,7 @@ DisplayListbox(
      */
 
     Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->borderWidthObj, &borderWidth);
-	Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, listPtr->tkwin, listPtr->highlightWidthObj, &highlightWidth);
     Tk_Draw3DRectangle(tkwin, pixmap, listPtr->normalBorder,
 	    highlightWidth, highlightWidth,
 	    Tk_Width(tkwin) - 2 * highlightWidth,

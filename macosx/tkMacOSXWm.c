@@ -5983,73 +5983,6 @@ InitialWindowBounds(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXResizable --
- *
- *	This function determines if the passed in window is part of a toplevel
- *	window that is resizable. If the window is resizable in the x, y or
- *	both directions, true is returned.
- *
- * Results:
- *	True if resizable, false otherwise.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXResizable(
-    TkWindow *winPtr)		/* Tk window or NULL. */
-{
-    WmInfo *wmPtr;
-
-    if (winPtr == NULL) {
-	return false;
-    }
-    while (winPtr->wmInfoPtr == NULL) {
-	winPtr = winPtr->parentPtr;
-    }
-
-    wmPtr = winPtr->wmInfoPtr;
-    if ((wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) &&
-	    (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE)) {
-	return false;
-    } else {
-	return true;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGrowToplevel --
- *
- *	The function is invoked when the user clicks in the grow region of a
- *	Tk window. The function will handle the dragging procedure and not
- *	return until completed. Finally, the function may place information
- *	Tk's event queue is the window was resized.
- *
- * Results:
- *	True if events were placed on event queue, false otherwise.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXGrowToplevel(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(XPoint))
-{
-    return false;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkSetWMName --
  *
  *	Set the title for a toplevel window. If the window is embedded, do not
@@ -6216,7 +6149,7 @@ TkMacOSXIsWindowZoomed(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkMacOSXZoomToplevel(
     void *whichWindow,		/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
@@ -6898,51 +6831,6 @@ TkMacOSXMakeRealWindowExist(
 /*
  *----------------------------------------------------------------------
  *
- * TkpRedrawWidget --
- *
- *      This is a stub called only from tkTextDisp.c.  It was introduced
- *      to deal with an issue in macOS 10.14 and is not needed
- *      even for that OS with updateLayer in use.  It would add the widget bounds
- *      to the dirtyRect, which is not currently used, and set the
- *      TkNeedsDisplay flag.  Now it is a no-op.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The widget's bounding rectangle is marked as dirty.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpRedrawWidget(Tk_Window tkwin) {
-    (void) tkwin;
-#if 0
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    NSWindow *w = nil;
-    Rect tkBounds;
-    NSRect bounds;
-
-    if (winPtr && winPtr->window) {
-	w = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    }
-    if (w) {
-	TKContentView *view = [w contentView];
-	TkMacOSXWinBounds(winPtr, &tkBounds);
-	bounds = NSMakeRect(tkBounds.left,
-			    [view bounds].size.height - tkBounds.bottom,
-			    tkBounds.right - tkBounds.left,
-			    tkBounds.bottom - tkBounds.top);
-	[view setNeedsDisplay:YES];
-    }
-#endif
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXSetScrollbarGrow --
  *
  *	Sets a flag for a toplevel window indicating that the passed Tk
@@ -7052,7 +6940,7 @@ TkpGetWrapperWindow(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -7110,30 +6998,7 @@ TkpWmSetState(
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 setStateEnd:
-    return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpIsWindowFloating --
- *
- *	Returns 1 if a window is floating, 0 otherwise.
- *
- * Results:
- *	1 or 0 depending on window's floating attribute.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpIsWindowFloating(
-    void *wRef)
-{
-    return [(NSWindow *)wRef level] == kCGFloatingWindowLevel;
+    return true;
 }
 
 /*

@@ -3231,7 +3231,7 @@ TkpMenuNotifyToplevelCreate(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GetMenuHWND --
+ * TkGetMenuHWND --
  *
  *	This function returns the HWND of a hidden menu Window that processes
  *	messages of a popup menu. This hidden menu window is used to handle
@@ -3248,7 +3248,7 @@ TkpMenuNotifyToplevelCreate(
  */
 
 HWND
-Tk_GetMenuHWND(
+TkGetMenuHWND(
     TCL_UNUSED(Tk_Window))
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)

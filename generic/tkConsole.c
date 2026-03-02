@@ -226,7 +226,7 @@ Tk_InitConsoleChannels(
 	return;
     }
 
-    consoleInitPtr = (int *)Tcl_GetThreadData(&consoleInitKey, (int) sizeof(int));
+    consoleInitPtr = (int *)Tcl_GetThreadData(&consoleInitKey, sizeof(int));
     if (*consoleInitPtr) {
 	/*
 	 * We've already initialized console channels in this thread.
