@@ -532,8 +532,12 @@ else
     # Final windowing system decision
     if test "$enable_wayland" = "yes"; then
         TK_WINDOWINGSYSTEM=WAYLAND
+		WAYLAND_LDFLAGS="-Wl,-Bsymbolic-functions"
+		AC_SUBST(WAYLAND_LDFLAGS)
     else
         TK_WINDOWINGSYSTEM=X11
+        WAYLAND_LDFLAGS=""
+		AC_SUBST(WAYLAND_LDFLAGS)
         SC_PATH_X
     fi
 fi

@@ -33,7 +33,6 @@ static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
 static void HeartbeatTimerProc(void *clientData);
-static void TkWaylandHandleExposeEvents(void);
 static int TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
 
 /* Heartbeat timer constants */
@@ -222,7 +221,6 @@ TkWaylandNotifyExitHandler(
     tsdPtr->initialized = false;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -251,19 +249,16 @@ TkWaylandExposeEventProc(
     if (!(flags & TCL_WINDOW_EVENTS)) return 0;
     if (exposePtr->winPtr == NULL)    return 1;
 
+    /* Update dimensions from mapping if this is a toplevel. */
     mapping = FindMappingByTk(exposePtr->winPtr);
-    if (mapping == NULL) {
-        Tk_HandleEvent(&exposePtr->xEvent);
-        return 1;
-    }
-
-    if (mapping->width > 1 && mapping->height > 1) {
+    if (mapping && mapping->width > 1 && mapping->height > 1) {
         exposePtr->winPtr->changes.width  = mapping->width;
         exposePtr->winPtr->changes.height = mapping->height;
         exposePtr->xEvent.xexpose.width   = mapping->width;
         exposePtr->xEvent.xexpose.height  = mapping->height;
     }
 
+    /* Deliver the event — BeginDraw's tree walk handles child drawables. */
     Tk_HandleEvent(&exposePtr->xEvent);
     return 1;
 }
@@ -288,7 +283,7 @@ TkWaylandExposeEventProc(
  *----------------------------------------------------------------------
  */
 
-static void
+void
 TkWaylandHandleExposeEvents(void)
 {
     WindowMapping           *m;
@@ -341,16 +336,14 @@ TkWaylandQueueExposeEvent(
     int x, int y, int width, int height)
 {
     TkWaylandExposeEvent *evPtr;
-    WindowMapping        *mapping;
 
     if (winPtr == NULL) return;
     if (winPtr->window == None) return;
 
-    mapping = FindMappingByTk(winPtr);
-    if (mapping == NULL) return;
-
-    if (width  <= 1 && mapping->width  > 1) width  = mapping->width;
-    if (height <= 1 && mapping->height > 1) height = mapping->height;
+    /* For child widgets with no direct mapping, use their own
+     * dimensions if none were supplied. */
+    if (width  <= 1) width  = winPtr->changes.width;
+    if (height <= 1) height = winPtr->changes.height;
 
     if (width <= 1 || height <= 1) return;
 

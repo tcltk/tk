@@ -147,6 +147,9 @@ TkGlfwWindowSizeCallback(
     winPtr->changes.width = clientWidth;
     winPtr->changes.height = clientHeight;
 
+
+    TkGlfwUpdateWindowSize(window, width, height);
+    
     /* Generate ConfigureNotify event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = ConfigureNotify;
@@ -165,6 +168,7 @@ TkGlfwWindowSizeCallback(
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
+ TkWaylandHandleExposeEvents();
     TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
 
 }
