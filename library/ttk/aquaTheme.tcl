@@ -10,7 +10,8 @@ namespace eval ttk::theme::aqua {
     # TEntry, TCombobox, and TSpinbox in the "!focus" state.
 
     proc setInactiveSelectBgColor {} {
-	lassign [winfo rgb systemUnemphasizedSelectedTextBackgroundColor] r g b
+	lassign [winfo rgb . systemUnemphasizedSelectedTextBackgroundColor] \
+	    r g b
 	if {$r != 32767} {
 	    # macOS 10.14+
 	    set inactiveSelBg systemUnemphasizedSelectedTextBackgroundColor
