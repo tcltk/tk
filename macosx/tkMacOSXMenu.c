@@ -103,6 +103,8 @@ static int	GenerateMenuSelectEvent(TKMenu *menu, NSMenuItem *menuItem);
 static void	MenuSelectEvent(TkMenu *menuPtr);
 static void	RecursivelyClearActiveMenu(TkMenu *menuPtr);
 static int	ModifierCharWidth(Tk_Font tkfont);
+static void ClearMenubarActive(void);
+
 
 #pragma mark TkBackgroundLoop
 
@@ -530,7 +532,7 @@ static Bool runMenuCommand = true;
 	backgroundLoop = nil;
     }
     if (!inPostMenu) {
-	TkMacOSXClearMenubarActive();
+	ClearMenubarActive();
     }
 }
 
@@ -1681,7 +1683,7 @@ RecursivelyClearActiveMenu(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXClearMenubarActive --
+ * ClearMenubarActive --
  *
  *	Recursively clears the active entry in the current menubar hierarchy.
  *
@@ -1695,7 +1697,7 @@ RecursivelyClearActiveMenu(
  */
 
 void
-TkMacOSXClearMenubarActive(void)
+ClearMenubarActive(void)
 {
     NSMenu *mainMenu = [NSApp mainMenu];
 
@@ -1898,152 +1900,6 @@ TkpDrawMenuEntry(
     TCL_UNUSED(int),		/* Boolean flag */
     TCL_UNUSED(int))		/* Whether or not to draw the cascade arrow
 				 * for cascade items. */
-{
-}
-
-#pragma mark Obsolete
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXPreprocessMenu --
- *
- *    Handle preprocessing of menubar if it exists.
- *
- * Results:
- *    None.
- *
- * Side effects:
- *    All post commands for the current menubar get executed.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXPreprocessMenu(void)
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXUseID --
- *
- *	Take the ID out of the available list for new menus. Used by the
- *	default menu bar's menus so that they do not get created at the Tk
- *	level. See TkMacOSXGetNewMenuID for more information.
- *
- * Results:
- *	Returns TCL_OK if the id was not in use. Returns TCL_ERROR if the id
- *	was in use.
- *
- * Side effects:
- *	A hash table entry in the command table is created with a NULL value.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXUseMenuID(
-    TCL_UNUSED(short))		/* The id to take out of the table */
-{
-    return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXDispatchMenuEvent --
- *
- *	Given a menu id and an item, dispatches the command associated with it.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Commands for the event are scheduled for execution at idle time.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXDispatchMenuEvent(
-    TCL_UNUSED(int),			/* The menu id of the menu we are invoking */
-    TCL_UNUSED(int))			/* The one-based index of the item that was
-				 * selected. */
-{
-    return TCL_ERROR;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXHandleTearoffMenu() --
- *
- *	This routine sees if the MDEF has set a menu and a mouse position for
- *	tearing off and makes a tearoff menu if it has.
- *
- * Results:
- *	menuPtr->interp will have the result of the tearoff command.
- *
- * Side effects:
- *	A new tearoff menu is created if it is supposed to be.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXHandleTearoffMenu(void)
-{
-    /*
-     * Obsolete: Nothing to do.
-     */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXSetHelpMenuItemCount --
- *
- *	Has to be called after the first call to InsertMenu. Sets up the global
- *	variable for the number of items in the unmodified help menu.
- *
- *	NB: Nobody uses this any more, since you can get the number of system
- *	help items from HMGetHelpMenu trivially. But it is in the stubs
- *	table...
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Nothing.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetHelpMenuItemCount(void)
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXMenuClick --
- *
- *	Prepares a menubar for MenuSelect or MenuKey.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Any pending configurations of the menubar are completed.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXMenuClick(void)
 {
 }
 

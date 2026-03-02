@@ -14,7 +14,7 @@ namespace eval ttk::theme::vista {
 	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont
 
-	ttk::style map "." -foreground [list disabled SystemGrayText]
+	ttk::style map "." -foreground {disabled SystemGrayText}
 
 	ttk::style configure TButton -anchor center -padding 0.75p -width -11
 	ttk::style configure TRadiobutton -padding 1.5p
@@ -25,21 +25,6 @@ namespace eval ttk::theme::vista {
 	    TOOLBAR 4 {{selected active} 6 {selected !active} 5
 		disabled 4 pressed 3 active 2 {} 1} \
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
-
-	ttk::style configure TNotebook -tabmargins {2 2 2 0}
-	ttk::style map TNotebook.Tab -expand {selected {2 2 2 2}}
-
-	# Treeview:
-	ttk::style configure Heading -font TkHeadingFont
-	ttk::style configure Treeview -background SystemWindow \
-		-stripedbackground System3dLight
-	ttk::style configure Treeview.Separator \
-		-background System3dLight
-	ttk::style map Treeview \
-	    -background [list   disabled SystemButtonFace \
-				selected SystemHighlight] \
-	    -foreground [list   disabled SystemGrayText \
-				selected SystemHighlightText]
 
 	# Label and Toolbutton
 	ttk::style configure TLabelframe.Label -foreground SystemButtonText
@@ -137,8 +122,7 @@ namespace eval ttk::theme::vista {
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText]
 
-
-	# SCROLLBAR elements (Vista includes a state for 'hover')
+	# Scrollbar elements (Vista includes a state for 'hover')
 	ttk::style element create Vertical.Scrollbar.uparrow vsapi \
 	    SCROLLBAR 1 {disabled 4 pressed 3 active 2 hover 17 {} 1} \
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
@@ -166,6 +150,10 @@ namespace eval ttk::theme::vista {
 	    -syssize {SM_CXHSCROLL SM_CYHSCROLL}
 	ttk::style element create Horizontal.Scrollbar.grip vsapi \
 	    SCROLLBAR 8 {disabled 4 pressed 3 active 2 hover 5 {} 1}
+
+	# Notebook
+	ttk::style configure TNotebook -tabmargins {2 2 2 0}
+	ttk::style map TNotebook.Tab -expand {selected {2 2 2 2}}
 
 	# Progressbar
 	ttk::style element create Horizontal.Progressbar.pbar vsapi \
@@ -209,9 +197,22 @@ namespace eval ttk::theme::vista {
 	}
 
 	# Treeview
+	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Item -padding {3p 0 0 0}
-	ttk::style configure Treeview -indent 15p
+	ttk::style configure Treeview -background SystemWindow \
+	    -stripedbackground System3dLight -indent 15p
 	ttk::setTreeviewRowHeight
+	ttk::style configure Treeview.Separator \
+	    -background System3dLight
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
+	ttk::style map Treeview \
+	    -background [list   disabled SystemButtonFace \
+				background #d9d9d9 \
+				selected SystemHighlight] \
+	    -foreground [list   disabled SystemGrayText \
+				background SystemWindowText \
+				selected SystemHighlightText]
     }
 }
 

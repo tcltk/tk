@@ -2446,7 +2446,7 @@ static int GdiCopyBits(
     double scale = 1.0;
     int src_x = 0, src_y = 0, src_w = 0, src_h = 0;
     int dst_x = 0, dst_y = 0, dst_w = 0, dst_h = 0;
-    int is_toplevel = 0;
+    bool is_toplevel = false;
 
     /*
      * The following steps are peculiar to the top level window.
@@ -2571,7 +2571,7 @@ static int GdiCopyBits(
      */
     if (hwnd == 0) {
 	if (Tk_IsTopLevel(workwin)) {
-	    is_toplevel = 1;
+	    is_toplevel = true;
 	}
 
 	if ((wnd = Tk_WindowId(workwin)) == 0) {

@@ -51,7 +51,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-EXTERN int		Tktest_Init(Tcl_Interp *interp);
+EXTERN Tcl_LibraryInitProc Tktest_Init;
 #ifdef __cplusplus
 }
 #endif

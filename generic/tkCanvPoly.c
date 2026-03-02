@@ -1021,8 +1021,7 @@ PolygonInsert(
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    int length, oriNumPoints, nbInsPoints, i;
-    Tcl_Size objc;
+    Tcl_Size objc, i, length, oriNumPoints, nbInsPoints;
     Tcl_Obj **objv;
     double *newCoordPtr;
     Tk_State state = itemPtr->state;
@@ -1038,14 +1037,14 @@ PolygonInsert(
     oriNumPoints = polyPtr->numPoints - polyPtr->autoClosed;
     length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
     nbInsPoints = objc / 2;
-    while ((int)beforeThis > length) {
+    while (beforeThis > length) {
 	beforeThis -= length;
     }
-    while ((int)beforeThis < 0) {
+    while (beforeThis < 0) {
 	beforeThis += length;
     }
     newCoordPtr = (double *)Tcl_Alloc(sizeof(double) * (length + 2 + objc));
-    for (i=0; i<(int)beforeThis; i++) {
+    for (i=0; i<beforeThis; i++) {
 	newCoordPtr[i] = polyPtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
@@ -1056,7 +1055,7 @@ PolygonInsert(
 	}
     }
 
-    for (i=(int)beforeThis; i<length; i++) {
+    for (i=beforeThis; i<length; i++) {
 	newCoordPtr[i+objc] = polyPtr->coordPtr[i];
     }
     if (polyPtr->coordPtr) {
@@ -1100,7 +1099,7 @@ PolygonInsert(
 	 */
 
 	double width;
-	int j;
+	Tcl_Size j;
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
 
@@ -1157,7 +1156,7 @@ PolygonInsert(
 	     * Be careful; beforeThis could now be negative
 	     */
 
-	    for (i=(int)beforeThis; i<(int)beforeThis+objc; i+=2) {
+	    for (i=beforeThis; i<beforeThis+objc; i+=2) {
 		j = i;
 		if (j < 0) {
 		    j += length;
@@ -1424,8 +1423,8 @@ PolygonToPoint(
 	    TkGetButtPoints(coordPtr, coordPtr+2, (double) width, 0, poly+4,
 		    poly+6);
 	} else if (polyPtr->joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
-		    (double) width, poly+4, poly+6) == 0) {
+	    if (!TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
+		    (double) width, poly+4, poly+6)) {
 		changedMiterToBevel = 1;
 		TkGetButtPoints(coordPtr, coordPtr+2, (double) width, 0,
 			poly+4, poly+6);
@@ -1622,8 +1621,8 @@ PolygonToArea(
 	if (count == 2) {
 	    TkGetButtPoints(coordPtr, coordPtr+2, width, 0, poly+4, poly+6);
 	} else if (polyPtr->joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4, width,
-		    poly+4, poly+6) == 0) {
+	    if (!TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4, width,
+		    poly+4, poly+6)) {
 		changedMiterToBevel = 1;
 		TkGetButtPoints(coordPtr, coordPtr+2, width,0, poly+4, poly+6);
 	    }

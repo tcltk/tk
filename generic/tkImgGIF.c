@@ -51,7 +51,7 @@
  */
 
 typedef struct {
-    int blockPresent;		/* if 1, the block was read and is in scope */
+    bool blockPresent;		/* if 1, the block was read and is in scope */
     int transparent;		/* Transparency index */
     int delayTime;		/* update delay time in 10ms */
     int disposalMethod;		/* disposal method 0-3 */
@@ -284,7 +284,7 @@ typedef struct {
      * compression rate changes, start over.
      */
 
-    int clearFlag;
+    bool clearFlag;
 
     int offset;
     unsigned int inCount;	/* Length of input */
@@ -437,7 +437,7 @@ FileReadGIF(
     };
     GIFImageConfig gifConf, *gifConfPtr = &gifConf;
 
-    gifGraphicControlExtensionBlock.blockPresent = 0;
+    gifGraphicControlExtensionBlock.blockPresent = false;
     /*
      * Decode the magic used to convey when we're sourcing data from a string
      * source and not a file.
@@ -668,7 +668,7 @@ FileReadGIF(
 	     * This extension starts a new scope, so Graphic control Extension
 	     * data should be cleared
 	     */
-	    gifGraphicControlExtensionBlock.blockPresent = 0;
+	    gifGraphicControlExtensionBlock.blockPresent = false;
 
 	    continue;
 	}
@@ -1192,7 +1192,7 @@ DoExtension(
 	 * This extension starts a new scope, so Graphic control Extension
 	 * data should be cleared
 	 */
-	gifGraphicControlExtensionBlock->blockPresent = 0;
+	gifGraphicControlExtensionBlock->blockPresent = false;
 	/* this extension is ignored, skip below */
 	break;
     case 0xf9:			/* Graphic Control Extension */
@@ -1200,7 +1200,7 @@ DoExtension(
 	if (count < 0) {
 	    return -1;
 	}
-	gifGraphicControlExtensionBlock->blockPresent=1;
+	gifGraphicControlExtensionBlock->blockPresent = true;
 	/* save disposal method */
 	gifGraphicControlExtensionBlock->disposalMethod
 		= ((buf[0] & 0x1C) >> 2);
@@ -2330,7 +2330,7 @@ Compress(
     state.offset = 0;
     state.hSize = HSIZE;
     state.outCount = 0;
-    state.clearFlag = 0;
+    state.clearFlag = false;
     state.inCount = 1;
     state.maxCode = MAXCODE(state.numBits = state.initialBits);
     state.clearCode = 1 << (initialBits - 1);
@@ -2456,7 +2456,7 @@ Output(
 	if (statePtr->clearFlag) {
 	    statePtr->maxCode = MAXCODE(
 		    statePtr->numBits = statePtr->initialBits);
-	    statePtr->clearFlag = 0;
+	    statePtr->clearFlag = false;
 	} else {
 	    statePtr->numBits++;
 	    if (statePtr->numBits == GIFBITS) {
@@ -2492,7 +2492,7 @@ ClearForBlock(			/* Table clear for block compress. */
 {
     ClearHashTable(statePtr, (int) statePtr->hSize);
     statePtr->freeEntry = statePtr->clearCode + 2;
-    statePtr->clearFlag = 1;
+    statePtr->clearFlag = true;
 
     Output(statePtr, (long) statePtr->clearCode);
 }

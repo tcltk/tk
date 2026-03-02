@@ -1014,7 +1014,7 @@ LineInsert(
 	}
     }
 
-    for (i=(int)beforeThis; i<length; i++) {
+    for (i=beforeThis; i<length; i++) {
 	newCoordPtr[i+objc] = linePtr->coordPtr[i];
     }
     if (linePtr->coordPtr) {
@@ -1082,7 +1082,7 @@ LineInsert(
 
 		    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 		} else {
-		    beforeThis -= (int)beforeThis % 6;
+		    beforeThis -= beforeThis % 6;
 		    objc += 4;
 		}
 
@@ -1096,16 +1096,16 @@ LineInsert(
 	}
 
 	if (itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW) {
-	    if ((int)beforeThis < 0) {
+	    if (beforeThis < 0) {
 		beforeThis = 0;
 	    }
-	    if ((int)beforeThis + objc > length) {
-		objc = length - (int)beforeThis;
+	    if (beforeThis + objc > length) {
+		objc = length - beforeThis;
 	    }
 
 	    itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
 	    itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
-	    if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis < 2)) {
+	    if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
 		/*
 		 * Include old first arrow.
 		 */
@@ -1115,7 +1115,7 @@ LineInsert(
 		    TkIncludePoint(itemPtr, coordPtr);
 		}
 	    }
-	    if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc >= length)) {
+	    if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
 		/*
 		 * Include old last arrow.
 		 */
@@ -1149,7 +1149,7 @@ LineInsert(
 	double width;
 	int intWidth;
 
-	if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis < 2)) {
+	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
 	    /*
 	     * Include new first arrow.
 	     */
@@ -1159,7 +1159,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc >= length)) {
+	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
 	    /*
 	     * Include new last arrow.
 	     */
@@ -1233,13 +1233,13 @@ LineDeleteCoords(
     first &= -2;	/* If odd, make it even. */
     last &= -2;
 
-    if ((int)first < 0) {
+    if (first < 0) {
 	first = 0;
     }
-    if ((int)last >= length) {
+    if (last >= length) {
 	last = length - 2;
     }
-    if ((int)first > (int)last) {
+    if (first > last) {
 	return;
     }
 
@@ -1589,8 +1589,8 @@ LineToPoint(
 	    TkGetButtPoints(coordPtr, coordPtr+2, width,
 		    linePtr->capStyle == CapProjecting, poly+4, poly+6);
 	} else if (linePtr->joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
-		    width, poly+4, poly+6) == 0) {
+	    if (!TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
+		    width, poly+4, poly+6)) {
 		changedMiterToBevel = 1;
 		TkGetButtPoints(coordPtr, coordPtr+2, width, 0,
 			poly+4, poly+6);

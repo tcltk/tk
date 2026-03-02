@@ -35,6 +35,7 @@ static int		GenerateUpdates(
 			    CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
+static void		GenerateWMDestroyEvent(Tk_Window tkwin);
 
 #pragma mark TKApplication(TKWindowEvent)
 
@@ -293,11 +294,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	TkGenWMDestroyEvent((Tk_Window)winPtr);
+	GenerateWMDestroyEvent((Tk_Window)winPtr);
     }
 
     /*
-     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window, so
+     * If necessary, GenerateWMDestroyEvent() handles [close]ing the window, so
      * can always return NO from -windowShouldClose: for a Tk window.
      */
 
@@ -525,38 +526,6 @@ static void RefocusGrabWindow(void *data) {
 @end
 
 #pragma mark -
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWillDrawWidget --
- *
- *      A widget display procedure can call this to determine whether it is
- *      being run inside of the drawRect method. If not, it may be desirable
- *      for the display procedure to simply clear the REDRAW_PENDING flag
- *      and return.  The widget can be recorded in order to schedule a
- *      redraw, via an Expose event, from within drawRect.
- *
- *      This is also needed for some tests, especially of the Text widget,
- *      which record data in a global Tcl variable and assume that display
- *      procedures will be run in a predictable sequence as Tcl idle tasks.
- *
- * Results:
- *      True if called from the drawRect method of a TKContentView with
- *      tkwin NULL or pointing to a widget in the current focusView.
- *
- * Side effects:
- *	Currently none.  One day the tkwin parameter may be recorded to
- *      handle redrawing the widget later.
- *
- *----------------------------------------------------------------------
- */
-// This stub is no longer used, but is expected by the stub mechanism.
-int
-TkpWillDrawWidget(Tk_Window tkwin) {
-    (void) tkwin;
-    return false;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -860,7 +829,7 @@ TkGenWMConfigureEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenWMDestroyEvent --
+ * GenerateWMDestroyEvent --
  *
  *	Generate a WM Destroy event for Tk.
  *
@@ -874,7 +843,7 @@ TkGenWMConfigureEvent(
  */
 
 void
-TkGenWMDestroyEvent(
+GenerateWMDestroyEvent(
     Tk_Window tkwin)
 {
     XEvent event;

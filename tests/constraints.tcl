@@ -35,6 +35,12 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
 
+# This constraint is for running an aqua test only when user interaction is
+# possible, not on a CI runner.  Some actions, such as writing to the
+# filesystem, require that the user review and dismiss a system dialog, which
+# cannot be done on a CI runner.
+testConstraint notMacCI [expr {[testConstraint notAqua] || ![info exists ::env(CI)]}]
+
 # constraint based on whether our display is secure
 testutils import child
 childTkProcess create

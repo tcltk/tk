@@ -1491,10 +1491,10 @@ CanvasWidgetCmd(
 	}
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
-	    int i;
+	    Tcl_Size i;
 	    Tcl_Obj *resultObj = Tcl_NewObj();
 
-	    for (i = 0; i < (int)itemPtr->numTags; i++) {
+	    for (i = 0; i < itemPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
 			Tcl_NewStringObj(itemPtr->tagPtr[i], TCL_INDEX_NONE));
 	    }

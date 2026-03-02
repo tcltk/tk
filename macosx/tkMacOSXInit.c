@@ -881,8 +881,8 @@ TkMacOSXGetInfoAsJSONObjCmd(
 					      error:nil];
 	if (infoAsJSON.length) {
 	    int buffer_size = (int) infoAsJSON.length + 1;
-	    bytes = malloc(buffer_size);
-	    strlcpy(bytes, infoAsJSON.bytes, buffer_size);
+	    bytes = (char *)malloc(buffer_size);
+	    strlcpy(bytes, (char *)infoAsJSON.bytes, buffer_size);
 	}
     }
     if (bytes) {
