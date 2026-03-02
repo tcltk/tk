@@ -91,7 +91,7 @@ declare 19 {
     void TkEventDeadWindow(TkWindow *winPtr)
 }
 declare 20 {
-    void TkFillPolygon(Tk_Canvas canvas, double *coordPtr, int numPoints,
+    void TkFillPolygon(Tk_Canvas canvas, double *coordPtr, Tcl_Size numPoints,
 	    Display *display, Drawable drawable, GC gc, GC outlineGC)
 }
 declare 21 {
@@ -249,10 +249,10 @@ declare 69 {
     bool TkPointerEvent(XEvent *eventPtr, TkWindow *winPtr)
 }
 declare 70 {
-    int TkPolygonToArea(double *polyPtr, int numPoints, double *rectPtr)
+    int TkPolygonToArea(double *polyPtr, Tcl_Size numPoints, double *rectPtr)
 }
 declare 71 {
-    double TkPolygonToPoint(double *polyPtr, int numPoints, double *pointPtr)
+    double TkPolygonToPoint(double *polyPtr, Tcl_Size numPoints, double *pointPtr)
 }
 declare 72 {
     int TkPositionInTree(TkWindow *winPtr, TkWindow *treePtr)
@@ -288,7 +288,7 @@ declare 86 {
     KeySym TkStringToKeysym(const char *name)
 }
 declare 87 {
-    int TkThickPolyLineToArea(double *coordPtr, int numPoints,
+    int TkThickPolyLineToArea(double *coordPtr, Tcl_Size numPoints,
 	    double width, int capStyle, int joinStyle, double *rectPtr)
 }
 declare 88 {
