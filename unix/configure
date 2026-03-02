@@ -702,6 +702,7 @@ UNIX_FONT_OBJS
 XFT_LIBS
 XFT_CFLAGS
 XMKMF
+WAYLAND_LDFLAGS
 HAVE_WAYLAND
 TEXT_INPUT_XML
 WAYLAND_SCANNER
@@ -8291,8 +8292,12 @@ else
     # Final windowing system decision
     if test "$enable_wayland" = "yes"; then
         TK_WINDOWINGSYSTEM=WAYLAND
+		WAYLAND_LDFLAGS="-Wl,-Bsymbolic-functions"
+
     else
         TK_WINDOWINGSYSTEM=X11
+        WAYLAND_LDFLAGS=""
+
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for X" >&5
 printf %s "checking for X... " >&6; }

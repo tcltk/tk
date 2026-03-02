@@ -114,6 +114,7 @@ XDrawString(
     const char *string,
     int         length)
 {
+
     TkWaylandDrawingContext dc;
     int   fontId;
     float fontSize;
@@ -123,7 +124,7 @@ XDrawString(
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
-        return BadDrawable;
+        return BadDrawable;            
 
     buf = (char *)ckalloc(length + 1);
     memcpy(buf, string, length);
@@ -176,7 +177,7 @@ XDrawImageString(
     float bounds[4];
     char *buf;
 
-    if (!string || length <= 0) return Success;
+    if (!string || length <= 0) return Success; 
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
@@ -565,12 +566,16 @@ XFillRectangles(
     XRectangle *rectangles,
     int         n_rectangles)
 {
+	        
     TkWaylandDrawingContext dc;
     int i;
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
+
+	XGCValues v;
+	TkWaylandGetGCValues(gc, GCForeground|GCBackground, &v);
 
     for (i = 0; i < n_rectangles; i++) {
         nvgBeginPath(dc.vg);

@@ -409,11 +409,11 @@ typedef struct {
 } TkWaylandExposeEvent;
 
 void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int width, int height);
-
+void TkWaylandHandleExposeEvents(void);
 /*
  *----------------------------------------------------------------------
  *
- * Colour Conversion Utilities
+ * Color Conversion Utilities
  *
  *----------------------------------------------------------------------
  */
