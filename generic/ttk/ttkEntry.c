@@ -319,8 +319,6 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
-    Tcl_Size length;
-    char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
 	entryPtr->entry.textLayout = Tk_ComputeTextLayout(
@@ -329,10 +327,10 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-	text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
+	Tcl_Size length = Tcl_GetCharLength(entryPtr->entry.placeholderObj);
 	entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
-	    text, length,
+	    Tcl_GetString(entryPtr->entry.placeholderObj), length,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     }
@@ -1339,7 +1337,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-	(void)Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &rightIndex);
+	rightIndex = Tcl_GetCharLength(entryPtr->entry.placeholderObj);
     } else {
 	foregroundObj = es.foregroundObj;
     }

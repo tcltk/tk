@@ -369,7 +369,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
 		found_xft=no
 	    ],[#include <X11/Xlib.h>])
@@ -381,7 +381,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
 	    AC_CHECK_LIB(Xft, XftFontOpen, [], [
 		found_xft=no
 	    ])
@@ -393,7 +393,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
+	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
 	    AC_CHECK_LIB(fontconfig, FcFontSort, [
 		XFT_LIBS="$XFT_LIBS -lfontconfig"
 	    ], [])
@@ -454,7 +454,7 @@ if test $tk_aqua = no; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    LIBS="$tk_oldLibs $CUPS_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(cups/cups.h, [], [
 		found_cups=no
 		CUPS_CFLAGS=""
@@ -713,7 +713,7 @@ if test "${ZIPFS_BUILD}" = 1; then
        INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
      else
-       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])\
+       AC_DEFINE(ZIPFS_BUILD, 1, [Are we building with zipfs enabled?])
        INSTALL_LIBRARIES=install-demos
        AC_MSG_RESULT([yes])
     fi
@@ -733,9 +733,8 @@ AC_SUBST(INSTALL_MSGS)
 #       stub support.
 #--------------------------------------------------------------------
 
-# Replace ${VERSION} with contents of ${TK_VERSION}
-    TK_STUB_LIB_FILE="libtkstub.a"
-    TK_STUB_LIB_FLAG="-ltkstub"
+TK_STUB_LIB_FILE="libtkstub.a"
+TK_STUB_LIB_FLAG="-ltkstub"
 eval "TK_STUB_LIB_DIR=\"${libdir}\""
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
