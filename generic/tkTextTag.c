@@ -16,6 +16,78 @@
 #include "tkText.h"
 #include "default.h"
 
+static int
+SetLocaleEnd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
+    TCL_UNUSED(Tk_Window),	/* Window for which option is being set. */
+    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+				 * We use a pointer to the pointer because we
+				 * may need to return a value (NULL). */
+    char *recordPtr,		/* Pointer to storage for the widget record. */
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
+				 * internal value is to be stored. */
+    char *oldInternalPtr,	/* Pointer to storage for the old value. */
+    int flags)			/* Flags for the option, set Tk_SetOptions. */
+{
+    char locale[6] = {0, 0, 0, 0, 0, 0};
+    char *internalPtr;
+    TkText *textPtr = (TkText *) recordPtr;
+
+    if (internalOffset != TCL_INDEX_NONE) {
+	internalPtr = (char *)recordPtr + internalOffset;
+    } else {
+	internalPtr = NULL;
+    }
+
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
+	*value = NULL;
+    } else {
+	/* Do the actual parsing here */
+	locale[0] = 'C';
+    }
+
+    if (internalPtr != NULL) {
+	memcpy(oldInternalPtr, internalPtr, sizeof(locale));
+	memcpy(internalPtr, locale, sizeof(locale));
+    }
+    return TCL_OK;
+}
+
+static Tcl_Obj *
+GetLocaleEnd(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *recordPtr,		/* Pointer to widget record. */
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the
+				 * line value. */
+{
+    char locale[6] = {0, 0, 0, 0, 0, 0};
+    memcpy(locale, recordPtr + internalOffset, sizeof(locale));
+
+    /* Translate locale to string */
+    return Tcl_NewStringObj("C", -1);
+}
+
+static void
+RestoreLocaleEnd(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *internalPtr,		/* Pointer to storage for value. */
+    char *oldInternalPtr)	/* Pointer to old value. */
+{
+    memcpy(internalPtr, oldInternalPtr, sizeof(char[6]));
+}
+
+const Tk_ObjCustomOption TkLocaleOption = {
+    "locale",			/* name */
+    SetLocaleEnd,		/* setProc */
+    GetLocaleEnd,		/* getProc */
+    RestoreLocaleEnd,	/* restoreProc */
+    NULL,			/* freeProc */
+    0
+};
+
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
@@ -43,6 +115,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-locale", NULL, NULL,
 	NULL, offsetof(TkTextTag, localeObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_CUSTOM, "-locale1", NULL, NULL,
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, locale), TK_OPTION_NULL_OK, &TkLocaleOption, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
 	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,

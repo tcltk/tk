@@ -160,6 +160,8 @@ typedef struct {
 #define DEF_ENTRY_FONT		"TkTextFont"
 #define DEF_LIST_HEIGHT		"10"
 
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
+
 static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", "1", TCL_INDEX_NONE, offsetof(Entry, entry.exportSelection),
