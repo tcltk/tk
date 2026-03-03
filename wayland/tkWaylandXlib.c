@@ -4146,31 +4146,6 @@ XSetFunction(
 /*
  *----------------------------------------------------------------------
  *
- * XStringToKeysym --
- *
- *	Convert string to keysym. No-op in Wayland port.
- *
- * Results:
- *	Always returns NoSymbol.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-KeySym
-XStringToKeysym(
-    const char *str)  /* Note: const char*, not char* */
-{
-    /* No-op - keysym conversion handled by GLFW/Tk. */
-    (void)str;  /* Suppress unused parameter warning */
-    return NoSymbol;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XVaCreateNestedList --
  *
  *	Create a nested variable argument list. No-op in Wayland port.
@@ -4249,29 +4224,6 @@ XGetWindowAttributes(
     return 0;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XKeysymToString --
- *
- *	Convert keysym to string. No-op in Wayland port.
- *
- * Results:
- *	Always returns NULL.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-char*
-XKeysymToString(
-    TCL_UNUSED(KeySym))
-{
-    /* No-op - keysym conversion handled by GLFW/Tk. */
-    return NULL;
-}
 
 /*
  *----------------------------------------------------------------------
