@@ -182,7 +182,6 @@ TkGlfwInitialize(void)
     if (!glfwInit()) {
     return TCL_ERROR;
 }
-
 	Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
     return TCL_OK;
 }

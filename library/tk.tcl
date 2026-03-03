@@ -459,13 +459,12 @@ switch -exact -- [tk windowingsystem] {
 	set ::tk::AlwaysShowSelection 1
     }
     "wayland" {
-	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
-	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
-	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
-	event add <<Undo>>		<Control-z> <Control-Lock-Z> <Undo>
-	event add <<Redo>>		<Control-Z> <Control-Lock-z> <Redo>
-	event add <<SelectAll>>		<Control-/>
-	event add <<SelectNone>>	<Control-backslash>
+	event add <<Cut>>		<Control-x> <Control-Lock-X>
+	event add <<Copy>>		<Control-c> <Control-Lock-C>
+	event add <<Paste>>		<Control-v> <Control-Lock-V>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z> 
+	event add <<Redo>>		<Control-Z> <Control-Lock-z> 
+	event add <<SelectAll>>		<Control-a>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
 	event add <<PrevChar>>		<Left>
