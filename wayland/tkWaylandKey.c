@@ -405,42 +405,6 @@ XKeysymToString(
     return NULL;
 }
 
-int
-TkWaylandKeyInit(void)
-{
-    if (!InitializeXKB()) {
-        return 0;
-    }
-    
-    /* Initialize IME (may fail if not on Wayland). */
-    InitializeIME();
-    
-    return 1;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkWaylandKeyCleanup --
- *
- *      Clean up keyboard and IME resources.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Frees XKB and IME resources.
- *
- *---------------------------------------------------------------------------
- */
-
-void
-TkWaylandKeyCleanup(void)
-{
-    CleanupIME();
-    CleanupXKB();
-}
-
 /*
  *---------------------------------------------------------------------------
  *
@@ -2446,6 +2410,58 @@ TkGetCurrentTimeMillis(void)
     Tcl_GetTime(&now);
 
     return (Time)(now.sec * 1000 + now.usec / 1000);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandKeyInit --
+ *
+ *       Iniitalizes keyboard and IME resources.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Launches XKB and IME resources.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkWaylandKeyInit(void)
+{
+    if (!InitializeXKB()) {
+        return 0;
+    }
+    
+    /* Initialize IME (may fail if not on Wayland). */
+    InitializeIME();
+    
+    return 1;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandKeyCleanup --
+ *
+ *      Clean up keyboard and IME resources.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Frees XKB and IME resources.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkWaylandKeyCleanup(void)
+{
+    CleanupIME();
+    CleanupXKB();
 }
 
 /*
