@@ -232,6 +232,8 @@ TkGlfwShutdown(TCL_UNUSED(ClientData))
         glfwTerminate();
         glfwContext.initialized = 0;
     }
+    
+    exit(0);
 }
 
 /*

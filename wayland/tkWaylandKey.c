@@ -255,6 +255,77 @@ static Time TkGetCurrentTimeMillis(void);
  *---------------------------------------------------------------------------
  */
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpKeycodeToKeysym --
+ *
+ *      Convert a keycode to a keysym during early initialization.
+ *      This provides a fallback when XKB state isn't ready yet.
+ *
+ * Results:
+ *      Returns the KeySym for the given keycode, or NoSymbol.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static KeySym
+TkpKeycodeToKeysym(
+    unsigned int keycode)
+{
+    /*
+     * Fallback mapping for common keys when XKB isn't ready.
+     * These match the mappings in TkpSetKeycodeAndState().
+     */
+    
+    switch (keycode) {
+    /* Control keys */
+    case 9:   return XK_Escape;
+    case 22:  return XK_BackSpace;
+    case 23:  return XK_Tab;
+    case 36:  return XK_Return;
+    case 65:  return XK_space;
+    
+    /* Arrow keys - CRITICAL for tk.tcl initialization */
+    case 111: return XK_Up;
+    case 113: return XK_Left;
+    case 114: return XK_Right;
+    case 116: return XK_Down;
+    
+    /* Navigation keys */
+    case 110: return XK_Home;
+    case 112: return XK_Page_Up;
+    case 115: return XK_End;
+    case 117: return XK_Page_Down;
+    case 118: return XK_Insert;
+    case 119: return XK_Delete;
+    
+    /* Function keys */
+    case 67:  return XK_F1;
+    case 68:  return XK_F2;
+    case 69:  return XK_F3;
+    case 70:  return XK_F4;
+    case 71:  return XK_F5;
+    case 72:  return XK_F6;
+    case 73:  return XK_F7;
+    case 74:  return XK_F8;
+    case 75:  return XK_F9;
+    case 76:  return XK_F10;
+    case 95:  return XK_F11;
+    case 96:  return XK_F12;
+    
+    default:
+        /* Letters a-z (QWERTY layout) */
+        if (keycode >= 38 && keycode <= 63) {
+            return XK_a + (keycode - 38);
+        }
+        return NoSymbol;
+    }
+}
+
 int
 TkWaylandKeyInit(void)
 {
@@ -2055,11 +2126,16 @@ TkpGetKeySym(
         return NoSymbol;
     }
 
-    if (!xkbState.state) {
-        return NoSymbol;
-    }
-
     XKeyEvent *keyPtr = &eventPtr->xkey;
+
+    /* 
+     * If XKB state isn't initialized yet, use fallback mapping.
+     * This ensures keysyms work during Tk initialization (tk.tcl).
+     * This fixes the "bad event type or keysym 'Right'" error.
+     */
+    if (!xkbState.state) {
+        return TkpKeycodeToKeysym(keyPtr->keycode);
+    }
 
     /* Convert X11 keycode (evdev+8) back to raw evdev code. */
     unsigned int evdev_keycode = keyPtr->keycode - 8;
