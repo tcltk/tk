@@ -414,7 +414,6 @@ typedef struct TkTextTag {
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
     char locale[6];	/* locale */
-    Tcl_Obj *localeObj;	/* locale */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -789,7 +788,6 @@ typedef struct TkText {
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
     char locale[6];	/* locale */
-    Tcl_Obj *localeObj;	/* locale */
 } TkText;
 
 MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
