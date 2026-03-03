@@ -9040,38 +9040,44 @@ fi
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support — allowed on both X11 and Wayland
+#   Check for Atk support — X11 only, explicitly excluding Wayland
 #--------------------------------------------------------------------
 
 if test "$tk_aqua" = no; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge" >&5
-printf %s "checking for ATK and Atk-bridge... " >&6; }
+  # Proceed only if X11 is available AND Wayland is not the active session
+  if pkg-config --exists x11 && test -z "$WAYLAND_DISPLAY"; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ATK and Atk-bridge (X11)" >&5
+printf %s "checking for ATK and Atk-bridge (X11)... " >&6; }
 
-  if pkg-config --exists atk \
-     && pkg-config --exists atk-bridge-2.0; then
+    if pkg-config --exists atk \
+       && pkg-config --exists atk-bridge-2.0; then
 
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
-    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+      ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+      ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
 
 printf "%s\n" "#define HAVE_ATK 1" >>confdefs.h
 
-    have_atk=yes
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: All accessibility dependencies found, enabling support" >&5
+      have_atk=yes
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: All accessibility dependencies found, enabling support" >&5
 printf "%s\n" "$as_me: All accessibility dependencies found, enabling support" >&6;}
-  else
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-    ATK_CFLAGS=""
-    ATK_LIBS=""
-    have_atk=no
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: One or more accessibility dependencies not found, disabling support" >&5
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+      have_atk=no
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: One or more accessibility dependencies not found, disabling support" >&5
 printf "%s\n" "$as_me: One or more accessibility dependencies not found, disabling support" >&6;}
+    fi
+
+
+
+  else
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Wayland detected or X11 not available; skipping ATK/Atk-bridge check" >&5
+printf "%s\n" "$as_me: Wayland detected or X11 not available; skipping ATK/Atk-bridge check" >&6;}
   fi
-
-
-
 fi
 
 #--------------------------------------------------------------------
