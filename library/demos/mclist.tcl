@@ -40,14 +40,14 @@ grid row    $w.container 0 -weight 1
 set upArrowData {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="m4 4 4-4 4 4z" fill="#000000"/>
+     <path d="m4 4 4-4 4 4z" fill="%s"/>
     </svg>
 }
 
 set downArrowData {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="m4 0 4 4 4-4z" fill="#000000"/>
+     <path d="m4 0 4 4 4-4z" fill="%s"/>
     </svg>
 }
 
@@ -59,10 +59,7 @@ proc createArrowImages {} {
 
     foreach dir {up down} {
 	upvar ${dir}ArrowData imgData
-	set idx1 [string first "#000000" $imgData]
-	set idx2 [expr {$idx1 + 6}]
-	set data [string replace $imgData $idx1 $idx2 $fgColor]
-
+	set data [format $imgData $fgColor]
 	image create photo ${dir}Arrow -format $::tk::svgFmt -data $data]
     }
 }
@@ -103,7 +100,7 @@ set font [ttk::style lookup Heading -font {} TkDefaultFont]
 set morePx [expr {[image width noArrow] + round(4 * $tk::scalingPct / 100.0)}]
 foreach col {country capital currency} name {Country Capital Currency} {
     $w.tree heading $col -text $name -image noArrow -anchor w \
-	-command [list SortBy $w.tree $col 0]
+	-command [list SortBy $w.tree $col 1]
     $w.tree column $col -width [expr {[font measure $font $name] + $morePx}]
 }
 set font [ttk::style lookup Treeview -font {} TkDefaultFont]
@@ -135,7 +132,7 @@ proc SortBy {tree col direction} {
 	lappend data [list [$tree set $row $col] $row]
     }
 
-    set dir [expr {$direction ? "-decreasing" : "-increasing"}]
+    set dir [expr {$direction ? "-increasing" : "-decreasing"}]
     set r -1
 
     # Now reshuffle the rows into the sorted order
