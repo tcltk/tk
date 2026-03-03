@@ -367,7 +367,7 @@ TkpGetShadows(
 
     /* Light color. */
     if (!stressed && (Tk_Depth(tkwin) >= 6)) {
-        int tmp1, tmp2, result;
+        int tmp1, tmp2;
 
         tmp1 = (int)(r * lightFactor);
         if (tmp1 > MAX_INTENSITY) tmp1 = MAX_INTENSITY;

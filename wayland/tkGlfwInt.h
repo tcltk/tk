@@ -342,6 +342,7 @@ MODULE_SCOPE GLFWwindow *TkGlfwGetGLFWWindow(Tk_Window tkwin);
 MODULE_SCOPE TkWindow   *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
 MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height);
+Tcl_Obj *Tk_GetSystemDefault(Tk_Window tkwin, const char *dbName,const char *className);
 
 /*
  *----------------------------------------------------------------------
@@ -519,7 +520,7 @@ MODULE_SCOPE void XSetWMIconName(Display *display, Window window, XTextProperty 
 extern int Tktray_Init(Tcl_Interp *interp);
 extern int SysNotify_Init(Tcl_Interp *interp);
 extern int Cups_Init(Tcl_Interp *interp);
-extern int TkAtkAccessibility_Init(Tcl_Interp *interp);
+int TkWaylandAccessibility_Init(Tcl_Interp *interp);
 
 #endif /* _TKGLFWINT_H */
 

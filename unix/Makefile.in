@@ -466,11 +466,10 @@ AQUA_TKTEST_OBJS = tkMacOSXTest.o
 WAYLAND_OBJS            = \
 	 nanovg.o text-input-unstable-v3-protocol.o \
       tkGlfwInit.o tkWayland.o  \
-     tkWayland3D.o tkWaylandButton.o tkWaylandClipboard.o \
-     tkWaylandColor.o tkWaylandConfig.o tkWaylandCursor.o \
-     tkWaylandDraw.o tkWaylandEmbed.o tkWaylandEvent.o \
-     tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o tkWaylandImage.o \
-     tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
+     tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
+     tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
+     tkWaylandEmbed.o tkWaylandEvent.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
+     tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
      tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
      tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
      tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
@@ -617,8 +616,8 @@ AQUA_SRCS = \
 
 WAYLAND_SRCS = \
 	$(WAYLAND_DIR)/nanovg.c $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWayland.c \
-    $(WAYLAND_DIR)/tkWayland3D.c $(WAYLAND_DIR)/tkWaylandButton.c $(WAYLAND_DIR)/tkWaylandClipboard.c \
-    $(WAYLAND_DIR)/tkWaylandColor.c $(WAYLAND_DIR)/tkWaylandConfig.c \
+    $(WAYLAND_DIR)/tkWayland3D.c  $(WAYLAND_DIR)/tkWaylandAccessibility.c $(WAYLAND_DIR)/tkWaylandButton.c \
+    $(WAYLAND_DIR)/tkWaylandClipboard.c $(WAYLAND_DIR)/tkWaylandColor.c $(WAYLAND_DIR)/tkWaylandConfig.c \
     $(WAYLAND_DIR)/tkWaylandCursor.c $(WAYLAND_DIR)/tkWaylandDraw.c \
     $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
     $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandFont.c \
@@ -1457,6 +1456,9 @@ tkWayland.o: $(WAYLAND_DIR)/tkWayland.c
 
 tkWayland3D.o: $(WAYLAND_DIR)/tkWayland3D.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland3D.c
+	
+tkWaylandAccessibility.o: $(WAYLAND_DIR)/tkWaylandAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandAccessibility.c
 
 tkWaylandButton.o: $(WAYLAND_DIR)/tkWaylandButton.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandButton.c

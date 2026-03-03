@@ -571,8 +571,9 @@ XFillRectangles(
     int i;
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+    if (rc != TCL_OK) {
         return BadDrawable;
+	}
 
 	XGCValues v;
 	TkWaylandGetGCValues(gc, GCForeground|GCBackground, &v);

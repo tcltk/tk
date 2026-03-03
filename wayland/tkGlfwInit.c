@@ -60,7 +60,6 @@ extern void  Tk_WaylandSetupTkNotifier(void);
 extern int   Tktray_Init(Tcl_Interp *);
 extern int   SysNotify_Init(Tcl_Interp *);
 extern int   Cups_Init(Tcl_Interp *);
-extern int   TkAtkAccessibility_Init(Tcl_Interp *);
 extern void  TkGlfwSetupCallbacks(GLFWwindow *, TkWindow *);
 
 WindowMapping *FindMappingByGLFW(GLFWwindow *);
@@ -740,7 +739,7 @@ TkpInit(Tcl_Interp *interp)
     Tktray_Init(interp);
     SysNotify_Init(interp);
     Cups_Init(interp);
-    TkAtkAccessibility_Init(interp);
+    TkWaylandAccessibility_Init(interp);
     return TCL_OK;
 }
 

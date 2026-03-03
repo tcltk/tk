@@ -1,5 +1,5 @@
 /*
- * tkUnixCursor.c --
+ * tkWaylandCursor.c --
  *
  *	This file contains platform-specific cursor manipulation routines
  *	for Wayland/GLFW/nanovg.
@@ -30,7 +30,7 @@ typedef struct {
     GLFWcursor *cursor;		/* GLFW cursor handle */
     int standardShape;		/* GLFW standard cursor shape, or -1 for custom */
     int width, height;		/* Dimensions for custom cursors */
-} TkUnixCursor;
+} TkWaylandCursor;
 
 /*
  * Table mapping Tk cursor names to GLFW standard cursor shapes.
@@ -679,7 +679,7 @@ TkGetCursorByName(
     const char *string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
-    TkUnixCursor *cursorPtr = NULL;
+    TkWaylandCursor *cursorPtr = NULL;
     Tcl_Size argc;
     const char **argv = NULL;
     const struct TkCursorName *tkCursorPtr = NULL;
@@ -856,7 +856,7 @@ TkGetCursorByName(
     }
 
     if (glfwCursor != NULL) {
-        cursorPtr = (TkUnixCursor *)Tcl_Alloc(sizeof(TkUnixCursor));
+        cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
         cursorPtr->info.cursor = (Tk_Cursor) glfwCursor;
         cursorPtr->cursor = glfwCursor;
         cursorPtr->standardShape = standardShape;
@@ -931,7 +931,7 @@ TkCreateCursorFromData(
         bgARGB);
 
     if (glfwCursor != NULL) {
-        TkUnixCursor *cursorPtr = (TkUnixCursor *)Tcl_Alloc(sizeof(TkUnixCursor));
+        TkWaylandCursor *cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
         cursorPtr->info.cursor = (Tk_Cursor) glfwCursor;
         cursorPtr->cursor = glfwCursor;
         cursorPtr->standardShape = -1; /* Custom cursor */
@@ -964,10 +964,10 @@ void
 TkpFreeCursor(
     TkCursor *cursorPtr)
 {
-    TkUnixCursor *unixCursorPtr = (TkUnixCursor *) cursorPtr;
+    TkWaylandCursor *waylandCursorPtr = (TkWaylandCursor *) cursorPtr;
 
-    if (unixCursorPtr->cursor != NULL) {
-        glfwDestroyCursor(unixCursorPtr->cursor);
+    if (waylandCursorPtr->cursor != NULL) {
+        glfwDestroyCursor(waylandCursorPtr->cursor);
     }
     Tcl_Free(cursorPtr);
 }
@@ -993,12 +993,12 @@ TkpSetCursor(
     TkWindow *winPtr,		/* Window to set cursor for. */
     TkCursor *cursorPtr)	/* New cursor, or NULL for default. */
 {
-    TkUnixCursor *unixCursorPtr = (TkUnixCursor *) cursorPtr;
+    TkWaylandCursor *waylandCursorPtr = (TkWaylandCursor *) cursorPtr;
     GLFWwindow* window = (GLFWwindow*)Tk_WindowId((Tk_Window)winPtr);
 
     if (window != NULL) {
-        if (unixCursorPtr != NULL && unixCursorPtr->cursor != NULL) {
-            glfwSetCursor(window, unixCursorPtr->cursor);
+        if (waylandCursorPtr != NULL && waylandCursorPtr->cursor != NULL) {
+            glfwSetCursor(window, waylandCursorPtr->cursor);
         } else {
             /* Set to default arrow cursor. */
             glfwSetCursor(window, NULL);
