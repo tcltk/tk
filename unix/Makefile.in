@@ -477,8 +477,7 @@ WAYLAND_OBJS            = \
 
 # Re-use some unix files (the ones that are backend-agnostic)
 WAYLAND_UNIX_OBJS       = \
-    tkUnixPrint.o \
-    tkUnixSysNotify.o       tkUnixAccessibility.o                     
+    tkUnixPrint.o  tkUnixSysNotify.o                   
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(TTK_OBJS) \
@@ -586,7 +585,7 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
 	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
-	$(UNIX_DIR)/tkUnixSysNotify $(UNIX_DIR)/tkUnixSysTray.c \
+	$(UNIX_DIR)/tkUnixSysNotify.c $(UNIX_DIR)/tkUnixSysTray.c \
 	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c \
 	$(UNIX_DIR)/tkUnixPrint.c
 
@@ -637,8 +636,7 @@ WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)
 
 WAYLAND_UNIX_SRCS = \
-    $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c \
-    $(UNIX_DIR)/tkUnixAccessibility.c  
+    $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c 
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
 

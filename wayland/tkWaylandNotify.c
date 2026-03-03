@@ -102,6 +102,11 @@ HeartbeatTimerProc(
     TCL_UNUSED(void *))
 {
     TSD_INIT();
+	
+	/* Don't reschedule if we are shutting down. */
+    if (!tsdPtr->initialized)
+        return;
+
 
     tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
                                                     HeartbeatTimerProc,
@@ -210,6 +215,8 @@ TkWaylandNotifyExitHandler(
         return;
     }
 
+    tsdPtr->initialized = false;  /* Must be before DeleteTimerHandler */
+	
     Tcl_DeleteEventSource(TkWaylandEventsSetupProc,
                           TkWaylandEventsCheckProc, NULL);
 
@@ -217,8 +224,6 @@ TkWaylandNotifyExitHandler(
         Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
         tsdPtr->heartbeatTimer = NULL;
     }
-
-    tsdPtr->initialized = false;
 }
 
 /*

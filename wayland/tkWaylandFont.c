@@ -20,6 +20,7 @@
 #include <nanovg.h>
 
 #include "stb_truetype.h"
+#include "noto_emoji.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -65,6 +66,9 @@ typedef struct {
 
 /* Whether Fontconfig has been initialized for this process. */
 static int fcInitialized = 0;
+
+/* Emoji font ID. */
+static int emojiFontID = -1;
 
 /* Forward declarations of file-local helpers. */
 static char    *FindFontFile(
@@ -1161,38 +1165,44 @@ EnsureNvgFont(
 
     if (!vg) return -1;
 
+    /* Load emoji font as fallback (from bundled memory) if not already in this context. */
+    id = nvgFindFont(vg, "emoji");
+    if (id < 0) {
+        id = nvgCreateFontMem(vg, "emoji", noto_emoji_mono_ttf, noto_emoji_mono_ttf_len, 0);  /* 0 means copy the data internally, */
+        if (id < 0) {
+            fprintf(stderr, "Failed to load bundled emoji font\n");
+            return -1;
+        }
+    }
+    emojiFontId = id;
+
+    /* Load the main font. */
     name = fontPtr->font.fa.family ? fontPtr->font.fa.family : "default";
 
-    /*
-     * Step 1: check whether the atlas already contains this font name in
-     * the current GL context.  This is the hot path — no file I/O.
-     */
     id = nvgFindFont(vg, name);
     if (id >= 0) {
         fontPtr->nvgFontId = id;
         return id;
     }
 
-    /*
-     * Step 2: font not yet loaded into this context — do it now.
-     * The GL context is guaranteed current by the caller.
-     */
     if (fontPtr->filePath) {
         id = nvgCreateFont(vg, name, fontPtr->filePath);
     }
 
-    /*
-     * Step 3: if the resolved file failed (missing, wrong format, etc.)
-     * fall back to the system DejaVu Sans so something always renders.
-     */
     if (id < 0) {
         id = nvgCreateFont(vg, name,
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
     }
 
+    /* Add emoji as fallback to the main font (whether from file or DejaVu fallback). */
+    if (id >= 0) {
+        nvgAddFallbackFontId(vg, id, emojiFontId);
+    }
+
     fontPtr->nvgFontId = id;
     return id;
 }
+
 
 /*
  *---------------------------------------------------------------------------
