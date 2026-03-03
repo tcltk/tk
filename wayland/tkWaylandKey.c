@@ -20,6 +20,7 @@
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>
+#include <X11/keysymdef.h>
 #include <wayland-client.h>
 #include <string.h>
 #include <ctype.h>
@@ -2094,10 +2095,10 @@ TkpSetKeycodeAndState(
         /* Numbers */
         keycode = keysym - '0' + 10;
         state = 0;
-    } else if (keysym >= XK_F1 && keysym <= XK_F12) {
-        /* Function keys */
-        keycode = keysym - XK_F1 + 67;
-        state = 0;
+	} else if (keysym >= XK_F1 && keysym <= XK_F35) {  /* Support F1-F35 */
+		/* Function keys */
+		keycode = keysym - XK_F1 + 67;
+		state = 0;
     } else {
         /* Special keys and others */
         switch (keysym) {

@@ -68,7 +68,7 @@ typedef struct {
 static int fcInitialized = 0;
 
 /* Emoji font ID. */
-static int emojiFontID = -1;
+static int emojiFontId = -1;
 
 /* Forward declarations of file-local helpers. */
 static char    *FindFontFile(
@@ -1168,7 +1168,7 @@ EnsureNvgFont(
     /* Load emoji font as fallback (from bundled memory) if not already in this context. */
     id = nvgFindFont(vg, "emoji");
     if (id < 0) {
-        id = nvgCreateFontMem(vg, "emoji", noto_emoji_mono_ttf, noto_emoji_mono_ttf_len, 0);  /* 0 means copy the data internally, */
+        id = nvgCreateFontMem(vg, "emoji", NotoEmoji_Regular_ttf, NotoEmoji_Regular_ttf_len, 0);  /* 0 means copy the data internally, */
         if (id < 0) {
             fprintf(stderr, "Failed to load bundled emoji font\n");
             return -1;

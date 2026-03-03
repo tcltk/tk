@@ -150,7 +150,7 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
  */
 
 void
-TkpCloseDisplay(TkDisplay *dispPtr)
+TkpCloseDisplay(TCL_UNUSED(TkDisplay*)) /* dispPtr */
 {
 	/* no-op */
 }

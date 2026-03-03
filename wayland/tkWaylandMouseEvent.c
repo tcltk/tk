@@ -289,8 +289,8 @@ GenerateButtonEvent(
 void
 TkWaylandHandleMouseButton(
 			   GLFWwindow *glfwWindow,
-			   int button,
-			   int action,
+			   TCL_UNUSED(int), /* button */
+			   TCL_UNUSED(int), /* action */
 			   TCL_UNUSED(int)) /* mods */
 {
     TkWindow *winPtr;

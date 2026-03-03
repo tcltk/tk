@@ -12,6 +12,7 @@
  */
 
 #include "tkInt.h"
+#include "tkGlfwInt.h"
 
 
 /*
@@ -35,13 +36,10 @@
 
 Tcl_Obj *
 Tk_GetSystemDefault(
-    Tk_Window tkwin,		/* A window to use. */
-    const char *dbName,		/* The option database name. */
-    const char *className)	/* The name of the option class. */
+    TCL_UNUSED(Tk_Window), /* tkwin */
+    TCL_UNUSED(const char *), /* dbName */
+    TCL_UNUSED(const char *)) /* className */
 {
-    (void)tkwin;
-    (void)dbName;
-    (void)className;
 
     return NULL;
 }
