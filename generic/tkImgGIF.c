@@ -980,7 +980,7 @@ StringMatchGIF(
      * Header is a minimum of 10 bytes.
      */
 
-    if (length < 10) {
+    if (!data || length < 10) {
 	return 0;
     }
 
