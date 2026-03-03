@@ -58,6 +58,12 @@ typedef struct {
 static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
 
 /*
+ * Keyboard repeat information from compositor.
+ */
+static int keyboard_repeat_rate = 0;   /* characters per second */
+static int keyboard_repeat_delay = 0;  /* milliseconds before repeating */
+
+/*
  *---------------------------------------------------------------------------
  *
  * IME (Input Method Editor) Support
@@ -83,10 +89,12 @@ typedef struct {
     TkIMEState **ime_hash;
     int hash_size;
     int hash_count;
+    
+    char *seat_name;                 /* Name of the seat (for debugging) */
 } WaylandIMEConnection;
 
 static WaylandIMEConnection wlIME = {
-    NULL, NULL, NULL, NULL, NULL, -1, NULL, 0, NULL, 0, 0
+    NULL, NULL, NULL, NULL, NULL, -1, NULL, 0, NULL, 0, 0, NULL
 };
 
 /*
@@ -114,13 +122,18 @@ typedef struct TkIMEState {
 } TkIMEState;
 
 static TkIMEState *currentIME = NULL;
+static Tk_Window focusedTkWin = NULL;   /* Currently focused Tk window for keyboard events */
 
 /* Hash table functions */
 static unsigned int HashWindow(Tk_Window tkwin);
 static TkIMEState *FindIMEState(Tk_Window tkwin);
+static TkIMEState *FindIMEStateBySurface(struct wl_surface *surface);
 static void StoreIMEState(Tk_Window tkwin, TkIMEState *ime);
 static void RemoveIMEState(Tk_Window tkwin);
 static void ResizeHashTableIfNeeded(void);
+
+/* Helper for synthetic events */
+static void SendKeySymEvent(Tk_Window tkwin, KeySym keysym, int pressed);
 
 /*
  *---------------------------------------------------------------------------
@@ -221,6 +234,10 @@ static const struct zwp_text_input_v3_listener text_input_listener = {
     .delete_surrounding_text = IMETextInputDeleteSurroundingText,
     .done = IMETextInputDone,
 };
+
+static Time TkGetCurrentTimeMillis(void);
+
+
 
 /*
  *---------------------------------------------------------------------------
@@ -500,8 +517,8 @@ static int
 XKBKeycodeToX11Keycode(
     unsigned int keycode)
 {
-    /* Wayland uses evdev keycodes (8-255)
-     * X11 typically uses the same range + 8 offset */
+    /* Wayland uses evdev keycodes (8-255).
+     * X11 typically uses the same range + 8 offset. */
     return keycode + 8;
 }
 
@@ -567,22 +584,6 @@ XKBGetModifierState(void)
 /*
  *---------------------------------------------------------------------------
  *
- * XKBKeysymToString --
- *
- *      Convert KeySym to UTF-8 string.
- *
- * Results:
- *      Returns number of bytes written to buffer.
- *
- * Side effects:
- *      Writes UTF-8 string to buffer.
- *
- *---------------------------------------------------------------------------
- */
-
-/*
- *---------------------------------------------------------------------------
- *
  * TkWaylandProcessKey --
  *
  *      Process a key press or release event.
@@ -632,10 +633,8 @@ TkWaylandProcessKey(
     event.xkey.x_root = 0;
     event.xkey.y_root = 0;
     event.xkey.state = XKBGetModifierState();
-    event.xkey.keycode = XKBKeycodeToX11Keycode(keycode);
+    event.xkey.keycode = XKBKeycodeToX11Keycode(keycode);   /* Store real X11 keycode. */
     event.xkey.same_screen = True;
-    
-    /* For KeyPress, we can't directly set string data in XKeyEvent */
     
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
@@ -754,6 +753,45 @@ FindIMEState(Tk_Window tkwin)
             return ime;
         }
         ime = ime->next;
+    }
+    
+    return NULL;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * FindIMEStateBySurface --
+ *
+ *      Find IME state for a Wayland surface by scanning hash table.
+ *
+ * Results:
+ *      Returns IME state or NULL.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static TkIMEState *
+FindIMEStateBySurface(struct wl_surface *surface)
+{
+    int i;
+    TkIMEState *ime;
+    
+    if (!wlIME.ime_hash || !surface) {
+        return NULL;
+    }
+    
+    for (i = 0; i < wlIME.hash_size; i++) {
+        ime = wlIME.ime_hash[i];
+        while (ime) {
+            if (ime->surface == surface) {
+                return ime;
+            }
+            ime = ime->next;
+        }
     }
     
     return NULL;
@@ -974,6 +1012,11 @@ CleanupIME(void)
         wlIME.ime_hash = NULL;
     }
     
+    if (wlIME.seat_name) {
+        ckfree(wlIME.seat_name);
+        wlIME.seat_name = NULL;
+    }
+    
     if (wlIME.display) {
         wl_display_disconnect(wlIME.display);
         wlIME.display = NULL;
@@ -1009,7 +1052,7 @@ WaylandIMEDispatchEvents(void)
         return 0;
     }
     
-    /* Prepare to read events */
+    /* Prepare to read events. */
     while (wl_display_prepare_read(wlIME.display) != 0) {
         ret = wl_display_dispatch_pending(wlIME.display);
         if (ret < 0) {
@@ -1072,13 +1115,12 @@ WaylandIMEEventHandler(
 
 static void
 RegistryHandleGlobal(
-    void *data,
+    TCL_UNUSED(void *), /* data */
     struct wl_registry *registry,
     uint32_t name,
     const char *interface,
     uint32_t version)
 {
-    (void)data;
     
     if (strcmp(interface, "wl_seat") == 0) {
         wlIME.seat = wl_registry_bind(registry, name,
@@ -1094,25 +1136,26 @@ RegistryHandleGlobal(
 
 static void
 RegistryHandleGlobalRemove(
-    void *data,
-    struct wl_registry *registry,
-    uint32_t name)
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_registry *), /* registry */
+    TCL_UNUSED(uint32_t)) /* name */
 {
-    (void)data;
-    (void)registry;
-    (void)name;
-    /* Handle removal if needed. */
+    
+    /*
+     * If the removed global is the seat or text input manager,
+     * we should clean up related resources. For simplicity, we
+     * ignore this for now; if the seat disappears, the compositor
+     * is likely shutting down.
+     */
 }
 
 static void
 SeatHandleCapabilities(
-    void *data,
+    TCL_UNUSED(void *), /* data */
     struct wl_seat *seat,
     uint32_t capabilities)
 {
-    (void)data;
-    (void)seat;
-    
+   
     if ((capabilities & WL_SEAT_CAPABILITY_KEYBOARD) && !wlIME.keyboard) {
         wlIME.keyboard = wl_seat_get_keyboard(seat);
         wl_keyboard_add_listener(wlIME.keyboard, &keyboard_listener, NULL);
@@ -1124,14 +1167,17 @@ SeatHandleCapabilities(
 
 static void
 SeatHandleName(
-    void *data,
-    struct wl_seat *seat,
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_seat *), /* seat */
     const char *name)
 {
-    (void)data;
-    (void)seat;
-    (void)name;
-    /* Seat name received. */
+    
+    /* Store seat name for debugging purposes */
+    if (wlIME.seat_name) {
+        ckfree(wlIME.seat_name);
+    }
+    wlIME.seat_name = (char *)ckalloc(strlen(name) + 1);
+    strcpy(wlIME.seat_name, name);
 }
 
 /*
@@ -1144,15 +1190,13 @@ SeatHandleName(
 
 static void
 KeyboardHandleKeymap(
-    void *data,
-    struct wl_keyboard *keyboard,
+    TCL_UNUSED(void *), /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
     uint32_t format,
     int32_t fd,
     uint32_t size)
 {
-    (void)data;
-    (void)keyboard;
-    
+   
     if (format == WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
         TkWaylandSetKeymap(fd, size);
     } else {
@@ -1162,81 +1206,81 @@ KeyboardHandleKeymap(
 
 static void
 KeyboardHandleEnter(
-    void *data,
-    struct wl_keyboard *keyboard,
-    uint32_t serial,
+    TCL_UNUSED(void *),  /* data */
+    TCL_UNUSED(struct wl_keyboard *), /*keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
     struct wl_surface *surface,
-    struct wl_array *keys)
+    TCL_UNUSED(struct wl_array *)) /* keys */
 {
-    (void)data;
-    (void)keyboard;
-    (void)serial;
-    (void)surface;
-    (void)keys;
-    /* Keyboard focus entered. */
+    TkIMEState *ime;
+    
+    /* Find which Tk window this surface belongs to */
+    ime = FindIMEStateBySurface(surface);
+    if (ime) {
+        focusedTkWin = ime->tkwin;
+    } else {
+        focusedTkWin = NULL;
+    }
 }
 
 static void
 KeyboardHandleLeave(
-    void *data,
-    struct wl_keyboard *keyboard,
-    uint32_t serial,
-    struct wl_surface *surface)
+    TCL_UNUSED(void *),  /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
+    TCL_UNUSED(struct wl_surface *)) /* surface */
 {
-    (void)data;
-    (void)keyboard;
-    (void)serial;
-    (void)surface;
-    /* Keyboard focus left. */
+    
+    focusedTkWin = NULL;
 }
 
 static void
 KeyboardHandleKey(
-    void *data,
-    struct wl_keyboard *keyboard,
-    uint32_t serial,
+    TCL_UNUSED(void *),  /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
     uint32_t time,
     uint32_t key,
     uint32_t state)
 {
-    TkIMEState *ime = (TkIMEState *)data;
-    (void)keyboard;
-    (void)serial;
-    
-    if (ime && ime->tkwin) {
-        TkWaylandProcessKey(ime->tkwin, key,
+   
+    if (focusedTkWin) {
+        TkWaylandProcessKey(focusedTkWin, key,
                 (state == WL_KEYBOARD_KEY_STATE_PRESSED), time);
     }
 }
 
 static void
 KeyboardHandleModifiers(
-    void *data,
-    struct wl_keyboard *keyboard,
-    uint32_t serial,
+    TCL_UNUSED(void *),  /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
+    TCL_UNUSED(uint32_t), /* serial */
     uint32_t mods_depressed,
     uint32_t mods_latched,
     uint32_t mods_locked,
     uint32_t group)
 {
-    (void)data;
-    (void)keyboard;
-    (void)serial;
+
     UpdateXKBModifiers(mods_depressed, mods_latched, mods_locked, group);
 }
 
 static void
 KeyboardHandleRepeatInfo(
-    void *data,
-    struct wl_keyboard *keyboard,
+    TCL_UNUSED(void *),  /* data */
+    TCL_UNUSED(struct wl_keyboard *), /* keyboard */
     int32_t rate,
     int32_t delay)
 {
-    (void)data;
-    (void)keyboard;
-    (void)rate;
-    (void)delay;
-    /* Key repeat info - could be used for auto-repeat. */
+    
+    /* Store repeat information for potential use (e.g., configuring Tk's autorepeat) */
+    keyboard_repeat_rate = rate;
+    keyboard_repeat_delay = delay;
+    
+    /*
+     * Note: Tk handles autorepeat internally via timer events,
+     * but we could use this info to adjust the repeat behavior.
+     * For now, we just store it.
+     */
 }
 
 /*
@@ -1698,9 +1742,50 @@ SendIMEPreeditEvent(
     }
     
     /* Trigger widget redraw to show preedit */
-	Tcl_DoOneEvent(TCL_ALL_EVENTS);
+    Tcl_DoOneEvent(TCL_ALL_EVENTS);
+}
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * SendKeySymEvent --
+ *
+ *      Helper to generate a synthetic KeyPress/KeyRelease event for a keysym.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Queues X events.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+SendKeySymEvent(
+    Tk_Window tkwin,
+    KeySym keysym,
+    int pressed)
+{
+    XEvent event;
     
+    if (!tkwin) {
+        return;
+    }
+    
+    memset(&event, 0, sizeof(XEvent));
+    event.xkey.type = pressed ? KeyPress : KeyRelease;
+    event.xkey.display = Tk_Display(tkwin);
+    event.xkey.window = Tk_WindowId(tkwin);
+    event.xkey.root = RootWindow(Tk_Display(tkwin), Tk_ScreenNumber(tkwin));
+    event.xkey.time = TkGetCurrentTimeMillis();
+    event.xkey.state = XKBGetModifierState();
+    event.xkey.same_screen = True;
+    
+    /* Set keycode and state using TkpSetKeycodeAndState. */
+    TkpSetKeycodeAndState(tkwin, keysym, &event);
+    
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
 
 /*
@@ -1726,30 +1811,28 @@ SendIMECommitEvent(
     XEvent event;
     const char *p;
     int ch;
-    char utf8_buf[6];  /* Max UTF-8 char length */
     int utf8_len;
     
     if (!ime || !ime->commit_string || !ime->tkwin) {
         return;
     }
     
-    /* Generate KeyPress for each UTF-8 character. */
+    /* Generate KeyPress for each Unicode character. */
     p = ime->commit_string;
     while (*p) {
         utf8_len = Tcl_UtfToUniChar(p, &ch);
-        memcpy(utf8_buf, p, utf8_len);
-        utf8_buf[utf8_len] = '\0';
         
         memset(&event, 0, sizeof(XEvent));
         event.xkey.type = KeyPress;
         event.xkey.display = Tk_Display(ime->tkwin);
         event.xkey.window = Tk_WindowId(ime->tkwin);
-        event.xkey.keycode = 0;  /* Virtual keycode for IME input */
-        event.xkey.state = XKBGetModifierState();
+        event.xkey.keycode = ch;                     /* Store Unicode code point */
+        event.xkey.state = XKBGetModifierState() | (utf8_len << 16); /* High byte = UTF-8 length */
+        event.xkey.time = TkGetCurrentTimeMillis();               /* Approximate time */
         
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         
-        /* Optionally send KeyRelease if needed */
+        /* Optionally send KeyRelease if needed. */
         event.xkey.type = KeyRelease;
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         
@@ -1870,11 +1953,31 @@ IMETextInputDeleteSurroundingText(
     uint32_t before_length,
     uint32_t after_length)
 {
-    (void)data;
+    TkIMEState *ime = (TkIMEState *)data;
+    uint32_t i;
+    
     (void)text_input;
-    (void)before_length;
-    (void)after_length;
-    /* No-op */
+    
+    if (!ime || !ime->tkwin) {
+        return;
+    }
+    
+    /*
+     * Simulate deletion by sending Backspace (for before_length)
+     * and Delete (for after_length) key events.
+     */
+    
+    /* Delete characters before cursor (Backspace). */
+    for (i = 0; i < before_length; i++) {
+        SendKeySymEvent(ime->tkwin, XK_BackSpace, 1);  /* Press */
+        SendKeySymEvent(ime->tkwin, XK_BackSpace, 0);  /* Release */
+    }
+    
+    /* Delete characters after cursor (Delete). */
+    for (i = 0; i < after_length; i++) {
+        SendKeySymEvent(ime->tkwin, XK_Delete, 1);
+        SendKeySymEvent(ime->tkwin, XK_Delete, 0);
+    }
 }
 
 static void
@@ -1948,25 +2051,38 @@ TkpGetKeySym(
     TCL_UNUSED(TkDisplay *),    /* Display on which to map keycode. */
     XEvent *eventPtr)            /* Description of X event. */
 {
-    KeySym keysym = NoSymbol;
-    XKeyEvent *keyPtr = &eventPtr->xkey;
-    
-    /*
-     * For Wayland/GLFW, the keysym has already been computed by
-     * our keyboard handling code in tkWaylandKey.c and stored in
-     * the trans_chars field of the XKeyEvent structure.
-     * We use the keycode field to store the keysym for compatibility.
-     */
-    
-    if (eventPtr->type == KeyPress || eventPtr->type == KeyRelease) {
-        /*
-         * The keysym was stored in the keycode field by our
-         * GLFW keyboard handler.
-         */
-        keysym = (KeySym)keyPtr->keycode;
+    if (eventPtr->type != KeyPress && eventPtr->type != KeyRelease) {
+        return NoSymbol;
     }
-    
-    return keysym;
+
+    if (!xkbState.state) {
+        return NoSymbol;
+    }
+
+    XKeyEvent *keyPtr = &eventPtr->xkey;
+
+    /* Convert X11 keycode (evdev+8) back to raw evdev code. */
+    unsigned int evdev_keycode = keyPtr->keycode - 8;
+
+    /* Get base keysym from XKB state. */
+    xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkbState.state, evdev_keycode);
+
+    /* Handle compose sequences if available. */
+    if (xkbState.compose_state && keysym != XKB_KEY_NoSymbol) {
+        if (xkb_compose_state_feed(xkbState.compose_state, keysym)
+                == XKB_COMPOSE_FEED_ACCEPTED) {
+            enum xkb_compose_status status =
+                xkb_compose_state_get_status(xkbState.compose_state);
+            if (status == XKB_COMPOSE_COMPOSED) {
+                keysym = xkb_compose_state_get_one_sym(xkbState.compose_state);
+                xkb_compose_state_reset(xkbState.compose_state);
+            } else if (status == XKB_COMPOSE_CANCELLED) {
+                xkb_compose_state_reset(xkbState.compose_state);
+            }
+        }
+    }
+
+    return (KeySym)keysym;
 }
 
 /*
@@ -1992,63 +2108,41 @@ TkpGetString(
     XEvent *eventPtr,            /* KeyPress event. */
     Tcl_DString *dsPtr)          /* DString to hold the returned string. */
 {
-    XKeyEvent *keyPtr = &eventPtr->xkey;
-    const char *str;
-    char buf[TCL_UTF_MAX + 1];
-    int len;
-    KeySym keysym;
-    
-    /*
-     * Initialize the DString to empty.
-     */
     Tcl_DStringInit(dsPtr);
-    
+
     if (eventPtr->type != KeyPress) {
         return "";
     }
-    
-    /*
-     * For Wayland/GLFW with IME support, the string has been
-     * generated by our keyboard handler and stored in the event.
-     * 
-     * The state field contains the string length in the high byte,
-     * and we use XLookupString compatibility to get the string.
-     */
-    
-    /* Extract string length from state field (high byte) */
-    len = (keyPtr->state >> 16) & 0xFF;
-    
-    if (len > 0) {
-        /*
-         * The string was pre-computed. Use XLookupString for compatibility.
-         */
-        keysym = NoSymbol;
-        len = XLookupString(keyPtr, buf, TCL_UTF_MAX, &keysym, NULL);
-        
+
+    XKeyEvent *keyPtr = &eventPtr->xkey;
+
+    /* Check if this is an IME commit event (high byte of state set). */
+    int utf8_len = (keyPtr->state >> 16) & 0xFF;
+    if (utf8_len > 0) {
+        /* IME commit: keycode holds Unicode code point */
+        int ch = (int)keyPtr->keycode;
+        char buf[TCL_UTF_MAX + 1];
+        int len = Tcl_UniCharToUtf(ch, buf);
         if (len > 0) {
             Tcl_DStringAppend(dsPtr, buf, len);
-            str = Tcl_DStringValue(dsPtr);
-        } else {
-            str = "";
         }
-    } else {
-        /*
-         * No string was generated (e.g., modifier key, function key).
-         * Try to generate one from the keysym.
-         */
-        keysym = (KeySym)keyPtr->keycode;
-        
-        if (keysym != NoSymbol && keysym < 256) {
-            /* ASCII character */
-            buf[0] = (char)keysym;
-            Tcl_DStringAppend(dsPtr, buf, 1);
-            str = Tcl_DStringValue(dsPtr);
-        } else {
-            str = "";
-        }
+        return Tcl_DStringValue(dsPtr);
     }
-    
-    return str;
+
+    /* Normal key press: get UTF‑8 from XKB */
+    if (!xkbState.state) {
+        return "";
+    }
+
+    unsigned int evdev_keycode = keyPtr->keycode - 8;
+    char buf[64];
+    int len = xkb_state_key_get_utf8(xkbState.state, evdev_keycode,
+                                      buf, sizeof(buf));
+    if (len > 0) {
+        Tcl_DStringAppend(dsPtr, buf, len);
+    }
+
+    return Tcl_DStringValue(dsPtr);
 }
 
 /*
@@ -2081,6 +2175,7 @@ TkpSetKeycodeAndState(
     /*
      * Simplified keycode mapping for event generation.
      * For [event generate], we just need reasonable mappings.
+     * This maps keysyms to approximate X11 keycodes.
      */
     
     if (keysym >= 'A' && keysym <= 'Z') {
@@ -2095,10 +2190,10 @@ TkpSetKeycodeAndState(
         /* Numbers */
         keycode = keysym - '0' + 10;
         state = 0;
-	} else if (keysym >= XK_F1 && keysym <= XK_F35) {  /* Support F1-F35 */
-		/* Function keys */
-		keycode = keysym - XK_F1 + 67;
-		state = 0;
+    } else if (keysym >= XK_F1 && keysym <= XK_F35) {
+        /* Function keys */
+        keycode = keysym - XK_F1 + 67;
+        state = 0;
     } else {
         /* Special keys and others */
         switch (keysym) {
@@ -2130,7 +2225,7 @@ TkpSetKeycodeAndState(
             keycode = 116;
             break;
         default:
-            /* Use keysym as keycode for unknown keys */
+            /* Use keysym as keycode for unknown keys (fallback) */
             keycode = keysym & 0xFF;
             break;
         }
@@ -2138,7 +2233,7 @@ TkpSetKeycodeAndState(
     
     /*
      * Update the event structure with the keycode and state.
-     * Store keysym in keycode field for TkpGetKeySym compatibility.
+     * We store a real keycode, not a keysym.
      */
     eventPtr->xkey.keycode = keycode;
     eventPtr->xkey.state |= state;
@@ -2186,6 +2281,16 @@ TkpInitKeymapInfo(
      * This function just sets up the modifier mask mappings
      * that Tk's binding system expects.
      */
+}
+
+/* Helper function to succinctly get current time. */
+static Time
+TkGetCurrentTimeMillis(void)
+{
+    Tcl_Time now;
+    Tcl_GetTime(&now);
+
+    return (Time)(now.sec * 1000 + now.usec / 1000);
 }
 
 /*
