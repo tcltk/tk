@@ -326,6 +326,85 @@ TkpKeycodeToKeysym(
     }
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * XStringToKeysym --
+ *
+ *      Convert a keysym name string to a KeySym value.
+ *      This is a Wayland/XKB implementation of the X11 function.
+ *
+ * Results:
+ *      Returns the KeySym corresponding to the name, or NoSymbol
+ *      if the name is not recognized.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+KeySym
+XStringToKeysym(
+    _Xconst char *string)
+{
+    if (!string || !*string) {
+        return NoSymbol;
+    }
+
+    /*
+     * Use xkbcommon to convert string to keysym.
+     * This handles standard X11 keysym names like "Right", "Left", etc.
+     */
+    xkb_keysym_t keysym = xkb_keysym_from_name(string, XKB_KEYSYM_NO_FLAGS);
+    
+    /*
+     * If case-sensitive lookup fails, try case-insensitive.
+     * This matches X11 XStringToKeysym behavior.
+     */
+    if (keysym == XKB_KEY_NoSymbol) {
+        keysym = xkb_keysym_from_name(string, XKB_KEYSYM_CASE_INSENSITIVE);
+    }
+    
+    return (KeySym)keysym;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * XKeysymToString --
+ *
+ *      Convert a KeySym value to its string name.
+ *      This is a Wayland/XKB implementation of the X11 function.
+ *
+ * Results:
+ *      Returns a pointer to a static string containing the keysym name,
+ *      or NULL if the keysym is not recognized.
+ *
+ * Side effects:
+ *      The returned string is stored in a static buffer.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+char *
+XKeysymToString(
+    KeySym keysym)
+{
+    static char buffer[64];
+    
+    /*
+     * Use xkbcommon to convert keysym to string.
+     */
+    int result = xkb_keysym_get_name((xkb_keysym_t)keysym, buffer, sizeof(buffer));
+    
+    if (result > 0) {
+        return buffer;
+    }
+    
+    return NULL;
+}
+
 int
 TkWaylandKeyInit(void)
 {

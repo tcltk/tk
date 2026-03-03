@@ -229,11 +229,12 @@ TkGlfwShutdown(TCL_UNUSED(ClientData))
 
     /* Only terminate GLFW if it was initialized. */
     if (glfwContext.initialized) {
+		/* Flush any final events. */
+		glfwPollEvents();    
         glfwTerminate();
         glfwContext.initialized = 0;
     }
     
-    exit(0);
 }
 
 /*
