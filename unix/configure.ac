@@ -714,31 +714,36 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support — allowed on both X11 and Wayland
+#   Check for Atk support — X11 only, explicitly excluding Wayland
 #--------------------------------------------------------------------
 
 if test "$tk_aqua" = no; then
-  AC_MSG_CHECKING([for ATK and Atk-bridge])
+  # Proceed only if X11 is available AND Wayland is not the active session
+  if pkg-config --exists x11 && test -z "$WAYLAND_DISPLAY"; then
+    AC_MSG_CHECKING([for ATK and Atk-bridge (X11)])
 
-  if pkg-config --exists atk \
-     && pkg-config --exists atk-bridge-2.0; then
+    if pkg-config --exists atk \
+       && pkg-config --exists atk-bridge-2.0; then
 
-    AC_MSG_RESULT([yes])
-    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
-    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-    AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
-    have_atk=yes
-    AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
+      AC_MSG_RESULT([yes])
+      ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+      ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+      AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
+      have_atk=yes
+      AC_MSG_NOTICE([All accessibility dependencies found, enabling support])
+    else
+      AC_MSG_RESULT([no])
+      ATK_CFLAGS=""
+      ATK_LIBS=""
+      have_atk=no
+      AC_MSG_NOTICE([One or more accessibility dependencies not found, disabling support])
+    fi
+
+    AC_SUBST([ATK_CFLAGS])
+    AC_SUBST([ATK_LIBS])
   else
-    AC_MSG_RESULT([no])
-    ATK_CFLAGS=""
-    ATK_LIBS=""
-    have_atk=no
-    AC_MSG_NOTICE([One or more accessibility dependencies not found, disabling support])
+    AC_MSG_NOTICE([Wayland detected or X11 not available; skipping ATK/Atk-bridge check])
   fi
-
-  AC_SUBST([ATK_CFLAGS])
-  AC_SUBST([ATK_LIBS])
 fi
 
 #--------------------------------------------------------------------
