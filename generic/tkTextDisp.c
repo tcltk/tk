@@ -158,7 +158,7 @@ typedef struct StyleValues {
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE or TEXT_WRAPMODE_WORD.*/
-    char locale[24];
+    char locale[6];
 } StyleValues;
 
 /*
@@ -812,8 +812,8 @@ GetStyle(
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.elide = 0;
-    if (textPtr->localeObj) {
-	strncpy(styleValues.locale, Tcl_GetString(textPtr->localeObj), sizeof(styleValues.locale)-1);
+    if (textPtr->locale[0]) {
+	memcpy(styleValues.locale, textPtr->locale, sizeof(styleValues.locale));
     }
     isSelected = 0;
 
@@ -985,9 +985,9 @@ GetStyle(
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
 	}
-	if ((tagPtr->localeObj != NULL)
+	if ((tagPtr->locale[0])
 		&& (tagPtr->priority > localePrio)) {
-	    strncpy(styleValues.locale, Tcl_GetString(tagPtr->localeObj), sizeof(styleValues.locale)-1);
+	    memcpy(styleValues.locale, tagPtr->locale, sizeof(styleValues.locale));
 	    localePrio = tagPtr->priority;
 	}
     }
@@ -7519,6 +7519,84 @@ TkTextIndexBbox(
  *----------------------------------------------------------------------
  */
 
+static const char *localeExt[] = {
+    "",
+    "adlam",
+    "cjknarrow",
+    "cyrillic",
+    "devangari",
+    "euro",
+    "iqtelif",
+    "latin",
+    "preeuro",
+    "valencia",
+    NULL
+};
+
+static int
+SetLocale(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
+    TCL_UNUSED(Tk_Window),	/* Window for which option is being set. */
+    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+				 * We use a pointer to the pointer because we
+				 * may need to return a value (NULL). */
+    char *recordPtr,		/* Pointer to storage for the widget record. */
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
+				 * internal value is to be stored. */
+    char *oldInternalPtr,	/* Pointer to storage for the old value. */
+    int flags)			/* Flags for the option, set Tk_SetOptions. */
+{
+    char locale[6] = {0, 0, 0, 0, 0, 0};
+
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
+	*value = NULL;
+    } else {
+	/* Do the actual parsing here */
+	locale[0] = 'C';
+    }
+
+    if (internalOffset != TCL_INDEX_NONE) {
+	char *internalPtr = recordPtr + internalOffset;
+	memcpy(oldInternalPtr, internalPtr, sizeof(locale));
+	memcpy(internalPtr, locale, sizeof(locale));
+    }
+    return TCL_OK;
+}
+
+static Tcl_Obj *
+GetLocale(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *recordPtr,		/* Pointer to widget record. */
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the
+				 * line value. */
+{
+    char *locale = recordPtr + internalOffset;
+
+    /* Translate locale to string */
+    return Tcl_NewStringObj("C", -1);
+}
+
+static void
+RestoreLocale(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *internalPtr,		/* Pointer to storage for value. */
+    char *oldInternalPtr)	/* Pointer to old value. */
+{
+    memcpy(internalPtr, oldInternalPtr, sizeof(char[6]));
+}
+
+const Tk_ObjCustomOption TkLocaleOption = {
+    "locale",		/* name */
+    SetLocale,		/* setProc */
+    GetLocale,		/* getProc */
+    RestoreLocale,	/* restoreProc */
+    NULL,			/* freeProc */
+    0
+};
+
 Tcl_Obj *
 TkTextIndexLocale(
     TkText *textPtr,		/* Widget record for text widget. */
@@ -7552,7 +7630,10 @@ TkTextIndexLocale(
      */
 
     if ((dlPtr == NULL) || (TkTextIndexCmp(&dlPtr->index, indexPtr) > 0)) {
-	return textPtr->localeObj;
+	if (textPtr->locale[0]) {
+	    return NULL;
+	}
+	return GetLocale(NULL, NULL, textPtr->locale, 0);
     }
 
     /*
@@ -7566,7 +7647,10 @@ TkTextIndexLocale(
     byteCount = TkTextIndexCountBytes(textPtr, &dlPtr->index, indexPtr);
     for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
 	if (chunkPtr == NULL) {
-	    return textPtr->localeObj;
+	    if (textPtr->locale[0]) {
+		return NULL;
+	    }
+	    return GetLocale(NULL, NULL, textPtr->locale, 0);;
 	}
 	if (byteCount < chunkPtr->numBytes) {
 	    break;
@@ -7577,7 +7661,7 @@ TkTextIndexLocale(
     if (!chunkPtr->stylePtr->sValuePtr->locale[0]) {
 	return NULL;
     }
-    return Tcl_NewStringObj(chunkPtr->stylePtr->sValuePtr->locale, TCL_INDEX_NONE);
+    return GetLocale(NULL, NULL, chunkPtr->stylePtr->sValuePtr->locale, 0);
 }
 
 /*

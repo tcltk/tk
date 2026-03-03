@@ -184,7 +184,6 @@ typedef struct {
     int placeholderLeftIndex;	/* Character index of left-most character
 				 * visible in window. */
     char locale[6];	/* locale */
-    Tcl_Obj *localeObj;		/* locale. */
 } Entry;
 
 /*
