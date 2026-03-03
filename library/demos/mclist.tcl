@@ -65,7 +65,7 @@ set data {
 set font [ttk::style lookup Heading -font]
 foreach col {country capital currency} name {Country Capital Currency} {
     $w.tree heading $col -text $name -image noArrow -anchor w \
-	-command [list SortBy $w.tree $col 0]
+	-command [list SortBy $w.tree $col 1]
     $w.tree column $col -width [expr {
 	[font measure $font $name] + [image width noArrow] + 5
     }]
@@ -99,7 +99,7 @@ proc SortBy {tree col direction} {
 	lappend data [list [$tree set $row $col] $row]
     }
 
-    set dir [expr {$direction ? "-decreasing" : "-increasing"}]
+    set dir [expr {$direction ? "-increasing" : "-decreasing"}]
     set r -1
 
     # Now reshuffle the rows into the sorted order
