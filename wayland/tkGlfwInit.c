@@ -40,7 +40,7 @@
  *----------------------------------------------------------------------
  */
 
-static TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, 0, NULL, 0, 0, 0};
+TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, 0, NULL, 0, 0, 0};
 static WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
 
@@ -173,15 +173,14 @@ TkGlfwInitialize(void)
     }
     TkWaylandSetNVGContext(glfwContext.vg);
 
-    /* Load font for decoration text rendering. */
-    glfwContext.decorFontId = nvgCreateFont(glfwContext.vg, "sans",
+    /* Load core fonts for decoration text rendering. */
+    nvgCreateFont(glfwContext.vg, "sans",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+    nvgCreateFont(glfwContext.vg, "sans-bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
+    nvgCreateFont(glfwContext.vg, "mono", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf");
 
     glfwContext.initialized = 1;
     
-    if (!glfwInit()) {
-    return TCL_ERROR;
-}
     Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
     return TCL_OK;
 }
@@ -307,6 +306,7 @@ TkGlfwCreateWindow(
     mapping->height     = height;
     mapping->nextPtr    = windowMappingList;
     windowMappingList   = mapping;
+    mapping->clearPending = false;
 
     glfwSetWindowUserPointer(window, mapping);
 
@@ -473,12 +473,14 @@ TkGlfwBeginDraw(
     glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
 
    glViewport(0, 0, fbWidth, fbHeight);
-	if (glfwContext.clearPending) {
+
+	if (mapping->clearPending) {   
+	    /* Use a neutral default (widgets will fill their own bg anyway). */
 	    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
 	    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	    glfwContext.clearPending = 0;
+	    mapping->clearPending = false;
 	}
-	
+
     nvgBeginFrame(glfwContext.vg,
                   (float)mapping->width,
                   (float)mapping->height,
