@@ -1075,18 +1075,18 @@ DoObjConfig(
      * it to the caller, then install the new object value into the record.
      */
 
+    if (slotPtrPtr != NULL) {
+	*slotPtrPtr = valuePtr;
+	if (valuePtr != NULL) {
+	    Tcl_IncrRefCount(valuePtr);
+	}
+    }
     if (savedOptionPtr == NULL) {
 	if (optionPtr->flags & OPTION_NEEDS_FREEING) {
 	    FreeResources(optionPtr, oldPtr, oldInternalPtr, tkwin);
 	}
 	if (oldPtr != NULL) {
 	    Tcl_DecrRefCount(oldPtr);
-	}
-    }
-    if (slotPtrPtr != NULL) {
-	*slotPtrPtr = valuePtr;
-	if (valuePtr != NULL) {
-	    Tcl_IncrRefCount(valuePtr);
 	}
     }
     return TCL_OK;
