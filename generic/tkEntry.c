@@ -122,7 +122,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), TK_OPTION_ENUM_VAR, 0, 0},
-    {TK_OPTION_STRING, "-locale", "locale", "Locale",
+    {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
 	"C", TCL_INDEX_NONE, offsetof(Entry, locale),
 	TK_OPTION_NULL_OK, &TkLocaleOption, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
