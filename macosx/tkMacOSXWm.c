@@ -1012,7 +1012,6 @@ TkWmMapWindow(
     XEvent event;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
-
 	/*
 	 * Create the underlying Mac window for this Tk window.
 	 */
