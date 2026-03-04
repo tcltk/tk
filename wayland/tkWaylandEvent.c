@@ -165,9 +165,7 @@ TkGlfwWindowSizeCallback(
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
- TkWaylandHandleExposeEvents();
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
+	TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
 
 }
 

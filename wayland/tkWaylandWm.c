@@ -687,7 +687,6 @@ Tk_MakeWindow(
     TCL_UNUSED(Window))        /* parent – ignored for toplevels */
 {
     TkWindow  *winPtr     = (TkWindow *)tkwin;
-    TkWindow  *parentPtr;
     GLFWwindow *glfwWindow = NULL;
     int         width, height;
     Drawable    drawable;
@@ -716,33 +715,25 @@ Tk_MakeWindow(
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
 
-    } else {
-        /* Child window: derive unique ID. */
-        parentPtr = winPtr->parentPtr;
-        while (parentPtr->parentPtr != NULL) parentPtr = parentPtr->parentPtr;
-
-        const char *p;
-        Window hash = 0;
-        for (p = winPtr->pathName; *p; p++) {
-            hash = hash * 131u + (unsigned char)*p;
-        }
-        window = parentPtr->window ^ hash;
-        if (window == parentPtr->window || window == None) {
-            window = parentPtr->window + 1;
-        }
+  } else {
+        /*
+         * Child window: assign a small unique integer ID.
+         *
+         * A static counter starting above the toplevel drawable range
+         * gives collision-free IDs.  The slow-path tree walk in
+         * FindMappingByDrawable resolves them correctly once Tk's generic
+         * layer links the child into its parent's childList (which happens
+         * after this function returns).
+         *
+         * Do NOT send MapNotify here.  The child is not yet in the
+         * parent's childList at this point, so FindMappingByDrawable
+         * would miss it.  Tk's generic Tk_MapWindow sends MapNotify at
+         * the correct time.
+         */
+        static Window nextChildId = 100000;
+        window = nextChildId++;
+        if (window == None) window = nextChildId++;
         winPtr->window = window;
-	/* Child window - generate MapNotify after window ID assigned. */
-	if (winPtr->display) {
-	    XEvent mapEv;
-	    memset(&mapEv, 0, sizeof(XEvent));
-	    mapEv.type = MapNotify;
-	    mapEv.xmap.serial = LastKnownRequestProcessed(winPtr->display);
-	    mapEv.xmap.display = winPtr->display;
-	    mapEv.xmap.event = window;
-	    mapEv.xmap.window = window;
-	    Tk_QueueWindowEvent(&mapEv, TCL_QUEUE_TAIL); 
-	}
-
     }
 
     return window;

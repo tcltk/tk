@@ -9,18 +9,37 @@
  * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution.
+ *
+ * Drawing pipeline
+ * ----------------
+ * glfwPollEvents is called ONLY from HeartbeatTimerProc and
+ * TkWaylandEventsCheckProc.  It queues Tk XEvents via GLFW callbacks
+ * but never opens a NanoVG frame.
+ *
+ * Widget display procedures own their own BeginDraw/EndDraw pairs and
+ * are driven by Tk's normal event/idle mechanism.  The only thing we
+ * need to do before they run is set clearPending=1 so the first
+ * BeginDraw for each window each tick issues a glClear.  Subsequent
+ * BeginDraw calls on the same window take the nested-frame path and
+ * composite into the same cleared buffer.
+ *
+ * TkWaylandRenderIdleProc (a Tcl idle callback) sets clearPending and
+ * then drains queued window events and idle callbacks with
+ * Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_IDLE_EVENTS|TCL_DONT_WAIT).
+ * Timer and file events are excluded to prevent re-entering the
+ * heartbeat timer or the Wayland IME fd handler during a draw pass.
  */
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 
+extern TkGlfwContext  glfwContext;
 
-
-/* Thread-specific data */
 typedef struct ThreadSpecificData {
-    bool initialized;
-    bool waylandInitialized;    /* or glfwInitialized — depending on backend */
+    bool           initialized;
+    bool           waylandInitialized;
     Tcl_TimerToken heartbeatTimer;
+    bool           renderPending;
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
@@ -28,16 +47,15 @@ static Tcl_ThreadDataKey dataKey;
 #define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
     Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
-/* Forward declarations */
 static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
 static void HeartbeatTimerProc(void *clientData);
-static int TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
+static void TkWaylandRenderIdleProc(void *clientData);
+static void TkWaylandScheduleRender(void);
+static int  TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
 
-/* Heartbeat timer constants */
 #define HEARTBEAT_INTERVAL 16   /* ms */
-
 
 /*
  *----------------------------------------------------------------------
@@ -66,7 +84,8 @@ Tk_WaylandSetupTkNotifier(void)
     TSD_INIT();
 
     if (!tsdPtr->initialized) {
-        tsdPtr->initialized = true;
+        tsdPtr->initialized   = true;
+        tsdPtr->renderPending = false;
 
         Tcl_CreateEventSource(TkWaylandEventsSetupProc,
                               TkWaylandEventsCheckProc, NULL);
@@ -74,8 +93,72 @@ Tk_WaylandSetupTkNotifier(void)
         tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
                                                         HeartbeatTimerProc,
                                                         NULL);
-
         TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
+    }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandScheduleRender --
+ *
+ *      Schedules redraws of widgets at idle events.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Redraws scheduled.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+static void
+TkWaylandScheduleRender(void)
+{
+    TSD_INIT();
+
+    if (!tsdPtr->renderPending && tsdPtr->initialized) {
+        tsdPtr->renderPending = true;
+        Tcl_DoWhenIdle(TkWaylandRenderIdleProc, NULL);
+    }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandRenderIdleProc -- --
+ *
+ *   Runs once per Tcl idle cycle.  Sets clearPending on every mapped
+ *   window so the first BeginDraw this tick clears the framebuffer,
+ *   then drains window events and idle callbacks so widget display
+ *   procedures run.  Does NOT open a NanoVG frame itself.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Widget display procedures run.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+static void 
+TkWaylandRenderIdleProc(ClientData clientData)
+{
+    WindowMapping *m;
+    TkGlfwContext *ctx = TkGlfwGetContext();
+    TSD_INIT();
+    
+    tsdPtr->renderPending = false;
+
+    /* Prime per-window clear flag for every mapped toplevel. */
+    for (m = TkGlfwGetMappingList(); m; m = m->nextPtr) {
+        if (m->glfwWindow && m->width > 1 && m->height > 1) {
+            m->clearPending = true;
+        }
     }
 }
 
@@ -98,25 +181,21 @@ Tk_WaylandSetupTkNotifier(void)
  */
  
 static void
-HeartbeatTimerProc(
-    TCL_UNUSED(void *))
+HeartbeatTimerProc(TCL_UNUSED(void *))
 {
     TSD_INIT();
-	
-	/* Don't reschedule if we are shutting down. */
+
     if (!tsdPtr->initialized)
         return;
-
 
     tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
                                                     HeartbeatTimerProc,
                                                     NULL);
-
     glfwPollEvents();
-
-    /* Flush any expose or auto-opened frames from the poll above. */
-    TkWaylandHandleExposeEvents();
+    TkWaylandScheduleRender();
 }
+
+static const Tcl_Time zeroBlockTime = { 0, 0 };
 
 /*
  *----------------------------------------------------------------------
@@ -135,18 +214,12 @@ HeartbeatTimerProc(
  *
  *----------------------------------------------------------------------
  */
- 
-static const Tcl_Time zeroBlockTime  = { 0, 0 };
 
 static void
-TkWaylandEventsSetupProc(
-    TCL_UNUSED(void *), /* clientData */
-    int flags)
+TkWaylandEventsSetupProc(TCL_UNUSED(void *), int flags)
 {
-    if (flags & TCL_WINDOW_EVENTS) {
-        /* For now we always want quick response when windows exist. */
+    if (flags & TCL_WINDOW_EVENTS)
         Tcl_SetMaxBlockTime(&zeroBlockTime);
-    }
 }
 
 /*
@@ -168,23 +241,23 @@ TkWaylandEventsSetupProc(
  */
  
 static void
-TkWaylandEventsCheckProc(
-    TCL_UNUSED(void *),
-    int flags)
+TkWaylandEventsCheckProc(TCL_UNUSED(void *), int flags)
 {
-    if (flags & TCL_WINDOW_EVENTS) {
-        /*
-         * Poll GLFW first so that window resize, refresh, and input
-         * callbacks fire and queue their synthetic XEvents.
-         */
-        TkGlfwProcessEvents();
-
-        /*
-         * Now drain any Expose events that were just queued, routing
-         * them through the NanoVG frame lifecycle.
-         */
-        TkWaylandHandleExposeEvents();
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return;
     }
+
+    if (!glfwContext.initialized) {
+        return;
+    }
+
+    if (!glfwContext.mainWindow) {
+        return;
+    }
+
+    glfwPollEvents();
+
+    TkWaylandScheduleRender();
 }
 
 /*
@@ -206,17 +279,15 @@ TkWaylandEventsCheckProc(
  */
  
 static void
-TkWaylandNotifyExitHandler(
-    TCL_UNUSED(void *)) /* clientData */
+TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 {
     TSD_INIT();
 
-    if (!tsdPtr->initialized) {
+    if (!tsdPtr->initialized)
         return;
-    }
 
-    tsdPtr->initialized = false;  /* Must be before DeleteTimerHandler */
-	
+    tsdPtr->initialized = false;
+
     Tcl_DeleteEventSource(TkWaylandEventsSetupProc,
                           TkWaylandEventsCheckProc, NULL);
 
@@ -224,6 +295,9 @@ TkWaylandNotifyExitHandler(
         Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
         tsdPtr->heartbeatTimer = NULL;
     }
+
+    Tcl_CancelIdleCall(TkWaylandRenderIdleProc, NULL);
+    tsdPtr->renderPending = false;
 }
 
 /*
@@ -242,11 +316,9 @@ TkWaylandNotifyExitHandler(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 static int
-TkWaylandExposeEventProc(
-    Tcl_Event *evPtr,
-    int        flags)
+TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags)
 {
     TkWaylandExposeEvent *exposePtr = (TkWaylandExposeEvent *)evPtr;
     WindowMapping        *mapping;
@@ -254,7 +326,6 @@ TkWaylandExposeEventProc(
     if (!(flags & TCL_WINDOW_EVENTS)) return 0;
     if (exposePtr->winPtr == NULL)    return 1;
 
-    /* Update dimensions from mapping if this is a toplevel. */
     mapping = FindMappingByTk(exposePtr->winPtr);
     if (mapping && mapping->width > 1 && mapping->height > 1) {
         exposePtr->winPtr->changes.width  = mapping->width;
@@ -263,11 +334,9 @@ TkWaylandExposeEventProc(
         exposePtr->xEvent.xexpose.height  = mapping->height;
     }
 
-    /* Deliver the event — BeginDraw's tree walk handles child drawables. */
     Tk_HandleEvent(&exposePtr->xEvent);
     return 1;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -287,35 +356,11 @@ TkWaylandExposeEventProc(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 void
 TkWaylandHandleExposeEvents(void)
 {
-    WindowMapping           *m;
-    TkWaylandDrawingContext  dc;
-    int                      didBegin = 0;
-
-    /*
-     * Open a NanoVG frame on each mapped window before draining.
-     * This clears once and holds the frame open so every child
-     * widget draw call composites into the same buffer.
-     */
-    for (m = TkGlfwGetMappingList(); m; m = m->nextPtr) {
-        if (m->glfwWindow && m->width > 1 && m->height > 1) {
-			TkGlfwContext *ctx = TkGlfwGetContext();
-            ctx->clearPending = 1;
-            if (TkGlfwBeginDraw(m->drawable, NULL, &dc) == TCL_OK)
-                didBegin = 1;
-        }
-    }
-
-    while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
-        /* drain */
-    }
-
-    /* Close the frame and swap once, after all widgets have drawn. */
-    if (didBegin)
-        TkGlfwEndDraw(&dc);
+    TkWaylandScheduleRender();
 }
 
 /*
@@ -336,7 +381,7 @@ TkWaylandHandleExposeEvents(void)
  *
  *----------------------------------------------------------------------
  */
-
+ 
 void
 TkWaylandQueueExposeEvent(
     TkWindow *winPtr,
@@ -344,40 +389,35 @@ TkWaylandQueueExposeEvent(
 {
     TkWaylandExposeEvent *evPtr;
 
-    if (winPtr == NULL) return;
-    if (winPtr->window == None) return;
+    if (winPtr == NULL)           return;
+    if (winPtr->window == None)   return;
 
-    /* For child widgets with no direct mapping, use their own
-     * dimensions if none were supplied. */
     if (width  <= 1) width  = winPtr->changes.width;
     if (height <= 1) height = winPtr->changes.height;
-
-    if (width <= 1 || height <= 1) return;
+    if (width  <= 1 || height <= 1) return;
 
     evPtr = (TkWaylandExposeEvent *)ckalloc(sizeof(TkWaylandExposeEvent));
     evPtr->header.proc = TkWaylandExposeEventProc;
     evPtr->winPtr      = winPtr;
 
     memset(&evPtr->xEvent, 0, sizeof(XEvent));
-    evPtr->xEvent.type               = Expose;
-    evPtr->xEvent.xexpose.serial     =
+    evPtr->xEvent.type                   = Expose;
+    evPtr->xEvent.xexpose.serial         =
         LastKnownRequestProcessed(winPtr->display);
-    evPtr->xEvent.xexpose.send_event = False;
-    evPtr->xEvent.xexpose.display    = winPtr->display;
-    evPtr->xEvent.xexpose.window     = winPtr->window;
-    evPtr->xEvent.xexpose.x          = x;
-    evPtr->xEvent.xexpose.y          = y;
-    evPtr->xEvent.xexpose.width      = width;
-    evPtr->xEvent.xexpose.height     = height;
-    evPtr->xEvent.xexpose.count      = 0;
-
-    TkGlfwContext *ctx = TkGlfwGetContext();
-    ctx->clearPending = 1;
+    evPtr->xEvent.xexpose.send_event     = False;
+    evPtr->xEvent.xexpose.display        = winPtr->display;
+    evPtr->xEvent.xexpose.window         = winPtr->window;
+    evPtr->xEvent.xexpose.x              = x;
+    evPtr->xEvent.xexpose.y              = y;
+    evPtr->xEvent.xexpose.width          = width;
+    evPtr->xEvent.xexpose.height         = height;
+    evPtr->xEvent.xexpose.count          = 0;
 
     Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
+    TkWaylandScheduleRender();
 }
- 
- /*
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

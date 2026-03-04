@@ -63,6 +63,7 @@ typedef struct WindowMapping {
     int                   width;      /* Current width */
     int                   height;     /* Current height */
     struct libdecor_frame *frame;     /* libdecor frame (owned by GLFW) */
+    bool 					clearPending; /* Per window clearing */
     struct WindowMapping  *nextPtr;   /* Next in linked list */
 } WindowMapping;
 
