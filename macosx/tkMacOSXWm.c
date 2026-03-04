@@ -788,13 +788,15 @@ SetWindowSizeLimits(
 /*
  *----------------------------------------------------------------------
  *
- * FrontWindowAtPoint --
+ * FrontMostToplevelAtPoint --
  *
- *	Find frontmost toplevel window at a given screen location which has the
- *      specified mainPtr.  If the location is in the title bar, return NULL.
+ *  Determine the frontmost toplevel window on the screen at a given
+ *  screen location. The location must be inside the toplevel's content
+ *  frame, not inside the title bar.
  *
  * Results:
- *	TkWindow*.
+ *  A pointer to the TkWindow structure for the toplevel window, or NULL
+ *  if the location isn't inside any toplevel.
  *
  * Side effects:
  *	None.
@@ -803,7 +805,7 @@ SetWindowSizeLimits(
  */
 
 static TkWindow*
-FrontWindowAtPoint(
+FrontMostToplevelAtPoint(
     int x,
     int y)
 {
@@ -811,7 +813,7 @@ FrontWindowAtPoint(
 
     for (NSWindow *w in [NSApp orderedWindows]) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr) {
+	if (winPtr && Tk_IsMapped(winPtr)) {
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = windowFrame;
 
@@ -1010,6 +1012,7 @@ TkWmMapWindow(
     XEvent event;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
+
 	/*
 	 * Create the underlying Mac window for this Tk window.
 	 */
@@ -5320,7 +5323,7 @@ Tk_CoordsToWindow(
      * Step 1: find the top-level window that contains the desired point.
      */
 
-    winPtr = FrontWindowAtPoint(rootX, rootY);
+    winPtr = FrontMostToplevelAtPoint(rootX, rootY);
     if (!winPtr) {
 	return NULL;
     }
