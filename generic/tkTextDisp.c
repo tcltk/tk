@@ -7532,81 +7532,6 @@ static const char localeExt[][10] = {
     "valencia"
 };
 
-static int
-SetLocale(
-    TCL_UNUSED(void *),
-    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
-    TCL_UNUSED(Tk_Window),	/* Window for which option is being set. */
-    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
-				 * We use a pointer to the pointer because we
-				 * may need to return a value (NULL). */
-    char *recordPtr,		/* Pointer to storage for the widget record. */
-    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
-				 * internal value is to be stored. */
-    char *oldInternalPtr,	/* Pointer to storage for the old value. */
-    int flags)			/* Flags for the option, set Tk_SetOptions. */
-{
-    char locale[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
-	*value = NULL;
-    } else {
-	const char *str = Tcl_GetString(*value);
-	if (isalpha(UCHAR(str[0])) && isalpha(UCHAR(str[1]))) {
-	    locale[0] = str[0] | ('a' - 'A'); // = tolower()
-	    locale[1] = str[1] | ('a' - 'A'); // = tolower()
-	    char *p;
-	    if (str[2] == '_' ||str[2] == '-') {
-		locale[2] = '_';
-		str += 3;
-		p = &locale[2];
-	    } else if (isalpha(UCHAR(str[2])) && (str[3] == '_' ||str[3] == '-')) {
-		locale[2] = str[2] | ('a' - 'A'); // = tolower()
-		locale[3] = '_';
-		str += 4;
-		p = &locale[3];
-	    } else if (!strncasecmp(str, "posix", 6)) {
-		goto localeC; // 'POSIX' is an alias for 'C'
-	    } else {
-		goto wrongLocale;	
-	    }
-	    // Parse second part, after the first '_';
-	    if (!isalpha(UCHAR(str[0])) || !isalpha(UCHAR(str[1]))) {
-		goto wrongLocale;
-	    }
-	    p[0] = *str++ & ~('a' - 'A'); // = toupper()
-	    p[1] = *str++ & ~('a' - 'A'); // = toupper()
-	    if (*str == '.') {
-		while (!strchr("@", *str)) {
-		    str++; // Skip everything, until next '@' or NULL
-		}
-	    }
-	    if (*str == '@') {
-		// TODO: parse everything after '@'
-	    } else if (*str) {
-		goto wrongLocale;
-	    }
-	} else if (((str[0] | ('a' - 'A')) == 'c') && !str[1]) {
-	localeC:
-	    locale[0] = 'C';
-	    locale[1] = 0;
-	} else {
-	wrongLocale:
-	    if (interp) {
-		Tcl_AppendResult(interp, "Invalid locale", (char *)NULL);
-	    }
-	    return TCL_ERROR;
-	}
-    }
-
-    if (internalOffset != TCL_INDEX_NONE) {
-	char *internalPtr = recordPtr + internalOffset;
-	memcpy(oldInternalPtr, internalPtr, sizeof(locale));
-	memcpy(internalPtr, locale, sizeof(locale));
-    }
-    return TCL_OK;
-}
-
 static Tcl_Obj *
 GetLocale(
     TCL_UNUSED(void *),
@@ -7634,6 +7559,78 @@ GetLocale(
 	p += strlen(p);
     }
     return Tcl_NewStringObj(buffer, p - buffer);
+}
+
+static int
+SetLocale(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
+    TCL_UNUSED(Tk_Window),	/* Window for which option is being set. */
+    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+				 * We use a pointer to the pointer because we
+				 * may need to return a value (NULL). */
+    char *recordPtr,		/* Pointer to storage for the widget record. */
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
+				 * internal value is to be stored. */
+    char *oldInternalPtr,	/* Pointer to storage for the old value. */
+    int flags)			/* Flags for the option, set Tk_SetOptions. */
+{
+    char locale[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
+	*value = NULL;
+    } else {
+	const char *str = Tcl_GetString(*value);
+	if (isalpha(UCHAR(str[0])) && isalpha(UCHAR(str[1]))) {
+	    locale[0] = str[0] | ('a' - 'A'); // = tolower()
+	    locale[1] = str[1] | ('a' - 'A'); // = tolower()
+	    if (str[2] == '_' ||str[2] == '-') {
+		locale[2] = '_';
+		str += 3;
+	    } else if (isalpha(UCHAR(str[2])) && (str[3] == '_' ||str[3] == '-')) {
+		locale[2] = str[2] | ('a' - 'A'); // = tolower()
+		str += 4;
+	    } else if (!strncasecmp(str, "posix", 6)) {
+		goto localeC; // 'POSIX' is an alias for 'C'
+	    } else {
+		goto wrongLocale;	
+	    }
+	    // Parse second part, after the first '_';
+	    if (!isalpha(UCHAR(str[0])) || !isalpha(UCHAR(str[1]))) {
+		goto wrongLocale;
+	    }
+	    locale[3] = *str++ & ~('a' - 'A'); // = toupper()
+	    locale[4] = *str++ & ~('a' - 'A'); // = toupper()
+	    if (*str == '.') {
+		while (!strchr("@", *str)) {
+		    str++; // Skip everything, until next '@' or NULL
+		}
+	    }
+	    if (*str == '@') {
+		// TODO: parse everything after '@'
+	    } else if (*str) {
+		goto wrongLocale;
+	    }
+	} else if (((str[0] | ('a' - 'A')) == 'c') && !str[1]) {
+	localeC:
+	    locale[0] = 'C';
+	    locale[1] = 0;
+	} else {
+	wrongLocale:
+	    if (interp) {
+		Tcl_AppendResult(interp, "Invalid locale", (char *)NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	*value = GetLocale(NULL, NULL, locale, 0);
+    }
+
+    if (internalOffset != TCL_INDEX_NONE) {
+	char *internalPtr = recordPtr + internalOffset;
+	memcpy(oldInternalPtr, internalPtr, sizeof(locale));
+	memcpy(internalPtr, locale, sizeof(locale));
+    }
+    return TCL_OK;
 }
 
 static void
