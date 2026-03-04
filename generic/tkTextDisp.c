@@ -158,7 +158,7 @@ typedef struct StyleValues {
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE or TEXT_WRAPMODE_WORD.*/
-    char locale[6];
+    char locale[8];
 } StyleValues;
 
 /*
@@ -7519,7 +7519,7 @@ TkTextIndexBbox(
  *----------------------------------------------------------------------
  */
 
-static const char *localeExt[] = {
+static const char localeExt[][10] = {
     "",
     "adlam",
     "cjknarrow",
@@ -7529,8 +7529,7 @@ static const char *localeExt[] = {
     "iqtelif",
     "latin",
     "preeuro",
-    "valencia",
-    NULL
+    "valencia"
 };
 
 static int
@@ -7547,13 +7546,57 @@ SetLocale(
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
 {
-    char locale[6] = {0, 0, 0, 0, 0, 0};
+    char locale[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
 	*value = NULL;
     } else {
-	/* Do the actual parsing here */
-	locale[0] = 'C';
+	const char *str = Tcl_GetString(*value);
+	if (isalpha(UCHAR(str[0])) && isalpha(UCHAR(str[1]))) {
+	    locale[0] = str[0] | ('a' - 'A'); // = tolower()
+	    locale[1] = str[1] | ('a' - 'A'); // = tolower()
+	    char *p;
+	    if (str[2] == '_' ||str[2] == '-') {
+		locale[2] = '_';
+		str += 3;
+		p = &locale[2];
+	    } else if (isalpha(UCHAR(str[2])) && (str[3] == '_' ||str[3] == '-')) {
+		locale[2] = str[2] | ('a' - 'A'); // = tolower()
+		locale[3] = '_';
+		str += 4;
+		p = &locale[3];
+	    } else if (!strncasecmp(str, "posix", 6)) {
+		goto localeC; // 'POSIX' is an alias for 'C'
+	    } else {
+		goto wrongLocale;	
+	    }
+	    // Parse second part, after the first '_';
+	    if (!isalpha(UCHAR(str[0])) || !isalpha(UCHAR(str[1]))) {
+		goto wrongLocale;
+	    }
+	    p[0] = *str++ & ~('a' - 'A'); // = toupper()
+	    p[1] = *str++ & ~('a' - 'A'); // = toupper()
+	    if (*str == '.') {
+		while (!strchr("@", *str)) {
+		    str++; // Skip everything, until next '@' or NULL
+		}
+	    }
+	    if (*str == '@') {
+		// TODO: parse everything after '@'
+	    } else if (*str) {
+		goto wrongLocale;
+	    }
+	} else if (((str[0] | ('a' - 'A')) == 'c') && !str[1]) {
+	localeC:
+	    locale[0] = 'C';
+	    locale[1] = 0;
+	} else {
+	wrongLocale:
+	    if (interp) {
+		Tcl_AppendResult(interp, "Invalid locale", (char *)NULL);
+	    }
+	    return TCL_ERROR;
+	}
     }
 
     if (internalOffset != TCL_INDEX_NONE) {
@@ -7573,9 +7616,24 @@ GetLocale(
 				 * line value. */
 {
     char *locale = recordPtr + internalOffset;
+    char buffer[24]; // Max size is 3 + '_' + 2 + '@' + 9 + '\0'= 17 characters;
 
-    /* Translate locale to string */
-    return Tcl_NewStringObj("C", -1);
+    strncpy(buffer, locale, 5);
+    buffer[5] = 0;
+    if (UCHAR(buffer[2]-'a') <= UCHAR('z' - 'a')) {
+	/* If locale[2] is a lowercase, insert an underscore '_' */
+	buffer[6] = 0;
+	buffer[5] = buffer[4];
+	buffer[4] = buffer[3];
+	buffer[3] = '_';
+    }
+    char *p = buffer + strlen(buffer);
+    if (locale[5]) {
+	*p++ = '_';
+	strcpy(p, localeExt[UCHAR(locale[5])]);
+	p += strlen(p);
+    }
+    return Tcl_NewStringObj(buffer, p - buffer);
 }
 
 static void

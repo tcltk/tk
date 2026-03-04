@@ -413,7 +413,7 @@ typedef struct TkTextTag {
 				 * size with which information is displayed on
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
-    char locale[6];	/* locale */
+    char locale[8];	/* locale */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -787,7 +787,7 @@ typedef struct TkText {
 				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
-    char locale[6];	/* locale */
+    char locale[8];	/* locale */
 } TkText;
 
 MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
