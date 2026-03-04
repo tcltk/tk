@@ -4543,39 +4543,47 @@ static int TreeviewFocusCommand(
 	}
 
     } else {
-	TreeItem *newFocus;
+	TreeItem *item;
 	int changed;
 
 	/* Get item */
-	if (!(newFocus = FindItem(interp, tv, objv[2]))) {
+	if (!(item = FindItem(interp, tv, objv[2]))) {
 	    return TCL_ERROR;
 	}
 
-	/* Clear focus */
-	if (newFocus == tv->tree.root) {
-	    newFocus = NULL;
+	/* Clear current focus */
+	if (item == tv->tree.root) {
+	    item = NULL;
 	}
 
 	/* Abort if item or ancestor is detached */
-	if (newFocus && IsItemOrAncestorDetached(tv, newFocus)) {
+	if (item && IsItemOrAncestorDetached(tv, item)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("detached item"));
 	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM", "DETACHED", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
+	/* Clear focus state from previous item */
 	if (tv->tree.focus) {
 	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	}
-	changed = (tv->tree.focus != newFocus);
-	tv->tree.focus = newFocus;
+
+	/* Store new focus and add item state */
+	changed = (tv->tree.focus != item);
+	tv->tree.focus = item;
 	tv->tree.focusCol = NULL;
 	if (tv->tree.focus) {
 	    (tv->tree.focus)->state |= TTK_STATE_FOCUS;
 	}
 	TtkRedisplayWidget(&tv->core);
 
+	/* Generate virtual event if focus changed */
 	if (changed) {
-	    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+	    if (item) {
+		Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", item->idObj);
+	    } else {
+		Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+	    }
 	}
     }
     return TCL_OK;
@@ -4618,7 +4626,7 @@ static int TreeviewCellFocusCommand(
 	    return TCL_ERROR;
 	}
 
-	/* Clear focus */
+	/* Clear current focus */
 	if (cell.item == tv->tree.root) {
 	    cell.item = NULL;
 	    cell.column = NULL;
@@ -4631,16 +4639,31 @@ static int TreeviewCellFocusCommand(
 	    return TCL_ERROR;
 	}
 
+	/* Clear focus state from previous item */
 	if (tv->tree.focus) {
 	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	}
+
+	/* Store new focus */
 	changed = (tv->tree.focus != cell.item || tv->tree.focusCol != cell.column);
 	tv->tree.focus = cell.item;
 	tv->tree.focusCol = cell.column;
 	TtkRedisplayWidget(&tv->core);
 
+	/* Generate virtual event if focus changed */
 	if (changed) {
-	    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+	    if (cell.item) {
+		Tcl_Obj *listPtr;
+
+		if ((listPtr = Tcl_NewListObj(0, NULL)) &&
+		    Tcl_ListObjAppendElement(interp, listPtr, (tv->tree.focus)->idObj) == TCL_OK &&
+		    Tcl_ListObjAppendElement(interp, listPtr, (tv->tree.focusCol)->idObj) == TCL_OK) {
+		    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", listPtr);
+		    Tcl_BounceRefCount(listPtr);
+		}
+	    } else {
+	        Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+	    }
 	}
     }
     return TCL_OK;

@@ -78,7 +78,7 @@ $w.tree heading \#0 -text "Directory Structure"
 $w.tree heading size -text "File Size"
 $w.tree column size -width 70
 populateRoots $w.tree
-bind $w.tree <<TreeviewOpen>> {populateTree %W [%W focus]}
+bind $w.tree <<TreeviewOpen>> {populateTree %W %d}
 
 ## Arrange the tree and its scrollbars in the toplevel
 lower [ttk::frame $w.dummy]

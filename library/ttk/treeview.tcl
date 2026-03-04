@@ -1354,7 +1354,7 @@ proc ::ttk::treeview::OpenItem {w item args} {
 
     # Open item
     if {$item ne ""} {
-	event generate $w <<TreeviewOpen>>
+	event generate $w <<TreeviewOpen>> -data $item
 	$w expand {*}$args [list $item]
     }
 }
@@ -1375,7 +1375,7 @@ proc ::ttk::treeview::CloseItem {w item} {
     # Close item
     if {$item ne ""} {
 	$w collapse [list $item]
-	event generate $w <<TreeviewClose>>
+	event generate $w <<TreeviewClose>> -data $item
     } else {
 	return
     }

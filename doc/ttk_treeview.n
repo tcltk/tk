@@ -1304,38 +1304,43 @@ If pressed in a heading when \fB-selecttype\fR is set to \fBcell\fR and in multi
 .IP \(bu
 \fB<<SelectInvert>>\fR virtual event will invert or toggle the selection state of all items or cells (multiple or extended select modes only).
 .IP \(bu
-The \fB<<Copy>>\fR virtual event will copy the selected items or cells to the clipboard.
+The \fB<<Copy>>\fR virtual event will copy the contents of the selected items or cells to the clipboard.
 .RE
 .PP
 .SH "VIRTUAL EVENTS"
 .PP
 The treeview widget generates the following virtual events.
 .IP \fB<<TreeviewSelect>>\fR
-Generated whenever the selection or cellselection changes.
-It might also be generated when selection is affected but not actually changed.
-Further, multiple selection changes could happen before events can be processed
-leading to multiple events with the same visible selection.
+Generated whenever the selection or cellselection changes. It may also be
+generated when the selection is affected but not actually changed. Furthermore,
+multiple selection changes could happen before events can be processed leading
+to multiple events with the same visible selection. Use the \fBselection\fR or
+\fBcellselection\fR subcommands to get the current selection.
 .IP \fB<<TreeviewOpen>>\fR
-Generated just before setting the focus item to \fB\-open true\fR.
+Only triggered when the tree closed indicator is pressed and generated
+just before setting the current item to \fB\-open true\fR. To get the
+current item, use the detail/user_data field (\fB%d\fR) in the binding script
+(see event \fB-detail\fR option) or the \fBcurrent\fR subcommand.
 .IP \fB<<TreeviewClose>>\fR
-Generated just after setting the focus item to \fB\-open false\fR.
+Only triggered when the tree open indicator is pressed and generated
+just after setting the current item to \fB\-open false\fR. To get the
+current item, use the detail/user_data field (\fB%d\fR) in the binding script
+(see event \fB-detail\fR option) or the \fBcurrent\fR subcommand.
 .IP \fB<<TreeviewFocus>>\fR
-Generated whenever the focus or cell focus changes including when unset.
-.PP
-The \fBfocus\fR, \fBcellfocus\fR, \fBselection\fR, and \fBcellselection\fR
-widget subcommands can be used to determine the affected item(s) or cell(s).
-'\" Not yet:
-'\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
-'\" of the virtual event.
+Triggered by any focus change and generated
+whenever the item focus or cell focus changes including when unset.
+To get the focus item, use the detail/user_data field (\fB%d\fR) in the binding
+script (see event \fB-detail\fR option) or the use the \fBfocus\fR or
+\fBcellfocus\fR subcommands to get the current focus.
 .PP
 .SH "STANDARD STYLES"
 .PP
-\fBTtk::treeview\fR widgets support the \fBCheckTreeview\fR style in all
+\fBTtk::treeview\fR widget also support the \fBCheckTreeview\fR style in all
 standard themes. This style adds a checkbutton after the open/close indicator
 and before the item image to better show which items are selected. Combine this
 style with the \fB\-selectmode multiple\fR option to create a check list widget
 where the user can easily select multiple entries without the need to use the
-keyboard. This style works best with \fBitem\fR select type, not \fBcell\fR.
+keyboard. This style works best with the \fBitem\fR select type, not \fBcell\fR.
 .SH "STYLING OPTIONS"
 .PP
 The following are the widget components for the \fBttk::style\fR command:

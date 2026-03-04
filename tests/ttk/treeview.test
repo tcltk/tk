@@ -1797,6 +1797,7 @@ test Children-11.27 {Cleanup} -body {
     }
 
 # Collapse
+set ::changed_item ""
 
 
 test Collapse-12.1 {Create} -body {
@@ -1864,7 +1865,25 @@ test Collapse-12.13 {Detached Item} -setup {
 	.tv item white -open
     } -result {0}
 
-test Collapse-12.14 {Cleanup} -body {
+test Collapse-12.14 {Trigger virtual event} -setup {
+	.tv item green -open 1
+	bind .tv "<<TreeviewClose>>" {set ::changed_item green}
+    } -body {
+	::ttk::treeview::ToggleOpenState .tv green
+	update
+	return $::changed_item
+    } -result {green}
+
+test Collapse-12.15 {Vritual Event with detail} -setup {
+	.tv item blue -open 1
+	bind .tv "<<TreeviewClose>>" {set ::changed_item "%d"}
+    } -body {
+	::ttk::treeview::ToggleOpenState .tv blue
+	update
+	return $::changed_item
+    } -result {blue}
+
+test Collapse-12.16 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
@@ -2346,6 +2365,7 @@ test Exists-18.14 {Cleanup} -body {
     }
 
 # Expand
+set ::changed_item ""
 
 
 test Expand-19.1 {Create} -body {
@@ -2412,13 +2432,30 @@ test Expand-19.12 {Detached item} -setup {
 	.tv item white -open
     } -result {1}
 
-test Expand-19.13 {Cleanup} -body {
+test Expand-19.13 {Trigger virtual event} -setup {
+	.tv item green -open 0
+	bind .tv "<<TreeviewOpen>>" {set ::changed_item green}
+    } -body {
+	::ttk::treeview::ToggleOpenState .tv green
+	update
+	return $::changed_item
+    } -result {green}
+
+test Expand-19.14 {Vritual Event with detail} -setup {
+	.tv item blue -open 0
+	bind .tv "<<TreeviewOpen>>" {set ::changed_item "%d"}
+    } -body {
+	::ttk::treeview::ToggleOpenState .tv blue
+	update
+	return $::changed_item
+    } -result {blue}
+
+test Expand-19.15 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
 # Focus
 set ::focus ""
-proc focus_callback {w} {set ::focus [$w focus]}
 
 
 test Focus-20.1 {Create} -body {
@@ -2473,26 +2510,33 @@ test Focus-20.10 {Detached item} -setup {
 	.tv focus
     } -result {detached item} -returnCodes {1}
 
-test Focus-20.11 {Trigger <<TreeviewFocus>>} -setup {
-	bind .tv "<<TreeviewFocus>>" [list focus_callback .tv]
+test Focus-20.11 {Trigger virtual event} -setup {
+	bind .tv "<<TreeviewFocus>>" {set ::focus [%W focus]}
     } -body {
 	.tv focus red
 	update
 	return $::focus
     } -result {red}
 
-test Focus-20.12 {Clear <<TreeviewFocus>>} -body {
+test Focus-20.12 {Clear virtial event} -body {
 	.tv focus {}
 	update
 	return $::focus
     }
 
-test Focus-20.13 {Cleanup} -body {
+test Focus-20.13 {Vritual Event with detail} -setup {
+	bind .tv "<<TreeviewFocus>>" {set ::focus "%d"}
+    } -body {
+	.tv focus black
+	update
+	return $::focus
+    } -result {black}
+
+test Focus-20.14 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
 # Cell Focus
-proc focus_callback {w} {set ::focus [$w cellfocus]}
 
 
 test Cell_Focus-21.1 {Create} -body {
@@ -2564,21 +2608,29 @@ test Cell_Focus-21.14 {Detached item} -setup {
 	.tv cellfocus
     } -result {detached item} -returnCodes {1}
 
-test Cell_Focus-21.15 {Trigger <<TreeviewFocus>>} -setup {
-	bind .tv "<<TreeviewFocus>>" [list focus_callback .tv]
+test Cell_Focus-21.15 {Trigger virtual event} -setup {
+	bind .tv "<<TreeviewFocus>>" {set ::focus [%W cellfocus]}
     } -body {
 	.tv cellfocus [list red Hex]
 	update
 	return $::focus
     } -result {red Hex}
 
-test Cell_Focus-21.16 {Clear <<TreeviewFocus>>} -body {
+test Cell_Focus-21.16 {Clear virtial event} -body {
 	.tv cellfocus {}
 	update
 	return $::focus
     }
 
-test Cell_Focus-21.17 {Cleanup} -body {
+test Cell_Focus-21.17 {Vritual Event with detail} -setup {
+	bind .tv "<<TreeviewFocus>>" {set ::focus "%d"}
+    } -body {
+	.tv cellfocus {black #0}
+	update
+	return $::focus
+    } -result {black #0}
+
+test Cell_Focus-21.18 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
