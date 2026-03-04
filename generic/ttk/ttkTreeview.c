@@ -4674,29 +4674,26 @@ static int TreeviewCellFocusCommand(
 static int TreeviewCurrentCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
-    Tcl_Obj *listPtr = NULL;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	return TCL_ERROR;
     }
 
-    if (!(listPtr = Tcl_NewListObj(0, NULL))) {
-	return TCL_ERROR;
-    }
+    if (!tv->tree.current) {
+    } else if (tv->tree.currentCol == -1) {
+	Tcl_SetObjResult(interp, (tv->tree.current)->idObj);
+    } else if (tv->tree.currentCol < tv->tree.nDisplayColumns) {
+	Tcl_Obj *listPtr;
 
-    if (tv->tree.current) {
+	if (!(listPtr = Tcl_NewListObj(0, NULL))) {
+	    return TCL_ERROR;
+	}
 	Tcl_ListObjAppendElement(interp, listPtr, (tv->tree.current)->idObj);
-    } else {
-	Tcl_BounceRefCount(listPtr);
-	return TCL_OK;
-    }
-
-    if (tv->tree.currentCol >= 0 && tv->tree.currentCol < tv->tree.nDisplayColumns) {
 	Tcl_ListObjAppendElement(interp, listPtr,
 	    (tv->tree.displayColumns[tv->tree.currentCol])->idObj);
+	Tcl_SetObjResult(interp, listPtr);
     }
-    Tcl_SetObjResult(interp, listPtr);
     return TCL_OK;
 }
 
