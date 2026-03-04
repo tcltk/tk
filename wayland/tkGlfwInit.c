@@ -182,7 +182,7 @@ TkGlfwInitialize(void)
     if (!glfwInit()) {
     return TCL_ERROR;
 }
-	Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
+    Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
     return TCL_OK;
 }
 
@@ -229,8 +229,8 @@ TkGlfwShutdown(TCL_UNUSED(ClientData))
 
     /* Only terminate GLFW if it was initialized. */
     if (glfwContext.initialized) {
-		/* Flush any final events. */
-		glfwPollEvents();    
+	/* Flush any final events. */
+	glfwPollEvents();    
         glfwTerminate();
         glfwContext.initialized = 0;
     }

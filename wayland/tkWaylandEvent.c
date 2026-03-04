@@ -72,9 +72,7 @@ TkGlfwSetupCallbacks(
     glfwSetCursorPosCallback       (glfwWindow, TkGlfwCursorPosCallback);
     glfwSetMouseButtonCallback     (glfwWindow, TkGlfwMouseButtonCallback);
     glfwSetScrollCallback          (glfwWindow, TkGlfwScrollCallback);
-    glfwSetKeyCallback             (glfwWindow, TkGlfwKeyCallback);
-    glfwSetCharCallback            (glfwWindow, TkGlfwCharCallback);
-	glfwSetWindowRefreshCallback   (glfwWindow, TkGlfwWindowRefreshCallback);
+    glfwSetWindowRefreshCallback   (glfwWindow, TkGlfwWindowRefreshCallback);
 }
 
 /*
@@ -703,52 +701,48 @@ TkGlfwScrollCallback(
  */
 
 MODULE_SCOPE void
-TkGlfwKeyCallback(
-    GLFWwindow *window,
-    TCL_UNUSED(int), /* key */
-    int scancode,
-    int action,
-    int mods)
+TkGlfwKeyCallback(GLFWwindow *window,
+		  int key,
+		  TCL_UNUSED(int), /* scancode */
+		  int action,
+		  int mods)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *focusWin;
     XEvent event;
     double xpos, ypos;
-    
-    if (!winPtr) {
-        return;
-    }
 
-    if (action == GLFW_REPEAT) {
-        return;
-    }
+    if (!winPtr || action == GLFW_REPEAT) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
-
     glfwGetCursorPos(window, &xpos, &ypos);
+
+    /* Route to focused child widget if any. */
+	focusWin = winPtr;
+	if (winPtr->dispPtr->focusPtr != NULL) {
+		focusWin = winPtr->dispPtr->focusPtr;
+	}
 
     memset(&event, 0, sizeof(XEvent));
     event.type = (action == GLFW_PRESS) ? KeyPress : KeyRelease;
-    event.xkey.serial     = LastKnownRequestProcessed(winPtr->display);
+    event.xkey.serial      = LastKnownRequestProcessed(winPtr->display);
     event.xkey.send_event  = False;
     event.xkey.display     = winPtr->display;
-    event.xkey.window      = Tk_WindowId((Tk_Window)winPtr);
+    event.xkey.window      = Tk_WindowId((Tk_Window)focusWin);
     event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
-    event.xkey.subwindow   = None;
     event.xkey.time        = CurrentTime;
     event.xkey.x           = (int)xpos;
     event.xkey.y           = (int)ypos;
     event.xkey.x_root      = winPtr->changes.x + (int)xpos;
     event.xkey.y_root      = winPtr->changes.y + (int)ypos;
-    
-    event.xkey.state = 0;
+    event.xkey.state       = 0;
     if (mods & GLFW_MOD_SHIFT)     event.xkey.state |= ShiftMask;
     if (mods & GLFW_MOD_CONTROL)   event.xkey.state |= ControlMask;
     if (mods & GLFW_MOD_ALT)       event.xkey.state |= Mod1Mask;
     if (mods & GLFW_MOD_SUPER)     event.xkey.state |= Mod4Mask;
     if (mods & GLFW_MOD_CAPS_LOCK) event.xkey.state |= LockMask;
     if (mods & GLFW_MOD_NUM_LOCK)  event.xkey.state |= Mod2Mask;
-    
-    event.xkey.keycode     = scancode;
+    event.xkey.keycode     = key;   /* GLFW key constant, not raw scancode */
     event.xkey.same_screen = True;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);

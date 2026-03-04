@@ -302,6 +302,8 @@ TkWaylandHandleExposeEvents(void)
      */
     for (m = TkGlfwGetMappingList(); m; m = m->nextPtr) {
         if (m->glfwWindow && m->width > 1 && m->height > 1) {
+			TkGlfwContext *ctx = TkGlfwGetContext();
+            ctx->clearPending = 1;
             if (TkGlfwBeginDraw(m->drawable, NULL, &dc) == TCL_OK)
                 didBegin = 1;
         }

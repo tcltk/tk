@@ -731,6 +731,18 @@ Tk_MakeWindow(
             window = parentPtr->window + 1;
         }
         winPtr->window = window;
+	/* Child window - generate MapNotify after window ID assigned. */
+	if (winPtr->display) {
+	    XEvent mapEv;
+	    memset(&mapEv, 0, sizeof(XEvent));
+	    mapEv.type = MapNotify;
+	    mapEv.xmap.serial = LastKnownRequestProcessed(winPtr->display);
+	    mapEv.xmap.display = winPtr->display;
+	    mapEv.xmap.event = window;
+	    mapEv.xmap.window = window;
+	    Tk_QueueWindowEvent(&mapEv, TCL_QUEUE_TAIL); 
+	}
+
     }
 
     return window;
