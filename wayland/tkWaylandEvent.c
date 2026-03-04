@@ -187,11 +187,26 @@ TkGlfwWindowSizeCallback(
 
 MODULE_SCOPE void
 TkGlfwFramebufferSizeCallback(
-    TCL_UNUSED(GLFWwindow *),
+    GLFWwindow *window,
     int width,
     int height)
 {
-    glViewport(0, 0, width, height);
+	
+	TkWindow      *winPtr = TkGlfwGetTkWindow(window);
+    WindowMapping *mapping;
+    int            w, h;
+
+    if (!winPtr) return;
+
+    mapping = FindMappingByTk(winPtr);
+    if (!mapping) return;
+
+    w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
+    h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
+
+
+	/* Trigger a redraw from Tk. */
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
 
 /*
@@ -875,6 +890,7 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
 
     w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
     h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
+
 
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
