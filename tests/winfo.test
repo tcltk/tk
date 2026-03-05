@@ -168,7 +168,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
 } -cleanup {
     destroy .t
 } -result 1
-test winfo-4.8 {Don't consider unmapped toplevel windows when searching for the pointer window (bug #591829e948-B)} -setup {
+test winfo-4.8 {"winfo containing": don't consider unmapped toplevel windows (bug #591829e948-B)} -setup {
     wm geometry . 200x200+100+100
     after 10; update
     wm withdraw .
@@ -176,11 +176,9 @@ test winfo-4.8 {Don't consider unmapped toplevel windows when searching for the 
     toplevel .one
     wm geometry .one 200x200+350+100
     after 10; update
-    event generate .one <Motion> -warp 1 -x 100 -y 100
-    after 10; update
     wm withdraw .one
     after 10; update
-    winfo containing [winfo pointerx .] [winfo pointery .]
+    winfo containing 450 200
 } -cleanup {
     wm deiconify .
 } -result ""
