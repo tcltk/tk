@@ -606,7 +606,7 @@ PRIVATE_HDRS = $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
 	$(GENERIC_DIR)/tkIntPlatDecls.h $(GENERIC_DIR)/tkPort.h \
 	$(TTK_HDRS) $(@TK_WINDOWINGSYSTEM@_PRIVATE_HDRS)
 
-DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
+DEMOPROGS = accessiblewidget browse hello ixset rmt rolodex square tcolor timer widget
 
 SHELL_ENV = \
 	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
@@ -1773,6 +1773,7 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
 	cp -pr $(TOP_DIR)/library/demos/*.tcl \
 		$(TOP_DIR)/library/demos/*.msg \
 		$(TOP_DIR)/library/demos/tclIndex \
+		$(TOP_DIR)/library/demos/accessiblewidget \
 		$(TOP_DIR)/library/demos/browse \
 		$(TOP_DIR)/library/demos/hello $(TOP_DIR)/library/demos/ixset \
 		$(TOP_DIR)/library/demos/rmt $(TOP_DIR)/library/demos/rolodex \
