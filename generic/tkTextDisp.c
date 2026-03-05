@@ -7554,7 +7554,7 @@ GetLocale(
     }
     char *p = buffer + strlen(buffer);
     if (locale[5]) {
-	*p++ = '_';
+	*p++ = '@';
 	strcpy(p, localeExt[UCHAR(locale[5])]);
 	p += strlen(p);
     }
@@ -7581,40 +7581,91 @@ SetLocale(
 	*value = NULL;
     } else {
 	const char *str = Tcl_GetString(*value);
-	if (isalpha(UCHAR(str[0])) && isalpha(UCHAR(str[1]))) {
-	    locale[0] = str[0] | ('a' - 'A'); // = tolower()
-	    locale[1] = str[1] | ('a' - 'A'); // = tolower()
-	    if (str[2] == '_' ||str[2] == '-') {
+#define TOUPPER(ch) ((char)((ch) & ~('a' - 'A'))) // Cheap toupper(), knowing isalpha() is true
+#define TOLOWER(ch) ((char)((ch) | ('a' - 'A')))  // Cheap tolower(), knowing isalpha() is true
+#define ISALPHA(ch) (UCHAR(TOLOWER(ch) - 'a') < UCHAR('z' - 'a')) // Cheap isalpha()
+	if (ISALPHA(str[0]) && ISALPHA(str[1])) {
+	    locale[0] = TOLOWER(str[0]);
+	    locale[1] = TOLOWER(str[1]);
+	    if ((str[2] == '_') || (str[2] == '-')) {
 		locale[2] = '_';
 		str += 3;
-	    } else if (isalpha(UCHAR(str[2])) && (str[3] == '_' ||str[3] == '-')) {
-		locale[2] = str[2] | ('a' - 'A'); // = tolower()
+	    } else if (ISALPHA(str[2]) && ((str[3] == '_') || (str[3] == '-'))) {
+		locale[2] = TOLOWER(str[2]);
 		str += 4;
-	    } else if (!strncasecmp(str, "posix", 6)) {
+	    } else if (!strncasecmp(str, "POSIX", 6)) {
+		locale[1] = 0;
 		goto localeC; // 'POSIX' is an alias for 'C'
 	    } else {
 		goto wrongLocale;	
 	    }
 	    // Parse second part, after the first '_';
-	    if (!isalpha(UCHAR(str[0])) || !isalpha(UCHAR(str[1]))) {
+	    if (!strncasecmp(str, "Arab", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Cans", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Cher", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Cyrl", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		locale[5] = 3; // "@cyrillic"
+		str += 5;
+	    } else if (!strncasecmp(str, "Deva", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		locale[5] = 4; // "@devangari"
+		str += 5;
+	    } else if (!strncasecmp(str, "Hans", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Latn", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		locale[5] = 7; // "@latin"
+		str += 5;
+	    } else if (!strncasecmp(str, "Mong", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Ploc", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Tale", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Talu", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Tfng", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    } else if (!strncasecmp(str, "Trad", 4) && ((str[4] == '_') || (str[4] == '-'))) {
+		// ignore
+		str += 5;
+	    }
+	    if (!ISALPHA(str[0]) || !ISALPHA(str[1])) {
 		goto wrongLocale;
 	    }
-	    locale[3] = *str++ & ~('a' - 'A'); // = toupper()
-	    locale[4] = *str++ & ~('a' - 'A'); // = toupper()
+	    locale[3] = TOUPPER(*str++);
+	    locale[4] = TOUPPER(*str++);
 	    if (*str == '.') {
 		while (!strchr("@", *str)) {
 		    str++; // Skip everything, until next '@' or NULL
 		}
 	    }
-	    if (*str == '@') {
-		// TODO: parse everything after '@'
+	    if (!locale[5] && (*str == '@')) {
+		locale[5] = sizeof(localeExt)/sizeof(localeExt[0]) - 1;
+		do {
+		    if (!strcasecmp(&str[1], localeExt[UCHAR(locale[5])])) {
+			break;
+		    }
+		} while (--locale[5] != 0);
+		if (!locale[5]) {
+		    goto wrongLocale;
+		}
 	    } else if (*str) {
 		goto wrongLocale;
 	    }
-	} else if (((str[0] | ('a' - 'A')) == 'c') && !str[1]) {
+	} else if ((TOUPPER(str[0]) == 'C') && !str[1]) {
 	localeC:
 	    locale[0] = 'C';
-	    locale[1] = 0;
 	} else {
 	wrongLocale:
 	    if (interp) {
@@ -7640,7 +7691,7 @@ RestoreLocale(
     char *internalPtr,		/* Pointer to storage for value. */
     char *oldInternalPtr)	/* Pointer to old value. */
 {
-    memcpy(internalPtr, oldInternalPtr, sizeof(char[6]));
+    memcpy(internalPtr, oldInternalPtr, sizeof(char[8]));
 }
 
 const Tk_ObjCustomOption TkLocaleOption = {
