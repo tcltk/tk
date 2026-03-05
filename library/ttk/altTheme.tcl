@@ -95,7 +95,7 @@ namespace eval ttk::theme::alt {
 	    -background [list selected $colors(-frame)] \
 	    -expand {selected {1.5p 1.5p 0.75p 0}}
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised
 	ttk::style configure Item \
@@ -112,10 +112,14 @@ namespace eval ttk::theme::alt {
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
+	    -background [list	disabled $colors(-frame)\
+				background $colors(-darker) \
 				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-selectfg) \
 				selected $colors(-selectfg)]
 
 	ttk::style configure TScale \

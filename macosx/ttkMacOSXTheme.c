@@ -3384,15 +3384,14 @@ static void DisclosureElementDraw(
 	NSColor *color = isSelected && isActive ?
 	    [NSColor whiteColor] : [NSColor textColor];
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	bool isDark = TkMacOSXInDarkMode(tkwin);
-	color = TkMacOSXGetNSColorFromNSColorUsingColorSpaceAndAppearance(
-		color, deviceRGB, isDark);
+	color = [color colorUsingColorSpace: deviceRGB];
 	CGFloat rgba[4];
 
 	[color getComponents: rgba];
 	if (rgba[0] == 0) {
 	    rgba[0] = rgba[1] = rgba[2] = 0.5;
 	} else if (isSelected && isActive) {
+	    bool isDark = TkMacOSXInDarkMode(tkwin);
 	    if (isDark) {
 		rgba[0] = rgba[1] = rgba[2] = 0.9;
 	    }

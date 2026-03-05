@@ -179,7 +179,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -highlight [list selected 1] \
 	    -highlightcolor [list selected $colors(-selectbg)]
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised
 	ttk::style configure Item -indicatorsize 9p \
@@ -216,7 +216,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -borderwidth 1 -relief solid
 
 	#
-	# Toolbar buttons:
+	# Toolbar buttons
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {

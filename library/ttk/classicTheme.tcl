@@ -105,7 +105,7 @@ namespace eval ttk::theme::classic {
 	    -focussolid 1
 	ttk::style map TNotebook.Tab -background [list selected $colors(-frame)]
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised
 	ttk::style configure Row -focuswidth 1
@@ -124,14 +124,18 @@ namespace eval ttk::theme::classic {
 	    -stripedbackground $colors(-alternate) -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
+	    -background [list	disabled $colors(-frame)\
+				background $colors(-frame) \
 				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-selectfg) \
 				selected $colors(-selectfg)]
 
 	#
-	# Toolbar buttons:
+	# Toolbar buttons
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.focus -children {

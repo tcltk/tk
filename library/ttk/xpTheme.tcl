@@ -48,7 +48,7 @@ namespace eval ttk::theme::xpnative {
 
 	ttk::style configure Toolbutton -padding 3p
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
