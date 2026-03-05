@@ -120,6 +120,7 @@ XDrawString(
     float fontSize;
     char *buf;
 
+ fprintf(stderr, "draw string received\n");
     if (!string || length <= 0) return Success;
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
@@ -487,6 +488,7 @@ XDrawRectangle(
 {
     TkWaylandDrawingContext dc;
 
+fprintf(stderr, "draw rect received\n");
     if (width == 0 || height == 0) return BadValue;
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
@@ -619,6 +621,8 @@ XFillRectangle(
     rect.y      = y;
     rect.width  = width;
     rect.height = height;
+    
+    fprintf(stderr, "XFillRectangle on drawable=%lu\n", d);
     return XFillRectangles(display, d, gc, &rect, 1);
 }
 

@@ -7,7 +7,7 @@
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2026 Kevin Walzer/WordTech Communications LLC
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -165,7 +165,9 @@ TkGlfwWindowSizeCallback(
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
+    
+    /* Trigger redraw from Tk. */
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
 
 }
 
@@ -192,7 +194,7 @@ TkGlfwFramebufferSizeCallback(
     int height)
 {
 	
-	TkWindow      *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow      *winPtr = TkGlfwGetTkWindow(window);
     WindowMapping *mapping;
     int            w, h;
 
@@ -205,7 +207,7 @@ TkGlfwFramebufferSizeCallback(
     h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
 
 
-	/* Trigger a redraw from Tk. */
+    /* Trigger a redraw from Tk. */
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
 

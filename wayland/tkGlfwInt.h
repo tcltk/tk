@@ -67,12 +67,20 @@ typedef struct WindowMapping {
     struct WindowMapping  *nextPtr;   /* Next in linked list */
 } WindowMapping;
 
+typedef struct DrawableMapping {
+    Drawable drawable;              /* Tk window ID or pixmap ID */
+    WindowMapping *mapping;         /* Toplevel mapping */
+    struct DrawableMapping *next;
+} DrawableMapping;
+
 WindowMapping *FindMappingByGLFW(GLFWwindow *glfwWindow);
 WindowMapping *FindMappingByTk(TkWindow *tkWin);
 WindowMapping *FindMappingByDrawable(Drawable drawable);
 WindowMapping *TkGlfwGetMappingList(void);
 void           RemoveMapping(WindowMapping *mapping);
 void           CleanupAllMappings(void);
+void		   RegisterDrawableForMapping(Drawable d, WindowMapping *m);
+Tk_Window 	   GetToplevelOfWidget(Tk_Window tkwin);
 
 
 /*
