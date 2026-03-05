@@ -7583,7 +7583,7 @@ SetLocale(
 	const char *str = Tcl_GetString(*value);
 #define TOUPPER(ch) ((char)((ch) & ~('a' - 'A'))) // Cheap toupper(), knowing isalpha() is true
 #define TOLOWER(ch) ((char)((ch) | ('a' - 'A')))  // Cheap tolower(), knowing isalpha() is true
-#define ISALPHA(ch) (UCHAR(TOLOWER(ch) - 'a') < UCHAR('z' - 'a')) // Cheap isalpha()
+#define ISALPHA(ch) (UCHAR(TOLOWER(ch) - 'a') <= UCHAR('z' - 'a')) // Cheap isalpha()
 	if (ISALPHA(str[0]) && ISALPHA(str[1])) {
 	    locale[0] = TOLOWER(str[0]);
 	    locale[1] = TOLOWER(str[1]);
