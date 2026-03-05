@@ -325,6 +325,11 @@ TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags)
 
     if (!(flags & TCL_WINDOW_EVENTS)) return 0;
     if (exposePtr->winPtr == NULL)    return 1;
+    
+fprintf(stderr, "Expose: xEvent.window=%lu, tkWin->window=%lu, drawable=%lu\n",
+        exposePtr->xEvent.xexpose.window,
+        exposePtr->winPtr->window,
+        FindMappingByTk(exposePtr->winPtr)->drawable);
 
     mapping = FindMappingByTk(exposePtr->winPtr);
     if (mapping && mapping->width > 1 && mapping->height > 1) {

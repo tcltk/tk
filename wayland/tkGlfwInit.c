@@ -43,6 +43,7 @@
 TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, 0, NULL, 0, 0, 0};
 static WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
+static DrawableMapping *drawableMappingList = NULL;
 
 /*
  *----------------------------------------------------------------------
@@ -61,12 +62,6 @@ extern int   Tktray_Init(Tcl_Interp *);
 extern int   SysNotify_Init(Tcl_Interp *);
 extern int   Cups_Init(Tcl_Interp *);
 extern void  TkGlfwSetupCallbacks(GLFWwindow *, TkWindow *);
-
-WindowMapping *FindMappingByGLFW(GLFWwindow *);
-WindowMapping *FindMappingByTk(TkWindow *);
-WindowMapping *FindMappingByDrawable(Drawable);
-void           RemoveMapping(WindowMapping *);
-void           CleanupAllMappings(void);
 
 /*
  *----------------------------------------------------------------------
@@ -393,6 +388,10 @@ TkGlfwBeginDraw(
     WindowMapping *mapping;
     int fbWidth, fbHeight;
     int offsetX = 0, offsetY = 0;
+    
+       fprintf(stderr, "BeginDraw: drawable=%lu\n", (unsigned long)drawable);
+    WindowMapping *m = FindMappingByDrawable(drawable);
+    fprintf(stderr, "BeginDraw: mapping=%p\n", (void *)m);
 
     if (!dcPtr) return TCL_ERROR;
 
@@ -808,6 +807,7 @@ TkpDisplayWarning(const char *msg, const char *title)
  *----------------------------------------------------------------------
  */
 
+/* GLFW native window/mapping. */
 WindowMapping *
 FindMappingByGLFW(GLFWwindow *w)
 {
@@ -816,6 +816,7 @@ FindMappingByGLFW(GLFWwindow *w)
     return NULL;
 }
 
+/* Find a window mapping by Tk window pointer. */
 WindowMapping *
 FindMappingByTk(TkWindow *w)
 {
@@ -827,40 +828,37 @@ FindMappingByTk(TkWindow *w)
 WindowMapping *
 FindMappingByDrawable(Drawable d)
 {
+    DrawableMapping *dm;
+
+    fprintf(stderr, "FindMappingByDrawable: d=%lu\n", (unsigned long)d);
+
+    /* Fast path: explicit registrations (toplevel + children + XCreateWindow + pixmaps). */
+    for (dm = drawableMappingList; dm; dm = dm->next) {
+        if (dm->drawable == d) {
+            return dm->mapping;
+        }
+    }
+
+    /* Fallback: check if this drawable is a toplevel Tk window ID. */
     WindowMapping *m;
-
-    /* Fast path: direct match on a toplevel drawable. */
-    for (m = windowMappingList; m; m = m->nextPtr)
-        if (m->drawable == d) return m;
-
-    /* Slow path: d belongs to a child widget — walk each toplevel's
-     * Tk window tree looking for a TkWindow whose window ID matches,
-     * then return that toplevel's mapping. */
-    for (m = windowMappingList; m; m = m->nextPtr) {
-        TkWindow *tw = m->tkWindow;
-        /* Iterative depth-first search using the child/sibling pointers. */
-        TkWindow *stack[256];
-        int top = 0;
-        if (!tw) continue;
-        stack[top++] = tw;
-        while (top > 0) {
-            TkWindow *cur = stack[--top];
-            if (cur->window == (Window)d) return m;
-            TkWindow *child;
-            for (child = cur->childList; child; child = child->nextPtr)
-                if (top < 255) stack[top++] = child;
+    for (m = TkGlfwGetMappingList(); m; m = m->nextPtr) {
+        if (m->tkWindow && m->tkWindow->window == d) {
+            return m;
         }
     }
 
     return NULL;
 }
 
+
+/* Retriever mapping list. */
 WindowMapping *
 TkGlfwGetMappingList(void)
 {
     return windowMappingList;
 }
 
+/* Delete mappings. */
 void
 RemoveMapping(WindowMapping *m)
 {
@@ -871,6 +869,7 @@ RemoveMapping(WindowMapping *m)
     }
 }
 
+/* Teardown of mappings. */
 void
 CleanupAllMappings(void)
 {
@@ -882,6 +881,20 @@ CleanupAllMappings(void)
         c = n;
     }
     windowMappingList = NULL;
+}
+
+/* Add drawable to mapping list. */
+void
+RegisterDrawableForMapping(Drawable d, WindowMapping *m)
+{
+    DrawableMapping *dm = ckalloc(sizeof(DrawableMapping));
+    dm->drawable = d;
+    dm->mapping  = m;
+    dm->next     = drawableMappingList;
+    drawableMappingList = dm;
+
+    fprintf(stderr, "REGISTER: drawable=%lu → mapping=%p\n",
+            (unsigned long)d, (void *)m);
 }
 
 /*
@@ -932,6 +945,20 @@ TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
 {
     WindowMapping *m = FindMappingByGLFW(glfwWindow);
     return m ? m->tkWindow : NULL;
+}
+
+/* Function to return the toplevel window that contains a given Tk widget. */
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
+{
+    if (!tkwin) return NULL;
+    Tk_Window current = tkwin;
+    if (Tk_IsTopLevel(current)) return current;
+    while (current != NULL && Tk_WindowId(current) != None) {
+	Tk_Window parent = Tk_Parent(current);
+	if (parent == NULL || Tk_IsTopLevel(current)) break;
+	current = parent;
+    }
+    return Tk_IsTopLevel(current) ? current : NULL;
 }
 
 /*

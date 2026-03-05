@@ -328,7 +328,7 @@ CreateGlfwWindow(TkWindow *winPtr)
 
     wmPtr->glfwWindow = (GLFWwindow *)winPtr->window;
 
-    /* Apply wm properties that are valid AFTER creation */
+    /* Apply wm properties that are valid AFTER creation. */
 
     UpdateTitle(winPtr);
     UpdateSizeHints(winPtr);
@@ -666,17 +666,19 @@ TkWmCleanup(
  *
  * Tk_MakeWindow --
  *
- *	Platform-specific window creation called by Tk's generic layer.
- *	Uses TkGlfwCreateWindow so that the WindowMapping is properly
- *	registered and the GLFW user pointer is set to the mapping (not
- *	to the WmInfo, which would break TkGlfwGetTkWindow).
+ *      Platform-specific window creation called by Tk's generic layer.
+ *      For toplevels, creates a GLFW window and registers the Tk window
+ *      ID as the mapping->drawable.  For child windows, assigns a unique
+ *      Tk window ID and registers it to the same WindowMapping as the
+ *      toplevel so that FindMappingByDrawable() always succeeds.
  *
  * Results:
- *	Returns a Window identifier (the GLFW window pointer cast to Window).
+ *      Returns a Window identifier.
  *
  * Side effects:
- *	Creates a new GLFW window for toplevel windows, or generates a
- *	unique identifier for child windows.
+ *      Creates a new GLFW window for toplevels.  Registers every Tk
+ *      window (toplevel or child) with the correct WindowMapping so
+ *      TkGlfwBeginDraw can always locate the mapping and compute offsets.
  *
  *----------------------------------------------------------------------
  */
@@ -686,25 +688,41 @@ Tk_MakeWindow(
     Tk_Window tkwin,
     TCL_UNUSED(Window))        /* parent – ignored for toplevels */
 {
-    TkWindow  *winPtr     = (TkWindow *)tkwin;
+    TkWindow   *winPtr     = (TkWindow *)tkwin;
     GLFWwindow *glfwWindow = NULL;
     int         width, height;
     Drawable    drawable;
     Window      window;
 
     if (winPtr->parentPtr == NULL) {
-        /* Toplevel window. */
+        /*
+         * -------------------------
+         *   TOPLEVEL WINDOW
+         * -------------------------
+         */
+
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
 
+        /*
+         * Create the GLFW window and get a drawable ID.
+         * drawable is ignored; we use winPtr->window instead.
+         */
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
-        if (!glfwWindow) return None;
+        if (!glfwWindow) {
+            return None;
+        }
 
+        /*
+         * Tk's window ID for a toplevel is the GLFWwindow pointer cast.
+         */
         window = (Window)glfwWindow;
         winPtr->window = window;
 
-        /* Ensure WmInfo exists. */
+        /*
+         * Ensure WmInfo exists.
+         */
         if (!winPtr->wmInfoPtr) {
             TkWmNewWindow(winPtr);
         }
@@ -715,29 +733,49 @@ Tk_MakeWindow(
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
 
-  } else {
         /*
-         * Child window: assign a small unique integer ID.
-         *
-         * A static counter starting above the toplevel drawable range
-         * gives collision-free IDs.  The slow-path tree walk in
-         * FindMappingByDrawable resolves them correctly once Tk's generic
-         * layer links the child into its parent's childList (which happens
-         * after this function returns).
-         *
-         * Do NOT send MapNotify here.  The child is not yet in the
-         * parent's childList at this point, so FindMappingByDrawable
-         * would miss it.  Tk's generic Tk_MapWindow sends MapNotify at
-         * the correct time.
+         * Register the toplevel Tk window ID as the mapping->drawable.
+         * This is the key: mapping->drawable == winPtr->window.
          */
+        WindowMapping *m = FindMappingByTk(winPtr);
+        if (m) {
+            m->drawable = winPtr->window;
+            RegisterDrawableForMapping(winPtr->window, m);
+        }
+
+    } else {
+        /*
+         * -------------------------
+         *     CHILD WINDOW
+         * -------------------------
+         *
+         * Assign a unique Tk window ID.  Tk will draw into this ID.
+         * We must register it to the SAME WindowMapping as the toplevel.
+         */
+
         static Window nextChildId = 100000;
         window = nextChildId++;
-        if (window == None) window = nextChildId++;
+        if (window == None) {
+            window = nextChildId++;
+        }
         winPtr->window = window;
+
+        /*
+         * Register this child drawable to the toplevel's mapping.
+         */
+
+      Tk_Window toplevel = GetToplevelOfWidget((Tk_Window)winPtr);
+      TkWindow *top = (TkWindow *)toplevel;
+      WindowMapping *m = FindMappingByTk(top);
+        if (m) {
+            RegisterDrawableForMapping(winPtr->window, m);
+        }
     }
 
     return window;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -3943,6 +3981,970 @@ WmWaitMapProc(
         Tk_DeleteEventHandler((Tk_Window)wmPtr->containerPtr,
 			      StructureNotifyMask, WmWaitMapProc, clientData);
     }
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WindowToGLFW --
+ *
+ *	Helper function to find a GLFWwindow from an opaque Window handle.
+ *	A Window in this port is either:
+ *	  (a) a GLFWwindow pointer cast to Window (toplevel), or
+ *	  (b) a synthetic child-window ID produced in Tk_MakeWindow.
+ *
+ * Results:
+ *	Pointer to the associated GLFWwindow, or NULL if not found.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static GLFWwindow *
+WindowToGLFW(
+    Window window)
+{
+    GLFWwindow *gw;
+
+    if (window == None || window == 0) {
+        return NULL;
+    }
+
+    /* Try direct drawable lookup first. */
+    gw = TkGlfwGetWindowFromDrawable((Drawable)window);
+    if (gw != NULL) {
+        return gw;
+    }
+
+    /* Try interpreting the Window as a GLFWwindow* directly (toplevel path). */
+    gw = (GLFWwindow *)window;
+
+    /* Validate by seeing if it is registered. */
+    if (TkGlfwGetTkWindow(gw) != NULL) {
+        return gw;
+    }
+
+    return NULL;
+}
+
+/*
+ *======================================================================
+ *
+ * Xlib window management functions, wrapping the Tk Wayland API.
+ *
+ *======================================================================
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCreateWindow --
+ *
+ *	Full Xlib window-creation entry point.
+ *	In this port every window ultimately corresponds to a GLFW
+ *	window (toplevel) or shares a parent's GLFW window (child).
+ *
+ * Results:
+ *	The new Window handle, or None on failure.
+ *
+ * Side effects:
+ *	Creates a GLFW window when parent is the root window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Window
+XCreateWindow(
+    TCL_UNUSED(Display *),          /* display */
+    Window parent,                  /* parent drawable */
+    TCL_UNUSED(int),                /* x */
+    TCL_UNUSED(int),                /* y */
+    TCL_UNUSED(unsigned int),       /* width */
+    TCL_UNUSED(unsigned int),       /* height */
+    TCL_UNUSED(unsigned int),       /* border_width */
+    TCL_UNUSED(int),                /* depth */
+    TCL_UNUSED(unsigned int),       /* class */
+    TCL_UNUSED(Visual *),           /* visual */
+    TCL_UNUSED(unsigned long),      /* valuemask */
+    TCL_UNUSED(XSetWindowAttributes *) /* attributes */
+){
+    /*
+     * INTERNAL CHILD WINDOW ONLY.
+     * Tk_MakeWindow is the ONLY place that creates real toplevels.
+     * XCreateWindow must NEVER create a GLFW window.
+     */
+
+    static Window nextId = 300000;
+    Window result = nextId++;
+
+    /* Inherit parent’s mapping. */
+    WindowMapping *pm = FindMappingByDrawable(parent);
+    if (pm) {
+        RegisterDrawableForMapping(result, pm);
+    }
+
+    fprintf(stderr,
+        "XCreateWindow(child): parent=%lu → child=%lu, parentMapping=%p\n",
+        (unsigned long)parent,
+        (unsigned long)result,
+        (void *)pm);
+
+    return result;
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCreateSimpleWindow --
+ *
+ *	Simplified Xlib window-creation entry point.
+ *	Delegates to XCreateWindow with a minimal attribute set.
+ *
+ * Results:
+ *	New Window handle, or None on failure.
+ *
+ * Side effects:
+ *	See XCreateWindow.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Window
+XCreateSimpleWindow(
+    Display      *display,
+    Window        parent,
+    int           x,
+    int           y,
+    unsigned int  width,
+    unsigned int  height,
+    unsigned int  border_width,
+    unsigned long border,
+    unsigned long background)
+{
+    XSetWindowAttributes attr;
+    unsigned long         mask = CWBackPixel | CWBorderPixel;
+
+    attr.background_pixel = background;
+    attr.border_pixel     = border;
+
+    return XCreateWindow(display, parent,
+                         x, y, width, height, border_width,
+                         CopyFromParent, InputOutput, CopyFromParent,
+                         mask, &attr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XDestroyWindow --
+ *
+ *	Destroy a window and all its subwindows.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Destroys the GLFW window when found.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XDestroyWindow(
+    TCL_UNUSED(Display *),
+    Window window)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        TkGlfwDestroyWindow(gw);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XDestroySubwindows --
+ *
+ *	Destroy all direct subwindows of window.
+ *	In this port child windows do not own independent GLFW windows,
+ *	so this is a no-op that still returns Success for compatibility.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None (child windows share the parent's GLFW window).
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XDestroySubwindows(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
+{
+    /* Child windows share the parent GLFW context – nothing to destroy. */
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XMapWindow --
+ *
+ *	Make a window visible.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Shows the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XMapWindow(
+    TCL_UNUSED(Display *),
+    Window window)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        glfwShowWindow(gw);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XMapRaised --
+ *
+ *	Make a window visible and raise it to the top of the stack.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Shows and focuses the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XMapRaised(
+    TCL_UNUSED(Display *),
+    Window window)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        glfwShowWindow(gw);
+        glfwFocusWindow(gw);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XMapSubwindows --
+ *
+ *	Map all unmapped subwindows.
+ *	Child windows share the parent's GLFW window and are always
+ *	"visible" in the compositing sense; this is therefore a no-op.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XMapSubwindows(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
+{
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XUnmapWindow --
+ *
+ *	Hide a window.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Hides the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XUnmapWindow(
+    TCL_UNUSED(Display *),
+    Window window)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        glfwHideWindow(gw);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XUnmapSubwindows --
+ *
+ *	Unmap all mapped subwindows.  No-op for the same reason as
+ *	XMapSubwindows.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XUnmapSubwindows(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
+{
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XResizeWindow --
+ *
+ *	Change the size of a window.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Resizes the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XResizeWindow(
+    TCL_UNUSED(Display *),
+    Window       window,
+    unsigned int width,
+    unsigned int height)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        glfwSetWindowSize(gw, (int)width, (int)height);
+        TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XMoveWindow --
+ *
+ *	Change the position of a window.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Repositions the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XMoveWindow(
+    TCL_UNUSED(Display *),
+    Window window,
+    int    x,
+    int    y)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        glfwSetWindowPos(gw, x, y);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XMoveResizeWindow --
+ *
+ *	Change position and size atomically.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Repositions and resizes the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XMoveResizeWindow(
+    TCL_UNUSED(Display *),
+    Window       window,
+    int          x,
+    int          y,
+    unsigned int width,
+    unsigned int height)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        glfwSetWindowPos(gw,  x, y);
+        glfwSetWindowSize(gw, (int)width, (int)height);
+        TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XConfigureWindow --
+ *
+ *	General-purpose window configuration.
+ *	Handles CWX, CWY, CWWidth, CWHeight, CWBorderWidth from the
+ *	value_mask; stacking-related bits (CWSibling, CWStackMode) are
+ *	silently ignored because the Wayland compositor controls the
+ *	window stack.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	May move and/or resize the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XConfigureWindow(
+    TCL_UNUSED(Display *),
+    Window          window,
+    unsigned int    value_mask,
+    XWindowChanges *values)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+    int         x  = -1, y  = -1;
+    int         w  = -1, h  = -1;
+    int         moveNeeded   = 0;
+    int         resizeNeeded = 0;
+
+    if (gw == NULL || values == NULL) {
+        return Success;
+    }
+
+    /* Collect the current GLFW state to fill in un-specified fields. */
+    glfwGetWindowPos(gw,  &x, &y);
+    glfwGetWindowSize(gw, &w, &h);
+
+    if (value_mask & CWX) { x = values->x; moveNeeded   = 1; }
+    if (value_mask & CWY) { y = values->y; moveNeeded   = 1; }
+
+    if (value_mask & CWWidth)  { w = values->width;  resizeNeeded = 1; }
+    if (value_mask & CWHeight) { h = values->height; resizeNeeded = 1; }
+
+    /* CWBorderWidth: recorded for Tk bookkeeping; no GLFW equivalent. */
+    /* CWSibling / CWStackMode: compositor-controlled; ignore. */
+
+    if (moveNeeded) {
+        glfwSetWindowPos(gw, x, y);
+    }
+    if (resizeNeeded) {
+        glfwSetWindowSize(gw, w, h);
+        TkGlfwUpdateWindowSize(gw, w, h);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetWindowBorderWidth --
+ *
+ *	Change a window's border width.
+ *	NanoVG handles border drawing; the GLFW border is the window
+ *	decoration managed by the compositor.  We accept this call for
+ *	Xlib compatibility but take no action.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetWindowBorderWidth(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(unsigned int))
+{
+    /* Border drawing is done by NanoVG / the compositor. */
+    return Success;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XRaiseWindow --
+ *
+ *	Raise a window to the top of the stack.
+ *	GLFW exposes glfwFocusWindow which brings the window to the
+ *	front on most Wayland compositors.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Focuses / raises the GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XRaiseWindow(
+    TCL_UNUSED(Display *),
+    Window window)
+{
+    GLFWwindow *gw = WindowToGLFW(window);
+
+    if (gw != NULL) {
+        glfwFocusWindow(gw);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XLowerWindow --
+ *
+ *	Lower a window to the bottom of the stack.
+ *	Wayland compositors do not expose a portable "lower" operation.
+ *	We accept the call and return Success for compatibility.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XLowerWindow(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
+{
+    /* No-op: the compositor controls window stacking in Wayland. */
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCirculateSubwindowsUp --
+ *
+ *	Raise the bottom-most subwindow to the top.
+ *	No-op in Wayland.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XCirculateSubwindowsUp(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
+{
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCirculateSubwindowsDown --
+ *
+ *	Lower the top-most subwindow to the bottom.
+ *	No-op in Wayland.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XCirculateSubwindowsDown(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window))
+{
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XRestackWindows --
+ *
+ *	Restack multiple windows.
+ *	The Wayland compositor owns the global window stack; individual
+ *	applications cannot reorder top-level surfaces relative to each
+ *	other.  We attempt to raise each window in the given order
+ *	(best-effort) and return Success.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	May focus the first window in the array.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XRestackWindows(
+    TCL_UNUSED(Display *),
+    Window *windows,
+    int     nwindows)
+{
+    int i;
+
+    if (windows == NULL || nwindows <= 0) {
+        return Success;
+    }
+
+    /* Raise each window in order; the compositor may or may not honor this. */
+    for (i = 0; i < nwindows; i++) {
+        GLFWwindow *gw = WindowToGLFW(windows[i]);
+        if (gw != NULL) {
+            glfwFocusWindow(gw);
+        }
+    }
+
+    return Success;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XChangeWindowAttributes --
+ *
+ *	Change one or more window attributes.
+ *	We handle override-redirect (GLFW DECORATED hint) and the
+ *	always-on-top semantic (GLFW FLOATING hint).  Other attributes
+ *	such as background pixel, event mask, cursor, etc. are accepted
+ *	silently; they are managed by Tk's own machinery or are not
+ *	meaningful in Wayland.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	May change GLFW window attributes.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XChangeWindowAttributes(
+    TCL_UNUSED(Display *),
+    Window                window,
+    unsigned long         valuemask,
+    XSetWindowAttributes *attributes)
+{
+    GLFWwindow *gw;
+
+    if (attributes == NULL) {
+        return Success;
+    }
+
+    gw = WindowToGLFW(window);
+    if (gw == NULL) {
+        return Success;
+    }
+
+    if (valuemask & CWOverrideRedirect) {
+        glfwSetWindowAttrib(gw, GLFW_DECORATED,
+            attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
+    }
+
+    /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, CWCursor …
+       All are maintained by Tk's own attribute tables; no GLFW action. */
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetWindowBackground --
+ *
+ *	Set the window background pixel.
+ *	Background painting is done by NanoVG during drawing; we store
+ *	no per-window background in GLFW.  Accept and return Success.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetWindowBackground(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(unsigned long))
+{
+    /* Background is drawn via NanoVG; no GLFW action needed. */
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetWindowBackgroundPixmap --
+ *
+ *	Set the window background from a pixmap.
+ *	Accepts ParentRelative and None values per Xlib semantics; actual
+ *	background rendering goes through NanoVG.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetWindowBackgroundPixmap(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Pixmap))
+{
+    /* No-op; background is drawn via NanoVG. */
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetWindowBorder --
+ *
+ *	Set the border color of a window.
+ *	Borders are drawn by NanoVG; this call is a no-op.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetWindowBorder(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(unsigned long))
+{
+    /* Border painting is done via NanoVG. */
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetWindowBorderPixmap --
+ *
+ *	Set the border from a pixmap.  No-op.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetWindowBorderPixmap(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Pixmap))
+{
+    /* Border painting is done via NanoVG. */
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetInputFocus --
+ *
+ *	Set keyboard input focus to a window.
+ *	GLFW's glfwFocusWindow requests focus from the compositor; the
+ *	Wayland protocol makes no guarantee that the compositor will
+ *	honour the request.
+ *
+ * Results:
+ *	Success.
+ *
+ * Side effects:
+ *	Requests GLFW window focus.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XSetInputFocus(
+    TCL_UNUSED(Display *),
+    Window focus,
+    TCL_UNUSED(int),    /* revert_to */
+    TCL_UNUSED(Time))   /* time      */
+{
+    GLFWwindow *gw;
+
+    if (focus == None || focus == PointerRoot) {
+        return Success;
+    }
+
+    gw = WindowToGLFW(focus);
+    if (gw != NULL) {
+        glfwFocusWindow(gw);
+    }
+
+    return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetWMName --
+ *
+ *	Set the WM_NAME property (window title) via an XTextProperty.
+ *	We decode the text value and forward it to GLFW.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates the GLFW window title.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+XSetWMName(
+    TCL_UNUSED(Display *),
+    Window        window,
+    XTextProperty *text_prop)
+{
+    GLFWwindow *gw;
+    const char *title;
+
+    if (text_prop == NULL || text_prop->value == NULL) {
+        return;
+    }
+
+    gw = WindowToGLFW(window);
+    if (gw == NULL) {
+        return;
+    }
+
+    title = (const char *)text_prop->value;
+    glfwSetWindowTitle(gw, title);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XSetWMIconName --
+ *
+ *	Set the WM_ICON_NAME property.
+ *	Wayland compositors do not expose a portable icon-name API;
+ *	we accept the call for ICCCM compliance and do nothing.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+XSetWMIconName(
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(XTextProperty *))
+{
+    /* Icon names are not exposed via Wayland protocols; no-op. */
 }
 
 /*

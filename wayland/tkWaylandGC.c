@@ -923,13 +923,30 @@ XCopyGC(
 Pixmap
 XCreatePixmap(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable parent,
     unsigned int width,
     unsigned int height,
     unsigned int depth)
 {
-    return TkWaylandCreatePixmap((int)width, (int)height, (int)depth);
+    /* Create the backend pixmap object. */
+    Pixmap p = TkWaylandCreatePixmap((int)width, (int)height, (int)depth);
+
+    /* Inherit the parent’s mapping so BeginDraw can resolve it. */
+    WindowMapping *m = FindMappingByDrawable(parent);
+    if (m) {
+        RegisterDrawableForMapping((Drawable)p, m);
+    }
+
+    fprintf(stderr,
+            "XCreatePixmap: parent=%lu, pixmap=%lu, mapping=%p\n",
+            (unsigned long)parent,
+            (unsigned long)p,
+            (void *)m);
+
+    return p;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
