@@ -176,7 +176,7 @@ static uint64_t ComputeStateForWidget(TkAccessible *acc);
 static char *GetNameForWidget(Tk_Window tkwin);
 static char *GetDescriptionForWidget(Tk_Window tkwin);
 static char *GetValueForWidget(Tk_Window tkwin);
-static Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 static void RegisterToplevel(TkAccessible *acc);
 static void UnregisterToplevel(TkAccessible *acc);
 static void RegisterWidgetRecursive(Tcl_Interp *interp, Tk_Window tkwin);
@@ -1594,7 +1594,7 @@ static void UpdateFocusChain(Tk_Window focused)
     }
 }
 
-static Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 {
     if (!tkwin) return NULL;
     Tk_Window current = tkwin;

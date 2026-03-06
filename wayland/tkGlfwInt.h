@@ -28,19 +28,28 @@
  *
  * Core Context Structure
  *
+ *	Global state for the GLFW/Wayland backend.
+ *	This structure holds the shared GL context window, the global
+ *	NanoVG context, and state tracking for nested drawing operations.
+ *
  *----------------------------------------------------------------------
  */
 
-typedef struct {
-    GLFWwindow *mainWindow;        /* Shared context window */
-    NVGcontext *vg;                /* Global NanoVG context */
-    int         initialized;       /* Initialization flag */
-    int         nvgFrameActive;    /* NanoVG frame is open */
-    int         nvgFrameAutoOpened;/* Frame was opened automatically */
-    GLFWwindow *activeWindow;      /* Window owning the current frame */
-    int         nestedFrame;       /* Frame within a frame */
-    int         decorFontId;       /* NVG font ID for decorations */
-    int         clearPending;/* 1 = next BeginDraw should glClear */
+typedef struct TkGlfwContext {
+    GLFWwindow *mainWindow;      /* Hidden shared context window - all
+                                   * application windows share this context */
+    NVGcontext *vg;               /* Global NanoVG context - created once
+                                   * and shared by all windows */
+    int initialized;              /* GLFW initialized flag - 1 if glfwInit()
+                                   * has been called successfully */
+    int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
+                                   * currently active */
+    GLFWwindow *activeWindow;     /* Window that has the current active
+                                   * NanoVG frame (if any) */
+    int fbWidth;                  /* Framebuffer width of mainWindow
+                                   * (cached for performance) */
+    int fbHeight;                 /* Framebuffer height of mainWindow
+                                   * (cached for performance) */
 } TkGlfwContext;
 
 /*
@@ -48,8 +57,9 @@ typedef struct {
  *
  * Window Mapping Structure
  *
- *	Maintains the bidirectional mapping between Tk windows,
- *	GLFW windows, and Drawables.
+ *	Maps between Tk windows, GLFW windows, and drawable IDs.
+ *	Each toplevel window has one WindowMapping structure.
+ *	Child windows and pixmaps share the mapping of their parent toplevel.
  *
  *----------------------------------------------------------------------
  */
@@ -57,31 +67,44 @@ typedef struct {
 struct WmInfo;
 
 typedef struct WindowMapping {
-    TkWindow             *tkWindow;   /* Tk window pointer */
-    GLFWwindow           *glfwWindow; /* Corresponding GLFW window */
-    Drawable              drawable;   /* X11-style drawable ID */
-    int                   width;      /* Current width */
-    int                   height;     /* Current height */
-    struct libdecor_frame *frame;     /* libdecor frame (owned by GLFW) */
-    bool 					clearPending; /* Per window clearing */
-    struct WindowMapping  *nextPtr;   /* Next in linked list */
+    TkWindow *tkWindow;           /* Associated Tk window (may be NULL for
+                                   * offscreen/pixmap-only mappings) */
+    GLFWwindow *glfwWindow;        /* Associated GLFW window - all drawing
+                                   * for this mapping goes to this window */
+    Drawable drawable;              /* Tk drawable ID for this toplevel.
+                                   * Child windows and pixmaps that share
+                                   * this mapping have their own drawable IDs
+                                   * registered separately via DrawableMapping */
+    int width;                      /* Current window width in pixels
+                                   * (updated by configure events) */
+    int height;                     /* Current window height in pixels
+                                   * (updated by configure events) */
+    int clearPending;               /* Flag indicating the framebuffer needs
+                                   * to be cleared before next draw operation.
+                                   * Set to 1 when window is created/resized,
+                                   * cleared after clearing */
+    struct libdecor_frame *frame;   /* libdecor frame (owned by GLFW) */
+    struct WindowMapping *nextPtr;  /* Next mapping in global linked list */
 } WindowMapping;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Drawable Mapping Structure
+ *
+ *	Maps arbitrary drawable IDs (child windows, pixmaps) to their
+ *	parent WindowMapping. This allows TkGlfwBeginDraw to find the
+ *	correct GLFW window and toplevel for any drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
 typedef struct DrawableMapping {
-    Drawable drawable;              /* Tk window ID or pixmap ID */
-    WindowMapping *mapping;         /* Toplevel mapping */
-    struct DrawableMapping *next;
+    Drawable drawable;              /* Tk drawable ID (child window or pixmap) */
+    WindowMapping *mapping;         /* Pointer to the parent WindowMapping
+                                   * that owns this drawable */
+    struct DrawableMapping *next;   /* Next in global linked list */
 } DrawableMapping;
-
-WindowMapping *FindMappingByGLFW(GLFWwindow *glfwWindow);
-WindowMapping *FindMappingByTk(TkWindow *tkWin);
-WindowMapping *FindMappingByDrawable(Drawable drawable);
-WindowMapping *TkGlfwGetMappingList(void);
-void           RemoveMapping(WindowMapping *mapping);
-void           CleanupAllMappings(void);
-void		   RegisterDrawableForMapping(Drawable d, WindowMapping *m);
-Tk_Window 	   GetToplevelOfWidget(Tk_Window tkwin);
-
 
 /*
  *----------------------------------------------------------------------
@@ -192,25 +215,6 @@ typedef struct TkWmInfo {
     struct TkWmInfo *nextPtr;
 } WmInfo;
 
-
-MODULE_SCOPE void TkGlfwStartInteractiveMove(GLFWwindow *glfwWindow);
-MODULE_SCOPE void TkGlfwStartInteractiveResize(GLFWwindow *glfwWindow, uint32_t edges);
-
-/* Decoration constants. */
-#define TITLE_BAR_HEIGHT    30
-#define BORDER_WIDTH        1
-#define BUTTON_WIDTH        30
-#define BUTTON_HEIGHT       30
-#define BUTTON_SPACING      5
-#define CORNER_RADIUS       6.0f
-#define SHADOW_BLUR         20.0f
-
-#define RESIZE_NONE     0
-#define RESIZE_LEFT     (1 << 0)
-#define RESIZE_RIGHT    (1 << 1)
-#define RESIZE_TOP      (1 << 2)
-#define RESIZE_BOTTOM   (1 << 3)
-
 /*
  *----------------------------------------------------------------------
  *
@@ -228,8 +232,8 @@ typedef struct {
     GLFWwindow *glfwWindow;  /* Associated GLFW window */
     int         width;       /* Drawable width */
     int         height;      /* Drawable height */
-    int         offsetX;     /* Offset of child  widget */
-    int         offsetY;     /* Offset of child  widget */
+    int         offsetX;     /* Offset of child widget */
+    int         offsetY;     /* Offset of child widget */
     int         nestedFrame; /* Frame within frame */
 } TkWaylandDrawingContext;
 
@@ -313,6 +317,28 @@ typedef struct TkWaylandPixmapStruct {
 /*
  *----------------------------------------------------------------------
  *
+ * Decoration constants
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define TITLE_BAR_HEIGHT    30
+#define BORDER_WIDTH        1
+#define BUTTON_WIDTH        30
+#define BUTTON_HEIGHT       30
+#define BUTTON_SPACING      5
+#define CORNER_RADIUS       6.0f
+#define SHADOW_BLUR         20.0f
+
+#define RESIZE_NONE     0
+#define RESIZE_LEFT     (1 << 0)
+#define RESIZE_RIGHT    (1 << 1)
+#define RESIZE_TOP      (1 << 2)
+#define RESIZE_BOTTOM   (1 << 3)
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Global State Access
  *
  *----------------------------------------------------------------------
@@ -334,6 +360,41 @@ MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
 /*
  *----------------------------------------------------------------------
  *
+ * Window Mapping Management
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Add a new mapping to the list */
+MODULE_SCOPE void AddMapping(WindowMapping *mapping);
+
+/* Find mapping by GLFW window */
+MODULE_SCOPE WindowMapping *FindMappingByGLFW(GLFWwindow *w);
+
+/* Find mapping by Tk window */
+MODULE_SCOPE WindowMapping *FindMappingByTk(TkWindow *w);
+
+/* Find mapping by drawable */
+MODULE_SCOPE WindowMapping *FindMappingByDrawable(Drawable d);
+
+/* Get the head of the mapping list */
+MODULE_SCOPE WindowMapping *TkGlfwGetMappingList(void);
+
+/* Remove a mapping from the list */
+void RemoveMapping(WindowMapping *m);
+
+/* Clean up all mappings */
+MODULE_SCOPE void CleanupAllMappings(void);
+
+/* Register a drawable with a mapping */
+MODULE_SCOPE void RegisterDrawableForMapping(Drawable d, WindowMapping *m);
+
+/* Get toplevel of a widget */
+MODULE_SCOPE Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Window Management
  *
  *----------------------------------------------------------------------
@@ -348,10 +409,22 @@ MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
 
 MODULE_SCOPE void        TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow *TkGlfwGetGLFWWindow(Tk_Window tkwin);
+MODULE_SCOPE Drawable    TkGlfwGetDrawable(GLFWwindow *w);
 MODULE_SCOPE TkWindow   *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
 MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height);
-Tcl_Obj *Tk_GetSystemDefault(Tk_Window tkwin, const char *dbName,const char *className);
+MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w, int width, int height);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Interactive Window Operations
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void TkGlfwStartInteractiveMove(GLFWwindow *glfwWindow);
+MODULE_SCOPE void TkGlfwStartInteractiveResize(GLFWwindow *glfwWindow, uint32_t edges);
 
 /*
  *----------------------------------------------------------------------
@@ -364,7 +437,6 @@ Tcl_Obj *Tk_GetSystemDefault(Tk_Window tkwin, const char *dbName,const char *cla
 MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
-MODULE_SCOPE void        TkGlfwFlushAutoFrame(void);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
 
 /*
@@ -410,7 +482,7 @@ MODULE_SCOPE NVGcontext *TkWaylandGetPixmapNVGContext(void);
 
 MODULE_SCOPE void TkGlfwProcessEvents(void);
 MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow, TkWindow *tkWin);
-void              Tk_WaylandSetupTkNotifier(void);
+MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 
 typedef struct {
     Tcl_Event  header;  /* Must be first. */
@@ -418,8 +490,9 @@ typedef struct {
     TkWindow  *winPtr;
 } TkWaylandExposeEvent;
 
-void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int width, int height);
-void TkWaylandHandleExposeEvents(void);
+MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int width, int height);
+MODULE_SCOPE void TkWaylandHandleExposeEvents(void);
+
 /*
  *----------------------------------------------------------------------
  *
@@ -473,7 +546,7 @@ MODULE_SCOPE void TkWaylandStoreCharacterInput(unsigned int codepoint);
  *----------------------------------------------------------------------
  */
 
-void TkWaylandMenuInit(void);
+MODULE_SCOPE void TkWaylandMenuInit(void);
 
 /*
  *----------------------------------------------------------------------
@@ -526,10 +599,10 @@ MODULE_SCOPE void XSetWMIconName(Display *display, Window window, XTextProperty 
  *----------------------------------------------------------------------
  */
 
-extern int Tktray_Init(Tcl_Interp *interp);
-extern int SysNotify_Init(Tcl_Interp *interp);
-extern int Cups_Init(Tcl_Interp *interp);
-int TkWaylandAccessibility_Init(Tcl_Interp *interp);
+MODULE_SCOPE int Tktray_Init(Tcl_Interp *interp);
+MODULE_SCOPE int SysNotify_Init(Tcl_Interp *interp);
+MODULE_SCOPE int Cups_Init(Tcl_Interp *interp);
+MODULE_SCOPE int TkWaylandAccessibility_Init(Tcl_Interp *interp);
 
 #endif /* _TKGLFWINT_H */
 

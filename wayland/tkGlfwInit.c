@@ -40,7 +40,7 @@
  *----------------------------------------------------------------------
  */
 
-TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, 0, NULL, 0, 0, 0};
+TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, NULL, 0, 0};
 static WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
 static DrawableMapping *drawableMappingList = NULL;
@@ -231,6 +231,7 @@ TkGlfwShutdown(TCL_UNUSED(ClientData))
     
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -292,16 +293,21 @@ TkGlfwCreateWindow(
                               NULL, glfwContext.mainWindow);
     if (!window) return NULL;
 
+    /* Allocate and initialize mapping. */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
-    mapping->tkWindow   = tkWin;
+    
+    /* Set fields explicitly. */
+    mapping->tkWindow = tkWin;
     mapping->glfwWindow = window;
-    mapping->drawable   = nextDrawableId++;
-    mapping->width      = width;
-    mapping->height     = height;
-    mapping->nextPtr    = windowMappingList;
-    windowMappingList   = mapping;
-    mapping->clearPending = false;
+    mapping->drawable = nextDrawableId++;
+    mapping->width = width;
+    mapping->height = height;
+    mapping->clearPending = 1;  /* Mark for first draw */
+    mapping->nextPtr = NULL;    /* Will be set by AddMapping */
+    
+    /* Add to list using helper. */
+    AddMapping(mapping);
 
     glfwSetWindowUserPointer(window, mapping);
 
@@ -315,10 +321,29 @@ TkGlfwCreateWindow(
     int timeout = 0;
     while ((mapping->width == 0 || mapping->height == 0) && timeout < 100) {
         glfwPollEvents();
+        
+        /* Get actual window size after events. */
+        if (mapping->width == 0 || mapping->height == 0) {
+            int w, h;
+            glfwGetWindowSize(window, &w, &h);
+            if (w > 0 && h > 0) {
+                mapping->width = w;
+                mapping->height = h;
+                break;
+            }
+        }
         timeout++;
     }
-    if (mapping->width  == 0) mapping->width  = width;
+    
+    /* Ensure we have valid dimensions. */
+    if (mapping->width == 0) mapping->width = width;
     if (mapping->height == 0) mapping->height = height;
+
+    /* Update Tk window dimensions. */
+    if (tkWin != NULL) {
+        tkWin->changes.width = mapping->width;
+        tkWin->changes.height = mapping->height;
+    }
 
     if (drawableOut) *drawableOut = mapping->drawable;
 
@@ -327,7 +352,6 @@ TkGlfwCreateWindow(
 
     return window;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -388,15 +412,16 @@ TkGlfwBeginDraw(
     WindowMapping *mapping;
     int fbWidth, fbHeight;
     int offsetX = 0, offsetY = 0;
-    
-       fprintf(stderr, "BeginDraw: drawable=%lu\n", (unsigned long)drawable);
-    WindowMapping *m = FindMappingByDrawable(drawable);
-    fprintf(stderr, "BeginDraw: mapping=%p\n", (void *)m);
+    float pixelRatio;
 
     if (!dcPtr) return TCL_ERROR;
 
     mapping = FindMappingByDrawable(drawable);
-    if (!mapping || !mapping->glfwWindow) return TCL_ERROR;
+    if (!mapping || !mapping->glfwWindow) {
+        fprintf(stderr, "TkGlfwBeginDraw: No mapping for drawable %lu\n", 
+                (unsigned long)drawable);
+        return TCL_ERROR;
+    }
 
     /*
      * If the drawable is not the toplevel's own drawable, the match
@@ -425,8 +450,8 @@ TkGlfwBeginDraw(
         if (found) {
             TkWindow *tw2 = found;
             while (tw2 && tw2->window != (Window)mapping->drawable) {
-                offsetX += tw2->changes.x;
-                offsetY += tw2->changes.y;
+                offsetX += tw2->changes.x + tw2->changes.border_width;
+                offsetY += tw2->changes.y + tw2->changes.border_width;
                 tw2 = tw2->parentPtr;
             }
         }
@@ -468,37 +493,65 @@ TkGlfwBeginDraw(
         glfwContext.activeWindow   = NULL;
     }
 
+    /* Make context current and set up viewport. */
     glfwMakeContextCurrent(mapping->glfwWindow);
     glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
 
-   glViewport(0, 0, fbWidth, fbHeight);
+    /* Calculate pixel ratio for NanoVG. */
+    pixelRatio = (float)fbWidth / (float)mapping->width;
 
-	if (mapping->clearPending) {   
-	    /* Use a neutral default (widgets will fill their own bg anyway). */
-	    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-	    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	    mapping->clearPending = false;
-	}
+    /* FIX: Clear framebuffer if needed. */
+    if (mapping->clearPending) {   
+        /* Use a neutral default (widgets will fill their own bg anyway). */
+        glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        mapping->clearPending = 0;
+    }
 
+    /* Begin NanoVG frame with proper coordinate system. */
     nvgBeginFrame(glfwContext.vg,
                   (float)mapping->width,
                   (float)mapping->height,
-                  (float)fbWidth / (float)mapping->width);
+                  pixelRatio);
+    
+    /* Set up coordinate system for Tk (origin at top-left). */
     nvgSave(glfwContext.vg);
-    nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
+    nvgScale(glfwContext.vg, 1.0f, -1.0f);  /* Flip Y axis */
+    nvgTranslate(glfwContext.vg, 0.0f, -(float)mapping->height); /* Move origin to top-left */
+    nvgTranslate(glfwContext.vg, 0.5f, 0.5f); /* Pixel snapping */
 
     glfwContext.nvgFrameActive = 1;
     glfwContext.activeWindow   = mapping->glfwWindow;
 
+    /* Apply child window offset if needed. */
     if (offsetX != 0 || offsetY != 0) {
         nvgSave(glfwContext.vg);
         nvgTranslate(glfwContext.vg, (float)offsetX, (float)offsetY);
     }
 
+    /* Apply GC settings. */
     if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
 
     return TCL_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwEndDraw --
+ *
+ *	End a drawing operation. Ends the NanoVG frame and swaps buffers.
+ *	No-ops for nested frames.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Ends the NanoVG frame and swaps buffers for non-nested frames.
+ *
+ *----------------------------------------------------------------------
+ */
 
 /*
  *----------------------------------------------------------------------
@@ -529,16 +582,22 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         return;
     }
 
-    nvgRestore(dcPtr->vg);   /* global pixel-snap save */
+    /* FIX: Restore the saved states. */
+    nvgRestore(dcPtr->vg);  /* Pop child offset if any */
+    nvgRestore(dcPtr->vg);  /* Pop coordinate transform */
+    
     nvgEndFrame(dcPtr->vg);
 
     glfwContext.nvgFrameActive = 0;
     glfwContext.activeWindow   = NULL;
 
-    if (dcPtr->glfwWindow)
+    if (dcPtr->glfwWindow) {
         glfwSwapBuffers(dcPtr->glfwWindow);
+        
+        /* Ensure events are processed after swap. */
+        glfwPollEvents();
+    }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -829,9 +888,7 @@ WindowMapping *
 FindMappingByDrawable(Drawable d)
 {
     DrawableMapping *dm;
-
-    fprintf(stderr, "FindMappingByDrawable: d=%lu\n", (unsigned long)d);
-
+    
     /* Fast path: explicit registrations (toplevel + children + XCreateWindow + pixmaps). */
     for (dm = drawableMappingList; dm; dm = dm->next) {
         if (dm->drawable == d) {
@@ -857,14 +914,46 @@ TkGlfwGetMappingList(void)
 {
     return windowMappingList;
 }
+/* Add mappings. */
+void
+AddMapping(WindowMapping *mapping)
+{
+    if (!mapping) return;
+    
+    /* Initialize all fields */
+    mapping->nextPtr = windowMappingList;
+    mapping->clearPending = 0;
+    mapping->width = 0;
+    mapping->height = 0;
+    mapping->glfwWindow = NULL;
+    mapping->tkWindow = NULL;
+    mapping->drawable = 0;
+    
+    windowMappingList = mapping;
+}
+
 
 /* Delete mappings. */
 void
 RemoveMapping(WindowMapping *m)
 {
     WindowMapping **pp = &windowMappingList;
+    
+    if (!m) {
+        fprintf(stderr, "RemoveMapping: Called with NULL mapping\n");
+        return;
+    }
+    
+  
     while (*pp) {
-        if (*pp == m) { *pp = m->nextPtr; ckfree((char *)m); return; }
+        if (*pp == m) { 
+            *pp = m->nextPtr; 
+            
+            /* Clear the mapping before freeing to detect use-after-free. */
+            memset(m, 0, sizeof(WindowMapping));
+            ckfree((char *)m); 
+            return; 
+        }
         pp = &(*pp)->nextPtr;
     }
 }
@@ -874,9 +963,13 @@ void
 CleanupAllMappings(void)
 {
     WindowMapping *c = windowMappingList, *n;
+    
     while (c) {
         n = c->nextPtr;
-        if (c->glfwWindow) glfwDestroyWindow(c->glfwWindow);
+        if (c->glfwWindow) {
+            glfwDestroyWindow(c->glfwWindow);
+        }
+        memset(c, 0, sizeof(WindowMapping));
         ckfree((char *)c);
         c = n;
     }
@@ -892,9 +985,6 @@ RegisterDrawableForMapping(Drawable d, WindowMapping *m)
     dm->mapping  = m;
     dm->next     = drawableMappingList;
     drawableMappingList = dm;
-
-    fprintf(stderr, "REGISTER: drawable=%lu → mapping=%p\n",
-            (unsigned long)d, (void *)m);
 }
 
 /*
@@ -945,20 +1035,6 @@ TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
 {
     WindowMapping *m = FindMappingByGLFW(glfwWindow);
     return m ? m->tkWindow : NULL;
-}
-
-/* Function to return the toplevel window that contains a given Tk widget. */
-Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
-{
-    if (!tkwin) return NULL;
-    Tk_Window current = tkwin;
-    if (Tk_IsTopLevel(current)) return current;
-    while (current != NULL && Tk_WindowId(current) != None) {
-	Tk_Window parent = Tk_Parent(current);
-	if (parent == NULL || Tk_IsTopLevel(current)) break;
-	current = parent;
-    }
-    return Tk_IsTopLevel(current) ? current : NULL;
 }
 
 /*

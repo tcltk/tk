@@ -930,22 +930,25 @@ XCreatePixmap(
 {
     /* Create the backend pixmap object. */
     Pixmap p = TkWaylandCreatePixmap((int)width, (int)height, (int)depth);
-
-    /* Inherit the parent’s mapping so BeginDraw can resolve it. */
-    WindowMapping *m = FindMappingByDrawable(parent);
-    if (m) {
-        RegisterDrawableForMapping((Drawable)p, m);
+    
+    /* FIX: Get the GLFW window from the parent and register mapping. */
+    GLFWwindow *glfwWindow = TkGlfwGetWindowFromDrawable(parent);
+    WindowMapping *m = NULL;
+    
+    if (glfwWindow) {
+        m = FindMappingByGLFW(glfwWindow);
+    } else {
+        /* If parent is not a GLFW window, try direct drawable lookup. */
+        m = FindMappingByDrawable(parent);
     }
-
-    fprintf(stderr,
-            "XCreatePixmap: parent=%lu, pixmap=%lu, mapping=%p\n",
-            (unsigned long)parent,
-            (unsigned long)p,
-            (void *)m);
+    
+    if (m) {
+        /* Register the pixmap with the parent's mapping. */
+        RegisterDrawableForMapping((Drawable)p, m);
+       }
 
     return p;
 }
-
 
 
 /*
