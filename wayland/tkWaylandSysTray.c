@@ -126,7 +126,7 @@ static int UpdateTooltip(DockIcon *icon);
 static int SaveTkImageToFile(DockIcon *icon);
 static int RegisterStatusNotifierItem(DockIcon *icon);
 static int UnregisterStatusNotifierItem(DockIcon *icon);
-static void ProcessDBusEvents(ClientData clientData);
+static void ProcessDBusEvents(void *clientData);
 static void InvokeButtonCommand(DockIcon *icon, int button, int x, int y);
 
 /* Global item ID counter. */
@@ -528,7 +528,7 @@ static const sd_bus_vtable status_notifier_item_vtable[] = {
 
 static void
 ProcessDBusEvents(
-    ClientData clientData)
+    void *clientData)
 {
     DockIcon *icon = (DockIcon *)clientData;
     

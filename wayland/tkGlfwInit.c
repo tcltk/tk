@@ -198,7 +198,7 @@ TkGlfwInitialize(void)
  */
 
 MODULE_SCOPE void
-TkGlfwShutdown(TCL_UNUSED(ClientData))
+TkGlfwShutdown(TCL_UNUSED(void *))
 {
     if (!glfwContext.initialized)
         return;

@@ -85,7 +85,7 @@ static void GetTearoffEntryGeometry(TkMenu *menuPtr,
 				    TkMenuEntry *mePtr, Tk_Font tkfont,
 				    const Tk_FontMetrics *fmPtr, int *widthPtr,
 				    int *heightPtr);
-static void TkpDisplayMenu(ClientData clientData);
+static void TkpDisplayMenu(void *clientData);
 static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
 static void MenuMouseLeave(TkMenu *menuPtr);
@@ -1379,7 +1379,7 @@ TkpDrawMenuEntry(
 
 static void
 TkpDisplayMenu(
-	       ClientData clientData)
+	       void *clientData)
 {
     TkMenu *menuPtr = (TkMenu *)clientData;
     TkWindow *winPtr;

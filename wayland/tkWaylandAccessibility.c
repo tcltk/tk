@@ -252,15 +252,15 @@ static void TkAccessible_ConfigureHandler(void *clientData, XEvent *eventPtr);
 static void TkAccessible_RegisterEventHandlers(Tk_Window tkwin, TkAccessible *acc);
 
 /* Tcl event loop integration. */
-static void BusFileHandlerProc(ClientData clientData, int mask);
-static void TclEventSetupProc(ClientData clientData, int flags);
-static void TclEventCheckProc(ClientData clientData, int flags);
+static void BusFileHandlerProc(void *clientData, int mask);
+static void TclEventSetupProc(void *clientData, int flags);
+static void TclEventCheckProc(void *clientData, int flags);
 
 /* Tcl command implementations. */
-static int AddAccessibleCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int EmitSelectionChangedCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int EmitFocusChangedCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static int IsScreenReaderRunningCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int AddAccessibleCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int EmitSelectionChangedCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int EmitFocusChangedCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+static int IsScreenReaderRunningCmd(void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 
 /* Screen reader detection. */
 static int IsScreenReaderActive(void);
@@ -1311,7 +1311,7 @@ static void SendActiveDescendantChanged(TkAccessible *container, TkAccessible *d
  * Tcl event loop integration. D-Bus will be come a custom event source for Tcl. 
  */
 
-static void BusFileHandlerProc(ClientData clientData, int mask)
+static void BusFileHandlerProc(void *clientData, int mask)
 {
     AtspiConnection *conn = (AtspiConnection *)clientData;
     if (mask & TCL_READABLE) {
@@ -1319,7 +1319,7 @@ static void BusFileHandlerProc(ClientData clientData, int mask)
     }
 }
 
-static void TclEventSetupProc(ClientData clientData, int flags)
+static void TclEventSetupProc(void *clientData, int flags)
 {
     AtspiConnection *conn = (AtspiConnection *)clientData;
     if (!(flags & TCL_WINDOW_EVENTS)) {
@@ -1337,7 +1337,7 @@ static void TclEventSetupProc(ClientData clientData, int flags)
     }
 }
 
-static void TclEventCheckProc(ClientData clientData, int flags)
+static void TclEventCheckProc(void *clientData, int flags)
 {
     AtspiConnection *conn = (AtspiConnection *)clientData;
     if (!(flags & TCL_WINDOW_EVENTS)) {
@@ -1976,7 +1976,7 @@ static int IsScreenReaderActive(void)
 */
 
 static int AddAccessibleCmd(
-	TCL_UNUSED(ClientData),
+	TCL_UNUSED(void *),
 	Tcl_Interp *interp,
 	int objc, 
 	Tcl_Obj 
@@ -2006,7 +2006,7 @@ static int AddAccessibleCmd(
 }
 
 static int EmitSelectionChangedCmd(
-	TCL_UNUSED(ClientData),  
+	TCL_UNUSED(void *),  
 	Tcl_Interp *interp,
 	int objc, Tcl_Obj 
 	*const objv[])
@@ -2043,7 +2043,7 @@ static int EmitSelectionChangedCmd(
 }
 
 static int EmitFocusChangedCmd(
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* void **/
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -2059,7 +2059,7 @@ static int EmitFocusChangedCmd(
 }
 
 static int IsScreenReaderRunningCmd(
-    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* void **/
     Tcl_Interp *interp,
     TCL_UNUSED(int), /* objc */
     TCL_UNUSED(Tcl_Obj *const *)) /* objv */

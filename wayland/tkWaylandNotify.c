@@ -146,7 +146,8 @@ TkWaylandScheduleRender(void)
  */
  
 static void 
-TkWaylandRenderIdleProc(ClientData clientData)
+TkWaylandRenderIdleProc(
+    TCL_UNUSED(void *))
 {
     WindowMapping *m;
     TkGlfwContext *ctx = TkGlfwGetContext();
