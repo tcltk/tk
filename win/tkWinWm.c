@@ -14,7 +14,6 @@
  */
 
 #include "tkWinInt.h"
-#include <windows.h>
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>

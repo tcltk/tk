@@ -10,6 +10,7 @@
  */
 
 #include "tkInt.h"
+#include <X11/cursorfont.h>
 
 /*
  * The following data structure is a superset of the TkCursor structure

@@ -179,8 +179,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -highlight [list selected 1] \
 	    -highlightcolor [list selected $colors(-selectbg)]
 
-	# Treeview.
-	#
+	# Treeview
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Item -indicatorsize 9p \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}

@@ -14,12 +14,7 @@
  */
 
 
-#include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <time.h>
-#include <tcl.h>
-#include <tk.h>
 #include "tkInt.h"
 
 #ifdef HAVE_ATK

@@ -2941,7 +2941,7 @@ StringMatchPNG(
 
     png.strDataBuf = Tcl_GetByteArrayFromObj(pObjData, &png.strDataLen);
 
-    if (ReadIHDR(interp, &png) == TCL_OK) {
+    if (png.strDataBuf != NULL && ReadIHDR(interp, &png) == TCL_OK) {
 	*widthPtr = png.block.width;
 	*heightPtr = png.block.height;
 	match = 1;
