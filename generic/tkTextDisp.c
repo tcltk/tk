@@ -7519,7 +7519,7 @@ TkTextIndexBbox(
  *----------------------------------------------------------------------
  */
 
-static const char localeExt[][10] = {
+static const char localeVariant[][10] = {
     "",
     "adlam",
     "cjknarrow",
@@ -7532,6 +7532,11 @@ static const char localeExt[][10] = {
     "valencia"
 };
 
+#define TOUPPER(ch) ((char)((ch) & ~('a' - 'A'))) // Cheap toupper(), knowing isalpha() is true
+#define TOLOWER(ch) ((char)((ch) | ('a' - 'A')))  // Cheap tolower(), knowing isalpha() is true
+#define ISALPHA(ch) (UCHAR(TOLOWER(ch) - 'a') <= UCHAR('z' - 'a')) // Cheap isalpha()
+#define ISDIGIT(ch) (UCHAR((ch) - '0') <= UCHAR('9' - '0')) // Cheap isdigit()
+
 static Tcl_Obj *
 GetLocale(
     TCL_UNUSED(void *),
@@ -7541,7 +7546,7 @@ GetLocale(
 				 * line value. */
 {
     char *locale = recordPtr + internalOffset;
-    char buffer[24]; // Max size is 3 + '_' + 2 + '@' + 9 + '\0'= 17 characters;
+    char buffer[24]; // Max size is 3 + '_' + 3 + '@' + 9 + '\0'= 18 characters;
 
     strncpy(buffer, locale, 5);
     buffer[5] = 0;
@@ -7553,9 +7558,13 @@ GetLocale(
 	buffer[3] = '_';
     }
     char *p = buffer + strlen(buffer);
+    if (ISDIGIT(locale[3])) {
+	p[-1] = '0' + locale[4]/10; // numeric locale, then locale[4] is a number between 00 and 99.
+	*p++ = '0' + locale[4]%10;
+    }
     if (locale[5]) {
 	*p++ = '@';
-	strcpy(p, localeExt[UCHAR(locale[5])]);
+	strcpy(p, localeVariant[UCHAR(locale[5])]);
 	p += strlen(p);
     }
     return Tcl_NewStringObj(buffer, p - buffer);
@@ -7581,9 +7590,6 @@ SetLocale(
 	*value = NULL;
     } else {
 	const char *str = Tcl_GetString(*value);
-#define TOUPPER(ch) ((char)((ch) & ~('a' - 'A'))) // Cheap toupper(), knowing isalpha() is true
-#define TOLOWER(ch) ((char)((ch) | ('a' - 'A')))  // Cheap tolower(), knowing isalpha() is true
-#define ISALPHA(ch) (UCHAR(TOLOWER(ch) - 'a') <= UCHAR('z' - 'a')) // Cheap isalpha()
 	if (ISALPHA(str[0]) && ISALPHA(str[1])) {
 	    locale[0] = TOLOWER(str[0]);
 	    locale[1] = TOLOWER(str[1]);
@@ -7651,9 +7657,9 @@ SetLocale(
 		}
 	    }
 	    if (!locale[5] && (*str == '@')) {
-		locale[5] = sizeof(localeExt)/sizeof(localeExt[0]) - 1;
+		locale[5] = sizeof(localeVariant)/sizeof(localeVariant[0]) - 1;
 		do {
-		    if (!strcasecmp(&str[1], localeExt[UCHAR(locale[5])])) {
+		    if (!strcasecmp(&str[1], localeVariant[UCHAR(locale[5])])) {
 			break;
 		    }
 		} while (--locale[5] != 0);
