@@ -154,14 +154,30 @@ TkWaylandRenderIdleProc(ClientData clientData)
     
     tsdPtr->renderPending = false;
 
+    /* Safety check */
+    if (!ctx || !ctx->initialized) {
+        fprintf(stderr, "TkWaylandRenderIdleProc: GLFW not initialized\n");
+        return;
+    }
+
     /* Prime per-window clear flag for every mapped toplevel. */
-    for (m = TkGlfwGetMappingList(); m; m = m->nextPtr) {
+    WindowMapping *list = TkGlfwGetMappingList();
+    if (!list) {
+        fprintf(stderr, "TkWaylandRenderIdleProc: No window mapping list\n");
+        return;
+    }
+
+    for (m = list; m != NULL; m = m->nextPtr) {
+        if (m == NULL) {
+            fprintf(stderr, "TkWaylandRenderIdleProc: NULL mapping in list\n");
+            break;
+        }
+        
         if (m->glfwWindow && m->width > 1 && m->height > 1) {
-            m->clearPending = true;
+            m->clearPending = 1;  /* Use 1 instead of true for portability */
         }
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -325,11 +341,6 @@ TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags)
 
     if (!(flags & TCL_WINDOW_EVENTS)) return 0;
     if (exposePtr->winPtr == NULL)    return 1;
-    
-fprintf(stderr, "Expose: xEvent.window=%lu, tkWin->window=%lu, drawable=%lu\n",
-        exposePtr->xEvent.xexpose.window,
-        exposePtr->winPtr->window,
-        FindMappingByTk(exposePtr->winPtr)->drawable);
 
     mapping = FindMappingByTk(exposePtr->winPtr);
     if (mapping && mapping->width > 1 && mapping->height > 1) {

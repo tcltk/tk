@@ -120,7 +120,6 @@ XDrawString(
     float fontSize;
     char *buf;
 
- fprintf(stderr, "draw string received\n");
     if (!string || length <= 0) return Success;
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
@@ -488,7 +487,6 @@ XDrawRectangle(
 {
     TkWaylandDrawingContext dc;
 
-fprintf(stderr, "draw rect received\n");
     if (width == 0 || height == 0) return BadValue;
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
@@ -568,29 +566,30 @@ XFillRectangles(
     XRectangle *rectangles,
     int         n_rectangles)
 {
-	        
     TkWaylandDrawingContext dc;
     int i;
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
         return BadDrawable;
-	}
+    }
 
-	XGCValues v;
-	TkWaylandGetGCValues(gc, GCForeground|GCBackground, &v);
+    XGCValues v;
+    TkWaylandGetGCValues(gc, GCForeground|GCBackground, &v);
 
     for (i = 0; i < n_rectangles; i++) {
+        /* Ensure valid dimensions. */
+        int w = rectangles[i].width > 0 ? rectangles[i].width : 1;
+        int h = rectangles[i].height > 0 ? rectangles[i].height : 1;
+        
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, rectangles[i].x, rectangles[i].y,
-                rectangles[i].width, rectangles[i].height);
+        nvgRect(dc.vg, rectangles[i].x, rectangles[i].y, w, h);
         nvgFill(dc.vg);
     }
 
     TkGlfwEndDraw(&dc);
     return Success;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -622,7 +621,10 @@ XFillRectangle(
     rect.width  = width;
     rect.height = height;
     
-    fprintf(stderr, "XFillRectangle on drawable=%lu\n", d);
+    /* Ensure width and height are at least 1. */
+    if (width == 0) rect.width = 1;
+    if (height == 0) rect.height = 1;
+    
     return XFillRectangles(display, d, gc, &rect, 1);
 }
 

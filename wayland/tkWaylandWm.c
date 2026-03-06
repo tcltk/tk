@@ -431,27 +431,35 @@ TkWmMapWindow(TkWindow *winPtr)
         if (w <= 0) w = 640;
         if (h <= 0) h = 480;
 
-        /* Prime the framebuffer with a visible color. */
+        /* Prime the framebuffer with a visible color and force redraw. */
         GLFWwindow *prev = glfwGetCurrentContext();
         glfwMakeContextCurrent(wmPtr->glfwWindow);
+        
+        /* Clear to light gray. */
         glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glfwSwapBuffers(wmPtr->glfwWindow);
-        if (prev) glfwMakeContextCurrent(prev);
-
-        TkGlfwProcessEvents();
-        winPtr->flags |= TK_MAPPED;
-
+        
+        /* Force an expose event to trigger widget drawing. */
         mapping = FindMappingByTk(winPtr);
         if (mapping != NULL) {
-            w = mapping->width  > 1 ? mapping->width  : 640;
-            h = mapping->height > 1 ? mapping->height : 480;
+            mapping->clearPending = 1;  /* Will clear on next draw */
+            w = mapping->width  > 1 ? mapping->width  : w;
+            h = mapping->height > 1 ? mapping->height : h;
 
             winPtr->changes.width  = w;
             winPtr->changes.height = h;
 
+            /* Queue expose for entire window. */
             TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+            
+            /* Process events to trigger drawing. */
+            TkGlfwProcessEvents();
         }
+        
+        if (prev) glfwMakeContextCurrent(prev);
+        
+        winPtr->flags |= TK_MAPPED;
     }
 }
 /*
