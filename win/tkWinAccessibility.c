@@ -12,9 +12,9 @@
  *
  */
 
+#include "tkWinInt.h"
 #include <tcl.h>
 #include <tk.h>
-#include "tkWinInt.h"
 #include <oleacc.h>
 #include <oaidl.h>
 #include <oleauto.h>
@@ -22,9 +22,7 @@
 #include <initguid.h>
 #include <tlhelp32.h>
 #include <tchar.h>
-#include <windows.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <limits.h>
 
 /*

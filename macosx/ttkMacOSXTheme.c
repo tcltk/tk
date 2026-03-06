@@ -33,7 +33,6 @@
 #include "ttk/ttkThemeInt.h"
 #include "ttkMacOSXTheme.h"
 #include "tkColor.h"
-#include <math.h>
 
 MODULE_SCOPE NSColor *controlAccentColor(void) {
     static int accentPixel = -1;
@@ -3364,20 +3363,6 @@ static void DisclosureElementSize(
     *minHeight = s;
 }
 
-static const char * GetWinStyleName(
-    Tk_Window tkwin)
-{
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    Tcl_Obj *cmdObj = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
-
-    Tcl_IncrRefCount(cmdObj);
-    Tcl_AppendToObj(cmdObj, " style", -1);
-    Tcl_EvalObjEx(interp, cmdObj, TCL_EVAL_GLOBAL);
-    Tcl_DecrRefCount(cmdObj);
-
-    return Tcl_GetStringResult(interp);
-}
-
 static void DisclosureElementDraw(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
@@ -3393,10 +3378,9 @@ static void DisclosureElementDraw(
 	 */
 
 	CGRect bounds = BoxToRect(d, b);
-	int isSelected = (state & TTK_STATE_SELECTED);
-	int isActive = !(state & TTK_STATE_BACKGROUND);
-	int isCheckTreeview = !strcmp(GetWinStyleName(tkwin), "CheckTreeview");
-	NSColor *color = isSelected && isActive && !isCheckTreeview ?
+	bool isSelected = (state & TTK_STATE_SELECTED) != 0;
+	bool isActive = (state & TTK_STATE_BACKGROUND) == 0;
+	NSColor *color = isSelected && isActive ?
 	    [NSColor whiteColor] : [NSColor textColor];
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	bool isDark = TkMacOSXInDarkMode(tkwin);
@@ -3407,7 +3391,7 @@ static void DisclosureElementDraw(
 	[color getComponents: rgba];
 	if (rgba[0] == 0) {
 	    rgba[0] = rgba[1] = rgba[2] = 0.5;
-	} else if (isSelected && isActive && !isCheckTreeview) {
+	} else if (isSelected && isActive) {
 	    if (isDark) {
 		rgba[0] = rgba[1] = rgba[2] = 0.9;
 	    }

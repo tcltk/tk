@@ -10,15 +10,13 @@ namespace eval ttk::theme::aqua {
     # TEntry, TCombobox, and TSpinbox in the "!focus" state.
 
     proc setInactiveSelectBgColor {} {
-	if {[interp issafe]} {
-	    set majorOSVersion 0
-	} else {
-	    scan $::tcl_platform(osVersion) "%d" majorOSVersion
-	}
-
-	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
+	lassign [winfo rgb . systemUnemphasizedSelectedTextBackgroundColor] \
+	    r g b
+	if {$r != 32767} {
+	    # macOS 10.14+
 	    set inactiveSelBg systemUnemphasizedSelectedTextBackgroundColor
 	} else {
+	    # macOS 10.13
 	    set inactiveSelBg systemWindowBackgroundColor2
 	}
 
@@ -46,16 +44,12 @@ namespace eval ttk::theme::aqua {
     # ttk::treeview and listbox widgets.
 
     proc setTreeviewAndListboxSelectColors {} {
-	if {[interp issafe]} {
-	    set majorOSVersion 0
-	} else {
-	    scan $::tcl_platform(osVersion) "%d" majorOSVersion
-	}
-
-	if {$majorOSVersion >= 18} {			;# macOS 10.14 or later
+	if {[catch {winfo rgb . systemSelectedContentBackgroundColor}] == 0} {
+	    # macOS 10.14+
 	    set selectedBg	systemSelectedContentBackgroundColor
 	    set inactiveSelBg	systemUnemphasizedSelectedContentBackgroundColor
 	} else {
+	    # macOS 10.13
 	    set selectedBg	systemHighlightAlternate
 	    set inactiveSelBg	systemWindowBackgroundColor2
 	}
@@ -73,6 +67,10 @@ namespace eval ttk::theme::aqua {
 
 	option add *Listbox.selectBackground	$selectedBg widgetDefault
 	option add *Listbox.selectForeground	$selectedFg widgetDefault
+	option add *Listbox.inactiveSelectBackground \
+	    $inactiveSelBg widgetDefault
+	option add *Listbox.inactiveSelectForeground \
+	    $inactiveSelFg widgetDefault
     }
 
     ttk::style theme settings aqua {
@@ -198,7 +196,7 @@ namespace eval ttk::theme::aqua {
 		{!background selected} systemSelectedTabTextColor
 		disabled systemDisabledControlTextColor}
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont \
 	    -foreground systemTextColor \
