@@ -13,7 +13,6 @@
  */
 
 
-#include <stdio.h>
 #include <unistd.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
