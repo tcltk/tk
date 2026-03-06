@@ -15,19 +15,6 @@
 #include "tkInt.h"
 #include "tkUnixInt.h"
 
-/*
- * Based extensively on the tktray extension package. Here we are removing
- * non-essential parts of tktray.
- */
-
-#include <time.h>
-#include <string.h>
-#include <stdio.h>
-
-#include <X11/X.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-
 /* XEmbed definitions
  * See http://www.freedesktop.org/wiki/Standards_2fxembed_2dspec
  * */
