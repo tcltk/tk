@@ -756,7 +756,7 @@ int (*XSynchronize(
     TCL_UNUSED(Bool)))(Display *)
 {
     /* No-op - synchronization not applicable to Wayland. */
-    return (int (*)(Display *))XSynchronize;
+    return (int (*)(Display *))(void *)XSynchronize;
 }
 
 /*

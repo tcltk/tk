@@ -190,8 +190,8 @@ TkGlfwWindowSizeCallback(
 MODULE_SCOPE void
 TkGlfwFramebufferSizeCallback(
     GLFWwindow *window,
-    int width,
-    int height)
+    TCL_UNUSED(int ), /* width */
+    TCL_UNUSED(int )) /* height */
 {
 	
     TkWindow      *winPtr = TkGlfwGetTkWindow(window);

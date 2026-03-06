@@ -162,7 +162,7 @@ static unsigned int XKBGetModifierState(void);
 /* IME functions. */
 static int InitializeIME(void);
 static void CleanupIME(void);
-static void WaylandIMEEventHandler(ClientData clientData, int mask);
+static void WaylandIMEEventHandler(void *clientData, int mask);
 static int WaylandIMEDispatchEvents(void);
 static TkIMEState *CreateIMEState(Tk_Window tkwin);
 static void DestroyIMEState(TkIMEState *ime);
@@ -1051,7 +1051,7 @@ InitializeIME(void)
 
     /* Create Tcl channel. */
     wlIME.channel = Tcl_MakeFileChannel(
-            (ClientData)(intptr_t)wlIME.fd, TCL_READABLE);
+            (void *)(intptr_t)wlIME.fd, TCL_READABLE);
     if (!wlIME.channel) {
         CleanupIME();
         return 0;
@@ -1207,7 +1207,7 @@ WaylandIMEDispatchEvents(void)
  */
 
 static void
-WaylandIMEEventHandler(ClientData clientData, int mask)
+WaylandIMEEventHandler(void *clientData, int mask)
 {
     (void)clientData;
     (void)mask;

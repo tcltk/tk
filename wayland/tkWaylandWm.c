@@ -105,9 +105,9 @@ const char *const WmAttributeNames[] = {
  *----------------------------------------------------------------------
  */
 
-static void TopLevelEventProc(ClientData clientData, XEvent *eventPtr);
-static void TopLevelReqProc(ClientData clientData, Tk_Window tkwin);
-static void UpdateGeometryInfo(ClientData clientData);
+static void TopLevelEventProc(void *clientData, XEvent *eventPtr);
+static void TopLevelReqProc(void *clientData, Tk_Window tkwin);
+static void UpdateGeometryInfo(void *clientData);
 static void UpdateHints(TkWindow *winPtr);
 static void UpdateSizeHints(TkWindow *winPtr);
 static void UpdateTitle(TkWindow *winPtr);
@@ -218,7 +218,7 @@ static int		WmTransientCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static void             WmWaitMapProc(ClientData clientData, XEvent *eventPtr);
+static void             WmWaitMapProc(void *clientData, XEvent *eventPtr);
 
 /* GLFW integration helpers. */
 static void CreateGlfwWindow(TkWindow *winPtr);
@@ -289,7 +289,7 @@ TkWmNewWindow(
 
     UpdateVRootGeometry(wmPtr);
 
-    Tk_ManageGeometry((Tk_Window)winPtr, &wmMgrType, (ClientData)0);
+    Tk_ManageGeometry((Tk_Window)winPtr, &wmMgrType, (void *)0);
 }
 
 /*
@@ -350,7 +350,7 @@ CreateGlfwWindow(TkWindow *winPtr)
     /* Register wm event handler */
     Tk_CreateEventHandler((Tk_Window)winPtr,
 			  StructureNotifyMask | PropertyChangeMask,
-			  TopLevelEventProc, (ClientData)winPtr);
+			  TopLevelEventProc, (void *)winPtr);
 }
 
 /*
@@ -416,7 +416,7 @@ TkWmMapWindow(TkWindow *winPtr)
         UpdatePhotoIcon(winPtr);
     }
 
-    UpdateGeometryInfo((ClientData)winPtr);
+    UpdateGeometryInfo((void *)winPtr);
 
     if (wmPtr->glfwWindow) {
         WindowMapping *mapping;
@@ -524,10 +524,10 @@ TkWmDeadWindow(
 
     Tk_DeleteEventHandler((Tk_Window)winPtr,
 			  StructureNotifyMask | PropertyChangeMask,
-			  TopLevelEventProc, (ClientData)winPtr);
+			  TopLevelEventProc, (void *)winPtr);
 
     if (wmPtr->flags & WM_UPDATE_PENDING) {
-        Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
+        Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
     }
 
     DestroyGlfwWindow(wmPtr);
@@ -556,7 +556,7 @@ TkWmDeadWindow(
     while (wmPtr->protPtr != NULL) {
         ProtocolHandler *protPtr = wmPtr->protPtr;
         wmPtr->protPtr = protPtr->nextPtr;
-        Tcl_EventuallyFree((ClientData)protPtr, TCL_DYNAMIC);
+        Tcl_EventuallyFree((void *)protPtr, TCL_DYNAMIC);
     }
 
     if (wmPtr->cmdArgv != NULL) {
@@ -645,7 +645,7 @@ TkWmCleanup(
         while (wmPtr->protPtr != NULL) {
             ProtocolHandler *p = wmPtr->protPtr;
             wmPtr->protPtr = p->nextPtr;
-            Tcl_EventuallyFree((ClientData)p, TCL_DYNAMIC);
+            Tcl_EventuallyFree((void *)p, TCL_DYNAMIC);
         }
         if (wmPtr->cmdArgv != NULL) {
             Tcl_Size j;
@@ -846,7 +846,7 @@ Tk_SetGrid(
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData)winPtr);
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
         wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -896,7 +896,7 @@ Tk_UnsetGrid(
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData)winPtr);
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
         wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -1100,9 +1100,9 @@ Tk_MoveToplevelWindow(
 
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
+            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
         }
-        UpdateGeometryInfo((ClientData)winPtr);
+        UpdateGeometryInfo((void *)winPtr);
     }
 }
 
@@ -1360,7 +1360,7 @@ TkpGetSystemDefault(
 
 int
 Tk_WmObjCmd(
-	    ClientData  clientData,
+	    void * clientData,
 	    Tcl_Interp *interp,
 	    Tcl_Size    objc,
 	    Tcl_Obj *const objv[])
@@ -2034,12 +2034,12 @@ WmGeometryCmd(
         wmPtr->width = wmPtr->height = -1;
         
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
+            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
         
         if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
-            UpdateGeometryInfo((ClientData)winPtr);
+            UpdateGeometryInfo((void *)winPtr);
             TkGlfwProcessEvents();
         }
         
@@ -2064,12 +2064,12 @@ WmGeometryCmd(
     if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Cancel any pending idle callback */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
-            Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData)winPtr);
+            Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
         
         /* Update internal Tk/GLFW state. */
-        UpdateGeometryInfo((ClientData)winPtr);
+        UpdateGeometryInfo((void *)winPtr);
         
         /* Process events to ensure callback fires before command returns */
         TkGlfwProcessEvents();
@@ -2778,7 +2778,7 @@ WmProtocolCmd(
             if (protPtr->protocol==protocol) {
                 if (prevPtr) prevPtr->nextPtr=protPtr->nextPtr;
                 else         wmPtr->protPtr  =protPtr->nextPtr;
-                Tcl_EventuallyFree((ClientData)protPtr,TCL_DYNAMIC);
+                Tcl_EventuallyFree((void *)protPtr,TCL_DYNAMIC);
                 break;
             }
         }
@@ -3160,7 +3160,7 @@ WmTransientCmd(
             wmPtr2 = (WmInfo *)wmPtr->containerPtr->wmInfoPtr;
             if (wmPtr2) wmPtr2->numTransients--;
             Tk_DeleteEventHandler((Tk_Window)wmPtr->containerPtr,
-				  StructureNotifyMask, WmWaitMapProc, (ClientData)winPtr);
+				  StructureNotifyMask, WmWaitMapProc, (void *)winPtr);
         }
         wmPtr->containerPtr = NULL;
     } else {
@@ -3536,7 +3536,7 @@ TkWmStackorderToplevel(
 
 static void
 TopLevelEventProc(
-		  ClientData clientData,
+		  void *clientData,
 		  XEvent    *eventPtr)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -3579,7 +3579,7 @@ TopLevelEventProc(
 
 static void
 TopLevelReqProc(
-		TCL_UNUSED(ClientData),
+		TCL_UNUSED(void *),
 		Tk_Window tkwin)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
@@ -3589,7 +3589,7 @@ TopLevelReqProc(
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData)winPtr);
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
         wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -3612,7 +3612,7 @@ TopLevelReqProc(
 
 static void
 UpdateGeometryInfo(
-		   ClientData clientData)
+		   void *clientData)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
@@ -3955,7 +3955,7 @@ static void
 WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr)
 {
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
-        Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData)winPtr);
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
         wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -3978,7 +3978,7 @@ WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr)
 
 static void
 WmWaitMapProc(
-	      ClientData clientData,
+	      void *clientData,
 	      XEvent    *eventPtr)
 {
     TkWindow *winPtr = (TkWindow *)clientData;

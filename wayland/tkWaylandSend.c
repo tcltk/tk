@@ -61,12 +61,12 @@ static char *   GetRegistryDir(void);
 static char *   GetSocketPathFromRegistry(const char *name);
 static int      AddToRegistry(const char *name, const char *socketPath);
 static int      RemoveFromRegistry(const char *name);
-static void     SocketEventProc(ClientData clientData, int mask);
+static void     SocketEventProc(void *clientData, int mask);
 static int      ValidateSocket(const char *socketPath);
 static int      SendViaSocket(const char *socketPath, const char *data, int length);
 static char *   CreateUniqueSocketPath(const char *baseName);
 static char *   GetMySocketPath(void);
-static void     DeleteProc(ClientData clientData);
+static void     DeleteProc(void *clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -479,7 +479,7 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
         }
     }
 
-    Tcl_CreateFileHandler(riPtr->sockfd, TCL_READABLE, SocketEventProc, (ClientData)riPtr);
+    Tcl_CreateFileHandler(riPtr->sockfd, TCL_READABLE, SocketEventProc, (void *)riPtr);
 
     /* Find unique name. */
     Tcl_DStringInit(&dString);
@@ -509,7 +509,7 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
     strcpy(riPtr->name, actualName);
     AddToRegistry(actualName, socketPath);
 
-    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, (ClientData)riPtr, DeleteProc);
+    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, (void *)riPtr, DeleteProc);
     if (Tcl_IsSafe(interp)) {
         Tcl_HideCommand(interp, "send", "send");
     }
@@ -536,7 +536,7 @@ Tk_SetAppName(Tk_Window tkwin, const char *name)
 
 int
 Tk_SendObjCmd(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
@@ -719,7 +719,7 @@ Tk_SendObjCmd(
  */
 
 static void
-SocketEventProc(ClientData clientData, 
+SocketEventProc(void *clientData, 
 	TCL_UNUSED(int)) /* mask */
 {
 
@@ -879,7 +879,7 @@ SocketEventProc(ClientData clientData,
  */
 
 static void
-DeleteProc(ClientData clientData)
+DeleteProc(void *clientData)
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
     RegisteredInterp **prevPtr;
@@ -1028,7 +1028,7 @@ TkSendCleanup(
 
 int
 TkpTestsendCmd(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
