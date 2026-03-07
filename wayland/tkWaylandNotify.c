@@ -52,7 +52,7 @@ static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
 static void HeartbeatTimerProc(void *clientData);
 static void TkWaylandRenderIdleProc(void *clientData);
-static void TkWaylandScheduleRender(void);
+void TkWaylandScheduleRender(void);
 static int  TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
 static void TkWaylandSwapIdleProc(void *clientData);
 
@@ -116,7 +116,7 @@ Tk_WaylandSetupTkNotifier(void)
  *----------------------------------------------------------------------
  */
  
-static void
+void
 TkWaylandScheduleRender(void)
 {
     TSD_INIT();

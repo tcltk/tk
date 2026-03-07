@@ -510,7 +510,7 @@ TkGlfwBeginDraw(
     nvgBeginFrame(glfwContext.vg,
                   (float)mapping->width,
                   (float)mapping->height,
-                  pixelRatio);
+                  pixelRatio); 
 
     /*
      * Push save 1: coordinate transform.
@@ -518,11 +518,15 @@ TkGlfwBeginDraw(
      * Push save 2: child offset (always pushed for symmetric restore).
      * EndDraw unconditionally pops both.
      */
+
     nvgSave(glfwContext.vg);
     nvgScale(glfwContext.vg, 1.0f, -1.0f);
     nvgTranslate(glfwContext.vg, 0.0f, -(float)mapping->height);
     nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
-
+    
+     fprintf(stderr, "BeginDraw: width=%d height=%d fb=%dx%d\n",
+            mapping->width, mapping->height, fbWidth, fbHeight);
+    
     glfwContext.nvgFrameActive = 1;
     glfwContext.activeWindow   = mapping->glfwWindow;
 
@@ -733,6 +737,10 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
     TkWaylandGetGCValues(gc,
                          GCForeground|GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle, &v);
     c = TkGlfwPixelToNVG(v.foreground);
+    #if 0
+    fprintf(stderr, "ApplyGC: foreground=0x%lx\n", v.foreground);
+    #endif
+    nvgFillColor(vg, c);
     nvgFillColor(vg, c);
     nvgStrokeColor(vg, c);
     nvgStrokeWidth(vg, v.line_width > 0 ? (float)v.line_width : 1.0f);

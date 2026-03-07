@@ -113,11 +113,16 @@ TkpGetColor(
     memset(&xcolor, 0, sizeof(XColor));
     
     /* Convert NVGcolor back to XColor */
-    xcolor.red   = (unsigned short)(nvgcolor.r * 65535.0f + 0.5f);
+	xcolor.red   = (unsigned short)(nvgcolor.r * 65535.0f + 0.5f);
     xcolor.green = (unsigned short)(nvgcolor.g * 65535.0f + 0.5f);
     xcolor.blue  = (unsigned short)(nvgcolor.b * 65535.0f + 0.5f);
     xcolor.flags = DoRed | DoGreen | DoBlue;
-    /* pixel and pad remain zero */
+
+    /* Encode RGB into pixel as 0x00RRGGBB so GC foreground values
+     * can be decoded back to color by TkGlfwPixelToNVG. */
+    xcolor.pixel = (((unsigned long)(nvgcolor.r * 255.0f + 0.5f)) << 16)
+                 | (((unsigned long)(nvgcolor.g * 255.0f + 0.5f)) <<  8)
+                 |  ((unsigned long)(nvgcolor.b * 255.0f + 0.5f));
 
     tkColPtr = (TkColor *)Tcl_Alloc(sizeof(TkColor));
     if (tkColPtr == NULL) {

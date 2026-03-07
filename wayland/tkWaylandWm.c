@@ -431,14 +431,7 @@ TkWmMapWindow(TkWindow *winPtr)
         if (w <= 0) w = 640;
         if (h <= 0) h = 480;
 
-        /* Prime the framebuffer with a visible color and force redraw. */
         GLFWwindow *prev = glfwGetCurrentContext();
-        glfwMakeContextCurrent(wmPtr->glfwWindow);
-        
-        /* Clear to light gray. */
-        glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glfwSwapBuffers(wmPtr->glfwWindow);
         
         /* Force an expose event to trigger widget drawing. */
         mapping = FindMappingByTk(winPtr);
@@ -775,11 +768,7 @@ Tk_MakeWindow(
       Tk_Window toplevel = GetToplevelOfWidget((Tk_Window)winPtr);
       TkWindow *top = (TkWindow *)toplevel;
       WindowMapping *m = FindMappingByTk(top);
-      fprintf(stderr, "Child Tk_MakeWindow: winPtr=%p window=%lu "
-        "toplevel=%p top=%p mapping=%p\n",
-        (void*)winPtr, (unsigned long)window,
-        (void*)toplevel, (void*)top, (void*)m);
-        if (m) {
+      if (m) {
             RegisterDrawableForMapping(winPtr->window, m);
         }
     }
