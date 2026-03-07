@@ -435,7 +435,7 @@ void SyncWindowSize(WindowMapping *m) {
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE int
 TkGlfwBeginDraw(
     Drawable                drawable,
@@ -536,12 +536,14 @@ TkGlfwBeginDraw(
     pixelRatio = (float)fbWidth / (float)mapping->width;
 
     /*
-     * Always clear at the start of a new frame.  Widgets fill their
-     * own backgrounds so the clear color is only visible in gaps.
+     * Clear framebuffer only if clearPending is set - this ensures we
+     * clear once per render cycle when TkWaylandRenderIdleProc runs.
      */
-    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    mapping->clearPending = 0;
+    if (mapping->clearPending) {
+        glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        mapping->clearPending = 0;
+    }
 
     /* Begin NanoVG frame. */
     nvgBeginFrame(glfwContext.vg,
@@ -572,6 +574,7 @@ TkGlfwBeginDraw(
 
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -606,10 +609,11 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     nvgRestore(dcPtr->vg);
     nvgRestore(dcPtr->vg);
 
-    nvgEndFrame(dcPtr->vg);
-
-    glfwContext.nvgFrameActive = 0;
-    glfwContext.activeWindow   = NULL;
+    /* 
+     * Do no call nvgEndFrame() here - the frame stays open so more
+     * widgets can draw into it. The frame will be ended in TkWaylandSwapIdleProc
+     * right before the buffer swap. 
+     */
 
     m = FindMappingByGLFW(dcPtr->glfwWindow);
     if (m) {
