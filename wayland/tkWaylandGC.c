@@ -928,28 +928,33 @@ XCreatePixmap(
     unsigned int height,
     unsigned int depth)
 {
-    /* Create the backend pixmap object. */
     Pixmap p = TkWaylandCreatePixmap((int)width, (int)height, (int)depth);
-    
-    /* FIX: Get the GLFW window from the parent and register mapping. */
-    GLFWwindow *glfwWindow = TkGlfwGetWindowFromDrawable(parent);
-    WindowMapping *m = NULL;
-    
-    if (glfwWindow) {
-        m = FindMappingByGLFW(glfwWindow);
-    } else {
-        /* If parent is not a GLFW window, try direct drawable lookup. */
-        m = FindMappingByDrawable(parent);
+
+    /* Find the mapping for this pixmap's parent. Try every available
+     * method before giving up, since parent may be a TkWindow*, a
+     * window ID, or a GLFWwindow* depending on call site. */
+    WindowMapping *m = FindMappingByDrawable(parent);
+
+    if (!m) {
+        /* parent is likely a TkWindow* passed directly */
+        TkWindow *tw = (TkWindow *)parent;
+        m = FindMappingByTk(tw);
     }
-    
+
+    if (!m) {
+        /* Last resort: use the first available mapping. */
+        m = TkGlfwGetMappingList();
+    }
+
     if (m) {
-        /* Register the pixmap with the parent's mapping. */
         RegisterDrawableForMapping((Drawable)p, m);
-       }
+    } else {
+        fprintf(stderr, "XCreatePixmap: no mapping found for parent %lu, "
+                "pixmap will fail\n", (unsigned long)parent);
+    }
 
     return p;
 }
-
 
 /*
  *----------------------------------------------------------------------

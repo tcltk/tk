@@ -84,6 +84,7 @@ typedef struct WindowMapping {
                                    * Set to 1 when window is created/resized,
                                    * cleared after clearing */
     struct libdecor_frame *frame;   /* libdecor frame (owned by GLFW) */
+	int swapPending;   				/* 1 = buffer is ready to swap at next idle */
     struct WindowMapping *nextPtr;  /* Next mapping in global linked list */
 } WindowMapping;
 
@@ -365,31 +366,31 @@ MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
  *----------------------------------------------------------------------
  */
 
-/* Add a new mapping to the list */
-MODULE_SCOPE void AddMapping(WindowMapping *mapping);
+/* Add a new mapping to the list. */
+void AddMapping(WindowMapping *mapping);
 
-/* Find mapping by GLFW window */
+/* Find mapping by GLFW window. */
 MODULE_SCOPE WindowMapping *FindMappingByGLFW(GLFWwindow *w);
 
-/* Find mapping by Tk window */
+/* Find mapping by Tk window. */
 MODULE_SCOPE WindowMapping *FindMappingByTk(TkWindow *w);
 
-/* Find mapping by drawable */
+/* Find mapping by drawable. */
 MODULE_SCOPE WindowMapping *FindMappingByDrawable(Drawable d);
 
-/* Get the head of the mapping list */
+/* Get the head of the mapping list. */
 MODULE_SCOPE WindowMapping *TkGlfwGetMappingList(void);
 
-/* Remove a mapping from the list */
+/* Remove a mapping from the list. */
 void RemoveMapping(WindowMapping *m);
 
-/* Clean up all mappings */
+/* Clean up all mappings. */
 MODULE_SCOPE void CleanupAllMappings(void);
 
-/* Register a drawable with a mapping */
+/* Register a drawable with a mapping. */
 MODULE_SCOPE void RegisterDrawableForMapping(Drawable d, WindowMapping *m);
 
-/* Get toplevel of a widget */
+/* Get toplevel of a widget. */
 MODULE_SCOPE Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 
 /*
@@ -414,17 +415,6 @@ MODULE_SCOPE TkWindow   *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
 MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height);
 MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w, int width, int height);
-
-/*
- *----------------------------------------------------------------------
- *
- * Interactive Window Operations
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void TkGlfwStartInteractiveMove(GLFWwindow *glfwWindow);
-MODULE_SCOPE void TkGlfwStartInteractiveResize(GLFWwindow *glfwWindow, uint32_t edges);
 
 /*
  *----------------------------------------------------------------------
@@ -492,6 +482,7 @@ typedef struct {
 
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int width, int height);
 MODULE_SCOPE void TkWaylandHandleExposeEvents(void);
+MODULE_SCOPE void TkWaylandScheduleSwap(WindowMapping *m);
 
 /*
  *----------------------------------------------------------------------

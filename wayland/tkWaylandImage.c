@@ -173,7 +173,7 @@ CreateNVGImageFromDrawableRect(
 
     /* Create NanoVG image. */
     imageId = nvgCreateImageRGBA(vg, width, height,
-                                  NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY,
+                                  0,
                                   rgba_pixels);
 
     ckfree(pixels);
@@ -188,7 +188,7 @@ CreateNVGImageFromDrawableRect(
 	nvgImg->id = imageId;
 	nvgImg->width = width;
 	nvgImg->height = height;
-	nvgImg->flags = NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY;
+	nvgImg->flags = 0;
 	nvgImg->pixels = rgba_pixels;   /* ⭐ store CPU copy */
 
 	return nvgImg;

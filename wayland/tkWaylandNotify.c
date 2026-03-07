@@ -54,6 +54,8 @@ static void HeartbeatTimerProc(void *clientData);
 static void TkWaylandRenderIdleProc(void *clientData);
 static void TkWaylandScheduleRender(void);
 static int  TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
+static void TkWaylandSwapIdleProc(void *clientData);
+
 
 #define HEARTBEAT_INTERVAL 16   /* ms */
 
@@ -145,40 +147,90 @@ TkWaylandScheduleRender(void)
  *----------------------------------------------------------------------
  */
  
-static void 
-TkWaylandRenderIdleProc(
-    TCL_UNUSED(void *))
+static void
+TkWaylandRenderIdleProc(TCL_UNUSED(void *)) 
 {
     WindowMapping *m;
     TkGlfwContext *ctx = TkGlfwGetContext();
     TSD_INIT();
-    
+
     tsdPtr->renderPending = false;
 
-    /* Safety check */
-    if (!ctx || !ctx->initialized) {
-        fprintf(stderr, "TkWaylandRenderIdleProc: GLFW not initialized\n");
-        return;
-    }
+    if (!ctx || !ctx->initialized) return;
 
-    /* Prime per-window clear flag for every mapped toplevel. */
     WindowMapping *list = TkGlfwGetMappingList();
-    if (!list) {
-        fprintf(stderr, "TkWaylandRenderIdleProc: No window mapping list\n");
-        return;
-    }
+    if (!list) return;
 
+    /* Prime per-window clear flag. */
+    #if 0
     for (m = list; m != NULL; m = m->nextPtr) {
-        if (m == NULL) {
-            fprintf(stderr, "TkWaylandRenderIdleProc: NULL mapping in list\n");
-            break;
-        }
-        
-        if (m->glfwWindow && m->width > 1 && m->height > 1) {
-            m->clearPending = 1;  /* Use 1 instead of true for portability */
-        }
+        if (m->glfwWindow && m->width > 1 && m->height > 1)
+            m->clearPending = 1;
+    }
+    #endif
+    for (m = list; m != NULL; m = m->nextPtr) {
+    if (m->glfwWindow && m->width > 1 && m->height > 1) {
+        m->clearPending = 1;
+     //   fprintf(stderr, "RenderIdleProc: set clearPending on window=%p\n",
+            //    (void*)m->glfwWindow);
     }
 }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandSwapIdleProc --
+ *
+ *   Swaps GLFW buffers, a key part of drawing. 
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Buffers swapped and drawing can take place. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+static void
+TkWaylandSwapIdleProc(void *clientData)
+{
+    WindowMapping *m = (WindowMapping *)clientData;
+
+    if (!m || !m->glfwWindow || !m->swapPending) return;
+    m->swapPending = 0;
+    glfwMakeContextCurrent(m->glfwWindow);
+    glfwSwapBuffers(m->glfwWindow);
+    glfwMakeContextCurrent(glfwContext.mainWindow);
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandScheduleSwap--
+ *
+ *   Schedules a GLFW buffer swap to run as an idle handler. 
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Process runs. 
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+ 
+MODULE_SCOPE void
+TkWaylandScheduleSwap(WindowMapping *m)
+{
+    if (m && m->swapPending)
+        Tcl_DoWhenIdle(TkWaylandSwapIdleProc, m);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -212,8 +264,6 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
     TkWaylandScheduleRender();
 }
 
-static const Tcl_Time zeroBlockTime = { 0, 0 };
-
 /*
  *----------------------------------------------------------------------
  *
@@ -226,18 +276,19 @@ static const Tcl_Time zeroBlockTime = { 0, 0 };
  *      None.
  *
  * Side effects:
- *      Sets the maximum block time to zero when window events are
- *      requested, ensuring Tcl doesn't block for extended periods.
+ *      No-op - the 16 ms heartbeat timer drives wakeup latency. 
  *
  *----------------------------------------------------------------------
  */
 
 static void
-TkWaylandEventsSetupProc(TCL_UNUSED(void *), int flags)
+TkWaylandEventsSetupProc(TCL_UNUSED(void *), 
+	TCL_UNUSED(int)) /* flags */
 {
-    if (flags & TCL_WINDOW_EVENTS)
-        Tcl_SetMaxBlockTime(&zeroBlockTime);
+    /* The heartbeat timer (16 ms) already bounds our wakeup latency.
+     * Do NOT unconditionally set zero block time — that causes a CPU spin. */ 
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -251,31 +302,24 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *), int flags)
  *      None.
  *
  * Side effects:
- *      Calls glfwPollEvents() to process window events when window
+ *      Calls TkWaylandScheduleRender() to process window events when window
  *      events are requested.
  *
  *----------------------------------------------------------------------
  */
  
 static void
-TkWaylandEventsCheckProc(TCL_UNUSED(void *), int flags)
+TkWaylandEventsCheckProc(TCL_UNUSED(void *), 
+	int flags) 
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        return;
-    }
-
-    if (!glfwContext.initialized) {
-        return;
-    }
-
-    if (!glfwContext.mainWindow) {
-        return;
-    }
-
-    glfwPollEvents();
-
+    if (!(flags & TCL_WINDOW_EVENTS)) return;
+    if (!glfwContext.initialized)    return;
+    if (!glfwContext.mainWindow)     return;
+	
+    /* Polling is done exclusively in HeartbeatTimerProc. */
     TkWaylandScheduleRender();
 }
+
 
 /*
  *----------------------------------------------------------------------
