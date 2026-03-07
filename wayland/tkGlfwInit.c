@@ -494,7 +494,7 @@ TkGlfwBeginDraw(
     }
 
 
-	/* Make main context current for NanoVG drawing. */
+    /* Make main context current for NanoVG drawing. */
     glfwMakeContextCurrent(mapping->glfwWindow);
     glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
