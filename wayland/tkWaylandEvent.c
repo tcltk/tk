@@ -120,55 +120,23 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
  */
 
 MODULE_SCOPE void
-TkGlfwWindowSizeCallback(
-    GLFWwindow *window,
-    int width,         
-    int height)          
+TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
-	TkWindow *winPtr;
-    XEvent event;
-    int clientWidth, clientHeight;
+    WindowMapping *mapping = (WindowMapping *)glfwGetWindowUserPointer(window);
+    if (!mapping) return;
 
-    /* Always update mapping, even if Tk window isn't ready yet. */
-    TkGlfwUpdateWindowSize(window, width, height);
+    mapping->width        = width;
+    mapping->height       = height;
+    mapping->clearPending = 1;
 
-    winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr) {
-        return;
+    if (mapping->tkWindow) {
+        TkWaylandQueueExposeEvent(mapping->tkWindow, 0, 0, width, height);
+        /* Update Tk's idea of the window size. */
+        mapping->tkWindow->changes.width  = width;
+        mapping->tkWindow->changes.height = height;
     }
 
-    clientWidth = width;
-    clientHeight = height;
-
-
-    /* Update Tk's window dimensions. */
-    winPtr->changes.width = clientWidth;
-    winPtr->changes.height = clientHeight;
-
-
-    TkGlfwUpdateWindowSize(window, width, height);
-    
-    /* Generate ConfigureNotify event. */
-    memset(&event, 0, sizeof(XEvent));
-    event.type = ConfigureNotify;
-    event.xconfigure.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xconfigure.send_event = False;
-    event.xconfigure.display = winPtr->display;
-    event.xconfigure.event = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.window = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.x = winPtr->changes.x;
-    event.xconfigure.y = winPtr->changes.y;
-    event.xconfigure.width = clientWidth;
-    event.xconfigure.height = clientHeight;
-    event.xconfigure.border_width = winPtr->changes.border_width;
-    event.xconfigure.above = None;
-    event.xconfigure.override_redirect = winPtr->atts.override_redirect;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    
-    /* Trigger redraw from Tk. */
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, clientWidth, clientHeight);
-
+    TkWaylandScheduleRender();
 }
 
 /*
