@@ -569,6 +569,7 @@ XFillRectangles(
     TkWaylandDrawingContext dc;
     int i;
 
+
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
         return BadDrawable;

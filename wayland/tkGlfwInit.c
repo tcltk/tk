@@ -524,9 +524,6 @@ TkGlfwBeginDraw(
     nvgTranslate(glfwContext.vg, 0.0f, -(float)mapping->height);
     nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
     
-     fprintf(stderr, "BeginDraw: width=%d height=%d fb=%dx%d\n",
-            mapping->width, mapping->height, fbWidth, fbHeight);
-    
     glfwContext.nvgFrameActive = 1;
     glfwContext.activeWindow   = mapping->glfwWindow;
 
@@ -737,9 +734,6 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
     TkWaylandGetGCValues(gc,
                          GCForeground|GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle, &v);
     c = TkGlfwPixelToNVG(v.foreground);
-    #if 0
-    fprintf(stderr, "ApplyGC: foreground=0x%lx\n", v.foreground);
-    #endif
     nvgFillColor(vg, c);
     nvgFillColor(vg, c);
     nvgStrokeColor(vg, c);
