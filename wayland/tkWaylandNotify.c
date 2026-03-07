@@ -176,10 +176,20 @@ static void
 TkWaylandSwapIdleProc(void *clientData)
 {
     WindowMapping *m = (WindowMapping *)clientData;
+    TkGlfwContext *ctx = TkGlfwGetContext();
 
     if (!m || !m->glfwWindow || !m->swapPending) return;
+    
     m->swapPending = 0;
     glfwMakeContextCurrent(m->glfwWindow);
+    
+    /* End the NanoVG frame if one is active for this window. */
+    if (ctx && ctx->nvgFrameActive && ctx->activeWindow == m->glfwWindow) {
+        nvgEndFrame(ctx->vg);
+        ctx->nvgFrameActive = 0;
+        ctx->activeWindow   = NULL;
+    }
+    
     glfwSwapBuffers(m->glfwWindow);
     glfwMakeContextCurrent(glfwContext.mainWindow);
 }
