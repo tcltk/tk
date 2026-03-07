@@ -10,24 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution.
  *
- * Drawing pipeline
- * ----------------
- * glfwPollEvents is called ONLY from HeartbeatTimerProc and
- * TkWaylandEventsCheckProc.  It queues Tk XEvents via GLFW callbacks
- * but never opens a NanoVG frame.
- *
- * Widget display procedures own their own BeginDraw/EndDraw pairs and
- * are driven by Tk's normal event/idle mechanism.  The only thing we
- * need to do before they run is set clearPending=1 so the first
- * BeginDraw for each window each tick issues a glClear.  Subsequent
- * BeginDraw calls on the same window take the nested-frame path and
- * composite into the same cleared buffer.
- *
- * TkWaylandRenderIdleProc (a Tcl idle callback) sets clearPending and
- * then drains queued window events and idle callbacks with
- * Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_IDLE_EVENTS|TCL_DONT_WAIT).
- * Timer and file events are excluded to prevent re-entering the
- * heartbeat timer or the Wayland IME fd handler during a draw pass.
  */
 
 #include "tkInt.h"
@@ -135,8 +117,8 @@ TkWaylandScheduleRender(void)
  *
  *   Runs once per Tcl idle cycle.  Sets clearPending on every mapped
  *   window so the first BeginDraw this tick clears the framebuffer,
- *   then drains window events and idle callbacks so widget display
- *   procedures run.  Does NOT open a NanoVG frame itself.
+ *   then drains window events so widget display procedures run.  
+ *   Does NOT open a NanoVG frame itself.
  *
  * Results:
  *      None.
@@ -148,13 +130,11 @@ TkWaylandScheduleRender(void)
  */
  
 static void
-TkWaylandRenderIdleProc(TCL_UNUSED(void *)) 
+TkWaylandRenderIdleProc(TCL_UNUSED(void *))
 {
     WindowMapping *m;
     TkGlfwContext *ctx = TkGlfwGetContext();
     TSD_INIT();
-
-    tsdPtr->renderPending = false;
 
     if (!ctx || !ctx->initialized) return;
 
@@ -162,19 +142,17 @@ TkWaylandRenderIdleProc(TCL_UNUSED(void *))
     if (!list) return;
 
     /* Prime per-window clear flag. */
-    #if 0
     for (m = list; m != NULL; m = m->nextPtr) {
-        if (m->glfwWindow && m->width > 1 && m->height > 1)
+        if (m->glfwWindow && m->width > 1 && m->height > 1) {
             m->clearPending = 1;
+        }
     }
-    #endif
-    for (m = list; m != NULL; m = m->nextPtr) {
-    if (m->glfwWindow && m->width > 1 && m->height > 1) {
-        m->clearPending = 1;
-     //   fprintf(stderr, "RenderIdleProc: set clearPending on window=%p\n",
-            //    (void*)m->glfwWindow);
-    }
-}
+    
+    /* Process widget display procedures. */
+    Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_ALL_EVENTS | TCL_DONT_WAIT);
+
+    /* Reset renderPending ONLY AFTER event processing is complete. */
+    tsdPtr->renderPending = false;
 }
 
 /*
@@ -204,8 +182,6 @@ TkWaylandSwapIdleProc(void *clientData)
     glfwSwapBuffers(m->glfwWindow);
     glfwMakeContextCurrent(glfwContext.mainWindow);
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -285,8 +261,10 @@ static void
 TkWaylandEventsSetupProc(TCL_UNUSED(void *), 
 	TCL_UNUSED(int)) /* flags */
 {
-    /* The heartbeat timer (16 ms) already bounds our wakeup latency.
-     * Do NOT unconditionally set zero block time — that causes a CPU spin. */ 
+    /* 
+     * The heartbeat timer (16 ms) already bounds our wakeup latency.
+     * Do NOT unconditionally set zero block time — that causes a CPU spin. 
+     */ 
 }
 
 
@@ -295,7 +273,7 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
  *
  * TkWaylandEventsCheckProc --
  *
- *      Process pending Wayland/GLFW events and queue synthetic Tk events.
+ *      Process pending Wayland/GLFW events and queue Tk events.
  *      Called by Tcl_DoOneEvent after events are posted.
  *
  * Results:

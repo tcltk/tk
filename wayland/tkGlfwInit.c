@@ -197,33 +197,35 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     if (!glfwContext.initialized)
         return;
 
-    /* Clean up any internal Tk/Wayland resources. */
-    CleanupAllMappings();
-    TkWaylandCleanupPixmapStore();
-
-	if (glfwContext.vg) {
+    /* Delete NanoVG while a context still exists. */
+    if (glfwContext.vg) {
+        /* Prefer any live window; fall back to the original shared one */
         WindowMapping *m = TkGlfwGetMappingList();
-        if (m && m->glfwWindow)
+        if (m && m->glfwWindow) {
             glfwMakeContextCurrent(m->glfwWindow);
+        } else if (glfwContext.mainWindow) {
+            glfwMakeContextCurrent(glfwContext.mainWindow);
+        }
         nvgDeleteGLES2(glfwContext.vg);
         glfwContext.vg = NULL;
         TkWaylandSetNVGContext(NULL);
     }
 
-    /* Destroy main window if it exists. */
+    /* Now safe to destroy windows. */
+    CleanupAllMappings();
+    TkWaylandCleanupPixmapStore();
+
+    /* Destroy the original hidden shared window if it somehow survived. */
     if (glfwContext.mainWindow) {
         glfwDestroyWindow(glfwContext.mainWindow);
         glfwContext.mainWindow = NULL;
     }
 
-    /* Only terminate GLFW if it was initialized. */
     if (glfwContext.initialized) {
-	/* Flush any final events. */
-	glfwPollEvents();    
+        glfwPollEvents();
         glfwTerminate();
         glfwContext.initialized = 0;
     }
-    
 }
 
 /*
