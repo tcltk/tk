@@ -696,10 +696,11 @@ Tk_MakeWindow(
     Window      window;
 
     if (winPtr->parentPtr == NULL) {
-
-		/*
-		 * Toplevel window. 
-		 */
+        /*
+         * -------------------------
+         *   TOPLEVEL WINDOW
+         * -------------------------
+         */
 
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
@@ -744,13 +745,15 @@ Tk_MakeWindow(
         }
 
     } else {
-        
-		/*
-		 * Child window. 
-		 * 
-		 * Assign a unique Tk window ID.  Tk will draw into this ID.
-		 * We must register it to the SAME WindowMapping as the toplevel.
-		 */
+        /*
+         * -------------------------
+         *     CHILD WINDOW
+         * -------------------------
+         *
+         * Assign a unique Tk window ID.  Tk will draw into this ID.
+         * We must register it to the SAME WindowMapping as the toplevel.
+         */
+
         static Window nextChildId = 100000;
         window = nextChildId++;
         if (window == None) {
@@ -772,6 +775,8 @@ Tk_MakeWindow(
 
     return window;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
