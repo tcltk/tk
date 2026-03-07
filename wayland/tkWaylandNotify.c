@@ -233,17 +233,11 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
 
     if (!tsdPtr->initialized)
         return;
-
-                                                    
-    /* If there are no windows left, stop polling. */
-    if (Tk_GetNumMainWindows() == 0) {
-       tsdPtr->heartbeatTimer = NULL;
-       return;
-    }
                                                                                                       
     glfwPollEvents();
 	TkWaylandScheduleRender();
 	
+	/* Schedule timer after all checks complete. */
 	tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
                                                     HeartbeatTimerProc,
                                                     NULL);
