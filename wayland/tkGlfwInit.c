@@ -36,7 +36,7 @@
  */
 
 TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, NULL, 0, 0};
-static WindowMapping *windowMappingList = NULL;
+WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
 static DrawableMapping *drawableMappingList = NULL;
 
@@ -382,6 +382,40 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 /*
  *----------------------------------------------------------------------
  *
+ * SyncWindowSize--
+ *
+ * Helper function to synchronize Tk window size when
+ * the framebuffer dimensions change.
+ * 
+ * Results:
+ *	Tk window size updated. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+MODULE_SCOPE 
+void SyncWindowSize(WindowMapping *m) {
+    int w, h;
+    int fbw, fbh;
+    glfwGetWindowSize(m->glfwWindow, &w, &h);
+    glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
+
+    m->width  = w;
+    m->height = h;
+
+    if (m->tkWindow) {
+        m->tkWindow->changes.width  = w;
+        m->tkWindow->changes.height = h;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkGlfwBeginDraw --
  *
  *	Begin a drawing operation on a drawable.  Makes the window's GL
@@ -467,14 +501,14 @@ TkGlfwBeginDraw(
     /*
      * If a frame is already open on this window, nest inside it.
      * The framebuffer has already been cleared; just apply the GC
-     * and push a save for symmetric restore in EndDraw.
+     * and push a save for symmetric restore in EndDraw. Do not
+     * translate coordinates as that has already been done in the parent
+     * frame.
      */
     if (glfwContext.nvgFrameActive &&
             glfwContext.activeWindow == mapping->glfwWindow) {
         dcPtr->nestedFrame = 1;
         nvgSave(glfwContext.vg);
-        if (offsetX != 0 || offsetY != 0)
-            nvgTranslate(glfwContext.vg, (float)offsetX, (float)offsetY);
         if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
         return TCL_OK;
     }
@@ -497,6 +531,7 @@ TkGlfwBeginDraw(
     /* Make main context current for NanoVG drawing. */
     glfwMakeContextCurrent(mapping->glfwWindow);
     glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
+    SyncWindowSize(mapping);
     glViewport(0, 0, fbWidth, fbHeight);
     pixelRatio = (float)fbWidth / (float)mapping->width;
 
@@ -885,13 +920,13 @@ FindMappingByDrawable(Drawable d)
             return dm->mapping;
     }
 
-    /* Fallback 1: toplevel whose Tk window ID matches. */
+    /* Toplevel whose Tk window ID matches. */
     for (m = windowMappingList; m; m = m->nextPtr) {
         if (m->tkWindow && (Drawable)m->tkWindow->window == d)
             return m;
     }
 
-    /* Fallback 2: drawable is a TkWindow* passed directly. */
+    /* Drawable is a TkWindow* passed directly. */
     for (m = windowMappingList; m; m = m->nextPtr) {
         if (!m->tkWindow) continue;
         TkWindow *stack[256];
@@ -910,9 +945,11 @@ FindMappingByDrawable(Drawable d)
         }
     }
 
-    /* Fallback 3: drawable is a TkWaylandPixmapImpl* that was never
+    /* 
+     * Drawable is a TkWaylandPixmapImpl* that was never
      * registered. Validate by checking that its fields look sane,
-     * then bind it to the first available mapping. */
+     * then bind it to the first available mapping. 
+     */
     TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)d;
     if (pix != NULL) {
         /* Sanity check: type must be 0 or 1, dimensions must be
