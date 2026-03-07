@@ -3,15 +3,10 @@
  *
  *   GLFW/Wayland-specific interpreter initialization: context
  *   management, window mapping, drawing context lifecycle, color
- *   conversion, and platform init/cleanup.
- *
- * Window architecture
- * -------------------
- * GLFW + libdecor own:
- *   - xdg_surface / xdg_toplevel creation and lifecycle
- *   - Window decorations (SSD or CSD depending on compositor)
- *   - OpenGL ES context creation and buffer swapping
- *   - Keyboard input, clipboard, IME, and the event loop
+ *   conversion, and platform init/cleanup. GLFW, NanoVG and libdecor
+ *   provide the native platform on which Tk's widget set and event loop
+1*   are deployed.  
+ *  
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 2026  Kevin Walzer
@@ -180,7 +175,6 @@ TkGlfwInitialize(void)
     return TCL_OK;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -207,9 +201,10 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     CleanupAllMappings();
     TkWaylandCleanupPixmapStore();
 
-    /* Delete NanoVG context if it exists. */
-    if (glfwContext.vg && glfwContext.mainWindow) {
-        glfwMakeContextCurrent(glfwContext.mainWindow);
+	if (glfwContext.vg) {
+        WindowMapping *m = TkGlfwGetMappingList();
+        if (m && m->glfwWindow)
+            glfwMakeContextCurrent(m->glfwWindow);
         nvgDeleteGLES2(glfwContext.vg);
         glfwContext.vg = NULL;
         TkWaylandSetNVGContext(NULL);
@@ -230,7 +225,6 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     }
     
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -262,13 +256,15 @@ TkGlfwCreateWindow(
 {
     WindowMapping *mapping;
     GLFWwindow    *window;
+    
+    window = NULL;
 
     if (!glfwContext.initialized) {
         if (TkGlfwInitialize() != TCL_OK)
             return NULL;
     }
 
-    /* Reuse existing mapping if present. */
+    /* Reuse existing mapping if already created for this TkWindow. */
     if (tkWin != NULL) {
         mapping = FindMappingByTk(tkWin);
         if (mapping != NULL) {
@@ -280,68 +276,68 @@ TkGlfwCreateWindow(
     if (width  <= 0) width  = 200;
     if (height <= 0) height = 200;
 
-    /* GL hints must be set before every glfwCreateWindow call. */
-    glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
-    glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
-    glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-
-    window = glfwCreateWindow(width, height, title ? title : "",
-                              NULL, glfwContext.mainWindow);
-    if (!window) return NULL;
+    /*
+     * Reuse mainWindow for the first visible window.  NanoVG was created
+     * on mainWindow so its GL objects are already present on that context.
+     * Subsequent windows get their own context sharing mainWindow's objects.
+     */
+    if (glfwContext.mainWindow != NULL) {
+        window = glfwContext.mainWindow;
+        glfwSetWindowSize(window, width, height);
+        glfwSetWindowTitle(window, title ? title : "");
+        glfwShowWindow(window);
+        glfwContext.mainWindow = NULL;
+    } else {
+        glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+        glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+        window = glfwCreateWindow(width, height, title ? title : "",
+                                  NULL, window);
+        if (!window) return NULL;
+        glfwShowWindow(window);
+    }
 
     /* Allocate and initialize mapping. */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
-    
-    /* Set fields explicitly. */
-    mapping->tkWindow = tkWin;
-    mapping->glfwWindow = window;
-    mapping->drawable = nextDrawableId++;
-    mapping->width = width;
-    mapping->height = height;
-    mapping->clearPending = 1;  /* Mark for first draw */
-    mapping->nextPtr = NULL;    /* Will be set by AddMapping */
-    
-    /* Add to list using helper. */
-    AddMapping(mapping);
+    mapping->tkWindow     = tkWin;
+    mapping->glfwWindow   = window;
+    mapping->drawable     = nextDrawableId++;
+    mapping->width        = width;
+    mapping->height       = height;
+    mapping->clearPending = 1;
 
+    AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
 
     if (tkWin != NULL)
         TkGlfwSetupCallbacks(window, tkWin);
 
-    /* Show window - triggers libdecor configure. */
-    glfwShowWindow(window);
-
     /* Wait for the compositor to confirm real dimensions. */
     int timeout = 0;
     while ((mapping->width == 0 || mapping->height == 0) && timeout < 100) {
         glfwPollEvents();
-        
-        /* Get actual window size after events. */
         if (mapping->width == 0 || mapping->height == 0) {
             int w, h;
             glfwGetWindowSize(window, &w, &h);
             if (w > 0 && h > 0) {
-                mapping->width = w;
+                mapping->width  = w;
                 mapping->height = h;
                 break;
             }
         }
         timeout++;
     }
-    
-    /* Ensure we have valid dimensions. */
-    if (mapping->width == 0) mapping->width = width;
+
+    if (mapping->width  == 0) mapping->width  = width;
     if (mapping->height == 0) mapping->height = height;
 
-    /* Update Tk window dimensions. */
     if (tkWin != NULL) {
-        tkWin->changes.width = mapping->width;
+        tkWin->changes.width  = mapping->width;
         tkWin->changes.height = mapping->height;
     }
 
@@ -352,6 +348,7 @@ TkGlfwCreateWindow(
 
     return window;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -418,8 +415,6 @@ TkGlfwBeginDraw(
 
     mapping = FindMappingByDrawable(drawable);
     if (!mapping || !mapping->glfwWindow) {
-        fprintf(stderr, "TkGlfwBeginDraw: No mapping for drawable %lu\n", 
-                (unsigned long)drawable);
         return TCL_ERROR;
     }
 
@@ -470,15 +465,14 @@ TkGlfwBeginDraw(
     /*
      * If a frame is already open on this window, nest inside it.
      * The framebuffer has already been cleared; just apply the GC
-     * and push the offset if needed.
+     * and push a save for symmetric restore in EndDraw.
      */
     if (glfwContext.nvgFrameActive &&
             glfwContext.activeWindow == mapping->glfwWindow) {
         dcPtr->nestedFrame = 1;
-        if (offsetX != 0 || offsetY != 0) {
-            nvgSave(glfwContext.vg);
+        nvgSave(glfwContext.vg);
+        if (offsetX != 0 || offsetY != 0)
             nvgTranslate(glfwContext.vg, (float)offsetX, (float)offsetY);
-        }
         if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
         return TCL_OK;
     }
@@ -488,49 +482,54 @@ TkGlfwBeginDraw(
      */
     if (glfwContext.nvgFrameActive) {
         nvgEndFrame(glfwContext.vg);
-        glfwSwapBuffers(glfwContext.activeWindow);
+        WindowMapping *prev = FindMappingByGLFW(glfwContext.activeWindow);
+        if (prev) {
+            prev->swapPending = 1;
+            TkWaylandScheduleSwap(prev);
+        }
         glfwContext.nvgFrameActive = 0;
         glfwContext.activeWindow   = NULL;
     }
 
-    /* Make context current and set up viewport. */
+
+	/* Make main context current for NanoVG drawing. */
     glfwMakeContextCurrent(mapping->glfwWindow);
     glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
-
-    /* Calculate pixel ratio for NanoVG. */
     pixelRatio = (float)fbWidth / (float)mapping->width;
 
-    /* FIX: Clear framebuffer if needed. */
-    if (mapping->clearPending) {   
-        /* Use a neutral default (widgets will fill their own bg anyway). */
-        glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        mapping->clearPending = 0;
-    }
+    /*
+     * Always clear at the start of a new frame.  Widgets fill their
+     * own backgrounds so the clear color is only visible in gaps.
+     */
+    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    mapping->clearPending = 0;
 
-    /* Begin NanoVG frame with proper coordinate system. */
+    /* Begin NanoVG frame. */
     nvgBeginFrame(glfwContext.vg,
                   (float)mapping->width,
                   (float)mapping->height,
                   pixelRatio);
-    
-    /* Set up coordinate system for Tk (origin at top-left). */
+
+    /*
+     * Push save 1: coordinate transform.
+     * Flip Y so origin is top-left, matching Tk's coordinate system.
+     * Push save 2: child offset (always pushed for symmetric restore).
+     * EndDraw unconditionally pops both.
+     */
     nvgSave(glfwContext.vg);
-    nvgScale(glfwContext.vg, 1.0f, -1.0f);  /* Flip Y axis */
-    nvgTranslate(glfwContext.vg, 0.0f, -(float)mapping->height); /* Move origin to top-left */
-    nvgTranslate(glfwContext.vg, 0.5f, 0.5f); /* Pixel snapping */
+    nvgScale(glfwContext.vg, 1.0f, -1.0f);
+    nvgTranslate(glfwContext.vg, 0.0f, -(float)mapping->height);
+    nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
 
     glfwContext.nvgFrameActive = 1;
     glfwContext.activeWindow   = mapping->glfwWindow;
 
-    /* Apply child window offset if needed. */
-    if (offsetX != 0 || offsetY != 0) {
-        nvgSave(glfwContext.vg);
+    nvgSave(glfwContext.vg);
+    if (offsetX != 0 || offsetY != 0)
         nvgTranslate(glfwContext.vg, (float)offsetX, (float)offsetY);
-    }
 
-    /* Apply GC settings. */
     if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
 
     return TCL_OK;
@@ -553,51 +552,34 @@ TkGlfwBeginDraw(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwEndDraw --
- *
- *	End a drawing operation. Ends the NanoVG frame and swaps buffers.
- *	No-ops for nested frames.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Ends the NanoVG frame and swaps buffers for non-nested frames.
- *
- *----------------------------------------------------------------------
- */
-
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
+    WindowMapping *m;
+
     if (!dcPtr || !dcPtr->vg) return;
 
     if (dcPtr->nestedFrame) {
-        /* Pop the per-call offset save pushed in BeginDraw for nested frames. */
-        if (dcPtr->offsetX != 0 || dcPtr->offsetY != 0)
-            nvgRestore(dcPtr->vg);
+        nvgRestore(dcPtr->vg);
         return;
     }
 
-    /* FIX: Restore the saved states. */
-    nvgRestore(dcPtr->vg);  /* Pop child offset if any */
-    nvgRestore(dcPtr->vg);  /* Pop coordinate transform */
-    
+    /* Pop save 2 (child offset) and save 1 (coordinate transform). */
+    nvgRestore(dcPtr->vg);
+    nvgRestore(dcPtr->vg);
+
     nvgEndFrame(dcPtr->vg);
 
     glfwContext.nvgFrameActive = 0;
     glfwContext.activeWindow   = NULL;
 
-    if (dcPtr->glfwWindow) {
-        glfwSwapBuffers(dcPtr->glfwWindow);
-        
-        /* Ensure events are processed after swap. */
-        glfwPollEvents();
+    m = FindMappingByGLFW(dcPtr->glfwWindow);
+    if (m) {
+        m->swapPending = 1;
+        TkWaylandScheduleSwap(m);
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -884,52 +866,81 @@ FindMappingByTk(TkWindow *w)
     return NULL;
 }
 
+/* Find a mapping from the Drawable surface. */
 WindowMapping *
 FindMappingByDrawable(Drawable d)
 {
     DrawableMapping *dm;
-    
-    /* Fast path: explicit registrations (toplevel + children + XCreateWindow + pixmaps). */
+    WindowMapping   *m;
+
+    if (d == 0 || d == None) return NULL;
+
+    /* Fast path: explicit registrations. */
     for (dm = drawableMappingList; dm; dm = dm->next) {
-        if (dm->drawable == d) {
+        if (dm->drawable == d)
             return dm->mapping;
+    }
+
+    /* Fallback 1: toplevel whose Tk window ID matches. */
+    for (m = windowMappingList; m; m = m->nextPtr) {
+        if (m->tkWindow && (Drawable)m->tkWindow->window == d)
+            return m;
+    }
+
+    /* Fallback 2: drawable is a TkWindow* passed directly. */
+    for (m = windowMappingList; m; m = m->nextPtr) {
+        if (!m->tkWindow) continue;
+        TkWindow *stack[256];
+        int top = 0;
+        stack[top++] = m->tkWindow;
+        while (top > 0) {
+            TkWindow *cur = stack[--top];
+            if ((Drawable)cur == d || (Drawable)cur->window == d) {
+                RegisterDrawableForMapping(d, m);
+                return m;
+            }
+            TkWindow *child;
+            for (child = cur->childList; child && top < 255;
+                 child = child->nextPtr)
+                stack[top++] = child;
         }
     }
 
-    /* Fallback: check if this drawable is a toplevel Tk window ID. */
-    WindowMapping *m;
-    for (m = TkGlfwGetMappingList(); m; m = m->nextPtr) {
-        if (m->tkWindow && m->tkWindow->window == d) {
-            return m;
+    /* Fallback 3: drawable is a TkWaylandPixmapImpl* that was never
+     * registered. Validate by checking that its fields look sane,
+     * then bind it to the first available mapping. */
+    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)d;
+    if (pix != NULL) {
+        /* Sanity check: type must be 0 or 1, dimensions must be
+         * plausible. This guards against random pointer misinterpretation. */
+        if ((pix->type == 0 || pix->type == 1) &&
+            pix->width  >= 0 && pix->width  < 32768 &&
+            pix->height >= 0 && pix->height < 32768) {
+            m = TkGlfwGetMappingList();
+            if (m) {
+                RegisterDrawableForMapping(d, m);
+                return m;
+            }
         }
     }
 
     return NULL;
 }
 
-
-/* Retriever mapping list. */
+/* Retrieve mapping list. */
 WindowMapping *
 TkGlfwGetMappingList(void)
 {
     return windowMappingList;
 }
+
 /* Add mappings. */
 void
-AddMapping(WindowMapping *mapping)
+AddMapping(WindowMapping *m)
 {
-    if (!mapping) return;
-    
-    /* Initialize all fields */
-    mapping->nextPtr = windowMappingList;
-    mapping->clearPending = 0;
-    mapping->width = 0;
-    mapping->height = 0;
-    mapping->glfwWindow = NULL;
-    mapping->tkWindow = NULL;
-    mapping->drawable = 0;
-    
-    windowMappingList = mapping;
+    if (!m) return;
+    m->nextPtr  = windowMappingList;
+    windowMappingList = m;
 }
 
 
@@ -944,7 +955,6 @@ RemoveMapping(WindowMapping *m)
         return;
     }
     
-  
     while (*pp) {
         if (*pp == m) { 
             *pp = m->nextPtr; 

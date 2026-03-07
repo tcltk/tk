@@ -775,6 +775,10 @@ Tk_MakeWindow(
       Tk_Window toplevel = GetToplevelOfWidget((Tk_Window)winPtr);
       TkWindow *top = (TkWindow *)toplevel;
       WindowMapping *m = FindMappingByTk(top);
+      fprintf(stderr, "Child Tk_MakeWindow: winPtr=%p window=%lu "
+        "toplevel=%p top=%p mapping=%p\n",
+        (void*)winPtr, (unsigned long)window,
+        (void*)toplevel, (void*)top, (void*)m);
         if (m) {
             RegisterDrawableForMapping(winPtr->window, m);
         }
