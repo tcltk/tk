@@ -130,12 +130,10 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
     mapping->clearPending = 1;
 
     if (mapping->tkWindow) {
+		SyncWindowSize(mapping);
         TkWaylandQueueExposeEvent(mapping->tkWindow, 0, 0, width, height);
-        /* Update Tk's idea of the window size. */
-        mapping->tkWindow->changes.width  = width;
-        mapping->tkWindow->changes.height = height;
     }
-
+    
     TkWaylandScheduleRender();
 }
 

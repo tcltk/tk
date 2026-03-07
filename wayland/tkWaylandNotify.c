@@ -16,6 +16,7 @@
 #include "tkGlfwInt.h"
 
 extern TkGlfwContext  glfwContext;
+extern WindowMapping *windowMappingList;
 
 typedef struct ThreadSpecificData {
     bool           initialized;
@@ -233,11 +234,19 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
     if (!tsdPtr->initialized)
         return;
 
-    tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
+                                                    
+    /* If there are no windows left, stop polling. */
+    if (Tk_GetNumMainWindows() == 0) {
+       tsdPtr->heartbeatTimer = NULL;
+       return;
+    }
+                                                                                                      
+    glfwPollEvents();
+	TkWaylandScheduleRender();
+	
+	tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
                                                     HeartbeatTimerProc,
                                                     NULL);
-    glfwPollEvents();
-    TkWaylandScheduleRender();
 }
 
 /*

@@ -473,6 +473,7 @@ MODULE_SCOPE NVGcontext *TkWaylandGetPixmapNVGContext(void);
 MODULE_SCOPE void TkGlfwProcessEvents(void);
 MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow, TkWindow *tkWin);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
+MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
 
 typedef struct {
     Tcl_Event  header;  /* Must be first. */
