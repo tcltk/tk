@@ -9,6 +9,7 @@ namespace eval ttk::theme::classic {
     variable colors
     array set colors {
 	-frame		"#d9d9d9"
+	-foreground	"#000000"
 	-window		"#ffffff"
 	-alternate	"#f0f0f0"
 	-activebg	"#ececec"
@@ -24,7 +25,7 @@ namespace eval ttk::theme::classic {
 	ttk::style configure "." \
 	    -font		TkDefaultFont \
 	    -background		$colors(-frame) \
-	    -foreground		black \
+	    -foreground		$colors(-foreground) \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -troughcolor	$colors(-troughbg) \
@@ -127,12 +128,14 @@ namespace eval ttk::theme::classic {
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list	disabled $colors(-frame)\
+	    -background [list	disabled $colors(-frame) \
 				background $colors(-frame) \
-				selected $colors(-selectbg)] \
+				selected $colors(-selectbg) \
+				active $colors(-activebg)] \
 	    -foreground [list	disabled $colors(-disabledfg) \
 				background $colors(-selectfg) \
-				selected $colors(-selectfg)]
+				selected $colors(-selectfg) \
+				active $colors(-foreground)]
 
 	#
 	# Toolbar buttons

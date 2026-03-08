@@ -63,7 +63,7 @@ namespace eval ttk::theme::xpnative {
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-				background #d9d9d9 \
+				background SystemScrollbar \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
 				background SystemWindowText \

@@ -26,7 +26,7 @@ pack [addSeeDismiss $w.seeDismiss $w] -side bottom -fill x
 ## Code to populate the roots of the tree (can be more than one on Windows)
 proc populateRoots {tree} {
     foreach dir [lsort -dictionary [file volumes]] {
-	if {$tk_version < 9.1} {
+	if {$::tk_version < 9.1} {
 	    populateTree $tree [$tree insert {} end -text $dir \
 		-values [list $dir directory]]
 	} else {
@@ -47,7 +47,7 @@ proc populateTree {tree node} {
     foreach f [lsort -dictionary [glob -nocomplain -dir $path *]] {
 	set f [file normalize $f]
 	set type [file type $f]
-	if {$tk_version < 9.1} {
+	if {$::tk_version < 9.1} {
 	    set id [$tree insert $node end -text [file tail $f] \
 		-values [list $f $type]]
 	} else {

@@ -220,7 +220,7 @@ static const Ttk_StateTable radiobutton_statemap[] =
 };
 
 /*
- * Groupboxes (tk: "frame")
+ * Groupboxes (tk: "frame" and "labelframe")
  */
 static const Ttk_StateTable groupbox_statemap[] =
 {
@@ -373,9 +373,10 @@ static const Ttk_StateTable header_statemap[] =
 static const Ttk_StateTable sortbutton_statemap[] =
 {
     { HIS_ICONSORTEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_SELECTED, 0 },
+    { HIS_ICONSORTEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_ALTERNATE, 0 },
+    { HIS_ICONPRESSED,		TTK_STATE_PRESSED, 0 },
     { HIS_ICONSORTEDHOT,	TTK_STATE_ACTIVE|TTK_STATE_SELECTED, 0 },
     { HIS_ICONSORTEDHOT,	TTK_STATE_ACTIVE|TTK_STATE_ALTERNATE, 0 },
-    { HIS_ICONPRESSED,		TTK_STATE_PRESSED, 0 },
     { HIS_ICONHOT,		TTK_STATE_ACTIVE, 0 },
     { HIS_ICONSORTEDNORMAL,	TTK_STATE_SELECTED, 0 },
     { HIS_ICONSORTEDNORMAL,	TTK_STATE_ALTERNATE, 0 },
@@ -407,9 +408,7 @@ static const Ttk_StateTable treeview_statemap[] =
 /* Treeview indicator */
 static const Ttk_StateTable tvpglyph_statemap[] =
 {
-    { HGLPS_OPENED,	TTK_STATE_ACTIVE|TTK_STATE_OPEN, 0 },
     { GLPS_OPENED,	TTK_STATE_OPEN, 0 },
-    { HGLPS_CLOSED,	TTK_STATE_ACTIVE, 0 },
     { GLPS_CLOSED,	0, 0 },
 };
 
@@ -1205,7 +1204,7 @@ static const ElementInfo ElementInfoTable[] = {
 	HP_HEADERITEM, header_statemap, PAD(4,0,4,0), 0 },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
 	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
-/*    { "Treeitem.row", &GenericElementSpec, L"ROW",
+/*    { "Treeitem.row", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeitem_statemap, NOPAD, 0 },*/
     { "sizegrip", &GenericElementSpec, L"STATUS",
 	SP_GRIPPER, null_statemap, NOPAD, 0 },

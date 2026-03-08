@@ -7,6 +7,7 @@ namespace eval ttk::theme::alt {
     variable colors
     array set colors {
 	-frame		"#d9d9d9"
+	-foreground	"#000000"
 	-window		"#ffffff"
 	-alternate	"#f0f0f0"
 	-darker		"#c3c3c3"
@@ -22,7 +23,7 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure "." \
 	    -background		$colors(-frame) \
-	    -foreground		black \
+	    -foreground		$colors(-foreground) \
 	    -troughcolor	$colors(-darker) \
 	    -bordercolor	$colors(-border) \
 	    -selectbackground	$colors(-selectbg) \
@@ -115,12 +116,12 @@ namespace eval ttk::theme::alt {
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list	disabled $colors(-frame)\
-				background $colors(-darker) \
-				selected $colors(-selectbg)] \
+	    -background [list	disabled $colors(-frame) \
+				selected $colors(-selectbg) \
+				active $colors(-activebg)] \
 	    -foreground [list	disabled $colors(-disabledfg) \
-				background $colors(-selectfg) \
-				selected $colors(-selectfg)]
+				selected $colors(-selectfg) \
+				active $colors(-foreground)]
 
 	ttk::style configure TScale \
 	    -groovewidth 3p -troughrelief sunken \

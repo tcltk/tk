@@ -10,6 +10,7 @@ namespace eval ttk::theme::clam {
     array set colors {
 	-disabledfg		"#999999"
 	-frame			"#dcdad5"
+	-foreground		"#000000"
 	-window			"#ffffff"
 	-dark			"#cfcdc8"
 	-darker			"#bab5ab"
@@ -26,7 +27,7 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure "." \
 	    -background $colors(-frame) \
-	    -foreground black \
+	    -foreground $colors(-foreground) \
 	    -bordercolor $colors(-darkest) \
 	    -darkcolor $colors(-dark) \
 	    -lightcolor $colors(-lighter) \
@@ -153,10 +154,12 @@ namespace eval ttk::theme::clam {
 	ttk::style map Treeview \
 	    -background [list	disabled $colors(-frame) \
 				background $colors(-darkest) \
-				selected $colors(-selectbg)] \
+				selected $colors(-selectbg) \
+				active $colors(-lighter)] \
 	    -foreground [list	disabled $colors(-disabledfg) \
 				background $colors(-selectfg) \
-				selected $colors(-selectfg)] \
+				selected $colors(-selectfg) \
+				active $colors(-foreground)] \
 	    -bordercolor [list	focus $colors(-selectbg)]
 
 	ttk::style configure TLabelframe \

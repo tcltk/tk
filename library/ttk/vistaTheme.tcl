@@ -223,12 +223,14 @@ namespace eval ttk::theme::vista {
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list   disabled SystemButtonFace \
-				background #d9d9d9 \
-				selected SystemHighlight] \
+	    -background [list   disabled SystemWindow \
+				background SystemScrollbar \
+				selected SystemHighlight \
+				active #D7E4F2] \
 	    -foreground [list   disabled SystemGrayText \
-				background SystemWindowText \
-				selected SystemHighlightText]
+				background SystemInactiveCaptionText \
+				selected SystemHighlightText \
+				active SystemCaptionText]
 
 	package provide ttk::theme::vista 1.0
     }

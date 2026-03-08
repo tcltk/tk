@@ -268,7 +268,7 @@ static const Tk_OptionSpec DisplayOptionSpecs[] = {
 	"center", offsetof(DisplayItem,anchorObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     /* From here down are the tags options. The index in TagOptionSpecs
-     * below should be kept in synch with this position.
+     * below should be kept in sync with this position.
      */
     {TK_OPTION_STRING, "-image", "image", "Image",
 	NULL, offsetof(DisplayItem,imageObj), TCL_INDEX_NONE,
@@ -516,6 +516,7 @@ typedef struct {
     Ttk_Box treeArea;		/* Display area for tree */
     int slack;			/* Slack space (see Resizing section) */
     unsigned showFlags;		/* bitmask of subparts to display */
+    unsigned typeFlags;		/* which select mode */
 } TreePart;
 
 typedef struct {
@@ -529,6 +530,10 @@ typedef struct {
 #define SCROLLCMD_CHANGED	(USER_MASK<<2)
 #define SHOW_CHANGED		(USER_MASK<<3)
 #define HEIGHT_CHANGED		(USER_MASK<<4)
+#define TYPE_CHANGED		(USER_MASK<<5)
+
+#define TYPE_ITEM	(0x1)	/* Item slect mode */
+#define TYPE_CELL	(0x2)	/* Cell select mode */
 
 static const char *const SelectModeStrings[] = {
 	"none", "single", "browse", "extended", "multiple", NULL };
@@ -550,7 +555,7 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 	0, SelectModeStrings, 0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
 	"item", offsetof(Treeview,tree.selectTypeObj), TCL_INDEX_NONE,
-	0, SelectTypeStrings, 0 },
+	0, SelectTypeStrings, TYPE_CHANGED },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
@@ -1248,6 +1253,16 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	TreeviewProcessEvent(tv, event, item, colno);
     }
 
+    /* After event action */
+    switch (event->type) {
+	case LeaveNotify:
+	    item = NULL;
+	    colno = -1;
+	    break;
+	default:
+	    break;
+    }
+
     /* Use Motion to generate internal Enter and Leave events */
     if ((event->type == MotionNotify) || (event->type == ButtonRelease)) {
 	if (item != tv->tree.current || colno != tv->tree.currentCol) {
@@ -1267,9 +1282,28 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	}
     }
 
+    /* Set active state */
     if (event->type != KeyPress && event->type != KeyRelease && event->type != VirtualEvent) {
-	tv->tree.current = item;
-	tv->tree.currentCol = colno;
+	if (item != tv->tree.current || colno != tv->tree.currentCol) {
+	    int changed = 0;
+
+	    /* Clear previous */
+	    if (tv->tree.current) {
+		(tv->tree.current)->state &= ~TTK_STATE_ACTIVE;
+		changed = 1;
+	    }
+
+	    /* Set current */
+	    tv->tree.current = item;
+	    tv->tree.currentCol = colno;
+	    if (item) {
+		(tv->tree.current)->state |= TTK_STATE_ACTIVE;
+		changed = 1;
+	    }
+	    if (changed) {
+		TtkRedisplayWidget(&tv->core);
+	    }
+	}
     }
 }
 
@@ -1397,7 +1431,6 @@ static Ttk_Layout TreeviewGetLayout(Tcl_Interp *interp, Ttk_Theme themePtr, void
 static int
 TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask) {
     Treeview *tv = (Treeview *)recordPtr;
-    unsigned showFlags = tv->tree.showFlags;
 
     if (mask & HEIGHT_CHANGED) {
 	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
@@ -1438,8 +1471,12 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask) {
 	TtkScrollbarUpdateRequired(tv->tree.xscrollHandle);
 	TtkScrollbarUpdateRequired(tv->tree.yscrollHandle);
     }
-    if ((mask & SHOW_CHANGED) && GetEnumSetFromObj(
-		interp,tv->tree.showObj,showStrings,&showFlags) != TCL_OK) {
+    if ((mask & SHOW_CHANGED) && GetEnumSetFromObj(interp,
+	    tv->tree.showObj,showStrings, &tv->tree.showFlags) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if ((mask & TYPE_CHANGED) && GetEnumSetFromObj(interp,tv->tree.selectTypeObj,
+	    SelectTypeStrings, &tv->tree.typeFlags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1448,7 +1485,6 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask) {
     }
 
     tv->tree.rowPosNeedsUpdate = 1;
-    tv->tree.showFlags = showFlags;
 
     if (mask & (SHOW_CHANGED | DCOLUMNS_CHANGED)) {
 	RecomputeSlack(tv);
@@ -1952,7 +1988,7 @@ static Ttk_Layout TreeviewGetLayout(
 	return 0;
     }
 
-    /* Compute heading height. */
+    /* Compute heading height */
     Ttk_RebindSublayout(tv->tree.headingLayout, &tv->tree.column0);
     Ttk_LayoutSize(tv->tree.headingLayout, 0, &width, &tv->tree.headingHeight);
     tv->tree.headingHeight += 2;
@@ -1998,7 +2034,7 @@ static Ttk_Layout TreeviewGetLayout(
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.colSeparatorWidth);
     }
 
-    /* Get item indent from style: */
+    /* Get item indent from style */
     tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.indent);
@@ -2074,8 +2110,13 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     if (!item->children) {
 	state |= TTK_STATE_LEAF;
     }
+
+    /* Remove focus and active state if in cell selection mode */
     if (item != tv->tree.focus || tv->tree.focusCol) {
 	state &= ~TTK_STATE_FOCUS;
+    }
+    if (tv->tree.typeFlags == TYPE_CELL || item != tv->tree.current) {
+	state &= ~TTK_STATE_ACTIVE;
     }
 
     if (!(tv->core.state & TTK_STATE_FOCUS) &&
@@ -2229,7 +2270,9 @@ static void PrepareCells(
  */
 static void DrawCells(
     Treeview *tv, TreeItem *item,
-    DisplayItem *displayItem, DisplayItem *displayItemSel,
+    DisplayItem *displayItem,
+    DisplayItem *displayItemSel,
+    DisplayItem *displayItemActive,
     Drawable d, int x, int y, int title) {
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
@@ -2237,7 +2280,7 @@ static void DrawCells(
     short horizPad = round(4 * TkScalingLevel(tv->core.tkwin));
     Ttk_Padding cellPadding = {horizPad, 0, horizPad, 0};
     DisplayItem displayItemLocal;
-    DisplayItem displayItemCell, displayItemCellSel;
+    DisplayItem displayItemCell, displayItemCellSel, displayItemCellActive;
     int rowHeight = tv->tree.rowHeight * item->height;
     int xPad = 0, defaultPadding = 1;
     Tcl_Size i;
@@ -2251,10 +2294,13 @@ static void DrawCells(
        A Cell's image can only be set by cell tags. */
     displayItemCell = *displayItem;
     displayItemCellSel = *displayItemSel;
+    displayItemCellActive = *displayItemActive;
     displayItemCell.imageObj = NULL;
     displayItemCellSel.imageObj = NULL;
+    displayItemCellActive.imageObj = NULL;
     displayItemCell.imageAnchorObj = NULL;
     displayItemCellSel.imageAnchorObj = NULL;
+    displayItemCellActive.imageAnchorObj = NULL;
 
     /* If explicit padding was asked for, skip default. */
     if (Ttk_QueryStyle(Ttk_LayoutStyle(tv->tree.cellLayout), &displayItemCell,
@@ -2278,12 +2324,18 @@ static void DrawCells(
 	if (!title && i <  tv->tree.nTitleColumns) continue;
 	if (!title && x <  tv->tree.titleWidth) continue;
 
+	if (tv->tree.typeFlags == TYPE_CELL && item == tv->tree.current &&
+		i == tv->tree.currentCol) {
+	    displayItemUsed = &displayItemCellActive;
+	    cellState |= TTK_STATE_ACTIVE;
+	}
+
 	if (column->selected) {
 	    displayItemUsed = &displayItemCellSel;
 	    cellState |= TTK_STATE_SELECTED;
 	}
 
-	if (item == tv->tree.focus && tv->tree.focusCol == column) {
+	if (item == tv->tree.focus && column == tv->tree.focusCol) {
 	    cellState |= TTK_STATE_FOCUS;
 	}
 
@@ -2318,7 +2370,7 @@ static void DrawCells(
 	}
 
 	DisplayLayoutTree(imageAnchor, textAnchor, layout, displayItemUsed,
-		state & ~TTK_STATE_FOCUS, parcel, d);
+		cellState, parcel, d);
     }
 }
 
@@ -2329,7 +2381,7 @@ static void DrawItem(
     Treeview *tv, TreeItem *item, Drawable d, int depth) {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
-    DisplayItem displayItem, displayItemSel, displayItemLocal;
+    DisplayItem displayItem, displayItemSel, displayItemActive, displayItemLocal;
     int x, y, h, xTitle, dispRow, rowHeight;
 
     dispRow = DisplayRow(item->rowPos, tv);
@@ -2346,6 +2398,7 @@ static void DrawItem(
 
     PrepareItem(tv, item, &displayItem, state);
     PrepareItem(tv, item, &displayItemSel, state | TTK_STATE_SELECTED);
+    PrepareItem(tv, item, &displayItemActive, state | TTK_STATE_ACTIVE);
 
     /* Draw row background: */
     {
@@ -2361,7 +2414,7 @@ static void DrawItem(
 
     /* Draw data cells: */
     PrepareCells(tv, item);
-    DrawCells(tv, item, &displayItem, &displayItemSel, d, x, y, 0);
+    DrawCells(tv, item, &displayItem, &displayItemSel, &displayItemActive, d, x, y, 0);
 
     /* Draw row background for non-scrolled area: */
     if (tv->tree.nTitleColumns >= 1) {
@@ -2383,6 +2436,12 @@ static void DrawItem(
 	Ttk_State cellState = state;
 	Tk_Anchor textAnchor, imageAnchor = DEFAULT_IMAGEANCHOR;
 	Ttk_Padding cellPadding = {(short)indent, 0, 0, 0};
+
+	if (tv->tree.typeFlags == TYPE_CELL && item == tv->tree.current &&
+		tv->tree.currentCol == 0) {
+	    displayItemUsed = &displayItemActive;
+	    cellState |= TTK_STATE_ACTIVE;
+	}
 
 	if (column->selected) {
 	    displayItemUsed = &displayItemSel;
@@ -2424,13 +2483,13 @@ static void DrawItem(
 
 	parcel = Ttk_PadBox(parcel, cellPadding);
 	DisplayLayoutTree(imageAnchor, textAnchor, tv->tree.itemLayout,
-		displayItemUsed, state & ~TTK_STATE_FOCUS, parcel, d);
+		displayItemUsed, cellState, parcel, d);
 	xTitle += colwidth;
     }
 
     /* Draw non-scrolled data cells: */
     if (tv->tree.nTitleColumns > 1) {
-	DrawCells(tv, item, &displayItem, &displayItemSel, d, xTitle, y, 1);
+	DrawCells(tv, item, &displayItem, &displayItemSel, &displayItemActive, d, xTitle, y, 1);
     }
 }
 
@@ -2444,6 +2503,7 @@ static void DrawForest(	/* forward */
 static void DrawSubtree(
     Treeview *tv, TreeItem *item, Drawable d, int depth) {
     int dispRow = DisplayRow(item->rowPos, tv);
+
     if (dispRow >= 0) {
 	DrawItem(tv, item, d, depth);
     }
@@ -2458,6 +2518,7 @@ static void DrawSubtree(
  */
 static void DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth) {
+
     while (item) {
 	DrawSubtree(tv, item, d, depth);
 	item = item->next;
@@ -2645,7 +2706,7 @@ static int TreeviewChildrenCommand(
     } else {
 	TreeItem **newChildren = GetItemListFromObj(interp, tv, objv[3]);
 	TreeItem *child;
-	int i;
+	int i, do_current = 0, do_focus = 0;
 
 	if (!newChildren) {
 	    return TCL_ERROR;
@@ -2699,6 +2760,7 @@ static int TreeviewChildrenCommand(
 	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	    tv->tree.focus = NULL;
 	    tv->tree.focusCol = NULL;
+	    do_focus = 1;
 	}
 
 	/* If selection anchor item is detached, unset it */
@@ -2714,11 +2776,20 @@ static int TreeviewChildrenCommand(
 	if (tv->tree.current && (tv->tree.current)->parent == NULL) {
 	    tv->tree.current = NULL;
 	    tv->tree.currentCol = -1;
+	    do_current = 1;
 	}
 
 	Tcl_Free(newChildren);
 	tv->tree.rowPosNeedsUpdate = 1;
 	TtkRedisplayWidget(&tv->core);
+
+	/* Event updates */
+	if (do_current) {
+	    /*TreeviewBindEventProc((void *)tv, MotionNotify);*/
+	}
+	if (do_focus) {
+	    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+	}
     }
     return TCL_OK;
 }
@@ -4084,6 +4155,7 @@ static int TreeviewDetachCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
     Tcl_Size i;
+    int do_current = 0, do_focus = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -4114,6 +4186,7 @@ static int TreeviewDetachCommand(
 	(tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	tv->tree.focus = NULL;
 	tv->tree.focusCol = NULL;
+	do_focus = 1;
     }
 
     /* If selection anchor item is detached, unset it */
@@ -4129,11 +4202,20 @@ static int TreeviewDetachCommand(
     if (tv->tree.current && (tv->tree.current)->parent == NULL) {
 	tv->tree.current = NULL;
 	tv->tree.currentCol = -1;
+	do_current = 1;
     }
 
     tv->tree.rowPosNeedsUpdate = 1;
     TtkRedisplayWidget(&tv->core);
     Tcl_Free(items);
+
+    /* Event updates */
+    if (do_current) {
+	/*TreeviewBindEventProc((void *)tv, MotionNotify);*/
+    }
+    if (do_focus) {
+	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+    }
     return TCL_OK;
 }
 
@@ -4200,7 +4282,7 @@ static int TreeviewDeleteCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items, *delq;
     Tcl_Size i;
-    int selChange = 0;
+    int selChange = 0, do_current = 0, do_focus = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -4246,6 +4328,7 @@ static int TreeviewDeleteCommand(
 	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	    tv->tree.focus = NULL;
 	    tv->tree.focusCol = NULL;
+	    do_focus = 1;
 	}
 
 	/* If item has selection anchor, unset it */
@@ -4261,6 +4344,7 @@ static int TreeviewDeleteCommand(
 	if (tv->tree.current == delq) {
 	    tv->tree.current = NULL;
 	    tv->tree.currentCol = -1;
+	    do_current = 1;
 	}
 	FreeItem(delq);
 	delq = next;
@@ -4272,6 +4356,14 @@ static int TreeviewDeleteCommand(
     }
     tv->tree.rowPosNeedsUpdate = 1;
     TtkRedisplayWidget(&tv->core);
+
+    /* Event updates */
+    if (do_current) {
+	/*TreeviewBindEventProc((void *)tv, MotionNotify);*/
+    }
+    if (do_focus) {
+	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+    }
     return TCL_OK;
 }
 

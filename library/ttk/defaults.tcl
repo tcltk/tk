@@ -203,10 +203,12 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+	    -background [list	disabled $colors(-frame) \
+				selected $colors(-selectbg) \
+				active   $colors(-activebg)] \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				selected $colors(-selectfg) \
+				active   $colors(-foreground)] \
 
 	# Combobox popdown frame
 	ttk::style layout ComboboxPopdownFrame {
