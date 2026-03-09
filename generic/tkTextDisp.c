@@ -7519,6 +7519,21 @@ TkTextIndexBbox(
  *----------------------------------------------------------------------
  */
 
+static const char localeScript[][4] = {
+    {'A', 'r', 'a', 'b'},
+    {'C', 'a', 'n', 's'},
+    {'C', 'h', 'e', 'r'},
+    {'C', 'y', 'r', 'l'},
+    {'D', 'e', 'v', 'a'},
+    {'H', 'a', 'n', 's'},
+    {'L', 'a', 't', 'n'},
+    {'M', 'o', 'n', 'g'},
+    {'P', 'l', 'o', 'c'},
+    {'T', 'a', 'l', 'e'},
+    {'T', 'a', 'l', 'u'},
+    {'F', 'f', 'n', 'g'},
+    {'T', 'r', 'a', 'd'}
+};
 static const char localeVariant[][10] = {
     "",
     "adlam",
@@ -7550,7 +7565,7 @@ GetLocale(
 
     strncpy(buffer, locale, 5);
     buffer[5] = 0;
-    if (UCHAR(buffer[2]-'a') <= UCHAR('z' - 'a')) {
+    if ((UCHAR(buffer[2]-'a') <= UCHAR('z' - 'a')) && buffer[4]) {
 	/* If locale[2] is a lowercase, insert an underscore '_' */
 	buffer[6] = 0;
 	buffer[5] = buffer[4];
@@ -7593,12 +7608,12 @@ SetLocale(
 	if (ISALPHA(str[0]) && ISALPHA(str[1])) {
 	    locale[0] = TOLOWER(str[0]);
 	    locale[1] = TOLOWER(str[1]);
-	    if ((str[2] == '_') || (str[2] == '-')) {
-		locale[2] = '_';
-		str += 3;
-	    } else if (ISALPHA(str[2]) && ((str[3] == '_') || (str[3] == '-'))) {
+	    if (strchr(".@-_", str[2])) {
+		locale[2] = 0;
+		str += 2;
+	    } else if (ISALPHA(str[2]) && strchr(".@-_", str[3])) {
 		locale[2] = TOLOWER(str[2]);
-		str += 4;
+		str += 3;
 	    } else if (!strncasecmp(str, "POSIX", 6)) {
 		locale[1] = 0;
 		goto localeC; // 'POSIX' is an alias for 'C'
@@ -7606,51 +7621,25 @@ SetLocale(
 		goto wrongLocale;	
 	    }
 	    // Parse second part, after the first '_';
-	    if (!strncasecmp(str, "Arab", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Cans", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Cher", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Cyrl", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		locale[5] = 3; // "@cyrillic"
-		str += 5;
-	    } else if (!strncasecmp(str, "Deva", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		locale[5] = 4; // "@devangari"
-		str += 5;
-	    } else if (!strncasecmp(str, "Hans", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Latn", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		locale[5] = 7; // "@latin"
-		str += 5;
-	    } else if (!strncasecmp(str, "Mong", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Ploc", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Tale", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Talu", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Tfng", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
-	    } else if (!strncasecmp(str, "Trad", 4) && ((str[4] == '_') || (str[4] == '-'))) {
-		// ignore
-		str += 5;
+	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2])
+		    && ISALPHA(str[3]) && ISALPHA(str[4]) && strchr(".@-_", str[5])) {
+		if (!strncasecmp(++str, localeScript[6], 4)) {
+		    locale[5] = 7;
+		    str += 4;
+		} else {
+		    goto wrongLocale;
+		}
 	    }
-	    if (!ISALPHA(str[0]) || !ISALPHA(str[1])) {
-		goto wrongLocale;
+	    if ((str[0] == '_') || (str[0] == '-')) {
+		if (!ISALPHA(*++str) || !ISALPHA(str[1])) {
+		    goto wrongLocale;
+		}
+		if (!locale[2]) {
+		    locale[2] = '_';
+		}
+		locale[3] = TOUPPER(*str++);
+		locale[4] = TOUPPER(*str++);
 	    }
-	    locale[3] = TOUPPER(*str++);
-	    locale[4] = TOUPPER(*str++);
 	    if (*str == '.') {
 		while (!strchr("@", *str)) {
 		    str++; // Skip everything, until next '@' or NULL
