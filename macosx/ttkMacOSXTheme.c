@@ -33,7 +33,6 @@
 #include "ttk/ttkThemeInt.h"
 #include "ttkMacOSXTheme.h"
 #include "tkColor.h"
-#include <math.h>
 
 MODULE_SCOPE NSColor *controlAccentColor(void) {
     static int accentPixel = -1;
