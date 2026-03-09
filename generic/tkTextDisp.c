@@ -7573,11 +7573,16 @@ GetLocale(
 	buffer[3] = '_';
     }
     char *p = buffer + strlen(buffer);
-    if (ISDIGIT(locale[3])) {
+    if ((signed char)locale[5] < 0) {
+	memcpy(p+2, p-3, 3);
+	memcpy(p-2, localeScript[UCHAR(-1-locale[5])], 4);
+	p += 5;
+    }
+    if (ISDIGIT(p[-2])) {
 	p[-1] = '0' + locale[4]/10; // numeric locale, then locale[4] is a number between 00 and 99.
 	*p++ = '0' + locale[4]%10;
     }
-    if (locale[5]) {
+    if ((signed char)(locale[5]) > 0) {
 	*p++ = '@';
 	strcpy(p, localeVariant[UCHAR(locale[5])]);
 	p += strlen(p);
@@ -7624,7 +7629,7 @@ SetLocale(
 	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2])
 		    && ISALPHA(str[3]) && ISALPHA(str[4]) && strchr(".@-_", str[5])) {
 		if (!strncasecmp(++str, localeScript[6], 4)) {
-		    locale[5] = 7;
+		    locale[5] = (char)(-7);
 		    str += 4;
 		} else {
 		    goto wrongLocale;
