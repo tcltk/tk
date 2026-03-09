@@ -405,11 +405,22 @@ TkWaylandQueueExposeEvent(
     int       width, int height)
 {
     XEvent event;
+    TkWindow *childPtr;
     WindowMapping *m;
+    int childCount = 0;
     
-    /* Create expose event */
+    if (!winPtr) return;
+    
+    
+    fprintf(stderr, "QueueExposeEvent: winPtr=%p x=%d y=%d w=%d h=%d\n", 
+            winPtr, x, y, width, height);
+    
+    /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
+    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xexpose.send_event = False;
+    event.xexpose.display = winPtr->display;
     event.xexpose.window = Tk_WindowId(winPtr);
     event.xexpose.x = x;
     event.xexpose.y = y;
@@ -417,14 +428,21 @@ TkWaylandQueueExposeEvent(
     event.xexpose.height = height;
     event.xexpose.count = 0;
     
-    /* Queue the event */
+    /* Queue it. */
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
-    /* Mark window as needing display. */
-    m = FindMappingByTk(winPtr);
-    if (m) {
-        TkWaylandScheduleDisplay(m);
+    /* Recursively for children. */
+    for (childPtr = winPtr->childList; childPtr != NULL;
+         childPtr = childPtr->nextPtr) {
+        if (!Tk_IsMapped((Tk_Window)childPtr) || Tk_IsTopLevel((Tk_Window)childPtr)) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr, 
+                                 0, 0,
+                                 Tk_Width((Tk_Window)childPtr),
+                                 Tk_Height((Tk_Window)childPtr));
     }
+    
 }
 
 
@@ -479,50 +497,39 @@ TkWaylandWakeupGLFW(void)
 MODULE_SCOPE void
 TkWaylandBeginEventCycle(WindowMapping *m)
 {
-    int fbWidth, fbHeight;
-    float pixelRatio;
-    
     if (!m || !m->glfwWindow) return;
-    
-    /* Already have a frame open for this window? */
-    if (m->frameOpen) return;
-    
-    /* Close any frame open on a different window. */
-    if (glfwContext.activeFrame && 
-        glfwContext.activeFrame != m) {
-        TkWaylandEndEventCycle(glfwContext.activeFrame);
-    }
-    
-    /* Make context current. */
+
+	if (m->frameOpen) {
+        /* Already in drawing round – do NOT clear again. */
+		fprintf(stderr, "BeginEventCycle: already open, continuing\n");
+		return;
+	}
+
+
     glfwMakeContextCurrent(m->glfwWindow);
-    glfwGetFramebufferSize(m->glfwWindow, &fbWidth, &fbHeight);
-    
-    /* Set viewport */
-    glViewport(0, 0, fbWidth, fbHeight);
-    pixelRatio = (float)fbWidth / (float)m->width;
-    
-    /* Clear framebuffer - this happens ONCE per event cycle. */
+
+    int fbw, fbh;
+    glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
+    glViewport(0, 0, fbw, fbh);
+
+    /* Clear only when starting new frame. */
     glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    /* Begin NanoVG frame - KEEP IT OPEN. */
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
     nvgBeginFrame(glfwContext.vg,
                   (float)m->width,
                   (float)m->height,
-                  pixelRatio);
-    
-    /* Set up coordinate transform (Y-flip for Tk coordinates). */
+                  (float)fbw / (float)m->width);
+
     nvgSave(glfwContext.vg);
     nvgScale(glfwContext.vg, 1.0f, -1.0f);
     nvgTranslate(glfwContext.vg, 0.0f, -(float)m->height);
-    nvgTranslate(glfwContext.vg, 0.5f, 0.5f);  /* Half-pixel offset */
-    
-    /* Mark frame as open. */
+    nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
+
     m->frameOpen = 1;
     m->inEventCycle = 1;
     glfwContext.activeFrame = m;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -543,6 +550,12 @@ TkWaylandBeginEventCycle(WindowMapping *m)
 MODULE_SCOPE void
 TkWaylandEndEventCycle(WindowMapping *m)
 {
+	
+	    if (!m || !m->frameOpen) {
+        fprintf(stderr, "EndEventCycle: Frame not open, returning\n");
+        return;
+    }
+    
     if (!m || !m->frameOpen) return;
     
     /* Restore coordinate transform. */
@@ -583,6 +596,7 @@ TkWaylandScheduleDisplay(WindowMapping *m)
 {
     if (!m->needsDisplay) {
         m->needsDisplay = 1;
+        /* Queue idle to close frame after widgets draw. */
         Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
     }
 }
@@ -607,15 +621,30 @@ void
 TkWaylandDisplayProc(ClientData clientData)
 {
     WindowMapping *m = (WindowMapping *)clientData;
-    
-    /* If frame is open and display is done, close it. */
-    if (m->frameOpen && m->inEventCycle) {
-        TkWaylandEndEventCycle(m);
-    }
-    
-    m->needsDisplay = 0;
-}
 
+    if (!m || !m->glfwWindow || !m->frameOpen) {
+        fprintf(stderr, "DisplayProc: nothing to do (no window or frame not open)\n");
+        m->needsDisplay = 0;
+        return;
+    }
+
+
+    /* Restore from the nvgSave() we did in BeginEventCycle. */
+    nvgRestore(glfwContext.vg);
+
+    /* Finish NanoVG rendering. */
+    nvgEndFrame(glfwContext.vg);
+
+    /* Actually show the drawing. */
+    glfwMakeContextCurrent(m->glfwWindow);
+    glfwSwapBuffers(m->glfwWindow);
+
+    m->frameOpen     = 0;
+    m->inEventCycle  = 0;
+    m->needsDisplay  = 0;
+    glfwContext.activeFrame = NULL;
+
+}
 
 
 /*

@@ -3,7 +3,7 @@
  *
  *	This file contains functions that draw to windows using Wayland,
  *	GLFW, and NanoVG. Many of these functions emulate Xlib functions
- *      for compatibility with Tk's traditional API.
+ *  for compatibility with Tk's traditional API.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -560,37 +560,49 @@ XDrawRectangles(
 
 int
 XFillRectangles(
-    TCL_UNUSED(Display *),
-    Drawable    drawable,
-    GC          gc,
+    Display *display,
+    Drawable drawable,
+    GC gc,
     XRectangle *rectangles,
-    int         n_rectangles)
+    int nrectangles)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
+    NVGcolor color;
     int i;
-
-
+    
+    
+    if (nrectangles < 1) return Success;
+    
+    /* Get color. */
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        color = TkGlfwPixelToNVG(v.foreground);        
+    } else {
+        color = nvgRGB(0, 0, 0);
+    }
+    
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK) {
         return BadDrawable;
     }
-
-    XGCValues v;
-    TkWaylandGetGCValues(gc, GCForeground|GCBackground, &v);
-
-    for (i = 0; i < n_rectangles; i++) {
-        /* Ensure valid dimensions. */
-        int w = rectangles[i].width > 0 ? rectangles[i].width : 1;
-        int h = rectangles[i].height > 0 ? rectangles[i].height : 1;
-        
+    
+    for (i = 0; i < nrectangles; i++) {
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, rectangles[i].x, rectangles[i].y, w, h);
+        nvgRect(dc.vg, 
+                (float)rectangles[i].x, 
+                (float)rectangles[i].y,
+                (float)rectangles[i].width, 
+                (float)rectangles[i].height);
+        nvgFillColor(dc.vg, color);
         nvgFill(dc.vg);
     }
-
+    
+    
     TkGlfwEndDraw(&dc);
+    
     return Success;
 }
+                
 /*
  *----------------------------------------------------------------------
  *
