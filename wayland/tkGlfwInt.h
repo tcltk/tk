@@ -50,6 +50,7 @@ typedef struct TkGlfwContext {
                                    * (cached for performance) */
     int fbHeight;                 /* Framebuffer height of mainWindow
                                    * (cached for performance) */
+    WindowMapping *activeFrame;      /* Which window has open frame */
 } TkGlfwContext;
 
 /*
@@ -83,8 +84,10 @@ typedef struct WindowMapping {
                                    * to be cleared before next draw operation.
                                    * Set to 1 when window is created/resized,
                                    * cleared after clearing */
-    struct libdecor_frame *frame;   /* libdecor frame (owned by GLFW) */
-	int swapPending;   				/* 1 = buffer is ready to swap at next idle */
+    int swapPending;   	           /* 1 = buffer is ready to swap at next idle */
+    int frameOpen;                /* Is NVG frame currently open? */
+    int needsDisplay;             /* Dirty flag - needs redraw */
+    int inEventCycle;             /* Currently processing events */
     struct WindowMapping *nextPtr;  /* Next mapping in global linked list */
 } WindowMapping;
 
@@ -270,13 +273,22 @@ typedef struct TkWaylandGCStruct {
  *----------------------------------------------------------------------
  */
 
-typedef struct TkWaylandPixmapStruct {
-    int      imageId; /* NanoVG image ID (type 0) */
-    NVGpaint paint;   /* NanoVG paint (type 1, fallback) */
-    int      width;
-    int      height;
-    int      depth;
-    int      type;    /* 0 = image, 1 = paint */
+typedef struct TkWaylandPixmapImpl {
+    int              type;          /* 0 = window, 1 = pixmap */
+    int              width;
+    int              height;
+    Drawable         drawable;      /* Tk's drawable ID */
+    
+    /* OpenGL FBO resources */
+    GLuint           fbo;           /* Framebuffer object */
+    GLuint           texture;       /* Color attachment */
+    GLuint           stencil;       /* Stencil buffer (for NanoVG) */
+    
+    /* NanoVG frame state */
+    int              frameOpen;     /* Is NVG frame open on this pixmap? */
+    
+    /* Associated window (for context) */
+    WindowMapping   *windowMapping; /* Which window owns this pixmap */
 } TkWaylandPixmapImpl;
 
 /*
@@ -428,6 +440,7 @@ MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDraw
 MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
+int IsPixmap(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------
@@ -442,25 +455,6 @@ MODULE_SCOPE void TkWaylandFreeGC(GC gc);
 MODULE_SCOPE int  TkWaylandGetGCValues(GC gc, unsigned long valuemask, XGCValues *values);
 MODULE_SCOPE int  TkWaylandChangeGC(GC gc, unsigned long valuemask, XGCValues *values);
 MODULE_SCOPE int  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
-
-/*
- *----------------------------------------------------------------------
- *
- * Pixmap Internals
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE Pixmap     TkWaylandCreatePixmap(int width, int height, int depth);
-MODULE_SCOPE void       TkWaylandFreePixmap(Pixmap pixmap);
-MODULE_SCOPE int        TkWaylandGetPixmapImageId(Pixmap pixmap);
-MODULE_SCOPE NVGpaint  *TkWaylandGetPixmapPaint(Pixmap pixmap);
-MODULE_SCOPE int        TkWaylandGetPixmapType(Pixmap pixmap);
-MODULE_SCOPE void       TkWaylandGetPixmapDimensions(Pixmap pixmap, int *width, int *height, int *depth);
-MODULE_SCOPE int        TkWaylandUpdatePixmapImage(Pixmap pixmap, const unsigned char *data);
-MODULE_SCOPE void       TkWaylandCleanupPixmapStore(void);
-MODULE_SCOPE void       TkWaylandSetNVGContext(NVGcontext *vg);
-MODULE_SCOPE NVGcontext *TkWaylandGetPixmapNVGContext(void);
 
 /*
  *----------------------------------------------------------------------
@@ -485,6 +479,10 @@ MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int 
 MODULE_SCOPE void TkWaylandHandleExposeEvents(void);
 MODULE_SCOPE void TkWaylandScheduleSwap(WindowMapping *m);
 void TkWaylandScheduleRender(void);
+MODULE_SCOPE void TkWaylandBeginEventCycle(WindowMapping *m);
+MODULE_SCOPE void TkWaylandEndEventCycle(WindowMapping *m);
+void TkWaylandScheduleDisplay(WindowMapping *m);
+void TkWaylandDisplayProc(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------

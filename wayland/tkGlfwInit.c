@@ -39,6 +39,7 @@ TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, NULL, 0, 0};
 WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
 static DrawableMapping *drawableMappingList = NULL;
+static int shutdownInProgress = 0;
 
 /*
  *----------------------------------------------------------------------
@@ -67,7 +68,10 @@ extern void  TkGlfwSetupCallbacks(GLFWwindow *, TkWindow *);
  */
 
 MODULE_SCOPE TkGlfwContext *
-TkGlfwGetContext(void) { return &glfwContext; }
+TkGlfwGetContext(void)
+{
+    return &glfwContext;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -75,6 +79,7 @@ TkGlfwGetContext(void) { return &glfwContext; }
  * TkGlfwErrorCallback --
  *
  *	GLFW error callback that prints errors to stderr.
+ *	Silences errors during shutdown.
  *
  * Results:
  *	None.
@@ -88,6 +93,9 @@ TkGlfwGetContext(void) { return &glfwContext; }
 MODULE_SCOPE void
 TkGlfwErrorCallback(int error, const char *desc)
 {
+    /* Don't print errors during shutdown. */
+    if (shutdownInProgress) return;
+    
     if (glfwContext.initialized && glfwContext.mainWindow) {
         fprintf(stderr, "GLFW Error %d: %s\n", error, desc);
     }
@@ -100,10 +108,6 @@ TkGlfwErrorCallback(int error, const char *desc)
  *
  *	Initialize the GLFW library, create a shared context window,
  *	initialize Wayland protocols, and create the global NanoVG context.
- *
- *	NanoVG is created exactly once here, immediately after the shared
- *	GL context is made current. All subsequent windows share this
- *	context and this NVGcontext.
  *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
@@ -134,7 +138,6 @@ TkGlfwInitialize(void)
     /*
      * Shared context window - hidden. All application windows
      * share its GL context so textures and shaders are visible across them.
-     * Window must be large enough to allow context to update correctly.
      */
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -166,10 +169,13 @@ TkGlfwInitialize(void)
     /* Load core fonts for decoration text rendering. */
     nvgCreateFont(glfwContext.vg, "sans",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
-    nvgCreateFont(glfwContext.vg, "sans-bold", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
-    nvgCreateFont(glfwContext.vg, "mono", "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf");
+    nvgCreateFont(glfwContext.vg, "sans-bold", 
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
+    nvgCreateFont(glfwContext.vg, "mono", 
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf");
 
     glfwContext.initialized = 1;
+    shutdownInProgress = 0;
     
     Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
     return TCL_OK;
@@ -178,9 +184,10 @@ TkGlfwInitialize(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwShutdown--
+ * TkGlfwShutdown --
  *
  *	Orderly cleanup of GLFW resources on app shutdown.
+ *	Now safely handles both exit command and root window closure.
  *
  * Results:
  *	GLFW is closed.
@@ -194,38 +201,48 @@ TkGlfwInitialize(void)
 MODULE_SCOPE void
 TkGlfwShutdown(TCL_UNUSED(void *))
 {
-    if (!glfwContext.initialized)
+    /* Prevent recursive shutdown. */
+    if (shutdownInProgress) return;
+    shutdownInProgress = 1;
+    
+    if (!glfwContext.initialized) {
+        shutdownInProgress = 0;
         return;
+    }
+
+    /* First, clean up all window mappings (this destroys GLFW windows). */
+    CleanupAllMappings();
+
+    /* Clean up pixmap store. */
+    TkWaylandCleanupPixmapStore();
 
     /* Delete NanoVG while a context still exists. */
     if (glfwContext.vg) {
-        /* Prefer any live window; fall back to the original shared one */
-        WindowMapping *m = TkGlfwGetMappingList();
-        if (m && m->glfwWindow) {
-            glfwMakeContextCurrent(m->glfwWindow);
-        } else if (glfwContext.mainWindow) {
+        /* Make the shared context current if it still exists. */
+        if (glfwContext.mainWindow) {
             glfwMakeContextCurrent(glfwContext.mainWindow);
+            nvgDeleteGLES2(glfwContext.vg);
         }
-        nvgDeleteGLES2(glfwContext.vg);
         glfwContext.vg = NULL;
         TkWaylandSetNVGContext(NULL);
     }
 
-    /* Now safe to destroy windows. */
-    CleanupAllMappings();
-    TkWaylandCleanupPixmapStore();
-
-    /* Destroy the original hidden shared window if it somehow survived. */
+    /* Destroy the original hidden shared window. */
     if (glfwContext.mainWindow) {
         glfwDestroyWindow(glfwContext.mainWindow);
         glfwContext.mainWindow = NULL;
     }
 
+    /* Poll one last time to let GLFW clean up internal state. */
+    glfwPollEvents();
+    
+    /* Terminate GLFW. */
     if (glfwContext.initialized) {
-        glfwPollEvents();
         glfwTerminate();
         glfwContext.initialized = 0;
     }
+    
+    shutdownInProgress = 0;
 }
 
 /*
@@ -239,11 +256,9 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *
  * Results:
  *	Returns the GLFWwindow pointer on success, NULL on failure.
- *	If drawableOut is non-NULL, it is set to the new drawable ID.
  *
  * Side effects:
- *	Creates a new GLFW window, adds it to the window mapping list,
- *	and queues an expose event for the associated Tk window.
+ *	Creates a new GLFW window, adds it to the window mapping list.
  *
  *----------------------------------------------------------------------
  */
@@ -260,6 +275,9 @@ TkGlfwCreateWindow(
     GLFWwindow    *window;
     
     window = NULL;
+
+    /* Don't create windows during shutdown. */
+    if (shutdownInProgress) return NULL;
 
     if (!glfwContext.initialized) {
         if (TkGlfwInitialize() != TCL_OK)
@@ -281,7 +299,6 @@ TkGlfwCreateWindow(
     /*
      * Reuse mainWindow for the first visible window.  NanoVG was created
      * on mainWindow so its GL objects are already present on that context.
-     * Subsequent windows get their own context sharing mainWindow's objects.
      */
     if (glfwContext.mainWindow != NULL) {
         window = glfwContext.mainWindow;
@@ -298,7 +315,7 @@ TkGlfwCreateWindow(
         glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
         window = glfwCreateWindow(width, height, title ? title : "",
-                                  NULL, window);
+                                  NULL, glfwContext.mainWindow); /* Share context */
         if (!window) return NULL;
         glfwShowWindow(window);
     }
@@ -348,6 +365,9 @@ TkGlfwCreateWindow(
     if (tkWin != NULL)
         TkWaylandQueueExposeEvent(tkWin, 0, 0, mapping->width, mapping->height);
 
+    /* Wake up the event loop to process the expose event. */
+    TkWaylandWakeupGLFW();
+
     return window;
 }
 
@@ -357,6 +377,7 @@ TkGlfwCreateWindow(
  * TkGlfwDestroyWindow --
  *
  *	Destroy a GLFW window and clean up associated resources.
+ *	Now safely handles destruction during shutdown.
  *
  * Results:
  *	None.
@@ -371,12 +392,24 @@ MODULE_SCOPE void
 TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 {
     WindowMapping *mapping;
+    
     if (!glfwWindow) return;
+    if (shutdownInProgress) return;  /* Let CleanupAllMappings handle it */
 
     mapping = FindMappingByGLFW(glfwWindow);
-    if (mapping) RemoveMapping(mapping);
+    if (mapping) {
+        /* Mark window as being destroyed */
+        mapping->glfwWindow = NULL;
+        RemoveMapping(mapping);
+    }
 
     glfwDestroyWindow(glfwWindow);
+    
+    /* Check if this was the last window. */
+    if (Tk_GetNumMainWindows() == 0 && !shutdownInProgress) {
+        /* Schedule shutdown via idle callback. */
+        Tcl_DoWhenIdle(TkGlfwShutdown, NULL);
+    }
 }
 
 /*
@@ -398,7 +431,10 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 
 
 MODULE_SCOPE 
-void SyncWindowSize(WindowMapping *m) {
+void SyncWindowSize(WindowMapping *m)
+{
+
+    if (!m || !m->glfwWindow || shutdownInProgress) return;
     int w, h;
     int fbw, fbh;
     glfwGetWindowSize(m->glfwWindow, &w, &h);
@@ -413,25 +449,20 @@ void SyncWindowSize(WindowMapping *m) {
     }
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
  * TkGlfwBeginDraw --
  *
- *	Begin a drawing operation on a drawable.  Makes the window's GL
- *	context current, clears the framebuffer, and opens a NanoVG frame.
- *
- *	Nested calls on the same window are allowed: the inner caller
- *	receives a context marked nestedFrame=1 and must not call
- *	TkGlfwEndDraw (the outer frame owns flush/swap).
+ *      Set up drawing context for either window or pixmap.
  *
  * Results:
- *	TCL_OK on success, TCL_ERROR on failure.
+ *      TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Makes the GL context current, clears the framebuffer, and begins
- *	a NanoVG frame. Updates the drawing context structure with window
- *	dimensions and NanoVG context.
+ *      May open NanoVG frame for pixmap.
+ *      Pushes NanoVG state.
  *
  *----------------------------------------------------------------------
  */
@@ -442,150 +473,154 @@ TkGlfwBeginDraw(
     GC                      gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    WindowMapping *mapping;
-    int fbWidth, fbHeight;
-    int offsetX = 0, offsetY = 0;
-    float pixelRatio;
-
+    WindowMapping           *mapping;
+    TkWaylandPixmapImpl     *pixmap;
+    int                      offsetX = 0, offsetY = 0;
+    
     if (!dcPtr) return TCL_ERROR;
-
-    mapping = FindMappingByDrawable(drawable);
-    if (!mapping || !mapping->glfwWindow) {
-        return TCL_ERROR;
-    }
-
-    /*
-     * If the drawable is not the toplevel's own drawable, the match
-     * came from the child-tree walk.  Find the TkWindow for this
-     * drawable and accumulate its position up to the toplevel so
-     * NanoVG draws in the right place.
-     */
-    if (mapping->drawable != drawable) {
-        TkWindow *tw = mapping->tkWindow;
-        TkWindow *stack[256];
-        int top = 0;
-        TkWindow *found = NULL;
-        if (tw) {
-            stack[top++] = tw;
-            while (top > 0 && !found) {
-                TkWindow *cur = stack[--top];
-                if (cur->window == (Window)drawable) {
-                    found = cur;
-                } else {
-                    TkWindow *child;
-                    for (child = cur->childList; child; child = child->nextPtr)
-                        if (top < 255) stack[top++] = child;
+    
+    /* Check if drawing to pixmap */
+    if (IsPixmap(drawable)) {
+        pixmap = (TkWaylandPixmapImpl *)drawable;
+        mapping = pixmap->windowMapping;
+        
+        if (!mapping || !mapping->glfwWindow) {
+            return TCL_ERROR;
+        }
+        
+        /* Make context current */
+        glfwMakeContextCurrent(mapping->glfwWindow);
+        
+        /* Bind pixmap's FBO */
+        glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
+        
+        /* Set viewport for pixmap */
+        glViewport(0, 0, pixmap->width, pixmap->height);
+        
+        /*
+         * Open NanoVG frame if not already open.
+         * Pixmap frames stay open until explicitly closed or pixmap freed.
+         */
+        if (!pixmap->frameOpen) {
+            /* Don't clear - preserve existing content. */
+            nvgBeginFrame(glfwContext.vg,
+                         (float)pixmap->width,
+                         (float)pixmap->height,
+                         1.0f);  /* Pixel ratio = 1 for pixmaps */
+            
+            /* Set up Y-flip transform. */
+            nvgSave(glfwContext.vg);
+            nvgScale(glfwContext.vg, 1.0f, -1.0f);
+            nvgTranslate(glfwContext.vg, 0.0f, -(float)pixmap->height);
+            nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
+            
+            pixmap->frameOpen = 1;
+        }
+        
+        /* Populate context for pixmap. */
+        dcPtr->drawable   = drawable;
+        dcPtr->glfwWindow = mapping->glfwWindow;
+        dcPtr->width      = pixmap->width;
+        dcPtr->height     = pixmap->height;
+        dcPtr->vg         = glfwContext.vg;
+        dcPtr->offsetX    = 0;
+        dcPtr->offsetY    = 0;
+        dcPtr->nestedFrame = 0;
+        
+    } else {
+        /* Drawing to window - standard path. */
+        mapping = FindMappingByDrawable(drawable);
+        if (!mapping || !mapping->glfwWindow) {
+            return TCL_ERROR;
+        }
+        
+        /*
+         * Frame should already be open.
+         * If not, it means widget is drawing outside event cycle.
+         * Open frame temporarily (will be closed by idle callback).
+         */
+        if (!mapping->frameOpen) {
+            TkWaylandBeginEventCycle(mapping);
+        }
+        
+        /* Calculate child window offset (same as before). */
+        if (mapping->drawable != drawable) {
+            TkWindow *tw = mapping->tkWindow;
+            TkWindow *stack[256];
+            int top = 0;
+            TkWindow *found = NULL;
+            
+            if (tw) {
+                stack[top++] = tw;
+                while (top > 0 && !found) {
+                    TkWindow *cur = stack[--top];
+                    if (cur->window == (Window)drawable) {
+                        found = cur;
+                    } else {
+                        TkWindow *child;
+                        for (child = cur->childList; child; child = child->nextPtr)
+                            if (top < 255) stack[top++] = child;
+                    }
+                }
+            }
+            
+            if (found) {
+                TkWindow *tw2 = found;
+                while (tw2 && tw2->window != (Window)mapping->drawable) {
+                    offsetX += tw2->changes.x + tw2->changes.border_width;
+                    offsetY += tw2->changes.y + tw2->changes.border_width;
+                    tw2 = tw2->parentPtr;
                 }
             }
         }
-        if (found) {
-            TkWindow *tw2 = found;
-            while (tw2 && tw2->window != (Window)mapping->drawable) {
-                offsetX += tw2->changes.x + tw2->changes.border_width;
-                offsetY += tw2->changes.y + tw2->changes.border_width;
-                tw2 = tw2->parentPtr;
-            }
-        }
+        
+        /* Populate context for window. */
+        dcPtr->drawable   = drawable;
+        dcPtr->glfwWindow = mapping->glfwWindow;
+        dcPtr->width      = mapping->width;
+        dcPtr->height     = mapping->height;
+        dcPtr->vg         = glfwContext.vg;
+        dcPtr->offsetX    = offsetX;
+        dcPtr->offsetY    = offsetY;
+        dcPtr->nestedFrame = 0;
     }
-
-    /* Populate common fields regardless of nesting. */
-    dcPtr->drawable    = drawable;
-    dcPtr->glfwWindow  = mapping->glfwWindow;
-    dcPtr->width       = mapping->width;
-    dcPtr->height      = mapping->height;
-    dcPtr->vg          = glfwContext.vg;
-    dcPtr->offsetX     = offsetX;
-    dcPtr->offsetY     = offsetY;
-    dcPtr->nestedFrame = 0;
-
-    /*
-     * If a frame is already open on this window, nest inside it.
-     * The framebuffer has already been cleared; just apply the GC
-     * and push a save for symmetric restore in EndDraw. Do not
-     * translate coordinates as that has already been done in the parent
-     * frame.
-     */
-    if (glfwContext.nvgFrameActive &&
-            glfwContext.activeWindow == mapping->glfwWindow) {
-        dcPtr->nestedFrame = 1;
-        nvgSave(glfwContext.vg);
-        if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
-        return TCL_OK;
-    }
-
-    /*
-     * A frame is active on a different window — flush it first.
-     */
-    if (glfwContext.nvgFrameActive) {
-        nvgEndFrame(glfwContext.vg);
-        WindowMapping *prev = FindMappingByGLFW(glfwContext.activeWindow);
-        if (prev) {
-            prev->swapPending = 1;
-            TkWaylandScheduleSwap(prev);
-        }
-        glfwContext.nvgFrameActive = 0;
-        glfwContext.activeWindow   = NULL;
-    }
-
-
-    /* Make main context current for NanoVG drawing. */
-    glfwMakeContextCurrent(mapping->glfwWindow);
-    glfwGetFramebufferSize(mapping->glfwWindow, &fbWidth, &fbHeight);
-    SyncWindowSize(mapping);
-    glViewport(0, 0, fbWidth, fbHeight);
-    pixelRatio = (float)fbWidth / (float)mapping->width;
-
-    /*
-     * Always clear at the start of a new frame.  Widgets fill their
-     * own backgrounds so the clear color is only visible in gaps.
-     */
-    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    mapping->clearPending = 0;
-
-    /* Begin NanoVG frame. */
-    nvgBeginFrame(glfwContext.vg,
-                  (float)mapping->width,
-                  (float)mapping->height,
-                  pixelRatio); 
-
-    /*
-     * Push save 1: coordinate transform.
-     * Flip Y so origin is top-left, matching Tk's coordinate system.
-     * Push save 2: child offset (always pushed for symmetric restore).
-     * EndDraw unconditionally pops both.
-     */
-
-    nvgSave(glfwContext.vg);
-    nvgScale(glfwContext.vg, 1.0f, -1.0f);
-    nvgTranslate(glfwContext.vg, 0.0f, -(float)mapping->height);
-    nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
     
-    glfwContext.nvgFrameActive = 1;
-    glfwContext.activeWindow   = mapping->glfwWindow;
-
+    /*
+     * Push NanoVG state and apply transforms.
+     * This is the ONLY state management in BeginDraw.
+     * No frame opening, no clearing - just state.
+     */
     nvgSave(glfwContext.vg);
-    if (offsetX != 0 || offsetY != 0)
-        nvgTranslate(glfwContext.vg, (float)offsetX, (float)offsetY);
-
-    if (gc) TkGlfwApplyGC(glfwContext.vg, gc);
-
+    
+    /* Apply child offset. */
+    if (dcPtr->offsetX != 0 || dcPtr->offsetY != 0) {
+        nvgTranslate(glfwContext.vg, 
+                    (float)dcPtr->offsetX, 
+                    (float)dcPtr->offsetY);
+    }
+    
+    /* Apply GC settings (color, line width, etc.) */
+    if (gc) {
+        TkGlfwApplyGC(glfwContext.vg, gc);
+    }
+    
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------
  *
  * TkGlfwEndDraw --
  *
- *	End a drawing operation. Ends the NanoVG frame and swaps buffers.
- *	No-ops for nested frames.
+ *      End a drawing operation.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Ends the NanoVG frame and swaps buffers for non-nested frames.
+ *      Pops NanoVG state.
+ *      Unbinds pixmap FBO if drawing to pixmap.
  *
  *----------------------------------------------------------------------
  */
@@ -593,39 +628,47 @@ TkGlfwBeginDraw(
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    WindowMapping *m;
-
+    TkWaylandPixmapImpl *pixmap;
+    
     if (!dcPtr || !dcPtr->vg) return;
-
-    if (dcPtr->nestedFrame) {
-        nvgRestore(dcPtr->vg);
-        return;
-    }
-
-    /* Pop save 2 (child offset) and save 1 (coordinate transform). */
+    
+    /* Just restore NanoVG state. */
     nvgRestore(dcPtr->vg);
-    nvgRestore(dcPtr->vg);
-
-    nvgEndFrame(dcPtr->vg);
-
-    glfwContext.nvgFrameActive = 0;
-    glfwContext.activeWindow   = NULL;
-
-    m = FindMappingByGLFW(dcPtr->glfwWindow);
-    if (m) {
-        m->swapPending = 1;
-        TkWaylandScheduleSwap(m);
+    
+    /*
+     * If we were drawing to a pixmap, unbind its FBO.
+     * Leave the NanoVG frame open on the pixmap.
+     */
+    if (IsPixmap(dcPtr->drawable)) {
+        pixmap = (TkWaylandPixmapImpl *)dcPtr->drawable;
+        
+        /* Unbind FBO - restore default framebuffer. */
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        
+        /*
+         * DO NOT close the pixmap's NanoVG frame!
+         * It stays open until:
+         * 1. Pixmap is copied to window (XCopyArea)
+         * 2. Pixmap is freed (Tk_FreePixmap)
+         * 3. Another pixmap needs the NanoVG context
+         */
     }
+    
+    /*
+     * For windows:
+     * NO nvgEndFrame!
+     * NO swap scheduling!
+     * The frame stays open until TkWaylandEndEventCycle.
+     */
 }
+
 
 /*
  *----------------------------------------------------------------------
  *
  * TkGlfwGetNVGContext --
  *
- *	Return the global NanoVG context.  Callers that need to do font
- *	measurement outside a BeginDraw/EndDraw pair must ensure a GL
- *	context is current themselves (use TkGlfwGetNVGContextForMeasure).
+ *	Return the global NanoVG context.
  *
  * Results:
  *	The NVGcontext pointer, or NULL if not yet initialized.
@@ -639,7 +682,8 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContext(void)
 {
-    return glfwContext.initialized ? glfwContext.vg : NULL;
+    return (glfwContext.initialized && !shutdownInProgress) ? 
+            glfwContext.vg : NULL;
 }
 
 /*
@@ -662,7 +706,8 @@ TkGlfwGetNVGContext(void)
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContextForMeasure(void)
 {
-    if (!glfwContext.initialized || !glfwContext.vg) return NULL;
+    if (!glfwContext.initialized || !glfwContext.vg || shutdownInProgress) 
+        return NULL;
     if (!glfwGetCurrentContext())
         glfwMakeContextCurrent(glfwContext.mainWindow);
     return glfwContext.vg;
@@ -687,7 +732,7 @@ TkGlfwGetNVGContextForMeasure(void)
 MODULE_SCOPE void
 TkGlfwProcessEvents(void)
 {
-    if (glfwContext.initialized) {
+    if (glfwContext.initialized && !shutdownInProgress) {
         glfwPollEvents();
     }
 }
@@ -767,7 +812,9 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
 {
     XGCValues v;
     NVGcolor  c;
-    if (!vg || !gc) return;
+    
+    if (!vg || !gc || shutdownInProgress) return;
+      
     TkWaylandGetGCValues(gc,
                          GCForeground|GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle, &v);
     c = TkGlfwPixelToNVG(v.foreground);
@@ -882,12 +929,19 @@ TkpDisplayWarning(const char *msg, const char *title)
 /*
  *----------------------------------------------------------------------
  *
- * Functions to query various WindowMapping details. 
+ * FindMappingbyGLFW --
+ *
+ *	Searches the windowMappingList by native GLFW window handle.
+ *
+ * Results:
+ *	Retrieves mapping entry. 
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
-/* GLFW native window/mapping. */
 WindowMapping *
 FindMappingByGLFW(GLFWwindow *w)
 {
@@ -896,7 +950,22 @@ FindMappingByGLFW(GLFWwindow *w)
     return NULL;
 }
 
-/* Find a window mapping by Tk window pointer. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * FindMappingbyTk --
+ *
+ *	Searches the windowMappingList by Tk window pointer.
+ *
+ * Results:
+ *	Retrieves mapping entry. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 WindowMapping *
 FindMappingByTk(TkWindow *w)
 {
@@ -905,7 +974,22 @@ FindMappingByTk(TkWindow *w)
     return NULL;
 }
 
-/* Find a mapping from the Drawable surface. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * FindMappingbyDrawable --
+ *
+ *	Searches the windowMappingList by Drawable.
+ *
+ * Results:
+ *	Retrieves mapping entry. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 WindowMapping *
 FindMappingByDrawable(Drawable d)
 {
@@ -968,14 +1052,44 @@ FindMappingByDrawable(Drawable d)
     return NULL;
 }
 
-/* Retrieve mapping list. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwGetMappingList --
+ *
+ *	Retrieves the entire windowMappingList. 
+ *
+ * Results:
+ *	Returns list. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 WindowMapping *
 TkGlfwGetMappingList(void)
 {
     return windowMappingList;
 }
 
-/* Add mappings. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * AddMapping  --
+ *
+ *	Add an entry to the windowMappingList.
+ *
+ * Results:
+ *	Entry is added. 
+ *
+ * Side effects:
+ *	None. 
+ *
+ *----------------------------------------------------------------------
+ */
+
 void
 AddMapping(WindowMapping *m)
 {
@@ -985,7 +1099,21 @@ AddMapping(WindowMapping *m)
 }
 
 
-/* Delete mappings. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemoveMappings --
+ *
+ *  Remove an entry from the windowMappingList. 
+ *
+ * Results:
+ *	Entry is added. 
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
 void
 RemoveMapping(WindowMapping *m)
 {
@@ -1009,7 +1137,23 @@ RemoveMapping(WindowMapping *m)
     }
 }
 
-/* Teardown of mappings. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * CleanupAllMappings --
+ *
+ *	Destroy all GLFW windows and free mapping structures.
+ *	Called during shutdown.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	All GLFW windows are destroyed and mappings freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
 void
 CleanupAllMappings(void)
 {
@@ -1027,7 +1171,22 @@ CleanupAllMappings(void)
     windowMappingList = NULL;
 }
 
-/* Add drawable to mapping list. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * RegisterDrawableForMapping --
+ *
+ *	Adds a Drawable to the windowMappingList.
+ *
+ * Results:
+ *	Entry added. 
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 void
 RegisterDrawableForMapping(Drawable d, WindowMapping *m)
 {
@@ -1038,10 +1197,19 @@ RegisterDrawableForMapping(Drawable d, WindowMapping *m)
     drawableMappingList = dm;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
- * Miscellaneous accessors
+ * TkGlfwGetGLFWWindow --
+ *
+ *	Retrieves the GLFW window associated with a Tk window.
+ *
+ * Results:
+ *	Window pointer returned.
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -1053,12 +1221,44 @@ TkGlfwGetGLFWWindow(Tk_Window tkwin)
     return m ? m->glfwWindow : NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwGetDrawable --
+ *
+ *	Retrieves the Drawable associated with a GLFW window.
+ *
+ * Results:
+ *	Window pointer returned.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE Drawable
 TkGlfwGetDrawable(GLFWwindow *w)
 {
     WindowMapping *m = FindMappingByGLFW(w);
     return m ? m->drawable : 0;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwResizeWindow --
+ *
+ *	Resizes a GLFW window.
+ *
+ * Results:
+ *	Window dimensions updated.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 MODULE_SCOPE void
 TkGlfwResizeWindow(GLFWwindow *w, int width, int height)
@@ -1067,6 +1267,23 @@ TkGlfwResizeWindow(GLFWwindow *w, int width, int height)
     if (m) { m->width = width; m->height = height; }
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwUpdateWindowSize --
+ *
+ *	Updates the side of a GLFW window.
+ *
+ * Results:
+ *	Window dimensions updated.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE void
 TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
 {
@@ -1074,12 +1291,45 @@ TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
     if (m) { m->width = width; m->height = height; }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwGetWindowFromDrawable --
+ *
+ *	Retrieves the GLFW window associated with a Drawable.
+ *
+ * Results:
+ *	Window pointer returned.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE GLFWwindow *
 TkGlfwGetWindowFromDrawable(Drawable drawable)
 {
     WindowMapping *m = FindMappingByDrawable(drawable);
     return m ? m->glfwWindow : NULL;
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwGetTkWindow --
+ *
+ *	Retrieves the Tk window associated with a GLFW window.
+ *
+ * Results:
+ *	Window pointer returned.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 MODULE_SCOPE TkWindow *
 TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
