@@ -472,7 +472,7 @@ TkGlfwBeginDraw(
     
     if (!dcPtr) return TCL_ERROR;
     
-    /* Check if drawing to pixmap */
+    /* Check if drawing to pixmap. */
     if (IsPixmap(drawable)) {
         pixmap = (TkWaylandPixmapImpl *)drawable;
         mapping = pixmap->windowMapping;
@@ -481,10 +481,10 @@ TkGlfwBeginDraw(
             return TCL_ERROR;
         }
         
-        /* Make context current */
+        /* Make context current. */
         glfwMakeContextCurrent(mapping->glfwWindow);
         
-        /* Bind pixmap's FBO */
+        /* Bind pixmap's FBO. */
         glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
         
         /* Set viewport for pixmap */
@@ -500,12 +500,13 @@ TkGlfwBeginDraw(
                          (float)pixmap->width,
                          (float)pixmap->height,
                          1.0f);  /* Pixel ratio = 1 for pixmaps */
-            
+            #if 0
             /* Set up Y-flip transform. */
             nvgSave(glfwContext.vg);
             nvgScale(glfwContext.vg, 1.0f, -1.0f);
             nvgTranslate(glfwContext.vg, 0.0f, -(float)pixmap->height);
             nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
+            #endif
             
             pixmap->frameOpen = 1;
         }
@@ -532,10 +533,15 @@ TkGlfwBeginDraw(
          * If not, it means widget is drawing outside event cycle.
          * Open frame temporarily (will be closed by idle callback).
          */
-        if (!mapping->frameOpen) {
-            TkWaylandBeginEventCycle(mapping);
-        }
-        
+     if (!mapping->frameOpen) {
+		TkWaylandBeginEventCycle(mapping);
+	}
+    
+	if (!mapping->needsDisplay) {
+		mapping->needsDisplay = 1;
+		Tcl_DoWhenIdle(TkWaylandDisplayProc, mapping);
+	}
+    
         /* Calculate child window offset (same as before). */
         if (mapping->drawable != drawable) {
             TkWindow *tw = mapping->tkWindow;
@@ -860,6 +866,7 @@ TkpInit(Tcl_Interp *interp)
     SysNotify_Init(interp);
     Cups_Init(interp);
     TkWaylandAccessibility_Init(interp);
+  
     return TCL_OK;
 }
 
