@@ -28,7 +28,6 @@ typedef struct ThreadSpecificData {
     int            wakeupFd;           /* eventfd for waking up GLFW polling */
     Tcl_FileProc   *watchProc;         /* stored for cleanup */
     Tcl_TimerToken heartbeatTimer;     /* fallback timer */
-    bool           renderPending;
     bool           shutdownInProgress; /* flag to prevent recursive shutdown */
 } ThreadSpecificData;
 
@@ -41,13 +40,8 @@ static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
 static void HeartbeatTimerProc(void *clientData);
-static void TkWaylandRenderIdleProc(void *clientData);
-static void TkWaylandSwapIdleProc(void *clientData);
 static void TkWaylandWakeupFileProc(void *clientData, int mask);
-static int  TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags);
 static void TkWaylandCheckForWindowClosure(void);
-
-void TkWaylandScheduleRender(void);
 
 #define HEARTBEAT_INTERVAL 16   /* ms - fallback when file events not working */
 
@@ -88,7 +82,6 @@ Tk_WaylandSetupTkNotifier(void)
         }
 
         tsdPtr->initialized   = true;
-        tsdPtr->renderPending = false;
         tsdPtr->shutdownInProgress = false;
 
         /* Create the Tcl event source. */
@@ -108,6 +101,9 @@ Tk_WaylandSetupTkNotifier(void)
 
         TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
+    
+        /* Wake up the event loop. */
+        TkWaylandWakeupGLFW();
 }
 
 /*
@@ -135,6 +131,7 @@ TkWaylandWakeupFileProc(TCL_UNUSED(void *),
 {
     TSD_INIT();
     uint64_t u;
+    WindowMapping *m;
     
     if (tsdPtr->wakeupFd == -1) return;
     
@@ -147,10 +144,16 @@ TkWaylandWakeupFileProc(TCL_UNUSED(void *),
     if (glfwContext.initialized && !tsdPtr->shutdownInProgress) {
         glfwPollEvents();
         TkWaylandCheckForWindowClosure();
-        TkWaylandScheduleRender();
+        
+        /* Begin event cycle for main window */
+        if (glfwContext.mainWindow) {
+            m = FindMappingByGLFW(glfwContext.mainWindow);
+            if (m && !m->frameOpen) {
+                TkWaylandBeginEventCycle(m);
+            }
+        }
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -184,136 +187,7 @@ TkWaylandCheckForWindowClosure(void)
     }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandScheduleRender --
- *
- *      Schedules redraws of widgets at idle events.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Redraws scheduled.
- *
- *----------------------------------------------------------------------
- */
- 
-void
-TkWaylandScheduleRender(void)
-{
-    TSD_INIT();
 
-    if (!tsdPtr->renderPending && tsdPtr->initialized && 
-        !tsdPtr->shutdownInProgress) {
-        tsdPtr->renderPending = true;
-        Tcl_DoWhenIdle(TkWaylandRenderIdleProc, NULL);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandRenderIdleProc --
- *
- *      Runs once per Tcl idle cycle. Sets clearPending on every mapped
- *      window so the first BeginDraw this tick clears the framebuffer,
- *      then drains window events so widget display procedures run.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Widget display procedures run.
- *
- *----------------------------------------------------------------------
- */
- 
-static void
-TkWaylandRenderIdleProc(TCL_UNUSED(void *))
-{
-    WindowMapping *m;
-    TkGlfwContext *ctx = TkGlfwGetContext();
-    TSD_INIT();
-
-    if (!ctx || !ctx->initialized || tsdPtr->shutdownInProgress) return;
-
-    WindowMapping *list = TkGlfwGetMappingList();
-    if (!list) return;
-
-    /* Prime per-window clear flag. */
-    for (m = list; m != NULL; m = m->nextPtr) {
-        if (m->glfwWindow && m->width > 1 && m->height > 1) {
-            m->clearPending = 1;
-        }
-    }
-    
-    /* Process widget display procedures. */
-    Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_ALL_EVENTS | TCL_DONT_WAIT);
-
-    /* Reset renderPending ONLY AFTER event processing is complete. */
-    tsdPtr->renderPending = false;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandSwapIdleProc --
- *
- *      Swaps GLFW buffers, a key part of drawing. 
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Buffers swapped and drawing can take place. 
- *
- *----------------------------------------------------------------------
- */
- 
-static void
-TkWaylandSwapIdleProc(void *clientData)
-{
-    WindowMapping *m = (WindowMapping *)clientData;
-    TSD_INIT();
-
-    if (!m || !m->glfwWindow || !m->swapPending || tsdPtr->shutdownInProgress) 
-        return;
-        
-    m->swapPending = 0;
-    glfwMakeContextCurrent(m->glfwWindow);
-    glfwSwapBuffers(m->glfwWindow);
-    
-    /* Restore context to main window if it exists. */
-    if (glfwContext.mainWindow && glfwContext.initialized) {
-        glfwMakeContextCurrent(glfwContext.mainWindow);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandScheduleSwap--
- *
- *      Schedules a GLFW buffer swap to run as an idle handler. 
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Process runs. 
- *
- *----------------------------------------------------------------------
- */
- 
-MODULE_SCOPE void
-TkWaylandScheduleSwap(WindowMapping *m)
-{
-    if (m && m->swapPending) {
-        Tcl_DoWhenIdle(TkWaylandSwapIdleProc, m);
-    }
-}
 
 /*
  *----------------------------------------------------------------------
@@ -353,7 +227,6 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
     /* Poll GLFW events. */
     if (glfwContext.initialized) {
         glfwPollEvents();
-        TkWaylandScheduleRender();
     }
     
     /* Reschedule timer if still initialized and not shutting down. */
@@ -424,8 +297,7 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
  *      None.
  *
  * Side effects:
- *      Calls TkWaylandScheduleRender() to process window events when window
- *      events are requested.
+ *      Begins the event cycle for the main window to enable rendering.
  *
  *----------------------------------------------------------------------
  */
@@ -434,16 +306,27 @@ static void
 TkWaylandEventsCheckProc(TCL_UNUSED(void *), int flags) 
 {
     TSD_INIT();
+    WindowMapping *m;
     
     if (tsdPtr->shutdownInProgress) return;
     
     if (!(flags & TCL_WINDOW_EVENTS)) return;
     if (!glfwContext.initialized)    return;
     
-    /* Polling may have been done by file handler or timer. */
-    TkWaylandScheduleRender();
+    /* Find the main window or first available window and begin its event cycle. */
+    if (glfwContext.mainWindow) {
+        m = FindMappingByGLFW(glfwContext.mainWindow);
+        if (m && !m->frameOpen) {
+            TkWaylandBeginEventCycle(m);
+        }
+    } else {
+        /* If no main window, try the first window in the list. */
+        m = windowMappingList;
+        if (m && !m->frameOpen) {
+            TkWaylandBeginEventCycle(m);
+        }
+    }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -477,10 +360,6 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
         tsdPtr->shutdownInProgress = 2; /* Mark as final shutdown. */
     }
 
-    /* Cancel all pending idle callbacks */
-    Tcl_CancelIdleCall(TkWaylandRenderIdleProc, NULL);
-    Tcl_CancelIdleCall(TkWaylandSwapIdleProc, NULL);
-
     /* Delete timer handler */
     if (tsdPtr->heartbeatTimer) {
         Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
@@ -499,71 +378,8 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
                           TkWaylandEventsCheckProc, NULL);
 
     tsdPtr->initialized = false;
-    tsdPtr->renderPending = false;
     
     /* Note: We don't call TkGlfwShutdown here. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandExposeEventProc --
- *
- *      Tcl event procedure that handles a single queued expose event.
- *      Installed as a Tcl event handler via Tcl_QueueEvent.
- *
- * Results:
- *      1 if event was processed.
- *
- * Side effects:
- *      Draws the window content using NanoVG.
- *
- *----------------------------------------------------------------------
- */
- 
-static int
-TkWaylandExposeEventProc(Tcl_Event *evPtr, int flags)
-{
-    TkWaylandExposeEvent *exposePtr = (TkWaylandExposeEvent *)evPtr;
-    WindowMapping        *mapping;
-
-    if (!(flags & TCL_WINDOW_EVENTS)) return 0;
-    if (exposePtr->winPtr == NULL)    return 1;
-
-    mapping = FindMappingByTk(exposePtr->winPtr);
-    if (mapping && mapping->width > 1 && mapping->height > 1) {
-        exposePtr->winPtr->changes.width  = mapping->width;
-        exposePtr->winPtr->changes.height = mapping->height;
-        exposePtr->xEvent.xexpose.width   = mapping->width;
-        exposePtr->xEvent.xexpose.height  = mapping->height;
-    }
-
-    Tk_HandleEvent(&exposePtr->xEvent);
-    return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandHandleExposeEvents --
- *
- *      Called after glfwPollEvents(). Routes any Expose XEvents that
- *      were queued by GLFW callbacks through the NanoVG frame lifecycle
- *      by re-queuing them as Tcl events.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Processes expose events.
- *
- *----------------------------------------------------------------------
- */
- 
-void
-TkWaylandHandleExposeEvents(void)
-{
-    TkWaylandScheduleRender();
 }
 
 /*
