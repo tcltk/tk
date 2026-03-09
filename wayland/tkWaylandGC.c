@@ -394,7 +394,7 @@ Tk_GetPixmap(
     /* Allocate pixmap structure. */
     pixmap = (TkWaylandPixmapImpl *)ckalloc(sizeof(TkWaylandPixmapImpl));
     memset(pixmap, 0, sizeof(TkWaylandPixmapImpl));
-    
+    pixmap->magic 		  = TK_WAYLAND_PIXMAP_MAGIC; 
     pixmap->type          = 1;  /* Pixmap, not window */
     pixmap->width         = width;
     pixmap->height        = height;
@@ -534,9 +534,14 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
 int
 IsPixmap(Drawable drawable)
 {
-    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)drawable;
+    if (!drawable) return 0;
     
-    if (!impl) return 0;
+    /* Window IDs are small integers - cast to uintptr_t for comparison. */
+    if ((uintptr_t)drawable < 0x1000000) {
+        return 0;
+    }
+    
+    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)drawable;
     
     /* Check type field and validate dimensions */
     if (impl->type == 1 &&
