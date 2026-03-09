@@ -35,7 +35,7 @@
  *----------------------------------------------------------------------
  */
 
-TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, NULL, 0, 0};
+TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, NULL, 0, 0, NULL};
 WindowMapping *windowMappingList = NULL;
 static Drawable       nextDrawableId   = 1000;
 static DrawableMapping *drawableMappingList = NULL;
@@ -49,8 +49,6 @@ static int shutdownInProgress = 0;
  *----------------------------------------------------------------------
  */
 
-extern void  TkWaylandSetNVGContext(NVGcontext *);
-extern void  TkWaylandCleanupPixmapStore(void);
 extern int   TkWaylandGetGCValues(GC, unsigned long, XGCValues *);
 extern void  TkWaylandMenuInit(void);
 extern void  Tk_WaylandSetupTkNotifier(void);
@@ -164,7 +162,6 @@ TkGlfwInitialize(void)
         glfwTerminate();
         return TCL_ERROR;
     }
-    TkWaylandSetNVGContext(glfwContext.vg);
 
     /* Load core fonts for decoration text rendering. */
     nvgCreateFont(glfwContext.vg, "sans",
@@ -213,9 +210,6 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     /* First, clean up all window mappings (this destroys GLFW windows). */
     CleanupAllMappings();
 
-    /* Clean up pixmap store. */
-    TkWaylandCleanupPixmapStore();
-
     /* Delete NanoVG while a context still exists. */
     if (glfwContext.vg) {
         /* Make the shared context current if it still exists. */
@@ -224,7 +218,6 @@ TkGlfwShutdown(TCL_UNUSED(void *))
             nvgDeleteGLES2(glfwContext.vg);
         }
         glfwContext.vg = NULL;
-        TkWaylandSetNVGContext(NULL);
     }
 
     /* Destroy the original hidden shared window. */
@@ -627,10 +620,10 @@ TkGlfwBeginDraw(
 
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
-{
-    TkWaylandPixmapImpl *pixmap;
-    
+{    
     if (!dcPtr || !dcPtr->vg) return;
+    
+	TkWaylandPixmapImpl *pixmap;
     
     /* Just restore NanoVG state. */
     nvgRestore(dcPtr->vg);
