@@ -623,17 +623,14 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {    
     if (!dcPtr || !dcPtr->vg) return;
     
-	TkWaylandPixmapImpl *pixmap;
-    
     /* Just restore NanoVG state. */
-    nvgRestore(dcPtr->vg);
+    nvgRestore(dcPtr->vg); 
     
     /*
      * If we were drawing to a pixmap, unbind its FBO.
      * Leave the NanoVG frame open on the pixmap.
      */
     if (IsPixmap(dcPtr->drawable)) {
-        pixmap = (TkWaylandPixmapImpl *)dcPtr->drawable;
         
         /* Unbind FBO - restore default framebuffer. */
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
