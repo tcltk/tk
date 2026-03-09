@@ -31,7 +31,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 
-
+extern TkGlfwContext  glfwContext;
 
 /* -----------------------------------------------------------------------
  * Display / screen initialization.
@@ -380,8 +380,6 @@ Tk_GetPixmap(
     GLint                oldFBO;
     GLenum               status;
     
-    (void)display;
-    (void)depth;  /* NanoVG always uses 32-bit RGBA */
     
     if (width <= 0 || height <= 0) {
         return None;
@@ -490,8 +488,6 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
 {
     TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)pixmap;
     
-    (void)display;
-    
     if (!impl || impl->type != 1) return;
     
     /* Make context current for GL cleanup. */
@@ -515,9 +511,6 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
     if (impl->stencil) {
         glDeleteRenderbuffers(1, &impl->stencil);
     }
-    
-    /* Unregister from drawable mapping. */
-    UnregisterDrawable(pixmap);
     
     ckfree((char *)impl);
 }
@@ -792,6 +785,7 @@ XCopyGC(
  *----------------------------------------------------------------------
  */
 
+Pixmap
 XCreatePixmap(
     Display *display,
     Drawable parent,
@@ -823,7 +817,7 @@ XFreePixmap(
     TCL_UNUSED(Display *),
     Pixmap pixmap)
 {
-    Tk_FreePixmap(pixmap);
+    Tk_FreePixmap(NULL, pixmap);
     return Success;
 }
 

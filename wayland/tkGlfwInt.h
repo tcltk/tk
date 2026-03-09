@@ -26,36 +26,6 @@
 /*
  *----------------------------------------------------------------------
  *
- * Core Context Structure
- *
- *	Global state for the GLFW/Wayland backend.
- *	This structure holds the shared GL context window, the global
- *	NanoVG context, and state tracking for nested drawing operations.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct TkGlfwContext {
-    GLFWwindow *mainWindow;      /* Hidden shared context window - all
-                                   * application windows share this context */
-    NVGcontext *vg;               /* Global NanoVG context - created once
-                                   * and shared by all windows */
-    int initialized;              /* GLFW initialized flag - 1 if glfwInit()
-                                   * has been called successfully */
-    int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
-                                   * currently active */
-    GLFWwindow *activeWindow;     /* Window that has the current active
-                                   * NanoVG frame (if any) */
-    int fbWidth;                  /* Framebuffer width of mainWindow
-                                   * (cached for performance) */
-    int fbHeight;                 /* Framebuffer height of mainWindow
-                                   * (cached for performance) */
-    WindowMapping *activeFrame;      /* Which window has open frame */
-} TkGlfwContext;
-
-/*
- *----------------------------------------------------------------------
- *
  * Window Mapping Structure
  *
  *	Maps between Tk windows, GLFW windows, and drawable IDs.
@@ -109,6 +79,36 @@ typedef struct DrawableMapping {
                                    * that owns this drawable */
     struct DrawableMapping *next;   /* Next in global linked list */
 } DrawableMapping;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Core Context Structure
+ *
+ *	Global state for the GLFW/Wayland backend.
+ *	This structure holds the shared GL context window, the global
+ *	NanoVG context, and state tracking for nested drawing operations.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct TkGlfwContext {
+    GLFWwindow *mainWindow;      /* Hidden shared context window - all
+                                   * application windows share this context */
+    NVGcontext *vg;               /* Global NanoVG context - created once
+                                   * and shared by all windows */
+    int initialized;              /* GLFW initialized flag - 1 if glfwInit()
+                                   * has been called successfully */
+    int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
+                                   * currently active */
+    GLFWwindow *activeWindow;     /* Window that has the current active
+                                   * NanoVG frame (if any) */
+    int fbWidth;                  /* Framebuffer width of mainWindow
+                                   * (cached for performance) */
+    int fbHeight;                 /* Framebuffer height of mainWindow
+                                   * (cached for performance) */
+    WindowMapping *activeFrame;      /* Which window has open frame */
+} TkGlfwContext;
 
 /*
  *----------------------------------------------------------------------
@@ -483,6 +483,8 @@ MODULE_SCOPE void TkWaylandBeginEventCycle(WindowMapping *m);
 MODULE_SCOPE void TkWaylandEndEventCycle(WindowMapping *m);
 void TkWaylandScheduleDisplay(WindowMapping *m);
 void TkWaylandDisplayProc(ClientData clientData);
+MODULE_SCOPE void TkWaylandWakeupGLFW(void);
+
 
 /*
  *----------------------------------------------------------------------

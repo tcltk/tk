@@ -22,7 +22,11 @@
 #include "tkGlfwInt.h"
 
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <nanovg.h>
+#include "nanovg_gl.h"
+
+#define NANOVG_GLES2  
 
 /*
  * Undefine X11 macro that conflicts with our implementation.
@@ -32,6 +36,8 @@
 #ifdef XDestroyImage
 #undef XDestroyImage
 #endif
+
+extern TkGlfwContext  glfwContext;
 
 /*
  *----------------------------------------------------------------------
@@ -81,9 +87,13 @@ static NVGImageData* CreateNVGImageFromDrawableRect(
     unsigned int width, unsigned int height);
 static XImage* TkWaylandCreateXImageWithNVGImage(
     NVGcontext* vg, NVGImageData* nvgImage, Display* display);
-static int XCopyArea_WithTempPixmap(
-    Drawable  src, Drawable dst, GC gc,int src_x, int src_y, unsigned width,
-    unsigned height, int dst_x, int dst_y);
+static int XCopyArea_PixmapToPixmap(
+    TkWaylandPixmapImpl *srcPixmap, TkWaylandPixmapImpl *dstPixmap, GC gc,
+    int src_x, int src_y,unsigned width, unsigned height, int dst_x, int dst_y);
+static int XCopyArea_PixmapToWindow(
+    TkWaylandPixmapImpl *srcPixmap,Drawable dst,
+    GC gc, int src_x, int src_y, unsigned width, unsigned height,
+    int dst_x, int dst_y);
 
 /*
  *----------------------------------------------------------------------
@@ -337,136 +347,7 @@ XGetImage(
 
 int
 XCopyArea(
-	  TCL_UNUSED(Display *), 
-	  Drawable  src,
-	  Drawable  dst,
-	  TCL_UNUSED(GC),
-	  int       src_x, int src_y,
-	  unsigned  width, unsigned height,
-	  int       dst_x, int dst_y)
-{
-    WindowMapping *srcMapping = NULL;
-    WindowMapping *dstMapping = NULL;
-    TkWaylandPixmapImpl *srcPixmap = NULL;
-    TkWaylandPixmapImpl *dstPixmap = NULL;
-    
-    /* Determine source type. */
-    if (IsPixmap(src)) {
-        srcPixmap = (TkWaylandPixmapImpl *)src;
-    } else {
-        srcMapping = FindMappingByDrawable(src);
-    }
-    
-    /* Determine destination type. */
-    if (IsPixmap(dst)) {
-        dstPixmap = (TkWaylandPixmapImpl *)dst;
-    } else {
-        dstMapping = FindMappingByDrawable(dst);
-    }
-
-    /*
-     * Copy Pixmap to a Window - blitting cached content. 
-     */
-    if (srcPixmap && dstMapping) {
-        /* Close pixmap frame if open. */
-        if (srcPixmap->frameOpen) {
-            nvgRestore(glfwContext.vg);
-            nvgEndFrame(glfwContext.vg);
-            srcPixmap->frameOpen = 0;
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        }
-        
-        /* Wrap pixmap texture as NVG image and blit. */
-        TkWaylandDrawingContext dc;
-        int nvgImage;
-        NVGpaint imgPaint;
-        
-        int rc = TkGlfwBeginDraw(dst, gc, &dc);
-        if (rc != TCL_OK) return BadDrawable;
-        
-        nvgImage = nvglCreateImageFromHandle(dc.vg,
-                                            srcPixmap->texture,
-                                            srcPixmap->width,
-                                            srcPixmap->height,
-                                            0);
-        
-        if (nvgImage == 0) {
-            TkGlfwEndDraw(&dc);
-            return BadDrawable;
-        }
-        
-        imgPaint = nvgImagePattern(dc.vg,
-                                   (float)dst_x - src_x,
-                                   (float)dst_y - src_y,
-                                   (float)srcPixmap->width,
-                                   (float)srcPixmap->height,
-                                   0.0f,
-                                   nvgImage,
-                                   1.0f);
-        
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg,
-                (float)dst_x,
-                (float)dst_y,
-                (float)width,
-                (float)height);
-        nvgFillPaint(dc.vg, imgPaint);
-        nvgFill(dc.vg);
-        
-        nvgDeleteImage(dc.vg, nvgImage);
-        TkGlfwEndDraw(&dc);
-        
-        return Success;
-    }
-    
-    /*
-     * Window to window copying - scrolling text, listboxes, etc.
-     */
-    if (srcMapping && dstMapping && srcMapping == dstMapping) {
-        /*
-         * Scrolling within same window.
-         * 
-         * Problem: Can't easily copy from window to itself with NanoVG
-         * during an open frame. 
-         * 
-         * Solution: Use a temporary pixmap (slower but simple).
-	 *
-         */
-            return XCopyArea_WithTempPixmap(
-            src, dst, gc, 
-            src_x, src_y, width, height, 
-            dst_x, dst_y
-        );
-    }
-    
-    return Success;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XCopyArea_WithTempPixmap --
- *
- *      Window→Window copy using temporary pixmap.
- *      Used for scrolling.
- *
- *      Strategy:
- *      1. Create temp pixmap
- *      2. Copy source area to pixmap (captures current content)
- *      3. Copy pixmap to destination area
- *      4. Free temp pixmap
- *
- * Results:
- *      Success or error code.
- *
- * Side effects:
- *      Allocates/frees temporary pixmap.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-XCopyArea_WithTempPixmap(
+    Display  *display,
     Drawable  src,
     Drawable  dst,
     GC        gc,
@@ -474,110 +355,216 @@ XCopyArea_WithTempPixmap(
     unsigned  width, unsigned height,
     int       dst_x, int dst_y)
 {
-    Pixmap tempPixmap;
-    TkWaylandPixmapImpl *temp;
-    WindowMapping *mapping;
+    WindowMapping *srcMapping = NULL;
+    WindowMapping *dstMapping = NULL;
+    TkWaylandPixmapImpl *srcPixmap = NULL;
+    TkWaylandPixmapImpl *dstPixmap = NULL;
+    
+    (void)display;
+    (void)gc;
+    
+    /* Determine source and destination types */
+    if (IsPixmap(src)) {
+        srcPixmap = (TkWaylandPixmapImpl *)src;
+    } else {
+        srcMapping = FindMappingByDrawable(src);
+    }
+    
+    if (IsPixmap(dst)) {
+        dstPixmap = (TkWaylandPixmapImpl *)dst;
+    } else {
+        dstMapping = FindMappingByDrawable(dst);
+    }
+    
+    /*
+     * Pixmap → Window
+     */
+    if (srcPixmap && dstMapping) {
+        return XCopyArea_PixmapToWindow(srcPixmap, dst, gc,
+                                       src_x, src_y, width, height,
+                                       dst_x, dst_y);
+    }
+    
+    /*
+     * Window → Window (for scrolling)
+     */
+    if (srcMapping && dstMapping && srcMapping == dstMapping) {
+		return Success;
+    }
+    
+    /*
+     * Pixmap → Pixmap
+     */
+    if (srcPixmap && dstPixmap) {
+        return XCopyArea_PixmapToPixmap(srcPixmap, dstPixmap, gc,
+                                       src_x, src_y, width, height,
+                                       dst_x, dst_y);
+    }
+    
+    return Success;
+}
+
+
+    
+/* Helper functions for XCopyArea to improve performance. */
+
+static int
+XCopyArea_PixmapToWindow(
+    TkWaylandPixmapImpl *srcPixmap,
+    Drawable             dst,
+    GC                   gc,
+    int                  src_x, int src_y,
+    unsigned             width, unsigned height,
+    int                  dst_x, int dst_y)
+{
     TkWaylandDrawingContext dc;
     int nvgImage;
     NVGpaint imgPaint;
     int rc;
+    unsigned char *pixels = NULL; 
     
-    mapping = FindMappingByDrawable(src);
-    if (!mapping) return BadDrawable;
+    pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
     
-    /*
-     * IMPORTANT: Close current frame to capture window content.
-     * We need to read what's currently displayed.
-     */
-    if (mapping->frameOpen) {
-        TkWaylandEndEventCycle(mapping);
+    
+    /* Close pixmap frame if open. */
+    if (srcPixmap->frameOpen) {
+        nvgRestore(glfwContext.vg);
+        nvgEndFrame(glfwContext.vg);
+        srcPixmap->frameOpen = 0;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     
-    /*
-     * Create temporary pixmap to hold the source area.
-     * We'll use the window's back buffer as the source.
-     */
-    tempPixmap = Tk_GetPixmap(NULL, src, width, height, 0);
-    temp = (TkWaylandPixmapImpl *)tempPixmap;
-    if (!temp) return BadDrawable;
-    
-    /*
-     * Copy from window's framebuffer to temp pixmap.
-     * 
-     * We need to read the window's back buffer (what was just rendered).
-     * Use glBlitFramebuffer for fast GPU copy.
-     */
-    glfwMakeContextCurrent(mapping->glfwWindow);
-    
-    /* Bind source (window's framebuffer = 0) */
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    
-    /* Bind destination (temp pixmap's FBO) */
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, temp->fbo);
-    
-    /* Copy pixels (Y-flip because GL coordinates are bottom-up) */
-    int fbHeight;
-    glfwGetFramebufferSize(mapping->glfwWindow, NULL, &fbHeight);
-    
-    glBlitFramebuffer(
-        src_x, fbHeight - src_y - height,  /* src rect (Y-flipped) */
-        src_x + width, fbHeight - src_y,
-        0, 0,                               /* dst rect */
-        width, height,
-        GL_COLOR_BUFFER_BIT,
-        GL_NEAREST
-    );
-    
-    /* Unbind framebuffers. */
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    
-    /*
-     * Now blit temp pixmap to destination position.
-     * Reopen frame for destination drawing.
-     */
+    /* Begin drawing to destination window. */
     rc = TkGlfwBeginDraw(dst, gc, &dc);
     if (rc != TCL_OK) {
-        Tk_FreePixmap(NULL, tempPixmap);
         return BadDrawable;
     }
     
-    /* Wrap temp pixmap as NVG image. */
-    nvgImage = nvglCreateImageFromHandle(dc.vg,
-                                        temp->texture,
-                                        temp->width,
-                                        temp->height,
-                                        0);
+    /* Wrap pixmap texture as NVG image. */
+    nvgImage = nvgCreateImageRGBA(dc.vg, srcPixmap->width, srcPixmap->height,
+                                  0, pixels);
+
     
     if (nvgImage == 0) {
         TkGlfwEndDraw(&dc);
-        Tk_FreePixmap(NULL, tempPixmap);
         return BadDrawable;
     }
     
-    /* Create image pattern for destination. */
+    /* Create image pattern. */
     imgPaint = nvgImagePattern(dc.vg,
-                               (float)dst_x,
-                               (float)dst_y,
-                               (float)width,
-                               (float)height,
+                               (float)dst_x - src_x,
+                               (float)dst_y - src_y,
+                               (float)srcPixmap->width,
+                               (float)srcPixmap->height,
                                0.0f,
                                nvgImage,
                                1.0f);
     
     /* Draw. */
     nvgBeginPath(dc.vg);
-    nvgRect(dc.vg, (float)dst_x, (float)dst_y, (float)width, (float)height);
+    nvgRect(dc.vg,
+            (float)dst_x,
+            (float)dst_y,
+            (float)width,
+            (float)height);
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
     
     /* Cleanup. */
     nvgDeleteImage(dc.vg, nvgImage);
     TkGlfwEndDraw(&dc);
-    Tk_FreePixmap(NULL, tempPixmap);
     
     return Success;
 }
+
+    
+static int
+XCopyArea_PixmapToPixmap(
+    TkWaylandPixmapImpl *srcPixmap,
+    TkWaylandPixmapImpl *dstPixmap,
+    GC                   gc,
+    int                  src_x, int src_y,
+    unsigned             width, unsigned height,
+    int                  dst_x, int dst_y)
+{
+    TkWaylandDrawingContext dc;
+    int nvgImage;
+    NVGpaint imgPaint;
+    
+    unsigned char *pixels = NULL; 
+    
+    pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
+ 
+    
+    /* Close source pixmap frame if open. */
+    if (srcPixmap->frameOpen) {
+        nvgRestore(glfwContext.vg);
+        nvgEndFrame(glfwContext.vg);
+        srcPixmap->frameOpen = 0;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+    
+    /* Set up destination pixmap for drawing. */
+    dc.drawable = (Drawable)dstPixmap;
+    dc.vg = glfwContext.vg;
+    dc.width = dstPixmap->width;
+    dc.height = dstPixmap->height;
+    dc.offsetX = 0;
+    dc.offsetY = 0;
+    
+    /* Bind destination FBO and open frame if needed. */
+    if (!dstPixmap->frameOpen) {
+        glBindFramebuffer(GL_FRAMEBUFFER, dstPixmap->fbo);
+        glViewport(0, 0, dstPixmap->width, dstPixmap->height);
+        
+        nvgBeginFrame(glfwContext.vg,
+                     (float)dstPixmap->width,
+                     (float)dstPixmap->height,
+                     1.0f);
+        
+        nvgSave(glfwContext.vg);
+        nvgScale(glfwContext.vg, 1.0f, -1.0f);
+        nvgTranslate(glfwContext.vg, 0.0f, -(float)dstPixmap->height);
+        nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
+        
+        dstPixmap->frameOpen = 1;
+    }
+    
+   /* Create NanoVG image (basic function, always works) */
+    nvgImage = nvgCreateImageRGBA(dc.vg, srcPixmap->width, srcPixmap->height,
+                                  0, pixels);
+    
+    if (nvgImage == 0) {
+        return BadDrawable;
+    }
+    
+    /* Create image pattern. */
+    imgPaint = nvgImagePattern(glfwContext.vg,
+                               (float)dst_x - src_x,
+                               (float)dst_y - src_y,
+                               (float)srcPixmap->width,
+                               (float)srcPixmap->height,
+                               0.0f,
+                               nvgImage,
+                               1.0f);
+    
+    /* Draw. */
+    nvgBeginPath(glfwContext.vg);
+    nvgRect(glfwContext.vg,
+            (float)dst_x,
+            (float)dst_y,
+            (float)width,
+            (float)height);
+    nvgFillPaint(glfwContext.vg, imgPaint);
+    nvgFill(glfwContext.vg);
+    
+    /* Cleanup. */
+    nvgDeleteImage(glfwContext.vg, nvgImage);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    return Success;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -621,8 +608,6 @@ XCopyPlane(
     NVGcolor                 fg, bg;
     int                      imageId;
     unsigned int             x, y;
-
-    (void)plane;   /* We always expand plane 1; other planes unsupported. */
 
     if (!display || !src || !dst) {
         return BadDrawable;
