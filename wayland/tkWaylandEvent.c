@@ -122,19 +122,24 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 MODULE_SCOPE void
 TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
-    WindowMapping *mapping = (WindowMapping *)glfwGetWindowUserPointer(window);
-    if (!mapping) return;
-
-    mapping->width        = width;
-    mapping->height       = height;
-    mapping->clearPending = 1;
-
-    if (mapping->tkWindow) {
-		SyncWindowSize(mapping);
-        TkWaylandQueueExposeEvent(mapping->tkWindow, 0, 0, width, height);
+      WindowMapping *m = FindMappingByGLFW(window);
+    if (!m) return;
+    
+    /* Close any open frame. */
+    if (m->frameOpen) {
+        TkWaylandEndEventCycle(m);
     }
     
-    TkWaylandScheduleRender();
+    /* Update size */
+    m->width = width;
+    m->height = height;
+    
+    /* Notify Tk */
+    if (m->tkWindow) {
+        m->tkWindow->changes.width = width;
+        m->tkWindow->changes.height = height;
+        TkWaylandQueueExposeEvent(m->tkWindow, 0, 0, width, height);
+    }
 }
 
 /*

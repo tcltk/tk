@@ -29,7 +29,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-#include <X11/Xlibint.h> 
+#include <X11/Xlibint.h>
+
+
 
 /* -----------------------------------------------------------------------
  * Display / screen initialization.
@@ -348,342 +350,212 @@ TkWaylandCopyGC(
 
 /* Pixmap functions. */
 
-static TkWaylandPixmapImpl *pixmapStore    = NULL;
-static int                   pixmapCount    = 0;
-static int                   pixmapCapacity = 0;
-static NVGcontext           *nvgCtx         = NULL;
-
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandSetNVGContext --
+ * Tk_GetPixmap --
  *
- *	Record the NanoVG context that pixmap operations should use.
- *	Must be called before creating any pixmaps.
+ *      Create an off-screen drawable (pixmap) using an OpenGL FBO.
+ *      This allows NanoVG to render to the pixmap just like a window.
  *
  * Results:
- *	None.
+ *      Returns a Pixmap (Drawable) identifier.
  *
  * Side effects:
- *	Sets internal module-level pointer.
+ *      Allocates FBO, texture, and stencil buffer.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
-TkWaylandSetNVGContext(
-    NVGcontext *vg)
+Pixmap
+Tk_GetPixmap(
+    TCL_UNUSED(Display *),  
+    Drawable d,
+    int      width,
+    int      height,
+    TCL_UNUSED(int)) /* depth */
 {
-    nvgCtx = vg;
+    TkWaylandPixmapImpl *pixmap;
+    WindowMapping       *mapping;
+    GLint                oldFBO;
+    GLenum               status;
+    
+    (void)display;
+    (void)depth;  /* NanoVG always uses 32-bit RGBA */
+    
+    if (width <= 0 || height <= 0) {
+        return None;
+    }
+    
+    /* Find the window mapping to get GL context. */
+    mapping = FindMappingByDrawable(d);
+    if (!mapping || !mapping->glfwWindow) {
+        return None;
+    }
+    
+    /* Allocate pixmap structure. */
+    pixmap = (TkWaylandPixmapImpl *)ckalloc(sizeof(TkWaylandPixmapImpl));
+    memset(pixmap, 0, sizeof(TkWaylandPixmapImpl));
+    
+    pixmap->type          = 1;  /* Pixmap, not window */
+    pixmap->width         = width;
+    pixmap->height        = height;
+    pixmap->drawable      = (Drawable)pixmap;  /* Use pointer as ID */
+    pixmap->windowMapping = mapping;
+    pixmap->frameOpen     = 0;
+    
+    /* Make GL context current for FBO creation. */
+    glfwMakeContextCurrent(mapping->glfwWindow);
+    
+    /* Save current FBO binding */
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
+    
+    /* Create texture for color attachment */
+    glGenTextures(1, &pixmap->texture);
+    glBindTexture(GL_TEXTURE_2D, pixmap->texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                 width, height, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    /* Create stencil buffer (required by NanoVG). */
+    glGenRenderbuffers(1, &pixmap->stencil);
+    glBindRenderbuffer(GL_RENDERBUFFER, pixmap->stencil);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
+                         width, height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    
+    /* Create and configure FBO. */
+    glGenFramebuffers(1, &pixmap->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
+    
+    /* Attach texture as color buffer. */
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                          GL_TEXTURE_2D, pixmap->texture, 0);
+    
+    /* Attach stencil buffer. */
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                             GL_RENDERBUFFER, pixmap->stencil);
+    
+    /* Check FBO completeness. */
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
+        glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
+        
+        /* Cleanup on failure. */
+        glDeleteFramebuffers(1, &pixmap->fbo);
+        glDeleteTextures(1, &pixmap->texture);
+        glDeleteRenderbuffers(1, &pixmap->stencil);
+        ckfree((char *)pixmap);
+        return None;
+    }
+    
+    /* Clear pixmap to white. */
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    
+    /* Restore previous FBO binding. */
+    glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
+    
+    /* Register pixmap with drawable mapping system. */
+    RegisterDrawableForMapping(pixmap->drawable, mapping);
+    
+    return pixmap->drawable;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandGetPixmapNVGContext --
+ * Tk_FreePixmap --
  *
- *	Return the NanoVG context registered for pixmap operations.
+ *      Destroy a pixmap and free its OpenGL resources.
  *
  * Results:
- *	NVGcontext pointer, or NULL.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      Deletes FBO, texture, and stencil buffer.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcontext *
-TkWaylandGetPixmapNVGContext(void)
+void
+Tk_FreePixmap(TCL_UNUSED(Display *),
+	      Pixmap pixmap)
 {
-    return nvgCtx;
+    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)pixmap;
+    
+    (void)display;
+    
+    if (!impl || impl->type != 1) return;
+    
+    /* Make context current for GL cleanup. */
+    if (impl->windowMapping && impl->windowMapping->glfwWindow) {
+        glfwMakeContextCurrent(impl->windowMapping->glfwWindow);
+    }
+    
+    /* Close any open NanoVG frame on this pixmap. */
+    if (impl->frameOpen) {
+        nvgEndFrame(glfwContext.vg);
+        impl->frameOpen = 0;
+    }
+    
+    /* Delete OpenGL resources. */
+    if (impl->fbo) {
+        glDeleteFramebuffers(1, &impl->fbo);
+    }
+    if (impl->texture) {
+        glDeleteTextures(1, &impl->texture);
+    }
+    if (impl->stencil) {
+        glDeleteRenderbuffers(1, &impl->stencil);
+    }
+    
+    /* Unregister from drawable mapping. */
+    UnregisterDrawable(pixmap);
+    
+    ckfree((char *)impl);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandCreatePixmap --
+ * IsPixmap --
  *
- *	Create a pixmap of the given dimensions and depth.
- *	Type 0 (image-backed) is used when NanoVG is available and
- *	width/height > 0; otherwise type 1 (paint) is used.
+ *      Check if a drawable is a pixmap (FBO-backed).
  *
  * Results:
- *	An opaque Pixmap handle.
+ *      Returns 1 if pixmap, 0 if window or invalid.
  *
  * Side effects:
- *	Allocates heap memory and (when possible) a NanoVG texture.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE Pixmap
-TkWaylandCreatePixmap(
-    int width,
-    int height,
-    int depth)
+int
+IsPixmap(Drawable drawable)
 {
-    TkWaylandPixmapImpl *pix;
-
-    /* Grow the store if needed. */
-    if (pixmapCount >= pixmapCapacity) {
-        int newCap = (pixmapCapacity == 0) ? 16 : pixmapCapacity * 2;
-        pixmapStore = (TkWaylandPixmapImpl *)ckrealloc(
-            (char *)pixmapStore,
-            newCap * sizeof(TkWaylandPixmapImpl));
-        pixmapCapacity = newCap;
+    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)drawable;
+    
+    if (!impl) return 0;
+    
+    /* Check type field and validate dimensions */
+    if (impl->type == 1 &&
+        impl->width > 0 && impl->width < 32768 &&
+        impl->height > 0 && impl->height < 32768 &&
+        impl->fbo != 0) {
+        return 1;
     }
-
-    pix = &pixmapStore[pixmapCount];
-    memset(pix, 0, sizeof(TkWaylandPixmapImpl));
-
-    pix->width  = width;
-    pix->height = height;
-    pix->depth  = depth;
-
-    if (nvgCtx != NULL && width > 0 && height > 0) {
-        unsigned char *data = (unsigned char *)ckalloc(width * height * 4);
-        if (data != NULL) {
-            memset(data, 0, width * height * 4);
-            pix->imageId = nvgCreateImageRGBA(
-                nvgCtx, width, height, NVG_IMAGE_NEAREST, data);
-            ckfree(data);
-            pix->type = 0; /* image-backed */
-        }
-    }
-
-    if (pix->type != 0) {
-        /* Fallback: zero-size or failed allocation → transparent paint. */
-        pix->paint = nvgLinearGradient(
-            nvgCtx != NULL ? nvgCtx : TkGlfwGetNVGContext(),
-            0, 0, 1, 1,
-            nvgRGBA(0, 0, 0, 0),
-            nvgRGBA(0, 0, 0, 0));
-        pix->type = 1; /* paint */
-    }
-
-    pixmapCount++;
-    return (Pixmap)pix;
+    
+    return 0;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandFreePixmap --
- *
- *	Release resources held by a pixmap.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Deletes NanoVG image if present; zeroes the struct for reuse.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandFreePixmap(
-    Pixmap pixmap)
-{
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)pixmap;
-
-    if (pix == NULL) {
-        return;
-    }
-
-    if (pix->type == 0 && pix->imageId != 0 && nvgCtx != NULL) {
-        nvgDeleteImage(nvgCtx, pix->imageId);
-    }
-
-    memset(pix, 0, sizeof(TkWaylandPixmapImpl));
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandGetPixmapImageId --
- *
- *	Return the NanoVG image ID for an image-backed pixmap.
- *
- * Results:
- *	NanoVG image ID, or 0 if not image-backed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE int
-TkWaylandGetPixmapImageId(
-    Pixmap pixmap)
-{
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)pixmap;
-    return (pix && pix->type == 0) ? pix->imageId : 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandGetPixmapPaint --
- *
- *	Return a pointer to the NVGpaint for a paint-backed pixmap.
- *
- * Results:
- *	NVGpaint pointer, or NULL.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE NVGpaint *
-TkWaylandGetPixmapPaint(
-    Pixmap pixmap)
-{
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)pixmap;
-    return (pix && pix->type == 1) ? &pix->paint : NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandGetPixmapType --
- *
- *	Return the pixmap type: 0 = image, 1 = paint, -1 = invalid.
- *
- * Results:
- *	See above.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE int
-TkWaylandGetPixmapType(
-    Pixmap pixmap)
-{
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)pixmap;
-    return pix ? pix->type : -1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandGetPixmapDimensions --
- *
- *	Fill in the optional out-pointers with the pixmap's dimensions.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandGetPixmapDimensions(
-    Pixmap pixmap,
-    int   *width,
-    int   *height,
-    int   *depth)
-{
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)pixmap;
-    if (pix == NULL) {
-        return;
-    }
-    if (width)  *width  = pix->width;
-    if (height) *height = pix->height;
-    if (depth)  *depth  = pix->depth;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandUpdatePixmapImage --
- *
- *	Replace the image data for an image-backed pixmap.
- *
- * Results:
- *	1 on success, 0 on failure.
- *
- * Side effects:
- *	Deletes old NanoVG image and creates a new one.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE int
-TkWaylandUpdatePixmapImage(
-    Pixmap               pixmap,
-    const unsigned char *data)
-{
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)pixmap;
-
-    if (pix == NULL || nvgCtx == NULL || pix->type != 0) {
-        return 0;
-    }
-
-    if (pix->imageId != 0) {
-        nvgDeleteImage(nvgCtx, pix->imageId);
-        pix->imageId = 0;
-    }
-
-    if (data != NULL) {
-        pix->imageId = nvgCreateImageRGBA(
-            nvgCtx, pix->width, pix->height, NVG_IMAGE_NEAREST, data);
-    }
-
-    return (pix->imageId != 0) ? 1 : 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandCleanupPixmapStore --
- *
- *	Release all pixmaps and reset the store.  Call at shutdown,
- *	before TkWaylandCleanupDisplay.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees all NanoVG images and the store array itself.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandCleanupPixmapStore(void)
-{
-    int i;
-
-    if (nvgCtx == NULL) {
-        return;
-    }
-
-    for (i = 0; i < pixmapCount; i++) {
-        TkWaylandPixmapImpl *pix = &pixmapStore[i];
-        if (pix->type == 0 && pix->imageId != 0) {
-            nvgDeleteImage(nvgCtx, pix->imageId);
-        }
-    }
-
-    if (pixmapStore != NULL) {
-        ckfree((char *)pixmapStore);
-        pixmapStore    = NULL;
-    }
-    pixmapCount    = 0;
-    pixmapCapacity = 0;
-    nvgCtx         = NULL;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -909,51 +781,25 @@ XCopyGC(
  *
  * XCreatePixmap --
  *
- *	Xlib-compatible wrapper for TkWaylandCreatePixmap.
+ *	Xlib-compatible wrapper for Tk_GetPixmap.
  *
  * Results:
  *	A newly created Pixmap handle.
  *
  * Side effects:
- *	Allocates pixmap resources via TkWaylandCreatePixmap.
+ *	Allocates pixmap resources via Tk_GetPixmap.
  *
  *----------------------------------------------------------------------
  */
 
-Pixmap
 XCreatePixmap(
-    TCL_UNUSED(Display *),
+    Display *display,
     Drawable parent,
     unsigned int width,
     unsigned int height,
     unsigned int depth)
 {
-    Pixmap p = TkWaylandCreatePixmap((int)width, (int)height, (int)depth);
-
-    /* Find the mapping for this pixmap's parent. Try every available
-     * method before giving up, since parent may be a TkWindow*, a
-     * window ID, or a GLFWwindow* depending on call site. */
-    WindowMapping *m = FindMappingByDrawable(parent);
-
-    if (!m) {
-        /* parent is likely a TkWindow* passed directly */
-        TkWindow *tw = (TkWindow *)parent;
-        m = FindMappingByTk(tw);
-    }
-
-    if (!m) {
-        /* Last resort: use the first available mapping. */
-        m = TkGlfwGetMappingList();
-    }
-
-    if (m) {
-        RegisterDrawableForMapping((Drawable)p, m);
-    } else {
-        fprintf(stderr, "XCreatePixmap: no mapping found for parent %lu, "
-                "pixmap will fail\n", (unsigned long)parent);
-    }
-
-    return p;
+    return Tk_GetPixmap(display, parent, (int)width, (int)height, (int)depth);
 }
 
 /*
@@ -961,13 +807,13 @@ XCreatePixmap(
  *
  * XFreePixmap --
  *
- *	Xlib-compatible wrapper for TkWaylandFreePixmap.
+ *	Xlib-compatible wrapper for Tk_FreePixmap.
  *
  * Results:
  *	Always returns Success.
  *
  * Side effects:
- *	Frees pixmap resources via TkWaylandFreePixmap.
+ *	Frees pixmap resources via Tk_FreePixmap.
  *
  *----------------------------------------------------------------------
  */
@@ -977,7 +823,7 @@ XFreePixmap(
     TCL_UNUSED(Display *),
     Pixmap pixmap)
 {
-    TkWaylandFreePixmap(pixmap);
+    Tk_FreePixmap(pixmap);
     return Success;
 }
 
