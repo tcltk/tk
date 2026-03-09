@@ -1753,6 +1753,38 @@ test entry-5.11 {ConfigureEntry procedure} -setup {
 } -cleanup {
     destroy .e
 } -result {}
+test entry-5.12 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale AB
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ab}
+test entry-5.13 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale AB_cd.utf8
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ab_CD}
+test entry-5.14 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale ABC_de
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C abc_DE}
+test entry-5.15 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale AB_Latn_de
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ab_DE@latin}
 
 # No tests for DisplayEntry.
 
