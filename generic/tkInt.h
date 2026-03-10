@@ -18,6 +18,7 @@
 #ifndef _TKPORT
 #include "tkPort.h"
 #endif
+#include <X11/Xatom.h>
 
 /*
  * Ensure WORDS_BIGENDIAN is defined correctly:

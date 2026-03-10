@@ -43,12 +43,6 @@
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
-#include <X11/Xlib.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xfuncproto.h>
-#include <X11/Xutil.h>
 
 /*
  * The following macro defines the type of the mask arguments to
