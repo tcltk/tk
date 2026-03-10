@@ -18,6 +18,8 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <errno.h>
+#include "nanovg_gl_utils.h"
+
 
 extern TkGlfwContext  glfwContext;
 extern WindowMapping *windowMappingList;

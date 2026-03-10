@@ -23,8 +23,19 @@
 #include "tkWaylandDefaults.h"
 
 #include "nanovg.h"
-#include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"
+
+typedef struct NVGLUframebuffer NVGLUframebuffer;
+
+/* Forward declarations for GLES2 backend functions. */
+NVGcontext* nvgCreateGLES2(int flags);
+void nvgDeleteGLES2(NVGcontext* ctx);
+int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
+GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image);
+
+/* Forward declarations for utils. */
+NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
+void nvgluBindFramebuffer(NVGLUframebuffer* fb);
+void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
 
 /*
  *----------------------------------------------------------------------
