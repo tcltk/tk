@@ -828,7 +828,7 @@ test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result 38
+} -result 39
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
 } -body {
@@ -1753,6 +1753,70 @@ test entry-5.11 {ConfigureEntry procedure} -setup {
 } -cleanup {
     destroy .e
 } -result {}
+test entry-5.12 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale AB
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ab}
+test entry-5.13 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale AB_cd.utf8
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ab_CD}
+test entry-5.14 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale ABC_de
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C abc_DE}
+test entry-5.15 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale AB_Trad_de
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ab_Trad_DE}
+test entry-5.16 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale ca_es_valencia
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ca_ES@valencia}
+test entry-5.17 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale qps-Ploc
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C qps@ploc}
+test entry-5.18 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale qps-Ploca
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C qps@ploca}
+test entry-5.19 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale PRG_001
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C prg_001}
 
 # No tests for DisplayEntry.
 
