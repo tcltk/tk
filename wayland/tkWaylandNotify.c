@@ -367,13 +367,13 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
        return;
     }
 
-    /* Delete timer handler */
+    /* Delete timer handler. */
     if (tsdPtr->heartbeatTimer) {
         Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
         tsdPtr->heartbeatTimer = NULL;
     }
 
-    /* Delete file handler for wakeup fd */
+    /* Delete file handler for wakeup fd. */
     if (tsdPtr->wakeupFd != -1) {
         Tcl_DeleteFileHandler(tsdPtr->wakeupFd);
         close(tsdPtr->wakeupFd);
@@ -602,17 +602,35 @@ void
 TkWaylandDisplayProc(ClientData clientData)
 {
     WindowMapping *m = (WindowMapping *)clientData;
-    if (!m || !m->frameOpen) return;
+    if (!m || !m->fbo) return;
 
-    /* Close the state we opened in CheckProc */
-    nvgRestore(glfwContext.vg);
-    nvgEndFrame(glfwContext.vg);
+    glfwMakeContextCurrent(m->glfwWindow);
     
+    int fbw, fbh;
+    glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
+    glViewport(0, 0, fbw, fbh);
+
+    /* Clear only the screen backbuffer, not our FBO! */
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, (float)fbw/m->width);
+
+    /* Create a paint pattern from the FBO's image. */
+    NVGpaint imgPaint = nvgImagePattern(glfwContext.vg, 0, 0, 
+                                        (float)m->width, (float)m->height, 
+                                        0, m->fbo->image, 1.0f);
+    
+    /* Draw the FBO to the window. */
+    nvgBeginPath(glfwContext.vg);
+    nvgRect(glfwContext.vg, 0, 0, (float)m->width, (float)m->height);
+    nvgFillPaint(glfwContext.vg, imgPaint);
+    nvgFill(glfwContext.vg);
+
+    nvgEndFrame(glfwContext.vg);
     glfwSwapBuffers(m->glfwWindow);
-    m->frameOpen = 0;
+    
     m->needsDisplay = 0;
 }
-
 
 /*
  * Local Variables:

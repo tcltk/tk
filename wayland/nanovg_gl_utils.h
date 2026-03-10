@@ -18,6 +18,10 @@
 #ifndef NANOVG_GL_UTILS_H
 #define NANOVG_GL_UTILS_H
 
+/* Suppress numerous warnings. */
+#pragma GCC system_header
+#pragma clang system_header
+
 struct NVGLUframebuffer {
 	NVGcontext* ctx;
 	GLuint fbo;

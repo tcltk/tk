@@ -19,9 +19,13 @@
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <libdecor.h>
-#include "nanovg.h"
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
+
+#include "nanovg.h"
+#define NANOVG_GLES2_IMPLEMENTATION
+#include "nanovg_gl.h"
+#include "nanovg_gl_utils.h"
 
 /*
  *----------------------------------------------------------------------
@@ -58,6 +62,7 @@ typedef struct WindowMapping {
     int frameOpen;                /* Is NVG frame currently open? */
     int needsDisplay;             /* Dirty flag - needs redraw */
     int inEventCycle;             /* Currently processing events */
+    NVGLUframebuffer *fbo;		 /* NanoVG frame buffer. */	
     struct WindowMapping *nextPtr;  /* Next mapping in global linked list */
 } WindowMapping;
 
