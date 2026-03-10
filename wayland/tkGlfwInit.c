@@ -442,171 +442,70 @@ void SyncWindowSize(WindowMapping *m)
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
  * TkGlfwBeginDraw --
  *
- *      Set up drawing context for either window or pixmap.
+ *	Prepares the NanoVG context for drawing. Uses the provided 
+ * dcPtr to store context-specific state.
  *
  * Results:
- *      TCL_OK on success, TCL_ERROR on failure.
+ *	TCL_OK if drawing can proceed, TCL_ERROR otherwise.
  *
  * Side effects:
- *      May open NanoVG frame for pixmap.
- *      Pushes NanoVG state.
+ *	Saves NanoVG state and applies translations.
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE int
 TkGlfwBeginDraw(
-    Drawable                drawable,
-    GC                      gc,
+    Drawable drawable,
+    GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    WindowMapping           *mapping;
-    TkWaylandPixmapImpl     *pixmap;
-    int                      offsetX = 0, offsetY = 0;
-    
-    if (!dcPtr) return TCL_ERROR;
-    
-    /* Check if drawing to pixmap. */
-    if (IsPixmap(drawable)) {
-        pixmap = (TkWaylandPixmapImpl *)drawable;
-        mapping = pixmap->windowMapping;
-        
-        if (!mapping || !mapping->glfwWindow) {
-            return TCL_ERROR;
-        }
-        
-        /* Make context current. */
-        glfwMakeContextCurrent(mapping->glfwWindow);
-        
-        /* Bind pixmap's FBO. */
-        glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
-        
-        /* Set viewport for pixmap */
-        glViewport(0, 0, pixmap->width, pixmap->height);
-        
-        /*
-         * Open NanoVG frame if not already open.
-         * Pixmap frames stay open until explicitly closed or pixmap freed.
-         */
-        if (!pixmap->frameOpen) {
-            /* Don't clear - preserve existing content. */
-            nvgBeginFrame(glfwContext.vg,
-                         (float)pixmap->width,
-                         (float)pixmap->height,
-                         1.0f);  /* Pixel ratio = 1 for pixmaps */
-            #if 0
-            /* Set up Y-flip transform. */
-            nvgSave(glfwContext.vg);
-            nvgScale(glfwContext.vg, 1.0f, -1.0f);
-            nvgTranslate(glfwContext.vg, 0.0f, -(float)pixmap->height);
-            nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
-            #endif
-            
-            pixmap->frameOpen = 1;
-        }
-        
-        /* Populate context for pixmap. */
-        dcPtr->drawable   = drawable;
-        dcPtr->glfwWindow = mapping->glfwWindow;
-        dcPtr->width      = pixmap->width;
-        dcPtr->height     = pixmap->height;
-        dcPtr->vg         = glfwContext.vg;
-        dcPtr->offsetX    = 0;
-        dcPtr->offsetY    = 0;
-        dcPtr->nestedFrame = 0;
-        
-    } else {
-        /* Drawing to window - standard path. */
-        mapping = FindMappingByDrawable(drawable);
-        if (!mapping || !mapping->glfwWindow) {
-            return TCL_ERROR;
-        }
-        
-        /*
-         * Frame should already be open.
-         * If not, it means widget is drawing outside event cycle.
-         * Open frame temporarily (will be closed by idle callback).
-         */
-     if (!mapping->frameOpen) {
-		TkWaylandBeginEventCycle(mapping);
-	}
-    
-	if (!mapping->needsDisplay) {
-		mapping->needsDisplay = 1;
-		Tcl_DoWhenIdle(TkWaylandDisplayProc, mapping);
-	}
-    
-        /* Calculate child window offset (same as before). */
-        if (mapping->drawable != drawable) {
-            TkWindow *tw = mapping->tkWindow;
-            TkWindow *stack[256];
-            int top = 0;
-            TkWindow *found = NULL;
-            
-            if (tw) {
-                stack[top++] = tw;
-                while (top > 0 && !found) {
-                    TkWindow *cur = stack[--top];
-                    if (cur->window == (Window)drawable) {
-                        found = cur;
-                    } else {
-                        TkWindow *child;
-                        for (child = cur->childList; child; child = child->nextPtr)
-                            if (top < 255) stack[top++] = child;
-                    }
-                }
-            }
-            
-            if (found) {
-                TkWindow *tw2 = found;
-                while (tw2 && tw2->window != (Window)mapping->drawable) {
-                    offsetX += tw2->changes.x + tw2->changes.border_width;
-                    offsetY += tw2->changes.y + tw2->changes.border_width;
-                    tw2 = tw2->parentPtr;
-                }
-            }
-        }
-        
-        /* Populate context for window. */
-        dcPtr->drawable   = drawable;
-        dcPtr->glfwWindow = mapping->glfwWindow;
-        dcPtr->width      = mapping->width;
-        dcPtr->height     = mapping->height;
-        dcPtr->vg         = glfwContext.vg;
-        dcPtr->offsetX    = offsetX;
-        dcPtr->offsetY    = offsetY;
-        dcPtr->nestedFrame = 0;
-    }
-    
-    /*
-     * Push NanoVG state and apply transforms.
-     * This is the ONLY state management in BeginDraw.
-     * No frame opening, no clearing - just state.
+    WindowMapping *m = FindMappingByDrawable(drawable);
+
+    /* 
+     * If the frame isn't open, we must not issue NanoVG commands.
+     * This prevents the 'unclean' drawing and potential crashes.
      */
-    nvgSave(glfwContext.vg);
-    
-    /* Apply child offset. */
-    if (dcPtr->offsetX != 0 || dcPtr->offsetY != 0) {
-        nvgTranslate(glfwContext.vg, 
-                    (float)dcPtr->offsetX, 
-                    (float)dcPtr->offsetY);
+    if (!m || !m->glfwWindow || !m->frameOpen) {
+        return TCL_ERROR;
     }
-    
-    /* Apply GC settings (color, line width, etc.) */
-    if (gc) {
-        TkGlfwApplyGC(glfwContext.vg, gc);
+
+    /* Set up the DC for this specific primitive call. */
+    dcPtr->vg = glfwContext.vg;
+
+    /* 
+     * Save state so this primitive's transformations and GC settings
+     * don't leak into the next drawing call in the same frame.
+     */
+    nvgSave(dcPtr->vg);
+
+    /* 
+     * Handle coordinate translation for child windows relative to 
+     * the GLFW root window.
+     */
+    if (m->tkWindow && !Tk_IsTopLevel(m->tkWindow)) {
+        int offsetX = 0;
+        int offsetY = 0;
+        TkWindow *winPtr = (TkWindow *)m->tkWindow;
+
+        while (winPtr && !Tk_IsTopLevel(winPtr)) {
+            offsetX += winPtr->changes.x;
+            offsetY += winPtr->changes.y;
+            winPtr = winPtr->parentPtr;
+        }
+        nvgTranslate(dcPtr->vg, (float)offsetX, (float)offsetY);
     }
-    
+
+    /* Sync X11 GC attributes (colors, line width) to NanoVG. */
+    TkGlfwApplyGC(dcPtr->vg, gc);
+
     return TCL_OK;
 }
-
-
 /*
  *----------------------------------------------------------------------
  *
