@@ -75,7 +75,7 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure CheckTreeview.Item \
 	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator
 	ttk::style configure Row -focuscolor black \
-	    -focussolid 1 -focusthickness 0 -padding 0
+	    -focussolid 0 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p

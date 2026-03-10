@@ -331,7 +331,7 @@ static const Ttk_StateTable spinbutton_statemap[] =
     { DNS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { DNS_HOT,		TTK_STATE_ACTIVE, 0 },
     { DNS_HOT,		TTK_STATE_HOVER, 0 },
-    { DNS_NORMAL,	0, 0 },
+    { DNS_NORMAL,	0, 0 }
 };
 
 /*
@@ -352,12 +352,14 @@ static const Ttk_StateTable tabitem_statemap[] =
     { TIS_HOT,          TTK_STATE_ACTIVE, 0 },
     { TIS_FOCUSED,      TTK_STATE_FOCUS, 0 },
     { TIS_SELECTED,     TTK_STATE_SELECTED, 0 },
-    { TIS_NORMAL,       0, 0 },
+    { TIS_NORMAL,       0, 0 }
 };
 
 /* Treeview header */
 static const Ttk_StateTable header_statemap[] =
 {
+    { HIS_NORMAL,		TTK_STATE_DISABLED, 0 },
+    { HIS_NORMAL,		TTK_STATE_READONLY, 0 },
     { HIS_SORTEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_SELECTED, 0 },
     { HIS_SORTEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_ALTERNATE, 0 },
     { HIS_PRESSED,		TTK_STATE_PRESSED, 0 },
@@ -366,32 +368,28 @@ static const Ttk_StateTable header_statemap[] =
     { HIS_HOT,			TTK_STATE_ACTIVE, 0 },
     { HIS_SORTEDNORMAL,		TTK_STATE_SELECTED, 0 },
     { HIS_SORTEDNORMAL,		TTK_STATE_ALTERNATE, 0 },
-    { HIS_NORMAL,		0, 0 },
+    { HIS_NORMAL,		0, 0 }
 };
 
-/* Header sort button */
-static const Ttk_StateTable sortbutton_statemap[] =
+/* Header sort indicator */
+static const Ttk_StateTable header_sort_statemap[] =
 {
-    { HIS_ICONSORTEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_SELECTED, 0 },
-    { HIS_ICONSORTEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_ALTERNATE, 0 },
-    { HIS_ICONPRESSED,		TTK_STATE_PRESSED, 0 },
-    { HIS_ICONSORTEDHOT,	TTK_STATE_ACTIVE|TTK_STATE_SELECTED, 0 },
-    { HIS_ICONSORTEDHOT,	TTK_STATE_ACTIVE|TTK_STATE_ALTERNATE, 0 },
-    { HIS_ICONHOT,		TTK_STATE_ACTIVE, 0 },
-    { HIS_ICONSORTEDNORMAL,	TTK_STATE_SELECTED, 0 },
-    { HIS_ICONSORTEDNORMAL,	TTK_STATE_ALTERNATE, 0 },
-    { HIS_ICONNORMAL,		0, 0 }
+    { HSAS_SORTEDDOWN,	TTK_STATE_SELECTED, 0 },
+    { HSAS_SORTEDUP,	TTK_STATE_ALTERNATE, 0 }
 };
 
-/* Treeview item */
+/* Treeview item: Win states don't match TTK states or colors, so remap them */
 static const Ttk_StateTable treeitem_statemap[] =
 {
-    { TREIS_DISABLED,		TTK_STATE_DISABLED, 0 },
-    { TREIS_HOTSELECTED,	TTK_STATE_ACTIVE|TTK_STATE_SELECTED, 0 },
-    { TREIS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { TREIS_SELECTEDNOTFOCUS,	TTK_STATE_BACKGROUND|TTK_STATE_SELECTED, 0 },
-    { TREIS_SELECTED,		TTK_STATE_SELECTED, 0 },
-    { TREIS_NORMAL,		0, 0 },
+    { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_DISABLED, 0 },
+    { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_READONLY, 0 },
+    { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_BACKGROUND, 0 },
+    { LVGH_CLOSESELECTEDHOT,		TTK_STATE_PRESSED, 0 },
+    { LVGH_CLOSESELECTEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
+    { LVGH_CLOSESELECTED,		TTK_STATE_SELECTED, 0 },
+    { LVGH_CLOSEHOT,			TTK_STATE_ACTIVE, 0 },
+    { LVGH_CLOSEHOT,			TTK_STATE_ALTERNATE, 0 },
+    { LVGH_CLOSE,			0, 0 }
 };
 
 /* Treeview */
@@ -402,14 +400,14 @@ static const Ttk_StateTable treeview_statemap[] =
     { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
     { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
     { ETS_SELECTED,	TTK_STATE_SELECTED, 0 },
-    { ETS_NORMAL,	0, 0 },
+    { ETS_NORMAL,	0, 0 }
 };
 
 /* Treeview indicator */
 static const Ttk_StateTable tvpglyph_statemap[] =
 {
     { GLPS_OPENED,	TTK_STATE_OPEN, 0 },
-    { GLPS_CLOSED,	0, 0 },
+    { GLPS_CLOSED,	0, 0 }
 };
 
 
@@ -1204,8 +1202,8 @@ static const ElementInfo ElementInfoTable[] = {
 	HP_HEADERITEM, header_statemap, PAD(4,0,4,0), 0 },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
 	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
-/*    { "Treeitem.row", &GenericElementSpec, L"TREEVIEW",
-	TVP_TREEITEM, treeitem_statemap, NOPAD, 0 },*/
+    { "Treeitem.row", &GenericElementSpec, L"LISTVIEW",
+	LVP_GROUPHEADER, treeitem_statemap, NOPAD, 0 },
     { "sizegrip", &GenericElementSpec, L"STATUS",
 	SP_GRIPPER, null_statemap, NOPAD, 0 },
     { "Spinbox.field", &GenericElementSpec, L"EDIT",

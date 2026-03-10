@@ -49,25 +49,27 @@ namespace eval ttk::theme::xpnative {
 	ttk::style configure Toolbutton -padding 3p
 
 	# Treeview
-	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Item \
+	ttk::style configure Heading -font TkHeadingFont
+	ttk::style configure Item -padding {3p 0 0 0} \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator
 	ttk::style configure Row -focuscolor black \
-	    -focussolid 0 -focusthickness 0 -padding 0
+	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
-	ttk::style map Treeview \
-	    -background [list   disabled SystemButtonFace \
-				background SystemScrollbar \
-				selected SystemHighlight] \
-	    -foreground [list   disabled SystemGrayText \
-				background SystemWindowText \
-				selected SystemHighlightText]
+#	ttk::style map Treeview \
+#	    -background [list   disabled SystemButtonFace \
+#				background SystemScrollbar \
+#				selected SystemHighlight \
+@				active #D7E4F2] \
+#	    -foreground [list   disabled SystemGrayText \
+#				background SystemWindowText \
+#				selected SystemHighlightText \
+#				active SystemCaptionText]
     }
 }
 
