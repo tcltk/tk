@@ -1593,7 +1593,8 @@ ConfigureMenu(
 		while (1) {
 		    Tk_Window parent = Tk_Parent(tkwin);
 
-		    if (Tk_Class(parent) != Tk_Class(menuPtr->tkwin)) {
+		    if (parent == NULL ||
+			Tk_Class(parent) != Tk_Class(menuPtr->tkwin)) {
 			break;
 		    }
 		    tkwin = parent;
