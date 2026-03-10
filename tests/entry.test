@@ -1793,6 +1793,30 @@ test entry-5.16 {-locale} -setup {
 } -cleanup {
     destroy .e
 } -result {-locale locale Locale C ca_ES@valencia}
+test entry-5.17 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale qps-Ploc
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C qps@ploc}
+test entry-5.18 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale qps-Ploca
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C qps@ploca}
+test entry-5.19 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale PRG_001
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C prg_001}
 
 # No tests for DisplayEntry.
 
