@@ -29,6 +29,7 @@ to the userbase.
  - [Use the native selection colors for listbox and ttk::treeview widgets on aqua](https://core.tcl-lang.org/tk/tktview/c6292f)
  - [ttk::entry placeholder length computation confuses string length and character length](https://core.tcl-lang.org/tk/tktview/992d6f)
  - [crash with invalid data in [image create photo]](https://core.tcl-lang.org/tk/tktview/f0b3fa)
+ - [Segfault under Windows when executing test file menu.test with "-singleproc 0"](https://core.tcl-lang.org/tk/tktview/d8f964)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
