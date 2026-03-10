@@ -123,9 +123,6 @@ static void		DrawMenuEntryAccelerator(TkMenu *menuPtr,
 			    Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
 			    Tk_3DBorder activeBorder, int x, int y,
 			    int width, int height);
-static void		DrawMenuEntryArrow(TkMenu *menuPtr, TkMenuEntry *mePtr,
-			    Drawable d, GC gc, Tk_3DBorder activeBorder,
-			    int x,int y, int width, int height, int drawArrow);
 static void		DrawMenuEntryBackground(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d,
 			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
@@ -135,10 +132,6 @@ static void		DrawMenuEntryIndicator(TkMenu *menuPtr,
 			    GC indicatorGC, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr, int x, int y,
 			    int width, int height);
-static void		DrawMenuEntryLabel(TkMenu *menuPtr, TkMenuEntry *mePtr,
-			    Drawable d, GC gc, Tk_Font tkfont,
-			    const Tk_FontMetrics *fmPtr, int x, int y,
-			    int width, int height, int underline);
 static void		DrawMenuSeparator(TkMenu *menuPtr, TkMenuEntry *mePtr,
 			    Drawable d, GC gc, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr,
@@ -1349,13 +1342,13 @@ TkWinHandleMenuEvent(
 	TkWinDrawable *twdPtr;
 	LPDRAWITEMSTRUCT itemPtr = (LPDRAWITEMSTRUCT) *plParam;
 	Tk_FontMetrics fontMetrics;
-	int drawingParameters = 0;
+	DrawMenuFlags drawingParameters = DRAW_MENU_ENTRY_DEFAULT;
 
 	if (itemPtr != NULL && tsdPtr->modalMenuPtr != NULL) {
 	    Tk_Font tkfont;
 
 	    if (itemPtr->itemState & ODS_NOACCEL && !showMenuAccelerators) {
-		drawingParameters |= DRAW_MENU_ENTRY_NOUNDERLINE;
+		drawingParameters = (DrawMenuFlags)(drawingParameters|DRAW_MENU_ENTRY_NOUNDERLINE);
 	    }
 	    mePtr = (TkMenuEntry *) itemPtr->itemData;
 	    menuPtr = mePtr->menuPtr;
@@ -1390,7 +1383,7 @@ TkWinHandleMenuEvent(
 		 */
 
 		if (mePtr->type == CASCADE_ENTRY) {
-		    drawingParameters |= DRAW_MENU_ENTRY_ARROW;
+		    drawingParameters = (DrawMenuFlags)(drawingParameters|DRAW_MENU_ENTRY_ARROW);
 		}
 	    }
 
@@ -1400,7 +1393,7 @@ TkWinHandleMenuEvent(
 		    itemPtr->rcItem.left, itemPtr->rcItem.top,
 		    itemPtr->rcItem.right - itemPtr->rcItem.left,
 		    itemPtr->rcItem.bottom - itemPtr->rcItem.top,
-		    0, drawingParameters);
+		    drawingParameters);
 
 	    Tcl_Free(twdPtr);
 	}
@@ -1986,7 +1979,7 @@ DrawMenuEntryAccelerator(
  *----------------------------------------------------------------------
  */
 
-void
+static void
 DrawMenuEntryArrow(
     TkMenu *menuPtr,		/* The menu we are drawing */
     TkMenuEntry *mePtr,		/* The entry we are drawing */
@@ -1997,7 +1990,7 @@ DrawMenuEntryArrow(
     int y,			/* top edge */
     int width,			/* Width of menu entry */
     int height,			/* Height of menu entry */
-    int drawArrow)		/* For cascade menus, whether of not to draw
+    bool drawArrow)		/* For cascade menus, whether of not to draw
 				 * the arrow. I cannot figure out Windows'
 				 * algorithm for where to draw this. */
 {
@@ -2364,7 +2357,7 @@ DrawMenuEntryLabel(
     int y,			/* right edge */
     int width,			/* width of entry */
     int height,			/* height of entry */
-    int underline)		/* accelerator cue should be drawn */
+    bool underline)		/* accelerator cue should be drawn */
 {
     int indicatorSpace = mePtr->indicatorSpace;
     int activeBorderWidth;
@@ -2663,10 +2656,7 @@ TkpDrawMenuEntry(
     int y,			/* Y-coordinate of topleft of entry */
     int width,			/* Width of the entry rectangle */
     int height,			/* Height of the current rectangle */
-    int strictMotif,		/* Boolean flag */
-    int drawingParameters)	/* Whether or not to draw the cascade arrow
-				 * for cascade items and accelerator
-				 * cues. */
+    DrawMenuFlags drawingParameters)	/* Flags */
 {
     GC gc, indicatorGC;
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -2711,7 +2701,7 @@ TkpDrawMenuEntry(
      * Choose the gc for drawing the foreground part of the entry.
      */
 
-    if ((mePtr->state == ENTRY_ACTIVE) && !strictMotif) {
+    if ((mePtr->state == ENTRY_ACTIVE) && !(drawingParameters & DRAW_MENU_ENTRY_STRICTMOTIF)) {
 	gc = mePtr->activeGC;
 	if (gc == NULL) {
 	    gc = menuPtr->activeGC;
@@ -2754,7 +2744,7 @@ TkpDrawMenuEntry(
     bgBorder = Tk_Get3DBorderFromObj(menuPtr->tkwin,
 	    (mePtr->borderPtr == NULL) ? menuPtr->borderPtr
 	    : mePtr->borderPtr);
-    if (strictMotif) {
+    if (drawingParameters & DRAW_MENU_ENTRY_STRICTMOTIF) {
 	activeBorder = bgBorder;
     } else {
 	activeBorder = Tk_Get3DBorderFromObj(menuPtr->tkwin,
@@ -2788,12 +2778,12 @@ TkpDrawMenuEntry(
     } else {
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		adjustedX, adjustedY, width, adjustedHeight,
-		(drawingParameters & DRAW_MENU_ENTRY_NOUNDERLINE)?0:1);
+		!(drawingParameters & DRAW_MENU_ENTRY_NOUNDERLINE));
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		activeBorder, adjustedX, adjustedY, width, adjustedHeight);
 	DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
 		activeBorder, adjustedX, adjustedY, width, adjustedHeight,
-		(drawingParameters & DRAW_MENU_ENTRY_ARROW)?1:0);
+		(drawingParameters & DRAW_MENU_ENTRY_ARROW) != 0);
 	if (!mePtr->hideMargin) {
 	    DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont,
 		    fmPtr, adjustedX, adjustedY, width, adjustedHeight);
