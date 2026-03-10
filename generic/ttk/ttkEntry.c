@@ -121,6 +121,8 @@ typedef struct {
 
     Tcl_Obj *placeholderObj;	/* Text to display for placeholder text */
 
+    Tcl_Obj *localeObj;		/* locale */
+
     /*
      * Derived resources:
      */
@@ -158,6 +160,8 @@ typedef struct {
 #define DEF_ENTRY_FONT		"TkTextFont"
 #define DEF_LIST_HEIGHT		"10"
 
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
+
 static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", "1", TCL_INDEX_NONE, offsetof(Entry, entry.exportSelection),
@@ -171,6 +175,9 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	"left", TCL_INDEX_NONE, offsetof(Entry, entry.justify),
 	TK_OPTION_ENUM_VAR, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
+	"C", offsetof(Entry, entry.localeObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, &TkLocaleOption, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	NULL, offsetof(Entry, entry.placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
