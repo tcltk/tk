@@ -1780,11 +1780,19 @@ test entry-5.14 {-locale} -setup {
 test entry-5.15 {-locale} -setup {
     entry .e
 } -body {
-    .e configure -locale AB_latn_de
+    .e configure -locale AB_Trad_de
     .e configure -locale
 } -cleanup {
     destroy .e
-} -result {-locale locale Locale C ab_Latn_DE}
+} -result {-locale locale Locale C ab_Trad_DE}
+test entry-5.16 {-locale} -setup {
+    entry .e
+} -body {
+    .e configure -locale ca_es_valencia
+    .e configure -locale
+} -cleanup {
+    destroy .e
+} -result {-locale locale Locale C ca_ES@valencia}
 
 # No tests for DisplayEntry.
 
