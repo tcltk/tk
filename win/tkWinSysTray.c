@@ -15,13 +15,13 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkWinInt.h"
 #include "tkInt.h"
 #include <windows.h>
 #include <shobjidl.h>
 #include <propvarutil.h>
 #include <propkey.h>
 #include "tkWin.h"
-#include "tkWinInt.h"
 #include "tkWinIco.h"
 
 #ifndef NOTIFYICON_VERSION_4
