@@ -28,7 +28,7 @@ typedef struct ThreadSpecificData {
     int            wakeupFd;           /* eventfd for waking up GLFW polling */
     Tcl_FileProc   *watchProc;         /* stored for cleanup */
     Tcl_TimerToken heartbeatTimer;     /* fallback timer */
-    bool           shutdownInProgress; /* flag to prevent recursive shutdown */
+    int          shutdownInProgress; /* flag to prevent recursive shutdown */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
@@ -82,7 +82,7 @@ Tk_WaylandSetupTkNotifier(void)
         }
 
         tsdPtr->initialized   = true;
-        tsdPtr->shutdownInProgress = false;
+        tsdPtr->shutdownInProgress = 0;
 
         /* Create the Tcl event source. */
         Tcl_CreateEventSource(TkWaylandEventsSetupProc,
@@ -180,7 +180,7 @@ TkWaylandCheckForWindowClosure(void)
     
     /* If there are no Tk main windows left, start shutdown. */
     if (Tk_GetNumMainWindows() == 0) {
-        tsdPtr->shutdownInProgress = true;
+        tsdPtr->shutdownInProgress = 1;
         
         /* Schedule cleanup as idle callback. */
         Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
@@ -219,7 +219,7 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
 
     /* If there are no windows left, start shutdown. */
     if (Tk_GetNumMainWindows() == 0) {
-        tsdPtr->shutdownInProgress = true;
+        tsdPtr->shutdownInProgress = 1;
         Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
         return;
     }
@@ -303,30 +303,37 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
  */
  
 static void
-TkWaylandEventsCheckProc(TCL_UNUSED(void *), int flags) 
+TkWaylandEventsCheckProc(TCL_UNUSED(void *),
+	int flags) 
 {
-    TSD_INIT();
-    WindowMapping *m;
-    
-    if (tsdPtr->shutdownInProgress) return;
-    
     if (!(flags & TCL_WINDOW_EVENTS)) return;
-    if (!glfwContext.initialized)    return;
-    
-    /* Find the main window or first available window and begin its event cycle. */
-    if (glfwContext.mainWindow) {
-        m = FindMappingByGLFW(glfwContext.mainWindow);
-        if (m && !m->frameOpen) {
-            TkWaylandBeginEventCycle(m);
+
+    /* Poll GLFW for system events (Map, Resize, Key, etc.) */
+    glfwPollEvents();
+
+    WindowMapping *m = windowMappingList; 
+    while (m) {
+        if (m->glfwWindow && !m->frameOpen) {
+            glfwMakeContextCurrent(m->glfwWindow);
+            
+            /* Start the frame once for the entire event pass. */
+            int fbw, fbh;
+            glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
+            nvgBeginFrame(glfwContext.vg, m->width, m->height, (float)fbw/m->width);
+            
+            /* Initial transform. */
+            nvgSave(glfwContext.vg);
+            nvgScale(glfwContext.vg, 1.0f, -1.0f);
+            nvgTranslate(glfwContext.vg, 0.0f, -(float)m->height);
+            
+            m->frameOpen = 1;
+
+            /* Force a display flush at the end of this Tcl cycle. */
+            Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
         }
-    } else {
-        /* If no main window, try the first window in the list. */
-        m = windowMappingList;
-        if (m && !m->frameOpen) {
-            TkWaylandBeginEventCycle(m);
-        }
+        m = m->nextPtr;
     }
-}
+} 
 /*
  *----------------------------------------------------------------------
  *
@@ -356,8 +363,8 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
         return;
 
     /* Prevent re-entrancy. */
-    if (tsdPtr->shutdownInProgress && tsdPtr->shutdownInProgress != 2) {
-        tsdPtr->shutdownInProgress = 2; /* Mark as final shutdown. */
+    if (tsdPtr->shutdownInProgress == 1) {
+       return;
     }
 
     /* Delete timer handler */
@@ -406,14 +413,9 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    WindowMapping *m;
-    int childCount = 0;
     
     if (!winPtr) return;
     
-    
-    fprintf(stderr, "QueueExposeEvent: winPtr=%p x=%d y=%d w=%d h=%d\n", 
-            winPtr, x, y, width, height);
     
     /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
@@ -548,31 +550,9 @@ TkWaylandBeginEventCycle(WindowMapping *m)
  */
 
 MODULE_SCOPE void
-TkWaylandEndEventCycle(WindowMapping *m)
+TkWaylandEndEventCycle(TCL_UNUSED(WindowMapping *))
 {
-	
-	    if (!m || !m->frameOpen) {
-        fprintf(stderr, "EndEventCycle: Frame not open, returning\n");
-        return;
-    }
-    
-    if (!m || !m->frameOpen) return;
-    
-    /* Restore coordinate transform. */
-    nvgRestore(glfwContext.vg);
-    
-    /* End NanoVG frame - this renders everything to back buffer. */
-    nvgEndFrame(glfwContext.vg);
-    
-    /* Swap buffers - make it visible NOW. */
-    glfwMakeContextCurrent(m->glfwWindow);
-    glfwSwapBuffers(m->glfwWindow);
-    
-    /* Mark frame as closed. */
-    m->frameOpen = 0;
-    m->inEventCycle = 0;
-    m->needsDisplay = 0;
-    glfwContext.activeFrame = NULL;
+	return;
 }
 
 /*
@@ -601,6 +581,7 @@ TkWaylandScheduleDisplay(WindowMapping *m)
     }
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -621,29 +602,15 @@ void
 TkWaylandDisplayProc(ClientData clientData)
 {
     WindowMapping *m = (WindowMapping *)clientData;
+    if (!m || !m->frameOpen) return;
 
-    if (!m || !m->glfwWindow || !m->frameOpen) {
-        fprintf(stderr, "DisplayProc: nothing to do (no window or frame not open)\n");
-        m->needsDisplay = 0;
-        return;
-    }
-
-
-    /* Restore from the nvgSave() we did in BeginEventCycle. */
+    /* Close the state we opened in CheckProc */
     nvgRestore(glfwContext.vg);
-
-    /* Finish NanoVG rendering. */
     nvgEndFrame(glfwContext.vg);
-
-    /* Actually show the drawing. */
-    glfwMakeContextCurrent(m->glfwWindow);
+    
     glfwSwapBuffers(m->glfwWindow);
-
-    m->frameOpen     = 0;
-    m->inEventCycle  = 0;
-    m->needsDisplay  = 0;
-    glfwContext.activeFrame = NULL;
-
+    m->frameOpen = 0;
+    m->needsDisplay = 0;
 }
 
 
