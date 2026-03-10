@@ -23,10 +23,6 @@
 #include <GLFW/glfw3native.h>
 #include <GLES2/gl2.h>
 
-#define NANOVG_GLES2_IMPLEMENTATION
-#include "nanovg_gl.h"
-#include "nanovg.h"
-
 /*
  *----------------------------------------------------------------------
  *
@@ -322,6 +318,11 @@ TkGlfwCreateWindow(
     mapping->width        = width;
     mapping->height       = height;
     mapping->clearPending = 1;
+    
+    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+	if (mapping->fbo == NULL) {
+		fprintf(stderr, "Could not create NanoVG framebuffer\n");
+	}
 
     AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
@@ -467,45 +468,40 @@ TkGlfwBeginDraw(
 {
     WindowMapping *m = FindMappingByDrawable(drawable);
 
-    /* 
-     * If the frame isn't open, we must not issue NanoVG commands.
-     * This prevents the 'unclean' drawing and potential crashes.
-     */
-    if (!m || !m->glfwWindow || !m->frameOpen) {
+    if (!m || !m->fbo) {
         return TCL_ERROR;
     }
 
-    /* Set up the DC for this specific primitive call. */
+    /* Redirect all subsequent GL commands to the off-screen FBO. */
+    nvgluBindFramebuffer(m->fbo);
+    
+    /* Set viewport to the FBO size. */
+    glViewport(0, 0, m->width, m->height);
+
+    /* Start a NanoVG frame targeting the FBO. */
+    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
+
     dcPtr->vg = glfwContext.vg;
 
-    /* 
-     * Save state so this primitive's transformations and GC settings
-     * don't leak into the next drawing call in the same frame.
-     */
+    /* Save state for this specific primitive. */
     nvgSave(dcPtr->vg);
 
-    /* 
-     * Handle coordinate translation for child windows relative to 
-     * the GLFW root window.
-     */
+    /* Handle coordinates (Child window offsets). */
     if (m->tkWindow && !Tk_IsTopLevel(m->tkWindow)) {
-        int offsetX = 0;
-        int offsetY = 0;
+        int x = 0, y = 0;
         TkWindow *winPtr = (TkWindow *)m->tkWindow;
-
         while (winPtr && !Tk_IsTopLevel(winPtr)) {
-            offsetX += winPtr->changes.x;
-            offsetY += winPtr->changes.y;
+            x += winPtr->changes.x;
+            y += winPtr->changes.y;
             winPtr = winPtr->parentPtr;
         }
-        nvgTranslate(dcPtr->vg, (float)offsetX, (float)offsetY);
+        nvgTranslate(dcPtr->vg, (float)x, (float)y);
     }
 
-    /* Sync X11 GC attributes (colors, line width) to NanoVG. */
     TkGlfwApplyGC(dcPtr->vg, gc);
-
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -525,36 +521,18 @@ TkGlfwBeginDraw(
 
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
-{    
-    if (!dcPtr || !dcPtr->vg) return;
-    
-    /* Just restore NanoVG state. */
-    nvgRestore(dcPtr->vg); 
-    
-    /*
-     * If we were drawing to a pixmap, unbind its FBO.
-     * Leave the NanoVG frame open on the pixmap.
-     */
-    if (IsPixmap(dcPtr->drawable)) {
+{
+    if (dcPtr && dcPtr->vg) {
+        nvgRestore(dcPtr->vg);
+        nvgEndFrame(dcPtr->vg);
         
-        /* Unbind FBO - restore default framebuffer. */
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        /* Unbind FBO to return to the default backbuffer. */
+        nvgluBindFramebuffer(NULL);
         
-        /*
-         * DO NOT close the pixmap's NanoVG frame!
-         * It stays open until:
-         * 1. Pixmap is copied to window (XCopyArea)
-         * 2. Pixmap is freed (Tk_FreePixmap)
-         * 3. Another pixmap needs the NanoVG context
-         */
+        /* Signal that the screen needs to be updated with the FBO's content. */
+        WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
+        m->needsDisplay = 1;
     }
-    
-    /*
-     * For windows:
-     * NO nvgEndFrame!
-     * NO swap scheduling!
-     * The frame stays open until TkWaylandEndEventCycle.
-     */
 }
 
 
