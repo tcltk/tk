@@ -7521,14 +7521,15 @@ TkTextIndexBbox(
 
 static const char localeScript[][4] = {
     {'A', 'r', 'a', 'b'},
+    {'C', 'a', 'k', 'm'},
     {'C', 'a', 'n', 's'},
     {'C', 'h', 'e', 'r'},
     {'C', 'y', 'r', 'l'},
     {'D', 'e', 'v', 'a'},
     {'H', 'a', 'n', 's'},
+    {'H', 'a', 'n', 't'},
     {'L', 'a', 't', 'n'},
     {'M', 'o', 'n', 'g'},
-    {'P', 'l', 'o', 'c'},
     {'T', 'a', 'l', 'e'},
     {'T', 'a', 'l', 'u'},
     {'F', 'f', 'n', 'g'},
@@ -7543,6 +7544,10 @@ static const char localeVariant[][10] = {
     "euro",
     "iqtelif",
     "latin",
+    "tradnl",
+    "ploc",
+    "ploca",
+    "plocm",
     "preeuro",
     "valencia"
 };
@@ -7628,12 +7633,13 @@ SetLocale(
 	    // Parse second part, after the first '_';
 	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2])
 		    && ISALPHA(str[3]) && ISALPHA(str[4]) && strchr(".@-_", str[5])) {
-		if (!strncasecmp(++str, localeScript[6], 4)) {
-		    locale[5] = (char)(-7);
-		    str += 4;
-		} else {
-		    goto wrongLocale;
+		str++;
+		while (strncasecmp(str, localeScript[UCHAR(-1-(--locale[5]))], 4)) {
+			if (UCHAR(-(locale[5])) >= sizeof(localeScript)/sizeof(localeScript[0])) {
+				goto wrongLocale;
+			}
 		}
+		str += 4;
 	    }
 	    if ((str[0] == '_') || (str[0] == '-')) {
 		if (!ISALPHA(*++str) || !ISALPHA(str[1])) {
@@ -7646,11 +7652,11 @@ SetLocale(
 		locale[4] = TOUPPER(*str++);
 	    }
 	    if (*str == '.') {
-		while (!strchr("@", *str)) {
+		while (!strchr("@-_", *str)) {
 		    str++; // Skip everything, until next '@' or NULL
 		}
 	    }
-	    if (!locale[5] && (*str == '@')) {
+	    if (!locale[5] && ((*str == '@') || (*str == '_') || (*str == '-'))) {
 		locale[5] = sizeof(localeVariant)/sizeof(localeVariant[0]) - 1;
 		do {
 		    if (!strcasecmp(&str[1], localeVariant[UCHAR(locale[5])])) {
