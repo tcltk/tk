@@ -539,7 +539,9 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         
         /* Signal that the screen needs to be updated with the FBO's content. */
         WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
-        m->needsDisplay = 1;
+        if (m) {
+			m->needsDisplay = 1;
+		}
     }
 }
 
