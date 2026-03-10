@@ -7544,10 +7544,12 @@ static const char localeVariant[][10] = {
     "euro",
     "iqtelif",
     "latin",
+    "modern",
     "tradnl",
     "ploc",
     "ploca",
     "plocm",
+    "posix",
     "preeuro",
     "valencia"
 };
@@ -7652,8 +7654,11 @@ SetLocale(
 		locale[4] = TOUPPER(*str++);
 	    }
 	    if (*str == '.') {
-		while (!strchr("@-_", *str)) {
-		    str++; // Skip everything, until next '@' or NULL
+		while (!strchr("@", *str)) {
+		    str++; // Skip everything, until next '@' or NULL or -/_ followed by non-digit
+		    if (((*str == '-') || (*str == '_')) && !ISDIGIT(str[1])) {
+			break; /* Handle both "utf-8" and "utf8-posix" as expected */
+		    }
 		}
 	    }
 	    if (!locale[5] && ((*str == '@') || (*str == '_') || (*str == '-'))) {
