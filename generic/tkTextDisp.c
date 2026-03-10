@@ -7526,10 +7526,12 @@ static const char localeScript[][4] = {
     {'C', 'h', 'e', 'r'},
     {'C', 'y', 'r', 'l'},
     {'D', 'e', 'v', 'a'},
+    {'E', 'u', 'r', 'o'},
     {'H', 'a', 'n', 's'},
     {'H', 'a', 'n', 't'},
     {'L', 'a', 't', 'n'},
     {'M', 'o', 'n', 'g'},
+    {'P', 'l', 'o', 'c'},
     {'T', 'a', 'l', 'e'},
     {'T', 'a', 'l', 'u'},
     {'F', 'f', 'n', 'g'},
@@ -7581,8 +7583,13 @@ GetLocale(
     }
     char *p = buffer + strlen(buffer);
     if ((signed char)locale[5] < 0) {
-	memcpy(p+2, p-3, 3);
-	memcpy(p-2, localeScript[UCHAR(-1-locale[5])], 4);
+	if (locale[3]) {
+	    memcpy(p+2, p-3, 3);
+	    memcpy(p-2, localeScript[UCHAR(-1-locale[5])], 4);
+	} else {
+	    *p = '_';
+	    memcpy(p+1, localeScript[UCHAR(-1-locale[5])], 4);
+	}
 	p += 5;
     }
     if (ISDIGIT(p[-2])) {
@@ -7643,15 +7650,21 @@ SetLocale(
 		}
 		str += 4;
 	    }
-	    if ((str[0] == '_') || (str[0] == '-')) {
-		if (!ISALPHA(*++str) || !ISALPHA(str[1])) {
-		    goto wrongLocale;
-		}
+	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2]) && !ISALPHA(str[3])) {
 		if (!locale[2]) {
 		    locale[2] = '_';
 		}
+		str++;
 		locale[3] = TOUPPER(*str++);
 		locale[4] = TOUPPER(*str++);
+	    } else if (((str[0] == '_') || (str[0] == '-')) && ISDIGIT(str[1]) && ISDIGIT(str[2]) && ISDIGIT(str[3])) {
+		if (!locale[2]) {
+		    locale[2] = '_';
+		}
+		str++;
+		locale[3] = *str++;
+		locale[4] = (*str++ - '0') * 10;
+		locale[4] += (*str++ - '0');
 	    }
 	    if (*str == '.') {
 		while (!strchr("@", *str)) {
@@ -7683,6 +7696,15 @@ SetLocale(
 		Tcl_AppendResult(interp, "Invalid locale", (char *)NULL);
 	    }
 	    return TCL_ERROR;
+	}
+	if (!locale[3]) {
+	    /* If there is no region, we cannot distingish between a script and a
+	     * 4-character variation. Assume the latter. Only for Euro and Ploc */
+	    if (locale[5] == (char)-7) {
+			locale[5] = 5; /* Euro */
+		} else if (locale[5] == (char)-12) {
+			locale[5] = 10; /* Ploc */
+		}
 	}
 	*value = GetLocale(NULL, NULL, locale, 0);
     }
