@@ -2518,7 +2518,6 @@ static void DrawSubtree(
  */
 static void DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth) {
-
     while (item) {
 	DrawSubtree(tv, item, d, depth);
 	item = item->next;
@@ -7265,9 +7264,9 @@ static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeitemIndicator,sizeObj), "12" },
+	offsetof(TreeitemIndicator,sizeObj), "9p" },
     { "-indicatormargins", TK_OPTION_STRING,
-	offsetof(TreeitemIndicator,marginsObj), "2 2 4 2" },
+	offsetof(TreeitemIndicator,marginsObj), "2p 2p 4p 2p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7280,15 +7279,21 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    int size = 0;
-    Ttk_Padding margins;
+    double scalingLevel = TkScalingLevel(tkwin);
+    int size = 12;
+    Ttk_Padding margins, padding;
 
     Tk_GetPixels(NULL, tkwin, Tcl_GetString(indicator->sizeObj), &size);
     if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
 
-    *widthPtr = size + Ttk_PaddingWidth(margins);
-    *heightPtr = size + Ttk_PaddingHeight(margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
+    padding.left = round(margins.left * scalingLevel);
+    padding.top = round(margins.top * scalingLevel);
+    padding.right = round(margins.right * scalingLevel);
+    padding.bottom = round(margins.bottom * scalingLevel);
+
+    *widthPtr = size + Ttk_PaddingWidth(padding);
+    *heightPtr = size + Ttk_PaddingHeight(padding);
 }
 
 static void TreeitemIndicatorDraw(
@@ -7307,9 +7312,9 @@ static void TreeitemIndicatorDraw(
     XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     XGCValues gcvalues; GC gc; unsigned mask;
 
-    if (state & TTK_STATE_LEAF) /* don't draw anything */
+    if (state & TTK_STATE_LEAF) {/* don't draw anything */
 	return;
-
+    }
     Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginsObj,&margins);
     b = Ttk_PadBox(b, margins);
 

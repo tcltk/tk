@@ -875,7 +875,7 @@ proc ::ttk::treeview::AutoSizeColumn {w column} {
     }
     if {$column eq "#0"} {
 	set i [ttk::style configure Item -indicatorsize]
-	if {$i eq ""} {set i 12}
+	if {$i eq "" || $i == 0} {set i 12}
 	lassign [ttk::style configure Item -indicatormargins] l t r b
 	if {$l eq ""} {set l 2}
 	if {$r eq ""} {set r $l}
