@@ -246,7 +246,7 @@ Tk_FocusObjCmd(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkFocusFilterEvent(
     TkWindow *winPtr,		/* Window that focus event is directed to. */
     XEvent *eventPtr)		/* FocusIn, FocusOut, Enter, or Leave
@@ -272,7 +272,8 @@ TkFocusFilterEvent(
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkWindow *newFocusPtr;
-    int retValue, delta;
+    int delta;
+    bool retValue;
 
     /*
      * If this was a generated event, just turn off the generated flag and
@@ -281,7 +282,7 @@ TkFocusFilterEvent(
 
     if ((eventPtr->xfocus.send_event & GENERATED_FOCUS_EVENT_MAGIC) == GENERATED_FOCUS_EVENT_MAGIC) {
 	eventPtr->xfocus.send_event &= ~GENERATED_FOCUS_EVENT_MAGIC;
-	return 1;
+	return true;
     }
 
     /*
@@ -295,7 +296,7 @@ TkFocusFilterEvent(
     if ((eventPtr->xfocus.mode == EMBEDDED_APP_WANTS_FOCUS)
 	    && (eventPtr->type == FocusIn)) {
 	TkSetFocusWin(winPtr, eventPtr->xfocus.detail);
-	return 0;
+	return false;
     }
 
     /*
@@ -304,7 +305,7 @@ TkFocusFilterEvent(
      * won't be processed) if it's a FocusIn or FocusOut event.
      */
 
-    retValue = 0;
+    retValue = false;
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
     if (eventPtr->type == FocusIn) {
 	/*
@@ -362,7 +363,7 @@ TkFocusFilterEvent(
 	    return retValue;
 	}
     } else {
-	retValue = 1;
+	retValue = true;
 	if (eventPtr->xcrossing.detail == NotifyInferior) {
 	    return retValue;
 	}

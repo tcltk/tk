@@ -200,10 +200,9 @@ ParseFormatOptions(
 
 {
     Tcl_Size optIndex, index;
-    int first, typeIndex;
+    bool first = true;
+    int typeIndex;
     const char *option;
-
-    first = 1;
 
     /*
      * Fill in default values
@@ -222,13 +221,13 @@ ParseFormatOptions(
 	if (option[0] != '-') {
 	    if (first) {
 		optPtr->formatName = objv[index];
-		first = 0;
+		first = false;
 		continue;
 	    } else {
 		break;
 	    }
 	}
-	first = 0;
+	first = false;
 
 	/*
 	 * Check if option is known and allowed
@@ -1029,7 +1028,7 @@ ParseColorAsStandard(
      * added to the colormap.
      */
 
-    if ( ! TkParseColor(display, colormap, colorString, &parsedColor)) {
+    if (TkParseColor(display, colormap, colorString, &parsedColor) == 0) {
 	 Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "invalid color name \"%s\"", specString));
 	 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -1117,7 +1116,7 @@ ParseColorAsStandard(
  *      None
  *----------------------------------------------------------------------
  */
-int
+bool
 TkDebugPhotoStringMatchDef(
     Tcl_Interp *interp,     /* Error messages are left in this interpreter */
     Tcl_Obj *data,          /* The data to check */
@@ -1125,7 +1124,7 @@ TkDebugPhotoStringMatchDef(
     int *widthPtr,          /* Width of image is written to this location */
     int *heightPtr)         /* Height of image is written to this location */
 {
-    return StringMatchDef(data, formatString, widthPtr, heightPtr, interp);
+    return StringMatchDef(data, formatString, widthPtr, heightPtr, interp) != 0;
 }
 
 

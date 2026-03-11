@@ -13,7 +13,6 @@
  */
 
 
-#include <stdio.h>
 #include <unistd.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
@@ -187,13 +186,13 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return nil;
     }
 
-    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
 	return nil;
     }
 
-    Tcl_Obj *roleObj = Tcl_GetHashValue(hPtr2);
+    Tcl_Obj *roleObj = (Tcl_Obj *)Tcl_GetHashValue(hPtr2);
     if (!roleObj) {
 	return nil;
     }
@@ -225,7 +224,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return @"";
     }
 
-    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
 
     /* Special handling for group roles (tables, listboxes, trees). */
     CFStringRef role = (__bridge CFStringRef)self.accessibilityRole;
@@ -243,7 +242,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return @"";
     }
 
-    Tcl_Obj *descObj = Tcl_GetHashValue(hPtr2);
+    Tcl_Obj *descObj = (Tcl_Obj *)Tcl_GetHashValue(hPtr2);
     if (!descObj) {
 	return @"";
     }
@@ -273,7 +272,7 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return nil;
     }
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
 
     /*
      * Special handling for checkbuttons, radio buttons and toggle switches.
@@ -373,13 +372,13 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return @"";
     }
 
-    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "name");
     if (!hPtr2) {
 	return @"";
     }
 
-    Tcl_Obj *nameObj = Tcl_GetHashValue(hPtr2);
+    Tcl_Obj *nameObj = (Tcl_Obj *)Tcl_GetHashValue(hPtr2);
     if (!nameObj) {
 	return @"";
     }
@@ -406,13 +405,13 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return nil;
     }
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "help");
     if (!hPtr2) {
 	return nil;
     }
 
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    char *result = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(hPtr2));
     NSString *machelp = [NSString stringWithUTF8String:result];
     return machelp;
 }
@@ -525,7 +524,7 @@ void PostAccessibilityAnnouncement(NSString *message)
      * accessibility parent.
      */
     if (winPtr->window) {
-	TKContentView *view = TkMacOSXGetRootControl(winPtr->window);
+	TKContentView *view = (TKContentView *)TkMacOSXGetRootControl(winPtr->window);
 	if (!view || ![view isKindOfClass:[TKContentView class]]) {
 	    return nil;
 	}
@@ -564,13 +563,13 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return NO;
     }
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     hPtr2=Tcl_FindHashEntry(AccessibleAttributes, "state");
     if (!hPtr2) {
 	return NO;
     }
 
-    char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    char *result = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(hPtr2));
     if (strcmp(result, "disabled") == 0) {
 	return YES;
     }
@@ -616,12 +615,12 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return FALSE;
     }
 
-    AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "action");
     if (!hPtr2) {
 	return FALSE;
     }
-    char *action = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    char *action = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(hPtr2));
 
 
     callback_command = action;
@@ -650,13 +649,13 @@ void PostAccessibilityAnnouncement(NSString *message)
 	return 0;
     }
 
-    Tcl_HashTable *AccessibleAttributes = Tcl_GetHashValue(hPtr);
+    Tcl_HashTable *AccessibleAttributes = (Tcl_HashTable *)Tcl_GetHashValue(hPtr);
     Tcl_HashEntry *hPtr2 = Tcl_FindHashEntry(AccessibleAttributes, "role");
     if (!hPtr2) {
 	return 0;
     }
 
-    const char *result = Tcl_GetString(Tcl_GetHashValue(hPtr2));
+    const char *result = Tcl_GetString((Tcl_Obj *)Tcl_GetHashValue(hPtr2));
     if (!result) {
 	return 0;
     }
