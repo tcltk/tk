@@ -18,6 +18,7 @@
 #ifndef _TKPORT
 #include "tkPort.h"
 #endif
+#include <X11/Xatom.h>
 
 /*
  * Ensure WORDS_BIGENDIAN is defined correctly:
@@ -145,8 +146,10 @@
 typedef struct TkColormap TkColormap;
 typedef struct TkFontAttributes TkFontAttributes;
 typedef struct TkGrabEvent TkGrabEvent;
-typedef struct TkpCursor_ *TkpCursor;
-#define TkRegion Region
+#ifndef TK_NO_DEPRECATED
+    typedef Cursor TkpCursor;
+    typedef Region TkRegion;
+#endif
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
 typedef struct Busy *TkBusy;
@@ -1273,20 +1276,22 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 /*
  * These macros are just wrappers for the equivalent X Region calls.
  */
-#define TkClipBox XClipBox
-#define TkCreateRegion XCreateRegion
-#define TkDestroyRegion XDestroyRegion
-#define TkIntersectRegion XIntersectRegion
-#define TkRectInRegion XRectInRegion
-#define TkSetRegion XSetRegion
-#define TkSubtractRegion XSubtractRegion
-#define TkUnionRectWithRegion XUnionRectWithRegion
+#ifndef TK_NO_DEPRECATED
+#   define TkClipBox XClipBox
+#   define TkCreateRegion XCreateRegion
+#   define TkDestroyRegion XDestroyRegion
+#   define TkIntersectRegion XIntersectRegion
+#   define TkRectInRegion XRectInRegion
+#   define TkSetRegion XSetRegion
+#   define TkSubtractRegion XSubtractRegion
+#   define TkUnionRectWithRegion XUnionRectWithRegion
+#endif
 
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
-MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
+MODULE_SCOPE void	TkpCopyRegion(Region dst, Region src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class

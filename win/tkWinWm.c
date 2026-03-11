@@ -14,7 +14,6 @@
  */
 
 #include "tkWinInt.h"
-#include <windows.h>
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
@@ -378,8 +377,8 @@ static void		GetMinSize(WmInfo *wmPtr,
 			    int *minWidthPtr, int *minHeightPtr);
 static TkWindow *	GetTopLevel(HWND hwnd);
 static void		InitWm(void);
-static int		InstallColormaps(HWND hwnd, int message,
-			    int isForemost);
+static bool		InstallColormaps(HWND hwnd, int message,
+			    bool isForemost);
 static void		InvalidateSubTree(TkWindow *winPtr, Colormap colormap);
 static void		InvalidateSubTreeDepth(TkWindow *winPtr);
 static int		ParseGeometry(Tcl_Interp *interp, const char *string,
@@ -2119,7 +2118,7 @@ UpdateWrapper(
 		Tk_ReqWidth((Tk_Window) winPtr),
 		Tk_ReqHeight((Tk_Window) winPtr));
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, (WPARAM) wmPtr->hMenu,
-		(LPARAM) Tk_GetMenuHWND((Tk_Window) winPtr));
+		(LPARAM) TkGetMenuHWND((Tk_Window) winPtr));
     }
 
     /*
@@ -2347,7 +2346,7 @@ TkWmUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -2377,7 +2376,7 @@ TkpWmSetState(
     ShowWindow(wmPtr->wrapper, cmd);
     wmPtr->flags &= ~WM_SYNC_PENDING;
 setStateEnd:
-    return 1;
+    return true;
 }
 
 /*
@@ -3408,9 +3407,9 @@ WmColormapwindowsCmd(
      */
 
     if (wmPtr == winPtr->dispPtr->foregroundWmPtr) {
-	InstallColormaps(wmPtr->wrapper, WM_QUERYNEWPALETTE, 1);
+	InstallColormaps(wmPtr->wrapper, WM_QUERYNEWPALETTE, true);
     } else {
-	InstallColormaps(wmPtr->wrapper, WM_PALETTECHANGED, 0);
+	InstallColormaps(wmPtr->wrapper, WM_PALETTECHANGED, false);
     }
     return TCL_OK;
 }
@@ -3619,7 +3618,11 @@ WmForgetCmd(
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
 
-    if (Tk_IsTopLevel(frameWin)) {
+    /*
+     * Tk ticket c77b426d: avoid panic on usage after wm forget
+     */
+
+    if (Tk_IsTopLevel(frameWin) && Tk_IsManageable(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
@@ -6957,9 +6960,9 @@ TkWmAddToColormapWindows(
      */
 
     if (topPtr->wmInfoPtr == winPtr->dispPtr->foregroundWmPtr) {
-	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_QUERYNEWPALETTE, 1);
+	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_QUERYNEWPALETTE, true);
     } else {
-	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_PALETTECHANGED, 0);
+	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_PALETTECHANGED, false);
     }
 }
 
@@ -7083,7 +7086,7 @@ TkWinSetMenu(
 	}
     } else {
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, (WPARAM) hMenu,
-		(LPARAM) Tk_GetMenuHWND(tkwin));
+		(LPARAM) TkGetMenuHWND(tkwin));
     }
 }
 
@@ -7350,13 +7353,13 @@ GenerateConfigureNotify(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 InstallColormaps(
     HWND hwnd,			/* Toplevel wrapper window whose colormaps
 				 * should be installed. */
     int message,		/* Either WM_PALETTECHANGED or
 				 * WM_QUERYNEWPALETTE */
-    int isForemost)		/* 1 if window is foremost, else 0 */
+    bool isForemost)		/* true if window is foremost, else false */
 {
     Tcl_Size i;
     HDC dc;
@@ -7367,7 +7370,7 @@ InstallColormaps(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
-	return 0;
+	return false;
     }
 
     wmPtr = winPtr->wmInfoPtr;
@@ -7397,7 +7400,7 @@ InstallColormaps(
 	    RealizePalette(dc);
 	    ReleaseDC(hwnd, dc);
 	    SendMessageW(hwnd, WM_PALETTECHANGED, (WPARAM) hwnd, (LPARAM) NULL);
-	    return TRUE;
+	    return true;
 	}
     } else {
 	/*
@@ -7439,7 +7442,7 @@ InstallColormaps(
     SelectPalette(dc, oldPalette, TRUE);
     RealizePalette(dc);
     ReleaseDC(hwnd, dc);
-    return TRUE;
+    return true;
 }
 
 /*
@@ -7941,7 +7944,7 @@ WmProc(
 	goto done;
 
     case WM_QUERYNEWPALETTE:
-	result = InstallColormaps(hwnd, WM_QUERYNEWPALETTE, TRUE);
+	result = InstallColormaps(hwnd, WM_QUERYNEWPALETTE, true);
 	goto done;
 
     case WM_SETTINGCHANGE:
@@ -8057,7 +8060,7 @@ WmProc(
     case WM_ENTERIDLE:
     case WM_INITMENUPOPUP:
 	if (winPtr) {
-	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window) winPtr);
+	    HWND hMenuHWnd = TkGetEmbeddedMenuHWND((Tk_Window) winPtr);
 
 	    if (hMenuHWnd) {
 		if (SendMessageW(hMenuHWnd, message, wParam, lParam)) {

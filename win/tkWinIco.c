@@ -333,12 +333,12 @@ GetFileIcon(
 
     GetObject(iconInfo.hbmMask, sizeof(BITMAP), &bmp);
     bitSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
-    bitBuffer = ckalloc(bitSize);
+    bitBuffer = (char *)Tcl_Alloc(bitSize);
     GetBitmapBits(iconInfo.hbmMask, bitSize, bitBuffer);
 
     GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bmp);
     imageSize = bmp.bmWidth * bmp.bmHeight * bmp.bmBitsPixel / 8;
-    byteBuffer = ckalloc(imageSize);
+    byteBuffer = (unsigned char *)Tcl_Alloc(imageSize);
     GetBitmapBits(iconInfo.hbmColor, imageSize, byteBuffer);
 
     hasAlpha = 0;
@@ -383,8 +383,8 @@ GetFileIcon(
 	TK_PHOTO_COMPOSITE_SET);
 
 cleanup:
-    if (bitBuffer) ckfree(bitBuffer);
-    if (byteBuffer) ckfree(byteBuffer);
+    if (bitBuffer) Tcl_Free(bitBuffer);
+    if (byteBuffer) Tcl_Free(byteBuffer);
 
     DeleteObject(iconInfo.hbmMask);
     DeleteObject(iconInfo.hbmColor);

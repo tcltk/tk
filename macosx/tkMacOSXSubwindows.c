@@ -202,7 +202,7 @@ XMapWindow(
 		 * visible.
 		 */
 
-		for (int try = 0; try < 20; try++) {
+		for (int count = 0; count < 20; count++) {
 		    if ([[NSApp orderedWindows] firstObject] == win) {
 			break;
 		    }
@@ -245,8 +245,8 @@ XMapWindow(
      * it in an idle task.
      */
 
-    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) view);
-    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, (void *) view);
+    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, view);
+    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.

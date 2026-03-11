@@ -1407,6 +1407,8 @@ WindowingsystemCmd(
     windowingsystem = "win32";
 #elif defined(MAC_OSX_TK)
     windowingsystem = "aqua";
+#elif defined(TK_USE_WAYLAND)
+    windowingsystem = "wayland";
 #else
     windowingsystem = "x11";
 #endif

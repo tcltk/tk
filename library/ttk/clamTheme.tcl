@@ -130,7 +130,7 @@ namespace eval ttk::theme::clam {
 	    -background [list selected $colors(-frame) {} $colors(-darker)] \
 	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)]
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding 2.25p
 	ttk::style configure Item -indicatorsize 9p \
@@ -140,10 +140,14 @@ namespace eval ttk::theme::clam {
 	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-lighter)
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
+	    -background [list	disabled $colors(-frame) \
+				background $colors(-darkest) \
 				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-selectfg) \
 				selected $colors(-selectfg)] \
 	    -bordercolor [list focus $colors(-selectbg)]
 
