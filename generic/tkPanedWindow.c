@@ -99,7 +99,7 @@ typedef struct Pane {
 				 * sash. */
     int handlex, handley;	/* Coordinates of the sash handle. */
     enum stretch stretch;	/* Controls how pane grows/shrinks */
-    int hide;			/* Controls visibility of pane */
+    bool hide;			/* Controls visibility of pane */
     struct PanedWindow *containerPtr;
 				/* Paned window managing the window. */
     Tk_Window after;		/* Placeholder for parsing options. */
@@ -129,12 +129,12 @@ typedef struct PanedWindow {
     Tcl_Obj *heightObj;		/* Tcl_Obj rep for height. */
     enum orient orient;		/* Orientation of the widget. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    int resizeOpaque;		/* Boolean indicating whether resize should be
+    bool resizeOpaque;		/* Boolean indicating whether resize should be
 				 * opaque or rubberband style. */
     int sashRelief;		/* Relief used to draw sash. */
     Tcl_Obj *sashWidthObj;	/* Tcl_Obj rep for sash width. */
     Tcl_Obj *sashPadObj;	/* Tcl_Obj rep for sash padding. */
-    int showHandle;		/* Boolean indicating whether sash handles
+    bool showHandle;		/* Boolean indicating whether sash handles
 				 * should be drawn. */
     Tcl_Obj *handleSizeObj;	/* Size of one side of a sash handle (handles
 				 * are square), in pixels. */
@@ -288,7 +288,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-opaqueresize", "opaqueResize", "OpaqueResize",
 	DEF_PANEDWINDOW_OPAQUERESIZE, TCL_INDEX_NONE,
-	offsetof(PanedWindow, resizeOpaque), 0, 0, 0},
+	offsetof(PanedWindow, resizeOpaque), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	DEF_PANEDWINDOW_ORIENT, TCL_INDEX_NONE, offsetof(PanedWindow, orient),
 	TK_OPTION_ENUM_VAR, orientStrings, GEOMETRY},
@@ -317,7 +317,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TCL_INDEX_NONE, 0, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-showhandle", "showHandle", "ShowHandle",
 	DEF_PANEDWINDOW_SHOWHANDLE, TCL_INDEX_NONE, offsetof(PanedWindow, showHandle),
-	0, 0, GEOMETRY},
+	TK_OPTION_VAR(bool), 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_PANEDWINDOW_WIDTH, offsetof(PanedWindow, widthObj),
 	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY},
@@ -335,7 +335,7 @@ static const Tk_OptionSpec paneOptionSpecs[] = {
 	DEF_PANEDWINDOW_PANE_HEIGHT, offsetof(Pane, heightObj),
 	offsetof(Pane, height), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-hide", "hide", "Hide",
-	DEF_PANEDWINDOW_PANE_HIDE, TCL_INDEX_NONE, offsetof(Pane, hide), 0,0,GEOMETRY},
+	DEF_PANEDWINDOW_PANE_HIDE, TCL_INDEX_NONE, offsetof(Pane, hide), TK_OPTION_VAR(bool), 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-minsize", NULL, NULL,
 	DEF_PANEDWINDOW_PANE_MINSIZE, offsetof(Pane, minSizeObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
