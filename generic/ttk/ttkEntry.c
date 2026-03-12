@@ -102,7 +102,7 @@ typedef struct {
      * Options managed by Tk_SetOptions:
      */
     Tcl_Obj *textVariableObj;	/* Name of linked variable */
-    int exportSelection;	/* Tie internal selection to X selection? */
+    bool exportSelection;	/* True means tie internal selection to X selection? */
 
     VMODE validate;		/* Validation mode */
     Tcl_Obj *validateCmdObj;	/* Validation script template */
@@ -161,7 +161,7 @@ typedef struct {
 static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", "1", TCL_INDEX_NONE, offsetof(Entry, entry.exportSelection),
-	0,0,0 },
+	TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_ENTRY_FONT, offsetof(Entry, entry.fontObj),TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED},

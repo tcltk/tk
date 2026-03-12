@@ -707,7 +707,7 @@ RegAddName(
  *	will normally be the same as name, but if name was already in use for
  *	an application then a name of the form "name #2" will be chosen, with
  *	a high enough number to make the name unique.
- *      
+ *
  *      A crucial exception to the behavior described above arises when Tk is
  *      being run on a Continuous Integration runner.  The file-based App
  *      registry which is used to ensure uniqueness cannot be used on CI

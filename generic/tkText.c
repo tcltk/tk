@@ -106,7 +106,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-autoseparators", "autoSeparators",
 	"AutoSeparators", DEF_TEXT_AUTO_SEPARATORS, TCL_INDEX_NONE,
 	offsetof(TkText, autoSeparators),
-	TK_OPTION_DONT_SET_DEFAULT, 0, 0},
+	TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_TEXT_BG_COLOR, TCL_INDEX_NONE, offsetof(TkText, border),
 	0, DEF_TEXT_BG_MONO, 0},
@@ -117,7 +117,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_BOOLEAN, "-blockcursor", "blockCursor",
 	"BlockCursor", DEF_TEXT_BLOCK_CURSOR, TCL_INDEX_NONE,
-	offsetof(TkText, insertCursorType), 0, 0, 0},
+	offsetof(TkText, insertCursorType), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_TEXT_BORDER_WIDTH, offsetof(TkText, borderWidthObj), TCL_INDEX_NONE,
 	0, 0, TK_TEXT_LINE_GEOMETRY},
@@ -129,7 +129,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_TEXT_EXPORT_SELECTION, TCL_INDEX_NONE,
-	offsetof(TkText, exportSelection), 0, 0, 0},
+	offsetof(TkText, exportSelection), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -197,7 +197,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selFgColorPtr),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
-	DEF_TEXT_SET_GRID, TCL_INDEX_NONE, offsetof(TkText, setGrid), 0, 0, 0},
+	DEF_TEXT_SET_GRID, TCL_INDEX_NONE, offsetof(TkText, setGrid), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
 	DEF_TEXT_SPACING1, offsetof(TkText, spacing1Obj), TCL_INDEX_NONE,
 	0, 0, TK_TEXT_LINE_GEOMETRY },
@@ -224,7 +224,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-undo", "undo", "Undo",
 	DEF_TEXT_UNDO, TCL_INDEX_NONE, offsetof(TkText, undo),
-	TK_OPTION_DONT_SET_DEFAULT, 0 , 0},
+	TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_VAR(bool), 0 , 0},
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_TEXT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, width), 0, 0,
 	TK_TEXT_LINE_GEOMETRY},
@@ -524,10 +524,10 @@ CreateWidget(
 	Tcl_InitHashTable(&sharedPtr->windowTable, TCL_STRING_KEYS);
 	Tcl_InitHashTable(&sharedPtr->imageTable, TCL_STRING_KEYS);
 	sharedPtr->undoStack = TkUndoInitStack(interp,0);
-	sharedPtr->undo = 0;
+	sharedPtr->undo = false;
 	sharedPtr->isDirty = 0;
 	sharedPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
-	sharedPtr->autoSeparators = 1;
+	sharedPtr->autoSeparators = true;
 	sharedPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 	sharedPtr->stateEpoch = 0;
 	sharedPtr->imageCount = 0;
@@ -588,7 +588,7 @@ CreateWidget(
     TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, 0, 0,
 	    &startIndex);
     TkTextSetYView(textPtr, &startIndex, 0);
-    textPtr->exportSelection = 1;
+    textPtr->exportSelection = true;
     textPtr->pickEvent.type = LeaveNotify;
     textPtr->undo = textPtr->sharedTextPtr->undo;
     textPtr->maxUndo = textPtr->sharedTextPtr->maxUndo;
@@ -1785,12 +1785,12 @@ TextReplaceCmd(
      * undo-separator between the delete and insert.
      */
 
-    int origAutoSep = textPtr->sharedTextPtr->autoSeparators;
+    bool origAutoSep = textPtr->sharedTextPtr->autoSeparators;
     int result, lineNumber;
     TkTextIndex indexTmp;
 
     if (textPtr->sharedTextPtr->undo) {
-	textPtr->sharedTextPtr->autoSeparators = 0;
+	textPtr->sharedTextPtr->autoSeparators = false;
 	if (origAutoSep &&
 		textPtr->sharedTextPtr->lastEditMode!=TK_TEXT_EDIT_REPLACE) {
 	    TkUndoInsertUndoSeparator(textPtr->sharedTextPtr->undoStack);
@@ -2061,7 +2061,7 @@ ConfigureText(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_SavedOptions savedOptions;
-    int oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
+    bool oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
     int mask = 0;
 
     if (Tk_SetOptions(interp, (char *) textPtr, textPtr->optionTable,
@@ -2166,7 +2166,7 @@ ConfigureText(
 		 */
 
 		TkTextSelectionEvent(textPtr);
-		textPtr->abortSelections = 1;
+		textPtr->abortSelections = true;
 	    }
 	}
 
@@ -2236,8 +2236,8 @@ ConfigureText(
     } else {
 	textPtr->selTagPtr->selFgColor = textPtr->selFgColorPtr;
     }
-    textPtr->selTagPtr->affectsDisplay = 0;
-    textPtr->selTagPtr->affectsDisplayGeometry = 0;
+    textPtr->selTagPtr->affectsDisplay = false;
+    textPtr->selTagPtr->affectsDisplayGeometry = false;
     if ((textPtr->selTagPtr->elide >= 0)
 	    || (textPtr->selTagPtr->tkfont != NULL)
 	    || (textPtr->selTagPtr->justify != TK_JUSTIFY_NULL)
@@ -2254,8 +2254,8 @@ ConfigureText(
 	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
 	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_NONE)
 	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
-	textPtr->selTagPtr->affectsDisplay = 1;
-	textPtr->selTagPtr->affectsDisplayGeometry = 1;
+	textPtr->selTagPtr->affectsDisplay = true;
+	textPtr->selTagPtr->affectsDisplayGeometry = true;
     }
     if ((textPtr->selTagPtr->border != NULL)
 	    || (textPtr->selTagPtr->selBorder != NULL)
@@ -2270,9 +2270,9 @@ ConfigureText(
 	    || (textPtr->selTagPtr->underlineColor != NULL)
 	    || (textPtr->selTagPtr->lMarginColor != NULL)
 	    || (textPtr->selTagPtr->rMarginColor != NULL)) {
-	textPtr->selTagPtr->affectsDisplay = 1;
+	textPtr->selTagPtr->affectsDisplay = true;
     }
-    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, 1);
+    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, true);
 
     /*
      * Claim the selection if we've suddenly started exporting it and there
@@ -2481,7 +2481,7 @@ TextEventProc(
 	textPtr->selFgColorPtr = NULL;
 	if (textPtr->setGrid) {
 	    Tk_UnsetGrid(textPtr->tkwin);
-	    textPtr->setGrid = 0;
+	    textPtr->setGrid = false;
 	}
 	if (!(textPtr->flags & OPTIONS_FREED)) {
 	    Tk_FreeConfigOptions(textPtr, textPtr->optionTable,
@@ -2515,7 +2515,7 @@ TextEventProc(
 	    }
 	    if (textPtr->inactiveSelBorder != textPtr->selBorder) {
 		TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr,
-			1);
+			true);
 	    }
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
@@ -2569,7 +2569,7 @@ TextCmdDeletedProc(
     if (!(textPtr->flags & DESTROYED)) {
 	if (textPtr->setGrid) {
 	    Tk_UnsetGrid(textPtr->tkwin);
-	    textPtr->setGrid = 0;
+	    textPtr->setGrid = false;
 	}
 	textPtr->flags |= DESTROYED;
 	Tk_DestroyWindow(tkwin);
@@ -2715,7 +2715,7 @@ InsertChars(
 	if (TkBTreeCharTagged(indexPtr, tPtr->selTagPtr)) {
 	    TkTextSelectionEvent(tPtr);
 	}
-	tPtr->abortSelections = 1;
+	tPtr->abortSelections = true;
     }
 
     /*
@@ -2755,7 +2755,7 @@ TextPushUndoAction(
 				/* Index describing second location. */
 {
     TkUndoSubAtom *iAtom, *dAtom;
-    int canUndo, canRedo;
+    bool canUndo, canRedo;
     char lMarkName[16 + TCL_INTEGER_SPACE] = "tk::undoMarkL";
     char rMarkName[16 + TCL_INTEGER_SPACE] = "tk::undoMarkR";
     char stringUndoMarkId[TCL_INTEGER_SPACE] = "";
@@ -3197,7 +3197,7 @@ DeleteIndexRange(
 	     */
 
 	    TkTextSelectionEvent(textPtr);
-	    tPtr->abortSelections = 1;
+	    tPtr->abortSelections = true;
 	}
     }
 
@@ -3356,7 +3356,7 @@ DeleteIndexRange(
 	 */
 
 	for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
-	    tPtr->abortSelections = 1;
+	    tPtr->abortSelections = true;
 	}
     }
 
@@ -3414,7 +3414,7 @@ TextFetchSelection(
     if (offset == 0) {
 	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, 0, 0,
 		&textPtr->selIndex);
-	textPtr->abortSelections = 0;
+	textPtr->abortSelections = false;
     } else if (textPtr->abortSelections) {
 	return 0;
     }
@@ -3545,7 +3545,7 @@ TkTextLostSelection(
 	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr),
 		0, &end);
-	TkTextRedrawTag(NULL, textPtr, &start, &end, textPtr->selTagPtr, 1);
+	TkTextRedrawTag(NULL, textPtr, &start, &end, textPtr->selTagPtr, true);
 	TkBTreeTag(&start, &end, textPtr->selTagPtr, 0);
     }
 
@@ -5094,7 +5094,7 @@ TextEditUndo(
      * 'fixed').
      */
 
-    textPtr->sharedTextPtr->undo = 0;
+    textPtr->sharedTextPtr->undo = false;
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_UNDO;
     }
@@ -5104,7 +5104,7 @@ TextEditUndo(
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     }
-    textPtr->sharedTextPtr->undo = 1;
+    textPtr->sharedTextPtr->undo = true;
 
     if (textPtr->sharedTextPtr->autoSeparators) {
 	TkUndoInsertUndoSeparator(textPtr->sharedTextPtr->undoStack);
@@ -5164,7 +5164,7 @@ TextEditRedo(
      * duration (unless it is 'fixed').
      */
 
-    textPtr->sharedTextPtr->undo = 0;
+    textPtr->sharedTextPtr->undo = false;
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_REDO;
     }
@@ -5174,7 +5174,7 @@ TextEditRedo(
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     }
-    textPtr->sharedTextPtr->undo = 1;
+    textPtr->sharedTextPtr->undo = true;
 
     /*
      * Convert undo/redo temporary marks set by TkUndoApply() into
@@ -5220,8 +5220,8 @@ TextEditCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, setModified, oldModified;
-    int canRedo = 0;
-    int canUndo = 0;
+    bool canRedo = false;
+    bool canUndo = false;
 
     static const char *const editOptionStrings[] = {
 	"canundo", "canredo", "modified", "redo", "reset", "separator",

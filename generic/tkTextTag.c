@@ -130,8 +130,7 @@ TkTextTagCmd(
 	TAG_ADD, TAG_BIND, TAG_CGET, TAG_CONFIGURE, TAG_DELETE, TAG_LOWER,
 	TAG_NAMES, TAG_NEXTRANGE, TAG_PREVRANGE, TAG_RAISE, TAG_RANGES,
 	TAG_REMOVE
-    };
-    int optionIndex;
+    } optionIndex;
     Tcl_Size i;
     TkTextTag *tagPtr;
     TkTextIndex index1, index2;
@@ -146,16 +145,11 @@ TkTextTagCmd(
 	return TCL_ERROR;
     }
 
-    switch ((enum tagOptions)optionIndex) {
+    switch (optionIndex) {
     case TAG_ADD:
     case TAG_REMOVE: {
-	int addTag;
+	bool addTag = optionIndex == TAG_ADD;
 
-	if (((enum tagOptions)optionIndex) == TAG_ADD) {
-	    addTag = 1;
-	} else {
-	    addTag = 0;
-	}
 	if (objc < 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv,
 		    "tagName index1 ?index2 index1 index2 ...?");
@@ -228,7 +222,7 @@ TkTextTagCmd(
 				TkTextLostSelection, textPtr);
 			textPtr->flags |= GOT_SELECTION;
 		    }
-		    textPtr->abortSelections = 1;
+		    textPtr->abortSelections = true;
 		}
 	    }
 	}
@@ -406,8 +400,8 @@ TkTextTagCmd(
 		}
 	    }
 
-	    tagPtr->affectsDisplay = 0;
-	    tagPtr->affectsDisplayGeometry = 0;
+	    tagPtr->affectsDisplay = false;
+	    tagPtr->affectsDisplayGeometry = false;
 	    if ((tagPtr->elide >= 0)
 		    || (tagPtr->tkfont != NULL)
 		    || (tagPtr->justify != TK_JUSTIFY_NULL)
@@ -424,8 +418,8 @@ TkTextTagCmd(
 		    || (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
 		    || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
 		    || (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
-		tagPtr->affectsDisplay = 1;
-		tagPtr->affectsDisplayGeometry = 1;
+		tagPtr->affectsDisplay = true;
+		tagPtr->affectsDisplayGeometry = true;
 	    }
 	    if ((tagPtr->border != NULL)
 		    || (tagPtr->selBorder != NULL)
@@ -440,7 +434,7 @@ TkTextTagCmd(
 		    || (tagPtr->underlineColor != NULL)
 		    || (tagPtr->lMarginColor != NULL)
 		    || (tagPtr->rMarginColor != NULL)) {
-		tagPtr->affectsDisplay = 1;
+		tagPtr->affectsDisplay = true;
 	    }
 	    if (!newTag) {
 		/*
@@ -455,7 +449,7 @@ TkTextTagCmd(
 		 */
 
 		TkTextRedrawTag(textPtr->sharedTextPtr, NULL,
-			NULL, NULL, tagPtr, 1);
+			NULL, NULL, tagPtr, true);
 	    }
 	    return TCL_OK;
 	}
@@ -486,7 +480,7 @@ TkTextTagCmd(
 	    }
 	    if (tagPtr->affectsDisplay) {
 		TkTextRedrawTag(textPtr->sharedTextPtr, NULL,
-			NULL, NULL, tagPtr, 1);
+			NULL, NULL, tagPtr, true);
 	    }
 	    TkTextDeleteTag(textPtr, tagPtr);
 	    Tcl_DeleteHashEntry(hPtr);
@@ -525,7 +519,7 @@ TkTextTagCmd(
 	 * for all peers.
 	 */
 
-	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, 1);
+	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, true);
 	break;
     }
     case TAG_NAMES: {
@@ -807,7 +801,7 @@ TkTextTagCmd(
 	 * for all peers.
 	 */
 
-	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, 1);
+	TkTextRedrawTag(textPtr->sharedTextPtr, NULL, NULL, NULL, tagPtr, true);
 	break;
     }
     case TAG_RANGES: {
@@ -953,8 +947,8 @@ TkTextCreateTag(
     tagPtr->underlineColor = NULL;
     tagPtr->elide = -1;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
-    tagPtr->affectsDisplay = 0;
-    tagPtr->affectsDisplayGeometry = 0;
+    tagPtr->affectsDisplay = false;
+    tagPtr->affectsDisplayGeometry = false;
     textPtr->sharedTextPtr->numTags++;
     if (!strcmp(tagName, "sel")) {
 	tagPtr->textPtr = textPtr;

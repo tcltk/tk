@@ -100,7 +100,7 @@ typedef struct {
 				 * fullLines lines. 1 means that there is one
 				 * additional line that is partially
 				 * visible. */
-    int setGrid;		/* Non-zero means pass gridding information to
+    bool setGrid;		/* True means pass gridding information to
 				 * window manager. */
 
     /*
@@ -129,7 +129,7 @@ typedef struct {
     int numSelected;		/* Number of elements currently selected. */
     int selectAnchor;		/* Fixed end of selection (i.e. element at
 				 * which selection was started.) */
-    int exportSelection;	/* Non-zero means tie internal listbox to X
+    bool exportSelection;	/* True means tie internal listbox to X
 				 * selection. */
     int active;			/* Index of "active" element (the one that has
 				 * been selected by keyboard traversal). -1
@@ -257,7 +257,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 offsetof(Listbox, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	 "ExportSelection", DEF_LISTBOX_EXPORT_SELECTION, TCL_INDEX_NONE,
-	 offsetof(Listbox, exportSelection), 0, 0, 0},
+	 offsetof(Listbox, exportSelection), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	 NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -301,7 +301,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_SELECT_MODE, offsetof(Listbox, selectModeObj), TCL_INDEX_NONE,
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
-	 DEF_LISTBOX_SET_GRID, TCL_INDEX_NONE, offsetof(Listbox, setGrid), 0, 0, 0},
+	 DEF_LISTBOX_SET_GRID, TCL_INDEX_NONE, offsetof(Listbox, setGrid), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_LISTBOX_STATE, TCL_INDEX_NONE, offsetof(Listbox, state),
 	0, &tkStateStrings[1], 0},
@@ -551,7 +551,7 @@ Tk_ListboxObjCmd(
     listPtr->selTextGC		   = NULL;
     listPtr->fullLines		   = 1;
     listPtr->xScrollUnit	   = 1;
-    listPtr->exportSelection	   = 1;
+    listPtr->exportSelection	   = true;
     listPtr->cursor		   = NULL;
     listPtr->state		   = STATE_NORMAL;
     listPtr->gray		   = None;

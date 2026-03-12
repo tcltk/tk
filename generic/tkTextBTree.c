@@ -2195,7 +2195,7 @@ TkBTreeTag(
 	}
 	segPtr->size = 0;
 	segPtr->body.toggle.tagPtr = tagPtr;
-	segPtr->body.toggle.inNodeCounts = 0;
+	segPtr->body.toggle.inNodeCounts = false;
 	anyChanges = 1;
     }
 
@@ -2223,7 +2223,7 @@ TkBTreeTag(
 	if (segPtr->body.toggle.inNodeCounts) {
 	    ChangeNodeToggleCount(search.curIndex.linePtr->parentPtr,
 		    segPtr->body.toggle.tagPtr, -1);
-	    segPtr->body.toggle.inNodeCounts = 0;
+	    segPtr->body.toggle.inNodeCounts = false;
 	    changed = 1;
 	} else {
 	    changed = 0;
@@ -2266,7 +2266,7 @@ TkBTreeTag(
 	}
 	segPtr->size = 0;
 	segPtr->body.toggle.tagPtr = tagPtr;
-	segPtr->body.toggle.inNodeCounts = 0;
+	segPtr->body.toggle.inNodeCounts = false;
 	anyChanges = 1;
     }
 
@@ -3050,7 +3050,7 @@ TkBTreePrevTag(
     Node *nodePtr, *node2Ptr, *prevNodePtr;
     Summary *summaryPtr;
     int byteIndex, linesSkipped;
-    int pastLast;		/* Saw last marker during scan. */
+    bool pastLast;		/* Saw last marker during scan. */
 
     if (searchPtr->linesLeft <= 0) {
 	goto searchOver;
@@ -3074,9 +3074,9 @@ TkBTreePrevTag(
 	     * Search back to the very beginning, so pastLast is irrelevent.
 	     */
 
-	    pastLast = 1;
+	    pastLast = true;
 	} else {
-	    pastLast = 0;
+	    pastLast = false;
 	}
 
 	for (prevPtr = NULL, segPtr = searchPtr->curIndex.linePtr->segPtr ;
@@ -3092,7 +3092,7 @@ TkBTreePrevTag(
 	    if (segPtr == searchPtr->lastPtr) {
 		prevPtr = NULL;		/* Segments earlier than last don't
 					 * count. */
-		pastLast = 1;
+		pastLast = true;
 	    }
 	    byteIndex += segPtr->size;
 	}
@@ -3252,7 +3252,7 @@ TkBTreePrevTag(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkBTreeCharTagged(
     const TkTextIndex *indexPtr,/* Indicates a character position at which to
 				 * check for a tag. */
@@ -3336,7 +3336,7 @@ TkBTreeCharTagged(
      * point.
      */
 
-    return toggles & 1;
+    return (toggles & 1) != 0;
 }
 
 /*
@@ -3532,7 +3532,7 @@ TkTextIsElided(
 	infoPtr = elideInfo;
     }
 
-    infoPtr->elide = 0;		/* If nobody says otherwise, it's visible. */
+    infoPtr->elide = false;		/* If nobody says otherwise, it's visible. */
     infoPtr->tagCnts = infoPtr->deftagCnts;
     infoPtr->tagPtrs = infoPtr->deftagPtrs;
     infoPtr->numTags = textPtr->sharedTextPtr->numTags;
@@ -3654,7 +3654,7 @@ TkTextIsElided(
 	}
     }
 
-    elide = (infoPtr->elide != 0);
+    elide = infoPtr->elide;
 
     if (elideInfo == NULL) {
 	if (LOTSA_TAGS < infoPtr->numTags) {
@@ -4752,7 +4752,7 @@ ToggleDeleteProc(
     if (segPtr->body.toggle.inNodeCounts) {
 	ChangeNodeToggleCount(linePtr->parentPtr,
 		segPtr->body.toggle.tagPtr, -1);
-	segPtr->body.toggle.inNodeCounts = 0;
+	segPtr->body.toggle.inNodeCounts = false;
     }
     return 1;
 }
@@ -4804,8 +4804,8 @@ ToggleCleanupProc(
 	    if (segPtr2->body.toggle.tagPtr != segPtr->body.toggle.tagPtr) {
 		continue;
 	    }
-	    counts = segPtr->body.toggle.inNodeCounts
-		    + segPtr2->body.toggle.inNodeCounts;
+	    counts = (segPtr->body.toggle.inNodeCounts ? 1 : 0)
+		    + (segPtr2->body.toggle.inNodeCounts ? 1 : 0);
 	    if (counts != 0) {
 		ChangeNodeToggleCount(linePtr->parentPtr,
 			segPtr->body.toggle.tagPtr, -counts);
@@ -4821,7 +4821,7 @@ ToggleCleanupProc(
     if (!segPtr->body.toggle.inNodeCounts) {
 	ChangeNodeToggleCount(linePtr->parentPtr,
 		segPtr->body.toggle.tagPtr, 1);
-	segPtr->body.toggle.inNodeCounts = 1;
+	segPtr->body.toggle.inNodeCounts = true;
     }
     return segPtr;
 }
@@ -4851,7 +4851,7 @@ ToggleLineChangeProc(
     if (segPtr->body.toggle.inNodeCounts) {
 	ChangeNodeToggleCount(linePtr->parentPtr,
 		segPtr->body.toggle.tagPtr, -1);
-	segPtr->body.toggle.inNodeCounts = 0;
+	segPtr->body.toggle.inNodeCounts = false;
     }
 }
 
@@ -4878,7 +4878,7 @@ ToggleCheckProc(
     TkTextLine *linePtr)	/* Line containing segment. */
 {
     Summary *summaryPtr;
-    int needSummary;
+    bool needSummary;
 
     if (segPtr->size != 0) {
 	Tcl_Panic("ToggleCheckProc: segment had non-zero size");
