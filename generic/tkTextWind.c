@@ -104,7 +104,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
 	"0", offsetof(TkTextEmbWindow, padYObj), TCL_INDEX_NONE, TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
@@ -293,7 +293,7 @@ TkTextWindowCmd(
 	ewPtr->body.ew.createObj = NULL;
 	ewPtr->body.ew.align = TK_ALIGN_CENTER;
 	ewPtr->body.ew.padXObj = ewPtr->body.ew.padYObj = NULL;
-	ewPtr->body.ew.stretch = 0;
+	ewPtr->body.ew.stretch = false;
 	ewPtr->body.ew.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
 	client = (TkTextEmbWindowClient *)Tcl_Alloc(sizeof(TkTextEmbWindowClient));
@@ -301,7 +301,7 @@ TkTextWindowCmd(
 	client->textPtr = textPtr;
 	client->tkwin = NULL;
 	client->chunkCount = 0;
-	client->displayed = 0;
+	client->displayed = false;
 	client->parent = ewPtr;
 	ewPtr->body.ew.clients = client;
 
@@ -466,7 +466,7 @@ EmbWinConfigure(
 		client->textPtr = textPtr;
 		client->tkwin = NULL;
 		client->chunkCount = 0;
-		client->displayed = 0;
+		client->displayed = false;
 		client->parent = ewPtr;
 		ewPtr->body.ew.clients = client;
 	    }
@@ -958,7 +958,7 @@ EmbWinLayoutProc(
 	    client->textPtr = textPtr;
 	    client->tkwin = NULL;
 	    client->chunkCount = 0;
-	    client->displayed = 0;
+	    client->displayed = false;
 	    client->parent = ewPtr;
 	    ewPtr->body.ew.clients = client;
 	}
@@ -1144,7 +1144,7 @@ TkTextEmbWinDisplayProc(
      * the embedded window its clients will get freed.
      */
 
-    client->displayed = 1;
+    client->displayed = true;
 
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if ((windowX != Tk_X(tkwin)) || (windowY != Tk_Y(tkwin))
@@ -1199,7 +1199,7 @@ EmbWinUndisplayProc(
 	 * the unmap becomes unnecessary.
 	 */
 
-	client->displayed = 0;
+	client->displayed = false;
 	Tcl_DoWhenIdle(EmbWinDelayedUnmap, client);
     }
 }

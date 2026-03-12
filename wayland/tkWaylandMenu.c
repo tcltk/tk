@@ -39,7 +39,7 @@ static void DrawMenuEntryAccelerator(TkMenu *menuPtr,
 				     TkMenuEntry *mePtr, Drawable d, GC gc,
 				     Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
 				     Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
-				     int x, int y, int width, int height, int drawArrow);
+				     int x, int y, int width, int height, bool drawArrow);
 static void DrawMenuEntryBackground(TkMenu *menuPtr,
 				    TkMenuEntry *mePtr, Drawable d, GC gc,
 				    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
@@ -581,7 +581,7 @@ DrawMenuEntryAccelerator(
 			 int y,
 			 int width,
 			 int height,
-			 int drawArrow)
+			 bool drawArrow)
 {
     int borderWidth;
     int activeBorderWidth;
@@ -1310,18 +1310,15 @@ TkpDrawMenuEntry(
 		 int x, 
 		 int y, 
 		 int width, 
-		 int height, 
-		 int strictMotif,
-		 int drawArrow)
+		 int height,
+		 DrawMenuFlags drawingParameters)	/* Flags */
 { 
     Tk_3DBorder bgBorder = NULL; 
     Tk_3DBorder activeBorder = NULL; 
     GC gc = NULL;  /* We'll use NanoVG directly, not X GC */
     int padY = (mePtr->menuPtr->menuType == MENUBAR) ? 3 : 0; 
     int adjustedY = y + padY; 
-    int adjustedHeight = height - 2 * padY; 
-    
-    (void)strictMotif;
+    int adjustedHeight = height - 2 * padY;
     
     /* Get the actual borders from the menu */
     if (mePtr->menuPtr->borderPtr != NULL) {
@@ -1347,7 +1344,7 @@ TkpDrawMenuEntry(
 			   x, adjustedY, width, adjustedHeight); 
 	DrawMenuEntryAccelerator(mePtr->menuPtr, mePtr, d, gc, tkfont, fmPtr, 
 				 activeBorder, bgBorder, x, adjustedY, width, adjustedHeight, 
-				 drawArrow);	 
+				 (drawingParameters & DRAW_MENU_ENTRY_ARROW) != 0);
 	if (!mePtr->hideMargin) { 
 	    /* For indicator, we need proper colors - get them from the borders */
 	    XColor *indicatorColor = NULL;
@@ -1440,7 +1437,7 @@ TkpDisplayMenu(
         TkpDrawMenuEntry(mePtr, drawable, NULL, NULL,
 			 menuX + mePtr->x, menuY + mePtr->y,
 			 mePtr->width, mePtr->height,
-			 0, 1);
+			 DRAW_MENU_ENTRY_ARROW);
     }
     
     TkGlfwEndDraw(&dc);

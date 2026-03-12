@@ -83,7 +83,7 @@ typedef struct {
 				 * background. */
     Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    int exportSelection;	/* Non-zero means tie internal entry selection
+    bool exportSelection;	/* True means tie internal entry selection
 				 * to X selection. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *fgColorPtr;		/* Text color in normal mode. */
@@ -212,7 +212,7 @@ typedef struct {
      * Spinbox specific fields for use with configuration settings above.
      */
 
-    int wrap;			/* whether to wrap around when spinning */
+    bool wrap;			/* whether to wrap around when spinning */
 
     int selElement;		/* currently selected control */
     int curElement;		/* currently mouseover control */
