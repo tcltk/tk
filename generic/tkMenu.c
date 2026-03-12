@@ -319,6 +319,10 @@ enum options {
  * Prototypes for static functions in this file:
  */
 
+static int		CheckLoop(Tcl_Interp *interp, const char *name,
+			    TkMenu *menuPtr);
+static int		CheckLoop0(Tcl_Interp *interp, const char *pathName,
+			    const char *name);
 static int		CloneMenu(TkMenu *menuPtr, Tcl_Obj *newMenuName,
 			    Tcl_Obj *newMenuTypeString);
 static int		ConfigureMenu(Tcl_Interp *interp, TkMenu *menuPtr,
@@ -1959,6 +1963,121 @@ ConfigureMenuEntry(
 /*
  *----------------------------------------------------------------------
  *
+ * CheckLoop0, CheckLoop --
+ *
+ *	Checks for loops in use of -menu option in cascades.
+ *
+ * Results:
+ *	True when loop detected.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CheckLoop0(
+    Tcl_Interp *interp,		/* Used for lookups. */
+    const char *pathName,	/* Current menu to look for cascade. */
+    const char *name)		/* Value of -menu option to check. */
+{
+    TkMenuReferences *menuRefPtr;
+
+    menuRefPtr = TkFindMenuReferences(interp, pathName);
+    if (menuRefPtr == NULL) {
+	return 0;
+    }
+    if (menuRefPtr->menuPtr != NULL) {
+	TkMenu *menuPtr = menuRefPtr->menuPtr;
+	const char *parentName;
+
+	if (menuPtr->tkwin != NULL) {
+	    parentName = Tk_PathName(menuPtr->tkwin);
+	    if (strcmp(name, parentName) == 0) {
+		return 1;
+	    }
+	    if ((menuPtr->masterMenuPtr != menuPtr) &&
+		    (menuPtr->masterMenuPtr->tkwin != NULL)) {
+		parentName = Tk_PathName(menuPtr->masterMenuPtr->tkwin);
+		if (strcmp(name, parentName) == 0) {
+		    return 1;
+		}
+	    }
+	}
+    }
+    if (menuRefPtr->parentEntryPtr != NULL) {
+	TkMenuEntry *cascadePtr = menuRefPtr->parentEntryPtr;
+	const char *cascadeName;
+
+	while (cascadePtr != NULL) {
+	    cascadeName = Tcl_GetString(cascadePtr->namePtr);
+	    if ((strcmp(pathName, cascadeName) != 0) &&
+		    CheckLoop0(interp, cascadeName, name)) {
+		return 1;
+	    }
+	    if ((cascadePtr->menuPtr != NULL) &&
+		    (cascadePtr->menuPtr->tkwin != NULL)) {
+		cascadeName = Tk_PathName(cascadePtr->menuPtr->tkwin);
+		if ((strcmp(pathName, cascadeName) != 0) &&
+			CheckLoop0(interp, cascadeName, name)) {
+		    return 1;
+		}
+	    }
+	    if (cascadePtr->menuPtr != NULL) {
+		TkMenu *masterMenuPtr = cascadePtr->menuPtr->masterMenuPtr;
+
+		if ((masterMenuPtr != cascadePtr->menuPtr) &&
+			(masterMenuPtr->tkwin != NULL)) {
+		    cascadeName = Tk_PathName(masterMenuPtr->tkwin);
+		    if ((strcmp(pathName, cascadeName) != 0) &&
+			    CheckLoop0(interp, cascadeName, name)) {
+			return 1;
+		    }
+		}
+	    }
+
+	    cascadePtr = cascadePtr->nextCascadePtr;
+	}
+    }
+    return 0;
+}
+
+static int
+CheckLoop(
+    Tcl_Interp *interp,		/* Used for lookups. */
+    const char *name,		/* Value of -menu option to check. */
+    TkMenu *menuPtr)		/* Information about menu. */
+{
+    const char *pathName = NULL;
+
+    if (menuPtr->tkwin != NULL) {
+	pathName = Tk_PathName(menuPtr->tkwin);
+	if (strcmp(name, pathName) == 0) {
+	    return 1;
+	}
+    }
+    if (pathName != NULL) {
+if (CheckLoop0(interp, pathName, name)) {
+	    return 1;
+	}
+    }
+    pathName = NULL;
+    if ((menuPtr->masterMenuPtr != menuPtr) &&
+	    (menuPtr->masterMenuPtr->tkwin != NULL)) {
+	pathName = Tk_PathName(menuPtr->masterMenuPtr->tkwin);
+	if (strcmp(name, pathName) == 0) {
+	    return 1;
+	}
+    }
+    if (pathName != NULL) {
+	if (CheckLoop0(interp, pathName, name)) {
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * ConfigureMenuCloneEntries --
  *
  *	Calls ConfigureMenuEntry for each menu in the clone chain.
@@ -2017,6 +2136,24 @@ ConfigureMenuCloneEntries(
 	    newCascadeName = Tcl_GetString(mePtr->namePtr);
 	} else {
 	    newCascadeName = NULL;
+	}
+
+	/*
+	 * Tk ticket 7f67bb4054d6d7d9: avoid menu loops
+	 */
+
+	if (newCascadeName != NULL) {
+	    Tcl_Interp *interp = menuPtr->interp;
+	    if (CheckLoop(interp, newCascadeName, menuPtr)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"cannot add recursive cascade menu \"%s\"",
+			newCascadeName));
+		Tcl_SetErrorCode(interp, "TK", "MENU", "RECURSION",
+			(char *) NULL);
+		Tcl_DecrRefCount(mePtr->namePtr);
+		mePtr->namePtr = oldCascadePtr;
+		return TCL_ERROR;
+	    }
 	}
 
 	if ((oldCascadePtr == NULL) && (mePtr->namePtr == NULL)) {
@@ -2390,15 +2527,14 @@ MenuAddOrInsert(
 
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
     	    menuListPtr = menuListPtr->nextInstancePtr) {
-
-    	mePtr = MenuNewEntry(menuListPtr, index, type);
+	TkMenu *errorMenuPtr;
+	int i;
+	mePtr = MenuNewEntry(menuListPtr, index, type);
     	if (mePtr == NULL) {
     	    return TCL_ERROR;
     	}
     	if (ConfigureMenuEntry(mePtr, objc - 1, objv + 1) != TCL_OK) {
-	    TkMenu *errorMenuPtr;
-	    int i;
-
+meError:
 	    for (errorMenuPtr = menuPtr->masterMenuPtr;
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
@@ -2425,6 +2561,22 @@ MenuAddOrInsert(
 	 * cloned for every clone the main menu has. This is special case #2
 	 * in the comment at the top of this file.
     	 */
+
+	/*
+	 * Tk ticket 7f67bb4054d6d7d9: avoid menu loops
+	 */
+
+	if ((type == CASCADE_ENTRY) && (mePtr->namePtr != NULL)) {
+	    char *name = Tcl_GetString(mePtr->namePtr);
+
+	    if (CheckLoop(interp, name, menuListPtr)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"cannot add recursive cascade menu \"%s\"", name));
+		Tcl_SetErrorCode(interp, "TK", "MENU", "RECURSION",
+			(char *) NULL);
+		goto meError;
+	    }
+	}
 
     	if ((menuPtr != menuListPtr) && (type == CASCADE_ENTRY)) {
     	    if ((mePtr->namePtr != NULL)
@@ -3373,7 +3525,7 @@ TkGetMenuHashTable(
  *
  * Results:
  *	Returns a pointer to a menu reference structure. Should not be freed
- *	by calller; when a field of the reference is cleared,
+ *	by caller; when a field of the reference is cleared,
  *	TkFreeMenuReferences should be called.
  *
  * Side effects:

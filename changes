@@ -8345,4 +8345,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-03-10 (bug) [d8f964] Segfault under Windows when executing test file menu.test with
   "-singleproc 0" (nadkarni)
 
+2026-03-12 (bug) [7f67bb] Check recursive menu usage to avoid crash (werner, emiliano)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
