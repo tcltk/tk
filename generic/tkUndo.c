@@ -491,7 +491,7 @@ TkUndoFreeStack(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkUndoCanRedo(
     TkUndoRedoStack *stack)	/* An Undo/Redo stack */
 {
@@ -514,7 +514,7 @@ TkUndoCanRedo(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkUndoCanUndo(
     TkUndoRedoStack *stack)	/* An Undo/Redo stack */
 {

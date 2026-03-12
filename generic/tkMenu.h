@@ -91,7 +91,7 @@ typedef struct TkMenuEntry {
 				 * Malloc'ed. */
     Tcl_Size accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
-    int indicatorOn;		/* True means draw indicator, false means
+    bool indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
 				 * the entry is a radio or check button. */
     /*
@@ -114,14 +114,14 @@ typedef struct TkMenuEntry {
 				 * GC from menu. */
     Tcl_Obj *fontPtr;		/* Text font for menu entries. NULL means use
 				 * overall font for menu. */
-    int columnBreak;		/* If this is 0, this item appears below the
-				 * item in front of it. If this is 1, this
+    bool columnBreak;		/* If this is false, this item appears below the
+				 * item in front of it. If this is true, this
 				 * item starts a new column. This field is
-				 * always 0 for tearoff and separator
+				 * always false for tearoff and separator
 				 * entries. */
-    int hideMargin;		/* If this is 0, then the item has enough
+    bool hideMargin;		/* If this is false, then the item has enough
 				 * margin to accommodate a standard check mark
-				 * and a default right margin. If this is 1,
+				 * and a default right margin. If this is true,
 				 * then the item has no such margins, and
 				 * checkbuttons and radiobuttons with this set
 				 * will have a rectangle drawn in the
@@ -324,7 +324,7 @@ typedef struct TkMenu {
      * Miscellaneous information:
      */
 
-    int tearoff;		/* 1 means this menu can be torn off. On some
+    bool tearoff;		/* True means this menu can be torn off. On some
 				 * platforms, the user can drag an outline of
 				 * the menu by just dragging outside of the
 				 * menu, and the tearoff is created where the
@@ -495,7 +495,7 @@ MODULE_SCOPE void	TkEventuallyRedrawMenu(TkMenu *menuPtr,
 MODULE_SCOPE TkMenuReferences*TkFindMenuReferences(Tcl_Interp *interp, const char *name);
 MODULE_SCOPE TkMenuReferences*TkFindMenuReferencesObj(Tcl_Interp *interp,
 			    Tcl_Obj *namePtr);
-MODULE_SCOPE int	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
+MODULE_SCOPE bool	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
 MODULE_SCOPE Tcl_HashTable *TkGetMenuHashTable(Tcl_Interp *interp);
 MODULE_SCOPE void	TkMenuInitializeDrawingFields(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);

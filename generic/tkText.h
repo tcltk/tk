@@ -62,8 +62,8 @@ typedef struct TkTextLine {
 
 typedef struct TkTextToggle {
     struct TkTextTag *tagPtr;	/* Tag that starts or ends here. */
-    int inNodeCounts;		/* 1 means this toggle has been accounted for
-				 * in node toggle counts; 0 means it hasn't,
+    bool inNodeCounts;		/* True means this toggle has been accounted for
+				 * in node toggle counts; false means it hasn't,
 				 * yet. */
 } TkTextToggle;
 
@@ -93,7 +93,7 @@ typedef struct TkTextEmbWindowClient {
 				 * the window hasn't been created yet. */
     int chunkCount;		/* Number of display chunks that refer to this
 				 * window. */
-    int displayed;		/* Non-zero means that the window has been
+    bool displayed;		/* True means that the window has been
 				 * displayed on the screen recently. */
     struct TkTextSegment *parent;
     struct TkTextEmbWindowClient *next;
@@ -119,8 +119,8 @@ typedef struct TkTextEmbWindow {
     Tcl_Obj *padXObj, *padYObj;		/* Padding to leave around each side of window. */
     TkAlignMode align;		/* How to align window in vertical space. See
 				 * definitions in tkTextWind.c. */
-    int stretch;		/* Should window stretch to fill vertical
-				 * space of line (except for pady)? 0 or 1. */
+    bool stretch;		/* Should window stretch to fill vertical
+				 * space of line (except for pady)? false or true. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
     TkTextEmbWindowClient *clients;
@@ -404,15 +404,15 @@ typedef struct TkTextTag {
 				 * use wrapmode for whole widget. */
     int elide;			/* Non-zero means that data under this tag
 				 * should not be displayed. -1 means not specified. */
-    int affectsDisplay;		/* Non-zero means that this tag affects the
+    bool affectsDisplay;		/* True means that this tag affects the
 				 * way information is displayed on the screen
 				 * (so need to redisplay if tag changes). */
-    Tk_OptionTable optionTable;	/* Token representing the configuration
-				 * specifications. */
-    int affectsDisplayGeometry;	/* Non-zero means that this tag affects the
+    bool affectsDisplayGeometry;	/* True means that this tag affects the
 				 * size with which information is displayed on
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
+    Tk_OptionTable optionTable;	/* Token representing the configuration
+				 * specifications. */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -446,7 +446,7 @@ typedef struct TkTextSearch {
     Tcl_Size linesLeft;		/* Lines left to search (including curIndex
 				 * and stopIndex). When this becomes <= 0 the
 				 * search is over. */
-    int allTags;		/* Non-zero means ignore tag check: search for
+    bool allTags;		/* True means ignore tag check: search for
 				 * transitions on all tags. */
 } TkTextSearch;
 
@@ -556,12 +556,12 @@ typedef struct TkSharedText {
      */
 
     TkUndoRedoStack *undoStack;	/* The undo/redo stack. */
-    int undo;			/* Non-zero means the undo/redo behaviour is
-				 * enabled. */
     int maxUndo;		/* The maximum depth of the undo stack
 				 * expressed as the maximum number of compound
 				 * statements. */
-    int autoSeparators;		/* Non-zero means the separators will be
+    bool undo;			/* True means the undo/redo behaviour is
+				 * enabled. */
+    bool autoSeparators;		/* True means the separators will be
 				 * inserted automatically. */
     int isDirty;		/* Flag indicating the 'dirtyness' of the
 				 * text widget. If the flag is not zero,
@@ -612,7 +612,7 @@ typedef struct TkText {
 				 * the end. */
     int pixelReference;		/* Counter into the current tree reference
 				 * index corresponding to this widget. */
-    int abortSelections;	/* Set to 1 whenever the text is modified in a
+    bool abortSelections;	/* Set to true whenever the text is modified in a
 				 * way that interferes with selection
 				 * retrieval: used to abort incremental
 				 * selection retrievals. */
@@ -683,8 +683,6 @@ typedef struct TkText {
 				 * use wrapmode for whole widget. */
     int width;		/* Desired dimensions for window, measured in characters */
     Tcl_Obj *heightObj;
-    int setGrid;		/* Non-zero means pass gridding information to
-				 * window manager. */
     int prevWidth, prevHeight;	/* Last known dimensions of window; used to
 				 * detect changes in size. */
     TkTextIndex topIndex;	/* Identifies first character in top display
@@ -709,8 +707,6 @@ typedef struct TkText {
     XColor *selFgColorPtr;	/* Foreground color for selected text. This is
 				 * a copy of information in *selTagPtr, so it
 				 * shouldn't be explicitly freed. */
-    int exportSelection;	/* Non-zero means tie "sel" tag to X
-				 * selection. */
     TkTextIndex selIndex;	/* Used during multi-pass selection
 				 * retrievals. This index identifies the next
 				 * character to be returned from the
@@ -769,21 +765,25 @@ typedef struct TkText {
 				 * specifications. */
     Tcl_Size refCount;		/* Number of cached TkTextIndex objects
 				 * refering to us. */
-    int insertCursorType;	/* 0 = standard insertion cursor, 1 = block
+    bool insertCursorType;	/* false = standard insertion cursor, true = block
 				 * cursor. */
+    bool setGrid;		/* True means pass gridding information to
+				 * window manager. */
+    bool exportSelection;	/* True means tie "sel" tag to X
+				 * selection. */
 
     /*
      * Copies of information from the shared section relating to the undo/redo
      * functonality
      */
 
-    int undo;			/* Non-zero means the undo/redo behaviour is
+    bool undo;			/* True means the undo/redo behaviour is
 				 * enabled. */
+    bool autoSeparators;		/* True means the separators will be
+				 * inserted automatically. */
     int maxUndo;		/* The maximum depth of the undo stack
 				 * expressed as the maximum number of compound
 				 * statements. */
-    int autoSeparators;		/* Non-zero means the separators will be
-				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
 } TkText;
@@ -892,7 +892,7 @@ typedef int TkTextCountType;
 #define LOTSA_TAGS 1000
 typedef struct TkTextElideInfo {
     Tcl_Size numTags;		/* Total tags in widget. */
-    int elide;			/* Is the state currently elided. */
+    bool elide;			/* Is the state currently elided. */
     Tcl_Size elidePriority;			/* Tag priority controlling elide state. */
     TkTextSegment *segPtr;	/* Segment to look at next. */
     Tcl_Size segOffset;		/* Offset of segment within line. */
@@ -982,7 +982,7 @@ MODULE_SCOPE const Tk_SegType tkTextEmbImageType;
 MODULE_SCOPE int	TkBTreeAdjustPixelHeight(const TkText *textPtr,
 			    TkTextLine *linePtr, int newPixelHeight,
 			    int mergedLogicalLines);
-MODULE_SCOPE int	TkBTreeCharTagged(const TkTextIndex *indexPtr,
+MODULE_SCOPE bool	TkBTreeCharTagged(const TkTextIndex *indexPtr,
 			    TkTextTag *tagPtr);
 MODULE_SCOPE void	TkBTreeCheck(TkTextBTree tree);
 MODULE_SCOPE TkTextBTree TkBTreeCreate(TkSharedText *sharedTextPtr);
@@ -1124,7 +1124,7 @@ MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y,
 MODULE_SCOPE void	TkTextRedrawTag(TkSharedText *sharedTextPtr,
 			    TkText *textPtr, TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
-			    int withTag);
+			    bool withTag);
 MODULE_SCOPE void	TkTextRelayoutWindow(TkText *textPtr, int mask);
 MODULE_SCOPE int	TkTextScanCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
