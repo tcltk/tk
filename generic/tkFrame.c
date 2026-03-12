@@ -75,7 +75,7 @@ typedef struct {
     Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. May be NULL. */
-    int isContainer;		/* 1 means this window is a container, 0 means
+    bool isContainer;		/* True means this window is a container, false means
 				 * that it isn't. */
     Tcl_Obj *useThisObj;	/* If the window is embedded, this points to
 				 * the name of the window in which it is
@@ -94,7 +94,7 @@ typedef struct {
     Tk_Image bgimg;		/* Derived from bgimgPtr by calling
 				 * Tk_GetImage, or NULL if bgimgPtr is
 				 * NULL. */
-    int tile;			/* Whether to tile the bgimg. */
+    bool tile;			/* Whether to tile the bgimg. */
 #ifndef TK_NO_DOUBLE_BUFFERING
     GC copyGC;			/* GC for copying when double-buffering. */
 #endif /* TK_NO_DOUBLE_BUFFERING */
@@ -190,7 +190,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
      * no border. It should be deprecated.
      */
     {TK_OPTION_BOOLEAN, "-container", "container", "Container",
-	DEF_FRAME_CONTAINER, TCL_INDEX_NONE, offsetof(Frame, isContainer), 0, 0, 0},
+	DEF_FRAME_CONTAINER, TCL_INDEX_NONE, offsetof(Frame, isContainer), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_FRAME_CURSOR, TCL_INDEX_NONE, offsetof(Frame, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -235,7 +235,7 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
-	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), 0, 0, 0},
+	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
 	NULL, 0, 0, 0, commonOptSpec, 0}
 };
@@ -261,7 +261,7 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
 	DEF_TOPLEVEL_SCREEN, offsetof(Frame, screenNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
-	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), 0, 0, 0},
+	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING, "-use", "use", "Use",
 	DEF_TOPLEVEL_USE, offsetof(Frame, useThisObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -326,7 +326,7 @@ static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(void *clientData);
 static void		DrawFrameBackground(Tk_Window tkwin, Pixmap pixmap,
 			    int highlightWidth, int borderWidth,
-			    Tk_Image bgimg, int bgtile);
+			    Tk_Image bgimg, bool bgtile);
 static void		FrameBgImageProc(void *clientData,
 			    int x, int y, int width, int height,
 			    int imgWidth, int imgHeight);
@@ -2133,7 +2133,7 @@ DrawFrameBackground(
     int highlightWidth,
     int borderWidth,
     Tk_Image bgimg,
-    int bgtile)
+    bool bgtile)
 {
     int width, height;			/* Area to paint on. */
     int imageWidth, imageHeight;	/* Dimensions of image. */

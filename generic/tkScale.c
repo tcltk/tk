@@ -100,7 +100,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_BOOLEAN, "-showvalue", "showValue", "ShowValue",
 	DEF_SCALE_SHOW_VALUE, TCL_INDEX_NONE, offsetof(TkScale, showValue),
-	0, 0, 0},
+	TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_PIXELS, "-sliderlength", "sliderLength", "SliderLength",
 	DEF_SCALE_SLIDER_LENGTH, offsetof(TkScale, sliderLengthObj), TCL_INDEX_NONE,
 	0, 0, 0},
@@ -312,7 +312,7 @@ Tk_ScaleObjCmd(
     scalePtr->highlightColorPtr	= NULL;
     scalePtr->inset		= 0;
     scalePtr->sliderLengthObj	= NULL;
-    scalePtr->showValue		= 0;
+    scalePtr->showValue		= false;
     scalePtr->horizLabelY	= 0;
     scalePtr->horizValueY	= 0;
     scalePtr->horizTroughY	= 0;

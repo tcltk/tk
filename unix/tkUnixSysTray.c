@@ -170,13 +170,13 @@ typedef struct {
 
     int flags; /* ICON_FLAG_ - see defines above */
     int msgid; /* Last balloon message ID */
-    int useShapeExt;
+    bool useShapeExt;
 
     int x,y,width,height;
     int imageWidth, imageHeight;
     int requestedWidth, requestedHeight;
-    int visible; /* whether XEMBED_MAPPED should be set */
-    int docked;	 /* whether an icon should be docked */
+    bool visible; /* whether XEMBED_MAPPED should be set */
+    bool docked;	 /* whether an icon should be docked */
     Tcl_Obj *imageObj; /* option: -image */
     Tcl_Obj *classObj; /* option: -class */
 } DockIcon;
@@ -663,13 +663,13 @@ Tk_OptionSpec IconOptionSpec[] = {
 	"TrayIcon", offsetof(DockIcon, classObj), TCL_INDEX_NONE,
 	0, NULL, ICON_CONF_CLASS},
     {TK_OPTION_BOOLEAN,"-docked","docked","Docked",
-	"1", TCL_INDEX_NONE, offsetof(DockIcon, docked), 0, NULL,
+	"1", TCL_INDEX_NONE, offsetof(DockIcon, docked), TK_OPTION_VAR(bool), NULL,
 	ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-shape","shape","Shape",
-	"0", TCL_INDEX_NONE, offsetof(DockIcon, useShapeExt), 0, NULL,
+	"0", TCL_INDEX_NONE, offsetof(DockIcon, useShapeExt), TK_OPTION_VAR(bool), NULL,
 	ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
     {TK_OPTION_BOOLEAN,"-visible","visible","Visible",
-	"1", TCL_INDEX_NONE, offsetof(DockIcon, visible), 0, NULL,
+	"1", TCL_INDEX_NONE, offsetof(DockIcon, visible), TK_OPTION_VAR(bool), NULL,
 	ICON_CONF_XEMBED | ICON_CONF_REDISPLAY},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
