@@ -21,102 +21,9 @@
 #include <vssym32.h>
 #include "ttk/ttkThemeInt.h"
 
-typedef HTHEME  (STDAPICALLTYPE OpenThemeDataProc)(HWND hwnd,
-		 LPCWSTR pszClassList);
-typedef HRESULT (STDAPICALLTYPE CloseThemeDataProc)(HTHEME hTheme);
-typedef HRESULT (STDAPICALLTYPE DrawThemeBackgroundProc)(HTHEME hTheme,
-		 HDC hdc, int iPartId, int iStateId, const RECT *pRect,
-		 OPTIONAL const RECT *pClipRect);
-typedef HRESULT (STDAPICALLTYPE DrawThemeEdgeProc)(HTHEME hTheme,
-		 HDC hdc, int iPartId, int iStateId, const RECT *pDestRect,
-		 unsigned int uEdge, unsigned int uFlags,
-		 OPTIONAL RECT *pContentRect);
-typedef HRESULT	(STDAPICALLTYPE GetThemePartSizeProc)(HTHEME,HDC,
-		 int iPartId, int iStateId,
-		 RECT *prc, enum THEMESIZE eSize, SIZE *psz);
-typedef int     (STDAPICALLTYPE GetThemeSysSizeProc)(HTHEME,int);
-/* GetThemeTextExtent and DrawThemeText only used with BROKEN_TEXT_ELEMENT */
-typedef HRESULT (STDAPICALLTYPE GetThemeTextExtentProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, const RECT *pBoundingRect, RECT *pExtent);
-typedef HRESULT (STDAPICALLTYPE DrawThemeTextProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, DWORD dwTextFlags2, const RECT *pRect);
-typedef BOOL    (STDAPICALLTYPE IsThemeActiveProc)(void);
-typedef BOOL    (STDAPICALLTYPE IsAppThemedProc)(void);
-
-typedef struct
-{
-    OpenThemeDataProc			*OpenThemeData;
-    CloseThemeDataProc			*CloseThemeData;
-    GetThemePartSizeProc		*GetThemePartSize;
-    GetThemeSysSizeProc			*GetThemeSysSize;
-    DrawThemeBackgroundProc		*DrawThemeBackground;
-    DrawThemeEdgeProc			*DrawThemeEdge;
-    DrawThemeTextProc		        *DrawThemeText;
-    GetThemeTextExtentProc		*GetThemeTextExtent;
-    IsThemeActiveProc			*IsThemeActive;
-    IsAppThemedProc			*IsAppThemed;
-
-    HWND                                stubWindow;
-} XPThemeProcs;
-
-typedef struct
-{
-    HINSTANCE hlibrary;
-    XPThemeProcs *procs;
-} XPThemeData;
-
-/*
- *----------------------------------------------------------------------
- *
- * LoadXPThemeProcs --
- *	Initialize XP theming support.
- *
- *	XP theme support is included in UXTHEME.DLL
- *	We dynamically load this DLL at runtime instead of linking
- *	to it at build-time.
- *
- * Returns:
- *	A pointer to an XPThemeProcs table if successful, NULL otherwise.
- */
-
-static XPThemeProcs *
-LoadXPThemeProcs(HINSTANCE *phlib)
-{
-    /*
-     * Load the library "uxtheme.dll", where the native widget
-     * drawing routines are implemented.  This will only succeed
-     * if we are running at least on Windows XP.
-     */
-    HINSTANCE handle;
-    *phlib = handle = LoadLibraryW(L"uxtheme.dll");
-    if (handle != 0) {
-	/*
-	 * We have successfully loaded the library. Proceed in storing the
-	 * addresses of the functions we want to use.
-	 */
-	XPThemeProcs *procs = (XPThemeProcs *)ckalloc(sizeof(XPThemeProcs));
-#define LOADPROC(name) \
-	(0 != (procs->name = (name ## Proc *)(void *)GetProcAddress(handle, #name) ))
-
-	if (LOADPROC(OpenThemeData)
-	    && LOADPROC(CloseThemeData)
-	    && LOADPROC(GetThemePartSize)
-	    && LOADPROC(GetThemeSysSize)
-	    && LOADPROC(DrawThemeBackground)
-	    && LOADPROC(DrawThemeEdge)
-	    && LOADPROC(GetThemeTextExtent)
-	    && LOADPROC(DrawThemeText)
-	    && LOADPROC(IsThemeActive)
-	    && LOADPROC(IsAppThemed)) {
-	    return procs;
-	}
-#undef LOADPROC
-	ckfree(procs);
-    }
-    return 0;
-}
+#ifdef _MSC_VER
+#   pragma comment (lib, "uxtheme.lib")
+#endif
 
 /*
  * XPThemeDeleteProc --
@@ -126,21 +33,17 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 
 static void
 XPThemeDeleteProc(
-    void *clientData)
+    TCL_UNUSED(void *))
 {
-    XPThemeData *themeData = (XPThemeData *)clientData;
-    FreeLibrary(themeData->hlibrary);
-    ckfree(clientData);
 }
 
 static int
 XPThemeEnabled(
     TCL_UNUSED(Ttk_Theme),
-    void *clientData)
+    TCL_UNUSED(void *))
 {
-    XPThemeData *themeData = (XPThemeData *)clientData;
-    int active = themeData->procs->IsThemeActive();
-    int themed = themeData->procs->IsAppThemed();
+    int active = IsThemeActive();
+    int themed = IsAppThemed();
 
     return (active && themed);
 }
@@ -229,13 +132,14 @@ static const Ttk_StateTable groupbox_statemap[] =
 };
 
 /*
- * Edit fields (tk: "entry")
+ * Edit fields (tk: "entry" and "spinbox")
  */
 static const Ttk_StateTable edittext_statemap[] =
 {
     { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { ETS_READONLY,	TTK_STATE_READONLY, 0 },
     { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { ETS_HOT,		TTK_STATE_HOVER, 0 },
     { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
     { ETS_NORMAL,	0, 0 }
 /* NOT USED: ETS_ASSIST, ETS_SELECTED */
@@ -249,7 +153,10 @@ static const Ttk_StateTable edittext_statemap[] =
 static const Ttk_StateTable combotext_statemap[] =
 {
     { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
+/*    { ETS_READONLY,	TTK_STATE_READONLY, 0 },*/
     { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { ETS_SELECTED,	TTK_STATE_SELECTED, 0 },
+    { ETS_HOT,		TTK_STATE_HOVER, 0 },
     { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
     { ETS_NORMAL,	0, 0 }
 };
@@ -339,11 +246,16 @@ static const Ttk_StateTable spinbutton_statemap[] =
  */
 static const Ttk_StateTable scale_statemap[] =
 {
-    { TUS_DISABLED,	TTK_STATE_DISABLED, 0 },
-    { TUS_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { TUS_FOCUSED,	TTK_STATE_FOCUS, 0 },
-    { TUS_HOT,		TTK_STATE_ACTIVE, 0 },
-    { TUS_NORMAL,	0, 0 }
+    { TUBS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { TUBS_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { TUBS_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { TUBS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { TUBS_NORMAL,	0, 0 }
+};
+
+static const Ttk_StateTable track_statemap[] =
+{
+    { TRS_NORMAL,	0, 0 }
 };
 
 static const Ttk_StateTable tabitem_statemap[] =
@@ -371,11 +283,12 @@ static const Ttk_StateTable header_statemap[] =
     { HIS_NORMAL,		0, 0 }
 };
 
-/* Header sort indicator */
-static const Ttk_StateTable header_sort_statemap[] =
+/* Treeview sort indicator */
+static const Ttk_StateTable treesort_statemap[] =
 {
-    { HSAS_SORTEDDOWN,	TTK_STATE_SELECTED, 0 },
-    { HSAS_SORTEDUP,	TTK_STATE_ALTERNATE, 0 }
+    { HSAS_SORTEDDOWN,	TTK_STATE_SELECTED|TTK_STATE_USER1, 0 },
+    { HSAS_SORTEDUP,	TTK_STATE_ALTERNATE|TTK_STATE_USER1, 0 },
+    { 0,		0, 0 }
 };
 
 /* Treeview item: Win states don't match TTK states or colors, so remap them */
@@ -456,7 +369,7 @@ typedef struct
      * Static data, initialized when element is registered:
      */
     const ElementInfo	*info;
-    XPThemeProcs *procs;	/* Pointer to theme procedure table */
+    HWND parentHwnd;
 
     /*
      * Dynamic data, allocated by InitElementData:
@@ -471,11 +384,11 @@ typedef struct
 } ElementData;
 
 static ElementData *
-NewElementData(XPThemeProcs *procs, const ElementInfo *info)
+NewElementData(HWND hwnd, const ElementInfo *info)
 {
     ElementData *elementData = (ElementData *)ckalloc(sizeof(ElementData));
 
-    elementData->procs = procs;
+    elementData->parentHwnd = hwnd;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
 
@@ -518,11 +431,11 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
     if (win) {
 	elementData->hwnd = Tk_GetHWND(win);
     } else  {
-	elementData->hwnd = elementData->procs->stubWindow;
+	elementData->hwnd = elementData->parentHwnd;
     }
 
-    elementData->hTheme = elementData->procs->OpenThemeData(
-	elementData->hwnd, elementData->info->className);
+    elementData->hTheme = OpenThemeDataEx(
+	elementData->hwnd, elementData->info->className, OTD_FORCE_RECT_SIZING);
 
     if (!elementData->hTheme) {
 	return 0;
@@ -540,7 +453,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 static void
 FreeElementData(ElementData *elementData)
 {
-    elementData->procs->CloseThemeData(elementData->hTheme);
+    CloseThemeData(elementData->hTheme);
     if (elementData->drawable != 0) {
 	TkWinReleaseDrawableDC(
 	    elementData->drawable, elementData->hDC, &elementData->dcState);
@@ -571,7 +484,7 @@ static void GenericElementSize(
     }
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
-	result = elementData->procs->GetThemePartSize(
+	result = GetThemePartSize(
 	    elementData->hTheme,
 	    NULL,
 	    elementData->info->partId,
@@ -605,6 +518,7 @@ static void GenericElementDraw(
 {
     ElementData *elementData = (ElementData *)clientData;
     RECT rc;
+    unsigned stateId;
 
     if (!InitElementData(elementData, tkwin, d)) {
 	return;
@@ -615,11 +529,17 @@ static void GenericElementDraw(
     }
     rc = BoxToRect(b);
 
-    elementData->procs->DrawThemeBackground(
+    stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+    if (IsThemeBackgroundPartiallyTransparent(elementData->hTheme,
+	    elementData->info->partId, stateId)) {
+	DrawThemeParentBackground(elementData->hwnd, elementData->hDC, &rc);
+    }
+
+    DrawThemeBackground(
 	elementData->hTheme,
 	elementData->hDC,
 	elementData->info->partId,
-	Ttk_StateTableLookup(elementData->info->statemap, state),
+	stateId,
 	&rc,
 	NULL/*pContentRect*/);
 
@@ -657,9 +577,9 @@ GenericSizedElementSize(
     GenericElementSize(clientData, elementRecord, tkwin,
 	widthPtr, heightPtr, paddingPtr);
 
-    *widthPtr = elementData->procs->GetThemeSysSize(NULL,
+    *widthPtr = GetThemeSysSize(NULL,
 	(elementData->info->flags >> 8) & 0xff);
-    *heightPtr = elementData->procs->GetThemeSysSize(NULL,
+    *heightPtr = GetThemeSysSize(NULL,
 	elementData->info->flags & 0xff);
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
@@ -722,7 +642,7 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
-    unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+    int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc = BoxToRect(b);
 
     /*
@@ -736,9 +656,8 @@ static void ThumbElementDraw(
 	return;
     }
 
-    elementData->procs->DrawThemeBackground(elementData->hTheme,
-	elementData->hDC, elementData->info->partId, stateId,
-	&rc, NULL);
+    DrawThemeBackground(elementData->hTheme, elementData->hDC,
+	elementData->info->partId, stateId, &rc, NULL);
 
     FreeElementData(elementData);
 }
@@ -886,7 +805,7 @@ static void TabElementDraw(
 	/*
 	 * Draw the border and fill into rc
 	 */
-	elementData->procs->DrawThemeBackground(
+	DrawThemeBackground(
 	    elementData->hTheme, elementData->hDC, partId, stateId, &rc, NULL);
     } else {
 	/*
@@ -894,7 +813,7 @@ static void TabElementDraw(
 	 */
 	RECT rc2 = rc;
 	--rc2.top; --rc2.left; ++rc2.bottom; ++rc2.right;
-	elementData->procs->DrawThemeBackground(
+	DrawThemeBackground(
 	    elementData->hTheme, elementData->hDC, partId, stateId, &rc2, &rc);
     }
 
@@ -906,17 +825,17 @@ static void TabElementDraw(
 	case TTK_STICK_S:
 	    break;
 	case TTK_STICK_N:
-	    elementData->procs->DrawThemeEdge(
+	    DrawThemeEdge(
 		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
 		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_RIGHT|BF_BOTTOM, NULL);
 	    break;
 	case TTK_STICK_E:
-	    elementData->procs->DrawThemeEdge(
+	    DrawThemeEdge(
 		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
 		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_TOP|BF_BOTTOM, NULL);
 	    break;
 	case TTK_STICK_W:
-	    elementData->procs->DrawThemeEdge(
+	    DrawThemeEdge(
 		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
 		BDR_RAISEDINNER, BF_FLAT|BF_TOP|BF_RIGHT|BF_BOTTOM, NULL);
 	    break;
@@ -935,7 +854,31 @@ static const Ttk_ElementSpec TabElementSpec =
 };
 
 /*----------------------------------------------------------------------
- * +++  Tree indicator element.
+ * +++  Tree sort indicator element.
+ *
+ *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
+ */
+
+static void TreeSortElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
+{
+    if ((state & TTK_STATE_USER1)) {
+	GenericElementDraw(clientData,elementRecord,tkwin,d,b,state);
+    }
+}
+
+static const Ttk_ElementSpec TreeheadingIndicatorElementSpec =
+{
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    GenericElementSize,
+    TreeSortElementDraw
+};
+
+/*----------------------------------------------------------------------
+ * +++  Tree disclosure indicator element.
  *
  *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
  */
@@ -949,7 +892,7 @@ static void TreeIndicatorElementDraw(
     }
 }
 
-static const Ttk_ElementSpec TreeIndicatorElementSpec =
+static const Ttk_ElementSpec TreeitemIndicatorElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
@@ -1004,7 +947,7 @@ static void TextElementSize(
 
     src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
-    hr = elementData->procs->GetThemeTextExtent(
+    hr = GetThemeTextExtent(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
@@ -1044,7 +987,7 @@ static void TextElementDraw(
 
     src = Tcl_GetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
-    hr = elementData->procs->DrawThemeText(
+    hr = DrawThemeText(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
@@ -1114,6 +1057,14 @@ TTK_LAYOUT("Vertical.TScale",
 	    TTK_NODE("Vertical.Scale.track", TTK_FILL_Y)
 	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
 
+TTK_LAYOUT("Heading",
+    TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
+    TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
+	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
+	    TTK_NODE("Treeheading.indicator", TTK_PACK_TOP)
+	    TTK_NODE("Treeheading.text", TTK_FILL_X|TTK_STICK_N|TTK_EXPAND))))
+
 TTK_END_LAYOUT_TABLE
 
 /*----------------------------------------------------------------------
@@ -1141,6 +1092,7 @@ static const ElementInfo ElementInfoTable[] = {
     { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
 	CP_DROPDOWNBUTTON, combobox_statemap, NOPAD,
 	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    /* ttk::scrollbar elements */
     { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
 	SBP_UPPERTRACKVERT, scrollbar_statemap, NOPAD, 0 },
     { "Vertical.Scrollbar.thumb", &ThumbElementSpec, L"SCROLLBAR",
@@ -1170,9 +1122,9 @@ static const ElementInfo ElementInfoTable[] = {
     { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
 	TKP_THUMBVERT, scale_statemap, NOPAD, 0 },
     { "Horizontal.Scale.track", &GenericElementSpec, L"TRACKBAR",
-	TKP_TRACK, scale_statemap, NOPAD, 0 },
+	TKP_TRACK, track_statemap, NOPAD, 0 },
     { "Vertical.Scale.track", &GenericElementSpec, L"TRACKBAR",
-	TKP_TRACKVERT, scale_statemap, NOPAD, 0 },
+	TKP_TRACKVERT, track_statemap, NOPAD, 0 },
     /* ttk::progressbar elements */
     { "Horizontal.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
 	PP_CHUNK, null_statemap, NOPAD, 0 },
@@ -1196,11 +1148,14 @@ static const ElementInfo ElementInfoTable[] = {
     { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
 	TP_SPLITBUTTONDROPDOWN, toolbutton_statemap, NOPAD,
 	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    /* ttk::treeview */
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
 	HP_HEADERITEM, header_statemap, PAD(4,0,4,0), 0 },
-    { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
+    { "Treeheading.indicator", &TreeheadingIndicatorElementSpec, L"HEADER",
+	HP_HEADERSORTARROW, treesort_statemap, PAD(1,1,1,1), 0 },
+    { "Treeitem.indicator", &TreeitemIndicatorElementSpec, L"TREEVIEW",
 	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeitem.row", &GenericElementSpec, L"LISTVIEW",
 	LVP_GROUPHEADER, treeitem_statemap, NOPAD, 0 },
@@ -1281,14 +1236,14 @@ Ttk_CreateVsapiElement(
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    XPThemeData *themeData = (XPThemeData *)clientData;
+    HWND hwnd = (HWND)clientData;
     ElementInfo *elementPtr = NULL;
     void *elementData;
     LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
-    int flags = 0;
+    unsigned flags = 0;
     Tcl_Size length = 0;
     char *name;
     LPWSTR wname;
@@ -1432,7 +1387,7 @@ Ttk_CreateVsapiElement(
     wcscpy(wname, className);
     elementPtr->className = wname;
 
-    elementData = NewElementData(themeData->procs, elementPtr);
+    elementData = NewElementData(hwnd, elementPtr);
     Ttk_RegisterElement(NULL,
 	theme, elementName, elementPtr->elementSpec, elementData);
 
@@ -1453,17 +1408,8 @@ retErr:
 MODULE_SCOPE int
 TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
-    XPThemeData *themeData;
-    XPThemeProcs *procs;
-    HINSTANCE hlibrary;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
     const ElementInfo *infoPtr;
-
-    procs = LoadXPThemeProcs(&hlibrary);
-    if (!procs) {
-	return TCL_ERROR;
-    }
-    procs->stubWindow = hwnd;
 
     /*
      * Create the new style engine.
@@ -1479,13 +1425,9 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Set theme data and cleanup proc
      */
 
-    themeData = (XPThemeData *)ckalloc(sizeof(XPThemeData));
-    themeData->procs = procs;
-    themeData->hlibrary = hlibrary;
-
-    Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, themeData);
-    Ttk_RegisterCleanup(interp, themeData, XPThemeDeleteProc);
-    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
+    Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, hwnd);
+    Ttk_RegisterCleanup(interp, hwnd, XPThemeDeleteProc);
+    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, hwnd);
 
     /*
      * Create the vista theme on suitable platform versions and set the theme
@@ -1495,7 +1437,7 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     if (TkWinGetPlatformTheme() == TK_THEME_WIN_VISTA) {
 	vistaPtr = Ttk_CreateTheme(interp, "vista", themePtr);
 	if (vistaPtr) {
-	    Ttk_SetThemeEnabledProc(vistaPtr, XPThemeEnabled, themeData);
+	    Ttk_SetThemeEnabledProc(vistaPtr, XPThemeEnabled, hwnd);
 	}
     }
 
@@ -1503,7 +1445,7 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	void *clientData = NewElementData(procs, infoPtr);
+	void *clientData = NewElementData(hwnd, infoPtr);
 	Ttk_RegisterElement(NULL,
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
