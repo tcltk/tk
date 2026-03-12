@@ -123,7 +123,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, bitmapPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-columnbreak", NULL, NULL,
 	DEF_MENU_ENTRY_COLUMN_BREAK,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, columnBreak), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, columnBreak), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-command", NULL, NULL,
 	DEF_MENU_ENTRY_COMMAND,
 	offsetof(TkMenuEntry, commandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -138,7 +138,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, fgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-hidemargin", NULL, NULL,
 	DEF_MENU_ENTRY_HIDE_MARGIN,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, hideMargin), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, hideMargin), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
 	DEF_MENU_ENTRY_IMAGE,
 	offsetof(TkMenuEntry, imagePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -164,7 +164,7 @@ static const Tk_OptionSpec tkSeparatorEntryConfigSpecs[] = {
 static const Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-offvalue", NULL, NULL,
 	DEF_MENU_ENTRY_OFF_VALUE,
 	offsetof(TkMenuEntry, offValuePtr), TCL_INDEX_NONE, 0, NULL, 0},
@@ -187,7 +187,7 @@ static const Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
 static const Tk_OptionSpec tkRadioButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", NULL, NULL,
 	DEF_MENU_ENTRY_SELECT,
 	offsetof(TkMenuEntry, indicatorFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -286,7 +286,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_TAKE_FOCUS,
 	offsetof(TkMenu, takeFocusPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-tearoff", "tearOff", "TearOff",
-	DEF_MENU_TEAROFF, TCL_INDEX_NONE, offsetof(TkMenu, tearoff), 0, NULL, 0},
+	DEF_MENU_TEAROFF, TCL_INDEX_NONE, offsetof(TkMenu, tearoff), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_STRING, "-tearoffcommand", "tearOffCommand",
 	"TearOffCommand", DEF_MENU_TEAROFF_CMD,
 	offsetof(TkMenu, tearoffCommandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -2483,10 +2483,10 @@ MenuNewEntry(
     mePtr->activeBorderPtr = NULL;
     mePtr->activeFgPtr = NULL;
     mePtr->fontPtr = NULL;
-    mePtr->indicatorOn = 0;
+    mePtr->indicatorOn = false;
     mePtr->indicatorFgPtr = NULL;
-    mePtr->columnBreak = 0;
-    mePtr->hideMargin = 0;
+    mePtr->columnBreak = false;
+    mePtr->hideMargin = false;
     mePtr->commandPtr = NULL;
     mePtr->namePtr = NULL;
     mePtr->childMenuRefPtr = NULL;
@@ -3723,7 +3723,7 @@ TkFindMenuReferencesObj(
  *	It cleans up the ref if it is now empty.
  *
  * Results:
- *	Returns 1 if the references structure was freed, and 0 otherwise.
+ *	Returns true if the references structure was freed, and false otherwise.
  *
  * Side effects:
  *	If this is the last field to be cleared, the menu ref is taken out of
@@ -3732,7 +3732,7 @@ TkFindMenuReferencesObj(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkFreeMenuReferences(
     TkMenuReferences *menuRefPtr)
 				/* The menu reference to free. */
@@ -3742,9 +3742,9 @@ TkFreeMenuReferences(
 	    && (menuRefPtr->topLevelListPtr == NULL)) {
 	Tcl_DeleteHashEntry(menuRefPtr->hashEntryPtr);
 	Tcl_Free(menuRefPtr);
-	return 1;
+	return true;
     }
-    return 0;
+    return false;
 }
 
 /*

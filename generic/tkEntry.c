@@ -87,7 +87,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
-	offsetof(Entry, exportSelection), 0, 0, 0},
+	offsetof(Entry, exportSelection), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -225,7 +225,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, TCL_INDEX_NONE,
-	offsetof(Entry, exportSelection), 0, 0, 0},
+	offsetof(Entry, exportSelection), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -317,7 +317,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, TCL_INDEX_NONE, offsetof(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
-	DEF_SPINBOX_WRAP, TCL_INDEX_NONE, offsetof(Spinbox, wrap), 0, 0, 0},
+	DEF_SPINBOX_WRAP, TCL_INDEX_NONE, offsetof(Spinbox, wrap), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_ENTRY_SCROLL_COMMAND, offsetof(Entry, scrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -534,7 +534,7 @@ Tk_EntryObjCmd(
     entryPtr->selectLast	= TCL_INDEX_NONE;
 
     entryPtr->cursor		= NULL;
-    entryPtr->exportSelection	= 1;
+    entryPtr->exportSelection	= true;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
@@ -3753,7 +3753,7 @@ Tk_SpinboxObjCmd(
     entryPtr->selectLast	= TCL_INDEX_NONE;
 
     entryPtr->cursor		= NULL;
-    entryPtr->exportSelection	= 1;
+    entryPtr->exportSelection	= true;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
