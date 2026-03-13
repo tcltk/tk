@@ -12,6 +12,9 @@
 #include "tkUnixInt.h"
 #include "tkFont.h"
 #include <X11/Xft/Xft.h>
+#include <math.h>
+#include "kb.h"
+#include "SheenBidi.h"
 
 #define MAX_CACHED_COLORS 16
 
@@ -69,6 +72,14 @@ static Tcl_ThreadDataKey dataKey;
 TCL_DECLARE_MUTEX(xftMutex);
 #define LOCK Tcl_MutexLock(&xftMutex)
 #define UNLOCK Tcl_MutexUnlock(&xftMutex)
+
+
+/*
+ * Text-shaping functions defined elsewhere. 
+ */
+extern void                    X11Shape_Init(X11Shape *s);
+extern void                    X11Shape_AddFont(X11Shape *s, kb_font *f);
+extern int                     X11Shape_Shape(const char *utf8, int len, X11Shape *s);
 
 /*
  *-------------------------------------------------------------------------
@@ -1433,6 +1444,82 @@ TkUnixSetXftClipRegion(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->clipRegion = clipRegion;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * Tk_DrawCharsRotated --
+ *
+ *	Draw rotated text using the third-party textcore library for
+ *	proper glyph shaping and positioning.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information gets drawn on the screen.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+Tk_DrawCharsRotated(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int x, int y,		/* Anchor point. */
+    double angle)		/* Rotation angle in degrees. */
+{
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    X11Shape shape;
+    int penX = 0;
+    int penY = 0;
+
+    X11Shape_Init(&shape);
+
+    /* Primary + fallback fonts */
+    X11Shape_AddFont(&shape, fontPtr->ftFont);
+    for (int i = 0; i < fontPtr->nfaces; i++) {
+        X11Shape_AddFont(&shape, fontPtr->faces[i].ftFont);
+    }
+
+    /* Shape the UTF-8 text */
+    X11Shape_Shape(source, numBytes, &shape);
+
+    /* Rotation in radians */
+    double rad = angle * (M_PI / 180.0);
+    double cosA = cos(rad);
+    double sinA = sin(rad);
+
+    /*
+     * Draw each glyph at its shaped position, rotated around (x,y).
+     * X11Shape_DrawGlyphRotated is assumed to render a single glyph
+     * from 'shape' at the given rotated position.
+     */
+
+    for (int i = 0; i < shape.glyphCount; i++) {
+        int gx = penX + shape.xOffset[i];
+        int gy = penY + shape.yOffset[i];
+
+        int rx = x + (int)(gx * cosA - gy * sinA);
+        int ry = y + (int)(gx * sinA + gy * cosA);
+
+        X11Shape_DrawGlyphRotated(display, drawable, gc,
+                                  &shape, i, rx, ry, angle);
+
+        penX += shape.advances[i];
+    }
 }
 
 /*

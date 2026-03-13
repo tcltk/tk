@@ -14,6 +14,7 @@
 
 #include "tkWinInt.h"
 #include "tkFont.h"
+#include <usp10.h>
 
 /*
  * The following structure represents a font family. It is assumed that all
@@ -179,6 +180,26 @@ typedef struct {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
+
+/*
+ * The following structure is used to define the components used 
+ * for shaping of complex script and bi-directional text.
+ */
+typedef struct {
+    SCRIPT_ITEM items[64];
+    int itemCount;
+
+    WORD glyphs[1024];
+    SCRIPT_VISATTR vis[1024];
+    int glyphCount;
+
+    int advances[1024];
+    GOFFSET offsets[1024];
+
+    SCRIPT_CONTROL control;
+    SCRIPT_STATE state;
+} WinShape;
+
 /*
  * Procedures used only in this file.
  */
@@ -233,6 +254,12 @@ static int CALLBACK	WinFontExistProc(ENUMLOGFONTW *lfPtr,
 static int CALLBACK	WinFontFamilyEnumProc(ENUMLOGFONTW *lfPtr,
 			    NEWTEXTMETRIC *tmPtr, int fontType,
 			    LPARAM lParam);
+static void             WinShape_Init(WinShape *s);
+static int              WinShape_Shape(HDC hdc, const WCHAR *text, int len,
+				       WinShape *s, SCRIPT_CACHE *cache);
+static void             WinShape_Draw(HDC hdc, int x, int y,
+                                 WinShape *s, SCRIPT_CACHE *cache) 
+
 
 /*
  *-------------------------------------------------------------------------
@@ -1062,7 +1089,7 @@ Tk_DrawChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
-    TCL_UNUSED(Tk_Font),	/* Font in which characters will be drawn;
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
@@ -1078,6 +1105,11 @@ Tk_DrawChars(
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
+    WinShape shape;
+    SCRIPT_CACHE cache = NULL;
+    WCHAR *wstr;
+    Tcl_DString ds;
+    int numChars;
 
     fontPtr = (WinFont *) gc->font;
     LastKnownRequestProcessed(display)++;
@@ -1093,6 +1125,19 @@ Tk_DrawChars(
     if ((gc->clip_mask != None) &&
 	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
 	SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
+    }
+
+    /* Convert UTF-8 to Unicode for shaping */
+    Tcl_DStringInit(&ds);
+    wstr = (WCHAR *)Tcl_UtfToUnicodeDString(source, (int)numBytes, &ds);
+    numChars = Tcl_DStringLength(&ds) / sizeof(WCHAR);
+
+    WinShape_Init(&shape);
+
+    if (!WinShape_Shape(dc, wstr, numChars, &shape, &cache)) {
+	Tcl_DStringFree(&ds);
+	TkWinReleaseDrawableDC(drawable, dc, &state);
+	return;
     }
 
     if ((gc->fill_style == FillStippled
@@ -1128,7 +1173,7 @@ Tk_DrawChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
+	GetTextExtentPointW(dcMem, wstr, numChars, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
@@ -1143,11 +1188,11 @@ Tk_DrawChars(
 	 */
 
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
+	WinShape_Draw(dc, x, y, &shape, &cache);
 	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0xEA02E9);
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
+	WinShape_Draw(dc, x, y, &shape, &cache);
 	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0x8A0E06);
 
@@ -1164,7 +1209,7 @@ Tk_DrawChars(
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
+	WinShape_Draw(dc, x, y, &shape, &cache);
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
@@ -1182,14 +1227,13 @@ Tk_DrawChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
+	GetTextExtentPointW(dcMem, wstr, numChars, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
-	MultiFontTextOut(dcMem, fontPtr, source, (int)numBytes, 0, tm.tmAscent,
-		0.0);
+	WinShape_Draw(dcMem, 0, tm.tmAscent, &shape, &cache);
 	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, (DWORD) tkpWinBltModes[gc->function]);
 
@@ -1201,6 +1245,9 @@ Tk_DrawChars(
 	DeleteObject(bitmap);
 	DeleteDC(dcMem);
     }
+
+    WinShape_Free(&shape);
+    Tcl_DStringFree(&ds);
     TkWinReleaseDrawableDC(drawable, dc, &state);
 }
 
@@ -1209,7 +1256,7 @@ TkDrawAngledChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
-    TCL_UNUSED(Tk_Font),	/* Font in which characters will be drawn;
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
@@ -1226,6 +1273,11 @@ TkDrawAngledChars(
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
+    WinShape shape;
+    SCRIPT_CACHE cache = NULL;
+    WCHAR *wstr;
+    Tcl_DString ds;
+    int numChars;
 
     fontPtr = (WinFont *) gc->font;
     LastKnownRequestProcessed(display)++;
@@ -1241,6 +1293,19 @@ TkDrawAngledChars(
     if ((gc->clip_mask != None) &&
 	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
 	SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
+    }
+
+    /* Convert UTF-8 to Unicode for shaping */
+    Tcl_DStringInit(&ds);
+    wstr = (WCHAR *)Tcl_UtfToUnicodeDString(source, (int)numBytes, &ds);
+    numChars = Tcl_DStringLength(&ds) / sizeof(WCHAR);
+
+    WinShape_Init(&shape);
+
+    if (!WinShape_Shape(dc, wstr, numChars, &shape, &cache)) {
+	Tcl_DStringFree(&ds);
+	TkWinReleaseDrawableDC(drawable, dc, &state);
+	return;
     }
 
     if ((gc->fill_style == FillStippled
@@ -1276,7 +1341,7 @@ TkDrawAngledChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
+	GetTextExtentPointW(dcMem, wstr, numChars, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
@@ -1291,11 +1356,11 @@ TkDrawAngledChars(
 	 */
 
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
+	WinShape_Draw(dc, (int)x, (int)y, &shape, &cache);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0xEA02E9);
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
+	WinShape_Draw(dc, (int)x, (int)y, &shape, &cache);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0x8A0E06);
 
@@ -1312,7 +1377,7 @@ TkDrawAngledChars(
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, angle);
+	WinShape_Draw(dc, (int)x, (int)y, &shape, &cache);
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
@@ -1330,14 +1395,13 @@ TkDrawAngledChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
+	GetTextExtentPointW(dcMem, wstr, numChars, &size);
 	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 
-	MultiFontTextOut(dcMem, fontPtr, source, (int)numBytes, 0, tm.tmAscent,
-		angle);
+	WinShape_Draw(dcMem, 0, tm.tmAscent, &shape, &cache);
 	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, (DWORD) tkpWinBltModes[gc->function]);
 
@@ -1349,6 +1413,9 @@ TkDrawAngledChars(
 	DeleteObject(bitmap);
 	DeleteDC(dcMem);
     }
+
+    WinShape_Free(&shape);
+    Tcl_DStringFree(&ds);
     TkWinReleaseDrawableDC(drawable, dc, &state);
 }
 
@@ -1363,7 +1430,7 @@ TkDrawAngledChars(
   *
  *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
  *            function is unused.
-*
+ *
  * Results:
  *	None.
  *
@@ -2897,6 +2964,60 @@ SwapLong(
     temp += (LONG) ((BYTE) *p);
     *p = temp;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Functions to support text shaping and bi-directional rendering.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Initialize shaping state. */
+static void WinShape_Init(WinShape *s)
+{
+    memset(s, 0, sizeof(*s));
+    s->control.uDefaultLanguage = 0;
+    s->state.uBidiLevel = 0;
+}
+
+/* Shape a UTF-16 run. */
+static int WinShape_Shape(HDC hdc, const WCHAR *text, int len,
+                                 WinShape *s, SCRIPT_CACHE *cache)
+{
+    HRESULT hr;
+
+    hr = ScriptItemize(text, len, 64, &s->control, &s->state,
+                       s->items, &s->itemCount);
+    if (FAILED(hr)) return 0;
+
+    SCRIPT_ITEM *it = &s->items[0];
+    int runLen = it[1].iCharPos - it[0].iCharPos;
+
+    hr = ScriptShape(hdc, cache,
+                     text + it[0].iCharPos, runLen,
+                     1024, &it->a,
+                     s->glyphs, s->vis, &s->glyphCount);
+    if (FAILED(hr)) return 0;
+
+    hr = ScriptPlace(hdc, cache,
+                     s->glyphs, s->glyphCount,
+                     s->vis, &it->a,
+                     s->advances, s->offsets, NULL);
+    return SUCCEEDED(hr);
+}
+
+/* Draw shaped glyphs. */
+static inline void WinShape_Draw(HDC hdc, int x, int y,
+                                 WinShape *s, SCRIPT_CACHE *cache)
+{
+    ScriptTextOut(hdc, NULL, x, y, 0,
+                  NULL, 0, NULL,
+                  s->glyphs, s->glyphCount,
+                  s->advances, s->offsets, NULL);
+}
+
+
 
 /*
  * Local Variables:

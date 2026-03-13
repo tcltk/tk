@@ -694,6 +694,7 @@ ZIP_PROG
 MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
+BIDI_CFLAGS
 ATK_LIBS
 ATK_CFLAGS
 CUPS_LIBS
@@ -8755,6 +8756,19 @@ printf "%s\n" "#define HAVE_XSS 1" >>confdefs.h
     LIBS=$tk_oldLibs
 fi
 
+# -----------------------------------------------------------------------
+# SheenBidi Unicode Bidirectional support — always included
+# Hard-wired into unix/bidi/ subdirectory
+# kb_text_shaper.h also lives in unix/bidi/
+# -----------------------------------------------------------------------
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for SheenBidi + text shaper support" >&5
+printf %s "checking for SheenBidi + text shaper support... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes (hard-wired in unix/bidi/)" >&5
+printf "%s\n" "yes (hard-wired in unix/bidi/)" >&6; }
+BIDI_CFLAGS="-I\${srcdir}/bidi/Headers -I\${srcdir}/bidi -DSB_CONFIG_EXPERIMENTAL_TEXT_API"
+
+
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
 #	#define for __CHAR_UNSIGNED__.
@@ -9197,6 +9211,8 @@ eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
 #------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
+
 
 
 
