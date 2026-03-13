@@ -1990,7 +1990,26 @@ ConfigureMenuEntry(
 		&errorStruct, NULL) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	result = PostProcessEntry(mePtr);
+#ifdef MAC_OSX_TK
+	/*
+	 * Early check due to PostProcessEntry() calling platform code.
+	 */
+	if ((mePtr->type == CASCADE_ENTRY) && (mePtr->namePtr != NULL)) {
+	    const char *cascadeName = Tcl_GetString(mePtr->namePtr);
+
+	    if (CheckLoop(menuPtr->interp, cascadeName, menuPtr)) {
+		Tcl_SetObjResult(menuPtr->interp, Tcl_ObjPrintf(
+			"cannot add recursive cascade menu \"%s\"",
+			cascadeName));
+		Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "RECURSION",
+			(char *) NULL);
+		result = TCL_ERROR;
+	    }
+	}
+#endif
+	if (result == TCL_OK) {
+	    result = PostProcessEntry(mePtr);
+	}
 	if (result != TCL_OK) {
 	    Tk_RestoreSavedOptions(&errorStruct);
 	    PostProcessEntry(mePtr);
