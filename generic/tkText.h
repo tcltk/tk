@@ -1003,7 +1003,7 @@ typedef struct TkTextTag {
 				 * NUL. */
     int elide;			/* > 0 means that data under this tag
 				 * should not be displayed. -1 means not specified. */
-    int undo;			/* True means that any change of tagging with this tag will be pushed
+    bool undo;			/* True means that any change of tagging with this tag will be pushed
 				 * on the undo stack (if undo stack is enabled), otherwise this tag
 				 * will not regarded in the undo/redo process. */
 
@@ -1243,7 +1243,7 @@ typedef struct TkSharedText {
 				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
     int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
-    int undo;			/* Non-zero means the undo/redo behaviour is enabled. */
+    bool undo;			/* True means the undo/redo behaviour is enabled. */
     int isModified;		/* Flag indicating the computed 'modified' state of the text widget. */
     int isAltered;		/* Flag indicating the computed 'altered' state of the text widget. */
     int isIrreversible;	/* Flag indicating the computed 'irreversible' flag. Value
@@ -1255,7 +1255,7 @@ typedef struct TkSharedText {
     int undoStackEvent;	/* Flag indicating whether <<UndoStack>> is already triggered. */
     int pushSeparator;		/* Flag indicating whether a separator has to be pushed before next
 				 * insert/delete item. */
-    int undoTagging;		/* Global default value for TkTextTag::undo. */
+    bool undoTagging;		/* Global default value for TkTextTag::undo. */
     size_t undoLevel;		/* The undo level which corresponds to the unmodified state. */
     TkTextEditMode lastEditMode;/* Keeps track of what the last edit mode was. */
     int lastUndoTokenType;	/* Type of newest undo token on stack. */
@@ -1574,7 +1574,7 @@ typedef struct TkText {
      * Copies of information from the shared section relating to the undo/redo functionality:
      */
 
-    int undo;			/* Non-zero means the undo/redo behaviour is
+    bool undo;			/* Non-zero means the undo/redo behaviour is
 				 * enabled. */
     int maxUndoDepth;		/* The maximum depth of the undo stack expressed as the
 				 * maximum number of compound statements. */
@@ -1582,7 +1582,7 @@ typedef struct TkText {
 				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
     int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
-    int undoTagging;		/* Global default value for TkTextTag::undo. */
+    bool undoTagging;		/* Global default value for TkTextTag::undo. */
 
     /*
      * Support of sync command:
@@ -2118,7 +2118,7 @@ MODULE_SCOPE void	TkTextDispAllocStatistic();
 MODULE_SCOPE int	TkTextLineIsElided(const TkSharedText *sharedTextPtr, const TkTextLine *linePtr,
 			    const TkText *textPtr);
 MODULE_SCOPE int	TkTextIsElided(const TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkTextTestTag(const TkTextIndex *indexPtr, const TkTextTag *tagPtr);
+MODULE_SCOPE bool	TkTextTestTag(const TkTextIndex *indexPtr, const TkTextTag *tagPtr);
 inline int		TkTextIsDeadPeer(const TkText *textPtr);
 MODULE_SCOPE void	TkTextGenerateWidgetViewSyncEvent(TkText *textPtr, int sendImmediately);
 MODULE_SCOPE void	TkTextRunAfterSyncCmd(TkText *textPtr);

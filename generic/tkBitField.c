@@ -757,7 +757,7 @@ TkBitComplete(
 }
 
 
-int
+bool
 TkBitIsEqual(
     const TkBitField *bf1,
     const TkBitField *bf2)
@@ -787,7 +787,7 @@ TkBitIsEqual(
 }
 
 
-int
+bool
 TkBitContains(
     const TkBitField *bf1,
     const TkBitField *bf2)
@@ -798,7 +798,7 @@ TkBitContains(
     assert(bf2);
 
     if (bf1 == bf2) {
-	return 1;
+	return true;
     }
 
     words1 = NWORDS(bf1->size);
@@ -806,7 +806,7 @@ TkBitContains(
 
     if (words1 < words2) {
 	if (!TkBitNone_(bf2->bits + words1, words2 - words1)) {
-	    return 0;
+	    return false;
 	}
 	words2 = words1;
     }
@@ -815,15 +815,15 @@ TkBitContains(
 	size_t bits2 = bf2->bits[i];
 
 	if (bits2 != (bf1->bits[i] & bits2)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitDisjunctive(
     const TkBitField *bf1,
     const TkBitField *bf2)
@@ -841,15 +841,15 @@ TkBitDisjunctive(
 
     for (i = 0; i < words; ++i) {
 	if (bf1->bits[i] & bf2->bits[i]) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitIntersectionIsEqual(
     const TkBitField *bf1,
     const TkBitField *bf2,
@@ -864,7 +864,7 @@ TkBitIntersectionIsEqual(
     assert(TkBitSize(bf2) <= TkBitSize(del));
 
     if (bf1 == bf2) {
-	return 1;
+	return true;
     }
     if (bf1->size == 0) {
 	return TkBitNone(bf2);
@@ -880,23 +880,23 @@ TkBitIntersectionIsEqual(
     for (i = 0; i < words; ++i) {
 	size_t bits = del->bits[i];
 	if ((bf1->bits[i] & bits) != (bf2->bits[i] & bits)) {
-	    return 0;
+	    return false;
 	}
     }
 
     for (i = words; i < words1; ++i) {
 	if (bf1->bits[i] & del->bits[i]) {
-	    return 0;
+	    return false;
 	}
     }
 
     for (i = words; i < words2; ++i) {
 	if (bf2->bits[i] & del->bits[i]) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
@@ -1115,7 +1115,7 @@ TkBitFindFirstInIntersection(
 }
 
 
-int
+bool
 TkBitTestAndSet(
     TkBitField *bf,
     unsigned n)
@@ -1130,14 +1130,14 @@ TkBitTestAndSet(
     mask = TK_BIT_MASK(BIT_INDEX(n));
 
     if (*word & mask) {
-	return 0;
+	return false;
     }
     *word |= mask;
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitTestAndUnset(
     TkBitField *bf,
     unsigned n)
@@ -1226,7 +1226,7 @@ TkBitInnerJoinDifference(
 }
 
 
-int
+bool
 TkBitInnerJoinDifferenceIsEmpty(
     const TkBitField *bf,
     const TkBitField *add,
@@ -1243,7 +1243,7 @@ TkBitInnerJoinDifferenceIsEmpty(
 
     if (add->size == 0) {
 	/* nil */
-	return 1;
+	return true;
     }
 
     if (add == bf) {
@@ -1260,13 +1260,13 @@ TkBitInnerJoinDifferenceIsEmpty(
     for (i = 0; i < words; ++i) {
 	size_t addBits = add->bits[i];
 	if ((bf->bits[i] & addBits) | (addBits & ~sub->bits[i])) {
-	    return 0;
+	    return false;
 	}
     }
 
     if (addWords == words) {
 	/* nil */
-	return 1;
+	return true;
     }
 
     if (bfWords > words) {
@@ -1275,7 +1275,7 @@ TkBitInnerJoinDifferenceIsEmpty(
 
 	for ( ; i < addWords; ++i) {
 	    if (add->bits[i]) {
-		return 0;
+		return false;
 	    }
 	}
     } else {
@@ -1286,16 +1286,16 @@ TkBitInnerJoinDifferenceIsEmpty(
 
 	for ( ; i < words; ++i) {
 	    if (add->bits[i] & ~sub->bits[i]) {
-		return 0;
+		return false;
 	    }
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitIsEqualToDifference(
     const TkBitField *bf1,
     const TkBitField *bf2,
@@ -1323,7 +1323,7 @@ TkBitIsEqualToDifference(
 
     for (i = 0; i < words0; ++i) {
 	if (bf1->bits[i] != (bf2->bits[i] & ~sub2->bits[i])) {
-	    return 0;
+	    return false;
 	}
     }
 
@@ -1333,15 +1333,15 @@ TkBitIsEqualToDifference(
 
     for ( ; i < words2; ++i) {
 	if (bf2->bits[i] & ~sub2->bits[i]) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitIsEqualToInnerJoin(
     const TkBitField *bf1,
     const TkBitField *bf2,
@@ -1355,7 +1355,7 @@ TkBitIsEqualToInnerJoin(
     assert(TkBitSize(bf2) == TkBitSize(add2));
 
     if (bf1 == bf2) {
-	return 1;
+	return true;
     }
     if (bf2 == add2) {
 	return TkBitIsEqual(bf1, bf2);
@@ -1374,7 +1374,7 @@ TkBitIsEqualToInnerJoin(
     for (i = 0; i < words0; ++i) {
 	size_t bf2Bits = bf2->bits[i];
 	if (bf1->bits[i] != (bf2Bits | (add2->bits[i] & bf2Bits))) {
-	    return 0;
+	    return false;
 	}
     }
 
@@ -1385,15 +1385,15 @@ TkBitIsEqualToInnerJoin(
     for ( ; i < words2; ++i) {
 	size_t bf2Bits = bf2->bits[i];
 	if (bf2Bits | (add2->bits[i] & bf2Bits)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitIsEqualToInnerJoinDifference(
     const TkBitField *bf1,
     const TkBitField *bf2,
@@ -1423,7 +1423,7 @@ TkBitIsEqualToInnerJoinDifference(
     for (i = 0; i < words0; ++i) {
 	size_t addBits = add2->bits[i];
 	if (bf1->bits[i] != ((bf2->bits[i] & addBits) | (addBits & ~sub2->bits[i]))) {
-	    return 0;
+	    return false;
 	}
     }
 
@@ -1434,15 +1434,15 @@ TkBitIsEqualToInnerJoinDifference(
     for ( ; i < words2; ++i) {
 	size_t addBits = add2->bits[i];
 	if ((bf2->bits[i] & addBits) | (addBits & ~sub2->bits[i])) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-static int
+static bool
 IntersectionIsDisjunctive(
     const TkBitField *bf1,
     const TkBitField *bf2,
@@ -1457,15 +1457,15 @@ IntersectionIsDisjunctive(
 	size_t delBits = del->bits[i];
 
 	if ((bf1->bits[i] & delBits) != (bf2->bits[i] & delBits)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitInnerJoinDifferenceIsEqual(
     const TkBitField *bf1,
     const TkBitField *bf2,
@@ -1483,7 +1483,7 @@ TkBitInnerJoinDifferenceIsEqual(
     assert(TkBitSize(bf1) == TkBitSize(sub));
 
     if (add->size == 0) {
-	return 1;
+	return true;
     }
 
     if (bf1->size == 0) {
@@ -1505,11 +1505,11 @@ TkBitInnerJoinDifferenceIsEqual(
 	size_t sumBits = addBits & ~sub->bits[i];
 
 	if (((bf1->bits[i] & addBits) | sumBits) != ((bf2->bits[i] & addBits) | sumBits)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 #endif /* TK_UNUSED_BITFIELD_FUNCTIONS */
@@ -1526,7 +1526,6 @@ extern int TkBitIsEmpty(const TkBitField *bf);
 extern size_t TkBitSize(const TkBitField *bf);
 extern int TkBitTest(const TkBitField *bf, unsigned n);
 extern int TkBitNone(const TkBitField *bf);
-extern int TkBitIntersects(const TkBitField *bf1, const TkBitField *bf2);
 extern void TkBitSet(TkBitField *bf, unsigned n);
 extern void TkBitUnset(TkBitField *bf, unsigned n);
 extern void TkBitPut(TkBitField *bf, unsigned n, int value);

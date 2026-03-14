@@ -639,7 +639,7 @@ GetFirstTagInfoSegment(
     return GetNextTagInfoSegment(segPtr);
 }
 
-static int
+static bool
 TagSetTestBits(
     const TkTextTagSet *tagInfoPtr,
     const TkBitField *bitField)		/* can be NULL */
@@ -652,7 +652,7 @@ TagSetTestBits(
     return !bitField || !TkTextTagBitContainsSet(bitField, tagInfoPtr);
 }
 
-static int
+static bool
 TagSetTestDisjunctiveBits(
     const TkTextTagSet *tagInfoPtr,
     const TkBitField *bitField)		/* can be NULL */
@@ -678,7 +678,7 @@ TagSetTestDontContainsAny(
 	    || TagSetTestDisjunctiveBits(tagoffPtr, bitField);
 }
 
-static int
+static bool
 TestTag(
     const TkTextTagSet *tagInfoPtr,
     const TkTextTag *tagPtr)	/* can be NULL */
@@ -3253,7 +3253,7 @@ AddPixelCount(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextTestTag(
     const TkTextIndex *indexPtr,/* The character in the text for which display information is wanted. */
     const TkTextTag *tagPtr)	/* Test for this tag. */
@@ -9990,7 +9990,7 @@ FindCommonParent(
     return nodePtr2;
 }
 
-static int
+static bool
 TestIfAnySegmentIsAffected(
     TkSharedText *sharedTextPtr,
     const TkTextTagSet *tagInfoPtr,

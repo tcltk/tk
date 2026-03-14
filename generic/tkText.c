@@ -339,9 +339,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_TEXT_TAKE_FOCUS, offsetof(TkText, takeFocusObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-undo", "undo", "Undo",
-	DEF_TEXT_UNDO, TCL_INDEX_NONE, offsetof(TkText, undo), TK_OPTION_DONT_SET_DEFAULT, 0 ,0},
+	DEF_TEXT_UNDO, TCL_INDEX_NONE, offsetof(TkText, undo), TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_VAR(bool), 0 ,0},
     {TK_OPTION_BOOLEAN, "-undotagging", "undoTagging", "UndoTagging",
-	"1", TCL_INDEX_NONE, offsetof(TkText, undoTagging), 0, 0 ,0},
+	"1", TCL_INDEX_NONE, offsetof(TkText, undoTagging), TK_OPTION_VAR(bool), 0 ,0},
     {TK_OPTION_BOOLEAN, "-useunibreak", "useUniBreak", "UseUniBreak",
 	"0", TCL_INDEX_NONE, offsetof(TkText, useUniBreak), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_INT, "-width", "width", "Width",
@@ -512,8 +512,8 @@ static void		TriggerUndoStackEvent(TkSharedText *sharedTextPtr);
 static void		PushRetainedUndoTokens(TkSharedText *sharedTextPtr);
 static void		PushUndoSeparatorIfNeeded(TkSharedText *sharedTextPtr, int autoSeparators,
 			    TkTextEditMode currentEditMode);
-static int		IsEmpty(const TkSharedText *sharedTextPtr, const TkText *textPtr);
-static int		IsClean(const TkSharedText *sharedTextPtr, const TkText *textPtr,
+static bool		IsEmpty(const TkSharedText *sharedTextPtr, const TkText *textPtr);
+static bool		IsClean(const TkSharedText *sharedTextPtr, const TkText *textPtr,
 			    int discardSelection);
 static TkTextUndoPerformProc TextUndoRedoCallback;
 static TkTextUndoFreeProc TextUndoFreeCallback;
@@ -962,7 +962,7 @@ CreateWidget(
 	sharedTextPtr->emptyTagInfoPtr = TkTextTagSetResize(NULL, 0);
 	sharedTextPtr->maxRedoDepth = -1;
 	sharedTextPtr->autoSeparators = 1;
-	sharedTextPtr->undoTagging = 1;
+	sharedTextPtr->undoTagging = true;
 	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 	sharedTextPtr->lastUndoTokenType = -1;
 	sharedTextPtr->startMarker = TkTextMakeStartEndMark(NULL, &tkTextLeftMarkType);
@@ -2661,7 +2661,7 @@ TextWidgetObjCmd(
  *--------------------------------------------------------------
  */
 
-static int
+static bool
 DoesNotContainTextSegments(
     const TkTextSegment *segPtr1,
     const TkTextSegment *segPtr2)
@@ -2672,10 +2672,10 @@ DoesNotContainTextSegments(
 	}
     }
 
-    return 1;
+    return true;
 }
 
-static int
+static bool
 IsEmpty(
     const TkSharedText *sharedTextPtr,
     const TkText *textPtr)		/* Can be NULL. */
@@ -2686,7 +2686,7 @@ IsEmpty(
     assert(sharedTextPtr);
 
     if (TkrBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
-	return 0;
+	return false;
     }
 
     if (textPtr) {
@@ -2718,7 +2718,7 @@ IsEmpty(
  *--------------------------------------------------------------
  */
 
-static int
+static bool
 ContainsAnySegment(
     const TkTextSegment *segPtr1,
     const TkTextSegment *segPtr2)
@@ -2729,10 +2729,10 @@ ContainsAnySegment(
 	}
     }
 
-    return 0;
+    return false;
 }
 
-static int
+static bool
 IsClean(
     const TkSharedText *sharedTextPtr,
     const TkText *textPtr,		/* Can be NULL. */
@@ -2746,7 +2746,7 @@ IsClean(
     assert(sharedTextPtr);
 
     if (TkrBTreeNumLines(sharedTextPtr->tree, textPtr) > 1) {
-	return 0;
+	return false;
     }
 
     if (textPtr) {
@@ -2758,14 +2758,14 @@ IsClean(
     }
 
     if (ContainsAnySegment(startMarker, endMarker)) {
-	return 0;
+	return false;
     }
 
     endLine = endMarker->sectionPtr->linePtr;
 
     if (!textPtr && ContainsAnySegment(endLine->segPtr, NULL)) {
 	/* This widget contains any mark on very last line. */
-	return 0;
+	return false;
     }
 
     tagInfoPtr = endLine->prevPtr->lastPtr->tagInfoPtr;
@@ -3454,7 +3454,7 @@ DestroyText(
 
     TkTextFreeDInfo(textPtr);
     textPtr->dInfoPtr = NULL;
-    textPtr->undo = 0;
+    textPtr->undo = false;
 
     /*
      * Always clean up the widget-specific tags first. Common tags (i.e. most)
@@ -3803,7 +3803,7 @@ TkConfigureText(
     int oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
     int oldTextDebug = tkTextDebug;
     int didHyphenate = textPtr->hyphenate;
-    int oldUndoTagging = textPtr->undoTagging;
+    bool oldUndoTagging = textPtr->undoTagging;
     int oldHyphenRules = textPtr->hyphenRules;
     int mask = 0;
 
