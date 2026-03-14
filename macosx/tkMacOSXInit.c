@@ -653,7 +653,9 @@ TkpInit(
 	 * tasks now, so the root window is configured.
 	 */
 
+	printf("Root window is mapped: %i\n", Tk_IsMapped(Tk_MainWindow(interp)));
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
+	printf("Root window is mapped: %i\n", Tk_IsMapped(Tk_MainWindow(interp)));
 
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
