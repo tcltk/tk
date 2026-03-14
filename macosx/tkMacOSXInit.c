@@ -458,26 +458,6 @@ static void TkMacOSXSignalHandler(TCL_UNUSED(int)) {
     Tcl_Exit(1);
 }
 
-/*
- * This static function is run as an idle task to order the root window front.
- * This is only done if the window is in the normal state.  This avoids
- * flashing the root window on the screen if it was withdrawn immediately after
- * loading Tk.
- */
-
-static void showRootWindow(void *clientData) {
-    NSWindow *root = (NSWindow *) clientData;
-    if ([NSApp tkWillExit]) {
-	return;
-    }
-    TkWindow *winPtr = TkMacOSXGetTkWindow(root);
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    if (wmPtr->hints.initial_state == NormalState) {
-	[root makeKeyAndOrderFront:NSApp];
-    }
-    [NSApp activateIgnoringOtherApps: YES];
-}
-
 int
 TkpInit(
     Tcl_Interp *interp)
@@ -645,32 +625,6 @@ TkpInit(
 	TkMacOSXServices_Init(interp);
 	TkMacOSXNSImage_Init(interp);
 	TkMacOSXAccessibility_Init(interp);
-
-	/*
-	 * The root window has been created and mapped, but XMapWindow deferred its
-	 * call to makeKeyAndOrderFront because the first call to XMapWindow
-	 * occurs too early in the initialization process for that.  Process idle
-	 * tasks now, so the root window is configured.
-	 */
-
-	printf("Root window is mapped: %i\n", Tk_IsMapped(Tk_MainWindow(interp)));
-	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {};
-	printf("Root window is mapped: %i\n", Tk_IsMapped(Tk_MainWindow(interp)));
-
-	for (NSWindow *window in [NSApp windows]) {
-	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
-	    if (winPtr && Tk_IsMapped(winPtr)) {
-
-		/*
-		 * Ordering the root window front in an idle task allows
-		 * checking whether it was immediately withdrawn, and
-		 * therefore does not need to be placed on the screen.
-		 */
-
-		Tcl_DoWhenIdle(showRootWindow, window);
-		break;
-	    }
-	}
 
 # if defined(USE_CUSTOM_EXIT_PROC)
 
