@@ -95,7 +95,7 @@ typedef struct {
        FT_UInt glyphId;      /* Glyph index in font */
        int x, y;             /* Pen position for this glyph */
        int advanceX;         /* Advance width */
-   } glyphs[1024];
+   } glyphs[2048];
    int glyphCount;
 } X11Shape;
 
@@ -105,6 +105,8 @@ int                     X11Shape_Shape(const char *utf8, int len, X11Shape *s);
 void 					X11Shape_Destroy(X11Shape *s);
 void 					UnixFontShapeString( UnixFtFont *fontPtr, const char *source, 
 							int numBytes, X11Shape *shapePtr);
+static int              GetBidiDirection(const char *utf8, int len);
+static void             ReverseGlyphRun(X11Shape *s, int runStart, int runCount);
 
 /*
  *-------------------------------------------------------------------------
@@ -302,6 +304,91 @@ GetTkFontMetrics(
     fmPtr->descent = ftFont->descent;
     fmPtr->maxWidth = ftFont->max_advance_width;
     fmPtr->fixed = spacing != XFT_PROPORTIONAL;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * GetBidiDirection --
+ *
+ *	Use SheenBidi to determine if text contains RTL characters.
+ *	This is a simplified approach that checks for RTL character ranges.
+ *
+ * Results:
+ *	Returns 1 if text contains RTL characters, 0 otherwise.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+GetBidiDirection(const char *utf8, int len)
+{
+    FcChar32 c;
+    int i = 0;
+    
+    /* Scan for RTL character ranges */
+    while (i < len) {
+        int clen = utf8ToUcs4(utf8 + i, &c, len - i);
+        if (clen <= 0) break;
+        
+        /* Check for Arabic (0600-06FF, 0750-077F, 08A0-08FF, FB50-FDFF, FE70-FEFF) */
+        if ((c >= 0x0600 && c <= 0x06FF) ||
+            (c >= 0x0750 && c <= 0x077F) ||
+            (c >= 0x08A0 && c <= 0x08FF) ||
+            (c >= 0xFB50 && c <= 0xFDFF) ||
+            (c >= 0xFE70 && c <= 0xFEFF) ||
+            /* Hebrew (0590-05FF) */
+            (c >= 0x0590 && c <= 0x05FF) ||
+            /* Syriac (0700-074F) */
+            (c >= 0x0700 && c <= 0x074F) ||
+            /* Thaana (0780-07BF) */
+            (c >= 0x0780 && c <= 0x07BF)) {
+            return 1; /* Found RTL character */
+        }
+        
+        i += clen;
+    }
+    
+    return 0; /* No RTL characters found */
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * ReverseGlyphRun --
+ *
+ *	Reverse the order of glyphs in a run for RTL text.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+ReverseGlyphRun(X11Shape *s, int runStart, int runCount)
+{
+    int i, j;
+    
+    if (runCount <= 1) return;
+    
+    for (i = 0, j = runCount - 1; i < j; i++, j--) {
+        /* Manual swap of each field */
+        kbts_font *tempFont = s->glyphs[runStart + i].font;
+        FT_UInt tempGlyphId = s->glyphs[runStart + i].glyphId;
+        int tempX = s->glyphs[runStart + i].x;
+        int tempY = s->glyphs[runStart + i].y;
+        int tempAdvanceX = s->glyphs[runStart + i].advanceX;
+        
+        s->glyphs[runStart + i].font = s->glyphs[runStart + j].font;
+        s->glyphs[runStart + i].glyphId = s->glyphs[runStart + j].glyphId;
+        s->glyphs[runStart + i].x = s->glyphs[runStart + j].x;
+        s->glyphs[runStart + i].y = s->glyphs[runStart + j].y;
+        s->glyphs[runStart + i].advanceX = s->glyphs[runStart + j].advanceX;
+        
+        s->glyphs[runStart + j].font = tempFont;
+        s->glyphs[runStart + j].glyphId = tempGlyphId;
+        s->glyphs[runStart + j].x = tempX;
+        s->glyphs[runStart + j].y = tempY;
+        s->glyphs[runStart + j].advanceX = tempAdvanceX;
+    }
 }
 
 /*
@@ -1476,7 +1563,8 @@ TkUnixSetXftClipRegion(
  *
  * Tk_DrawCharsRotated --
  *
- *	Draw rotated text with proper glyph shaping and positioning.
+ *	Draw rotated text with proper glyph shaping and positioning,
+ *	including RTL support via character range detection.
  *
  * Results:
  *	None.
@@ -1516,7 +1604,6 @@ Tk_DrawCharsRotated(
     /* Shape the string with primary + fallback fonts. */
     UnixFontShapeString(fontPtr, source, numBytes, &shape);
     
-
     /* Setup Xft drawing target. */
     if (fontPtr->ftDraw == NULL) {
         fontPtr->ftDraw = XftDrawCreate(display, drawable,
@@ -1738,10 +1825,52 @@ UnixFontShapeString(
         }
     }
     
-    /* Shape the string. */
-    X11Shape_Shape(source, numBytes, shapePtr);
+    /* Shape the string with direction detection. */
+    int isRtl = GetBidiDirection(source, numBytes);
+    
+    /* Begin shaping with appropriate direction */
+    kbts_ShapeBegin(shapePtr->context, 
+                    isRtl ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR, 
+                    KBTS_LANGUAGE_DONT_KNOW);
+    
+    /* Shape the UTF-8 text. */
+    kbts_ShapeUtf8(shapePtr->context, source, numBytes, 
+                   KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
+    
+    /* End shaping. */
+    kbts_ShapeEnd(shapePtr->context);
+    
+    /* Extract shaped glyphs from runs. */
+    kbts_run run;
+    kbts_glyph *glyph;
+    int penX = 0, penY = 0;
+    
+    shapePtr->glyphCount = 0;
+    while (kbts_ShapeRun(shapePtr->context, &run) && shapePtr->glyphCount < 2048) {
+        kbts_glyph_iterator it = run.Glyphs;
+        
+        /* Store the glyphs for this run */
+        int runStart = shapePtr->glyphCount;
+        int runGlyphCount = 0;
+        
+        while (kbts_GlyphIteratorNext(&it, &glyph) && shapePtr->glyphCount < 2048) {
+            shapePtr->glyphs[shapePtr->glyphCount].glyphId = glyph->Id;
+            shapePtr->glyphs[shapePtr->glyphCount].font = run.Font;
+            shapePtr->glyphs[shapePtr->glyphCount].x = penX + glyph->OffsetX;
+            shapePtr->glyphs[shapePtr->glyphCount].y = penY + glyph->OffsetY;
+            shapePtr->glyphs[shapePtr->glyphCount].advanceX = glyph->AdvanceX;
+            
+            penX += glyph->AdvanceX;
+            shapePtr->glyphCount++;
+            runGlyphCount++;
+        }
+        
+        /* For RTL text, reverse the glyph order in this run */
+        if (isRtl && runGlyphCount > 1) {
+            ReverseGlyphRun(shapePtr, runStart, runGlyphCount);
+        }
+    }
 }
-
 
 /* Initialize shaping context. */
 void X11Shape_Init(X11Shape *s)
@@ -1764,11 +1893,17 @@ int X11Shape_Shape(const char *utf8, int len, X11Shape *s)
    kbts_run run;
    kbts_glyph *glyph;
    int penX = 0, penY = 0;
+   int isRtl;
    
    if (!s->context) return 0;
    
-   /* Begin shaping with LTR paragraph direction and default language. */
-   kbts_ShapeBegin(s->context, KBTS_DIRECTION_LTR, KBTS_LANGUAGE_DONT_KNOW);
+   /* Determine base direction using character range detection */
+   isRtl = GetBidiDirection(utf8, len);
+   
+   /* Begin shaping with appropriate direction */
+   kbts_ShapeBegin(s->context, 
+                   isRtl ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR, 
+                   KBTS_LANGUAGE_DONT_KNOW);
    
    /* Shape the UTF-8 text. */
    kbts_ShapeUtf8(s->context, utf8, len, KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
@@ -1778,10 +1913,14 @@ int X11Shape_Shape(const char *utf8, int len, X11Shape *s)
    
    /* Extract shaped glyphs from runs. */
    s->glyphCount = 0;
-   while (kbts_ShapeRun(s->context, &run) && s->glyphCount < 1024) {
+   while (kbts_ShapeRun(s->context, &run) && s->glyphCount < 2048) {
        kbts_glyph_iterator it = run.Glyphs;
        
-       while (kbts_GlyphIteratorNext(&it, &glyph) && s->glyphCount < 1024) {
+       /* Store the start of this run */
+       int runStart = s->glyphCount;
+       int runGlyphCount = 0;
+       
+       while (kbts_GlyphIteratorNext(&it, &glyph) && s->glyphCount < 2048) {
            s->glyphs[s->glyphCount].glyphId = glyph->Id;
            s->glyphs[s->glyphCount].font = run.Font;
            s->glyphs[s->glyphCount].x = penX + glyph->OffsetX;
@@ -1790,6 +1929,12 @@ int X11Shape_Shape(const char *utf8, int len, X11Shape *s)
            
            penX += glyph->AdvanceX;
            s->glyphCount++;
+           runGlyphCount++;
+       }
+       
+       /* For RTL text, reverse the glyph order in this run */
+       if (isRtl && runGlyphCount > 1) {
+           ReverseGlyphRun(s, runStart, runGlyphCount);
        }
    }
    
