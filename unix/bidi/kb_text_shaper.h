@@ -1,3 +1,7 @@
+/* Suppress numerous warnings. */
+#pragma GCC system_header
+#pragma clang system_header
+
 /*  kb_text_shape - v2.14 - text segmentation and shaping
     by Jimmy Lefevre
 
