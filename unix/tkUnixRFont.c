@@ -82,11 +82,19 @@ TCL_DECLARE_MUTEX(xftMutex);
 typedef struct {
    kbts_shape_context *context;
    
+   /* Mapping between kb_text_shaper fonts and Tk font faces */
    struct {
-       FT_UInt glyphId;      /* Glyph index from kb_text_shaper */
-       kbts_font *font;      /* Font this glyph came from */
-       int x, y;             /* Position including offsets */
-       int advanceX;         /* Advance for next glyph */
+       kbts_font *kbFont;    /* kb_text_shaper font */
+       int faceIndex;        /* Index in UnixFtFont->faces[] */
+   } fontMap[8];
+   int numFonts;
+   
+   /* Store shaped glyph data */
+   struct {
+       kbts_font *font;      /* Which kb font this glyph came from */
+       FT_UInt glyphId;      /* Glyph index in font */
+       int x, y;             /* Pen position for this glyph */
+       int advanceX;         /* Advance width */
    } glyphs[1024];
    int glyphCount;
 } X11Shape;
@@ -1503,7 +1511,7 @@ Tk_DrawCharsRotated(
     XftColor *xftcolor;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    int i;
+    int i, j;
 
     /* Shape the string with primary + fallback fonts. */
     UnixFontShapeString(fontPtr, source, numBytes, &shape);
@@ -1538,14 +1546,50 @@ Tk_DrawCharsRotated(
     /* Batch buffer for Xft. */
     XftGlyphFontSpec specs[NUM_SPEC];
     int nspec = 0;
-
-    /* 
-     * We use the primary rotated font for drawing all glyphs.
-     */
-    XftFont *drawFont = GetFont(fontPtr, 0, angle);
+    XftFont *currentFont = NULL;
 
     for (i = 0; i < shape.glyphCount; i++) {
         FT_UInt glyphIndex = shape.glyphs[i].glyphId;
+        
+        /* Find which Xft font to use based on which kb_text_shaper font was selected. */
+        int faceIndex = 0; /* default to primary font */
+        for (j = 0; j < shape.numFonts; j++) {
+            if (shape.fontMap[j].kbFont == shape.glyphs[i].font) {
+                faceIndex = shape.fontMap[j].faceIndex;
+                break;
+            }
+        }
+        
+        /* Get the appropriate rotated Xft font for this face. */
+        XftFont *drawFont = NULL;
+        if (faceIndex < fontPtr->nfaces) {
+            if (angle == 0.0) {
+                drawFont = fontPtr->faces[faceIndex].ft0Font;
+            } else {
+                if (fontPtr->faces[faceIndex].ftFont && 
+                    fontPtr->faces[faceIndex].angle == angle) {
+                    drawFont = fontPtr->faces[faceIndex].ftFont;
+                }
+            }
+        }
+        
+        /* If font not loaded for this face/angle, use GetFont to load it. */
+        if (!drawFont) {
+            drawFont = GetFont(fontPtr, 0, angle);
+        }
+        
+        if (!drawFont) {
+            continue; /* Skip this glyph if we can't get a font. */
+        }
+
+        /* If font changed, flush the batch */
+        if (drawFont != currentFont && nspec > 0) {
+            LOCK;
+            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            UNLOCK;
+            nspec = 0;
+        }
+        currentFont = drawFont;
 
         /* Position in logical (horizontal) shaping space. */
         int gx = shape.glyphs[i].x;
@@ -1565,11 +1609,12 @@ Tk_DrawCharsRotated(
             XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
             UNLOCK;
             nspec = 0;
+            currentFont = NULL; /* Force font check on next iteration. */
         }
 
-        /* Advance pen in logical space - already accumulated in shape.glyphs[i].advanceX */
+        /* Advance pen in logical space. */
         penX += shape.glyphs[i].advanceX;
-        penY += 0; /* No Y advance in horizontal text */
+        penY += 0; /* No Y advance in horizontal text. */
     }
 
     /* Flush any remaining glyphs. */
@@ -1648,7 +1693,6 @@ Tk_DrawCharsRotated(
     /* Clean up shaping context. */
     X11Shape_Destroy(&shape);
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1661,16 +1705,43 @@ Tk_DrawCharsRotated(
 /* Common shaping helper: primary + fallback fonts. */
 void
 UnixFontShapeString(
-    TCL_UNUSED(UnixFtFont *), /* fontPtr */
+    UnixFtFont *fontPtr,
     const char *source,
     int numBytes,
     X11Shape *shapePtr)
 {
+    int i;
+    
     X11Shape_Init(shapePtr);
-
-    /* Primary font – use unrotated for shaping metrics. */
+    
+    /* Load fonts from fontconfig patterns into kb_text_shaper. */
+    for (i = 0; i < fontPtr->nfaces && i < 8; i++) {
+        FcPattern *pattern = fontPtr->faces[i].source;
+        FcChar8 *file;
+        int index;
+        
+        /* Get the font file path from the pattern. */
+        if (FcPatternGetString(pattern, FC_FILE, 0, &file) == FcResultMatch &&
+            FcPatternGetInteger(pattern, FC_INDEX, 0, &index) == FcResultMatch) {
+            
+            /* Load this font into kb_text_shaper. */
+            kbts_font *kbFont = kbts_ShapePushFontFromFile(shapePtr->context, 
+                                                           (const char *)file, 
+                                                           index);
+            
+            /* Store mapping between kbts_font and face index. */
+            if (kbFont && shapePtr->numFonts < 8) {
+                shapePtr->fontMap[shapePtr->numFonts].kbFont = kbFont;
+                shapePtr->fontMap[shapePtr->numFonts].faceIndex = i;
+                shapePtr->numFonts++;
+            }
+        }
+    }
+    
+    /* Shape the string. */
     X11Shape_Shape(source, numBytes, shapePtr);
 }
+
 
 /* Initialize shaping context. */
 void X11Shape_Init(X11Shape *s)
@@ -1731,57 +1802,6 @@ void X11Shape_Destroy(X11Shape *s)
    if (s->context) {
        kbts_DestroyShapeContext(s->context);
        s->context = NULL;
-   }
-}
-
-/* Draw shaped glyphs via Xft. */
-void X11Shape_Draw(TCL_UNUSED(Display *),
-				XftDraw *draw,
-				XftColor *color, 
-				int x, 
-				int y,
-				X11Shape *s, 
-				UnixFtFont *fontPtr, 
-				double angle)
-{
-   int i;
-   XftFont *currentFtFont = NULL;
-   FT_UInt glyphBatch[256];
-   int batchCount = 0;
-   int batchX = 0, batchY = 0;
-   
-   for (i = 0; i < s->glyphCount; i++) {
-       /* Get the Xft font for this character - we need to map from kbts_font
-        * to the appropriate face in fontPtr->faces[]. For now, use face 0. */
-       XftFont *ftFont = GetFont(fontPtr, 0, angle);
-       
-       if (!ftFont) {
-           continue;
-       }
-       
-       /* If font changed or batch is full, flush the batch */
-       if (ftFont != currentFtFont || batchCount >= 256) {
-           if (batchCount > 0 && currentFtFont) {
-               LOCK;
-               XftDrawGlyphs(draw, color, currentFtFont,
-                            batchX, batchY, glyphBatch, batchCount);
-               UNLOCK;
-           }
-           batchCount = 0;
-           batchX = ROUND16(x + s->glyphs[i].x);
-           batchY = ROUND16(y + s->glyphs[i].y);
-           currentFtFont = ftFont;
-       }
-       
-       glyphBatch[batchCount++] = s->glyphs[i].glyphId;
-   }
-   
-   /* Flush remaining glyphs */
-   if (batchCount > 0 && currentFtFont) {
-       LOCK;
-       XftDrawGlyphs(draw, color, currentFtFont,
-                    batchX, batchY, glyphBatch, batchCount);
-       UNLOCK;
    }
 }
 
