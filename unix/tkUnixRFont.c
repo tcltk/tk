@@ -13,8 +13,9 @@
 #include "tkFont.h"
 #include <X11/Xft/Xft.h>
 #include <math.h>
-#include "kb.h"
-#include "SheenBidi.h"
+#define KB_TEXT_SHAPE_IMPLEMENTATION
+#include "kb_text_shaper.h"
+#include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 16
 
@@ -75,11 +76,27 @@ TCL_DECLARE_MUTEX(xftMutex);
 
 
 /*
- * Text-shaping functions defined elsewhere. 
+ * Text-shaping functions and data. 
  */
-extern void                    X11Shape_Init(X11Shape *s);
-extern void                    X11Shape_AddFont(X11Shape *s, kb_font *f);
-extern int                     X11Shape_Shape(const char *utf8, int len, X11Shape *s);
+    
+typedef struct {
+   kbts_shape_context *context;
+   
+   struct {
+       FT_UInt glyphId;      /* Glyph index from kb_text_shaper */
+       kbts_font *font;      /* Font this glyph came from */
+       int x, y;             /* Position including offsets */
+       int advanceX;         /* Advance for next glyph */
+   } glyphs[1024];
+   int glyphCount;
+} X11Shape;
+
+void                    X11Shape_Init(X11Shape *s);
+void                    X11Shape_AddFont(X11Shape *s, kbts_font *f);
+int                     X11Shape_Shape(const char *utf8, int len, X11Shape *s);
+void 					X11Shape_Destroy(X11Shape *s);
+void 					UnixFontShapeString( UnixFtFont *fontPtr, const char *source, 
+							int numBytes, X11Shape *shapePtr);
 
 /*
  *-------------------------------------------------------------------------
@@ -1451,8 +1468,7 @@ TkUnixSetXftClipRegion(
  *
  * Tk_DrawCharsRotated --
  *
- *	Draw rotated text using the third-party textcore library for
- *	proper glyph shaping and positioning.
+ *	Draw rotated text with proper glyph shaping and positioning.
  *
  * Results:
  *	None.
@@ -1478,50 +1494,297 @@ Tk_DrawCharsRotated(
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
     int numBytes,		/* Number of bytes in string. */
-    int x, int y,		/* Anchor point. */
-    double angle)		/* Rotation angle in degrees. */
+    int x, int y,		/* Anchor point (origin of the string). */
+    double angle)		/* Rotation angle in degrees (positive = counterclockwise). */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     X11Shape shape;
-    int penX = 0;
-    int penY = 0;
+    XGCValues values;
+    XftColor *xftcolor;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    int i;
 
-    X11Shape_Init(&shape);
+    /* Shape the string with primary + fallback fonts. */
+    UnixFontShapeString(fontPtr, source, numBytes, &shape);
+    
 
-    /* Primary + fallback fonts */
-    X11Shape_AddFont(&shape, fontPtr->ftFont);
-    for (int i = 0; i < fontPtr->nfaces; i++) {
-        X11Shape_AddFont(&shape, fontPtr->faces[i].ftFont);
+    /* Setup Xft drawing target. */
+    if (fontPtr->ftDraw == NULL) {
+        fontPtr->ftDraw = XftDrawCreate(display, drawable,
+                                        fontPtr->visual, fontPtr->colormap);
+    } else {
+        Tk_ErrorHandler handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+        XftDrawChange(fontPtr->ftDraw, drawable);
+        Tk_DeleteErrorHandler(handler);
     }
 
-    /* Shape the UTF-8 text */
-    X11Shape_Shape(source, numBytes, &shape);
+    XGetGCValues(display, gc, GCForeground, &values);
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
 
-    /* Rotation in radians */
-    double rad = angle * (M_PI / 180.0);
+    if (tsdPtr->clipRegion != NULL) {
+        XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
+
+    /* Rotation parameters. */
+    double rad  = angle * M_PI / 180.0;
     double cosA = cos(rad);
     double sinA = sin(rad);
 
-    /*
-     * Draw each glyph at its shaped position, rotated around (x,y).
-     * X11Shape_DrawGlyphRotated is assumed to render a single glyph
-     * from 'shape' at the given rotated position.
+    /* Logical pen position in unshaped (horizontal) space */
+    int penX = 0;
+    int penY = 0;
+
+    /* Batch buffer for Xft. */
+    XftGlyphFontSpec specs[NUM_SPEC];
+    int nspec = 0;
+
+    /* 
+     * We use the primary rotated font for drawing all glyphs.
      */
+    XftFont *drawFont = GetFont(fontPtr, 0, angle);
 
-    for (int i = 0; i < shape.glyphCount; i++) {
-        int gx = penX + shape.xOffset[i];
-        int gy = penY + shape.yOffset[i];
+    for (i = 0; i < shape.glyphCount; i++) {
+        FT_UInt glyphIndex = shape.glyphs[i].glyphId;
 
-        int rx = x + (int)(gx * cosA - gy * sinA);
-        int ry = y + (int)(gx * sinA + gy * cosA);
+        /* Position in logical (horizontal) shaping space. */
+        int gx = shape.glyphs[i].x;
+        int gy = shape.glyphs[i].y;
 
-        X11Shape_DrawGlyphRotated(display, drawable, gc,
-                                  &shape, i, rx, ry, angle);
+        /* Rotate coordinates around the origin (x,y). */
+        int rx = x + (int)(gx * cosA - gy * sinA + 0.5);
+        int ry = y + (int)(gx * sinA + gy * cosA + 0.5);
 
-        penX += shape.advances[i];
+        specs[nspec].font  = drawFont;
+        specs[nspec].glyph = glyphIndex;
+        specs[nspec].x     = rx;
+        specs[nspec].y     = ry;
+
+        if (++nspec >= NUM_SPEC) {
+            LOCK;
+            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            UNLOCK;
+            nspec = 0;
+        }
+
+        /* Advance pen in logical space - already accumulated in shape.glyphs[i].advanceX */
+        penX += shape.glyphs[i].advanceX;
+        penY += 0; /* No Y advance in horizontal text */
     }
+
+    /* Flush any remaining glyphs. */
+    if (nspec > 0) {
+        LOCK;
+        XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+        UNLOCK;
+    }
+
+    /* Restore clipping. */
+    if (tsdPtr->clipRegion != NULL) {
+        XftDrawSetClip(fontPtr->ftDraw, NULL);
+    }
+
+    /* Underline / overstrike — rotated. */
+    if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
+        /* Total advance vector after rotation. */
+        double totalAdvanceX = (double)penX * cosA - (double)penY * sinA;
+        double totalAdvanceY = (double)penX * sinA + (double)penY * cosA;
+
+        XPoint points[5];
+        double barHeight = (double) fontPtr->font.underlineHeight;
+        double dy;
+
+        if (fontPtr->font.fa.underline) {
+            dy = (double) fontPtr->font.underlinePos;
+            if (fontPtr->font.underlineHeight <= 1) {
+                dy += 1.0;
+            }
+
+            points[0].x = x + (int)(dy * sinA + 0.5);
+            points[0].y = y + (int)(dy * cosA + 0.5);
+
+            points[1].x = x + (int)(dy * sinA + totalAdvanceX * cosA + 0.5);
+            points[1].y = y + (int)(dy * cosA + totalAdvanceY * sinA + 0.5);
+
+            if (barHeight <= 1.0) {
+                XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
+            } else {
+                points[2].x = points[1].x + (int)(barHeight * sinA + 0.5);
+                points[2].y = points[1].y + (int)(-barHeight * cosA + 0.5);
+                points[3].x = points[0].x + (int)(barHeight * sinA + 0.5);
+                points[3].y = points[0].y + (int)(-barHeight * cosA + 0.5);
+                points[4] = points[0];
+
+                XFillPolygon(display, drawable, gc, points, 5, Complex, CoordModeOrigin);
+                XDrawLines(display, drawable, gc, points, 5, CoordModeOrigin);
+            }
+        }
+
+        if (fontPtr->font.fa.overstrike) {
+            dy = - (double)fontPtr->font.fm.descent
+                 - ((double)fontPtr->font.fm.ascent / 10.0);
+
+            points[0].x = x + (int)(dy * sinA + 0.5);
+            points[0].y = y + (int)(dy * cosA + 0.5);
+
+            points[1].x = x + (int)(dy * sinA + totalAdvanceX * cosA + 0.5);
+            points[1].y = y + (int)(dy * cosA + totalAdvanceY * sinA + 0.5);
+
+            if (barHeight <= 1.0) {
+                XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
+            } else {
+                points[2].x = points[1].x + (int)(barHeight * sinA + 0.5);
+                points[2].y = points[1].y + (int)(-barHeight * cosA + 0.5);
+                points[3].x = points[0].x + (int)(barHeight * sinA + 0.5);
+                points[3].y = points[0].y + (int)(-barHeight * cosA + 0.5);
+                points[4] = points[0];
+
+                XFillPolygon(display, drawable, gc, points, 5, Complex, CoordModeOrigin);
+                XDrawLines(display, drawable, gc, points, 5, CoordModeOrigin);
+            }
+        }
+    }
+    
+    /* Clean up shaping context. */
+    X11Shape_Destroy(&shape);
 }
-
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Functions to support text shaping and bi-directional rendering.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+/* Common shaping helper: primary + fallback fonts. */
+void
+UnixFontShapeString(
+    TCL_UNUSED(UnixFtFont *), /* fontPtr */
+    const char *source,
+    int numBytes,
+    X11Shape *shapePtr)
+{
+    X11Shape_Init(shapePtr);
+
+    /* Primary font – use unrotated for shaping metrics. */
+    X11Shape_Shape(source, numBytes, shapePtr);
+}
+
+/* Initialize shaping context. */
+void X11Shape_Init(X11Shape *s)
+{
+   memset(s, 0, sizeof(*s));
+   s->context = kbts_CreateShapeContext(NULL, NULL);
+}
+
+/* Add a fallback font. */
+void X11Shape_AddFont(X11Shape *s, kbts_font *f)
+{
+   if (s->context) {
+       kbts_ShapePushFont(s->context, f);
+   }
+}
+
+/* Shape a UTF-8 run and extract glyph data. */
+int X11Shape_Shape(const char *utf8, int len, X11Shape *s)
+{
+   kbts_run run;
+   kbts_glyph *glyph;
+   int penX = 0, penY = 0;
+   
+   if (!s->context) return 0;
+   
+   /* Begin shaping with LTR paragraph direction and default language. */
+   kbts_ShapeBegin(s->context, KBTS_DIRECTION_LTR, KBTS_LANGUAGE_DONT_KNOW);
+   
+   /* Shape the UTF-8 text. */
+   kbts_ShapeUtf8(s->context, utf8, len, KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
+   
+   /* End shaping. */
+   kbts_ShapeEnd(s->context);
+   
+   /* Extract shaped glyphs from runs. */
+   s->glyphCount = 0;
+   while (kbts_ShapeRun(s->context, &run) && s->glyphCount < 1024) {
+       kbts_glyph_iterator it = run.Glyphs;
+       
+       while (kbts_GlyphIteratorNext(&it, &glyph) && s->glyphCount < 1024) {
+           s->glyphs[s->glyphCount].glyphId = glyph->Id;
+           s->glyphs[s->glyphCount].font = run.Font;
+           s->glyphs[s->glyphCount].x = penX + glyph->OffsetX;
+           s->glyphs[s->glyphCount].y = penY + glyph->OffsetY;
+           s->glyphs[s->glyphCount].advanceX = glyph->AdvanceX;
+           
+           penX += glyph->AdvanceX;
+           s->glyphCount++;
+       }
+   }
+   
+   return s->glyphCount;
+}
+
+/* Clean up shaping context. */
+void X11Shape_Destroy(X11Shape *s)
+{
+   if (s->context) {
+       kbts_DestroyShapeContext(s->context);
+       s->context = NULL;
+   }
+}
+
+/* Draw shaped glyphs via Xft. */
+void X11Shape_Draw(TCL_UNUSED(Display *),
+				XftDraw *draw,
+				XftColor *color, 
+				int x, 
+				int y,
+				X11Shape *s, 
+				UnixFtFont *fontPtr, 
+				double angle)
+{
+   int i;
+   XftFont *currentFtFont = NULL;
+   FT_UInt glyphBatch[256];
+   int batchCount = 0;
+   int batchX = 0, batchY = 0;
+   
+   for (i = 0; i < s->glyphCount; i++) {
+       /* Get the Xft font for this character - we need to map from kbts_font
+        * to the appropriate face in fontPtr->faces[]. For now, use face 0. */
+       XftFont *ftFont = GetFont(fontPtr, 0, angle);
+       
+       if (!ftFont) {
+           continue;
+       }
+       
+       /* If font changed or batch is full, flush the batch */
+       if (ftFont != currentFtFont || batchCount >= 256) {
+           if (batchCount > 0 && currentFtFont) {
+               LOCK;
+               XftDrawGlyphs(draw, color, currentFtFont,
+                            batchX, batchY, glyphBatch, batchCount);
+               UNLOCK;
+           }
+           batchCount = 0;
+           batchX = ROUND16(x + s->glyphs[i].x);
+           batchY = ROUND16(y + s->glyphs[i].y);
+           currentFtFont = ftFont;
+       }
+       
+       glyphBatch[batchCount++] = s->glyphs[i].glyphId;
+   }
+   
+   /* Flush remaining glyphs */
+   if (batchCount > 0 && currentFtFont) {
+       LOCK;
+       XftDrawGlyphs(draw, color, currentFtFont,
+                    batchX, batchY, glyphBatch, batchCount);
+       UNLOCK;
+   }
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 4
