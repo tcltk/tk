@@ -561,7 +561,7 @@ fi
 
 AC_MSG_CHECKING([for SheenBidi + text shaper support])
 AC_MSG_RESULT([yes (hard-wired in unix/bidi/)])
-BIDI_CFLAGS="-I\${srcdir}/bidi/Headers -I\${srcdir}/bidi -DSB_CONFIG_EXPERIMENTAL_TEXT_API"
+BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers -I${TK_SRC_DIR}/unix/bidi/Source -I${TK_SRC_DIR}/unix/bidi -DSB_CONFIG_EXPERIMENTAL_TEXT_API"
 AC_SUBST(BIDI_CFLAGS)
 
 #--------------------------------------------------------------------
