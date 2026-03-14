@@ -103,11 +103,10 @@ inline int TkBitNone(const TkBitField *bf);
 int TkBitAny(const TkBitField *bf);
 int TkBitComplete(const TkBitField *bf);
 
-int TkBitIsEqual(const TkBitField *bf1, const TkBitField *bf2);
-int TkBitContains(const TkBitField *bf1, const TkBitField *bf2);
-int TkBitDisjunctive(const TkBitField *bf1, const TkBitField *bf2);
-inline int TkBitIntersects(const TkBitField *bf1, const TkBitField *bf2);
-int TkBitIntersectionIsEqual(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *del);
+bool TkBitIsEqual(const TkBitField *bf1, const TkBitField *bf2);
+bool TkBitContains(const TkBitField *bf1, const TkBitField *bf2);
+bool TkBitDisjunctive(const TkBitField *bf1, const TkBitField *bf2);
+bool TkBitIntersectionIsEqual(const TkBitField *bf1, const TkBitField *bf2, const TkBitField *del);
 
 unsigned TkBitFindFirst(const TkBitField *bf);
 unsigned TkBitFindLast(const TkBitField *bf);
@@ -121,8 +120,8 @@ unsigned TkBitFindFirstInIntersection(const TkBitField *bf1, const TkBitField *b
 inline void TkBitSet(TkBitField *bf, unsigned n);
 inline void TkBitUnset(TkBitField *bf, unsigned n);
 inline void TkBitPut(TkBitField *bf, unsigned n, int value);
-int TkBitTestAndSet(TkBitField *bf, unsigned n);
-int TkBitTestAndUnset(TkBitField *bf, unsigned n);
+bool TkBitTestAndSet(TkBitField *bf, unsigned n);
+bool TkBitTestAndUnset(TkBitField *bf, unsigned n);
 void TkBitFill(TkBitField *bf);
 void TkBitClear(TkBitField *bf);
 

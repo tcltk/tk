@@ -127,7 +127,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, TK_OPTION_NULL_OK, "-underlinecolor", 0},
 #endif /* SUPPORT_DEPRECATED_TAG_OPTIONS */
     {TK_OPTION_BOOLEAN, "-undo", NULL, NULL,
-	"1", TCL_INDEX_NONE, offsetof(TkTextTag, undo), 0, 0, 0},
+	"1", TCL_INDEX_NONE, offsetof(TkTextTag, undo), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode), TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, tkTextWrapStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
@@ -143,16 +143,16 @@ DEBUG_ALLOC(extern unsigned tkTextCountDestroyUndoToken);
  */
 
 static int		ChangeTagPriority(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
-			    unsigned newPriority, int undo);
-static int		TagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
-			    const TkTextIndex *index2Ptr, TkTextTag *tagPtr, int add);
+			    unsigned newPriority, bool undo);
+static bool		TagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
+			    const TkTextIndex *index2Ptr, TkTextTag *tagPtr, bool add);
 static void		TagBindEvent(TkText *textPtr, XEvent *eventPtr, TkTextTagSet *tagInfoPtr,
 			    unsigned epoch);
 static void		AppendTags(Tcl_Interp *interp, unsigned numTags, TkTextTag **tagArray);
 static TkTextTag *	FindTag(Tcl_Interp *interp, const TkText *textPtr, Tcl_Obj *tagName);
 static int		EnumerateTags(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const *objv);
-static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, int add, int changed);
+static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add, bool changed);
 
 /*
  * We need some private undo/redo stuff.
@@ -299,8 +299,8 @@ TkTextTagCmd(
     switch ((enum tagOptions)optionIndex) {
     case TAG_ADD:
     case TAG_REMOVE: {
-	int addTag;
-	int anyChanges = 0;
+	bool addTag;
+	bool anyChanges = false;
 
 	addTag = ((enum tagOptions) optionIndex) == TAG_ADD;
 	if (objc < 5) {
@@ -331,7 +331,7 @@ TkTextTagCmd(
 		TkTextIndexForwChars(textPtr, &index1, 1, &index2, COUNT_INDICES);
 	    }
 	    if (TagAddRemove(textPtr, &index1, &index2, tagPtr, addTag)) {
-		anyChanges = 1;
+		anyChanges = true;
 	    }
 	}
 	if (tagPtr->isSelTag) {
@@ -431,7 +431,7 @@ TkTextTagCmd(
 			arrayPtr[countTags++] = tagPtr;
 
 			if (tagPtr->isSelTag) {
-			    GrabSelection(textPtr, tagPtr, 0, 1);
+			    GrabSelection(textPtr, tagPtr, false, true);
 			}
 			if (tagPtr->undo) {
 			    anyChanges = 1;
@@ -463,7 +463,7 @@ TkTextTagCmd(
 	    return TCL_ERROR;
 	}
 	for (i = 3; i < objc; i++) {
-	    int undo;
+	    bool undo;
 
 	    if (!(hPtr = Tcl_FindHashEntry(&sharedTextPtr->tagTable, Tcl_GetString(objv[i])))) {
 		/*
@@ -1079,7 +1079,7 @@ TkConfigureTag(
     TkTextTag *tagPtr = TkTextCreateTag(textPtr, tagName, &newTag);
     int relief = tagPtr->relief;
     int elide = tagPtr->elide;
-    int undo = tagPtr->undo;
+    bool undo = tagPtr->undo;
     int affectsDisplay = tagPtr->affectsDisplay;
     int affectsLineHeight = 0;
     int rc = TCL_OK;
@@ -1452,7 +1452,7 @@ TkTextReplaceTags(
 	    j = TkTextTagSetFindNext(oldTagInfoPtr, j)) {
 	if (!TkTextTagSetTest(newTagInfoPtr, j)) {
 	    tagPtr = sharedTextPtr->tagLookup[j];
-	    if (!tagPtr->isSelTag && TagAddRemove(textPtr, &index[0], &index[1], tagPtr, 0)) {
+	    if (!tagPtr->isSelTag && TagAddRemove(textPtr, &index[0], &index[1], tagPtr, false)) {
 		anyChanges = 1;
 		if (tagPtr->undo) {
 		    altered = 1;
@@ -1470,7 +1470,7 @@ TkTextReplaceTags(
 	    j = TkTextTagSetFindNext(newTagInfoPtr, j)) {
 	if (!TkTextTagSetTest(segPtr->tagInfoPtr, j)) {
 	    tagPtr = sharedTextPtr->tagLookup[j];
-	    if (!tagPtr->isSelTag && TagAddRemove(textPtr, &index[0], &index[1], tagPtr, 1)) {
+	    if (!tagPtr->isSelTag && TagAddRemove(textPtr, &index[0], &index[1], tagPtr, true)) {
 		anyChanges = 1;
 		if (tagPtr->undo) {
 		    altered = 1;
@@ -1567,7 +1567,7 @@ TkTextTagChangedUndoRedo(
 	return 0;
     }
     if (textPtr && tagPtr == textPtr->selTagPtr) {
-	GrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), 1);
+	GrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), true);
     }
     return 1;
 }
@@ -1597,12 +1597,12 @@ static void
 GrabSelection(
     TkText *textPtr,		/* Info about overall widget. */
     TCL_UNUSED(const TkTextTag *),	/* Tag which has been modified. */
-    int add,			/* 'true' means that we have added the "sel" tag;
+    bool add,			/* 'true' means that we have added the "sel" tag;
 				 * 'false' means we have removed the "sel" tag. */
-    int changed)		/* 'false' means that the selection has not changed, nevertheless
+    bool changed)		/* 'false' means that the selection has not changed, nevertheless
 				 * the text widget should become the owner again. */
 {
-    int ownSelection = add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION);
+    bool ownSelection = add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION);
 
     assert(textPtr);
 
@@ -1640,7 +1640,7 @@ GrabSelection(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 UndoTagOperation(
     const TkSharedText *sharedTextPtr,
     const TkTextTag *tagPtr)
@@ -1648,7 +1648,7 @@ UndoTagOperation(
     return sharedTextPtr->undoStack && (!tagPtr || tagPtr->undo);
 }
 
-static int
+static bool
 TagAddRemove(
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextIndex *index1Ptr,
@@ -1656,7 +1656,7 @@ TagAddRemove(
     const TkTextIndex *index2Ptr,
 				/* Indicates character just after the last one in range. */
     TkTextTag *tagPtr,		/* Tag to add or remove. */
-    int add)			/* 'true' means add tag to the given range of characters;
+    bool add)			/* 'true' means add tag to the given range of characters;
 				 * 'false' means remove the tag from the range. */
 {
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
@@ -2662,7 +2662,7 @@ ChangeTagPriority(
     TkSharedText *sharedTextPtr,/* Shared text resource. */
     TkTextTag *tagPtr,		/* Tag whose priority is to be changed. */
     unsigned newPriority,	/* New priority for tag. */
-    int undo)			/* Push undo item for this action? */
+    bool undo)			/* Push undo item for this action? */
 {
     int delta;
     unsigned low, high;

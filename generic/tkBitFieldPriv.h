@@ -142,16 +142,6 @@ TkBitNone(
 
 inline
 int
-TkBitIntersects(
-    const TkBitField *bf1,
-    const TkBitField *bf2)
-{
-    return !TkBitDisjunctive(bf1, bf2);
-}
-
-
-inline
-int
 TkBitTest(
     const TkBitField *bf,
     unsigned n)

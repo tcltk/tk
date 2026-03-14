@@ -46,10 +46,10 @@
 #endif /* TK_IS_64_BIT_ARCH */
 
 
-MODULE_SCOPE int TkTextTagSetIsEqual_(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-MODULE_SCOPE int TkTextTagSetContains_(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-MODULE_SCOPE int TkTextTagSetDisjunctive_(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-MODULE_SCOPE int TkTextTagSetIntersectionIsEqual_(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
+MODULE_SCOPE bool TkTextTagSetIsEqual_(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+MODULE_SCOPE bool TkTextTagSetContains_(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+MODULE_SCOPE bool TkTextTagSetDisjunctive_(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+MODULE_SCOPE bool TkTextTagSetIntersectionIsEqual_(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
 		    const TkBitField *bf);
 
 #endif /* _TKTEXTTAGSETPRIV */
@@ -114,7 +114,7 @@ TkTextTagSetDecrRefCount(
 
 
 inline
-int
+bool
 TkTextTagSetIsEmpty(
     const TkTextTagSet *ts)
 {
@@ -124,7 +124,7 @@ TkTextTagSetIsEmpty(
 
 
 inline
-int
+bool
 TkTextTagSetIsBitField(
     const TkTextTagSet *ts)
 {
@@ -168,7 +168,7 @@ TkTextTagSetCount(
 
 
 inline
-int
+bool
 TkTextTagSetIsEqual(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2)
@@ -184,7 +184,7 @@ TkTextTagSetIsEqual(
 
 
 inline
-int
+bool
 TkTextTagSetContains(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2)
@@ -200,7 +200,7 @@ TkTextTagSetContains(
 
 
 inline
-int
+bool
 TkTextTagSetDisjunctive(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2)
@@ -216,7 +216,7 @@ TkTextTagSetDisjunctive(
 
 
 inline
-int
+bool
 TkTextTagSetIntersects(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2)
@@ -226,7 +226,7 @@ TkTextTagSetIntersects(
 
 
 inline
-int
+bool
 TkTextTagSetIntersectionIsEqual(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2,
@@ -243,7 +243,7 @@ TkTextTagSetIntersectionIsEqual(
 
 
 inline
-int
+bool
 TkTextTagBitContainsSet(
     const TkBitField *bf,
     const TkTextTagSet *ts)
@@ -253,19 +253,7 @@ TkTextTagBitContainsSet(
 
 
 inline
-int
-TkTextTagSetIsEqualBits(
-    const TkTextTagSet *ts,
-    const TkBitField *bf)
-{
-    assert(ts);
-    assert(bf);
-    return ts->base.isSetFlag ? TkIntSetIsEqualBits(&ts->set, bf) : TkBitIsEqual(&ts->bf, bf);
-}
-
-
-inline
-int
+bool
 TkTextTagSetContainsBits(
     const TkTextTagSet *ts,
     const TkBitField *bf)
@@ -277,7 +265,7 @@ TkTextTagSetContainsBits(
 
 
 inline
-int
+bool
 TkTextTagSetDisjunctiveBits(
     const TkTextTagSet *ts,
     const TkBitField *bf)
@@ -289,7 +277,7 @@ TkTextTagSetDisjunctiveBits(
 
 
 inline
-int
+bool
 TkTextTagSetIntersectsBits(
     const TkTextTagSet *ts,
     const TkBitField *bf)
@@ -299,7 +287,7 @@ TkTextTagSetIntersectsBits(
 
 
 inline
-int
+bool
 TkTextTagSetTest(
     const TkTextTagSet *ts,
     unsigned n)
@@ -313,18 +301,9 @@ TkTextTagSetTest(
 }
 
 
-inline
-int
-TkTextTagSetNone(
-    const TkTextTagSet *ts)
-{
-    assert(ts);
-    return ts->base.isSetFlag ? TkIntSetNone(&ts->set) : TkBitNone(&ts->bf);
-}
-
 
 inline
-int
+bool
 TkTextTagSetAny(
     const TkTextTagSet *ts)
 {

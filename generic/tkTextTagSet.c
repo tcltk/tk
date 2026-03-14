@@ -241,7 +241,7 @@ TkTextTagSetResize(
 }
 
 
-int
+bool
 TkTextTagSetIsEqual_(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2)
@@ -260,7 +260,7 @@ TkTextTagSetIsEqual_(
 }
 
 
-int
+bool
 TkTextTagSetContains_(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2)
@@ -279,7 +279,7 @@ TkTextTagSetContains_(
 }
 
 
-int
+bool
 TkTextTagSetDisjunctive_(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2)
@@ -298,7 +298,7 @@ TkTextTagSetDisjunctive_(
 }
 
 
-int
+bool
 TkTextTagSetIntersectionIsEqual_(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2,
@@ -1195,14 +1195,14 @@ TkTextTagSetInnerJoinDifference(
 }
 
 
-int
+bool
 TkTextTagSetInnerJoinDifferenceIsEmpty(
     const TkTextTagSet *ts,
     const TkTextTagSet *add,
     const TkTextTagSet *sub)
 {
     TkBitField *bf, *bfAdd, *bfSub;
-    int isEmpty;
+    bool isEmpty;
     unsigned n, size;
 
     assert(ts);
@@ -1238,14 +1238,14 @@ TkTextTagSetInnerJoinDifferenceIsEmpty(
 }
 
 
-int
+bool
 TkTextTagSetIsEqualToDifference(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2,
     const TkTextTagSet *sub2)
 {
     TkBitField *bf1, *bf2, *bfSub;
-    int isEqual;
+    bool isEqual;
     unsigned n, size;
 
     assert(ts1);
@@ -1278,7 +1278,7 @@ TkTextTagSetIsEqualToDifference(
 }
 
 
-int
+bool
 TkTextTagSetIsEqualToInnerJoin(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2,
@@ -1324,7 +1324,7 @@ TkTextTagSetIsEqualToInnerJoin(
 }
 
 
-int
+bool
 TkTextTagSetIsEqualToInnerJoinDifference(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2,
@@ -1332,7 +1332,7 @@ TkTextTagSetIsEqualToInnerJoinDifference(
     const TkTextTagSet *sub2)
 {
     TkBitField *bf1, *bf2, *bfAdd, *bfSub;
-    int isEqual;
+    bool isEqual;
     unsigned n, size;
 
     assert(ts1);
@@ -1370,7 +1370,7 @@ TkTextTagSetIsEqualToInnerJoinDifference(
 }
 
 
-int
+bool
 TkTextTagSetInnerJoinDifferenceIsEqual(
     const TkTextTagSet *ts1,
     const TkTextTagSet *ts2,
@@ -1420,24 +1420,22 @@ extern unsigned TkTextTagSetRefCount(const TkTextTagSet *ts);
 extern void TkTextTagSetIncrRefCount(TkTextTagSet *ts);
 extern unsigned TkTextTagSetDecrRefCount(TkTextTagSet *ts);
 extern TkTextTagSet *TkTextTagSetCopy(const TkTextTagSet *src);
-extern int TkTextTagSetIsEmpty(const TkTextTagSet *ts);
-extern int TkTextTagSetIsBitField(const TkTextTagSet *ts);
+extern bool TkTextTagSetIsEmpty(const TkTextTagSet *ts);
+extern bool TkTextTagSetIsBitField(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetSize(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetCount(const TkTextTagSet *ts);
-extern int TkTextTagSetTest(const TkTextTagSet *ts, unsigned n);
-extern int TkTextTagSetNone(const TkTextTagSet *ts);
-extern int TkTextTagSetAny(const TkTextTagSet *ts);
-extern int TkTextTagSetIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-extern int TkTextTagSetContains(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-extern int TkTextTagSetDisjunctive(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-extern int TkTextTagSetIntersects(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
-extern int TkTextTagSetIntersectionIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
+extern bool TkTextTagSetTest(const TkTextTagSet *ts, unsigned n);
+extern bool TkTextTagSetAny(const TkTextTagSet *ts);
+extern bool TkTextTagSetIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+extern bool TkTextTagSetContains(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+extern bool TkTextTagSetDisjunctive(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+extern bool TkTextTagSetIntersects(const TkTextTagSet *ts1, const TkTextTagSet *ts2);
+extern bool TkTextTagSetIntersectionIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
     const TkBitField *bf);
-extern int TkTextTagBitContainsSet(const TkBitField *bf, const TkTextTagSet *ts);
-extern int TkTextTagSetIsEqualBits(const TkTextTagSet *ts, const TkBitField *bf);
-extern int TkTextTagSetContainsBits(const TkTextTagSet *ts, const TkBitField *bf);
-extern int TkTextTagSetDisjunctiveBits(const TkTextTagSet *ts, const TkBitField *bf);
-extern int TkTextTagSetIntersectsBits(const TkTextTagSet *ts, const TkBitField *bf);
+extern bool TkTextTagBitContainsSet(const TkBitField *bf, const TkTextTagSet *ts);
+extern bool TkTextTagSetContainsBits(const TkTextTagSet *ts, const TkBitField *bf);
+extern bool TkTextTagSetDisjunctiveBits(const TkTextTagSet *ts, const TkBitField *bf);
+extern bool TkTextTagSetIntersectsBits(const TkTextTagSet *ts, const TkBitField *bf);
 extern unsigned TkTextTagSetFindFirst(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetFindNext(const TkTextTagSet *ts, unsigned prev);
 extern TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, int value);

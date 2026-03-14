@@ -63,20 +63,20 @@ NextPowerOf2(
 }
 
 
-int
+bool
 TkIntSetIsEqual__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2)
 {
     if (end1 - set1 != end2 - set2) {
-	return 0;
+	return false;
     }
     for ( ; set1 < end1; ++set1, ++set2) {
 	if (*set1 != *set2) {
-	    return 0;
+	    return false;
 	}
     }
-    return 1;
+    return true;
 }
 
 
@@ -1152,7 +1152,7 @@ TkIntSetContains__(
 }
 
 
-int
+bool
 TkIntSetIsContainedBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1168,15 +1168,15 @@ TkIntSetIsContainedBits(
     for (i = 0; i < setSize; ++i) {
 	TkIntSetType value = set->buf[i];
 	if (value >= bitSize || !TkBitTest(bf, value)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkIntSetIntersectionIsEqual(
     const TkIntSet *set1,
     const TkIntSet *set2,
@@ -1194,7 +1194,7 @@ TkIntSetIntersectionIsEqual(
     assert(TkIntSetMax(set2) < TkBitSize(del));
 
     if (set1 == set2) {
-	return 1;
+	return true;
     }
 
     s1 = set1->buf; e1 = set1->end;
@@ -1206,39 +1206,39 @@ TkIntSetIntersectionIsEqual(
 	    ++s2;
 	} else if (*s1 < *s2) {
 	    if (!TkBitTest(del, *s1)) {
-		return 0;
+		return false;
 	    }
 	    ++s1;
 	} else { /* if (*s2 < *s1) */
 	    if (!TkBitTest(del, *s2)) {
-		return 0;
+		return false;
 	    }
 	    ++s2;
 	}
     }
     for ( ; s1 != e1; ++s1) {
 	if (!TkBitTest(del, *s1)) {
-	    return 0;
+	    return false;
 	}
     }
     for ( ; s2 != e2; ++s2) {
 	if (!TkBitTest(del, *s2)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkIntSetIntersectionIsEqualBits(
     const TkIntSet *set,
     const TkBitField *bf,
     const TkBitField *del)
 {
     TkBitField *cp = TkBitCopy(del, -1);
-    int test;
+    bool test;
 
     assert(set);
     assert(bf);
@@ -1433,7 +1433,7 @@ TkIntSetClear(
 }
 
 
-int
+bool
 TkIntSetIsEqualBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1446,7 +1446,7 @@ TkIntSetIsEqualBits(
     sizeSet = TkIntSetSize(set);
 
     if (sizeSet != TkBitCount(bf)) {
-	return 0;
+	return false;
     }
 
     sizeBf = TkBitSize(bf);
@@ -1455,15 +1455,15 @@ TkIntSetIsEqualBits(
 	TkIntSetType value = set->buf[i];
 
 	if (value >= sizeBf || !TkBitTest(bf, value)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkIntSetContainsBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1493,7 +1493,7 @@ TkIntSetContainsBits(
 }
 
 
-int
+bool
 TkIntSetDisjunctiveBits(
     const TkIntSet *set,
     const TkBitField *bf)
@@ -1510,14 +1510,14 @@ TkIntSetDisjunctiveBits(
 	TkIntSetType value = set->buf[i];
 
 	if (value >= sizeBf) {
-	    return 1;
+	    return true;
 	}
 	if (TkBitTest(bf, value)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
@@ -1638,7 +1638,7 @@ TkIntSetInnerJoinDifference(
 }
 
 
-int
+bool
 TkIntSetInnerJoinDifferenceIsEmpty(
     const TkIntSet *set,
     const TkIntSet *add,
@@ -1887,7 +1887,7 @@ EqualToJoin(
 }
 
 
-int
+bool
 TkIntSetIsEqualToInnerJoinDifference(
     const TkIntSet *set1,
     const TkIntSet *set2,
@@ -2089,20 +2089,19 @@ TkIntSetInnerJoinDifferenceIsEqual(
 /* Additionally we need stand-alone object code. */
 extern unsigned TkIntSetByteSize(const TkIntSet *set);
 extern const unsigned char *TkIntSetData(const TkIntSet *set);
-extern int TkIntSetIsEmpty(const TkIntSet *set);
+extern bool TkIntSetIsEmpty(const TkIntSet *set);
 extern unsigned TkIntSetSize(const TkIntSet *set);
 extern unsigned TkIntSetMax(const TkIntSet *set);
 extern unsigned TkIntSetRefCount(const TkIntSet *set);
 extern void TkIntSetIncrRefCount(TkIntSet *set);
 extern unsigned TkIntSetDecrRefCount(TkIntSet *set);
 extern TkIntSetType TkIntSetAccess(const TkIntSet *set, unsigned index);
-extern int TkIntSetTest(const TkIntSet *set, unsigned n);
-extern int TkIntSetNone(const TkIntSet *set);
-extern int TkIntSetAny(const TkIntSet *set);
-extern int TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
-extern int TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
-extern int TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
-extern int TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
+extern bool TkIntSetTest(const TkIntSet *set, unsigned n);
+extern bool TkIntSetAny(const TkIntSet *set);
+extern bool TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
+extern bool TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
+extern bool TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
+extern bool TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
 extern unsigned TkIntSetFindFirst(const TkIntSet *set);
 extern unsigned TkIntSetFindNext(const TkIntSet *set);
 extern TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, int add);
