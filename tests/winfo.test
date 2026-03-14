@@ -168,6 +168,20 @@ test winfo-4.7 {"winfo containing" command} -setup {
 } -cleanup {
     destroy .t
 } -result 1
+test winfo-4.8 {"winfo containing": don't consider unmapped toplevel windows (bug #591829e948-B)} -setup {
+    wm geometry . 200x200+100+100
+    after 10; update
+    wm withdraw .
+} -body {
+    toplevel .one
+    wm geometry .one 200x200+350+100
+    after 10; update
+    wm withdraw .one
+    after 10; update
+    winfo containing 450 200
+} -cleanup {
+    wm deiconify .
+} -result ""
 
 
 test winfo-5.1 {"winfo interps" command} -body {
