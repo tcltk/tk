@@ -143,26 +143,6 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
-/*
- * This static function is run as an idle task to order the root window front.
- * This is only done if the window is in the normal state.  This avoids
- * flashing the root window on the screen if it was withdrawn immediately after
- * loading Tk.
- */
-
-static void showRootWindow(void *clientData) {
-    NSWindow *root = (NSWindow *) clientData;
-    if ([NSApp tkWillExit]) {
-	return;
-    }
-    TkWindow *winPtr = TkMacOSXGetTkWindow(root);
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    if (wmPtr->hints.initial_state == NormalState) {
-	[root makeKeyAndOrderFront:NSApp];
-    }
-    [NSApp activateIgnoringOtherApps: YES];
-}
-
 int
 XMapWindow(
     Display *display,		/* Display. */
@@ -195,18 +175,9 @@ XMapWindow(
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
-
-	    /*
-	     * We want to activate Tk when a toplevel is mapped but we can't
-	     * always specify activateIgnoringOtherApps to be YES.  This is
-	     * because during Tk initialization the root window is mapped
-	     * before applicationDidFinishLaunching returns. Forcing the app to
-	     * activate too early can make the menu bar unresponsive.
-	     */
-
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
-	    [NSApp activateIgnoringOtherApps:initialized];
+	    [NSApp activateIgnoringOtherApps:YES];
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
 		    [win makeKeyAndOrderFront:NSApp];
@@ -229,20 +200,9 @@ XMapWindow(
 		    [NSThread sleepForTimeInterval:.001];
 		}
 	    }
-	    if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
-
-		/*
-		 * Ordering the root window front in an idle task allows
-		 * checking whether it was immediately withdrawn, and
-		 * therefore does not need to be placed on the screen.
-		 *
-		 * [EL]: XMapWindow() is already called as an idle task. So, we don't have to
-		 *       schedule showRootWindow() for execution at idle time once more. Just
-		 *       make the call here.
-		 */
-
-		// Tcl_DoWhenIdle(showRootWindow, win);
-		showRootWindow(win);
+	    if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
+		    (winPtr->wmInfoPtr->hints.initial_state == NormalState)) {
+		[win makeKeyAndOrderFront:NSApp];
 	    }
 
 	    /*
