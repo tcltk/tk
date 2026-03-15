@@ -72,12 +72,8 @@ typedef struct MMRep {
 typedef struct WindowRep {
     Tk_Window tkwin;		/* Cached window; NULL if not found. */
     TkMainInfo *mainPtr;	/* MainWindow associated with tkwin. */
-#if TCL_MAJOR_VERSION > 8
     size_t epoch;			/* Value of mainPtr->deletionEpoch at last
 				 * successful lookup. */
-#else
-    long epoch;
-#endif
 } WindowRep;
 
 /*
@@ -95,6 +91,8 @@ static void		UpdateStringOfMM(Tcl_Obj *objPtr);
 static int		SetMMFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
+static Tcl_Size	LengthOneOrTwo(Tcl_Obj *objPtr);
+
 
 /*
  * The following structure defines the implementation of the "pixel" Tcl
@@ -108,7 +106,7 @@ static const TkObjType pixelObjType = {
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V1(TkLengthOne)},
+    TCL_OBJTYPE_V1(LengthOneOrTwo)},
     0
 };
 
@@ -131,7 +129,7 @@ static const TkObjType mmObjType = {
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V1(TkLengthOne)},
+    TCL_OBJTYPE_V1(LengthOneOrTwo)},
     0
 };
 
@@ -150,6 +148,35 @@ static const TkObjType windowObjType = {
     0
 };
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * LengthOneOrTwo --
+ *
+ *	Determine the length of a "pixel" or "mm". It returns 2 if there is any
+ *	space between the float and the 'c', 'i', 'm' or 'p', 1 otherwise.
+ *
+ *----------------------------------------------------------------------
+ */
+Tcl_Size
+LengthOneOrTwo(
+    Tcl_Obj *objPtr)
+{
+    if (objPtr->bytes) {
+	const char *p = objPtr->bytes + strlen(objPtr->bytes);
+	while (strchr(" \f\n\r\t\v", *--p)) {
+	    // skip spacing at end;
+	}
+	if (strchr("cimp", *p)) {
+	    // Check whether character is preceded by space
+	    if (strchr(" \f\n\r\t\v", *--p)) {
+		return 2;
+	    }
+	}
+    }
+    return 1;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -245,7 +272,7 @@ TkGetIntForIndex(
 static
 int
 GetPixelsFromObjEx(
-    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tcl_Interp *interp,	/* Used for error reporting if not NULL. */
     Tk_Window tkwin,
     Tcl_Obj *objPtr,		/* The object from which to get pixels. */
     int *intPtr,
@@ -334,7 +361,7 @@ GetPixelsFromObjEx(
 
 int
 Tk_GetPixelsFromObj(
-    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tcl_Interp *interp,	/* Used for error reporting if not NULL. */
     Tk_Window tkwin,
     Tcl_Obj *objPtr,		/* The object from which to get pixels. */
     int *intPtr)		/* Place to store resulting pixels. */
@@ -365,7 +392,7 @@ Tk_GetPixelsFromObj(
 
 int
 Tk_GetDoublePixelsFromObj(
-    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tcl_Interp *interp,	/* Used for error reporting if not NULL. */
     Tk_Window tkwin,
     Tcl_Obj *objPtr,		/* The object from which to get pixels. */
     double *doublePtr)		/* Place to store resulting pixels. */
@@ -604,7 +631,7 @@ SetPixelFromAny(
 
 int
 Tk_GetMMFromObj(
-    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tcl_Interp *interp,	/* Used for error reporting if not NULL. */
     Tk_Window tkwin,
     Tcl_Obj *objPtr,		/* The object from which to get mms. */
     double *doublePtr)		/* Place to store resulting millimeters. */
@@ -882,7 +909,7 @@ SetMMFromAny(
 
 int
 TkGetWindowFromObj(
-    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tcl_Interp *interp,	/* Used for error reporting if not NULL. */
     Tk_Window tkwin,		/* A token to get the main window from. */
     Tcl_Obj *objPtr,		/* The object from which to get window. */
     Tk_Window *windowPtr)	/* Place to store resulting window. */
@@ -936,7 +963,7 @@ TkGetWindowFromObj(
  *	Frees the old internal representation, if any.
  *
  * See also:
- * 	TkGetWindowFromObj, which initializes the WindowRep cache.
+ *	TkGetWindowFromObj, which initializes the WindowRep cache.
  *
  *----------------------------------------------------------------------
  */

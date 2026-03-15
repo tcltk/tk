@@ -13,7 +13,7 @@
 
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
- * 	Draw a solid highlight border to indicate focus.
+ *	Draw a solid highlight border to indicate focus.
  */
 
 typedef struct {
@@ -172,15 +172,15 @@ static void ButtonBorderElementDraw(
 	    inset += round(5 * TkScalingLevel(tkwin));
 	    break;
 	case TTK_BUTTON_DEFAULT_ACTIVE :
-            Tk_Draw3DRectangle(tkwin, d, border,
+	    Tk_Draw3DRectangle(tkwin, d, border,
 		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
 		2, TK_RELIEF_FLAT);
-            inset += 2;
-            Tk_Draw3DRectangle(tkwin, d, border,
+	    inset += 2;
+	    Tk_Draw3DRectangle(tkwin, d, border,
 		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
 		1, TK_RELIEF_SUNKEN);
 	    ++inset;
-            Tk_Draw3DRectangle(tkwin, d, border,
+	    Tk_Draw3DRectangle(tkwin, d, border,
 		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
 		2, TK_RELIEF_FLAT);
 	    inset += 2;
@@ -472,9 +472,9 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] =
     { "-arrowsize", TK_OPTION_PIXELS, offsetof(ArrowElement,sizeObj),
 	DEFAULT_ARROW_SIZE },
     { "-background", TK_OPTION_BORDER, offsetof(ArrowElement,borderObj),
-    	DEFAULT_BACKGROUND },
+	DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS, offsetof(ArrowElement,borderWidthObj),
-    	DEFAULT_BORDERWIDTH },
+	DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF, offsetof(ArrowElement,reliefObj),"raised" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -518,17 +518,17 @@ static void ArrowElementDraw(
     switch (direction)
     {
 	case ARROW_UP:
-	    points[2].x = b.x; 		points[2].y = b.y + size;
+	    points[2].x = b.x;		points[2].y = b.y + size;
 	    points[1].x = b.x + size/2;	points[1].y = b.y;
 	    points[0].x = b.x + size;	points[0].y = b.y + size;
 	    break;
 	case ARROW_DOWN:
-	    points[0].x = b.x; 		points[0].y = b.y;
+	    points[0].x = b.x;		points[0].y = b.y;
 	    points[1].x = b.x + size/2;	points[1].y = b.y + size;
 	    points[2].x = b.x + size;	points[2].y = b.y;
 	    break;
 	case ARROW_LEFT:
-	    points[0].x = b.x; 		points[0].y = b.y + size / 2;
+	    points[0].x = b.x;		points[0].y = b.y + size / 2;
 	    points[1].x = b.x + size;	points[1].y = b.y + size;
 	    points[2].x = b.x + size;	points[2].y = b.y;
 	    break;
@@ -681,7 +681,7 @@ static const Ttk_ElementSpec SliderElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj *borderObj; 	/* background color */
+    Tcl_Obj *borderObj;	/* background color */
     Tcl_Obj *sashReliefObj;	/* sash relief */
     Tcl_Obj *sashThicknessObj;	/* overall thickness of sash */
     Tcl_Obj *sashPadObj;	/* padding on either side of handle */
@@ -718,13 +718,15 @@ static void SashElementSize(
     Tk_GetPixelsFromObj(NULL, tkwin, sash->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, tkwin, sash->sashPadObj, &sashPad);
 
-    if (sashThickness < handleSize + 2*sashPad)
+    if (sashThickness < handleSize + 2*sashPad) {
 	sashThickness = handleSize + 2*sashPad;
+    }
 
-    if (orient == TTK_ORIENT_HORIZONTAL)
+    if (orient == TTK_ORIENT_HORIZONTAL) {
 	*heightPtr = sashThickness;
-    else
+    } else {
 	*widthPtr = sashThickness;
+    }
 }
 
 static void SashElementDraw(
@@ -805,50 +807,50 @@ TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
 
 TTK_LAYOUT("TButton",
     TTK_GROUP("Button.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Button.border", TTK_FILL_BOTH|TTK_BORDER,
+	TTK_GROUP("Button.border", TTK_FILL_BOTH|TTK_BORDER,
 	    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Button.label", TTK_FILL_BOTH)))))
+		TTK_NODE("Button.label", TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TCheckbutton",
     TTK_GROUP("Checkbutton.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Checkbutton.border", TTK_FILL_BOTH,
+	TTK_GROUP("Checkbutton.border", TTK_FILL_BOTH,
 	    TTK_GROUP("Checkbutton.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
-	        TTK_NODE("Checkbutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
+		TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
+		TTK_NODE("Checkbutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TRadiobutton",
     TTK_GROUP("Radiobutton.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Radiobutton.border", TTK_FILL_BOTH,
+	TTK_GROUP("Radiobutton.border", TTK_FILL_BOTH,
 	    TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Radiobutton.indicator", TTK_PACK_LEFT)
-	        TTK_NODE("Radiobutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
+		TTK_NODE("Radiobutton.indicator", TTK_PACK_LEFT)
+		TTK_NODE("Radiobutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TMenubutton",
     TTK_GROUP("Menubutton.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
+	TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
 	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
 	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
-	        TTK_NODE("Menubutton.label", 0)))))
+		TTK_NODE("Menubutton.label", 0)))))
 
 /* "classic" entry, includes highlight border */
 TTK_LAYOUT("TEntry",
     TTK_GROUP("Entry.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Entry.field", TTK_FILL_BOTH|TTK_BORDER,
+	TTK_GROUP("Entry.field", TTK_FILL_BOTH|TTK_BORDER,
 	    TTK_GROUP("Entry.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
+		TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
 
 /* "classic" combobox, includes highlight border */
 TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
+	TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	    TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
 	    TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
+		TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
 
 /* "classic" spinbox, includes highlight border */
 TTK_LAYOUT("TSpinbox",
     TTK_GROUP("Spinbox.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Spinbox.field", TTK_FILL_BOTH|TTK_FILL_X,
+	TTK_GROUP("Spinbox.field", TTK_FILL_BOTH|TTK_FILL_X,
 	    TTK_GROUP("null", TTK_PACK_RIGHT,
 		TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
 		TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
@@ -856,15 +858,21 @@ TTK_LAYOUT("TSpinbox",
 		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
 
 /* "classic" scale, includes highlight border */
+TTK_LAYOUT("Horizontal.TScale",
+    TTK_GROUP("Horizontal.Scale.highlight", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
+
 TTK_LAYOUT("Vertical.TScale",
     TTK_GROUP("Vertical.Scale.highlight", TTK_FILL_BOTH,
 	TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
 	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
 
-TTK_LAYOUT("Horizontal.TScale",
-    TTK_GROUP("Horizontal.Scale.highlight", TTK_FILL_BOTH,
-	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
-	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
+TTK_LAYOUT("Horizontal.Sash",
+    TTK_NODE("Sash.hsash", TTK_FILL_X))
+
+TTK_LAYOUT("Vertical.Sash",
+    TTK_NODE("Sash.vsash", TTK_FILL_Y))
 
 /* put highlight border around treeview */
 TTK_LAYOUT("Treeview",
@@ -877,7 +885,7 @@ TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------
  * TtkClassicTheme_Init --
- * 	Install classic theme.
+ *	Install classic theme.
  */
 
 MODULE_SCOPE int
