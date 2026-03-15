@@ -143,6 +143,26 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
+/*
+ * This static function is run as an idle task to order the root window front.
+ * This is only done if the window is in the normal state.  This avoids
+ * flashing the root window on the screen if it was withdrawn immediately after
+ * loading Tk.
+ */
+
+static void showRootWindow(void *clientData) {
+    NSWindow *root = (NSWindow *) clientData;
+    if ([NSApp tkWillExit]) {
+	return;
+    }
+    TkWindow *winPtr = TkMacOSXGetTkWindow(root);
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr->hints.initial_state == NormalState) {
+	[root makeKeyAndOrderFront:NSApp];
+    }
+    [NSApp activateIgnoringOtherApps: YES];
+}
+
 int
 XMapWindow(
     Display *display,		/* Display. */
@@ -247,6 +267,24 @@ XMapWindow(
 
     Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, view);
     Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
+    if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
+
+	/*
+	* Ordering the root window front in an idle task allows
+	* checking whether it was immediately withdrawn, and
+	* therefore does not need to be placed on the screen.
+	*
+	* [EL]: XMapWindow() is already called as an idle task. So, we don't have to
+	*       schedule showRootWindow() for execution at idle time once more. Just
+	*       make the call here.
+	* 	However, I can't judge the dependency of showRootWindow() and
+	* 	TkMacOSXRedrawViewIdleTask().
+	*/
+
+	// Tcl_DoWhenIdle(showRootWindow, win);
+	showRootWindow(win);
+    }
+    fflush(stdout);
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.
