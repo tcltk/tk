@@ -1365,7 +1365,7 @@ tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 
 # SheenBidi unity build
 SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
-	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c -o $@
+	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c

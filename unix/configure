@@ -8766,7 +8766,7 @@ fi
 printf %s "checking for SheenBidi + text shaper support... " >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes (hard-wired in unix/bidi/)" >&5
 printf "%s\n" "yes (hard-wired in unix/bidi/)" >&6; }
-BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers -I${TK_SRC_DIR}/unix/bidi/Source -I${TK_SRC_DIR}/unix/bidi -DSB_CONFIG_EXPERIMENTAL_TEXT_API"
+BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers -I${TK_SRC_DIR}/unix/bidi/Source -I${TK_SRC_DIR}/unix/bidi -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API"
 
 
 #--------------------------------------------------------------------
