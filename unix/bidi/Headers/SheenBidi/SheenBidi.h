@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/* Suppress numerous warnings. */
+#pragma GCC system_header
+#pragma clang system_header
+
 #ifndef _SHEENBIDI_H
 #define _SHEENBIDI_H
 
