@@ -467,16 +467,6 @@ Returns 1 if \fIitem\fR has children, 0 if not.
 Query or modify the heading options for the specified \fIcolumn\fR.
 Valid options are:
 .RS
-.\" OPTION: -text
-.TP
-\fB\-text \fItext\fR
-.
-The text to display in the column heading.
-.\" OPTION: -image
-.TP
-\fB\-image \fIimageName\fR
-.
-Specifies an image to display to the right of the column heading.
 .\" OPTION: -anchor
 .TP
 \fB\-anchor \fIanchor\fR
@@ -490,6 +480,28 @@ See \fBTk_GetAnchor\fR for valid values.
 A script to evaluate when the heading label is pressed.
 .PP
 Use \fIpathname heading #0\fR to configure the tree column heading.
+.\" OPTION: -image
+.TP
+\fB\-image \fIimageName\fR
+.
+Specifies an image to display to the right of the column heading.
+Ignored by Mac Aqua theme.
+.\" OPTION: -text
+.TP
+\fB\-text \fItext\fR
+.
+The text to display in the column heading.
+.\" OPTION: state
+.TP
+\fBstate \fIstateSpec\fR
+.
+Modify or inquire about heading state. If \fIstateSpec\fR is present, sets the
+widget state: for each flag in stateSpec, sets the corresponding flag or clears
+it if prefixed by an exclamation point. To use the default sort direction
+indicator, set the heading to \fBuser1\fR state plus either
+\fBselected\fR for ascending sorts or \fBalternate\fR for descending sorts.
+Remember to clear the states when a new heading is to be used as the sort column.
+Themes may set and use other states as needed for visual effects.
 .RE
 .\" METHOD: hide
 .TP

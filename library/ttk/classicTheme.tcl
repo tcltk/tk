@@ -116,7 +116,7 @@ namespace eval ttk::theme::classic {
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item \
             -indicatorcolor [list selected $colors(-indicator)] \
-            -indicatorrelief {selected sunken} 
+            -indicatorrelief {selected sunken}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]

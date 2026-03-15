@@ -7238,6 +7238,7 @@ TTK_LAYOUT("Heading",
     TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
 	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
+	    TTK_NODE("Treeheading.indicator", TTK_PACK_RIGHT)
 	    TTK_NODE("Treeheading.text", TTK_FILL_X))))
 
 TTK_LAYOUT("Row",
@@ -7251,7 +7252,109 @@ TTK_LAYOUT("Separator",
 TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------
- * +++ Tree indicator element.
+ * +++ Tree sort indicator element.
+ */
+
+typedef struct {
+    Tcl_Obj *colorObj;
+    Tcl_Obj *sizeObj;
+    Tcl_Obj *marginsObj;
+} TreeheadingIndicator;
+
+static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
+    { "-foreground", TK_OPTION_COLOR,
+	offsetof(TreeheadingIndicator,colorObj), DEFAULT_FOREGROUND },
+    { "-indicatorsize", TK_OPTION_PIXELS,
+	offsetof(TreeheadingIndicator,sizeObj), "9p" },
+    { "-indicatormargins", TK_OPTION_STRING,
+	offsetof(TreeheadingIndicator,marginsObj), "2p 2p 4p 2p" },
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+};
+
+static void TreeheadingIndicatorSize(
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *)) {
+
+    TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
+    double scalingLevel = TkScalingLevel(tkwin);
+    int size = 12;
+    Ttk_Padding margins, padding;
+
+    Tk_GetPixels(NULL, tkwin, Tcl_GetString(indicator->sizeObj), &size);
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
+
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
+    padding.left = round(margins.left * scalingLevel);
+    padding.top = round(margins.top * scalingLevel);
+    padding.right = round(margins.right * scalingLevel);
+    padding.bottom = round(margins.bottom * scalingLevel);
+
+    *widthPtr = size + Ttk_PaddingWidth(padding);
+    *heightPtr = size + Ttk_PaddingHeight(padding);
+}
+
+static void TreeheadingIndicatorDraw(
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state) {
+
+    TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
+    ArrowDirection direction;
+    Ttk_Padding margins;
+    int cx, cy;
+    XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    XGCValues gcvalues;
+    GC gc;
+    unsigned mask;
+
+    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginsObj,&margins);
+    b = Ttk_PadBox(b, margins);
+
+    if (state & TTK_STATE_SELECTED) {
+	direction = ARROW_DOWN;
+	TtkArrowSize(b.width/2, direction, &cx, &cy);
+	if ((b.height - cy) % 2 == 1) {
+	    ++cy;
+	}
+    } else if (state & TTK_STATE_ALTERNATE) {
+	direction = ARROW_UP;
+	TtkArrowSize(b.width/2, direction, &cx, &cy);
+	if ((b.height - cy) % 2 == 1) {
+	    ++cy;
+	}
+    } else {
+	return;
+    }
+
+    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
+
+    gcvalues.foreground = borderColor->pixel;
+    gcvalues.line_width = 1;
+    mask = GCForeground | GCLineWidth;
+    gc = Tk_GetGC(tkwin, mask, &gcvalues);
+
+    TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
+
+    Tk_FreeGC(Tk_Display(tkwin), gc);
+}
+
+static const Ttk_ElementSpec TreeheadingIndicatorElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(TreeheadingIndicator),
+    TreeheadingIndicatorOptions,
+    TreeheadingIndicatorSize,
+    TreeheadingIndicatorDraw
+};
+
+/*------------------------------------------------------------------------
+ * +++ Tree disclosure indicator element.
  */
 
 typedef struct {
@@ -7310,7 +7413,9 @@ static void TreeitemIndicatorDraw(
     Ttk_Padding margins;
     int cx, cy;
     XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
-    XGCValues gcvalues; GC gc; unsigned mask;
+    XGCValues gcvalues;
+    GC gc;
+    unsigned mask;
 
     if (state & TTK_STATE_LEAF) {/* don't draw anything */
 	return;
@@ -7412,7 +7517,9 @@ TtkTreeview_Init(Tcl_Interp *interp) {
     RegisterWidget(interp, "ttk::treeview", &TreeviewWidgetSpec);
 
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
-	    &TreeitemIndicatorElementSpec, 0);
+	&TreeitemIndicatorElementSpec, 0);
+    Ttk_RegisterElement(interp, theme, "Treeheading.indicator",
+	&TreeheadingIndicatorElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.row", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.separator", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeheading.cell", &RowElementSpec, 0);
