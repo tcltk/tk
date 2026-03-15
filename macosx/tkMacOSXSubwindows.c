@@ -284,7 +284,6 @@ XMapWindow(
 	// Tcl_DoWhenIdle(showRootWindow, win);
 	showRootWindow(win);
     }
-    fflush(stdout);
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.
