@@ -1620,7 +1620,6 @@ Tk_DrawCharsRotated(
  *----------------------------------------------------------------------
  */
 
-
 /* Common shaping helper: uses SheenBidi for bidi, then kb_text_shaper for shaping */
 void
 UnixFontShapeString(
@@ -1629,7 +1628,7 @@ UnixFontShapeString(
     int numBytes,
     X11Shape *shapePtr)
 {
-    int i, r;
+    int r;
     BidiRun bidiRuns[32];
     int numBidiRuns;
     int globalPenX = 0;
@@ -1650,7 +1649,6 @@ UnixFontShapeString(
             if (FcPatternGetString(pattern, FC_FILE, 0, &file) == FcResultMatch &&
                 FcPatternGetInteger(pattern, FC_INDEX, 0, &index) == FcResultMatch) {
                 
-                fprintf(stderr, "Loading font: %s index %d\n", file, index);
                 kbts_font *kbFont = kbts_ShapePushFontFromFile(shapePtr->context,
                                                    (const char *)file,
                                                    index);
@@ -1659,9 +1657,8 @@ UnixFontShapeString(
                     shapePtr->fontMap[0].kbFont = kbFont;
                     shapePtr->fontMap[0].faceIndex = 0;
                     shapePtr->numFonts = 1;
-                    fprintf(stderr, "Font loaded successfully\n");
                 } else {
-                    fprintf(stderr, "Font load FAILED\n");
+                    fprintf(stderr, "Font load failed\n");
                 }
             }
         }
@@ -1674,8 +1671,6 @@ UnixFontShapeString(
     }
 
     shapePtr->glyphCount = 0;
-
-    fprintf(stderr, "Shaping string: '%.*s' (%d bytes)\n", numBytes, source, numBytes);
     
     numBidiRuns = GetBidiRuns(source, numBytes, bidiRuns, 32);
 
@@ -1687,8 +1682,6 @@ UnixFontShapeString(
         numBidiRuns = 1;
     }
 
-    fprintf(stderr, "Got %d bidi runs\n", numBidiRuns);
-
     for (r = 0; r < numBidiRuns; r++) {
         const char *runText = source + bidiRuns[r].offset;
         int runLen = bidiRuns[r].length;
@@ -1697,11 +1690,8 @@ UnixFontShapeString(
         kbts_glyph *glyph;
         int runPenX = 0;
         int runPenY = 0;
-        int runSafety = 0;
 
         if (runLen <= 0) continue;
-
-        fprintf(stderr, "  Run %d: len=%d RTL=%d\n", r, runLen, runIsRTL);
 
         kbts_ShapeBegin(shapePtr->context, 
                         runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR, 
@@ -1711,19 +1701,18 @@ UnixFontShapeString(
                        KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
 
         kbts_ShapeEnd(shapePtr->context);
-
-        fprintf(stderr, "  Starting kbts_ShapeRun loop\n");
+        
+        /* Process each run from the shaper. */
         while (kbts_ShapeRun(shapePtr->context, &run) && 
-               shapePtr->glyphCount < 2048 && 
-               runSafety++ < 100) {
+               shapePtr->glyphCount < 2048) {
             
-            fprintf(stderr, "    ShapeRun iteration %d\n", runSafety);
             kbts_glyph_iterator it = run.Glyphs;
             int glyphsFoundInThisRun = 0;
 
-            while (kbts_GlyphIteratorNext(&it, &glyph)) {
-                if (shapePtr->glyphCount >= 2048) break;
-
+            /* Process all glyphs in this run. */
+            while (kbts_GlyphIteratorNext(&it, &glyph) && 
+                   shapePtr->glyphCount < 2048) {
+                
                 shapePtr->glyphs[shapePtr->glyphCount].glyphId = glyph->Id;
                 shapePtr->glyphs[shapePtr->glyphCount].font = run.Font;
                 shapePtr->glyphs[shapePtr->glyphCount].x = globalPenX + runPenX + glyph->OffsetX;
@@ -1736,12 +1725,11 @@ UnixFontShapeString(
                 glyphsFoundInThisRun++;
             }
 
-            fprintf(stderr, "    Found %d glyphs, total now %d\n", glyphsFoundInThisRun, shapePtr->glyphCount);
-
-            if (glyphsFoundInThisRun == 0) break;
+            /* If no glyphs found, we're done with this run. */
+            if (glyphsFoundInThisRun == 0) {
+                break;
+            }
         }
-
-        fprintf(stderr, "  Finished ShapeRun loop after %d iterations\n", runSafety);
 
         globalPenX += runPenX;
         globalPenY += runPenY;
@@ -1749,7 +1737,6 @@ UnixFontShapeString(
         if (shapePtr->glyphCount >= 2048) break;
     }
 
-    fprintf(stderr, "Shaping complete: %d glyphs, total width=%d\n", shapePtr->glyphCount, globalPenX);
 }
 
  /*
