@@ -229,6 +229,21 @@ XMapWindow(
 		    [NSThread sleepForTimeInterval:.001];
 		}
 	    }
+	    if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
+
+		/*
+		 * Ordering the root window front in an idle task allows
+		 * checking whether it was immediately withdrawn, and
+		 * therefore does not need to be placed on the screen.
+		 *
+		 * [EL]: XMapWindow() is already called as an idle task. So, we don't have to
+		 *       schedule showRootWindow() for execution at idle time once more. Just
+		 *       make the call here.
+		 */
+
+		// Tcl_DoWhenIdle(showRootWindow, win);
+		showRootWindow(win);
+	    }
 
 	    /*
 	     * Call Tk_UpdatePointer to tell Tk whether the pointer is in the
@@ -267,23 +282,6 @@ XMapWindow(
 
     Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, view);
     Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
-    if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
-
-	/*
-	* Ordering the root window front in an idle task allows
-	* checking whether it was immediately withdrawn, and
-	* therefore does not need to be placed on the screen.
-	*
-	* [EL]: XMapWindow() is already called as an idle task. So, we don't have to
-	*       schedule showRootWindow() for execution at idle time once more. Just
-	*       make the call here.
-	* 	However, I can't judge the dependency of showRootWindow() and
-	* 	TkMacOSXRedrawViewIdleTask().
-	*/
-
-	// Tcl_DoWhenIdle(showRootWindow, win);
-	showRootWindow(win);
-    }
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.
