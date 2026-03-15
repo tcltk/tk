@@ -46,6 +46,7 @@ exit} exercise.tcl]
     # Launch a child Tk process that determines the state of the root window
     exec [info nameofexecutable] $scriptFile -geometry 200x200+100+100
 } -cleanup {
+    wm deiconify .
     tcltest::removeFile exercise.tcl
     unset scriptFile
 } -result "|0||1|.|"
