@@ -445,8 +445,10 @@ static void RefocusGrabWindow(void *data) {
     }
     if ([self keyWindow] == nil && iconifiedWindow != nil) {
 	[iconifiedWindow makeKeyAndOrderFront:self];
+	[[iconifiedWindow contentView] setOnScreen:YES];
     } else {
 	[[self keyWindow] orderFront:self];
+	[[[self keyWindow] contentView] setOnScreen:YES];
     }
 
 }

@@ -813,7 +813,7 @@ FrontMostToplevelAtPoint(
 
     for (NSWindow *w in [NSApp orderedWindows]) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr && Tk_IsMapped(winPtr)) {
+	if (winPtr && [[w contentView] onScreen]) {
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = windowFrame;
 
@@ -853,7 +853,7 @@ void TkMacOSXAssignNewKeyWindow(
     [NSApp setTkEventTarget: NULL];
     for (NSWindow *w in [NSApp orderedWindows]) {
 	WmInfo *wmPtr;
-	BOOL isOnScreen;
+	//	BOOL isOnScreen;
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
 	    || !winPtr->wmInfoPtr
@@ -864,11 +864,12 @@ void TkMacOSXAssignNewKeyWindow(
 	    continue;
 	}
 	wmPtr = winPtr->wmInfoPtr;
-	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
-		      wmPtr->hints.initial_state != WithdrawnState);
-	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
+	//	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
+	//		      wmPtr->hints.initial_state != WithdrawnState);
+	if (w != ignore && Tk_IsMapped(winPtr) && [w canBecomeKeyWindow]) {
 	    TKMenu *menu;
 	    [w makeKeyAndOrderFront:NSApp];
+	    [[w contentView] setOnScreen:YES];
 	    /* Set the menubar for the new front window. */
 	    if (winPtr->wmInfoPtr &&
 		winPtr->wmInfoPtr->menuPtr &&
@@ -2461,6 +2462,7 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
+	[[win contentView] setOnScreen:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
@@ -6990,6 +6992,7 @@ TkpWmSetState(
 	TkWmMapWindow(winPtr);
 	[macWin deminiaturize:NSApp];
 	[macWin orderFront:NSApp];
+	[[macWin contentView] setOnScreen:YES];
 	TkMacOSXZoomToplevel(macWin, state == NormalState ? inZoomIn : inZoomOut);
     }
 
@@ -7136,6 +7139,7 @@ TkpChangeFocus(
 	}
 	if (win && [win canBecomeKeyWindow]) {
 	    [win makeKeyAndOrderFront:NSApp];
+	    [[win contentView] setOnScreen:YES];
 	    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 	}
     }
@@ -7535,6 +7539,7 @@ ApplyContainerOverrideChanges(
 	    [macWindow setStyleMask:styleMask];
 	    if (wmPtr->hints.initial_state == NormalState) {
 		[macWindow orderFront:NSApp];
+		[[macWindow contentVew] setOnScreen:YES];
 	    }
 	    if (wmPtr->container != NULL) {
 		wmPtr->flags |= WM_TOPMOST;
@@ -7581,6 +7586,7 @@ ApplyContainerOverrideChanges(
 			[parentWindow removeChildWindow:macWindow];
 		    }
 		    [macWindow orderFront:NSApp];
+		    [[macWindow contentView] setOnScreen:YES];
 		    [containerMacWin addChildWindow:macWindow
 					    ordered:NSWindowAbove];
 		}
