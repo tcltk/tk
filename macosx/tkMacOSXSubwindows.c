@@ -155,7 +155,8 @@ XMapWindow(
     static bool initialized = false;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-    //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr));
+    printf("XMapWindow: %s (%p)\n", Tk_PathName(macWin->winPtr), NSApp);
+    fflush(stdout);
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -194,6 +195,7 @@ XMapWindow(
 		} else {
 		    [win orderFrontRegardless];
 		}
+		[[win contentView] setOnScreen:YES];
 
 		/*
 		 * Delay for up to 20 milliseconds until the toplevel has
@@ -260,6 +262,7 @@ XMapWindow(
 	event.xvisibility.state = VisibilityUnobscured;
 	NotifyVisibility(winPtr, &event);
     } else {
+	winPtr->flags &= ~TK_MAPPED;
 	initialized = true;
     }
     return Success;
@@ -327,10 +330,9 @@ XUnmapWindow(
     MacDrawable *macWin = (MacDrawable *)window;
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
+    printf("XUnmapWindow %s (%p)\n", Tk_PathName(winPtr), NSApp);
+    fflush(stdout);
 
-    if (!window) {
-	return BadWindow;
-    }
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&

@@ -228,6 +228,8 @@ static Tcl_ObjCmdProc2 TkMacOSXGetInfoAsJSONObjCmd;
 	 {
 	     return event;
 	 }];
+    printf("Finished launching %p\n", NSApp);
+    fflush(stdout);
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -470,10 +472,20 @@ static void showRootWindow(void *clientData) {
     if ([NSApp tkWillExit]) {
 	return;
     }
+    printf("showRootWindow (%p)\n", NSApp);
+    fflush(stdout);
     TkWindow *winPtr = TkMacOSXGetTkWindow(root);
     WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (Tk_IsMapped(winPtr)) {
+	printf("Root is mapped\n");
+	fflush(stdout);
+    }
     if (wmPtr->hints.initial_state == NormalState) {
 	[root makeKeyAndOrderFront:NSApp];
+	winPtr->flags |= TK_MAPPED;
+    } else {
+	printf("    Not in normal state; root not ordered front\n");
+	fflush(stdout);
     }
     [NSApp activateIgnoringOtherApps: YES];
 }
@@ -657,13 +669,14 @@ TkpInit(
 
 	for (NSWindow *window in [NSApp windows]) {
 	    TkWindow *winPtr = TkMacOSXGetTkWindow(window);
-	    if (winPtr && Tk_IsMapped(winPtr)) {
+	    if (winPtr && strlen(Tk_PathName(winPtr)) == 1) {
 
-		/*
+		/* This is the root window.  We will order it front.
 		 * Ordering the root window front in an idle task allows
 		 * checking whether it was immediately withdrawn, and
 		 * therefore does not need to be placed on the screen.
 		 */
+		//winPtr->flags |= TK_MAPPED;
 
 		Tcl_DoWhenIdle(showRootWindow, window);
 		break;
