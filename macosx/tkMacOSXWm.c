@@ -812,8 +812,9 @@ FrontMostToplevelAtPoint(
     NSPoint p = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     for (NSWindow *w in [NSApp orderedWindows]) {
-	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr && [[w contentView] onScreen]) {
+	//TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+	TKContentView *view = (TKContentView *) [w contentView];
+	if ([view isMemberOfClass:[TKContentView class]] && [view onScreen]) {
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = windowFrame;
 
@@ -823,9 +824,9 @@ FrontMostToplevelAtPoint(
 	     * window.
 	     */
 
-	    contentFrame.size.height = [[w contentView] frame].size.height;
+	    contentFrame.size.height = [view frame].size.height;
 	    if (NSMouseInRect(p, contentFrame, NO)) {
-		return winPtr;
+		return TkMacOSXGetTkWindow(w);
 	    } else if (NSMouseInRect(p, windowFrame, NO)) {
 		/*
 		 * The pointer is in the title bar of the highest NSWindow
