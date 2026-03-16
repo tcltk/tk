@@ -58,7 +58,7 @@ namespace eval ttk::theme::alt {
 		   disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -padding 2.25p -arrowsize 3.75p -relief raised
+	    -width 11p -padding 2.25p -arrowsize 3.75p -relief raised
 
 	ttk::style configure TEntry -padding 1 \
 	    -focuswidth 2 -focuscolor $colors(-selectbg)
@@ -85,7 +85,7 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 10.5p -width 10.5p
+	    -arrowsize 10.5p -width 9p
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 

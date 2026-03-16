@@ -97,7 +97,7 @@ namespace eval ttk::theme::clam {
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize 3.75p -arrowpadding 2.25p -padding 3.75p \
+	    -width 11p -arrowsize 3.75p -arrowpadding 2.25p -padding 3.75p \
 	    -relief raised
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
@@ -106,8 +106,7 @@ namespace eval ttk::theme::clam {
 	    -bordercolor [list focus $colors(-selectbg)] \
 	    -lightcolor [list focus #6f9dc6]
 
-	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
-	    -arrowsize 10.5p
+	ttk::style configure TCombobox -padding 1 -insertwidth 1 -arrowsize 9p
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
@@ -167,7 +166,7 @@ namespace eval ttk::theme::clam {
 	    -borderwidth 2 -relief raised
 
 	ttk::style configure TScrollbar -gripsize 7.5p \
-	    -arrowsize 10.5p -width 10.5p
+	    -arrowpadding 1p -arrowsize 9p -width 9p
 
 	ttk::style configure TScale -gripsize 7.5p \
 	    -arrowsize 10.5p -sliderlength 22.5p

@@ -7265,7 +7265,7 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TreeheadingIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "9p" },
+	offsetof(TreeheadingIndicator,sizeObj), "9" },
     { "-indicatormargins", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginsObj), "2p 2p 4p 2p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -7281,7 +7281,7 @@ static void TreeheadingIndicatorSize(
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     double scalingLevel = TkScalingLevel(tkwin);
-    int size = 12;
+    int size = 9;
     Ttk_Padding margins, padding;
 
     Tk_GetPixels(NULL, tkwin, Tcl_GetString(indicator->sizeObj), &size);
@@ -7318,13 +7318,13 @@ static void TreeheadingIndicatorDraw(
     b = Ttk_PadBox(b, margins);
 
     if (state & TTK_STATE_SELECTED) {
-	direction = ARROW_DOWN;
+	direction = CHEVRON_DOWN;
 	TtkArrowSize(b.width/2, direction, &cx, &cy);
 	if ((b.height - cy) % 2 == 1) {
 	    ++cy;
 	}
     } else if (state & TTK_STATE_ALTERNATE) {
-	direction = ARROW_UP;
+	direction = CHEVRON_UP;
 	TtkArrowSize(b.width/2, direction, &cx, &cy);
 	if ((b.height - cy) % 2 == 1) {
 	    ++cy;
@@ -7340,8 +7340,7 @@ static void TreeheadingIndicatorDraw(
     mask = GCForeground | GCLineWidth;
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
 
-    TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
-
+    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 

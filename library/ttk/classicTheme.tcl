@@ -76,7 +76,8 @@ namespace eval ttk::theme::classic {
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style element create Combobox.downarrow from default
-	ttk::style configure TCombobox -padding 1 -arrowsize 9p
+	ttk::style configure TCombobox -padding 1 \
+	    -arrowpadding 2p -arrowsize 7p
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
@@ -84,13 +85,15 @@ namespace eval ttk::theme::classic {
 
 	ttk::style element create Spinbox.uparrow from default
 	ttk::style element create Spinbox.downarrow from default
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
+	ttk::style configure TSpinbox \
+	    -arrowpadding 1.5p -arrowsize 5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure TScrollbar -relief raised -arrowsize 9p -width 9p
+	ttk::style configure TScrollbar -relief raised \
+	    -arrowpadding 1 -arrowsize 9p -width 9p
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised \

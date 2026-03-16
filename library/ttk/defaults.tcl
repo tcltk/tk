@@ -123,7 +123,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	}
 
 	ttk::style configure TMenubutton \
-	    -relief raised -arrowsize 3.75p -arrowpadding 2.25p \
+	    -relief raised -arrowsize 3.25p -arrowpadding 2.25p \
 	    -arrowcolor $colors(-text) -padding {7.5p 2.25p}
 	ttk::style map TMenubutton \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -135,7 +135,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox \
-	    -arrowsize 9p -arrowcolor $colors(-text) \
+	    -arrowpadding 2p -arrowsize 7p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding 1 \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
@@ -143,7 +143,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TSpinbox \
-	    -arrowsize 7.5p -arrowcolor $colors(-text) \
+	    -arrowpadding 1.5p -arrowsize 5.5p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
@@ -154,7 +154,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 9p -arrowsize 9p -arrowcolor $colors(-text)
+	    -width 9p -arrowpadding 1p -arrowsize 6p \
+	    -arrowcolor $colors(-text)
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 

@@ -393,7 +393,8 @@ MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
  * Drawing utilities for theme code:
  * (@@@ find a better home for this)
  */
-typedef enum { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } ArrowDirection;
+typedef enum { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT,
+	CHEVRON_UP, CHEVRON_DOWN, CHEVRON_LEFT, CHEVRON_RIGHT } ArrowDirection;
 MODULE_SCOPE void TtkArrowSize(int h, ArrowDirection, int *widthPtr, int *heightPtr);
 MODULE_SCOPE void TtkDrawArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
 MODULE_SCOPE void TtkFillArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);

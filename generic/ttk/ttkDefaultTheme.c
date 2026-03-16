@@ -190,14 +190,93 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
     points[3].y = points[0].y;
 }
 
+/*
+ * ChevronPoints --
+ *	Compute points of chevron polygon.
+ */
+static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[9])
+{
+    int cx, cy, h;
+
+    switch (direction) {
+	case CHEVRON_UP:
+	    h = (b.width - 1)/2;
+	    cx = b.x + h;
+	    cy = b.y;
+	    if (b.height <= h) h = b.height - 2;
+	    points[0].x = cx;		points[0].y = cy;
+	    points[1].x = cx + h;	points[1].y = cy + h;
+	    points[2].x = cx + h - 1;	points[2].y = cy + h;
+	    points[3].x = cx;		points[3].y = cy + 1;
+	    points[4].x = cx - h + 1;	points[4].y = cy + h;
+	    points[5].x = cx - h;	points[5].y = cy + h;
+	    break;
+	case CHEVRON_DOWN:
+	    h = (b.width - 1)/2;
+	    cx = b.x + h;
+	    cy = b.y + b.height - 1;
+	    if (b.height <= h) h = b.height - 2;
+	    points[0].x = cx;		points[0].y = cy;
+	    points[1].x = cx - h;	points[1].y = cy - h;
+	    points[2].x = cx - h + 1;	points[2].y = cy - h;
+	    points[3].x = cx;		points[3].y = cy - 1;
+	    points[4].x = cx + h - 1;	points[4].y = cy - h;
+	    points[5].x = cx + h;	points[5].y = cy - h;
+	    break;
+	case CHEVRON_LEFT:
+	    h = (b.height - 1)/2;
+	    cx = b.x;
+	    cy = b.y + h;
+	    if (b.width <= h) h = b.width - 2;
+	    points[0].x = cx;		points[0].y = cy;
+	    points[1].x = cx + h;	points[1].y = cy - h;
+	    points[2].x = cx + h;	points[2].y = cy - h + 1;
+	    points[3].x = cx + 1;	points[3].y = cy;
+	    points[4].x = cx + h;	points[4].y = cy + h - 1;
+	    points[5].x = cx + h;	points[5].y = cy + h;
+	    break;
+	case CHEVRON_RIGHT:
+	    h = (b.height - 1)/2;
+	    cx = b.x + b.width - 1;
+	    cy = b.y + h;
+	    if (b.width <= h) h = b.width - 2;
+	    points[0].x = cx;		points[0].y = cy;
+	    points[1].x = cx - h;	points[1].y = cy + h;
+	    points[2].x = cx - h;	points[2].y = cy + h - 1;
+	    points[3].x = cx - 1;	points[3].y = cy;
+	    points[4].x = cx - h;	points[4].y = cy - h + 1;
+	    points[5].x = cx - h;	points[5].y = cy - h;
+	    break;
+    }
+
+    points[6].x = points[0].x;
+    points[6].y = points[0].y;
+}
+
 /*public*/
 void TtkArrowSize(int h, ArrowDirection direction, int *widthPtr, int *heightPtr)
 {
     switch (direction) {
 	case ARROW_UP:
-	case ARROW_DOWN:	*widthPtr = 2*h+1; *heightPtr = h+1; break;
+	case ARROW_DOWN:
+	    *widthPtr = 2*h+1;
+	    *heightPtr = h+1;
+	    break;
 	case ARROW_LEFT:
-	case ARROW_RIGHT:	*widthPtr = h+1; *heightPtr = 2*h+1;
+	case ARROW_RIGHT:
+	    *widthPtr = h+1;
+	    *heightPtr = 2*h+1;
+	    break;
+	case CHEVRON_UP:
+	case CHEVRON_DOWN:
+	    *widthPtr = 2*h+1;
+	    *heightPtr = h+2;
+	    break;
+	case CHEVRON_LEFT:
+	case CHEVRON_RIGHT:
+	    *widthPtr = h+2;
+	    *heightPtr = 2*h+1;
+	    break;
     }
 }
 
@@ -209,25 +288,40 @@ void TtkArrowSize(int h, ArrowDirection direction, int *widthPtr, int *heightPtr
 void TtkFillArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection direction)
 {
-    XPoint points[4];
-    ArrowPoints(b, direction, points);
-    XFillPolygon(display, d, gc, points, 3, Convex, CoordModeOrigin);
-    XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+    XPoint points[7];
 
-    /* Work around bug [77527326e5] - ttk artifacts on Ubuntu */
-    XDrawPoint(display, d, gc, points[2].x, points[2].y);
+    /* Get points for shape, fill, and draw outline. Use XDrawPoints to */
+    /* work around bug [77527326e5] - ttk artifacts on Ubuntu. */
+    if (direction <= ARROW_RIGHT) {
+	ArrowPoints(b, direction, points);
+	XFillPolygon(display, d, gc, points, 3, Convex, CoordModeOrigin);
+	XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+	XDrawPoints(display, d, gc, points, 3, CoordModeOrigin);
+    } else {
+	ChevronPoints(b, direction, points);
+	XFillPolygon(display, d, gc, points, 6, Convex, CoordModeOrigin);
+	XDrawLines(display, d, gc, points, 7, CoordModeOrigin);
+	XDrawPoints(display, d, gc, points, 6, CoordModeOrigin);
+    }
 }
 
 /*public*/
 void TtkDrawArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection direction)
 {
-    XPoint points[4];
-    ArrowPoints(b, direction, points);
-    XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+    XPoint points[7];
 
-    /* Work around bug [77527326e5] - ttk artifacts on Ubuntu */
-    XDrawPoint(display, d, gc, points[2].x, points[2].y);
+    /* Get points for shape and draw outline. Use XDrawPoints to */
+    /* work around bug [77527326e5] - ttk artifacts on Ubuntu. */
+    if (direction <= ARROW_RIGHT) {
+	ArrowPoints(b, direction, points);
+	XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+	XDrawPoints(display, d, gc, points, 3, CoordModeOrigin);
+    } else {
+	ChevronPoints(b, direction, points);
+	XDrawLines(display, d, gc, points, 7, CoordModeOrigin);
+	XDrawPoints(display, d, gc, points, 6, CoordModeOrigin);
+    }
 }
 
 /*
@@ -772,9 +866,9 @@ static void ArrowElementSize(
     int size = SCROLLBAR_WIDTH;
 
     padding.left = round(ArrowPadding.left * scalingLevel);
-    padding.right = padding.left + 1;
     padding.top = round(ArrowPadding.top * scalingLevel);
-    padding.bottom = padding.top + 1;
+    padding.right = round(ArrowPadding.right * scalingLevel);
+    padding.bottom = round(ArrowPadding.bottom * scalingLevel);
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
     size -= Ttk_PaddingWidth(padding);
@@ -811,15 +905,17 @@ static void ArrowElementDraw(
     DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 
     padding.left = round(ArrowPadding.left * scalingLevel);
-    padding.right = padding.left + 1;
     padding.top = round(ArrowPadding.top * scalingLevel);
-    padding.bottom = padding.top + 1;
+    padding.right = round(ArrowPadding.right * scalingLevel);
+    padding.bottom = round(ArrowPadding.bottom * scalingLevel);
 
     b = Ttk_PadBox(b, padding);
 
     switch (direction) {
 	case ARROW_UP:
 	case ARROW_DOWN:
+	case CHEVRON_UP:
+	case CHEVRON_DOWN:
 	    TtkArrowSize(b.width/2, direction, &cx, &cy);
 	    if ((b.height - cy) % 2 == 1) {
 		++cy;
@@ -827,6 +923,8 @@ static void ArrowElementDraw(
 	    break;
 	case ARROW_LEFT:
 	case ARROW_RIGHT:
+	case CHEVRON_LEFT:
+	case CHEVRON_RIGHT:
 	    TtkArrowSize(b.height/2, direction, &cx, &cy);
 	    if ((b.width - cx) % 2 == 1) {
 		++cx;
@@ -835,7 +933,6 @@ static void ArrowElementDraw(
     }
 
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
 }
 
@@ -915,7 +1012,6 @@ static void BoxArrowElementDraw(
     }
 
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-
     TtkFillArrow(disp, d, arrowGC, b, direction);
 }
 
