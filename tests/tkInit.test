@@ -1,0 +1,59 @@
+# This file is a Tcl script to test the Tk initialization process for all
+# platforms, that is, everything induced by Tk_Init() and the platform-specific
+# initialization function TkpInit().
+#
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# All rights reserved.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
+
+test tkInit-1.0 {Tk initialization: let the root window be mapped after initialization, at idle time. Bug #591829e948-A} -body {
+    set scriptFile [tcltest::makeFile {package require Tk
+# Determine the state of the root window immediately upon Tk initialization.
+set result "|[winfo ismapped .]|[winfo containing 200 200]|"
+# Determine the state of the root window again after having serviced all
+# idle tasks.
+update idletasks; after 100
+append result "[winfo ismapped .]|[winfo containing 200 200]|"
+puts $result
+exit} exercise.tcl]
+
+    # Withdraw our own root window
+    wm withdraw .
+    after 10; update
+
+    # Launch a child Tk process that determines the state of the root window
+    exec [info nameofexecutable] $scriptFile -geometry 200x200+100+100
+} -cleanup {
+    wm deiconify .
+    tcltest::removeFile exercise.tcl
+    unset scriptFile
+} -result "|0||1|.|"
+
+#
+# TESTFILE CLEANUP
+#
+
+deleteWindows
+cleanupTests
