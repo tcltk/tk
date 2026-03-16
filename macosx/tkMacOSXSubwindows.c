@@ -200,6 +200,12 @@ XMapWindow(
 		    [NSThread sleepForTimeInterval:.001];
 		}
 	    }
+
+	    /*
+	     * If we're processing the Tk root window, order it front unless
+	     * it was immediately withdrawn.
+	     */
+
 	    if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
 		    (winPtr->wmInfoPtr->hints.initial_state == NormalState)) {
 		[win makeKeyAndOrderFront:NSApp];

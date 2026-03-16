@@ -28,7 +28,7 @@ resetWindows
 # TESTS
 #
 
-test tkInit-1.0 {Tk initialization: async mapping of root window. Bug #591829e948-A} -body {
+test tkInit-1.0 {Tk initialization: let the root window be mapped after initialization, at idle time. Bug #591829e948-A} -body {
     set scriptFile [tcltest::makeFile {package require Tk
 # Determine the state of the root window immediately upon Tk initialization.
 set result "|[winfo ismapped .]|[winfo containing 200 200]|"
