@@ -421,30 +421,42 @@ XCopyArea_PixmapToWindow(
     int rc;
     unsigned char *pixels = NULL; 
     
+    /* Allocate buffer for pixel data. */
     pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
-    
     
     /* Close pixmap frame if open. */
     if (srcPixmap->frameOpen) {
         nvgRestore(glfwContext.vg);
         nvgEndFrame(glfwContext.vg);
         srcPixmap->frameOpen = 0;
+    }
+    
+    /* Read pixmap texture data into buffer.
+     * Bind the pixmap's FBO and read the color attachment. */
+    if (srcPixmap->fbo) {
+        glBindFramebuffer(GL_FRAMEBUFFER, srcPixmap->fbo);
+        glReadPixels(0, 0, srcPixmap->width, srcPixmap->height,
+                     GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        /* No FBO means no content - fill with transparent. */
+        memset(pixels, 0, srcPixmap->width * srcPixmap->height * 4);
     }
     
     /* Begin drawing to destination window. */
     rc = TkGlfwBeginDraw(dst, gc, &dc);
     if (rc != TCL_OK) {
+        ckfree((char *)pixels);
         return BadDrawable;
     }
     
     /* Wrap pixmap texture as NVG image. */
     nvgImage = nvgCreateImageRGBA(dc.vg, srcPixmap->width, srcPixmap->height,
                                   0, pixels);
-
     
     if (nvgImage == 0) {
         TkGlfwEndDraw(&dc);
+        ckfree((char *)pixels);
         return BadDrawable;
     }
     
@@ -471,10 +483,10 @@ XCopyArea_PixmapToWindow(
     /* Cleanup. */
     nvgDeleteImage(dc.vg, nvgImage);
     TkGlfwEndDraw(&dc);
+    ckfree((char *)pixels);
     
     return Success;
 }
-
     
 static int
 XCopyArea_PixmapToPixmap(

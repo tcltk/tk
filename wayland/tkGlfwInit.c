@@ -490,6 +490,7 @@ TkGlfwBeginDraw(
     nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
 
     dcPtr->vg = glfwContext.vg;
+    dcPtr->drawable = drawable;
 
     /* Save state for this specific primitive. */
     nvgSave(dcPtr->vg);
