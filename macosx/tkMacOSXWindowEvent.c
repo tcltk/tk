@@ -433,7 +433,6 @@ static void RefocusGrabWindow(void *data) {
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen:NO];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_Preserve(winPtr);
@@ -445,10 +444,8 @@ static void RefocusGrabWindow(void *data) {
     }
     if ([self keyWindow] == nil && iconifiedWindow != nil) {
 	[iconifiedWindow makeKeyAndOrderFront:self];
-	[[iconifiedWindow contentView] setOnScreen:YES];
     } else {
 	[[self keyWindow] orderFront:self];
-	[[[self keyWindow] contentView] setOnScreen:YES];
     }
 
 }
@@ -1019,10 +1016,9 @@ ExposeRestrictProc(
 	 * display procs before updating the layer.
 	 */
 
-	if (! [self onScreen]) {
+	if (! self.window.isVisible) {
 	    //printf("Running event loop.\n");
 	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	    [self setOnScreen:YES];
 	}
 
 	/*
