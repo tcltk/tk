@@ -208,6 +208,11 @@ XMapWindow(
 	    if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
 		    (winPtr->wmInfoPtr->hints.initial_state == NormalState)) {
 		[win makeKeyAndOrderFront:NSApp];
+
+		/*
+		 * Now the root is fully mapped, so we can set the flag.
+		 */
+
 		winPtr->flags |= TK_MAPPED;
 	    }
 
