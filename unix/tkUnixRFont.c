@@ -1,37 +1,102 @@
 /*
  * tkUnixRFont.c --
  *
- *	Alternate implementation of tkUnixFont.c using Xft. Supports text 
- *  shaping and bidirectional rendering for complex text and RTL languages 
- *  via external tkUnixShaper API.
+ *	Alternate implementation of tkUnixFont.c using Xft.
  *
  * Copyright (c) 2002-2003 Keith Packard
- * Copyright (c) 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <X11/Xft/Xft.h>
 #include "tkUnixInt.h"
 #include "tkFont.h"
-#include "tkUnixShaper.h" 
+#include <X11/Xft/Xft.h>
+#include <math.h>
+#include <stdlib.h>
+#define KB_TEXT_SHAPE_IMPLEMENTATION
+#include <kb_text_shaper.h>
+#include <SheenBidi/SheenBidi.h>
+
+#define MAX_CACHED_COLORS 16
+#define TK_DRAW_IN_CONTEXT
 
 /*
  * Debugging support...
  */
+
 #define DEBUG_FONTSEL 0
 #define DEBUG(arguments) \
     if (DEBUG_FONTSEL) { \
 	printf arguments; fflush(stdout); \
     }
 
+typedef struct {
+    XftFont *ftFont;
+    XftFont *ft0Font;
+    FcPattern *source;
+    FcCharSet *charset;
+    double angle;
+} UnixFtFace;
+
+typedef struct {
+    XftColor color;
+    int next;
+} UnixFtColorList;
+
+/*
+ * Text-shaping functions and data.
+ */
+
+typedef struct {
+    kbts_shape_context *context;
+
+    /* Mapping between kb_text_shaper fonts and Tk font faces */
+    struct {
+	kbts_font *kbFont;    /* kb_text_shaper font */
+	int faceIndex;        /* Index in UnixFtFont->faces[] */
+    } fontMap[8];
+    int numFonts;
+
+    /* Store shaped glyph data */
+    struct {
+	kbts_font *font;      /* Which kb font this glyph came from */
+	FT_UInt glyphId;      /* Glyph index in font */
+	int x, y;             /* Pen position for this glyph */
+	int advanceX;         /* Advance width */
+    } glyphs[2048];
+    int glyphCount;
+    Font cachedFamilyId;
+    char lastSrc[1024]; 
+    int lastLen;
+} X11Shape;
+
+typedef struct {
+    TkFont font;		/* Stuff used by generic font package. Must be
+				 * first in structure. */
+    UnixFtFace *faces;
+    int nfaces;
+    FcFontSet *fontset;
+    FcPattern *pattern;
+
+    Display *display;
+    int screen;
+    Colormap colormap;
+    Visual *visual;
+    XftDraw *ftDraw;
+    int ncolors;
+    int firstColor;
+    UnixFtColorList colors[MAX_CACHED_COLORS];
+    X11Shape shape;		
+} UnixFtFont;
+
 /*
  * Used to describe the current clipping box. Can't be passed normally because
  * the information isn't retrievable from the GC.
  */
+
 typedef struct {
-    Region clipRegion;		/* The clipping region, or None */
+    Region clipRegion;		/* The clipping region, or None. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -39,22 +104,32 @@ TCL_DECLARE_MUTEX(xftMutex);
 #define LOCK Tcl_MutexLock(&xftMutex)
 #define UNLOCK Tcl_MutexUnlock(&xftMutex)
 
-/*
- * Forward declarations
- */
-static XftFont *GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
-static void GetTkFontAttributes(Tk_Window tkwin, XftFont *ftFont,
-				TkFontAttributes *faPtr);
-static void GetTkFontMetrics(XftFont *ftFont, TkFontMetrics *fmPtr);
-static XftFont *GetFontForFace(UnixFtFont *fontPtr, int faceIndex, double angle);
-static XftColor *LookUpColor(Display *display, UnixFtFont *fontPtr,
-			     unsigned long pixel);
-static void UnixFontDrawShapedText(Display *display, Drawable drawable, GC gc,
-				   UnixFtFont *fontPtr, const char *source,
-				   int numBytes, double originX, double originY,
-				   double angle_deg);
-static int InitFontErrorProc(void *clientData, XErrorEvent *errPtr);
-static void FinishedWithFont(UnixFtFont *fontPtr);
+void                    X11Shape_Init(X11Shape *s);
+void                    X11Shape_AddFont(X11Shape *s, kbts_font *f);
+void 		        X11Shape_Destroy(X11Shape *s);
+void 		        UnixFontShapeString(UnixFtFont *fontPtr, const
+							char *source,
+							int numBytes, X11Shape *shapePtr);
+static void 	        UnixFontDrawShapedText(Display *display,
+							Drawable drawable, GC gc, UnixFtFont *fontPtr, 
+							const char *source, int numBytes, double originX, 
+							double originY, double angle_deg);
+void		        Tk_DrawCharsRotated(Display *display, Drawable drawable, 
+							GC gc,	Tk_Font tkfont,	const char *source, 
+							int numBytes,int x, int y, double angle);
+static int	        UnixFontGetShapedWidth(UnixFtFont *fontPtr, const char *source,Tcl_Size numBytes);
+
+typedef struct {
+    int offset;          /* Byte offset in original UTF-8 string */
+    int length;          /* Length in bytes */
+    SBLevel level;       /* Embedding level from SheenBidi */
+    int isRTL;           /* 1 if this run is RTL, 0 if LTR */
+} BidiRun;
+
+static int              GetBidiRuns(const char *utf8, int len, BidiRun *runsOut, int maxRuns);
+
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -74,38 +149,32 @@ static void FinishedWithFont(UnixFtFont *fontPtr);
  *----------------------------------------------------------------------
  */
 
+static Tcl_Size utf8ToUcs4(const char *source, FcChar32 *c, Tcl_Size numBytes)
+{
+    if (numBytes >= 6) {
+	return Tcl_UtfToUniChar(source, (int *)c);
+    }
+    return FcUtf8ToUcs4((const FcChar8 *)source, c, numBytes);
+}
+
 void
 TkpFontPkgInit(
     TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
-	return;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * GetFont --
- *
- *	Returns an XftFont for the given character and angle, opening it if
- *	necessary. Uses ft0Font for upright text, ftFont for rotated.
- *
- * Results:
- *	An XftFont *, or panics on total failure.
- *
- * Side effects:
- *	May open a new font.
- *
- *----------------------------------------------------------------------
- */
-
+
 static XftFont *
-GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle)
+GetFont(
+    UnixFtFont *fontPtr,
+    FcChar32 ucs4,
+    double angle)
 {
     int i;
 
     if (ucs4) {
 	for (i = 0; i < fontPtr->nfaces; i++) {
 	    FcCharSet *charset = fontPtr->faces[i].charset;
+
 	    if (charset && FcCharSetHasChar(charset, ucs4)) {
 		break;
 	    }
@@ -116,39 +185,51 @@ GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle)
     } else {
 	i = 0;
     }
-
-    if ((angle == 0.0 && !fontPtr->faces[i].ft0Font) ||
-	(angle != 0.0 && (!fontPtr->faces[i].ftFont ||
-			  fontPtr->faces[i].angle != angle))) {
-
-	FcPattern *pat = FcFontRenderPrepare(NULL, fontPtr->pattern,
-					      fontPtr->faces[i].source);
-	double s = sin(angle * M_PI / 180.0);
-	double c = cos(angle * M_PI / 180.0);
+    if ((angle == 0.0 && !fontPtr->faces[i].ft0Font) || (angle != 0.0 &&
+	(!fontPtr->faces[i].ftFont || fontPtr->faces[i].angle != angle))){
+	FcPattern *pat = FcFontRenderPrepare(0, fontPtr->pattern,
+		fontPtr->faces[i].source);
+	double s = sin(angle*PI/180.0), c = cos(angle*PI/180.0);
 	FcMatrix mat;
+	XftFont *ftFont;
+
+	/*
+	 * Initialize the matrix manually so this can compile with HP-UX cc
+	 * (which does not allow non-constant structure initializers). [Bug
+	 * 2978410]
+	 */
+
 	mat.xx = mat.yy = c;
-	mat.yx = -s;
-	mat.xy = s;
-	
+	mat.xy = -(mat.yx = s);
+
 	if (angle != 0.0) {
 	    FcPatternAddMatrix(pat, FC_MATRIX, &mat);
 	}
-
 	LOCK;
-	XftFont *ftFont = XftFontOpenPattern(fontPtr->display, pat);
+	ftFont = XftFontOpenPattern(fontPtr->display, pat);
 	UNLOCK;
-
 	if (!ftFont) {
-	    /* Fallback */
+	    /*
+	     * The previous call to XftFontOpenPattern() should not fail, but
+	     * sometimes does anyway. Usual cause appears to be a
+	     * misconfigured fontconfig installation; see [Bug 1090382]. Try a
+	     * fallback:
+	     */
+
 	    LOCK;
 	    ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
-				 XFT_FAMILY, FcTypeString, "sans",
-				 XFT_SIZE, FcTypeDouble, 12.0,
-				 XFT_MATRIX, FcTypeMatrix, &mat,
-				 NULL);
+		    FC_FAMILY, FcTypeString, "sans",
+		    FC_SIZE, FcTypeDouble, 12.0,
+		    FC_MATRIX, FcTypeMatrix, &mat,
+		    NULL);
 	    UNLOCK;
 	}
 	if (!ftFont) {
+	    /*
+	     * The previous call should definitely not fail. Impossible to
+	     * proceed at this point.
+	     */
+
 	    Tcl_Panic("Cannot find a usable font");
 	}
 
@@ -164,28 +245,23 @@ GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle)
 	    fontPtr->faces[i].angle = angle;
 	}
     }
-
-    return (angle == 0.0 ? fontPtr->faces[i].ft0Font : fontPtr->faces[i].ftFont);
+    return (angle==0.0? fontPtr->faces[i].ft0Font : fontPtr->faces[i].ftFont);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * GetTkFontAttributes --
  *
- *	Fill TkFontAttributes from XftFont.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Fills the provided TkFontAttributes structure.
- *
+ *	Fill in TkFontAttributes from an XftFont.
  *----------------------------------------------------------------------
  */
 
 static void
-GetTkFontAttributes(Tk_Window tkwin, XftFont *ftFont, TkFontAttributes *faPtr)
+GetTkFontAttributes(
+    Tk_Window tkwin,
+    XftFont *ftFont,
+    TkFontAttributes *faPtr)
 {
     const char *family = "Unknown";
     const char *const *familyPtr = &family;
@@ -193,54 +269,60 @@ GetTkFontAttributes(Tk_Window tkwin, XftFont *ftFont, TkFontAttributes *faPtr)
     int intPxSize, weight, slant;
 
     (void) XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0, familyPtr);
-
-    if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0, &ptSize) == XftResultMatch) {
+    if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
+	&ptSize) == XftResultMatch) {
 	size = ptSize;
-    } else if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0, &dblPxSize) == XftResultMatch) {
+    } else if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+	&dblPxSize) == XftResultMatch) {
 	size = -dblPxSize;
-    } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0, &intPxSize) == XftResultMatch) {
+    } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+	&intPxSize) == XftResultMatch) {
 	size = (double)-intPxSize;
     } else {
 	size = 12.0;
     }
-
-    if (XftPatternGetInteger(ftFont->pattern, XFT_WEIGHT, 0, &weight) != XftResultMatch) {
+    if (XftPatternGetInteger(ftFont->pattern, XFT_WEIGHT, 0,
+	&weight) != XftResultMatch) {
 	weight = XFT_WEIGHT_MEDIUM;
     }
-    if (XftPatternGetInteger(ftFont->pattern, XFT_SLANT, 0, &slant) != XftResultMatch) {
+    if (XftPatternGetInteger(ftFont->pattern, XFT_SLANT, 0,
+	&slant) != XftResultMatch) {
 	slant = XFT_SLANT_ROMAN;
     }
 
+    DEBUG(("GetTkFontAttributes: family %s size %ld weight %d slant %d\n",
+	family, lround(size), weight, slant));
+
     faPtr->family = Tk_GetUid(family);
+    /*
+     * Make sure that faPtr->size will be > 0 even
+     * in the very unprobable case that size < 0
+     */
     faPtr->size = TkFontGetPoints(tkwin, size);
     faPtr->weight = (weight > XFT_WEIGHT_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
     faPtr->slant = (slant > XFT_SLANT_ROMAN) ? TK_FS_ITALIC : TK_FS_ROMAN;
     faPtr->underline = 0;
     faPtr->overstrike = 0;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * GetTkFontMetrics --
  *
- *	Fill TkFontMetrics from XftFont.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Fills the provided TkFontMetrics structure.
- *
+ *	Fill in TkFontMetrics from an XftFont.
  *----------------------------------------------------------------------
  */
 
 static void
-GetTkFontMetrics(XftFont *ftFont, TkFontMetrics *fmPtr)
+GetTkFontMetrics(
+    XftFont *ftFont,
+    TkFontMetrics *fmPtr)
 {
     int spacing;
 
-    if (XftPatternGetInteger(ftFont->pattern, XFT_SPACING, 0, &spacing) != XftResultMatch) {
+    if (XftPatternGetInteger(ftFont->pattern, XFT_SPACING, 0,
+	&spacing) != XftResultMatch) {
 	spacing = XFT_PROPORTIONAL;
     }
 
@@ -253,21 +335,138 @@ GetTkFontMetrics(XftFont *ftFont, TkFontMetrics *fmPtr)
 /*
  *----------------------------------------------------------------------
  *
- * InitFont --
+ * GetBidiRuns --
  *
- *	Initialize a UnixFtFont structure.
+ *	Use SheenBidi to properly analyze text per UAX#9 and split it into
+ *	level runs with correct directionality.
  *
  * Results:
- *	Returns fontPtr on success, NULL on failure (frees fontPtr if allocated).
+ *	Returns number of runs created. Fills runsOut array (caller provides).
+ *	Returns 0 on error or if text is simple LTR (single run created).
  *
  * Side effects:
- *	Opens fonts, sets metrics, initializes shaper state.
+ *	Caller must provide runsOut array with sufficient space (32 runs max).
  *
  *----------------------------------------------------------------------
  */
 
+static int
+GetBidiRuns(const char *utf8, int len, BidiRun *runsOut, int maxRuns)
+{
+    /* Scan for characters that might require Bidi reordering.
+     * U+0590 is the start of the Hebrew block; everything 
+     * below is LTR. 
+     */
+    int needsBidi = 0;
+    const unsigned char *p = (const unsigned char *)utf8;
+    for (int i = 0; i < len; i++) {
+        if (p[i] > 0x7F) { /* Check for non-ASCII */
+            FcChar32 u;
+            Tcl_UtfToUniChar((const char *)(p + i), (int *)&u);
+            if (u >= 0x0590) {
+                needsBidi = 1;
+                break;
+            }
+        }
+    }
+
+    if (!needsBidi) {
+        runsOut[0].offset = 0;
+        runsOut[0].length = len;
+        runsOut[0].level = 0;
+        runsOut[0].isRTL = 0;
+        return 1;
+    }
+
+    SBAlgorithmRef bidiAlg = NULL;
+    SBParagraphRef paragraph = NULL;
+    SBUInteger cpCount = 0;
+    SBUInteger codepoints[1024]; /* Sufficient for most UI strings */
+
+    int byteIdx = 0;
+    while (byteIdx < len && cpCount < 1024) {
+        FcChar32 c;
+        int clen = utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
+        if (clen <= 0) break;
+        codepoints[cpCount++] = (SBUInteger)c;
+        byteIdx += clen;
+    }
+
+    SBCodepointSequence codepointSeq = {SBStringEncodingUTF32, codepoints, cpCount};
+    bidiAlg = SBAlgorithmCreate(&codepointSeq);
+    paragraph = SBAlgorithmCreateParagraph(bidiAlg, 0, cpCount, SBLevelDefaultLTR);
+    SBLineRef line = SBParagraphCreateLine(paragraph, 0, cpCount);
+
+    SBUInteger lineRunCount = SBLineGetRunCount(line);
+    const SBRun *runs = SBLineGetRunsPtr(line);
+
+    /* OPTIMIZATION: Use stack memory for the mapping to avoid malloc latency. */
+    int cpToByteStack[1025];
+    int *cpToByte = (cpCount < 1024) ? cpToByteStack : (int *)malloc((cpCount + 1) * sizeof(int));
+
+    byteIdx = 0;
+    for (SBUInteger i = 0; i < cpCount; i++) {
+        cpToByte[i] = byteIdx;
+        FcChar32 c;
+        byteIdx += utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
+    }
+    cpToByte[cpCount] = len;
+
+    int runCount = 0;
+    for (SBUInteger i = 0; i < lineRunCount && runCount < maxRuns; i++) {
+        runsOut[runCount].offset = cpToByte[runs[i].offset];
+        runsOut[runCount].length = cpToByte[runs[i].offset + runs[i].length] - runsOut[runCount].offset;
+        runsOut[runCount].level = runs[i].level;
+        runsOut[runCount].isRTL = (runs[i].level & 1);
+        runCount++;
+    }
+
+    if (cpToByte != cpToByteStack) free(cpToByte);
+    SBLineRelease(line);
+    SBParagraphRelease(paragraph);
+    SBAlgorithmRelease(bidiAlg);
+
+    return runCount;
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitFont --
+ *
+ *	Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
+ *	also allocates a new UnixFtFont.
+ *
+ * Results:
+ *	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+FinishedWithFont(
+    UnixFtFont *fontPtr);
+
+static int
+InitFontErrorProc(
+    void *clientData,
+    TCL_UNUSED(XErrorEvent *))
+{
+    int *errorFlagPtr = (int *)clientData;
+
+    if (errorFlagPtr != NULL) {
+	*errorFlagPtr = 1;
+    }
+    return 0;
+}
+
 static UnixFtFont *
-InitFont(Tk_Window tkwin, FcPattern *pattern, UnixFtFont *fontPtr)
+InitFont(
+    Tk_Window tkwin,
+    FcPattern *pattern,
+    UnixFtFont *fontPtr)
 {
     FcFontSet *set;
     FcCharSet *charset;
@@ -275,78 +474,107 @@ InitFont(Tk_Window tkwin, FcPattern *pattern, UnixFtFont *fontPtr)
     XftFont *ftFont;
     int i, iWidth, errorFlag;
     Tk_ErrorHandler handler;
-
+    
     if (!fontPtr) {
 	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
     }
-
-    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    
+    FcConfigSubstitute(0, pattern, FcMatchPattern);
     XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
-
-    set = FcFontSort(NULL, pattern, FcTrue, NULL, &result);
+    
+    /*
+     * Generate the list of fonts
+     */
+    set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
 	Tcl_Free(fontPtr);
 	return NULL;
     }
-
+    
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
     fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
-
+    
+    /*
+     * Fill in information about each returned font
+     */
     for (i = 0; i < set->nfont; i++) {
-	fontPtr->faces[i].ftFont = NULL;
-	fontPtr->faces[i].ft0Font = NULL;
+	fontPtr->faces[i].ftFont = 0;
+	fontPtr->faces[i].ft0Font = 0;
 	fontPtr->faces[i].source = set->fonts[i];
-	if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &charset) == FcResultMatch) {
+	if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0,
+		&charset) == FcResultMatch) {
 	    fontPtr->faces[i].charset = FcCharSetCopy(charset);
 	} else {
-	    fontPtr->faces[i].charset = NULL;
+	    fontPtr->faces[i].charset = 0;
 	}
 	fontPtr->faces[i].angle = 0.0;
     }
-
+    
     fontPtr->display = Tk_Display(tkwin);
     fontPtr->screen = Tk_ScreenNumber(tkwin);
     fontPtr->colormap = Tk_Colormap(tkwin);
     fontPtr->visual = Tk_Visual(tkwin);
-    fontPtr->ftDraw = NULL;
+    fontPtr->ftDraw = 0;
     fontPtr->ncolors = 0;
     fontPtr->firstColor = -1;
-
-    /* Shaping state is initialized lazily by tkUnixShaper on first use. */
-    TclpX11ShapeInit(&fontPtr->shape);
-
+    
+    /*
+     * Initialize shape context to zero - will be initialized lazily on first use.
+     */
+    memset(&fontPtr->shape, 0, sizeof(fontPtr->shape));
+    
+    /*
+     * Fill in platform-specific fields of TkFont.
+     */
     errorFlag = 0;
-    handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1,
-				    InitFontErrorProc, (void *)&errorFlag);
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+		-1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
     ftFont = GetFont(fontPtr, 0, 0.0);
-    if (!ftFont || errorFlag) {
+    if ((ftFont == NULL) || errorFlag) {
 	Tk_DeleteErrorHandler(handler);
 	FinishedWithFont(fontPtr);
 	Tcl_Free(fontPtr);
 	return NULL;
     }
-
+    
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
     GetTkFontAttributes(tkwin, ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
     Tk_DeleteErrorHandler(handler);
-
+    
     if (errorFlag) {
 	FinishedWithFont(fontPtr);
 	Tcl_Free(fontPtr);
 	return NULL;
     }
-
-    /* Underline / overstrike defaults. */
+    
+    /*
+     * Fontconfig can't report any information about the position or thickness
+     * of underlines or overstrikes. Thus, we use some defaults that are
+     * hacked around from backup defaults in tkUnixFont.c, which are in turn
+     * based on recommendations in the X manual. The comments from that file
+     * leading to these computations were:
+     *
+     *	    If the XA_UNDERLINE_POSITION property does not exist, the X manual
+     *	    recommends using half the descent.
+     *
+     *	    If the XA_UNDERLINE_THICKNESS property does not exist, the X
+     *	    manual recommends using the width of the stem on a capital letter.
+     *	    I don't know of a way to get the stem width of a letter, so guess
+     *	    and use 1/3 the width of a capital I.
+     *
+     * Note that nothing corresponding to *either* property is reported by
+     * Fontconfig at all. [Bug 1961455]
+     */
     {
 	TkFont *fPtr = &fontPtr->font;
 	fPtr->underlinePos = fPtr->fm.descent / 2;
-	handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1,
-					InitFontErrorProc, (void *)&errorFlag);
+	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+		-1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 	errorFlag = 0;
-	Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
+	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
 	Tk_DeleteErrorHandler(handler);
 	if (errorFlag) {
 	    FinishedWithFont(fontPtr);
@@ -365,42 +593,58 @@ InitFont(Tk_Window tkwin, FcPattern *pattern, UnixFtFont *fontPtr)
 	    }
 	}
     }
-
+    
+    /*
+     * Now that font metrics are established, initialize the persistent 
+     * shaping context for this font.
+     */
+    X11Shape_Init(&fontPtr->shape);
+    
+    /*
+     * Load all font faces into the shaper context.
+     */
+    for (i = 0; i < fontPtr->nfaces && i < 8; i++) {
+	FcPattern *facePattern = fontPtr->faces[i].source;
+	FcChar8 *file;
+	int index;
+	
+	if (FcPatternGetString(facePattern, FC_FILE, 0, &file) == FcResultMatch &&
+	    FcPatternGetInteger(facePattern, FC_INDEX, 0, &index) == FcResultMatch) {
+	    
+	    kbts_font *kbFont = kbts_ShapePushFontFromFile(fontPtr->shape.context,
+						       (const char *)file,
+						       index);
+	    
+	    if (kbFont && fontPtr->shape.numFonts < 8) {
+		fontPtr->shape.fontMap[fontPtr->shape.numFonts].kbFont = kbFont;
+		fontPtr->shape.fontMap[fontPtr->shape.numFonts].faceIndex = i;
+		fontPtr->shape.numFonts++;
+	    }
+	}
+    }
+    
     return fontPtr;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * FinishedWithFont --
- *
- *	Clean up a UnixFtFont.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees all resources associated with the font.
- *
- *----------------------------------------------------------------------
- */
-
+
 static void
-FinishedWithFont(UnixFtFont *fontPtr)
+FinishedWithFont(
+    UnixFtFont *fontPtr)
 {
     Display *display = fontPtr->display;
     int i;
-    Tk_ErrorHandler handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
-
+    Tk_ErrorHandler handler =
+	Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+    
     for (i = 0; i < fontPtr->nfaces; i++) {
 	if (fontPtr->faces[i].ftFont) {
 	    LOCK;
-	    XftFontClose(display, fontPtr->faces[i].ftFont);
+	    XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
 	    UNLOCK;
 	}
 	if (fontPtr->faces[i].ft0Font) {
 	    LOCK;
-	    XftFontClose(display, fontPtr->faces[i].ft0Font);
+	    XftFontClose(fontPtr->display, fontPtr->faces[i].ft0Font);
 	    UNLOCK;
 	}
 	if (fontPtr->faces[i].charset) {
@@ -417,39 +661,25 @@ FinishedWithFont(UnixFtFont *fontPtr)
 	XftDrawDestroy(fontPtr->ftDraw);
     }
     if (fontPtr->font.fid) {
-	XUnloadFont(display, fontPtr->font.fid);
+	XUnloadFont(fontPtr->display, fontPtr->font.fid);
     }
     if (fontPtr->fontset) {
 	FcFontSetDestroy(fontPtr->fontset);
     }
-
-    /* Clean up shaper state. */
-    Tk_ShaperDestroy((Tk_Font)&fontPtr->font);
-
+    
+    /* Clean up the persistent shaper context.*/
+    X11Shape_Destroy(&fontPtr->shape);
+    
     Tk_DeleteErrorHandler(handler);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpGetNativeFont --
- *
- *	Platform-specific font creation from XLFD name.
- *
- * Results:
- *	Returns a TkFont handle, or NULL on failure.
- *
- * Side effects:
- *	Creates and initializes a new font.
- *
- *----------------------------------------------------------------------
- */
-
+
 TkFont *
-TkpGetNativeFont(Tk_Window tkwin, const char *name)
+TkpGetNativeFont(
+    Tk_Window tkwin,		/* For display where font will be used. */
+    const char *name)		/* Platform-specific font name. */
 {
-    FcPattern *pattern;
     UnixFtFont *fontPtr;
+    FcPattern *pattern;
 
     DEBUG(("TkpGetNativeFont: %s\n", name));
 
@@ -458,6 +688,11 @@ TkpGetNativeFont(Tk_Window tkwin, const char *name)
 	return NULL;
     }
 
+    /*
+     * Should also try: pattern = FcNameParse(name); but generic/tkFont.c
+     * expects TkpGetNativeFont() to only work on XLFD names under Unix.
+     */
+
     fontPtr = InitFont(tkwin, pattern, NULL);
     if (!fontPtr) {
 	FcPatternDestroy(pattern);
@@ -465,80 +700,75 @@ TkpGetNativeFont(Tk_Window tkwin, const char *name)
     }
     return &fontPtr->font;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpGetFontFromAttributes --
- *
- *	Create or update font from attributes.
- *
- * Results:
- *	Returns a TkFont handle, or NULL on failure.
- *
- * Side effects:
- *	Creates a new font or updates an existing one.
- *
- *----------------------------------------------------------------------
- */
-
+
 TkFont *
-TkpGetFontFromAttributes(TkFont *tkFontPtr, Tk_Window tkwin,
-			 const TkFontAttributes *faPtr)
+TkpGetFontFromAttributes(
+    TkFont *tkFontPtr,		/* If non-NULL, store the information in this
+				 * existing TkFont structure, rather than
+				 * allocating a new structure to hold the
+				 * font; the existing contents of the font
+				 * will be released. If NULL, a new TkFont
+				 * structure is allocated. */
+    Tk_Window tkwin,		/* For display where font will be used. */
+    const TkFontAttributes *faPtr)
+				/* Set of attributes to match. */
 {
-    FcPattern *pattern;
+    XftPattern *pattern;
     int weight, slant;
     UnixFtFont *fontPtr;
 
-    DEBUG(("TkpGetFontFromAttributes: %s %ld %d %d\n",
-	   faPtr->family, lround(faPtr->size), faPtr->weight, faPtr->slant));
+    DEBUG(("TkpGetFontFromAttributes: %s %ld %d %d\n", faPtr->family,
+	lround(faPtr->size), faPtr->weight, faPtr->slant));
 
-    pattern = FcPatternCreate();
+    pattern = XftPatternCreate();
     if (faPtr->family) {
-	FcPatternAddString(pattern, FC_FAMILY, (FcChar8 *)faPtr->family);
+	XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
     }
     if (faPtr->size > 0.0) {
-	FcPatternAddDouble(pattern, FC_SIZE, faPtr->size);
+	XftPatternAddDouble(pattern, XFT_SIZE, faPtr->size);
     } else if (faPtr->size < 0.0) {
-	FcPatternAddDouble(pattern, FC_SIZE, TkFontGetPoints(tkwin, faPtr->size));
+	XftPatternAddDouble(pattern, XFT_SIZE, TkFontGetPoints(tkwin, faPtr->size));
     } else {
-	FcPatternAddDouble(pattern, FC_SIZE, 12.0);
+	XftPatternAddDouble(pattern, XFT_SIZE, 12.0);
     }
-
     switch (faPtr->weight) {
-    case TK_FW_NORMAL:
-    default:
-	weight = XFT_WEIGHT_MEDIUM;
-	break;
-    case TK_FW_BOLD:
-	weight = XFT_WEIGHT_BOLD;
-	break;
+	case TK_FW_NORMAL:
+	default:
+	    weight = XFT_WEIGHT_MEDIUM;
+	    break;
+	case TK_FW_BOLD:
+	    weight = XFT_WEIGHT_BOLD;
+	    break;
     }
-    FcPatternAddInteger(pattern, FC_WEIGHT, weight);
-
+    XftPatternAddInteger(pattern, XFT_WEIGHT, weight);
     switch (faPtr->slant) {
-    case TK_FS_ROMAN:
-    default:
-	slant = XFT_SLANT_ROMAN;
-	break;
-    case TK_FS_ITALIC:
-	slant = XFT_SLANT_ITALIC;
-	break;
-    case TK_FS_OBLIQUE:
-	slant = XFT_SLANT_OBLIQUE;
-	break;
+	case TK_FS_ROMAN:
+	default:
+	    slant = XFT_SLANT_ROMAN;
+	    break;
+	case TK_FS_ITALIC:
+	    slant = XFT_SLANT_ITALIC;
+	    break;
+	case TK_FS_OBLIQUE:
+	    slant = XFT_SLANT_OBLIQUE;
+	    break;
     }
-    FcPatternAddInteger(pattern, FC_SLANT, slant);
+    XftPatternAddInteger(pattern, XFT_SLANT, slant);
 
-    fontPtr = (UnixFtFont *)tkFontPtr;
-    if (fontPtr) {
+    fontPtr = (UnixFtFont *) tkFontPtr;
+    if (fontPtr != NULL) {
 	FinishedWithFont(fontPtr);
     }
     fontPtr = InitFont(tkwin, pattern, fontPtr);
 
+    /*
+     * Hack to work around issues with weird issues with Xft/Xrender
+     * connection. For details, see comp.lang.tcl thread starting from
+     * <adcc99ed-c73e-4efc-bb5d-e57a57a051e8@l35g2000pra.googlegroups.com>
+     */
+
     if (!fontPtr) {
-	/* Try non-rendered fallback. */
-	FcPatternAddBool(pattern, XFT_RENDER, FcFalse);
+	XftPatternAddBool(pattern, XFT_RENDER, FcFalse);
 	fontPtr = InitFont(tkwin, pattern, fontPtr);
     }
 
@@ -551,263 +781,286 @@ TkpGetFontFromAttributes(TkFont *tkFontPtr, Tk_Window tkwin,
     fontPtr->font.fa.overstrike = faPtr->overstrike;
     return &fontPtr->font;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpDeleteFont --
- *
- *	Delete font.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees all resources associated with the font.
- *
- *----------------------------------------------------------------------
- */
-
+
 void
-TkpDeleteFont(TkFont *tkFontPtr)
+TkpDeleteFont(
+    TkFont *tkFontPtr)		/* Token of font to be deleted. */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkFontPtr;
-    FinishedWithFont(fontPtr);
-    /* tkUnixFont.c historically didn't free tkFontPtr here */
-}
+    UnixFtFont *fontPtr = (UnixFtFont *) tkFontPtr;
 
+    FinishedWithFont(fontPtr);
+    /* XXX tkUnixFont.c doesn't free tkFontPtr... */
+}
+
 /*
  *----------------------------------------------------------------------
  *
  * TkpGetFontFamilies --
  *
- *	List available font families.
+ *	Return information about the font families that are available on the
+ *	display of the given window.
  *
  * Results:
- *	None.
- *
- * Side effects:
- *	Sets the interpreter result to a list of font family names.
+ *	Modifies interp's result object to hold a list of all the available
+ *	font families.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkpGetFontFamilies(Tcl_Interp *interp, Tk_Window tkwin)
+TkpGetFontFamilies(
+    Tcl_Interp *interp,		/* Interp to hold result. */
+    Tk_Window tkwin)		/* For display to query. */
 {
+    Tcl_Obj *resultPtr;
     XftFontSet *list;
     int i;
-    Tcl_Obj *resultPtr = Tcl_NewListObj(0, NULL);
+
+    resultPtr = Tcl_NewListObj(0, NULL);
 
     list = XftListFonts(Tk_Display(tkwin), Tk_ScreenNumber(tkwin),
-			NULL, XFT_FAMILY, NULL);
-
+	    (char *) 0,		/* pattern elements */
+	    XFT_FAMILY, (char*) 0);	/* fields */
     for (i = 0; i < list->nfont; i++) {
-	const char *family;
-	const char *const *familyPtr = &family;
-	if (XftPatternGetString(list->fonts[i], XFT_FAMILY, 0, familyPtr) == XftResultMatch) {
-	    Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(family, -1));
+	char *family, **familyPtr = &family;
+
+	if (XftPatternGetString(list->fonts[i], XFT_FAMILY, 0, familyPtr)
+		== XftResultMatch) {
+	    Tcl_Obj *strPtr = Tcl_NewStringObj(family, TCL_INDEX_NONE);
+
+	    Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	}
     }
     XftFontSetDestroy(list);
+
     Tcl_SetObjResult(interp, resultPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * TkpGetSubFonts --
  *
- *	Return sub-font information (for testfont command).
+ *	Called by [testfont subfonts] in the Tk testing package.
  *
  * Results:
- *	None.
- *
- * Side effects:
- *	Sets the interpreter result to a list of sub-font information.
+ *	Sets interp's result to a list of the faces used by tkfont
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
+TkpGetSubFonts(
+    Tcl_Interp *interp,
+    Tk_Font tkfont)
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    Tcl_Obj *resultPtr = Tcl_NewListObj(0, NULL);
+    Tcl_Obj *objv[3], *listPtr, *resultPtr;
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    FcPattern *pattern;
+    const char *family = "Unknown";
+    const char *const *familyPtr = &family;
+    const char *foundry = "Unknown";
+    const char *const *foundryPtr = &foundry;
+    const char *encoding = "Unknown";
+    const char *const *encodingPtr = &encoding;
     int i;
 
-    for (i = 0; i < fontPtr->nfaces; i++) {
-	FcPattern *pat = FcFontRenderPrepare(NULL, fontPtr->pattern,
-					     fontPtr->faces[i].source);
-	const char *family = "Unknown", *foundry = "Unknown", *encoding = "Unknown";
-	const char *const *ptr;
+    resultPtr = Tcl_NewListObj(0, NULL);
 
-	ptr = &family;
-	XftPatternGetString(pat, XFT_FAMILY, 0, ptr);
-	Tcl_Obj *objv[3] = {
-	    Tcl_NewStringObj(family, -1),
-	    Tcl_NewStringObj(foundry, -1),
-	    Tcl_NewStringObj(encoding, -1)
-	};
-	Tcl_ListObjAppendElement(NULL, resultPtr,
-				 Tcl_NewListObj(3, objv));
+    for (i = 0; i < fontPtr->nfaces ; ++i) {
+	pattern = FcFontRenderPrepare(0, fontPtr->pattern,
+		fontPtr->faces[i].source);
+
+	XftPatternGetString(pattern, XFT_FAMILY, 0, familyPtr);
+	XftPatternGetString(pattern, XFT_FOUNDRY, 0, foundryPtr);
+	XftPatternGetString(pattern, XFT_ENCODING, 0, encodingPtr);
+	objv[0] = Tcl_NewStringObj(family, TCL_INDEX_NONE);
+	objv[1] = Tcl_NewStringObj(foundry, TCL_INDEX_NONE);
+	objv[2] = Tcl_NewStringObj(encoding, TCL_INDEX_NONE);
+	listPtr = Tcl_NewListObj(3, objv);
+	Tcl_ListObjAppendElement(NULL, resultPtr, listPtr);
     }
     Tcl_SetObjResult(interp, resultPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * TkpGetFontAttrsForChar --
  *
- *	Get attributes of font used for a specific character.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Fills the provided TkFontAttributes structure.
+ *	Retrieve the font attributes of the actual font used to render a given
+ *	character.
  *
  *----------------------------------------------------------------------
  */
+
 void
-TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont, int c,
-		       TkFontAttributes *faPtr)
+TkpGetFontAttrsForChar(
+    Tk_Window tkwin,		/* Window on the font's display */
+    Tk_Font tkfont,		/* Font to query */
+    int c,			/* Character of interest */
+    TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    XftFont *ftFont = GetFont(fontPtr, (FcChar32)c, 0.0);
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+				/* Structure describing the logical font */
+    FcChar32 ucs4 = (FcChar32) c;
+				/* UCS-4 character to map */
+    XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
+				/* Actual font used to render the character */
+
     GetTkFontAttributes(tkwin, ftFont, faPtr);
     faPtr->underline = fontPtr->font.fa.underline;
     faPtr->overstrike = fontPtr->font.fa.overstrike;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MeasureChars --
- *
- *	Measure how much of a string fits in a given width.
- *
- * Results:
- *	Returns the number of bytes that fit within the given width.
- *
- * Side effects:
- *	Sets *lengthPtr to the consumed width.
- *
- *----------------------------------------------------------------------
- */
+
 int
-Tk_MeasureChars(Tk_Font tkfont, 
-	const char *source, Tcl_Size numBytes,
-	int maxLength, int flags, int *lengthPtr)
+Tk_MeasureChars(
+    Tk_Font tkfont,		/* Font in which characters will be drawn. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. */
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
+				 * source string. */
+    int maxLength,		/* If >= 0, maxLength specifies the longest
+				 * permissible line length in pixels; don't
+				 * consider any character that would cross
+				 * this x-position. If < 0, then line length
+				 * is unbounded and the flags argument is
+				 * ignored. */
+    int flags,			/* Various flag bits OR-ed together:
+				 * TK_PARTIAL_OK means include the last char
+				 * which only partially fit on this line.
+				 * TK_WHOLE_WORDS means stop on a word
+				 * boundary, if possible. TK_AT_LEAST_ONE
+				 * means return at least one character even if
+				 * no characters fit. */
+    int *lengthPtr)		/* Filled with x-location just after the
+				 * terminating character. */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-
-    TkShapedTextBuffer *shaped = Tk_ShapeText(tkfont, source, (int)numBytes);
-    if (!shaped || shaped->glyphCount == 0) {
-	*lengthPtr = 0;
-	return 0;
-    }
-
-    int total = 0;
-    int i;
-    for (i = 0; i < shaped->glyphCount; i++) {
-	int next = total + shaped->glyphs[i].advanceX;
-	if (maxLength >= 0 && next > maxLength) {
-	    if (flags & TK_PARTIAL_OK) {
-		total = next;
-	    } else if ((flags & TK_AT_LEAST_ONE) && total == 0) {
-		total = next;
+	
+	UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+	int total = 0;
+	int i;
+	
+	/* Use the persistent shape context stored in the font */
+	fontPtr->shape.glyphCount = 0;  /* Reset glyph buffer */
+	UnixFontShapeString(fontPtr, source, (int)numBytes, &fontPtr->shape);
+	
+	for (i = 0; i < fontPtr->shape.glyphCount; i++) {
+	    int next = total + fontPtr->shape.glyphs[i].advanceX;
+	    if (maxLength >= 0 && next > maxLength) {
+	        if (flags & TK_PARTIAL_OK) {
+	            total = next;
+	        } else if ((flags & TK_AT_LEAST_ONE) && total == 0) {
+	            total = next;   /* must take at least something */
+	        }
+	        break;
 	    }
-	    break;
+	    total = next;
 	}
-	total = next;
-    }
-    *lengthPtr = total;
+	*lengthPtr = total;
 
-    /* Approximate byte count (original heuristic kept) */
-    if (total >= shaped->totalWidth) {
-	return (int)numBytes;
+    /* Very conservative byte estimate when truncating. */
+    int byteCount;
+    if (total >= UnixFontGetShapedWidth(fontPtr, source, numBytes)) {
+        byteCount = (int)numBytes;
     } else {
-	int byteCount = (int)(numBytes * (double)total / (shaped->totalWidth + 1) + 0.5);
-	if (byteCount < 1 && (flags & TK_AT_LEAST_ONE)) byteCount = 1;
-	if (byteCount > numBytes) byteCount = (int)numBytes;
-	return byteCount;
+        byteCount = (int)(numBytes * (double)total / (total + 1) + 0.5);
+        if (byteCount < 1 && (flags & TK_AT_LEAST_ONE)) byteCount = 1;
+        if (byteCount > numBytes) byteCount = (int)numBytes;
     }
-}
 
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MeasureCharsInContext --
- *
- *	Measure substring.
- *
- * Results:
- *	Returns the number of bytes that fit within the given width.
- *
- * Side effects:
- *	Sets *lengthPtr to the consumed width.
- *
- *----------------------------------------------------------------------
- */
+    return byteCount;
+}
+
 int
-Tk_MeasureCharsInContext(Tk_Font tkfont, const char *source,
-			 TCL_UNUSED(Tcl_Size), Tcl_Size rangeStart,
-			 Tcl_Size rangeLength, int maxLength, int flags,
-			 int *lengthPtr)
+Tk_MeasureCharsInContext(
+    Tk_Font tkfont,
+    const char *source,
+    TCL_UNUSED(Tcl_Size),
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    int maxLength,
+    int flags,
+    int *lengthPtr)
 {
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
-			   maxLength, flags, lengthPtr);
+	maxLength, flags, lengthPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * LookUpColor --
  *
- *	Get XftColor from pixel value (with small LRU cache).
+ *	Convert a pixel value to an XftColor.  This can be slow due to the
+ *	need to call XQueryColor, which involves a server round-trip.  To
+ *	avoid that, a least-recently-used cache of up to MAX_CACHED_COLORS
+ *	is kept, in the form of a linked list.  The returned color is moved
+ *	to the front of the list, so repeatedly asking for the same one
+ *	should be fast.
  *
  * Results:
- *	Returns a pointer to an XftColor structure.
+ *	A pointer to the XftColor structure for the requested color is
+ *	returned.
  *
  * Side effects:
- *	May update the color cache.
- *
+ *	The converted color is stored in a cache in the UnixFtFont structure.  The cache
+ *	can hold at most MAX_CACHED_COLORS colors.  If no more slots are available, the least
+ *	recently used color is replaced with the new one.
  *----------------------------------------------------------------------
  */
+
 static XftColor *
-LookUpColor(Display *display, UnixFtFont *fontPtr, unsigned long pixel)
+LookUpColor(Display *display,      /* Display to lookup colors on */
+    UnixFtFont *fontPtr,   /* Font to search for cached colors */
+    unsigned long pixel)   /* Pixel value to translate to XftColor */
 {
     int i, last = -1, last2 = -1;
     XColor xcolor;
 
-    for (i = fontPtr->firstColor; i >= 0; last2 = last, last = i,
-	 i = fontPtr->colors[i].next) {
+    for (i = fontPtr->firstColor;
+	 i >= 0; last2 = last, last = i, i = fontPtr->colors[i].next) {
+
 	if (pixel == fontPtr->colors[i].color.pixel) {
+	    /*
+	     * Color found in cache.  Move it to the front of the list and return it.
+	     */
 	    if (last >= 0) {
 		fontPtr->colors[last].next = fontPtr->colors[i].next;
 		fontPtr->colors[i].next = fontPtr->firstColor;
 		fontPtr->firstColor = i;
 	    }
+
 	    return &fontPtr->colors[i].color;
 	}
     }
+
+    /*
+     * Color wasn't found, so it needs to be added to the cache.
+     * If a spare slot is available, it can be put there.  If not, last
+     * will now point to the least recently used color, so replace that one.
+     */
 
     if (fontPtr->ncolors < MAX_CACHED_COLORS) {
 	last2 = -1;
 	last = fontPtr->ncolors++;
     }
 
+    /*
+     * Translate the pixel value to a color.  Needs a server round-trip.
+     */
     xcolor.pixel = pixel;
     XQueryColor(display, fontPtr->colormap, &xcolor);
 
-    fontPtr->colors[last].color.color.red   = xcolor.red;
+    fontPtr->colors[last].color.color.red = xcolor.red;
     fontPtr->colors[last].color.color.green = xcolor.green;
-    fontPtr->colors[last].color.color.blue  = xcolor.blue;
+    fontPtr->colors[last].color.color.blue = xcolor.blue;
     fontPtr->colors[last].color.color.alpha = 0xFFFF;
     fontPtr->colors[last].color.pixel = pixel;
 
+    /*
+     * Put at the front of the list.
+     */
     if (last2 >= 0) {
 	fontPtr->colors[last2].next = fontPtr->colors[last].next;
     }
@@ -816,93 +1069,128 @@ LookUpColor(Display *display, UnixFtFont *fontPtr, unsigned long pixel)
 
     return &fontPtr->colors[last].color;
 }
+
+#define NUM_SPEC    1024
 
-/*
- *----------------------------------------------------------------------
- *
- * Tk_DrawChars --
- *
- *	Draw text (horizontal, no rotation).
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Renders text to the specified drawable.
- *
- *----------------------------------------------------------------------
- */
 void
-Tk_DrawChars(Display *display, Drawable drawable, GC gc, Tk_Font tkfont,
-	     const char *source, Tcl_Size numBytes, int x, int y)
+Tk_DrawChars(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    int x, int y)		/* Coordinates at which to place origin of
+				 * string when drawing. */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     UnixFontDrawShapedText(display, drawable, gc, fontPtr,
-			   source, (int)numBytes, (double)x, (double)y, 0.0);
+                           source, numBytes,
+                           (double)x, (double)y,
+                           0.0);
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
  * TkDrawAngledChars --
  *
- *	Draw rotated text.
+ *	Draw some characters at an angle. This would be simple code, except
+ *	Xft has bugs with cumulative errors in character positioning which are
+ *	caused by trying to perform all calculations internally with integers.
+ *	So we have to do the work ourselves with floating-point math.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Renders rotated text to the specified drawable.
+ *	Target drawable is updated.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkDrawAngledChars(Display *display, Drawable drawable, GC gc, Tk_Font tkfont,
-		  const char *source, Tcl_Size numBytes,
-		  double x, double y, double angle)
+TkDrawAngledChars(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    double x, double y,		/* Coordinates at which to place origin of
+				 * string when drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     UnixFontDrawShapedText(display, drawable, gc, fontPtr,
-			   source, (int)numBytes, x, y, angle);
+                           source, numBytes,
+                           x, y, angle);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * Tk_DrawCharsInContext --
  *
- *	Draw substring (coordinates are for whole line).
+ *	 Draws a substring of text using full shaping + bidi logic.
+ * 	 The coordinates (x,y) are for the start of the **whole line**, not just the range.
+ * 	 Only draws characters from rangeStart to rangeStart+rangeLength.
+ *
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Renders a substring of text to the specified drawable.
+ *	Information gets drawn on the screen.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_DrawCharsInContext(Display *display, Drawable drawable, GC gc,
-		      Tk_Font tkfont, const char *source,
-		      TCL_UNUSED(Tcl_Size), Tcl_Size rangeStart,
-		      Tcl_Size rangeLength, int x, int y)
+Tk_DrawCharsInContext(
+    Display *display,      /* Display on which to draw. */
+    Drawable drawable,     /* Window or pixmap in which to draw. */
+    GC gc,                 /* Graphics context for drawing characters. */
+    Tk_Font tkfont,        /* Font in which characters will be drawn. */
+    const char *source,    /* UTF-8 string to be displayed. */
+    TCL_UNUSED(Tcl_Size),  /* Number of bytes in string. */
+    Tcl_Size rangeStart,   /* Index of first glyph to draw (approx). */
+    Tcl_Size rangeLength,  /* Number of glyphs to draw (approx). */
+    int x, int y)          /* Coordinates for the start of the line. */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    TkShapedTextBuffer *shaped = Tk_ShapeText(tkfont, source,
-					      (int)(rangeStart + rangeLength));
-    if (!shaped || shaped->glyphCount == 0) {
-	return;
-    }
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    
+    int i;
+
+    /* Shape the entire line to get correct glyph positions. */
+    UnixFontShapeString(fontPtr, source, (int)rangeStart + (int)rangeLength, &fontPtr->shape);
+
+    /* Setup drawing target. */
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (fontPtr->ftDraw == NULL) {
-	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-					fontPtr->visual, fontPtr->colormap);
+        fontPtr->ftDraw = XftDrawCreate(display, drawable,
+                                        fontPtr->visual, fontPtr->colormap);
     } else {
-	Tk_ErrorHandler handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
-	XftDrawChange(fontPtr->ftDraw, drawable);
-	Tk_DeleteErrorHandler(handler);
+        Tk_ErrorHandler handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+        XftDrawChange(fontPtr->ftDraw, drawable);
+        Tk_DeleteErrorHandler(handler);
     }
 
     XGCValues values;
@@ -910,181 +1198,192 @@ Tk_DrawCharsInContext(Display *display, Drawable drawable, GC gc,
     XGetGCValues(display, gc, GCForeground, &values);
     xftcolor = LookUpColor(display, fontPtr, values.foreground);
 
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    if (tsdPtr->clipRegion) {
-	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    if (tsdPtr->clipRegion != NULL) {
+        XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
+    /* Draw glyphs in range. */
     XftGlyphFontSpec specs[NUM_SPEC];
     int nspec = 0;
     XftFont *prevFont = NULL;
 
-    Tcl_Size glyphStart = rangeStart;
-    Tcl_Size glyphEnd = rangeStart + rangeLength;
-    if (glyphEnd > shaped->glyphCount) glyphEnd = shaped->glyphCount;
+    int glyphStart = (int)rangeStart;
+    int glyphEnd   = glyphStart + (int)rangeLength;
+    if (glyphEnd > fontPtr->shape.glyphCount) glyphEnd = fontPtr->shape.glyphCount;
 
-    int i;
-    for (i = (int)glyphStart; i < (int)glyphEnd; i++) {
-	XftFont *ftFont = shaped->glyphs[i].xftFont;
-	if (!ftFont) ftFont = fontPtr->faces[0].ft0Font;
-	if (!ftFont) continue;
+    for (i = glyphStart; i < glyphEnd; i++) {
+        /* Map kbFont to face index. */
+        int faceIndex = 0;
+        for (int j = 0; j < fontPtr->shape.numFonts; j++) {
+            if (fontPtr->shape.fontMap[j].kbFont == fontPtr->shape.glyphs[i].font) {
+                faceIndex = fontPtr->shape.fontMap[j].faceIndex;
+                break;
+            }
+        }
 
-	if (ftFont != prevFont && nspec > 0) {
-	    LOCK;
-	    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
-	    UNLOCK;
-	    nspec = 0;
-	}
-	prevFont = ftFont;
+        /* Pick the XftFont for this glyph. */
+        XftFont *ftFont = GetFont(fontPtr, 0, 0.0);
+        if (faceIndex < fontPtr->nfaces && fontPtr->faces[faceIndex].ft0Font) {
+            ftFont = fontPtr->faces[faceIndex].ft0Font;
+        }
+        if (!ftFont) continue;
 
-	specs[nspec].font  = ftFont;
-	specs[nspec].glyph = shaped->glyphs[i].glyphId;
-	specs[nspec].x     = x + shaped->glyphs[i].x;
-	specs[nspec].y     = y + shaped->glyphs[i].y;
+        /* Flush batch if font changed. */
+        if (ftFont != prevFont && nspec > 0) {
+            LOCK;
+            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            UNLOCK;
+            nspec = 0;
+        }
+        prevFont = ftFont;
 
-	if (++nspec >= NUM_SPEC) {
-	    LOCK;
-	    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
-	    UNLOCK;
-	    nspec = 0;
-	    prevFont = NULL;
-	}
+        /* Glyph position. */
+        int sx = (int)(x + fontPtr->shape.glyphs[i].x + 0.5);
+        int sy = (int)(y + fontPtr->shape.glyphs[i].y + 0.5);
+
+        specs[nspec].font  = ftFont;
+        specs[nspec].glyph = fontPtr->shape.glyphs[i].glyphId;
+        specs[nspec].x     = sx;
+        specs[nspec].y     = sy;
+
+        if (++nspec >= NUM_SPEC) {
+            LOCK;
+            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            UNLOCK;
+            nspec = 0;
+            prevFont = NULL;
+        }
     }
 
+    /* Flush remaining glyphs. */
     if (nspec > 0) {
-	LOCK;
-	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
-	UNLOCK;
+        LOCK;
+        XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+        UNLOCK;
     }
 
-    if (tsdPtr->clipRegion) {
-	XftDrawSetClip(fontPtr->ftDraw, NULL);
+    if (tsdPtr->clipRegion != NULL) {
+        XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkpDrawAngledCharsInContext --
- *
- *	Draw rotated substring (coordinates for whole line).
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Renders rotated substring to the specified drawable.
- *
- *----------------------------------------------------------------------
- */
+
 void
-TkpDrawAngledCharsInContext(Display *display, Drawable drawable, GC gc,
-			    Tk_Font tkfont, const char *source,
-			    TCL_UNUSED(Tcl_Size), Tcl_Size rangeStart,
-			    Tcl_Size rangeLength,
-			    double x, double y, double angle)
+TkpDrawAngledCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    const char * source,	/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that is
+				 * passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
+    double x, double y,		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    TkShapedTextBuffer *shaped = Tk_ShapeText(tkfont, source,
-					      (int)(rangeStart + rangeLength));
-    if (!shaped || shaped->glyphCount == 0) {
-	return;
-    }
-
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    
     double offsetX = 0.0;
     int i;
-    for (i = 0; i < shaped->glyphCount; i++) {
-	if (offsetX >= rangeStart) break;
-	offsetX += shaped->glyphs[i].advanceX;
+
+    UnixFontShapeString(fontPtr, source, (int)rangeStart + (int)rangeLength, &fontPtr->shape);
+
+    /* Compute offset to the start of the requested range. */
+    for (i = 0; i < fontPtr->shape.glyphCount; i++) {
+        /* TODO: proper cluster check — this is approximate. */
+        if (offsetX >= rangeStart) break;
+        offsetX += (double)fontPtr->shape.glyphs[i].advanceX;
     }
 
-    double rad = angle * M_PI / 180.0;
-    double cosA = cos(rad);
-    double sinA = sin(rad);
+    double rad   = angle * M_PI / 180.0;
+    double cosA  = cos(rad);
+    double sinA  = sin(rad);
 
-    double drawX = x + offsetX * cosA;
-    double drawY = y - offsetX * sinA;
+    /* Adjust origin so that the drawn part starts at correct visual position. */
+    double drawOriginX = x + offsetX * cosA;
+    double drawOriginY = y - offsetX * sinA;   /* note sign — y grows downward */
 
-    UnixFontDrawShapedText(display, drawable, gc, fontPtr,
-			   source + rangeStart, (int)rangeLength,
-			   drawX, drawY, angle);
+    /* Now draw the shaped text starting from adjusted origin. */
+    UnixFontDrawShapedText(
+        display,
+        drawable,
+        gc,
+        fontPtr,
+        source + rangeStart,           /* pass only the substring */
+        (int)rangeLength,
+        drawOriginX,
+        drawOriginY,
+        angle
+    );
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkUnixSetXftClipRegion --
- *
- *	Set thread-local clip region.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates the thread-local clipping region.
- *
- *----------------------------------------------------------------------
- */
+
 void
-TkUnixSetXftClipRegion(Region clipRegion)
+TkUnixSetXftClipRegion(
+    Region clipRegion)	/* The clipping region to install. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
     tsdPtr->clipRegion = clipRegion;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
  * Tk_DrawCharsRotated --
  *
- *	Draw rotated text (public API).
+ *	Draw rotated text with proper glyph shaping and positioning,
+ *	including RTL support via character range detection.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Renders rotated text to the specified drawable.
+ *	Information gets drawn on the screen.
  *
  *----------------------------------------------------------------------
  */
+
 void
-Tk_DrawCharsRotated(Display *display, Drawable drawable, GC gc,
-		    Tk_Font tkfont, const char *source, int numBytes,
-		    int x, int y, double angle)
+Tk_DrawCharsRotated(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int x, int y,		/* Anchor point (origin of the string). */
+    double angle)		/* Rotation angle in degrees (positive = counterclockwise). */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    UnixFontDrawShapedText(display, drawable, gc, fontPtr,
-			   source, numBytes, (double)x, (double)y, angle);
-}
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    
+    XGCValues values;
+    XftColor *xftcolor;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    int i, j;
 
-/*
- *----------------------------------------------------------------------
- *
- * UnixFontDrawShapedText --
- *
- *	Unified drawing function for shaped text (horizontal or rotated).
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Renders shaped text to the specified drawable.
- *
- *----------------------------------------------------------------------
- */
+    /* Shape the string with primary + fallback fonts. */
+    UnixFontShapeString(fontPtr, source, numBytes, &fontPtr->shape);
 
-static void
-UnixFontDrawShapedText(Display *display, Drawable drawable, GC gc,
-		       UnixFtFont *fontPtr, const char *source, int numBytes,
-		       double originX, double originY, double angle_deg)
-{
-    TkShapedTextBuffer *shaped = Tk_ShapeText((Tk_Font)fontPtr, source, numBytes);
-    if (!shaped || shaped->glyphCount == 0) {
-	return;
-    }
-
+    /* Setup Xft drawing target. */
     if (fontPtr->ftDraw == NULL) {
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 					fontPtr->visual, fontPtr->colormap);
@@ -1094,224 +1393,422 @@ UnixFontDrawShapedText(Display *display, Drawable drawable, GC gc,
 	Tk_DeleteErrorHandler(handler);
     }
 
-    XGCValues values;
-    XftColor *xftcolor;
     XGetGCValues(display, gc, GCForeground, &values);
     xftcolor = LookUpColor(display, fontPtr, values.foreground);
 
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    if (tsdPtr->clipRegion) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
-    double rad  = (angle_deg != 0.0) ? angle_deg * M_PI / 180.0 : 0.0;
+    /* Rotation parameters. */
+    double rad  = angle * M_PI / 180.0;
     double cosA = cos(rad);
     double sinA = sin(rad);
 
+    /* Logical pen position in unshaped (horizontal) space */
+    int penX = 0;
+    int penY = 0;
+
+    /* Batch buffer for Xft. */
     XftGlyphFontSpec specs[NUM_SPEC];
     int nspec = 0;
-    XftFont *lastFont = NULL;
+    XftFont *currentFont = NULL;
 
-    int penX = 0;
+    for (i = 0; i < fontPtr->shape.glyphCount; i++) {
+	FT_UInt glyphIndex = fontPtr->shape.glyphs[i].glyphId;
 
-    int i;
-    for (i = 0; i < shaped->glyphCount; i++) {
-	XftFont *drawFont = shaped->glyphs[i].xftFont;
-
-	if (angle_deg != 0.0) {
-	    /* For rotated text we need to look up the angled face. */
-	    int faceIndex = 0;
-	    for (int j = 0; j < fontPtr->shape.numFonts; j++) {
-		if (fontPtr->shape.fontMap[j].kbFont == shaped->glyphs[i].kbFont) {
-		    faceIndex = fontPtr->shape.fontMap[j].faceIndex;
-		    break;
-		}
+	/* Find which Xft font to use based on which kb_text_shaper font was selected. */
+	int faceIndex = 0; /* default to primary font */
+	for (j = 0; j < fontPtr->shape.numFonts; j++) {
+	    if (fontPtr->shape.fontMap[j].kbFont == fontPtr->shape.glyphs[i].font) {
+		faceIndex = fontPtr->shape.fontMap[j].faceIndex;
+		break;
 	    }
-	    drawFont = GetFontForFace(fontPtr, faceIndex, angle_deg);
-	    if (!drawFont) drawFont = GetFont(fontPtr, 0, angle_deg);
 	}
 
-	if (!drawFont) continue;
+	/* Get the appropriate rotated Xft font for this face. */
+	XftFont *drawFont = NULL;
+	if (faceIndex < fontPtr->nfaces) {
+	    if (angle == 0.0) {
+		drawFont = fontPtr->faces[faceIndex].ft0Font;
+	    } else {
+		if (fontPtr->faces[faceIndex].ftFont && 
+		    fontPtr->faces[faceIndex].angle == angle) {
+		    drawFont = fontPtr->faces[faceIndex].ftFont;
+		}
+	    }
+	}
 
-	if (lastFont && drawFont != lastFont && nspec > 0) {
+	/* If font not loaded for this face/angle, use GetFont to load it. */
+	if (!drawFont) {
+	    drawFont = GetFont(fontPtr, 0, angle);
+	}
+
+	if (!drawFont) {
+	    continue; /* Skip this glyph if we can't get a font. */
+	}
+
+	/* If font changed, flush the batch */
+	if (drawFont != currentFont && nspec > 0) {
 	    LOCK;
 	    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
 	    UNLOCK;
 	    nspec = 0;
 	}
-	lastFont = drawFont;
+	currentFont = drawFont;
+
+	/* Position in logical (horizontal) shaping space. */
+	int gx = fontPtr->shape.glyphs[i].x;
+	int gy = fontPtr->shape.glyphs[i].y;
+
+	/* Rotate coordinates around the origin (x,y). */
+	int rx = x + (int)(gx * cosA - gy * sinA + 0.5);
+	int ry = y + (int)(gx * sinA + gy * cosA + 0.5);
 
 	specs[nspec].font  = drawFont;
-	specs[nspec].glyph = shaped->glyphs[i].glyphId;
-
-	if (angle_deg == 0.0) {
-	    specs[nspec].x = (int)(originX + shaped->glyphs[i].x + 0.5);
-	    specs[nspec].y = (int)(originY + shaped->glyphs[i].y + 0.5);
-	} else {
-	    double gx = shaped->glyphs[i].x;
-	    double gy = shaped->glyphs[i].y;
-	    specs[nspec].x = (int)(originX + gx * cosA - gy * sinA + 0.5);
-	    specs[nspec].y = (int)(originY + gx * sinA + gy * cosA + 0.5);
-	}
+	specs[nspec].glyph = glyphIndex;
+	specs[nspec].x     = rx;
+	specs[nspec].y     = ry;
 
 	if (++nspec >= NUM_SPEC) {
 	    LOCK;
 	    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
 	    UNLOCK;
 	    nspec = 0;
-	    lastFont = NULL;
+	    currentFont = NULL; /* Force font check on next iteration. */
 	}
 
-	penX += shaped->glyphs[i].advanceX;
+	/* Advance pen in logical space. */
+	penX += fontPtr->shape.glyphs[i].advanceX;
+	penY += 0; /* No Y advance in horizontal text. */
     }
 
+    /* Flush any remaining glyphs. */
     if (nspec > 0) {
 	LOCK;
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
 	UNLOCK;
     }
 
-    if (tsdPtr->clipRegion) {
+    /* Restore clipping. */
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
 
-    /* Underline / overstrike (rotated if necessary). */
+    /* Underline / overstrike — rotated. */
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
-	double totalAdvX = (double)penX * cosA;
-	double totalAdvY = (double)penX * sinA;
+	/* Total advance vector after rotation. */
+	double totalAdvanceX = (double)penX * cosA - (double)penY * sinA;
+	double totalAdvanceY = (double)penX * sinA + (double)penY * cosA;
 
 	XPoint points[5];
-	double barH = (double)fontPtr->font.underlineHeight;
+	double barHeight = (double) fontPtr->font.underlineHeight;
 	double dy;
 
 	if (fontPtr->font.fa.underline) {
-	    dy = (double)fontPtr->font.underlinePos;
-	    if (barH <= 1.0) dy += 1.0;
+	    dy = (double) fontPtr->font.underlinePos;
+	    if (fontPtr->font.underlineHeight <= 1) {
+		dy += 1.0;
+	    }
 
-	    points[0].x = (int)(originX + dy * sinA + 0.5);
-	    points[0].y = (int)(originY + dy * cosA + 0.5);
-	    points[1].x = (int)(points[0].x + totalAdvX + 0.5);
-	    points[1].y = (int)(points[0].y + totalAdvY + 0.5);
+	    points[0].x = x + (int)(dy * sinA + 0.5);
+	    points[0].y = y + (int)(dy * cosA + 0.5);
 
-	    if (barH <= 1.0) {
+	    points[1].x = x + (int)(dy * sinA + totalAdvanceX * cosA + 0.5);
+	    points[1].y = y + (int)(dy * cosA + totalAdvanceY * sinA + 0.5);
+
+	    if (barHeight <= 1.0) {
 		XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
 	    } else {
-		points[2].x = points[1].x + (int)(barH * sinA + 0.5);
-		points[2].y = points[1].y + (int)(-barH * cosA + 0.5);
-		points[3].x = points[0].x + (int)(barH * sinA + 0.5);
-		points[3].y = points[0].y + (int)(-barH * cosA + 0.5);
+		points[2].x = points[1].x + (int)(barHeight * sinA + 0.5);
+		points[2].y = points[1].y + (int)(-barHeight * cosA + 0.5);
+		points[3].x = points[0].x + (int)(barHeight * sinA + 0.5);
+		points[3].y = points[0].y + (int)(-barHeight * cosA + 0.5);
 		points[4] = points[0];
+
 		XFillPolygon(display, drawable, gc, points, 5, Complex, CoordModeOrigin);
 		XDrawLines(display, drawable, gc, points, 5, CoordModeOrigin);
 	    }
 	}
 
 	if (fontPtr->font.fa.overstrike) {
-	    dy = - (double)fontPtr->font.fm.descent - (fontPtr->font.fm.ascent / 10.0);
+	    dy = - (double)fontPtr->font.fm.descent
+		 - ((double)fontPtr->font.fm.ascent / 10.0);
 
-	    points[0].x = (int)(originX + dy * sinA + 0.5);
-	    points[0].y = (int)(originY + dy * cosA + 0.5);
-	    points[1].x = (int)(points[0].x + totalAdvX + 0.5);
-	    points[1].y = (int)(points[0].y + totalAdvY + 0.5);
+	    points[0].x = x + (int)(dy * sinA + 0.5);
+	    points[0].y = y + (int)(dy * cosA + 0.5);
 
-	    if (barH <= 1.0) {
+	    points[1].x = x + (int)(dy * sinA + totalAdvanceX * cosA + 0.5);
+	    points[1].y = y + (int)(dy * cosA + totalAdvanceY * sinA + 0.5);
+
+	    if (barHeight <= 1.0) {
 		XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
 	    } else {
-		points[2].x = points[1].x + (int)(barH * sinA + 0.5);
-		points[2].y = points[1].y + (int)(-barH * cosA + 0.5);
-		points[3].x = points[0].x + (int)(barH * sinA + 0.5);
-		points[3].y = points[0].y + (int)(-barH * cosA + 0.5);
+		points[2].x = points[1].x + (int)(barHeight * sinA + 0.5);
+		points[2].y = points[1].y + (int)(-barHeight * cosA + 0.5);
+		points[3].x = points[0].x + (int)(barHeight * sinA + 0.5);
+		points[3].y = points[0].y + (int)(-barHeight * cosA + 0.5);
 		points[4] = points[0];
+
 		XFillPolygon(display, drawable, gc, points, 5, Complex, CoordModeOrigin);
 		XDrawLines(display, drawable, gc, points, 5, CoordModeOrigin);
 	    }
 	}
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
- * GetFontForFace --
- *
- *	Get rotated XftFont for a specific face index.
- *
- * Results:
- *	Returns an XftFont pointer.
- *
- * Side effects:
- *	May create a new rotated font variant.
+ * Functions to support text shaping and bi-directional rendering.
  *
  *----------------------------------------------------------------------
  */
 
-static XftFont *
-GetFontForFace(UnixFtFont *fontPtr, int faceIndex, double angle)
+/* Common shaping helper: uses SheenBidi for bidi, then kb_text_shaper for shaping */
+void
+UnixFontShapeString(
+    UnixFtFont *fontPtr,
+    const char *source,
+    int numBytes,
+    X11Shape *shapePtr)
 {
-    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
-	faceIndex = 0;
-    }
-    if (angle == 0.0) {
-	return fontPtr->faces[faceIndex].ft0Font ?
-	       fontPtr->faces[faceIndex].ft0Font :
-	       fontPtr->faces[0].ft0Font;
-    }
+    int r;
+    BidiRun bidiRuns[32];
+    int numBidiRuns;
+    int globalPenX = 0;
+    int globalPenY = 0;
 
-    if (!fontPtr->faces[faceIndex].ftFont ||
-	fontPtr->faces[faceIndex].angle != angle) {
-
-	FcPattern *pat = FcFontRenderPrepare(NULL, fontPtr->pattern,
-					     fontPtr->faces[faceIndex].source);
-	double s = sin(angle * M_PI / 180.0);
-	double c = cos(angle * M_PI / 180.0);
-	FcMatrix mat = {c, -s, s, c};
-
-	FcPatternAddMatrix(pat, FC_MATRIX, &mat);
-
-	LOCK;
-	XftFont *ftFont = XftFontOpenPattern(fontPtr->display, pat);
-	UNLOCK;
-
-	if (ftFont) {
-	    if (fontPtr->faces[faceIndex].ftFont) {
-		LOCK;
-		XftFontClose(fontPtr->display, fontPtr->faces[faceIndex].ftFont);
-		UNLOCK;
-	    }
-	    fontPtr->faces[faceIndex].ftFont = ftFont;
-	    fontPtr->faces[faceIndex].angle = angle;
-	}
+    if (!shapePtr || !source || numBytes <= 0) {
+        if (shapePtr) shapePtr->glyphCount = 0;
+        return;
     }
 
-    return fontPtr->faces[faceIndex].ftFont ?
-	   fontPtr->faces[faceIndex].ftFont :
-	   fontPtr->faces[0].ft0Font;
+    /* 
+     * Performance cache:  If this is the same string as last time, 
+     * exit early. Tk calls measurement functions many times b
+     * efore drawing.
+     */
+    if (numBytes == shapePtr->lastLen && numBytes < 1024) {
+        if (memcmp(source, shapePtr->lastSrc, numBytes) == 0) {
+            return; 
+        }
+    }
+
+    /* Initialize Shaper context if needed. */
+    if (!shapePtr->context) {
+        X11Shape_Init(shapePtr);
+        /* Load all primary and fallback faces into the shaper. */
+        for (int i = 0; i < fontPtr->nfaces && i < 8; i++) {
+            FcPattern *facePattern = fontPtr->faces[i].source;
+            FcChar8 *file;
+            int index;
+            if (FcPatternGetString(facePattern, FC_FILE, 0, &file) == FcResultMatch &&
+                FcPatternGetInteger(facePattern, FC_INDEX, 0, &index) == FcResultMatch) {
+                kbts_font *kbFont = kbts_ShapePushFontFromFile(shapePtr->context, (const char *)file, index);
+                if (kbFont) {
+                    shapePtr->fontMap[shapePtr->numFonts].kbFont = kbFont;
+                    shapePtr->fontMap[shapePtr->numFonts].faceIndex = i;
+                    shapePtr->numFonts++;
+                }
+            }
+        }
+    }
+
+    shapePtr->glyphCount = 0;
+
+    /* Bidi analysis (GetBidiRuns now includes the fast path for Latin text). */
+    numBidiRuns = GetBidiRuns(source, numBytes, bidiRuns, 32);
+
+    /* Shaping loop. */
+    for (r = 0; r < numBidiRuns; r++) {
+        const char *runText = source + bidiRuns[r].offset;
+        int runLen = bidiRuns[r].length;
+        int runIsRTL = bidiRuns[r].isRTL;
+        kbts_run run;
+        kbts_glyph *glyph;
+        int runPenX = 0;
+        int runPenY = 0;
+
+        if (runLen <= 0) continue;
+
+        kbts_ShapeBegin(shapePtr->context, 
+                        runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR, 
+                        KBTS_LANGUAGE_DONT_KNOW);
+
+        kbts_ShapeUtf8(shapePtr->context, runText, runLen, 
+                       KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
+
+        kbts_ShapeEnd(shapePtr->context);
+        
+        while (kbts_ShapeRun(shapePtr->context, &run) && shapePtr->glyphCount < 2048) {
+            kbts_glyph_iterator it = run.Glyphs;
+            while (kbts_GlyphIteratorNext(&it, &glyph) && shapePtr->glyphCount < 2048) {
+                shapePtr->glyphs[shapePtr->glyphCount].glyphId = glyph->Id;
+                shapePtr->glyphs[shapePtr->glyphCount].font = run.Font;
+                shapePtr->glyphs[shapePtr->glyphCount].x = globalPenX + runPenX + glyph->OffsetX;
+                shapePtr->glyphs[shapePtr->glyphCount].y = globalPenY + runPenY + glyph->OffsetY;
+                shapePtr->glyphs[shapePtr->glyphCount].advanceX = glyph->AdvanceX;
+
+                runPenX += glyph->AdvanceX;
+                runPenY += glyph->AdvanceY;
+                shapePtr->glyphCount++;
+            }
+        }
+        globalPenX += runPenX;
+        globalPenY += runPenY;
+
+        if (shapePtr->glyphCount >= 2048) break;
+    }
+
+    /* Update cache markers.  */
+    shapePtr->lastLen = numBytes;
+    if (numBytes < 1024) {
+        memcpy(shapePtr->lastSrc, source, numBytes);
+    }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * InitFontErrorProc --
- *
- *	Error handler for font initialization.
- *
- * Results:
- *	Always returns 0.
- *
- * Side effects:
- *	Sets the error flag in client data.
- *
- *----------------------------------------------------------------------
+ /*
+ * Unified drawing function for shaped + bidirectional text.
+ * Handles both horizontal (angle == 0.0) and rotated cases.
+ * Uses integer math when angle == 0 for speed & exactness.
  */
-
-static int
-InitFontErrorProc(void *clientData,
-		  TCL_UNUSED(XErrorEvent *))
+static void
+UnixFontDrawShapedText(
+    Display *display, Drawable drawable, GC gc, UnixFtFont *fontPtr,
+    const char *source, int numBytes, double originX, double originY, double angle_deg)
 {
-    int *errorFlagPtr = (int *)clientData;
-    if (errorFlagPtr) *errorFlagPtr = 1;
-    return 0;
+    XftColor *xftcolor;
+    XGCValues values;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    /* Shape the string and use internal cache. */
+    UnixFontShapeString(fontPtr, source, numBytes, &fontPtr->shape);
+    if (fontPtr->shape.glyphCount <= 0) return;
+
+    /* Setup XftDraw. */
+    if (fontPtr->ftDraw == NULL) {
+        fontPtr->ftDraw = XftDrawCreate(display, drawable, fontPtr->visual, fontPtr->colormap);
+    } else {
+        XftDrawChange(fontPtr->ftDraw, drawable);
+    }
+
+    XGetGCValues(display, gc, GCForeground, &values);
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
+    if (!xftcolor) return;
+
+    if (tsdPtr->clipRegion != NULL) {
+        XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
+
+    XftGlyphFontSpec specs[NUM_SPEC];
+    int nspec = 0;
+    XftFont *lastFont = NULL;
+
+    for (int i = 0; i < fontPtr->shape.glyphCount; i++) {
+        XftFont *drawFont = NULL;
+        
+        /* Map back to the correct XftFont using direct array access. */
+        for (int j = 0; j < fontPtr->shape.numFonts; j++) {
+            if (fontPtr->shape.fontMap[j].kbFont == fontPtr->shape.glyphs[i].font) {
+                int fIdx = fontPtr->shape.fontMap[j].faceIndex;
+                if (fIdx >= 0 && fIdx < fontPtr->nfaces) {
+                    drawFont = (angle_deg == 0.0) ? fontPtr->faces[fIdx].ft0Font : fontPtr->faces[fIdx].ftFont;
+                }
+                break;
+            }
+        }
+
+        /* Fallback to primary font if no match found. */
+        if (!drawFont) {
+            drawFont = GetFont(fontPtr, 0, angle_deg);
+        }
+
+        /* If font changes, flush the current batch. */
+        if (lastFont && drawFont != lastFont && nspec > 0) {
+            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            nspec = 0;
+        }
+        lastFont = drawFont;
+
+        /* Assign specs using direct access to the anonymous struct members. */
+        specs[nspec].font = drawFont;
+        specs[nspec].glyph = fontPtr->shape.glyphs[i].glyphId;
+        
+        if (angle_deg == 0.0) {
+            specs[nspec].x = (int)(originX + fontPtr->shape.glyphs[i].x + 0.5);
+            specs[nspec].y = (int)(originY + fontPtr->shape.glyphs[i].y + 0.5);
+        } else {
+            double rad = angle_deg * M_PI / 180.0;
+            double cosA = cos(rad), sinA = sin(rad);
+            double gx = fontPtr->shape.glyphs[i].x;
+            double gy = fontPtr->shape.glyphs[i].y;
+            specs[nspec].x = (int)(originX + gx * cosA - gy * sinA + 0.5);
+            specs[nspec].y = (int)(originY + gx * sinA + gy * cosA + 0.5);
+        }
+
+        nspec++;
+        if (nspec >= NUM_SPEC) {
+            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            nspec = 0;
+        }
+    }
+
+    /* Final flush. */
+    if (nspec > 0) {
+        XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+    }
+
+    if (tsdPtr->clipRegion != NULL) {
+        XftDrawSetClip(fontPtr->ftDraw, NULL);
+    }
+}
+/*
+ * Returns the total advance width (in pixels) after full shaping + bidi.
+ * This is the correct way to measure complex text.
+ */
+static int
+UnixFontGetShapedWidth(
+    UnixFtFont *fontPtr,
+    const char *source,
+    Tcl_Size numBytes)
+{
+    
+    int totalWidth = 0;
+    int i;
+
+    UnixFontShapeString(fontPtr, source, (int)numBytes, &fontPtr->shape);
+
+    for (i = 0; i < fontPtr->shape.glyphCount; i++) {
+        totalWidth += fontPtr->shape.glyphs[i].advanceX;
+    }
+
+    return totalWidth;
+}
+
+/* Initialize shaping context. */
+void X11Shape_Init(X11Shape *s)
+{
+    memset(s, 0, sizeof(*s));
+    s->context = kbts_CreateShapeContext(NULL, NULL);
+    s->cachedFamilyId = None;
+}
+
+/* Add a fallback font. */
+void X11Shape_AddFont(X11Shape *s, kbts_font *f)
+{
+    if (s->context) {
+	kbts_ShapePushFont(s->context, f);
+    }
+}
+
+
+/* Clean up shaping context. */
+void X11Shape_Destroy(X11Shape *s)
+{
+    if (s->context) {
+	kbts_DestroyShapeContext(s->context);
+	s->context = NULL;
+    }
 }
 
 /*
