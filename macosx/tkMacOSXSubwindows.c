@@ -130,7 +130,7 @@ XDestroyWindow(
  *	This X11 stub maps the given X11 Window but does not update any of
  *      the Tk structures describing the window.  Tk applications should
  *	never call this directly, but it is called by Tk_MapWindow and
- *      Tk_WmMapWindow.
+ *      TkWmMapWindow.
  *
  * Results:
  *	Always returns Success or BadWindow.
@@ -198,18 +198,14 @@ XMapWindow(
 		    }
 		    [NSThread sleepForTimeInterval:.001];
 		}
-	    }
-
-	    /*
-	     * If we're processing the Tk root window, order it front unless
-	     * it was immediately withdrawn.
-	     */
-
-	    if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
+	    } else if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
 		    (winPtr->wmInfoPtr->hints.initial_state == NormalState)) {
+
 		/*
-		 * Order the root window front to make it fully mapped. The TK_MAPPED flag
-		 * has already been set by the caller of this function: Tk_WmMapWindow().
+		 * Order the Tk root window front unless it was immediately withdrawn.
+		 * Doing so makes it fully mapped. We don't have to set the TK_MAPPED
+		 * flag here because that has already been done by the caller of this
+		 * function: TkWmMapWindow().
 		 */
 
 		[win makeKeyAndOrderFront:NSApp];
