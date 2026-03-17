@@ -852,7 +852,6 @@ void TkMacOSXAssignNewKeyWindow(
 
     [NSApp setTkEventTarget: NULL];
     for (NSWindow *w in [NSApp orderedWindows]) {
-	WmInfo *wmPtr;
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
 	    || !winPtr->wmInfoPtr
@@ -862,7 +861,6 @@ void TkMacOSXAssignNewKeyWindow(
 	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
 	    continue;
 	}
-	wmPtr = winPtr->wmInfoPtr;
 	if (w != ignore && Tk_IsMapped(winPtr) && [w canBecomeKeyWindow]) {
 	    TKMenu *menu;
 	    [w makeKeyAndOrderFront:NSApp];
