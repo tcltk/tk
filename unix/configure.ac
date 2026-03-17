@@ -413,7 +413,7 @@ if test $tk_aqua = no; then
 	fi
     fi
     if test $enable_xft = "yes" ; then
-	UNIX_FONT_OBJS="tkUnixRFont.o tkUnixShaper.o"
+	UNIX_FONT_OBJS=tkUnixRFont.o
 	AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
     else
 	UNIX_FONT_OBJS=tkUnixFont.o

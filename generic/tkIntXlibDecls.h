@@ -89,7 +89,8 @@ EXTERN GContext		XGContextFromGC(GC g);
 /* 10 */
 EXTERN XHostAddress *	XListHosts(Display *d, int *i, Bool *b);
 /* 11 */
-EXTERN KeySym		XKeycodeToKeysym(Display *d, unsigned int k, int i);
+//EXTERN KeySym		XKeycodeToKeysym(Display *d, unsigned int k, int i);
+//EXTERN KeySym XKeycodeToKeysym(Display *d, KeyCode k, int i);
 /* 12 */
 EXTERN KeySym		XStringToKeysym(const char *c);
 /* 13 */
