@@ -12,17 +12,15 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include <X11/Xft/Xft.h>
 #include "tkUnixInt.h"
 #include "tkFont.h"
-#include <X11/Xft/Xft.h>
-#include <math.h>
-#include <stdlib.h>
+#include "tkUnixShaper.h" 
 
-#include "tkUnixShaper.h"   /* All bidi + shaping is now here */
+/*
+ * The per-font structure.
+ */
 
-#define MAX_CACHED_COLORS 16
-#define TK_DRAW_IN_CONTEXT
-#define NUM_SPEC 1024
 
 /*
  * Debugging support...
@@ -32,46 +30,6 @@
     if (DEBUG_FONTSEL) { \
 	printf arguments; fflush(stdout); \
     }
-
-/*
- * One UnixFtFace per fontconfig face (main + fallbacks).
- */
-typedef struct {
-    XftFont *ftFont;       /* rotated variant (if angle != 0) */
-    XftFont *ft0Font;      /* upright (angle == 0) */
-    FcPattern *source;
-    FcCharSet *charset;
-    double angle;
-} UnixFtFace;
-
-/*
- * Cached XftColor entries (avoids repeated XQueryColor round-trips).
- */
-typedef struct {
-    XftColor color;
-    int next;
-} UnixFtColorList;
-
-/*
- * The per-font structure.
- */
-typedef struct {
-    TkFont font;		/* Stuff used by generic font package. Must be first. */
-    UnixFtFace *faces;
-    int nfaces;
-    FcFontSet *fontset;
-    FcPattern *pattern;
-
-    Display *display;
-    int screen;
-    Colormap colormap;
-    Visual *visual;
-    XftDraw *ftDraw;
-    int ncolors;
-    int firstColor;
-    UnixFtColorList colors[MAX_CACHED_COLORS];
-    X11Shape shape;		/* opaque to this file — managed by tkUnixShaper */
-} UnixFtFont;
 
 /*
  * Used to describe the current clipping box. Can't be passed normally because
@@ -101,7 +59,7 @@ static void UnixFontDrawShapedText(Display *display, Drawable drawable, GC gc,
 				   int numBytes, double originX, double originY,
 				   double angle_deg);
 static int InitFontErrorProc(void *clientData, XErrorEvent *errPtr);
-
+static void FinishedWithFont(UnixFtFont *fontPtr);
 /*
  *----------------------------------------------------------------------
  *
@@ -121,18 +79,11 @@ static int InitFontErrorProc(void *clientData, XErrorEvent *errPtr);
  *----------------------------------------------------------------------
  */
 
-static Tcl_Size utf8ToUcs4(const char *source, FcChar32 *c, Tcl_Size numBytes)
-{
-    if (numBytes >= 6) {
-	return Tcl_UtfToUniChar(source, (int *)c);
-    }
-    return FcUtf8ToUcs4((const FcChar8 *)source, c, numBytes);
-}
-
 void
 TkpFontPkgInit(
     TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
+	return;
 }
 
 /*
@@ -181,8 +132,9 @@ GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle)
 	double c = cos(angle * M_PI / 180.0);
 	FcMatrix mat;
 	mat.xx = mat.yy = c;
-	mat.xy = -mat.yx = s;
-
+	mat.yx = -s;
+	mat.xy = s;
+	
 	if (angle != 0.0) {
 	    FcPatternAddMatrix(pat, FC_MATRIX, &mat);
 	}
@@ -368,7 +320,7 @@ InitFont(Tk_Window tkwin, FcPattern *pattern, UnixFtFont *fontPtr)
     fontPtr->firstColor = -1;
 
     /* Shaping state is initialized lazily by tkUnixShaper on first use. */
-    X11Shape_Init(&fontPtr->shape);
+    TclpX11ShapeInit(&fontPtr->shape);
 
     errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1,
@@ -591,7 +543,7 @@ TkpGetFontFromAttributes(TkFont *tkFontPtr, Tk_Window tkwin,
 
     if (!fontPtr) {
 	/* Try non-rendered fallback. */
-	FcPatternAddBool(pattern, FC_RENDER, FcFalse);
+	FcPatternAddBool(pattern, XFT_RENDER, FcFalse);
 	fontPtr = InitFont(tkwin, pattern, fontPtr);
     }
 
@@ -750,8 +702,9 @@ TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont, int c,
  *----------------------------------------------------------------------
  */
 int
-Tk_MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size numBytes,
-		int maxLength, int flags, int *lengthPtr)
+Tk_MeasureChars(Tk_Font tkfont, 
+	const char *source, Tcl_Size numBytes,
+	int maxLength, int flags, int *lengthPtr)
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
 
@@ -1165,7 +1118,7 @@ UnixFontDrawShapedText(Display *display, Drawable drawable, GC gc,
     int nspec = 0;
     XftFont *lastFont = NULL;
 
-    int penX = 0, penY = 0;
+    int penX = 0;
 
     int i;
     for (i = 0; i < shaped->glyphCount; i++) {

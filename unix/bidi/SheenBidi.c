@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
+ /* Suppress numerous warnings. */
+#pragma GCC system_header
+#pragma clang system_header
 
 #include <SheenBidi/SBConfig.h>
 #include <SheenBidi/SheenBidi.h>

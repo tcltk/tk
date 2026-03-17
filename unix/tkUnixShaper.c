@@ -17,12 +17,12 @@
  */
 
 #define KB_TEXT_SHAPE_IMPLEMENTATION
-#include "kb_text_shaper.h"
+#include <kb_text_shaper.h>
 #include <SheenBidi/SheenBidi.h>
 
-#include "tkUnixInt.h"
-#include "tkFont.h"
+#include <X11/Xft/Xft.h>
 #include "tkUnixShaper.h"
+
 
 #include <string.h>
 #include <stdlib.h>
@@ -82,7 +82,7 @@ static void           TclpProcessComplexText(UnixFtFont *fontPtr, X11Shape *shap
                           const char *source, int numBytes, int slot, 
                           BidiRun *bidiRuns, int numBidiRuns);
 static XftFont *      TclpFindXftFontForKbFont(UnixFtFont *fontPtr, kbts_font *kbFont);
-static void           TclpX11ShapeInit(X11Shape *s);
+void           		  TclpX11ShapeInit(X11Shape *s);
 static void           TclpX11ShapeDestroy(X11Shape *s);
 
 /*
@@ -169,7 +169,7 @@ Tk_ShaperDestroy(Tk_Font tkfont)
  *
  *----------------------------------------------------------------------
  */
-static void
+void
 TclpX11ShapeInit(X11Shape *s)
 {
     int i;
