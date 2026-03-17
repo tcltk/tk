@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "7f67bb4054d6d7d9-menu-recursive-chw"
     tags:
     - "core-**"
 permissions:
