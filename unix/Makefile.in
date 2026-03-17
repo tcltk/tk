@@ -524,7 +524,7 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixDraw.c \
 	$(UNIX_DIR)/tkUnixEmbed.c $(UNIX_DIR)/tkUnixEvent.c \
 	$(UNIX_DIR)/tkUnixFocus.c $(GENERIC_DIR)/tkIcu.c \
-	$(UNIX_DIR)/tkUnixRFont.c \
+	$(UNIX_DIR)/tkUnixRFont.c  $(UNIX_DIR)/tkUnixShaper.c \
 	$(UNIX_DIR)/tkUnixFont.c $(UNIX_DIR)/tkUnixInit.c \
 	$(UNIX_DIR)/tkUnixKey.c \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
@@ -1322,6 +1322,10 @@ tkUnixFont.o: $(UNIX_DIR)/tkUnixFont.c
 # NB: tkUnixRFont.o uses nondefault CFLAGS
 tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
+
+# NB: tkUnixRFont.o uses nondefault CFLAGS
+tkUnixShaper.o: $(UNIX_DIR)/tkUnixShaper.c
+	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixShaper.c
 
 tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) \
