@@ -155,7 +155,6 @@ XMapWindow(
     static bool initialized = false;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-    //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr));
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -208,6 +207,11 @@ XMapWindow(
 
 	    if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
 		    (winPtr->wmInfoPtr->hints.initial_state == NormalState)) {
+		/*
+		 * Order the root window front to make it fully mapped. The TK_MAPPED flag
+		 * has already been set by the caller of this function: Tk_WmMapWindow().
+		 */
+
 		[win makeKeyAndOrderFront:NSApp];
 	    }
 
@@ -329,16 +333,12 @@ XUnmapWindow(
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
 
-    if (!window) {
-	return BadWindow;
-    }
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
 	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
 	    [win orderOut:NSApp];
-	    [[win contentView] setOnScreen:NO];
 	    if ([win isKeyWindow]) {
 
 		/*
@@ -353,15 +353,15 @@ XUnmapWindow(
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
 
-		    BOOL isOnScreen;
+		    BOOL tkIsVisible;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
 			continue;
 		    }
 		    wmInfoPtr = winPtr2->wmInfoPtr;
-		    isOnScreen = (wmInfoPtr->hints.initial_state != IconicState &&
-				  wmInfoPtr->hints.initial_state != WithdrawnState);
-		    if (w != win && isOnScreen && [w canBecomeKeyWindow]) {
+		    tkIsVisible = (wmInfoPtr->hints.initial_state != IconicState &&
+				   wmInfoPtr->hints.initial_state != WithdrawnState);
+		    if (w != win && tkIsVisible && [w canBecomeKeyWindow]) {
 			[w makeKeyAndOrderFront:NSApp];
 			[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 			break;
