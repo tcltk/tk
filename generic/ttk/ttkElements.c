@@ -1209,7 +1209,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(MenuIndicatorElement,sizeObj), STRINGIFY(MENUBUTTON_ARROW_SIZE)},
+	offsetof(MenuIndicatorElement,sizeObj), STRINGIFY(MENUBUTTON_ARROW_SIZE) },
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(MenuIndicatorElement,colorObj), "black" },
     { "-arrowpadding", TK_OPTION_STRING,
@@ -1255,6 +1255,7 @@ static void MenuIndicatorElementDraw(
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     GC gc = Tk_GCForColor(arrowColor, d);
     double scalingLevel = TkScalingLevel(tkwin);
+    Ttk_Padding padding, margins;
     int size = MENUBUTTON_ARROW_SIZE;
     int width, height;
 
@@ -1262,6 +1263,14 @@ static void MenuIndicatorElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
     size = round(size * scalingLevel);
     TtkArrowSize(size, direction, &width, &height);
+
+    /* Add scaled padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &margins);
+    padding.left = round(margins.left * scalingLevel);
+    padding.top = round(margins.top * scalingLevel);
+    padding.right = round(margins.right * scalingLevel);
+    padding.bottom = round(margins.bottom * scalingLevel);
+    b = Ttk_PadBox(b, padding);
 
     /* Draw indicator */
     b = Ttk_StickBox(b, width, height, 0);
@@ -1722,8 +1731,7 @@ static void PbarElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, pbar->reliefObj, &relief);
 
-    Tk_Fill3DRectangle(tkwin, d, border,
-	b.x, b.y, b.width, b.height,
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	borderWidth, relief);
 }
 
@@ -2059,6 +2067,15 @@ TtkElements_Init(Tcl_Interp *interp)
 	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
     Ttk_RegisterElement(interp, theme, "arrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
+
+    Ttk_RegisterElement(interp, theme, "upchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
+    Ttk_RegisterElement(interp, theme, "downchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
+     Ttk_RegisterElement(interp, theme, "leftchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_LEFT));
+    Ttk_RegisterElement(interp, theme, "rightchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
 
     Ttk_RegisterElement(interp, theme, "trough", &TroughElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "thumb", &ThumbElementSpec, NULL);

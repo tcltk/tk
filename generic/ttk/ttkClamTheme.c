@@ -1225,6 +1225,15 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "arrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
+    Ttk_RegisterElement(interp, theme, "upchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
+    Ttk_RegisterElement(interp, theme, "downchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
+     Ttk_RegisterElement(interp, theme, "leftchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_LEFT));
+    Ttk_RegisterElement(interp, theme, "rightchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
+
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
 	    &IndicatorElementSpec, (void *)&checkbutton_spec);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",

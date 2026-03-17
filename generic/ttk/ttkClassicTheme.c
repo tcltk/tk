@@ -9,7 +9,7 @@
 #include "ttkTheme.h"
 
 #define DEFAULT_BORDERWIDTH "2"
-#define DEFAULT_ARROW_SIZE "15"
+#define DEFAULT_ARROW_SIZE "12"
 
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
@@ -923,6 +923,15 @@ TtkClassicTheme_Init(Tcl_Interp *interp)
 	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
     Ttk_RegisterElement(interp, theme, "arrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
+
+    Ttk_RegisterElement(interp, theme, "upchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
+    Ttk_RegisterElement(interp, theme, "downchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
+     Ttk_RegisterElement(interp, theme, "leftchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_LEFT));
+    Ttk_RegisterElement(interp, theme, "rightchevron",
+	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
 
     Ttk_RegisterElement(interp, theme, "slider",
 	    &SliderElementSpec, NULL);
