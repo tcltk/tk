@@ -1990,7 +1990,7 @@ ConfigureMenuEntry(
 		&errorStruct, NULL) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-#ifdef MAC_OSX_TK
+
 	/*
 	 * Early check due to PostProcessEntry() calling platform code.
 	 */
@@ -2006,7 +2006,7 @@ ConfigureMenuEntry(
 		result = TCL_ERROR;
 	    }
 	}
-#endif
+
 	if (result == TCL_OK) {
 	    result = PostProcessEntry(mePtr);
 	}
@@ -2202,6 +2202,7 @@ ConfigureMenuCloneEntries(
 	 * Tk ticket 7f67bb4054d6d7d9: avoid menu loops
 	 */
 
+#if 0
 	if (newCascadeName != NULL) {
 	    Tcl_Interp *interp = menuPtr->interp;
 	    if (CheckLoop(interp, newCascadeName, menuPtr)) {
@@ -2215,6 +2216,7 @@ ConfigureMenuCloneEntries(
 		return TCL_ERROR;
 	    }
 	}
+#endif
 
 	if ((oldCascadePtr == NULL) && (mePtr->namePtr == NULL)) {
 	    cascadeEntryChanged = 0;
@@ -2671,9 +2673,9 @@ meError:
 	 * Tk ticket 7f67bb4054d6d7d9: avoid menu loops
 	 */
 
+#if 0
 	if ((type == CASCADE_ENTRY) && (mePtr->namePtr != NULL)) {
 	    char *name = Tcl_GetString(mePtr->namePtr);
-
 	    if (CheckLoop(interp, name, menuListPtr)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"cannot add recursive cascade menu \"%s\"", name));
@@ -2682,6 +2684,7 @@ meError:
 		goto meError;
 	    }
 	}
+#endif
 
 	if ((menuPtr != menuListPtr) && (type == CASCADE_ENTRY)) {
 	    if ((mePtr->namePtr != NULL)
