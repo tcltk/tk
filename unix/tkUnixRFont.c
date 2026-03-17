@@ -18,11 +18,6 @@
 #include "tkUnixShaper.h" 
 
 /*
- * The per-font structure.
- */
-
-
-/*
  * Debugging support...
  */
 #define DEBUG_FONTSEL 0
