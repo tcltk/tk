@@ -183,6 +183,7 @@ typedef struct {
     int placeholderX;		/* Origin for layout. */
     int placeholderLeftIndex;	/* Character index of left-most character
 				 * visible in window. */
+    char locale[8];	/* locale */
 } Entry;
 
 /*
@@ -295,6 +296,8 @@ enum state {
 enum selelement {
     SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NONE, SEL_NULL, SEL_ENTRY
 };
+
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
 
 /*
  * Declaration of functions used in the implementation of the native side of
