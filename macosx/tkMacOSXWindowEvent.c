@@ -433,6 +433,7 @@ static void RefocusGrabWindow(void *data) {
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    [win orderOut:NSApp];
+	    [[win contentView] setOnScreen:NO];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
 	    Tcl_Preserve(winPtr);
@@ -1016,9 +1017,10 @@ ExposeRestrictProc(
 	 * display procs before updating the layer.
 	 */
 
-	if (! self.window.isVisible) {
+	if (! [self onScreen]) {
 	    //printf("Running event loop.\n");
 	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	    [self setOnScreen:YES];
 	}
 
 	/*
