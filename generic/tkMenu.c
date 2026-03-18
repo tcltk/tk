@@ -2623,7 +2623,7 @@ MenuAddOrInsert(
 	    return TCL_ERROR;
 	}
 	if (ConfigureMenuEntry(mePtr, objc - offs, objv + offs) != TCL_OK) {
-meError:
+//meError:
 	    for (errorMenuPtr = menuPtr->mainMenuPtr;
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
