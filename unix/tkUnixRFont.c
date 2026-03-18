@@ -1661,6 +1661,12 @@ UnixFontShapeString(
     int globalPenX = 0;
     int globalPenY = 0;
 
+	if (!shaper || !shaper->context) {
+		fprintf(stderr, "kb_text_shaper: NULL context\n");
+		if (shapeOut) shapeOut->glyphCount = 0;
+		return;
+	}
+	
     if (!shapeOut || !source || numBytes <= 0) {
 	if (shapeOut) shapeOut->glyphCount = 0;
 	return;
