@@ -1254,7 +1254,7 @@ TkDrawAngledChars(
 
 /*
  * ---------------------------------------------------------------
- * Tk_DrawCharsInContext -- PATCHED
+ * Tk_DrawCharsInContext -- 
  *
  *   Draws a substring of text using full shaping + bidi logic.
  *   Now shapes ONLY the requested substring (source + rangeStart) and
@@ -1369,7 +1369,7 @@ Tk_DrawCharsInContext(
 
 /*
  * ---------------------------------------------------------------
- * TkpDrawAngledCharsInContext -- PATCHED
+ * TkpDrawAngledCharsInContext --
  *
  *   Draw a substring of rotated text.
  *   Now shapes ONLY the requested substring and draws it directly at (x,y).
