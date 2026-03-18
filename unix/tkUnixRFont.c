@@ -1881,7 +1881,7 @@ void
 X11Shaper_Init(X11Shaper *s)
 {
     memset(s, 0, sizeof(*s));
-    s->context = kbts_CreateShapeContext(NULL, NULL);
+    s->context = kbts_CreateShapeContext(0, 0);
 }
 
 /*
