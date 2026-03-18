@@ -1257,7 +1257,7 @@ TkDrawAngledChars(
  * Tk_DrawCharsInContext -- 
  *
  *   Draws a substring of text using full shaping + bidi logic.
- *   Now shapes ONLY the requested substring (source + rangeStart) and
+ *   Shapes ONLY the requested substring (source + rangeStart) and
  *   draws ALL resulting glyphs at the caller-provided (x,y). This eliminates
  *   the old bogus byte-as-glyph-index slicing that caused OOB access on RTL
  *   text, NULL-context spam, and the X_CreatePixmap(0) crash.
@@ -1372,7 +1372,7 @@ Tk_DrawCharsInContext(
  * TkpDrawAngledCharsInContext --
  *
  *   Draw a substring of rotated text.
- *   Now shapes ONLY the requested substring and draws it directly at (x,y).
+ *   Shapes ONLY the requested substring and draws it directly at (x,y).
  *   Removed the broken pixel-vs-byte offset accumulation that caused crashes
  *   on bidirectional text.
  *
