@@ -25,7 +25,7 @@
 #define MAX_GLYPHS 2048
 #define MAX_FONTS 8
 #define MAX_BIDI_RUNS 32
-#define MAX_STRING_CACHE 256
+#define MAX_STRING_CACHE 1024        /* Increased from 256 */
 #define TK_DRAW_IN_CONTEXT
 
 /*
@@ -167,6 +167,7 @@ typedef struct {
     Colormap colormap;
     Visual *visual;
     XftDraw *ftDraw;
+    Drawable lastDrawable;      /* Last drawable used with ftDraw */
     int ncolors;
     int firstColor;
     UnixFtColorList colors[MAX_CACHED_COLORS];
@@ -199,8 +200,10 @@ static int X11Shaper_ShapeString(X11Shaper *shaper, UnixFtFont *fontPtr,
                                  ShapedGlyphBuffer *buffer);
 static int GetBidiRuns(const char *utf8, int len, BidiRun *runs, int maxRuns);
 static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
+static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
+static int IsSimpleText(const char *source, int len);
 
 /*
  * ---------------------------------------------------------------
@@ -231,10 +234,140 @@ utf8ToUcs4(
 
 /*
  * ---------------------------------------------------------------
+ * IsSimpleText --
+ *
+ *   Determine whether a UTF-8 string consists only of characters
+ *   from simple scripts (Latin, Greek, Cyrillic, etc.) that do not
+ *   require complex shaping. This enables a fast path using
+ *   XftDrawString32.
+ *
+ *   The simple range is defined as U+0000 - U+02FF, which includes:
+ *     - Basic Latin, Latin-1 Supplement, Latin Extended-A
+ *     - IPA Extensions, Spacing Modifier Letters
+ *     - Combining Diacritical Marks, Greek, Cyrillic
+ *
+ * Results:
+ *   1 if all characters are in the simple range, 0 otherwise.
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+static int
+IsSimpleText(
+    const char *source,
+    int len)
+{
+    const unsigned char *p = (const unsigned char *)source;
+    int i = 0;
+    
+    while (i < len) {
+        if (p[i] < 0x80) {
+            i++;
+            continue;
+        }
+        FcChar32 u;
+        int clen = Tcl_UtfToUniChar(source + i, (int *)&u);
+        if (clen <= 0) return 0;
+        if (u > 0x02FF) return 0;  /* Outside simple range */
+        i += clen;
+    }
+    return 1;
+}
+
+/*
+ * ---------------------------------------------------------------
+ * GetFaceFont --
+ *
+ *   Retrieve or create an XftFont for a specific face index and rotation angle.
+ *
+ * Results:
+ *   Pointer to XftFont, or NULL if not available.
+ *
+ * Side effects:
+ *   May create new XftFont if not already cached.
+ * ---------------------------------------------------------------
+ */
+
+static XftFont *
+GetFaceFont(
+    UnixFtFont *fontPtr,
+    int faceIndex,
+    double angle)
+{
+    if (faceIndex < 0 || faceIndex >= fontPtr->nfaces) {
+        return NULL;
+    }
+    
+    UnixFtFace *face = &fontPtr->faces[faceIndex];
+    
+    if (angle == 0.0) {
+        if (!face->ft0Font) {
+            FcPattern *pat = FcFontRenderPrepare(NULL, fontPtr->pattern,
+                                                 face->source);
+            LOCK;
+            face->ft0Font = XftFontOpenPattern(fontPtr->display, pat);
+            UNLOCK;
+            
+            if (!face->ft0Font) {
+                /* Fallback to basic sans font */
+                LOCK;
+                face->ft0Font = XftFontOpen(fontPtr->display, fontPtr->screen,
+                                           FC_FAMILY, FcTypeString, "sans",
+                                           FC_SIZE, FcTypeDouble, 12.0,
+                                           NULL);
+                UNLOCK;
+            }
+        }
+        return face->ft0Font;
+    } else {
+        /* Rotated font handling */
+        if (!face->ftFont || face->angle != angle) {
+            FcPattern *pat = FcFontRenderPrepare(NULL, fontPtr->pattern,
+                                                 face->source);
+            double rad = angle * M_PI / 180.0;
+            double s = sin(rad), c = cos(rad);
+            FcMatrix mat;
+            mat.xx = c;
+            mat.xy = -s;
+            mat.yx = s;
+            mat.yy = c;
+            FcPatternAddMatrix(pat, FC_MATRIX, &mat);
+            
+            LOCK;
+            XftFont *ftFont = XftFontOpenPattern(fontPtr->display, pat);
+            UNLOCK;
+            
+            if (!ftFont) {
+                /* Fallback */
+                LOCK;
+                ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
+                                     FC_FAMILY, FcTypeString, "sans",
+                                     FC_SIZE, FcTypeDouble, 12.0,
+                                     FC_MATRIX, FcTypeMatrix, &mat,
+                                     NULL);
+                UNLOCK;
+            }
+            
+            if (face->ftFont) {
+                LOCK;
+                XftFontClose(fontPtr->display, face->ftFont);
+                UNLOCK;
+            }
+            face->ftFont = ftFont;
+            face->angle = angle;
+        }
+        return face->ftFont;
+    }
+}
+
+/*
+ * ---------------------------------------------------------------
  * GetFont --
  *
  *   Retrieve an XftFont for a given character and rotation angle.
- *   Caches rotated fonts per face.
+ *   Selects the face that contains the character, falling back to first face.
  *
  * Results:
  *   Pointer to XftFont, or NULL if not available.
@@ -267,60 +400,7 @@ GetFont(
         i = 0;
     }
     
-    /* Check if we need to create rotated font */
-    if ((angle == 0.0 && !fontPtr->faces[i].ft0Font) ||
-        (angle != 0.0 && (!fontPtr->faces[i].ftFont || 
-                          fontPtr->faces[i].angle != angle))) {
-        
-        FcPattern *pat = FcFontRenderPrepare(NULL, fontPtr->pattern,
-                                             fontPtr->faces[i].source);
-        XftFont *ftFont;
-        
-        if (angle != 0.0) {
-            double rad = angle * M_PI / 180.0;
-            double s = sin(rad), c = cos(rad);
-            FcMatrix mat;
-            mat.xx = c;
-            mat.xy = -s;
-            mat.yx = s;
-            mat.yy = c;
-            FcPatternAddMatrix(pat, FC_MATRIX, &mat);
-        }
-        
-        LOCK;
-        ftFont = XftFontOpenPattern(fontPtr->display, pat);
-        UNLOCK;
-        
-        if (!ftFont) {
-            /* Fallback to basic font */
-            LOCK;
-            ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
-                                 FC_FAMILY, FcTypeString, "sans",
-                                 FC_SIZE, FcTypeDouble, 12.0,
-                                 NULL);
-            UNLOCK;
-        }
-        
-        if (!ftFont) {
-            FcPatternDestroy(pat);
-            return NULL;
-        }
-        
-        if (angle == 0.0) {
-            fontPtr->faces[i].ft0Font = ftFont;
-        } else {
-            if (fontPtr->faces[i].ftFont) {
-                LOCK;
-                XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
-                UNLOCK;
-            }
-            fontPtr->faces[i].ftFont = ftFont;
-            fontPtr->faces[i].angle = angle;
-        }
-    }
-    
-    return (angle == 0.0) ? fontPtr->faces[i].ft0Font 
-                          : fontPtr->faces[i].ftFont;
+    return GetFaceFont(fontPtr, i, angle);
 }
 
 /*
@@ -681,6 +761,7 @@ InitFont(
     fontPtr->colormap = Tk_Colormap(tkwin);
     fontPtr->visual = Tk_Visual(tkwin);
     fontPtr->firstColor = -1;
+    fontPtr->lastDrawable = None;
 
     /* Get base font metrics */
     errorFlag = 0;
@@ -936,7 +1017,7 @@ X11Shaper_ShapeString(
         
         if (runLen <= 0) continue;
         
-        /* Begin shaping run - these functions return void, so don't check return value */
+        /* Begin shaping run */
         kbts_ShapeBegin(shaper->context,
                        runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
                        KBTS_LANGUAGE_DONT_KNOW);
@@ -1328,6 +1409,36 @@ Tk_MeasureChars(
 				 * terminating character. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    
+    /* Fast path for simple text */
+    if (IsSimpleText(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (ftFont) {
+            /* Convert UTF-8 to UCS-4 */
+            FcChar32 ucs4[MAX_GLYPHS];
+            int count = 0;
+            int i = 0;
+            while (i < numBytes && count < MAX_GLYPHS) {
+                i += Tcl_UtfToUniChar(source + i, (int *)&ucs4[count]);
+                count++;
+            }
+            XGlyphInfo extents;
+            LOCK;
+            XftTextExtents32(fontPtr->display, ftFont, ucs4, count, &extents);
+            UNLOCK;
+            *lengthPtr = extents.xOff;
+            
+            /* Approximate byte count (simple text: 1 glyph per char) */
+            int bytes = count;
+            if (maxLength >= 0 && extents.xOff > maxLength) {
+                /* Need to truncate - fall back to shaping for accuracy */
+                goto use_shaping;
+            }
+            return bytes;
+        }
+    }
+
+use_shaping:
     ShapedGlyphBuffer buffer;
     
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, 
@@ -1427,20 +1538,17 @@ Tk_DrawChars(
 				 * string when drawing. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    ShapedGlyphBuffer buffer;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
-    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                                (int)numBytes, &buffer)) {
-        return;
-    }
-    
+    /* Ensure XftDraw is ready */
     if (!fontPtr->ftDraw) {
         fontPtr->ftDraw = XftDrawCreate(display, drawable,
                                         fontPtr->visual, fontPtr->colormap);
-    } else {
+        fontPtr->lastDrawable = drawable;
+    } else if (fontPtr->lastDrawable != drawable) {
         XftDrawChange(fontPtr->ftDraw, drawable);
+        fontPtr->lastDrawable = drawable;
     }
     
     XGCValues values;
@@ -1453,51 +1561,60 @@ Tk_DrawChars(
         XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     
-    /* Draw glyphs in batches */
-    XftGlyphFontSpec specs[256];
-    int nspec = 0;
-    XftFont *lastFont = NULL;
-    
-    for (int i = 0; i < buffer.glyphCount; i++) {
-        int faceIdx = buffer.glyphs[i].fontIndex;
-        if (faceIdx >= fontPtr->nfaces) faceIdx = 0;
-        
-        XftFont *ftFont = fontPtr->faces[faceIdx].ft0Font;
-        
-        if (!ftFont) {
-            ftFont = GetFont(fontPtr, 0, 0.0);
-        }
-        
-        if (ftFont != lastFont && nspec > 0) {
+    /* Fast path for simple text */
+    if (IsSimpleText(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (ftFont) {
+            /* Convert UTF-8 to UCS-4 */
+            FcChar32 ucs4[MAX_GLYPHS];
+            int count = 0;
+            int i = 0;
+            while (i < numBytes && count < MAX_GLYPHS) {
+                i += Tcl_UtfToUniChar(source + i, (int *)&ucs4[count]);
+                count++;
+            }
             LOCK;
-            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            XftDrawString32(fontPtr->ftDraw, xftcolor, ftFont, x, y, ucs4, count);
             UNLOCK;
-            nspec = 0;
-        }
-        lastFont = ftFont;
-        
-        specs[nspec].font = ftFont;
-        specs[nspec].glyph = buffer.glyphs[i].glyphId;
-        specs[nspec].x = x + buffer.glyphs[i].x;
-        specs[nspec].y = y + buffer.glyphs[i].y;
-        
-        nspec++;
-        
-        if (nspec >= 256) {
-            LOCK;
-            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
-            UNLOCK;
-            nspec = 0;
-            lastFont = NULL;
+            goto done;
         }
     }
     
-    if (nspec > 0) {
-        LOCK;
-        XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
-        UNLOCK;
+    /* Full shaping path */
+    {
+        ShapedGlyphBuffer buffer;
+        
+        if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                    (int)numBytes, &buffer)) {
+            goto done;
+        }
+        
+        /* Prepare glyph specs */
+        XftGlyphFontSpec specs[MAX_GLYPHS];
+        int nspec = 0;
+        
+        for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+            int faceIdx = buffer.glyphs[i].fontIndex;
+            if (faceIdx >= fontPtr->nfaces) faceIdx = 0;
+            
+            XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
+            if (!ftFont) continue;
+            
+            specs[nspec].font = ftFont;
+            specs[nspec].glyph = buffer.glyphs[i].glyphId;
+            specs[nspec].x = x + buffer.glyphs[i].x;
+            specs[nspec].y = y + buffer.glyphs[i].y;
+            nspec++;
+        }
+        
+        if (nspec > 0) {
+            LOCK;
+            XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+            UNLOCK;
+        }
     }
-    
+
+done:
     if (tsdPtr->clipRegion) {
         XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
