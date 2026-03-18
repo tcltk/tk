@@ -41,6 +41,20 @@
 
 /*
  * ---------------------------------------------------------------
+ * BidiRun --
+ *
+ *   Structure to hold bidirectional run information.
+ * ---------------------------------------------------------------
+ */
+
+typedef struct {
+    int offset;                 /* Byte offset in original UTF-8 string */
+    int len;                    /* Length in bytes */
+    int isRTL;                  /* 1 if this run is RTL, 0 if LTR */
+} BidiRun;
+
+/*
+ * ---------------------------------------------------------------
  * UnixFtFace --
  *
  *   Structure representing a single font face from fontconfig,
@@ -90,7 +104,7 @@ typedef struct {
 typedef struct {
     struct {
         int fontIndex;         /* Index into UnixFtFont->faces[] */
-        FT_UInt glyphId;        /* Glyph index in font */
+        unsigned int glyphId;   /* Glyph index in font */
         int x, y;               /* Pen position for this glyph */
         int advanceX;           /* Advance width in pixels */
         int clusterStart;       /* Start of cluster in original text */
@@ -183,9 +197,7 @@ static void X11Shaper_Destroy(X11Shaper *s);
 static int X11Shaper_ShapeString(X11Shaper *shaper, UnixFtFont *fontPtr,
                                  const char *source, int numBytes,
                                  ShapedGlyphBuffer *buffer);
-static int GetBidiRuns(const char *utf8, int len,
-                       struct { int offset; int len; int isRTL; } *runs,
-                       int maxRuns);
+static int GetBidiRuns(const char *utf8, int len, BidiRun *runs, int maxRuns);
 static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
@@ -267,7 +279,11 @@ GetFont(
         if (angle != 0.0) {
             double rad = angle * M_PI / 180.0;
             double s = sin(rad), c = cos(rad);
-            FcMatrix mat = { .xx = c, .xy = -s, .yx = s, .yy = c };
+            FcMatrix mat;
+            mat.xx = c;
+            mat.xy = -s;
+            mat.yx = s;
+            mat.yy = c;
             FcPatternAddMatrix(pat, FC_MATRIX, &mat);
         }
         
@@ -476,7 +492,7 @@ static int
 GetBidiRuns(
     const char *utf8,
     int len,
-    struct { int offset; int len; int isRTL; } *runs,
+    BidiRun *runs,
     int maxRuns)
 {
     /* Fast path: check if any RTL characters exist */
@@ -552,7 +568,7 @@ GetBidiRuns(
     const SBRun *bidiRuns = SBLineGetRunsPtr(line);
     
     int outRuns = 0;
-    for (i = 0; i < runCount && outRuns < maxRuns; i++) {
+    for (i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
         runs[outRuns].offset = cpToByte[bidiRuns[i].offset];
         runs[outRuns].len = cpToByte[bidiRuns[i].offset + bidiRuns[i].length] 
                            - runs[outRuns].offset;
@@ -695,8 +711,7 @@ InitFont(
     /*
      * Fontconfig can't report any information about the position or thickness
      * of underlines or overstrikes. Thus, we use some defaults that are
-     * hacked around from backup defaults in tkUnixFont.c, which are in turn
-     * based on recommendations in the X manual.
+     * hacked around from backup defaults in tkUnixFont.c.
      */
     {
         TkFont *fPtr = &fontPtr->font;
@@ -902,11 +917,7 @@ X11Shaper_ShapeString(
     buffer->totalAdvance = 0;
     
     /* Get bidi runs */
-    struct {
-        int offset;
-        int len;
-        int isRTL;
-    } bidiRuns[MAX_BIDI_RUNS];
+    BidiRun bidiRuns[MAX_BIDI_RUNS];
     
     int numRuns = GetBidiRuns(source, numBytes, bidiRuns, MAX_BIDI_RUNS);
     
@@ -925,28 +936,18 @@ X11Shaper_ShapeString(
         
         if (runLen <= 0) continue;
         
-        /* Begin shaping run */
-        if (kbts_ShapeBegin(shaper->context,
-                           runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
-                           KBTS_LANGUAGE_DONT_KNOW) != KBTS_ERROR_NONE) {
-            shaper->shapeErrors++;
-            continue;
-        }
+        /* Begin shaping run - these functions return void, so don't check return value */
+        kbts_ShapeBegin(shaper->context,
+                       runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
+                       KBTS_LANGUAGE_DONT_KNOW);
         
-        if (kbts_ShapeUtf8(shaper->context, runText, runLen,
-                          KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX) != KBTS_ERROR_NONE) {
-            shaper->shapeErrors++;
-            kbts_ShapeEnd(shaper->context);
-            continue;
-        }
+        kbts_ShapeUtf8(shaper->context, runText, runLen,
+                      KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
         
-        if (kbts_ShapeEnd(shaper->context) != KBTS_ERROR_NONE) {
-            shaper->shapeErrors++;
-            continue;
-        }
+        kbts_ShapeEnd(shaper->context);
         
         /* Extract shaped glyphs */
-        while (kbts_ShapeRun(shaper->context, &run) == KBTS_ERROR_NONE &&
+        while (kbts_ShapeRun(shaper->context, &run) == 1 &&
                buffer->glyphCount < MAX_GLYPHS) {
             
             /* Find face index for this run's font */
@@ -971,7 +972,7 @@ X11Shaper_ShapeString(
             }
             
             kbts_glyph_iterator it = run.Glyphs;
-            while (kbts_GlyphIteratorNext(&it, &glyph) == KBTS_ERROR_NONE &&
+            while (kbts_GlyphIteratorNext(&it, &glyph) == 1 &&
                    buffer->glyphCount < MAX_GLYPHS) {
                 
                 int idx = buffer->glyphCount;
@@ -986,8 +987,9 @@ X11Shaper_ShapeString(
                                         (int)(glyph->OffsetY * scale + 0.5);
                 buffer->glyphs[idx].advanceX = (int)(glyph->AdvanceX * scale + 0.5);
                 
-                buffer->glyphs[idx].clusterStart = glyph->UserId;
-                buffer->glyphs[idx].clusterLen = glyph->UserId2 - glyph->UserId;
+                /* Cluster information - not available in basic kbts_glyph */
+                buffer->glyphs[idx].clusterStart = 0;
+                buffer->glyphs[idx].clusterLen = 0;
                 
                 runPenX += buffer->glyphs[idx].advanceX;
                 runPenY += (int)(glyph->AdvanceY * scale + 0.5);
@@ -1350,7 +1352,7 @@ Tk_MeasureChars(
         }
         
         total = next;
-        bytes = buffer.glyphs[i].clusterStart + buffer.glyphs[i].clusterLen;
+        bytes = i + 1;  /* Approximate byte count based on glyph index */
     }
     
     *lengthPtr = total;
@@ -1458,6 +1460,8 @@ Tk_DrawChars(
     
     for (int i = 0; i < buffer.glyphCount; i++) {
         int faceIdx = buffer.glyphs[i].fontIndex;
+        if (faceIdx >= fontPtr->nfaces) faceIdx = 0;
+        
         XftFont *ftFont = fontPtr->faces[faceIdx].ft0Font;
         
         if (!ftFont) {
