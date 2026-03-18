@@ -122,6 +122,9 @@ TCL_DECLARE_MUTEX(xftMutex);
 #define LOCK Tcl_MutexLock(&xftMutex)
 #define UNLOCK Tcl_MutexUnlock(&xftMutex)
 
+/* One-time warning so we don't spam the console when a font is in a bad state */
+static int warnedNullShaper = 0;
+
 void                    X11Shaper_Init(X11Shaper *s);
 void                    X11Shaper_Destroy(X11Shaper *s);
 void                    UnixFontShapeString(UnixFtFont *fontPtr,
@@ -1251,12 +1254,13 @@ TkDrawAngledChars(
 
 /*
  * ---------------------------------------------------------------
- * Tk_DrawCharsInContext --
+ * Tk_DrawCharsInContext -- PATCHED
  *
  *   Draws a substring of text using full shaping + bidi logic.
- *   The coordinates (x,y) are for the start of the whole line, not just
- *   the range. Only draws characters from rangeStart to
- *   rangeStart+rangeLength.
+ *   Now shapes ONLY the requested substring (source + rangeStart) and
+ *   draws ALL resulting glyphs at the caller-provided (x,y). This eliminates
+ *   the old bogus byte-as-glyph-index slicing that caused OOB access on RTL
+ *   text, NULL-context spam, and the X_CreatePixmap(0) crash.
  *
  * Results:
  *   None.
@@ -1279,11 +1283,9 @@ Tk_DrawCharsInContext(
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     X11Shape shape;
-    int i;
 
-    /* Shape the entire line to get correct glyph positions. */
-    UnixFontShapeString(fontPtr, source,
-			(int)rangeStart + (int)rangeLength, &shape);
+    /* Shape ONLY the requested substring (correct for bidi within the range) */
+    UnixFontShapeString(fontPtr, source + rangeStart, (int)rangeLength, &shape);
 
     /* Setup drawing target. */
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -1308,16 +1310,12 @@ Tk_DrawCharsInContext(
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
-    /* Draw glyphs in range. */
+    /* Draw ALL glyphs of the substring (no more bogus slicing) */
     XftGlyphFontSpec specs[NUM_SPEC];
     int nspec = 0;
     XftFont *prevFont = NULL;
 
-    int glyphStart = (int)rangeStart;
-    int glyphEnd   = glyphStart + (int)rangeLength;
-    if (glyphEnd > shape.glyphCount) glyphEnd = shape.glyphCount;
-
-    for (i = glyphStart; i < glyphEnd; i++) {
+    for (int i = 0; i < shape.glyphCount; i++) {
 	/* Map kbFont pointer to face index via shaper's font map. */
 	int faceIndex = 0;
 	for (int j = 0; j < fontPtr->shaper.numFonts; j++) {
@@ -1371,9 +1369,12 @@ Tk_DrawCharsInContext(
 
 /*
  * ---------------------------------------------------------------
- * TkpDrawAngledCharsInContext --
+ * TkpDrawAngledCharsInContext -- PATCHED
  *
  *   Draw a substring of rotated text.
+ *   Now shapes ONLY the requested substring and draws it directly at (x,y).
+ *   Removed the broken pixel-vs-byte offset accumulation that caused crashes
+ *   on bidirectional text.
  *
  * Results:
  *   None.
@@ -1397,27 +1398,13 @@ TkpDrawAngledCharsInContext(
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     X11Shape shape;
-    double offsetX = 0.0;
-    int i;
 
-    UnixFontShapeString(fontPtr, source,
-			(int)rangeStart + (int)rangeLength, &shape);
+    /* Shape ONLY the requested substring */
+    UnixFontShapeString(fontPtr, source + rangeStart, (int)rangeLength, &shape);
 
-    /* Compute pen offset to the start of the requested range. */
-    for (i = 0; i < shape.glyphCount; i++) {
-	if (offsetX >= rangeStart) break;
-	offsetX += (double)shape.glyphs[i].advanceX;
-    }
-
-    double rad  = angle * M_PI / 180.0;
-    double cosA = cos(rad);
-    double sinA = sin(rad);
-
-    double drawOriginX = x + offsetX * cosA;
-    double drawOriginY = y - offsetX * sinA;
-
+    /* Draw at the caller-provided origin (no bogus offset calculation) */
     UnixFontDrawShapedText(display, drawable, gc, fontPtr,
-			   &shape, drawOriginX, drawOriginY, angle);
+			   &shape, x, y, angle);
 }
 
 /*
@@ -1655,17 +1642,16 @@ UnixFontShapeString(
     X11Shape *shapeOut)
 {
     X11Shaper *shaper = &fontPtr->shaper;
-    int r;
-    BidiRun bidiRuns[32];
-    int numBidiRuns;
-    int globalPenX = 0;
-    int globalPenY = 0;
 
-	if (!shaper || !shaper->context) {
-		fprintf(stderr, "kb_text_shaper: NULL context\n");
-		if (shapeOut) shapeOut->glyphCount = 0;
-		return;
+    if (!shaper || !shaper->context) {
+	if (!warnedNullShaper) {
+	    fprintf(stderr, "WARNING: kb_text_shaper context is NULL - "
+	                    "bidi/complex script support disabled for this font\n");
+	    warnedNullShaper = 1;
 	}
+	if (shapeOut) shapeOut->glyphCount = 0;
+	return;
+    }
 	
     if (!shapeOut || !source || numBytes <= 0) {
 	if (shapeOut) shapeOut->glyphCount = 0;
@@ -1687,9 +1673,13 @@ UnixFontShapeString(
     shapeOut->glyphCount = 0;
 
     /* Bidi analysis (fast LTR path is inside GetBidiRuns). */
-    numBidiRuns = GetBidiRuns(source, numBytes, bidiRuns, 32);
+    BidiRun bidiRuns[32];
+    int numBidiRuns = GetBidiRuns(source, numBytes, bidiRuns, 32);
 
-    for (r = 0; r < numBidiRuns; r++) {
+    int globalPenX = 0;
+    int globalPenY = 0;
+
+    for (int r = 0; r < numBidiRuns; r++) {
 	const char *runText  = source + bidiRuns[r].offset;
 	int         runLen   = bidiRuns[r].length;
 	int         runIsRTL = bidiRuns[r].isRTL;
