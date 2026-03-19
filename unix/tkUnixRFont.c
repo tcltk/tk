@@ -198,7 +198,7 @@ static void X11Shaper_Destroy(X11Shaper *s);
 static int X11Shaper_ShapeString(X11Shaper *shaper, UnixFtFont *fontPtr,
                                  const char *source, int numBytes,
                                  ShapedGlyphBuffer *buffer);
-static int GetBidiRuns(const char *utf8, int len, BidiRun *runs, int maxRuns);
+static int GetBidiRuns(FcChar32 *ucs4, int charCount, BidiRun *runs, int maxRuns);
 static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
@@ -576,35 +576,35 @@ GetBidiRuns(
     int maxRuns)
 {
     if (charCount <= 0) {
-        runs[0].start = 0;
-        runs[0].len = 0;
-        runs[0].isRTL = 0;
+        runs[0].offset = 0;
+        runs[0].len    = 0;
+        runs[0].isRTL  = 0;
         return 1;
     }
 
-    /* Fast path: no RTL codepoints at all */
+    /* Fast path: check if any strong RTL characters exist */
     int needsBidi = 0;
     for (int i = 0; i < charCount; i++) {
-        if (ucs4[i] >= 0x0590) {  /* Hebrew/Arabic/others start here */
+        if (ucs4[i] >= 0x0590) {  /* Hebrew/Arabic/Thaana/etc. start */
             needsBidi = 1;
             break;
         }
     }
 
     if (!needsBidi) {
-        runs[0].start = 0;
-        runs[0].len = charCount;
-        runs[0].isRTL = 0;
+        runs[0].offset = 0;
+        runs[0].len    = charCount;
+        runs[0].isRTL  = 0;
         return 1;
     }
 
-    /* Full bidi with automatic paragraph direction */
+    /* Full bidi analysis */
     SBCodepointSequence seq = {SBStringEncodingUTF32, ucs4, (SBUInteger)charCount};
     SBAlgorithmRef algo = SBAlgorithmCreate(&seq);
 
-    /* Key change: use auto direction instead of forced LTR */
+    /* Use explicit LTR base level (common default for Tk apps) */
     SBParagraphRef para = SBAlgorithmCreateParagraph(algo, 0, (SBUInteger)charCount,
-                                                     SBLevelDefaultAuto);
+                                                     SBLevelDefaultLTR);
 
     SBLineRef line = SBParagraphCreateLine(para, 0, (SBUInteger)charCount);
 
@@ -613,9 +613,9 @@ GetBidiRuns(
 
     int outRuns = 0;
     for (int i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
-        runs[outRuns].start = (int)bidiRuns[i].offset;
-        runs[outRuns].len   = (int)bidiRuns[i].length;
-        runs[outRuns].isRTL = (bidiRuns[i].level & 1);  /* odd = RTL */
+        runs[outRuns].offset = (int)bidiRuns[i].offset;
+        runs[outRuns].len    = (int)bidiRuns[i].length;
+        runs[outRuns].isRTL  = (bidiRuns[i].level & 1);  /* odd level = RTL */
         outRuns++;
     }
 
@@ -623,7 +623,8 @@ GetBidiRuns(
     SBParagraphRelease(para);
     SBAlgorithmRelease(algo);
 
-    return outRuns ? outRuns : 1;  /* always at least one run */
+    /* Always return at least one run */
+    return outRuns > 0 ? outRuns : 1;
 }
 
 /*
@@ -945,123 +946,154 @@ X11Shaper_ShapeString(
     if (!shaper->context || !source || numBytes <= 0 || !buffer) {
         return 0;
     }
-    
+
     /* Check cache first */
-    if (shaper->cache.valid && 
+    if (shaper->cache.valid &&
         shaper->cache.len == numBytes &&
         numBytes <= MAX_STRING_CACHE &&
         memcmp(source, shaper->cache.text, numBytes) == 0) {
         *buffer = shaper->cache.buffer;
         return 1;
     }
-    
+
     buffer->glyphCount = 0;
     buffer->totalAdvance = 0;
 
     int shapedAny = 0;
-    
+
+    /* Allocate arrays */
+    int *charBounds = (int *)malloc((numBytes + 1) * sizeof(int));
+    FcChar32 *ucs4Chars = (FcChar32 *)malloc(numBytes * sizeof(FcChar32));
+
+    if (!charBounds || !ucs4Chars) {
+        free(charBounds);
+        free(ucs4Chars);
+        return 0;
+    }
+
+    /* Convert UTF-8 to UCS-4 using FcUtf8ToUcs4 directly */
+    charBounds[0] = 0;
+    int bytePos = 0;
+    int charCount = 0;
+
+    while (bytePos < numBytes && charCount < MAX_GLYPHS) {
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + bytePos), &uc, numBytes - bytePos);
+
+        if (clen <= 0) {
+            /* Invalid sequence → replacement char + skip 1 byte */
+            uc   = 0xFFFD;  /* � */
+            clen = 1;
+        }
+
+        ucs4Chars[charCount] = uc;
+        charCount++;
+        bytePos += clen;
+        charBounds[charCount] = bytePos;
+    }
+
+    if (charCount == 0) {
+        free(charBounds);
+        free(ucs4Chars);
+        return 0;
+    }
+
     /* Get bidi runs */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
-    
-    int numRuns = GetBidiRuns(source, numBytes, bidiRuns, MAX_BIDI_RUNS);
-    
+    int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
+
     int globalPenX = 0;
     int globalPenY = 0;
-    
-    /* Shape each directional run */
+
     for (int r = 0; r < numRuns; r++) {
-        const char *runText = source + bidiRuns[r].offset;
-        int runLen = bidiRuns[r].len;
+        int runStart = bidiRuns[r].offset;
+        int runLen   = bidiRuns[r].len;
         int runIsRTL = bidiRuns[r].isRTL;
+
+        if (runLen <= 0) continue;
+
+        int runByteStart = charBounds[runStart];
+        int runByteEnd   = charBounds[runStart + runLen];
+        int runByteLen   = runByteEnd - runByteStart;
+
+        if (runByteLen <= 0) continue;
+
         kbts_run run;
         kbts_glyph *glyph;
         int runPenX = 0;
         int runPenY = 0;
-        
-        if (runLen <= 0) continue;
-        
-        /* Begin shaping run */
+
         kbts_ShapeBegin(shaper->context,
-                       runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
-                       KBTS_LANGUAGE_DONT_KNOW);
-        
-        kbts_ShapeUtf8(shaper->context, runText, runLen,
-                      KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
-        
+                        runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
+                        KBTS_LANGUAGE_DONT_KNOW);
+
+        kbts_ShapeUtf8(shaper->context, source + runByteStart, runByteLen,
+                       KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
+
         kbts_ShapeEnd(shaper->context);
-        
-        /* Extract shaped glyphs */
+
         while (kbts_ShapeRun(shaper->context, &run) == 1 &&
                buffer->glyphCount < MAX_GLYPHS) {
-            
-            /* Find face index for this run's font */
-            int faceIndex = -1;
+
+            int faceIndex = 0;
             for (int f = 0; f < shaper->numFonts; f++) {
                 if (shaper->fontMap[f].kbFont == run.Font) {
                     faceIndex = shaper->fontMap[f].faceIndex;
                     break;
                 }
             }
-            
-            if (faceIndex < 0) {
-                /* Fallback to first face */
-                faceIndex = 0;
-            }
-            
-            /* Get font metrics for scaling */
+            if (faceIndex >= fontPtr->nfaces) faceIndex = 0;
+
             double scale = fontPtr->pixelScale;
             if (fontPtr->faces[faceIndex].unitsPerEm > 0) {
-                scale = (double)fontPtr->font.fm.ascent / 
-		    fontPtr->faces[faceIndex].unitsPerEm;
+                scale = (double)fontPtr->font.fm.ascent /
+                        fontPtr->faces[faceIndex].unitsPerEm;
             }
-            
+
             kbts_glyph_iterator it = run.Glyphs;
             while (kbts_GlyphIteratorNext(&it, &glyph) == 1 &&
                    buffer->glyphCount < MAX_GLYPHS) {
-                
+
                 int idx = buffer->glyphCount;
-                
+
                 buffer->glyphs[idx].fontIndex = faceIndex;
-                buffer->glyphs[idx].glyphId = glyph->Id;
-                buffer->glyphs[idx].clusterStart = 0;
-                buffer->glyphs[idx].clusterLen = 0;
-                
-		double scale = fontPtr->pixelScale;
-                if (fontPtr->faces[faceIndex].unitsPerEm > 0) {
-                    scale = (double)fontPtr->font.fm.ascent / 
-			fontPtr->faces[faceIndex].unitsPerEm;
-                }
+                buffer->glyphs[idx].glyphId   = glyph->Id;
 
                 buffer->glyphs[idx].x = globalPenX + runPenX +
-		    (int)(glyph->OffsetX * scale + 0.5);
+                                        (int)(glyph->OffsetX * scale + 0.5);
 
-                /* Use baseline directly — ignore OffsetY for now. */
-                buffer->glyphs[idx].y = globalPenY + runPenY; 
+                buffer->glyphs[idx].y = globalPenY + runPenY;
+
                 buffer->glyphs[idx].advanceX = (int)(glyph->AdvanceX * scale + 0.5);
 
-                /* Advance pen — horizontal only. */
+                /* No per-glyph cluster info available → safe default */
+                buffer->glyphs[idx].clusterStart = 0;
+                buffer->glyphs[idx].clusterLen   = 0;
+
                 runPenX += buffer->glyphs[idx].advanceX;
-                 
+
                 buffer->glyphCount++;
-		shapedAny = 1;
+                shapedAny = 1;
             }
         }
-        
+
         globalPenX += runPenX;
         globalPenY += runPenY;
     }
-    
+
     buffer->totalAdvance = globalPenX;
-    
-    /* Update cache if string is small enough */
+
     if (numBytes <= MAX_STRING_CACHE) {
         memcpy(shaper->cache.text, source, numBytes);
         shaper->cache.len = numBytes;
         shaper->cache.buffer = *buffer;
         shaper->cache.valid = 1;
     }
-    
-    return (buffer->glyphCount > 0) ? 1 : 0;
+
+    free(charBounds);
+    free(ucs4Chars);
+
+    return shapedAny ? 1 : 0;
 }
 
 /*
