@@ -581,17 +581,22 @@ GetBidiRuns(
     int i = 0;
     
     while (i < len) {
-        if (p[i] > 0x7F) {
-            FcChar32 u;
-            int clen = Tcl_UtfToUniChar((const char *)(p + i), (int *)&u);
-            if (u >= 0x0590) {  /* Hebrew block start */
-                needsBidi = 1;
-                break;
-            }
-            i += clen;
-        } else {
+        if (p[i] < 0x80) {
             i++;
+            continue;
         }
+        FcChar32 u;
+        int clen = Tcl_UtfToUniChar(utf8 + i, (int *)&u);
+        if (clen <= 0) {
+            /* Invalid UTF-8 - treat as LTR and continue */
+            i++;
+            continue;
+        }
+        if (u >= 0x0590) {  /* Hebrew/Arabic block start */
+            needsBidi = 1;
+            break;
+        }
+        i += clen;
     }
 
     if (!needsBidi) {
@@ -605,38 +610,37 @@ GetBidiRuns(
     SBUInteger codepoints[1024];
     int cpCount = 0;
     int byteIdx = 0;
+    int *bytePositions = (int *)malloc((len + 1) * sizeof(int));
+    if (!bytePositions) {
+        runs[0].offset = 0;
+        runs[0].len = len;
+        runs[0].isRTL = 0;
+        return 1;
+    }
     
+    bytePositions[0] = 0;
     while (byteIdx < len && cpCount < 1024) {
         FcChar32 c;
-        int clen = utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
-        if (clen <= 0) break;
-        codepoints[cpCount++] = (SBUInteger)c;
+        int clen = Tcl_UtfToUniChar(utf8 + byteIdx, (int *)&c);
+        if (clen <= 0) {
+            /* Invalid byte - skip it */
+            byteIdx++;
+            bytePositions[cpCount + 1] = byteIdx;
+            continue;
+        }
+        codepoints[cpCount] = (SBUInteger)c;
+        cpCount++;
         byteIdx += clen;
+        bytePositions[cpCount] = byteIdx;
     }
     
     if (cpCount == 0) {
+        free(bytePositions);
         runs[0].offset = 0;
         runs[0].len = len;
         runs[0].isRTL = 0;
         return 1;
     }
-
-    /* Create byte-to-codepoint mapping */
-    int *cpToByte = (int *)malloc((cpCount + 1) * sizeof(int));
-    if (!cpToByte) {
-        runs[0].offset = 0;
-        runs[0].len = len;
-        runs[0].isRTL = 0;
-        return 1;
-    }
-    
-    byteIdx = 0;
-    for (i = 0; i < cpCount; i++) {
-        cpToByte[i] = byteIdx;
-        FcChar32 c;
-        byteIdx += utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
-    }
-    cpToByte[cpCount] = len;
 
     /* Run bidi analysis */
     SBCodepointSequence seq = {SBStringEncodingUTF32, codepoints, cpCount};
@@ -649,15 +653,15 @@ GetBidiRuns(
     
     int outRuns = 0;
     for (i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
-        runs[outRuns].offset = cpToByte[bidiRuns[i].offset];
-        runs[outRuns].len = cpToByte[bidiRuns[i].offset + bidiRuns[i].length] 
+        runs[outRuns].offset = bytePositions[bidiRuns[i].offset];
+        runs[outRuns].len = bytePositions[bidiRuns[i].offset + bidiRuns[i].length] 
                            - runs[outRuns].offset;
         runs[outRuns].isRTL = (bidiRuns[i].level & 1);
         outRuns++;
     }
 
     /* Cleanup */
-    free(cpToByte);
+    free(bytePositions);
     SBLineRelease(line);
     SBParagraphRelease(para);
     SBAlgorithmRelease(algo);
@@ -984,6 +988,29 @@ X11Shaper_ShapeString(
     if (!shaper->context || !source || numBytes <= 0 || !buffer) {
         return 0;
     }
+    
+    /* Validate UTF-8 - ensure we don't pass partial multi-byte sequences */
+    const char *end = source + numBytes;
+    const char *p = source;
+    while (p < end) {
+        FcChar32 u;
+        int clen = Tcl_UtfToUniChar(p, (int *)&u);
+        if (clen <= 0) {
+            /* Invalid UTF-8 - skip this byte */
+            DEBUG_PRINT(("Invalid UTF-8 at offset %ld\n", (long)(p - source)));
+            p++;
+            continue;
+        }
+        p += clen;
+    }
+    
+    /* If the entire string was invalid, return failure */
+    if (p == source) {
+        return 0;
+    }
+    
+    /* Adjust numBytes to the last valid character boundary */
+    numBytes = p - source;
     
     /* Check cache first */
     if (shaper->cache.valid && 
