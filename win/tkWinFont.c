@@ -1885,11 +1885,13 @@ TkpDrawAngledCharsInContext(
 
 static void
 MultiFontTextOut(
-    HDC hdc,
-    WinFont *fontPtr,
-    const char *source,
-    int numBytes,
-    double x, double y,
+    HDC hdc,			/* HDC to draw into. */
+    WinFont *fontPtr,		/* Contains set of fonts to use when drawing
+				 * following string. */
+    const char *source,		/* Potentially multilingual UTF-8 string. */
+    int numBytes,		/* Length of string in bytes. */
+    double x, double y,		/* Coordinates at which to place origin of
+				 * string when drawing. */
     double angle)
 {
     Tcl_DString uniStr;
@@ -1899,7 +1901,8 @@ MultiFontTextOut(
     int nRuns = 0;
     int i;
     HFONT oldFont;
-    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+    double sinA = sin(angle * PI/180.0);
+    double cosA = cos(angle * PI/180.0);
 
     if (numBytes == 0) return;
 
@@ -1909,8 +1912,9 @@ MultiFontTextOut(
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
     if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
-        /* Shaping failed – plain GDI fallback (still works). */
+        /* Fallback path — should still show something if Uniscribe fails */
         HFONT old = (HFONT)SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
+        SetBkMode(hdc, TRANSPARENT);           /* ← important for fallback too */
         TextOutW(hdc, (int)x, (int)y, wstr, wlen);
         SelectObject(hdc, old);
         Tcl_DStringFree(&uniStr);
@@ -1919,44 +1923,66 @@ MultiFontTextOut(
 
     oldFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
 
+    /* CRITICAL: Uniscribe + ScriptTextOut needs TRANSPARENT background mode
+     *           when you do NOT want the background filled (most Tk cases).
+     *           If your app expects OPAQUE, change to OPAQUE + SetBkColor().
+     */
+    int oldBkMode = SetBkMode(hdc, TRANSPARENT);
+
     for (i = 0; i < nRuns; i++) {
         TkWinShapedRun *run = &runs[i];
         HFONT hDrawFont = run->hFont;
-        HFONT hAngled = NULL;
+        HFONT hAngled   = NULL;
 
-        /* Angled text: create a rotated version of this run's exact face. */
         if (angle != 0.0) {
             hAngled = GetScreenFont(&fontPtr->font.fa,
                     run->subFontPtr->familyPtr->faceName,
                     fontPtr->pixelSize, angle);
             if (hAngled) hDrawFont = hAngled;
         }
+
         SelectObject(hdc, hDrawFont);
 
-        /* Pass NULL for lprc (no clipping).*/
-        ScriptTextOut(hdc, NULL,
-            (int)x, (int)y,
-		      0, NULL,
-            &run->sa,
-            NULL, 0,
-            run->glyphs, run->glyphCount,
-            run->advances, NULL,
-            run->offsets);
+        /* Optional temporary debug: fill a background rectangle behind each run
+         * so you can see *where* text should appear even if glyphs are invisible.
+         *
+         * Uncomment for 5 minutes of debugging, then remove.
+         */
+       /*
+        RECT debugRect = {(int)x, (int)y - 20, (int)x + 300, (int)y + 20};
+        HBRUSH br = CreateSolidBrush(RGB(220, 220, 255));  // light blue
+        FillRect(hdc, &debugRect, br);
+        DeleteObject(br);
+       */
 
-        /* Advance along the (possibly rotated) baseline. */
-        {
-            int runWidth = 0, g;
-            for (g = 0; g < run->glyphCount; g++) {
-                runWidth += run->advances[g];
-            }
-            x += cosA * runWidth;
-            y -= sinA * runWidth;
+        ScriptTextOut(hdc,
+                      NULL,                     /* pscState — we pass NULL (no cache reuse here) */
+                      (int)x, (int)y,
+                      0,                        /* dx — no justification */
+                      NULL,                     /* no clip rect */
+                      &run->sa,
+                      NULL, 0,                  /* no string/reserved */
+                      run->glyphs,
+                      run->glyphCount,
+                      run->advances,
+                      NULL,                     /* no justification widths */
+                      run->offsets);
+
+        /* Advance pen along rotated baseline */
+        int runWidth = 0;
+        int g;
+        for (g = 0; g < run->glyphCount; g++) {
+            runWidth += run->advances[g];
         }
+        x += cosA * runWidth;
+        y -= sinA * runWidth;   /* note: y decreases upward in most Windows DCs */
 
         if (hAngled) DeleteObject(hAngled);
     }
 
+    SetBkMode(hdc, oldBkMode);
     SelectObject(hdc, oldFont);
+
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
 }
