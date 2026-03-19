@@ -581,22 +581,17 @@ GetBidiRuns(
     int i = 0;
     
     while (i < len) {
-        if (p[i] < 0x80) {
+        if (p[i] > 0x7F) {
+            FcChar32 u;
+            int clen = Tcl_UtfToUniChar((const char *)(p + i), (int *)&u);
+            if (u >= 0x0590) {  /* Hebrew block start */
+                needsBidi = 1;
+                break;
+            }
+            i += clen;
+        } else {
             i++;
-            continue;
         }
-        FcChar32 u;
-        int clen = Tcl_UtfToUniChar(utf8 + i, (int *)&u);
-        if (clen <= 0) {
-            /* Invalid UTF-8 - treat as LTR and continue */
-            i++;
-            continue;
-        }
-        if (u >= 0x0590) {  /* Hebrew/Arabic block start */
-            needsBidi = 1;
-            break;
-        }
-        i += clen;
     }
 
     if (!needsBidi) {
@@ -610,37 +605,38 @@ GetBidiRuns(
     SBUInteger codepoints[1024];
     int cpCount = 0;
     int byteIdx = 0;
-    int *bytePositions = (int *)malloc((len + 1) * sizeof(int));
-    if (!bytePositions) {
-        runs[0].offset = 0;
-        runs[0].len = len;
-        runs[0].isRTL = 0;
-        return 1;
-    }
     
-    bytePositions[0] = 0;
     while (byteIdx < len && cpCount < 1024) {
         FcChar32 c;
-        int clen = Tcl_UtfToUniChar(utf8 + byteIdx, (int *)&c);
-        if (clen <= 0) {
-            /* Invalid byte - skip it */
-            byteIdx++;
-            bytePositions[cpCount + 1] = byteIdx;
-            continue;
-        }
-        codepoints[cpCount] = (SBUInteger)c;
-        cpCount++;
+        int clen = utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
+        if (clen <= 0) break;
+        codepoints[cpCount++] = (SBUInteger)c;
         byteIdx += clen;
-        bytePositions[cpCount] = byteIdx;
     }
     
     if (cpCount == 0) {
-        free(bytePositions);
         runs[0].offset = 0;
         runs[0].len = len;
         runs[0].isRTL = 0;
         return 1;
     }
+
+    /* Create byte-to-codepoint mapping */
+    int *cpToByte = (int *)malloc((cpCount + 1) * sizeof(int));
+    if (!cpToByte) {
+        runs[0].offset = 0;
+        runs[0].len = len;
+        runs[0].isRTL = 0;
+        return 1;
+    }
+    
+    byteIdx = 0;
+    for (i = 0; i < cpCount; i++) {
+        cpToByte[i] = byteIdx;
+        FcChar32 c;
+        byteIdx += utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
+    }
+    cpToByte[cpCount] = len;
 
     /* Run bidi analysis */
     SBCodepointSequence seq = {SBStringEncodingUTF32, codepoints, cpCount};
@@ -653,15 +649,15 @@ GetBidiRuns(
     
     int outRuns = 0;
     for (i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
-        runs[outRuns].offset = bytePositions[bidiRuns[i].offset];
-        runs[outRuns].len = bytePositions[bidiRuns[i].offset + bidiRuns[i].length] 
+        runs[outRuns].offset = cpToByte[bidiRuns[i].offset];
+        runs[outRuns].len = cpToByte[bidiRuns[i].offset + bidiRuns[i].length] 
                            - runs[outRuns].offset;
         runs[outRuns].isRTL = (bidiRuns[i].level & 1);
         outRuns++;
     }
 
     /* Cleanup */
-    free(bytePositions);
+    free(cpToByte);
     SBLineRelease(line);
     SBParagraphRelease(para);
     SBAlgorithmRelease(algo);
@@ -989,29 +985,6 @@ X11Shaper_ShapeString(
         return 0;
     }
     
-    /* Validate UTF-8 - ensure we don't pass partial multi-byte sequences */
-    const char *end = source + numBytes;
-    const char *p = source;
-    while (p < end) {
-        FcChar32 u;
-        int clen = Tcl_UtfToUniChar(p, (int *)&u);
-        if (clen <= 0) {
-            /* Invalid UTF-8 - skip this byte */
-            DEBUG_PRINT(("Invalid UTF-8 at offset %ld\n", (long)(p - source)));
-            p++;
-            continue;
-        }
-        p += clen;
-    }
-    
-    /* If the entire string was invalid, return failure */
-    if (p == source) {
-        return 0;
-    }
-    
-    /* Adjust numBytes to the last valid character boundary */
-    numBytes = p - source;
-    
     /* Check cache first */
     if (shaper->cache.valid && 
         shaper->cache.len == numBytes &&
@@ -1076,7 +1049,7 @@ X11Shaper_ShapeString(
             double scale = fontPtr->pixelScale;
             if (fontPtr->faces[faceIndex].unitsPerEm > 0) {
                 scale = (double)fontPtr->font.fm.ascent / 
-                        fontPtr->faces[faceIndex].unitsPerEm;
+		    fontPtr->faces[faceIndex].unitsPerEm;
             }
             
             kbts_glyph_iterator it = run.Glyphs;
@@ -1087,22 +1060,27 @@ X11Shaper_ShapeString(
                 
                 buffer->glyphs[idx].fontIndex = faceIndex;
                 buffer->glyphs[idx].glyphId = glyph->Id;
-                
-                /* Scale glyph positions from design units to pixels */
-                buffer->glyphs[idx].x = globalPenX + runPenX + 
-                                        (int)(glyph->OffsetX * scale + 0.5);
-                buffer->glyphs[idx].y = globalPenY + runPenY + 
-                                        (int)(glyph->OffsetY * scale + 0.5);
-                buffer->glyphs[idx].advanceX = (int)(glyph->AdvanceX * scale + 0.5);
-                
-                /* Cluster information - not available in basic kbts_glyph */
                 buffer->glyphs[idx].clusterStart = 0;
                 buffer->glyphs[idx].clusterLen = 0;
                 
+		double scale = fontPtr->pixelScale;
+                if (fontPtr->faces[faceIndex].unitsPerEm > 0) {
+                    scale = (double)fontPtr->font.fm.ascent / 
+			fontPtr->faces[faceIndex].unitsPerEm;
+                }
+
+                buffer->glyphs[idx].x = globalPenX + runPenX +
+		    (int)(glyph->OffsetX * scale + 0.5);
+
+                /* Use baseline directly — ignore OffsetY for now. */
+                buffer->glyphs[idx].y = globalPenY + runPenY; 
+                buffer->glyphs[idx].advanceX = (int)(glyph->AdvanceX * scale + 0.5);
+
+                /* Advance pen — horizontal only. */
                 runPenX += buffer->glyphs[idx].advanceX;
-                runPenY += (int)(glyph->AdvanceY * scale + 0.5);
-                
+                 
                 buffer->glyphCount++;
+		shapedAny = 1;
             }
         }
         
@@ -1626,6 +1604,19 @@ Tk_DrawChars(
             
             XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
             if (!ftFont) continue;
+
+	    unsigned int actualGlyph = buffer.glyphs[i].glyphId;
+            if (actualGlyph == 0) {  
+                /* Try .notdef or replacement char from primary font .*/
+                XftFont *primary = GetFaceFont(fontPtr, 0, 0.0);
+                if (primary) {
+                    actualGlyph = XftCharIndex(fontPtr->display, primary, 0xFFFD);
+                    if (actualGlyph == 0) actualGlyph = 0; 
+                    ftFont = primary;  /* use primary for fallback glyph *?
+                } else {
+		continue;  /* skip drawing blank */
+                }
+            }
             
             specs[nspec].font = ftFont;
             specs[nspec].glyph = buffer.glyphs[i].glyphId;
