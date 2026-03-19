@@ -957,6 +957,8 @@ X11Shaper_ShapeString(
     
     buffer->glyphCount = 0;
     buffer->totalAdvance = 0;
+
+    int shapedAny = 0;
     
     /* Get bidi runs */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
