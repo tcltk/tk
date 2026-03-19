@@ -476,21 +476,17 @@ DrawMenuEntryAccelerator(
     GC gc,			/* The precalculated gc to draw with */
     Tk_Font tkfont,		/* The precalculated font */
     const Tk_FontMetrics *fmPtr,/* The precalculated metrics */
-    XColor *activeFg,		/* The foreground color for an active item */
-    XColor *fg,			/* The foreground color */
     int x,			/* Left coordinate of entry rect */
     int y,			/* Top coordinate of entry rect */
     int width,			/* Width of entry */
     int height,			/* Height of entry */
     bool drawArrow)		/* Whether or not to draw arrow. */
 {
-    XPoint points[4];
     int borderWidth, activeBorderWidth;
     double scalingLevel = TkScalingLevel(menuPtr->tkwin);
     int arrowSize = CASCADE_ARROW_SIZE * scalingLevel;
     int arrowWidth = arrowSize + 1, arrowHeight = 2*arrowSize + 1;
-    GC fgGC = (mePtr->state == ENTRY_ACTIVE)
-	    ? Tk_GCForColor(activeFg, d) : Tk_GCForColor(fg, d);
+    XPoint points[4];
 
     /*
      * Draw accelerator or cascade arrow.
@@ -515,13 +511,13 @@ DrawMenuEntryAccelerator(
 	points[3].x = points[0].x;
 	points[3].y = points[0].y;
 
-	XFillPolygon(Tk_Display(menuPtr->tkwin), d, fgGC, points, 3, Complex,
+	XFillPolygon(Tk_Display(menuPtr->tkwin), d, gc, points, 3, Complex,
 		CoordModeOrigin);
-	XDrawLines(Tk_Display(menuPtr->tkwin), d, fgGC, points, 4,
+	XDrawLines(Tk_Display(menuPtr->tkwin), d, gc, points, 4,
 		CoordModeOrigin);
 
 	/* Work around bug [77527326e5] */
-	XDrawPoint(Tk_Display(menuPtr->tkwin), d, fgGC,
+	XDrawPoint(Tk_Display(menuPtr->tkwin), d, gc,
 		points[2].x, points[2].y);
     } else if (mePtr->accelPtr != NULL) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
@@ -1435,7 +1431,6 @@ TkpDrawMenuEntry(
     XColor *indicatorColor, *disableColor = NULL;
     TkMenu *menuPtr = mePtr->menuPtr;
     Tk_3DBorder bgBorder, activeBorder;
-    XColor *fg = NULL, *activeFg = NULL;
     const Tk_FontMetrics *fmPtr;
     Tk_FontMetrics entryMetrics;
     int padY = (menuPtr->menuType == MENUBAR) ? 3 : 0;
@@ -1503,19 +1498,12 @@ TkpDrawMenuEntry(
     bgBorder = Tk_Get3DBorderFromObj(menuPtr->tkwin,
 	    (mePtr->borderPtr == NULL)
 	    ? menuPtr->borderPtr : mePtr->borderPtr);
-    fg = Tk_GetColorFromObj(menuPtr->tkwin,
-	    (mePtr->fgPtr == NULL)
-	    ? menuPtr->fgPtr : mePtr->fgPtr);
     if (drawingParameters & DRAW_MENU_ENTRY_STRICTMOTIF) {
 	activeBorder = bgBorder;
-	activeFg = fg;
     } else {
 	activeBorder = Tk_Get3DBorderFromObj(menuPtr->tkwin,
 	    (mePtr->activeBorderPtr == NULL)
 	    ? menuPtr->activeBorderPtr : mePtr->activeBorderPtr);
-	activeFg = Tk_GetColorFromObj(menuPtr->tkwin,
-	    (mePtr->activeFgPtr == NULL)
-	    ? menuPtr->activeFgPtr : mePtr->activeFgPtr);
     }
 
     if (mePtr->fontPtr == NULL) {
@@ -1545,7 +1533,7 @@ TkpDrawMenuEntry(
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
-		activeFg, fg, x, adjustedY, width, adjustedHeight,
+		x, adjustedY, width, adjustedHeight,
 		(drawingParameters & DRAW_MENU_ENTRY_ARROW) != 0);
 	if (!mePtr->hideMargin) {
 	    if (mePtr->state == ENTRY_ACTIVE) {
