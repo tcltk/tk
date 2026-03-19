@@ -1885,13 +1885,11 @@ TkpDrawAngledCharsInContext(
 
 static void
 MultiFontTextOut(
-    HDC hdc,			/* HDC to draw into. */
-    WinFont *fontPtr,		/* Contains set of fonts to use when drawing
-				 * following string. */
-    const char *source,		/* Potentially multilingual UTF-8 string. */
-    int numBytes,		/* Length of string in bytes. */
-    double x, double y,		/* Coordinates at which to place origin of
-				 * string when drawing. */
+    HDC hdc,
+    WinFont *fontPtr,
+    const char *source,
+    int numBytes,
+    double x, double y,
     double angle)
 {
     Tcl_DString uniStr;
@@ -1905,69 +1903,47 @@ MultiFontTextOut(
 
     if (numBytes == 0) return;
 
-    /*
-     * Convert UTF-8 to UTF-16 once.  All subsequent operations work on the
-     * shaped glyph buffers returned by TkWinShapeString(); this function
-     * never touches the UTF-8 source again after this point.
-     */
     Tcl_DStringInit(&uniStr);
     Tcl_UtfToWCharDString(source, numBytes, &uniStr);
     wstr = (WCHAR *)Tcl_DStringValue(&uniStr);
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
-    /*
-     * Shape + bidi-reorder.  After this call, 'runs' contains one entry per
-     * Uniscribe item in visual (left-to-right paint) order.  Each run carries
-     * its own HFONT (possibly a fallback subfont), glyph array, advance
-     * widths, and per-glyph offsets.  No Unicode work happens below.
-     */
     if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
-        /* Shaping failed – fall back to plain GDI drawing with the base font. */
-        HFONT oldFont = (HFONT)SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
+        /* Shaping failed – plain GDI fallback (still works). */
+        HFONT old = (HFONT)SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
         TextOutW(hdc, (int)x, (int)y, wstr, wlen);
-        SelectObject(hdc, oldFont);
+        SelectObject(hdc, old);
         Tcl_DStringFree(&uniStr);
         return;
     }
 
     oldFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
 
-    /*
-     * Draw each shaped run.  The only font-related operation here is
-     * SelectObject to switch to the run's pre-chosen HFONT; all glyph
-     * selection and advance computation was done in TkWinShapeString().
-     */
     for (i = 0; i < nRuns; i++) {
         TkWinShapedRun *run = &runs[i];
-        RECT clipRect = {0, 0, 0, 0}; /* no clip rect for ScriptTextOut */
-
-        /*
-         * For angled text, select a rotated copy of the run's specific font.
-         * We derive the face name from run->subFontPtr (which may be a
-         * fallback subfont, not the base font) so the correct typeface is
-         * used for each run.  The rotated HFONT is ephemeral: created here
-         * and deleted immediately after ScriptTextOut returns.
-         */
         HFONT hDrawFont = run->hFont;
-        HFONT hAngled   = NULL;
+        HFONT hAngled = NULL;
+
+        /* Angled text: create a rotated version of this run's exact face. */
         if (angle != 0.0) {
             hAngled = GetScreenFont(&fontPtr->font.fa,
-		    run->subFontPtr->familyPtr->faceName,
-		    fontPtr->pixelSize, angle);
+                    run->subFontPtr->familyPtr->faceName,
+                    fontPtr->pixelSize, angle);
             if (hAngled) hDrawFont = hAngled;
         }
         SelectObject(hdc, hDrawFont);
 
+        /* Pass NULL for lprc (no clipping).*/
         ScriptTextOut(hdc, NULL,
-		(int)x, (int)y,
-		0, &clipRect,
-		&run->sa,
-		NULL, 0,                /* no reserved/string args */
-		run->glyphs, run->glyphCount,
-		run->advances, NULL,    /* no justification */
-		run->offsets);
+            (int)x, (int)y,
+		      0, NULL,
+            &run->sa,
+            NULL, 0,
+            run->glyphs, run->glyphCount,
+            run->advances, NULL,
+            run->offsets);
 
-        /* Advance the pen position along the rotated baseline. */
+        /* Advance along the (possibly rotated) baseline. */
         {
             int runWidth = 0, g;
             for (g = 0; g < run->glyphCount; g++) {
