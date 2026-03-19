@@ -1004,8 +1004,23 @@ TkWinShapeString(
         }
 
         if (FAILED(hr)) {
-            Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
-            continue;   /* skip this item rather than hard-fail */
+            /* Shaping failed – try to find a fallback font for the whole item. */
+            SubFont *fb = FindSubFontForChar(fontPtr, firstCh, &subFontPtr);
+            if (fb != subFontPtr) {
+                subFontPtr = fb;
+                subFontIdx = (int)(subFontPtr - fontPtr->subFontArray);
+                hFont = subFontPtr->hFont0;
+                SelectObject(hdc, hFont);
+                hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+                        wstr + itemStart, itemLen,
+                        maxGlyphs, &item->a,
+                        glyphs, logClust, visAttr, &glyphCount);
+            }
+            if (FAILED(hr)) {
+                /* Still failing – give up on this item (fallback GDI will handle later). */
+                Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
+                continue;
+            }
         }
 
         /*
@@ -1163,6 +1178,10 @@ TkWinShapedRunsWidth(
  *	is performed on the whole string first; we then walk the shaped runs
  *	summing glyph advances until we exceed maxLength.
  *
+ *	If shaping fails (TkWinShapeString returns error or no runs), we fall
+ *	back to plain GDI measurement with the base font.  This ensures that
+ *	basic text still works.
+ *
  * Results:
  *	The return value is the number of bytes from source that fit into the
  *	span that extends from 0 to maxLength. *lengthPtr is filled with the
@@ -1225,7 +1244,17 @@ Tk_MeasureChars(
     wstr = (WCHAR *)Tcl_DStringValue(&uniStr);
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
-    TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns);
+    if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
+        /* Shaping failed – fall back to plain GDI measurement with base font. */
+        SIZE size;
+        SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
+        GetTextExtentPoint32W(hdc, wstr, wlen, &size);
+        ReleaseDC(fontPtr->hwnd, hdc);
+        Tcl_DStringFree(&uniStr);
+        *lengthPtr = size.cx;
+        return (int)numBytes;
+    }
+
     ReleaseDC(fontPtr->hwnd, hdc);
 
     if (maxLength < 0) {
@@ -1304,11 +1333,18 @@ Tk_MeasureChars(
             Tcl_UtfToWCharDString(source, charBytes, &ds2);
             ws2 = (WCHAR *)Tcl_DStringValue(&ds2);
             wl2 = (int)(Tcl_DStringLength(&ds2) / sizeof(WCHAR));
-            TkWinShapeString(hdc2, fontPtr, ws2, wl2, &r2, &nr2);
+            if (TkWinShapeString(hdc2, fontPtr, ws2, wl2, &r2, &nr2) < 0 || nr2 == 0) {
+                /* Fallback to GDI */
+                SIZE size;
+                SelectObject(hdc2, fontPtr->subFontArray[0].hFont0);
+                GetTextExtentPoint32W(hdc2, ws2, wl2, &size);
+                accumX = size.cx;
+            } else {
+                accumX = TkWinShapedRunsWidth(r2, nr2);
+                TkWinFreeShapedRuns(r2, nr2);
+            }
             ReleaseDC(fontPtr->hwnd, hdc2);
             Tcl_DStringFree(&ds2);
-            accumX = TkWinShapedRunsWidth(r2, nr2);
-            TkWinFreeShapedRuns(r2, nr2);
 
             if (accumX > maxLength) {
                 if ((flags & TK_PARTIAL_OK) && curX != maxLength) {
@@ -1429,6 +1465,10 @@ Tk_MeasureCharsInContext(
  *	bidi-reordered glyph runs, then iterates over those runs calling
  *	ScriptTextOut.  No Unicode parsing or subfont selection occurs during
  *	drawing.
+ *
+ *	If shaping fails, we fall back to plain GDI drawing with the base
+ *	font.  This ensures that text always appears, even when Uniscribe
+ *	cannot process the string.
  *
  * Results:
  *	None.
@@ -1745,7 +1785,7 @@ TkDrawAngledChars(
   *
  *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
  *            function is unused.
-*
+ *
  * Results:
  *	None.
  *
@@ -1826,6 +1866,9 @@ TkpDrawAngledCharsInContext(
  *	No Unicode parsing, subfont selection, or bidi logic is performed
  *	here; all of that was done in the shaping layer.
  *
+ *	If shaping fails, we fall back to plain GDI drawing with the base
+ *	font.  This ensures that text always appears.
+ *
  *	The 'angle' parameter rotates the escapement of the font before
  *	shaping so that TrueType rotation is applied correctly per run.
  *
@@ -1878,7 +1921,11 @@ MultiFontTextOut(
      * its own HFONT (possibly a fallback subfont), glyph array, advance
      * widths, and per-glyph offsets.  No Unicode work happens below.
      */
-    if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0) {
+    if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
+        /* Shaping failed – fall back to plain GDI drawing with the base font. */
+        HFONT oldFont = (HFONT)SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
+        TextOutW(hdc, (int)x, (int)y, wstr, wlen);
+        SelectObject(hdc, oldFont);
         Tcl_DStringFree(&uniStr);
         return;
     }
@@ -2349,6 +2396,12 @@ FreeFontFamily(
  *	display the character, another screen font may be loaded into the font
  *	object, following a set of preferred fallback rules.
  *
+ *	Note: For characters below BASE_CHARS, we now check the base font's
+ *	coverage via FontMapLookup. If the base font cannot display the
+ *	character, we continue to the fallback search. This ensures that even
+ *	basic ASCII can be provided by a fallback font if the base font lacks
+ *	it.
+ *
  * Results:
  *	The return value is the SubFont to use to display the given character.
  *
@@ -2377,10 +2430,20 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if ((ch < BASE_CHARS) || (ch >= FONTMAP_NUMCHARS)) {
+    /* For characters >= FONTMAP_NUMCHARS, just use base font. */
+    if (ch >= FONTMAP_NUMCHARS) {
 	return &fontPtr->subFontArray[0];
     }
 
+    /* For characters below BASE_CHARS, check if base font can display them. */
+    if (ch < BASE_CHARS) {
+        if (FontMapLookup(&fontPtr->subFontArray[0], ch)) {
+            return &fontPtr->subFontArray[0];
+        }
+        /* Otherwise fall through to fallback search. */
+    }
+
+    /* First, see if any already-loaded subfont can display the character. */
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
