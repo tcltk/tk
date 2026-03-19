@@ -570,99 +570,60 @@ GetTkFontMetrics(
 
 static int
 GetBidiRuns(
-    const char *utf8,
-    int len,
+    FcChar32 *ucs4,
+    int charCount,
     BidiRun *runs,
     int maxRuns)
 {
-    /* Fast path: check if any RTL characters exist */
+    if (charCount <= 0) {
+        runs[0].start = 0;
+        runs[0].len = 0;
+        runs[0].isRTL = 0;
+        return 1;
+    }
+
+    /* Fast path: no RTL codepoints at all */
     int needsBidi = 0;
-    const unsigned char *p = (const unsigned char *)utf8;
-    int i = 0;
-    
-    while (i < len) {
-        if (p[i] > 0x7F) {
-            FcChar32 u;
-            int clen = Tcl_UtfToUniChar((const char *)(p + i), (int *)&u);
-            if (u >= 0x0590) {  /* Hebrew block start */
-                needsBidi = 1;
-                break;
-            }
-            i += clen;
-        } else {
-            i++;
+    for (int i = 0; i < charCount; i++) {
+        if (ucs4[i] >= 0x0590) {  /* Hebrew/Arabic/others start here */
+            needsBidi = 1;
+            break;
         }
     }
 
     if (!needsBidi) {
-        runs[0].offset = 0;
-        runs[0].len = len;
+        runs[0].start = 0;
+        runs[0].len = charCount;
         runs[0].isRTL = 0;
         return 1;
     }
 
-    /* Convert UTF-8 to UCS-4 for SheenBidi */
-    SBUInteger codepoints[1024];
-    int cpCount = 0;
-    int byteIdx = 0;
-    
-    while (byteIdx < len && cpCount < 1024) {
-        FcChar32 c;
-        int clen = utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
-        if (clen <= 0) break;
-        codepoints[cpCount++] = (SBUInteger)c;
-        byteIdx += clen;
-    }
-    
-    if (cpCount == 0) {
-        runs[0].offset = 0;
-        runs[0].len = len;
-        runs[0].isRTL = 0;
-        return 1;
-    }
-
-    /* Create byte-to-codepoint mapping */
-    int *cpToByte = (int *)malloc((cpCount + 1) * sizeof(int));
-    if (!cpToByte) {
-        runs[0].offset = 0;
-        runs[0].len = len;
-        runs[0].isRTL = 0;
-        return 1;
-    }
-    
-    byteIdx = 0;
-    for (i = 0; i < cpCount; i++) {
-        cpToByte[i] = byteIdx;
-        FcChar32 c;
-        byteIdx += utf8ToUcs4(utf8 + byteIdx, &c, len - byteIdx);
-    }
-    cpToByte[cpCount] = len;
-
-    /* Run bidi analysis */
-    SBCodepointSequence seq = {SBStringEncodingUTF32, codepoints, cpCount};
+    /* Full bidi with automatic paragraph direction */
+    SBCodepointSequence seq = {SBStringEncodingUTF32, ucs4, (SBUInteger)charCount};
     SBAlgorithmRef algo = SBAlgorithmCreate(&seq);
-    SBParagraphRef para = SBAlgorithmCreateParagraph(algo, 0, cpCount, SBLevelDefaultLTR);
-    SBLineRef line = SBParagraphCreateLine(para, 0, cpCount);
-    
+
+    /* Key change: use auto direction instead of forced LTR */
+    SBParagraphRef para = SBAlgorithmCreateParagraph(algo, 0, (SBUInteger)charCount,
+                                                     SBLevelDefaultAuto);
+
+    SBLineRef line = SBParagraphCreateLine(para, 0, (SBUInteger)charCount);
+
     SBUInteger runCount = SBLineGetRunCount(line);
     const SBRun *bidiRuns = SBLineGetRunsPtr(line);
-    
+
     int outRuns = 0;
-    for (i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
-        runs[outRuns].offset = cpToByte[bidiRuns[i].offset];
-        runs[outRuns].len = cpToByte[bidiRuns[i].offset + bidiRuns[i].length] 
-                           - runs[outRuns].offset;
-        runs[outRuns].isRTL = (bidiRuns[i].level & 1);
+    for (int i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
+        runs[outRuns].start = (int)bidiRuns[i].offset;
+        runs[outRuns].len   = (int)bidiRuns[i].length;
+        runs[outRuns].isRTL = (bidiRuns[i].level & 1);  /* odd = RTL */
         outRuns++;
     }
 
-    /* Cleanup */
-    free(cpToByte);
     SBLineRelease(line);
     SBParagraphRelease(para);
     SBAlgorithmRelease(algo);
-    
-    return outRuns;
+
+    return outRuns ? outRuns : 1;  /* always at least one run */
 }
 
 /*
