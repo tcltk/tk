@@ -1447,8 +1447,8 @@ static void DrawListHeader(
 
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
     if (!isDark) {
-	GrayColor bgGray = [win isKeyWindow] ?
-	    listheaderActiveBG : listheaderInactiveBG;
+	GrayColor bgGray = ![win isKeyWindow] || (state & TTK_STATE_BACKGROUND)
+	    ? listheaderInactiveBG : listheaderActiveBG;
 	backgroundColor = CGColorFromGray(bgGray);
     }
 
@@ -3641,13 +3641,14 @@ static int AquaTheme_Init(
 	&SpinButtonDownElementSpec, 0);
     Ttk_RegisterElement(NULL, themePtr, "Combobox.button",
 	&ComboboxElementSpec, 0);
+
     Ttk_RegisterElement(NULL, themePtr, "Treeitem.indicator",
 	&DisclosureElementSpec, &DisclosureParams);
     Ttk_RegisterElement(NULL, themePtr, "Treeheading.cell",
 	&TreeHeaderElementSpec, &ListHeaderParams);
-
     Ttk_RegisterElement(NULL, themePtr, "Treeview.treearea",
 	&TreeAreaElementSpec, 0);
+
     Ttk_RegisterElement(NULL, themePtr, "Notebook.tab", &TabElementSpec, 0);
     Ttk_RegisterElement(NULL, themePtr, "Notebook.client", &PaneElementSpec, 0);
 

@@ -2107,6 +2107,8 @@ static int TreeviewSize(void *clientData, int *widthPtr, int *heightPtr) {
  */
 static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     Ttk_State state = tv->core.state | item->state;
+
+    /* Leaf or branch */
     if (!item->children) {
 	state |= TTK_STATE_LEAF;
     }
@@ -2119,6 +2121,7 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
 	state &= ~TTK_STATE_ACTIVE;
     }
 
+    /* Propagate background state if window doesn't have focus */
     if (!(tv->core.state & TTK_STATE_FOCUS) &&
 	(item->state & TTK_STATE_SELECTED)) {
 	state |= TTK_STATE_BACKGROUND;
@@ -2137,31 +2140,41 @@ static void DrawHeadings(Treeview *tv, Drawable d) {
     const int h0 = tv->tree.headingArea.height;
     Tcl_Size i = FirstColumn(tv);
     int x = 0;
+    Ttk_State state = 0;
+
+    /* Propagate background state if window doesn't have focus */
+    if (!(tv->core.state & TTK_STATE_FOCUS)) {
+	state = TTK_STATE_BACKGROUND;
+    }
 
     if (tv->tree.nTitleColumns > i) {
 	x = tv->tree.titleWidth;
 	i = tv->tree.nTitleColumns;
     }
 
+    /* Create heading cells for non title columns */
     while (i < tv->tree.nDisplayColumns) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
 	if (x0+x+column->width > tv->tree.titleWidth) {
-	    DisplayLayout(tv->tree.headingLayout, column, column->headingState,
-		    parcel, d);
+	    int is_sel = (column->headingState & TTK_STATE_SELECTED) || (column->headingState & TTK_STATE_ALTERNATE);
+	    DisplayLayout(tv->tree.headingLayout, column,
+		column->headingState | (is_sel ? state : 0), parcel, d);
 	}
 	x += column->width;
 	++i;
     }
 
+    /* Draw heading cells for title columns */
     x0 = tv->tree.headingArea.x;
     i = FirstColumn(tv);
     x = 0;
     while ((i < tv->tree.nTitleColumns) && (i < tv->tree.nDisplayColumns)) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
-	DisplayLayout(tv->tree.headingLayout, column, column->headingState,
-		parcel, d);
+	int is_sel = (column->headingState & TTK_STATE_SELECTED) || (column->headingState & TTK_STATE_ALTERNATE);
+	DisplayLayout(tv->tree.headingLayout, column,
+	    column->headingState | (is_sel ? state : 0), parcel, d);
 	x += column->width;
 	++i;
     }
