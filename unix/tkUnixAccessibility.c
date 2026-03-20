@@ -1956,9 +1956,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
 
-    Tk_MakeWindowExist(mainWin);
-    Tk_MapWindow(mainWin);
-
     AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {
 	Tcl_SetResult(interp, "Failed to create AtkObject for root window", TCL_STATIC);

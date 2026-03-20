@@ -164,13 +164,13 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-create", NULL, NULL,
 	NULL, offsetof(TkTextEmbWindow, createObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-owner", NULL, NULL,
-	"1", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, isOwner), 0, 0, 0},
+	"1", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, isOwner), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", offsetof(TkTextEmbWindow, padXObj), offsetof(TkTextEmbWindow, padX), TK_OPTION_NEG_OK, 0, 0},
+	"0", offsetof(TkTextEmbWindow, padXObj), TCL_INDEX_NONE, TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", offsetof(TkTextEmbWindow, padYObj), offsetof(TkTextEmbWindow, padY), TK_OPTION_NEG_OK, 0, 0},
+	"0", offsetof(TkTextEmbWindow, padYObj), TCL_INDEX_NONE, TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING, "-tags", NULL, NULL,
 	NULL, TCL_INDEX_NONE, TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
@@ -655,7 +655,7 @@ MakeWindow(
     ewPtr->refCount = 1;
     ewPtr->body.ew.sharedTextPtr = textPtr->sharedTextPtr;
     ewPtr->body.ew.align = ALIGN_CENTER;
-    ewPtr->body.ew.isOwner = 1;
+    ewPtr->body.ew.isOwner = true;
     ewPtr->body.ew.optionTable = Tk_CreateOptionTable(textPtr->interp, optionSpecs);
     DEBUG_ALLOC(tkTextCountNewSegment++);
 
@@ -1396,6 +1396,7 @@ EmbWinLayoutProc(
     TkText *textPtr = indexPtr->textPtr;
     int cantEmbed = 0;
     int x;
+    int padX = 0, padY = 0;
 
     assert(indexPtr->textPtr);
 
@@ -1446,9 +1447,9 @@ EmbWinLayoutProc(
 		    Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
 		}
 		before += 2;
-		string += 1;
+		string++;
 	    }
-	    string += 1;
+	    string++;
 	}
 
 	/*
@@ -1515,7 +1516,8 @@ EmbWinLayoutProc(
 
 	client->tkwin = ewPtr->body.ew.tkwin;
 	Tk_ManageGeometry(client->tkwin, &textGeomType, client);
-	Tk_CreateEventHandler(client->tkwin, StructureNotifyMask, EmbWinStructureProc, client);
+	Tk_CreateEventHandler(client->tkwin, StructureNotifyMask,
+		EmbWinStructureProc, client);
 
 	/*
 	 * Special trick! Must enter into the hash table *after* calling
@@ -1539,8 +1541,14 @@ EmbWinLayoutProc(
 	width = 0;
 	height = 0;
     } else {
-	width = Tk_ReqWidth(ewPtr->body.ew.tkwin) + 2*ewPtr->body.ew.padX;
-	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2*ewPtr->body.ew.padY;
+	if (ewPtr->body.ew.padXObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+	}
+	if (ewPtr->body.ew.padYObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+	}
+	width = Tk_ReqWidth(ewPtr->body.ew.tkwin) + 2 * padX;
+	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2 * padY;
     }
 
     x = chunkPtr ? chunkPtr->x : 0;
@@ -1557,8 +1565,8 @@ EmbWinLayoutProc(
 	chunkPtr->layoutProcs = &layoutWindowProcs;
 	chunkPtr->numBytes = 1;
 	if (ewPtr->body.ew.align == ALIGN_BASELINE) {
-	    chunkPtr->minAscent = height - ewPtr->body.ew.padY;
-	    chunkPtr->minDescent = ewPtr->body.ew.padY;
+	    chunkPtr->minAscent = height - padY;
+	    chunkPtr->minDescent = padY;
 	    chunkPtr->minHeight = 0;
 	} else {
 	    chunkPtr->minAscent = 0;
@@ -1780,43 +1788,60 @@ static void
 EmbWinBboxProc(
     TkText *textPtr,		/* Information about text widget. */
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the chunk. */
-    int y,			/* Topmost pixel in area allocated for this line. */
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
+				 * chunk. */
+    int y,			/* Topmost pixel in area allocated for this
+				 * line. */
     int lineHeight,		/* Total height of line. */
-    int baseline,		/* Location of line's baseline, in pixels measured down from y. */
-    int *xPtr, int *yPtr,	/* Gets filled in with coords of character's upper-left pixel. */
-    int *widthPtr,		/* Gets filled in with width of window, in pixels. */
-    int *heightPtr)		/* Gets filled in with height of window, in pixels. */
+    int baseline,		/* Location of line's baseline, in pixels
+				 * measured down from y. */
+    int *xPtr, int *yPtr,	/* Gets filled in with coords of character's
+				 * upper-left pixel. */
+    int *widthPtr,		/* Gets filled in with width of window, in
+				 * pixels. */
+    int *heightPtr)		/* Gets filled in with height of window, in
+				 * pixels. */
 {
     Tk_Window tkwin;
     TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
+    int padX = 0, padY = 0;
 
-    tkwin = client ? client->tkwin : NULL;
-    if (tkwin) {
+    if (client == NULL) {
+	tkwin = NULL;
+    } else {
+	tkwin = client->tkwin;
+    }
+    if (tkwin != NULL) {
 	*widthPtr = Tk_ReqWidth(tkwin);
 	*heightPtr = Tk_ReqHeight(tkwin);
     } else {
 	*widthPtr = 0;
 	*heightPtr = 0;
     }
-    *xPtr = chunkPtr->x + ewPtr->body.ew.padX;
+    if (ewPtr->body.ew.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+    }
+    if (ewPtr->body.ew.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+    }
+    *xPtr = chunkPtr->x + padX;
     if (ewPtr->body.ew.stretch) {
 	if (ewPtr->body.ew.align == ALIGN_BASELINE) {
-	    *heightPtr = baseline - ewPtr->body.ew.padY;
+	    *heightPtr = baseline - padY;
 	} else {
-	    *heightPtr = lineHeight - 2*ewPtr->body.ew.padY;
+	    *heightPtr = lineHeight - 2 * padY;
 	}
     }
     switch (ewPtr->body.ew.align) {
     case ALIGN_BOTTOM:
-	*yPtr = y + (lineHeight - *heightPtr - ewPtr->body.ew.padY);
+	*yPtr = y + (lineHeight - *heightPtr - padY);
 	break;
     case ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
     case ALIGN_TOP:
-	*yPtr = y + ewPtr->body.ew.padY;
+	*yPtr = y + padY;
 	break;
     case ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
@@ -1849,7 +1874,7 @@ EmbWinDelayedUnmap(
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
 
-    if (!client->displayed && client->tkwin) {
+    if (!client->displayed && (client->tkwin != NULL)) {
 	if (client->textPtr->tkwin != Tk_Parent(client->tkwin)) {
 	    Tk_UnmaintainGeometry(client->tkwin, client->textPtr->tkwin);
 	} else {
@@ -1883,7 +1908,7 @@ EmbWinDelayedUnmap(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkTextWindowIndex(
     TkText *textPtr,		/* Text widget containing window. */
     const char *name,		/* Name of window. */
@@ -1895,7 +1920,7 @@ TkTextWindowIndex(
     assert(textPtr);
 
     if (!(hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->windowTable, name))) {
-	return 0;
+	return false;
     }
 
     ewPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
@@ -1905,10 +1930,10 @@ TkTextWindowIndex(
     DEBUG(indexPtr->discardConsistencyCheck = 0);
 
     if (TkTextIndexOutsideStartEnd(indexPtr)) {
-	return 0;
+	return false;
     }
 
-    return 1;
+    return true;
 }
 
 /*
@@ -1942,7 +1967,7 @@ EmbWinGetClient(
 {
     TkTextEmbWindowClient *client = ewPtr->body.ew.clients;
 
-    while (client) {
+    while (client != NULL) {
 	if (client->textPtr == textPtr) {
 	    return client;
 	}
@@ -1955,7 +1980,6 @@ EmbWinGetClient(
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
- * fill-column: 105
+ * fill-column: 78
  * End:
- * vi:set ts=8 sw=4:
  */

@@ -1869,7 +1869,7 @@ UndoClearTagsPerform(
     TkTextIndex startIndex, endIndex;
     unsigned n = token->changeListSize;
     int anyChanges = 0;
-    int affectsDisplayGeometry = 0;
+    bool affectsDisplayGeometry = false;
     int updateElideInfo = 0;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
@@ -1965,7 +1965,7 @@ UndoClearTagsPerform(
 		size -= segPtr->size;
 		offs += segPtr->size;
 		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->affectGeometryTags)) {
-		    affectsDisplayGeometry = 1;
+		    affectsDisplayGeometry = true;
 		}
 		if (TkTextTagSetIntersectsBits(entry->tagInfoPtr, sharedTextPtr->elisionTags)) {
 		    updateElideInfo = 1;
@@ -6921,7 +6921,7 @@ DeleteRange(
     unsigned maxSegments;
     unsigned byteSize;
     unsigned lineDiff;
-    int steadyMarks;
+    bool steadyMarks;
     int insertSurrogate;
     int deleteFirst;
     unsigned lineNo1;
@@ -9510,7 +9510,7 @@ TreeTagNode(
 			TkTextIndexSetToStartOfLine2(&index1, linePtr);
 			TkTextIndexSetToEndOfLine2(&index2, linePtr);
 			data->changedProc(sharedTextPtr, data->textPtr, &index1, &index2,
-				tagPtr, 0);
+				tagPtr, false);
 		    }
 		    if (!data->firstSegPtr) {
 			data->firstSegPtr = linePtr->segPtr;
@@ -9526,7 +9526,7 @@ TreeTagNode(
 	if (redraw) {
 	    TkTextIndexSetToStartOfLine2(&index1, nodePtr->linePtr);
 	    TkTextIndexSetToEndOfLine2(&index2, nodePtr->lastPtr);
-	    data->changedProc(sharedTextPtr, data->textPtr, &index1, &index2, tagPtr, 0);
+	    data->changedProc(sharedTextPtr, data->textPtr, &index1, &index2, tagPtr, false);
 	}
 
 	if (add) {
@@ -9598,7 +9598,7 @@ TreeTagNode(
 		    if (redraw) {
 			TkTextIndexSetToStartOfLine2(&index1, linePtr);
 			TkTextIndexSetToEndOfLine2(&index2, linePtr);
-			data->changedProc(sharedTextPtr, data->textPtr, &index1, &index2, tagPtr, 0);
+			data->changedProc(sharedTextPtr, data->textPtr, &index1, &index2, tagPtr, false);
 		    }
 		} else {
 		    if (add) {
@@ -10002,7 +10002,7 @@ TestIfAnySegmentIsAffected(
     return tagInfoPtr != sharedTextPtr->emptyTagInfoPtr;
 }
 
-static int
+static bool
 TestIfDisplayGeometryIsAffected(
     TkSharedText *sharedTextPtr,
     const TkTextTagSet *tagInfoPtr,
@@ -10013,7 +10013,7 @@ TestIfDisplayGeometryIsAffected(
     i = TkTextTagSetFindFirstInIntersection(
 	    tagInfoPtr, discardSelection ? sharedTextPtr->affectGeometryNonSelTags
 	    : sharedTextPtr->affectGeometryTags);
-    return i != TK_TEXT_TAG_SET_NPOS && sharedTextPtr->tagLookup[i]->affectsDisplayGeometry;
+    return (i != TK_TEXT_TAG_SET_NPOS) && sharedTextPtr->tagLookup[i]->affectsDisplayGeometry;
 }
 
 static TkTextTagSet *
@@ -10156,7 +10156,7 @@ ClearTagsFromLine(
 			discardSelection
 			    ? sharedTextPtr->affectDisplayNonSelTags
 			    : sharedTextPtr->affectDisplayTags)) {
-	    int affectsDisplayGeometry = TestIfDisplayGeometryIsAffected(
+	    bool affectsDisplayGeometry = TestIfDisplayGeometryIsAffected(
 		    sharedTextPtr, myAffectedTagInfoPtr, discardSelection);
 	    TkTextIndex index1, index2;
 
@@ -10391,7 +10391,7 @@ ClearTagsFromNode(
 	}
 
 	if (redraw) {
-	    int affectsDisplayGeometry = TestIfDisplayGeometryIsAffected(sharedTextPtr,
+	    bool affectsDisplayGeometry = TestIfDisplayGeometryIsAffected(sharedTextPtr,
 		    nodePtr->tagonPtr, discardSelection);
 	    TkTextIndexSetToStartOfLine2(&index1, nodePtr->linePtr);
 	    TkTextIndexSetToEndOfLine2(&index2,
@@ -10656,7 +10656,7 @@ TkBTreeClearTags(
 		/* TODO: probably it's better to search for all affected ranges. */
 		/* TODO: probably it's better to delegate the redraw to ClearTagsFromAllNodes,
 		 *       especially because of 'affectsDisplayGeometry'. */
-		int affectsDisplayGeometry = TestIfDisplayGeometryIsAffected(sharedTextPtr,
+		bool affectsDisplayGeometry = TestIfDisplayGeometryIsAffected(sharedTextPtr,
 			affectedTagInfoPtr, discardSelection);
 		changedProc(sharedTextPtr, textPtr, &startIndex, &endIndex,
 			NULL, affectsDisplayGeometry);

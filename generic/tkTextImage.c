@@ -134,15 +134,18 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align), 0, alignStrings, TK_TEXT_LINE_GEOMETRY},
+	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
+	0, alignStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", offsetof(TkTextEmbImage, padXObj), offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", offsetof(TkTextEmbImage, padXObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", offsetof(TkTextEmbImage, padYObj), offsetof(TkTextEmbImage, padY), 0, 0, TK_TEXT_LINE_GEOMETRY},
+	"0", offsetof(TkTextEmbImage, padYObj), TCL_INDEX_NONE, 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, offsetof(TkTextEmbImage, imageObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+	NULL, offsetof(TkTextEmbImage, imageObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, offsetof(TkTextEmbImage, imageNameObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextEmbImage, imageNameObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tags", NULL, NULL,
 	NULL, TCL_INDEX_NONE, TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
@@ -957,11 +960,18 @@ EmbImageLayoutProc(
 {
     TkTextEmbImage *img = &eiPtr->body.ei;
     int width, height;
+    int padX = 0, padY = 0;
 
     assert(indexPtr->textPtr);
 
+    if (img->padXObj) {
+	Tk_GetPixelsFromObj(NULL, indexPtr->textPtr->tkwin, img->padXObj, &padX);
+    }
+    if (img->padXObj) {
+	Tk_GetPixelsFromObj(NULL, indexPtr->textPtr->tkwin, img->padYObj, &padY);
+    }
     /*
-     * See if there's room for this image on this line.
+     * See if there's room for this image on this line.s
      */
 
     if (!img->image) {
@@ -973,8 +983,9 @@ EmbImageLayoutProc(
 	Tk_SizeOfImage(img->image, &width, &height);
 	img->imgWidth = width;
 	img->imgHeight = height;
-	width += 2*img->padX;
-	height += 2*img->padY;
+
+	width += 2*padX;
+	height += 2*padY;
     }
     if ((width > maxX - (chunkPtr ? chunkPtr->x : 0))
 	    && !noCharsYet
@@ -990,8 +1001,8 @@ EmbImageLayoutProc(
 	chunkPtr->layoutProcs = &layoutImageProcs;
 	chunkPtr->numBytes = 1;
 	if (img->align == ALIGN_BASELINE) {
-	    chunkPtr->minAscent = height - img->padY;
-	    chunkPtr->minDescent = img->padY;
+	    chunkPtr->minAscent = height - padY;
+	    chunkPtr->minDescent = padY;
 	    chunkPtr->minHeight = 0;
 	} else {
 	    chunkPtr->minAscent = 0;
@@ -1067,9 +1078,10 @@ EmbImageDisplayProc(
 				 * (x-position is in the chunk itself). */
     int lineHeight,		/* Total height of line. */
     int baseline,		/* Offset of baseline from y. */
-    TCL_UNUSED(Display *),		/* Display to use for drawing. */
+    TCL_UNUSED(Display *),	/* Display to use for drawing. */
     Drawable dst,		/* Pixmap or window in which to draw */
-    TCL_UNUSED(int))		/* Y-coordinate in text window that corresponds to y. */
+    TCL_UNUSED(int))	/* Y-coordinate in text window that
+				 * corresponds to y. */
 {
     TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbImage *img = &eiPtr->body.ei;
@@ -1117,19 +1129,26 @@ EmbImageDisplayProc(
 
 static void
 EmbImageBboxProc(
-    TCL_UNUSED(TkText *),
+    TkText *textPtr,
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the chunk. */
-    int y,			/* Topmost pixel in area allocated for this line. */
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
+				 * chunk. */
+    int y,			/* Topmost pixel in area allocated for this
+				 * line. */
     int lineHeight,		/* Total height of line. */
-    int baseline,		/* Location of line's baseline, in pixels measured down from y. */
-    int *xPtr, int *yPtr,	/* Gets filled in with coords of character's upper-left pixel. */
-    int *widthPtr,		/* Gets filled in with width of image, in pixels. */
-    int *heightPtr)		/* Gets filled in with height of image, in pixels. */
+    int baseline,		/* Location of line's baseline, in pixels
+				 * measured down from y. */
+    int *xPtr, int *yPtr,	/* Gets filled in with coords of character's
+				 * upper-left pixel. */
+    int *widthPtr,		/* Gets filled in with width of image, in
+				 * pixels. */
+    int *heightPtr)		/* Gets filled in with height of image, in
+				 * pixels. */
 {
     TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbImage *img = &eiPtr->body.ei;
     Tk_Image image = img->image;
+    int padX = 0, padY = 0;
 
     if (image) {
 	Tk_SizeOfImage(image, widthPtr, heightPtr);
@@ -1137,17 +1156,23 @@ EmbImageBboxProc(
 	*widthPtr = *heightPtr = 0;
     }
 
-    *xPtr = chunkPtr->x + img->padX;
+    if (img->padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, img->padXObj, &padX);
+    }
+    if (img->padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, img->padYObj, &padY);
+    }
+    *xPtr = chunkPtr->x + padX;
 
     switch (img->align) {
     case ALIGN_BOTTOM:
-	*yPtr = y + (lineHeight - *heightPtr - img->padY);
+	*yPtr = y + (lineHeight - *heightPtr - padY);
 	break;
     case ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
     case ALIGN_TOP:
-	*yPtr = y + img->padY;
+	*yPtr = y + padY;
 	break;
     case ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
@@ -1174,7 +1199,7 @@ EmbImageBboxProc(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkTextImageIndex(
     TkText *textPtr,		/* Text widget containing image. */
     const char *name,		/* Name of image. */
@@ -1186,7 +1211,7 @@ TkTextImageIndex(
     assert(textPtr);
 
     if (!(hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name))) {
-	return 0;
+	return false;
     }
     eiPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     TkTextIndexClear(indexPtr, textPtr);
@@ -1195,10 +1220,10 @@ TkTextImageIndex(
     DEBUG(indexPtr->discardConsistencyCheck = 0);
 
     if (TkTextIndexOutsideStartEnd(indexPtr)) {
-	return 0;
+	return false;
     }
 
-    return 1;
+    return true;
 }
 
 /*

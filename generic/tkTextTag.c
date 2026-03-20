@@ -988,8 +988,8 @@ void
 TkTextUpdateTagDisplayFlags(
     TkTextTag *tagPtr)
 {
-    tagPtr->affectsDisplay = 0;
-    tagPtr->affectsDisplayGeometry = 0;
+    tagPtr->affectsDisplay = false;
+    tagPtr->affectsDisplayGeometry = false;
 
     if ((tagPtr->elide >= 0)
 	    || tagPtr->tkfont
@@ -1008,8 +1008,8 @@ TkTextUpdateTagDisplayFlags(
 		|| tagPtr->wrapMode == TEXT_WRAPMODE_NONE
 		|| tagPtr->wrapMode == TEXT_WRAPMODE_WORD
 		|| tagPtr->wrapMode == TEXT_WRAPMODE_CODEPOINT) {
-	tagPtr->affectsDisplay = 1;
-	tagPtr->affectsDisplayGeometry = 1;
+	tagPtr->affectsDisplay = true;
+	tagPtr->affectsDisplayGeometry = true;
     } else if (tagPtr->attrs.border
 	    || tagPtr->attrs.inactiveBorder
 	    || tagPtr->selBorder
@@ -1030,7 +1030,7 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->underlineColor
 	    || tagPtr->lMarginColor
 	    || tagPtr->rMarginColor) {
-	tagPtr->affectsDisplay = 1;
+	tagPtr->affectsDisplay = true;
     }
 }
 
@@ -1080,7 +1080,7 @@ TkConfigureTag(
     int relief = tagPtr->relief;
     int elide = tagPtr->elide;
     bool undo = tagPtr->undo;
-    int affectsDisplay = tagPtr->affectsDisplay;
+    bool affectsDisplay = tagPtr->affectsDisplay;
     int affectsLineHeight = 0;
     int rc = TCL_OK;
 
@@ -1176,7 +1176,7 @@ TkConfigureTag(
 	    rc = TCL_ERROR;
 	}
 	if (oldHyphenRules != tagPtr->hyphenRules && textPtr->hyphenate) {
-	    affectsDisplay = 1;
+	    affectsDisplay = true;
 	}
     }
     if (tagPtr->elide >= 0) {
@@ -1242,7 +1242,7 @@ TkConfigureTag(
 
     TkTextUpdateTagDisplayFlags(tagPtr);
     if (tagPtr->affectsDisplay) {
-	affectsDisplay = 1;
+	affectsDisplay = true;
     }
     if (tagPtr->tkfont != NULL && tagPtr->tkfont != textPtr->tkfont) {
 	Tk_FontMetrics fm;
@@ -1561,7 +1561,7 @@ TkTextTagChangedUndoRedo(
     const TkTextIndex *indexPtr1,
     const TkTextIndex *indexPtr2,
     const TkTextTag *tagPtr,
-    int affectsDisplayGeometry)
+    bool affectsDisplayGeometry)
 {
     if (!TkTextRedrawTag(sharedTextPtr, textPtr, indexPtr1, indexPtr2, tagPtr, affectsDisplayGeometry)) {
 	return 0;

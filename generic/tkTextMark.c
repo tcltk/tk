@@ -2067,7 +2067,7 @@ TkTextMarkSegToIndex(
  *--------------------------------------------------------------
  */
 
-static int
+static bool
 MarkToIndex(
     TkText *textPtr,		/* Text widget containing mark. */
     TkTextSegment *markPtr,	/* Pointer to mark segment. */
@@ -2078,13 +2078,13 @@ MarkToIndex(
     indexPtr->textPtr = textPtr;
 
     if (TkTextIndexOutsideStartEnd(indexPtr)) {
-	return 0;
+	return false;
     }
 
-    return 1;
+    return true;
 }
 
-int
+bool
 TkTextMarkNameToIndex(
     TkText *textPtr,		/* Text widget containing mark. */
     const char *name,		/* Name of mark. */
@@ -2102,7 +2102,7 @@ TkTextMarkNameToIndex(
 	Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, name);
 
 	if (hPtr == NULL) {
-	    return 0;
+	    return false;
 	}
 	segPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     }
