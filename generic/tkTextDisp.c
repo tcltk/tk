@@ -1902,6 +1902,7 @@ TkTextResetDInfo(
 
 static int
 FillStyle(
+    Tk_Window tkwin,
     const TkTextTag *tagPtr,
     StyleValues *stylePtr,
     int haveFocus,
@@ -1952,9 +1953,9 @@ FillStyle(
     if (tagPtr->offsetObj)              { stylePtr->offset = tagPtr->offset; }
     if (tagPtr->rMarginObj)             { stylePtr->rMargin = tagPtr->rMargin; }
     if (tagPtr->rMarginColor)           { stylePtr->rMarginColor = tagPtr->rMarginColor; }
-    if (tagPtr->spacing1Obj)            { stylePtr->spacing1 = tagPtr->spacing1; }
-    if (tagPtr->spacing2Obj)            { stylePtr->spacing2 = tagPtr->spacing2; }
-    if (tagPtr->spacing3Obj)            { stylePtr->spacing3 = tagPtr->spacing3; }
+    if (tagPtr->spacing1Obj)            { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->spacing1Obj, &stylePtr->spacing1); }
+    if (tagPtr->spacing2Obj)            { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->spacing2Obj, &stylePtr->spacing2); }
+    if (tagPtr->spacing3Obj)            { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->spacing3Obj, &stylePtr->spacing3); }
     if (tagPtr->tabStringObj)           { stylePtr->tabArrayPtr = tagPtr->tabArrayPtr; }
     if (tagPtr->eolColor)               { stylePtr->eolColor = tagPtr->eolColor; }
     if (tagPtr->hyphenColor)            { stylePtr->hyphenColor = tagPtr->hyphenColor; }
@@ -2025,9 +2026,15 @@ MakeStyle(
     styleValues.hyphenColor = textPtr->hyphenColor;
     styleValues.tkfont = textPtr->tkfont;
     styleValues.justify = textPtr->justify;
-    styleValues.spacing1 = textPtr->spacing1;
-    styleValues.spacing2 = textPtr->spacing2;
-    styleValues.spacing3 = textPtr->spacing3;
+    if (textPtr->spacing1Obj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &styleValues.spacing1);
+    }
+    if (textPtr->spacing2Obj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing2Obj, &styleValues.spacing2);
+    }
+    if (textPtr->spacing3Obj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing3Obj, &styleValues.spacing3);
+    }
     styleValues.tabArrayPtr = textPtr->tabArrayPtr;
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
@@ -2039,7 +2046,7 @@ MakeStyle(
 
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
 	if (!tagPtr->isSelTag) {
-	    borderPrio = MAX(borderPrio, FillStyle(tagPtr, &styleValues, haveFocus, containsSelection));
+	    borderPrio = MAX(borderPrio, FillStyle(textPtr->tkwin, tagPtr, &styleValues, haveFocus, containsSelection));
 	}
     }
 
@@ -2065,7 +2072,7 @@ MakeStyle(
 			&& (textPtr->state == TK_TEXT_STATE_NORMAL)
 #endif
 		))) {
-	    borderPrio = FillStyle(tagPtr1, &styleValues, haveFocus, containsSelection);
+	    borderPrio = FillStyle(textPtr->tkwin, tagPtr1, &styleValues, haveFocus, containsSelection);
 
 	    if (borderPrio == -1) {
 		if (textPtr->selAttrs.border)  { styleValues.border = textPtr->selAttrs.border; }
@@ -9518,7 +9525,7 @@ RedrawTagsInPeer(
     TextRedrawTag(textPtr, indexPtr1, indexPtr2, affectsDisplayGeometry);
 }
 
-int
+bool
 TkTextRedrawTag(
     const TkSharedText *sharedTextPtr,
 				/* Shared widget section, or NULL if textPtr is not NULL. */
@@ -9542,7 +9549,7 @@ TkTextRedrawTag(
     assert(sharedTextPtr || textPtr);
 
     if (!sharedTextPtr && !textPtr->dInfoPtr->dLinePtr) {
-	return 0;
+	return false;
     }
 
     if (tagPtr && tagPtr->affectsDisplayGeometry) {
@@ -9574,7 +9581,7 @@ TkTextRedrawTag(
 	 */
 
 	if (tagPtr) {
-	    int found = 0;
+	    bool found = false;
 
 	    TkBTreeStartSearch(&startIndex, &endIndex, tagPtr, &search, SEARCH_EITHER_TAGON_TAGOFF);
 
@@ -9590,7 +9597,7 @@ TkTextRedrawTag(
 		} else {
 		    assert(!found);
 		}
-		found = 1;
+		found = true;
 		assert(!search.tagon);
 		if (!sharedTextPtr) {
 		    TextRedrawTag(textPtr, &startIndex, &search.curIndex, affectsDisplayGeometry);
@@ -9614,7 +9621,7 @@ TkTextRedrawTag(
 		}
 	    }
 	    if (!(segPtr = TkBTreeFindNextTagged(&startIndex, &endIndex, discardTags))) {
-		return 0;
+		return false;
 	    }
 	    index2 = endIndex;
 
@@ -9651,7 +9658,7 @@ TkTextRedrawTag(
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*

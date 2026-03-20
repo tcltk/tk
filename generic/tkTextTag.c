@@ -109,11 +109,11 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing1Obj), offsetof(TkTextTag, spacing1), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, spacing1Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-spacing2", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing2Obj), offsetof(TkTextTag, spacing2), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, spacing2Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-spacing3", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing3Obj), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, spacing3Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
 	NULL, offsetof(TkTextTag, tabStringObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
@@ -1151,15 +1151,6 @@ TkConfigureTag(
     } else if (relief != TK_RELIEF_NULL) {
 	SetupDefaultRelief(textPtr, tagPtr);
     }
-    if (tagPtr->spacing1Obj) {
-	tagPtr->spacing1 = MAX(0, tagPtr->spacing1);
-    }
-    if (tagPtr->spacing2Obj) {
-	tagPtr->spacing2 = MAX(0, tagPtr->spacing2);
-    }
-    if (tagPtr->spacing3Obj) {
-	tagPtr->spacing3 = MAX(0, tagPtr->spacing3);
-    }
     if (tagPtr->tabArrayPtr) {
 	Tcl_Free(tagPtr->tabArrayPtr);
 	tagPtr->tabArrayPtr = NULL;
@@ -1554,7 +1545,7 @@ TkTextFindTags(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextTagChangedUndoRedo(
     const TkSharedText *sharedTextPtr,
     TkText *textPtr,
@@ -1564,12 +1555,12 @@ TkTextTagChangedUndoRedo(
     bool affectsDisplayGeometry)
 {
     if (!TkTextRedrawTag(sharedTextPtr, textPtr, indexPtr1, indexPtr2, tagPtr, affectsDisplayGeometry)) {
-	return 0;
+	return false;
     }
     if (textPtr && tagPtr == textPtr->selTagPtr) {
 	GrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), true);
     }
-    return 1;
+    return true;
 }
 
 /*
@@ -1837,11 +1828,10 @@ TkTextCreateTag(
     TkTextTag *tagPtr;
     Tcl_HashEntry *hPtr = NULL;
     int isNew;
-    int isSelTag;
     const char *name;
     unsigned index;
 
-    isSelTag = (strcmp(tagName, "sel") == 0);
+    bool isSelTag = (strcmp(tagName, "sel") == 0);
 
     if (isSelTag) {
 	if (textPtr->selTagPtr) {
@@ -2030,7 +2020,7 @@ TkTextEnableTag(
     TkTextTag *tagPtr)		/* Tag being deleted. */
 {
     if (tagPtr->isDisabled) {
-	tagPtr->isDisabled = 0;
+	tagPtr->isDisabled = false;
 	MarkIndex(sharedTextPtr, tagPtr, 1);
 	sharedTextPtr->numEnabledTags += 1;
 	ChangeTagPriority(sharedTextPtr, tagPtr, tagPtr->savedPriority, 0);
@@ -2232,7 +2222,7 @@ TkTextDeleteTag(
 	}
     }
 
-    tagPtr->isDisabled = 1;
+    tagPtr->isDisabled = true;
     TkTextReleaseTag(sharedTextPtr, tagPtr, hPtr);
     return used;
 }
