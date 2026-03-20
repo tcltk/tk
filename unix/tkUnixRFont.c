@@ -633,88 +633,14 @@ GetBidiRuns(
     SBUInteger runCount = SBLineGetRunCount(line);
     const SBRun *bidiRuns = SBLineGetRunsPtr(line);
 
-    /* 
-     * Copy runs to temporary array so we can reorder them.
-     * SBLineGetRunsPtr returns runs in logical order.
-     * We need to reorder them for visual display.
-     */
-    typedef struct {
-        int offset;
-        int len;
-        int isRTL;
-        SBLevel level;
-    } TempRun;
-    
-    TempRun *tempRuns = (TempRun *)malloc(runCount * sizeof(TempRun));
-    if (!tempRuns) {
-        /* Memory allocation failed - fall back to single LTR run */
-        SBLineRelease(line);
-        SBParagraphRelease(para);
-        SBAlgorithmRelease(algo);
-        runs[0].offset = 0;
-        runs[0].len    = charCount;
-        runs[0].isRTL  = 0;
-        return 1;
-    }
-
-    /* Copy runs with their levels */
-    for (int i = 0; i < (int)runCount; i++) {
-        tempRuns[i].offset = (int)bidiRuns[i].offset;
-        tempRuns[i].len    = (int)bidiRuns[i].length;
-        tempRuns[i].level  = bidiRuns[i].level;
-        tempRuns[i].isRTL  = (bidiRuns[i].level & 1);
-    }
-
-    /* 
-     * Reorder runs for visual display using the UAX#9 L2 rule.
-     * This implements visual reordering: runs are reordered by finding
-     * the highest level and reversing runs at that level, then repeating
-     * for progressively lower levels.
-     */
-    
-    /* Find maximum level */
-    SBLevel maxLevel = 0;
-    for (int i = 0; i < (int)runCount; i++) {
-        if (tempRuns[i].level > maxLevel) {
-            maxLevel = tempRuns[i].level;
-        }
-    }
-
-    /* Reverse runs at each level from highest to lowest */
-    for (SBLevel level = maxLevel; level > 0; level--) {
-        int start = -1;
-        for (int i = 0; i <= (int)runCount; i++) {
-            if (i < (int)runCount && tempRuns[i].level >= level) {
-                if (start == -1) {
-                    start = i;
-                }
-            } else {
-                if (start != -1) {
-                    /* Reverse runs from start to i-1 */
-                    int end = i - 1;
-                    while (start < end) {
-                        TempRun tmp = tempRuns[start];
-                        tempRuns[start] = tempRuns[end];
-                        tempRuns[end] = tmp;
-                        start++;
-                        end--;
-                    }
-                    start = -1;
-                }
-            }
-        }
-    }
-
-    /* Copy reordered runs to output */
     int outRuns = 0;
     for (int i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
-        runs[outRuns].offset = tempRuns[i].offset;
-        runs[outRuns].len    = tempRuns[i].len;
-        runs[outRuns].isRTL  = tempRuns[i].isRTL;
+        runs[outRuns].offset = (int)bidiRuns[i].offset;
+        runs[outRuns].len    = (int)bidiRuns[i].length;
+        runs[outRuns].isRTL  = (bidiRuns[i].level & 1);  /* odd level = RTL */
         outRuns++;
     }
 
-    free(tempRuns);
     SBLineRelease(line);
     SBParagraphRelease(para);
     SBAlgorithmRelease(algo);
