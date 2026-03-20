@@ -387,11 +387,12 @@ GetMenuAccelGeometry(
     int *widthPtr,		/* The width of the acclerator area */
     int *heightPtr)		/* The height of the accelerator area */
 {
-    double scalingLevel = TkScalingLevel(menuPtr->tkwin);
-
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
-	*widthPtr = 2 * (CASCADE_ARROW_SIZE * scalingLevel + 1);
+	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+	int arrowWidth = CASCADE_ARROW_SIZE * scalingLevel + 1;
+
+	*widthPtr = 2 * arrowWidth;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
@@ -501,8 +502,15 @@ DrawMenuEntryAccelerator(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
-	points[0].x = x + width - 1 - borderWidth - activeBorderWidth
-		      - arrowWidth;
+	/*
+	 * The value of points[0].x below is based on the following equations:
+	 * points[0].x + arrowWidth + cascadeOffset = menuWidth
+	 * cascadeOffset = borderWidth + activeBorderWidth + 2
+	 * (see function AdjustMenuCoords() in file tkMenuDraw.c)
+	 * menuWidth = x + width + borderWidth
+	 */
+
+	points[0].x = x + width - activeBorderWidth - 2 - arrowWidth;
 	points[0].y = y + (height - arrowHeight)/2;
 	points[1].x = points[0].x;
 	points[1].y = points[0].y + arrowHeight - 1;
