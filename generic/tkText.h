@@ -867,8 +867,6 @@ typedef struct TkTextTag {
 				 * number is less than 'TkBitSize(sharedTextPtr->usedTags)'.*/
     uint32_t tagEpoch;		/* Epoch of creation time. */
     uint32_t refCount;		/* Number of objects referring to us. */
-    int isDisabled;		/* This tag is disabled? */
-    int isSelTag;		/* This tag is the special "sel" tag? */
 
     /*
      * Information for tag collection [TkBTreeGetTags, TextInspectCmd, TkTextPickCurrent].
@@ -920,21 +918,11 @@ typedef struct TkTextTag {
 				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL, or TK_TEXT_JUSTIFY_NULL. */
     Tcl_Obj *lMargin1Obj;	/* -lmargin1 option. NULL
 				 * means option not specified. */
-    int lMargin1;		/* Left margin for first display line of each
-				 * text line, in pixels. Only valid if
-				 * lMargin1Obj is non-NULL. */
     Tcl_Obj *lMargin2Obj;	/* -lmargin2 option. NULL means option not specified. */
-    int lMargin2;		/* Left margin for second and later display
-				 * lines of each text line, in pixels. Only
-				 * valid if lMargin2Obj is non-NULL. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
 				 * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
     Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
-    int offset;			/* Vertical offset of text's baseline from
-				 * baseline of line. Used for superscripts and
-				 * subscripts. Only valid if offsetObj is
-				 * non-NULL. */
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
@@ -980,11 +968,11 @@ typedef struct TkTextTag {
 				 * TEXT_SPACEMODE_NONE, TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
     Tcl_Obj *hyphenRulesObj;	/* The hyphen rules string. */
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
+    int elide;			/* > 0 means that data under this tag
+				 * should not be displayed. -1 means not specified. */
     Tcl_Obj *langObj;		/* -lang option string. NULL means option not specified. */
     char lang[3];		/* The specified language for the text content, only enabled if not
 				 * NUL. */
-    int elide;			/* > 0 means that data under this tag
-				 * should not be displayed. -1 means not specified. */
     bool undo;			/* True means that any change of tagging with this tag will be pushed
 				 * on the undo stack (if undo stack is enabled), otherwise this tag
 				 * will not regarded in the undo/redo process. */
@@ -993,6 +981,8 @@ typedef struct TkTextTag {
      * Derived values, and the container for all the options.
      */
 
+    bool isDisabled;		/* This tag is disabled? */
+    bool isSelTag;		/* This tag is the special "sel" tag? */
     bool affectsDisplay;	/* True means that this tag affects the way information is
 				 * displayed on the screen (so need to redisplay if tag changes). */
     bool affectsDisplayGeometry;/* True means that this tag affects the size with which
@@ -1000,7 +990,16 @@ typedef struct TkTextTag {
 				 * line dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
 #ifdef BUILD_tk
-    int spacing1, spacing2, spacing3;
+    int lMargin1;		/* Left margin for first display line of each
+				 * text line, in pixels. Only valid if
+				 * lMargin1Obj is non-NULL. */
+    int lMargin2;		/* Left margin for second and later display
+				 * lines of each text line, in pixels. Only
+				 * valid if lMargin2Obj is non-NULL. */
+    int offset;			/* Vertical offset of text's baseline from
+				 * baseline of line. Used for superscripts and
+				 * subscripts. Only valid if offsetObj is
+				 * non-NULL. */
 #endif
 } TkTextTag;
 
@@ -1581,7 +1580,6 @@ typedef struct TkText {
 #ifdef BUILD_tk
     int height, highlightWidth;
     int insertWidth, insertBorderWidth;
-    int spacing1, spacing2, spacing3;
 #endif
 } TkText;
 
@@ -1838,7 +1836,7 @@ enum { DISP_LINE_START = 0, DISP_LINE_END = 1 };
  * this operation is undoable.
  */
 
-typedef int TkTextTagChangedProc(
+typedef bool TkTextTagChangedProc(
     const TkSharedText *sharedTextPtr,
     TkText *textPtr,
     const TkTextIndex *indexPtr1,
@@ -2042,7 +2040,7 @@ MODULE_SCOPE void	TkTextReleaseUndoMarkTokens(TkSharedText *sharedTextPtr,
 			    TkTextMarkChange *changePtr);
 MODULE_SCOPE void	TkTextInspectUndoMarkItem(const TkSharedText *sharedTextPtr,
 			    const TkTextMarkChange *changePtr, Tcl_Obj* objPtr);
-MODULE_SCOPE int	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE bool	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    const TkTextTag *tagPtr, bool affectsDisplayGeometry);
 MODULE_SCOPE void	TkTextReplaceTags(TkText *textPtr, TkTextSegment *segPtr, int undoable,
@@ -2154,7 +2152,7 @@ MODULE_SCOPE const TkTextDispChunk * TkTextPixelIndex(TkText *textPtr, int x, in
 			    TkTextIndex *indexPtr, int *nearest);
 MODULE_SCOPE Tcl_Obj *	TkTextNewIndexObj(const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y, int width, int height);
-MODULE_SCOPE int	TkTextRedrawTag(const TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE bool	TkTextRedrawTag(const TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    const TkTextTag *tagPtr, bool affectsDisplayGeometry);
 MODULE_SCOPE void	TkTextRelayoutWindow(TkText *textPtr, int mask);

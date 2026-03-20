@@ -313,11 +313,11 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-spacemode", "spaceMode", "SpaceMode",
 	"none", TCL_INDEX_NONE, offsetof(TkText, spaceMode), TK_OPTION_ENUM_VAR, spaceModeStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
-	DEF_TEXT_SPACING1, TCL_INDEX_NONE, offsetof(TkText, spacing1), 0, 0 , TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_SPACING1, offsetof(TkText, spacing1Obj), TCL_INDEX_NONE, 0, 0 , TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing2", "spacing2", "Spacing",
-	DEF_TEXT_SPACING2, TCL_INDEX_NONE, offsetof(TkText, spacing2), 0, 0 , TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_SPACING2, offsetof(TkText, spacing2Obj), TCL_INDEX_NONE, 0, 0 , TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing3", "spacing3", "Spacing",
-	DEF_TEXT_SPACING3, TCL_INDEX_NONE, offsetof(TkText, spacing3), 0, 0 , TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_SPACING3, offsetof(TkText, spacing3Obj), TCL_INDEX_NONE, 0, 0 , TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_CUSTOM, "-startindex", NULL, NULL,
 	 NULL, TCL_INDEX_NONE, offsetof(TkText, newStartIndex), TK_OPTION_NULL_OK, &startEndMarkOption, TK_TEXT_INDEX_RANGE},
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
@@ -4280,9 +4280,6 @@ TkConfigureText(
      * Don't allow negative values for specific attributes.
      */
 
-    textPtr->spacing1 = MAX(textPtr->spacing1, 0);
-    textPtr->spacing2 = MAX(textPtr->spacing2, 0);
-    textPtr->spacing3 = MAX(textPtr->spacing3, 0);
     textPtr->highlightWidth = MAX(textPtr->highlightWidth, 0);
     textPtr->insertWidth = MAX(textPtr->insertWidth, 0);
     textPtr->syncTime = MAX(0, textPtr->syncTime);
@@ -4503,7 +4500,7 @@ TextWorldChanged(
     int mask)			/* OR'd collection of bits showing what has changed. */
 {
     Tk_FontMetrics fm;
-    int border, borderWidth = 0, padX = 0, padY = 0;
+    int border, borderWidth = 0, padX = 0, padY = 0, spacing1 = 0, spacing3 = 0;
     int oldLineHeight = textPtr->lineHeight;
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);
@@ -4524,10 +4521,16 @@ TextWorldChanged(
     if (textPtr->padYObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
     }
+    if (textPtr->spacing1Obj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &spacing1);
+    }
+    if (textPtr->spacing3Obj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing3Obj, &spacing3);
+    }
     border = borderWidth + textPtr->highlightWidth;
     Tk_GeometryRequest(textPtr->tkwin,
 	    textPtr->width*textPtr->charWidth + 2 * padX + 2*border,
-	    textPtr->height*(fm.linespace + textPtr->spacing1 + textPtr->spacing3)
+	    textPtr->height*(fm.linespace + spacing1 + spacing3)
 		    + 2 * padY + 2*border);
 
     Tk_SetInternalBorderEx(textPtr->tkwin,
