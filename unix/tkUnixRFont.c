@@ -1240,15 +1240,16 @@ X11Shaper_ShapeString(
             }
 
             /*
-             * For RTL runs, we need to collect glyphs first, then reverse
-             * their visual order while preserving relative positioning offsets.
+             * Collect glyphs from kb_text_shaper.
+             * kb_text_shaper handles RTL reversal internally when we pass
+             * KBTS_DIRECTION_RTL, so glyphs come back already in visual order.
              */
             struct {
                 int fontIndex;
                 unsigned int glyphId;
                 int x, y;
                 int advanceX;
-                int offsetX;           /* Store OffsetX separately for RTL reconstruction */
+                int offsetX;
                 int byteOffset;
                 int clusterLen;
             } tempGlyphs[MAX_GLYPHS];
@@ -1259,9 +1260,8 @@ X11Shaper_ShapeString(
                    tempCount < MAX_GLYPHS) {
 
                 tempGlyphs[tempCount].fontIndex = faceIndex;
-                tempGlyphs[tempCount].glyphId   = glyph->Id;  /* Glyph index for rendering */
+                tempGlyphs[tempCount].glyphId   = glyph->Id;
 
-                /* Store OffsetX separately for RTL reconstruction. */
                 tempGlyphs[tempCount].offsetX = (int)(glyph->OffsetX * scale + 0.5);
                 
                 tempGlyphs[tempCount].x = globalPenX + runPenX +
@@ -1292,43 +1292,24 @@ X11Shaper_ShapeString(
             }
 
             /*
-             * For RTL runs, reverse the glyph order but preserve computed positions.
-             * This gives us RTL visual order while keeping kb_text_shaper's spacing.
+             * Copy glyphs directly to output buffer.
+             * kb_text_shaper already handles RTL reversal when we pass
+             * KBTS_DIRECTION_RTL, so no additional reversal is needed.
              */
-            if (runIsRTL && tempCount > 0) {
-                for (int i = 0; i < tempCount; i++) {
-                    int idx = buffer->glyphCount;
-                    if (idx >= MAX_GLYPHS) break;
-                    
-                    int srcIdx = tempCount - 1 - i;
+            for (int i = 0; i < tempCount; i++) {
+                int idx = buffer->glyphCount;
+                if (idx >= MAX_GLYPHS) break;
 
-                    buffer->glyphs[idx].fontIndex  = tempGlyphs[srcIdx].fontIndex;
-                    buffer->glyphs[idx].glyphId    = tempGlyphs[srcIdx].glyphId;
-                    buffer->glyphs[idx].x          = tempGlyphs[i].x;
-                    buffer->glyphs[idx].y          = tempGlyphs[i].y;
-                    buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
-                    buffer->glyphs[idx].byteOffset = tempGlyphs[srcIdx].byteOffset;
-                    buffer->glyphs[idx].clusterLen = tempGlyphs[srcIdx].clusterLen;
+                buffer->glyphs[idx].fontIndex  = tempGlyphs[i].fontIndex;
+                buffer->glyphs[idx].glyphId    = tempGlyphs[i].glyphId;
+                buffer->glyphs[idx].x          = tempGlyphs[i].x;
+                buffer->glyphs[idx].y          = tempGlyphs[i].y;
+                buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
+                buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
+                buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
 
-                    buffer->glyphCount++;
-                    shapedAny = 1;
-                }
-            } else {
-                for (int i = 0; i < tempCount; i++) {
-                    int idx = buffer->glyphCount;
-                    if (idx >= MAX_GLYPHS) break;
-
-                    buffer->glyphs[idx].fontIndex  = tempGlyphs[i].fontIndex;
-                    buffer->glyphs[idx].glyphId    = tempGlyphs[i].glyphId;
-                    buffer->glyphs[idx].x          = tempGlyphs[i].x;
-                    buffer->glyphs[idx].y          = tempGlyphs[i].y;
-                    buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
-                    buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
-                    buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
-
-                    buffer->glyphCount++;
-                    shapedAny = 1;
-                }
+                buffer->glyphCount++;
+                shapedAny = 1;
             }
         }
 
