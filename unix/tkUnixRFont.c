@@ -603,31 +603,29 @@ GetBidiRuns(
         return 1;
     }
 
-    /* Determine base level from first strong character. */
-    SBLevel baseLevel = SBLevelDefaultLTR;  /* Default to LTR */
-    
+    /* Fast path: check if any strong RTL characters exist. */
+    int needsBidi = 0;
     for (int i = 0; i < charCount; i++) {
-        if (ucs4[i] >= 0x590 && ucs4[i] <= 0x5FF) {  /* Hebrew */
-            baseLevel = SBLevelDefaultRTL;
-            break;
-        } else if (ucs4[i] >= 0x600 && ucs4[i] <= 0x6FF) {  /* Arabic */
-            baseLevel = SBLevelDefaultRTL;
-            break;
-        } else if (ucs4[i] >= 0x700 && ucs4[i] <= 0x74F) {  /* Syriac */
-            baseLevel = SBLevelDefaultRTL;
-            break;
-        } else if (ucs4[i] >= 0x590) {  /* Any other RTL script */
-            baseLevel = SBLevelDefaultRTL;
+        if (ucs4[i] >= 0x0590) {  /* Hebrew/Arabic/Thaana/etc. start */
+            needsBidi = 1;
             break;
         }
     }
 
-    /* Full bidi analysis with proper base level. */
+    if (!needsBidi) {
+        runs[0].offset = 0;
+        runs[0].len    = charCount;
+        runs[0].isRTL  = 0;
+        return 1;
+    }
+
+    /* Full bidi analysis. */
     SBCodepointSequence seq = {SBStringEncodingUTF32, ucs4, (SBUInteger)charCount};
     SBAlgorithmRef algo = SBAlgorithmCreate(&seq);
 
+    /* Use explicit LTR base level (common default for Tk apps). */
     SBParagraphRef para = SBAlgorithmCreateParagraph(algo, 0, (SBUInteger)charCount,
-                                                     baseLevel);
+                                                     SBLevelDefaultLTR);
 
     SBLineRef line = SBParagraphCreateLine(para, 0, (SBUInteger)charCount);
 
@@ -955,7 +953,6 @@ X11Shaper_Destroy(
     }
 }
 
-
 /*
  * ---------------------------------------------------------------
  * X11Shaper_ShapeString --
@@ -1062,33 +1059,17 @@ X11Shaper_ShapeString(
         return 0;
     }
 
-    /* Get bidi runs with proper base level detection. */
+    /* Get bidi runs. */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
 
-    /* Track pen position globally. */
     int globalPenX = 0;
     int globalPenY = 0;
 
-    /* For RTL runs, we need to process in reverse visual order. */
     for (int r = 0; r < numRuns; r++) {
-        /* Process runs in visual order: RTL runs from right to left */
-        int runIdx;
-        if (bidiRuns[r].isRTL) {
-            /* For RTL runs, we need to process from rightmost to leftmost.
-             * But SheenBidi gives us runs in logical order. To get visual
-             * order, we should process RTL runs from the end of the string
-             * towards the beginning. However, since we're accumulating
-             * positions sequentially, we'll shape each run and then adjust
-             * positioning for RTL runs by accumulating their widths first. */
-            runIdx = r;
-        } else {
-            runIdx = r;
-        }
-        
-        int runStart = bidiRuns[runIdx].offset;
-        int runLen   = bidiRuns[runIdx].len;
-        int runIsRTL = bidiRuns[runIdx].isRTL;
+        int runStart = bidiRuns[r].offset;
+        int runLen   = bidiRuns[r].len;
+        int runIsRTL = bidiRuns[r].isRTL;
 
         if (runLen <= 0) continue;
 
@@ -1098,24 +1079,11 @@ X11Shaper_ShapeString(
 
         if (runByteLen <= 0) continue;
 
-        /* For RTL runs, we need to know the width before we start drawing.
-         * We'll shape the run first to get its width, then position glyphs
-         * from right to left. */
-        
-        /* First, shape the run to get glyphs and total width. */
-        struct {
-            int fontIndex;
-            unsigned int glyphId;
-            int x, y;
-            int advanceX;
-            int offsetX;
-            int byteOffset;
-            int clusterLen;
-        } tempGlyphs[MAX_GLYPHS];
-        int tempCount = 0;
-        int runTotalWidth = 0;
+        kbts_run  run;
+        kbts_glyph *glyph;
+        int runPenX = 0;
+        int runPenY = 0;
 
-        /* Shape the run with kb_text_shaper. */
         kbts_ShapeBegin(shaper->context,
                         runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
                         KBTS_LANGUAGE_DONT_KNOW);
@@ -1125,11 +1093,14 @@ X11Shaper_ShapeString(
 
         kbts_ShapeEnd(shaper->context);
 
-        /* Collect glyphs from all runs within this bidi run. */
-        kbts_run run;
-        while (kbts_ShapeRun(shaper->context, &run) == 1) {
+        while (kbts_ShapeRun(shaper->context, &run) == 1 &&
+               buffer->glyphCount < MAX_GLYPHS) {
+
             /*
-             * Map kbts_font* back to the face index.
+             * Map kbts_font* back to the face index used when loading.
+             * If the font isn't in our map yet, kb_text_shaper loaded it
+             * dynamically as a fallback. We need to find which face it
+             * corresponds to and add it to the map.
              */
             int faceIndex = 0;
             int faceFound = 0;
@@ -1143,10 +1114,12 @@ X11Shaper_ShapeString(
                 }
             }
             
-            /* If not found, try to load it on-demand. */
+            /* If not found, try to load it on-demand from remaining faces. */
             if (!faceFound && shaper->numFonts < MAX_FONTS) {
+                /* Search unloaded faces for one that matches this font. */
                 for (int i = 0; i < fontPtr->nfaces; i++) {
                     if (fontPtr->faces[i].kbFont == run.Font) {
+                        /* Found it - add to map. */
                         shaper->fontMap[shaper->numFonts].kbFont = run.Font;
                         shaper->fontMap[shaper->numFonts].faceIndex = i;
                         faceIndex = i;
@@ -1162,12 +1135,13 @@ X11Shaper_ShapeString(
             if (!faceFound) {
                 DEBUG_PRINT(("WARNING: kbts run.Font %p not found in any face — "
                              "skipping run\n", (void *)run.Font));
-                /* Skip this run's glyphs. */
+                /* Consume glyphs without emitting them. */
                 kbts_glyph_iterator it = run.Glyphs;
                 kbts_glyph *g;
                 while (kbts_GlyphIteratorNext(&it, &g) == 1) {
-                    /* Just advance, don't store. */
+                    runPenX += (int)(g->AdvanceX * fontPtr->pixelScale + 0.5);
                 }
+                globalPenX += runPenX;
                 continue;
             }
             
@@ -1175,27 +1149,61 @@ X11Shaper_ShapeString(
                 faceIndex = 0;
             }
 
-            /* Get scaling factor. */
-            double scale = fontPtr->pixelScale;
+            /* Get proper scaling factor for this font face. 
+             * kb_text_shaper returns positions in font units (unitsPerEm scale).
+             * We need to scale to pixels based on the font size.
+             * The XftFont's ascent/descent are already in pixels for the requested size.
+             */
+            double scale = fontPtr->pixelScale;  /* Fallback */
             
+            /* Ensure we have metrics for this face. */
             XftFont *faceFont = GetFaceFont(fontPtr, faceIndex, 0.0);
             if (faceFont && fontPtr->faces[faceIndex].unitsPerEm > 0) {
+                /* Scale from font units to pixels using the face's actual metrics. */
                 scale = (double)faceFont->ascent / 
                         (double)fontPtr->faces[faceIndex].ascender;
             }
 
-            /* Process glyphs in this sub-run. */
+            /*
+             * For RTL runs, we need to collect glyphs first, then reverse
+             * their visual order while preserving relative positioning offsets.
+             */
+            struct {
+                int fontIndex;
+                unsigned int glyphId;
+                int x, y;
+                int advanceX;
+                int offsetX;           /* Store OffsetX separately for RTL reconstruction */
+                int byteOffset;
+                int clusterLen;
+            } tempGlyphs[MAX_GLYPHS];
+            int tempCount = 0;
+
             kbts_glyph_iterator it = run.Glyphs;
-            kbts_glyph *glyph;
             while (kbts_GlyphIteratorNext(&it, &glyph) == 1 &&
                    tempCount < MAX_GLYPHS) {
 
                 tempGlyphs[tempCount].fontIndex = faceIndex;
-                tempGlyphs[tempCount].glyphId   = glyph->Id;
-                tempGlyphs[tempCount].offsetX = (int)(glyph->OffsetX * scale + 0.5);
-                tempGlyphs[tempCount].advanceX = (int)(glyph->AdvanceX * scale + 0.5);
+                tempGlyphs[tempCount].glyphId   = glyph->Id;  /* Glyph index for rendering */
 
-                /* Map back to byte offset. */
+                /* Store OffsetX separately for RTL reconstruction. */
+                tempGlyphs[tempCount].offsetX = (int)(glyph->OffsetX * scale + 0.5);
+                
+                tempGlyphs[tempCount].x = globalPenX + runPenX +
+                                          tempGlyphs[tempCount].offsetX;
+                tempGlyphs[tempCount].y = globalPenY + runPenY;
+
+                tempGlyphs[tempCount].advanceX =
+                        (int)(glyph->AdvanceX * scale + 0.5);
+
+                /*
+                 * Map the kbts UserIdOrCodepointIndex back to a byte offset in
+                 * the original source string. kbts is invoked with
+                 * KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX, so
+                 * glyph->UserIdOrCodepointIndex is the codepoint index within
+                 * this run. charBounds[runStart + UserIdOrCodepointIndex] is
+                 * the byte start of that codepoint in the full source string.
+                 */
                 int cpIndex = runStart + glyph->UserIdOrCodepointIndex;
                 if (cpIndex >= 0 && cpIndex <= charCount) {
                     tempGlyphs[tempCount].byteOffset = charBounds[cpIndex];
@@ -1204,65 +1212,53 @@ X11Shaper_ShapeString(
                 }
                 tempGlyphs[tempCount].clusterLen = 0;
 
-                /* Accumulate width for positioning. */
-                runTotalWidth += tempGlyphs[tempCount].advanceX;
+                runPenX += tempGlyphs[tempCount].advanceX;
                 tempCount++;
+            }
+
+            /*
+             * For RTL runs, reverse the glyph order but preserve computed positions.
+             * This gives us RTL visual order while keeping kb_text_shaper's spacing.
+             */
+            if (runIsRTL && tempCount > 0) {
+                for (int i = 0; i < tempCount; i++) {
+                    int idx = buffer->glyphCount;
+                    if (idx >= MAX_GLYPHS) break;
+                    
+                    int srcIdx = tempCount - 1 - i;
+
+                    buffer->glyphs[idx].fontIndex  = tempGlyphs[srcIdx].fontIndex;
+                    buffer->glyphs[idx].glyphId    = tempGlyphs[srcIdx].glyphId;
+                    buffer->glyphs[idx].x          = tempGlyphs[i].x;
+                    buffer->glyphs[idx].y          = tempGlyphs[i].y;
+                    buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
+                    buffer->glyphs[idx].byteOffset = tempGlyphs[srcIdx].byteOffset;
+                    buffer->glyphs[idx].clusterLen = tempGlyphs[srcIdx].clusterLen;
+
+                    buffer->glyphCount++;
+                    shapedAny = 1;
+                }
+            } else {
+                for (int i = 0; i < tempCount; i++) {
+                    int idx = buffer->glyphCount;
+                    if (idx >= MAX_GLYPHS) break;
+
+                    buffer->glyphs[idx].fontIndex  = tempGlyphs[i].fontIndex;
+                    buffer->glyphs[idx].glyphId    = tempGlyphs[i].glyphId;
+                    buffer->glyphs[idx].x          = tempGlyphs[i].x;
+                    buffer->glyphs[idx].y          = tempGlyphs[i].y;
+                    buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
+                    buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
+                    buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
+
+                    buffer->glyphCount++;
+                    shapedAny = 1;
+                }
             }
         }
 
-        /* Now position the glyphs based on direction. */
-        if (runIsRTL) {
-            /* RTL: Position glyphs from right to left.
-             * Start at the right edge of the run (globalPenX + runTotalWidth)
-             * and move leftwards for each glyph. */
-            int currentX = globalPenX + runTotalWidth;
-            
-            for (int i = 0; i < tempCount && buffer->glyphCount < MAX_GLYPHS; i++) {
-                /* For RTL, glyphs are stored in logical order but should be
-                 * drawn from rightmost to leftmost. So we use the stored
-                 * positions but offset them appropriately. */
-                int idx = buffer->glyphCount;
-                
-                /* Position this glyph: start at currentX, add its offset,
-                 * then subtract its advance for the next glyph. */
-                buffer->glyphs[idx].fontIndex = tempGlyphs[i].fontIndex;
-                buffer->glyphs[idx].glyphId   = tempGlyphs[i].glyphId;
-                buffer->glyphs[idx].x = currentX + tempGlyphs[i].offsetX;
-                buffer->glyphs[idx].y = globalPenY;  /* Y position unchanged */
-                buffer->glyphs[idx].advanceX = tempGlyphs[i].advanceX;
-                buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
-                buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
-                
-                /* Move current position left by advance. */
-                currentX -= tempGlyphs[i].advanceX;
-                buffer->glyphCount++;
-                shapedAny = 1;
-            }
-            
-            /* After RTL run, advance global pen by total width. */
-            globalPenX += runTotalWidth;
-        } else {
-            /* LTR: Position glyphs from left to right. */
-            int currentX = globalPenX;
-            
-            for (int i = 0; i < tempCount && buffer->glyphCount < MAX_GLYPHS; i++) {
-                int idx = buffer->glyphCount;
-                
-                buffer->glyphs[idx].fontIndex = tempGlyphs[i].fontIndex;
-                buffer->glyphs[idx].glyphId   = tempGlyphs[i].glyphId;
-                buffer->glyphs[idx].x = currentX + tempGlyphs[i].offsetX;
-                buffer->glyphs[idx].y = globalPenY;
-                buffer->glyphs[idx].advanceX = tempGlyphs[i].advanceX;
-                buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
-                buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
-                
-                currentX += tempGlyphs[i].advanceX;
-                buffer->glyphCount++;
-                shapedAny = 1;
-            }
-            
-            globalPenX += runTotalWidth;
-        }
+        globalPenX += runPenX;
+        globalPenY += runPenY;
     }
 
     buffer->totalAdvance = globalPenX;
@@ -1282,6 +1278,7 @@ X11Shaper_ShapeString(
 
     return shapedAny ? 1 : 0;
 }
+
 /*
  * ---------------------------------------------------------------
  * TkpFontPkgInit --
