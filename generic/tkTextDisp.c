@@ -1644,7 +1644,7 @@ TkTextCreateDInfo(
 
     if (!sharedTextPtr->breakInfoTableIsInitialized) {
 	Tcl_InitHashTable(&sharedTextPtr->breakInfoTable, TCL_ONE_WORD_KEYS);
-	sharedTextPtr->breakInfoTableIsInitialized = 1;
+	sharedTextPtr->breakInfoTableIsInitialized = true;
     }
 
     if (sharedTextPtr->allowUpdateLineMetrics) {
@@ -6256,8 +6256,12 @@ ComputeCursorExtents(
      * visible, thus we allow to overlap the first character in this special case.
      */
 
-    *extent1 = MAX(1, MIN(textPtr->padX, textPtr->insertWidth/2));
-    *extent2 = MAX(1, MIN(textPtr->padX, (textPtr->insertWidth + 1)/2));
+    int padX = 0;
+    if (textPtr->padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    }
+    *extent1 = MAX(1, MIN(padX, textPtr->insertWidth/2));
+    *extent2 = MAX(1, MIN(padX, (textPtr->insertWidth + 1)/2));
 }
 
 
@@ -6329,8 +6333,12 @@ DisplayDLine(
     xIndent = GetLeftLineMargin(dlPtr, sValuePtr);
 
     if (xIndent > 0 && sValuePtr->lMarginColor != NULL) {
-	int pad = textPtr->padX ? textPtr->padX + 1 : 0;
-	Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, textPtr->padX, y,
+	int pad, padX = 0;
+	if (textPtr->padXObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+	}
+	pad = padX ? padX + 1 : 0;
+	Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, padX, y,
 		xIndent + dInfoPtr->x - dInfoPtr->curXPixelOffset - pad,
 		dlPtr->height, 0, TK_RELIEF_FLAT);
     }
@@ -8752,6 +8760,14 @@ DisplayText(
 
     ClearRegion(invalidRegion);
 
+    int padX = 0, padY = 0;
+    if (textPtr->padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    }
+    if (textPtr->padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
+    }
+
     /*
      * Redraw the borders if that's needed.
      */
@@ -8767,12 +8783,16 @@ DisplayText(
 	    goto end;
 	}
 
+	int borderWidth = 0;
+	if (textPtr->borderWidthObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+	}
 	Tk_Draw3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		textPtr->border, textPtr->highlightWidth,
 		textPtr->highlightWidth,
 		Tk_Width(textPtr->tkwin) - 2*textPtr->highlightWidth,
 		Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth,
-		textPtr->borderWidth, textPtr->relief);
+		borderWidth, textPtr->relief);
 	if (textPtr->highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
@@ -8786,29 +8806,29 @@ DisplayText(
 			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    }
 	}
-	borders = textPtr->borderWidth + textPtr->highlightWidth;
-	if (textPtr->padY > 0) {
+	borders = borderWidth + textPtr->highlightWidth;
+	if (padY > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders, borders,
-		    Tk_Width(textPtr->tkwin) - 2*borders, textPtr->padY,
+		    Tk_Width(textPtr->tkwin) - 2 * borders, padY,
 		    0, TK_RELIEF_FLAT);
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders,
-		    Tk_Height(textPtr->tkwin) - borders - textPtr->padY,
-		    Tk_Width(textPtr->tkwin) - 2*borders,
-		    textPtr->padY, 0, TK_RELIEF_FLAT);
+		    Tk_Height(textPtr->tkwin) - borders - padY,
+		    Tk_Width(textPtr->tkwin) - 2 * borders,
+		    padY, 0, TK_RELIEF_FLAT);
 	}
-	if (textPtr->padX > 0) {
+	if (padX > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
-		    textPtr->border, borders, borders + textPtr->padY,
-		    textPtr->padX,
-		    Tk_Height(textPtr->tkwin) - 2*borders -2*textPtr->padY,
+		    textPtr->border, borders, borders + padY,
+		    padX,
+		    Tk_Height(textPtr->tkwin) - 2 * borders -2 * padY,
 		    0, TK_RELIEF_FLAT);
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border,
-		    Tk_Width(textPtr->tkwin) - borders - textPtr->padX,
-		    borders + textPtr->padY, textPtr->padX,
-		    Tk_Height(textPtr->tkwin) - 2*borders -2*textPtr->padY,
+		    Tk_Width(textPtr->tkwin) - borders - padX,
+		    borders + padY, padX,
+		    Tk_Height(textPtr->tkwin) - 2 * borders -2 * padY,
 		    0, TK_RELIEF_FLAT);
 	}
 	dInfoPtr->flags &= ~REDRAW_BORDERS;
@@ -8991,8 +9011,8 @@ DisplayText(
 	}
 
 	Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
-		textPtr->border, dInfoPtr->x - textPtr->padX, bottomY,
-		dInfoPtr->maxX - (dInfoPtr->x - textPtr->padX),
+		textPtr->border, dInfoPtr->x - padX, bottomY,
+		dInfoPtr->maxX - (dInfoPtr->x - padX),
 		dInfoPtr->topOfEof - bottomY, 0, TK_RELIEF_FLAT);
     }
     dInfoPtr->topOfEof = bottomY;
@@ -9137,12 +9157,21 @@ TextInvalidateRegion(
 
     dInfoPtr = textPtr->dInfoPtr;
     ComputeCursorExtents(textPtr, &extent1, &extent2);
-    inset = textPtr->borderWidth + textPtr->highlightWidth;
-
-    textRect.x = inset + textPtr->padX - extent1;
-    textRect.width = Tk_Width(textPtr->tkwin) - 2 * (inset + textPtr->padX) + extent1 + extent2;
-    textRect.y = inset + textPtr->padY;
-    textRect.height = Tk_Height(textPtr->tkwin) - 2 * (inset + textPtr->padY);
+    int borderWidth = 0, padX = 0, padY = 0;
+    if (textPtr->borderWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+    }
+    if (textPtr->padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    }
+    if (textPtr->padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
+    }
+    inset = borderWidth + textPtr->highlightWidth;
+    textRect.x = inset + padX - extent1;
+    textRect.width = Tk_Width(textPtr->tkwin) - 2 * (inset + padX) + extent1 + extent2;
+    textRect.y = inset + padY;
+    textRect.height = Tk_Height(textPtr->tkwin) - 2 * (inset + padY);
 
     /*
      * Find all lines that overlap the given region and mark them for redisplay.
@@ -9369,7 +9398,7 @@ TextRedrawTag(
     const TkTextIndex *index2Ptr,
 				/* Character just after last one to consider for redisplay.
 				 * NULL means process all the characters in the text. */
-    int affectsDisplayGeometry)/* Whether the display geometry is affected. */
+    bool affectsDisplayGeometry)/* Whether the display geometry is affected. */
 {
     TextDInfo *dInfoPtr;
     DLine *dlPtr;
@@ -9462,7 +9491,7 @@ RedrawTagsInPeer(
     TkText *textPtr,
     TkTextIndex *indexPtr1,
     TkTextIndex *indexPtr2,
-    int affectsDisplayGeometry)
+    bool affectsDisplayGeometry)
 {
     TkTextIndex start, end;
 
@@ -9504,7 +9533,7 @@ TkTextRedrawTag(
 				 * both indices are NULL, or both are non-Null. */
     const TkTextTag *tagPtr,	/* Information about tag, can be NULL, but only if the indices are
 				 * non-NULL*/
-    int affectsDisplayGeometry)/* Whether the display geometry is affected. If argument tagPtr is
+    bool affectsDisplayGeometry)/* Whether the display geometry is affected. If argument tagPtr is
 				 * given, then also this tag will be tested if the display geometry
 				 * is affected. */
 {
@@ -9517,7 +9546,7 @@ TkTextRedrawTag(
     }
 
     if (tagPtr && tagPtr->affectsDisplayGeometry) {
-	affectsDisplayGeometry = 1;
+	affectsDisplayGeometry = true;
     }
 
     if (!index1Ptr) {
@@ -9723,10 +9752,19 @@ TkTextRelayoutWindow(
      */
 
     assert(textPtr->highlightWidth >= 0);
-    assert(textPtr->borderWidth >= 0);
 
-    dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth + textPtr->padX;
-    dInfoPtr->y = textPtr->highlightWidth + textPtr->borderWidth + textPtr->padY;
+    int borderWidth = 0, padX = 0, padY = 0;
+    if (textPtr->borderWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
+    }
+    if (textPtr->padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
+    }
+    if (textPtr->padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
+    }
+    dInfoPtr->x = textPtr->highlightWidth + borderWidth + padX;
+    dInfoPtr->y = textPtr->highlightWidth + borderWidth + padY;
 
     dInfoPtr->maxX = MAX(Tk_Width(textPtr->tkwin) - dInfoPtr->x, dInfoPtr->x + 1);
 
