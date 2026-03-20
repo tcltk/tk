@@ -216,33 +216,6 @@ static int IsSimpleText(const char *source, int len);
 
 /*
  * ---------------------------------------------------------------
- * utf8ToUcs4 --
- *
- *   Convert UTF-8 to UCS-4, using Tcl or Fontconfig depending on available
- *   bytes.
- *
- * Results:
- *   Number of bytes consumed. *cPtr filled with UCS-4 character.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-static int
-utf8ToUcs4(
-    const char *source,
-    FcChar32 *cPtr,
-    int numBytes)
-{
-    if (numBytes >= 6) {
-        return Tcl_UtfToUniChar(source, (int *)cPtr);
-    }
-    return FcUtf8ToUcs4((const FcChar8 *)source, cPtr, numBytes);
-}
-
-/*
- * ---------------------------------------------------------------
  * IsSimpleText --
  *
  *   Determine whether a UTF-8 string consists only of characters
