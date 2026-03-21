@@ -390,7 +390,7 @@ GetMenuAccelGeometry(
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
 	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
-	int arrowWidth = CASCADE_ARROW_SIZE * scalingLevel + 1;
+	int arrowWidth = (int)(CASCADE_ARROW_SIZE * scalingLevel) + 1;
 
 	*widthPtr = 2 * arrowWidth;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
@@ -485,7 +485,7 @@ DrawMenuEntryAccelerator(
 {
     int borderWidth, activeBorderWidth;
     double scalingLevel = TkScalingLevel(menuPtr->tkwin);
-    int arrowSize = CASCADE_ARROW_SIZE * scalingLevel;
+    int arrowSize = (int)(CASCADE_ARROW_SIZE * scalingLevel);
     int arrowWidth = arrowSize + 1, arrowHeight = 2*arrowSize + 1;
     XPoint points[4];
 
@@ -505,12 +505,13 @@ DrawMenuEntryAccelerator(
 	/*
 	 * The value of points[0].x below is based on the following equations:
 	 * points[0].x + arrowWidth + cascadeOffset = menuWidth
-	 * cascadeOffset = borderWidth + activeBorderWidth + 2
+	 * cascadeOffset = borderWidth + activeBorderWidth + 2*scalingLevel
 	 * (see function AdjustMenuCoords() in file tkMenuDraw.c)
 	 * menuWidth = x + width + borderWidth
 	 */
 
-	points[0].x = x + width - activeBorderWidth - 2 - arrowWidth;
+	points[0].x = x + width - activeBorderWidth - (int)round(2*scalingLevel)
+		      - arrowWidth;
 	points[0].y = y + (height - arrowHeight)/2;
 	points[1].x = points[0].x;
 	points[1].y = points[0].y + arrowHeight - 1;
@@ -525,15 +526,14 @@ DrawMenuEntryAccelerator(
 		CoordModeOrigin);
 
 	/* Work around bug [77527326e5] */
-	XDrawPoint(Tk_Display(menuPtr->tkwin), d, gc,
-		points[2].x, points[2].y);
+	XDrawPoint(Tk_Display(menuPtr->tkwin), d, gc, points[2].x, points[2].y);
     } else if (mePtr->accelPtr != NULL) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 	int left = x + mePtr->labelWidth + activeBorderWidth
 		+ mePtr->indicatorSpace;
 
 	if (menuPtr->menuType == MENUBAR) {
-	    left += 5;
+	    left += (int)round(5*scalingLevel);
 	}
 	Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
 		mePtr->accelLength, left,
@@ -697,7 +697,8 @@ DrawMenuEntryLabel(
 	    &activeBorderWidth);
     leftEdge = x + indicatorSpace + activeBorderWidth;
     if (menuPtr->menuType == MENUBAR) {
-	leftEdge += 5;
+	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+	leftEdge += (int)round(5*scalingLevel);
     }
 
     /*
@@ -880,7 +881,8 @@ DrawMenuUnderline(
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	    leftEdge = x + mePtr->indicatorSpace + activeBorderWidth;
 	    if (menuPtr->menuType == MENUBAR) {
-		leftEdge += 5;
+		double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+		leftEdge += (int)round(5*scalingLevel);
 	    }
 
 	    Tk_UnderlineChars(menuPtr->display, d, gc, tkfont, label, leftEdge,
@@ -1122,6 +1124,8 @@ TkpComputeMenubarGeometry(
 	height = 0;
     } else {
 	int borderWidth;
+	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+	int scaled10 = (int)round(10*scalingLevel);
 
 	maxWindowWidth = Tk_Width(menuPtr->tkwin);
 	if (maxWindowWidth == 1) {
@@ -1169,7 +1173,7 @@ TkpComputeMenubarGeometry(
 		mePtr->height = mePtr->width = 0;
 	    } else {
 		GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height);
-		mePtr->height = height + 2 * activeBorderWidth + 10;
+		mePtr->height = height + 2 * activeBorderWidth + scaled10;
 		mePtr->width = width;
 
 		GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont, fmPtr,
@@ -1178,7 +1182,7 @@ TkpComputeMenubarGeometry(
 		if (width > 0) {
 		    mePtr->width += width;
 		}
-		mePtr->width += 2 * activeBorderWidth + 10;
+		mePtr->width += 2 * activeBorderWidth + scaled10;
 	    }
 	    if (mePtr->entryFlags & ENTRY_HELP_MENU) {
 		helpMenuIndex = i;
