@@ -694,11 +694,11 @@ InitFont(
         memset(fontPtr, 0, sizeof(UnixFtFont));
     }
 
-    /* Configure font pattern */
+    /* Configure font pattern. */
     FcConfigSubstitute(NULL, pattern, FcMatchPattern);
     XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
 
-    /* Sort fonts by quality */
+    /* Sort fonts by quality. */
     set = FcFontSort(NULL, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
         if (fontPtr) Tcl_Free(fontPtr);
@@ -944,12 +944,11 @@ X11Shaper_Destroy(
  *
  *   Shape a UTF-8 string and produce glyph buffer.
  *
- *   FIXED ISSUES:
- *   1. Now computes actual clusterLen for each glyph (was always 0)
- *   2. Clamps byteOffset to valid range to prevent buffer overruns
- *   3. Shapes all runs LTR, then reverses RTL runs manually to fix
- *      word-level BiDi (was reversing glyphs within words incorrectly)
- *   4. Stores isRTL flag per-glyph for cursor movement logic
+ *   Now computes actual clusterLen for each glyph (was always 0).
+ *   Clamps byteOffset to valid range to prevent buffer overruns
+ *   Shapes all runs LTR, then reverses RTL runs manually to fix
+ *   word-level BiDi (was reversing glyphs within words incorrectly).
+ *   Stores isRTL flag per-glyph for cursor movement logic
  *
  *   For each output glyph, glyphs[i].fontIndex identifies which
  *   UnixFtFace produced the glyph ID. Since kbts operates in raw
@@ -997,18 +996,18 @@ X11Shaper_ShapeString(
     for (int i = 0; i < numBytes; ) {
         unsigned char byte = (unsigned char)source[i];
         
-        /* Check for ASCII printable or multi-byte UTF-8 starter */
+        /* Check for ASCII printable or multi-byte UTF-8 starter. */
         if (byte >= 0x20 && byte < 0x7F) {
             /* ASCII printable (space through ~) */
             hasShapeableContent = 1;
             break;
         } else if (byte >= 0xC0) {
-            /* UTF-8 multi-byte sequence starter */
+            /* UTF-8 multi-byte sequence starter. */
             hasShapeableContent = 1;
             break;
         }
         
-        /* Allow tab, newline, carriage return */
+        /* Allow tab, newline, carriage return. */
         if (byte == 0x09 || byte == 0x0A || byte == 0x0D) {
             hasShapeableContent = 1;
             break;
@@ -1018,10 +1017,10 @@ X11Shaper_ShapeString(
     }
     
     if (!hasShapeableContent) {
-        /* String contains only control chars or invalid bytes */
+        /* String contains only control chars or invalid bytes. */
         buffer->glyphCount = 0;
         buffer->totalAdvance = 0;
-        return 1;  /* Not an error - just nothing to shape */
+        return 1;  /* Not an error - just nothing to shape. */
     }
 
     /* Check cache first. */
@@ -1076,10 +1075,10 @@ X11Shaper_ShapeString(
         }
         
         /*
-         * DEFENSIVE: Filter out problematic codepoints that crash kb_text_shaper.
-         * - C0 controls (0x00-0x1F) except tab/newline/CR
+         * Filter out problematic codepoints that crash kb_text_shaper.
+         * - C0 controls (0x00-0x1F) except tab/newline/CR.
          * - C1 controls (0x80-0x9F) - these cause the crash!
-         * - Invalid/replacement characters
+         * - Invalid/replacement characters.
          */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
             (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls - THE CRASH CULPRIT */
@@ -1141,7 +1140,7 @@ X11Shaper_ShapeString(
         if (runByteLen <= 0) continue;
         
         /*
-         * DEFENSIVE: Verify the run contains actual data.
+         * Verify the run contains actual data.
          * Some runs may be empty after filtering control characters.
          */
         int hasVisibleChars = 0;
@@ -1153,7 +1152,7 @@ X11Shaper_ShapeString(
             }
         }
         if (!hasVisibleChars) {
-            continue;  /* Skip runs with only filtered control chars */
+            continue;  /* Skip runs with only filtered control chars. */
         }
 
         kbts_run  run;
@@ -1295,7 +1294,7 @@ X11Shaper_ShapeString(
                  */
                 int cpIndex = runStart + glyph->UserIdOrCodepointIndex;
                 
-                /* FIXED: Add bounds checking to prevent segfaults */
+                /* Add bounds checking to prevent segfaults. */
                 if (cpIndex >= 0 && cpIndex < charCount) {
                     tempGlyphs[tempCount].byteOffset = charBounds[cpIndex];
                     
@@ -1330,13 +1329,13 @@ X11Shaper_ShapeString(
                 if (i + 1 < tempCount) {
                     clusterEnd = tempGlyphs[i + 1].byteOffset;
                 } else {
-                    /* Last glyph - cluster extends to end of run */
+                    /* Last glyph - cluster extends to end of run. */
                     clusterEnd = runByteEnd;
                 }
                 
                 tempGlyphs[i].clusterLen = clusterEnd - clusterStart;
                 
-                /* FIXED: Ensure cluster length is positive */
+                /* Ensure cluster length is positive. */
                 if (tempGlyphs[i].clusterLen <= 0) {
                     tempGlyphs[i].clusterLen = 1;
                 }
@@ -1385,7 +1384,7 @@ X11Shaper_ShapeString(
      * Strategy: Find word boundaries (spaces) and reverse the word order.
      */
     if (numRuns == 1 && bidiRuns[0].isRTL && buffer->glyphCount > 1) {
-        /* Find word boundaries by looking for space glyphs */
+        /* Find word boundaries by looking for space glyphs. */
         typedef struct {
             int startIdx;
             int endIdx;  /* inclusive */
@@ -1396,12 +1395,12 @@ X11Shaper_ShapeString(
         int wordStart = 0;
         
         for (int i = 0; i < buffer->glyphCount; i++) {
-            /* Check if this is a space (advance typically 5-7 for spaces) */
+            /* Check if this is a space (advance typically 5-7 for spaces). */
             int isSpace = (buffer->glyphs[i].glyphId == 3);  /* Common space glyph ID */
             
             if (isSpace || i == buffer->glyphCount - 1) {
                 if (!isSpace && i == buffer->glyphCount - 1) {
-                    /* Last glyph is not a space, include it */
+                    /* Last glyph is not a space, include it. */
                     i++;
                 }
                 
@@ -1411,7 +1410,7 @@ X11Shaper_ShapeString(
                     wordCount++;
                 }
                 
-                wordStart = i + 1;  /* Start next word after the space */
+                wordStart = i + 1;  /* Start next word after the space. */
             }
         }
         
@@ -1448,7 +1447,7 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Update cache - invalidate first for thread safety */
+    /* Update cache - invalidate first for thread safety. */
     if (numBytes <= MAX_STRING_CACHE) {
         shaper->cache.valid = 0;
         memcpy(shaper->cache.text, source, numBytes);
@@ -1823,7 +1822,7 @@ Tk_MeasureChars(
         if (maxLength >= 0 && next > maxLength) {
             if (flags & TK_PARTIAL_OK) {
                 total = next;
-                /* FIXED: Use cluster end = byteOffset + clusterLen */
+                /* Use cluster end = byteOffset + clusterLen. */
                 bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
             } else if ((flags & TK_AT_LEAST_ONE) && total == 0) {
                 total = next;
@@ -1834,11 +1833,11 @@ Tk_MeasureChars(
 
         total = next;
         
-        /* FIXED: bytes tracks the end of this cluster using clusterLen */
+        /* Bytes tracks the end of this cluster using clusterLen. */
         bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
     }
 
-    /* FIXED: Clamp bytes to valid range */
+    /* Clamp bytes to valid range. */
     if (bytes > (int)numBytes) {
         bytes = (int)numBytes;
     }
@@ -1888,7 +1887,7 @@ Tk_MeasureCharsInContext(
     ShapedGlyphBuffer buffer;
     
     /* 
-     * FIXED: Shape the FULL string to preserve context.
+     * Shape the FULL string to preserve context.
      * Previously this just called Tk_MeasureChars on the substring,
      * which broke ligatures and BiDi at range boundaries.
      */
@@ -1898,7 +1897,7 @@ Tk_MeasureCharsInContext(
         return 0;
     }
     
-    /* Find glyphs that overlap the requested range [rangeStart, rangeStart+rangeLength) */
+    /* Find glyphs that overlap the requested range [rangeStart, rangeStart+rangeLength). */
     int total = 0;
     int bytes = 0;
     int rangeEnd = rangeStart + rangeLength;
@@ -1918,7 +1917,7 @@ Tk_MeasureCharsInContext(
             break;
         }
         
-        /* This glyph overlaps the range - include its advance */
+        /* This glyph overlaps the range - include its advance. */
         foundAny = 1;
         int next = total + buffer.glyphs[i].advanceX;
         
@@ -1937,7 +1936,7 @@ Tk_MeasureCharsInContext(
         bytes = glyphEnd;
     }
     
-    /* FIXED: Clamp bytes to valid range */
+    /* Clamp bytes to valid range. */
     if (bytes > rangeEnd) {
         bytes = rangeEnd;
     }
@@ -1947,7 +1946,7 @@ Tk_MeasureCharsInContext(
     
     *lengthPtr = total;
     
-    /* Return byte count relative to rangeStart */
+    /* Return byte count relative to rangeStart. */
     return foundAny ? (bytes - rangeStart) : 0;
 }
 
@@ -2181,7 +2180,7 @@ TkDrawAngledChars(
     color.color.alpha = 0xFFFF;
     color.pixel       = values.foreground;
 
-    /* Simple UCS-4 conversion and drawing */
+    /* Simple UCS-4 conversion and drawing. */
     FcChar32 ucs4[1024];
     int count = 0;
     int i = 0;
