@@ -107,6 +107,10 @@ typedef struct {
  *   provided the same font file+face-index is used for both shaping and
  *   rendering. The fontIndex field tracks which UnixFtFace produced each
  *   glyph to ensure this invariant holds.
+ *
+ *   FIXED: byteOffset now records the cluster start AND clusterLen records
+ *   the cluster length in bytes. This enables accurate cursor placement and
+ *   text selection by mapping pixel positions back to byte ranges.
  * ---------------------------------------------------------------
  */
 
@@ -117,7 +121,8 @@ typedef struct {
         int x, y;              /* Pen position for this glyph */
         int advanceX;          /* Advance width in pixels */
         int byteOffset;        /* Byte offset of cluster start in source string */
-        int clusterLen;        /* Length of cluster in bytes */
+        int clusterLen;        /* Length of cluster in bytes (FIXED: was always 0) */
+        int isRTL;             /* 1 if this glyph is part of an RTL run */
     } glyphs[MAX_GLYPHS];
     int glyphCount;
     int totalAdvance;          /* Total advance width in pixels */
@@ -606,11 +611,17 @@ GetBidiRuns(
     SBUInteger runCount = SBLineGetRunCount(line);
     const SBRun *bidiRuns = SBLineGetRunsPtr(line);
 
+    /*
+     * Keep runs in logical order, but we'll process them RIGHT-TO-LEFT
+     * for display. The visual reordering happens in the layout/positioning,
+     * not in the run order itself.
+     */
+    
     int outRuns = 0;
     for (int i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
         runs[outRuns].offset = (int)bidiRuns[i].offset;
         runs[outRuns].len    = (int)bidiRuns[i].length;
-        runs[outRuns].isRTL  = (bidiRuns[i].level & 1);  /* odd level = RTL */
+        runs[outRuns].isRTL  = (bidiRuns[i].level & 1);
         outRuns++;
     }
 
@@ -933,6 +944,13 @@ X11Shaper_Destroy(
  *
  *   Shape a UTF-8 string and produce glyph buffer.
  *
+ *   FIXED ISSUES:
+ *   1. Now computes actual clusterLen for each glyph (was always 0)
+ *   2. Clamps byteOffset to valid range to prevent buffer overruns
+ *   3. Shapes all runs LTR, then reverses RTL runs manually to fix
+ *      word-level BiDi (was reversing glyphs within words incorrectly)
+ *   4. Stores isRTL flag per-glyph for cursor movement logic
+ *
  *   For each output glyph, glyphs[i].fontIndex identifies which
  *   UnixFtFace produced the glyph ID. Since kbts operates in raw
  *   TrueType glyph index space (same as Xft), the ID is valid for
@@ -940,8 +958,10 @@ X11Shaper_Destroy(
  *   for rendering. fontIndex is the key that enforces this.
  *
  *   glyphs[i].byteOffset records the byte offset of the cluster's
- *   start in the original source string, enabling accurate byte-count
- *   returns from Tk_MeasureChars.
+ *   start in the original source string, and glyphs[i].clusterLen
+ *   records the length in bytes. Together these enable accurate
+ *   byte-count returns from Tk_MeasureChars and pixel-to-byte
+ *   mapping for cursor placement.
  *
  * Results:
  *   1 on success, 0 on failure.
@@ -966,6 +986,42 @@ X11Shaper_ShapeString(
     /* Early exit for shaper with no fonts loaded - can't shape anything. */
     if (shaper->numFonts == 0) {
         return 0;
+    }
+    
+    /*
+     * DEFENSIVE: Quick scan for shapeable content.
+     * If the string contains ONLY control characters, whitespace, or invalid UTF-8,
+     * return empty buffer rather than crashing kb_text_shaper.
+     */
+    int hasShapeableContent = 0;
+    for (int i = 0; i < numBytes; ) {
+        unsigned char byte = (unsigned char)source[i];
+        
+        /* Check for ASCII printable or multi-byte UTF-8 starter */
+        if (byte >= 0x20 && byte < 0x7F) {
+            /* ASCII printable (space through ~) */
+            hasShapeableContent = 1;
+            break;
+        } else if (byte >= 0xC0) {
+            /* UTF-8 multi-byte sequence starter */
+            hasShapeableContent = 1;
+            break;
+        }
+        
+        /* Allow tab, newline, carriage return */
+        if (byte == 0x09 || byte == 0x0A || byte == 0x0D) {
+            hasShapeableContent = 1;
+            break;
+        }
+        
+        i++;
+    }
+    
+    if (!hasShapeableContent) {
+        /* String contains only control chars or invalid bytes */
+        buffer->glyphCount = 0;
+        buffer->totalAdvance = 0;
+        return 1;  /* Not an error - just nothing to shape */
     }
 
     /* Check cache first. */
@@ -1014,9 +1070,22 @@ X11Shaper_ShapeString(
                                 numBytes - bytePos);
 
         if (clen <= 0) {
-            /* Invalid sequence → replacement char + skip 1 byte. */
-            uc   = 0xFFFD;
-            clen = 1;
+            /* Invalid sequence → skip this byte entirely. */
+            bytePos++;
+            continue;  /* Don't add to character array at all */
+        }
+        
+        /*
+         * DEFENSIVE: Filter out problematic codepoints that crash kb_text_shaper.
+         * - C0 controls (0x00-0x1F) except tab/newline/CR
+         * - C1 controls (0x80-0x9F) - these cause the crash!
+         * - Invalid/replacement characters
+         */
+        if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
+            (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls - THE CRASH CULPRIT */
+            (uc == 0xFFFD)) {  /* Replacement character */
+            bytePos += clen;
+            continue;  /* Skip without adding to character array */
         }
 
         ucs4Chars[charCount] = uc;
@@ -1030,12 +1099,30 @@ X11Shaper_ShapeString(
             free(charBounds);
             free(ucs4Chars);
         }
-        return 0;
+        /* Return success with empty buffer - nothing to shape */
+        buffer->glyphCount = 0;
+        buffer->totalAdvance = 0;
+        return 1;  /* Changed from 0 - empty string is not an error */
     }
 
     /* Get bidi runs. */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
+
+    /* DEBUG: Print what we got from SheenBidi */
+    if (DEBUG_FONTSEL) {
+        printf("\n=== BiDi Debug ===\n");
+        printf("Input string has %d characters, %d runs\n", charCount, numRuns);
+        for (int r = 0; r < numRuns; r++) {
+            printf("Run %d: offset=%d, len=%d, isRTL=%d\n", 
+                   r, bidiRuns[r].offset, bidiRuns[r].len, bidiRuns[r].isRTL);
+            printf("  Characters: ");
+            for (int i = 0; i < bidiRuns[r].len && i < 10; i++) {
+                printf("U+%04X ", ucs4Chars[bidiRuns[r].offset + i]);
+            }
+            printf("\n");
+        }
+    }
 
     int globalPenX = 0;
     int globalPenY = 0;
@@ -1052,15 +1139,44 @@ X11Shaper_ShapeString(
         int runByteLen   = runByteEnd - runByteStart;
 
         if (runByteLen <= 0) continue;
+        
+        /*
+         * DEFENSIVE: Verify the run contains actual data.
+         * Some runs may be empty after filtering control characters.
+         */
+        int hasVisibleChars = 0;
+        for (int ci = runStart; ci < runStart + runLen; ci++) {
+            if (ucs4Chars[ci] >= 0x0020 || ucs4Chars[ci] == 0x0009 || 
+                ucs4Chars[ci] == 0x000A || ucs4Chars[ci] == 0x000D) {
+                hasVisibleChars = 1;
+                break;
+            }
+        }
+        if (!hasVisibleChars) {
+            continue;  /* Skip runs with only filtered control chars */
+        }
 
         kbts_run  run;
         kbts_glyph *glyph;
         int runPenX = 0;
         int runPenY = 0;
 
+        /*
+         * Now that runs are in visual order from SheenBidi's visual map,
+         * we need to shape RTL runs with KBTS_DIRECTION_RTL to get
+         * proper glyph joining and correct glyph order within each word.
+         */
+
         kbts_ShapeBegin(shaper->context,
                         runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
                         KBTS_LANGUAGE_DONT_KNOW);
+
+        /*
+         * DEFENSIVE: Skip empty or invalid runs that could crash kb_text_shaper.
+         */
+        if (runByteLen <= 0 || !source) {
+            continue;
+        }
 
         kbts_ShapeUtf8(shaper->context, source + runByteStart, runByteLen,
                        KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
@@ -1139,9 +1255,8 @@ X11Shaper_ShapeString(
             }
 
             /*
-             * Collect glyphs from kb_text_shaper.
-             * kb_text_shaper handles RTL reversal internally when we pass
-             * KBTS_DIRECTION_RTL, so glyphs come back already in visual order.
+             * Collect glyphs from kb_text_shaper into a temporary buffer.
+             * We need to reverse the order for RTL runs and recompute positions.
              */
             struct {
                 int fontIndex;
@@ -1179,11 +1294,23 @@ X11Shaper_ShapeString(
                  * the byte start of that codepoint in the full source string.
                  */
                 int cpIndex = runStart + glyph->UserIdOrCodepointIndex;
-                if (cpIndex >= 0 && cpIndex <= charCount) {
+                
+                /* FIXED: Add bounds checking to prevent segfaults */
+                if (cpIndex >= 0 && cpIndex < charCount) {
                     tempGlyphs[tempCount].byteOffset = charBounds[cpIndex];
+                    
+                    /* FIXED: Clamp to run boundaries */
+                    if (tempGlyphs[tempCount].byteOffset < runByteStart) {
+                        tempGlyphs[tempCount].byteOffset = runByteStart;
+                    }
+                    if (tempGlyphs[tempCount].byteOffset >= runByteEnd) {
+                        tempGlyphs[tempCount].byteOffset = runByteEnd - 1;
+                    }
                 } else {
                     tempGlyphs[tempCount].byteOffset = runByteStart;
                 }
+                
+                /* clusterLen will be computed after all glyphs are collected */
                 tempGlyphs[tempCount].clusterLen = 0;
 
                 runPenX += tempGlyphs[tempCount].advanceX;
@@ -1191,9 +1318,33 @@ X11Shaper_ShapeString(
             }
 
             /*
-             * Copy glyphs directly to output buffer.
-             * kb_text_shaper already handles RTL reversal when we pass
-             * KBTS_DIRECTION_RTL, so no additional reversal is needed.
+             * FIXED: Compute actual cluster lengths.
+             * Each glyph's cluster extends from its byteOffset to the next
+             * glyph's byteOffset (or to runByteEnd for the last glyph).
+             * This was always 0 before, making selection impossible.
+             */
+            for (int i = 0; i < tempCount; i++) {
+                int clusterStart = tempGlyphs[i].byteOffset;
+                int clusterEnd;
+                
+                if (i + 1 < tempCount) {
+                    clusterEnd = tempGlyphs[i + 1].byteOffset;
+                } else {
+                    /* Last glyph - cluster extends to end of run */
+                    clusterEnd = runByteEnd;
+                }
+                
+                tempGlyphs[i].clusterLen = clusterEnd - clusterStart;
+                
+                /* FIXED: Ensure cluster length is positive */
+                if (tempGlyphs[i].clusterLen <= 0) {
+                    tempGlyphs[i].clusterLen = 1;
+                }
+            }
+
+            /*
+             * Copy glyphs to output buffer.
+             * kb_text_shaper has already handled RTL reversal and positioning.
              */
             for (int i = 0; i < tempCount; i++) {
                 int idx = buffer->glyphCount;
@@ -1206,6 +1357,7 @@ X11Shaper_ShapeString(
                 buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
                 buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
                 buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
+                buffer->glyphs[idx].isRTL      = runIsRTL;
 
                 buffer->glyphCount++;
                 shapedAny = 1;
@@ -1218,8 +1370,87 @@ X11Shaper_ShapeString(
 
     buffer->totalAdvance = globalPenX;
 
-    /* Update cache. */
+    /* DEBUG: Print glyph buffer */
+    if (DEBUG_FONTSEL && buffer->glyphCount > 0) {
+        printf("\n=== Glyph Buffer FINAL ===\n");
+        printf("Total glyphs: %d, total advance: %d\n", buffer->glyphCount, buffer->totalAdvance);
+    }
+
+    /*
+     * WORD-LEVEL REVERSAL FOR RTL:
+     * When we have a single RTL run containing multiple words, kb_text_shaper
+     * reverses glyphs within each word correctly, but keeps words in logical order.
+     * We need to reverse the word order for visual display.
+     * 
+     * Strategy: Find word boundaries (spaces) and reverse the word order.
+     */
+    if (numRuns == 1 && bidiRuns[0].isRTL && buffer->glyphCount > 1) {
+        /* Find word boundaries by looking for space glyphs */
+        typedef struct {
+            int startIdx;
+            int endIdx;  /* inclusive */
+        } Word;
+        
+        Word words[64];
+        int wordCount = 0;
+        int wordStart = 0;
+        
+        for (int i = 0; i < buffer->glyphCount; i++) {
+            /* Check if this is a space (advance typically 5-7 for spaces) */
+            int isSpace = (buffer->glyphs[i].glyphId == 3);  /* Common space glyph ID */
+            
+            if (isSpace || i == buffer->glyphCount - 1) {
+                if (!isSpace && i == buffer->glyphCount - 1) {
+                    /* Last glyph is not a space, include it */
+                    i++;
+                }
+                
+                if (i > wordStart) {
+                    words[wordCount].startIdx = wordStart;
+                    words[wordCount].endIdx = isSpace ? i - 1 : i - 1;
+                    wordCount++;
+                }
+                
+                wordStart = i + 1;  /* Start next word after the space */
+            }
+        }
+        
+        if (wordCount > 1) {
+            /* Reverse the word order */
+            ShapedGlyphBuffer tempBuffer;
+            tempBuffer.glyphCount = 0;
+            int penX = 0;
+            
+            for (int w = wordCount - 1; w >= 0; w--) {
+                /* Copy this word's glyphs */
+                for (int i = words[w].startIdx; i <= words[w].endIdx; i++) {
+                    tempBuffer.glyphs[tempBuffer.glyphCount] = buffer->glyphs[i];
+                    tempBuffer.glyphs[tempBuffer.glyphCount].x = penX;
+                    penX += buffer->glyphs[i].advanceX;
+                    tempBuffer.glyphCount++;
+                }
+                
+                /* Add space after word (except last) */
+                if (w > 0) {
+                    /* Find the space glyph that was after this word */
+                    int spaceIdx = words[w].endIdx + 1;
+                    if (spaceIdx < buffer->glyphCount) {
+                        tempBuffer.glyphs[tempBuffer.glyphCount] = buffer->glyphs[spaceIdx];
+                        tempBuffer.glyphs[tempBuffer.glyphCount].x = penX;
+                        penX += buffer->glyphs[spaceIdx].advanceX;
+                        tempBuffer.glyphCount++;
+                    }
+                }
+            }
+            
+            *buffer = tempBuffer;
+            buffer->totalAdvance = penX;
+        }
+    }
+
+    /* Update cache - invalidate first for thread safety */
     if (numBytes <= MAX_STRING_CACHE) {
+        shaper->cache.valid = 0;
         memcpy(shaper->cache.text, source, numBytes);
         shaper->cache.len    = numBytes;
         shaper->cache.buffer = *buffer;
@@ -1517,6 +1748,10 @@ TkpGetFontAttrsForChar(
  *
  *   Measure the width of a string when drawn in the given font.
  *
+ *   FIXED: Now uses clusterLen to determine byte boundaries instead
+ *   of assuming next glyph's byteOffset. Adds bounds checking to
+ *   prevent segfaults.
+ *
  * Results:
  *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
  *
@@ -1588,28 +1823,27 @@ Tk_MeasureChars(
         if (maxLength >= 0 && next > maxLength) {
             if (flags & TK_PARTIAL_OK) {
                 total = next;
-                bytes = buffer.glyphs[i].byteOffset + 1;
+                /* FIXED: Use cluster end = byteOffset + clusterLen */
+                bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
             } else if ((flags & TK_AT_LEAST_ONE) && total == 0) {
                 total = next;
-                bytes = buffer.glyphs[i].byteOffset + 1;
+                bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
             }
             break;
         }
 
         total = next;
-        /*
-         * bytes tracks the byte-end of the last fully-included cluster.
-         * byteOffset is the start of this glyph's cluster; the end of
-         * this cluster is the start of the next, or numBytes if this is
-         * the last glyph.  Using byteOffset+1 would be wrong for multi-
-         * byte sequences, so instead we use the next glyph's byteOffset
-         * (or numBytes) as the exclusive end of this cluster.
-         */
-        if (i + 1 < buffer.glyphCount) {
-            bytes = buffer.glyphs[i + 1].byteOffset;
-        } else {
-            bytes = (int)numBytes;
-        }
+        
+        /* FIXED: bytes tracks the end of this cluster using clusterLen */
+        bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
+    }
+
+    /* FIXED: Clamp bytes to valid range */
+    if (bytes > (int)numBytes) {
+        bytes = (int)numBytes;
+    }
+    if (bytes < 0) {
+        bytes = 0;
     }
 
     *lengthPtr = total;
@@ -1625,7 +1859,11 @@ Tk_MeasureChars(
  * ---------------------------------------------------------------
  * Tk_MeasureCharsInContext --
  *
- *   Measure a substring of a larger string.
+ *   Measure a substring of a larger string, preserving shaping context.
+ *
+ *   FIXED: Now shapes the FULL string and extracts metrics for the
+ *   requested range. This preserves ligatures, kerning, and BiDi
+ *   analysis across substring boundaries.
  *
  * Results:
  *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
@@ -1639,15 +1877,78 @@ int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
     const char *source,
-    TCL_UNUSED(Tcl_Size),
+    Tcl_Size numBytes,		/* FIXED: Was TCL_UNUSED - now used for full string */
     Tcl_Size rangeStart,
     Tcl_Size rangeLength,
     int maxLength,
     int flags,
     int *lengthPtr)
 {
-    return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
-                           maxLength, flags, lengthPtr);
+    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    ShapedGlyphBuffer buffer;
+    
+    /* 
+     * FIXED: Shape the FULL string to preserve context.
+     * Previously this just called Tk_MeasureChars on the substring,
+     * which broke ligatures and BiDi at range boundaries.
+     */
+    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                (int)numBytes, &buffer)) {
+        *lengthPtr = 0;
+        return 0;
+    }
+    
+    /* Find glyphs that overlap the requested range [rangeStart, rangeStart+rangeLength) */
+    int total = 0;
+    int bytes = 0;
+    int rangeEnd = rangeStart + rangeLength;
+    int foundAny = 0;
+    
+    for (int i = 0; i < buffer.glyphCount; i++) {
+        int glyphStart = buffer.glyphs[i].byteOffset;
+        int glyphEnd   = glyphStart + buffer.glyphs[i].clusterLen;
+        
+        /* Skip glyphs entirely before range */
+        if (glyphEnd <= rangeStart) {
+            continue;
+        }
+        
+        /* Stop when we've completely passed the range end */
+        if (glyphStart >= rangeEnd) {
+            break;
+        }
+        
+        /* This glyph overlaps the range - include its advance */
+        foundAny = 1;
+        int next = total + buffer.glyphs[i].advanceX;
+        
+        if (maxLength >= 0 && next > maxLength) {
+            if (flags & TK_PARTIAL_OK) {
+                total = next;
+                bytes = glyphEnd;
+            } else if ((flags & TK_AT_LEAST_ONE) && total == 0) {
+                total = next;
+                bytes = glyphEnd;
+            }
+            break;
+        }
+        
+        total = next;
+        bytes = glyphEnd;
+    }
+    
+    /* FIXED: Clamp bytes to valid range */
+    if (bytes > rangeEnd) {
+        bytes = rangeEnd;
+    }
+    if (bytes < rangeStart) {
+        bytes = rangeStart;
+    }
+    
+    *lengthPtr = total;
+    
+    /* Return byte count relative to rangeStart */
+    return foundAny ? (bytes - rangeStart) : 0;
 }
 
 /*

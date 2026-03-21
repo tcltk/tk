@@ -8,7 +8,7 @@
  * Copyright © 1994 Software Research Associates, Inc.
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 1998-1999 Scriptics Corporation.
- * Copyright 2026 Kevin Walzer
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -36,25 +36,57 @@
 #define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
-    struct FontFamily *nextPtr;
-    size_t refCount;
-    Tk_Uid faceName;
+    struct FontFamily *nextPtr;	/* Next in list of all known font families. */
+    size_t refCount;		/* How many SubFonts are referring to this
+				 * FontFamily. When the refCount drops to
+				 * zero, this FontFamily may be freed. */
+    /*
+     * Key.
+     */
 
-    Tcl_Encoding encoding;
-    int isSymbolFont;
-    int isWideFont;
-    BOOL (WINAPI *textOutProc)(HDC hdc, int x, int y, WCHAR *str, int len);
-    BOOL (WINAPI *getTextExtentPoint32Proc)(HDC, WCHAR *, int, LPSIZE);
-
-    char *fontMap[FONTMAP_PAGES];
+    Tk_Uid faceName;		/* Face name key for this FontFamily. */
 
     /*
-     * Cached TrueType font info.
-     * Now uses ULONG to hold 32-bit codepoints.
+     * Derived properties.
      */
-    int segCount;           /* Number of segments (length of arrays below) */
-    ULONG *startCount;      /* Start codepoint of each segment */
-    ULONG *endCount;        /* End codepoint of each segment */
+
+    Tcl_Encoding encoding;	/* Encoding for this font family. */
+    int isSymbolFont;		/* Non-zero if this is a symbol font. */
+    int isWideFont;		/* 1 if this is a double-byte font, 0
+				 * otherwise. */
+    BOOL (WINAPI *textOutProc)(HDC hdc, int x, int y, WCHAR *str, int len);
+				/* The procedure to use to draw text after it
+				 * has been converted from UTF-8 to the
+				 * encoding of this font. */
+    BOOL (WINAPI *getTextExtentPoint32Proc)(HDC, WCHAR *, int, LPSIZE);
+				/* The procedure to use to measure text after
+				 * it has been converted from UTF-8 to the
+				 * encoding of this font. */
+
+    char *fontMap[FONTMAP_PAGES];
+				/* Two-level sparse table used to determine
+				 * quickly if the specified character exists.
+				 * As characters are encountered, more pages
+				 * in this table are dynamically added. The
+				 * contents of each page is a bitmask
+				 * consisting of FONTMAP_BITSPERPAGE bits,
+				 * representing whether this font can be used
+				 * to display the given character at the
+				 * corresponding bit position. The high bits
+				 * of the character are used to pick which
+				 * page of the table is used. */
+
+    /*
+     * Cached Truetype font info.
+     */
+
+    int segCount;		/* The length of the following arrays. */
+    USHORT *startCount;		/* Truetype information about the font, */
+    USHORT *endCount;		/* indicating which characters this font can
+				 * display (malloced). The format of this
+				 * information is (relatively) compact, but
+				 * would take longer to search than indexing
+				 * into the fontMap[][] table. */
 } FontFamily;
 
 /*
@@ -235,7 +267,7 @@ static int		CreateNamedSystemLogFont(Tcl_Interp *interp,
 static int		CreateNamedSystemFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char* name, HFONT hFont);
 static int		LoadFontRanges(HDC hdc, HFONT hFont,
-			    ULONG **startCount, ULONG **endCount,
+			    USHORT **startCount, USHORT **endCount,
 			    int *symbolPtr);
 static void		MultiFontTextOut(HDC hdc, WinFont *fontPtr,
 			    const char *source, int numBytes,
@@ -1010,29 +1042,26 @@ TkWinShapeString(
             }
         }
 
-       /*
+        /*
          * Subfont fallback for missing glyphs.
-         * Walk every character position in the cluster map. For each glyph
-         * that is still .notdef (index 0), decode the codepoint (handling
+         * Uniscribe places the font's .notdef glyph (index 0) for any
+         * character it cannot map.  Walk the cluster map: for each character
+         * position whose cluster glyph is 0, decode the codepoint (handling
          * surrogates) and ask FindSubFontForChar for a better subfont.
-         * When a new subfont is found, switch to it and re-shape the whole
-         * item immediately, then continue scanning the freshly-shaped glyph
-         * buffer from the top. Each distinct missing codepoint may trigger
-         * its own subfont switch; the loop restarts after every reshape so
-         * the new glyph buffer is checked from scratch.
+         * Re-shape the whole item with the new font.  One retry only.
          *
-         * Pass &subFontPtr — not a dummy — to FindSubFontForChar so that
-         * any reallocation of subFontArray is propagated back here.
+         * Pass &subFontPtr — not a dummy — to
+         * FindSubFontForChar.  If CanUseFallback reallocates subFontArray,
+         * the fixup path inside FindSubFontForChar updates *subFontPtrPtr,
+         * which is our live subFontPtr variable.  Using a dummy local means
+         * the realloc goes undetected and the subsequent pointer subtraction
+         * produces a garbage subFontIdx.
          */
         {
-            int ci, reshaped;
-            do {
-                reshaped = 0;
-                for (ci = 0; ci < itemLen; ci++) {
-                    int gi = logClust[ci];
-                    if (glyphs[gi] != 0) {
-                        continue;
-                    }
+            int ci, foundMissing = 0;
+            for (ci = 0; ci < itemLen && !foundMissing; ci++) {
+                int gi = logClust[ci];
+                if (glyphs[gi] == 0) {
                     /* Decode surrogate pair if present. */
                     int ch;
                     if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) &&
@@ -1047,20 +1076,19 @@ TkWinShapeString(
 
                     SubFont *fb = FindSubFontForChar(fontPtr, ch, &subFontPtr);
                     if (fb != subFontPtr) {
-                        subFontPtr = fb;
-                        subFontIdx = (int)(subFontPtr - fontPtr->subFontArray);
-                        hFont      = subFontPtr->hFont0;
+                        subFontPtr  = fb;
+                        subFontIdx  = (int)(subFontPtr - fontPtr->subFontArray);
+                        hFont       = subFontPtr->hFont0;
                         SelectObject(hdc, hFont);
-                        ScriptShape(hdc,
-                                &fontPtr->scriptCacheArray[subFontIdx],
-                                wstr + itemStart, itemLen,
-                                maxGlyphs, &item->a,
-                                glyphs, logClust, visAttr, &glyphCount);
-                        reshaped = 1;
-                        break; /* restart scan on the new glyph buffer */
+                        /* Re-shape with the new font and its cache slot. */
+                        ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+				wstr + itemStart, itemLen,
+				maxGlyphs, &item->a,
+				glyphs, logClust, visAttr, &glyphCount);
+                        foundMissing = 1; /* one retry only */
                     }
                 }
-            } while (reshaped);
+            }
         }
 
         /*
@@ -2241,9 +2269,11 @@ ReleaseSubFont(
 
 static FontFamily *
 AllocFontFamily(
-    HDC hdc,
-    HFONT hFont,
-    int base)           /* base parameter is unused but kept for compatibility */
+    HDC hdc,			/* HDC in which font can be selected. */
+    HFONT hFont,		/* Screen font whose FontFamily is to be
+				 * returned. */
+    TCL_UNUSED(int))			/* Non-zero if this font family is to be used
+				 * in the base font of a font object. */
 {
     Tk_Uid faceName;
     FontFamily *familyPtr;
@@ -2251,7 +2281,7 @@ AllocFontFamily(
     Tcl_Encoding encoding;
     WCHAR buf[LF_FACESIZE];
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hFont = (HFONT)SelectObject(hdc, hFont);
     GetTextFaceW(hdc, LF_FACESIZE, buf);
@@ -2263,10 +2293,10 @@ AllocFontFamily(
 
     familyPtr = tsdPtr->fontFamilyList;
     for ( ; familyPtr != NULL; familyPtr = familyPtr->nextPtr) {
-        if (familyPtr->faceName == faceName) {
-            familyPtr->refCount++;
-            return familyPtr;
-        }
+	if (familyPtr->faceName == faceName) {
+	    familyPtr->refCount++;
+	    return familyPtr;
+	}
     }
 
     familyPtr = (FontFamily *)Tcl_Alloc(sizeof(FontFamily));
@@ -2274,35 +2304,60 @@ AllocFontFamily(
     familyPtr->nextPtr = tsdPtr->fontFamilyList;
     tsdPtr->fontFamilyList = familyPtr;
 
-    familyPtr->faceName = faceName;
-    familyPtr->refCount = 2;  
+    /*
+     * Set key for this FontFamily.
+     */
 
-    /* Load font ranges – now ULONG** */
-    familyPtr->segCount = LoadFontRanges(hdc, hFont,
-            &familyPtr->startCount, &familyPtr->endCount,
-            &familyPtr->isSymbolFont);
+    familyPtr->faceName = faceName;
+
+    /*
+     * An initial refCount of 2 means that FontFamily information will persist
+     * even when the SubFont that loaded the FontFamily is released. Change it
+     * to 1 to cause FontFamilies to be unloaded when not in use.
+     */
+
+    familyPtr->refCount = 2;
+
+    familyPtr->segCount = LoadFontRanges(hdc, hFont, &familyPtr->startCount,
+	    &familyPtr->endCount, &familyPtr->isSymbolFont);
 
     encoding = NULL;
     if (familyPtr->isSymbolFont) {
-        encoding = Tcl_GetEncoding(NULL, faceName);
+	/*
+	 * Symbol fonts are handled specially. For instance, Unicode 0393
+	 * (GREEK CAPITAL GAMMA) must be mapped to Symbol character 0047
+	 * (GREEK CAPITAL GAMMA), because the Symbol font doesn't have a GREEK
+	 * CAPITAL GAMMA at location 0393. If Tk interpreted the Symbol font
+	 * using the Unicode encoding, it would decide that the Symbol font
+	 * has no GREEK CAPITAL GAMMA, because the Symbol encoding (of course)
+	 * reports that character 0393 doesn't exist.
+	 *
+	 * With non-symbol Windows fonts, such as Times New Roman, if the font
+	 * has a GREEK CAPITAL GAMMA, it will be found in the correct Unicode
+	 * location (0393); the GREEK CAPITAL GAMMA will not be off hiding at
+	 * some other location.
+	 */
+
+	encoding = Tcl_GetEncoding(NULL, faceName);
     }
 
     if (encoding == NULL) {
-        encoding = TkWinGetUnicodeEncoding();
-        familyPtr->textOutProc =
-            (BOOL (WINAPI *)(HDC, int, int, WCHAR *, int)) TextOutW;
-        familyPtr->getTextExtentPoint32Proc =
-            (BOOL (WINAPI *)(HDC, WCHAR *, int, LPSIZE)) GetTextExtentPoint32W;
-        familyPtr->isWideFont = 1;
+	encoding = TkWinGetUnicodeEncoding();
+	familyPtr->textOutProc =
+	    (BOOL (WINAPI *)(HDC, int, int, WCHAR *, int)) TextOutW;
+	familyPtr->getTextExtentPoint32Proc =
+	    (BOOL (WINAPI *)(HDC, WCHAR *, int, LPSIZE)) GetTextExtentPoint32W;
+	familyPtr->isWideFont = 1;
     } else {
-        familyPtr->textOutProc =
-            (BOOL (WINAPI *)(HDC, int, int, WCHAR *, int)) TextOutA;
-        familyPtr->getTextExtentPoint32Proc =
-            (BOOL (WINAPI *)(HDC, WCHAR *, int, LPSIZE)) GetTextExtentPoint32A;
-        familyPtr->isWideFont = 0;
+	familyPtr->textOutProc =
+	    (BOOL (WINAPI *)(HDC, int, int, WCHAR *, int)) TextOutA;
+	familyPtr->getTextExtentPoint32Proc =
+	    (BOOL (WINAPI *)(HDC, WCHAR *, int, LPSIZE)) GetTextExtentPoint32A;
+	familyPtr->isWideFont = 0;
     }
 
     familyPtr->encoding = encoding;
+
     return familyPtr;
 }
 
@@ -2397,9 +2452,11 @@ FreeFontFamily(
 
 static SubFont *
 FindSubFontForChar(
-    WinFont *fontPtr,
-    int ch,
-    SubFont **subFontPtrPtr)
+    WinFont *fontPtr,		/* The font object with which the character
+				 * will be displayed. */
+    int ch,			/* The Unicode character to be displayed. */
+    SubFont **subFontPtrPtr)	/* Pointer to var to be fixed up if we
+				 * reallocate the subfont table. */
 {
     HDC hdc;
     int i, j, k;
@@ -2411,15 +2468,9 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    /*
-     * Characters outside the fontmap space cannot be looked up in the
-     * coverage cache. Rather than silently dropping them on the base font,
-     * we still attempt the fallback search — Uniscribe may be able to shape
-     * them if the right subfont is loaded. Only give up if ch is truly out
-     * of the Unicode range we care about (> 0x10FFFF).
-     */
-    if (ch > 0x10FFFF) {
-        return &fontPtr->subFontArray[0];
+    /* For characters >= FONTMAP_NUMCHARS, just use base font. */
+    if (ch >= FONTMAP_NUMCHARS) {
+	return &fontPtr->subFontArray[0];
     }
 
     /* For characters below BASE_CHARS, check if base font can display them. */
@@ -2430,18 +2481,17 @@ FindSubFontForChar(
         /* Otherwise fall through to fallback search. */
     }
 
-    /*
-     * For codepoints inside the fontmap range, check already-loaded subfonts
-     * first. For codepoints above FONTMAP_NUMCHARS we skip the cache lookup
-     * (it can't represent them) and go straight to the fallback search.
-     */
-    if (ch < FONTMAP_NUMCHARS) {
-        for (i = 0; i < fontPtr->numSubFonts; i++) {
-            if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
-                return &fontPtr->subFontArray[i];
-            }
-        }
+    /* First, see if any already-loaded subfont can display the character. */
+    for (i = 0; i < fontPtr->numSubFonts; i++) {
+	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
+	    return &fontPtr->subFontArray[i];
+	}
     }
+
+    /*
+     * Keep track of all face names that we check, so we don't check some name
+     * multiple times if it can be reached by multiple paths.
+     */
 
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
@@ -2450,40 +2500,62 @@ FindSubFontForChar(
 
     fontFallbacks = TkFontGetFallbacks();
     for (i = 0; fontFallbacks[i] != NULL; i++) {
-        for (j = 0; fontFallbacks[i][j] != NULL; j++) {
-            fallbackName = fontFallbacks[i][j];
-            if (strcasecmp(fallbackName, fontPtr->font.fa.family) == 0) {
-                goto tryfallbacks;
-            } else if (aliases != NULL) {
-                for (k = 0; aliases[k] != NULL; k++) {
-                    if (strcasecmp(aliases[k], fallbackName) == 0) {
-                        goto tryfallbacks;
-                    }
-                }
-            }
-        }
-        continue;
+	for (j = 0; fontFallbacks[i][j] != NULL; j++) {
+	    fallbackName = fontFallbacks[i][j];
+	    if (strcasecmp(fallbackName, fontPtr->font.fa.family) == 0) {
+		/*
+		 * If the base font has a fallback...
+		 */
+
+		goto tryfallbacks;
+	    } else if (aliases != NULL) {
+		/*
+		 * Or if an alias for the base font has a fallback...
+		 */
+
+		for (k = 0; aliases[k] != NULL; k++) {
+		    if (strcasecmp(aliases[k], fallbackName) == 0) {
+			goto tryfallbacks;
+		    }
+		}
+	    }
+	}
+	continue;
+
+	/*
+	 * ...then see if we can use one of the fallbacks, or an alias for one
+	 * of the fallbacks.
+	 */
 
     tryfallbacks:
-        for (j = 0; fontFallbacks[i][j] != NULL; j++) {
-            fallbackName = fontFallbacks[i][j];
-            subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
-                    ch, &ds, subFontPtrPtr);
-            if (subFontPtr != NULL) {
-                goto end;
-            }
-        }
+	for (j = 0; fontFallbacks[i][j] != NULL; j++) {
+	    fallbackName = fontFallbacks[i][j];
+	    subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
+		    ch, &ds, subFontPtrPtr);
+	    if (subFontPtr != NULL) {
+		goto end;
+	    }
+	}
     }
+
+    /*
+     * See if we can use something from the global fallback list.
+     */
 
     anyFallbacks = TkFontGetGlobalClass();
     for (i = 0; anyFallbacks[i] != NULL; i++) {
-        fallbackName = anyFallbacks[i];
-        subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
-                ch, &ds, subFontPtrPtr);
-        if (subFontPtr != NULL) {
-            goto end;
-        }
+	fallbackName = anyFallbacks[i];
+	subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
+		ch, &ds, subFontPtrPtr);
+	if (subFontPtr != NULL) {
+	    goto end;
+	}
     }
+
+    /*
+     * Try all face names available in the whole system until we find one that
+     * can be used.
+     */
 
     canUse.hdc = hdc;
     canUse.fontPtr = fontPtr;
@@ -2492,15 +2564,20 @@ FindSubFontForChar(
     canUse.subFontPtr = NULL;
     canUse.subFontPtrPtr = subFontPtrPtr;
     EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontCanUseProc,
-            (LPARAM) &canUse);
+	    (LPARAM) &canUse);
     subFontPtr = canUse.subFontPtr;
 
   end:
     Tcl_DStringFree(&ds);
 
     if (subFontPtr == NULL) {
-        subFontPtr = &fontPtr->subFontArray[0];
-        FontMapInsert(subFontPtr, ch);
+	/*
+	 * No font can display this character. We will use the base font and
+	 * have it display the "unknown" character.
+	 */
+
+	subFontPtr = &fontPtr->subFontArray[0];
+	FontMapInsert(subFontPtr, ch);
     }
     ReleaseDC(fontPtr->hwnd, hdc);
     return subFontPtr;
@@ -2649,14 +2726,15 @@ FontMapInsert(
 
 static void
 FontMapLoadPage(
-    SubFont *subFontPtr,
-    int row)
+    SubFont *subFontPtr,	/* Contains font mapping cache to be
+				 * updated. */
+    int row)			/* Index of the page to be loaded into the
+				 * cache. */
 {
     FontFamily *familyPtr;
     Tcl_Encoding encoding;
-    ULONG i, j, bitOffset, end;        /* changed from int to ULONG */
-    int segCount;
-    ULONG *startCount, *endCount;
+    int i, j, bitOffset, end, segCount;
+    USHORT *startCount, *endCount;
     char buf[16], src[6];
 
     subFontPtr->fontMap[row] = (char *)Tcl_Alloc(FONTMAP_BITSPERPAGE / 8);
@@ -2666,41 +2744,55 @@ FontMapLoadPage(
     encoding = familyPtr->encoding;
 
     if (familyPtr->encoding == TkWinGetUnicodeEncoding()) {
-        /*
-         * Font is Unicode. Use the TrueType character existence metrics.
-         */
-        segCount    = familyPtr->segCount;
-        startCount  = familyPtr->startCount;   /* ULONG* */
-        endCount    = familyPtr->endCount;     /* ULONG* */
+	/*
+	 * Font is Unicode. Few fonts are going to have all characters, so
+	 * examine the TrueType character existence metrics to determine what
+	 * characters actually exist in this font.
+	 */
 
-        j = 0;
-        end = ((ULONG)(row + 1)) << FONTMAP_SHIFT;
-        for (i = ((ULONG)row) << FONTMAP_SHIFT; i < end; i++) {
-            for ( ; j < (ULONG)segCount; j++) {
-                if (endCount[j] >= i) {
-                    if (startCount[j] <= i) {
-                        bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
-                        subFontPtr->fontMap[row][bitOffset >> 3] |=
-                                1 << (bitOffset & 7);
-                    }
-                    break;
-                }
-            }
-        }
+	segCount    = familyPtr->segCount;
+	startCount  = familyPtr->startCount;
+	endCount    = familyPtr->endCount;
+
+	j = 0;
+	end = (row + 1) << FONTMAP_SHIFT;
+	for (i = row << FONTMAP_SHIFT; i < end; i++) {
+	    for ( ; j < segCount; j++) {
+		if (endCount[j] >= i) {
+		    if (startCount[j] <= i) {
+			bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
+			subFontPtr->fontMap[row][bitOffset >> 3] |=
+				1 << (bitOffset & 7);
+		    }
+		    break;
+		}
+	    }
+	}
     } else if (familyPtr->isSymbolFont) {
-        /*
-         * Symbol font with known encoding: assume all characters in that encoding exist.
-         */
-        end = ((ULONG)(row + 1)) << FONTMAP_SHIFT;
-        for (i = ((ULONG)row) << FONTMAP_SHIFT; i < end; i++) {
-            if (Tcl_UtfToExternal(NULL, encoding, src,
-                    Tcl_UniCharToUtf((int)i, src), TCL_ENCODING_PROFILE_STRICT, NULL,
-                    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
-                continue;
-            }
-            bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
-            subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
-        }
+	/*
+	 * Assume that a symbol font with a known encoding has all the
+	 * characters that its encoding claims it supports.
+	 *
+	 * The test for "encoding == unicodeEncoding" must occur before this
+	 * case, to catch all symbol fonts (such as {Comic Sans MS} or
+	 * Wingdings) for which we don't have encoding information; those
+	 * symbol fonts are treated as if they were in the Unicode encoding
+	 * and their symbolic character existence metrics are treated as if
+	 * they were Unicode character existence metrics. This way, although
+	 * we don't know the proper Unicode -> symbol font mapping, we can
+	 * install the symbol font as the base font and access its glyphs.
+	 */
+
+	end = (row + 1) << FONTMAP_SHIFT;
+	for (i = row << FONTMAP_SHIFT; i < end; i++) {
+	    if (Tcl_UtfToExternal(NULL, encoding, src,
+		    Tcl_UniCharToUtf(i, src), TCL_ENCODING_PROFILE_STRICT, NULL,
+		    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
+		continue;
+	    }
+	    bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
+	    subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
+	}
     }
 }
 
@@ -3142,20 +3234,6 @@ typedef union SUBTABLE {
     TRIMMEDTABLE trimmed;
 } SUBTABLE;
 
-typedef struct FORMAT12GROUP {
-    ULONG startCharCode;
-    ULONG endCharCode;
-    ULONG startGlyphCode;   /* not used; present for correct sizeof */
-} FORMAT12GROUP;
-
-typedef struct FORMAT12TABLE {
-    USHORT format;          /* 12 */
-    USHORT reserved;
-    ULONG  length;
-    ULONG  language;
-    ULONG  nGroups;
-} FORMAT12TABLE;
-
 #pragma pack()
 
 /*
@@ -3182,27 +3260,26 @@ typedef struct FORMAT12TABLE {
 
 static int
 LoadFontRanges(
-    HDC hdc,
-    HFONT hFont,
-    ULONG **startCountPtr,   /* changed from USHORT** */
-    ULONG **endCountPtr,     /* changed from USHORT** */
+    HDC hdc,			/* HDC into which font can be selected. */
+    HFONT hFont,		/* HFONT to query. */
+    USHORT **startCountPtr,	/* Filled with malloced pointer to character
+				 * range information. */
+    USHORT **endCountPtr,	/* Filled with malloced pointer to character
+				 * range information. */
     int *symbolPtr)
-{
+ {
     int n, i, j, k, swapped, segCount;
     size_t cbData, offset;
     DWORD cmapKey;
+    USHORT *startCount, *endCount;
     CMAPTABLE cmapTable;
     ENCODINGTABLE encTable;
     SUBTABLE subTable;
     char *s;
 
-    ULONG *startCount = NULL;
-    ULONG *endCount   = NULL;
-    ULONG *f12Start   = NULL;   /* now ULONG */
-    ULONG *f12End     = NULL;   /* now ULONG */
-    int    f12Count   = 0;
-
-    segCount   = 0;
+    segCount = 0;
+    startCount = NULL;
+    endCount = NULL;
     *symbolPtr = 0;
 
     hFont = (HFONT)SelectObject(hdc, hFont);
@@ -3211,188 +3288,108 @@ LoadFontRanges(
     s = (char *) &i;
     *s = '\1';
     swapped = 0;
+
     if (i == 1) {
-        swapped = 1;
+	swapped = 1;
     }
 
     cmapKey = CMAPHEX;
     if (swapped) {
-        SwapLong(&cmapKey);
+	SwapLong(&cmapKey);
     }
 
     n = GetFontData(hdc, cmapKey, 0, &cmapTable, sizeof(cmapTable));
     if (n != (int) GDI_ERROR) {
-        if (swapped) {
-            SwapShort(&cmapTable.numTables);
-        }
-        for (i = 0; i < cmapTable.numTables; i++) {
-            offset = sizeof(cmapTable) + i * sizeof(encTable);
-            GetFontData(hdc, cmapKey, (DWORD) offset, &encTable,
-                    sizeof(encTable));
-            if (swapped) {
-                SwapShort(&encTable.platform);
-                SwapShort(&encTable.encoding);
-                SwapLong(&encTable.offset);
-            }
-            if (encTable.platform != 3) {
-                continue;
-            }
+	if (swapped) {
+	    SwapShort(&cmapTable.numTables);
+	}
+	for (i = 0; i < cmapTable.numTables; i++) {
+	    offset = sizeof(cmapTable) + i * sizeof(encTable);
+	    GetFontData(hdc, cmapKey, (DWORD) offset, &encTable,
+		    sizeof(encTable));
+	    if (swapped) {
+		SwapShort(&encTable.platform);
+		SwapShort(&encTable.encoding);
+		SwapLong(&encTable.offset);
+	    }
+	    if (encTable.platform != 3) {
+		/*
+		 * Not Microsoft encoding.
+		 */
 
-            if (encTable.encoding == 0) {
-                *symbolPtr = 1;
-            } else if (encTable.encoding == 1) {
-                /*
-                 * Platform 3, encoding 1: BMP Unicode via format-4.
-                 */
-                GetFontData(hdc, cmapKey, (DWORD) encTable.offset, &subTable,
-                        sizeof(subTable));
-                if (swapped) {
-                    SwapShort(&subTable.any.format);
-                }
-                if (subTable.any.format == 4) {
-                    if (swapped) {
-                        SwapShort(&subTable.segment.segCountX2);
-                    }
-                    segCount = subTable.segment.segCountX2 / 2;
-                    cbData = segCount * sizeof(USHORT);
+		continue;
+	    }
+	    if (encTable.encoding == 0) {
+		*symbolPtr = 1;
+	    } else if (encTable.encoding != 1) {
+		continue;
+	    }
 
-                    /* Temporary USHORT arrays for reading */
-                    USHORT *tmpEnd   = (USHORT *)Tcl_Alloc(cbData);
-                    USHORT *tmpStart = (USHORT *)Tcl_Alloc(cbData);
+	    GetFontData(hdc, cmapKey, (DWORD) encTable.offset, &subTable,
+		    sizeof(subTable));
+	    if (swapped) {
+		SwapShort(&subTable.any.format);
+	    }
+	    if (subTable.any.format == 4) {
+		if (swapped) {
+		    SwapShort(&subTable.segment.segCountX2);
+		}
+		segCount = subTable.segment.segCountX2 / 2;
+		cbData = segCount * sizeof(USHORT);
 
-                    offset = encTable.offset + sizeof(subTable.segment);
-                    GetFontData(hdc, cmapKey, (DWORD) offset,
-                            tmpEnd, (DWORD) cbData);
-                    offset += cbData + sizeof(USHORT);
-                    GetFontData(hdc, cmapKey, (DWORD) offset,
-                            tmpStart, (DWORD) cbData);
-                    if (swapped) {
-                        for (j = 0; j < segCount; j++) {
-                            SwapShort(&tmpEnd[j]);
-                            SwapShort(&tmpStart[j]);
-                        }
-                    }
+		startCount = (USHORT *)Tcl_Alloc(cbData);
+		endCount = (USHORT *)Tcl_Alloc(cbData);
 
-                    /* Convert to ULONG arrays */
-                    startCount = (ULONG *)Tcl_Alloc(segCount * sizeof(ULONG));
-                    endCount   = (ULONG *)Tcl_Alloc(segCount * sizeof(ULONG));
-                    for (j = 0; j < segCount; j++) {
-                        startCount[j] = (ULONG)tmpStart[j];
-                        endCount[j]   = (ULONG)tmpEnd[j];
-                    }
+		offset = encTable.offset + sizeof(subTable.segment);
+		GetFontData(hdc, cmapKey, (DWORD) offset, endCount, (DWORD)cbData);
+		offset += cbData + sizeof(USHORT);
+		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, (DWORD)cbData);
+		if (swapped) {
+		    for (j = 0; j < segCount; j++) {
+			SwapShort(&endCount[j]);
+			SwapShort(&startCount[j]);
+		    }
+		}
+		if (*symbolPtr != 0) {
+		    /*
+		     * Empirically determined: When a symbol font is loaded,
+		     * the character existence metrics obtained from the
+		     * system are mildly wrong. If the real range of the
+		     * symbol font is from 0020 to 00FE, then the metrics are
+		     * reported as F020 to F0FE. When we load a symbol font,
+		     * we must fix the character existence metrics.
+		     *
+		     * Symbol fonts should only use the symbol encoding for
+		     * 8-bit characters [note Bug: 2406]
+		     */
 
-                    Tcl_Free(tmpStart);
-                    Tcl_Free(tmpEnd);
-
-                    if (*symbolPtr != 0) {
-                        for (k = 0; k < segCount; k++) {
-                            if (((startCount[k] & 0xff00) == 0xf000)
-                                    && ((endCount[k] & 0xff00) == 0xf000)) {
-                                startCount[k] &= 0xff;
-                                endCount[k]   &= 0xff;
-                            }
-                        }
-                    }
-                }
-
-            } else if (encTable.encoding == 10) {
-                /*
-                 * Platform 3, encoding 10: full Unicode via format-12.
-                 */
-                FORMAT12TABLE f12hdr;
-                GetFontData(hdc, cmapKey, (DWORD) encTable.offset,
-                        &f12hdr, sizeof(f12hdr));
-                if (swapped) {
-                    SwapShort(&f12hdr.format);
-                }
-                if (f12hdr.format == 12) {
-                    ULONG nGroups;
-                    if (swapped) {
-                        SwapLong(&f12hdr.length);
-                        SwapLong(&f12hdr.language);
-                        SwapLong(&f12hdr.nGroups);
-                    }
-                    nGroups = f12hdr.nGroups;
-
-                    f12Start = (ULONG *)Tcl_Alloc(
-                            sizeof(ULONG) * (size_t) nGroups);
-                    f12End   = (ULONG *)Tcl_Alloc(
-                            sizeof(ULONG) * (size_t) nGroups);
-                    f12Count = 0;
-
-                    offset = encTable.offset + sizeof(FORMAT12TABLE);
-                    for (j = 0; j < (int) nGroups; j++) {
-                        FORMAT12GROUP grp;
-                        GetFontData(hdc, cmapKey, (DWORD) offset,
-                                &grp, sizeof(grp));
-                        offset += sizeof(FORMAT12GROUP);
-                        if (swapped) {
-                            SwapLong(&grp.startCharCode);
-                            SwapLong(&grp.endCharCode);
-                        }
-                        /* Skip pure-BMP groups; format-4 already covers them. */
-                        if (grp.endCharCode <= 0xFFFF) {
-                            continue;
-                        }
-                        /* Clamp to the fontmap ceiling (0x3FFFF currently). */
-                        if (grp.startCharCode >= FONTMAP_NUMCHARS) {
-                            continue;
-                        }
-                        if (grp.endCharCode >= FONTMAP_NUMCHARS) {
-                            grp.endCharCode = FONTMAP_NUMCHARS - 1;
-                        }
-                        /* Store full 32-bit values – no truncation! */
-                        f12Start[f12Count] = grp.startCharCode;
-                        f12End[f12Count]   = grp.endCharCode;
-                        f12Count++;
-                    }
-                }
-            }
-            /* All other encoding values are ignored. */
-        }
+		    for (k = 0; k < segCount; k++) {
+			if (((startCount[k] & 0xff00) == 0xf000)
+				&& ((endCount[k] & 0xff00) == 0xf000)) {
+			    startCount[k] &= 0xff;
+			    endCount[k] &= 0xff;
+			}
+		    }
+		}
+	    }
+	}
     } else if (GetTextCharset(hdc) == ANSI_CHARSET) {
-        /*
-         * Bitmap font: assume single segment covering 0x0000–0x00FF.
-         */
-        segCount = 1;
-        startCount = (ULONG *)Tcl_Alloc(sizeof(ULONG));
-        endCount   = (ULONG *)Tcl_Alloc(sizeof(ULONG));
-        startCount[0] = 0x0000;
-        endCount[0]   = 0x00FF;
+	/*
+	 * Bitmap font. We should also support ranges for the other *_CHARSET
+	 * values.
+	 */
+
+	segCount = 1;
+	cbData = segCount * sizeof(USHORT);
+	startCount = (USHORT *)Tcl_Alloc(cbData);
+	endCount = (USHORT *)Tcl_Alloc(cbData);
+	startCount[0] = 0x0000;
+	endCount[0] = 0x00ff;
     }
-
-    /*
-     * Merge format-12 SMP segments with format-4 BMP segments.
-     */
-    if (f12Count > 0) {
-        int total   = segCount + f12Count;
-        ULONG *mergedStart = (ULONG *)Tcl_Alloc(total * sizeof(ULONG));
-        ULONG *mergedEnd   = (ULONG *)Tcl_Alloc(total * sizeof(ULONG));
-
-        if (segCount > 0 && startCount != NULL) {
-            memcpy(mergedStart, startCount, segCount * sizeof(ULONG));
-            memcpy(mergedEnd,   endCount,   segCount * sizeof(ULONG));
-            Tcl_Free(startCount);
-            Tcl_Free(endCount);
-        }
-        memcpy(mergedStart + segCount, f12Start, f12Count * sizeof(ULONG));
-        memcpy(mergedEnd   + segCount, f12End,   f12Count * sizeof(ULONG));
-        Tcl_Free(f12Start);
-        Tcl_Free(f12End);
-
-        startCount = mergedStart;
-        endCount   = mergedEnd;
-        segCount   = total;
-    } else if (f12Start != NULL) {
-        /* No BMP segments, but we had SMP segments – shouldn't happen, but free. */
-        Tcl_Free(f12Start);
-        Tcl_Free(f12End);
-    }
-
     SelectObject(hdc, hFont);
 
     *startCountPtr = startCount;
-    *endCountPtr   = endCount;
+    *endCountPtr = endCount;
     return segCount;
 }
 
