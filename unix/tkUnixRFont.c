@@ -1747,7 +1747,7 @@ Tk_MeasureChars(
 
         if (maxLength >= 0 && (curX + glyphWidth) > maxLength) {
             /* We hit the margin! */
-            if (lastBreakByte > 0 && !(flags & TK_WHOLE_WORDS == 0)) {
+            if (lastBreakByte > 0 && !(flags & (TK_WHOLE_WORDS == 0))) {
                 /* Wrap at the last space we found. */
                 *lengthPtr = lastBreakX;
                 return lastBreakByte;
@@ -2033,7 +2033,6 @@ Tk_DrawCharsInContext(
     XftGlyphFontSpec specs[MAX_GLYPHS];
     int nspec = 0;
     int rangeEnd = rangeStart + rangeLength;
-    int baseX = x;  /* Starting X position for the first glyph we draw. */
     int firstGlyphFound = 0;
     
     /* We need to find the actual screen X position of the first glyph
