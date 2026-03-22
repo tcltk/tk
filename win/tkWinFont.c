@@ -2003,7 +2003,7 @@ MultiFontTextOut(
 
     /*
      * Normal Uniscribe path -
-	 * 
+     * 
      * Used for all non-emoji text: Arabic, Hebrew, Indic, Thai, etc.
      */
 
