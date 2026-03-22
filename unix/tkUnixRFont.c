@@ -591,17 +591,20 @@ GetBidiRuns(
 
 /*
  * ---------------------------------------------------------------
- * InitFontErrorProc --
+ * InitFont --
  *
- *   Error handler for font initialization.
+ *   Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
+ *   also allocates a new UnixFtFont.
  *
  * Results:
- *   Always returns 0.
+ *   On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
  *
  * Side effects:
- *   Sets error flag.
+ *   Allocates memory, loads fonts, initializes shaper.
  * ---------------------------------------------------------------
  */
+
+static void FinishedWithFont(UnixFtFont *fontPtr);
 
 static int
 InitFontErrorProc(
@@ -609,8 +612,9 @@ InitFontErrorProc(
     TCL_UNUSED(XErrorEvent *))
 {
     int *errorFlagPtr = (int *)clientData;
+
     if (errorFlagPtr != NULL) {
-        *errorFlagPtr = 1;
+	*errorFlagPtr = 1;
     }
     return 0;
 }
@@ -630,8 +634,6 @@ InitFontErrorProc(
  * ---------------------------------------------------------------
  */
 
-static void FinishedWithFont(UnixFtFont *fontPtr);
-
 static UnixFtFont *
 InitFont(
     Tk_Window tkwin,
@@ -642,116 +644,152 @@ InitFont(
     FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
-    int i, errorFlag;
+    int i, iWidth, errorFlag;
     Tk_ErrorHandler handler;
 
     if (!fontPtr) {
         fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
-        memset(fontPtr, 0, sizeof(UnixFtFont));
+        if (!fontPtr) {
+            return NULL;
+        }
+        memset(fontPtr, 0, sizeof(UnixFtFont));  /* Safer than relying on zero-init. */
     }
 
-    /* Configure font pattern. */
-    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    FcConfigSubstitute(0, pattern, FcMatchPattern);
     XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
 
-    /* Sort fonts by quality. */
-    set = FcFontSort(NULL, pattern, FcTrue, NULL, &result);
+    /*
+     * Generate the list of fonts.
+     */
+    set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-        if (fontPtr) Tcl_Free(fontPtr);
+        if (!fontPtr->font.fid) {  /* Only free if newly allocated. */
+            Tcl_Free(fontPtr);
+        }
+        FcPatternDestroy(pattern);
         return NULL;
     }
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
     fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
-    memset(fontPtr->faces, 0, set->nfont * sizeof(UnixFtFace));
+    if (!fontPtr->faces) {
+        FcFontSetDestroy(set);
+        Tcl_Free(fontPtr);
+        FcPatternDestroy(pattern);
+        return NULL;
+    }
     fontPtr->nfaces = set->nfont;
 
-    /* Initialize each face. */
+    /*
+     * Fill in information about each returned font.
+     */
     for (i = 0; i < set->nfont; i++) {
-        fontPtr->faces[i].source = set->fonts[i];
+        fontPtr->faces[i].ftFont     = NULL;
+        fontPtr->faces[i].ft0Font    = NULL;
+        fontPtr->faces[i].source     = set->fonts[i];
+        fontPtr->faces[i].angle      = 0.0;
+        fontPtr->faces[i].kbFont     = NULL;
+        fontPtr->faces[i].isLoaded   = 0;
+        fontPtr->faces[i].unitsPerEm = 0.0;
+        fontPtr->faces[i].ascender   = 0.0;
+        fontPtr->faces[i].descender  = 0.0;
+
         if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0, &charset) == FcResultMatch) {
             fontPtr->faces[i].charset = FcCharSetCopy(charset);
+        } else {
+            fontPtr->faces[i].charset = NULL;
         }
-
-        /* Will get actual unitsPerEm when font is opened. */
-        fontPtr->faces[i].unitsPerEm = 0;
-        fontPtr->faces[i].ascender = 0;
-        fontPtr->faces[i].descender = 0;
     }
 
-    fontPtr->display = Tk_Display(tkwin);
-    fontPtr->screen = Tk_ScreenNumber(tkwin);
-    fontPtr->colormap = Tk_Colormap(tkwin);
-    fontPtr->visual = Tk_Visual(tkwin);
-    fontPtr->firstColor = -1;
-    fontPtr->lastDrawable = None;
+    /*
+     *   Initialize the shaper before calling GetFont() or Tk_MeasureChars()
+     *   because both can trigger shaping operations.
+     */
+    X11Shaper_Init(&fontPtr->shaper, fontPtr);
 
-    /* Get base font metrics. */
+    /* Set a safe default pixel scale (will be overridden 
+     * per-face when metrics are loaded). 
+     */
+    fontPtr->pixelScale = 1.0;
+
+    fontPtr->display   = Tk_Display(tkwin);
+    fontPtr->screen    = Tk_ScreenNumber(tkwin);
+    fontPtr->colormap  = Tk_Colormap(tkwin);
+    fontPtr->visual    = Tk_Visual(tkwin);
+    fontPtr->ftDraw    = NULL;
+    fontPtr->ncolors   = 0;
+    fontPtr->firstColor = -1;
+
+    /*
+     * Fill in platform-specific fields of TkFont.
+     */
     errorFlag = 0;
-    handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1,
-                                    InitFontErrorProc, (void *)&errorFlag);
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+                    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 
     ftFont = GetFont(fontPtr, 0, 0.0);
-    if (!ftFont || errorFlag) {
+    if ((ftFont == NULL) || errorFlag) {
         Tk_DeleteErrorHandler(handler);
         FinishedWithFont(fontPtr);
+        if (!fontPtr->font.fid) {
+            Tcl_Free(fontPtr);
+        }
         return NULL;
     }
 
-    fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
+    fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");  /* legacy fallback */
+
     GetTkFontAttributes(tkwin, ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
 
-    /* Calculate pixel scale. */
-    fontPtr->pixelScale = (double)ftFont->ascent / 2048.0; /* Approximate. */
-
     Tk_DeleteErrorHandler(handler);
-
     if (errorFlag) {
         FinishedWithFont(fontPtr);
+        if (!fontPtr->font.fid) {
+            Tcl_Free(fontPtr);
+        }
         return NULL;
     }
 
     /*
-     * Fontconfig can't report any information about the position or thickness
-     * of underlines or overstrikes. Thus, we use some defaults that are
-     * hacked around from backup defaults in tkUnixFont.c.
+     * Compute underline position and thickness.
      */
     {
         TkFont *fPtr = &fontPtr->font;
-        int iWidth;
 
         fPtr->underlinePos = fPtr->fm.descent / 2;
 
         errorFlag = 0;
-        handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1,
-                                        InitFontErrorProc, (void *)&errorFlag);
+        handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+                        -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+
         Tk_MeasureChars((Tk_Font)fPtr, "I", 1, -1, 0, &iWidth);
+
         Tk_DeleteErrorHandler(handler);
-
-        if (!errorFlag) {
-            fPtr->underlineHeight = iWidth / 3;
-            if (fPtr->underlineHeight == 0) fPtr->underlineHeight = 1;
-
-            if (fPtr->underlineHeight + fPtr->underlinePos > fPtr->fm.descent) {
-                fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
-                if (fPtr->underlineHeight == 0) {
-                    fPtr->underlinePos--;
-                    fPtr->underlineHeight = 1;
-                }
+        if (errorFlag) {
+            FinishedWithFont(fontPtr);
+            if (!fontPtr->font.fid) {
+                Tcl_Free(fontPtr);
             }
-        } else {
+            return NULL;
+        }
+
+        fPtr->underlineHeight = iWidth / 3;
+        if (fPtr->underlineHeight == 0) {
             fPtr->underlineHeight = 1;
+        }
+        if (fPtr->underlineHeight + fPtr->underlinePos > fPtr->fm.descent) {
+            fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
+            if (fPtr->underlineHeight == 0) {
+                fPtr->underlinePos--;
+                fPtr->underlineHeight = 1;
+            }
         }
     }
 
-    /* Initialize shaper with this font's faces. */
-    X11Shaper_Init(&fontPtr->shaper, fontPtr);
-
     return fontPtr;
 }
-
 /*
  * ---------------------------------------------------------------
  * FinishedWithFont --
@@ -772,32 +810,42 @@ FinishedWithFont(
 {
     Display *display = fontPtr->display;
     int i;
-    Tk_ErrorHandler handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+    Tk_ErrorHandler handler =
+	    Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
     for (i = 0; i < fontPtr->nfaces; i++) {
-        if (fontPtr->faces[i].ftFont) {
-            LOCK;
-            XftFontClose(display, fontPtr->faces[i].ftFont);
-            UNLOCK;
-        }
-        if (fontPtr->faces[i].ft0Font) {
-            LOCK;
-            XftFontClose(display, fontPtr->faces[i].ft0Font);
-            UNLOCK;
-        }
-        if (fontPtr->faces[i].charset) {
-            FcCharSetDestroy(fontPtr->faces[i].charset);
-        }
+	if (fontPtr->faces[i].ftFont) {
+	    LOCK;
+	    XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
+	    UNLOCK;
+	}
+	if (fontPtr->faces[i].ft0Font) {
+	    LOCK;
+	    XftFontClose(fontPtr->display, fontPtr->faces[i].ft0Font);
+	    UNLOCK;
+	}
+	if (fontPtr->faces[i].charset) {
+	    FcCharSetDestroy(fontPtr->faces[i].charset);
+	}
+    }
+    if (fontPtr->faces) {
+	Tcl_Free(fontPtr->faces);
+    }
+    if (fontPtr->pattern) {
+	FcPatternDestroy(fontPtr->pattern);
+    }
+    if (fontPtr->ftDraw) {
+	XftDrawDestroy(fontPtr->ftDraw);
+    }
+    if (fontPtr->font.fid) {
+	XUnloadFont(fontPtr->display, fontPtr->font.fid);
+    }
+    if (fontPtr->fontset) {
+	FcFontSetDestroy(fontPtr->fontset);
     }
 
-    if (fontPtr->faces) Tcl_Free(fontPtr->faces);
-    if (fontPtr->pattern) FcPatternDestroy(fontPtr->pattern);
-    if (fontPtr->ftDraw) XftDrawDestroy(fontPtr->ftDraw);
-    if (fontPtr->font.fid) XUnloadFont(display, fontPtr->font.fid);
-    if (fontPtr->fontset) FcFontSetDestroy(fontPtr->fontset);
-
     X11Shaper_Destroy(&fontPtr->shaper);
-
+    
     Tk_DeleteErrorHandler(handler);
 }
 
@@ -1460,70 +1508,52 @@ TkpGetNativeFont(
  *   Allocates font resources; may reuse an existing font structure.
  * ---------------------------------------------------------------
  */
-
+ 
 TkFont *
-TkpGetFontFromAttributes(
-    TkFont *tkFontPtr,
-    Tk_Window tkwin,
-    const TkFontAttributes *faPtr)
-{
+TkpGetFontFromAttributes(TkFont *tkFontPtr, Tk_Window tkwin, const TkFontAttributes *faPtr) {
     XftPattern *pattern = XftPatternCreate();
-    int weight, slant;
     const char *family = faPtr->family;
 
-    /* If no family specified, use sans-serif as default. */
     if (!family || family[0] == '\0') {
         family = "sans-serif";
     }
-    
-    XftPatternAddString(pattern, XFT_FAMILY, family);
 
-    if (faPtr->size > 0.0) {
-        XftPatternAddDouble(pattern, XFT_SIZE, faPtr->size);
-    } else if (faPtr->size < 0.0) {
-        XftPatternAddDouble(pattern, XFT_SIZE, TkFontGetPoints(tkwin, faPtr->size));
-    } else {
-        XftPatternAddDouble(pattern, XFT_SIZE, 12.0);
+    /* Force Fontconfig to treat this as a preferred family */
+    XftPatternAddString(pattern, XFT_FAMILY, family);
+    
+    /* ADD THIS: Explicitly tell Xft we want a sans-serif style if the family is generic */
+    if (strcmp(family, "sans-serif") == 0) {
+        XftPatternAddInteger(pattern, XFT_SPACING, XFT_PROPORTIONAL);
+        XftPatternAddString(pattern, FC_STYLE, "Regular");
     }
 
-    weight = (faPtr->weight == TK_FW_BOLD) ? XFT_WEIGHT_BOLD : XFT_WEIGHT_MEDIUM;
+    double size = (faPtr->size > 0.0) ? faPtr->size : 
+                 ((faPtr->size < 0.0) ? TkFontGetPoints(tkwin, faPtr->size) : 12.0);
+    XftPatternAddDouble(pattern, XFT_SIZE, size);
+
+    int weight = (faPtr->weight == TK_FW_BOLD) ? XFT_WEIGHT_BOLD : XFT_WEIGHT_MEDIUM;
     XftPatternAddInteger(pattern, XFT_WEIGHT, weight);
 
-    switch (faPtr->slant) {
-        case TK_FS_ITALIC:  slant = XFT_SLANT_ITALIC;  break;
-        case TK_FS_OBLIQUE: slant = XFT_SLANT_OBLIQUE; break;
-        default:            slant = XFT_SLANT_ROMAN;   break;
-    }
+    int slant = (faPtr->slant == TK_FS_ROMAN) ? XFT_SLANT_ROMAN : XFT_SLANT_ITALIC;
     XftPatternAddInteger(pattern, XFT_SLANT, slant);
 
-    /* Resolve "sans-serif" alias and system defaults. */
-    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    /* Perform system substitution */
     XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
+    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
 
     UnixFtFont *fontPtr = (UnixFtFont *)tkFontPtr;
-    if (fontPtr != NULL) {
-        FinishedWithFont(fontPtr);
-    }
-
     fontPtr = InitFont(tkwin, pattern, fontPtr);
 
-    /* Fallback if Xft rendering fails. */
     if (!fontPtr) {
-        XftPatternAddBool(pattern, XFT_RENDER, FcFalse);
-        fontPtr = InitFont(tkwin, pattern, fontPtr);
+        /* Emergency Fallback: If "sans-serif" failed, try "sans" */
+        XftPatternDestroy(pattern);
+        pattern = XftPatternBuild(NULL, XFT_FAMILY, XftTypeString, "sans", 
+                                  XFT_SIZE, XftTypeDouble, size, NULL);
+        fontPtr = InitFont(tkwin, pattern, (UnixFtFont *)tkFontPtr);
     }
 
-    if (!fontPtr) {
-        FcPatternDestroy(pattern);
-        return NULL;
-    }
-
-    fontPtr->font.fa.underline   = faPtr->underline;
-    fontPtr->font.fa.overstrike  = faPtr->overstrike;
-
-    return &fontPtr->font;
+    return (TkFont *)fontPtr;
 }
-
 /*
  * ---------------------------------------------------------------
  * TkpDeleteFont --
@@ -1681,93 +1711,64 @@ TkpGetFontAttrsForChar(
 
 int
 Tk_MeasureChars(
-    Tk_Font tkfont,
-    const char *source,
-    Tcl_Size numBytes,
-    int maxLength,
-    int flags,
-    int *lengthPtr)
+	Tk_Font tkfont, 
+	const char *source, 
+	Tcl_Size numBytes, 
+	int maxLength, 
+	int flags, 
+	int *lengthPtr) 
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+	
+	UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
     ShapedGlyphBuffer buffer;
 
-    /* Shape the string to get the actual glyph advances. */
-    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                                (int)numBytes, &buffer)) {
-        *lengthPtr = 0;
-        return 0;
+    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &buffer)) {
+        *lengthPtr = 0; return 0;
     }
 
-    int totalWidth = 0;
-    int bytesConsumed = 0;
-    int lastBreakPos = 0;       /* Byte position of last valid break (whitespace). */
-    int lastBreakWidth = 0;     /* Width up to last break. */
-    int lastBreakGlyph = -1;    /* Glyph index of last break. */
-    int lastValidPos = 0;       /* Last valid position before overflow. */
-    int lastValidWidth = 0;     /* Width up to last valid position. */
+    int curX = 0;
+    int curByte = 0;
+    int lastBreakByte = 0;
+    int lastBreakX = 0;
 
-    /* To prevent the "bunched up" text in the UI, we must sum the
-     * advances of the glyphs in the order they appear in the SHAPED buffer.
-     */
     for (int i = 0; i < buffer.glyphCount; i++) {
-        int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
-        int bytePos = buffer.glyphs[i].byteOffset;
+        int glyphWidth = buffer.glyphs[i].advanceX;
         
-	/* Character-based break detection. */
-        if (bytePos < (int)numBytes && bytePos >= 0) {
-            char ch = source[bytePos];
-            if (ch == ' ' || ch == '\t' || ch == '\n') {
-                lastBreakPos = bytePos + buffer.glyphs[i].clusterLen;
-                lastBreakWidth = nextWidth;
-                lastBreakGlyph = i;
+        /* Check the source byte at this glyph's offset.
+         * If it's a space, we MUST record it as a wrap point.
+         */
+        int offset = buffer.glyphs[i].byteOffset;
+        if (offset >= 0 && offset < numBytes) {
+            if (source[offset] == ' ' || source[offset] == '\t') {
+                lastBreakByte = offset + buffer.glyphs[i].clusterLen;
+                lastBreakX = curX + glyphWidth;
             }
         }
 
-        /* Check if we've exceeded the max width. */
-        if (maxLength >= 0 && nextWidth > maxLength) {
-            /* We've exceeded maxLength. Decide where to break. */
-            
-            /* First, try to use the last valid break point if we have one. */
-            if (lastBreakGlyph >= 0) {
-                totalWidth = lastBreakWidth;
-                bytesConsumed = lastBreakPos;
-            } 
-            /* Otherwise, if we have a valid position before overflow, use that. */
-            else if (lastValidPos > 0) {
-                totalWidth = lastValidWidth;
-                bytesConsumed = lastValidPos;
+        if (maxLength >= 0 && (curX + glyphWidth) > maxLength) {
+            /* We hit the margin! */
+            if (lastBreakByte > 0 && !(flags & TK_WHOLE_WORDS == 0)) {
+                /* Wrap at the last space we found. */
+                *lengthPtr = lastBreakX;
+                return lastBreakByte;
             }
-            /* If we need at least one character and haven't consumed any yet. */
-            else if ((flags & TK_AT_LEAST_ONE) && bytesConsumed == 0) {
-                /* Include this character even if it exceeds the limit. */
-                totalWidth = nextWidth;
-                bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
+            /* No space found, or breaking mid-word is allowed. */
+            if (flags & TK_AT_LEAST_ONE && curByte == 0) {
+                *lengthPtr = curX + glyphWidth;
+                return offset + buffer.glyphs[i].clusterLen;
             }
-            /* Break before this character - keep previous values. */
-            break;
+            *lengthPtr = curX;
+            return curByte;
         }
 
-        /* Update last valid position (always valid if we didn't overflow). */
-        lastValidPos = bytePos + buffer.glyphs[i].clusterLen;
-        lastValidWidth = nextWidth;
-        totalWidth = nextWidth;
-        bytesConsumed = lastValidPos;
+        curX += glyphWidth;
+        curByte = offset + buffer.glyphs[i].clusterLen;
     }
 
-    /* Handle the case where we never overflowed. */
-    if (maxLength < 0 || totalWidth <= maxLength) {
-        /* Ensure we don't exceed the original request. */
-        if (bytesConsumed > (int)numBytes) bytesConsumed = (int)numBytes;
-        *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : totalWidth;
-        return bytesConsumed;
-    }
-
-    /* Ensure we don't exceed the original request. */
-    if (bytesConsumed > (int)numBytes) bytesConsumed = (int)numBytes;
-    
-    *lengthPtr = totalWidth;
-    return bytesConsumed;
+    *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : curX;
+    return (curByte > numBytes) ? (int)numBytes : curByte;
 }
+
 /*
  * ---------------------------------------------------------------
  * Tk_MeasureCharsInContext --
@@ -1800,8 +1801,6 @@ Tk_MeasureCharsInContext(
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
     ShapedGlyphBuffer buffer;
     
-    /* * Shape the FULL string to preserve context.
-     */
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &buffer)) {
         *lengthPtr = 0;
@@ -1809,11 +1808,10 @@ Tk_MeasureCharsInContext(
     }
     
     int totalWidth = 0;
-    int bytesConsumed = 0;
+    int bytesConsumed = (int)rangeStart;
     int rangeEnd = (int)(rangeStart + rangeLength);
     
-    /* Track potential break points for wrapping */
-    int lastBreakPos = 0;
+    int lastBreakPos = (int)rangeStart;
     int lastBreakWidth = 0;
     int lastBreakGlyph = -1;
     
@@ -1821,19 +1819,12 @@ Tk_MeasureCharsInContext(
         int glyphStart = buffer.glyphs[i].byteOffset;
         int glyphEnd   = glyphStart + buffer.glyphs[i].clusterLen;
         
-        /* Skip glyphs entirely before the requested range. */
-        if (glyphEnd <= (int)rangeStart) {
-            continue;
-        }
-        
-        /* Stop when we've completely passed the range end. */
-        if (glyphStart >= rangeEnd) {
-            break;
-        }
+        if (glyphEnd <= (int)rangeStart) continue;
+        if (glyphStart >= rangeEnd) break;
         
         int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
 
-        /* Identify break points within the range. */
+        /* Check for spaces in the original source to allow wrapping. */
         if (glyphStart < (int)numBytes && glyphStart >= 0) {
             char ch = source[glyphStart];
             if (ch == ' ' || ch == '\t' || ch == '\n') {
@@ -1843,41 +1834,28 @@ Tk_MeasureCharsInContext(
             }
         }
 
-        /* Check against maxLength for wrapping */
         if (maxLength >= 0 && nextWidth > maxLength) {
             if (lastBreakGlyph >= 0) {
-                /* Wrap at the last seen space */
                 totalWidth = lastBreakWidth;
                 bytesConsumed = lastBreakPos;
-            } else if ((flags & TK_AT_LEAST_ONE) && bytesConsumed == 0) {
-                /* Force at least one character if no break found. */
-                totalWidth = nextWidth;
-                bytesConsumed = glyphEnd;
-            } else if (flags & TK_PARTIAL_OK) {
+            } else if ((flags & TK_AT_LEAST_ONE) && totalWidth == 0) {
                 totalWidth = nextWidth;
                 bytesConsumed = glyphEnd;
             }
-            break;
+            goto done;
         }
         
         totalWidth = nextWidth;
         bytesConsumed = glyphEnd;
     }
-    
-    /* Clamp bytesConsumed to the requested range boundaries. */
-    if (bytesConsumed > rangeEnd) {
-        bytesConsumed = rangeEnd;
-    }
-    if (bytesConsumed < (int)rangeStart) {
-        bytesConsumed = (int)rangeStart;
-    }
+
+done:
+    if (bytesConsumed > rangeEnd) bytesConsumed = rangeEnd;
+    if (bytesConsumed < (int)rangeStart) bytesConsumed = (int)rangeStart;
     
     *lengthPtr = totalWidth;
-    
-    /* Return byte count relative to rangeStart. */
     return (bytesConsumed - (int)rangeStart);
 }
-
 /*
  * ---------------------------------------------------------------
  * Tk_DrawChars --
