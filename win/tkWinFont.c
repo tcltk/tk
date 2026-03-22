@@ -104,6 +104,13 @@ typedef struct SubFont {
     FontFamily *familyPtr;	/* The FontFamily for this SubFont. */
     HFONT hFontAngled;
     double angle;
+    int hasColorGlyphs;		/* 1 if this font contains COLR or CBLC color
+				 * glyph tables (e.g. Segoe UI Emoji).
+				 * ScriptTextOut cannot render color glyphs;
+				 * runs using this subfont must be drawn with
+				 * ExtTextOutW + ETO_GLYPH_INDEX instead.
+				 * Set once by InitSubFont, -1 = not yet
+				 * checked. */
 } SubFont;
 
 /*
@@ -1895,12 +1902,20 @@ TkpDrawAngledCharsInContext(
  *
  *	This function is the sole drawing entry point.  It calls
  *	TkWinShapeString() to obtain fully shaped, bidi-reordered
- *	TkWinShapedRun buffers, then calls ScriptTextOut() for each run.
- *	No Unicode parsing, subfont selection, or bidi logic is performed
- *	here; all of that was done in the shaping layer.
+ *	TkWinShapedRun buffers, then dispatches each run to the appropriate
+ *	GDI rendering path:
  *
- *	If shaping fails, we fall back to plain GDI drawing with the base
- *	font.  This ensures that text always appears.
+ *	  - Runs whose subfont contains color glyph tables (COLR/CBLC, i.e.
+ *	    color emoji such as Segoe UI Emoji) are drawn with ExtTextOutW
+ *	    and ETO_GLYPH_INDEX.  ScriptTextOut uses the legacy GDI monochrome
+ *	    rasterizer which ignores color tables entirely, producing tofu
+ *	    (empty boxes) for every emoji glyph.
+ *
+ *	  - All other runs use ScriptTextOut as before so that Uniscribe
+ *	    shaping (ligatures, mark positioning, bidi, etc.) is preserved.
+ *
+ *	If shaping fails entirely we fall back to plain GDI drawing with the
+ *	base font so that text always appears.
  *
  *	The 'angle' parameter rotates the escapement of the font before
  *	shaping so that TrueType rotation is applied correctly per run.
@@ -1959,7 +1974,8 @@ MultiFontTextOut(
 
     /*
      * TRANSPARENT background mode: required so ScriptTextOut does not fill
-     * the glyph bounding box with the DC background color.
+     * the glyph bounding box with the DC background color, and so that
+     * ExtTextOutW leaves the background intact for color emoji glyphs.
      */
     int oldBkMode = SetBkMode(hdc, TRANSPARENT);
 
@@ -1967,6 +1983,7 @@ MultiFontTextOut(
         TkWinShapedRun *run = &runs[i];
         HFONT hDrawFont = run->hFont;
         HFONT hAngled   = NULL;
+        int runWidth    = 0, g;
 
         if (angle != 0.0) {
             hAngled = GetScreenFont(&fontPtr->font.fa,
@@ -1977,36 +1994,65 @@ MultiFontTextOut(
 
         SelectObject(hdc, hDrawFont);
 
-        /*
-         * Pass run->scriptCache, not NULL.
-         *
-         * ScriptTextOut MUST receive the same SCRIPT_CACHE* that was used
-         * during ScriptShape and ScriptPlace for this run.  Passing NULL
-         * causes Uniscribe to treat the glyph array as if it came from a
-         * fresh, uncached shaping pass against an unknown font, which on
-         * most Windows versions silently produces no output at all.
-         *
-         * run->scriptCache is set in TkWinShapeString to point at
-         * fontPtr->scriptCacheArray[subFontIdx] — the exact slot used for
-         * shape+place — so it is always valid for the lifetime of this call.
-         */
-        HRESULT hrDraw = ScriptTextOut(
-                hdc,
-                run->scriptCache,       /* must match font + shape pass */
-                (int)x, (int)y,
-                0,                      /* fuOptions */
-                NULL,                   /* no clip rect */
-                &run->sa,
-                NULL, 0,                /* pwcReserved / iReserved */
-                run->glyphs,
-                run->glyphCount,
-                run->advances,
-                NULL,                   /* no justification widths */
-                run->offsets);
-        (void)hrDraw;   /* non-fatal; add logging here if debugging */
+        if (run->subFontPtr->hasColorGlyphs) {
+            /*
+             * Color emoji path — ExtTextOutW + ETO_GLYPH_INDEX.
+             *
+             * ScriptTextOut routes through GDI's legacy monochrome
+             * rasterizer, which silently ignores the COLR (layered vector)
+             * and CBLC/CBDT (embedded bitmap) OpenType tables that color
+             * emoji fonts use.  The result is tofu for every emoji glyph.
+             *
+             * ExtTextOutW with ETO_GLYPH_INDEX bypasses the Unicode-to-glyph
+             * mapping stage and treats lpString as an array of WORD glyph
+             * indices — exactly what TkWinShapeString already produced.
+             * GDI's color-font rasterizer (available on Windows 8.1+) then
+             * renders the COLR/CBLC glyphs correctly.
+             *
+             * The lpdx array (run->advances) supplies per-glyph advance
+             * widths in device units, preserving the spacing computed during
+             * the Uniscribe place pass.
+             *
+             * Note: rotation (hAngled) is selected above before this branch,
+             * so emoji rotation works the same way as regular text.
+             */
+            ExtTextOutW(hdc,
+                    (int)x, (int)y,
+                    ETO_GLYPH_INDEX,        /* glyph indices, not code points */
+                    NULL,                   /* no clip rect */
+                    (LPCWSTR)run->glyphs,   /* WORD* glyphs cast to WCHAR*   */
+                    (UINT)run->glyphCount,
+                    run->advances);         /* per-glyph advance widths       */
+        } else {
+            /*
+             * Normal (monochrome / greyscale) path — ScriptTextOut.
+             *
+             * run->scriptCache MUST be the same SCRIPT_CACHE* that was
+             * passed to ScriptShape and ScriptPlace for this run.  Passing
+             * NULL causes Uniscribe to discard all shaping work and produce
+             * no visible output on most Windows versions.
+             *
+             * run->scriptCache is set in TkWinShapeString to point at
+             * fontPtr->scriptCacheArray[subFontIdx], so it is always valid
+             * for the lifetime of this call.
+             */
+            HRESULT hrDraw = ScriptTextOut(
+                    hdc,
+                    run->scriptCache,       /* must match font + shape pass */
+                    (int)x, (int)y,
+                    0,                      /* fuOptions                     */
+                    NULL,                   /* no clip rect                  */
+                    &run->sa,
+                    NULL, 0,                /* pwcReserved / iReserved       */
+                    run->glyphs,
+                    run->glyphCount,
+                    run->advances,
+                    NULL,                   /* no justification widths       */
+                    run->offsets);
+            (void)hrDraw;   /* non-fatal; add logging here if needed */
+        }
 
-        /* Advance pen along rotated baseline. */
-        int runWidth = 0, g;
+        /* Advance pen position along the (possibly rotated) baseline. */
         for (g = 0; g < run->glyphCount; g++) {
             runWidth += run->advances[g];
         }
@@ -2196,6 +2242,20 @@ ReleaseFont(
  *-------------------------------------------------------------------------
  */
 
+/*
+ * OT_TAG --
+ *
+ *   Build a little-endian DWORD from a four-character OpenType table tag so
+ *   it can be passed directly to GetFontData().  GetFontData expects the tag
+ *   as a DWORD in the byte order that Windows stores it (little-endian on
+ *   x86/x64), so 'COLR' becomes 0x524C4F43.
+ */
+#ifndef OT_TAG
+#define OT_TAG(a,b,c,d) \
+    ((DWORD)(BYTE)(a)        | ((DWORD)(BYTE)(b) << 8) | \
+     ((DWORD)(BYTE)(c) << 16)| ((DWORD)(BYTE)(d) << 24))
+#endif
+
 static inline void
 InitSubFont(
     HDC hdc,			/* HDC in which font can be selected. */
@@ -2205,11 +2265,32 @@ InitSubFont(
     SubFont *subFontPtr)	/* Filled with SubFont constructed from above
 				 * attributes. */
 {
+    HFONT oldFont;
+
     subFontPtr->hFont0	    = hFont;
     subFontPtr->familyPtr   = AllocFontFamily(hdc, hFont, base);
     subFontPtr->fontMap	    = subFontPtr->familyPtr->fontMap;
     subFontPtr->hFontAngled = NULL;
     subFontPtr->angle	    = 0.0;
+
+    /*
+     * Detect color emoji fonts.  ScriptTextOut (Uniscribe/GDI) only renders
+     * monochrome outline glyphs and ignores the COLR/CPAL (layered vector)
+     * and CBLC/CBDT (embedded bitmap) tables used by color emoji fonts such
+     * as Segoe UI Emoji.  We probe for those tables here, once per SubFont,
+     * so that MultiFontTextOut can route color runs through ExtTextOutW with
+     * ETO_GLYPH_INDEX instead.
+     *
+     * GetFontData with a NULL buffer and zero size returns the table length
+     * (or GDI_ERROR if the table is absent) without copying any data, so
+     * this probe is essentially free.
+     */
+    oldFont = (HFONT)SelectObject(hdc, hFont);
+    subFontPtr->hasColorGlyphs =
+        (GetFontData(hdc, OT_TAG('C','O','L','R'), 0, NULL, 0) != GDI_ERROR ||
+         GetFontData(hdc, OT_TAG('C','B','L','C'), 0, NULL, 0) != GDI_ERROR)
+        ? 1 : 0;
+    SelectObject(hdc, oldFont);
 }
 
 /*
