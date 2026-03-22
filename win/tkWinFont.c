@@ -1933,13 +1933,13 @@ TkpDrawAngledCharsInContext(
 
 static void
 MultiFontTextOut(
-    HDC hdc,			/* HDC to draw into. */
-    WinFont *fontPtr,		/* Contains set of fonts to use when drawing
-				 * following string. */
-    const char *source,		/* Potentially multilingual UTF-8 string. */
-    int numBytes,		/* Length of string in bytes. */
-    double x, double y,		/* Coordinates at which to place origin of
-				 * string when drawing. */
+    HDC hdc,                /* HDC to draw into. */
+    WinFont *fontPtr,       /* Contains set of fonts to use when drawing
+                             * following string. */
+    const char *source,     /* Potentially multilingual UTF-8 string. */
+    int numBytes,           /* Length of string in bytes. */
+    double x, double y,     /* Coordinates at which to place origin of
+                             * string when drawing. */
     double angle)
 {
     Tcl_DString uniStr;
@@ -1994,62 +1994,38 @@ MultiFontTextOut(
 
         SelectObject(hdc, hDrawFont);
 
+        /*
+         * Windows 11 Fix: If the subfont supports color (like Segoe UI Emoji),
+         * we MUST use ExtTextOutW + ETO_GLYPH_INDEX.
+         *
+         * ScriptTextOut uses a legacy rendering path that does not support
+         * the OpenType tables (COLR/CPAL) used by modern emoji fonts.
+         * Using ExtTextOutW with glyph indices allows GDI to hand off the
+         * rendering to the modern DirectWrite-backed engine.
+         */
         if (run->subFontPtr->hasColorGlyphs) {
-            /*
-             * Color emoji path — ExtTextOutW + ETO_GLYPH_INDEX.
-             *
-             * ScriptTextOut routes through GDI's legacy monochrome
-             * rasterizer, which silently ignores the COLR (layered vector)
-             * and CBLC/CBDT (embedded bitmap) OpenType tables that color
-             * emoji fonts use.  The result is tofu for every emoji glyph.
-             *
-             * ExtTextOutW with ETO_GLYPH_INDEX bypasses the Unicode-to-glyph
-             * mapping stage and treats lpString as an array of WORD glyph
-             * indices — exactly what TkWinShapeString already produced.
-             * GDI's color-font rasterizer (available on Windows 8.1+) then
-             * renders the COLR/CBLC glyphs correctly.
-             *
-             * The lpdx array (run->advances) supplies per-glyph advance
-             * widths in device units, preserving the spacing computed during
-             * the Uniscribe place pass.
-             *
-             * Note: rotation (hAngled) is selected above before this branch,
-             * so emoji rotation works the same way as regular text.
-             */
             ExtTextOutW(hdc,
-                    (int)x, (int)y,
-                    ETO_GLYPH_INDEX,        /* glyph indices, not code points */
-                    NULL,                   /* no clip rect */
-                    (LPCWSTR)run->glyphs,   /* WORD* glyphs cast to WCHAR*   */
+                    (int)(x + 0.5), (int)(y + 0.5), /* Rounded coordinates. */
+                    ETO_GLYPH_INDEX,
+                    NULL,
+                    (LPCWSTR)run->glyphs,
                     (UINT)run->glyphCount,
-                    run->advances);         /* per-glyph advance widths       */
+                    run->advances);
         } else {
-            /*
-             * Normal (monochrome / greyscale) path — ScriptTextOut.
-             *
-             * run->scriptCache MUST be the same SCRIPT_CACHE* that was
-             * passed to ScriptShape and ScriptPlace for this run.  Passing
-             * NULL causes Uniscribe to discard all shaping work and produce
-             * no visible output on most Windows versions.
-             *
-             * run->scriptCache is set in TkWinShapeString to point at
-             * fontPtr->scriptCacheArray[subFontIdx], so it is always valid
-             * for the lifetime of this call.
-             */
-            HRESULT hrDraw = ScriptTextOut(
+            /* Regular text path for non-emoji fonts. */
+            ScriptTextOut(
                     hdc,
-                    run->scriptCache,       /* must match font + shape pass */
-                    (int)x, (int)y,
-                    0,                      /* fuOptions                     */
-                    NULL,                   /* no clip rect                  */
+                    run->scriptCache,
+                    (int)(x + 0.5), (int)(y + 0.5),
+                    0,
+                    NULL,
                     &run->sa,
-                    NULL, 0,                /* pwcReserved / iReserved       */
+                    NULL, 0,
                     run->glyphs,
                     run->glyphCount,
                     run->advances,
-                    NULL,                   /* no justification widths       */
+                    NULL,
                     run->offsets);
-            (void)hrDraw;   /* non-fatal; add logging here if needed */
         }
 
         /* Advance pen position along the (possibly rotated) baseline. */
@@ -2577,11 +2553,11 @@ FindSubFontForChar(
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
 	
-	/*
-     * Emoji characters (U+1F300 - U+1F9FF) should use a color font.
+    /*
+     * Emoji characters should use a color font.
      * Try the standard Windows color emoji font explicitly.
      */
-    if (ch >= 0x1F300 && ch <= 0x1F9FF) {
+    if (ch >= 0x1F000 && ch <= 0x1FFFF) {
         SubFont *emojiSubFont = CanUseFallback(hdc, fontPtr,
                 "Segoe UI Emoji", ch, subFontPtrPtr);
         if (emojiSubFont != NULL) {
