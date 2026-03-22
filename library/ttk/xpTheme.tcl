@@ -31,6 +31,7 @@ namespace eval ttk::theme::xpnative {
 	ttk::style map TEntry \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText]
+
 	ttk::style configure TCombobox -padding 1.5p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
@@ -51,7 +52,7 @@ namespace eval ttk::theme::xpnative {
 	# Treeview
 	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Item -padding {3p 0 0 0} \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator
 	ttk::style configure Row -focuscolor black \

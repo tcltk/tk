@@ -6,28 +6,29 @@
 
 #include "tkInt.h"
 #include "ttkThemeInt.h"
-
-/*
- * Under windows, the Tk-provided XDrawLine and XDrawArc have an
- * off-by-one error in the end point. This is especially apparent with this
- * theme. Defining this macro as true handles this case.
- */
-#if defined(_WIN32) && !defined(WIN32_XDRAWLINE_HACK)
-  #define WIN32_XDRAWLINE_HACK 1
-#else
-  #define WIN32_XDRAWLINE_HACK 0
-#endif
+#include "ttkThemeInt.h"
 
 #define STR(x) StR(x)
 #define StR(x) #x
 
-#define SCROLLBAR_THICKNESS 14
+#define SCROLLBAR_THICKNESS 12
 
 #define FRAME_COLOR	"#dcdad5"
 #define LIGHT_COLOR	"#ffffff"
 #define DARK_COLOR	"#cfcdc8"
 #define DARKER_COLOR	"#bab5ab"
 #define DARKEST_COLOR	"#9e9a91"
+
+/*
+ * Under windows, the Tk-provided XDrawLine and XDrawArc have an off-by-one
+ * error in the end point. This is especially apparent with this theme.
+ * Defining this macro as true handles this case.
+ */
+#if defined(_WIN32) && !defined(WIN32_XDRAWLINE_HACK)
+  #define WIN32_XDRAWLINE_HACK 1
+#else
+  #define WIN32_XDRAWLINE_HACK 0
+#endif
 
 /*------------------------------------------------------------------------
  * +++ Utilities.
@@ -374,7 +375,7 @@ static void IndicatorElementSize(
 {
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
-    Ttk_Padding margins;
+    Ttk_Padding margins = Ttk_UniformPadding(0);
     double scalingLevel = TkScalingLevel(tkwin);
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
@@ -405,7 +406,7 @@ static void IndicatorElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
-    Ttk_Padding padding;
+    Ttk_Padding padding = Ttk_UniformPadding(0);
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     double scalingLevel = TkScalingLevel(tkwin);
     int width = (int)(spec->width * scalingLevel);
@@ -713,7 +714,7 @@ static void ThumbElementDraw(
     TCL_UNUSED(Ttk_State))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
-    int gripSize = 0;
+    int gripSize = 9;
     Ttk_Orient orient = TTK_ORIENT_HORIZONTAL;
     GC lightGC, darkGC;
     int x1, y1, x2, y2, dx, dy, i;
@@ -772,8 +773,8 @@ static void SliderElementSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
-    int length, thickness;
-    Ttk_Orient orient;
+    int length = 30, thickness = SCROLLBAR_THICKNESS;
+    Ttk_Orient orient = TTK_ORIENT_HORIZONTAL;
 
     length = thickness = SCROLLBAR_THICKNESS;
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
@@ -853,6 +854,10 @@ static void ArrowElementSize(
     int size = SCROLLBAR_THICKNESS;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
+    /* Sizes in points are automatically scaled, but pixel sizes are not. */
+    if (Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size) == TCL_OK) {
+	size = round(size * scalingLevel);
+    }
     size -= Ttk_PaddingWidth(padding);
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
@@ -931,8 +936,11 @@ static void SpinboxArrowElementSize(
     int size = 10;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
+    /* Sizes in points are automatically scaled, but pixel sizes are not. */
+    if (Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size) == TCL_OK) {
+	size = round(size * scalingLevel);
+    }
     size -= Ttk_PaddingWidth(padding);
-    size += 2 * round(scalingLevel);
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -1018,7 +1026,7 @@ static void TabElementDraw(
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     int borderWidth = 2, delta = 0;
     NotebookElement *tab = (NotebookElement *)elementRecord;
-    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
+    Tk_3DBorder border = NULL;
     Display *display = Tk_Display(tkwin);
     int x1, y1, x2, y2;
     GC gc;
@@ -1032,6 +1040,7 @@ static void TabElementDraw(
 	delta = borderWidth;
     }
 
+    border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     switch (nbTabsStickBit) {
 	default:
 	case TTK_STICK_S:
@@ -1155,9 +1164,10 @@ static void ClientElementDraw(
     TCL_UNUSED(Ttk_State))
 {
     NotebookElement *ce = (NotebookElement *)elementRecord;
-    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, ce->backgroundObj);
+    Tk_3DBorder border = NULL;
     int borderWidth = 2;
 
+    border = Tk_Get3DBorderFromObj(tkwin, ce->backgroundObj);
     Tk_Fill3DRectangle(tkwin, d, border,
 	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_FLAT);
     DrawSmoothBorder(tkwin, d, b,
@@ -1200,30 +1210,40 @@ TtkClamTheme_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
 
-    Ttk_RegisterElement(interp, theme, "border",
-	    &BorderElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "field",
-	    &FieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "field", &FieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "trough", &TroughElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "thumb", &ThumbElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "slider", &SliderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "bar", &PbarElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "pbar", &PbarElementSpec, NULL);
+
     Ttk_RegisterElement(interp, theme, "Combobox.field",
 	    &ComboboxFieldElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "trough",
-	    &TroughElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "thumb",
-	    &ThumbElementSpec, NULL);
+
+    Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
+	    &IndicatorElementSpec, (void *)&checkbutton_spec);
+    Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
+	    &IndicatorElementSpec, (void *)&radiobutton_spec);
+    /* Menubutton */
+
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
-    Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
-	    &SpinboxArrowElementSpec, INT2PTR(ARROW_UP));
     Ttk_RegisterElement(interp, theme, "downarrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
-    Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
-	    &SpinboxArrowElementSpec, INT2PTR(ARROW_DOWN));
-    Ttk_RegisterElement(interp, theme, "leftarrow",
+     Ttk_RegisterElement(interp, theme, "leftarrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_LEFT));
     Ttk_RegisterElement(interp, theme, "rightarrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
     Ttk_RegisterElement(interp, theme, "arrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
+
+    Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
+	    &SpinboxArrowElementSpec, INT2PTR(CHEVRON_UP));
+    Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
+	    &SpinboxArrowElementSpec, INT2PTR(CHEVRON_DOWN));
+    Ttk_RegisterElement(interp, theme, "Combobox.downarrow",
+	    &SpinboxArrowElementSpec, INT2PTR(CHEVRON_DOWN));
 
     Ttk_RegisterElement(interp, theme, "upchevron",
 	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
@@ -1234,17 +1254,8 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "rightchevron",
 	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
 
-    Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
-	    &IndicatorElementSpec, (void *)&checkbutton_spec);
-    Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
-	    &IndicatorElementSpec, (void *)&radiobutton_spec);
-
     Ttk_RegisterElement(interp, theme, "tab", &TabElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "client", &ClientElementSpec, NULL);
-
-    Ttk_RegisterElement(interp, theme, "slider", &SliderElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "bar", &PbarElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "pbar", &PbarElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "hgrip",
 	    &GripElementSpec,  INT2PTR(TTK_ORIENT_HORIZONTAL));

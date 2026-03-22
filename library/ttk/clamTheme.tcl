@@ -97,7 +97,7 @@ namespace eval ttk::theme::clam {
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TMenubutton \
-	    -width 11p -arrowsize 3.75p -arrowpadding 2.25p -padding 3.75p \
+	    -width 11p -arrowsize 5p -arrowpadding 2.25p -padding 3.75p \
 	    -relief raised
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
@@ -106,7 +106,8 @@ namespace eval ttk::theme::clam {
 	    -bordercolor [list focus $colors(-selectbg)] \
 	    -lightcolor [list focus #6f9dc6]
 
-	ttk::style configure TCombobox -padding 1 -insertwidth 1 -arrowsize 9p
+	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
+	    -arrowsize 9p -arrowpadding 1
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
@@ -118,7 +119,8 @@ namespace eval ttk::theme::clam {
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
+	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
+	    -arrowsize 8p -arrowpadding {1.5p 0 1.5p 0}
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
@@ -132,22 +134,23 @@ namespace eval ttk::theme::clam {
 
 	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont -relief raised -padding 2.25p
-	ttk::style configure Item -indicatorsize 9p \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	    -font TkHeadingFont -relief raised -padding 2.25p \
+	    -indicatorsize 7p -indicatormargin {3p 1.5p 3p 1.5p}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Item -indicatorsize 8p \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item \
 	    -indicatorbackground [list disabled $colors(-frame)] \
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
-	ttk::style configure Row -focuscolor black \
-	    -focussolid 1 -focusthickness 0 -padding 0
-	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Treeview.Separator \
+	    -background $colors(-lighter)
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-lighter) -indent 15p
-	ttk::style configure Treeview.Separator \
-	    -background $colors(-lighter)
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \

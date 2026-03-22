@@ -123,7 +123,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	}
 
 	ttk::style configure TMenubutton \
-	    -relief raised -arrowsize 3.25p -arrowpadding 2.25p \
+	    -relief raised -arrowsize 5p -arrowpadding 2.25p \
 	    -arrowcolor $colors(-text) -padding {7.5p 2.25p}
 	ttk::style map TMenubutton \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -182,18 +182,21 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont -relief raised
-	ttk::style configure Item -indicatorsize 9p \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	    -font TkHeadingFont -relief raised \
+	    -indicatorsize 7p -indicatormargin {3p 1.5p 3p 1.5p}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Item -indicatorsize 8p \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item -indicatorbackground \
 	    [list {selected disabled}	$colors(-disabledindicator) \
 		  selected		$colors(-indicator) \
 		  disabled		$colors(-frame)]
-	ttk::style configure Row -focuscolor black \
-	    -focussolid 1 -focusthickness 0 -padding 0
-	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Treeview.Separator \
+	    -background $colors(-alternate)
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) \
@@ -201,15 +204,13 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -foreground $colors(-text) \
 	    -indent 15p \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
-	ttk::style configure Treeview.Separator \
-	    -background $colors(-alternate)
 	ttk::style map Treeview \
 	    -background [list	disabled $colors(-frame) \
 				selected $colors(-selectbg) \
 				active   $colors(-activebg)] \
 	    -foreground [list	disabled $colors(-disabledfg) \
 				selected $colors(-selectfg) \
-				active   $colors(-foreground)] \
+				active   $colors(-foreground)]
 
 	# Combobox popdown frame
 	ttk::style layout ComboboxPopdownFrame {
