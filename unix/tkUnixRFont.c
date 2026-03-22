@@ -1459,10 +1459,14 @@ TkpGetFontFromAttributes(
 {
     XftPattern *pattern = XftPatternCreate();
     int weight, slant;
+    const char *family = faPtr->family;
 
-    if (faPtr->family) {
-        XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
+    /* If no family specified, use sans-serif as default instead of
+     * letting fontconfig pick (which often defaults to serif). */
+    if (!family || family[0] == '\0') {
+        family = "sans-serif";
     }
+    XftPatternAddString(pattern, XFT_FAMILY, family);
 
     if (faPtr->size > 0.0) {
         XftPatternAddDouble(pattern, XFT_SIZE, faPtr->size);
@@ -1682,26 +1686,56 @@ Tk_MeasureChars(
 
     int totalWidth = 0;
     int bytesConsumed = 0;
+    int lastBreakPos = 0;       /* Byte position of last valid break (whitespace). */
+    int lastBreakWidth = 0;     /* Width up to last break. */
+    int lastBreakGlyph = -1;    /* Glyph index of last break. */
 
     /* To prevent the "bunched up" text in the UI, we must sum the
      * advances of the glyphs in the order they appear in the SHAPED buffer.
      */
     for (int i = 0; i < buffer.glyphCount; i++) {
         int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
+        int bytePos = buffer.glyphs[i].byteOffset;
+        
+        /* Check if we're at a potential break point (whitespace). */
+        if (bytePos < (int)numBytes && bytePos >= 0) {
+            char ch = source[bytePos];
+            if (ch == ' ' || ch == '\t' || ch == '\n') {
+                lastBreakPos = bytePos + buffer.glyphs[i].clusterLen;
+                lastBreakWidth = nextWidth;
+                lastBreakGlyph = i;
+            }
+        }
 
         if (maxLength >= 0 && nextWidth > maxLength) {
-            if (flags & TK_PARTIAL_OK) {
+            /* We've exceeded maxLength. Decide where to break. */
+            if (flags & TK_WHOLE_WORDS) {
+                /* Try to break at last whitespace. */
+                if (lastBreakGlyph >= 0) {
+                    totalWidth = lastBreakWidth;
+                    bytesConsumed = lastBreakPos;
+                } else if ((flags & TK_AT_LEAST_ONE) && totalWidth == 0) {
+                    /* No break found, but need at least one char. */
+                    totalWidth = nextWidth;
+                    bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
+                }
+                /* Else: no whitespace found but totalWidth > 0,
+                 * break before current char (keep previous values). */
+            } else if (flags & TK_PARTIAL_OK) {
+                /* Include this character even though it exceeds limit. */
                 totalWidth = nextWidth;
-                bytesConsumed = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
+                bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
             } else if ((flags & TK_AT_LEAST_ONE) && totalWidth == 0) {
+                /* Must include at least one character. */
                 totalWidth = nextWidth;
-                bytesConsumed = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
+                bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
             }
+            /* else: Default - break before this character (keep previous values). */
             break;
         }
 
         totalWidth = nextWidth;
-        bytesConsumed = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
+        bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
     }
 
     /* Ensure we don't exceed the original request. */
