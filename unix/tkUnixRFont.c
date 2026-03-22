@@ -9,7 +9,7 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- */
+. */
 
 #include "tkUnixInt.h"
 #include "tkFont.h"
@@ -39,9 +39,9 @@
  */
 
 typedef struct {
-    int offset;                 /* Byte offset in original UTF-8 string */
-    int len;                    /* Length in bytes */
-    int isRTL;                  /* 1 if this run is RTL, 0 if LTR */
+    int offset;                 /* Byte offset in original UTF-8 string. */
+    int len;                    /* Length in bytes. */
+    int isRTL;                  /* 1 if this run is RTL, 0 if LTR. */
 } BidiRun;
 
 /*
@@ -54,20 +54,20 @@ typedef struct {
  */
 
 typedef struct {
-    XftFont *ftFont;           /* Rotated font */
-    XftFont *ft0Font;          /* Unrotated font */
-    FcPattern *source;         /* Fontconfig pattern */
-    FcCharSet *charset;        /* Supported characters */
-    double angle;              /* Current rotation angle */
+    XftFont *ftFont;           /* Rotated font. */
+    XftFont *ft0Font;          /* Unrotated font. */
+    FcPattern *source;         /* Fontconfig pattern. */
+    FcCharSet *charset;        /* Supported characters. */
+    double angle;              /* Current rotation angle. */
 
-    /* kb_text_shaper font mapping */
-    kbts_font *kbFont;         /* Corresponding kbts font */
-    int isLoaded;              /* Whether kbFont was successfully loaded */
+    /* kb_text_shaper font mapping. */
+    kbts_font *kbFont;         /* Corresponding kbts font. */
+    int isLoaded;              /* Whether kbFont was successfully loaded. */
 
-    /* Font metrics for scaling */
-    double unitsPerEm;         /* For scaling glyph positions */
-    double ascender;           /* Font ascender in design units */
-    double descender;          /* Font descender in design units */
+    /* Font metrics for scaling. */
+    double unitsPerEm;         /* For scaling glyph positions. */
+    double ascender;           /* Font ascender in design units. */
+    double descender;          /* Font descender in design units. */
 } UnixFtFace;
 
 /*
@@ -105,16 +105,16 @@ typedef struct {
 
 typedef struct {
     struct {
-        int fontIndex;         /* Index into UnixFtFont->faces[] */
-        unsigned int glyphId;  /* Raw TrueType glyph index (kbts == Xft space) */
-        int x, y;              /* Pen position for this glyph */
-        int advanceX;          /* Advance width in pixels */
-        int byteOffset;        /* Byte offset of cluster start in source string */
-        int clusterLen;        /* Length of cluster in bytes (FIXED: was always 0) */
-        int isRTL;             /* 1 if this glyph is part of an RTL run */
+        int fontIndex;         /* Index into UnixFtFont->faces[]. */
+        unsigned int glyphId;  /* Raw TrueType glyph index (kbts == Xft space). */
+        int x, y;              /* Pen position for this glyph. */
+        int advanceX;          /* Advance width in pixels. */
+        int byteOffset;        /* Byte offset of cluster start in source string. */
+        int clusterLen;        /* Length of cluster in bytes (FIXED: was always 0). */
+        int isRTL;             /* 1 if this glyph is part of an RTL run. */
     } glyphs[MAX_GLYPHS];
     int glyphCount;
-    int totalAdvance;          /* Total advance width in pixels */
+    int totalAdvance;          /* Total advance width in pixels. */
 } ShapedGlyphBuffer;
 
 /*
@@ -129,14 +129,14 @@ typedef struct {
 typedef struct {
     kbts_shape_context *context;
 
-    /* Font mapping - bidirectional */
+    /* Font mapping - bidirectional. */
     struct {
         kbts_font *kbFont;
         int faceIndex;
     } fontMap[MAX_FONTS];
     int numFonts;
 
-    /* Simple string cache for common measurements */
+    /* Simple string cache for common measurements. */
     struct {
         char text[MAX_STRING_CACHE];
         int len;
@@ -144,7 +144,7 @@ typedef struct {
         int valid;
     } cache;
 
-    /* Error tracking */
+    /* Error tracking. */
     int shapeErrors;
     int lastError;
 } X11Shaper;
@@ -159,7 +159,7 @@ typedef struct {
  */
 
 typedef struct {
-    TkFont font;                /* Must be first */
+    TkFont font;                /* Must be first. */
     UnixFtFace *faces;
     int nfaces;
     FcFontSet *fontset;
@@ -170,21 +170,21 @@ typedef struct {
     Colormap colormap;
     Visual *visual;
     XftDraw *ftDraw;
-    Drawable lastDrawable;      /* Last drawable used with ftDraw */
+    Drawable lastDrawable;      /* Last drawable used with ftDraw. */
     int ncolors;
     int firstColor;
     UnixFtColorList colors[MAX_CACHED_COLORS];
 
     X11Shaper shaper;
 
-    /* Precomputed scale factors */
-    double pixelScale;          /* Global pixel scaling factor */
+    /* Precomputed scale factors. */
+    double pixelScale;          /* Global pixel scaling factor. */
 } UnixFtFont;
 
 /*
  * Used to describe the current clipping box. Can't be passed normally because
  * the information isn't retrievable from the GC.
- */
+. */
 
 typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
@@ -206,51 +206,6 @@ static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
-static int IsSimpleText(const char *source, int len);
-
-/*
- * ---------------------------------------------------------------
- * IsSimpleText --
- *
- *   Determine whether a UTF-8 string consists only of characters
- *   from simple scripts (Latin, Greek, Cyrillic, etc.) that do not
- *   require complex shaping. This enables a fast path using
- *   XftDrawString32.
- *
- *   The simple range is defined as U+0000 - U+02FF, which includes:
- *     - Basic Latin, Latin-1 Supplement, Latin Extended-A
- *     - IPA Extensions, Spacing Modifier Letters
- *     - Combining Diacritical Marks, Greek, Cyrillic
- *
- * Results:
- *   1 if all characters are in the simple range, 0 otherwise.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-static int
-IsSimpleText(
-    const char *source,
-    int len)
-{
-    const unsigned char *p = (const unsigned char *)source;
-    int i = 0;
-
-    while (i < len) {
-        if (p[i] < 0x80) {
-            i++;
-            continue;
-        }
-        FcChar32 u;
-        int clen = Tcl_UtfToUniChar(source + i, (int *)&u);
-        if (clen <= 0) return 0;
-        if (u > 0x02FF) return 0;  /* Outside simple range */
-        i += clen;
-    }
-    return 1;
-}
 
 /*
  * ---------------------------------------------------------------
@@ -288,7 +243,7 @@ GetFaceFont(
             UNLOCK;
 
             if (!face->ft0Font) {
-                /* Fallback to basic sans font */
+                /* Fallback to basic sans font. */
                 LOCK;
                 face->ft0Font = XftFontOpen(fontPtr->display, fontPtr->screen,
                                            FC_FAMILY, FcTypeString, "sans",
@@ -373,7 +328,7 @@ GetFont(
 {
     int i;
 
-    /* Find face containing this character */
+    /* Find face containing this character. */
     if (ucs4) {
         for (i = 0; i < fontPtr->nfaces; i++) {
             FcCharSet *charset = fontPtr->faces[i].charset;
@@ -571,7 +526,7 @@ GetBidiRuns(
     /* Fast path: check if any strong RTL characters exist. */
     int needsBidi = 0;
     for (int i = 0; i < charCount; i++) {
-        if (ucs4[i] >= 0x0590) {  /* Hebrew/Arabic/Thaana/etc. start */
+        if (ucs4[i] >= 0x0590) {  /* Hebrew/Arabic/Thaana/etc. start. */
             needsBidi = 1;
             break;
         }
@@ -734,7 +689,7 @@ InitFont(
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
 
     /* Calculate pixel scale. */
-    fontPtr->pixelScale = (double)ftFont->ascent / 2048.0; /* Approximate */
+    fontPtr->pixelScale = (double)ftFont->ascent / 2048.0; /* Approximate. */
 
     Tk_DeleteErrorHandler(handler);
 
@@ -866,7 +821,7 @@ X11Shaper_Init(
      * a limited set initially. kb_text_shaper will automatically load
      * additional fonts as needed during shaping (on-demand fallback).
      * We cap the initial load at 32 fonts to balance coverage vs. speed.
-     */
+    . */
     int maxInitialFonts = (fontPtr->nfaces < 32) ? fontPtr->nfaces : 32;
     
     /* Load all faces into shaper. */
@@ -968,17 +923,17 @@ X11Shaper_ShapeString(
     }
     
     /*
-     * DEFENSIVE: Quick scan for shapeable content.
+     * Quick scan for shapeable content.
      * If the string contains ONLY control characters, whitespace, or invalid UTF-8,
      * return empty buffer rather than crashing kb_text_shaper.
-     */
+    . */
     int hasShapeableContent = 0;
     for (int i = 0; i < numBytes; ) {
         unsigned char byte = (unsigned char)source[i];
         
         /* Check for ASCII printable or multi-byte UTF-8 starter. */
         if (byte >= 0x20 && byte < 0x7F) {
-            /* ASCII printable (space through ~) */
+            /* ASCII printable (space through ~). */
             hasShapeableContent = 1;
             break;
         } else if (byte >= 0xC0) {
@@ -1051,7 +1006,7 @@ X11Shaper_ShapeString(
         if (clen <= 0) {
             /* Invalid sequence → skip this byte entirely. */
             bytePos++;
-            continue;  /* Don't add to character array at all */
+            continue;  /* Don't add to character array at all. */
         }
         
         /*
@@ -1059,12 +1014,12 @@ X11Shaper_ShapeString(
          * - C0 controls (0x00-0x1F) except tab/newline/CR.
          * - C1 controls (0x80-0x9F) - these cause the crash!
          * - Invalid/replacement characters.
-         */
+        . */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
-            (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls - THE CRASH CULPRIT */
-            (uc == 0xFFFD)) {  /* Replacement character */
+            (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls - THE CRASH CULPRIT. */
+            (uc == 0xFFFD)) {  /* Replacement character. */
             bytePos += clen;
-            continue;  /* Skip without adding to character array */
+            continue;  /* Skip without adding to character array. */
         }
 
         ucs4Chars[charCount] = uc;
@@ -1078,10 +1033,10 @@ X11Shaper_ShapeString(
             free(charBounds);
             free(ucs4Chars);
         }
-        /* Return success with empty buffer - nothing to shape */
+        /* Return success with empty buffer - nothing to shape. */
         buffer->glyphCount = 0;
         buffer->totalAdvance = 0;
-        return 1;  /* Changed from 0 - empty string is not an error */
+        return 1;  /* Changed from 0 - empty string is not an error. */
     }
 
     /* Get bidi runs. */
@@ -1136,7 +1091,7 @@ X11Shaper_ShapeString(
                         KBTS_LANGUAGE_DONT_KNOW);
 
         /*
-         * DEFENSIVE: Skip empty or invalid runs that could crash kb_text_shaper.
+         * Skip empty or invalid runs that could crash kb_text_shaper.
          */
         if (runByteLen <= 0 || !source) {
             continue;
@@ -1204,7 +1159,7 @@ X11Shaper_ShapeString(
              * We need to scale to pixels based on the font size.
              * The XftFont's ascent/descent are already in pixels for the requested size.
              */
-            double scale = fontPtr->pixelScale;  /* Fallback */
+            double scale = fontPtr->pixelScale;  /* Fallback. */
             
             /* Ensure we have metrics for this face. */
             XftFont *faceFont = GetFaceFont(fontPtr, faceIndex, 0.0);
@@ -1252,14 +1207,14 @@ X11Shaper_ShapeString(
                  * glyph->UserIdOrCodepointIndex is the codepoint index within
                  * this run. charBounds[runStart + UserIdOrCodepointIndex] is
                  * the byte start of that codepoint in the full source string.
-                 */
+                . */
                 int cpIndex = runStart + glyph->UserIdOrCodepointIndex;
                 
                 /* Add bounds checking to prevent segfaults. */
                 if (cpIndex >= 0 && cpIndex < charCount) {
                     tempGlyphs[tempCount].byteOffset = charBounds[cpIndex];
                     
-                    /* FIXED: Clamp to run boundaries */
+                    /* FIXED: Clamp to run boundaries. */
                     if (tempGlyphs[tempCount].byteOffset < runByteStart) {
                         tempGlyphs[tempCount].byteOffset = runByteStart;
                     }
@@ -1270,7 +1225,7 @@ X11Shaper_ShapeString(
                     tempGlyphs[tempCount].byteOffset = runByteStart;
                 }
                 
-                /* clusterLen will be computed after all glyphs are collected */
+                /* clusterLen will be computed after all glyphs are collected. */
                 tempGlyphs[tempCount].clusterLen = 0;
 
                 runPenX += tempGlyphs[tempCount].advanceX;
@@ -1305,7 +1260,7 @@ X11Shaper_ShapeString(
             /*
              * Copy glyphs to output buffer.
              * kb_text_shaper has already handled RTL reversal and positioning.
-             */
+            . */
             for (int i = 0; i < tempCount; i++) {
                 int idx = buffer->glyphCount;
                 if (idx >= MAX_GLYPHS) break;
@@ -1337,12 +1292,12 @@ X11Shaper_ShapeString(
      * We need to reverse the word order for visual display.
      * 
      * Strategy: Find word boundaries (spaces) and reverse the word order.
-     */
+    . */
     if (numRuns == 1 && bidiRuns[0].isRTL && buffer->glyphCount > 1) {
         /* Find word boundaries by looking for space glyphs. */
         typedef struct {
             int startIdx;
-            int endIdx;  /* inclusive */
+            int endIdx;  /* inclusive. */
         } Word;
         
         Word words[64];
@@ -1351,7 +1306,7 @@ X11Shaper_ShapeString(
         
         for (int i = 0; i < buffer->glyphCount; i++) {
             /* Check if this is a space (advance typically 5-7 for spaces). */
-            int isSpace = (buffer->glyphs[i].glyphId == 3);  /* Common space glyph ID */
+            int isSpace = (buffer->glyphs[i].glyphId == 3);  /* Common space glyph ID. */
             
             if (isSpace || i == buffer->glyphCount - 1) {
                 if (!isSpace && i == buffer->glyphCount - 1) {
@@ -1370,13 +1325,13 @@ X11Shaper_ShapeString(
         }
         
         if (wordCount > 1) {
-            /* Reverse the word order */
+            /* Reverse the word order. */
             ShapedGlyphBuffer tempBuffer;
             tempBuffer.glyphCount = 0;
             int penX = 0;
             
             for (int w = wordCount - 1; w >= 0; w--) {
-                /* Copy this word's glyphs */
+                /* Copy this word's glyphs. */
                 for (int i = words[w].startIdx; i <= words[w].endIdx; i++) {
                     tempBuffer.glyphs[tempBuffer.glyphCount] = buffer->glyphs[i];
                     tempBuffer.glyphs[tempBuffer.glyphCount].x = penX;
@@ -1384,9 +1339,9 @@ X11Shaper_ShapeString(
                     tempBuffer.glyphCount++;
                 }
                 
-                /* Add space after word (except last) */
+                /* Add space after word (except last). */
                 if (w > 0) {
-                    /* Find the space glyph that was after this word */
+                    /* Find the space glyph that was after this word. */
                     int spaceIdx = words[w].endIdx + 1;
                     if (spaceIdx < buffer->glyphCount) {
                         tempBuffer.glyphs[tempBuffer.glyphCount] = buffer->glyphs[spaceIdx];
@@ -1439,7 +1394,7 @@ void
 TkpFontPkgInit(
     TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
-    /* Nothing to initialize */
+    /* Nothing to initialize. */
 }
 
 /*
@@ -1674,10 +1629,10 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
-    Tk_Font tkfont,		/* Font to query */
-    int c,			/* Character of interest */
-    TkFontAttributes *faPtr)	/* Output: Font attributes */
+    Tk_Window tkwin,		/* Window on the font's display. */
+    Tk_Font tkfont,		/* Font to query. */
+    int c,			/* Character of interest. */
+    TkFontAttributes *faPtr)	/* Output: Font attributes. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
     XftFont *ftFont = GetFont(fontPtr, (FcChar32)c, 0.0);
@@ -1698,10 +1653,6 @@ TkpGetFontAttrsForChar(
  *
  *   Measure the width of a string when drawn in the given font.
  *
- *   FIXED: Now uses clusterLen to determine byte boundaries instead
- *   of assuming next glyph's byteOffset. Adds bounds checking to
- *   prevent segfaults.
- *
  * Results:
  *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
  *
@@ -1712,97 +1663,52 @@ TkpGetFontAttrsForChar(
 
 int
 Tk_MeasureChars(
-    Tk_Font tkfont,		/* Font in which characters will be drawn. */
-    const char *source,		/* UTF-8 string to be displayed. Need not be
-				 * '\0' terminated. */
-    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
-				 * source string. */
-    int maxLength,		/* If >= 0, maxLength specifies the longest
-				 * permissible line length in pixels; don't
-				 * consider any character that would cross
-				 * this x-position. If < 0, then line length
-				 * is unbounded and the flags argument is
-				 * ignored. */
-    int flags,			/* Various flag bits OR-ed together:
-				 * TK_PARTIAL_OK means include the last char
-				 * which only partially fit on this line.
-				 * TK_WHOLE_WORDS means stop on a word
-				 * boundary, if possible. TK_AT_LEAST_ONE
-				 * means return at least one character even if
-				 * no characters fit. */
-    int *lengthPtr)		/* Filled with x-location just after the
-				 * terminating character. */
+    Tk_Font tkfont,
+    const char *source,
+    Tcl_Size numBytes,
+    int maxLength,
+    int flags,
+    int *lengthPtr)
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-
-    /* Fast path for simple text (unbounded measure only). */
-    if (maxLength < 0 && IsSimpleText(source, (int)numBytes)) {
-        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
-        if (ftFont) {
-            FcChar32 ucs4[MAX_GLYPHS];
-            int count = 0;
-            int i = 0;
-            while (i < numBytes && count < MAX_GLYPHS) {
-                i += Tcl_UtfToUniChar(source + i, (int *)&ucs4[count]);
-                count++;
-            }
-            XGlyphInfo extents;
-            LOCK;
-            XftTextExtents32(fontPtr->display, ftFont, ucs4, count, &extents);
-            UNLOCK;
-            *lengthPtr = extents.xOff;
-            return (int)numBytes;
-        }
-    }
-
-    /* Full shaping path. */
     ShapedGlyphBuffer buffer;
 
+    /* Shape the string to get the actual glyph advances. */
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &buffer)) {
         *lengthPtr = 0;
         return 0;
     }
 
-    int total = 0;
-    int bytes = 0;
+    int totalWidth = 0;
+    int bytesConsumed = 0;
 
+    /* To prevent the "bunched up" text in the UI, we must sum the
+     * advances of the glyphs in the order they appear in the SHAPED buffer.
+     */
     for (int i = 0; i < buffer.glyphCount; i++) {
-        int next = total + buffer.glyphs[i].advanceX;
+        int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
 
-        if (maxLength >= 0 && next > maxLength) {
+        if (maxLength >= 0 && nextWidth > maxLength) {
             if (flags & TK_PARTIAL_OK) {
-                total = next;
-                /* Use cluster end = byteOffset + clusterLen. */
-                bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
-            } else if ((flags & TK_AT_LEAST_ONE) && total == 0) {
-                total = next;
-                bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
+                totalWidth = nextWidth;
+                bytesConsumed = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
+            } else if ((flags & TK_AT_LEAST_ONE) && totalWidth == 0) {
+                totalWidth = nextWidth;
+                bytesConsumed = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
             }
             break;
         }
 
-        total = next;
-        
-        /* Bytes tracks the end of this cluster using clusterLen. */
-        bytes = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
+        totalWidth = nextWidth;
+        bytesConsumed = buffer.glyphs[i].byteOffset + buffer.glyphs[i].clusterLen;
     }
 
-    /* Clamp bytes to valid range. */
-    if (bytes > (int)numBytes) {
-        bytes = (int)numBytes;
-    }
-    if (bytes < 0) {
-        bytes = 0;
-    }
-
-    *lengthPtr = total;
-
-    if (bytes == 0 && buffer.glyphCount > 0) {
-        bytes = (int)numBytes;
-    }
-
-    return bytes;
+    /* Ensure we don't exceed the original request. */
+    if (bytesConsumed > (int)numBytes) bytesConsumed = (int)numBytes;
+    
+    *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : totalWidth;
+    return bytesConsumed;
 }
 
 /*
@@ -1827,7 +1733,7 @@ int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
     const char *source,
-    Tcl_Size numBytes,		/* FIXED: Was TCL_UNUSED - now used for full string */
+    Tcl_Size numBytes,		
     Tcl_Size rangeStart,
     Tcl_Size rangeLength,
     int maxLength,
@@ -1858,12 +1764,12 @@ Tk_MeasureCharsInContext(
         int glyphStart = buffer.glyphs[i].byteOffset;
         int glyphEnd   = glyphStart + buffer.glyphs[i].clusterLen;
         
-        /* Skip glyphs entirely before range */
+        /* Skip glyphs entirely before range. */
         if (glyphEnd <= rangeStart) {
             continue;
         }
         
-        /* Stop when we've completely passed the range end */
+        /* Stop when we've completely passed the range end. */
         if (glyphStart >= rangeEnd) {
             break;
         }
@@ -1917,27 +1823,21 @@ Tk_MeasureCharsInContext(
 
 void
 Tk_DrawChars(
-    Display *display,		/* Display on which to draw. */
-    Drawable drawable,		/* Window or pixmap in which to draw. */
-    GC gc,			/* Graphics context for drawing characters. */
-    Tk_Font tkfont,		/* Font in which characters will be drawn;
-				 * must be the same as font used in GC. */
-    const char *source,		/* UTF-8 string to be displayed. Need not be
-				 * '\0' terminated. All Tk meta-characters
-				 * (tabs, control characters, and newlines)
-				 * should be stripped out of the string that
-				 * is passed to this function. If they are not
-				 * stripped out, they will be displayed as
-				 * regular printing characters. */
-    Tcl_Size numBytes,		/* Number of bytes in string. */
-    int x, int y)		/* Coordinates at which to place origin of
-				 * string when drawing. */
+    Display *display,      /* Display on which to draw. */
+    Drawable drawable,     /* Window or pixmap in which to draw. */
+    GC gc,                 /* Graphics context for drawing characters. */
+    Tk_Font tkfont,        /* Font in which characters will be drawn. */
+    const char *source,    /* UTF-8 string to be displayed. */
+    Tcl_Size numBytes,     /* Number of bytes in string. */
+    int x, int y)          /* Coordinates at which to place origin. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    /* Ensure XftDraw is ready */
+    if (numBytes <= 0) return;
+
+    /* 1. Ensure XftDraw is ready. */
     if (!fontPtr->ftDraw) {
         fontPtr->ftDraw = XftDrawCreate(display, drawable,
                                         fontPtr->visual, fontPtr->colormap);
@@ -1949,7 +1849,6 @@ Tk_DrawChars(
 
     XGCValues values;
     XGetGCValues(display, gc, GCForeground, &values);
-
     XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
     if (!xftcolor) return;
 
@@ -1957,28 +1856,14 @@ Tk_DrawChars(
         XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
-    /* Fast path for simple text. */
-    if (IsSimpleText(source, (int)numBytes)) {
-        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
-        if (ftFont) {
-            FcChar32 ucs4[MAX_GLYPHS];
-            int count = 0;
-            int i = 0;
-            while (i < numBytes && count < MAX_GLYPHS) {
-                i += Tcl_UtfToUniChar(source + i, (int *)&ucs4[count]);
-                count++;
-            }
-            LOCK;
-            XftDrawString32(fontPtr->ftDraw, xftcolor, ftFont, x, y, ucs4, count);
-            UNLOCK;
-            goto done;
-        }
-    }
+    /* * 2. DISABLE FAST PATH: 
+     * For RTL/Shaped text, we MUST go through the shaper to avoid 
+     * the "blob" of overlapping characters seen in the screenshots.
+     */
 
-    /* Full shaping path. */
+    /* 3. Full shaping path. */
     {
         ShapedGlyphBuffer buffer;
-
         if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                     (int)numBytes, &buffer)) {
             goto done;
@@ -1989,55 +1874,40 @@ Tk_DrawChars(
 
         for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
             int faceIdx = buffer.glyphs[i].fontIndex;
-            if (faceIdx >= fontPtr->nfaces) faceIdx = 0;
+            if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
             XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
             if (!ftFont) continue;
 
-            /*
-             * kb_text_shaper provides shaped glyph positions and clusters.
-             * When it returns glyph ID 0, it means the current font doesn't have
-             * this glyph, but the shaped position/advance is still valid.
-             *
-             * Strategy: Keep the shaped position from kb_text_shaper, but look up
-             * the glyph ID from a fallback font. This preserves complex shaping
-             * (Arabic ligatures, Devanagari conjuncts) while supporting font fallback.
-             */
             unsigned int actualGlyph = buffer.glyphs[i].glyphId;
             
+            /* Fallback logic for missing glyphs in primary font. */
             if (actualGlyph == 0) {
-                /* Try to find this glyph in a fallback font. */
                 FcChar32 ucs4 = 0;
-                
-                /* Extract the codepoint from the source string. */
                 int byteOff = buffer.glyphs[i].byteOffset;
-                if (byteOff >= 0 && byteOff < numBytes) {
+                if (byteOff >= 0 && byteOff < (int)numBytes) {
                     FcUtf8ToUcs4((const FcChar8 *)(source + byteOff), &ucs4, 
-                                 numBytes - byteOff);
+                                 (int)numBytes - byteOff);
                 }
                 
                 if (ucs4 != 0) {
-                    /* Find a font that has this character. */
                     XftFont *fallbackFont = GetFont(fontPtr, ucs4, 0.0);
                     if (fallbackFont) {
-                        actualGlyph = XftCharIndex(fontPtr->display, fallbackFont, ucs4);
-                        if (actualGlyph != 0) {
-                            ftFont = fallbackFont;
-                        }
+                        actualGlyph = XftCharIndex(display, fallbackFont, ucs4);
+                        if (actualGlyph != 0) ftFont = fallbackFont;
                     }
                 }
-                
-                /* If still no glyph, skip this position. */
-                if (actualGlyph == 0) {
-                    continue;
-                }
+                if (actualGlyph == 0) continue;
             }
 
-            /* Use the shaped position from kb_text_shaper, even if we used a fallback glyph. */
+            /* * 4. COORDINATE SYNC:
+             * 'buffer.glyphs[i].x' is the offset relative to the start of the string.
+             * Adding 'x' places the entire shaped block at the correct Tk baseline.
+             */
             specs[nspec].font  = ftFont;
             specs[nspec].glyph = actualGlyph;
-            specs[nspec].x     = x + buffer.glyphs[i].x;
-            specs[nspec].y     = y + buffer.glyphs[i].y;
+            specs[nspec].x     = x + (int)buffer.glyphs[i].x;
+            specs[nspec].y     = y + (int)buffer.glyphs[i].y;
             nspec++;
         }
 
