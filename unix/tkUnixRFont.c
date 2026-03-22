@@ -25,21 +25,10 @@
 
 #define MAX_CACHED_COLORS 16
 #define MAX_GLYPHS 2048
-#define MAX_FONTS 64        /* Increased from 8 to support more fallback fonts */
+#define MAX_FONTS 64      
 #define MAX_BIDI_RUNS 32
-#define MAX_STRING_CACHE 1024        /* Increased from 256 */
+#define MAX_STRING_CACHE 1024  
 #define TK_DRAW_IN_CONTEXT
-
-/*
- * Debugging support - enable with -DDEBUG_FONTSEL=1
- */
-
-#ifndef DEBUG_FONTSEL
-#define DEBUG_FONTSEL 0
-#endif
-
-#define DEBUG_PRINT(args) \
-    do { if (DEBUG_FONTSEL) { printf args; fflush(stdout); } } while(0)
 
 /*
  * ---------------------------------------------------------------
@@ -108,7 +97,7 @@ typedef struct {
  *   rendering. The fontIndex field tracks which UnixFtFace produced each
  *   glyph to ensure this invariant holds.
  *
- *   FIXED: byteOffset now records the cluster start AND clusterLen records
+ *   byteOffset records the cluster start AND clusterLen records
  *   the cluster length in bytes. This enables accurate cursor placement and
  *   text selection by mapping pixel positions back to byte ranges.
  * ---------------------------------------------------------------
@@ -509,9 +498,6 @@ GetTkFontAttributes(
         slant = XFT_SLANT_ROMAN;
     }
 
-    DEBUG_PRINT(("GetTkFontAttributes: family %s size %ld weight %d slant %d\n",
-           family, lround(size), weight, slant));
-
     faPtr->family = Tk_GetUid(family);
     faPtr->size = TkFontGetPoints(tkwin, size);
     faPtr->weight = (weight > XFT_WEIGHT_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
@@ -868,7 +854,6 @@ X11Shaper_Init(
 
     s->context = kbts_CreateShapeContext(0, 0);
     if (!s->context) {
-        DEBUG_PRINT(("Failed to create kb_text_shaper context\n"));
         return;
     }
 
@@ -902,16 +887,11 @@ X11Shaper_Init(
                 fontPtr->faces[i].kbFont   = kbFont;
                 fontPtr->faces[i].isLoaded = 1;
                 s->numFonts++;
-                DEBUG_PRINT(("Loaded font face %d: %s\n", i, file));
             } else {
-                DEBUG_PRINT(("Failed to load font face %d: %s\n", i, file));
                 fontPtr->faces[i].isLoaded = 0;
             }
         }
     }
-    
-    DEBUG_PRINT(("X11Shaper_Init: loaded %d of %d available fonts\n", 
-                 s->numFonts, fontPtr->nfaces));
 }
 
 /*
@@ -1108,21 +1088,6 @@ X11Shaper_ShapeString(
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
 
-    /* DEBUG: Print what we got from SheenBidi */
-    if (DEBUG_FONTSEL) {
-        printf("\n=== BiDi Debug ===\n");
-        printf("Input string has %d characters, %d runs\n", charCount, numRuns);
-        for (int r = 0; r < numRuns; r++) {
-            printf("Run %d: offset=%d, len=%d, isRTL=%d\n", 
-                   r, bidiRuns[r].offset, bidiRuns[r].len, bidiRuns[r].isRTL);
-            printf("  Characters: ");
-            for (int i = 0; i < bidiRuns[r].len && i < 10; i++) {
-                printf("U+%04X ", ucs4Chars[bidiRuns[r].offset + i]);
-            }
-            printf("\n");
-        }
-    }
-
     int globalPenX = 0;
     int globalPenY = 0;
 
@@ -1214,16 +1179,12 @@ X11Shaper_ShapeString(
                         faceIndex = i;
                         faceFound = 1;
                         shaper->numFonts++;
-                        DEBUG_PRINT(("Dynamically mapped kbts font %p to face %d\n",
-                                     (void *)run.Font, i));
                         break;
                     }
                 }
             }
             
             if (!faceFound) {
-                DEBUG_PRINT(("WARNING: kbts run.Font %p not found in any face — "
-                             "skipping run\n", (void *)run.Font));
                 /* Consume glyphs without emitting them. */
                 kbts_glyph_iterator it = run.Glyphs;
                 kbts_glyph *g;
@@ -1369,12 +1330,6 @@ X11Shaper_ShapeString(
 
     buffer->totalAdvance = globalPenX;
 
-    /* DEBUG: Print glyph buffer */
-    if (DEBUG_FONTSEL && buffer->glyphCount > 0) {
-        printf("\n=== Glyph Buffer FINAL ===\n");
-        printf("Total glyphs: %d, total advance: %d\n", buffer->glyphCount, buffer->totalAdvance);
-    }
-
     /*
      * WORD-LEVEL REVERSAL FOR RTL:
      * When we have a single RTL run containing multiple words, kb_text_shaper
@@ -1506,7 +1461,6 @@ TkpGetNativeFont(
     Tk_Window tkwin,		/* For display where font will be used. */
     const char *name)		/* Platform-specific font name. */
 {
-    DEBUG_PRINT(("TkpGetNativeFont: %s\n", name));
 
     FcPattern *pattern = XftXlfdParse(name, FcFalse, FcFalse);
     if (!pattern) {
@@ -1550,9 +1504,6 @@ TkpGetFontFromAttributes(
 {
     XftPattern *pattern = XftPatternCreate();
     int weight, slant;
-
-    DEBUG_PRINT(("TkpGetFontFromAttributes: %s %ld %d %d\n", faPtr->family,
-           lround(faPtr->size), faPtr->weight, faPtr->slant));
 
     if (faPtr->family) {
         XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
