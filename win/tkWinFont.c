@@ -105,13 +105,6 @@ typedef struct SubFont {
     FontFamily *familyPtr;	/* The FontFamily for this SubFont. */
     HFONT hFontAngled;
     double angle;
-    int hasColorGlyphs;		/* 1 if this font contains COLR/CPAL or CBLC
-				 * color glyph tables (e.g. Segoe UI Emoji).
-				 * ScriptTextOut cannot render color glyphs;
-				 * runs using this subfont must be drawn with
-				 * ExtTextOutW + ETO_GLYPH_INDEX instead.
-				 * Set once by InitSubFont, -1 = not yet
-				 * checked. */
 } SubFont;
 
 /*
@@ -1955,10 +1948,10 @@ MultiFontTextOut(
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
     /*
-     * Emoji detection: 
-	 *
-     * If the string contains surrogate pairs → Uniscribe cannot
-     * shape it. Bypass shaping entirely and use ExtTextOutW.
+     * Global emoji detection - 
+     *
+     * If the string contains surrogate pairs → Uniscribe cannot shape it.
+     * Bypass shaping entirely and use ExtTextOutW.
      */
     int hasSurrogate = 0;
     for (i = 0; i < wlen; i++) {
@@ -1973,8 +1966,8 @@ MultiFontTextOut(
         /* Choose fallback font inline. */
         HFONT hEmoji = NULL;
         const char *emojiFonts[] = {
-            "Segoe UI Emoji",      /* Color emoji. */
-            "Segoe UI Symbol",     /* Monochrome emoji. */
+            "Segoe UI Emoji",      /* Color emoji */
+            "Segoe UI Symbol",     /* Monochrome emoji */
             "Segoe UI",
             "Arial Unicode MS",
             "Lucida Sans Unicode",
@@ -1987,7 +1980,9 @@ MultiFontTextOut(
                                     angle);
             if (h) { hEmoji = h; break; }
         }
-        if (!hEmoji) hEmoji = fontPtr->subFontArray[0].hFont0;
+        if (!hEmoji) {
+            hEmoji = fontPtr->subFontArray[0].hFont0;
+        }
 
         HFONT old = (HFONT)SelectObject(hdc, hEmoji);
         SetBkMode(hdc, TRANSPARENT);
@@ -2006,9 +2001,11 @@ MultiFontTextOut(
         return;
     }
 
-    /* 
-	 * Normal Uniscribe path for complex scripts/RTL text. 
-	 */
+    /*
+     * Normal Uniscribe path -
+	 * 
+     * Used for all non-emoji text: Arabic, Hebrew, Indic, Thai, etc.
+     */
 
     TkWinShapedRun *runs = NULL;
     int nRuns = 0;
@@ -2034,39 +2031,15 @@ MultiFontTextOut(
         HFONT hAngled = NULL;
         int runWidth = 0;
 
-        /* Your existing fallback logic stays intact */
-        if (run->subFontPtr->hasColorGlyphs) {
-            hDrawFont = GetScreenFont(&fontPtr->font.fa,
-                                      run->subFontPtr->familyPtr->faceName,
-                                      fontPtr->pixelSize,
-                                      angle);
-
-            if (hDrawFont == NULL || hDrawFont == run->hFont) {
-                const char *monoEmojiFonts[] = {
-                    "Segoe UI Symbol",
-                    "Segoe UI",
-                    "Arial Unicode MS",
-                    "Lucida Sans Unicode",
-                    NULL
-                };
-                for (int fb = 0; monoEmojiFonts[fb]; fb++) {
-                    HFONT hMono = GetScreenFont(&fontPtr->font.fa,
-                                                monoEmojiFonts[fb],
-                                                fontPtr->pixelSize,
-                                                angle);
-                    if (hMono) { hDrawFont = hMono; break; }
-                }
-            }
-
-            if (!hDrawFont) hDrawFont = run->hFont;
-        }
-
-        if (angle != 0.0 && hDrawFont == run->hFont) {
+        /* Rotation support. */
+        if (angle != 0.0) {
             hAngled = GetScreenFont(&fontPtr->font.fa,
                                     run->subFontPtr->familyPtr->faceName,
                                     fontPtr->pixelSize,
                                     angle);
-            if (hAngled) hDrawFont = hAngled;
+            if (hAngled) {
+                hDrawFont = hAngled;
+            }
         }
 
         SelectObject(hdc, hDrawFont);
@@ -2092,7 +2065,9 @@ MultiFontTextOut(
         x += cosA * runWidth;
         y -= sinA * runWidth;
 
-        if (hAngled) DeleteObject(hAngled);
+        if (hAngled) {
+            DeleteObject(hAngled);
+        }
     }
 
     SetBkMode(hdc, oldBkMode);
@@ -2298,7 +2273,6 @@ InitSubFont(
     SubFont *subFontPtr)	/* Filled with SubFont constructed from above
 				 * attributes. */
 {
-    HFONT oldFont;
 
     subFontPtr->hFont0	    = hFont;
     subFontPtr->familyPtr   = AllocFontFamily(hdc, hFont, base);
@@ -2306,35 +2280,7 @@ InitSubFont(
     subFontPtr->hFontAngled = NULL;
     subFontPtr->angle	    = 0.0;
 
-    /*
-     * Detect color emoji fonts.  ScriptTextOut (Uniscribe/GDI) only renders
-     * monochrome outline glyphs and ignores the COLR/CPAL (layered vector)
-     * and CBLC/CBDT (embedded bitmap) tables used by color emoji fonts such
-     * as Segoe UI Emoji.  We probe for those tables here, once per SubFont,
-     * so that MultiFontTextOut can route color runs through ExtTextOutW with
-     * ETO_GLYPH_INDEX instead.
-     *
-     * GetFontData with a NULL buffer and zero size returns the table length
-     * (or GDI_ERROR if the table is absent) without copying any data, so
-     * this probe is essentially free.
-     */
-    oldFont = (HFONT)SelectObject(hdc, hFont);
-    subFontPtr->hasColorGlyphs = 0;
-
-    /* COLR + CPAL (vector color glyphs) */
-    if (GetFontData(hdc, FOURCC_TAG('C','O','L','R'), 0, NULL, 0) != GDI_ERROR &&
-        GetFontData(hdc, FOURCC_TAG('C','P','A','L'), 0, NULL, 0) != GDI_ERROR)
-    {
-        subFontPtr->hasColorGlyphs = 1;
-    }
-    /* CBDT/CBLC (embedded bitmap color glyphs) */
-    else if (GetFontData(hdc, FOURCC_TAG('C','B','D','T'), 0, NULL, 0) != GDI_ERROR ||
-             GetFontData(hdc, FOURCC_TAG('C','B','L','C'), 0, NULL, 0) != GDI_ERROR)
-    {
-        subFontPtr->hasColorGlyphs = 1;
-    }
-
-    SelectObject(hdc, oldFont);
+    SelectObject(hdc, hFont);
 }
 
 /*
