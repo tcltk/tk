@@ -894,7 +894,7 @@ X11Shaper_Destroy(
  *
  *   Shape a UTF-8 string and produce glyph buffer.
  *
- *   Now computes actual clusterLen for each glyph (was always 0).
+ *   Computes actual clusterLen for each glyph.
  *   Clamps byteOffset to valid range to prevent buffer overruns
  *   Shapes all runs LTR, then reverses RTL runs manually to fix
  *   word-level BiDi (was reversing glyphs within words incorrectly).
@@ -941,7 +941,7 @@ X11Shaper_ShapeString(
      * Quick scan for shapeable content.
      * If the string contains ONLY control characters, whitespace, or invalid UTF-8,
      * return empty buffer rather than crashing kb_text_shaper.
-    . */
+     */
     int hasShapeableContent = 0;
     for (int i = 0; i < numBytes; ) {
         unsigned char byte = (unsigned char)source[i];
@@ -1031,7 +1031,7 @@ X11Shaper_ShapeString(
          * - Invalid/replacement characters.
         . */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
-            (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls - THE CRASH CULPRIT. */
+            (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls. */
             (uc == 0xFFFD)) {  /* Replacement character. */
             bytePos += clen;
             continue;  /* Skip without adding to character array. */
@@ -1248,7 +1248,7 @@ X11Shaper_ShapeString(
             }
 
             /*
-             * FIXED: Compute actual cluster lengths.
+             * Compute actual cluster lengths.
              * Each glyph's cluster extends from its byteOffset to the next
              * glyph's byteOffset (or to runByteEnd for the last glyph).
              * This was always 0 before, making selection impossible.
@@ -1320,9 +1320,10 @@ X11Shaper_ShapeString(
         int wordStart = 0;
         
         for (int i = 0; i < buffer->glyphCount; i++) {
-            /* Check if this is a space (advance typically 5-7 for spaces). */
-            int isSpace = (buffer->glyphs[i].glyphId == 3);  /* Common space glyph ID. */
-            
+	    /* Identify spaces by character, not glyph ID.*/
+            int byteOff = buffer->glyphs[i].byteOffset;
+            int isSpace = (byteOff >= 0 && byteOff < numBytes && source[byteOff] == ' ');
+           
             if (isSpace || i == buffer->glyphCount - 1) {
                 if (!isSpace && i == buffer->glyphCount - 1) {
                     /* Last glyph is not a space, include it. */
@@ -1495,6 +1496,10 @@ TkpGetFontFromAttributes(
     }
     XftPatternAddInteger(pattern, XFT_SLANT, slant);
 
+    /* Resolve "sans-serif" alias and system defaults. */
+    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
+
     UnixFtFont *fontPtr = (UnixFtFont *)tkFontPtr;
     if (fontPtr != NULL) {
         FinishedWithFont(fontPtr);
@@ -1518,6 +1523,7 @@ TkpGetFontFromAttributes(
 
     return &fontPtr->font;
 }
+
 /*
  * ---------------------------------------------------------------
  * TkpDeleteFont --
@@ -1707,7 +1713,7 @@ Tk_MeasureChars(
         int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
         int bytePos = buffer.glyphs[i].byteOffset;
         
-        /* Check if we're at a potential break point (whitespace). */
+	/* Character-based break detection. */
         if (bytePos < (int)numBytes && bytePos >= 0) {
             char ch = source[bytePos];
             if (ch == ' ' || ch == '\t' || ch == '\n') {
@@ -1794,10 +1800,7 @@ Tk_MeasureCharsInContext(
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
     ShapedGlyphBuffer buffer;
     
-    /* 
-     * Shape the FULL string to preserve context.
-     * Previously this just called Tk_MeasureChars on the substring,
-     * which broke ligatures and BiDi at range boundaries.
+    /* * Shape the FULL string to preserve context.
      */
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &buffer)) {
@@ -1805,18 +1808,21 @@ Tk_MeasureCharsInContext(
         return 0;
     }
     
-    /* Find glyphs that overlap the requested range [rangeStart, rangeStart+rangeLength). */
-    int total = 0;
-    int bytes = 0;
-    int rangeEnd = rangeStart + rangeLength;
-    int foundAny = 0;
+    int totalWidth = 0;
+    int bytesConsumed = 0;
+    int rangeEnd = (int)(rangeStart + rangeLength);
+    
+    /* Track potential break points for wrapping */
+    int lastBreakPos = 0;
+    int lastBreakWidth = 0;
+    int lastBreakGlyph = -1;
     
     for (int i = 0; i < buffer.glyphCount; i++) {
         int glyphStart = buffer.glyphs[i].byteOffset;
         int glyphEnd   = glyphStart + buffer.glyphs[i].clusterLen;
         
-        /* Skip glyphs entirely before range. */
-        if (glyphEnd <= rangeStart) {
+        /* Skip glyphs entirely before the requested range. */
+        if (glyphEnd <= (int)rangeStart) {
             continue;
         }
         
@@ -1825,37 +1831,51 @@ Tk_MeasureCharsInContext(
             break;
         }
         
-        /* This glyph overlaps the range - include its advance. */
-        foundAny = 1;
-        int next = total + buffer.glyphs[i].advanceX;
-        
-        if (maxLength >= 0 && next > maxLength) {
-            if (flags & TK_PARTIAL_OK) {
-                total = next;
-                bytes = glyphEnd;
-            } else if ((flags & TK_AT_LEAST_ONE) && total == 0) {
-                total = next;
-                bytes = glyphEnd;
+        int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
+
+        /* Identify break points within the range. */
+        if (glyphStart < (int)numBytes && glyphStart >= 0) {
+            char ch = source[glyphStart];
+            if (ch == ' ' || ch == '\t' || ch == '\n') {
+                lastBreakPos = glyphEnd;
+                lastBreakWidth = nextWidth;
+                lastBreakGlyph = i;
+            }
+        }
+
+        /* Check against maxLength for wrapping */
+        if (maxLength >= 0 && nextWidth > maxLength) {
+            if (lastBreakGlyph >= 0) {
+                /* Wrap at the last seen space */
+                totalWidth = lastBreakWidth;
+                bytesConsumed = lastBreakPos;
+            } else if ((flags & TK_AT_LEAST_ONE) && bytesConsumed == 0) {
+                /* Force at least one character if no break found. */
+                totalWidth = nextWidth;
+                bytesConsumed = glyphEnd;
+            } else if (flags & TK_PARTIAL_OK) {
+                totalWidth = nextWidth;
+                bytesConsumed = glyphEnd;
             }
             break;
         }
         
-        total = next;
-        bytes = glyphEnd;
+        totalWidth = nextWidth;
+        bytesConsumed = glyphEnd;
     }
     
-    /* Clamp bytes to valid range. */
-    if (bytes > rangeEnd) {
-        bytes = rangeEnd;
+    /* Clamp bytesConsumed to the requested range boundaries. */
+    if (bytesConsumed > rangeEnd) {
+        bytesConsumed = rangeEnd;
     }
-    if (bytes < rangeStart) {
-        bytes = rangeStart;
+    if (bytesConsumed < (int)rangeStart) {
+        bytesConsumed = (int)rangeStart;
     }
     
-    *lengthPtr = total;
+    *lengthPtr = totalWidth;
     
     /* Return byte count relative to rangeStart. */
-    return foundAny ? (bytes - rangeStart) : 0;
+    return (bytesConsumed - (int)rangeStart);
 }
 
 /*
