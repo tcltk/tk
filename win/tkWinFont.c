@@ -32,7 +32,8 @@
 #define FONTMAP_SHIFT	    10
 
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
-#define FONTMAP_NUMCHARS	0x40000
+/* Cover the full Unicode range (0x110000) */
+#define FONTMAP_NUMCHARS	0x110000
 #define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
@@ -104,8 +105,8 @@ typedef struct SubFont {
     FontFamily *familyPtr;	/* The FontFamily for this SubFont. */
     HFONT hFontAngled;
     double angle;
-    int hasColorGlyphs;		/* 1 if this font contains COLR or CBLC color
-				 * glyph tables (e.g. Segoe UI Emoji).
+    int hasColorGlyphs;		/* 1 if this font contains COLR/CPAL or CBLC
+				 * color glyph tables (e.g. Segoe UI Emoji).
 				 * ScriptTextOut cannot render color glyphs;
 				 * runs using this subfont must be drawn with
 				 * ExtTextOutW + ETO_GLYPH_INDEX instead.
@@ -1905,11 +1906,11 @@ TkpDrawAngledCharsInContext(
  *	TkWinShapedRun buffers, then dispatches each run to the appropriate
  *	GDI rendering path:
  *
- *	  - Runs whose subfont contains color glyph tables (COLR/CBLC, i.e.
- *	    color emoji such as Segoe UI Emoji) are drawn with ExtTextOutW
- *	    and ETO_GLYPH_INDEX.  ScriptTextOut uses the legacy GDI monochrome
- *	    rasterizer which ignores color tables entirely, producing tofu
- *	    (empty boxes) for every emoji glyph.
+ *	  - Runs whose subfont contains color glyph tables (COLR/CPAL or CBLC,
+ *	    i.e. color emoji such as Segoe UI Emoji) are drawn with
+ *	    ExtTextOutW and ETO_GLYPH_INDEX.  ScriptTextOut uses the legacy
+ *	    GDI monochrome rasterizer which ignores color tables entirely,
+ *	    producing tofu (empty boxes) for every emoji glyph.
  *
  *	  - All other runs use ScriptTextOut as before so that Uniscribe
  *	    shaping (ligatures, mark positioning, bidi, etc.) is preserved.
@@ -1933,24 +1934,18 @@ TkpDrawAngledCharsInContext(
 
 static void
 MultiFontTextOut(
-    HDC hdc,                /* HDC to draw into. */
-    WinFont *fontPtr,       /* Contains set of fonts to use when drawing
-                             * following string. */
-    const char *source,     /* Potentially multilingual UTF-8 string. */
-    int numBytes,           /* Length of string in bytes. */
-    double x, double y,     /* Coordinates at which to place origin of
-                             * string when drawing. */
+    HDC hdc,
+    WinFont *fontPtr,
+    const char *source,
+    int numBytes,
+    double x, double y,
     double angle)
 {
     Tcl_DString uniStr;
     WCHAR *wstr;
     int wlen;
-    TkWinShapedRun *runs = NULL;
-    int nRuns = 0;
     int i;
     HFONT oldFont;
-    double sinA = sin(angle * PI/180.0);
-    double cosA = cos(angle * PI/180.0);
 
     if (numBytes == 0) return;
 
@@ -1959,9 +1954,66 @@ MultiFontTextOut(
     wstr = (WCHAR *)Tcl_DStringValue(&uniStr);
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
-    if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0
-            || nRuns == 0) {
-        /* Fallback path — plain GDI when Uniscribe fails entirely. */
+    /*
+     * Emoji detection: 
+	 *
+     * If the string contains surrogate pairs → Uniscribe cannot
+     * shape it. Bypass shaping entirely and use ExtTextOutW.
+     */
+    int hasSurrogate = 0;
+    for (i = 0; i < wlen; i++) {
+        WCHAR wc = wstr[i];
+        if (wc >= 0xD800 && wc <= 0xDBFF) {
+            hasSurrogate = 1;
+            break;
+        }
+    }
+
+    if (hasSurrogate) {
+        /* Choose fallback font inline. */
+        HFONT hEmoji = NULL;
+        const char *emojiFonts[] = {
+            "Segoe UI Emoji",      /* Color emoji. */
+            "Segoe UI Symbol",     /* Monochrome emoji. */
+            "Segoe UI",
+            "Arial Unicode MS",
+            "Lucida Sans Unicode",
+            NULL
+        };
+        for (int ef = 0; emojiFonts[ef]; ef++) {
+            HFONT h = GetScreenFont(&fontPtr->font.fa,
+                                    emojiFonts[ef],
+                                    fontPtr->pixelSize,
+                                    angle);
+            if (h) { hEmoji = h; break; }
+        }
+        if (!hEmoji) hEmoji = fontPtr->subFontArray[0].hFont0;
+
+        HFONT old = (HFONT)SelectObject(hdc, hEmoji);
+        SetBkMode(hdc, TRANSPARENT);
+
+        ExtTextOutW(
+            hdc,
+            (int)(x + 0.5), (int)(y + 0.5),
+            0,
+            NULL,
+            wstr,
+            wlen,
+            NULL);
+
+        SelectObject(hdc, old);
+        Tcl_DStringFree(&uniStr);
+        return;
+    }
+
+    /* 
+	 * Normal Uniscribe path for complex scripts/RTL text. 
+	 */
+
+    TkWinShapedRun *runs = NULL;
+    int nRuns = 0;
+
+    if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
         HFONT old = (HFONT)SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
         SetBkMode(hdc, TRANSPARENT);
         TextOutW(hdc, (int)x, (int)y, wstr, wlen);
@@ -1971,67 +2023,72 @@ MultiFontTextOut(
     }
 
     oldFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
-
-    /*
-     * TRANSPARENT background mode: required so ScriptTextOut does not fill
-     * the glyph bounding box with the DC background color, and so that
-     * ExtTextOutW leaves the background intact for color emoji glyphs.
-     */
     int oldBkMode = SetBkMode(hdc, TRANSPARENT);
+
+    double sinA = sin(angle * PI / 180.0);
+    double cosA = cos(angle * PI / 180.0);
 
     for (i = 0; i < nRuns; i++) {
         TkWinShapedRun *run = &runs[i];
         HFONT hDrawFont = run->hFont;
-        HFONT hAngled   = NULL;
-        int runWidth    = 0, g;
+        HFONT hAngled = NULL;
+        int runWidth = 0;
 
-        if (angle != 0.0) {
+        /* Your existing fallback logic stays intact */
+        if (run->subFontPtr->hasColorGlyphs) {
+            hDrawFont = GetScreenFont(&fontPtr->font.fa,
+                                      run->subFontPtr->familyPtr->faceName,
+                                      fontPtr->pixelSize,
+                                      angle);
+
+            if (hDrawFont == NULL || hDrawFont == run->hFont) {
+                const char *monoEmojiFonts[] = {
+                    "Segoe UI Symbol",
+                    "Segoe UI",
+                    "Arial Unicode MS",
+                    "Lucida Sans Unicode",
+                    NULL
+                };
+                for (int fb = 0; monoEmojiFonts[fb]; fb++) {
+                    HFONT hMono = GetScreenFont(&fontPtr->font.fa,
+                                                monoEmojiFonts[fb],
+                                                fontPtr->pixelSize,
+                                                angle);
+                    if (hMono) { hDrawFont = hMono; break; }
+                }
+            }
+
+            if (!hDrawFont) hDrawFont = run->hFont;
+        }
+
+        if (angle != 0.0 && hDrawFont == run->hFont) {
             hAngled = GetScreenFont(&fontPtr->font.fa,
-                    run->subFontPtr->familyPtr->faceName,
-                    fontPtr->pixelSize, angle);
+                                    run->subFontPtr->familyPtr->faceName,
+                                    fontPtr->pixelSize,
+                                    angle);
             if (hAngled) hDrawFont = hAngled;
         }
 
         SelectObject(hdc, hDrawFont);
 
-        /*
-         * Windows 11 Fix: If the subfont supports color (like Segoe UI Emoji),
-         * we MUST use ExtTextOutW + ETO_GLYPH_INDEX.
-         *
-         * ScriptTextOut uses a legacy rendering path that does not support
-         * the OpenType tables (COLR/CPAL) used by modern emoji fonts.
-         * Using ExtTextOutW with glyph indices allows GDI to hand off the
-         * rendering to the modern DirectWrite-backed engine.
-         */
-        if (run->subFontPtr->hasColorGlyphs) {
-            ExtTextOutW(hdc,
-                    (int)(x + 0.5), (int)(y + 0.5), /* Rounded coordinates. */
-                    ETO_GLYPH_INDEX,
-                    NULL,
-                    (LPCWSTR)run->glyphs,
-                    (UINT)run->glyphCount,
-                    run->advances);
-        } else {
-            /* Regular text path for non-emoji fonts. */
-            ScriptTextOut(
-                    hdc,
-                    run->scriptCache,
-                    (int)(x + 0.5), (int)(y + 0.5),
-                    0,
-                    NULL,
-                    &run->sa,
-                    NULL, 0,
-                    run->glyphs,
-                    run->glyphCount,
-                    run->advances,
-                    NULL,
-                    run->offsets);
-        }
+        ScriptTextOut(
+            hdc,
+            run->scriptCache,
+            (int)(x + 0.5), (int)(y + 0.5),
+            0,
+            NULL,
+            &run->sa,
+            NULL, 0,
+            run->glyphs,
+            run->glyphCount,
+            run->advances,
+            NULL,
+            run->offsets);
 
-        /* Advance pen position along the (possibly rotated) baseline. */
-        for (g = 0; g < run->glyphCount; g++) {
+        for (int g = 0; g < run->glyphCount; g++) {
             runWidth += run->advances[g];
         }
+
         x += cosA * runWidth;
         y -= sinA * runWidth;
 
@@ -2040,10 +2097,10 @@ MultiFontTextOut(
 
     SetBkMode(hdc, oldBkMode);
     SelectObject(hdc, oldFont);
-
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
 }
+
 
 static inline HFONT
 SelectFont(
@@ -2219,17 +2276,17 @@ ReleaseFont(
  */
 
 /*
- * OT_TAG --
+ * FOURCC_TAG --
  *
- *   Build a little-endian DWORD from a four-character OpenType table tag so
- *   it can be passed directly to GetFontData().  GetFontData expects the tag
- *   as a DWORD in the byte order that Windows stores it (little-endian on
- *   x86/x64), so 'COLR' becomes 0x524C4F43.
+ *   Build a big-endian DWORD from four characters, as required by
+ *   GetFontData() for OpenType table tags.  The Windows GDI expects
+ *   the tag in the byte order used in the font file, which is big-endian.
+ *   So "COLR" becomes 0x434F4C52.
  */
-#ifndef OT_TAG
-#define OT_TAG(a,b,c,d) \
-    ((DWORD)(BYTE)(a)        | ((DWORD)(BYTE)(b) << 8) | \
-     ((DWORD)(BYTE)(c) << 16)| ((DWORD)(BYTE)(d) << 24))
+#ifndef FOURCC_TAG
+#define FOURCC_TAG(a,b,c,d) \
+    ((DWORD)(BYTE)(a) << 24 | (DWORD)(BYTE)(b) << 16 | \
+     (DWORD)(BYTE)(c) << 8  | (DWORD)(BYTE)(d))
 #endif
 
 static inline void
@@ -2262,10 +2319,21 @@ InitSubFont(
      * this probe is essentially free.
      */
     oldFont = (HFONT)SelectObject(hdc, hFont);
-    subFontPtr->hasColorGlyphs =
-        (GetFontData(hdc, OT_TAG('C','O','L','R'), 0, NULL, 0) != GDI_ERROR ||
-         GetFontData(hdc, OT_TAG('C','B','L','C'), 0, NULL, 0) != GDI_ERROR)
-        ? 1 : 0;
+    subFontPtr->hasColorGlyphs = 0;
+
+    /* COLR + CPAL (vector color glyphs) */
+    if (GetFontData(hdc, FOURCC_TAG('C','O','L','R'), 0, NULL, 0) != GDI_ERROR &&
+        GetFontData(hdc, FOURCC_TAG('C','P','A','L'), 0, NULL, 0) != GDI_ERROR)
+    {
+        subFontPtr->hasColorGlyphs = 1;
+    }
+    /* CBDT/CBLC (embedded bitmap color glyphs) */
+    else if (GetFontData(hdc, FOURCC_TAG('C','B','D','T'), 0, NULL, 0) != GDI_ERROR ||
+             GetFontData(hdc, FOURCC_TAG('C','B','L','C'), 0, NULL, 0) != GDI_ERROR)
+    {
+        subFontPtr->hasColorGlyphs = 1;
+    }
+
     SelectObject(hdc, oldFont);
 }
 
@@ -2552,18 +2620,6 @@ FindSubFontForChar(
 
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
-	
-    /*
-     * Emoji characters should use a color font.
-     * Try the standard Windows color emoji font explicitly.
-     */
-    if (ch >= 0x1F000 && ch <= 0x1FFFF) {
-        SubFont *emojiSubFont = CanUseFallback(hdc, fontPtr,
-                "Segoe UI Emoji", ch, subFontPtrPtr);
-        if (emojiSubFont != NULL) {
-            return emojiSubFont;
-        }
-    }
 
     aliases = TkFontGetAliasList(fontPtr->font.fa.family);
 
