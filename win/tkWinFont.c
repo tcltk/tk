@@ -2576,6 +2576,18 @@ FindSubFontForChar(
 
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
+	
+	/*
+     * Emoji characters (U+1F300 - U+1F9FF) should use a color font.
+     * Try the standard Windows color emoji font explicitly.
+     */
+    if (ch >= 0x1F300 && ch <= 0x1F9FF) {
+        SubFont *emojiSubFont = CanUseFallback(hdc, fontPtr,
+                "Segoe UI Emoji", ch, subFontPtrPtr);
+        if (emojiSubFont != NULL) {
+            return emojiSubFont;
+        }
+    }
 
     aliases = TkFontGetAliasList(fontPtr->font.fa.family);
 
