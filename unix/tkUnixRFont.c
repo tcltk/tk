@@ -243,13 +243,26 @@ GetFaceFont(
             UNLOCK;
 
             if (!face->ft0Font) {
-                /* Fallback to basic sans font. */
+                /* FIXED: Use proper sans-serif font with correct size. */
+                double size = 12.0;
+                FcPatternGetDouble(fontPtr->pattern, FC_SIZE, 0, &size);
+                
                 LOCK;
                 face->ft0Font = XftFontOpen(fontPtr->display, fontPtr->screen,
-                                           FC_FAMILY, FcTypeString, "sans",
-                                           FC_SIZE, FcTypeDouble, 12.0,
+                                           FC_FAMILY, FcTypeString, "sans-serif",
+                                           FC_SIZE, FcTypeDouble, size,
                                            NULL);
                 UNLOCK;
+                
+                /* Last resort - try a fixed font. */
+                if (!face->ft0Font) {
+                    LOCK;
+                    face->ft0Font = XftFontOpen(fontPtr->display, fontPtr->screen,
+                                               FC_FAMILY, FcTypeString, "fixed",
+                                               FC_SIZE, FcTypeDouble, size,
+                                               NULL);
+                    UNLOCK;
+                }
             }
             
             /* Extract font metrics for proper scaling. */
@@ -283,11 +296,14 @@ GetFaceFont(
             UNLOCK;
 
             if (!ftFont) {
-                /* Fallback. */
+                /* Fallback with correct size. */
+                double size = 12.0;
+                FcPatternGetDouble(fontPtr->pattern, FC_SIZE, 0, &size);
+                
                 LOCK;
                 ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
-                                     FC_FAMILY, FcTypeString, "sans",
-                                     FC_SIZE, FcTypeDouble, 12.0,
+                                     FC_FAMILY, FcTypeString, "sans-serif",
+                                     FC_SIZE, FcTypeDouble, size,
                                      FC_MATRIX, FcTypeMatrix, &mat,
                                      NULL);
                 UNLOCK;
@@ -304,7 +320,6 @@ GetFaceFont(
         return face->ftFont;
     }
 }
-
 /*
  * ---------------------------------------------------------------
  * GetFont --
@@ -1447,25 +1462,19 @@ TkpGetNativeFont(
 
 TkFont *
 TkpGetFontFromAttributes(
-    TkFont *tkFontPtr,		/* If non-NULL, store the information in this
-				 * existing TkFont structure, rather than
-				 * allocating a new structure to hold the
-				 * font; the existing contents of the font
-				 * will be released. If NULL, a new TkFont
-				 * structure is allocated. */
-    Tk_Window tkwin,		/* For display where font will be used. */
+    TkFont *tkFontPtr,
+    Tk_Window tkwin,
     const TkFontAttributes *faPtr)
-				/* Set of attributes to match. */
 {
     XftPattern *pattern = XftPatternCreate();
     int weight, slant;
     const char *family = faPtr->family;
 
-    /* If no family specified, use sans-serif as default instead of
-     * letting fontconfig pick (which often defaults to serif). */
+    /* If no family specified, use sans-serif as default. */
     if (!family || family[0] == '\0') {
         family = "sans-serif";
     }
+    
     XftPatternAddString(pattern, XFT_FAMILY, family);
 
     if (faPtr->size > 0.0) {
@@ -1509,7 +1518,6 @@ TkpGetFontFromAttributes(
 
     return &fontPtr->font;
 }
-
 /*
  * ---------------------------------------------------------------
  * TkpDeleteFont --
@@ -1689,6 +1697,8 @@ Tk_MeasureChars(
     int lastBreakPos = 0;       /* Byte position of last valid break (whitespace). */
     int lastBreakWidth = 0;     /* Width up to last break. */
     int lastBreakGlyph = -1;    /* Glyph index of last break. */
+    int lastValidPos = 0;       /* Last valid position before overflow. */
+    int lastValidWidth = 0;     /* Width up to last valid position. */
 
     /* To prevent the "bunched up" text in the UI, we must sum the
      * advances of the glyphs in the order they appear in the SHAPED buffer.
@@ -1707,51 +1717,58 @@ Tk_MeasureChars(
             }
         }
 
+        /* Check if we've exceeded the max width. */
         if (maxLength >= 0 && nextWidth > maxLength) {
             /* We've exceeded maxLength. Decide where to break. */
-            if (flags & TK_WHOLE_WORDS) {
-                /* Try to break at last whitespace. */
-                if (lastBreakGlyph >= 0) {
-                    totalWidth = lastBreakWidth;
-                    bytesConsumed = lastBreakPos;
-                } else if ((flags & TK_AT_LEAST_ONE) && totalWidth == 0) {
-                    /* No break found, but need at least one char. */
-                    totalWidth = nextWidth;
-                    bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
-                }
-                /* Else: no whitespace found but totalWidth > 0,
-                 * break before current char (keep previous values). */
-            } else if (flags & TK_PARTIAL_OK) {
-                /* Include this character even though it exceeds limit. */
-                totalWidth = nextWidth;
-                bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
-            } else if ((flags & TK_AT_LEAST_ONE) && totalWidth == 0) {
-                /* Must include at least one character. */
+            
+            /* First, try to use the last valid break point if we have one. */
+            if (lastBreakGlyph >= 0) {
+                totalWidth = lastBreakWidth;
+                bytesConsumed = lastBreakPos;
+            } 
+            /* Otherwise, if we have a valid position before overflow, use that. */
+            else if (lastValidPos > 0) {
+                totalWidth = lastValidWidth;
+                bytesConsumed = lastValidPos;
+            }
+            /* If we need at least one character and haven't consumed any yet. */
+            else if ((flags & TK_AT_LEAST_ONE) && bytesConsumed == 0) {
+                /* Include this character even if it exceeds the limit. */
                 totalWidth = nextWidth;
                 bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
             }
-            /* else: Default - break before this character (keep previous values). */
+            /* Break before this character - keep previous values. */
             break;
         }
 
+        /* Update last valid position (always valid if we didn't overflow). */
+        lastValidPos = bytePos + buffer.glyphs[i].clusterLen;
+        lastValidWidth = nextWidth;
         totalWidth = nextWidth;
-        bytesConsumed = bytePos + buffer.glyphs[i].clusterLen;
+        bytesConsumed = lastValidPos;
+    }
+
+    /* Handle the case where we never overflowed. */
+    if (maxLength < 0 || totalWidth <= maxLength) {
+        /* Ensure we don't exceed the original request. */
+        if (bytesConsumed > (int)numBytes) bytesConsumed = (int)numBytes;
+        *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : totalWidth;
+        return bytesConsumed;
     }
 
     /* Ensure we don't exceed the original request. */
     if (bytesConsumed > (int)numBytes) bytesConsumed = (int)numBytes;
     
-    *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : totalWidth;
+    *lengthPtr = totalWidth;
     return bytesConsumed;
 }
-
 /*
  * ---------------------------------------------------------------
  * Tk_MeasureCharsInContext --
  *
  *   Measure a substring of a larger string, preserving shaping context.
  *
- *   FIXED: Now shapes the FULL string and extracts metrics for the
+ *   Shapes the FULL string and extracts metrics for the
  *   requested range. This preserves ligatures, kerning, and BiDi
  *   analysis across substring boundaries.
  *
@@ -1871,7 +1888,7 @@ Tk_DrawChars(
 
     if (numBytes <= 0) return;
 
-    /* 1. Ensure XftDraw is ready. */
+    /* Ensure XftDraw is ready. */
     if (!fontPtr->ftDraw) {
         fontPtr->ftDraw = XftDrawCreate(display, drawable,
                                         fontPtr->visual, fontPtr->colormap);
@@ -1890,12 +1907,8 @@ Tk_DrawChars(
         XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
-    /* * 2. DISABLE FAST PATH: 
-     * For RTL/Shaped text, we MUST go through the shaper to avoid 
-     * the "blob" of overlapping characters seen in the screenshots.
-     */
 
-    /* 3. Full shaping path. */
+    /* Full shaping path. */
     {
         ShapedGlyphBuffer buffer;
         if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
@@ -1934,7 +1947,7 @@ Tk_DrawChars(
                 if (actualGlyph == 0) continue;
             }
 
-            /* * 4. COORDINATE SYNC:
+            /*
              * 'buffer.glyphs[i].x' is the offset relative to the start of the string.
              * Adding 'x' places the entire shaped block at the correct Tk baseline.
              */
@@ -1962,7 +1975,9 @@ done:
  * ---------------------------------------------------------------
  * Tk_DrawCharsInContext --
  *
- *   Draws a substring of text using full shaping + bidi logic.
+ *   Draws a substring of text using full shaping + bidi logic,
+ *   preserving context from surrounding text for proper ligatures
+ *   and BiDi reordering.
  *
  * Results:
  *   None.
@@ -1979,15 +1994,148 @@ Tk_DrawCharsInContext(
     GC gc,
     Tk_Font tkfont,
     const char *source,
-    TCL_UNUSED(Tcl_Size),
-    Tcl_Size rangeStart,
-    Tcl_Size rangeLength,
-    int x, int y)
+    Tcl_Size numBytes,        /* Total bytes in source string. */
+    Tcl_Size rangeStart,      /* Byte offset of substring start. */
+    Tcl_Size rangeLength,     /* Byte length of substring. */
+    int x, int y)              /* Coordinates at which to place origin. */
 {
-    Tk_DrawChars(display, drawable, gc, tkfont,
-                 source + rangeStart, rangeLength, x, y);
-}
+    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+    if (rangeLength <= 0) return;
+
+    /* 1. Ensure XftDraw is ready. */
+    if (!fontPtr->ftDraw) {
+        fontPtr->ftDraw = XftDrawCreate(display, drawable,
+                                        fontPtr->visual, fontPtr->colormap);
+        fontPtr->lastDrawable = drawable;
+    } else if (fontPtr->lastDrawable != drawable) {
+        XftDrawChange(fontPtr->ftDraw, drawable);
+        fontPtr->lastDrawable = drawable;
+    }
+
+    XGCValues values;
+    XGetGCValues(display, gc, GCForeground, &values);
+    XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
+    if (!xftcolor) return;
+
+    if (tsdPtr->clipRegion) {
+        XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
+
+    /* 2. Shape the FULL string to preserve context for ligatures and BiDi. */
+    ShapedGlyphBuffer fullBuffer;
+    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                (int)numBytes, &fullBuffer)) {
+        goto done;
+    }
+
+    /* 3. Find the glyphs that overlap our requested range. */
+    XftGlyphFontSpec specs[MAX_GLYPHS];
+    int nspec = 0;
+    int rangeEnd = rangeStart + rangeLength;
+    int baseX = x;  /* Starting X position for the first glyph we draw. */
+    int firstGlyphFound = 0;
+    
+    /* We need to find the actual screen X position of the first glyph
+     * in our range. The glyph positions in the buffer are absolute
+     * from the start of the shaped string. We need to subtract the
+     * X offset of the first glyph in our range to get the correct
+     * baseline. */
+    int rangeStartX = 0;
+    int rangeStartFound = 0;
+    
+    /* First pass: Find the X position of the first glyph that starts
+     * at or after rangeStart. */
+    for (int i = 0; i < fullBuffer.glyphCount; i++) {
+        int glyphStart = fullBuffer.glyphs[i].byteOffset;
+        int glyphEnd = glyphStart + fullBuffer.glyphs[i].clusterLen;
+        
+        if (glyphEnd <= rangeStart) {
+            /* Glyph is entirely before our range. */
+            continue;
+        }
+        
+        if (!rangeStartFound) {
+            /* This is the first glyph that overlaps our range. */
+            rangeStartX = fullBuffer.glyphs[i].x;
+            rangeStartFound = 1;
+            break;
+        }
+    }
+    
+    /* Second pass: Draw the glyphs that overlap our range. */
+    for (int i = 0; i < fullBuffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+        int glyphStart = fullBuffer.glyphs[i].byteOffset;
+        int glyphEnd = glyphStart + fullBuffer.glyphs[i].clusterLen;
+        
+        /* Skip glyphs entirely before our range. */
+        if (glyphEnd <= rangeStart) {
+            continue;
+        }
+        
+        /* Stop when we've passed our range. */
+        if (glyphStart >= rangeEnd) {
+            break;
+        }
+        
+        /* This glyph overlaps our range - draw it. */
+        int faceIdx = fullBuffer.glyphs[i].fontIndex;
+        if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+        
+        XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
+        if (!ftFont) continue;
+        
+        unsigned int actualGlyph = fullBuffer.glyphs[i].glyphId;
+        
+        /* Fallback logic for missing glyphs in primary font. */
+        if (actualGlyph == 0) {
+            FcChar32 ucs4 = 0;
+            int byteOff = fullBuffer.glyphs[i].byteOffset;
+            if (byteOff >= 0 && byteOff < (int)numBytes) {
+                FcUtf8ToUcs4((const FcChar8 *)(source + byteOff), &ucs4, 
+                             (int)numBytes - byteOff);
+            }
+            
+            if (ucs4 != 0) {
+                XftFont *fallbackFont = GetFont(fontPtr, ucs4, 0.0);
+                if (fallbackFont) {
+                    actualGlyph = XftCharIndex(display, fallbackFont, ucs4);
+                    if (actualGlyph != 0) ftFont = fallbackFont;
+                }
+            }
+            if (actualGlyph == 0) continue;
+        }
+        
+        /* Calculate screen position: baseX + (glyph X - rangeStartX). 
+         * This ensures the substring starts at the correct x coordinate
+         * as if it were drawn starting from the beginning of the range. */
+        int glyphScreenX = x + (fullBuffer.glyphs[i].x - rangeStartX);
+        
+        specs[nspec].font  = ftFont;
+        specs[nspec].glyph = actualGlyph;
+        specs[nspec].x     = glyphScreenX;
+        specs[nspec].y     = y + (int)fullBuffer.glyphs[i].y;
+        nspec++;
+        
+        if (!firstGlyphFound) {
+            firstGlyphFound = 1;
+        }
+    }
+    
+    /* Draw the glyphs. */
+    if (nspec > 0) {
+        LOCK;
+        XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+        UNLOCK;
+    }
+
+done:
+    if (tsdPtr->clipRegion) {
+        XftDrawSetClip(fontPtr->ftDraw, NULL);
+    }
+}
 /*
  * ---------------------------------------------------------------
  * TkDrawAngledChars --
