@@ -206,6 +206,26 @@ static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
+static int IsAsciiOnly(const char *str, int len);  /* new helper */
+
+/*
+ * ---------------------------------------------------------------
+ * IsAsciiOnly --
+ *
+ *   Returns 1 if the string contains only ASCII characters (0x00-0x7F),
+ *   0 otherwise.
+ * ---------------------------------------------------------------
+ */
+static int
+IsAsciiOnly(const char *str, int len)
+{
+    for (int i = 0; i < len; i++) {
+        if ((unsigned char)str[i] >= 0x80) {
+            return 0;
+        }
+    }
+    return 1;
+}
 
 /*
  * ---------------------------------------------------------------
@@ -985,26 +1005,7 @@ X11Shaper_ShapeString(
         return 0;
     }
     
-	/* 
-	 * Bail out early if the string is ASCII-only.
-	 * This prevents kb_text_shaper from hijacking plain text.
-	 */
-	int asciiOnly = 1;
-	for (int i = 0; i < numBytes; i++) {
-	    if ((unsigned char)source[i] >= 0x80) {
-	        asciiOnly = 0;
-	        break;
-	    }
-	}
-	
-	if (asciiOnly) {
-	    buffer->glyphCount = 0;
-	    buffer->totalAdvance = 0;
-	    return 1;   /* success, but no shaped glyphs */
-	}
-
-    /*
-     * Quick scan for shapeable content.
+    /* Quick scan for shapeable content.
      * If the string contains ONLY control characters, whitespace, or invalid UTF-8,
      * return empty buffer rather than crashing kb_text_shaper.
      */
@@ -1736,12 +1737,77 @@ Tk_MeasureChars(
 	int flags, 
 	int *lengthPtr) 
 {
-	
-	UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    ShapedGlyphBuffer buffer;
+    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
 
+    /* Fast path for pure ASCII strings */
+    if (IsAsciiOnly(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (!ftFont) {
+            *lengthPtr = 0;
+            return 0;
+        }
+
+        /* Total width of the entire string */
+        XGlyphInfo extents;
+        XftTextExtents8(fontPtr->display, ftFont,
+                        (const FcChar8 *)source, (int)numBytes, &extents);
+        int totalWidth = extents.xOff;
+
+        if (maxLength < 0) {
+            *lengthPtr = totalWidth;
+            return (int)numBytes;
+        }
+
+        /* Binary search for longest prefix that fits in maxLength */
+        int lo = 0, hi = (int)numBytes;
+        int best = 0, bestWidth = 0;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) / 2;
+            XftTextExtents8(fontPtr->display, ftFont,
+                            (const FcChar8 *)source, mid, &extents);
+            int w = extents.xOff;
+            if (w <= maxLength) {
+                best = mid;
+                bestWidth = w;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+
+        /* Whole-word break if requested */
+        if ((flags & TK_WHOLE_WORDS) && best < (int)numBytes) {
+            int spacePos = -1;
+            for (int i = 0; i < best; i++) {
+                if (source[i] == ' ' || source[i] == '\t')
+                    spacePos = i;
+            }
+            if (spacePos >= 0) {
+                best = spacePos + 1;
+                XftTextExtents8(fontPtr->display, ftFont,
+                                (const FcChar8 *)source, best, &extents);
+                bestWidth = extents.xOff;
+            }
+        }
+
+        /* At least one character if requested and nothing fit yet */
+        if ((flags & TK_AT_LEAST_ONE) && best == 0 && (int)numBytes > 0) {
+            best = 1;
+            XftTextExtents8(fontPtr->display, ftFont,
+                            (const FcChar8 *)source, 1, &extents);
+            bestWidth = extents.xOff;
+        }
+
+        *lengthPtr = bestWidth;
+        return best;
+    }
+
+    /* Original shaping path for non‑ASCII */
+    ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &buffer)) {
-        *lengthPtr = 0; return 0;
+        *lengthPtr = 0;
+        return 0;
     }
 
     int curX = 0;
@@ -1817,8 +1883,75 @@ Tk_MeasureCharsInContext(
     int *lengthPtr)
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+
+    /* Fast path for pure ASCII strings */
+    if (IsAsciiOnly(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (!ftFont) {
+            *lengthPtr = 0;
+            return 0;
+        }
+
+        const char *sub = source + rangeStart;
+        int subLen = (int)rangeLength;
+
+        XGlyphInfo extents;
+        XftTextExtents8(fontPtr->display, ftFont,
+                        (const FcChar8 *)sub, subLen, &extents);
+        int totalWidth = extents.xOff;
+
+        if (maxLength < 0) {
+            *lengthPtr = totalWidth;
+            return subLen;
+        }
+
+        /* Binary search for longest prefix of the substring that fits */
+        int lo = 0, hi = subLen;
+        int best = 0, bestWidth = 0;
+
+        while (lo <= hi) {
+            int mid = (lo + hi) / 2;
+            XftTextExtents8(fontPtr->display, ftFont,
+                            (const FcChar8 *)sub, mid, &extents);
+            int w = extents.xOff;
+            if (w <= maxLength) {
+                best = mid;
+                bestWidth = w;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
+        }
+
+        /* Whole-word break if requested (within substring) */
+        if ((flags & TK_WHOLE_WORDS) && best < subLen) {
+            int spacePos = -1;
+            for (int i = 0; i < best; i++) {
+                if (sub[i] == ' ' || sub[i] == '\t')
+                    spacePos = i;
+            }
+            if (spacePos >= 0) {
+                best = spacePos + 1;
+                XftTextExtents8(fontPtr->display, ftFont,
+                                (const FcChar8 *)sub, best, &extents);
+                bestWidth = extents.xOff;
+            }
+        }
+
+        /* At least one character if requested */
+        if ((flags & TK_AT_LEAST_ONE) && best == 0 && subLen > 0) {
+            best = 1;
+            XftTextExtents8(fontPtr->display, ftFont,
+                            (const FcChar8 *)sub, 1, &extents);
+            bestWidth = extents.xOff;
+        }
+
+        *lengthPtr = bestWidth;
+        return best;
+    }
+
+    /* Original shaping path for non‑ASCII */
     ShapedGlyphBuffer buffer;
-    
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &buffer)) {
         *lengthPtr = 0;
@@ -1923,6 +2056,15 @@ Tk_DrawChars(
         XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
+    /* Fast path for pure ASCII strings */
+    if (IsAsciiOnly(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (ftFont) {
+            XftDrawString8(fontPtr->ftDraw, xftcolor, ftFont,
+                           x, y, (const FcChar8 *)source, (int)numBytes);
+        }
+        goto done;
+    }
 
     /* Full shaping path. */
     {
@@ -2038,6 +2180,18 @@ Tk_DrawCharsInContext(
 
     if (tsdPtr->clipRegion) {
         XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
+
+    /* Fast path for pure ASCII strings */
+    if (IsAsciiOnly(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (ftFont) {
+            XftDrawString8(fontPtr->ftDraw, xftcolor, ftFont,
+                           x, y,
+                           (const FcChar8 *)(source + rangeStart),
+                           (int)rangeLength);
+        }
+        goto done;
     }
 
     /* 2. Shape the FULL string to preserve context for ligatures and BiDi. */
