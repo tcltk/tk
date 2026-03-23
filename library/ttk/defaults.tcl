@@ -183,12 +183,12 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 7p -indicatormargin {3p 1.5p 3p 1.5p}
+	    -indicatorsize 6p -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Item -indicatorsize 8p \
-	    -indicatormargin {1.5p 1.5p 3p 1.5p}
+	    -indicatormargin {2 2 4 2}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item -indicatorbackground \

@@ -24,6 +24,33 @@
 
 /*
  *----------------------------------------------------------------------
+ * +++ Get Scaling Factor
+ *	Same as TkScalingLevel, but doesn't round to nearest 25%.
+ */
+static double
+GetScalingFactor(Tk_Window tkwin) {
+    Screen *screenPtr = Tk_Screen(tkwin);
+    double d;
+
+    d = 25.4 / 72.0 * WidthOfScreen(screenPtr) / WidthMMOfScreen(screenPtr) * 0.75;
+    return d;
+}
+
+/* + TreeviewFreeColumns --
+ *	Get scaled screen units value
+ */
+static int
+GetScaledValue(Tk_Window tkwin, Tcl_Obj *valuePtr, double divisor) {
+    int size;
+    double d;
+
+    Tk_GetDoublePixelsFromObj(NULL, tkwin, valuePtr, &d);
+    size = (int)round(d * GetScalingFactor(tkwin) / divisor);
+    return size;
+}
+
+/*
+ *----------------------------------------------------------------------
  *
  * Helper routine for drawing a few style elements:
  *
@@ -805,7 +832,7 @@ static void IndicatorElementSize(
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingLevel = GetScalingFactor(tkwin);
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     *widthPtr = spec->width * scalingLevel + Ttk_PaddingWidth(margins);
@@ -837,7 +864,7 @@ static void IndicatorElementDraw(
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingLevel = GetScalingFactor(tkwin);
     int width = spec->width * scalingLevel;
     int height = spec->height * scalingLevel;
 
@@ -1021,22 +1048,17 @@ static void ArrowElementSize(
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding;
     int size = 12;
 
     /* Get scaled size */
-    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
-    /* Sizes in points are automatically scaled, but pixel sizes are not. */
-    if (Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size) == TCL_OK) {
-	size = round(size * scalingLevel);
-    }
-    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    size = GetScaledValue(tkwin, arrow->sizeObj, 2.0);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
-    *widthPtr  += round(Ttk_PaddingWidth(padding) * scalingLevel);
-    *heightPtr += round(Ttk_PaddingHeight(padding) * scalingLevel);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
     if (*widthPtr < *heightPtr) {
 	*widthPtr = *heightPtr;
     } else {
@@ -1056,8 +1078,7 @@ static void ArrowElementDraw(
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = DEFAULT_BORDERWIDTH, relief = TK_RELIEF_RAISED;
-    Ttk_Padding padding, margins;
-    double scalingLevel = TkScalingLevel(tkwin);
+    Ttk_Padding padding;
     int cx = 0, cy = 0;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     GC gc = Tk_GCForColor(arrowColor, d);
@@ -1069,11 +1090,7 @@ static void ArrowElementDraw(
 	    borderWidth, relief);
 
     /* Apply scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &margins);
-    padding.left = round(margins.left * scalingLevel);
-    padding.top = round(margins.top * scalingLevel);
-    padding.right = round(margins.right * scalingLevel);
-    padding.bottom = round(margins.bottom * scalingLevel);
+    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
     /* Draw indicator */
@@ -1125,22 +1142,17 @@ static void BoxArrowElementSize(
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding;
     int size = 12;
 
     /* Get scaled size */
-    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
-    /* Sizes in points are automatically scaled, but pixel sizes are not. */
-    if (Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size) == TCL_OK) {
-	size = round(size * scalingLevel);
-    }
-    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    size = GetScaledValue(tkwin, arrow->sizeObj, 2.0);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
-    *widthPtr  += round(Ttk_PaddingWidth(padding) * scalingLevel);
-    *heightPtr += round(Ttk_PaddingHeight(padding) * scalingLevel);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
     if (*widthPtr < *heightPtr) {
 	*widthPtr = *heightPtr;
     } else {
@@ -1163,8 +1175,7 @@ static void BoxArrowElementDraw(
     Display *disp = Tk_Display(tkwin);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
     int w = WIN32_XDRAWLINE_HACK;
-    Ttk_Padding padding, margins;
-    double scalingLevel = TkScalingLevel(tkwin);
+    Ttk_Padding padding;
     int cx = 0, cy = 0;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     GC arrowGC = Tk_GCForColor(arrowColor, d);
@@ -1175,11 +1186,7 @@ static void BoxArrowElementDraw(
     XDrawLine(disp, d, darkGC, b.x, b.y+1, b.x, b.y+b.height-1+w);
 
     /* Apply scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &margins);
-    padding.left = round(margins.left * scalingLevel);
-    padding.top = round(margins.top * scalingLevel);
-    padding.right = round(margins.right * scalingLevel);
-    padding.bottom = round(margins.bottom * scalingLevel);
+    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
     /* Draw indicator */
@@ -1235,22 +1242,18 @@ static void MenuIndicatorElementSize(
 {
     MenuIndicatorElement *indicator = (MenuIndicatorElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding;
     int size = MENUBUTTON_ARROW_SIZE;
 
     /* Get scaled size */
+    size = GetScaledValue(tkwin, indicator->sizeObj, 2.0);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    /* Sizes in points are automatically scaled, but pixel sizes are not. */
-    if (Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size) == TCL_OK) {
-	size = round(size * scalingLevel);
-    }
-    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &padding);
-    *widthPtr  += round(Ttk_PaddingWidth(padding) * scalingLevel);
-    *heightPtr += round(Ttk_PaddingHeight(padding) * scalingLevel);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
 }
 
 static void MenuIndicatorElementDraw(
@@ -1265,25 +1268,16 @@ static void MenuIndicatorElementDraw(
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     GC gc = Tk_GCForColor(arrowColor, d);
-    double scalingLevel = TkScalingLevel(tkwin);
-    Ttk_Padding padding, margins;
+    Ttk_Padding padding;
     int size = MENUBUTTON_ARROW_SIZE;
     int width, height;
 
     /* Get scaled indicator size */
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    /* Sizes in points are automatically scaled, but pixel sizes are not. */
-    if (Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size) == TCL_OK) {
-	size = round(size * scalingLevel);
-    }
+    size = GetScaledValue(tkwin, indicator->sizeObj, 2.0);
     TtkArrowSize(size, direction, &width, &height);
 
     /* Add scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &margins);
-    padding.left = round(margins.left * scalingLevel);
-    padding.top = round(margins.top * scalingLevel);
-    padding.right = round(margins.right * scalingLevel);
-    padding.bottom = round(margins.bottom * scalingLevel);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
     /* Draw indicator */
@@ -1518,7 +1512,7 @@ static void SliderElementSize(
     int *widthPtr, int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingLevel = GetScalingFactor(tkwin);
     *widthPtr = *heightPtr = SLIDER_DIM * scalingLevel;
 }
 
@@ -1528,7 +1522,7 @@ static void SliderElementDraw(
     Drawable d, Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingLevel = GetScalingFactor(tkwin);
     int dim = SLIDER_DIM * scalingLevel;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
@@ -1829,7 +1823,7 @@ static void TabElementDraw(
     int highlight = 0;
     XColor *hlColor = NULL;
     XPoint pts[6];
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingLevel = GetScalingFactor(tkwin);
     int cut = round(2 * scalingLevel);
     Display *disp = Tk_Display(tkwin);
     int borderWidth = DEFAULT_BORDERWIDTH;

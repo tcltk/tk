@@ -59,7 +59,7 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure TMenubutton \
 	    -width 11p -padding 2.25p -relief raised \
-	    -arrowsize 3.25p -arrowpadding 2.25p
+	    -arrowsize 5p -arrowpadding 2.25p
 
 	ttk::style configure TEntry -padding 1 \
 	    -focuswidth 2 -focuscolor $colors(-selectbg)
@@ -102,12 +102,12 @@ namespace eval ttk::theme::alt {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 7p -indicatormargin {3p 1.5p 3p 1.5p}
+	    -indicatorsize 6p -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Item \
-	    -indicatorsize 7p -indicatormargin {1.5p 1.5p 3p 1.5p}
+	    -indicatorsize 4p -indicatormargin {2p 2p 4p 2p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item -indicatorcolor [list disabled $colors(-frame)]

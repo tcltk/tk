@@ -774,6 +774,33 @@ static TreeItem **GetItemListFromObj(
     return items;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * +++ Get Scaling Factor
+ *	Same as TkScalingLevel, but doesn't round to nearest 25%.
+ */
+static double
+GetScalingFactor(Tk_Window tkwin) {
+    Screen *screenPtr = Tk_Screen(tkwin);
+    double d;
+
+    d = 25.4 / 72.0 * WidthOfScreen(screenPtr) / WidthMMOfScreen(screenPtr) * 0.75;
+    return d;
+}
+
+/* + TreeviewFreeColumns --
+ *	Get scaled screen units value
+ */
+static int
+GetScaledValue(Tk_Window tkwin, Tcl_Obj *valuePtr, double divisor) {
+    int size;
+    double d;
+
+    Tk_GetDoublePixelsFromObj(NULL, tkwin, valuePtr, &d);
+    size = (int)round(d * GetScalingFactor(tkwin) / divisor);
+    return size;
+}
+
 /*------------------------------------------------------------------------
  * +++ Column configuration.
  */
@@ -1757,7 +1784,7 @@ static TreeItem *IdentifyItem(Treeview *tv, int y) {
 static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1) {
     Tcl_Size colno = FirstColumn(tv);
     int xpos = tv->tree.treeArea.x;
-    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
+    int scaledHALO = round(HALO * GetScalingFactor(tv->core.tkwin));
 
     if (tv->tree.nTitleColumns <= colno) {
 	xpos -= tv->tree.xscroll.first;
@@ -1914,7 +1941,7 @@ static const char *const regionStrings[] = {
 static TreeRegion IdentifyRegion(Treeview *tv, int x, int y) {
     int x1 = 0;
     Tcl_Size colno = IdentifyDisplayColumn(tv, x, &x1);
-    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
+    int scaledHALO = round(HALO * GetScalingFactor(tv->core.tkwin));
 
     if (Ttk_BoxContains(tv->tree.headingArea, x, y)) {
 	if (colno < 0) {
@@ -2290,7 +2317,7 @@ static void DrawCells(
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
-    short horizPad = round(4 * TkScalingLevel(tv->core.tkwin));
+    short horizPad = round(4 * GetScalingFactor(tv->core.tkwin));
     Ttk_Padding cellPadding = {horizPad, 0, horizPad, 0};
     DisplayItem displayItemLocal;
     DisplayItem displayItemCell, displayItemCellSel, displayItemCellActive;
@@ -3433,7 +3460,7 @@ static int TreeviewHorribleIdentify(
     Tcl_Size dColumnNumber;
     char dcolbuf[32];
     int x, y, x1;
-    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
+    int scaledHALO = round(HALO * GetScalingFactor(tv->core.tkwin));
 
     /* ASSERT: objc == 4 */
 
@@ -7280,7 +7307,7 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginsObj), "3p 1.5p 1.5p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "7p" },
+	offsetof(TreeheadingIndicator,sizeObj), "6p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7294,22 +7321,17 @@ static void TreeheadingIndicatorSize(
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding;
     int size = 9;
 
     /* Get scaled indicator size */
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    /* Sizes in points are automatically scaled, but pixel sizes are not. */
-    if (Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size) == TCL_OK) {
-	size = round(size * scalingLevel);
-    }
-    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    size = GetScaledValue(tkwin, indicator->sizeObj, 2.0);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);
 
-    /* Add scaled padding */
+    /* Add padding (only scaled if not in pixels) */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
-    *widthPtr  += round(Ttk_PaddingWidth(padding) * scalingLevel);
-    *heightPtr += round(Ttk_PaddingHeight(padding) * scalingLevel);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
 }
 
 static void TreeheadingIndicatorDraw(
@@ -7322,7 +7344,7 @@ static void TreeheadingIndicatorDraw(
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     ArrowDirection direction;
-    Ttk_Padding margins;
+    Ttk_Padding padding;
     int cx, cy;
     XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     XGCValues gcvalues;
@@ -7333,8 +7355,8 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginsObj,&margins);
-    b = Ttk_PadBox(b, margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
+    b = Ttk_PadBox(b, padding);
 
     if (state & TTK_STATE_SELECTED) {
 	direction = CHEVRON_DOWN;
@@ -7401,22 +7423,17 @@ static void TreeitemIndicatorSize(
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding;
     int size = 9;
 
     /* Get scaled indicator size */
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    /* Sizes in points are automatically scaled, but pixel sizes are not. */
-    if (Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size) == TCL_OK) {
-	size = round(size * scalingLevel);
-    }
-    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    size = GetScaledValue(tkwin, indicator->sizeObj, 2.0);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);
 
-    /* Add scaled padding */
+    /* Add padding (only scaled if not in pixels) */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
-    *widthPtr  += round(Ttk_PaddingWidth(padding) * scalingLevel);
-    *heightPtr += round(Ttk_PaddingHeight(padding) * scalingLevel);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
     if (*widthPtr < *heightPtr) {
 	*widthPtr = *heightPtr;
     } else {
@@ -7435,7 +7452,7 @@ static void TreeitemIndicatorDraw(
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
     ArrowDirection direction =
 	(state & TTK_STATE_OPEN) ? CHEVRON_DOWN : CHEVRON_RIGHT;
-    Ttk_Padding margins;
+    Ttk_Padding padding;
     int cx, cy;
     XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     XGCValues gcvalues;
@@ -7446,8 +7463,8 @@ static void TreeitemIndicatorDraw(
 	return;
     }
 
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginsObj,&margins);
-    b = Ttk_PadBox(b, margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
+    b = Ttk_PadBox(b, padding);
 
     switch (direction) {
 	case ARROW_DOWN:
