@@ -863,6 +863,7 @@ FinishedWithFont(
  * ---------------------------------------------------------------
  */
 
+
 static void
 X11Shaper_Init(
     X11Shaper *s,
@@ -905,12 +906,11 @@ X11Shaper_Init(
                 fontPtr->faces[i].kbFont   = kbFont;
                 fontPtr->faces[i].isLoaded = 1;
                 s->numFonts++;
-            } else {
-                fontPtr->faces[i].isLoaded = 0;
-            }
+            } 
         }
     }
 }
+
 
 /*
  * ---------------------------------------------------------------
@@ -985,6 +985,24 @@ X11Shaper_ShapeString(
         return 0;
     }
     
+	/* 
+	 * Bail out early if the string is ASCII-only.
+	 * This prevents kb_text_shaper from hijacking plain text.
+	 */
+	int asciiOnly = 1;
+	for (int i = 0; i < numBytes; i++) {
+	    if ((unsigned char)source[i] >= 0x80) {
+	        asciiOnly = 0;
+	        break;
+	    }
+	}
+	
+	if (asciiOnly) {
+	    buffer->glyphCount = 0;
+	    buffer->totalAdvance = 0;
+	    return 1;   /* success, but no shaped glyphs */
+	}
+
     /*
      * Quick scan for shapeable content.
      * If the string contains ONLY control characters, whitespace, or invalid UTF-8,
