@@ -155,6 +155,7 @@ namespace eval ::tk::test::generic {
 	#   areas with a special function provided by a desktop environment
 	#   (dock, hotspots, ...), i.e. away from screen borders and corners.
 	# - make it adapt its size to its children
+	wm deiconify .
 	. configure -width 200 -height 200
 	wm geometry . {}
 	update

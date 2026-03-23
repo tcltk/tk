@@ -620,7 +620,6 @@ DisplayMenu(
     TkMenuEntry *mePtr;
     Tk_Window tkwin = menuPtr->tkwin;
     Tcl_Size index;
-    int strictMotif;
     Tk_Font tkfont;
     Tk_FontMetrics menuMetrics;
     int width;
@@ -643,7 +642,10 @@ DisplayMenu(
 		Tk_Height(tkwin) - 2 * borderWidth, 0, TK_RELIEF_FLAT);
     }
 
-    strictMotif = Tk_StrictMotif(menuPtr->tkwin);
+    DrawMenuFlags drawingParameters = DRAW_MENU_ENTRY_ARROW;
+    if (Tk_StrictMotif(menuPtr->tkwin)) {
+	drawingParameters = (DrawMenuFlags)(drawingParameters | DRAW_MENU_ENTRY_STRICTMOTIF);
+    }
 
     /*
      * See note in ComputeMenuGeometry. We don't want to be doing font metrics
@@ -668,7 +670,7 @@ DisplayMenu(
 
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
 		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
-		mePtr->height, strictMotif? DRAW_MENU_ENTRY_STRICTMOTIF : DRAW_MENU_ENTRY_DEFAULT);
+		mePtr->height, drawingParameters);
 
 	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
 
