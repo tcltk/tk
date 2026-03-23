@@ -990,14 +990,16 @@ AdjustMenuCoords(
 	*yPtr += mePtr->y + mePtr->height;
     } else {
 	int borderWidth, activeBorderWidth;
+	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+	int scaled2 = (int)round(2*scalingLevel);
 
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	*xPtr += Tk_Width(menuPtr->tkwin) - borderWidth	- activeBorderWidth
-		- 2;
-	*yPtr += mePtr->y + activeBorderWidth + 2;
+		- scaled2;
+	*yPtr += mePtr->y + activeBorderWidth + scaled2;
     }
 }
 
