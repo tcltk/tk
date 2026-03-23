@@ -28,6 +28,7 @@ necessarily in Tk 8.
  - [Add support for native file icons to the core]((https://core.tcl-lang.org/tips/doc/trunk/tip/743.md))
  - [Re-implement the Aqua send command so that it can communicate with other processes and has the features documented in the manual.] (https://core.tcl-lang.org/tk/info/1574913cc772201e)
  - [Make the selection colors of the listbox widget fully native-conform](https://core.tcl-lang.org/tips/doc/trunk/tip/747.md)
+ - [Get rid of the ugly Motif-style cascade arrows on X11](https://core.tcl-lang.org/tk/info/aca9953f)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
