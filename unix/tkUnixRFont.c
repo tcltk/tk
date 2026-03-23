@@ -24,7 +24,7 @@
 #include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 16
-#define MAX_GLYPHS 512  //2048
+#define MAX_GLYPHS 512
 #define MAX_FONTS 64
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
