@@ -24,7 +24,7 @@
 #include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 16
-#define MAX_GLYPHS 2048
+#define MAX_GLYPHS 512  //2048
 #define MAX_FONTS 64
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
@@ -1006,39 +1006,33 @@ X11Shaper_ShapeString(
         return 0;
     }
 
-    /* Quick scan for shapeable content.
-     * If the string contains ONLY control characters, whitespace, or invalid UTF-8,
-     * return empty buffer rather than crashing kb_text_shaper.
-     */
-    int hasShapeableContent = 0;
-    for (int i = 0; i < numBytes; ) {
-        unsigned char byte = (unsigned char)source[i];
+     /* Fast path optimization.  */
+    if (IsAsciiOnly(source, numBytes)) {
+        XftFont *ftFont = GetFont(fontPtr, 0, 0.0); /* Get primary face. */
+        if (ftFont) {
+            int penX = 0;
+            buffer->glyphCount = 0;
+            
+            for (int i = 0; i < numBytes && buffer->glyphCount < MAX_GLYPHS; i++) {
+                unsigned int glyphId = XftCharIndex(fontPtr->display, ftFont, (FcChar32)source[i]);
+                XGlyphInfo metrics;
+                XftGlyphExtents(fontPtr->display, ftFont, &glyphId, 1, &metrics);
 
-        /* Check for ASCII printable or multi-byte UTF-8 starter. */
-        if (byte >= 0x20 && byte < 0x7F) {
-            /* ASCII printable (space through ~). */
-            hasShapeableContent = 1;
-            break;
-        } else if (byte >= 0xC0) {
-            /* UTF-8 multi-byte sequence starter. */
-            hasShapeableContent = 1;
-            break;
+                buffer->glyphs[buffer->glyphCount].fontIndex = 0; /* Primary face. */
+                buffer->glyphs[buffer->glyphCount].glyphId = glyphId;
+                buffer->glyphs[buffer->glyphCount].x = penX;
+                buffer->glyphs[buffer->glyphCount].y = 0;
+                buffer->glyphs[buffer->glyphCount].advanceX = metrics.xOff;
+                buffer->glyphs[buffer->glyphCount].byteOffset = i;
+                buffer->glyphs[buffer->glyphCount].clusterLen = 1;
+                buffer->glyphs[buffer->glyphCount].isRTL = 0;
+
+                penX += metrics.xOff;
+                buffer->glyphCount++;
+            }
+            buffer->totalAdvance = penX;
+            return 1; /* Exit early, skipping complex shaping. */
         }
-
-        /* Allow tab, newline, carriage return. */
-        if (byte == 0x09 || byte == 0x0A || byte == 0x0D) {
-            hasShapeableContent = 1;
-            break;
-        }
-
-        i++;
-    }
-
-    if (!hasShapeableContent) {
-        /* String contains only control chars or invalid bytes. */
-        buffer->glyphCount = 0;
-        buffer->totalAdvance = 0;
-        return 1;  /* Not an error - just nothing to shape. */
     }
 
     /* Check cache first. */
