@@ -216,6 +216,7 @@ static int IsAsciiOnly(const char *str, int len);  /* new helper */
  *   0 otherwise.
  * ---------------------------------------------------------------
  */
+
 static int
 IsAsciiOnly(const char *str, int len)
 {
@@ -1739,7 +1740,7 @@ Tk_MeasureChars(
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
 
-    /* Fast path for pure ASCII strings */
+    /* Fast path for pure ASCII strings. */
     if (IsAsciiOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (!ftFont) {
@@ -1747,7 +1748,7 @@ Tk_MeasureChars(
             return 0;
         }
 
-        /* Total width of the entire string */
+        /* Total width of the entire string. */
         XGlyphInfo extents;
         XftTextExtents8(fontPtr->display, ftFont,
                         (const FcChar8 *)source, (int)numBytes, &extents);
@@ -1758,7 +1759,7 @@ Tk_MeasureChars(
             return (int)numBytes;
         }
 
-        /* Binary search for longest prefix that fits in maxLength */
+        /* Binary search for longest prefix that fits in maxLength. */
         int lo = 0, hi = (int)numBytes;
         int best = 0, bestWidth = 0;
 
@@ -1776,7 +1777,7 @@ Tk_MeasureChars(
             }
         }
 
-        /* Whole-word break if requested */
+        /* Whole-word break if requested. */
         if ((flags & TK_WHOLE_WORDS) && best < (int)numBytes) {
             int spacePos = -1;
             for (int i = 0; i < best; i++) {
@@ -1791,7 +1792,7 @@ Tk_MeasureChars(
             }
         }
 
-        /* At least one character if requested and nothing fit yet */
+        /* At least one character if requested and nothing fit yet. */
         if ((flags & TK_AT_LEAST_ONE) && best == 0 && (int)numBytes > 0) {
             best = 1;
             XftTextExtents8(fontPtr->display, ftFont,
@@ -1803,7 +1804,7 @@ Tk_MeasureChars(
         return best;
     }
 
-    /* Original shaping path for non‑ASCII */
+    /* Shaping path for non‑ASCII. */
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &buffer)) {
         *lengthPtr = 0;
@@ -1884,7 +1885,7 @@ Tk_MeasureCharsInContext(
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
 
-    /* Fast path for pure ASCII strings */
+    /* Fast path for pure ASCII strings. */
     if (IsAsciiOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (!ftFont) {
@@ -1905,7 +1906,7 @@ Tk_MeasureCharsInContext(
             return subLen;
         }
 
-        /* Binary search for longest prefix of the substring that fits */
+        /* Binary search for longest prefix of the substring that fits. */
         int lo = 0, hi = subLen;
         int best = 0, bestWidth = 0;
 
@@ -1923,7 +1924,7 @@ Tk_MeasureCharsInContext(
             }
         }
 
-        /* Whole-word break if requested (within substring) */
+        /* Whole-word break if requested (within substring). */
         if ((flags & TK_WHOLE_WORDS) && best < subLen) {
             int spacePos = -1;
             for (int i = 0; i < best; i++) {
@@ -1938,7 +1939,7 @@ Tk_MeasureCharsInContext(
             }
         }
 
-        /* At least one character if requested */
+        /* At least one character if requested. */
         if ((flags & TK_AT_LEAST_ONE) && best == 0 && subLen > 0) {
             best = 1;
             XftTextExtents8(fontPtr->display, ftFont,
@@ -1950,7 +1951,7 @@ Tk_MeasureCharsInContext(
         return best;
     }
 
-    /* Original shaping path for non‑ASCII */
+    /* Shaping path for non‑ASCII. */
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &buffer)) {
@@ -2056,7 +2057,7 @@ Tk_DrawChars(
         XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
-    /* Fast path for pure ASCII strings */
+    /* Fast path for pure ASCII strings. */
     if (IsAsciiOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
@@ -2163,7 +2164,7 @@ Tk_DrawCharsInContext(
 
     if (rangeLength <= 0) return;
 
-    /* 1. Ensure XftDraw is ready. */
+    /* Ensure XftDraw is ready. */
     if (!fontPtr->ftDraw) {
         fontPtr->ftDraw = XftDrawCreate(display, drawable,
                                         fontPtr->visual, fontPtr->colormap);
@@ -2182,7 +2183,7 @@ Tk_DrawCharsInContext(
         XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
-    /* Fast path for pure ASCII strings */
+    /* Fast path for pure ASCII strings. */
     if (IsAsciiOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
@@ -2194,14 +2195,14 @@ Tk_DrawCharsInContext(
         goto done;
     }
 
-    /* 2. Shape the FULL string to preserve context for ligatures and BiDi. */
+    /* Shape the FULL string to preserve context for ligatures and BiDi. */
     ShapedGlyphBuffer fullBuffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &fullBuffer)) {
         goto done;
     }
 
-    /* 3. Find the glyphs that overlap our requested range. */
+    /* Find the glyphs that overlap our requested range. */
     XftGlyphFontSpec specs[MAX_GLYPHS];
     int nspec = 0;
     int rangeEnd = rangeStart + rangeLength;
