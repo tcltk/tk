@@ -3,7 +3,7 @@
  *
  *	Contains the Windows implementation of the platform-independent font
  *	package interface with support for shaping and RTL support with complex
- *  script languages like Arabic. 
+ *  script languages like Arabic.
  *
  * Copyright © 1994 Software Research Associates, Inc.
  * Copyright © 1995-1997 Sun Microsystems, Inc.
@@ -1309,7 +1309,6 @@ Tk_MeasureChars(
      */
     {
         int i, g;
-        int prevX = 0;
         bytesFit = 0;
 
         for (i = 0; i < nRuns; i++) {
@@ -1327,7 +1326,6 @@ Tk_MeasureChars(
                     }
                     goto doneMeasure;
                 }
-                prevX = curX;
                 curX  = newX;
             }
         }
@@ -1948,7 +1946,7 @@ MultiFontTextOut(
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
     /*
-     * Global emoji detection - 
+     * Global emoji detection -
      *
      * If the string contains surrogate pairs → Uniscribe cannot shape it.
      * Bypass shaping entirely and use ExtTextOutW.
@@ -2003,7 +2001,7 @@ MultiFontTextOut(
 
     /*
      * Normal Uniscribe path -
-     * 
+     *
      * Used for all non-emoji text: Arabic, Hebrew, Indic, Thai, etc.
      */
 
