@@ -19,6 +19,7 @@
 
 #define MENU_MARGIN_WIDTH	2
 #define MENU_DIVIDER_HEIGHT	2
+#define CASCADE_ARROW_SIZE	4
 
 /*
  * Platform specific flags for Unix.
@@ -52,7 +53,6 @@ static void		SetHelpMenu(TkMenu *menuPtr);
 static void		DrawMenuEntryAccelerator(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc,
 			    Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
 			    int x, int y, int width, int height, int drawArrow);
 static void		DrawMenuEntryBackground(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d,
@@ -394,7 +394,9 @@ GetMenuAccelGeometry(
 {
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
-    	*widthPtr = 2 * CASCADE_ARROW_WIDTH;
+	int arrowWidth = CASCADE_ARROW_SIZE + 1;
+
+	*widthPtr = 2 * arrowWidth;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
@@ -479,16 +481,16 @@ DrawMenuEntryAccelerator(
     GC gc,			/* The precalculated gc to draw with */
     Tk_Font tkfont,		/* The precalculated font */
     const Tk_FontMetrics *fmPtr,/* The precalculated metrics */
-    Tk_3DBorder activeBorder,	/* The border for an active item */
-    Tk_3DBorder bgBorder,	/* The background border */
     int x,			/* Left coordinate of entry rect */
     int y,			/* Top coordinate of entry rect */
     int width,			/* Width of entry */
     int height,			/* Height of entry */
     int drawArrow)		/* Whether or not to draw arrow. */
 {
-    XPoint points[3];
     int borderWidth, activeBorderWidth;
+    int arrowWidth = CASCADE_ARROW_SIZE + 1;
+    int arrowHeight = 2*CASCADE_ARROW_SIZE + 1;
+    XPoint points[4];
 
     /*
      * Draw accelerator or cascade arrow.
@@ -503,18 +505,30 @@ DrawMenuEntryAccelerator(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
-    	points[0].x = x + width - borderWidth - activeBorderWidth
-		- CASCADE_ARROW_WIDTH;
-    	points[0].y = y + (height - CASCADE_ARROW_HEIGHT)/2;
+	/*
+	 * The value of points[0].x below is based on the following equations:
+	 * points[0].x + arrowWidth + cascadeOffset = menuWidth
+	 * cascadeOffset = borderWidth + activeBorderWidth + 2
+	 * (see function AdjustMenuCoords() in file tkMenuDraw.c)
+	 * menuWidth = x + width + borderWidth
+	 */
+
+	points[0].x = x + width - activeBorderWidth - 2 - arrowWidth;
+    	points[0].y = y + (height - arrowHeight)/2;
     	points[1].x = points[0].x;
-    	points[1].y = points[0].y + CASCADE_ARROW_HEIGHT;
-    	points[2].x = points[0].x + CASCADE_ARROW_WIDTH;
-    	points[2].y = points[0].y + CASCADE_ARROW_HEIGHT/2;
-    	Tk_Fill3DPolygon(menuPtr->tkwin, d,
-		(mePtr->state == ENTRY_ACTIVE) ? activeBorder : bgBorder,
-		points, 3, DECORATION_BORDER_WIDTH,
-	    	(menuPtr->postedCascade == mePtr)
-	    	? TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
+    	points[1].y = points[0].y + arrowHeight - 1;
+    	points[2].x = points[0].x + CASCADE_ARROW_SIZE;
+    	points[2].y = points[0].y + CASCADE_ARROW_SIZE;
+	points[3].x = points[0].x;
+	points[3].y = points[0].y;
+
+	XFillPolygon(Tk_Display(menuPtr->tkwin), d, gc, points, 3, Complex,
+		CoordModeOrigin);
+	XDrawLines(Tk_Display(menuPtr->tkwin), d, gc, points, 4,
+		CoordModeOrigin);
+
+	/* Work around bug [77527326e5] */
+	XDrawPoint(Tk_Display(menuPtr->tkwin), d, gc, points[2].x, points[2].y);
     } else if (mePtr->accelPtr != NULL) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 	int left = x + mePtr->labelWidth + activeBorderWidth
@@ -1532,8 +1546,7 @@ TkpDrawMenuEntry(
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
-		activeBorder, bgBorder, x, adjustedY, width, adjustedHeight,
-		drawArrow);
+		x, adjustedY, width, adjustedHeight, drawArrow);
 	if (!mePtr->hideMargin) {
 	    if (mePtr->state == ENTRY_ACTIVE) {
 		bgBorder = activeBorder;
