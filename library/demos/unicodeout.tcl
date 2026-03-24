@@ -52,8 +52,8 @@ proc usePresentationFormsFor {language} {
 	    return false
 	}
 	x11 {
-	    # The X11 font renderers that Tk supports all know nothing about
-	    # composing characters, so we need to use presentation forms.
+	    # With bidi support now added, the render does not need to use 
+	    # presentation forms.
 	    return false
 	}
 	win32 {
