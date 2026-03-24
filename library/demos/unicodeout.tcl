@@ -54,7 +54,7 @@ proc usePresentationFormsFor {language} {
 	x11 {
 	    # The X11 font renderers that Tk supports all know nothing about
 	    # composing characters, so we need to use presentation forms.
-	    return true
+	    return false
 	}
 	win32 {
 	    # On Windows, we need to determine whether the font system will
