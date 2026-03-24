@@ -132,7 +132,7 @@ typedef struct TkTextMyBTree BTree; /* see TkTextPriv.h */
  * Variable that indicates whether to enable consistency checks for debugging.
  */
 
-int tkBTreeDebug = 0;
+bool tkBTreeDebug = false;
 
 /*
  * Macros that determine how much space to allocate for new segments:
@@ -7493,9 +7493,9 @@ DeleteRange(
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
     {
 	TkText *peer;
-	int oldBTreeDebug = tkBTreeDebug;
+	bool oldBTreeDebug = tkBTreeDebug;
 
-	tkBTreeDebug = 0;
+	tkBTreeDebug = false;
 
 	/*
 	 * We have to adjust startline/endline.
@@ -7565,7 +7565,7 @@ DeleteRange(
 
     if (insertSurrogate) {
 	TkTextIndex index;
-	DEBUG(int oldTreeDebug = tkBTreeDebug);
+	DEBUG(bool oldTreeDebug = tkBTreeDebug);
 
 	/*
 	 * We have to insert a surrogate newline.
@@ -7577,7 +7577,7 @@ DeleteRange(
 	} else {
 	    TkTextIndexSetupToStartOfText(&index, NULL, sharedTextPtr->tree);
 	}
-	DEBUG(tkBTreeDebug = 0); /* otherwise protected segment will be complained */
+	DEBUG(tkBTreeDebug = false); /* otherwise protected segment will be complained */
 	TkBTreeInsertChars(sharedTextPtr->tree, &index, "\n",
 		sharedTextPtr->emptyTagInfoPtr, NULL, NULL);
 	/* don't forget to reset pixel info of very last line */

@@ -928,8 +928,6 @@ typedef struct TkTextTag {
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
 				 * color as foreground. */
     Tcl_Obj *rMarginObj;	/* -rmargin option. NULL means option not specified. */
-    int rMargin;		/* Right margin for text, in pixels. Only
-				 * valid if rMarginObj is non-NULL. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
@@ -989,18 +987,6 @@ typedef struct TkTextTag {
 				 * information is displayed on the screen (so need to recalculate
 				 * line dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
-#ifdef BUILD_tk
-    int lMargin1;		/* Left margin for first display line of each
-				 * text line, in pixels. Only valid if
-				 * lMargin1Obj is non-NULL. */
-    int lMargin2;		/* Left margin for second and later display
-				 * lines of each text line, in pixels. Only
-				 * valid if lMargin2Obj is non-NULL. */
-    int offset;			/* Vertical offset of text's baseline from
-				 * baseline of line. Used for superscripts and
-				 * subscripts. Only valid if offsetObj is
-				 * non-NULL. */
-#endif
 } TkTextTag;
 
 /*
@@ -1188,9 +1174,9 @@ typedef struct TkSharedText {
 				 * marks will not change. */
     size_t imageCount;	/* Used for creating unique image names. */
     size_t countEmbWindows;	/* Used for counting embedded windows. */
-    int triggerWatchCmd;	/* Whether we should trigger the watch command for any peer. */
-    int triggerAlways;		/* Whether we should always trigger the watch command for any peer. */
-    int haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
+    bool triggerWatchCmd;	/* Whether we should trigger the watch command for any peer. */
+    bool triggerAlways;		/* Whether we should always trigger the watch command for any peer. */
+    bool haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
 				 * been postponed in any peer. */
 
     /*
@@ -1415,24 +1401,26 @@ typedef struct TkText {
 				 * TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or TEXT_WRAPMODE_NONE. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NONE,
 				 * TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
-    int useHyphenSupport;	/* Indicating the hypenation support. */
-    int hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
+    bool useHyphenSupport;	/* Indicating the hypenation support. */
+    bool hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
 				 * (if not in state TK_TEXT_STATE_NORMAL). */
-    int useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
+    bool useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
 				 * internal algorithm will be used. */
+    bool showEndOfLine;		/* Flag whether the end of line symbol will be shown at end of
+				 * each logical line. */
+    bool showEndOfText;		/* Flag whether the end of text symbol will be shown at end of text. */
+    bool setGrid;		/* True means pass gridding information to
+				 * window manager. */
+    bool exportSelection;	/* True means tie "sel" tag to X
+				 * selection. */
     int width;			/* Desired width for window, measured in
 				 * characters. */
     Tcl_Obj *heightObj; /* Desired height for window */
-    int setGrid;		/* Non-zero means pass gridding information to
-				 * window manager. */
     int prevWidth, prevHeight;	/* Last known dimensions of window; used to
 				 * detect changes in size. */
     TkTextIndex topIndex;	/* Identifies first character in top display
 				 * line of window. */
     struct TextDInfo *dInfoPtr;	/* Information maintained by tkTextDisp.c. */
-    int showEndOfLine;		/* Flag whether the end of line symbol will be shown at end of
-				 * each logical line. */
-    int showEndOfText;		/* Flag whether the end of text symbol will be shown at end of text. */
     int syncTime;		/* Synchronization timeout, used for line metric calculation, default is
 				 * 200. */
 
@@ -1449,8 +1437,6 @@ typedef struct TkText {
 				/* Contains the original attributes of the "sel" tag. */
     TkTextTag *selTagPtr;	/* Pointer to "sel" tag. Used to tell when a new selection
 				 * has been made. */
-    int exportSelection;	/* Non-zero means tie "sel" tag to X
-				 * selection. */
     TkTextSearch selSearch;	/* Used during multi-pass selection retrievals. */
     TkTextIndex selIndex;	/* Used during multi-pass selection
 				 * retrievals. This index identifies the next
@@ -1467,7 +1453,7 @@ typedef struct TkText {
 				 * cursor. */
     XColor *insertFgColor;	/* Foreground color for text behind a block cursor.
 				 * NULL means no value specified here. */
-    int showInsertFgColor;	/* Flag whether insertFgColor is relevant. */
+    bool showInsertFgColor;	/* Flag whether insertFgColor is relevant. */
     Tcl_Obj *insertWidthObj;		/* Total width of insert cursor. */
     Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor */
     TkTextInsertUnfocussed insertUnfocussed;
@@ -1488,7 +1474,7 @@ typedef struct TkText {
      */
 
     Tcl_Obj *watchCmd;		/* The command prefix for the "watch" command. */
-    int triggerAlways;		/* Whether we should trigger for any modification. */
+    bool triggerAlways;		/* Whether we should trigger for any modification. */
     TkTextIndex insertIndex;	/* Saved position of insertion cursor. */
 
     /*
@@ -1509,7 +1495,7 @@ typedef struct TkText {
 				/* The index of the "current" mark, needed for postponing the
 				 * insertion of the "current" mark segment.
 				 */
-    int haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
+    bool haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
 				 * been postponed. */
     XEvent pickEvent;		/* The event from which the current character was chosen.
 				 * Must be saved so that we can repick after modifications
@@ -1537,7 +1523,7 @@ typedef struct TkText {
     unsigned flags;		/* Miscellaneous flags; see below for definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
     size_t refCount;		/* Number of objects referring to us. */
-    int blockCursorType;	/* false = standard insertion cursor, true = block cursor. */
+    bool blockCursorType;	/* false = standard insertion cursor, true = block cursor. */
     int accelerateTagSearch;	/* Update B-Tree tag information for search? */
     int responsiveness;		/* The delay in ms before repick the mouse position (behavior when
 				 * scrolling the widget). */
@@ -1578,7 +1564,6 @@ typedef struct TkText {
     size_t widgetNumber;
 #endif
 #ifdef BUILD_tk
-    int height, highlightWidth;
     int insertWidth, insertBorderWidth;
 #endif
 } TkText;
@@ -1800,8 +1785,8 @@ typedef enum {
  * Declarations for variables shared among the text-related files:
  */
 
-MODULE_SCOPE int	tkBTreeDebug;
-MODULE_SCOPE int	tkTextDebug;
+MODULE_SCOPE bool	tkBTreeDebug;
+MODULE_SCOPE bool	tkTextDebug;
 MODULE_SCOPE const Tk_SegType tkTextCharType;
 MODULE_SCOPE const Tk_SegType tkTextBranchType;
 MODULE_SCOPE const Tk_SegType tkTextLinkType;
