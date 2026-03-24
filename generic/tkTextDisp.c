@@ -6274,12 +6274,15 @@ ComputeCursorExtents(
      * visible, thus we allow to overlap the first character in this special case.
      */
 
-    int padX = 0;
+    int padX = 0, insertWidth = 0;
     if (textPtr->padXObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padXObj, &padX);
     }
-    *extent1 = MAX(1, MIN(padX, textPtr->insertWidth/2));
-    *extent2 = MAX(1, MIN(padX, (textPtr->insertWidth + 1)/2));
+    if (textPtr->insertWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    }
+    *extent1 = MAX(1, MIN(padX, insertWidth/2));
+    *extent2 = MAX(1, MIN(padX, (insertWidth + 1)/2));
 }
 
 

@@ -261,7 +261,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_TEXT_INSERT_BG, TCL_INDEX_NONE, offsetof(TkText, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
-	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, TCL_INDEX_NONE, offsetof(TkText, insertBorderWidth), 0,
+	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, offsetof(TkText, insertBorderWidthObj), TCL_INDEX_NONE, 0,
 	DEF_TEXT_INSERT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-insertforeground", "insertForeground", "InsertForeground",
 	DEF_TEXT_BG_COLOR, TCL_INDEX_NONE, offsetof(TkText, insertFgColor), 0, 0, 0},
@@ -274,7 +274,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_INSERT_UNFOCUSSED, TCL_INDEX_NONE, offsetof(TkText, insertUnfocussed),
 	TK_OPTION_ENUM_VAR, insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_TEXT_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, insertWidth), 0, 0, 0},
+	DEF_TEXT_INSERT_WIDTH, offsetof(TkText, insertWidthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-justify", "justify", "Justify",
 	"left", TCL_INDEX_NONE, offsetof(TkText, justify), TK_OPTION_ENUM_VAR, justifyStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-lang", "lang", "Lang",
@@ -4280,7 +4280,6 @@ TkConfigureText(
      * Don't allow negative values for specific attributes.
      */
 
-    textPtr->insertWidth = MAX(textPtr->insertWidth, 0);
     textPtr->syncTime = MAX(0, textPtr->syncTime);
     textPtr->selAttrs.borderWidth = MAX(textPtr->selAttrs.borderWidth, 0);
 

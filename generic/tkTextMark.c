@@ -2564,7 +2564,7 @@ TkTextGetCursorBbox(
     TkTextIndex index;
     Tcl_UniChar thisChar;
     int cursorExtent;
-    int charWidth = -1;
+    int charWidth = -1, insertWidth = 0;
 
     assert(textPtr);
     assert(x);
@@ -2572,7 +2572,10 @@ TkTextGetCursorBbox(
     assert(w);
     assert(h);
 
-    cursorExtent = MAX(1, textPtr->insertWidth/2);
+    if (textPtr->insertWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    }
+    cursorExtent = MAX(1, insertWidth/2);
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 
     if (!TkTextIndexBbox(textPtr, &index, 0, x, y, w, h, &charWidth, &thisChar)) {
@@ -2623,7 +2626,7 @@ TkTextGetCursorBbox(
 	/* NOTE: the block cursor extent is always rounded towards zero. */
 	*w = charWidth + 2*cursorExtent;
     } else {
-	*w = textPtr->insertWidth;
+	*w = insertWidth;
     }
 
     *x -= cursorExtent;
@@ -2652,8 +2655,13 @@ TkTextGetCursorWidth(
     TCL_UNUSED(int *),			/* Shift x coordinate, can be NULL. */
     int *extent)		/* Extent of cursor to left side, can be NULL. */
 {
-    int width;
-    int cursorExtent = MAX(1, textPtr->insertWidth/2);
+    int width, cursorExtent;
+    int insertWidth = 0;
+
+    if (textPtr->insertWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    }
+    cursorExtent = MAX(1, insertWidth/2);
 
     if (extent) {
 	*extent = -cursorExtent;
@@ -2666,7 +2674,7 @@ TkTextGetCursorWidth(
 	    return 0; /* cursor is not visible at all */
 	}
     } else {
-	width = textPtr->insertWidth;
+	width = insertWidth;
     }
 
     return width;
@@ -2702,9 +2710,13 @@ TkrTextInsertDisplayProc(
     Drawable dst,		/* Pixmap or window in which to draw chunk. */
     int screenY)		/* Y-coordinate in text window that corresponds to y. */
 {
-    int halfWidth = textPtr->insertWidth/2;
+    int insertWidth = 0, insertBorderWidth = 0;
+    if (textPtr->insertWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    }
+    int halfWidth = insertWidth/2;
     int width = TkTextGetCursorWidth(textPtr, &x, NULL);
-    int rightSideWidth = MAX(1, width + halfWidth - textPtr->insertWidth);
+    int rightSideWidth = MAX(1, width + halfWidth - insertWidth);
 
     if ((x + rightSideWidth) < 0) {
 	/*
@@ -2731,16 +2743,19 @@ TkrTextInsertDisplayProc(
      * the cursor.
      */
 
+    if (textPtr->insertBorderWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
+    }
     if (textPtr->flags & GOT_FOCUS) {
 	if (textPtr->flags & INSERT_ON) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder, x, y,
-		    width, height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		    width, height, insertBorderWidth, TK_RELIEF_RAISED);
 	} else if (textPtr->selAttrs.border == textPtr->insertBorder) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->border, x, y,
 		    width, height, 0, TK_RELIEF_FLAT);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_HOLLOW) {
-	if (textPtr->insertBorderWidth < 1) {
+	if (insertBorderWidth < 1) {
 	    /*
 	     * Hack to work around the fact that a "solid" border always paints in black.
 	     */
@@ -2751,11 +2766,11 @@ TkrTextInsertDisplayProc(
 		    width - 1, height - 1);
 	} else {
 	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder, x, y,
-		    width, height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		    width, height, insertBorderWidth, TK_RELIEF_RAISED);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder, x, y,
-		width, height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		width, height, insertBorderWidth, TK_RELIEF_RAISED);
     }
 }
 
