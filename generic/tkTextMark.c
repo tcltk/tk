@@ -1088,11 +1088,11 @@ TkTextUpdateCurrentMark(
 
     assert(sharedTextPtr->haveToSetCurrentMark);
 
-    sharedTextPtr->haveToSetCurrentMark = 0;
+    sharedTextPtr->haveToSetCurrentMark = false;
 
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	if (tPtr->haveToSetCurrentMark) {
-	    tPtr->haveToSetCurrentMark = 0;
+	    tPtr->haveToSetCurrentMark = false;
 	    TkBTreeUnlinkSegment(sharedTextPtr, tPtr->currentMarkPtr);
 	    TkBTreeLinkSegment(sharedTextPtr, tPtr->currentMarkPtr, &tPtr->currentMarkIndex);
 	}
@@ -1794,7 +1794,7 @@ SetMark(
 		}
 	    }
 	} else if (markPtr == textPtr->currentMarkPtr) {
-	    textPtr->haveToSetCurrentMark = 0;
+	    textPtr->haveToSetCurrentMark = false;
 	} else if (pushUndoToken) {
 	    TkBTreeMakeUndoIndex(sharedTextPtr, markPtr, &undoIndex);
 	}

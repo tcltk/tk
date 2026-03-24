@@ -83,13 +83,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-lang", NULL, NULL,
 	NULL, offsetof(TkTextTag, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin1Obj), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, lMargin1Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin2Obj), offsetof(TkTextTag, lMargin2), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, lMargin2Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
-	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
+	NULL, offsetof(TkTextTag, offsetObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
@@ -101,7 +101,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_RELIEF, "-relief", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
-	NULL, offsetof(TkTextTag, rMarginObj), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, rMarginObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
@@ -1161,7 +1161,7 @@ TkConfigureTag(
 	}
     }
     if (tagPtr->hyphenRulesObj) {
-	int oldHyphenRules = tagPtr->hyphenRules;
+	bool oldHyphenRules = tagPtr->hyphenRules;
 
 	if (TkTextParseHyphenRules(textPtr, tagPtr->hyphenRulesObj, &tagPtr->hyphenRules) != TCL_OK) {
 	    rc = TCL_ERROR;
@@ -2876,7 +2876,7 @@ TkTextPickCurrent(
 				 * Must be EnterWindow, LeaveWindow, ButtonRelease, or MotionNotify. */
 {
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
-    int sameChunkWithUnchangedTags = 0;
+    bool sameChunkWithUnchangedTags = false;
     TkTextTagSet *newTagInfoPtr;
     TkTextTagSet *leaveTags;
     TkTextTagSet *enterTags;
@@ -2980,16 +2980,16 @@ TkTextPickCurrent(
 
 	textPtr->currentMarkIndex = index;
 	TkTextIndexToByteIndex(&textPtr->currentMarkIndex);
-	textPtr->haveToSetCurrentMark = 1;
-	sharedTextPtr->haveToSetCurrentMark = 1;
+	textPtr->haveToSetCurrentMark = true;
+	sharedTextPtr->haveToSetCurrentMark = true;
 
 	if (textPtr->lastLineY == TK_TEXT_NEARBY_IS_UNDETERMINED
 		|| (textPtr->lastLineY == TK_TEXT_IS_NEARBY) != nearby) {
-	    sameChunkWithUnchangedTags = 0;
+	    sameChunkWithUnchangedTags = false;
 	} else if (nearby) {
-	    sameChunkWithUnchangedTags = 1;
+	    sameChunkWithUnchangedTags = true;
 	} else if (eventPtr->type != MotionNotify || sharedTextPtr->numMotionEventBindings > 0) {
-	    sameChunkWithUnchangedTags = 0;
+	    sameChunkWithUnchangedTags = false;
 	}
 
 	if (nearby) {
@@ -3232,8 +3232,8 @@ TkTextPickCurrent(
 	    newLineY = nearby ? TK_TEXT_IS_NEARBY : TkTextGetYPixelFromChunk(textPtr, newDispChunkPtr);
 	    textPtr->currentMarkIndex = index;
 	    TkTextIndexToByteIndex(&textPtr->currentMarkIndex);
-	    textPtr->haveToSetCurrentMark = 1;
-	    sharedTextPtr->haveToSetCurrentMark = 1;
+	    textPtr->haveToSetCurrentMark = true;
+	    sharedTextPtr->haveToSetCurrentMark = true;
 	}
 
 	if (sharedTextPtr->tagBindingTable && !TkTextTagSetIsEmpty(enterTags)) {

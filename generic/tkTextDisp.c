@@ -224,7 +224,7 @@ typedef struct StyleValues {
     XColor *overstrikeColor;	/* Foreground color for overstrike through text. */
     XColor *underlineColor;	/* Foreground color for underline underneath text. */
     char const *lang;		/* Language support (may be NULL). */
-    int hyphenRules;		/* Hyphenation rules for spelling changes. */
+    int32_t hyphenRules;	/* Hyphenation rules for spelling changes. */
     int32_t borderWidth;	/* Width of 3-D border for background. */
     int32_t lMargin1;		/* Left margin, in pixels, for first display line of each text line. */
     int32_t lMargin2;		/* Left margin, in pixels, for second and later display lines of
@@ -1947,11 +1947,11 @@ FillStyle(
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
     if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
     if (tagPtr->justify != TK_TEXT_JUSTIFY_NULL) { stylePtr->justify = tagPtr->justify; }
-    if (tagPtr->lMargin1Obj)            { stylePtr->lMargin1 = tagPtr->lMargin1; }
-    if (tagPtr->lMargin2Obj)            { stylePtr->lMargin2 = tagPtr->lMargin2; }
+    if (tagPtr->lMargin1Obj)            { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->lMargin1Obj, &stylePtr->lMargin1);}
+    if (tagPtr->lMargin2Obj)            { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->lMargin2Obj, &stylePtr->lMargin2);}
     if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
-    if (tagPtr->offsetObj)              { stylePtr->offset = tagPtr->offset; }
-    if (tagPtr->rMarginObj)             { stylePtr->rMargin = tagPtr->rMargin; }
+    if (tagPtr->offsetObj)              { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->offsetObj, &stylePtr->offset);}
+    if (tagPtr->rMarginObj)             { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->rMarginObj, &stylePtr->rMargin);}
     if (tagPtr->rMarginColor)           { stylePtr->rMarginColor = tagPtr->rMarginColor; }
     if (tagPtr->spacing1Obj)            { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->spacing1Obj, &stylePtr->spacing1); }
     if (tagPtr->spacing2Obj)            { Tk_GetPixelsFromObj(NULL, tkwin, tagPtr->spacing2Obj, &stylePtr->spacing2); }
@@ -2597,7 +2597,7 @@ LayoutComputeBreakLocations(
     TkText *textPtr = data->textPtr;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextSegment *segPtr = data->logicalLinePtr->segPtr;
-    int useUniBreak = data->textPtr->useUniBreak;
+    bool useUniBreak = data->textPtr->useUniBreak;
     char const *lang = useUniBreak ? textPtr->lang : NULL;
     char const *nextLang = NULL;
     unsigned capacity = dInfoPtr->strBufferSize;
@@ -4698,14 +4698,14 @@ TriggerWatchCursor(
 	char buf[2][2*TK_POS_CHARS + 2];
 
 	if (memcmp(&dInfoPtr->curPixelPos, &dInfoPtr->prevPixelPos, sizeof(PixelPos)) != 0) {
-	    textPtr->sharedTextPtr->triggerWatchCmd = 0;
+	    textPtr->sharedTextPtr->triggerWatchCmd = false;
 	    snprintf(buf[0], sizeof(buf[0]), "@%d,%d",
 		    dInfoPtr->curPixelPos.xFirst, dInfoPtr->curPixelPos.yFirst);
 	    snprintf(buf[1], sizeof(buf[1]), "@%d,%d",
 		    dInfoPtr->curPixelPos.xLast, dInfoPtr->curPixelPos.yLast);
 	    TkTextTriggerWatchCmd(textPtr, "view", buf[0], buf[1], NULL, NULL, NULL, 0);
 	    memcpy(&textPtr->dInfoPtr->prevPixelPos, &textPtr->dInfoPtr->curPixelPos, sizeof(PixelPos));
-	    textPtr->sharedTextPtr->triggerWatchCmd = 1;
+	    textPtr->sharedTextPtr->triggerWatchCmd = true;
 	}
     }
 
@@ -4835,7 +4835,7 @@ SaveDisplayLines(
 {
     TextDInfo *dInfoPtr;
     DLine *firstPtr, *lastPtr;
-    int height, viewHeight;
+    int height, viewHeight, highlightWidth = 0;;
 
     if (!(firstPtr = info->dLinePtr)) {
 	return;
@@ -4845,7 +4845,10 @@ SaveDisplayLines(
     lastPtr = info->lastDLinePtr;
     dInfoPtr = textPtr->dInfoPtr;
     height = dInfoPtr->savedDisplayLinesHeight + info->heightOfCachedLines;
-    viewHeight = Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth;
+    if (textPtr->highlightWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    }
+    viewHeight = Tk_Height(textPtr->tkwin) - 2*highlightWidth;
     /* we need some overhead, because the widget may show lines only partially */
     viewHeight += info->dLinePtr->height;
 
@@ -5000,6 +5003,7 @@ ComputeDisplayLineInfo(
     unsigned byteOffset;
     unsigned startByteOffset;
     unsigned viewHeight;
+	int highlightWidth = 0;
 
     assert(info);
     assert(TkTextIndexGetLine(indexPtr));
@@ -5090,7 +5094,10 @@ ComputeDisplayLineInfo(
      * the widget.
      */
 
-    viewHeight = Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth;
+    if (textPtr->highlightWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    }
+    viewHeight = Tk_Height(textPtr->tkwin) - 2 * highlightWidth;
     /* we need some overhead, because the widget may show lines only partially */
     viewHeight += dInfoPtr->dLinePtr ? dInfoPtr->dLinePtr->height : 20;
 
@@ -5192,6 +5199,7 @@ ComputeMissingMetric(
     int *metricPtr = NULL; /* avoids compiler warning */
     unsigned viewHeight;
     TkTextIndex index;
+	int highlightWidth = 0;
 
     assert(threshold >= 0);
 
@@ -5203,7 +5211,10 @@ ComputeMissingMetric(
     assert(additionalLines > 0);
     byteOffset = info->entry[additionalLines].byteOffset;
     displayLineNo = info->numDispLines;
-    viewHeight = Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth;
+    if (textPtr->highlightWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    }
+    viewHeight = Tk_Height(textPtr->tkwin) - 2 * highlightWidth;
     /* we need some overhead, because the widget may show lines only partially */
     viewHeight += textPtr->dInfoPtr->dLinePtr ? textPtr->dInfoPtr->dLinePtr->height : 20;
     TkrTextIndexForwBytes(textPtr, &info->index,
@@ -8790,30 +8801,33 @@ DisplayText(
 	    goto end;
 	}
 
-	int borderWidth = 0;
+	int borderWidth = 0, highlightWidth = 0;
 	if (textPtr->borderWidthObj) {
 	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
 	}
+    if (textPtr->highlightWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    }
 	Tk_Draw3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
-		textPtr->border, textPtr->highlightWidth,
-		textPtr->highlightWidth,
-		Tk_Width(textPtr->tkwin) - 2*textPtr->highlightWidth,
-		Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth,
+		textPtr->border, highlightWidth,
+		highlightWidth,
+		Tk_Width(textPtr->tkwin) - 2 * highlightWidth,
+		Tk_Height(textPtr->tkwin) - 2 * highlightWidth,
 		borderWidth, textPtr->relief);
-	if (textPtr->highlightWidth > 0) {
+	if (highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(textPtr->highlightBgColorPtr, Tk_WindowId(textPtr->tkwin));
 	    if (textPtr->flags & GOT_FOCUS) {
 		fgGC = Tk_GCForColor(textPtr->highlightColorPtr, Tk_WindowId(textPtr->tkwin));
 		Tk_DrawHighlightBorder(textPtr->tkwin, fgGC, bgGC,
-			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
+			highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    } else {
 		Tk_DrawHighlightBorder(textPtr->tkwin, bgGC, bgGC,
-			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
+			highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    }
 	}
-	borders = borderWidth + textPtr->highlightWidth;
+	borders = borderWidth + highlightWidth;
 	if (padY > 0) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, Tk_WindowId(textPtr->tkwin),
 		    textPtr->border, borders, borders,
@@ -9174,7 +9188,11 @@ TextInvalidateRegion(
     if (textPtr->padYObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
     }
-    inset = borderWidth + textPtr->highlightWidth;
+	int highlightWidth = 0;
+    if (textPtr->highlightWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    }
+    inset = borderWidth + highlightWidth;
     textRect.x = inset + padX - extent1;
     textRect.width = Tk_Width(textPtr->tkwin) - 2 * (inset + padX) + extent1 + extent2;
     textRect.y = inset + padY;
@@ -9770,8 +9788,12 @@ TkTextRelayoutWindow(
     if (textPtr->padYObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->padYObj, &padY);
     }
-    dInfoPtr->x = textPtr->highlightWidth + borderWidth + padX;
-    dInfoPtr->y = textPtr->highlightWidth + borderWidth + padY;
+	int highlightWidth = 0;
+    if (textPtr->highlightWidthObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->highlightWidthObj, &highlightWidth);
+    }
+    dInfoPtr->x = highlightWidth + borderWidth + padX;
+    dInfoPtr->y = highlightWidth + borderWidth + padY;
 
     dInfoPtr->maxX = MAX(Tk_Width(textPtr->tkwin) - dInfoPtr->x, dInfoPtr->x + 1);
 
