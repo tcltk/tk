@@ -1563,9 +1563,6 @@ typedef struct TkText {
 #ifdef TK_CHECK_ALLOCS
     size_t widgetNumber;
 #endif
-#ifdef BUILD_tk
-    int insertWidth, insertBorderWidth;
-#endif
 } TkText;
 
 /*
