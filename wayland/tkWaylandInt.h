@@ -418,7 +418,7 @@ MODULE_SCOPE void AddMapping(WindowMapping *m);
 MODULE_SCOPE void RemoveMapping(WindowMapping *m);
 MODULE_SCOPE void CleanupAllMappings(void);
 MODULE_SCOPE void RegisterDrawableForMapping(Drawable d, WindowMapping *m);
-MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 
 /*
  *----------------------------------------------------------------------

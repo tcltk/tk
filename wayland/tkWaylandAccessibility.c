@@ -2172,7 +2172,8 @@ InitializeAtspiConnection(void)
     return 1;
 }
 
-int TkWaylandAccessibility_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TkWaylandAccessibility_Init(Tcl_Interp *interp)
 {
     /* Initialize D-Bus connection to at-spi. */
 	if (!InitializeAtspiConnection()) {
@@ -2208,7 +2209,6 @@ int TkWaylandAccessibility_Init(Tcl_Interp *interp)
     Tcl_CreateObjCommand(interp, "::tk::accessible::check_screenreader",
                           IsScreenReaderRunningCmd, NULL, NULL);
 
-    return TCL_OK;
 }
 
 

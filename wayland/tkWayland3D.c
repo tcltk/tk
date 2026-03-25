@@ -39,6 +39,8 @@ cgRGB(int r, int g, int b)
     return c;
 }
 
+extern bool TkpCmapStressed(Tk_Window tkwin, Colormap  colormap);
+
 /*
  *----------------------------------------------------------------------
  *

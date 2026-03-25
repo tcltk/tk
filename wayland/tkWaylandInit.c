@@ -78,13 +78,13 @@ static const char *vertexShaderSource =
     "    v_texcoord = a_texcoord;\n"
     "}\n";
 
-static const char *fragmentShaderSource =
-    "precision mediump float;\n"
-    "varying vec2 v_texcoord;\n"
-    "uniform sampler2D u_texture;\n"
-    "void main() {\n"
-    "    gl_FragColor = texture2D(u_texture, v_texcoord);\n"
-    "}\n";
+	static const char *fragmentShaderSource =
+	    "precision mediump float;\n"
+	    "varying vec2 v_texcoord;\n"
+	    "uniform sampler2D u_texture;\n"
+	    "void main() {\n"
+	    "    gl_FragColor = texture2D(u_texture, v_texcoord);\n"
+	    "}\n";
 
 /*
  *----------------------------------------------------------------------
@@ -96,10 +96,10 @@ static const char *fragmentShaderSource =
 
 static const GLfloat quadVertices[] = {
     /* positions        texture coordinates */
-    -1.0f, -1.0f,       0.0f, 1.0f,   /* bottom left */
-     1.0f, -1.0f,       1.0f, 1.0f,   /* bottom right */
-     1.0f,  1.0f,       1.0f, 0.0f,   /* top right */
-    -1.0f,  1.0f,       0.0f, 0.0f    /* top left */
+    -1.0f, -1.0f,       0.0f, 0.0f,   /* bottom left -> map to top of texture */
+     1.0f, -1.0f,       1.0f, 0.0f,   /* bottom right */
+     1.0f,  1.0f,       1.0f, 1.0f,   /* top right */
+    -1.0f,  1.0f,       0.0f, 1.0f    /* top left */
 };
 
 static const GLushort quadIndices[] = {
@@ -433,39 +433,42 @@ TkGlfwCleanupTexture(WindowMapping *m)
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwUploadSurfaceToTexture(WindowMapping *m)
 {
-    uint32_t *pixels;
+    if (!m || !m->surface || !m->surface->pixels) return;
 
-    if (!m || !m->surface || !m->texture.texture_id) {
-	return;
-    }
+    int w = m->surface->width;
+    int h = m->surface->height;
+    int stride = m->surface->stride; /* Prevent segfaults from row padding. */
+    unsigned char *srcBase = (unsigned char *)m->surface->pixels;
 
-    /* Get pixel data from libcg surface - direct access to pixels field. */
-    pixels = (uint32_t *)m->surface->pixels;
-    if (!pixels) {
-	return;
+    uint32_t *rgba = (uint32_t *)ckalloc(w * h * sizeof(uint32_t));
+
+    for (int y = 0; y < h; y++) {
+        /* Calculate row start using the actual byte-stride of the surface */
+        uint32_t *srcRow = (uint32_t *)(srcBase + (y * stride));
+        for (int x = 0; x < w; x++) {
+            uint32_t p = srcRow[x];
+            
+            /* libcg is ARGB (0xAARRGGBB) */
+            uint8_t r = (p >> 16) & 0xFF;
+            uint8_t g = (p >> 8)  & 0xFF;
+            uint8_t b = (p >> 0)  & 0xFF;
+
+            /* FORCE ALPHA TO 255. This is the only way to kill the hole. */
+            rgba[y * w + x] = (r << 24) | (g << 16) | (b << 8) | 0xFF;
+        }
     }
 
     glfwMakeContextCurrent(m->glfwWindow);
     glBindTexture(GL_TEXTURE_2D, m->texture.texture_id);
+    
+    /* Ensure texture storage matches current surface size. */
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
-    /* Check if we need to reallocate texture. */
-    if (m->width != m->texture.width || m->height != m->texture.height) {
-	/* Reallocate texture with new size. */
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m->width, m->height, 0,
-		     GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	m->texture.width = m->width;
-	m->texture.height = m->height;
-    } else {
-	/* Update existing texture. */
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m->width, m->height,
-			GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    }
-
-    glBindTexture(GL_TEXTURE_2D, 0);
+    ckfree((char *)rgba);
     m->texture.needs_texture_update = 0;
 }
 
@@ -492,48 +495,55 @@ TkGlfwRenderTexture(WindowMapping *m)
 {
     GLint posAttrib, texAttrib, texUniform;
 
-    if (!m || !m->texture.texture_id) {
-	return;
+    if (!m) {
+        return;
+    }
+    if (!m->glfwWindow || !m->texture.texture_id) {
+        return;
+    }
+    if (!m->texture.program || !globalVBO || !globalIBO) {
+        return;
     }
 
     glfwMakeContextCurrent(m->glfwWindow);
 
-    /* Use the shader program. */
     glUseProgram(m->texture.program);
 
-    /* Get attribute and uniform locations. */
     posAttrib = glGetAttribLocation(m->texture.program, "a_position");
     texAttrib = glGetAttribLocation(m->texture.program, "a_texcoord");
     texUniform = glGetUniformLocation(m->texture.program, "u_texture");
 
-    /* Bind the vertex buffer. */
+    if (posAttrib < 0 || texAttrib < 0 || texUniform < 0) {
+        glUseProgram(0);
+        return;
+    }
+
     glBindBuffer(GL_ARRAY_BUFFER, globalVBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, globalIBO);
 
-    /* Set up vertex attributes. */
     glEnableVertexAttribArray(posAttrib);
     glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE,
-			  4 * sizeof(GLfloat), (void *)0);
+                          4 * sizeof(GLfloat), (void *)0);
 
     glEnableVertexAttribArray(texAttrib);
     glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE,
-			  4 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
+                          4 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
 
-    /* Bind the texture. */
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m->texture.texture_id);
     glUniform1i(texUniform, 0);
 
-    /* Draw the quad. */
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
-    /* Clean up. */
     glDisableVertexAttribArray(posAttrib);
     glDisableVertexAttribArray(texAttrib);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -727,6 +737,7 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
 	glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
+	glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
 	window = glfwCreateWindow(width, height, title ? title : "",
 				  NULL, NULL);
 	if (!window) {
@@ -1012,7 +1023,9 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     dcPtr->cg = NULL;
 
     m = FindMappingByDrawable(dcPtr->drawable);
-    if (m) {
+    if (m) {	
+	/* Mark that the texture needs fresh pixels from libcg. */
+    m->texture.needs_texture_update = 1;
 	/* Mark that we need to display this window. */
 	m->needsDisplay = 1;
 	/* Schedule display. */
@@ -1394,74 +1407,33 @@ FindMappingByTk(TkWindow *w)
  *
  *----------------------------------------------------------------------
  */
-
-WindowMapping *
-FindMappingByDrawable(Drawable d)
+WindowMapping *FindMappingByDrawable(Drawable d)
 {
-    DrawableMapping *dm;
-    WindowMapping *m;
-
-    if (d == 0 || d == None) {
-	return NULL;
+    /* Direct lookup (toplevel drawables) */
+    DrawableMapping *dm = drawableMappingList;
+    while (dm) {
+        if (dm->drawable == d) {
+            return dm->mapping;
+        }
+        dm = dm->next;
     }
 
-    /* Fast path: explicit registrations. */
-    for (dm = drawableMappingList; dm; dm = dm->next) {
-	if (dm->drawable == d) {
-	    return dm->mapping;
-	}
+    /* Fallback: resolve Tk window from drawable */
+    Tk_Window tkwin = Tk_IdToWindow(TkGetDisplayList()->display, d);
+    if (!tkwin) {
+        return NULL;
     }
 
-    /* Toplevel whose Tk window ID matches. */
-    for (m = windowMappingList; m; m = m->nextPtr) {
-	if (m->tkWindow && (Drawable)m->tkWindow->window == d) {
-	    return m;
-	}
+    /* Walk up to the toplevel. */
+    Tk_Window top = GetToplevelOfWidget(tkwin);
+    if (!top) {
+        return NULL;
     }
 
-    /* Drawable is a TkWindow* passed directly - walk the child tree. */
-    for (m = windowMappingList; m; m = m->nextPtr) {
-	if (!m->tkWindow) continue;
-
-	TkWindow *stack[256];
-	int top = 0;
-
-	stack[top++] = m->tkWindow;
-	while (top > 0) {
-	    TkWindow *cur = stack[--top];
-
-	    if ((Drawable)cur == d || (Drawable)cur->window == d) {
-		RegisterDrawableForMapping(d, m);
-		return m;
-	    }
-
-	    TkWindow *child;
-	    for (child = cur->childList; child && top < 255;
-		 child = child->nextPtr) {
-		stack[top++] = child;
-	    }
-	}
-    }
-
-    /*
-     * Drawable is a TkWaylandPixmapImpl* that was never registered.
-     * Use the magic field to distinguish a real pixmap from a random
-     * pointer before binding it to the first available mapping.
-     */
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)d;
-    if (pix != NULL && pix->magic == TK_WAYLAND_PIXMAP_MAGIC) {
-	if (pix->width >= 0 && pix->width < 32768 &&
-	    pix->height >= 0 && pix->height < 32768) {
-	    m = TkGlfwGetMappingList();
-	    if (m) {
-		RegisterDrawableForMapping(d, m);
-		return m;
-	    }
-	}
-    }
-
-    return NULL;
+    /* Return the mapping for the toplevel. */
+    return FindMappingByTk((TkWindow *)top);
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1708,6 +1680,28 @@ TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
     WindowMapping *m = FindMappingByGLFW(glfwWindow);
 
     return m ? m->tkWindow : NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandProcessEvents --
+ *
+ *	Spins the Glfw event loop.
+ *
+ * Results:
+ *	Events processed.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandProcessEvents(void)
+{
+      glfwPollEvents();
 }
 
 /*

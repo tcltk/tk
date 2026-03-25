@@ -219,6 +219,8 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Obj *const objv[]);
 static void             WmWaitMapProc(void *clientData, XEvent *eventPtr);
 
+bool			TkpWmSetState(TkWindow *winPtr, int state);
+
 /* GLFW integration helpers. */
 static void CreateGlfwWindow(TkWindow *winPtr);
 static void DestroyGlfwWindow(WmInfo *wmPtr);
@@ -446,7 +448,7 @@ TkWmMapWindow(TkWindow *winPtr)
             TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
             
             /* Process events to trigger drawing. */
-            TkGlfwProcessEvents();
+            TkWaylandProcessEvents();
         }
         
         if (prev) glfwMakeContextCurrent(prev);
@@ -2032,7 +2034,7 @@ WmGeometryCmd(
         
         if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
             UpdateGeometryInfo((void *)winPtr);
-            TkGlfwProcessEvents();
+            TkWaylandProcessEvents();
         }
         
         return TCL_OK;
@@ -2064,7 +2066,7 @@ WmGeometryCmd(
         UpdateGeometryInfo((void *)winPtr);
         
         /* Process events to ensure callback fires before command returns */
-        TkGlfwProcessEvents();
+        TkWaylandProcessEvents();
         
         /* Verify the change actually took effect. */
         int newWidth, newHeight;
@@ -3642,7 +3644,7 @@ UpdateGeometryInfo(
         
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
-        TkGlfwProcessEvents();
+        TkWaylandProcessEvents();
     }
 
     /* Apply position change if needed. */
@@ -3651,7 +3653,7 @@ UpdateGeometryInfo(
         wmPtr->y != winPtr->changes.y) {
         glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
-        TkGlfwProcessEvents();
+        TkWaylandProcessEvents();
     }
     
 }

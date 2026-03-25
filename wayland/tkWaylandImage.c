@@ -29,6 +29,7 @@
 #endif
 
 extern TkGlfwContext glfwContext;
+extern int IsPixmap(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------
