@@ -1,5 +1,5 @@
 /*
- * tkGlfwInt.h --
+ * tkWaylandInt.h --
  *
  *	This file contains declarations that are shared among the
  *	GLFW/Wayland-specific parts of Tk.
@@ -22,20 +22,7 @@
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
 
-#include "nanovg.h"
-
-typedef struct NVGLUframebuffer NVGLUframebuffer;
-
-/* Forward declarations for GLES2 backend functions. */
-NVGcontext* nvgCreateGLES2(int flags);
-void nvgDeleteGLES2(NVGcontext* ctx);
-int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
-GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image);
-
-/* Forward declarations for utils. */
-NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
-void nvgluBindFramebuffer(NVGLUframebuffer* fb);
-void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
+#include "cg.h"
 
 /*
  *----------------------------------------------------------------------
@@ -64,15 +51,15 @@ typedef struct WindowMapping {
                                    * (updated by configure events) */
     int height;                     /* Current window height in pixels
                                    * (updated by configure events) */
-    int clearPending;               /* Flag indicating the framebuffer needs
+    int clearPending;               /* Flag indicating the surface needs
                                    * to be cleared before next draw operation.
                                    * Set to 1 when window is created/resized,
                                    * cleared after clearing */
-    int swapPending;   	           /* 1 = buffer is ready to swap at next idle */
-    int frameOpen;                /* Is NVG frame currently open? */
+    int swapPending;   	           /* 1 = surface is ready to present at next idle */
+    int frameOpen;                /* Is cg frame currently open? */
     int needsDisplay;             /* Dirty flag - needs redraw */
     int inEventCycle;             /* Currently processing events */
-    NVGLUframebuffer *fbo;		 /* NanoVG frame buffer. */	
+    struct cg_surface_t *surface; /* libcg render surface for this window */
     struct WindowMapping *nextPtr;  /* Next mapping in global linked list */
 } WindowMapping;
 
@@ -101,8 +88,8 @@ typedef struct DrawableMapping {
  * Core Context Structure
  *
  *	Global state for the GLFW/Wayland backend.
- *	This structure holds the shared GL context window, the global
- *	NanoVG context, and state tracking for nested drawing operations.
+ *	This structure holds the shared GL context window and state
+ *	tracking for nested drawing operations.
  *
  *----------------------------------------------------------------------
  */
@@ -110,14 +97,14 @@ typedef struct DrawableMapping {
 typedef struct TkGlfwContext {
     GLFWwindow *mainWindow;      /* Hidden shared context window - all
                                    * application windows share this context */
-    NVGcontext *vg;               /* Global NanoVG context - created once
-                                   * and shared by all windows */
+    struct cg_ctx_t *cg;         /* Global libcg drawing context - created
+                                   * once and shared by all windows */
     int initialized;              /* GLFW initialized flag - 1 if glfwInit()
                                    * has been called successfully */
-    int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
+    int cgFrameActive;            /* Flag indicating if a cg frame is
                                    * currently active */
     GLFWwindow *activeWindow;     /* Window that has the current active
-                                   * NanoVG frame (if any) */
+                                   * cg frame (if any) */
     int fbWidth;                  /* Framebuffer width of mainWindow
                                    * (cached for performance) */
     int fbHeight;                 /* Framebuffer height of mainWindow
@@ -246,7 +233,7 @@ typedef struct TkWmInfo {
  */
 
 typedef struct {
-    NVGcontext *vg;          /* NanoVG context for this draw */
+    struct cg_ctx_t *cg;         /* libcg context for this draw */
     Drawable    drawable;    /* Target drawable */
     GLFWwindow *glfwWindow;  /* Associated GLFW window */
     int         width;       /* Drawable width */
@@ -290,20 +277,19 @@ typedef struct TkWaylandGCStruct {
 #define TK_WAYLAND_PIXMAP_MAGIC 0x544B5058  /* "TKPX" */
 
 typedef struct TkWaylandPixmapImpl {
-	int      		 magic;        
+    int              magic;
     int              type;          /* 0 = window, 1 = pixmap */
     int              width;
     int              height;
     Drawable         drawable;      /* Tk's drawable ID */
-    
-    /* OpenGL FBO resources */
-    GLuint           fbo;           /* Framebuffer object */
-    GLuint           texture;       /* Color attachment */
-    GLuint           stencil;       /* Stencil buffer (for NanoVG) */
-    
-    /* NanoVG frame state */
-    int              frameOpen;     /* Is NVG frame open on this pixmap? */
-    
+
+    /* libcg rendering resources */
+    struct cg_surface_t *surface;   /* Pixel buffer for this pixmap */
+    struct cg_ctx_t     *cg;        /* libcg context bound to surface */
+
+    /* Frame state */
+    int              frameOpen;     /* Is a cg frame open on this pixmap? */
+
     /* Associated window (for context) */
     WindowMapping   *windowMapping; /* Which window owns this pixmap */
 } TkWaylandPixmapImpl;
@@ -453,10 +439,10 @@ MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w, int width, int height
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
+MODULE_SCOPE int              TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
+MODULE_SCOPE void             TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
+MODULE_SCOPE struct cg_ctx_t *TkGlfwGetCGContext(void);
+MODULE_SCOPE struct cg_ctx_t *TkGlfwGetCGContextForMeasure(void);
 int IsPixmap(Drawable drawable);
 
 /*
@@ -509,9 +495,9 @@ MODULE_SCOPE void TkWaylandWakeupGLFW(void);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcolor TkGlfwXColorToNVG(XColor *xcolor);
-MODULE_SCOPE NVGcolor TkGlfwPixelToNVG(unsigned long pixel);
-MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
+MODULE_SCOPE struct cg_color_t TkGlfwXColorToCG(XColor *xcolor);
+MODULE_SCOPE struct cg_color_t TkGlfwPixelToCG(unsigned long pixel);
+MODULE_SCOPE void              TkGlfwApplyGC(struct cg_ctx_t *cg, GC gc);
 
 /*
  *----------------------------------------------------------------------
@@ -572,7 +558,7 @@ MODULE_SCOPE void TkGlfwErrorCallback(int error, const char *description);
  * Xlib Emulation Layer
  *
  *	The following functions provide an Xlib-compatible API over the
- *	GLFW/NanoVG backend.  They are implemented in tkWaylandXlib.c.
+ *	GLFW/libcg backend.  They are implemented in tkWaylandXlib.c.
  *
  *----------------------------------------------------------------------
  */

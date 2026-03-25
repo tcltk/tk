@@ -14,7 +14,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

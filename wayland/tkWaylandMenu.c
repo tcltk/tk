@@ -12,18 +12,9 @@
 
 #include <tcl.h>
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include "tkMenu.h"
 #include <GLFW/glfw3.h>
-
-/* Default font definitions for NanoVG */
-#ifndef DEFAULT_FONT_SIZE
-#define DEFAULT_FONT_SIZE 16.0f
-#endif
-
-#ifndef DEFAULT_FONT
-#define DEFAULT_FONT "sans"
-#endif
 
 /* Menu constants. */
 #define MENU_MARGIN_WIDTH	2
@@ -1375,71 +1366,78 @@ TkpDrawMenuEntry(
  */
 
 static void
-TkpDisplayMenu(
-	       void *clientData)
+TkpDisplayMenu(void *clientData)
 {
-    TkMenu *menuPtr = (TkMenu *)clientData;
+    TkMenu   *menuPtr = (TkMenu *)clientData;
     TkWindow *winPtr;
-    GLFWwindow *glfwWindow;
-    Drawable drawable;
-    int i;
-    
+    Drawable  drawable;
+    int       i;
+    int       menuX, menuY, menuW, menuH;
+
+    TkWaylandDrawingContext dc;
+    struct cg_color_t       bgColor, borderColor;
+
     if (!menuPtr || !menuPtr->tkwin) {
         return;
     }
-    
+
     winPtr = (TkWindow *)menuPtr->tkwin;
-    
-    /* Get parent window's GLFW window (menus are toplevels). */
-    if (winPtr->parentPtr) {
-        glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr->parentPtr);
-    } else {
-        glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
-    }
-    
-    if (!glfwWindow) {
-        return;
-    }
-    
+    (void)winPtr;   /* used only for glfwWindow lookup, no longer needed */
+
     drawable = Tk_WindowId(menuPtr->tkwin);
     if (!drawable) {
         return;
     }
-    
-    TkWaylandDrawingContext dc;
-    
-    /* Begin NanoVG drawing using unified API. */
+
     if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
         return;
     }
 
-    
-    /* Get menu position (already computed by TkpPostMenu). */
-    int menuX = Tk_X(menuPtr->tkwin);
-    int menuY = Tk_Y(menuPtr->tkwin);
-    int menuW = menuPtr->totalWidth;
-    int menuH = menuPtr->totalHeight;
-    
-    /* Draw menu background/border. */
-    nvgSave(dc.vg);
-    nvgBeginPath(dc.vg);
-    nvgRect(dc.vg, menuX, menuY, menuW, menuH);
-    nvgFillColor(dc.vg, nvgRGB(240, 240, 240));
-    nvgFill(dc.vg);
-    nvgStrokeColor(dc.vg, nvgRGB(0, 0, 0));
-    nvgStroke(dc.vg);
-    nvgRestore(dc.vg);
-    
-    /* Draw each menu entry. */
+    menuX = Tk_X(menuPtr->tkwin);
+    menuY = Tk_Y(menuPtr->tkwin);
+    menuW = menuPtr->totalWidth;
+    menuH = menuPtr->totalHeight;
+
+    /* Menu background — light grey. */
+    bgColor.r     = 240.0/255.0;
+    bgColor.g     = 240.0/255.0;
+    bgColor.b     = 240.0/255.0;
+    bgColor.a     = 1.0;
+
+    borderColor.r = 0.0;
+    borderColor.g = 0.0;
+    borderColor.b = 0.0;
+    borderColor.a = 1.0;
+
+    cg_save(dc.cg);
+
+    /* Fill background. */
+    cg_set_source_rgba(dc.cg,
+                       bgColor.r, bgColor.g, bgColor.b, bgColor.a);
+    cg_rectangle(dc.cg, (double)menuX, (double)menuY,
+                 (double)menuW, (double)menuH);
+    cg_fill(dc.cg);
+
+    /* Draw border. */
+    cg_set_source_rgba(dc.cg,
+                       borderColor.r, borderColor.g,
+                       borderColor.b, borderColor.a);
+    cg_set_line_width(dc.cg, 1.0);
+    cg_rectangle(dc.cg, (double)menuX, (double)menuY,
+                 (double)menuW, (double)menuH);
+    cg_stroke(dc.cg);
+
+    cg_restore(dc.cg);
+
+    /* Draw each menu entry via the platform-independent helper. */
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
-        
         TkpDrawMenuEntry(mePtr, drawable, NULL, NULL,
-			 menuX + mePtr->x, menuY + mePtr->y,
-			 mePtr->width, mePtr->height,
-			 DRAW_MENU_ENTRY_ARROW);
+                         menuX + mePtr->x, menuY + mePtr->y,
+                         mePtr->width, mePtr->height,
+                         DRAW_MENU_ENTRY_ARROW);
     }
-    
+
     TkGlfwEndDraw(&dc);
 }
 

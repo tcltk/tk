@@ -16,7 +16,7 @@
 
 #include "tkInt.h"
 #include "tkScrollbar.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 /*
  * Minimum slider length, in pixels (designed to make sure that the slider is

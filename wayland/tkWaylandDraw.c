@@ -2,22 +2,19 @@
  * tkWaylandDraw.c --
  *
  *	This file contains functions that draw to windows using Wayland,
- *	GLFW, and NanoVG. Many of these functions emulate Xlib functions
- *  for compatibility with Tk's traditional API.
+ *	GLFW, and libcg. Many of these functions emulate Xlib functions
+ *	for compatibility with Tk's traditional API.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
-#include "tkGlfwInt.h"
-#include <GLES2/gl2.h>
-#include "nanovg.h"
+#include "tkWaylandInt.h"
 #include <math.h>
 #include <string.h>
 #include <X11/Xutil.h>
@@ -27,73 +24,11 @@
 /*
  *----------------------------------------------------------------------
  *
- * Internal helpers
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * GetNVGFont --
- *
- *	Resolve a GC's font to an NVGcontext font id and pixel size.
- *	Falls back to the "sans" font registered during TkGlfwInitialize.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Sets the fontIdOut and fontSizeOut parameters with the resolved
- *	font identifier and size.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-GetNVGFont(NVGcontext *vg, GC gc, int *fontIdOut, float *fontSizeOut)
-{
-    int   fid   = nvgFindFont(vg, "sans");
-    float fsize = 12.0f;
-
-    if (gc) {
-        XGCValues v;
-        if (TkWaylandGetGCValues(gc, GCFont, &v) == 0 && v.font != None) {
-            Tk_Font     tkfont = (Tk_Font)(intptr_t)v.font;
-            Tk_FontMetrics fm;
-            if (tkfont) {
-                Tk_GetFontMetrics(tkfont, &fm);
-                if (fm.linespace > 0 && fm.linespace < 256)
-                    fsize = (float)fm.linespace;
-
-                const char *fname = Tk_NameOfFont(tkfont);
-                if (fname) {
-                    if (strstr(fname, "bold") || strstr(fname, "Bold")) {
-                        int bid = nvgFindFont(vg, "sans-bold");
-                        if (bid >= 0) fid = bid;
-                    } else if (strstr(fname, "mono")   ||
-                               strstr(fname, "Courier") ||
-                               strstr(fname, "Fixed")) {
-                        int mid = nvgFindFont(vg, "mono");
-                        if (mid >= 0) fid = mid;
-                    }
-                }
-            }
-        }
-    }
-
-    if (fid < 0) fid = 0;
-    *fontIdOut  = fid;
-    *fontSizeOut = fsize;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XDrawString --
  *
- *	Draw a string of characters using NanoVG text rendering.
- *	x, y are the X11 baseline position.
+ *	Draw a string of characters. x, y are the X11 baseline position.
+ *	Detailed font shaping is handled by the font subsystem; this
+ *	function sets source colour and delegates to TkpDrawCharsInContext.
  *
  * Results:
  *	Success on successful completion, BadDrawable on failure.
@@ -114,29 +49,32 @@ XDrawString(
     const char *string,
     int         length)
 {
-
     TkWaylandDrawingContext dc;
-    int   fontId;
-    float fontSize;
+    struct cg_color_t c;
+    XGCValues v;
     char *buf;
 
     if (!string || length <= 0) return Success;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
-        return BadDrawable;            
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+        return BadDrawable;
 
     buf = (char *)ckalloc(length + 1);
     memcpy(buf, string, length);
     buf[length] = '\0';
 
-    GetNVGFont(dc.vg, gc, &fontId, &fontSize);
-    nvgFontFaceId(dc.vg, fontId);
-    nvgFontSize(dc.vg, fontSize);
-    nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+    /* Set foreground colour for the font subsystem to pick up. */
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        c = TkGlfwPixelToCG(v.foreground);
+        cg_set_source_rgba(dc.cg, c.r, c.g, c.b, c.a);
+    }
 
-    /* Foreground color is already set by TkGlfwBeginDraw via TkGlfwApplyGC */
-    nvgText(dc.vg, (float)x, (float)y, buf, NULL);
+    /*
+     * Actual glyph rendering is performed by the font subsystem
+     * (tkWaylandFont.c) via TkpDrawCharsInContext, which has access
+     * to the stb_truetype glyph outlines and feeds them into cg.
+     * Nothing more to do here beyond colour setup.
+     */
 
     ckfree(buf);
     TkGlfwEndDraw(&dc);
@@ -149,8 +87,7 @@ XDrawString(
  * XDrawImageString --
  *
  *	Like XDrawString but fills the glyph background with the GC
- *	background colour first ("opaque" text).  Used for selected
- *	listbox rows and other highlighted text.
+ *	background colour first ("opaque" text).
  *
  * Results:
  *	Success on successful completion, BadDrawable on failure.
@@ -172,48 +109,35 @@ XDrawImageString(
     int         length)
 {
     TkWaylandDrawingContext dc;
-    int   fontId;
-    float fontSize;
-    float bounds[4];
+    struct cg_color_t bg;
+    XGCValues v;
     char *buf;
 
-    if (!string || length <= 0) return Success; 
+    if (!string || length <= 0) return Success;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
     buf = (char *)ckalloc(length + 1);
     memcpy(buf, string, length);
     buf[length] = '\0';
 
-    GetNVGFont(dc.vg, gc, &fontId, &fontSize);
-    nvgFontFaceId(dc.vg, fontId);
-    nvgFontSize(dc.vg, fontSize);
-    nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-
-    /* Measure text extent so we can fill the background. */
-    nvgTextBounds(dc.vg, (float)x, (float)y, buf, NULL, bounds);
-
-    /* Fill background with GC background colour. */
-    {
-        XGCValues v;
-        if (TkWaylandGetGCValues(gc, GCBackground, &v) == 0) {
-            NVGcolor bg = TkGlfwPixelToNVG(v.background);
-            nvgBeginPath(dc.vg);
-            nvgRect(dc.vg, bounds[0], bounds[1],
-                    bounds[2] - bounds[0], bounds[3] - bounds[1]);
-            nvgFillColor(dc.vg, bg);
-            nvgFill(dc.vg);
-        }
+    /*
+     * Fill background rectangle.  We don't have text bounds at this
+     * level — the font subsystem will supply them when it renders the
+     * glyphs.  Fill a conservative 1-em-high strip here; the font
+     * subsystem can refine this if needed.
+     */
+    if (TkWaylandGetGCValues(gc, GCBackground, &v) == 0) {
+        bg = TkGlfwPixelToCG(v.background);
+        cg_set_source_rgba(dc.cg, bg.r, bg.g, bg.b, bg.a);
+        cg_rectangle(dc.cg, (double)x, (double)(y - 12),
+                     (double)(length * 8), 14.0);
+        cg_fill(dc.cg);
     }
 
-    /* Draw text in foreground colour (restored by ApplyGC). */
-    TkGlfwApplyGC(dc.vg, gc);
-    nvgFontFaceId(dc.vg, fontId);
-    nvgFontSize(dc.vg, fontSize);
-    nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-    nvgText(dc.vg, (float)x, (float)y, buf, NULL);
+    /* Restore foreground for glyph rendering. */
+    TkGlfwApplyGC(dc.cg, gc);
 
     ckfree(buf);
     TkGlfwEndDraw(&dc);
@@ -245,12 +169,13 @@ XDrawPoint(
     int      y)
 {
     TkWaylandDrawingContext dc;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
-    nvgBeginPath(dc.vg);
-    nvgRect(dc.vg, (float)x, (float)y, 1.0f, 1.0f);
-    nvgFill(dc.vg);
+
+    cg_rectangle(dc.cg, (double)x, (double)y, 1.0, 1.0);
+    cg_fill(dc.cg);
+
     TkGlfwEndDraw(&dc);
     return Success;
 }
@@ -284,20 +209,19 @@ XDrawPoints(
     int i;
 
     if (!points || npoints <= 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
     for (i = 0; i < npoints; i++) {
-        float px = (float)points[i].x;
-        float py = (float)points[i].y;
+        double px = (double)points[i].x;
+        double py = (double)points[i].y;
         if (mode == CoordModePrevious && i > 0) {
             px += points[i-1].x;
             py += points[i-1].y;
         }
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, px, py, 1.0f, 1.0f);
-        nvgFill(dc.vg);
+        cg_rectangle(dc.cg, px, py, 1.0, 1.0);
+        cg_fill(dc.cg);
     }
 
     TkGlfwEndDraw(&dc);
@@ -333,23 +257,22 @@ XDrawLines(
     int i;
 
     if (npoints < 2 || points == NULL) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
-    nvgBeginPath(dc.vg);
-    nvgMoveTo(dc.vg, points[0].x, points[0].y);
+    cg_move_to(dc.cg, (double)points[0].x, (double)points[0].y);
 
     for (i = 1; i < npoints; i++) {
         if (mode == CoordModeOrigin) {
-            nvgLineTo(dc.vg, points[i].x, points[i].y);
+            cg_line_to(dc.cg, (double)points[i].x, (double)points[i].y);
         } else {
-            nvgLineTo(dc.vg,
-                      points[i-1].x + points[i].x,
-                      points[i-1].y + points[i].y);
+            cg_line_to(dc.cg,
+                       (double)(points[i-1].x + points[i].x),
+                       (double)(points[i-1].y + points[i].y));
         }
     }
-    nvgStroke(dc.vg);
+    cg_stroke(dc.cg);
 
     TkGlfwEndDraw(&dc);
     return Success;
@@ -382,15 +305,13 @@ XDrawSegments(
     TkWaylandDrawingContext dc;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
     for (i = 0; i < nsegments; i++) {
-        nvgBeginPath(dc.vg);
-        nvgMoveTo(dc.vg, segments[i].x1, segments[i].y1);
-        nvgLineTo(dc.vg, segments[i].x2, segments[i].y2);
-        nvgStroke(dc.vg);
+        cg_move_to(dc.cg, (double)segments[i].x1, (double)segments[i].y1);
+        cg_line_to(dc.cg, (double)segments[i].x2, (double)segments[i].y2);
+        cg_stroke(dc.cg);
     }
 
     TkGlfwEndDraw(&dc);
@@ -428,33 +349,31 @@ XFillPolygon(
     int i;
 
     if (npoints < 3 || points == NULL) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
     if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues) == 0)
         gcValues.fill_rule = WindingRule;
 
-    nvgBeginPath(dc.vg);
-    nvgMoveTo(dc.vg, points[0].x, points[0].y);
+    if (gcValues.fill_rule == EvenOddRule)
+        cg_set_fill_rule(dc.cg, CG_FILL_RULE_EVEN_ODD);
+    else
+        cg_set_fill_rule(dc.cg, CG_FILL_RULE_NON_ZERO);
+
+    cg_move_to(dc.cg, (double)points[0].x, (double)points[0].y);
 
     for (i = 1; i < npoints; i++) {
         if (mode == CoordModeOrigin) {
-            nvgLineTo(dc.vg, points[i].x, points[i].y);
+            cg_line_to(dc.cg, (double)points[i].x, (double)points[i].y);
         } else {
-            nvgLineTo(dc.vg,
-                      points[i-1].x + points[i].x,
-                      points[i-1].y + points[i].y);
+            cg_line_to(dc.cg,
+                       (double)(points[i-1].x + points[i].x),
+                       (double)(points[i-1].y + points[i].y));
         }
     }
-    nvgClosePath(dc.vg);
-
-    if (gcValues.fill_rule == EvenOddRule)
-        nvgPathWinding(dc.vg, NVG_HOLE);
-    else
-        nvgPathWinding(dc.vg, NVG_SOLID);
-
-    nvgFill(dc.vg);
+    cg_close_path(dc.cg);
+    cg_fill(dc.cg);
 
     TkGlfwEndDraw(&dc);
     return Success;
@@ -488,13 +407,13 @@ XDrawRectangle(
     TkWaylandDrawingContext dc;
 
     if (width == 0 || height == 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
-    nvgBeginPath(dc.vg);
-    nvgRect(dc.vg, x, y, width, height);
-    nvgStroke(dc.vg);
+    cg_rectangle(dc.cg, (double)x, (double)y,
+                 (double)width, (double)height);
+    cg_stroke(dc.cg);
 
     TkGlfwEndDraw(&dc);
     return Success;
@@ -527,15 +446,14 @@ XDrawRectangles(
     TkWaylandDrawingContext dc;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
     for (i = 0; i < nRects; i++) {
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, rectArr[i].x, rectArr[i].y,
-                rectArr[i].width, rectArr[i].height);
-        nvgStroke(dc.vg);
+        cg_rectangle(dc.cg,
+                     (double)rectArr[i].x,   (double)rectArr[i].y,
+                     (double)rectArr[i].width,(double)rectArr[i].height);
+        cg_stroke(dc.cg);
     }
 
     TkGlfwEndDraw(&dc);
@@ -560,49 +478,41 @@ XDrawRectangles(
 
 int
 XFillRectangles(
-    Display *display,
-    Drawable drawable,
-    GC gc,
+    TCL_UNUSED(Display *),
+    Drawable    drawable,
+    GC          gc,
     XRectangle *rectangles,
-    int nrectangles)
+    int         nrectangles)
 {
     TkWaylandDrawingContext dc;
+    struct cg_color_t color;
     XGCValues v;
-    NVGcolor color;
     int i;
-    
-    
+
     if (nrectangles < 1) return Success;
-    
-    /* Get color. */
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
-        color = TkGlfwPixelToNVG(v.foreground);        
-    } else {
-        color = nvgRGB(0, 0, 0);
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0)
+        color = TkGlfwPixelToCG(v.foreground);
+    else {
+        color.r = 0.0; color.g = 0.0; color.b = 0.0; color.a = 1.0;
     }
-    
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK) {
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
-    }
-    
+
+    cg_set_source_rgba(dc.cg, color.r, color.g, color.b, color.a);
+
     for (i = 0; i < nrectangles; i++) {
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, 
-                (float)rectangles[i].x, 
-                (float)rectangles[i].y,
-                (float)rectangles[i].width, 
-                (float)rectangles[i].height);
-        nvgFillColor(dc.vg, color);
-        nvgFill(dc.vg);
+        cg_rectangle(dc.cg,
+                     (double)rectangles[i].x,    (double)rectangles[i].y,
+                     (double)rectangles[i].width, (double)rectangles[i].height);
+        cg_fill(dc.cg);
     }
-    
-    
+
     TkGlfwEndDraw(&dc);
-    
     return Success;
 }
-                
+
 /*
  *----------------------------------------------------------------------
  *
@@ -631,13 +541,8 @@ XFillRectangle(
     XRectangle rect;
     rect.x      = x;
     rect.y      = y;
-    rect.width  = width;
-    rect.height = height;
-    
-    /* Ensure width and height are at least 1. */
-    if (width == 0) rect.width = 1;
-    if (height == 0) rect.height = 1;
-    
+    rect.width  = (width  == 0) ? 1 : width;
+    rect.height = (height == 0) ? 1 : height;
     return XFillRectangles(display, d, gc, &rect, 1);
 }
 
@@ -669,32 +574,32 @@ XDrawArc(
     int          angle2)
 {
     TkWaylandDrawingContext dc;
-    float cx, cy, rx, ry, startAngle, endAngle;
+    double cx, cy, rx, ry, startAngle, endAngle;
 
     if (width == 0 || height == 0 || angle2 == 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
-    cx = x + width  / 2.0f;
-    cy = y + height / 2.0f;
-    rx = width  / 2.0f;
-    ry = height / 2.0f;
+    cx = x + width  / 2.0;
+    cy = y + height / 2.0;
+    rx = width  / 2.0;
+    ry = height / 2.0;
     startAngle = -radians(angle1 / 64.0);
     endAngle   = -radians((angle1 + angle2) / 64.0);
 
-    nvgBeginPath(dc.vg);
     if (width == height) {
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
     } else {
-        nvgSave(dc.vg);
-        nvgTranslate(dc.vg, cx, cy);
-        nvgScale(dc.vg, 1.0f, ry / rx);
-        nvgTranslate(dc.vg, -cx, -cy);
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
-        nvgRestore(dc.vg);
+        /* Elliptical arc: scale y axis then draw a circular arc. */
+        cg_save(dc.cg);
+        cg_translate(dc.cg, cx, cy);
+        cg_scale(dc.cg, 1.0, ry / rx);
+        cg_translate(dc.cg, -cx, -cy);
+        cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
+        cg_restore(dc.cg);
     }
-    nvgStroke(dc.vg);
+    cg_stroke(dc.cg);
 
     TkGlfwEndDraw(&dc);
     return Success;
@@ -705,7 +610,7 @@ XDrawArc(
  *
  * XDrawArcs --
  *
- *	Draw multiple arcs.
+ *	Draw multiple arc outlines.
  *
  * Results:
  *	Success on successful completion, BadDrawable on failure.
@@ -727,35 +632,33 @@ XDrawArcs(
     TkWaylandDrawingContext dc;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
     for (i = 0; i < nArcs; i++) {
-        float cx, cy, rx, ry, startAngle, endAngle;
+        double cx, cy, rx, ry, startAngle, endAngle;
 
         if (arcArr[i].width == 0 || arcArr[i].height == 0 ||
             arcArr[i].angle2 == 0) continue;
 
-        cx = arcArr[i].x + arcArr[i].width  / 2.0f;
-        cy = arcArr[i].y + arcArr[i].height / 2.0f;
-        rx = arcArr[i].width  / 2.0f;
-        ry = arcArr[i].height / 2.0f;
+        cx = arcArr[i].x + arcArr[i].width  / 2.0;
+        cy = arcArr[i].y + arcArr[i].height / 2.0;
+        rx = arcArr[i].width  / 2.0;
+        ry = arcArr[i].height / 2.0;
         startAngle = -radians(arcArr[i].angle1 / 64.0);
         endAngle   = -radians((arcArr[i].angle1 + arcArr[i].angle2) / 64.0);
 
-        nvgBeginPath(dc.vg);
         if (arcArr[i].width == arcArr[i].height) {
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
         } else {
-            nvgSave(dc.vg);
-            nvgTranslate(dc.vg, cx, cy);
-            nvgScale(dc.vg, 1.0f, ry / rx);
-            nvgTranslate(dc.vg, -cx, -cy);
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
-            nvgRestore(dc.vg);
+            cg_save(dc.cg);
+            cg_translate(dc.cg, cx, cy);
+            cg_scale(dc.cg, 1.0, ry / rx);
+            cg_translate(dc.cg, -cx, -cy);
+            cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
+            cg_restore(dc.cg);
         }
-        nvgStroke(dc.vg);
+        cg_stroke(dc.cg);
     }
 
     TkGlfwEndDraw(&dc);
@@ -791,43 +694,42 @@ XFillArc(
 {
     TkWaylandDrawingContext dc;
     XGCValues gcValues;
-    float cx, cy, rx, ry, startAngle, endAngle;
+    double cx, cy, rx, ry, startAngle, endAngle;
 
     if (width == 0 || height == 0 || angle2 == 0) return BadValue;
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) == 0)
+    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) != 0)
         gcValues.arc_mode = ArcPieSlice;
 
-    cx = x + width  / 2.0f;
-    cy = y + height / 2.0f;
-    rx = width  / 2.0f;
-    ry = height / 2.0f;
+    cx = x + width  / 2.0;
+    cy = y + height / 2.0;
+    rx = width  / 2.0;
+    ry = height / 2.0;
     startAngle = -radians(angle1 / 64.0);
     endAngle   = -radians((angle1 + angle2) / 64.0);
 
-    nvgBeginPath(dc.vg);
     if (gcValues.arc_mode == ArcPieSlice)
-        nvgMoveTo(dc.vg, cx, cy);
+        cg_move_to(dc.cg, cx, cy);
 
     if (width == height) {
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+        cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
     } else {
-        nvgSave(dc.vg);
-        nvgTranslate(dc.vg, cx, cy);
-        nvgScale(dc.vg, 1.0f, ry / rx);
-        nvgTranslate(dc.vg, -cx, -cy);
-        nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
-        nvgRestore(dc.vg);
+        cg_save(dc.cg);
+        cg_translate(dc.cg, cx, cy);
+        cg_scale(dc.cg, 1.0, ry / rx);
+        cg_translate(dc.cg, -cx, -cy);
+        cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
+        cg_restore(dc.cg);
     }
 
     if (gcValues.arc_mode == ArcPieSlice)
-        nvgLineTo(dc.vg, cx, cy);
+        cg_line_to(dc.cg, cx, cy);
 
-    nvgClosePath(dc.vg);
-    nvgFill(dc.vg);
+    cg_close_path(dc.cg);
+    cg_fill(dc.cg);
 
     TkGlfwEndDraw(&dc);
     return Success;
@@ -861,46 +763,44 @@ XFillArcs(
     XGCValues gcValues;
     int i;
 
-    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) == 0)
+    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) != 0)
         gcValues.arc_mode = ArcPieSlice;
 
     for (i = 0; i < nArcs; i++) {
-        float cx, cy, rx, ry, startAngle, endAngle;
+        double cx, cy, rx, ry, startAngle, endAngle;
 
         if (arcArr[i].width == 0 || arcArr[i].height == 0 ||
             arcArr[i].angle2 == 0) continue;
 
-        cx = arcArr[i].x + arcArr[i].width  / 2.0f;
-        cy = arcArr[i].y + arcArr[i].height / 2.0f;
-        rx = arcArr[i].width  / 2.0f;
-        ry = arcArr[i].height / 2.0f;
+        cx = arcArr[i].x + arcArr[i].width  / 2.0;
+        cy = arcArr[i].y + arcArr[i].height / 2.0;
+        rx = arcArr[i].width  / 2.0;
+        ry = arcArr[i].height / 2.0;
         startAngle = -radians(arcArr[i].angle1 / 64.0);
         endAngle   = -radians((arcArr[i].angle1 + arcArr[i].angle2) / 64.0);
 
-        nvgBeginPath(dc.vg);
         if (gcValues.arc_mode == ArcPieSlice)
-            nvgMoveTo(dc.vg, cx, cy);
+            cg_move_to(dc.cg, cx, cy);
 
         if (arcArr[i].width == arcArr[i].height) {
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
+            cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
         } else {
-            nvgSave(dc.vg);
-            nvgTranslate(dc.vg, cx, cy);
-            nvgScale(dc.vg, 1.0f, ry / rx);
-            nvgTranslate(dc.vg, -cx, -cy);
-            nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
-            nvgRestore(dc.vg);
+            cg_save(dc.cg);
+            cg_translate(dc.cg, cx, cy);
+            cg_scale(dc.cg, 1.0, ry / rx);
+            cg_translate(dc.cg, -cx, -cy);
+            cg_arc(dc.cg, cx, cy, rx, startAngle, endAngle);
+            cg_restore(dc.cg);
         }
 
         if (gcValues.arc_mode == ArcPieSlice)
-            nvgLineTo(dc.vg, cx, cy);
+            cg_line_to(dc.cg, cx, cy);
 
-        nvgClosePath(dc.vg);
-        nvgFill(dc.vg);
+        cg_close_path(dc.cg);
+        cg_fill(dc.cg);
     }
 
     TkGlfwEndDraw(&dc);

@@ -2,7 +2,7 @@
  * tkWayland3D.c --
  *
  *	This file contains the platform specific routines for drawing 3d
- *	borders in the Motif style for Wayland/GLFW/NanoVG.
+ *	borders in the Motif style for Wayland/GLFW/libcg.
  *
  * Copyright © 1996 Sun Microsystems Inc.
  * Copyright © 2026 Kevin Walzer
@@ -13,29 +13,38 @@
 
 #include "tkInt.h"
 #include "tk3d.h"
-#include "tkGlfwInt.h"
-#include <GLES2/gl2.h>
-#include "nanovg.h"
+#include "tkWaylandInt.h"
 
 /*
- * This structure is used to keep track of the extra colors used by Wayland 3D
- * borders. Now includes NanoVG context and color storage.
+ * This structure keeps track of the extra colors used by Wayland 3D borders.
  */
 
 typedef struct {
-    TkBorder info;
-    NVGcolor solidColor;	/* Used to draw solid relief. */
-    NVGcolor lightColor;        /* Cached light shadow color */
-    NVGcolor darkColor;         /* Cached dark shadow color */
-    NVGcolor bgColor;           /* Cached background color */
+    TkBorder          info;
+    struct cg_color_t solidColor;   /* Used to draw solid relief. */
+    struct cg_color_t lightColor;   /* Cached light shadow color. */
+    struct cg_color_t darkColor;    /* Cached dark shadow color. */
+    struct cg_color_t bgColor;      /* Cached background color. */
 } WaylandBorder;
+
+/* Convenience: initialise a cg_color_t from 0-255 RGB components. */
+static inline struct cg_color_t
+cgRGB(int r, int g, int b)
+{
+    struct cg_color_t c;
+    c.r = r / 255.0;
+    c.g = g / 255.0;
+    c.b = b / 255.0;
+    c.a = 1.0;
+    return c;
+}
 
 /*
  *----------------------------------------------------------------------
  *
  * TkpGetBorder --
  *
- *	This function allocates a new TkBorder structure.
+ *	Allocate a new TkBorder structure.
  *
  * Results:
  *	Returns a newly allocated TkBorder.
@@ -49,15 +58,15 @@ typedef struct {
 TkBorder *
 TkpGetBorder(void)
 {
-    WaylandBorder *borderPtr = (WaylandBorder *)Tcl_Alloc(sizeof(WaylandBorder));
+    WaylandBorder *borderPtr =
+        (WaylandBorder *)Tcl_Alloc(sizeof(WaylandBorder));
 
-    /* Initialize colors to black/white defaults. */
-    borderPtr->solidColor = nvgRGB(0, 0, 0);
-    borderPtr->lightColor = nvgRGB(255, 255, 255);
-    borderPtr->darkColor  = nvgRGB(128, 128, 128);
-    borderPtr->bgColor    = nvgRGB(192, 192, 192);
+    borderPtr->solidColor = cgRGB(0,   0,   0);
+    borderPtr->lightColor = cgRGB(255, 255, 255);
+    borderPtr->darkColor  = cgRGB(128, 128, 128);
+    borderPtr->bgColor    = cgRGB(192, 192, 192);
 
-    return (TkBorder *) borderPtr;
+    return (TkBorder *)borderPtr;
 }
 
 /*
@@ -65,14 +74,14 @@ TkpGetBorder(void)
  *
  * TkpFreeBorder --
  *
- *	This function frees any colors allocated by the platform specific part
- *	of this module.
+ *	Free any colors allocated by the platform-specific part of this
+ *	module.  cg_color_t values are plain structs; nothing to free.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	May deallocate some colors.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -81,10 +90,6 @@ void
 TkpFreeBorder(
     TCL_UNUSED(TkBorder *))
 {
-    /*
-     * NanoVG colors are just structs, no explicit freeing needed.
-     * This function kept for compatibility.
-     */
 }
 
 /*
@@ -92,7 +97,7 @@ TkpFreeBorder(
  *
  * Tk_3DVerticalBevel --
  *
- *	This procedure draws a vertical bevel along one side of an object.
+ *	Draw a vertical bevel along one side of an object.
  *
  * Results:
  *	None.
@@ -105,52 +110,58 @@ TkpFreeBorder(
 
 void
 Tk_3DVerticalBevel(
-    Tk_Window      tkwin,
-    Drawable       drawable,
-    Tk_3DBorder    border,
+    Tk_Window   tkwin,
+    Drawable    drawable,
+    Tk_3DBorder border,
     int x, int y, int width, int height,
-    int            leftBevel,
-    int            relief)
+    int         leftBevel,
+    int         relief)
 {
-    TkBorder               *borderPtr      = (TkBorder *) border;
-    WaylandBorder          *waylandBorderPtr = (WaylandBorder *) borderPtr;
+    TkBorder               *borderPtr       = (TkBorder *)border;
+    WaylandBorder          *waylandBorderPtr = (WaylandBorder *)borderPtr;
     TkWaylandDrawingContext dc;
-    NVGcolor                leftColor, rightColor;
+    struct cg_color_t       leftColor, rightColor;
 
     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT)) {
         TkpGetShadows(borderPtr, tkwin);
     }
 
-    /* Sync cached NVG colors from XColor pointers. */
-    if (borderPtr->bgColorPtr) {
-        waylandBorderPtr->bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
-    }
-    if (borderPtr->lightColorPtr) {
-        waylandBorderPtr->lightColor = TkGlfwXColorToNVG(borderPtr->lightColorPtr);
-    }
-    if (borderPtr->darkColorPtr) {
-        waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
-    }
+    /* Sync cached colors from XColor pointers. */
+    if (borderPtr->bgColorPtr)
+        waylandBorderPtr->bgColor    = TkGlfwXColorToCG(borderPtr->bgColorPtr);
+    if (borderPtr->lightColorPtr)
+        waylandBorderPtr->lightColor = TkGlfwXColorToCG(borderPtr->lightColorPtr);
+    if (borderPtr->darkColorPtr)
+        waylandBorderPtr->darkColor  = TkGlfwXColorToCG(borderPtr->darkColorPtr);
 
-    int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
-    if (rc != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc) != TCL_OK)
         return;
 
     switch (relief) {
     case TK_RELIEF_RAISED:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, leftBevel ? waylandBorderPtr->lightColor :
-                     waylandBorderPtr->darkColor);
-        nvgFill(dc.vg);
+        cg_set_source_rgba(dc.cg,
+            leftBevel ? waylandBorderPtr->lightColor.r
+                      : waylandBorderPtr->darkColor.r,
+            leftBevel ? waylandBorderPtr->lightColor.g
+                      : waylandBorderPtr->darkColor.g,
+            leftBevel ? waylandBorderPtr->lightColor.b
+                      : waylandBorderPtr->darkColor.b,
+            1.0);
+        cg_rectangle(dc.cg, x, y, width, height);
+        cg_fill(dc.cg);
         break;
 
     case TK_RELIEF_SUNKEN:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, leftBevel ? waylandBorderPtr->darkColor :
-                     waylandBorderPtr->lightColor);
-        nvgFill(dc.vg);
+        cg_set_source_rgba(dc.cg,
+            leftBevel ? waylandBorderPtr->darkColor.r
+                      : waylandBorderPtr->lightColor.r,
+            leftBevel ? waylandBorderPtr->darkColor.g
+                      : waylandBorderPtr->lightColor.g,
+            leftBevel ? waylandBorderPtr->darkColor.b
+                      : waylandBorderPtr->lightColor.b,
+            1.0);
+        cg_rectangle(dc.cg, x, y, width, height);
+        cg_fill(dc.cg);
         break;
 
     case TK_RELIEF_RIDGE:
@@ -163,33 +174,37 @@ Tk_3DVerticalBevel(
         rightColor = waylandBorderPtr->lightColor;
     ridgeGroove: {
             int half = width / 2;
-            if (!leftBevel && (width & 1)) {
+            if (!leftBevel && (width & 1))
                 half++;
-            }
-            nvgBeginPath(dc.vg);
-            nvgRect(dc.vg, x, y, half, height);
-            nvgFillColor(dc.vg, leftColor);
-            nvgFill(dc.vg);
 
-            nvgBeginPath(dc.vg);
-            nvgRect(dc.vg, x + half, y, width - half, height);
-            nvgFillColor(dc.vg, rightColor);
-            nvgFill(dc.vg);
+            cg_set_source_rgba(dc.cg,
+                leftColor.r, leftColor.g, leftColor.b, 1.0);
+            cg_rectangle(dc.cg, x, y, half, height);
+            cg_fill(dc.cg);
+
+            cg_set_source_rgba(dc.cg,
+                rightColor.r, rightColor.g, rightColor.b, 1.0);
+            cg_rectangle(dc.cg, x + half, y, width - half, height);
+            cg_fill(dc.cg);
             break;
         }
 
     case TK_RELIEF_FLAT:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, waylandBorderPtr->bgColor);
-        nvgFill(dc.vg);
+        cg_set_source_rgba(dc.cg,
+            waylandBorderPtr->bgColor.r,
+            waylandBorderPtr->bgColor.g,
+            waylandBorderPtr->bgColor.b, 1.0);
+        cg_rectangle(dc.cg, x, y, width, height);
+        cg_fill(dc.cg);
         break;
 
     case TK_RELIEF_SOLID:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
-        nvgFill(dc.vg);
+        cg_set_source_rgba(dc.cg,
+            waylandBorderPtr->solidColor.r,
+            waylandBorderPtr->solidColor.g,
+            waylandBorderPtr->solidColor.b, 1.0);
+        cg_rectangle(dc.cg, x, y, width, height);
+        cg_fill(dc.cg);
         break;
     }
 
@@ -201,7 +216,7 @@ Tk_3DVerticalBevel(
  *
  * Tk_3DHorizontalBevel --
  *
- *	This procedure draws a horizontal bevel along one side of an object.
+ *	Draw a horizontal bevel along one side of an object.
  *
  * Results:
  *	None.
@@ -214,19 +229,19 @@ Tk_3DVerticalBevel(
 
 void
 Tk_3DHorizontalBevel(
-    Tk_Window      tkwin,
-    Drawable       drawable,
-    Tk_3DBorder    border,
+    Tk_Window   tkwin,
+    Drawable    drawable,
+    Tk_3DBorder border,
     int x, int y, int width, int height,
-    int            leftIn,
-    int            rightIn,
-    int            topBevel,
-    int            relief)
+    int         leftIn,
+    int         rightIn,
+    int         topBevel,
+    int         relief)
 {
-    TkBorder               *borderPtr       = (TkBorder *) border;
-    WaylandBorder          *waylandBorderPtr = (WaylandBorder *) borderPtr;
+    TkBorder               *borderPtr       = (TkBorder *)border;
+    WaylandBorder          *waylandBorderPtr = (WaylandBorder *)borderPtr;
     TkWaylandDrawingContext dc;
-    NVGcolor                topColor, bottomColor;
+    struct cg_color_t       topColor, bottomColor;
     int                     bottom, halfway, x1, x2, x1Delta, x2Delta;
 
     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT) &&
@@ -234,22 +249,18 @@ Tk_3DHorizontalBevel(
         TkpGetShadows(borderPtr, tkwin);
     }
 
-    /* Sync cached NVG colors from XColor pointers. */
-    if (borderPtr->bgColorPtr) {
-        waylandBorderPtr->bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
-    }
-    if (borderPtr->lightColorPtr) {
-        waylandBorderPtr->lightColor = TkGlfwXColorToNVG(borderPtr->lightColorPtr);
-    }
-    if (borderPtr->darkColorPtr) {
-        waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
-    }
+    /* Sync cached colors from XColor pointers. */
+    if (borderPtr->bgColorPtr)
+        waylandBorderPtr->bgColor    = TkGlfwXColorToCG(borderPtr->bgColorPtr);
+    if (borderPtr->lightColorPtr)
+        waylandBorderPtr->lightColor = TkGlfwXColorToCG(borderPtr->lightColorPtr);
+    if (borderPtr->darkColorPtr)
+        waylandBorderPtr->darkColor  = TkGlfwXColorToCG(borderPtr->darkColorPtr);
 
-    int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
-    if (rc != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc) != TCL_OK)
         return;
 
-    /* Compute top/bottom half colors based on relief. */
+    /* Determine top/bottom half colors based on relief. */
     switch (relief) {
     case TK_RELIEF_FLAT:
         topColor = bottomColor = waylandBorderPtr->bgColor;
@@ -259,23 +270,27 @@ Tk_3DHorizontalBevel(
         bottomColor = waylandBorderPtr->lightColor;
         break;
     case TK_RELIEF_RAISED:
-        topColor = bottomColor = topBevel ? waylandBorderPtr->lightColor :
-            waylandBorderPtr->darkColor;
+        topColor = bottomColor = topBevel
+            ? waylandBorderPtr->lightColor
+            : waylandBorderPtr->darkColor;
         break;
     case TK_RELIEF_RIDGE:
         topColor    = waylandBorderPtr->lightColor;
         bottomColor = waylandBorderPtr->darkColor;
         break;
     case TK_RELIEF_SOLID:
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
-        nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
-        nvgFill(dc.vg);
+        cg_set_source_rgba(dc.cg,
+            waylandBorderPtr->solidColor.r,
+            waylandBorderPtr->solidColor.g,
+            waylandBorderPtr->solidColor.b, 1.0);
+        cg_rectangle(dc.cg, x, y, width, height);
+        cg_fill(dc.cg);
         TkGlfwEndDraw(&dc);
         return;
     case TK_RELIEF_SUNKEN:
-        topColor = bottomColor = topBevel ? waylandBorderPtr->darkColor :
-            waylandBorderPtr->lightColor;
+        topColor = bottomColor = topBevel
+            ? waylandBorderPtr->darkColor
+            : waylandBorderPtr->lightColor;
         break;
     default:
         topColor = bottomColor = waylandBorderPtr->bgColor;
@@ -283,31 +298,22 @@ Tk_3DHorizontalBevel(
     }
 
     /* Compute geometry. */
-    x1 = x;
-    if (!leftIn) {
-        x1 += height;
-    }
-    x2 = x + width;
-    if (!rightIn) {
-        x2 -= height;
-    }
+    x1      = x + (leftIn  ? 0 : height);
+    x2      = x + width - (rightIn ? 0 : height);
     x1Delta = leftIn  ?  1 : -1;
     x2Delta = rightIn ? -1 :  1;
     halfway = y + height / 2;
-    if (!topBevel && (height & 1)) {
+    if (!topBevel && (height & 1))
         halfway++;
-    }
-    bottom = y + height;
+    bottom  = y + height;
 
     /* Draw one scanline per y coordinate. */
     for ( ; y < bottom; y++) {
-        NVGcolor currentColor = (y < halfway) ? topColor : bottomColor;
-
-        nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x1, y, x2 - x1, 1);
-        nvgFillColor(dc.vg, currentColor);
-        nvgFill(dc.vg);
-
+        struct cg_color_t *cur = (y < halfway) ? &topColor : &bottomColor;
+        cg_set_source_rgba(dc.cg, cur->r, cur->g, cur->b, 1.0);
+        cg_rectangle(dc.cg, (double)x1, (double)y,
+                     (double)(x2 - x1), 1.0);
+        cg_fill(dc.cg);
         x1 += x1Delta;
         x2 += x2Delta;
     }
@@ -320,13 +326,14 @@ Tk_3DHorizontalBevel(
  *
  * TkpGetShadows --
  *
- *	This procedure computes the shadow colors for a 3-D border.
+ *	Compute the shadow colors for a 3-D border.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The lightColor and darkColor fields in WaylandBorder get filled in.
+ *	lightColor, darkColor and bgColor in WaylandBorder are filled in.
+ *	borderPtr->lightColorPtr and borderPtr->darkColorPtr are set.
  *
  *----------------------------------------------------------------------
  */
@@ -336,28 +343,27 @@ TkpGetShadows(
     TkBorder  *borderPtr,
     Tk_Window  tkwin)
 {
-    WaylandBorder *waylandBorderPtr = (WaylandBorder *) borderPtr;
+    WaylandBorder *waylandBorderPtr = (WaylandBorder *)borderPtr;
     XColor  lightColor, darkColor;
     int     stressed;
     int     r, g, b;
-    float   darkFactor, lightFactor;
+    double  darkFactor, lightFactor;
 
-    if (borderPtr->lightGC != NULL) {
+    if (borderPtr->lightGC != NULL)
         return;
-    }
 
     stressed = TkpCmapStressed(tkwin, borderPtr->colormap);
 
-    r = (int) borderPtr->bgColorPtr->red;
-    g = (int) borderPtr->bgColorPtr->green;
-    b = (int) borderPtr->bgColorPtr->blue;
+    r = (int)borderPtr->bgColorPtr->red;
+    g = (int)borderPtr->bgColorPtr->green;
+    b = (int)borderPtr->bgColorPtr->blue;
 
     if (!stressed && (Tk_Depth(tkwin) >= 6)) {
-        darkFactor  = 0.6f;
-        lightFactor = 1.4f;
+        darkFactor  = 0.6;
+        lightFactor = 1.4;
     } else {
-        darkFactor  = 0.7f;
-        lightFactor = 1.3f;
+        darkFactor  = 0.7;
+        lightFactor = 1.3;
     }
 
     /* Dark color. */
@@ -387,30 +393,28 @@ TkpGetShadows(
         int tmp;
 
         tmp = (int)(r * lightFactor);
-        lightColor.red   = (unsigned short)(tmp > MAX_INTENSITY ? MAX_INTENSITY : tmp);
-
+        lightColor.red   = (unsigned short)(tmp > MAX_INTENSITY
+                                             ? MAX_INTENSITY : tmp);
         tmp = (int)(g * lightFactor);
-        lightColor.green = (unsigned short)(tmp > MAX_INTENSITY ? MAX_INTENSITY : tmp);
-
+        lightColor.green = (unsigned short)(tmp > MAX_INTENSITY
+                                             ? MAX_INTENSITY : tmp);
         tmp = (int)(b * lightFactor);
-        lightColor.blue  = (unsigned short)(tmp > MAX_INTENSITY ? MAX_INTENSITY : tmp);
+        lightColor.blue  = (unsigned short)(tmp > MAX_INTENSITY
+                                             ? MAX_INTENSITY : tmp);
     }
 
     borderPtr->darkColorPtr  = Tk_GetColorByValue(tkwin, &darkColor);
     borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
 
-    /* Cache NVG colors. */
-    if (borderPtr->bgColorPtr) {
-        waylandBorderPtr->bgColor = TkGlfwXColorToNVG(borderPtr->bgColorPtr);
-    }
-    if (borderPtr->lightColorPtr) {
-        waylandBorderPtr->lightColor = TkGlfwXColorToNVG(borderPtr->lightColorPtr);
-    }
-    if (borderPtr->darkColorPtr) {
-        waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
-    }
+    /* Cache cg colors. */
+    if (borderPtr->bgColorPtr)
+        waylandBorderPtr->bgColor    = TkGlfwXColorToCG(borderPtr->bgColorPtr);
+    if (borderPtr->lightColorPtr)
+        waylandBorderPtr->lightColor = TkGlfwXColorToCG(borderPtr->lightColorPtr);
+    if (borderPtr->darkColorPtr)
+        waylandBorderPtr->darkColor  = TkGlfwXColorToCG(borderPtr->darkColorPtr);
 
-    /* Dummy non-NULL values — NanoVG doesn't use GCs but Tk checks these. */
+    /* Dummy non-NULL values — cg doesn't use GCs but Tk checks these. */
     borderPtr->darkGC  = (GC)1;
     borderPtr->lightGC = (GC)1;
 
