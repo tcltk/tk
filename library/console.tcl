@@ -108,15 +108,8 @@ proc ::tk::ConsoleInit {} {
 	bind Console <FocusIn>  [list ::tk::console::FontchooserFocus %W 1]
 	bind Console <FocusOut> [list ::tk::console::FontchooserFocus %W 0]
     }
-    bind Console <Command-MouseWheel> {
-	if {%D > 0} {
-	    event generate .console <<Console_FontSizeIncr>>
-	} else {
-	    event generate .console <<Console_FontSizeDecr>>
-	}
-    }
     AmpMenuArgs .menubar.edit add command -label [mc "&Increase Font Size"] \
-	-accel "$mod+=" -command {event generate .console <<Console_FontSizeIncr>>}
+	-accel "$mod++" -command {event generate .console <<Console_FontSizeIncr>>}
     AmpMenuArgs .menubar.edit add command -label [mc "&Decrease Font Size"] \
 	-accel "$mod+-" -command {event generate .console <<Console_FontSizeDecr>>}
     AmpMenuArgs .menubar.edit add command -label [mc "Fit To Screen Width"] \
@@ -128,6 +121,27 @@ proc ::tk::ConsoleInit {} {
     }
 
     . configure -menu .menubar
+
+    foreach modifier {Control Command} {
+	bind Console <$modifier-MouseWheel> {
+	    if {%D > 0} {
+		event generate .console <<Console_FontSizeIncr>>
+	    } else {
+		event generate .console <<Console_FontSizeDecr>>
+	    }
+	}
+	bind Console <$modifier-TouchpadScroll> {
+	    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	    # TouchpadScroll events fire about 60 times per second.
+	    if {$tk::Priv(deltaY) != 0 && %# %% 15 == 0} {
+		if {$tk::Priv(deltaY) > 0} {
+		    event generate .console <<Console_FontSizeIncr>>
+		} else {
+		    event generate .console <<Console_FontSizeDecr>>
+		}
+	    }
+	}
+    }
 
     # See if we can find a better font than the TkFixedFont
     catch {font create TkConsoleFont {*}[font configure TkFixedFont]}
