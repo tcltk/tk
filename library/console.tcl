@@ -125,9 +125,9 @@ proc ::tk::ConsoleInit {} {
     foreach modifier {Control Command} {
 	bind Console <$modifier-MouseWheel> {
 	    if {%D > 0} {
-		event generate .console <<Console_FontSizeIncr>>
+		event generate %W <<Console_FontSizeIncr>>
 	    } else {
-		event generate .console <<Console_FontSizeDecr>>
+		event generate %W <<Console_FontSizeDecr>>
 	    }
 	}
 	bind Console <$modifier-TouchpadScroll> {
@@ -135,9 +135,9 @@ proc ::tk::ConsoleInit {} {
 	    # TouchpadScroll events fire about 60 times per second.
 	    if {$tk::Priv(deltaY) != 0 && %# %% 15 == 0} {
 		if {$tk::Priv(deltaY) > 0} {
-		    event generate .console <<Console_FontSizeIncr>>
+		    event generate %W <<Console_FontSizeIncr>>
 		} else {
-		    event generate .console <<Console_FontSizeDecr>>
+		    event generate %W <<Console_FontSizeDecr>>
 		}
 	    }
 	}
