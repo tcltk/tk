@@ -122,6 +122,27 @@ proc ::tk::ConsoleInit {} {
 
     . configure -menu .menubar
 
+    foreach modifier {Control Command} {
+	bind Console <$modifier-MouseWheel> {
+	    if {%D > 0} {
+		event generate %W <<Console_FontSizeIncr>>
+	    } else {
+		event generate %W <<Console_FontSizeDecr>>
+	    }
+	}
+	bind Console <$modifier-TouchpadScroll> {
+	    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	    # TouchpadScroll events fire about 60 times per second.
+	    if {$tk::Priv(deltaY) != 0 && %# %% 15 == 0} {
+		if {$tk::Priv(deltaY) > 0} {
+		    event generate %W <<Console_FontSizeIncr>>
+		} else {
+		    event generate %W <<Console_FontSizeDecr>>
+		}
+	    }
+	}
+    }
+
     # See if we can find a better font than the TkFixedFont
     catch {font create TkConsoleFont {*}[font configure TkFixedFont]}
     set families [font families]
@@ -462,9 +483,13 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_ClearLine>>		<Control-u>
 	<<Console_SaveCommand>>		<Control-z>
 	<<Console_FontSizeIncr>>	<Control-+>
+	<<Console_FontSizeIncr>>	<Control-=>
 	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeDecr>>	<Control-_>
 	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeIncr>>	<Command-=>
 	<<Console_FontSizeDecr>>	<Command-minus>
+	<<Console_FontSizeDecr>>	<Command-_>
     } {
 	event add $ev $key
 	bind Console $key {}
