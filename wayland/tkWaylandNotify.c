@@ -93,8 +93,10 @@ Tk_WaylandSetupTkNotifier(void)
 
 	TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
-
-    TkWaylandWakeupGLFW();
+    
+    if (glfwContext.initialized) {
+		TkWaylandWakeupGLFW();
+	}
 }
 
 /*
@@ -354,43 +356,50 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    WindowMapping *m;
 
     if (!winPtr) {
-	return;
+        return;
     }
 
+    /* Queue the actual Expose event for Tk. */
     memset(&event, 0, sizeof(XEvent));
-    event.type = Expose;
-    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display);
+    event.type              = Expose;
+    event.xexpose.serial    = LastKnownRequestProcessed(winPtr->display);
     event.xexpose.send_event = False;
-    event.xexpose.display = winPtr->display;
-    event.xexpose.window = Tk_WindowId(winPtr);
-    event.xexpose.x = x;
-    event.xexpose.y = y;
-    event.xexpose.width = width;
-    event.xexpose.height = height;
-    event.xexpose.count = 0;
+    event.xexpose.display   = winPtr->display;
+    event.xexpose.window    = Tk_WindowId(winPtr);
+    event.xexpose.x         = x;
+    event.xexpose.y         = y;
+    event.xexpose.width     = width;
+    event.xexpose.height    = height;
+    event.xexpose.count     = 0;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Schedule display for the toplevel window. */
-    m = FindMappingByTk(winPtr);
-    if (m && m->glfwWindow) {
-	TkWaylandScheduleDisplay(m);
+    /* Resolve the REAL toplevel using your helper. */
+    Tk_Window top = GetToplevelOfWidget((Tk_Window)winPtr);
+    if (top) {
+        WindowMapping *m = FindMappingByTk((TkWindow *)top);
+        if (m && m->glfwWindow) {
+            /* Schedule display for the toplevel window ONLY */
+            TkWaylandScheduleDisplay(m);
+        }
     }
 
-    /* Recursively for children. */
-    for (childPtr = winPtr->childList; childPtr != NULL;
-	 childPtr = childPtr->nextPtr) {
-	if (!Tk_IsMapped((Tk_Window)childPtr) ||
-	    Tk_IsTopLevel((Tk_Window)childPtr)) {
-	    continue;
-	}
-	TkWaylandQueueExposeEvent(childPtr,
-				 0, 0,
-				 Tk_Width((Tk_Window)childPtr),
-				 Tk_Height((Tk_Window)childPtr));
+    /* Recursively queue expose for mapped children. */
+    for (childPtr = winPtr->childList;
+         childPtr != NULL;
+         childPtr = childPtr->nextPtr)
+    {
+        if (!Tk_IsMapped((Tk_Window)childPtr) ||
+            Tk_IsTopLevel((Tk_Window)childPtr)) {
+            continue;
+        }
+
+        TkWaylandQueueExposeEvent(childPtr,
+                                  0, 0,
+                                  Tk_Width((Tk_Window)childPtr),
+                                  Tk_Height((Tk_Window)childPtr));
     }
 }
 
@@ -445,11 +454,11 @@ TkWaylandBeginEventCycle(WindowMapping *m)
     int fbw, fbh;
 
     if (!m || !m->glfwWindow) {
-	return;
+    return;
     }
 
     if (m->frameOpen) {
-	return;
+    return;
     }
 
     glfwMakeContextCurrent(m->glfwWindow);
@@ -458,15 +467,13 @@ TkWaylandBeginEventCycle(WindowMapping *m)
 
     /* Update window dimensions if changed. */
     if (fbw != m->width || fbh != m->height) {
-	m->width = fbw;
-	m->height = fbh;
-	if (m->tkWindow) {
-	    m->tkWindow->changes.width = fbw;
-	    m->tkWindow->changes.height = fbh;
-	}
-	/* Mark surface as stale - will be recreated at next BeginDraw. */
-	m->surfaceStale = 1;
-	m->texture.needs_texture_update = 1;
+    m->width = fbw;
+    m->height = fbh;
+    if (m->tkWindow) {
+        m->tkWindow->changes.width = fbw;
+        m->tkWindow->changes.height = fbh;
+    }
+    /* Resize callbacks handle surface lifecycle. */
     }
 
     glViewport(0, 0, fbw, fbh);
@@ -555,32 +562,45 @@ TkWaylandDisplayProc(ClientData clientData)
 {
     WindowMapping *m = (WindowMapping *)clientData;
 
-    if (!m || !m->glfwWindow) {
-	return;
+    if (!m) {
+        return;
     }
+    if (!m->glfwWindow) {
+        m->needsDisplay = 0;
+        return;
+    }
+    
+    if (TkGlfwEnsureSurface(m) != TCL_OK || !m->surface || !m->surface->pixels) {
+		m->needsDisplay = 0;
+		return;
+	}
 
     /* Only do something if we actually have pixels to display. */
     if (!m->needsDisplay) {
-	return;
+        return;
     }
 
     /* Ensure we have a valid surface. */
-    if (TkGlfwEnsureSurface(m) != TCL_OK) {
-	m->needsDisplay = 0;
-	return;
+    if (TkGlfwEnsureSurface(m) != TCL_OK || !m->surface) {
+        m->needsDisplay = 0;
+        return;
     }
 
     /* Start the frame. */
     TkWaylandBeginEventCycle(m);
+    if (!m->frameOpen) {
+        m->needsDisplay = 0;
+        return;
+    }
 
     /* Upload the libcg surface pixels to OpenGL texture if needed. */
-    if (m->texture.needs_texture_update && m->surface) {
-	TkGlfwUploadSurfaceToTexture(m);
+    if (m->texture.needs_texture_update && m->surface && m->texture.texture_id) {
+        TkGlfwUploadSurfaceToTexture(m);
     }
 
     /* Render the texture to screen. */
     if (m->texture.texture_id) {
-	TkGlfwRenderTexture(m);
+        TkGlfwRenderTexture(m);
     }
 
     /* Swap buffers to present. */

@@ -92,7 +92,7 @@ TkpChangeFocus(
     /*
      * Process pending events to ensure focus request is handled.
      */
-    TkGlfwProcessEvents();  /* Use the header's event processing function */
+    TkWaylandProcessEvents();  /* Use the header's event processing function */
 
     return serial;
 }
