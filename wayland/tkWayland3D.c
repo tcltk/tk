@@ -39,7 +39,7 @@ cgRGB(int r, int g, int b)
     return c;
 }
 
-extern bool TkpCmapStressed(Tk_Window tkwin, Colormap  colormap);
+extern bool TkpCmapStressed(Tk_Window tkwin, Colormap colormap);
 
 /*
  *----------------------------------------------------------------------
@@ -90,7 +90,7 @@ TkpGetBorder(void)
 
 void
 TkpFreeBorder(
-    TCL_UNUSED(TkBorder *))
+    TkBorder *borderPtr)
 {
 }
 
@@ -112,17 +112,20 @@ TkpFreeBorder(
 
 void
 Tk_3DVerticalBevel(
-    Tk_Window   tkwin,
-    Drawable    drawable,
+    Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
-    int x, int y, int width, int height,
-    int         leftBevel,
-    int         relief)
+    int x,
+    int y,
+    int width,
+    int height,
+    int leftBevel,
+    int relief)
 {
-    TkBorder               *borderPtr       = (TkBorder *)border;
-    WaylandBorder          *waylandBorderPtr = (WaylandBorder *)borderPtr;
+    TkBorder *borderPtr = (TkBorder *)border;
+    WaylandBorder *waylandBorderPtr = (WaylandBorder *)borderPtr;
     TkWaylandDrawingContext dc;
-    struct cg_color_t       leftColor, rightColor;
+    struct cg_color_t leftColor, rightColor;
 
     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT)) {
         TkpGetShadows(borderPtr, tkwin);
@@ -136,8 +139,9 @@ Tk_3DVerticalBevel(
     if (borderPtr->darkColorPtr)
         waylandBorderPtr->darkColor  = TkGlfwXColorToCG(borderPtr->darkColorPtr);
 
-    if (TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc) != TCL_OK) {
         return;
+    }
 
     switch (relief) {
     case TK_RELIEF_RAISED:
@@ -231,20 +235,23 @@ Tk_3DVerticalBevel(
 
 void
 Tk_3DHorizontalBevel(
-    Tk_Window   tkwin,
-    Drawable    drawable,
+    Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
-    int x, int y, int width, int height,
-    int         leftIn,
-    int         rightIn,
-    int         topBevel,
-    int         relief)
+    int x,
+    int y,
+    int width,
+    int height,
+    int leftIn,
+    int rightIn,
+    int topBevel,
+    int relief)
 {
-    TkBorder               *borderPtr       = (TkBorder *)border;
-    WaylandBorder          *waylandBorderPtr = (WaylandBorder *)borderPtr;
+    TkBorder *borderPtr = (TkBorder *)border;
+    WaylandBorder *waylandBorderPtr = (WaylandBorder *)borderPtr;
     TkWaylandDrawingContext dc;
-    struct cg_color_t       topColor, bottomColor;
-    int                     bottom, halfway, x1, x2, x1Delta, x2Delta;
+    struct cg_color_t topColor, bottomColor;
+    int bottom, halfway, x1, x2, x1Delta, x2Delta;
 
     if ((borderPtr->lightGC == NULL) && (relief != TK_RELIEF_FLAT) &&
         (relief != TK_RELIEF_SOLID)) {
@@ -259,8 +266,9 @@ Tk_3DHorizontalBevel(
     if (borderPtr->darkColorPtr)
         waylandBorderPtr->darkColor  = TkGlfwXColorToCG(borderPtr->darkColorPtr);
 
-    if (TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc) != TCL_OK) {
         return;
+    }
 
     /* Determine top/bottom half colors based on relief. */
     switch (relief) {
@@ -342,8 +350,8 @@ Tk_3DHorizontalBevel(
 
 void
 TkpGetShadows(
-    TkBorder  *borderPtr,
-    Tk_Window  tkwin)
+    TkBorder *borderPtr,
+    Tk_Window tkwin)
 {
     WaylandBorder *waylandBorderPtr = (WaylandBorder *)borderPtr;
     XColor  lightColor, darkColor;

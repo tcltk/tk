@@ -41,23 +41,23 @@
 
 int
 XDrawString(
-    TCL_UNUSED(Display *),
-    Drawable    drawable,
-    GC          gc,
-    int         x,
-    int         y,
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    int x,
+    int y,
     const char *string,
-    int         length)
+    int length)
 {
     TkWaylandDrawingContext dc;
-    struct cg_color_t c;
     XGCValues v;
     char *buf;
 
     if (!string || length <= 0) return Success;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
 
     buf = (char *)ckalloc(length + 1);
     memcpy(buf, string, length);
@@ -65,8 +65,11 @@ XDrawString(
 
     /* Set foreground color for the font subsystem to pick up. */
     if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
-        c = TkGlfwPixelToCG(v.foreground);
-        cg_set_source_rgba(dc.cg, c.r, c.g, c.b, c.a);
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
     }
 
     /*
@@ -100,23 +103,23 @@ XDrawString(
 
 int
 XDrawImageString(
-    TCL_UNUSED(Display *),
-    Drawable    drawable,
-    GC          gc,
-    int         x,
-    int         y,
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    int x,
+    int y,
     const char *string,
-    int         length)
+    int length)
 {
     TkWaylandDrawingContext dc;
-    struct cg_color_t bg;
     XGCValues v;
     char *buf;
 
     if (!string || length <= 0) return Success;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
 
     buf = (char *)ckalloc(length + 1);
     memcpy(buf, string, length);
@@ -129,15 +132,24 @@ XDrawImageString(
      * subsystem can refine this if needed.
      */
     if (TkWaylandGetGCValues(gc, GCBackground, &v) == 0) {
-        bg = TkGlfwPixelToCG(v.background);
-        cg_set_source_rgba(dc.cg, bg.r, bg.g, bg.b, bg.a);
+        cg_set_source_rgba(dc.cg,
+            (double)((v.background >> 16) & 0xFF) / 255.0,
+            (double)((v.background >> 8) & 0xFF) / 255.0,
+            (double)(v.background & 0xFF) / 255.0,
+            1.0);
         cg_rectangle(dc.cg, (double)x, (double)(y - 12),
                      (double)(length * 8), 14.0);
         cg_fill(dc.cg);
     }
 
     /* Restore foreground for glyph rendering. */
-    TkGlfwApplyGC(dc.cg, gc);
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
 
     ckfree(buf);
     TkGlfwEndDraw(&dc);
@@ -162,16 +174,26 @@ XDrawImageString(
 
 int
 XDrawPoint(
-    TCL_UNUSED(Display *),
+    Display *display,
     Drawable drawable,
-    GC       gc,
-    int      x,
-    int      y)
+    GC gc,
+    int x,
+    int y)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
 
     cg_rectangle(dc.cg, (double)x, (double)y, 1.0, 1.0);
     cg_fill(dc.cg);
@@ -198,20 +220,30 @@ XDrawPoint(
 
 int
 XDrawPoints(
-    TCL_UNUSED(Display *),
-    Drawable  drawable,
-    GC        gc,
-    XPoint   *points,
-    int       npoints,
-    int       mode)
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    XPoint *points,
+    int npoints,
+    int mode)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
     int i;
 
     if (!points || npoints <= 0) return BadValue;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
 
     for (i = 0; i < npoints; i++) {
         double px = (double)points[i].x;
@@ -246,20 +278,34 @@ XDrawPoints(
 
 int
 XDrawLines(
-    TCL_UNUSED(Display *),
+    Display *display,
     Drawable drawable,
-    GC       gc,
-    XPoint  *points,
-    int      npoints,
-    int      mode)
+    GC gc,
+    XPoint *points,
+    int npoints,
+    int mode)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
     int i;
 
     if (npoints < 2 || points == NULL) return BadValue;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
+
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+        cg_set_line_width(dc.cg, (double)v.line_width);
+    }
 
     cg_move_to(dc.cg, (double)points[0].x, (double)points[0].y);
 
@@ -296,17 +342,31 @@ XDrawLines(
 
 int
 XDrawSegments(
-    TCL_UNUSED(Display *),
-    Drawable   drawable,
-    GC         gc,
-    XSegment  *segments,
-    int        nsegments)
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    XSegment *segments,
+    int nsegments)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
     int i;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
+
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+        cg_set_line_width(dc.cg, (double)v.line_width);
+    }
 
     for (i = 0; i < nsegments; i++) {
         cg_move_to(dc.cg, (double)segments[i].x1, (double)segments[i].y1);
@@ -336,13 +396,13 @@ XDrawSegments(
 
 int
 XFillPolygon(
-    TCL_UNUSED(Display *),
+    Display *display,
     Drawable drawable,
-    GC       gc,
-    XPoint  *points,
-    int      npoints,
-    TCL_UNUSED(int),   /* shape */
-    int      mode)
+    GC gc,
+    XPoint *points,
+    int npoints,
+    int shape,
+    int mode)
 {
     TkWaylandDrawingContext dc;
     XGCValues gcValues;
@@ -350,16 +410,26 @@ XFillPolygon(
 
     if (npoints < 3 || points == NULL) return BadValue;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
 
-    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues) == 0)
-        gcValues.fill_rule = WindingRule;
+    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((gcValues.foreground >> 16) & 0xFF) / 255.0,
+            (double)((gcValues.foreground >> 8) & 0xFF) / 255.0,
+            (double)(gcValues.foreground & 0xFF) / 255.0,
+            1.0);
+    }
 
-    if (gcValues.fill_rule == EvenOddRule)
-        cg_set_fill_rule(dc.cg, CG_FILL_RULE_EVEN_ODD);
-    else
+    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues) == 0) {
+        if (gcValues.fill_rule == EvenOddRule)
+            cg_set_fill_rule(dc.cg, CG_FILL_RULE_EVEN_ODD);
+        else
+            cg_set_fill_rule(dc.cg, CG_FILL_RULE_NON_ZERO);
+    } else {
         cg_set_fill_rule(dc.cg, CG_FILL_RULE_NON_ZERO);
+    }
 
     cg_move_to(dc.cg, (double)points[0].x, (double)points[0].y);
 
@@ -397,19 +467,34 @@ XFillPolygon(
 
 int
 XDrawRectangle(
-    TCL_UNUSED(Display *),
-    Drawable     drawable,
-    GC           gc,
-    int          x, int y,
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    int x,
+    int y,
     unsigned int width,
     unsigned int height)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
 
     if (width == 0 || height == 0) return BadValue;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
+
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+        cg_set_line_width(dc.cg, (double)v.line_width);
+    }
 
     cg_rectangle(dc.cg, (double)x, (double)y,
                  (double)width, (double)height);
@@ -437,17 +522,31 @@ XDrawRectangle(
 
 int
 XDrawRectangles(
-    TCL_UNUSED(Display *),
-    Drawable     drawable,
-    GC           gc,
-    XRectangle  *rectArr,
-    int          nRects)
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    XRectangle *rectArr,
+    int nRects)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
     int i;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
+
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+        cg_set_line_width(dc.cg, (double)v.line_width);
+    }
 
     for (i = 0; i < nRects; i++) {
         cg_rectangle(dc.cg,
@@ -478,29 +577,29 @@ XDrawRectangles(
 
 int
 XFillRectangles(
-    TCL_UNUSED(Display *),
-    Drawable    drawable,
-    GC          gc,
+    Display *display,
+    Drawable drawable,
+    GC gc,
     XRectangle *rectangles,
-    int         nrectangles)
+    int nrectangles)
 {
     TkWaylandDrawingContext dc;
-    struct cg_color_t color;
     XGCValues v;
     int i;
 
     if (nrectangles < 1) return Success;
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0)
-        color = TkGlfwPixelToCG(v.foreground);
-    else {
-        color.r = 0.0; color.g = 0.0; color.b = 0.0; color.a = 1.0;
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+        return BadDrawable;
     }
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
-        return BadDrawable;
-
-    cg_set_source_rgba(dc.cg, color.r, color.g, color.b, color.a);
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
 
     for (i = 0; i < nrectangles; i++) {
         cg_rectangle(dc.cg,
@@ -518,7 +617,7 @@ XFillRectangles(
  *
  * XFillRectangle --
  *
- *	Fill a rectangle.  Delegates to XFillRectangles.
+ *	Fill a rectangle.
  *
  * Results:
  *	Success on successful completion, BadDrawable on failure.
@@ -531,19 +630,34 @@ XFillRectangles(
 
 int
 XFillRectangle(
-    Display     *display,
-    Drawable     d,
-    GC           gc,
-    int          x, int y,
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    int x,
+    int y,
     unsigned int width,
     unsigned int height)
 {
-    XRectangle rect;
-    rect.x      = x;
-    rect.y      = y;
-    rect.width  = (width  == 0) ? 1 : width;
-    rect.height = (height == 0) ? 1 : height;
-    return XFillRectangles(display, d, gc, &rect, 1);
+    TkWaylandDrawingContext dc;
+    XGCValues v;
+
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+        return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
+
+    cg_rectangle(dc.cg, (double)x, (double)y, (double)width, (double)height);
+    cg_fill(dc.cg);
+
+    TkGlfwEndDraw(&dc);
+    return Success;
 }
 
 /*
@@ -564,22 +678,37 @@ XFillRectangle(
 
 int
 XDrawArc(
-    TCL_UNUSED(Display *),
-    Drawable     drawable,
-    GC           gc,
-    int          x, int y,
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    int x,
+    int y,
     unsigned int width,
     unsigned int height,
-    int          angle1,
-    int          angle2)
+    int angle1,
+    int angle2)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
     double cx, cy, rx, ry, startAngle, endAngle;
 
     if (width == 0 || height == 0 || angle2 == 0) return BadValue;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
+
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+        cg_set_line_width(dc.cg, (double)v.line_width);
+    }
 
     cx = x + width  / 2.0;
     cy = y + height / 2.0;
@@ -623,17 +752,31 @@ XDrawArc(
 
 int
 XDrawArcs(
-    TCL_UNUSED(Display *),
+    Display *display,
     Drawable drawable,
-    GC       gc,
-    XArc    *arcArr,
-    int      nArcs)
+    GC gc,
+    XArc *arcArr,
+    int nArcs)
 {
     TkWaylandDrawingContext dc;
+    XGCValues v;
     int i;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((v.foreground >> 16) & 0xFF) / 255.0,
+            (double)((v.foreground >> 8) & 0xFF) / 255.0,
+            (double)(v.foreground & 0xFF) / 255.0,
+            1.0);
+    }
+
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+        cg_set_line_width(dc.cg, (double)v.line_width);
+    }
 
     for (i = 0; i < nArcs; i++) {
         double cx, cy, rx, ry, startAngle, endAngle;
@@ -683,14 +826,15 @@ XDrawArcs(
 
 int
 XFillArc(
-    TCL_UNUSED(Display *),
-    Drawable     drawable,
-    GC           gc,
-    int          x, int y,
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    int x,
+    int y,
     unsigned int width,
     unsigned int height,
-    int          angle1,
-    int          angle2)
+    int angle1,
+    int angle2)
 {
     TkWaylandDrawingContext dc;
     XGCValues gcValues;
@@ -698,8 +842,17 @@ XFillArc(
 
     if (width == 0 || height == 0 || angle2 == 0) return BadValue;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((gcValues.foreground >> 16) & 0xFF) / 255.0,
+            (double)((gcValues.foreground >> 8) & 0xFF) / 255.0,
+            (double)(gcValues.foreground & 0xFF) / 255.0,
+            1.0);
+    }
 
     if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) != 0)
         gcValues.arc_mode = ArcPieSlice;
@@ -753,18 +906,27 @@ XFillArc(
 
 int
 XFillArcs(
-    TCL_UNUSED(Display *),
+    Display *display,
     Drawable drawable,
-    GC       gc,
-    XArc    *arcArr,
-    int      nArcs)
+    GC gc,
+    XArc *arcArr,
+    int nArcs)
 {
     TkWaylandDrawingContext dc;
     XGCValues gcValues;
     int i;
 
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK)
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return BadDrawable;
+    }
+
+    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) == 0) {
+        cg_set_source_rgba(dc.cg,
+            (double)((gcValues.foreground >> 16) & 0xFF) / 255.0,
+            (double)((gcValues.foreground >> 8) & 0xFF) / 255.0,
+            (double)(gcValues.foreground & 0xFF) / 255.0,
+            1.0);
+    }
 
     if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) != 0)
         gcValues.arc_mode = ArcPieSlice;
@@ -826,10 +988,10 @@ XFillArcs(
 void
 Tk_DrawHighlightBorder(
     Tk_Window tkwin,
-    GC        fgGC,
-    GC        bgGC,
-    int       highlightWidth,
-    Drawable  drawable)
+    GC fgGC,
+    GC bgGC,
+    int highlightWidth,
+    Drawable drawable)
 {
     if (highlightWidth <= 1) {
         TkDrawInsetFocusHighlight(tkwin, fgGC, 1, drawable, 0);
@@ -860,16 +1022,16 @@ Tk_DrawHighlightBorder(
 
 void
 TkpDrawFrameEx(
-    Tk_Window  tkwin,
-    Drawable   drawable,
+    Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
-    int        highlightWidth,
-    int        borderWidth,
-    int        relief)
+    int highlightWidth,
+    int borderWidth,
+    int relief)
 {
     Tk_Fill3DRectangle(tkwin, drawable, border,
                        highlightWidth, highlightWidth,
-                       Tk_Width(tkwin)  - 2 * highlightWidth,
+                       Tk_Width(tkwin) - 2 * highlightWidth,
                        Tk_Height(tkwin) - 2 * highlightWidth,
                        borderWidth, relief);
 }
@@ -894,15 +1056,15 @@ TkpDrawFrameEx(
 
 bool
 TkScrollWindow(
-    TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(GC),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(TkRegion))
+    Tk_Window tkwin,
+    GC gc,
+    int x,
+    int y,
+    int width,
+    int height,
+    int dx,
+    int dy,
+    TkRegion damageRgn)
 {
     return 1;
 }

@@ -95,11 +95,11 @@ static const char *vertexShaderSource =
  */
 
 static const GLfloat quadVertices[] = {
-    /* positions        texture coordinates */
-    -1.0f, -1.0f,       0.0f, 0.0f,   /* bottom left -> map to top of texture */
-     1.0f, -1.0f,       1.0f, 0.0f,   /* bottom right */
-     1.0f,  1.0f,       1.0f, 1.0f,   /* top right */
-    -1.0f,  1.0f,       0.0f, 1.0f    /* top left */
+    /* positions        texture coordinates (Flipped Y) */
+    -1.0f, -1.0f,       0.0f, 1.0f,   /* bottom left  -> maps to texture top */
+     1.0f, -1.0f,       1.0f, 1.0f,   /* bottom right -> maps to texture top */
+     1.0f,  1.0f,       1.0f, 0.0f,   /* top right    -> maps to texture bottom */
+    -1.0f,  1.0f,       0.0f, 0.0f    /* top left     -> maps to texture bottom */
 };
 
 static const GLushort quadIndices[] = {
@@ -441,13 +441,12 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
 
     int w = m->surface->width;
     int h = m->surface->height;
-    int stride = m->surface->stride; /* Prevent segfaults from row padding. */
+    int stride = m->surface->stride;
     unsigned char *srcBase = (unsigned char *)m->surface->pixels;
 
     uint32_t *rgba = (uint32_t *)ckalloc(w * h * sizeof(uint32_t));
 
     for (int y = 0; y < h; y++) {
-        /* Calculate row start using the actual byte-stride of the surface */
         uint32_t *srcRow = (uint32_t *)(srcBase + (y * stride));
         for (int x = 0; x < w; x++) {
             uint32_t p = srcRow[x];
@@ -457,16 +456,21 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
             uint8_t g = (p >> 8)  & 0xFF;
             uint8_t b = (p >> 0)  & 0xFF;
 
-            /* FORCE ALPHA TO 255. This is the only way to kill the hole. */
-            rgba[y * w + x] = (r << 24) | (g << 16) | (b << 8) | 0xFF;
+            /* CORRECT PACKING for GL_RGBA (Little Endian): 
+             * Byte 0: R, Byte 1: G, Byte 2: B, Byte 3: A */
+            rgba[y * w + x] = (uint32_t)r | 
+                             ((uint32_t)g << 8) | 
+                             ((uint32_t)b << 16) | 
+                             (0xFF << 24);
         }
     }
 
     glfwMakeContextCurrent(m->glfwWindow);
     glBindTexture(GL_TEXTURE_2D, m->texture.texture_id);
     
-    /* Ensure texture storage matches current surface size. */
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+    /* Use glTexImage2D to ensure the texture size matches the surface exactly */
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, 
+                 GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
     ckfree((char *)rgba);
     m->texture.needs_texture_update = 0;
@@ -495,17 +499,17 @@ TkGlfwRenderTexture(WindowMapping *m)
 {
     GLint posAttrib, texAttrib, texUniform;
 
-    if (!m) {
-        return;
-    }
-    if (!m->glfwWindow || !m->texture.texture_id) {
-        return;
-    }
-    if (!m->texture.program || !globalVBO || !globalIBO) {
-        return;
-    }
+    if (!m || !m->glfwWindow || !m->texture.texture_id) return;
+    if (!m->texture.program || !globalVBO || !globalIBO) return;
 
     glfwMakeContextCurrent(m->glfwWindow);
+
+    /* Set the viewport to match the window size. */
+    glViewport(0, 0, m->width, m->height);
+    
+    /* Disable blending so Alpha channel bugs don't create holes. */
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
 
     glUseProgram(m->texture.program);
 
@@ -542,8 +546,6 @@ TkGlfwRenderTexture(WindowMapping *m)
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -945,53 +947,37 @@ TkGlfwBeginDraw(
     TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *m = FindMappingByDrawable(drawable);
-
-    if (!m) {
-	return TCL_ERROR;
+    if (!m || !m->surface) {
+        return TCL_ERROR;
     }
 
-    /* Ensure we have a valid surface. */
-    if (TkGlfwEnsureSurface(m) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    if (!m->surface) {
-	return TCL_ERROR;
-    }
-
-    dcPtr->cg = cg_create(m->surface);
+    /* Initialize the drawing context structure. */
     dcPtr->drawable = drawable;
-    dcPtr->glfwWindow = m->glfwWindow;
     dcPtr->width = m->width;
     dcPtr->height = m->height;
-    dcPtr->offsetX = 0;
-    dcPtr->offsetY = 0;
-    dcPtr->nestedFrame = 0;
+    dcPtr->glfwWindow = m->glfwWindow;
 
+    /* Create the libcg context from the window's surface.
+     * This is the 'canvas' Tk will draw on.
+     */
+    dcPtr->cg = cg_create(m->surface); 
     if (!dcPtr->cg) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
-    cg_save(dcPtr->cg);
-
-    /* Apply child-window translation. */
-    if (m->tkWindow && !Tk_IsTopLevel(m->tkWindow)) {
-	int x = 0, y = 0;
-	TkWindow *winPtr = (TkWindow *)m->tkWindow;
-	while (winPtr && !Tk_IsTopLevel(winPtr)) {
-	    x += winPtr->changes.x;
-	    y += winPtr->changes.y;
-	    winPtr = winPtr->parentPtr;
-	}
-	cg_translate(dcPtr->cg, (double)x, (double)y);
-	dcPtr->offsetX = x;
-	dcPtr->offsetY = y;
-    }
-
-    TkGlfwApplyGC(dcPtr->cg, gc);
+    /* Initial clear: fill the buffer with the standard Tk gray.
+     * Use CG_OPERATOR_SRC to ensure we overwrite any old black pixels.
+     */
+    cg_set_source_rgba(dcPtr->cg, 0.9216, 0.9216, 0.9216, 1.0);
+    cg_set_operator(dcPtr->cg, CG_OPERATOR_SRC);
+    cg_paint(dcPtr->cg);
+    
+    /* Set back to SRC_OVER so widgets draw correctly on top of the gray. */
+    cg_set_operator(dcPtr->cg, CG_OPERATOR_SRC_OVER);
+    
+    m->frameOpen = 1;
     return TCL_OK;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1012,24 +998,24 @@ TkGlfwBeginDraw(
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    WindowMapping *m;
-
-    if (!dcPtr || !dcPtr->cg) {
-	return;
+    WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
+    
+    if (dcPtr->cg) {
+        /* Destroying the context flushes all pending drawing operations 
+         * into the surface's pixel buffer.
+         */
+        cg_destroy(dcPtr->cg);
+        dcPtr->cg = NULL;
     }
 
-    cg_restore(dcPtr->cg);
-    cg_destroy(dcPtr->cg);
-    dcPtr->cg = NULL;
-
-    m = FindMappingByDrawable(dcPtr->drawable);
-    if (m) {	
-	/* Mark that the texture needs fresh pixels from libcg. */
-    m->texture.needs_texture_update = 1;
-	/* Mark that we need to display this window. */
-	m->needsDisplay = 1;
-	/* Schedule display. */
-	TkWaylandScheduleDisplay(m);
+    if (m) {
+        /* Mark the texture as 'dirty'. The next time the display 
+         * procedure runs, it will see this flag and upload the 
+         * new pixels to the GPU.
+         */
+        m->texture.needs_texture_update = 1;
+        m->needsDisplay = 1;
+        m->frameOpen = 0;
     }
 }
 
