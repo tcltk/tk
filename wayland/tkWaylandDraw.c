@@ -63,7 +63,7 @@ XDrawString(
     memcpy(buf, string, length);
     buf[length] = '\0';
 
-    /* Set foreground colour for the font subsystem to pick up. */
+    /* Set foreground color for the font subsystem to pick up. */
     if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
         c = TkGlfwPixelToCG(v.foreground);
         cg_set_source_rgba(dc.cg, c.r, c.g, c.b, c.a);
