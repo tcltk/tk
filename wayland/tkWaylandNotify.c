@@ -120,7 +120,6 @@ TkWaylandWakeupFileProc(
 {
     TSD_INIT();
     uint64_t u;
-    WindowMapping *m;
 
     if (tsdPtr->wakeupFd == -1) {
 	return;
@@ -133,13 +132,6 @@ TkWaylandWakeupFileProc(
     if (glfwContext.initialized && !tsdPtr->shutdownInProgress) {
 	glfwPollEvents();
 	TkWaylandCheckForWindowClosure();
-
-	/* Process pending displays after events. */
-	for (m = windowMappingList; m; m = m->nextPtr) {
-	    if (m->needsDisplay && m->glfwWindow) {
-		TkWaylandDisplayProc(m);
-	    }
-	}
     }
 }
 
@@ -196,7 +188,6 @@ static void
 HeartbeatTimerProc(TCL_UNUSED(void *))
 {
     TSD_INIT();
-    WindowMapping *m;
 
     if (!tsdPtr->initialized || tsdPtr->shutdownInProgress) {
 	return;
@@ -210,13 +201,6 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
 
     if (glfwContext.initialized) {
 	glfwPollEvents();
-
-	/* Process pending displays. */
-	for (m = windowMappingList; m; m = m->nextPtr) {
-	    if (m->needsDisplay && m->glfwWindow) {
-		TkWaylandDisplayProc(m);
-	    }
-	}
     }
 
     if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
@@ -272,12 +256,13 @@ TkWaylandEventsSetupProc(
  * TkWaylandEventsCheckProc --
  *
  *	Process pending Wayland/GLFW events and start drawing cycles.
+ *	Note: No GL work happens here - only event processing.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Initiates drawing for mapped windows.
+ *	None (drawing is scheduled via TkWaylandScheduleDisplay).
  *
  *----------------------------------------------------------------------
  */
@@ -287,8 +272,6 @@ TkWaylandEventsCheckProc(
     TCL_UNUSED(void *),
     int flags)
 {
-    WindowMapping *m;
-
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
     }
@@ -296,17 +279,6 @@ TkWaylandEventsCheckProc(
     /* Poll for new events. */
     if (glfwContext.initialized) {
 	glfwPollEvents();
-    }
-
-    /* Start drawing cycles for all mapped windows that aren't already in a frame. */
-    for (m = windowMappingList; m; m = m->nextPtr) {
-	if (m->glfwWindow && m->tkWindow && (m->tkWindow->flags & TK_MAPPED)) {
-	    if (!m->frameOpen && !m->inEventCycle) {
-		TkWaylandBeginEventCycle(m);
-		/* Schedule display to end the frame and swap buffers. */
-		Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
-	    }
-	}
     }
 }
 
@@ -404,9 +376,8 @@ TkWaylandQueueExposeEvent(
 
     /* Schedule display for the toplevel window. */
     m = FindMappingByTk(winPtr);
-    if (m && m->glfwWindow && !m->frameOpen) {
-	TkWaylandBeginEventCycle(m);
-	Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
+    if (m && m->glfwWindow) {
+	TkWaylandScheduleDisplay(m);
     }
 
     /* Recursively for children. */
@@ -456,7 +427,8 @@ TkWaylandWakeupGLFW(void)
  *
  * TkWaylandBeginEventCycle --
  *
- *	Called at the START of each event loop iteration.
+ *	Start a frame for drawing. Called by DisplayProc only when
+ *	we actually have content to display.
  *
  * Results:
  *	None.
@@ -492,7 +464,8 @@ TkWaylandBeginEventCycle(WindowMapping *m)
 	    m->tkWindow->changes.width = fbw;
 	    m->tkWindow->changes.height = fbh;
 	}
-	/* Mark texture as needing reallocation. */
+	/* Mark surface as stale - will be recreated at next BeginDraw. */
+	m->surfaceStale = 1;
 	m->texture.needs_texture_update = 1;
     }
 
@@ -503,8 +476,6 @@ TkWaylandBeginEventCycle(WindowMapping *m)
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     m->frameOpen = 1;
-    m->inEventCycle = 1;
-    glfwContext.activeFrame = m;
 }
 
 /*
@@ -512,7 +483,7 @@ TkWaylandBeginEventCycle(WindowMapping *m)
  *
  * TkWaylandEndEventCycle --
  *
- *	Called at the END of each event loop iteration.
+ *	End a frame after drawing. Called by DisplayProc after presenting.
  *
  * Results:
  *	None.
@@ -531,10 +502,6 @@ TkWaylandEndEventCycle(WindowMapping *m)
     }
 
     m->frameOpen = 0;
-    m->inEventCycle = 0;
-    if (glfwContext.activeFrame == m) {
-	glfwContext.activeFrame = NULL;
-    }
 }
 
 /*
@@ -572,6 +539,7 @@ TkWaylandScheduleDisplay(WindowMapping *m)
  * TkWaylandDisplayProc --
  *
  *	Completes the drawing cycle and swaps buffers.
+ *	This is the ONLY place where GL work happens.
  *
  * Results:
  *	None.
@@ -591,29 +559,38 @@ TkWaylandDisplayProc(ClientData clientData)
 	return;
     }
 
-    /* If we have a libcg surface that needs display, upload it to OpenGL texture. */
-    if (m->surface && m->needsDisplay) {
-	/* Upload the libcg surface pixels to OpenGL texture. */
-	TkGlfwUploadSurfaceToTexture(m);
-
-	/* Begin frame if not already in one. */
-	if (!m->frameOpen) {
-	    TkWaylandBeginEventCycle(m);
-	}
-
-	/* Render the texture to screen. */
-	TkGlfwRenderTexture(m);
-
-	/* End the frame and swap buffers. */
-	TkWaylandEndEventCycle(m);
-	glfwSwapBuffers(m->glfwWindow);
-
-	m->needsDisplay = 0;
-    } else if (m->frameOpen) {
-	/* Just end the frame if no content to display. */
-	TkWaylandEndEventCycle(m);
-	glfwSwapBuffers(m->glfwWindow);
+    /* Only do something if we actually have pixels to display. */
+    if (!m->needsDisplay) {
+	return;
     }
+
+    /* Ensure we have a valid surface. */
+    if (TkGlfwEnsureSurface(m) != TCL_OK) {
+	m->needsDisplay = 0;
+	return;
+    }
+
+    /* Start the frame. */
+    TkWaylandBeginEventCycle(m);
+
+    /* Upload the libcg surface pixels to OpenGL texture if needed. */
+    if (m->texture.needs_texture_update && m->surface) {
+	TkGlfwUploadSurfaceToTexture(m);
+    }
+
+    /* Render the texture to screen. */
+    if (m->texture.texture_id) {
+	TkGlfwRenderTexture(m);
+    }
+
+    /* Swap buffers to present. */
+    glfwSwapBuffers(m->glfwWindow);
+
+    /* End the frame. */
+    TkWaylandEndEventCycle(m);
+
+    /* Clear the dirty flag. */
+    m->needsDisplay = 0;
 }
 
 /*

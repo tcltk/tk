@@ -23,6 +23,31 @@
 #include <stdlib.h>
 
 /*
+ * Forward declarations of helper functions
+ */
+static void TkWaylandUpdateKeyboardModifiers(int glfw_mods);
+static void TkWaylandStoreCharacterInput(unsigned int codepoint);
+static unsigned int TkWaylandGetPendingCharacter(void);
+static void TkGenerateActivateEvents(TkWindow *winPtr, int focused);
+
+/*
+ * Forward declarations of GLFW callback functions
+ */
+static void TkGlfwWindowCloseCallback(GLFWwindow *window);
+static void TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height);
+static void TkGlfwFramebufferSizeCallback(GLFWwindow *window, int width, int height);
+static void TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
+static void TkGlfwWindowFocusCallback(GLFWwindow *window, int focused);
+static void TkGlfwWindowIconifyCallback(GLFWwindow *window, int iconified);
+static void TkGlfwWindowMaximizeCallback(GLFWwindow *window, int maximized);
+static void TkGlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos);
+static void TkGlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+static void TkGlfwScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
+static void TkGlfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+static void TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint);
+static void TkGlfwWindowRefreshCallback(GLFWwindow *window);
+
+/*
  * Global state for mouse buttons and modifiers.
  */
 unsigned int glfwButtonState   = 0;
@@ -67,6 +92,8 @@ TkGlfwSetupCallbacks(
     glfwSetCursorPosCallback       (glfwWindow, TkGlfwCursorPosCallback);
     glfwSetMouseButtonCallback     (glfwWindow, TkGlfwMouseButtonCallback);
     glfwSetScrollCallback          (glfwWindow, TkGlfwScrollCallback);
+    glfwSetKeyCallback             (glfwWindow, TkGlfwKeyCallback);
+    glfwSetCharCallback            (glfwWindow, TkGlfwCharCallback);
     glfwSetWindowRefreshCallback   (glfwWindow, TkGlfwWindowRefreshCallback);
 }
 
@@ -85,7 +112,7 @@ TkGlfwSetupCallbacks(
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwWindowCloseCallback(GLFWwindow *window)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
@@ -99,32 +126,47 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
  *
  * TkGlfwWindowSizeCallback --
  *
- *	Called when window size changes. Recreates the cg surface to
- *	match the new dimensions, updates Tk geometry, and queues a
- *	redraw.
+ *	GLFW window size callback. Updates window dimensions and marks
+ *	surface as stale for recreation at the next draw.
+ *	Never destroys the surface during the callback to avoid
+ *	invalid memory access during active drawing.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Resizes the cg surface, updates Tk window dimensions, queues expose.
+ *	Updates cached dimensions and marks surface as stale.
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
     WindowMapping *m = FindMappingByGLFW(window);
-    if (!m) return;
-
-    /* Recreate the cg surface at the new size. */
-    SyncWindowSize(m);
-
-    if (m->tkWindow) {
-        m->tkWindow->changes.width  = width;
-        m->tkWindow->changes.height = height;
-        TkWaylandQueueExposeEvent(m->tkWindow, 0, 0, width, height);
+    
+    if (!m) {
+	return;
     }
+    
+    /* Update cached dimensions. */
+    m->width = width;
+    m->height = height;
+    
+    /* Mark surface as stale - will be recreated at next EnsureSurface. */
+    m->surfaceStale = 1;
+    m->texture.needs_texture_update = 1;
+    
+    /* Update Tk window dimensions if this is a Tk window. */
+    if (m->tkWindow) {
+	m->tkWindow->changes.width = width;
+	m->tkWindow->changes.height = height;
+	
+	/* Queue expose event to trigger redraw at the new size. */
+	TkWaylandQueueExposeEvent(m->tkWindow, 0, 0, width, height);
+    }
+    
+    /* Wake up the event loop to process the resize. */
+    TkWaylandWakeupGLFW();
 }
 
 /*
@@ -143,7 +185,7 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwFramebufferSizeCallback(
     GLFWwindow *window,
     TCL_UNUSED(int),
@@ -180,7 +222,7 @@ TkGlfwFramebufferSizeCallback(
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
@@ -224,7 +266,7 @@ TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
@@ -242,7 +284,13 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
     event.xfocus.detail     = NotifyAncestor;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    TkGenerateActivateEvents(winPtr, focused);
+    
+    /* Generate activate events for the window */
+    if (focused) {
+        TkGenerateActivateEvents(winPtr, 1);
+    } else {
+        TkGenerateActivateEvents(winPtr, 0);
+    }
 }
 
 /*
@@ -260,7 +308,7 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwWindowIconifyCallback(GLFWwindow *window, int iconified)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
@@ -306,13 +354,15 @@ TkGlfwWindowIconifyCallback(GLFWwindow *window, int iconified)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwWindowMaximizeCallback(GLFWwindow *window, int maximized)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) return;
+    
+    /* Use TkWmInfo structure which is the correct type */
     if (winPtr->wmInfoPtr) {
-        WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+        struct TkWmInfo *wmPtr = (struct TkWmInfo *)winPtr->wmInfoPtr;
         wmPtr->attributes.zoomed = maximized;
     }
 }
@@ -332,7 +382,7 @@ TkGlfwWindowMaximizeCallback(GLFWwindow *window, int maximized)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
@@ -440,7 +490,7 @@ TkGlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 {
     TkWindow    *winPtr = TkGlfwGetTkWindow(window);
@@ -506,7 +556,7 @@ TkGlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
@@ -557,7 +607,7 @@ TkGlfwScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwKeyCallback(GLFWwindow *window, int key,
                   TCL_UNUSED(int), int action, int mods)
 {
@@ -614,7 +664,7 @@ TkGlfwKeyCallback(GLFWwindow *window, int key,
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwCharCallback(TCL_UNUSED(GLFWwindow *), unsigned int codepoint)
 {
     TkWaylandStoreCharacterInput(codepoint);
@@ -635,7 +685,7 @@ TkGlfwCharCallback(TCL_UNUSED(GLFWwindow *), unsigned int codepoint)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkWaylandUpdateKeyboardModifiers(int glfw_mods)
 {
     glfwModifierState = 0;
@@ -662,7 +712,7 @@ TkWaylandUpdateKeyboardModifiers(int glfw_mods)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkWaylandStoreCharacterInput(unsigned int codepoint)
 {
     pendingCodepoint = codepoint;
@@ -683,12 +733,52 @@ TkWaylandStoreCharacterInput(unsigned int codepoint)
  *
  *---------------------------------------------------------------------------
  */
-unsigned int
+static unsigned int
 TkWaylandGetPendingCharacter(void)
 {
     unsigned int cp = pendingCodepoint;
     pendingCodepoint = 0;
     return cp;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkGenerateActivateEvents --
+ *
+ *	Generate activate/deactivate events for a window and its children.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Queues activate events for the window tree.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+TkGenerateActivateEvents(TkWindow *winPtr, int focused)
+{
+    XEvent event;
+    TkWindow *childPtr;
+    
+    if (!winPtr) return;
+    
+    memset(&event, 0, sizeof(XEvent));
+    event.type = focused ? ActivateNotify : DeactivateNotify;
+    event.xclient.display = winPtr->display;
+    event.xclient.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xclient.message_type = Tk_InternAtom((Tk_Window)winPtr, "ACTIVATE");
+    event.xclient.format = 32;
+    
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    
+    /* Propagate to children */
+    for (childPtr = winPtr->childList; childPtr; childPtr = childPtr->nextPtr) {
+        if (Tk_IsMapped((Tk_Window)childPtr)) {
+            TkGenerateActivateEvents(childPtr, focused);
+        }
+    }
 }
 
 /*
@@ -706,7 +796,7 @@ TkWaylandGetPendingCharacter(void)
  *
  *---------------------------------------------------------------------------
  */
-MODULE_SCOPE void
+static void
 TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
     TkWindow      *winPtr = TkGlfwGetTkWindow(window);

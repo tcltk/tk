@@ -44,6 +44,9 @@
  *----------------------------------------------------------------------
  */
 
+struct WmInfo;
+struct WmAttributes;
+struct ProtocolHandler;
 typedef struct WindowMapping WindowMapping;
 typedef struct TkWaylandGCImpl TkWaylandGCImpl;
 typedef struct TkWaylandPixmapImpl TkWaylandPixmapImpl;
@@ -100,6 +103,7 @@ struct WindowMapping {
     struct cg_surface_t *surface;	/* libcg drawing surface */
     TextureState texture;	/* OpenGL texture state */
     WindowMapping *nextPtr;	/* Next in linked list */
+    int surfaceStale;     /* Flag indicating stale drawing surface */
 };
 
 /*
@@ -210,6 +214,115 @@ struct TkWaylandDrawingContext {
 /*
  *----------------------------------------------------------------------
  *
+ * ProtocolHandler – per-protocol Tcl command binding.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct ProtocolHandler {
+    int                    protocol;  /* Protocol identifier. */
+    struct ProtocolHandler *nextPtr;
+    Tcl_Interp            *interp;
+    char                   command[TKFLEXARRAY];
+} ProtocolHandler;
+
+#define HANDLER_SIZE(cmdLength) \
+    (offsetof(ProtocolHandler, command) + 1 + (cmdLength))
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmAttributes – per-window wm attribute state.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct {
+    double alpha;       /* 0.0 = transparent, 1.0 = opaque */
+    int    topmost;
+    int    zoomed;
+    int    fullscreen;
+} WmAttributes;
+
+typedef enum {
+    WMATT_ALPHA,
+    WMATT_FULLSCREEN,
+    WMATT_TOPMOST,
+    WMATT_TYPE,
+    WMATT_ZOOMED,
+    _WMATT_LAST_ATTRIBUTE
+} WmAttribute;
+
+extern const char *const WmAttributeNames[];
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmInfo – per-toplevel window manager state.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct TkWmInfo {
+    TkWindow    *winPtr;        /* Tk window. */
+    GLFWwindow  *glfwWindow;    /* GLFW handle (NULL until first map). */
+    char        *title;
+    char        *iconName;
+    char        *leaderName;
+    TkWindow    *containerPtr;  /* Transient-for container. */
+    Tk_Window    icon;
+    Tk_Window    iconFor;
+    int          withdrawn;
+    int          initialState;  /* NormalState, IconicState, WithdrawnState */
+
+    /* Wrapper / menubar. */
+    TkWindow    *wrapperPtr;
+    Tk_Window    menubar;
+    int          menuHeight;
+
+    /* Size hints. */
+    int          sizeHintsFlags;
+    int          minWidth, minHeight;
+    int          maxWidth, maxHeight;
+    Tk_Window    gridWin;
+    int          widthInc, heightInc;
+    struct { int x; int y; } minAspect, maxAspect;
+    int          reqGridWidth, reqGridHeight;
+    int          gravity;
+
+    /* Position / size. */
+    int          width, height;
+    int          x, y;
+    int          parentWidth, parentHeight;
+    int          xInParent, yInParent;
+    int          configWidth, configHeight;
+
+    /* Virtual root (compatibility). */
+    int          vRootX, vRootY;
+    int          vRootWidth, vRootHeight;
+
+    /* Misc. */
+    WmAttributes  attributes;
+    WmAttributes  reqState;
+    ProtocolHandler *protPtr;
+    Tcl_Size      cmdArgc;
+    Tcl_Obj     **cmdArgv;
+    char         *clientMachine;
+    int           flags;
+    int           numTransients;
+    int           iconDataSize;
+    unsigned char *iconDataPtr;
+    GLFWimage    *glfwIcon;
+    int           glfwIconCount;
+    int           isMapped;
+    int           lastX, lastY;
+    int           lastWidth, lastHeight;
+    struct TkWmInfo *nextPtr;
+} WmInfo;
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Global variables (declared in tkWaylandInit.c)
  *
  *----------------------------------------------------------------------
@@ -248,6 +361,7 @@ MODULE_SCOPE GLFWwindow *TkGlfwGetGLFWWindow(Tk_Window tkwin);
 MODULE_SCOPE Drawable TkGlfwGetDrawable(GLFWwindow *w);
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
 MODULE_SCOPE TkWindow *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE int TkGlfwEnsureSurface(WindowMapping *m);
 
 /*
  *----------------------------------------------------------------------
