@@ -122,27 +122,6 @@ proc ::tk::ConsoleInit {} {
 
     . configure -menu .menubar
 
-    foreach modifier {Control Command} {
-	bind Console <$modifier-MouseWheel> {
-	    if {%D > 0} {
-		event generate %W <<Console_FontSizeIncr>>
-	    } else {
-		event generate %W <<Console_FontSizeDecr>>
-	    }
-	}
-	bind Console <$modifier-TouchpadScroll> {
-	    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
-	    # TouchpadScroll events fire about 60 times per second.
-	    if {$tk::Priv(deltaY) != 0 && %# %% 15 == 0} {
-		if {$tk::Priv(deltaY) > 0} {
-		    event generate %W <<Console_FontSizeIncr>>
-		} else {
-		    event generate %W <<Console_FontSizeDecr>>
-		}
-	    }
-	}
-    }
-
     # See if we can find a better font than the TkFixedFont
     catch {font create TkConsoleFont {*}[font configure TkFixedFont]}
     set families [font families]
@@ -625,6 +604,27 @@ proc ::tk::ConsoleBind {w} {
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }
     bind Console <<Paste>> { ::tk::console::Paste %W }
+
+    foreach modifier {Control Command} {
+	bind Console <$modifier-MouseWheel> {
+	    if {%D > 0} {
+		event generate %W <<Console_FontSizeIncr>>
+	    } else {
+		event generate %W <<Console_FontSizeDecr>>
+	    }
+	}
+	bind Console <$modifier-TouchpadScroll> {
+	    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	    # TouchpadScroll events fire about 60 times per second.
+	    if {$tk::Priv(deltaY) != 0 && %# %% 15 == 0} {
+		if {$tk::Priv(deltaY) > 0} {
+		    event generate %W <<Console_FontSizeIncr>>
+		} else {
+		    event generate %W <<Console_FontSizeDecr>>
+		}
+	    }
+	}
+    }
 
     bind Console <<Console_FontSizeIncr>> {
 	set size [font configure TkConsoleFont -size]
