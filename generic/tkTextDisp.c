@@ -9779,8 +9779,6 @@ TkTextRelayoutWindow(
      * pretend that there's at least one pixel of drawing space in it.
      */
 
-    assert(textPtr->highlightWidth >= 0);
-
     int borderWidth = 0, padX = 0, padY = 0;
     if (textPtr->borderWidthObj) {
 	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->borderWidthObj, &borderWidth);
