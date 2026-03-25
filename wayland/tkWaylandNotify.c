@@ -1,7 +1,7 @@
 /*
  * tkWaylandNotify.c --
  *
- *      Tcl event source for integrating Wayland/GLFW event loop with Tk.
+ *	Tcl event source for integrating Wayland/GLFW event loop with Tk.
  *
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
@@ -18,22 +18,23 @@
 #include <unistd.h>
 #include <errno.h>
 
-extern TkGlfwContext  glfwContext;
+extern struct TkGlfwContext glfwContext;
 extern WindowMapping *windowMappingList;
 
 typedef struct ThreadSpecificData {
-    bool           initialized;
-    bool           waylandInitialized;
-    int            wakeupFd;           /* eventfd for waking up GLFW polling */
-    Tcl_FileProc   *watchProc;         /* stored for cleanup */
-    Tcl_TimerToken heartbeatTimer;     /* fallback timer */
-    int            shutdownInProgress; /* flag to prevent recursive shutdown */
+    int initialized;		/* Flag indicating initialization */
+    int waylandInitialized;	/* Flag for Wayland initialization */
+    int wakeupFd;		/* eventfd for waking up GLFW polling */
+    Tcl_FileProc *watchProc;	/* Stored for cleanup */
+    Tcl_TimerToken heartbeatTimer;	/* Fallback timer */
+    int shutdownInProgress;	/* Flag to prevent recursive shutdown */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
 
-#define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
-    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
+#define TSD_INIT() \
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
 static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandEventsSetupProc(void *clientData, int flags);
@@ -42,49 +43,55 @@ static void HeartbeatTimerProc(void *clientData);
 static void TkWaylandWakeupFileProc(void *clientData, int mask);
 static void TkWaylandCheckForWindowClosure(void);
 
-#define HEARTBEAT_INTERVAL 16   /* ms - fallback when file events not working */
+#define HEARTBEAT_INTERVAL 16	/* ms - fallback when file events not working */
 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_WaylandSetupTkNotifier --
  *
- *      Called during Tk initialization to install the Wayland/GLFW
- *      event source.
+ *	Called during Tk initialization to install the Wayland/GLFW
+ *	event source.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Installs the event source and creates the wakeup file descriptor.
  *
  *----------------------------------------------------------------------
  */
+
 void
 Tk_WaylandSetupTkNotifier(void)
 {
     TSD_INIT();
 
     if (!tsdPtr->initialized) {
-        tsdPtr->wakeupFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
-        if (tsdPtr->wakeupFd == -1) {
-            fprintf(stderr, "TkWaylandNotify: Failed to create eventfd: %s\n",
-                    strerror(errno));
-            tsdPtr->wakeupFd = -1;
-        }
+	tsdPtr->wakeupFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+	if (tsdPtr->wakeupFd == -1) {
+	    fprintf(stderr,
+		    "TkWaylandNotify: Failed to create eventfd: %s\n",
+		    strerror(errno));
+	    tsdPtr->wakeupFd = -1;
+	}
 
-        tsdPtr->initialized   = true;
-        tsdPtr->shutdownInProgress = 0;
+	tsdPtr->initialized = 1;
+	tsdPtr->shutdownInProgress = 0;
 
-        Tcl_CreateEventSource(TkWaylandEventsSetupProc,
-                              TkWaylandEventsCheckProc, NULL);
+	Tcl_CreateEventSource(TkWaylandEventsSetupProc,
+			      TkWaylandEventsCheckProc, NULL);
 
-        tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
-                                                        HeartbeatTimerProc,
-                                                        NULL);
+	tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
+							HeartbeatTimerProc,
+							NULL);
 
-        if (tsdPtr->wakeupFd != -1) {
-            Tcl_CreateFileHandler(tsdPtr->wakeupFd, TCL_READABLE,
-                                  TkWaylandWakeupFileProc, NULL);
-        }
+	if (tsdPtr->wakeupFd != -1) {
+	    Tcl_CreateFileHandler(tsdPtr->wakeupFd, TCL_READABLE,
+				  TkWaylandWakeupFileProc, NULL);
+	}
 
-        TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
-        
-        fprintf(stderr, "Tk_WaylandSetupTkNotifier: Initialized\n");
+	TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
 
     TkWaylandWakeupGLFW();
@@ -95,34 +102,44 @@ Tk_WaylandSetupTkNotifier(void)
  *
  * TkWaylandWakeupFileProc --
  *
- *      Called when the wakeup file descriptor becomes readable.
+ *	Called when the wakeup file descriptor becomes readable.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Processes GLFW events and schedules displays.
  *
  *----------------------------------------------------------------------
  */
+
 static void
-TkWaylandWakeupFileProc(TCL_UNUSED(void *),
-			TCL_UNUSED(int)) /* mask */
+TkWaylandWakeupFileProc(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int))		/* mask */
 {
     TSD_INIT();
     uint64_t u;
     WindowMapping *m;
 
-    if (tsdPtr->wakeupFd == -1) return;
+    if (tsdPtr->wakeupFd == -1) {
+	return;
+    }
 
     if (read(tsdPtr->wakeupFd, &u, sizeof(u)) != sizeof(u)) {
-        /* Ignore errors */
+	/* Ignore errors. */
     }
 
     if (glfwContext.initialized && !tsdPtr->shutdownInProgress) {
-        glfwPollEvents();
-        TkWaylandCheckForWindowClosure();
-        
-        /* Process pending displays after events */
-        for (m = windowMappingList; m; m = m->nextPtr) {
-            if (m->needsDisplay && m->glfwWindow) {
-                TkWaylandDisplayProc(m);
-            }
-        }
+	glfwPollEvents();
+	TkWaylandCheckForWindowClosure();
+
+	/* Process pending displays after events. */
+	for (m = windowMappingList; m; m = m->nextPtr) {
+	    if (m->needsDisplay && m->glfwWindow) {
+		TkWaylandDisplayProc(m);
+	    }
+	}
     }
 }
 
@@ -131,21 +148,31 @@ TkWaylandWakeupFileProc(TCL_UNUSED(void *),
  *
  * TkWaylandCheckForWindowClosure --
  *
- *      Check if all Tk main windows have been destroyed.
+ *	Check if all Tk main windows have been destroyed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May schedule shutdown.
  *
  *----------------------------------------------------------------------
  */
+
 static void
 TkWaylandCheckForWindowClosure(void)
 {
     TSD_INIT();
 
-    if (tsdPtr->shutdownInProgress) return;
+    if (tsdPtr->shutdownInProgress) {
+	return;
+    }
 
     if (Tk_GetNumMainWindows() == 0) {
-        fprintf(stderr, "TkWaylandCheckForWindowClosure: No windows left, shutting down\n");
-        tsdPtr->shutdownInProgress = 1;
-        Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
+	fprintf(stderr,
+		"TkWaylandCheckForWindowClosure: No windows left, shutting down\n");
+	tsdPtr->shutdownInProgress = 1;
+	Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
     }
 }
 
@@ -154,10 +181,17 @@ TkWaylandCheckForWindowClosure(void)
  *
  * HeartbeatTimerProc --
  *
- *      Periodic timer to keep the event loop responsive.
+ *	Periodic timer to keep the event loop responsive.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Processes events and reschedules itself.
  *
  *----------------------------------------------------------------------
  */
+
 static void
 HeartbeatTimerProc(TCL_UNUSED(void *))
 {
@@ -165,30 +199,30 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
     WindowMapping *m;
 
     if (!tsdPtr->initialized || tsdPtr->shutdownInProgress) {
-        return;
+	return;
     }
 
     if (Tk_GetNumMainWindows() == 0) {
-        tsdPtr->shutdownInProgress = 1;
-        Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
-        return;
+	tsdPtr->shutdownInProgress = 1;
+	Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
+	return;
     }
 
     if (glfwContext.initialized) {
-        glfwPollEvents();
-        
-        /* Process pending displays */
-        for (m = windowMappingList; m; m = m->nextPtr) {
-            if (m->needsDisplay && m->glfwWindow) {
-                TkWaylandDisplayProc(m);
-            }
-        }
+	glfwPollEvents();
+
+	/* Process pending displays. */
+	for (m = windowMappingList; m; m = m->nextPtr) {
+	    if (m->needsDisplay && m->glfwWindow) {
+		TkWaylandDisplayProc(m);
+	    }
+	}
     }
 
     if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
-        tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
-                                                        HeartbeatTimerProc,
-                                                        NULL);
+	tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
+							HeartbeatTimerProc,
+							NULL);
     }
 }
 
@@ -197,30 +231,38 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
  *
  * TkWaylandEventsSetupProc --
  *
- *      Tell Tcl how long we are willing to block.
+ *	Tell Tcl how long we are willing to block.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the maximum block time.
  *
  *----------------------------------------------------------------------
  */
+
 static void
-TkWaylandEventsSetupProc(TCL_UNUSED(void *),
-			 int flags)
+TkWaylandEventsSetupProc(
+    TCL_UNUSED(void *),
+    int flags)
 {
     TSD_INIT();
     Tcl_Time blockTime = {0, 0};
 
     if (tsdPtr->shutdownInProgress) {
-        Tcl_SetMaxBlockTime(&blockTime);
-        return;
+	Tcl_SetMaxBlockTime(&blockTime);
+	return;
     }
 
     if (tsdPtr->wakeupFd != -1 && glfwContext.initialized) {
-        return;
+	return;
     }
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
-        blockTime.sec = 0;
-        blockTime.usec = HEARTBEAT_INTERVAL * 1000;
-        Tcl_SetMaxBlockTime(&blockTime);
+	blockTime.sec = 0;
+	blockTime.usec = HEARTBEAT_INTERVAL * 1000;
+	Tcl_SetMaxBlockTime(&blockTime);
     }
 }
 
@@ -229,32 +271,42 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
  *
  * TkWaylandEventsCheckProc --
  *
- *      Process pending Wayland/GLFW events and start drawing cycles.
+ *	Process pending Wayland/GLFW events and start drawing cycles.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Initiates drawing for mapped windows.
  *
  *----------------------------------------------------------------------
  */
+
 static void
-TkWaylandEventsCheckProc(TCL_UNUSED(void *),
-	int flags)
+TkWaylandEventsCheckProc(
+    TCL_UNUSED(void *),
+    int flags)
 {
     WindowMapping *m;
-    
-    if (!(flags & TCL_WINDOW_EVENTS)) return;
 
-    /* Poll for new events */
-    if (glfwContext.initialized) {
-        glfwPollEvents();
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+	return;
     }
-    
-    /* Start drawing cycles for all mapped windows that aren't already in a frame */
+
+    /* Poll for new events. */
+    if (glfwContext.initialized) {
+	glfwPollEvents();
+    }
+
+    /* Start drawing cycles for all mapped windows that aren't already in a frame. */
     for (m = windowMappingList; m; m = m->nextPtr) {
-        if (m->glfwWindow && m->tkWindow && (m->tkWindow->flags & TK_MAPPED)) {
-            if (!m->frameOpen && !m->inEventCycle) {
-                TkWaylandBeginEventCycle(m);
-                /* Schedule display to end the frame and swap buffers */
-                Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
-            }
-        }
+	if (m->glfwWindow && m->tkWindow && (m->tkWindow->flags & TK_MAPPED)) {
+	    if (!m->frameOpen && !m->inEventCycle) {
+		TkWaylandBeginEventCycle(m);
+		/* Schedule display to end the frame and swap buffers. */
+		Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
+	    }
+	}
     }
 }
 
@@ -263,37 +315,45 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
  *
  * TkWaylandNotifyExitHandler --
  *
- *      Clean up at exit.
+ *	Clean up at exit.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Removes event sources and closes file descriptors.
  *
  *----------------------------------------------------------------------
  */
+
 static void
 TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 {
     TSD_INIT();
 
-    if (!tsdPtr->initialized)
-        return;
+    if (!tsdPtr->initialized) {
+	return;
+    }
 
     if (tsdPtr->shutdownInProgress == 1) {
-       return;
+	return;
     }
 
     if (tsdPtr->heartbeatTimer) {
-        Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
-        tsdPtr->heartbeatTimer = NULL;
+	Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
+	tsdPtr->heartbeatTimer = NULL;
     }
 
     if (tsdPtr->wakeupFd != -1) {
-        Tcl_DeleteFileHandler(tsdPtr->wakeupFd);
-        close(tsdPtr->wakeupFd);
-        tsdPtr->wakeupFd = -1;
+	Tcl_DeleteFileHandler(tsdPtr->wakeupFd);
+	close(tsdPtr->wakeupFd);
+	tsdPtr->wakeupFd = -1;
     }
 
     Tcl_DeleteEventSource(TkWaylandEventsSetupProc,
-                          TkWaylandEventsCheckProc, NULL);
+			  TkWaylandEventsCheckProc, NULL);
 
-    tsdPtr->initialized = false;
+    tsdPtr->initialized = 0;
 }
 
 /*
@@ -301,21 +361,32 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  *
  * TkWaylandQueueExposeEvent --
  *
- *      Queue an Expose event.
+ *	Queue an Expose event.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Queues an X expose event and schedules display.
  *
  *----------------------------------------------------------------------
  */
+
 void
 TkWaylandQueueExposeEvent(
     TkWindow *winPtr,
-    int       x, int y,
-    int       width, int height)
+    int x,
+    int y,
+    int width,
+    int height)
 {
     XEvent event;
     TkWindow *childPtr;
     WindowMapping *m;
 
-    if (!winPtr) return;
+    if (!winPtr) {
+	return;
+    }
 
     memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
@@ -331,23 +402,24 @@ TkWaylandQueueExposeEvent(
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Schedule display for the toplevel window */
+    /* Schedule display for the toplevel window. */
     m = FindMappingByTk(winPtr);
     if (m && m->glfwWindow && !m->frameOpen) {
-        TkWaylandBeginEventCycle(m);
-        Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
+	TkWaylandBeginEventCycle(m);
+	Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
     }
 
-    /* Recursively for children */
+    /* Recursively for children. */
     for (childPtr = winPtr->childList; childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped((Tk_Window)childPtr) || Tk_IsTopLevel((Tk_Window)childPtr)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr,
-                                 0, 0,
-                                 Tk_Width((Tk_Window)childPtr),
-                                 Tk_Height((Tk_Window)childPtr));
+	 childPtr = childPtr->nextPtr) {
+	if (!Tk_IsMapped((Tk_Window)childPtr) ||
+	    Tk_IsTopLevel((Tk_Window)childPtr)) {
+	    continue;
+	}
+	TkWaylandQueueExposeEvent(childPtr,
+				 0, 0,
+				 Tk_Width((Tk_Window)childPtr),
+				 Tk_Height((Tk_Window)childPtr));
     }
 }
 
@@ -356,10 +428,17 @@ TkWaylandQueueExposeEvent(
  *
  * TkWaylandWakeupGLFW --
  *
- *      Wake up the GLFW event loop.
+ *	Wake up the GLFW event loop.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Writes to the wakeup file descriptor.
  *
  *----------------------------------------------------------------------
  */
+
 MODULE_SCOPE void
 TkWaylandWakeupGLFW(void)
 {
@@ -367,8 +446,8 @@ TkWaylandWakeupGLFW(void)
     uint64_t u = 1;
 
     if (tsdPtr->wakeupFd != -1 && tsdPtr->initialized &&
-        !tsdPtr->shutdownInProgress) {
-        write(tsdPtr->wakeupFd, &u, sizeof(u));
+	!tsdPtr->shutdownInProgress) {
+	write(tsdPtr->wakeupFd, &u, sizeof(u));
     }
 }
 
@@ -377,44 +456,55 @@ TkWaylandWakeupGLFW(void)
  *
  * TkWaylandBeginEventCycle --
  *
- *      Called at the START of each event loop iteration.
+ *	Called at the START of each event loop iteration.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Makes the OpenGL context current and clears the framebuffer.
  *
  *----------------------------------------------------------------------
  */
+
 MODULE_SCOPE void
 TkWaylandBeginEventCycle(WindowMapping *m)
 {
-    if (!m || !m->glfwWindow) return;
+    int fbw, fbh;
+
+    if (!m || !m->glfwWindow) {
+	return;
+    }
 
     if (m->frameOpen) {
-        return;
+	return;
     }
 
     glfwMakeContextCurrent(m->glfwWindow);
 
-    int fbw, fbh;
     glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
-    
-    /* Update window dimensions if changed */
+
+    /* Update window dimensions if changed. */
     if (fbw != m->width || fbh != m->height) {
-        m->width = fbw;
-        m->height = fbh;
-        if (m->tkWindow) {
-            m->tkWindow->changes.width = fbw;
-            m->tkWindow->changes.height = fbh;
-        }
+	m->width = fbw;
+	m->height = fbh;
+	if (m->tkWindow) {
+	    m->tkWindow->changes.width = fbw;
+	    m->tkWindow->changes.height = fbh;
+	}
+	/* Mark texture as needing reallocation. */
+	m->texture.needs_texture_update = 1;
     }
-    
+
     glViewport(0, 0, fbw, fbh);
 
-    /* Clear with light gray background */
+    /* Clear with light gray background. */
     glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     m->frameOpen = 1;
     m->inEventCycle = 1;
     glfwContext.activeFrame = m;
-    
 }
 
 /*
@@ -422,19 +512,28 @@ TkWaylandBeginEventCycle(WindowMapping *m)
  *
  * TkWaylandEndEventCycle --
  *
- *      Called at the END of each event loop iteration.
+ *	Called at the END of each event loop iteration.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Clears the frame open flag.
  *
  *----------------------------------------------------------------------
  */
+
 MODULE_SCOPE void
 TkWaylandEndEventCycle(WindowMapping *m)
 {
-    if (!m || !m->frameOpen) return;
+    if (!m || !m->frameOpen) {
+	return;
+    }
 
-    m->frameOpen    = 0;
+    m->frameOpen = 0;
     m->inEventCycle = 0;
     if (glfwContext.activeFrame == m) {
-        glfwContext.activeFrame = NULL;
+	glfwContext.activeFrame = NULL;
     }
 }
 
@@ -443,18 +542,27 @@ TkWaylandEndEventCycle(WindowMapping *m)
  *
  * TkWaylandScheduleDisplay --
  *
- *      Schedules a redraw of a Tk window.
+ *	Schedules a redraw of a Tk window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Schedules a display callback.
  *
  *----------------------------------------------------------------------
  */
+
 void
 TkWaylandScheduleDisplay(WindowMapping *m)
 {
-    if (!m) return;
-    
+    if (!m) {
+	return;
+    }
+
     if (!m->needsDisplay) {
-        m->needsDisplay = 1;
-        Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
+	m->needsDisplay = 1;
+	Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
     }
 }
 
@@ -463,32 +571,49 @@ TkWaylandScheduleDisplay(WindowMapping *m)
  *
  * TkWaylandDisplayProc --
  *
- *      Completes the drawing cycle and swaps buffers.
+ *	Completes the drawing cycle and swaps buffers.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Uploads the libcg surface to a texture, renders it, and swaps buffers.
  *
  *----------------------------------------------------------------------
  */
+
 void
 TkWaylandDisplayProc(ClientData clientData)
 {
     WindowMapping *m = (WindowMapping *)clientData;
-    
+
     if (!m || !m->glfwWindow) {
-        return;
-    }
-    
-    if (!m->frameOpen) {
-        /* Need to start a frame first */
-        TkWaylandBeginEventCycle(m);
+	return;
     }
 
+    /* If we have a libcg surface that needs display, upload it to OpenGL texture. */
+    if (m->surface && m->needsDisplay) {
+	/* Upload the libcg surface pixels to OpenGL texture. */
+	TkGlfwUploadSurfaceToTexture(m);
 
-    glfwMakeContextCurrent(m->glfwWindow);
-    
-    /* End the frame and swap buffers */
-    TkWaylandEndEventCycle(m);
-    glfwSwapBuffers(m->glfwWindow);
+	/* Begin frame if not already in one. */
+	if (!m->frameOpen) {
+	    TkWaylandBeginEventCycle(m);
+	}
 
-    m->needsDisplay = 0;
+	/* Render the texture to screen. */
+	TkGlfwRenderTexture(m);
+
+	/* End the frame and swap buffers. */
+	TkWaylandEndEventCycle(m);
+	glfwSwapBuffers(m->glfwWindow);
+
+	m->needsDisplay = 0;
+    } else if (m->frameOpen) {
+	/* Just end the frame if no content to display. */
+	TkWaylandEndEventCycle(m);
+	glfwSwapBuffers(m->glfwWindow);
+    }
 }
 
 /*

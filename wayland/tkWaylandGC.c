@@ -33,6 +33,9 @@
 
 extern TkGlfwContext glfwContext;
 
+/* GC magic number for validation */
+#define TK_WAYLAND_GC_MAGIC 0x574C4743  /* "WLGC" */
+
 /*
  *----------------------------------------------------------------------
  *
@@ -55,56 +58,70 @@ TkDisplay *
 TkpOpenDisplay(TCL_UNUSED(const char *))
 {
     _XPrivDisplay display;
-    Screen       *screen;
-    Visual       *visual;
-    TkDisplay    *dispPtr;
-    int           sw = 1920, sh = 1080;
-    GLFWmonitor  *mon;
+    Screen *screen;
+    Visual *visual;
+    TkDisplay *dispPtr;
+    int sw = 1920, sh = 1080;
+    GLFWmonitor *mon;
 
     display = (_XPrivDisplay)ckalloc(sizeof(Display));
-    if (!display) return NULL;
+    if (!display) {
+	return NULL;
+    }
     bzero(display, sizeof(Display));
 
     screen = (Screen *)ckalloc(sizeof(Screen));
-    if (!screen) { ckfree(display); return NULL; }
+    if (!screen) {
+	ckfree(display);
+	return NULL;
+    }
 
     visual = (Visual *)ckalloc(sizeof(Visual));
-    if (!visual) { ckfree(screen); ckfree(display); return NULL; }
+    if (!visual) {
+	ckfree(screen);
+	ckfree(display);
+	return NULL;
+    }
     bzero(visual, sizeof(Visual));
 
     if (!glfwInit()) {
-        ckfree(visual); ckfree(screen); ckfree(display);
-        return NULL;
+	ckfree(visual);
+	ckfree(screen);
+	ckfree(display);
+	return NULL;
     }
 
     mon = glfwGetPrimaryMonitor();
     if (mon) {
-        const GLFWvidmode *mode = glfwGetVideoMode(mon);
-        if (mode) { sw = mode->width; sh = mode->height; }
+	const GLFWvidmode *mode = glfwGetVideoMode(mon);
+	if (mode) {
+	    sw = mode->width;
+	    sh = mode->height;
+	}
     }
 
-    screen->width   = sw;
-    screen->height  = sh;
-    screen->mwidth  = (sw * 254.0) / 720.0;
+    screen->width = sw;
+    screen->height = sh;
+    screen->mwidth = (sw * 254.0) / 720.0;
     screen->mheight = (sh * 254.0) / 720.0;
 
-    display->screens        = screen;
-    display->nscreens       = 1;
+    display->screens = screen;
+    display->nscreens = 1;
     display->default_screen = 0;
-    display->display_name   = (char *)"wayland-0";
+    display->display_name = (char *)"wayland-0";
 
-    screen->display     = (Display *)display;
-    screen->root        = 1;
+    screen->display = (Display *)display;
+    screen->root = 1;
     screen->root_visual = visual;
-    screen->root_depth  = 24;
+    screen->root_depth = 24;
 
-    visual->visualid     = 1;
-    visual->class        = TrueColor;
+    visual->visualid = 1;
+    visual->class = TrueColor;
     visual->bits_per_rgb = 8;
-    visual->map_entries  = 256;
-    visual->red_mask     = 0xFF0000;
-    visual->green_mask   = 0x00FF00;
-    visual->blue_mask    = 0x0000FF;
+    visual->map_entries = 256;
+    visual->red_mask = 0xFF0000;
+    visual->green_mask = 0x00FF00;
+    visual->blue_mask = 0x0000FF;
 
     dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     bzero(dispPtr, sizeof(TkDisplay));
@@ -161,26 +178,29 @@ TkpCloseDisplay(TCL_UNUSED(TkDisplay *))
 
 MODULE_SCOPE GC
 TkWaylandCreateGC(
-    unsigned long  valuemask,
-    XGCValues     *values)
+    unsigned long valuemask,
+    XGCValues *values)
 {
     TkWaylandGCImpl *gc;
 
     gc = (TkWaylandGCImpl *)ckalloc(sizeof(TkWaylandGCImpl));
-    if (gc == NULL) return NULL;
+    if (gc == NULL) {
+	return NULL;
+    }
 
+    gc->magic = TK_WAYLAND_GC_MAGIC;
     gc->foreground = 0x000000;
     gc->background = 0xFFFFFF;
     gc->line_width = 1;
     gc->line_style = LineSolid;
-    gc->cap_style  = CapButt;
+    gc->cap_style = CapButt;
     gc->join_style = JoinMiter;
-    gc->fill_rule  = WindingRule;
-    gc->arc_mode   = ArcPieSlice;
-    gc->font       = NULL;
+    gc->fill_rule = WindingRule;
+    gc->arc_mode = ArcPieSlice;
+    gc->font = NULL;
 
     if (values != NULL) {
-        TkWaylandChangeGC((GC)gc, valuemask, values);
+	TkWaylandChangeGC((GC)gc, valuemask, values);
     }
 
     return (GC)gc;
@@ -205,8 +225,11 @@ TkWaylandCreateGC(
 MODULE_SCOPE void
 TkWaylandFreeGC(GC gc)
 {
-    if (gc != NULL) {
-        ckfree((char *)gc);
+    TkWaylandGCImpl *impl = (TkWaylandGCImpl *)gc;
+
+    if (impl != NULL && impl->magic == TK_WAYLAND_GC_MAGIC) {
+	impl->magic = 0;
+	ckfree((char *)gc);
     }
 }
 
@@ -228,23 +251,43 @@ TkWaylandFreeGC(GC gc)
 
 MODULE_SCOPE int
 TkWaylandGetGCValues(
-    GC             gc,
-    unsigned long  valuemask,
-    XGCValues     *values)
+    GC gc,
+    unsigned long valuemask,
+    XGCValues *values)
 {
     TkWaylandGCImpl *impl = (TkWaylandGCImpl *)gc;
 
-    if (impl == NULL || values == NULL) return 0;
+    if (impl == NULL || values == NULL || impl->magic != TK_WAYLAND_GC_MAGIC) {
+	return 0;
+    }
 
-    if (valuemask & GCForeground)  values->foreground  = impl->foreground;
-    if (valuemask & GCBackground)  values->background  = impl->background;
-    if (valuemask & GCLineWidth)   values->line_width  = impl->line_width;
-    if (valuemask & GCLineStyle)   values->line_style  = impl->line_style;
-    if (valuemask & GCCapStyle)    values->cap_style   = impl->cap_style;
-    if (valuemask & GCJoinStyle)   values->join_style  = impl->join_style;
-    if (valuemask & GCFillRule)    values->fill_rule   = impl->fill_rule;
-    if (valuemask & GCArcMode)     values->arc_mode    = impl->arc_mode;
-    if (valuemask & GCFont)        values->font        = (Font)(uintptr_t)impl->font;
+    if (valuemask & GCForeground) {
+	values->foreground = impl->foreground;
+    }
+    if (valuemask & GCBackground) {
+	values->background = impl->background;
+    }
+    if (valuemask & GCLineWidth) {
+	values->line_width = impl->line_width;
+    }
+    if (valuemask & GCLineStyle) {
+	values->line_style = impl->line_style;
+    }
+    if (valuemask & GCCapStyle) {
+	values->cap_style = impl->cap_style;
+    }
+    if (valuemask & GCJoinStyle) {
+	values->join_style = impl->join_style;
+    }
+    if (valuemask & GCFillRule) {
+	values->fill_rule = impl->fill_rule;
+    }
+    if (valuemask & GCArcMode) {
+	values->arc_mode = impl->arc_mode;
+    }
+    if (valuemask & GCFont) {
+	values->font = (Font)(uintptr_t)impl->font;
+    }
 
     return 1;
 }
@@ -267,23 +310,43 @@ TkWaylandGetGCValues(
 
 MODULE_SCOPE int
 TkWaylandChangeGC(
-    GC             gc,
-    unsigned long  valuemask,
-    XGCValues     *values)
+    GC gc,
+    unsigned long valuemask,
+    XGCValues *values)
 {
     TkWaylandGCImpl *impl = (TkWaylandGCImpl *)gc;
 
-    if (impl == NULL || values == NULL) return 0;
+    if (impl == NULL || values == NULL || impl->magic != TK_WAYLAND_GC_MAGIC) {
+	return 0;
+    }
 
-    if (valuemask & GCForeground)  impl->foreground = values->foreground;
-    if (valuemask & GCBackground)  impl->background = values->background;
-    if (valuemask & GCLineWidth)   impl->line_width = values->line_width;
-    if (valuemask & GCLineStyle)   impl->line_style = values->line_style;
-    if (valuemask & GCCapStyle)    impl->cap_style  = values->cap_style;
-    if (valuemask & GCJoinStyle)   impl->join_style = values->join_style;
-    if (valuemask & GCFillRule)    impl->fill_rule  = values->fill_rule;
-    if (valuemask & GCArcMode)     impl->arc_mode   = values->arc_mode;
-    if (valuemask & GCFont)        impl->font       = (void *)(uintptr_t)values->font;
+    if (valuemask & GCForeground) {
+	impl->foreground = values->foreground;
+    }
+    if (valuemask & GCBackground) {
+	impl->background = values->background;
+    }
+    if (valuemask & GCLineWidth) {
+	impl->line_width = values->line_width;
+    }
+    if (valuemask & GCLineStyle) {
+	impl->line_style = values->line_style;
+    }
+    if (valuemask & GCCapStyle) {
+	impl->cap_style = values->cap_style;
+    }
+    if (valuemask & GCJoinStyle) {
+	impl->join_style = values->join_style;
+    }
+    if (valuemask & GCFillRule) {
+	impl->fill_rule = values->fill_rule;
+    }
+    if (valuemask & GCArcMode) {
+	impl->arc_mode = values->arc_mode;
+    }
+    if (valuemask & GCFont) {
+	impl->font = (void *)(uintptr_t)values->font;
+    }
 
     return 1;
 }
@@ -306,13 +369,15 @@ TkWaylandChangeGC(
 
 MODULE_SCOPE int
 TkWaylandCopyGC(
-    GC            src,
+    GC src,
     unsigned long valuemask,
-    GC            dst)
+    GC dst)
 {
     XGCValues tmp;
 
-    if (src == NULL || dst == NULL) return 0;
+    if (src == NULL || dst == NULL) {
+	return 0;
+    }
 
     TkWaylandGetGCValues(src, valuemask, &tmp);
     TkWaylandChangeGC(dst, valuemask, &tmp);
@@ -347,44 +412,48 @@ TkWaylandCopyGC(
 Pixmap
 Tk_GetPixmap(
     TCL_UNUSED(Display *),
-    Drawable     d,
-    int          width,
-    int          height,
-    TCL_UNUSED(int))   /* depth */
+    Drawable d,
+    int width,
+    int height,
+    TCL_UNUSED(int))	/* depth */
 {
     TkWaylandPixmapImpl *pixmap;
-    WindowMapping       *mapping;
+    WindowMapping *mapping;
 
-    if (width <= 0 || height <= 0) return None;
+    if (width <= 0 || height <= 0) {
+	return None;
+    }
 
     mapping = FindMappingByDrawable(d);
-    if (!mapping || !mapping->glfwWindow) return None;
+    if (!mapping || !mapping->glfwWindow) {
+	return None;
+    }
 
     pixmap = (TkWaylandPixmapImpl *)ckalloc(sizeof(TkWaylandPixmapImpl));
     memset(pixmap, 0, sizeof(TkWaylandPixmapImpl));
 
-    pixmap->magic         = TK_WAYLAND_PIXMAP_MAGIC;
-    pixmap->type          = 1;
-    pixmap->width         = width;
-    pixmap->height        = height;
-    pixmap->drawable      = (Drawable)pixmap;
+    pixmap->magic = TK_WAYLAND_PIXMAP_MAGIC;
+    pixmap->type = 1;
+    pixmap->width = width;
+    pixmap->height = height;
+    pixmap->drawable = (Drawable)pixmap;
     pixmap->windowMapping = mapping;
-    pixmap->frameOpen     = 0;
+    pixmap->frameOpen = 0;
 
     pixmap->surface = cg_surface_create(width, height);
     if (!pixmap->surface) {
-        ckfree((char *)pixmap);
-        return None;
+	ckfree((char *)pixmap);
+	return None;
     }
 
     pixmap->cg = cg_create(pixmap->surface);
     if (!pixmap->cg) {
-        cg_surface_destroy(pixmap->surface);
-        ckfree((char *)pixmap);
-        return None;
+	cg_surface_destroy(pixmap->surface);
+	ckfree((char *)pixmap);
+	return None;
     }
 
-    /* Clear to white. */
+    /* Clear to white */
     cg_set_source_rgba(pixmap->cg, 1.0, 1.0, 1.0, 1.0);
     cg_rectangle(pixmap->cg, 0, 0, (double)width, (double)height);
     cg_fill(pixmap->cg);
@@ -417,17 +486,20 @@ Tk_FreePixmap(
 {
     TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)pixmap;
 
-    if (!impl || impl->type != 1) return;
+    if (!impl || impl->type != 1 || impl->magic != TK_WAYLAND_PIXMAP_MAGIC) {
+	return;
+    }
 
     if (impl->cg) {
-        cg_destroy(impl->cg);
-        impl->cg = NULL;
+	cg_destroy(impl->cg);
+	impl->cg = NULL;
     }
     if (impl->surface) {
-        cg_surface_destroy(impl->surface);
-        impl->surface = NULL;
+	cg_surface_destroy(impl->surface);
+	impl->surface = NULL;
     }
 
+    impl->magic = 0;
     ckfree((char *)impl);
 }
 
@@ -452,18 +524,22 @@ IsPixmap(Drawable drawable)
 {
     TkWaylandPixmapImpl *impl;
 
-    if (!drawable) return 0;
+    if (!drawable) {
+	return 0;
+    }
 
     /* Window IDs are small integers. */
-    if ((uintptr_t)drawable < 0x1000000) return 0;
+    if ((uintptr_t)drawable < 0x1000000) {
+	return 0;
+    }
 
     impl = (TkWaylandPixmapImpl *)drawable;
 
-    return (impl->magic  == TK_WAYLAND_PIXMAP_MAGIC &&
-            impl->type   == 1 &&
-            impl->width  > 0 && impl->width  < 32768 &&
-            impl->height > 0 && impl->height < 32768 &&
-            impl->surface != NULL);
+    return (impl->magic == TK_WAYLAND_PIXMAP_MAGIC &&
+	    impl->type == 1 &&
+	    impl->width > 0 && impl->width < 32768 &&
+	    impl->height > 0 && impl->height < 32768 &&
+	    impl->surface != NULL);
 }
 
 /*
@@ -478,8 +554,8 @@ GC
 XCreateGC(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Drawable),
-    unsigned long  valuemask,
-    XGCValues     *values)
+    unsigned long valuemask,
+    XGCValues *values)
 {
     return TkWaylandCreateGC(valuemask, values);
 }
@@ -496,10 +572,11 @@ XFreeGC(
 int
 XSetForeground(
     TCL_UNUSED(Display *),
-    GC            gc,
+    GC gc,
     unsigned long foreground)
 {
     XGCValues v;
+
     v.foreground = foreground;
     return TkWaylandChangeGC(gc, GCForeground, &v) ? Success : BadGC;
 }
@@ -507,10 +584,11 @@ XSetForeground(
 int
 XSetBackground(
     TCL_UNUSED(Display *),
-    GC            gc,
+    GC gc,
     unsigned long background)
 {
     XGCValues v;
+
     v.background = background;
     return TkWaylandChangeGC(gc, GCBackground, &v) ? Success : BadGC;
 }
@@ -518,59 +596,59 @@ XSetBackground(
 int
 XSetLineAttributes(
     TCL_UNUSED(Display *),
-    GC           gc,
+    GC gc,
     unsigned int line_width,
-    int          line_style,
-    int          cap_style,
-    int          join_style)
+    int line_style,
+    int cap_style,
+    int join_style)
 {
     XGCValues v;
+
     v.line_width = (int)line_width;
     v.line_style = line_style;
-    v.cap_style  = cap_style;
+    v.cap_style = cap_style;
     v.join_style = join_style;
-    return TkWaylandChangeGC(
-        gc, GCLineWidth | GCLineStyle | GCCapStyle | GCJoinStyle,
-        &v) ? Success : BadGC;
+    return TkWaylandChangeGC(gc, GCLineWidth | GCLineStyle | GCCapStyle | GCJoinStyle,
+			     &v) ? Success : BadGC;
 }
 
 int
 XGetGCValues(
     TCL_UNUSED(Display *),
-    GC             gc,
-    unsigned long  valuemask,
-    XGCValues     *values)
+    GC gc,
+    unsigned long valuemask,
+    XGCValues *values)
 {
-    return TkWaylandGetGCValues(gc, valuemask, values);
+    return TkWaylandGetGCValues(gc, valuemask, values) ? Success : BadGC;
 }
 
 int
 XChangeGC(
     TCL_UNUSED(Display *),
-    GC             gc,
-    unsigned long  valuemask,
-    XGCValues     *values)
+    GC gc,
+    unsigned long valuemask,
+    XGCValues *values)
 {
-    return TkWaylandChangeGC(gc, valuemask, values);
+    return TkWaylandChangeGC(gc, valuemask, values) ? Success : BadGC;
 }
 
 int
 XCopyGC(
     TCL_UNUSED(Display *),
-    GC            src,
+    GC src,
     unsigned long valuemask,
-    GC            dst)
+    GC dst)
 {
     return TkWaylandCopyGC(src, valuemask, dst) ? Success : BadGC;
 }
 
 Pixmap
 XCreatePixmap(
-    Display      *display,
-    Drawable      parent,
-    unsigned int  width,
-    unsigned int  height,
-    unsigned int  depth)
+    Display *display,
+    Drawable parent,
+    unsigned int width,
+    unsigned int height,
+    unsigned int depth)
 {
     return Tk_GetPixmap(display, parent, (int)width, (int)height, (int)depth);
 }
