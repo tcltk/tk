@@ -447,42 +447,19 @@ TkWaylandWakeupGLFW(void)
  *
  *----------------------------------------------------------------------
  */
-
-MODULE_SCOPE void
+ 
+void
 TkWaylandBeginEventCycle(WindowMapping *m)
 {
-    int fbw, fbh;
-
-    if (!m || !m->glfwWindow) {
-    return;
-    }
-
-    if (m->frameOpen) {
-    return;
-    }
+    if (!m || !m->glfwWindow) return;
 
     glfwMakeContextCurrent(m->glfwWindow);
 
-    glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
+    /* We only clear the stencil/depth if your app uses them. */
+    glClear(GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /* Update window dimensions if changed. */
-    if (fbw != m->width || fbh != m->height) {
-    m->width = fbw;
-    m->height = fbh;
-    if (m->tkWindow) {
-        m->tkWindow->changes.width = fbw;
-        m->tkWindow->changes.height = fbh;
-    }
-    /* Resize callbacks handle surface lifecycle. */
-    }
-
-    glViewport(0, 0, fbw, fbh);
-
-    /* Clear with light gray background. */
-    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    m->frameOpen = 1;
+    /* Ensure we are drawing at the right scale. */
+    glViewport(0, 0, m->width, m->height);
 }
 
 /*
@@ -562,54 +539,47 @@ TkWaylandDisplayProc(ClientData clientData)
 {
     WindowMapping *m = (WindowMapping *)clientData;
 
-    if (!m) {
+    if (!m || !m->glfwWindow) {
         return;
     }
-    if (!m->glfwWindow) {
-        m->needsDisplay = 0;
-        return;
-    }
-    
+
+    /* Ensure we have a valid libcg surface and OpenGL texture 
+     * to work with.
+     */
     if (TkGlfwEnsureSurface(m) != TCL_OK || !m->surface || !m->surface->pixels) {
-		m->needsDisplay = 0;
-		return;
-	}
-
-    /* Only do something if we actually have pixels to display. */
-    if (!m->needsDisplay) {
-        return;
-    }
-
-    /* Ensure we have a valid surface. */
-    if (TkGlfwEnsureSurface(m) != TCL_OK || !m->surface) {
         m->needsDisplay = 0;
         return;
     }
 
-    /* Start the frame. */
-    TkWaylandBeginEventCycle(m);
-    if (!m->frameOpen) {
-        m->needsDisplay = 0;
-        return;
-    }
-
-    /* Upload the libcg surface pixels to OpenGL texture if needed. */
-    if (m->texture.needs_texture_update && m->surface && m->texture.texture_id) {
+    /* If a drawing function (like XFillPolygon) just finished,
+     * m->texture.needs_texture_update will be 1. We must upload NOW.
+     */
+    if (m->texture.needs_texture_update) {
+        /* This is the function in tkWaylandInit.c that fixes corrupted drawing. */
         TkGlfwUploadSurfaceToTexture(m);
+        
+        /* Reset the flag so we don't waste GPU cycles re-uploading identical pixels */
+        m->texture.needs_texture_update = 0;
     }
 
-    /* Render the texture to screen. */
+    /* Presentation: Make the GLFW context current and draw the texture.
+     */
+    glfwMakeContextCurrent(m->glfwWindow);
+
+    /* Start the OpenGL cycle (sets up blending/clearing if needed) */
+    TkWaylandBeginEventCycle(m);
+
     if (m->texture.texture_id) {
+        /* This renders the quad with the texture we just uploaded. */
         TkGlfwRenderTexture(m);
     }
 
-    /* Swap buffers to present. */
+    /* Present to the Wayland compositor. */
     glfwSwapBuffers(m->glfwWindow);
 
-    /* End the frame. */
+    /* Finalize the frame. */
     TkWaylandEndEventCycle(m);
-
-    /* Clear the dirty flag. */
+    
     m->needsDisplay = 0;
 }
 

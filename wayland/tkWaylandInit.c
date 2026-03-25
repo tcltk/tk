@@ -444,35 +444,49 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     int stride = m->surface->stride;
     unsigned char *srcBase = (unsigned char *)m->surface->pixels;
 
+    /* Allocate the destination buffer for RGBA. */
     uint32_t *rgba = (uint32_t *)ckalloc(w * h * sizeof(uint32_t));
 
     for (int y = 0; y < h; y++) {
-        uint32_t *srcRow = (uint32_t *)(srcBase + (y * stride));
+        /* Wee MUST use the stride to find the start of the row.
+         * Then we treat the row as a byte array to avoid pointer math errors.
+         */
+        unsigned char *srcRow = srcBase + (y * stride);
+        
         for (int x = 0; x < w; x++) {
-            uint32_t p = srcRow[x];
-            
-            /* libcg is ARGB (0xAARRGGBB) */
-            uint8_t r = (p >> 16) & 0xFF;
-            uint8_t g = (p >> 8)  & 0xFF;
-            uint8_t b = (p >> 0)  & 0xFF;
+            /* libcg usually stores pixels as BGRA or ARGB depending on endianness.
+             * For most Wayland systems (Little Endian), it's 0xBB 0xGG 0xRR 0xAA.
+             */
+            unsigned char b = srcRow[x * 4 + 0];
+            unsigned char g = srcRow[x * 4 + 1];
+            unsigned char r = srcRow[x * 4 + 2];
+            /* We ignore srcRow[x * 4 + 3] because we want OPAQUE */
 
-            /* CORRECT PACKING for GL_RGBA (Little Endian): 
-             * Byte 0: R, Byte 1: G, Byte 2: B, Byte 3: A */
+            /* Pack into GL_RGBA order (Little Endian):
+             * Byte 0: R, Byte 1: G, Byte 2: B, Byte 3: 0xFF.
+             */
             rgba[y * w + x] = (uint32_t)r | 
                              ((uint32_t)g << 8) | 
                              ((uint32_t)b << 16) | 
-                             (0xFF << 24);
+                             (0xFFu << 24);
         }
     }
 
+    /* Ensure the context is current before talking to the GPU. */
     glfwMakeContextCurrent(m->glfwWindow);
     glBindTexture(GL_TEXTURE_2D, m->texture.texture_id);
     
-    /* Use glTexImage2D to ensure the texture size matches the surface exactly */
+    /* Upload to GPU. Using GL_UNSIGNED_BYTE with our manually packed
+     * uint32_t ensures Red is in the first byte, Green in second, etc.
+     */
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, 
                  GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
     ckfree((char *)rgba);
+    
+    /* Flag reset: Only do this here so DisplayProc knows 
+     * the work is actually finished.
+     */
     m->texture.needs_texture_update = 0;
 }
 
@@ -941,43 +955,26 @@ TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
  */
 
 MODULE_SCOPE int
-TkGlfwBeginDraw(
-    Drawable drawable,
-    GC gc,
-    TkWaylandDrawingContext *dcPtr)
+TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *m = FindMappingByDrawable(drawable);
-    if (!m || !m->surface) {
-        return TCL_ERROR;
-    }
+    if (!m || !m->surface) return TCL_ERROR;
 
-    /* Initialize the drawing context structure. */
-    dcPtr->drawable = drawable;
-    dcPtr->width = m->width;
-    dcPtr->height = m->height;
-    dcPtr->glfwWindow = m->glfwWindow;
-
-    /* Create the libcg context from the window's surface.
-     * This is the 'canvas' Tk will draw on.
+    dcPtr->cg = cg_create(m->surface);
+    
+    /* FILL THE BACKGROUND HERE.
+     * This replaces the transparency with solid Gray.
      */
-    dcPtr->cg = cg_create(m->surface); 
-    if (!dcPtr->cg) {
-        return TCL_ERROR;
-    }
-
-    /* Initial clear: fill the buffer with the standard Tk gray.
-     * Use CG_OPERATOR_SRC to ensure we overwrite any old black pixels.
-     */
-    cg_set_source_rgba(dcPtr->cg, 0.9216, 0.9216, 0.9216, 1.0);
+    cg_set_source_rgba(dcPtr->cg, 0.92, 0.92, 0.92, 1.0);
     cg_set_operator(dcPtr->cg, CG_OPERATOR_SRC);
     cg_paint(dcPtr->cg);
     
-    /* Set back to SRC_OVER so widgets draw correctly on top of the gray. */
+    /* Reset to normal mode so widgets draw ON TOP of the gray. */
     cg_set_operator(dcPtr->cg, CG_OPERATOR_SRC_OVER);
-    
-    m->frameOpen = 1;
+
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1001,21 +998,19 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
     
     if (dcPtr->cg) {
-        /* Destroying the context flushes all pending drawing operations 
-         * into the surface's pixel buffer.
-         */
         cg_destroy(dcPtr->cg);
         dcPtr->cg = NULL;
     }
 
     if (m) {
-        /* Mark the texture as 'dirty'. The next time the display 
-         * procedure runs, it will see this flag and upload the 
-         * new pixels to the GPU.
-         */
-        m->texture.needs_texture_update = 1;
+        m->texture.needs_texture_update = 1; 
         m->needsDisplay = 1;
         m->frameOpen = 0;
+        
+        /* This is vital! It tells Tcl to run the DisplayProc 
+         * right now instead of waiting for a mouse move.
+         */
+        Tcl_ThreadAlert(Tcl_GetCurrentThread());
     }
 }
 
