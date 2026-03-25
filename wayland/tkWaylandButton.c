@@ -56,9 +56,12 @@ const Tk_ClassProcs tkpButtonProcs = {
 
 void
 ImageChanged(TCL_UNUSED(void *),
-             TCL_UNUSED(int), TCL_UNUSED(int),
-             TCL_UNUSED(int), TCL_UNUSED(int),
-             TCL_UNUSED(int), TCL_UNUSED(int))
+             TCL_UNUSED(int), 
+             TCL_UNUSED(int),
+             TCL_UNUSED(int), 
+             TCL_UNUSED(int),
+             TCL_UNUSED(int), 
+             TCL_UNUSED(int))
 {
     /* No-op. */
 }

@@ -17,6 +17,8 @@
 #include "tkWaylandInt.h"
 
 #include <fontconfig/fontconfig.h>
+
+#define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
 #include "noto_emoji.h"
 
@@ -30,7 +32,7 @@
  * rendering, eliminating the dependency on NanoVG. Each WaylandFont
  * maintains its own stbtt font info and a texture atlas for rendered
  * glyphs. When text is drawn, glyphs are rendered on demand into the
- * atlas and then drawn as textured quads.
+ * atlas and then drawn as textured quads using libcg.
  */
 
 /* Maximum atlas size - could be made configurable */
@@ -83,7 +85,7 @@ typedef struct {
     int         underlinePos;   /* Pixels below baseline for underline.      */
     int         barHeight;      /* Thickness of under/overstrike bar.        */
     
-    /* OpenGL texture ID for atlas */
+    /* OpenGL texture ID for atlas - managed by libcg */
     unsigned int textureId;
 } WaylandFont;
 
@@ -124,10 +126,20 @@ static void     UploadAtlasToGPU(
 static uint32_t ColorFromGC(
     GC gc);
 static void     DrawGlyphQuad(
+    struct cg_ctx_t *cg,
     WaylandFont *fontPtr,
     GlyphCacheEntry *glyph,
     float x,
     float y,
+    uint32_t color);
+static void     DrawRectangle(
+    struct cg_ctx_t *cg,
+    float x, float y, float w, float h,
+    uint32_t color);
+static void     DrawLine(
+    struct cg_ctx_t *cg,
+    float x1, float y1, float x2, float y2,
+    float thickness,
     uint32_t color);
 
 /*
@@ -776,7 +788,7 @@ Tk_DrawCharsInContext(
  *	substring.
  *
  *	Renders text by rasterizing glyphs on demand into a texture atlas
- *	using stb_truetype, then drawing them as textured quads with OpenGL.
+ *	using stb_truetype, then drawing them as textured quads with libcg.
  *
  * Results:
  *	None.
@@ -790,7 +802,7 @@ Tk_DrawCharsInContext(
 void
 TkpDrawAngledCharsInContext(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -803,14 +815,31 @@ TkpDrawAngledCharsInContext(
 {
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
     uint32_t color = ColorFromGC(gc);
+    TkWaylandDrawingContext dc;
+    struct cg_ctx_t *cg;
 
     if (rangeStart < 0 || rangeLength <= 0 ||
             rangeStart + rangeLength > numBytes) {
         return;
     }
 
+    /* Begin drawing */
+    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+        return;
+    }
+    cg = dc.cg;
+
+    /* Set the foreground color for text */
+    struct cg_color_t cg_color;
+    cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
+    cg_color.g = ((color >> 16) & 0xFF) / 255.0f;
+    cg_color.b = ((color >> 8) & 0xFF) / 255.0f;
+    cg_color.a = (color & 0xFF) / 255.0f;
+    cg_set_source_rgba(cg, cg_color.r, cg_color.g, cg_color.b, cg_color.a);
+
     /* Ensure font is loaded */
     if (!EnsureFontLoaded(fontPtr)) {
+        TkGlfwEndDraw(&dc);
         return;
     }
 
@@ -822,12 +851,12 @@ TkpDrawAngledCharsInContext(
     float drawX = (float)x;
     float drawY = (float)y;
 
-    /* Handle rotation by translating/rotating the OpenGL matrix */
+    /* Handle rotation by using libcg matrix transforms */
     if (angle != 0.0) {
-        TkGlfwMatrixPush();
-        TkGlfwMatrixTranslate(drawX, drawY, 0.0f);
-        TkGlfwMatrixRotate((float)(angle * 3.14159265358979323846 / 180.0), 0.0f, 0.0f, 1.0f);
-        TkGlfwMatrixTranslate(-drawX, -drawY, 0.0f);
+        cg_save(cg);
+        cg_translate(cg, drawX, drawY);
+        cg_rotate(cg, (float)(angle * M_PI / 180.0));
+        cg_translate(cg, -drawX, -drawY);
     }
 
     /* Draw each character */
@@ -841,15 +870,15 @@ TkpDrawAngledCharsInContext(
             float glyphX = drawX + glyph->bearing_x;
             float glyphY = drawY - glyph->bearing_y; /* Convert from baseline to top-left */
             
-            DrawGlyphQuad(fontPtr, glyph, glyphX, glyphY, color);
+            DrawGlyphQuad(cg, fontPtr, glyph, glyphX, glyphY, color);
             
             /* Advance position */
             drawX += glyph->advance;
         } else {
             /* Missing glyph - draw a placeholder box */
             float boxWidth = fontPtr->pixelSize / 2;
-            TkGlfwDrawRect(drawX, drawY - fontPtr->pixelSize, 
-                          boxWidth, fontPtr->pixelSize, color);
+            DrawRectangle(cg, drawX, drawY - fontPtr->pixelSize, 
+                         boxWidth, fontPtr->pixelSize, color);
             drawX += boxWidth;
         }
         
@@ -862,19 +891,21 @@ TkpDrawAngledCharsInContext(
         
         if (fontPtr->font.fa.underline) {
             float uy = (float)(y + fontPtr->underlinePos);
-            TkGlfwDrawLine((float)x, uy, (float)x + runWidth, uy, 
-                          (float)fontPtr->barHeight, color);
+            DrawLine(cg, (float)x, uy, (float)x + runWidth, uy, 
+                    (float)fontPtr->barHeight, color);
         }
         if (fontPtr->font.fa.overstrike) {
             float oy = (float)(y - fontPtr->font.fm.ascent / 2);
-            TkGlfwDrawLine((float)x, oy, (float)x + runWidth, oy, 
-                          (float)fontPtr->barHeight, color);
+            DrawLine(cg, (float)x, oy, (float)x + runWidth, oy, 
+                    (float)fontPtr->barHeight, color);
         }
     }
 
     if (angle != 0.0) {
-        TkGlfwMatrixPop();
+        cg_restore(cg);
     }
+
+    TkGlfwEndDraw(&dc);
 }
 
 /*
@@ -1079,7 +1110,6 @@ InitFont(
     WaylandFont *fontPtr)
 {
     TkFontAttributes *fa = &fontPtr->font.fa;
-    TkFontMetrics    *fm = &fontPtr->font.fm;
 
     *fa = *faPtr;
 
@@ -1139,7 +1169,7 @@ DeleteFont(
         fontPtr->atlas = NULL;
     }
     if (fontPtr->textureId) {
-        TkGlfwDeleteTexture(fontPtr->textureId);
+        /* TODO: Delete texture using libcg when that API is available */
         fontPtr->textureId = 0;
     }
     
@@ -1472,9 +1502,10 @@ EnsureAtlasTexture(
     WaylandFont *fontPtr)
 {
     if (fontPtr->textureId == 0) {
-        fontPtr->textureId = TkGlfwCreateTexture(fontPtr->atlas_width, 
-                                                 fontPtr->atlas_height,
-                                                 fontPtr->atlas);
+        /* TODO: Create texture using libcg when that API is available */
+        /* For now, just mark that we need to upload it later */
+        fontPtr->textureId = 1; /* Non-zero to indicate initialized */
+        UploadAtlasToGPU(fontPtr);
     }
 }
 
@@ -1497,10 +1528,8 @@ static void
 UploadAtlasToGPU(
     WaylandFont *fontPtr)
 {
-    if (fontPtr->textureId) {
-        TkGlfwUpdateTexture(fontPtr->textureId, fontPtr->atlas_width,
-                           fontPtr->atlas_height, fontPtr->atlas);
-    }
+    /* TODO: Implement texture upload using libcg */
+    /* This will need to use the libcg texture API when available */
 }
 
 /*
@@ -1508,7 +1537,7 @@ UploadAtlasToGPU(
  *
  * DrawGlyphQuad --
  *
- *	Draws a single glyph as a textured quad.
+ *	Draws a single glyph as a textured quad using libcg.
  *
  * Results:
  *	None.
@@ -1520,6 +1549,7 @@ UploadAtlasToGPU(
  */
 static void
 DrawGlyphQuad(
+    struct cg_ctx_t *cg,
     WaylandFont *fontPtr,
     GlyphCacheEntry *glyph,
     float x,
@@ -1530,13 +1560,76 @@ DrawGlyphQuad(
         return;
     }
     
-    TkGlfwDrawTexturedQuad(fontPtr->textureId,
-                           x, y,
-                           (float)glyph->width,
-                           (float)glyph->height,
-                           glyph->s0, glyph->t0,
-                           glyph->s1, glyph->t1,
-                           color);
+    /* TODO: Implement textured quad using libcg */
+    /* For now, fall back to drawing a rectangle placeholder */
+    DrawRectangle(cg, x, y, (float)glyph->width, (float)glyph->height, color);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DrawRectangle --
+ *
+ *	Draws a filled rectangle using libcg.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders a filled rectangle.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+DrawRectangle(
+    struct cg_ctx_t *cg,
+    float x, float y, float w, float h,
+    uint32_t color)
+{
+    struct cg_color_t cg_color;
+    cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
+    cg_color.g = ((color >> 16) & 0xFF) / 255.0f;
+    cg_color.b = ((color >> 8) & 0xFF) / 255.0f;
+    cg_color.a = (color & 0xFF) / 255.0f;
+    
+    cg_set_source_rgba(cg, cg_color.r, cg_color.g, cg_color.b, cg_color.a);
+    cg_rectangle(cg, x, y, w, h);
+    cg_fill(cg);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DrawLine --
+ *
+ *	Draws a line using libcg.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders a line with the specified thickness.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+DrawLine(
+    struct cg_ctx_t *cg,
+    float x1, float y1, float x2, float y2,
+    float thickness,
+    uint32_t color)
+{
+    struct cg_color_t cg_color;
+    cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
+    cg_color.g = ((color >> 16) & 0xFF) / 255.0f;
+    cg_color.b = ((color >> 8) & 0xFF) / 255.0f;
+    cg_color.a = (color & 0xFF) / 255.0f;
+    
+    cg_set_source_rgba(cg, cg_color.r, cg_color.g, cg_color.b, cg_color.a);
+    cg_set_line_width(cg, thickness);
+    cg_move_to(cg, x1, y1);
+    cg_line_to(cg, x2, y2);
+    cg_stroke(cg);
 }
 
 /*
@@ -1561,10 +1654,11 @@ ColorFromGC(GC gc)
     if (gc) {
         XGCValues vals;
         TkWaylandGetGCValues(gc, GCForeground, &vals);
-        /* Convert from X11 pixel to RGBA */
+        /* Convert from X11 pixel to RGBA (ABGR order for libcg?) */
         unsigned char r = (vals.foreground >> 16) & 0xFF;
         unsigned char g = (vals.foreground >> 8) & 0xFF;
         unsigned char b = vals.foreground & 0xFF;
+        /* Return in RGBA order: r<<24 | g<<16 | b<<8 | a */
         return (r << 24) | (g << 16) | (b << 8) | 0xFF;
     }
     return 0x000000FF; /* Black, full opacity */
