@@ -14,7 +14,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <errno.h>
@@ -67,7 +67,7 @@ static void TkWaylandCheckForWindowClosure(void);
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 Tk_WaylandSetupTkNotifier(void)
 {
@@ -103,7 +103,7 @@ Tk_WaylandSetupTkNotifier(void)
 
         TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
-    
+
         /* Wake up the event loop. */
         TkWaylandWakeupGLFW();
 }
@@ -134,19 +134,19 @@ TkWaylandWakeupFileProc(TCL_UNUSED(void *),
     TSD_INIT();
     uint64_t u;
     WindowMapping *m;
-    
+
     if (tsdPtr->wakeupFd == -1) return;
-    
+
     /* Read and discard the eventfd value. */
     if (read(tsdPtr->wakeupFd, &u, sizeof(u)) != sizeof(u)) {
         /* Ignore errors - just clear the fd. */
     }
-    
+
     /* Process any pending GLFW events. */
     if (glfwContext.initialized && !tsdPtr->shutdownInProgress) {
         glfwPollEvents();
         TkWaylandCheckForWindowClosure();
-        
+
         /* Begin event cycle for main window */
         if (glfwContext.mainWindow) {
             m = FindMappingByGLFW(glfwContext.mainWindow);
@@ -156,6 +156,7 @@ TkWaylandWakeupFileProc(TCL_UNUSED(void *),
         }
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -177,19 +178,17 @@ static void
 TkWaylandCheckForWindowClosure(void)
 {
     TSD_INIT();
-    
+
     if (tsdPtr->shutdownInProgress) return;
-    
+
     /* If there are no Tk main windows left, start shutdown. */
     if (Tk_GetNumMainWindows() == 0) {
         tsdPtr->shutdownInProgress = 1;
-        
+
         /* Schedule cleanup as idle callback. */
         Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
     }
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -209,7 +208,7 @@ TkWaylandCheckForWindowClosure(void)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 HeartbeatTimerProc(TCL_UNUSED(void *))
 {
@@ -225,12 +224,12 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
         Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
         return;
     }
-    
+
     /* Poll GLFW events. */
     if (glfwContext.initialized) {
         glfwPollEvents();
     }
-    
+
     /* Reschedule timer if still initialized and not shutting down. */
     if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
         tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
@@ -262,13 +261,13 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
 {
     TSD_INIT();
     Tcl_Time blockTime = {0, 0};
-    
+
     if (tsdPtr->shutdownInProgress) {
         /* Don't block during shutdown. */
         Tcl_SetMaxBlockTime(&blockTime);
         return;
     }
-    
+
     /* If we have a wakeup fd, we can block indefinitely since we'll be woken. */
     if (tsdPtr->wakeupFd != -1 && glfwContext.initialized) {
         /* Check if GLFW has pending events. */
@@ -277,7 +276,7 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
             return;
         }
     }
-    
+
     /* Otherwise use timer-based approach. */
     if (!(flags & TCL_WINDOW_EVENTS)) {
         /* Not interested in window events - use timer. */
@@ -299,43 +298,32 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
  *      None.
  *
  * Side effects:
- *      Begins the event cycle for the main window to enable rendering.
+ *      Begins the event cycle for windows that are not yet in a frame,
+ *      via TkWaylandBeginEventCycle, and schedules TkWaylandDisplayProc
+ *      to close and blit each frame at idle time.
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandEventsCheckProc(TCL_UNUSED(void *),
-	int flags) 
+	int flags)
 {
     if (!(flags & TCL_WINDOW_EVENTS)) return;
 
     /* Poll GLFW for system events (Map, Resize, Key, etc.) */
     glfwPollEvents();
 
-    WindowMapping *m = windowMappingList; 
+    WindowMapping *m = windowMappingList;
     while (m) {
         if (m->glfwWindow && !m->frameOpen) {
-            glfwMakeContextCurrent(m->glfwWindow);
-            
-            /* Start the frame once for the entire event pass. */
-            int fbw, fbh;
-            glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
-            nvgBeginFrame(glfwContext.vg, m->width, m->height, (float)fbw/m->width);
-            
-            /* Initial transform. */
-            nvgSave(glfwContext.vg);
-            nvgScale(glfwContext.vg, 1.0f, -1.0f);
-            nvgTranslate(glfwContext.vg, 0.0f, -(float)m->height);
-            
-            m->frameOpen = 1;
-
-            /* Force a display flush at the end of this Tcl cycle. */
+            TkWaylandBeginEventCycle(m);
             Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
         }
         m = m->nextPtr;
     }
-} 
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -355,7 +343,7 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 {
@@ -387,7 +375,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
                           TkWaylandEventsCheckProc, NULL);
 
     tsdPtr->initialized = false;
-    
+
     /* Note: We don't call TkGlfwShutdown here. */
 }
 
@@ -406,7 +394,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 TkWaylandQueueExposeEvent(
     TkWindow *winPtr,
@@ -415,10 +403,9 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    
+
     if (!winPtr) return;
-    
-    
+
     /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
@@ -431,24 +418,22 @@ TkWaylandQueueExposeEvent(
     event.xexpose.width = width;
     event.xexpose.height = height;
     event.xexpose.count = 0;
-    
+
     /* Queue it. */
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    
+
     /* Recursively for children. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
         if (!Tk_IsMapped((Tk_Window)childPtr) || Tk_IsTopLevel((Tk_Window)childPtr)) {
             continue;
         }
-        TkWaylandQueueExposeEvent(childPtr, 
+        TkWaylandQueueExposeEvent(childPtr,
                                  0, 0,
                                  Tk_Width((Tk_Window)childPtr),
                                  Tk_Height((Tk_Window)childPtr));
     }
-    
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -473,13 +458,12 @@ TkWaylandWakeupGLFW(void)
 {
     TSD_INIT();
     uint64_t u = 1;
-    
-    if (tsdPtr->wakeupFd != -1 && tsdPtr->initialized && 
+
+    if (tsdPtr->wakeupFd != -1 && tsdPtr->initialized &&
         !tsdPtr->shutdownInProgress) {
         write(tsdPtr->wakeupFd, &u, sizeof(u));
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -503,12 +487,11 @@ TkWaylandBeginEventCycle(WindowMapping *m)
 {
     if (!m || !m->glfwWindow) return;
 
-	if (m->frameOpen) {
+    if (m->frameOpen) {
         /* Already in drawing round – do NOT clear again. */
-		fprintf(stderr, "BeginEventCycle: already open, continuing\n");
-		return;
-	}
-
+        fprintf(stderr, "BeginEventCycle: already open, continuing\n");
+        return;
+    }
 
     glfwMakeContextCurrent(m->glfwWindow);
 
@@ -534,27 +517,38 @@ TkWaylandBeginEventCycle(WindowMapping *m)
     m->inEventCycle = 1;
     glfwContext.activeFrame = m;
 }
+
 /*
  *----------------------------------------------------------------------
  *
  * TkWaylandEndEventCycle --
  *
  *      Called at the END of each event loop iteration, after all
- *      widgets have drawn. Closes the NanoVG frame and swaps buffers.
+ *      widgets have drawn. Restores NanoVG state and closes the frame.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Ends NanoVG frame, swaps GL buffers.
+ *      Pops the NanoVG save pushed by TkWaylandBeginEventCycle and
+ *      ends the NanoVG frame. Clears frameOpen and inEventCycle.
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
-TkWaylandEndEventCycle(TCL_UNUSED(WindowMapping *))
+TkWaylandEndEventCycle(WindowMapping *m)
 {
-	return;
+    if (!m || !m->frameOpen) return;
+
+    nvgRestore(glfwContext.vg);     /* matches nvgSave in TkWaylandBeginEventCycle */
+    nvgEndFrame(glfwContext.vg);
+
+    m->frameOpen    = 0;
+    m->inEventCycle = 0;
+    if (glfwContext.activeFrame == m) {
+        glfwContext.activeFrame = NULL;
+    }
 }
 
 /*
@@ -583,19 +577,20 @@ TkWaylandScheduleDisplay(WindowMapping *m)
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
  * TkWaylandDisplayProc --
  *
- *      Completes NanoVG drawing cycle.
+ *      Completes the NanoVG drawing cycle: closes the accumulation
+ *      frame opened by TkWaylandBeginEventCycle, then blits the FBO
+ *      to the window backbuffer and swaps.
  *
  * Results:
  *      Drawing complete.
  *
  * Side effects:
- *      None.
+ *      Ends NanoVG frame, blits FBO, swaps GL buffers.
  *
  *----------------------------------------------------------------------
  */
@@ -607,22 +602,22 @@ TkWaylandDisplayProc(ClientData clientData)
     if (!m || !m->fbo) return;
 
     glfwMakeContextCurrent(m->glfwWindow);
-    
+
+    /* Close the accumulation frame before blitting. */
+    TkWaylandEndEventCycle(m);
+
     int fbw, fbh;
     glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
     glViewport(0, 0, fbw, fbh);
 
-    /* Clear only the screen backbuffer, not our FBO! */
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    /* Blit pass: render FBO contents to the screen backbuffer. */
+    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height,
+                  (float)fbw / m->width);
 
-    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, (float)fbw/m->width);
-
-    /* Create a paint pattern from the FBO's image. */
-    NVGpaint imgPaint = nvgImagePattern(glfwContext.vg, 0, 0, 
-                                        (float)m->width, (float)m->height, 
+    NVGpaint imgPaint = nvgImagePattern(glfwContext.vg, 0, 0,
+                                        (float)m->width, (float)m->height,
                                         0, m->fbo->image, 1.0f);
-    
-    /* Draw the FBO to the window. */
+
     nvgBeginPath(glfwContext.vg);
     nvgRect(glfwContext.vg, 0, 0, (float)m->width, (float)m->height);
     nvgFillPaint(glfwContext.vg, imgPaint);
@@ -630,7 +625,7 @@ TkWaylandDisplayProc(ClientData clientData)
 
     nvgEndFrame(glfwContext.vg);
     glfwSwapBuffers(m->glfwWindow);
-    
+
     m->needsDisplay = 0;
 }
 

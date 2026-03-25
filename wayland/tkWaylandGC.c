@@ -2,11 +2,11 @@
  * tkWaylandGC.c --
  *
  *	Graphics Context and Pixmap implementation for the
- *	Wayland/GLFW/NanoVG backend.
+ *	Wayland/GLFW/libcg backend.
  *
  *	This file provides the central definitions of
  *	TkWaylandGCImpl and TkWaylandPixmapImpl and all TkWayland*
- *	entry points declared in tkGlfwInt.h.  The Xlib-compatible
+ *	entry points declared in tkWaylandInt.h.  The Xlib-compatible
  *	wrappers (XCreateGC, XFreeGC, XCreatePixmap, etc.) forward to
  *	these entry points and live here as well.
  *
@@ -23,7 +23,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <stdlib.h>
 #include <string.h>
 #include <X11/Xlib.h>
@@ -31,81 +31,63 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 
-extern TkGlfwContext  glfwContext;
-
-/* -----------------------------------------------------------------------
- * Display / screen initialization.
- *
- *
- * TkpOpenDisplay is the Tk platform entry point that allocates a full
- * TkDisplay together with a TkWaylandDisplay (our Display subtype), a
- * Screen, and a Visual.  GLFW is initialized here so that the primary
- * monitor dimensions can be queried immediately.
-
- * ----------------------------------------------------------------------- */
+extern TkGlfwContext glfwContext;
 
 /*
  *----------------------------------------------------------------------
  *
  * TkpOpenDisplay --
  *
- *  Tk platform entry point: allocate a TkDisplay for Wayland/GLFW.
- *  Sets up Screen, Visual, and ensures mwidth/mheight are valid.
+ *	Tk platform entry point: allocate a TkDisplay for Wayland/GLFW.
+ *	Sets up Screen, Visual, and queries primary monitor dimensions.
  *
  * Results:
- *  Pointer to newly allocated TkDisplay, or NULL on failure.
+ *	Pointer to newly allocated TkDisplay, or NULL on failure.
  *
  * Side effects:
- *  Allocates memory for Display, Screen, Visual, TkDisplay.
- *  Calls glfwInit().
+ *	Allocates memory for Display, Screen, Visual, TkDisplay.
+ *	Calls glfwInit().
  *
  *----------------------------------------------------------------------
  */
+
 TkDisplay *
-TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
+TkpOpenDisplay(TCL_UNUSED(const char *))
 {
-    /* Allocate Display. */
-    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
+    _XPrivDisplay display;
+    Screen       *screen;
+    Visual       *visual;
+    TkDisplay    *dispPtr;
+    int           sw = 1920, sh = 1080;
+    GLFWmonitor  *mon;
+
+    display = (_XPrivDisplay)ckalloc(sizeof(Display));
     if (!display) return NULL;
     bzero(display, sizeof(Display));
 
-    /* Allocate Screen. */
-    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
-    if (!screen) {
-        ckfree(display);
-        return NULL;
-    }
+    screen = (Screen *)ckalloc(sizeof(Screen));
+    if (!screen) { ckfree(display); return NULL; }
 
-    /* Allocate Visual. */
-    Visual *visual = (Visual *)ckalloc(sizeof(Visual));
-    if (!visual) {
-        ckfree(screen);
-        ckfree(display);
-        return NULL;
-    }
+    visual = (Visual *)ckalloc(sizeof(Visual));
+    if (!visual) { ckfree(screen); ckfree(display); return NULL; }
     bzero(visual, sizeof(Visual));
 
-    /* Initialize GLFW (Wayland support). */
     if (!glfwInit()) {
-        ckfree(visual);
-        ckfree(screen);
-        ckfree(display);
+        ckfree(visual); ckfree(screen); ckfree(display);
         return NULL;
     }
 
-    /* Fill screen dimensions. */
-    int sw = 1920, sh = 1080;
-    GLFWmonitor *mon = glfwGetPrimaryMonitor();
+    mon = glfwGetPrimaryMonitor();
     if (mon) {
         const GLFWvidmode *mode = glfwGetVideoMode(mon);
         if (mode) { sw = mode->width; sh = mode->height; }
     }
-    screen->width  = sw;
-    screen->height = sh;
+
+    screen->width   = sw;
+    screen->height  = sh;
     screen->mwidth  = (sw * 254.0) / 720.0;
     screen->mheight = (sh * 254.0) / 720.0;
 
-    /* Display. */
     display->screens        = screen;
     display->nscreens       = 1;
     display->default_screen = 0;
@@ -116,7 +98,6 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     screen->root_visual = visual;
     screen->root_depth  = 24;
 
-    /* Visual. */
     visual->visualid     = 1;
     visual->class        = TrueColor;
     visual->bits_per_rgb = 8;
@@ -125,14 +106,12 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     visual->green_mask   = 0x00FF00;
     visual->blue_mask    = 0x0000FF;
 
-    /* Allocate TkDisplay once. */
-    TkDisplay *dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     bzero(dispPtr, sizeof(TkDisplay));
     dispPtr->display = (Display *)display;
 
     return dispPtr;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -145,19 +124,24 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
  *	None.
  *
  * Side effects:
- *	Frees all memory allocated by TkpOpenDisplay.  Resets
- *	tkWaylandDispPtr to NULL.
+ *	None (no-op; resources freed at shutdown).
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkpCloseDisplay(TCL_UNUSED(TkDisplay*)) /* dispPtr */
+TkpCloseDisplay(TCL_UNUSED(TkDisplay *))
 {
-	/* no-op */
+    /* no-op */
 }
 
-/* Graphics context functions. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * Graphics Context functions
+ *
+ *----------------------------------------------------------------------
+ */
 
 /*
  *----------------------------------------------------------------------
@@ -167,7 +151,7 @@ TkpCloseDisplay(TCL_UNUSED(TkDisplay*)) /* dispPtr */
  *	Allocate a new GC, optionally initialising fields from values/mask.
  *
  * Results:
- *	A freshly allocated GC cast to the opaque GC type, or NULL.
+ *	A freshly allocated GC, or NULL.
  *
  * Side effects:
  *	Allocates heap memory.
@@ -183,13 +167,10 @@ TkWaylandCreateGC(
     TkWaylandGCImpl *gc;
 
     gc = (TkWaylandGCImpl *)ckalloc(sizeof(TkWaylandGCImpl));
-    if (gc == NULL) {
-        return NULL;
-    }
+    if (gc == NULL) return NULL;
 
-    /* Apply defaults. */
-    gc->foreground = 0x000000;  /* Black   */
-    gc->background = 0xFFFFFF;  /* White   */
+    gc->foreground = 0x000000;
+    gc->background = 0xFFFFFF;
     gc->line_width = 1;
     gc->line_style = LineSolid;
     gc->cap_style  = CapButt;
@@ -198,7 +179,6 @@ TkWaylandCreateGC(
     gc->arc_mode   = ArcPieSlice;
     gc->font       = NULL;
 
-    /* Override with caller-supplied values. */
     if (values != NULL) {
         TkWaylandChangeGC((GC)gc, valuemask, values);
     }
@@ -223,8 +203,7 @@ TkWaylandCreateGC(
  */
 
 MODULE_SCOPE void
-TkWaylandFreeGC(
-    GC gc)
+TkWaylandFreeGC(GC gc)
 {
     if (gc != NULL) {
         ckfree((char *)gc);
@@ -255,9 +234,7 @@ TkWaylandGetGCValues(
 {
     TkWaylandGCImpl *impl = (TkWaylandGCImpl *)gc;
 
-    if (impl == NULL || values == NULL) {
-        return 0;
-    }
+    if (impl == NULL || values == NULL) return 0;
 
     if (valuemask & GCForeground)  values->foreground  = impl->foreground;
     if (valuemask & GCBackground)  values->background  = impl->background;
@@ -296,9 +273,7 @@ TkWaylandChangeGC(
 {
     TkWaylandGCImpl *impl = (TkWaylandGCImpl *)gc;
 
-    if (impl == NULL || values == NULL) {
-        return 0;
-    }
+    if (impl == NULL || values == NULL) return 0;
 
     if (valuemask & GCForeground)  impl->foreground = values->foreground;
     if (valuemask & GCBackground)  impl->background = values->background;
@@ -337,132 +312,85 @@ TkWaylandCopyGC(
 {
     XGCValues tmp;
 
-    if (src == NULL || dst == NULL) {
-        return 0;
-    }
+    if (src == NULL || dst == NULL) return 0;
 
-    /* Read from src, write to dst via the canonical helpers. */
     TkWaylandGetGCValues(src, valuemask, &tmp);
     TkWaylandChangeGC(dst, valuemask, &tmp);
 
     return 1;
 }
 
-/* Pixmap functions. */
+/*
+ *----------------------------------------------------------------------
+ *
+ * Pixmap functions
+ *
+ *----------------------------------------------------------------------
+ */
 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_GetPixmap --
  *
- *      Create an off-screen drawable (pixmap) using an OpenGL FBO.
- *      This allows NanoVG to render to the pixmap just like a window.
+ *	Create an off-screen drawable (pixmap) backed by a libcg surface.
  *
  * Results:
- *      Returns a Pixmap (Drawable) identifier.
+ *	Returns a Pixmap (Drawable) identifier, or None on failure.
  *
  * Side effects:
- *      Allocates FBO, texture, and stencil buffer.
+ *	Allocates a TkWaylandPixmapImpl, a cg_surface_t, and a cg_ctx_t.
  *
  *----------------------------------------------------------------------
  */
 
 Pixmap
 Tk_GetPixmap(
-    TCL_UNUSED(Display *),  
-    Drawable d,
-    int      width,
-    int      height,
-    TCL_UNUSED(int)) /* depth */
+    TCL_UNUSED(Display *),
+    Drawable     d,
+    int          width,
+    int          height,
+    TCL_UNUSED(int))   /* depth */
 {
     TkWaylandPixmapImpl *pixmap;
     WindowMapping       *mapping;
-    GLint                oldFBO;
-    GLenum               status;
-    
-    
-    if (width <= 0 || height <= 0) {
-        return None;
-    }
-    
-    /* Find the window mapping to get GL context. */
+
+    if (width <= 0 || height <= 0) return None;
+
     mapping = FindMappingByDrawable(d);
-    if (!mapping || !mapping->glfwWindow) {
-        return None;
-    }
-    
-    /* Allocate pixmap structure. */
+    if (!mapping || !mapping->glfwWindow) return None;
+
     pixmap = (TkWaylandPixmapImpl *)ckalloc(sizeof(TkWaylandPixmapImpl));
     memset(pixmap, 0, sizeof(TkWaylandPixmapImpl));
-    pixmap->magic 		  = TK_WAYLAND_PIXMAP_MAGIC; 
-    pixmap->type          = 1;  /* Pixmap, not window */
+
+    pixmap->magic         = TK_WAYLAND_PIXMAP_MAGIC;
+    pixmap->type          = 1;
     pixmap->width         = width;
     pixmap->height        = height;
-    pixmap->drawable      = (Drawable)pixmap;  /* Use pointer as ID */
+    pixmap->drawable      = (Drawable)pixmap;
     pixmap->windowMapping = mapping;
     pixmap->frameOpen     = 0;
-    
-    /* Make GL context current for FBO creation. */
-    glfwMakeContextCurrent(mapping->glfwWindow);
-    
-    /* Save current FBO binding */
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
-    
-    /* Create texture for color attachment */
-    glGenTextures(1, &pixmap->texture);
-    glBindTexture(GL_TEXTURE_2D, pixmap->texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                 width, height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    /* Create stencil buffer (required by NanoVG). */
-    glGenRenderbuffers(1, &pixmap->stencil);
-    glBindRenderbuffer(GL_RENDERBUFFER, pixmap->stencil);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
-                         width, height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    
-    /* Create and configure FBO. */
-    glGenFramebuffers(1, &pixmap->fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
-    
-    /* Attach texture as color buffer. */
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                          GL_TEXTURE_2D, pixmap->texture, 0);
-    
-    /* Attach stencil buffer. */
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                             GL_RENDERBUFFER, pixmap->stencil);
-    
-    /* Check FBO completeness. */
-    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
-        glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
-        
-        /* Cleanup on failure. */
-        glDeleteFramebuffers(1, &pixmap->fbo);
-        glDeleteTextures(1, &pixmap->texture);
-        glDeleteRenderbuffers(1, &pixmap->stencil);
+
+    pixmap->surface = cg_surface_create(width, height);
+    if (!pixmap->surface) {
         ckfree((char *)pixmap);
         return None;
     }
-    
-    /* Clear pixmap to white. */
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    
-    /* Restore previous FBO binding. */
-    glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
-    
-    /* Register pixmap with drawable mapping system. */
+
+    pixmap->cg = cg_create(pixmap->surface);
+    if (!pixmap->cg) {
+        cg_surface_destroy(pixmap->surface);
+        ckfree((char *)pixmap);
+        return None;
+    }
+
+    /* Clear to white. */
+    cg_set_source_rgba(pixmap->cg, 1.0, 1.0, 1.0, 1.0);
+    cg_rectangle(pixmap->cg, 0, 0, (double)width, (double)height);
+    cg_fill(pixmap->cg);
+
     RegisterDrawableForMapping(pixmap->drawable, mapping);
-    
+
     return pixmap->drawable;
 }
 
@@ -471,47 +399,35 @@ Tk_GetPixmap(
  *
  * Tk_FreePixmap --
  *
- *      Destroy a pixmap and free its OpenGL resources.
+ *	Destroy a pixmap and free its libcg resources.
  *
  * Results:
- *      None.
+ *	None.
  *
  * Side effects:
- *      Deletes FBO, texture, and stencil buffer.
+ *	Frees cg_ctx_t, cg_surface_t, and the pixmap struct.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_FreePixmap(TCL_UNUSED(Display *),
-	      Pixmap pixmap)
+Tk_FreePixmap(
+    TCL_UNUSED(Display *),
+    Pixmap pixmap)
 {
     TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)pixmap;
-    
+
     if (!impl || impl->type != 1) return;
-    
-    /* Make context current for GL cleanup. */
-    if (impl->windowMapping && impl->windowMapping->glfwWindow) {
-        glfwMakeContextCurrent(impl->windowMapping->glfwWindow);
+
+    if (impl->cg) {
+        cg_destroy(impl->cg);
+        impl->cg = NULL;
     }
-    
-    /* Close any open NanoVG frame on this pixmap. */
-    if (impl->frameOpen) {
-        nvgEndFrame(glfwContext.vg);
-        impl->frameOpen = 0;
+    if (impl->surface) {
+        cg_surface_destroy(impl->surface);
+        impl->surface = NULL;
     }
-    
-    /* Delete OpenGL resources. */
-    if (impl->fbo) {
-        glDeleteFramebuffers(1, &impl->fbo);
-    }
-    if (impl->texture) {
-        glDeleteTextures(1, &impl->texture);
-    }
-    if (impl->stencil) {
-        glDeleteRenderbuffers(1, &impl->stencil);
-    }
-    
+
     ckfree((char *)impl);
 }
 
@@ -520,13 +436,13 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
  *
  * IsPixmap --
  *
- *      Check if a drawable is a pixmap (FBO-backed).
+ *	Check whether a Drawable is a libcg-backed pixmap.
  *
  * Results:
- *      Returns 1 if pixmap, 0 if window or invalid.
+ *	1 if it is a pixmap, 0 otherwise.
  *
  * Side effects:
- *      None.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -534,39 +450,26 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
 int
 IsPixmap(Drawable drawable)
 {
-    if (!drawable) return 0;
-    
-    /* Window IDs are small integers - cast to uintptr_t for comparison. */
-    if ((uintptr_t)drawable < 0x1000000) {
-        return 0;
-    }
-    
-    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)drawable;
-    
-    /* Check type field and validate dimensions */
-    if (impl->type == 1 &&
-        impl->width > 0 && impl->width < 32768 &&
-        impl->height > 0 && impl->height < 32768 &&
-        impl->fbo != 0) {
-        return 1;
-    }
-    
-    return 0;
-}
+    TkWaylandPixmapImpl *impl;
 
+    if (!drawable) return 0;
+
+    /* Window IDs are small integers. */
+    if ((uintptr_t)drawable < 0x1000000) return 0;
+
+    impl = (TkWaylandPixmapImpl *)drawable;
+
+    return (impl->magic  == TK_WAYLAND_PIXMAP_MAGIC &&
+            impl->type   == 1 &&
+            impl->width  > 0 && impl->width  < 32768 &&
+            impl->height > 0 && impl->height < 32768 &&
+            impl->surface != NULL);
+}
 
 /*
  *----------------------------------------------------------------------
  *
- * XCreateGC --
- *
- *	Xlib-compatible wrapper for TkWaylandCreateGC.
- *
- * Results:
- *	A newly created Graphics Context.
- *
- * Side effects:
- *	Allocates memory for a new GC via TkWaylandCreateGC.
+ * Xlib-compatible wrappers
  *
  *----------------------------------------------------------------------
  */
@@ -581,22 +484,6 @@ XCreateGC(
     return TkWaylandCreateGC(valuemask, values);
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XFreeGC --
- *
- *	Xlib-compatible wrapper for TkWaylandFreeGC.
- *
- * Results:
- *	Always returns Success.
- *
- * Side effects:
- *	Frees memory associated with the GC via TkWaylandFreeGC.
- *
- *----------------------------------------------------------------------
- */
-
 int
 XFreeGC(
     TCL_UNUSED(Display *),
@@ -605,22 +492,6 @@ XFreeGC(
     TkWaylandFreeGC(gc);
     return Success;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetForeground --
- *
- *	Xlib-compatible wrapper to set the foreground color in a GC.
- *
- * Results:
- *	Success on success, BadGC on failure.
- *
- * Side effects:
- *	Updates the GC's foreground value via TkWaylandChangeGC.
- *
- *----------------------------------------------------------------------
- */
 
 int
 XSetForeground(
@@ -633,22 +504,6 @@ XSetForeground(
     return TkWaylandChangeGC(gc, GCForeground, &v) ? Success : BadGC;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XSetBackground --
- *
- *	Xlib-compatible wrapper to set the background color in a GC.
- *
- * Results:
- *	Success on success, BadGC on failure.
- *
- * Side effects:
- *	Updates the GC's background value via TkWaylandChangeGC.
- *
- *----------------------------------------------------------------------
- */
-
 int
 XSetBackground(
     TCL_UNUSED(Display *),
@@ -659,22 +514,6 @@ XSetBackground(
     v.background = background;
     return TkWaylandChangeGC(gc, GCBackground, &v) ? Success : BadGC;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * XSetLineAttributes --
- *
- *	Xlib-compatible wrapper to set line drawing attributes in a GC.
- *
- * Results:
- *	Success on success, BadGC on failure.
- *
- * Side effects:
- *	Updates the GC's line attributes via TkWaylandChangeGC.
- *
- *----------------------------------------------------------------------
- */
 
 int
 XSetLineAttributes(
@@ -691,26 +530,9 @@ XSetLineAttributes(
     v.cap_style  = cap_style;
     v.join_style = join_style;
     return TkWaylandChangeGC(
-        gc,
-        GCLineWidth | GCLineStyle | GCCapStyle | GCJoinStyle,
+        gc, GCLineWidth | GCLineStyle | GCCapStyle | GCJoinStyle,
         &v) ? Success : BadGC;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * XGetGCValues --
- *
- *	Xlib-compatible wrapper for TkWaylandGetGCValues.
- *
- * Results:
- *	1 on success, 0 on failure.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
 
 int
 XGetGCValues(
@@ -722,22 +544,6 @@ XGetGCValues(
     return TkWaylandGetGCValues(gc, valuemask, values);
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XChangeGC --
- *
- *	Xlib-compatible wrapper for TkWaylandChangeGC.
- *
- * Results:
- *	1 on success, 0 on failure.
- *
- * Side effects:
- *	Updates GC fields via TkWaylandChangeGC.
- *
- *----------------------------------------------------------------------
- */
-
 int
 XChangeGC(
     TCL_UNUSED(Display *),
@@ -747,22 +553,6 @@ XChangeGC(
 {
     return TkWaylandChangeGC(gc, valuemask, values);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * XCopyGC --
- *
- *	Xlib-compatible wrapper for TkWaylandCopyGC.
- *
- * Results:
- *	Success on success, BadGC on failure.
- *
- * Side effects:
- *	Copies GC attributes from source to destination via TkWaylandCopyGC.
- *
- *----------------------------------------------------------------------
- */
 
 int
 XCopyGC(
@@ -774,48 +564,16 @@ XCopyGC(
     return TkWaylandCopyGC(src, valuemask, dst) ? Success : BadGC;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * XCreatePixmap --
- *
- *	Xlib-compatible wrapper for Tk_GetPixmap.
- *
- * Results:
- *	A newly created Pixmap handle.
- *
- * Side effects:
- *	Allocates pixmap resources via Tk_GetPixmap.
- *
- *----------------------------------------------------------------------
- */
-
 Pixmap
 XCreatePixmap(
-    Display *display,
-    Drawable parent,
-    unsigned int width,
-    unsigned int height,
-    unsigned int depth)
+    Display      *display,
+    Drawable      parent,
+    unsigned int  width,
+    unsigned int  height,
+    unsigned int  depth)
 {
     return Tk_GetPixmap(display, parent, (int)width, (int)height, (int)depth);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * XFreePixmap --
- *
- *	Xlib-compatible wrapper for Tk_FreePixmap.
- *
- * Results:
- *	Always returns Success.
- *
- * Side effects:
- *	Frees pixmap resources via Tk_FreePixmap.
- *
- *----------------------------------------------------------------------
- */
 
 int
 XFreePixmap(

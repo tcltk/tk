@@ -13,7 +13,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <string.h>
 
 /*
@@ -22,7 +22,7 @@
  * NVGcolor helper forwarders
  *
  *	Previously defined here; now just forward to the centralized
- *	helpers in tkGlfwInit.c / tkWaylandGC.c.
+ *	helpers in tkWaylandInit.h / tkWaylandGC.c.
  *
  *----------------------------------------------------------------------
  */

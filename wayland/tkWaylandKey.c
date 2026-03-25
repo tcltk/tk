@@ -13,7 +13,7 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <xkbcommon/xkbcommon.h>

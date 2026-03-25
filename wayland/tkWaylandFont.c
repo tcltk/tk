@@ -2,8 +2,8 @@
  *
  * tkWaylandFont.c –
  *
- * This module implements the Wayland/GLFW/NanoVG platform-specific
- * features of fonts.
+ * This module implements the Wayland/GLFW platform-specific
+ * features of fonts using stb_truetype.h directly.
  *
  * Copyright © 1996-1998 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -14,12 +14,10 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 #include <fontconfig/fontconfig.h>
-#include <nanovg.h>
-
-#include "stb_truetype.h"
+#include <stb_truetype.h>
 #include "noto_emoji.h"
 
 #include <math.h>
@@ -28,47 +26,74 @@
 #include <string.h>
 
 /*
- * Architecture note: this file is intentionally modelled after
- * the macOS font implementation. Font *discovery* is delegated to Fontconfig
- * (just as the macOS file delegates it to NSFontManager), and font *rendering*
- * is delegated entirely to NanoVG (just as the macOS file delegates it to
- * CoreText). We do NOT maintain our own glyph-coverage bitmaps, SubFont
- * linked lists, or stbtt rasterization state. NanoVG already wraps
- * stb_truetype internally and handles fallback at draw time; prior
- * implementations of Wayland fonts used Tk's Unix font implementation as the
- * source, but removing the X11 mechanisms made font management unstable
- * and crash-prone.
+ * Architecture note: this file now uses stb_truetype directly for font
+ * rendering, eliminating the dependency on NanoVG. Each WaylandFont
+ * maintains its own stbtt font info and a texture atlas for rendered
+ * glyphs. When text is drawn, glyphs are rendered on demand into the
+ * atlas and then drawn as textured quads.
  */
+
+/* Maximum atlas size - could be made configurable */
+#define ATLAS_WIDTH  1024
+#define ATLAS_HEIGHT 1024
+#define ATLAS_PADDING 2
+
+/* Glyph cache entry */
+typedef struct GlyphCacheEntry {
+    int codepoint;              /* Unicode codepoint */
+    int atlas_x;                /* X position in atlas */
+    int atlas_y;                /* Y position in atlas */
+    int width;                  /* Glyph width in pixels */
+    int height;                 /* Glyph height in pixels */
+    float s0, t0, s1, t1;       /* Texture coordinates */
+    int advance;                /* Advance width in pixels */
+    int bearing_x;              /* Left side bearing in pixels */
+    int bearing_y;              /* Top side bearing (from baseline) */
+    struct GlyphCacheEntry *next; /* Hash chain */
+} GlyphCacheEntry;
+
+/* Glyph cache hash table size */
+#define GLYPH_CACHE_SIZE 1024
 
 /*
- *------------------------------------------------------------------------
- *
  * Platform font structure:
  *
- * Mirrors the simplicity of the macOS implementation: the generic TkFont
- * base is first, followed only by the platform handles we actually need.
- * NanoVG manages all the rasterization state; we just keep the resolved
- * file path and the NanoVG font id so we can load the font lazily on
- * first draw.
- *
- *------------------------------------------------------------------------
+ * Extends the generic TkFont with stb_truetype data and glyph caching.
  */
-
 typedef struct {
     TkFont      font;           /* Generic font data — MUST be first.        */
-    char       *filePath;       /* Absolute path returned by Fontconfig.
-                                 * Owned by this struct; freed on delete.    */
-    int         nvgFontId;      /* Handle returned by nvgCreateFont / -1.    */
+    char       *filePath;       /* Absolute path returned by Fontconfig.    */
+    unsigned char *fontData;    /* Mapped font file data                     */
+    stbtt_fontinfo stbInfo;     /* stb_truetype font info                    */
+    float       scale;          /* Scale factor for pixel size               */
+    
+    /* Glyph atlas for this font */
+    unsigned char *atlas;        /* RGBA texture atlas */
+    int            atlas_width;  /* Current atlas width */
+    int            atlas_height; /* Current atlas height */
+    int            atlas_used_x; /* Current position in atlas */
+    int            atlas_used_y;
+    int            atlas_row_height;
+    
+    /* Glyph cache */
+    GlyphCacheEntry *glyphCache[GLYPH_CACHE_SIZE];
+    
+    /* Metrics */
     int         pixelSize;      /* Resolved size in pixels.                  */
     int         underlinePos;   /* Pixels below baseline for underline.      */
     int         barHeight;      /* Thickness of under/overstrike bar.        */
+    
+    /* OpenGL texture ID for atlas */
+    unsigned int textureId;
 } WaylandFont;
 
 /* Whether Fontconfig has been initialized for this process. */
 static int fcInitialized = 0;
 
-/* Emoji font ID. */
-static int emojiFontId = -1;
+/* Emoji font data - loaded once and shared */
+static stbtt_fontinfo emojiInfo;
+static unsigned char *emojiFontData = NULL;
+static int emojiInitialized = 0;
 
 /* Forward declarations of file-local helpers. */
 static char    *FindFontFile(
@@ -82,36 +107,73 @@ static void     InitFont(
     WaylandFont *fontPtr);
 static void     DeleteFont(
     WaylandFont *fontPtr);
-static int      EnsureNvgFont(
+static int      EnsureFontLoaded(
+    WaylandFont *fontPtr);
+static int      GetGlyph(
     WaylandFont *fontPtr,
-    NVGcontext  *vg);
-static NVGcolor ColorFromGC(
+    int codepoint,
+    GlyphCacheEntry **entryOut);
+static void     RenderGlyphToAtlas(
+    WaylandFont *fontPtr,
+    int codepoint,
+    GlyphCacheEntry *entry);
+static void     EnsureAtlasTexture(
+    WaylandFont *fontPtr);
+static void     UploadAtlasToGPU(
+    WaylandFont *fontPtr);
+static uint32_t ColorFromGC(
     GC gc);
+static void     DrawGlyphQuad(
+    WaylandFont *fontPtr,
+    GlyphCacheEntry *glyph,
+    float x,
+    float y,
+    uint32_t color);
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * GlyphHash --
+ *
+ *	Hash function for glyph cache.
+ *
+ * Results:
+ *	Returns hash index for given codepoint.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+static unsigned int
+GlyphHash(int codepoint)
+{
+    return (unsigned int)(codepoint) % GLYPH_CACHE_SIZE;
+}
 
 /*
  *---------------------------------------------------------------------------
  *
  * TkpFontPkgInit --
  *
- *     Initializes the platform font package for a new Tk application.
- *     Registers the standard Tk named fonts (TkDefaultFont, TkFixedFont,
- *     etc.) so that wish and other Tk applications can resolve them at
- *     startup without crashing.
+ *	Initializes the platform font package for a new Tk application.
+ *	Registers the standard Tk named fonts (TkDefaultFont, TkFixedFont,
+ *	etc.) so that wish and other Tk applications can resolve them at
+ *	startup without crashing.
  *
- *     Named fonts must be registered here, before any widget is created,
- *     because Tk's generic layer calls TkpFontPkgInit exactly once and
- *     then immediately tries to resolve TkDefaultFont for the root window.
- *     If the named fonts are absent at that point, Tk panics.
+ *	Named fonts must be registered here, before any widget is created,
+ *	because Tk's generic layer calls TkpFontPkgInit exactly once and
+ *	then immediately tries to resolve TkDefaultFont for the root window.
+ *	If the named fonts are absent at that point, Tk panics.
  *
  * Results:
- *     None.
+ *	None.
  *
  * Side effects:
- *     Initializes Fontconfig; creates Tk named fonts via Tk_CreateFont.
+ *	Initializes Fontconfig; creates Tk named fonts via Tk_CreateFont.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)
@@ -121,6 +183,15 @@ TkpFontPkgInit(
     if (!fcInitialized) {
         FcInit();
         fcInitialized = 1;
+    }
+
+    /* Initialize emoji font from bundled data */
+    if (!emojiInitialized) {
+        emojiFontData = (unsigned char *)NotoEmoji_Regular_ttf;
+        if (stbtt_InitFont(&emojiInfo, emojiFontData, 
+                           stbtt_GetFontOffsetForIndex(emojiFontData, 0))) {
+            emojiInitialized = 1;
+        }
     }
 
     /*
@@ -210,17 +281,16 @@ TkpFontPkgInit(
  *
  * TkpGetNativeFont --
  *
- *     Resolves a native platform font name (Fontconfig family) to a TkFont.
+ *	Resolves a native platform font name (Fontconfig family) to a TkFont.
  *
  * Results:
- *     A new TkFont pointer, or NULL on failure.
+ *	A new TkFont pointer, or NULL on failure.
  *
  * Side effects:
- *     Allocates a WaylandFont.
+ *	Allocates a WaylandFont.
  *
  *---------------------------------------------------------------------------
  */
-
 TkFont *
 TkpGetNativeFont(
     Tk_Window tkwin,
@@ -241,17 +311,17 @@ TkpGetNativeFont(
  *
  * TkpGetFontFromAttributes --
  *
- *     Creates or updates a WaylandFont that matches the requested attributes.
+ *	Creates or updates a WaylandFont that matches the requested attributes.
  *
  * Results:
- *     Returns a TkFont pointer.
+ *	Returns a TkFont pointer.
  *
  * Side effects:
- *     May allocate or reuse platform data; defers NVG font creation.
+ *	May allocate or reuse platform data; loads font file and initializes
+ *	stb_truetype structures.
  *
  *---------------------------------------------------------------------------
  */
-
 TkFont *
 TkpGetFontFromAttributes(
     TkFont *tkFontPtr,
@@ -263,6 +333,11 @@ TkpGetFontFromAttributes(
     if (tkFontPtr == NULL) {
         fontPtr = (WaylandFont *) Tcl_Alloc(sizeof(WaylandFont));
         memset(fontPtr, 0, sizeof(WaylandFont));
+        fontPtr->atlas_width = ATLAS_WIDTH;
+        fontPtr->atlas_height = ATLAS_HEIGHT;
+        fontPtr->atlas = (unsigned char *)Tcl_Alloc(ATLAS_WIDTH * ATLAS_HEIGHT * 4);
+        memset(fontPtr->atlas, 0, ATLAS_WIDTH * ATLAS_HEIGHT * 4);
+        fontPtr->textureId = 0;
     } else {
         fontPtr = (WaylandFont *) tkFontPtr;
         /*
@@ -271,14 +346,6 @@ TkpGetFontFromAttributes(
          */
         DeleteFont(fontPtr);
     }
-
-    /*
-     * nvgFontId == -1 signals "not yet loaded into any NVG context".
-     * We defer the actual nvgCreateFont call to first draw so that
-     * this function never needs to touch the NVG context (which may not
-     * exist yet when fonts are created at startup).
-     */
-    fontPtr->nvgFontId = -1;
 
     InitFont(tkwin, faPtr, fontPtr);
     return (TkFont *) fontPtr;
@@ -289,17 +356,16 @@ TkpGetFontFromAttributes(
  *
  * TkpDeleteFont --
  *
- *     Releases platform-specific data for a TkFont.
+ *	Releases platform-specific data for a TkFont.
  *
  * Results:
- *     None.
+ *	None.
  *
  * Side effects:
- *     Frees WaylandFont resources but not the TkFont struct itself.
+ *	Frees WaylandFont resources but not the TkFont struct itself.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkpDeleteFont(
     TkFont *tkFontPtr)
@@ -313,17 +379,16 @@ TkpDeleteFont(
  *
  * TkpGetFontFamilies --
  *
- *     Returns the list of available font families via Fontconfig.
+ *	Returns the list of available font families via Fontconfig.
  *
  * Results:
- *     Sets the interpreter result to a Tcl list of family names.
+ *	Sets the interpreter result to a Tcl list of family names.
  *
  * Side effects:
- *     Queries Fontconfig.
+ *	Queries Fontconfig.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkpGetFontFamilies(
     Tcl_Interp *interp,
@@ -366,14 +431,16 @@ TkpGetFontFamilies(
  *
  * TkpGetSubFonts --
  *
- *     Returns the subfont names composing this font object.
+ *	Returns the subfont names composing this font object.
  *
  * Results:
- *     Sets the interpreter result to a Tcl list.
+ *	Sets the interpreter result to a Tcl list.
+ *
+ * Side effects:
+ *	None.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkpGetSubFonts(
     Tcl_Interp *interp,
@@ -394,18 +461,17 @@ TkpGetSubFonts(
  *
  * TkpGetFontAttrsForChar --
  *
- *     Determines the effective font attributes used to render a given
- *     Unicode character.
+ *	Determines the effective font attributes used to render a given
+ *	Unicode character.
  *
  * Results:
- *     None.
+ *	None.
  *
  * Side effects:
- *     May update the family in the provided attributes based on Fontconfig.
+ *	May update the family in the provided attributes based on Fontconfig.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),
@@ -448,14 +514,16 @@ TkpGetFontAttrsForChar(
  *
  * Tk_MeasureChars --
  *
- *     Measures how many bytes of a UTF-8 string fit within a pixel width.
+ *	Measures how many bytes of a UTF-8 string fit within a pixel width.
  *
  * Results:
- *     Returns the count of bytes that fit; sets *lengthPtr to the pixel width.
+ *	Returns the count of bytes that fit; sets *lengthPtr to the pixel width.
+ *
+ * Side effects:
+ *	None.
  *
  *---------------------------------------------------------------------------
  */
-
 int
 Tk_MeasureChars(
     Tk_Font tkfont,
@@ -474,25 +542,20 @@ Tk_MeasureChars(
  *
  * Tk_MeasureCharsInContext --
  *
- *     Measures a substring using NanoVG metrics for accurate layout.
+ *	Measures a substring using stb_truetype metrics for accurate layout.
  *
- *     Uses TkGlfwGetNVGContextForMeasure() which does not require an
- *     active NanoVG frame, allowing measurement during geometry computation
- *     outside of expose handling.
- *
- *     The per-context lazy font load (same pattern as DrawTitleBar) is
- *     applied here: nvgFindFont() checks whether the font atlas is present
- *     in the *current* GL context before attempting a load.
+ *	Uses cached glyph metrics from the font's stbtt info. If a glyph
+ *	hasn't been rendered yet, we still need its metrics, which we can
+ *	get directly from stb_truetype without rendering.
  *
  * Results:
- *     Returns the count of bytes that fit; sets *lengthPtr with pixel width.
+ *	Returns the count of bytes that fit; sets *lengthPtr with pixel width.
  *
  * Side effects:
- *     May load the font into the current NanoVG context on first call.
+ *	None.
  *
  *---------------------------------------------------------------------------
  */
-
 int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
@@ -516,13 +579,9 @@ Tk_MeasureCharsInContext(
         maxLength = 32767;
     }
 
-    NVGcontext *vg = TkGlfwGetNVGContextForMeasure();
-
-    if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
-        /*
-         * No NVG context yet (startup before GLFW is initialised) — fall
-         * back to a per-character advance estimate from stored metrics.
-         */
+    /* Ensure font is loaded */
+    if (!EnsureFontLoaded(fontPtr)) {
+        /* Fallback to simple estimate */
         int width = 0;
         const char *p          = source + rangeStart;
         const char *end        = source + rangeStart + rangeLength;
@@ -557,94 +616,58 @@ Tk_MeasureCharsInContext(
         return (int)(p - source - rangeStart);
     }
 
-    /* Measure using NanoVG. */
-    nvgSave(vg);
-    nvgFontFaceId(vg, fontPtr->nvgFontId);
-    nvgFontSize(vg, (float) fontPtr->pixelSize);
-    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-
-    const char *rangePtr = source + rangeStart;
-    const char *rangeEnd = rangePtr + rangeLength;
-
-    int nchars = 0;
-    {
-        const char *p = rangePtr;
-        while (p < rangeEnd) {
-            int ch;
-            p += Tcl_UtfToUniChar(p, &ch);
-            nchars++;
-        }
-    }
-    if (nchars == 0) {
-        *lengthPtr = 0;
-        nvgRestore(vg);
-        return 0;
-    }
-
-    NVGglyphPosition  stackPos[256];
-    NVGglyphPosition *positions = stackPos;
-    if (nchars > 256) {
-        positions = (NVGglyphPosition *)
-                Tcl_Alloc(nchars * sizeof(NVGglyphPosition));
-    }
-
-    int npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
-                                     positions, nchars);
-
-    float bounds[4];
-    nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
-    float totalWidth = bounds[2];
-
-    int         pixelWidth     = 0;
-    const char *lastBreak      = rangePtr;
+    /* Measure using stb_truetype metrics */
+    const char *p          = source + rangeStart;
+    const char *end        = source + rangeStart + rangeLength;
+    const char *lastBreak  = p;
+    int         totalWidth = 0;
     int         lastBreakWidth = 0;
-    const char *p              = rangePtr;
-    int         pi             = 0;
-
-    while (p < rangeEnd && pi < npos) {
+    
+    while (p < end) {
         int ch;
         const char *next = p + Tcl_UtfToUniChar(p, &ch);
-
-        float glyphRight = positions[pi].maxx;
-        int   glyphWidth = (int) ceil(glyphRight - positions[pi].x);
-
-        if (maxLength >= 0 && pixelWidth + glyphWidth > maxLength) {
-            if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
-                p          = lastBreak;
-                pixelWidth = lastBreakWidth;
-            } else if (flags & TK_PARTIAL_OK) {
-                pixelWidth += glyphWidth;
-                p = next;
-            }
-            break;
+        
+        /* Get glyph index */
+        int glyph = stbtt_FindGlyphIndex(&fontPtr->stbInfo, ch);
+        if (glyph == 0 && emojiInitialized) {
+            /* Try emoji font as fallback */
+            glyph = stbtt_FindGlyphIndex(&emojiInfo, ch);
         }
-
-        pixelWidth += glyphWidth;
+        
+        int advance;
+        if (glyph != 0) {
+            stbtt_GetGlyphHMetrics(&fontPtr->stbInfo, glyph, &advance, NULL);
+            advance = (int)(advance * fontPtr->scale + 0.5f);
+        } else {
+            /* Missing glyph - use average width */
+            advance = fontPtr->pixelSize / 2;
+        }
+        
+        if (maxLength >= 0 && totalWidth + advance > maxLength) {
+            if ((flags & TK_WHOLE_WORDS) && lastBreak > p) {
+                *lengthPtr = lastBreakWidth;
+                return (int)(lastBreak - source - rangeStart);
+            }
+            if (!(flags & TK_PARTIAL_OK)) break;
+        }
+        
         if (ch == ' ' || ch == '\t') {
             lastBreak      = next;
-            lastBreakWidth = pixelWidth;
+            lastBreakWidth = totalWidth + advance;
         }
-
+        
+        totalWidth += advance;
         p = next;
-        pi++;
     }
-
-    if ((flags & TK_AT_LEAST_ONE) && p == rangePtr && rangePtr < rangeEnd) {
+    
+    if ((flags & TK_AT_LEAST_ONE) && p == source + rangeStart && p < end) {
         int ch;
-        const char *next = rangePtr + Tcl_UtfToUniChar(rangePtr, &ch);
-        float glyphRight = (npos > 1) ? positions[1].x : totalWidth;
-        pixelWidth = (int) ceil(glyphRight);
-        p = next;
+        p += Tcl_UtfToUniChar(p, &ch);
+        totalWidth += fontPtr->pixelSize / 2;
     }
-
-    if (positions != stackPos) {
-        Tcl_Free((char *) positions);
-    }
-
-    nvgRestore(vg);
-
-    *lengthPtr = pixelWidth;
-    return (int)(p - rangePtr);
+    
+    *lengthPtr = totalWidth;
+    return (int)(p - source - rangeStart);
 }
 
 /*
@@ -652,11 +675,16 @@ Tk_MeasureCharsInContext(
  *
  * Tk_DrawChars --
  *
- *     Draws a UTF-8 string at the specified position using NanoVG.
+ *	Draws a UTF-8 string at the specified position using stb_truetype.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders text to the current OpenGL context.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 Tk_DrawChars(
     TCL_UNUSED(Display *),
@@ -678,11 +706,16 @@ Tk_DrawChars(
  *
  * TkDrawAngledChars --
  *
- *     Draws a UTF-8 string rotated by the given angle.
+ *	Draws a UTF-8 string rotated by the given angle.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders rotated text to the current OpenGL context.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkDrawAngledChars(
     TCL_UNUSED(Display *),
@@ -705,11 +738,16 @@ TkDrawAngledChars(
  *
  * Tk_DrawCharsInContext --
  *
- *     Draws a substring of a UTF-8 string.
+ *	Draws a substring of a UTF-8 string.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders a substring to the current OpenGL context.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 Tk_DrawCharsInContext(
     TCL_UNUSED(Display *),
@@ -734,24 +772,21 @@ Tk_DrawCharsInContext(
  *
  * TkpDrawAngledCharsInContext --
  *
- *     Canonical text rendering entry point; draws a (possibly rotated)
- *     substring.
+ *	Canonical text rendering entry point; draws a (possibly rotated)
+ *	substring.
  *
- *     Applies the same per-context lazy font load as DrawTitleBar:
- *     nvgFindFont() is called on the *active* vg context before use, and
- *     nvgCreateFont() is called if the atlas is not yet populated for
- *     this context.
+ *	Renders text by rasterizing glyphs on demand into a texture atlas
+ *	using stb_truetype, then drawing them as textured quads with OpenGL.
  *
  * Results:
- *     None.
+ *	None.
  *
  * Side effects:
- *     Loads font into active NVG context on first call per context;
- *     renders text and optional underline/overstrike.
+ *	Renders glyphs to atlas as needed; uploads atlas to GPU when full;
+ *	draws text with optional underline/overstrike.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkpDrawAngledCharsInContext(
     TCL_UNUSED(Display *),
@@ -767,80 +802,79 @@ TkpDrawAngledCharsInContext(
     double angle)
 {
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
+    uint32_t color = ColorFromGC(gc);
 
     if (rangeStart < 0 || rangeLength <= 0 ||
             rangeStart + rangeLength > numBytes) {
         return;
     }
 
-    NVGcontext *vg = TkGlfwGetNVGContext();
-    if (!vg) return;
-
-    if (EnsureNvgFont(fontPtr, vg) < 0) return;
-
-    nvgSave(vg);
-    nvgFontFaceId(vg, fontPtr->nvgFontId);
-    nvgFontSize(vg, (float) fontPtr->pixelSize);
-    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-    nvgFillColor(vg, ColorFromGC(gc));
-
-    double drawX = x;
-
-    if (rangeStart > 0) {
-        float bounds[4];
-        nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
-        drawX += (double) bounds[2];
+    /* Ensure font is loaded */
+    if (!EnsureFontLoaded(fontPtr)) {
+        return;
     }
 
-    const char *rangePtr = source + rangeStart;
-    const char *rangeEnd = rangePtr + rangeLength;
+    /* Ensure atlas texture exists */
+    EnsureAtlasTexture(fontPtr);
 
+    const char *p = source + rangeStart;
+    const char *end = p + rangeLength;
+    float drawX = (float)x;
+    float drawY = (float)y;
+
+    /* Handle rotation by translating/rotating the OpenGL matrix */
     if (angle != 0.0) {
-        nvgTranslate(vg, (float) drawX, (float) y);
-        nvgRotate(vg, (float)(angle * NVG_PI / 180.0));
-        nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
-    } else {
-        nvgText(vg, (float) drawX, (float) y, rangePtr, rangeEnd);
+        TkGlfwMatrixPush();
+        TkGlfwMatrixTranslate(drawX, drawY, 0.0f);
+        TkGlfwMatrixRotate((float)(angle * 3.14159265358979323846 / 180.0), 0.0f, 0.0f, 1.0f);
+        TkGlfwMatrixTranslate(-drawX, -drawY, 0.0f);
     }
 
-    if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
-        float bounds[4];
-        float runWidth;
-
-        if (angle != 0.0) {
-            nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
-            runWidth = bounds[2];
+    /* Draw each character */
+    while (p < end) {
+        int ch;
+        const char *next = p + Tcl_UtfToUniChar(p, &ch);
+        
+        GlyphCacheEntry *glyph = NULL;
+        if (GetGlyph(fontPtr, ch, &glyph) && glyph) {
+            /* Draw the glyph */
+            float glyphX = drawX + glyph->bearing_x;
+            float glyphY = drawY - glyph->bearing_y; /* Convert from baseline to top-left */
+            
+            DrawGlyphQuad(fontPtr, glyph, glyphX, glyphY, color);
+            
+            /* Advance position */
+            drawX += glyph->advance;
         } else {
-            nvgTextBounds(vg, (float) drawX, (float) y, rangePtr, rangeEnd,
-                          bounds);
-            runWidth = bounds[2] - (float) drawX;
+            /* Missing glyph - draw a placeholder box */
+            float boxWidth = fontPtr->pixelSize / 2;
+            TkGlfwDrawRect(drawX, drawY - fontPtr->pixelSize, 
+                          boxWidth, fontPtr->pixelSize, color);
+            drawX += boxWidth;
         }
+        
+        p = next;
+    }
 
-        nvgStrokeColor(vg, ColorFromGC(gc));
-        nvgStrokeWidth(vg, (float) fontPtr->barHeight);
-
+    /* Draw underline and overstrike if needed */
+    if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
+        float runWidth = drawX - (float)x;
+        
         if (fontPtr->font.fa.underline) {
-            float uy = (angle != 0.0) ? (float) fontPtr->underlinePos
-                                      : (float)(y + fontPtr->underlinePos);
-            float ux = (angle != 0.0) ? 0.0f : (float) drawX;
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, ux, uy);
-            nvgLineTo(vg, ux + runWidth, uy);
-            nvgStroke(vg);
+            float uy = (float)(y + fontPtr->underlinePos);
+            TkGlfwDrawLine((float)x, uy, (float)x + runWidth, uy, 
+                          (float)fontPtr->barHeight, color);
         }
         if (fontPtr->font.fa.overstrike) {
-            float oy = (angle != 0.0)
-                    ? -(float)(fontPtr->font.fm.ascent / 2)
-                    : (float)(y - fontPtr->font.fm.ascent / 2);
-            float ox = (angle != 0.0) ? 0.0f : (float) drawX;
-            nvgBeginPath(vg);
-            nvgMoveTo(vg, ox, oy);
-            nvgLineTo(vg, ox + runWidth, oy);
-            nvgStroke(vg);
+            float oy = (float)(y - fontPtr->font.fm.ascent / 2);
+            TkGlfwDrawLine((float)x, oy, (float)x + runWidth, oy, 
+                          (float)fontPtr->barHeight, color);
         }
     }
 
-    nvgRestore(vg);
+    if (angle != 0.0) {
+        TkGlfwMatrixPop();
+    }
 }
 
 /*
@@ -848,14 +882,16 @@ TkpDrawAngledCharsInContext(
  *
  * TkPostscriptFontName --
  *
- *     Builds a PostScript font name for the given TkFont.
+ *	Builds a PostScript font name for the given TkFont.
  *
  * Results:
- *     Returns 0 on success.
+ *	Returns 0 on success.
+ *
+ * Side effects:
+ *	Appends font name to the dynamic string.
  *
  *---------------------------------------------------------------------------
  */
-
 int
 TkPostscriptFontName(
     Tk_Font tkfont,
@@ -880,16 +916,21 @@ TkPostscriptFontName(
  *
  * TkUnixSetXftClipRegion --
  *
- *     No-op stub; clipping is handled by NanoVG.
+ *	No-op stub; clipping is handled by OpenGL scissor test.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkUnixSetXftClipRegion(
     TCL_UNUSED(Region))
 {
-    /* No-op: NanoVG handles clipping through its scissor API. */
+    /* No-op: clipping handled through OpenGL scissor. */
 }
 
 /*
@@ -897,11 +938,16 @@ TkUnixSetXftClipRegion(
  *
  * TkpDrawCharsInContext --
  *
- *     Simple delegating wrapper required by some Tk internal callers.
+ *	Simple delegating wrapper required by some Tk internal callers.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Delegates to Tk_DrawCharsInContext.
  *
  *---------------------------------------------------------------------------
  */
-
 void
 TkpDrawCharsInContext(
     Display *display,
@@ -924,11 +970,16 @@ TkpDrawCharsInContext(
  *
  * TkpMeasureCharsInContext --
  *
- *     Simple delegating wrapper required by some Tk internal callers.
+ *	Simple delegating wrapper required by some Tk internal callers.
+ *
+ * Results:
+ *	Returns count of bytes that fit.
+ *
+ * Side effects:
+ *	Delegates to Tk_MeasureCharsInContext.
  *
  *---------------------------------------------------------------------------
  */
-
 int
 TkpMeasureCharsInContext(
     Tk_Font tkfont,
@@ -952,13 +1003,18 @@ TkpMeasureCharsInContext(
  *
  * FindFontFile --
  *
- *     Ask Fontconfig for the best font file matching the given family
- *     and style attributes. Returns a malloc'd path string (caller must
- *     free with free()), or NULL if nothing matched.
+ *	Ask Fontconfig for the best font file matching the given family
+ *	and style attributes. Returns a malloc'd path string (caller must
+ *	free with free()), or NULL if nothing matched.
+ *
+ * Results:
+ *	Returns malloc'd path string or NULL.
+ *
+ * Side effects:
+ *	Queries Fontconfig.
  *
  *---------------------------------------------------------------------------
  */
-
 static char *
 FindFontFile(
     const char *family,
@@ -1004,15 +1060,18 @@ FindFontFile(
  *
  * InitFont --
  *
- *     Populate a WaylandFont from TkFontAttributes. Resolves the font
- *     file via Fontconfig, computes metrics via stbtt, and stores
- *     everything needed for later rendering. The NanoVG font handle
- *     is created lazily (EnsureNvgFont) because the NVG context may
- *     not exist yet at startup.
+ *	Populate a WaylandFont from TkFontAttributes. Resolves the font
+ *	file via Fontconfig, computes metrics via stbtt, and stores
+ *	everything needed for later rendering.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Initializes font structure; resolves font file path.
  *
  *---------------------------------------------------------------------------
  */
-
 static void
 InitFont(
     Tk_Window tkwin,
@@ -1039,54 +1098,12 @@ InitFont(
 
     fontPtr->filePath = FindFontFile(faPtr->family, bold, italic,
                                      fontPtr->pixelSize);
-
-    if (fontPtr->filePath) {
-        FILE *fd = fopen(fontPtr->filePath, "rb");
-        if (fd) {
-            fseek(fd, 0, SEEK_END);
-            long sz = ftell(fd);
-            fseek(fd, 0, SEEK_SET);
-
-            unsigned char *buf = (unsigned char *) Tcl_Alloc((int) sz);
-            if (buf && (long) fread(buf, 1, sz, fd) == sz) {
-                stbtt_fontinfo info;
-                if (stbtt_InitFont(&info, buf,
-                                   stbtt_GetFontOffsetForIndex(buf, 0))) {
-                    float scale = stbtt_ScaleForPixelHeight(
-                                      &info, (float) fontPtr->pixelSize);
-                    int ascent, descent, linegap;
-                    stbtt_GetFontVMetrics(&info, &ascent, &descent, &linegap);
-                    fm->ascent  = (int)(ascent   * scale + 0.5f);
-                    fm->descent = (int)(-descent * scale + 0.5f);
-
-                    int adv_W, adv_dot, lsb;
-                    stbtt_GetCodepointHMetrics(&info, 'W', &adv_W, &lsb);
-                    stbtt_GetCodepointHMetrics(&info, '.', &adv_dot, &lsb);
-                    fm->maxWidth = (int)(adv_W * scale + 0.5f);
-                    fm->fixed    = (adv_W == adv_dot);
-
-                    fa->size = (double)(-fontPtr->pixelSize);
-                }
-            }
-            if (buf) Tcl_Free((char *) buf);
-            fclose(fd);
-        }
+    
+    /* Clear any existing font data */
+    if (fontPtr->fontData) {
+        Tcl_Free((char *)fontPtr->fontData);
+        fontPtr->fontData = NULL;
     }
-
-    if (fm->ascent == 0 && fm->descent == 0) {
-        fm->ascent   = (int)(fontPtr->pixelSize * 0.80 + 0.5);
-        fm->descent  = (int)(fontPtr->pixelSize * 0.20 + 0.5);
-        fm->maxWidth = fontPtr->pixelSize;
-        fm->fixed    = 0;
-    }
-
-    fontPtr->underlinePos = fm->descent / 2;
-    if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
-    fontPtr->barHeight    = (int)(fontPtr->pixelSize * 0.07 + 0.5);
-    if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
-
-    fontPtr->nvgFontId    = -1;
-    fontPtr->font.fid     = (Font)(uintptr_t) fontPtr;
 }
 
 /*
@@ -1094,16 +1111,17 @@ InitFont(
  *
  * DeleteFont --
  *
- *     Release platform-specific resources inside a WaylandFont without
- *     freeing the struct itself.
+ *	Release platform-specific resources inside a WaylandFont without
+ *	freeing the struct itself.
  *
- *     The NanoVG font handle is intentionally NOT destroyed here: NanoVG
- *     owns the font atlas and there is no nvgDeleteFont() API.  The handle
- *     remains valid until the NVG context itself is destroyed.
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees font data, atlas, texture, and glyph cache.
  *
  *---------------------------------------------------------------------------
  */
-
 static void
 DeleteFont(
     WaylandFont *fontPtr)
@@ -1112,118 +1130,444 @@ DeleteFont(
         free(fontPtr->filePath);
         fontPtr->filePath = NULL;
     }
-    fontPtr->nvgFontId = -1;
+    if (fontPtr->fontData) {
+        Tcl_Free((char *)fontPtr->fontData);
+        fontPtr->fontData = NULL;
+    }
+    if (fontPtr->atlas) {
+        Tcl_Free((char *)fontPtr->atlas);
+        fontPtr->atlas = NULL;
+    }
+    if (fontPtr->textureId) {
+        TkGlfwDeleteTexture(fontPtr->textureId);
+        fontPtr->textureId = 0;
+    }
+    
+    /* Free glyph cache */
+    for (int i = 0; i < GLYPH_CACHE_SIZE; i++) {
+        GlyphCacheEntry *entry = fontPtr->glyphCache[i];
+        while (entry) {
+            GlyphCacheEntry *next = entry->next;
+            Tcl_Free((char *)entry);
+            entry = next;
+        }
+        fontPtr->glyphCache[i] = NULL;
+    }
 }
 
 /*
  *---------------------------------------------------------------------------
  *
- * EnsureNvgFont --
+ * EnsureFontLoaded --
  *
- *     Load the font into the *provided* NanoVG context if it has not been
- *     loaded yet for that context.
- *
- *     Per-context lazy loading (same fix as DrawTitleBar in tkWaylandDecor.c):
- *
- *       1. nvgFindFont(vg, name) — O(1) name lookup in the current context's
- *          atlas.  If it returns >= 0 the font is already present and we are
- *          done.  This is called on every draw and measurement call so it
- *          must be cheap.
- *
- *       2. If not found, nvgCreateFont(vg, name, filePath) is called NOW,
- *          while the correct GL context is current (guaranteed by the callers
- *          TkGlfwGetNVGContext / TkGlfwGetNVGContextForMeasure which both
- *          call glfwMakeContextCurrent before returning).  The resulting
- *          atlas texture is therefore owned by that context.
- *
- *       3. The id is stored in fontPtr->nvgFontId as a fast-path cache for
- *          the *next* call in the same context.  Because all windows share
- *          one NVGcontext* but may have different GL contexts, the id value
- *          returned by NanoVG is stable across contexts for the same named
- *          font — only the *texture* upload differs per context, which is
- *          handled transparently by NanoVG's atlas dirty-flag mechanism when
- *          it sees a new GL context.
- *
- *     Falls back to DejaVu Sans if the resolved file cannot be loaded.
+ *	Ensures the font file is loaded and stb_truetype is initialized.
  *
  * Results:
- *     NVG font ID (>= 0) on success, -1 on failure.
+ *	1 on success, 0 on failure.
  *
  * Side effects:
- *     May call nvgCreateFont() to upload the atlas for this GL context.
+ *	Loads font file, initializes stbtt info, computes scale.
  *
  *---------------------------------------------------------------------------
  */
-
 static int
-EnsureNvgFont(
-    WaylandFont *fontPtr,
-    NVGcontext  *vg)
+EnsureFontLoaded(
+    WaylandFont *fontPtr)
 {
-    const char *name;
-    int         id;
-
-    if (!vg) return -1;
-
-    /* Load emoji font as fallback (from bundled memory) if not already in this context. */
-    id = nvgFindFont(vg, "emoji");
-    if (id < 0) {
-        id = nvgCreateFontMem(vg, "emoji", NotoEmoji_Regular_ttf, NotoEmoji_Regular_ttf_len, 0);  /* 0 means copy the data internally, */
-        if (id < 0) {
-            fprintf(stderr, "Failed to load bundled emoji font\n");
-            return -1;
-        }
-    }
-    emojiFontId = id;
-
-    /* Load the main font. */
-    name = fontPtr->font.fa.family ? fontPtr->font.fa.family : "default";
-
-    id = nvgFindFont(vg, name);
-    if (id >= 0) {
-        fontPtr->nvgFontId = id;
-        return id;
+    if (fontPtr->fontData != NULL) {
+        return 1; /* Already loaded */
     }
 
-    if (fontPtr->filePath) {
-        id = nvgCreateFont(vg, name, fontPtr->filePath);
+    if (!fontPtr->filePath) {
+        /* Fallback to DejaVu Sans */
+        const char *fallback = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+        fontPtr->filePath = strdup(fallback);
     }
 
-    if (id < 0) {
-        id = nvgCreateFont(vg, name,
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+    FILE *fd = fopen(fontPtr->filePath, "rb");
+    if (!fd) {
+        return 0;
     }
 
-    /* Add emoji as fallback to the main font (whether from file or DejaVu fallback). */
-    if (id >= 0) {
-        nvgAddFallbackFontId(vg, id, emojiFontId);
+    fseek(fd, 0, SEEK_END);
+    long sz = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+
+    fontPtr->fontData = (unsigned char *) Tcl_Alloc((int) sz);
+    if (!fontPtr->fontData) {
+        fclose(fd);
+        return 0;
     }
 
-    fontPtr->nvgFontId = id;
-    return id;
+    if ((long) fread(fontPtr->fontData, 1, sz, fd) != sz) {
+        Tcl_Free((char *)fontPtr->fontData);
+        fontPtr->fontData = NULL;
+        fclose(fd);
+        return 0;
+    }
+    fclose(fd);
+
+    if (!stbtt_InitFont(&fontPtr->stbInfo, fontPtr->fontData,
+                        stbtt_GetFontOffsetForIndex(fontPtr->fontData, 0))) {
+        Tcl_Free((char *)fontPtr->fontData);
+        fontPtr->fontData = NULL;
+        return 0;
+    }
+
+    /* Compute scale and metrics */
+    fontPtr->scale = stbtt_ScaleForPixelHeight(&fontPtr->stbInfo, 
+                                                (float)fontPtr->pixelSize);
+    
+    int ascent, descent, linegap;
+    stbtt_GetFontVMetrics(&fontPtr->stbInfo, &ascent, &descent, &linegap);
+    fontPtr->font.fm.ascent  = (int)(ascent * fontPtr->scale + 0.5f);
+    fontPtr->font.fm.descent = (int)(-descent * fontPtr->scale + 0.5f);
+    
+    int adv_W, adv_dot, lsb;
+    stbtt_GetCodepointHMetrics(&fontPtr->stbInfo, 'W', &adv_W, &lsb);
+    stbtt_GetCodepointHMetrics(&fontPtr->stbInfo, '.', &adv_dot, &lsb);
+    fontPtr->font.fm.maxWidth = (int)(adv_W * fontPtr->scale + 0.5f);
+    fontPtr->font.fm.fixed = (adv_W == adv_dot);
+
+    fontPtr->underlinePos = fontPtr->font.fm.descent / 2;
+    if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
+    fontPtr->barHeight = (int)(fontPtr->pixelSize * 0.07 + 0.5);
+    if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
+
+    return 1;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * RenderGlyphToAtlas --
+ *
+ *	Renders a glyph to the font's texture atlas using stb_truetype.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates atlas with glyph bitmap; may upload atlas to GPU if full.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+RenderGlyphToAtlas(
+    WaylandFont *fontPtr,
+    int codepoint,
+    GlyphCacheEntry *entry)
+{
+    stbtt_fontinfo *info = &fontPtr->stbInfo;
+    float scale = fontPtr->scale;
+    
+    /* Try to get glyph from main font */
+    int glyph = stbtt_FindGlyphIndex(info, codepoint);
+    stbtt_fontinfo *renderInfo = info;
+    
+    /* If not found, try emoji font */
+    if (glyph == 0 && emojiInitialized) {
+        glyph = stbtt_FindGlyphIndex(&emojiInfo, codepoint);
+        if (glyph != 0) {
+            renderInfo = &emojiInfo;
+            /* Recalculate scale for emoji font */
+            float emojiScale = stbtt_ScaleForPixelHeight(renderInfo, 
+                                                          (float)fontPtr->pixelSize);
+            scale = emojiScale;
+        }
+    }
+    
+    if (glyph == 0) {
+        /* Missing glyph - create a placeholder box */
+        entry->width = fontPtr->pixelSize / 2;
+        entry->height = fontPtr->pixelSize;
+        entry->bearing_x = 0;
+        entry->bearing_y = fontPtr->pixelSize;
+        entry->advance = entry->width;
+        
+        /* Allocate space in atlas */
+        if (fontPtr->atlas_used_x + entry->width + ATLAS_PADDING > fontPtr->atlas_width) {
+            fontPtr->atlas_used_x = 0;
+            fontPtr->atlas_used_y += fontPtr->atlas_row_height + ATLAS_PADDING;
+            fontPtr->atlas_row_height = 0;
+        }
+        
+        entry->atlas_x = fontPtr->atlas_used_x;
+        entry->atlas_y = fontPtr->atlas_used_y;
+        
+        /* Draw placeholder box in atlas */
+        for (int py = 0; py < entry->height; py++) {
+            for (int px = 0; px < entry->width; px++) {
+                int atlas_idx = ((entry->atlas_y + py) * fontPtr->atlas_width + 
+                                 (entry->atlas_x + px)) * 4;
+                if (px == 0 || px == entry->width-1 || py == 0 || py == entry->height-1) {
+                    /* Border */
+                    fontPtr->atlas[atlas_idx] = 255;
+                    fontPtr->atlas[atlas_idx+1] = 255;
+                    fontPtr->atlas[atlas_idx+2] = 255;
+                    fontPtr->atlas[atlas_idx+3] = 255;
+                } else {
+                    /* Interior - transparent */
+                    fontPtr->atlas[atlas_idx+3] = 0;
+                }
+            }
+        }
+        
+        fontPtr->atlas_used_x += entry->width + ATLAS_PADDING;
+        if (entry->height > fontPtr->atlas_row_height) {
+            fontPtr->atlas_row_height = entry->height;
+        }
+        
+        /* Update texture coordinates */
+        entry->s0 = (float)entry->atlas_x / fontPtr->atlas_width;
+        entry->t0 = (float)entry->atlas_y / fontPtr->atlas_height;
+        entry->s1 = (float)(entry->atlas_x + entry->width) / fontPtr->atlas_width;
+        entry->t1 = (float)(entry->atlas_y + entry->height) / fontPtr->atlas_height;
+        
+        return;
+    }
+
+    /* Get glyph metrics */
+    int advance, lsb;
+    stbtt_GetGlyphHMetrics(renderInfo, glyph, &advance, &lsb);
+    
+    int x0, y0, x1, y1;
+    stbtt_GetGlyphBitmapBox(renderInfo, glyph, scale, scale, &x0, &y0, &x1, &y1);
+    
+    entry->width = x1 - x0;
+    entry->height = y1 - y0;
+    entry->bearing_x = (int)(lsb * scale);
+    entry->bearing_y = y1; /* Distance from baseline to top */
+    entry->advance = (int)(advance * scale + 0.5f);
+
+    if (entry->width <= 0 || entry->height <= 0) {
+        /* Empty glyph (space, etc.) */
+        entry->width = 0;
+        entry->height = 0;
+        return;
+    }
+
+    /* Check if atlas needs more space */
+    if (fontPtr->atlas_used_x + entry->width + ATLAS_PADDING > fontPtr->atlas_width) {
+        fontPtr->atlas_used_x = 0;
+        fontPtr->atlas_used_y += fontPtr->atlas_row_height + ATLAS_PADDING;
+        fontPtr->atlas_row_height = 0;
+        
+        /* If atlas is full, upload current contents and reset */
+        if (fontPtr->atlas_used_y + entry->height + ATLAS_PADDING > fontPtr->atlas_height) {
+            UploadAtlasToGPU(fontPtr);
+            fontPtr->atlas_used_x = 0;
+            fontPtr->atlas_used_y = 0;
+            fontPtr->atlas_row_height = 0;
+            memset(fontPtr->atlas, 0, fontPtr->atlas_width * fontPtr->atlas_height * 4);
+        }
+    }
+
+    entry->atlas_x = fontPtr->atlas_used_x;
+    entry->atlas_y = fontPtr->atlas_used_y;
+
+    /* Render glyph to atlas */
+    unsigned char *bitmap = (unsigned char *)Tcl_Alloc(entry->width * entry->height);
+    if (bitmap) {
+        stbtt_MakeGlyphBitmap(renderInfo, bitmap, entry->width, entry->height,
+                              entry->width, scale, scale, glyph);
+        
+        /* Convert to RGBA and copy to atlas */
+        for (int py = 0; py < entry->height; py++) {
+            for (int px = 0; px < entry->width; px++) {
+                int atlas_idx = ((entry->atlas_y + py) * fontPtr->atlas_width + 
+                                 (entry->atlas_x + px)) * 4;
+                unsigned char alpha = bitmap[py * entry->width + px];
+                fontPtr->atlas[atlas_idx] = 255;     /* R */
+                fontPtr->atlas[atlas_idx+1] = 255;   /* G */
+                fontPtr->atlas[atlas_idx+2] = 255;   /* B */
+                fontPtr->atlas[atlas_idx+3] = alpha; /* A */
+            }
+        }
+        
+        Tcl_Free((char *)bitmap);
+    }
+
+    /* Update atlas position */
+    fontPtr->atlas_used_x += entry->width + ATLAS_PADDING;
+    if (entry->height > fontPtr->atlas_row_height) {
+        fontPtr->atlas_row_height = entry->height;
+    }
+
+    /* Calculate texture coordinates */
+    entry->s0 = (float)entry->atlas_x / fontPtr->atlas_width;
+    entry->t0 = (float)entry->atlas_y / fontPtr->atlas_height;
+    entry->s1 = (float)(entry->atlas_x + entry->width) / fontPtr->atlas_width;
+    entry->t1 = (float)(entry->atlas_y + entry->height) / fontPtr->atlas_height;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * GetGlyph --
+ *
+ *	Retrieves a glyph from the cache, rendering it if necessary.
+ *
+ * Results:
+ *	1 if glyph is available (entryOut set), 0 otherwise.
+ *
+ * Side effects:
+ *	May render glyph to atlas if not already cached.
+ *
+ *---------------------------------------------------------------------------
+ */
+static int
+GetGlyph(
+    WaylandFont *fontPtr,
+    int codepoint,
+    GlyphCacheEntry **entryOut)
+{
+    unsigned int hash = GlyphHash(codepoint);
+    GlyphCacheEntry *entry = fontPtr->glyphCache[hash];
+    
+    /* Search cache */
+    while (entry) {
+        if (entry->codepoint == codepoint) {
+            *entryOut = entry;
+            return 1;
+        }
+        entry = entry->next;
+    }
+    
+    /* Not found - create new entry */
+    entry = (GlyphCacheEntry *)Tcl_Alloc(sizeof(GlyphCacheEntry));
+    if (!entry) return 0;
+    
+    memset(entry, 0, sizeof(GlyphCacheEntry));
+    entry->codepoint = codepoint;
+    
+    /* Render glyph to atlas */
+    RenderGlyphToAtlas(fontPtr, codepoint, entry);
+    
+    /* Add to cache */
+    entry->next = fontPtr->glyphCache[hash];
+    fontPtr->glyphCache[hash] = entry;
+    
+    *entryOut = entry;
+    return 1;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * EnsureAtlasTexture --
+ *
+ *	Ensures the font's atlas texture exists and is up to date.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Creates OpenGL texture if needed.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+EnsureAtlasTexture(
+    WaylandFont *fontPtr)
+{
+    if (fontPtr->textureId == 0) {
+        fontPtr->textureId = TkGlfwCreateTexture(fontPtr->atlas_width, 
+                                                 fontPtr->atlas_height,
+                                                 fontPtr->atlas);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * UploadAtlasToGPU --
+ *
+ *	Uploads the current atlas contents to the GPU texture.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates OpenGL texture with current atlas data.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+UploadAtlasToGPU(
+    WaylandFont *fontPtr)
+{
+    if (fontPtr->textureId) {
+        TkGlfwUpdateTexture(fontPtr->textureId, fontPtr->atlas_width,
+                           fontPtr->atlas_height, fontPtr->atlas);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DrawGlyphQuad --
+ *
+ *	Draws a single glyph as a textured quad.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders a quad with the glyph texture.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+DrawGlyphQuad(
+    WaylandFont *fontPtr,
+    GlyphCacheEntry *glyph,
+    float x,
+    float y,
+    uint32_t color)
+{
+    if (glyph->width <= 0 || glyph->height <= 0) {
+        return;
+    }
+    
+    TkGlfwDrawTexturedQuad(fontPtr->textureId,
+                           x, y,
+                           (float)glyph->width,
+                           (float)glyph->height,
+                           glyph->s0, glyph->t0,
+                           glyph->s1, glyph->t1,
+                           color);
+}
 
 /*
  *---------------------------------------------------------------------------
  *
  * ColorFromGC --
  *
- *     Extract the foreground color from an X11 GC and convert it to an
- *     NVGcolor.
+ *	Extract the foreground color from an X11 GC and convert it to a
+ *	32-bit RGBA value.
+ *
+ * Results:
+ *	Returns RGBA color value.
+ *
+ * Side effects:
+ *	None.
  *
  *---------------------------------------------------------------------------
  */
-
-static NVGcolor
+static uint32_t
 ColorFromGC(GC gc)
 {
     if (gc) {
         XGCValues vals;
         TkWaylandGetGCValues(gc, GCForeground, &vals);
-        return TkGlfwPixelToNVG(vals.foreground);
+        /* Convert from X11 pixel to RGBA */
+        unsigned char r = (vals.foreground >> 16) & 0xFF;
+        unsigned char g = (vals.foreground >> 8) & 0xFF;
+        unsigned char b = vals.foreground & 0xFF;
+        return (r << 24) | (g << 16) | (b << 8) | 0xFF;
     }
-    return nvgRGBA(0, 0, 0, 255);
+    return 0x000000FF; /* Black, full opacity */
 }
 
 /*

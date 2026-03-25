@@ -11,7 +11,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkGlfwInt.h"  /* Changed from tkUnixInt.h */
+#include "tkWaylandInt.h"  /* Changed from tkUnixInt.h */
 #include <GLFW/glfw3.h>
 
 /*
