@@ -281,6 +281,54 @@ TkGlfwCleanupGlobalBuffers(void)
 /*
  *----------------------------------------------------------------------
  *
+ * TkGlfwEnsureSurface --
+ *
+ *	Ensure a valid libcg surface exists for the window.
+ *	Recreates the surface if needed (stale or wrong size).
+ *	Safe to call at any time except during active drawing.
+ *
+ * Results:
+ *	TCL_OK on success, TCL_ERROR on failure.
+ *
+ * Side effects:
+ *	May allocate a new cg_surface_t and destroy the old one.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkGlfwEnsureSurface(WindowMapping *m)
+{
+    if (!m) {
+	return TCL_ERROR;
+    }
+
+    /* Check if we need to recreate the surface. */
+    if (m->surfaceStale || !m->surface ||
+	(m->width != m->surface->width || m->height != m->surface->height)) {
+
+	if (m->surface) {
+	    cg_surface_destroy(m->surface);
+	    m->surface = NULL;
+	}
+
+	m->surface = cg_surface_create(m->width, m->height);
+	if (!m->surface) {
+	    fprintf(stderr, "TkGlfwEnsureSurface: cg_surface_create(%d,%d) failed\n",
+		    m->width, m->height);
+	    return TCL_ERROR;
+	}
+
+	m->surfaceStale = 0;
+	m->texture.needs_texture_update = 1;
+    }
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkGlfwInitializeTexture --
  *
  *	Initialize OpenGL texture for a window.
@@ -326,17 +374,9 @@ TkGlfwInitializeTexture(WindowMapping *m)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    /* Allocate texture storage with initial data (black). */
-    size_t pixelSize = (size_t)m->width * m->height * 4;
-    void *pixels = calloc(1, pixelSize);
-    if (pixels) {
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m->width, m->height, 0,
-		     GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	free(pixels);
-    } else {
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m->width, m->height, 0,
-		     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    }
+    /* Allocate empty texture storage. */
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m->width, m->height, 0,
+		 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -398,7 +438,6 @@ MODULE_SCOPE void
 TkGlfwUploadSurfaceToTexture(WindowMapping *m)
 {
     uint32_t *pixels;
-    int stride;
 
     if (!m || !m->surface || !m->texture.texture_id) {
 	return;
@@ -409,9 +448,6 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     if (!pixels) {
 	return;
     }
-
-    /* libcg stride is width * 4 (32 bits per pixel). */
-    stride = m->surface->stride;
 
     glfwMakeContextCurrent(m->glfwWindow);
     glBindTexture(GL_TEXTURE_2D, m->texture.texture_id);
@@ -440,6 +476,7 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
  *
  *	Render the texture to the screen using a full-screen quad.
  *	This draws the libcg-rendered content to the window.
+ *	Assumes the GL context is current and a frame is open.
  *
  * Results:
  *	None.
@@ -649,7 +686,6 @@ TkGlfwCreateWindow(
 {
     WindowMapping *mapping;
     GLFWwindow *window;
-    struct cg_surface_t *surface;
 
     window = NULL;
 
@@ -699,14 +735,6 @@ TkGlfwCreateWindow(
 	glfwShowWindow(window);
     }
 
-    /* Create the libcg pixel surface for this window. */
-    surface = cg_surface_create(width, height);
-    if (!surface) {
-	fprintf(stderr, "TkGlfwCreateWindow: cg_surface_create() failed\n");
-	glfwDestroyWindow(window);
-	return NULL;
-    }
-
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
     mapping->tkWindow = tkWin;
@@ -714,8 +742,11 @@ TkGlfwCreateWindow(
     mapping->drawable = nextDrawableId++;
     mapping->width = width;
     mapping->height = height;
-    mapping->clearPending = 1;
-    mapping->surface = surface;
+    mapping->surfaceStale = 0;
+    mapping->surface = NULL;  /* Will be created lazily in EnsureSurface */
+    mapping->needsDisplay = 0;
+    mapping->frameOpen = 0;
+    mapping->inEventCycle = 0;
 
     AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
@@ -724,10 +755,18 @@ TkGlfwCreateWindow(
 	TkGlfwSetupCallbacks(window, tkWin);
     }
 
+    /* Ensure surface exists. */
+    if (TkGlfwEnsureSurface(mapping) != TCL_OK) {
+	fprintf(stderr, "TkGlfwCreateWindow: failed to create surface\n");
+	glfwDestroyWindow(window);
+	ckfree((char *)mapping);
+	return NULL;
+    }
+
     /* Initialize OpenGL texture for this window. */
     if (TkGlfwInitializeTexture(mapping) != TCL_OK) {
 	fprintf(stderr, "TkGlfwCreateWindow: failed to initialize texture\n");
-	cg_surface_destroy(surface);
+	cg_surface_destroy(mapping->surface);
 	glfwDestroyWindow(window);
 	ckfree((char *)mapping);
 	return NULL;
@@ -820,52 +859,54 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 /*
  *----------------------------------------------------------------------
  *
- * SyncWindowSize --
+ * TkGlfwResizeWindow --
  *
- *	Synchronize Tk window size when framebuffer dimensions change.
- *	Recreates the cg surface if dimensions changed.
+ *	Handle window resize - mark surface as stale for recreation.
+ *	Never destroy the surface during a draw cycle.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	May reallocate mapping->surface.
+ *	Updates cached dimensions and marks surface as stale.
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
-SyncWindowSize(WindowMapping *m)
+TkGlfwResizeWindow(GLFWwindow *w, int width, int height)
 {
-    int w, h;
+    WindowMapping *m = FindMappingByGLFW(w);
 
-    if (!m || !m->glfwWindow || shutdownInProgress) {
-	return;
-    }
-
-    glfwGetWindowSize(m->glfwWindow, &w, &h);
-
-    if (w <= 0 || h <= 0) {
-	return;
-    }
-
-    if (w != m->width || h != m->height) {
-	if (m->surface) {
-	    cg_surface_destroy(m->surface);
-	}
-	m->surface = cg_surface_create(w, h);
-	if (!m->surface) {
-	    fprintf(stderr, "SyncWindowSize: cg_surface_create() failed\n");
-	}
-	m->width = w;
-	m->height = h;
+    if (m) {
+	m->width = width;
+	m->height = height;
+	/* Mark surface as stale - will be recreated at next EnsureSurface. */
+	m->surfaceStale = 1;
 	m->texture.needs_texture_update = 1;
     }
+}
 
-    if (m->tkWindow) {
-	m->tkWindow->changes.width = w;
-	m->tkWindow->changes.height = h;
-    }
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwUpdateWindowSize --
+ *
+ *	Update cached dimensions for a GLFW window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	mapping->width and mapping->height updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
+{
+    TkGlfwResizeWindow(glfwWindow, width, height);
 }
 
 /*
@@ -874,8 +915,8 @@ SyncWindowSize(WindowMapping *m)
  * TkGlfwBeginDraw --
  *
  *	Prepare a libcg context for drawing to the given drawable.
- *	Creates a cg_ctx_t bound to the window's cg_surface_t, saves
- *	drawing state, and applies child-window translation and GC settings.
+ *	Ensures a valid surface exists, creates a cg_ctx_t, and applies
+ *	child-window translation and GC settings.
  *
  * Results:
  *	TCL_OK if drawing can proceed, TCL_ERROR otherwise.
@@ -894,7 +935,16 @@ TkGlfwBeginDraw(
 {
     WindowMapping *m = FindMappingByDrawable(drawable);
 
-    if (!m || !m->surface) {
+    if (!m) {
+	return TCL_ERROR;
+    }
+
+    /* Ensure we have a valid surface. */
+    if (TkGlfwEnsureSurface(m) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    if (!m->surface) {
 	return TCL_ERROR;
     }
 
@@ -937,6 +987,7 @@ TkGlfwBeginDraw(
  * TkGlfwEndDraw --
  *
  *	End a drawing operation: restore cg state and release the context.
+ *	Marks the window as needing display.
  *
  * Results:
  *	None.
@@ -962,9 +1013,9 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 
     m = FindMappingByDrawable(dcPtr->drawable);
     if (m) {
+	/* Mark that we need to display this window. */
 	m->needsDisplay = 1;
-	m->texture.needs_texture_update = 1;
-	/* Schedule display if not already scheduled. */
+	/* Schedule display. */
 	TkWaylandScheduleDisplay(m);
     }
 }
@@ -1609,60 +1660,6 @@ TkGlfwGetDrawable(GLFWwindow *w)
     WindowMapping *m = FindMappingByGLFW(w);
 
     return m ? m->drawable : 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwResizeWindow --
- *
- *	Update cached dimensions for a GLFW window.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	mapping->width and mapping->height updated.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwResizeWindow(GLFWwindow *w, int width, int height)
-{
-    WindowMapping *m = FindMappingByGLFW(w);
-
-    if (m) {
-	m->width = width;
-	m->height = height;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwUpdateWindowSize --
- *
- *	Update cached dimensions for a GLFW window.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	mapping->width and mapping->height updated.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
-{
-    WindowMapping *m = FindMappingByGLFW(glfwWindow);
-
-    if (m) {
-	m->width = width;
-	m->height = height;
-    }
 }
 
 /*
