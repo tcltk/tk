@@ -2,7 +2,7 @@
  * tkWaylandXId.c --
  *
  *	Window-ID scanning and legacy compatibility shims for the
- *	Wayland/GLFW/NanoVG Tk port.
+ *	Wayland/GLFW/libcg Tk port.
  *
  * Copyright © 1993 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.
@@ -19,45 +19,90 @@
 /*
  *----------------------------------------------------------------------
  *
- * NVGcolor helper forwarders
+ * Color conversion helpers
  *
- *	Previously defined here; now just forward to the centralized
- *	helpers in tkWaylandInit.h / tkWaylandGC.c.
+ *	Convert between Tk colors and libcg colors.
  *
  *----------------------------------------------------------------------
  */
 
-NVGcolor
-Tk_PixelToNVGColor(
-    unsigned long pixel)
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_PixelToCGColor --
+ *
+ *	Convert a pixel value (RGB encoded as 0xRRGGBB) to a cg_color_t.
+ *
+ * Results:
+ *	Returns a cg_color_t.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+struct cg_color_t
+Tk_PixelToCGColor(unsigned long pixel)
 {
-    return TkGlfwPixelToNVG(pixel);
+    return TkGlfwPixelToCG(pixel);
 }
 
-NVGcolor
-Tk_GCToNVGColor(
-    GC gc)
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GCToCGColor --
+ *
+ *	Extract the foreground color from a GC and return as cg_color_t.
+ *
+ * Results:
+ *	Returns a cg_color_t.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+struct cg_color_t
+Tk_GCToCGColor(GC gc)
 {
     if (gc) {
         XGCValues v;
-        if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
-            return TkGlfwPixelToNVG(v.foreground);
+        if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+            return TkGlfwPixelToCG(v.foreground);
         }
     }
-    return nvgRGBA(0, 0, 0, 255);
+    /* Default to black */
+    struct cg_color_t black = {0.0, 0.0, 0.0, 1.0};
+    return black;
 }
 
-NVGcolor
-Tk_GCToNVGBackground(
-    GC gc)
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GCToCGBackground --
+ *
+ *	Extract the background color from a GC and return as cg_color_t.
+ *
+ * Results:
+ *	Returns a cg_color_t.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+struct cg_color_t
+Tk_GCToCGBackground(GC gc)
 {
     if (gc) {
         XGCValues v;
-        if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
-            return TkGlfwPixelToNVG(v.background);
+        if (TkWaylandGetGCValues(gc, GCBackground, &v) == 0) {
+            return TkGlfwPixelToCG(v.background);
         }
     }
-    return nvgRGBA(255, 255, 255, 255);
+    /* Default to white */
+    struct cg_color_t white = {1.0, 1.0, 1.0, 1.0};
+    return white;
 }
 
 /*
