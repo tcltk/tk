@@ -387,11 +387,11 @@ TkWaylandQueueExposeEvent(
         return;
     }
 
-    /* ------------------------------------------------------------------
+    /* 
      * Clear the surface for this toplevel at the START of each expose
      * cycle.  We find the mapping before queuing the event so that
      * widget redraws triggered by the event find a clean surface.
-     * ------------------------------------------------------------------ */
+     */
     Tk_Window top = GetToplevelOfWidget((Tk_Window)winPtr);
     if (top) {
         WindowMapping *m = FindMappingByTk((TkWindow *)top);
@@ -562,7 +562,7 @@ TkWaylandDisplayProc(ClientData clientData)
 
     /*
      * Set the viewport to the full window.
-     * Clear the colour buffer to the default background so that any
+     * Clear the colur buffer to the default background so that any
      * region not covered by the texture quad (e.g. letterboxing) shows
      * a neutral colour rather than undefined framebuffer contents.
      */

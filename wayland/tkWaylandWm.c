@@ -687,8 +687,8 @@ TkWmCleanup(
 
 Window
 Tk_MakeWindow(
-    Tk_Window tkwin,
-    TCL_UNUSED(Window))        /* parent – ignored for toplevels */
+	      Tk_Window tkwin,
+	      TCL_UNUSED(Window))        /* parent – ignored for toplevels */
 {
     TkWindow   *winPtr     = (TkWindow *)tkwin;
     GLFWwindow *glfwWindow = NULL;
@@ -697,11 +697,8 @@ Tk_MakeWindow(
     Window      window;
 
     if (winPtr->parentPtr == NULL) {
-        /*
-         * -------------------------
-         * TOPLEVEL WINDOW
-         * -------------------------
-         */
+	
+	/* Toplevel window. */
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
 
@@ -724,7 +721,9 @@ Tk_MakeWindow(
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
 
-        /* * Toplevels are 0,0 relative to themselves. 
+        /*
+         * Toplevel registration: use RegisterDrawableForMapping.
+         * Toplevels are always at (0,0) relative to their own surface.
          */
         WindowMapping *m = FindMappingByTk(winPtr);
         if (m) {
@@ -733,21 +732,16 @@ Tk_MakeWindow(
         }
 
     } else {
-        /*
-         * -------------------------
-         * CHILD WINDOW
-         * -------------------------
-         */
+        /* Child window. */
         static Window nextChildId = 100000;
         window = nextChildId++;
-        if (window == None) {
-            window = nextChildId++;
-        }
+        if (window == None) window = nextChildId++;
         winPtr->window = window;
 
         /*
-         * FIX: Instead of manual registration, use the logic in tkWaylandInit.c
-         * that finds the toplevel parent and computes the x,y offsets.
+         * Use AddDrawableMapping (via the wrapper) instead of 
+         * RegisterDrawableForMapping. This computes the (x,y) offset 
+         * so the widget draws in the right place.
          */
         TkGlfwRegisterChildDrawable(winPtr->window, winPtr);
     }
