@@ -176,7 +176,7 @@ typedef struct {
 /*
  * Used to describe the current clipping box. Can't be passed normally because
  * the information isn't retrievable from the GC.
-. */
+ */
 
 typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
@@ -637,21 +637,6 @@ InitFontErrorProc(
     return 0;
 }
 
-/*
- * ---------------------------------------------------------------
- * InitFont --
- *
- *   Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
- *   also allocates a new UnixFtFont.
- *
- * Results:
- *   On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
- *
- * Side effects:
- *   Allocates memory, loads fonts, initializes shaper.
- * ---------------------------------------------------------------
- */
-
 static UnixFtFont *
 InitFont(
     Tk_Window tkwin,
@@ -807,6 +792,7 @@ InitFont(
 
     return fontPtr;
 }
+
 /*
  * ---------------------------------------------------------------
  * FinishedWithFont --
@@ -1084,7 +1070,7 @@ X11Shaper_ShapeString(
          * - C0 controls (0x00-0x1F) except tab/newline/CR.
          * - C1 controls (0x80-0x9F) - these cause the crash!
          * - Invalid/replacement characters.
-        . */
+         */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
             (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls. */
             (uc == 0xFFFD)) {  /* Replacement character. */
@@ -1277,7 +1263,7 @@ X11Shaper_ShapeString(
                  * glyph->UserIdOrCodepointIndex is the codepoint index within
                  * this run. charBounds[runStart + UserIdOrCodepointIndex] is
                  * the byte start of that codepoint in the full source string.
-                . */
+                 */
                 int cpIndex = runStart + glyph->UserIdOrCodepointIndex;
 
                 /* Add bounds checking to prevent segfaults. */
@@ -1362,7 +1348,7 @@ X11Shaper_ShapeString(
      * We need to reverse the word order for visual display.
      *
      * Strategy: Find word boundaries (spaces) and reverse the word order.
-    . */
+     */
     if (numRuns == 1 && bidiRuns[0].isRTL && buffer->glyphCount > 1) {
         /* Find word boundaries by looking for space glyphs. */
         typedef struct {
@@ -2303,6 +2289,7 @@ done:
         XftDrawSetClip(ftDraw, NULL);
     }
 }
+
 /*
  * ---------------------------------------------------------------
  * TkDrawAngledChars --
