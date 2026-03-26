@@ -21,33 +21,6 @@
   #define WIN32_XDRAWLINE_HACK 0
 #endif
 
-/*
- *----------------------------------------------------------------------
- * +++ Get Scaling Factor
- *	Same as TkScalingLevel, but doesn't round to nearest 25%.
- */
-static double
-GetScalingFactor(Tk_Window tkwin) {
-    Screen *screenPtr = Tk_Screen(tkwin);
-    double d;
-
-    d = 25.4 / 72.0 * WidthOfScreen(screenPtr) / WidthMMOfScreen(screenPtr) * 0.75;
-    return d;
-}
-
-/* + TreeviewFreeColumns --
- *	Get scaled screen units value
- */
-static int
-GetScaledValue(Tk_Window tkwin, Tcl_Obj *valuePtr, double divisor) {
-    int size;
-    double d;
-
-    Tk_GetDoublePixelsFromObj(NULL, tkwin, valuePtr, &d);
-    size = (int)round(d * GetScalingFactor(tkwin) / divisor);
-    return size;
-}
-
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
  *	Draw a solid highlight border to indicate focus.
@@ -106,7 +79,7 @@ static void HighlightElementDraw(
 	GC gc = Tk_GCForColor(highlightColor, d);
 	if (defaultState == TTK_BUTTON_DEFAULT_NORMAL) {
 	    TkDrawInsetFocusHighlight(tkwin, gc, highlightThickness, d,
-		round(5 * GetScalingFactor(tkwin)));
+		round(5 * TkScalingLevel(tkwin)));
 	} else {
 	    Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
 	}
@@ -169,7 +142,7 @@ static void ButtonBorderElementSize(
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
-	borderWidth += round(5 * GetScalingFactor(tkwin));
+	borderWidth += round(5 * TkScalingLevel(tkwin));
     }
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -209,7 +182,7 @@ static void ButtonBorderElementDraw(
 	case TTK_BUTTON_DEFAULT_DISABLED :
 	    break;
 	case TTK_BUTTON_DEFAULT_NORMAL :
-	    inset += round(5 * GetScalingFactor(tkwin));
+	    inset += round(5 * TkScalingLevel(tkwin));
 	    break;
 	case TTK_BUTTON_DEFAULT_ACTIVE :
 	    Tk_Draw3DRectangle(tkwin, d, border,
@@ -532,7 +505,7 @@ static void ArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     int size = 12;
 
-    size = GetScaledValue(tkwin, arrow->sizeObj, 1.0);
+    size = TkGetScaledPixelValue(tkwin, arrow->sizeObj, 1.0);
     *widthPtr = *heightPtr = size;
 }
 
@@ -611,7 +584,7 @@ static void BoxArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     int size = 12;
 
-    size = GetScaledValue(tkwin, arrow->sizeObj, 1.0);
+    size = TkGetScaledPixelValue(tkwin, arrow->sizeObj, 1.0);
     *widthPtr = *heightPtr = size;
 }
 
@@ -934,8 +907,8 @@ static const Ttk_ElementSpec SashElementSpec = {
 
 typedef struct {
     Tcl_Obj *colorObj;
-    Tcl_Obj *sizeObj;
     Tcl_Obj *marginObj;
+    Tcl_Obj *sizeObj;
 } TreeheadingIndicator;
 
 static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
@@ -962,10 +935,10 @@ static void TreeheadingIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = GetScaledValue(tkwin, indicator->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
-    /* Add scaled padding */
+    /* Add padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -988,13 +961,16 @@ static void TreeheadingIndicatorDraw(
     GC gc;
     unsigned mask;
 
+    /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
 	return;
     }
 
+    /* Shrink size based on padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+    /* Get arrow size */
     if (state & TTK_STATE_SELECTED) {
 	direction = ARROW_DOWN;
 	TtkArrowSize(b.width/2, direction, &cx, &cy);
@@ -1011,13 +987,12 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
+    /* Draw arrow */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-
     gcvalues.foreground = borderColor->pixel;
     gcvalues.line_width = 1;
     mask = GCForeground | GCLineWidth;
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
-
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
@@ -1063,9 +1038,8 @@ static void TreeitemIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = GetScaledValue(tkwin, indicator->sizeObj, 1.0);
-    *widthPtr = size;
-    *heightPtr = size;
+    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 1.0);
+    *widthPtr = *heightPtr = size;
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);

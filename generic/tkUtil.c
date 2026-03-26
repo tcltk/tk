@@ -1242,7 +1242,8 @@ TkMakeEnsemble(
  *
  * TkScalingLevel --
  *
- *	Returns the display's DPI scaling level as 1.0, 1.25, 1.5, ....
+ *	Returns the display's DPI scaling value as a decimal value where
+ *	0.9 is 90%, 1.0 is 100%, 1.1 is 110%, 2.0 is 200%, etc.
  *
  * Results:
  *      The scaling level.
@@ -1257,16 +1258,45 @@ double
 TkScalingLevel(
     Tk_Window tkwin)
 {
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    Tcl_Obj *scalingPctPtr = Tcl_GetVar2Ex(interp, "::tk::scalingPct", NULL,
-	    TCL_GLOBAL_ONLY);
-    if (scalingPctPtr == NULL) {
-	return 1.0;
+    Screen *screenPtr = Tk_Screen(tkwin);
+
+    return 25.4/72.0*WidthOfScreen(screenPtr)/WidthMMOfScreen(screenPtr)*0.75;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetScaledPixelValue --
+ *
+ *	Returns a scaled pixel value for a given screen unit value.
+ *
+ * Results:
+ *      The scaled screen unit value in pixels.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkGetScaledPixelValue(
+    Tk_Window tkwin,
+    Tcl_Obj *valuePtr,
+    double divisor)
+{
+    int size;
+    double d;
+
+    if (Tcl_GetDoubleFromObj(NULL, valuePtr, &d) == TCL_OK) {
+	/* Unscaled pixel value, so do scaling */
+	size = (int)round(d * TkScalingLevel(tkwin) / divisor);
     } else {
-	int scalingPct;
-	Tcl_GetIntFromObj(interp, scalingPctPtr, &scalingPct);
-	return scalingPct / 100.0;
+	/* Other screen units value, so convert to scaled pixels */
+	Tk_GetDoublePixelsFromObj(NULL, tkwin, valuePtr, &d);
+	size = (int)round(d / divisor);
     }
+    return size;
 }
 
 /*

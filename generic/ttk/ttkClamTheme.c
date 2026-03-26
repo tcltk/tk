@@ -30,33 +30,6 @@
   #define WIN32_XDRAWLINE_HACK 0
 #endif
 
-/*
- *----------------------------------------------------------------------
- * +++ Get Scaling Factor
- *	Same as TkScalingLevel, but doesn't round to nearest 25%.
- */
-static double
-GetScalingFactor(Tk_Window tkwin) {
-    Screen *screenPtr = Tk_Screen(tkwin);
-    double d;
-
-    d = 25.4 / 72.0 * WidthOfScreen(screenPtr) / WidthMMOfScreen(screenPtr) * 0.75;
-    return d;
-}
-
-/* + TreeviewFreeColumns --
- *	Get scaled screen units value
- */
-static int
-GetScaledValue(Tk_Window tkwin, Tcl_Obj *valuePtr, double divisor) {
-    int size;
-    double d;
-
-    Tk_GetDoublePixelsFromObj(NULL, tkwin, valuePtr, &d);
-    size = (int)round(d * GetScalingFactor(tkwin) / divisor);
-    return size;
-}
-
 /*------------------------------------------------------------------------
  * +++ Utilities.
  */
@@ -403,11 +376,11 @@ static void IndicatorElementSize(
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = (int)(spec->width * scalingLevel) + Ttk_PaddingWidth(margins);
-    *heightPtr = (int)(spec->height * scalingLevel) + Ttk_PaddingHeight(margins);
+    *widthPtr = (int)(spec->width * scalingLevel + Ttk_PaddingWidth(margins));
+    *heightPtr = (int)(spec->height * scalingLevel + Ttk_PaddingHeight(margins));
 }
 
 static void ColorToStr(
@@ -435,7 +408,7 @@ static void IndicatorElementDraw(
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding = Ttk_UniformPadding(0);
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     int width = (int)(spec->width * scalingLevel);
     int height = (int)(spec->height * scalingLevel);
 
@@ -876,11 +849,11 @@ static void ArrowElementSize(
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding = Ttk_UniformPadding((short)round(3 * scalingLevel));
     int size = SCROLLBAR_THICKNESS;
 
-    size = GetScaledValue(tkwin, sb->arrowSizeObj, 2.0);
+    size = TkGetScaledPixelValue(tkwin, sb->arrowSizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
@@ -898,7 +871,7 @@ static void ArrowElementDraw(
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding = Ttk_UniformPadding((short)round(3 * scalingLevel));
     int cx, cy;
     GC gc = Ttk_GCForColor(tkwin, sb->arrowColorObj, d);
@@ -953,14 +926,19 @@ static void SpinboxArrowElementSize(
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding = Ttk_UniformPadding((short)round(3 * scalingLevel));
     int size = 10;
 
-    size = GetScaledValue(tkwin, sb->arrowSizeObj, 2.0);
+    size = TkGetScaledPixelValue(tkwin, sb->arrowSizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
+    if (*widthPtr < *heightPtr) {
+	*widthPtr = *heightPtr;
+    } else {
+	*heightPtr = *widthPtr;
+    }
 }
 
 static const Ttk_ElementSpec SpinboxArrowElementSpec = {

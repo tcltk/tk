@@ -24,33 +24,6 @@
 
 /*
  *----------------------------------------------------------------------
- * +++ Get Scaling Factor
- *	Same as TkScalingLevel, but doesn't round to nearest 25%.
- */
-static double
-GetScalingFactor(Tk_Window tkwin) {
-    Screen *screenPtr = Tk_Screen(tkwin);
-    double d;
-
-    d = 25.4 / 72.0 * WidthOfScreen(screenPtr) / WidthMMOfScreen(screenPtr) * 0.75;
-    return d;
-}
-
-/* + TreeviewFreeColumns --
- *	Get scaled screen units value
- */
-static int
-GetScaledValue(Tk_Window tkwin, Tcl_Obj *valuePtr, double divisor) {
-    int size;
-    double d;
-
-    Tk_GetDoublePixelsFromObj(NULL, tkwin, valuePtr, &d);
-    size = (int)round(d * GetScalingFactor(tkwin) / divisor);
-    return size;
-}
-
-/*
- *----------------------------------------------------------------------
  *
  * Helper routine for drawing a few style elements:
  *
@@ -832,11 +805,11 @@ static void IndicatorElementSize(
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = spec->width * scalingLevel + Ttk_PaddingWidth(margins);
-    *heightPtr = spec->height * scalingLevel + Ttk_PaddingHeight(margins);
+    *widthPtr = (int)round(spec->width * scalingLevel + Ttk_PaddingWidth(margins));
+    *heightPtr = (int)round(spec->height * scalingLevel + Ttk_PaddingHeight(margins));
 }
 
 static void ColorToStr(
@@ -864,7 +837,7 @@ static void IndicatorElementDraw(
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     int width = spec->width * scalingLevel;
     int height = spec->height * scalingLevel;
 
@@ -1052,7 +1025,7 @@ static void ArrowElementSize(
     int size = 12;
 
     /* Get scaled size */
-    size = GetScaledValue(tkwin, arrow->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(tkwin, arrow->sizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1146,7 +1119,7 @@ static void BoxArrowElementSize(
     int size = 12;
 
     /* Get scaled size */
-    size = GetScaledValue(tkwin, arrow->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(tkwin, arrow->sizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1246,7 +1219,7 @@ static void MenuIndicatorElementSize(
     int size = MENUBUTTON_ARROW_SIZE;
 
     /* Get scaled size */
-    size = GetScaledValue(tkwin, indicator->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 2.0);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
@@ -1254,6 +1227,11 @@ static void MenuIndicatorElementSize(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
+    if (*widthPtr < *heightPtr) {
+	*widthPtr = *heightPtr;
+    } else {
+	*heightPtr = *widthPtr;
+    }
 }
 
 static void MenuIndicatorElementDraw(
@@ -1273,7 +1251,7 @@ static void MenuIndicatorElementDraw(
     int width, height;
 
     /* Get scaled indicator size */
-    size = GetScaledValue(tkwin, indicator->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 2.0);
     TtkArrowSize(size, direction, &width, &height);
 
     /* Add scaled padding */
@@ -1512,7 +1490,7 @@ static void SliderElementSize(
     int *widthPtr, int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     *widthPtr = *heightPtr = SLIDER_DIM * scalingLevel;
 }
 
@@ -1522,7 +1500,7 @@ static void SliderElementDraw(
     Drawable d, Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     int dim = SLIDER_DIM * scalingLevel;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
@@ -1823,7 +1801,7 @@ static void TabElementDraw(
     int highlight = 0;
     XColor *hlColor = NULL;
     XPoint pts[6];
-    double scalingLevel = GetScalingFactor(tkwin);
+    double scalingLevel = TkScalingLevel(tkwin);
     int cut = round(2 * scalingLevel);
     Display *disp = Tk_Display(tkwin);
     int borderWidth = DEFAULT_BORDERWIDTH;
