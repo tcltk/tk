@@ -552,7 +552,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XCreateGlyphCursor, /* 8 */
     XGContextFromGC, /* 9 */
     XListHosts, /* 10 */
-    XKeycodeToKeysym, /* 11 */
+    0, /* 11 */
     XStringToKeysym, /* 12 */
     XRootWindow, /* 13 */
     XSetErrorHandler, /* 14 */
