@@ -208,15 +208,21 @@ test unixfont-5.5 {Tk_MeasureChars procedure: ran out of chars} x11 {
     .b.l config -text "000000"
     getsize .b.l
 } "[expr {$ax*6}] $ay"
-test unixfont-5.6 {Tk_MeasureChars procedure: find last word} x11 {
+test unixfont-5.6 {Tk_MeasureChars procedure: find last word} {x11 !withXft} {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # skip test if compiled with Xft.
     .b.l config -text "000000 00000"
     getsize .b.l
 } "[expr {$ax*6}] [expr {$ay*2}]"
-test unixfont-5.7 {Tk_MeasureChars procedure: already saw space in line} x11 {
+test unixfont-5.7 {Tk_MeasureChars procedure: already saw space in line} {x11 !withXft} {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # skip test if compiled with Xft.
     .b.l config -text "000000     00000"
     getsize .b.l
 } "[expr {$ax*6}] [expr {$ay*2}]"
-test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {x11} {
+test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {x11 !withXft} {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # skip test if compiled with Xft.
     .b.l config -text "00  000     00000"
     getsize .b.l
 } "[expr {$ax*7}] [expr {$ay*2}]"
