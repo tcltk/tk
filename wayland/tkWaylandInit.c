@@ -60,6 +60,8 @@ extern int Tktray_Init(Tcl_Interp *interp);
 extern int SysNotify_Init(Tcl_Interp *interp);
 extern int Cups_Init(Tcl_Interp *interp);
 extern void TkGlfwSetupCallbacks(GLFWwindow *window, TkWindow *tkWin);
+extern Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
+extern void TkWaylandAccessibility_Init(Tcl_Interp *interp);
 
 /*
  *----------------------------------------------------------------------
@@ -78,13 +80,13 @@ static const char *vertexShaderSource =
     "    v_texcoord = a_texcoord;\n"
     "}\n";
 
-	static const char *fragmentShaderSource =
-	    "precision mediump float;\n"
-	    "varying vec2 v_texcoord;\n"
-	    "uniform sampler2D u_texture;\n"
-	    "void main() {\n"
-	    "    gl_FragColor = texture2D(u_texture, v_texcoord);\n"
-	    "}\n";
+static const char *fragmentShaderSource =
+    "precision mediump float;\n"
+    "varying vec2 v_texcoord;\n"
+    "uniform sampler2D u_texture;\n"
+    "void main() {\n"
+    "    gl_FragColor = texture2D(u_texture, v_texcoord);\n"
+    "}\n";
 
 /*
  *----------------------------------------------------------------------
@@ -448,7 +450,7 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     uint32_t *rgba = (uint32_t *)ckalloc(w * h * sizeof(uint32_t));
 
     for (int y = 0; y < h; y++) {
-        /* Wee MUST use the stride to find the start of the row.
+        /* We MUST use the stride to find the start of the row.
          * Then we treat the row as a byte array to avoid pointer math errors.
          */
         unsigned char *srcRow = srcBase + (y * stride);
@@ -799,6 +801,9 @@ TkGlfwCreateWindow(
 	return NULL;
     }
 
+    /* Register this drawable with the mapping. */
+    RegisterDrawableForMapping(mapping->drawable, mapping);
+
     /* Wait for the compositor to confirm real dimensions. */
     int timeout = 0;
     while ((mapping->width == 0 || mapping->height == 0) && timeout < 100) {
@@ -888,14 +893,15 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
  *
  * TkGlfwResizeWindow --
  *
- *	Handle window resize - mark surface as stale for recreation.
- *	Never destroy the surface during a draw cycle.
+ *	Handle window resize - mark surface as stale for recreation and
+ *	immediately recreate it to ensure it's ready for the next draw.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Updates cached dimensions and marks surface as stale.
+ *	Updates cached dimensions, marks surface as stale, and recreates
+ *	the cg surface with the new size.
  *
  *----------------------------------------------------------------------
  */
@@ -908,9 +914,14 @@ TkGlfwResizeWindow(GLFWwindow *w, int width, int height)
     if (m) {
 	m->width = width;
 	m->height = height;
-	/* Mark surface as stale - will be recreated at next EnsureSurface. */
+	/* Mark surface as stale - will be recreated immediately */
 	m->surfaceStale = 1;
 	m->texture.needs_texture_update = 1;
+
+	/* Immediately recreate the cg surface with the new size */
+	if (TkGlfwEnsureSurface(m) != TCL_OK) {
+	    fprintf(stderr, "TkGlfwResizeWindow: failed to ensure surface after resize\n");
+	}
     }
 }
 
@@ -939,6 +950,148 @@ TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
 /*
  *----------------------------------------------------------------------
  *
+ * ComputeWidgetOffset --
+ *
+ *	Compute the cumulative offset of a widget relative to its
+ *	toplevel window. This traverses the widget hierarchy to
+ *	calculate the absolute position.
+ *
+ * Results:
+ *	None. Output parameters x and y are set to the offset.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+ComputeWidgetOffset(TkWindow *winPtr, TkWindow *top, int *x, int *y)
+{
+    *x = 0;
+    *y = 0;
+
+    TkWindow *w = winPtr;
+    while (w && w != top) {
+        *x += w->changes.x;
+        *y += w->changes.y;
+        w = w->parentPtr;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AddDrawableMapping --
+ *
+ *	Associate a drawable (child widget) with its toplevel window mapping.
+ *	This creates a mapping entry that stores the drawable ID, the
+ *	toplevel mapping, and the widget's offset and dimensions.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Allocates a new DrawableMapping and adds it to the global list.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+AddDrawableMapping(Drawable drawable, TkWindow *winPtr)
+{
+    if (!drawable || !winPtr) return;
+
+    /* Find the toplevel window. */
+    TkWindow *top = winPtr;
+    while (!Tk_IsTopLevel(top)) {
+        top = top->parentPtr;
+        if (!top) return;
+    }
+
+    /* Find the mapping for the toplevel. */
+    WindowMapping *m = FindMappingByTk(top);
+    if (!m) return;
+
+    /* Allocate and initialize the mapping entry. */
+    DrawableMapping *dm = (DrawableMapping *)ckalloc(sizeof(DrawableMapping));
+    memset(dm, 0, sizeof(DrawableMapping));
+
+    dm->drawable = drawable;
+    dm->toplevel = m;
+
+    /* Compute the widget's offset within the toplevel. */
+    ComputeWidgetOffset(winPtr, top, &dm->x, &dm->y);
+
+    dm->width  = Tk_Width(winPtr);
+    dm->height = Tk_Height(winPtr);
+
+    /* Add to the list. */
+    dm->next = drawableMappingList;
+    drawableMappingList = dm;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FindDrawableMapping --
+ *
+ *	Find the DrawableMapping entry associated with a drawable ID.
+ *
+ * Results:
+ *	Returns a pointer to the DrawableMapping, or NULL if not found.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE DrawableMapping *
+FindDrawableMapping(Drawable d)
+{
+    DrawableMapping *dm = drawableMappingList;
+    while (dm) {
+        if (dm->drawable == d) return dm;
+        dm = dm->next;
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemoveDrawableMapping --
+ *
+ *	Remove and free a DrawableMapping entry associated with a drawable ID.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees the DrawableMapping entry.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+RemoveDrawableMapping(Drawable d)
+{
+    DrawableMapping **pp = &drawableMappingList;
+    while (*pp) {
+        if ((*pp)->drawable == d) {
+            DrawableMapping *dead = *pp;
+            *pp = dead->next;
+            ckfree(dead);
+            return;
+        }
+        pp = &(*pp)->next;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkGlfwBeginDraw --
  *
  *	Prepare a libcg context for drawing to the given drawable.
@@ -957,13 +1110,33 @@ TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
 MODULE_SCOPE int
 TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
 {
-    WindowMapping *m = FindMappingByDrawable(drawable);
+    DrawableMapping *dm = FindDrawableMapping(drawable);
+    if (!dm) {
+        fprintf(stderr, "BeginDraw: NO drawable mapping for %lu\n",
+                (unsigned long)drawable);
+        return TCL_ERROR;
+    }
+
+    WindowMapping *m = dm->toplevel;
     if (!m || !m->surface) return TCL_ERROR;
 
+    if (TkGlfwEnsureSurface(m) != TCL_OK) return TCL_ERROR;
+
+    memset(dcPtr, 0, sizeof(*dcPtr));
+    dcPtr->drawable = drawable;
+    dcPtr->width = dm->width;
+    dcPtr->height = dm->height;
+    dcPtr->offsetX = dm->x;
+    dcPtr->offsetY = dm->y;
+
     dcPtr->cg = cg_create(m->surface);
-    
-    /* FILL THE BACKGROUND HERE.
-     * This replaces the transparency with solid Gray.
+    if (!dcPtr->cg) return TCL_ERROR;
+
+    /* Translate into child widget region */
+    cg_translate(dcPtr->cg, dm->x, dm->y);
+
+    /* Fill the background with solid gray before drawing.
+     * This replaces transparency with solid Gray.
      */
     cg_set_source_rgba(dcPtr->cg, 0.92, 0.92, 0.92, 1.0);
     cg_set_operator(dcPtr->cg, CG_OPERATOR_SRC);
@@ -971,6 +1144,11 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
     
     /* Reset to normal mode so widgets draw ON TOP of the gray. */
     cg_set_operator(dcPtr->cg, CG_OPERATOR_SRC_OVER);
+
+    /* Apply GC settings if provided. */
+    if (gc) {
+        TkGlfwApplyGC(dcPtr->cg, gc);
+    }
 
     return TCL_OK;
 }
@@ -995,9 +1173,14 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
+    WindowMapping *m = NULL;
     
     if (dcPtr->cg) {
+        /* Find the mapping for this drawable. */
+        DrawableMapping *dm = FindDrawableMapping(dcPtr->drawable);
+        if (dm && dm->toplevel) {
+            m = dm->toplevel;
+        }
         cg_destroy(dcPtr->cg);
         dcPtr->cg = NULL;
     }
@@ -1011,6 +1194,48 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
          * right now instead of waiting for a mouse move.
          */
         Tcl_ThreadAlert(Tcl_GetCurrentThread());
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwRegisterChildDrawable --
+ *
+ *	Register a drawable for a child widget with the parent's window
+ *	mapping. This allows proper lookup of the WindowMapping for any
+ *	drawable ID, including those belonging to child windows.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Adds an entry to drawableMappingList associating the drawable
+ *	with the toplevel window's mapping.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin)
+{
+    if (shutdownInProgress || !tkWin || drawable == None) {
+	return;
+    }
+
+    Tk_Window top = GetToplevelOfWidget((Tk_Window)tkWin);
+    if (top) {
+	WindowMapping *m = FindMappingByTk((TkWindow *)top);
+	if (m) {
+	    AddDrawableMapping(drawable, tkWin);
+	    return;
+	}
+    }
+
+    /* Fallback for toplevels */
+    WindowMapping *m = FindMappingByTk(tkWin);
+    if (m) {
+	AddDrawableMapping(drawable, tkWin);
     }
 }
 
@@ -1388,13 +1613,15 @@ FindMappingByTk(TkWindow *w)
  *
  *----------------------------------------------------------------------
  */
-WindowMapping *FindMappingByDrawable(Drawable d)
+
+WindowMapping *
+FindMappingByDrawable(Drawable d)
 {
     /* Direct lookup (toplevel drawables) */
     DrawableMapping *dm = drawableMappingList;
     while (dm) {
         if (dm->drawable == d) {
-            return dm->mapping;
+            return dm->toplevel;
         }
         dm = dm->next;
     }
@@ -1414,7 +1641,6 @@ WindowMapping *FindMappingByDrawable(Drawable d)
     /* Return the mapping for the toplevel. */
     return FindMappingByTk((TkWindow *)top);
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1560,9 +1786,14 @@ void
 RegisterDrawableForMapping(Drawable d, WindowMapping *m)
 {
     DrawableMapping *dm = ckalloc(sizeof(DrawableMapping));
+    memset(dm, 0, sizeof(DrawableMapping));
 
     dm->drawable = d;
-    dm->mapping = m;
+    dm->toplevel = m;
+    dm->x = 0;
+    dm->y = 0;
+    dm->width = m->width;
+    dm->height = m->height;
     dm->next = drawableMappingList;
     drawableMappingList = dm;
 }
