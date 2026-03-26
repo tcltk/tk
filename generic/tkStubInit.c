@@ -43,6 +43,12 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XPutImage
 #define TkUnusedStubEntry 0
 
+#define TkPointToChar_ PointToChar /* Move out of the way */
+static int PointToChar(Tk_TextLayout layout, int x, int y)
+{
+    return Tk_PointToChar(layout, x, y);
+}
+
 #if !defined(MAC_OSX_TK)
 static int
 doNothing(void)
@@ -892,7 +898,7 @@ const TkStubs tkStubs = {
     Tk_PhotoBlank, /* 147 */
     0, /* 148 */
     Tk_PhotoGetSize, /* 149 */
-    0, /* 150 */
+    TkPointToChar_, /* 150 */
     Tk_PointToChar, /* 151 */
     Tk_PostscriptFontName, /* 152 */
     Tk_PreserveColormap, /* 153 */

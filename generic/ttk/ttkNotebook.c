@@ -473,7 +473,7 @@ static void SqueezeTabs(
 
     if (nTabs > 0) {
 	int difference = available - needed;
-	double delta = (double)difference / needed;
+	double delta = (double)difference / (double)needed;
 	double slack = 0;
 	int i;
 
