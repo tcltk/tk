@@ -120,7 +120,7 @@ static const GLushort quadIndices[] = {
  * TkGlfwAllocDrawableId --
  *
  *	Allocate the next sequential drawable ID.
- *	Called from TkpMakeWindow so that child widget drawables are
+ *	Called from Tk_MakeWindow so that child widget drawables are
  *	assigned from the same namespace as toplevel drawables.
  *
  * Results:
@@ -340,7 +340,7 @@ TkGlfwEnsureSurface(WindowMapping *m)
 	    return TCL_ERROR;
 	}
 
-	/* Initialise to solid background immediately. */
+	/* Initialize to solid background immediately. */
 	struct cg_ctx_t *ctx = cg_create(m->surface);
 	if (ctx) {
 	    cg_set_source_rgba(ctx, 0.92, 0.92, 0.92, 1.0);
@@ -439,7 +439,7 @@ TkGlfwInitializeTexture(WindowMapping *m)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    /* Allocate storage; pixels supplied later by Upload. */
+    /* Allocate storage; pixels supplied later by upload. */
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m->width, m->height, 0,
 		 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -735,7 +735,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  * TkGlfwCreateWindow --
  *
  *	Create a GLFW window for a Tk toplevel, allocate the libcg surface,
- *	initialise the GL texture, and register the drawable.
+ *	initialize the GL texture, and register the drawable.
  *
  * Results:
  *	GLFWwindow * on success, NULL on failure.
@@ -1160,23 +1160,12 @@ TkGlfwUpdateDrawableDims(Drawable d, int width, int height)
  *----------------------------------------------------------------------
  */
 
-/*
- * TkGlfwRegisterChildDrawable --
- *
- *	Public entry point called from TkpMakeWindow (or lazily from
- *	BeginDraw) to enter a child widget drawable into the lookup table.
- */
 
 MODULE_SCOPE void
 TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin)
 {
     if (shutdownInProgress || !tkWin || drawable == None) return;
 
-    /* * Simply call AddDrawableMapping. It already contains the logic to:
-     * 1. Find the toplevel parent.
-     * 2. Compute the X/Y offset relative to that toplevel.
-     * 3. Allocate and insert the DrawableMapping into the global list.
-     */
     AddDrawableMapping(drawable, tkWin);
 }
 
@@ -1226,9 +1215,9 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
     memset(dcPtr, 0, sizeof(*dcPtr));
     dcPtr->drawable = drawable;
 
-    /* ----------------------------------------------------------------
-     * CASE A: Pixmap — draw into the pixmap's own surface.
-     * ---------------------------------------------------------------- */
+    /* 
+     *  Pixmap — draw into the pixmap's own surface.
+     */
     if (IsPixmap(drawable)) {
         px = (TkWaylandPixmapImpl *)drawable;
         if (!px->surface) return TCL_ERROR;
@@ -1245,30 +1234,40 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
         if (gc) TkGlfwApplyGC(dcPtr->cg, gc);
         return TCL_OK;
     }
-
-    /* ----------------------------------------------------------------
-     * CASE B: Window drawable — draw into the toplevel surface.
-     * ---------------------------------------------------------------- */
+    
+    /* 
+     * Window drawable — draw into the toplevel surface.
+     */
     dm = FindDrawableMapping(drawable);
     if (!dm) {
-        /*
-         * Not registered yet.  This is normal on the first draw after
-         * TkpMakeWindow assigns the drawable ID.  Register lazily via
-         * Tk_IdToWindow so subsequent draws are fast.
-         */
         Tk_Window tkwin = Tk_IdToWindow(TkGetDisplayList()->display, drawable);
-        if (tkwin) {
-            TkGlfwRegisterChildDrawable(drawable, (TkWindow *)tkwin);
-            dm = FindDrawableMapping(drawable);
+
+        /*
+         * Only treat as a pointer if it's NOT in our small integer range.
+         * Your nextChildId starts at 100,000. Real pointers are typically 
+         * much larger (e.g., > 0x100000000 on 64-bit).
+         */
+        if (!tkwin && (unsigned long)drawable > 1000000) {
+            tkwin = (Tk_Window)drawable;
         }
+
+        if (tkwin) {
+            /* * IMPORTANT: Verify this is a valid TkWindow before proceeding.
+             * We check if the 'display' field matches our known display.
+             */
+            TkWindow *winPtr = (TkWindow *)tkwin;
+            if (winPtr->display == TkGetDisplayList()->display) {
+                TkGlfwRegisterChildDrawable(drawable, winPtr);
+                dm = FindDrawableMapping(drawable);
+            }
+        }
+
         if (!dm) {
-            fprintf(stderr,
-                "TkGlfwBeginDraw: no mapping for drawable %lu\n",
-                (unsigned long)drawable);
+            fprintf(stderr, "TkGlfwBeginDraw: no mapping for drawable %lu\n",
+                    (unsigned long)drawable);
             return TCL_ERROR;
         }
     }
-
     m = dm->toplevel;
     if (!m || !m->surface) return TCL_ERROR;
     if (TkGlfwEnsureSurface(m) != TCL_OK) return TCL_ERROR;
@@ -1469,7 +1468,7 @@ TkGlfwXColorToCG(XColor *xcolor)
 	c.a = 1.0;
 	return c;
     }
-    /* XColor channels are 16-bit; >> 8 gives 0-255, then normalise. */
+    /* XColor channels are 16-bit; >> 8 gives 0-255, then normalize. */
     c.r = (xcolor->red   >> 8) / 255.0;
     c.g = (xcolor->green >> 8) / 255.0;
     c.b = (xcolor->blue  >> 8) / 255.0;
@@ -1510,7 +1509,7 @@ TkGlfwPixelToCG(unsigned long pixel)
  *
  * TkGlfwApplyGC --
  *
- *	Apply GC state (colour, line width, cap, join) to a cg context.
+ *	Apply GC state (color, line width, cap, join) to a cg context.
  *
  * Results:
  *	None.
@@ -1566,7 +1565,7 @@ TkGlfwApplyGC(struct cg_ctx_t *cg, GC gc)
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Initialises GLFW, Wayland notifier, menu system, tray support,
+ *	Initializes GLFW, Wayland notifier, menu system, tray support,
  *	notifications, printing, and accessibility.
  *
  *----------------------------------------------------------------------
