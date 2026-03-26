@@ -486,9 +486,9 @@ EXTERN void		Tk_PhotoBlank(Tk_PhotoHandle handle);
 EXTERN void		Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr,
 				int *heightPtr);
 /* 150 */
-EXTERN int		TkPointToChar_(Tk_TextLayout layout, int x, int y);
-/* 151 */
 EXTERN Tcl_Size		Tk_PointToChar(Tk_TextLayout layout, int x, int y);
+/* 151 */
+EXTERN int		TkPointToChar_(Tk_TextLayout layout, int x, int y);
 /* 152 */
 EXTERN int		Tk_PostscriptFontName(Tk_Font tkfont,
 				Tcl_DString *dsPtr);
@@ -1069,8 +1069,8 @@ typedef struct TkStubs {
     void (*tk_PhotoBlank) (Tk_PhotoHandle handle); /* 147 */
     void (*reserved148)(void);
     void (*tk_PhotoGetSize) (Tk_PhotoHandle handle, int *widthPtr, int *heightPtr); /* 149 */
-    int (*tkPointToChar_) (Tk_TextLayout layout, int x, int y); /* 150 */
-    Tcl_Size (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 151 */
+    Tcl_Size (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 150 */
+    int (*tkPointToChar_) (Tk_TextLayout layout, int x, int y); /* 151 */
     int (*tk_PostscriptFontName) (Tk_Font tkfont, Tcl_DString *dsPtr); /* 152 */
     void (*tk_PreserveColormap) (Display *display, Colormap colormap); /* 153 */
     void (*tk_QueueWindowEvent) (XEvent *eventPtr, Tcl_QueuePosition position); /* 154 */
@@ -1523,10 +1523,10 @@ extern const TkStubs *tkStubsPtr;
 /* Slot 148 is reserved */
 #define Tk_PhotoGetSize \
 	(tkStubsPtr->tk_PhotoGetSize) /* 149 */
-#define TkPointToChar_ \
-	(tkStubsPtr->tkPointToChar_) /* 150 */
 #define Tk_PointToChar \
-	(tkStubsPtr->tk_PointToChar) /* 151 */
+	(tkStubsPtr->tk_PointToChar) /* 150 */
+#define TkPointToChar_ \
+	(tkStubsPtr->tkPointToChar_) /* 151 */
 #define Tk_PostscriptFontName \
 	(tkStubsPtr->tk_PostscriptFontName) /* 152 */
 #define Tk_PreserveColormap \
