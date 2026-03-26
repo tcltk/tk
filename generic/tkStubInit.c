@@ -898,8 +898,8 @@ const TkStubs tkStubs = {
     Tk_PhotoBlank, /* 147 */
     0, /* 148 */
     Tk_PhotoGetSize, /* 149 */
-    TkPointToChar_, /* 150 */
-    Tk_PointToChar, /* 151 */
+    Tk_PointToChar, /* 150 */
+    TkPointToChar_, /* 151 */
     Tk_PostscriptFontName, /* 152 */
     Tk_PreserveColormap, /* 153 */
     Tk_QueueWindowEvent, /* 154 */
