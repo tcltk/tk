@@ -308,7 +308,7 @@ UpdateKeymaps()
  *	The parameter deadKeyStatePtr can be NULL, if no deadkey handling is
  *	needed (which is always the case here).
  *
- *	This function is called in XKeycodeToKeysym and UpdateKeymaps.
+ *	This function is called in XkbKeycodeToKeysym and UpdateKeymaps.
  *
  * Results:
  *	The number of characters generated if any, 0 if we are waiting for
@@ -384,7 +384,7 @@ KeyDataToUnicode(
 /*
  *----------------------------------------------------------------------
  *
- * XKeycodeToKeysym --
+ * XkbKeycodeToKeysym --
  *
  *	This is a stub function which translates from the keycode used in an
  *      XEvent to a numerical keysym.  On macOS, the display parameter is
@@ -459,15 +459,6 @@ XkbKeycodeToKeysym(
 	}
     }
     return NoSymbol;
-}
-
-KeySym
-XKeycodeToKeysym(
-    TCL_UNUSED(Display *),
-    unsigned int keycode,
-    int index)
-{
-    return XkbKeycodeToKeysym(NULL, keycode, 0, index);
 }
 
 /*

@@ -5,7 +5,7 @@
  *    Accessibility API for Tk on Windows and supports UI Automation
  *    through the MSAA-UIA bridge provided by Windows.
  *
- * Copyright (c) 2024-2025 Kevin Walzer
+ * Copyright © 2024-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

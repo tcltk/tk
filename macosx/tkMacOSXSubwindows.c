@@ -204,8 +204,8 @@ XMapWindow(
 		/*
 		 * Order the Tk root window front unless it was immediately withdrawn.
 		 * Doing so makes it fully mapped. We don't have to set the TK_MAPPED
-		 * flag here because that has already been done by the caller of this
-		 * function: TkWmMapWindow().
+		 * flag here because that is handled by the caller of this function:
+		 * TkWmMapWindow().
 		 */
 
 		[win makeKeyAndOrderFront:NSApp];
