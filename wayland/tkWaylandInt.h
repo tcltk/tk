@@ -366,6 +366,7 @@ MODULE_SCOPE Drawable TkGlfwGetDrawable(GLFWwindow *w);
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
 MODULE_SCOPE TkWindow *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE int TkGlfwEnsureSurface(WindowMapping *m);
+MODULE_SCOPE void TkGlfwClearSurface(WindowMapping *m);
 MODULE_SCOPE void TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin);
 
 /*
