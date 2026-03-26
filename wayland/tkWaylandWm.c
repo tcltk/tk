@@ -699,32 +699,21 @@ Tk_MakeWindow(
     if (winPtr->parentPtr == NULL) {
         /*
          * -------------------------
-         *   TOPLEVEL WINDOW
+         * TOPLEVEL WINDOW
          * -------------------------
          */
-
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
 
-        /*
-         * Create the GLFW window and get a drawable ID.
-         * drawable is ignored; we use winPtr->window instead.
-         */
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
         if (!glfwWindow) {
             return None;
         }
 
-        /*
-         * Tk's window ID for a toplevel is the GLFWwindow pointer cast.
-         */
         window = (Window)glfwWindow;
         winPtr->window = window;
 
-        /*
-         * Ensure WmInfo exists.
-         */
         if (!winPtr->wmInfoPtr) {
             TkWmNewWindow(winPtr);
         }
@@ -735,9 +724,7 @@ Tk_MakeWindow(
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
 
-        /*
-         * Register the toplevel Tk window ID as the mapping->drawable.
-         * This is the key: mapping->drawable == winPtr->window.
+        /* * Toplevels are 0,0 relative to themselves. 
          */
         WindowMapping *m = FindMappingByTk(winPtr);
         if (m) {
@@ -748,13 +735,9 @@ Tk_MakeWindow(
     } else {
         /*
          * -------------------------
-         *     CHILD WINDOW
+         * CHILD WINDOW
          * -------------------------
-         *
-         * Assign a unique Tk window ID.  Tk will draw into this ID.
-         * We must register it to the SAME WindowMapping as the toplevel.
          */
-
         static Window nextChildId = 100000;
         window = nextChildId++;
         if (window == None) {
@@ -763,20 +746,14 @@ Tk_MakeWindow(
         winPtr->window = window;
 
         /*
-         * Register this child drawable to the toplevel's mapping.
+         * FIX: Instead of manual registration, use the logic in tkWaylandInit.c
+         * that finds the toplevel parent and computes the x,y offsets.
          */
-
-      Tk_Window toplevel = GetToplevelOfWidget((Tk_Window)winPtr);
-      TkWindow *top = (TkWindow *)toplevel;
-      WindowMapping *m = FindMappingByTk(top);
-      if (m) {
-            RegisterDrawableForMapping(winPtr->window, m);
-        }
+        TkGlfwRegisterChildDrawable(winPtr->window, winPtr);
     }
 
     return window;
 }
-
 
 
 /*

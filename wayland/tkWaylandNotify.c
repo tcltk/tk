@@ -51,7 +51,16 @@ static void TkWaylandCheckForWindowClosure(void);
  * Tk_WaylandSetupTkNotifier --
  *
  *	Called during Tk initialization to install the Wayland/GLFW
- *	event source.
+ *	event source. Creates the eventfd for wakeup notifications,
+ *	establishes the event source, creates a heartbeat timer, and
+ *	sets up the exit handler for cleanup.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Initializes thread-specific data, creates file handlers,
+ *	timer handlers, and event sources for Wayland/GLFW integration.
  *
  *----------------------------------------------------------------------
  */
@@ -98,7 +107,16 @@ Tk_WaylandSetupTkNotifier(void)
  *
  * TkWaylandWakeupFileProc --
  *
- *	Called when the wakeup file descriptor becomes readable.
+ *	Called when the wakeup file descriptor becomes readable. Reads
+ *	the eventfd counter and polls GLFW events to process pending
+ *	Wayland events.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Processes pending GLFW/Wayland events and checks for window
+ *	closure when all main windows are destroyed.
  *
  *----------------------------------------------------------------------
  */
@@ -130,6 +148,16 @@ TkWaylandWakeupFileProc(
  *
  * TkWaylandCheckForWindowClosure --
  *
+ *	Checks if there are no remaining main windows. If none exist,
+ *	marks shutdown as in progress and schedules the exit handler
+ *	to run when idle.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May schedule TkWaylandNotifyExitHandler to run via Tcl_DoWhenIdle.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -154,6 +182,15 @@ TkWaylandCheckForWindowClosure(void)
  * HeartbeatTimerProc --
  *
  *	Periodic timer to keep the event loop alive and poll GLFW events.
+ *	Checks for window closure and reschedules itself if the notifier
+ *	is still active and shutdown hasn't been initiated.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Polls GLFW events, checks for window closure, and reschedules
+ *	the heartbeat timer.
  *
  *----------------------------------------------------------------------
  */
@@ -189,6 +226,17 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
  *
  * TkWaylandEventsSetupProc --
  *
+ *	Event source setup procedure that determines the maximum block
+ *	time for the event loop. If shutdown is in progress, forces a
+ *	zero block time. Otherwise, if no file handler is active, sets
+ *	the maximum block time to the heartbeat interval.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the maximum block time for Tcl's event loop.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -221,6 +269,15 @@ TkWaylandEventsSetupProc(
  *
  * TkWaylandEventsCheckProc --
  *
+ *	Event source check procedure that polls GLFW events when window
+ *	events are being processed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Polls GLFW events to process any pending window events.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -242,6 +299,16 @@ TkWaylandEventsCheckProc(
  *----------------------------------------------------------------------
  *
  * TkWaylandNotifyExitHandler --
+ *
+ *	Exit handler that cleans up resources when Tk shuts down.
+ *	Deletes the heartbeat timer, closes the wakeup file descriptor,
+ *	removes the event source, and resets initialization state.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Cleans up all notifier-related resources.
  *
  *----------------------------------------------------------------------
  */
@@ -293,6 +360,14 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  *	  3. TkWaylandDisplayProc (via Tcl_DoWhenIdle) fires after all
  *	     idle widget draws complete, uploading the fully-composited
  *	     surface exactly once.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Clears the surface for the toplevel, queues an Expose event,
+ *	schedules display for the toplevel, and recursively queues
+ *	expose events for mapped children.
  *
  *----------------------------------------------------------------------
  */
@@ -370,7 +445,16 @@ TkWaylandQueueExposeEvent(
  *
  * TkWaylandWakeupGLFW --
  *
- *	Wake up the GLFW event loop via the eventfd.
+ *	Wake up the GLFW event loop by writing to the eventfd.
+ *	This function is used to break the Tcl event loop out of
+ *	a wait state when a GLFW event needs to be processed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Writes to the wakeup file descriptor, causing the file handler
+ *	to fire and process GLFW events.
  *
  *----------------------------------------------------------------------
  */
@@ -395,6 +479,13 @@ TkWaylandWakeupGLFW(void)
  *	Schedule a single deferred redraw for the window.
  *	Uses needsDisplay as a guard so that multiple calls within one
  *	event-loop iteration queue exactly one DisplayProc invocation.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	If not already scheduled, queues TkWaylandDisplayProc to run
+ *	when idle.
  *
  *----------------------------------------------------------------------
  */
@@ -427,6 +518,12 @@ TkWaylandScheduleDisplay(WindowMapping *m)
  *	widget draw procs for the current event have completed.  The
  *	surface therefore contains the fully-composited frame when we
  *	arrive here, eliminating partial-frame flicker.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Uploads texture data to GPU, renders the frame, and swaps buffers.
  *
  *----------------------------------------------------------------------
  */
@@ -486,11 +583,17 @@ TkWaylandDisplayProc(ClientData clientData)
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandBeginEventCycle / TkWaylandEndEventCycle --
+ * TkWaylandBeginEventCycle --
  *
- *	These stubs are retained for API compatibility with any callers
- *	that may have been wired up.  All real GL work has been
- *	consolidated into TkWaylandDisplayProc.
+ *	Retained for API compatibility with any callers that may have
+ *	been wired up. All real GL work has been consolidated into
+ *	TkWaylandDisplayProc.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None. This function is a no-op stub.
  *
  *----------------------------------------------------------------------
  */
@@ -501,6 +604,23 @@ TkWaylandBeginEventCycle(WindowMapping *m)
     (void)m;
     /* No-op: GL work is done in TkWaylandDisplayProc. */
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandEndEventCycle --
+ *
+ *	Resets the frameOpen flag for the window mapping. This function
+ *	is retained for API compatibility.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets m->frameOpen to 0.
+ *
+ *----------------------------------------------------------------------
+ */
 
 MODULE_SCOPE void
 TkWaylandEndEventCycle(WindowMapping *m)

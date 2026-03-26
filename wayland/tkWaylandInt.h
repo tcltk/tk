@@ -213,6 +213,7 @@ struct TkWaylandDrawingContext {
     int offsetX;		/* X offset for child windows */
     int offsetY;		/* Y offset for child windows */
     int nestedFrame;		/* Flag for nested drawing */
+    int isPixmap; 	    /* is drawable a pixmap? */
 };
 
 /*
@@ -424,7 +425,9 @@ MODULE_SCOPE void AddMapping(WindowMapping *m);
 MODULE_SCOPE void RemoveMapping(WindowMapping *m);
 MODULE_SCOPE void CleanupAllMappings(void);
 MODULE_SCOPE void RegisterDrawableForMapping(Drawable d, WindowMapping *m);
+MODULE_SCOPE void TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin);
 MODULE_SCOPE Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
+MODULE_SCOPE Drawable TkGlfwAllocDrawableId(void);
 
 /*
  *----------------------------------------------------------------------
