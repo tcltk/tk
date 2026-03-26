@@ -109,6 +109,27 @@ struct WindowMapping {
 /*
  *----------------------------------------------------------------------
  *
+ * DrawableMapping --
+ *
+ *	Associates a drawable (child widget) with its toplevel window mapping
+ *	and stores the offset and dimensions for proper drawing.
+ *	This structure is used for child widgets to know where to draw
+ *	within the toplevel's surface.
+ *
+ *----------------------------------------------------------------------
+ */
+
+struct DrawableMapping {
+    Drawable drawable;              /* The widget's drawable ID */
+    WindowMapping *toplevel;        /* Pointer to the toplevel WindowMapping */
+    int x, y;                       /* Offset inside the toplevel surface */
+    int width, height;              /* Widget size */
+    struct DrawableMapping *next;   /* Next in linked list */
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandGCImpl --
  *
  *	Implementation of a graphics context. This structure holds
@@ -152,23 +173,6 @@ struct TkWaylandPixmapImpl {
     int frameOpen;		/* Flag indicating frame is open */
     struct cg_surface_t *surface;	/* libcg drawing surface */
     struct cg_ctx_t *cg;	/* libcg drawing context */
-};
-
-/*
- *----------------------------------------------------------------------
- *
- * DrawableMapping --
- *
- *	Associates a drawable with a window mapping. This allows
- *	fast lookup of the WindowMapping for any Drawable ID.
- *
- *----------------------------------------------------------------------
- */
-
-struct DrawableMapping {
-    Drawable drawable;		/* Drawable ID */
-    WindowMapping *mapping;	/* Associated window mapping */
-    DrawableMapping *next;	/* Next in linked list */
 };
 
 /*
@@ -362,6 +366,7 @@ MODULE_SCOPE Drawable TkGlfwGetDrawable(GLFWwindow *w);
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
 MODULE_SCOPE TkWindow *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE int TkGlfwEnsureSurface(WindowMapping *m);
+MODULE_SCOPE void TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin);
 
 /*
  *----------------------------------------------------------------------
@@ -418,7 +423,20 @@ MODULE_SCOPE void AddMapping(WindowMapping *m);
 MODULE_SCOPE void RemoveMapping(WindowMapping *m);
 MODULE_SCOPE void CleanupAllMappings(void);
 MODULE_SCOPE void RegisterDrawableForMapping(Drawable d, WindowMapping *m);
-Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
+MODULE_SCOPE Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Function prototypes - Drawable mapping management (for child widgets)
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE DrawableMapping *FindDrawableMapping(Drawable d);
+MODULE_SCOPE void AddDrawableMapping(Drawable drawable, TkWindow *winPtr);
+MODULE_SCOPE void RemoveDrawableMapping(Drawable d);
+MODULE_SCOPE void ComputeWidgetOffset(TkWindow *winPtr, TkWindow *top, int *x, int *y);
 
 /*
  *----------------------------------------------------------------------
