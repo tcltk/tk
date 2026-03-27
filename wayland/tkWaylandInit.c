@@ -538,10 +538,6 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
             /* Check if this pixel is non-zero (has content) */
             if (r != 0 || g != 0 || b != 0) {
                 non_zero++;
-                if (non_zero == 1) {
-                    fprintf(stderr, "First non-zero pixel at (%d,%d): R=%d G=%d B=%d A=%d\n",
-                            x, y, r, g, b, a);
-                }
             }
 
             if (a > 0 && a < 255) {
@@ -555,8 +551,6 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
                              (uint32_t)a;
         }
     }
-
-    fprintf(stderr, "Texture upload: %dx%d, non-zero pixels: %d\n", w, h, non_zero);
 
     glBindTexture(GL_TEXTURE_2D, m->texture.texture_id);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
@@ -845,8 +839,8 @@ TkGlfwCreateWindow(
         }
     }
 
-    if (width  <= 0) width  = 200;
-    if (height <= 0) height = 200;
+    if (width  <= 1) width  = 200;
+    if (height <= 1) height = 200;
 
     /* Create the window */
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
@@ -864,8 +858,6 @@ TkGlfwCreateWindow(
         return NULL;
     }
     glfwShowWindow(window);
-    fprintf(stderr, "TkGlfwCreateWindow: created new window %p size %dx%d\n", 
-            (void*)window, width, height);
 
     /* Create and initialize the mapping structure */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
@@ -884,9 +876,7 @@ TkGlfwCreateWindow(
     mapping->texture.program = 0;
     mapping->texture.needs_texture_update = 1;
 
-    fprintf(stderr, "TkGlfwCreateWindow: allocated drawable ID %lu for window %p\n",
-            (unsigned long)mapping->drawable, (void*)window);
-
+ 
     /* Add to global mapping list */
     AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
@@ -934,9 +924,7 @@ TkGlfwCreateWindow(
 
     /* Register the drawable mapping for lookup */
     RegisterDrawableForMapping(mapping->drawable, mapping);
-    fprintf(stderr, "TkGlfwCreateWindow: registered drawable %lu\n",
-            (unsigned long)mapping->drawable);
-
+  
     /* Update Tk's window dimensions */
     if (tkWin != NULL) {
         tkWin->changes.width  = mapping->width;
@@ -1405,9 +1393,6 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
             
             width = Tk_Width(tkwin);
             height = Tk_Height(tkwin);
-            
-            fprintf(stderr, "Draw: %s at (%d,%d) size %dx%d toplevel %p\n",
-                    Tk_PathName(tkwin), x_offset, y_offset, width, height, (void*)m);
         }
     }
 
@@ -1529,9 +1514,8 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         glClear(GL_COLOR_BUFFER_BIT);
         TkGlfwRenderTexture(m);
         glfwSwapBuffers(m->glfwWindow);
-        
-        fprintf(stderr, "Display: rendered %dx%d\n", m->width, m->height);
     }
+
 }
 
 /*
@@ -1732,6 +1716,9 @@ TkGlfwApplyGC(struct cg_ctx_t *cg, GC gc)
 
     c = TkGlfwPixelToCG(v.foreground);
     cg_set_source_rgba(cg, c.r, c.g, c.b, c.a);
+
+    /* Use SRC_OVER operator for proper compositing of widget content over background */
+    cg_set_operator(cg, CG_OPERATOR_SRC_OVER);
 
     lw = (v.line_width > 0) ? (double)v.line_width : 1.0;
     cg_set_line_width(cg, lw);
