@@ -3821,7 +3821,7 @@ ParseFontNameObj(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "unknown font style \"%s\"", Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT_STYLE",
-		    Tcl_GetString(objv[i]), NULL);
+		    Tcl_GetString(objv[i]), (char *)NULL);
 	}
 	return TCL_ERROR;
     }
