@@ -46,7 +46,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkPointToChar_ PointToChar /* Move out of the way */
 static int PointToChar(Tk_TextLayout layout, int x, int y)
 {
-    return Tk_PointToChar(layout, x, y);
+    return (int)Tk_PointToChar(layout, x, y);
 }
 
 #if !defined(MAC_OSX_TK)

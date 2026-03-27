@@ -77,7 +77,7 @@ startEndOfCmd(
     UErrorCodex errorCode = U_ZERO_ERRORZ;
     void *it;
     Tcl_Size idx;
-    int flags = PTR2INT(clientData);
+    int flags = (int)PTR2INT(clientData);
     const uint16_t *ustr;
     char locale[128];
 
@@ -110,7 +110,7 @@ startEndOfCmd(
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
 	ustr = (const uint16_t *)Tcl_DStringValue(&ds);
-	icu_setText(it, ustr, len, &errorCode);
+	icu_setText(it, ustr, (int32_t)len, &errorCode);
     }
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
 	Tcl_DStringFree(&ds);
@@ -132,7 +132,7 @@ startEndOfCmd(
 	if ((idx < 0) && (flags & FLAG_WORD)) {
 	    idx = 0;
 	}
-	idx = icu_following(it, idx);
+	idx = icu_following(it, (int32_t)idx);
 	if ((flags & FLAG_WORD) && idx >= len) {
 	    idx = -1;
 	}
@@ -140,7 +140,7 @@ startEndOfCmd(
 	if (!(flags & FLAG_WORD)) {
 	    idx += 1 + (((ustr[idx]&0xFC00) == 0xD800) && ((ustr[idx+1]&0xFC00) == 0xDC00));
 	}
-	idx = icu_preceding(it, idx);
+	idx = icu_preceding(it, (int32_t)idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
 	    flags &= ~FLAG_WORD; /* If 0 is reached here, don't do a further search */
 	}
