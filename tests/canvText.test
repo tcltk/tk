@@ -923,7 +923,9 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} -setup {
     unset -nocomplain bbox x2 y2
 } -result 1
 
-test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup {
+test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -constraints !withXft -setup {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # skip test if compiled with Xft. 
     destroy .c
     set c [canvas .c -bg black -width 964]
     pack $c
