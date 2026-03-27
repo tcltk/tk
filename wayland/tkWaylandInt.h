@@ -384,6 +384,7 @@ MODULE_SCOPE void TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE void TkGlfwApplyGC(struct cg_ctx_t *cg, GC gc);
 MODULE_SCOPE struct cg_ctx_t *TkGlfwGetCGContext(void);
 MODULE_SCOPE struct cg_ctx_t *TkGlfwGetCGContextForMeasure(void);
+struct cg_surface_t *ResolveSurface(Drawable d, int *outW, int *outH);
 
 /*
  *----------------------------------------------------------------------

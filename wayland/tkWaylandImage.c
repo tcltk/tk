@@ -68,7 +68,8 @@ CGRowToXImageRow(
     }
 }
 
-/* Convert an XImage row (0x00RRGGBB) to RGBA bytes for cg_surface_create_for_data. */
+/* Convert an XImage row (0x00RRGGBB) to RGBA bytes for
+ * cg_surface_create_for_data. */
 static void
 XImageRowToRGBA(
     const uint32_t *src,
@@ -83,6 +84,7 @@ XImageRowToRGBA(
         dst[i*4+3] = 0xFF;                /* A = opaque */
     }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -128,12 +130,10 @@ XGetImage(
     unsigned long plane_mask,
     int           format)
 {
-    WindowMapping        *m;
-    TkWaylandPixmapImpl  *pix = NULL;
     struct cg_surface_t  *surface;
     XImage               *img;
     uint32_t             *imgData;
-    int                   surfW, surfH;
+    int                   surfW = 0, surfH = 0;
 
     (void)plane_mask;
     (void)format;
@@ -141,20 +141,7 @@ XGetImage(
     if (!display || !drawable) return NULL;
     LastKnownRequestProcessed(display)++;
 
-    /* Resolve surface from drawable. */
-    if (IsPixmap(drawable)) {
-        pix     = (TkWaylandPixmapImpl *)drawable;
-        surface = pix->surface;
-        surfW   = pix->width;
-        surfH   = pix->height;
-    } else {
-        m = FindMappingByDrawable(drawable);
-        if (!m || !m->surface) return NULL;
-        surface = m->surface;
-        surfW   = m->width;
-        surfH   = m->height;
-    }
-
+    surface = ResolveSurface(drawable, &surfW, &surfH);
     if (!surface) return NULL;
 
     /* Clamp region to surface bounds. */
@@ -168,12 +155,16 @@ XGetImage(
     if (!imgData) return NULL;
 
     /* Copy rows, converting premul-ARGB → 0x00RRGGBB. */
-    const uint32_t *pixels = (const uint32_t *)surface->pixels;
-    int stride = surface->stride / 4;   /* pixels per row */
-    for (unsigned int row = 0; row < height; row++) {
-        const uint32_t *src = pixels + (y + row) * stride + x;
-        uint32_t       *dst = imgData + row * width;
-        CGRowToXImageRow(src, dst, (int)width);
+    {
+        const uint32_t *pixels = (const uint32_t *)surface->pixels;
+        int             stride = surface->stride / 4;   /* pixels per row */
+        unsigned int    row;
+
+        for (row = 0; row < height; row++) {
+            const uint32_t *src = pixels + (y + (int)row) * stride + x;
+            uint32_t       *dst = imgData + row * width;
+            CGRowToXImageRow(src, dst, (int)width);
+        }
     }
 
     img = (XImage *)ckalloc(sizeof(XImage));
@@ -336,30 +327,15 @@ XCopyArea(
     unsigned  width,  unsigned height,
     int       dst_x,  int dst_y)
 {
-    TkWaylandDrawingContext     dc;
-    struct cg_surface_t        *srcSurface = NULL;
-    TkWaylandPixmapImpl        *srcPix     = NULL;
-    WindowMapping              *srcMap     = NULL;
-    int                         srcW, srcH;
+    TkWaylandDrawingContext  dc;
+    struct cg_surface_t     *srcSurface;
+    int                      srcW = 0, srcH = 0;
 
     (void)display;
 
     if (!src || !dst) return BadDrawable;
 
-    /* Resolve source surface. */
-    if (IsPixmap(src)) {
-        srcPix     = (TkWaylandPixmapImpl *)src;
-        srcSurface = srcPix->surface;
-        srcW       = srcPix->width;
-        srcH       = srcPix->height;
-    } else {
-        srcMap = FindMappingByDrawable(src);
-        if (!srcMap || !srcMap->surface) return BadDrawable;
-        srcSurface = srcMap->surface;
-        srcW       = srcMap->width;
-        srcH       = srcMap->height;
-    }
-
+    srcSurface = ResolveSurface(src, &srcW, &srcH);
     if (!srcSurface) return BadDrawable;
 
     /* Clamp source region. */
@@ -422,31 +398,18 @@ XCopyPlane(
     TkWaylandDrawingContext  dc;
     struct cg_surface_t     *srcSurface;
     struct cg_surface_t     *expSurface;
-    WindowMapping           *srcMap;
-    TkWaylandPixmapImpl     *srcPix;
     XGCValues                gcv;
     struct cg_color_t        fg, bg;
     uint32_t                *expData;
     uint32_t                 fgPx, bgPx;
-    int                      srcW, srcH;
+    int                      srcW = 0, srcH = 0;
     int                      row, col;
 
     if (!display || !src || !dst) return BadDrawable;
     LastKnownRequestProcessed(display)++;
 
-    /* Resolve source surface. */
-    if (IsPixmap(src)) {
-        srcPix     = (TkWaylandPixmapImpl *)src;
-        srcSurface = srcPix->surface;
-        srcW       = srcPix->width;
-        srcH       = srcPix->height;
-    } else {
-        srcMap = FindMappingByDrawable(src);
-        if (!srcMap || !srcMap->surface) return BadDrawable;
-        srcSurface = srcMap->surface;
-        srcW       = srcMap->width;
-        srcH       = srcMap->height;
-    }
+    srcSurface = ResolveSurface(src, &srcW, &srcH);
+    if (!srcSurface) return BadDrawable;
 
     /* Clamp. */
     if (src_x < 0) { dest_x -= src_x; width  += src_x; src_x = 0; }
@@ -483,8 +446,9 @@ XCopyPlane(
         int             srcStride = srcSurface->stride / 4;
 
         for (row = 0; row < (int)height; row++) {
-            const uint32_t *srcRow = srcPixels + (src_y + row) * srcStride + src_x;
-            uint32_t       *dstRow = expData   + row * width;
+            const uint32_t *srcRow = srcPixels
+                                   + (src_y + row) * srcStride + src_x;
+            uint32_t       *dstRow = expData + row * width;
             for (col = 0; col < (int)width; col++) {
                 dstRow[col] = (srcRow[col] & 0x00FFFFFF) ? fgPx : bgPx;
             }
