@@ -485,7 +485,8 @@ EXTERN void		Tk_PhotoBlank(Tk_PhotoHandle handle);
 /* 149 */
 EXTERN void		Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr,
 				int *heightPtr);
-/* Slot 150 is reserved */
+/* 150 */
+EXTERN Tcl_Size		TkPointToChar_(Tk_TextLayout layout, int x, int y);
 /* 151 */
 EXTERN int		Tk_PointToChar(Tk_TextLayout layout, int x, int y);
 /* 152 */
@@ -1068,7 +1069,7 @@ typedef struct TkStubs {
     void (*tk_PhotoBlank) (Tk_PhotoHandle handle); /* 147 */
     void (*reserved148)(void);
     void (*tk_PhotoGetSize) (Tk_PhotoHandle handle, int *widthPtr, int *heightPtr); /* 149 */
-    void (*reserved150)(void);
+    Tcl_Size (*tkPointToChar_) (Tk_TextLayout layout, int x, int y); /* 150 */
     int (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 151 */
     int (*tk_PostscriptFontName) (Tk_Font tkfont, Tcl_DString *dsPtr); /* 152 */
     void (*tk_PreserveColormap) (Display *display, Colormap colormap); /* 153 */
@@ -1522,7 +1523,8 @@ extern const TkStubs *tkStubsPtr;
 /* Slot 148 is reserved */
 #define Tk_PhotoGetSize \
 	(tkStubsPtr->tk_PhotoGetSize) /* 149 */
-/* Slot 150 is reserved */
+#define TkPointToChar_ \
+	(tkStubsPtr->tkPointToChar_) /* 150 */
 #define Tk_PointToChar \
 	(tkStubsPtr->tk_PointToChar) /* 151 */
 #define Tk_PostscriptFontName \
@@ -1807,6 +1809,7 @@ extern const TkStubs *tkStubsPtr;
 
 #define Tk_GetImageMasterData Tk_GetImageModelData
 
+#undef TkPointToChar_
 #ifndef MAC_OSX_TK
 #   undef Tk_ClipDrawableToRect
 #endif
