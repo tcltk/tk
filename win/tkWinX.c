@@ -190,7 +190,7 @@ TkGetServerInfo(
 	"Win32"
 #endif
     );
-    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 /*
