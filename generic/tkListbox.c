@@ -1669,7 +1669,7 @@ ConfigureListbox(
 	    if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy)
 		    != TCL_OK) {
 		Tcl_AppendResult(listPtr->interp,
-			": invalid -listvariable value", NULL);
+			": invalid -listvariable value", (char *)NULL);
 		continue;
 	    }
 

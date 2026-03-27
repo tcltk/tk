@@ -381,7 +381,7 @@ GetIcoPtr(
 
 notfound:
     Tcl_AppendResult(interp, "icon \"", string,
-	"\" does not exist", NULL);
+	"\" does not exist", (char *)NULL);
     return NULL;
 }
 
@@ -964,7 +964,7 @@ WinSystrayCmd(
 		if (i+1 >= objc) {
 		    Tcl_AppendResult(interp,
 			    "missing value for option \"", Tcl_GetString(objv[i]),
-			    "\"", NULL);
+			    "\"", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		switch (opt) {
@@ -1083,7 +1083,7 @@ WinSysNotifyCmd(
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
 	Tcl_AppendResult(interp, "unknown subcommand \"", Tcl_GetString(objv[1]),
-		"\": must be notify", NULL);
+		"\": must be notify", (char *)NULL);
 	return TCL_ERROR;
     }
     if (objc != 5) {
