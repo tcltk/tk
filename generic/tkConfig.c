@@ -633,7 +633,7 @@ DoObjConfig(
 	} else if (Tcl_GetBooleanFromObj(nullOK ? NULL : interp, valuePtr, &newBool) != TCL_OK) {
 	    if (nullOK && interp) {
 		Tcl_AppendResult(interp, "expected boolean value or \"\" but got \"",
-			Tcl_GetString(valuePtr), "\"", NULL);
+			Tcl_GetString(valuePtr), "\"", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -703,7 +703,7 @@ DoObjConfig(
 	if (TkGetIntForIndex(valuePtr, TCL_INDEX_NONE, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
-			"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
+			"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
