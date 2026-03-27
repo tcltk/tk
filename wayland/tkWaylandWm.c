@@ -400,6 +400,42 @@ DestroyGlfwWindow(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmMapWindow --
+ *
+ *	Maps the window (makes it visible). Fixed to ensure window
+ *	is properly shown during initial startup.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The window becomes visible, and a MapNotify event is sent to
+ *	Tk's event system.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmMapWindow --
+ *
+ *	Maps the window (makes it visible). Fixed to ensure window
+ *	is properly shown during initial startup.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The window becomes visible, and a MapNotify event is sent to
+ *	Tk's event system.
+ *
+ *----------------------------------------------------------------------
+ */
+
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
@@ -424,38 +460,65 @@ TkWmMapWindow(TkWindow *winPtr)
         int w, h;
 
         glfwShowWindow(wmPtr->glfwWindow);
-
-        /* Get the actual window size after showing. */
         glfwGetWindowSize(wmPtr->glfwWindow, &w, &h);
         
-        /* Ensure we have valid dimensions. */
+        fprintf(stderr, "TkWmMapWindow: GLFW window size = %dx%d\n", w, h);
+        
         if (w <= 0) w = 640;
         if (h <= 0) h = 480;
 
-        GLFWwindow *prev = glfwGetCurrentContext();
-        
-        /* Force an expose event to trigger widget drawing. */
         mapping = FindMappingByTk(winPtr);
         if (mapping != NULL) {
-            mapping->clearPending = 1;  /* Will clear on next draw */
-            w = mapping->width  > 1 ? mapping->width  : w;
-            h = mapping->height > 1 ? mapping->height : h;
-
+            /* CRITICAL: Only update if size actually changed */
+            if (mapping->width != w || mapping->height != h) {
+                fprintf(stderr, "TkWmMapWindow: updating mapping from %dx%d to %dx%d\n",
+                        mapping->width, mapping->height, w, h);
+                
+                mapping->width = w;
+                mapping->height = h;
+                mapping->surfaceStale = 1;
+                
+                /* Recreate surface at new size */
+                if (TkGlfwEnsureSurface(mapping) != TCL_OK) {
+                    fprintf(stderr, "TkWmMapWindow: EnsureSurface failed\n");
+                }
+                
+                /* Recreate texture at new size */
+                if (mapping->texture.texture_id) {
+                    glfwMakeContextCurrent(mapping->glfwWindow);
+                    glDeleteTextures(1, &mapping->texture.texture_id);
+                    glGenTextures(1, &mapping->texture.texture_id);
+                    glBindTexture(GL_TEXTURE_2D, mapping->texture.texture_id);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    
+                    uint32_t *black = (uint32_t *)ckalloc(w * h * 4);
+                    memset(black, 0, w * h * 4);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+                                 GL_RGBA, GL_UNSIGNED_BYTE, black);
+                    ckfree(black);
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                    
+                    mapping->texture.width = w;
+                    mapping->texture.height = h;
+                    mapping->texture.needs_texture_update = 1;
+                }
+            }
+            
             winPtr->changes.width  = w;
             winPtr->changes.height = h;
-
-            /* Queue expose for entire window. */
-            TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
             
-            /* Process events to trigger drawing. */
-            TkWaylandProcessEvents();
+            /* Clear surface and queue expose */
+            TkGlfwClearSurface(mapping);
+            TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
         }
-        
-        if (prev) glfwMakeContextCurrent(prev);
         
         winPtr->flags |= TK_MAPPED;
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -687,8 +750,8 @@ TkWmCleanup(
 
 Window
 Tk_MakeWindow(
-	      Tk_Window tkwin,
-	      TCL_UNUSED(Window))        /* parent – ignored for toplevels */
+    Tk_Window tkwin,
+    TCL_UNUSED(Window))
 {
     TkWindow   *winPtr     = (TkWindow *)tkwin;
     GLFWwindow *glfwWindow = NULL;
@@ -697,8 +760,8 @@ Tk_MakeWindow(
     Window      window;
 
     if (winPtr->parentPtr == NULL) {
-	
-	/* Toplevel window. */
+
+        /* Toplevel window. */
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
 
@@ -708,7 +771,13 @@ Tk_MakeWindow(
             return None;
         }
 
-        window = (Window)glfwWindow;
+        /*
+         * Use the drawable ID that TkGlfwCreateWindow already allocated
+         * and registered. Do NOT use the GLFW pointer as the window ID —
+         * that would create a mismatch between winPtr->window and the
+         * DrawableMapping entries.
+         */
+        window = (Window)drawable;
         winPtr->window = window;
 
         if (!winPtr->wmInfoPtr) {
@@ -722,14 +791,9 @@ Tk_MakeWindow(
         }
 
         /*
-         * Toplevel registration: use RegisterDrawableForMapping.
-         * Toplevels are always at (0,0) relative to their own surface.
+         * TkGlfwCreateWindow already called RegisterDrawableForMapping
+         * for this drawable. Do NOT call it again here.
          */
-        WindowMapping *m = FindMappingByTk(winPtr);
-        if (m) {
-            m->drawable = winPtr->window;
-            RegisterDrawableForMapping(winPtr->window, m);
-        }
 
     } else {
         /* Child window. */
@@ -739,12 +803,20 @@ Tk_MakeWindow(
         winPtr->window = window;
 
         /*
-         * Use AddDrawableMapping (via the wrapper) instead of 
-         * RegisterDrawableForMapping. This computes the (x,y) offset 
-         * so the widget draws in the right place.
+         * Register using AddDrawableMapping (via the wrapper) so that
+         * the (x,y) offset relative to the toplevel is computed correctly.
          */
         TkGlfwRegisterChildDrawable(winPtr->window, winPtr);
+        fprintf(stderr, "Tk_MakeWindow child: set winPtr->window=%lu, readback=%lu\n",
+        (unsigned long)window,
+        (unsigned long)((TkWindow *)winPtr)->window);
     }
+    
+    /* At the end of both branches, before return window: */
+fprintf(stderr,
+    "Tk_MakeWindow: winPtr=%p parentPtr=%p window=%lu (0x%lx)\n",
+    (void *)winPtr, (void *)winPtr->parentPtr,
+    (unsigned long)window, (unsigned long)window);
 
     return window;
 }
@@ -2005,7 +2077,6 @@ WmGeometryCmd(
         
         if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
             UpdateGeometryInfo((void *)winPtr);
-            TkWaylandProcessEvents();
         }
         
         return TCL_OK;
@@ -2036,8 +2107,6 @@ WmGeometryCmd(
         /* Update internal Tk/GLFW state. */
         UpdateGeometryInfo((void *)winPtr);
         
-        /* Process events to ensure callback fires before command returns */
-        TkWaylandProcessEvents();
         
         /* Verify the change actually took effect. */
         int newWidth, newHeight;
@@ -3615,7 +3684,6 @@ UpdateGeometryInfo(
         
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
-        TkWaylandProcessEvents();
     }
 
     /* Apply position change if needed. */
@@ -3624,7 +3692,6 @@ UpdateGeometryInfo(
         wmPtr->y != winPtr->changes.y) {
         glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
-        TkWaylandProcessEvents();
     }
     
 }
@@ -4052,18 +4119,37 @@ XCreateWindow(
 
     static Window nextId = 300000;
     Window result = nextId++;
+    
+    /* IMPORTANT: Don't use huge IDs that could be confused with pointers */
+    if (result < 100000) result = nextId++;
 
-    /* Inherit parent’s mapping. */
+    /* Find the parent's mapping */
     WindowMapping *pm = FindMappingByDrawable(parent);
+    
+    if (!pm) {
+        /* Try to find by GLFW window if parent is a toplevel window */
+        GLFWwindow *gw = (GLFWwindow *)parent;
+        pm = FindMappingByGLFW(gw);
+        
+        if (!pm && parent < 100000) {
+            /* Try to find by drawable ID directly */
+            pm = FindMappingByDrawable(parent);
+        }
+        
+        if (pm) {
+            fprintf(stderr, "XCreateWindow: found mapping for parent %lu via GLFW\n", 
+                    (unsigned long)parent);
+        }
+    }
+    
     if (pm) {
         RegisterDrawableForMapping(result, pm);
+        fprintf(stderr, "XCreateWindow(child): parent=%lu → child=%lu, registered with toplevel %p\n",
+                (unsigned long)parent, (unsigned long)result, (void *)pm);
+    } else {
+        fprintf(stderr, "XCreateWindow(child): parent=%lu → child=%lu, NO MAPPING FOUND!\n",
+                (unsigned long)parent, (unsigned long)result);
     }
-
-    fprintf(stderr,
-        "XCreateWindow(child): parent=%lu → child=%lu, parentMapping=%p\n",
-        (unsigned long)parent,
-        (unsigned long)result,
-        (void *)pm);
 
     return result;
 }

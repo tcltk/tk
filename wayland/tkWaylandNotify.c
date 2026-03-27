@@ -382,6 +382,7 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
+    static WindowMapping *lastCleared = NULL;
 
     if (!winPtr) {
         return;
@@ -389,14 +390,17 @@ TkWaylandQueueExposeEvent(
 
     /* 
      * Clear the surface for this toplevel at the START of each expose
-     * cycle.  We find the mapping before queuing the event so that
-     * widget redraws triggered by the event find a clean surface.
+     * cycle, but ONLY ONCE per cycle.  Track which toplevel we cleared
+     * so we don't clear multiple times in the same event cycle.
      */
     Tk_Window top = GetToplevelOfWidget((Tk_Window)winPtr);
     if (top) {
         WindowMapping *m = FindMappingByTk((TkWindow *)top);
-        if (m) {
+        if (m && m != lastCleared) {
+            fprintf(stderr, "TkWaylandQueueExposeEvent: clearing surface for toplevel %p\n", 
+                    (void*)m);
             TkGlfwClearSurface(m);
+            lastCleared = m;
         }
     }
 
@@ -419,6 +423,8 @@ TkWaylandQueueExposeEvent(
     if (top) {
         WindowMapping *m = FindMappingByTk((TkWindow *)top);
         if (m && m->glfwWindow) {
+            fprintf(stderr, "TkWaylandQueueExposeEvent: scheduling display for toplevel %p\n", 
+                    (void*)m);
             TkWaylandScheduleDisplay(m);
         }
     }
@@ -439,7 +445,6 @@ TkWaylandQueueExposeEvent(
                                   Tk_Height((Tk_Window)childPtr));
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -527,6 +532,45 @@ TkWaylandScheduleDisplay(WindowMapping *m)
  *
  *----------------------------------------------------------------------
  */
+ 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandDisplayProc --
+ *
+ *	The SINGLE site where GPU work is performed for a window:
+ *	  1. Upload the software-rendered libcg surface to the GL texture.
+ *	  2. Set the viewport and clear the colour buffer.
+ *	  3. Render the full-screen textured quad.
+ *	  4. Swap buffers.
+ *
+ *	This fires via Tcl_DoWhenIdle, which means it runs after all
+ *	widget draw procs for the current event have completed.  The
+ *	surface therefore contains the fully-composited frame when we
+ *	arrive here, eliminating partial-frame flicker.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Uploads texture data to GPU, renders the frame, and swaps buffers.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandDisplayProc --
+ *
+ *	The SINGLE site where GPU work is performed for a window:
+ *	  1. Upload the software-rendered libcg surface to the GL texture.
+ *	  2. Set the viewport and clear the colour buffer.
+ *	  3. Render the full-screen textured quad.
+ *	  4. Swap buffers.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void
 TkWaylandDisplayProc(ClientData clientData)
@@ -534,49 +578,46 @@ TkWaylandDisplayProc(ClientData clientData)
     WindowMapping *m = (WindowMapping *)clientData;
 
     if (!m || !m->glfwWindow) {
-        m->needsDisplay = 0;
+        if (m) m->needsDisplay = 0;
         return;
     }
 
-    /* Always clear the guard first so new redraws can be scheduled
-     * while we are doing GPU work below. */
     m->needsDisplay = 0;
 
-    /* Ensure a valid surface. */
+    /* Make the context current for THIS window */
+    glfwMakeContextCurrent(m->glfwWindow);
+    
+    if (!glfwGetCurrentContext()) {
+        return;
+    }
+
+    /* Ensure a valid surface */
     if (TkGlfwEnsureSurface(m) != TCL_OK || !m->surface || !m->surface->pixels) {
         return;
     }
 
-    /* Make the context current for all GL operations. */
-    glfwMakeContextCurrent(m->glfwWindow);
-
-    /* Upload the software surface to GPU if any draw happened. */
+    /* Upload the software surface to GPU if any draw happened */
     if (m->texture.needs_texture_update) {
         TkGlfwUploadSurfaceToTexture(m);
-        /* needs_texture_update is cleared inside Upload. */
     }
 
     if (!m->texture.texture_id) {
         return;
     }
 
-    /*
-     * Set the viewport to the full window.
-     * Clear the colur buffer to the default background so that any
-     * region not covered by the texture quad (e.g. letterboxing) shows
-     * a neutral colour rather than undefined framebuffer contents.
-     */
+    /* Set the viewport to the full window */
     glViewport(0, 0, m->width, m->height);
+    
+    /* Clear to default background color */
     glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    /* Render the full-screen texture quad. */
+    /* Render the full-screen texture quad */
     TkGlfwRenderTexture(m);
 
-    /* Present to the compositor. */
+    /* Present to the compositor */
     glfwSwapBuffers(m->glfwWindow);
 
-    /* frameOpen is no longer used for anything critical but keep it tidy. */
     m->frameOpen = 0;
 }
 
