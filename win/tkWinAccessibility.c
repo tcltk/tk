@@ -1509,7 +1509,7 @@ static int GetChildIdForTkWindow(
 	TkGlobalUnlock();
 	return -1;
     }
-    int id = PTR2INT(Tcl_GetHashValue(entry));
+    int id = (int)PTR2INT(Tcl_GetHashValue(entry));
     TkGlobalUnlock();
     return id;
 }
