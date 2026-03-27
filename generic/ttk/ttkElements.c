@@ -648,7 +648,7 @@ static const Ttk_ElementOptionSpec SizegripOptions[] = {
 	offsetof(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-gripsize", TK_OPTION_PIXELS,
 	offsetof(SizegripElement,gripSizeObj), "11.25p" },
-    {0, TK_OPTION_BOOLEAN, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void SizegripSize(
@@ -1724,7 +1724,7 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
 	offsetof(TabElement,highlightObj), "0" },
     { "-highlightcolor", TK_OPTION_COLOR,
 	offsetof(TabElement,highlightColorObj), "#4a6984" },
-    {0, TK_OPTION_BOOLEAN, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void TabElementSize(
