@@ -190,7 +190,7 @@ TkGetServerInfo(
 	"Win32"
 #endif
     );
-    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 /*
@@ -434,7 +434,7 @@ TkWinDisplayChanged(
      */
 
     screen->ext_data = (XExtData *)INT2PTR(GetDeviceCaps(dc, PLANES));
-    screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data);
+    screen->root_depth = (int)(GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data));
 
     if (screen->root_visual != NULL) {
 	Tcl_Free(screen->root_visual);
@@ -841,7 +841,7 @@ TkTranslateWinEvent(
 	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	if (winPtr) {
-	    TkWinClipboardRender(winPtr->dispPtr, wParam);
+	    TkWinClipboardRender(winPtr->dispPtr, (UINT)wParam);
 	}
 	return 1;
     }
@@ -1194,7 +1194,7 @@ GenerateXEvent(
 
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -1;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
 		    WM_SYSCHAR);
 	    break;
@@ -1208,7 +1208,7 @@ GenerateXEvent(
 	     */
 
 	    event.x.type = KeyRelease;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    break;
 
@@ -1284,7 +1284,7 @@ GenerateXEvent(
 	case WM_UNICHAR: {
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -3;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
 	    event.x.type = KeyRelease;

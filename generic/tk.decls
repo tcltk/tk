@@ -567,8 +567,12 @@ declare 147 {
 declare 149 {
     void Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr, int *heightPtr)
 }
+declare 150 {
+    Tcl_Size Tk_PointToChar(Tk_TextLayout layout, int x, int y)
+}
+# Just a stub entry, for binary compatibility with Tk 9.0.
 declare 151 {
-    int Tk_PointToChar(Tk_TextLayout layout, int x, int y)
+    int TkPointToChar_(Tk_TextLayout layout, int x, int y)
 }
 declare 152 {
     int Tk_PostscriptFontName(Tk_Font tkfont, Tcl_DString *dsPtr)

@@ -66,7 +66,7 @@ typedef struct {
 
     int scanMarkX;		/* X-position at which scan started (e.g.
 				 * button was pressed here). */
-    int scanMarkIndex;		/* Character index of character that was at
+    Tcl_Size scanMarkIndex;		/* Character index of character that was at
 				 * left of window when scan started. */
 
     /*
@@ -181,7 +181,7 @@ typedef struct {
     XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
     GC placeholderGC;		/* For drawing placeholder text. */
     int placeholderX;		/* Origin for layout. */
-    int placeholderLeftIndex;	/* Character index of left-most character
+    Tcl_Size placeholderLeftIndex;	/* Character index of left-most character
 				 * visible in window. */
 } Entry;
 
@@ -237,8 +237,8 @@ typedef struct {
 
     Tcl_Obj *valueObj;		/* Values List. */
     Tcl_Obj *listObj;		/* Pointer to the list object being used */
-    int eIndex;			/* Holds the current index into elements */
-    int nElements;		/* Holds the current count of elements */
+    Tcl_Size eIndex;			/* Holds the current index into elements */
+    Tcl_Size nElements;		/* Holds the current count of elements */
 } Spinbox;
 
 /*

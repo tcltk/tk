@@ -1006,7 +1006,7 @@ FindTag(
 		"tag \"%s\" isn't defined in text widget",
 		Tcl_GetString(tagName)));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_TAG",
-		Tcl_GetString(tagName), NULL);
+		Tcl_GetString(tagName), (char *)NULL);
     }
     return NULL;
 }

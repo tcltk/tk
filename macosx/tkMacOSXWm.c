@@ -628,6 +628,9 @@ static void placeAsTab(TKWindow *macWindow) {
 
 - (BOOL) canBecomeKeyWindow
 {
+    if ([NSApp tkWillExit]) {
+	return NO;
+    }
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
     if (!winPtr || !winPtr->wmInfoPtr) {
@@ -1008,6 +1011,9 @@ TkWmMapWindow(
     TkWindow *winPtr)		/* Top-level window that's about to be
 				 * mapped. */
 {
+    if (Tk_IsMapped(winPtr)) {
+	return;
+    }
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     XEvent event;
 
@@ -1077,8 +1083,8 @@ TkWmMapWindow(
      * Map the window and process a MapNotify event for it.
      */
 
-    winPtr->flags |= TK_MAPPED;
     XMapWindow(winPtr->display, winPtr->window);
+    winPtr->flags |= TK_MAPPED;
     event.xany.serial = LastKnownRequestProcessed(winPtr->display);
     event.xany.send_event = False;
     event.xany.display = winPtr->display;
@@ -1111,11 +1117,13 @@ TkWmUnmapWindow(
     TkWindow *winPtr)		/* Top-level window that's about to be
 				 * unmapped. */
 {
-    winPtr->flags &= ~TK_MAPPED;
+    if (!Tk_IsMapped(winPtr)) {
+	return;
+    }
     if ((winPtr->window != None)
 	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)) {
+	winPtr->flags &= ~TK_MAPPED;
 	XEvent event;
-
 	event.xany.serial = LastKnownRequestProcessed(winPtr->display);
 	event.xany.send_event = False;
 	event.xany.display = winPtr->display;
@@ -2563,10 +2571,10 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
-    TkWindow *winPtr,		/* Toplevel or Frame to work with */
-    TCL_UNUSED(Tcl_Interp *),	/* Current interpreter. */
-    TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
+    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TkWindow *winPtr,			/* Toplevel or Frame to work with */
+    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    TCL_UNUSED(Tcl_Size),		/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window)winPtr;
@@ -2579,20 +2587,21 @@ WmForgetCmd(
 	MacDrawable *macWin;
 
 	Tk_MakeWindowExist(frameWin);
-	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
-
+	if (winPtr->parentPtr) {
+	    Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+	}
 	macWin = (MacDrawable *)winPtr->window;
 
 	TkFocusJoin(winPtr);
 	Tk_UnmapWindow(frameWin);
 
 	macWin->toplevel->referenceCount--;
-	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
-	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
-
-	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
-
+	if (winPtr->parentPtr) {
+	    macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	    macWin->toplevel->referenceCount++;
+	    RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
+	}
 	/*
 	 * Make sure wm no longer manages this window
 	 */
