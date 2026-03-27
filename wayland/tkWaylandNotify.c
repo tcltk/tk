@@ -382,29 +382,22 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    static WindowMapping *lastCleared = NULL;
 
     if (!winPtr) {
         return;
     }
 
-    /* 
-     * Clear the surface for this toplevel at the START of each expose
-     * cycle, but ONLY ONCE per cycle.  Track which toplevel we cleared
-     * so we don't clear multiple times in the same event cycle.
-     */
-    Tk_Window top = GetToplevelOfWidget((Tk_Window)winPtr);
-    if (top) {
-        WindowMapping *m = FindMappingByTk((TkWindow *)top);
-        if (m && m != lastCleared) {
-            fprintf(stderr, "TkWaylandQueueExposeEvent: clearing surface for toplevel %p\n", 
-                    (void*)m);
-            TkGlfwClearSurface(m);
-            lastCleared = m;
+    /* CRITICAL: Skip toplevel windows - they don't draw themselves */
+    if (Tk_IsTopLevel((Tk_Window)winPtr)) {
+        /* Only schedule display for toplevel, but don't queue expose */
+        WindowMapping *m = FindMappingByTk(winPtr);
+        if (m && m->glfwWindow) {
+            TkWaylandScheduleDisplay(m);
         }
+        return;
     }
 
-    /* Queue the Expose event. */
+    /* Queue the Expose event for non-toplevel widgets */
     memset(&event, 0, sizeof(XEvent));
     event.type               = Expose;
     event.xexpose.serial     = LastKnownRequestProcessed(winPtr->display);
@@ -419,17 +412,16 @@ TkWaylandQueueExposeEvent(
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    /* Schedule display for the toplevel. */
+    /* Schedule display for the toplevel */
+    Tk_Window top = GetToplevelOfWidget((Tk_Window)winPtr);
     if (top) {
         WindowMapping *m = FindMappingByTk((TkWindow *)top);
         if (m && m->glfwWindow) {
-            fprintf(stderr, "TkWaylandQueueExposeEvent: scheduling display for toplevel %p\n", 
-                    (void*)m);
             TkWaylandScheduleDisplay(m);
         }
     }
 
-    /* Recurse into mapped non-toplevel children. */
+    /* Recurse into mapped non-toplevel children */
     for (childPtr = winPtr->childList;
          childPtr != NULL;
          childPtr = childPtr->nextPtr)
@@ -445,6 +437,7 @@ TkWaylandQueueExposeEvent(
                                   Tk_Height((Tk_Window)childPtr));
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
