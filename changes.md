@@ -32,6 +32,7 @@ to the userbase.
  - [Segfault under Windows when executing test file menu.test with "-singleproc 0"](https://core.tcl-lang.org/tk/tktview/d8f964)
  - [Check recursive menu usage to avoid crash](https://core.tcl-lang.org/tk/info/7f67bb40)
  - [Get rid of the ugly Motif-style cascade arrows on X11](https://core.tcl-lang.org/tk/info/aca9953f)
+ - ["wm forget ." segfaults](https://core.tcl-lang.org/tk/info/8c362075)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
