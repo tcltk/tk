@@ -462,8 +462,6 @@ TkWmMapWindow(TkWindow *winPtr)
         glfwShowWindow(wmPtr->glfwWindow);
         glfwGetWindowSize(wmPtr->glfwWindow, &w, &h);
         
-        fprintf(stderr, "TkWmMapWindow: GLFW window size = %dx%d\n", w, h);
-        
         if (w <= 0) w = 640;
         if (h <= 0) h = 480;
 
@@ -762,8 +760,8 @@ Tk_MakeWindow(
     if (winPtr->parentPtr == NULL) {
 
         /* Toplevel window. */
-        width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
-        height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
+        width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 640;
+        height = (winPtr->changes.height > 0) ? winPtr->changes.height : 480;
 
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);

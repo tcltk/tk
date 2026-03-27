@@ -1593,6 +1593,7 @@ DrawRectangle(
     cg_color.a = (color & 0xFF) / 255.0f;
     
     cg_set_source_rgba(cg, cg_color.r, cg_color.g, cg_color.b, cg_color.a);
+    cg_set_operator(cg, CG_OPERATOR_SRC_OVER);
     cg_rectangle(cg, x, y, w, h);
     cg_fill(cg);
 }

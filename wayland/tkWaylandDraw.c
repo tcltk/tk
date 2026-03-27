@@ -64,7 +64,7 @@ XDrawString(
     buf[length] = '\0';
 
     /* Set foreground color for the font subsystem to pick up. */
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -131,7 +131,7 @@ XDrawImageString(
      * glyphs.  Fill a conservative 1-em-high strip here; the font
      * subsystem can refine this if needed.
      */
-    if (TkWaylandGetGCValues(gc, GCBackground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCBackground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.background >> 16) & 0xFF) / 255.0,
             (double)((v.background >> 8) & 0xFF) / 255.0,
@@ -143,7 +143,7 @@ XDrawImageString(
     }
 
     /* Restore foreground for glyph rendering. */
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -187,7 +187,7 @@ XDrawPoint(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -237,7 +237,7 @@ XDrawPoints(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -295,7 +295,7 @@ XDrawLines(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -303,7 +303,7 @@ XDrawLines(
             1.0);
     }
 
-    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) != 0) {
         cg_set_line_width(dc.cg, (double)v.line_width);
     }
 
@@ -356,7 +356,7 @@ XDrawSegments(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -364,7 +364,7 @@ XDrawSegments(
             1.0);
     }
 
-    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) != 0) {
         cg_set_line_width(dc.cg, (double)v.line_width);
     }
 
@@ -414,7 +414,7 @@ XFillPolygon(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((gcValues.foreground >> 16) & 0xFF) / 255.0,
             (double)((gcValues.foreground >> 8) & 0xFF) / 255.0,
@@ -422,7 +422,7 @@ XFillPolygon(
             1.0);
     }
 
-    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues) == 0) {
+    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues) != 0) {
         if (gcValues.fill_rule == EvenOddRule)
             cg_set_fill_rule(dc.cg, CG_FILL_RULE_EVEN_ODD);
         else
@@ -484,7 +484,7 @@ XDrawRectangle(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -492,7 +492,7 @@ XDrawRectangle(
             1.0);
     }
 
-    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) != 0) {
         cg_set_line_width(dc.cg, (double)v.line_width);
     }
 
@@ -536,7 +536,7 @@ XDrawRectangles(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -544,7 +544,7 @@ XDrawRectangles(
             1.0);
     }
 
-    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) != 0) {
         cg_set_line_width(dc.cg, (double)v.line_width);
     }
 
@@ -593,7 +593,7 @@ XFillRectangles(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -645,7 +645,7 @@ XFillRectangle(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -698,7 +698,7 @@ XDrawArc(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -706,7 +706,7 @@ XDrawArc(
             1.0);
     }
 
-    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) != 0) {
         cg_set_line_width(dc.cg, (double)v.line_width);
     }
 
@@ -766,7 +766,7 @@ XDrawArcs(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((v.foreground >> 16) & 0xFF) / 255.0,
             (double)((v.foreground >> 8) & 0xFF) / 255.0,
@@ -774,7 +774,7 @@ XDrawArcs(
             1.0);
     }
 
-    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCLineWidth, &v) != 0) {
         cg_set_line_width(dc.cg, (double)v.line_width);
     }
 
@@ -846,7 +846,7 @@ XFillArc(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((gcValues.foreground >> 16) & 0xFF) / 255.0,
             (double)((gcValues.foreground >> 8) & 0xFF) / 255.0,
@@ -920,7 +920,7 @@ XFillArcs(
         return BadDrawable;
     }
 
-    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &gcValues) != 0) {
         cg_set_source_rgba(dc.cg,
             (double)((gcValues.foreground >> 16) & 0xFF) / 255.0,
             (double)((gcValues.foreground >> 8) & 0xFF) / 255.0,
