@@ -2571,10 +2571,10 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
-    TkWindow *winPtr,		/* Toplevel or Frame to work with */
-    TCL_UNUSED(Tcl_Interp *),	/* Current interpreter. */
-    TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
+    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TkWindow *winPtr,			/* Toplevel or Frame to work with */
+    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    TCL_UNUSED(Tcl_Size),		/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window)winPtr;
@@ -2587,20 +2587,21 @@ WmForgetCmd(
 	MacDrawable *macWin;
 
 	Tk_MakeWindowExist(frameWin);
-	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
-
+	if (winPtr->parentPtr) {
+	    Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+	}
 	macWin = (MacDrawable *)winPtr->window;
 
 	TkFocusJoin(winPtr);
 	Tk_UnmapWindow(frameWin);
 
 	macWin->toplevel->referenceCount--;
-	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
-	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
-
-	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
-
+	if (winPtr->parentPtr) {
+	    macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	    macWin->toplevel->referenceCount++;
+	    RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
+	}
 	/*
 	 * Make sure wm no longer manages this window
 	 */
