@@ -53,24 +53,83 @@ const Tk_ClassProcs tkpButtonProcs = {
 #define CHECK_MENU_DIM    8
 #define RADIO_BUTTON_DIM 16
 #define RADIO_MENU_DIM    8
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImageChanged --
+ *
+ *	This function is called when an image used by a button changes.
+ *	It schedules a redisplay of the button to reflect the updated image.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	If the button is currently mapped, a redisplay is scheduled.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void
-ImageChanged(TCL_UNUSED(void *),
-             TCL_UNUSED(int), 
-             TCL_UNUSED(int),
-             TCL_UNUSED(int), 
-             TCL_UNUSED(int),
-             TCL_UNUSED(int), 
-             TCL_UNUSED(int))
+ImageChanged(
+    void *clientData,           /* The button widget record. */
+    TCL_UNUSED(int),            /* x-coordinate (unused) */
+    TCL_UNUSED(int),            /* y-coordinate (unused) */
+    TCL_UNUSED(int),            /* width (unused) */
+    TCL_UNUSED(int),            /* height (unused) */
+    TCL_UNUSED(int),            /* imageWidth (unused) */
+    TCL_UNUSED(int))            /* imageHeight (unused) */
 {
-    /* No-op. */
+    TkButton *butPtr = (TkButton *)clientData;
+    
+    /* Only schedule a redraw if the button still exists and is mapped. */
+    if (butPtr->tkwin != NULL && Tk_IsMapped(butPtr->tkwin)) {
+        /* Mark that a redraw is pending. */
+        if (!(butPtr->flags & REDRAW_PENDING)) {
+            Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
+            butPtr->flags |= REDRAW_PENDING;
+        }
+    }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCreateButton --
+ *
+ *	Allocate a new TkButton structure.
+ *
+ * Results:
+ *	Returns a newly allocated TkButton structure.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 TkButton *
 TkpCreateButton(TCL_UNUSED(Tk_Window))
 {
     return (TkButton *)ckalloc(sizeof(TkButton));
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ShiftByOffset --
+ *
+ *	Shift the drawing position based on relief and button type.
+ *	This provides the "motif" look for buttons.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Modifies x and y coordinates.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
@@ -96,6 +155,12 @@ ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
  *
  *	Draw a Tk bitmap using libcg. Converts the 1-bit bitmap to an
  *	RGBA surface using the GC's foreground color and blits it.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders the bitmap on the drawing context.
  *
  *----------------------------------------------------------------------
  */
@@ -197,6 +262,22 @@ fallback_rect:
     cg_fill(dc->cg);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawButtonImage --
+ *
+ *	Draw the button's image (either from a Tk image or a bitmap).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders the image on the drawing context.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 DrawButtonImage(TkButton *butPtr, TkWaylandDrawingContext *dc,
                 int x, int y, int width, int height, int selected)
@@ -215,6 +296,22 @@ DrawButtonImage(TkButton *butPtr, TkWaylandDrawingContext *dc,
         DrawButtonBitmap(butPtr, dc, x, y, width, height);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawButtonText --
+ *
+ *	Draw the button's text label.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders text on the drawing context.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 DrawButtonText(TkButton *butPtr, TkWaylandDrawingContext *dc,
@@ -238,6 +335,23 @@ DrawButtonText(TkButton *butPtr, TkWaylandDrawingContext *dc,
                            butPtr->underline);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDisplayButton --
+ *
+ *	This procedure is invoked as an idle handler to redisplay the
+ *	contents of a button widget.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The button gets redisplayed.
+ *
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpDisplayButton(void *clientData)
 {
@@ -253,6 +367,7 @@ TkpDisplayButton(void *clientData)
     int imageXOffset = 0, imageYOffset = 0;
     int padX, padY, bd, hl;
     int winWidth, winHeight;
+    Drawable drawable;
 
     butPtr->flags &= ~REDRAW_PENDING;
     if (!tkwin || !Tk_IsMapped(tkwin)) return;
@@ -269,8 +384,22 @@ TkpDisplayButton(void *clientData)
     }
 
     currentGC = butPtr->activeTextGC;
-    if (TkGlfwBeginDraw((Drawable)tkwin, currentGC, &dc) != TCL_OK)
+
+#ifdef TK_NO_DOUBLE_BUFFERING
+    /* Draw directly to the window. */
+    drawable = Tk_WindowId(tkwin);
+#else
+    /* Use off-screen pixmap for double-buffering. */
+    drawable = Tk_GetPixmap(butPtr->display, Tk_WindowId(tkwin),
+                            winWidth, winHeight, Tk_Depth(tkwin));
+#endif
+
+    if (TkGlfwBeginDraw(drawable, currentGC, &dc) != TCL_OK) {
+#ifndef TK_NO_DOUBLE_BUFFERING
+        Tk_FreePixmap(butPtr->display, drawable);
+#endif
         return;
+    }
 
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &padX);
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &padY);
@@ -410,7 +539,33 @@ TkpDisplayButton(void *clientData)
     }
 
     TkGlfwEndDraw(&dc);
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+    /* Copy off-screen pixmap to screen and free it. */
+    XCopyArea(butPtr->display, drawable, Tk_WindowId(tkwin),
+              butPtr->normalTextGC, 0, 0,
+              (unsigned)winWidth, (unsigned)winHeight, 0, 0);
+    Tk_FreePixmap(butPtr->display, drawable);
+#endif
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpComputeButtonGeometry --
+ *
+ *	After changes in a button's size or configuration, this procedure
+ *	recomputes various geometry information used in displaying the
+ *	button.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The button will be displayed differently.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void
 TkpComputeButtonGeometry(TkButton *butPtr)
@@ -523,6 +678,23 @@ TkpComputeButtonGeometry(TkButton *butPtr)
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpButtonWorldChanged --
+ *
+ *	This procedure is invoked when the screen has changed (e.g., DPI
+ *	scaling) to update GCs and geometry.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates GCs, frees cached bitmaps, and schedules a redraw.
+ *
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpButtonWorldChanged(void *instanceData)
 {
@@ -577,6 +749,12 @@ TkpButtonWorldChanged(void *instanceData)
  * TkpDrawCheckIndicator --
  *
  *	Draw check/radio button indicator using libcg.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders the indicator on the drawing context.
  *
  *----------------------------------------------------------------------
  */
