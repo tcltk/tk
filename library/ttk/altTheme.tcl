@@ -67,7 +67,7 @@ namespace eval ttk::theme::alt {
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox -padding 1 \
-	    -arrowsize 5.5p -arrowpadding 2.25p \
+	    -arrowsize 5.5p -arrowpadding 1.5p \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
@@ -88,7 +88,7 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 5p -width 9p
+	    -arrowsize 6p -width 6p -arrowpadding 2p
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
@@ -102,12 +102,12 @@ namespace eval ttk::theme::alt {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 6p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	    -indicatorsize 6p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item \
-	    -indicatorsize 4p -indicatormargin {2p 2p 4p 2p}
+	ttk::style configure Item -indicatorsize 6p \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item -indicatorcolor [list disabled $colors(-frame)]

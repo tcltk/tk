@@ -664,7 +664,7 @@ static void SizegripSize(
     SizegripElement *grip = (SizegripElement *)elementRecord;
     int gripSize = 0;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+    gripSize = TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0);
     *widthPtr = *heightPtr = gripSize;
 }
 
@@ -685,7 +685,7 @@ static void SizegripDraw(
     int x1 = b.x + b.width-1, y1 = b.y + b.height-1, x2 = x1, y2 = y1;
     int w = WIN32_XDRAWLINE_HACK;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+    gripSize = TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0);
     gripThickness = gripSize * 3 / (gripCount * 5);
     gripSpace = gripSize / 3 - gripThickness;
     while (gripCount--) {
@@ -1025,7 +1025,7 @@ static void ArrowElementSize(
     int size = 12;
 
     /* Get scaled size */
-    size = TkGetScaledPixelValue(tkwin, arrow->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1119,7 +1119,7 @@ static void BoxArrowElementSize(
     int size = 12;
 
     /* Get scaled size */
-    size = TkGetScaledPixelValue(tkwin, arrow->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1219,8 +1219,7 @@ static void MenuIndicatorElementSize(
     int size = MENUBUTTON_ARROW_SIZE;
 
     /* Get scaled size */
-    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 2.0);
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1251,7 +1250,7 @@ static void MenuIndicatorElementDraw(
     int width, height;
 
     /* Get scaled indicator size */
-    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0);
     TtkArrowSize(size, direction, &width, &height);
 
     /* Add scaled padding */
@@ -1689,8 +1688,8 @@ static void PbarElementSize(
     int thickness = 15, length = 30, borderWidth = DEFAULT_BORDERWIDTH;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
-    Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);
-    Tk_GetPixelsFromObj(NULL, tkwin, pbar->lengthObj, &length);
+    thickness = TkGetScaledPixelValue(NULL, tkwin, pbar->thicknessObj, 1.0);
+    length = TkGetScaledPixelValue(NULL, tkwin, pbar->lengthObj, 1.0);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
 
     switch (orient) {

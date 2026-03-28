@@ -7295,7 +7295,7 @@ static void TreeheadingIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0);
     TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
 
     /* Add padding */
@@ -7398,7 +7398,7 @@ static void TreeitemIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = TkGetScaledPixelValue(tkwin, indicator->sizeObj, 2.0);
+    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0);
     TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
 
     /* Add padding (only scaled if not in pixels) */

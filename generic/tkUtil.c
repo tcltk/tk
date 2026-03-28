@@ -1271,7 +1271,7 @@ TkScalingLevel(
  *	Returns a scaled pixel value for a given screen unit value.
  *
  * Results:
- *      The scaled screen unit value in pixels.
+ *      The scaled screen unit value in pixels or -1 for error.
  *
  * Side effects:
  *      None.
@@ -1281,6 +1281,7 @@ TkScalingLevel(
 
 int
 TkGetScaledPixelValue(
+    Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,
     Tcl_Obj *valuePtr,
     double divisor)
@@ -1291,10 +1292,11 @@ TkGetScaledPixelValue(
     if (Tcl_GetDoubleFromObj(NULL, valuePtr, &d) == TCL_OK) {
 	/* Unscaled pixel value, so do scaling */
 	size = (int)round(d * TkScalingLevel(tkwin) / divisor);
-    } else {
+    } else if (Tk_GetDoublePixelsFromObj(interp, tkwin, valuePtr, &d) == TCL_OK) {
 	/* Other screen units value, so convert to scaled pixels */
-	Tk_GetDoublePixelsFromObj(NULL, tkwin, valuePtr, &d);
 	size = (int)round(d / divisor);
+    } else {
+	return -1;
     }
     return size;
 }

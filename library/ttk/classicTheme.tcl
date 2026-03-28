@@ -76,21 +76,23 @@ namespace eval ttk::theme::classic {
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox -padding 1 \
-	    -arrowpadding 2p -arrowsize 12p
+	    -arrowsize 5.5p -arrowpadding 2.25p \
+	    -focuswidth 1 -focuscolor black
 	ttk::style map TCombobox -fieldbackground \
-		[list readonly $colors(-frame) disabled $colors(-frame)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox \
-	    -arrowpadding 1.5p -arrowsize 8p -padding {1.5p 0 7.5p 0}
+	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
+	    -arrowsize 5p -arrowpadding 1.5p \
+	    -focuswidth 1 -focuscolor black
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowpadding 1 -arrowsize 9p -width 9p
+	    -arrowpadding 2p -arrowsize 6p -width 9p
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised \
@@ -109,12 +111,12 @@ namespace eval ttk::theme::classic {
 	# Treeview
 	ttk::style configure Heading -padding {2p 1 2p 1} \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 7p -indicatormargin {3p 1.5p 3p 1.5p}
+	    -indicatorsize 6p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item \
-	    -indicatorsize 7p -indicatormargin {1.5p 1.5p 3p 1.5p}
+	ttk::style configure Item -indicatorsize 6p \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item \

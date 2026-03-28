@@ -135,7 +135,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox \
-	    -arrowpadding 2p -arrowsize 7p -arrowcolor $colors(-text) \
+	    -arrowpadding 2p -arrowsize 5p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding 1 \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
@@ -143,7 +143,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TSpinbox \
-	    -arrowpadding 1.5p -arrowsize 5.5p -arrowcolor $colors(-text) \
+	    -arrowpadding 1.5p -arrowsize 5p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
@@ -154,7 +154,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 9p -arrowpadding 1p -arrowsize 6p \
+	    -width 9p -arrowpadding 2p -arrowsize 6p \
 	    -arrowcolor $colors(-text)
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -183,12 +183,12 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 6p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	    -indicatorsize 6p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 8p \
-	    -indicatormargin {2 2 4 2}
+	ttk::style configure Item -indicatorsize 6p \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item -indicatorbackground \
@@ -206,9 +206,11 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
 	    -background [list	disabled $colors(-frame) \
+				background $colors(-alternate) \
 				selected $colors(-selectbg) \
 				active   $colors(-activebg)] \
 	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-alternate) \
 				selected $colors(-selectfg) \
 				active   $colors(-foreground)]
 

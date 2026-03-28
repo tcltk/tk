@@ -96,9 +96,8 @@ namespace eval ttk::theme::clam {
 		    disabled		  $colors(-frame)] \
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TMenubutton \
-	    -width 11p -arrowsize 5p -arrowpadding 2.25p -padding 3.75p \
-	    -relief raised
+	ttk::style configure TMenubutton -width 11p -padding 2.75p \
+	    -arrowsize 5p -arrowpadding 2.25p -relief raised
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
@@ -107,7 +106,7 @@ namespace eval ttk::theme::clam {
 	    -lightcolor [list focus #6f9dc6]
 
 	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
-	    -arrowsize 9p -arrowpadding 1
+	    -arrowsize 5p -arrowpadding {2p 1p 2p 1p}
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
@@ -120,7 +119,7 @@ namespace eval ttk::theme::clam {
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 8p -arrowpadding {1.5p 0 1.5p 0}
+	    -arrowsize 5p -arrowpadding {1.5p 0 1.5p 0}
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
@@ -135,13 +134,13 @@ namespace eval ttk::theme::clam {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding 2.25p \
-	    -indicatorsize 7p -indicatormargin {3p 1.5p 3p 1.5p}
+	    -indicatorsize 6p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 8p \
+	ttk::style configure Item -indicatorsize 6p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
-	ttk::style configure CheckTreeview.Item \
+	ttk::style configure CheckTreeview.Item -indicatorsize 6p  \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map Item \
 	    -indicatorbackground [list disabled $colors(-frame)] \
@@ -169,7 +168,7 @@ namespace eval ttk::theme::clam {
 	    -borderwidth 2 -relief raised
 
 	ttk::style configure TScrollbar -gripsize 7.5p \
-	    -arrowpadding 1p -arrowsize 9p -width 9p
+	    -arrowpadding 2p -arrowsize 6p
 
 	ttk::style configure TScale -gripsize 7.5p \
 	    -arrowsize 10.5p -sliderlength 22.5p
