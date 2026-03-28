@@ -17,6 +17,8 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <errno.h>
+#include <GLFW/glfw3native.h>
+#include <wayland-client.h>
 
 extern struct TkGlfwContext glfwContext;
 extern WindowMapping *windowMappingList;
@@ -534,43 +536,40 @@ TkWaylandDisplayProc(ClientData clientData)
 
     m->needsDisplay = 0;
 
-    /* Make the context current for THIS window. */
     glfwMakeContextCurrent(m->glfwWindow);
-    
-    if (!glfwGetCurrentContext()) {
+    if (!glfwGetCurrentContext()) return;
+
+    glViewport(0, 0, m->width, m->height);
+    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    /*
+     * If surface is stale or missing, we still swap the gray clear
+     * so the compositor always has a valid committed buffer.
+     * Then trigger a fresh expose cycle to redraw widgets.
+     */
+    if (m->surfaceStale || !m->surface || !m->surface->pixels) {
+        glfwSwapBuffers(m->glfwWindow);
+        if (m->tkWindow) {
+            TkWaylandQueueExposeEvent(m->tkWindow,
+                0, 0, m->width, m->height);
+        }
         return;
     }
 
-    /* Ensure a valid surface */
-    if (TkGlfwEnsureSurface(m) != TCL_OK || !m->surface || !m->surface->pixels) {
-        return;
-    }
-
-    /* Upload the software surface to GPU if any draw happened. */
     if (m->texture.needs_texture_update) {
         TkGlfwUploadSurfaceToTexture(m);
     }
 
     if (!m->texture.texture_id) {
+        glfwSwapBuffers(m->glfwWindow);
         return;
     }
 
-    /* Set the viewport to the full window. */
-    glViewport(0, 0, m->width, m->height);
-    
-    /* Clear to default background color. */
-    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    /* Render the full-screen texture quad. */
     TkGlfwRenderTexture(m);
-
-    /* Present to the compositor. */
     glfwSwapBuffers(m->glfwWindow);
-
     m->frameOpen = 0;
 }
-
 
 /*
  * Local Variables:

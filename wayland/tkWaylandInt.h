@@ -18,6 +18,10 @@
 #ifndef _TKWAYLANDINT
 #define _TKWAYLANDINT
 
+#ifndef TK_NO_DOUBLE_BUFFERING
+#define TK_NO_DOUBLE_BUFFERING 1
+#endif
+
 #include "tkInt.h"
 #include <GLFW/glfw3.h>
 #include <cg.h>
@@ -104,6 +108,8 @@ struct WindowMapping {
     TextureState texture;	/* OpenGL texture state */
     WindowMapping *nextPtr;	/* Next in linked list */
     int surfaceStale;     /* Flag indicating stale drawing surface */
+    unsigned long background_pixel;  /* Tk toplevel background color */
+    int background_set;               /* Whether background has been set */
 };
 
 /*
@@ -122,6 +128,7 @@ struct WindowMapping {
 struct DrawableMapping {
     Drawable drawable;              /* The widget's drawable ID */
     WindowMapping *toplevel;        /* Pointer to the toplevel WindowMapping */
+    TkWindow *winPtr;    
     int x, y;                       /* Offset inside the toplevel surface */
     int width, height;              /* Widget size */
     struct DrawableMapping *next;   /* Next in linked list */

@@ -720,8 +720,8 @@ Tk_MakeWindow(
     if (winPtr->parentPtr == NULL) {
 
         /* Toplevel window. */
-        width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 640;
-        height = (winPtr->changes.height > 0) ? winPtr->changes.height : 480;
+        width  = (winPtr->changes.width  > 1) ? winPtr->changes.width  : 640;
+        height = (winPtr->changes.height > 1) ? winPtr->changes.height : 480;
 
         glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
@@ -729,12 +729,6 @@ Tk_MakeWindow(
             return None;
         }
 
-        /*
-         * Use the drawable ID that TkGlfwCreateWindow already allocated
-         * and registered. Do NOT use the GLFW pointer as the window ID —
-         * that would create a mismatch between winPtr->window and the
-         * DrawableMapping entries.
-         */
         window = (Window)drawable;
         winPtr->window = window;
 
@@ -749,11 +743,19 @@ Tk_MakeWindow(
         }
 
         /*
-         * TkGlfwCreateWindow already called RegisterDrawableForMapping
-         * for this drawable. Do NOT call it again here.
+         * TkGlfwCreateWindow already called RegisterDrawableForMapping.
+         * Now also store the TkWindow* in that DrawableMapping so
+         * TkGlfwBeginDraw can use it directly without Tk_IdToWindow.
          */
+        {
+            DrawableMapping *dm = FindDrawableMapping(drawable);
+            if (dm) {
+                dm->winPtr = winPtr;
+            }
+        }
 
     } else {
+
         /* Child window. */
         static Window nextChildId = 100000;
         window = nextChildId++;
@@ -761,11 +763,28 @@ Tk_MakeWindow(
         winPtr->window = window;
 
         /*
-         * Register using AddDrawableMapping (via the wrapper) so that
-         * the (x,y) offset relative to the toplevel is computed correctly.
+         * Register the child drawable.  AddDrawableMapping computes
+         * the (x,y) offset from changes.x/y which are 0 at this point —
+         * that is intentional because TkGlfwBeginDraw recomputes the
+         * live offset via ComputeWidgetOffset(dm->winPtr, top) at draw
+         * time.  We only need the mapping to exist so FindDrawableMapping
+         * succeeds; the offset stored here is never used.
          */
-        TkGlfwRegisterChildDrawable(winPtr->window, winPtr);
+        AddDrawableMapping(window, winPtr);
+
+        /*
+         * Store TkWindow* directly in the mapping so TkGlfwBeginDraw
+         * can get the live geometry without going through Tk_IdToWindow
+         * (which does not know about synthetic child IDs).
+         */
+        {
+            DrawableMapping *dm = FindDrawableMapping(window);
+            if (dm) {
+                dm->winPtr = winPtr;
+            }
+        }
     }
+
     return window;
 }
 
@@ -4734,25 +4753,37 @@ XChangeWindowAttributes(
  * XSetWindowBackground --
  *
  *	Set the window background pixel.
- *	Background painting is done by NanoVG during drawing; we store
- *	no per-window background in GLFW.  Accept and return Success.
+ *	Store the background color in the window mapping so it can be
+ *	used when clearing the surface during expose.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	None.
+ *	Updates the window mapping's background pixel.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XSetWindowBackground(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(unsigned long))
+    Display *display,
+    Window w,
+    unsigned long pixel)
 {
-    /* Background is drawn via NanoVG; no GLFW action needed. */
+    WindowMapping *m = FindMappingByDrawable(w);
+    
+    if (m) {
+        m->background_pixel = pixel;
+        m->background_set = 1;
+        
+        /* If window is mapped, schedule a redraw to show the new background. */
+        if (m->tkWindow && Tk_IsMapped((Tk_Window)m->tkWindow)) {
+            TkGlfwClearSurface(m);
+            TkWaylandQueueExposeEvent(m->tkWindow, 0, 0, m->width, m->height);
+        }
+    }
+    
     return Success;
 }
 

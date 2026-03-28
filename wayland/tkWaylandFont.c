@@ -763,7 +763,7 @@ TkDrawAngledChars(
 void
 Tk_DrawCharsInContext(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -773,10 +773,10 @@ Tk_DrawCharsInContext(
     int x,
     int y)
 {
-    TkpDrawAngledCharsInContext(NULL, 0, gc, tkfont,
+    TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
         source, numBytes,
         rangeStart, rangeLength,
-        (double) x, (double) y, 0.0);
+        (double)x, (double)y, 0.0);
 }
 
 /*
