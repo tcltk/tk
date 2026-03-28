@@ -551,10 +551,11 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
                 g = (uint8_t)((g * 255) / a);
                 b = (uint8_t)((b * 255) / a);
             }
-            rgba[y * w + x] = ((uint32_t)r << 24) |
-                             ((uint32_t)g << 16) |
-                             ((uint32_t)b <<  8) |
-                             (uint32_t)a;
+            /* Correct RGBA byte order for OpenGL. */
+			rgba[y * w + x] = ((uint32_t)r << 0)  |   /* R in lowest byte */
+			                  ((uint32_t)g << 8)  |
+			                  ((uint32_t)b << 16) |
+			                  ((uint32_t)a << 24);  /* A in highest byte */
         }
     }
 
