@@ -88,8 +88,7 @@ EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
 EXTERN GContext		XGContextFromGC(GC g);
 /* 10 */
 EXTERN XHostAddress *	XListHosts(Display *d, int *i, Bool *b);
-/* 11 */
-EXTERN KeySym		XKeycodeToKeysym(Display *d, unsigned int k, int i);
+/* Slot 11 is reserved */
 /* 12 */
 EXTERN KeySym		XStringToKeysym(const char *c);
 /* 13 */
@@ -492,7 +491,7 @@ typedef struct TkIntXlibStubs {
     Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor const *x1, XColor const *x2); /* 8 */
     GContext (*xGContextFromGC) (GC g); /* 9 */
     XHostAddress * (*xListHosts) (Display *d, int *i, Bool *b); /* 10 */
-    KeySym (*xKeycodeToKeysym) (Display *d, unsigned int k, int i); /* 11 */
+    void (*reserved11)(void);
     KeySym (*xStringToKeysym) (const char *c); /* 12 */
     Window (*xRootWindow) (Display *d, int i); /* 13 */
     XErrorHandler (*xSetErrorHandler) (XErrorHandler x); /* 14 */
@@ -676,8 +675,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xGContextFromGC) /* 9 */
 #define XListHosts \
 	(tkIntXlibStubsPtr->xListHosts) /* 10 */
-#define XKeycodeToKeysym \
-	(tkIntXlibStubsPtr->xKeycodeToKeysym) /* 11 */
+/* Slot 11 is reserved */
 #define XStringToKeysym \
 	(tkIntXlibStubsPtr->xStringToKeysym) /* 12 */
 #define XRootWindow \

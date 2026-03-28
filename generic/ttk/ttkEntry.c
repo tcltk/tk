@@ -293,10 +293,10 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
  *	of (the first character in the string) 'showChar'.
  *	Used to compute the displayString if -show is non-NULL.
  */
-static char *EntryDisplayString(const char *showChar, int numChars)
+static char *EntryDisplayString(const char *showChar, Tcl_Size numChars)
 {
     char *displayString, *p;
-    int size;
+    Tcl_Size size;
     int ch;
     char buf[6];
 
@@ -428,11 +428,9 @@ ExpandPercents(
      VREASON reason,		/* Reason for change */
      Tcl_DString *dsPtr)	/* Result of %-substitutions */
 {
-    int spaceNeeded, cvtFlags;
-    int number, length;
+    Tcl_Size spaceNeeded, length, stringLength;
     const char *string;
-    int stringLength;
-    int ch;
+    int ch, number, cvtFlags;
     char numStorage[2*TCL_INTEGER_SPACE];
 
     while (*templ) {
@@ -1285,10 +1283,10 @@ static void EntryDisplay(void *clientData, Drawable d)
      * clipping area from the GC, so we have to supply that by other means.
      */
 
-    rect.x = textarea.x;
-    rect.y = textarea.y;
-    rect.width = textarea.width;
-    rect.height = textarea.height;
+    rect.x = (short)textarea.x;
+    rect.y = (short)textarea.y;
+    rect.width = (unsigned short)textarea.width;
+    rect.height = (unsigned short)textarea.height;
     clipRegion = XCreateRegion();
     XUnionRectWithRegion(&rect, clipRegion, clipRegion);
 #ifdef HAVE_XFT
@@ -1754,7 +1752,7 @@ static int EntryXViewCommand(
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst, 1);
+	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst, true);
 	return TCL_OK;
     }
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);

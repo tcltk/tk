@@ -1414,7 +1414,7 @@ Tk_MessageBoxObjCmd(
     tmpObj = messageObj ? Tcl_DuplicateObj(messageObj) : Tcl_NewObj();
     Tcl_IncrRefCount(tmpObj);
     if (detailObj) {
-	Tcl_AppendStringsToObj(tmpObj, "\n\n", NULL);
+	Tcl_AppendStringsToObj(tmpObj, "\n\n", (char *)NULL);
 	Tcl_AppendObjToObj(tmpObj, detailObj);
     }
 

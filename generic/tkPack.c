@@ -1306,7 +1306,7 @@ ConfigureContent(
 				"window \"%s\" isn't packed",
 				Tcl_GetString(objv[i+1])));
 			Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED",
-				NULL);
+				(char *)NULL);
 			return TCL_ERROR;
 		    }
 		    containerPtr = prevPtr->containerPtr;

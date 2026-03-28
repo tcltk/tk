@@ -361,7 +361,7 @@ TkGlfwEnsureSurface(WindowMapping *m)
  *
  * TkGlfwClearSurface --
  *
- *	Fill the window surface with the default background colour.
+ *	Fill the window surface with the default background color.
  *	Called once at the start of every expose cycle (from
  *	TkWaylandQueueExposeEvent) so that all widget draws within
  *	the cycle accumulate onto a clean slate.
@@ -646,7 +646,7 @@ TkGlfwRenderTexture(WindowMapping *m)
  *
  * TkGlfwInitialize --
  *
- *	Initialise GLFW and create the shared hidden GL context window.
+ *	Initialize GLFW and create the shared hidden GL context window.
  *	This shared context is used for all OpenGL operations and is
  *	promoted to the first real window when needed.
  *
@@ -804,7 +804,7 @@ TkGlfwCreateWindow(
         }
     }
 
-    /* Reuse existing mapping if TkWindow already has one */
+    /* Reuse existing mapping if TkWindow already has one. */
     if (tkWin != NULL) {
         m = FindMappingByTk(tkWin);
         if (m != NULL) {
@@ -816,7 +816,7 @@ TkGlfwCreateWindow(
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
 
-    /* Create GLFW window */
+    /* Create GLFW window. */
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -834,7 +834,7 @@ TkGlfwCreateWindow(
 
     glfwShowWindow(window);
 
-    /* Allocate mapping */
+    /* Allocate mapping. */
     m = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(m, 0, sizeof(WindowMapping));
 
@@ -848,7 +848,7 @@ TkGlfwCreateWindow(
     m->needsDisplay = 0;
     m->frameOpen = 0;
 
-    /* Add to global list */
+    /* Add to global list. */
     AddMapping(m);
     glfwSetWindowUserPointer(window, m);
 
@@ -857,7 +857,7 @@ TkGlfwCreateWindow(
         TkGlfwSetupCallbacks(window, tkWin);
     }
 
-    /* Query compositor for actual size */
+    /* Query compositor for actual size. */
     {
         int actual_w = 0, actual_h = 0;
         int timeout = 0;
@@ -875,7 +875,7 @@ TkGlfwCreateWindow(
         }
     }
 
-    /* Create libcg surface */
+    /* Create libcg surface. */
     if (TkGlfwEnsureSurface(m) != TCL_OK) {
         fprintf(stderr, "TkGlfwCreateWindow: EnsureSurface failed\n");
         glfwDestroyWindow(window);
@@ -905,7 +905,7 @@ TkGlfwCreateWindow(
         *drawableOut = m->drawable;
     }
 
-    /* Initial clear + schedule display (no immediate GL work) */
+    /* Initial clear + schedule display (no immediate GL work). */
     TkGlfwClearSurface(m);
     m->texture.needs_texture_update = 1;
     TkWaylandScheduleDisplay(m);
@@ -983,9 +983,7 @@ TkGlfwResizeWindow(GLFWwindow *w, int width, int height)
     if (m) {
 	m->width  = width;
 	m->height = height;
-	m->surfaceStale = 1;  /* Mark stale - will be recreated at next expose */
-	/* Do NOT call TkGlfwEnsureSurface here - that would destroy the
-	 * surface during an active draw cycle, wiping widget draws. */
+	m->surfaceStale = 1;  /* Mark stale - will be recreated at next expose. */
     }
 }
 
@@ -1121,14 +1119,14 @@ FindDrawableMapping(Drawable d)
 {
     DrawableMapping *dm = drawableMappingList;
     
-    /* Reject obviously invalid drawables */
+    /* Reject obviously invalid drawables. */
     if (d == None || d == 0) {
         return NULL;
     }
     
-    /* Reject values that look like GC pointers (typical GC pointers are small integers or low addresses) */
+    /* Reject values that look like GC pointers (typical GC pointers are small integers or low addresses). */
     if ((unsigned long)d < 0x10000 && d != 0) {
-        /* This might be a GC - let's check if it's in the drawable range */
+        /* This might be a GC - let's check if it's in the drawable range. */
         static int gc_warning_printed = 0;
         if (!gc_warning_printed && d > 1000 && d < 2000) {
             fprintf(stderr, "FindDrawableMapping: possible GC %lu passed as drawable\n", 
@@ -1138,7 +1136,7 @@ FindDrawableMapping(Drawable d)
         return NULL;
     }
     
-    /* Reject raw pointers that look like stack addresses (0xffff...) */
+    /* Reject raw pointers that look like stack addresses (0xffff...). */
     if ((unsigned long)d > 0xffff000000000000ULL) {
         static int stack_warning_printed = 0;
         if (!stack_warning_printed) {
@@ -1242,9 +1240,11 @@ TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin)
 
     AddDrawableMapping(drawable, tkWin);
     
-    /* Queue an initial Expose event for this newly-created child widget.
+    /* 
+     * Queue an initial Expose event for this newly-created child widget.
      * This ensures it gets drawn even if it was created after the toplevel's
-     * initial expose cycle. */
+     * initial expose cycle. 
+     */
     if (Tk_IsMapped((Tk_Window)tkWin) && !Tk_IsTopLevel((Tk_Window)tkWin)) {
         TkWaylandQueueExposeEvent(tkWin, 0, 0,
                                   Tk_Width((Tk_Window)tkWin),
@@ -1261,12 +1261,12 @@ TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin)
  *
  *	Handles three drawable types transparently:
  *
- *	  PIXMAP  — The drawable is a TkWaylandPixmapImpl*.  We bind the
+ *	  Pixmap  — The drawable is a TkWaylandPixmapImpl*.  We bind the
  *	            context directly to the pixmap's own surface.  Draws
  *	            accumulate there and are composited onto the window
  *	            surface later by XCopyArea.
  *
- *	  WINDOW  — The drawable is an integer ID registered in
+ *	  Window  — The drawable is an integer ID registered in
  *	            drawableMappingList.  We bind to the persistent toplevel
  *	            surface and translate into the widget's sub-region.
  *	            If not yet registered (first draw after TkpMakeWindow)
@@ -1288,17 +1288,6 @@ TkGlfwRegisterChildDrawable(Drawable drawable, TkWindow *tkWin)
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwBeginDraw --
- *
- *	Simplified: Always draw directly to the toplevel surface.
- *	Child widgets draw at their offset coordinates.
- *
- *----------------------------------------------------------------------
- */
-
 MODULE_SCOPE int
 TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
 {
@@ -1313,7 +1302,7 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
         return TCL_ERROR;
     }
 
-    /* Handle pixmaps */
+    /* Handle pixmaps. */
     if (IsPixmap(drawable)) {
         px = (TkWaylandPixmapImpl *)drawable;
         if (!px->surface) return TCL_ERROR;
@@ -1327,7 +1316,7 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
         return TCL_OK;
     }
 
-    /* Handle windows - find the toplevel window */
+    /* Handle windows - find the toplevel window. */
     Tk_Window tkwin = Tk_IdToWindow(TkGetDisplayList()->display, drawable);
     if (!tkwin) {
         /* Try raw pointer */
@@ -1338,7 +1327,7 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
     }
 
     if (tkwin) {
-        /* Find the toplevel window - walk up parent chain */
+        /* Find the toplevel window - walk up parent chain. */
         Tk_Window top = tkwin;
         while (top && !Tk_IsTopLevel(top)) {
             top = Tk_Parent(top);
@@ -1347,11 +1336,11 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
         if (top) {
             m = FindMappingByTk((TkWindow *)top);
             
-            /* Calculate offset from toplevel using Tk_GetRootCoords */
+            /* Calculate offset from toplevel using Tk_GetRootCoords. */
             int root_x, root_y;
             Tk_GetRootCoords(tkwin, &root_x, &root_y);
             
-            /* Get toplevel root coords */
+            /* Get toplevel root coords. */
             int top_root_x, top_root_y;
             Tk_GetRootCoords(top, &top_root_x, &top_root_y);
             
@@ -1367,16 +1356,14 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
         return TCL_ERROR;
     }
 
-    /* Surface must already exist - it's ensured at expose-cycle start.
-     * Do NOT call TkGlfwEnsureSurface here or size changes will wipe draws. */
 
-    /* Create drawing context */
+    /* Create drawing context. */
     dcPtr->cg = cg_create(m->surface);
     if (!dcPtr->cg) {
         return TCL_ERROR;
     }
 
-    /* Set up context for this widget */
+    /* Set up context for this widget. */
     dcPtr->width = width;
     dcPtr->height = height;
     dcPtr->offsetX = x_offset;
@@ -1384,12 +1371,12 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
     dcPtr->drawable = drawable;
     dcPtr->isPixmap = 0;
 
-    /* Translate to widget position */
+    /* Translate to widget position. */
     if (x_offset != 0 || y_offset != 0) {
         cg_translate(dcPtr->cg, (double)x_offset, (double)y_offset);
     }
 
-    /* Apply GC */
+    /* Apply GC. */
     if (gc) {
         TkGlfwApplyGC(dcPtr->cg, gc);
     }
@@ -1428,18 +1415,18 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     WindowMapping *m = NULL;
     Tk_Window tkwin;
 
-    /* Tear down cg context */
+    /* Tear down cg context. */
     if (dcPtr->cg) {
         cg_destroy(dcPtr->cg);
         dcPtr->cg = NULL;
     }
 
-    /* Pixmaps never hit the window texture directly */
+    /* Pixmaps never hit the window texture directly. */
     if (dcPtr->isPixmap) {
         return;
     }
 
-    /* Find the Tk window for this drawable */
+    /* Find the Tk window for this drawable. */
     tkwin = Tk_IdToWindow(TkGetDisplayList()->display, dcPtr->drawable);
     if (!tkwin) {
         TkWindow *winPtr = (TkWindow *)dcPtr->drawable;
@@ -1449,7 +1436,7 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     }
 
     if (tkwin) {
-        /* Walk up to the toplevel */
+        /* Walk up to the toplevel. */
         Tk_Window top = tkwin;
         while (top && !Tk_IsTopLevel(top)) {
             top = Tk_Parent(top);
@@ -1460,7 +1447,7 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     }
 
     if (m && m->glfwWindow) {
-        /* Mark that the texture needs an upload and schedule ONE display */
+        /* Mark that the texture needs an upload and schedule ONE display. */
         m->texture.needs_texture_update = 1;
         TkWaylandScheduleDisplay(m);
     }
@@ -1515,30 +1502,6 @@ TkGlfwGetCGContextForMeasure(void)
 	glfwMakeContextCurrent(glfwContext.mainWindow);
     }
     return glfwContext.cg;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwProcessEvents --
- *
- *	Process any pending GLFW events by calling glfwPollEvents.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Processes GLFW event queue.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwProcessEvents(void)
-{
-    if (glfwContext.initialized && !shutdownInProgress) {
-	glfwPollEvents();
-    }
 }
 
 /*
@@ -1666,7 +1629,7 @@ TkGlfwApplyGC(struct cg_ctx_t *cg, GC gc)
     c = TkGlfwPixelToCG(v.foreground);
     cg_set_source_rgba(cg, c.r, c.g, c.b, c.a);
 
-    /* Use SRC_OVER operator for proper compositing of widget content over background */
+    /* Use SRC_OVER operator for proper compositing of widget content over background. */
     cg_set_operator(cg, CG_OPERATOR_SRC_OVER);
 
     lw = (v.line_width > 0) ? (double)v.line_width : 1.0;
@@ -1690,7 +1653,7 @@ TkGlfwApplyGC(struct cg_ctx_t *cg, GC gc)
  *
  * TkpInit --
  *
- *	Tk platform entry point: initialise the Wayland/GLFW layer.
+ *	Tk platform entry point: initialize the Wayland/GLFW layer.
  *	Called during Tk initialization to set up platform-specific
  *	resources.
  *
@@ -2195,8 +2158,10 @@ ResolveSurface(
         return m->surface;
     }
 
-    /* Raw TkWindow* — validate via display pointer then walk to
-     * toplevel. */
+    /* 
+     * Raw TkWindow* — validate via display pointer then walk to
+     * toplevel. 
+     */
     ourDisp   = TkGetDisplayList()->display;
     candidate = (TkWindow *)d;
     if (candidate == NULL || candidate->display != ourDisp) {

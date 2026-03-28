@@ -455,8 +455,6 @@ MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
-MODULE_SCOPE void TkWaylandBeginEventCycle(WindowMapping *m);
-MODULE_SCOPE void TkWaylandEndEventCycle(WindowMapping *m);
 MODULE_SCOPE void TkWaylandScheduleDisplay(WindowMapping *m);
 MODULE_SCOPE void TkWaylandDisplayProc(ClientData clientData);
 MODULE_SCOPE void TkWaylandProcessEvents(void);
