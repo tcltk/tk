@@ -391,9 +391,6 @@ TkWaylandQueueExposeEvent(
         /* Toplevel: ensure surface exists, then clear once and schedule display. */
         WindowMapping *m = FindMappingByTk(winPtr);
         if (m && m->glfwWindow) {
-            fprintf(stderr, "EXPOSE_TOPLEVEL: drawable=%lu window=%s\n",
-                    (unsigned long)m->drawable,
-                    winPtr->pathName ? winPtr->pathName : "?");
             TkGlfwEnsureSurface(m);         /* Ensure surface is correct size first. */
             TkGlfwClearSurface(m);          /* Clear libcg surface. */
             TkWaylandScheduleDisplay(m);    /* One deferred GPU pass */
@@ -419,20 +416,8 @@ TkWaylandQueueExposeEvent(
 
     /* Non-toplevel: queue Expose for the widget itself. */
     if (!Tk_WindowId((Tk_Window)winPtr)) {
-        /* 
-        * Window doesn't have a drawable ID yet - skip for now.
-         * It will get an Expose when it's properly realized. 
-         */
-        fprintf(stderr, "EXPOSE_SKIP: %s (no window ID yet)\n",
-                winPtr->pathName ? winPtr->pathName : "?");
         return;
     }
-
-    fprintf(stderr, "EXPOSE_CHILD: window=%lu %s size=%dx%d\n",
-            (unsigned long)Tk_WindowId((Tk_Window)winPtr),
-            winPtr->pathName ? winPtr->pathName : "?",
-            width, height);
-
     memset(&event, 0, sizeof(XEvent));
     event.type               = Expose;
     event.xexpose.serial     = LastKnownRequestProcessed(winPtr->display);
@@ -563,11 +548,6 @@ TkWaylandDisplayProc(ClientData clientData)
 
     /* Upload the software surface to GPU if any draw happened. */
     if (m->texture.needs_texture_update) {
-		fprintf(stderr,
-        "DISPLAY: drawable=%lu needs_texture_update=%d\n",
-        (unsigned long)m->drawable,
-        m->texture.needs_texture_update);
-
         TkGlfwUploadSurfaceToTexture(m);
     }
 

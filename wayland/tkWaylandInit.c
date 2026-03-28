@@ -396,11 +396,6 @@ TkGlfwClearSurface(WindowMapping *m)
 
     m->texture.needs_texture_update = 1;
     
-    fprintf(stderr,
-        "CLEAR: drawable=%lu size=%dx%d\n",
-        (unsigned long)m->drawable,
-        m->width, m->height);
-
 }
 
 /*
@@ -489,40 +484,36 @@ TkGlfwCleanupTexture(WindowMapping *m)
  *
  * TkGlfwUploadSurfaceToTexture --
  *
- *	Convert the libcg surface (premultiplied BGRA on LE systems) to
- *	GL_RGBA byte order and upload to the window's GL texture.
+ *	Convert the libcg surface (premultiplied BGRA) to correct RGBA byte
+ *	order for OpenGL and upload it to the window's texture.
+ *
+ *	This was the main reason buttons (and all other widgets) were invisible.
  *
  *	The GL context for this window MUST be current before calling.
- *	Clears needs_texture_update on completion.
+ *	Clears needs_texture_update on success.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Uploads pixel data to GPU texture; clears needs_texture_update flag.
+ *	Uploads pixel data to GPU texture.
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE void
 TkGlfwUploadSurfaceToTexture(WindowMapping *m)
 {
-    int           w, h, stride, y, x;
+    int w, h, stride, y, x;
     unsigned char *srcBase;
-    uint32_t      *rgba;
-    int           non_zero = 0;
+    uint32_t *rgba = NULL;
 
     if (!m || !m->surface || !m->surface->pixels) {
-        fprintf(stderr, "TkGlfwUploadSurfaceToTexture: invalid surface\n");
         return;
     }
 
-    if (!glfwGetCurrentContext()) {
-        if (m->glfwWindow) {
-            glfwMakeContextCurrent(m->glfwWindow);
-        } else {
-            return;
-        }
+    if (!glfwGetCurrentContext() && m->glfwWindow) {
+        glfwMakeContextCurrent(m->glfwWindow);
     }
 
     w = m->surface->width;
@@ -533,48 +524,32 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     rgba = (uint32_t *)ckalloc(w * h * sizeof(uint32_t));
     if (!rgba) return;
 
+    /* BGRA (libcg) → RGBA (OpenGL) */
     for (y = 0; y < h; y++) {
         unsigned char *srcRow = srcBase + y * stride;
         for (x = 0; x < w; x++) {
-            unsigned char b = srcRow[x * 4 + 0];
-            unsigned char g = srcRow[x * 4 + 1];
-            unsigned char r = srcRow[x * 4 + 2];
-            unsigned char a = srcRow[x * 4 + 3];
-
-            /* Check if this pixel is non-zero (has content) */
-            if (r != 0 || g != 0 || b != 0) {
-                non_zero++;
-            }
+            unsigned char b = srcRow[x*4 + 0];
+            unsigned char g = srcRow[x*4 + 1];
+            unsigned char r = srcRow[x*4 + 2];
+            unsigned char a = srcRow[x*4 + 3];
 
             if (a > 0 && a < 255) {
-                r = (uint8_t)((r * 255) / a);
-                g = (uint8_t)((g * 255) / a);
-                b = (uint8_t)((b * 255) / a);
+                r = (r * 255) / a;
+                g = (g * 255) / a;
+                b = (b * 255) / a;
             }
-            /* Correct RGBA byte order for OpenGL. */
-			rgba[y * w + x] = ((uint32_t)r << 0)  |   /* R in lowest byte */
-			                  ((uint32_t)g << 8)  |
-			                  ((uint32_t)b << 16) |
-			                  ((uint32_t)a << 24);  /* A in highest byte */
+
+            rgba[y*w + x] = (r << 0) | (g << 8) | (b << 16) | (a << 24);
         }
     }
 
     glBindTexture(GL_TEXTURE_2D, m->texture.texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     ckfree((char *)rgba);
     m->texture.needs_texture_update = 0;
-    
-    fprintf(stderr,
-        "UPLOAD: drawable=%lu size=%dx%d non_zero=%d\n",
-        (unsigned long)m->drawable,
-        w, h, non_zero);
-
 }
-
-
 /*
  *----------------------------------------------------------------------
  *

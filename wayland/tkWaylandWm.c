@@ -431,11 +431,8 @@ TkWmMapWindow(TkWindow *winPtr)
 
         mapping = FindMappingByTk(winPtr);
         if (mapping != NULL) {
-            /* CRITICAL: Only update if size actually changed. */
+            /* Only update if size actually changed. */
             if (mapping->width != w || mapping->height != h) {
-                fprintf(stderr, "TkWmMapWindow: updating mapping from %dx%d to %dx%d\n",
-                        mapping->width, mapping->height, w, h);
-                
                 mapping->width = w;
                 mapping->height = h;
                 mapping->surfaceStale = 1;
@@ -768,17 +765,7 @@ Tk_MakeWindow(
          * the (x,y) offset relative to the toplevel is computed correctly.
          */
         TkGlfwRegisterChildDrawable(winPtr->window, winPtr);
-        fprintf(stderr, "Tk_MakeWindow child: set winPtr->window=%lu, readback=%lu\n",
-        (unsigned long)window,
-        (unsigned long)((TkWindow *)winPtr)->window);
     }
-    
-    /* At the end of both branches, before return window: */
-fprintf(stderr,
-    "Tk_MakeWindow: winPtr=%p parentPtr=%p window=%lu (0x%lx)\n",
-    (void *)winPtr, (void *)winPtr->parentPtr,
-    (unsigned long)window, (unsigned long)window);
-
     return window;
 }
 
@@ -4096,22 +4083,11 @@ XCreateWindow(
             /* Try to find by drawable ID directly. */
             pm = FindMappingByDrawable(parent);
         }
-        
-        if (pm) {
-            fprintf(stderr, "XCreateWindow: found mapping for parent %lu via GLFW\n", 
-                    (unsigned long)parent);
-        }
     }
     
     if (pm) {
         RegisterDrawableForMapping(result, pm);
-        fprintf(stderr, "XCreateWindow(child): parent=%lu → child=%lu, registered with toplevel %p\n",
-                (unsigned long)parent, (unsigned long)result, (void *)pm);
-    } else {
-        fprintf(stderr, "XCreateWindow(child): parent=%lu → child=%lu, NO MAPPING FOUND!\n",
-                (unsigned long)parent, (unsigned long)result);
-    }
-
+    } 
     return result;
 }
 
