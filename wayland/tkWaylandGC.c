@@ -424,18 +424,12 @@ Tk_GetPixmap(
         return None;
     }
 
-    /* Try direct mapping lookup first. */
     mapping = FindMappingByDrawable(d);
 
-    /*
-     * If that failed, the drawable may be a TkWindow* passed before
-     * winPtr->window was assigned. Validate via display pointer.
-     */
     if (!mapping) {
         TkWindow *candidate = (TkWindow *)d;
         Display  *ourDisp   = TkGetDisplayList()->display;
         if (candidate != NULL && candidate->display == ourDisp) {
-            /* Walk up to toplevel to find the mapping. */
             TkWindow *top = candidate;
             while (top && !Tk_IsTopLevel((Tk_Window)top)) {
                 top = top->parentPtr;
@@ -474,13 +468,17 @@ Tk_GetPixmap(
         return None;
     }
 
-    /* Clear to transparent rather than white — compositing onto
-     * the window surface is additive so opaque white would obscure
-     * whatever is behind the pixmap. */
-    cg_set_source_rgba(pixmap->cg, 0.0, 0.0, 0.0, 0.0);
+    /*
+     * Initialize to opaque background.  TK_NO_DOUBLE_BUFFERING means
+     * widget draw procs never use pixmaps for screen buffering — they
+     * draw directly into the window drawable.  Pixmaps are only used
+     * here for genuine off-screen work (images, stipples, bitmaps).
+     * Opaque initialization ensures every pixel is defined before any
+     * XCopyArea blit so no transparent holes can appear on the surface.
+     */
+    cg_set_source_rgba(pixmap->cg, 0.92, 0.92, 0.92, 1.0);
     cg_set_operator(pixmap->cg, CG_OPERATOR_SRC);
-    cg_rectangle(pixmap->cg, 0, 0, (double)width, (double)height);
-    cg_fill(pixmap->cg);
+    cg_paint(pixmap->cg);
 
     return pixmap->drawable;
 }
