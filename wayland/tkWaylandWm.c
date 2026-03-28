@@ -447,7 +447,6 @@ TkWmMapWindow(TkWindow *winPtr)
                 
                 /* Recreate texture at new size. */
                 if (mapping->texture.texture_id) {
-                    glfwMakeContextCurrent(mapping->glfwWindow);
                     glDeleteTextures(1, &mapping->texture.texture_id);
                     glGenTextures(1, &mapping->texture.texture_id);
                     glBindTexture(GL_TEXTURE_2D, mapping->texture.texture_id);
