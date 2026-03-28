@@ -244,7 +244,7 @@ TkGlfwCreateShaderProgram(void)
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Creates GL buffer objects and initialises them with quad geometry.
+ *	Creates GL buffer objects and initializes them with quad geometry.
  *
  *----------------------------------------------------------------------
  */
@@ -305,7 +305,7 @@ TkGlfwCleanupGlobalBuffers(void)
  *
  *	Ensure a valid libcg surface exists for the window mapping.
  *	Creates or recreates the surface when stale or sized incorrectly.
- *	New surfaces are initialised to the default Tk background colour
+ *	New surfaces are initialized to the default Tk background color
  *	so that widgets which don't paint every pixel never expose garbage.
  *
  * Results:
@@ -322,50 +322,58 @@ MODULE_SCOPE int
 TkGlfwEnsureSurface(WindowMapping *m)
 {
     if (!m) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     if (m->surfaceStale || !m->surface ||
-	m->width  != m->surface->width ||
-	m->height != m->surface->height) {
+        m->width  != m->surface->width ||
+        m->height != m->surface->height) {
 
-	if (m->surface) {
-	    cg_surface_destroy(m->surface);
-	    m->surface = NULL;
-	}
+        if (m->surface) {
+            cg_surface_destroy(m->surface);
+            m->surface = NULL;
+        }
 
-	m->surface = cg_surface_create(m->width, m->height);
-	if (!m->surface) {
-	    fprintf(stderr,
-		    "TkGlfwEnsureSurface: cg_surface_create(%d,%d) failed\n",
-		    m->width, m->height);
-	    return TCL_ERROR;
-	}
+        m->surface = cg_surface_create(m->width, m->height);
+        if (!m->surface) {
+            fprintf(stderr,
+                    "TkGlfwEnsureSurface: cg_surface_create(%d,%d) failed\n",
+                    m->width, m->height);
+            return TCL_ERROR;
+        }
 
-	/* Manually initialize every pixel to opaque background. */
-	if (m->surface->pixels) {
-	    int total_pixels = m->width * m->height;
-	    unsigned char *p = (unsigned char *)m->surface->pixels;
-	    
-	    /* Default background color (light gray) */
-	    unsigned char R = 235;  /* 0.92 * 255 */
-	    unsigned char G = 235;
-	    unsigned char B = 235;
-	    
-	    for (int i = 0; i < total_pixels; i++) {
-		p[i*4 + 0] = B;  /* Blue channel */
-		p[i*4 + 1] = G;  /* Green channel */
-		p[i*4 + 2] = R;  /* Red channel */
-		p[i*4 + 3] = 255; /* Alpha - FORCE OPAQUE */
-	    }
-	}
+        /* Initialize every pixel to opaque background. */
+        if (m->surface->pixels) {
+            int total_pixels = m->width * m->height;
+            unsigned char *p = (unsigned char *)m->surface->pixels;
+            
+            /* Use the window's background color if set, otherwise light gray. */
+            unsigned char R, G, B;
+            if (m->background_set) {
+                R = (m->background_pixel >> 16) & 0xFF;
+                G = (m->background_pixel >> 8) & 0xFF;
+                B = m->background_pixel & 0xFF;
+            } else {
+                /* Default Tk background (light gray). */
+                R = 235; G = 235; B = 235;
+            }
+            
+            /* Fill with opaque pixels. */
+            for (int i = 0; i < total_pixels; i++) {
+                p[i*4 + 0] = B;  /* Blue */
+                p[i*4 + 1] = G;  /* Green */
+                p[i*4 + 2] = R;  /* Red */
+                p[i*4 + 3] = 255; /* Alpha - opaque */
+            }
+        }
 
-	m->surfaceStale = 0;
-	m->texture.needs_texture_update = 1;
+        m->surfaceStale = 0;
+        m->texture.needs_texture_update = 1;
     }
 
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -383,7 +391,7 @@ TkGlfwEnsureSurface(WindowMapping *m)
  *	None.
  *
  * Side effects:
- *	Clears the libcg surface to the default background colour and
+ *	Clears the libcg surface to the default background color and
  *	marks the texture as needing update.
  *
  *----------------------------------------------------------------------
@@ -428,14 +436,14 @@ TkGlfwClearSurface(WindowMapping *m)
  * TkGlfwInitializeTexture --
  *
  *	Create the OpenGL texture object for a window mapping.
- *	The shared shader and VBO/IBO are initialised here too if not
+ *	The shared shader and VBO/IBO are initialized here too if not
  *	yet done.
  *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Creates GL texture object, initialises shared shader program,
+ *	Creates GL texture object, initializes shared shader program,
  *	and sets up global buffers if not already done.
  *
  *----------------------------------------------------------------------
@@ -789,7 +797,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *	If drawableOut is non-NULL it receives the Drawable ID.
  *
  * Side effects:
- *	Creates a native window, initialises drawing surfaces, and sets up
+ *	Creates a native window, initializes drawing surfaces, and sets up
  *	the window mapping for later lookups.
  *
  *----------------------------------------------------------------------
@@ -832,11 +840,11 @@ TkGlfwCreateWindow(
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
 
-    /* Create GLFW window. */
+    /* Create GLFW window with opaque framebuffer */
     glfwWindowHint(GLFW_RED_BITS,   8);
-	glfwWindowHint(GLFW_GREEN_BITS, 8);
-	glfwWindowHint(GLFW_BLUE_BITS,  8);
-	glfwWindowHint(GLFW_ALPHA_BITS, 0);
+    glfwWindowHint(GLFW_GREEN_BITS, 8);
+    glfwWindowHint(GLFW_BLUE_BITS,  8);
+    glfwWindowHint(GLFW_ALPHA_BITS, 0);        /* No alpha channel - force opaque */
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -844,7 +852,7 @@ TkGlfwCreateWindow(
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);  /* Explicitly disable transparency. */
 
     window = glfwCreateWindow(width, height, title ? title : "", NULL, NULL);
     if (!window) {
@@ -867,12 +875,16 @@ TkGlfwCreateWindow(
     m->surfaceStale = 0;
     m->needsDisplay = 0;
     m->frameOpen = 0;
+    
+    /* Default background - opaque light gray. */
+    m->background_pixel = 0xEBEBEB;  /* RGB: 235,235,235 */
+    m->background_set = 1;
 
     /* Add to global list. */
     AddMapping(m);
     glfwSetWindowUserPointer(window, m);
 
-    /* Install callbacks */
+    /* Install callbacks. */
     if (tkWin != NULL) {
         TkGlfwSetupCallbacks(window, tkWin);
     }
@@ -895,7 +907,7 @@ TkGlfwCreateWindow(
         }
     }
 
-    /* Create libcg surface. */
+    /* Create libcg surface with opaque initial fill. */
     if (TkGlfwEnsureSurface(m) != TCL_OK) {
         fprintf(stderr, "TkGlfwCreateWindow: EnsureSurface failed\n");
         glfwDestroyWindow(window);
@@ -903,7 +915,7 @@ TkGlfwCreateWindow(
         return NULL;
     }
 
-    /* Create GL texture */
+    /* Create GL texture. */
     if (TkGlfwInitializeTexture(m) != TCL_OK) {
         fprintf(stderr, "TkGlfwCreateWindow: InitializeTexture failed\n");
         cg_surface_destroy(m->surface);
@@ -912,10 +924,10 @@ TkGlfwCreateWindow(
         return NULL;
     }
 
-    /* Register drawable → mapping */
+    /* Register drawable → mapping. */
     RegisterDrawableForMapping(m->drawable, m);
 
-    /* Update Tk window geometry */
+    /* Update Tk window geometry. */
     if (tkWin != NULL) {
         tkWin->changes.width  = m->width;
         tkWin->changes.height = m->height;
@@ -925,7 +937,7 @@ TkGlfwCreateWindow(
         *drawableOut = m->drawable;
     }
 
-    /* Initial clear + schedule display (no immediate GL work). */
+    /* Initial clear with opaque background + schedule display. */
     TkGlfwClearSurface(m);
     m->texture.needs_texture_update = 1;
     TkWaylandScheduleDisplay(m);

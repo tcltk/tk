@@ -303,6 +303,7 @@ TkpDisplayScrollbar(
 	elementBorderWidth = borderWidth;
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * In order to avoid screen flashes, this procedure redraws the scrollbar
      * in a pixmap, then copies the pixmap to the screen in a single
@@ -312,6 +313,9 @@ TkpDisplayScrollbar(
 
     pixmap = Tk_GetPixmap(scrollPtr->display, Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
+    pixmap = Tk_WindowId(tkwin);
+#endif
 
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
     if (highlightWidth > 0) {
@@ -429,6 +433,7 @@ TkpDisplayScrollbar(
 		elementBorderWidth, relief);
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Copy the information from the off-screen pixmap onto the screen, then
      * delete the pixmap.
@@ -438,6 +443,7 @@ TkpDisplayScrollbar(
 	    ((WaylandScrollbar*)scrollPtr)->copyGC, 0, 0,
 	    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin), 0, 0);
     Tk_FreePixmap(scrollPtr->display, pixmap);
+#endif
 
   done:
     scrollPtr->flags &= ~REDRAW_PENDING;
