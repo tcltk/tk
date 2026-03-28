@@ -1006,7 +1006,37 @@ TkScrollWindow(
 {
     return 1;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_ClipDrawableToRect --
+ *
+ *      Clip all drawing into the drawable d to the given rectangle. If width
+ *      or height are negative, reset to no clipping. This is called by the
+ *      Text widget to display each DLine, and by the Canvas widget when it
+ *      is updating a sub rectangle in the canvas.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Subsequent drawing into d is offset and clipped as specified.
+ *
+ *----------------------------------------------------------------------
+ */
 
+void
+Tk_ClipDrawableToRect(
+    TCL_UNUSED(Display *),
+    Drawable d,
+    int x, int y,
+    int width, int height)
+{
+    //// printf("Wayland needs to implement Tk_ClipDrawableToRect\n");
+    //// printf("Called with d = %d, x = %d, y = %d, width = %d, height = %d\n",
+    ////	   d, x, y, width, height);
+}
 /*
  * Local Variables:
  * mode: c

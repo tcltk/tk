@@ -2532,7 +2532,7 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	/* Clean up the temporary resources */
 	Tk_FreePixmap(Tk_Display(tkwin), p);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
-#else
+#elif defined(MAC_OSX_TK)
 	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
 	Ttk_Theme aquaTheme = Ttk_GetTheme(tv->core.interp, "aqua");
 	if (currentTheme == aquaTheme && [NSApp macOSVersion] > 100800) {
@@ -2543,6 +2543,8 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, x, y, width, height);
 	DrawTreeArea(tv, d);
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), d, 0, 0, -1, -1);
+#elif defined(TK_USE_WAYLAND)
+	printf("Wayland needs to implement TreeViewDisplay\n");
 #endif
     }
 }
