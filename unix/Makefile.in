@@ -630,8 +630,10 @@ WAYLAND_SRCS = \
     $(WAYLAND_UNIX_SRCS)
 
 WAYLAND_PRIVATE_HDRS = \
-    $(WAYLAND_DIR)/tkWaylandInt.h           $(WAYLAND_DIR)/tkWaylandDefaults.h \
+    $(WAYLAND_DIR)/tkWaylandInt.h \
+    $(WAYLAND_DIR)/tkWaylandDefaults.h \
     $(WAYLAND_DIR)/tkGlfwInt.h \
+    $(WAYLAND_DIR)/tkWaylandPort.h \
     $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)
 
 WAYLAND_UNIX_SRCS = \
@@ -1456,7 +1458,7 @@ tkWayland.o: $(WAYLAND_DIR)/tkWayland.c
 
 tkWayland3D.o: $(WAYLAND_DIR)/tkWayland3D.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland3D.c
-	
+
 tkWaylandAccessibility.o: $(WAYLAND_DIR)/tkWaylandAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandAccessibility.c
 
