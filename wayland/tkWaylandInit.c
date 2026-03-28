@@ -402,29 +402,25 @@ TkGlfwClearSurface(WindowMapping *m)
 {
     if (!m || !m->surface || !m->surface->pixels) return;
     
-    /* Direct pixel manipulation - guaranteed to set alpha to 255 */
     int total_pixels = m->width * m->height;
     unsigned char *p = (unsigned char *)m->surface->pixels;
     
-    double r, g, b;
+    unsigned char R, G, B;
     if (m->background_set) {
-        r = ((m->background_pixel >> 16) & 0xFF) / 255.0;
-        g = ((m->background_pixel >> 8) & 0xFF) / 255.0;
-        b = (m->background_pixel & 0xFF) / 255.0;
+        R = (m->background_pixel >> 16) & 0xFF;
+        G = (m->background_pixel >> 8) & 0xFF;
+        B = m->background_pixel & 0xFF;
     } else {
-        /* Default Tk background (light gray) */
-        r = 0.92; g = 0.92; b = 0.92;
+        /* Default Tk background (light gray). */
+        R = 235; G = 235; B = 235;
     }
     
-    unsigned char R = (unsigned char)(r * 255);
-    unsigned char G = (unsigned char)(g * 255);
-    unsigned char B = (unsigned char)(b * 255);
-    
+    /* Fill with opaque pixels. */
     for (int i = 0; i < total_pixels; i++) {
-        p[i*4 + 0] = B;  /* Blue channel */
-        p[i*4 + 1] = G;  /* Green channel */
-        p[i*4 + 2] = R;  /* Red channel */
-        p[i*4 + 3] = 255; /* Alpha - FORCE OPAQUE */
+        p[i*4 + 0] = B;  /* Blue */
+        p[i*4 + 1] = G;  /* Green */
+        p[i*4 + 2] = R;  /* Red */
+        p[i*4 + 3] = 255; /* Alpha - fully opaque */
     }
     
     m->texture.needs_texture_update = 1;
@@ -555,7 +551,7 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     rgba = (uint32_t *)ckalloc(w * h * sizeof(uint32_t));
     if (!rgba) return;
 
-    /* BGRA (libcg) → RGBA (OpenGL) */
+    /* Convert BGRA (libcg) → RGBA (OpenGL) with alpha forced to 255.  */
     for (y = 0; y < h; y++) {
         unsigned char *srcRow = srcBase + y * stride;
         for (x = 0; x < w; x++) {
@@ -563,23 +559,11 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
             unsigned char g = srcRow[x*4 + 1];
             unsigned char r = srcRow[x*4 + 2];
             unsigned char a = srcRow[x*4 + 3];
-
-            /* CRITICAL FIX: If alpha is less than fully opaque, 
-               composite with background color before upload */
-            if (a < 255) {
-                /* Blend with background color (0.92,0.92,0.92) */
-                float bg_r = 0.92f * 255.0f;
-                float bg_g = 0.92f * 255.0f;
-                float bg_b = 0.92f * 255.0f;
-                float alpha_f = a / 255.0f;
-                
-                r = (unsigned char)(r * alpha_f + bg_r * (1.0f - alpha_f));
-                g = (unsigned char)(g * alpha_f + bg_g * (1.0f - alpha_f));
-                b = (unsigned char)(b * alpha_f + bg_b * (1.0f - alpha_f));
-                a = 255;  /* Force fully opaque after compositing */
-            }
-
-            rgba[y*w + x] = (r << 0) | (g << 8) | (b << 16) | (a << 24);
+            
+            /* Force alpha to 255 - ignore any transparency.
+            /* This ensures no transparency artifacts reach 
+             * the screen.*/
+            rgba[y*w + x] = (r << 0) | (g << 8) | (b << 16) | (255 << 24);
         }
     }
 
@@ -590,7 +574,6 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     ckfree((char *)rgba);
     m->texture.needs_texture_update = 0;
 }
-
 /*
  *----------------------------------------------------------------------
  *
