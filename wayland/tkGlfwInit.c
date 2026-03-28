@@ -146,8 +146,16 @@ TkGlfwInitialize(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
 
+    //// XXXX if the width and height below are set to 640 x 480,
+    //// you will see a white 640x480 rectangle behind the root window,
+    //// which moves with the window and contains a 200x200 window
+    //// frame at its top left and a black 200x200 square at its
+    //// bottom left.  Something is going badly wrong with the
+    //// code which sets the size of the root window to 200x200.
+    //// Using 200x200 here hides the bug, but does not deal with
+    //// it.
     glfwContext.mainWindow =
-        glfwCreateWindow(640, 480, "Tk Shared Context", NULL, NULL);
+        glfwCreateWindow(200, 200, "Tk Shared Context", NULL, NULL);
     if (!glfwContext.mainWindow) {
         fprintf(stderr, "TkGlfwInitialize: failed to create shared window\n");
         glfwTerminate();

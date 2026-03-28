@@ -708,7 +708,7 @@ Tk_MakeWindow(
          * Create the GLFW window and get a drawable ID.
          * drawable is ignored; we use winPtr->window instead.
          */
-        glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
+	glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
         if (!glfwWindow) {
             return None;
