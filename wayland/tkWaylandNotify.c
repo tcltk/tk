@@ -387,23 +387,56 @@ TkWaylandQueueExposeEvent(
         return;
     }
 
-    /* CRITICAL: Skip toplevel windows - they don't draw themselves */
     if (Tk_IsTopLevel((Tk_Window)winPtr)) {
-        /* Only schedule display for toplevel, but don't queue expose */
+        /* TOPLEVEL: ensure surface exists, then clear once and schedule display */
         WindowMapping *m = FindMappingByTk(winPtr);
         if (m && m->glfwWindow) {
-            TkWaylandScheduleDisplay(m);
+            fprintf(stderr, "EXPOSE_TOPLEVEL: drawable=%lu window=%s\n",
+                    (unsigned long)m->drawable,
+                    winPtr->pathName ? winPtr->pathName : "?");
+            TkGlfwEnsureSurface(m);         /* <-- ensure surface is correct size FIRST */
+            TkGlfwClearSurface(m);          /* <-- clear libcg surface */
+            TkWaylandScheduleDisplay(m);    /* <-- one deferred GPU pass */
+        }
+
+        /* Recurse into mapped non-toplevel children to queue Expose */
+        for (childPtr = winPtr->childList;
+             childPtr != NULL;
+             childPtr = childPtr->nextPtr)
+        {
+            if (!Tk_IsMapped((Tk_Window)childPtr) ||
+                Tk_IsTopLevel((Tk_Window)childPtr)) {
+                continue;
+            }
+
+            TkWaylandQueueExposeEvent(childPtr,
+                                      0, 0,
+                                      Tk_Width((Tk_Window)childPtr),
+                                      Tk_Height((Tk_Window)childPtr));
         }
         return;
     }
 
-    /* Queue the Expose event for non-toplevel widgets */
+    /* Non-toplevel: queue Expose for the widget itself. */
+    if (!Tk_WindowId((Tk_Window)winPtr)) {
+        /* Window doesn't have a drawable ID yet - skip for now.
+         * It will get an Expose when it's properly realized. */
+        fprintf(stderr, "EXPOSE_SKIP: %s (no window ID yet)\n",
+                winPtr->pathName ? winPtr->pathName : "?");
+        return;
+    }
+
+    fprintf(stderr, "EXPOSE_CHILD: window=%lu %s size=%dx%d\n",
+            (unsigned long)Tk_WindowId((Tk_Window)winPtr),
+            winPtr->pathName ? winPtr->pathName : "?",
+            width, height);
+
     memset(&event, 0, sizeof(XEvent));
     event.type               = Expose;
     event.xexpose.serial     = LastKnownRequestProcessed(winPtr->display);
     event.xexpose.send_event = False;
     event.xexpose.display    = winPtr->display;
-    event.xexpose.window     = Tk_WindowId(winPtr);
+    event.xexpose.window     = Tk_WindowId((Tk_Window)winPtr);
     event.xexpose.x          = x;
     event.xexpose.y          = y;
     event.xexpose.width      = width;
@@ -411,32 +444,8 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count      = 0;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-    /* Schedule display for the toplevel */
-    Tk_Window top = GetToplevelOfWidget((Tk_Window)winPtr);
-    if (top) {
-        WindowMapping *m = FindMappingByTk((TkWindow *)top);
-        if (m && m->glfwWindow) {
-            TkWaylandScheduleDisplay(m);
-        }
-    }
-
-    /* Recurse into mapped non-toplevel children */
-    for (childPtr = winPtr->childList;
-         childPtr != NULL;
-         childPtr = childPtr->nextPtr)
-    {
-        if (!Tk_IsMapped((Tk_Window)childPtr) ||
-            Tk_IsTopLevel((Tk_Window)childPtr)) {
-            continue;
-        }
-
-        TkWaylandQueueExposeEvent(childPtr,
-                                  0, 0,
-                                  Tk_Width((Tk_Window)childPtr),
-                                  Tk_Height((Tk_Window)childPtr));
-    }
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -591,6 +600,11 @@ TkWaylandDisplayProc(ClientData clientData)
 
     /* Upload the software surface to GPU if any draw happened */
     if (m->texture.needs_texture_update) {
+		fprintf(stderr,
+        "DISPLAY: drawable=%lu needs_texture_update=%d\n",
+        (unsigned long)m->drawable,
+        m->texture.needs_texture_update);
+
         TkGlfwUploadSurfaceToTexture(m);
     }
 
