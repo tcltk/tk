@@ -704,7 +704,7 @@ NextBitmapWord(
 	}
 	for ( ; !isspace(UCHAR(c)) && (c != ',') && (c != EOF);
 		c = GetByte(parseInfoPtr->chan)) {
-	    *dst = c;
+	    *dst = (char)c;
 	    dst++;
 	    parseInfoPtr->wordLength++;
 	    if (parseInfoPtr->wordLength > MAX_WORD_LENGTH) {

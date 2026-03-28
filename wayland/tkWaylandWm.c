@@ -400,42 +400,6 @@ DestroyGlfwWindow(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWmMapWindow --
- *
- *	Maps the window (makes it visible). Fixed to ensure window
- *	is properly shown during initial startup.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The window becomes visible, and a MapNotify event is sent to
- *	Tk's event system.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWmMapWindow --
- *
- *	Maps the window (makes it visible). Fixed to ensure window
- *	is properly shown during initial startup.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The window becomes visible, and a MapNotify event is sent to
- *	Tk's event system.
- *
- *----------------------------------------------------------------------
- */
-
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
@@ -467,7 +431,7 @@ TkWmMapWindow(TkWindow *winPtr)
 
         mapping = FindMappingByTk(winPtr);
         if (mapping != NULL) {
-            /* CRITICAL: Only update if size actually changed */
+            /* CRITICAL: Only update if size actually changed. */
             if (mapping->width != w || mapping->height != h) {
                 fprintf(stderr, "TkWmMapWindow: updating mapping from %dx%d to %dx%d\n",
                         mapping->width, mapping->height, w, h);
@@ -476,12 +440,12 @@ TkWmMapWindow(TkWindow *winPtr)
                 mapping->height = h;
                 mapping->surfaceStale = 1;
                 
-                /* Recreate surface at new size */
+                /* Recreate surface at new size. */
                 if (TkGlfwEnsureSurface(mapping) != TCL_OK) {
                     fprintf(stderr, "TkWmMapWindow: EnsureSurface failed\n");
                 }
                 
-                /* Recreate texture at new size */
+                /* Recreate texture at new size. */
                 if (mapping->texture.texture_id) {
                     glfwMakeContextCurrent(mapping->glfwWindow);
                     glDeleteTextures(1, &mapping->texture.texture_id);
@@ -1664,7 +1628,7 @@ WmAttributesCmd(
         return TCL_OK;
     }
 
-    /* Must be attribute/value pairs */
+    /* Must be attribute/value pairs. */
     if (objc % 2 != 0) {
         Tcl_WrongNumArgs(interp, 0, objv, "?-attribute value ...?");
         return TCL_ERROR;
@@ -1672,7 +1636,7 @@ WmAttributesCmd(
 
     GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
 
-    /* Set attributes */
+    /* Set attributes. */
     for (i = 0; i < objc; i += 2) {
         int attribute;
         if (Tcl_GetIndexFromObjStruct(interp, objv[i], WmAttributeNames,
@@ -1738,7 +1702,7 @@ WmAttributesCmd(
             }
 
             case WMATT_TYPE:
-                /* Placeholder / ignored */
+                /* Placeholder / ignored. */
                 break;
 
             default:
@@ -4110,7 +4074,7 @@ XCreateWindow(
     TCL_UNUSED(XSetWindowAttributes *) /* attributes */
 ){
     /*
-     * INTERNAL CHILD WINDOW ONLY.
+     * Internal child window only.
      * Tk_MakeWindow is the ONLY place that creates real toplevels.
      * XCreateWindow must NEVER create a GLFW window.
      */
@@ -4121,16 +4085,16 @@ XCreateWindow(
     /* IMPORTANT: Don't use huge IDs that could be confused with pointers */
     if (result < 100000) result = nextId++;
 
-    /* Find the parent's mapping */
+    /* Find the parent's mapping. */
     WindowMapping *pm = FindMappingByDrawable(parent);
     
     if (!pm) {
-        /* Try to find by GLFW window if parent is a toplevel window */
+        /* Try to find by GLFW window if parent is a toplevel window. */
         GLFWwindow *gw = (GLFWwindow *)parent;
         pm = FindMappingByGLFW(gw);
         
         if (!pm && parent < 100000) {
-            /* Try to find by drawable ID directly */
+            /* Try to find by drawable ID directly. */
             pm = FindMappingByDrawable(parent);
         }
         

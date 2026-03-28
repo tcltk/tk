@@ -68,8 +68,7 @@ CGRowToXImageRow(
     }
 }
 
-/* Convert an XImage row (0x00RRGGBB) to RGBA bytes for
- * cg_surface_create_for_data. */
+/* Convert an XImage row (0x00RRGGBB) to RGBA bytes for cg_surface_create_for_data. */
 static void
 XImageRowToRGBA(
     const uint32_t *src,

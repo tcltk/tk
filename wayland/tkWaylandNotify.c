@@ -388,18 +388,18 @@ TkWaylandQueueExposeEvent(
     }
 
     if (Tk_IsTopLevel((Tk_Window)winPtr)) {
-        /* TOPLEVEL: ensure surface exists, then clear once and schedule display */
+        /* Toplevel: ensure surface exists, then clear once and schedule display. */
         WindowMapping *m = FindMappingByTk(winPtr);
         if (m && m->glfwWindow) {
             fprintf(stderr, "EXPOSE_TOPLEVEL: drawable=%lu window=%s\n",
                     (unsigned long)m->drawable,
                     winPtr->pathName ? winPtr->pathName : "?");
-            TkGlfwEnsureSurface(m);         /* <-- ensure surface is correct size FIRST */
-            TkGlfwClearSurface(m);          /* <-- clear libcg surface */
-            TkWaylandScheduleDisplay(m);    /* <-- one deferred GPU pass */
+            TkGlfwEnsureSurface(m);         /* Ensure surface is correct size first. */
+            TkGlfwClearSurface(m);          /* Clear libcg surface. */
+            TkWaylandScheduleDisplay(m);    /* One deferred GPU pass */
         }
 
-        /* Recurse into mapped non-toplevel children to queue Expose */
+        /* Recurse into mapped non-toplevel children to queue Expose. */
         for (childPtr = winPtr->childList;
              childPtr != NULL;
              childPtr = childPtr->nextPtr)
@@ -419,8 +419,10 @@ TkWaylandQueueExposeEvent(
 
     /* Non-toplevel: queue Expose for the widget itself. */
     if (!Tk_WindowId((Tk_Window)winPtr)) {
-        /* Window doesn't have a drawable ID yet - skip for now.
-         * It will get an Expose when it's properly realized. */
+        /* 
+        * Window doesn't have a drawable ID yet - skip for now.
+         * It will get an Expose when it's properly realized. 
+         */
         fprintf(stderr, "EXPOSE_SKIP: %s (no window ID yet)\n",
                 winPtr->pathName ? winPtr->pathName : "?");
         return;
@@ -534,45 +536,6 @@ TkWaylandScheduleDisplay(WindowMapping *m)
  *
  *----------------------------------------------------------------------
  */
- 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandDisplayProc --
- *
- *	The SINGLE site where GPU work is performed for a window:
- *	  1. Upload the software-rendered libcg surface to the GL texture.
- *	  2. Set the viewport and clear the colour buffer.
- *	  3. Render the full-screen textured quad.
- *	  4. Swap buffers.
- *
- *	This fires via Tcl_DoWhenIdle, which means it runs after all
- *	widget draw procs for the current event have completed.  The
- *	surface therefore contains the fully-composited frame when we
- *	arrive here, eliminating partial-frame flicker.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Uploads texture data to GPU, renders the frame, and swaps buffers.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandDisplayProc --
- *
- *	The SINGLE site where GPU work is performed for a window:
- *	  1. Upload the software-rendered libcg surface to the GL texture.
- *	  2. Set the viewport and clear the colour buffer.
- *	  3. Render the full-screen textured quad.
- *	  4. Swap buffers.
- *
- *----------------------------------------------------------------------
- */
 
 void
 TkWaylandDisplayProc(ClientData clientData)
@@ -586,7 +549,7 @@ TkWaylandDisplayProc(ClientData clientData)
 
     m->needsDisplay = 0;
 
-    /* Make the context current for THIS window */
+    /* Make the context current for THIS window. */
     glfwMakeContextCurrent(m->glfwWindow);
     
     if (!glfwGetCurrentContext()) {
@@ -598,7 +561,7 @@ TkWaylandDisplayProc(ClientData clientData)
         return;
     }
 
-    /* Upload the software surface to GPU if any draw happened */
+    /* Upload the software surface to GPU if any draw happened. */
     if (m->texture.needs_texture_update) {
 		fprintf(stderr,
         "DISPLAY: drawable=%lu needs_texture_update=%d\n",
@@ -612,71 +575,22 @@ TkWaylandDisplayProc(ClientData clientData)
         return;
     }
 
-    /* Set the viewport to the full window */
+    /* Set the viewport to the full window. */
     glViewport(0, 0, m->width, m->height);
     
-    /* Clear to default background color */
+    /* Clear to default background color. */
     glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    /* Render the full-screen texture quad */
+    /* Render the full-screen texture quad. */
     TkGlfwRenderTexture(m);
 
-    /* Present to the compositor */
+    /* Present to the compositor. */
     glfwSwapBuffers(m->glfwWindow);
 
     m->frameOpen = 0;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandBeginEventCycle --
- *
- *	Retained for API compatibility with any callers that may have
- *	been wired up. All real GL work has been consolidated into
- *	TkWaylandDisplayProc.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None. This function is a no-op stub.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandBeginEventCycle(WindowMapping *m)
-{
-    (void)m;
-    /* No-op: GL work is done in TkWaylandDisplayProc. */
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandEndEventCycle --
- *
- *	Resets the frameOpen flag for the window mapping. This function
- *	is retained for API compatibility.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Sets m->frameOpen to 0.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandEndEventCycle(WindowMapping *m)
-{
-    if (m) {
-        m->frameOpen = 0;
-    }
-}
 
 /*
  * Local Variables:

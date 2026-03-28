@@ -100,8 +100,11 @@ test main-2.3 {Tk_MainEx: -encoding option} -constraints stdio -setup {
 	removeFile script
 } -returnCodes ok -result {-enc utf-8 script}
 
-test main-3.1 {Tk_ParseArgv: -help option} -constraints unix -body {
-    # Run only on unix as Win32 pops up native dialog
+
+test main-3.1 {Tk_ParseArgv: -help option} -constraints {unix !withXft} -body {
+    # Constraints: Running on win32 pops up a dialog, so disable on Windows.
+    # On Unix, Xft with bidi support added can cause hangs, reasons unclear. Skip
+    # test if compiled with Xft. 
     exec [interpreter] -help
 } -returnCodes error -match glob -result {*application-specific initialization failed: Command-specific options:*}
 

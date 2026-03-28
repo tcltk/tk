@@ -442,7 +442,7 @@ FindInterpreterObject(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "no application named \"%s\"", name));
 		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		}
 
