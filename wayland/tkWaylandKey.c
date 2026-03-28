@@ -729,6 +729,7 @@ TkWaylandProcessKey(Tk_Window tkwin, unsigned int keycode, int pressed,
     TkIMEState *ime;
     TkWindow *winPtr;
     TkWindow *focusWin;
+    ////printf("TkWaylandProcessKey\n");
 
     if (!tkwin) {
         return;
@@ -1344,6 +1345,7 @@ KeyboardHandleKey(TCL_UNUSED(void *),
         uint32_t key, 
         uint32_t state)
 {
+    ////printf("KeyboardHandleKey\n");
     if (focusedTkWin) {
         /* key is a raw evdev code; TkWaylandProcessKey adds 8. */
         TkWaylandProcessKey(focusedTkWin, key,

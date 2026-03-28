@@ -73,6 +73,7 @@ TkGlfwSetupCallbacks(
     glfwSetMouseButtonCallback     (glfwWindow, TkGlfwMouseButtonCallback);
     glfwSetScrollCallback          (glfwWindow, TkGlfwScrollCallback);
     glfwSetWindowRefreshCallback   (glfwWindow, TkGlfwWindowRefreshCallback);
+    glfwSetKeyCallback             (glfwWindow, TkGlfwKeyCallback);
 }
 
 /*
@@ -122,8 +123,14 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 MODULE_SCOPE void
 TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
-      WindowMapping *m = FindMappingByGLFW(window);
-    if (!m) return;
+    int fw, fh;
+    glfwGetFramebufferSize(window, &fw, &fh);
+    glViewport(0, 0, fw, fh);
+    
+    WindowMapping *m = FindMappingByGLFW(window);
+    if (!m) {
+	return;
+    }
     
     /* Close any open frame. */
     if (m->frameOpen) {
@@ -138,6 +145,7 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
     if (m->tkWindow) {
         m->tkWindow->changes.width = width;
         m->tkWindow->changes.height = height;
+	//// We need a configure event too!
         TkWaylandQueueExposeEvent(m->tkWindow, 0, 0, width, height);
     }
 }
@@ -161,9 +169,11 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 MODULE_SCOPE void
 TkGlfwFramebufferSizeCallback(
     GLFWwindow *window,
-    TCL_UNUSED(int ), /* width */
-    TCL_UNUSED(int )) /* height */
+    int width,
+    int height)
 {
+    int ww, wh;
+    glfwGetWindowSize(window, &ww, &wh);
 	
     TkWindow      *winPtr = TkGlfwGetTkWindow(window);
     WindowMapping *mapping;
@@ -179,6 +189,7 @@ TkGlfwFramebufferSizeCallback(
 
 
     /* Trigger a redraw from Tk. */
+    //// We need a configure event too!
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
 
@@ -697,17 +708,20 @@ TkGlfwKeyCallback(GLFWwindow *window,
     TkWindow *focusWin;
     XEvent event;
     double xpos, ypos;
+    int x, y;
 
     if (!winPtr || action == GLFW_REPEAT) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
     glfwGetCursorPos(window, &xpos, &ypos);
+    x = floor(xpos);
+    y = floor(ypos);
 
     /* Route to focused child widget if any. */
-	focusWin = winPtr;
-	if (winPtr->dispPtr->focusPtr != NULL) {
-		focusWin = winPtr->dispPtr->focusPtr;
-	}
+    focusWin = winPtr;
+    if (winPtr->dispPtr->focusPtr != NULL) {
+	focusWin = winPtr->dispPtr->focusPtr;
+    }
 
     memset(&event, 0, sizeof(XEvent));
     event.type = (action == GLFW_PRESS) ? KeyPress : KeyRelease;
@@ -717,10 +731,10 @@ TkGlfwKeyCallback(GLFWwindow *window,
     event.xkey.window      = Tk_WindowId((Tk_Window)focusWin);
     event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
     event.xkey.time        = CurrentTime;
-    event.xkey.x           = (int)xpos;
-    event.xkey.y           = (int)ypos;
-    event.xkey.x_root      = winPtr->changes.x + (int)xpos;
-    event.xkey.y_root      = winPtr->changes.y + (int)ypos;
+    event.xkey.x           = x;
+    event.xkey.y           = y;
+    event.xkey.x_root      = winPtr->changes.x + x;
+    event.xkey.y_root      = winPtr->changes.y + y;
     event.xkey.state       = 0;
     if (mods & GLFW_MOD_SHIFT)     event.xkey.state |= ShiftMask;
     if (mods & GLFW_MOD_CONTROL)   event.xkey.state |= ControlMask;
@@ -730,7 +744,6 @@ TkGlfwKeyCallback(GLFWwindow *window,
     if (mods & GLFW_MOD_NUM_LOCK)  event.xkey.state |= Mod2Mask;
     event.xkey.keycode     = key;   /* GLFW key constant, not raw scancode */
     event.xkey.same_screen = True;
-
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
 
@@ -755,6 +768,7 @@ TkGlfwCharCallback(
     TCL_UNUSED(GLFWwindow *), /* window */
     unsigned int codepoint)
 {
+    printf("TkGlfwCharCallback\n");
     TkWaylandStoreCharacterInput(codepoint);
 }
 
@@ -779,12 +793,12 @@ TkWaylandUpdateKeyboardModifiers(int glfw_mods)
 {
     glfwModifierState = 0;
 
-    if (glfw_mods & GLFW_MOD_SHIFT)    glfwModifierState |= ShiftMask;
-    if (glfw_mods & GLFW_MOD_CONTROL)  glfwModifierState |= ControlMask;
-    if (glfw_mods & GLFW_MOD_ALT)      glfwModifierState |= Mod1Mask;
-    if (glfw_mods & GLFW_MOD_SUPER)    glfwModifierState |= Mod4Mask;
+    if (glfw_mods & GLFW_MOD_SHIFT)     glfwModifierState |= ShiftMask;
+    if (glfw_mods & GLFW_MOD_CONTROL)   glfwModifierState |= ControlMask;
+    if (glfw_mods & GLFW_MOD_ALT)       glfwModifierState |= Mod1Mask;
+    if (glfw_mods & GLFW_MOD_SUPER)     glfwModifierState |= Mod4Mask;
     if (glfw_mods & GLFW_MOD_CAPS_LOCK) glfwModifierState |= LockMask;
-    if (glfw_mods & GLFW_MOD_NUM_LOCK) glfwModifierState |= Mod2Mask;
+    if (glfw_mods & GLFW_MOD_NUM_LOCK)  glfwModifierState |= Mod2Mask;
 }
 
 /*

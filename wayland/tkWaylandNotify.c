@@ -18,6 +18,7 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <errno.h>
+#include <GLES3/gl3.h>
 #include "nanovg_gl_utils.h"
 
 
@@ -310,10 +311,18 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
 {
     if (!(flags & TCL_WINDOW_EVENTS)) return;
 
-    /* Poll GLFW for system events (Map, Resize, Key, etc.) */
+    /*
+     * Process all events in the GLFW event queue, calling the registered
+     * callback for each one.
+     */
+
     glfwPollEvents();
 
-    WindowMapping *m = windowMappingList; 
+    /*
+     * Update window graphics.
+     */
+    
+    WindowMapping *m = windowMappingList;
     while (m) {
         if (m->glfwWindow && !m->frameOpen) {
             glfwMakeContextCurrent(m->glfwWindow);
@@ -329,10 +338,9 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
             nvgTranslate(glfwContext.vg, 0.0f, -(float)m->height);
             
             m->frameOpen = 1;
-
-            /* Force a display flush at the end of this Tcl cycle. */
-            Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
-        }
+	}
+	/* Force a display flush at the end of this Tcl cycle. */
+	Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
         m = m->nextPtr;
     }
 } 
@@ -517,7 +525,8 @@ TkWaylandBeginEventCycle(WindowMapping *m)
     glViewport(0, 0, fbw, fbh);
 
     /* Clear only when starting new frame. */
-    glClearColor(0.92f, 0.92f, 0.92f, 1.0f);
+    //// Changed to purple for debugging
+    glClearColor(0.92f, 0.92f, 0.92f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     nvgBeginFrame(glfwContext.vg,
@@ -615,8 +624,31 @@ TkWaylandDisplayProc(ClientData clientData)
     /* Clear only the screen backbuffer, not our FBO! */
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, (float)fbw/m->width);
+    // Start a frame
+    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height,
+		  (float)fbw/m->width);
 
+    //Do some fake drawing - a red square in a blue window.
+    glBindFramebuffer(GL_FRAMEBUFFER, m->fbo->image);
+    glClearColor(0.0, 0.0, 1.0, 0.0);  //Looks like alpha is ignored.
+    nvgStrokeColor(glfwContext.vg, nvgRGBA(255, 0, 0, 255));
+    nvgBeginPath(glfwContext.vg);
+    nvgRect(glfwContext.vg, 10.0, 10.0, 30.0, 30.0);
+    nvgStroke(glfwContext.vg);
+
+    // Blit the FBO to the (default) back buffer.
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->image);
+    glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
+		      0, 0, (int)m->width, (int)m->height,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+    // End the frame.
+    nvgEndFrame(glfwContext.vg);
+    // Wwap buffers.
+    glfwSwapBuffers(m->glfwWindow);
+
+#if 0
     /* Create a paint pattern from the FBO's image. */
     NVGpaint imgPaint = nvgImagePattern(glfwContext.vg, 0, 0, 
                                         (float)m->width, (float)m->height, 
@@ -627,9 +659,9 @@ TkWaylandDisplayProc(ClientData clientData)
     nvgRect(glfwContext.vg, 0, 0, (float)m->width, (float)m->height);
     nvgFillPaint(glfwContext.vg, imgPaint);
     nvgFill(glfwContext.vg);
-
     nvgEndFrame(glfwContext.vg);
     glfwSwapBuffers(m->glfwWindow);
+#endif
     
     m->needsDisplay = 0;
 }
