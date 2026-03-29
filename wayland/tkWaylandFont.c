@@ -1212,7 +1212,7 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
     entry->width = x1 - x0;
     entry->height = y1 - y0;
     entry->bearing_x = (int)(lsb * renderScale);
-    entry->bearing_y = y1;
+    entry->bearing_y = -y0;
     
     if (entry->width <= 0 || entry->height <= 0) {
         /* Empty glyph (space, etc.) - just store advance */
