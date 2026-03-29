@@ -776,6 +776,14 @@ TkpDrawAngledCharsInContext(
     }
     cg = dc.cg;
 
+    /* Get content scale from the live drawable. */
+    float contentScale = 1.0f;
+    if (dc.glfwWindow) {
+        float xscale, yscale;
+        glfwGetWindowContentScale(dc.glfwWindow, &xscale, &yscale);
+        contentScale = (xscale + yscale) / 2.0f;
+    }
+
     /* Ensure font is loaded. */
     if (!EnsureFontLoaded(fontPtr)) {
         fprintf(stderr, "Failed to load font\n");
@@ -826,16 +834,16 @@ TkpDrawAngledCharsInContext(
             /* Advance cursor by the glyph's advance. */
             drawX += glyphEntry->advance;
         } else {
-            /* Missing glyph - draw a placeholder rectangle. */
-            float boxWidth = fontPtr->pixelSize / 2;
+            /* Missing glyph - draw a placeholder rectangle (scaled). */
+            float boxWidth = (fontPtr->pixelSize * contentScale) / 2;
+            float boxHeight = fontPtr->pixelSize * contentScale;
             struct cg_color_t cg_color;
             cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
             cg_color.g = ((color >> 16) & 0xFF) / 255.0f;
             cg_color.b = ((color >> 8) & 0xFF) / 255.0f;
             cg_color.a = (color & 0xFF) / 255.0f;
             cg_set_source_rgba(cg, cg_color.r, cg_color.g, cg_color.b, cg_color.a);
-            cg_rectangle(cg, drawX, drawY - fontPtr->pixelSize,
-                        boxWidth, fontPtr->pixelSize);
+            cg_rectangle(cg, drawX, drawY - boxHeight, boxWidth, boxHeight);
             cg_fill(cg);
             drawX += boxWidth;
         }
@@ -843,7 +851,7 @@ TkpDrawAngledCharsInContext(
         i += bytes;
     }
 
-    /* Draw underline and overstrike if needed. */
+    /* Draw underline and overstrike if needed (scaled). */
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
         float runWidth = drawX - (float)x;
         struct cg_color_t cg_color;
@@ -854,15 +862,15 @@ TkpDrawAngledCharsInContext(
         cg_set_source_rgba(cg, cg_color.r, cg_color.g, cg_color.b, cg_color.a);
         
         if (fontPtr->font.fa.underline) {
-            float uy = (float)(y + fontPtr->underlinePos);
-            cg_set_line_width(cg, (float)fontPtr->barHeight);
+            float uy = (float)(y + fontPtr->underlinePos * contentScale);
+            cg_set_line_width(cg, (float)(fontPtr->barHeight * contentScale));
             cg_move_to(cg, (float)x, uy);
             cg_line_to(cg, (float)x + runWidth, uy);
             cg_stroke(cg);
         }
         if (fontPtr->font.fa.overstrike) {
-            float oy = (float)(y - fontPtr->font.fm.ascent / 2);
-            cg_set_line_width(cg, (float)fontPtr->barHeight);
+            float oy = (float)(y - (fontPtr->font.fm.ascent * contentScale) / 2);
+            cg_set_line_width(cg, (float)(fontPtr->barHeight * contentScale));
             cg_move_to(cg, (float)x, oy);
             cg_line_to(cg, (float)x + runWidth, oy);
             cg_stroke(cg);
@@ -949,59 +957,49 @@ static void
 InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr, WaylandFont *fontPtr)
 {
     double ptSize = faPtr->size;
-
-    /* Store the original font attributes (Tk may still need the logical point size). */
+    
+    /* Store the original font attributes. */
     fontPtr->font.fa = *faPtr;
-
-    /* Get the correct hi-DPI scale from GLFW (works reliably on Wayland). */
-    GLFWwindow *win = TkGlfwGetGLFWWindow(tkwin);
-    float contentScale = 1.0f;
-    if (win) {
-        float xscale, yscale;
-        glfwGetWindowContentScale(win, &xscale, &yscale);
-        contentScale = (xscale + yscale) / 2.0f;   /* or just xscale; fonts are usually isotropic */
-    }
-
-    /* Calculate device pixel size for stb_truetype. */
+    
+    /* Calculate LOGICAL pixel size (no scaling). */
     if (ptSize < 0.0) {
-        /* Negative size = absolute device pixels (Tk convention). Do NOT scale it. */
+        /* Negative size = absolute pixels (logical). */
         fontPtr->pixelSize = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        /* Positive size = points. Convert using the standard 96 DPI logical base + content scale. */
-        double logicalPx = ptSize * (96.0 / 72.0);          /* 12 pt → ~16 px at scale = 1 */
-        fontPtr->pixelSize = (int)(logicalPx * contentScale + 0.5);
+        /* Positive size = points. Convert at 96 DPI baseline. */
+        fontPtr->pixelSize = (int)(ptSize * (96.0 / 72.0) + 0.5);
     } else {
-        /* Default = 12 pt (scaled). */
-        double logicalPx = 12.0 * (96.0 / 72.0);
-        fontPtr->pixelSize = (int)(logicalPx * contentScale + 0.5);
+        /* Default = 12 pt. */
+        fontPtr->pixelSize = (int)(12.0 * (96.0 / 72.0) + 0.5);
     }
-
+    
     if (fontPtr->pixelSize < 1)
         fontPtr->pixelSize = 1;
-
+    
     fontPtr->font.fa.size = ptSize; 
-
+    
     int bold   = (faPtr->weight == TK_FW_BOLD);
     int italic = (faPtr->slant == TK_FS_ITALIC);
-
+    
     /* Find font file. */
     if (fontPtr->filePath) {
         free(fontPtr->filePath);
         fontPtr->filePath = NULL;
     }
     fontPtr->filePath = FindFontFile(faPtr->family, bold, italic, fontPtr->pixelSize);
-
+    
     /* Don't load font data here - let EnsureFontLoaded do it lazily. */
     if (fontPtr->fontData) {
         Tcl_Free((char *)fontPtr->fontData);
         fontPtr->fontData = NULL;
     }
-
+    
     /* Initialize glyph cache to NULL. */
     for (int i = 0; i < GLYPH_CACHE_SIZE; i++) {
         fontPtr->glyphCache[i] = NULL;
     }
 }
+
 /*----------------------------------------------------------------------
  * DeleteFont --
  *
