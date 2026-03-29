@@ -198,29 +198,53 @@ static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
-static int IsLatinOnly(const char *str, int len);  /* fast-path helper */
+static int IsSimpleScript(const char *str, int len); /* fast-path helper */
 
 /*
  * ---------------------------------------------------------------
- * IsLatinOnly --
+ * IsSimpleScript --
  *
- *   Returns 1 if every codepoint in the UTF-8 string falls within
- *   the Latin "simple" range: Basic Latin (U+0000-U+007F), Latin-1
- *   Supplement (U+0080-U+00FF), Latin Extended-A (U+0100-U+017F),
- *   or Latin Extended-B (U+0180-U+024F).
+ *   Returns 1 if every codepoint in the UTF-8 string belongs to a
+ *   script that requires no shaping, no BiDi reordering, and no
+ *   multi-face fallback — meaning a single Xft face with
+ *   XftTextExtentsUtf8 / XftDrawStringUtf8 will render it correctly.
  *
- *   All codepoints in this range (U+0000-U+024F) are precomposed
- *   or trivially handled by a single Xft font face with no BiDi
- *   reordering, no ligature shaping, and no multi-face fallback.
- *   Using XftTextExtentsUtf8 / XftDrawStringUtf8 directly is both
- *   correct and significantly faster for these scripts.
+ *   Accepted blocks:
+ *     U+0000-U+007F  Basic Latin
+ *     U+0080-U+00FF  Latin-1 Supplement
+ *     U+0100-U+017F  Latin Extended-A
+ *     U+0180-U+024F  Latin Extended-B
+ *     U+0250-U+02AF  IPA Extensions          (precomposed phonetic symbols)
+ *     U+02B0-U+02FF  Spacing Modifier Letters (precomposed, no joining)
+ *     U+0370-U+03FF  Greek and Coptic        (modern Greek, precomposed LTR)
+ *     U+0400-U+04FF  Cyrillic                (Russian, Ukrainian, Bulgarian…)
+ *     U+0500-U+052F  Cyrillic Supplement
+ *     U+1E00-U+1EFF  Latin Extended Additional (Vietnamese, Welsh, precomposed)
+ *     U+2000-U+206F  General Punctuation     (em-dash, smart quotes, ellipsis…)
+ *     U+2070-U+209F  Superscripts and Subscripts
+ *     U+20A0-U+20CF  Currency Symbols        (€ £ ¥ ₽ …)
+ *     U+2100-U+214F  Letterlike Symbols      (℃ ™ © …)
+ *     U+2150-U+218F  Number Forms            (½ ¼ Roman numerals)
+ *     U+2190-U+22FF  Arrows + Math Operators
+ *     U+25A0-U+26FF  Geometric Shapes + Miscellaneous Symbols
+ *
+ *   Explicitly excluded (routed to shaper):
+ *     U+0300-U+036F  Combining Diacritical Marks (attach to base chars)
+ *     U+0530-U+1DFF  Armenian through Phonetic Extensions (complex scripts)
+ *     U+2300-U+25FF  Misc Technical, Control Pictures, Box Drawing (font
+ *                    fallback behavior unpredictable — leave to shaper)
+ *     U+2700-U+27BF  Dingbats (typically a different face; needs fallback)
+ *     U+2DE0-U+2DFF  Cyrillic Extended-A (Old Church Slavonic, combining)
+ *     U+A640-U+A69F  Cyrillic Extended-B (historical, combining)
+ *     U+1F300+        Emoji (color fonts, ZWJ sequences, skin-tone modifiers)
+ *     Everything else.
  *
  *   Returns 0 as soon as any out-of-range codepoint is found.
  * ---------------------------------------------------------------
  */
 
 static int
-IsLatinOnly(const char *str, int len)
+IsSimpleScript(const char *str, int len)
 {
     int i = 0;
     while (i < len) {
@@ -240,10 +264,14 @@ IsLatinOnly(const char *str, int len)
             return 0;
         }
 
-        /* Accept U+0080 through U+024F (Latin-1 Supplement through
-         * Latin Extended-B).  Everything above U+024F needs the shaper.
-         */
-        if (uc > 0x024F) {
+        if (!( (uc >= 0x0080 && uc <= 0x02FF) ||  /* Latin supp/ext + IPA + modifiers */
+               (uc >= 0x0370 && uc <= 0x03FF) ||  /* Greek and Coptic                 */
+               (uc >= 0x0400 && uc <= 0x052F) ||  /* Cyrillic + Supplement            */
+               (uc >= 0x1E00 && uc <= 0x1EFF) ||  /* Latin Extended Additional        */
+               (uc >= 0x2000 && uc <= 0x22FF) ||  /* Punctuation, super/sub, currency,
+                                                    * letterlike, number forms, arrows,
+                                                    * math operators                  */
+               (uc >= 0x25A0 && uc <= 0x26FF) )) {/* Geometric shapes, misc symbols   */
             return 0;
         }
 
@@ -251,6 +279,9 @@ IsLatinOnly(const char *str, int len)
     }
     return 1;
 }
+
+/* Alias used at all call sites — rename kept local to this file. */
+#define IsLatinOnly IsSimpleScript
 
 
 /*
