@@ -40,7 +40,7 @@
  */
 
 /* Glyph cache entry - for direct rendering we still cache rendered glyph
- * bitmaps to avoid re-rendering the same glyph multiple times */
+ * bitmaps to avoid re-rendering the same glyph multiple times. */
 typedef struct GlyphCacheEntry {
     int codepoint;               /* Unicode codepoint */
     int width;                   /* Glyph width in pixels */
@@ -59,11 +59,11 @@ typedef struct GlyphCacheEntry {
 typedef struct {
     TkFont      font;           /* Generic font data — MUST be first. */
     char       *filePath;       /* Absolute path returned by Fontconfig. */
-    unsigned char *fontData;    /* Mapped font file data */
-    stbtt_fontinfo stbInfo;     /* stb_truetype font info */
-    float       scale;          /* Scale factor for pixel size */
+    unsigned char *fontData;    /* Mapped font file data. */
+    stbtt_fontinfo stbInfo;     /* stb_truetype font info. */
+    float       scale;          /* Scale factor for pixel siz.e */
     
-    /* Glyph cache for this font */
+    /* Glyph cache for this font. */
     GlyphCacheEntry *glyphCache[GLYPH_CACHE_SIZE];
     
     /* Metrics */
@@ -75,12 +75,12 @@ typedef struct {
 /* Whether Fontconfig has been initialized for this process. */
 static int fcInitialized = 0;
 
-/* Emoji font data - loaded once and shared */
+/* Emoji font data - loaded once and shared. */
 static stbtt_fontinfo emojiInfo;
 static unsigned char *emojiFontData = NULL;
 static int emojiInitialized = 0;
 
-/* Forward declarations */
+/* Forward declarations. */
 static char    *FindFontFile(const char *family, int bold, int italic, int pixelSize);
 static void     InitFont(Tk_Window tkwin, const TkFontAttributes *fa, WaylandFont *fontPtr);
 static void     DeleteFont(WaylandFont *fontPtr);
@@ -121,7 +121,9 @@ GlyphHash(int codepoint)
  * Side effects:
  *   Fontconfig is initialized, emoji font is loaded, and standard
  *   Tk named fonts are created.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpFontPkgInit(TkMainInfo *mainPtr)
 {
@@ -133,7 +135,7 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
         FONT_DEBUG("Fontconfig initialized\n");
     }
 
-    /* Initialize emoji font from bundled data */
+    /* Initialize emoji font from bundled data. */
     if (!emojiInitialized) {
         emojiFontData = (unsigned char *)NotoEmoji_Regular_ttf;
         if (stbtt_InitFont(&emojiInfo, emojiFontData, 
@@ -143,7 +145,7 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
         }
     }
 
-    /* Register standard Tk named fonts */
+    /* Register standard Tk named fonts. */
     static const struct {
         const char *tkName;
         const char *family;
@@ -201,7 +203,9 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 TkFont *
 TkpGetNativeFont(Tk_Window tkwin, const char *name)
 {
@@ -225,7 +229,9 @@ TkpGetNativeFont(Tk_Window tkwin, const char *name)
  *
  * Side effects:
  *   Font data is loaded and cached.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 TkFont *
 TkpGetFontFromAttributes(
     TkFont *tkFontPtr,
@@ -242,7 +248,7 @@ TkpGetFontFromAttributes(
         fontPtr = (WaylandFont *) Tcl_Alloc(sizeof(WaylandFont));
         memset(fontPtr, 0, sizeof(WaylandFont));
         
-        /* Initialize the TkFont portion properly */
+        /* Initialize the TkFont portion properly. */
         fontPtr->font.fa = *faPtr;
         fontPtr->font.fm.ascent = 0;
         fontPtr->font.fm.descent = 0;
@@ -265,7 +271,7 @@ TkpGetFontFromAttributes(
         DeleteFont(fontPtr);
         memset(fontPtr, 0, sizeof(WaylandFont));
         
-        /* Re-initialize the TkFont portion */
+        /* Re-initialize the TkFont portion. */
         fontPtr->font.fa = *faPtr;
         fontPtr->font.fm.ascent = 0;
         fontPtr->font.fm.descent = 0;
@@ -299,7 +305,9 @@ TkpGetFontFromAttributes(
  *
  * Side effects:
  *   Font data and glyph cache are freed.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpDeleteFont(TkFont *tkFontPtr)
 {
@@ -321,7 +329,9 @@ TkpDeleteFont(TkFont *tkFontPtr)
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpGetFontFamilies(Tcl_Interp *interp, TCL_UNUSED(Tk_Window))
 {
@@ -365,7 +375,9 @@ TkpGetFontFamilies(Tcl_Interp *interp, TCL_UNUSED(Tk_Window))
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
 {
@@ -389,7 +401,9 @@ TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),
@@ -400,7 +414,7 @@ TkpGetFontAttrsForChar(
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
     *faPtr = fontPtr->font.fa;
 
-    /* Use Fontconfig to find a font that supports this character */
+    /* Use Fontconfig to find a font that supports this character. */
     FcCharSet *cs  = FcCharSetCreate();
     FcCharSetAddChar(cs, (FcChar32) c);
 
@@ -442,7 +456,9 @@ TkpGetFontAttrsForChar(
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 int
 Tk_MeasureChars(
     Tk_Font tkfont,
@@ -467,7 +483,9 @@ Tk_MeasureChars(
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
@@ -500,7 +518,7 @@ Tk_MeasureCharsInContext(
     const char *text = source + rangeStart;
     size_t len = rangeLength;
     
-    /* Simple character-by-character measurement */
+    /* Simple character-by-character measurement. */
     for (size_t i = 0; i < len; ) {
         int codepoint;
         int bytes = Tcl_UtfToUniChar(text + i, &codepoint);
@@ -509,7 +527,7 @@ Tk_MeasureCharsInContext(
             break;
         }
         
-        /* Get glyph cache entry which includes advance */
+        /* Get glyph cache entry which includes advance. */
         GlyphCacheEntry *glyphEntry = NULL;
         int advance;
         
@@ -521,7 +539,7 @@ Tk_MeasureCharsInContext(
             FONT_DEBUG("Char %c (0x%x) not found, using advance=%d\n", codepoint, codepoint, advance);
         }
         
-        /* Check if we exceed maxLength */
+        /* Check if we exceed maxLength. */
         if (maxLength >= 0 && totalWidth + advance > maxLength) {
             if ((flags & TK_WHOLE_WORDS) && lastBreakBytes > 0) {
                 *lengthPtr = lastBreakWidth;
@@ -532,7 +550,7 @@ Tk_MeasureCharsInContext(
             }
         }
         
-        /* Check for word boundaries (space or punctuation) */
+        /* Check for word boundaries (space or punctuation). */
         if ((flags & TK_WHOLE_WORDS) && (codepoint == ' ' || codepoint == '\t')) {
             lastBreakBytes = bytesMeasured + bytes;
             lastBreakWidth = totalWidth + advance;
@@ -579,7 +597,9 @@ Tk_MeasureCharsInContext(
  *
  * Side effects:
  *   Text is drawn to the drawable.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 Tk_DrawChars(
     TCL_UNUSED(Display *),
@@ -607,7 +627,9 @@ Tk_DrawChars(
  *
  * Side effects:
  *   Text is drawn to the drawable.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkDrawAngledChars(
     TCL_UNUSED(Display *),
@@ -635,7 +657,9 @@ TkDrawAngledChars(
  *
  * Side effects:
  *   Text is drawn to the drawable.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 Tk_DrawCharsInContext(
     TCL_UNUSED(Display *),
@@ -664,7 +688,9 @@ Tk_DrawCharsInContext(
  *
  * Side effects:
  *   Text is drawn to the drawable.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpDrawCharsInContext(
     Display *display,
@@ -692,7 +718,9 @@ TkpDrawCharsInContext(
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 int
 TkpMeasureCharsInContext(
     Tk_Font tkfont,
@@ -726,7 +754,9 @@ TkpMeasureCharsInContext(
  *
  * Side effects:
  *   Text is drawn to the drawable.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 void
 TkpDrawAngledCharsInContext(
     TCL_UNUSED(Display *),
@@ -754,14 +784,14 @@ TkpDrawAngledCharsInContext(
     FONT_DEBUG("Drawing text: '%.*s' at (%.1f,%.1f), color=0x%08x\n", 
                (int)rangeLength, source + rangeStart, x, y, color);
 
-    /* Begin drawing - works for both window (direct) and pixmap (off-screen) */
+    /* Begin drawing - works for both window (direct) and pixmap (off-screen). */
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         FONT_DEBUG("Failed to begin drawing\n");
         return;
     }
     cg = dc.cg;
 
-    /* Ensure font is loaded */
+    /* Ensure font is loaded. */
     if (!EnsureFontLoaded(fontPtr)) {
         FONT_DEBUG("Failed to load font\n");
         TkGlfwEndDraw(&dc);
@@ -774,7 +804,7 @@ TkpDrawAngledCharsInContext(
     FONT_DEBUG("Font loaded: pixelSize=%d, ascent=%d, descent=%d\n",
                fontPtr->pixelSize, fontPtr->font.fm.ascent, fontPtr->font.fm.descent);
     
-    /* Handle rotation by using libcg matrix transforms */
+    /* Handle rotation by using libcg matrix transforms. */
     float drawX = (float)x;
     float drawY = (float)y;
     
@@ -785,7 +815,7 @@ TkpDrawAngledCharsInContext(
         cg_translate(cg, -drawX, -drawY);
     }
 
-    /* Draw each character directly */
+    /* Draw each character directly. */
     for (size_t i = 0; i < len; ) {
         int codepoint;
         int bytes = Tcl_UtfToUniChar(text + i, &codepoint);
@@ -794,10 +824,10 @@ TkpDrawAngledCharsInContext(
             break;
         }
         
-        /* Get the rendered glyph bitmap from cache */
+        /* Get the rendered glyph bitmap from cache. */
         GlyphCacheEntry *glyphEntry = NULL;
         if (GetGlyphBitmap(fontPtr, codepoint, &glyphEntry) && glyphEntry && glyphEntry->bitmap) {
-            /* Set color for this glyph */
+            /* Set color for this glyph. */
             struct cg_color_t cg_color;
             cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
             cg_color.g = ((color >> 16) & 0xFF) / 255.0f;
@@ -805,7 +835,7 @@ TkpDrawAngledCharsInContext(
             cg_color.a = (color & 0xFF) / 255.0f;
             cg_set_source_rgba(cg, cg_color.r, cg_color.g, cg_color.b, cg_color.a);
             
-            /* Draw the glyph */
+            /* Draw the glyph. */
             float glyphX = drawX + glyphEntry->bearing_x;
             float glyphY = drawY - glyphEntry->bearing_y;
             
@@ -814,10 +844,10 @@ TkpDrawAngledCharsInContext(
             
             DrawGlyphDirect(cg, fontPtr, glyphEntry, glyphX, glyphY, color);
             
-            /* Advance cursor by the glyph's advance */
+            /* Advance cursor by the glyph's advance. */
             drawX += glyphEntry->advance;
         } else {
-            /* Missing glyph - draw a placeholder rectangle */
+            /* Missing glyph - draw a placeholder rectangle. */
             float boxWidth = fontPtr->pixelSize / 2;
             struct cg_color_t cg_color;
             cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
@@ -836,7 +866,7 @@ TkpDrawAngledCharsInContext(
         i += bytes;
     }
 
-    /* Draw underline and overstrike if needed */
+    /* Draw underline and overstrike if needed. */
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
         float runWidth = drawX - (float)x;
         struct cg_color_t cg_color;
@@ -886,7 +916,9 @@ TkpDrawAngledCharsInContext(
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static char *
 FindFontFile(const char *family, int bold, int italic, int pixelSize)
 {
@@ -936,16 +968,18 @@ FindFontFile(const char *family, int bold, int italic, int pixelSize)
  *
  * Side effects:
  *   Font attributes are set, and a file path is resolved.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static void
 InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr, WaylandFont *fontPtr)
 {
     double ptSize = faPtr->size;
     
-    /* Store the font attributes - they should already be set, but ensure */
+    /* Store the font attributes - they should already be set, but ensure. */
     fontPtr->font.fa = *faPtr;
     
-    /* Calculate pixel size */
+    /* Calculate pixel size. */
     if (ptSize < 0.0) {
         fontPtr->pixelSize = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
@@ -991,7 +1025,9 @@ InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr, WaylandFont *fontPtr)
  *
  * Side effects:
  *   Font data and glyph cache are freed.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static void
 DeleteFont(WaylandFont *fontPtr)
 {
@@ -1029,7 +1065,9 @@ DeleteFont(WaylandFont *fontPtr)
  *
  * Side effects:
  *   Font data is loaded and metrics are set.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static int
 EnsureFontLoaded(WaylandFont *fontPtr)
 {
@@ -1078,7 +1116,7 @@ EnsureFontLoaded(WaylandFont *fontPtr)
         return 0;
     }
 
-    /* Compute scale and metrics */
+    /* Compute scale and metrics. */
     fontPtr->scale = stbtt_ScaleForPixelHeight(&fontPtr->stbInfo, 
                                                 (float)fontPtr->pixelSize);
     
@@ -1093,17 +1131,17 @@ EnsureFontLoaded(WaylandFont *fontPtr)
     fontPtr->font.fm.maxWidth = (int)(adv_W * fontPtr->scale + 0.5f);
     fontPtr->font.fm.fixed = (adv_W == adv_dot);
 
-    /* Set underline fields that Tk expects in the TkFont structure */
+    /* Set underline fields that Tk expects in the TkFont structure. */
     fontPtr->underlinePos = fontPtr->font.fm.descent / 2;
     if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
     fontPtr->barHeight = (int)(fontPtr->pixelSize * 0.07 + 0.5);
     if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
     
-    /* Store underline info in the TkFont structure as well */
+    /* Store underline info in the TkFont structure as well. */
     fontPtr->font.underlinePos = fontPtr->underlinePos;
     fontPtr->font.underlineHeight = fontPtr->barHeight;
     
-    /* Set tab width to 8 spaces (typical default) */
+    /* Set tab width to 8 spaces (typical default). */
     fontPtr->font.tabWidth = fontPtr->font.fm.maxWidth * 8;
     
     FONT_DEBUG("Font loaded: ascent=%d, descent=%d, maxWidth=%d, scale=%f\n",
@@ -1123,14 +1161,16 @@ EnsureFontLoaded(WaylandFont *fontPtr)
  *
  * Side effects:
  *   May render and cache a new glyph.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static int
 GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry **entryOut)
 {
     unsigned int hash = GlyphHash(codepoint);
     GlyphCacheEntry *entry = fontPtr->glyphCache[hash];
     
-    /* Search cache */
+    /* Search cache. */
     while (entry) {
         if (entry->codepoint == codepoint) {
             *entryOut = entry;
@@ -1139,17 +1179,17 @@ GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry **entryOut)
         entry = entry->next;
     }
     
-    /* Not found - create new entry */
+    /* Not found - create new entry. */
     entry = (GlyphCacheEntry *)Tcl_Alloc(sizeof(GlyphCacheEntry));
     if (!entry) return 0;
     
     memset(entry, 0, sizeof(GlyphCacheEntry));
     entry->codepoint = codepoint;
     
-    /* Render glyph to bitmap */
+    /* Render glyph to bitmap. */
     RenderGlyphToBitmap(fontPtr, codepoint, entry);
     
-    /* Add to cache */
+    /* Add to cache. */
     entry->next = fontPtr->glyphCache[hash];
     fontPtr->glyphCache[hash] = entry;
     
@@ -1167,19 +1207,21 @@ GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry **entryOut)
  *
  * Side effects:
  *   The entry's bitmap and metrics are set.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static void
 RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
 {
     stbtt_fontinfo *info = &fontPtr->stbInfo;
     float scale = fontPtr->scale;
     
-    /* Try to get glyph from main font */
+    /* Try to get glyph from main font. */
     int glyph = stbtt_FindGlyphIndex(info, codepoint);
     stbtt_fontinfo *renderInfo = info;
     float renderScale = scale;
     
-    /* If not found in main font, try emoji font */
+    /* If not found in main font, try emoji font. */
     if (glyph == 0 && emojiInitialized) {
         glyph = stbtt_FindGlyphIndex(&emojiInfo, codepoint);
         if (glyph != 0) {
@@ -1190,7 +1232,7 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
     }
     
     if (glyph == 0) {
-        /* Missing glyph - create placeholder box metrics */
+        /* Missing glyph - create placeholder box metrics. */
         entry->width = fontPtr->pixelSize / 2;
         entry->height = fontPtr->pixelSize;
         entry->bearing_x = 0;
@@ -1201,7 +1243,7 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
         return;
     }
     
-    /* Get glyph metrics */
+    /* Get glyph metrics. */
     int advance, lsb;
     stbtt_GetGlyphHMetrics(renderInfo, glyph, &advance, &lsb);
     entry->advance = (int)(advance * renderScale + 0.5f);
@@ -1215,7 +1257,7 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
     entry->bearing_y = -y0;
     
     if (entry->width <= 0 || entry->height <= 0) {
-        /* Empty glyph (space, etc.) - just store advance */
+        /* Empty glyph (space, etc.) - just store advance. */
         entry->width = 0;
         entry->height = 0;
         entry->bitmap = NULL;
@@ -1223,7 +1265,7 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
         return;
     }
     
-    /* Render glyph to bitmap */
+    /* Render glyph to bitmap. */
     entry->bitmap = (unsigned char *)Tcl_Alloc(entry->width * entry->height);
     if (entry->bitmap) {
         stbtt_MakeGlyphBitmap(renderInfo, entry->bitmap, entry->width, entry->height,
@@ -1244,7 +1286,9 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
  *
  * Side effects:
  *   Glyph is drawn to the context.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static void
 DrawGlyphDirect(
     struct cg_ctx_t *cg,
@@ -1258,7 +1302,7 @@ DrawGlyphDirect(
         return;
     }
     
-    /* Create a temporary RGBA surface from the alpha bitmap */
+    /* Create a temporary RGBA surface from the alpha bitmap. */
     unsigned char *rgba = (unsigned char *)Tcl_Alloc(glyph->width * glyph->height * 4);
     if (!rgba) return;
     
@@ -1267,7 +1311,7 @@ DrawGlyphDirect(
     unsigned char b = ((color >> 8) & 0xFF);
     unsigned char a = (color & 0xFF);
     
-    /* Convert alpha bitmap to RGBA with the specified color */
+    /* Convert alpha bitmap to RGBA with the specified color. */
     for (int i = 0; i < glyph->width * glyph->height; i++) {
         unsigned char alpha = glyph->bitmap[i];
         unsigned char final_alpha = (alpha * a) / 255;
@@ -1277,7 +1321,7 @@ DrawGlyphDirect(
         rgba[i*4+3] = final_alpha;
     }
     
-    /* Create a libcg surface and blit it */
+    /* Create a libcg surface and blit it. */
     struct cg_surface_t *glyphSurface = cg_surface_create_for_data(glyph->width, glyph->height, rgba);
     if (glyphSurface) {
         cg_set_source_surface(cg, glyphSurface, x, y);
@@ -1299,7 +1343,9 @@ DrawGlyphDirect(
  *
  * Side effects:
  *   Rectangle is drawn to the context.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static void
 DrawRectangle(
     struct cg_ctx_t *cg,
@@ -1327,7 +1373,9 @@ DrawRectangle(
  *
  * Side effects:
  *   Line is drawn to the context.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static void
 DrawLine(
     struct cg_ctx_t *cg,
@@ -1358,7 +1406,9 @@ DrawLine(
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *----------------------------------------------------------------------
+ */
+
 static uint32_t
 ColorFromGC(GC gc)
 {
@@ -1416,7 +1466,9 @@ TkPostscriptFontName(Tk_Font tkfont, Tcl_DString *dsPtr)
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------*/
+ *---------------------------------------------------------------------
+ */
+
 void
 TkUnixSetXftClipRegion(TCL_UNUSED(Region))
 {
