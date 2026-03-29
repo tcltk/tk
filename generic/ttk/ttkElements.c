@@ -648,7 +648,7 @@ static const Ttk_ElementOptionSpec SizegripOptions[] = {
 	offsetof(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-gripsize", TK_OPTION_PIXELS,
 	offsetof(SizegripElement,gripSizeObj), "11.25p" },
-    {0, TK_OPTION_BOOLEAN, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void SizegripSize(
@@ -858,8 +858,9 @@ static void IndicatorElementDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+#if 0
     /*
-     * Sanity check
+     * Sanity check -- not needed and no longer used
      */
     if (   b.x < 0
 	|| b.y < 0
@@ -871,6 +872,7 @@ static void IndicatorElementDraw(
 	 */
 	return;
     }
+#endif
 
     /*
      * Construct the color strings bgColorStr, fgColorStr, and borderColorStr
@@ -1497,8 +1499,9 @@ static void SliderElementDraw(
     char *script;
     int code;
 
+#if 0
     /*
-     * Sanity check
+     * Sanity check -- not needed and no longer used
      */
     if (   b.x < 0
 	|| b.y < 0
@@ -1510,6 +1513,7 @@ static void SliderElementDraw(
 	 */
 	return;
     }
+#endif
 
     /*
      * Fill the thin trough area preceding the
@@ -1720,7 +1724,7 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
 	offsetof(TabElement,highlightObj), "0" },
     { "-highlightcolor", TK_OPTION_COLOR,
 	offsetof(TabElement,highlightColorObj), "#4a6984" },
-    {0, TK_OPTION_BOOLEAN, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void TabElementSize(

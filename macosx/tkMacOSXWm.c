@@ -628,6 +628,9 @@ static void placeAsTab(TKWindow *macWindow) {
 
 - (BOOL) canBecomeKeyWindow
 {
+    if ([NSApp tkWillExit]) {
+	return NO;
+    }
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
     if (!winPtr || !winPtr->wmInfoPtr) {
@@ -1004,6 +1007,9 @@ TkWmMapWindow(
     TkWindow *winPtr)		/* Top-level window that's about to be
 				 * mapped. */
 {
+    if (Tk_IsMapped(winPtr)) {
+	return;
+    }
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     XEvent event;
 
@@ -1107,11 +1113,13 @@ TkWmUnmapWindow(
     TkWindow *winPtr)		/* Top-level window that's about to be
 				 * unmapped. */
 {
+    if (!Tk_IsMapped(winPtr)) {
+	return;
+    }
     winPtr->flags &= ~TK_MAPPED;
     if ((winPtr->window != None)
 	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)) {
 	XEvent event;
-
 	event.xany.serial = LastKnownRequestProcessed(winPtr->display);
 	event.xany.send_event = False;
 	event.xany.display = winPtr->display;

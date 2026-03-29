@@ -216,8 +216,8 @@ int TtkScrollviewCommand(
 
     if (objc == 2) {
 	Tcl_Obj *result[2];
-	result[0] = Tcl_NewDoubleObj((double)s->first / s->total);
-	result[1] = Tcl_NewDoubleObj((double)s->last / s->total);
+	result[0] = Tcl_NewDoubleObj((double)s->first / (double)s->total);
+	result[1] = Tcl_NewDoubleObj((double)s->last / (double)s->total);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, result));
 	return TCL_OK;
     } else if (objc == 3) {
@@ -245,12 +245,12 @@ int TtkScrollviewCommand(
 	}
     }
 
-    TtkScrollTo(h, newFirst, 0);
+    TtkScrollTo(h, newFirst, false);
 
     return TCL_OK;
 }
 
-void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
+void TtkScrollTo(ScrollHandle h, int newFirst, bool updateScrollInfo)
 {
     Scrollable *s = h->scrollPtr;
 
