@@ -305,6 +305,8 @@ CUPS_LIBS		= @CUPS_LIBS@
 ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
 
+# SheenBidi + kb_text_shaper.h (hard-wired in unix/bidi/)
+BIDI_CFLAGS		= @BIDI_CFLAGS@
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -342,7 +344,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
 ${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS)
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -351,7 +353,7 @@ APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
 -I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
-${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
+${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS)
 
 WISH_OBJS = tkAppInit.o
 
@@ -397,13 +399,14 @@ STUB_OBJS = tkStubInit.o
 
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
+# X11 objects including SheenBidi unity build
 X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
 	tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
-	tkUnixPrint.o
+	tkUnixPrint.o SheenBidi.o
 
 AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -510,6 +513,7 @@ TTK_SRCS = \
 TTK_STUB_SRCS = \
 	$(TTK_DIR)/ttkStubInit.c $(TTK_DIR)/ttkStubLib.c
 
+# X11 sources including SheenBidi unity build
 X11_SRCS = \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
 	$(UNIX_DIR)/tkUnix3d.c \
@@ -526,9 +530,9 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
 	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
-	$(UNIX_DIR)/tkUnixSysNotify $(UNIX_DIR)/tkUnixSysTray.c \
+	$(UNIX_DIR)/tkUnixSysNotify.c $(UNIX_DIR)/tkUnixSysTray.c \
 	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c \
-	$(UNIX_DIR)/tkUnixPrint.c
+	$(UNIX_DIR)/tkUnixPrint.c $(UNIX_DIR)/bidi/SheenBidi.c
 
 AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXAccessibility.c \
@@ -1358,6 +1362,10 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
+
+# SheenBidi unity build
+SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
+	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
