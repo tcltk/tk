@@ -1303,7 +1303,9 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
 
     memset(dcPtr, 0, sizeof(*dcPtr));
 
-    if (drawable == None) return TCL_ERROR;
+    if (drawable == None) {
+		return TCL_ERROR;
+	}
 
     /* Pixmap path. */
     if (IsPixmap(drawable)) {
@@ -1383,11 +1385,14 @@ TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr)
                 y_offset = ry - ty;
                 width    = Tk_Width(tkwin);
                 height   = Tk_Height(tkwin);
+                goto have_mapping;
             }
         }
     }
 
-    if (!m || !m->surface) return TCL_ERROR;
+    if (!m || !m->surface) {
+		return TCL_ERROR;
+	}
 
 have_mapping:
     dcPtr->cg = cg_create(m->surface);
