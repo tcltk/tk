@@ -327,12 +327,15 @@ DrawButtonText(TkButton *butPtr, TkWaylandDrawingContext *dc,
         currentGC = butPtr->normalTextGC;
 
     TkGlfwApplyGC(dc->cg, currentGC);
+    
+    Drawable drawable = dc->drawable;
 
-    Tk_DrawTextLayout(butPtr->display, (Drawable)dc, currentGC,
-                      butPtr->textLayout, x, y, 0, -1);
-    Tk_UnderlineTextLayout(butPtr->display, (Drawable)dc, currentGC,
-                           butPtr->textLayout, x, y,
-                           butPtr->underline);
+	Tk_DrawTextLayout(butPtr->display, drawable, currentGC,
+	                  butPtr->textLayout, x, y, 0, -1);
+	
+	Tk_UnderlineTextLayout(butPtr->display, drawable, currentGC,
+	                       butPtr->textLayout, x, y,
+	                       butPtr->underline);
 }
 
 /*

@@ -26,13 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Enable debugging - remove for production */
-#define DEBUG_FONT 1
-#if DEBUG_FONT
-#define FONT_DEBUG(...) fprintf(stderr, "FONT: " __VA_ARGS__)
-#else
-#define FONT_DEBUG(...)
-#endif
 
 /* ============================================================================
  * Font Structure
@@ -132,7 +125,6 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
     if (!fcInitialized) {
         FcInit();
         fcInitialized = 1;
-        FONT_DEBUG("Fontconfig initialized\n");
     }
 
     /* Initialize emoji font from bundled data. */
@@ -141,7 +133,6 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
         if (stbtt_InitFont(&emojiInfo, emojiFontData, 
                            stbtt_GetFontOffsetForIndex(emojiFontData, 0))) {
             emojiInitialized = 1;
-            FONT_DEBUG("Emoji font initialized\n");
         }
     }
 
@@ -189,8 +180,6 @@ TkpFontPkgInit(TkMainInfo *mainPtr)
         Tcl_DecrRefCount(cmd);
         Tcl_ResetResult(interp);
     }
-    
-    FONT_DEBUG("Font package initialized\n");
 }
 
 /*----------------------------------------------------------------------
@@ -240,9 +229,6 @@ TkpGetFontFromAttributes(
 {
     WaylandFont *fontPtr;
     Screen *screen = Tk_Screen(tkwin);
-
-    FONT_DEBUG("Getting font: family=%s, size=%f\n", 
-               faPtr->family ? faPtr->family : "(null)", faPtr->size);
 
     if (tkFontPtr == NULL) {
         fontPtr = (WaylandFont *) Tcl_Alloc(sizeof(WaylandFont));
@@ -314,7 +300,6 @@ TkpDeleteFont(TkFont *tkFontPtr)
     WaylandFont *fontPtr = (WaylandFont *) tkFontPtr;
     
     if (fontPtr) {
-        FONT_DEBUG("Deleting font\n");
         DeleteFont(fontPtr);
     }
 }
@@ -510,7 +495,7 @@ Tk_MeasureCharsInContext(
     }
 
     if (!EnsureFontLoaded(fontPtr)) {
-        FONT_DEBUG("Failed to load font for measurement\n");
+        fprintf(stderr, "Failed to load font for measurement\n");
         *lengthPtr = 0;
         return 0;
     }
@@ -533,10 +518,8 @@ Tk_MeasureCharsInContext(
         
         if (GetGlyphBitmap(fontPtr, codepoint, &glyphEntry) && glyphEntry) {
             advance = glyphEntry->advance;
-            FONT_DEBUG("Char %c (0x%x) advance=%d\n", codepoint, codepoint, advance);
         } else {
             advance = fontPtr->pixelSize / 2;
-            FONT_DEBUG("Char %c (0x%x) not found, using advance=%d\n", codepoint, codepoint, advance);
         }
         
         /* Check if we exceed maxLength. */
@@ -562,7 +545,7 @@ Tk_MeasureCharsInContext(
     }
     
     if ((flags & TK_AT_LEAST_ONE) && bytesMeasured == 0 && rangeLength > 0) {
-        /* Need at least one character - measure the first one */
+        /* Need at least one character - measure the first one. */
         int codepoint;
         int bytes = Tcl_UtfToUniChar(text, &codepoint);
         GlyphCacheEntry *glyphEntry = NULL;
@@ -603,7 +586,7 @@ Tk_MeasureCharsInContext(
 void
 Tk_DrawChars(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+	Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -611,8 +594,13 @@ Tk_DrawChars(
     int x,
     int y)
 {
-    FONT_DEBUG("Tk_DrawChars: '%s' at (%d,%d)\n", source, x, y);
-    TkpDrawAngledCharsInContext(NULL, 0, gc, tkfont,
+    
+    if (drawable == None) {
+		fprintf(stderr, "Cannot draw characters - no valid drawable found\n");
+    return;
+	}
+	
+    TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
         source, numBytes, 0, numBytes,
         (double) x, (double) y, 0.0);
 }
@@ -633,7 +621,7 @@ Tk_DrawChars(
 void
 TkDrawAngledChars(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -781,28 +769,22 @@ TkpDrawAngledCharsInContext(
         return;
     }
 
-    FONT_DEBUG("Drawing text: '%.*s' at (%.1f,%.1f), color=0x%08x\n", 
-               (int)rangeLength, source + rangeStart, x, y, color);
-
     /* Begin drawing - works for both window (direct) and pixmap (off-screen). */
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
-        FONT_DEBUG("Failed to begin drawing\n");
+        fprintf(stderr, "Failed to begin drawing\n");
         return;
     }
     cg = dc.cg;
 
     /* Ensure font is loaded. */
     if (!EnsureFontLoaded(fontPtr)) {
-        FONT_DEBUG("Failed to load font\n");
+        fprintf(stderr, "Failed to load font\n");
         TkGlfwEndDraw(&dc);
         return;
     }
 
     const char *text = source + rangeStart;
     size_t len = rangeLength;
-    
-    FONT_DEBUG("Font loaded: pixelSize=%d, ascent=%d, descent=%d\n",
-               fontPtr->pixelSize, fontPtr->font.fm.ascent, fontPtr->font.fm.descent);
     
     /* Handle rotation by using libcg matrix transforms. */
     float drawX = (float)x;
@@ -839,9 +821,6 @@ TkpDrawAngledCharsInContext(
             float glyphX = drawX + glyphEntry->bearing_x;
             float glyphY = drawY - glyphEntry->bearing_y;
             
-            FONT_DEBUG("Drawing glyph for 0x%x at (%.1f,%.1f), size=%dx%d, advance=%d\n",
-                       codepoint, glyphX, glyphY, glyphEntry->width, glyphEntry->height, glyphEntry->advance);
-            
             DrawGlyphDirect(cg, fontPtr, glyphEntry, glyphX, glyphY, color);
             
             /* Advance cursor by the glyph's advance. */
@@ -858,8 +837,6 @@ TkpDrawAngledCharsInContext(
             cg_rectangle(cg, drawX, drawY - fontPtr->pixelSize,
                         boxWidth, fontPtr->pixelSize);
             cg_fill(cg);
-            FONT_DEBUG("Missing glyph for 0x%x, drawing placeholder at (%.1f,%.1f)\n",
-                       codepoint, drawX, drawY - fontPtr->pixelSize);
             drawX += boxWidth;
         }
         
@@ -897,7 +874,6 @@ TkpDrawAngledCharsInContext(
     }
 
     TkGlfwEndDraw(&dc);
-    FONT_DEBUG("Text drawing complete\n");
 }
 
 /* ============================================================================
@@ -927,7 +903,6 @@ FindFontFile(const char *family, int bold, int italic, int pixelSize)
 
     if (family) {
         FcPatternAddString(pat, FC_FAMILY, (FcChar8 *) family);
-        FONT_DEBUG("Looking for font family: %s\n", family);
     }
     FcPatternAddInteger(pat, FC_WEIGHT,
                         bold ? FC_WEIGHT_BOLD : FC_WEIGHT_REGULAR);
@@ -947,11 +922,10 @@ FindFontFile(const char *family, int bold, int italic, int pixelSize)
         FcChar8 *fcPath = NULL;
         if (FcPatternGetString(match, FC_FILE, 0, &fcPath) == FcResultMatch && fcPath) {
             path = strdup((char *) fcPath);
-            FONT_DEBUG("Found font file: %s\n", path);
         }
         FcPatternDestroy(match);
     } else {
-        FONT_DEBUG("No font found for family: %s\n", family ? family : "(null)");
+        fprintf(stderr, "No font found for family: %s\n", family ? family : "(null)");
     }
 
     FcPatternDestroy(pat);
@@ -975,44 +949,58 @@ static void
 InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr, WaylandFont *fontPtr)
 {
     double ptSize = faPtr->size;
-    
-    /* Store the font attributes - they should already be set, but ensure. */
+
+    /* Store the original font attributes (Tk may still need the logical point size). */
     fontPtr->font.fa = *faPtr;
-    
-    /* Calculate pixel size. */
+
+    /* === NEW: Get the correct hi-DPI scale from GLFW (works reliably on Wayland) === */
+    GLFWwindow *win = TkGlfwGetGLFWWindow(tkwin);
+    float contentScale = 1.0f;
+    if (win) {
+        float xscale, yscale;
+        glfwGetWindowContentScale(win, &xscale, &yscale);
+        contentScale = (xscale + yscale) / 2.0f;   /* or just xscale; fonts are usually isotropic */
+    }
+
+    /* Calculate device pixel size for stb_truetype. */
     if (ptSize < 0.0) {
+        /* Negative size = absolute device pixels (Tk convention). Do NOT scale it. */
         fontPtr->pixelSize = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        fontPtr->pixelSize = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
+        /* Positive size = points. Convert using the standard 96 DPI logical base + content scale. */
+        double logicalPx = ptSize * (96.0 / 72.0);          /* 12 pt → ~16 px at scale = 1 */
+        fontPtr->pixelSize = (int)(logicalPx * contentScale + 0.5);
     } else {
-        fontPtr->pixelSize = 12;
+        /* Default = 12 pt (scaled). */
+        double logicalPx = 12.0 * (96.0 / 72.0);
+        fontPtr->pixelSize = (int)(logicalPx * contentScale + 0.5);
     }
-    if (fontPtr->pixelSize < 1) fontPtr->pixelSize = 1;
 
-    int bold = (faPtr->weight == TK_FW_BOLD);
+    if (fontPtr->pixelSize < 1)
+        fontPtr->pixelSize = 1;
+
+    fontPtr->font.fa.size = ptSize; 
+
+    int bold   = (faPtr->weight == TK_FW_BOLD);
     int italic = (faPtr->slant == TK_FS_ITALIC);
 
-    /* Find the font file, but don't load it yet - lazy loading */
+    /* Find font file. */
     if (fontPtr->filePath) {
         free(fontPtr->filePath);
         fontPtr->filePath = NULL;
     }
-    
     fontPtr->filePath = FindFontFile(faPtr->family, bold, italic, fontPtr->pixelSize);
-    
-    /* Don't load font data here - let EnsureFontLoaded do it lazily */
+
+    /* Don't load font data here - let EnsureFontLoaded do it lazily. */
     if (fontPtr->fontData) {
         Tcl_Free((char *)fontPtr->fontData);
         fontPtr->fontData = NULL;
     }
-    
-    /* Initialize glyph cache to NULL */
+
+    /* Initialize glyph cache to NULL. */
     for (int i = 0; i < GLYPH_CACHE_SIZE; i++) {
         fontPtr->glyphCache[i] = NULL;
     }
-    
-    FONT_DEBUG("InitFont: pixelSize=%d, filePath=%s\n", 
-               fontPtr->pixelSize, fontPtr->filePath ? fontPtr->filePath : "(none)");
 }
 
 /*----------------------------------------------------------------------
@@ -1079,14 +1067,11 @@ EnsureFontLoaded(WaylandFont *fontPtr)
         /* Try a fallback font */
         const char *fallback = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
         fontPtr->filePath = strdup(fallback);
-        FONT_DEBUG("Using fallback font: %s\n", fallback);
     }
-
-    FONT_DEBUG("Loading font from: %s\n", fontPtr->filePath);
-    
+  
     FILE *fd = fopen(fontPtr->filePath, "rb");
     if (!fd) {
-        FONT_DEBUG("Failed to open font file: %s\n", fontPtr->filePath);
+        fprintf(stderr, "Failed to open font file: %s\n", fontPtr->filePath);
         return 0;
     }
 
@@ -1110,7 +1095,7 @@ EnsureFontLoaded(WaylandFont *fontPtr)
 
     if (!stbtt_InitFont(&fontPtr->stbInfo, fontPtr->fontData,
                         stbtt_GetFontOffsetForIndex(fontPtr->fontData, 0))) {
-        FONT_DEBUG("Failed to initialize stb_truetype font\n");
+        fprintf(stderr, "Failed to initialize stb_truetype font\n");
         Tcl_Free((char *)fontPtr->fontData);
         fontPtr->fontData = NULL;
         return 0;
@@ -1144,10 +1129,6 @@ EnsureFontLoaded(WaylandFont *fontPtr)
     /* Set tab width to 8 spaces (typical default). */
     fontPtr->font.tabWidth = fontPtr->font.fm.maxWidth * 8;
     
-    FONT_DEBUG("Font loaded: ascent=%d, descent=%d, maxWidth=%d, scale=%f\n",
-               fontPtr->font.fm.ascent, fontPtr->font.fm.descent,
-               fontPtr->font.fm.maxWidth, fontPtr->scale);
-
     return 1;
 }
 
@@ -1239,7 +1220,6 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
         entry->bearing_y = fontPtr->pixelSize;
         entry->advance = entry->width;
         entry->bitmap = NULL;
-        FONT_DEBUG("Missing glyph for codepoint 0x%x\n", codepoint);
         return;
     }
     
@@ -1261,7 +1241,6 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
         entry->width = 0;
         entry->height = 0;
         entry->bitmap = NULL;
-        FONT_DEBUG("Empty glyph for codepoint 0x%x, advance=%d\n", codepoint, entry->advance);
         return;
     }
     
@@ -1270,9 +1249,6 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
     if (entry->bitmap) {
         stbtt_MakeGlyphBitmap(renderInfo, entry->bitmap, entry->width, entry->height,
                               entry->width, renderScale, renderScale, glyph);
-        FONT_DEBUG("Rendered glyph for codepoint 0x%x: size=%dx%d, advance=%d, bearing=(%d,%d)\n",
-                   codepoint, entry->width, entry->height, entry->advance,
-                   entry->bearing_x, entry->bearing_y);
     }
 }
 
