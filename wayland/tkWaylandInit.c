@@ -1399,11 +1399,9 @@ have_mapping:
     dcPtr->offsetY = y_offset;
     dcPtr->drawable = drawable;
     dcPtr->isPixmap = 0;
-
-  //  if (x_offset != 0 || y_offset != 0)
-  //      cg_translate(dcPtr->cg, (double)x_offset, (double)y_offset);   
-  
-cg_translate(dcPtr->cg, (double)x_offset, (double)y_offset);
+ 
+	cg_translate(dcPtr->cg, (double)x_offset, (double)y_offset);
+	
     if (gc) TkGlfwApplyGC(dcPtr->cg, gc);
     return TCL_OK;
 }
