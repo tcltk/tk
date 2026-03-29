@@ -953,7 +953,7 @@ InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr, WaylandFont *fontPtr)
     /* Store the original font attributes (Tk may still need the logical point size). */
     fontPtr->font.fa = *faPtr;
 
-    /* === NEW: Get the correct hi-DPI scale from GLFW (works reliably on Wayland) === */
+    /* Get the correct hi-DPI scale from GLFW (works reliably on Wayland). */
     GLFWwindow *win = TkGlfwGetGLFWWindow(tkwin);
     float contentScale = 1.0f;
     if (win) {
@@ -1002,7 +1002,6 @@ InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr, WaylandFont *fontPtr)
         fontPtr->glyphCache[i] = NULL;
     }
 }
-
 /*----------------------------------------------------------------------
  * DeleteFont --
  *

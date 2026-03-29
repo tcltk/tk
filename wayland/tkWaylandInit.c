@@ -574,6 +574,7 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     ckfree((char *)rgba);
     m->texture.needs_texture_update = 0;
 }
+
 /*
  *----------------------------------------------------------------------
  *
