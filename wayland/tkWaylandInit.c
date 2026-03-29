@@ -575,6 +575,7 @@ TkGlfwUploadSurfaceToTexture(WindowMapping *m)
     m->texture.needs_texture_update = 0;
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -644,6 +645,7 @@ TkGlfwRenderTexture(WindowMapping *m)
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -824,7 +826,8 @@ TkGlfwCreateWindow(
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
 
-    /* Create GLFW window with opaque framebuffer */
+    /* Create GLFW window with opaque framebuffer. */
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);  /* Explicitly disable transparency. */
     glfwWindowHint(GLFW_RED_BITS,   8);
     glfwWindowHint(GLFW_GREEN_BITS, 8);
     glfwWindowHint(GLFW_BLUE_BITS,  8);
@@ -836,7 +839,7 @@ TkGlfwCreateWindow(
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);  /* Explicitly disable transparency. */
+  
 
     window = glfwCreateWindow(width, height, title ? title : "", NULL, NULL);
     if (!window) {
