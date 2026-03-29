@@ -33,7 +33,9 @@
  */
 
 /* Glyph cache entry - for direct rendering we still cache rendered glyph
- * bitmaps to avoid re-rendering the same glyph multiple times. */
+ * bitmaps to avoid re-rendering the same glyph multiple times. 
+ * NOTE: Glyphs are cached at a specific contentScale. If scale changes,
+ * we may need to re-render (future optimization). */
 typedef struct GlyphCacheEntry {
     int codepoint;               /* Unicode codepoint */
     int width;                   /* Glyph width in pixels */
@@ -41,6 +43,7 @@ typedef struct GlyphCacheEntry {
     int bearing_x;               /* Left side bearing in pixels */
     int bearing_y;               /* Top side bearing (from baseline) */
     int advance;                 /* Advance width in pixels */
+    float contentScale;          /* Content scale this glyph was rendered at */
     unsigned char *bitmap;       /* Rendered glyph bitmap (alpha only) */
     struct GlyphCacheEntry *next; /* Hash chain */
 } GlyphCacheEntry;
@@ -54,13 +57,13 @@ typedef struct {
     char       *filePath;       /* Absolute path returned by Fontconfig. */
     unsigned char *fontData;    /* Mapped font file data. */
     stbtt_fontinfo stbInfo;     /* stb_truetype font info. */
-    float       scale;          /* Scale factor for pixel siz.e */
+    float       scale;          /* Scale factor for pixel size. */
     
     /* Glyph cache for this font. */
     GlyphCacheEntry *glyphCache[GLYPH_CACHE_SIZE];
     
     /* Metrics */
-    int         pixelSize;      /* Resolved size in pixels. */
+    float       pixelSize;      /* Resolved size in pixels (float for precision). */
     int         underlinePos;   /* Pixels below baseline for underline. */
     int         barHeight;      /* Thickness of under/overstrike bar. */
 } WaylandFont;
@@ -78,8 +81,10 @@ static char    *FindFontFile(const char *family, int bold, int italic, int pixel
 static void     InitFont(Tk_Window tkwin, const TkFontAttributes *fa, WaylandFont *fontPtr);
 static void     DeleteFont(WaylandFont *fontPtr);
 static int      EnsureFontLoaded(WaylandFont *fontPtr);
-static int      GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry **entryOut);
-static void     RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry);
+static int      GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, float contentScale, 
+                                GlyphCacheEntry **entryOut);
+static void     RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, float contentScale,
+                                     GlyphCacheEntry *entry);
 static void     DrawGlyphDirect(struct cg_ctx_t *cg, WaylandFont *fontPtr, 
                                  GlyphCacheEntry *glyph, float x, float y, uint32_t color);
 static void     DrawRectangle(struct cg_ctx_t *cg, float x, float y, float w, float h, uint32_t color);
@@ -512,14 +517,15 @@ Tk_MeasureCharsInContext(
             break;
         }
         
-        /* Get glyph cache entry which includes advance. */
+        /* Get glyph cache entry which includes advance.
+         * For measurement, use contentScale = 1.0 (logical pixels). */
         GlyphCacheEntry *glyphEntry = NULL;
         int advance;
         
-        if (GetGlyphBitmap(fontPtr, codepoint, &glyphEntry) && glyphEntry) {
+        if (GetGlyphBitmap(fontPtr, codepoint, 1.0f, &glyphEntry) && glyphEntry) {
             advance = glyphEntry->advance;
         } else {
-            advance = fontPtr->pixelSize / 2;
+            advance = (int)(fontPtr->pixelSize / 2.0f + 0.5f);
         }
         
         /* Check if we exceed maxLength. */
@@ -551,10 +557,10 @@ Tk_MeasureCharsInContext(
         GlyphCacheEntry *glyphEntry = NULL;
         int advance;
         
-        if (GetGlyphBitmap(fontPtr, codepoint, &glyphEntry) && glyphEntry) {
+        if (GetGlyphBitmap(fontPtr, codepoint, 1.0f, &glyphEntry) && glyphEntry) {
             advance = glyphEntry->advance;
         } else {
-            advance = fontPtr->pixelSize / 2;
+            advance = (int)(fontPtr->pixelSize / 2.0f + 0.5f);
         }
         
         totalWidth = advance;
@@ -814,9 +820,10 @@ TkpDrawAngledCharsInContext(
             break;
         }
         
-        /* Get the rendered glyph bitmap from cache. */
+        /* Get the rendered glyph bitmap from cache (HiDPI-aware). */
         GlyphCacheEntry *glyphEntry = NULL;
-        if (GetGlyphBitmap(fontPtr, codepoint, &glyphEntry) && glyphEntry && glyphEntry->bitmap) {
+        if (GetGlyphBitmap(fontPtr, codepoint, contentScale, &glyphEntry) && 
+            glyphEntry && glyphEntry->bitmap) {
             /* Set color for this glyph. */
             struct cg_color_t cg_color;
             cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
@@ -834,8 +841,9 @@ TkpDrawAngledCharsInContext(
             /* Advance cursor by the glyph's advance. */
             drawX += glyphEntry->advance;
         } else {
-            /* Missing glyph - draw a placeholder rectangle (scaled). */
-            float boxWidth = (fontPtr->pixelSize * contentScale) / 2;
+            /* Missing glyph - draw a placeholder rectangle.
+             * Glyphs are now rendered at the scaled size, so use entry dimensions. */
+            float boxWidth = (fontPtr->pixelSize * contentScale) / 2.0f;
             float boxHeight = fontPtr->pixelSize * contentScale;
             struct cg_color_t cg_color;
             cg_color.r = ((color >> 24) & 0xFF) / 255.0f;
@@ -961,32 +969,33 @@ InitFont(Tk_Window tkwin, const TkFontAttributes *faPtr, WaylandFont *fontPtr)
     /* Store the original font attributes. */
     fontPtr->font.fa = *faPtr;
     
-    /* Calculate LOGICAL pixel size (no scaling). */
+    /* Calculate LOGICAL pixel size as FLOAT (no scaling, no premature rounding). */
     if (ptSize < 0.0) {
         /* Negative size = absolute pixels (logical). */
-        fontPtr->pixelSize = (int)(-ptSize + 0.5);
+        fontPtr->pixelSize = (float)(-ptSize);
     } else if (ptSize > 0.0) {
         /* Positive size = points. Convert at 96 DPI baseline. */
-        fontPtr->pixelSize = (int)(ptSize * (96.0 / 72.0) + 0.5);
+        fontPtr->pixelSize = (float)(ptSize * (96.0 / 72.0));
     } else {
         /* Default = 12 pt. */
-        fontPtr->pixelSize = (int)(12.0 * (96.0 / 72.0) + 0.5);
+        fontPtr->pixelSize = (float)(12.0 * (96.0 / 72.0));
     }
     
-    if (fontPtr->pixelSize < 1)
-        fontPtr->pixelSize = 1;
+    if (fontPtr->pixelSize < 1.0f)
+        fontPtr->pixelSize = 1.0f;
     
     fontPtr->font.fa.size = ptSize; 
     
     int bold   = (faPtr->weight == TK_FW_BOLD);
     int italic = (faPtr->slant == TK_FS_ITALIC);
     
-    /* Find font file. */
+    /* Find font file - pass integer pixel size hint to fontconfig. */
     if (fontPtr->filePath) {
         free(fontPtr->filePath);
         fontPtr->filePath = NULL;
     }
-    fontPtr->filePath = FindFontFile(faPtr->family, bold, italic, fontPtr->pixelSize);
+    fontPtr->filePath = FindFontFile(faPtr->family, bold, italic, 
+                                     (int)(fontPtr->pixelSize + 0.5f));
     
     /* Don't load font data here - let EnsureFontLoaded do it lazily. */
     if (fontPtr->fontData) {
@@ -1098,9 +1107,11 @@ EnsureFontLoaded(WaylandFont *fontPtr)
         return 0;
     }
 
-    /* Compute scale and metrics. */
-    fontPtr->scale = stbtt_ScaleForPixelHeight(&fontPtr->stbInfo, 
-                                                (float)fontPtr->pixelSize);
+    /* Compute scale and metrics using ScaleForMappingEmToPixels for accurate sizing.
+     * This maps the font's Em square to the requested pixel size, not ascent+descent.
+     */
+    fontPtr->scale = stbtt_ScaleForMappingEmToPixels(&fontPtr->stbInfo, 
+                                                      fontPtr->pixelSize);
     
     int ascent, descent, linegap;
     stbtt_GetFontVMetrics(&fontPtr->stbInfo, &ascent, &descent, &linegap);
@@ -1116,7 +1127,7 @@ EnsureFontLoaded(WaylandFont *fontPtr)
     /* Set underline fields that Tk expects in the TkFont structure. */
     fontPtr->underlinePos = fontPtr->font.fm.descent / 2;
     if (fontPtr->underlinePos < 1) fontPtr->underlinePos = 1;
-    fontPtr->barHeight = (int)(fontPtr->pixelSize * 0.07 + 0.5);
+    fontPtr->barHeight = (int)(fontPtr->pixelSize * 0.07f + 0.5f);
     if (fontPtr->barHeight < 1) fontPtr->barHeight = 1;
     
     /* Store underline info in the TkFont structure as well. */
@@ -1132,40 +1143,48 @@ EnsureFontLoaded(WaylandFont *fontPtr)
 /*----------------------------------------------------------------------
  * GetGlyphBitmap --
  *
- *   Get a cached glyph bitmap for the given codepoint.
+ *   Get a cached glyph bitmap for the given codepoint at the specified
+ *   content scale. For simplicity, we currently ignore scale in the
+ *   cache lookup (always re-render if not found). A future optimization
+ *   could cache multiple scales or invalidate on scale change.
  *
  * Results:
  *   Returns 1 on success, 0 on failure, and sets entryOut.
  *
  * Side effects:
- *   May render and cache a new glyph.
+ *   May render and cache a new glyph at the current content scale.
  *----------------------------------------------------------------------
  */
 
 static int
-GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry **entryOut)
+GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, float contentScale, 
+               GlyphCacheEntry **entryOut)
 {
     unsigned int hash = GlyphHash(codepoint);
     GlyphCacheEntry *entry = fontPtr->glyphCache[hash];
     
-    /* Search cache. */
+    /* Search cache for matching codepoint AND scale. 
+     * For now, we use a simple tolerance check (within 0.01). */
+    const float SCALE_TOLERANCE = 0.01f;
     while (entry) {
-        if (entry->codepoint == codepoint) {
+        if (entry->codepoint == codepoint && 
+            fabsf(entry->contentScale - contentScale) < SCALE_TOLERANCE) {
             *entryOut = entry;
             return 1;
         }
         entry = entry->next;
     }
     
-    /* Not found - create new entry. */
+    /* Not found at this scale - create new entry. */
     entry = (GlyphCacheEntry *)Tcl_Alloc(sizeof(GlyphCacheEntry));
     if (!entry) return 0;
     
     memset(entry, 0, sizeof(GlyphCacheEntry));
     entry->codepoint = codepoint;
+    entry->contentScale = contentScale;
     
-    /* Render glyph to bitmap. */
-    RenderGlyphToBitmap(fontPtr, codepoint, entry);
+    /* Render glyph to bitmap at the requested content scale. */
+    RenderGlyphToBitmap(fontPtr, codepoint, contentScale, entry);
     
     /* Add to cache. */
     entry->next = fontPtr->glyphCache[hash];
@@ -1178,21 +1197,27 @@ GetGlyphBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry **entryOut)
 /*----------------------------------------------------------------------
  * RenderGlyphToBitmap --
  *
- *   Render a glyph for the given codepoint to a bitmap.
+ *   Render a glyph for the given codepoint to a bitmap at the specified
+ *   content scale (for HiDPI support).
  *
  * Results:
  *   None.
  *
  * Side effects:
- *   The entry's bitmap and metrics are set.
+ *   The entry's bitmap and metrics are set, scaled appropriately.
  *----------------------------------------------------------------------
  */
 
 static void
-RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
+RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, float contentScale,
+                    GlyphCacheEntry *entry)
 {
     stbtt_fontinfo *info = &fontPtr->stbInfo;
-    float scale = fontPtr->scale;
+    
+    /* Calculate the PHYSICAL pixel size by scaling the logical size.
+     * This ensures glyphs are rendered at native resolution on HiDPI displays. */
+    float physicalPixelSize = fontPtr->pixelSize * contentScale;
+    float scale = stbtt_ScaleForMappingEmToPixels(info, physicalPixelSize);
     
     /* Try to get glyph from main font. */
     int glyph = stbtt_FindGlyphIndex(info, codepoint);
@@ -1204,17 +1229,16 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
         glyph = stbtt_FindGlyphIndex(&emojiInfo, codepoint);
         if (glyph != 0) {
             renderInfo = &emojiInfo;
-            renderScale = stbtt_ScaleForPixelHeight(renderInfo,
-                                                      (float)fontPtr->pixelSize);
+            renderScale = stbtt_ScaleForMappingEmToPixels(renderInfo, physicalPixelSize);
         }
     }
     
     if (glyph == 0) {
-        /* Missing glyph - create placeholder box metrics. */
-        entry->width = fontPtr->pixelSize / 2;
-        entry->height = fontPtr->pixelSize;
+        /* Missing glyph - create placeholder box metrics (scaled). */
+        entry->width = (int)(physicalPixelSize / 2.0f + 0.5f);
+        entry->height = (int)(physicalPixelSize + 0.5f);
         entry->bearing_x = 0;
-        entry->bearing_y = fontPtr->pixelSize;
+        entry->bearing_y = (int)(physicalPixelSize + 0.5f);
         entry->advance = entry->width;
         entry->bitmap = NULL;
         return;
@@ -1241,7 +1265,7 @@ RenderGlyphToBitmap(WaylandFont *fontPtr, int codepoint, GlyphCacheEntry *entry)
         return;
     }
     
-    /* Render glyph to bitmap. */
+    /* Render glyph to bitmap at the scaled size. */
     entry->bitmap = (unsigned char *)Tcl_Alloc(entry->width * entry->height);
     if (entry->bitmap) {
         stbtt_MakeGlyphBitmap(renderInfo, entry->bitmap, entry->width, entry->height,
