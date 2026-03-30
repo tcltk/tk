@@ -568,8 +568,8 @@ declare 149 {
     void Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr, int *heightPtr)
 }
 # Just a stub entry, for binary compatibility with Tk 9.1.
-declare 150 {
-    Tcl_Size TkPointToChar_(Tk_TextLayout layout, int x, int y)
+declare 150 {deprecated {MODULE_SCOPE, only for internal use}} {
+    Tcl_Size TkPointToChar(Tk_TextLayout layout, int x, int y)
 }
 declare 151 {
     int Tk_PointToChar(Tk_TextLayout layout, int x, int y)
