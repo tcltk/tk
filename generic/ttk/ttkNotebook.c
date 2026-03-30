@@ -289,8 +289,8 @@ static void ActivateTab(Notebook *nb, Tcl_Size index)
  * TabState --
  *	Return the state of the specified tab, based on
  *	notebook state, currentIndex, activeIndex, and user-specified tab state.
- *	The USER1 bit is set for the leftmost visible tab, and USER2
- *	is set for the rightmost visible tab.
+ *	The TTK_STATE_FIRST bit is set for the leftmost visible tab, and
+ *	TTK_STATE_LAST is set for the rightmost visible tab.
  */
 static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 {
