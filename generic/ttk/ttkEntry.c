@@ -424,7 +424,7 @@ ExpandPercents(
      const char *templ,	/* Script template */
      const char *newValue,		/* Potential new value of entry string */
      Tcl_Size index,			/* index of insert/delete */
-     int count,			/* #changed characters */
+     Tcl_Size count,			/* #changed characters */
      VREASON reason,		/* Reason for change */
      Tcl_DString *dsPtr)	/* Result of %-substitutions */
 {
@@ -696,7 +696,7 @@ static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
  *	Adjust index to account for insertion (nChars > 0)
  *	or deletion (nChars < 0) at specified index.
  */
-static int AdjustIndex(int i0, int index, int nChars)
+static Tcl_Size AdjustIndex(Tcl_Size i0, Tcl_Size index, Tcl_Size nChars)
 {
     if (i0 >= index) {
 	i0 += nChars;
@@ -712,7 +712,7 @@ static int AdjustIndex(int i0, int index, int nChars)
  *	Note that insertPos, and selectFirst have "right gravity",
  *	while leftIndex (=xscroll.first) and selectLast have "left gravity".
  */
-static void AdjustIndices(Entry *entryPtr, int index, int nChars)
+static void AdjustIndices(Entry *entryPtr, Tcl_Size index, Tcl_Size nChars)
 {
     EntryPart *e = &entryPtr->entry;
     int g = nChars > 0;		/* left gravity adjustment */
@@ -848,7 +848,7 @@ InsertChars(
     const char *value = Tcl_GetString(obj);
     size_t byteIndex = Tcl_UtfAtIndex(string, index) - string;
     size_t byteCount = strlen(value);
-    int charsAdded = Tcl_NumUtfChars(value, byteCount);
+    Tcl_Size charsAdded = Tcl_NumUtfChars(value, byteCount);
     size_t newByteCount = entryPtr->entry.numBytes + byteCount + 1;
     char *newBytes;
     int code;
@@ -1125,8 +1125,8 @@ EntryDoLayout(void *recordPtr)
     Entry *entryPtr = (Entry *)recordPtr;
     WidgetCore *corePtr = &entryPtr->core;
     Tk_TextLayout textLayout = entryPtr->entry.textLayout;
-    int leftIndex = entryPtr->entry.xscroll.first;
-    int rightIndex;
+    Tcl_Size leftIndex = entryPtr->entry.xscroll.first;
+    Tcl_Size rightIndex;
     Ttk_Box textarea;
 
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
@@ -1159,7 +1159,7 @@ EntryDoLayout(void *recordPtr)
 	 * of empty space on the right.
 	 */
 	int overflow = entryPtr->entry.layoutWidth - textarea.width;
-	int maxLeftIndex = 1 + Tk_PointToChar(textLayout, overflow, 0);
+	Tcl_Size maxLeftIndex = 1 + Tk_PointToChar(textLayout, overflow, 0);
 	int leftX;
 
 	if (leftIndex > maxLeftIndex) {

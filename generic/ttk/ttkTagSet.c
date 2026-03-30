@@ -304,7 +304,7 @@ void Ttk_TagSetDefaults(Ttk_TagTable tagTable, Ttk_Style style, void *record)
     memset(record, 0, tagTable->recordSize);
 
     while (optionSpec->type != TK_OPTION_END) {
-	int offset = optionSpec->objOffset;
+	Tcl_Size offset = optionSpec->objOffset;
 	const char *optionName = optionSpec->optionName;
 	OBJ_AT(record, offset) = Ttk_StyleDefault(style, optionName);
 	++optionSpec;
@@ -319,7 +319,7 @@ void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
 	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
 	Tcl_Size offset = optionSpec->objOffset;
-	int prio = LOWEST_PRIORITY;
+	Tcl_Size prio = LOWEST_PRIORITY;
 
 	for (j = 0; j < tagSet->nTags; ++j) {
 	    Ttk_Tag tag = tagSet->tags[j];
