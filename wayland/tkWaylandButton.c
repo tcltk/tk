@@ -370,6 +370,7 @@ static void
 DrawButtonText(TkButton *butPtr, TkWaylandDrawingContext *dc,
                 int x, int y)
 {
+    printf("DrawButtonText\n");
     GC currentGC;
     
     /* Select appropriate GC based on button state. */

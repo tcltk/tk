@@ -273,12 +273,17 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
     /* If we have a wakeup fd, we can block indefinitely since we'll be woken. */
     if (tsdPtr->wakeupFd != -1 && glfwContext.initialized) {
         /* Check if GLFW has pending events. */
+	//// Actually, there is no way to check if GLFW has pending events.
+	//// All you can do is process all events, optionally blocking with
+	//// a timeout as long as the queue is empty.
         if (glfwContext.initialized) {
             /* Let Tcl block - we'll wake up via file event. */
             return;
         }
     }
-    
+
+    //// In order to use this timeout we would need to create 
+    //// which just calls 
     /* Otherwise use timer-based approach. */
     if (!(flags & TCL_WINDOW_EVENTS)) {
         /* Not interested in window events - use timer. */
@@ -294,7 +299,9 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
  * TkWaylandEventsCheckProc --
  *
  *      Process pending Wayland/GLFW events and queue Tk events.
- *      Called by Tcl_DoOneEvent after events are posted.
+ *      Called by Tcl_DoOneEvent after calling Tcl_WaitForEvent, which
+ *      will call tclNotifierHooks.waitForEventProc if it is defined.
+        //// We should define it to call glfwWaitEventsTimeout. 
  *
  * Results:
  *      None.
@@ -317,7 +324,8 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
      */
 
     glfwPollEvents();
-
+#if 0
+    //// I don't think we need any of this.
     /*
      * Update window graphics.
      */
@@ -340,9 +348,10 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
             m->frameOpen = 1;
 	}
 	/* Force a display flush at the end of this Tcl cycle. */
-	Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
+	//Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
         m = m->nextPtr;
     }
+#endif
 } 
 /*
  *----------------------------------------------------------------------
@@ -624,45 +633,6 @@ TkWaylandDisplayProc(ClientData clientData)
     /* Clear only the screen backbuffer, not our FBO! */
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // Start a frame
-    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height,
-		  (float)fbw/m->width);
-
-    //Do some fake drawing - a red square in a blue window.
-    glBindFramebuffer(GL_FRAMEBUFFER, m->fbo->image);
-    glClearColor(0.0, 0.0, 1.0, 0.0);  //Looks like alpha is ignored.
-    nvgStrokeColor(glfwContext.vg, nvgRGBA(255, 0, 0, 255));
-    nvgBeginPath(glfwContext.vg);
-    nvgRect(glfwContext.vg, 10.0, 10.0, 30.0, 30.0);
-    nvgStroke(glfwContext.vg);
-
-    // Blit the FBO to the (default) back buffer.
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->image);
-    glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
-		      0, 0, (int)m->width, (int)m->height,
-		      GL_COLOR_BUFFER_BIT,
-		      GL_NEAREST);
-    // End the frame.
-    nvgEndFrame(glfwContext.vg);
-    // Wwap buffers.
-    glfwSwapBuffers(m->glfwWindow);
-
-#if 0
-    /* Create a paint pattern from the FBO's image. */
-    NVGpaint imgPaint = nvgImagePattern(glfwContext.vg, 0, 0, 
-                                        (float)m->width, (float)m->height, 
-                                        0, m->fbo->image, 1.0f);
-    
-    /* Draw the FBO to the window. */
-    nvgBeginPath(glfwContext.vg);
-    nvgRect(glfwContext.vg, 0, 0, (float)m->width, (float)m->height);
-    nvgFillPaint(glfwContext.vg, imgPaint);
-    nvgFill(glfwContext.vg);
-    nvgEndFrame(glfwContext.vg);
-    glfwSwapBuffers(m->glfwWindow);
-#endif
-    
     m->needsDisplay = 0;
 }
 
