@@ -313,13 +313,12 @@ void Ttk_TagSetDefaults(Ttk_TagTable tagTable, Ttk_Style style, void *record)
 
 void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 {
-    const int LOWEST_PRIORITY = 0x7FFFFFFF;
     Tcl_Size i, j;
 
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
 	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
 	Tcl_Size offset = optionSpec->objOffset;
-	Tcl_Size prio = LOWEST_PRIORITY;
+	Tcl_Size prio = TCL_SIZE_MAX;
 
 	for (j = 0; j < tagSet->nTags; ++j) {
 	    Ttk_Tag tag = tagSet->tags[j];
