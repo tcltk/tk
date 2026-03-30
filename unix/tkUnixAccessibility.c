@@ -5,9 +5,9 @@
  * on Unix-like systems based on the Gnome Accessibility Toolkit.
  * the standard accessibility library for X11 systems.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
- * Copyright (c) 2006, Marcus von Appen
- * Copyright (c) 2019-2025 Kevin Walzer
+ * Copyright © 1995 Sun Microsystems, Inc.
+ * Copyright © 2006, Marcus von Appen
+ * Copyright © 2019-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1955,9 +1955,6 @@ int TkAtkAccessibility_Init(Tcl_Interp *interp)
 	Tcl_SetResult(interp, "Failed to get main window", TCL_STATIC);
 	return TCL_ERROR;
     }
-
-    Tk_MakeWindowExist(mainWin);
-    Tk_MapWindow(mainWin);
 
     AtkObject *main_acc = TkCreateAccessibleAtkObject(interp, mainWin, Tk_PathName(mainWin));
     if (!main_acc) {

@@ -1052,7 +1052,7 @@ GridRowColumnConfigureCommand(
 	if (Tcl_GetSizeIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
 		    " (when retrieving options only integer indices are "
-		    "allowed)", NULL);
+		    "allowed)", (char *)NULL);
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "INDEX_FORMAT", (char *)NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;

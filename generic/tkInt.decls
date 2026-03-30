@@ -1000,10 +1000,10 @@ declare 9 {
 declare 10 {
     XHostAddress *XListHosts(Display *d, int *i, Bool *b)
 }
-# second parameter was of type KeyCode
-declare 11 {
-    KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
-}
+# Removed in 9.1, because it is deprecated in X11
+#declare 11 {
+#    KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
+#}
 declare 12 {
     KeySym XStringToKeysym(const char *c)
 }
