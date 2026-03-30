@@ -195,14 +195,14 @@ typedef struct {
     Tk_TextLayout textLayout;	/* Saved text layout information. */
     int indicatorSpace;		/* Horizontal space (in pixels) allocated for
 				 * display of indicator. */
+    double angle;		/* Value of -textangle option. */
+    int xoffset, yoffset;	/* Offset for drawing with angle. */
     int indicatorDiameter;	/* Diameter of indicator, in pixels. */
     enum defaultState defaultState;
 				/* Value of -default option, such as
 				 * DEFAULT_NORMAL: specifies state of default
 				 * ring for buttons (normal, active, or
 				 * disabled). NULL for other classes. */
-    double angle;		/* Value of -angle option. */
-    double xoffset, yoffset;	/* Offset for drawing with angle. */
 
     /*
      * For check and radio buttons, the fields below are used to manage the

@@ -986,6 +986,7 @@ static void TabElementSize(
 
     if (mainInfoPtr != NULL) {
 	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabsStickBit &= 0x0f;
     }
 
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
@@ -1026,6 +1027,7 @@ static void TabElementDraw(
 
     if (mainInfoPtr != NULL) {
 	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabsStickBit &= 0x0f;
     }
 
     if (state & TTK_STATE_SELECTED) {
