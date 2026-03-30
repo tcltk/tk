@@ -336,7 +336,7 @@ static void		FreeFontObj(Tcl_Obj *objPtr);
 static void		FreeFontObjProc(Tcl_Obj *objPtr);
 static int		GetAttributeInfoObj(Tcl_Interp *interp,
 			    const TkFontAttributes *faPtr, Tcl_Obj *objPtr);
-static LayoutChunk *	NewChunk(TextLayout **layoutPtrPtr, int *maxPtr,
+static LayoutChunk *	NewChunk(TextLayout **layoutPtrPtr, Tcl_Size *maxPtr,
 			    const char *start, Tcl_Size numChars, int curX,
 			    int newX, int y);
 static int		ParseFontNameObj(Tcl_Interp *interp, Tk_Window tkwin,
@@ -506,7 +506,8 @@ Tk_FontObjCmd(
 
     switch ((enum options) index) {
     case FONT_ACTUAL: {
-	int skip, result, n;
+	int result;
+	Tcl_Size skip, n;
 	const char *s;
 	Tk_Font tkfont;
 	Tcl_Obj *optPtr, *charPtr, *resultPtr;
@@ -576,9 +577,9 @@ Tk_FontObjCmd(
 
 	if (charPtr != NULL) {
 	    const char *string = Tcl_GetString(charPtr);
-	    size_t len = Tcl_UtfToUniChar(string, &uniChar);
+	    Tcl_Size len = Tcl_UtfToUniChar(string, &uniChar);
 
-	    if (len != (size_t)charPtr->length) {
+	    if (len != charPtr->length) {
 		resultPtr = Tcl_NewStringObj(
 			"expected a single character but got \"", TCL_INDEX_NONE);
 		Tcl_AppendLimitedToObj(resultPtr, string,
@@ -691,7 +692,8 @@ Tk_FontObjCmd(
 	break;
     }
     case FONT_DELETE: {
-	int i, result = TCL_OK;
+	Tcl_Size i;
+	int result = TCL_OK;
 	const char *string;
 
 	/*
@@ -710,7 +712,7 @@ Tk_FontObjCmd(
 	return result;
     }
     case FONT_FAMILIES: {
-	int skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
+	Tcl_Size skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
 
 	if (skip < 0) {
 	    return TCL_ERROR;
@@ -726,7 +728,7 @@ Tk_FontObjCmd(
 	const char *string;
 	Tk_Font tkfont;
 	Tcl_Size length = 0;
-	int skip = 0;
+	Tcl_Size skip = 0;
 
 	if (objc > 4) {
 	    skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
@@ -751,7 +753,8 @@ Tk_FontObjCmd(
     }
     case FONT_METRICS: {
 	Tk_Font tkfont;
-	int skip, i;
+	Tcl_Size skip;
+	int i;
 	const TkFontMetrics *fmPtr;
 	static const char *const switches[] = {
 	    "-ascent", "-descent", "-fixed", "-linespace", NULL
@@ -1707,7 +1710,8 @@ Tk_PostscriptFontName(
     TkFont *fontPtr = (TkFont *) tkfont;
     Tk_Uid family, weightString, slantString;
     char *src, *dest;
-    int upper, len;
+    Tcl_Size len;
+    int upper;
 
     len = Tcl_DStringLength(dsPtr);
 
@@ -1868,7 +1872,7 @@ Tk_TextWidth(
     int width;
 
     if (numBytes < 0) {
-	numBytes = strlen(string);
+	numBytes = (Tcl_Size)strlen(string);
     }
     Tk_MeasureChars(tkfont, string, numBytes, -1, 0, &width);
     return width;
@@ -1998,8 +2002,8 @@ Tk_ComputeTextLayout(
 {
     TkFont *fontPtr = (TkFont *) tkfont;
     const char *start, *endp, *special;
-    Tcl_Size n;
-    int y, bytesThisChunk, maxChunks, curLine, layoutHeight;
+    Tcl_Size n, maxChunks, bytesThisChunk;
+    int y, curLine, layoutHeight;
     int baseline, height, curX, newX, maxWidth, *lineLengths;
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
@@ -2032,7 +2036,7 @@ Tk_ComputeTextLayout(
     maxChunks = 1;
 
     layoutPtr = (TextLayout *)ckalloc(offsetof(TextLayout, chunks)
-	    + maxChunks * sizeof(LayoutChunk));
+	    + (size_t)maxChunks * sizeof(LayoutChunk));
     layoutPtr->tkfont = tkfont;
     layoutPtr->string = string;
     layoutPtr->numChunks = 0;
@@ -2402,7 +2406,8 @@ TkDrawAngledTextLayout(
 				 * means to draw all characters. */
 {
     TextLayout *layoutPtr = (TextLayout *) layout;
-    int i, numDisplayChars, drawX;
+    Tcl_Size i, numDisplayChars;
+    int drawX;
     const char *firstByte, *lastByte;
     LayoutChunk *chunkPtr;
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
@@ -2551,10 +2556,10 @@ TkUnderlineAngledTextLayout(
 	 * minimizes roundoff errors.
 	 */
 
-	points[0].x = x + ROUND16(xx*cosA + dy*sinA);
-	points[0].y = y + ROUND16(dy*cosA - xx*sinA);
-	points[1].x = x + ROUND16(xx*cosA + dy*sinA + width*cosA);
-	points[1].y = y + ROUND16(dy*cosA - xx*sinA - width*sinA);
+	points[0].x = (short)(x + ROUND16(xx*cosA + dy*sinA));
+	points[0].y = (short)(y + ROUND16(dy*cosA - xx*sinA));
+	points[1].x = (short)(x + ROUND16(xx*cosA + dy*sinA + width*cosA));
+	points[1].y = (short)(y + ROUND16(dy*cosA - xx*sinA - width*sinA));
 	if (fontPtr->underlineHeight == 1) {
 	    /*
 	     * Thin underlines look better when rotated when drawn as a line
@@ -2563,14 +2568,14 @@ TkUnderlineAngledTextLayout(
 
 	    XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
 	} else {
-	    points[2].x = x + ROUND16(xx*cosA + dy*sinA + width*cosA
-		    + fontPtr->underlineHeight*sinA);
-	    points[2].y = y + ROUND16(dy*cosA - xx*sinA - width*sinA
-		    + fontPtr->underlineHeight*cosA);
-	    points[3].x = x + ROUND16(xx*cosA + dy*sinA
-		    + fontPtr->underlineHeight*sinA);
-	    points[3].y = y + ROUND16(dy*cosA - xx*sinA
-		    + fontPtr->underlineHeight*cosA);
+	    points[2].x = (short)(x + ROUND16(xx*cosA + dy*sinA + width*cosA
+		    + fontPtr->underlineHeight*sinA));
+	    points[2].y = (short)(y + ROUND16(dy*cosA - xx*sinA - width*sinA
+		    + fontPtr->underlineHeight*cosA));
+	    points[3].x = (short)(x + ROUND16(xx*cosA + dy*sinA
+		    + fontPtr->underlineHeight*sinA));
+	    points[3].y = (short)(y + ROUND16(dy*cosA - xx*sinA
+		    + fontPtr->underlineHeight*cosA));
 	    points[4].x = points[0].x;
 	    points[4].y = points[0].y;
 	    XFillPolygon(display, drawable, gc, points, 5, Complex,
@@ -2620,10 +2625,22 @@ Tk_PointToChar(
 				 * to the upper-left corner of the text
 				 * layout. */
 {
+    return (int)TkPointToChar(layout, x, y);
+}
+
+Tcl_Size
+TkPointToChar(
+    Tk_TextLayout layout,	/* Layout information, from a previous call to
+				 * Tk_ComputeTextLayout(). */
+    int x, int y)		/* Coordinates of point to check, with respect
+				 * to the upper-left corner of the text
+				 * layout. */
+{
     TextLayout *layoutPtr = (TextLayout *) layout;
     LayoutChunk *chunkPtr, *lastPtr;
     TkFont *fontPtr;
-    int i, n, dummy, baseline, pos, numChars;
+    Tcl_Size i, n, numChars, pos;
+    int dummy, baseline;
 
     if (y < 0) {
 	/*
@@ -3847,7 +3864,7 @@ ParseFontNameObj(
 static LayoutChunk *
 NewChunk(
     TextLayout **layoutPtrPtr,
-    int *maxPtr,
+    Tcl_Size *maxPtr,
     const char *start,
     Tcl_Size numBytes,
     int curX,
@@ -3856,14 +3873,14 @@ NewChunk(
 {
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
-    int maxChunks, numChars;
+    Tcl_Size maxChunks, numChars;
     size_t s;
 
     layoutPtr = *layoutPtrPtr;
     maxChunks = *maxPtr;
     if (layoutPtr->numChunks == maxChunks) {
 	maxChunks *= 2;
-	s = offsetof(TextLayout, chunks) + (maxChunks * sizeof(LayoutChunk));
+	s = offsetof(TextLayout, chunks) + ((size_t)maxChunks * sizeof(LayoutChunk));
 	layoutPtr = (TextLayout *)ckrealloc(layoutPtr, s);
 
 	*layoutPtrPtr = layoutPtr;

@@ -116,7 +116,7 @@ UnderlineParseProc(
 
     obj.refCount = 1;
     obj.bytes = (char *)value;
-    obj.length = strlen(value);
+    obj.length = (Tcl_Size)strlen(value);
     obj.typePtr = NULL;
     code = TkGetIntForIndex(&obj, TCL_INDEX_NONE, 0, &underline);
     if (code == TCL_OK) {
@@ -1092,7 +1092,7 @@ TextInsert(
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteIndex, charsAdded;
+    Tcl_Size byteIndex, charsAdded;
     Tcl_Size byteCount;
     const char *string, *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1175,7 +1175,7 @@ TextDeleteChars(
 				 * (inclusive). */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteIndex, byteCount, charsRemoved;
+    Tcl_Size byteIndex, byteCount, charsRemoved;
     const char *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
@@ -1526,7 +1526,7 @@ GetTextIndex(
 	y = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
 	x -= (int) textPtr->drawOrigin[0];
 	y -= (int) textPtr->drawOrigin[1];
-	*indexPtr = Tk_PointToChar(textPtr->textLayout,
+	*indexPtr = TkPointToChar(textPtr->textLayout,
 		(int) (x*cs - y*s), (int) (y*cs + x*s));
     } else {
     badIndex:
