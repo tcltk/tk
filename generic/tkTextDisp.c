@@ -445,19 +445,16 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     int numBytes;		/* Number of bytes to display. */
-    char chars[TKFLEXARRAY];		/* UTF characters to display.
-				 * Allocated as large as necessary. THIS MUST BE THE LAST
-				 * FIELD IN THE STRUCTURE. */
+    char *chars;		/* Pointer to UTF characters to display.
+				 * Actual array follows this struct. */
 } CharInfo;
 
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 typedef struct CharInfo {
     TkTextDispChunk *baseChunkPtr;
-    int baseOffset;		/* Starting offset in base chunk
-				 * baseChars. */
-    int numBytes;		/* Number of bytes that belong to this
-				 * chunk. */
+    int baseOffset;		/* Starting offset in base chunk baseChars. */
+    int numBytes;		/* Number of bytes that belong to this chunk. */
     const char *chars;		/* UTF characters to display. Actually points
 				 * into the baseChars of the base chunk. Only
 				 * valid after FinalizeBaseChunk(). */
@@ -2435,7 +2432,7 @@ FreeDLines(
 static void
 DisplayDLine(
     TkText *textPtr,		/* Text widget in which to draw line. */
-    DLine *dlPtr,	/* Information about line to draw. */
+    DLine *dlPtr,		/* Information about line to draw. */
     DLine *prevPtr,		/* Line just before one to draw, or NULL if
 				 * dlPtr is the top line. */
     Pixmap pixmap)		/* Pixmap to use for double-buffering. Caller
@@ -2448,6 +2445,11 @@ DisplayDLine(
     int height, y_off;
     struct TextStyle tmpStyle;
     TkBorder *borderPtr;
+    int blockCursor = textPtr->insertCursorType != 0;
+    int haveFocus = (textPtr->flags & GOT_FOCUS) != 0;
+    int showInsertCursor = (textPtr->flags & INSERT_ON) != 0;
+    int solidUnfocussed =
+	    textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID;
 #ifndef TK_NO_DOUBLE_BUFFERING
     const int y = 0;
 #else
@@ -2544,8 +2546,9 @@ DisplayDLine(
 	     * here.
 	     */
 
-	    if (textPtr->insertCursorType &&
-		    ((textPtr->flags & (GOT_FOCUS | INSERT_ON)) == (GOT_FOCUS | INSERT_ON)) &&
+	    if (blockCursor &&
+		    ((haveFocus && showInsertCursor) ||
+			(!haveFocus && solidUnfocussed)) &&
 		    (chunkPtr->nextPtr != NULL) &&
 		    (chunkPtr->nextPtr->displayProc == CharDisplayProc) &&
 		    (chunkPtr->nextPtr->numBytes > 0)) {
@@ -2553,18 +2556,15 @@ DisplayDLine(
 		 * Make a temporary chunk for displaying the text
 		 * within the block cursor later on.
 		 */
+
 		XGCValues gcValues;
 		unsigned long mask;
 		int endX, numBytes, ix, iy, iw, ih;
 		int charWidth = 0, cursorWidth = 0;
 		TkTextIndex index;
-
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 		CharInfo *ciPtr;
 		BaseCharInfo *bciPtr;
-		Tcl_UniChar ch;
-		int chnum;
-		char buf[16];
 #endif
 
 		otherChunkPtr = &tmpChunk;
@@ -2603,8 +2603,8 @@ DisplayDLine(
 		    otherChunkPtr->numBytes = bci.ci.numBytes;
 #else
 		    ci = *((CharInfo *) (otherChunkPtr->clientData));
-		    otherChunkPtr->clientData = (ClientData) &ci;
 		    ci.numBytes = numBytes;
+		    otherChunkPtr->clientData = (ClientData) &ci;
 		    otherChunkPtr->numBytes = ci.numBytes;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		} else {
@@ -7917,7 +7917,8 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = (CharInfo *)ckalloc((Tk_Offset(CharInfo, chars) + 1) + bytesThatFit);
+    ciPtr = (CharInfo *)ckalloc(sizeof(CharInfo) + 1 + bytesThatFit);
+    ciPtr->chars = (char *) (ciPtr + 1);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -9179,7 +9180,7 @@ IsSameFGStyle(
 	    && sv1->overstrike == sv2->overstrike
 	    && sv1->elide == sv2->elide
 	    && sv1->offset == sv2->offset
-	    && sv1->fgStipple == sv1->fgStipple;
+	    && sv1->fgStipple == sv2->fgStipple;
 #endif /* TK_DRAW_IN_CONTEXT */
 }
 
