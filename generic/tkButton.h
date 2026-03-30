@@ -201,6 +201,8 @@ typedef struct {
 				 * DEFAULT_NORMAL: specifies state of default
 				 * ring for buttons (normal, active, or
 				 * disabled). NULL for other classes. */
+    double angle;		/* Value of -angle option. */
+    double xoffset, yoffset;	/* Offset for drawing with angle. */
 
     /*
      * For check and radio buttons, the fields below are used to manage the

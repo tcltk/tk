@@ -68,6 +68,8 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), TK_OPTION_ENUM_VAR, 0, 0},
+    {TK_OPTION_DOUBLE, "-angle", "angle", "Angle",
+	"0.0", -1, offsetof(TkButton, angle), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
