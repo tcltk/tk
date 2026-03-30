@@ -691,7 +691,7 @@ test menuDraw-16.6 {TkPostSubMenu} -constraints {
 } -cleanup {
     deleteWindows
 } -result {}
-test menuDraw-16.7 {TkPostSubMenu [bug 7f67bb4054]} -setup {
+test menuDraw-16.7 {Recursive menu, TkPostSubMenu [bug 7f67bb4054]} -setup {
     deleteWindows
 } -body {
     menu .m1
@@ -701,6 +701,18 @@ test menuDraw-16.7 {TkPostSubMenu [bug 7f67bb4054]} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {cannot add recursive cascade menu ".m1"}
+test menuDraw-16.8 {Recursive cloned menu [bug 7f67bb4054]} -setup {
+    deleteWindows
+} -body {
+    menu .mbar -title MENU
+    menu .mbar.edit
+    .mbar.edit add cascade -label COMMAND -menu .foo
+    .mbar add cascade -label CASCADE -menu .mbar.edit
+    . configure -menu .mbar
+    .#mbar.#mbar#edit entryconfigure last -menu .mbar
+} -returnCodes error -cleanup {
+    deleteWindows
+} -result {cannot add recursive cascade menu ".mbar"}
 
 test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
     deleteWindows

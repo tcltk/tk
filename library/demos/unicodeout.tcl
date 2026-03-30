@@ -52,30 +52,14 @@ proc usePresentationFormsFor {language} {
 	    return false
 	}
 	x11 {
-	    # The X11 font renderers that Tk supports all know nothing about
-	    # composing characters, so we need to use presentation forms.
-	    return true
+	    # With bidi support now added, the renderer does not need to use 
+	    # presentation forms.
+	    return false
 	}
 	win32 {
-	    # On Windows, we need to determine whether the font system will
-	    # render right-to-left text. This varies by language!
-	    try {
-		package require registry
-		set rkey [join {
-		    HKEY_LOCAL_MACHINE
-		    SOFTWARE
-		    Microsoft
-		    {Windows NT}
-		    CurrentVersion
-		    LanguagePack
-		} \\]
-		return [expr {
-		    [string toupper $language] ni [registry values $rkey]
-		}]
-	    } trap error {} {
-		# Cannot work it out, so use presentation forms.
-		return true
-	    }
+	    # With bidi support now added, the renderer does not need to use
+		# presentation forms. 
+		return false
 	}
 	default {
 	    # Default to using presentation forms.

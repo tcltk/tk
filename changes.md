@@ -14,7 +14,6 @@ necessarily in Tk 8.
 
 # 9.1 Features and Interfaces
  - [MS-Win: remove Windows XP dialog variants for tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
- - [Handle negative screen distances](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
  - [Extend Tk_CanvasTextInfo](https://core.tcl-lang.org/tips/doc/trunk/tip/704.md)
  - [Add new states to ttk::treeview and ttk::notebook](https://core.tcl-lang.org/tips/doc/trunk/tip/719.md)
  - [Limit tk_messageBox to physical screen width](https://core.tcl-lang.org/tk/info/e19f1d891)
@@ -26,9 +25,11 @@ necessarily in Tk 8.
  - [Scroll entry with mouse wheel](https://core.tcl-lang.org/tips/doc/trunk/tip/736.md)
  - [Add a Wide.TSpinbox style to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/739.md)
  - [Add support for native file icons to the core]((https://core.tcl-lang.org/tips/doc/trunk/tip/743.md))
- - [Re-implement the Aqua send command so that it can communicate with other processes and has the features documented in the manual.] (https://core.tcl-lang.org/tk/info/1574913cc772201e)
+ - [Re-implement the Aqua send command](https://core.tcl-lang.org/tk/info/1574913cc772201e)
  - [Make the selection colors of the listbox widget fully native-conform](https://core.tcl-lang.org/tips/doc/trunk/tip/747.md)
+ - [Add support for bidrectional text / RTL languages on Windows and X11](https://core.tcl-lang.org/tk/info/058e738f9f06fe20)
 
 # Potential incompatibilities to 9.0
- - [MS-Win: the undocumented option -xpstyle was removed from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
- - [MS-Win: The "xpnative" ttk style is gone too, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
+ - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)

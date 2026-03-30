@@ -901,7 +901,7 @@ Ttk_ElementClass *Ttk_RegisterElement(
 		"Internal error: Ttk_RegisterElement (%s): invalid version",
 		name));
 	    Tcl_SetErrorCode(interp, "TTK", "REGISTER_ELEMENT", "VERSION",
-		NULL);
+		(char *)NULL);
 	}
 	return 0;
     }
@@ -1529,7 +1529,7 @@ static int StyleElementCreateCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"No such element type %s", factoryName));
 	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT_TYPE", factoryName,
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1617,7 +1617,7 @@ static int StyleLayoutCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", layoutName));
 	    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", layoutName,
-		NULL);
+		(char *)NULL);
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Ttk_UnparseLayoutTemplate(layoutTemplate));

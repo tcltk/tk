@@ -387,7 +387,7 @@ GetIcoPtr(
 
 notfound:
     Tcl_AppendResult(interp, "icon \"", string,
-	"\" does not exist", NULL);
+	"\" does not exist", (char *)NULL);
     return NULL;
 }
 
@@ -970,7 +970,7 @@ WinSystrayCmd(
 		if (i+1 >= objc) {
 		    Tcl_AppendResult(interp,
 			    "missing value for option \"", Tcl_GetString(objv[i]),
-			    "\"", NULL);
+			    "\"", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		switch (opt) {
@@ -1088,7 +1088,7 @@ WinSysNotifyCmd(
     }
     if (strcmp(Tcl_GetString(objv[1]), "notify") != 0) {
 	Tcl_AppendResult(interp, "unknown subcommand \"",
-	    Tcl_GetString(objv[1]), "\": must be notify", NULL);
+	    Tcl_GetString(objv[1]), "\": must be notify", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1106,12 +1106,12 @@ WinSysNotifyCmd(
     if (!appidSet) {
 	Tk_Window mainWin = Tk_MainWindow(interp);
 	if (mainWin == NULL) {
-	    Tcl_AppendResult(interp, "No main window available", NULL);
+	    Tcl_AppendResult(interp, "No main window available", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
 	if (Tcl_Eval(interp, "wm title .") != TCL_OK) {
-	    Tcl_AppendResult(interp, "Failed to obtain window title", NULL);
+	    Tcl_AppendResult(interp, "Failed to obtain window title", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1173,7 +1173,7 @@ WinSysNotifyCmd(
 	sprintf_s(buf, sizeof(buf),
 		  "Notification failed (error %lu)",
 		  GetLastError());
-	Tcl_AppendResult(interp, buf, NULL);
+	Tcl_AppendResult(interp, buf, (char *)NULL);
 	return TCL_ERROR;
     }
 
