@@ -2476,6 +2476,72 @@ TkDrawAngledTextLayout(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkAdjustAngledTextLayout --
+ *
+ *	Calculates the width and height of a text layout when it is
+ *	rotated by 'angle' degrees.
+ *	Additionally, it can return the required offsets from the origin
+ *	point (nw) so TkDrawAngledTextlayout/TkDrawAngledChars works
+ *	correctly.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkAdjustAngledTextLayout(
+    double angle,		/* Rotation angle, in degrees. */
+    int *width,			/* Reference to width variable (in/out). */
+    int *height,		/* Reference to height variable (in/out). */
+    int *xoffset,		/* X offset from origin (out). */
+    int *yoffset)		/* Y offset from origin (out). */
+{
+#define DEG2RAD(a) ((a) * PI / 180.0)
+#define ROUND32(d) (floor((d) + 0.5))
+    double sinA = sin(-DEG2RAD(fmod(angle, 360.0)));
+    double cosA = cos(-DEG2RAD(fmod(angle, 360.0)));
+    double x[4], y[4], xt, yt;
+    double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+    int i;
+
+    x[0] = x[3] = 0;
+    x[1] = x[2] = *width;
+    y[0] = y[1] = 0;
+    y[2] = y[3] = *height;
+    for (i = 0; i < 4; i++) {
+	xt = x[i] * cosA - y[i] * sinA;
+	if (xt > xmax) {
+	    xmax = xt;
+	}
+	if (xt < xmin) {
+	    xmin = xt;
+	}
+	yt = x[i] * sinA + y[i] * cosA;
+	if (yt > ymax) {
+	    ymax = yt;
+	}
+	if (yt < ymin) {
+	    ymin = yt;
+	}
+    }
+    *width = ROUND32(xmax - xmin);
+    *height = ROUND32(ymax - ymin);
+    if (xoffset != NULL) {
+	*xoffset = ROUND32(-xmin);
+    }
+    if (yoffset != NULL) {
+	*yoffset = ROUND32(-ymin);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * Tk_UnderlineTextLayout --
  *
  *	Use the information in the Tk_TextLayout token to display an underline

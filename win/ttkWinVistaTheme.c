@@ -646,6 +646,7 @@ static void TabElementSize(
 
     if (mainInfoPtr != NULL) {
 	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabsStickBit &= 0x0f;
     }
 
     GenericElementSize(clientData, elementRecord, tkwin,
@@ -686,6 +687,7 @@ static void TabElementDraw(
 
     if (mainInfoPtr != NULL) {
 	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabsStickBit &= 0x0f;
     }
 
     /*

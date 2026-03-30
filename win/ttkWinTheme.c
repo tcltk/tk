@@ -751,6 +751,7 @@ static void TabElementSize(
 
     if (mainInfoPtr != NULL) {
 	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabsStickBit &= 0x0f;
     }
 
     switch (nbTabsStickBit) {
@@ -790,6 +791,7 @@ static void TabElementDraw(
 
     if (mainInfoPtr != NULL) {
 	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabsStickBit &= 0x0f;
     }
 
     if (state & TTK_STATE_SELECTED) {

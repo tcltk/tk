@@ -165,7 +165,7 @@ static void NotebookStyleOptions(
      * TTK_STICK_S, TTK_STICK_N, TTK_STICK_E, or TTK_STICK_W:
      */
     if (mainInfoPtr != NULL) {
-	mainInfoPtr->ttkNbTabsStickBit = (nbstyle->tabPlacement & 0x0f);
+	mainInfoPtr->ttkNbTabsStickBit = (unsigned int)nbstyle->tabPlacement;
     }
 
     /* Compute tabOrient as function of tabPlacement:
@@ -297,7 +297,23 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
     Ttk_State state = nb->core.state;
     Tab *itab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
     Tcl_Size i = 0;
+    int statefirst = TTK_STATE_FIRST;
+    int statelast = TTK_STATE_LAST;
+    
+    if (nb->core.tkwin != NULL) {
+	TkMainInfo *mainInfoPtr = ((TkWindow *) nb->core.tkwin)->mainPtr;
 
+	if ((mainInfoPtr->ttkNbTabsStickBit & TTK_PACK_BOTTOM) ||
+	    (mainInfoPtr->ttkNbTabsStickBit & TTK_PACK_RIGHT)) {
+	    statefirst = TTK_STATE_LAST;
+	    statelast = TTK_STATE_FIRST;
+	}
+    }
+
+    /*
+     * Flip First/last if tabs are on the bottom or right side.
+     */
+    
     if (index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
     } else {
@@ -313,7 +329,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_FIRST;
+	    state |= statefirst;
 	}
 	break;
     }
@@ -323,7 +339,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_LAST;
+	    state |= statelast;
 	}
 	break;
     }

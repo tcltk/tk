@@ -1090,36 +1090,8 @@ TkpComputeButtonGeometry(
 	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
     if ((butPtr->type == TYPE_LABEL) && (butPtr->angle != 0.0)) {
-	double sinA = sin(-butPtr->angle * PI / 180.0);
-	double cosA = cos(-butPtr->angle * PI / 180.0);
-	double xo[4], yo[4], xt, yt;
-	double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
-	int i;
-
-	xo[0] = xo[3] = 0;
-	xo[1] = xo[2] = butPtr->textWidth;
-	yo[0] = yo[1] = 0;
-	yo[2] = yo[3] = butPtr->textHeight;
-	for (i = 0; i < 4; i++) {
-	    xt = xo[i] * cosA - yo[i] * sinA;
-	    if (xt > xmax) {
-		xmax = xt;
-	    }
-	    if (xt < xmin) {
-		xmin = xt;
-	    }
-	    yt = xo[i] * sinA + yo[i] * cosA;
-	    if (yt > ymax) {
-		ymax = yt;
-	    }
-	    if (yt < ymin) {
-		ymin = yt;
-	    }
-	}
-	butPtr->textWidth = xmax - xmin;
-	butPtr->textHeight = ymax - ymin;
-	butPtr->xoffset = -xmin;
-	butPtr->yoffset = -ymin;
+	TkAdjustAngledTextLayout(butPtr->angle, &butPtr->textWidth,
+		&butPtr->textHeight, &butPtr->xoffset, &butPtr->yoffset);
     }
 
     txtWidth = butPtr->textWidth;
