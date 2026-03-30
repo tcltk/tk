@@ -58,7 +58,7 @@ GetNVGFont(NVGcontext *vg, GC gc, int *fontIdOut, float *fontSizeOut)
 
     if (gc) {
         XGCValues v;
-        if (TkWaylandGetGCValues(gc, GCFont, &v) == 0 && v.font != None) {
+        if (TkWaylandGetGCValues(gc, GCFont, &v) && v.font != None) {
             Tk_Font     tkfont = (Tk_Font)(intptr_t)v.font;
             Tk_FontMetrics fm;
             if (tkfont) {
@@ -114,7 +114,7 @@ XDrawString(
     const char *string,
     int         length)
 {
-
+    printf("XDrawString\n");
     TkWaylandDrawingContext dc;
     int   fontId;
     float fontSize;
@@ -171,6 +171,7 @@ XDrawImageString(
     const char *string,
     int         length)
 {
+    printf("XDrawImageString\n");
     TkWaylandDrawingContext dc;
     int   fontId;
     float fontSize;
@@ -198,7 +199,8 @@ XDrawImageString(
     /* Fill background with GC background colour. */
     {
         XGCValues v;
-        if (TkWaylandGetGCValues(gc, GCBackground, &v) == 0) {
+        if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
+	    printf("background is %lx\n", v.background);
             NVGcolor bg = TkGlfwPixelToNVG(v.background);
             nvgBeginPath(dc.vg);
             nvgRect(dc.vg, bounds[0], bounds[1],
@@ -208,7 +210,7 @@ XDrawImageString(
         }
     }
 
-    /* Draw text in foreground colour (restored by ApplyGC). */
+    /* Draw text in foreground color (restored by ApplyGC). */
     TkGlfwApplyGC(dc.vg, gc);
     nvgFontFaceId(dc.vg, fontId);
     nvgFontSize(dc.vg, fontSize);
@@ -432,7 +434,7 @@ XFillPolygon(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues) == 0)
+    if (TkWaylandGetGCValues(gc, GCFillRule, &gcValues))
         gcValues.fill_rule = WindingRule;
 
     nvgBeginPath(dc.vg);
@@ -489,9 +491,9 @@ XDrawRectangle(
 
     if (width == 0 || height == 0) return BadValue;
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
-    if (rc != TCL_OK)
+    if (rc != TCL_OK) {
         return BadDrawable;
-
+    }
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, x, y, width, height);
     nvgStroke(dc.vg);
@@ -557,7 +559,7 @@ XDrawRectangles(
  *
  *----------------------------------------------------------------------
  */
-
+extern TkGlfwContext  glfwContext;
 int
 XFillRectangles(
     Display *display,
@@ -566,16 +568,16 @@ XFillRectangles(
     XRectangle *rectangles,
     int nrectangles)
 {
+    printf("XFillRectangles\n");
     TkWaylandDrawingContext dc;
     XGCValues v;
     NVGcolor color;
     int i;
-    
-    
+
     if (nrectangles < 1) return Success;
     
     /* Get color. */
-    if (TkWaylandGetGCValues(gc, GCForeground, &v) == 0) {
+    if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
         color = TkGlfwPixelToNVG(v.foreground);        
     } else {
         color = nvgRGB(0, 0, 0);
@@ -585,7 +587,7 @@ XFillRectangles(
     if (rc != TCL_OK) {
         return BadDrawable;
     }
-    
+
     for (i = 0; i < nrectangles; i++) {
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, 
@@ -594,10 +596,8 @@ XFillRectangles(
                 (float)rectangles[i].width, 
                 (float)rectangles[i].height);
         nvgFillColor(dc.vg, color);
-        nvgFill(dc.vg);
+        nvgFill(glfwContext.vg);
     }
-    
-    
     TkGlfwEndDraw(&dc);
     
     return Success;
@@ -628,6 +628,7 @@ XFillRectangle(
     unsigned int width,
     unsigned int height)
 {
+    printf("XFillRectangle\n");
     XRectangle rect;
     rect.x      = x;
     rect.y      = y;
@@ -798,7 +799,7 @@ XFillArc(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) == 0)
+    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
         gcValues.arc_mode = ArcPieSlice;
 
     cx = x + width  / 2.0f;
@@ -865,7 +866,7 @@ XFillArcs(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues) == 0)
+    if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
         gcValues.arc_mode = ArcPieSlice;
 
     for (i = 0; i < nArcs; i++) {

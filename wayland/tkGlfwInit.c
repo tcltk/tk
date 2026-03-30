@@ -48,22 +48,6 @@ static int shutdownInProgress = 0;
 /*
  *----------------------------------------------------------------------
  *
- * Forward declarations
- *
- *----------------------------------------------------------------------
- */
-
-extern int   TkWaylandGetGCValues(GC, unsigned long, XGCValues *);
-extern void  TkWaylandMenuInit(void);
-extern void  Tk_WaylandSetupTkNotifier(void);
-extern int   Tktray_Init(Tcl_Interp *);
-extern int   SysNotify_Init(Tcl_Interp *);
-extern int   Cups_Init(Tcl_Interp *);
-extern void  TkGlfwSetupCallbacks(GLFWwindow *, TkWindow *);
-
-/*
- *----------------------------------------------------------------------
- *
  * Accessors
  *
  *----------------------------------------------------------------------
@@ -515,6 +499,7 @@ TkGlfwBeginDraw(
         nvgTranslate(dcPtr->vg, (float)x, (float)y);
     }
 
+    printf("BeginDraw: calling ApplyGC with %p\n", gc);
     TkGlfwApplyGC(dcPtr->vg, gc);
     return TCL_OK;
 }
@@ -539,15 +524,26 @@ TkGlfwBeginDraw(
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
+    WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
+    printf("EndDraw\n");
+
+    // Blit the FBO to the (default) back buffer.
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->fbo);
+    glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
+		      0, 0, (int)m->width, (int)m->height,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+
     if (dcPtr && dcPtr->vg) {
         nvgRestore(dcPtr->vg);
         nvgEndFrame(dcPtr->vg);
+	glfwSwapBuffers(m->glfwWindow);
         
         /* Unbind FBO to return to the default backbuffer. */
         nvgluBindFramebuffer(NULL);
         
         /* Signal that the screen needs to be updated with the FBO's content. */
-        WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
         if (m) {
 			m->needsDisplay = 1;
 		}
@@ -704,13 +700,14 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
 {
     XGCValues v;
     NVGcolor  c;
-    
+
+    printf("ApplyGC for %p\n", gc);
     if (!vg || !gc || shutdownInProgress) return;
       
     TkWaylandGetGCValues(gc,
-                         GCForeground|GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle, &v);
+        GCForeground|GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle, &v);
+    printf("foreground is %lx\n", v.foreground);
     c = TkGlfwPixelToNVG(v.foreground);
-    nvgFillColor(vg, c);
     nvgFillColor(vg, c);
     nvgStrokeColor(vg, c);
     nvgStrokeWidth(vg, v.line_width > 0 ? (float)v.line_width : 1.0f);

@@ -1,0 +1,1 @@
+#define TK_NO_DOUBLE_BUFFERING
