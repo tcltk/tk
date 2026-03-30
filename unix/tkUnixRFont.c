@@ -198,27 +198,90 @@ static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
-static int IsAsciiOnly(const char *str, int len);  /* new helper */
+static int IsSimpleScript(const char *str, int len); /* fast-path helper */
 
 /*
  * ---------------------------------------------------------------
- * IsAsciiOnly --
+ * IsSimpleScript --
  *
- *   Returns 1 if the string contains only ASCII characters (0x00-0x7F),
- *   0 otherwise.
+ *   Returns 1 if every codepoint in the UTF-8 string belongs to a
+ *   script that requires no shaping, no BiDi reordering, and no
+ *   multi-face fallback — meaning a single Xft face with
+ *   XftTextExtentsUtf8 / XftDrawStringUtf8 will render it correctly.
+ *
+ *   Accepted blocks:
+ *     U+0000-U+007F  Basic Latin
+ *     U+0080-U+00FF  Latin-1 Supplement
+ *     U+0100-U+017F  Latin Extended-A
+ *     U+0180-U+024F  Latin Extended-B
+ *     U+0250-U+02AF  IPA Extensions          (precomposed phonetic symbols)
+ *     U+02B0-U+02FF  Spacing Modifier Letters (precomposed, no joining)
+ *     U+0370-U+03FF  Greek and Coptic        (modern Greek, precomposed LTR)
+ *     U+0400-U+04FF  Cyrillic                (Russian, Ukrainian, Bulgarian…)
+ *     U+0500-U+052F  Cyrillic Supplement
+ *     U+1E00-U+1EFF  Latin Extended Additional (Vietnamese, Welsh, precomposed)
+ *     U+2000-U+206F  General Punctuation     (em-dash, smart quotes, ellipsis…)
+ *     U+2070-U+209F  Superscripts and Subscripts
+ *     U+20A0-U+20CF  Currency Symbols        (€ £ ¥ ₽ …)
+ *     U+2100-U+214F  Letterlike Symbols      (℃ ™ © …)
+ *     U+2150-U+218F  Number Forms            (½ ¼ Roman numerals)
+ *     U+2190-U+22FF  Arrows + Math Operators
+ *     U+25A0-U+26FF  Geometric Shapes + Miscellaneous Symbols
+ *
+ *   Explicitly excluded (routed to shaper):
+ *     U+0300-U+036F  Combining Diacritical Marks (attach to base chars)
+ *     U+0530-U+1DFF  Armenian through Phonetic Extensions (complex scripts)
+ *     U+2300-U+25FF  Misc Technical, Control Pictures, Box Drawing (font
+ *                    fallback behavior unpredictable — leave to shaper)
+ *     U+2700-U+27BF  Dingbats (typically a different face; needs fallback)
+ *     U+2DE0-U+2DFF  Cyrillic Extended-A (Old Church Slavonic, combining)
+ *     U+A640-U+A69F  Cyrillic Extended-B (historical, combining)
+ *     U+1F300+        Emoji (color fonts, ZWJ sequences, skin-tone modifiers)
+ *     Everything else.
+ *
+ *   Returns 0 as soon as any out-of-range codepoint is found.
  * ---------------------------------------------------------------
  */
 
 static int
-IsAsciiOnly(const char *str, int len)
+IsSimpleScript(const char *str, int len)
 {
-    for (int i = 0; i < len; i++) {
-        if ((unsigned char)str[i] >= 0x80) {
+    int i = 0;
+    while (i < len) {
+        unsigned char c = (unsigned char)str[i];
+
+        if (c < 0x80) {
+            /* Single-byte ASCII — always fine. */
+            i++;
+            continue;
+        }
+
+        /* Decode the leading byte to determine codepoint range. */
+        FcChar32 uc;
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
+        if (clen <= 0) {
+            /* Invalid UTF-8 — route to shaper for safe handling. */
             return 0;
         }
+
+        if (!( (uc >= 0x0080 && uc <= 0x02FF) ||  /* Latin supp/ext + IPA + modifiers */
+               (uc >= 0x0370 && uc <= 0x03FF) ||  /* Greek and Coptic                 */
+               (uc >= 0x0400 && uc <= 0x052F) ||  /* Cyrillic + Supplement            */
+               (uc >= 0x1E00 && uc <= 0x1EFF) ||  /* Latin Extended Additional        */
+               (uc >= 0x2000 && uc <= 0x22FF) ||  /* Punctuation, super/sub, currency,
+                                                    * letterlike, number forms, arrows,
+                                                    * math operators                  */
+               (uc >= 0x25A0 && uc <= 0x26FF) )) {/* Geometric shapes, misc symbols   */
+            return 0;
+        }
+
+        i += clen;
     }
     return 1;
 }
+
+/* Alias used at all call sites — rename kept local to this file. */
+#define IsLatinOnly IsSimpleScript
 
 
 /*
@@ -985,32 +1048,50 @@ X11Shaper_ShapeString(
         return 0;
     }
 
-     /* Fast path optimization.  */
-    if (IsAsciiOnly(source, numBytes)) {
-        XftFont *ftFont = GetFont(fontPtr, 0, 0.0); /* Get primary face. */
+    /*
+     * Fast path for Latin-only text (U+0000-U+024F).
+     *
+     * This covers Basic Latin, Latin-1 Supplement, Latin Extended-A and B,
+     * which includes all common Western European precomposed diacritics
+     * (à á â ã ä å æ ç è é ê ë ì í î ï ð ñ ò ó ô õ ö ø ù ú û ü ý þ ÿ
+     * and their uppercase counterparts, plus the Extended-A/B additions).
+     *
+     * These scripts need no BiDi reordering, no ligature shaping, and no
+     * multi-face fallback.  A single Xft face with XftTextExtentsUtf8 /
+     * XftDrawStringUtf8 handles them correctly and is much faster.
+     */
+    if (IsLatinOnly(source, numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
             int penX = 0;
             buffer->glyphCount = 0;
-            
-            for (int i = 0; i < numBytes && buffer->glyphCount < MAX_GLYPHS; i++) {
-                unsigned int glyphId = XftCharIndex(fontPtr->display, ftFont, (FcChar32)source[i]);
+            int i = 0;
+
+            while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
+                FcChar32 uc;
+                int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
+                                        numBytes - i);
+                if (clen <= 0) { i++; continue; }
+
+                unsigned int glyphId = XftCharIndex(fontPtr->display, ftFont, uc);
                 XGlyphInfo metrics;
                 XftGlyphExtents(fontPtr->display, ftFont, &glyphId, 1, &metrics);
 
-                buffer->glyphs[buffer->glyphCount].fontIndex = 0; /* Primary face. */
-                buffer->glyphs[buffer->glyphCount].glyphId = glyphId;
-                buffer->glyphs[buffer->glyphCount].x = penX;
-                buffer->glyphs[buffer->glyphCount].y = 0;
-                buffer->glyphs[buffer->glyphCount].advanceX = metrics.xOff;
+                buffer->glyphs[buffer->glyphCount].fontIndex  = 0;
+                buffer->glyphs[buffer->glyphCount].glyphId    = glyphId;
+                buffer->glyphs[buffer->glyphCount].x          = penX;
+                buffer->glyphs[buffer->glyphCount].y          = 0;
+                buffer->glyphs[buffer->glyphCount].advanceX   = metrics.xOff;
                 buffer->glyphs[buffer->glyphCount].byteOffset = i;
-                buffer->glyphs[buffer->glyphCount].clusterLen = 1;
-                buffer->glyphs[buffer->glyphCount].isRTL = 0;
+                buffer->glyphs[buffer->glyphCount].clusterLen = clen;
+                buffer->glyphs[buffer->glyphCount].isRTL      = 0;
 
                 penX += metrics.xOff;
                 buffer->glyphCount++;
+                i += clen;
             }
             buffer->totalAdvance = penX;
-            return 1; /* Exit early, skipping complex shaping. */
+            return 1;
         }
     }
 
@@ -1092,7 +1173,7 @@ X11Shaper_ShapeString(
         /* Return success with empty buffer - nothing to shape. */
         buffer->glyphCount = 0;
         buffer->totalAdvance = 0;
-        return 1;  /* Changed from 0 - empty string is not an error. */
+        return 1;  /* Empty string is not an error. */
     }
 
     /* Get bidi runs. */
@@ -1270,7 +1351,7 @@ X11Shaper_ShapeString(
                 if (cpIndex >= 0 && cpIndex < charCount) {
                     tempGlyphs[tempCount].byteOffset = charBounds[cpIndex];
 
-                    /* FIXED: Clamp to run boundaries. */
+                    /* Clamp to run boundaries. */
                     if (tempGlyphs[tempCount].byteOffset < runByteStart) {
                         tempGlyphs[tempCount].byteOffset = runByteStart;
                     }
@@ -1292,7 +1373,6 @@ X11Shaper_ShapeString(
              * Compute actual cluster lengths.
              * Each glyph's cluster extends from its byteOffset to the next
              * glyph's byteOffset (or to runByteEnd for the last glyph).
-             * This was always 0 before, making selection impossible.
              */
             for (int i = 0; i < tempCount; i++) {
                 int clusterStart = tempGlyphs[i].byteOffset;
@@ -1718,8 +1798,16 @@ Tk_MeasureChars(
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
 
-    /* Fast path for pure ASCII strings. */
-    if (IsAsciiOnly(source, (int)numBytes)) {
+    /*
+     * Fast path for Latin-only strings (ASCII through Latin Extended-B,
+     * U+0000-U+024F).  XftTextExtentsUtf8 handles the full UTF-8 encoding
+     * of these codepoints correctly with a single font face.
+     *
+     * IMPORTANT: check only the bytes we are asked to measure, not any
+     * larger surrounding buffer.  The caller may pass a slice of a
+     * mixed-script string whose other portions contain non-Latin text.
+     */
+    if (IsLatinOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (!ftFont) {
             *lengthPtr = 0;
@@ -1728,8 +1816,8 @@ Tk_MeasureChars(
 
         /* Total width of the entire string. */
         XGlyphInfo extents;
-        XftTextExtents8(fontPtr->display, ftFont,
-                        (const FcChar8 *)source, (int)numBytes, &extents);
+        XftTextExtentsUtf8(fontPtr->display, ftFont,
+                           (const FcChar8 *)source, (int)numBytes, &extents);
         int totalWidth = extents.xOff;
 
         if (maxLength < 0) {
@@ -1737,22 +1825,33 @@ Tk_MeasureChars(
             return (int)numBytes;
         }
 
-        /* Binary search for longest prefix that fits in maxLength. */
-        int lo = 0, hi = (int)numBytes;
+        /*
+         * Linear scan for the longest prefix that fits, advancing one
+         * full codepoint at a time.
+         *
+         * A binary search on raw byte offsets is incorrect for multi-byte
+         * UTF-8: the midpoint can land inside a sequence (e.g. the second
+         * byte of \xC3\xA1 = U+00E1 'a acute'), making XftTextExtentsUtf8
+         * measure a truncated, invalid sequence and return a wrong width.
+         * That wrong width causes the caller to think measurement failed and
+         * fall through to the shaper, which then uses multiple faces.
+         */
         int best = 0, bestWidth = 0;
+        int pos = 0;
+        while (pos < (int)numBytes) {
+            FcChar32 uc;
+            int clen = FcUtf8ToUcs4((const FcChar8 *)(source + pos), &uc,
+                                    (int)numBytes - pos);
+            if (clen <= 0) clen = 1;  /* skip invalid byte */
+            int next = pos + clen;
 
-        while (lo <= hi) {
-            int mid = (lo + hi) / 2;
-            XftTextExtents8(fontPtr->display, ftFont,
-                            (const FcChar8 *)source, mid, &extents);
-            int w = extents.xOff;
-            if (w <= maxLength) {
-                best = mid;
-                bestWidth = w;
-                lo = mid + 1;
-            } else {
-                hi = mid - 1;
-            }
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)source, next, &extents);
+            if (extents.xOff > maxLength) break;
+
+            best = next;
+            bestWidth = extents.xOff;
+            pos = next;
         }
 
         /* Whole-word break if requested. */
@@ -1764,17 +1863,20 @@ Tk_MeasureChars(
             }
             if (spacePos >= 0) {
                 best = spacePos + 1;
-                XftTextExtents8(fontPtr->display, ftFont,
-                                (const FcChar8 *)source, best, &extents);
+                XftTextExtentsUtf8(fontPtr->display, ftFont,
+                                   (const FcChar8 *)source, best, &extents);
                 bestWidth = extents.xOff;
             }
         }
 
-        /* At least one character if requested and nothing fit yet. */
+        /* At least one full codepoint if requested and nothing fit yet. */
         if ((flags & TK_AT_LEAST_ONE) && best == 0 && (int)numBytes > 0) {
-            best = 1;
-            XftTextExtents8(fontPtr->display, ftFont,
-                            (const FcChar8 *)source, 1, &extents);
+            FcChar32 uc;
+            int clen = FcUtf8ToUcs4((const FcChar8 *)source, &uc, (int)numBytes);
+            if (clen <= 0) clen = 1;
+            best = clen;
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)source, best, &extents);
             bestWidth = extents.xOff;
         }
 
@@ -1782,7 +1884,7 @@ Tk_MeasureChars(
         return best;
     }
 
-    /* Shaping path for non‑ASCII. */
+    /* Shaping path for non-Latin. */
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &buffer)) {
         *lengthPtr = 0;
@@ -1863,8 +1965,14 @@ Tk_MeasureCharsInContext(
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
 
-    /* Fast path for pure ASCII strings. */
-    if (IsAsciiOnly(source, (int)numBytes)) {
+    /*
+     * Fast path for Latin-only strings (U+0000-U+024F).
+     *
+     * Check only the substring [rangeStart, rangeStart+rangeLength).
+     * The full source may contain non-Latin script outside this range;
+     * checking the full numBytes would incorrectly bypass this path.
+     */
+    if (IsLatinOnly(source + rangeStart, (int)rangeLength)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (!ftFont) {
             *lengthPtr = 0;
@@ -1875,8 +1983,8 @@ Tk_MeasureCharsInContext(
         int subLen = (int)rangeLength;
 
         XGlyphInfo extents;
-        XftTextExtents8(fontPtr->display, ftFont,
-                        (const FcChar8 *)sub, subLen, &extents);
+        XftTextExtentsUtf8(fontPtr->display, ftFont,
+                           (const FcChar8 *)sub, subLen, &extents);
         int totalWidth = extents.xOff;
 
         if (maxLength < 0) {
@@ -1884,22 +1992,26 @@ Tk_MeasureCharsInContext(
             return subLen;
         }
 
-        /* Binary search for longest prefix of the substring that fits. */
-        int lo = 0, hi = subLen;
+        /*
+         * Linear codepoint scan — same reasoning as Tk_MeasureChars above.
+         * Binary search on raw byte offsets splits multi-byte sequences.
+         */
         int best = 0, bestWidth = 0;
+        int pos = 0;
+        while (pos < subLen) {
+            FcChar32 uc;
+            int clen = FcUtf8ToUcs4((const FcChar8 *)(sub + pos), &uc,
+                                    subLen - pos);
+            if (clen <= 0) clen = 1;
+            int next = pos + clen;
 
-        while (lo <= hi) {
-            int mid = (lo + hi) / 2;
-            XftTextExtents8(fontPtr->display, ftFont,
-                            (const FcChar8 *)sub, mid, &extents);
-            int w = extents.xOff;
-            if (w <= maxLength) {
-                best = mid;
-                bestWidth = w;
-                lo = mid + 1;
-            } else {
-                hi = mid - 1;
-            }
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)sub, next, &extents);
+            if (extents.xOff > maxLength) break;
+
+            best = next;
+            bestWidth = extents.xOff;
+            pos = next;
         }
 
         /* Whole-word break if requested (within substring). */
@@ -1911,17 +2023,20 @@ Tk_MeasureCharsInContext(
             }
             if (spacePos >= 0) {
                 best = spacePos + 1;
-                XftTextExtents8(fontPtr->display, ftFont,
-                                (const FcChar8 *)sub, best, &extents);
+                XftTextExtentsUtf8(fontPtr->display, ftFont,
+                                   (const FcChar8 *)sub, best, &extents);
                 bestWidth = extents.xOff;
             }
         }
 
-        /* At least one character if requested. */
+        /* At least one full codepoint if requested. */
         if ((flags & TK_AT_LEAST_ONE) && best == 0 && subLen > 0) {
-            best = 1;
-            XftTextExtents8(fontPtr->display, ftFont,
-                            (const FcChar8 *)sub, 1, &extents);
+            FcChar32 uc;
+            int clen = FcUtf8ToUcs4((const FcChar8 *)sub, &uc, subLen);
+            if (clen <= 0) clen = 1;
+            best = clen;
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)sub, best, &extents);
             bestWidth = extents.xOff;
         }
 
@@ -1929,7 +2044,7 @@ Tk_MeasureCharsInContext(
         return best;
     }
 
-    /* Shaping path for non‑ASCII. */
+    /* Shaping path for non-Latin. */
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &buffer)) {
@@ -2038,12 +2153,17 @@ Tk_DrawChars(
         XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
     }
 
-    /* Fast path for pure ASCII strings. */
-    if (IsAsciiOnly(source, (int)numBytes)) {
+    /*
+     * Fast path for Latin-only strings (U+0000-U+024F).
+     * XftDrawStringUtf8 correctly handles the multi-byte UTF-8 encoding
+     * of precomposed diacritics (à á â ñ ü etc.) with a single face.
+     * Check only the bytes being drawn, not any larger buffer.
+     */
+    if (IsLatinOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
-            XftDrawString8(ftDraw, xftcolor, ftFont,
-                           x, y, (const FcChar8 *)source, (int)numBytes);
+            XftDrawStringUtf8(ftDraw, xftcolor, ftFont,
+                              x, y, (const FcChar8 *)source, (int)numBytes);
         }
         goto done;
     }
@@ -2163,14 +2283,21 @@ Tk_DrawCharsInContext(
         XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
     }
 
-    /* Fast path for pure ASCII strings. */
-    if (IsAsciiOnly(source, (int)numBytes)) {
+    /*
+     * Fast path for Latin-only strings (U+0000-U+024F).
+     * XftDrawStringUtf8 handles precomposed diacritics correctly
+     * without needing the shaper or multi-face fallback.
+     *
+     * Check only the substring being drawn: the full source may contain
+     * non-Latin characters outside [rangeStart, rangeStart+rangeLength).
+     */
+    if (IsLatinOnly(source + rangeStart, (int)rangeLength)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
-            XftDrawString8(ftDraw, xftcolor, ftFont,
-                           x, y,
-                           (const FcChar8 *)(source + rangeStart),
-                           (int)rangeLength);
+            XftDrawStringUtf8(ftDraw, xftcolor, ftFont,
+                              x, y,
+                              (const FcChar8 *)(source + rangeStart),
+                              (int)rangeLength);
         }
         goto done;
     }
@@ -2288,6 +2415,7 @@ done:
     if (tsdPtr->clipRegion) {
         XftDrawSetClip(ftDraw, NULL);
     }
+    XftDrawDestroy(ftDraw);
 }
 
 /*
