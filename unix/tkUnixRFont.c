@@ -1015,16 +1015,22 @@ X11Shaper_Init(
     s->numFonts = 0;
     s->cache.valid = 0;
     s->shapeErrors = 0;
-    
-    
 
-    /* Load faces into shaper, up to KBTS_MAX_INITIAL_FONTS.
-     * See the comment on that constant for why the cap exists.
+
+    /*
+     * Load fonts into shaper. To avoid initialization hangs, we load
+     * a limited set initially. kb_text_shaper will automatically load
+     * additional fonts as needed during shaping (on-demand fallback).
+     * We cap the initial load at 32 fonts to balance coverage vs. speed.
+     * Keeping the number small also guards against a bug in kb_text_shaper
+     * that comes when it loads seldom-used complex fonts such as Mongolian.
      */
     int maxInitialFonts = (fontPtr->nfaces < KBTS_MAX_INITIAL_FONTS)
                           ? fontPtr->nfaces : KBTS_MAX_INITIAL_FONTS;
 
     int fatalSignal = 0;
+
+    /* Load all faces into shaper. */
 
     for (int i = 0; i < maxInitialFonts && s->numFonts < MAX_FONTS; i++) {
         FcPattern *facePattern = fontPtr->faces[i].source;
