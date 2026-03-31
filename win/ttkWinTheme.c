@@ -1,4 +1,8 @@
 /* winTheme.c - Copyright © 2004 Pat Thoyts <patthoyts@users.sf.net>
+ *
+ * See also:
+ *
+ * <URL: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsystemmetrics >
  */
 
 #ifdef _MSC_VER
@@ -153,14 +157,11 @@ static void FrameControlElementSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     FrameControlElementData *p = (FrameControlElementData *)clientData;
-    int cx = GETMETRIC(p->cxId);
-    int cy = GETMETRIC(p->cyId);
+    double scalingLevel = TkScalingLevel(tkwin);
+    int cx = (int)round(GETMETRIC(p->cxId)*scalingLevel);
+    int cy = (int)round(GETMETRIC(p->cyId)*scalingLevel);
 
     if ((p->cxId & _FIXEDSIZE) && cx == BASE_DIM) {
-	double scalingLevel = TkScalingLevel(tkwin);
-	cx *= scalingLevel;
-	cy *= scalingLevel;
-
 	/*
 	 * Update the corresponding element of the array FrameControlElements
 	 */
@@ -580,21 +581,22 @@ static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
 static void ThumbElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
     ThumbElement *thumbPtr = (ThumbElement *)elementRecord;
+    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Orient orient;
 
     Ttk_GetOrientFromObj(NULL, thumbPtr->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
-	*widthPtr = GetSystemMetrics(SM_CXHTHUMB);
-	*heightPtr = GetSystemMetrics(SM_CYHSCROLL);
+	*widthPtr = (int)round(GetSystemMetrics(SM_CXHTHUMB)*scalingLevel);
+	*heightPtr = (int)round(GetSystemMetrics(SM_CYHSCROLL)*scalingLevel);
     } else {
-	*widthPtr = GetSystemMetrics(SM_CXVSCROLL);
-	*heightPtr = GetSystemMetrics(SM_CYVTHUMB);
+	*widthPtr = (int)round(GetSystemMetrics(SM_CXVSCROLL)*scalingLevel);
+	*heightPtr = (int)round(GetSystemMetrics(SM_CYVTHUMB)*scalingLevel);
     }
 }
 
@@ -646,21 +648,24 @@ static const Ttk_ElementOptionSpec SliderElementOptions[] = {
 static void SliderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
     SliderElement *slider = (SliderElement *)elementRecord;
+    double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Orient orient;
 
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
-	*widthPtr = (GetSystemMetrics(SM_CXHTHUMB) / 2) | 1;
-	*heightPtr = GetSystemMetrics(SM_CYHSCROLL);
+	*widthPtr = (int)round((GetSystemMetrics(SM_CXHTHUMB) * scalingLevel) / 2);
+	*heightPtr = (int)round(GetSystemMetrics(SM_CYHSCROLL) * scalingLevel);
+	*widthPtr |= 1;
     } else {
-	*widthPtr = GetSystemMetrics(SM_CXVSCROLL);
-	*heightPtr = (GetSystemMetrics(SM_CYVTHUMB) / 2) | 1;
+	*widthPtr = (int)round(GetSystemMetrics(SM_CXVSCROLL) * scalingLevel);
+	*heightPtr = (int)round((GetSystemMetrics(SM_CYVTHUMB) * scalingLevel) / 2);
+	*heightPtr |= 1;
     }
 }
 

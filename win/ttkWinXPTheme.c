@@ -11,8 +11,8 @@
  *
  * See also:
  *
- * <URL: http://msdn.microsoft.com/library/en-us/
- *	shellcc/platform/commctls/userex/refentry.asp >
+ * <URL: http://msdn.microsoft.com/library/en-us/shellcc/platform/commctls/userex/refentry.asp
+ *	https://learn.microsoft.com/en-us/windows/win32/controls/parts-and-states >
  */
 
 #include "tkWinInt.h"
@@ -348,14 +348,13 @@ static const Ttk_StateTable tvpglyph_statemap[] =
 
 typedef struct	/* XP element specifications */
 {
-    const char	*elementName;	/* Tk theme engine element name */
-    const Ttk_ElementSpec *elementSpec;
-				/* Element spec (usually GenericElementSpec) */
-    LPCWSTR	className;	/* Windows window class name */
-    int	partId;		/* BP_PUSHBUTTON, BP_CHECKBUTTON, etc. */
-    const Ttk_StateTable *statemap;	/* Map Tk states to XP states */
-    Ttk_Padding	padding;	/* See NOTE-GetThemeMargins */
-    unsigned	flags;
+    const char		  *elementName;	/* Tk theme engine element name */
+    const Ttk_ElementSpec *elementSpec; /* Element spec struct */
+    LPCWSTR		   className;	/* Windows window class name */
+    int			   partId;	/* BP_PUSHBUTTON, BP_CHECKBUTTON, etc. */
+    const Ttk_StateTable  *statemap;	/* Map Tk states to Win32 states */
+    Ttk_Padding		   padding;	/* See NOTE-GetThemeMargins */
+    unsigned		   flags;	/* Flags from following: */
 #   define	IGNORE_THEMESIZE 0x80000000U /* See NOTE-GetThemePartSize */
 #   define	PAD_MARGINS	 0x40000000U /* See NOTE-GetThemeMargins */
 #   define	HEAP_ELEMENT	 0x20000000U /* ElementInfo is on heap */
@@ -365,15 +364,11 @@ typedef struct	/* XP element specifications */
 
 typedef struct
 {
-    /*
-     * Static data, initialized when element is registered:
-     */
+    /* Static data, initialized when element is registered: */
     const ElementInfo	*info;
     HWND parentHwnd;
 
-    /*
-     * Dynamic data, allocated by InitElementData:
-     */
+    /* Dynamic data, allocated by InitElementData: */
     HTHEME	hTheme;
     HDC		hDC;
     HWND	hwnd;
@@ -383,10 +378,13 @@ typedef struct
     TkWinDCState dcState;
 } ElementData;
 
+/*
+ * Create theme element
+ */
 static ElementData *
 NewElementData(HWND hwnd, const ElementInfo *info)
 {
-    ElementData *elementData = (ElementData *)ckalloc(sizeof(ElementData));
+    ElementData *elementData = (ElementData *)Tcl_Alloc(sizeof(ElementData));
 
     elementData->parentHwnd = hwnd;
     elementData->info = info;
@@ -396,20 +394,21 @@ NewElementData(HWND hwnd, const ElementInfo *info)
 }
 
 /*
- * Destroy elements. If the element was created by the element factory
- * then the info member is dynamically allocated. Otherwise it was
- * static data from the C object and only the ElementData needs freeing.
+ * Destroy theme element. If the element was created by the element factory
+ * then the info member is dynamically allocated. Otherwise it was static
+ * data from the C object and only the ElementData needs freeing.
  */
-static void DestroyElementData(void *clientData)
+static void
+DestroyElementData(void *clientData)
 {
     ElementData *elementData = (ElementData *)clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
-	ckfree((void *)elementData->info->statemap);
-	ckfree((void *)elementData->info->className);
-	ckfree((void *)elementData->info->elementName);
-	ckfree((void *)elementData->info);
+	Tcl_Free((void *)elementData->info->statemap);
+	Tcl_Free((void *)elementData->info->className);
+	Tcl_Free((void *)elementData->info->elementName);
+	Tcl_Free((void *)elementData->info);
     }
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /*
@@ -434,8 +433,8 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hwnd = elementData->parentHwnd;
     }
 
-    elementData->hTheme = OpenThemeDataEx(
-	elementData->hwnd, elementData->info->className, OTD_FORCE_RECT_SIZING);
+    elementData->hTheme = OpenThemeDataEx(elementData->hwnd,
+	    elementData->info->className, OTD_FORCE_RECT_SIZING);
 
     if (!elementData->hTheme) {
 	return 0;
@@ -476,6 +475,7 @@ static void GenericElementSize(
     Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
+    double scalingLevel = TkScalingLevel(tkwin);
     HRESULT result;
     SIZE size;
 
@@ -485,22 +485,21 @@ static void GenericElementSize(
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
 	result = GetThemePartSize(
-	    elementData->hTheme,
-	    NULL,
-	    elementData->info->partId,
-	    Ttk_StateTableLookup(elementData->info->statemap, 0),
-	    NULL /*RECT *prc*/,
-	    TS_TRUE, /* size of the part will be best fit to available space */
-	    &size);
+	    elementData->hTheme,	/* Theme data handle */
+	    elementData->hDC,		/* HDC to select font into & measure against */
+	    elementData->info->partId,	/* Part number to retrieve size for */
+	    Ttk_StateTableLookup(elementData->info->statemap, 0), /* States */
+	    NULL,			/* (optional) rect for part drawing dest */
+	    TS_TRUE,			/* Best fit to available space */
+	    &size);			/* Returned size */
 
 	if (SUCCEEDED(result)) {
-	    *widthPtr = size.cx;
-	    *heightPtr = size.cy;
+	    *widthPtr = (int)round(size.cx * scalingLevel);
+	    *heightPtr = (int)round(size.cy * scalingLevel);
 	}
     }
 
-    /* See NOTE-GetThemeMargins
-     */
+    /* See NOTE-GetThemeMargins for PAD_MARGINS */
     *paddingPtr = elementData->info->padding;
     if (elementData->info->flags & PAD_MARGINS) {
 	*widthPtr += Ttk_PaddingWidth(elementData->info->padding);
@@ -535,13 +534,14 @@ static void GenericElementDraw(
 	DrawThemeParentBackground(elementData->hwnd, elementData->hDC, &rc);
     }
 
+    /* Drawing operations are always scaled to fit, but not exceed rect */
     DrawThemeBackground(
-	elementData->hTheme,
-	elementData->hDC,
-	elementData->info->partId,
-	stateId,
-	&rc,
-	NULL/*pContentRect*/);
+	elementData->hTheme,		/* Theme data handle */
+	elementData->hDC,		/* HDC to draw into */
+	elementData->info->partId,	/* Part number to draw */
+	stateId,			/* State number (of the part) to draw */
+	&rc,				/* Defines the size/location of the part */
+	NULL);				/* Optional clipping rect */
 
     FreeElementData(elementData);
 }
@@ -559,8 +559,8 @@ static const Ttk_ElementSpec GenericElementSpec =
  * +++ Sized element implementation.
  *
  * Used for elements which are handled entirely by the XP Theme API,
- * but that require a fixed size adjustment.
- * Note that GetThemeSysSize calls through to GetSystemMetrics
+ * but that require a fixed size adjustment. Note that GetThemeSysSize
+ * calls through to GetSystemMetrics when hTheme is NULL.
  */
 
 static void
@@ -569,6 +569,7 @@ GenericSizedElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
+    double scalingLevel = TkScalingLevel(tkwin);
 
     if (!InitElementData(elementData, tkwin, 0)) {
 	return;
@@ -577,10 +578,10 @@ GenericSizedElementSize(
     GenericElementSize(clientData, elementRecord, tkwin,
 	widthPtr, heightPtr, paddingPtr);
 
-    *widthPtr = GetThemeSysSize(NULL,
-	(elementData->info->flags >> 8) & 0xff);
-    *heightPtr = GetThemeSysSize(NULL,
-	elementData->info->flags & 0xff);
+    *widthPtr = (int)round(GetThemeSysSize(NULL,
+	(elementData->info->flags >> 8) & 0xff) * scalingLevel);
+    *heightPtr = (int)round(GetThemeSysSize(NULL,
+	elementData->info->flags & 0xff) * scalingLevel);
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
     }
@@ -594,37 +595,6 @@ static const Ttk_ElementSpec GenericSizedElementSpec = {
     sizeof(NullElement),
     TtkNullElementOptions,
     GenericSizedElementSize,
-    GenericElementDraw
-};
-
-/*----------------------------------------------------------------------
- * +++ Spinbox arrow element.
- *     These are half-height scrollbar buttons.
- */
-
-static void
-SpinboxArrowElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
-{
-    ElementData *elementData = (ElementData *)clientData;
-
-    if (!InitElementData(elementData, tkwin, 0)) {
-	return;
-    }
-
-    GenericSizedElementSize(clientData, elementRecord, tkwin,
-	widthPtr, heightPtr, paddingPtr);
-
-    /* force the arrow button height to half size */
-    *heightPtr /= 2;
-}
-
-static const Ttk_ElementSpec SpinboxArrowElementSpec = {
-    TK_STYLE_VERSION_2,
-    sizeof(NullElement),
-    TtkNullElementOptions,
-    SpinboxArrowElementSize,
     GenericElementDraw
 };
 
@@ -901,118 +871,6 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#ifdef BROKEN_TEXT_ELEMENT
-
-/*
- *----------------------------------------------------------------------
- * Text element (does not work yet).
- *
- * According to "Using Windows XP Visual Styles",  we need to select
- * a font into the DC before calling DrawThemeText().
- * There's just no easy way to get an HFONT out of a Tk_Font.
- * Maybe GetThemeFont() would work?
- *
- */
-
-typedef struct
-{
-    Tcl_Obj *textObj;
-    Tcl_Obj *fontObj;
-} TextElement;
-
-static const Ttk_ElementOptionSpec TextElementOptions[] =
-{
-    { "-text", TK_OPTION_STRING,
-	offsetof(TextElement,textObj), "" },
-    { "-font", TK_OPTION_FONT,
-	offsetof(TextElement,fontObj), DEFAULT_FONT },
-    { NULL }
-};
-
-static void TextElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
-{
-    TextElement *element = elementRecord;
-    ElementData *elementData = clientData;
-    RECT rc = {0, 0};
-    HRESULT hr = S_OK;
-    const char *src;
-    Tcl_Size len;
-    Tcl_DString ds;
-
-    if (!InitElementData(elementData, tkwin, 0)) {
-	return;
-    }
-
-    src = Tcl_GetStringFromObj(element->textObj, &len);
-    Tcl_DStringInit(&ds);
-    hr = GetThemeTextExtent(
-	    elementData->hTheme,
-	    elementData->hDC,
-	    elementData->info->partId,
-	    Ttk_StateTableLookup(elementData->info->statemap, 0),
-	    Tcl_UtfToWCharDString(src, len, &ds),
-	    -1,
-	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
-	    NULL,
-	    &rc);
-
-    if (SUCCEEDED(hr)) {
-	*widthPtr = rc.right - rc.left;
-	*heightPtr = rc.bottom - rc.top;
-    }
-    if (*widthPtr < 80) *widthPtr = 80;
-    if (*heightPtr < 20) *heightPtr = 20;
-
-    Tcl_DStringFree(&ds);
-    FreeElementData(elementData);
-}
-
-static void TextElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
-{
-    TextElement *element = elementRecord;
-    ElementData *elementData = clientData;
-    RECT rc = BoxToRect(b);
-    HRESULT hr = S_OK;
-    const char *src;
-    Tcl_Size len;
-    Tcl_DString ds;
-
-    if (!InitElementData(elementData, tkwin, d)) {
-	return;
-    }
-
-    src = Tcl_GetStringFromObj(element->textObj, &len);
-    Tcl_DStringInit(&ds);
-    hr = DrawThemeText(
-	    elementData->hTheme,
-	    elementData->hDC,
-	    elementData->info->partId,
-	    Ttk_StateTableLookup(elementData->info->statemap, state),
-	    Tcl_UtfToWCharDString(src, len, &ds),
-	    -1,
-	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
-	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
-	    &rc);
-
-    Tcl_DStringFree(&ds);
-    FreeElementData(elementData);
-}
-
-static const Ttk_ElementSpec TextElementSpec =
-{
-    TK_STYLE_VERSION_2,
-    sizeof(TextElement),
-    TextElementOptions,
-    TextElementSize,
-    TextElementDraw
-};
-
-#endif	/* BROKEN_TEXT_ELEMENT */
-
 /*----------------------------------------------------------------------
  * +++ Widget layouts:
  */
@@ -1091,7 +949,7 @@ static const ElementInfo ElementInfoTable[] = {
 	EP_EDITTEXT, combotext_statemap, PAD(1, 1, 1, 1), 0 },
     { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
 	CP_DROPDOWNBUTTON, combobox_statemap, NOPAD,
-	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
     /* ttk::scrollbar elements */
     { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
 	SBP_UPPERTRACKVERT, scrollbar_statemap, NOPAD, 0 },
@@ -1147,7 +1005,7 @@ static const ElementInfo ElementInfoTable[] = {
 	TP_SPLITBUTTON, toolbutton_statemap, NOPAD, 0 },
     { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
 	TP_SPLITBUTTONDROPDOWN, toolbutton_statemap, NOPAD,
-	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
     /* ttk::treeview */
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
 	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
@@ -1163,16 +1021,12 @@ static const ElementInfo ElementInfoTable[] = {
 	SP_GRIPPER, null_statemap, NOPAD, 0 },
     { "Spinbox.field", &GenericElementSpec, L"EDIT",
 	EP_EDITTEXT, edittext_statemap, PAD(1, 1, 1, 1), 0 },
-    { "Spinbox.uparrow", &SpinboxArrowElementSpec, L"SPIN",
+    { "Spinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
 	SPNP_UP, spinbutton_statemap, NOPAD,
-	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-    { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
+	HALF_HEIGHT | PAD_MARGINS | (SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
+    { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
-	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-#ifdef BROKEN_TEXT_ELEMENT
-    { "Labelframe.text", &TextElementSpec, L"BUTTON",
-	BP_GROUPBOX, groupbox_statemap, NOPAD, 0 },
-#endif
+	HALF_HEIGHT | PAD_MARGINS | (SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
     { 0, 0, 0, 0, 0, NOPAD, 0 }
 };
 #undef PAD
@@ -1302,14 +1156,14 @@ Ttk_CreateVsapiElement(
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		pad.left = pad.right = tmp;
+		pad.left = pad.right = (short)tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_HEIGHT:
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
 		    goto retErr;
 		}
-		pad.top = pad.bottom = tmp;
+		pad.top = pad.bottom = (short)tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_SYSSIZE:
@@ -1348,8 +1202,8 @@ Ttk_CreateVsapiElement(
 	    goto retErr;
 	}
 	/* we over-allocate to ensure there is a terminating entry */
-	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable) * (count + 1));
-	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
+	stateTable = (Ttk_StateTable *)Tcl_Alloc(sizeof(Ttk_StateTable) * ((size_t)count + 1));
+	memset(stateTable, 0, sizeof(Ttk_StateTable) * ((size_t)count + 1));
 	for (n = 0, j = 0; status == TCL_OK && n < count; n += 2, ++j) {
 	    Ttk_StateSpec spec = {0,0};
 	    status = Ttk_GetStateSpecFromObj(interp, specs[n], &spec);
@@ -1361,29 +1215,29 @@ Ttk_CreateVsapiElement(
 	    }
 	}
 	if (status != TCL_OK) {
-	    ckfree(stateTable);
+	    Tcl_Free(stateTable);
 	    Tcl_DStringFree(&classBuf);
 	    return status;
 	}
     } else {
-	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable));
+	stateTable = (Ttk_StateTable *)Tcl_Alloc(sizeof(Ttk_StateTable));
 	memset(stateTable, 0, sizeof(Ttk_StateTable));
     }
 
-    elementPtr = (ElementInfo *)ckalloc(sizeof(ElementInfo));
+    elementPtr = (ElementInfo *)Tcl_Alloc(sizeof(ElementInfo));
     elementPtr->elementSpec = elementSpec;
     elementPtr->partId = partId;
     elementPtr->statemap = stateTable;
     elementPtr->padding = pad;
-    elementPtr->flags = HEAP_ELEMENT | flags;
+    elementPtr->flags = HEAP_ELEMENT | (unsigned)flags;
 
     /* set the element name to an allocated copy */
-    name = (char *)ckalloc(strlen(elementName) + 1);
+    name = (char *)Tcl_Alloc(strlen(elementName) + 1);
     strcpy(name, elementName);
     elementPtr->elementName = name;
 
     /* set the class name to an allocated copy */
-    wname = (LPWSTR)ckalloc(Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
+    wname = (LPWSTR)Tcl_Alloc((size_t)Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
     wcscpy(wname, className);
     elementPtr->className = wname;
 
