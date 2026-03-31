@@ -289,8 +289,8 @@ static void ActivateTab(Notebook *nb, Tcl_Size index)
  * TabState --
  *	Return the state of the specified tab, based on
  *	notebook state, currentIndex, activeIndex, and user-specified tab state.
- *	The USER1 bit is set for the leftmost visible tab, and USER2
- *	is set for the rightmost visible tab.
+ *	The TTK_STATE_FIRST bit is set for the leftmost visible tab, and
+ *	TTK_STATE_LAST is set for the rightmost visible tab.
  */
 static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 {
@@ -485,13 +485,13 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 static void SqueezeTabs(
     Notebook *nb, int needed, int available)
 {
-    int nTabs = Ttk_NumberContent(nb->notebook.mgr);
+    Tcl_Size nTabs = Ttk_NumberContent(nb->notebook.mgr);
 
     if (nTabs > 0) {
 	int difference = available - needed;
 	double delta = (double)difference / (double)needed;
 	double slack = 0;
-	int i;
+	Tcl_Size i;
 
 	for (i = 0; i < nTabs; ++i) {
 	    Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr,i);
@@ -509,8 +509,8 @@ static void PlaceTabs(
     Notebook *nb, Ttk_Box tabrowBox, Ttk_PositionSpec tabPlacement)
 {
     Ttk_Layout tabLayout = nb->notebook.tabLayout;
-    int nTabs = Ttk_NumberContent(nb->notebook.mgr);
-    int i;
+    Tcl_Size nTabs = Ttk_NumberContent(nb->notebook.mgr);
+    Tcl_Size i;
 
     for (i = 0; i < nTabs; ++i) {
 	Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, i);
@@ -669,7 +669,7 @@ static void SelectTab(Notebook *nb, Tcl_Size index)
  *	in the normal state (e.g., not hidden or disabled),
  *	or -1 if all tabs are disabled or hidden.
  */
-static int NextTab(Notebook *nb, int index)
+static Tcl_Size NextTab(Notebook *nb, Tcl_Size index)
 {
     Tcl_Size nTabs = Ttk_NumberContent(nb->notebook.mgr);
     Tcl_Size nextIndex;
@@ -1379,7 +1379,7 @@ static Ttk_Layout NotebookGetLayout(
  * +++ Display routines.
  */
 
-static void DisplayTab(Notebook *nb, int index, Drawable d)
+static void DisplayTab(Notebook *nb, Tcl_Size index, Drawable d)
 {
     Ttk_Layout tabLayout = nb->notebook.tabLayout;
     Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
