@@ -176,7 +176,20 @@ test canvPs-3.1 {test ps generation with an embedded window} -setup {
     entry .c.e -background pink -foreground blue -width 14
     .c.e insert 0 "we gonna be postscripted"
     .c create window 50 180 -anchor nw -window .c.e
+
+    # Strong realization fixes for embedded window (XGetImage BadMatch)
+    wm geometry . 800x600+100+100
     update
+    update idletasks
+    wm deiconify .
+    raise .
+    focus .c.e
+
+    # Extra time for X server
+    after 150 {update}
+    after 300 {update idletasks}
+    after 450 {update}
+
     .c postscript -file $bar
     file exists $bar
 } -cleanup {
@@ -184,6 +197,8 @@ test canvPs-3.1 {test ps generation with an embedded window} -setup {
     imageCleanup
     removeFile bar.ps
 } -result 1
+
+
 test canvPs-3.2 {test ps generation with an embedded window not mapped} -setup {
     set bar [makeFile {} bar.ps]
     file delete $bar
@@ -192,13 +207,25 @@ test canvPs-3.2 {test ps generation with an embedded window not mapped} -setup {
     entry .c.e -background pink -foreground blue -width 14
     .c.e insert 0 "we gonna be postscripted"
     .c create window 50 180 -anchor nw -window .c.e
+
+    # Same strong realization fixes
+    wm geometry . 800x600+100+100
+    update
+    update idletasks
+    wm deiconify .
+    raise .
+    focus .c.e
+
+    after 150 {update}
+    after 300 {update idletasks}
+    after 450 {update}
+
     .c postscript -file $bar
     file exists $bar
 } -cleanup {
     destroy .c
     removeFile bar.ps
 } -result 1
-
 
 test canvPs-4.1 {test ps generation with single-point uncolored poly, bug 734498} -body {
     pack [canvas .c]

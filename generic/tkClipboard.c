@@ -428,8 +428,8 @@ Tk_ClipboardObjCmd(
     Atom selection;
     static const char *const optionStrings[] = {
 	"append", "clear", "get", NULL };
-    int index;
-    Tcl_Size i, result;
+    int index, result;
+    Tcl_Size i;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");

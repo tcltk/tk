@@ -1509,7 +1509,7 @@ static int GetChildIdForTkWindow(
 	TkGlobalUnlock();
 	return -1;
     }
-    int id = PTR2INT(Tcl_GetHashValue(entry));
+    int id = (int)PTR2INT(Tcl_GetHashValue(entry));
     TkGlobalUnlock();
     return id;
 }
@@ -2009,7 +2009,7 @@ static int EmitFocusChanged(
     AssignChildIdsRecursive(toplevel, &nextId, interp, toplevel);
     LONG childId = GetChildIdForTkWindow(win, childIdTable);
     if (childId <= 0) {
-	Tcl_AppendResult(interp, "Failed to find child ID for ", path, NULL);
+	Tcl_AppendResult(interp, "Failed to find child ID for ", path, (char *)NULL);
 	TkGlobalUnlock();
 	return TCL_OK;
     }

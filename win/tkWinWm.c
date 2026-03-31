@@ -750,7 +750,7 @@ WinSetIcon(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", Tk_PathName(tkw)));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", Tk_PathName(tkw),
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     if (Tk_WindowId(tkw) == None) {
@@ -1443,7 +1443,7 @@ ReadIconOrCursorFromFile(
     BlockOfIconImagesPtr lpIR;
     Tcl_Channel channel;
     int i;
-    DWORD dwBytesRead;
+    Tcl_Size dwBytesRead;
     LPICONDIRENTRY lpIDE;
 
     /*
@@ -1500,7 +1500,7 @@ ReadIconOrCursorFromFile(
 
     dwBytesRead = Tcl_Read(channel, (char *) lpIDE,
 	    (int) (lpIR->nNumImages * sizeof(ICONDIRENTRY)));
-    if (dwBytesRead != lpIR->nNumImages * sizeof(ICONDIRENTRY)) {
+    if (dwBytesRead != lpIR->nNumImages * (Tcl_Size)sizeof(ICONDIRENTRY)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file: %s", Tcl_PosixError(interp)));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "READ", (char *)NULL);
@@ -2803,7 +2803,7 @@ Tk_WmObjCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -3221,7 +3221,7 @@ WmAttributesCmd(
 			"can't set fullscreen attribute for \"%s\":"
 			" override-redirect flag is set", winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
-			"OVERRIDE_REDIRECT", NULL);
+			"OVERRIDE_REDIRECT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -3478,7 +3478,7 @@ WmCommandCmd(
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	XSetCommand(winPtr->display, winPtr->window, (char **) cmdArgv, cmdArgc);
+	XSetCommand(winPtr->display, winPtr->window, (char **) cmdArgv, (int)cmdArgc);
     }
     return TCL_OK;
 }
@@ -3625,8 +3625,10 @@ WmForgetCmd(
     if (Tk_IsTopLevel(frameWin) && Tk_IsManageable(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
-	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
-	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	if (winPtr->parentPtr) {
+	    Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+	    RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	}
 
 	/*
 	 * Make sure wm no longer manages this window
@@ -3736,10 +3738,10 @@ WmGeometryCmd(
 	    height = winPtr->changes.height;
 	}
 	if (winPtr->flags & TK_EMBEDDED) {
-	    int result = SendMessageW(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
+	    LRESULT result = SendMessageW(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
 
-	    wmPtr->x = result >> 16;
-	    wmPtr->y = result & 0x0000ffff;
+	    wmPtr->x = (short)(result >> 16);
+	    wmPtr->y = (short)(result & 0x0000ffff);
 	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
 		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
@@ -4209,7 +4211,7 @@ WmIconifyCmd(
 		"can't iconify \"%s\": override-redirect flag is set",
 		winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->containerPtr != NULL) {
@@ -4372,7 +4374,7 @@ WmIconphotoCmd(
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
-    unsigned size;
+    size_t size;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -4809,7 +4811,7 @@ WmOverrideredirectCmd(
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
-	curValue = SendMessageW(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1)-1;
+	curValue = (Bool)(SendMessageW(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1)-1);
 	if (curValue < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Container does not support overrideredirect", TCL_INDEX_NONE));
@@ -5198,7 +5200,8 @@ WmStackorderCmd(
 	}
     } else {
 	TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
-	int index1 = -1, index2 = -1, result;
+	Tcl_Size index1 = -1, index2 = -1;
+	int result;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[4],
 		(Tk_Window *) winPtr2Ptr) != TCL_OK) {
@@ -5365,7 +5368,7 @@ WmStateCmd(
 			"can't iconify \"%s\": override-redirect flag is set",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
-			"OVERRIDE_REDIRECT", NULL);
+			"OVERRIDE_REDIRECT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (wmPtr->containerPtr != NULL) {
@@ -5373,7 +5376,7 @@ WmStateCmd(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "TRANSIENT",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    TkpWmSetState(winPtr, IconicState);
@@ -5393,7 +5396,7 @@ WmStateCmd(
 	    int state;
 
 	    if (winPtr->flags & TK_EMBEDDED) {
-		state = SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1;
+		state = (int)(SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1);
 	    } else {
 		state = wmPtr->hints.initial_state;
 	    }
@@ -6895,7 +6898,7 @@ TkWmAddToColormapWindows(
 {
     TkWindow *topPtr;
     TkWindow **oldPtr, **newPtr;
-    int count, i;
+    Tcl_Size count, i;
 
     if (winPtr->window == None) {
 	return;
@@ -6995,7 +6998,7 @@ TkWmRemoveFromColormapWindows(
 {
     TkWindow *topPtr;
     TkWindow **oldPtr;
-    int count, i, j;
+    Tcl_Size count, i, j;
 
     for (topPtr = winPtr->parentPtr; ; topPtr = topPtr->parentPtr) {
 	if (topPtr == NULL) {
@@ -7795,7 +7798,7 @@ TopLevelProc(
 	    winPtr->changes.height = pos->cy;
 	}
 	if (!(pos->flags & SWP_NOMOVE)) {
-	    long result = SendMessageW(winPtr->wmInfoPtr->wrapper,
+	    int result = (int)SendMessageW(winPtr->wmInfoPtr->wrapper,
 		    TK_MOVEWINDOW, -1, -1);
 	    winPtr->wmInfoPtr->x = winPtr->changes.x = result >> 16;
 	    winPtr->wmInfoPtr->y = winPtr->changes.y = result & 0xffff;
@@ -8370,7 +8373,7 @@ TkpWinToplevelWithDraw(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int resetTempStyle = 0;
-    LONG exStyle = 0;
+    LONG_PTR exStyle = 0;
 
     /*
      * Special handling of transient toplevels (wmPtr->containerPtr != NULL),
@@ -8628,7 +8631,7 @@ TkpWinToplevelDetachWindow(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (winPtr->flags & TK_EMBEDDED) {
-	int state = SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1;
+	int state = (int)(SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1);
 
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, 0, 0);
 	SendMessageW(wmPtr->wrapper, TK_DETACHWINDOW, 0, 0);
