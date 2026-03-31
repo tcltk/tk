@@ -985,7 +985,7 @@ SafeKbtsLoadFont(
          * Signal was caught inside kb_text_shaper.  The shaper context
          * is now in an unknown state — stop loading fonts entirely.
          */
-         fprintf(stderr, "Bad font caught in kb_text_shaper; bailing\n");
+    //     fprintf(stderr, "Bad font caught in kb_text_shaper; bailing\n");
         *fatalSignal = 1;
         result = NULL;
     }
@@ -1008,10 +1008,12 @@ X11Shaper_Init(
         return;
     }
 
- /* test - force a crash */
+ /* test - force a crash 
     kbts_font *crashfont = kbts_ShapePushFontFromFile(s->context,
                                                           "/usr/share/fonts/truetype/noto/NotoSansGlagolitic-Regular.ttf",
                                                          0);
+                                                         
+                                                         */
     s->numFonts = 0;
     s->cache.valid = 0;
     s->shapeErrors = 0;
