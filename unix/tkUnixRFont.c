@@ -28,6 +28,27 @@
 #define MAX_FONTS 64
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
+
+/*
+ * Maximum number of font faces loaded into kb_text_shaper at init time.
+ *
+ * Fontconfig sorts faces by best match first, so the fonts most relevant
+ * to the current locale appear early in the list.  Faces beyond this
+ * limit are skipped.
+ *
+ * This cap is intentional and serves as a safety boundary against a
+ * known bug in kb_text_shaper (kbts__MarkMatrixCoverage): certain fonts
+ * for less-common scripts (observed with NotoSansMongolian-Regular.ttf,
+ * NotoSansGlagolitic-Regular.ttf) have GSUB/GPOS coverage tables that
+ * reference glyph IDs beyond the font's maxp glyph count, causing
+ * kb_text_shaper to overrun an internal matrix and corrupt the heap.
+ * These fonts tend to sort late in the fontconfig list behind more
+ * common script faces, so capping at KBTS_MAX_INITIAL_FONTS keeps them
+ * out of the shaper without requiring us to maintain a denylist or patch
+ * kb_text_shaper itself.  If that bug is fixed upstream the cap can be
+ * raised or removed.
+ */
+#define KBTS_MAX_INITIAL_FONTS 32
 #define TK_DRAW_IN_CONTEXT
 
 /*
@@ -912,17 +933,12 @@ X11Shaper_Init(
     s->cache.valid = 0;
     s->shapeErrors = 0;
 
-    /*
-     * Load fonts into shaper. To avoid initialization hangs, we load
-     * a limited set initially. kb_text_shaper will automatically load
-     * additional fonts as needed during shaping (on-demand fallback).
-     * We cap the initial load at 32 fonts to balance coverage vs. speed.
-     * Keeping the number small also guards against a bug in kb_text_shaper
-     * that comes when it loads seldom-used complex fonts such as Mongolian.
+    /* Load faces into shaper, up to KBTS_MAX_INITIAL_FONTS.
+     * See the comment on that constant for why the cap exists.
      */
-    int maxInitialFonts = (fontPtr->nfaces < 32) ? fontPtr->nfaces : 32;
+    int maxInitialFonts = (fontPtr->nfaces < KBTS_MAX_INITIAL_FONTS)
+                          ? fontPtr->nfaces : KBTS_MAX_INITIAL_FONTS;
 
-    /* Load all faces into shaper. */
     for (int i = 0; i < maxInitialFonts && s->numFonts < MAX_FONTS; i++) {
         FcPattern *facePattern = fontPtr->faces[i].source;
         FcChar8 *file;
@@ -1248,13 +1264,19 @@ X11Shaper_ShapeString(
             }
 
             if (!faceFound) {
-                /* Consume glyphs without emitting them. */
+                /*
+                 * Cannot map this kbts font to an Xft face.  Consume the
+                 * glyphs to keep runPenX accurate for subsequent glyph
+                 * positions, but do NOT add runPenX to globalPenX here.
+                 * globalPenX += runPenX runs unconditionally at the bottom
+                 * of the outer loop; adding it here too would double-count
+                 * the advance and shift all subsequent glyphs to the right.
+                 */
                 kbts_glyph_iterator it = run.Glyphs;
                 kbts_glyph *g;
                 while (kbts_GlyphIteratorNext(&it, &g) == 1) {
                     runPenX += (int)(g->AdvanceX * fontPtr->pixelScale + 0.5);
                 }
-                globalPenX += runPenX;
                 continue;
             }
 
@@ -1479,7 +1501,18 @@ X11Shaper_ShapeString(
         free(ucs4Chars);
     }
 
-    return shapedAny ? 1 : 0;
+    /*
+     * Return success even if shapedAny is still 0 (all runs had faceFound=0
+     * so no glyphs were emitted into the buffer).  An empty buffer with
+     * totalAdvance>0 is a valid result — it means the string occupies space
+     * but has no renderable glyphs in our Xft face set.
+     *
+     * Returning 0 here is wrong: Tk_MeasureChars and Tk_MeasureCharsInContext
+     * treat a 0 return as a hard failure and immediately return 0 bytes
+     * consumed with *lengthPtr=0.  If the text widget calls either in a loop
+     * expecting to make forward progress, it will spin forever.
+     */
+    return 1;
 }
 
 /*
@@ -1863,46 +1896,93 @@ Tk_MeasureChars(
     }
 
     int curX = 0;
-    int curByte = 0;
     int lastBreakByte = 0;
     int lastBreakX = 0;
 
+    /*
+     * For cursor placement and line breaking, Tk_MeasureChars must return
+     * a logical byte count that increases monotonically as maxLength grows.
+     *
+     * For LTR text byteOffset increases with glyph index, so tracking
+     * the latest byteOffset + clusterLen is correct.
+     *
+     * For RTL text the shaper places glyphs in visual (left-to-right)
+     * order, meaning byteOffset runs backwards through the logical string.
+     * If we set curByte = byteOffset + clusterLen naively, curByte jumps
+     * around as we scan glyphs — it is not monotonic.  The text widget's
+     * cursor search calls Tk_MeasureChars in a loop expecting the returned
+     * byte count to strictly increase as maxLength increases.  When it
+     * doesn't, the search never converges and spins forever, consuming
+     * memory until the process crashes (the "endless loop" bug on BiDi
+     * text in the Labels and Unicode widget demo).
+     *
+     * Fix: curByte tracks the MAXIMUM logical byte boundary seen across
+     * all glyphs consumed so far.  For a pure RTL run the rightmost visual
+     * glyph has the lowest byteOffset; scanning left-to-right visually
+     * produces increasing byteOffsets, so max(byteOffset + clusterLen)
+     * gives a monotonically increasing byte count regardless of run
+     * direction.  For mixed LTR/RTL paragraphs this is also correct.
+     */
+    int curByte = 0;
+
     for (int i = 0; i < buffer.glyphCount; i++) {
         int glyphWidth = buffer.glyphs[i].advanceX;
+        int offset     = buffer.glyphs[i].byteOffset;
+        int glyphEnd   = offset + buffer.glyphs[i].clusterLen;
 
-        /* Check the source byte at this glyph's offset.
-         * If it's a space, we MUST record it as a wrap point.
-         */
-        int offset = buffer.glyphs[i].byteOffset;
-        if (offset >= 0 && offset < numBytes) {
+        if (offset < 0) offset = 0;
+        if (glyphEnd > (int)numBytes) glyphEnd = (int)numBytes;
+
+        /* Record word-break opportunities. */
+        if (offset >= 0 && offset < (int)numBytes) {
             if (source[offset] == ' ' || source[offset] == '\t') {
-                lastBreakByte = offset + buffer.glyphs[i].clusterLen;
-                lastBreakX = curX + glyphWidth;
+                lastBreakByte = glyphEnd;
+                lastBreakX    = curX + glyphWidth;
             }
         }
 
         if (maxLength >= 0 && (curX + glyphWidth) > maxLength) {
-            /* We hit the margin! */
-            if (lastBreakByte > 0 && !(flags & (TK_WHOLE_WORDS == 0))) {
-                /* Wrap at the last space we found. */
+            if (lastBreakByte > 0 && (flags & TK_WHOLE_WORDS)) {
                 *lengthPtr = lastBreakX;
                 return lastBreakByte;
             }
-            /* No space found, or breaking mid-word is allowed. */
-            if (flags & TK_AT_LEAST_ONE && curByte == 0) {
+            /*
+             * Nothing consumed yet and this glyph already exceeds maxLength.
+             * Always advance by at least this one glyph — both when the caller
+             * explicitly requests TK_AT_LEAST_ONE and when curByte is still 0,
+             * because returning 0 bytes consumed is never correct when there is
+             * remaining input: any caller looping on Tk_MeasureChars would spin
+             * forever if we returned 0 bytes with a non-empty source string.
+             */
+            if (curByte == 0) {
                 *lengthPtr = curX + glyphWidth;
-                return offset + buffer.glyphs[i].clusterLen;
+                return glyphEnd;
             }
             *lengthPtr = curX;
             return curByte;
         }
 
         curX += glyphWidth;
-        curByte = offset + buffer.glyphs[i].clusterLen;
+
+        /* Advance to the furthest logical byte covered — max(), not assign,
+         * so the result is monotonic for RTL and mixed-direction text.
+         */
+        if (glyphEnd > curByte) {
+            curByte = glyphEnd;
+        }
     }
 
+    /*
+     * If the buffer was empty (all characters filtered, or shaper emitted
+     * no glyphs), curByte is still 0.  Returning 0 bytes consumed would
+     * lock up any caller that loops until all input is consumed.  Return
+     * numBytes to skip the entire unmeasurable segment.
+     */
+    if (curByte == 0 && (int)numBytes > 0) {
+        curByte = (int)numBytes;
+    }
     *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : curX;
-    return (curByte > numBytes) ? (int)numBytes : curByte;
+    return (curByte > (int)numBytes) ? (int)numBytes : curByte;
 }
 
 /*
@@ -2024,27 +2104,59 @@ Tk_MeasureCharsInContext(
     }
 
     int totalWidth = 0;
-    int bytesConsumed = (int)rangeStart;
     int rangeEnd = (int)(rangeStart + rangeLength);
 
     int lastBreakPos = (int)rangeStart;
     int lastBreakWidth = 0;
     int lastBreakGlyph = -1;
 
+    /*
+     * bytesConsumed tracks the furthest logical byte boundary covered by
+     * glyphs rendered so far, measured from the start of source.
+     *
+     * For RTL text the shaper stores glyphs in visual order, so
+     * byteOffset is NOT monotonically increasing through the glyph array.
+     * Using max() here — rather than plain assignment — ensures that
+     * bytesConsumed only moves forward through the logical string,
+     * regardless of glyph visual order.
+     *
+     * The same applies to the range-membership test: we cannot use
+     * "glyphStart >= rangeEnd => break" because for RTL the first glyph
+     * in the visual array may have a high byteOffset while later glyphs
+     * have low byteOffsets still inside the range.  Instead we test each
+     * glyph individually against [rangeStart, rangeEnd) using its logical
+     * byte span, and scan the full glyph array.
+     *
+     * Without these two corrections Tk_MeasureCharsInContext returns a
+     * non-monotonic byte count for RTL/BiDi text, causing the text
+     * widget's cursor-placement binary search to spin forever and consume
+     * unbounded memory until the process crashes.
+     */
+    int bytesConsumed = (int)rangeStart;
+
     for (int i = 0; i < buffer.glyphCount; i++) {
         int glyphStart = buffer.glyphs[i].byteOffset;
         int glyphEnd   = glyphStart + buffer.glyphs[i].clusterLen;
 
-        if (glyphEnd <= (int)rangeStart) continue;
-        if (glyphStart >= rangeEnd) break;
+        if (glyphStart < 0) glyphStart = 0;
+        if (glyphEnd > (int)numBytes) glyphEnd = (int)numBytes;
+
+        /* Skip glyphs whose logical span does not overlap the range.
+         * Test both ends explicitly — do NOT use an early break, because
+         * for RTL text later glyphs in the visual array may still have
+         * byteOffsets inside the range.
+         */
+        if (glyphEnd <= (int)rangeStart || glyphStart >= rangeEnd) {
+            continue;
+        }
 
         int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
 
-        /* Check for spaces in the original source to allow wrapping. */
-        if (glyphStart < (int)numBytes && glyphStart >= 0) {
+        /* Record word-break opportunities. */
+        if (glyphStart >= 0 && glyphStart < (int)numBytes) {
             char ch = source[glyphStart];
             if (ch == ' ' || ch == '\t' || ch == '\n') {
-                lastBreakPos = glyphEnd;
+                lastBreakPos   = glyphEnd;
                 lastBreakWidth = nextWidth;
                 lastBreakGlyph = i;
             }
@@ -2052,22 +2164,44 @@ Tk_MeasureCharsInContext(
 
         if (maxLength >= 0 && nextWidth > maxLength) {
             if (lastBreakGlyph >= 0) {
-                totalWidth = lastBreakWidth;
+                totalWidth    = lastBreakWidth;
                 bytesConsumed = lastBreakPos;
-            } else if ((flags & TK_AT_LEAST_ONE) && totalWidth == 0) {
-                totalWidth = nextWidth;
+            } else if (bytesConsumed == (int)rangeStart) {
+                /*
+                 * Nothing consumed yet — advance by at least this glyph.
+                 * Same reasoning as Tk_MeasureChars: returning 0 bytes
+                 * consumed locks up any caller looping for progress.
+                 */
+                totalWidth    = nextWidth;
                 bytesConsumed = glyphEnd;
             }
             goto done;
         }
 
         totalWidth = nextWidth;
-        bytesConsumed = glyphEnd;
+
+        /* Advance logical byte cursor using max() for RTL safety. */
+        if (glyphEnd > bytesConsumed) {
+            bytesConsumed = glyphEnd;
+        }
     }
 
 done:
     if (bytesConsumed > rangeEnd) bytesConsumed = rangeEnd;
     if (bytesConsumed < (int)rangeStart) bytesConsumed = (int)rangeStart;
+
+    /*
+     * If maxLength was unconstrained and we consumed no bytes despite the
+     * range being non-empty, it means no glyph in the buffer had a byte
+     * offset inside [rangeStart, rangeEnd).  This can happen when the
+     * shaper drops all glyphs (faceFound=0 for every run).  Returning 0
+     * bytes in this case is wrong — the caller would loop forever trying
+     * to make progress.  Return the full range length so the caller
+     * advances past this segment.
+     */
+    if (bytesConsumed == (int)rangeStart && maxLength < 0 && rangeLength > 0) {
+        bytesConsumed = rangeEnd;
+    }
 
     *lengthPtr = totalWidth;
     return (bytesConsumed - (int)rangeStart);
