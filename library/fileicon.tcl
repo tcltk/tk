@@ -9248,9 +9248,18 @@ proc ::tk::fileicon {filename size} {
                 set newsize $s
             }
         }
+
+	# Return the same icon for all volumes, incl. the virtual filesystems
+	if {$filename in [file volumes]} {
+	    set filename "C:/"
+	}
         return [::tk::fileicon::_getwinicon $filename $newsize]
     }
     if {[tk windowingsystem] eq "aqua"} {
+	# Return the same icon for all volumes, incl. the virtual filesystems
+	if {$filename in [file volumes]} {
+	    set filename "/"
+	}
         return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
     }
     if {[tk windowingsystem] eq "x11"} {
