@@ -308,9 +308,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 // Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
-    if ([NSApp tkWillExit]) {
-	return;
-    }
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
@@ -321,9 +318,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 // Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
-    if ([NSApp tkWillExit]) {
-	return;
-    }
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
