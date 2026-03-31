@@ -1,4 +1,4 @@
-! /bin/bash -norc
+#! /bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
@@ -553,6 +553,17 @@ if test $tk_aqua = no; then
     LIBS=$tk_oldLibs
 fi
 
+# -----------------------------------------------------------------------
+# SheenBidi Unicode Bidirectional support — always included
+# Hard-wired into unix/bidi/ subdirectory
+# kb_text_shaper.h also lives in unix/bidi/
+# -----------------------------------------------------------------------
+
+AC_MSG_CHECKING([for SheenBidi + text shaper support])
+AC_MSG_RESULT([yes (hard-wired in unix/bidi/)])
+BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers -I${TK_SRC_DIR}/unix/bidi/Source -I${TK_SRC_DIR}/unix/bidi -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+AC_SUBST(BIDI_CFLAGS)
+
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
 #	#define for __CHAR_UNSIGNED__.
@@ -811,6 +822,8 @@ AC_SUBST(LIB_RSRC_FILE)
 AC_SUBST(APP_RSRC_FILE)
 AC_SUBST(REZ)
 AC_SUBST(REZ_FLAGS)
+
+AC_SUBST(BIDI_CFLAGS)
 
 AC_CONFIG_FILES([
     Makefile:../unix/Makefile.in

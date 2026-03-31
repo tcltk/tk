@@ -21,7 +21,7 @@
 
 struct TtkImageSpec {
     Tk_Image		baseImage;	/* Base image to use */
-    int		mapCount;	/* #state-specific overrides */
+    Tcl_Size		mapCount;	/* #state-specific overrides */
     Ttk_StateSpec	*states;	/* array[mapCount] of states ... */
     Tk_Image		*images;	/* ... per-state images to use */
     Tk_ImageChangedProc *imageChanged;
@@ -79,7 +79,7 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     Tk_ImageChangedProc *imageChangedProc, void *imageChangedClientData)
 {
     Ttk_ImageSpec *imageSpec = 0;
-    int i = 0, n = 0;
+    Tcl_Size i = 0, n = 0;
     Tcl_Size objc;
     Tcl_Obj **objv;
 
