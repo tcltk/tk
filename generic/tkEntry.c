@@ -2449,7 +2449,7 @@ EntrySetValue(
 {
     const char *oldSource;
     size_t valueLen;
-	bool malloced = false;
+    bool malloced = false;
 
     if (strcmp(value, entryPtr->string) == 0) {
 	return;
