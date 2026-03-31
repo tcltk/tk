@@ -1,3 +1,4 @@
+#if 0
 /*
  * tkUnixRFont.c --
  *
@@ -198,53 +199,29 @@ static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
-static int IsSimpleScript(const char *str, int len); /* fast-path helper */
+static int IsLatinOnly(const char *str, int len);  /* fast-path helper */
 
 /*
  * ---------------------------------------------------------------
- * IsSimpleScript --
+ * IsLatinOnly --
  *
- *   Returns 1 if every codepoint in the UTF-8 string belongs to a
- *   script that requires no shaping, no BiDi reordering, and no
- *   multi-face fallback — meaning a single Xft face with
- *   XftTextExtentsUtf8 / XftDrawStringUtf8 will render it correctly.
+ *   Returns 1 if every codepoint in the UTF-8 string falls within
+ *   the Latin "simple" range: Basic Latin (U+0000-U+007F), Latin-1
+ *   Supplement (U+0080-U+00FF), Latin Extended-A (U+0100-U+017F),
+ *   or Latin Extended-B (U+0180-U+024F).
  *
- *   Accepted blocks:
- *     U+0000-U+007F  Basic Latin
- *     U+0080-U+00FF  Latin-1 Supplement
- *     U+0100-U+017F  Latin Extended-A
- *     U+0180-U+024F  Latin Extended-B
- *     U+0250-U+02AF  IPA Extensions          (precomposed phonetic symbols)
- *     U+02B0-U+02FF  Spacing Modifier Letters (precomposed, no joining)
- *     U+0370-U+03FF  Greek and Coptic        (modern Greek, precomposed LTR)
- *     U+0400-U+04FF  Cyrillic                (Russian, Ukrainian, Bulgarian…)
- *     U+0500-U+052F  Cyrillic Supplement
- *     U+1E00-U+1EFF  Latin Extended Additional (Vietnamese, Welsh, precomposed)
- *     U+2000-U+206F  General Punctuation     (em-dash, smart quotes, ellipsis…)
- *     U+2070-U+209F  Superscripts and Subscripts
- *     U+20A0-U+20CF  Currency Symbols        (€ £ ¥ ₽ …)
- *     U+2100-U+214F  Letterlike Symbols      (℃ ™ © …)
- *     U+2150-U+218F  Number Forms            (½ ¼ Roman numerals)
- *     U+2190-U+22FF  Arrows + Math Operators
- *     U+25A0-U+26FF  Geometric Shapes + Miscellaneous Symbols
- *
- *   Explicitly excluded (routed to shaper):
- *     U+0300-U+036F  Combining Diacritical Marks (attach to base chars)
- *     U+0530-U+1DFF  Armenian through Phonetic Extensions (complex scripts)
- *     U+2300-U+25FF  Misc Technical, Control Pictures, Box Drawing (font
- *                    fallback behavior unpredictable — leave to shaper)
- *     U+2700-U+27BF  Dingbats (typically a different face; needs fallback)
- *     U+2DE0-U+2DFF  Cyrillic Extended-A (Old Church Slavonic, combining)
- *     U+A640-U+A69F  Cyrillic Extended-B (historical, combining)
- *     U+1F300+        Emoji (color fonts, ZWJ sequences, skin-tone modifiers)
- *     Everything else.
+ *   All codepoints in this range (U+0000-U+024F) are precomposed
+ *   or trivially handled by a single Xft font face with no BiDi
+ *   reordering, no ligature shaping, and no multi-face fallback.
+ *   Using XftTextExtentsUtf8 / XftDrawStringUtf8 directly is both
+ *   correct and significantly faster for these scripts.
  *
  *   Returns 0 as soon as any out-of-range codepoint is found.
  * ---------------------------------------------------------------
  */
 
 static int
-IsSimpleScript(const char *str, int len)
+IsLatinOnly(const char *str, int len)
 {
     int i = 0;
     while (i < len) {
@@ -264,14 +241,10 @@ IsSimpleScript(const char *str, int len)
             return 0;
         }
 
-        if (!( (uc >= 0x0080 && uc <= 0x02FF) ||  /* Latin supp/ext + IPA + modifiers */
-               (uc >= 0x0370 && uc <= 0x03FF) ||  /* Greek and Coptic                 */
-               (uc >= 0x0400 && uc <= 0x052F) ||  /* Cyrillic + Supplement            */
-               (uc >= 0x1E00 && uc <= 0x1EFF) ||  /* Latin Extended Additional        */
-               (uc >= 0x2000 && uc <= 0x22FF) ||  /* Punctuation, super/sub, currency,
-                                                    * letterlike, number forms, arrows,
-                                                    * math operators                  */
-               (uc >= 0x25A0 && uc <= 0x26FF) )) {/* Geometric shapes, misc symbols   */
+        /* Accept U+0080 through U+024F (Latin-1 Supplement through
+         * Latin Extended-B).  Everything above U+024F needs the shaper.
+         */
+        if (uc > 0x024F) {
             return 0;
         }
 
@@ -279,9 +252,6 @@ IsSimpleScript(const char *str, int len)
     }
     return 1;
 }
-
-/* Alias used at all call sites — rename kept local to this file. */
-#define IsLatinOnly IsSimpleScript
 
 
 /*
@@ -938,7 +908,12 @@ X11Shaper_Init(
     if (!s->context) {
         return;
     }
-
+     
+    /* test - force a crash 
+    kbts_font *crashfont = kbts_ShapePushFontFromFile(s->context,
+                                                          "/usr/share/fonts/truetype/noto/NotoSansGlagolitic-Regular.ttf",
+                                                         0);
+*/
     s->numFonts = 0;
     s->cache.valid = 0;
     s->shapeErrors = 0;
@@ -948,6 +923,8 @@ X11Shaper_Init(
      * a limited set initially. kb_text_shaper will automatically load
      * additional fonts as needed during shaping (on-demand fallback).
      * We cap the initial load at 32 fonts to balance coverage vs. speed.
+     * Keeping the number small also guards against a bug in kb_text_shaper
+     * that comes when it loads seldom-used complex fonts such as Mongolian.
      */
     int maxInitialFonts = (fontPtr->nfaces < 32) ? fontPtr->nfaces : 32;
 
@@ -2533,6 +2510,1453 @@ TkUnixSetXftClipRegion(
     tsdPtr->clipRegion = clipRegion;
 }
 
+/*
+ * Local Variables:
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
+ #endif
+ 
+ //Temporarily restore old code until we figure out kb_text_shape.h crash. 
+ 
+ /*
+ * tkUnixRFont.c --
+ *
+ *	Alternate implementation of tkUnixFont.c using Xft.
+ *
+ * Copyright © 2002-2003 Keith Packard
+ *
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ */
+
+#include "tkUnixInt.h"
+#include "tkFont.h"
+#include <X11/Xft/Xft.h>
+
+#define MAX_CACHED_COLORS 16
+
+/*
+ * Debugging support...
+ */
+
+#define DEBUG_FONTSEL 0
+#define DEBUG(arguments) \
+    if (DEBUG_FONTSEL) { \
+	printf arguments; fflush(stdout); \
+    }
+
+typedef struct {
+    XftFont *ftFont;
+    XftFont *ft0Font;
+    FcPattern *source;
+    FcCharSet *charset;
+    double angle;
+} UnixFtFace;
+
+typedef struct {
+    XftColor color;
+    int next;
+} UnixFtColorList;
+
+typedef struct {
+    TkFont font;		/* Stuff used by generic font package. Must be
+				 * first in structure. */
+    UnixFtFace *faces;
+    int nfaces;
+    FcFontSet *fontset;
+    FcPattern *pattern;
+
+    Display *display;
+    int screen;
+    Colormap colormap;
+    Visual *visual;
+    XftDraw *ftDraw;
+    int ncolors;
+    int firstColor;
+    UnixFtColorList colors[MAX_CACHED_COLORS];
+} UnixFtFont;
+
+/*
+ * Used to describe the current clipping box. Can't be passed normally because
+ * the information isn't retrievable from the GC.
+ */
+
+typedef struct {
+    Region clipRegion;		/* The clipping region, or None. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
+
+TCL_DECLARE_MUTEX(xftMutex);
+#define LOCK Tcl_MutexLock(&xftMutex)
+#define UNLOCK Tcl_MutexUnlock(&xftMutex)
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * TkpFontPkgInit --
+ *
+ *	This procedure is called when an application is created. It
+ *	initializes all the structures that are used by the
+ *	platform-dependant code on a per application basis.
+ *	Note that this is called before TkpInit() !
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static Tcl_Size utf8ToUcs4(const char *source, FcChar32 *c, Tcl_Size numBytes)
+{
+    if (numBytes >= 6) {
+	return Tcl_UtfToUniChar(source, (int *)c);
+    }
+    return FcUtf8ToUcs4((const FcChar8 *)source, c, numBytes);
+}
+
+void
+TkpFontPkgInit(
+    TCL_UNUSED(TkMainInfo *))	/* The application being created. */
+{
+}
+
+static XftFont *
+GetFont(
+    UnixFtFont *fontPtr,
+    FcChar32 ucs4,
+    double angle)
+{
+    int i;
+
+    if (ucs4) {
+	for (i = 0; i < fontPtr->nfaces; i++) {
+	    FcCharSet *charset = fontPtr->faces[i].charset;
+
+	    if (charset && FcCharSetHasChar(charset, ucs4)) {
+		break;
+	    }
+	}
+	if (i == fontPtr->nfaces) {
+	    i = 0;
+	}
+    } else {
+	i = 0;
+    }
+    if ((angle == 0.0 && !fontPtr->faces[i].ft0Font) || (angle != 0.0 &&
+	    (!fontPtr->faces[i].ftFont || fontPtr->faces[i].angle != angle))){
+	FcPattern *pat = FcFontRenderPrepare(0, fontPtr->pattern,
+		fontPtr->faces[i].source);
+	double s = sin(angle*PI/180.0), c = cos(angle*PI/180.0);
+	FcMatrix mat;
+	XftFont *ftFont;
+
+	/*
+	 * Initialize the matrix manually so this can compile with HP-UX cc
+	 * (which does not allow non-constant structure initializers). [Bug
+	 * 2978410]
+	 */
+
+	mat.xx = mat.yy = c;
+	mat.xy = -(mat.yx = s);
+
+	if (angle != 0.0) {
+	    FcPatternAddMatrix(pat, FC_MATRIX, &mat);
+	}
+	LOCK;
+	ftFont = XftFontOpenPattern(fontPtr->display, pat);
+	UNLOCK;
+	if (!ftFont) {
+	    /*
+	     * The previous call to XftFontOpenPattern() should not fail, but
+	     * sometimes does anyway. Usual cause appears to be a
+	     * misconfigured fontconfig installation; see [Bug 1090382]. Try a
+	     * fallback:
+	     */
+
+	    LOCK;
+	    ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
+		    FC_FAMILY, FcTypeString, "sans",
+		    FC_SIZE, FcTypeDouble, 12.0,
+		    FC_MATRIX, FcTypeMatrix, &mat,
+		    NULL);
+	    UNLOCK;
+	}
+	if (!ftFont) {
+	    /*
+	     * The previous call should definitely not fail. Impossible to
+	     * proceed at this point.
+	     */
+
+	    Tcl_Panic("Cannot find a usable font");
+	}
+
+	if (angle == 0.0) {
+	    fontPtr->faces[i].ft0Font = ftFont;
+	} else {
+	    if (fontPtr->faces[i].ftFont) {
+		LOCK;
+		XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
+		UNLOCK;
+	    }
+	    fontPtr->faces[i].ftFont = ftFont;
+	    fontPtr->faces[i].angle = angle;
+	}
+    }
+    return (angle==0.0? fontPtr->faces[i].ft0Font : fontPtr->faces[i].ftFont);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * GetTkFontAttributes --
+ *	Fill in TkFontAttributes from an XftFont.
+ */
+
+static void
+GetTkFontAttributes(
+    Tk_Window tkwin,
+    XftFont *ftFont,
+    TkFontAttributes *faPtr)
+{
+    const char *family = "Unknown";
+    const char *const *familyPtr = &family;
+    double ptSize, dblPxSize, size;
+    int intPxSize, weight, slant;
+
+    (void) XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0, familyPtr);
+    if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
+	    &ptSize) == XftResultMatch) {
+	size = ptSize;
+    } else if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+	    &dblPxSize) == XftResultMatch) {
+	size = -dblPxSize;
+    } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+	    &intPxSize) == XftResultMatch) {
+	size = (double)-intPxSize;
+    } else {
+	size = 12.0;
+    }
+    if (XftPatternGetInteger(ftFont->pattern, XFT_WEIGHT, 0,
+	    &weight) != XftResultMatch) {
+	weight = XFT_WEIGHT_MEDIUM;
+    }
+    if (XftPatternGetInteger(ftFont->pattern, XFT_SLANT, 0,
+	    &slant) != XftResultMatch) {
+	slant = XFT_SLANT_ROMAN;
+    }
+
+    DEBUG(("GetTkFontAttributes: family %s size %ld weight %d slant %d\n",
+	    family, lround(size), weight, slant));
+
+    faPtr->family = Tk_GetUid(family);
+    /*
+     * Make sure that faPtr->size will be > 0 even
+     * in the very unprobable case that size < 0
+     */
+    faPtr->size = TkFontGetPoints(tkwin, size);
+    faPtr->weight = (weight > XFT_WEIGHT_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
+    faPtr->slant = (slant > XFT_SLANT_ROMAN) ? TK_FS_ITALIC : TK_FS_ROMAN;
+    faPtr->underline = 0;
+    faPtr->overstrike = 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * GetTkFontMetrics --
+ *	Fill in TkFontMetrics from an XftFont.
+ */
+
+static void
+GetTkFontMetrics(
+    XftFont *ftFont,
+    TkFontMetrics *fmPtr)
+{
+    int spacing;
+
+    if (XftPatternGetInteger(ftFont->pattern, XFT_SPACING, 0,
+	    &spacing) != XftResultMatch) {
+	spacing = XFT_PROPORTIONAL;
+    }
+
+    fmPtr->ascent = ftFont->ascent;
+    fmPtr->descent = ftFont->descent;
+    fmPtr->maxWidth = ftFont->max_advance_width;
+    fmPtr->fixed = spacing != XFT_PROPORTIONAL;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * InitFont --
+ *
+ *	Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
+ *	also allocates a new UnixFtFont.
+ *
+ * Results:
+ *	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+FinishedWithFont(
+    UnixFtFont *fontPtr);
+
+static int
+InitFontErrorProc(
+    void *clientData,
+    TCL_UNUSED(XErrorEvent *))
+{
+    int *errorFlagPtr = (int *)clientData;
+
+    if (errorFlagPtr != NULL) {
+	*errorFlagPtr = 1;
+    }
+    return 0;
+}
+
+static UnixFtFont *
+InitFont(
+    Tk_Window tkwin,
+    FcPattern *pattern,
+    UnixFtFont *fontPtr)
+{
+    FcFontSet *set;
+    FcCharSet *charset;
+    FcResult result;
+    XftFont *ftFont;
+    int i, iWidth, errorFlag;
+    Tk_ErrorHandler handler;
+
+    if (!fontPtr) {
+	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
+    }
+
+    FcConfigSubstitute(0, pattern, FcMatchPattern);
+    XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
+
+    /*
+     * Generate the list of fonts
+     */
+
+    set = FcFontSort(0, pattern, FcTrue, NULL, &result);
+    if (!set || set->nfont == 0) {
+	Tcl_Free(fontPtr);
+	return NULL;
+    }
+
+    fontPtr->fontset = set;
+    fontPtr->pattern = pattern;
+    fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
+    fontPtr->nfaces = set->nfont;
+
+    /*
+     * Fill in information about each returned font
+     */
+
+    for (i = 0; i < set->nfont; i++) {
+	fontPtr->faces[i].ftFont = 0;
+	fontPtr->faces[i].ft0Font = 0;
+	fontPtr->faces[i].source = set->fonts[i];
+	if (FcPatternGetCharSet(set->fonts[i], FC_CHARSET, 0,
+		&charset) == FcResultMatch) {
+	    fontPtr->faces[i].charset = FcCharSetCopy(charset);
+	} else {
+	    fontPtr->faces[i].charset = 0;
+	}
+	fontPtr->faces[i].angle = 0.0;
+    }
+
+    fontPtr->display = Tk_Display(tkwin);
+    fontPtr->screen = Tk_ScreenNumber(tkwin);
+    fontPtr->colormap = Tk_Colormap(tkwin);
+    fontPtr->visual = Tk_Visual(tkwin);
+    fontPtr->ftDraw = 0;
+    fontPtr->ncolors = 0;
+    fontPtr->firstColor = -1;
+
+    /*
+     * Fill in platform-specific fields of TkFont.
+     */
+
+    errorFlag = 0;
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+		    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+    ftFont = GetFont(fontPtr, 0, 0.0);
+    if ((ftFont == NULL) || errorFlag) {
+	Tk_DeleteErrorHandler(handler);
+	FinishedWithFont(fontPtr);
+	Tcl_Free(fontPtr);
+	return NULL;
+    }
+    fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
+    GetTkFontAttributes(tkwin, ftFont, &fontPtr->font.fa);
+    GetTkFontMetrics(ftFont, &fontPtr->font.fm);
+    Tk_DeleteErrorHandler(handler);
+    if (errorFlag) {
+	FinishedWithFont(fontPtr);
+	Tcl_Free(fontPtr);
+	return NULL;
+    }
+
+    /*
+     * Fontconfig can't report any information about the position or thickness
+     * of underlines or overstrikes. Thus, we use some defaults that are
+     * hacked around from backup defaults in tkUnixFont.c, which are in turn
+     * based on recommendations in the X manual. The comments from that file
+     * leading to these computations were:
+     *
+     *	    If the XA_UNDERLINE_POSITION property does not exist, the X manual
+     *	    recommends using half the descent.
+     *
+     *	    If the XA_UNDERLINE_THICKNESS property does not exist, the X
+     *	    manual recommends using the width of the stem on a capital letter.
+     *	    I don't know of a way to get the stem width of a letter, so guess
+     *	    and use 1/3 the width of a capital I.
+     *
+     * Note that nothing corresponding to *either* property is reported by
+     * Fontconfig at all. [Bug 1961455]
+     */
+
+    {
+	TkFont *fPtr = &fontPtr->font;
+
+	fPtr->underlinePos = fPtr->fm.descent / 2;
+	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
+			-1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
+	errorFlag = 0;
+	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
+	Tk_DeleteErrorHandler(handler);
+	if (errorFlag) {
+	    FinishedWithFont(fontPtr);
+	    Tcl_Free(fontPtr);
+	    return NULL;
+	}
+	fPtr->underlineHeight = iWidth / 3;
+	if (fPtr->underlineHeight == 0) {
+	    fPtr->underlineHeight = 1;
+	}
+	if (fPtr->underlineHeight + fPtr->underlinePos > fPtr->fm.descent) {
+	    fPtr->underlineHeight = fPtr->fm.descent - fPtr->underlinePos;
+	    if (fPtr->underlineHeight == 0) {
+		fPtr->underlinePos--;
+		fPtr->underlineHeight = 1;
+	    }
+	}
+    }
+
+    return fontPtr;
+}
+
+static void
+FinishedWithFont(
+    UnixFtFont *fontPtr)
+{
+    Display *display = fontPtr->display;
+    int i;
+    Tk_ErrorHandler handler =
+	    Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+
+    for (i = 0; i < fontPtr->nfaces; i++) {
+	if (fontPtr->faces[i].ftFont) {
+	    LOCK;
+	    XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
+	    UNLOCK;
+	}
+	if (fontPtr->faces[i].ft0Font) {
+	    LOCK;
+	    XftFontClose(fontPtr->display, fontPtr->faces[i].ft0Font);
+	    UNLOCK;
+	}
+	if (fontPtr->faces[i].charset) {
+	    FcCharSetDestroy(fontPtr->faces[i].charset);
+	}
+    }
+    if (fontPtr->faces) {
+	Tcl_Free(fontPtr->faces);
+    }
+    if (fontPtr->pattern) {
+	FcPatternDestroy(fontPtr->pattern);
+    }
+    if (fontPtr->ftDraw) {
+	XftDrawDestroy(fontPtr->ftDraw);
+    }
+    if (fontPtr->font.fid) {
+	XUnloadFont(fontPtr->display, fontPtr->font.fid);
+    }
+    if (fontPtr->fontset) {
+	FcFontSetDestroy(fontPtr->fontset);
+    }
+    Tk_DeleteErrorHandler(handler);
+}
+
+TkFont *
+TkpGetNativeFont(
+    Tk_Window tkwin,		/* For display where font will be used. */
+    const char *name)		/* Platform-specific font name. */
+{
+    UnixFtFont *fontPtr;
+    FcPattern *pattern;
+
+    DEBUG(("TkpGetNativeFont: %s\n", name));
+
+    pattern = XftXlfdParse(name, FcFalse, FcFalse);
+    if (!pattern) {
+	return NULL;
+    }
+
+    /*
+     * Should also try: pattern = FcNameParse(name); but generic/tkFont.c
+     * expects TkpGetNativeFont() to only work on XLFD names under Unix.
+     */
+
+    fontPtr = InitFont(tkwin, pattern, NULL);
+    if (!fontPtr) {
+	FcPatternDestroy(pattern);
+	return NULL;
+    }
+    return &fontPtr->font;
+}
+
+TkFont *
+TkpGetFontFromAttributes(
+    TkFont *tkFontPtr,		/* If non-NULL, store the information in this
+				 * existing TkFont structure, rather than
+				 * allocating a new structure to hold the
+				 * font; the existing contents of the font
+				 * will be released. If NULL, a new TkFont
+				 * structure is allocated. */
+    Tk_Window tkwin,		/* For display where font will be used. */
+    const TkFontAttributes *faPtr)
+				/* Set of attributes to match. */
+{
+    XftPattern *pattern;
+    int weight, slant;
+    UnixFtFont *fontPtr;
+
+    DEBUG(("TkpGetFontFromAttributes: %s %ld %d %d\n", faPtr->family,
+	    lround(faPtr->size), faPtr->weight, faPtr->slant));
+
+    pattern = XftPatternCreate();
+    if (faPtr->family) {
+	XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
+    }
+    if (faPtr->size > 0.0) {
+	XftPatternAddDouble(pattern, XFT_SIZE, faPtr->size);
+    } else if (faPtr->size < 0.0) {
+	XftPatternAddDouble(pattern, XFT_SIZE, TkFontGetPoints(tkwin, faPtr->size));
+    } else {
+	XftPatternAddDouble(pattern, XFT_SIZE, 12.0);
+    }
+    switch (faPtr->weight) {
+    case TK_FW_NORMAL:
+    default:
+	weight = XFT_WEIGHT_MEDIUM;
+	break;
+    case TK_FW_BOLD:
+	weight = XFT_WEIGHT_BOLD;
+	break;
+    }
+    XftPatternAddInteger(pattern, XFT_WEIGHT, weight);
+    switch (faPtr->slant) {
+    case TK_FS_ROMAN:
+    default:
+	slant = XFT_SLANT_ROMAN;
+	break;
+    case TK_FS_ITALIC:
+	slant = XFT_SLANT_ITALIC;
+	break;
+    case TK_FS_OBLIQUE:
+	slant = XFT_SLANT_OBLIQUE;
+	break;
+    }
+    XftPatternAddInteger(pattern, XFT_SLANT, slant);
+
+    fontPtr = (UnixFtFont *) tkFontPtr;
+    if (fontPtr != NULL) {
+	FinishedWithFont(fontPtr);
+    }
+    fontPtr = InitFont(tkwin, pattern, fontPtr);
+
+    /*
+     * Hack to work around issues with weird issues with Xft/Xrender
+     * connection. For details, see comp.lang.tcl thread starting from
+     * <adcc99ed-c73e-4efc-bb5d-e57a57a051e8@l35g2000pra.googlegroups.com>
+     */
+
+    if (!fontPtr) {
+	XftPatternAddBool(pattern, XFT_RENDER, FcFalse);
+	fontPtr = InitFont(tkwin, pattern, fontPtr);
+    }
+
+    if (!fontPtr) {
+	FcPatternDestroy(pattern);
+	return NULL;
+    }
+
+    fontPtr->font.fa.underline = faPtr->underline;
+    fontPtr->font.fa.overstrike = faPtr->overstrike;
+    return &fontPtr->font;
+}
+
+void
+TkpDeleteFont(
+    TkFont *tkFontPtr)		/* Token of font to be deleted. */
+{
+    UnixFtFont *fontPtr = (UnixFtFont *) tkFontPtr;
+
+    FinishedWithFont(fontPtr);
+    /* XXX tkUnixFont.c doesn't free tkFontPtr... */
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpGetFontFamilies --
+ *
+ *	Return information about the font families that are available on the
+ *	display of the given window.
+ *
+ * Results:
+ *	Modifies interp's result object to hold a list of all the available
+ *	font families.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkpGetFontFamilies(
+    Tcl_Interp *interp,		/* Interp to hold result. */
+    Tk_Window tkwin)		/* For display to query. */
+{
+    Tcl_Obj *resultPtr;
+    XftFontSet *list;
+    int i;
+
+    resultPtr = Tcl_NewListObj(0, NULL);
+
+    list = XftListFonts(Tk_Display(tkwin), Tk_ScreenNumber(tkwin),
+		(char *) 0,		/* pattern elements */
+		XFT_FAMILY, (char*) 0);	/* fields */
+    for (i = 0; i < list->nfont; i++) {
+	char *family, **familyPtr = &family;
+
+	if (XftPatternGetString(list->fonts[i], XFT_FAMILY, 0, familyPtr)
+		== XftResultMatch) {
+	    Tcl_Obj *strPtr = Tcl_NewStringObj(family, TCL_INDEX_NONE);
+
+	    Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
+	}
+    }
+    XftFontSetDestroy(list);
+
+    Tcl_SetObjResult(interp, resultPtr);
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * TkpGetSubFonts --
+ *
+ *	Called by [testfont subfonts] in the Tk testing package.
+ *
+ * Results:
+ *	Sets interp's result to a list of the faces used by tkfont
+ *
+ *-------------------------------------------------------------------------
+ */
+
+void
+TkpGetSubFonts(
+    Tcl_Interp *interp,
+    Tk_Font tkfont)
+{
+    Tcl_Obj *objv[3], *listPtr, *resultPtr;
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    FcPattern *pattern;
+    const char *family = "Unknown";
+    const char *const *familyPtr = &family;
+    const char *foundry = "Unknown";
+    const char *const *foundryPtr = &foundry;
+    const char *encoding = "Unknown";
+    const char *const *encodingPtr = &encoding;
+    int i;
+
+    resultPtr = Tcl_NewListObj(0, NULL);
+
+    for (i = 0; i < fontPtr->nfaces ; ++i) {
+	pattern = FcFontRenderPrepare(0, fontPtr->pattern,
+		fontPtr->faces[i].source);
+
+	XftPatternGetString(pattern, XFT_FAMILY, 0, familyPtr);
+	XftPatternGetString(pattern, XFT_FOUNDRY, 0, foundryPtr);
+	XftPatternGetString(pattern, XFT_ENCODING, 0, encodingPtr);
+	objv[0] = Tcl_NewStringObj(family, TCL_INDEX_NONE);
+	objv[1] = Tcl_NewStringObj(foundry, TCL_INDEX_NONE);
+	objv[2] = Tcl_NewStringObj(encoding, TCL_INDEX_NONE);
+	listPtr = Tcl_NewListObj(3, objv);
+	Tcl_ListObjAppendElement(NULL, resultPtr, listPtr);
+    }
+    Tcl_SetObjResult(interp, resultPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetFontAttrsForChar --
+ *
+ *	Retrieve the font attributes of the actual font used to render a given
+ *	character.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpGetFontAttrsForChar(
+    Tk_Window tkwin,		/* Window on the font's display */
+    Tk_Font tkfont,		/* Font to query */
+    int c,		/* Character of interest */
+    TkFontAttributes *faPtr)	/* Output: Font attributes */
+{
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+				/* Structure describing the logical font */
+    FcChar32 ucs4 = (FcChar32) c;
+				/* UCS-4 character to map */
+    XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
+				/* Actual font used to render the character */
+
+    GetTkFontAttributes(tkwin, ftFont, faPtr);
+    faPtr->underline = fontPtr->font.fa.underline;
+    faPtr->overstrike = fontPtr->font.fa.overstrike;
+}
+
+int
+Tk_MeasureChars(
+    Tk_Font tkfont,		/* Font in which characters will be drawn. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. */
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
+				 * source string. */
+    int maxLength,		/* If >= 0, maxLength specifies the longest
+				 * permissible line length in pixels; don't
+				 * consider any character that would cross
+				 * this x-position. If < 0, then line length
+				 * is unbounded and the flags argument is
+				 * ignored. */
+    int flags,			/* Various flag bits OR-ed together:
+				 * TK_PARTIAL_OK means include the last char
+				 * which only partially fit on this line.
+				 * TK_WHOLE_WORDS means stop on a word
+				 * boundary, if possible. TK_AT_LEAST_ONE
+				 * means return at least one character even if
+				 * no characters fit. */
+    int *lengthPtr)		/* Filled with x-location just after the
+				 * terminating character. */
+{
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    XftFont *ftFont;
+    FcChar32 c;
+    XGlyphInfo extents;
+    Tcl_Size clen;
+    int curX, newX, curByte, newByte, sawNonSpace;
+    int termByte = 0, termX = 0, errorFlag = 0;
+    Tk_ErrorHandler handler;
+#if DEBUG_FONTSEL
+    char string[256];
+    int len = 0;
+#endif /* DEBUG_FONTSEL */
+
+    handler = Tk_CreateErrorHandler(fontPtr->display,
+	    -1, -1, -1, InitFontErrorProc, &errorFlag);
+    curX = 0;
+    curByte = 0;
+    sawNonSpace = 0;
+    while (numBytes > 0) {
+	int unichar;
+
+	clen = Tcl_UtfToUniChar(source, &unichar);
+	c = (FcChar32) unichar;
+
+	if (clen <= 0) {
+	    /*
+	     * This can't happen (but see #1185640)
+	     */
+
+	    goto measureCharsEnd;
+	}
+
+	source += clen;
+	numBytes -= clen;
+	if (c < 256 && isspace(c)) {		/* I18N: ??? */
+	    if (sawNonSpace) {
+		termByte = curByte;
+		termX = curX;
+		sawNonSpace = 0;
+	    }
+	} else {
+	    sawNonSpace = 1;
+	}
+
+#if DEBUG_FONTSEL
+	string[len++] = (char) c;
+#endif /* DEBUG_FONTSEL */
+	ftFont = GetFont(fontPtr, c, 0.0);
+
+	if (!errorFlag) {
+	    LOCK;
+	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
+	    UNLOCK;
+	}
+	if (errorFlag) {
+	    extents.xOff = 0;
+	    errorFlag = 0;
+	}
+
+	newX = curX + extents.xOff;
+	newByte = curByte + clen;
+	if (maxLength >= 0 && newX > maxLength) {
+	    if (flags & TK_PARTIAL_OK ||
+		    (flags & TK_AT_LEAST_ONE && curByte == 0)) {
+		curX = newX;
+		curByte = newByte;
+	    } else if (flags & TK_WHOLE_WORDS) {
+		if ((flags & TK_AT_LEAST_ONE) && (termX == 0)) {
+		    /*
+		     * No space was seen before reaching the right
+		     * of the allotted maxLength space, i.e. no word
+		     * boundary. Return the string that fills the
+		     * allotted space, without overfill.
+		     * curX and curByte are already the right ones:
+		     */
+		} else {
+		    curX = termX;
+		    curByte = termByte;
+		}
+	    }
+	    break;
+	}
+
+	curX = newX;
+	curByte = newByte;
+    }
+measureCharsEnd:
+    Tk_DeleteErrorHandler(handler);
+#if DEBUG_FONTSEL
+    string[len] = '\0';
+    DEBUG(("MeasureChars: %s length %d bytes %d\n", string, curX, curByte));
+#endif /* DEBUG_FONTSEL */
+    *lengthPtr = curX;
+    return curByte;
+}
+
+int
+Tk_MeasureCharsInContext(
+    Tk_Font tkfont,
+    const char *source,
+    TCL_UNUSED(Tcl_Size),
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    int maxLength,
+    int flags,
+    int *lengthPtr)
+{
+    return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
+	    maxLength, flags, lengthPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * LookUpColor --
+ *
+ *	Convert a pixel value to an XftColor.  This can be slow due to the
+ * need to call XQueryColor, which involves a server round-trip.  To
+ * avoid that, a least-recently-used cache of up to MAX_CACHED_COLORS
+ * is kept, in the form of a linked list.  The returned color is moved
+ * to the front of the list, so repeatedly asking for the same one
+ * should be fast.
+ *
+ * Results:
+ *      A pointer to the XftColor structure for the requested color is
+ * returned.
+ *
+ * Side effects:
+ *      The converted color is stored in a cache in the UnixFtFont structure.  The cache
+ * can hold at most MAX_CACHED_COLORS colors.  If no more slots are available, the least
+ * recently used color is replaced with the new one.
+ *----------------------------------------------------------------------
+ */
+
+static XftColor *
+LookUpColor(Display *display,      /* Display to lookup colors on */
+	    UnixFtFont *fontPtr,   /* Font to search for cached colors */
+	    unsigned long pixel)   /* Pixel value to translate to XftColor */
+{
+    int i, last = -1, last2 = -1;
+    XColor xcolor;
+
+    for (i = fontPtr->firstColor;
+	 i >= 0; last2 = last, last = i, i = fontPtr->colors[i].next) {
+
+	if (pixel == fontPtr->colors[i].color.pixel) {
+	    /*
+	     * Color found in cache.  Move it to the front of the list and return it.
+	     */
+	    if (last >= 0) {
+		fontPtr->colors[last].next = fontPtr->colors[i].next;
+		fontPtr->colors[i].next = fontPtr->firstColor;
+		fontPtr->firstColor = i;
+	    }
+
+	    return &fontPtr->colors[i].color;
+	}
+    }
+
+    /*
+     * Color wasn't found, so it needs to be added to the cache.
+     * If a spare slot is available, it can be put there.  If not, last
+     * will now point to the least recently used color, so replace that one.
+     */
+
+    if (fontPtr->ncolors < MAX_CACHED_COLORS) {
+	last2 = -1;
+	last = fontPtr->ncolors++;
+    }
+
+    /*
+     * Translate the pixel value to a color.  Needs a server round-trip.
+     */
+    xcolor.pixel = pixel;
+    XQueryColor(display, fontPtr->colormap, &xcolor);
+
+    fontPtr->colors[last].color.color.red = xcolor.red;
+    fontPtr->colors[last].color.color.green = xcolor.green;
+    fontPtr->colors[last].color.color.blue = xcolor.blue;
+    fontPtr->colors[last].color.color.alpha = 0xFFFF;
+    fontPtr->colors[last].color.pixel = pixel;
+
+    /*
+     * Put at the front of the list.
+     */
+    if (last2 >= 0) {
+	fontPtr->colors[last2].next = fontPtr->colors[last].next;
+    }
+    fontPtr->colors[last].next = fontPtr->firstColor;
+    fontPtr->firstColor = last;
+
+    return &fontPtr->colors[last].color;
+}
+
+#define NUM_SPEC    1024
+
+void
+Tk_DrawChars(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    int x, int y)		/* Coordinates at which to place origin of
+				 * string when drawing. */
+{
+    const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
+    const int minCoord = -maxCoord-1;
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    XGCValues values;
+    XftColor *xftcolor;
+    int clen, nspec, xStart = x;
+    XftGlyphFontSpec specs[NUM_SPEC];
+    XGlyphInfo metrics;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (fontPtr->ftDraw == 0) {
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
+	fontPtr->ftDraw = XftDrawCreate(display, drawable,
+		fontPtr->visual, fontPtr->colormap);
+} else {
+	Tk_ErrorHandler handler =
+		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+
+	XftDrawChange(fontPtr->ftDraw, drawable);
+	Tk_DeleteErrorHandler(handler);
+    }
+    XGetGCValues(display, gc, GCForeground, &values);
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
+    if (tsdPtr->clipRegion != NULL) {
+	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
+    nspec = 0;
+    while (numBytes > 0) {
+	XftFont *ftFont;
+	FcChar32 c;
+
+	clen = utf8ToUcs4(source, &c, numBytes);
+	if (clen <= 0) {
+	    /*
+	     * This should not happen, but it can.
+	     */
+
+	    goto doUnderlineStrikeout;
+	}
+	source += clen;
+	numBytes -= clen;
+
+	ftFont = GetFont(fontPtr, c, 0.0);
+	if (ftFont) {
+	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
+	    LOCK;
+	    XftGlyphExtents(fontPtr->display, ftFont, &specs[nspec].glyph, 1,
+		    &metrics);
+	    UNLOCK;
+
+	    /*
+	     * Draw glyph only when it fits entirely into 16 bit coords.
+	     */
+
+	    if (x >= minCoord && y >= minCoord &&
+		x <= maxCoord - metrics.width &&
+		y <= maxCoord - metrics.height) {
+		specs[nspec].font = ftFont;
+		specs[nspec].x = x;
+		specs[nspec].y = y;
+		if (++nspec == NUM_SPEC) {
+		    LOCK;
+		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
+			    specs, nspec);
+		    UNLOCK;
+		    nspec = 0;
+		}
+	    }
+	    x += metrics.xOff;
+	    y += metrics.yOff;
+	}
+    }
+    if (nspec) {
+	LOCK;
+	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+	UNLOCK;
+    }
+
+  doUnderlineStrikeout:
+    if (tsdPtr->clipRegion != NULL) {
+	XftDrawSetClip(fontPtr->ftDraw, NULL);
+    }
+    if (fontPtr->font.fa.underline != 0) {
+	XFillRectangle(display, drawable, gc, xStart,
+		y + fontPtr->font.underlinePos, (unsigned) (x - xStart),
+		(unsigned) fontPtr->font.underlineHeight);
+    }
+    if (fontPtr->font.fa.overstrike != 0) {
+	y -= fontPtr->font.fm.descent + (fontPtr->font.fm.ascent) / 10;
+	XFillRectangle(display, drawable, gc, xStart, y,
+		(unsigned) (x - xStart),
+		(unsigned) fontPtr->font.underlineHeight);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkDrawAngledChars --
+ *
+ *	Draw some characters at an angle. This would be simple code, except
+ *	Xft has bugs with cumulative errors in character positioning which are
+ *	caused by trying to perform all calculations internally with integers.
+ *	So we have to do the work ourselves with floating-point math.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Target drawable is updated.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkDrawAngledChars(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    double x, double y,		/* Coordinates at which to place origin of
+				 * string when drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
+{
+    const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
+    const int minCoord = -maxCoord-1;
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
+    XGCValues values;
+    XftColor *xftcolor;
+    int xStart = x, yStart = y;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+#ifdef XFT_HAS_FIXED_ROTATED_PLACEMENT
+    int clen, nglyph;
+    FT_UInt glyphs[NUM_SPEC];
+    XGlyphInfo metrics;
+    XftFont *currentFtFont;
+    int originX, originY;
+
+    if (fontPtr->ftDraw == 0) {
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
+	fontPtr->ftDraw = XftDrawCreate(display, drawable,
+		fontPtr->visual, fontPtr->colormap);
+    } else {
+	Tk_ErrorHandler handler =
+		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+
+	XftDrawChange(fontPtr->ftDraw, drawable);
+	Tk_DeleteErrorHandler(handler);
+    }
+
+    XGetGCValues(display, gc, GCForeground, &values);
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
+    if (tsdPtr->clipRegion != None) {
+	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
+
+    nglyph = 0;
+    currentFtFont = NULL;
+    originX = originY = 0;
+
+    while (numBytes > 0) {
+	XftFont *ftFont;
+	FcChar32 c;
+
+	clen = utf8ToUcs4(source, &c, numBytes);
+	if (clen <= 0) {
+	    /*
+	     * This should not happen, but it can.
+	     */
+
+	    goto doUnderlineStrikeout;
+	}
+	source += clen;
+	numBytes -= clen;
+
+	ftFont = GetFont(fontPtr, c, angle);
+	if (!ftFont) {
+	    continue;
+	}
+
+	if (ftFont != currentFtFont || nglyph == NUM_SPEC) {
+	    if (nglyph) {
+		/*
+		 * We pass multiple glyphs at once to enable the code to
+		 * perform better rendering of sub-pixel inter-glyph spacing.
+		 * If only the current Xft implementation could make use of
+		 * this information... but we'll be ready when it does!
+		 */
+
+		LOCK;
+		XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
+			nglyph, &metrics);
+		UNLOCK;
+
+		/*
+		 * Draw glyph only when it fits entirely into 16 bit coords.
+		 */
+
+		if (x >= minCoord && y >= minCoord &&
+		    x <= maxCoord - metrics.width &&
+		    y <= maxCoord - metrics.height) {
+
+		    /*
+		     * NOTE:
+		     * The whole algorithm has a design problem, the choice of
+		     * NUM_SPEC is arbitrary, and so the inter-glyph spacing could
+		     * look arbitrary. This algorithm has to draw the whole string
+		     * at once (or whole blocks with same font), this requires a
+		     * dynamic 'glyphs' array. In case of overflow the array has to
+		     * be divided until the maximal string will fit. (GC)
+		     * Given the resolution of current displays though, this should
+		     * not be a huge issue since NUM_SPEC is 1024 and thus able to
+		     * cover about 6000 pixels for a 6 pixel wide font (which is
+		     * a very small barely readable font)
+		     */
+
+		    LOCK;
+		    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
+			    originX, originY, glyphs, nglyph);
+		    UNLOCK;
+		}
+	    }
+	    originX = ROUND16(x);
+	    originY = ROUND16(y);
+	    currentFtFont = ftFont;
+	}
+	glyphs[nglyph++] = XftCharIndex(fontPtr->display, ftFont, c);
+    }
+    if (nglyph) {
+	LOCK;
+	XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
+		nglyph, &metrics);
+	UNLOCK;
+
+	/*
+	 * Draw glyph only when it fits entirely into 16 bit coords.
+	 */
+
+	if (x >= minCoord && y >= minCoord &&
+	    x <= maxCoord - metrics.width &&
+	    y <= maxCoord - metrics.height) {
+	    LOCK;
+	    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
+		    originX, originY, glyphs, nglyph);
+	    UNLOCK;
+	}
+    }
+#else /* !XFT_HAS_FIXED_ROTATED_PLACEMENT */
+    Tcl_Size clen;
+    int nspec;
+    XftGlyphFontSpec specs[NUM_SPEC];
+    XGlyphInfo metrics;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+
+    if (fontPtr->ftDraw == 0) {
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
+	fontPtr->ftDraw = XftDrawCreate(display, drawable,
+		fontPtr->visual, fontPtr->colormap);
+    } else {
+	Tk_ErrorHandler handler =
+		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
+
+	XftDrawChange(fontPtr->ftDraw, drawable);
+	Tk_DeleteErrorHandler(handler);
+    }
+    XGetGCValues(display, gc, GCForeground, &values);
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
+    if (tsdPtr->clipRegion != NULL) {
+	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
+    nspec = 0;
+    while (numBytes > 0) {
+	XftFont *ftFont, *ft0Font;
+	FcChar32 c;
+
+	clen = utf8ToUcs4(source, &c, numBytes);
+	if (clen <= 0) {
+	    /*
+	     * This should not happen, but it can.
+	     */
+
+	    goto doUnderlineStrikeout;
+	}
+	source += clen;
+	numBytes -= clen;
+
+	ftFont = GetFont(fontPtr, c, angle);
+	ft0Font = GetFont(fontPtr, c, 0.0);
+	if (ftFont && ft0Font) {
+	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
+	    LOCK;
+	    XftGlyphExtents(fontPtr->display, ft0Font, &specs[nspec].glyph, 1,
+		    &metrics);
+	    UNLOCK;
+
+	    /*
+	     * Draw glyph only when it fits entirely into 16 bit coords.
+	     */
+
+	    if (x >= minCoord && y >= minCoord &&
+		x <= maxCoord - metrics.width &&
+		y <= maxCoord - metrics.height) {
+		specs[nspec].font = ftFont;
+		specs[nspec].x = ROUND16(x);
+		specs[nspec].y = ROUND16(y);
+		if (++nspec == NUM_SPEC) {
+		    LOCK;
+		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
+			    specs, nspec);
+		    UNLOCK;
+		    nspec = 0;
+		}
+	    }
+	    x += metrics.xOff*cosA + metrics.yOff*sinA;
+	    y += metrics.yOff*cosA - metrics.xOff*sinA;
+	}
+    }
+    if (nspec) {
+	LOCK;
+	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+	UNLOCK;
+    }
+#endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
+
+  doUnderlineStrikeout:
+    if (tsdPtr->clipRegion != NULL) {
+	XftDrawSetClip(fontPtr->ftDraw, NULL);
+    }
+    if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
+	XPoint points[5];
+	double width = (x - xStart) * cosA + (yStart - y) * sinA;
+	double barHeight = fontPtr->font.underlineHeight;
+	double dy = fontPtr->font.underlinePos;
+
+	if (fontPtr->font.fa.underline != 0) {
+	    if (fontPtr->font.underlineHeight == 1) {
+		dy++;
+	    }
+	    points[0].x = xStart + ROUND16(dy*sinA);
+	    points[0].y = yStart + ROUND16(dy*cosA);
+	    points[1].x = xStart + ROUND16(dy*sinA + width*cosA);
+	    points[1].y = yStart + ROUND16(dy*cosA - width*sinA);
+	    if (fontPtr->font.underlineHeight == 1) {
+		XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
+	    } else {
+		points[2].x = xStart + ROUND16(dy*sinA + width*cosA
+			+ barHeight*sinA);
+		points[2].y = yStart + ROUND16(dy*cosA - width*sinA
+			+ barHeight*cosA);
+		points[3].x = xStart + ROUND16(dy*sinA + barHeight*sinA);
+		points[3].y = yStart + ROUND16(dy*cosA + barHeight*cosA);
+		points[4].x = points[0].x;
+		points[4].y = points[0].y;
+		XFillPolygon(display, drawable, gc, points, 5, Complex,
+			CoordModeOrigin);
+		XDrawLines(display, drawable, gc, points, 5, CoordModeOrigin);
+	    }
+	}
+	if (fontPtr->font.fa.overstrike != 0) {
+	    dy = -fontPtr->font.fm.descent
+		   - (fontPtr->font.fm.ascent) / 10;
+	    points[0].x = xStart + ROUND16(dy*sinA);
+	    points[0].y = yStart + ROUND16(dy*cosA);
+	    points[1].x = xStart + ROUND16(dy*sinA + width*cosA);
+	    points[1].y = yStart + ROUND16(dy*cosA - width*sinA);
+	    if (fontPtr->font.underlineHeight == 1) {
+		XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
+	    } else {
+		points[2].x = xStart + ROUND16(dy*sinA + width*cosA
+			+ barHeight*sinA);
+		points[2].y = yStart + ROUND16(dy*cosA - width*sinA
+			+ barHeight*cosA);
+		points[3].x = xStart + ROUND16(dy*sinA + barHeight*sinA);
+		points[3].y = yStart + ROUND16(dy*cosA + barHeight*cosA);
+		points[4].x = points[0].x;
+		points[4].y = points[0].y;
+		XFillPolygon(display, drawable, gc, points, 5, Complex,
+			CoordModeOrigin);
+		XDrawLines(display, drawable, gc, points, 5, CoordModeOrigin);
+	    }
+	}
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * Tk_DrawCharsInContext --
+ *
+ *	Draw a string of characters on the screen like Tk_DrawChars(), but
+ *	with access to all the characters on the line for context. On X11 this
+ *	context isn't consulted, so we just call Tk_DrawChars().
+ *
+ *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
+ *            function is unused.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information gets drawn on the screen.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+Tk_DrawCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
+    int x, int y)		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+{
+    int widthUntilStart;
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+widthUntilStart, y);
+}
+
+void
+TkpDrawAngledCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    const char * source,	/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that is
+				 * passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
+    double x, double y,		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
+{
+    int widthUntilStart;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+    TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
+	    rangeLength, x+cosA*widthUntilStart, y-sinA*widthUntilStart, angle);
+}
+
+void
+TkUnixSetXftClipRegion(
+    Region clipRegion)	/* The clipping region to install. */
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    tsdPtr->clipRegion = clipRegion;
+}
+
 /*
  * Local Variables:
  * c-basic-offset: 4
