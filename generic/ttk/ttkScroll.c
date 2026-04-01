@@ -87,8 +87,8 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
     }
 
     arg1[0] = arg2[0] = ' ';
-    Tcl_PrintDouble(interp, (double)s->first / s->total, arg1+1);
-    Tcl_PrintDouble(interp, (double)s->last / s->total, arg2+1);
+    Tcl_PrintDouble(interp, (double)s->first / (double)s->total, arg1+1);
+    Tcl_PrintDouble(interp, (double)s->last / (double)s->total, arg2+1);
     Tcl_DStringInit(&buf);
     Tcl_DStringAppend(&buf, Tcl_GetString(s->scrollCmdObj), TCL_INDEX_NONE);
     Tcl_DStringAppend(&buf, arg1, TCL_INDEX_NONE);
@@ -141,7 +141,7 @@ static void UpdateScrollbarBG(void *clientData)
 /* TtkScrolled --
  *	Update scroll info, schedule scrollbar update.
  */
-void TtkScrolled(ScrollHandle h, int first, int last, int total)
+void TtkScrolled(ScrollHandle h, Tcl_Size first, Tcl_Size last, Tcl_Size total)
 {
     Scrollable *s = h->scrollPtr;
 
@@ -209,7 +209,7 @@ int TtkScrollviewCommand(
     Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
-    int newFirst;
+    Tcl_Size newFirst;
 
     TtkUpdateScrollInfo(h);
     newFirst = s->first;
@@ -221,7 +221,7 @@ int TtkScrollviewCommand(
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, result));
 	return TCL_OK;
     } else if (objc == 3) {
-	if (Tcl_GetIntFromObj(interp, objv[2], &newFirst) != TCL_OK) {
+	if (Tcl_GetSizeIntFromObj(interp, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
@@ -230,13 +230,13 @@ int TtkScrollviewCommand(
 
 	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
 	    case TK_SCROLL_MOVETO:
-		newFirst = (int) ((fraction * s->total) + 0.5);
+		newFirst = (Tcl_Size) ((fraction * (double)s->total) + 0.5);
 		break;
 	    case TK_SCROLL_UNITS:
 		newFirst = s->first + count;
 		break;
 	    case TK_SCROLL_PAGES: {
-		int perPage = s->last - s->first;	/* @@@ */
+		Tcl_Size perPage = s->last - s->first;	/* @@@ */
 		newFirst = s->first + count * perPage;
 		break;
 	    }
@@ -250,7 +250,7 @@ int TtkScrollviewCommand(
     return TCL_OK;
 }
 
-void TtkScrollTo(ScrollHandle h, int newFirst, bool updateScrollInfo)
+void TtkScrollTo(ScrollHandle h, Tcl_Size newFirst, bool updateScrollInfo)
 {
     Scrollable *s = h->scrollPtr;
 

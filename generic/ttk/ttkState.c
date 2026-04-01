@@ -136,8 +136,8 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
     unsigned int offbits = objPtr->internalRep.wideValue & 0xFFFFFFFFLL;
     unsigned int mask = onbits | offbits;
     Tcl_DString result;
+    Tcl_Size len;
     int i;
-    int len;
 
     Tcl_DStringInit(&result);
 

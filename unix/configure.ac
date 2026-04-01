@@ -1,10 +1,10 @@
-#!/bin/bash -norc
+#! /bin/bash -norc
 dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
 AC_INIT([tk],[9.1])
-AC_PREREQ([2.72])
+AC_PREREQ([2.73])
 
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [

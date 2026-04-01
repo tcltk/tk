@@ -37,6 +37,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define if libdecor-0 is available for client-side decorations on Wayland */
+#undef HAVE_LIBDECOR
+
 /* Define to 1 if you have the 'Xft' library (-lXft). */
 #undef HAVE_LIBXFT
 
@@ -208,6 +211,9 @@
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
+
+/* X11 support deliberately disabled because Wayland backend is active */
+#undef X11_BACKEND_DISABLED_FOR_WAYLAND
 
 /* Are we building with zipfs enabled? */
 #undef ZIPFS_BUILD
