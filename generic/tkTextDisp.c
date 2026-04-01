@@ -15,6 +15,7 @@
 
 #include "tkInt.h"
 #include "tkText.h"
+#include "tk3d.h"
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -245,11 +246,11 @@ typedef struct DLine {
 				 * options. This is included in height. */
     Tk_3DBorder lMarginColor;	/* Background color of the area corresponding
 				 * to the left margin of the display line. */
-    int lMarginWidth;           /* Pixel width of the area corresponding to
+    int lMarginWidth;		/* Pixel width of the area corresponding to
 				 * the left margin. */
     Tk_3DBorder rMarginColor;	/* Background color of the area corresponding
 				 * to the right margin of the display line. */
-    int rMarginWidth;           /* Pixel width of the area corresponding to
+    int rMarginWidth;		/* Pixel width of the area corresponding to
 				 * the right margin. */
     int length;			/* Total length of line, in pixels. */
     TkTextDispChunk *chunkPtr;	/* Pointer to first chunk in list of all of
@@ -433,19 +434,16 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     Tcl_Size numBytes;		/* Number of bytes to display. */
-    char chars[TKFLEXARRAY];		/* UTF characters to display.
-				 * Allocated as large as necessary. THIS MUST BE THE LAST
-				 * FIELD IN THE STRUCTURE. */
+    char *chars;		/* Pointer to UTF characters to display.
+				 * Actual array follows this struct. */
 } CharInfo;
 
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 typedef struct CharInfo {
     TkTextDispChunk *baseChunkPtr;
-    int baseOffset;		/* Starting offset in base chunk
-				 * baseChars. */
-    Tcl_Size numBytes;		/* Number of bytes that belong to this
-				 * chunk. */
+    int baseOffset;		/* Starting offset in base chunk baseChars. */
+    Tcl_Size numBytes;		/* Number of bytes that belong to this chunk. */
     const char *chars;		/* UTF characters to display. Actually points
 				 * into the baseChars of the base chunk. Only
 				 * valid after FinalizeBaseChunk(). */
@@ -484,15 +482,15 @@ static TkTextDispChunk *baseCharChunkPtr = NULL;
  *				different character might be under the mouse
  *				cursor now). Need to recompute the current
  *				character before the next redisplay.
- * OUT_OF_SYNC                  1 means that the last <<WidgetViewSync>> event had
- *                              value 0, indicating that the widget is out of sync.
+ * OUT_OF_SYNC			1 means that the last <<WidgetViewSync>> event had
+ *				value 0, indicating that the widget is out of sync.
  */
 
 #define DINFO_OUT_OF_DATE	1
 #define REDRAW_PENDING		2
 #define REDRAW_BORDERS		4
 #define REPICK_NEEDED		8
-#define OUT_OF_SYNC             16
+#define OUT_OF_SYNC		16
 /*
  * Action values for FreeDLines:
  *
@@ -530,7 +528,7 @@ static void		CharBboxProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
-static Tcl_Size	CharChunkMeasureChars(TkTextDispChunk *chunkPtr,
+static Tcl_Size		CharChunkMeasureChars(TkTextDispChunk *chunkPtr,
 			    const char *chars, int charsLen,
 			    int start, int end, int startX, int maxX,
 			    int flags, int *nextX);
@@ -612,7 +610,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(void *clientData);
-static int              IsStartOfNotMergedLine(const TkText *textPtr,
+static int		IsStartOfNotMergedLine(const TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 
 /*
@@ -2425,22 +2423,34 @@ FreeDLines(
 static void
 DisplayDLine(
     TkText *textPtr,		/* Text widget in which to draw line. */
-    DLine *dlPtr,	/* Information about line to draw. */
+    DLine *dlPtr,		/* Information about line to draw. */
     DLine *prevPtr,		/* Line just before one to draw, or NULL if
 				 * dlPtr is the top line. */
     Pixmap pixmap)		/* Pixmap to use for double-buffering. Caller
 				 * must make sure it's large enough to hold
 				 * line. */
 {
-    TkTextDispChunk *chunkPtr;
+    TkTextDispChunk *chunkPtr, tmpChunk, *otherChunkPtr = NULL;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     Display *display;
     int height, y_off;
+    struct TextStyle tmpStyle;
+    TkBorder *borderPtr;
+    int blockCursor = textPtr->insertCursorType != 0;
+    int haveFocus = (textPtr->flags & GOT_FOCUS) != 0;
+    int showInsertCursor = (textPtr->flags & INSERT_ON) != 0;
+    int solidUnfocussed =
+	    textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID;
 #ifndef TK_NO_DOUBLE_BUFFERING
     const int y = 0;
 #else
     const int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    BaseCharInfo bci;
+#else
+    CharInfo ci;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     if (dlPtr->chunkPtr == NULL) return;
 
@@ -2526,6 +2536,73 @@ DisplayDLine(
 	     * here.
 	     */
 
+	    if (blockCursor &&
+		    ((haveFocus && showInsertCursor) ||
+			(!haveFocus && solidUnfocussed)) &&
+		    (chunkPtr->nextPtr != NULL) &&
+		    (chunkPtr->nextPtr->displayProc == CharDisplayProc) &&
+		    (chunkPtr->nextPtr->numBytes > 0)) {
+		/*
+		 * Make a temporary chunk for displaying the text
+		 * within the block cursor later on.
+		 */
+
+		TkTextIndex index;
+		int ix, iy, iw, ih, charWidth, cursorWidth;
+		int endX;
+		Tcl_Size numBytes;
+
+		otherChunkPtr = &tmpChunk;
+		*otherChunkPtr = *(chunkPtr->nextPtr);
+		TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
+		TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih,
+			&charWidth, &cursorWidth);
+		numBytes = CharChunkMeasureChars(otherChunkPtr, NULL, 0,
+			0, -1, otherChunkPtr->x,
+			otherChunkPtr->x + cursorWidth, 0, &endX);
+		if (numBytes > 0) {
+		    XGCValues gcValues;
+		    unsigned long mask;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		    CharInfo *ciPtr;
+		    BaseCharInfo *bciPtr;
+#endif
+
+		    otherChunkPtr->undisplayProc = NULL;
+		    tmpStyle = *otherChunkPtr->stylePtr;
+		    otherChunkPtr->stylePtr = &tmpStyle;
+		    tmpStyle.bgGC = None;
+		    mask = GCFont;
+		    gcValues.font = Tk_FontId(tmpStyle.sValuePtr->tkfont);
+		    mask |= GCForeground;
+		    borderPtr = (TkBorder *) textPtr->border;
+		    gcValues.foreground = borderPtr->bgColorPtr->pixel;
+		    tmpStyle.fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		    ciPtr = (CharInfo *) otherChunkPtr->clientData;
+		    bciPtr = (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
+		    bci.ci = *ciPtr;
+		    Tcl_DStringInit(&bci.baseChars);
+		    bci.width = -1;
+		    Tcl_DStringAppend(&bci.baseChars,
+			    Tcl_DStringValue(&bciPtr->baseChars) +
+			    bci.ci.baseOffset, numBytes);
+		    bci.ci.baseOffset = 0;
+		    bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
+		    bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
+		    bci.ci.baseChunkPtr = otherChunkPtr;
+		    otherChunkPtr->clientData = (ClientData) &bci;
+		    otherChunkPtr->numBytes = bci.ci.numBytes;
+#else
+		    ci = *((CharInfo *) (otherChunkPtr->clientData));
+		    ci.numBytes = numBytes;
+		    otherChunkPtr->clientData = (ClientData) &ci;
+		    otherChunkPtr->numBytes = ci.numBytes;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+		} else {
+		    otherChunkPtr = NULL;
+		}
+	    }
 	    continue;
 	}
 
@@ -2554,6 +2631,37 @@ DisplayDLine(
 		    y + dlPtr->spaceAbove, dlPtr->height - dlPtr->spaceAbove -
 		    dlPtr->spaceBelow, dlPtr->baseline - dlPtr->spaceAbove,
 		    display, pixmap, dlPtr->y + dlPtr->spaceAbove);
+	}
+
+	if (otherChunkPtr != NULL) {
+	    if ((textPtr->tkwin != NULL) && !(textPtr->flags & DESTROYED)) {
+		/*
+		 * Draw text within (i.e. "under") the block cursor.
+		 */
+
+		int x = otherChunkPtr->x + dInfoPtr->x -
+			dInfoPtr->curXPixelOffset;
+
+		if ((x + otherChunkPtr->width <= 0) || (x >= dInfoPtr->maxX)) {
+		    /*
+		     * See note above.
+		     */
+
+		    x = -otherChunkPtr->width;
+		}
+		otherChunkPtr->displayProc(textPtr, otherChunkPtr, x,
+			y + dlPtr->spaceAbove, dlPtr->height -
+			dlPtr->spaceAbove - dlPtr->spaceBelow,
+			dlPtr->baseline - dlPtr->spaceAbove,
+			display, pixmap, dlPtr->y + dlPtr->spaceAbove);
+	    }
+	    if (otherChunkPtr->stylePtr->fgGC != NULL) {
+		Tk_FreeGC(textPtr->display, otherChunkPtr->stylePtr->fgGC);
+	    }
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	    Tcl_DStringFree(&bci.baseChars);
+#endif
+	    otherChunkPtr = NULL;
 	}
 
 	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
@@ -3124,7 +3232,7 @@ AsyncUpdateLineMetrics(
  *      at any time when the state is known.
  *
  *      If an event is sent, the effect is equivalent to:
- *         event generate $textWidget <<WidgetViewSync>> -data $s
+ *	   event generate $textWidget <<WidgetViewSync>> -data $s
  *      where $s is the sync status: true (when the widget view is in
  *      sync with its internal data) or false (when it is not).
  *
@@ -3139,8 +3247,8 @@ AsyncUpdateLineMetrics(
 
 static void
 GenerateWidgetViewSyncEvent(
-    TkText *textPtr,	  /* Information about text widget. */
-    Bool InSync)          /* true if becoming in sync, false otherwise */
+    TkText *textPtr,	/* Information about text widget. */
+    Bool InSync)	/* true if becoming in sync, false otherwise */
 {
     Bool NewSyncState = (InSync != 0); /* ensure 0 or 1 value */
     Bool OldSyncState = !(textPtr->dInfoPtr->flags & OUT_OF_SYNC);
@@ -6999,8 +7107,8 @@ FindDLine(
 
 static int
 IsStartOfNotMergedLine(
-      const TkText *textPtr,              /* Widget record for text widget. */
-      const TkTextIndex *indexPtr)  /* Index to check. */
+      const TkText *textPtr,		/* Widget record for text widget. */
+      const TkTextIndex *indexPtr)	/* Index to check. */
 {
     TkTextIndex indexPtr2;
 
@@ -7643,7 +7751,7 @@ TkTextCharLayoutProc(
     TCL_UNUSED(TkTextIndex *),	/* Index of first character to lay out
 				 * (corresponds to segPtr and offset). */
     TkTextSegment *segPtr,	/* Segment being layed out. */
-    Tcl_Size byteOffset,		/* Byte offset within segment of first
+    Tcl_Size byteOffset,	/* Byte offset within segment of first
 				 * character to consider. */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
@@ -7806,7 +7914,8 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = (CharInfo *)ckalloc(offsetof(CharInfo, chars) + 1 + bytesThatFit);
+    ciPtr = (CharInfo *)ckalloc(sizeof(CharInfo) + 1 + bytesThatFit);
+    ciPtr->chars = (char *) (ciPtr + 1);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -9080,7 +9189,7 @@ IsSameFGStyle(
 	    && sv1->overstrike == sv2->overstrike
 	    && sv1->elide == sv2->elide
 	    && sv1->offset == sv2->offset
-	    && sv1->fgStipple == sv1->fgStipple;
+	    && sv1->fgStipple == sv2->fgStipple;
 #endif /* TK_DRAW_IN_CONTEXT */
 }
 
