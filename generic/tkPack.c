@@ -1109,11 +1109,17 @@ PackStructureProc(
     XEvent *eventPtr)		/* Describes what just happened. */
 {
     Packer *packPtr = (Packer *)clientData;
-
+    printf("PackStructureProc: ");
     if (eventPtr->type == ConfigureNotify) {
+	printf("%s received Configure(%d) -> %dx%d+%d+%d\n",
+	       Tk_PathName(packPtr->tkwin), eventPtr->xconfigure.serial, 
+	       eventPtr->xconfigure.width, eventPtr->xconfigure.height,
+	       eventPtr->xconfigure.x, eventPtr->xconfigure.y);
 	if ((packPtr->contentPtr != NULL)
 		&& !(packPtr->flags & REQUESTED_REPACK)) {
 	    packPtr->flags |= REQUESTED_REPACK;
+	    printf("PackStructureProc:scheduling ArrangePacking for %s\n",
+		   Tk_PathName(packPtr->tkwin));
 	    Tcl_DoWhenIdle(ArrangePacking, packPtr);
 	}
 	if ((packPtr->containerPtr != NULL)
@@ -1126,7 +1132,8 @@ PackStructureProc(
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	Packer *contentPtr, *nextPtr;
-
+	printf("%s received Destroy(%d)\n",
+	       Tk_PathName(packPtr->tkwin), eventPtr->xany.serial);
 	if (packPtr->containerPtr != NULL) {
 	    Unlink(packPtr);
 	}
@@ -1152,6 +1159,8 @@ PackStructureProc(
 	packPtr->tkwin = NULL;
 	Tcl_EventuallyFree(packPtr, DestroyPacker);
     } else if (eventPtr->type == MapNotify) {
+	printf("%s received MapNotify(%d)\n",
+	       Tk_PathName(packPtr->tkwin), eventPtr->xmap.serial);
 	/*
 	 * When a container gets mapped, must redo the geometry computation so
 	 * that all of its content get remapped.
@@ -1163,6 +1172,8 @@ PackStructureProc(
 	    Tcl_DoWhenIdle(ArrangePacking, packPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
+	printf("%s received UnmapNotify(%d)\n",
+	       Tk_PathName(packPtr->tkwin), eventPtr->xunmap.serial);
 	Packer *packPtr2;
 
 	/*
@@ -1174,6 +1185,8 @@ PackStructureProc(
 	     packPtr2 = packPtr2->nextPtr) {
 	    Tk_UnmapWindow(packPtr2->tkwin);
 	}
+    } else {
+	printf("No events\n");
     }
 }
 

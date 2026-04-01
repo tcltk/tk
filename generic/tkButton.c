@@ -1412,6 +1412,7 @@ TkButtonWorldChanged(
      */
 
     if (Tk_IsMapped(butPtr->tkwin) && !(butPtr->flags & REDRAW_PENDING)) {
+	printf("Scheduling TkpDisplayButton (1)\n");
 	Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	butPtr->flags |= REDRAW_PENDING;
     }
@@ -1438,14 +1439,24 @@ TkButtonWorldChanged(
 static void
 ButtonEventProc(
     void *clientData,	/* Information about window. */
-    XEvent *eventPtr)		/* Information about event. */
+    XEvent *eventPtr)	/* Information about event. */
 {
     TkButton *butPtr = (TkButton *)clientData;
     int highlightWidth;
+    printf("ButtonEventProc: ");
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
+	printf("%s received Expose(%d)\n",
+	       Tk_PathName(butPtr->tkwin), eventPtr->xexpose.serial); 
 	goto redraw;
     } else if (eventPtr->type == ConfigureNotify) {
+	printf("%s received Configure(%d) -> %dx%d+%d+%d\n",
+	       Tk_PathName(butPtr->tkwin),
+	       eventPtr->xconfigure.serial,
+	       eventPtr->xconfigure.width,
+	       eventPtr->xconfigure.height,
+	       eventPtr->xconfigure.x,
+	       eventPtr->xconfigure.y); 
 	/*
 	 * Must redraw after size changes, since layout could have changed and
 	 * borders will need to be redrawn.
@@ -1457,7 +1468,8 @@ ButtonEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    butPtr->flags |= GOT_FOCUS;
-	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin,
+				butPtr->highlightWidthObj, &highlightWidth);
 	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
@@ -1465,18 +1477,26 @@ ButtonEventProc(
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    butPtr->flags &= ~GOT_FOCUS;
-	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &highlightWidth);
+	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin,
+				butPtr->highlightWidthObj, &highlightWidth);
 	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
+    } else {
+	printf("no events\n");
     }
     return;
 
   redraw:
     if ((butPtr->tkwin != NULL) && !(butPtr->flags & REDRAW_PENDING)) {
+	printf("ButtonEventProc: scheduling TkpDisplayButton for %s\n",
+	       Tk_PathName(butPtr->tkwin));
 	Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	butPtr->flags |= REDRAW_PENDING;
+    } else {
+	printf("Drawing skipped for %s: REDRAW_PENDING is %lx\n",
+	       Tk_PathName(butPtr->tkwin), butPtr->flags & REDRAW_PENDING);
     }
 }
 
@@ -1674,6 +1694,7 @@ ButtonVarProc(
   redisplay:
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
 	    && !(butPtr->flags & REDRAW_PENDING)) {
+	printf("Scheduling TkpDisplayButton (3)\n");
 	Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	butPtr->flags |= REDRAW_PENDING;
     }
@@ -1767,6 +1788,7 @@ ButtonTextVarProc(
 
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
 	    && !(butPtr->flags & REDRAW_PENDING)) {
+	printf("Scheduling TkpDisplayButton (4)\n");
 	Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	butPtr->flags |= REDRAW_PENDING;
     }
@@ -1806,6 +1828,7 @@ ButtonImageProc(
     if (butPtr->tkwin != NULL) {
 	TkpComputeButtonGeometry(butPtr);
 	if (Tk_IsMapped(butPtr->tkwin) && !(butPtr->flags & REDRAW_PENDING)) {
+	    printf("Scheduling TkpDisplayButton (5)\n");
 	    Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	    butPtr->flags |= REDRAW_PENDING;
 	}
@@ -1855,6 +1878,7 @@ ButtonSelectImageProc(
     if ((butPtr->flags & SELECTED) && (butPtr->tkwin != NULL)
 	    && Tk_IsMapped(butPtr->tkwin)
 	    && !(butPtr->flags & REDRAW_PENDING)) {
+	    printf("Scheduling TkpDisplayButton (6)\n");
 	Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	butPtr->flags |= REDRAW_PENDING;
     }
@@ -1903,6 +1927,7 @@ ButtonTristateImageProc(
     if ((butPtr->flags & TRISTATED) && (butPtr->tkwin != NULL)
 	    && Tk_IsMapped(butPtr->tkwin)
 	    && !(butPtr->flags & REDRAW_PENDING)) {
+	printf("Scheduling TkpDisplayButton (7)\n");
 	Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	butPtr->flags |= REDRAW_PENDING;
     }

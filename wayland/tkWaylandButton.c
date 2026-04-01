@@ -32,7 +32,7 @@ void ImageChanged(			/* to be passed to Tk_GetImage() */
     int x, int y, int width, int height,
     int imageWidth, int imageHeight);
 
-void TkpButtonWorldChanged(void *instanceData);
+static void TkpButtonWorldChanged(void *instanceData);
 
 /*
  * Class function table.
@@ -59,7 +59,6 @@ const Tk_ClassProcs tkpButtonProcs = {
 #define CHECK_MENU_DIM    8
 #define RADIO_BUTTON_DIM 16
 #define RADIO_MENU_DIM    8
-
 
 /*
  * -------------------------------------------------------------------------
@@ -89,7 +88,6 @@ ImageChanged(TCL_UNUSED(void *),
   
 }
 
-
 /* 
  * -------------------------------------------------------------------------
  * TkpCreateButton --
@@ -107,10 +105,12 @@ ImageChanged(TCL_UNUSED(void *),
 
 TkButton *
 TkpCreateButton(
-	TCL_UNUSED(Tk_Window)) /* window */
+    TCL_UNUSED(Tk_Window))
 {
-    return (TkButton*) ckalloc(sizeof(TkButton));
+    TkButton* ButtonPtr = (TkButton*) ckalloc(sizeof(TkButton));
+    return ButtonPtr;
 }
+
 
 /* 
  * -------------------------------------------------------------------------
@@ -333,6 +333,7 @@ static void
 DrawButtonImage(TkButton *butPtr, TkWaylandDrawingContext *dc,
                  int x, int y, int width, int height, int selected)
 {
+    printf("    DrawButtonImage\n");
     if (butPtr->image) {
         /* Use Tk_RedrawImage – it eventually calls XPutImage which
          * in our Wayland port uses the NanoVG drawing context. */
@@ -370,7 +371,7 @@ static void
 DrawButtonText(TkButton *butPtr, TkWaylandDrawingContext *dc,
                 int x, int y)
 {
-    printf("DrawButtonText\n");
+    printf("    DrawButtonText\n");
     GC currentGC;
     
     /* Select appropriate GC based on button state. */
@@ -413,10 +414,12 @@ void
 TkpDisplayButton(void *clientData)
 {
     TkButton *butPtr = clientData;
+    Tk_Window tkwin = butPtr->tkwin;
+    printf("TkpDisplayButton: %s mapped = %d\n",
+	   Tk_PathName(tkwin), Tk_IsMapped(tkwin));
     TkWaylandDrawingContext dc;
     GC currentGC;
     int x = 0, y = 0, relief;
-    Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0;
     int fullWidth = 0, fullHeight = 0;
     int textXOffset = 0, textYOffset = 0;
@@ -425,12 +428,12 @@ TkpDisplayButton(void *clientData)
     int padX, padY, bd, hl;
     int winWidth, winHeight;
 
-    butPtr->flags &= ~REDRAW_PENDING;
-    if (!tkwin || !Tk_IsMapped(tkwin)) return;
-
+    if (!tkwin || !Tk_IsMapped(tkwin)) {
+      printf("Not mapped - drawing anyway.\n");
+      //return;
+    }
     winWidth = Tk_Width(tkwin);
     winHeight = Tk_Height(tkwin);
-
     relief = butPtr->relief;
     if (butPtr->type >= TYPE_CHECK_BUTTON && !butPtr->indicatorOn) {
         if (butPtr->flags & SELECTED) {
@@ -439,12 +442,7 @@ TkpDisplayButton(void *clientData)
             relief = butPtr->offRelief;
         }
     }
-
-	currentGC = butPtr->activeTextGC;
-    /* Begin drawing with NanoVG. */
-    if (TkGlfwBeginDraw((Drawable)tkwin, currentGC, &dc) != TCL_OK) {
-        return;
-    }
+    currentGC = butPtr->activeTextGC;
 
     /* Get padding and border values. */
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &padX);
@@ -453,8 +451,15 @@ TkpDisplayButton(void *clientData)
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &hl);
 
     /* Background fill - using 3D border drawing. */
-    Tk_Fill3DRectangle(tkwin, (Drawable)&dc, butPtr->normalBorder, 0, 0,
-                       winWidth, winHeight, 0, TK_RELIEF_FLAT);
+    Tk_Fill3DRectangle(tkwin, (Drawable)tkwin, butPtr->normalBorder, 0, 0,
+		       winWidth, winHeight, 0, TK_RELIEF_FLAT);
+
+    /* Begin drawing with NanoVG. */
+    printf("Calling BeginDraw for drawable %p\n", tkwin);
+    if (TkGlfwBeginDraw((Drawable)tkwin, currentGC, &dc) != TCL_OK) {
+        printf("BeginDraw failed in TkpDisplayButton\n");
+        return;
+    }
 
     /* Determine image/bitmap size. */
     if (butPtr->image) {
@@ -640,6 +645,8 @@ TkpDisplayButton(void *clientData)
 
     /* End drawing session. */
     TkGlfwEndDraw(&dc);
+    butPtr->flags &= ~REDRAW_PENDING;
+    printf("DisplayButton done.\n");
 }
 
 /* 
@@ -847,6 +854,7 @@ TkpComputeButtonGeometry(
 void
 TkpButtonWorldChanged(void *instanceData)
 {
+  printf("TkpButtonWorldChanged\n");
     XGCValues gcValues;
     GC newGC;
     unsigned long mask;
@@ -867,6 +875,7 @@ TkpButtonWorldChanged(void *instanceData)
     /* Active text GC. */
     gcValues.foreground = butPtr->activeFg->pixel;
     gcValues.background = Tk_3DBorderColor(butPtr->activeBorder)->pixel;
+    printf("Active Text fg = %lx, bg=%lx\n", gcValues.foreground, gcValues.background);
     newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
     if (butPtr->activeTextGC != NULL) {
         Tk_FreeGC(butPtr->display, butPtr->activeTextGC);
@@ -916,6 +925,7 @@ TkpButtonWorldChanged(void *instanceData)
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
             && !(butPtr->flags & REDRAW_PENDING)) {
         Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
+	printf("Setting REDRAW_PENDING\n");
         butPtr->flags |= REDRAW_PENDING;
     }
 }
