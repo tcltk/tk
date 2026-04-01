@@ -18,7 +18,6 @@ text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate 'text' hype
 \fBtk_textCut\fI pathName\fR
 \fBtk_textPaste\fI pathName\fR
 .fi
-.fi
 .SO
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
