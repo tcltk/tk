@@ -413,7 +413,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  *
  * TkWaylandQueueExposeEvent --
  *
- *      Queue an Expose event as a wrapped Tcl event.
+ *      Queue Expose events for a window and all of its children.
  *
  * Results:
  *      None.
@@ -432,6 +432,7 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
+    printf("TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
     
     if (!winPtr) return;
     
@@ -439,7 +440,7 @@ TkWaylandQueueExposeEvent(
     /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
-    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xexpose.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xexpose.send_event = False;
     event.xexpose.display = winPtr->display;
     event.xexpose.window = Tk_WindowId(winPtr);
@@ -450,12 +451,14 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;
     
     /* Queue it. */
+    printf("Queuing Expose(%lu)\n", event.xexpose.serial);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
-    /* Recursively for children. */
+    /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped((Tk_Window)childPtr) || Tk_IsTopLevel((Tk_Window)childPtr)) {
+        if (!Tk_IsMapped((Tk_Window)childPtr) ||
+	    Tk_IsTopLevel((Tk_Window)childPtr)) {
             continue;
         }
         TkWaylandQueueExposeEvent(childPtr, 
@@ -463,9 +466,7 @@ TkWaylandQueueExposeEvent(
                                  Tk_Width((Tk_Window)childPtr),
                                  Tk_Height((Tk_Window)childPtr));
     }
-    
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -496,7 +497,6 @@ TkWaylandWakeupGLFW(void)
         write(tsdPtr->wakeupFd, &u, sizeof(u));
     }
 }
-
 
 /*
  *----------------------------------------------------------------------

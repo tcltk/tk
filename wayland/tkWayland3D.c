@@ -132,6 +132,7 @@ Tk_3DVerticalBevel(
         waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
     }
 
+    printf("Tk_3DBorder\n");
     int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
     if (rc != TCL_OK)
         return;
@@ -223,6 +224,7 @@ Tk_3DHorizontalBevel(
     int            topBevel,
     int            relief)
 {
+    printf("Tk_3DHorizontalBevel\n");
     TkBorder               *borderPtr       = (TkBorder *) border;
     WaylandBorder          *waylandBorderPtr = (WaylandBorder *) borderPtr;
     TkWaylandDrawingContext dc;

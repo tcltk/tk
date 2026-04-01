@@ -357,7 +357,8 @@ TkGlfwCreateWindow(
     if (drawableOut) *drawableOut = mapping->drawable;
 
     if (tkWin != NULL)
-        TkWaylandQueueExposeEvent(tkWin, 0, 0, mapping->width, mapping->height);
+        TkWaylandQueueExposeEvent(tkWin, 0, 0,
+	    mapping->width, mapping->height);
 
     /* Wake up the event loop to process the expose event. */
     TkWaylandWakeupGLFW();
@@ -466,19 +467,29 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
+    printf("BeginDraw: %p\n", drawable);
     WindowMapping *m = FindMappingByDrawable(drawable);
 
     if (!m || !m->fbo) {
+	printf("Failed to find mapping for drawable %lx\n", drawable);
         return TCL_ERROR;
     }
-
+    printf("%s\n", Tk_PathName(m->tkWindow));
+    
     /* Redirect all subsequent GL commands to the off-screen FBO. */
     nvgluBindFramebuffer(m->fbo);
     
     /* Set viewport to the FBO size. */
+    //// BeginFrame supposedly does this.
     glViewport(0, 0, m->width, m->height);
 
+    if (m->width != Tk_Width(m->tkWindow) ||
+	m->height != Tk_Height(m->tkWindow)) {
+	printf("window size does not match mapping\n");
+    }
+    
     /* Start a NanoVG frame targeting the FBO. */
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
 
     dcPtr->vg = glfwContext.vg;
@@ -498,8 +509,6 @@ TkGlfwBeginDraw(
         }
         nvgTranslate(dcPtr->vg, (float)x, (float)y);
     }
-
-    printf("BeginDraw: calling ApplyGC with %p\n", gc);
     TkGlfwApplyGC(dcPtr->vg, gc);
     return TCL_OK;
 }
@@ -534,10 +543,11 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 		      0, 0, (int)m->width, (int)m->height,
 		      GL_COLOR_BUFFER_BIT,
 		      GL_NEAREST);
-
+ 
     if (dcPtr && dcPtr->vg) {
         nvgRestore(dcPtr->vg);
         nvgEndFrame(dcPtr->vg);
+	// The swap must be done after ending the frame.
 	glfwSwapBuffers(m->glfwWindow);
         
         /* Unbind FBO to return to the default backbuffer. */
@@ -616,7 +626,9 @@ TkGlfwGetNVGContextForMeasure(void)
  *
  *----------------------------------------------------------------------
  */
-
+////XXXX Why is this used sometimes and glfwPollEvents used directly
+//// other times????  (It is NOT called from the event loop.)
+#if 0
 MODULE_SCOPE void
 TkGlfwProcessEvents(void)
 {
@@ -624,6 +636,7 @@ TkGlfwProcessEvents(void)
         glfwPollEvents();
     }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -701,12 +714,10 @@ TkGlfwApplyGC(NVGcontext *vg, GC gc)
     XGCValues v;
     NVGcolor  c;
 
-    printf("ApplyGC for %p\n", gc);
     if (!vg || !gc || shutdownInProgress) return;
       
     TkWaylandGetGCValues(gc,
         GCForeground|GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle, &v);
-    printf("foreground is %lx\n", v.foreground);
     c = TkGlfwPixelToNVG(v.foreground);
     nvgFillColor(vg, c);
     nvgStrokeColor(vg, c);

@@ -401,6 +401,7 @@ DestroyGlfwWindow(
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
+    printf("TkWmMapWindow: %s\n", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
 
@@ -446,7 +447,7 @@ TkWmMapWindow(TkWindow *winPtr)
             TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
             
             /* Process events to trigger drawing. */
-            TkGlfwProcessEvents();
+            ////TkGlfwProcessEvents();
         }
         
         if (prev) glfwMakeContextCurrent(prev);
@@ -2032,7 +2033,6 @@ WmGeometryCmd(
         
         if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
             UpdateGeometryInfo((void *)winPtr);
-            TkGlfwProcessEvents();
         }
         
         return TCL_OK;
@@ -2042,7 +2042,8 @@ WmGeometryCmd(
     if (ParseGeometry(interp, Tcl_GetString(objv[0]), winPtr) != TCL_OK) {
         return TCL_ERROR;
     }
-    
+
+    //// Why immediate?  X11 does this as at idle.
     /* Immediately set GLFW window size and position. */
     if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Set size only if positive values were provided */
@@ -2051,7 +2052,8 @@ WmGeometryCmd(
         }
         glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
     }
-    
+
+    //// Why immediate?  X11 does this at idle.
     /* Force immediate update instead of waiting for idle. */
     if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Cancel any pending idle callback */
@@ -2064,7 +2066,7 @@ WmGeometryCmd(
         UpdateGeometryInfo((void *)winPtr);
         
         /* Process events to ensure callback fires before command returns */
-        TkGlfwProcessEvents();
+        ////TkGlfwProcessEvents();
         
         /* Verify the change actually took effect. */
         int newWidth, newHeight;
@@ -3611,6 +3613,7 @@ UpdateGeometryInfo(
     int       tw, th;
 
     if (wmPtr == NULL) return;
+    printf("UpdateGeometryInfo:");
     
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
@@ -3622,6 +3625,7 @@ UpdateGeometryInfo(
 
     /* Don't proceed if window isn't ready. */
     if (wmPtr->glfwWindow == NULL || wmPtr->withdrawn) {
+	printf("No glfw window\n");
         return;
     }
 
@@ -3635,6 +3639,8 @@ UpdateGeometryInfo(
 
     /* Apply size change if needed. */
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
+	printf("glfwSetWindowSize %s -> %dx%d\n",
+	       Tk_PathName(winPtr), tw, th); 
         glfwSetWindowSize(wmPtr->glfwWindow, tw, th);
         TkGlfwUpdateWindowSize(wmPtr->glfwWindow, tw, th);
         winPtr->changes.width = tw;
@@ -3642,16 +3648,16 @@ UpdateGeometryInfo(
         
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
-        TkGlfwProcessEvents();
     }
 
     /* Apply position change if needed. */
     if ((wmPtr->flags & WM_MOVE_PENDING) ||
         wmPtr->x != winPtr->changes.x ||
         wmPtr->y != winPtr->changes.y) {
+	printf("glfwSetWindowPos %s -> %d+%d\n",
+	       Tk_PathName(winPtr), wmPtr->x, wmPtr->y); 
         glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
-        TkGlfwProcessEvents();
     }
     
 }
@@ -4363,6 +4369,7 @@ XResizeWindow(
     GLFWwindow *gw = WindowToGLFW(window);
 
     if (gw != NULL) {
+	printf("XResizeWindow -> %ux%u\n", width, height);
         glfwSetWindowSize(gw, (int)width, (int)height);
         TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
     }
@@ -4431,6 +4438,7 @@ XMoveResizeWindow(
 
     if (gw != NULL) {
         glfwSetWindowPos(gw,  x, y);
+	printf("XMoveResizeWindow -> %ux%u\n", width, height);
         glfwSetWindowSize(gw, (int)width, (int)height);
         TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
     }
@@ -4492,6 +4500,7 @@ XConfigureWindow(
         glfwSetWindowPos(gw, x, y);
     }
     if (resizeNeeded) {
+	printf("XConfigureWindow -> %dx%d\n", w, h);
         glfwSetWindowSize(gw, w, h);
         TkGlfwUpdateWindowSize(gw, w, h);
     }

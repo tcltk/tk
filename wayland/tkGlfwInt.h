@@ -486,14 +486,16 @@ MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow, TkWindow *tkWin);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
 
+////unused
+#if 0
 typedef struct {
     Tcl_Event  header;  /* Must be first. */
     XEvent     xEvent;
     TkWindow  *winPtr;
 } TkWaylandExposeEvent;
+#endif
 
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int width, int height);
-MODULE_SCOPE void TkWaylandHandleExposeEvents(void);
 MODULE_SCOPE void TkWaylandBeginEventCycle(WindowMapping *m);
 MODULE_SCOPE void TkWaylandEndEventCycle(WindowMapping *m);
 void TkWaylandScheduleDisplay(WindowMapping *m);

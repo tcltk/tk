@@ -1229,6 +1229,7 @@ FrameWorldChanged(
 
     if (Tk_IsMapped(tkwin)) {
 	if (!(framePtr->flags & REDRAW_PENDING)) {
+	    printf("Scheduling DisplayFrame (1)\n");
 	    Tcl_DoWhenIdle(DisplayFrame, framePtr);
 	}
 	framePtr->flags |= REDRAW_PENDING;
@@ -1407,6 +1408,7 @@ static void
 DisplayFrame(
     void *clientData)	/* Information about widget. */
 {
+    printf("DisplayFrame\n");
     Frame *framePtr = (Frame *)clientData;
     Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2;
@@ -1614,6 +1616,7 @@ DisplayFrame(
 	    highlightWidth, highlightWidth);
     Tk_FreePixmap(framePtr->display, pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
+    printf("DisplayFrame done.\n");
 }
 
 /*
@@ -1673,11 +1676,18 @@ FrameEventProc(
     void *clientData,	/* Information about window. */
     XEvent *eventPtr)	/* Information about event. */
 {
+    printf("FrameEventProc: ");
     Frame *framePtr = (Frame *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
+	printf("%s received Expose(%d)\n", Tk_PathName(framePtr->tkwin),
+	       eventPtr->xexpose.serial);
 	goto redraw;
     } else if (eventPtr->type == ConfigureNotify) {
+	printf("%s received Configure(%d) -> %dx%d+%d+%d\n",
+	       Tk_PathName(framePtr->tkwin), eventPtr->xconfigure.serial,
+	       eventPtr->xconfigure.width, eventPtr->xconfigure.height,
+	       eventPtr->xconfigure.x, eventPtr->xconfigure.y);
 	ComputeFrameGeometry(framePtr);
 	goto redraw;
     } else if (eventPtr->type == DestroyNotify) {
@@ -1712,11 +1722,14 @@ FrameEventProc(
 	    Tcl_DeleteCommandFromToken(framePtr->interp, framePtr->widgetCmd);
 	}
 	if (framePtr->flags & REDRAW_PENDING) {
+	    printf("Cancelling DisplayFrame\n");
 	    Tcl_CancelIdleCall(DisplayFrame, framePtr);
 	}
 	Tcl_CancelIdleCall(MapFrame, framePtr);
 	Tcl_EventuallyFree(framePtr, DestroyFrame);
     } else if (eventPtr->type == FocusIn) {
+	printf("%s received FocusIn(%d)\n", Tk_PathName(framePtr->tkwin),
+	       eventPtr->xfocus.serial);
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    int highlightWidth;
 	    framePtr->flags |= GOT_FOCUS;
@@ -1726,6 +1739,8 @@ FrameEventProc(
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
+	printf("%s received FocusOut(%d)\n", Tk_PathName(framePtr->tkwin),
+	       eventPtr->xfocus.serial);
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    int highlightWidth;
 	    framePtr->flags &= ~GOT_FOCUS;
@@ -1737,16 +1752,21 @@ FrameEventProc(
     } else if (eventPtr->type == ActivateNotify) {
 	Tk_SetMainMenubar(framePtr->interp, framePtr->tkwin,
 		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
+    } else {
+	printf("no events.\n");
     }
     return;
 
   redraw:
     if ((framePtr->tkwin != NULL) && !(framePtr->flags & REDRAW_PENDING)) {
+	printf("FrameEventProc: scheduling DisplayFrame for %s\n",
+	       Tk_PathName(framePtr->tkwin));
 	Tcl_DoWhenIdle(DisplayFrame, framePtr);
 	framePtr->flags |= REDRAW_PENDING;
     }
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2105,6 +2125,7 @@ FrameBgImageProc(
 
     if (framePtr->tkwin && Tk_IsMapped(framePtr->tkwin) &&
 	    !(framePtr->flags & REDRAW_PENDING)) {
+	printf("Scheduling DisplayFrame (3)\n");
 	Tcl_DoWhenIdle(DisplayFrame, framePtr);
 	framePtr->flags |= REDRAW_PENDING;
     }

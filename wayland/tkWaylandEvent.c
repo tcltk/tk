@@ -114,8 +114,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
  *      None.
  *
  * Side effects:
- *      Updates window geometry, generates ConfigureNotify event,
- *      queues Expose event for redraw.
+ *      Updates window geometry, generates ConfigureNotify event.
  *
  *----------------------------------------------------------------------
  */
@@ -123,30 +122,30 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 MODULE_SCOPE void
 TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
-    int fw, fh;
-    glfwGetFramebufferSize(window, &fw, &fh);
-    glViewport(0, 0, fw, fh);
+    printf("TkGlfWindowSizeCallback\n");
+    glViewport(0, 0, width, height);
     
-    WindowMapping *m = FindMappingByGLFW(window);
-    if (!m) {
+    WindowMapping *mapping = FindMappingByGLFW(window);
+    if (!mapping) {
 	return;
     }
     
     /* Close any open frame. */
-    if (m->frameOpen) {
-        TkWaylandEndEventCycle(m);
+    //// can this ever happen?
+    if (mapping->frameOpen) {
+	printf("TkGlfwWindowSizeCallback: size changed with frame open\n");
+        TkWaylandEndEventCycle(mapping);
     }
     
     /* Update size */
-    m->width = width;
-    m->height = height;
+    mapping->width = width;
+    mapping->height = height;
     
     /* Notify Tk */
-    if (m->tkWindow) {
-        m->tkWindow->changes.width = width;
-        m->tkWindow->changes.height = height;
-	//// We need a configure event too!
-        TkWaylandQueueExposeEvent(m->tkWindow, 0, 0, width, height);
+    if (mapping->tkWindow) {
+        mapping->tkWindow->changes.width = width;
+        mapping->tkWindow->changes.height = height;
+	TkDoConfigureNotify(mapping->tkWindow);
     }
 }
 
@@ -155,7 +154,11 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
  *
  * TkGlfwFramebufferSizeCallback --
  *
- *      Called when framebuffer size changes.
+ *      Called when framebuffer size changes.  A call to this
+ *      callback is always paired with a call to the
+ *      RefreshWindowCallback, which generates an ExposeNotify
+ *      event. This generates a ConfigureNotify event.
+ *      while 
  *
  * Results:
  *      None.
@@ -172,25 +175,25 @@ TkGlfwFramebufferSizeCallback(
     int width,
     int height)
 {
-    int ww, wh;
-    glfwGetWindowSize(window, &ww, &wh);
-	
-    TkWindow      *winPtr = TkGlfwGetTkWindow(window);
+    printf("TkGlfwFramebufferSizeCallback %dx%d\n", width, height);
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (!winPtr) {
+	return;
+    }
     WindowMapping *mapping;
-    int            w, h;
-
-    if (!winPtr) return;
-
     mapping = FindMappingByTk(winPtr);
-    if (!mapping) return;
+    if (!mapping) {
+	return;
+    }
+    printf("TkGlfwFramebufferSizeCallback: Configure\n");
 
-    w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
-    h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
+    /* Notify Tk */
+    mapping->width = width;
+    mapping->height = height;
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
+    TkDoConfigureNotify(winPtr);
 
-
-    /* Trigger a redraw from Tk. */
-    //// We need a configure event too!
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
 
 /*
@@ -215,32 +218,15 @@ TkGlfwWindowPosCallback(
     int xpos,
     int ypos)
 {
+    printf("TkGlfwWindowPosCallback \n");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    XEvent event;
-    
     if (!winPtr) {
         return;
     }
 
     winPtr->changes.x = xpos;
     winPtr->changes.y = ypos;
-
-    memset(&event, 0, sizeof(XEvent));
-    event.type = ConfigureNotify;
-    event.xconfigure.serial          = LastKnownRequestProcessed(winPtr->display);
-    event.xconfigure.send_event       = False;
-    event.xconfigure.display          = winPtr->display;
-    event.xconfigure.event            = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.window           = Tk_WindowId((Tk_Window)winPtr);
-    event.xconfigure.x                = xpos;
-    event.xconfigure.y                = ypos;
-    event.xconfigure.width            = winPtr->changes.width;
-    event.xconfigure.height           = winPtr->changes.height;
-    event.xconfigure.border_width     = winPtr->changes.border_width;
-    event.xconfigure.above            = None;
-    event.xconfigure.override_redirect = winPtr->atts.override_redirect;
-
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    TkDoConfigureNotify(winPtr);
 }
 
 /*
@@ -264,6 +250,7 @@ TkGlfwWindowFocusCallback(
     GLFWwindow *window,
     int focused)
 {
+    printf("TkGlfwWindowFocusCallback\n");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
     
@@ -273,7 +260,7 @@ TkGlfwWindowFocusCallback(
 
     memset(&event, 0, sizeof(XEvent));
     event.type = focused ? FocusIn : FocusOut;
-    event.xfocus.serial     = LastKnownRequestProcessed(winPtr->display);
+    event.xfocus.serial     = LastKnownRequestProcessed(winPtr->display)++;
     event.xfocus.send_event  = False;
     event.xfocus.display     = winPtr->display;
     event.xfocus.window      = Tk_WindowId((Tk_Window)winPtr);
@@ -281,7 +268,6 @@ TkGlfwWindowFocusCallback(
     event.xfocus.detail      = NotifyAncestor;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
     TkGenerateActivateEvents(winPtr, focused);
 }
 
@@ -878,7 +864,7 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
     w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
     h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
 
-
+    printf("TkGlWindowRefreshCallback Expose\n");
     TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
 /*
