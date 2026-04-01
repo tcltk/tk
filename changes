@@ -8349,4 +8349,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-03-24 (patch) [aca995] Get rid of the ugly Motif-style cascade arrows on X11 (nemethi)
 
+2026-04-01 (bug) [556606] Block cursor in text widget may hide the character underneath (werner)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
