@@ -1083,8 +1083,8 @@ TkWmMapWindow(
      * Map the window and process a MapNotify event for it.
      */
 
-    XMapWindow(winPtr->display, winPtr->window);
     winPtr->flags |= TK_MAPPED;
+    XMapWindow(winPtr->display, winPtr->window);
     event.xany.serial = LastKnownRequestProcessed(winPtr->display);
     event.xany.send_event = False;
     event.xany.display = winPtr->display;
