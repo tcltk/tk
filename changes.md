@@ -33,6 +33,7 @@ to the userbase.
  - [Check recursive menu usage to avoid crash](https://core.tcl-lang.org/tk/info/7f67bb40)
  - [Get rid of the ugly Motif-style cascade arrows on X11](https://core.tcl-lang.org/tk/info/aca9953f)
  - ["wm forget ." segfaults](https://core.tcl-lang.org/tk/info/8c362075)
+ - [macOS/aqua: <Map> events are generated for windows that are already mapped, and wish crashes](https://core.tcl-lang.org/tk/info/d4d89d13)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
