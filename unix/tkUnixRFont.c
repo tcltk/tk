@@ -222,6 +222,9 @@ static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
 static int IsLatinOnly(const char *str, int len);  /* fast-path helper */
+static int IsNotoFont(FcPattern *pat);             /* exclude Noto fonts */
+static void KbtsLoadSignalHandler(int sig);
+static kbts_font * SafeKbtsLoadFont(kbts_shape_context *context, const char *filePath, int faceIndex, int *fatalSignal);
 
 /*
  * ---------------------------------------------------------------
@@ -273,6 +276,40 @@ IsLatinOnly(const char *str, int len)
         i += clen;
     }
     return 1;
+}
+
+/*
+ * ---------------------------------------------------------------
+ * IsNotoFont --
+ *
+ *   Returns 1 if the font is a Noto font (by family name or file path).
+ *   Noto fonts frequently trigger GSUB/GPOS bugs in kb_text_shaper
+ *   that cause crashes or heap corruption.
+ * ---------------------------------------------------------------
+ */
+
+static int
+IsNotoFont(FcPattern *pat)
+{
+    const char *family = NULL;
+    const char *const *familyPtr = &family;
+    FcChar8 *file = NULL;
+
+    /* Check family name */
+    if (XftPatternGetString(pat, XFT_FAMILY, 0, familyPtr) == XftResultMatch) {
+        if (family && strstr(family, "Noto") != NULL) {
+            return 1;
+        }
+    }
+
+    /* Check file path */
+    if (FcPatternGetString(pat, FC_FILE, 0, &file) == FcResultMatch) {
+        if (file && strstr((const char *)file, "Noto") != NULL) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 
@@ -906,21 +943,6 @@ FinishedWithFont(
 
 /*
  * ---------------------------------------------------------------
- * X11Shaper_Init --
- *
- *   Initialize persistent shaping context and load all font faces.
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Allocates shaping context and loads fonts.
- * ---------------------------------------------------------------
- */
-
-
-/*
- * ---------------------------------------------------------------
  * SafeKbtsLoadFont --
  *
  *   Signal-safe wrapper around kbts_ShapePushFontFromFile.
@@ -985,7 +1007,6 @@ SafeKbtsLoadFont(
          * Signal was caught inside kb_text_shaper.  The shaper context
          * is now in an unknown state — stop loading fonts entirely.
          */
-    //     fprintf(stderr, "Bad font caught in kb_text_shaper; bailing\n");
         *fatalSignal = 1;
         result = NULL;
     }
@@ -995,6 +1016,22 @@ SafeKbtsLoadFont(
 
     return result;
 }
+
+
+/*
+ * ---------------------------------------------------------------
+ * X11Shaper_Init --
+ *
+ *   Initialize persistent shaping context and load all font faces.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Allocates shaping context and loads fonts.
+ * ---------------------------------------------------------------
+ */
+
 
 static void
 X11Shaper_Init(
@@ -1008,33 +1045,21 @@ X11Shaper_Init(
         return;
     }
 
- /* test - force a crash 
-    kbts_font *crashfont = kbts_ShapePushFontFromFile(s->context,
-                                                          "/usr/share/fonts/truetype/noto/NotoSansGlagolitic-Regular.ttf",
-                                                         0);
-                                                         
-                                                         */
     s->numFonts = 0;
     s->cache.valid = 0;
     s->shapeErrors = 0;
 
-
-    /*
-     * Load fonts into shaper. To avoid initialization hangs, we load
-     * a limited set initially. kb_text_shaper will automatically load
-     * additional fonts as needed during shaping (on-demand fallback).
-     * We cap the initial load at 32 fonts to balance coverage vs. speed.
-     * Keeping the number small also guards against a bug in kb_text_shaper
-     * that comes when it loads seldom-used complex fonts such as Mongolian.
-     */
     int maxInitialFonts = (fontPtr->nfaces < KBTS_MAX_INITIAL_FONTS)
                           ? fontPtr->nfaces : KBTS_MAX_INITIAL_FONTS;
 
     int fatalSignal = 0;
 
-    /* Load all faces into shaper. */
-
+    /* Load fonts, but skip all Noto fonts to avoid crashes */
     for (int i = 0; i < maxInitialFonts && s->numFonts < MAX_FONTS; i++) {
+        if (IsNotoFont(fontPtr->faces[i].source)) {
+            continue;                   /* Skip Noto fonts */
+        }
+
         FcPattern *facePattern = fontPtr->faces[i].source;
         FcChar8 *file;
         int index;
@@ -1047,11 +1072,6 @@ X11Shaper_Init(
         kbts_font *kbFont = SafeKbtsLoadFont(s->context, (const char *)file,
                                              index, &fatalSignal);
         if (fatalSignal) {
-            /*
-             * kb_text_shaper crashed loading this font.  The shaper context
-             * is compromised — stop here.  Fonts loaded so far are still
-             * usable; text in scripts they cover will shape correctly.
-             */
             break;
         }
         if (kbFont) {
@@ -1063,7 +1083,6 @@ X11Shaper_Init(
         }
     }
 }
-
 
 /*
  * ---------------------------------------------------------------
