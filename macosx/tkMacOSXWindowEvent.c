@@ -294,6 +294,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowBecameVisible: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
@@ -310,6 +313,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowMapped: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
