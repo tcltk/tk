@@ -405,7 +405,7 @@ X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
-	tkUnixPrint.o SheenBidi.o
+	tkUnixPrint.o 
 
 AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -1315,6 +1315,10 @@ tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 tkUnixBidiFont.o: $(UNIX_DIR)/tkUnixBidiFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(BIDI_CFLAGS) $(UNIX_DIR)/tkUnixBidiFont.c
 
+# SheenBidi unity build - only compiled when BIDI_CFLAGS is set
+SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
+	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
+
 tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) \
 	    $(UNIX_DIR)/tkUnixInit.c
@@ -1354,10 +1358,6 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
-
-# SheenBidi unity build - only compiled when BIDI_CFLAGS is set
-SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
-	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
