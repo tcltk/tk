@@ -434,7 +434,7 @@ if test $tk_aqua = no; then
                      -I${TK_SRC_DIR}/unix/bidi \
                      -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
 	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
-	UNIX_FONT_OBJS="tkUnixBidiFont.o"
+	UNIX_FONT_OBJS="tkUnixBidiFont.o Sheenbidi.o"
     else
 	AC_MSG_RESULT([no])
 	BIDI_CFLAGS=""

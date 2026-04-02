@@ -8688,7 +8688,7 @@ printf '%s\n' "$as_me: --enable-bidi requested: enabling Xft as well" >&6;}
 
 printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
 
-	UNIX_FONT_OBJS="tkUnixBidiFont.o"
+	UNIX_FONT_OBJS="tkUnixBidiFont.o Sheenbidi.o"
     else
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
