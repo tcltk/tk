@@ -8674,13 +8674,13 @@ fi
     if test "$enable_bidi" = "yes"; then
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes (forces Xft on)" >&5
 printf '%s\n' "yes (forces Xft on)" >&6; }
-	# Force Xft on when bidi is requested
 	if test "$enable_xft" = "no"; then
-	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: --enable-bidi requested: enabling Xft as well" >&5
+	   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: --enable-bidi requested: enabling Xft as well" >&5
 printf '%s\n' "$as_me: --enable-bidi requested: enabling Xft as well" >&6;}
-	    enable_xft=yes
+	   enable_xft=yes
 	fi
 
+	# Fixed include paths for SheenBidi (point to the directory containing the SheenBidi/ subdir)
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
                      -I${TK_SRC_DIR}/unix/bidi/Source \
                      -I${TK_SRC_DIR}/unix/bidi \
@@ -8695,12 +8695,12 @@ printf '%s\n' "no" >&6; }
 	BIDI_CFLAGS=""
 
 	if test "$enable_xft" = "yes" ; then
-	    UNIX_FONT_OBJS="tkUnixRFont.o"
+	   UNIX_FONT_OBJS="tkUnixRFont.o"
 
 printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
 
 	else
-	    UNIX_FONT_OBJS="tkUnixFont.o"
+	   UNIX_FONT_OBJS="tkUnixFont.o"
 	fi
     fi
 

@@ -423,12 +423,12 @@ if test $tk_aqua = no; then
 
     if test "$enable_bidi" = "yes"; then
 	AC_MSG_RESULT([yes (forces Xft on)])
-	# Force Xft on when bidi is requested
 	if test "$enable_xft" = "no"; then
-	    AC_MSG_NOTICE([--enable-bidi requested: enabling Xft as well])
-	    enable_xft=yes
+	   AC_MSG_NOTICE([--enable-bidi requested: enabling Xft as well])
+	   enable_xft=yes
 	fi
 
+	# Fixed include paths for SheenBidi (point to the directory containing the SheenBidi/ subdir)
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
                      -I${TK_SRC_DIR}/unix/bidi/Source \
                      -I${TK_SRC_DIR}/unix/bidi \
@@ -440,10 +440,10 @@ if test $tk_aqua = no; then
 	BIDI_CFLAGS=""
 
 	if test "$enable_xft" = "yes" ; then
-	    UNIX_FONT_OBJS="tkUnixRFont.o"
-	    AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
+	   UNIX_FONT_OBJS="tkUnixRFont.o"
+	   AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
 	else
-	    UNIX_FONT_OBJS="tkUnixFont.o"
+	   UNIX_FONT_OBJS="tkUnixFont.o"
 	fi
     fi
 
