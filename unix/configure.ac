@@ -339,23 +339,29 @@ if test -d /usr/include/mit -a $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for freetype / fontconfig / Xft support.
+#	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
+
+    #--------------------------------------------------------------------
+    # --enable-xft (default: yes) - Antialiased fonts via Xft
+    #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
 	AS_HELP_STRING([--enable-xft],
-	    [use freetype/fontconfig/xft (default: on)]),
-	[enable_xft=$enableval], [enable_xft="default"])
+	    [use freetype/fontconfig/xft for antialiased fonts (default: yes)]),
+	[enable_xft=$enableval], [enable_xft="yes"])   # default changed to yes
+
     XFT_CFLAGS=""
     XFT_LIBS=""
+
     if test "$enable_xft" = "no" ; then
-	AC_MSG_RESULT([$enable_xft])
+	AC_MSG_RESULT([no])
     else
 	found_xft="yes"
-	dnl make sure package configurator (xft-config or pkg-config
-	dnl says that xft is present.
+
+	# Try xft-config first, then pkg-config
 	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
 	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
 	if test "$found_xft" = "no" ; then
@@ -363,47 +369,36 @@ if test $tk_aqua = no; then
 	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
 	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
+
 	AC_MSG_RESULT([$found_xft])
-	dnl make sure that compiling against Xft header file doesn't bomb
+
+	# Verify headers and libraries
 	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
 	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
-	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
-		found_xft=no
-	    ],[#include <X11/Xlib.h>])
+
+	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [found_xft=no], [#include <X11/Xlib.h>])
+
+	    if test "$found_xft" = "yes" ; then
+		AC_CHECK_LIB(Xft, XftFontOpen, [], [found_xft=no])
+	    fi
+
+	    if test "$found_xft" = "yes" ; then
+		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
+		AC_CHECK_LIB(fontconfig, FcFontSort, [
+		    XFT_LIBS="$XFT_LIBS -lfontconfig"
+		], [])
+	    fi
+
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
 	fi
-	dnl make sure that linking against Xft libraries finds freetype
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
-	    AC_CHECK_LIB(Xft, XftFontOpen, [], [
-		found_xft=no
-	    ])
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-	dnl make sure that linking against fontconfig libraries finds Fc* symbols
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
-	    AC_CHECK_LIB(fontconfig, FcFontSort, [
-		XFT_LIBS="$XFT_LIBS -lfontconfig"
-	    ], [])
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-	dnl print a warning if xft is unusable and was specifically requested
+
 	if test "$found_xft" = "no" ; then
 	    if test "$enable_xft" = "yes" ; then
-		AC_MSG_WARN([Can't find xft configuration, or xft is unusable])
+		AC_MSG_WARN([Can't find xft configuration or xft is unusable -- falling back to classic fonts])
 	    fi
 	    enable_xft=no
 	    XFT_CFLAGS=""
@@ -412,15 +407,55 @@ if test $tk_aqua = no; then
 	    enable_xft=yes
 	fi
     fi
-    if test $enable_xft = "yes" ; then
-	UNIX_FONT_OBJS=tkUnixRFont.o
-	AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
-    else
-	UNIX_FONT_OBJS=tkUnixFont.o
-    fi
+
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
+
+    #--------------------------------------------------------------------
+    # --enable-bidi (advanced optional switch)
+    # If enabled, forces --enable-xft=yes and uses tkUnixBidiFont.o
+    #--------------------------------------------------------------------
+    AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
+    AC_ARG_ENABLE(bidi,
+	AS_HELP_STRING([--enable-bidi],
+	    [enable bidirectional/RTL text support using SheenBidi + tkUnixBidiFont (forces --enable-xft=yes)]),
+	[enable_bidi=$enableval], [enable_bidi="no"])   # default: no
+
+    if test "$enable_bidi" = "yes"; then
+	AC_MSG_RESULT([yes (forces Xft on)])
+	# Force Xft on when bidi is requested
+	if test "$enable_xft" = "no"; then
+	    AC_MSG_NOTICE([--enable-bidi requested: enabling Xft as well])
+	    enable_xft=yes
+	fi
+
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
+	UNIX_FONT_OBJS="tkUnixBidiFont.o"
+    else
+	AC_MSG_RESULT([no])
+	BIDI_CFLAGS=""
+
+	if test "$enable_xft" = "yes" ; then
+	    UNIX_FONT_OBJS="tkUnixRFont.o"
+	    AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
+	else
+	    UNIX_FONT_OBJS="tkUnixFont.o"
+	fi
+    fi
+
+    AC_SUBST(BIDI_CFLAGS)
     AC_SUBST(UNIX_FONT_OBJS)
+
+else
+    # On Aqua (macOS) - neither Xft nor Bidi is supported in this path
+    enable_xft=no
+    enable_bidi=no
+    UNIX_FONT_OBJS="tkUnixFont.o"
+    BIDI_CFLAGS=""
 fi
 
 #--------------------------------------------------------------------
@@ -552,17 +587,6 @@ if test $tk_aqua = no; then
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 fi
-
-# -----------------------------------------------------------------------
-# SheenBidi Unicode Bidirectional support — always included
-# Hard-wired into unix/bidi/ subdirectory
-# kb_text_shaper.h also lives in unix/bidi/
-# -----------------------------------------------------------------------
-
-AC_MSG_CHECKING([for SheenBidi + text shaper support])
-AC_MSG_RESULT([yes (hard-wired in unix/bidi/)])
-BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers -I${TK_SRC_DIR}/unix/bidi/Source -I${TK_SRC_DIR}/unix/bidi -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
-AC_SUBST(BIDI_CFLAGS)
 
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
