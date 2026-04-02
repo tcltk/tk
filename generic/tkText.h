@@ -1930,7 +1930,7 @@ MODULE_SCOPE bool	TkBTreePrevTag(TkTextSearch *searchPtr);
 MODULE_SCOPE TkTextSegment * TkBTreeFindNextTagged(const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, const struct TkBitField *discardTags);
 MODULE_SCOPE TkTextSegment * TkBTreeFindPrevTagged(const TkTextIndex *indexPtr1,
-			    const TkTextIndex *indexPtr2, int discardSelection);
+			    const TkTextIndex *indexPtr2, bool discardSelection);
 MODULE_SCOPE TkTextSegment * TkBTreeFindNextUntagged(const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, const struct TkBitField *discardTags);
 MODULE_SCOPE unsigned	TkBTreeNumPixels(const TkText *textPtr);
@@ -1946,13 +1946,13 @@ MODULE_SCOPE void	TkBTreeStartSearchBack(const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr, const TkTextTag *tagPtr,
 			    TkTextSearch *searchPtr, TkTextSearchMode mode);
 MODULE_SCOPE void	TkBTreeLiftSearch(TkTextSearch *searchPtr);
-MODULE_SCOPE int	TkBTreeTag(TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE bool	TkBTreeTag(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
-			    TkTextTag *tagPtr, int add, TkTextUndoInfo *undoInfo,
+			    TkTextTag *tagPtr, bool add, TkTextUndoInfo *undoInfo,
 			    TkTextTagChangedProc changedProc);
 MODULE_SCOPE TkTextTag * TkBTreeClearTags(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
-			    TkTextUndoInfo *undoInfo, int discardSelection,
+			    TkTextUndoInfo *undoInfo, bool discardSelection,
 			    TkTextTagChangedProc changedProc);
 MODULE_SCOPE void	TkBTreeUpdateElideInfo(TkText *textPtr, TkTextTag *tagPtr);
 MODULE_SCOPE void	TkBTreeUnlinkSegment(const TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
@@ -1994,7 +1994,7 @@ MODULE_SCOPE void	TkTextTagFindEndOfRange(TkText *textPtr, const TkTextTag *tagP
 			    const TkTextIndex *currentPtr, TkTextIndex *resultPtr);
 MODULE_SCOPE TkTextTag * TkTextClearTags(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2,
-			    int discardSelection);
+			    bool discardSelection);
 MODULE_SCOPE void	TkTextClearSelection(TkSharedText *sharedTextPtr,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 MODULE_SCOPE void	TkTextUpdateTagDisplayFlags(TkTextTag *tagPtr);
@@ -2028,7 +2028,7 @@ MODULE_SCOPE bool	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, Tk
 MODULE_SCOPE void	TkTextReplaceTags(TkText *textPtr, TkTextSegment *segPtr, int undoable,
 			    Tcl_Obj *tagListPtr);
 MODULE_SCOPE void	TkTextFindTags(Tcl_Interp *interp, TkText *textPtr, const TkTextSegment *segPtr,
-			    int discardSelection);
+			    bool discardSelection);
 MODULE_SCOPE int	TkTextDeleteTag(TkText *textPtr, TkTextTag *tagPtr, Tcl_HashEntry *hPtr);
 MODULE_SCOPE void	TkTextReleaseTag(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    Tcl_HashEntry *hPtr);
