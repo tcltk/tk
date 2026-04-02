@@ -87,13 +87,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
  */
 
 static void		ChangeTagPriority(TkText *textPtr, TkTextTag *tagPtr,
-			    int prio);
+			    Tcl_Size prio);
 static TkTextTag *	FindTag(Tcl_Interp *interp, TkText *textPtr,
 			    Tcl_Obj *tagName);
-static void		SortTags(int numTags, TkTextTag **tagArrayPtr);
+static void		SortTags(Tcl_Size numTags, TkTextTag **tagArrayPtr);
 static int		TagSortProc(const void *first, const void *second);
 static void		TagBindEvent(TkText *textPtr, XEvent *eventPtr,
-			    int numTags, TkTextTag **tagArrayPtr);
+			    Tcl_Size numTags, TkTextTag **tagArrayPtr);
 
 /*
  *--------------------------------------------------------------
@@ -489,7 +489,7 @@ TkTextTagCmd(
     }
     case TAG_LOWER: {
 	TkTextTag *tagPtr2;
-	int prio;
+	Tcl_Size prio;
 
 	if ((objc != 4) && (objc != 5)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?belowThis?");
@@ -612,7 +612,7 @@ TkTextTagCmd(
 	TkBTreeStartSearch(&index1, &last, tagPtr, &tSearch);
 	if (TkBTreeCharTagged(&index1, tagPtr)) {
 	    TkTextSegment *segPtr;
-	    int offset;
+	    Tcl_Size offset;
 
 	    /*
 	     * The first character is tagged. See if there is an on-toggle
@@ -771,7 +771,7 @@ TkTextTagCmd(
     }
     case TAG_RAISE: {
 	TkTextTag *tagPtr2;
-	int prio;
+	Tcl_Size prio;
 
 	if ((objc != 4) && (objc != 5)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?aboveThis?");
@@ -1046,7 +1046,7 @@ TkTextDeleteTag(
     TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, 0, 0, &first);
     TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 	    TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), 0, &last),
-    TkBTreeTag(&first, &last, tagPtr, 0);
+    TkBTreeTag(&first, &last, tagPtr, false);
 
     if (tagPtr == textPtr->selTagPtr) {
 	/*
@@ -1099,7 +1099,7 @@ TkTextFreeTag(
     TkText *textPtr,		/* Info about overall widget. */
     TkTextTag *tagPtr)	/* Tag being deleted. */
 {
-    int i;
+    Tcl_Size i;
 
     /*
      * Let Tk do most of the hard work for us.
@@ -1172,10 +1172,10 @@ TkTextFreeTag(
 
 static void
 SortTags(
-    int numTags,		/* Number of tag pointers at *tagArrayPtr. */
+    Tcl_Size numTags,		/* Number of tag pointers at *tagArrayPtr. */
     TkTextTag **tagArrayPtr)	/* Pointer to array of pointers. */
 {
-    int i, j, prio;
+    Tcl_Size i, j, prio;
     TkTextTag **tagPtrPtr;
     TkTextTag **maxPtrPtr, *tmp;
 
@@ -1230,7 +1230,10 @@ TagSortProc(
 
     tagPtr1 = * (TkTextTag **) first;
     tagPtr2 = * (TkTextTag **) second;
-    return tagPtr1->priority - tagPtr2->priority;
+    if (tagPtr1->priority == tagPtr2->priority) {
+	return 0;
+    }
+    return (tagPtr1->priority > tagPtr2->priority) ? 1 : -1;
 }
 
 /*
@@ -1257,9 +1260,9 @@ static void
 ChangeTagPriority(
     TkText *textPtr,		/* Information about text widget. */
     TkTextTag *tagPtr,		/* Tag whose priority is to be changed. */
-    int prio)			/* New priority for tag. */
+    Tcl_Size prio)			/* New priority for tag. */
 {
-    int low, high, delta;
+    Tcl_Size low, high, delta;
     TkTextTag *tagPtr2;
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
@@ -1441,10 +1444,11 @@ TkTextPickCurrent(
     TkTextTag **copyArrayPtr = NULL;
 				/* Initialization needed to prevent compiler
 				 * warning. */
-    int numOldTags, i, nearby;
+    Tcl_Size numOldTags, i;
     Tcl_Size numNewTags, j;
     size_t size;
     XEvent event;
+    bool nearby;
 
     /*
      * If a button is down, then don't do anything at all; we'll be called
@@ -1634,13 +1638,13 @@ static void
 TagBindEvent(
     TkText *textPtr,		/* Text widget to fire bindings in. */
     XEvent *eventPtr,		/* What actually happened. */
-    int numTags,		/* Number of relevant tags. */
+    Tcl_Size numTags,		/* Number of relevant tags. */
     TkTextTag **tagArrayPtr)	/* Array of relevant tags. */
 {
 #   define NUM_BIND_TAGS 10
     const char *nameArray[NUM_BIND_TAGS];
     const char **nameArrPtr;
-    int i;
+    Tcl_Size i;
 
     /*
      * Try to avoid allocation unless there are lots of tags.

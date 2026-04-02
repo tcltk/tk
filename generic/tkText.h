@@ -515,7 +515,7 @@ typedef enum {
  */
 
 typedef struct TkSharedText {
-    Tcl_Size refCount;		/* Reference count this shared object. */
+    size_t refCount;		/* Reference count this shared object. */
     TkTextBTree tree;		/* B-tree representation of text and tags for
 				 * widget. */
     Tcl_HashTable tagTable;	/* Hash table that maps from tag names to
@@ -743,7 +743,7 @@ typedef struct TkText {
     XEvent pickEvent;		/* The event from which the current character
 				 * was chosen. Must be saved so that we can
 				 * repick after modifications to the text. */
-    int numCurTags;		/* Number of tags associated with character at
+    Tcl_Size numCurTags;		/* Number of tags associated with character at
 				 * current mark. */
     TkTextTag **curTagArrayPtr;	/* Pointer to array of tags for current mark,
 				 * or NULL if none. */
@@ -1027,7 +1027,7 @@ MODULE_SCOPE void	TkBTreeStartSearchBack(TkTextIndex *index1Ptr,
 			    TkTextSearch *searchPtr);
 MODULE_SCOPE int	TkBTreeTag(TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
-			    int add);
+			    bool add);
 MODULE_SCOPE void	TkBTreeUnlinkSegment(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 MODULE_SCOPE void	TkTextBindProc(void *clientData,
@@ -1039,7 +1039,7 @@ MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    int *cursorWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noBreakYet,
+			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
 MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
@@ -1070,10 +1070,10 @@ MODULE_SCOPE void	TkTextIndexBackChars(const TkText *textPtr,
 			    TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE int	TkTextIndexCmp(const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkTextIndexCountBytes(const TkText *textPtr,
+MODULE_SCOPE Tcl_Size	TkTextIndexCountBytes(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkTextIndexCount(const TkText *textPtr,
+MODULE_SCOPE Tcl_Size	TkTextIndexCount(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr,
 			    TkTextCountType type);
@@ -1088,7 +1088,7 @@ MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(const TkTextIndex *indexPtr,
 			    Tcl_Size *offsetPtr);
 MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
-			    int lineIndex, int charIndex,
+			    Tcl_Size lineIndex, Tcl_Size charIndex,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextMeasureDown(TkText *textPtr,
 			    TkTextIndex *srcPtr, int distance);
@@ -1100,8 +1100,8 @@ MODULE_SCOPE int	TkTextMakePixelIndex(TkText *textPtr,
 			    int pixelIndex, TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextInvalidateLineMetrics(
 			    TkSharedText *sharedTextPtr, TkText *textPtr,
-			    TkTextLine *linePtr, int lineCount, TkTextInvalidateAction action);
-MODULE_SCOPE int	TkTextUpdateLineMetrics(TkText *textPtr, Tcl_Size lineNum,
+			    TkTextLine *linePtr, Tcl_Size lineCount, TkTextInvalidateAction action);
+MODULE_SCOPE Tcl_Size	TkTextUpdateLineMetrics(TkText *textPtr, Tcl_Size lineNum,
 			    Tcl_Size endLine, int doThisMuch);
 MODULE_SCOPE int	TkTextUpdateOneLine(TkText *textPtr,
 			    TkTextLine *linePtr, int pixelHeight,
@@ -1116,7 +1116,7 @@ MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
 MODULE_SCOPE Bool	TkTextPendingsync(TkText *textPtr);
 MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextPixelIndex(TkText *textPtr, int x, int y,
-			    TkTextIndex *indexPtr, int *nearest);
+			    TkTextIndex *indexPtr, bool *nearest);
 MODULE_SCOPE Tcl_Obj *	TkTextNewIndexObj(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y,
@@ -1150,7 +1150,7 @@ MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
 MODULE_SCOPE void       TkTextRunAfterSyncCmd(void *clientData);
 MODULE_SCOPE int        TkTextIndexAdjustToStartEnd(TkText *textPtr,
-			    TkTextIndex *indexPtr, int err);
+			    TkTextIndex *indexPtr, bool check);
 #endif /* _TKTEXT */
 
 /*

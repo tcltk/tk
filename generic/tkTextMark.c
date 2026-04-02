@@ -301,7 +301,7 @@ TkTextSetMark(
 
 	if (markPtr == textPtr->insertMarkPtr) {
 	    TkTextIndex index, index2;
-	    int nblines;
+	    Tcl_Size nblines;
 
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
@@ -461,7 +461,7 @@ TkTextMarkNameToIndex(
      * (bug 1630271).
      */
 
-    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, true) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
@@ -799,7 +799,7 @@ MarkFindNext(
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
     TkTextSegment *segPtr;
-    int offset;
+    Tcl_Size offset;
     const char *string = Tcl_GetString(obj);
 
     if (!strcmp(string, "insert")) {
@@ -890,7 +890,7 @@ MarkFindPrev(
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
     TkTextSegment *segPtr, *seg2Ptr, *prevPtr;
-    int offset;
+    Tcl_Size offset;
     const char *string = Tcl_GetString(obj);
 
     if (!strcmp(string, "insert")) {
