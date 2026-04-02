@@ -678,12 +678,12 @@ ZIP_PROG
 MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
-BIDI_CFLAGS
 ATK_LIBS
 ATK_CFLAGS
 CUPS_LIBS
 CUPS_CFLAGS
 UNIX_FONT_OBJS
+BIDI_CFLAGS
 XFT_LIBS
 XFT_CFLAGS
 XMKMF
@@ -798,6 +798,7 @@ enable_symbols
 enable_aqua
 with_x
 enable_xft
+enable_bidi
 enable_libcups
 enable_xss
 enable_framework
@@ -1451,7 +1452,10 @@ Optional Features:
                           on)
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: no)
-  --enable-xft            use freetype/fontconfig/xft (default: on)
+  --enable-xft            use freetype/fontconfig/xft for antialiased fonts
+                          (default: yes)
+  --enable-bidi           enable bidirectional/RTL text support using
+                          SheenBidi + tkUnixBidiFont (forces --enable-xft=yes)
   --enable-libcups        use libcups (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
@@ -8461,10 +8465,14 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 fi
 
 #--------------------------------------------------------------------
-#	Check for freetype / fontconfig / Xft support.
+#	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
+
+    #--------------------------------------------------------------------
+    # --enable-xft (default: yes) - Antialiased fonts via Xft
+    #--------------------------------------------------------------------
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use xft" >&5
 printf %s "checking whether to use xft... " >&6; }
     # Check whether --enable-xft was given.
@@ -8472,52 +8480,52 @@ if test ${enable_xft+y}
 then :
   enableval=$enable_xft; enable_xft=$enableval
 else case e in #(
-  e) enable_xft="default" ;;
+  e) enable_xft="yes" ;;
 esac
 fi
+   # default changed to yes
 
     XFT_CFLAGS=""
     XFT_LIBS=""
+
     if test "$enable_xft" = "no" ; then
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xft" >&5
-printf '%s\n' "$enable_xft" >&6; }
+	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
     else
 	found_xft="yes"
-			XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
+
+	# Try xft-config first, then pkg-config
+	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
 	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
 	if test "$found_xft" = "no" ; then
 	    found_xft=yes
 	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
 	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
+
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $found_xft" >&5
 printf '%s\n' "$found_xft" >&6; }
-		if test "$found_xft" = "yes" ; then
+
+	# Verify headers and libraries
+	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
 	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
 	    tk_oldLibs=$LIBS
 	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
+
 	    ac_fn_c_check_header_compile "$LINENO" "X11/Xft/Xft.h" "ac_cv_header_X11_Xft_Xft_h" "#include <X11/Xlib.h>
 "
 if test "x$ac_cv_header_X11_Xft_Xft_h" = xyes
 then :
 
 else case e in #(
-  e)
-		found_xft=no
-	     ;;
+  e) found_xft=no ;;
 esac
 fi
 
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-		if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW"
-	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for XftFontOpen in -lXft" >&5
+
+	    if test "$found_xft" = "yes" ; then
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for XftFontOpen in -lXft" >&5
 printf %s "checking for XftFontOpen in -lXft... " >&6; }
 if test ${ac_cv_lib_Xft_XftFontOpen+y}
 then :
@@ -8567,21 +8575,15 @@ then :
   LIBS="-lXft $LIBS"
 
 else case e in #(
-  e)
-		found_xft=no
-	     ;;
+  e) found_xft=no ;;
 esac
 fi
 
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-		if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
-	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for FcFontSort in -lfontconfig" >&5
+	    fi
+
+	    if test "$found_xft" = "yes" ; then
+		LIBS="$tk_oldLibs $XFT_LIBS $XLIBSW -lfontconfig"
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for FcFontSort in -lfontconfig" >&5
 printf %s "checking for FcFontSort in -lfontconfig... " >&6; }
 if test ${ac_cv_lib_fontconfig_FcFontSort+y}
 then :
@@ -8627,17 +8629,20 @@ printf '%s\n' "$ac_cv_lib_fontconfig_FcFontSort" >&6; }
 if test "x$ac_cv_lib_fontconfig_FcFontSort" = xyes
 then :
 
-		XFT_LIBS="$XFT_LIBS -lfontconfig"
+		    XFT_LIBS="$XFT_LIBS -lfontconfig"
 
 fi
+
+	    fi
 
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
 	fi
-		if test "$found_xft" = "no" ; then
+
+	if test "$found_xft" = "no" ; then
 	    if test "$enable_xft" = "yes" ; then
-		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Can't find xft configuration, or xft is unusable" >&5
-printf '%s\n' "$as_me: WARNING: Can't find xft configuration, or xft is unusable" >&2;}
+		{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Can't find xft configuration or xft is unusable -- falling back to classic fonts" >&5
+printf '%s\n' "$as_me: WARNING: Can't find xft configuration or xft is unusable -- falling back to classic fonts" >&2;}
 	    fi
 	    enable_xft=no
 	    XFT_CFLAGS=""
@@ -8646,17 +8651,68 @@ printf '%s\n' "$as_me: WARNING: Can't find xft configuration, or xft is unusable
 	    enable_xft=yes
 	fi
     fi
-    if test $enable_xft = "yes" ; then
-	UNIX_FONT_OBJS=tkUnixRFont.o
+
+
+
+
+    #--------------------------------------------------------------------
+    # --enable-bidi (advanced optional switch)
+    # If enabled, forces --enable-xft=yes and uses tkUnixBidiFont.o
+    #--------------------------------------------------------------------
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable bidirectional (Bidi) text support" >&5
+printf %s "checking whether to enable bidirectional (Bidi) text support... " >&6; }
+    # Check whether --enable-bidi was given.
+if test ${enable_bidi+y}
+then :
+  enableval=$enable_bidi; enable_bidi=$enableval
+else case e in #(
+  e) enable_bidi="no" ;;
+esac
+fi
+   # default: no
+
+    if test "$enable_bidi" = "yes"; then
+	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes (forces Xft on)" >&5
+printf '%s\n' "yes (forces Xft on)" >&6; }
+	# Force Xft on when bidi is requested
+	if test "$enable_xft" = "no"; then
+	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: --enable-bidi requested: enabling Xft as well" >&5
+printf '%s\n' "$as_me: --enable-bidi requested: enabling Xft as well" >&6;}
+	    enable_xft=yes
+	fi
+
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+
+printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
+
+	UNIX_FONT_OBJS="tkUnixBidiFont.o"
+    else
+	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+	BIDI_CFLAGS=""
+
+	if test "$enable_xft" = "yes" ; then
+	    UNIX_FONT_OBJS="tkUnixRFont.o"
 
 printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
 
-    else
-	UNIX_FONT_OBJS=tkUnixFont.o
+	else
+	    UNIX_FONT_OBJS="tkUnixFont.o"
+	fi
     fi
 
 
 
+
+else
+    # On Aqua (macOS) - neither Xft nor Bidi is supported in this path
+    enable_xft=no
+    enable_bidi=no
+    UNIX_FONT_OBJS="tkUnixFont.o"
+    BIDI_CFLAGS=""
 fi
 
 #--------------------------------------------------------------------
@@ -8930,19 +8986,6 @@ printf '%s\n' "#define HAVE_XSS 1" >>confdefs.h
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 fi
-
-# -----------------------------------------------------------------------
-# SheenBidi Unicode Bidirectional support — always included
-# Hard-wired into unix/bidi/ subdirectory
-# kb_text_shaper.h also lives in unix/bidi/
-# -----------------------------------------------------------------------
-
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for SheenBidi + text shaper support" >&5
-printf %s "checking for SheenBidi + text shaper support... " >&6; }
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes (hard-wired in unix/bidi/)" >&5
-printf '%s\n' "yes (hard-wired in unix/bidi/)" >&6; }
-BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers -I${TK_SRC_DIR}/unix/bidi/Source -I${TK_SRC_DIR}/unix/bidi -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
-
 
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
