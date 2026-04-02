@@ -140,7 +140,7 @@ typedef struct {
     int totalAdvance;          /* Total advance width in pixels. */
     
     /*
-     * VISUAL INDEX FOR CURSOR POSITIONING
+     * Visual index for cursor positioning/;
      * 
      * Parallel structure that maps visual (screen) positions back to logical 
      * (source string) byte offsets. Built in sync with word reversal so that
@@ -317,14 +317,14 @@ IsNotoFont(FcPattern *pat)
     const char *const *familyPtr = &family;
     FcChar8 *file = NULL;
 
-    /* Check family name */
+    /* Check family name. */
     if (XftPatternGetString(pat, XFT_FAMILY, 0, familyPtr) == XftResultMatch) {
         if (family && strstr(family, "Noto") != NULL) {
             return 1;
         }
     }
 
-    /* Check file path */
+    /* Check file path. */
     if (FcPatternGetString(pat, FC_FILE, 0, &file) == FcResultMatch) {
         if (file && strstr((const char *)file, "Noto") != NULL) {
             return 1;
@@ -645,7 +645,7 @@ GetTkFontMetrics(
  * GetBidiRuns --
  *
  *   Use SheenBidi to properly analyze text per UAX#9 and split it into
- *   level runs with correct directionality in VISUAL ORDER.
+ *   level runs with correct directionality in visual order.
  *
  * Results:
  *   Returns number of runs created (at least 1). Fills runs array
@@ -1076,7 +1076,7 @@ X11Shaper_Init(
 
     int fatalSignal = 0;
 
-    /* Load fonts, but skip all Noto fonts to avoid crashes */
+    /* Load fonts, but skip all Noto fonts to avoid crashes. */
     for (int i = 0; i < maxInitialFonts && s->numFonts < MAX_FONTS; i++) {
         if (IsNotoFont(fontPtr->faces[i].source)) {
             continue;                   /* Skip Noto fonts */
@@ -1349,7 +1349,7 @@ X11Shaper_ShapeString(
         int runPenY = 0;
 
         /*
-         * Now that runs are in visual order from SheenBidi's visual map,
+         * Now that runs are in logical order from SheenBidi,
          * we need to shape RTL runs with KBTS_DIRECTION_RTL to get
          * proper glyph joining and correct glyph order within each word.
          */
@@ -1553,7 +1553,8 @@ X11Shaper_ShapeString(
     buffer->totalAdvance = globalPenX;
 
     /*
-     * WORD-LEVEL REVERSAL FOR RTL:
+     * Word-level reversal for RTL:
+     *
      * When we have a single RTL run containing multiple words, kb_text_shaper
      * reverses glyphs within each word correctly, but keeps words in logical order.
      * We need to reverse the word order for visual display.
@@ -1626,7 +1627,7 @@ X11Shaper_ShapeString(
     }
 
     /*
-     * BUILD VISUAL INDEX FOR CURSOR POSITIONING
+     * Build visual index for cursor positioning: 
      * 
      * Create a parallel index that maps visual (screen) positions to logical
      * (source) byte offsets. This enables fast, accurate cursor positioning
@@ -2062,7 +2063,7 @@ Tk_MeasureChars(
     int lastBreakX = 0;
 
     /*
-     * CURSOR POSITIONING WITH VISUAL INDEX
+     * Cursor positioning with visual index:
      * 
      * The visualIndex maps visual (screen) positions to logical (source) byte
      * offsets, enabling accurate cursor positioning for all text directions.
@@ -2084,9 +2085,9 @@ Tk_MeasureChars(
         if (byteEnd < 0) byteEnd = 0;
         if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
 
-        /* Record word-break opportunities based on source character */
+        /* Record word-break opportunities based on source character. */
         if (byteEnd > 0 && byteEnd <= (int)numBytes) {
-            /* Check character before the end of this cluster */
+            /* Check character before the end of this cluster. */
             if (source[byteEnd - 1] == ' ' || source[byteEnd - 1] == '\t') {
                 lastBreakByte = byteEnd;
                 lastBreakX = glyphXEnd;
@@ -2099,7 +2100,7 @@ Tk_MeasureChars(
                 return lastBreakByte;
             }
             
-            /* Ensure we return at least one character if TK_AT_LEAST_ONE is set */
+            /* Ensure we return at least one character if TK_AT_LEAST_ONE is set. */
             if (prevByteEnd == 0 && (flags & TK_AT_LEAST_ONE)) {
                 *lengthPtr = glyphXEnd;
                 return byteEnd;
@@ -2113,7 +2114,7 @@ Tk_MeasureChars(
         prevByteEnd = byteEnd;
     }
 
-    /* All glyphs fit - return total */
+    /* All glyphs fit - return total. */
     if (prevByteEnd == 0 && (int)numBytes > 0) {
         prevByteEnd = (int)numBytes;
     }
@@ -2251,7 +2252,7 @@ Tk_MeasureCharsInContext(
     int bytesConsumed = (int)rangeStart;
 
     /*
-     * CURSOR POSITIONING IN RANGE WITH VISUAL INDEX
+     * Cursor positioning in range with visual index:
      * 
      * Use visualIndex to measure a substring while preserving shaping context.
      * The visualIndex provides fast, accurate byte-position lookup for all
@@ -2264,7 +2265,7 @@ Tk_MeasureCharsInContext(
         if (byteEnd < 0) byteEnd = 0;
         if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
 
-        /* Skip glyphs outside the range */
+        /* Skip glyphs outside the range. */
         if (byteEnd <= (int)rangeStart || 
             (i == 0 && buffer.glyphs[i].byteOffset >= rangeEnd)) {
             continue;
@@ -2272,7 +2273,7 @@ Tk_MeasureCharsInContext(
 
         int nextWidth = totalWidth + glyphAdvance;
 
-        /* Record word-break opportunities */
+        /* Record word-break opportunities. */
         if (byteEnd > 0 && byteEnd <= (int)numBytes) {
             if (source[byteEnd - 1] == ' ' || 
                 source[byteEnd - 1] == '\t' || 
@@ -2288,7 +2289,7 @@ Tk_MeasureCharsInContext(
                 totalWidth = lastBreakWidth;
                 bytesConsumed = lastBreakPos;
             } else if (bytesConsumed == (int)rangeStart) {
-                /* Nothing consumed yet - include this glyph */
+                /* Nothing consumed yet - include this glyph. */
                 totalWidth = nextWidth;
                 bytesConsumed = byteEnd;
             }
@@ -2304,7 +2305,7 @@ Tk_MeasureCharsInContext(
     if (bytesConsumed < (int)rangeStart) bytesConsumed = (int)rangeStart;
     if (bytesConsumed > rangeEnd) bytesConsumed = rangeEnd;
 
-    /* If we consumed nothing and the range is non-empty, skip to end */
+    /* If we consumed nothing and the range is non-empty, skip to end. */
     if (bytesConsumed == (int)rangeStart && rangeLength > 0) {
         bytesConsumed = rangeEnd;
     }
@@ -2526,7 +2527,8 @@ Tk_DrawCharsInContext(
     int rangeEnd = rangeStart + rangeLength;
     int firstGlyphFound = 0;
 
-    /* We need to find the actual screen X position of the first glyph
+    /*
+     * We need to find the actual screen X position of the first glyph
      * in our range. The glyph positions in the buffer are absolute
      * from the start of the shaped string. We need to subtract the
      * X offset of the first glyph in our range to get the correct
@@ -2535,7 +2537,8 @@ Tk_DrawCharsInContext(
     int rangeStartX = 0;
     int rangeStartFound = 0;
 
-    /* First pass: Find the X position of the first glyph that starts
+    /*
+     * First pass: Find the X position of the first glyph that starts
      * at or after rangeStart.
      */
     for (int i = 0; i < fullBuffer.glyphCount; i++) {
@@ -2598,7 +2601,8 @@ Tk_DrawCharsInContext(
             if (actualGlyph == 0) continue;
         }
 
-        /* Calculate screen position: baseX + (glyph X - rangeStartX).
+        /*
+	 * Calculate screen position: baseX + (glyph X - rangeStartX).
          * This ensures the substring starts at the correct x coordinate
          * as if it were drawn starting from the beginning of the range.
 	 */
