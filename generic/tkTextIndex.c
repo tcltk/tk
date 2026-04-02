@@ -46,7 +46,7 @@ static const char *	StartEnd(TkText *textPtr, const char *string,
 static int		GetIndex(Tcl_Interp *interp, TkSharedText *sharedPtr,
 			    TkText *textPtr, const char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr);
-static int              IndexCountBytesOrdered(const TkText *textPtr,
+static Tcl_Size		IndexCountBytesOrdered(const TkText *textPtr,
 			    const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2);
 
@@ -432,7 +432,7 @@ TkTextMakeByteIndex(
 	    indexPtr->byteIndex = index - sizeof(char);
 	    break;
 	}
-	if (index + (int)segPtr->size > byteIndex) {
+	if (index + segPtr->size > byteIndex) {
 	    indexPtr->byteIndex = byteIndex;
 	    if ((byteIndex > index) && (segPtr->typePtr == &tkTextCharType)) {
 		/*
@@ -479,14 +479,14 @@ TkTextMakeCharIndex(
     TkTextBTree tree,		/* Tree that lineIndex and charIndex refer
 				 * to. */
     TkText *textPtr,
-    int lineIndex,		/* Index of desired line (0 means first line
+    Tcl_Size lineIndex,		/* Index of desired line (0 means first line
 				 * of text). */
-    int charIndex,		/* Index of desired character. */
+    Tcl_Size charIndex,		/* Index of desired character. */
     TkTextIndex *indexPtr)	/* Structure to fill in. */
 {
     TkTextSegment *segPtr;
     char *p, *start, *end;
-    int index, offset;
+    Tcl_Size index, offset;
     Tcl_UniChar ch = 0;
 
     indexPtr->tree = tree;
@@ -538,7 +538,7 @@ TkTextMakeCharIndex(
 		index += offset;
 	    }
 	} else {
-	    if (charIndex < (int)segPtr->size) {
+	    if (charIndex < segPtr->size) {
 		indexPtr->byteIndex = index;
 		break;
 	    }
@@ -882,7 +882,8 @@ GetIndex(
     }
 
     if (isdigit(UCHAR(string[0])) || (string[0] == '-')) {
-	int lineIndex, charIndex;
+	int lineIndex;
+	Tcl_Size charIndex;
 
 	/*
 	 * Base is identified with line and character indices.
@@ -1004,7 +1005,7 @@ GetIndex(
     if (indexPtr->linePtr == NULL) {
 	Tcl_Panic("Bad index created");
     }
-    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 0);
+    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, false);
     return TCL_OK;
 
   error:
@@ -1038,11 +1039,11 @@ int
 TkTextIndexAdjustToStartEnd(
     TkText *textPtr,
     TkTextIndex *indexPtr,  /* Pointer to index. */
-    int check)		    /* 1 means only check indexPtr against
+    bool check)		    /* true means only check indexPtr against
 			     * the -startline/-endline range
-			     * 0 means adjust to this range */
+			     * false means adjust to this range */
 {
-    int bound;
+    Tcl_Size bound;
     TkTextIndex indexBound;
 
     if (!textPtr) {
@@ -1135,7 +1136,7 @@ TkTextPrintIndex(
 	charIndex += numBytes;
     }
 
-    return snprintf(string, TK_POS_CHARS, "%" TCL_SIZE_MODIFIER "d.%" TCL_SIZE_MODIFIER "d",
+    return snprintf(string, TK_POS_CHARS, "%" TCL_Z_MODIFIER "d.%" TCL_Z_MODIFIER "d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
 
@@ -1162,7 +1163,7 @@ TkTextIndexCmp(
     const TkTextIndex*index1Ptr,/* First index. */
     const TkTextIndex*index2Ptr)/* Second index. */
 {
-    int line1, line2;
+    Tcl_Size line1, line2;
 
     if (index1Ptr->linePtr == index2Ptr->linePtr) {
 	if (index1Ptr->byteIndex < index2Ptr->byteIndex) {
@@ -1222,9 +1223,10 @@ ForwBack(
 {
     const char *p, *units;
     char *end;
-    int count, lineIndex;
+    Tcl_Size lineIndex;
     indexModifier modifier;
     size_t length;
+    int count;
 
     /*
      * Get the count (how many units forward or backward).
@@ -1484,7 +1486,7 @@ TkTextIndexForwBytes(
 {
     TkTextLine *linePtr;
     TkTextSegment *segPtr;
-    int lineLength;
+    Tcl_Size lineLength;
 
     if (byteCount < 0) {
 	TkTextIndexBackBytes(textPtr, srcPtr, -byteCount, dstPtr);
@@ -1719,7 +1721,7 @@ TkTextIndexForwChars(
  *---------------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkTextIndexCountBytes(
     const TkText *textPtr,
     const TkTextIndex *indexPtr1, /* Index describing one location. */
@@ -1736,7 +1738,7 @@ TkTextIndexCountBytes(
     }
 }
 
-static int
+static Tcl_Size
 IndexCountBytesOrdered(
     const TkText *textPtr,
     const TkTextIndex *indexPtr1,
@@ -1751,7 +1753,7 @@ IndexCountBytesOrdered(
     TkTextLine *linePtr;
 
     if (indexPtr1->linePtr == indexPtr2->linePtr) {
-	return indexPtr2->byteIndex - indexPtr1->byteIndex;
+	return (indexPtr2->byteIndex - indexPtr1->byteIndex);
     }
 
     /*
@@ -1809,7 +1811,7 @@ IndexCountBytesOrdered(
  *---------------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkTextIndexCount(
     const TkText *textPtr,	/* Overall information about text widget. */
     const TkTextIndex *indexPtr1,
@@ -2014,7 +2016,7 @@ TkTextIndexBackBytes(
     TkTextIndex *dstPtr)	/* Destination index: gets modified. */
 {
     TkTextSegment *segPtr;
-    int lineIndex;
+    Tcl_Size lineIndex;
 
     if (byteCount < 0) {
 	return TkTextIndexForwBytes(textPtr, srcPtr, -byteCount, dstPtr);
@@ -2086,7 +2088,8 @@ TkTextIndexBackChars(
 {
     TkTextSegment *segPtr, *oldPtr;
     TkTextElideInfo *infoPtr = NULL;
-    int lineIndex, segSize;
+    Tcl_Size lineIndex;
+    Tcl_Size segSize;
     const char *p, *start, *end;
     bool elide = false;
     bool checkElided = (type & COUNT_DISPLAY) != 0;
@@ -2126,7 +2129,7 @@ TkTextIndexBackChars(
 		linePtr = TkBTreeNextLine(NULL, linePtr);
 		segPtr = linePtr->segPtr;
 	    }
-	    if (segSize <= (int)segPtr->size) {
+	    if (segSize <= segPtr->size) {
 		break;
 	    }
 	    segSize -= segPtr->size;
@@ -2386,7 +2389,7 @@ StartEnd(
 	}
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	while (1) {
-	    int chSize = 1;
+	    Tcl_Size chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
 		int ch;
@@ -2431,7 +2434,7 @@ StartEnd(
 
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	while (1) {
-	    int chSize = 1;
+	    Tcl_Size chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
 
