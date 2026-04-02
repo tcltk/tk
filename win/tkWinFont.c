@@ -276,8 +276,6 @@ static void		MultiFontTextOut(HDC hdc, WinFont *fontPtr,
 static void		ReleaseFont(WinFont *fontPtr);
 static inline void	ReleaseSubFont(SubFont *subFontPtr);
 static int		SeenName(const char *name, Tcl_DString *dsPtr);
-static inline HFONT	SelectFont(HDC hdc, WinFont *fontPtr,
-			    SubFont *subFontPtr, double angle);
 static inline void	SwapLong(PULONG p);
 static inline void	SwapShort(USHORT *p);
 static int CALLBACK	WinFontCanUseProc(ENUMLOGFONTW *lfPtr,
@@ -2075,30 +2073,6 @@ MultiFontTextOut(
 }
 
 
-static inline HFONT
-SelectFont(
-    HDC hdc,
-    WinFont *fontPtr,
-    SubFont *subFontPtr,
-    double angle)
-{
-    if (angle == 0.0) {
-	return (HFONT)SelectObject(hdc, subFontPtr->hFont0);
-    } else if (angle == subFontPtr->angle) {
-	return (HFONT)SelectObject(hdc, subFontPtr->hFontAngled);
-    } else {
-	if (subFontPtr->hFontAngled) {
-	    DeleteObject(subFontPtr->hFontAngled);
-	}
-	subFontPtr->hFontAngled = GetScreenFont(&fontPtr->font.fa,
-		subFontPtr->familyPtr->faceName, fontPtr->pixelSize, angle);
-	if (subFontPtr->hFontAngled == NULL) {
-	    return (HFONT)SelectObject(hdc, subFontPtr->hFont0);
-	}
-	subFontPtr->angle = angle;
-	return (HFONT)SelectObject(hdc, subFontPtr->hFontAngled);
-    }
-}
 
 /*
  *---------------------------------------------------------------------------
