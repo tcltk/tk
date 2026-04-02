@@ -19,20 +19,11 @@
 #include <math.h>
 
 /*
- * In Wayland/GLFW/NanoVG, we don't have X-style colormaps.
- * We use RGBA colors directly with NanoVG.
- * We simulate minimal colormap stress behavior for Tk compatibility.
+ * This file simply implements the platfofm specific functions
+ * required by Tk stubs.  We ignore colormaps completely and
+ * simply use Tk_Color objects with colormap set to None.
  */
 
-struct TkStressedCmap {
-    void          *colormap;        /* Placeholder for colormap ID */
-    int            numColors;       /* Number of colors (placeholder) */
-    NVGcolor      *colorPtr;        /* Array of colors (placeholder) */
-    struct TkStressedCmap *nextPtr;
-};
-
-/* Forward declarations. */
-static void DeleteStressedCmap(Display *display, Colormap colormap);
 static int  ParseColorString(const char *name, NVGcolor *color);
 
 /*
@@ -40,18 +31,15 @@ static int  ParseColorString(const char *name, NVGcolor *color);
  *
  * TkpFreeColor --
  *
- *      Release a previously allocated TkColor structure.
- *
- *      In the NanoVG backend, colors themselves require no special
- *      freeing, but any associated stress colormap cache entries are
- *      cleaned up.
+ *      Release platform-specific data associated with a previously
+ *      allocated TkColor structure.  Since we have no such data,
+ *      This is a no-op.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Memory associated with the TkColor is freed, and any stress
- *      colormap entry is removed from the display's cache.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -59,10 +47,6 @@ static int  ParseColorString(const char *name, NVGcolor *color);
 void
 TkpFreeColor(TkColor *tkColPtr)
 {
-    if (tkColPtr->colormap != None) {
-        DeleteStressedCmap(NULL, tkColPtr->colormap);
-    }
-    Tcl_Free((char *)tkColPtr);
 }
 
 /*
@@ -113,7 +97,7 @@ TkpGetColor(
     memset(&xcolor, 0, sizeof(XColor));
     
     /* Convert NVGcolor back to XColor */
-	xcolor.red   = (unsigned short)(nvgcolor.r * 65535.0f + 0.5f);
+    xcolor.red   = (unsigned short)(nvgcolor.r * 65535.0f + 0.5f);
     xcolor.green = (unsigned short)(nvgcolor.g * 65535.0f + 0.5f);
     xcolor.blue  = (unsigned short)(nvgcolor.b * 65535.0f + 0.5f);
     xcolor.flags = DoRed | DoGreen | DoBlue;
@@ -164,6 +148,7 @@ TkpGetColorByValue(
     TCL_UNUSED(Tk_Window), /* tkwin */
     XColor   *colorPtr)
 {
+    printf("TkpGetColorByValue\n");
     TkColor *tkColPtr;
     XColor   safeColor;
 
@@ -196,59 +181,6 @@ TkpGetColorByValue(
 /*
  *----------------------------------------------------------------------
  *
- * DeleteStressedCmap --
- *
- *      Remove a colormap from the display's stress cache.
- *
- *      This is a stub implementation for the NanoVG backend, as
- *      colormap stress is not a concept in this environment. The
- *      function exists only for API compatibility.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The stress cache entry for the given colormap is removed if found.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-DeleteStressedCmap(
-    TCL_UNUSED(Display *), /* display*/
-    Colormap colormap)          /* Colormap to remove from cache */
-{
-    TkDisplay *dispPtr;
-    TkStressedCmap *prevPtr = NULL;
-    TkStressedCmap *stressPtr;
-    void *cmapPtr = (void *)colormap;
-
-    dispPtr = TkGetDisplay(NULL);   /* may need real display later */
-    if (dispPtr == NULL || dispPtr->stressPtr == NULL) {
-        return;
-    }
-
-    for (stressPtr = dispPtr->stressPtr; stressPtr != NULL;
-         prevPtr = stressPtr, stressPtr = stressPtr->nextPtr) {
-
-        if (stressPtr->colormap == cmapPtr) {
-            if (prevPtr == NULL) {
-                dispPtr->stressPtr = stressPtr->nextPtr;
-            } else {
-                prevPtr->nextPtr = stressPtr->nextPtr;
-            }
-            if (stressPtr->colorPtr) {
-                Tcl_Free(stressPtr->colorPtr);
-            }
-            Tcl_Free(stressPtr);
-            return;
-        }
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpCmapStressed --
  *
  *      Determine whether a colormap is known to be out of entries.
@@ -269,19 +201,6 @@ TkpCmapStressed(
     Tk_Window tkwin,
     Colormap colormap)          /* Colormap to check (unsigned long) */
 {
-    TkDisplay *dispPtr = ((TkWindow *)tkwin)->dispPtr;
-    TkStressedCmap *stressPtr;
-
-    if (dispPtr == NULL) {
-        return false;
-    }
-
-    for (stressPtr = dispPtr->stressPtr; stressPtr != NULL;
-         stressPtr = stressPtr->nextPtr) {
-        if (stressPtr->colormap == (void *)colormap) {
-            return true;
-        }
-    }
     return false;
 }
 

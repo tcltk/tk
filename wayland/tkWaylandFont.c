@@ -766,6 +766,8 @@ TkpDrawAngledCharsInContext(
     double y,
     double angle)
 {
+    static int count = 0;
+    printf("TkpDrawAngledCharsInContext: %d\n", count++);
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
     if (rangeStart < 0 || rangeLength <= 0 ||
             rangeStart + rangeLength > numBytes) {

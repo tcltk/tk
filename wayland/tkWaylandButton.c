@@ -455,7 +455,6 @@ TkpDisplayButton(void *clientData)
 		       winWidth, winHeight, 0, TK_RELIEF_FLAT);
 
     /* Begin drawing with NanoVG. */
-    printf("Calling BeginDraw for drawable %p\n", tkwin);
     if (TkGlfwBeginDraw((Drawable)tkwin, currentGC, &dc) != TCL_OK) {
         printf("BeginDraw failed in TkpDisplayButton\n");
         return;
