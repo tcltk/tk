@@ -507,7 +507,7 @@ typedef struct RedoTokenClearTags {
     const Tk_UndoType *undoType;
     TkTextUndoIndex startIndex;	/* Start of clearing range. */
     TkTextUndoIndex endIndex;	/* End of clearing range. */
-    uint8_t discardSelection;
+    bool discardSelection;
 } RedoTokenClearTags;
 
 /*
@@ -1768,7 +1768,7 @@ UndoTagPerform(
     UndoTokenTagChange *token = (UndoTokenTagChange *) undoInfo->token;
     TkTextTag *tagPtr = token->tagPtr;
     int remove = POINTER_IS_MARKED(tagPtr);
-    int add = (isRedo != remove);
+    bool add = (isRedo != remove);
     TkTextIndex index1, index2;
 
     UNMARK_POINTER(tagPtr);
@@ -9725,14 +9725,14 @@ FindSplitPoints(
     return 1;
 }
 
-int
+bool
 TkBTreeTag(
     TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     TkText *textPtr,			/* Information about text widget, can be NULL. */
     const TkTextIndex *indexPtr1,	/* Indicates first character in range. */
     const TkTextIndex *indexPtr2,	/* Indicates character just after the last one in range. */
     TkTextTag *tagPtr,			/* Tag to add or remove. */
-    int add,				/* 'true' means add tag to the given range of characters;
+    bool add,				/* 'true' means add tag to the given range of characters;
 					 * 'false' means remove the tag from the range. */
     TkTextUndoInfo *undoInfo,		/* Store undo information, can be NULL. */
     TkTextTagChangedProc changedProc)	/* Trigger this callback when any tag will be added/removed. */
@@ -9753,21 +9753,21 @@ TkBTreeTag(
 #endif
 
     if (!add && !tagPtr->rootPtr) {
-	return 0;
+	return false;
     }
     if (TkTextIndexIsEqual(indexPtr1, indexPtr2)) {
-	return 0;
+	return false;
     }
     if (!add) {
 	if (!tagPtr->rootPtr) {
-	    return 0;
+	    return false;
 	}
 	if (TkBTreeGetRoot(sharedTextPtr->tree)->tagonPtr == sharedTextPtr->emptyTagInfoPtr) {
-	    return 0;
+	    return false;
 	}
     }
     if (!FindSplitPoints(sharedTextPtr, indexPtr1, indexPtr2, tagPtr, add, &segPtr1, &segPtr2)) {
-	return 0;
+	return false;
     }
 
     segPtr1->protectionFlag = 1;
@@ -9994,7 +9994,7 @@ static bool
 TestIfAnySegmentIsAffected(
     TkSharedText *sharedTextPtr,
     const TkTextTagSet *tagInfoPtr,
-    int discardSelection)
+    bool discardSelection)
 {
     if (discardSelection) {
 	return !TkTextTagBitContainsSet(sharedTextPtr->selectionTags, tagInfoPtr);
@@ -10006,7 +10006,7 @@ static bool
 TestIfDisplayGeometryIsAffected(
     TkSharedText *sharedTextPtr,
     const TkTextTagSet *tagInfoPtr,
-    int discardSelection)
+    bool discardSelection)
 {
     unsigned i;
 
@@ -10025,8 +10025,8 @@ ClearTagsFromLine(
     TkTextTagSet *affectedTagInfoPtr,
     UndoTokenTagClear *undoToken,
     ClearTagsData *data,
-    int discardSelection,
-    int redraw,
+    bool discardSelection,
+    bool redraw,
     TkTextTagChangedProc changedProc,
     TkText *textPtr)
 {
@@ -10034,7 +10034,7 @@ ClearTagsFromLine(
     TkTextTagSet *myAffectedTagInfoPtr;
     TkTextSegment *segPtr;
     TkTextSegment *prevPtr;
-    int anyChanges;
+    bool anyChanges;
 
     if (linePtr->tagonPtr == emptyTagInfoPtr) {
 	/*
@@ -10054,7 +10054,7 @@ ClearTagsFromLine(
 
     segPtr = firstPtr ? firstPtr : linePtr->segPtr;
     prevPtr = NULL;
-    anyChanges = 0;
+    anyChanges = false;
 
     if (undoToken && firstPtr) {
 	TkTextIndex index;
@@ -10122,7 +10122,7 @@ ClearTagsFromLine(
 		} else {
 		    TagSetAssign(&segPtr->tagInfoPtr, sharedTextPtr->emptyTagInfoPtr);
 		}
-		anyChanges = 1;
+		anyChanges = true;
 	    } else if (undoToken) {
 		data->skip += segPtr->size;
 	    }
@@ -10248,7 +10248,7 @@ ClearTagsFromAllNodes(
     TkSharedText *sharedTextPtr,
     Node *nodePtr,
     ClearTagsData *data,
-    int discardSelection,
+    bool discardSelection,
     TkTextTagChangedProc changedProc,
     TkText *textPtr)
 {
@@ -10304,8 +10304,8 @@ ClearTagsFromNode(
     TkTextTagSet *affectedTagInfoPtr,
     UndoTokenTagClear *undoToken,
     ClearTagsData *data,
-    int discardSelection,
-    int redraw,
+    bool discardSelection,
+    bool redraw,
     TkTextTagChangedProc changedProc,
     TkText *textPtr)
 {
@@ -10333,7 +10333,7 @@ ClearTagsFromNode(
 
     if ((segPtr1 ? lineNo1 < firstLineNo : lineNo1 <= firstLineNo)
 	    && (segPtr2 ? endLineNo < lineNo2 : endLineNo <= lineNo2)) {
-	int delegateRedraw = redraw
+	bool delegateRedraw = redraw
 		&& (discardSelection
 			? TkTextTagSetIntersectionIsEqual(nodePtr->tagonPtr, nodePtr->tagoffPtr,
 				sharedTextPtr->selectionTags)
@@ -10344,7 +10344,7 @@ ClearTagsFromNode(
 	TkTextIndexClear2(&index2, NULL, sharedTextPtr->tree);
 
 	if (delegateRedraw) {
-	    redraw = 0;
+	    redraw = false;
 	}
 
 	/*
@@ -10499,11 +10499,11 @@ ClearTagsFromNode(
     return affectedTagInfoPtr;
 }
 
-static int
+static bool
 CheckIfAnyTagIsAffected(
     TkSharedText *sharedTextPtr,
     const TkTextTagSet *tagInfoPtr,
-    int discardSelection)
+    bool discardSelection)
 {
     unsigned i;
 
@@ -10516,11 +10516,11 @@ CheckIfAnyTagIsAffected(
 	assert(!tagPtr->isDisabled);
 
 	if (!discardSelection || !TkBitTest(sharedTextPtr->selectionTags, tagPtr->index)) {
-	    return 1;
+	    return true;
 	}
     }
 
-    return 0;
+    return false;
 }
 
 TkTextTag *
@@ -10530,7 +10530,7 @@ TkBTreeClearTags(
     const TkTextIndex *indexPtr1,	/* Start clearing tags here. */
     const TkTextIndex *indexPtr2,	/* Stop clearing tags here. */
     TkTextUndoInfo *undoInfo,		/* Store undo information, can be NULL. */
-    int discardSelection,		/* Discard the special selection tag (do not delete)? */
+    bool discardSelection,		/* Discard the special selection tag (do not delete)? */
     TkTextTagChangedProc changedProc)	/* Trigger this callback when any tag will be added/removed. */
 {
     TkTextTag *chainPtr;
@@ -10540,7 +10540,7 @@ TkBTreeClearTags(
     TkTextLine *linePtr1, *linePtr2;
     TkTextIndex startIndex, endIndex;
     Node *rootPtr;
-    int wholeText;
+    bool wholeText;
     unsigned i;
 
     assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
@@ -10601,7 +10601,7 @@ TkBTreeClearTags(
     segPtr2->protectionFlag = 1;
     undoToken = NULL;
     chainPtr = NULL;
-    wholeText = 0;
+    wholeText = false;
 
     /*
      * Now we will test whether we can accelerate a frequent case: all tagged segments
@@ -10611,16 +10611,16 @@ TkBTreeClearTags(
 
     if (!undoInfo) {
 	if (TkTextIndexIsStartOfText(indexPtr1) && TkTextIndexIsEndOfText(indexPtr2)) {
-	    wholeText = 1;
+	    wholeText = true;
 	} else if (linePtr1->parentPtr != linePtr2->parentPtr) {
 	    TkTextIndex index1, index2;
 
-	    wholeText = 1;
+	    wholeText = true;
 
 	    if (TkTextIndexBackChars(textPtr, indexPtr1, 1, &index1, COUNT_DISPLAY_INDICES)) {
 		TkTextIndexSetupToStartOfText(&index2, textPtr, sharedTextPtr->tree);
 		if (TkBTreeFindPrevTagged(&index1, &index2, discardSelection)) {
-		    wholeText = 0;
+		    wholeText = false;
 		}
 	    }
 
@@ -10628,7 +10628,7 @@ TkBTreeClearTags(
 		TkTextIndexSetupToEndOfText(&index2, textPtr, sharedTextPtr->tree);
 		if (TkBTreeFindNextTagged(indexPtr2, &index2,
 			discardSelection ? sharedTextPtr->selectionTags : NULL)) {
-		    wholeText = 0;
+		    wholeText = false;
 		}
 	    }
 	}
@@ -10637,7 +10637,7 @@ TkBTreeClearTags(
     TkTextTagSetIncrRefCount(affectedTagInfoPtr = sharedTextPtr->emptyTagInfoPtr);
 
     if (!wholeText || CheckIfAnyTagIsAffected(sharedTextPtr, rootPtr->tagonPtr, discardSelection)) {
-	int anyChanges = wholeText; /* already checked for this case */
+	bool anyChanges = wholeText; /* already checked for this case */
 	ClearTagsData data;
 
 	memset(&data, 0, sizeof(data));
@@ -12585,7 +12585,7 @@ TkBTreeFindPrevTagged(
 				/* Search starts here. Tag toggles at this position will be returned. */
     const TkTextIndex *indexPtr2,
 				/* Search stops here. Tag toggles at this position will be returned. */
-    int discardSelection)	/* Discard selection tags? */
+    bool discardSelection)	/* Discard selection tags? */
 {
     const TkSharedText *sharedTextPtr = TkTextIndexGetShared(indexPtr1);
     const TkBitField *selTags = discardSelection ? sharedTextPtr->selectionTags : NULL;

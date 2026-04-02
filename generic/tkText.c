@@ -514,7 +514,7 @@ static void		PushUndoSeparatorIfNeeded(TkSharedText *sharedTextPtr, bool autoSep
 			    TkTextEditMode currentEditMode);
 static bool		IsEmpty(const TkSharedText *sharedTextPtr, const TkText *textPtr);
 static bool		IsClean(const TkSharedText *sharedTextPtr, const TkText *textPtr,
-			    int discardSelection);
+			    bool discardSelection);
 static TkTextUndoPerformProc TextUndoRedoCallback;
 static TkTextUndoFreeProc TextUndoFreeCallback;
 static TkTextUndoStackContentChangedProc TextUndoStackContentChangedCallback;
@@ -2736,7 +2736,7 @@ static bool
 IsClean(
     const TkSharedText *sharedTextPtr,
     const TkText *textPtr,		/* Can be NULL. */
-    int discardSelection)
+    bool discardSelection)
 {
     const TkTextTagSet *tagInfoPtr;
     const TkTextSegment *startMarker;
@@ -5328,7 +5328,7 @@ TextUndoRedoCallback(
 		    } else {
 			if (range->startIndex.lineIndex < range->endIndex.lineIndex
 				&& TkBTreeTag(sharedTextPtr, NULL, &index1, &index2,
-					tPtr->selTagPtr, 0, NULL, TkTextRedrawTag)) {
+					tPtr->selTagPtr, false, NULL, TkTextRedrawTag)) {
 			    TkTextSelectionEvent(tPtr);
 			    tPtr->abortSelections = 1;
 			}
@@ -6120,7 +6120,7 @@ TkTextLostSelection(
 	TkTextIndexSetupToStartOfText(&start, textPtr, textPtr->sharedTextPtr->tree);
 	TkTextIndexSetupToEndOfText(&end, textPtr, textPtr->sharedTextPtr->tree);
 	TkBTreeTag(textPtr->sharedTextPtr, textPtr, &start, &end, textPtr->selTagPtr,
-		0, NULL, TkTextRedrawTag);
+		false, NULL, TkTextRedrawTag);
     }
 
     /*

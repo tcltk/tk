@@ -374,7 +374,7 @@ TkTextTagCmd(
 	}
 	break;
     case TAG_CLEAR: {
-	int discardSelection;
+	bool discardSelection;
 	Tcl_Size epoch, countTags;
 	TkTextTag **arrayPtr;
 	int anyChanges;
@@ -389,7 +389,7 @@ TkTextTagCmd(
 
 	if (objc > 4 && *Tcl_GetString(objv[arg]) == '-') {
 	    if (strcmp(Tcl_GetString(objv[arg++]), "-discardselection") == 0) {
-		discardSelection = 1;
+		discardSelection = true;
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardselection", Tcl_GetString(objv[3])));
@@ -398,7 +398,7 @@ TkTextTagCmd(
 	    }
 	}
 
-	discardSelection = 0;
+	discardSelection = false;
 	epoch = TkBTreeEpoch(sharedTextPtr->tree);
 	arrayPtr = (TkTextTag **)Tcl_Alloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
 	countTags = 0;
@@ -519,7 +519,7 @@ TkTextTagCmd(
 	break;
     }
     case TAG_FINDPREV: {
-	int discardSelection = 0;
+	bool discardSelection = false;
 	TkTextSegment *segPtr;
 
 	if (objc != 4 && objc != 5) {
@@ -528,7 +528,7 @@ TkTextTagCmd(
 	}
 	if (objc == 5) {
 	    if (strcmp(Tcl_GetString(objv[3]), "-discardselection") == 0) {
-		discardSelection = 1;
+		discardSelection = true;
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardselection", Tcl_GetString(objv[3])));
@@ -918,7 +918,7 @@ TkTextClearSelection(
 
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	if (TkBTreeTag(sharedTextPtr, textPtr, indexPtr1, indexPtr2, textPtr->selTagPtr,
-		0, NULL, TkTextRedrawTag)) {
+		false, NULL, TkTextRedrawTag)) {
 	    /*
 	     * Send an event that the selection changed. This is equivalent to:
 	     *	 event generate $textWidget <<Selection>>
@@ -952,7 +952,7 @@ TkTextClearTags(
     TkText *textPtr,			/* can be NULL */
     const TkTextIndex *indexPtr1,
     const TkTextIndex *indexPtr2,
-    int discardSelection)
+    bool discardSelection)
 {
     TkTextTag *tagPtr;
     TkTextUndoInfo undoInfo;
@@ -1508,7 +1508,7 @@ TkTextFindTags(
     Tcl_Interp *interp,		/* Current interpreter. */
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextSegment *segPtr,/* Tags from this segment. */
-    int discardSelection)	/* "sel" tag will be discarded? */
+    bool discardSelection)	/* "sel" tag will be discarded? */
 {
     TkTextTag *tagPtr;
     Tcl_Obj *listObj;
@@ -2175,7 +2175,7 @@ TkTextDeleteTag(
 	assert(!tSearch.tagon); /* we must find tagoff */
 
 	TkBTreeTag(textPtr->sharedTextPtr, textPtr, &startIndex, &tSearch.curIndex,
-		tagPtr, 0, undoInfoPtr, TkTextRedrawTag);
+		tagPtr, false, undoInfoPtr, TkTextRedrawTag);
 
 	if (undoInfoPtr && undoInfoPtr->token) {
 	    tagPtr->refCount += 1;
@@ -3437,7 +3437,7 @@ EnumerateTags(
     const TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkBitField *includeBits = NULL;
     TkBitField *discardBits = NULL;
-    int discardSelection = 0;
+    bool discardSelection = false;
     TkTextTag **arrayPtr;
     int index, countTags, i;
     unsigned k;
@@ -3459,7 +3459,7 @@ EnumerateTags(
 	switch ((enum opts) index) {
 	case ENUM_ALL:
 	case ENUM_DISCARD_SELECTION:
-	    discardSelection = 1;
+	    discardSelection = true;
 	    break;
 	case ENUM_DISPLAY:
 	    includeBits = AddBits(includeBits, sharedTextPtr->affectDisplayTags);
@@ -3486,7 +3486,7 @@ EnumerateTags(
 	    discardBits = AddBits(discardBits, sharedTextPtr->affectLineHeightTags);
 	    break;
 	case ENUM_NO_SELECTION:
-	    discardSelection = 1;
+	    discardSelection = true;
 	    break;
 	case ENUM_NO_UNDO:
 	    discardBits = AddComplementBits(discardBits, sharedTextPtr->dontUndoTags);
