@@ -368,7 +368,7 @@ CANV_OBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 	tkCanvLine.o tkCanvPoly.o tkCanvPs.o tkCanvText.o \
 	tkCanvUtil.o tkCanvWind.o tkRectOval.o tkTrig.o
 
-IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPPM.o \
+IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
 	tkImgPhoto.o tkImgPhInstance.o tkImgListFormat.o tkImgSVGnano.o
 
 TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
