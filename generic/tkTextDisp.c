@@ -2572,7 +2572,7 @@ DisplayDLine(
 		    otherChunkPtr->undisplayProc = NULL;
 		    tmpStyle = *otherChunkPtr->stylePtr;
 		    otherChunkPtr->stylePtr = &tmpStyle;
-		    tmpStyle.bgGC = None;
+		    tmpStyle.bgGC = NULL;
 		    mask = GCFont;
 		    gcValues.font = Tk_FontId(tmpStyle.sValuePtr->tkfont);
 		    mask |= GCForeground;
