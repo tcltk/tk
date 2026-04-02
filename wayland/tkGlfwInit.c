@@ -150,7 +150,7 @@ TkGlfwInitialize(void)
     glfwSwapInterval(1);
 
     /* Create NanoVG context once, here, while the shared context is current. */
-    glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
     if (!glfwContext.vg) {
         fprintf(stderr, "TkGlfwInitialize: nvgCreateGLES2() failed\n");
         glfwDestroyWindow(glfwContext.mainWindow);
@@ -467,7 +467,7 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    printf("BeginDraw: %p\n", drawable);
+    printf("TkGlfwBeginDraw: ");
     WindowMapping *m = FindMappingByDrawable(drawable);
 
     if (!m || !m->fbo) {
@@ -489,7 +489,7 @@ TkGlfwBeginDraw(
     }
     
     /* Start a NanoVG frame targeting the FBO. */
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
 
     dcPtr->vg = glfwContext.vg;
@@ -536,23 +536,24 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
     printf("EndDraw\n");
 
-    // Blit the FBO to the (default) back buffer.
+    // After we finish drawing, but before we call EndFrame,
+    // blit the FBO to the (default) back buffer.
+    /* Unbind FBO to return to the default backbuffer. */
+        nvgluBindFramebuffer(NULL);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->fbo);
     glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
 		      0, 0, (int)m->width, (int)m->height,
 		      GL_COLOR_BUFFER_BIT,
 		      GL_NEAREST);
- 
+    
     if (dcPtr && dcPtr->vg) {
-        nvgRestore(dcPtr->vg);
         nvgEndFrame(dcPtr->vg);
-	// The swap must be done after ending the frame.
+        nvgRestore(dcPtr->vg);
+	
+	// Now we can swap the buffers.
 	glfwSwapBuffers(m->glfwWindow);
-        
-        /* Unbind FBO to return to the default backbuffer. */
-        nvgluBindFramebuffer(NULL);
-        
+
         /* Signal that the screen needs to be updated with the FBO's content. */
         if (m) {
 			m->needsDisplay = 1;
