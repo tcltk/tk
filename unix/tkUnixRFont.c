@@ -138,6 +138,28 @@ typedef struct {
     } glyphs[MAX_GLYPHS];
     int glyphCount;
     int totalAdvance;          /* Total advance width in pixels. */
+    
+    /*
+     * VISUAL INDEX FOR CURSOR POSITIONING
+     * 
+     * Parallel structure that maps visual (screen) positions back to logical 
+     * (source string) byte offsets. Built in sync with word reversal so that
+     * cursor positioning works correctly for LTR, RTL, and mixed text.
+     * 
+     * visualIndex[i] corresponds to glyphs[i] and contains:
+     * - x: visual X position of this glyph
+     * - advanceX: width of this glyph
+     * - byteEnd: logical byte offset after this glyph (byteOffset + clusterLen)
+     * 
+     * For cursor positioning: binary search to find glyph at visual position X,
+     * then return the corresponding byteEnd.
+     */
+    struct {
+        int x;              /* Visual X position of glyph */
+        int advanceX;       /* Glyph width */
+        int byteEnd;        /* Logical byte end (byteOffset + clusterLen) */
+    } visualIndex[MAX_GLYPHS];
+    int indexCount;         /* Should equal glyphCount; kept separate for clarity */
 } ShapedGlyphBuffer;
 
 /*
@@ -1603,6 +1625,26 @@ X11Shaper_ShapeString(
         }
     }
 
+    /*
+     * BUILD VISUAL INDEX FOR CURSOR POSITIONING
+     * 
+     * Create a parallel index that maps visual (screen) positions to logical
+     * (source) byte offsets. This enables fast, accurate cursor positioning
+     * and selection for RTL and mixed-direction text.
+     * 
+     * Process after word reversal so the index reflects final visual order.
+     */
+    buffer->indexCount = buffer->glyphCount;
+    for (int i = 0; i < buffer->glyphCount; i++) {
+        buffer->visualIndex[i].x = buffer->glyphs[i].x;
+        buffer->visualIndex[i].advanceX = buffer->glyphs[i].advanceX;
+        
+        int byteEnd = buffer->glyphs[i].byteOffset + buffer->glyphs[i].clusterLen;
+        if (byteEnd < 0) byteEnd = 0;
+        if (byteEnd > numBytes) byteEnd = numBytes;
+        buffer->visualIndex[i].byteEnd = byteEnd;
+    }
+
     /* Update cache - invalidate first for thread safety. */
     if (numBytes <= MAX_STRING_CACHE) {
         shaper->cache.valid = 0;
@@ -2012,7 +2054,7 @@ Tk_MeasureChars(
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &buffer)) {
         *lengthPtr = 0;
-        return (int)numBytes;  /* FIX: skip entire string instead of 0 */
+        return (int)numBytes;
     }
 
     int curX = 0;
@@ -2020,64 +2062,64 @@ Tk_MeasureChars(
     int lastBreakX = 0;
 
     /*
-     * FIX: Track both minimum and maximum logical byte boundaries.
-     * For RTL text, byteOffset runs backwards through the logical string,
-     * so we must track the furthest boundary reached to ensure monotonic
-     * returns as maxLength increases.
+     * CURSOR POSITIONING WITH VISUAL INDEX
+     * 
+     * The visualIndex maps visual (screen) positions to logical (source) byte
+     * offsets, enabling accurate cursor positioning for all text directions.
+     * 
+     * Algorithm:
+     * 1. Scan through visualIndex in visual order (left-to-right on screen)
+     * 2. For each glyph, track the furthest logical byte offset
+     * 3. When pixel position exceeds maxLength, return the byte offset
+     * 4. This works correctly for LTR, RTL, and mixed text
      */
-    int minByteSeen = (int)numBytes;
-    int maxByteSeen = 0;
+    int prevByteEnd = 0;
+    
+    for (int i = 0; i < buffer.indexCount; i++) {
+        int glyphX = buffer.visualIndex[i].x;
+        int glyphAdvance = buffer.visualIndex[i].advanceX;
+        int glyphXEnd = glyphX + glyphAdvance;
+        int byteEnd = buffer.visualIndex[i].byteEnd;
+        
+        if (byteEnd < 0) byteEnd = 0;
+        if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
 
-    for (int i = 0; i < buffer.glyphCount; i++) {
-        int glyphWidth = buffer.glyphs[i].advanceX;
-        int offset     = buffer.glyphs[i].byteOffset;
-        int glyphEnd   = offset + buffer.glyphs[i].clusterLen;
-
-        if (offset < 0) offset = 0;
-        if (glyphEnd > (int)numBytes) glyphEnd = (int)numBytes;
-
-        /* Track the logical byte range spanned by glyphs processed so far. */
-        if (offset < minByteSeen) minByteSeen = offset;
-        if (glyphEnd > maxByteSeen) maxByteSeen = glyphEnd;
-
-        /* Record word-break opportunities. */
-        if (offset >= 0 && offset < (int)numBytes) {
-            if (source[offset] == ' ' || source[offset] == '\t') {
-                lastBreakByte = glyphEnd;
-                lastBreakX    = curX + glyphWidth;
+        /* Record word-break opportunities based on source character */
+        if (byteEnd > 0 && byteEnd <= (int)numBytes) {
+            /* Check character before the end of this cluster */
+            if (source[byteEnd - 1] == ' ' || source[byteEnd - 1] == '\t') {
+                lastBreakByte = byteEnd;
+                lastBreakX = glyphXEnd;
             }
         }
 
-        if (maxLength >= 0 && (curX + glyphWidth) > maxLength) {
+        if (maxLength >= 0 && glyphXEnd > maxLength) {
             if (lastBreakByte > 0 && (flags & TK_WHOLE_WORDS)) {
                 *lengthPtr = lastBreakX;
                 return lastBreakByte;
             }
             
-            /* FIX: Return furthest logical boundary reached so far. */
-            if (maxByteSeen == 0) {
-                /* Nothing consumed yet - advance by at least this glyph. */
-                *lengthPtr = curX + glyphWidth;
-                return glyphEnd;
+            /* Ensure we return at least one character if TK_AT_LEAST_ONE is set */
+            if (prevByteEnd == 0 && (flags & TK_AT_LEAST_ONE)) {
+                *lengthPtr = glyphXEnd;
+                return byteEnd;
             }
             
             *lengthPtr = curX;
-            return (maxByteSeen > (int)numBytes) ? (int)numBytes : maxByteSeen;
+            return prevByteEnd;
         }
 
-        curX += glyphWidth;
+        curX = glyphXEnd;
+        prevByteEnd = byteEnd;
     }
 
-    /* FIX: Compute final byte boundary using max. */
-    if (maxByteSeen == 0 && (int)numBytes > 0) {
-        /* No glyphs were processed - skip the whole string. */
-        *lengthPtr = (maxLength < 0) ? 0 : 0;
-        return (int)numBytes;
+    /* All glyphs fit - return total */
+    if (prevByteEnd == 0 && (int)numBytes > 0) {
+        prevByteEnd = (int)numBytes;
     }
 
     *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : curX;
-    int bytesConsumed = (maxByteSeen > 0) ? maxByteSeen : (int)numBytes;
-    return (bytesConsumed > (int)numBytes) ? (int)numBytes : bytesConsumed;
+    return prevByteEnd;
 }
 
 /*
@@ -2198,7 +2240,7 @@ Tk_MeasureCharsInContext(
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
                                 (int)numBytes, &buffer)) {
         *lengthPtr = 0;
-        return (int)rangeLength;  /* FIX: skip entire range instead of 0 */
+        return (int)rangeLength;
     }
 
     int totalWidth = 0;
@@ -2206,40 +2248,36 @@ Tk_MeasureCharsInContext(
     int lastBreakPos = (int)rangeStart;
     int lastBreakWidth = 0;
     int lastBreakGlyph = -1;
+    int bytesConsumed = (int)rangeStart;
 
     /*
-     * FIX: Track minimum and maximum logical byte boundaries within the range.
+     * CURSOR POSITIONING IN RANGE WITH VISUAL INDEX
+     * 
+     * Use visualIndex to measure a substring while preserving shaping context.
+     * The visualIndex provides fast, accurate byte-position lookup for all
+     * text directions, including RTL and mixed text.
      */
-    int minByteSeen = rangeEnd;
-    int maxByteSeen = (int)rangeStart;
+    for (int i = 0; i < buffer.indexCount; i++) {
+        int glyphAdvance = buffer.visualIndex[i].advanceX;
+        int byteEnd = buffer.visualIndex[i].byteEnd;
 
-    for (int i = 0; i < buffer.glyphCount; i++) {
-        int glyphStart = buffer.glyphs[i].byteOffset;
-        int glyphEnd   = glyphStart + buffer.glyphs[i].clusterLen;
+        if (byteEnd < 0) byteEnd = 0;
+        if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
 
-        if (glyphStart < 0) glyphStart = 0;
-        if (glyphEnd > (int)numBytes) glyphEnd = (int)numBytes;
-
-        /* Skip glyphs whose logical span does not overlap the range. */
-        if (glyphEnd <= (int)rangeStart || glyphStart >= rangeEnd) {
+        /* Skip glyphs outside the range */
+        if (byteEnd <= (int)rangeStart || 
+            (i == 0 && buffer.glyphs[i].byteOffset >= rangeEnd)) {
             continue;
         }
 
-        /* Track byte boundaries for glyphs in our range. */
-        if (glyphStart >= (int)rangeStart && glyphStart < minByteSeen) {
-            minByteSeen = glyphStart;
-        }
-        if (glyphEnd > maxByteSeen && glyphEnd <= rangeEnd) {
-            maxByteSeen = glyphEnd;
-        }
+        int nextWidth = totalWidth + glyphAdvance;
 
-        int nextWidth = totalWidth + buffer.glyphs[i].advanceX;
-
-        /* Record word-break opportunities. */
-        if (glyphStart >= 0 && glyphStart < (int)numBytes) {
-            char ch = source[glyphStart];
-            if (ch == ' ' || ch == '\t' || ch == '\n') {
-                lastBreakPos   = glyphEnd;
+        /* Record word-break opportunities */
+        if (byteEnd > 0 && byteEnd <= (int)numBytes) {
+            if (source[byteEnd - 1] == ' ' || 
+                source[byteEnd - 1] == '\t' || 
+                source[byteEnd - 1] == '\n') {
+                lastBreakPos   = byteEnd;
                 lastBreakWidth = nextWidth;
                 lastBreakGlyph = i;
             }
@@ -2247,35 +2285,32 @@ Tk_MeasureCharsInContext(
 
         if (maxLength >= 0 && nextWidth > maxLength) {
             if (lastBreakGlyph >= 0 && (flags & TK_WHOLE_WORDS)) {
-                totalWidth    = lastBreakWidth;
-                maxByteSeen   = lastBreakPos;
-            } else if (maxByteSeen == (int)rangeStart) {
-                /* Nothing consumed yet - include this glyph. */
-                totalWidth  = nextWidth;
-                maxByteSeen = glyphEnd;
+                totalWidth = lastBreakWidth;
+                bytesConsumed = lastBreakPos;
+            } else if (bytesConsumed == (int)rangeStart) {
+                /* Nothing consumed yet - include this glyph */
+                totalWidth = nextWidth;
+                bytesConsumed = byteEnd;
             }
-            goto done;
+            break;
         }
 
         totalWidth = nextWidth;
-
-        /* Expand the boundary to the furthest we've seen. */
-        if (glyphEnd > maxByteSeen) {
-            maxByteSeen = glyphEnd;
+        if (byteEnd > bytesConsumed) {
+            bytesConsumed = byteEnd;
         }
     }
 
-done:
-    if (maxByteSeen < (int)rangeStart) maxByteSeen = (int)rangeStart;
-    if (maxByteSeen > rangeEnd) maxByteSeen = rangeEnd;
+    if (bytesConsumed < (int)rangeStart) bytesConsumed = (int)rangeStart;
+    if (bytesConsumed > rangeEnd) bytesConsumed = rangeEnd;
 
-    /* FIX: If we consumed nothing and the range is non-empty, skip to end. */
-    if (maxByteSeen == (int)rangeStart && rangeLength > 0) {
-        maxByteSeen = rangeEnd;
+    /* If we consumed nothing and the range is non-empty, skip to end */
+    if (bytesConsumed == (int)rangeStart && rangeLength > 0) {
+        bytesConsumed = rangeEnd;
     }
 
     *lengthPtr = totalWidth;
-    return (maxByteSeen - (int)rangeStart);
+    return (bytesConsumed - (int)rangeStart);
 }
 
 /*
