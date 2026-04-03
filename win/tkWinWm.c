@@ -14,10 +14,22 @@
  */
 
 #include "tkWinInt.h"
+#include <dwmapi.h>
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
 #include "tkWinIco.h"
+
+
+/*
+    DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 10/11)
+    For older Windows 10 versions, use 19
+*/
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+
 /*
  * These next two defines are only valid on Win2K/XP+.
  */
@@ -269,6 +281,7 @@ typedef struct TkWmInfo {
  * WM_FULLSCREEN -		Non-zero means that this window has been placed
  *				in the full screen mode. It should be mapped at
  *				0,0 and be the width and height of the screen.
+ * WM_DARK_MODE			1 if toplevel decoration is in dark mode.
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -285,6 +298,7 @@ typedef struct TkWmInfo {
 #define WM_HEIGHT_NOT_RESIZABLE		(1<<11)
 #define WM_WITHDRAWN			(1<<12)
 #define WM_FULLSCREEN			(1<<13)
+#define WM_DARK_MODE			(1<<14)
 
 /*
  * Window styles for various types of toplevel windows.
@@ -2980,8 +2994,10 @@ WmAttributesCmd(
     const char *string;
     int boolValue;
     Tcl_Size i, length;
-    int config_fullscreen = 0, updatewrapper = 0;
-    int fullscreen_attr_changed = 0, fullscreen_attr = 0;
+    bool config_darkmode = 0, config_fullscreen = 0, updatewrapper = 0;
+    BOOL  darkmode_attr = 0;
+    bool darkmode_attr_changed = 0;
+    bool fullscreen_attr_changed = 0, fullscreen_attr = 0;
 
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
     configArgs:
@@ -2989,6 +3005,7 @@ WmAttributesCmd(
 		"window"
 		" ?-alpha ?double??"
 		" ?-transparentcolor ?color??"
+		" ?-darkmode ?bool?"
 		" ?-disabled ?bool??"
 		" ?-fullscreen ?bool??"
 		" ?-toolwindow ?bool??"
@@ -3006,6 +3023,10 @@ WmAttributesCmd(
 		Tcl_NewStringObj("-transparentcolor", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		wmPtr->crefObj ? wmPtr->crefObj : Tcl_NewObj());
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-darkmode", TCL_INDEX_NONE));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj(wmPtr->flags & WM_DARK_MODE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-disabled", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -3027,10 +3048,7 @@ WmAttributesCmd(
     }
     for (i = 3; i < objc; i += 2) {
 	string = Tcl_GetStringFromObj(objv[i], &length);
-	if (strncmp(string, "-disabled", length) == 0) {
-	    stylePtr = &style;
-	    styleBit = WS_DISABLED;
-	} else if ((strncmp(string, "-alpha", length) == 0)
+	if ((strncmp(string, "-alpha", length) == 0)
 		|| ((length > 2) && (strncmp(string, "-transparentcolor",
 			length) == 0))) {
 	    stylePtr = &exStyle;
@@ -3048,6 +3066,14 @@ WmAttributesCmd(
 		 */
 		updatewrapper = 1;
 	    }
+	} else if ((length > 2)
+		&& (strncmp(string, "-darkmode", length) == 0)) {
+	    config_darkmode = 1;
+	    styleBit = 0;
+	} else if ((length > 2)
+		&& (strncmp(string, "-disabled", length) == 0)) {
+	    stylePtr = &style;
+	    styleBit = WS_DISABLED;
 	} else if ((length > 3)
 		&& (strncmp(string, "-topmost", length) == 0)) {
 	    stylePtr = &exStyle;
@@ -3061,7 +3087,7 @@ WmAttributesCmd(
 	    }
 	} else if (i == 3) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad attribute \"%s\": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
+		    "bad attribute \"%s\": must be -alpha, -darkmode, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
 		    string));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", (char *)NULL);
 	    return TCL_ERROR;
@@ -3158,7 +3184,16 @@ WmAttributesCmd(
 			    != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (config_fullscreen) {
+	    if (config_darkmode) {
+		if (objc == 4) {
+		    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
+			    (wmPtr->flags & WM_DARK_MODE) != 0));
+		} else {
+		    darkmode_attr_changed = 1;
+		    darkmode_attr = boolValue;
+		}
+		config_darkmode = 0;
+	    } else if (config_fullscreen) {
 		if (objc == 4) {
 		    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 			    (wmPtr->flags & WM_FULLSCREEN) != 0));
@@ -3212,6 +3247,21 @@ WmAttributesCmd(
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		UpdateWrapper(winPtr);
 	    }
+	}
+    }
+    if (darkmode_attr_changed) {
+	if (S_OK != DwmSetWindowAttribute(
+		wmPtr->wrapper,
+		DWMWA_USE_IMMERSIVE_DARK_MODE,
+		&darkmode_attr,
+		sizeof(darkmode_attr)
+		)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't set darkmode attribute for \"%s\":",
+		    winPtr->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
+		    "DARK_MODE", (char *)NULL);
+	    return TCL_ERROR;
 	}
     }
     if (fullscreen_attr_changed) {
