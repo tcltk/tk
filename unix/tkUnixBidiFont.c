@@ -225,6 +225,8 @@ static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
 static int IsLatinOnly(const char *str, int len);  /* fast-path helper */
+static int
+GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runLen);
 
 /*
  * ---------------------------------------------------------------
@@ -1019,16 +1021,50 @@ GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runL
             return fi;
         }
     }
-    return 0;   /* fallback to first face */
+    return 0;   /* fallback */
 }
 
 
 /*
  * X11Shaper_ShapeString --
  *
- *   Updated version: proper per-run font selection, correct HarfBuzz scaling,
- *   and removal of legacy manual RTL word reversal (HarfBuzz + SheenBidi
- *   already produce correct visual order).
+ *   Final fixed version:
+ *   - Per-run font selection (already correct)
+ *   - Correct HarfBuzz pixel scaling (no extra *scale)
+ *   - Removed legacy manual RTL reversal
+ *   - NEW: Correct clusterLen calculation that works for BOTH LTR and RTL
+ *     (clusters are now computed from logical order, independent of visual order)
+ */
+/*
+ * X11Shaper_ShapeString --
+ *
+ *   Final fixed version for correct cursor / selection behavior with RTL
+ *   and complex scripts (Arabic, Hebrew, CJK, etc.).
+ */
+/*
+ * X11Shaper_ShapeString --
+ *
+ *   Corrected version that fixes:
+ *   - RTL / Arabic vertical stacking (proper pen advancement)
+ *   - Cursor / selection jumping (correct clusterLen for LTR + RTL)
+ *   - Maintains correct shaping for CJK, Devanagari, etc.
+ */
+/*
+ * X11Shaper_ShapeString --
+ *
+ *   Restored working version:
+ *   - Correct shaping for Arabic, Hebrew, Hindi, CJK, etc.
+ *   - Proper horizontal pen advancement (no more vertical stacking)
+ *   - Correct clusterLen for cursor / selection in RTL and complex scripts
+ */
+/*
+ * X11Shaper_ShapeString --
+ *
+ *   Complete version with:
+ *   - Correct shaping and positioning for Arabic, Hebrew, CJK, Hindi, etc.
+ *   - Proper horizontal advancement (no vertical stacking)
+ *   - Robust clusterLen calculation that works for LTR + RTL (fixes cursor jumping)
+ *   - Monotonically increasing byte positions for Tk text widget
  */
 static int
 X11Shaper_ShapeString(
@@ -1042,7 +1078,7 @@ X11Shaper_ShapeString(
         return 0;
     }
 
-    /* Fast path for Latin-only text (U+0000–U+024F) — unchanged */
+    /* === Latin-only fast path (very reliable for cursor) === */
     if (IsLatinOnly(source, numBytes)) {
         fprintf(stderr, "DEBUG: Taking Latin-only fast path for %d bytes\n", numBytes);
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
@@ -1050,11 +1086,9 @@ X11Shaper_ShapeString(
             int penX = 0;
             buffer->glyphCount = 0;
             int i = 0;
-
             while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
                 FcChar32 uc;
-                int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc,
-                                        numBytes - i);
+                int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, numBytes - i);
                 if (clen <= 0) { i++; continue; }
 
                 unsigned int glyphId = XftCharIndex(fontPtr->display, ftFont, uc);
@@ -1081,7 +1115,7 @@ X11Shaper_ShapeString(
 
     fprintf(stderr, "DEBUG: Taking HarfBuzz shaping path for %d bytes\n", numBytes);
 
-    /* Check cache first (unchanged) */
+    /* Cache check */
     if (shaper->cache.valid &&
         shaper->cache.len == numBytes &&
         numBytes <= MAX_STRING_CACHE &&
@@ -1093,17 +1127,14 @@ X11Shaper_ShapeString(
     buffer->glyphCount   = 0;
     buffer->totalAdvance = 0;
 
-    /* UCS-4 conversion (unchanged) */
+    /* UCS-4 conversion + byte boundaries */
     int stackCharBounds[256];
     FcChar32 stackUcs4Chars[256];
-    int *charBounds;
-    FcChar32 *ucs4Chars;
+    int *charBounds = stackCharBounds;
+    FcChar32 *ucs4Chars = stackUcs4Chars;
     int needFree = 0;
 
-    if (numBytes < 256) {
-        charBounds = stackCharBounds;
-        ucs4Chars = stackUcs4Chars;
-    } else {
+    if (numBytes >= 256) {
         charBounds = (int *)malloc((numBytes + 1) * sizeof(int));
         ucs4Chars = (FcChar32 *)malloc(numBytes * sizeof(FcChar32));
         if (!charBounds || !ucs4Chars) {
@@ -1115,20 +1146,12 @@ X11Shaper_ShapeString(
     }
 
     charBounds[0] = 0;
-    int bytePos   = 0;
-    int charCount = 0;
-
+    int bytePos = 0, charCount = 0;
     while (bytePos < numBytes && charCount < MAX_GLYPHS) {
         FcChar32 uc;
-        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + bytePos), &uc,
-                                numBytes - bytePos);
+        int clen = FcUtf8ToUcs4((const FcChar8 *)(source + bytePos), &uc, numBytes - bytePos);
+        if (clen <= 0) { bytePos++; continue; }
 
-        if (clen <= 0) {
-            bytePos++;
-            continue;
-        }
-
-        /* Filter problematic control characters */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
             (uc >= 0x0080 && uc <= 0x009F) || uc == 0xFFFD) {
             bytePos += clen;
@@ -1148,12 +1171,11 @@ X11Shaper_ShapeString(
         return 1;
     }
 
-    /* Get bidirectional runs using SheenBidi (unchanged) */
+    /* BiDi runs using SheenBidi */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
 
     int globalPenX = 0;
-    int globalPenY = 0;
 
     for (int r = 0; r < numRuns; r++) {
         int runStart = bidiRuns[r].offset;
@@ -1165,10 +1187,8 @@ X11Shaper_ShapeString(
         int runByteStart = charBounds[runStart];
         int runByteEnd   = charBounds[runStart + runLen];
         int runByteLen   = runByteEnd - runByteStart;
-
         if (runByteLen <= 0) continue;
 
-        /* Skip runs with only filtered control characters */
         int hasVisibleChars = 0;
         for (int ci = runStart; ci < runStart + runLen; ci++) {
             if (ucs4Chars[ci] >= 0x0020 || ucs4Chars[ci] == 0x0009 ||
@@ -1179,40 +1199,24 @@ X11Shaper_ShapeString(
         }
         if (!hasVisibleChars) continue;
 
-        /* Choose the best face for this run */
         int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, runStart, runLen);
 
-        int runPenX = 0;
-        int runPenY = 0;
-
-        /* Lazy-load HarfBuzz fonts (once per font) */
+        /* Lazy-load HarfBuzz fonts (once) */
         if (shaper->numFonts == 0) {
             for (int fi = 0; fi < fontPtr->nfaces && shaper->numFonts < MAX_FONTS; fi++) {
                 FcPattern *facePattern = fontPtr->faces[fi].source;
                 FcChar8 *fontFile = NULL;
                 int fontIndex = 0;
-
-                if (FcPatternGetString(facePattern, FC_FILE, 0, &fontFile) != FcResultMatch)
-                    continue;
+                if (FcPatternGetString(facePattern, FC_FILE, 0, &fontFile) != FcResultMatch) continue;
                 FcPatternGetInteger(facePattern, FC_INDEX, 0, &fontIndex);
 
                 hb_blob_t *blob = hb_blob_create_from_file_or_fail((const char *)fontFile);
                 if (!blob) continue;
-
                 hb_face_t *face = hb_face_create(blob, fontIndex);
-                if (!face) {
-                    hb_blob_destroy(blob);
-                    continue;
-                }
-
+                if (!face) { hb_blob_destroy(blob); continue; }
                 hb_font_t *font = hb_font_create(face);
-                if (!font) {
-                    hb_face_destroy(face);
-                    hb_blob_destroy(blob);
-                    continue;
-                }
+                if (!font) { hb_face_destroy(face); hb_blob_destroy(blob); continue; }
 
-                /* Set correct pixel scale */
                 XftFont *xftFont = GetFaceFont(fontPtr, fi, 0.0);
                 if (xftFont) {
                     int pixelSize = 12;
@@ -1227,32 +1231,27 @@ X11Shaper_ShapeString(
                 shaper->fontMap[shaper->numFonts].hbFont    = font;
                 shaper->fontMap[shaper->numFonts].faceIndex = fi;
                 fontPtr->faces[fi].hbFont = font;
-                fontPtr->faces[fi].hbBlob = blob;   /* never destroy */
-                fontPtr->faces[fi].hbFace = face;   /* never destroy */
+                fontPtr->faces[fi].hbBlob = blob;
+                fontPtr->faces[fi].hbFace = face;
                 fontPtr->faces[fi].isLoaded = 1;
                 shaper->numFonts++;
             }
         }
 
-        /* Set up HarfBuzz buffer for this run */
+        /* Shape this run */
         hb_buffer_clear_contents(shaper->buffer);
         hb_buffer_add_utf8(shaper->buffer, source + runByteStart, runByteLen, 0, runByteLen);
         hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
         hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 
-        /* Use the font for this run */
         hb_font_t *runHbFont = NULL;
         int shapeFaceIndex = runFaceIndex;
-
-        if (shapeFaceIndex < fontPtr->nfaces &&
-            fontPtr->faces[shapeFaceIndex].isLoaded &&
-            fontPtr->faces[shapeFaceIndex].hbFont) {
+        if (shapeFaceIndex < fontPtr->nfaces && fontPtr->faces[shapeFaceIndex].isLoaded)
             runHbFont = fontPtr->faces[shapeFaceIndex].hbFont;
-        } else if (shaper->numFonts > 0) {
+        else if (shaper->numFonts > 0) {
             runHbFont = shaper->fontMap[0].hbFont;
             shapeFaceIndex = shaper->fontMap[0].faceIndex;
         }
-
         if (!runHbFont) continue;
 
         hb_shape(runHbFont, shaper->buffer, NULL, 0);
@@ -1260,52 +1259,70 @@ X11Shaper_ShapeString(
         unsigned int glyphCount = hb_buffer_get_length(shaper->buffer);
         hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
         hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
-
         if (!glyphInfo || !glyphPos) continue;
 
-        /* Collect glyphs — NO extra *scale multiplier */
+        /* Temporary glyphs with positioning */
         struct {
             int fontIndex;
             unsigned int glyphId;
             int x, y;
             int advanceX;
-            int offsetX;
             int byteOffset;
             int clusterLen;
         } tempGlyphs[MAX_GLYPHS];
         int tempCount = 0;
 
+        int runPenX = 0;
         for (unsigned int i = 0; i < glyphCount && tempCount < MAX_GLYPHS; i++) {
-            tempGlyphs[tempCount].fontIndex = shapeFaceIndex;
-            tempGlyphs[tempCount].glyphId   = glyphInfo[i].codepoint;
+            tempGlyphs[tempCount].fontIndex  = shapeFaceIndex;
+            tempGlyphs[tempCount].glyphId    = glyphInfo[i].codepoint;
+            tempGlyphs[tempCount].x          = globalPenX + runPenX + (int)(glyphPos[i].x_offset / 64.0 + 0.5);
+            tempGlyphs[tempCount].y          = -(int)(glyphPos[i].y_offset / 64.0 + 0.5);
+            tempGlyphs[tempCount].advanceX   = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
+            tempGlyphs[tempCount].byteOffset = runByteStart + glyphInfo[i].cluster;
 
-            tempGlyphs[tempCount].offsetX = (int)(glyphPos[i].x_offset / 64.0 + 0.5);
-
-            tempGlyphs[tempCount].x = globalPenX + runPenX + tempGlyphs[tempCount].offsetX;
-            tempGlyphs[tempCount].y = globalPenY + runPenY - (int)(glyphPos[i].y_offset / 64.0 + 0.5);
-
-            tempGlyphs[tempCount].advanceX = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
-
-            /* Map cluster back to source bytes */
-            int clusterByte = glyphInfo[i].cluster;
-            int byteOffsetInSource = runByteStart + clusterByte;
-            if (byteOffsetInSource >= 0 && byteOffsetInSource < numBytes) {
-                tempGlyphs[tempCount].byteOffset = byteOffsetInSource;
-            } else {
-                tempGlyphs[tempCount].byteOffset = runByteStart;
-            }
-
-            tempGlyphs[tempCount].clusterLen = 0;
             runPenX += tempGlyphs[tempCount].advanceX;
             tempCount++;
         }
 
-        /* Compute actual cluster lengths */
+        /* === Robust clusterLen calculation (fixes cursor jumping) === */
+        /* Collect unique logical cluster starts */
+        int uniqueClusters[MAX_GLYPHS];
+        int numUnique = 0;
         for (int i = 0; i < tempCount; i++) {
-            int clusterStart = tempGlyphs[i].byteOffset;
-            int clusterEnd = (i + 1 < tempCount) ?
-                             tempGlyphs[i + 1].byteOffset : runByteEnd;
-            tempGlyphs[i].clusterLen = clusterEnd - clusterStart;
+            int cs = tempGlyphs[i].byteOffset;
+            int found = 0;
+            for (int j = 0; j < numUnique; j++) {
+                if (uniqueClusters[j] == cs) { found = 1; break; }
+            }
+            if (!found && numUnique < MAX_GLYPHS) {
+                uniqueClusters[numUnique++] = cs;
+            }
+        }
+
+        /* Sort clusters in ascending logical order */
+        for (int i = 0; i < numUnique; i++) {
+            for (int j = i + 1; j < numUnique; j++) {
+                if (uniqueClusters[i] > uniqueClusters[j]) {
+                    int tmp = uniqueClusters[i];
+                    uniqueClusters[i] = uniqueClusters[j];
+                    uniqueClusters[j] = tmp;
+                }
+            }
+        }
+
+        /* Assign correct clusterLen to each glyph */
+        for (int i = 0; i < tempCount; i++) {
+            int cs = tempGlyphs[i].byteOffset;
+            int end = runByteEnd;
+            for (int j = 0; j < numUnique; j++) {
+                if (uniqueClusters[j] == cs) {
+                    if (j + 1 < numUnique)
+                        end = uniqueClusters[j + 1];
+                    break;
+                }
+            }
+            tempGlyphs[i].clusterLen = end - cs;
             if (tempGlyphs[i].clusterLen <= 0)
                 tempGlyphs[i].clusterLen = 1;
         }
@@ -1328,18 +1345,14 @@ X11Shaper_ShapeString(
         }
 
         globalPenX += runPenX;
-        globalPenY += runPenY;
     }
 
     buffer->totalAdvance = globalPenX;
 
-    /* === REMOVED: legacy manual RTL word-reversal block === */
-    /* It is no longer needed with correct HarfBuzz + SheenBidi usage. */
-
-    /* Build visual index for cursor positioning */
+    /* Build visualIndex (critical for cursor positioning) */
     buffer->indexCount = buffer->glyphCount;
     for (int i = 0; i < buffer->glyphCount; i++) {
-        buffer->visualIndex[i].x = buffer->glyphs[i].x;
+        buffer->visualIndex[i].x        = buffer->glyphs[i].x;
         buffer->visualIndex[i].advanceX = buffer->glyphs[i].advanceX;
         int byteEnd = buffer->glyphs[i].byteOffset + buffer->glyphs[i].clusterLen;
         if (byteEnd < 0) byteEnd = 0;
