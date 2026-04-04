@@ -1,5 +1,5 @@
 /*
- * tkUnixRFont.c --
+ * tkUnixBidiFont.c --
  *
  * Alternate implementation of tkUnixFont.c using Xft with proper
  * text shaping via kb_text_shaper.
@@ -27,30 +27,10 @@
 
 #define MAX_CACHED_COLORS 16
 #define MAX_GLYPHS 512
-#define MAX_FONTS 64
+#define MAX_FONTS 20
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
 
-/*
- * Maximum number of font faces loaded into kb_text_shaper at init time.
- *
- * Fontconfig sorts faces by best match first, so the fonts most relevant
- * to the current locale appear early in the list.  Faces beyond this
- * limit are skipped.
- *
- * This cap is intentional and serves as a safety boundary against a
- * known bug in kb_text_shaper (kbts__MarkMatrixCoverage): certain fonts
- * for less-common scripts (observed with NotoSansMongolian-Regular.ttf,
- * NotoSansGlagolitic-Regular.ttf) have GSUB/GPOS coverage tables that
- * reference glyph IDs beyond the font's maxp glyph count, causing
- * kb_text_shaper to overrun an internal matrix and corrupt the heap.
- * These fonts tend to sort late in the fontconfig list behind more
- * common script faces, so capping at KBTS_MAX_INITIAL_FONTS keeps them
- * out of the shaper without requiring us to maintain a denylist or patch
- * kb_text_shaper itself.  If that bug is fixed upstream the cap can be
- * raised or removed.
- */
-#define KBTS_MAX_INITIAL_FONTS 32
 #define TK_DRAW_IN_CONTEXT
 
 /*
@@ -133,7 +113,7 @@ typedef struct {
         int x, y;              /* Pen position for this glyph. */
         int advanceX;          /* Advance width in pixels. */
         int byteOffset;        /* Byte offset of cluster start in source string. */
-        int clusterLen;        /* Length of cluster in bytes (FIXED: was always 0). */
+        int clusterLen;        /* Length of cluster in bytes. */
         int isRTL;             /* 1 if this glyph is part of an RTL run. */
     } glyphs[MAX_GLYPHS];
     int glyphCount;
@@ -244,9 +224,6 @@ static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
 static int IsLatinOnly(const char *str, int len);  /* fast-path helper */
-static int IsNotoFont(FcPattern *pat);             /* exclude Noto fonts */
-static void KbtsLoadSignalHandler(int sig);
-static kbts_font * SafeKbtsLoadFont(kbts_shape_context *context, const char *filePath, int faceIndex, int *fatalSignal);
 
 /*
  * ---------------------------------------------------------------
@@ -299,41 +276,6 @@ IsLatinOnly(const char *str, int len)
     }
     return 1;
 }
-
-/*
- * ---------------------------------------------------------------
- * IsNotoFont --
- *
- *   Returns 1 if the font is a Noto font (by family name or file path).
- *   Noto fonts frequently trigger GSUB/GPOS bugs in kb_text_shaper
- *   that cause crashes or heap corruption.
- * ---------------------------------------------------------------
- */
-
-static int
-IsNotoFont(FcPattern *pat)
-{
-    const char *family = NULL;
-    const char *const *familyPtr = &family;
-    FcChar8 *file = NULL;
-
-    /* Check family name. */
-    if (XftPatternGetString(pat, XFT_FAMILY, 0, familyPtr) == XftResultMatch) {
-        if (family && strstr(family, "Noto") != NULL) {
-            return 1;
-        }
-    }
-
-    /* Check file path. */
-    if (FcPatternGetString(pat, FC_FILE, 0, &file) == FcResultMatch) {
-        if (file && strstr((const char *)file, "Noto") != NULL) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
 
 /*
  * ---------------------------------------------------------------
@@ -699,12 +641,6 @@ GetBidiRuns(
     SBUInteger runCount = SBLineGetRunCount(line);
     const SBRun *bidiRuns = SBLineGetRunsPtr(line);
 
-    /*
-     * Keep runs in logical order, but we'll process them RIGHT-TO-LEFT
-     * for display. The visual reordering happens in the layout/positioning,
-     * not in the run order itself.
-     */
-
     int outRuns = 0;
     for (int i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
         runs[outRuns].offset = (int)bidiRuns[i].offset;
@@ -769,7 +705,7 @@ InitFont(
         if (!fontPtr) {
             return NULL;
         }
-        memset(fontPtr, 0, sizeof(UnixFtFont));  /* Safer than relying on zero-init. */
+        memset(fontPtr, 0, sizeof(UnixFtFont));
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -780,7 +716,7 @@ InitFont(
      */
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-        if (!fontPtr->font.fid) {  /* Only free if newly allocated. */
+        if (!fontPtr->font.fid) {
             Tcl_Free(fontPtr);
         }
         FcPatternDestroy(pattern);
@@ -820,8 +756,8 @@ InitFont(
     }
 
     /*
-     *   Initialize the shaper before calling GetFont() or Tk_MeasureChars()
-     *   because both can trigger shaping operations.
+     * Initialize the shaper before calling GetFont() or Tk_MeasureChars()
+     * because both can trigger shaping operations.
      */
     X11Shaper_Init(&fontPtr->shaper, fontPtr);
 
@@ -854,7 +790,7 @@ InitFont(
         return NULL;
     }
 
-    fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");  /* Legacy fallback. */
+    fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
 
     GetTkFontAttributes(tkwin, ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
@@ -965,83 +901,6 @@ FinishedWithFont(
 
 /*
  * ---------------------------------------------------------------
- * SafeKbtsLoadFont --
- *
- *   Signal-safe wrapper around kbts_ShapePushFontFromFile.
- *
- *   kb_text_shaper has a recurring bug (observed in kbts__MarkMatrixCoverage
- *   and kbts_ShapePushFontFromFile) where certain valid font files — including
- *   NotoSansMongolian, NotoSansGlagolitic, NotoSerifCJK and potentially others
- *   — cause a SIGSEGV or heap corruption during font loading.  The crash
- *   occurs inside kb_text_shaper's internal parser and cannot be prevented by
- *   pre-flight checks on the font file because the triggering condition (a
- *   coverage table referencing glyph IDs >= maxp glyph count, or a malformed
- *   TTC collection header) is only detected deep inside the loader.
- *
- *   We install a temporary SIGSEGV + SIGABRT handler around each
- *   kbts_ShapePushFontFromFile call.  If the call crashes, siglongjmp
- *   returns control here and we treat that font as unloadable.  The shaper
- *   context may be in an inconsistent state after a crash; we therefore
- *   stop loading any further fonts for this shaper instance.
- *
- * Results:
- *   Pointer to kbts_font on success, NULL if the font could not be loaded
- *   or caused a signal.  *fatalSignal is set to 1 if a signal was caught,
- *   indicating the shaper context is compromised and no further fonts
- *   should be loaded.
- * ---------------------------------------------------------------
- */
-
-static sigjmp_buf kbts__loadJmpBuf;
-static volatile sig_atomic_t kbts__loadCrashed;
-
-static void
-KbtsLoadSignalHandler(int sig)
-{
-    (void)sig;
-    kbts__loadCrashed = 1;
-    siglongjmp(kbts__loadJmpBuf, 1);
-}
-
-static kbts_font *
-SafeKbtsLoadFont(
-    kbts_shape_context *context,
-    const char *filePath,
-    int faceIndex,
-    int *fatalSignal)
-{
-    struct sigaction sa, oldSegv, oldAbrt;
-
-    kbts__loadCrashed = 0;
-
-    sa.sa_handler = KbtsLoadSignalHandler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGSEGV, &sa, &oldSegv);
-    sigaction(SIGABRT, &sa, &oldAbrt);
-
-    kbts_font *result = NULL;
-
-    if (sigsetjmp(kbts__loadJmpBuf, 1) == 0) {
-        result = kbts_ShapePushFontFromFile(context, filePath, faceIndex);
-    } else {
-        /*
-         * Signal was caught inside kb_text_shaper.  The shaper context
-         * is now in an unknown state — stop loading fonts entirely.
-         */
-        *fatalSignal = 1;
-        result = NULL;
-    }
-
-    sigaction(SIGSEGV, &oldSegv, NULL);
-    sigaction(SIGABRT, &oldAbrt, NULL);
-
-    return result;
-}
-
-
-/*
- * ---------------------------------------------------------------
  * X11Shaper_Init --
  *
  *   Initialize persistent shaping context and load all font faces.
@@ -1053,7 +912,6 @@ SafeKbtsLoadFont(
  *   Allocates shaping context and loads fonts.
  * ---------------------------------------------------------------
  */
-
 
 static void
 X11Shaper_Init(
@@ -1071,17 +929,8 @@ X11Shaper_Init(
     s->cache.valid = 0;
     s->shapeErrors = 0;
 
-    int maxInitialFonts = (fontPtr->nfaces < KBTS_MAX_INITIAL_FONTS)
-                          ? fontPtr->nfaces : KBTS_MAX_INITIAL_FONTS;
-
-    int fatalSignal = 0;
-
-    /* Load fonts, but skip all Noto fonts to avoid crashes. */
-    for (int i = 0; i < maxInitialFonts && s->numFonts < MAX_FONTS; i++) {
-        if (IsNotoFont(fontPtr->faces[i].source)) {
-            continue;                   /* Skip Noto fonts */
-        }
-
+    /* Load all fonts. */
+    for (int i = 0; i < fontPtr->nfaces && s->numFonts < MAX_FONTS; i++) {
         FcPattern *facePattern = fontPtr->faces[i].source;
         FcChar8 *file;
         int index;
@@ -1091,11 +940,7 @@ X11Shaper_Init(
             continue;
         }
 
-        kbts_font *kbFont = SafeKbtsLoadFont(s->context, (const char *)file,
-                                             index, &fatalSignal);
-        if (fatalSignal) {
-            break;
-        }
+        kbts_font *kbFont = kbts_ShapePushFontFromFile(s->context, (const char *)file, index);
         if (kbFont) {
             s->fontMap[s->numFonts].kbFont    = kbFont;
             s->fontMap[s->numFonts].faceIndex = i;
@@ -1487,8 +1332,6 @@ X11Shaper_ShapeString(
                 /* Add bounds checking to prevent segfaults. */
                 if (cpIndex >= 0 && cpIndex < charCount) {
                     tempGlyphs[tempCount].byteOffset = charBounds[cpIndex];
-                    
-                    /* NO clamping here. Let Tk_MeasureChars clamp the final result. */
                 } else {
                     tempGlyphs[tempCount].byteOffset = runByteStart;
                 }
