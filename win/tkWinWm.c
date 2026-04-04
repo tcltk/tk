@@ -2994,9 +2994,9 @@ WmAttributesCmd(
     const char *string;
     int boolValue;
     Tcl_Size i, length;
-    bool config_darkmode = 0, config_fullscreen = 0, updatewrapper = 0;
+    bool config_appearance = 0, config_fullscreen = 0, updatewrapper = 0;
     BOOL  darkmode_attr = 0;
-    bool darkmode_attr_changed = 0;
+    bool appearance_attr_changed = 0;
     bool fullscreen_attr_changed = 0, fullscreen_attr = 0;
 
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
@@ -3004,8 +3004,8 @@ WmAttributesCmd(
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
 		" ?-alpha ?double??"
+		" ?-appearance auto|light|dark?"
 		" ?-transparentcolor ?color??"
-		" ?-darkmode ?bool?"
 		" ?-disabled ?bool??"
 		" ?-fullscreen ?bool??"
 		" ?-toolwindow ?bool??"
@@ -3020,13 +3020,14 @@ WmAttributesCmd(
 		Tcl_NewStringObj("-alpha", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewDoubleObj(wmPtr->alpha));
 	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-appearance", TCL_INDEX_NONE));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj(
+		((wmPtr->flags & WM_DARK_MODE)?"dark":"light"), TCL_INDEX_NONE));
+	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-transparentcolor", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		wmPtr->crefObj ? wmPtr->crefObj : Tcl_NewObj());
-	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewStringObj("-darkmode", TCL_INDEX_NONE));
-	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewBooleanObj(wmPtr->flags & WM_DARK_MODE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-disabled", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -3048,8 +3049,12 @@ WmAttributesCmd(
     }
     for (i = 3; i < objc; i += 2) {
 	string = Tcl_GetStringFromObj(objv[i], &length);
-	if ((strncmp(string, "-alpha", length) == 0)
-		|| ((length > 2) && (strncmp(string, "-transparentcolor",
+	if (strncmp(string, "-disabled", length) == 0) {
+	    stylePtr = &style;
+	    styleBit = WS_DISABLED;
+	} else if ((length > 2)
+		&& ((strncmp(string, "-alpha", length) == 0)
+		|| (strncmp(string, "-transparentcolor",
 			length) == 0))) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_LAYERED;
@@ -3067,8 +3072,8 @@ WmAttributesCmd(
 		updatewrapper = 1;
 	    }
 	} else if ((length > 2)
-		&& (strncmp(string, "-darkmode", length) == 0)) {
-	    config_darkmode = 1;
+		&& (strncmp(string, "-appearance", length) == 0)) {
+	    config_appearance = 1;
 	    styleBit = 0;
 	} else if ((length > 2)
 		&& (strncmp(string, "-disabled", length) == 0)) {
@@ -3087,7 +3092,7 @@ WmAttributesCmd(
 	    }
 	} else if (i == 3) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad attribute \"%s\": must be -alpha, -darkmode, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
+		    "bad attribute \"%s\": must be -alpha, -appearance, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
 		    string));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", (char *)NULL);
 	    return TCL_ERROR;
@@ -3180,19 +3185,36 @@ WmAttributesCmd(
 	    }
 	} else {
 	    if ((i < objc-1)
+		    && ! config_appearance
 		    && Tcl_GetBooleanFromObj(interp, objv[i+1], &boolValue)
 			    != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (config_darkmode) {
+	    if (config_appearance) {
 		if (objc == 4) {
-		    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
-			    (wmPtr->flags & WM_DARK_MODE) != 0));
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    ((wmPtr->flags & WM_DARK_MODE)?"dark":"light"),
+			    TCL_INDEX_NONE));
 		} else {
-		    darkmode_attr_changed = 1;
-		    darkmode_attr = boolValue;
+		    char * ArgString;
+		    Tcl_Size ArgLength;
+		    ArgString = Tcl_GetStringFromObj(objv[i+1], &ArgLength);
+		    if ((ArgLength = 4 && 0 == memcmp(ArgString,"auto",4))
+			    || (ArgLength = 5 && 0 == memcmp(ArgString,"light",4))) {
+			darkmode_attr = false;
+			appearance_attr_changed = 1;
+		    } else if (ArgLength = 4 && 0 == memcmp(ArgString,"dark",4)) {
+			darkmode_attr = true;
+			appearance_attr_changed = 1;
+		    } else {
+			Tcl_SetObjResult(interp,
+				Tcl_NewStringObj("Invalid value for -appearance",-1));
+			Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
+				"APPEARANCE", (char *)NULL);
+			return TCL_ERROR;
+		    }
 		}
-		config_darkmode = 0;
+		config_appearance = 0;
 	    } else if (config_fullscreen) {
 		if (objc == 4) {
 		    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
@@ -3249,7 +3271,7 @@ WmAttributesCmd(
 	    }
 	}
     }
-    if (darkmode_attr_changed) {
+    if (appearance_attr_changed) {
 	if (S_OK != DwmSetWindowAttribute(
 		wmPtr->wrapper,
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
@@ -3257,11 +3279,16 @@ WmAttributesCmd(
 		sizeof(darkmode_attr)
 		)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't set darkmode attribute for \"%s\":",
+		    "can't set appearance attribute for \"%s\":",
 		    winPtr->pathName));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
-		    "DARK_MODE", (char *)NULL);
+		    "APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
+	}
+	if (darkmode_attr) {
+	    wmPtr->flags |= WM_DARK_MODE;
+	} else {
+	    wmPtr->flags &= ~WM_DARK_MODE;
 	}
     }
     if (fullscreen_attr_changed) {
