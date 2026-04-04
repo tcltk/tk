@@ -61,22 +61,22 @@ namespace eval ttk::theme::alt {
 	    -width 11p -padding 2.25p -relief raised \
 	    -arrowsize 5p -arrowpadding 2.25p
 
-	ttk::style configure TEntry -padding 1 \
-	    -focuswidth 2 -focuscolor $colors(-selectbg)
+	ttk::style configure TEntry -padding 1p -insertwidth 1p \
+	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1 \
+	ttk::style configure TCombobox -padding 1p -insertwidth 1p \
 	    -arrowsize 5.5p -arrowpadding 1.5p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 5p -arrowpadding {1.5p 0 1.5p 0} \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -arrowsize 5p -arrowpadding {1.5p 0 1.5p 0} -insertwidth 1p \
+	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -116,7 +116,7 @@ namespace eval ttk::theme::alt {
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) -indent 15p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \

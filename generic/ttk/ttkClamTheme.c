@@ -138,7 +138,7 @@ static void BorderElementSize(
     BorderElement *border = (BorderElement*)elementRecord;
     int borderWidth = 2;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, border->borderWidthObj, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, border->borderWidthObj, 1.0, &borderWidth);
     if (borderWidth == 1) ++borderWidth;
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -157,7 +157,7 @@ static void BorderElementDraw(
     Tcl_Obj *outer = 0, *upper = 0, *lower = 0;
 
     Tk_GetReliefFromObj(NULL, border->reliefObj, &relief);
-    Tk_GetPixelsFromObj(NULL, tkwin, border->borderWidthObj, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, border->borderWidthObj, 1.0, &borderWidth);
 
     if (borderWidth == 0) return;
 
@@ -377,8 +377,8 @@ static void IndicatorElementSize(
     double scalingLevel = TkScalingLevel(tkwin);
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = (int)(spec->width * scalingLevel + Ttk_PaddingWidth(margins));
-    *heightPtr = (int)(spec->height * scalingLevel + Ttk_PaddingHeight(margins));
+    *widthPtr = (int)round(spec->width * scalingLevel + Ttk_PaddingWidth(margins));
+    *heightPtr = (int)round(spec->height * scalingLevel + Ttk_PaddingHeight(margins));
 }
 
 static void ColorToStr(
@@ -407,8 +407,8 @@ static void IndicatorElementDraw(
     Ttk_Padding padding;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     double scalingLevel = TkScalingLevel(tkwin);
-    int width = (int)(spec->width * scalingLevel);
-    int height = (int)(spec->height * scalingLevel);
+    int width = (int)round(spec->width * scalingLevel);
+    int height = (int)round(spec->height * scalingLevel);
 
     char upperBdColorStr[7], lowerBdColorStr[7], bgColorStr[7], fgColorStr[7];
     unsigned int selected = (state & TTK_STATE_SELECTED);
@@ -572,7 +572,7 @@ static void GripElementSize(
     GripElement *grip = (GripElement *)elementRecord;
     int gripSize = 0;
 
-    gripSize = TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0, &gripSize);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = gripSize;
     } else {
@@ -593,7 +593,7 @@ static void GripElementDraw(
     int gripPad = 1, gripSize = 0;
     int i;
 
-    gripSize = TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0, &gripSize);
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	int x = b.x + (b.width - gripSize) / 2;
@@ -701,7 +701,7 @@ static void ThumbElementSize(
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = 12;
 
-    size = TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, 1.0, &size);
     *widthPtr = *heightPtr = size;
 }
 
@@ -730,7 +730,7 @@ static void ThumbElementDraw(
      * Draw grip:
      */
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
-    gripSize = TkGetScaledPixelValue(NULL, tkwin, sb->gripSizeObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, sb->gripSizeObj, 1.0, &gripSize);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
 
@@ -777,8 +777,8 @@ static void SliderElementSize(
     Ttk_Orient orient = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
-    thickness = TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, 1.0);
-    length = TkGetScaledPixelValue(NULL, tkwin, sb->sliderlengthObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, 1.0, &thickness);
+    TkGetScaledPixelValue(NULL, tkwin, sb->sliderlengthObj, 1.0, &length);
     if (orient == TTK_ORIENT_VERTICAL) {
 	*heightPtr = length;
 	*widthPtr = thickness;
@@ -882,7 +882,7 @@ static void ArrowElementSize(
     int size = 12;
 
     /* Get scaled size */
-    size = TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */

@@ -219,13 +219,17 @@ static const Ttk_ElementOptionSpec BorderElementOptions[] = {
 static void BorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    paddingPtr->left = paddingPtr->right = GetSystemMetrics(SM_CXEDGE);
-    paddingPtr->top = paddingPtr->bottom = GetSystemMetrics(SM_CYEDGE);
+    double scalingLevel = TkScalingLevel(tkwin);
+
+    paddingPtr->left = paddingPtr->right =
+	(int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+    paddingPtr->top = paddingPtr->bottom =
+	(int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 }
 
 static void BorderElementDraw(
@@ -278,13 +282,17 @@ static const Ttk_ElementOptionSpec FieldElementOptions[] = {
 static void FieldElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    paddingPtr->left = paddingPtr->right = GetSystemMetrics(SM_CXEDGE);
-    paddingPtr->top = paddingPtr->bottom = GetSystemMetrics(SM_CYEDGE);
+    double scalingLevel = TkScalingLevel(tkwin);
+
+    paddingPtr->left = paddingPtr->right =
+	(int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+    paddingPtr->top = paddingPtr->bottom =
+	(int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 }
 
 static void FieldElementDraw(
@@ -341,20 +349,21 @@ static const Ttk_ElementOptionSpec ButtonBorderElementOptions[] = {
 static void ButtonBorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
+    double scalingLevel = TkScalingLevel(tkwin);
     int relief = TK_RELIEF_RAISED;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     short int cx, cy;
 
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
-    cx = GetSystemMetrics(SM_CXEDGE);
-    cy = GetSystemMetrics(SM_CYEDGE);
+    cx = (int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+    cy = (int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 
     /* Space for default indicator:
      */
@@ -724,7 +733,7 @@ static void TabElementSize(
     Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
-    Tk_GetPixelsFromObj(0, tkwin, tab->borderWidthObj, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, 1.0, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 
     if (mainInfoPtr != NULL) {
@@ -831,7 +840,7 @@ static void TabElementDraw(
     XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	    pts, 6, Convex, CoordModeOrigin);
 
-    Tk_GetPixelsFromObj(NULL, tkwin, tab->borderWidthObj, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, 1.0, &borderWidth);
     while (borderWidth--) {
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);
@@ -871,13 +880,17 @@ static const Ttk_ElementSpec TabElementSpec = {
 static void ClientElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    paddingPtr->left = paddingPtr->right = GetSystemMetrics(SM_CXEDGE);
-    paddingPtr->top = paddingPtr->bottom = GetSystemMetrics(SM_CYEDGE);
+    double scalingLevel = TkScalingLevel(tkwin);
+
+    paddingPtr->left = paddingPtr->right =
+	(int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+    paddingPtr->top = paddingPtr->bottom =
+	(int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 }
 
 static void ClientElementDraw(

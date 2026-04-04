@@ -1132,8 +1132,7 @@ Ttk_CreateVsapiElement(
 	    int tmp = 0;
 	    if (i == objc -1) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"Missing value for \"%s\".",
-			Tcl_GetString(objv[i])));
+			"Missing value for \"%s\".", Tcl_GetString(objv[i])));
 		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", (char *)NULL);
 		goto retErr;
 	    }

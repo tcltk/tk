@@ -1265,7 +1265,7 @@ MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    void *clientData, const TkEnsemble *map);
 MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
 MODULE_SCOPE int	TkGetScaledPixelValue(Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj *valuePtr, double divisor);
+			    Tcl_Obj *valuePtr, double divisor, int *size);
 MODULE_SCOPE int	TkObjIsEmpty(Tcl_Obj *objPtr);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    void *clientData);

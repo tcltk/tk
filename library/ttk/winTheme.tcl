@@ -69,8 +69,10 @@ namespace eval ttk::theme::winnative {
 	ttk::style map TNotebook.Tab -expand {selected {2 2 2 0}}
 
 	# Treeview
-	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Item \
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised \
+	    -indicatorsize 6p -indicatormargin {3 1 2 1}
+	ttk::style configure Item -indicatorsize 6p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator

@@ -1757,7 +1757,7 @@ static TreeItem *IdentifyItem(Treeview *tv, int y) {
 static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1) {
     Tcl_Size colno = FirstColumn(tv);
     int xpos = tv->tree.treeArea.x;
-    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
+    int scaledHALO = (int)round(HALO * TkScalingLevel(tv->core.tkwin));
 
     if (tv->tree.nTitleColumns <= colno) {
 	xpos -= tv->tree.xscroll.first;
@@ -1914,7 +1914,7 @@ static const char *const regionStrings[] = {
 static TreeRegion IdentifyRegion(Treeview *tv, int x, int y) {
     int x1 = 0;
     Tcl_Size colno = IdentifyDisplayColumn(tv, x, &x1);
-    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
+    int scaledHALO = (int)round(HALO * TkScalingLevel(tv->core.tkwin));
 
     if (Ttk_BoxContains(tv->tree.headingArea, x, y)) {
 	if (colno < 0) {
@@ -2292,7 +2292,7 @@ static void DrawCells(
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
-    short horizPad = round(4 * TkScalingLevel(tv->core.tkwin));
+    short horizPad = (short)round(4 * TkScalingLevel(tv->core.tkwin));
     Ttk_Padding cellPadding = {horizPad, 0, horizPad, 0};
     DisplayItem displayItemCell, displayItemCellSel, displayItemCellActive;
     int rowHeight = tv->tree.rowHeight * item->height;
@@ -3431,7 +3431,7 @@ static int TreeviewHorribleIdentify(
     Tcl_Size dColumnNumber;
     char dcolbuf[32];
     int x, y, x1;
-    int scaledHALO = round(HALO * TkScalingLevel(tv->core.tkwin));
+    int scaledHALO = (int)round(HALO * TkScalingLevel(tv->core.tkwin));
 
     /* ASSERT: objc == 4 */
 
@@ -7295,7 +7295,7 @@ static void TreeheadingIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0, &size);
     TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
 
     /* Add padding */
@@ -7398,7 +7398,7 @@ static void TreeitemIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0, &size);
     TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
 
     /* Add padding (only scaled if not in pixels) */

@@ -71,21 +71,21 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TMenubutton -relief raised \
 	    -indicatormargin {3.75p 0} -padding {3m 1m}
 
-	ttk::style configure TEntry -padding 1 -font TkTextFont
+	ttk::style configure TEntry -padding 1p -font TkTextFont -insertwidth 1p
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1 \
-	    -arrowsize 5.5p -arrowpadding 2.25p \
-	    -focuswidth 1 -focuscolor black
+	ttk::style configure TCombobox -padding 1p \
+	    -arrowsize 5.5p -arrowpadding 2.25p -insertwidth 1p \
+	    -focuswidth 1p -focuscolor black
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 5p -arrowpadding 1.5p \
-	    -focuswidth 1 -focuscolor black
+	    -arrowsize 5p -arrowpadding 1.5p -insertwidth 1p \
+	    -focuswidth 1p -focuscolor black
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 

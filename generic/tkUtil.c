@@ -428,7 +428,7 @@ TkOffsetPrintProc(
 	if (offsetPtr->flags >= INT_MAX) {
 	    return "end";
 	}
-	p = (char *)ckalloc(32);
+	p = (char *)Tcl_Alloc(32);
 	snprintf(p, 32, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
@@ -458,7 +458,7 @@ TkOffsetPrintProc(
 	    return "se";
 	}
     }
-    q = p = (char *)ckalloc(32);
+    q = p = (char *)Tcl_Alloc(32);
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
@@ -523,7 +523,7 @@ TkPixelPrintProc(
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
-    char *p = (char *)ckalloc(24);
+    char *p = (char *)Tcl_Alloc(24);
 
     Tcl_PrintDouble(NULL, *doublePtr, p);
     *freeProcPtr = TCL_DYNAMIC;
@@ -1271,7 +1271,7 @@ TkScalingLevel(
  *	Returns a scaled pixel value for a given screen unit value.
  *
  * Results:
- *      The scaled screen unit value in pixels or -1 for error.
+ *      The scaled screen unit value in pixels or TCL_ERROR for error.
  *
  * Side effects:
  *      None.
@@ -1283,22 +1283,22 @@ int
 TkGetScaledPixelValue(
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,
-    Tcl_Obj *valuePtr,
-    double divisor)
+    Tcl_Obj *valuePtr,		/* Value to scale */
+    double divisor,		/* Divided result by value */
+    int *size)			/* Return value */
 {
-    int size;
     double d;
 
     if (Tcl_GetDoubleFromObj(NULL, valuePtr, &d) == TCL_OK) {
 	/* Unscaled pixel value, so do scaling */
-	size = (int)round(d * TkScalingLevel(tkwin) / divisor);
+	*size = (int)round(d * TkScalingLevel(tkwin) / divisor);
     } else if (Tk_GetDoublePixelsFromObj(interp, tkwin, valuePtr, &d) == TCL_OK) {
-	/* Other screen units value, so convert to scaled pixels */
-	size = (int)round(d / divisor);
+	/* Other screen units value, already scaled  */
+	*size = (int)round(d / divisor);
     } else {
-	return -1;
+	return TCL_ERROR;
     }
-    return size;
+    return TCL_OK;
 }
 
 /*

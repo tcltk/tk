@@ -6,7 +6,6 @@
 
 #include "tkInt.h"
 #include "ttkThemeInt.h"
-#include "ttkThemeInt.h"
 
 #if defined(MAC_OSX_TK)
   #define IGNORES_VISUAL
@@ -374,7 +373,7 @@ static void BorderElementSize(
     int borderWidth = BORDERWIDTH;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, bd->borderWidthObj, 1.0, &borderWidth);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
@@ -402,7 +401,7 @@ static void BorderElementDraw(
     /*
      * Get option values.
      */
-    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, bd->borderWidthObj, 1.0, &borderWidth);
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
@@ -471,7 +470,7 @@ static void FieldElementDraw(
     XColor *borderColor = Tk_GetColorFromObj(tkwin, field->borderColorObj);
     int focusWidth = 2;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
+    TkGetScaledPixelValue(NULL, tkwin, field->focusWidthObj, 1.0, &focusWidth);
 
     if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
 	Display *disp = Tk_Display(tkwin);
@@ -649,8 +648,8 @@ static void IndicatorElementSize(
     Ttk_Padding margins;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = round(spec->width * scalingLevel + Ttk_PaddingWidth(margins));
-    *heightPtr = round(spec->height * scalingLevel + Ttk_PaddingHeight(margins));
+    *widthPtr = (int)round(spec->width * scalingLevel + Ttk_PaddingWidth(margins));
+    *heightPtr = (int)round(spec->height * scalingLevel + Ttk_PaddingHeight(margins));
 }
 
 static void ColorToStr(
@@ -679,8 +678,8 @@ static void IndicatorElementDraw(
     Ttk_Padding padding;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     double scalingLevel = TkScalingLevel(tkwin);
-    int width = spec->width * scalingLevel;
-    int height = spec->height * scalingLevel;
+    int width = (int)round(spec->width * scalingLevel);
+    int height = (int)round(spec->height * scalingLevel);
 
     char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
 	 shadeColorStr[7], borderColorStr[7];
@@ -875,7 +874,7 @@ static void ArrowElementSize(
     int size = 9;
 
     /* Get scaled size */
-    size = TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -970,7 +969,7 @@ static void BoxArrowElementSize(
     int size = 9;
 
     /* Get scaled size */
-    size = TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1073,7 +1072,7 @@ static void MenubuttonArrowElementSize(
     Ttk_Padding padding;
     int size = 9;
     /* Get scaled size */
-    size = TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
     TtkArrowSize(size, ARROW_RIGHT, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1104,7 +1103,7 @@ static void MenubuttonArrowElementDraw(
     int width = 0, height = 0;
     Ttk_Padding padding;
 
-    size = TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 1.0, &size);
     Tcl_GetIndexFromObjStruct(NULL, arrow->directionObj, directionStrings,
 	   sizeof(char *), ""/*message*/, 0/*flags*/, &postDirection);
 
@@ -1175,10 +1174,9 @@ static void ThumbElementSize(
 {
     ThumbElement *thumb = (ThumbElement *)elementRecord;
     Ttk_Orient orient;
-    double scalingLevel = TkScalingLevel(tkwin);
     int size = 9;
 
-    size = TkGetScaledPixelValue(NULL, tkwin, thumb->sizeObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, thumb->sizeObj, 1.0, &size);
     Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
@@ -1276,8 +1274,8 @@ static void SliderElementSize(
     int thickness = 15, borderWidth = BORDERWIDTH;
 
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
-    thickness = TkGetScaledPixelValue(NULL, tkwin, slider->thicknessObj, 1.0);
-    borderWidth = TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, slider->thicknessObj, 1.0, &thickness);
+    TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, 1.0, &borderWidth);
 
     switch (orient) {
 	case TTK_ORIENT_VERTICAL:
@@ -1304,7 +1302,7 @@ static void SliderElementDraw(
     XColor *borderColor = Tk_GetColorFromObj(tkwin, slider->borderColorObj);
     int relief = TK_RELIEF_RAISED, borderWidth = BORDERWIDTH;
 
-    borderWidth = TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, 1.0, &borderWidth);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
 
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
@@ -1336,7 +1334,7 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginObj), "3p 1.5p 1.5p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "7p" },
+	offsetof(TreeheadingIndicator,sizeObj), "6p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -1354,7 +1352,7 @@ static void TreeheadingIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add padding */
@@ -1458,7 +1456,7 @@ static void TreeitemIndicatorSize(
     int size = 9;
 
     /* Get scaled indicator size */
-    size = TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 1.0);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 1.0, &size);
     *widthPtr = *heightPtr = size;
 
     /* Add scaled padding */

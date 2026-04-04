@@ -128,24 +128,24 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style map TMenubutton \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TEntry \
-	    -fieldbackground $colors(-window) -padding 1 \
+	ttk::style configure TEntry -insertwidth 1p \
+	    -fieldbackground $colors(-window) -padding 1p \
 	    -focuswidth 2 -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox \
+	ttk::style configure TCombobox -insertwidth 1p \
 	    -arrowpadding 2p -arrowsize 5p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding 1 \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -fieldbackground $colors(-window) -padding 1p \
+	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TSpinbox \
+	ttk::style configure TSpinbox -insertwidth 1p \
 	    -arrowpadding 1.5p -arrowsize 5p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -182,7 +182,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont -relief raised \
+	    -font TkHeadingFont -relief raised -padding 2.25p \
 	    -indicatorsize 6p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
@@ -203,7 +203,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
 	    -indent 15p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
 	    -background [list	disabled $colors(-frame) \
 				background $colors(-alternate) \
@@ -219,7 +219,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    ComboboxPopdownFrame.border -sticky nswe
 	}
 	ttk::style configure ComboboxPopdownFrame \
-	    -borderwidth 1 -relief solid
+	    -borderwidth 1p -relief solid
 
 	#
 	# Toolbar buttons
