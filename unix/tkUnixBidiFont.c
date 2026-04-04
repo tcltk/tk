@@ -19,15 +19,13 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <signal.h>
-#include <setjmp.h>
 #include <hb.h>
 #include <hb-ft.h>
 #include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 16
 #define MAX_GLYPHS 512
-#define MAX_FONTS 100
+#define MAX_FONTS 200
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
 
@@ -225,8 +223,8 @@ static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
                              unsigned long pixel);
 static int IsLatinOnly(const char *str, int len);  /* fast-path helper */
-static int
-GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runLen);
+static int GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars,
+			   int runStart, int runLen);
 
 /*
  * ---------------------------------------------------------------
@@ -969,7 +967,7 @@ X11Shaper_Destroy(
     }
 }
 
-/*
+/* ---------------------------------------------------------------
  * GetRunFaceIndex --
  *
  *  Choose the best font face for a given run based on the first character.
@@ -978,7 +976,8 @@ X11Shaper_Destroy(
  *    Font face; falls back to face 0 if no match is found.
  *
  *  Side effects:
- *    None. 
+ *    None.
+ * ---------------------------------------------------------------
  */
 
 static int
@@ -998,7 +997,6 @@ GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runL
     }
     return 0;   /* Fallback. */
 }
-
 
 /*
  * ---------------------------------------------------------------
