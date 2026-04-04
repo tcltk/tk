@@ -684,6 +684,8 @@ CUPS_LIBS
 CUPS_CFLAGS
 UNIX_FONT_OBJS
 BIDI_CFLAGS
+HB_LIBS
+HB_CFLAGS
 XFT_LIBS
 XFT_CFLAGS
 XMKMF
@@ -8658,6 +8660,7 @@ printf '%s\n' "$as_me: WARNING: Can't find xft configuration or xft is unusable 
     #--------------------------------------------------------------------
     # --enable-bidi (advanced optional switch)
     # If enabled, forces --enable-xft=yes and uses tkUnixBidiFont.o
+    # HarfBuzz is now a **hard dependency** when bidi is enabled.
     #--------------------------------------------------------------------
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable bidirectional (Bidi) text support" >&5
 printf %s "checking whether to enable bidirectional (Bidi) text support... " >&6; }
@@ -8680,7 +8683,7 @@ printf '%s\n' "$as_me: --enable-bidi requested: enabling Xft as well" >&6;}
 	   enable_xft=yes
 	fi
 
-	# Fixed include paths for SheenBidi (point to the directory containing the SheenBidi/ subdir)
+	# Fixed include paths for SheenBidi
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
                      -I${TK_SRC_DIR}/unix/bidi/Source \
                      -I${TK_SRC_DIR}/unix/bidi \
@@ -8689,6 +8692,110 @@ printf '%s\n' "$as_me: --enable-bidi requested: enabling Xft as well" >&6;}
 printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
 
 	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz - HARD DEPENDENCY for bidirectional support
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for HarfBuzz (required for --enable-bidi)" >&5
+printf %s "checking for HarfBuzz (required for --enable-bidi)... " >&6; }
+        if pkg-config --exists harfbuzz; then
+            HB_CFLAGS=`pkg-config --cflags harfbuzz`
+            HB_LIBS=`pkg-config --libs harfbuzz`
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+            # Verify headers and library
+            tk_oldCFlags=$CFLAGS
+            tk_oldLibs=$LIBS
+            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+
+            ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "#include <X11/Xlib.h>
+"
+if test "x$ac_cv_header_harfbuzz_hb_h" = xyes
+then :
+
+else case e in #(
+  e)
+                as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
+             ;;
+esac
+fi
+
+
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for hb_buffer_create in -lharfbuzz" >&5
+printf %s "checking for hb_buffer_create in -lharfbuzz... " >&6; }
+if test ${ac_cv_lib_harfbuzz_hb_buffer_create+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-lharfbuzz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char hb_buffer_create (void);
+int
+main (void)
+{
+return hb_buffer_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_harfbuzz_hb_buffer_create=yes
+else case e in #(
+  e) ac_cv_lib_harfbuzz_hb_buffer_create=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_harfbuzz_hb_buffer_create" >&5
+printf '%s\n' "$ac_cv_lib_harfbuzz_hb_buffer_create" >&6; }
+if test "x$ac_cv_lib_harfbuzz_hb_buffer_create" = xyes
+then :
+  printf '%s\n' "#define HAVE_LIBHARFBUZZ 1" >>confdefs.h
+
+  LIBS="-lharfbuzz $LIBS"
+
+else case e in #(
+  e)
+                as_fn_error $? "HarfBuzz library (libharfbuzz) not found or unusable" "$LINENO" 5
+             ;;
+esac
+fi
+
+
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+
+            # Add HarfBuzz flags
+            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+
+
+        else
+            as_fn_error $? "--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
+        fi
+
     else
 	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
@@ -8713,6 +8820,8 @@ else
     enable_bidi=no
     UNIX_FONT_OBJS="tkUnixFont.o"
     BIDI_CFLAGS=""
+    HB_CFLAGS=""
+    HB_LIBS=""
 fi
 
 #--------------------------------------------------------------------
@@ -9150,7 +9259,7 @@ printf '%s\n' "#define TK_FRAMEWORK 1" >>confdefs.h
     HTML_DIR="${libdir}/Resources/Documentation/Reference/Tk"
     EXTRA_INSTALL="install-private-headers html-tk"
     EXTRA_BUILD_HTML='@ln -fs contents.htm "$(HTML_INSTALL_DIR)"/TkTOC.html'
-    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
+    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_IMPORT_DIR)/Resources/Info.plist"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Credits.html "$(LIB_INSTALL_DIR)/Resources"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua = yes; then
@@ -9429,6 +9538,9 @@ eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
 #------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
+
+
 
 
 
