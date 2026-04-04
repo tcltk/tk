@@ -2,7 +2,7 @@
  * tkUnixBidiFont.c --
  *
  * Alternate implementation of tkUnixFont.c using Xft with proper
- * text shaping via kb_text_shaper.
+ * text shaping via HarfBuzz (ported from kb_text_shaper).
  *
  * Copyright (c) 2002-2003 Keith Packard
  * Copyright (c) 2026 Kevin Walzer
@@ -21,13 +21,13 @@
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>
-#define KB_TEXT_SHAPE_IMPLEMENTATION
-#include <kb_text_shaper.h>
+#include <hb.h>
+#include <hb-ft.h>
 #include <SheenBidi/SheenBidi.h>
 
 #define MAX_CACHED_COLORS 16
 #define MAX_GLYPHS 512
-#define MAX_FONTS 20
+#define MAX_FONTS 100
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
 
@@ -63,9 +63,11 @@ typedef struct {
     FcCharSet *charset;        /* Supported characters. */
     double angle;              /* Current rotation angle. */
 
-    /* kb_text_shaper font mapping. */
-    kbts_font *kbFont;         /* Corresponding kbts font. */
-    int isLoaded;              /* Whether kbFont was successfully loaded. */
+    /* HarfBuzz font mapping. */
+    hb_font_t *hbFont;         /* Corresponding HarfBuzz font. */
+    hb_blob_t *hbBlob;         /* Font blob (kept alive for hbFont lifetime) */
+    hb_face_t *hbFace;         /* HarfBuzz face (kept alive for hbFont lifetime) */
+    int isLoaded;              /* Whether hbFont was successfully loaded. */
 
     /* Font metrics for scaling. */
     double unitsPerEm;         /* For scaling glyph positions. */
@@ -93,12 +95,11 @@ typedef struct {
  *   Pure output buffer for shaped glyphs. No shaper state; no cache.
  *   Callers stack-allocate this, pass it to shaping functions.
  *
- *   Note on glyph IDs: kb_text_shaper operates directly on raw TrueType
- *   glyph index space (the same space as FT_Get_Char_Index / Xft internal
- *   indices). IDs are therefore directly usable with XftDrawGlyphFontSpec
- *   provided the same font file+face-index is used for both shaping and
- *   rendering. The fontIndex field tracks which UnixFtFace produced each
- *   glyph to ensure this invariant holds.
+ *   Note on glyph IDs: HarfBuzz operates on FreeType glyph indices,
+ *   which match Xft's internal glyph space. IDs are directly usable
+ *   with XftDrawGlyphFontSpec provided the same font file+face is used
+ *   for both shaping and rendering. fontIndex tracks which UnixFtFace
+ *   produced each glyph to ensure this invariant.
  *
  *   byteOffset records the cluster start AND clusterLen records
  *   the cluster length in bytes. This enables accurate cursor placement and
@@ -109,7 +110,7 @@ typedef struct {
 typedef struct {
     struct {
         int fontIndex;         /* Index into UnixFtFont->faces[]. */
-        unsigned int glyphId;  /* Raw TrueType glyph index (kbts == Xft space). */
+        unsigned int glyphId;  /* FreeType glyph index (HarfBuzz == Xft space). */
         int x, y;              /* Pen position for this glyph. */
         int advanceX;          /* Advance width in pixels. */
         int byteOffset;        /* Byte offset of cluster start in source string. */
@@ -120,7 +121,7 @@ typedef struct {
     int totalAdvance;          /* Total advance width in pixels. */
     
     /*
-     * Visual index for cursor positioning/;
+     * Visual index for cursor positioning.
      * 
      * Parallel structure that maps visual (screen) positions back to logical 
      * (source string) byte offsets. Built in sync with word reversal so that
@@ -146,16 +147,16 @@ typedef struct {
  * ---------------------------------------------------------------
  * X11Shaper --
  *
- *   Persistent per-font shaping state. Owns the kbts context,
- *   bidirectional font mapping, and string cache.
+ *   Persistent per-font shaping state. Owns the HarfBuzz context,
+ *   font mapping, and string cache.
  * ---------------------------------------------------------------
  */
 
 typedef struct {
-    kbts_shape_context *context;
+    hb_buffer_t *buffer;
     /* Font mapping - bidirectional. */
     struct {
-        kbts_font *kbFont;
+        hb_font_t *hbFont;
         int faceIndex;
     } fontMap[MAX_FONTS];
     int numFonts;
@@ -742,7 +743,9 @@ InitFont(
         fontPtr->faces[i].ft0Font    = NULL;
         fontPtr->faces[i].source     = set->fonts[i];
         fontPtr->faces[i].angle      = 0.0;
-        fontPtr->faces[i].kbFont     = NULL;
+        fontPtr->faces[i].hbFont     = NULL;
+        fontPtr->faces[i].hbBlob     = NULL;
+        fontPtr->faces[i].hbFace     = NULL;
         fontPtr->faces[i].isLoaded   = 0;
         fontPtr->faces[i].unitsPerEm = 0.0;
         fontPtr->faces[i].ascender   = 0.0;
@@ -877,6 +880,10 @@ FinishedWithFont(
 	    XftFontClose(fontPtr->display, fontPtr->faces[i].ft0Font);
 	    UNLOCK;
 	}
+	if (fontPtr->faces[i].hbFont) {
+	    /* Don't destroy - fonts/faces/blobs stay alive for program lifetime */
+	    fontPtr->faces[i].hbFont = NULL;
+	}
 	if (fontPtr->faces[i].charset) {
 	    FcCharSetDestroy(fontPtr->faces[i].charset);
 	}
@@ -903,13 +910,14 @@ FinishedWithFont(
  * ---------------------------------------------------------------
  * X11Shaper_Init --
  *
- *   Initialize persistent shaping context and load all font faces.
+ *   Initialize persistent shaping context.
+ *   Fonts are loaded lazily on first use (see X11Shaper_ShapeString).
  *
  * Results:
  *   None.
  *
  * Side effects:
- *   Allocates shaping context and loads fonts.
+ *   Allocates shaping buffer.
  * ---------------------------------------------------------------
  */
 
@@ -920,8 +928,9 @@ X11Shaper_Init(
 {
     memset(s, 0, sizeof(*s));
 
-    s->context = kbts_CreateShapeContext(0, 0);
-    if (!s->context) {
+    /* Create a HarfBuzz buffer for shaping. */
+    s->buffer = hb_buffer_create();
+    if (!s->buffer) {
         return;
     }
 
@@ -929,26 +938,9 @@ X11Shaper_Init(
     s->cache.valid = 0;
     s->shapeErrors = 0;
 
-    /* Load all fonts. */
-    for (int i = 0; i < fontPtr->nfaces && s->numFonts < MAX_FONTS; i++) {
-        FcPattern *facePattern = fontPtr->faces[i].source;
-        FcChar8 *file;
-        int index;
-
-        if (FcPatternGetString(facePattern, FC_FILE, 0, &file) != FcResultMatch ||
-            FcPatternGetInteger(facePattern, FC_INDEX, 0, &index) != FcResultMatch) {
-            continue;
-        }
-
-        kbts_font *kbFont = kbts_ShapePushFontFromFile(s->context, (const char *)file, index);
-        if (kbFont) {
-            s->fontMap[s->numFonts].kbFont    = kbFont;
-            s->fontMap[s->numFonts].faceIndex = i;
-            fontPtr->faces[i].kbFont          = kbFont;
-            fontPtr->faces[i].isLoaded        = 1;
-            s->numFonts++;
-        }
-    }
+    /* Fonts are loaded lazily on first shape call.
+     * This avoids issues with XftFace locking during font initialization.
+     */
 }
 
 /*
@@ -969,9 +961,9 @@ static void
 X11Shaper_Destroy(
     X11Shaper *s)
 {
-    if (s->context) {
-        kbts_DestroyShapeContext(s->context);
-        s->context = NULL;
+    if (s->buffer) {
+        hb_buffer_destroy(s->buffer);
+        s->buffer = NULL;
     }
 }
 
@@ -979,17 +971,17 @@ X11Shaper_Destroy(
  * ---------------------------------------------------------------
  * X11Shaper_ShapeString --
  *
- *   Shape a UTF-8 string and produce glyph buffer.
+ *   Shape a UTF-8 string using HarfBuzz and produce glyph buffer.
  *
  *   Computes actual clusterLen for each glyph.
- *   Clamps byteOffset to valid range to prevent buffer overruns
+ *   Clamps byteOffset to valid range to prevent buffer overruns.
  *   Shapes all runs LTR, then reverses RTL runs manually to fix
  *   word-level BiDi (was reversing glyphs within words incorrectly).
- *   Stores isRTL flag per-glyph for cursor movement logic
+ *   Stores isRTL flag per-glyph for cursor movement logic.
  *
  *   For each output glyph, glyphs[i].fontIndex identifies which
- *   UnixFtFace produced the glyph ID. Since kbts operates in raw
- *   TrueType glyph index space (same as Xft), the ID is valid for
+ *   UnixFtFace produced the glyph ID. Since HarfBuzz operates in raw
+ *   FreeType glyph index space (same as Xft), the ID is valid for
  *   XftDrawGlyphFontSpec as long as the same font file+face is used
  *   for rendering. fontIndex is the key that enforces this.
  *
@@ -1006,7 +998,38 @@ X11Shaper_Destroy(
  *   Updates the shaper cache; buffer is filled.
  * ---------------------------------------------------------------
  */
+/*
+ * GetRunFaceIndex --
+ *
+ *   Choose the best font face for a given run based on the first character.
+ *   Falls back to face 0 if no match is found.
+ */
+static int
+GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runLen)
+{
+    if (runLen <= 0 || runStart < 0) {
+        return 0;
+    }
 
+    FcChar32 uc = ucs4Chars[runStart];
+
+    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+        if (fontPtr->faces[fi].charset &&
+            FcCharSetHasChar(fontPtr->faces[fi].charset, uc)) {
+            return fi;
+        }
+    }
+    return 0;   /* fallback to first face */
+}
+
+
+/*
+ * X11Shaper_ShapeString --
+ *
+ *   Updated version: proper per-run font selection, correct HarfBuzz scaling,
+ *   and removal of legacy manual RTL word reversal (HarfBuzz + SheenBidi
+ *   already produce correct visual order).
+ */
 static int
 X11Shaper_ShapeString(
     X11Shaper *shaper,
@@ -1015,28 +1038,13 @@ X11Shaper_ShapeString(
     int numBytes,
     ShapedGlyphBuffer *buffer)
 {
-    if (!shaper->context || !source || numBytes <= 0 || !buffer) {
+    if (!shaper->buffer || !source || numBytes <= 0 || !buffer) {
         return 0;
     }
 
-    /* Early exit for shaper with no fonts loaded - can't shape anything. */
-    if (shaper->numFonts == 0) {
-        return 0;
-    }
-
-    /*
-     * Fast path for Latin-only text (U+0000-U+024F).
-     *
-     * This covers Basic Latin, Latin-1 Supplement, Latin Extended-A and B,
-     * which includes all common Western European precomposed diacritics
-     * (à á â ã ä å æ ç è é ê ë ì í î ï ð ñ ò ó ô õ ö ø ù ú û ü ý þ ÿ
-     * and their uppercase counterparts, plus the Extended-A/B additions).
-     *
-     * These scripts need no BiDi reordering, no ligature shaping, and no
-     * multi-face fallback.  A single Xft face with XftTextExtentsUtf8 /
-     * XftDrawStringUtf8 handles them correctly and is much faster.
-     */
+    /* Fast path for Latin-only text (U+0000–U+024F) — unchanged */
     if (IsLatinOnly(source, numBytes)) {
+        fprintf(stderr, "DEBUG: Taking Latin-only fast path for %d bytes\n", numBytes);
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
             int penX = 0;
@@ -1071,7 +1079,9 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Check cache first. */
+    fprintf(stderr, "DEBUG: Taking HarfBuzz shaping path for %d bytes\n", numBytes);
+
+    /* Check cache first (unchanged) */
     if (shaper->cache.valid &&
         shaper->cache.len == numBytes &&
         numBytes <= MAX_STRING_CACHE &&
@@ -1083,9 +1093,7 @@ X11Shaper_ShapeString(
     buffer->glyphCount   = 0;
     buffer->totalAdvance = 0;
 
-    int shapedAny = 0;
-
-    /* Use stack allocation for common case (small strings). */
+    /* UCS-4 conversion (unchanged) */
     int stackCharBounds[256];
     FcChar32 stackUcs4Chars[256];
     int *charBounds;
@@ -1106,7 +1114,6 @@ X11Shaper_ShapeString(
         needFree = 1;
     }
 
-    /* Convert UTF-8 to UCS-4 and record byte boundaries. */
     charBounds[0] = 0;
     int bytePos   = 0;
     int charCount = 0;
@@ -1117,22 +1124,15 @@ X11Shaper_ShapeString(
                                 numBytes - bytePos);
 
         if (clen <= 0) {
-            /* Invalid sequence → skip this byte entirely. */
             bytePos++;
-            continue;  /* Don't add to character array at all. */
+            continue;
         }
 
-        /*
-         * Filter out problematic codepoints that crash kb_text_shaper.
-         * - C0 controls (0x00-0x1F) except tab/newline/CR.
-         * - C1 controls (0x80-0x9F) - these cause the crash!
-         * - Invalid/replacement characters.
-         */
+        /* Filter problematic control characters */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
-            (uc >= 0x0080 && uc <= 0x009F) ||  /* C1 controls. */
-            (uc == 0xFFFD)) {  /* Replacement character. */
+            (uc >= 0x0080 && uc <= 0x009F) || uc == 0xFFFD) {
             bytePos += clen;
-            continue;  /* Skip without adding to character array. */
+            continue;
         }
 
         ucs4Chars[charCount] = uc;
@@ -1142,17 +1142,13 @@ X11Shaper_ShapeString(
     }
 
     if (charCount == 0) {
-        if (needFree) {
-            free(charBounds);
-            free(ucs4Chars);
-        }
-        /* Return success with empty buffer - nothing to shape. */
+        if (needFree) { free(charBounds); free(ucs4Chars); }
         buffer->glyphCount = 0;
         buffer->totalAdvance = 0;
-        return 1;  /* Empty string is not an error. */
+        return 1;
     }
 
-    /* Get bidi runs. */
+    /* Get bidirectional runs using SheenBidi (unchanged) */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
 
@@ -1172,10 +1168,7 @@ X11Shaper_ShapeString(
 
         if (runByteLen <= 0) continue;
 
-        /*
-         * Verify the run contains actual data.
-         * Some runs may be empty after filtering control characters.
-         */
+        /* Skip runs with only filtered control characters */
         int hasVisibleChars = 0;
         for (int ci = runStart; ci < runStart + runLen; ci++) {
             if (ucs4Chars[ci] >= 0x0020 || ucs4Chars[ci] == 0x0009 ||
@@ -1184,209 +1177,154 @@ X11Shaper_ShapeString(
                 break;
             }
         }
-        if (!hasVisibleChars) {
-            continue;  /* Skip runs with only filtered control chars. */
-        }
+        if (!hasVisibleChars) continue;
 
-        kbts_run  run;
-        kbts_glyph *glyph;
+        /* Choose the best face for this run */
+        int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, runStart, runLen);
+
         int runPenX = 0;
         int runPenY = 0;
 
-        /*
-         * Now that runs are in logical order from SheenBidi,
-         * we need to shape RTL runs with KBTS_DIRECTION_RTL to get
-         * proper glyph joining and correct glyph order within each word.
-         */
+        /* Lazy-load HarfBuzz fonts (once per font) */
+        if (shaper->numFonts == 0) {
+            for (int fi = 0; fi < fontPtr->nfaces && shaper->numFonts < MAX_FONTS; fi++) {
+                FcPattern *facePattern = fontPtr->faces[fi].source;
+                FcChar8 *fontFile = NULL;
+                int fontIndex = 0;
 
-        kbts_ShapeBegin(shaper->context,
-                        runIsRTL ? KBTS_DIRECTION_RTL : KBTS_DIRECTION_LTR,
-                        KBTS_LANGUAGE_DONT_KNOW);
+                if (FcPatternGetString(facePattern, FC_FILE, 0, &fontFile) != FcResultMatch)
+                    continue;
+                FcPatternGetInteger(facePattern, FC_INDEX, 0, &fontIndex);
 
-        /*
-         * Skip empty or invalid runs that could crash kb_text_shaper.
-         */
-        if (runByteLen <= 0 || !source) {
-            continue;
+                hb_blob_t *blob = hb_blob_create_from_file_or_fail((const char *)fontFile);
+                if (!blob) continue;
+
+                hb_face_t *face = hb_face_create(blob, fontIndex);
+                if (!face) {
+                    hb_blob_destroy(blob);
+                    continue;
+                }
+
+                hb_font_t *font = hb_font_create(face);
+                if (!font) {
+                    hb_face_destroy(face);
+                    hb_blob_destroy(blob);
+                    continue;
+                }
+
+                /* Set correct pixel scale */
+                XftFont *xftFont = GetFaceFont(fontPtr, fi, 0.0);
+                if (xftFont) {
+                    int pixelSize = 12;
+                    if (XftPatternGetInteger(xftFont->pattern, XFT_PIXEL_SIZE, 0, &pixelSize) != XftResultMatch) {
+                        double ptSize = 12.0;
+                        XftPatternGetDouble(xftFont->pattern, XFT_SIZE, 0, &ptSize);
+                        pixelSize = (int)(ptSize * 96.0 / 72.0 + 0.5);
+                    }
+                    hb_font_set_scale(font, pixelSize * 64, pixelSize * 64);
+                }
+
+                shaper->fontMap[shaper->numFonts].hbFont    = font;
+                shaper->fontMap[shaper->numFonts].faceIndex = fi;
+                fontPtr->faces[fi].hbFont = font;
+                fontPtr->faces[fi].hbBlob = blob;   /* never destroy */
+                fontPtr->faces[fi].hbFace = face;   /* never destroy */
+                fontPtr->faces[fi].isLoaded = 1;
+                shaper->numFonts++;
+            }
         }
 
-        kbts_ShapeUtf8(shaper->context, source + runByteStart, runByteLen,
-                       KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX);
+        /* Set up HarfBuzz buffer for this run */
+        hb_buffer_clear_contents(shaper->buffer);
+        hb_buffer_add_utf8(shaper->buffer, source + runByteStart, runByteLen, 0, runByteLen);
+        hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
+        hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 
-        kbts_ShapeEnd(shaper->context);
+        /* Use the font for this run */
+        hb_font_t *runHbFont = NULL;
+        int shapeFaceIndex = runFaceIndex;
 
-        while (kbts_ShapeRun(shaper->context, &run) == 1 &&
-               buffer->glyphCount < MAX_GLYPHS) {
+        if (shapeFaceIndex < fontPtr->nfaces &&
+            fontPtr->faces[shapeFaceIndex].isLoaded &&
+            fontPtr->faces[shapeFaceIndex].hbFont) {
+            runHbFont = fontPtr->faces[shapeFaceIndex].hbFont;
+        } else if (shaper->numFonts > 0) {
+            runHbFont = shaper->fontMap[0].hbFont;
+            shapeFaceIndex = shaper->fontMap[0].faceIndex;
+        }
 
-            /*
-             * Map kbts_font* back to the face index used when loading.
-             * If the font isn't in our map yet, kb_text_shaper loaded it
-             * dynamically as a fallback. We need to find which face it
-             * corresponds to and add it to the map.
-             */
-            int faceIndex = 0;
-            int faceFound = 0;
+        if (!runHbFont) continue;
 
-            /* First, check if we already have this font. */
-            for (int f = 0; f < shaper->numFonts; f++) {
-                if (shaper->fontMap[f].kbFont == run.Font) {
-                    faceIndex = shaper->fontMap[f].faceIndex;
-                    faceFound = 1;
-                    break;
-                }
+        hb_shape(runHbFont, shaper->buffer, NULL, 0);
+
+        unsigned int glyphCount = hb_buffer_get_length(shaper->buffer);
+        hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
+        hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
+
+        if (!glyphInfo || !glyphPos) continue;
+
+        /* Collect glyphs — NO extra *scale multiplier */
+        struct {
+            int fontIndex;
+            unsigned int glyphId;
+            int x, y;
+            int advanceX;
+            int offsetX;
+            int byteOffset;
+            int clusterLen;
+        } tempGlyphs[MAX_GLYPHS];
+        int tempCount = 0;
+
+        for (unsigned int i = 0; i < glyphCount && tempCount < MAX_GLYPHS; i++) {
+            tempGlyphs[tempCount].fontIndex = shapeFaceIndex;
+            tempGlyphs[tempCount].glyphId   = glyphInfo[i].codepoint;
+
+            tempGlyphs[tempCount].offsetX = (int)(glyphPos[i].x_offset / 64.0 + 0.5);
+
+            tempGlyphs[tempCount].x = globalPenX + runPenX + tempGlyphs[tempCount].offsetX;
+            tempGlyphs[tempCount].y = globalPenY + runPenY - (int)(glyphPos[i].y_offset / 64.0 + 0.5);
+
+            tempGlyphs[tempCount].advanceX = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
+
+            /* Map cluster back to source bytes */
+            int clusterByte = glyphInfo[i].cluster;
+            int byteOffsetInSource = runByteStart + clusterByte;
+            if (byteOffsetInSource >= 0 && byteOffsetInSource < numBytes) {
+                tempGlyphs[tempCount].byteOffset = byteOffsetInSource;
+            } else {
+                tempGlyphs[tempCount].byteOffset = runByteStart;
             }
 
-            /* If not found, try to load it on-demand from remaining faces. */
-            if (!faceFound && shaper->numFonts < MAX_FONTS) {
-                /* Search unloaded faces for one that matches this font. */
-                for (int i = 0; i < fontPtr->nfaces; i++) {
-                    if (fontPtr->faces[i].kbFont == run.Font) {
-                        /* Found it - add to map. */
-                        shaper->fontMap[shaper->numFonts].kbFont = run.Font;
-                        shaper->fontMap[shaper->numFonts].faceIndex = i;
-                        faceIndex = i;
-                        faceFound = 1;
-                        shaper->numFonts++;
-                        break;
-                    }
-                }
-            }
+            tempGlyphs[tempCount].clusterLen = 0;
+            runPenX += tempGlyphs[tempCount].advanceX;
+            tempCount++;
+        }
 
-            if (!faceFound) {
-                /*
-                 * Cannot map this kbts font to an Xft face.  Consume the
-                 * glyphs to keep runPenX accurate for subsequent glyph
-                 * positions, but do NOT add runPenX to globalPenX here.
-                 * globalPenX += runPenX runs unconditionally at the bottom
-                 * of the outer loop; adding it here too would double-count
-                 * the advance and shift all subsequent glyphs to the right.
-                 */
-                kbts_glyph_iterator it = run.Glyphs;
-                kbts_glyph *g;
-                while (kbts_GlyphIteratorNext(&it, &g) == 1) {
-                    runPenX += (int)(g->AdvanceX * fontPtr->pixelScale + 0.5);
-                }
-                continue;
-            }
+        /* Compute actual cluster lengths */
+        for (int i = 0; i < tempCount; i++) {
+            int clusterStart = tempGlyphs[i].byteOffset;
+            int clusterEnd = (i + 1 < tempCount) ?
+                             tempGlyphs[i + 1].byteOffset : runByteEnd;
+            tempGlyphs[i].clusterLen = clusterEnd - clusterStart;
+            if (tempGlyphs[i].clusterLen <= 0)
+                tempGlyphs[i].clusterLen = 1;
+        }
 
-            if (faceIndex >= fontPtr->nfaces) {
-                faceIndex = 0;
-            }
+        /* Copy to final buffer */
+        for (int i = 0; i < tempCount; i++) {
+            int idx = buffer->glyphCount;
+            if (idx >= MAX_GLYPHS) break;
 
-            /* Get proper scaling factor for this font face.
-             * kb_text_shaper returns positions in font units (unitsPerEm scale).
-             * We need to scale to pixels based on the font size.
-             * The XftFont's ascent/descent are already in pixels for the requested size.
-             */
-            double scale = fontPtr->pixelScale;  /* Fallback. */
+            buffer->glyphs[idx].fontIndex  = tempGlyphs[i].fontIndex;
+            buffer->glyphs[idx].glyphId    = tempGlyphs[i].glyphId;
+            buffer->glyphs[idx].x          = tempGlyphs[i].x;
+            buffer->glyphs[idx].y          = tempGlyphs[i].y;
+            buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
+            buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
+            buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
+            buffer->glyphs[idx].isRTL      = runIsRTL;
 
-            /* Ensure we have metrics for this face. */
-            XftFont *faceFont = GetFaceFont(fontPtr, faceIndex, 0.0);
-            if (faceFont && fontPtr->faces[faceIndex].unitsPerEm > 0) {
-                /* Scale from font units to pixels using the face's actual metrics. */
-                scale = (double)faceFont->ascent /
-                        (double)fontPtr->faces[faceIndex].ascender;
-            }
-
-            /*
-             * Collect glyphs from kb_text_shaper into a temporary buffer.
-             * We need to reverse the order for RTL runs and recompute positions.
-             */
-            struct {
-                int fontIndex;
-                unsigned int glyphId;
-                int x, y;
-                int advanceX;
-                int offsetX;
-                int byteOffset;
-                int clusterLen;
-            } tempGlyphs[MAX_GLYPHS];
-            int tempCount = 0;
-
-            kbts_glyph_iterator it = run.Glyphs;
-            while (kbts_GlyphIteratorNext(&it, &glyph) == 1 &&
-                   tempCount < MAX_GLYPHS) {
-
-                tempGlyphs[tempCount].fontIndex = faceIndex;
-                tempGlyphs[tempCount].glyphId   = glyph->Id;
-
-                tempGlyphs[tempCount].offsetX = (int)(glyph->OffsetX * scale + 0.5);
-
-                tempGlyphs[tempCount].x = globalPenX + runPenX +
-                                          tempGlyphs[tempCount].offsetX;
-                tempGlyphs[tempCount].y = globalPenY + runPenY;
-
-                tempGlyphs[tempCount].advanceX =
-                        (int)(glyph->AdvanceX * scale + 0.5);
-
-                /*
-                 * Map the kbts UserIdOrCodepointIndex back to a byte offset in
-                 * the original source string. kbts is invoked with
-                 * KBTS_USER_ID_GENERATION_MODE_CODEPOINT_INDEX, so
-                 * glyph->UserIdOrCodepointIndex is the codepoint index within
-                 * this run. charBounds[runStart + UserIdOrCodepointIndex] is
-                 * the byte start of that codepoint in the full source string.
-                 */
-                int cpIndex = runStart + glyph->UserIdOrCodepointIndex;
-
-                /* Add bounds checking to prevent segfaults. */
-                if (cpIndex >= 0 && cpIndex < charCount) {
-                    tempGlyphs[tempCount].byteOffset = charBounds[cpIndex];
-                } else {
-                    tempGlyphs[tempCount].byteOffset = runByteStart;
-                }
-
-                /* clusterLen will be computed after all glyphs are collected. */
-                tempGlyphs[tempCount].clusterLen = 0;
-
-                runPenX += tempGlyphs[tempCount].advanceX;
-                tempCount++;
-            }
-
-            /*
-             * Compute actual cluster lengths.
-             * Each glyph's cluster extends from its byteOffset to the next
-             * glyph's byteOffset (or to runByteEnd for the last glyph).
-             */
-            for (int i = 0; i < tempCount; i++) {
-                int clusterStart = tempGlyphs[i].byteOffset;
-                int clusterEnd;
-
-                if (i + 1 < tempCount) {
-                    clusterEnd = tempGlyphs[i + 1].byteOffset;
-                } else {
-                    /* Last glyph - cluster extends to end of run. */
-                    clusterEnd = runByteEnd;
-                }
-
-                tempGlyphs[i].clusterLen = clusterEnd - clusterStart;
-
-                /* Ensure cluster length is positive. */
-                if (tempGlyphs[i].clusterLen <= 0) {
-                    tempGlyphs[i].clusterLen = 1;
-                }
-            }
-
-            /*
-             * Copy glyphs to output buffer.
-             * kb_text_shaper has already handled RTL reversal and positioning.
-             */
-            for (int i = 0; i < tempCount; i++) {
-                int idx = buffer->glyphCount;
-                if (idx >= MAX_GLYPHS) break;
-
-                buffer->glyphs[idx].fontIndex  = tempGlyphs[i].fontIndex;
-                buffer->glyphs[idx].glyphId    = tempGlyphs[i].glyphId;
-                buffer->glyphs[idx].x          = tempGlyphs[i].x;
-                buffer->glyphs[idx].y          = tempGlyphs[i].y;
-                buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
-                buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
-                buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
-                buffer->glyphs[idx].isRTL      = runIsRTL;
-
-                buffer->glyphCount++;
-                shapedAny = 1;
-            }
+            buffer->glyphCount++;
         }
 
         globalPenX += runPenX;
@@ -1395,101 +1333,21 @@ X11Shaper_ShapeString(
 
     buffer->totalAdvance = globalPenX;
 
-    /*
-     * Word-level reversal for RTL:
-     *
-     * When we have a single RTL run containing multiple words, kb_text_shaper
-     * reverses glyphs within each word correctly, but keeps words in logical order.
-     * We need to reverse the word order for visual display.
-     *
-     * Strategy: Find word boundaries (spaces) and reverse the word order.
-     */
-    if (numRuns == 1 && bidiRuns[0].isRTL && buffer->glyphCount > 1) {
-        /* Find word boundaries by looking for space glyphs. */
-        typedef struct {
-            int startIdx;
-            int endIdx;  /* Inclusive. */
-        } Word;
+    /* === REMOVED: legacy manual RTL word-reversal block === */
+    /* It is no longer needed with correct HarfBuzz + SheenBidi usage. */
 
-        Word words[64];
-        int wordCount = 0;
-        int i = 0;
-        int wordStart = 0;
-
-        while (i < buffer->glyphCount) {
-            /* Identify spaces by character, not glyph ID. */
-            int byteOff = buffer->glyphs[i].byteOffset;
-            int isSpace = (byteOff >= 0 && byteOff < numBytes && source[byteOff] == ' ');
-
-            if (isSpace) {
-                /* End current word at the character before this space. */
-                if (i > wordStart) {
-                    words[wordCount].startIdx = wordStart;
-                    words[wordCount].endIdx = i - 1;
-                    wordCount++;
-                }
-                wordStart = i + 1;  /* Next word starts after space. */
-            } else if (i == buffer->glyphCount - 1) {
-                /* Last glyph - end current word here. */
-                words[wordCount].startIdx = wordStart;
-                words[wordCount].endIdx = i;
-                wordCount++;
-                wordStart = i + 1;  /* For completeness; won't be used. */
-            }
-            
-            i++;
-        }
-
-        if (wordCount > 1) {
-            /* Reverse the word order. */
-            ShapedGlyphBuffer tempBuffer;
-            tempBuffer.glyphCount = 0;
-            int penX = 0;
-
-            for (int w = wordCount - 1; w >= 0; w--) {
-                for (int j = words[w].startIdx; j <= words[w].endIdx; j++) {
-                    tempBuffer.glyphs[tempBuffer.glyphCount] = buffer->glyphs[j];
-                    tempBuffer.glyphs[tempBuffer.glyphCount].x = penX;
-                    penX += buffer->glyphs[j].advanceX;
-                    tempBuffer.glyphCount++;
-                }
-
-                /* Add space after word (except last). */
-                if (w > 0 && words[w].endIdx + 1 < buffer->glyphCount) {
-                    int spaceIdx = words[w].endIdx + 1;
-                    tempBuffer.glyphs[tempBuffer.glyphCount] = buffer->glyphs[spaceIdx];
-                    tempBuffer.glyphs[tempBuffer.glyphCount].x = penX;
-                    penX += buffer->glyphs[spaceIdx].advanceX;
-                    tempBuffer.glyphCount++;
-                }
-            }
-
-            *buffer = tempBuffer;
-            buffer->totalAdvance = penX;
-        }
-    }
-
-    /*
-     * Build visual index for cursor positioning: 
-     * 
-     * Create a parallel index that maps visual (screen) positions to logical
-     * (source) byte offsets. This enables fast, accurate cursor positioning
-     * and selection for RTL and mixed-direction text.
-     * 
-     * Process after word reversal so the index reflects final visual order.
-     */
+    /* Build visual index for cursor positioning */
     buffer->indexCount = buffer->glyphCount;
     for (int i = 0; i < buffer->glyphCount; i++) {
         buffer->visualIndex[i].x = buffer->glyphs[i].x;
         buffer->visualIndex[i].advanceX = buffer->glyphs[i].advanceX;
-        
         int byteEnd = buffer->glyphs[i].byteOffset + buffer->glyphs[i].clusterLen;
         if (byteEnd < 0) byteEnd = 0;
         if (byteEnd > numBytes) byteEnd = numBytes;
         buffer->visualIndex[i].byteEnd = byteEnd;
     }
 
-    /* Update cache - invalidate first for thread safety. */
+    /* Update cache */
     if (numBytes <= MAX_STRING_CACHE) {
         shaper->cache.valid = 0;
         memcpy(shaper->cache.text, source, numBytes);
@@ -1503,20 +1361,8 @@ X11Shaper_ShapeString(
         free(ucs4Chars);
     }
 
-    /*
-     * Return success even if shapedAny is still 0 (all runs had faceFound=0
-     * so no glyphs were emitted into the buffer).  An empty buffer with
-     * totalAdvance>0 is a valid result — it means the string occupies space
-     * but has no renderable glyphs in our Xft face set.
-     *
-     * Returning 0 here is wrong: Tk_MeasureChars and Tk_MeasureCharsInContext
-     * treat a 0 return as a hard failure and immediately return 0 bytes
-     * consumed with *lengthPtr=0.  If the text widget calls either in a loop
-     * expecting to make forward progress, it will spin forever.
-     */
     return 1;
 }
-
 /*
  * ---------------------------------------------------------------
  * TkpFontPkgInit --
@@ -1840,11 +1686,8 @@ Tk_MeasureChars(
          * full codepoint at a time.
          *
          * A binary search on raw byte offsets is incorrect for multi-byte
-         * UTF-8: the midpoint can land inside a sequence (e.g. the second
-         * byte of \xC3\xA1 = U+00E1 'a acute'), making XftTextExtentsUtf8
-         * measure a truncated, invalid sequence and return a wrong width.
-         * That wrong width causes the caller to think measurement failed and
-         * fall through to the shaper, which then uses multiple faces.
+         * UTF-8: the midpoint can land inside a sequence, making
+         * XftTextExtentsUtf8 measure a truncated, invalid sequence.
          */
         int best = 0, bestWidth = 0;
         int pos = 0;
@@ -1910,12 +1753,6 @@ Tk_MeasureChars(
      * 
      * The visualIndex maps visual (screen) positions to logical (source) byte
      * offsets, enabling accurate cursor positioning for all text directions.
-     * 
-     * Algorithm:
-     * 1. Scan through visualIndex in visual order (left-to-right on screen)
-     * 2. For each glyph, track the furthest logical byte offset
-     * 3. When pixel position exceeds maxLength, return the byte offset
-     * 4. This works correctly for LTR, RTL, and mixed text
      */
     int prevByteEnd = 0;
     
@@ -1930,7 +1767,6 @@ Tk_MeasureChars(
 
         /* Record word-break opportunities based on source character. */
         if (byteEnd > 0 && byteEnd <= (int)numBytes) {
-            /* Check character before the end of this cluster. */
             if (source[byteEnd - 1] == ' ' || source[byteEnd - 1] == '\t') {
                 lastBreakByte = byteEnd;
                 lastBreakX = glyphXEnd;
@@ -1976,9 +1812,6 @@ Tk_MeasureChars(
  *   requested range. This preserves ligatures, kerning, and BiDi
  *   analysis across substring boundaries.
  *
- *   FIX: Track minimum and maximum byte boundaries to ensure
- *   returned byte counts are monotonically increasing.
- *
  * Results:
  *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
  *
@@ -2004,8 +1837,6 @@ Tk_MeasureCharsInContext(
      * Fast path for Latin-only strings (U+0000-U+024F).
      *
      * Check only the substring [rangeStart, rangeStart+rangeLength).
-     * The full source may contain non-Latin script outside this range;
-     * checking the full numBytes would incorrectly bypass this path.
      */
     if (IsLatinOnly(source + rangeStart, (int)rangeLength)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
@@ -2029,7 +1860,6 @@ Tk_MeasureCharsInContext(
 
         /*
          * Linear codepoint scan — same reasoning as Tk_MeasureChars above.
-         * Binary search on raw byte offsets splits multi-byte sequences.
          */
         int best = 0, bestWidth = 0;
         int pos = 0;
@@ -2095,11 +1925,7 @@ Tk_MeasureCharsInContext(
     int bytesConsumed = (int)rangeStart;
 
     /*
-     * Cursor positioning in range with visual index:
-     * 
-     * Use visualIndex to measure a substring while preserving shaping context.
-     * The visualIndex provides fast, accurate byte-position lookup for all
-     * text directions, including RTL and mixed text.
+     * Cursor positioning in range with visual index.
      */
     for (int i = 0; i < buffer.indexCount; i++) {
         int glyphAdvance = buffer.visualIndex[i].advanceX;
@@ -2188,10 +2014,7 @@ Tk_DrawChars(
 
     if (numBytes <= 0) return;
 
-    /* Create a temporary XftDraw for this draw operation. 
-     * Don't reuse across different drawables - this was causing
-     * RenderBadPicture errors when drawables were destroyed.
-     */
+    /* Create a temporary XftDraw for this draw operation. */
     ftDraw = XftDrawCreate(display, drawable,
                           fontPtr->visual, fontPtr->colormap);
     if (!ftDraw) return;
@@ -2210,8 +2033,6 @@ Tk_DrawChars(
 
     /*
      * Fast path for Latin-only strings (U+0000-U+024F).
-     * XftDrawStringUtf8 correctly handles the multi-byte UTF-8 encoding
-     * of precomposed diacritics (à á â ñ ü etc.) with a single face.
      * Check only the bytes being drawn, not any larger buffer.
      */
     if (IsLatinOnly(source, (int)numBytes)) {
@@ -2321,10 +2142,7 @@ Tk_DrawCharsInContext(
     
     XftDraw *ftDraw = NULL;
 
-    /* Create a temporary XftDraw for this draw operation. 
-     * Don't reuse across different drawables - this was causing
-     * the RenderBadPicture errors when drawables were destroyed.
-     */
+    /* Create a temporary XftDraw for this draw operation. */
     ftDraw = XftDrawCreate(display, drawable,
                           fontPtr->visual, fontPtr->colormap);
     if (!ftDraw) return;
@@ -2340,11 +2158,7 @@ Tk_DrawCharsInContext(
 
     /*
      * Fast path for Latin-only strings (U+0000-U+024F).
-     * XftDrawStringUtf8 handles precomposed diacritics correctly
-     * without needing the shaper or multi-face fallback.
-     *
-     * Check only the substring being drawn: the full source may contain
-     * non-Latin characters outside [rangeStart, rangeStart+rangeLength).
+     * Check only the substring being drawn.
      */
     if (IsLatinOnly(source + rangeStart, (int)rangeLength)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
@@ -2371,19 +2185,12 @@ Tk_DrawCharsInContext(
     int firstGlyphFound = 0;
 
     /*
-     * We need to find the actual screen X position of the first glyph
-     * in our range. The glyph positions in the buffer are absolute
-     * from the start of the shaped string. We need to subtract the
-     * X offset of the first glyph in our range to get the correct
-     * baseline.
+     * Find the X position of the first glyph that starts
+     * at or after rangeStart.
      */
     int rangeStartX = 0;
     int rangeStartFound = 0;
 
-    /*
-     * First pass: Find the X position of the first glyph that starts
-     * at or after rangeStart.
-     */
     for (int i = 0; i < fullBuffer.glyphCount; i++) {
         int glyphStart = fullBuffer.glyphs[i].byteOffset;
         int glyphEnd = glyphStart + fullBuffer.glyphs[i].clusterLen;
@@ -2446,8 +2253,6 @@ Tk_DrawCharsInContext(
 
         /*
 	 * Calculate screen position: baseX + (glyph X - rangeStartX).
-         * This ensures the substring starts at the correct x coordinate
-         * as if it were drawn starting from the beginning of the range.
 	 */
         int glyphScreenX = x + (fullBuffer.glyphs[i].x - rangeStartX);
 

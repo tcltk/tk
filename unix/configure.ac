@@ -414,6 +414,7 @@ if test $tk_aqua = no; then
     #--------------------------------------------------------------------
     # --enable-bidi (advanced optional switch)
     # If enabled, forces --enable-xft=yes and uses tkUnixBidiFont.o
+    # HarfBuzz is now a **hard dependency** when bidi is enabled.
     #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
     AC_ARG_ENABLE(bidi,
@@ -428,13 +429,53 @@ if test $tk_aqua = no; then
 	   enable_xft=yes
 	fi
 
-	# Fixed include paths for SheenBidi (point to the directory containing the SheenBidi/ subdir)
+	# Fixed include paths for SheenBidi
 	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
                      -I${TK_SRC_DIR}/unix/bidi/Source \
                      -I${TK_SRC_DIR}/unix/bidi \
                      -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
 	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
 	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz - HARD DEPENDENCY for bidirectional support
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
+        if pkg-config --exists harfbuzz; then
+            HB_CFLAGS=`pkg-config --cflags harfbuzz`
+            HB_LIBS=`pkg-config --libs harfbuzz`
+            AC_MSG_RESULT([yes])
+
+            # Verify headers and library
+            tk_oldCFlags=$CFLAGS
+            tk_oldLibs=$LIBS
+            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+
+            AC_CHECK_HEADER(harfbuzz/hb.h, [], [
+                AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
+            ], [#include <X11/Xlib.h>])
+
+            AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
+                AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
+            ])
+
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+
+            # Add HarfBuzz flags
+            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+            AC_SUBST(HB_CFLAGS)
+            AC_SUBST(HB_LIBS)
+        else
+            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz])
+        fi
+
     else
 	AC_MSG_RESULT([no])
 	BIDI_CFLAGS=""
@@ -456,6 +497,8 @@ else
     enable_bidi=no
     UNIX_FONT_OBJS="tkUnixFont.o"
     BIDI_CFLAGS=""
+    HB_CFLAGS=""
+    HB_LIBS=""
 fi
 
 #--------------------------------------------------------------------
@@ -678,7 +721,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     HTML_DIR="${libdir}/Resources/Documentation/Reference/Tk"
     EXTRA_INSTALL="install-private-headers html-tk"
     EXTRA_BUILD_HTML='@ln -fs contents.htm "$(HTML_INSTALL_DIR)"/TkTOC.html'
-    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
+    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_IMPORT_DIR)/Resources/Info.plist"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Credits.html "$(LIB_INSTALL_DIR)/Resources"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua = yes; then
@@ -848,6 +891,9 @@ AC_SUBST(REZ)
 AC_SUBST(REZ_FLAGS)
 
 AC_SUBST(BIDI_CFLAGS)
+AC_SUBST(HB_CFLAGS)
+AC_SUBST(HB_LIBS)
+AC_SUBST(UNIX_FONT_OBJS)
 
 AC_CONFIG_FILES([
     Makefile:../unix/Makefile.in

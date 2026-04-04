@@ -157,7 +157,7 @@ AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
-X11_LIB_SWITCHES	= $(XFT_LIBS) @XLIBSW@
+X11_LIB_SWITCHES	= $(XFT_LIBS) $(HB_LIBS) @XLIBSW@
 
 
 # To turn off the security checks that disallow incoming sends when
@@ -264,8 +264,8 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @EXTRA_WISH_LIBS@
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the
@@ -297,6 +297,10 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
 
+# support for HarfBuzz (hard dependency when --enable-bidi is used)
+HB_CFLAGS		= @HB_CFLAGS@
+HB_LIBS			= @HB_LIBS@
+
 # support for libcups
 CUPS_CFLAGS		= @CUPS_CFLAGS@
 CUPS_LIBS		= @CUPS_LIBS@
@@ -305,7 +309,7 @@ CUPS_LIBS		= @CUPS_LIBS@
 ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
 
-# Bidi support (SheenBidi + text shaper)
+# Bidi support (SheenBidi + HarfBuzz text shaping)
 BIDI_CFLAGS		= @BIDI_CFLAGS@
 
 #----------------------------------------------------------------
@@ -344,7 +348,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
 ${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS)
+${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -353,7 +357,7 @@ APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
 -I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
-${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS)
+${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 WISH_OBJS = tkAppInit.o
 
@@ -1009,7 +1013,6 @@ tk3d.o: $(GENERIC_DIR)/tk3d.c
 tkAccessibility.o: $(GENERIC_DIR)/tkAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkAccessibility.c
 
-
 tkArgv.o: $(GENERIC_DIR)/tkArgv.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkArgv.c
 
@@ -1311,9 +1314,9 @@ tkUnixFont.o: $(UNIX_DIR)/tkUnixFont.c
 tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
 
-# New rule for bidi font renderer
+# New rule for bidi font renderer with HarfBuzz
 tkUnixBidiFont.o: $(UNIX_DIR)/tkUnixBidiFont.c
-	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(BIDI_CFLAGS) $(UNIX_DIR)/tkUnixBidiFont.c
+	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS) $(UNIX_DIR)/tkUnixBidiFont.c
 
 # SheenBidi unity build - only compiled when BIDI_CFLAGS is set
 SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
