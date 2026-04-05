@@ -682,6 +682,7 @@ ATK_LIBS
 ATK_CFLAGS
 CUPS_LIBS
 CUPS_CFLAGS
+FONTSYSTEM
 UNIX_FONT_OBJS
 BIDI_CFLAGS
 HB_LIBS
@@ -8814,6 +8815,16 @@ printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
 
 
 
+    # Set font system for pkgconfig
+    if test "$enable_bidi" = "yes"; then
+	FONTSYSTEM="xft"
+    elif test "$enable_xft" = "yes"; then
+	FONTSYSTEM="xft"
+    else
+	FONTSYSTEM="core"
+    fi
+
+
 else
     # On Aqua (macOS) - neither Xft nor Bidi is supported in this path
     enable_xft=no
@@ -8822,6 +8833,8 @@ else
     BIDI_CFLAGS=""
     HB_CFLAGS=""
     HB_LIBS=""
+    FONTSYSTEM="core"
+
 fi
 
 #--------------------------------------------------------------------
@@ -9538,6 +9551,7 @@ eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
 #------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
 
 
 

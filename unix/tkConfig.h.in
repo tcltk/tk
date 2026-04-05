@@ -7,6 +7,9 @@
 /* Define if ATK and Atk-bridge are available */
 #undef HAVE_ATK
 
+/* Define to 1 if bidirectional text support is enabled */
+#undef HAVE_BIDI
+
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
 
