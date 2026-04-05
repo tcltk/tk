@@ -496,10 +496,11 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
     }
     
     /* Close any open NanoVG frame on this pixmap. */
-    if (impl->frameOpen) {
-        nvgEndFrame(glfwContext.vg);
-        impl->frameOpen = 0;
-    }
+    //// Suspicious - how could it be open?
+    //if (impl->frameOpen) {
+    //    nvgEndFrame(glfwContext.vg);
+    //    impl->frameOpen = 0;
+    //}
     
     /* Delete OpenGL resources. */
     if (impl->fbo) {

@@ -316,6 +316,7 @@ CreateGlfwWindow(TkWindow *winPtr)
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
 
     if (wmPtr->glfwWindow != NULL) {
+	printf("%s already has a glfwWindow\n", Tk_PathName(winPtr));
         return;
     }
 
@@ -326,6 +327,7 @@ CreateGlfwWindow(TkWindow *winPtr)
     }
 
     wmPtr->glfwWindow = (GLFWwindow *)winPtr->window;
+    
 
     /* Apply wm properties that are valid AFTER creation. */
 
@@ -695,7 +697,10 @@ Tk_MakeWindow(
     Drawable    drawable;
     Window      window;
 
-    if (winPtr->parentPtr == NULL) {
+    printf("Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
+    /// This doesn't test for a toplevel!
+    //if (winPtr->parentPtr == NULL) {
+    if (Tk_IsTopLevel(winPtr)) {
         /*
          * -------------------------
          *   TOPLEVEL WINDOW
@@ -709,15 +714,17 @@ Tk_MakeWindow(
          * Create the GLFW window and get a drawable ID.
          * drawable is ignored; we use winPtr->window instead.
          */
+
 	glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
         if (!glfwWindow) {
             return None;
         }
-
+	
         /*
          * Tk's window ID for a toplevel is the GLFWwindow pointer cast.
          */
+
         window = (Window)glfwWindow;
         winPtr->window = window;
 
@@ -3707,6 +3714,7 @@ UpdateSizeHints(TkWindow *winPtr)
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
 
     if (wmPtr->glfwWindow == NULL) return;
+    printf("glfwWindow is %p\n", wmPtr->glfwWindow);
 
     glfwSetWindowSizeLimits(wmPtr->glfwWindow,
 			    wmPtr->minWidth, wmPtr->minHeight,

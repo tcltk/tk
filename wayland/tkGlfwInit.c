@@ -105,6 +105,27 @@ TkGlfwErrorCallback(int error, const char *desc)
  *----------------------------------------------------------------------
  */
 
+
+// Vertex shader: assigns corners of a texture as attributes of vertices
+// of two triangles forming a quad.
+static const char* vShader = "#version 330 core\n"
+    "layout (location = 0) in vec2 aPos; \n"
+    "layout (location = 1) in vec2 aTex; \n"
+    "out vec2 UV; \n"
+    "void main() { \n"
+        "gl_Position = vec4(aPos, 0.0, 1.0); \n"
+        "UV = aTex; }";
+
+// Fragment shader: assigns color to screen pixels by sampling the texture.
+static const char* fShader = "#version 330 core\n"
+    "out vec4 Color; \n"
+    "in vec2 UV; \n"
+    "uniform sampler2D screenTexture; \n"
+    "void main() { \n"
+    "    Color = texture(screenTexture, UV); }";
+
+static GLuint tkWaylandShader;
+
 MODULE_SCOPE int
 TkGlfwInitialize(void)
 {
@@ -121,15 +142,43 @@ TkGlfwInitialize(void)
         return TCL_ERROR;
     }
 
+    // Compile Vertex Shader
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vShader, NULL);
+    glCompileShader(vs);
+
+    // Compile Fragment Shader
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fShader, NULL);
+    glCompileShader(fs);
+
+    // Link shaders into a program
+    tkWaylandShader = glCreateProgram();
+    glAttachShader(tkWaylandShader, vs);
+    glAttachShader(tkWaylandShader, fs);
+    glLinkProgram(tkWaylandShader);
+
+    // These shaders are no longer needed. 
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
     /*
      * Shared context window - hidden. All application windows
      * share its GL context so textures and shaders are visible across them.
      */
+    //// This is used for the root window, which is NOT hidden
+    //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
 
+    //// Added for consistency
+    glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+
+    
     //// XXXX if the width and height below are set to 640 x 480,
     //// you will see a white 640x480 rectangle behind the root window,
     //// which moves with the window and contains a 200x200 window
@@ -252,6 +301,12 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *----------------------------------------------------------------------
  */
 
+void setTextureSize(unsigned int fbo, unsigned int width, unsigned int height) {
+    if (width > 0 && height > 0) {
+    }
+}
+
+
 MODULE_SCOPE GLFWwindow *
 TkGlfwCreateWindow(
     TkWindow   *tkWin,
@@ -318,11 +373,20 @@ TkGlfwCreateWindow(
     mapping->width        = width;
     mapping->height       = height;
     mapping->clearPending = 1;
+
+    // Create and initialize a framebuffer
+
+    //==================================================================
+
     
+    //==================================================================
+#if 1 // Old code
+
     mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
 	if (mapping->fbo == NULL) {
 		fprintf(stderr, "Could not create NanoVG framebuffer\n");
 	}
+#endif
 
     AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
@@ -456,7 +520,7 @@ void SyncWindowSize(WindowMapping *m)
  *	TCL_OK if drawing can proceed, TCL_ERROR otherwise.
  *
  * Side effects:
- *	Saves NanoVG state and applies translations.
+ *      Changes nvg and gl state.
  *
  *----------------------------------------------------------------------
  */
@@ -474,29 +538,33 @@ TkGlfwBeginDraw(
 	printf("Failed to find mapping for drawable %lx\n", drawable);
         return TCL_ERROR;
     }
-    printf("%s\n", Tk_PathName(m->tkWindow));
-    
-    /* Redirect all subsequent GL commands to the off-screen FBO. */
+    printf("window %s; FBO: %d\n", Tk_PathName(m->tkWindow), m->fbo->fbo);
+
+    /* Redirect all subsequent GL commands to the FBO. */
     nvgluBindFramebuffer(m->fbo);
-    
+
+    /* Check FBO completeness. */
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        printf("FBO is incomplete (status=0x%x)\n", status);
+    }
+
     /* Set viewport to the FBO size. */
     //// BeginFrame supposedly does this.
     glViewport(0, 0, m->width, m->height);
+    printf("Set viewport to %d x %d\n", m->width, m->height);
 
     if (m->width != Tk_Width(m->tkWindow) ||
 	m->height != Tk_Height(m->tkWindow)) {
 	printf("window size does not match mapping\n");
     }
-    
+	
     /* Start a NanoVG frame targeting the FBO. */
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
 
     dcPtr->vg = glfwContext.vg;
     dcPtr->drawable = drawable;
-
-    /* Save state for this specific primitive. */
-    nvgSave(dcPtr->vg);
 
     /* Handle coordinates (Child window offsets). */
     if (m->tkWindow && !Tk_IsTopLevel(m->tkWindow)) {
@@ -534,31 +602,37 @@ MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
-    printf("EndDraw\n");
-
-    // After we finish drawing, but before we call EndFrame,
-    // blit the FBO to the (default) back buffer.
-    /* Unbind FBO to return to the default backbuffer. */
-        nvgluBindFramebuffer(NULL);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->fbo);
-    glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
-		      0, 0, (int)m->width, (int)m->height,
-		      GL_COLOR_BUFFER_BIT,
-		      GL_NEAREST);
-    
     if (dcPtr && dcPtr->vg) {
-        nvgEndFrame(dcPtr->vg);
-        nvgRestore(dcPtr->vg);
+	nvgRestore(dcPtr->vg); // nvgBeginFrame called nvgSave!
+    
+	// Before we call EndFrame, blit the FBO to the (default) back buffer.
 	
+	printf("Blitting\n");
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->fbo);
+	glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
+			  0, 0, (int)m->width, (int)m->height,
+			  GL_COLOR_BUFFER_BIT,
+			  GL_NEAREST);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	printf("Blitted\n");
+	
+        nvgEndFrame(dcPtr->vg);
 	// Now we can swap the buffers.
+	printf("Swapping\n");
 	glfwSwapBuffers(m->glfwWindow);
+	printf("Swapped\n");
 
         /* Signal that the screen needs to be updated with the FBO's content. */
+	//// This does not make sense anymore.
         if (m) {
 			m->needsDisplay = 1;
 		}
+    } else {
+	printf("No context in TkGlfwEndDraw\n");
     }
+
+    printf("TkGlfwEndDraw: %s\n", Tk_PathName(m->tkWindow));
 }
 
 

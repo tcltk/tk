@@ -309,6 +309,7 @@ NVGcontext* nvgCreateInternal(NVGparams* params)
 	ctx->cache = nvg__allocPathCache();
 	if (ctx->cache == NULL) goto error;
 
+	printf("nvgCreateInternal calling nvgSave\n");
 	nvgSave(ctx);
 	nvgReset(ctx);
 
@@ -371,6 +372,7 @@ void nvgDeleteInternal(NVGcontext* ctx)
 
 void nvgBeginFrame(NVGcontext* ctx, float windowWidth, float windowHeight, float devicePixelRatio)
 {
+  printf("nvgBeginFrame\n");
 /*	printf("Tris: draws:%d  fill:%d  stroke:%d  text:%d  TOT:%d\n",
 		ctx->drawCallCount, ctx->fillTriCount, ctx->strokeTriCount, ctx->textTriCount,
 		ctx->fillTriCount+ctx->strokeTriCount+ctx->textTriCount);*/
@@ -396,6 +398,7 @@ void nvgCancelFrame(NVGcontext* ctx)
 
 void nvgEndFrame(NVGcontext* ctx)
 {
+    printf("nvgEndFrame\n");
 	ctx->params.renderFlush(ctx->params.userPtr);
 	if (ctx->fontImageIdx != 0) {
 		int fontImage = ctx->fontImages[ctx->fontImageIdx];
@@ -630,6 +633,7 @@ static void nvg__setPaintColor(NVGpaint* p, NVGcolor color)
 // State handling
 void nvgSave(NVGcontext* ctx)
 {
+  printf("nvgSave\n");
 	if (ctx->nstates >= NVG_MAX_STATES)
 		return;
 	if (ctx->nstates > 0)
@@ -639,6 +643,7 @@ void nvgSave(NVGcontext* ctx)
 
 void nvgRestore(NVGcontext* ctx)
 {
+    printf("nvgRestore\n");
 	if (ctx->nstates <= 1)
 		return;
 	ctx->nstates--;

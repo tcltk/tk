@@ -123,7 +123,6 @@ MODULE_SCOPE void
 TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
     printf("TkGlfWindowSizeCallback\n");
-    glViewport(0, 0, width, height);
     
     WindowMapping *mapping = FindMappingByGLFW(window);
     if (!mapping) {
@@ -176,6 +175,7 @@ TkGlfwFramebufferSizeCallback(
     int height)
 {
     printf("TkGlfwFramebufferSizeCallback %dx%d\n", width, height);
+    //glViewport(0, 0, width, height);
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	return;
@@ -193,7 +193,6 @@ TkGlfwFramebufferSizeCallback(
     winPtr->changes.width = width;
     winPtr->changes.height = height;
     TkDoConfigureNotify(winPtr);
-
 }
 
 /*

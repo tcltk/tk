@@ -148,6 +148,7 @@ TkWaylandWakeupFileProc(TCL_UNUSED(void *),
         glfwPollEvents();
         TkWaylandCheckForWindowClosure();
         
+#if 0
         /* Begin event cycle for main window */
         if (glfwContext.mainWindow) {
             m = FindMappingByGLFW(glfwContext.mainWindow);
@@ -155,6 +156,7 @@ TkWaylandWakeupFileProc(TCL_UNUSED(void *),
                 TkWaylandBeginEventCycle(m);
             }
         }
+#endif
     }
 }
 /*
@@ -334,7 +336,8 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
     while (m) {
         if (m->glfwWindow && !m->frameOpen) {
             glfwMakeContextCurrent(m->glfwWindow);
-            
+
+#if 0 //This is done in BeginDraw
             /* Start the frame once for the entire event pass. */
             int fbw, fbh;
             glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
@@ -347,6 +350,7 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
             
             m->frameOpen = 1;
 	}
+#endif
 	/* Force a display flush at the end of this Tcl cycle. */
 	//Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
         m = m->nextPtr;
@@ -457,8 +461,9 @@ TkWaylandQueueExposeEvent(
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped((Tk_Window)childPtr) ||
-	    Tk_IsTopLevel((Tk_Window)childPtr)) {
+        //if (!Tk_IsMapped((Tk_Window)childPtr) ||
+	//    Tk_IsTopLevel((Tk_Window)childPtr)) {
+	if (Tk_IsTopLevel((Tk_Window)childPtr)) {
             continue;
         }
         TkWaylandQueueExposeEvent(childPtr, 
@@ -529,6 +534,7 @@ TkWaylandBeginEventCycle(WindowMapping *m)
 
     glfwMakeContextCurrent(m->glfwWindow);
 
+#if 0
     int fbw, fbh;
     glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
     glViewport(0, 0, fbw, fbh);
@@ -551,6 +557,7 @@ TkWaylandBeginEventCycle(WindowMapping *m)
     m->frameOpen = 1;
     m->inEventCycle = 1;
     glfwContext.activeFrame = m;
+#endif
 }
 /*
  *----------------------------------------------------------------------
@@ -621,6 +628,7 @@ TkWaylandScheduleDisplay(WindowMapping *m)
 void
 TkWaylandDisplayProc(ClientData clientData)
 {
+#if 0 //// What is this for?
     WindowMapping *m = (WindowMapping *)clientData;
     if (!m || !m->fbo) return;
 
@@ -634,6 +642,7 @@ TkWaylandDisplayProc(ClientData clientData)
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     m->needsDisplay = 0;
+#endif
 }
 
 /*
