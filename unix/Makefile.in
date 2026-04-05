@@ -312,6 +312,9 @@ ATK_LIBS		= @ATK_LIBS@
 # Bidi support (SheenBidi + HarfBuzz text shaping)
 BIDI_CFLAGS		= @BIDI_CFLAGS@
 
+# Font system (core, xft, or bidi)
+FONTSYSTEM		= @FONTSYSTEM@
+
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
 # Makefile is generated from Makefile.in.  You shouldn't normally

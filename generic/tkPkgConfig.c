@@ -43,6 +43,8 @@
 #  define CFG_FONTSYSTEM	"cocoa"
 #elif defined(HAVE_XFT)
 #  define CFG_FONTSYSTEM	"xft"
+#elif defined(HAVE_BIDI)	
+#  define CFG_FONTSYSTEM	"xft"
 #else
 #  define CFG_FONTSYSTEM	"x11"
 #endif

@@ -491,6 +491,16 @@ Please install the HarfBuzz development package:
     AC_SUBST(BIDI_CFLAGS)
     AC_SUBST(UNIX_FONT_OBJS)
 
+    # Set font system for pkgconfig
+    if test "$enable_bidi" = "yes"; then
+	FONTSYSTEM="xft"
+    elif test "$enable_xft" = "yes"; then
+	FONTSYSTEM="xft"
+    else
+	FONTSYSTEM="core"
+    fi
+    AC_SUBST(FONTSYSTEM)
+
 else
     # On Aqua (macOS) - neither Xft nor Bidi is supported in this path
     enable_xft=no
@@ -499,6 +509,8 @@ else
     BIDI_CFLAGS=""
     HB_CFLAGS=""
     HB_LIBS=""
+    FONTSYSTEM="core"
+    AC_SUBST(FONTSYSTEM)
 fi
 
 #--------------------------------------------------------------------
@@ -894,6 +906,7 @@ AC_SUBST(BIDI_CFLAGS)
 AC_SUBST(HB_CFLAGS)
 AC_SUBST(HB_LIBS)
 AC_SUBST(UNIX_FONT_OBJS)
+AC_SUBST(FONTSYSTEM)
 
 AC_CONFIG_FILES([
     Makefile:../unix/Makefile.in
