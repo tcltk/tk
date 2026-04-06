@@ -1042,12 +1042,16 @@ X11Shaper_ShapeString(
         return 0;
     }
 
+    /* Initialize output buffer counts to prevent garbage reads. */
+    buffer->glyphCount   = 0;
+    buffer->indexCount   = 0;
+    buffer->totalAdvance = 0;
+
     /* Latin-only fast path. */
     if (IsLatinOnly(source, numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
             int penX = 0;
-            buffer->glyphCount = 0;
             int i = 0;
             while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
                 FcChar32 uc;
@@ -1072,6 +1076,14 @@ X11Shaper_ShapeString(
                 i += clen;
             }
             buffer->totalAdvance = penX;
+            
+            /* Build visualIndex for cursor positioning. */
+            buffer->indexCount = buffer->glyphCount;
+            for (int j = 0; j < buffer->glyphCount; j++) {
+                buffer->visualIndex[j].x        = buffer->glyphs[j].x;
+                buffer->visualIndex[j].advanceX = buffer->glyphs[j].advanceX;
+                buffer->visualIndex[j].byteEnd  = buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
+            }
             return 1;
         }
     }
@@ -1084,9 +1096,6 @@ X11Shaper_ShapeString(
         *buffer = shaper->cache.buffer;
         return 1;
     }
-
-    buffer->glyphCount   = 0;
-    buffer->totalAdvance = 0;
 
     /* UCS-4 conversion. */
     int stackCharBounds[256];
@@ -1126,8 +1135,7 @@ X11Shaper_ShapeString(
 
     if (charCount == 0) {
         if (needFree) { free(charBounds); free(ucs4Chars); }
-        buffer->glyphCount = 0;
-        buffer->totalAdvance = 0;
+        /* buffer counts already zeroed at function entry */
         return 1;
     }
 
@@ -1291,6 +1299,31 @@ X11Shaper_ShapeString(
         buffer->visualIndex[i].byteEnd = byteEnd;
     }
 
+      /*
+     * Sort visualIndex by X coordinate (left-to-right screen order).
+     * This ensures cursor positioning works correctly for mixed BiDi text.
+     * Without this, the visualIndex is in run-emission order, causing
+     * cursor jumps when navigating between LTR and RTL runs.
+     */
+    for (int i = 0; i < buffer->indexCount - 1; i++) {
+        for (int j = i + 1; j < buffer->indexCount; j++) {
+            if (buffer->visualIndex[j].x < buffer->visualIndex[i].x) {
+                /* Swap visualIndex[i] and visualIndex[j] */
+                int temp_x = buffer->visualIndex[i].x;
+                int temp_advanceX = buffer->visualIndex[i].advanceX;
+                int temp_byteEnd = buffer->visualIndex[i].byteEnd;
+                
+                buffer->visualIndex[i].x = buffer->visualIndex[j].x;
+                buffer->visualIndex[i].advanceX = buffer->visualIndex[j].advanceX;
+                buffer->visualIndex[i].byteEnd = buffer->visualIndex[j].byteEnd;
+                
+                buffer->visualIndex[j].x = temp_x;
+                buffer->visualIndex[j].advanceX = temp_advanceX;
+                buffer->visualIndex[j].byteEnd = temp_byteEnd;
+            }
+        }
+    }
+    
     /* Update cache. */
     if (numBytes <= MAX_STRING_CACHE) {
         shaper->cache.valid = 0;
