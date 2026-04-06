@@ -59,7 +59,7 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure TMenubutton \
 	    -width 11p -padding 2.25p -relief raised \
-	    -arrowsize 5p -arrowpadding 2.25p
+	    -arrowsize 3.25p -arrowpadding 2.25p
 
 	ttk::style configure TEntry -padding 1p -insertwidth 1p \
 	    -focuswidth 1p -focuscolor $colors(-selectbg)
@@ -67,7 +67,7 @@ namespace eval ttk::theme::alt {
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox -padding 1p -insertwidth 1p \
-	    -arrowsize 5.5p -arrowpadding 1.5p \
+	    -arrowsize 3p -arrowpadding 3p \
 	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
@@ -75,7 +75,7 @@ namespace eval ttk::theme::alt {
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 5p -arrowpadding {1.5p 0 1.5p 0} -insertwidth 1p \
+	    -arrowsize 2.5p -arrowpadding {1.5p 0 1.5p 0} -insertwidth 1p \
 	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
@@ -88,7 +88,7 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 6p -width 6p -arrowpadding 2p
+	    -arrowsize 3p -width 6p -arrowpadding 2p
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
@@ -102,11 +102,11 @@ namespace eval ttk::theme::alt {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 6p -indicatormargin {3 1 2 1}
+	    -indicatorsize 3p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 6p \
+	ttk::style configure Item -indicatorsize 6.5p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator

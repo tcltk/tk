@@ -27,7 +27,7 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure TRadiobutton -padding {1.5p 3p}
 
 	ttk::style configure TMenubutton \
-	    -padding {6p 3p} -arrowsize 2.25p -relief raised
+	    -padding {6p 3p} -arrowsize 5p -relief raised
 
 	ttk::style configure TEntry \
 	    -padding 2 -insertwidth 1
@@ -71,8 +71,8 @@ namespace eval ttk::theme::winnative {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 6p -indicatormargin {3 1 2 1}
-	ttk::style configure Item -indicatorsize 6p \
+	    -indicatorsize 3.5p -indicatormargin {3 1 2 1}
+	ttk::style configure Item -indicatorsize 6.5p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator

@@ -123,7 +123,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	}
 
 	ttk::style configure TMenubutton \
-	    -relief raised -arrowsize 5p -arrowpadding 2.25p \
+	    -relief raised -arrowsize 3.25p -arrowpadding 2.25p \
 	    -arrowcolor $colors(-text) -padding {7.5p 2.25p}
 	ttk::style map TMenubutton \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -135,7 +135,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox -insertwidth 1p \
-	    -arrowpadding 2p -arrowsize 5p -arrowcolor $colors(-text) \
+	    -arrowpadding 2p -arrowsize 2.5p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding 1p \
 	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
@@ -143,7 +143,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TSpinbox -insertwidth 1p \
-	    -arrowpadding 1.5p -arrowsize 5p -arrowcolor $colors(-text) \
+	    -arrowpadding 1.5p -arrowsize 2.25p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
 	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
@@ -154,7 +154,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 9p -arrowpadding 2p -arrowsize 6p \
+	    -width 9p -arrowpadding 2p -arrowsize 3p \
 	    -arrowcolor $colors(-text)
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -183,11 +183,11 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding 2.25p \
-	    -indicatorsize 6p -indicatormargin {3 1 2 1}
+	    -indicatorsize 3p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 6p \
+	ttk::style configure Item -indicatorsize 3.5p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator

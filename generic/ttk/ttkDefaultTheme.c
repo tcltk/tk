@@ -188,6 +188,8 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
 	    points[1].x = cx - h;	points[1].y = cy - h;
 	    points[2].x = cx - h;	points[2].y = cy + h;
 	    break;
+	default:
+	    return;
     }
 
     points[3].x = points[0].x;
@@ -251,6 +253,8 @@ static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[9])
 	    points[4].x = cx - h;	points[4].y = cy - h + 1;
 	    points[5].x = cx - h;	points[5].y = cy - h;
 	    break;
+	default:
+	    return;
     }
 
     points[6].x = points[0].x;
@@ -373,7 +377,7 @@ static void BorderElementSize(
     int borderWidth = BORDERWIDTH;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 
-    TkGetScaledPixelValue(NULL, tkwin, bd->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
@@ -401,7 +405,7 @@ static void BorderElementDraw(
     /*
      * Get option values.
      */
-    TkGetScaledPixelValue(NULL, tkwin, bd->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
@@ -470,7 +474,7 @@ static void FieldElementDraw(
     XColor *borderColor = Tk_GetColorFromObj(tkwin, field->borderColorObj);
     int focusWidth = 2;
 
-    TkGetScaledPixelValue(NULL, tkwin, field->focusWidthObj, 1.0, &focusWidth);
+    TkGetScaledPixelValue(NULL, tkwin, field->focusWidthObj, &focusWidth);
 
     if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
 	Display *disp = Tk_Display(tkwin);
@@ -840,7 +844,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(ArrowElement,sizeObj), "7p" },
+	offsetof(ArrowElement,sizeObj), "3p" },
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ArrowElement,colorObj), "black"},
     { "-arrowpadding", TK_OPTION_STRING,
@@ -871,10 +875,10 @@ static void ArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 9;
+    int size = 5;
 
     /* Get scaled size */
-    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -966,10 +970,10 @@ static void BoxArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 9;
+    int size = 5;
 
     /* Get scaled size */
-    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1052,7 +1056,7 @@ static const Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
     { "-direction", TK_OPTION_STRING,
 	offsetof(MenubuttonArrowElement,directionObj), "below" },
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(MenubuttonArrowElement,sizeObj), "6p" },
+	offsetof(MenubuttonArrowElement,sizeObj), "3p" },
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(MenubuttonArrowElement,colorObj), "black" },
     { "-arrowpadding", TK_OPTION_STRING,
@@ -1070,9 +1074,9 @@ static void MenubuttonArrowElementSize(
 {
     MenubuttonArrowElement *arrow = (MenubuttonArrowElement *)elementRecord;
     Ttk_Padding padding;
-    int size = 9;
+    int size = 5;
     /* Get scaled size */
-    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
     TtkArrowSize(size, ARROW_RIGHT, widthPtr, heightPtr);
 
     /* Add scaled padding */
@@ -1103,7 +1107,7 @@ static void MenubuttonArrowElementDraw(
     int width = 0, height = 0;
     Ttk_Padding padding;
 
-    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 1.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
     Tcl_GetIndexFromObjStruct(NULL, arrow->directionObj, directionStrings,
 	   sizeof(char *), ""/*message*/, 0/*flags*/, &postDirection);
 
@@ -1152,7 +1156,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-width", TK_OPTION_PIXELS,
-	offsetof(ThumbElement,sizeObj), "7p" },
+	offsetof(ThumbElement,sizeObj), "3.5p" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(ThumbElement,borderObj), DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR,
@@ -1174,9 +1178,9 @@ static void ThumbElementSize(
 {
     ThumbElement *thumb = (ThumbElement *)elementRecord;
     Ttk_Orient orient;
-    int size = 9;
+    int size = 5;
 
-    TkGetScaledPixelValue(NULL, tkwin, thumb->sizeObj, 1.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, thumb->sizeObj, &size);
     Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
@@ -1274,8 +1278,8 @@ static void SliderElementSize(
     int thickness = 15, borderWidth = BORDERWIDTH;
 
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
-    TkGetScaledPixelValue(NULL, tkwin, slider->thicknessObj, 1.0, &thickness);
-    TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, slider->thicknessObj, &thickness);
+    TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, &borderWidth);
 
     switch (orient) {
 	case TTK_ORIENT_VERTICAL:
@@ -1302,7 +1306,7 @@ static void SliderElementDraw(
     XColor *borderColor = Tk_GetColorFromObj(tkwin, slider->borderColorObj);
     int relief = TK_RELIEF_RAISED, borderWidth = BORDERWIDTH;
 
-    TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
 
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
@@ -1334,7 +1338,7 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginObj), "3p 1.5p 1.5p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "6p" },
+	offsetof(TreeheadingIndicator,sizeObj), "3p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -1349,10 +1353,10 @@ static void TreeheadingIndicatorSize(
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 9;
+    int size = 5;
 
     /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add padding */
@@ -1438,12 +1442,12 @@ static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeitemIndicator,marginObj), "1.5p 1.5p 3p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeitemIndicator,sizeObj), "7p" },
+	offsetof(TreeitemIndicator,sizeObj), "3p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void TreeitemIndicatorSize(
-    void *clientData,
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     int *widthPtr,
@@ -1451,12 +1455,11 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *))
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 9;
+    int size = 5;
 
     /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 1.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
     *widthPtr = *heightPtr = size;
 
     /* Add scaled padding */

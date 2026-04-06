@@ -7278,7 +7278,7 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginsObj), "3p 1.5p 1.5p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "6p" },
+	offsetof(TreeheadingIndicator,sizeObj), "3.5p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7292,10 +7292,10 @@ static void TreeheadingIndicatorSize(
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     Ttk_Padding padding;
-    int size = 9;
+    int size = 5;
 
     /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
     TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
 
     /* Add padding */
@@ -7381,7 +7381,7 @@ static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeitemIndicator,marginsObj), "1.5p 1.5p 3p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeitemIndicator,sizeObj), "7p" },
+	offsetof(TreeitemIndicator,sizeObj), "3.5p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7395,10 +7395,10 @@ static void TreeitemIndicatorSize(
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
     Ttk_Padding padding;
-    int size = 9;
+    int size = 5;
 
     /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, 2.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
     TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
 
     /* Add padding (only scaled if not in pixels) */
@@ -7446,7 +7446,7 @@ static void TreeitemIndicatorDraw(
 	    break;
 	case ARROW_RIGHT:
 	default:
-	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    TtkArrowSize(b.height/3, direction, &cx, &cy);
 	    if ((b.width - cx) % 2 == 1) {
 		++cx;
 	    }

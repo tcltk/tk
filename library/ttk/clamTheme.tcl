@@ -97,7 +97,7 @@ namespace eval ttk::theme::clam {
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TMenubutton -width 11p -padding 2.75p \
-	    -arrowsize 5p -arrowpadding 2.25p -relief raised
+	    -arrowsize 3.25p -arrowpadding 2.25p -relief raised
 
 	ttk::style configure TEntry -padding 1p -insertwidth 1p
 	ttk::style map TEntry \
@@ -106,7 +106,7 @@ namespace eval ttk::theme::clam {
 	    -lightcolor [list focus #6f9dc6]
 
 	ttk::style configure TCombobox -padding 1p -insertwidth 1p \
-	    -arrowsize 5p -arrowpadding {2p 1p 2p 1p}
+	    -arrowsize 2.5p -arrowpadding {2p 1p 2p 1p}
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
@@ -119,7 +119,7 @@ namespace eval ttk::theme::clam {
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 5p -arrowpadding {1.5p 0 1.5p 0} -insertwidth 1p
+	    -arrowsize 2.25p -arrowpadding {1.5p 0 1.5p 0} -insertwidth 1p
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
@@ -134,11 +134,11 @@ namespace eval ttk::theme::clam {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding 2.25p \
-	    -indicatorsize 6p -indicatormargin {3 1 2 1}
+	    -indicatorsize 3p -indicatormargin {3 1 2 1}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 6p \
+	ttk::style configure Item -indicatorsize 3.5p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item -indicatorsize 6p  \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
@@ -168,7 +168,7 @@ namespace eval ttk::theme::clam {
 	    -borderwidth 2 -relief raised
 
 	ttk::style configure TScrollbar -gripsize 7.5p \
-	    -arrowpadding 2p -arrowsize 6p
+	    -arrowpadding 2p -arrowsize 3p
 
 	ttk::style configure TScale -gripsize 7.5p \
 	    -arrowsize 10.5p -sliderlength 22.5p

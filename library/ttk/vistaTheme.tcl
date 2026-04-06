@@ -208,8 +208,6 @@ namespace eval ttk::theme::vista {
 
 	# Treeview
 	ttk::style configure Heading -font TkHeadingFont
-#	ttk::style map Heading \
-#	    -foreground [list selected black alternate black]
 	ttk::style configure Item -padding {3p 0 0 0}
 	ttk::style configure CheckTreeview.Item \
 	    -padding {3p 0.75p 0 0.75p}	;# because of Checkbutton.indicator
@@ -220,17 +218,6 @@ namespace eval ttk::theme::vista {
 	    -stripedbackground System3dLight -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background System3dLight
-	# The treeview uses the "background" state for
-	# selected items when the widget has lost the focus.
-#	ttk::style map Treeview \
-#	    -background [list   disabled SystemButtonFace \
-#				background SystemScrollbar \
-#				selected SystemHighlight \
-#				active #D7E4F2] \
-#	    -foreground [list   disabled SystemGrayText \
-#				background SystemWindowText \
-#				selected SystemHighlightText \
-#				active SystemCaptionText]
 
 	package provide ttk::theme::vista 1.0
     }

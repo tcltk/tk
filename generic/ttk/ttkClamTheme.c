@@ -138,7 +138,7 @@ static void BorderElementSize(
     BorderElement *border = (BorderElement*)elementRecord;
     int borderWidth = 2;
 
-    TkGetScaledPixelValue(NULL, tkwin, border->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, border->borderWidthObj, &borderWidth);
     if (borderWidth == 1) ++borderWidth;
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -157,7 +157,7 @@ static void BorderElementDraw(
     Tcl_Obj *outer = 0, *upper = 0, *lower = 0;
 
     Tk_GetReliefFromObj(NULL, border->reliefObj, &relief);
-    TkGetScaledPixelValue(NULL, tkwin, border->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, border->borderWidthObj, &borderWidth);
 
     if (borderWidth == 0) return;
 
@@ -572,7 +572,7 @@ static void GripElementSize(
     GripElement *grip = (GripElement *)elementRecord;
     int gripSize = 0;
 
-    TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0, &gripSize);
+    TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, &gripSize);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = gripSize;
     } else {
@@ -593,7 +593,7 @@ static void GripElementDraw(
     int gripPad = 1, gripSize = 0;
     int i;
 
-    TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, 1.0, &gripSize);
+    TkGetScaledPixelValue(NULL, tkwin, grip->gripSizeObj, &gripSize);
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	int x = b.x + (b.width - gripSize) / 2;
@@ -656,7 +656,7 @@ static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(ScrollbarElement,arrowSizeObj), "6p" },
+	offsetof(ScrollbarElement,arrowSizeObj), "3p" },
     { "-gripsize", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,gripSizeObj), "7.5p" },
     { "-sliderlength", TK_OPTION_PIXELS,
@@ -701,7 +701,7 @@ static void ThumbElementSize(
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = 12;
 
-    TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, 1.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, &size);
     *widthPtr = *heightPtr = size;
 }
 
@@ -730,7 +730,7 @@ static void ThumbElementDraw(
      * Draw grip:
      */
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
-    TkGetScaledPixelValue(NULL, tkwin, sb->gripSizeObj, 1.0, &gripSize);
+    TkGetScaledPixelValue(NULL, tkwin, sb->gripSizeObj, &gripSize);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
 
@@ -777,8 +777,8 @@ static void SliderElementSize(
     Ttk_Orient orient = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
-    TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, 1.0, &thickness);
-    TkGetScaledPixelValue(NULL, tkwin, sb->sliderlengthObj, 1.0, &length);
+    TkGetScaledPixelValue(NULL, tkwin, sb->arrowSizeObj, &thickness);
+    TkGetScaledPixelValue(NULL, tkwin, sb->sliderlengthObj, &length);
     if (orient == TTK_ORIENT_VERTICAL) {
 	*heightPtr = length;
 	*widthPtr = thickness;
@@ -856,7 +856,7 @@ typedef struct {
 /* Size does not include padding */
 static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(ArrowElement,sizeObj), "9p" },
+	offsetof(ArrowElement,sizeObj), "3p" },
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ArrowElement,colorObj), "black"},
     { "-arrowpadding", TK_OPTION_STRING,
@@ -879,10 +879,10 @@ static void ArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 12;
+    int size = 5;
 
     /* Get scaled size */
-    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, 2.0, &size);
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);
 
     /* Add scaled padding */

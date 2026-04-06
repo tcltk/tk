@@ -733,7 +733,7 @@ static void TabElementSize(
     Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
-    TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 
     if (mainInfoPtr != NULL) {
@@ -840,7 +840,7 @@ static void TabElementDraw(
     XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	    pts, 6, Convex, CoordModeOrigin);
 
-    TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, 1.0, &borderWidth);
+    TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);

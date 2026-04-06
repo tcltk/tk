@@ -1284,17 +1284,16 @@ TkGetScaledPixelValue(
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,
     Tcl_Obj *valuePtr,		/* Value to scale */
-    double divisor,		/* Divided result by value */
     int *size)			/* Return value */
 {
     double d;
 
     if (Tcl_GetDoubleFromObj(NULL, valuePtr, &d) == TCL_OK) {
 	/* Unscaled pixel value, so do scaling */
-	*size = (int)round(d * TkScalingLevel(tkwin) / divisor);
+	*size = (int)round(d * TkScalingLevel(tkwin));
     } else if (Tk_GetDoublePixelsFromObj(interp, tkwin, valuePtr, &d) == TCL_OK) {
 	/* Other screen units value, already scaled  */
-	*size = (int)round(d / divisor);
+	*size = (int)round(d);
     } else {
 	return TCL_ERROR;
     }

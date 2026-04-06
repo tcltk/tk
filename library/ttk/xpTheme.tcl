@@ -60,17 +60,6 @@ namespace eval ttk::theme::xpnative {
 	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
-	# The treeview uses the "background" state for
-	# selected items when the widget has lost the focus.
-#	ttk::style map Treeview \
-#	    -background [list   disabled SystemButtonFace \
-#				background SystemScrollbar \
-#				selected SystemHighlight \
-@				active #D7E4F2] \
-#	    -foreground [list   disabled SystemGrayText \
-#				background SystemWindowText \
-#				selected SystemHighlightText \
-#				active SystemCaptionText]
     }
 }
 
