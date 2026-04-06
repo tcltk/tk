@@ -18,11 +18,10 @@ set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
 ::msgcat::mcload $tk_demoDirectory
 namespace import ::msgcat::mc
 
-if {[info commands ::tk::accessible::check_screenreader] ne ""}  { 
-	if {[::tk::accessible::check_screenreader] eq "1"} {
-	    source -encoding utf-8 [file join $tk_demoDirectory accessiblewidget]
-	}
+if {[::tk::accessible::check_screenreader] eq "1"} {
+	source -encoding utf-8 [file join $tk_demoDirectory accessiblewidget]
 }
+
 
 wm title . [mc "Widget Demonstration"]
 if {[tk windowingsystem] eq "x11"} {
