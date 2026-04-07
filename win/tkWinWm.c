@@ -2999,12 +2999,19 @@ WmAttributesCmd(
     bool appearance_attr_changed = 0;
     bool fullscreen_attr_changed = 0, fullscreen_attr = 0;
 
+    static const char *const appearanceStrings[] = {
+	"light", "dark", NULL
+    };
+    enum appearances {
+	APPEARANCE_LIGHT, APPEARANCE_DARK
+    };
+
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
     configArgs:
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
 		" ?-alpha ?double??"
-		" ?-appearance auto|light|dark?"
+		" ?-appearance ?light|dark??"
 		" ?-transparentcolor ?color??"
 		" ?-disabled ?bool??"
 		" ?-fullscreen ?bool??"
@@ -3023,7 +3030,9 @@ WmAttributesCmd(
 		Tcl_NewStringObj("-appearance", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj(
-		((wmPtr->flags & WM_DARK_MODE)?"dark":"light"), TCL_INDEX_NONE));
+		appearanceStrings[
+		    ((wmPtr->flags & WM_DARK_MODE)?APPEARANCE_DARK:APPEARANCE_LIGHT)],
+		TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-transparentcolor", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -3193,26 +3202,17 @@ WmAttributesCmd(
 	    if (config_appearance) {
 		if (objc == 4) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    ((wmPtr->flags & WM_DARK_MODE)?"dark":"light"),
+			    appearanceStrings[
+				((wmPtr->flags & WM_DARK_MODE)?APPEARANCE_DARK:APPEARANCE_LIGHT)],
 			    TCL_INDEX_NONE));
 		} else {
-		    char * ArgString;
-		    Tcl_Size ArgLength;
-		    ArgString = Tcl_GetStringFromObj(objv[i+1], &ArgLength);
-		    if ((ArgLength = 4 && 0 == memcmp(ArgString,"auto",4))
-			    || (ArgLength = 5 && 0 == memcmp(ArgString,"light",4))) {
-			darkmode_attr = false;
-			appearance_attr_changed = 1;
-		    } else if (ArgLength = 4 && 0 == memcmp(ArgString,"dark",4)) {
-			darkmode_attr = true;
-			appearance_attr_changed = 1;
-		    } else {
-			Tcl_SetObjResult(interp,
-				Tcl_NewStringObj("Invalid value for -appearance",-1));
-			Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
-				"APPEARANCE", (char *)NULL);
+		    int index;
+		    if (Tcl_GetIndexFromObj(interp, objv[i+1], appearanceStrings,
+			    "appearancename", 0, &index) != TCL_OK) {
 			return TCL_ERROR;
 		    }
+		    darkmode_attr = (index == APPEARANCE_DARK);
+		    appearance_attr_changed = true;
 		}
 		config_appearance = 0;
 	    } else if (config_fullscreen) {
