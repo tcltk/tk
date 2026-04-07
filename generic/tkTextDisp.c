@@ -8247,7 +8247,7 @@ CharChunkMeasureChars(
         int widthToStart, widthToEnd;
         Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
 
-        /* Always measure from offset 0 of the base string for context */
+        /* Always measure from offset 0 of the base string for context. */
         MeasureChars(tkfont, Tcl_DStringValue(&bciPtr->baseChars), 
                      Tcl_DStringLength(&bciPtr->baseChars), 0, start, 
                      0, -1, flags, &widthToStart);
@@ -9013,64 +9013,66 @@ MeasureChars(
     Tcl_Size rangeLength,
     int startX, int maxX, int flags, int *nextXPtr)
 {
-    int curX, width;
-    Tcl_Size bytesMeasured;
-    const char *start = source + rangeStart;
-    const char *end = start + rangeLength;
-    const char *special = start;
+    int curX = startX;
+    int width = 0;
+    Tcl_Size totalBytesMeasured = 0;
+    const char *p = source + rangeStart;
+    const char *end = p + rangeLength;
 
-    curX = startX;
-
-    /* Apply RTL context flag for the shaper. */
-    if (TkTextChunkIsRTL(start, rangeLength)) {
+    /* Detect RTL context for the whole run to prevent 
+     * the "skewing" back to LTR during measurement.
+     */
+    if (TkTextChunkIsRTL(p, rangeLength)) {
         flags |= TK_ISOLATE_END;
     }
 
-    while (start < end) {
-        if (start >= special) {
-            for (special = start; special < end; special++) {
-                if (*special == '\t' || *special == '\n') break;
-            }
+    while (p < end) {
+        int segWidth;
+        Tcl_Size bytes;
+        const char *special;
+
+        /* Find next tab or newline - we must stop there. */
+        for (special = p; special < end; special++) {
+            if (*special == '\t' || *special == '\n') break;
         }
 
-        if ((maxX >= 0) && (curX >= maxX)) {
+        /* Measure this segment. */
+#ifdef TK_DRAW_IN_CONTEXT
+        bytes = Tk_MeasureCharsInContext(tkfont, source, maxBytes, 
+                p - source, special - p, 
+                (maxX >= 0) ? (maxX - curX) : -1, flags, &segWidth);
+#else
+        bytes = Tk_MeasureChars(tkfont, p, special - p, 
+                (maxX >= 0) ? (maxX - curX) : -1, flags, &segWidth);
+#endif
+
+        /* Force progress.
+         * If 0 bytes fit, but we have text to process, we MUST take 
+         * at least one character, even if it exceeds maxX.
+         */
+        if (bytes == 0 && p < special) {
+            Tcl_UniChar ch;
+            bytes = Tcl_UtfToUniChar(p, &ch);
+            Tk_MeasureChars(tkfont, p, bytes, -1, flags, &segWidth);
+        }
+
+        curX += segWidth;
+        p += bytes;
+        totalBytesMeasured += bytes;
+
+        /* Stop if we ran out of room or hit a special char. */
+        if (bytes == 0 || p < special || (maxX >= 0 && curX >= maxX)) {
             break;
         }
 
-#ifdef TK_DRAW_IN_CONTEXT
-        bytesMeasured = Tk_MeasureCharsInContext(tkfont, source, maxBytes, 
-                             start - source, special - start, 
-                             maxX >= 0 ? maxX - curX : -1, flags, &width);
-#else
-        (void)maxBytes;
-        bytesMeasured = Tk_MeasureChars(tkfont, start, special - start, 
-                             maxX >= 0 ? maxX - curX : -1, flags, &width);
-#endif
-
-        /* PROGRESS GUARD: If 0 bytes fit, we MUST force progress by 
-         * measuring at least one UTF-8 character. 
-         */
-        if (bytesMeasured == 0 && start < special) {
-            int ch;
-            Tcl_Size chLen = Tcl_UtfToUniChar(start, &ch);
-            bytesMeasured = Tk_MeasureChars(tkfont, start, chLen, -1, 0, &width);
-            if (bytesMeasured == 0) bytesMeasured = 1; /* Safety for corrupt UTF. */
-        }
-
-        start += bytesMeasured;
-        curX += width;
-
-        if (bytesMeasured == 0 || (maxX >= 0 && curX >= maxX)) {
-            break; 
-        }
-
-        if (special < end && *special == '\t') {
-            break; /* Tabs are handled by higher-level AdjustForTab. */
+        /* If we hit a tab, we stop and let the higher-level logic handle it */
+        if (p < end && *p == '\t') {
+            break;
         }
     }
 
     *nextXPtr = curX;
-    return start - (source + rangeStart);
+    return totalBytesMeasured;
 }
 
 /*
