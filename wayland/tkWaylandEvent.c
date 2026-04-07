@@ -102,6 +102,69 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
     }
 }
 
+// When a window is resized by the user the following callbacks
+// are called:
+// FramebufferSizeCallback
+// WindowSizeCallback
+// WindowRefreshCallback
+//
+// But when a window is resized by a call to glfwSetWindowSize
+// (e.g. if a geometry manager is resizing the window), then the
+// WindowSizeCallback is not called.  So there is no use for
+// the WindowSizeCallback (yet, anyway);
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwFramebufferSizeCallback --
+ *
+ *      Called when framebuffer size changes.  A call to this
+ *      callback is always followed by WindowSizeCallback and
+ *      RefreshWindowCallback, which generates an ExposeNotify
+ *      event.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Updates OpenGL viewport.
+ *
+ *----------------------------------------------------------------------
+ */
+// Should be in window private struct.
+extern TkGlfwContext  glfwContext;
+
+MODULE_SCOPE void
+TkGlfwFramebufferSizeCallback(
+    GLFWwindow *window,
+    int width,
+    int height)
+{
+    printf("TkGlfwFramebufferSizeCallback %dx%d\n", width, height);
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (!winPtr) {
+	printf("No Tk window!\n");
+	return;
+    }
+    WindowMapping *mapping;
+    mapping = FindMappingByTk(winPtr);
+    if (!mapping) {
+	printf("No mapping!\n");
+	return;
+    }
+    printf("TkGlfwFramebufferSizeCallback: Rebuild framebuffer to size %dx%d\n", width, height);
+    nvgluDeleteFramebuffer(mapping->fbo);
+    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, 0);
+
+    /* Notify Tk */
+    printf("TkGlfwFramebufferSizeCallback: Configuring %s\n",
+	   Tk_PathName(winPtr));
+    mapping->width = width;
+    mapping->height = height;
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
+    TkDoConfigureNotify(mapping->tkWindow);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -139,60 +202,50 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
     /* Update size */
     mapping->width = width;
     mapping->height = height;
-    
+
+#if 0
     /* Notify Tk */
     if (mapping->tkWindow) {
         mapping->tkWindow->changes.width = width;
         mapping->tkWindow->changes.height = height;
 	TkDoConfigureNotify(mapping->tkWindow);
     }
+#endif
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwFramebufferSizeCallback --
+ * TkGlfwWindowRefreshCallback --
  *
- *      Called when framebuffer size changes.  A call to this
- *      callback is always paired with a call to the
- *      RefreshWindowCallback, which generates an ExposeNotify
- *      event. This generates a ConfigureNotify event.
- *      while 
+ *      Called by GLFW when window needs redraw. Generates Expose event.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Updates OpenGL viewport.
+ *      Queues Expose event for client area.
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
-TkGlfwFramebufferSizeCallback(
-    GLFWwindow *window,
-    int width,
-    int height)
+TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
-    printf("TkGlfwFramebufferSizeCallback %dx%d\n", width, height);
-    //glViewport(0, 0, width, height);
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr) {
-	return;
-    }
+    TkWindow      *winPtr = TkGlfwGetTkWindow(window);
     WindowMapping *mapping;
-    mapping = FindMappingByTk(winPtr);
-    if (!mapping) {
-	return;
-    }
-    printf("TkGlfwFramebufferSizeCallback: Configure\n");
+    int            w, h;
 
-    /* Notify Tk */
-    mapping->width = width;
-    mapping->height = height;
-    winPtr->changes.width = width;
-    winPtr->changes.height = height;
-    TkDoConfigureNotify(winPtr);
+    if (!winPtr) return;
+
+    mapping = FindMappingByTk(winPtr);
+    if (!mapping) return;
+
+    w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
+    h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
+
+    printf("TkGlWindowRefreshCallback Exposing %s\n", Tk_PathName(winPtr));
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
 }
 
 /*
@@ -832,40 +885,6 @@ TkWaylandGetPendingCharacter(void)
     return codepoint;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwWindowRefreshCallback --
- *
- *      Called by GLFW when window needs redraw. Generates Expose event.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Queues Expose event for client area.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwWindowRefreshCallback(GLFWwindow *window)
-{
-    TkWindow      *winPtr = TkGlfwGetTkWindow(window);
-    WindowMapping *mapping;
-    int            w, h;
-
-    if (!winPtr) return;
-
-    mapping = FindMappingByTk(winPtr);
-    if (!mapping) return;
-
-    w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
-    h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
-
-    printf("TkGlWindowRefreshCallback Expose\n");
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
-}
 /*
  * Local Variables:
  * mode: c

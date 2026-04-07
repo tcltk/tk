@@ -140,7 +140,7 @@ Tk_3DVerticalBevel(
     switch (relief) {
     case TK_RELIEF_RAISED:
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
+        nvgRect(dc.vg, (float) x, (float) y, (float) width, (float) height);
         nvgFillColor(dc.vg, leftBevel ? waylandBorderPtr->lightColor :
                      waylandBorderPtr->darkColor);
         nvgFill(dc.vg);
@@ -148,7 +148,7 @@ Tk_3DVerticalBevel(
 
     case TK_RELIEF_SUNKEN:
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
+        nvgRect(dc.vg, (float) x, (float) y, (float) width, (float) height);
         nvgFillColor(dc.vg, leftBevel ? waylandBorderPtr->darkColor :
                      waylandBorderPtr->lightColor);
         nvgFill(dc.vg);
@@ -168,12 +168,13 @@ Tk_3DVerticalBevel(
                 half++;
             }
             nvgBeginPath(dc.vg);
-            nvgRect(dc.vg, x, y, half, height);
+            nvgRect(dc.vg, (float) x, (float) y, (float) half, (float) height);
             nvgFillColor(dc.vg, leftColor);
             nvgFill(dc.vg);
 
             nvgBeginPath(dc.vg);
-            nvgRect(dc.vg, x + half, y, width - half, height);
+            nvgRect(dc.vg, (float) (x + half), (float) y,
+		    (float) (width - half), (float) height);
             nvgFillColor(dc.vg, rightColor);
             nvgFill(dc.vg);
             break;
@@ -181,14 +182,14 @@ Tk_3DVerticalBevel(
 
     case TK_RELIEF_FLAT:
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
+        nvgRect(dc.vg, (float) x, (float) y, (float) width, (float) height);
         nvgFillColor(dc.vg, waylandBorderPtr->bgColor);
         nvgFill(dc.vg);
         break;
 
     case TK_RELIEF_SOLID:
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
+        nvgRect(dc.vg, (float) x, (float) y, (float) width, (float) height);
         nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
         nvgFill(dc.vg);
         break;
@@ -270,7 +271,7 @@ Tk_3DHorizontalBevel(
         break;
     case TK_RELIEF_SOLID:
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x, y, width, height);
+        nvgRect(dc.vg, (float) x, (float) y, (float) width, (float) height);
         nvgFillColor(dc.vg, waylandBorderPtr->solidColor);
         nvgFill(dc.vg);
         TkGlfwEndDraw(&dc);
@@ -306,7 +307,7 @@ Tk_3DHorizontalBevel(
         NVGcolor currentColor = (y < halfway) ? topColor : bottomColor;
 
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, x1, y, x2 - x1, 1);
+        nvgRect(dc.vg, (float) x1, (float) y, (float)(x2 - x1), 1.0f);
         nvgFillColor(dc.vg, currentColor);
         nvgFill(dc.vg);
 

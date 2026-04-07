@@ -341,7 +341,8 @@ TkWaylandEventsCheckProc(TCL_UNUSED(void *),
             /* Start the frame once for the entire event pass. */
             int fbw, fbh;
             glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
-            nvgBeginFrame(glfwContext.vg, m->width, m->height, (float)fbw/m->width);
+            nvgBeginFrame(glfwContext.vg,
+		(float)m->width, (float)m->height, (float)fbw/m->width);
             
             /* Initial transform. */
             nvgSave(glfwContext.vg);
@@ -461,9 +462,8 @@ TkWaylandQueueExposeEvent(
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
-        //if (!Tk_IsMapped((Tk_Window)childPtr) ||
-	//    Tk_IsTopLevel((Tk_Window)childPtr)) {
-	if (Tk_IsTopLevel((Tk_Window)childPtr)) {
+        if (!Tk_IsMapped((Tk_Window)childPtr) ||
+	    Tk_IsTopLevel((Tk_Window)childPtr)) {
             continue;
         }
         TkWaylandQueueExposeEvent(childPtr, 
@@ -541,8 +541,8 @@ TkWaylandBeginEventCycle(WindowMapping *m)
 
     /* Clear only when starting new frame. */
     //// Changed to purple for debugging
-    glClearColor(0.92f, 0.92f, 0.92f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    //    glClearColor(0.92f, 0.92f, 0.92f, 0.0f);
+    //    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     nvgBeginFrame(glfwContext.vg,
                   (float)m->width,

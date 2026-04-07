@@ -21,13 +21,14 @@
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-#include <GLES2/gl2.h>
 
+//#include <GLES2/gl2.h>
 
-#ifndef NANOVG_GLES2_IMPLEMENTATION
-#define NANOVG_GLES2_IMPLEMENTATION
-#endif
+//#ifndef NANOVG_GLES2_IMPLEMENTATION
+//#define NANOVG_GLES2_IMPLEMENTATION
+//#endif
 
+#define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
@@ -105,31 +106,126 @@ TkGlfwErrorCallback(int error, const char *desc)
  *----------------------------------------------------------------------
  */
 
+/*
+ * Simple glsl shader program which copies a texture to the
+ * glsl window.  The window is triangulated by adding a diagonal
+ * from upper left to lower right.
+ */
 
-// Vertex shader: assigns corners of a texture as attributes of vertices
-// of two triangles forming a quad.
-static const char* vShader = "#version 330 core\n"
-    "layout (location = 0) in vec2 aPos; \n"
-    "layout (location = 1) in vec2 aTex; \n"
-    "out vec2 UV; \n"
+/* Vertex shader: assigns a corner of the texture to each vertex.
+ * Expects vertex coordinates in slot 0, texture coordinates in
+ * slot 1.
+ */
+const char* vShader = "#version 320 es \n"
+    "precision mediump float; \n"
+    "layout (location = 0) in vec2 vpos; \n"
+    "layout (location = 1) in vec2 tpos; \n"
+    "out vec2 uv; \n"
     "void main() { \n"
-        "gl_Position = vec4(aPos, 0.0, 1.0); \n"
-        "UV = aTex; }";
+        "gl_Position = vec4(vpos, 0.0, 1.0); \n"
+        "uv = tpos; }";
 
-// Fragment shader: assigns color to screen pixels by sampling the texture.
-static const char* fShader = "#version 330 core\n"
-    "out vec4 Color; \n"
-    "in vec2 UV; \n"
-    "uniform sampler2D screenTexture; \n"
-    "void main() { \n"
-    "    Color = texture(screenTexture, UV); }";
+/*
+ * Fragment shader: colors each screen pixel (fragment) with the
+ * corresponding pixel in the texture.
+ */
+const char* fShader = "#version 320 es \n"
+    "precision mediump float; \n"
+    "out vec4 fragColor; \n"
+    "in vec2 uv; \n"
+    "uniform sampler2D backingStore; \n"
+    "vec4 color = texture(backingStore, uv); \n"
+    "void main() {fragColor = vec4(color.rgb, 1.0);}";
+    //    "void main() {fragColor = texture(backingStore, uv);}";
 
-static GLuint tkWaylandShader;
+/*
+ * Vertex coordinates in the XY plane of the GL cube,
+ * interleaved with the associated texture coordinates.
+ * The cube is parametrized by [-1,1]x[-1,1]x[-1,1],
+ * while the texture is parametrized by [0,1]x[0,1].
+ */
+
+static float quad[] = {
+    // first triangle 
+    -1,1,0,1,  // top left
+    -1,-1,0,0, // bottom left
+    1,-1,1,0,  // bottom right
+    // second triangle
+    -1,1,0,1,  // top left
+    1,-1,1,0,  // bottom right
+    1,1,1,1 }; // top right
+
+static GLuint tkWaylandShader, vao, vbo;
+
+/*
+ * Each window will have its own backing store framebuffer.
+ * Right now we have only one ...
+ */
+
+static int createTkShader(GLFWwindow *window) {
+    //// The shader program should be stored in the Tk window
+    //// private data
+    //// for now, make sure this is only called once.
+    static int initialized = 0;
+    if (initialized) {
+	printf("createTkShader was already called.\n"); 
+	return 0;
+    }
+    glfwMakeContextCurrent(window);
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+			  (void*) 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+			  (void*) (2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // Compile the vertex shader
+    int success;
+    char errorMessage[512];
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vShader, NULL);
+    glCompileShader(vs);
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+	glGetShaderInfoLog(vs, 512, NULL, errorMessage);
+	printf("Vertex shader compilation error: %s\n", errorMessage);
+    }
+    // Compile the fragment shader
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fShader, NULL);
+    glCompileShader(fs);
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+	glGetShaderInfoLog(fs, 512, NULL, errorMessage);
+	printf("Fragment shader compilation error: %s\n", errorMessage);
+    }
+    // Link the shaders into a program
+    tkWaylandShader = glCreateProgram();
+    printf("Created program %u\n", tkWaylandShader);
+    glAttachShader(tkWaylandShader, vs);
+    glAttachShader(tkWaylandShader, fs);
+    printf("Linking shader\n");
+    glLinkProgram(tkWaylandShader);
+
+    // The shaders are no longer needed. 
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    initialized = 1;
+    // Teturn the gl error number
+    return glGetError();
+}
 
 MODULE_SCOPE int
 TkGlfwInitialize(void)
 {
     if (glfwContext.initialized) return TCL_OK;
+    //glewInit(); This did not prevent the crash in glLinkProgram.
 
     glfwSetErrorCallback(TkGlfwErrorCallback);
 
@@ -142,37 +238,18 @@ TkGlfwInitialize(void)
         return TCL_ERROR;
     }
 
-    // Compile Vertex Shader
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vShader, NULL);
-    glCompileShader(vs);
-
-    // Compile Fragment Shader
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fShader, NULL);
-    glCompileShader(fs);
-
-    // Link shaders into a program
-    tkWaylandShader = glCreateProgram();
-    glAttachShader(tkWaylandShader, vs);
-    glAttachShader(tkWaylandShader, fs);
-    glLinkProgram(tkWaylandShader);
-
-    // These shaders are no longer needed. 
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
     /*
      * Shared context window - hidden. All application windows
      * share its GL context so textures and shaders are visible across them.
      */
     //// This is used for the root window, which is NOT hidden
     //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_STENCIL_BITS, 8);
+    
     //// Added for consistency
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
@@ -196,12 +273,20 @@ TkGlfwInitialize(void)
     }
 
     glfwMakeContextCurrent(glfwContext.mainWindow);
-    glfwSwapInterval(1);
+    // Setting glfwSwapInterval to a positive interval causes calls
+    // to glfwSwapBuffers to be asynchronous, timed to the screen
+    // refresh cycle.  This seems to break our scheme for drawing
+    // and then swapping buffers.
+    glfwSwapInterval(0);
+    //// a shader program will be needed for each window.
+    int error = createTkShader(glfwContext.mainWindow);
+    printf("createTkShader returned %d\n", error);
 
+    //// We should have a separate context for each window.
     /* Create NanoVG context once, here, while the shared context is current. */
-    glfwContext.vg = nvgCreateGLES2(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    glfwContext.vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
     if (!glfwContext.vg) {
-        fprintf(stderr, "TkGlfwInitialize: nvgCreateGLES2() failed\n");
+        fprintf(stderr, "TkGlfwInitialize: nvgCreateGLES3() failed\n");
         glfwDestroyWindow(glfwContext.mainWindow);
         glfwContext.mainWindow = NULL;
         glfwTerminate();
@@ -260,7 +345,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
         /* Make the shared context current if it still exists. */
         if (glfwContext.mainWindow) {
             glfwMakeContextCurrent(glfwContext.mainWindow);
-            nvgDeleteGLES2(glfwContext.vg);
+            nvgDeleteGLES3(glfwContext.vg);
         }
         glfwContext.vg = NULL;
     }
@@ -300,12 +385,6 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *
  *----------------------------------------------------------------------
  */
-
-void setTextureSize(unsigned int fbo, unsigned int width, unsigned int height) {
-    if (width > 0 && height > 0) {
-    }
-}
-
 
 MODULE_SCOPE GLFWwindow *
 TkGlfwCreateWindow(
@@ -358,6 +437,8 @@ TkGlfwCreateWindow(
         glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
         glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+	glfwWindowHint(GLFW_STENCIL_BITS,          8);
+
         window = glfwCreateWindow(width, height, title ? title : "",
                                   NULL, glfwContext.mainWindow); /* Share context */
         if (!window) return NULL;
@@ -376,17 +457,18 @@ TkGlfwCreateWindow(
 
     // Create and initialize a framebuffer
 
-    //==================================================================
-
-    
-    //==================================================================
-#if 1 // Old code
-
-    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
-	if (mapping->fbo == NULL) {
-		fprintf(stderr, "Could not create NanoVG framebuffer\n");
-	}
-#endif
+    // Why do we want the image repeating?
+    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height,
+					  NVG_IMAGE_NODELETE);
+    //		      NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+    if (mapping->fbo == NULL) {
+	fprintf(stderr, "Could not create NanoVG framebuffer\n");
+    }
+    nvgluBindFramebuffer(mapping->fbo);
+    glClearColor(1, 1, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    nvgluBindFramebuffer(NULL);
+ 
 
     AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
@@ -542,6 +624,9 @@ TkGlfwBeginDraw(
 
     /* Redirect all subsequent GL commands to the FBO. */
     nvgluBindFramebuffer(m->fbo);
+    glClearStencil(0);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glStencilMask(0xFF);
 
     /* Check FBO completeness. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -560,9 +645,12 @@ TkGlfwBeginDraw(
     }
 	
     /* Start a NanoVG frame targeting the FBO. */
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
+    
+    if (m->width <= 0 || m->height <= 0) {
+	printf("Bad Frame dimensions\n");
+    }
 
+    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
     dcPtr->vg = glfwContext.vg;
     dcPtr->drawable = drawable;
 
@@ -597,17 +685,56 @@ TkGlfwBeginDraw(
  *
  *----------------------------------------------------------------------
  */
+MODULE_SCOPE void
+__attribute__((optimize("O0"))) swapdone() {
+    printf("Swap Done\n");
+}
 
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
     if (dcPtr && dcPtr->vg) {
-	nvgRestore(dcPtr->vg); // nvgBeginFrame called nvgSave!
-    
-	// Before we call EndFrame, blit the FBO to the (default) back buffer.
-	
-	printf("Blitting\n");
+	// nvgBeginFrame calls nvgSave but nvgEndFrame does not call nvgRestore.
+	// They claim this is intentional, even though it unbalances the calls.
+	// nvgRestore(dcPtr->vg);
+
+	//insurance
+	nvgluBindFramebuffer(m->fbo);
+
+	// All nvg drawing commands since the last call to nvgBeginFrame
+	// have been saved.  They get run in this call to nvgEndFrame.
+	nvgEndFrame(dcPtr->vg);
+
+	printf("Resetting GL state.\n");
+glDisable(GL_STENCIL_TEST); 
+glDisable(GL_SCISSOR_TEST);
+glDisable(GL_CULL_FACE);
+glDisable(GL_DEPTH_TEST);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Reset to standard blending
+
+// 3. UNBIND FBO to target the screen
+nvgluBindFramebuffer(NULL); 
+glViewport(0, 0, m->width, m->height);
+
+// 4. MAP TEXTURE
+
+#if 1  // Use our shader to copy the backing store to the back buffer.
+	printf("Copying the FBO to the back buffer.\n");
+	glBindVertexArray(vao);
+	//nvgluBindFramebuffer(NULL);
+	printf("Calling glBindTexture %d\n", m->fbo->texture);
+	glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, m->fbo->texture);
+	glUseProgram(tkWaylandShader);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glUniform1i(glGetUniformLocation(tkWaylandShader,
+					 "backingstore"), 1);
+#endif
+
+#if 0   // Use BlitFramebuffer to copy the backing store to the back buffer.
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->fbo);
 	glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
@@ -615,16 +742,17 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 			  GL_COLOR_BUFFER_BIT,
 			  GL_NEAREST);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	printf("Blitted\n");
-	
-        nvgEndFrame(dcPtr->vg);
-	// Now we can swap the buffers.
+#endif
+	// NanoVG is finished.  Now we can Swap the buffers so the back buffer
+	// becomes visible.
 	printf("Swapping\n");
+	
 	glfwSwapBuffers(m->glfwWindow);
-	printf("Swapped\n");
-
+	swapdone();
+	
+	
         /* Signal that the screen needs to be updated with the FBO's content. */
-	//// This does not make sense anymore.
+	//// This does not really make sense anymore.
         if (m) {
 			m->needsDisplay = 1;
 		}

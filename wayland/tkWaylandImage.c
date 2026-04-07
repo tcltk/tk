@@ -21,10 +21,10 @@
 #include "tkColor.h"
 #include "tkGlfwInt.h"
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+//#include <GLES2/gl2.h>
+//#include <GLES2/gl2ext.h>
 
-#define NANOVG_GLES2  
+//#define NANOVG_GLES2  
 
 /*
  * Undefine X11 macro that conflicts with our implementation.
