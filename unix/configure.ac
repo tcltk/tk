@@ -643,6 +643,16 @@ if test $tk_aqua = no; then
     LIBS=$tk_oldLibs
 fi
 
+# -----------------------------------------------------------------------
+# SheenBidi Unicode Bidirectional support — always included
+# Hard-wired into unix/bidi/ subdirectory
+# -----------------------------------------------------------------------
+
+AC_MSG_CHECKING([for SheenBidi + text shaper support])
+AC_MSG_RESULT([yes (hard-wired in unix/bidi/)])
+BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers -I${TK_SRC_DIR}/unix/bidi/Source -I${TK_SRC_DIR}/unix/bidi -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+AC_SUBST(BIDI_CFLAGS)
+
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
 #	#define for __CHAR_UNSIGNED__.
@@ -725,7 +735,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
-    TK_PKG_DIR="Resources/Scripts"
+    TK_PKG_DIR="${libdir}/Resources/Scripts"
     TK_RSRC_FILE="Tk.rsrc"
     WISH_RSRC_FILE="Wish.rsrc"
     includedir="${libdir}/Headers"
@@ -733,7 +743,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     HTML_DIR="${libdir}/Resources/Documentation/Reference/Tk"
     EXTRA_INSTALL="install-private-headers html-tk"
     EXTRA_BUILD_HTML='@ln -fs contents.htm "$(HTML_INSTALL_DIR)"/TkTOC.html'
-    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_IMPORT_DIR)/Resources/Info.plist"'
+    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Credits.html "$(LIB_INSTALL_DIR)/Resources"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua = yes; then
