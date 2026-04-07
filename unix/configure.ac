@@ -556,7 +556,6 @@ fi
 # -----------------------------------------------------------------------
 # SheenBidi Unicode Bidirectional support — always included
 # Hard-wired into unix/bidi/ subdirectory
-# kb_text_shaper.h also lives in unix/bidi/
 # -----------------------------------------------------------------------
 
 AC_MSG_CHECKING([for SheenBidi + text shaper support])
