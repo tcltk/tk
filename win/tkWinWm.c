@@ -3272,6 +3272,29 @@ WmAttributesCmd(
 	}
     }
     if (appearance_attr_changed) {
+
+	/*
+	 * Check for embedded window
+	 * Note: this may not be needed, as the command below will fail anyway
+	 */
+
+	if ((winPtr->flags & TK_EMBEDDED)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't set appearance attribute for \"%s\":",
+		    winPtr->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
+		    "APPEARANCE", (char *)NULL);
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * This will fail if the Window is not physically visible.
+	 * The following will fail and requires an "update" between
+	 * the two commands:
+	 * toplevel .t;wm attributes .t -appearance d
+	 */
+
+	
 	if (S_OK != DwmSetWindowAttribute(
 		wmPtr->wrapper,
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
