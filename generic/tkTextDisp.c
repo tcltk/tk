@@ -8233,78 +8233,34 @@ TkTextCharLayoutProc(
 
 static Tcl_Size
 CharChunkMeasureChars(
-    TkTextDispChunk *chunkPtr,	/* Chunk from which to measure. */
-    const char *chars,		/* Chars to use, instead of the chunk's own.
-				 * Used by the layoutproc during chunk setup.
-				 * All other callers use NULL. Not
-				 * NUL-terminated. */
-    Tcl_Size charsLen,		/* Length of the "chars" parameter. */
-    Tcl_Size start, Tcl_Size end,		/* The range of chars to measure inside the
-				 * chunk (or inside the additional chars). */
-    int startX,			/* Starting x coordinate where the measured
-				 * span will begin. */
-    int maxX,			/* Maximum pixel width of the span. May be -1
-				 * for unlimited. */
-    int flags,			/* Flags to pass to MeasureChars. */
-    int *nextXPtr)		/* The function puts the newly calculated
-				 * right border x-position of the span
-				 * here. */
+    TkTextDispChunk *chunkPtr,
+    const char *chars,
+    Tcl_Size charsLen,
+    Tcl_Size start, Tcl_Size end,
+    int startX, int maxX, int flags, int *nextX)
 {
-    Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+    CharInfo *ciPtr = (CharInfo *) chunkPtr->clientData;
 
-#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
-    if (chars == NULL) {
-	chars = ciPtr->chars;
-	charsLen = ciPtr->numBytes;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (ciPtr->baseChunkPtr != NULL) {
+        BaseCharInfo *bciPtr = (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
+        int widthToStart, widthToEnd;
+        Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
+
+        /* Always measure from offset 0 of the base string for context */
+        MeasureChars(tkfont, Tcl_DStringValue(&bciPtr->baseChars), 
+                     Tcl_DStringLength(&bciPtr->baseChars), 0, start, 
+                     0, -1, flags, &widthToStart);
+        MeasureChars(tkfont, Tcl_DStringValue(&bciPtr->baseChars), 
+                     Tcl_DStringLength(&bciPtr->baseChars), 0, end, 
+                     0, maxX + widthToStart - startX, flags, &widthToEnd);
+
+        *nextX = startX + (widthToEnd - widthToStart);
+        return (end - start);
     }
-    if (end == -1) {
-	end = charsLen;
-    }
-
-    return MeasureChars(tkfont, chars, charsLen, start, end-start,
-	    startX, maxX, flags, nextXPtr);
-#else /* TK_LAYOUT_WITH_BASE_CHUNKS */
-    {
-	int xDisplacement;
-	int fit, bstart = start, bend = end;
-
-	if (chars == NULL) {
-	    Tcl_DString *baseChars = &((BaseCharInfo *)
-		    ciPtr->baseChunkPtr->clientData)->baseChars;
-
-	    chars = Tcl_DStringValue(baseChars);
-	    charsLen = Tcl_DStringLength(baseChars);
-	    bstart += ciPtr->baseOffset;
-	    if (bend == -1) {
-		bend = ciPtr->baseOffset + ciPtr->numBytes;
-	    } else {
-		bend += ciPtr->baseOffset;
-	    }
-	} else if (bend == -1) {
-	    bend = charsLen;
-	}
-
-	if (bstart == ciPtr->baseOffset) {
-	    xDisplacement = startX - chunkPtr->x;
-	} else {
-	    int widthUntilStart = 0;
-
-	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
-		    0, -1, 0, &widthUntilStart);
-	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
-	}
-
-	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
-		ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
-
-	if (fit < bstart) {
-	    return 0;
-	} else {
-	    return fit - bstart;
-	}
-    }
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+#endif
+    return MeasureChars(chunkPtr->stylePtr->sValuePtr->tkfont, chars, charsLen, 
+                        start, end - start, startX, maxX, flags, nextX);
 }
 
 /*
@@ -8617,92 +8573,33 @@ CharMeasureProc(
 
 static void
 CharBboxProc(
-    TCL_UNUSED(TkText *),
-    TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    Tcl_Size byteIndex,		/* Byte offset of desired character within the
-				 * chunk. */
-    int y,			/* Topmost pixel in area allocated for this
-				 * line. */
-    TCL_UNUSED(int),	/* Height of line, in pixels. */
-    int baseline,		/* Location of line's baseline, in pixels
-				 * measured down from y. */
-    int *xPtr, int *yPtr,	/* Gets filled in with coords of character's
-				 * upper-left pixel. X-coord is in same
-				 * coordinate system as chunkPtr->x. */
-    int *widthPtr,		/* Gets filled in with width of character, in
-				 * pixels. */
-    int *heightPtr)		/* Gets filled in with height of character, in
-				 * pixels. */
+    TkText *textPtr,
+    TkTextDispChunk *chunkPtr,
+    Tcl_Size index,           /* Byte offset within chunk. */
+    int y, int lineHeight, int baseline,
+    int *xPtr, int *yPtr, int *widthPtr, int *heightPtr)
 {
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-    int maxX;
-    const char *chars;
+    CharInfo *ciPtr = (CharInfo *) chunkPtr->clientData;
+    int x;
 
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    chars = Tcl_DStringValue(
-	    &((BaseCharInfo *)ciPtr->baseChunkPtr->clientData)->baseChars)
-	    + ciPtr->baseOffset;
-#else
-    chars = ciPtr->chars;
-#endif
-
-    maxX = chunkPtr->width + chunkPtr->x;
-
-    /*
-     * RTL bounding-box: byte 0 of the logical string renders at the right
-     * edge of the chunk, advancing leftward.  The x coordinate of byte B is:
-     *   x_B = maxX - advance([0..B+1))
-     * and its glyph width is:
-     *   advance([0..B+1)) - advance([0..B))
-     */
-    if (ciPtr->numBytes > 0 && TkTextChunkIsRTL(chars, ciPtr->numBytes)) {
-	int xAfter, xBefore;
-
-	if (byteIndex == ciPtr->numBytes) {
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-		    chunkPtr->x, -1, 0, &xAfter);
-	    *xPtr = maxX - (xAfter - chunkPtr->x);
-	    *widthPtr = maxX - *xPtr;
-	} else if (chars[byteIndex] == '\t' && byteIndex == ciPtr->numBytes-1) {
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-		    chunkPtr->x, -1, 0, &xAfter);
-	    *xPtr = maxX - (xAfter - chunkPtr->x);
-	    *widthPtr = maxX - *xPtr;
-	} else {
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
-		    chunkPtr->x, -1, 0, &xAfter);
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-		    chunkPtr->x, -1, 0, &xBefore);
-	    *xPtr = maxX - (xAfter - chunkPtr->x);
-	    *widthPtr = (xAfter - xBefore);
-	    if (*widthPtr < 0) { *widthPtr = 0; }
-	    if (*xPtr + *widthPtr > maxX) { *widthPtr = maxX - *xPtr; }
-	}
-	*yPtr = y + baseline - chunkPtr->minAscent;
-	*heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-	return;
-    }
-
-    /* LTR path (original) */
-    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-	    chunkPtr->x, -1, 0, xPtr);
-
-    if (byteIndex == ciPtr->numBytes) {
-	*widthPtr = maxX - *xPtr;
-    } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
-	*widthPtr = maxX - *xPtr;
+    if (TkTextChunkIsRTL(ciPtr->chars, ciPtr->numBytes)) {
+        /* RTL: Measure from right to left. */
+        int widthToChar;
+        CharChunkMeasureChars(chunkPtr, ciPtr->chars, ciPtr->numBytes, 
+                             0, index, chunkPtr->x, -1, 0, &widthToChar);
+        x = chunkPtr->x + (chunkPtr->width - widthToChar);
     } else {
-	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
-		*xPtr, -1, 0, widthPtr);
-	if (*widthPtr > maxX) {
-	    *widthPtr = maxX - *xPtr;
-	} else {
-	    *widthPtr -= *xPtr;
-	}
+        /* LTR: Standard measurement. */
+        CharChunkMeasureChars(chunkPtr, ciPtr->chars, ciPtr->numBytes, 
+                             0, index, chunkPtr->x, -1, 0, &x);
     }
-    *yPtr = y + baseline - chunkPtr->minAscent;
-    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+
+    CharChunkMeasureChars(chunkPtr, ciPtr->chars, ciPtr->numBytes, 
+                         index, index + 1, x, -1, 0, widthPtr);
+
+    *xPtr = x;
+    *yPtr = y;
+    *heightPtr = lineHeight;
 }
 
 /*
@@ -9109,78 +9006,71 @@ NextTabStop(
 
 static Tcl_Size
 MeasureChars(
-    Tk_Font tkfont,		/* Font in which to draw characters. */
-    const char *source,		/* Characters to be displayed. Need not be
-				 * NULL-terminated. */
-    Tcl_Size maxBytes,		/* Maximum # of bytes to consider from
-				 * source. */
-    Tcl_Size rangeStart, Tcl_Size rangeLength,
-				/* Range of bytes to consider in source.*/
-    int startX,			/* X-position at which first character will be
-				 * drawn. */
-    int maxX,			/* Don't consider any character that would
-				 * cross this x-position. */
-    int flags,			/* Flags to pass to Tk_MeasureChars. */
-    int *nextXPtr)		/* Return x-position of terminating character
-				 * here. */
+    Tk_Font tkfont,
+    const char *source,
+    Tcl_Size maxBytes,
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    int startX, int maxX, int flags, int *nextXPtr)
 {
-    int curX, width, ch;
-    const char *special, *end, *start;
+    int curX, width;
+    Tcl_Size bytesMeasured;
+    const char *start = source + rangeStart;
+    const char *end = start + rangeLength;
+    const char *special = start;
 
-    ch = 0;
     curX = startX;
-    start = source + rangeStart;
-    end = start + rangeLength;
-    special = start;
+
+    /* Apply RTL context flag for the shaper. */
+    if (TkTextChunkIsRTL(start, rangeLength)) {
+        flags |= TK_ISOLATE_END;
+    }
+
     while (start < end) {
-	if (start >= special) {
-	    /*
-	     * Find the next special character in the string.
-	     */
+        if (start >= special) {
+            for (special = start; special < end; special++) {
+                if (*special == '\t' || *special == '\n') break;
+            }
+        }
 
-	    for (special = start; special < end; special++) {
-		ch = *special;
-		if ((ch == '\t') || (ch == '\n')) {
-		    break;
-		}
-	    }
-	}
+        if ((maxX >= 0) && (curX >= maxX)) {
+            break;
+        }
 
-	/*
-	 * Special points at the next special character (or the end of the
-	 * string). Process characters between start and special.
-	 */
-
-	if ((maxX >= 0) && (curX >= maxX)) {
-	    break;
-	}
 #ifdef TK_DRAW_IN_CONTEXT
-	start += Tk_MeasureCharsInContext(tkfont, source, maxBytes,
-		start - source, special - start,
-		maxX >= 0 ? maxX - curX : -1, flags, &width);
+        bytesMeasured = Tk_MeasureCharsInContext(tkfont, source, maxBytes, 
+                             start - source, special - start, 
+                             maxX >= 0 ? maxX - curX : -1, flags, &width);
 #else
-	(void) maxBytes;
-	start += Tk_MeasureChars(tkfont, start, special - start,
-		maxX >= 0 ? maxX - curX : -1, flags, &width);
-#endif /* TK_DRAW_IN_CONTEXT */
-	curX += width;
-	if (start < special) {
-	    /*
-	     * No more chars fit in line.
-	     */
+        (void)maxBytes;
+        bytesMeasured = Tk_MeasureChars(tkfont, start, special - start, 
+                             maxX >= 0 ? maxX - curX : -1, flags, &width);
+#endif
 
-	    break;
-	}
-	if (special < end) {
-	    if (ch != '\t') {
-		break;
-	    }
-	    start++;
-	}
+        /* PROGRESS GUARD: If 0 bytes fit, we MUST force progress by 
+         * measuring at least one UTF-8 character. 
+         */
+        if (bytesMeasured == 0 && start < special) {
+            int ch;
+            Tcl_Size chLen = Tcl_UtfToUniChar(start, &ch);
+            bytesMeasured = Tk_MeasureChars(tkfont, start, chLen, -1, 0, &width);
+            if (bytesMeasured == 0) bytesMeasured = 1; /* Safety for corrupt UTF. */
+        }
+
+        start += bytesMeasured;
+        curX += width;
+
+        if (bytesMeasured == 0 || (maxX >= 0 && curX >= maxX)) {
+            break; 
+        }
+
+        if (special < end && *special == '\t') {
+            break; /* Tabs are handled by higher-level AdjustForTab. */
+        }
     }
 
     *nextXPtr = curX;
-    return start - (source+rangeStart);
+    return start - (source + rangeStart);
 }
 
 /*
