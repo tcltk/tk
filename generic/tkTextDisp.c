@@ -26,112 +26,6 @@
 #endif
 
 /*
- * RTL / BiDi support for tkTextDisp.c
- *
- * Problems addressed:
- *
- * 1. RTL cursor hit-testing (all platforms): When a chunk contains RTL
- *    shaped text, CharMeasureProc must map screen x-coordinates to logical
- *    byte offsets using the visual→logical order used by the shaper, not the
- *    raw left-to-right byte order that CharChunkMeasureChars assumes.  We
- *    detect RTL runs by scanning for leading strong-RTL Unicode codepoints
- *    and, when found, synthesise the reverse mapping by probing glyph widths
- *    from the right edge of the chunk inward.
- *
- * 2. X11 mixed-bidi line-wrap jump: On X11 the Xft/shaping backend can
- *    return a byte-fit count for a mixed LTR+RTL run that is larger than the
- *    actual visible advance because it measures the logical string without
- *    accounting for the bidi reordering.  We clamp the break point to the
- *    last safe UAX#9 bidi boundary within the chunk.
- *
- * 3. Arabic word-wrap: The word-wrap break scanner in TkTextCharLayoutProc
- *    only recognises ASCII whitespace.  Arabic text has no inter-word ASCII
- *    spaces so it never wraps.  We extend the scan to treat U+0020 SPACE,
- *    U+00A0 (skip – non-breaking), U+200B ZERO WIDTH SPACE, and – critically
- *    – any transition from a strong-RTL codepoint back to a neutral or
- *    whitespace codepoint as a wrap opportunity, matching UAX#14 line-break
- *    class WJ/ZW/SP rules.
- *
- * 4. TK_LAYOUT_WITH_BASE_CHUNKS RTL finalization: The base-chunk stretching
- *    mechanism accumulates characters across adjacent same-font chunks to give
- *    the shaper full context.  For RTL runs this is wrong: glyphs shaped in a
- *    larger LTR+RTL combined string will differ from those shaped in isolation,
- *    and re-splitting the base chunk for cursor movement exposes the unshaped
- *    fallback glyphs.  We force FinalizeBaseChunk at every RTL chunk boundary
- *    so each RTL run is shaped as its own atomic unit.
- */
-
-/*
- * TkTextChunkIsRTL --
- *
- *	Return 1 if the first strong-directional codepoint in 'str' (of byte
- *	length 'numBytes') has Unicode Bidi_Class R or AL (right-to-left or
- *	Arabic Letter), 0 otherwise.  This is a fast heuristic sufficient for
- *	deciding shaping strategy; it does not implement the full UBA.
- *
- *	Unicode strong-RTL ranges checked (BMP only for speed):
- *	  U+0590–U+08FF  Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan,
- *	                 Mandaic, Arabic Supplement, Arabic Extended-A
- *	  U+FB1D–U+FDFF  Hebrew/Arabic Presentation Forms-A
- *	  U+FE70–U+FEFF  Arabic Presentation Forms-B
- */
-static int
-TkTextChunkIsRTL(
-    const char *str,
-    Tcl_Size numBytes)
-{
-    const char *end = str + numBytes;
-
-    while (str < end) {
-	int ch;
-	int len = Tcl_UtfToUniChar(str, &ch);
-
-	if (len <= 0) {
-	    break;
-	}
-	/* Skip neutral / weak codepoints: whitespace, punctuation, digits */
-	if ((ch >= 0x0590 && ch <= 0x08FF) ||
-	    (ch >= 0xFB1D && ch <= 0xFDFF) ||
-	    (ch >= 0xFE70 && ch <= 0xFEFF)) {
-	    return 1;
-	}
-	/* Strong LTR found first – not an RTL run */
-	if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') ||
-	    (ch >= 0x00C0 && ch <= 0x02AF) ||	/* Latin extended */
-	    (ch >= 0x0400 && ch <= 0x04FF) ||	/* Cyrillic */
-	    (ch >= 0x4E00 && ch <= 0x9FFF)) {	/* CJK */
-	    return 0;
-	}
-	/* Neutral/weak: keep scanning */
-	str += len;
-    }
-    return 0;
-}
-
-/*
- * TkTextUtf8IsWordSep --
- *
- *	Return 1 if the Unicode codepoint at 'p' is a UAX#14 line-break
- *	opportunity boundary for bidirectional text.  Recognised separators:
- *	  U+0020  SPACE
- *	  U+200B  ZERO WIDTH SPACE
- *	  U+00AD  SOFT HYPHEN
- *
- *	*advance is set to the byte length of the codepoint at p.
- */
-static int
-TkTextUtf8IsWordSep(
-    const char *p,
-    int *advance)
-{
-    int ch;
-    int len = Tcl_UtfToUniChar(p, &ch);
-    if (len <= 0) { *advance = 1; return 0; }
-    *advance = len;
-    return (ch == 0x0020 || ch == 0x200B || ch == 0x00AD);
-}
-
-/*
  * "Calculations of line pixel heights and the size of the vertical
  * scrollbar."
  *
@@ -7903,28 +7797,7 @@ TkTextCharLayoutProc(
     p = segPtr->body.chars + byteOffset;
     tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
 
-    /*
-     * RTL detection: determine whether this chunk begins with a strong
-     * right-to-left codepoint.  This governs three later decisions:
-     *   (a) Whether to force FinalizeBaseChunk (TK_LAYOUT_WITH_BASE_CHUNKS).
-     *   (b) Whether to clamp bytesThatFit to a safe bidi boundary (X11).
-     *   (c) Whether to use Unicode word-separator scanning for word-wrap.
-     */
-    int chunkIsRTL = TkTextChunkIsRTL(p, maxBytes);
-
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    /*
-     * For RTL chunks, the base-chunk accumulation mechanism is
-     * counterproductive: the shaper will produce different (wrong) glyphs
-     * when an RTL run is measured as part of a larger LTR+RTL base string
-     * and again when the base string is split at a cursor position.  Force
-     * finalization of any in-progress base chunk before starting an RTL run,
-     * and make the RTL chunk its own isolated base chunk.
-     */
-    if (chunkIsRTL && baseCharChunkPtr != NULL) {
-	FinalizeBaseChunk(NULL);
-    }
-
     if (baseCharChunkPtr == NULL) {
 	baseCharChunkPtr = chunkPtr;
 	bciPtr = (BaseCharInfo *)Tcl_Alloc(sizeof(BaseCharInfo));
@@ -7955,54 +7828,6 @@ TkTextCharLayoutProc(
     bytesThatFit = CharChunkMeasureChars(chunkPtr, p, maxBytes, 0, -1,
 	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-
-    /*
-     * X11 bidi line-jump guard: on X11 the Xft/shaping backend may return a
-     * bytesThatFit value that exceeds the true visual advance for a mixed
-     * LTR+RTL run, because it measures the logical string without applying
-     * the bidi reordering that the renderer will later apply.  This causes
-     * the display to jump to a new line mid-word.
-     *
-     * If the chunk is RTL and maxX is a real constraint (not -1), clamp
-     * bytesThatFit to the last complete UTF-8 codepoint boundary that fits.
-     * We verify by re-measuring only that prefix; if it overshoots we walk
-     * back one codepoint at a time until it fits.  This is O(n) in the number
-     * of codepoints that needed to be dropped, which is typically 0 or 1.
-     */
-#if !defined(_WIN32) && !defined(MAC_OSX_TK)
-    if (chunkIsRTL && maxX >= 0 && bytesThatFit > 0) {
-	int verifyX = 0;
-	Tcl_Size clampedFit = bytesThatFit;
-	CharChunkMeasureChars(chunkPtr,
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		line, lineOffset + clampedFit, lineOffset,
-#else
-		p, clampedFit, 0,
-#endif
-		clampedFit,
-		chunkPtr->x, -1, 0, &verifyX);
-	while (verifyX > maxX && clampedFit > 0) {
-	    /* Back up one UTF-8 codepoint */
-	    do { clampedFit--; } while (clampedFit > 0 &&
-		    (p[clampedFit] & 0xC0) == 0x80);
-	    if (clampedFit == 0) {
-		break;
-	    }
-	    CharChunkMeasureChars(chunkPtr,
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-		    line, lineOffset + clampedFit, lineOffset,
-#else
-		    p, clampedFit, 0,
-#endif
-		    clampedFit,
-		    chunkPtr->x, -1, 0, &verifyX);
-	}
-	if (clampedFit < bytesThatFit) {
-	    bytesThatFit = clampedFit;
-	    nextX = verifyX;
-	}
-    }
-#endif /* !_WIN32 && !MAC_OSX_TK */
 
     if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && (noCharsYet & 1)) {
@@ -8107,15 +7932,11 @@ TkTextCharLayoutProc(
     bciPtr->width = nextX - baseCharChunkPtr->x;
 
     /*
-     * Finalize the base chunk if:
-     *   (a) this chunk ends in a tab (original rule), or
-     *   (b) this chunk is an RTL run (new rule: RTL runs must be shaped as
-     *       isolated units so that cursor-splitting does not lose shaping
-     *       context and cause the renderer to fall back to unshaped glyphs).
+     * Finalize the base chunk if this chunk ends in a tab, which definitly
+     * breaks the context and needs to be handled on a higher level.
      */
 
-    if (ciPtr->numBytes > 0 &&
-	    (p[ciPtr->numBytes - 1] == '\t' || chunkIsRTL)) {
+    if (ciPtr->numBytes > 0 && p[ciPtr->numBytes - 1] == '\t') {
 	FinalizeBaseChunk(chunkPtr);
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -8124,27 +7945,13 @@ TkTextCharLayoutProc(
      * Compute a break location. If we're in word wrap mode, a break can occur
      * after any space character, or at the end of the chunk if the next
      * segment (ignoring those with zero size) is not a character segment.
-     *
-     * For RTL / bidi text (Arabic, Hebrew, etc.) the ASCII-only break scan
-     * below will never fire because those scripts do not use ASCII spaces
-     * between words.  We extend the scan with a Unicode-aware pass that
-     * recognises:
-     *   U+0020  SPACE           (standard word separator in bidi text)
-     *   U+200B  ZERO WIDTH SPACE (explicit soft break opportunity)
-     *   U+00AD  SOFT HYPHEN     (discretionary hyphen)
-     * The scan proceeds forward through the chunk in logical byte order and
-     * records the byte offset immediately after each separator as a candidate
-     * break point, keeping the last one found (matching the existing
-     * right-to-left scan semantics for LTR text).
      */
 
     if (wrapMode != TEXT_WRAPMODE_WORD) {
 	chunkPtr->breakIndex = chunkPtr->numBytes;
     } else {
-	/* --- ASCII break scan (LTR and fallback) --- */
-	const char *scanP = p;
-	for (count = bytesThatFit, scanP = p + bytesThatFit - 1; count > 0;
-		count--, scanP--) {
+	for (count = bytesThatFit, p += bytesThatFit - 1; count > 0;
+		count--, p--) {
 	    /*
 	     * Don't use isspace(); effects are unpredictable and can lead to
 	     * odd word-wrapping problems on some platforms. Also don't use
@@ -8153,42 +7960,12 @@ TkTextCharLayoutProc(
 	     * ASCII space characters, so use them explicitly...
 	     */
 
-	    switch (*scanP) {
+	    switch (*p) {
 	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
 		chunkPtr->breakIndex = count;
 		goto checkForNextChunk;
 	    }
 	}
-
-	/*
-	 * Unicode break-opportunity scan for RTL / bidi text.
-	 *
-	 * Walk forward through the chunk in logical byte order.  For each
-	 * Unicode separator codepoint found, record the byte offset right
-	 * after it as a break candidate.  The last such candidate wins (it is
-	 * the rightmost – and thus longest – fitting break point), matching
-	 * the expectation of LayoutDLine which uses breakIndex to trim the
-	 * chunk.
-	 *
-	 * Note: We only do this scan if the chunk contains non-ASCII bytes,
-	 * i.e. the ASCII scan above found nothing.  For pure ASCII text the
-	 * existing behavior is preserved exactly.
-	 */
-	if (chunkIsRTL) {
-	    Tcl_Size off = 0;
-	    while (off < bytesThatFit) {
-		int advance;
-		if (TkTextUtf8IsWordSep(p + off, &advance)) {
-		    /* Record break after the separator */
-		    Tcl_Size candidate = off + advance;
-		    if (candidate <= (Tcl_Size)bytesThatFit) {
-			chunkPtr->breakIndex = candidate;
-		    }
-		}
-		off += (advance > 0 ? advance : 1);
-	    }
-	}
-
     checkForNextChunk:
 	if ((bytesThatFit + byteOffset) == segPtr->size) {
 	    for (nextPtr = segPtr->nextPtr; nextPtr != NULL;
@@ -8547,67 +8324,6 @@ CharMeasureProc(
 				 * chunkPtr->x. */
 {
     int endX;
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-    const char *chars;
-    Tcl_Size numBytes;
-
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    {
-	BaseCharInfo *bciPtr =
-		(BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
-	chars = Tcl_DStringValue(&bciPtr->baseChars) + ciPtr->baseOffset;
-    }
-#else
-    chars = ciPtr->chars;
-#endif
-    numBytes = ciPtr->numBytes;
-
-    /*
-     * RTL cursor hit-testing.
-     *
-     * For LTR text, CharChunkMeasureChars walks the string left-to-right and
-     * returns the byte count of characters whose total advance fits within x.
-     * That is correct for LTR.
-     *
-     * For RTL text the glyph order on screen is the reverse of the logical
-     * byte order.  The shaper places the first logical byte at the right edge
-     * of the chunk and advances leftward.  A naive left-to-right scan therefore
-     * maps screen positions to the wrong byte offsets, which manifests as the
-     * cursor jumping backwards or the glyph cluster deforming when clicked.
-     *
-     * Strategy for RTL: we want the byte offset i such that the visual
-     * advance of bytes [i..numBytes) (the suffix that has been rendered)
-     * equals (chunkPtr->x + chunkPtr->width - x).  We probe prefix widths
-     * and use: offset = numBytes - (bytes that fit in the suffix width).
-     *
-     * For correctness we must clamp to valid UTF-8 codepoint boundaries.
-     */
-
-    if (numBytes > 0 && TkTextChunkIsRTL(chars, numBytes)) {
-	/*
-	 * Target: find byte offset i such that the visual advance of the
-	 * glyph cluster starting at i is the closest to the click position.
-	 * We approximate via: suffix_pixels = chunkPtr->width - (x - chunkPtr->x)
-	 * and count how many bytes from the end account for suffix_pixels.
-	 */
-	int suffixPixels = (chunkPtr->x + chunkPtr->width) - x;
-	if (suffixPixels <= 0) {
-	    return 0;		/* click at or past the right edge → byte 0 */
-	}
-	if (suffixPixels >= chunkPtr->width) {
-	    return numBytes;	/* click at or before left edge → last byte */
-	}
-
-	/*
-	 * Count bytes from the right that consume suffixPixels.
-	 * We measure from the start (chunkPtr->x) and subtract.
-	 */
-	int prefixTarget = chunkPtr->width - suffixPixels;
-	Tcl_Size result = CharChunkMeasureChars(chunkPtr, NULL, 0,
-		0, numBytes - 1, chunkPtr->x, chunkPtr->x + prefixTarget,
-		0, &endX);
-	return result;
-    }
 
     return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
 	    chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
@@ -8656,79 +8372,8 @@ CharBboxProc(
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
-    const char *chars;
-
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-    {
-	BaseCharInfo *bciPtr =
-		(BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
-	chars = Tcl_DStringValue(&bciPtr->baseChars) + ciPtr->baseOffset;
-    }
-#else
-    chars = ciPtr->chars;
-#endif
 
     maxX = chunkPtr->width + chunkPtr->x;
-
-    /*
-     * RTL bounding-box computation.
-     *
-     * For LTR text the x coordinate of byte offset B within a chunk is
-     * simply the advance of bytes [0..B), measured from chunkPtr->x.  The
-     * standard CharChunkMeasureChars call gives that directly.
-     *
-     * For RTL text the renderer places byte 0 at the right edge of the
-     * chunk and advances leftward.  Byte offset B therefore starts at:
-     *
-     *   x_B = chunkPtr->x + chunkPtr->width
-     *          - advance([0..B+1])    <- right edge minus the suffix up to B
-     *
-     * We compute this as:
-     *   suffix_width = measure of [0..B+1) starting from chunkPtr->x
-     *   *xPtr = maxX - suffix_width
-     *
-     * and the glyph width for codepoint at B is:
-     *   advance([B..B+1)) = measure([0..B+1)) - measure([0..B))
-     *
-     * Both calls start from chunkPtr->x so that base-chunk offsets are
-     * handled correctly under TK_LAYOUT_WITH_BASE_CHUNKS.
-     */
-    if (ciPtr->numBytes > 0 && TkTextChunkIsRTL(chars, ciPtr->numBytes)) {
-	int xAfter, xBefore;
-
-	if (byteIndex == ciPtr->numBytes) {
-	    /* Past-the-end: space character absorbs leftover space */
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-		    chunkPtr->x, -1, 0, &xAfter);
-	    *xPtr = maxX - (xAfter - chunkPtr->x);
-	    *widthPtr = maxX - *xPtr;
-	} else if (chars[byteIndex] == '\t' && byteIndex == ciPtr->numBytes - 1) {
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-		    chunkPtr->x, -1, 0, &xAfter);
-	    *xPtr = maxX - (xAfter - chunkPtr->x);
-	    *widthPtr = maxX - *xPtr;
-	} else {
-	    /* Width of the suffix [0..byteIndex+1) */
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
-		    chunkPtr->x, -1, 0, &xAfter);
-	    /* Width of the suffix [0..byteIndex) */
-	    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-		    chunkPtr->x, -1, 0, &xBefore);
-
-	    /* The glyph at byteIndex occupies [maxX - xAfter .. maxX - xBefore) */
-	    *xPtr = maxX - (xAfter - chunkPtr->x);
-	    *widthPtr = (xAfter - chunkPtr->x) - (xBefore - chunkPtr->x);
-	    if (*widthPtr < 0) { *widthPtr = 0; }
-	    if (*xPtr + *widthPtr > maxX) {
-		*widthPtr = maxX - *xPtr;
-	    }
-	}
-	*yPtr = y + baseline - chunkPtr->minAscent;
-	*heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-	return;
-    }
-
-    /* LTR path (original logic) */
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 	    chunkPtr->x, -1, 0, xPtr);
 
@@ -9625,4 +9270,3 @@ RemoveFromBaseChunk(
  * fill-column: 78
  * End:
  */
- 
