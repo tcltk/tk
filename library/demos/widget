@@ -373,11 +373,8 @@ addFormattedText {
 if {[tk windowingsystem] eq "aqua"} {
     addFormattedText {
 	@@subtitle Mac-Specific Widgets and Window Styles
-	@@new
 	@@demo mac_styles	Special widgets for macOS
-	@@new
 	@@demo mac_wm	Window styles for macOS
-	@@new
 	@@demo mac_tabs	Tabbed Windows on macOS
     }
 }
@@ -440,9 +437,7 @@ addFormattedText {
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
     @@demo fontchoose	Font selection dialog
-    @@new
     @@demo systray      System tray icon and notification
-    @@new
     @@demo print        Printing from canvas and text widgets
 
     @@subtitle	Animation
@@ -455,7 +450,6 @@ addFormattedText {
     @@demo bitmap	The built-in bitmaps
     @@demo dialog1	A dialog box with a local grab
     @@demo dialog2	A dialog box with a global grab
-    @@new
     @@demo windowicons  Window icons and badges
 }
 
