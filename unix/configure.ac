@@ -556,7 +556,6 @@ fi
 # -----------------------------------------------------------------------
 # SheenBidi Unicode Bidirectional support — always included
 # Hard-wired into unix/bidi/ subdirectory
-# kb_text_shaper.h also lives in unix/bidi/
 # -----------------------------------------------------------------------
 
 AC_MSG_CHECKING([for SheenBidi + text shaper support])
@@ -646,7 +645,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
-    TK_PKG_DIR="Resources/Scripts"
+    TK_PKG_DIR="${libdir}/Resources/Scripts"
     TK_RSRC_FILE="Tk.rsrc"
     WISH_RSRC_FILE="Wish.rsrc"
     includedir="${libdir}/Headers"
