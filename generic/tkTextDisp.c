@@ -8362,11 +8362,10 @@ CharMeasureProc(
             if (len <= 0) break;
 
             /* Strong RTL. */
-            if ((ch >= 0x0590 && ch <= 0x08FF) ||
-                (ch >= 0x0700 && ch <= 0x07FF) ||
-                (ch >= 0xFB1D && ch <= 0xFDFF) ||
-                (ch >= 0xFE70 && ch <= 0xFEFF) ||
-                ch == 0x200F || ch == 0x061C) {
+            if ((ch >= 0x0590 && ch <= 0x08FF) ||   /* Hebrew, Arabic, Syriac, Thaana, NKo, etc. */
+                (ch >= 0xFB1D && ch <= 0xFDFF) ||   /* Arabic Presentation Forms-A, Hebrew pres. */
+                (ch >= 0xFE70 && ch <= 0xFEFF) ||   /* Arabic Presentation Forms-B */
+                ch == 0x200F || ch == 0x061C) {      /* RLM, ALM */
                 rtl = 1;
                 break;
             }
@@ -8447,13 +8446,13 @@ CharMeasureProc(
             int w;
             MeasureChars(tkfont, q, len, 0, len, 0, -1, 0, &w);
 
-            if (rightX - w < xMax) {
-                return bytePos;
-            }
-
             rightX -= w;
             p = q;
             bytePos -= len;
+
+            if (rightX <= xMax) {
+                return bytePos;
+            }
         }
 
         return 0;
@@ -8535,10 +8534,9 @@ CharBboxProc(
             if (len <= 0) break;
 
             /* Strong RTL ranges. */
-            if ((ch >= 0x0590 && ch <= 0x08FF) ||     /* Hebrew + Arabic */
-                (ch >= 0x0700 && ch <= 0x07FF) ||     /* Syriac, Thaana, N'Ko */
-                (ch >= 0xFB1D && ch <= 0xFDFF) ||     /* Arabic pres. A */
-                (ch >= 0xFE70 && ch <= 0xFEFF) ||     /* Arabic pres. B */
+            if ((ch >= 0x0590 && ch <= 0x08FF) ||     /* Hebrew, Arabic, Syriac, Thaana, NKo, etc. */
+                (ch >= 0xFB1D && ch <= 0xFDFF) ||     /* Arabic Presentation Forms-A, Hebrew pres. */
+                (ch >= 0xFE70 && ch <= 0xFEFF) ||     /* Arabic Presentation Forms-B */
                 ch == 0x200F ||                       /* RLM */
                 ch == 0x061C) {                       /* ALM */
                 rtl = 1;
@@ -8614,11 +8612,17 @@ CharBboxProc(
 
     /*
      * Fill out the bounding box.
+     * Use actual font metrics (ascent/descent) for the vertical extent, not
+     * lineHeight, which includes inter-line spacing padding and would push
+     * *yPtr above the real top of the glyphs causing cursor visual artifacts.
      */
+    Tk_FontMetrics fm;
+    Tk_GetFontMetrics(tkfont, &fm);
+
     *xPtr      = x;
-    *yPtr      = y + baseline - lineHeight;
+    *yPtr      = y + baseline - fm.ascent;
     *widthPtr  = charWidth;
-    *heightPtr = lineHeight;
+    *heightPtr = fm.ascent + fm.descent;
 }
 
 
