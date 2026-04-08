@@ -8319,15 +8319,147 @@ CharUndisplayProc(
 
 static Tcl_Size
 CharMeasureProc(
-    TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
-    int x)			/* X-coordinate, in same coordinate system as
-				 * chunkPtr->x. */
+    TkTextDispChunk *chunkPtr,
+    int xMax)
 {
-    int endX;
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+    Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
 
-    return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
-	    chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
+    const char *chars;
+    Tcl_Size numBytes;
+
+    /*
+     * Resolve actual UTF‑8 buffer depending on base‑chunk mode.
+     */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (ciPtr->baseChunkPtr != NULL) {
+        BaseCharInfo *bciPtr =
+            (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+        Tcl_DString *dsPtr = &bciPtr->baseChars;
+        chars = Tcl_DStringValue(dsPtr);
+        numBytes = Tcl_DStringLength(dsPtr);
+    } else
+#endif
+    {
+        chars = ciPtr->chars;
+        numBytes = ciPtr->numBytes;
+    }
+
+    if (!chars || numBytes == 0) {
+        return 0;
+    }
+
+    /*
+     * Inline RTL detection: find first strong directional character.
+     */
+    int rtl = 0;
+    {
+        const char *p = chars;
+        const char *end = chars + numBytes;
+
+        while (p < end) {
+            int ch, len = Tcl_UtfToUniChar(p, &ch);
+            if (len <= 0) break;
+
+            /* Strong RTL. */
+            if ((ch >= 0x0590 && ch <= 0x08FF) ||
+                (ch >= 0x0700 && ch <= 0x07FF) ||
+                (ch >= 0xFB1D && ch <= 0xFDFF) ||
+                (ch >= 0xFE70 && ch <= 0xFEFF) ||
+                ch == 0x200F || ch == 0x061C) {
+                rtl = 1;
+                break;
+            }
+
+            /* Strong LTR. */
+            if ((ch >= 0x0041 && ch <= 0x005A) ||
+                (ch >= 0x0061 && ch <= 0x007A) ||
+                (ch >= 0x00C0 && ch <= 0x02AF) ||
+                (ch >= 0x0370 && ch <= 0x03FF) ||
+                (ch >= 0x0400 && ch <= 0x04FF) ||
+                (ch >= 0x4E00 && ch <= 0x9FFF)) {
+                rtl = 0;
+                break;
+            }
+
+            p += len;
+        }
+    }
+
+    /*
+     * Compute how many bytes fit before xMax.
+     */
+    int x = chunkPtr->x;
+
+    if (!rtl) {
+        /*
+         * LTR: accumulate widths from the left.
+         */
+        const char *p = chars;
+        const char *end = chars + numBytes;
+        Tcl_Size bytePos = 0;
+
+        while (p < end) {
+            int ch, len = Tcl_UtfToUniChar(p, &ch);
+            if (len <= 0) break;
+
+            int w;
+            MeasureChars(tkfont, p, len, 0, len, 0, -1, 0, &w);
+
+            if (x + w > xMax) {
+                return bytePos;
+            }
+
+            x += w;
+            p += len;
+            bytePos += len;
+        }
+
+        return numBytes;
+    } else {
+        /*
+         * RTL: accumulate widths from the right.
+         *
+         * Strategy:
+         *   - measure total width
+         *   - walk characters from the right edge inward
+         *   - stop when the left edge of the remaining text crosses xMax
+         */
+        int totalWidth;
+        MeasureChars(tkfont, chars, numBytes,
+                     0, (int)numBytes, 0, -1, 0, &totalWidth);
+
+        int rightX = chunkPtr->x + totalWidth;
+
+        const char *p = chars + numBytes;
+        Tcl_Size bytePos = numBytes;
+
+        while (p > chars) {
+            /* Step backward one UTF‑8 character. */
+            const char *q = p;
+            do {
+                q--;
+            } while (q > chars && ((*q & 0xC0) == 0x80));
+
+            int ch, len = Tcl_UtfToUniChar(q, &ch);
+            if (len <= 0) break;
+
+            int w;
+            MeasureChars(tkfont, q, len, 0, len, 0, -1, 0, &w);
+
+            if (rightX - w < xMax) {
+                return bytePos;
+            }
+
+            rightX -= w;
+            p = q;
+            bytePos -= len;
+        }
+
+        return 0;
+    }
 }
+
 
 /*
  *--------------------------------------------------------------
@@ -8353,58 +8485,143 @@ CharMeasureProc(
 
 static void
 CharBboxProc(
-    TCL_UNUSED(TkText *),
-    TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    Tcl_Size byteIndex,		/* Byte offset of desired character within the
-				 * chunk. */
-    int y,			/* Topmost pixel in area allocated for this
-				 * line. */
-    TCL_UNUSED(int),	/* Height of line, in pixels. */
-    int baseline,		/* Location of line's baseline, in pixels
-				 * measured down from y. */
-    int *xPtr, int *yPtr,	/* Gets filled in with coords of character's
-				 * upper-left pixel. X-coord is in same
-				 * coordinate system as chunkPtr->x. */
-    int *widthPtr,		/* Gets filled in with width of character, in
-				 * pixels. */
-    int *heightPtr)		/* Gets filled in with height of character, in
-				 * pixels. */
+    TkText *textPtr,
+    TkTextDispChunk *chunkPtr,
+    Tcl_Size index,      /* Byte index within chunk */
+    int y,
+    int lineHeight,
+    int baseline,
+    int *xPtr,
+    int *yPtr,
+    int *widthPtr,
+    int *heightPtr)
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-    int maxX;
+    Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
+    const char *chars;
+    Tcl_Size numBytes;
 
-    maxX = chunkPtr->width + chunkPtr->x;
-    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-	    chunkPtr->x, -1, 0, xPtr);
-
-    if (byteIndex == ciPtr->numBytes) {
-	/*
-	 * This situation only happens if the last character in a line is a
-	 * space character, in which case it absorbs all of the extra space in
-	 * the line (see TkTextCharLayoutProc).
-	 */
-
-	*widthPtr = maxX - *xPtr;
-    } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
-	/*
-	 * The desired character is a tab character that terminates a chunk;
-	 * give it all the space left in the chunk.
-	 */
-
-	*widthPtr = maxX - *xPtr;
-    } else {
-	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
-		*xPtr, -1, 0, widthPtr);
-	if (*widthPtr > maxX) {
-	    *widthPtr = maxX - *xPtr;
-	} else {
-	    *widthPtr -= *xPtr;
-	}
+    /*
+     * Resolve the actual UTF‑8 buffer depending on base‑chunk mode.
+     */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (ciPtr->baseChunkPtr != NULL) {
+        BaseCharInfo *bciPtr =
+            (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+        Tcl_DString *dsPtr = &bciPtr->baseChars;
+        chars = Tcl_DStringValue(dsPtr);
+        numBytes = Tcl_DStringLength(dsPtr);
+    } else
+#endif
+    {
+        chars = ciPtr->chars;
+        numBytes = ciPtr->numBytes;
     }
-    *yPtr = y + baseline - chunkPtr->minAscent;
-    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+
+    if (chars == NULL || numBytes == 0) {
+        return;
+    }
+
+    /*
+     * Inline RTL detection: find first strong directional character.
+     */
+    int rtl = 0;
+    {
+        const char *p = chars;
+        const char *end = chars + numBytes;
+        while (p < end) {
+            int ch;
+            int len = Tcl_UtfToUniChar(p, &ch);
+            if (len <= 0) break;
+
+            /* Strong RTL ranges. */
+            if ((ch >= 0x0590 && ch <= 0x08FF) ||     /* Hebrew + Arabic */
+                (ch >= 0x0700 && ch <= 0x07FF) ||     /* Syriac, Thaana, N'Ko */
+                (ch >= 0xFB1D && ch <= 0xFDFF) ||     /* Arabic pres. A */
+                (ch >= 0xFE70 && ch <= 0xFEFF) ||     /* Arabic pres. B */
+                ch == 0x200F ||                       /* RLM */
+                ch == 0x061C) {                       /* ALM */
+                rtl = 1;
+                break;
+            }
+
+            /* Strong LTR. */
+            if ((ch >= 0x0041 && ch <= 0x005A) ||     /* A–Z */
+                (ch >= 0x0061 && ch <= 0x007A) ||     /* a–z */
+                (ch >= 0x00C0 && ch <= 0x02AF) ||     /* Latin ext */
+                (ch >= 0x0370 && ch <= 0x03FF) ||     /* Greek */
+                (ch >= 0x0400 && ch <= 0x04FF) ||     /* Cyrillic */
+                (ch >= 0x4E00 && ch <= 0x9FFF)) {     /* CJK */
+                rtl = 0;
+                break;
+            }
+
+            p += len;
+        }
+    }
+
+    /*
+     * Find the UTF‑8 character at byte index "index".
+     */
+    const char *p = chars;
+    const char *end = chars + numBytes;
+    Tcl_Size bytePos = 0;
+
+    while (p < end && bytePos < index) {
+        int ch, len = Tcl_UtfToUniChar(p, &ch);
+        if (len <= 0) break;
+        p += len;
+        bytePos += len;
+    }
+    if (p >= end) {
+        return;
+    }
+
+    int ch, charLen = Tcl_UtfToUniChar(p, &ch);
+
+    /*
+     * Measure width of this character.
+     */
+    int charWidth;
+    MeasureChars(tkfont, p, charLen, 0, charLen, 0, -1, 0, &charWidth);
+
+    int x = chunkPtr->x;
+
+    if (!rtl) {
+        /*
+         * LTR: x = left edge + width of all bytes before index.
+         */
+        int beforeWidth;
+        MeasureChars(tkfont, chars, numBytes,
+                     0, (int)bytePos, 0, -1, 0, &beforeWidth);
+        x += beforeWidth;
+    } else {
+        /*
+         * RTL: x = right edge - widthAfter - charWidth.
+         */
+        int totalWidth, afterWidth;
+
+        MeasureChars(tkfont, chars, numBytes,
+                     0, (int)numBytes, 0, -1, 0, &totalWidth);
+
+        MeasureChars(tkfont, chars, numBytes,
+                     (int)(bytePos + charLen),
+                     (int)(numBytes - (bytePos + charLen)),
+                     0, -1, 0, &afterWidth);
+
+        x += totalWidth - afterWidth - charWidth;
+    }
+
+    /*
+     * Fill out the bounding box.
+     */
+    *xPtr      = x;
+    *yPtr      = y + baseline - lineHeight;
+    *widthPtr  = charWidth;
+    *heightPtr = lineHeight;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
