@@ -279,6 +279,10 @@ struct TkTextDispChunk {
 				 * or immediately after this chunk. */
     void *clientData;	/* Additional information for use of
 				 * displayProc and undisplayProc. */
+    int rtl;                /* TK_TEXT_DIR_RTL if this chunk belongs to an
+                             * RTL display line, TK_TEXT_DIR_LTR otherwise.
+                             * Stamped by ReorderChunksVisually() in
+                             * tkTextDisp.c during LayoutDLine. */
 };
 
 /*

@@ -203,6 +203,17 @@ typedef struct TextStyle {
     (fabs((double1)-(double2))*((scaleFactor)+1.0) < 0.3)
 
 /*
+ * Text direction constants for BiDi support.  Stored in DLine.direction and
+ * stamped onto TkTextDispChunk.rtl by LayoutDLine so that CharBboxProc and
+ * CharMeasureProc can determine intra-chunk directionality without rescanning
+ * the text on every call.  The chunk list order and chunkPtr->x values are
+ * left exactly as the platform shaper set them; only intra-chunk coordinate
+ * math changes based on these flags.
+ */
+#define TK_TEXT_DIR_LTR 0	/* Left-to-right run. */
+#define TK_TEXT_DIR_RTL 1	/* Right-to-left run. */
+
+/*
  * Macros to make debugging/testing logging a little easier.
  */
 
@@ -266,6 +277,10 @@ typedef struct DLine {
 				 * have been deleted because they're out of
 				 * date. */
     int flags;			/* Various flag bits: see below for values. */
+    int direction;		/* Base direction of this display line:
+				 * TK_TEXT_DIR_LTR or TK_TEXT_DIR_RTL.
+				 * Set by LayoutDLine via DetermineBaseDirection
+				 * and stamped onto every chunk as chunk->rtl. */
 } DLine;
 
 /*
@@ -574,6 +589,7 @@ static void		GetYView(Tcl_Interp *interp, TkText *textPtr,
 static int		GetYPixelCount(TkText *textPtr, DLine *dlPtr);
 static DLine *		LayoutDLine(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
+static int		DetermineBaseDirection(TkTextDispChunk *chunkPtr);
 static Tcl_Size	MeasureChars(Tk_Font tkfont, const char *source,
 			    Tcl_Size maxBytes, Tcl_Size rangeStart, Tcl_Size rangeLength,
 			    int startX, int maxX, int flags, int *nextXPtr);
@@ -1082,6 +1098,98 @@ FreeStyle(
 /*
  *----------------------------------------------------------------------
  *
+ * DetermineBaseDirection --
+ *
+ *	Scans the character chunks of a freshly-built display line to find
+ *	the first strong directional Unicode character (Unicode rules P2/P3)
+ *	and returns the corresponding direction constant.
+ *
+ *	Only character chunks (bboxProc == CharBboxProc) are examined;
+ *	non-character chunks (embedded windows, images) are skipped.
+ *
+ *	This is called once per LayoutDLine.  The result is stored in
+ *	dlPtr->direction and stamped onto every chunk as chunk->rtl, so
+ *	that CharBboxProc and CharMeasureProc never need to re-scan the text
+ *	on every cursor-placement or hit-test call.
+ *
+ *	The chunk list order and all chunkPtr->x values are left completely
+ *	unchanged: the platform shaper (HarfBuzz, Uniscribe, CoreText) has
+ *	already placed them in visual order with correct x coordinates.
+ *
+ * Results:
+ *	TK_TEXT_DIR_RTL if the first strong character is right-to-left,
+ *	TK_TEXT_DIR_LTR otherwise (including when no strong character is
+ *	found, which defaults to LTR per Unicode P3).
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DetermineBaseDirection(
+    TkTextDispChunk *chunkPtr)	/* First chunk of the display line. */
+{
+    for (; chunkPtr != NULL; chunkPtr = chunkPtr->nextPtr) {
+	CharInfo *ciPtr;
+	const char *p, *end;
+
+	if (chunkPtr->bboxProc != CharBboxProc) {
+	    continue;		/* Skip images, windows, etc. */
+	}
+	ciPtr = (CharInfo *)chunkPtr->clientData;
+	if (ciPtr == NULL) {
+	    continue;
+	}
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	if (ciPtr->baseChunkPtr != NULL) {
+	    BaseCharInfo *bciPtr =
+		    (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+	    p   = Tcl_DStringValue(&bciPtr->baseChars);
+	    end = p + Tcl_DStringLength(&bciPtr->baseChars);
+	} else
+#endif
+	{
+	    p   = ciPtr->chars;
+	    end = p + ciPtr->numBytes;
+	}
+	if (p == NULL) {
+	    continue;
+	}
+
+	while (p < end) {
+	    int ch, len = Tcl_UtfToUniChar(p, &ch);
+	    if (len <= 0) break;
+
+	    /* Strong RTL: Hebrew, Arabic, Syriac, Thaana, NKo,
+	     * Arabic Presentation Forms A/B, RLM, ALM. */
+	    if ((ch >= 0x0590 && ch <= 0x08FF) ||
+		(ch >= 0xFB1D && ch <= 0xFDFF) ||
+		(ch >= 0xFE70 && ch <= 0xFEFF) ||
+		ch == 0x200F || ch == 0x061C) {
+		return TK_TEXT_DIR_RTL;
+	    }
+	    /* Strong LTR: Basic Latin, Latin Extended, Greek,
+	     * Cyrillic, CJK Unified Ideographs. */
+	    if ((ch >= 0x0041 && ch <= 0x005A) ||
+		(ch >= 0x0061 && ch <= 0x007A) ||
+		(ch >= 0x00C0 && ch <= 0x02AF) ||
+		(ch >= 0x0370 && ch <= 0x03FF) ||
+		(ch >= 0x0400 && ch <= 0x04FF) ||
+		(ch >= 0x4E00 && ch <= 0x9FFF)) {
+		return TK_TEXT_DIR_LTR;
+	    }
+	    p += len;
+	}
+    }
+    return TK_TEXT_DIR_LTR;	/* Default: LTR when no strong char found. */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * LayoutDLine --
  *
  *	This function generates a single DLine structure for a display line
@@ -1193,6 +1301,7 @@ LayoutDLine(
     dlPtr->lMarginWidth = 0;
     dlPtr->rMarginColor = NULL;
     dlPtr->rMarginWidth = 0;
+    dlPtr->direction = TK_TEXT_DIR_LTR;	/* Set properly at end of layout. */
 
     /*
      * This is not necessarily totally correct, where we have merged logical
@@ -1790,6 +1899,23 @@ LayoutDLine(
      */
 
     dlPtr->length = lastChunkPtr->x + lastChunkPtr->width;
+
+    /*
+     * Determine the base direction of this display line by scanning for the
+     * first strong Unicode directional character.  Store the result in
+     * dlPtr->direction and stamp it onto every chunk as chunk->rtl so that
+     * CharBboxProc and CharMeasureProc can select intra-chunk coordinate
+     * direction without rescanning the text on every call.
+     *
+     * Chunk list order and chunkPtr->x values are intentionally left exactly
+     * as the platform shaper produced them.
+     */
+
+    dlPtr->direction = DetermineBaseDirection(dlPtr->chunkPtr);
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    chunkPtr = chunkPtr->nextPtr) {
+	chunkPtr->rtl = dlPtr->direction;
+    }
 
     return dlPtr;
 }
@@ -8350,40 +8476,11 @@ CharMeasureProc(
     }
 
     /*
-     * Inline RTL detection: find first strong directional character.
+     * Direction was determined once for the whole line by DetermineBaseDirection
+     * in LayoutDLine and stamped onto every chunk as chunk->rtl.  Read it
+     * directly instead of rescanning the text on every hit-test call.
      */
-    int rtl = 0;
-    {
-        const char *p = chars;
-        const char *end = chars + numBytes;
-
-        while (p < end) {
-            int ch, len = Tcl_UtfToUniChar(p, &ch);
-            if (len <= 0) break;
-
-            /* Strong RTL. */
-            if ((ch >= 0x0590 && ch <= 0x08FF) ||   /* Hebrew, Arabic, Syriac, Thaana, NKo, etc. */
-                (ch >= 0xFB1D && ch <= 0xFDFF) ||   /* Arabic Presentation Forms-A, Hebrew pres. */
-                (ch >= 0xFE70 && ch <= 0xFEFF) ||   /* Arabic Presentation Forms-B */
-                ch == 0x200F || ch == 0x061C) {      /* RLM, ALM */
-                rtl = 1;
-                break;
-            }
-
-            /* Strong LTR. */
-            if ((ch >= 0x0041 && ch <= 0x005A) ||
-                (ch >= 0x0061 && ch <= 0x007A) ||
-                (ch >= 0x00C0 && ch <= 0x02AF) ||
-                (ch >= 0x0370 && ch <= 0x03FF) ||
-                (ch >= 0x0400 && ch <= 0x04FF) ||
-                (ch >= 0x4E00 && ch <= 0x9FFF)) {
-                rtl = 0;
-                break;
-            }
-
-            p += len;
-        }
-    }
+    int rtl = chunkPtr->rtl;
 
     /*
      * Compute how many bytes fit before xMax.
@@ -8522,41 +8619,11 @@ CharBboxProc(
     }
 
     /*
-     * Inline RTL detection: find first strong directional character.
+     * Direction was determined once for the whole line by DetermineBaseDirection
+     * in LayoutDLine and stamped onto every chunk as chunk->rtl.  Read it
+     * directly instead of rescanning the text on every bounding-box call.
      */
-    int rtl = 0;
-    {
-        const char *p = chars;
-        const char *end = chars + numBytes;
-        while (p < end) {
-            int ch;
-            int len = Tcl_UtfToUniChar(p, &ch);
-            if (len <= 0) break;
-
-            /* Strong RTL ranges. */
-            if ((ch >= 0x0590 && ch <= 0x08FF) ||     /* Hebrew, Arabic, Syriac, Thaana, NKo, etc. */
-                (ch >= 0xFB1D && ch <= 0xFDFF) ||     /* Arabic Presentation Forms-A, Hebrew pres. */
-                (ch >= 0xFE70 && ch <= 0xFEFF) ||     /* Arabic Presentation Forms-B */
-                ch == 0x200F ||                       /* RLM */
-                ch == 0x061C) {                       /* ALM */
-                rtl = 1;
-                break;
-            }
-
-            /* Strong LTR. */
-            if ((ch >= 0x0041 && ch <= 0x005A) ||     /* A–Z */
-                (ch >= 0x0061 && ch <= 0x007A) ||     /* a–z */
-                (ch >= 0x00C0 && ch <= 0x02AF) ||     /* Latin ext */
-                (ch >= 0x0370 && ch <= 0x03FF) ||     /* Greek */
-                (ch >= 0x0400 && ch <= 0x04FF) ||     /* Cyrillic */
-                (ch >= 0x4E00 && ch <= 0x9FFF)) {     /* CJK */
-                rtl = 0;
-                break;
-            }
-
-            p += len;
-        }
-    }
+    int rtl = chunkPtr->rtl;
 
     /*
      * Find the UTF‑8 character at byte index "index".
