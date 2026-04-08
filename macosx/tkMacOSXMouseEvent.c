@@ -745,13 +745,9 @@ TkpWarpPointer(
     }
 #endif
 
-    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, med.window);
-
-    if (tkwin != NULL) {
-	tkwin = Tk_TopCoordsToWindow(tkwin, med.local.h, med.local.v,
-		&dummy, &dummy);
-    }
-    Tk_UpdatePointer(tkwin, med.global.h, med.global.v, med.state);
+    Tk_Window newPointerWin = Tk_CoordsToWindow(global_x, global_y,
+    		dispPtr->warpMainwin);
+    Tk_UpdatePointer(newPointerWin, med.global.h, med.global.v, med.state);
 }
 
 /*
