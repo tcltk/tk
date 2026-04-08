@@ -844,7 +844,7 @@ test font-17.4 {Tk_FreeFont procedure: named font} -setup {
     getnondefaultfonts
 } -result {xyz}
 test font-17.5 {Tk_FreeFont procedure: named font} -constraints !withXft -setup {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
     # skip test if compiled with Xft.
     destroy .t.f
     catch {font delete xyz}
@@ -1545,7 +1545,7 @@ test font-24.4 {Tk_ComputeTextLayout: calls Tk_MeasureChars} -body {
 	    [expr {[winfo reqheight .t.l] eq [expr {$ay * 2}]}]
 } -result {1 1}
 test font-24.5 {Tk_ComputeTextLayout: break line} -constraints !withXft -body {
-     # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+     # Text measurements may differ slightly from legacy Tk due to proper font shaping;
      # skip test if compiled with Xft.
     .t.l config -text "000\t00000" -wrap [expr {9 * $ax}]
     update
@@ -1598,7 +1598,7 @@ test font-24.10 {Tk_ComputeTextLayout: tab caused break} -body {
     .t.l config -wrap 0
 } -result {1 1 1 1}
 test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol} -constraints !withXft -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
     # skip test if compiled with Xft.
     set x {}
     .t.l config -text "000            000" -wrap [expr {$ax * 5}]
@@ -1614,7 +1614,7 @@ test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol} -constraints !withX
     .t.l config -wrap 0
 } -result {1 1 1 1}
 test font-24.12 {Tk_ComputeTextLayout: append non-printing spaces to chunk} -constraints !withXft -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
     # skip test if compiled with Xft.
     set x {}
     .t.l config -text "000            0000" -wrap [expr {$ax * 5}]
@@ -1917,7 +1917,7 @@ test font-30.5 {Tk_DistanceToTextLayout procedure: ignore newline} -body {
     bind all <Enter> {}
 } -result {}
 test font-30.6 {Tk_DistanceToTextLayout procedure: ignore spaces at eol} -constraints !withXft -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
     # skip test if compiled with Xft.
     csetup "000\n000      000000000"
     .t.c itemconfig text -width [expr {$ax*10}]
@@ -2045,7 +2045,7 @@ test font-31.5 {Tk_IntersectTextLayout procedure: ignore newlines} -body {
     .t.c find overlapping $ax $ay $ax $ay
 } -result {}
 test font-31.6 {Tk_IntersectTextLayout procedure: ignore spaces at eol} -constraints !withXft -body {
-    # Text measurements may differ slightly from legacy Tk due to proper font shaping; 
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
     # skip test if compiled with Xft.
     csetup "000\n000      000000000"
     .t.c itemconfig text -width [expr {$ax*10}]
