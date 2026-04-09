@@ -76,7 +76,7 @@
 #   endif
 #endif
 
-#if defined(_WIN32) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+#if defined(_WIN32)
 # if TCL_UTF_MAX > 3
 #   define Tcl_WCharToUtfDString(a,b,c) Tcl_WinTCharToUtf((TCHAR *)(a),(b)*sizeof(WCHAR),c)
 #   define Tcl_UtfToWCharDString(a,b,c) (WCHAR *)Tcl_WinUtfToTChar(a,b,c)
@@ -1347,7 +1347,7 @@ MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 #endif
 
 /* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+#if TCL_UTF_MAX > 4
 #   define TkUtfToUniChar Tcl_UtfToUniChar
 #   define TkUniCharToUtf Tcl_UniCharToUtf
 #   define TkUtfPrev Tcl_UtfPrev
