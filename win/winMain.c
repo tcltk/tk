@@ -19,7 +19,7 @@
 #include <locale.h>
 #include <stdlib.h>
 #include <tchar.h>
-#if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
+#if TCL_MAJOR_VERSION < 9
 #   define Tcl_LibraryInitProc Tcl_PackageInitProc
 #   define Tcl_StaticLibrary Tcl_StaticPackage
 #endif
@@ -36,7 +36,7 @@ extern Tcl_LibraryInitProc Tktest_Init;
 #endif /* TK_TEST */
 
 #if !defined(TCL_USE_STATIC_PACKAGES)
-#   if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 6
+#   if TCL_MAJOR_VERSION > 8
 #	define TCL_USE_STATIC_PACKAGES 1
 #   else
 #	define TCL_USE_STATIC_PACKAGES 0
