@@ -445,8 +445,13 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     int numBytes;		/* Number of bytes to display. */
-    char *chars;		/* Pointer to UTF characters to display.
-				 * Actual array follows this struct. */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    char *chars;		/* Pointer to UTF characters to display. */
+#else
+    char chars[TKFLEXARRAY];		/* UTF characters to display.
+				 * Allocated as large as necessary. THIS MUST BE THE LAST
+				 * FIELD IN THE STRUCTURE. */
+#endif
 } CharInfo;
 
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -571,7 +576,7 @@ static void		DisplayDLine(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
-static void		DisplayText(ClientData clientData);
+static void		DisplayText(void *clientData);
 static DLine *		FindDLine(TkText *textPtr, DLine *dlPtr,
                             const TkTextIndex *indexPtr);
 static void		FreeDLines(TkText *textPtr, DLine *firstPtr,
@@ -618,9 +623,9 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    TkText *textPtr, int objc,
 			    Tcl_Obj *const objv[], double *dblPtr,
 			    int *intPtr);
-static void		AsyncUpdateLineMetrics(ClientData clientData);
+static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
-static void		AsyncUpdateYScrollbar(ClientData clientData);
+static void		AsyncUpdateYScrollbar(void *clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             const TkTextIndex *indexPtr);
 
@@ -2600,12 +2605,12 @@ DisplayDLine(
 		    bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
 		    bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
 		    bci.ci.baseChunkPtr = otherChunkPtr;
-		    otherChunkPtr->clientData = (ClientData) &bci;
+		    otherChunkPtr->clientData = &bci;
 		    otherChunkPtr->numBytes = bci.ci.numBytes;
 #else
 		    ci = *((CharInfo *) (otherChunkPtr->clientData));
 		    ci.numBytes = numBytes;
-		    otherChunkPtr->clientData = (ClientData) &ci;
+		    otherChunkPtr->clientData = &ci;
 		    otherChunkPtr->numBytes = ci.numBytes;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		} else {
@@ -3121,7 +3126,7 @@ DisplayLineBackground(
 
 static void
 AsyncUpdateLineMetrics(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -3193,14 +3198,14 @@ AsyncUpdateLineMetrics(
         if (textPtr->afterSyncCmd) {
             int code;
 	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
-            Tcl_Preserve((ClientData) textPtr->interp);
+            Tcl_Preserve(textPtr->interp);
             code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd,
                     TCL_EVAL_GLOBAL);
 	    if (code == TCL_ERROR) {
                 Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
                 Tcl_BackgroundError(textPtr->interp);
 	    }
-            Tcl_Release((ClientData) textPtr->interp);
+            Tcl_Release(textPtr->interp);
             Tcl_DecrRefCount(textPtr->afterSyncCmd);
             textPtr->afterSyncCmd = NULL;
 	}
@@ -4278,7 +4283,7 @@ TkTextUpdateOneLine(
 
 static void
 DisplayText(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -6497,7 +6502,7 @@ TkTextScanCmd(
     if ((objc != 5) && (objc != 6)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "mark x y");
 	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
-		" scan dragto x y ?gain?\"", NULL);
+		" scan dragto x y ?gain?\"", (char *)NULL);
 	/*
 	 * Ought to be:
 	 * Tcl_WrongNumArgs(interp, 2, objc, "dragto x y ?gain?");
@@ -6568,7 +6573,7 @@ TkTextScanCmd(
 		"bad scan option \"%s\": must be mark or dragto",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
-		Tcl_GetString(objv[2]), NULL);
+		Tcl_GetString(objv[2]), (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -6966,7 +6971,7 @@ GetYView(
 
 static void
 AsyncUpdateYScrollbar(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
 
@@ -7918,8 +7923,7 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = (CharInfo *)ckalloc(sizeof(CharInfo) + 1 + bytesThatFit);
-    ciPtr->chars = (char *) (ciPtr + 1);
+    ciPtr = (CharInfo *)ckalloc((Tk_Offset(CharInfo, chars) + 1) + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
