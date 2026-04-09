@@ -1292,7 +1292,8 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
     }
     set result
 } -cleanup {
-    unset -nocomplain caseID coords i result yPos srcWin destWin destWin2 nextDestWin prevDestWin warpWin windowList
+    unset -nocomplain caseID coords i destWin destWin2 nextDestWin prevDestWin \
+            result srcWin yPos warpWin windowList
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .f
