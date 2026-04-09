@@ -436,6 +436,13 @@ typedef struct CharInfo {
     Tcl_Size numBytes;		/* Number of bytes to display. */
     char *chars;		/* Pointer to UTF characters to display.
 				 * Actual array follows this struct. */
+    bool isRtl;			/* True if the platform shaper laid out this
+				 * chunk in RTL visual order, meaning logical
+				 * byte 0 maps to the rightmost glyph.  Set by
+				 * the shaper (tkUnixBidiFont.c / tkWinFont.c /
+				 * tkMacOSXFont.c) after filling the chunk;
+				 * read by CharMeasureProc and CharBboxProc to
+				 * mirror the byte↔pixel mapping. */
 } CharInfo;
 
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -447,6 +454,10 @@ typedef struct CharInfo {
     const char *chars;		/* UTF characters to display. Actually points
 				 * into the baseChars of the base chunk. Only
 				 * valid after FinalizeBaseChunk(). */
+    bool isRtl;			/* True if the platform shaper laid out this
+				 * chunk in RTL visual order.  See the
+				 * non-base-chunks variant above for full
+				 * commentary. */
 } CharInfo;
 
 /*
@@ -603,6 +614,7 @@ static void		DlineIndexOfX(TkText *textPtr,
 			    DLine *dlPtr, int x, TkTextIndex *indexPtr);
 static int		DlineXOfIndex(TkText *textPtr,
 			    DLine *dlPtr, Tcl_Size byteIndex);
+static bool		DisplayLineIsRtl(DLine *dlPtr);
 static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], double *dblPtr,
@@ -1759,6 +1771,51 @@ LayoutDLine(
 		&& (sValuePtr->relief != TK_RELIEF_FLAT)) {
 	    dlPtr->flags |= HAS_3D_BORDER;
 	}
+    }
+
+    /*
+     * RTL paragraph reordering pass.
+     *
+     * If the display line's first strong Unicode character has RTL Bidi
+     * class (R or AL), or if every char chunk in the line carries isRtl,
+     * mirror all chunk x-positions within the content band so that the
+     * logically-first chunk sits at the right edge.  This is a paragraph-
+     * level visual reorder: glyph-level reordering within each run has
+     * already been done by the platform shaper (HarfBuzz / Uniscribe /
+     * CoreText) which set chunkPtr->isRtl on each shaped RTL run.
+     *
+     * After mirroring we also reverse the chunk linked list so that
+     * DlineIndexOfX, DlineXOfIndex, and the selection / cursor rendering
+     * code can continue to scan left-to-right in visual (screen) order
+     * and get correct results without any further direction awareness.
+     *
+     * The content band is [lMarginWidth, lMarginWidth + lineContentWidth).
+     * Chunks that have zero width (marks, elided runs) keep their mirrored
+     * positions so that cursor placement remains consistent.
+     */
+
+    if (DisplayLineIsRtl(dlPtr)) {
+	TkTextDispChunk *prevPtr, *nextPtr2, *headPtr;
+	int lineContentWidth = maxX - dlPtr->lMarginWidth;
+	int rightEdge = dlPtr->lMarginWidth + lineContentWidth;
+
+	/* Mirror each chunk x within the content band. */
+	for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+		chunkPtr = chunkPtr->nextPtr) {
+	    chunkPtr->x = rightEdge - (chunkPtr->x - dlPtr->lMarginWidth)
+		    - chunkPtr->width;
+	}
+
+	/* Reverse the linked list to restore visual L→R scan order. */
+	prevPtr = NULL;
+	headPtr = dlPtr->chunkPtr;
+	for (chunkPtr = headPtr; chunkPtr != NULL; ) {
+	    nextPtr2 = chunkPtr->nextPtr;
+	    chunkPtr->nextPtr = prevPtr;
+	    prevPtr = chunkPtr;
+	    chunkPtr = nextPtr2;
+	}
+	dlPtr->chunkPtr = prevPtr;
     }
     if (dlPtr->height < (ascent + descent)) {
 	dlPtr->height = ascent + descent;
@@ -7234,6 +7291,144 @@ TkTextPixelIndex(
 
     DlineIndexOfX(textPtr, dlPtr, x, indexPtr);
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DisplayLineIsRtl --
+ *
+ *	Determine whether a display line should be treated as a right-to-left
+ *	paragraph by scanning for the first strong Unicode Bidi character
+ *	(Unicode Bidi Algorithm rules P2 and P3).
+ *
+ *	"Strong" characters are those with Bidi class L (Left), R (Right), or
+ *	AL (Arabic Letter).  The first such character found in the line
+ *	determines the base paragraph direction.  If no strong character is
+ *	found we default to LTR (return false).
+ *
+ *	As a fast secondary check we also return true if every char chunk in
+ *	the line has isRtl set — this handles the case where the shaper has
+ *	already done the direction work even if the first character's Unicode
+ *	category isn't trivially classifiable.
+ *
+ * Results:
+ *	true if the line's base paragraph direction is RTL, false otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static bool
+DisplayLineIsRtl(
+    DLine *dlPtr)		/* Display line to test. */
+{
+    TkTextDispChunk *chunkPtr;
+    int charChunkCount = 0;
+    int rtlChunkCount  = 0;
+
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL;
+	    chunkPtr = chunkPtr->nextPtr) {
+	const char *p, *end;
+	CharInfo *ciPtr;
+
+	if (chunkPtr->bboxProc != CharBboxProc) {
+	    /* Not a char chunk (mark, image, window, elide). Skip. */
+	    continue;
+	}
+
+	charChunkCount++;
+	if (chunkPtr->isRtl) {
+	    rtlChunkCount++;
+	}
+
+	/*
+	 * Walk the UTF-8 bytes of this chunk looking for the first strong
+	 * Bidi character (Unicode Bidi Algorithm P2).  We only need to
+	 * distinguish three outcomes:
+	 *   RTL_STRONG  — Bidi class R or AL  → return true
+	 *   LTR_STRONG  — Bidi class L        → return false
+	 *   WEAK/NEUTRAL— everything else     → keep scanning
+	 *
+	 * Ranges approximate the Unicode Bidi data table for all scripts in
+	 * common use; they are stable across Unicode versions.
+	 */
+
+	ciPtr = (CharInfo *)chunkPtr->clientData;
+	p   = ciPtr->chars;
+	end = p + ciPtr->numBytes;
+
+	while (p < end) {
+	    Tcl_UniChar uch;
+	    int bytes = Tcl_UtfToUniChar(p, &uch);
+	    int ch = (int)uch;
+
+	    /* Fast ASCII LTR shortcut (the vast majority of chunks). */
+	    if (ch >= 0x0041 && ch <= 0x007A) {
+		return false;	/* L */
+	    }
+
+	    /* Latin Extended, IPA, Spacing Modifiers, Combining Diacritics. */
+	    if (ch >= 0x00C0 && ch <= 0x02FF) {
+		return false;	/* L */
+	    }
+
+	    /* Greek, Coptic, Cyrillic, Armenian. */
+	    if (ch >= 0x0370 && ch <= 0x058F) {
+		return false;	/* L */
+	    }
+
+	    /* Hebrew block: U+0590-U+05FF */
+	    if (ch >= 0x0590 && ch <= 0x05FF) {
+		return true;	/* R */
+	    }
+
+	    /* Arabic, Syriac, Arabic Supplement, Thaana, NKo,
+	     * Samaritan, Mandaic, Arabic Extended-A. */
+	    if (ch >= 0x0600 && ch <= 0x08FF) {
+		return true;	/* AL / R */
+	    }
+
+	    /* Hebrew Presentation Forms. */
+	    if (ch >= 0xFB1D && ch <= 0xFB4F) {
+		return true;	/* R */
+	    }
+
+	    /* Arabic Presentation Forms A & B. */
+	    if ((ch >= 0xFB50 && ch <= 0xFDFF) ||
+		    (ch >= 0xFE70 && ch <= 0xFEFF)) {
+		return true;	/* AL */
+	    }
+
+	    /* Supplementary RTL scripts above U+10000. */
+	    if (ch >= 0x10800 && ch <= 0x10FFF) {
+		return true;	/* R */
+	    }
+
+	    /* CJK and most of plane 0 above U+2E80: Bidi class L or ON. */
+	    if (ch >= 0x2E80) {
+		return false;	/* L */
+	    }
+
+	    /* Neutral or weak — continue scanning. */
+	    p += bytes;
+	}
+    }
+
+    /*
+     * No strong character found via Unicode scan.  Fall back: if every char
+     * chunk was shaped RTL by the platform shaper, treat the line as RTL.
+     */
+
+    if (charChunkCount > 0 && charChunkCount == rtlChunkCount) {
+	return true;
+    }
+
+    return false;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -7820,6 +8015,7 @@ TkTextCharLayoutProc(
     ciPtr->baseOffset = lineOffset;
     ciPtr->chars = NULL;
     ciPtr->numBytes = 0;
+    ciPtr->isRtl = false;	/* shaper sets this to true for RTL runs */
 
     bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
 	    lineOffset + maxBytes, lineOffset, -1, chunkPtr->x, maxX,
@@ -7910,10 +8106,12 @@ TkTextCharLayoutProc(
     chunkPtr->minHeight = 0;
     chunkPtr->width = nextX - chunkPtr->x;
     chunkPtr->breakIndex = -1;
+    chunkPtr->isRtl = false;	/* platform shaper sets true for RTL runs */
 
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     ciPtr = (CharInfo *)Tcl_Alloc(sizeof(CharInfo) + 1 + bytesThatFit);
     ciPtr->chars = (char *) (ciPtr + 1);
+    ciPtr->isRtl = false;	/* shaper sets this to true for RTL runs */
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -8325,8 +8523,44 @@ CharMeasureProc(
 {
     int endX;
 
-    return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
-	    chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
+    if (!chunkPtr->isRtl) {
+	/*
+	 * LTR: measure from byte 0 forward until we reach pixel x.  The
+	 * return value is the byte offset within the chunk of the character
+	 * that covers x.
+	 */
+
+	return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
+		chunkPtr->x, x, 0, &endX);
+    }
+
+    /*
+     * RTL: logical byte 0 is at the right edge of the chunk.  Mirror x
+     * within the chunk so that the pixel closest to the right edge maps to
+     * byte 0, and the pixel closest to the left edge maps to numBytes-1.
+     *
+     * The mirrored coordinate is:
+     *   mirroredX = chunkPtr->x + chunkPtr->width - (x - chunkPtr->x)
+     *             = 2*chunkPtr->x + chunkPtr->width - x
+     *
+     * We clamp to [chunkPtr->x, chunkPtr->x + chunkPtr->width - 1] to
+     * avoid going out of range on the edges.
+     */
+
+    {
+	int chunkRight = chunkPtr->x + chunkPtr->width;
+	int mirroredX  = chunkPtr->x + (chunkRight - x) - 1;
+
+	if (mirroredX < chunkPtr->x) {
+	    mirroredX = chunkPtr->x;
+	}
+	if (mirroredX >= chunkRight) {
+	    mirroredX = chunkRight - 1;
+	}
+
+	return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
+		chunkPtr->x, mirroredX, 0, &endX);
+    }
 }
 
 /*
@@ -8374,34 +8608,90 @@ CharBboxProc(
     int maxX;
 
     maxX = chunkPtr->width + chunkPtr->x;
-    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-	    chunkPtr->x, -1, 0, xPtr);
 
-    if (byteIndex == ciPtr->numBytes) {
+    if (!chunkPtr->isRtl) {
 	/*
-	 * This situation only happens if the last character in a line is a
-	 * space character, in which case it absorbs all of the extra space in
-	 * the line (see TkTextCharLayoutProc).
+	 * LTR path: logical byte 0 is the leftmost glyph.  Measure from the
+	 * start of the chunk up to byteIndex to get the left edge, then
+	 * measure one more character to get the width.
 	 */
 
-	*widthPtr = maxX - *xPtr;
-    } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
-	/*
-	 * The desired character is a tab character that terminates a chunk;
-	 * give it all the space left in the chunk.
-	 */
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+		chunkPtr->x, -1, 0, xPtr);
 
-	*widthPtr = maxX - *xPtr;
-    } else {
-	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
-		*xPtr, -1, 0, widthPtr);
-	if (*widthPtr > maxX) {
+	if (byteIndex == ciPtr->numBytes) {
+	    /*
+	     * Last character in a line is a space that absorbed all extra
+	     * space (see TkTextCharLayoutProc).
+	     */
+
+	    *widthPtr = maxX - *xPtr;
+	} else if ((ciPtr->chars[byteIndex] == '\t')
+		&& (byteIndex == ciPtr->numBytes - 1)) {
+	    /*
+	     * Tab at end of chunk gets all remaining space.
+	     */
+
 	    *widthPtr = maxX - *xPtr;
 	} else {
-	    *widthPtr -= *xPtr;
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
+		    *xPtr, -1, 0, widthPtr);
+	    if (*widthPtr > maxX) {
+		*widthPtr = maxX - *xPtr;
+	    } else {
+		*widthPtr -= *xPtr;
+	    }
+	}
+    } else {
+	/*
+	 * RTL path: the platform shaper placed logical byte 0 at the right
+	 * edge of the chunk and byte (numBytes-1) at the left edge.  We
+	 * measure as if the run were LTR (which is what CharChunkMeasureChars
+	 * does — it just calls Tk_MeasureChars from byte 0), then mirror the
+	 * result within the chunk's pixel span.
+	 *
+	 * For a chunk occupying [chunkPtr->x, maxX):
+	 *
+	 *   ltr_left  = pixel position of byte byteIndex in LTR order
+	 *   ltr_right = pixel position of byte byteIndex+1 in LTR order
+	 *
+	 *   rtl_left  = maxX - ltr_right + chunkPtr->x  (mirror right→left)
+	 *   rtl_right = maxX - ltr_left  + chunkPtr->x
+	 *   width     = rtl_right - rtl_left = ltr_right - ltr_left
+	 *
+	 * The width is unchanged by the mirror, only the x position flips.
+	 */
+
+	int ltrLeft, ltrRight;
+
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+		chunkPtr->x, -1, 0, &ltrLeft);
+
+	if (byteIndex == ciPtr->numBytes) {
+	    ltrRight = maxX;
+	} else if ((ciPtr->chars[byteIndex] == '\t')
+		&& (byteIndex == ciPtr->numBytes - 1)) {
+	    ltrRight = maxX;
+	} else {
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
+		    chunkPtr->x, -1, 0, &ltrRight);
+	    if (ltrRight > maxX) {
+		ltrRight = maxX;
+	    }
+	}
+
+	/*
+	 * Mirror: the visual left edge of this glyph in RTL space is the
+	 * complement of its LTR right edge within the chunk.
+	 */
+
+	*xPtr = maxX - (ltrRight - chunkPtr->x);
+	*widthPtr = ltrRight - ltrLeft;
+	if (*widthPtr < 0) {
+	    *widthPtr = 0;
 	}
     }
+
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 }

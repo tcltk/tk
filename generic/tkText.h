@@ -279,6 +279,17 @@ struct TkTextDispChunk {
 				 * or immediately after this chunk. */
     void *clientData;	/* Additional information for use of
 				 * displayProc and undisplayProc. */
+    bool isRtl;			/* Set to true by the platform shaper when
+				 * this chunk was shaped in RTL visual order,
+				 * i.e. logical byte 0 maps to the rightmost
+				 * glyph in the rendered run.  When true,
+				 * CharMeasureProc and CharBboxProc mirror the
+				 * byte↔pixel mapping within the chunk, and
+				 * LayoutDLine folds this chunk into the line's
+				 * RTL reordering pass.  Must be initialised to
+				 * false by TkTextCharLayoutProc; shapers that
+				 * do not perform RTL shaping need not touch
+				 * this field. */
 };
 
 /*
@@ -293,6 +304,7 @@ typedef enum {
     TEXT_WRAPMODE_NONE,
     TEXT_WRAPMODE_WORD
 } TkWrapMode;
+
 
 /*
  * The following are the supported styles of tabbing, used for the -tabstyle
