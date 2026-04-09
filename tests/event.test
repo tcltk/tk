@@ -1229,6 +1229,7 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
     after 10; update; # opportunity to service crossing events
 
     set windowList [list "{}" . .f]
+    unset coords
     array set coords {
         "A,{}" 150
         "B,{}" 250
@@ -1246,6 +1247,7 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
         "x,.f,." 150
         "x,.f,.f" 50
     }
+    set i 0
     set yPos X
 
     bind all <Leave> {append result "<Leave> %W|"}
@@ -1291,7 +1293,7 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
     }
     set result
 } -cleanup {
-    unset result
+    unset -nocomplain caseID coords i result yPos srcWin destWin destWin2 nextDestWin prevDestWin warpWin windowList
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .f
