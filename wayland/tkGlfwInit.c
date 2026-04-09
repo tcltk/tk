@@ -21,13 +21,12 @@
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-
 //#include <GLES2/gl2.h>
+
 
 //#ifndef NANOVG_GLES2_IMPLEMENTATION
 //#define NANOVG_GLES2_IMPLEMENTATION
-//#endif
-
+//#end
 #define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
@@ -88,24 +87,7 @@ TkGlfwErrorCallback(int error, const char *desc)
     }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwInitialize --
- *
- *	Initialize the GLFW library, create a shared context window,
- *	initialize Wayland protocols, and create the global NanoVG context.
- *
- * Results:
- *	TCL_OK on success, TCL_ERROR on failure.
- *
- * Side effects:
- *	Initializes GLFW, creates a hidden shared GL context window,
- *	and creates the global NanoVG context.
- *
- *----------------------------------------------------------------------
- */
-
+#if 1
 /*
  * Simple glsl shader program which copies a texture to the
  * glsl window.  The window is triangulated by adding a diagonal
@@ -134,9 +116,7 @@ const char* fShader = "#version 320 es \n"
     "out vec4 fragColor; \n"
     "in vec2 uv; \n"
     "uniform sampler2D backingStore; \n"
-    "vec4 color = texture(backingStore, uv); \n"
-    "void main() {fragColor = vec4(color.rgb, 1.0);}";
-    //    "void main() {fragColor = texture(backingStore, uv);}";
+    "void main() {fragColor = texture(backingStore, uv);}";
 
 /*
  * Vertex coordinates in the XY plane of the GL cube,
@@ -220,12 +200,30 @@ static int createTkShader(GLFWwindow *window) {
     // Teturn the gl error number
     return glGetError();
 }
+#endif
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwInitialize --
+ *
+ *	Initialize the GLFW library, create a shared context window,
+ *	initialize Wayland protocols, and create the global NanoVG context.
+ *
+ * Results:
+ *	TCL_OK on success, TCL_ERROR on failure.
+ *
+ * Side effects:
+ *	Initializes GLFW, creates a hidden shared GL context window,
+ *	and creates the global NanoVG context.
+ *
+ *----------------------------------------------------------------------
+ */
 
 MODULE_SCOPE int
 TkGlfwInitialize(void)
 {
     if (glfwContext.initialized) return TCL_OK;
-    //glewInit(); This did not prevent the crash in glLinkProgram.
 
     glfwSetErrorCallback(TkGlfwErrorCallback);
 
@@ -244,26 +242,16 @@ TkGlfwInitialize(void)
      */
     //// This is used for the root window, which is NOT hidden
     //glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    glfwWindowHint(GLFW_STENCIL_BITS, 8);
-    
+    glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+
     //// Added for consistency
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-
     
-    //// XXXX if the width and height below are set to 640 x 480,
-    //// you will see a white 640x480 rectangle behind the root window,
-    //// which moves with the window and contains a 200x200 window
-    //// frame at its top left and a black 200x200 square at its
-    //// bottom left.  Something is going badly wrong with the
-    //// code which sets the size of the root window to 200x200.
-    //// Using 200x200 here hides the bug, but does not deal with
-    //// it.
     glfwContext.mainWindow =
         glfwCreateWindow(200, 200, "Tk Shared Context", NULL, NULL);
     if (!glfwContext.mainWindow) {
@@ -273,16 +261,11 @@ TkGlfwInitialize(void)
     }
 
     glfwMakeContextCurrent(glfwContext.mainWindow);
-    // Setting glfwSwapInterval to a positive interval causes calls
-    // to glfwSwapBuffers to be asynchronous, timed to the screen
-    // refresh cycle.  This seems to break our scheme for drawing
-    // and then swapping buffers.
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
     //// a shader program will be needed for each window.
     int error = createTkShader(glfwContext.mainWindow);
     printf("createTkShader returned %d\n", error);
 
-    //// We should have a separate context for each window.
     /* Create NanoVG context once, here, while the shared context is current. */
     glfwContext.vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
     if (!glfwContext.vg) {
@@ -437,8 +420,6 @@ TkGlfwCreateWindow(
         glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
         glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-	glfwWindowHint(GLFW_STENCIL_BITS,          8);
-
         window = glfwCreateWindow(width, height, title ? title : "",
                                   NULL, glfwContext.mainWindow); /* Share context */
         if (!window) return NULL;
@@ -457,18 +438,17 @@ TkGlfwCreateWindow(
 
     // Create and initialize a framebuffer
 
-    // Why do we want the image repeating?
-    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height,
-					  NVG_IMAGE_NODELETE);
-    //		      NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
-    if (mapping->fbo == NULL) {
-	fprintf(stderr, "Could not create NanoVG framebuffer\n");
-    }
-    nvgluBindFramebuffer(mapping->fbo);
-    glClearColor(1, 1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    nvgluBindFramebuffer(NULL);
- 
+    //==================================================================
+
+    
+    //==================================================================
+#if 1 // Old code
+
+    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+	if (mapping->fbo == NULL) {
+		fprintf(stderr, "Could not create NanoVG framebuffer\n");
+	}
+#endif
 
     AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
@@ -607,6 +587,8 @@ void SyncWindowSize(WindowMapping *m)
  *----------------------------------------------------------------------
  */
 
+static NVGLUframebuffer* backingStore = NULL;
+
 MODULE_SCOPE int
 TkGlfwBeginDraw(
     Drawable drawable,
@@ -620,41 +602,37 @@ TkGlfwBeginDraw(
 	printf("Failed to find mapping for drawable %lx\n", drawable);
         return TCL_ERROR;
     }
-    printf("window %s; FBO: %d\n", Tk_PathName(m->tkWindow), m->fbo->fbo);
 
-    /* Redirect all subsequent GL commands to the FBO. */
+    printf("window %s; backing store at %p with FBO: %d\n",
+	   Tk_PathName(m->tkWindow), m->fbo, m->fbo->fbo);
+    // Bind our backing store framebuffer.
     nvgluBindFramebuffer(m->fbo);
-    glClearStencil(0);
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glStencilMask(0xFF);
-
-    /* Check FBO completeness. */
+    
+    /* Check FBO completeness for now. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         printf("FBO is incomplete (status=0x%x)\n", status);
     }
 
     /* Set viewport to the FBO size. */
-    //// BeginFrame supposedly does this.
+    //// Note: BeginFrame supposedly does this.
     glViewport(0, 0, m->width, m->height);
-    printf("Set viewport to %d x %d\n", m->width, m->height);
+    printf("Viewport is %d x %d.\n", m->width, m->height);
 
     if (m->width != Tk_Width(m->tkWindow) ||
 	m->height != Tk_Height(m->tkWindow)) {
 	printf("window size does not match mapping\n");
     }
 	
-    /* Start a NanoVG frame targeting the FBO. */
-    
-    if (m->width <= 0 || m->height <= 0) {
-	printf("Bad Frame dimensions\n");
-    }
-
+    /* Start a NanoVG frame drawing on the backing store. */
+	
     nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
+    // Set up the drawing context for EndDraw
     dcPtr->vg = glfwContext.vg;
     dcPtr->drawable = drawable;
 
     /* Handle coordinates (Child window offsets). */
+    //// This is completely broken.
     if (m->tkWindow && !Tk_IsTopLevel(m->tkWindow)) {
         int x = 0, y = 0;
         TkWindow *winPtr = (TkWindow *)m->tkWindow;
@@ -685,84 +663,63 @@ TkGlfwBeginDraw(
  *
  *----------------------------------------------------------------------
  */
-MODULE_SCOPE void
-__attribute__((optimize("O0"))) swapdone() {
-    printf("Swap Done\n");
+
+static void blitFBOToBack(NVGLUframebuffer *fbo, int width, int height) {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, width, height,
+		      0, 0, width, height,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
 }
 
-MODULE_SCOPE void
+static void blitBackToFBO(NVGLUframebuffer *fbo, int width, int height) {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo->fbo);
+    glBlitFramebuffer(0, 0, width, height,
+		      0, 0, width, height,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+}
+
+static void drawFBOOnBack(NVGLUframebuffer *fbo) {
+    nvgluBindFramebuffer(NULL);
+    glBindVertexArray(vao);
+    glBindTexture(GL_TEXTURE_2D, fbo->texture);
+    glUseProgram(tkWaylandShader);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+ MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
+    printf("TkGlfwEndDraw: %s\n", Tk_PathName(m->tkWindow));
     if (dcPtr && dcPtr->vg) {
-	// nvgBeginFrame calls nvgSave but nvgEndFrame does not call nvgRestore.
-	// They claim this is intentional, even though it unbalances the calls.
-	// nvgRestore(dcPtr->vg);
-
-	//insurance
+	nvgRestore(dcPtr->vg); // nvgBeginFrame called nvgSave!
+	printf("Binding backing store at %p\n", m->fbo);
 	nvgluBindFramebuffer(m->fbo);
-
-	// All nvg drawing commands since the last call to nvgBeginFrame
-	// have been saved.  They get run in this call to nvgEndFrame.
+	glViewport(0, 0, m->width, m->height);
+	// All nvg drawing happens here.
 	nvgEndFrame(dcPtr->vg);
-
-	printf("Resetting GL state.\n");
-glDisable(GL_STENCIL_TEST); 
-glDisable(GL_SCISSOR_TEST);
-glDisable(GL_CULL_FACE);
-glDisable(GL_DEPTH_TEST);
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Reset to standard blending
-
-// 3. UNBIND FBO to target the screen
-nvgluBindFramebuffer(NULL); 
-glViewport(0, 0, m->width, m->height);
-
-// 4. MAP TEXTURE
-
-#if 1  // Use our shader to copy the backing store to the back buffer.
-	printf("Copying the FBO to the back buffer.\n");
-	glBindVertexArray(vao);
-	//nvgluBindFramebuffer(NULL);
-	printf("Calling glBindTexture %d\n", m->fbo->texture);
-	glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, m->fbo->texture);
-	glUseProgram(tkWaylandShader);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glUniform1i(glGetUniformLocation(tkWaylandShader,
-					 "backingstore"), 1);
-#endif
-
-#if 0   // Use BlitFramebuffer to copy the backing store to the back buffer.
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m->fbo->fbo);
-	glBlitFramebuffer(0, 0, (int)m->width, (int)m->height,
-			  0, 0, (int)m->width, (int)m->height,
-			  GL_COLOR_BUFFER_BIT,
-			  GL_NEAREST);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-	// NanoVG is finished.  Now we can Swap the buffers so the back buffer
-	// becomes visible.
-	printf("Swapping\n");
-	
+	printf("Blitting backingStore to the back buffer\n");
+	blitFBOToBack(m->fbo, m->width, m->height);
+	printf("Sending window image to the compositor.\n");
+	nvgluBindFramebuffer(NULL);
 	glfwSwapBuffers(m->glfwWindow);
-	swapdone();
-	
-	
+	printf("Sent\n");
+
         /* Signal that the screen needs to be updated with the FBO's content. */
-	//// This does not really make sense anymore.
+	//// This does not make sense anymore.
         if (m) {
 			m->needsDisplay = 1;
 		}
     } else {
 	printf("No context in TkGlfwEndDraw\n");
     }
-
-    printf("TkGlfwEndDraw: %s\n", Tk_PathName(m->tkWindow));
 }
-
 
 /*
  *----------------------------------------------------------------------

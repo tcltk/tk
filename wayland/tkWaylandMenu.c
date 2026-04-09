@@ -1423,7 +1423,7 @@ TkpDisplayMenu(
     /* Draw menu background/border. */
     nvgSave(dc.vg);
     nvgBeginPath(dc.vg);
-    nvgRect(dc.vg, (float) menuX, (float) menuY, (float) menuW, (float) menuH);
+    nvgRect(dc.vg, menuX, menuY, menuW, menuH);
     nvgFillColor(dc.vg, nvgRGB(240, 240, 240));
     nvgFill(dc.vg);
     nvgStrokeColor(dc.vg, nvgRGB(0, 0, 0));

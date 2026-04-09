@@ -16,7 +16,7 @@
 #include "tkInt.h"
 #include "tkPort.h"
 #include "tkGlfwInt.h"
-//#include <GLES2/gl2.h>
+#include <GLES2/gl2.h>
 #include "nanovg.h"
 #include <math.h>
 #include <string.h>
@@ -694,7 +694,7 @@ XDrawArc(
     if (width == height) {
         nvgArc(dc.vg, cx, cy, rx, startAngle, endAngle, NVG_CW);
     } else {
-	nvgSave(dc.vg);
+        nvgSave(dc.vg);
         nvgTranslate(dc.vg, cx, cy);
         nvgScale(dc.vg, 1.0f, ry / rx);
         nvgTranslate(dc.vg, -cx, -cy);
@@ -974,27 +974,11 @@ TkpDrawFrameEx(
     int        borderWidth,
     int        relief)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin, *childPtr;
-
     Tk_Fill3DRectangle(tkwin, drawable, border,
                        highlightWidth, highlightWidth,
                        Tk_Width(tkwin)  - 2 * highlightWidth,
                        Tk_Height(tkwin) - 2 * highlightWidth,
                        borderWidth, relief);
-    // When we drawing a frame we need to expose all of its
-    // children.
-    for (childPtr = winPtr->childList; childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped((Tk_Window)childPtr) ||
-	    Tk_IsTopLevel((Tk_Window)childPtr)) {
-            continue;
-        }
-        TkWaylandQueueExposeEvent(childPtr, 
-                                 0, 0,
-                                 Tk_Width((Tk_Window)childPtr),
-                                 Tk_Height((Tk_Window)childPtr));
-    }
-
 }
 
 /*

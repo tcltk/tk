@@ -184,7 +184,7 @@ DrawButtonBitmap(TkButton *butPtr,
     if (!bitmap) {
         /* No bitmap: draw fallback rectangle. */
         nvgBeginPath(dc->vg);
-        nvgRect(dc->vg, (float) x, (float) y, (float) width, (float) height);
+        nvgRect(dc->vg, x, y, width, height);
         nvgFillColor(dc->vg, nvgRGBA(192, 192, 192, 255));
         nvgFill(dc->vg);
         return;
@@ -289,8 +289,7 @@ DrawButtonBitmap(TkButton *butPtr,
     if (imageId > 0) {
         NVGpaint paint = nvgImagePattern(dc->vg, x, y, bm_width, bm_height, 0, imageId, 1);
         nvgBeginPath(dc->vg);
-        nvgRect(dc->vg, (float) x, (float) y,
-		(float) bm_width, (float) bm_height);
+        nvgRect(dc->vg, x, y, bm_width, bm_height);
         nvgFillPaint(dc->vg, paint);
         nvgFill(dc->vg);
         nvgDeleteImage(dc->vg, imageId);
@@ -310,7 +309,7 @@ cleanup:
 
 fallback_rect:
     nvgBeginPath(dc->vg);
-    nvgRect(dc->vg, (float) x, (float) y, (float) width, (float) height);
+    nvgRect(dc->vg, x, y, width, height);
     nvgFillColor(dc->vg, nvgRGBA(192, 192, 192, 255));
     nvgFill(dc->vg);
     return;
@@ -992,7 +991,7 @@ TkpDrawCheckIndicator(
     
     /* Draw background. */
     nvgBeginPath(dc->vg);
-    nvgRect(dc->vg, (float) x, (float) y, (float) size, (float) size);
+    nvgRect(dc->vg, x, y, size, size);
     
     if (disabled && disColor) {
         nvgFillColor(dc->vg, TkGlfwXColorToNVG(disColor));
