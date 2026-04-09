@@ -1254,7 +1254,7 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
     set result "|"
 } -body {
     # The cases below exercise a pointer warp with source window, destination
-    # window and warp window varying over thet fixed set of windows in windowList,
+    # window and warp window varying over the fixed set of windows in windowList,
     # utilizing the destination of a previous warp as the source for the next one.
     foreach destWin $windowList {
         foreach warpWin $windowList {
