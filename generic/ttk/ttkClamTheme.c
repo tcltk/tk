@@ -992,16 +992,17 @@ static void TabElementSize(
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPlacementStickBit  = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     int borderWidth = 2;
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPlacementStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
-    switch (nbTabsStickBit) {
+    switch (nbTabPlacementStickBit) {
 	default:
 	case TTK_STICK_S:
 	    paddingPtr->bottom = 0;
@@ -1026,7 +1027,8 @@ static void TabElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPosStickBit = TTK_STICK_W;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     int borderWidth = 2, delta = 0;
     NotebookElement *tab = (NotebookElement *)elementRecord;
@@ -1037,7 +1039,10 @@ static void TabElementDraw(
     const int w = WIN32_XDRAWLINE_HACK;
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPosStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPosition & 0x0f);
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
     if (state & TTK_STATE_SELECTED) {
@@ -1045,7 +1050,7 @@ static void TabElementDraw(
     }
 
     border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    if (state & TTK_STATE_LAST) {		/* rightmost tab */
@@ -1061,9 +1066,13 @@ static void TabElementDraw(
 
 	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
 	    XDrawLine(display, d, gc, x1, y1+1, x1, y2+1+w);
-	    XDrawLine(display, d, gc, x2, y1+1, x2, y2+1+w);
 	    XDrawLine(display, d, gc, x1+1, y1, x2-1+w, y1);
 
+	    if ((state & TTK_STATE_LAST) && nbTabPosStickBit == TTK_STICK_E) {
+		XDrawLine(display, d, gc, x2, y1+1, x2, y2+2+w);
+	    } else {
+		XDrawLine(display, d, gc, x2, y1+1, x2, y2+1+w);
+	    }
 	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
 	    XDrawLine(display, d, gc, x1+1, y1+1, x1+1, y2+delta+w);
 	    XDrawLine(display, d, gc, x1+1, y1+1, x2-1+w, y1+1);
@@ -1083,8 +1092,13 @@ static void TabElementDraw(
 
 	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
 	    XDrawLine(display, d, gc, x1, y1-1, x1, y2-1-w);
-	    XDrawLine(display, d, gc, x2, y1-1, x2, y2-1-w);
 	    XDrawLine(display, d, gc, x1+1, y1, x2-1+w, y1);
+
+	    if ((state & TTK_STATE_LAST) && nbTabPosStickBit == TTK_STICK_E) {
+		XDrawLine(display, d, gc, x2, y1-1, x2, y2-2-w);
+	    } else {
+		XDrawLine(display, d, gc, x2, y1-1, x2, y2-1-w);
+	    }
 
 	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
 	    XDrawLine(display, d, gc, x1+1, y1-1, x1+1, y2-delta-w);
@@ -1106,7 +1120,12 @@ static void TabElementDraw(
 	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
 	    XDrawLine(display, d, gc, x1, y1+1, x1, y2-1+w);
 	    XDrawLine(display, d, gc, x1+1, y1, x2+1+w, y1);
-	    XDrawLine(display, d, gc, x1+1, y2, x2+1+w, y2);
+
+	    if ((state & TTK_STATE_LAST) && nbTabPosStickBit == TTK_STICK_S) {
+		XDrawLine(display, d, gc, x1+1, y2, x2+2+w, y2);
+	    } else {
+		XDrawLine(display, d, gc, x1+1, y2, x2+1+w, y2);
+	    }
 
 	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
 	    XDrawLine(display, d, gc, x1+1, y1+1, x1+1, y2-1+w);
@@ -1128,7 +1147,12 @@ static void TabElementDraw(
 	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
 	    XDrawLine(display, d, gc, x1, y1+1, x1, y2-1+w);
 	    XDrawLine(display, d, gc, x1-1, y1, x2-1-w, y1);
-	    XDrawLine(display, d, gc, x1-1, y2, x2-1-w, y2);
+
+	    if ((state & TTK_STATE_LAST) && nbTabPosStickBit == TTK_STICK_S) {
+		XDrawLine(display, d, gc, x1-1, y2, x2-2-w, y2);
+	    } else {
+		XDrawLine(display, d, gc, x1-1, y2, x2-1-w, y2);
+	    }
 
 	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
 	    XDrawLine(display, d, gc, x1-1, y1+1, x1-1, y2-1+w);

@@ -700,7 +700,7 @@ typedef struct TkMainInfo {
 				 * Tcl's version of [update] after Tk is shut
 				 * down, in case it's a Tcl_ObjCmdProc2 */
 #endif
-    unsigned int ttkNbTabsStickBit;
+    unsigned int nbTabPosition, nbTabPlacement;
 				/* Information used by ttk::notebook. */
     int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
 				/* Information used by ttk::scale. */
