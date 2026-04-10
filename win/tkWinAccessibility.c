@@ -929,7 +929,7 @@ TkAccRole(
     if (!win || !pvarRole) return E_INVALIDARG;
     TkGlobalLock();
 
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (ClientData)win);
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
 	TkGlobalUnlock();
 	return S_FALSE;
