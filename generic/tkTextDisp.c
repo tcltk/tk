@@ -434,8 +434,13 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     Tcl_Size numBytes;		/* Number of bytes to display. */
-    char *chars;		/* Pointer to UTF characters to display.
-				 * Actual array follows this struct. */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    char *chars;		/* Pointer to UTF characters to display. */
+#else
+    char chars[TKFLEXARRAY];		/* UTF characters to display.
+				 * Allocated as large as necessary. THIS MUST BE THE LAST
+				 * FIELD IN THE STRUCTURE. */
+#endif
 } CharInfo;
 
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -1168,8 +1173,9 @@ LayoutDLine(
 				 * numBytes > 0. Used to drop 0-sized chunks
 				 * from the end of the line. */
     Tcl_Size byteOffset;
-    int ascent, descent, code, elidesize;
-	int elide;
+    int ascent, descent, code;
+    int elidesize;
+    int elide;
     StyleValues *sValuePtr;
     TkTextElideInfo info;	/* Keep track of elide state. */
 
@@ -2571,7 +2577,7 @@ DisplayDLine(
 		    otherChunkPtr->undisplayProc = NULL;
 		    tmpStyle = *otherChunkPtr->stylePtr;
 		    otherChunkPtr->stylePtr = &tmpStyle;
-		    tmpStyle.bgGC = None;
+		    tmpStyle.bgGC = NULL;
 		    mask = GCFont;
 		    gcValues.font = Tk_FontId(tmpStyle.sValuePtr->tkfont);
 		    mask |= GCForeground;
@@ -2591,12 +2597,12 @@ DisplayDLine(
 		    bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
 		    bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
 		    bci.ci.baseChunkPtr = otherChunkPtr;
-		    otherChunkPtr->clientData = (ClientData) &bci;
+		    otherChunkPtr->clientData = &bci;
 		    otherChunkPtr->numBytes = bci.ci.numBytes;
 #else
 		    ci = *((CharInfo *) (otherChunkPtr->clientData));
 		    ci.numBytes = numBytes;
-		    otherChunkPtr->clientData = (ClientData) &ci;
+		    otherChunkPtr->clientData = &ci;
 		    otherChunkPtr->numBytes = ci.numBytes;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		} else {
@@ -4823,10 +4829,10 @@ TkTextRedrawRegion(
     TkRegion damageRgn = XCreateRegion();
     XRectangle rect;
 
-    rect.x = x;
-    rect.y = y;
-    rect.width = width;
-    rect.height = height;
+    rect.x = (short)x;
+    rect.y = (short)y;
+    rect.width = (unsigned short)width;
+    rect.height = (unsigned short)height;
     XUnionRectWithRegion(&rect, damageRgn, damageRgn);
 
     TextInvalidateRegion(textPtr, damageRgn);
@@ -5472,7 +5478,8 @@ TkTextSetYView(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
-    int bottomY, close, lineIndex;
+    int bottomY, close;
+    int lineIndex;
     TkTextIndex tmpIndex, rounded;
     int lineHeight;
 
@@ -5842,7 +5849,8 @@ TkTextSeeCmd(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
-    int x, y, width, height, lineWidth, byteCount, oneThird, delta;
+    int byteCount;
+    int x, y, width, height, lineWidth, oneThird, delta;
     DLine *dlPtr;
     TkTextDispChunk *chunkPtr;
 
@@ -7832,9 +7840,9 @@ TkTextCharLayoutProc(
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     if (bytesThatFit + 1 <= maxBytes) {
-	if ((bytesThatFit == 0) && noCharsYet) {
+	if ((bytesThatFit == 0) && (noCharsYet & 1)) {
 	    int ch;
-	    int chLen = Tcl_UtfToUniChar(p, &ch);
+	    Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
@@ -7914,8 +7922,7 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = (CharInfo *)ckalloc(sizeof(CharInfo) + 1 + bytesThatFit);
-    ciPtr->chars = (char *) (ciPtr + 1);
+    ciPtr = (CharInfo *)ckalloc((offsetof(CharInfo, chars) + 1) + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
