@@ -24,6 +24,11 @@
 #else
   #define WIN32_XDRAWLINE_HACK 0
 #endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+  #define X11_XDRAWRECTANGLE_HACK 1
+#else
+  #define X11_XDRAWRECTANGLE_HACK 0
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -413,6 +418,9 @@ static void BorderElementDraw(
 	GC gc = Tk_GCForColor(borderColor, d);
 	XDrawRectangle(Tk_Display(tkwin), d, gc,
 		b.x, b.y, b.width-1, b.height-1);
+	if (borderWidth == 1 && X11_XDRAWRECTANGLE_HACK) {
+	    XDrawPoint(Tk_Display(tkwin), d, gc, b.x+b.width-1, b.y+b.height-1);
+	}
     }
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
 	/* Space for default ring: */
@@ -517,6 +525,9 @@ static void FieldElementDraw(
 	     * Change the color of the border's outermost pixels
 	     */
 	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	    if (X11_XDRAWRECTANGLE_HACK) {
+		XDrawPoint(disp, d, focusGC, b.x+b.width-1, b.y+b.height-1);
+	    }
 	}
     } else {
 	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,

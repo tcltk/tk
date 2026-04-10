@@ -21,6 +21,11 @@
 #else
   #define WIN32_XDRAWLINE_HACK 0
 #endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+  #define X11_XDRAWRECTANGLE_HACK 1
+#else
+  #define X11_XDRAWRECTANGLE_HACK 0
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -346,6 +351,9 @@ static void FieldElementDraw(
 	     * Change the color of the border's outermost pixels
 	     */
 	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	    if (X11_XDRAWRECTANGLE_HACK) {
+		XDrawPoint(disp, d, focusGC, b.x+b.width-1, b.y+b.height-1);
+	    }
 	}
     } else {
 	int borderWidth = DEFAULT_BORDERWIDTH;
