@@ -1750,6 +1750,8 @@ FrameEventProc(
 	    }
 	}
     } else if (eventPtr->type == ActivateNotify) {
+	printf("%s received Activate(%d)\n", Tk_PathName(framePtr->tkwin),
+	       eventPtr->xfocus.serial);
 	Tk_SetMainMenubar(framePtr->interp, framePtr->tkwin,
 		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
     } else {

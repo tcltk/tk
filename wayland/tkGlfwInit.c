@@ -261,7 +261,11 @@ TkGlfwInitialize(void)
     }
 
     glfwMakeContextCurrent(glfwContext.mainWindow);
-    glfwSwapInterval(1);
+    // A positive swap interval causes glfwSwapBuffers to wait for
+    // the end of a display cycle before swapping the buffers,
+    // and that causes artifacts when resizing windows.
+    glfwSwapInterval(0);
+    
     //// a shader program will be needed for each window.
     int error = createTkShader(glfwContext.mainWindow);
     printf("createTkShader returned %d\n", error);
@@ -435,20 +439,10 @@ TkGlfwCreateWindow(
     mapping->width        = width;
     mapping->height       = height;
     mapping->clearPending = 1;
-
-    // Create and initialize a framebuffer
-
-    //==================================================================
-
-    
-    //==================================================================
-#if 1 // Old code
-
     mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
 	if (mapping->fbo == NULL) {
 		fprintf(stderr, "Could not create NanoVG framebuffer\n");
 	}
-#endif
 
     AddMapping(mapping);
     glfwSetWindowUserPointer(window, mapping);
@@ -596,6 +590,7 @@ TkGlfwBeginDraw(
     TkWaylandDrawingContext *dcPtr)
 {
     printf("TkGlfwBeginDraw: ");
+    // Make sure the window size has been registered correctly.
     WindowMapping *m = FindMappingByDrawable(drawable);
 
     if (!m || !m->fbo) {
@@ -664,13 +659,15 @@ TkGlfwBeginDraw(
  *----------------------------------------------------------------------
  */
 
-static void blitFBOToBack(NVGLUframebuffer *fbo, int width, int height) {
+MODULE_SCOPE void blitFBOToBack(NVGLUframebuffer *fbo, int width, int height) {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, width, height,
 		      0, 0, width, height,
 		      GL_COLOR_BUFFER_BIT,
 		      GL_NEAREST);
+    glFlush();
+    glFinish();
 }
 
 static void blitBackToFBO(NVGLUframebuffer *fbo, int width, int height) {
@@ -701,21 +698,30 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 	nvgRestore(dcPtr->vg); // nvgBeginFrame called nvgSave!
 	printf("Binding backing store at %p\n", m->fbo);
 	nvgluBindFramebuffer(m->fbo);
+	int fbwidth, fbheight;
+	glfwGetFramebufferSize(m->glfwWindow, &fbwidth, &fbheight);
+	if (fbwidth == m->width && fbheight == m->height) { 
+	} else {
+	    printf("Buffer size mismatch\n");
+	    return;
+	}
 	glViewport(0, 0, m->width, m->height);
 	// All nvg drawing happens here.
 	nvgEndFrame(dcPtr->vg);
 	printf("Blitting backingStore to the back buffer\n");
 	blitFBOToBack(m->fbo, m->width, m->height);
+	//glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
 	printf("Sending window image to the compositor.\n");
-	nvgluBindFramebuffer(NULL);
+	fprintf(stderr, "Calling glfwSwapBuffers\n");
 	glfwSwapBuffers(m->glfwWindow);
+	nvgluBindFramebuffer(NULL);
 	printf("Sent\n");
 
         /* Signal that the screen needs to be updated with the FBO's content. */
 	//// This does not make sense anymore.
         if (m) {
-			m->needsDisplay = 1;
-		}
+	    m->needsDisplay = 1;
+	}
     } else {
 	printf("No context in TkGlfwEndDraw\n");
     }

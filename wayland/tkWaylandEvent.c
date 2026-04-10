@@ -107,8 +107,15 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
  *
  * TkGlfwWindowSizeCallback --
  *
- *      Called when window size changes. Updates window geometry,
- *      generates ConfigureNotify event, and queues an expose for redraw.
+ *      Called when window size changes due to user resizing.
+ *      The size reported may be smaller than the framebuffer
+ *      size on a high resolution monitor when a screen logical
+ *      pixel is composed of more than one monitor pixel.  This
+ *      scaling is managed internally by Tk, so all drawing should
+ *      be done with framebuffer pixels, not with the size provided
+ *      here.  The only value to the call back is to compare
+ *      the window size with the framebuffer size in order to
+ *      measure the size of a logical pixel.
  *
  * Results:
  *      None.
@@ -123,6 +130,10 @@ MODULE_SCOPE void
 TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
     printf("TkGlfWindowSizeCallback\n");
+    int fbwidth, fbheight;
+    glfwGetFramebufferSize(window, &fbwidth, &fbheight);
+    float pixelRatio = (float) fbwidth / (float) width;
+    printf("This window has pixel ratio %.1f.\n", pixelRatio);
     
     WindowMapping *mapping = FindMappingByGLFW(window);
     if (!mapping) {
@@ -130,21 +141,10 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
     }
     
     /* Close any open frame. */
-    //// can this ever happen?
+    //// can this ever happen?  I think this can be removed.
     if (mapping->frameOpen) {
 	printf("TkGlfwWindowSizeCallback: size changed with frame open\n");
         TkWaylandEndEventCycle(mapping);
-    }
-    
-    /* Update size */
-    mapping->width = width;
-    mapping->height = height;
-    
-    /* Notify Tk */
-    if (mapping->tkWindow) {
-        mapping->tkWindow->changes.width = width;
-        mapping->tkWindow->changes.height = height;
-	TkDoConfigureNotify(mapping->tkWindow);
     }
 }
 
@@ -177,7 +177,6 @@ TkGlfwFramebufferSizeCallback(
     int height)
 {
     printf("TkGlfwFramebufferSizeCallback ");
-    //glViewport(0, 0, width, height);
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	printf("No Tk window!\n");
@@ -188,21 +187,31 @@ TkGlfwFramebufferSizeCallback(
     if (!mapping) {
 	return;
     }
-
     printf("Rebuilding framebuffer for %s to size %dx%d\n",
 	   Tk_PathName(mapping->tkWindow), width, height);
     nvgluDeleteFramebuffer(mapping->fbo);
     // Should be in window private struct.
     extern TkGlfwContext glfwContext;
+    // Rebuild the backing store
     mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, 0);
-    
+
     /* Notify Tk */
     mapping->width = width;
     mapping->height = height;
     winPtr->changes.width = width;
     winPtr->changes.height = height;
-    printf("TkGlfwFramebufferSizeCallback: Configure\n");
+    printf("TkGlfwFramebufferSizeCallback: Configuring\n");
     TkDoConfigureNotify(winPtr);
+    // Wayland wants a call to glfwSwapBuffers very soon after
+    // it sends a configure notification.  Some people (or bots)
+    // recommend redrawing the window before this callback
+    // returns.  This is a test of that concept.
+    //printf("TkGlfwFramebufferSizeCallback: Exposing\n");
+    //TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
+    //while (Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)) {};
+
+    /* Update ViewPort */
+    glViewport(0, 0, width, height);
 }
 
 /*
@@ -210,7 +219,12 @@ TkGlfwFramebufferSizeCallback(
  *
  * TkGlfwWindowPosCallback --
  *
- *      Called when window position changes.
+ *      This is never called on Wayland, according to GLFW.
+ *      Wayland hides the position of an app on the screen.
+ *      The only way to move (or focus) a window is to do
+ *      it with the mouse.  This will be a major limitation
+ *      when it comes time to run the Tk tests.
+ *      See https://www.glfw.org/docs/3.4/group__window.html#ga08bdfbba88934f9c4f92fd757979ac74
  *
  * Results:
  *      None.
@@ -227,11 +241,13 @@ TkGlfwWindowPosCallback(
     int xpos,
     int ypos)
 {
-    printf("TkGlfwWindowPosCallback \n");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
+	printf("TkGlfwWindowPosCallback: no Tk window\n");
         return;
     }
+    printf("TkGlfwWindowPosCallback: %s -> to %d+%d\n",
+	   Tk_PathName(winPtr), xpos, ypos);
 
     winPtr->changes.x = xpos;
     winPtr->changes.y = ypos;
