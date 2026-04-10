@@ -774,7 +774,7 @@ static void TabElementDraw(
     double scalingLevel = TkScalingLevel(tkwin);
     int cut = round(2 * scalingLevel);
     Display *disp = Tk_Display(tkwin);
-    int borderWidth = 1;
+    int once = 1, borderWidth = 1;
 
     if (mainInfoPtr != NULL) {
 	nbTabPlcStickBit =
@@ -844,10 +844,50 @@ static void TabElementDraw(
 
     TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
-	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
-		pts, 4, CoordModeOrigin);
-	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
-		pts+3, 3, CoordModeOrigin);
+	int n = 5;
+
+	if ((state & (TTK_STATE_LAST | TTK_STATE_SELECTED)) ==
+		(TTK_STATE_LAST | TTK_STATE_SELECTED)) {
+	    --n;
+	}
+
+	switch (nbTabPlcStickBit) {
+	    default:
+	    case TTK_STICK_S:
+	    case TTK_STICK_E:
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+			pts, 4, CoordModeOrigin);
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+			pts+3, 3, CoordModeOrigin);
+		break;
+	    case TTK_STICK_N:
+	    case TTK_STICK_W:
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+			pts, 2, CoordModeOrigin);
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+			pts+1, n, CoordModeOrigin);
+
+		if (n == 4 && once--) {
+		    HDC hdc;
+		    TkWinDCState dcState;
+		    RECT rc;
+
+		    hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
+		    rc.top = pts[0].y;
+		    rc.left = pts[0].x;
+		    rc.bottom = pts[4].y + 1;
+		    rc.right = pts[4].x + 1;
+		    DrawEdge(hdc, &rc, EDGE_RAISED,
+			    (nbTabPlcStickBit == TTK_STICK_W) ?
+			    BF_BOTTOM : BF_RIGHT);
+		    TkWinReleaseDrawableDC(d, hdc, &dcState);
+		}
+		break;
+	}
 
 	switch (nbTabPlcStickBit ) {
 	    default:
