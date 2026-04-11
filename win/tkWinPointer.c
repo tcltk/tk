@@ -443,7 +443,7 @@ TkpWarpPointer(
 	TkSetCursorPos(dispPtr->warpX, dispPtr->warpY);
     }
 
-    XQueryPointer(dispPtr->display, NULL, NULL, NULL, &rootx, &rooty,
+    XQueryPointer(dispPtr->display, None, NULL, NULL, &rootx, &rooty,
 	NULL, NULL, &modifierState);
     Tk_Window newPointerWin = Tk_CoordsToWindow(rootx, rooty,
 	dispPtr->warpMainwin);
