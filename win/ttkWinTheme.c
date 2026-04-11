@@ -779,6 +779,7 @@ static void TabElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
+    Ttk_PositionSpec nbTabPosStickBit = TTK_STICK_W;
     Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     TabElement *tab = (TabElement *)elementRecord;
@@ -790,6 +791,8 @@ static void TabElementDraw(
     int once = 1, borderWidth = 1;
 
     if (mainInfoPtr != NULL) {
+	nbTabPosStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPosition & 0x0f);
 	nbTabPlcStickBit =
 	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
@@ -857,10 +860,23 @@ static void TabElementDraw(
 
     Tk_GetPixelsFromObj(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
-	int n = 5;
+	int n;
 
+	switch (nbTabPlcStickBit) {
+	    default:
+	    case TTK_STICK_S:
+	    case TTK_STICK_E:
+		n = 3;
+		break;
+	    case TTK_STICK_N:
+	    case TTK_STICK_W:
+		n = 5;
+		break;
+	}
 	if ((state & (TTK_STATE_LAST | TTK_STATE_SELECTED)) ==
-		(TTK_STATE_LAST | TTK_STATE_SELECTED)) {
+		(TTK_STATE_LAST | TTK_STATE_SELECTED) &&
+		(nbTabPosStickBit == TTK_STICK_E ||
+		 nbTabPosStickBit == TTK_STICK_S)) {
 	    --n;
 	}
 
@@ -873,7 +889,29 @@ static void TabElementDraw(
 			pts, 4, CoordModeOrigin);
 		XDrawLines(disp, d,
 			Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
-			pts+3, 3, CoordModeOrigin);
+			pts+3, n, CoordModeOrigin);
+		if (n == 2 && once--) {
+		    HDC hdc;
+		    TkWinDCState dcState;
+		    RECT rc;
+
+		    hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
+		    if (nbTabPlcStickBit == TTK_STICK_S) {
+			rc.left = pts[0].x;
+			rc.top = pts[4].y;
+			rc.right = pts[4].x + 1;
+			rc.bottom = pts[0].y+ 1;
+		    } else {
+			rc.left = pts[4].x;
+			rc.top = pts[0].y;
+			rc.right = pts[0].x + 1;
+			rc.bottom = pts[4].y + 1;
+		    }
+		    DrawEdge(hdc, &rc, EDGE_RAISED,
+			    (nbTabPlcStickBit == TTK_STICK_E) ?
+			    BF_BOTTOM : BF_RIGHT);
+		    TkWinReleaseDrawableDC(d, hdc, &dcState);
+		}
 		break;
 	    case TTK_STICK_N:
 	    case TTK_STICK_W:
@@ -883,17 +921,16 @@ static void TabElementDraw(
 		XDrawLines(disp, d,
 			Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
 			pts+1, n, CoordModeOrigin);
-
 		if (n == 4 && once--) {
 		    HDC hdc;
 		    TkWinDCState dcState;
 		    RECT rc;
 
 		    hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
-		    rc.top = pts[0].y;
 		    rc.left = pts[0].x;
-		    rc.bottom = pts[4].y + 1;
+		    rc.top = pts[0].y;
 		    rc.right = pts[4].x + 1;
+		    rc.bottom = pts[4].y + 1;
 		    DrawEdge(hdc, &rc, EDGE_RAISED,
 			    (nbTabPlcStickBit == TTK_STICK_W) ?
 			    BF_BOTTOM : BF_RIGHT);
