@@ -22,6 +22,13 @@ LOCALES			= @LOCALES@
 # the configuration script).
 #----------------------------------------------------------------
 
+# Default top-level directories in which to install architecture-
+# specific files (exec_prefix) and machine-independent files such
+# as scripts (prefix).  The values specified here may be overridden
+# at configure-time with the --exec-prefix and --prefix options
+# to the "configure" script.  The *dir vars are standard configure
+# substitutions that are based off prefix and exec_prefix.
+
 prefix			= @prefix@
 exec_prefix		= @exec_prefix@
 bindir			= @bindir@
@@ -712,6 +719,15 @@ tktest-real: ${TK_STUB_LIB_FILE}
 	${CC} ${CFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ ${LDFLAGS} $(WISH_LIBS) \
 		${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
+# # FIXME: This xttest rule seems to be broken in a number of ways.  It should
+# # use CC_SEARCH_FLAGS, it does not include the shared lib location logic from
+# # tktest, and it is not clear where this test.o object file comes from.
+#
+# xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE) ${TK_STUB_LIB_FILE}
+#	${CC} ${CFLAGS} test.o tkTest.o tkSquare.o \
+#		@TK_BUILD_LIB_SPEC@ ${LDFLAGS} ${TK_STUB_LIB_FILE}  ${TCL_STUB_LIB_SPEC} \
+#		$(WISH_LIBS) $(LD_SEARCH_FLAGS) -lXt -o xttest
+
 # Note, in the target below TCL_LIBRARY needs to be set or else
 # "make test" won't work in the case where the compilation directory
 # isn't the same as the source directory.
@@ -1095,6 +1111,14 @@ tkOption.o: $(GENERIC_DIR)/tkOption.c
 tkPack.o: $(GENERIC_DIR)/tkPack.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPack.c
 
+# TIP #59, embedding of configuration information into the binary library.
+#
+# Part of Tk's configuration information are the paths where it was installed
+# and where it will look for its libraries (which can be different). We derive
+# this information from the variables which can be overridden by the user. As
+# every path can be configured separately we do not remember one general
+# prefix/exec_prefix but all the different paths individually.
+
 tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
 	$(CC) -c $(CC_SWITCHES)					\
 		-DCFG_INSTALL_LIBDIR="\"$(LIB_INSTALL_DIR)\"" \
@@ -1264,6 +1288,12 @@ tkTextWind.o: $(GENERIC_DIR)/tkTextWind.c
 tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubInit.c
 
+# Stub library binaries, these must be compiled for use in a shared library
+# even though they will be placed in a static archive
+
+tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
+
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
 
@@ -1303,6 +1333,7 @@ tkUnixFocus.o: $(UNIX_DIR)/tkUnixFocus.c
 tkUnixFont.o: $(UNIX_DIR)/tkUnixFont.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixFont.c
 
+# NB: tkUnixRFont.o uses nondefault CFLAGS
 tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
 
@@ -1345,6 +1376,10 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
+
+# SheenBidi unity build
+SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
+	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
