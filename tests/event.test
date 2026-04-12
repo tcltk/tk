@@ -1234,8 +1234,8 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     }
     event generate . <Motion> -warp 1 -x 50 -y 50
     waitForWindowEvent . <Enter>; # ensures that a MOUSE_TIMER_INTERVAL just ended
-    bind all <Leave> {append result "<Leave> %W|"}
-    bind all <Enter> {append result "<Enter> %W|"}
+    bind all <Leave> {append result "<Leave> %W"}
+    bind all <Enter> {append result "<Enter> %W"}
     set result "|"
 } -body {
     # Let the screen pointer perform a back and forth warp in quick succession,
@@ -1243,13 +1243,15 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     # crossing events.
     event generate . <Motion> -warp 1 -x -50 -y 50
     update
+    append result "|"
     event generate . <Motion> -warp 1 -x 50 -y 50
     update
+    append result "|"
     # On MS Windows with bug present:
     # The TkWinPointerEvent mechanism doesn't detect the previous changes to
-    # the position of the screen pointer, because the back and forth motion
-    # happens entirely within the MOUSE_TIMER_INTERVAL. The expected result
-    # in this case is: "|"
+    # the position of the screen pointer because the back and forth motion
+    # happens entirely within one MOUSE_TIMER_INTERVAL. The value for the
+    # result variable in this case is: "|||"
     set result
 } -cleanup {
     unset result
