@@ -173,6 +173,16 @@ static const Ttk_StateTable combobox_statemap[] = {
 };
 
 /*
+ * Menu buttons (NAV_MENUBUTTON):
+ */
+static const Ttk_StateTable menubutton_statemap[] =  {
+    { NAV_MB_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { NAV_MB_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { NAV_MB_HOT,	TTK_STATE_ACTIVE, 0 },
+    { NAV_MB_NORMAL,	0, 0 }
+};
+
+/*
  * Toolbar buttons (TP_BUTTON):
  */
 static const Ttk_StateTable toolbutton_statemap[] =  {
@@ -297,8 +307,8 @@ static const Ttk_StateTable treeitem_statemap[] =
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_DISABLED, 0 },
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_READONLY, 0 },
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_BACKGROUND, 0 },
-    { LVGH_CLOSESELECTEDHOT,		TTK_STATE_PRESSED, 0 },
-    { LVGH_CLOSESELECTEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
+    { LVGH_CLOSESELECTEDNOTFOCUSEDHOT,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
+    { LVGH_CLOSESELECTEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE|TTK_STATE_FOCUS, 0 },
     { LVGH_CLOSESELECTED,		TTK_STATE_SELECTED, 0 },
     { LVGH_CLOSEHOT,			TTK_STATE_ACTIVE, 0 },
     { LVGH_CLOSEHOT,			TTK_STATE_ALTERNATE, 0 },
@@ -1026,8 +1036,11 @@ static const ElementInfo ElementInfoTable[] = {
 	TP_BUTTON, toolbutton_statemap, NOPAD, 0 },
     { "Menubutton.button", &GenericElementSpec, L"TOOLBAR",
 	TP_SPLITBUTTON, toolbutton_statemap, NOPAD, 0 },
-    { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
+/*    { "Menubutton.dropdown", &GenericSizedElementSpec, L"TOOLBAR",
 	TP_SPLITBUTTONDROPDOWN, toolbutton_statemap, NOPAD,
+	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },*/
+    { "Menubutton.dropdown", &GenericSizedElementSpec, L"NAVIGATION",
+	NAV_MENUBUTTON, menubutton_statemap, NOPAD,
 	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
     /* ttk::treeview */
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
@@ -1264,8 +1277,8 @@ Ttk_CreateVsapiElement(
     elementPtr->className = wname;
 
     elementData = NewElementData(hwnd, elementPtr);
-    Ttk_RegisterElement(NULL,
-	theme, elementName, elementPtr->elementSpec, elementData);
+    Ttk_RegisterElement(NULL, theme, elementName, elementPtr->elementSpec,
+	elementData);
 
     Ttk_RegisterCleanup(interp, elementData, DestroyElementData);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, TCL_INDEX_NONE));
@@ -1322,8 +1335,8 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
 	void *clientData = NewElementData(hwnd, infoPtr);
-	Ttk_RegisterElement(NULL,
-	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
+	Ttk_RegisterElement(NULL, themePtr, infoPtr->elementName,
+	    infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
     }
 

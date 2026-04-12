@@ -10,9 +10,9 @@ namespace eval ttk::theme::aqua {
     # TEntry, TCombobox, and TSpinbox in the "!focus" state.
 
     proc setInactiveSelectBgColor {} {
-	set r 32767
-	if {![catch {lassign [winfo rgb . systemUnemphasizedSelectedTextBackgroundColor] \
-		r g b}] && $r != 32767} {
+	lassign [winfo rgb . systemUnemphasizedSelectedTextBackgroundColor] \
+	    r g b
+	if {$r != 32767} {
 	    # macOS 10.14+
 	    set inactiveSelBg systemUnemphasizedSelectedTextBackgroundColor
 	} else {
@@ -44,9 +44,7 @@ namespace eval ttk::theme::aqua {
     # ttk::treeview and listbox widgets.
 
     proc setTreeviewAndListboxSelectColors {} {
-	set r 32767
-	if {![catch {lassign [winfo rgb . systemUnemphasizedSelectedTextBackgroundColor] \
-		r g b}] && $r != 32767} {
+	if {[catch {winfo rgb . systemSelectedContentBackgroundColor}] == 0} {
 	    # macOS 10.14+
 	    set selectedBg	systemSelectedContentBackgroundColor
 	    set inactiveSelBg	systemUnemphasizedSelectedContentBackgroundColor

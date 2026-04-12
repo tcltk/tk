@@ -109,8 +109,8 @@ typedef struct {
 #define BASE_DIM    16
 #define _FIXEDSIZE  0x80000000UL
 #define _HALFMETRIC 0x40000000UL
-#define FIXEDSIZE(id) (id|_FIXEDSIZE)
-#define HALFMETRIC(id) (id|_HALFMETRIC)
+#define FIXEDSIZE(id) ((id)|_FIXEDSIZE)
+#define HALFMETRIC(id) ((id)|_HALFMETRIC)
 #define GETMETRIC(m) \
     ((m) & _FIXEDSIZE ? (int)((m) & ~_FIXEDSIZE) : GetSystemMetrics((m)&0xFFFFFFF))
 
@@ -165,8 +165,8 @@ static void FrameControlElementSize(
 	/*
 	 * Update the corresponding element of the array FrameControlElements
 	 */
-	p->cxId = FIXEDSIZE(cx);
-	p->cyId = FIXEDSIZE(cy);
+	p->cxId = FIXEDSIZE((unsigned long)cx);
+	p->cyId = FIXEDSIZE((unsigned long)cy);
     }
 
     if (p->cxId & _HALFMETRIC) cx /= 2;
@@ -190,8 +190,8 @@ static void FrameControlElementDraw(
     HDC hdc = TkWinGetDrawableDC(Tk_Display(tkwin), d, &dcState);
 
     DrawFrameControl(hdc, &rc,
-	elementData->classId,
-	elementData->partId|Ttk_StateTableLookup(elementData->stateMap, state));
+	(UINT)elementData->classId,
+	(UINT)(elementData->partId|Ttk_StateTableLookup(elementData->stateMap, state)));
     TkWinReleaseDrawableDC(d, hdc, &dcState);
 }
 
@@ -227,9 +227,9 @@ static void BorderElementSize(
     double scalingLevel = TkScalingLevel(tkwin);
 
     paddingPtr->left = paddingPtr->right =
-	(int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
     paddingPtr->top = paddingPtr->bottom =
-	(int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 }
 
 static void BorderElementDraw(
@@ -290,9 +290,9 @@ static void FieldElementSize(
     double scalingLevel = TkScalingLevel(tkwin);
 
     paddingPtr->left = paddingPtr->right =
-	(int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
     paddingPtr->top = paddingPtr->bottom =
-	(int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 }
 
 static void FieldElementDraw(
@@ -362,8 +362,8 @@ static void ButtonBorderElementSize(
 
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
-    cx = (int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
-    cy = (int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+    cx = (short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+    cy = (short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 
     /* Space for default indicator:
      */
@@ -376,7 +376,7 @@ static void ButtonBorderElementSize(
     cx += 2;
     cy += 2;
 
-    *paddingPtr = Ttk_MakePadding(cx,cy,cx,cy);
+    *paddingPtr = Ttk_MakePadding(cx, cy, cx, cy);
 }
 
 static void ButtonBorderElementDraw(
@@ -401,7 +401,8 @@ static void ButtonBorderElementDraw(
 	XColor *highlightColor =
 	    Tk_GetColorFromObj(tkwin, bd->highlightColorObj);
 	GC gc = Tk_GCForColor(highlightColor, d);
-	XDrawRectangle(Tk_Display(tkwin), d, gc, b.x,b.y,b.width-1,b.height-1);
+	XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, (UINT)(b.width - 1),
+	    (UINT)(b.height-1));
     }
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
 	++b.x; ++b.y; b.width -= 2; b.height -= 2;
@@ -412,7 +413,7 @@ static void ButtonBorderElementDraw(
     rc = BoxToRect(b);
     DrawFrameControl(hdc, &rc,
 	DFC_BUTTON,	/* classId */
-	DFCS_BUTTONPUSH | Ttk_StateTableLookup(pushbutton_statemap, state));
+	(UINT)(DFCS_BUTTONPUSH | Ttk_StateTableLookup(pushbutton_statemap, state)));
 
     TkWinReleaseDrawableDC(d, hdc, &dcState);
 
@@ -434,7 +435,8 @@ static const Ttk_ElementSpec ButtonBorderElementSpec = {
     ButtonBorderElementDraw
 };
 
-/* FillFocusElement --
+/*------------------------------------------------------------------------
+/* +++ Focus Element.
  *	Draws a focus ring filled with the selection color
  */
 
@@ -472,7 +474,7 @@ static void FillFocusElementDraw(
 	FillFocusElement *focus = (FillFocusElement *)elementRecord;
 	XColor *fillColor = Tk_GetColorFromObj(tkwin, focus->fillColorObj);
 	GC gc = Tk_GCForColor(fillColor, d);
-	XFillRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width, b.height);
+	XFillRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, (unsigned)b.width, (unsigned)b.height);
 
 	TkWinDrawDottedRect(Tk_Display(tkwin), d, -1, b.x, b.y,
 	    b.width, b.height);
@@ -522,12 +524,12 @@ static void TroughClientDataDeleteProc(void *clientData)
     TroughClientData *cd = (TroughClientData *)clientData;
     DeleteObject(cd->PatternBrush);
     DeleteObject(cd->PatternBitmap);
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 static TroughClientData *TroughClientDataInit(Tcl_Interp *interp)
 {
-    TroughClientData *cd = (TroughClientData *)ckalloc(sizeof(*cd));
+    TroughClientData *cd = (TroughClientData *)Tcl_Alloc(sizeof(*cd));
     cd->PatternBitmap = CreateBitmap(8, 8, 1, 1, Pattern);
     cd->PatternBrush  = CreatePatternBrush(cd->PatternBitmap);
     Ttk_RegisterCleanup(interp, cd, TroughClientDataDeleteProc);
@@ -730,7 +732,7 @@ static void TabElementSize(
 {
     TabElement *tab = (TabElement *)elementRecord;
     int borderWidth = 1;
-    Ttk_PositionSpec nbTabPlcStickBit  = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     TkGetScaledPixelValue(NULL, tkwin, tab->borderWidthObj, &borderWidth);
@@ -741,7 +743,7 @@ static void TabElementSize(
 	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
-    switch (nbTabPlcStickBit ) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    paddingPtr->bottom = 0;
@@ -773,7 +775,7 @@ static void TabElementDraw(
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     XPoint pts[6];
     double scalingLevel = TkScalingLevel(tkwin);
-    int cut = round(2 * scalingLevel);
+    int cut = (int)round(2 * scalingLevel);
     Display *disp = Tk_Display(tkwin);
     int once = 1, borderWidth = 1;
 
@@ -789,7 +791,7 @@ static void TabElementDraw(
 	 * Draw slightly outside of the allocated parcel,
 	 * to overwrite the client area border.
 	 */
-	switch (nbTabPlcStickBit ) {
+	switch (nbTabPlcStickBit) {
 	    default:
 	    case TTK_STICK_S:
 		b.height += 2;
@@ -806,39 +808,39 @@ static void TabElementDraw(
 	}
     }
 
-    switch (nbTabPlcStickBit ) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
-	    pts[0].x = b.x;  pts[0].y = b.y + b.height-1;
-	    pts[1].x = b.x;  pts[1].y = b.y + cut;
-	    pts[2].x = b.x + cut;  pts[2].y = b.y;
-	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y;
-	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + cut;
-	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y + b.height;
+	    pts[0].x = (short)b.x;  pts[0].y = (short)(b.y + b.height - 1);
+	    pts[1].x = (short)b.x;  pts[1].y = (short)(b.y + cut);
+	    pts[2].x = (short)(b.x + cut);  pts[2].y = (short)b.y;
+	    pts[3].x = (short)(b.x + b.width - 1 - cut);  pts[3].y = (short)b.y;
+	    pts[4].x = (short)(b.x + b.width - 1);  pts[4].y = (short)(b.y + cut);
+	    pts[5].x = (short)(b.x + b.width - 1);  pts[5].y = (short)(b.y + b.height);
 	    break;
 	case TTK_STICK_N:
-	    pts[0].x = b.x;  pts[0].y = b.y;
-	    pts[1].x = b.x;  pts[1].y = b.y + b.height-1 - cut;
-	    pts[2].x = b.x + cut;  pts[2].y = b.y + b.height-1;
-	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y + b.height-1;
-	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + b.height-1 - cut;
-	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y-1;
+	    pts[0].x = (short)b.x;  pts[0].y = (short)b.y;
+	    pts[1].x = (short)b.x;  pts[1].y = (short)(b.y + b.height - 1 - cut);
+	    pts[2].x = (short)(b.x + cut);  pts[2].y = (short)(b.y + b.height - 1);
+	    pts[3].x = (short)(b.x + b.width - 1 - cut);  pts[3].y = (short)(b.y + b.height - 1);
+	    pts[4].x = (short)(b.x + b.width - 1);  pts[4].y = (short)(b.y + b.height - 1 - cut);
+	    pts[5].x = (short)(b.x + b.width - 1);  pts[5].y = (short)(b.y - 1);
 	    break;
 	case TTK_STICK_E:
-	    pts[0].x = b.x + b.width-1;  pts[0].y = b.y;
-	    pts[1].x = b.x + cut;  pts[1].y = b.y;
-	    pts[2].x = b.x;  pts[2].y = b.y + cut;
-	    pts[3].x = b.x;  pts[3].y = b.y + b.height-1 - cut;
-	    pts[4].x = b.x + cut;  pts[4].y = b.y + b.height-1;
-	    pts[5].x = b.x + b.width;  pts[5].y = b.y + b.height-1;
+	    pts[0].x = (short)(b.x + b.width - 1);  pts[0].y = (short)b.y;
+	    pts[1].x = (short)(b.x + cut);  pts[1].y = (short)b.y;
+	    pts[2].x = (short)b.x;  pts[2].y = (short)(b.y + cut);
+	    pts[3].x = (short)b.x;  pts[3].y = (short)(b.y + b.height - 1 - cut);
+	    pts[4].x = (short)(b.x + cut);  pts[4].y = (short)(b.y + b.height - 1);
+	    pts[5].x = (short)(b.x + b.width);  pts[5].y = (short)(b.y + b.height - 1);
 	    break;
 	case TTK_STICK_W:
-	    pts[0].x = b.x;  pts[0].y = b.y;
-	    pts[1].x = b.x + b.width-1 - cut;  pts[1].y = b.y;
-	    pts[2].x = b.x + b.width-1;  pts[2].y = b.y + cut;
-	    pts[3].x = b.x + b.width-1;  pts[3].y = b.y + b.height-1 - cut;
-	    pts[4].x = b.x + b.width-1 - cut;  pts[4].y = b.y + b.height-1;
-	    pts[5].x = b.x-1;  pts[5].y = b.y + b.height-1;
+	    pts[0].x = (short)b.x;  pts[0].y = (short)b.y;
+	    pts[1].x = (short)(b.x + b.width - 1 - cut);  pts[1].y = (short)b.y;
+	    pts[2].x = (short)(b.x + b.width - 1);  pts[2].y = (short)(b.y + cut);
+	    pts[3].x = (short)(b.x + b.width - 1);  pts[3].y = (short)(b.y + b.height - 1 - cut);
+	    pts[4].x = (short)(b.x + b.width - 1 - cut);  pts[4].y = (short)(b.y + b.height - 1);
+	    pts[5].x = (short)(b.x - 1);  pts[5].y = (short)(b.y + b.height - 1);
 	    break;
     }
 
@@ -927,7 +929,7 @@ static void TabElementDraw(
 		break;
 	}
 
-	switch (nbTabPlcStickBit ) {
+	switch (nbTabPlcStickBit) {
 	    default:
 	    case TTK_STICK_S:
 		++pts[0].x;  ++pts[1].x;  ++pts[2].y;
@@ -968,9 +970,9 @@ static void ClientElementSize(
     double scalingLevel = TkScalingLevel(tkwin);
 
     paddingPtr->left = paddingPtr->right =
-	(int)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CXEDGE) * scalingLevel);
     paddingPtr->top = paddingPtr->bottom =
-	(int)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
+	(short)round(GetSystemMetrics(SM_CYEDGE) * scalingLevel);
 }
 
 static void ClientElementDraw(

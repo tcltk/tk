@@ -2,16 +2,6 @@
 # Settings for Microsoft Windows Vista and Server 2008
 #
 
-# The Vista theme can only be defined on Windows Vista and above. The theme
-# is created in C due to the need to assign a theme-enabled function for
-# detecting when themeing is disabled. On systems that cannot support the
-# Vista theme, there will be no such theme created and we must not
-# evaluate this script.
-
-if {"vista" ni [ttk::style theme names]} {
-    return
-}
-
 namespace eval ttk::theme::vista {
 
     ttk::style theme settings vista {

@@ -1073,6 +1073,7 @@ static void TabElementDraw(
 	    } else {
 		XDrawLine(display, d, gc, x2, y1+1, x2, y2+1+w);
 	    }
+
 	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
 	    XDrawLine(display, d, gc, x1+1, y1+1, x1+1, y2+delta+w);
 	    XDrawLine(display, d, gc, x1+1, y1+1, x2-1+w, y1+1);

@@ -25,8 +25,6 @@ static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
 static const int DEFAULT_INDENT = 20;
 static const int HALO		= 4;	/* heading separator */
 
-#define STATE_CHANGED		(0x100)	/* item state option changed */
-
 /*------------------------------------------------------------------------
  * +++ Tree items.
  *
@@ -78,6 +76,7 @@ struct TreeItemRec {
 
 #define ITEM_OPTION_TAGS_CHANGED	0x100
 #define ITEM_OPTION_IMAGE_CHANGED	0x200
+#define STATE_CHANGED			0x400	/* item state option changed */
 
 static const Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
