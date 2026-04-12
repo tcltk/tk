@@ -992,7 +992,7 @@ static void TabElementSize(
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
-    Ttk_PositionSpec nbTabPlacementStickBit  = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPlacementStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     int borderWidth = 2;
 

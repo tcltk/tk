@@ -754,6 +754,10 @@ static void TabElementDraw(
     switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
+	    if (nbTabPosStickBit == TTK_STICK_E && isSelected &&
+		    (state & TTK_STATE_USER2)) {	/* rightmost tab */
+		b.x -= 2;
+	    }
 	    break;
 	case TTK_STICK_N:
 	    b.y -= isSelected ? 0 : 1; b.height -= isSelected ? 1 : 0;
@@ -787,6 +791,8 @@ static void TabElementDraw(
     if (nbTabPlcStickBit == TTK_STICK_S) {
 	if (state & TTK_STATE_FIRST) {
 	    partId = TABP_TABITEMLEFTEDGE;
+	} else if (state & TTK_STATE_LAST) {
+	    partId = TABP_TABITEMRIGHTEDGE;
 	}
 
 	/*
