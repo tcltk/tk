@@ -225,3 +225,34 @@ namespace eval ttk::theme::aqua {
 	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
     }
 }
+
+# ttk::theme::aqua::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook style $style and the
+# style $style.Tab.  Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::aqua::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n {
+	    ttk::style configure $style -tabmargins {10 0}
+	    ttk::style configure $style.Tab -padding {12 3 12 2}
+	}
+	s {
+	    ttk::style configure $style -tabmargins {10 0}
+	    ttk::style configure $style.Tab -padding {12 2 12 3}
+	}
+	w {
+	    ttk::style configure $style -tabmargins {0 10}
+	    ttk::style configure $style.Tab -padding {3 12 2 12}
+	}
+	e {
+	    ttk::style configure $style -tabmargins {0 10}
+	    ttk::style configure $style.Tab -padding {2 12 3 12}
+	}
+	default {
+	    ttk::style configure $style -tabmargins {10 0}
+	    ttk::style configure $style.Tab -padding {12 3 12 2}
+	}
+    }
+}
