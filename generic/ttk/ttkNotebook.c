@@ -26,7 +26,7 @@ typedef struct
     /* Internal data:
      */
     int 	width, height;		/* Requested size of tab */
-    Ttk_Box	parcel;			/* Tab position */
+    Ttk_Box	parcel;		/* Tab position */
 
     /* Tab options:
      */
@@ -34,7 +34,7 @@ typedef struct
 
     /* Child window options:
      */
-    Tcl_Obj	*paddingObj;		/* Padding inside pane */
+    Tcl_Obj	*paddingObj;	/* Padding inside pane */
     Ttk_Padding	padding;
     Tcl_Obj 	*stickyObj;
     Ttk_Sticky	sticky;
@@ -87,18 +87,18 @@ static Tk_OptionSpec PaneOptionSpecs[] =
  */
 typedef struct
 {
-    Tcl_Obj *widthObj;		/* Default width */
-    Tcl_Obj *heightObj;		/* Default height */
-    Tcl_Obj *paddingObj;	/* Padding around notebook */
+    Tcl_Obj *widthObj;			/* Default width */
+    Tcl_Obj *heightObj;			/* Default height */
+    Tcl_Obj *paddingObj;		/* Padding around notebook */
 
-    Ttk_Manager *mgr;		/* Geometry manager */
+    Ttk_Manager *mgr;			/* Geometry manager */
     Tk_OptionTable tabOptionTable;	/* Tab options */
     Tk_OptionTable paneOptionTable;	/* Tab+pane options */
-    int currentIndex;		/* index of currently selected tab */
-    int activeIndex;		/* index of currently active tab */
-    Ttk_Layout tabLayout;	/* Sublayout for tabs */
+    int currentIndex;			/* index of currently selected tab */
+    int activeIndex;			/* index of currently active tab */
+    Ttk_Layout tabLayout;		/* Sublayout for tabs */
 
-    Ttk_Box clientArea;		/* Where to pack content widgets */
+    Ttk_Box clientArea;			/* Where to pack content widgets */
 } NotebookPart;
 
 typedef struct
@@ -128,11 +128,11 @@ static Tk_OptionSpec NotebookOptionSpecs[] =
 typedef struct
 {
     Ttk_PositionSpec	tabPosition;	/* Where to place tabs */
-    Ttk_Padding 	tabMargins;	/* Margins around tab row */
+    Ttk_Padding		tabMargins;	/* Margins around tab row */
     Ttk_PositionSpec 	tabPlacement;	/* How to pack tabs within tab row */
     Ttk_Orient		tabOrient;	/* ... */
-    int 		minTabWidth;	/* Minimum tab width */
-    Ttk_Padding 	padding;	/* External padding */
+    int			minTabWidth;	/* Minimum tab width */
+    Ttk_Padding		padding;	/* External padding */
 } NotebookStyle;
 
 static void NotebookStyleOptions(
@@ -161,11 +161,11 @@ static void NotebookStyleOptions(
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &nbstyle->tabPlacement);
     }
 
-    /* Save the stick bit for later.  One of the values
-     * TTK_STICK_S, TTK_STICK_N, TTK_STICK_E, or TTK_STICK_W:
+    /* Save the tabPosition and tabPlacement for later
      */
     if (mainInfoPtr != NULL) {
-	mainInfoPtr->ttkNbTabsStickBit = (nbstyle->tabPlacement & 0x0f);
+	mainInfoPtr->nbTabPosition  = (unsigned int)nbstyle->tabPosition;
+	mainInfoPtr->nbTabPlacement = (unsigned int)nbstyle->tabPlacement;
     }
 
     /* Compute tabOrient as function of tabPlacement:
@@ -301,7 +301,23 @@ static Ttk_State TabState(Notebook *nb, int index)
     Ttk_State state = nb->core.state;
     Tab *itab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
     int i = 0;
+    int statefirst = TTK_STATE_USER1;
+    int statelast = TTK_STATE_USER2;
+    
+    if (nb->core.tkwin != NULL) {
+	TkMainInfo *mainInfoPtr = ((TkWindow *) nb->core.tkwin)->mainPtr;
 
+	if ((mainInfoPtr->nbTabPlacement & TTK_PACK_BOTTOM) ||
+	    (mainInfoPtr->nbTabPlacement & TTK_PACK_RIGHT)) {
+	    statefirst = TTK_STATE_USER2;
+	    statelast = TTK_STATE_USER1;
+	}
+    }
+
+    /*
+     * Flip First/last if tabs are on the bottom or right side.
+     */
+    
     if (index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
     } else {
@@ -317,7 +333,7 @@ static Ttk_State TabState(Notebook *nb, int index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_USER1;
+	    state |= statefirst;
 	}
 	break;
     }
@@ -327,7 +343,7 @@ static Ttk_State TabState(Notebook *nb, int index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_USER2;
+	    state |= statelast;
 	}
 	break;
     }
@@ -368,7 +384,7 @@ static void TabrowSize(
 
 	Ttk_RebindSublayout(tabLayout, tab);
 	Ttk_LayoutSize(tabLayout,tabState,&tab->width,&tab->height);
-        tab->width = MAX(tab->width, minTabWidth);
+	tab->width = MAX(tab->width, minTabWidth);
 
 	if (orient == TTK_ORIENT_HORIZONTAL) {
 	    tabrowHeight = MAX(tabrowHeight, tab->height);
@@ -1056,7 +1072,7 @@ static int NotebookHideCommand(
     if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
     } else {
-        TtkRedisplayWidget(&nb->core);
+	TtkRedisplayWidget(&nb->core);
     }
 
     return TCL_OK;
@@ -1254,19 +1270,19 @@ static int NotebookTabCommand(
 /* Subcommand table:
  */
 static const Ttk_Ensemble NotebookCommands[] = {
-    { "add",    	NotebookAddCommand,0 },
+    { "add",		NotebookAddCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
     { "forget",		NotebookForgetCommand,0 },
     { "hide",		NotebookHideCommand,0 },
     { "identify",	NotebookIdentifyCommand,0 },
     { "index",		NotebookIndexCommand,0 },
-    { "insert",  	NotebookInsertCommand,0 },
+    { "insert",		NotebookInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "select",		NotebookSelectCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "state",		TtkWidgetStateCommand,0 },
     { "tab",   		NotebookTabCommand,0 },
-    { "tabs",   	NotebookTabsCommand,0 },
+    { "tabs",		NotebookTabsCommand,0 },
     { 0,0,0 }
 };
 
@@ -1416,9 +1432,9 @@ TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(TabLayout)
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
-	TTK_GROUP("Notebook.padding", TTK_PACK_TOP|TTK_FILL_BOTH,
-	    TTK_GROUP("Notebook.focus", TTK_PACK_TOP|TTK_FILL_BOTH,
-		TTK_NODE("Notebook.label", TTK_PACK_TOP))))
+	TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Notebook.focus", TTK_FILL_BOTH,
+		TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------

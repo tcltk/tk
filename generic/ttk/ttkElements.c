@@ -1451,17 +1451,18 @@ static void TabElementSize(
 {
     TabElement *tab = (TabElement *)elementRecord;
     int borderWidth = 1;
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     Tk_GetPixelsFromObj(0, tkwin, tab->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    paddingPtr->bottom = 0;
@@ -1483,7 +1484,7 @@ static void TabElementDraw(
     void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
@@ -1495,7 +1496,8 @@ static void TabElementDraw(
     int borderWidth = 1;
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
     if (state & TTK_STATE_SELECTED) {
@@ -1503,7 +1505,7 @@ static void TabElementDraw(
 	 * Draw slightly outside of the allocated parcel,
 	 * to overwrite the client area border.
 	 */
-	switch (nbTabsStickBit) {
+	switch (nbTabPlcStickBit) {
 	    default:
 	    case TTK_STICK_S:
 		b.height += 1;
@@ -1525,7 +1527,7 @@ static void TabElementDraw(
 	}
     }
 
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    pts[0].x = b.x;  pts[0].y = b.y + b.height-1;
@@ -1564,7 +1566,7 @@ static void TabElementDraw(
     XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	    pts, 6, Convex, CoordModeOrigin);
 
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    pts[5].y -= 1 - WIN32_XDRAWLINE_HACK;
@@ -1582,12 +1584,29 @@ static void TabElementDraw(
 
     Tk_GetPixelsFromObj(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
-	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
-		pts, 4, CoordModeOrigin);
-	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
-		pts+3, 3, CoordModeOrigin);
+	switch (nbTabPlcStickBit) {
+	    default:
+	    case TTK_STICK_S:
+	    case TTK_STICK_E:
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+			pts, 4, CoordModeOrigin);
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+			pts+3, 3, CoordModeOrigin);
+		break;
+	    case TTK_STICK_N:
+	    case TTK_STICK_W:
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+			pts, 2, CoordModeOrigin);
+		XDrawLines(disp, d,
+			Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+			pts+1, 5, CoordModeOrigin);
+		break;
+	}
 
-	switch (nbTabsStickBit) {
+	switch (nbTabPlcStickBit) {
 	    default:
 	    case TTK_STICK_S:
 		++pts[0].x;  ++pts[1].x;  ++pts[2].y;
@@ -1609,7 +1628,7 @@ static void TabElementDraw(
     }
 
     if (highlight) {
-	switch (nbTabsStickBit) {
+	switch (nbTabPlcStickBit) {
 	    default:
 	    case TTK_STICK_S:
 		if (b.width >= 2*cut) {

@@ -128,3 +128,23 @@ namespace eval ttk::theme::classic {
 	    [list pressed $colors(-troughbg)  active $colors(-activebg)]
     }
 }
+
+# ttk::theme::classic::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook tab style $style.Tab.
+# Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::classic::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n - s {
+	    ttk::style configure $style.Tab -padding {3m 1m}
+	}
+	w - e {
+	    ttk::style configure $style.Tab -padding {1m 3m}
+	}
+	default {
+	    ttk::style configure $style.Tab -padding {3m 1m}
+	}
+    }
+}
