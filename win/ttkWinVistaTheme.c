@@ -641,18 +641,19 @@ static void TabElementSize(
     int *heightPtr,
     Ttk_Padding *paddingPtr)
 {
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
     GenericElementSize(clientData, elementRecord, tkwin,
 	    widthPtr, heightPtr, paddingPtr);
 
     *paddingPtr = Ttk_UniformPadding(3);
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    paddingPtr->bottom = 0;
@@ -677,7 +678,8 @@ static void TabElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    Ttk_PositionSpec nbTabPosStickBit = TTK_STICK_W;
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
@@ -685,24 +687,39 @@ static void TabElementDraw(
     int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     if (mainInfoPtr != NULL) {
-	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+	nbTabPosStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPosition & 0x0f);
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
     /*
      * Correct the members of b if needed
      */
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    break;
 	case TTK_STICK_N:
 	    b.y -= isSelected ? 0 : 1; b.height -= isSelected ? 1 : 0;
+	    if (nbTabPosStickBit == TTK_STICK_E && isSelected &&
+		    (state & TTK_STATE_LAST)) {		/* rightmost tab */
+		b.x -= 2;
+	    }
 	    break;
 	case TTK_STICK_E:
 	    b.width -= isSelected ? 1 : 0;
+	    if (nbTabPosStickBit == TTK_STICK_S && isSelected &&
+		    (state & TTK_STATE_LAST)) {		/* bottommost tab */
+		b.y -= 1;
+	    }
 	    break;
 	case TTK_STICK_W:
 	    b.x -= isSelected ? 1 : 2; b.width -= isSelected ? 1 : 0;
+	    if (nbTabPosStickBit == TTK_STICK_S && isSelected &&
+		    (state & TTK_STATE_LAST)) {		/* bottommost tab */
+		b.y -= 1;
+	    }
 	    break;
     }
 
@@ -712,9 +729,11 @@ static void TabElementDraw(
 	return;
     }
 
-    if (nbTabsStickBit == TTK_STICK_S) {
+    if (nbTabPlcStickBit == TTK_STICK_S) {
 	if (state & TTK_STATE_FIRST) {
 	    partId = TABP_TABITEMLEFTEDGE;
+	} else if (state & TTK_STATE_LAST) {
+	    partId = TABP_TABITEMRIGHTEDGE;
 	}
 
 	/*
@@ -735,7 +754,7 @@ static void TabElementDraw(
     /*
      * Draw a flat border at 3 edges
      */
-    switch (nbTabsStickBit) {
+    switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
 	    break;
