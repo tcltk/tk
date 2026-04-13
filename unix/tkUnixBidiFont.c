@@ -2287,37 +2287,103 @@ TkDrawAngledChars(
     double angle)		/* What angle to put text at, in degrees. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    XftFont *ftFont = GetFont(fontPtr, 0, angle);
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (!ftFont) return;
+    if (numBytes == 0) return;
 
-    XftDraw *draw = XftDrawCreate(display, drawable,
-                                   fontPtr->visual, fontPtr->colormap);
+    /* Create XftDraw context. */
+    XftDraw *ftDraw = XftDrawCreate(display, drawable,
+                                     fontPtr->visual, fontPtr->colormap);
+    if (!ftDraw) return;
+
+    /* Get foreground color. */
     XGCValues values;
     XGetGCValues(display, gc, GCForeground, &values);
-
-    XftColor color;
-    XColor xcolor;
-    xcolor.pixel = values.foreground;
-    XQueryColor(display, fontPtr->colormap, &xcolor);
-    color.color.red   = xcolor.red;
-    color.color.green = xcolor.green;
-    color.color.blue  = xcolor.blue;
-    color.color.alpha = 0xFFFF;
-    color.pixel       = values.foreground;
-
-    /* Simple UCS-4 conversion and drawing. */
-    FcChar32 ucs4[1024];
-    int count = 0;
-    int i = 0;
-
-    while (i < numBytes && count < 1024) {
-        i += Tcl_UtfToUniChar(source + i, (int *)&ucs4[count]);
-        count++;
+    XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
+    if (!xftcolor) {
+        XftDrawDestroy(ftDraw);
+        return;
     }
 
-    XftDrawString32(draw, &color, ftFont, (int)x, (int)y, ucs4, count);
-    XftDrawDestroy(draw);
+    if (tsdPtr->clipRegion) {
+        XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
+    }
+
+    /*
+     * Fast path for Latin-only strings: use XftDrawStringUtf8 directly
+     * with a rotated font.
+     */
+    if (IsLatinOnly(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, angle);
+        if (ftFont) {
+            XftDrawStringUtf8(ftDraw, xftcolor, ftFont,
+                              (int)x, (int)y,
+                              (const FcChar8 *)source, (int)numBytes);
+        }
+        goto done;
+    }
+    
+/*
+ * Complex text: use full shaping + bidi pipeline,
+ * then rotate glyph positions.
+ */
+    
+{
+    ShapedGlyphBuffer buffer;
+    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                (int)numBytes, &buffer)) {
+        goto done;
+    }
+
+    /* Rotation setup. */
+    double radians = angle * (M_PI / 180.0);
+    double cosA = cos(radians);
+    double sinA = sin(radians);
+
+    XftGlyphFontSpec specs[MAX_GLYPHS];
+    int nspec = 0;
+
+    for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+        int faceIdx = buffer.glyphs[i].fontIndex;
+        if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+
+        XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, angle);
+        if (!ftFont) continue;
+
+        unsigned int glyph = buffer.glyphs[i].glyphId;
+        if (glyph == 0) continue;
+
+        /* Original (unrotated) glyph position. */
+        double gx = buffer.glyphs[i].x;
+        double gy = buffer.glyphs[i].y;
+
+        /*
+         * Rotate around (0,0), then translate to (x,y).
+         * Y is inverted for X11 coordinates.
+         */
+        double rx = gx * cosA - gy * sinA;
+        double ry = gx * sinA + gy * cosA;
+
+        specs[nspec].font  = ftFont;
+        specs[nspec].glyph = glyph;
+        specs[nspec].x     = (int)(x + rx);
+        specs[nspec].y     = (int)(y - ry);
+        nspec++;
+    }
+
+    if (nspec > 0) {
+        LOCK;
+        XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
+        UNLOCK;
+    }
+}
+    
+done:
+    if (tsdPtr->clipRegion) {
+        XftDrawSetClip(ftDraw, NULL);
+    }
+    XftDrawDestroy(ftDraw);
 }
 
 /*
