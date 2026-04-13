@@ -1029,7 +1029,6 @@ tkUnixBidiFont.o: $(UNIX_DIR)/tkUnixBidiFont.c
 SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
 	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
-# All other object rules (unchanged from original)
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c
 
@@ -1288,12 +1287,6 @@ tkTextWind.o: $(GENERIC_DIR)/tkTextWind.c
 tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubInit.c
 
-# Stub library binaries, these must be compiled for use in a shared library
-# even though they will be placed in a static archive
-
-tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
-
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
 
@@ -1376,10 +1369,6 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
-
-# SheenBidi unity build
-SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
-	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
