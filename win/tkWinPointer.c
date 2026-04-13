@@ -445,9 +445,9 @@ TkpWarpPointer(
     }
 
     XQueryPointer(dispPtr->display, None, NULL, NULL, &rootx, &rooty,
-	NULL, NULL, &modifierState);
+	    NULL, NULL, &modifierState);
     Tk_Window newPointerWin = Tk_CoordsToWindow(rootx, rooty,
-	dispPtr->warpMainwin);
+	    dispPtr->warpMainwin);
     Tk_UpdatePointer(newPointerWin, rootx, rooty, modifierState);
 }
 
