@@ -433,7 +433,8 @@ void
 TkpWarpPointer(
     TkDisplay *dispPtr)
 {
-    int rootx, rooty, modifierState;
+    int rootx, rooty;
+    unsigned int modifierState;
 
     if (dispPtr->warpWindow) {
 	RECT r;
