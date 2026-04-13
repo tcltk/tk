@@ -1223,7 +1223,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
 
 test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
     deleteWindows
-    wm geometry . 100x100
+    wm geometry . 200x200+100+100
     wm deiconify .
     after 10; update
     # On MS Windows with bug present:
