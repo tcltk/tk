@@ -1495,24 +1495,43 @@ DrawTab(
     CGContextRef context,
     Tk_Window tkwin)
 {
+    Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
+    bool horizontal = true;
     CGRect originalBounds = bounds;
     CGColorRef strokeColor;
     int OSVersion = [NSApp macOSVersion];
 
+    if (mainInfoPtr != NULL) {
+	nbTabPlcStickBit =
+	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
+	horizontal =
+	    nbTabPlcStickBit == TTK_STICK_S || nbTabPlcStickBit == TTK_STICK_N;
+    }
+
     /*
      * Extend the bounds to one or both sides so the rounded part will be
-     * clipped off if the right of the left tab, the left of the right tab,
-     * and both sides of the middle tabs.
+     * clipped off in the right of the left tab, the left of the right tab,
+     * and both sides of the middle tabs.  Similarly for vertical tab rows.
      */
 
     CGContextClipToRect(context, bounds);
     if (OSVersion < 110000 || !(state & TTK_STATE_SELECTED)) {
 	if (!(state & TTK_STATE_FIRST)) {
-	    bounds.origin.x -= 10;
-	    bounds.size.width += 10;
+	    if (horizontal) {
+		bounds.origin.x -= 10;
+		bounds.size.width += 10;
+	    } else {
+		bounds.origin.y -= 10;
+		bounds.size.height += 10;
+	    }
 	}
 	if (!(state & TTK_STATE_LAST)) {
-	    bounds.size.width += 10;
+	    if (horizontal) {
+		bounds.size.width += 10;
+	    } else {
+		bounds.size.height += 10;
+	    }
 	}
     }
     /*
@@ -1525,7 +1544,7 @@ DrawTab(
 	DrawGrayButton(context, bounds, &tabDesign, state, tkwin);
 
 	/*
-	 * Draw a separator line on the left side of the tab if it
+	 * Draw a separator line on the left/top side of the tab if it is
 	 * not first.
 	 */
 
@@ -1534,15 +1553,22 @@ DrawTab(
 	    strokeColor = CGColorFromGray(darkTabSeparator);
 	    CGContextSetStrokeColorWithColor(context, strokeColor);
 	    CGContextBeginPath(context);
-	    CGContextMoveToPoint(context, originalBounds.origin.x,
-		originalBounds.origin.y + 1);
-	    CGContextAddLineToPoint(context, originalBounds.origin.x,
-		originalBounds.origin.y + originalBounds.size.height - 1);
+	    if (horizontal) {
+		CGContextMoveToPoint(context, originalBounds.origin.x,
+		    originalBounds.origin.y + 1);
+		CGContextAddLineToPoint(context, originalBounds.origin.x,
+		    originalBounds.origin.y + originalBounds.size.height - 1);
+	    } else {
+		CGContextMoveToPoint(context, originalBounds.origin.x + 1,
+		    originalBounds.origin.y);
+		CGContextAddLineToPoint(context,
+		    originalBounds.origin.x + originalBounds.size.width - 1,
+		    originalBounds.origin.y);
+	    }
 	    CGContextStrokePath(context);
 	    CGContextRestoreGState(context);
 	}
     } else {
-
 	/*
 	 * This is the selected tab; paint it with the current accent color.
 	 * If it is first, cover up the separator line drawn by the second one.
@@ -1550,7 +1576,11 @@ DrawTab(
 	 */
 
 	if ((state & TTK_STATE_FIRST) && !(state & TTK_STATE_LAST)) {
-	    bounds.size.width += 1;
+	    if (horizontal) {
+		bounds.size.width += 1;
+	    } else {
+		bounds.size.height += 1;
+	    }
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
 	    DrawAccentedButton(context, bounds, &tabDesign, 0, 0);
@@ -1567,11 +1597,18 @@ DrawTab11(
     CGContextRef context,
     Tk_Window tkwin)
 {
-
     if (state & TTK_STATE_SELECTED) {
 	DrawGrayButton(context, bounds, &pushbuttonDesign, state, tkwin);
     } else {
+	Ttk_PositionSpec nbTabPlcStickBit = TTK_STICK_S;
+	TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 	CGRect clipRect = bounds;
+
+	if (mainInfoPtr != NULL) {
+	    nbTabPlcStickBit =
+		(Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
+	}
+
 	/*
 	 * Draw a segment of a Group Box as a background for non-selected tabs.
 	 * Clip the Group Box so that the segments fit together to form a long
@@ -1579,15 +1616,31 @@ DrawTab11(
 	 */
 
 	if (!(state & TTK_STATE_FIRST)) {
-	    clipRect.origin.x -= 5;
-	    bounds.origin.x -= 5;
-	    clipRect.size.width += 5;
-	    bounds.size.width += 5;
+	    if (nbTabPlcStickBit == TTK_STICK_S ||
+		    nbTabPlcStickBit == TTK_STICK_N) {
+		clipRect.origin.x -= 5;
+		bounds.origin.x -= 5;
+		clipRect.size.width += 5;
+		bounds.size.width += 5;
+	    } else {
+		clipRect.origin.y -= 5;
+		bounds.origin.y -= 5;
+		clipRect.size.height += 5;
+		bounds.size.height += 5;
+	    }
 	}
+
 	if (!(state & TTK_STATE_LAST)) {
-	    clipRect.size.width += 5;
-	    bounds.size.width += 5;
+	    if (nbTabPlcStickBit == TTK_STICK_S ||
+		    nbTabPlcStickBit == TTK_STICK_N) {
+		clipRect.size.width += 5;
+		bounds.size.width += 5;
+	    } else {
+		clipRect.size.height += 5;
+		bounds.size.height += 5;
+	    }
 	}
+
 	CGContextSaveGState(context);
 	CGContextClipToRect(context, clipRect);
 	DrawGroupBox(bounds, context, tkwin, 3, NO);
