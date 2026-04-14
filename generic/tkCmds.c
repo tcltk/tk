@@ -1722,7 +1722,7 @@ int
 Tk_WinfoObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, c_class;
@@ -1758,6 +1758,7 @@ Tk_WinfoObjCmd(
 	"exists",	"fpixels",	"pixels",	"rgb",
 	"visualsavailable",
 
+	"isdark",
 	NULL
     };
     enum options {
@@ -1776,7 +1777,9 @@ Tk_WinfoObjCmd(
 	WIN_PATHNAME,
 
 	WIN_EXISTS,	WIN_FPIXELS,	WIN_PIXELS,	WIN_RGB,
-	WIN_VISUALSAVAILABLE
+	WIN_VISUALSAVAILABLE,
+
+	WIN_ISDARK,
     };
 
     if (objc < 2) {
@@ -2265,6 +2268,10 @@ Tk_WinfoObjCmd(
 	XFree(visInfoPtr);
 	break;
     }
+    case WIN_ISDARK:
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+	    TkpWindowIsDark(tkwin)));
+	break;
     }
     return TCL_OK;
 }

@@ -7515,6 +7515,30 @@ RemapWindows(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpWindowIsDark --
+ *
+ *      Tests whether the given window is in "dark mode"..
+ *
+ * Results:
+ *      Returns true if the window is in dark mode, false if not.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE bool
+TkpWindowIsDark(Tk_Window tkwin) {
+    /*
+     * Always returns false for X11.
+     */
+    return False.
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
