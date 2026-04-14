@@ -14,10 +14,22 @@
  */
 
 #include "tkWinInt.h"
+#include <dwmapi.h>
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
 #include "tkWinIco.h"
+
+
+/*
+    DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 10/11)
+    For older Windows 10 versions, use 19
+*/
+
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+
 /*
  * These next two defines are only valid on Win2K/XP+.
  */
@@ -269,6 +281,7 @@ typedef struct TkWmInfo {
  * WM_FULLSCREEN -		Non-zero means that this window has been placed
  *				in the full screen mode. It should be mapped at
  *				0,0 and be the width and height of the screen.
+ * WM_DARK_MODE			1 if toplevel decoration is in dark mode.
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -285,6 +298,7 @@ typedef struct TkWmInfo {
 #define WM_HEIGHT_NOT_RESIZABLE		(1<<11)
 #define WM_WITHDRAWN			(1<<12)
 #define WM_FULLSCREEN			(1<<13)
+#define WM_DARK_MODE			(1<<14)
 
 /*
  * Window styles for various types of toplevel windows.
@@ -2980,14 +2994,24 @@ WmAttributesCmd(
     const char *string;
     int boolValue;
     Tcl_Size i, length;
-    int config_fullscreen = 0, updatewrapper = 0;
-    int fullscreen_attr_changed = 0, fullscreen_attr = 0;
+    bool config_appearance = 0, config_fullscreen = 0, updatewrapper = 0;
+    BOOL  darkmode_attr = 0;
+    bool appearance_attr_changed = 0;
+    bool fullscreen_attr_changed = 0, fullscreen_attr = 0;
+
+    static const char *const appearanceStrings[] = {
+	"light", "dark", NULL
+    };
+    enum appearances {
+	APPEARANCE_LIGHT, APPEARANCE_DARK
+    };
 
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
     configArgs:
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
 		" ?-alpha ?double??"
+		" ?-appearance ?light|dark??"
 		" ?-transparentcolor ?color??"
 		" ?-disabled ?bool??"
 		" ?-fullscreen ?bool??"
@@ -3002,6 +3026,13 @@ WmAttributesCmd(
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-alpha", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewDoubleObj(wmPtr->alpha));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-appearance", TCL_INDEX_NONE));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj(
+		appearanceStrings[
+		    ((wmPtr->flags & WM_DARK_MODE)?APPEARANCE_DARK:APPEARANCE_LIGHT)],
+		TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-transparentcolor", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -3030,8 +3061,9 @@ WmAttributesCmd(
 	if (strncmp(string, "-disabled", length) == 0) {
 	    stylePtr = &style;
 	    styleBit = WS_DISABLED;
-	} else if ((strncmp(string, "-alpha", length) == 0)
-		|| ((length > 2) && (strncmp(string, "-transparentcolor",
+	} else if ((length > 2)
+		&& ((strncmp(string, "-alpha", length) == 0)
+		|| (strncmp(string, "-transparentcolor",
 			length) == 0))) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_LAYERED;
@@ -3048,6 +3080,14 @@ WmAttributesCmd(
 		 */
 		updatewrapper = 1;
 	    }
+	} else if ((length > 2)
+		&& (strncmp(string, "-appearance", length) == 0)) {
+	    config_appearance = 1;
+	    styleBit = 0;
+	} else if ((length > 2)
+		&& (strncmp(string, "-disabled", length) == 0)) {
+	    stylePtr = &style;
+	    styleBit = WS_DISABLED;
 	} else if ((length > 3)
 		&& (strncmp(string, "-topmost", length) == 0)) {
 	    stylePtr = &exStyle;
@@ -3061,7 +3101,7 @@ WmAttributesCmd(
 	    }
 	} else if (i == 3) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad attribute \"%s\": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
+		    "bad attribute \"%s\": must be -alpha, -appearance, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
 		    string));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", (char *)NULL);
 	    return TCL_ERROR;
@@ -3154,11 +3194,28 @@ WmAttributesCmd(
 	    }
 	} else {
 	    if ((i < objc-1)
+		    && ! config_appearance
 		    && Tcl_GetBooleanFromObj(interp, objv[i+1], &boolValue)
 			    != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (config_fullscreen) {
+	    if (config_appearance) {
+		if (objc == 4) {
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    appearanceStrings[
+				((wmPtr->flags & WM_DARK_MODE)?APPEARANCE_DARK:APPEARANCE_LIGHT)],
+			    TCL_INDEX_NONE));
+		} else {
+		    int index;
+		    if (Tcl_GetIndexFromObj(interp, objv[i+1], appearanceStrings,
+			    "appearancename", 0, &index) != TCL_OK) {
+			return TCL_ERROR;
+		    }
+		    darkmode_attr = (index == APPEARANCE_DARK);
+		    appearance_attr_changed = true;
+		}
+		config_appearance = 0;
+	    } else if (config_fullscreen) {
 		if (objc == 4) {
 		    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 			    (wmPtr->flags & WM_FULLSCREEN) != 0));
@@ -3212,6 +3269,49 @@ WmAttributesCmd(
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		UpdateWrapper(winPtr);
 	    }
+	}
+    }
+    if (appearance_attr_changed) {
+
+	/*
+	 * Check for embedded window
+	 * Note: this may not be needed, as the command below will fail anyway
+	 */
+
+	if ((winPtr->flags & TK_EMBEDDED)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't set appearance attribute for \"%s\":",
+		    winPtr->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
+		    "APPEARANCE", (char *)NULL);
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * This will fail if the Window is not physically visible.
+	 * The following will fail and requires an "update" between
+	 * the two commands:
+	 * toplevel .t;wm attributes .t -appearance d
+	 */
+
+	
+	if (S_OK != DwmSetWindowAttribute(
+		wmPtr->wrapper,
+		DWMWA_USE_IMMERSIVE_DARK_MODE,
+		&darkmode_attr,
+		sizeof(darkmode_attr)
+		)) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't set appearance attribute for \"%s\":",
+		    winPtr->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
+		    "APPEARANCE", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	if (darkmode_attr) {
+	    wmPtr->flags |= WM_DARK_MODE;
+	} else {
+	    wmPtr->flags &= ~WM_DARK_MODE;
 	}
     }
     if (fullscreen_attr_changed) {
@@ -8711,11 +8811,8 @@ RemapWindows(
 
 MODULE_SCOPE bool
 TkpWindowIsDark(Tk_Window tkwin) {
-    /*
-     * This is called by the implementation of winfo isdark.
-     * The Windows code for this needs to be written.
-     */
-    return False.
+    WmInfo *wmPtr = ((TkWindow *) tkwin)->wmInfoPtr;
+    return (wmPtr->flags & WM_DARK_MODE) ? true : false;
 }
 
 
