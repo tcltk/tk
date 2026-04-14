@@ -248,7 +248,12 @@ ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 # of Development build without overwriting
 # the debug library
 	@cd "${INSTALL_ROOT}${LIBDIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}" && \
-	ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"
+	if \
+	    ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
+	then : ; else \
+		cp "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
+	fi
+
 endif # Development, not embedded
 ifeq (${TK_X11},)
 ifeq (${SUBFRAMEWORK},)
