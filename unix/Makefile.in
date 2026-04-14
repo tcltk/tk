@@ -9,7 +9,7 @@
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
-VERSION		= @TK_VERSION@
+VERSION			= @TK_VERSION@
 MAJOR_VERSION		= @TK_MAJOR_VERSION@
 MINOR_VERSION		= @TK_MINOR_VERSION@
 PATCH_LEVEL		= @TK_PATCH_LEVEL@
@@ -157,8 +157,7 @@ AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
-X11_LIB_SWITCHES	= $(XFT_LIBS) @XLIBSW@
-
+X11_LIB_SWITCHES	= $(XFT_LIBS) $(HB_LIBS) @XLIBSW@
 
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
@@ -264,8 +263,8 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @EXTRA_WISH_LIBS@
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the
@@ -297,6 +296,10 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
 
+# support for HarfBuzz (hard dependency when --enable-bidi is used)
+HB_CFLAGS		= @HB_CFLAGS@
+HB_LIBS			= @HB_LIBS@
+
 # support for libcups
 CUPS_CFLAGS		= @CUPS_CFLAGS@
 CUPS_LIBS		= @CUPS_LIBS@
@@ -305,8 +308,11 @@ CUPS_LIBS		= @CUPS_LIBS@
 ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
 
-# SheenBidi + kb_text_shaper.h (hard-wired in unix/bidi/)
+# Bidi support (SheenBidi + HarfBuzz text shaping)
 BIDI_CFLAGS		= @BIDI_CFLAGS@
+
+# Font system (core, xft, or bidi)
+FONTSYSTEM		= @FONTSYSTEM@
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -341,19 +347,19 @@ MAN_FLAGS               = @MAN_FLAGS@
 CC			= @CC@
 
 CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
-${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
-${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
-${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS)
+	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
+	${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
+	${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
+	${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
 APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 
 DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
-${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
--I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
-${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS)
+	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
+	-I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
+	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 WISH_OBJS = tkAppInit.o
 
@@ -374,8 +380,7 @@ IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
 TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
 
-# either tkUnixFont.o (default) or tkUnixRFont.o (if --enable-xft)
-#
+# either tkUnixFont.o (default) or tkUnixRFont.o (if --enable-xft) or tkUnixBidiFont.o (if --enable-bidi)
 FONT_OBJS = @UNIX_FONT_OBJS@
 
 GENERIC_OBJS = tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
@@ -406,7 +411,7 @@ X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
-	tkUnixPrint.o SheenBidi.o
+	tkUnixPrint.o 
 
 AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -467,8 +472,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTrig.c $(GENERIC_DIR)/tkImage.c \
 	$(GENERIC_DIR)/tkImgBmap.c $(GENERIC_DIR)/tkImgGIF.c \
 	$(GENERIC_DIR)/tkImgPNG.c $(GENERIC_DIR)/tkImgPPM.c \
-	$(GENERIC_DIR)/tkImgSVGnano.c $(GENERIC_DIR)/tkImgSVGnano.c \
-	$(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
+	$(GENERIC_DIR)/tkImgSVGnano.c $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
 	$(GENERIC_DIR)/tkImgListFormat.c $(GENERIC_DIR)/tkText.c \
 	$(GENERIC_DIR)/tkTextBTree.c $(GENERIC_DIR)/tkTextDisp.c \
 	$(GENERIC_DIR)/tkTextImage.c \
@@ -524,8 +528,7 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixDraw.c \
 	$(UNIX_DIR)/tkUnixEmbed.c $(UNIX_DIR)/tkUnixEvent.c \
 	$(UNIX_DIR)/tkUnixFocus.c $(GENERIC_DIR)/tkIcu.c \
-	$(UNIX_DIR)/tkUnixRFont.c \
-	$(UNIX_DIR)/tkUnixFont.c $(UNIX_DIR)/tkUnixInit.c \
+	$(UNIX_DIR)/tkUnixInit.c \
 	$(UNIX_DIR)/tkUnixKey.c \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
@@ -976,8 +979,6 @@ install-private-headers:
 
 Makefile: $(UNIX_DIR)/Makefile.in
 	$(SHELL) config.status
-#tkConfig.h: $(UNIX_DIR)/tkConfig.h.in
-#	$(SHELL) config.status
 
 clean:
 	rm -rf *.vfs
@@ -1015,12 +1016,24 @@ tkTestInit.o: $(UNIX_DIR)/tkAppInit.c ${WISH_EXE}
 tkAppInit.o: $(UNIX_DIR)/tkAppInit.c
 	$(CC) -c $(APP_CC_SWITCHES) $(UNIX_DIR)/tkAppInit.c
 
+# Stub library objects - fixed rules
+tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
+
+ttkStubLib.o: $(TTK_DIR)/ttkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(TTK_DIR)/ttkStubLib.c
+
+tkUnixBidiFont.o: $(UNIX_DIR)/tkUnixBidiFont.c
+	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS) $(UNIX_DIR)/tkUnixBidiFont.c
+
+SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
+	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
+
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c
 
 tkAccessibility.o: $(GENERIC_DIR)/tkAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkAccessibility.c
-
 
 tkArgv.o: $(GENERIC_DIR)/tkArgv.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkArgv.c
@@ -1274,12 +1287,6 @@ tkTextWind.o: $(GENERIC_DIR)/tkTextWind.c
 tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubInit.c
 
-# Stub library binaries, these must be compiled for use in a shared library
-# even though they will be placed in a static archive
-
-tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
-
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
 
@@ -1362,10 +1369,6 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
-
-# SheenBidi unity build
-SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
-	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
@@ -1571,9 +1574,6 @@ ttkState.o: $(TTK_DIR)/ttkState.c
 
 ttkStubInit.o: $(TTK_DIR)/ttkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubInit.c
-
-ttkStubLib.o: $(TTK_DIR)/ttkStubLib.c
-	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(TTK_DIR)/ttkStubLib.c
 
 ttkTagSet.o: $(TTK_DIR)/ttkTagSet.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkTagSet.c

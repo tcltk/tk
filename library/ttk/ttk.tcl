@@ -12,11 +12,11 @@ namespace eval ::ttk {
     }
 }
 
-source -encoding utf-8 [file join $::ttk::library fonts.tcl]
-source -encoding utf-8 [file join $::ttk::library cursors.tcl]
-source -encoding utf-8 [file join $::ttk::library utils.tcl]
-source -encoding utf-8 [file join $::ttk::library elements.tcl]
-source -encoding utf-8 [file join $::ttk::library wideSpinbox.tcl]
+source [file join $::ttk::library fonts.tcl]
+source [file join $::ttk::library cursors.tcl]
+source [file join $::ttk::library utils.tcl]
+source [file join $::ttk::library elements.tcl]
+source [file join $::ttk::library wideSpinbox.tcl]
 
 ## ttk::deprecated $old $new --
 #	Define $old command as a deprecated alias for $new command
@@ -154,19 +154,19 @@ proc ::ttk::setTreeviewRowHeight {} {
 
 ### Load widget bindings.
 #
-source -encoding utf-8 [file join $::ttk::library button.tcl]
-source -encoding utf-8 [file join $::ttk::library menubutton.tcl]
-source -encoding utf-8 [file join $::ttk::library toggleswitch.tcl]
-source -encoding utf-8 [file join $::ttk::library scrollbar.tcl]
-source -encoding utf-8 [file join $::ttk::library scale.tcl]
-source -encoding utf-8 [file join $::ttk::library progress.tcl]
-source -encoding utf-8 [file join $::ttk::library notebook.tcl]
-source -encoding utf-8 [file join $::ttk::library panedwindow.tcl]
-source -encoding utf-8 [file join $::ttk::library entry.tcl]
-source -encoding utf-8 [file join $::ttk::library combobox.tcl]	;# dependency: entry.tcl
-source -encoding utf-8 [file join $::ttk::library spinbox.tcl]  ;# dependency: entry.tcl
-source -encoding utf-8 [file join $::ttk::library treeview.tcl]
-source -encoding utf-8 [file join $::ttk::library sizegrip.tcl]
+source [file join $::ttk::library button.tcl]
+source [file join $::ttk::library menubutton.tcl]
+source [file join $::ttk::library toggleswitch.tcl]
+source [file join $::ttk::library scrollbar.tcl]
+source [file join $::ttk::library scale.tcl]
+source [file join $::ttk::library progress.tcl]
+source [file join $::ttk::library notebook.tcl]
+source [file join $::ttk::library panedwindow.tcl]
+source [file join $::ttk::library entry.tcl]
+source [file join $::ttk::library combobox.tcl]	;# dependency: entry.tcl
+source [file join $::ttk::library spinbox.tcl]  ;# dependency: entry.tcl
+source [file join $::ttk::library treeview.tcl]
+source [file join $::ttk::library sizegrip.tcl]
 
 ## Label and Labelframe bindings:
 #  (not enough to justify their own file...)
@@ -180,7 +180,7 @@ proc ttk::LoadThemes {} {
     variable library
 
     # "default" always present:
-    uplevel #0 [list source -encoding utf-8 [file join $library defaults.tcl]]
+    uplevel #0 [list source [file join $library defaults.tcl]]
 
     set builtinThemes [style theme names]
     foreach {theme scripts} {
@@ -193,7 +193,7 @@ proc ttk::LoadThemes {} {
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
 	    foreach script $scripts {
-		uplevel #0 [list source -encoding utf-8 [file join $library $script]]
+		uplevel #0 [list source [file join $library $script]]
 	    }
 	}
     }
