@@ -228,3 +228,23 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 }
 
 ttk::theme::default::reconfigureDefaultTheme
+
+# ttk::theme::default::configureNotebookStyle --
+#
+# Sets theme-specific option values for the ttk::notebook tab style $style.Tab.
+# Invoked by ::ttk::configureNotebookStyle.
+
+proc ttk::theme::default::configureNotebookStyle {style} {
+    set tabPos [ttk::style lookup $style -tabposition {} nw]
+    switch -- [string index $tabPos 0] {
+	n - s {
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
+	}
+	w - e {
+	    ttk::style configure $style.Tab -padding {1.5p 3p}
+	}
+	default {
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
+	}
+    }
+}

@@ -434,8 +434,13 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     Tcl_Size numBytes;		/* Number of bytes to display. */
-    char *chars;		/* Pointer to UTF characters to display.
-				 * Actual array follows this struct. */
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+    char *chars;		/* Pointer to UTF characters to display. */
+#else
+    char chars[TKFLEXARRAY];		/* UTF characters to display.
+				 * Allocated as large as necessary. THIS MUST BE THE LAST
+				 * FIELD IN THE STRUCTURE. */
+#endif
 } CharInfo;
 
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -2592,12 +2597,12 @@ DisplayDLine(
 		    bci.ci.numBytes = Tcl_DStringLength(&bci.baseChars);
 		    bci.ci.chars = Tcl_DStringValue(&bci.baseChars);
 		    bci.ci.baseChunkPtr = otherChunkPtr;
-		    otherChunkPtr->clientData = (ClientData) &bci;
+		    otherChunkPtr->clientData = &bci;
 		    otherChunkPtr->numBytes = bci.ci.numBytes;
 #else
 		    ci = *((CharInfo *) (otherChunkPtr->clientData));
 		    ci.numBytes = numBytes;
-		    otherChunkPtr->clientData = (ClientData) &ci;
+		    otherChunkPtr->clientData = &ci;
 		    otherChunkPtr->numBytes = ci.numBytes;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		} else {
@@ -7912,8 +7917,7 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = (CharInfo *)Tcl_Alloc(sizeof(CharInfo) + 1 + bytesThatFit);
-    ciPtr->chars = (char *) (ciPtr + 1);
+    ciPtr = (CharInfo *)Tcl_Alloc((offsetof(CharInfo, chars) + 1) + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */

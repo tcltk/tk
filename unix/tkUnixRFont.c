@@ -1,4 +1,4 @@
-/*
+ /*
  * tkUnixRFont.c --
  *
  *	Alternate implementation of tkUnixFont.c using Xft.
