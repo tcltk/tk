@@ -251,7 +251,7 @@ ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
 	if \
 	    ln -f "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
 	then : ; else \
-		cp "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
+	    cp "${PRODUCT_NAME}" "${PRODUCT_NAME}_debug"; \
 	fi
 
 endif # Development, not embedded
