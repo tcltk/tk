@@ -2442,7 +2442,7 @@ DisplayDLine(
     int height, y_off;
     struct TextStyle tmpStyle;
     TkBorder *borderPtr;
-    bool blockCursor = textPtr->insertCursorType != 0;
+    bool blockCursor = textPtr->insertCursorType;
     bool haveFocus = (textPtr->flags & GOT_FOCUS) != 0;
     bool showInsertCursor = (textPtr->flags & INSERT_ON) != 0;
     bool solidUnfocussed =

@@ -25,7 +25,7 @@ typedef struct
 {
     /* Internal data:
      */
-    int	width, height;		/* Requested size of tab */
+    int		width, height;	/* Requested size of tab */
     Ttk_Box	parcel;		/* Tab position */
 
     /* Tab options:
