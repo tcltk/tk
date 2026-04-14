@@ -1221,6 +1221,44 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|}
 
+test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
+    deleteWindows
+    wm geometry . 200x200+100+100
+    wm deiconify .
+    after 10; update
+    # On MS Windows with bug present:
+    # Ensure that the test body starts immediately after a MOUSE_TIMER_INTERVAL
+    set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
+    if {$pointerWin eq "."} {
+	event generate . <Motion> -warp 1 -x -50 -y 50
+    }
+    event generate . <Motion> -warp 1 -x 50 -y 50
+    waitForWindowEvent . <Enter>; # ensures that a MOUSE_TIMER_INTERVAL just ended
+    bind all <Leave> {append result "<Leave> %W"}
+    bind all <Enter> {append result "<Enter> %W"}
+    set result "|"
+} -body {
+    # Let the screen pointer perform a back and forth warp in quick succession,
+    # while immediatly providing opportunity for the event loop to service any
+    # crossing events.
+    event generate . <Motion> -warp 1 -x -50 -y 50
+    update
+    append result "|"
+    event generate . <Motion> -warp 1 -x 50 -y 50
+    update
+    append result "|"
+    # On MS Windows with bug present:
+    # The TkWinPointerEvent mechanism doesn't detect the previous changes to
+    # the position of the screen pointer because the back and forth motion
+    # happens entirely within one MOUSE_TIMER_INTERVAL. The value for the
+    # result variable in this case is: "|||"
+    set result
+} -cleanup {
+    unset result
+    bind all <Leave> {}
+    bind all <Enter> {}
+} -result "|<Leave> .|<Enter> .|"
+
 #
 # TESTFILE CLEANUP
 #
