@@ -8351,4 +8351,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-04-01 (bug) [556606] Block cursor in text widget may hide the character underneath (werner)
 
+2026-04-13 (bug) [011533] Flip ttk::notebook tab states "first" and "last" for "-tabplacement e*|s*" (werner)
+
 - (to be) Released 8.6.18, Apr ??, 2026 - https://core.tcl-lang.org/tk/ for details
