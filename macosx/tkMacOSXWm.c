@@ -298,13 +298,13 @@ static void syncLayout(NSWindow *macWindow)
 
 typedef enum {
     WMATT_ALPHA, WMATT_APPEARANCE, WMATT_BUTTONS, WMATT_FULLSCREEN,
-    WMATT_ISDARK, WMATT_MODIFIED, WMATT_NOTIFY, WMATT_TITLEPATH, WMATT_TOPMOST,
+    WMATT_MODIFIED, WMATT_NOTIFY, WMATT_TITLEPATH, WMATT_TOPMOST,
     WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS, WMATT_TABBINGID,
     WMATT_TABBINGMODE, WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
-    "-alpha", "-appearance", "-buttons", "-fullscreen", "-isdark", "-modified",
+    "-alpha", "-appearance", "-buttons", "-fullscreen", "-modified",
     "-notify", "-titlepath", "-topmost", "-transparent", "-stylemask", "-class",
     "-tabbingid", "-tabbingmode", "-type", NULL
 };
@@ -1724,6 +1724,7 @@ WmSetAttribute(
 	default:
 	    macWindow.appearance = nil;
 	}
+	Tcl_SetObjResult(interp, Tcl_NewObj());
 	break;
     }
     case WMATT_BUTTONS: {
@@ -1899,9 +1900,6 @@ WmSetAttribute(
 	placeAsTab((TKWindow *)macWindow);
 	break;
     }
-    case WMATT_ISDARK: {
-	break;
-    }
     case WMATT_TITLEPATH: {
 	const char *path = (const char *)Tcl_FSGetNativePath(value);
 	NSString *filename = @"";
@@ -2031,9 +2029,6 @@ WmGetAttribute(
 	break;
     case WMATT_FULLSCREEN:
 	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
-	break;
-    case WMATT_ISDARK:
-	result = Tcl_NewBooleanObj(TkMacOSXInDarkMode((Tk_Window)winPtr));
 	break;
     case WMATT_MODIFIED:
 	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);

@@ -1750,7 +1750,7 @@ Tk_WinfoObjCmd(
 	"screenmmheight","screenmmwidth","screenvisual","server",
 	"toplevel",	"viewable",	"visual",	"visualid",
 	"vrootheight",	"vrootwidth",	"vrootx",	"vrooty",
-	"width",	"x",		"y",
+	"width",	"x",		"y",		"isdark",
 
 	"atom",		"atomname",	"containing",	"interps",
 	"pathname",
@@ -1758,7 +1758,6 @@ Tk_WinfoObjCmd(
 	"exists",	"fpixels",	"pixels",	"rgb",
 	"visualsavailable",
 
-	"isdark",
 	NULL
     };
     enum options {
@@ -1771,7 +1770,7 @@ Tk_WinfoObjCmd(
 	WIN_SCREENMMHEIGHT,WIN_SCREENMMWIDTH,WIN_SCREENVISUAL,WIN_SERVER,
 	WIN_TOPLEVEL,	WIN_VIEWABLE,	WIN_VISUAL,	WIN_VISUALID,
 	WIN_VROOTHEIGHT,WIN_VROOTWIDTH,	WIN_VROOTX,	WIN_VROOTY,
-	WIN_WIDTH,	WIN_X,		WIN_Y,
+	WIN_WIDTH,	WIN_X,		WIN_Y,		WIN_ISDARK,
 
 	WIN_ATOM,	WIN_ATOMNAME,	WIN_CONTAINING,	WIN_INTERPS,
 	WIN_PATHNAME,
@@ -1779,7 +1778,6 @@ Tk_WinfoObjCmd(
 	WIN_EXISTS,	WIN_FPIXELS,	WIN_PIXELS,	WIN_RGB,
 	WIN_VISUALSAVAILABLE,
 
-	WIN_ISDARK,
     };
 
     if (objc < 2) {
