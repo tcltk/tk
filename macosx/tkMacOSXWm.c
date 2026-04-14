@@ -237,10 +237,10 @@ static const tabbingMode tabbingModes[] = {
 };
 
 static const char *const appearanceStrings[] = {
-    "aqua", "auto", "darkaqua", NULL
+    "light", "dark", "auto", NULL
 };
 enum appearances {
-    APPEARANCE_AQUA, APPEARANCE_AUTO, APPEARANCE_DARKAQUA
+    APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_AUTO
 };
 
 static Bool wantsToBeTab(NSWindow *macWindow) {
@@ -1709,11 +1709,11 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	switch ((enum appearances) index) {
-	case APPEARANCE_AQUA:
+	case APPEARANCE_LIGHT:
 	    macWindow.appearance = [NSAppearance appearanceNamed:
 		NSAppearanceNameAqua];
 	    break;
-	case APPEARANCE_DARKAQUA:
+	case APPEARANCE_DARK:
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	    if (@available(macOS 10.14, *)) {
 		macWindow.appearance = [NSAppearance appearanceNamed:
@@ -1998,11 +1998,11 @@ WmGetAttribute(
 	if (appearance == nil) {
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
 	} else if (appearance == NSAppearanceNameAqua) {
-	    resultString = appearanceStrings[APPEARANCE_AQUA];
+	    resultString = appearanceStrings[APPEARANCE_LIGHT];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	} else if (@available(macOS 10.14, *)) {
 	    if (appearance == NSAppearanceNameDarkAqua) {
-		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+		resultString = appearanceStrings[APPEARANCE_DARK];
 	    }
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	}
@@ -6192,6 +6192,7 @@ TkMacOSXZoomToplevel(
     return true;
 }
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -6280,6 +6281,7 @@ TkUnsupported1ObjCmd(
 	return TCL_ERROR;
     }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -6524,11 +6526,11 @@ WmWinAppearance(
 	if (appearance == nil) {
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
 	} else if (appearance == NSAppearanceNameAqua) {
-	    resultString = appearanceStrings[APPEARANCE_AQUA];
+	    resultString = appearanceStrings[APPEARANCE_LIGHT];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	} else if (@available(macOS 10.14, *)) {
 	    if (appearance == NSAppearanceNameDarkAqua) {
-		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+		resultString = appearanceStrings[APPEARANCE_DARK];
 	    }
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	}
@@ -6545,11 +6547,11 @@ WmWinAppearance(
 	    return TCL_ERROR;
 	}
 	switch ((enum appearances) index) {
-	case APPEARANCE_AQUA:
+	case APPEARANCE_LIGHT:
 	    win.appearance = [NSAppearance appearanceNamed:
 		NSAppearanceNameAqua];
 	    break;
-	case APPEARANCE_DARKAQUA:
+	case APPEARANCE_DARK:
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	    if (@available(macOS 10.14, *)) {
 		win.appearance = [NSAppearance appearanceNamed:
@@ -7809,6 +7811,56 @@ RemapWindows(
 	    childPtr = childPtr->nextPtr) {
 	RemapWindows(childPtr, (MacDrawable *)winPtr->window);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInDarkMode --
+ *
+ *      Tests whether the given window's NSView has a DarkAqua Appearance.
+ *
+ * Results:
+ *      Returns true if the NSView is in DarkMode, false if not.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE bool
+TkMacOSXInDarkMode(Tk_Window tkwin)
+{
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if (@available(macOS 10.14, *)) {
+	TkWindow *winPtr = (TkWindow*) tkwin;
+	NSAppearanceName name;
+	NSView *view = nil;
+	if (winPtr && winPtr->privatePtr) {
+	    view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
+	}
+	if (view) {
+	    name = [[view effectiveAppearance] name];
+	} else {
+	    name = [[NSApp effectiveAppearance] name];
+	}
+	return (name == NSAppearanceNameDarkAqua);
+    }
+#else
+    (void) tkwin;
+#endif
+    return false;
+}
+
+/*
+ * This function is also used for the stub function TkpWindowIsDark, now
+ * that dark mode is available on other platforms.
+ */
+
+bool TkpWindowIsDark(Tk_Window tkwin) {
+    return TkMacOSXInDarkMode(tkwin);
 }
 
 /*

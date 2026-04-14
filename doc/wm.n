@@ -108,7 +108,7 @@ On macOS, the following attributes may be set.
 \fB\-appearance\fR
 .
 Specifies whether the window is rendered in "dark mode".  Allowed
-values are \fBauto\fR, \fBaqua\fR and \fBdarkaqua\fR.  If the setting
+values are \fBauto\fR, \fBlight\fR and \fBdark\fR.  If the setting
 is auto then the appearance of the window is controlled by the
 System Settings.
 .\" OPTION: -class
@@ -125,12 +125,6 @@ does not correspond to an existing window.  Doing that causes the
 class name to be cached for later use.  When a toplevel with that
 pathname is eventually created, the cached class name will determine which
 class is used for the underlying Aqua window.
-.\" OPTION: -isdark
-.TP
-\fB\-isdark\fR
-.
-Returns a boolean value which is true if the window is currently in
-dark mode.
 .\" OPTION: -modified
 .TP
 \fB\-modified\fR

@@ -66,7 +66,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     }
 
     if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $w moveableModal {}
+	wm attributes $w -style docmodal
     } elseif {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
     }
