@@ -85,7 +85,7 @@ be used to modify bits in the stylemask property of the NSWindow or \
 NSPanel underlying a Tk Window.  Changing these bits causes the \
 style of the window to change.  This demo allows you to see the \
 effects of changing the bits.  (Note that buttons in the title bar \
-can also be enabled or disabled with the ::tk::unsupported::MacWindowStyle \
+can also be enabled or disabled with the wminfo attributes $window -style \
 command.)"
 
 set panelInfo "A toplevel based on an NSPanel has a narrower title bar\

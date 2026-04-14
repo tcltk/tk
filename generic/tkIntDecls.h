@@ -337,7 +337,8 @@ EXTERN int		XSetRegion(Display *display, GC gc, Region rgn);
 /* 119 */
 EXTERN int		XUnionRectWithRegion(XRectangle *rect, Region src,
 				Region dr_return);
-/* Slot 120 is reserved */
+/* 120 */
+EXTERN bool             TkpWindowIsDark(Tk_Window tkwin);
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap(Display *display,
 				const void *source);
