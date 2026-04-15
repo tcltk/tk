@@ -797,7 +797,7 @@ static void DrawClosedDisclosure(
     CGFloat x = bounds.origin.x + inset;
     CGFloat y = bounds.origin.y + trunc(bounds.size.height / 2) + 1;
 
-    if (OSVersion >= 101300) {
+    if (OSVersion >= 110000) {
 	CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
 	CGContextSetLineWidth(context, 1.5);
     } else {
@@ -808,12 +808,12 @@ static void DrawClosedDisclosure(
     CGPoint arrow[3] = {
 	{x, y - size / 4 - 1}, {x + size / 2, y}, {x, y + size / 4 + 1}
     };
-    if (OSVersion < 101300) {
+    if (OSVersion < 110000) {
 	arrow[1].x += 1;
     }
     CGContextAddLines(context, arrow, 3);
 
-    if (OSVersion >= 101300) {
+    if (OSVersion >= 110000) {
 	CGContextStrokePath(context);
     } else {
 	CGContextFillPath(context);
@@ -837,7 +837,7 @@ static void DrawOpenDisclosure(
     CGFloat x = bounds.origin.x + inset;
     CGFloat y = bounds.origin.y + trunc(bounds.size.height / 2);
 
-    if (OSVersion >= 101300) {
+    if (OSVersion >= 110000) {
 	CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
 	CGContextSetLineWidth(context, 1.5);
     } else {
@@ -848,12 +848,12 @@ static void DrawOpenDisclosure(
     CGPoint arrow[3] = {
 	{x, y - size / 4}, {x + size / 2, y + size / 2}, {x + size, y - size / 4}
     };
-    if (OSVersion < 101300) {
+    if (OSVersion < 110000) {
 	arrow[0].y -= 1; arrow[2].y -= 1;
     }
     CGContextAddLines(context, arrow, 3);
 
-    if (OSVersion >= 101300) {
+    if (OSVersion >= 110000) {
 	CGContextStrokePath(context);
     } else {
 	CGContextFillPath(context);
