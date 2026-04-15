@@ -7850,12 +7850,13 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 }
 
 /*
- * This function is also used for the stub function TkpWindowIsDark, now
+ * This function is also used in the stub function TkpWindowIsDark, now
  * that dark mode is available on other platforms.
  */
 
-bool TkpWindowIsDark(Tk_Window tkwin) {
-    return TkMacOSXInDarkMode(tkwin);
+int TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
+    *isdark = TkMacOSXInDarkMode(tkwin);
+    return TCL_OK;
 }
 
 /*

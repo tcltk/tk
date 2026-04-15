@@ -8798,10 +8798,11 @@ RemapWindows(
  *
  * TkpWindowIsDark --
  *
- *      Tests whether the given window is in "dark mode"..
+ *      Stub funciton which tests if the given window is in "dark mode".
+ *      Assigns true if the window is in dark mode, false if not.
  *
  * Results:
- *      Returns true if the window is in dark mode, false if not.
+ *      Returns a standard Tcl result code.
  *
  * Side effects:
  *      None.
@@ -8809,11 +8810,22 @@ RemapWindows(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE bool
-TkpWindowIsDark(Tk_Window tkwin) {
-    WmInfo *wmPtr = ((TkWindow *) tkwin)->wmInfoPtr;
-    return (wmPtr->flags & WM_DARK_MODE) ? true : false;
+MODULE_SCOPE int
+TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
+    HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
+    HRESULT result;
+    /*
+     * DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 10/11)
+     * For older Windows 10 versions, use 19
+     */
+    result = DwmSetWindowAttribute(
+        hwnd,
+        DWMWA_USE_IMMERSIVE_DARK_MODE, &isdark),
+        sizeof(*enabled)
+    );
+    return (result == S_OK ? TCL_OK : TCL_ERROR);
 }
+
 
 
 /*

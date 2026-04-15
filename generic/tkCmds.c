@@ -2266,10 +2266,19 @@ Tk_WinfoObjCmd(
 	XFree(visInfoPtr);
 	break;
     }
-    case WIN_ISDARK:
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-	    TkpWindowIsDark(tkwin)));
-	break;
+    case WIN_ISDARK: {
+	bool isdark;
+	int result = TkpWindowIsDark(tkwin, &isdark);
+	if (result == TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(isdark));
+	    break;
+	} else {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"could not determine appearance of %s", Tk_PathName(tkwin)));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "ISDARK", string, (char *)NULL);
+	    return TCL_ERROR;
+	}
+    }
     }
     return TCL_OK;
 }
