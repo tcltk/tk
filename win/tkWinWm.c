@@ -8820,9 +8820,9 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
      */
     result = DwmSetWindowAttribute(
         hwnd,
-        DWMWA_USE_IMMERSIVE_DARK_MODE, &isdark),
-        sizeof(*enabled)
-    );
+        DWMWA_USE_IMMERSIVE_DARK_MODE,
+	&isdark,
+        sizeof(*isdark));
     return (result == S_OK ? TCL_OK : TCL_ERROR);
 }
 
