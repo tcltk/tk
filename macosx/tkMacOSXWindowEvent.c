@@ -1191,9 +1191,9 @@ ExposeRestrictProc(
 /*
  * In macOS 10.14 and later this method is called when a user changes between
  * light and dark mode or changes the accent color. The implementation
- * generates two virtual events.  The first is either <<LightAqua>> or
- * <<DarkAqua>>, depending on the view's current effective appearance.  The
- * second is <<AppearnceChanged>> and has a data string describing the
+ * generates two virtual events.  The first is either <<LightAppearance>> or
+ * <<DarkAppearance>>, depending on the view's current effective appearance.
+ * The second is <<AppearnceChanged>> and has a data string describing the
  * effective appearance of the view and the current accent and highlight
  * colors.
  */
@@ -1220,11 +1220,14 @@ static const char *const accentNames[] = {
     NSAppearanceName effectiveAppearanceName = [[self effectiveAppearance] name];
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     static const char *defaultColor = NULL;
+    const char *newAppearance;
 
     if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
+	newAppearance = "Light";
+	Tk_SendVirtualEvent(tkwin, "LightAppearance", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
+	newAppearance = "Dark";
+	Tk_SendVirtualEvent(tkwin, "DarkAppearance", NULL);
     }
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
@@ -1237,9 +1240,9 @@ static const char *const accentNames[] = {
     const char *highlightName = highlight ? highlight.UTF8String: defaultColor;
     char data[256];
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
-	     effectiveAppearanceName.UTF8String, accentName,
-	     highlightName);
-    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
+	     newAppearance, accentName, highlightName);
+    Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+			Tcl_NewStringObj(data, TCL_INDEX_NONE));
     // Force a redraw of the view.
     [self setFrameSize:self.frame.size];
 
