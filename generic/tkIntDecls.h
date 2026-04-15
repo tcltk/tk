@@ -338,7 +338,7 @@ EXTERN int		XSetRegion(Display *display, GC gc, Region rgn);
 EXTERN int		XUnionRectWithRegion(XRectangle *rect, Region src,
 				Region dr_return);
 /* 120 */
-EXTERN bool             TkpWindowIsDark(Tk_Window tkwin);
+EXTERN int              TkpWindowIsDark(Tk_Window tkwin, bool *isdark);
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap(Display *display,
 				const void *source);

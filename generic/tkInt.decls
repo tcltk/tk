@@ -393,6 +393,9 @@ declare 119 {
 	    Region src, Region dr_return)
 }
 declare 121 {
+    int TkpWindowIsDark(Tk_Window tkwin, bool *isdark)
+}
+declare 121 {
     Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
 }
 declare 122 {
