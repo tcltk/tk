@@ -16,16 +16,20 @@
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #include <errno.h>
 #include <signal.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
 
+///// Move declaration to header or move callbacks to tkWaylandNotify.c 
+extern void recordCallback();
+
 /*
  * Global state for mouse buttons and modifiers.
  * These are used across callbacks to maintain consistent state.
+ //// This should be thread local!
  */
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
@@ -96,6 +100,7 @@ MODULE_SCOPE void
 TkGlfwWindowCloseCallback(GLFWwindow *window)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    recordCallback();
     
     if (winPtr) {
         Tk_DestroyWindow((Tk_Window)winPtr);
@@ -129,6 +134,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 MODULE_SCOPE void
 TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
 {
+    recordCallback();
     printf("TkGlfWindowSizeCallback\n");
     int fbwidth, fbheight;
     glfwGetFramebufferSize(window, &fbwidth, &fbheight);
@@ -176,6 +182,7 @@ TkGlfwFramebufferSizeCallback(
     int width,
     int height)
 {
+    recordCallback();
     printf("TkGlfwFramebufferSizeCallback ");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
@@ -241,6 +248,7 @@ TkGlfwWindowPosCallback(
     int xpos,
     int ypos)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	printf("TkGlfwWindowPosCallback: no Tk window\n");
@@ -275,6 +283,7 @@ TkGlfwWindowFocusCallback(
     GLFWwindow *window,
     int focused)
 {
+    recordCallback();
     printf("TkGlfwWindowFocusCallback\n");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
@@ -317,7 +326,9 @@ TkGlfwWindowIconifyCallback(
     GLFWwindow *window,
     int iconified)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    printf("TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
     XEvent event;
     
     if (!winPtr) {
@@ -327,7 +338,7 @@ TkGlfwWindowIconifyCallback(
     if (iconified) {
         memset(&event, 0, sizeof(XEvent));
         event.type = UnmapNotify;
-        event.xunmap.serial     = LastKnownRequestProcessed(winPtr->display);
+        event.xunmap.serial     = LastKnownRequestProcessed(winPtr->display)++;
         event.xunmap.send_event  = False;
         event.xunmap.display     = winPtr->display;
         event.xunmap.event       = Tk_WindowId((Tk_Window)winPtr);
@@ -339,7 +350,7 @@ TkGlfwWindowIconifyCallback(
     } else {
         memset(&event, 0, sizeof(XEvent));
         event.type = MapNotify;
-        event.xmap.serial       = LastKnownRequestProcessed(winPtr->display);
+        event.xmap.serial       = LastKnownRequestProcessed(winPtr->display)++;
         event.xmap.send_event    = False;
         event.xmap.display       = winPtr->display;
         event.xmap.event         = Tk_WindowId((Tk_Window)winPtr);
@@ -372,6 +383,7 @@ TkGlfwWindowMaximizeCallback(
     GLFWwindow *window,
     int maximized)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     
     if (!winPtr) {
@@ -409,6 +421,7 @@ TkGlfwCursorPosCallback(
     double xpos,
     double ypos)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
 
@@ -541,6 +554,7 @@ TkGlfwMouseButtonCallback(
     int action,
     int mods)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
     double xpos, ypos;
@@ -644,6 +658,7 @@ TkGlfwScrollCallback(
     double xoffset,
     double yoffset)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
     double xpos, ypos;
@@ -715,6 +730,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
 		  int action,
 		  int mods)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     TkWindow *focusWin;
     XEvent event;
@@ -779,6 +795,7 @@ TkGlfwCharCallback(
     TCL_UNUSED(GLFWwindow *), /* window */
     unsigned int codepoint)
 {
+    recordCallback();
     printf("TkGlfwCharCallback\n");
     TkWaylandStoreCharacterInput(codepoint);
 }
@@ -877,6 +894,7 @@ TkWaylandGetPendingCharacter(void)
 MODULE_SCOPE void
 TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
+    recordCallback();
     TkWindow      *winPtr = TkGlfwGetTkWindow(window);
     WindowMapping *mapping;
     int            w, h;

@@ -28,10 +28,8 @@ extern WindowMapping *windowMappingList;
 typedef struct ThreadSpecificData {
     bool           initialized;
     bool           waylandInitialized;
-    int            wakeupFd;           /* eventfd for waking up GLFW polling */
-    Tcl_FileProc   *watchProc;         /* stored for cleanup */
-    Tcl_TimerToken heartbeatTimer;     /* fallback timer */
-    int          shutdownInProgress; /* flag to prevent recursive shutdown */
+    int            shutdownInProgress; /* flag to prevent recursive shutdown */
+    int            callbackCount;  /* used by the setup proc to check for events. */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
@@ -42,11 +40,7 @@ static Tcl_ThreadDataKey dataKey;
 static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandEventsSetupProc(void *clientData, int flags);
 static void TkWaylandEventsCheckProc(void *clientData, int flags);
-static void HeartbeatTimerProc(void *clientData);
-static void TkWaylandWakeupFileProc(void *clientData, int mask);
 static void TkWaylandCheckForWindowClosure(void);
-
-#define HEARTBEAT_INTERVAL 16   /* ms - fallback when file events not working */
 
 /*
  *----------------------------------------------------------------------
@@ -75,90 +69,19 @@ Tk_WaylandSetupTkNotifier(void)
     TSD_INIT();
 
     if (!tsdPtr->initialized) {
-        /* Create eventfd for waking up the GLFW poll. */
-        tsdPtr->wakeupFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
-        if (tsdPtr->wakeupFd == -1) {
-            fprintf(stderr, "TkWaylandNotify: Failed to create eventfd: %s\n",
-                    strerror(errno));
-            /* Fall back to timer-only mode. */
-            tsdPtr->wakeupFd = -1;
-        }
-
         tsdPtr->initialized   = true;
         tsdPtr->shutdownInProgress = 0;
 
         /* Create the Tcl event source. */
         Tcl_CreateEventSource(TkWaylandEventsSetupProc,
                               TkWaylandEventsCheckProc, NULL);
-
-        /* Create fallback timer. */
-        tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
-                                                        HeartbeatTimerProc,
-                                                        NULL);
-
-        /* If we have a wakeup fd, create a file handler for it. */
-        if (tsdPtr->wakeupFd != -1) {
-            Tcl_CreateFileHandler(tsdPtr->wakeupFd, TCL_READABLE,
-                                  TkWaylandWakeupFileProc, NULL);
-        }
-
         TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
     
-        /* Wake up the event loop. */
-        TkWaylandWakeupGLFW();
+    /* Wake up the event loop. */
+    TkWaylandWakeupGLFW();
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWakeupFileProc --
- *
- *      Called when the wakeup file descriptor becomes readable.
- *      This happens when glfwPostEmptyEvent() is called from another
- *      thread or when we need to wake up the GLFW poll.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Reads from the eventfd to clear it, then triggers GLFW event
- *      processing.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-TkWaylandWakeupFileProc(TCL_UNUSED(void *),
-			TCL_UNUSED(int)) /* mask */
-{
-    TSD_INIT();
-    uint64_t u;
-    WindowMapping *m;
-    
-    if (tsdPtr->wakeupFd == -1) return;
-    
-    /* Read and discard the eventfd value. */
-    if (read(tsdPtr->wakeupFd, &u, sizeof(u)) != sizeof(u)) {
-        /* Ignore errors - just clear the fd. */
-    }
-    
-    /* Process any pending GLFW events. */
-    if (glfwContext.initialized && !tsdPtr->shutdownInProgress) {
-        glfwPollEvents();
-        TkWaylandCheckForWindowClosure();
-        
-#if 0
-        /* Begin event cycle for main window */
-        if (glfwContext.mainWindow) {
-            m = FindMappingByGLFW(glfwContext.mainWindow);
-            if (m && !m->frameOpen) {
-                TkWaylandBeginEventCycle(m);
-            }
-        }
-#endif
-    }
-}
 /*
  *----------------------------------------------------------------------
  *
@@ -192,56 +115,6 @@ TkWaylandCheckForWindowClosure(void)
     }
 }
 
-
-
-/*
- *----------------------------------------------------------------------
- *
- * HeartbeatTimerProc --
- *
- *      Periodic timer to keep the event loop responsive as a fallback.
- *      Reschedules itself and pumps GLFW events. Also checks for window
- *      closure.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Creates a new timer handler for the next heartbeat. Calls
- *      glfwPollEvents() to process pending Wayland/GLFW events.
- *
- *----------------------------------------------------------------------
- */
- 
-static void
-HeartbeatTimerProc(TCL_UNUSED(void *))
-{
-    TSD_INIT();
-
-    if (!tsdPtr->initialized || tsdPtr->shutdownInProgress) {
-        return;
-    }
-
-    /* If there are no windows left, start shutdown. */
-    if (Tk_GetNumMainWindows() == 0) {
-        tsdPtr->shutdownInProgress = 1;
-        Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
-        return;
-    }
-    
-    /* Poll GLFW events. */
-    if (glfwContext.initialized) {
-        glfwPollEvents();
-    }
-    
-    /* Reschedule timer if still initialized and not shutting down. */
-    if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
-        tsdPtr->heartbeatTimer = Tcl_CreateTimerHandler(HEARTBEAT_INTERVAL,
-                                                        HeartbeatTimerProc,
-                                                        NULL);
-    }
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -259,39 +132,46 @@ HeartbeatTimerProc(TCL_UNUSED(void *))
  *----------------------------------------------------------------------
  */
 
+/* Called by the callback functions to tell the setup proc not to block. */
+MODULE_SCOPE void
+recordCallback() {
+    TSD_INIT();
+    tsdPtr->callbackCount++;
+}
+
+/* Called by the setup proc to reset the callback counter. */
+MODULE_SCOPE void
+clearCallbackCount() {
+    TSD_INIT();
+    tsdPtr->callbackCount = 0;
+}
+    
 static void
 TkWaylandEventsSetupProc(TCL_UNUSED(void *),
 			 int flags)
 {
     TSD_INIT();
-    Tcl_Time blockTime = {0, 0};
+    Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
+    Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
     
     if (tsdPtr->shutdownInProgress) {
         /* Don't block during shutdown. */
-        Tcl_SetMaxBlockTime(&blockTime);
+        Tcl_SetMaxBlockTime(&noBlock);
         return;
     }
-    
-    /* If we have a wakeup fd, we can block indefinitely since we'll be woken. */
-    if (tsdPtr->wakeupFd != -1 && glfwContext.initialized) {
-        /* Check if GLFW has pending events. */
-	//// Actually, there is no way to check if GLFW has pending events.
-	//// All you can do is process all events, optionally blocking with
-	//// a timeout as long as the queue is empty.
-        if (glfwContext.initialized) {
-            /* Let Tcl block - we'll wake up via file event. */
-            return;
-        }
-    }
 
-    //// In order to use this timeout we would need to create 
-    //// which just calls 
-    /* Otherwise use timer-based approach. */
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-        /* Not interested in window events - use timer. */
-        blockTime.sec = 0;
-        blockTime.usec = HEARTBEAT_INTERVAL * 1000;
-        Tcl_SetMaxBlockTime(&blockTime);
+    /*
+     * Clear the callback counter and call glfwPollEvents.
+     * If there were no events, block for one display cycle.
+     * Otherwise, don't block.
+     */
+
+    clearCallbackCount();
+    glfwPollEvents();
+    if (tsdPtr->callbackCount) {
+	Tcl_SetMaxBlockTime(&noBlock);
+    } else {
+	Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
 
@@ -303,7 +183,7 @@ TkWaylandEventsSetupProc(TCL_UNUSED(void *),
  *      Process pending Wayland/GLFW events and queue Tk events.
  *      Called by Tcl_DoOneEvent after calling Tcl_WaitForEvent, which
  *      will call tclNotifierHooks.waitForEventProc if it is defined.
-        //// We should define it to call glfwWaitEventsTimeout. 
+ *      We are using the default waitForEventProc (I think).
  *
  * Results:
  *      None.
@@ -318,44 +198,11 @@ static void
 TkWaylandEventsCheckProc(TCL_UNUSED(void *),
 	int flags) 
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) return;
-
-    /*
-     * Process all events in the GLFW event queue, calling the registered
-     * callback for each one.
-     */
-
-    glfwPollEvents();
-#if 0
-    //// I don't think we need any of this.
-    /*
-     * Update window graphics.
-     */
-    
-    WindowMapping *m = windowMappingList;
-    while (m) {
-        if (m->glfwWindow && !m->frameOpen) {
-            glfwMakeContextCurrent(m->glfwWindow);
-
-#if 0 //This is done in BeginDraw
-            /* Start the frame once for the entire event pass. */
-            int fbw, fbh;
-            glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
-            nvgBeginFrame(glfwContext.vg, m->width, m->height, (float)fbw/m->width);
-            
-            /* Initial transform. */
-            nvgSave(glfwContext.vg);
-            nvgScale(glfwContext.vg, 1.0f, -1.0f);
-            nvgTranslate(glfwContext.vg, 0.0f, -(float)m->height);
-            
-            m->frameOpen = 1;
-	}
-#endif
-	/* Force a display flush at the end of this Tcl cycle. */
-	//Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
-        m = m->nextPtr;
+    //// Currently we don't need to do anything here. (????)
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+	printf("CheckProc called without WINDOW_EVENTS\n");
+	return;
     }
-#endif
 } 
 /*
  *----------------------------------------------------------------------
@@ -390,19 +237,6 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
        return;
     }
 
-    /* Delete timer handler. */
-    if (tsdPtr->heartbeatTimer) {
-        Tcl_DeleteTimerHandler(tsdPtr->heartbeatTimer);
-        tsdPtr->heartbeatTimer = NULL;
-    }
-
-    /* Delete file handler for wakeup fd. */
-    if (tsdPtr->wakeupFd != -1) {
-        Tcl_DeleteFileHandler(tsdPtr->wakeupFd);
-        close(tsdPtr->wakeupFd);
-        tsdPtr->wakeupFd = -1;
-    }
-
     /* Remove event source. */
     Tcl_DeleteEventSource(TkWaylandEventsSetupProc,
                           TkWaylandEventsCheckProc, NULL);
@@ -410,6 +244,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
     tsdPtr->initialized = false;
     
     /* Note: We don't call TkGlfwShutdown here. */
+    //// Why not?
 }
 
 /*
@@ -461,9 +296,9 @@ TkWaylandQueueExposeEvent(
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
-        //if (!Tk_IsMapped((Tk_Window)childPtr) ||
-	//    Tk_IsTopLevel((Tk_Window)childPtr)) {
-	if (Tk_IsTopLevel((Tk_Window)childPtr)) {
+        if (!Tk_IsMapped((Tk_Window)childPtr) ||
+	    Tk_IsTopLevel((Tk_Window)childPtr)) {
+	    //if (Tk_IsTopLevel((Tk_Window)childPtr)) {
             continue;
         }
         TkWaylandQueueExposeEvent(childPtr, 
@@ -497,9 +332,9 @@ TkWaylandWakeupGLFW(void)
     TSD_INIT();
     uint64_t u = 1;
     
-    if (tsdPtr->wakeupFd != -1 && tsdPtr->initialized && 
-        !tsdPtr->shutdownInProgress) {
-        write(tsdPtr->wakeupFd, &u, sizeof(u));
+    if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
+	//// This should post an empty event to GLFW!!!
+        //write(tsdPtr->wakeupFd, &u, sizeof(u));
     }
 }
 

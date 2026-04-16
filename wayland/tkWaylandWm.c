@@ -477,6 +477,7 @@ TkWmMapWindow(TkWindow *winPtr)
 void
 TkWmUnmapWindow(TkWindow *winPtr)
 {
+    printf("TkWmUnmapWindow: %s\n", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) return;
 
@@ -3712,9 +3713,13 @@ static void
 UpdateSizeHints(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    printf("UpdateSizeHints: min: %dx%d; max: %dx%d\n",
+	   wmPtr->minWidth, wmPtr->minHeight,
+	   wmPtr->maxWidth, wmPtr->maxHeight);
 
-    if (wmPtr->glfwWindow == NULL) return;
-    printf("glfwWindow is %p\n", wmPtr->glfwWindow);
+    if (wmPtr->glfwWindow == NULL) {
+	return;
+    }
 
     glfwSetWindowSizeLimits(wmPtr->glfwWindow,
 			    wmPtr->minWidth, wmPtr->minHeight,
@@ -4374,14 +4379,14 @@ XResizeWindow(
     unsigned int width,
     unsigned int height)
 {
+    printf("XResizeWindow -> %ux%u\n", width, height);
+#if 0
     GLFWwindow *gw = WindowToGLFW(window);
-
     if (gw != NULL) {
-	printf("XResizeWindow -> %ux%u\n", width, height);
         glfwSetWindowSize(gw, (int)width, (int)height);
         TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
     }
-
+#endif
     return Success;
 }
 
@@ -4408,12 +4413,14 @@ XMoveWindow(
     int    x,
     int    y)
 {
+    printf("XMoveWindow -> %d+%d - ignoring\n", x, y);
+#if 0
     GLFWwindow *gw = WindowToGLFW(window);
 
     if (gw != NULL) {
         glfwSetWindowPos(gw, x, y);
     }
-
+#endif
     return Success;
 }
 
@@ -4442,15 +4449,15 @@ XMoveResizeWindow(
     unsigned int width,
     unsigned int height)
 {
+printf("XMoveResizeWindow -> %ux%u - ignoring\n", width, height);
+#if 0
     GLFWwindow *gw = WindowToGLFW(window);
-
     if (gw != NULL) {
         glfwSetWindowPos(gw,  x, y);
-	printf("XMoveResizeWindow -> %ux%u\n", width, height);
-        glfwSetWindowSize(gw, (int)width, (int)height);
+        //glfwSetWindowSize(gw, (int)width, (int)height);
         TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
     }
-
+#endif
     return Success;
 }
 

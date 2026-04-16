@@ -21,12 +21,7 @@
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-//#include <GLES2/gl2.h>
 
-
-//#ifndef NANOVG_GLES2_IMPLEMENTATION
-//#define NANOVG_GLES2_IMPLEMENTATION
-//#end
 #define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
@@ -344,7 +339,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     }
 
     /* Poll one last time to let GLFW clean up internal state. */
-    glfwPollEvents();
+    ////glfwPollEvents();
     
     /* Terminate GLFW. */
     if (glfwContext.initialized) {
@@ -450,10 +445,11 @@ TkGlfwCreateWindow(
     if (tkWin != NULL)
         TkGlfwSetupCallbacks(window, tkWin);
 
+#if 0
     /* Wait for the compositor to confirm real dimensions. */
     int timeout = 0;
     while ((mapping->width == 0 || mapping->height == 0) && timeout < 100) {
-        glfwPollEvents();
+        ////glfwPollEvents();
         if (mapping->width == 0 || mapping->height == 0) {
             int w, h;
             glfwGetWindowSize(window, &w, &h);
@@ -465,6 +461,7 @@ TkGlfwCreateWindow(
         }
         timeout++;
     }
+#endif
 
     if (mapping->width  == 0) mapping->width  = width;
     if (mapping->height == 0) mapping->height = height;
@@ -799,7 +796,7 @@ MODULE_SCOPE void
 TkGlfwProcessEvents(void)
 {
     if (glfwContext.initialized && !shutdownInProgress) {
-        glfwPollEvents();
+        ////glfwPollEvents();
     }
 }
 #endif
