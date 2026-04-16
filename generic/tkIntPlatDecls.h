@@ -241,9 +241,7 @@ EXTERN Tk_Window	TkpGetCapture(void);
 /* Slot 48 is reserved */
 /* 49 */
 EXTERN Tk_Window	TkMacOSXGetContainer(TkWindow *winPtr);
-/* 50 */
-EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
-				unsigned int state);
+/* Slot 50 is reserved */
 /* 51 */
 EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
 #endif /* AQUA */
@@ -666,8 +664,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 /* Slot 48 is reserved */
 #define TkMacOSXGetContainer \
 	(tkIntPlatStubsPtr->tkMacOSXGetContainer) /* 49 */
-#define TkGenerateButtonEvent \
-	(tkIntPlatStubsPtr->tkGenerateButtonEvent) /* 50 */
+/* Slot 50 is reserved */
 #define TkGenWMDestroyEvent \
 	(tkIntPlatStubsPtr->tkGenWMDestroyEvent) /* 51 */
 #endif /* AQUA */
