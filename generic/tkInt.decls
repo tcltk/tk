@@ -392,7 +392,7 @@ declare 119 {
     int XUnionRectWithRegion(XRectangle *rect,
 	    Region src, Region dr_return)
 }
-declare 121 {
+declare 120 {
     int TkpWindowIsDark(Tk_Window tkwin, bool *isdark)
 }
 declare 121 {

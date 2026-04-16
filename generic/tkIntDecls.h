@@ -338,7 +338,7 @@ EXTERN int		XSetRegion(Display *display, GC gc, Region rgn);
 EXTERN int		XUnionRectWithRegion(XRectangle *rect, Region src,
 				Region dr_return);
 /* 120 */
-EXTERN int              TkpWindowIsDark(Tk_Window tkwin, bool *isdark);
+EXTERN int		TkpWindowIsDark(Tk_Window tkwin, bool *isdark);
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap(Display *display,
 				const void *source);
@@ -667,7 +667,7 @@ typedef struct TkIntStubs {
     int (*xRectInRegion) (Region rgn, int x, int y, unsigned int width, unsigned int height); /* 117 */
     int (*xSetRegion) (Display *display, GC gc, Region rgn); /* 118 */
     int (*xUnionRectWithRegion) (XRectangle *rect, Region src, Region dr_return); /* 119 */
-    void (*reserved120)(void);
+    int (*tkpWindowIsDark) (Tk_Window tkwin, bool *isdark); /* 120 */
     Pixmap (*tkpCreateNativeBitmap) (Display *display, const void *source); /* 121 */
     void (*tkpDefineNativeBitmaps) (void); /* 122 */
     void (*reserved123)(void);
@@ -977,7 +977,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->xSetRegion) /* 118 */
 #define XUnionRectWithRegion \
 	(tkIntStubsPtr->xUnionRectWithRegion) /* 119 */
-/* Slot 120 is reserved */
+#define TkpWindowIsDark \
+	(tkIntStubsPtr->tkpWindowIsDark) /* 120 */
 #define TkpCreateNativeBitmap \
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
 #define TkpDefineNativeBitmaps \
