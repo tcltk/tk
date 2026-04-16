@@ -584,6 +584,32 @@ test winWm-10.2 "Set and get -appearence light" -constraints win -setup {
     destroy .t
 } -result light
 
+test winWm-10.3 "Set and get -appearence auto" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    # Without the following update, the command fails.
+    update idletasks
+    wm attributes .t -appearance a
+    wm attributes .t -appearance
+} -cleanup {
+    destroy .t
+} -result auto
+
+test winWm-10.4 "-appearence auto is light on Windows" -constraints win -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    # Without the following update, the command fails.
+    update idletasks
+    wm attributes .t -appearance a
+    winfo isdark .t
+} -cleanup {
+    destroy .t
+} -result 0
+
 #
 # TESTFILE CLEANUP
 #

@@ -18,7 +18,6 @@
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
-#include <stdalign.h>
 #include "tkWinIco.h"
 
 
@@ -282,7 +281,14 @@ typedef struct TkWmInfo {
  * WM_FULLSCREEN -		Non-zero means that this window has been placed
  *				in the full screen mode. It should be mapped at
  *				0,0 and be the width and height of the screen.
- * WM_DARK_MODE			1 if toplevel decoration is in dark mode.
+ * WM_APPEARANCE_AUTO		First bit to encode the toplevel appearance mode.
+ * WM_APPEARANCE_DARK		Second bit to encode the toplevel appearance mode.
+ *				Possible values are:
+ *				AUTO=1,DARK=0: auto mode
+ *				AUTO=0,DARK=0: light mode
+ *				AUTO=0,DARK=1: dark mode
+ *				AUTO=1,DARK=1: undefined, may not happen
+ *				Note: auto mode always shows light decoration on MS-Win.
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -299,7 +305,8 @@ typedef struct TkWmInfo {
 #define WM_HEIGHT_NOT_RESIZABLE		(1<<11)
 #define WM_WITHDRAWN			(1<<12)
 #define WM_FULLSCREEN			(1<<13)
-#define WM_DARK_MODE			(1<<14)
+#define WM_APPEARANCE_AUTO		(1<<14)
+#define WM_APPEARANCE_DARK		(1<<15)
 
 /*
  * Window styles for various types of toplevel windows.
@@ -378,10 +385,19 @@ static UINT TaskbarButtonCreatedMessageId = WM_NULL;
 /* Reference to taskbarlist API for overlay icons. */
 ITaskbarList3 *ptbl;
 
+/* Attribute -appearance strings and enum values */
+static const char *const AttributeAppearanceStrings[] = {
+    "light", "dark", "auto", NULL
+};
+enum AttributeAppearances {
+    APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_AUTO
+};
+
 /*
  * Forward declarations for functions defined in this file:
  */
 
+static inline char *	AppearanceStringGet(int flags);
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);
 static void		GenerateConfigureNotify(TkWindow *winPtr);
@@ -2996,16 +3012,9 @@ WmAttributesCmd(
     int boolValue;
     Tcl_Size i, length;
     bool config_appearance = 0, config_fullscreen = 0, updatewrapper = 0;
-    BOOL  darkmode_attr = 0;
-    bool appearance_attr_changed = 0;
     bool fullscreen_attr_changed = 0, fullscreen_attr = 0;
-
-    static const char *const appearanceStrings[] = {
-	"light", "dark", NULL
-    };
-    enum appearances {
-	APPEARANCE_LIGHT, APPEARANCE_DARK
-    };
+    enum AttributeAppearances appearanceAttrValue = APPEARANCE_LIGHT;
+    bool appearanceAttrChanged = 0;
 
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
     configArgs:
@@ -3030,9 +3039,7 @@ WmAttributesCmd(
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-appearance", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewStringObj(
-		appearanceStrings[
-		    ((wmPtr->flags & WM_DARK_MODE)?APPEARANCE_DARK:APPEARANCE_LIGHT)],
+		Tcl_NewStringObj(AppearanceStringGet(wmPtr->flags),
 		TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-transparentcolor", TCL_INDEX_NONE));
@@ -3203,17 +3210,16 @@ WmAttributesCmd(
 	    if (config_appearance) {
 		if (objc == 4) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    appearanceStrings[
-				((wmPtr->flags & WM_DARK_MODE)?APPEARANCE_DARK:APPEARANCE_LIGHT)],
+			    AppearanceStringGet(wmPtr->flags),
 			    TCL_INDEX_NONE));
 		} else {
 		    int index;
-		    if (Tcl_GetIndexFromObj(interp, objv[i+1], appearanceStrings,
+		    if (Tcl_GetIndexFromObj(interp, objv[i+1], AttributeAppearanceStrings,
 			    "appearancename", 0, &index) != TCL_OK) {
 			return TCL_ERROR;
 		    }
-		    darkmode_attr = (index == APPEARANCE_DARK);
-		    appearance_attr_changed = true;
+		    appearanceAttrValue = index;
+		    appearanceAttrChanged = true;
 		}
 		config_appearance = 0;
 	    } else if (config_fullscreen) {
@@ -3272,8 +3278,9 @@ WmAttributesCmd(
 	    }
 	}
     }
-    if (appearance_attr_changed) {
+    if (appearanceAttrChanged) {
 
+	int isDark;
 	/*
 	 * Check for embedded window
 	 * Note: this may not be needed, as the command below will fail anyway
@@ -3289,6 +3296,13 @@ WmAttributesCmd(
 	}
 
 	/*
+	 * Translate the appearance mode to isDark 0/1 value.
+	 * AUTO appearance always uses false (light appearance) on MS-Win
+	 */
+
+	isDark = ((appearanceAttrValue == APPEARANCE_DARK) ? 1:0);
+
+	/*
 	 * This will fail if the Window is not physically visible.
 	 * The following will fail and requires an "update" between
 	 * the two commands:
@@ -3299,8 +3313,8 @@ WmAttributesCmd(
 	if (S_OK != DwmSetWindowAttribute(
 		wmPtr->wrapper,
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
-		&darkmode_attr,
-		sizeof(darkmode_attr)
+		&isDark,
+		sizeof(isDark)
 		)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't set appearance attribute for \"%s\":",
@@ -3309,10 +3323,24 @@ WmAttributesCmd(
 		    "APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	if (darkmode_attr) {
-	    wmPtr->flags |= WM_DARK_MODE;
-	} else {
-	    wmPtr->flags &= ~WM_DARK_MODE;
+	
+	/*
+	 * On success, set the mode value
+	 */
+	switch (appearanceAttrValue) {
+	case APPEARANCE_LIGHT:
+	    wmPtr->flags &= ~WM_APPEARANCE_AUTO;
+	    wmPtr->flags &= ~WM_APPEARANCE_DARK;
+	    break;
+	case APPEARANCE_DARK:
+	    wmPtr->flags &= ~WM_APPEARANCE_AUTO;
+	    wmPtr->flags |= WM_APPEARANCE_DARK;
+	    break;
+	case APPEARANCE_AUTO:
+	    default:
+	    wmPtr->flags |= WM_APPEARANCE_AUTO;
+	    wmPtr->flags &= ~WM_APPEARANCE_DARK;
+	    break;
 	}
     }
     if (fullscreen_attr_changed) {
@@ -3348,6 +3376,33 @@ WmAttributesCmd(
     }
 
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AppearanceStringGet --
+ *
+ *	Transform the flag bits to appearance strings.
+ *
+ * Results:
+ *	Pointer to a static string.
+ *
+ * Side effects:
+ *	none.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static inline char * AppearanceStringGet(int flags)
+{
+    if (flags & WM_APPEARANCE_AUTO) {
+	return AttributeAppearanceStrings[APPEARANCE_AUTO];
+    }
+    if (flags & WM_APPEARANCE_DARK) {
+	return AttributeAppearanceStrings[APPEARANCE_DARK];
+    }
+    return AttributeAppearanceStrings[APPEARANCE_LIGHT];
 }
 
 /*
