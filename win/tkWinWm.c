@@ -26,9 +26,8 @@
     For older Windows 10 versions, use 19
 */
 
-#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-#endif
+#define DWMWA_OLD_USE_IMMERSIVE_DARK_MODE 19
 
 /*
  * These next two defines are only valid on Win2K/XP+.
@@ -8870,21 +8869,17 @@ MODULE_SCOPE int
 TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
     HRESULT result;
-    long long answer; /* Windows cares about the alignment. */
+    long long answer = 0; /* Windows cares about the alignment. */
 
-    /*
-     * DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 10/11)
-     * For older Windows 10 versions, use 19
-     */
     result = DwmGetWindowAttribute(
         GetAncestor(hwnd, GA_ROOT),
         DWMWA_USE_IMMERSIVE_DARK_MODE,
 	&answer,
         sizeof(answer));
-    if (result != S_OK) { /* maybe we should be using 19? */
+    if (result != S_OK) { /* Maybe we should have used the old value? */
 	result = DwmGetWindowAttribute(
 	    GetAncestor(hwnd, GA_ROOT),
-	    DWMWA_USE_IMMERSIVE_DARK_MODE,
+	    DWMWA_OLD_USE_IMMERSIVE_DARK_MODE,
 	    &answer,
 	    sizeof(answer));
     }
