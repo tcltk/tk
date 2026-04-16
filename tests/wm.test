@@ -224,19 +224,6 @@ test wm-attributes-1.2.5.2 {usage} -constraints win32 -returnCodes error -body {
 test wm-attributes-1.2.5.3 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -appearance, -buttons, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, -stylemask, -class, -tabbingid, -tabbingmode, or -type}
-test wm-attributes-1.3.1 "Check winfo isdark" -constraints aquaOrWin32 -setup {
-    catch {destroy .t}
-    update
-} -body {
-    toplevel .t
-    # Without the following update, the command fails.
-    update idletasks
-    wm attributes .t -appearance d
-    winfo isdark .t
-} -cleanup {
-    destroy .t
-} -result 1
-
 #
 # COMMON TEST CLEANUP
 #
@@ -361,6 +348,18 @@ test wm-attributes-1.3.12 {another attribute, then -fullscreen, then another} -c
     wm attributes .t -fullscreen
 } -cleanup {
     deleteWindows
+} -result 1
+test wm-attributes-1.3.13 "Check winfo isdark" -constraints aquaOrWin32 -setup {
+    catch {destroy .t}
+    update
+} -body {
+    toplevel .t
+    # Without the following update, the command fails.
+    update idletasks
+    wm attributes .t -appearance d
+    winfo isdark .t
+} -cleanup {
+    destroy .t
 } -result 1
 
 test wm-attributes-1.4.0 {setting/unsetting fullscreen does not change the focus} -setup {
