@@ -813,8 +813,7 @@ static int
 GenerateButtonEvent(
     MouseEventData *medPtr)
 {
-    Tk_Window tkwin;
-    int dummy;
+    Tk_Window newPointerWin;
     TkDisplay *dispPtr;
 
 #ifdef UNUSED
@@ -835,13 +834,9 @@ GenerateButtonEvent(
 #endif
 
     dispPtr = TkGetDisplayList();
-    tkwin = Tk_IdToWindow(dispPtr->display, medPtr->window);
-
-    if (tkwin != NULL) {
-	tkwin = Tk_TopCoordsToWindow(tkwin, medPtr->local.h, medPtr->local.v,
-		&dummy, &dummy);
-    }
-    Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
+    newPointerWin = Tk_CoordsToWindow(medPtr->global.h, medPtr->global.v,
+    		dispPtr->warpMainwin);
+    Tk_UpdatePointer(newPointerWin, medPtr->global.h, medPtr->global.v, medPtr->state);
     return true;
 }
 
