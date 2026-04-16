@@ -18,7 +18,6 @@
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
-#include <stdalign.h>
 #include "tkWinIco.h"
 
 
