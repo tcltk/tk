@@ -397,7 +397,7 @@ enum AttributeAppearances {
  * Forward declarations for functions defined in this file:
  */
 
-static inline char *	AppearanceStringGet(int flags);
+static inline const char *	AppearanceStringGet(int flags);
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);
 static void		GenerateConfigureNotify(TkWindow *winPtr);
@@ -3394,7 +3394,7 @@ WmAttributesCmd(
  *----------------------------------------------------------------------
  */
 
-static inline char * AppearanceStringGet(int flags)
+static inline const char * AppearanceStringGet(int flags)
 {
     if (flags & WM_APPEARANCE_AUTO) {
 	return AttributeAppearanceStrings[APPEARANCE_AUTO];
