@@ -8810,6 +8810,9 @@ RemapWindows(
  *----------------------------------------------------------------------
  */
 
+/* force alignment */
+static BOOL isdark_ext = false;
+
 MODULE_SCOPE int
 TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
@@ -8818,12 +8821,20 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
      * DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 10/11)
      * For older Windows 10 versions, use 19
      */
-    result = DwmSetWindowAttribute(
-        hwnd,
+    result = DwmGetWindowAttribute(
+        GetAncestor(hwnd, GA_ROOT),
         DWMWA_USE_IMMERSIVE_DARK_MODE,
-	&isdark,
-        sizeof(*isdark));
-    return (result == S_OK ? TCL_OK : TCL_ERROR);
+	&isdark_ext,
+        sizeof(isdark_ext));
+    *isdark = (bool) isdark_ext; 
+    if (result != S_OK) {
+	char hexresult[32];
+	sprintf(hexresult, "%x", result);
+	FILE *errorfile = fopen("error", "w");
+	fwrite(hexresult, strlen(hexresult), 1, errorfile);
+	fclose(errorfile);
+    }	
+    return (result == S_OK ? TCL_OK : result);
 }
 
 
