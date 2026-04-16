@@ -24,12 +24,14 @@ necessarily in Tk 8.
  - [Add accessibility/screen reader support to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/733.md)
  - [Scroll entry with mouse wheel](https://core.tcl-lang.org/tips/doc/trunk/tip/736.md)
  - [Add a Wide.TSpinbox style to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/739.md)
- - [Add support for native file icons to the core]((https://core.tcl-lang.org/tips/doc/trunk/tip/743.md))
+ - [Add support for native file icons to the core](https://core.tcl-lang.org/tips/doc/trunk/tip/743.md)
  - [Re-implement the Aqua send command](https://core.tcl-lang.org/tk/info/1574913cc772201e)
  - [Make the selection colors of the listbox widget fully native-conform](https://core.tcl-lang.org/tips/doc/trunk/tip/747.md)
  - [Add support for bidrectional text / RTL languages on Windows and X11](https://core.tcl-lang.org/tk/info/058e738f9f06fe20)
+ - [Add Mouse Wheel Zoom Support to Tk Console](https://core.tcl-lang.org/tips/doc/trunk/tip/742.md)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
  - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
  - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
+ - [RTL/bidirectional text is a configure option on X11 (--enable-bidi). Additionally, there are some visual artifacts with bidi strings in the text widget in cursor and selection events on all platforms](https://core.tcl-lang.org/tk/tktview/cf94f5afd)
