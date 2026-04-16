@@ -2702,6 +2702,46 @@ test button-1.271 {configuration options: fallback to default} -setup {
     destroy .c
 } -result {0 0 0 0 0}
 
+# test for "-textangle" option for labels
+test button-1.272 {configuration option: "textangle" for label} -setup {
+    label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    pack .l
+    update
+} -body {
+    .l configure -textangle 10.5
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {10.5}
+test button-1.273 {configuration option: "textangle" for label} -setup {
+    label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    pack .l
+    update
+} -body {
+    .l configure -textangle 0 -text "Hello World"
+    update
+    set w [winfo reqwidth .l]
+    set h [winfo reqheight .l]
+    .l configure -textangle 90
+    update
+    expr {[winfo reqwidth .l] == $h && [winfo reqheight .l] == $w}
+} -cleanup {
+    destroy .l
+    unset w h
+} -result {1}
+test button-1.274 {configuration option: "textangle" for label} -setup {
+    label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    pack .l
+    update
+} -body {
+    .l configure -textangle 45 -text "Hello World"
+    update
+    expr {[winfo reqwidth .l] == [winfo reqheight .l]}
+} -cleanup {
+    destroy .l
+} -result {1}
+
+
 test button-2.1 {ButtonCreate - not enough arguments} -body {
     button
 } -returnCodes error -result {wrong # args: should be "button pathName ?-option value ...?"}
