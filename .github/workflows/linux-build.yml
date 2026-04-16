@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "bug-c3f5c85322-9-0-a"
     tags:
     - "core-*"
 permissions:
