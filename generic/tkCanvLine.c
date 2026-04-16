@@ -569,7 +569,7 @@ ConfigureLine(
     }
     if ((linePtr->lastArrowPtr != NULL) && (linePtr->arrow != ARROWS_LAST)
 	    && (linePtr->arrow != ARROWS_BOTH)) {
-	int i;
+	Tcl_Size i;
 
 	i = 2*(linePtr->numPoints-1);
 	linePtr->coordPtr[i] = linePtr->lastArrowPtr[0];
@@ -847,7 +847,7 @@ DisplayLine(
     XPoint staticPoints[MAX_STATIC_POINTS*3];
     XPoint *pointPtr;
     double linewidth;
-    int numPoints;
+    Tcl_Size numPoints;
     Tk_State state = itemPtr->state;
 
     if (!linePtr->numPoints || (linePtr->outline.gc == NULL)) {
@@ -876,7 +876,7 @@ DisplayLine(
 
     if ((linePtr->smooth) && (linePtr->numPoints > 2)) {
 	numPoints = linePtr->smooth->coordProc(canvas, NULL,
-		linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
+		(int)linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
     } else {
 	numPoints = linePtr->numPoints;
     }
@@ -889,7 +889,7 @@ DisplayLine(
 
     if ((linePtr->smooth) && (linePtr->numPoints > 2)) {
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
-		linePtr->numPoints, linePtr->splineSteps, pointPtr, NULL);
+		(int)linePtr->numPoints, linePtr->splineSteps, pointPtr, NULL);
     } else {
 	numPoints = TkCanvTranslatePath((TkCanvas *) canvas, numPoints,
 		linePtr->coordPtr, 0, pointPtr);
@@ -907,7 +907,7 @@ DisplayLine(
 		&linePtr->outline.tsoffset);
     }
     if (numPoints > 1) {
-	XDrawLines(display, drawable, linePtr->outline.gc, pointPtr, numPoints,
+	XDrawLines(display, drawable, linePtr->outline.gc, pointPtr, (int)numPoints,
 		CoordModeOrigin);
     } else {
 	int intwidth = (int) (linewidth + 0.5);
@@ -1014,7 +1014,7 @@ LineInsert(
 	}
     }
 
-    for (i=(int)beforeThis; i<length; i++) {
+    for (i=beforeThis; i<length; i++) {
 	newCoordPtr[i+objc] = linePtr->coordPtr[i];
     }
     if (linePtr->coordPtr) {
@@ -1082,7 +1082,7 @@ LineInsert(
 
 		    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 		} else {
-		    beforeThis -= (int)beforeThis % 6;
+		    beforeThis -= beforeThis % 6;
 		    objc += 4;
 		}
 
@@ -1096,16 +1096,16 @@ LineInsert(
 	}
 
 	if (itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW) {
-	    if ((int)beforeThis < 0) {
+	    if (beforeThis < 0) {
 		beforeThis = 0;
 	    }
-	    if ((int)beforeThis + objc > length) {
-		objc = length - (int)beforeThis;
+	    if (beforeThis + objc > length) {
+		objc = length - beforeThis;
 	    }
 
 	    itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
 	    itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
-	    if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis < 2)) {
+	    if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
 		/*
 		 * Include old first arrow.
 		 */
@@ -1115,7 +1115,7 @@ LineInsert(
 		    TkIncludePoint(itemPtr, coordPtr);
 		}
 	    }
-	    if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc >= length)) {
+	    if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
 		/*
 		 * Include old last arrow.
 		 */
@@ -1149,7 +1149,7 @@ LineInsert(
 	double width;
 	int intWidth;
 
-	if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis < 2)) {
+	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 2)) {
 	    /*
 	     * Include new first arrow.
 	     */
@@ -1159,7 +1159,7 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc >= length)) {
+	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
 	    /*
 	     * Include new last arrow.
 	     */
@@ -1219,10 +1219,10 @@ LineDeleteCoords(
     Tcl_Size last)			/* Index of last character to delete. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int count, i, first1, last1, nbDelPoints;
-    int oriNumPoints = linePtr->numPoints;
-    int canOptimize = 1;
-    int length = 2*linePtr->numPoints;
+    Tcl_Size count, i, first1, last1, nbDelPoints;
+    Tcl_Size oriNumPoints = linePtr->numPoints;
+    bool canOptimize = true;
+    Tcl_Size length = 2*linePtr->numPoints;
     double *coordPtr;
     Tk_State state = itemPtr->state;
 
@@ -1233,13 +1233,13 @@ LineDeleteCoords(
     first &= -2;	/* If odd, make it even. */
     last &= -2;
 
-    if ((int)first < 0) {
+    if (first < 0) {
 	first = 0;
     }
-    if ((int)last >= length) {
+    if (last >= length) {
 	last = length - 2;
     }
-    if ((int)first > (int)last) {
+    if (first > last) {
 	return;
     }
 
@@ -1302,7 +1302,7 @@ LineDeleteCoords(
 		 * something else than a multiple of 3 points.
 		 */
 
-		canOptimize = 0;
+		canOptimize = false;
 	    }
 	    else {
 		first1 -= first1 % 6;
@@ -1314,7 +1314,7 @@ LineDeleteCoords(
 	     * Custom smoothing method. No optimization is possible.
 	     */
 
-	    canOptimize = 0;
+	    canOptimize = false;
 	}
     }
 
@@ -1463,8 +1463,8 @@ LineToPoint(
     double staticSpace[2*MAX_STATIC_POINTS];
     double poly[10];
     double bestDist, dist, width;
-    int numPoints, count;
-    int changedMiterToBevel;	/* Non-zero means that a mitered corner had to
+    Tcl_Size numPoints, count;
+    bool changedMiterToBevel;	/* true means that a mitered corner had to
 				 * be treated as beveled after all because the
 				 * angle was < 11 degrees. */
 
@@ -1492,14 +1492,14 @@ LineToPoint(
 
     if ((linePtr->smooth) && (linePtr->numPoints > 2)) {
 	numPoints = linePtr->smooth->coordProc(canvas, NULL,
-		linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
+		(int)linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    linePoints = staticSpace;
 	} else {
 	    linePoints = (double *)Tcl_Alloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
-		linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
+		(int)linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
     } else {
 	numPoints = linePtr->numPoints;
 	linePoints = linePtr->coordPtr;
@@ -1527,7 +1527,7 @@ LineToPoint(
      * joints and caps.
      */
 
-    changedMiterToBevel = 0;
+    changedMiterToBevel = false;
     for (count = numPoints, coordPtr = linePoints; count >= 2;
 	    count--, coordPtr += 2) {
 	/*
@@ -1582,7 +1582,7 @@ LineToPoint(
 		} else if (dist < bestDist) {
 		    bestDist = dist;
 		}
-		changedMiterToBevel = 0;
+		changedMiterToBevel = false;
 	    }
 	}
 	if (count == 2) {
@@ -1591,7 +1591,7 @@ LineToPoint(
 	} else if (linePtr->joinStyle == JoinMiter) {
 	    if (!TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
 		    width, poly+4, poly+6)) {
-		changedMiterToBevel = 1;
+		changedMiterToBevel = true;
 		TkGetButtPoints(coordPtr, coordPtr+2, width, 0,
 			poly+4, poly+6);
 	    }
@@ -1687,7 +1687,8 @@ LineToArea(
     LineItem *linePtr = (LineItem *) itemPtr;
     double staticSpace[2*MAX_STATIC_POINTS];
     double *linePoints;
-    int numPoints, result;
+    Tcl_Size numPoints;
+	int result;
     double radius, width;
     Tk_State state = itemPtr->state;
 
@@ -1726,14 +1727,14 @@ LineToArea(
 
     if ((linePtr->smooth) && (linePtr->numPoints > 2)) {
 	numPoints = linePtr->smooth->coordProc(canvas, NULL,
-		linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
+		(int)linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    linePoints = staticSpace;
 	} else {
 	    linePoints = (double *)Tcl_Alloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
-		linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
+		(int)linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
     } else {
 	numPoints = linePtr->numPoints;
 	linePoints = linePtr->coordPtr;
@@ -2518,7 +2519,7 @@ LineToPostscript(
 	Tk_CanvasPsPath(interp, canvas, linePtr->coordPtr, linePtr->numPoints);
     } else if ((stipple == None) && linePtr->smooth->postscriptProc) {
 	linePtr->smooth->postscriptProc(interp, canvas, linePtr->coordPtr,
-		linePtr->numPoints, linePtr->splineSteps);
+		(int)linePtr->numPoints, linePtr->splineSteps);
     } else {
 	/*
 	 * Special hack: Postscript printers don't appear to be able to turn a
@@ -2533,13 +2534,13 @@ LineToPostscript(
 	int numPoints;
 
 	numPoints = linePtr->smooth->coordProc(canvas, NULL,
-		linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
+		(int)linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
 	pointPtr = staticPoints;
 	if (numPoints > MAX_STATIC_POINTS) {
 	    pointPtr = (double *)Tcl_Alloc(numPoints * 2 * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
-		linePtr->numPoints, linePtr->splineSteps, NULL, pointPtr);
+		(int)linePtr->numPoints, linePtr->splineSteps, NULL, pointPtr);
 	Tk_CanvasPsPath(interp, canvas, pointPtr, numPoints);
 	if (pointPtr != staticPoints) {
 	    Tcl_Free(pointPtr);

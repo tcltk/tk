@@ -75,7 +75,7 @@ typedef struct {
     Tcl_Obj *takeFocusObj;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. May be NULL. */
-    int isContainer;		/* 1 means this window is a container, 0 means
+    bool isContainer;		/* True means this window is a container, false means
 				 * that it isn't. */
     Tcl_Obj *useThisObj;	/* If the window is embedded, this points to
 				 * the name of the window in which it is
@@ -94,7 +94,7 @@ typedef struct {
     Tk_Image bgimg;		/* Derived from bgimgPtr by calling
 				 * Tk_GetImage, or NULL if bgimgPtr is
 				 * NULL. */
-    int tile;			/* Whether to tile the bgimg. */
+    bool tile;			/* Whether to tile the bgimg. */
 #ifndef TK_NO_DOUBLE_BUFFERING
     GC copyGC;			/* GC for copying when double-buffering. */
 #endif /* TK_NO_DOUBLE_BUFFERING */
@@ -190,7 +190,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
      * no border. It should be deprecated.
      */
     {TK_OPTION_BOOLEAN, "-container", "container", "Container",
-	DEF_FRAME_CONTAINER, TCL_INDEX_NONE, offsetof(Frame, isContainer), 0, 0, 0},
+	DEF_FRAME_CONTAINER, TCL_INDEX_NONE, offsetof(Frame, isContainer), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_FRAME_CURSOR, TCL_INDEX_NONE, offsetof(Frame, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -235,7 +235,7 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
-	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), 0, 0, 0},
+	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
 	NULL, 0, 0, 0, commonOptSpec, 0}
 };
@@ -261,7 +261,7 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
 	DEF_TOPLEVEL_SCREEN, offsetof(Frame, screenNameObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
-	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), 0, 0, 0},
+	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING, "-use", "use", "Use",
 	DEF_TOPLEVEL_USE, offsetof(Frame, useThisObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -326,7 +326,7 @@ static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(void *clientData);
 static void		DrawFrameBackground(Tk_Window tkwin, Pixmap pixmap,
 			    int highlightWidth, int borderWidth,
-			    Tk_Image bgimg, int bgtile);
+			    Tk_Image bgimg, bool bgtile);
 static void		FrameBgImageProc(void *clientData,
 			    int x, int y, int width, int height,
 			    int imgWidth, int imgHeight);
@@ -788,7 +788,7 @@ FrameWidgetObjCmd(
 			    "can't modify %s option after widget is created",
 			    arg));
 		    Tcl_SetErrorCode(interp, "TK", "FRAME", "CREATE_ONLY",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		    goto done;
 		}
@@ -1280,8 +1280,8 @@ ComputeFrameGeometry(
      * Calculate the available size for the label
      */
 
-    labelframePtr->labelBox.width = labelframePtr->labelReqWidth;
-    labelframePtr->labelBox.height = labelframePtr->labelReqHeight;
+    labelframePtr->labelBox.width = (unsigned short)labelframePtr->labelReqWidth;
+    labelframePtr->labelBox.height = (unsigned short)labelframePtr->labelReqHeight;
 
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->highlightWidthObj, &highlightWidth);
@@ -1307,10 +1307,10 @@ ComputeFrameGeometry(
 	}
     }
     if (labelframePtr->labelBox.width > maxWidth) {
-	labelframePtr->labelBox.width = maxWidth;
+	labelframePtr->labelBox.width = (unsigned short)maxWidth;
     }
     if (labelframePtr->labelBox.height > maxHeight) {
-	labelframePtr->labelBox.height = maxHeight;
+	labelframePtr->labelBox.height = (unsigned short)maxHeight;
     }
 
     /*
@@ -1330,23 +1330,23 @@ ComputeFrameGeometry(
     case LABELANCHOR_EN:
     case LABELANCHOR_ES:
 	labelframePtr->labelTextX = otherWidthT - padding;
-	labelframePtr->labelBox.x = otherWidth - padding;
+	labelframePtr->labelBox.x = (short)(otherWidth - padding);
 	break;
     case LABELANCHOR_N:
     case LABELANCHOR_NE:
     case LABELANCHOR_NW:
 	labelframePtr->labelTextY = padding;
-	labelframePtr->labelBox.y = padding;
+	labelframePtr->labelBox.y = (short)padding;
 	break;
     case LABELANCHOR_S:
     case LABELANCHOR_SE:
     case LABELANCHOR_SW:
 	labelframePtr->labelTextY = otherHeightT - padding;
-	labelframePtr->labelBox.y = otherHeight - padding;
+	labelframePtr->labelBox.y = (short)(otherHeight - padding);
 	break;
     default:
 	labelframePtr->labelTextX = padding;
-	labelframePtr->labelBox.x = padding;
+	labelframePtr->labelBox.x = (short)padding;
 	break;
     }
 
@@ -1358,31 +1358,31 @@ ComputeFrameGeometry(
     case LABELANCHOR_NW:
     case LABELANCHOR_SW:
 	labelframePtr->labelTextX = padding;
-	labelframePtr->labelBox.x = padding;
+	labelframePtr->labelBox.x = (short)padding;
 	break;
     case LABELANCHOR_N:
     case LABELANCHOR_S:
 	labelframePtr->labelTextX = otherWidthT / 2;
-	labelframePtr->labelBox.x = otherWidth / 2;
+	labelframePtr->labelBox.x = (short)(otherWidth / 2);
 	break;
     case LABELANCHOR_NE:
     case LABELANCHOR_SE:
 	labelframePtr->labelTextX = otherWidthT - padding;
-	labelframePtr->labelBox.x = otherWidth - padding;
+	labelframePtr->labelBox.x = (short)(otherWidth - padding);
 	break;
     case LABELANCHOR_EN:
     case LABELANCHOR_WN:
 	labelframePtr->labelTextY = padding;
-	labelframePtr->labelBox.y = padding;
+	labelframePtr->labelBox.y = (short)padding;
 	break;
     case LABELANCHOR_E:
     case LABELANCHOR_W:
 	labelframePtr->labelTextY = otherHeightT / 2;
-	labelframePtr->labelBox.y = otherHeight / 2;
+	labelframePtr->labelBox.y = (short)(otherHeight / 2);
 	break;
     default:
 	labelframePtr->labelTextY = otherHeightT - padding;
-	labelframePtr->labelBox.y = otherHeight - padding;
+	labelframePtr->labelBox.y = (short)(otherHeight - padding);
 	break;
     }
 }
@@ -2133,7 +2133,7 @@ DrawFrameBackground(
     int highlightWidth,
     int borderWidth,
     Tk_Image bgimg,
-    int bgtile)
+    bool bgtile)
 {
     int width, height;			/* Area to paint on. */
     int imageWidth, imageHeight;	/* Dimensions of image. */

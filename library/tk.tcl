@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact tk  9.1a1
+package require -exact tk  9.1a2
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -809,7 +809,7 @@ proc ::tk::mcmaxamp {args} {
 if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
-	uplevel #0 source -encoding utf-8 $file
+	uplevel #0 source $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script

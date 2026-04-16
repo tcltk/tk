@@ -767,6 +767,9 @@ ReadPPMStringHeader(
     unsigned char *dataBuffer;
 
     dataBuffer = Tcl_GetByteArrayFromObj(dataPtr, &dataSize);
+    if (!dataBuffer) {
+	return 0;
+    }
 
     /*
      * Read 4 space-separated fields from the string, ignoring comments (any

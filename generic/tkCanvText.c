@@ -1092,7 +1092,7 @@ TextInsert(
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteIndex, charsAdded;
+    Tcl_Size byteIndex, charsAdded;
     Tcl_Size byteCount;
     const char *string, *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1175,7 +1175,7 @@ TextDeleteChars(
 				 * (inclusive). */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteIndex, byteCount, charsRemoved;
+    Tcl_Size byteIndex, byteCount, charsRemoved;
     const char *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 

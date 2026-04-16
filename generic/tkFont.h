@@ -212,8 +212,6 @@ MODULE_SCOPE int	TkCreateNamedFont(Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *name, TkFontAttributes *faPtr);
 MODULE_SCOPE int	TkDeleteNamedFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name);
-MODULE_SCOPE int	TkFontGetFirstTextLayout(Tk_TextLayout layout,
-			    Tk_Font *font, char *dst);
 
 /*
  * Low-level API exported by platform-specific code to generic code.

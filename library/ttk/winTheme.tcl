@@ -68,17 +68,21 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure TNotebook.Tab -padding {2.25p 0.75p} -borderwidth 1
 	ttk::style map TNotebook.Tab -expand {selected {2 2 2 0}}
 
-	# Treeview:
+	# Treeview
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
 	ttk::setTreeviewRowHeight
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
+				background #d9d9d9 \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
+				background SystemWindowText \
 				selected SystemHighlightText]
 
 	ttk::style configure TProgressbar \

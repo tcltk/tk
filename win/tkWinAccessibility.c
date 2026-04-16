@@ -5,16 +5,16 @@
  *    Accessibility API for Tk on Windows and supports UI Automation
  *    through the MSAA-UIA bridge provided by Windows.
  *
- * Copyright (c) 2024-2025 Kevin Walzer
+ * Copyright © 2024-2025 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
 
+#include "tkWinInt.h"
 #include <tcl.h>
 #include <tk.h>
-#include "tkWinInt.h"
 #include <oleacc.h>
 #include <oaidl.h>
 #include <oleauto.h>
@@ -22,9 +22,7 @@
 #include <initguid.h>
 #include <tlhelp32.h>
 #include <tchar.h>
-#include <windows.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <limits.h>
 
 /*
@@ -931,7 +929,7 @@ TkAccRole(
     if (!win || !pvarRole) return E_INVALIDARG;
     TkGlobalLock();
 
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, (ClientData)win);
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(TkAccessibilityObject, win);
     if (!hPtr) {
 	TkGlobalUnlock();
 	return S_FALSE;
@@ -1511,7 +1509,7 @@ static int GetChildIdForTkWindow(
 	TkGlobalUnlock();
 	return -1;
     }
-    int id = PTR2INT(Tcl_GetHashValue(entry));
+    int id = (int)PTR2INT(Tcl_GetHashValue(entry));
     TkGlobalUnlock();
     return id;
 }
@@ -2011,7 +2009,7 @@ static int EmitFocusChanged(
     AssignChildIdsRecursive(toplevel, &nextId, interp, toplevel);
     LONG childId = GetChildIdForTkWindow(win, childIdTable);
     if (childId <= 0) {
-	Tcl_AppendResult(interp, "Failed to find child ID for ", path, NULL);
+	Tcl_AppendResult(interp, "Failed to find child ID for ", path, (char *)NULL);
 	TkGlobalUnlock();
 	return TCL_OK;
     }

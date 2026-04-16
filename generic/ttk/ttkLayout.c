@@ -31,7 +31,7 @@ Ttk_BoxContains(Ttk_Box box, int x, int y)
 	&& box.y <= y && y < box.y + box.height;
 }
 
-int
+bool
 TtkBoxEqual(Ttk_Box box1, Ttk_Box box2)
 {
     return box1.x == box2.x && box1.y == box2.y
