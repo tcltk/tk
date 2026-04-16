@@ -18,6 +18,7 @@
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
+#include <stdalign.h>
 #include "tkWinIco.h"
 
 
@@ -8810,13 +8811,12 @@ RemapWindows(
  *----------------------------------------------------------------------
  */
 
-/* force alignment */
-static BOOL isdark_ext = false;
-
 MODULE_SCOPE int
 TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
     HRESULT result;
+    long long answer; /* Windows cares about the alignment. */
+
     /*
      * DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 10/11)
      * For older Windows 10 versions, use 19
@@ -8824,9 +8824,17 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     result = DwmGetWindowAttribute(
         GetAncestor(hwnd, GA_ROOT),
         DWMWA_USE_IMMERSIVE_DARK_MODE,
-	&isdark_ext,
-        sizeof(isdark_ext));
-    *isdark = (bool) isdark_ext;
+	&answer,
+        sizeof(answer));
+    if (result != S_OK) { /* maybe we should be using 19? */
+	result = DwmGetWindowAttribute(
+	    GetAncestor(hwnd, GA_ROOT),
+	    DWMWA_USE_IMMERSIVE_DARK_MODE,
+	    &answer,
+	    sizeof(answer));
+    }
+    *isdark = answer ? true : false;
+
 #if 0
     /* Debug error results from DwmGetWindowAttribute. */
     if (result != S_OK) {
@@ -8837,7 +8845,7 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
 	fclose(errorfile);
     }
 #endif
-    return (result == S_OK ? TCL_OK : result);
+    return (result == S_OK ? TCL_OK : TCL_ERROR);
 }
 
 
