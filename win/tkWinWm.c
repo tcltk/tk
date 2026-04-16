@@ -8826,14 +8826,17 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
         DWMWA_USE_IMMERSIVE_DARK_MODE,
 	&isdark_ext,
         sizeof(isdark_ext));
-    *isdark = (bool) isdark_ext; 
+    *isdark = (bool) isdark_ext;
+#if 0
+    /* Debug error results from DwmGetWindowAttribute. */
     if (result != S_OK) {
 	char hexresult[32];
 	sprintf(hexresult, "%x", result);
 	FILE *errorfile = fopen("error", "w");
 	fwrite(hexresult, strlen(hexresult), 1, errorfile);
 	fclose(errorfile);
-    }	
+    }
+#endif
     return (result == S_OK ? TCL_OK : result);
 }
 
