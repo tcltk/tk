@@ -942,9 +942,9 @@ declare 47 aqua {
 declare 49 aqua {
     Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
 }
-declare 50 aqua {
-    int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
-}
+#
+# Slot 50 unused (WAS: TkGenerateButtonEvent)
+#
 declare 51 aqua {
     void TkGenWMDestroyEvent(Tk_Window tkwin)
 }
