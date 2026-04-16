@@ -476,7 +476,7 @@ GetRGBA(
  *----------------------------------------------------------------------
  */
 
-static Bool
+static bool
 SetCGColorComponents(
     SystemColorDatum *entry,
     unsigned long pixel,
@@ -519,7 +519,7 @@ SetCGColorComponents(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE Bool
+MODULE_SCOPE bool
 TkMacOSXInDarkMode(Tk_Window tkwin)
 {
 
@@ -563,7 +563,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkSetMacColor(
     unsigned long pixel,	/* Pixel value to convert. */
     void *macColor)		/* CGColorRef to modify. */
@@ -574,7 +574,7 @@ TkSetMacColor(
 
     return TkSetMacColor2(pixel, (CGColorRef *)macColor, useDarkAppearance);
 }
-int
+bool
 TkSetMacColor2(
     unsigned long pixel,	/* Pixel value to convert. */
     CGColorRef *color,		/* CGColorRef to modify. */

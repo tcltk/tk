@@ -1077,7 +1077,7 @@ typedef struct {
  */
 static int GetCellFromObj(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *obj,
-    int displayColumnOnly, int *displayColumn,
+    bool displayColumnOnly, int *displayColumn,
     TreeCell *cell)
 {
     Tcl_Size nElements;
@@ -1146,7 +1146,7 @@ static TreeCell *GetCellListFromObj(
 
     /* A two element list might be a single cell */
     if (n == 2) {
-	if (GetCellFromObj(interp, tv, objPtr, 0, NULL, &cell)
+	if (GetCellFromObj(interp, tv, objPtr, false, NULL, &cell)
 		== TCL_OK) {
 	    n = 1;
 	    oneCell = objPtr;
@@ -1158,7 +1158,7 @@ static TreeCell *GetCellListFromObj(
 
     cells = (TreeCell *)Tcl_Alloc(n * sizeof(TreeCell));
     for (i = 0; i < n; ++i) {
-	if (GetCellFromObj(interp, tv, elements[i], 0, NULL, &cells[i]) != TCL_OK) {
+	if (GetCellFromObj(interp, tv, elements[i], false, NULL, &cells[i]) != TCL_OK) {
 	    Tcl_Free(cells);
 	    return NULL;
 	}
@@ -2055,6 +2055,13 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item)
     }
     if (item != tv->tree.focus) {
 	state &= ~TTK_STATE_FOCUS;
+    }
+
+    if (!(tv->core.state & TTK_STATE_FOCUS) &&
+	(item->state & TTK_STATE_SELECTED)) {
+	state |= TTK_STATE_BACKGROUND;
+    } else {
+	state &= ~TTK_STATE_BACKGROUND;
     }
     return state;
 }
@@ -3643,7 +3650,7 @@ static int TreeviewSeeCommand(
 
     if (scrollRow2 >= tv->tree.yscroll.first + visibleRows) {
 	scrollRow2 = 1 + scrollRow2 - visibleRows;
-	TtkScrollTo(tv->tree.yscrollHandle, scrollRow2, 1);
+	TtkScrollTo(tv->tree.yscrollHandle, scrollRow2, true);
     }
 
     /* On small widgets (shorter than one row high, which is also the case
@@ -3651,7 +3658,7 @@ static int TreeviewSeeCommand(
      * scrolled down too far. This is why both conditions must be checked.
      */
     if (scrollRow1 < tv->tree.yscroll.first || item->height > visibleRows) {
-	TtkScrollTo(tv->tree.yscrollHandle, scrollRow1, 1);
+	TtkScrollTo(tv->tree.yscrollHandle, scrollRow1, true);
     }
 
     return TCL_OK;
@@ -3885,11 +3892,11 @@ static int CellSelectionRange(
     Tcl_Size i, nElements;
     int set = !(add || remove || toggle);
 
-    if (GetCellFromObj(interp, tv, fromCell, 1, &fromNo, &cellFrom)
+    if (GetCellFromObj(interp, tv, fromCell, true, &fromNo, &cellFrom)
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (GetCellFromObj(interp, tv, toCell, 1, &toNo, &cellTo)
+    if (GetCellFromObj(interp, tv, toCell, true, &toNo, &cellTo)
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -4274,8 +4281,8 @@ static int TreeviewCtagHasCommand(
 	return TCL_OK;
     } else if (objc == 6) {	/* Test if cell has specified tag */
 	Ttk_Tag tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
-	int result = 0;
-	if (GetCellFromObj(interp, tv, objv[5], 0, NULL, &cell) != TCL_OK) {
+	bool result = false;
+	if (GetCellFromObj(interp, tv, objv[5], false, NULL, &cell) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (cell.column == &tv->tree.column0) {
@@ -4291,7 +4298,7 @@ static int TreeviewCtagHasCommand(
 	    }
 	}
 
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
 	return TCL_OK;
     } else {
 	Tcl_WrongNumArgs(interp, 4, objv, "tagName ?cell?");

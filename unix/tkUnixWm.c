@@ -338,7 +338,7 @@ typedef struct WaitRestrictInfo {
  * Forward declarations for functions defined in this file:
  */
 
-static int		ComputeReparentGeometry(WmInfo *wmPtr);
+static bool		ComputeReparentGeometry(WmInfo *wmPtr);
 static void		ConfigureEvent(WmInfo *wmPtr,
 			    XConfigureEvent *eventPtr);
 static void		CreateWrapper(WmInfo *wmPtr);
@@ -4313,7 +4313,7 @@ ReparentEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ComputeReparentGeometry(
     WmInfo *wmPtr)		/* Information about toplevel window whose
 				 * reparent info is to be recomputed. */
@@ -4342,7 +4342,7 @@ ComputeReparentGeometry(
 
 	wmPtr->reparent = None;
 	wmPtr->xInParent = wmPtr->yInParent = 0;
-	return 0;
+	return false;
     }
     wmPtr->xInParent = xOffset + bd;
     wmPtr->yInParent = yOffset + bd;
@@ -4396,7 +4396,7 @@ ComputeReparentGeometry(
 	printf("     wmPtr %p coords %d,%d, offsets %d %d\n",
 		wmPtr, wmPtr->x, wmPtr->y, wmPtr->xInParent, wmPtr->yInParent);
     }
-    return 1;
+    return true;
 }
 
 /*
@@ -7429,7 +7429,7 @@ UpdateCommand(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
      TkWindow *winPtr,		/* Toplevel window to operate on. */
      int state)			/* One of IconicState, NormalState, or
@@ -7441,25 +7441,25 @@ TkpWmSetState(
 	wmPtr->hints.initial_state = WithdrawnState;
 	wmPtr->withdrawn = 1;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (XWithdrawWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		winPtr->screenNum) == 0) {
-	    return 0;
+	    return false;
 	}
 	WaitForMapNotify(winPtr, 0);
     } else if (state == NormalState) {
 	wmPtr->hints.initial_state = NormalState;
 	wmPtr->withdrawn = 0;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	UpdateHints(winPtr);
 	Tk_MapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
 	wmPtr->hints.initial_state = IconicState;
 	if (wmPtr->flags & WM_NEVER_MAPPED) {
-	    return 1;
+	    return true;
 	}
 	if (wmPtr->withdrawn) {
 	    UpdateHints(winPtr);
@@ -7468,13 +7468,13 @@ TkpWmSetState(
 	} else {
 	    if (XIconifyWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		    winPtr->screenNum) == 0) {
-		return 0;
+		return false;
 	    }
 	    WaitForMapNotify(winPtr, 0);
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*

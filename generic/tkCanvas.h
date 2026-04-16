@@ -291,8 +291,8 @@ typedef struct TkCanvas {
 
 MODULE_SCOPE int	TkCanvPostscriptObjCmd(TkCanvas *canvasPtr,
 			    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
-MODULE_SCOPE int	TkCanvTranslatePath(TkCanvas *canvPtr,
-			    int numVertex, double *coordPtr, int closed,
+MODULE_SCOPE Tcl_Size	TkCanvTranslatePath(TkCanvas *canvPtr,
+			    Tcl_Size numVertex, double *coordPtr, int closed,
 			    XPoint *outPtr);
 /*
  * Standard item types provided by Tk:

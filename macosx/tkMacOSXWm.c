@@ -628,6 +628,9 @@ static void placeAsTab(TKWindow *macWindow) {
 
 - (BOOL) canBecomeKeyWindow
 {
+    if ([NSApp tkWillExit]) {
+	return NO;
+    }
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
     if (!winPtr || !winPtr->wmInfoPtr) {
@@ -788,13 +791,15 @@ SetWindowSizeLimits(
 /*
  *----------------------------------------------------------------------
  *
- * FrontWindowAtPoint --
+ * FrontMostToplevelAtPoint --
  *
- *	Find frontmost toplevel window at a given screen location which has the
- *      specified mainPtr.  If the location is in the title bar, return NULL.
+ *  Determine the frontmost toplevel window on the screen at a given
+ *  screen location. The location must be inside the toplevel's content
+ *  frame, not inside the title bar.
  *
  * Results:
- *	TkWindow*.
+ *  A pointer to the TkWindow structure for the toplevel window, or NULL
+ *  if the location isn't inside any toplevel.
  *
  * Side effects:
  *	None.
@@ -803,7 +808,7 @@ SetWindowSizeLimits(
  */
 
 static TkWindow*
-FrontWindowAtPoint(
+FrontMostToplevelAtPoint(
     int x,
     int y)
 {
@@ -811,7 +816,7 @@ FrontWindowAtPoint(
 
     for (NSWindow *w in [NSApp orderedWindows]) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr) {
+	if (winPtr && Tk_IsMapped(winPtr)) {
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = windowFrame;
 
@@ -1006,6 +1011,9 @@ TkWmMapWindow(
     TkWindow *winPtr)		/* Top-level window that's about to be
 				 * mapped. */
 {
+    if (Tk_IsMapped(winPtr)) {
+	return;
+    }
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     XEvent event;
 
@@ -1109,11 +1117,13 @@ TkWmUnmapWindow(
     TkWindow *winPtr)		/* Top-level window that's about to be
 				 * unmapped. */
 {
-    winPtr->flags &= ~TK_MAPPED;
+    if (!Tk_IsMapped(winPtr)) {
+	return;
+    }
     if ((winPtr->window != None)
 	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)) {
+	winPtr->flags &= ~TK_MAPPED;
 	XEvent event;
-
 	event.xany.serial = LastKnownRequestProcessed(winPtr->display);
 	event.xany.send_event = False;
 	event.xany.display = winPtr->display;
@@ -2561,10 +2571,10 @@ WmFocusmodelCmd(
 
 static int
 WmForgetCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
-    TkWindow *winPtr,		/* Toplevel or Frame to work with */
-    TCL_UNUSED(Tcl_Interp *),	/* Current interpreter. */
-    TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
+    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TkWindow *winPtr,			/* Toplevel or Frame to work with */
+    TCL_UNUSED(Tcl_Interp *),		/* Current interpreter. */
+    TCL_UNUSED(Tcl_Size),		/* Number of arguments. */
     TCL_UNUSED(Tcl_Obj *const *))	/* Argument objects. */
 {
     Tk_Window frameWin = (Tk_Window)winPtr;
@@ -2577,20 +2587,21 @@ WmForgetCmd(
 	MacDrawable *macWin;
 
 	Tk_MakeWindowExist(frameWin);
-	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
-
+	if (winPtr->parentPtr) {
+	    Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+	}
 	macWin = (MacDrawable *)winPtr->window;
 
 	TkFocusJoin(winPtr);
 	Tk_UnmapWindow(frameWin);
 
 	macWin->toplevel->referenceCount--;
-	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
-	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
-
-	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
-
+	if (winPtr->parentPtr) {
+	    macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	    macWin->toplevel->referenceCount++;
+	    RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
+	}
 	/*
 	 * Make sure wm no longer manages this window
 	 */
@@ -5320,7 +5331,7 @@ Tk_CoordsToWindow(
      * Step 1: find the top-level window that contains the desired point.
      */
 
-    winPtr = FrontWindowAtPoint(rootX, rootY);
+    winPtr = FrontMostToplevelAtPoint(rootX, rootY);
     if (!winPtr) {
 	return NULL;
     }
@@ -5983,73 +5994,6 @@ InitialWindowBounds(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXResizable --
- *
- *	This function determines if the passed in window is part of a toplevel
- *	window that is resizable. If the window is resizable in the x, y or
- *	both directions, true is returned.
- *
- * Results:
- *	True if resizable, false otherwise.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXResizable(
-    TkWindow *winPtr)		/* Tk window or NULL. */
-{
-    WmInfo *wmPtr;
-
-    if (winPtr == NULL) {
-	return false;
-    }
-    while (winPtr->wmInfoPtr == NULL) {
-	winPtr = winPtr->parentPtr;
-    }
-
-    wmPtr = winPtr->wmInfoPtr;
-    if ((wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) &&
-	    (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE)) {
-	return false;
-    } else {
-	return true;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGrowToplevel --
- *
- *	The function is invoked when the user clicks in the grow region of a
- *	Tk window. The function will handle the dragging procedure and not
- *	return until completed. Finally, the function may place information
- *	Tk's event queue is the window was resized.
- *
- * Results:
- *	True if events were placed on event queue, false otherwise.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXGrowToplevel(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(XPoint))
-{
-    return false;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkSetWMName --
  *
  *	Set the title for a toplevel window. If the window is embedded, do not
@@ -6216,7 +6160,7 @@ TkMacOSXIsWindowZoomed(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkMacOSXZoomToplevel(
     void *whichWindow,		/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
@@ -7007,7 +6951,7 @@ TkpGetWrapperWindow(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -7065,30 +7009,7 @@ TkpWmSetState(
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 setStateEnd:
-    return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpIsWindowFloating --
- *
- *	Returns 1 if a window is floating, 0 otherwise.
- *
- * Results:
- *	1 or 0 depending on window's floating attribute.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpIsWindowFloating(
-    void *wRef)
-{
-    return [(NSWindow *)wRef level] == kCGFloatingWindowLevel;
+    return true;
 }
 
 /*

@@ -72,10 +72,10 @@ extern "C" {
 #endif
 #   define TK_MINOR_VERSION	1
 #   define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#   define TK_RELEASE_SERIAL	1
+#   define TK_RELEASE_SERIAL	2
 
 #   define TK_VERSION		"9.1"
-#   define TK_PATCH_LEVEL		"9.1a1"
+#   define TK_PATCH_LEVEL		"9.1a2"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -93,6 +93,7 @@ extern "C" {
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
+#   define NeedWidePrototypes 1
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>

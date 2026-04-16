@@ -338,6 +338,24 @@ test listbox-1.55 {configuration options} -body {
 } -cleanup {
     .l configure -listvar [lindex [.l configure -listvar] 3]
 } -result {testVariable testVariable}
+test listbox-1.56 {configuration options} -body {
+    .l configure -inactiveselectbackground #110022
+    list [lindex [.l configure -inactiveselectbackg] 4] [.l cget -inactiveselectbackg]
+} -cleanup {
+    .l configure -inactiveselectbackg [lindex [.l configure -inactiveselectbackg] 3]
+} -result {{#110022} #110022}
+test listbox-1.57 {configuration options} -body {
+    .l configure -inactiveselectbackg bogus
+} -returnCodes error -result {unknown color name "bogus"}
+test listbox-1.58 {configuration options} -body {
+    .l configure -inactiveselectforeground #654321
+    list [lindex [.l configure -inactiveselectforeg] 4] [.l cget -inactiveselectforeg]
+} -cleanup {
+    .l configure -inactiveselectforeg [lindex [.l configure -inactiveselectforeg] 3]
+} -result {{#654321} #654321}
+test listbox-1.59 {configuration options} -body {
+    .l configure -inactiveselectforeg bogus
+} -returnCodes error -result {unknown color name "bogus"}
 
 
 test listbox-2.1 {Tk_ListboxCmd procedure} -body {
@@ -553,7 +571,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} -body {
 } -result 0
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} -body {
     llength [.l configure]
-} -result 28
+} -result 30
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} -body {
     .l configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}

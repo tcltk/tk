@@ -40,7 +40,7 @@ resetWindows
 # a chance to complete.
 #
 proc raiseDelay {} {
-    after 250;
+    after 300;
     update idletasks
     update
 }

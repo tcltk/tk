@@ -555,7 +555,7 @@ UpdateCursor(
 	}
 	winPtr = winPtr->parentPtr;
     }
-    TkpSetCursor((TkpCursor) cursor);
+    TkpSetCursor(cursor);
 }
 
 /*

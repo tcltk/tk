@@ -1511,32 +1511,6 @@ ClipToGC(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXMakeStippleMap --
- *
- *	Given a drawable and a stipple pattern this function draws the pattern
- *	repeatedly over the drawable. The drawable can then be used as a mask
- *	for bit-bliting a stipple pattern over an object.
- *
- * Results:
- *	A BitMap data structure.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void *
-TkMacOSXMakeStippleMap(
-    TCL_UNUSED(Drawable),	/* Window to apply stipple. */
-    TCL_UNUSED(Drawable))	/* The stipple pattern. */
-{
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * Tk_DrawHighlightBorder --
  *
  *	This procedure draws a rectangular ring around the outside of a widget

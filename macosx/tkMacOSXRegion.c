@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-static void ReleaseRegion(TkRegion r);
+static void ReleaseRegion(Region r);
 
 #ifdef DEBUG
 static int totalRegions = 0;
@@ -468,8 +468,8 @@ XOffsetRegion(
 
 void
 TkpCopyRegion(
-    TkRegion dst,
-    TkRegion src)
+    Region dst,
+    Region src)
 {
     ChkErr(HIShapeSetWithShape, (HIMutableShapeRef)dst, (HIShapeRef)src);
 }

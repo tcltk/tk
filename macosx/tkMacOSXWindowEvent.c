@@ -35,6 +35,7 @@ static int		GenerateUpdates(
 			    CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
+static void		GenerateWMDestroyEvent(Tk_Window tkwin);
 
 #pragma mark TKApplication(TKWindowEvent)
 
@@ -293,11 +294,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	TkGenWMDestroyEvent((Tk_Window)winPtr);
+	GenerateWMDestroyEvent((Tk_Window)winPtr);
     }
 
     /*
-     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window, so
+     * If necessary, GenerateWMDestroyEvent() handles [close]ing the window, so
      * can always return NO from -windowShouldClose: for a Tk window.
      */
 
@@ -307,6 +308,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 // Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
@@ -317,6 +321,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 // Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -828,7 +835,7 @@ TkGenWMConfigureEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenWMDestroyEvent --
+ * GenerateWMDestroyEvent --
  *
  *	Generate a WM Destroy event for Tk.
  *
@@ -842,7 +849,7 @@ TkGenWMConfigureEvent(
  */
 
 void
-TkGenWMDestroyEvent(
+GenerateWMDestroyEvent(
     Tk_Window tkwin)
 {
     XEvent event;

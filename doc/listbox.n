@@ -14,13 +14,13 @@ listbox \- Create and manipulate 'listbox' item list widgets
 .SH SYNOPSIS
 \fBlistbox\fI pathName \fR?\fIoptions\fR?
 .SO
-\-background	\-borderwidth	\-cursor
-\-disabledforeground	\-exportselection	\-font
-\-foreground	\-highlightbackground	\-highlightcolor
-\-highlightthickness	\-justify	\-relief
-\-selectbackground	\-selectborderwidth	\-selectforeground
-\-setgrid	\-takefocus	\-xscrollcommand
-\-yscrollcommand
+\-background	\-highlightbackground	\-selectforeground
+\-borderwidth	\-highlightcolor	\-setgrid
+\-cursor	\-highlightthickness	\-takefocus
+\-disabledforeground	\-justify	\-xscrollcommand
+\-exportselection	\-relief	\-yscrollcommand
+\-font	\-selectbackground
+\-foreground	\-selectborderwidth
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-activestyle activeStyle ActiveStyle
@@ -33,6 +33,23 @@ The default is \fBunderline\fR on Windows, and \fBdotbox\fR elsewhere.
 Specifies the desired height for the window, in lines.
 If zero or less, then the desired height for the window is made just
 large enough to hold all the elements in the listbox.
+.OP \-inactiveselectbackground inactiveSelectBackground Foreground
+Specifies the background color to use for the selection when the window does
+not have the input focus.  The option's value may be an empty string or have
+any of the forms accepted by \fBTk_GetColor\fR.  If empty then the value of the
+\fB-selectbackground\fR widget or item configuration option is used when the
+window does not have the focus.  The default value depends on the windowing
+system: it is non-empty on \fBaqua\fR and \fBwin32\fR, and an empty string on
+\fBx11\fR.
+.OP \-inactiveselectforeground inactiveSelectForeground Background
+Specifies the foreground color to use for the selection when the window does
+not have the input focus.  The option's value may be an empty string or have
+any of the forms accepted by \fBTk_GetColor\fR.  This option is only relevant
+if the value of the \fB-inactiveselectbackground\fR option is non-empty, in
+which case, if the value of this option is an empty string then the value of
+the \fB-selectforeground\fR widget configuration option is used when the window
+does not have the focus.  The default value depends on the windowing system: it
+is non-empty on \fBaqua\fR and \fBwin32\fR, and an empty string on \fBx11\fR.
 .OP \-listvariable listVariable Variable
 Specifies the name of a global variable.  The value of the variable is a list to
 be displayed inside the widget; if the variable value changes then the

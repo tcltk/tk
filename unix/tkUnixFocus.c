@@ -92,7 +92,7 @@ TkpChangeFocus(
 	    XQueryTree(dispPtr->display, window, &root, &parent, &children,
 		    &numChildren);
 	    if (children != NULL) {
-		XFree((void *) children);
+		XFree(children);
 	    }
 	    if (parent == root) {
 		goto done;

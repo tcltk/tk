@@ -23,21 +23,22 @@
  * DISABLED -		Foreground color when widget is disabled.
  */
 
-#define BLACK		"Black"
-#define WHITE		"White"
+#define BLACK			"Black"
+#define WHITE			"White"
 
-#define NORMAL_BG	"SystemButtonFace"
-#define NORMAL_FG	"SystemButtonText"
-#define ACTIVE_BG	NORMAL_BG
-#define TEXT_FG		"SystemWindowText"
-#define SELECT_BG	"SystemHighlight"
-#define SELECT_FG	"SystemHighlightText"
-#define TROUGH		"SystemScrollbar"
-#define INDICATOR	"SystemWindow"
-#define DISABLED	"SystemDisabledText"
-#define MENU_BG		"SystemMenu"
-#define MENU_FG		"SystemMenuText"
-#define HIGHLIGHT	"SystemWindowFrame"
+#define NORMAL_BG		"SystemButtonFace"
+#define NORMAL_FG		"SystemButtonText"
+#define ACTIVE_BG		NORMAL_BG
+#define TEXT_FG			"SystemWindowText"
+#define SELECT_BG		"SystemHighlight"
+#define SELECT_FG		"SystemHighlightText"
+#define INACTIVE_SELECT_BG	"#d9d9d9"
+#define TROUGH			"SystemScrollbar"
+#define INDICATOR		"SystemWindow"
+#define DISABLED		"SystemDisabledText"
+#define MENU_BG			"SystemMenu"
+#define MENU_FG			"SystemMenuText"
+#define HIGHLIGHT		"SystemWindowFrame"
 
 /*
  * Defaults for labels, buttons, checkbuttons, and radiobuttons:
@@ -232,9 +233,11 @@
 #define DEF_LISTBOX_RELIEF		"sunken"
 #define DEF_LISTBOX_SCROLL_COMMAND	""
 #define DEF_LISTBOX_LIST_VARIABLE	""
+#define DEF_LISTBOX_INACTIVE_SELECT_COLOR	INACTIVE_SELECT_BG
 #define DEF_LISTBOX_SELECT_COLOR	SELECT_BG
 #define DEF_LISTBOX_SELECT_MONO		BLACK
 #define DEF_LISTBOX_SELECT_BD		"0"
+#define DEF_LISTBOX_INACTIVE_SELECT_FG_COLOR	NORMAL_FG
 #define DEF_LISTBOX_SELECT_FG_COLOR	SELECT_FG
 #define DEF_LISTBOX_SELECT_FG_MONO	WHITE
 #define DEF_LISTBOX_SELECT_MODE		"browse"
