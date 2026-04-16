@@ -867,24 +867,29 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
+    Window window;
+
+    int rootx, rooty;
+    unsigned int modifierState;
 
     if (dispPtr->warpWindow) {
 	int x, y;
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
+	window = Tk_WindowId(dispPtr->warpWindow);
     } else {
 	pt.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
+	window = None;
     }
-
     CGWarpMouseCursorPosition(pt);
 
-    if (dispPtr->warpWindow) {
-	GenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
-    } else {
-	GenerateButtonEventForXPointer(None);
-    }
+    XQueryPointer(NULL, window, NULL, NULL, &rootx, &rooty, NULL, NULL,
+	    &modifierState);
+    Tk_Window newPointerWin = Tk_CoordsToWindow(rootx, rooty,
+	    dispPtr->warpMainwin);
+    Tk_UpdatePointer(newPointerWin, rootx, rooty, modifierState);
 }
 
 /*
