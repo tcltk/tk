@@ -216,7 +216,8 @@ wrapping, depending on the value of option \fB\-wrap\fR).
 .OP \-insertforeground insertForeground InsertForeground
 Specifies the color to use as foreground for the characters in the area
 covered by the insertion cursor. This color will not be overridden with
-tagging options. Note that this color will not be used unless option
+tagging options. The default is the same as for the \fB\-background\fR
+option. Note that this color will not be used unless option
 \fB\-showinsertforeground\fR is enabled.
 .OP \-insertunfocussed insertUnfocussed InsertUnfocussed
 .VS 8.6
@@ -308,8 +309,8 @@ be edited or selected. Per default the end of text symbol will not be shown.
 .OP \-showinsertforeground showInsertForeground ShowInsertForeground
 Use color option \fB\-insertforeground\fR for the foreground of characters
 covered by the insert cursor if this option is enabled, otherwise the color
-of the characters will not change when coverd by the insertion cursor. Per
-default this option is disabled.
+of the characters will not change when covered by the insertion cursor. Per
+default this option is enabled.
 .OP \-spacemode spaceMode SpaceMode
 Specifies the mode how spaces (U+0020) will be displayed. Default is
 \fBnone\fR, this means that spaces will be displayed like any character, but

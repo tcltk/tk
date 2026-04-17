@@ -309,7 +309,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-showendoftext", "showEndOfText", "ShowEndOfText",
 	"0", TCL_INDEX_NONE, offsetof(TkText, showEndOfText), TK_OPTION_VAR(bool), 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BOOLEAN, "-showinsertforeground", "showInsertForeground", "ShowInsertForeground",
-	"0", TCL_INDEX_NONE, offsetof(TkText, showInsertFgColor), TK_OPTION_VAR(bool), 0, 0},
+	"1", TCL_INDEX_NONE, offsetof(TkText, showInsertFgColor), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING_TABLE, "-spacemode", "spaceMode", "SpaceMode",
 	"none", TCL_INDEX_NONE, offsetof(TkText, spaceMode), TK_OPTION_ENUM_VAR, spaceModeStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",

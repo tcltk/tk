@@ -1021,6 +1021,9 @@ TkCreateMainWindow(
 #if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_ATK)
 		".no-atk"
 #endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !(defined(TK_USE_WAYLAND) || defined(HAVE_BIDI))
+		".no-bidi"
+#endif
 #ifdef TK_NO_DEPRECATED
 		".no-deprecate"
 #endif

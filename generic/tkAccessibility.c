@@ -48,7 +48,7 @@ int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
 			       Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     Tcl_Size objc, Tcl_Obj *const objv[]);
-void    TkAccessibility_Cleanup(ClientData clientData);
+void    TkAccessibility_Cleanup(void *clientData);
 /* Cleanup proc when the window is destroyed. */
 static  Tk_EventProc WindowDestroyHandler;
 
