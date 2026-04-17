@@ -2273,8 +2273,9 @@ Tk_WinfoObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(isdark));
 	    break;
 	} else {
+	    string = Tk_PathName(tkwin);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"could not determine appearance of %s", Tk_PathName(tkwin)));
+		"could not determine appearance of %s", string));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "ISDARK", string, (char *)NULL);
 	    return TCL_ERROR;
 	}

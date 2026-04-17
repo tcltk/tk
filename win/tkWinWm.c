@@ -8865,7 +8865,7 @@ RemapWindows(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+int
 TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
     HRESULT result;
