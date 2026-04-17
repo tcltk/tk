@@ -495,7 +495,7 @@ MODULE_SCOPE int  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
  */
 
 MODULE_SCOPE void TkGlfwProcessEvents(void);
-MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow, TkWindow *tkWin);
+MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
 
@@ -527,28 +527,6 @@ MODULE_SCOPE void TkWaylandWakeupGLFW(void);
 MODULE_SCOPE NVGcolor TkGlfwXColorToNVG(XColor *xcolor);
 MODULE_SCOPE NVGcolor TkGlfwPixelToNVG(unsigned long pixel);
 MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
-
-/*
- *----------------------------------------------------------------------
- *
- * GLFW Callback Functions
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void TkGlfwWindowCloseCallback(GLFWwindow *window);
-MODULE_SCOPE void TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height);
-MODULE_SCOPE void TkGlfwFramebufferSizeCallback(GLFWwindow *window, int width, int height);
-MODULE_SCOPE void TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
-MODULE_SCOPE void TkGlfwWindowFocusCallback(GLFWwindow *window, int focused);
-MODULE_SCOPE void TkGlfwWindowIconifyCallback(GLFWwindow *window, int iconified);
-MODULE_SCOPE void TkGlfwWindowMaximizeCallback(GLFWwindow *window, int maximized);
-MODULE_SCOPE void TkGlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos);
-MODULE_SCOPE void TkGlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-MODULE_SCOPE void TkGlfwScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
-MODULE_SCOPE void TkGlfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-MODULE_SCOPE void TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint);
-MODULE_SCOPE void TkGlfwWindowRefreshCallback(GLFWwindow *window);
 
 /*
  *----------------------------------------------------------------------

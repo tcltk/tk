@@ -4219,13 +4219,13 @@ XDestroySubwindows(
  *
  * XMapWindow --
  *
- *	Make a window visible.
+ *	Called by Tk_MapWindow.  But there is nothing that we need to do.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Shows the GLFW window.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -4233,14 +4233,15 @@ XDestroySubwindows(
 int
 XMapWindow(
     TCL_UNUSED(Display *),
-    Window window)
+    TCL_UNUSED(Window))
 {
+#if 0
     GLFWwindow *gw = WindowToGLFW(window);
 
     if (gw != NULL) {
         glfwShowWindow(gw);
     }
-
+#endif
     return Success;
 }
 
@@ -4306,13 +4307,13 @@ XMapSubwindows(
  *
  * XUnmapWindow --
  *
- *	Hide a window.
+ *	Called by Tk_UnmapWindow.  But there is nothing we need to do.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Hides the GLFW window.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -4320,14 +4321,8 @@ XMapSubwindows(
 int
 XUnmapWindow(
     TCL_UNUSED(Display *),
-    Window window)
+    TCL_UNUSED(Window))
 {
-    GLFWwindow *gw = WindowToGLFW(window);
-
-    if (gw != NULL) {
-        glfwHideWindow(gw);
-    }
-
     return Success;
 }
 

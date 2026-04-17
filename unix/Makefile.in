@@ -9,7 +9,7 @@
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
-VERSION		= @TK_VERSION@
+VERSION			= @TK_VERSION@
 MAJOR_VERSION		= @TK_MAJOR_VERSION@
 MINOR_VERSION		= @TK_MINOR_VERSION@
 PATCH_LEVEL		= @TK_PATCH_LEVEL@
@@ -468,7 +468,7 @@ WAYLAND_OBJS            = \
       tkGlfwInit.o tkWayland.o  \
      tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
      tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
-     tkWaylandEmbed.o tkWaylandEvent.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
+     tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
      tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
      tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
      tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
@@ -619,7 +619,6 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWayland3D.c  $(WAYLAND_DIR)/tkWaylandAccessibility.c $(WAYLAND_DIR)/tkWaylandButton.c \
     $(WAYLAND_DIR)/tkWaylandClipboard.c $(WAYLAND_DIR)/tkWaylandColor.c $(WAYLAND_DIR)/tkWaylandConfig.c \
     $(WAYLAND_DIR)/tkWaylandCursor.c $(WAYLAND_DIR)/tkWaylandDraw.c \
-    $(WAYLAND_DIR)/tkWaylandEmbed.c $(WAYLAND_DIR)/tkWaylandEvent.c \
     $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandFont.c \
     $(WAYLAND_DIR)/tkWaylandGC.c $(WAYLAND_DIR)/tkWaylandImage.c \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
@@ -1482,9 +1481,6 @@ tkWaylandDraw.o: $(WAYLAND_DIR)/tkWaylandDraw.c
 
 tkWaylandEmbed.o: $(WAYLAND_DIR)/tkWaylandEmbed.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandEmbed.c
-
-tkWaylandEvent.o: $(WAYLAND_DIR)/tkWaylandEvent.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandEvent.c
 
 tkWaylandFocus.o: $(WAYLAND_DIR)/tkWaylandFocus.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFocus.c

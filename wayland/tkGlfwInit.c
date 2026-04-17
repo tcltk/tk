@@ -443,7 +443,7 @@ TkGlfwCreateWindow(
     glfwSetWindowUserPointer(window, mapping);
 
     if (tkWin != NULL)
-        TkGlfwSetupCallbacks(window, tkWin);
+        TkGlfwSetupCallbacks(window);
 
 #if 0
     /* Wait for the compositor to confirm real dimensions. */
