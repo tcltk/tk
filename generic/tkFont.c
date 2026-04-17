@@ -2474,10 +2474,22 @@ TkDrawAngledTextLayout(
 }
 
 /*
- * This function calculates the width and height of a text layout when is
- * rotated by 'angle' degrees.
- * Additionally, it can return the required offsets from the origin
- * point (nw) so TkDrawAngledTextlayout/TkDrawAngledChars works correctly.
+ *---------------------------------------------------------------------------
+ *
+ * TkAdjustAngledTextLayout --
+ *
+ *	Calculates the width and height of a text layout when it is
+ *	rotated by 'angle' degrees.
+ *
+ * Results:
+ *	Returns the adjusted width and height. Additionally, if not
+ *	NULL, it returns the required offsets from the origin point (nw)
+ *	so TkDrawAngledTextlayout works correctly.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
  */
 void
 TkAdjustAngledTextLayout(
