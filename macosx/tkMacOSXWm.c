@@ -1243,33 +1243,40 @@ TkWmDeadWindow(
     NSPoint mouse = [NSEvent mouseLocation];
     [NSApp setTkPointerWindow:nil];
     winPtr2 = NULL;
+    Tk_Window target = NULL;
 
     for (w in [NSApp orderedWindows]) {
 	if (w == deadNSWindow || w == NULL) {
 	    continue;
 	}
 	winPtr2 = TkMacOSXGetTkWindow(w);
-	if (winPtr2 == NULL) {
+	if (winPtr2 == NULL || ! Tk_IsMapped((Tk_Window)winPtr2)) {
 	    continue;
 	}
 	if (NSPointInRect(mouse, [w frame])) {
 	    [NSApp setTkPointerWindow: winPtr2];
+	    target = (Tk_Window)winPtr2;
 	    break;
 	}
     }
-    if (winPtr2) {
+
+    /*
+     * Determine the coordinates of the screen pointer
+     */
+    NSPoint local = [w tkConvertPointFromScreen: mouse];
+    int top_x = floor(local.x),
+	top_y = floor(w.frame.size.height - local.y);
+    int root_x = floor(mouse.x),
+	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
+
+    if (target) {
 	/*
 	 * We now know which toplevel will contain the pointer when the window
 	 * is destroyed.  We need to know which Tk window within the
 	 * toplevel will contain the pointer.
 	 */
-	NSPoint local = [w tkConvertPointFromScreen: mouse];
-	int top_x = floor(local.x),
-	    top_y = floor(w.frame.size.height - local.y);
-	int root_x = floor(mouse.x),
-	    root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
 	int win_x, win_y;
-	Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) winPtr2, top_x, top_y, &win_x, &win_y);
+	target = Tk_TopCoordsToWindow(target, top_x, top_y, &win_x, &win_y);
 	/*
 	 * A non-toplevel window can have a NULL parent while it is in the process of
 	 * being destroyed.  We should not call Tk_UpdatePointer in that case.
@@ -1277,6 +1284,12 @@ TkWmDeadWindow(
 	if (Tk_Parent(target) != NULL || Tk_IsTopLevel(target)) {
 	    Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
 	}
+    } else {
+	/*
+	 * No Tk window (toplevel or internal) will contain the screen pointer.
+	 * Register the root window of the screen as the new pointer window.
+	 */
+	Tk_UpdatePointer(NULL, root_x, root_y, [NSApp tkButtonState]);
     }
 
     /*
