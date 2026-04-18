@@ -1259,6 +1259,44 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     bind all <Enter> {}
 } -result "|<Leave> .|<Enter> .|"
 
+test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #xxxx} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+500+100; # the screen pointer is outside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    unset result
+} -result "|"
+
+test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer window after toplevel destroy (inside). See ticket #xxxx} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+100+100; # the screen pointer is inside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    unset result
+} -result "|"
+
 test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ticket #c3f5c85322} -setup {
     wm geometry . 200x200+100+100
     pack [frame .f -width 100 -height 200 -bg blue] -side right
