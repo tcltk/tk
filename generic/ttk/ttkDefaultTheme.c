@@ -205,7 +205,7 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
  * ChevronPoints --
  *	Compute points of chevron polygon.
  */
-static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[9])
+static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[7])
 {
     int cx, cy, h;
 
@@ -312,7 +312,7 @@ void TtkFillArrow(
 	XDrawPoints(display, d, gc, points, 3, CoordModeOrigin);
     } else {
 	ChevronPoints(b, direction, points);
-	XFillPolygon(display, d, gc, points, 6, Convex, CoordModeOrigin);
+	/*XFillPolygon(display, d, gc, points, 6, Convex, CoordModeOrigin);*/
 	XDrawLines(display, d, gc, points, 7, CoordModeOrigin);
 	XDrawPoints(display, d, gc, points, 6, CoordModeOrigin);
     }
@@ -1110,7 +1110,7 @@ static void MenubuttonArrowElementDraw(
     TCL_UNUSED(Ttk_State))
 {
     MenubuttonArrowElement *arrow = (MenubuttonArrowElement *)elementRecord;
-    ArrowDirection direction;
+    ArrowDirection direction = ARROW_DOWN; 
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     GC gc = Tk_GCForColor(arrowColor, d);
     int size = 9;

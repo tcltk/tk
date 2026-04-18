@@ -764,10 +764,6 @@ static void TabElementDraw(
     switch (nbTabPlcStickBit) {
 	default:
 	case TTK_STICK_S:
-	    if (nbTabPosStickBit == TTK_STICK_E && isSelected &&
-		    (state & TTK_STATE_USER2)) {	/* rightmost tab */
-		b.x -= 2;
-	    }
 	    break;
 	case TTK_STICK_N:
 	    b.y -= isSelected ? 0 : 1; b.height -= isSelected ? 1 : 0;
@@ -859,7 +855,7 @@ static const Ttk_ElementSpec TabElementSpec =
 /*----------------------------------------------------------------------
  * +++  Tree sort indicator element.
  *
- *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
+ *	Generic element, but only display if TTK_STATE_USER1 is set
  */
 
 static void TreeSortElementDraw(
@@ -883,7 +879,7 @@ static const Ttk_ElementSpec TreeheadingIndicatorElementSpec =
 /*----------------------------------------------------------------------
  * +++  Tree disclosure indicator element.
  *
- *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
+ *	Generic element, but only display if TTK_STATE_LEAF not set
  */
 
 static void TreeIndicatorElementDraw(
