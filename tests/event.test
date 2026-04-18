@@ -1275,6 +1275,7 @@ test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer win
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    wm deiconify .
     unset result
 } -result "|"
 
@@ -1294,6 +1295,7 @@ test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer win
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    wm deiconify .
     unset result
 } -result "|"
 
