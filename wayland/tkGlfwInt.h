@@ -390,6 +390,19 @@ MODULE_SCOPE TkGlfwContext *TkGlfwGetContext(void);
 /*
  *----------------------------------------------------------------------
  *
+ * Windows, Pixmaps, and Drawables
+ *
+ *----------------------------------------------------------------------
+ */
+
+Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr);
+TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable);
+Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap);
+TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable);
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Initialization and Cleanup
  *
  *----------------------------------------------------------------------

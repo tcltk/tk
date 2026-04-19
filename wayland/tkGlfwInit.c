@@ -307,6 +307,8 @@ TkGlfwInitialize(void)
  *----------------------------------------------------------------------
  */
 
+//// This is not reached when we see the crashes at shutdown.
+
 MODULE_SCOPE void
 TkGlfwShutdown(TCL_UNUSED(void *))
 {
@@ -370,7 +372,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
 
 MODULE_SCOPE GLFWwindow *
 TkGlfwCreateWindow(
-    TkWindow   *tkWin,
+    TkWindow   *winPtr,
     int         width,
     int         height,
     const char *title,
@@ -378,8 +380,12 @@ TkGlfwCreateWindow(
 {
     WindowMapping *mapping;
     GLFWwindow    *window;
-    
     window = NULL;
+
+    printf("TkGlfwCreateWindow\n");
+    if (winPtr == NULL) {
+	printf("   TkGlfwCreateWindow called with null winPtr\n");
+    }
 
     /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
@@ -390,9 +396,10 @@ TkGlfwCreateWindow(
     }
 
     /* Reuse existing mapping if already created for this TkWindow. */
-    if (tkWin != NULL) {
-        mapping = FindMappingByTk(tkWin);
+    if (winPtr != NULL) {
+        mapping = FindMappingByTk(winPtr);
         if (mapping != NULL) {
+	    printf("   winPtr has a mapping - returning its glfwWindow\n");
             if (drawableOut) *drawableOut = mapping->drawable;
             return mapping->glfwWindow;
         }
@@ -406,6 +413,7 @@ TkGlfwCreateWindow(
      * on mainWindow so its GL objects are already present on that context.
      */
     if (glfwContext.mainWindow != NULL) {
+	printf("    Using the window created for the glfwContext\n");
         window = glfwContext.mainWindow;
         glfwSetWindowSize(window, width, height);
         glfwSetWindowTitle(window, title ? title : "");
@@ -428,7 +436,7 @@ TkGlfwCreateWindow(
     /* Allocate and initialize mapping. */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
-    mapping->tkWindow     = tkWin;
+    mapping->tkWindow     = winPtr;
     mapping->glfwWindow   = window;
     mapping->drawable     = nextDrawableId++;
     mapping->width        = width;
@@ -440,9 +448,11 @@ TkGlfwCreateWindow(
 	}
 
     AddMapping(mapping);
+#if 0 //// What is this for?  It gets reset in tkWaylandMenu.c
     glfwSetWindowUserPointer(window, mapping);
+#endif
 
-    if (tkWin != NULL)
+    if (winPtr != NULL)
         TkGlfwSetupCallbacks(window);
 
 #if 0
@@ -466,19 +476,20 @@ TkGlfwCreateWindow(
     if (mapping->width  == 0) mapping->width  = width;
     if (mapping->height == 0) mapping->height = height;
 
-    if (tkWin != NULL) {
-        tkWin->changes.width  = mapping->width;
-        tkWin->changes.height = mapping->height;
+    if (winPtr != NULL) {
+        winPtr->changes.width  = mapping->width;
+        winPtr->changes.height = mapping->height;
     }
 
     if (drawableOut) *drawableOut = mapping->drawable;
 
-    if (tkWin != NULL)
-        TkWaylandQueueExposeEvent(tkWin, 0, 0,
+    if (winPtr != NULL)
+        TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	    mapping->width, mapping->height);
-
+#if 0
     /* Wake up the event loop to process the expose event. */
     TkWaylandWakeupGLFW();
+#endif
 
     return window;
 }
@@ -587,7 +598,13 @@ TkGlfwBeginDraw(
     TkWaylandDrawingContext *dcPtr)
 {
     printf("TkGlfwBeginDraw: ");
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+
     // Make sure the window size has been registered correctly.
+    // For a child window, this finds the mapping it shares with
+    // its containing toplevel.  That knows the FBO that we need
+    // to draw into, which is all that we need from mappings.
+
     WindowMapping *m = FindMappingByDrawable(drawable);
 
     if (!m || !m->fbo) {
@@ -623,11 +640,9 @@ TkGlfwBeginDraw(
     dcPtr->vg = glfwContext.vg;
     dcPtr->drawable = drawable;
 
-    /* Handle coordinates (Child window offsets). */
-    //// This is completely broken.
-    if (m->tkWindow && !Tk_IsTopLevel(m->tkWindow)) {
+    /* Compute offsets for a child window. */
+    if (!Tk_IsTopLevel(winPtr)) {
         int x = 0, y = 0;
-        TkWindow *winPtr = (TkWindow *)m->tkWindow;
         while (winPtr && !Tk_IsTopLevel(winPtr)) {
             x += winPtr->changes.x;
             y += winPtr->changes.y;

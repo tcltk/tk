@@ -100,7 +100,7 @@ const char *const WmAttributeNames[] = {
 
 /*
  *----------------------------------------------------------------------
- * XID, Drawable, Window, and Pixmap
+ * XIDs, Drawables, Windows, and Pixmaps
  *----------------------------------------------------------------------
  */
 
@@ -145,15 +145,19 @@ Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
      return (Drawable) winPtr;
  }
 
-TkWindow *TkWaylandTkWindowFromDrawable(Drawable drawable) {
-    return (TkWindow *) drawable;
+TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
+    printf("Getting window from drawable %lx of size %d\n",
+	   drawable, sizeof(drawable));
+    TkWindow *result = (TkWindow *) drawable;
+    printf("result is %p\n", result);
+    return result;
 }
 
 Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap) {
      return 1 + (Drawable) pixmap;
  }
 
-TkWaylandPixmap *TkWaylandPixmapFromDrawable(Drawable drawable) {
+TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
     if ((drawable & 1UL) == 0) {
 	Tcl_Panic("Attempt to convert a window drawable to a pixmap");
     }
@@ -739,7 +743,8 @@ TkWmCleanup(
  *      toplevel so that FindMappingByDrawable() always succeeds.
  *
  * Results:
- *      Returns a Window identifier.
+ *      Returns a Window identifier which is assigned to the window
+ *      field of the TkWindow structure by 
  *
  * Side effects:
  *      Creates a new GLFW window for toplevels.  Registers every Tk
@@ -752,7 +757,7 @@ TkWmCleanup(
 Window
 Tk_MakeWindow(
     Tk_Window tkwin,
-    TCL_UNUSED(Window))        /* parent – ignored for toplevels */
+    TCL_UNUSED(Window))        /* parent */
 {
     TkWindow   *winPtr     = (TkWindow *)tkwin;
     GLFWwindow *glfwWindow = NULL;
@@ -761,7 +766,10 @@ Tk_MakeWindow(
     Window      window;
 
     printf("Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
-    /// This doesn't test for a toplevel!
+    // This is the return value
+    window = TkWaylandDrawableForTkWindow(winPtr);
+
+    //// This was being used to test for a toplevel!
     //if (winPtr->parentPtr == NULL) {
     if (Tk_IsTopLevel(winPtr)) {
         /*
@@ -788,8 +796,10 @@ Tk_MakeWindow(
          * Tk's window ID for a toplevel is the GLFWwindow pointer cast.
          */
 
-        window = (Window)glfwWindow;
-        winPtr->window = window;
+	//// This is where the return value was being generated.
+        //// window = (Window)glfwWindow;
+        //// Not necessary.
+	//// winPtr->window = window;
 
         /*
          * Ensure WmInfo exists.
@@ -810,8 +820,8 @@ Tk_MakeWindow(
          */
         WindowMapping *m = FindMappingByTk(winPtr);
         if (m) {
-            m->drawable = winPtr->window;
-            RegisterDrawableForMapping(winPtr->window, m);
+            m->drawable = window;
+            RegisterDrawableForMapping(window, m);
         }
 
     } else {
@@ -823,14 +833,15 @@ Tk_MakeWindow(
          * Assign a unique Tk window ID.  Tk will draw into this ID.
          * We must register it to the SAME WindowMapping as the toplevel.
          */
-
+#if 0
         static Window nextChildId = 100000;
         window = nextChildId++;
         if (window == None) {
             window = nextChildId++;
         }
         winPtr->window = window;
-
+#endif
+	
         /*
          * Register this child drawable to the toplevel's mapping.
          */
@@ -839,10 +850,12 @@ Tk_MakeWindow(
       TkWindow *top = (TkWindow *)toplevel;
       WindowMapping *m = FindMappingByTk(top);
       if (m) {
-            RegisterDrawableForMapping(winPtr->window, m);
+            RegisterDrawableForMapping(window, m);
         }
     }
 
+    printf("TkMakeWindow: returning Window %lx for TkWindow %p\n",
+	   window, winPtr);
     return window;
 }
 
