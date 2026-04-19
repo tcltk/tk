@@ -139,8 +139,8 @@ static const Ttk_StateTable edittext_statemap[] =
     { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { ETS_READONLY,	TTK_STATE_READONLY, 0 },
     { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
-    { ETS_HOT,		TTK_STATE_HOVER, 0 },
     { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { ETS_HOT,		TTK_STATE_HOVER, 0 },
     { ETS_NORMAL,	0, 0 }
 /* NOT USED: ETS_ASSIST, ETS_SELECTED */
 };
@@ -156,8 +156,8 @@ static const Ttk_StateTable combotext_statemap[] =
 /*    { ETS_READONLY,	TTK_STATE_READONLY, 0 },*/
     { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
     { ETS_SELECTED,	TTK_STATE_SELECTED, 0 },
-    { ETS_HOT,		TTK_STATE_HOVER, 0 },
     { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { ETS_HOT,		TTK_STATE_HOVER, 0 },
     { ETS_NORMAL,	0, 0 }
 };
 
@@ -260,6 +260,7 @@ static const Ttk_StateTable scale_statemap[] =
     { TUBS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { TUBS_FOCUSED,	TTK_STATE_FOCUS, 0 },
     { TUBS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { TUBS_HOT,		TTK_STATE_HOVER, 0 },
     { TUBS_NORMAL,	0, 0 }
 };
 
@@ -307,8 +308,8 @@ static const Ttk_StateTable treeitem_statemap[] =
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_DISABLED, 0 },
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_READONLY, 0 },
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_BACKGROUND, 0 },
-    { LVGH_CLOSESELECTEDNOTFOCUSEDHOT,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
     { LVGH_CLOSESELECTEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE|TTK_STATE_FOCUS, 0 },
+    { LVGH_CLOSESELECTEDNOTFOCUSEDHOT,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
     { LVGH_CLOSESELECTED,		TTK_STATE_SELECTED, 0 },
     { LVGH_CLOSEHOT,			TTK_STATE_ACTIVE, 0 },
     { LVGH_CLOSEHOT,			TTK_STATE_ALTERNATE, 0 },
@@ -329,7 +330,11 @@ static const Ttk_StateTable treeview_statemap[] =
 /* Treeview indicator */
 static const Ttk_StateTable tvpglyph_statemap[] =
 {
+    { HGLPS_OPENED,	TTK_STATE_ACTIVE|TTK_STATE_OPEN, 0 },
+    { HGLPS_OPENED,	TTK_STATE_HOVER|TTK_STATE_OPEN, 0 },
     { GLPS_OPENED,	TTK_STATE_OPEN, 0 },
+    { HGLPS_CLOSED,	TTK_STATE_ACTIVE, 0 },
+    { HGLPS_CLOSED,	TTK_STATE_HOVER, 0 },
     { GLPS_CLOSED,	0, 0 }
 };
 
@@ -496,7 +501,7 @@ static void GenericElementSize(
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
 	result = GetThemePartSize(
 	    elementData->hTheme,	/* Theme data handle */
-	    elementData->hDC,		/* HDC to select font into & measure against */
+	    NULL,			/* HDC to select font into & measure against */
 	    elementData->info->partId,	/* Part number to retrieve size for */
 	    Ttk_StateTableLookup(elementData->info->statemap, 0), /* States */
 	    NULL,			/* (optional) rect for part drawing dest */
@@ -575,8 +580,12 @@ static const Ttk_ElementSpec GenericElementSpec =
 
 static void
 GenericSizedElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
     double scalingLevel = TkScalingLevel(tkwin);
@@ -658,8 +667,12 @@ static const Ttk_ElementSpec ThumbElementSpec =
  */
 
 static void PbarElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
     int nBars = 3;
@@ -859,11 +872,15 @@ static const Ttk_ElementSpec TabElementSpec =
  */
 
 static void TreeSortElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     if ((state & TTK_STATE_USER1)) {
-	GenericElementDraw(clientData,elementRecord,tkwin,d,b,state);
+	GenericElementDraw(clientData, elementRecord, tkwin, d, b, state);
     }
 }
 
@@ -883,11 +900,30 @@ static const Ttk_ElementSpec TreeheadingIndicatorElementSpec =
  */
 
 static void TreeIndicatorElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
+    ElementData *elementData = (ElementData *)clientData;
+    ElementData newData;
+    ElementInfo newInfo;
+
     if (!(state & TTK_STATE_LEAF)) {
-	GenericElementDraw(clientData,elementRecord,tkwin,d,b,state);
+	memcpy(&newData, elementData, sizeof(ElementData));
+	memcpy(&newInfo, elementData->info, sizeof(ElementInfo));
+	newData.info = &newInfo;
+
+	/* Hot states use a different part Id */
+	if ((state & TTK_STATE_ACTIVE)) {
+	    newInfo.partId = TVP_HOTGLYPH;
+	}
+	
+	/* Use new Explorer style indicators */
+	SetWindowTheme(elementData->hwnd, L"Explorer", NULL);
+	GenericElementDraw((void *)&newData, elementRecord, tkwin, d, b, state);
     }
 }
 
@@ -977,7 +1013,7 @@ static const ElementInfo ElementInfoTable[] = {
     { "Combobox.field", &GenericElementSpec, L"EDIT",
 	EP_EDITTEXT, combotext_statemap, PAD(1, 1, 1, 1), 0 },
     { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
-	CP_DROPDOWNBUTTON, combobox_statemap, NOPAD,
+	CP_DROPDOWNBUTTONRIGHT, combobox_statemap, NOPAD,
 	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
     /* ttk::scrollbar elements */
     { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
@@ -1295,6 +1331,8 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     Ttk_Theme themePtr, parentPtr, vistaPtr;
     const ElementInfo *infoPtr;
+    DWORD dwFlags = (STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS);
+    HMODULE hUxtheme = LoadLibraryExW(L"uxtheme.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 
     /*
      * Create the new style engine.
@@ -1306,10 +1344,12 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 	return TCL_ERROR;
     }
 
+    /* Set so non-client and common controls will have theming applied */
+    SetThemeAppProperties(dwFlags);
+
     /*
      * Set theme data and cleanup proc
      */
-
     Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, hwnd);
     Ttk_RegisterCleanup(interp, hwnd, XPThemeDeleteProc);
     Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, hwnd);
@@ -1318,7 +1358,6 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Create the vista theme on suitable platform versions and set the theme
      * enable function. The theme itself is defined in script.
      */
-
     if (TkWinGetPlatformTheme() == TK_THEME_WIN_VISTA) {
 	vistaPtr = Ttk_CreateTheme(interp, "vista", themePtr);
 	if (vistaPtr) {

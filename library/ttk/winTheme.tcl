@@ -27,7 +27,7 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure TRadiobutton -padding {1.5p 3p}
 
 	ttk::style configure TMenubutton \
-	    -padding {6p 3p} -arrowsize 5p -relief raised
+	    -padding {6p 3p} -arrowsize 3.25p -relief raised
 
 	ttk::style configure TEntry \
 	    -padding 2 -insertwidth 1
