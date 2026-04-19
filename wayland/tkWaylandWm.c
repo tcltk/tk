@@ -100,6 +100,68 @@ const char *const WmAttributeNames[] = {
 
 /*
  *----------------------------------------------------------------------
+ * XID, Drawable, Window, and Pixmap
+ *----------------------------------------------------------------------
+ */
+
+/*
+ * These concepts are, for me, among the most confusing parts of Tk.
+ *
+ * The file X.h in the xlib directory defines a type XID which is a 64 bit
+ * integer on all platforms supported by Tk.  (Note that the original X11
+ * specification used a 32 bit XID).  The X.h file also defines types
+ * Drawable, Window, and Pixmap, all of which are typedef'ed to XID.  The
+ * Window type is meant to be a unique identifier for an instance of a struct
+ * TkWindow, defined in the generic code.  The Pixmap type is meant to be a
+ * unique identifier for an instance of a struct TkWaylandPixmap.  The
+ * Drawable type is meant to uniquely identify something which is either a
+ * Window or a Pixmap.  As such, platform specific code needs to be able to
+ * determine whether a Drawable is a window or a pixmap.
+ *
+ * Obviously, the simplest way to uniquely identify an instance of
+ * a certain struct by a 64 bit integer is to use its address, cast
+ * to a 64 bit integer.  However, that does not solve the problem
+ * of how to distinguish a pixmap Drawable from a window Drawable.
+ * It also encourages questionable behavior such as casting a Drawable
+ * to a TkWindow*.
+ *
+ * Our solution to these problems for the Wayland port depends
+ * on knowing that both the address of a struct TkWindow and the
+ * address of a struct TkWaylandPixmap will be aligned to at least
+ * 4 bytes.  In particular, if the address is cast to a 64 bit integer
+ * then it will be even.  That means that, in constructing a
+ * Drawable, as long as a Drawable is never cast to a pointer,
+ * the last bit is available for use as a flag.  So we construct
+ * the Drawable for a TkWindow by converting its address to a
+ * 64 bit integer, and we construct the Drawable for a TkWaylandPixmap
+ * by converting the address to a 64 bit integer and then adding 1.
+ * To avoid the need for casting we provide functions for converting
+ * between a Drawable and a pointer to one of these structs.  These
+ * are functions, rather than macros, to enable the C compiler to
+ * check the types of their arguments.
+ */
+
+Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
+     return (Drawable) winPtr;
+ }
+
+TkWindow *TkWaylandTkWindowFromDrawable(Drawable drawable) {
+    return (TkWindow *) drawable;
+}
+
+Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap) {
+     return 1 + (Drawable) pixmap;
+ }
+
+TkWaylandPixmap *TkWaylandPixmapFromDrawable(Drawable drawable) {
+    if ((drawable & 1UL) == 0) {
+	Tcl_Panic("Attempt to convert a window drawable to a pixmap");
+    }
+    return (TkWaylandPixmap *) (drawable & ~1UL);
+}
+
+/*
+ *----------------------------------------------------------------------
  * Forward declarations
  *----------------------------------------------------------------------
  */

@@ -1094,11 +1094,11 @@ FindMappingByDrawable(Drawable d)
     }
 
     /* 
-     * Drawable is a TkWaylandPixmapImpl* that was never
+     * Drawable is a TkWaylandPixmap* that was never
      * registered. Validate by checking that its fields look sane,
      * then bind it to the first available mapping. 
      */
-    TkWaylandPixmapImpl *pix = (TkWaylandPixmapImpl *)d;
+    TkWaylandPixmap *pix = (TkWaylandPixmap *)d;
     if (pix != NULL) {
         /* Sanity check: type must be 0 or 1, dimensions must be
          * plausible. This guards against random pointer misinterpretation. */

@@ -86,10 +86,10 @@ static NVGImageData* CreateNVGImageFromDrawableRect(
 static XImage* TkWaylandCreateXImageWithNVGImage(
     NVGcontext* vg, NVGImageData* nvgImage, Display* display);
 static int XCopyArea_PixmapToPixmap(
-    TkWaylandPixmapImpl *srcPixmap, TkWaylandPixmapImpl *dstPixmap, GC gc,
+    TkWaylandPixmap *srcPixmap, TkWaylandPixmap *dstPixmap, GC gc,
     int src_x, int src_y,unsigned width, unsigned height, int dst_x, int dst_y);
 static int XCopyArea_PixmapToWindow(
-    TkWaylandPixmapImpl *srcPixmap,Drawable dst,
+    TkWaylandPixmap *srcPixmap,Drawable dst,
     GC gc, int src_x, int src_y, unsigned width, unsigned height,
     int dst_x, int dst_y);
 
@@ -355,21 +355,21 @@ XCopyArea(
 {
     WindowMapping *srcMapping = NULL;
     WindowMapping *dstMapping = NULL;
-    TkWaylandPixmapImpl *srcPixmap = NULL;
-    TkWaylandPixmapImpl *dstPixmap = NULL;
+    TkWaylandPixmap *srcPixmap = NULL;
+    TkWaylandPixmap *dstPixmap = NULL;
     
     (void)display;
     (void)gc;
     
     /* Determine source and destination types */
     if (IsPixmap(src)) {
-        srcPixmap = (TkWaylandPixmapImpl *)src;
+        srcPixmap = (TkWaylandPixmap *)src;
     } else {
         srcMapping = FindMappingByDrawable(src);
     }
     
     if (IsPixmap(dst)) {
-        dstPixmap = (TkWaylandPixmapImpl *)dst;
+        dstPixmap = (TkWaylandPixmap *)dst;
     } else {
         dstMapping = FindMappingByDrawable(dst);
     }
@@ -408,7 +408,7 @@ XCopyArea(
 
 static int
 XCopyArea_PixmapToWindow(
-    TkWaylandPixmapImpl *srcPixmap,
+    TkWaylandPixmap *srcPixmap,
     Drawable             dst,
     GC                   gc,
     int                  src_x, int src_y,
@@ -490,8 +490,8 @@ XCopyArea_PixmapToWindow(
     
 static int
 XCopyArea_PixmapToPixmap(
-    TkWaylandPixmapImpl *srcPixmap,
-    TkWaylandPixmapImpl *dstPixmap,
+    TkWaylandPixmap *srcPixmap,
+    TkWaylandPixmap *dstPixmap,
     GC                   gc,
     int                  src_x, int src_y,
     unsigned             width, unsigned height,

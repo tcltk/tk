@@ -5,7 +5,7 @@
  *	Wayland/GLFW/NanoVG backend.
  *
  *	This file provides the central definitions of
- *	TkWaylandGCImpl and TkWaylandPixmapImpl and all TkWayland*
+ *	TkWaylandGCImpl and TkWaylandPixmap and all TkWayland*
  *	entry points declared in tkGlfwInt.h.  The Xlib-compatible
  *	wrappers (XCreateGC, XFreeGC, XCreatePixmap, etc.) forward to
  *	these entry points and live here as well.
@@ -375,7 +375,7 @@ Tk_GetPixmap(
     int      height,
     TCL_UNUSED(int)) /* depth */
 {
-    TkWaylandPixmapImpl *pixmap;
+    TkWaylandPixmap *pixmap;
     WindowMapping       *mapping;
     GLint                oldFBO;
     GLenum               status;
@@ -392,9 +392,8 @@ Tk_GetPixmap(
     }
     
     /* Allocate pixmap structure. */
-    pixmap = (TkWaylandPixmapImpl *)ckalloc(sizeof(TkWaylandPixmapImpl));
-    memset(pixmap, 0, sizeof(TkWaylandPixmapImpl));
-    pixmap->magic 		  = TK_WAYLAND_PIXMAP_MAGIC; 
+    pixmap = (TkWaylandPixmap *)ckalloc(sizeof(TkWaylandPixmap));
+    memset(pixmap, 0, sizeof(TkWaylandPixmap));
     pixmap->type          = 1;  /* Pixmap, not window */
     pixmap->width         = width;
     pixmap->height        = height;
@@ -486,7 +485,7 @@ void
 Tk_FreePixmap(TCL_UNUSED(Display *),
 	      Pixmap pixmap)
 {
-    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)pixmap;
+    TkWaylandPixmap *impl = (TkWaylandPixmap *)pixmap;
     
     if (!impl || impl->type != 1) return;
     
@@ -542,7 +541,7 @@ IsPixmap(Drawable drawable)
         return 0;
     }
     
-    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)drawable;
+    TkWaylandPixmap *impl = (TkWaylandPixmap *)drawable;
     
     /* Check type field and validate dimensions */
     if (impl->type == 1 &&

@@ -300,10 +300,8 @@ typedef struct TkWaylandGCStruct {
  *
  *----------------------------------------------------------------------
  */
-#define TK_WAYLAND_PIXMAP_MAGIC 0x544B5058  /* "TKPX" */
 
-typedef struct TkWaylandPixmapImpl {
-	int      		 magic;        
+typedef struct TkWaylandPixmap {
     int              type;          /* 0 = window, 1 = pixmap */
     int              width;
     int              height;
@@ -319,7 +317,7 @@ typedef struct TkWaylandPixmapImpl {
     
     /* Associated window (for context) */
     WindowMapping   *windowMapping; /* Which window owns this pixmap */
-} TkWaylandPixmapImpl;
+} TkWaylandPixmap;
 
 /*
  *----------------------------------------------------------------------
