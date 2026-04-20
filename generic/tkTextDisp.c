@@ -16,6 +16,7 @@
 #include "tkInt.h"
 #include "tkText.h"
 #include "tk3d.h"
+#include "tkFont.h"
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -434,6 +435,9 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     Tcl_Size numBytes;		/* Number of bytes to display. */
+    int isRTL;			/* Non-zero if this chunk's run direction is
+				 * right-to-left (BiDi). Used by bbox/measure
+				 * procs to mirror pixel offsets correctly. */
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     char *chars;		/* Pointer to UTF characters to display. */
 #else
@@ -449,6 +453,9 @@ typedef struct CharInfo {
     TkTextDispChunk *baseChunkPtr;
     int baseOffset;		/* Starting offset in base chunk baseChars. */
     Tcl_Size numBytes;		/* Number of bytes that belong to this chunk. */
+    int isRTL;			/* Non-zero if this chunk's run direction is
+				 * right-to-left (BiDi). Used by bbox/measure
+				 * procs to mirror pixel offsets correctly. */
     const char *chars;		/* UTF characters to display. Actually points
 				 * into the baseChars of the base chunk. Only
 				 * valid after FinalizeBaseChunk(). */
@@ -617,6 +624,26 @@ static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(void *clientData);
 static int		IsStartOfNotMergedLine(const TkText *textPtr,
 			    const TkTextIndex *indexPtr);
+static int		TkFontChunkIsRTL(Tk_Font tkfont,
+			    const char *source, Tcl_Size numBytes);
+
+/*
+ * TkTextIndexVisualMove is MODULE_SCOPE so tkTextIndex.c can call it
+ * without a shared header.  It is implemented at the bottom of this file.
+ */
+MODULE_SCOPE int TkTextIndexVisualMove(TkText *textPtr,
+			const TkTextIndex *srcPtr, int forward,
+			TkTextIndex *dstPtr);
+
+/*
+ * TkpFontChunkHitTest is implemented in the platform font backend:
+ *   tkUnixBidiFont.c  — exact, uses sorted visualIndex from HarfBuzz
+ *   tkWinFont.c       — stub returning -1 (fallback to mirror)
+ *   tkMacOSXFont.c    — stub returning -1 (fallback to mirror)
+ */
+MODULE_SCOPE int TkpFontChunkHitTest(TkFont *fontPtr,
+			const char *source, Tcl_Size numBytes, int x);
+
 
 /*
  * Result values returned by TextGetScrollInfoObj:
@@ -7272,12 +7299,12 @@ DlineIndexOfX(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextDispChunk *chunkPtr;
+    TkTextIndex chunkStart;
+    Tcl_Size bytesSoFar;
 
     /*
-     * Scan through the line's chunks to find the one that contains the
-     * desired x-coordinate. Before doing this, translate the x-coordinate
-     * from the coordinate system of the window to the coordinate system of
-     * the line (to take account of x-scrolling).
+     * Translate x from window coordinates to display-line coordinates,
+     * accounting for horizontal scrolling.
      */
 
     *indexPtr = dlPtr->index;
@@ -7285,50 +7312,68 @@ DlineIndexOfX(
     chunkPtr = dlPtr->chunkPtr;
 
     if (chunkPtr == NULL || x == 0) {
-	/*
-	 * This may occur if everything is elided, or if we're simply already
-	 * at the beginning of the line.
-	 */
-
 	return;
     }
 
-    while (x >= (chunkPtr->x + chunkPtr->width)) {
-	/*
-	 * Note that this forward then backward movement of the index can be
-	 * problematic at the end of the buffer (we can't move forward, and
-	 * then when we move backward, we do, leading to the wrong position).
-	 * Hence when x == 0 we take special action above.
-	 */
+    /*
+     * Phase 1: scan chunks left-to-right by screen position to find which
+     * chunk contains x.  Chunks are stored in visual (left-to-right) order
+     * regardless of their logical byte order, so this scan is always correct.
+     *
+     * We track bytesSoFar as the sum of numBytes of all chunks preceding
+     * the current one measured from dlPtr->index.  We do NOT accumulate via
+     * TkTextIndexForwBytes across chunks because for RTL chunks the logical
+     * byte order is reversed relative to screen order, and ForwBytes would
+     * walk off into the wrong region of the B-tree.
+     *
+     * Instead, after finding the owning chunk we resolve its start index
+     * independently by counting bytes from dlPtr->index.
+     */
 
-	if (TkTextIndexForwBytes(NULL,indexPtr,chunkPtr->numBytes,indexPtr)) {
-	    /*
-	     * We've reached the end of the text.
-	     */
-
-	    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr, COUNT_INDICES);
-	    return;
-	}
-	if (chunkPtr->nextPtr == NULL) {
-	    /*
-	     * We've reached the end of the display line.
-	     */
-
-	    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr, COUNT_INDICES);
-	    return;
-	}
+    bytesSoFar = 0;
+    while (chunkPtr->nextPtr != NULL &&
+	    x >= (chunkPtr->x + chunkPtr->width)) {
+	bytesSoFar += chunkPtr->numBytes;
 	chunkPtr = chunkPtr->nextPtr;
     }
 
     /*
-     * If the chunk has more than one byte in it, ask it which character is at
-     * the desired location. In this case we can manipulate
-     * 'indexPtr->byteIndex' directly, because we know we're staying inside a
-     * single logical line.
+     * chunkPtr now owns x (or is the last chunk).  Resolve the index of
+     * the first byte of this chunk by walking forward from dlPtr->index.
+     * This is safe because bytesSoFar is a byte count within the display
+     * line's logical extent — it counts all bytes in the chunks we passed
+     * regardless of their RTL/LTR direction.
+     */
+
+    chunkStart = dlPtr->index;
+    if (bytesSoFar > 0) {
+	if (TkTextIndexForwBytes(textPtr, &chunkStart, bytesSoFar, &chunkStart)) {
+	    /*
+	     * Reached end of text — back up one character and return.
+	     */
+	    TkTextIndexBackChars(NULL, &chunkStart, 1, indexPtr, COUNT_INDICES);
+	    return;
+	}
+    }
+    *indexPtr = chunkStart;
+
+    /*
+     * Phase 2: within the owning chunk, delegate to measureProc to find
+     * the byte offset of the character at x.  measureProc (CharMeasureProc)
+     * is already RTL-aware: for RTL chunks it mirrors x before measuring.
+     *
+     * If x is past the end of the last chunk, back up one character to stay
+     * within valid text.
      */
 
     if (chunkPtr->numBytes > 1) {
 	indexPtr->byteIndex += chunkPtr->measureProc(chunkPtr, x);
+    } else if (chunkPtr->nextPtr == NULL &&
+	    x >= (chunkPtr->x + chunkPtr->width)) {
+	/*
+	 * x is beyond the last chunk.  Land on the last real character.
+	 */
+	TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr, COUNT_INDICES);
     }
 }
 
@@ -7397,9 +7442,12 @@ DlineXOfIndex(
     DLine *dlPtr,		/* Display information for this display
 				 * line. */
     Tcl_Size byteIndex)		/* The byte index for which we want the
-				 * coordinate. */
+				 * coordinate.  Relative to the display line
+				 * (i.e. to dlPtr->index), NOT to the logical
+				 * line. */
 {
     TkTextDispChunk *chunkPtr = dlPtr->chunkPtr;
+    Tcl_Size remaining = byteIndex;
     int x = 0;
 
     if (byteIndex == 0 || chunkPtr == NULL) {
@@ -7407,27 +7455,44 @@ DlineXOfIndex(
     }
 
     /*
-     * Scan through the line's chunks to find the one that contains the
-     * desired byte index.
+     * Walk the chunk list consuming bytes until we find the chunk that owns
+     * byteIndex.  Chunks are in visual left-to-right order but their byte
+     * ranges are in logical order; each chunk's numBytes is always the count
+     * of logical bytes it represents, regardless of RTL/LTR direction.
+     *
+     * We subtract numBytes per chunk — the same way the caller computed
+     * byteIndex as a sum of chunk byte counts — until we either land inside
+     * a chunk (remaining < chunkPtr->numBytes) or exhaust the chunk list.
      */
 
-    chunkPtr = dlPtr->chunkPtr;
-    while (byteIndex > 0) {
-	if (byteIndex < chunkPtr->numBytes) {
+    while (remaining > 0) {
+	if (remaining < chunkPtr->numBytes) {
+	    /*
+	     * byteIndex falls inside this chunk.  Ask bboxProc for the exact
+	     * pixel x of that byte.  bboxProc (CharBboxProc) is RTL-aware and
+	     * returns the visual screen left-edge of the cluster.
+	     */
 	    int y, width, height;
 
-	    chunkPtr->bboxProc(textPtr, chunkPtr, byteIndex,
+	    chunkPtr->bboxProc(textPtr, chunkPtr, remaining,
 		    dlPtr->y + dlPtr->spaceAbove,
 		    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-		    dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
-		    &height);
-	    break;
+		    dlPtr->baseline - dlPtr->spaceAbove,
+		    &x, &y, &width, &height);
+	    return x;
 	}
-	byteIndex -= chunkPtr->numBytes;
-	if (chunkPtr->nextPtr == NULL || byteIndex == 0) {
+
+	remaining -= chunkPtr->numBytes;
+
+	if (chunkPtr->nextPtr == NULL || remaining == 0) {
+	    /*
+	     * byteIndex is at or past the end of this (the last) chunk.
+	     * Return the right edge of the chunk.
+	     */
 	    x = chunkPtr->x + chunkPtr->width;
-	    break;
+	    return x;
 	}
+
 	chunkPtr = chunkPtr->nextPtr;
     }
 
@@ -7927,6 +7992,16 @@ TkTextCharLayoutProc(
 	ciPtr->numBytes--;
     }
 
+    /*
+     * Determine the BiDi run direction for this chunk.
+     * TkFontChunkIsRTL reads the direction flag that the font backend
+     * cached during the CharChunkMeasureChars call above — the shaper
+     * has already been invoked for exactly these bytes, so the cached
+     * value is current.  We capture it here before the word-wrap scan
+     * below mutates the 'p' pointer.
+     */
+    ciPtr->isRTL = TkFontChunkIsRTL(tkfont, p, ciPtr->numBytes);
+
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
      * Final update for the current base chunk data.
@@ -8327,7 +8402,62 @@ CharMeasureProc(
     int x)			/* X-coordinate, in same coordinate system as
 				 * chunkPtr->x. */
 {
+    CharInfo *ciPtr = (CharInfo *) chunkPtr->clientData;
     int endX;
+
+    if (ciPtr->isRTL) {
+	/*
+	 * For RTL chunks ask the platform backend for an exact byte offset
+	 * using its sorted visual-cluster index.  This is pixel-accurate for
+	 * mixed-bidi runs where a simple mirror is only an approximation.
+	 *
+	 * TkpFontChunkHitTest returns a byte offset from the start of the
+	 * chunk's source string, or -1 when the backend has no exact data
+	 * (Win/macOS stubs, cache miss).  x is passed relative to the
+	 * chunk's own origin (chunkPtr->x == 0 in chunk-local coordinates)
+	 * so subtract chunkPtr->x before the call.
+	 */
+	Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
+	TkFont *fontPtr = (TkFont *) tkfont;
+	const char *source;
+	Tcl_Size numBytes;
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	{
+	    BaseCharInfo *bciPtr =
+		    (BaseCharInfo *) ciPtr->baseChunkPtr->clientData;
+	    source   = Tcl_DStringValue(&bciPtr->baseChars) + ciPtr->baseOffset;
+	    numBytes = ciPtr->numBytes;
+	}
+#else
+	source   = ciPtr->chars;
+	numBytes = ciPtr->numBytes;
+#endif
+
+	int hitByte = TkpFontChunkHitTest(fontPtr, source, numBytes,
+		x - chunkPtr->x);
+	if (hitByte >= 0) {
+	    return (Tcl_Size) hitByte;
+	}
+
+	/*
+	 * Backend returned -1 (no exact data).  Fall back to the x-mirror
+	 * approximation: reflect x around the chunk's centre so that the
+	 * existing LTR measurement logic returns the correct cluster index
+	 * for a pure-RTL chunk.
+	 *
+	 *   mirrorX = chunkPtr->x + (chunkRight - x)
+	 */
+	int chunkRight = chunkPtr->x + chunkPtr->width;
+	int mirrorX = chunkPtr->x + (chunkRight - x);
+	if (mirrorX < chunkPtr->x) {
+	    mirrorX = chunkPtr->x;
+	}
+	if (mirrorX > chunkRight) {
+	    mirrorX = chunkRight;
+	}
+	x = mirrorX;
+    }
 
     return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
 	    chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
@@ -8378,26 +8508,36 @@ CharBboxProc(
     int maxX;
 
     maxX = chunkPtr->width + chunkPtr->x;
+
+    /*
+     * Step 1: measure the LTR advance from the start of the chunk to
+     * byteIndex.  For LTR chunks this is the visual x directly.  For RTL
+     * chunks we mirror it below.
+     */
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 	    chunkPtr->x, -1, 0, xPtr);
 
     if (byteIndex == ciPtr->numBytes) {
 	/*
-	 * This situation only happens if the last character in a line is a
-	 * space character, in which case it absorbs all of the extra space in
-	 * the line (see TkTextCharLayoutProc).
+	 * Last character in line is a space that absorbs all remaining
+	 * space (see TkTextCharLayoutProc).  Width is whatever is left.
+	 * For RTL the mirrored xPtr still sits at maxX minus the LTR
+	 * advance, so this formula remains correct after mirroring below.
 	 */
-
 	*widthPtr = maxX - *xPtr;
     } else if ((ciPtr->chars[byteIndex] == '\t')
 	    && (byteIndex == ciPtr->numBytes - 1)) {
 	/*
-	 * The desired character is a tab character that terminates a chunk;
-	 * give it all the space left in the chunk.
+	 * Tab that terminates a chunk — give it all the remaining space.
 	 */
-
 	*widthPtr = maxX - *xPtr;
     } else {
+	/*
+	 * Normal character: measure the advance width of this one cluster
+	 * [byteIndex, byteIndex+1).  The result is an absolute x position
+	 * (right edge of the cluster in LTR terms), so subtract *xPtr to
+	 * get the pixel width.
+	 */
 	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
 		*xPtr, -1, 0, widthPtr);
 	if (*widthPtr > maxX) {
@@ -8406,6 +8546,33 @@ CharBboxProc(
 	    *widthPtr -= *xPtr;
 	}
     }
+
+    if (ciPtr->isRTL) {
+	/*
+	 * For RTL chunks the shaper placed glyph[0] at the right edge of
+	 * the chunk.  CharChunkMeasureChars measures advances left-to-right
+	 * through the byte string, so *xPtr is the distance from the left
+	 * of the chunk to the LTR-logical start of this cluster.
+	 *
+	 * The visual (screen) left edge of the cluster is:
+	 *
+	 *   visualX = maxX - (*xPtr - chunkPtr->x) - *widthPtr
+	 *           = maxX - ltrAdvance - clusterWidth
+	 *
+	 * *widthPtr is unchanged (cluster width is the same regardless of
+	 * direction).  Only *xPtr needs to be replaced.
+	 */
+	int ltrAdvance = *xPtr - chunkPtr->x;
+	*xPtr = maxX - ltrAdvance - *widthPtr;
+	/* Clamp to chunk bounds in case of rounding. */
+	if (*xPtr < chunkPtr->x) {
+	    *xPtr = chunkPtr->x;
+	}
+	if (*xPtr + *widthPtr > maxX) {
+	    *widthPtr = maxX - *xPtr;
+	}
+    }
+
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 }
@@ -9267,6 +9434,224 @@ RemoveFromBaseChunk(
 }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkFontChunkIsRTL --
+ *
+ *	Determine whether the UTF-8 run [source, source+numBytes) carried by
+ *	the given font should be rendered right-to-left.
+ *
+ *	Called once per char-chunk from TkTextCharLayoutProc, immediately
+ *	after the CharChunkMeasureChars call that drives shaping.  The result
+ *	is stored in CharInfo.isRTL and consulted by CharBboxProc (cursor
+ *	placement, index→pixel) and CharMeasureProc (click hit-testing,
+ *	pixel→index) to mirror pixel coordinates for RTL runs.
+ *
+ *	Dispatches to TkpFontChunkIsRTL, which each platform backend
+ *	implements by reading the shaper direction flag it cached during the
+ *	preceding measurement call:
+ *
+ *	  Unix  — HarfBuzz hb_buffer direction via UnixFtFont.lastRunIsRTL
+ *	  Win   — Uniscribe SCRIPT_ANALYSIS.s.fRTL via WinFont.lastRunIsRTL
+ *	  macOS — CoreText kCTRunStatusRightToLeft via MacFont.lastRunIsRTL
+ *
+ *	When the cached flag is -1 (ASCII fast-path that bypassed the shaper,
+ *	or a cold font with no measurement yet) each backend falls back to a
+ *	Unicode P2/P3 strong-character scan of the source bytes.
+ *
+ * Results:
+ *	1 if the run is RTL, 0 if LTR or unknown.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+/*
+ * TkpFontChunkIsRTL is implemented in the platform font backend:
+ *   tkUnixBidiFont.c  (Unix/HarfBuzz)
+ *   tkWinFont.c       (Windows/Uniscribe)
+ *   tkMacOSXFont.c    (macOS/CoreText)
+ * MODULE_SCOPE makes it visible at link time without a shared header.
+ */
+MODULE_SCOPE int TkpFontChunkIsRTL(TkFont *fontPtr,
+			const char *source, Tcl_Size numBytes);
+
+static int
+TkFontChunkIsRTL(
+    Tk_Font tkfont,		/* Font used to render the chunk. */
+    const char *source,		/* First byte of the UTF-8 run. */
+    Tcl_Size numBytes)		/* Length of the run in bytes. */
+{
+    TkFont *fontPtr = (TkFont *) tkfont;
+
+    if (fontPtr == NULL || source == NULL || numBytes <= 0) {
+	return 0;
+    }
+    return TkpFontChunkIsRTL(fontPtr, source, numBytes);
+}
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextIndexVisualMove --
+ *
+ *	Move the index one visual character position left or right,
+ *	respecting BiDi run direction.
+ *
+ *	This is the correct primitive for left/right arrow-key cursor
+ *	movement in a text widget.  It differs from TkTextIndexForwChars /
+ *	TkTextIndexBackChars in that it moves to the visually adjacent
+ *	cluster, not the logically adjacent byte.  In a pure-LTR line the
+ *	two are identical.  In a line containing RTL runs, logical-byte
+ *	movement crosses run boundaries in the wrong visual direction.
+ *
+ *	Algorithm:
+ *	  1. Lay out the display line that contains srcPtr.
+ *	  2. Find which chunk owns srcPtr and the visual x of its left edge.
+ *	  3. Compute the target x: current_x +/- 1 pixel (enough to step
+ *	     into the adjacent cluster).
+ *	  4. Call DlineIndexOfX on that target x to resolve the new index.
+ *	  5. If the result equals srcPtr (degenerate case — e.g. at line
+ *	     end) fall back to TkTextIndexForwChars / BackChars.
+ *
+ * Results:
+ *	1 if a visual move was performed and *dstPtr is set.
+ *	0 if the position was a line edge or the line has no RTL content
+ *	  (caller should use the normal logical movement instead).
+ *
+ * Side effects:
+ *	Lays out a temporary DLine (freed before return).
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextIndexVisualMove(
+    TkText *textPtr,		/* Widget record. */
+    const TkTextIndex *srcPtr,	/* Starting position. */
+    int forward,		/* 1 = move right (visually), 0 = move left. */
+    TkTextIndex *dstPtr)	/* Result: visually adjacent position. */
+{
+    DLine *dlPtr;
+    TkTextDispChunk *chunkPtr;
+    TkTextIndex lineStart;
+    Tcl_Size srcBytes;
+    int hasRTL, currentX, targetX, lineEndX;
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+
+    /*
+     * Make sure display info is current; dInfoPtr->x etc. may be stale
+     * if the widget was recently reconfigured.
+     */
+    if (dInfoPtr == NULL) {
+	return 0;
+    }
+    if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
+	UpdateDisplayInfo(textPtr);
+    }
+
+    /*
+     * Find the start of the display line containing srcPtr.
+     * TkTextFindDisplayLineEnd modifies its index argument in place.
+     */
+    lineStart = *srcPtr;
+    TkTextFindDisplayLineEnd(textPtr, &lineStart, 0, NULL);
+
+    /*
+     * Lay out the display line.
+     */
+    dlPtr = LayoutDLine(textPtr, &lineStart);
+    if (dlPtr == NULL || dlPtr->chunkPtr == NULL) {
+	if (dlPtr) {
+	    FreeDLines(textPtr, dlPtr, NULL, DLINE_FREE_TEMP);
+	}
+	return 0;
+    }
+
+    /*
+     * Check whether this line contains any RTL chunk.  If not, visual
+     * and logical order are identical; the caller can use the faster
+     * logical movement instead.
+     */
+    hasRTL = 0;
+    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+	if (chunkPtr->clientData && chunkPtr->bboxProc == CharBboxProc) {
+	    CharInfo *ciPtr = (CharInfo *) chunkPtr->clientData;
+	    if (ciPtr->isRTL) {
+		hasRTL = 1;
+		break;
+	    }
+	}
+    }
+    if (!hasRTL) {
+	FreeDLines(textPtr, dlPtr, NULL, DLINE_FREE_TEMP);
+	return 0;
+    }
+
+    /*
+     * Determine the pixel extent of this display line so we can clamp.
+     * dlPtr->length is the total advance width of the line in pixels.
+     * The last chunk's right edge is chunkPtr->x + chunkPtr->width for
+     * the last chunk; use dlPtr->length as the right boundary.
+     */
+    lineEndX = dlPtr->length;
+
+    /*
+     * Find the byte offset of srcPtr relative to the display-line start,
+     * then get its visual x position via DlineXOfIndex.
+     * DlineXOfIndex returns a coordinate in line-space (0 = left edge of
+     * the first chunk, independent of scroll position).
+     */
+    srcBytes = TkTextIndexCountBytes(textPtr, &dlPtr->index, srcPtr);
+    currentX = DlineXOfIndex(textPtr, dlPtr, srcBytes);
+
+    /*
+     * Step one pixel in the requested visual direction so that
+     * DlineIndexOfX snaps to the adjacent cluster boundary.
+     *
+     * DlineIndexOfX expects a *window* x coordinate; it converts
+     * internally via:   lineX = windowX - dInfoPtr->x + dInfoPtr->curXPixelOffset
+     * So to pass a line-space x we use:
+     *   windowX = lineX + dInfoPtr->x - dInfoPtr->curXPixelOffset
+     */
+    targetX = currentX + (forward ? 1 : -1);
+
+    /*
+     * Clamp to the line's own pixel extent (line-space coordinates).
+     * 0 is the left edge of the first chunk; lineEndX is the right edge
+     * of the last chunk.
+     */
+    if (targetX < 0) {
+	targetX = 0;
+    }
+    if (targetX > lineEndX) {
+	targetX = lineEndX;
+    }
+
+    /*
+     * Convert to window coordinates for DlineIndexOfX.
+     */
+    targetX = targetX + dInfoPtr->x - dInfoPtr->curXPixelOffset;
+
+    *dstPtr = dlPtr->index;
+    DlineIndexOfX(textPtr, dlPtr, targetX, dstPtr);
+
+    FreeDLines(textPtr, dlPtr, NULL, DLINE_FREE_TEMP);
+
+    /*
+     * If we landed on the same index we started at, the cursor is at a
+     * line edge (or the line has only one cluster).  Report failure so
+     * the caller falls through to its normal line-transition logic.
+     */
+    if (TkTextIndexCmp(dstPtr, srcPtr) == 0) {
+	return 0;
+    }
+
+    return 1;
+}
+
 /*
  * Local Variables:
  * mode: c

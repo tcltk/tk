@@ -152,6 +152,11 @@ typedef struct WinFont {
 				 * for handling common case. The base font is
 				 * always used to draw characters between
 				 * 0x0000 and 0x007f. */
+    int lastRunIsRTL;		/* BiDi direction cache: set by TkWinShapeString
+				 * to SCRIPT_ANALYSIS.s.fRTL of the first visual
+				 * run so that TkpFontChunkIsRTL can read it back
+				 * immediately after measurement.
+				 * -1 = not yet set, 0 = LTR, 1 = RTL. */
 } WinFont;
 
 /*
@@ -942,6 +947,17 @@ TkWinShapeString(
 	    Tcl_Alloc(sizeof(TkWinShapedRun) * itemCount);
     int nRuns = 0;
 
+    /*
+     * Record the BiDi direction of the first visual run so that
+     * TkpFontChunkIsRTL can read it back immediately after measurement.
+     * Visual item 0 (vi == 0 on the first iteration below) is the
+     * leftmost item, whose direction determines how CharBboxProc and
+     * CharMeasureProc should mirror pixel coordinates for this chunk.
+     * Reset to -1 so that a string with zero valid items leaves the
+     * previous chunk's flag intact (caller falls back to Unicode scan).
+     */
+    fontPtr->lastRunIsRTL = -1;
+
     for (int vi = 0; vi < itemCount; vi++) {
 	int li = visualToLogical[vi];   /* logical item index */
 	SCRIPT_ITEM *item = &items[li];
@@ -1129,6 +1145,15 @@ TkWinShapeString(
 	runs[nRuns].advances    = advances;
 	runs[nRuns].offsets     = offsets;
 	runs[nRuns].abc         = abc;
+	/*
+	 * Capture the BiDi direction of the first successfully shaped visual
+	 * run.  vi is the visual index; nRuns counts successfully stored runs.
+	 * We want the direction of the first visual run that actually makes it
+	 * into the output array (some items may be skipped on error above).
+	 */
+	if (nRuns == 0) {
+	    fontPtr->lastRunIsRTL = item->a.s.fRTL ? 1 : 0;
+	}
 	nRuns++;
     }
 
@@ -2157,6 +2182,7 @@ InitFont(
     fontPtr->subFontArray	= fontPtr->staticSubFonts;
     memset(fontPtr->staticScriptCaches, 0, sizeof(fontPtr->staticScriptCaches));
     fontPtr->scriptCacheArray	= fontPtr->staticScriptCaches;
+    fontPtr->lastRunIsRTL	= -1;   /* not yet classified */
     InitSubFont(hdc, hFont, 1, &fontPtr->subFontArray[0]);
 
     encoding = fontPtr->subFontArray[0].familyPtr->encoding;
@@ -3491,3 +3517,110 @@ SwapLong(
  * fill-column: 78
  * End:
  */
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpFontChunkIsRTL --
+ *
+ *	Windows/Uniscribe implementation of the platform BiDi direction hook.
+ *
+ *	Returns fontPtr->lastRunIsRTL which is set by TkWinShapeString from
+ *	SCRIPT_ANALYSIS.s.fRTL of the first visual run.  TkTextCharLayoutProc
+ *	always calls measurement (which drives ScriptItemize/Shape/Place)
+ *	before calling TkFontChunkIsRTL, so the cached value is current.
+ *
+ *	Falls back to a Unicode strong-character scan when lastRunIsRTL is
+ *	still -1 (e.g. pure ASCII measured via the widths[] fast-path, which
+ *	never calls TkWinShapeString at all).
+ *
+ * Results:
+ *	1 if the chunk is RTL, 0 if LTR.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpFontChunkIsRTL(
+    TkFont *tkFontPtr,
+    const char *source,
+    Tcl_Size numBytes)
+{
+    WinFont *fontPtr = (WinFont *) tkFontPtr;
+
+    if (fontPtr->lastRunIsRTL >= 0) {
+	return fontPtr->lastRunIsRTL;
+    }
+
+    /*
+     * lastRunIsRTL == -1: Uniscribe was not invoked for this chunk
+     * (ASCII widths[] fast-path).  Scan source for the first Unicode
+     * strong directional character (UAX#9 P2/P3 heuristic).
+     */
+    const char *p   = source;
+    const char *end = source + numBytes;
+    int ch;
+
+    while (p < end) {
+	Tcl_Size len = Tcl_UtfToUniChar(p, &ch);
+	if (ch < 0) break;
+
+	if ((ch >= 0x0590 && ch <= 0x05FF) ||
+	    (ch >= 0x0600 && ch <= 0x06FF) ||
+	    (ch >= 0x0700 && ch <= 0x074F) ||
+	    (ch >= 0x0780 && ch <= 0x07FF) ||
+	    (ch >= 0x0800 && ch <= 0x085F) ||
+	    (ch >= 0x08A0 && ch <= 0x08FF) ||
+	    (ch >= 0xFB1D && ch <= 0xFB4F) ||
+	    (ch >= 0xFB50 && ch <= 0xFDFF) ||
+	    (ch >= 0xFE70 && ch <= 0xFEFF) ||
+	    (ch >= 0x10E60 && ch <= 0x10E7F)) {
+	    return 1;
+	}
+	if ((ch >= 0x0041 && ch <= 0x005A) ||
+	    (ch >= 0x0061 && ch <= 0x007A) ||
+	    (ch >= 0x00C0 && ch <= 0x02B8) ||
+	    (ch >= 0x0370 && ch <= 0x04FF)) {
+	    return 0;
+	}
+	p += len;
+    }
+    return 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpFontChunkHitTest --
+ *
+ *	Windows stub.  The Uniscribe shaping pipeline does not currently
+ *	expose a sorted visual-cluster index to tkTextDisp.c.  Return -1 so
+ *	that CharMeasureProc falls back to the x-mirror approximation, which
+ *	is correct for pure-RTL chunks and a reasonable approximation for
+ *	mixed runs.
+ *
+ *	A full implementation would iterate the SCRIPT_LOGATTR array from
+ *	ScriptBreak, walking the visual-order glyph advances to build a
+ *	cluster-boundary list, and binary-search it here.
+ *
+ * Results:
+ *	Always -1 (not implemented).
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpFontChunkHitTest(
+    TCL_UNUSED(TkFont *),
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(int))
+{
+    return -1;
+}

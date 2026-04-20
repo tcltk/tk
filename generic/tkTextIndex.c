@@ -20,6 +20,17 @@
 #endif
 
 /*
+ * TkTextIndexVisualMove is implemented in tkTextDisp.c.
+ * It moves one visual cluster left or right on a BiDi line, returning 1
+ * on success and 0 when the line is pure-LTR or the cursor is at a line
+ * edge (in which case the caller uses normal logical movement).
+ * MODULE_SCOPE makes it visible at link time without a shared header.
+ */
+MODULE_SCOPE int TkTextIndexVisualMove(TkText *textPtr,
+		const TkTextIndex *srcPtr, int forward,
+		TkTextIndex *dstPtr);
+
+/*
  * Index to use to select last character in line (very large integer):
  */
 
@@ -1570,6 +1581,30 @@ TkTextIndexForwChars(
 	TkTextIndexBackChars(textPtr, srcPtr, -charCount, dstPtr, type);
 	return;
     }
+
+    /*
+     * Visual cursor movement for BiDi text.
+     *
+     * When moving exactly one display character forward, delegate to
+     * TkTextIndexVisualMove so that the cursor steps to the visually
+     * adjacent cluster regardless of logical byte order.  This is the
+     * correct behaviour for left/right arrow-key navigation in a line
+     * that contains RTL runs.
+     *
+     * TkTextIndexVisualMove returns 0 when the line is pure-LTR (falls
+     * back to normal logical movement below) or when the cursor is
+     * already at a line edge (caller handles the line transition).
+     */
+    if (charCount == 1 && type == COUNT_DISPLAY_CHARS && textPtr != NULL) {
+	/*
+	 * Discard const: TkTextIndexVisualMove calls LayoutDLine which
+	 * needs a non-const TkText *.  The widget state is not modified;
+	 * the temporary DLine is freed before return.
+	 */
+	if (TkTextIndexVisualMove((TkText *)(void *)textPtr, srcPtr, 1, dstPtr)) {
+	    return;
+	}
+    }
     if (checkElided) {
 	infoPtr = (TkTextElideInfo *)Tcl_Alloc(sizeof(TkTextElideInfo));
 	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
@@ -2097,6 +2132,20 @@ TkTextIndexBackChars(
     if (charCount < 0) {
 	TkTextIndexForwChars(textPtr, srcPtr, -charCount, dstPtr, type);
 	return;
+    }
+
+    /*
+     * Visual cursor movement — symmetric with TkTextIndexForwChars.
+     * Moving left by one display char steps to the visually preceding
+     * cluster boundary, which for RTL runs is a higher logical byte index.
+     */
+    if (charCount == 1 && type == COUNT_DISPLAY_CHARS && textPtr != NULL) {
+	/*
+	 * Discard const: see comment in TkTextIndexForwChars above.
+	 */
+	if (TkTextIndexVisualMove((TkText *)(void *)textPtr, srcPtr, 0, dstPtr)) {
+	    return;
+	}
     }
     if (checkElided) {
 	infoPtr = (TkTextElideInfo *)Tcl_Alloc(sizeof(TkTextElideInfo));
