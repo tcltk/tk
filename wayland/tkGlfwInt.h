@@ -67,25 +67,24 @@ struct WmInfo;
 typedef struct WindowMapping {
     TkWindow *tkWindow;           /* Associated Tk window (may be NULL for
                                    * offscreen/pixmap-only mappings) */
-    GLFWwindow *glfwWindow;        /* Associated GLFW window - all drawing
+    GLFWwindow *glfwWindow;       /* Associated GLFW window - all drawing
                                    * for this mapping goes to this window */
-    Drawable drawable;              /* Tk drawable ID for this toplevel.
+    Drawable drawable;            /* Tk drawable ID for this toplevel.
                                    * Child windows and pixmaps that share
                                    * this mapping have their own drawable IDs
                                    * registered separately via DrawableMapping */
-    int width;                      /* Current window width in pixels
+    int width;                    /* Current window width in pixels
                                    * (updated by configure events) */
-    int height;                     /* Current window height in pixels
+    int height;                   /* Current window height in pixels
                                    * (updated by configure events) */
-    int clearPending;               /* Flag indicating the framebuffer needs
+    int clearPending;             /* Flag indicating the framebuffer needs
                                    * to be cleared before next draw operation.
                                    * Set to 1 when window is created/resized,
                                    * cleared after clearing */
-    int swapPending;   	           /* 1 = buffer is ready to swap at next idle */
+    int swapPending;   	          /* 1 = buffer is ready to swap at next idle */
     int frameOpen;                /* Is NVG frame currently open? */
     int needsDisplay;             /* Dirty flag - needs redraw */
-    NVGLUframebuffer *fbo;		 /* NanoVG frame buffer. */	
-    struct WindowMapping *nextPtr;  /* Next mapping in global linked list */
+    struct WindowMapping *nextPtr; /* Next mapping in global linked list */
 } WindowMapping;
 
 /*
@@ -510,8 +509,6 @@ MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
-void TkWaylandScheduleDisplay(WindowMapping *m);
-void TkWaylandDisplayProc(ClientData clientData);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
 
 

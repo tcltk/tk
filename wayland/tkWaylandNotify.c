@@ -583,7 +583,6 @@ TkGlfwFramebufferSizeCallback(
 	printf("====== No mapping for Tk Window!\n");
 	return;
     }
-    mapping->fbo = winPtr->privatePtr->fbo;
 
     // Reconfigure the Tk window.
     TkDoConfigureNotify(winPtr);
@@ -1233,69 +1232,6 @@ TkWaylandWakeupGLFW(void)
 	//// This should post an empty event to GLFW!!!
         //write(tsdPtr->wakeupFd, &u, sizeof(u));
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandScheduleDisplay --
- *
- *      Schedules a redraw of a Tk window as an idle handler.
- *
- * Results:
- *      Redraw scheduled.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandScheduleDisplay(WindowMapping *m)
-{
-    if (!m->needsDisplay) {
-        m->needsDisplay = 1;
-        /* Queue idle to close frame after widgets draw. */
-        Tcl_DoWhenIdle(TkWaylandDisplayProc, m);
-    }
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandDisplayProc --
- *
- *      Completes NanoVG drawing cycle.
- *
- * Results:
- *      Drawing complete.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkWaylandDisplayProc(ClientData clientData)
-{
-#if 0 //// What is this for?
-    WindowMapping *m = (WindowMapping *)clientData;
-    if (!m || !m->fbo) return;
-
-    glfwMakeContextCurrent(m->glfwWindow);
-    
-    int fbw, fbh;
-    glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
-    glViewport(0, 0, fbw, fbh);
-
-    /* Clear only the screen backbuffer, not our FBO! */
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    m->needsDisplay = 0;
-#endif
 }
 
 /*

@@ -48,10 +48,35 @@ static int shutdownInProgress = 0;
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE TkGlfwContext *
+MODULE_SCOPE TkGlfwContext*
 TkGlfwGetContext(void)
 {
     return &glfwContext;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Backing Store framebuffers
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NVGLUframebuffer* TkWaylandFBOForTkWindow(
+    TkWindow *winPtr,
+    int *width,
+    int *height) {
+    TkWindow *toplevelPtr = winPtr;
+    while (toplevelPtr->parentPtr) {
+	toplevelPtr = toplevelPtr->parentPtr;
+    }
+    if (width) {
+	*width = Tk_Width(toplevelPtr);
+    }
+    if (height) {
+	*height = Tk_Height(toplevelPtr);
+    }
+    return toplevelPtr->privatePtr->fbo;
 }
 
 /*
@@ -449,7 +474,6 @@ TkGlfwCreateWindow(
     mapping->width        = width;
     mapping->height       = height;
     mapping->clearPending = 1;
-    mapping->fbo = winPtr->privatePtr->fbo;
 
     AddMapping(mapping);
 #if 0 //// What is this for?  It gets reset in tkWaylandMenu.c
@@ -602,12 +626,9 @@ TkGlfwBeginDraw(
     TkWaylandDrawingContext *dcPtr)
 {
     printf("TkGlfwBeginDraw: ");
+    int width, height;
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
-    TkWindow *toplevelPtr = winPtr;
-    while (toplevelPtr->parentPtr) {
-	toplevelPtr = toplevelPtr->parentPtr;
-    }
-    NVGLUframebuffer *fbo = toplevelPtr->privatePtr->fbo;
+    NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr, &width, &height);
     printf("drawing window %s; backing store at %p with FBO: %d\n",
 	   Tk_PathName(winPtr), fbo, fbo->fbo);
     // Bind our backing store framebuffer.
@@ -622,24 +643,22 @@ TkGlfwBeginDraw(
     /* Set viewport to the FBO size. */
 
     /* Start a NanoVG frame drawing on the backing store. */
-    float width = (float) Tk_Width(toplevelPtr);
-    float height = (float) Tk_Height(toplevelPtr);
     ////XXXX Watch out for hi-res displays
-    nvgBeginFrame(glfwContext.vg, width, height, 1.0f);
+    nvgBeginFrame(glfwContext.vg, (float) width, (float) height, 1.0f);
 
     // Set up the drawing context for EndDraw
     dcPtr->vg = glfwContext.vg;
     dcPtr->drawable = drawable;
 
-    /* Compute offsets for a child window. */
+    /* Compute offsets. */
     if (!Tk_IsTopLevel(winPtr)) {
-        int x = 0, y = 0;
+        float x = 0, y = 0;
         while (winPtr && !Tk_IsTopLevel(winPtr)) {
             x += winPtr->changes.x;
             y += winPtr->changes.y;
             winPtr = winPtr->parentPtr;
         }
-        nvgTranslate(dcPtr->vg, (float)x, (float)y);
+        nvgTranslate(dcPtr->vg, x, y);
     }
     TkGlfwApplyGC(dcPtr->vg, gc);
     return TCL_OK;
@@ -695,38 +714,39 @@ static void drawFBOOnBack(NVGLUframebuffer *fbo) {
  MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
     WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
     printf("TkGlfwEndDraw: %s\n", Tk_PathName(m->tkWindow));
-    if (dcPtr && dcPtr->vg) {
-	nvgRestore(dcPtr->vg); // nvgBeginFrame called nvgSave!
-	printf("Binding backing store at %p\n", m->fbo);
-	nvgluBindFramebuffer(m->fbo);
-	int fbwidth, fbheight;
-	glfwGetFramebufferSize(m->glfwWindow, &fbwidth, &fbheight);
-	if (fbwidth == m->width && fbheight == m->height) { 
-	} else {
-	    printf("Buffer size mismatch\n");
-	    return;
-	}
-	glViewport(0, 0, m->width, m->height);
-	// All nvg drawing happens here.
-	nvgEndFrame(dcPtr->vg);
-	printf("Blitting backingStore to the back buffer\n");
-	blitFBOToBack(m->fbo, m->width, m->height);
-	//glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
-	printf("Sending window image to the compositor.\n");
-	fprintf(stderr, "Calling glfwSwapBuffers\n");
-	glfwSwapBuffers(m->glfwWindow);
-	nvgluBindFramebuffer(NULL);
-	printf("Sent\n");
-
-        /* Signal that the screen needs to be updated with the FBO's content. */
-	//// This does not make sense anymore.
-        if (m) {
-	    m->needsDisplay = 1;
-	}
+    NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr, NULL, NULL);
+    if (!dcPtr || !dcPtr->vg) {
+	printf("No drawing context!\n");
+    }
+    nvgRestore(dcPtr->vg); // nvgBeginFrame called nvgSave!
+    printf("Binding backing store at %p\n", fbo);
+    nvgluBindFramebuffer(fbo);
+    int fbwidth, fbheight;
+    glfwGetFramebufferSize(m->glfwWindow, &fbwidth, &fbheight);
+    if (fbwidth == m->width && fbheight == m->height) { 
     } else {
-	printf("No context in TkGlfwEndDraw\n");
+	printf("Buffer size mismatch\n");
+	return;
+    }
+    glViewport(0, 0, m->width, m->height);
+    // All nvg drawing happens here.
+    nvgEndFrame(dcPtr->vg);
+    printf("Blitting backingStore to the back buffer\n");
+    blitFBOToBack(fbo, m->width, m->height);
+    //glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
+    printf("Sending window image to the compositor.\n");
+    fprintf(stderr, "Calling glfwSwapBuffers\n");
+    glfwSwapBuffers(m->glfwWindow);
+    nvgluBindFramebuffer(NULL);
+    printf("Sent\n");
+
+    /* Signal that the screen needs to be updated with the FBO's content. */
+    //// This does not make sense anymore.
+    if (m) {
+	m->needsDisplay = 1;
     }
 }
 
