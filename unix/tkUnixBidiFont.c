@@ -2128,7 +2128,10 @@ Tk_DrawCharsInContext(
     XGCValues values;
     XGetGCValues(display, gc, GCForeground, &values);
     XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
-    if (!xftcolor) return;
+    if (!xftcolor) {
+        XftDrawDestroy(ftDraw);
+        return;
+    }
 
     if (tsdPtr->clipRegion) {
         XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
@@ -2149,112 +2152,148 @@ Tk_DrawCharsInContext(
         goto done;
     }
 
-    /* Shape the FULL string to preserve context for ligatures and BiDi. */
-    ShapedGlyphBuffer fullBuffer;
-    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                                (int)numBytes, &fullBuffer)) {
-        goto done;
-    }
-
-    /* Find the glyphs that overlap our requested range. */
-    XftGlyphFontSpec specs[MAX_GLYPHS];
-    int nspec = 0;
-    int rangeEnd = rangeStart + rangeLength;
-    int firstGlyphFound = 0;
-
-    /*
-     * Find the X position of the first glyph that starts
-     * at or after rangeStart.
+    /* 
+     * Complex text path: Shape the FULL source string to preserve
+     * context for ligatures, Arabic joining, and BiDi reordering.
+     * Then clip to the visual span corresponding to the requested range.
      */
-    int rangeStartX = 0;
-    int rangeStartFound = 0;
-
-    for (int i = 0; i < fullBuffer.glyphCount; i++) {
-        int glyphStart = fullBuffer.glyphs[i].byteOffset;
-        int glyphEnd = glyphStart + fullBuffer.glyphs[i].clusterLen;
-
-        if (glyphEnd <= rangeStart) {
-            /* Glyph is entirely before our range. */
-            continue;
+    {
+        ShapedGlyphBuffer fullBuffer;
+        if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                    (int)numBytes, &fullBuffer)) {
+            goto done;
         }
 
-        if (!rangeStartFound) {
-            /* This is the first glyph that overlaps our range. */
-            rangeStartX = fullBuffer.glyphs[i].x;
-            rangeStartFound = 1;
-            break;
-        }
-    }
+        /* Find the glyph that contains rangeStart (the start of our range). */
+        int rangeStartGlyphIdx = -1;
+        int rangeEndGlyphIdx = -1;
+        int rangeStartByte = (int)rangeStart;
+        int rangeEndByte = (int)(rangeStart + rangeLength);
+        int rangeStartX = 0;
+        int rangeEndX = 0;
 
-    /* Second pass: Draw the glyphs that overlap our range. */
-    for (int i = 0; i < fullBuffer.glyphCount && nspec < MAX_GLYPHS; i++) {
-        int glyphStart = fullBuffer.glyphs[i].byteOffset;
-        int glyphEnd = glyphStart + fullBuffer.glyphs[i].clusterLen;
+        /*
+         * First pass: Find the glyph indices and X positions for
+         * rangeStart and rangeEnd boundaries.
+         */
+        for (int i = 0; i < fullBuffer.glyphCount; i++) {
+            int glyphStart = fullBuffer.glyphs[i].byteOffset;
+            int glyphEnd = glyphStart + fullBuffer.glyphs[i].clusterLen;
 
-        /* Skip glyphs entirely before our range. */
-        if (glyphEnd <= rangeStart) {
-            continue;
-        }
-
-        /* Stop when we've passed our range. */
-        if (glyphStart >= rangeEnd) {
-            break;
-        }
-
-        /* This glyph overlaps our range - draw it. */
-        int faceIdx = fullBuffer.glyphs[i].fontIndex;
-        if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
-
-        XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
-        if (!ftFont) continue;
-
-        unsigned int actualGlyph = fullBuffer.glyphs[i].glyphId;
-
-        /* Fallback logic for missing glyphs in primary font. */
-        if (actualGlyph == 0) {
-            FcChar32 ucs4 = 0;
-            int byteOff = fullBuffer.glyphs[i].byteOffset;
-            if (byteOff >= 0 && byteOff < (int)numBytes) {
-                FcUtf8ToUcs4((const FcChar8 *)(source + byteOff), &ucs4,
-                             (int)numBytes - byteOff);
+            /* Find the glyph that contains or starts at rangeStart. */
+            if (rangeStartGlyphIdx == -1 && glyphEnd >= rangeStartByte) {
+                rangeStartGlyphIdx = i;
+                /* Get the X position at rangeStart boundary.
+                 * For exact byte offset match, we need the offset within the glyph.
+                 * For simplicity, use the glyph's left edge. For cursor accuracy,
+                 * this is sufficient; the visual difference is at most one glyph width.
+                 */
+                rangeStartX = fullBuffer.glyphs[i].x;
             }
 
-            if (ucs4 != 0) {
-                XftFont *fallbackFont = GetFont(fontPtr, ucs4, 0.0);
-                if (fallbackFont) {
-                    actualGlyph = XftCharIndex(display, fallbackFont, ucs4);
-                    if (actualGlyph != 0) ftFont = fallbackFont;
-                }
+            /* Find the glyph that contains or ends at rangeEnd. */
+            if (rangeEndGlyphIdx == -1 && glyphEnd >= rangeEndByte) {
+                rangeEndGlyphIdx = i;
+                rangeEndX = fullBuffer.glyphs[i].x + fullBuffer.glyphs[i].advanceX;
+                break;  /* We've found the end boundary. */
             }
-            if (actualGlyph == 0) continue;
+        }
+
+        /* Fallback if boundaries not found. */
+        if (rangeStartGlyphIdx == -1) {
+            rangeStartGlyphIdx = 0;
+            rangeStartX = 0;
+        }
+        if (rangeEndGlyphIdx == -1 && fullBuffer.glyphCount > 0) {
+            rangeEndGlyphIdx = fullBuffer.glyphCount - 1;
+            rangeEndX = fullBuffer.glyphs[rangeEndGlyphIdx].x +
+                        fullBuffer.glyphs[rangeEndGlyphIdx].advanceX;
         }
 
         /*
-	 * Calculate screen position: baseX + (glyph X - rangeStartX).
-	 */
-        int glyphScreenX = x + (fullBuffer.glyphs[i].x - rangeStartX);
-
-        specs[nspec].font  = ftFont;
-        specs[nspec].glyph = actualGlyph;
-        specs[nspec].x     = glyphScreenX;
-        specs[nspec].y     = y + (int)fullBuffer.glyphs[i].y;
-        nspec++;
-
-        if (!firstGlyphFound) {
-            firstGlyphFound = 1;
+         * Normalize X positions for LTR/RTL.
+         * rangeStartX should be the left edge, rangeEndX the right edge.
+         */
+        if (rangeEndX < rangeStartX) {
+            int tmpX = rangeStartX;
+            rangeStartX = rangeEndX;
+            rangeEndX = tmpX;
         }
-    }
 
-    /* Draw the glyphs. */
-    if (nspec > 0) {
-        LOCK;
-        XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
-        UNLOCK;
+        int clipWidth = rangeEndX - rangeStartX;
+        if (clipWidth <= 0) {
+            /* No visible width - nothing to draw. */
+            goto done;
+        }
+
+        /*
+         * Save graphics state, apply clip rectangle to the visual span,
+         * then draw the FULL shaped line.
+         *
+         * The clip rectangle uses a large height to avoid clipping
+         * ascenders/descenders. The X coordinate is adjusted by the
+         * x parameter (origin of the full string).
+         */
+        XftDrawSetClipRectangles(ftDraw, x + rangeStartX, y - 32768,
+                                 1, &(XRectangle){x + rangeStartX, y - 32768,
+                                                  (unsigned short)clipWidth, 65536});
+
+        /* Draw all glyphs - the clip will restrict to our range. */
+        XftGlyphFontSpec specs[MAX_GLYPHS];
+        int nspec = 0;
+
+        for (int i = 0; i < fullBuffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+            int faceIdx = fullBuffer.glyphs[i].fontIndex;
+            if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+
+            XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
+            if (!ftFont) continue;
+
+            unsigned int actualGlyph = fullBuffer.glyphs[i].glyphId;
+
+            /* Fallback logic for missing glyphs in primary font. */
+            if (actualGlyph == 0) {
+                FcChar32 ucs4 = 0;
+                int byteOff = fullBuffer.glyphs[i].byteOffset;
+                if (byteOff >= 0 && byteOff < (int)numBytes) {
+                    FcUtf8ToUcs4((const FcChar8 *)(source + byteOff), &ucs4,
+                                 (int)numBytes - byteOff);
+                }
+
+                if (ucs4 != 0) {
+                    XftFont *fallbackFont = GetFont(fontPtr, ucs4, 0.0);
+                    if (fallbackFont) {
+                        actualGlyph = XftCharIndex(display, fallbackFont, ucs4);
+                        if (actualGlyph != 0) ftFont = fallbackFont;
+                    }
+                }
+                if (actualGlyph == 0) continue;
+            }
+
+            specs[nspec].font  = ftFont;
+            specs[nspec].glyph = actualGlyph;
+            specs[nspec].x     = x + (int)fullBuffer.glyphs[i].x;
+            specs[nspec].y     = y + (int)fullBuffer.glyphs[i].y;
+            nspec++;
+        }
+
+        if (nspec > 0) {
+            LOCK;
+            XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
+            UNLOCK;
+        }
+
+        /* Restore clip region. */
+        if (tsdPtr->clipRegion) {
+            XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
+        } else {
+            XftDrawSetClipRectangles(ftDraw, 0, 0, 0, NULL);
+        }
     }
 
 done:
     if (tsdPtr->clipRegion) {
-        XftDrawSetClip(ftDraw, NULL);
+        XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
     }
     XftDrawDestroy(ftDraw);
 }
