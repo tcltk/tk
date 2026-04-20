@@ -833,17 +833,8 @@ Tk_MakeWindow(
          *     CHILD WINDOW
          * -------------------------
          *
-         * Assign a unique Tk window ID.  Tk will draw into this ID.
-         * We must register it to the SAME WindowMapping as the toplevel.
+         * We must register the child to the SAME WindowMapping as the toplevel.
          */
-#if 0
-        static Window nextChildId = 100000;
-        window = nextChildId++;
-        if (window == None) {
-            window = nextChildId++;
-        }
-        winPtr->window = window;
-#endif
 	
         /*
          * Register this child drawable to the toplevel's mapping.
@@ -4313,13 +4304,6 @@ XMapWindow(
     TCL_UNUSED(Display *),
     TCL_UNUSED(Window))
 {
-#if 0
-    GLFWwindow *gw = WindowToGLFW(window);
-
-    if (gw != NULL) {
-        glfwShowWindow(gw);
-    }
-#endif
     return Success;
 }
 
@@ -4452,13 +4436,6 @@ XResizeWindow(
     TCL_UNUSED(unsigned int), /* width */
     TCL_UNUSED(unsigned int)) /* height */
 {
-#if 0
-    GLFWwindow *gw = WindowToGLFW(window);
-    if (gw != NULL) {
-        glfwSetWindowSize(gw, (int)width, (int)height);
-        TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
-    }
-#endif
     return Success;
 }
 
@@ -4485,13 +4462,6 @@ XMoveWindow(
     TCL_UNUSED(int),      /* x */
     TCL_UNUSED(int))      /* y */
 {
-#if 0
-    GLFWwindow *gw = WindowToGLFW(window);
-
-    if (gw != NULL) {
-        glfwSetWindowPos(gw, x, y);
-    }
-#endif
     return Success;
 }
 
@@ -4520,14 +4490,6 @@ XMoveResizeWindow(
     TCL_UNUSED(unsigned int), /* width */
     TCL_UNUSED(unsigned int)) /* height */
 {
-#if 0
-    GLFWwindow *gw = WindowToGLFW(window);
-    if (gw != NULL) {
-        glfwSetWindowPos(gw,  x, y);
-        //glfwSetWindowSize(gw, (int)width, (int)height);
-        TkGlfwUpdateWindowSize(gw, (int)width, (int)height);
-    }
-#endif
     return Success;
 }
 

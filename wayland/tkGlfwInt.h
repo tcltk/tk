@@ -84,7 +84,6 @@ typedef struct WindowMapping {
     int swapPending;   	           /* 1 = buffer is ready to swap at next idle */
     int frameOpen;                /* Is NVG frame currently open? */
     int needsDisplay;             /* Dirty flag - needs redraw */
-    int inEventCycle;             /* Currently processing events */
     NVGLUframebuffer *fbo;		 /* NanoVG frame buffer. */	
     struct WindowMapping *nextPtr;  /* Next mapping in global linked list */
 } WindowMapping;
@@ -509,19 +508,8 @@ MODULE_SCOPE void TkGlfwProcessEvents(void);
 MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
-
-////unused
-#if 0
-typedef struct {
-    Tcl_Event  header;  /* Must be first. */
-    XEvent     xEvent;
-    TkWindow  *winPtr;
-} TkWaylandExposeEvent;
-#endif
-
-MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y, int width, int height);
-MODULE_SCOPE void TkWaylandBeginEventCycle(WindowMapping *m);
-MODULE_SCOPE void TkWaylandEndEventCycle(WindowMapping *m);
+MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
+					    int width, int height);
 void TkWaylandScheduleDisplay(WindowMapping *m);
 void TkWaylandDisplayProc(ClientData clientData);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);

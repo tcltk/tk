@@ -534,13 +534,6 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
     if (!mapping) {
 	return;
     }
-    
-    /* Close any open frame. */
-    //// can this ever happen?  I think this can be removed.
-    if (mapping->frameOpen) {
-	printf("TkGlfwWindowSizeCallback: size changed with frame open\n");
-        TkWaylandEndEventCycle(mapping);
-    }
 }
 
 /*
@@ -1252,85 +1245,6 @@ TkWaylandWakeupGLFW(void)
 	//// This should post an empty event to GLFW!!!
         //write(tsdPtr->wakeupFd, &u, sizeof(u));
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandBeginEventCycle --
- *
- *      Called at the START of each event loop iteration, before
- *      processing any expose events. Opens the NanoVG frame.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Opens NanoVG frame, clears framebuffer, sets up viewport.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandBeginEventCycle(WindowMapping *m)
-{
-    if (!m || !m->glfwWindow) return;
-
-	if (m->frameOpen) {
-        /* Already in drawing round – do NOT clear again. */
-		fprintf(stderr, "BeginEventCycle: already open, continuing\n");
-		return;
-	}
-
-
-    glfwMakeContextCurrent(m->glfwWindow);
-
-#if 0
-    int fbw, fbh;
-    glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
-    glViewport(0, 0, fbw, fbh);
-
-    /* Clear only when starting new frame. */
-    //// Changed to purple for debugging
-    glClearColor(0.92f, 0.92f, 0.92f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    nvgBeginFrame(glfwContext.vg,
-                  (float)m->width,
-                  (float)m->height,
-                  (float)fbw / (float)m->width);
-
-    nvgSave(glfwContext.vg);
-    nvgScale(glfwContext.vg, 1.0f, -1.0f);
-    nvgTranslate(glfwContext.vg, 0.0f, -(float)m->height);
-    nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
-
-    m->frameOpen = 1;
-    m->inEventCycle = 1;
-    glfwContext.activeFrame = m;
-#endif
-}
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandEndEventCycle --
- *
- *      Called at the END of each event loop iteration, after all
- *      widgets have drawn. Closes the NanoVG frame and swaps buffers.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Ends NanoVG frame, swaps GL buffers.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandEndEventCycle(TCL_UNUSED(WindowMapping *))
-{
-	return;
 }
 
 /*
