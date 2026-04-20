@@ -34,10 +34,6 @@ typedef struct {
 				 * first in structure. */
     NSFont *nsFont;
     NSDictionary *nsAttributes;
-    int lastRunIsRTL;		/* BiDi direction cache: set by
-				 * Tk_MeasureCharsInContext from the first
-				 * CTRun's kCTRunStatusRightToLeft flag.
-				 * -1 = not yet set, 0 = LTR, 1 = RTL. */
 } MacFont;
 
 /*
@@ -336,7 +332,6 @@ InitFont(
 	TkInitFontAttributes(faPtr);
     }
     fontPtr->nsFont = nsFont;
-    fontPtr->lastRunIsRTL = -1;	/* not yet classified */
 
     /*
      * Some don't like antialiasing on fixed-width even if bigger than limit
@@ -1169,30 +1164,6 @@ Tk_MeasureCharsInContext(
 	}
 
     }
-    /*
-     * Determine the BiDi direction of this chunk by inspecting the status
-     * of the first CTRun in the final measurement line.  We create a
-     * fresh line from the range already determined above — CTRun status
-     * is cheap to query.  fontPtr is declared const here but lastRunIsRTL
-     * is a mutable cache field; the cast is intentional and safe.
-     */
-    if (range.length > 0) {
-	CTLineRef dirLine = CTTypesetterCreateLine(typesetter,
-		CFRangeMake(0, range.length));
-	if (dirLine) {
-	    CFArrayRef ctRuns = CTLineGetGlyphRuns(dirLine);
-	    if (ctRuns && CFArrayGetCount(ctRuns) > 0) {
-		CTRunRef firstRun =
-			(CTRunRef) CFArrayGetValueAtIndex(ctRuns, 0);
-		CTRunStatus status = CTRunGetStatus(firstRun);
-		((MacFont *)(void *)fontPtr)->lastRunIsRTL =
-			(status & kCTRunStatusRightToLeft) ? 1 : 0;
-	    } else {
-		((MacFont *)(void *)fontPtr)->lastRunIsRTL = 0;
-	    }
-	    CFRelease(dirLine);
-	}
-    }
     CFRelease(typesetter);
     [attributedString release];
     [string release];
@@ -1582,107 +1553,3 @@ TkMacOSXUseAntialiasedText(
  * coding: utf-8
  * End:
  */
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkpFontChunkIsRTL --
- *
- *	macOS/CoreText implementation of the platform BiDi direction hook.
- *
- *	Returns fontPtr->lastRunIsRTL which is set by Tk_MeasureCharsInContext
- *	from the kCTRunStatusRightToLeft flag of the first CTRun of the
- *	measurement line.  TkTextCharLayoutProc always calls measurement
- *	before calling TkFontChunkIsRTL, so the cached value is current.
- *
- *	Falls back to a Unicode strong-character scan when lastRunIsRTL is
- *	still -1 (font just created and not yet measured).
- *
- * Results:
- *	1 if the chunk is RTL, 0 if LTR.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-int
-TkpFontChunkIsRTL(
-    TkFont *tkFontPtr,
-    const char *source,
-    Tcl_Size numBytes)
-{
-    MacFont *fontPtr = (MacFont *) tkFontPtr;
-
-    if (fontPtr->lastRunIsRTL >= 0) {
-	return fontPtr->lastRunIsRTL;
-    }
-
-    /*
-     * lastRunIsRTL == -1: no measurement has run for this font yet.
-     * Fall back to the Unicode P2/P3 strong-character heuristic.
-     */
-    const char *p   = source;
-    const char *end = source + numBytes;
-    int ch;
-
-    while (p < end) {
-	Tcl_Size len = Tcl_UtfToUniChar(p, &ch);
-	if (ch < 0) break;
-
-	if ((ch >= 0x0590 && ch <= 0x05FF) ||
-	    (ch >= 0x0600 && ch <= 0x06FF) ||
-	    (ch >= 0x0700 && ch <= 0x074F) ||
-	    (ch >= 0x0780 && ch <= 0x07FF) ||
-	    (ch >= 0x0800 && ch <= 0x085F) ||
-	    (ch >= 0x08A0 && ch <= 0x08FF) ||
-	    (ch >= 0xFB1D && ch <= 0xFB4F) ||
-	    (ch >= 0xFB50 && ch <= 0xFDFF) ||
-	    (ch >= 0xFE70 && ch <= 0xFEFF) ||
-	    (ch >= 0x10E60 && ch <= 0x10E7F)) {
-	    return 1;
-	}
-	if ((ch >= 0x0041 && ch <= 0x005A) ||
-	    (ch >= 0x0061 && ch <= 0x007A) ||
-	    (ch >= 0x00C0 && ch <= 0x02B8) ||
-	    (ch >= 0x0370 && ch <= 0x04FF)) {
-	    return 0;
-	}
-	p += len;
-    }
-    return 0;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkpFontChunkHitTest --
- *
- *	macOS stub.  CoreText handles BiDi internally during layout; the
- *	CTRun cluster boundaries are not currently extracted into a sorted
- *	index accessible here.  Return -1 so that CharMeasureProc uses the
- *	x-mirror approximation.
- *
- *	A full implementation would call CTRunGetStringIndices on each CTRun
- *	and CTRunGetPositions to build a visual-order cluster list, then
- *	binary-search it here.
- *
- * Results:
- *	Always -1 (not implemented).
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-int
-TkpFontChunkHitTest(
-    TCL_UNUSED(TkFont *),
-    TCL_UNUSED(const char *),
-    TCL_UNUSED(Tcl_Size),
-    TCL_UNUSED(int))
-{
-    return -1;
-}

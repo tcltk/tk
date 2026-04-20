@@ -195,16 +195,6 @@ typedef struct {
     X11Shaper shaper;
     /* Precomputed scale factors. */
     double pixelScale;          /* Global pixel scaling factor. */
-    /*
-     * BiDi run-direction cache.
-     *
-     * Set to the isRTL flag of the last BidiRun processed by
-     * X11Shaper_ShapeString so that TkpFontChunkIsRTL can read it back
-     * immediately after measurement without re-running the shaper.
-     * -1 = not yet set (font just created or Latin fast-path was taken
-     *      for a pure-LTR chunk).
-     */
-    int lastRunIsRTL;
 } UnixFtFont;
 
 /*
@@ -717,7 +707,6 @@ InitFont(
             return NULL;
         }
         memset(fontPtr, 0, sizeof(UnixFtFont));
-        fontPtr->lastRunIsRTL = -1;  /* -1 = not yet classified */
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -1095,7 +1084,6 @@ X11Shaper_ShapeString(
                 buffer->visualIndex[j].advanceX = buffer->glyphs[j].advanceX;
                 buffer->visualIndex[j].byteEnd  = buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
             }
-            fontPtr->lastRunIsRTL = 0; /* Latin fast-path is always LTR */
             return 1;
         }
     }
@@ -1106,10 +1094,6 @@ X11Shaper_ShapeString(
         numBytes <= MAX_STRING_CACHE &&
         memcmp(source, shaper->cache.text, numBytes) == 0) {
         *buffer = shaper->cache.buffer;
-        /* Restore the cached direction flag so TkpFontChunkIsRTL is correct. */
-        if (buffer->glyphCount > 0) {
-            fontPtr->lastRunIsRTL = buffer->glyphs[0].isRTL;
-        }
         return 1;
     }
 
@@ -1303,17 +1287,6 @@ X11Shaper_ShapeString(
     }
 
     buffer->totalAdvance = globalPenX;
-
-    /*
-     * Cache the dominant run direction for TkpFontChunkIsRTL.
-     * We use the first BidiRun's direction: SheenBidi returns runs in
-     * visual order, so bidiRuns[0] is the leftmost (dominant) run of
-     * the chunk.  For a pure-RTL chunk numRuns==1 and this is exact.
-     * For mixed chunks the caller (CharBboxProc / CharMeasureProc) only
-     * needs to know whether to mirror pixel arithmetic for the chunk as
-     * a whole; the first-run direction is the correct signal.
-     */
-    fontPtr->lastRunIsRTL = (numRuns > 0) ? bidiRuns[0].isRTL : 0;
 
     /* Visual index for cursor positioning. */
     buffer->indexCount = buffer->glyphCount;
@@ -2473,159 +2446,3 @@ TkUnixSetXftClipRegion(
  * fill-column: 78
  * End:
  */
-
-/*
- * ---------------------------------------------------------------
- * TkpFontChunkIsRTL --
- *
- *   Unix/HarfBuzz implementation of the platform BiDi direction hook.
- *
- *   Returns the direction flag cached in fontPtr->lastRunIsRTL by the
- *   most recent call to X11Shaper_ShapeString for this font.
- *   TkTextCharLayoutProc always calls measurement (which drives shaping)
- *   before calling TkFontChunkIsRTL, so the cached value is current.
- *
- *   Falls back to scanning the source bytes for a Unicode strong-RTL
- *   character when lastRunIsRTL is still -1 (font just created, or the
- *   chunk was empty).
- *
- * Results:
- *   1 if the chunk is RTL, 0 if LTR.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-TkpFontChunkIsRTL(
-    TkFont *tkFontPtr,
-    const char *source,
-    Tcl_Size numBytes)
-{
-    UnixFtFont *fontPtr = (UnixFtFont *) tkFontPtr;
-
-    if (fontPtr->lastRunIsRTL >= 0) {
-        return fontPtr->lastRunIsRTL;
-    }
-
-    /*
-     * lastRunIsRTL == -1: no shaping has run for this font yet (or the
-     * chunk was zero-length).  Fall back to a fast Unicode scan for the
-     * first strong directional character (Unicode P2/P3).
-     */
-    const char *p = source;
-    const char *end = source + numBytes;
-    int ch;
-
-    while (p < end) {
-        Tcl_Size len = Tcl_UtfToUniChar(p, &ch);
-        if (ch < 0) break;
-
-        /* Strong RTL ranges (Hebrew, Arabic and related scripts). */
-        if ((ch >= 0x0590 && ch <= 0x05FF) ||
-            (ch >= 0x0600 && ch <= 0x06FF) ||
-            (ch >= 0x0700 && ch <= 0x074F) ||
-            (ch >= 0x0780 && ch <= 0x07FF) ||
-            (ch >= 0x0800 && ch <= 0x085F) ||
-            (ch >= 0x08A0 && ch <= 0x08FF) ||
-            (ch >= 0xFB1D && ch <= 0xFB4F) ||
-            (ch >= 0xFB50 && ch <= 0xFDFF) ||
-            (ch >= 0xFE70 && ch <= 0xFEFF) ||
-            (ch >= 0x10E60 && ch <= 0x10E7F)) {
-            return 1;
-        }
-        /* First strong LTR character — ASCII letters, Latin, Cyrillic, Greek. */
-        if ((ch >= 0x0041 && ch <= 0x005A) ||
-            (ch >= 0x0061 && ch <= 0x007A) ||
-            (ch >= 0x00C0 && ch <= 0x02B8) ||
-            (ch >= 0x0370 && ch <= 0x04FF)) {
-            return 0;
-        }
-        p += len;
-    }
-    return 0; /* default LTR */
-}
-
-/*
- * ---------------------------------------------------------------
- * TkpFontChunkHitTest --
- *
- *   Unix/HarfBuzz implementation of the visual hit-test hook.
- *
- *   Given a visual pixel x position within a chunk, returns the
- *   logical byte offset (from the start of source) of the cluster
- *   boundary closest to x, using the sorted visualIndex built by
- *   X11Shaper_ShapeString.
- *
- *   This is exact for mixed-bidi text: the visualIndex maps every
- *   visual pixel span to its correct logical byteEnd, regardless of
- *   run direction.
- *
- *   Returns -1 if the shaper cache doesn't match source/numBytes
- *   (caller falls back to the mirror approximation).
- *
- * Results:
- *   Byte offset from start of source, or -1 on cache miss.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-int
-TkpFontChunkHitTest(
-    TkFont *tkFontPtr,
-    const char *source,
-    Tcl_Size numBytes,
-    int x)              /* Visual x relative to chunk origin (pixels). */
-{
-    UnixFtFont *fontPtr = (UnixFtFont *) tkFontPtr;
-    X11Shaper  *shaper  = &fontPtr->shaper;
-
-    /*
-     * Verify the cache holds this exact string.  The cache key is the
-     * raw source bytes; if it matches we can trust the visualIndex.
-     */
-    if (!shaper->cache.valid
-            || shaper->cache.len != (int) numBytes
-            || numBytes > MAX_STRING_CACHE
-            || memcmp(source, shaper->cache.text, (size_t) numBytes) != 0) {
-        return -1;
-    }
-
-    ShapedGlyphBuffer *buf = &shaper->cache.buffer;
-    if (buf->indexCount == 0) {
-        return 0;
-    }
-
-    /*
-     * The visualIndex is sorted by ascending x.  Find the entry whose
-     * pixel span [vi.x, vi.x + vi.advanceX) contains x, choosing the
-     * nearer cluster edge for snap-to-character behaviour.
-     *
-     * We scan linearly; MAX_GLYPHS is 512 and this path is only taken
-     * for RTL or mixed chunks so the count is typically small.
-     */
-    for (int i = 0; i < buf->indexCount; i++) {
-        int vx  = buf->visualIndex[i].x;
-        int vw  = buf->visualIndex[i].advanceX;
-        int end = buf->visualIndex[i].byteEnd;
-
-        if (x < vx + vw) {
-            /*
-             * x lands in this glyph's span.  Snap to the nearer edge:
-             * if x is in the left half return the previous byteEnd
-             * (= start of this cluster), otherwise return this byteEnd.
-             */
-            if (x < vx + vw / 2) {
-                /* Left half → cluster start = previous byteEnd (or 0). */
-                return (i > 0) ? buf->visualIndex[i-1].byteEnd : 0;
-            }
-            return end;
-        }
-    }
-
-    /* x is past the last glyph — return the total byte count. */
-    return (int) numBytes;
-}
