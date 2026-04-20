@@ -433,6 +433,13 @@ TkGlfwCreateWindow(
         glfwShowWindow(window);
     }
 
+    /* Create a framebuffer for the backing store of the window. */
+    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(glfwContext.vg, width,
+		       height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+    if (winPtr->privatePtr->fbo == NULL) {
+		fprintf(stderr, "Could not create NanoVG framebuffer\n");
+    }
+
     /* Allocate and initialize mapping. */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
@@ -442,10 +449,7 @@ TkGlfwCreateWindow(
     mapping->width        = width;
     mapping->height       = height;
     mapping->clearPending = 1;
-    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
-	if (mapping->fbo == NULL) {
-		fprintf(stderr, "Could not create NanoVG framebuffer\n");
-	}
+    mapping->fbo = winPtr->privatePtr->fbo;
 
     AddMapping(mapping);
 #if 0 //// What is this for?  It gets reset in tkWaylandMenu.c
@@ -599,23 +603,15 @@ TkGlfwBeginDraw(
 {
     printf("TkGlfwBeginDraw: ");
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
-
-    // Make sure the window size has been registered correctly.
-    // For a child window, this finds the mapping it shares with
-    // its containing toplevel.  That knows the FBO that we need
-    // to draw into, which is all that we need from mappings.
-
-    WindowMapping *m = FindMappingByDrawable(drawable);
-
-    if (!m || !m->fbo) {
-	printf("Failed to find mapping for drawable %lx\n", drawable);
-        return TCL_ERROR;
+    TkWindow *toplevelPtr = winPtr;
+    while (toplevelPtr->parentPtr) {
+	toplevelPtr = toplevelPtr->parentPtr;
     }
-
-    printf("window %s; backing store at %p with FBO: %d\n",
-	   Tk_PathName(m->tkWindow), m->fbo, m->fbo->fbo);
+    NVGLUframebuffer *fbo = toplevelPtr->privatePtr->fbo;
+    printf("drawing window %s; backing store at %p with FBO: %d\n",
+	   Tk_PathName(winPtr), fbo, fbo->fbo);
     // Bind our backing store framebuffer.
-    nvgluBindFramebuffer(m->fbo);
+    nvgluBindFramebuffer(fbo);
     
     /* Check FBO completeness for now. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -624,18 +620,13 @@ TkGlfwBeginDraw(
     }
 
     /* Set viewport to the FBO size. */
-    //// Note: BeginFrame supposedly does this.
-    glViewport(0, 0, m->width, m->height);
-    printf("Viewport is %d x %d.\n", m->width, m->height);
 
-    if (m->width != Tk_Width(m->tkWindow) ||
-	m->height != Tk_Height(m->tkWindow)) {
-	printf("window size does not match mapping\n");
-    }
-	
     /* Start a NanoVG frame drawing on the backing store. */
-	
-    nvgBeginFrame(glfwContext.vg, (float)m->width, (float)m->height, 1.0f);
+    float width = (float) Tk_Width(toplevelPtr);
+    float height = (float) Tk_Height(toplevelPtr);
+    ////XXXX Watch out for hi-res displays
+    nvgBeginFrame(glfwContext.vg, width, height, 1.0f);
+
     // Set up the drawing context for EndDraw
     dcPtr->vg = glfwContext.vg;
     dcPtr->drawable = drawable;
@@ -652,7 +643,7 @@ TkGlfwBeginDraw(
     }
     TkGlfwApplyGC(dcPtr->vg, gc);
     return TCL_OK;
-}
+    }
 
 /*
  *----------------------------------------------------------------------

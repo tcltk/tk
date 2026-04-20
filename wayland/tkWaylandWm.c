@@ -577,8 +577,12 @@ TkWmUnmapWindow(TkWindow *winPtr)
 
 void
 TkWmDeadWindow(
-	       TkWindow *winPtr)
+    TkWindow *winPtr)
 {
+    if (winPtr->privatePtr) {
+	ckfree(winPtr->privatePtr);
+	winPtr->privatePtr = NULL;
+    }
     WmInfo *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
     WmInfo *wmPtr2;
     int     i;
@@ -780,6 +784,10 @@ Tk_MakeWindow(
          *   TOPLEVEL WINDOW
          * -------------------------
          */
+
+	if (winPtr->privatePtr == NULL) {
+	    winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+	}
 
         width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;

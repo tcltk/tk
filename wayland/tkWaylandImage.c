@@ -353,52 +353,36 @@ XCopyArea(
     unsigned  width, unsigned height,
     int       dst_x, int dst_y)
 {
-    WindowMapping *srcMapping = NULL;
-    WindowMapping *dstMapping = NULL;
+    (void)display;
+    (void)gc;
+    TkWindow *srcWindow = NULL;
+    TkWindow *dstWindow = NULL;
     TkWaylandPixmap *srcPixmap = NULL;
     TkWaylandPixmap *dstPixmap = NULL;
     
-    (void)display;
-    (void)gc;
-    
-    /* Determine source and destination types */
     if (TkWaylandDrawableIsPixmap(src)) {
-        srcPixmap = (TkWaylandPixmap *)src;
+	srcPixmap = TkWaylandPixmapFromDrawable(src);
     } else {
-        srcMapping = FindMappingByDrawable(src);
+	srcWindow = TkWaylandTkWindowFromDrawable(src);
     }
-    
     if (TkWaylandDrawableIsPixmap(dst)) {
-        dstPixmap = (TkWaylandPixmap *)dst;
+	dstPixmap = TkWaylandPixmapFromDrawable(dst);
     } else {
-        dstMapping = FindMappingByDrawable(dst);
+	dstWindow = TkWaylandTkWindowFromDrawable(dst);
     }
-    
-    /*
-     * Pixmap → Window
-     */
-    if (srcPixmap && dstMapping) {
+
+    if (srcPixmap && dstWindow) {
         return XCopyArea_PixmapToWindow(srcPixmap, dst, gc,
-                                       src_x, src_y, width, height,
-                                       dst_x, dst_y);
+                   src_x, src_y, width, height, dst_x, dst_y);
     }
     
-    /*
-     * Window → Window (for scrolling)
-     */
-    if (srcMapping && dstMapping && srcMapping == dstMapping) {
-		return Success;
-    }
-    
-    /*
-     * Pixmap → Pixmap
-     */
     if (srcPixmap && dstPixmap) {
         return XCopyArea_PixmapToPixmap(srcPixmap, dstPixmap, gc,
-                                       src_x, src_y, width, height,
-                                       dst_x, dst_y);
+		   src_x, src_y, width, height, dst_x, dst_y);
     }
-    
+
+    //// The other two cases are not handled yet.
+
     return Success;
 }
 

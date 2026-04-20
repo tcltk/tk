@@ -529,11 +529,6 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
     glfwGetFramebufferSize(window, &fbwidth, &fbheight);
     float pixelRatio = (float) fbwidth / (float) width;
     printf("This window has pixel ratio %.1f.\n", pixelRatio);
-    
-    WindowMapping *mapping = FindMappingByGLFW(window);
-    if (!mapping) {
-	return;
-    }
 }
 
 /*
@@ -566,39 +561,32 @@ TkGlfwFramebufferSizeCallback(
 {
     recordCallback();
     printf("TkGlfwFramebufferSizeCallback ");
+    TkGlfwUpdateWindowSize(window, width, height);
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	printf("No Tk window!\n");
 	return;
     }
+    // Should be in window private struct.
+    extern TkGlfwContext glfwContext;
+    /* Rebuild the backing store */
+    nvgluDeleteFramebuffer(winPtr->privatePtr->fbo);
+    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(
+	 glfwContext.vg, width, height, 0);
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
+
+    // Update the mapping, for now
     WindowMapping *mapping;
     mapping = FindMappingByTk(winPtr);
     if (!mapping) {
+	printf("====== No mapping for Tk Window!\n");
 	return;
     }
-    printf("Rebuilding framebuffer for %s to size %dx%d\n",
-	   Tk_PathName(mapping->tkWindow), width, height);
-    nvgluDeleteFramebuffer(mapping->fbo);
-    // Should be in window private struct.
-    extern TkGlfwContext glfwContext;
-    // Rebuild the backing store
-    mapping->fbo = nvgluCreateFramebuffer(glfwContext.vg, width, height, 0);
+    mapping->fbo = winPtr->privatePtr->fbo;
 
-    /* Notify Tk */
-    mapping->width = width;
-    mapping->height = height;
-    winPtr->changes.width = width;
-    winPtr->changes.height = height;
-    printf("TkGlfwFramebufferSizeCallback: Configuring\n");
+    // Reconfigure the Tk window.
     TkDoConfigureNotify(winPtr);
-    // Wayland wants a call to glfwSwapBuffers very soon after
-    // it sends a configure notification.  Some people (or bots)
-    // recommend redrawing the window before this callback
-    // returns.  This is a test of that concept.
-    //printf("TkGlfwFramebufferSizeCallback: Exposing\n");
-    //TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
-    //while (Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)) {};
-
     /* Update ViewPort */
     glViewport(0, 0, width, height);
 }
