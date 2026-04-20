@@ -2100,6 +2100,26 @@ done:
  * ---------------------------------------------------------------
  */
 
+/*
+ * ---------------------------------------------------------------
+ * Tk_DrawCharsInContext --
+ *
+ *   Draws a substring of text using full shaping + bidi logic,
+ *   preserving context from surrounding text for proper ligatures
+ *   and BiDi reordering.
+ *
+ *   FIX: Shape the FULL source string, then clip to the visual span
+ *   of the requested range. This ensures correct Arabic joining,
+ *   ligatures, kerning, and BiDi reordering across substring boundaries.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Draws the specified range of characters.
+ * ---------------------------------------------------------------
+ */
+
 void
 Tk_DrawCharsInContext(
     Display *display,
@@ -2227,16 +2247,20 @@ Tk_DrawCharsInContext(
         }
 
         /*
-         * Save graphics state, apply clip rectangle to the visual span,
+         * Save current clip, apply clip rectangle to the visual span,
          * then draw the FULL shaped line.
          *
          * The clip rectangle uses a large height to avoid clipping
-         * ascenders/descenders. The X coordinate is adjusted by the
-         * x parameter (origin of the full string).
+         * ascenders/descenders.
          */
-        XftDrawSetClipRectangles(ftDraw, x + rangeStartX, y - 32768,
-                                 1, &(XRectangle){x + rangeStartX, y - 32768,
-                                                  (unsigned short)clipWidth, 65536});
+        XRectangle clipRect;
+        clipRect.x = x + rangeStartX;
+        clipRect.y = y - 32768;
+        clipRect.width = (unsigned short)clipWidth;
+        clipRect.height = 65536;
+
+        /* Set the clip rectangle. */
+        XftDrawSetClipRectangles(ftDraw, 0, 0, &clipRect, 1);
 
         /* Draw all glyphs - the clip will restrict to our range. */
         XftGlyphFontSpec specs[MAX_GLYPHS];
@@ -2283,11 +2307,12 @@ Tk_DrawCharsInContext(
             UNLOCK;
         }
 
-        /* Restore clip region. */
+        /* Restore original clip region. */
         if (tsdPtr->clipRegion) {
             XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
         } else {
-            XftDrawSetClipRectangles(ftDraw, 0, 0, 0, NULL);
+            /* Clear clip region. */
+            XftDrawSetClipRectangles(ftDraw, 0, 0, NULL, 0);
         }
     }
 
