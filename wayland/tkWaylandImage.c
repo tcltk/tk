@@ -362,13 +362,13 @@ XCopyArea(
     (void)gc;
     
     /* Determine source and destination types */
-    if (IsPixmap(src)) {
+    if (TkWaylandDrawableIsPixmap(src)) {
         srcPixmap = (TkWaylandPixmap *)src;
     } else {
         srcMapping = FindMappingByDrawable(src);
     }
     
-    if (IsPixmap(dst)) {
+    if (TkWaylandDrawableIsPixmap(dst)) {
         dstPixmap = (TkWaylandPixmap *)dst;
     } else {
         dstMapping = FindMappingByDrawable(dst);

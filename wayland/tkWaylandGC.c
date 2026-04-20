@@ -518,46 +518,6 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
 /*
  *----------------------------------------------------------------------
  *
- * IsPixmap --
- *
- *      Check if a drawable is a pixmap (FBO-backed).
- *
- * Results:
- *      Returns 1 if pixmap, 0 if window or invalid.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-IsPixmap(Drawable drawable)
-{
-    if (!drawable) return 0;
-    
-    /* Window IDs are small integers - cast to uintptr_t for comparison. */
-    if ((uintptr_t)drawable < 0x1000000) {
-        return 0;
-    }
-    
-    TkWaylandPixmap *impl = (TkWaylandPixmap *)drawable;
-    
-    /* Check type field and validate dimensions */
-    if (impl->type == 1 &&
-        impl->width > 0 && impl->width < 32768 &&
-        impl->height > 0 && impl->height < 32768 &&
-        impl->fbo != 0) {
-        return 1;
-    }
-    
-    return 0;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
  * XCreateGC --
  *
  *	Xlib-compatible wrapper for TkWaylandCreateGC.

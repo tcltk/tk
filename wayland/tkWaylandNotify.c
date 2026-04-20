@@ -284,16 +284,20 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
  *
  * TkWaylandCheckProc --
  *
- *      Process pending Wayland/GLFW events and queue Tk events.
  *      Called by Tcl_DoOneEvent after calling Tcl_WaitForEvent, which
  *      will call tclNotifierHooks.waitForEventProc if it is defined.
  *      We are using the default waitForEventProc (I think).
+ *
+ *      The SetupProc already processed all events that were in the
+ *      queue.  If there were none then it will have requested a block
+ *      for a few milliseconds.  So there could be some events in the
+ *      queue by now.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Begins the event cycle for the main window to enable rendering.
+ *      May generate some X events when callbacks are called.
  *
  *----------------------------------------------------------------------
  */
@@ -302,11 +306,11 @@ static void
 TkWaylandCheckProc(TCL_UNUSED(void *),
 	int flags) 
 {
-    //// Currently we don't need to do anything here. (????)
     if (!(flags & TCL_WINDOW_EVENTS)) {
-	printf("CheckProc called without WINDOW_EVENTS\n");
+	fprintf(stderr, "CheckProc called without WINDOW_EVENTS\n");
 	return;
     }
+    glfwPollEvents();
 } 
 /*
  *----------------------------------------------------------------------

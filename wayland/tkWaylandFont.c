@@ -504,7 +504,6 @@ Tk_MeasureCharsInContext(
     int flags,
     int *lengthPtr)
 {
-    printf("Tk_MeasureCharsInContext\n");
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
 
     if (rangeStart < 0 || rangeLength <= 0 ||
@@ -769,7 +768,6 @@ TkpDrawAngledCharsInContext(
     double y,
     double angle)
 {
-    printf("TkpDrawAngledCharsInContext\n");
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
     if (rangeStart < 0 || rangeLength <= 0 ||
             rangeStart + rangeLength > numBytes) {
@@ -842,9 +840,6 @@ TkpDrawAngledCharsInContext(
             nvgStroke(vg);
         }
     }
-
-    //nvgRestore(vg);
-    printf("TkpDrawAngledCharsInContext done\n");
 }
 
 /*

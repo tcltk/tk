@@ -399,6 +399,7 @@ Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr);
 TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable);
 Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap);
 TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable);
+int TkWaylandDrawableIsPixmap(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------
@@ -481,7 +482,6 @@ MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDraw
 MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
-int IsPixmap(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------

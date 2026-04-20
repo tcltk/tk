@@ -105,8 +105,6 @@ const char *const WmAttributeNames[] = {
  */
 
 /*
- * These concepts are, for me, among the most confusing parts of Tk.
- *
  * The file X.h in the xlib directory defines a type XID which is a 64 bit
  * integer on all platforms supported by Tk.  (Note that the original X11
  * specification used a 32 bit XID).  The X.h file also defines types
@@ -141,24 +139,29 @@ const char *const WmAttributeNames[] = {
  * check the types of their arguments.
  */
 
-Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
+inline int TkWaylandDrawableIsPixmap(Drawable drawable) {
+    return ((drawable & 1UL) == 1);
+}
+
+inline Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
      return (Drawable) winPtr;
  }
 
-TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
-    printf("Getting window from drawable %lx of size %d\n",
-	   drawable, sizeof(drawable));
+inline TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+	Tcl_Panic("Attempt to convert a pixmap drawable to a window.");
+    }
     TkWindow *result = (TkWindow *) drawable;
     printf("result is %p\n", result);
     return result;
 }
 
-Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap) {
+inline Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap) {
      return 1 + (Drawable) pixmap;
  }
 
-TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
-    if ((drawable & 1UL) == 0) {
+inline TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
+    if (!TkWaylandDrawableIsPixmap(drawable)) {
 	Tcl_Panic("Attempt to convert a window drawable to a pixmap");
     }
     return (TkWaylandPixmap *) (drawable & ~1UL);
@@ -166,7 +169,7 @@ TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
 
 /*
  *----------------------------------------------------------------------
- * Forward declarations
+ * Declarations of static functions defined in this module.
  *----------------------------------------------------------------------
  */
 
@@ -4431,25 +4434,24 @@ XUnmapSubwindows(
  *
  * XResizeWindow --
  *
- *	Change the size of a window.
+ *	Change the size of a window.  This is a no-op for Wayland.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Resizes the GLFW window.
+ *	None
  *
  *----------------------------------------------------------------------
  */
 
 int
 XResizeWindow(
-    TCL_UNUSED(Display *),
-    Window       window,
-    unsigned int width,
-    unsigned int height)
+    TCL_UNUSED(Display *),    /* display */
+    TCL_UNUSED(Window),       /* window */
+    TCL_UNUSED(unsigned int), /* width */
+    TCL_UNUSED(unsigned int)) /* height */
 {
-    printf("XResizeWindow -> %ux%u\n", width, height);
 #if 0
     GLFWwindow *gw = WindowToGLFW(window);
     if (gw != NULL) {
@@ -4465,25 +4467,24 @@ XResizeWindow(
  *
  * XMoveWindow --
  *
- *	Change the position of a window.
+ *	Change the position of a window.  This is a no-op for Wayland.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Repositions the GLFW window.
+ *	None
  *
  *----------------------------------------------------------------------
  */
 
 int
 XMoveWindow(
-    TCL_UNUSED(Display *),
-    Window window,
-    int    x,
-    int    y)
+    TCL_UNUSED(Display*), /* display */
+    TCL_UNUSED(Window),   /* window */
+    TCL_UNUSED(int),      /* x */
+    TCL_UNUSED(int))      /* y */
 {
-    printf("XMoveWindow -> %d+%d - ignoring\n", x, y);
 #if 0
     GLFWwindow *gw = WindowToGLFW(window);
 
@@ -4499,13 +4500,13 @@ XMoveWindow(
  *
  * XMoveResizeWindow --
  *
- *	Change position and size atomically.
+ *	Change position and size atomically.  This is a no-op for Wayland.
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Repositions and resizes the GLFW window.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -4513,13 +4514,12 @@ XMoveWindow(
 int
 XMoveResizeWindow(
     TCL_UNUSED(Display *),
-    Window       window,
-    int          x,
-    int          y,
-    unsigned int width,
-    unsigned int height)
+    TCL_UNUSED(Window),       /* window */
+    TCL_UNUSED(int),          /* x */
+    TCL_UNUSED(int),          /* y */
+    TCL_UNUSED(unsigned int), /* width */
+    TCL_UNUSED(unsigned int)) /* height */
 {
-printf("XMoveResizeWindow -> %ux%u - ignoring\n", width, height);
 #if 0
     GLFWwindow *gw = WindowToGLFW(window);
     if (gw != NULL) {
