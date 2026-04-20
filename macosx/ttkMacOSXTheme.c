@@ -3471,15 +3471,15 @@ TTK_LAYOUT("TButton",
     TTK_GROUP("Button.padding", TTK_FILL_BOTH,
     TTK_NODE("Button.label", TTK_FILL_BOTH))))
 
-TTK_LAYOUT("TRadiobutton",
-    TTK_GROUP("Radiobutton.button", TTK_FILL_BOTH,
-    TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
-    TTK_NODE("Radiobutton.label", TTK_PACK_LEFT))))
-
 TTK_LAYOUT("TCheckbutton",
-    TTK_GROUP("Checkbutton.button", TTK_FILL_BOTH,
     TTK_GROUP("Checkbutton.padding", TTK_FILL_BOTH,
-    TTK_NODE("Checkbutton.label", TTK_PACK_LEFT))))
+    TTK_NODE("Checkbutton.button", TTK_PACK_LEFT)
+    TTK_NODE("Checkbutton.label", TTK_PACK_LEFT)))
+
+TTK_LAYOUT("TRadiobutton",
+    TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
+    TTK_NODE("Radiobutton.button", TTK_PACK_LEFT)
+    TTK_NODE("Radiobutton.label", TTK_PACK_LEFT)))
 
 TTK_LAYOUT("TMenubutton",
     TTK_GROUP("Menubutton.button", TTK_FILL_BOTH,
