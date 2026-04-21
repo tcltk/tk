@@ -29,8 +29,6 @@
 #define MAX_BIDI_RUNS 32
 #define MAX_STRING_CACHE 1024
 
-#define TK_DRAW_IN_CONTEXT
-
 /*
  * ---------------------------------------------------------------
  * BidiRun --
@@ -1206,7 +1204,18 @@ X11Shaper_ShapeString(
         }
 
         hb_buffer_clear_contents(shaper->buffer);
-        hb_buffer_add_utf8(shaper->buffer, source + runByteStart, runByteLen, 0, runByteLen);
+        /*
+         * Pass the FULL source string to hb_buffer_add_utf8 but tell
+         * HarfBuzz to shape only the current run's byte range via
+         * item_offset/item_length.  The bytes outside the run are used
+         * as shaping context — this gives HarfBuzz the surrounding
+         * characters it needs to determine correct Arabic joining forms
+         * (initial / medial / final / isolated) at run boundaries, which
+         * is exactly what changes as the cursor moves through the word
+         * and the insert mark splits the text segment at different points.
+         */
+        hb_buffer_add_utf8(shaper->buffer, source, numBytes,
+                           runByteStart, runByteLen);
         hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
         hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 

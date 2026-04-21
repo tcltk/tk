@@ -17,6 +17,11 @@
 #include "tkInt.h"
 #endif
 
+#ifdef HAVE_BIDI
+#  define TK_DRAW_IN_CONTEXT
+#  define TK_LAYOUT_WITH_BASE_CHUNKS
+#endif
+
 /*
  * Prototypes for procedures that are referenced in files other than the ones
  * they're defined in.
