@@ -1254,7 +1254,7 @@ X11Shaper_ShapeString(
             tempGlyphs[tempCount].x          = globalPenX + runPenX + (int)(glyphPos[i].x_offset / 64.0 + 0.5);
             tempGlyphs[tempCount].y          = -(int)(glyphPos[i].y_offset / 64.0 + 0.5);
             tempGlyphs[tempCount].advanceX   = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
-            tempGlyphs[tempCount].byteOffset = runByteStart + glyphInfo[i].cluster;
+            tempGlyphs[tempCount].byteOffset = glyphInfo[i].cluster;
 
             runPenX += tempGlyphs[tempCount].advanceX;
             tempCount++;
@@ -1819,13 +1819,14 @@ Tk_MeasureCharsInContext(
     int *lengthPtr)
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    int rangeEnd = (int)(rangeStart + rangeLength);
 
     /*
-     * Fast path for Latin-only strings (U+0000-U+024F).
-     *
-     * Check only the substring [rangeStart, rangeStart+rangeLength).
+     * Fast path: Latin-only substring with no surrounding non-Latin context.
+     * We check the full source for non-Latin to decide whether context
+     * matters — if the whole string is Latin, no shaping context is needed.
      */
-    if (IsLatinOnly(source + rangeStart, (int)rangeLength)) {
+    if (IsLatinOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (!ftFont) {
             *lengthPtr = 0;
@@ -1834,20 +1835,15 @@ Tk_MeasureCharsInContext(
 
         const char *sub = source + rangeStart;
         int subLen = (int)rangeLength;
-
         XGlyphInfo extents;
-        XftTextExtentsUtf8(fontPtr->display, ftFont,
-                           (const FcChar8 *)sub, subLen, &extents);
-        int totalWidth = extents.xOff;
 
         if (maxLength < 0) {
-            *lengthPtr = totalWidth;
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)sub, subLen, &extents);
+            *lengthPtr = extents.xOff;
             return subLen;
         }
 
-        /*
-         * Linear codepoint scan — same reasoning as Tk_MeasureChars above.
-         */
         int best = 0, bestWidth = 0;
         int pos = 0;
         while (pos < subLen) {
@@ -1856,22 +1852,17 @@ Tk_MeasureCharsInContext(
                                     subLen - pos);
             if (clen <= 0) clen = 1;
             int next = pos + clen;
-
             XftTextExtentsUtf8(fontPtr->display, ftFont,
                                (const FcChar8 *)sub, next, &extents);
             if (extents.xOff > maxLength) break;
-
             best = next;
             bestWidth = extents.xOff;
             pos = next;
         }
-
-        /* Whole-word break if requested (within substring). */
         if ((flags & TK_WHOLE_WORDS) && best < subLen) {
             int spacePos = -1;
             for (int i = 0; i < best; i++) {
-                if (sub[i] == ' ' || sub[i] == '\t')
-                    spacePos = i;
+                if (sub[i] == ' ' || sub[i] == '\t') spacePos = i;
             }
             if (spacePos >= 0) {
                 best = spacePos + 1;
@@ -1880,8 +1871,6 @@ Tk_MeasureCharsInContext(
                 bestWidth = extents.xOff;
             }
         }
-
-        /* At least one full codepoint if requested. */
         if ((flags & TK_AT_LEAST_ONE) && best == 0 && subLen > 0) {
             FcChar32 uc;
             int clen = FcUtf8ToUcs4((const FcChar8 *)sub, &uc, subLen);
@@ -1891,83 +1880,109 @@ Tk_MeasureCharsInContext(
                                (const FcChar8 *)sub, best, &extents);
             bestWidth = extents.xOff;
         }
-
         *lengthPtr = bestWidth;
         return best;
     }
 
-    /* Shaping path for non-Latin. */
+    /*
+     * Complex text path: shape the full source string for correct joining
+     * context, then extract metrics for [rangeStart, rangeEnd).
+     *
+     * The contract from tkTextDisp.c (MeasureChars under TK_DRAW_IN_CONTEXT):
+     *   - source/numBytes is the full base-chunk string
+     *   - rangeStart/rangeLength is the sub-span to measure
+     *   - maxLength is remaining pixel space (relative, not absolute)
+     *   - return value is bytes consumed from rangeStart (caller does start+=result)
+     *   - *lengthPtr is the pixel width of those bytes
+     *
+     * We scan glyphs[] in their natural emit order (which is left-to-right
+     * across the line since runs are emitted LTR and RTL glyphs within each
+     * run are placed with x positions already accounting for direction).
+     * We accumulate the width of glyphs whose clusters fall inside the range.
+     */
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                                (int)numBytes, &buffer)) {
+                               (int)numBytes, &buffer)) {
         *lengthPtr = 0;
         return (int)rangeLength;
     }
 
-    int totalWidth = 0;
-    int rangeEnd = (int)(rangeStart + rangeLength);
-    int lastBreakPos = (int)rangeStart;
-    int lastBreakWidth = 0;
-    int lastBreakGlyph = -1;
-    int bytesConsumed = (int)rangeStart;
-
     /*
-     * Cursor positioning in range with visual index.
+     * Compute the pixel width of glyphs in [rangeStart, rangeEnd) by
+     * summing their advance widths from glyphs[].  glyphs[] is in screen
+     * left-to-right order (each run emits glyphs with monotonically
+     * increasing x).  We use x/advanceX directly rather than accumulating,
+     * so the result is independent of which glyphs we skip.
+     *
+     * For each glyph in range, rangePixelStart = min(glyph.x) and
+     * rangePixelEnd = max(glyph.x + glyph.advanceX).
+     *
+     * We also track byte progress in logical (source) order to handle the
+     * maxLength break and return value correctly.
      */
-    for (int i = 0; i < buffer.indexCount; i++) {
-        int glyphAdvance = buffer.visualIndex[i].advanceX;
-        int byteEnd = buffer.visualIndex[i].byteEnd;
+    int rangePixelStart = -1;
+    int rangePixelEnd   = 0;
+    int lastBreakByte   = -1;
+    int lastBreakPixelEnd = 0;
+    int bytesConsumed   = 0;  /* bytes consumed within range, relative to rangeStart */
 
-        if (byteEnd < 0) byteEnd = 0;
-        if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
+    for (int i = 0; i < buffer.glyphCount; i++) {
+        int bo  = buffer.glyphs[i].byteOffset;
+        int boe = bo + buffer.glyphs[i].clusterLen;
+        int gx  = buffer.glyphs[i].x;
+        int gxe = gx + buffer.glyphs[i].advanceX;
 
-        /* Skip glyphs outside the range. */
-        if (byteEnd <= (int)rangeStart || 
-            (i == 0 && buffer.glyphs[i].byteOffset >= rangeEnd)) {
-            continue;
+        /* Skip glyphs outside [rangeStart, rangeEnd). */
+        if (boe <= (int)rangeStart || bo >= rangeEnd) continue;
+
+        /* Track pixel extent of range. */
+        if (rangePixelStart < 0 || gx  < rangePixelStart) rangePixelStart = gx;
+        if (gxe > rangePixelEnd) rangePixelEnd = gxe;
+
+        /* Width of range so far = rangePixelEnd - rangePixelStart. */
+        int curWidth = rangePixelEnd - rangePixelStart;
+
+        /* Track word-break opportunities. */
+        if (boe > 0 && boe <= (int)numBytes &&
+            (source[boe-1] == ' ' || source[boe-1] == '\t')) {
+            lastBreakByte     = boe - (int)rangeStart;
+            lastBreakPixelEnd = rangePixelEnd;
         }
 
-        int nextWidth = totalWidth + glyphAdvance;
-
-        /* Record word-break opportunities. */
-        if (byteEnd > 0 && byteEnd <= (int)numBytes) {
-            if (source[byteEnd - 1] == ' ' || 
-                source[byteEnd - 1] == '\t' || 
-                source[byteEnd - 1] == '\n') {
-                lastBreakPos   = byteEnd;
-                lastBreakWidth = nextWidth;
-                lastBreakGlyph = i;
+        /* Check if we've exceeded maxLength. */
+        if (maxLength >= 0 && curWidth > maxLength) {
+            if (lastBreakByte > 0 && (flags & TK_WHOLE_WORDS)) {
+                *lengthPtr = lastBreakPixelEnd - rangePixelStart;
+                return lastBreakByte;
             }
-        }
-
-        if (maxLength >= 0 && nextWidth > maxLength) {
-            if (lastBreakGlyph >= 0 && (flags & TK_WHOLE_WORDS)) {
-                totalWidth = lastBreakWidth;
-                bytesConsumed = lastBreakPos;
-            } else if (bytesConsumed == (int)rangeStart) {
-                /* Nothing consumed yet - include this glyph. */
-                totalWidth = nextWidth;
-                bytesConsumed = byteEnd;
+            if (bytesConsumed == 0 && (flags & TK_AT_LEAST_ONE)) {
+                /* Force at least this one glyph. */
+                bytesConsumed = boe - (int)rangeStart;
+                *lengthPtr = curWidth;
+                return bytesConsumed;
+            }
+            if (bytesConsumed == 0) {
+                /* Nothing fit and no TK_AT_LEAST_ONE — return zero. */
+                *lengthPtr = 0;
+                return 0;
             }
             break;
         }
 
-        totalWidth = nextWidth;
-        if (byteEnd > bytesConsumed) {
-            bytesConsumed = byteEnd;
-        }
+        /* Glyph fits: advance byte counter to end of this cluster. */
+        int clusterRelEnd = boe - (int)rangeStart;
+        if (clusterRelEnd > bytesConsumed) bytesConsumed = clusterRelEnd;
     }
 
-    if (bytesConsumed < (int)rangeStart) bytesConsumed = (int)rangeStart;
-    if (bytesConsumed > rangeEnd) bytesConsumed = rangeEnd;
-
-    /* If we consumed nothing and the range is non-empty, skip to end. */
-    if (bytesConsumed == (int)rangeStart && rangeLength > 0) {
-        bytesConsumed = rangeEnd;
+    if (rangePixelStart < 0) {
+        /* No glyphs in range at all. */
+        *lengthPtr = 0;
+        return (int)rangeLength;
     }
 
-    *lengthPtr = totalWidth;
-    return (bytesConsumed - (int)rangeStart);
+    *lengthPtr = rangePixelEnd - rangePixelStart;
+    if (bytesConsumed <= 0) bytesConsumed = (int)rangeLength;
+    return bytesConsumed;
 }
 
 /*
@@ -2097,15 +2112,16 @@ done:
  * ---------------------------------------------------------------
  * Tk_DrawCharsInContext --
  *
- *   Draws a substring of text using full shaping + bidi logic,
- *   preserving context from surrounding text for proper ligatures
- *   and BiDi reordering.
+ *   Draw a substring of text with full shaping context.
  *
- * Results:
- *   None.
+ *   source/numBytes is the full base-chunk string (from baseChars).
+ *   rangeStart/rangeLength selects which bytes to draw.
+ *   x/y is the screen origin of the full base-chunk string (position 0
+ *   of the shaped buffer maps to this point).
  *
- * Side effects:
- *   Draws the specified range of characters.
+ *   We shape the full string for correct joining/ligatures, then draw
+ *   only the glyphs whose clusters fall within [rangeStart, rangeEnd).
+ *   No clip rectangle is needed: we simply skip out-of-range glyphs.
  * ---------------------------------------------------------------
  */
 
@@ -2116,22 +2132,20 @@ Tk_DrawCharsInContext(
     GC gc,
     Tk_Font tkfont,
     const char *source,
-    Tcl_Size numBytes,        /* Total bytes in source string. */
-    Tcl_Size rangeStart,      /* Byte offset of substring start. */
-    Tcl_Size rangeLength,     /* Byte length of substring. */
-    int x, int y)              /* Coordinates at which to place origin. */
+    Tcl_Size numBytes,        /* Total bytes in full base-chunk string. */
+    Tcl_Size rangeStart,      /* Byte offset of substring to draw. */
+    Tcl_Size rangeLength,     /* Byte length of substring to draw. */
+    int x, int y)             /* Screen origin of the full base-chunk string. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    int rangeEnd = (int)(rangeStart + rangeLength);
 
     if (rangeLength <= 0) return;
-    
-    XftDraw *ftDraw = NULL;
 
-    /* Create a temporary XftDraw for this draw operation. */
-    ftDraw = XftDrawCreate(display, drawable,
-                          fontPtr->visual, fontPtr->colormap);
+    XftDraw *ftDraw = XftDrawCreate(display, drawable,
+                                    fontPtr->visual, fontPtr->colormap);
     if (!ftDraw) return;
 
     XGCValues values;
@@ -2147,146 +2161,86 @@ Tk_DrawCharsInContext(
     }
 
     /*
-     * Fast path for Latin-only strings (U+0000-U+024F).
-     * Check only the substring being drawn.
+     * Fast path: if the whole source string is Latin, no shaping context
+     * is needed across chunk boundaries. Draw just the sub-range directly.
      */
-    if (IsLatinOnly(source + rangeStart, (int)rangeLength)) {
+    if (IsLatinOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
+            /*
+             * Compute x offset for rangeStart within the Latin string using
+             * simple extent measurement (no ligatures to worry about).
+             */
+            int offsetX = x;
+            if (rangeStart > 0) {
+                XGlyphInfo extents;
+                XftTextExtentsUtf8(fontPtr->display, ftFont,
+                                   (const FcChar8 *)source, (int)rangeStart,
+                                   &extents);
+                offsetX = x + extents.xOff;
+            }
             XftDrawStringUtf8(ftDraw, xftcolor, ftFont,
-                              x, y,
+                              offsetX, y,
                               (const FcChar8 *)(source + rangeStart),
                               (int)rangeLength);
         }
         goto done;
     }
 
-    /* 
-     * Complex text path: Shape the FULL source string to preserve
-     * context for ligatures, Arabic joining, and BiDi reordering.
-     * Then clip to the visual span corresponding to the requested range.
+    /*
+     * Complex text path: shape the full source string, then draw only the
+     * glyphs whose clusters fall in [rangeStart, rangeEnd).
+     *
+     * Glyph positions (glyphs[i].x) are offsets from the start of the
+     * shaped string (pen-x=0), so the screen position of glyph i is
+     * x + glyphs[i].x.  We need no clip rectangle — we simply skip glyphs
+     * outside the byte range.
      */
     {
-        ShapedGlyphBuffer fullBuffer;
+        ShapedGlyphBuffer buffer;
         if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                                    (int)numBytes, &fullBuffer)) {
+                                   (int)numBytes, &buffer)) {
             goto done;
         }
 
-        /* Find the glyph that contains rangeStart (the start of our range). */
-        int rangeStartGlyphIdx = -1;
-        int rangeEndGlyphIdx = -1;
-        int rangeStartByte = (int)rangeStart;
-        int rangeEndByte = (int)(rangeStart + rangeLength);
-        int rangeStartX = 0;
-        int rangeEndX = 0;
-
-        /*
-         * First pass: Find the glyph indices and X positions for
-         * rangeStart and rangeEnd boundaries.
-         */
-        for (int i = 0; i < fullBuffer.glyphCount; i++) {
-            int glyphStart = fullBuffer.glyphs[i].byteOffset;
-            int glyphEnd = glyphStart + fullBuffer.glyphs[i].clusterLen;
-
-            /* Find the glyph that contains or starts at rangeStart. */
-            if (rangeStartGlyphIdx == -1 && glyphEnd >= rangeStartByte) {
-                rangeStartGlyphIdx = i;
-                /* Get the X position at rangeStart boundary.
-                 * For exact byte offset match, we need the offset within the glyph.
-                 * For simplicity, use the glyph's left edge. For cursor accuracy,
-                 * this is sufficient; the visual difference is at most one glyph width.
-                 */
-                rangeStartX = fullBuffer.glyphs[i].x;
-            }
-
-            /* Find the glyph that contains or ends at rangeEnd. */
-            if (rangeEndGlyphIdx == -1 && glyphEnd >= rangeEndByte) {
-                rangeEndGlyphIdx = i;
-                rangeEndX = fullBuffer.glyphs[i].x + fullBuffer.glyphs[i].advanceX;
-                break;  /* We've found the end boundary. */
-            }
-        }
-
-        /* Fallback if boundaries not found. */
-        if (rangeStartGlyphIdx == -1) {
-            rangeStartGlyphIdx = 0;
-            rangeStartX = 0;
-        }
-        if (rangeEndGlyphIdx == -1 && fullBuffer.glyphCount > 0) {
-            rangeEndGlyphIdx = fullBuffer.glyphCount - 1;
-            rangeEndX = fullBuffer.glyphs[rangeEndGlyphIdx].x +
-                        fullBuffer.glyphs[rangeEndGlyphIdx].advanceX;
-        }
-
-        /*
-         * Normalize X positions for LTR/RTL.
-         * rangeStartX should be the left edge, rangeEndX the right edge.
-         */
-        if (rangeEndX < rangeStartX) {
-            int tmpX = rangeStartX;
-            rangeStartX = rangeEndX;
-            rangeEndX = tmpX;
-        }
-
-        int clipWidth = rangeEndX - rangeStartX;
-        if (clipWidth <= 0) {
-            /* No visible width - nothing to draw. */
-            goto done;
-        }
-
-        /*
-         * Save current clip, apply clip rectangle to the visual span,
-         * then draw the FULL shaped line.
-         *
-         * The clip rectangle uses a large height to avoid clipping
-         * ascenders/descenders.
-         */
-        XRectangle clipRect;
-        clipRect.x = x + rangeStartX;
-        clipRect.y = y - 32768;
-        clipRect.width = (unsigned short)clipWidth;
-        clipRect.height = 65536;
-
-        /* Set the clip rectangle. */
-        XftDrawSetClipRectangles(ftDraw, 0, 0, &clipRect, 1);
-
-        /* Draw all glyphs - the clip will restrict to our range. */
         XftGlyphFontSpec specs[MAX_GLYPHS];
         int nspec = 0;
 
-        for (int i = 0; i < fullBuffer.glyphCount && nspec < MAX_GLYPHS; i++) {
-            int faceIdx = fullBuffer.glyphs[i].fontIndex;
+        for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+            int bo  = buffer.glyphs[i].byteOffset;
+            int boe = bo + buffer.glyphs[i].clusterLen;
+
+            /* Skip glyphs whose cluster is outside [rangeStart, rangeEnd). */
+            if (boe <= (int)rangeStart || bo >= rangeEnd) continue;
+
+            int faceIdx = buffer.glyphs[i].fontIndex;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
 
             XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
             if (!ftFont) continue;
 
-            unsigned int actualGlyph = fullBuffer.glyphs[i].glyphId;
+            unsigned int glyph = buffer.glyphs[i].glyphId;
 
-            /* Fallback logic for missing glyphs in primary font. */
-            if (actualGlyph == 0) {
+            /* Fallback for missing glyphs. */
+            if (glyph == 0) {
                 FcChar32 ucs4 = 0;
-                int byteOff = fullBuffer.glyphs[i].byteOffset;
-                if (byteOff >= 0 && byteOff < (int)numBytes) {
-                    FcUtf8ToUcs4((const FcChar8 *)(source + byteOff), &ucs4,
-                                 (int)numBytes - byteOff);
-                }
-
-                if (ucs4 != 0) {
-                    XftFont *fallbackFont = GetFont(fontPtr, ucs4, 0.0);
-                    if (fallbackFont) {
-                        actualGlyph = XftCharIndex(display, fallbackFont, ucs4);
-                        if (actualGlyph != 0) ftFont = fallbackFont;
+                if (bo >= 0 && bo < (int)numBytes)
+                    FcUtf8ToUcs4((const FcChar8 *)(source + bo), &ucs4,
+                                 (int)numBytes - bo);
+                if (ucs4) {
+                    XftFont *fb = GetFont(fontPtr, ucs4, 0.0);
+                    if (fb) {
+                        glyph = XftCharIndex(display, fb, ucs4);
+                        if (glyph) ftFont = fb;
                     }
                 }
-                if (actualGlyph == 0) continue;
+                if (!glyph) continue;
             }
 
             specs[nspec].font  = ftFont;
-            specs[nspec].glyph = actualGlyph;
-            specs[nspec].x     = x + (int)fullBuffer.glyphs[i].x;
-            specs[nspec].y     = y + (int)fullBuffer.glyphs[i].y;
+            specs[nspec].glyph = glyph;
+            specs[nspec].x     = x + buffer.glyphs[i].x;
+            specs[nspec].y     = y + buffer.glyphs[i].y;
             nspec++;
         }
 
@@ -2295,20 +2249,9 @@ Tk_DrawCharsInContext(
             XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
             UNLOCK;
         }
-
-        /* Restore original clip region. */
-        if (tsdPtr->clipRegion) {
-            XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
-        } else {
-            /* Clear clip region. */
-            XftDrawSetClipRectangles(ftDraw, 0, 0, NULL, 0);
-        }
     }
 
 done:
-    if (tsdPtr->clipRegion) {
-        XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
-    }
     XftDrawDestroy(ftDraw);
 }
 
