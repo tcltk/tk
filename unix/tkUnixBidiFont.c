@@ -2109,26 +2109,6 @@ done:
  * ---------------------------------------------------------------
  */
 
-/*
- * ---------------------------------------------------------------
- * Tk_DrawCharsInContext --
- *
- *   Draws a substring of text using full shaping + bidi logic,
- *   preserving context from surrounding text for proper ligatures
- *   and BiDi reordering.
- *
- *   FIX: Shape the FULL source string, then clip to the visual span
- *   of the requested range. This ensures correct Arabic joining,
- *   ligatures, kerning, and BiDi reordering across substring boundaries.
- *
- * Results:
- *   None.
- *
- * Side effects:
- *   Draws the specified range of characters.
- * ---------------------------------------------------------------
- */
-
 void
 Tk_DrawCharsInContext(
     Display *display,
