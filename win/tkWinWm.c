@@ -7984,6 +7984,49 @@ TopLevelProc(
  *----------------------------------------------------------------------
  */
 
+/*
+ * Static helper function.  Returns 1 if the registry value of
+ * AppsUseLightTheme is true, or if the key does not exist or
+ * if there is an error reading the value.
+ */
+
+bool AppsUseLightTheme() {
+    HKEY hKey;
+    LONG lResult;
+    LPCWSTR subKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+    LPCWSTR valueName = L"AppsUseLightTheme";
+
+    lResult = RegOpenKeyExW(
+        HKEY_CURRENT_USER,  // Root hive for the active user
+        subKey,             // Subkey path
+        0,                  // Reserved, must be 0
+        KEY_READ,           // Security access mask
+        &hKey               // Out handle to the open key
+    );
+
+    if (lResult != ERROR_SUCCESS) {
+        return 1;
+    }
+
+    DWORD dwValue = 0;
+    DWORD dwSize = sizeof(DWORD);
+
+    lResult = RegQueryValueExW(
+        hKey, 
+        valueName, 
+        NULL, 
+        NULL, 
+        (LPBYTE)&dwValue, 
+        &dwSize
+    );
+    RegCloseKey(hKey);
+    if (lResult == ERROR_SUCCESS) {
+      return dwValue;
+    } else {
+      return 1;
+    }
+}
+
 static LRESULT CALLBACK
 WmProc(
     HWND hwnd,
@@ -8106,13 +8149,37 @@ WmProc(
 	goto done;
 
     case WM_SETTINGCHANGE:
+	winPtr = GetTopLevel(hwnd);
 	if (wParam == SPI_SETNONCLIENTMETRICS) {
-	    winPtr = GetTopLevel(hwnd);
 	    TkWinSetupSystemFonts(winPtr->mainPtr);
 	    result = 0;
 	    goto done;
 	}
-	break;
+	if (lParam != 0 &&
+	    wcscmp((const wchar_t*)lParam, L"ImmersiveColorSet") == 0) {
+	    /* This message gets sent at least twice for each change of the
+	     * Settings. One message is sent because AppsUseLightTheme
+	     * changed; the other because SystemUsesLightTheme changed. But
+	     * the two messages are identical.  There seems to be no way
+	     * to avoid sending the virtual event twice.  The binding
+	     * script must be prepared to handle that.  Saving state here
+	     * does not work.  (Many attempts were made, and all failed.)
+	     */
+	    bool lightApps = AppsUseLightTheme();
+	    char dataString[512];
+	    Tcl_Obj *data;
+	    char *windowTheme, *systemTheme;
+	    Tk_Window tkwin = (Tk_Window) winPtr;
+	    bool windowIsDark;
+	    TkpWindowIsDark(tkwin, &windowIsDark);
+	    windowTheme = windowIsDark ? "dark" : "light";
+	    systemTheme = lightApps ? "light" : "dark";
+	    snprintf(dataString, 512, "windowtheme %s systemtheme %s",
+		     windowTheme, systemTheme);
+	    data = Tcl_NewStringObj(dataString, TCL_INDEX_NONE);
+	    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", data);
+	    goto done;
+	}
 
     case WM_WINDOWPOSCHANGED:
 	ConfigureTopLevel((WINDOWPOS *) lParam);
