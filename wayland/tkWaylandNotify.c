@@ -504,6 +504,12 @@ TkGlfwClearCallbacks(
  *----------------------------------------------------------------------
  */
  
+/* Helper function to avoid type mismatch in callback. */
+static void DestroyWindowIdleProc(void *clientData)
+{
+    Tk_DestroyWindow((Tk_Window)clientData);
+}
+ 
 static void
 TkGlfwWindowCloseCallback(GLFWwindow *window)
 {
@@ -511,7 +517,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
     recordCallback();
     
     if (winPtr) {
-	Tcl_DoWhenIdle(Tk_DestroyWindow, winPtr);
+	Tcl_DoWhenIdle(DestroyWindowIdleProc, winPtr);
     }
 }
 
