@@ -1331,7 +1331,6 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     Ttk_Theme themePtr, parentPtr, vistaPtr;
     const ElementInfo *infoPtr;
-    DWORD dwFlags = (STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS);
     HMODULE hUxtheme = LoadLibraryExW(L"uxtheme.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 
     /*
@@ -1343,9 +1342,6 @@ TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     if (!themePtr) {
 	return TCL_ERROR;
     }
-
-    /* Set so non-client and common controls will have theming applied */
-    SetThemeAppProperties(dwFlags);
 
     /*
      * Set theme data and cleanup proc
