@@ -52,6 +52,10 @@ _RULESDIR = $(TCLDIR:/=\)
 !endif
 !endif
 
+!ifndef NMAKEHLP_NATIVE
+NMAKEHLP_NATIVE=nmakehlp
+!endif
+
 !else
 
 # If an installation path is specified, that is also the Tcl directory.
