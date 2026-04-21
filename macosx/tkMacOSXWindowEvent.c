@@ -1223,10 +1223,10 @@ static const char *const accentNames[] = {
     const char *newAppearance;
 
     if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	newAppearance = "Light";
+	newAppearance = "light";
 	Tk_SendVirtualEvent(tkwin, "LightAppearance", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	newAppearance = "Dark";
+	newAppearance = "dark";
 	Tk_SendVirtualEvent(tkwin, "DarkAppearance", NULL);
     }
     if (!defaultColor) {
