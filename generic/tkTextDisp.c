@@ -8049,6 +8049,27 @@ CharChunkMeasureChars(
 	int fit, bstart = start, bend = end;
 
 	if (chars == NULL) {
+	    /*
+	     * Guard against a stale baseChunkPtr (e.g. the base chunk was
+	     * freed by CharUndisplayProc but a dependent chunk's ciPtr was
+	     * not yet updated).  Fall back to the chunk's own chars.
+	     */
+	    if (ciPtr->baseChunkPtr == NULL ||
+		    ciPtr->baseChunkPtr->clientData == NULL) {
+		if (ciPtr->chars == NULL || ciPtr->numBytes == 0) {
+		    *nextXPtr = startX;
+		    return 0;
+		}
+		chars = ciPtr->chars;
+		charsLen = ciPtr->numBytes;
+		if (bend == -1) {
+		    bend = charsLen;
+		}
+		MeasureChars(tkfont, chars, charsLen, start, bend - start,
+			startX, maxX, flags, nextXPtr);
+		return bend - start;
+	    }
+
 	    Tcl_DString *baseChars = &((BaseCharInfo *)
 		    ciPtr->baseChunkPtr->clientData)->baseChars;
 
@@ -9052,6 +9073,14 @@ FinalizeBaseChunk(
 	if (chunkPtr->displayProc != CharDisplayProc) {
 	    continue;
 	}
+	if (chunkPtr->clientData == NULL) {
+	    /*
+	     * This chunk's clientData was freed by CharUndisplayProc (e.g.
+	     * during break-position re-layout).  The base chunk stretch ends
+	     * here; stop iterating to avoid a NULL dereference.
+	     */
+	    break;
+	}
 	ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr->baseChunkPtr != baseCharChunkPtr) {
 	    break;
@@ -9119,6 +9148,9 @@ FreeBaseChunk(
     for (chunkPtr=baseChunkPtr; chunkPtr!=NULL; chunkPtr=chunkPtr->nextPtr) {
 	if (chunkPtr->undisplayProc != CharUndisplayProc) {
 	    continue;
+	}
+	if (chunkPtr->clientData == NULL) {
+	    break;
 	}
 	ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr->baseChunkPtr != baseChunkPtr) {
