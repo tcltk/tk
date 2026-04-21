@@ -505,6 +505,7 @@ MODULE_SCOPE int  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
 
 MODULE_SCOPE void TkGlfwProcessEvents(void);
 MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow);
+MODULE_SCOPE void TkGlfwClearCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,

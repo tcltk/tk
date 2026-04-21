@@ -442,11 +442,12 @@ CreateGlfwWindow(TkWindow *winPtr)
 
 static void
 DestroyGlfwWindow(
-		  WmInfo *wmPtr)
+    WmInfo *wmPtr)
 {
     if (wmPtr->glfwWindow == NULL) {
         return;
     }
+    TkGlfwClearCallbacks(wmPtr->glfwWindow);
     TkGlfwDestroyWindow(wmPtr->glfwWindow);
     wmPtr->glfwWindow = NULL;
 }

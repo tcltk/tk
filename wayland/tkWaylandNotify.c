@@ -261,6 +261,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
     if (tsdPtr->shutdownInProgress) {
         /* Don't block during shutdown. */
         Tcl_SetMaxBlockTime(&noBlock);
+	printf("SetupProc returning - shutdown in progress.\n");
         return;
     }
 
@@ -469,6 +470,24 @@ TkGlfwSetupCallbacks(
     glfwSetKeyCallback             (glfwWindow, TkGlfwKeyCallback);
 }
 
+MODULE_SCOPE void
+TkGlfwClearCallbacks(
+    GLFWwindow *glfwWindow)
+{
+    glfwSetWindowCloseCallback     (glfwWindow, NULL);
+    glfwSetWindowSizeCallback      (glfwWindow, NULL);
+    glfwSetFramebufferSizeCallback (glfwWindow, NULL);
+    glfwSetWindowPosCallback       (glfwWindow, NULL);
+    glfwSetWindowFocusCallback     (glfwWindow, NULL);
+    glfwSetWindowIconifyCallback   (glfwWindow, NULL);
+    glfwSetWindowMaximizeCallback  (glfwWindow, NULL);
+    glfwSetCursorPosCallback       (glfwWindow, NULL);
+    glfwSetMouseButtonCallback     (glfwWindow, NULL);
+    glfwSetScrollCallback          (glfwWindow, NULL);
+    glfwSetWindowRefreshCallback   (glfwWindow, NULL);
+    glfwSetKeyCallback             (glfwWindow, NULL);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -492,7 +511,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
     recordCallback();
     
     if (winPtr) {
-        Tk_DestroyWindow((Tk_Window)winPtr);
+	Tcl_DoWhenIdle(Tk_DestroyWindow, winPtr);
     }
 }
 

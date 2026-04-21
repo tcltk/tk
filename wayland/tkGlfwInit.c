@@ -332,8 +332,6 @@ TkGlfwInitialize(void)
  *----------------------------------------------------------------------
  */
 
-//// This is not reached when we see the crashes at shutdown.
-
 MODULE_SCOPE void
 TkGlfwShutdown(TCL_UNUSED(void *))
 {
@@ -366,7 +364,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     }
 
     /* Poll one last time to let GLFW clean up internal state. */
-    ////glfwPollEvents();
+    glfwPollEvents();
     
     /* Terminate GLFW. */
     if (glfwContext.initialized) {
