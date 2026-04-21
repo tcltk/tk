@@ -8180,6 +8180,7 @@ WmProc(
 	    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", data);
 	    goto done;
 	}
+	break;
 
     case WM_WINDOWPOSCHANGED:
 	ConfigureTopLevel((WINDOWPOS *) lParam);
