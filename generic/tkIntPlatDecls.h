@@ -162,8 +162,7 @@ EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
 /* 7 */
 EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
-/* 8 */
-EXTERN unsigned int	TkMacOSXButtonKeyState(void);
+/* Slot 8 is reserved */
 /* 9 */
 EXTERN void		TkMacOSXClearMenubarActive(void);
 /* 10 */
@@ -372,7 +371,7 @@ typedef struct TkIntPlatStubs {
     void (*tkpSetCursor) (TkpCursor cursor); /* 5 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 7 */
-    unsigned int (*tkMacOSXButtonKeyState) (void); /* 8 */
+    void (*reserved8)(void);
     void (*tkMacOSXClearMenubarActive) (void); /* 9 */
     int (*tkMacOSXDispatchMenuEvent) (int menuID, int index); /* 10 */
     void (*tkpSetCapture) (TkWindow *winPtr); /* 11 */
@@ -590,8 +589,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpScanWindowId) /* 6 */
 #define TkpWmSetState \
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 7 */
-#define TkMacOSXButtonKeyState \
-	(tkIntPlatStubsPtr->tkMacOSXButtonKeyState) /* 8 */
+/* Slot 8 is reserved */
 #define TkMacOSXClearMenubarActive \
 	(tkIntPlatStubsPtr->tkMacOSXClearMenubarActive) /* 9 */
 #define TkMacOSXDispatchMenuEvent \
