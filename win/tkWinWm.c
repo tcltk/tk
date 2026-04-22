@@ -8161,28 +8161,24 @@ WmProc(
 	     * Settings because both AppsUseLightTheme
 	     * and SystemUsesLightTheme are changed when the theme is
 	     * changed by the user in the Settings. Moreover, the repeated
-	     * messages result in nested calls to this function.
-	     * To avoid duplicate virtual events we track the number of
-	     * calls, and only send the virtual event when the count is
-	     * a multiple of 4.  (Yes, 4; not 2.)
+	     * messages result in nested calls to this function.  There
+	     * seems to be no way to avoid sending duplicate virtual events.
+	     * Apps which bind to <<AppearanceChanged>> will need to expect
+	     * to receive duplicate events
 	     */
-	    static int entrycount = 0;
-	    entrycount++;
 	    bool lightApps = doAppsUseLightTheme();
 	    char dataString[512];
 	    Tcl_Obj *data;
 	    char *windowTheme, *systemTheme;
 	    Tk_Window tkwin = (Tk_Window) winPtr;
-	    if (entrycount % 4 == 0) {
-		bool windowIsDark = false;
-		TkpWindowIsDark(tkwin, &windowIsDark);
-		windowTheme = windowIsDark ? "dark" : "light";
-		systemTheme = lightApps ? "light" : "dark";
-		snprintf(dataString, 512, "windowtheme %s systemtheme %s",
+	    bool windowIsDark = false;
+	    TkpWindowIsDark(tkwin, &windowIsDark);
+	    windowTheme = windowIsDark ? "dark" : "light";
+	    systemTheme = lightApps ? "light" : "dark";
+	    snprintf(dataString, 512, "windowtheme %s systemtheme %s",
 		     windowTheme, systemTheme);
-		data = Tcl_NewStringObj(dataString, TCL_INDEX_NONE);
-		Tk_SendVirtualEvent(tkwin, "AppearanceChanged", data);
-	    }
+	    data = Tcl_NewStringObj(dataString, TCL_INDEX_NONE);
+	    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", data);
 	    result = 0;
 	    goto done;
 	}
