@@ -6,8 +6,8 @@
  *	widgets. (Well, strictly, each TkTextLine and B-tree node caches its
  *	last observed pixel height, but that information originates here).
  *
- * Copyright © 1992-1994 The Regents of the University of California.
- * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright Â© 1992-1994 The Regents of the University of California.
+ * Copyright Â© 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -8029,13 +8029,9 @@ CharChunkMeasureChars(
 				 * right border x-position of the span
 				 * here. */
 {
+#ifdef _WIN32
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-
-    if (ciPtr == NULL) {
-	*nextXPtr = startX;
-	return 0;
-    }
 
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     if (chars == NULL) {
@@ -8047,36 +8043,15 @@ CharChunkMeasureChars(
     }
 
     return MeasureChars(tkfont, chars, charsLen, start, end-start,
-	    startX, maxX, flags, nextXPtr);
+			startX, maxX, flags, nextXPtr);
 #else /* TK_LAYOUT_WITH_BASE_CHUNKS */
     {
 	int xDisplacement;
 	int fit, bstart = start, bend = end;
 
 	if (chars == NULL) {
-	    /*
-	     * Guard against a stale baseChunkPtr (e.g. the base chunk was
-	     * freed by CharUndisplayProc but a dependent chunk's ciPtr was
-	     * not yet updated).  Fall back to the chunk's own chars.
-	     */
-	    if (ciPtr->baseChunkPtr == NULL ||
-		    ciPtr->baseChunkPtr->clientData == NULL) {
-		if (ciPtr->chars == NULL || ciPtr->numBytes == 0) {
-		    *nextXPtr = startX;
-		    return 0;
-		}
-		chars = ciPtr->chars;
-		charsLen = ciPtr->numBytes;
-		if (bend == -1) {
-		    bend = charsLen;
-		}
-		MeasureChars(tkfont, chars, charsLen, start, bend - start,
-			startX, maxX, flags, nextXPtr);
-		return bend - start;
-	    }
-
 	    Tcl_DString *baseChars = &((BaseCharInfo *)
-		    ciPtr->baseChunkPtr->clientData)->baseChars;
+				       ciPtr->baseChunkPtr->clientData)->baseChars;
 
 	    chars = Tcl_DStringValue(baseChars);
 	    charsLen = Tcl_DStringLength(baseChars);
@@ -8096,12 +8071,12 @@ CharChunkMeasureChars(
 	    int widthUntilStart = 0;
 
 	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
-		    0, -1, 0, &widthUntilStart);
+			 0, -1, 0, &widthUntilStart);
 	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
 	}
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
-		ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
+			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
 
 	if (fit < bstart) {
 	    return 0;
@@ -8110,6 +8085,89 @@ CharChunkMeasureChars(
 	}
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+#else /* X11 and macOS */
+    Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+
+    if (ciPtr == NULL) {
+	*nextXPtr = startX;
+	return 0;
+    }
+
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (chars == NULL) {
+	chars = ciPtr->chars;
+	charsLen = ciPtr->numBytes;
+    }
+    if (end == -1) {
+	end = charsLen;
+    }
+
+    return MeasureChars(tkfont, chars, charsLen, start, end-start,
+			startX, maxX, flags, nextXPtr);
+#else /* TK_LAYOUT_WITH_BASE_CHUNKS */
+    {
+	int xDisplacement;
+	int fit, bstart = start, bend = end;
+
+	if (chars == NULL) {
+	    /*
+	     * Guard against a stale baseChunkPtr (e.g. the base chunk was
+	     * freed by CharUndisplayProc but a dependent chunk's ciPtr was
+	     * not yet updated).  Fall back to the chunk's own chars.
+	     */
+	    if (ciPtr->baseChunkPtr == NULL ||
+		ciPtr->baseChunkPtr->clientData == NULL) {
+		if (ciPtr->chars == NULL || ciPtr->numBytes == 0) {
+		    *nextXPtr = startX;
+		    return 0;
+		}
+		chars = ciPtr->chars;
+		charsLen = ciPtr->numBytes;
+		if (bend == -1) {
+		    bend = charsLen;
+		}
+		MeasureChars(tkfont, chars, charsLen, start, bend - start,
+			     startX, maxX, flags, nextXPtr);
+		return bend - start;
+	    }
+
+	    Tcl_DString *baseChars = &((BaseCharInfo *)
+				       ciPtr->baseChunkPtr->clientData)->baseChars;
+
+	    chars = Tcl_DStringValue(baseChars);
+	    charsLen = Tcl_DStringLength(baseChars);
+	    bstart += ciPtr->baseOffset;
+	    if (bend == -1) {
+		bend = ciPtr->baseOffset + ciPtr->numBytes;
+	    } else {
+		bend += ciPtr->baseOffset;
+	    }
+	} else if (bend == -1) {
+	    bend = charsLen;
+	}
+
+	if (bstart == ciPtr->baseOffset) {
+	    xDisplacement = startX - chunkPtr->x;
+	} else {
+	    int widthUntilStart = 0;
+
+	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
+			 0, -1, 0, &widthUntilStart);
+	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
+	}
+
+	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
+			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
+
+	if (fit < bstart) {
+	    return 0;
+	} else {
+	    return fit - bstart;
+	}
+    }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+#endif
 }
 
 /*
@@ -8274,7 +8332,6 @@ CharDisplayProc(
     }
 }
 
-
 /*
  *--------------------------------------------------------------
  *
@@ -8295,9 +8352,41 @@ CharDisplayProc(
 
 static void
 CharUndisplayProc(
-    TCL_UNUSED(TkText *),        /* Overall information about text widget. */
-    TkTextDispChunk *chunkPtr)   /* Chunk that is about to be freed. */
+    TCL_UNUSED(TkText *),	/* Overall information about text widget. */
+    TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
+#ifdef _WIN32
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+
+    if (ciPtr) {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	if (chunkPtr == ciPtr->baseChunkPtr) {
+	    /*
+	     * Basechunks are undisplayed first, when DLines are freed or
+	     * partially freed, so this makes sure we don't access their data
+	     * any more.
+	     */
+
+	    FreeBaseChunk(chunkPtr);
+	} else if (ciPtr->baseChunkPtr != NULL) {
+	    /*
+	     * When other char chunks are undisplayed, drop their characters
+	     * from the base chunk. This usually happens, when they are last
+	     * in a line and need to be re-layed out.
+	     */
+
+	    RemoveFromBaseChunk(chunkPtr);
+	}
+
+	ciPtr->baseChunkPtr = NULL;
+	ciPtr->chars = NULL;
+	ciPtr->numBytes = 0;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+
+	Tcl_Free(ciPtr);
+	chunkPtr->clientData = NULL;
+    }
+#else /* X11 and macOS */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr == NULL) {
@@ -8342,6 +8431,7 @@ CharUndisplayProc(
      * Always detach chunk from CharInfo to prevent stale access.
      */
     chunkPtr->clientData = NULL;
+#endif
 }
 
 /*
@@ -8415,17 +8505,7 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled in with height of character, in
 				 * pixels. */
 {
-    if (chunkPtr == NULL) return;
-    
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-
-    if (ciPtr == NULL || ciPtr->chars == NULL || ciPtr->numBytes == 0) {
-	*xPtr = 0;
-	*yPtr = y;
-	*widthPtr = 0;
-	*heightPtr = 0;
-	return;
-    }
     int maxX;
 
     maxX = chunkPtr->width + chunkPtr->x;
@@ -8440,11 +8520,8 @@ CharBboxProc(
 	 */
 
 	*widthPtr = maxX - *xPtr;
-    } else if (ciPtr->chars != NULL
-	       && byteIndex >= 0
-	       && byteIndex < ciPtr->numBytes
-	       && ciPtr->chars[byteIndex] == '\t'
-	       && byteIndex == ciPtr->numBytes - 1) {
+    } else if ((ciPtr->chars[byteIndex] == '\t')
+	    && (byteIndex == ciPtr->numBytes - 1)) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
@@ -9106,14 +9183,6 @@ FinalizeBaseChunk(
 	if (chunkPtr->displayProc != CharDisplayProc) {
 	    continue;
 	}
-	if (chunkPtr->clientData == NULL) {
-	    /*
-	     * This chunk's clientData was freed by CharUndisplayProc (e.g.
-	     * during break-position re-layout).  The base chunk stretch ends
-	     * here; stop iterating to avoid a NULL dereference.
-	     */
-	    break;
-	}
 	ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr->baseChunkPtr != baseCharChunkPtr) {
 	    break;
@@ -9181,9 +9250,6 @@ FreeBaseChunk(
     for (chunkPtr=baseChunkPtr; chunkPtr!=NULL; chunkPtr=chunkPtr->nextPtr) {
 	if (chunkPtr->undisplayProc != CharUndisplayProc) {
 	    continue;
-	}
-	if (chunkPtr->clientData == NULL) {
-	    break;
 	}
 	ciPtr = (CharInfo *)chunkPtr->clientData;
 	if (ciPtr->baseChunkPtr != baseChunkPtr) {
