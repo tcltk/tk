@@ -8032,6 +8032,11 @@ CharChunkMeasureChars(
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
+    if (ciPtr == NULL) {
+	*nextXPtr = startX;
+	return 0;
+    }
+
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
     if (chars == NULL) {
 	chars = ciPtr->chars;
@@ -8269,6 +8274,7 @@ CharDisplayProc(
     }
 }
 
+
 /*
  *--------------------------------------------------------------
  *
@@ -8289,39 +8295,53 @@ CharDisplayProc(
 
 static void
 CharUndisplayProc(
-    TCL_UNUSED(TkText *),	/* Overall information about text widget. */
-    TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
+    TCL_UNUSED(TkText *),        /* Overall information about text widget. */
+    TkTextDispChunk *chunkPtr)   /* Chunk that is about to be freed. */
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-    if (ciPtr) {
+    if (ciPtr == NULL) {
+        return;
+    }
+
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	if (chunkPtr == ciPtr->baseChunkPtr) {
-	    /*
-	     * Basechunks are undisplayed first, when DLines are freed or
-	     * partially freed, so this makes sure we don't access their data
-	     * any more.
-	     */
+    /*
+     * If this is the base chunk, it owns the CharInfo.
+     * Otherwise, just detach safely.
+     */
+    if (chunkPtr == ciPtr->baseChunkPtr) {
 
-	    FreeBaseChunk(chunkPtr);
-	} else if (ciPtr->baseChunkPtr != NULL) {
-	    /*
-	     * When other char chunks are undisplayed, drop their characters
-	     * from the base chunk. This usually happens, when they are last
-	     * in a line and need to be re-layed out.
-	     */
+        /*
+         * Base chunk is being removed → remove dependent data first.
+         */
+        FreeBaseChunk(chunkPtr);
 
-	    RemoveFromBaseChunk(chunkPtr);
-	}
+        /*
+         * Now this CharInfo is no longer referenced by any chunk
+         * in this layout pass, so it's safe to free.
+         */
+        ciPtr->baseChunkPtr = NULL;
+        ciPtr->chars = NULL;
+        ciPtr->numBytes = 0;
 
-	ciPtr->baseChunkPtr = NULL;
-	ciPtr->chars = NULL;
-	ciPtr->numBytes = 0;
+        Tcl_Free(ciPtr);
+
+    } else {
+
+        /*
+         * Non-base chunk: remove from base structure if needed,
+         * but DO NOT touch or free CharInfo (it may be shared).
+         */
+        if (ciPtr->baseChunkPtr != NULL) {
+            RemoveFromBaseChunk(chunkPtr);
+        }
+    }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-	Tcl_Free(ciPtr);
-	chunkPtr->clientData = NULL;
-    }
+    /*
+     * Always detach chunk from CharInfo to prevent stale access.
+     */
+    chunkPtr->clientData = NULL;
 }
 
 /*
@@ -8395,7 +8415,17 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled in with height of character, in
 				 * pixels. */
 {
+    if (chunkPtr == NULL) return;
+    
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+
+    if (ciPtr == NULL || ciPtr->chars == NULL || ciPtr->numBytes == 0) {
+	*xPtr = 0;
+	*yPtr = y;
+	*widthPtr = 0;
+	*heightPtr = 0;
+	return;
+    }
     int maxX;
 
     maxX = chunkPtr->width + chunkPtr->x;
@@ -8410,8 +8440,11 @@ CharBboxProc(
 	 */
 
 	*widthPtr = maxX - *xPtr;
-    } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
+    } else if (ciPtr->chars != NULL
+	       && byteIndex >= 0
+	       && byteIndex < ciPtr->numBytes
+	       && ciPtr->chars[byteIndex] == '\t'
+	       && byteIndex == ciPtr->numBytes - 1) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.

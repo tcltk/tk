@@ -1184,13 +1184,36 @@ X11Shaper_ShapeString(
 
                 XftFont *xftFont = GetFaceFont(fontPtr, fi, 0.0);
                 if (xftFont) {
-                    int pixelSize = 12;
-                    if (XftPatternGetInteger(xftFont->pattern, XFT_PIXEL_SIZE, 0, &pixelSize) != XftResultMatch) {
-                        double ptSize = 12.0;
-                        XftPatternGetDouble(xftFont->pattern, XFT_SIZE, 0, &ptSize);
-                        pixelSize = (int)(ptSize * 96.0 / 72.0 + 0.5);
+                    /*
+                     * Set HarfBuzz scale so that x_advance values from
+                     * hb_glyph_position_t come out in 26.6 fixed-point
+                     * pixels (i.e. divide by 64 to get integer pixels).
+                     *
+                     * The correct scale is upem * 64 combined with ppem,
+                     * but the simplest equivalent is to read the actual
+                     * pixel size from the FreeType face that Xft opened
+                     * (which already accounts for DPI and hinting) and
+                     * set scale = pixelSize * 64.
+                     *
+                     * We get pixelSize from the FreeType face's size
+                     * metrics rather than recomputing from point size and
+                     * an assumed DPI — the latter gives wrong results when
+                     * the display DPI is not 96.
+                     */
+                    int pixelSize = 0;
+                    FT_Face ftFace = XftLockFace(xftFont);
+                    if (ftFace && ftFace->size) {
+                        /* FreeType size metrics: x_ppem is pixels per em. */
+                        pixelSize = (int)ftFace->size->metrics.x_ppem;
+                        XftUnlockFace(xftFont);
                     }
+                    if (pixelSize <= 0) {
+                        /* Fallback: use ascent+descent as a proxy. */
+                        pixelSize = xftFont->ascent + xftFont->descent;
+                    }
+                    if (pixelSize <= 0) pixelSize = 12;
                     hb_font_set_scale(font, pixelSize * 64, pixelSize * 64);
+                    hb_font_set_ppem(font, (unsigned)pixelSize, (unsigned)pixelSize);
                 }
 
                 shaper->fontMap[shaper->numFonts].hbFont = font;
@@ -1204,6 +1227,7 @@ X11Shaper_ShapeString(
         }
 
         hb_buffer_clear_contents(shaper->buffer);
+        
         /*
          * Pass the FULL source string to hb_buffer_add_utf8 but tell
          * HarfBuzz to shape only the current run's byte range via
@@ -1213,11 +1237,13 @@ X11Shaper_ShapeString(
          * (initial / medial / final / isolated) at run boundaries, which
          * is exactly what changes as the cursor moves through the word
          * and the insert mark splits the text segment at different points.
-         */
+         */       
+         
         hb_buffer_add_utf8(shaper->buffer, source, numBytes,
                            runByteStart, runByteLen);
         hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
         hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
+
 
         hb_font_t *runHbFont = NULL;
         int shapeFaceIndex = runFaceIndex;
@@ -1248,13 +1274,29 @@ X11Shaper_ShapeString(
         int tempCount = 0;
 
         int runPenX = 0;
+        XftFont *xftRunFont = GetFaceFont(fontPtr, shapeFaceIndex, 0.0);
         for (unsigned int i = 0; i < glyphCount && tempCount < MAX_GLYPHS; i++) {
             tempGlyphs[tempCount].fontIndex  = shapeFaceIndex;
             tempGlyphs[tempCount].glyphId    = glyphInfo[i].codepoint;
             tempGlyphs[tempCount].x          = globalPenX + runPenX + (int)(glyphPos[i].x_offset / 64.0 + 0.5);
             tempGlyphs[tempCount].y          = -(int)(glyphPos[i].y_offset / 64.0 + 0.5);
-            tempGlyphs[tempCount].advanceX   = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
             tempGlyphs[tempCount].byteOffset = glyphInfo[i].cluster;
+
+            /*
+             * Use XftGlyphExtents for the advance width rather than
+             * HarfBuzz's x_advance.  Xft applies FreeType hinting which
+             * rounds advances to integer pixels at small sizes; HarfBuzz
+             * via the blob API does not, leading to fractional advances
+             * that accumulate into visible inter-glyph gaps for CJK text.
+             */
+            unsigned int gid = glyphInfo[i].codepoint;
+            if (xftRunFont && gid != 0) {
+                XGlyphInfo gmetrics;
+                XftGlyphExtents(fontPtr->display, xftRunFont, &gid, 1, &gmetrics);
+                tempGlyphs[tempCount].advanceX = gmetrics.xOff;
+            } else {
+                tempGlyphs[tempCount].advanceX = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
+            }
 
             runPenX += tempGlyphs[tempCount].advanceX;
             tempCount++;
@@ -1308,7 +1350,7 @@ X11Shaper_ShapeString(
         buffer->visualIndex[i].byteEnd = byteEnd;
     }
 
-      /*
+     /*
      * Sort visualIndex by X coordinate (left-to-right screen order).
      * This ensures cursor positioning works correctly for mixed BiDi text.
      * Without this, the visualIndex is in run-emission order, causing
@@ -1349,6 +1391,7 @@ X11Shaper_ShapeString(
 
     return 1;
 }
+
 
 /*
  * ---------------------------------------------------------------
