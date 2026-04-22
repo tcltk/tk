@@ -489,7 +489,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpSetCursor, /* 5 */
     TkpScanWindowId, /* 6 */
     TkpWmSetState, /* 7 */
-    TkMacOSXButtonKeyState, /* 8 */
+    0, /* 8 */
     TkMacOSXClearMenubarActive, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
     TkpSetCapture, /* 11 */
