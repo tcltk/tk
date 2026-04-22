@@ -7990,7 +7990,7 @@ TopLevelProc(
  * if there is an error reading the value.
  */
 
-bool AppsUseLightTheme() {
+bool doAppsUseLightTheme() {
     HKEY hKey;
     LONG lResult;
     LPCWSTR subKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
@@ -8157,27 +8157,33 @@ WmProc(
 	}
 	if (lParam != 0 &&
 	    wcscmp((const wchar_t*)lParam, L"ImmersiveColorSet") == 0) {
-	    /* This message gets sent at least twice for each change of the
-	     * Settings. One message is sent because AppsUseLightTheme
-	     * changed; the other because SystemUsesLightTheme changed. But
-	     * the two messages are identical.  There seems to be no way
-	     * to avoid sending the virtual event twice.  The binding
-	     * script must be prepared to handle that.  Saving state here
-	     * does not work.  (Many attempts were made, and all failed.)
+	    /* This message gets sent multiple times for each change of the
+	     * Settings because both AppsUseLightTheme
+	     * and SystemUsesLightTheme are changed when the theme is
+	     * changed by the user in the Settings. Moreover, the repeated
+	     * messages result in nested calls to this function.
+	     * To avoid duplicate virtual events we track the number of
+	     * calls, and only send the virtual event when the count is
+	     * a multiple of 4.  (Yes, 4; not 2.)
 	     */
-	    bool lightApps = AppsUseLightTheme();
+	    static int entrycount = 0;
+	    entrycount++;
+	    bool lightApps = doAppsUseLightTheme();
 	    char dataString[512];
 	    Tcl_Obj *data;
 	    char *windowTheme, *systemTheme;
 	    Tk_Window tkwin = (Tk_Window) winPtr;
-	    bool windowIsDark;
-	    TkpWindowIsDark(tkwin, &windowIsDark);
-	    windowTheme = windowIsDark ? "dark" : "light";
-	    systemTheme = lightApps ? "light" : "dark";
-	    snprintf(dataString, 512, "windowtheme %s systemtheme %s",
+	    if (entrycount % 4 == 0) {
+		bool windowIsDark = false;
+		TkpWindowIsDark(tkwin, &windowIsDark);
+		windowTheme = windowIsDark ? "dark" : "light";
+		systemTheme = lightApps ? "light" : "dark";
+		snprintf(dataString, 512, "windowtheme %s systemtheme %s",
 		     windowTheme, systemTheme);
-	    data = Tcl_NewStringObj(dataString, TCL_INDEX_NONE);
-	    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", data);
+		data = Tcl_NewStringObj(dataString, TCL_INDEX_NONE);
+		Tk_SendVirtualEvent(tkwin, "AppearanceChanged", data);
+	    }
+	    result = 0;
 	    goto done;
 	}
 	break;
