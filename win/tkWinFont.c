@@ -175,7 +175,7 @@ typedef struct CanUse {
  * produces an array of these; the drawing layer consumes them without any
  * further Unicode processing.
  *
- * Ownership: glyphs, advances, and offsets are allocated by
+ * Ownership: glyphs, advances, offsets, logClust, and visualX are allocated by
  * TkWinShapeString() and freed by TkWinFreeShapedRuns().
  *
  * The scriptCache field points into the owning WinFont's scriptCacheArray at
@@ -213,6 +213,10 @@ typedef struct TkWinShapedRun {
 				 * index of the first glyph for UTF-16 char i
 				 * within this run.  Length = charLen.
 				 * (malloced). */
+    int         *visualX;       /* Length charLen+1: visual X offsets from run
+				 * start. visualX[0] = 0, visualX[charLen] =
+				 * run width. malloced, freed in
+				 * TkWinFreeShapedRuns. */
 } TkWinShapedRun;
 
 /*
@@ -302,6 +306,8 @@ static int		TkWinShapeString(HDC hdc, WinFont *fontPtr,
 static void		TkWinFreeShapedRuns(TkWinShapedRun *runs, int nRuns);
 static int		TkWinShapedRunsWidth(const TkWinShapedRun *runs,
 			    int nRuns);
+static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
+			    int nRuns, int logicalIdx);
 
 /*
  *-------------------------------------------------------------------------
@@ -865,6 +871,7 @@ TkpGetFontAttrsForChar(
  *	       a. Select the appropriate WinFont subfont (with fallback).
  *	       b. ScriptShape  -- map chars -> glyphs
  *	       c. ScriptPlace  -- compute advance widths and offsets
+ *	       d. Compute visualX offsets for logical character boundaries.
  *	  5. Return the run array to the caller.
  *
  *	Subfont fallback: if ScriptShape returns a missing-glyph for any
@@ -1119,6 +1126,63 @@ TkWinShapeString(
 	Tcl_Free(visAttr);
 
 	/*
+	 * Compute visualX offsets for logical character boundaries.
+	 */
+	int *visualX = (int *)Tcl_Alloc(sizeof(int) * (itemLen + 1));
+	visualX[0] = 0;
+	if (item->a.fRTL) {
+	    /* RTL: visual order is reverse of logical.
+	     * We accumulate advances from the end of the run toward the
+	     * beginning, then reverse the array.
+	     */
+	    int curX = 0;
+	    /* First compute total run width */
+	    int totalWidth = 0;
+	    for (int g = 0; g < glyphCount; g++) totalWidth += advances[g];
+	    /* Walk logical characters from last to first */
+	    int glyphIdx = glyphCount;
+	    for (int ci = itemLen - 1; ci >= 0; ci--) {
+		int firstGlyph = (int)logClust[ci];
+		int clusterAdv = 0;
+		int nextGlyph = glyphCount;
+		for (int j = ci + 1; j < itemLen; j++) {
+		    if (logClust[j] != firstGlyph) {
+			nextGlyph = (int)logClust[j];
+			break;
+		    }
+		}
+		for (int g = firstGlyph; g < nextGlyph; g++) clusterAdv += advances[g];
+		curX += clusterAdv;
+		visualX[ci + 1] = curX;
+	    }
+	    visualX[0] = 0;
+	    visualX[itemLen] = totalWidth;
+	    /* Reverse the array so visualX[i] is the visual offset for prefix of i chars */
+	    for (int i = 0; i <= itemLen / 2; i++) {
+		int tmp = visualX[i];
+		visualX[i] = visualX[itemLen - i];
+		visualX[itemLen - i] = tmp;
+	    }
+	} else {
+	    /* LTR: simple accumulation */
+	    int curX = 0;
+	    for (int ci = 0; ci < itemLen; ci++) {
+		int firstGlyph = (int)logClust[ci];
+		int clusterAdv = 0;
+		int nextGlyph = glyphCount;
+		for (int j = ci + 1; j < itemLen; j++) {
+		    if (logClust[j] != firstGlyph) {
+			nextGlyph = (int)logClust[j];
+			break;
+		    }
+		}
+		for (int g = firstGlyph; g < nextGlyph; g++) clusterAdv += advances[g];
+		curX += clusterAdv;
+		visualX[ci + 1] = curX;
+	    }
+	}
+
+	/*
 	 * Store the completed run.
 	 *
 	 * Carry scriptCache in the run so MultiFontTextOut
@@ -1141,7 +1205,8 @@ TkWinShapeString(
 	runs[nRuns].abc         = abc;
 	runs[nRuns].charStart   = itemStart;
 	runs[nRuns].charLen     = itemLen;
-	runs[nRuns].logClust    = logClust;   /* transferred; freed by TkWinFreeShapedRuns */
+	runs[nRuns].logClust    = logClust;
+	runs[nRuns].visualX     = visualX;
 	nRuns++;
     }
 
@@ -1177,6 +1242,7 @@ TkWinFreeShapedRuns(
 	Tcl_Free(runs[i].advances);
 	Tcl_Free(runs[i].offsets);
 	Tcl_Free(runs[i].logClust);
+	Tcl_Free(runs[i].visualX);
     }
     Tcl_Free(runs);
 }
@@ -1207,10 +1273,39 @@ TkWinShapedRunsWidth(
 }
 
 /*
+ *---------------------------------------------------------------------------
  *
- * End of shaping layer.
+ * GetVisualXForLogicalIndex --
  *
+ *	Given shaped runs (in visual order) and a logical character index
+ *	(0‑based from the start of the full string), returns the visual X
+ *	coordinate (from the line origin) of the boundary after that character.
+ *	If index == total characters, returns total line width.
+ *
+ *---------------------------------------------------------------------------
  */
+static int
+GetVisualXForLogicalIndex(
+    const TkWinShapedRun *runs,
+    int nRuns,
+    int logicalIdx)
+{
+    int x = 0;
+    for (int i = 0; i < nRuns; i++) {
+	const TkWinShapedRun *run = &runs[i];
+	int runStart = run->charStart;
+	int runEnd = runStart + run->charLen;
+	if (logicalIdx <= runEnd) {
+	    if (logicalIdx <= runStart) {
+		return x;
+	    }
+	    int offset = logicalIdx - runStart;
+	    return x + run->visualX[offset];
+	}
+	x += run->visualX[run->charLen];  // full run width
+    }
+    return x;  // beyond last character
+}
 
 /*
  *---------------------------------------------------------------------------
@@ -1512,11 +1607,11 @@ RunGlyphRange(
  *	given horizontal span, with access to the full source string for
  *	shaping context.
  *
- *	For measurement we delegate to Tk_MeasureChars on the sub-range:
- *	glyph advance widths are stable regardless of joining forms, so
- *	the measurement is correct.  The full-context benefit is in drawing
- *	(Tk_DrawCharsInContext), where incorrect joining forms cause the
- *	visible cursor shimmer.
+ *	This implementation shapes the full string (up to the end of the range)
+ *	and then uses the visualX offsets stored in each shaped run to map
+ *	logical character positions to visual X coordinates.  This ensures
+ *	that the measured width of a logical prefix matches the visual layout
+ *	used for drawing, eliminating the cursor “snap” in RTL scripts.
  *
  * Results:
  *	The return value is the number of bytes from rangeStart that fit.
@@ -1532,15 +1627,144 @@ int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
     const char *source,
-    TCL_UNUSED(Tcl_Size),	/* numBytes — full string length */
+    Tcl_Size numBytes,		/* full length of source string */
     Tcl_Size rangeStart,
     Tcl_Size rangeLength,
     int maxLength,
     int flags,
     int *lengthPtr)
 {
-    return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
-	    maxLength, flags, lengthPtr);
+    WinFont *fontPtr = (WinFont *) tkfont;
+    HDC hdc;
+    Tcl_DString fullUni;
+    WCHAR *wstr;
+    int wlen;
+    TkWinShapedRun *runs = NULL;
+    int nRuns = 0;
+    int resultBytes = 0;
+    int resultWidth = 0;
+
+    if (rangeLength == 0) {
+	*lengthPtr = 0;
+	return 0;
+    }
+
+    /* Shape the full string up to the end of the range (context) */
+    hdc = GetDC(fontPtr->hwnd);
+    Tcl_DStringInit(&fullUni);
+    Tcl_UtfToWCharDString(source, rangeStart + rangeLength, &fullUni);
+    wstr = (WCHAR *) Tcl_DStringValue(&fullUni);
+    wlen = (int)(Tcl_DStringLength(&fullUni) / sizeof(WCHAR));
+
+    /* Map byte offsets to UTF-16 indices */
+    Tcl_DString prefix;
+    Tcl_DStringInit(&prefix);
+    Tcl_UtfToWCharDString(source, rangeStart, &prefix);
+    int wStart = (int)(Tcl_DStringLength(&prefix) / sizeof(WCHAR));
+    Tcl_DStringFree(&prefix);
+
+    Tcl_DString rangePart;
+    Tcl_DStringInit(&rangePart);
+    Tcl_UtfToWCharDString(source, rangeStart + rangeLength, &rangePart);
+    int wEnd = (int)(Tcl_DStringLength(&rangePart) / sizeof(WCHAR));
+    Tcl_DStringFree(&rangePart);
+
+    if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
+	/* Fallback to non-context measurement */
+	ReleaseDC(fontPtr->hwnd, hdc);
+	Tcl_DStringFree(&fullUni);
+	return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
+			       maxLength, flags, lengthPtr);
+    }
+
+    /* Compute visual X positions for the range boundaries */
+    int startX = GetVisualXForLogicalIndex(runs, nRuns, wStart);
+    int endX   = GetVisualXForLogicalIndex(runs, nRuns, wEnd);
+    int totalWidth = endX - startX;
+
+    if (maxLength < 0 || totalWidth <= maxLength) {
+	/* All characters fit */
+	resultBytes = (int)rangeLength;
+	resultWidth = totalWidth;
+    } else {
+	/*
+	 * Binary search for the largest logical prefix whose visual width
+	 * does not exceed maxLength.
+	 */
+	int lo = 0, hi = (int)rangeLength;  /* hi is exclusive byte count */
+	int bestBytes = 0;
+	int bestWidth = 0;
+
+	while (lo < hi) {
+	    int mid = (lo + hi + 1) / 2;
+	    /* Compute UTF-16 index of the mid point */
+	    Tcl_DString tmp;
+	    Tcl_DStringInit(&tmp);
+	    Tcl_UtfToWCharDString(source + rangeStart, mid, &tmp);
+	    int wMid = wStart + (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
+	    Tcl_DStringFree(&tmp);
+	    int midX = GetVisualXForLogicalIndex(runs, nRuns, wMid) - startX;
+
+	    if (midX <= maxLength) {
+		bestBytes = mid;
+		bestWidth = midX;
+		lo = mid;
+	    } else {
+		hi = mid - 1;
+	    }
+	}
+	resultBytes = bestBytes;
+	resultWidth = bestWidth;
+
+	/* Apply TK_PARTIAL_OK and TK_AT_LEAST_ONE */
+	if (resultBytes == 0 && (flags & TK_AT_LEAST_ONE)) {
+	    /* At least one character even if it doesn't fit */
+	    Tcl_DString tmp;
+	    Tcl_DStringInit(&tmp);
+	    Tcl_UtfToWCharDString(source + rangeStart, 1, &tmp);
+	    int wFirst = wStart + (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
+	    Tcl_DStringFree(&tmp);
+	    int firstWidth = GetVisualXForLogicalIndex(runs, nRuns, wFirst) - startX;
+	    resultBytes = 1;
+	    resultWidth = firstWidth;
+	} else if (resultBytes < (int)rangeLength && (flags & TK_PARTIAL_OK) &&
+		   bestWidth < maxLength && bestWidth > 0) {
+	    /* We already included the partial character in bestBytes */
+	}
+    }
+
+    /* Handle TK_WHOLE_WORDS */
+    if ((flags & TK_WHOLE_WORDS) && (resultBytes < (int)rangeLength)) {
+	const char *p = source + rangeStart;
+	const char *end = source + rangeStart + resultBytes;
+	const char *lastWordBreak = NULL;
+	int ch, prevCh = ' ';
+	while (p < end) {
+	    const char *next = p + Tcl_UtfToUniChar(p, &ch);
+	    if (prevCh != ' ' && ch == ' ') {
+		lastWordBreak = p;
+	    }
+	    p = next;
+	    prevCh = ch;
+	}
+	if (lastWordBreak != NULL) {
+	    /* Re-measure up to the word break (without flags to avoid recursion) */
+	    resultBytes = Tk_MeasureCharsInContext(tkfont, source, numBytes,
+						   rangeStart,
+						   lastWordBreak - source,
+						   -1, 0, lengthPtr);
+	    resultWidth = *lengthPtr;
+	} else if (!(flags & TK_AT_LEAST_ONE)) {
+	    resultBytes = 0;
+	    resultWidth = 0;
+	}
+    }
+
+    TkWinFreeShapedRuns(runs, nRuns);
+    Tcl_DStringFree(&fullUni);
+    ReleaseDC(fontPtr->hwnd, hdc);
+    *lengthPtr = resultWidth;
+    return resultBytes;
 }
 
 /*
