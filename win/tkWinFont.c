@@ -3,7 +3,7 @@
  *
  *	Contains the Windows implementation of the platform-independent font
  *	package interface with support for shaping and RTL support with complex
- *  script languages like Arabic.
+ *  	script languages like Arabic.
  *
  * Copyright © 1994 Software Research Associates, Inc.
  * Copyright © 1995-1997 Sun Microsystems, Inc.
@@ -13,6 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
+
 
 #include "tkWinInt.h"
 #include "tkFont.h"
@@ -1127,45 +1128,43 @@ TkWinShapeString(
 
 	/*
 	 * Compute visualX offsets for logical character boundaries.
+	 *
+	 * visualX[i] is the visual X distance from the run's left (visual)
+	 * edge to the inter-character boundary before logical character i.
+	 * visualX[0] == 0 always; visualX[itemLen] == total run width.
+	 *
+	 * For LTR runs glyph order matches logical order, so we accumulate
+	 * advances left-to-right.
+	 *
+	 * For RTL runs Uniscribe stores glyphs in visual left-to-right order
+	 * but logClust[] maps in reverse: logClust[0] is the highest glyph
+	 * index (the rightmost cluster) and logClust[itemLen-1] is the lowest
+	 * (the leftmost cluster).  visualX[ci] therefore equals the sum of
+	 * advances for glyphs 0 .. logClust[ci]-1, which are the glyphs that
+	 * appear visually to the left of logical character ci's cluster.
+	 * No array reversal is required.
 	 */
 	int *visualX = (int *)Tcl_Alloc(sizeof(int) * (itemLen + 1));
-	visualX[0] = 0;
 	if (item->a.fRTL) {
-	    /* RTL: visual order is reverse of logical.
-	     * We accumulate advances from the end of the run toward the
-	     * beginning, then reverse the array.
+	    /*
+	     * RTL: compute total run width first, then for each logical
+	     * character position sum the advances of glyphs that are
+	     * visually to its left (i.e. glyph indices < logClust[ci]).
 	     */
-	    int curX = 0;
-	    /* First compute total run width */
 	    int totalWidth = 0;
 	    for (int g = 0; g < glyphCount; g++) totalWidth += advances[g];
-	    /* Walk logical characters from last to first */
-	    int glyphIdx = glyphCount;
-	    for (int ci = itemLen - 1; ci >= 0; ci--) {
-		int firstGlyph = (int)logClust[ci];
-		int clusterAdv = 0;
-		int nextGlyph = glyphCount;
-		for (int j = ci + 1; j < itemLen; j++) {
-		    if (logClust[j] != firstGlyph) {
-			nextGlyph = (int)logClust[j];
-			break;
-		    }
-		}
-		for (int g = firstGlyph; g < nextGlyph; g++) clusterAdv += advances[g];
-		curX += clusterAdv;
-		visualX[ci + 1] = curX;
+
+	    for (int ci = 0; ci < itemLen; ci++) {
+		int clusterGlyph = (int)logClust[ci];
+		int preAdv = 0;
+		for (int g = 0; g < clusterGlyph; g++) preAdv += advances[g];
+		visualX[ci] = preAdv;
 	    }
-	    visualX[0] = 0;
 	    visualX[itemLen] = totalWidth;
-	    /* Reverse the array so visualX[i] is the visual offset for prefix of i chars */
-	    for (int i = 0; i <= itemLen / 2; i++) {
-		int tmp = visualX[i];
-		visualX[i] = visualX[itemLen - i];
-		visualX[itemLen - i] = tmp;
-	    }
 	} else {
-	    /* LTR: simple accumulation */
+	    /* LTR: simple left-to-right accumulation. */
 	    int curX = 0;
+	    visualX[0] = 0;
 	    for (int ci = 0; ci < itemLen; ci++) {
 		int firstGlyph = (int)logClust[ci];
 		int clusterAdv = 0;
@@ -1290,21 +1289,58 @@ GetVisualXForLogicalIndex(
     int nRuns,
     int logicalIdx)
 {
-    int x = 0;
-    for (int i = 0; i < nRuns; i++) {
+    int i, result, found;
+
+    /*
+     * Runs are stored in visual (paint) left-to-right order by
+     * TkWinShapeString, but their charStart values are logical UTF-16
+     * indices and are NOT monotonically increasing in mixed BiDi text
+     * (e.g. an RTL run may have charStart < the LTR run before it
+     * visually).  We therefore cannot use a simple accumulate-and-early-
+     * exit loop: the first run whose charStart+charLen >= logicalIdx may
+     * not be the run that actually owns that logical position.
+     *
+     * Two-pass approach:
+     *   Pass 1 — build runOriginX[i], the visual-left pixel offset of
+     *            run i, by linearly accumulating full run widths across
+     *            the visual array (this part is still left-to-right).
+     *   Pass 2 — search all runs for the one that owns logicalIdx by
+     *            checking [charStart, charStart+charLen], then return
+     *            that run's origin plus its intra-run visualX offset.
+     */
+
+    /* Pass 1: compute visual-left origin of every run. */
+    int *runOriginX = (int *)Tcl_Alloc(sizeof(int) * (nRuns ? nRuns : 1));
+    {
+	int x = 0;
+	for (i = 0; i < nRuns; i++) {
+	    runOriginX[i] = x;
+	    x += runs[i].visualX[runs[i].charLen];
+	}
+    }
+
+    /* Pass 2: find the run that contains logicalIdx. */
+    result = 0;
+    found  = 0;
+    for (i = 0; i < nRuns && !found; i++) {
 	const TkWinShapedRun *run = &runs[i];
 	int runStart = run->charStart;
-	int runEnd = runStart + run->charLen;
-	if (logicalIdx <= runEnd) {
-	    if (logicalIdx <= runStart) {
-		return x;
-	    }
-	    int offset = logicalIdx - runStart;
-	    return x + run->visualX[offset];
+	int runEnd   = runStart + run->charLen;
+	if (logicalIdx >= runStart && logicalIdx <= runEnd) {
+	    result = runOriginX[i] + run->visualX[logicalIdx - runStart];
+	    found  = 1;
 	}
-	x += run->visualX[run->charLen];  // full run width
     }
-    return x;  // beyond last character
+
+    if (!found) {
+	/* logicalIdx is beyond the last character — return total width. */
+	result = (nRuns > 0)
+	    ? runOriginX[nRuns - 1] + runs[nRuns - 1].visualX[runs[nRuns - 1].charLen]
+	    : 0;
+    }
+
+    Tcl_Free(runOriginX);
+    return result;
 }
 
 /*

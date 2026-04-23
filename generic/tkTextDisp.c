@@ -80,7 +80,7 @@
  *	always performed with maximum context.
  *
  *	This is necessary for text rendering engines that provide ligatures
- *	and sub-pixel layout, like ATSU on macOS. If we don't do this, the
+ *	and sub-pixel layout, like CoreText on macOS. If we don't do this, the
  *	measuring will change all the time, leading to an ugly "tremble and
  *	shiver" effect. This is because of the continuous splitting and
  *	re-merging of chunks that goes on in a text widget, when the cursor or
@@ -8086,7 +8086,7 @@ CharChunkMeasureChars(
 	}
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-#else /* X11 and macOS */
+#else /* X11 and macOS. */
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
@@ -8391,7 +8391,7 @@ CharUndisplayProc(
 	Tcl_Free(ciPtr);
 	chunkPtr->clientData = NULL;
     }
-#else /* X11 and macOS */
+#else /* X11 and macOS. */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr == NULL) {
@@ -8555,7 +8555,7 @@ CharBboxProc(
     }
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-#else /* X11 and macOS */
+#else /* X11 and macOS. */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
 
