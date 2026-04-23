@@ -8029,68 +8029,12 @@ CharChunkMeasureChars(
 				 * right border x-position of the span
 				 * here. */
 {
-
-/* MSVC prefers this block - the next block causes hangs. */    
-#ifdef _WIN32
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
-    if (chars == NULL) {
-	chars = ciPtr->chars;
-	charsLen = ciPtr->numBytes;
-    }
-    if (end == -1) {
-	end = charsLen;
-    }
-
-    return MeasureChars(tkfont, chars, charsLen, start, end-start,
-			startX, maxX, flags, nextXPtr);
-#else /* TK_LAYOUT_WITH_BASE_CHUNKS */
-    {
-	int xDisplacement;
-	int fit, bstart = start, bend = end;
-
-	if (chars == NULL) {
-	    Tcl_DString *baseChars = &((BaseCharInfo *)
-				       ciPtr->baseChunkPtr->clientData)->baseChars;
-
-	    chars = Tcl_DStringValue(baseChars);
-	    charsLen = Tcl_DStringLength(baseChars);
-	    bstart += ciPtr->baseOffset;
-	    if (bend == -1) {
-		bend = ciPtr->baseOffset + ciPtr->numBytes;
-	    } else {
-		bend += ciPtr->baseOffset;
-	    }
-	} else if (bend == -1) {
-	    bend = charsLen;
-	}
-
-	if (bstart == ciPtr->baseOffset) {
-	    xDisplacement = startX - chunkPtr->x;
-	} else {
-	    int widthUntilStart = 0;
-
-	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
-			 0, -1, 0, &widthUntilStart);
-	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
-	}
-
-	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
-			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
-
-	if (fit < bstart) {
-	    return 0;
-	} else {
-	    return fit - bstart;
-	}
-    }
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-#else /* X11 and macOS */
-    Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-
+    /*
+     * Defensive check: if ciPtr is NULL, we can't measure anything.
+     */
     if (ciPtr == NULL) {
 	*nextXPtr = startX;
 	return 0;
@@ -8169,7 +8113,6 @@ CharChunkMeasureChars(
 	}
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-#endif
 }
 
 /*
@@ -8357,40 +8300,6 @@ CharUndisplayProc(
     TCL_UNUSED(TkText *),	/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
-
-/* MSVC prefers this block - the next block causes hangs. */
-#ifdef _WIN32
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-
-    if (ciPtr) {
-#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-	if (chunkPtr == ciPtr->baseChunkPtr) {
-	    /*
-	     * Basechunks are undisplayed first, when DLines are freed or
-	     * partially freed, so this makes sure we don't access their data
-	     * any more.
-	     */
-
-	    FreeBaseChunk(chunkPtr);
-	} else if (ciPtr->baseChunkPtr != NULL) {
-	    /*
-	     * When other char chunks are undisplayed, drop their characters
-	     * from the base chunk. This usually happens, when they are last
-	     * in a line and need to be re-layed out.
-	     */
-
-	    RemoveFromBaseChunk(chunkPtr);
-	}
-
-	ciPtr->baseChunkPtr = NULL;
-	ciPtr->chars = NULL;
-	ciPtr->numBytes = 0;
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-
-	Tcl_Free(ciPtr);
-	chunkPtr->clientData = NULL;
-    }
-#else /* X11 and macOS */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr == NULL) {
@@ -8399,43 +8308,51 @@ CharUndisplayProc(
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
-     * If this is the base chunk, it owns the CharInfo.
-     * Otherwise, just detach safely.
+     * Determine whether this chunk is a base chunk or a dependent chunk.
+     * Base chunks own the CharInfo and must free it.
+     * Dependent chunks must NOT free CharInfo (it belongs to the base chunk).
      */
     if (chunkPtr == ciPtr->baseChunkPtr) {
-
         /*
-         * Base chunk is being removed → remove dependent data first.
+         * This is a base chunk being removed.
+         * First disconnect all dependent chunks from this base.
          */
         FreeBaseChunk(chunkPtr);
 
         /*
-         * Now this CharInfo is no longer referenced by any chunk
-         * in this layout pass, so it's safe to free.
+         * Now safe to clear and free the CharInfo since no other
+         * chunks reference it.
          */
         ciPtr->baseChunkPtr = NULL;
         ciPtr->chars = NULL;
         ciPtr->numBytes = 0;
 
         Tcl_Free(ciPtr);
+        chunkPtr->clientData = NULL;
 
     } else {
-
         /*
-         * Non-base chunk: remove from base structure if needed,
-         * but DO NOT touch or free CharInfo (it may be shared).
+         * This is a dependent chunk (not the base chunk).
+         * Remove it from the base chunk's data structure if still connected.
+         * DO NOT free the CharInfo - it belongs to the base chunk.
          */
         if (ciPtr->baseChunkPtr != NULL) {
             RemoveFromBaseChunk(chunkPtr);
         }
-    }
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
+        /*
+         * Detach this chunk from the CharInfo to prevent stale access,
+         * but don't free the CharInfo itself.
+         */
+        chunkPtr->clientData = NULL;
+    }
+#else
     /*
-     * Always detach chunk from CharInfo to prevent stale access.
+     * Without TK_LAYOUT_WITH_BASE_CHUNKS, each chunk owns its own CharInfo.
      */
+    Tcl_Free(ciPtr);
     chunkPtr->clientData = NULL;
-#endif
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 }
 
 /*
@@ -8509,42 +8426,6 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled in with height of character, in
 				 * pixels. */
 {
-	#ifdef _WIN32
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-    int maxX;
-
-    maxX = chunkPtr->width + chunkPtr->x;
-    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-	    chunkPtr->x, -1, 0, xPtr);
-
-    if (byteIndex == ciPtr->numBytes) {
-	/*
-	 * This situation only happens if the last character in a line is a
-	 * space character, in which case it absorbs all of the extra space in
-	 * the line (see TkTextCharLayoutProc).
-	 */
-
-	*widthPtr = maxX - *xPtr;
-    } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
-	/*
-	 * The desired character is a tab character that terminates a chunk;
-	 * give it all the space left in the chunk.
-	 */
-
-	*widthPtr = maxX - *xPtr;
-    } else {
-	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
-		*xPtr, -1, 0, widthPtr);
-	if (*widthPtr > maxX) {
-	    *widthPtr = maxX - *xPtr;
-	} else {
-	    *widthPtr -= *xPtr;
-	}
-    }
-    *yPtr = y + baseline - chunkPtr->minAscent;
-    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-#else 
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
 
@@ -8574,12 +8455,20 @@ CharBboxProc(
         chunkPtr->x, -1, 0, xPtr);
 
     if (byteIndex == ciPtr->numBytes) {
+        /*
+         * This situation only happens if the last character in a line is a
+         * space character, in which case it absorbs all of the extra space in
+         * the line (see TkTextCharLayoutProc).
+         */
         *widthPtr = maxX - *xPtr;
 
     } else if (byteIndex < ciPtr->numBytes &&
                ciPtr->chars[byteIndex] == '\t' &&
                byteIndex == ciPtr->numBytes - 1) {
-
+        /*
+         * The desired character is a tab character that terminates a chunk;
+         * give it all the space left in the chunk.
+         */
         *widthPtr = maxX - *xPtr;
 
     } else {
@@ -8596,7 +8485,6 @@ CharBboxProc(
 
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-    #endif
 }
 
 /*
@@ -9391,6 +9279,15 @@ FreeBaseChunk(
 	    continue;
 	}
 	ciPtr = (CharInfo *)chunkPtr->clientData;
+	
+	/*
+	 * Defensive check: ciPtr may be NULL if chunk is being torn down
+	 * or was never fully initialized.
+	 */
+	if (ciPtr == NULL) {
+	    continue;
+	}
+	
 	if (ciPtr->baseChunkPtr != baseChunkPtr) {
 	    break;
 	}
@@ -9399,7 +9296,7 @@ FreeBaseChunk(
 	ciPtr->chars = NULL;
     }
 
-    if (baseChunkPtr) {
+    if (baseChunkPtr && baseChunkPtr->clientData != NULL) {
 	Tcl_DStringFree(&((BaseCharInfo *) baseChunkPtr->clientData)->baseChars);
     }
 }
@@ -9507,15 +9404,25 @@ RemoveFromBaseChunk(
     }
 
     /*
+     * Defensive check: ciPtr may be NULL during teardown.
+     */
+    ciPtr = (CharInfo *)chunkPtr->clientData;
+    if (ciPtr == NULL || ciPtr->baseChunkPtr == NULL) {
+	return;
+    }
+
+    /*
      * Reinstitute this base chunk for re-layout.
      */
-
-    ciPtr = (CharInfo *)chunkPtr->clientData;
     baseCharChunkPtr = ciPtr->baseChunkPtr;
 
     /*
      * Remove the chunk data from the base chunk data.
+     * Guard against baseCharChunkPtr->clientData being NULL.
      */
+    if (baseCharChunkPtr->clientData == NULL) {
+	return;
+    }
 
     bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
 
