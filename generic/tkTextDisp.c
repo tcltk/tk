@@ -8029,8 +8029,8 @@ CharChunkMeasureChars(
 				 * right border x-position of the span
 				 * here. */
 {
-	/* MSVC prefers this block - the next block causes hangs. */    
-#ifdef _WIN32
+  
+#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */  
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
@@ -8359,8 +8359,8 @@ CharUndisplayProc(
     TCL_UNUSED(TkText *),	/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
-	/* MSVC prefers this block - the next block causes hangs. */
-#ifdef _WIN32
+
+#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr) {
@@ -8519,8 +8519,8 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled in with height of character, in
 				 * pixels. */
 {
-	/* MSVC prefers this section - hangs on the other section. */
-	#ifdef _WIN32
+	
+#ifdef _WIN32 /* MSVC prefers block - hangs on the other block. */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
 
@@ -8555,7 +8555,7 @@ CharBboxProc(
     }
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-#else 
+#else /* X11 and macOS */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
 
@@ -8615,7 +8615,7 @@ CharBboxProc(
 
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-    #endif
+#endif
 }
 
 /*
@@ -9236,8 +9236,8 @@ FinalizeBaseChunk(
 				 * list yet. Used by the LayoutProc, otherwise
 				 * NULL. */
 {
-	/* MSVC prefers this block - the next one hangs. */
-	#ifdef _WIN32
+	
+#ifdef _WIN32 /* MSVC prefers this block - the next one hangs. */
     const char *baseChars;
     TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
@@ -9290,7 +9290,7 @@ FinalizeBaseChunk(
     }
 
     baseCharChunkPtr = NULL;
-    #else /* X11 and macOS. */
+#else /* X11 and macOS. */
      const char *baseChars;
     TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
@@ -9369,7 +9369,7 @@ FinalizeBaseChunk(
     }
 
     baseCharChunkPtr = NULL;
-    #endif
+#endif
 }
 
 /*
@@ -9399,9 +9399,9 @@ FreeBaseChunk(
 				/* The base chunk of the stretch and head of
 				 * the linked list. */
 {
-	/* MSVC prefers this section. */
-	#ifdef _WIN32 
-	 TkTextDispChunk *chunkPtr;
+
+#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */
+	TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
 
     if (baseCharChunkPtr == baseChunkPtr) {
@@ -9457,7 +9457,7 @@ FreeBaseChunk(
     if (baseChunkPtr && baseChunkPtr->clientData != NULL) {
 	Tcl_DStringFree(&((BaseCharInfo *) baseChunkPtr->clientData)->baseChars);
     }
-    #endif
+#endif
 }
 
 /*
@@ -9552,8 +9552,8 @@ RemoveFromBaseChunk(
     TkTextDispChunk *chunkPtr)	/* The chunk to remove from the end of the
 				 * stretch. */
 {
-	/* MSVC prefers this block - the next block causes hangs. */
-	#ifdef _WIN32
+
+#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */
 	CharInfo *ciPtr;
     BaseCharInfo *bciPtr;
 
@@ -9642,7 +9642,7 @@ RemoveFromBaseChunk(
      */
 
     bciPtr->width = -1;
-    #endif
+#endif
 }
 #endif /*TK_LAYOUT_WITH_BASE_CHUNKS */
 
