@@ -761,8 +761,8 @@ TkTextFreeDInfo(
 static TextStyle *
 GetStyle(
     const TkText *textPtr,		/* Overall information about text widget. */
-    const TkTextIndex *indexPtr)	/* The character in the text for which display
-					 * information is wanted. */
+    const TkTextIndex *indexPtr)/* The character in the text for which display
+				 * information is wanted. */
 {
     TkTextTag **tagPtrs;
     TkTextTag *tagPtr;
@@ -805,7 +805,7 @@ GetStyle(
     styleValues.fgColor = textPtr->fgColor;
     styleValues.underlineColor = textPtr->fgColor;
     styleValues.overstrikeColor = textPtr->fgColor;
-    styleValues.tkfont = textPtr->tkfont;          /* fallback */
+    styleValues.tkfont = textPtr->tkfont;
     styleValues.justify = TK_JUSTIFY_LEFT;
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing1Obj, &styleValues.spacing1);
     Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->spacing2Obj, &styleValues.spacing2);
@@ -990,18 +990,6 @@ GetStyle(
     }
 
     /*
-     * SAFETY: Ensure we never use a NULL font.
-     */
-    if (styleValues.tkfont == NULL) {
-	styleValues.tkfont = textPtr->tkfont;
-    }
-    if (styleValues.tkfont == NULL) {
-	/* Last resort: use the default Tk font (should never happen) */
-	styleValues.tkfont = Tk_GetFont(textPtr->interp, textPtr->tkwin,
-					"TkDefaultFont");
-    }
-
-    /*
      * Use an existing style if there's one around that matches.
      */
 
@@ -1074,29 +1062,25 @@ GetStyle(
 
 static void
 FreeStyle(
-    TkText *textPtr,
+    TkText *textPtr,		/* Information about overall widget. */
     TextStyle *stylePtr)
+				/* Information about style to free. */
 {
-    if (stylePtr == NULL) return;
-    if (stylePtr->refCount <= 0) return;  /* already freed */
-    if (--stylePtr->refCount == 0) {
-        if (stylePtr->bgGC != NULL) {
-            Tk_FreeGC(textPtr->display, stylePtr->bgGC);
-        }
-        if (stylePtr->fgGC != NULL) {
-            Tk_FreeGC(textPtr->display, stylePtr->fgGC);
-        }
-        if (stylePtr->ulGC != NULL) {
-            Tk_FreeGC(textPtr->display, stylePtr->ulGC);
-        }
-        if (stylePtr->ovGC != NULL) {
-            Tk_FreeGC(textPtr->display, stylePtr->ovGC);
-        }
-        if (stylePtr->hPtr != NULL) {
-            Tcl_DeleteHashEntry(stylePtr->hPtr);
-            stylePtr->hPtr = NULL;
-        }
-        Tcl_Free(stylePtr);
+    if (stylePtr->refCount-- <= 1) {
+	if (stylePtr->bgGC != NULL) {
+	    Tk_FreeGC(textPtr->display, stylePtr->bgGC);
+	}
+	if (stylePtr->fgGC != NULL) {
+	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
+	}
+	if (stylePtr->ulGC != NULL) {
+	    Tk_FreeGC(textPtr->display, stylePtr->ulGC);
+	}
+	if (stylePtr->ovGC != NULL) {
+	    Tk_FreeGC(textPtr->display, stylePtr->ovGC);
+	}
+	Tcl_DeleteHashEntry(stylePtr->hPtr);
+	Tcl_Free(stylePtr);
     }
 }
 
@@ -1136,56 +1120,74 @@ FreeStyle(
 
 static DLine *
 LayoutDLine(
-    TkText *textPtr,
-    const TkTextIndex *indexPtr)
+    TkText *textPtr,		/* Overall information about text widget. */
+    const TkTextIndex *indexPtr)/* Beginning of display line. May not
+				 * necessarily point to a character
+				 * segment. */
 {
-    DLine *dlPtr;
-    TkTextSegment *segPtr;
+    DLine *dlPtr;	/* New display line. */
+    TkTextSegment *segPtr;	/* Current segment in text. */
     TkTextDispChunk *lastChunkPtr;
-    TkTextDispChunk *chunkPtr;
+				/* Last chunk allocated so far for line. */
+    TkTextDispChunk *chunkPtr;	/* Current chunk. */
     TkTextIndex curIndex;
     TkTextDispChunk *breakChunkPtr;
-    TkTextIndex breakIndex;
-    Tcl_Size breakByteOffset;
-    int justify;
-    int jIndent;
-    int rMargin;
-    TkWrapMode wrapMode;
-    int x = 0, maxX = 0;
-    int tabIndex;
-    bool noCharsYet;
-    bool paragraphStart;
-    bool wholeLine;
-    bool gotTab;
+				/* Chunk containing best word break point, if
+				 * any. */
+    TkTextIndex breakIndex;	/* Index of first character in
+				 * breakChunkPtr. */
+    Tcl_Size breakByteOffset;	/* Byte offset of character within
+				 * breakChunkPtr just to right of best break
+				 * point. */
+    int justify;		/* How to justify line: taken from style for
+				 * the first character in line. */
+    int jIndent;		/* Additional indentation (beyond margins) due
+				 * to justification. */
+    int rMargin;		/* Right margin width for line. */
+    TkWrapMode wrapMode;	/* Wrap mode to use for this line. */
+    int x = 0, maxX = 0;	/* Initializations needed only to stop
+				 * compiler warnings. */
+    int tabIndex;		/* Index of the current tab stop. */
+    bool noCharsYet;		/* True means that no characters have been
+				 * placed on the line yet. */
+    bool paragraphStart;		/* True means that we are on the first
+				 * line of a paragraph (used to choose between
+				 * lmargin1, lmargin2). */
+    bool wholeLine;		/* Non-zero means this display line runs to
+				 * the end of the text line. */
+    bool gotTab;			/* True means the current chunk contains a
+				 * tab. */
     TkTextDispChunk *tabChunkPtr;
-    Tcl_Size maxBytes;
-    TkTextTabArray *tabArrayPtr;
-    TkTextTabStyle tabStyle;
-    int tabSize;
+				/* Pointer to the chunk containing the
+				 * previous tab stop. */
+    Tcl_Size maxBytes;		/* Maximum number of bytes to include in this
+				 * chunk. */
+    TkTextTabArray *tabArrayPtr;/* Tab stops for line; taken from style for
+				 * the first character on line. */
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR
+				 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    int tabSize;		/* Number of pixels consumed by current tab
+				 * stop. */
     TkTextDispChunk *lastCharChunkPtr;
+				/* Pointer to last chunk in display lines with
+				 * numBytes > 0. Used to drop 0-sized chunks
+				 * from the end of the line. */
     Tcl_Size byteOffset;
     int ascent, descent, code;
-    Tcl_Size elidesize;
+	Tcl_Size elidesize;
     bool elide;
     StyleValues *sValuePtr;
-    TkTextElideInfo info;
+    TkTextElideInfo info;	/* Keep track of elide state. */
 
     /*
-     * DEFENSIVE: Validate input index.
+     * Create and initialize a new DLine structure.
      */
-    if (indexPtr == NULL || indexPtr->linePtr == NULL) {
-        /* Return a dummy zero‑height DLine to avoid crash */
-        dlPtr = (DLine *)Tcl_Alloc(sizeof(DLine));
-        memset(dlPtr, 0, sizeof(DLine));
-        dlPtr->flags = NEW_LAYOUT | OLD_Y_INVALID;
-        return dlPtr;
-    }
 
     dlPtr = (DLine *)Tcl_Alloc(sizeof(DLine));
     dlPtr->index = *indexPtr;
     dlPtr->byteCount = 0;
     dlPtr->y = 0;
-    dlPtr->oldY = 0;
+    dlPtr->oldY = 0;		/* Only set to avoid compiler warnings. */
     dlPtr->height = 0;
     dlPtr->baseline = 0;
     dlPtr->chunkPtr = NULL;
@@ -1197,63 +1199,108 @@ LayoutDLine(
     dlPtr->rMarginColor = NULL;
     dlPtr->rMarginWidth = 0;
 
+    /*
+     * This is not necessarily totally correct, where we have merged logical
+     * lines. Fixing this would require a quite significant overhaul, though,
+     * so currently we make do with this.
+     */
+
     paragraphStart = (indexPtr->byteIndex == 0);
 
     /*
-     * Special case entirely elided line.
-     * Ensure info is zeroed before use.
+     * Special case entirely elide line as there may be 1000s or more.
      */
-    memset(&info, 0, sizeof(info));
+
     elide = TkTextIsElided(textPtr, indexPtr, &info);
     if (elide && indexPtr->byteIndex == 0) {
-        maxBytes = 0;
-        for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
-            if (segPtr->size > 0) {
-                if (elide == 0) {
-                    break;
-                }
-                maxBytes += segPtr->size;
-            } else if ((segPtr->typePtr == &tkTextToggleOffType)
-                    || (segPtr->typePtr == &tkTextToggleOnType)) {
-                TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
-                if (tagPtr->elide >= 0) {
-                    info.tagCnts[tagPtr->priority]++;
-                    if (info.tagCnts[tagPtr->priority] & 1) {
-                        info.tagPtrs[tagPtr->priority] = tagPtr;
-                    }
-                    if (tagPtr->priority >= info.elidePriority) {
-                        if (segPtr->typePtr == &tkTextToggleOffType) {
-                            if (tagPtr->priority != info.elidePriority) {
-                                Tcl_Panic("Bad tag priority being toggled off");
-                            }
-                            elide = 0;
-                            while (--info.elidePriority > 0) {
-                                if (info.tagCnts[info.elidePriority] & 1) {
-                                    elide = info.tagPtrs[info.elidePriority]->elide > 0;
-                                    break;
-                                }
-                            }
-                        } else {
-                            elide = tagPtr->elide > 0;
-                            info.elidePriority = tagPtr->priority;
-                        }
-                    }
-                }
-            }
-        }
-        if (elide) {
-            dlPtr->byteCount = maxBytes;
-            dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
-            if (dlPtr->index.byteIndex == 0 && dlPtr->index.linePtr != NULL) {
-                TkBTreeLinePixelEpoch(textPtr, dlPtr->index.linePtr)
-                    = textPtr->dInfoPtr->lineMetricUpdateEpoch;
-                if (TkBTreeLinePixelCount(textPtr, dlPtr->index.linePtr) != 0) {
-                    TkBTreeAdjustPixelHeight(textPtr, dlPtr->index.linePtr, 0, 0);
-                }
-            }
-            TkTextFreeElideInfo(&info);
-            return dlPtr;
-        }
+	maxBytes = 0;
+	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
+	    if (segPtr->size > 0) {
+		if (elide == 0) {
+		    /*
+		     * We toggled a tag and the elide state changed to
+		     * visible, and we have something of non-zero size.
+		     * Therefore we must bail out.
+		     */
+
+		    break;
+		}
+		maxBytes += segPtr->size;
+
+		/*
+		 * Reset tag elide priority, since we're on a new character.
+		 */
+
+	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
+		    || (segPtr->typePtr == &tkTextToggleOnType)) {
+		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
+
+		/*
+		 * The elide state only changes if this tag is either the
+		 * current highest priority tag (and is therefore being
+		 * toggled off), or it's a new tag with higher priority.
+		 */
+
+		if (tagPtr->elide >= 0) {
+		    info.tagCnts[tagPtr->priority]++;
+		    if (info.tagCnts[tagPtr->priority] & 1) {
+			info.tagPtrs[tagPtr->priority] = tagPtr;
+		    }
+		    if (tagPtr->priority >= info.elidePriority) {
+			if (segPtr->typePtr == &tkTextToggleOffType) {
+			    /*
+			     * If it is being toggled off, and it has an elide
+			     * string, it must actually be the current highest
+			     * priority tag, so this check is redundant:
+			     */
+
+			    if (tagPtr->priority != info.elidePriority) {
+				Tcl_Panic("Bad tag priority being toggled off");
+			    }
+
+			    /*
+			     * Find previous elide tag, if any (if not then
+			     * elide will be zero, of course).
+			     */
+
+			    elide = 0;
+			    while (--info.elidePriority > 0) {
+				if (info.tagCnts[info.elidePriority] & 1) {
+				    elide = info.tagPtrs[info.elidePriority]
+					    ->elide > 0;
+				    break;
+				}
+			    }
+			} else {
+			    elide = tagPtr->elide > 0;
+			    info.elidePriority = tagPtr->priority;
+			}
+		    }
+		}
+	    }
+	}
+
+	if (elide) {
+	    dlPtr->byteCount = maxBytes;
+	    dlPtr->spaceAbove = dlPtr->spaceBelow = dlPtr->length = 0;
+	    if (dlPtr->index.byteIndex == 0) {
+		/*
+		 * Elided state goes from beginning to end of an entire
+		 * logical line. This means we can update the line's pixel
+		 * height, and bring its pixel calculation up to date.
+		 */
+
+		TkBTreeLinePixelEpoch(textPtr, dlPtr->index.linePtr)
+			= textPtr->dInfoPtr->lineMetricUpdateEpoch;
+
+		if (TkBTreeLinePixelCount(textPtr,dlPtr->index.linePtr) != 0) {
+		    TkBTreeAdjustPixelHeight(textPtr,
+			    dlPtr->index.linePtr, 0, 0);
+		}
+	    }
+	    TkTextFreeElideInfo(&info);
+	    return dlPtr;
+	}
     }
     TkTextFreeElideInfo(&info);
 
@@ -1501,7 +1548,6 @@ LayoutDLine(
 	}
 	if (code <= 0) {
 	    FreeStyle(textPtr, chunkPtr->stylePtr);
-		chunkPtr->stylePtr = NULL;   /* Prevent double free */
 	    if (code < 0) {
 		/*
 		 * This segment doesn't wish to display itself (e.g. most
@@ -7972,7 +8018,7 @@ CharChunkMeasureChars(
 				 * All other callers use NULL. Not
 				 * NUL-terminated. */
     Tcl_Size charsLen,		/* Length of the "chars" parameter. */
-    Tcl_Size start, Tcl_Size end,/* The range of chars to measure inside the
+    Tcl_Size start, Tcl_Size end,		/* The range of chars to measure inside the
 				 * chunk (or inside the additional chars). */
     int startX,			/* Starting x coordinate where the measured
 				 * span will begin. */
@@ -7983,6 +8029,64 @@ CharChunkMeasureChars(
 				 * right border x-position of the span
 				 * here. */
 {
+	/* MSVC prefers this block - the next block causes hangs. */    
+#ifdef _WIN32
+    Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+
+#ifndef TK_LAYOUT_WITH_BASE_CHUNKS
+    if (chars == NULL) {
+	chars = ciPtr->chars;
+	charsLen = ciPtr->numBytes;
+    }
+    if (end == -1) {
+	end = charsLen;
+    }
+
+    return MeasureChars(tkfont, chars, charsLen, start, end-start,
+			startX, maxX, flags, nextXPtr);
+#else /* TK_LAYOUT_WITH_BASE_CHUNKS */
+    {
+	int xDisplacement;
+	int fit, bstart = start, bend = end;
+
+	if (chars == NULL) {
+	    Tcl_DString *baseChars = &((BaseCharInfo *)
+				       ciPtr->baseChunkPtr->clientData)->baseChars;
+
+	    chars = Tcl_DStringValue(baseChars);
+	    charsLen = Tcl_DStringLength(baseChars);
+	    bstart += ciPtr->baseOffset;
+	    if (bend == -1) {
+		bend = ciPtr->baseOffset + ciPtr->numBytes;
+	    } else {
+		bend += ciPtr->baseOffset;
+	    }
+	} else if (bend == -1) {
+	    bend = charsLen;
+	}
+
+	if (bstart == ciPtr->baseOffset) {
+	    xDisplacement = startX - chunkPtr->x;
+	} else {
+	    int widthUntilStart = 0;
+
+	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
+			 0, -1, 0, &widthUntilStart);
+	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
+	}
+
+	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
+			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
+
+	if (fit < bstart) {
+	    return 0;
+	} else {
+	    return fit - bstart;
+	}
+    }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+#else /* X11 and macOS */
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
@@ -8011,12 +8115,27 @@ CharChunkMeasureChars(
 	int fit, bstart = start, bend = end;
 
 	if (chars == NULL) {
-	    /* Guard against partially torn‑down chunks */
+	    /*
+	     * Guard against a stale baseChunkPtr (e.g. the base chunk was
+	     * freed by CharUndisplayProc but a dependent chunk's ciPtr was
+	     * not yet updated).  Fall back to the chunk's own chars.
+	     */
 	    if (ciPtr->baseChunkPtr == NULL ||
 		ciPtr->baseChunkPtr->clientData == NULL) {
-		*nextXPtr = startX;
-		return 0;
+		if (ciPtr->chars == NULL || ciPtr->numBytes == 0) {
+		    *nextXPtr = startX;
+		    return 0;
+		}
+		chars = ciPtr->chars;
+		charsLen = ciPtr->numBytes;
+		if (bend == -1) {
+		    bend = charsLen;
+		}
+		MeasureChars(tkfont, chars, charsLen, start, bend - start,
+			     startX, maxX, flags, nextXPtr);
+		return bend - start;
 	    }
+
 	    Tcl_DString *baseChars = &((BaseCharInfo *)
 				       ciPtr->baseChunkPtr->clientData)->baseChars;
 
@@ -8032,12 +8151,6 @@ CharChunkMeasureChars(
 	    bend = charsLen;
 	}
 
-	/* Ensure base chunk is still valid before using it */
-	if (ciPtr->baseChunkPtr == NULL) {
-	    *nextXPtr = startX;
-	    return 0;
-	}
-
 	if (bstart == ciPtr->baseOffset) {
 	    xDisplacement = startX - chunkPtr->x;
 	} else {
@@ -8049,8 +8162,7 @@ CharChunkMeasureChars(
 	}
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
-			   ciPtr->baseChunkPtr->x + xDisplacement,
-			   maxX, flags, nextXPtr);
+			   ciPtr->baseChunkPtr->x + xDisplacement, maxX, flags, nextXPtr);
 
 	if (fit < bstart) {
 	    return 0;
@@ -8059,6 +8171,7 @@ CharChunkMeasureChars(
 	}
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+#endif
 }
 
 /*
@@ -8243,28 +8356,44 @@ CharDisplayProc(
 
 static void
 CharUndisplayProc(
-    TkText *textPtr,                /* Overall information about text widget. */
-    TkTextDispChunk *chunkPtr)      /* Chunk that is about to be freed. */
+    TCL_UNUSED(TkText *),	/* Overall information about text widget. */
+    TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
-    CharInfo *ciPtr;
-    TextStyle *stylePtr;
+	/* MSVC prefers this block - the next block causes hangs. */
+#ifdef _WIN32
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-    if (chunkPtr == NULL) {
-        return;
+    if (ciPtr) {
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	if (chunkPtr == ciPtr->baseChunkPtr) {
+	    /*
+	     * Basechunks are undisplayed first, when DLines are freed or
+	     * partially freed, so this makes sure we don't access their data
+	     * any more.
+	     */
+
+	    FreeBaseChunk(chunkPtr);
+	} else if (ciPtr->baseChunkPtr != NULL) {
+	    /*
+	     * When other char chunks are undisplayed, drop their characters
+	     * from the base chunk. This usually happens, when they are last
+	     * in a line and need to be re-layed out.
+	     */
+
+	    RemoveFromBaseChunk(chunkPtr);
+	}
+
+	ciPtr->baseChunkPtr = NULL;
+	ciPtr->chars = NULL;
+	ciPtr->numBytes = 0;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+
+	Tcl_Free(ciPtr);
+	chunkPtr->clientData = NULL;
     }
+#else /* X11 and macOS */
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
-    /*
-     * Free the style if it is still attached.
-     * This must be done before freeing the CharInfo because
-     * the style might be shared by other chunks.
-     */
-    stylePtr = chunkPtr->stylePtr;
-    if (stylePtr != NULL) {
-        FreeStyle(textPtr, stylePtr);
-        chunkPtr->stylePtr = NULL;   /* Prevent double free */
-    }
-
-    ciPtr = (CharInfo *)chunkPtr->clientData;
     if (ciPtr == NULL) {
         return;
     }
@@ -8277,31 +8406,46 @@ CharUndisplayProc(
      */
     if (chunkPtr == ciPtr->baseChunkPtr) {
         /*
-         * Base chunk: disconnect all dependents, then free CharInfo.
+         * This is a base chunk being removed.
+         * First disconnect all dependent chunks from this base.
          */
         FreeBaseChunk(chunkPtr);
+
+        /*
+         * Now safe to clear and free the CharInfo since no other
+         * chunks reference it.
+         */
         ciPtr->baseChunkPtr = NULL;
         ciPtr->chars = NULL;
         ciPtr->numBytes = 0;
+
         Tcl_Free(ciPtr);
         chunkPtr->clientData = NULL;
+
     } else {
         /*
-         * Dependent chunk: remove from base chunk if still connected,
-         * but do not free CharInfo.
+         * This is a dependent chunk (not the base chunk).
+         * Remove it from the base chunk's data structure if still connected.
+         * DO NOT free the CharInfo - it belongs to the base chunk.
          */
         if (ciPtr->baseChunkPtr != NULL) {
             RemoveFromBaseChunk(chunkPtr);
         }
-        chunkPtr->clientData = NULL;   /* Detach, but do not free */
+
+        /*
+         * Detach this chunk from the CharInfo to prevent stale access,
+         * but don't free the CharInfo itself.
+         */
+        chunkPtr->clientData = NULL;
     }
 #else
     /*
-     * Without base chunks, each chunk owns its CharInfo.
+     * Without TK_LAYOUT_WITH_BASE_CHUNKS, each chunk owns its own CharInfo.
      */
     Tcl_Free(ciPtr);
     chunkPtr->clientData = NULL;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+#endif
 }
 
 /*
@@ -8375,11 +8519,48 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled in with height of character, in
 				 * pixels. */
 {
+	/* MSVC prefers this section - hangs on the other section. */
+	#ifdef _WIN32
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+    int maxX;
+
+    maxX = chunkPtr->width + chunkPtr->x;
+    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+	    chunkPtr->x, -1, 0, xPtr);
+
+    if (byteIndex == ciPtr->numBytes) {
+	/*
+	 * This situation only happens if the last character in a line is a
+	 * space character, in which case it absorbs all of the extra space in
+	 * the line (see TkTextCharLayoutProc).
+	 */
+
+	*widthPtr = maxX - *xPtr;
+    } else if ((ciPtr->chars[byteIndex] == '\t')
+	    && (byteIndex == ciPtr->numBytes - 1)) {
+	/*
+	 * The desired character is a tab character that terminates a chunk;
+	 * give it all the space left in the chunk.
+	 */
+
+	*widthPtr = maxX - *xPtr;
+    } else {
+	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
+		*xPtr, -1, 0, widthPtr);
+	if (*widthPtr > maxX) {
+	    *widthPtr = maxX - *xPtr;
+	} else {
+	    *widthPtr -= *xPtr;
+	}
+    }
+    *yPtr = y + baseline - chunkPtr->minAscent;
+    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+#else 
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
 
     /*
-     * Defensive: malformed or uninitialized chunk
+     * Defensive: malformed or uninitialized chunk.
      */
     if (ciPtr == NULL || ciPtr->chars == NULL) {
         *xPtr = chunkPtr->x;
@@ -8390,7 +8571,7 @@ CharBboxProc(
     }
 
     /*
-     * Clamp byteIndex to valid range to avoid overrun
+     * Clamp byteIndex to valid range to avoid overrun.
      */
     if (byteIndex < 0) {
         byteIndex = 0;
@@ -8434,6 +8615,7 @@ CharBboxProc(
 
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+    #endif
 }
 
 /*
@@ -9054,6 +9236,7 @@ FinalizeBaseChunk(
 				 * list yet. Used by the LayoutProc, otherwise
 				 * NULL. */
 {
+	/* MSVC prefers this block - the next one hangs. */
 	#ifdef _WIN32
     const char *baseChars;
     TkTextDispChunk *chunkPtr;
@@ -9107,7 +9290,7 @@ FinalizeBaseChunk(
     }
 
     baseCharChunkPtr = NULL;
-    #else 
+    #else /* X11 and macOS. */
      const char *baseChars;
     TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
@@ -9216,27 +9399,20 @@ FreeBaseChunk(
 				/* The base chunk of the stretch and head of
 				 * the linked list. */
 {
-    TkTextDispChunk *chunkPtr;
+	/* MSVC prefers this section. */
+	#ifdef _WIN32 
+	 TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
 
     if (baseCharChunkPtr == baseChunkPtr) {
 	baseCharChunkPtr = NULL;
     }
 
-    for (chunkPtr = baseChunkPtr; chunkPtr != NULL; chunkPtr = chunkPtr->nextPtr) {
+    for (chunkPtr=baseChunkPtr; chunkPtr!=NULL; chunkPtr=chunkPtr->nextPtr) {
 	if (chunkPtr->undisplayProc != CharUndisplayProc) {
 	    continue;
 	}
 	ciPtr = (CharInfo *)chunkPtr->clientData;
-
-	/*
-	 * Defensive check: ciPtr may be NULL if chunk is being torn down
-	 * or was never fully initialized.
-	 */
-	if (ciPtr == NULL) {
-	    continue;
-	}
-
 	if (ciPtr->baseChunkPtr != baseChunkPtr) {
 	    break;
 	}
@@ -9245,9 +9421,43 @@ FreeBaseChunk(
 	ciPtr->chars = NULL;
     }
 
-    if (baseChunkPtr != NULL && baseChunkPtr->clientData != NULL) {
+    if (baseChunkPtr) {
 	Tcl_DStringFree(&((BaseCharInfo *) baseChunkPtr->clientData)->baseChars);
     }
+    # else /* X11 and macOS. */
+    TkTextDispChunk *chunkPtr;
+    CharInfo *ciPtr;
+
+    if (baseCharChunkPtr == baseChunkPtr) {
+	baseCharChunkPtr = NULL;
+    }
+
+    for (chunkPtr=baseChunkPtr; chunkPtr!=NULL; chunkPtr=chunkPtr->nextPtr) {
+	if (chunkPtr->undisplayProc != CharUndisplayProc) {
+	    continue;
+	}
+	ciPtr = (CharInfo *)chunkPtr->clientData;
+	
+	/*
+	 * Defensive check: ciPtr may be NULL if chunk is being torn down
+	 * or was never fully initialized.
+	 */
+	if (ciPtr == NULL) {
+	    continue;
+	}
+	
+	if (ciPtr->baseChunkPtr != baseChunkPtr) {
+	    break;
+	}
+
+	ciPtr->baseChunkPtr = NULL;
+	ciPtr->chars = NULL;
+    }
+
+    if (baseChunkPtr && baseChunkPtr->clientData != NULL) {
+	Tcl_DStringFree(&((BaseCharInfo *) baseChunkPtr->clientData)->baseChars);
+    }
+    #endif
 }
 
 /*
@@ -9342,6 +9552,48 @@ RemoveFromBaseChunk(
     TkTextDispChunk *chunkPtr)	/* The chunk to remove from the end of the
 				 * stretch. */
 {
+	/* MSVC prefers this block - the next block causes hangs. */
+	#ifdef _WIN32
+	CharInfo *ciPtr;
+    BaseCharInfo *bciPtr;
+
+    if (chunkPtr->displayProc != CharDisplayProc) {
+#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
+	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk type\n");
+#endif
+	return;
+    }
+
+    /*
+     * Reinstitute this base chunk for re-layout.
+     */
+
+    ciPtr = (CharInfo *)chunkPtr->clientData;
+    baseCharChunkPtr = ciPtr->baseChunkPtr;
+
+    /*
+     * Remove the chunk data from the base chunk data.
+     */
+
+    bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
+
+#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
+    if ((ciPtr->baseOffset + ciPtr->numBytes)
+	    != Tcl_DStringLength(&bciPtr->baseChars)) {
+	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk "
+		"(not last)\n");
+    }
+#endif
+
+    Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
+
+    /*
+     * Invalidate the stored pixel width of the base chunk.
+     */
+
+    bciPtr->width = -1;
+}
+#else /* X11 and macOS. */
     CharInfo *ciPtr;
     BaseCharInfo *bciPtr;
 
@@ -9388,9 +9640,11 @@ RemoveFromBaseChunk(
     /*
      * Invalidate the stored pixel width of the base chunk.
      */
+
     bciPtr->width = -1;
+    #endif
 }
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+#endif /*TK_LAYOUT_WITH_BASE_CHUNKS */
 
 /*
  * Local Variables:
