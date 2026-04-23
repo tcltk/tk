@@ -6,8 +6,8 @@
  *	widgets. (Well, strictly, each TkTextLine and B-tree node caches its
  *	last observed pixel height, but that information originates here).
  *
- * Copyright Â© 1992-1994 The Regents of the University of California.
- * Copyright Â© 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -8029,6 +8029,8 @@ CharChunkMeasureChars(
 				 * right border x-position of the span
 				 * here. */
 {
+
+/* MSVC prefers this block - the next block causes hangs. */    
 #ifdef _WIN32
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
@@ -8355,6 +8357,8 @@ CharUndisplayProc(
     TCL_UNUSED(TkText *),	/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
+
+/* MSVC prefers this block - the next block causes hangs. */
 #ifdef _WIN32
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
