@@ -8509,6 +8509,7 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled in with height of character, in
 				 * pixels. */
 {
+	#ifdef _WIN32
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
 
@@ -8543,6 +8544,59 @@ CharBboxProc(
     }
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+#else 
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+    int maxX;
+
+    /*
+     * Defensive: malformed or uninitialized chunk
+     */
+    if (ciPtr == NULL || ciPtr->chars == NULL) {
+        *xPtr = chunkPtr->x;
+        *yPtr = y;
+        *widthPtr = 0;
+        *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+        return;
+    }
+
+    /*
+     * Clamp byteIndex to valid range to avoid overrun
+     */
+    if (byteIndex < 0) {
+        byteIndex = 0;
+    } else if (byteIndex > ciPtr->numBytes) {
+        byteIndex = ciPtr->numBytes;
+    }
+
+    maxX = chunkPtr->width + chunkPtr->x;
+
+    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+        chunkPtr->x, -1, 0, xPtr);
+
+    if (byteIndex == ciPtr->numBytes) {
+        *widthPtr = maxX - *xPtr;
+
+    } else if (byteIndex < ciPtr->numBytes &&
+               ciPtr->chars[byteIndex] == '\t' &&
+               byteIndex == ciPtr->numBytes - 1) {
+
+        *widthPtr = maxX - *xPtr;
+
+    } else {
+        CharChunkMeasureChars(chunkPtr, NULL, 0,
+            byteIndex, byteIndex + 1,
+            *xPtr, -1, 0, widthPtr);
+
+        if (*widthPtr > maxX) {
+            *widthPtr = maxX - *xPtr;
+        } else {
+            *widthPtr -= *xPtr;
+        }
+    }
+
+    *yPtr = y + baseline - chunkPtr->minAscent;
+    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+    #endif
 }
 
 /*
@@ -9163,6 +9217,7 @@ FinalizeBaseChunk(
 				 * list yet. Used by the LayoutProc, otherwise
 				 * NULL. */
 {
+	#ifdef _WIN32
     const char *baseChars;
     TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
@@ -9215,6 +9270,86 @@ FinalizeBaseChunk(
     }
 
     baseCharChunkPtr = NULL;
+    #else 
+     const char *baseChars;
+    TkTextDispChunk *chunkPtr;
+    CharInfo *ciPtr;
+#ifdef TK_DRAW_IN_CONTEXT
+    int widthAdjust = 0;
+    int newwidth;
+#endif /* TK_DRAW_IN_CONTEXT */
+
+    if (baseCharChunkPtr == NULL) {
+        return;
+    }
+
+    baseChars = Tcl_DStringValue(
+        &((BaseCharInfo *) baseCharChunkPtr->clientData)->baseChars);
+
+    for (chunkPtr = baseCharChunkPtr;
+         chunkPtr != NULL;
+         chunkPtr = chunkPtr->nextPtr) {
+
+#ifdef TK_DRAW_IN_CONTEXT
+        chunkPtr->x += widthAdjust;
+#endif /* TK_DRAW_IN_CONTEXT */
+
+        /*
+         * Base-char runs must be contiguous CharDisplayProc chunks.
+         * If we hit anything else, we're done.
+         */
+        if (chunkPtr->displayProc != CharDisplayProc) {
+            break;
+        }
+
+        ciPtr = (CharInfo *)chunkPtr->clientData;
+
+        /*
+         * Defensive checks: malformed or partially initialized chunk.
+         * This can happen if shaping/splitting didn't fully populate CharInfo.
+         */
+        if (ciPtr == NULL || ciPtr->baseChunkPtr == NULL) {
+            break;
+        }
+
+        /*
+         * End of this base chunk group.
+         */
+        if (ciPtr->baseChunkPtr != baseCharChunkPtr) {
+            break;
+        }
+
+        /*
+         * Now safe to assign chars pointer.
+         */
+        ciPtr->chars = baseChars + ciPtr->baseOffset;
+
+#ifdef TK_DRAW_IN_CONTEXT
+        newwidth = 0;
+        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, 0, &newwidth);
+        if (newwidth < chunkPtr->width) {
+            widthAdjust += newwidth - chunkPtr->width;
+            chunkPtr->width = newwidth;
+        }
+#endif /* TK_DRAW_IN_CONTEXT */
+    }
+
+    if (addChunkPtr != NULL) {
+        ciPtr = (CharInfo *)addChunkPtr->clientData;
+
+        if (ciPtr != NULL && ciPtr->baseChunkPtr != NULL) {
+            ciPtr->chars = baseChars + ciPtr->baseOffset;
+
+#ifdef TK_DRAW_IN_CONTEXT
+            addChunkPtr->x += widthAdjust;
+            CharChunkMeasureChars(addChunkPtr, NULL, 0, 0, -1, 0, -1, 0,
+                                  &addChunkPtr->width);
+#endif /* TK_DRAW_IN_CONTEXT */
+        }
+    }
+
+    baseCharChunkPtr = NULL;
+    #endif
 }
 
 /*
