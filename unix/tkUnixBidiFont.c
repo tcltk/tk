@@ -1976,7 +1976,7 @@ Tk_MeasureCharsInContext(
         int gxe = gx + buffer.glyphs[i].advanceX;
 
         /* Skip glyphs outside [rangeStart, rangeEnd). */
-        if (boe <= (int)rangeStart || bo >= rangeEnd) continue;
+        if (bo < (int)rangeStart || bo >= rangeEnd) continue;
 
         /* Track pixel extent of range. */
         if (rangePixelStart < 0 || gx  < rangePixelStart) rangePixelStart = gx;
