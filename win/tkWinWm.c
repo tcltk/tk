@@ -3298,7 +3298,7 @@ WmAttributesCmd(
 		    "APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
-
+	
 	/*
 	 * Translate the appearance mode to isDark 0/1 value.  The AUTO
 	 * appearance uses the AppsUseLightTheme registry variable.
@@ -3324,12 +3324,20 @@ WmAttributesCmd(
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
 		&isDark,
 		sizeof(isDark));
-	if (status != S_OK){
+	if (status == 0x80070006) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't set appearance attribute for \"%s\": %x",
-		    winPtr->pathName, status));
+		"too early to set appearance attribute for \"%s\"",
+		 winPtr->pathName));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
 		    "APPEARANCE", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	if (status != S_OK){
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't set appearance attribute for \"%s\": status %x",
+		winPtr->pathName, status));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
+		"APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	
