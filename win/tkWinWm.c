@@ -8166,19 +8166,14 @@ WmProc(
 	     * Apps which bind to <<AppearanceChanged>> will need to expect
 	     * to receive duplicate events
 	     */
-	    bool lightApps = doAppsUseLightTheme();
-	    char dataString[512];
-	    Tcl_Obj *data;
-	    char *windowTheme, *systemTheme;
 	    Tk_Window tkwin = (Tk_Window) winPtr;
+	    const char *systemTheme = doAppsUseLightTheme() ? "light" : "dark";
 	    bool windowIsDark = false;
 	    TkpWindowIsDark(tkwin, &windowIsDark);
-	    windowTheme = windowIsDark ? "dark" : "light";
-	    systemTheme = lightApps ? "light" : "dark";
-	    snprintf(dataString, 512, "windowtheme %s systemtheme %s",
-		     windowTheme, systemTheme);
-	    data = Tcl_NewStringObj(dataString, TCL_INDEX_NONE);
-	    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", data);
+	    const char *windowTheme = windowIsDark ? "dark" : "light";
+	    Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+		Tcl_ObjPrintf("windowtheme %s systemtheme %s",
+			      windowTheme, systemTheme));
 	    result = 0;
 	    goto done;
 	}
