@@ -18,8 +18,11 @@
 #endif
 
 #ifdef HAVE_BIDI
-#  define TK_DRAW_IN_CONTEXT
-#  define TK_LAYOUT_WITH_BASE_CHUNKS
+#  define TK_DRAW_IN_CONTEXT 1
+#  define TK_LAYOUT_WITH_BASE_CHUNKS 1
+#else 
+#  define TK_DRAW_IN_CONTEXT 0
+#  define TK_LAYOUT_WITH_BASE_CHUNKS 0
 #endif
 
 /*
