@@ -180,44 +180,59 @@ proc setup_win_mousepointer {w} {
 
 # waitForWindowEvent --
 #
-#    This proc is intended to overcome latency of windowing system
-#    notifications when toplevel windows are involved. These latencies vary
-#    considerably with the window manager in use, with the system load,
-#    with configured scheduling priorities for processes, etc ...
-#    Waiting for the corresponding window events evades the trouble that is
-#    associated with the alternative: waiting or halting the Tk process for a
-#    fixed amount of time (using "after ms"). With the latter strategy it's
-#    always a gamble how much waiting time is enough on an end user's system.
-#    It also leads to long fixed waiting times in order to be on the safe side.
+#    Wait for a specific window event to be serviced from the event queue.
 #
-proc waitForWindowEvent {w event {timeout 1000}} {
-
+# Arguments:
+#    w       : the event window
+#    event   : the event type
+#    timeout : time after which waiting stops
+#
+# Result: none
+#
+proc waitForWindowEvent {w event {timeout 100}} {
     variable _windowEvent
+
+    if {! [winfo exists $w]} {
+	return -code error "window $w doesn't exist"
+    }
 
     # Use counter as a unique ID to prevent subsequent waits
     # from interfering with each other.
     set counter [incr _windowEvent(counter)]
-    set _windowEvent($counter) 1
+    set _windowEvent($counter) -1
     set savedBinding [bind $w $event]
-    bind $w $event [list +waitForWindowEvent.signal $counter]
-    set afterID [after $timeout [list set _windowEvent($counter) -1]]
-    vwait _windowEvent($counter)
-    set late [expr {$_windowEvent($counter) == -1}]
+    bind $w $event [list +waitForWindowEvent.signal $counter $w %W]
+    set afterID [after $timeout [list set ::[namespace current]::_windowEvent($counter) 0]]
+    vwait ::[namespace current]::_windowEvent($counter)
     bind $w $event $savedBinding
+    set result $_windowEvent($counter)
     unset _windowEvent($counter)
-    if {$late} {
-	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
-    } else {
+    if {$result} {
 	after cancel $afterID
+    } else {
+	return -code error "wait for $event event on $w timed out (> $timeout ms)"
     }
 }
 
-# waitForWindowEvent.signal--
+# waitForWindowEvent.signal --
 #
-#    Helper proc that records the triggering of a window event.
+#    Sets the wait variable used by proc waitForWindowEvent, thus
+#    unblocking the vwait command in that proc.
 #
-proc waitForWindowEvent.signal {counter} {
-    incr ::_windowEvent($counter)
+proc waitForWindowEvent.signal {counter w W} {
+    if {$w ne $W} {
+	# Beware that:
+	# - "w" is the name of a window as a binding tag
+	# - all children of a toplevel window carry the name of their
+	#   toplevel window as a binding tag.
+	# Therefore, this handler may be triggered by the servicing of an event
+	# on a child "W" of toplevel "w" rather than the toplevel "w" itself.
+	# Such cases are contrary to the intention of waitForWindowEvent,
+	# so we leave the wait variable untouched.
+	return
+    }
+    variable _windowEvent
+    set _windowEvent($counter) 1
 }
 
 #
@@ -1258,6 +1273,46 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     bind all <Leave> {}
     bind all <Enter> {}
 } -result "|<Leave> .|<Enter> .|"
+
+test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #xxxx} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+500+100; # the screen pointer is outside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    wm deiconify .
+    unset result
+} -result "|"
+
+test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer window after toplevel destroy (inside). See ticket #xxxx} -setup {
+    setup_win_mousepointer .one
+    wm geometry . 200x200+100+100; # the screen pointer is inside the area of the candidate window
+    update
+    wm withdraw .
+    update
+    set result "|"
+} -body {
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
+    destroy .one
+    update
+    set result
+} -cleanup {
+    bind all <Leave> {}
+    bind all <Enter> {}
+    wm deiconify .
+    unset result
+} -result "|"
 
 test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ticket #c3f5c85322} -setup {
     wm geometry . 200x200+100+100
