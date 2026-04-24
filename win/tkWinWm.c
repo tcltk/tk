@@ -280,7 +280,7 @@ typedef struct TkWmInfo {
  * WM_FULLSCREEN -		Non-zero means that this window has been placed
  *				in the full screen mode. It should be mapped at
  *				0,0 and be the width and height of the screen.
- * WM_APPEARANCE_AUTO		First bit to encode the toplevel appearance mode.
+ * WM_OVERRIDE_APPEARANCE	App overrides the system AppsUseLightMode setting.
  * WM_APPEARANCE_DARK		Second bit to encode the toplevel appearance mode.
  *				Possible values are:
  *				AUTO=1,DARK=0: auto mode
@@ -304,7 +304,7 @@ typedef struct TkWmInfo {
 #define WM_HEIGHT_NOT_RESIZABLE		(1<<11)
 #define WM_WITHDRAWN			(1<<12)
 #define WM_FULLSCREEN			(1<<13)
-#define WM_APPEARANCE_AUTO		(1<<14)
+#define WM_OVERRIDE_APPEARANCE		(1<<14)
 #define WM_APPEARANCE_DARK		(1<<15)
 
 /*
@@ -396,6 +396,7 @@ enum AttributeAppearances {
  * Forward declarations for functions defined in this file:
  */
 
+static bool             AppsShouldUseLightTheme();
 static inline const char *	AppearanceStringGet(int flags);
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);
@@ -543,6 +544,9 @@ static int		WmWithdrawCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+static int		SynchronizeAppearance(TkWindow *winPtr);
+static void		AppearanceIdleProc(void *clientData);
+
 
 /*
  *----------------------------------------------------------------------
@@ -2142,6 +2146,7 @@ UpdateWrapper(
     }
 
     wmPtr->flags &= ~WM_NEVER_MAPPED;
+    Tcl_DoWhenIdle(AppearanceIdleProc, (void *)winPtr);
     if (winPtr->flags & TK_EMBEDDED &&
 	    SendMessageW(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0)) {
 	SendMessageW(wmPtr->wrapper, TK_GEOMETRYREQ,
@@ -3279,7 +3284,7 @@ WmAttributesCmd(
     }
     if (appearanceAttrChanged) {
 
-	int isDark;
+	long long isDark; /* Alignment matters for this! */
 	/*
 	 * Check for embedded window
 	 * Note: this may not be needed, as the command below will fail anyway
@@ -3287,37 +3292,42 @@ WmAttributesCmd(
 
 	if ((winPtr->flags & TK_EMBEDDED)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't set appearance attribute for \"%s\":",
-		    winPtr->pathName));
+		"can't set appearance attribute for embedded window \"%s\":",
+		winPtr->pathName));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
 		    "APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
 	/*
-	 * Translate the appearance mode to isDark 0/1 value.
-	 * AUTO appearance always uses false (light appearance) on MS-Win
+	 * Translate the appearance mode to isDark 0/1 value.  The AUTO
+	 * appearance uses the AppsUseLightTheme registry variable.
 	 */
 
-	isDark = ((appearanceAttrValue == APPEARANCE_DARK) ? 1:0);
-
+	if (appearanceAttrValue == APPEARANCE_AUTO) {
+	    isDark = (long long) !AppsShouldUseLightTheme();
+	} else {
+	    isDark = (long long) ((appearanceAttrValue == APPEARANCE_DARK) ?
+				  1 : 0);
+	};
+	
 	/*
 	 * This will fail if the Window is not physically visible.
-	 * The following will fail and requires an "update" between
+	 * The following will also fail without an "update idletasks" between
 	 * the two commands:
-	 * toplevel .t;wm attributes .t -appearance d
+	 * toplevel .t ; wm attributes .t -appearance d
+	 * This is because the window handle is not valid yet.
 	 */
 
-	
-	if (S_OK != DwmSetWindowAttribute(
+	int status = DwmSetWindowAttribute(
 		wmPtr->wrapper,
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
 		&isDark,
-		sizeof(isDark)
-		)) {
+		sizeof(isDark));
+	if (status != S_OK){
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't set appearance attribute for \"%s\":",
-		    winPtr->pathName));
+		    "can't set appearance attribute for \"%s\": %x",
+		    winPtr->pathName, status));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
 		    "APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
@@ -3328,16 +3338,16 @@ WmAttributesCmd(
 	 */
 	switch (appearanceAttrValue) {
 	case APPEARANCE_LIGHT:
-	    wmPtr->flags &= ~WM_APPEARANCE_AUTO;
+	    wmPtr->flags |= WM_OVERRIDE_APPEARANCE;
 	    wmPtr->flags &= ~WM_APPEARANCE_DARK;
 	    break;
 	case APPEARANCE_DARK:
-	    wmPtr->flags &= ~WM_APPEARANCE_AUTO;
+	    wmPtr->flags |= WM_OVERRIDE_APPEARANCE;
 	    wmPtr->flags |= WM_APPEARANCE_DARK;
 	    break;
 	case APPEARANCE_AUTO:
 	    default:
-	    wmPtr->flags |= WM_APPEARANCE_AUTO;
+	    wmPtr->flags &= ~WM_OVERRIDE_APPEARANCE;
 	    wmPtr->flags &= ~WM_APPEARANCE_DARK;
 	    break;
 	}
@@ -3395,7 +3405,7 @@ WmAttributesCmd(
 
 static inline const char * AppearanceStringGet(int flags)
 {
-    if (flags & WM_APPEARANCE_AUTO) {
+    if ((flags & WM_OVERRIDE_APPEARANCE) == 0) {
 	return AttributeAppearanceStrings[APPEARANCE_AUTO];
     }
     if (flags & WM_APPEARANCE_DARK) {
@@ -7985,12 +7995,11 @@ TopLevelProc(
  */
 
 /*
- * Static helper function.  Returns 1 if the registry value of
- * AppsUseLightTheme is true, or if the key does not exist or
- * if there is an error reading the value.
+ * Returns true if the registry value of AppsUseLightTheme is true,
+ * or if the key does not exist or if there is an error reading the value.
  */
 
-bool doAppsUseLightTheme() {
+bool AppsShouldUseLightTheme() {
     HKEY hKey;
     LONG lResult;
     LPCWSTR subKey = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
@@ -8025,6 +8034,43 @@ bool doAppsUseLightTheme() {
     } else {
       return 1;
     }
+}
+
+static void
+AppearanceIdleProc(void *clientData) {
+    SynchronizeAppearance((TkWindow *) clientData);
+}
+
+static int SynchronizeAppearance(TkWindow *winPtr) {
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr->flags & WM_OVERRIDE_APPEARANCE) {
+	return TCL_OK;
+    }
+    bool appsShouldBeDark = !AppsShouldUseLightTheme();
+    long long isDarkParam; /* Alignment matters! */
+    bool windowIsDark;
+    TkpWindowIsDark(tkwin, &windowIsDark);
+    if (appsShouldBeDark == windowIsDark) {
+	//Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+	//    Tcl_ObjPrintf("Already in sync"));
+	return TCL_OK;
+    }
+    isDarkParam = appsShouldBeDark ? 1 : 0;
+    int status = DwmSetWindowAttribute(
+	wmPtr->wrapper,
+	DWMWA_USE_IMMERSIVE_DARK_MODE,
+	&isDarkParam,
+	sizeof(isDarkParam));
+    if (status != S_OK) {
+	Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+	    Tcl_ObjPrintf("SetWindowAttribute failed with %x", status));
+	return TCL_ERROR;
+    }
+    const char *newAppearance = appsShouldBeDark ? "dark" : "light";
+    Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+			Tcl_ObjPrintf("appearance %s ", newAppearance));
+    return TCL_OK;
 }
 
 static LRESULT CALLBACK
@@ -8158,23 +8204,14 @@ WmProc(
 	if (lParam != 0 &&
 	    wcscmp((const wchar_t*)lParam, L"ImmersiveColorSet") == 0) {
 	    /* This message gets sent multiple times for each change of the
-	     * Settings because both AppsUseLightTheme
-	     * and SystemUsesLightTheme are changed when the theme is
-	     * changed by the user in the Settings. Moreover, the repeated
-	     * messages result in nested calls to this function.  There
-	     * seems to be no way to avoid sending duplicate virtual events.
-	     * Apps which bind to <<AppearanceChanged>> will need to expect
-	     * to receive duplicate events
+	     * Settings because both AppsUseLightTheme and
+	     * SystemUsesLightTheme can change when the theme is changed by
+	     * the user in the Settings. (The "Custom" menu item allows
+	     * setting these separately but the Light and Dark menus change
+	     * both.)  Moreover, changing both results in nested calls to this
+	     * function.
 	     */
-	    Tk_Window tkwin = (Tk_Window) winPtr;
-	    const char *systemTheme = doAppsUseLightTheme() ? "light" : "dark";
-	    bool windowIsDark = false;
-	    TkpWindowIsDark(tkwin, &windowIsDark);
-	    const char *windowTheme = windowIsDark ? "dark" : "light";
-	    Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
-		Tcl_ObjPrintf("windowtheme %s systemtheme %s",
-			      windowTheme, systemTheme));
-	    result = 0;
+	    return SynchronizeAppearance((void *)winPtr);
 	    goto done;
 	}
 	break;
@@ -8950,7 +8987,7 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     }
     *isdark = answer ? true : false;
 
-#if 0
+#if 1
     /* Debug error results from DwmGetWindowAttribute. */
     if (result != S_OK) {
 	char hexresult[32];
