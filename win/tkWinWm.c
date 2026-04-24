@@ -3312,19 +3312,19 @@ WmAttributesCmd(
 	};
 	
 	/*
-	 * This will fail if the Window is not physically visible.
-	 * The following will also fail without an "update idletasks" between
-	 * the two commands:
+	 * The following will fail if the Window is not physically visible.
+	 * In Tcl the command line:
 	 * toplevel .t ; wm attributes .t -appearance d
-	 * This is because the window handle is not valid yet.
+	 * will produce an error.  This is because the window handle
+	 * is not valid when this is called.
 	 */
 
-	int status = DwmSetWindowAttribute(
+	long status = DwmSetWindowAttribute(
 		wmPtr->wrapper,
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
 		&isDark,
 		sizeof(isDark));
-	if (status == 0x80070006) {
+	if (status == 0x80070006L) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"too early to set appearance attribute for \"%s\"",
 		 winPtr->pathName));
@@ -8065,14 +8065,14 @@ static int SynchronizeAppearance(TkWindow *winPtr) {
 	return TCL_OK;
     }
     isDarkParam = appsShouldBeDark ? 1 : 0;
-    int status = DwmSetWindowAttribute(
+    long status = DwmSetWindowAttribute(
 	wmPtr->wrapper,
 	DWMWA_USE_IMMERSIVE_DARK_MODE,
 	&isDarkParam,
 	sizeof(isDarkParam));
     if (status != S_OK) {
 	Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
-	    Tcl_ObjPrintf("SetWindowAttribute failed with %x", status));
+	    Tcl_ObjPrintf("SetWindowAttribute failed with %lx", status));
 	return TCL_ERROR;
     }
     const char *newAppearance = appsShouldBeDark ? "dark" : "light";
@@ -8995,11 +8995,11 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     }
     *isdark = answer ? true : false;
 
-#if 1
+#if 0
     /* Debug error results from DwmGetWindowAttribute. */
     if (result != S_OK) {
 	char hexresult[32];
-	sprintf(hexresult, "%x", result);
+	sprintf(hexresult, "%lx", result);
 	FILE *errorfile = fopen("error", "w");
 	fwrite(hexresult, strlen(hexresult), 1, errorfile);
 	fclose(errorfile);
