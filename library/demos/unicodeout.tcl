@@ -75,7 +75,12 @@ addSample $w Icelandic "Íslenska"
 addSample $w Japanese "日本語のひらがな, 漢字とカタカナ"
 addSample $w Korean "대한민국의 한글"
 addSample $w Russian "Русский язык"
-if {![tk::build-info no-xft]} {
+# the configuration options for emoji's are complex on X11
+if {[tk windowingsystem] eq "x11"} {
+    if {![tk::build-info no-bidi] && [tk::build-info no-xft]} {
+	addSample $w Emoji "😀💩👍🇳🇱"
+    }
+} else {
     addSample $w Emoji "😀💩👍🇳🇱"
 }
 
