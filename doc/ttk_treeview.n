@@ -1145,6 +1145,14 @@ The list of values associated with the item. Each item should have the same
 number of values as the \fB\-columns\fR widget option. If there are fewer
 values than columns, the remaining values are assumed empty. If there are more
 values than columns, the extra values are ignored.
+.IP \fB\state \fIstateSpec\fR
+Modify or query item state. If \fIstateSpec\fR is present, sets the widget
+state: for each flag in stateSpec, sets the corresponding flag or clears it if
+prefixed by an exclamation point. Without \fIstateSpec\fR, the current states
+are returned. The \fBfocus\fR, \fBselected\fR, and \fBopen\fR states can only
+be set or cleared via the associated subcommands.
+
+
 .SH "TAG OPTIONS"
 .PP
 The following tag options can be set or get with the \fBtag configure\fR subcommand:
@@ -1449,6 +1457,16 @@ Specifies the the font for the heading.
 .
 Specifies the foreground color of the heading.
 .TP
+\fB\-indicatormargin\fR \fIamount\fR
+.
+Specifies the additional padding to include around the indicator.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
+The default is "2 2 4 2".
+.TP
+\fB\-indicatorsize\fR \fIpixels\fR
+.
+Specifies the size of the indicator in pixels. The default is 3.5 points.
+.TP
 \fB\-padding\fR \fIamount\fR
 .
 Specifies the additional padding to include inside the border of the heading.
@@ -1509,7 +1527,7 @@ The \fBItem\fR (tree column only) styling options configurable with \fBttk::styl
 .
 Specifies the foreground color of the tree items. The default is same as Treeview.
 .TP
-\fB\-indicatormargins\fR \fIamount\fR
+\fB\-indicatormargin\fR \fIamount\fR
 .
 Specifies the additional padding to include around the indicator.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
@@ -1517,7 +1535,7 @@ The default is "2 2 4 2".
 .TP
 \fB\-indicatorsize\fR \fIpixels\fR
 .
-Specifies the size of the indicator in pixels. The default is 12 pixels.
+Specifies the size of the indicator in pixels. The default is 3.5 points.
 .TP
 \fB\-padding\fR \fIamount\fR
 .
