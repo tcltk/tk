@@ -8602,14 +8602,40 @@ CharBboxProc(
         *widthPtr = maxX - *xPtr;
 
     } else {
+        int x2;
+
         CharChunkMeasureChars(chunkPtr, NULL, 0,
             byteIndex, byteIndex + 1,
-            *xPtr, -1, 0, widthPtr);
+            *xPtr, -1, 0, &x2);
 
-        if (*widthPtr > maxX) {
+        if (x2 > maxX) {
             *widthPtr = maxX - *xPtr;
         } else {
-            *widthPtr -= *xPtr;
+            *widthPtr = x2 - *xPtr;
+        }
+
+        /*
+         * Fix: handle zero-width results from derived/bidi/elided chunks.
+         */
+        if (*widthPtr == 0 && ciPtr->numBytes > 0) {
+            int idx = byteIndex;
+
+            if (idx >= ciPtr->numBytes) {
+                idx = ciPtr->numBytes - 1;
+            }
+            if (idx < 0) {
+                idx = 0;
+            }
+
+            CharChunkMeasureChars(chunkPtr, NULL, 0,
+                idx, idx + 1,
+                *xPtr, -1, 0, &x2);
+
+            if (x2 > maxX) {
+                *widthPtr = maxX - *xPtr;
+            } else {
+                *widthPtr = x2 - *xPtr;
+            }
         }
     }
 
