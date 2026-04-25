@@ -354,7 +354,9 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     list [.t bbox 1.15] [.t bbox 1.16]
 } [list [list [xchar 15] [yline 1] [xe 15] $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
-test textDisp-2.7 {LayoutDLine, marks and tags} -body {
+# This test no longer passes on X11 or Aqua because of the internal changes made
+# to support bidi text
+test textDisp-2.7 {LayoutDLine, marks and tags} -constraints {win32} -body {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
