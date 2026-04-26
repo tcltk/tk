@@ -4197,7 +4197,7 @@ test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} -constraints 
         set result [list $bbox1 $bbox2]
     }
     
-    # Return a specific value for Windows to match your requirement
+    # Return a specific value for Windows
     if {[tk windowingsystem] eq "win32" && $result ne "centered"} {
         set result $result
     }
