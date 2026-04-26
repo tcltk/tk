@@ -34,9 +34,25 @@
  *----------------------------------------------------------------------
  */
 
+/*
+ * GLFW requires all initialization and event polling to be done
+ * on the main thread.
+ */
+
+static int GlfwIsInitialized = 0;
+
+/*
+  The glfwWindow for the root window
+*/
+
+GLFWwindow *mainGlfwWindow;
+
+/* This can go when we are using the privatePtr. */
+
 TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, NULL, 0, 0, NULL};
+
 WindowMapping *windowMappingList = NULL;
-static Drawable       nextDrawableId   = 1000;
+// static Drawable       nextDrawableId   = 1000;
 static DrawableMapping *drawableMappingList = NULL;
 static int shutdownInProgress = 0;
 
@@ -127,7 +143,7 @@ TkGlfwErrorCallback(int error, const char *desc)
 MODULE_SCOPE int
 TkGlfwInitialize(void)
 {
-    if (glfwContext.initialized) return TCL_OK;
+    if (GlfwIsInitialized) return TCL_OK;
 
     glfwSetErrorCallback(TkGlfwErrorCallback);
 
@@ -140,6 +156,14 @@ TkGlfwInitialize(void)
         return TCL_ERROR;
     }
 
+    /*
+     * The glfwWindow for the Tk root is created here.
+     * For all other toplevels the glfwWindow shares the GL context
+     * of the root.  The window is created hidden.  It will be
+     * shown in Tk_MakeWindow.
+     */
+
+    /* Hints apply to the next call to glfwCreateWindow. */
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -147,34 +171,27 @@ TkGlfwInitialize(void)
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-    glfwSwapInterval(0);
-
-    /*
-     * Shared context window - hidden. All application windows
-     * share its GL context so textures and shaders are visible across them.
-     */
-    //// This is used for the root window, which is NOT hidden
-
-    
-    glfwContext.mainWindow =
-        glfwCreateWindow(200, 200, "Tk Shared Context", NULL, NULL);
-    if (!glfwContext.mainWindow) {
-        fprintf(stderr, "TkGlfwInitialize: failed to create shared window\n");
+    mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
+    if (!mainGlfwWindow) {
+        fprintf(stderr, "TkGlfwInitialize: failed to create root window\n");
         glfwTerminate();
         return TCL_ERROR;
     }
 
-    glfwMakeContextCurrent(glfwContext.mainWindow);
     // A positive swap interval causes glfwSwapBuffers to wait for
     // the end of a display cycle before swapping the buffers,
     // and that causes artifacts when resizing windows.
+    glfwMakeContextCurrent(mainGlfwWindow);
+    glfwSwapInterval(0);
     
-    /* Create NanoVG context once, here, while the shared context is current. */
-    glfwContext.vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
+    /* Create one NanoVG context which is shared by all toplevels.  */
+    glfwContext.vg = nvgCreateGLES3(NVG_ANTIALIAS
+				  | NVG_STENCIL_STROKES
+				  | NVG_DEBUG);
     if (!glfwContext.vg) {
         fprintf(stderr, "TkGlfwInitialize: nvgCreateGLES3() failed\n");
-        glfwDestroyWindow(glfwContext.mainWindow);
-        glfwContext.mainWindow = NULL;
+        glfwDestroyWindow(mainGlfwWindow);
+        mainGlfwWindow = NULL;
         glfwTerminate();
         return TCL_ERROR;
     }
@@ -187,7 +204,7 @@ TkGlfwInitialize(void)
     nvgCreateFont(glfwContext.vg, "mono", 
         "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf");
 
-    glfwContext.initialized = 1;
+    GlfwIsInitialized = 1;
     shutdownInProgress = 0;
     
     Tcl_CreateExitHandler(TkGlfwShutdown, NULL);
@@ -217,8 +234,8 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     /* Prevent recursive shutdown. */
     if (shutdownInProgress) return;
     shutdownInProgress = 1;
-    
-    if (!glfwContext.initialized) {
+
+    if (!GlfwIsInitialized) {
         shutdownInProgress = 0;
         return;
     }
@@ -228,27 +245,29 @@ TkGlfwShutdown(TCL_UNUSED(void *))
 
     /* Delete NanoVG while a context still exists. */
     if (glfwContext.vg) {
-        /* Make the shared context current if it still exists. */
-        if (glfwContext.mainWindow) {
-            glfwMakeContextCurrent(glfwContext.mainWindow);
+        /* Make the GL context of the root current if it still exists. */
+        if (mainGlfwWindow) {
+            glfwMakeContextCurrent(mainGlfwWindow);
             nvgDeleteGLES3(glfwContext.vg);
         }
         glfwContext.vg = NULL;
     }
 
-    /* Destroy the original hidden shared window. */
-    if (glfwContext.mainWindow) {
-        glfwDestroyWindow(glfwContext.mainWindow);
-        glfwContext.mainWindow = NULL;
-    }
-
     /* Poll one last time to let GLFW clean up internal state. */
+    //// Does not really seem to be needed.
     glfwPollEvents();
-    
-    /* Terminate GLFW. */
-    if (glfwContext.initialized) {
+
+    glfwMakeContextCurrent(NULL);
+    TkGlfwClearCallbacks(mainGlfwWindow);
+    glfwSetErrorCallback(NULL);
+    if (mainGlfwWindow) {
+	// This seems like a good idea but it segfaults!
+        //glfwDestroyWindow(mainGlfwWindow);
+        mainGlfwWindow = NULL;
+    }
+    if (GlfwIsInitialized) {
         glfwTerminate();
-        glfwContext.initialized = 0;
+        GlfwIsInitialized = 0;
     }
     
     shutdownInProgress = 0;
@@ -280,59 +299,53 @@ TkGlfwCreateWindow(
     const char *title,
     Drawable   *drawableOut)
 {
-    WindowMapping *mapping;
-    GLFWwindow    *window;
-    window = NULL;
-
     printf("TkGlfwCreateWindow\n");
     if (winPtr == NULL) {
-	printf("   TkGlfwCreateWindow called with null winPtr\n");
+	Tcl_Panic("TkGlfwCreateWindow called with null winPtr\n");
     }
+    WindowMapping *mapping;
+    GLFWwindow    *window = NULL;
+    //    Tcl_Interp *interp = winPtr->mainPtr->interp
 
     /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
 
-    if (!glfwContext.initialized) {
+    if (!GlfwIsInitialized) {
+	printf("****************************** TkGlfwCreateWindow called before TkGlfwInitialize !\n");
         if (TkGlfwInitialize() != TCL_OK)
             return NULL;
     }
 
     /* Reuse existing mapping if already created for this TkWindow. */
-    if (winPtr != NULL) {
-        mapping = FindMappingByTk(winPtr);
-        if (mapping != NULL) {
-	    printf("   winPtr has a mapping - returning its glfwWindow\n");
-            if (drawableOut) *drawableOut = mapping->drawable;
-            return mapping->glfwWindow;
-        }
+    mapping = FindMappingByTk(winPtr);
+    if (mapping != NULL) {
+	printf("   winPtr has a mapping - returning its glfwWindow\n");
+	if (drawableOut) *drawableOut = mapping->drawable;
+	return mapping->glfwWindow;
     }
 
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
 
-    /*
-     * Reuse mainWindow for the first visible window.  NanoVG was created
-     * on mainWindow so its GL objects are already present on that context.
-     */
-    if (glfwContext.mainWindow != NULL) {
-	printf("    Using the window created for the glfwContext\n");
-        window = glfwContext.mainWindow;
+    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
+        window = mainGlfwWindow;
         glfwSetWindowSize(window, width, height);
         glfwSetWindowTitle(window, title ? title : "");
-        glfwShowWindow(window);
-        glfwContext.mainWindow = NULL;
     } else {
-        glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-        glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
-        glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
-        glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+	/* Hints apply to the next call to glfwCreateWindow. */
+	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
         window = glfwCreateWindow(width, height, title ? title : "",
-                     NULL, glfwContext.mainWindow); /* Share context */
+                     NULL, mainGlfwWindow); /* Share the GL contexts */
         if (!window) return NULL;
-        glfwShowWindow(window);
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(0);
+	glfwShowWindow(window);
     }
 
     /* Create a framebuffer for the backing store of the window. */
@@ -360,7 +373,8 @@ TkGlfwCreateWindow(
     memset(mapping, 0, sizeof(WindowMapping));
     mapping->tkWindow     = winPtr;
     mapping->glfwWindow   = window;
-    mapping->drawable     = nextDrawableId++;
+    mapping->drawable     = TkWaylandDrawableForTkWindow(winPtr);
+	//nextDrawableId++;
     mapping->width        = width;
     mapping->height       = height;
     mapping->clearPending = 1;
@@ -638,10 +652,13 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
  *----------------------------------------------------------------------
  */
 
+//// This is evil.  There is no global context anymore!  Used in Image and Font.
+//// Maybe it can use the context for the main window if all windows share fonts.
+
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContext(void)
 {
-    return (glfwContext.initialized && !shutdownInProgress) ? 
+    return (GlfwIsInitialized && !shutdownInProgress) ? 
             glfwContext.vg : NULL;
 }
 
@@ -665,10 +682,9 @@ TkGlfwGetNVGContext(void)
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContextForMeasure(void)
 {
-    if (!glfwContext.initialized || !glfwContext.vg || shutdownInProgress) 
+    if (!GlfwIsInitialized || !glfwContext.vg || shutdownInProgress) 
         return NULL;
-    if (!glfwGetCurrentContext())
-        glfwMakeContextCurrent(glfwContext.mainWindow);
+    glfwMakeContextCurrent(mainGlfwWindow);
     return glfwContext.vg;
 }
 
@@ -693,7 +709,7 @@ TkGlfwGetNVGContextForMeasure(void)
 MODULE_SCOPE void
 TkGlfwProcessEvents(void)
 {
-    if (glfwContext.initialized && !shutdownInProgress) {
+    if (GlfwIsInitialized && !shutdownInProgress) {
         ////glfwPollEvents();
     }
 }
