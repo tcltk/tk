@@ -316,9 +316,7 @@ typedef struct TkWaylandPixmap {
 
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
-    TkGlfwContext glfwContext;
     NVGLUframebuffer *fbo;
-    NVGcontext *vg;
 } glfwData;
 
 

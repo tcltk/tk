@@ -31,8 +31,6 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 
-extern TkGlfwContext  glfwContext;
-
 /* -----------------------------------------------------------------------
  * Display / screen initialization.
  *
@@ -493,13 +491,6 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
     if (impl->windowMapping && impl->windowMapping->glfwWindow) {
         glfwMakeContextCurrent(impl->windowMapping->glfwWindow);
     }
-    
-    /* Close any open NanoVG frame on this pixmap. */
-    //// Suspicious - how could it be open?
-    //if (impl->frameOpen) {
-    //    nvgEndFrame(glfwContext.vg);
-    //    impl->frameOpen = 0;
-    //}
     
     /* Delete OpenGL resources. */
     if (impl->fbo) {

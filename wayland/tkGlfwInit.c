@@ -47,14 +47,11 @@ static int GlfwIsInitialized = 0;
 
 GLFWwindow *mainGlfwWindow;
 
-/* This can go when we are using the privatePtr. */
-
-TkGlfwContext  glfwContext       = {NULL, NULL, 0, 0, NULL, 0, 0, NULL};
+static TkGlfwContext glfwContext = {NULL, NULL, 0, 0, NULL, 0, 0, NULL};
+static int shutdownInProgress = 0;
 
 WindowMapping *windowMappingList = NULL;
-// static Drawable       nextDrawableId   = 1000;
 static DrawableMapping *drawableMappingList = NULL;
-static int shutdownInProgress = 0;
 
 /*
  *----------------------------------------------------------------------
@@ -651,9 +648,6 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
  *
  *----------------------------------------------------------------------
  */
-
-//// This is evil.  There is no global context anymore!  Used in Image and Font.
-//// Maybe it can use the context for the main window if all windows share fonts.
 
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContext(void)

@@ -26,7 +26,6 @@
 #include <GLES3/gl3.h>
 #include "nanovg_gl_utils.h"
 
-extern TkGlfwContext  glfwContext;
 extern WindowMapping *windowMappingList;
 
 /* ========================= Thread Specific Data  ========================= */
@@ -592,13 +591,14 @@ TkGlfwFramebufferSizeCallback(
 	printf("No Tk window!\n");
 	return;
     }
-    // Should be in window private struct.
-    extern TkGlfwContext glfwContext;
+    NVGcontext *vg = TkGlfwGetNVGContext();
+    if (vg == NULL) {
+	return;
+    }
     /* Rebuild the backing store */
     glfwMakeContextCurrent(window);
     nvgluDeleteFramebuffer(winPtr->privatePtr->fbo);
-    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(
-	 glfwContext.vg, width, height, 0);
+    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(vg, width, height, 0);
     printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fbo,
 	   Tk_PathName(winPtr), winPtr->privatePtr->fbo->fbo);
     nvgluBindFramebuffer(winPtr->privatePtr->fbo);

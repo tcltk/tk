@@ -35,8 +35,6 @@
 #undef XDestroyImage
 #endif
 
-extern TkGlfwContext  glfwContext;
-
 /*
  *----------------------------------------------------------------------
  *
@@ -404,14 +402,17 @@ XCopyArea_PixmapToWindow(
     NVGpaint imgPaint;
     int rc;
     unsigned char *pixels = NULL; 
-    
+    NVGcontext *vg = TkGlfwGetNVGContext();
+    if (!vg) {
+	return;
+    }
     /* Allocate buffer for pixel data. */
     pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
     
     /* Close pixmap frame if open. */
     if (srcPixmap->frameOpen) {
-        nvgRestore(glfwContext.vg);
-        nvgEndFrame(glfwContext.vg);
+        nvgRestore(vg);
+        nvgEndFrame(vg);
         srcPixmap->frameOpen = 0;
     }
     
@@ -484,23 +485,26 @@ XCopyArea_PixmapToPixmap(
     TkWaylandDrawingContext dc;
     int nvgImage;
     NVGpaint imgPaint;
-    
     unsigned char *pixels = NULL; 
+    NVGcontext *vg = TkGlfwGetNVGContext();
+    if (!vg) {
+	return;
+    }
     
     pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
  
     
     /* Close source pixmap frame if open. */
     if (srcPixmap->frameOpen) {
-        nvgRestore(glfwContext.vg);
-        nvgEndFrame(glfwContext.vg);
+        nvgRestore(vg);
+        nvgEndFrame(vg);
         srcPixmap->frameOpen = 0;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     
     /* Set up destination pixmap for drawing. */
     dc.drawable = (Drawable)dstPixmap;
-    dc.vg = glfwContext.vg;
+    dc.vg = vg;
     dc.width = dstPixmap->width;
     dc.height = dstPixmap->height;
     dc.offsetX = 0;
@@ -511,15 +515,15 @@ XCopyArea_PixmapToPixmap(
         glBindFramebuffer(GL_FRAMEBUFFER, dstPixmap->fbo);
         glViewport(0, 0, dstPixmap->width, dstPixmap->height);
         
-        nvgBeginFrame(glfwContext.vg,
+        nvgBeginFrame(vg,
                      (float)dstPixmap->width,
                      (float)dstPixmap->height,
                      1.0f);
         
-        nvgSave(glfwContext.vg);
-        nvgScale(glfwContext.vg, 1.0f, -1.0f);
-        nvgTranslate(glfwContext.vg, 0.0f, -(float)dstPixmap->height);
-        nvgTranslate(glfwContext.vg, 0.5f, 0.5f);
+        nvgSave(vg);
+        nvgScale(vg, 1.0f, -1.0f);
+        nvgTranslate(vg, 0.0f, -(float)dstPixmap->height);
+        nvgTranslate(vg, 0.5f, 0.5f);
         
         dstPixmap->frameOpen = 1;
     }
@@ -533,7 +537,7 @@ XCopyArea_PixmapToPixmap(
     }
     
     /* Create image pattern. */
-    imgPaint = nvgImagePattern(glfwContext.vg,
+    imgPaint = nvgImagePattern(vg,
                                (float)dst_x - src_x,
                                (float)dst_y - src_y,
                                (float)srcPixmap->width,
@@ -543,17 +547,17 @@ XCopyArea_PixmapToPixmap(
                                1.0f);
     
     /* Draw. */
-    nvgBeginPath(glfwContext.vg);
-    nvgRect(glfwContext.vg,
+    nvgBeginPath(vg);
+    nvgRect(vg,
             (float)dst_x,
             (float)dst_y,
             (float)width,
             (float)height);
-    nvgFillPaint(glfwContext.vg, imgPaint);
-    nvgFill(glfwContext.vg);
+    nvgFillPaint(vg, imgPaint);
+    nvgFill(vg);
     
     /* Cleanup. */
-    nvgDeleteImage(glfwContext.vg, nvgImage);
+    nvgDeleteImage(vg, nvgImage);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     return Success;
