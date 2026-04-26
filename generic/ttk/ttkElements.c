@@ -333,6 +333,9 @@ static void FieldElementDraw(
 	     */
 	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
 	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	    if (X11_XDRAWRECTANGLE_HACK) {
+		XDrawPoint(disp, d, focusGC, b.x+b.width-1, b.y+b.height-1);
+	    }
 
 	    /*
 	     * Fill the inner rectangle
@@ -658,7 +661,7 @@ static const Ttk_ElementOptionSpec SizegripOptions[] = {
 	offsetof(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-gripsize", TK_OPTION_PIXELS,
 	offsetof(SizegripElement,gripSizeObj), "11.25p" },
-    {0, TK_OPTION_BOOLEAN, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void SizegripSize(
@@ -1755,7 +1758,7 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
 	offsetof(TabElement,highlightObj), "0" },
     { "-highlightcolor", TK_OPTION_COLOR,
 	offsetof(TabElement,highlightColorObj), "#4a6984" },
-    {0, TK_OPTION_BOOLEAN, 0, 0}
+    {NULL, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void TabElementSize(

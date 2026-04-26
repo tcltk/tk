@@ -25,7 +25,7 @@ typedef struct
 {
     /* Internal data:
      */
-    int	width, height;		/* Requested size of tab */
+    int		width, height;	/* Requested size of tab */
     Ttk_Box	parcel;		/* Tab position */
 
     /* Tab options:
@@ -127,12 +127,12 @@ static const Tk_OptionSpec NotebookOptionSpecs[] =
  */
 typedef struct
 {
-    Ttk_PositionSpec tabPosition;	/* Where to place tabs */
-    Ttk_Padding	tabMargins;		/* Margins around tab row */
-    Ttk_PositionSpec tabPlacement;	/* How to pack tabs within tab row */
-    Ttk_Orient tabOrient;		/* ... */
-    int minTabWidth;			/* Minimum tab width */
-    Ttk_Padding	padding;		/* External padding */
+    Ttk_PositionSpec	tabPosition;	/* Where to place tabs */
+    Ttk_Padding		tabMargins;	/* Margins around tab row */
+    Ttk_PositionSpec	tabPlacement;	/* How to pack tabs within tab row */
+    Ttk_Orient		tabOrient;	/* ... */
+    int			minTabWidth;	/* Minimum tab width */
+    Ttk_Padding		padding;	/* External padding */
 } NotebookStyle;
 
 static void NotebookStyleOptions(
@@ -299,7 +299,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
     Tcl_Size i = 0;
     int statefirst = TTK_STATE_FIRST;
     int statelast = TTK_STATE_LAST;
-    
+
     if (nb->core.tkwin != NULL) {
 	TkMainInfo *mainInfoPtr = ((TkWindow *) nb->core.tkwin)->mainPtr;
 
@@ -313,6 +313,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
     /*
      * Flip First/last if tabs are on the bottom or right side.
      */
+
     if (index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
     } else {
@@ -1014,7 +1015,7 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (destIndex  >= nContent) {
+    if (destIndex >= nContent) {
 	destIndex = nContent - 1;
     }
     Ttk_ReorderContent(nb->notebook.mgr, srcIndex, destIndex);

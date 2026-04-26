@@ -208,8 +208,6 @@ namespace eval ttk::theme::vista {
 	    -stripedbackground System3dLight -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background System3dLight
-
-	package provide ttk::theme::vista 1.0
     }
 }
 

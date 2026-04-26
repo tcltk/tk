@@ -416,7 +416,9 @@ Tk_GetDoublePixelsFromObj(
 	    /* Internally "shimmer" to pixel units.
 	     * Doesn't support scaling changes. */ 
 /*	    pixelPtr->units = -1;
-	    pixelPtr->value = d;*/
+	    pixelPtr->value = d;
+	    pixelPtr->scaling = WidthMMOfScreen(Tk_Screen(tkwin));
+*/
 	}
     }
     *doublePtr = d;
@@ -490,6 +492,7 @@ DupPixelInternalRep(
 	newPtr->units = oldPtr->units;
 	newPtr->tkwin = oldPtr->tkwin;
 	newPtr->returnValue = oldPtr->returnValue;
+	newPtr->scaling = oldPtr->scaling;
 	SET_COMPLEXPIXEL(copyPtr, newPtr);
     }
 }

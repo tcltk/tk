@@ -6,16 +6,6 @@
 
 #include "tkInt.h"
 #include "ttkThemeInt.h"
-#include "ttkThemeInt.h"
-
-#define STR(x) StR(x)
-#define StR(x) #x
-
-#define FRAME_COLOR	"#dcdad5"
-#define LIGHT_COLOR	"#ffffff"
-#define DARK_COLOR	"#cfcdc8"
-#define DARKER_COLOR	"#bab5ab"
-#define DARKEST_COLOR	"#9e9a91"
 
 /*
  * Under windows, the Tk-provided XDrawLine and XDrawArc have an off-by-one
@@ -27,6 +17,15 @@
 #else
   #define WIN32_XDRAWLINE_HACK 0
 #endif
+
+#define STR(x) StR(x)
+#define StR(x) #x
+
+#define FRAME_COLOR	"#dcdad5"
+#define LIGHT_COLOR	"#ffffff"
+#define DARK_COLOR	"#cfcdc8"
+#define DARKER_COLOR	"#bab5ab"
+#define DARKEST_COLOR	"#9e9a91"
 
 /*------------------------------------------------------------------------
  * +++ Utilities.

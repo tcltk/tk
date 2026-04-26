@@ -2025,7 +2025,7 @@ static Ttk_Layout TreeviewGetLayout(
     if (height > 0) {
 	tv->tree.rowHeight = height;
     }
-    if (tv->tree.rowHeight <= 0) {
+    if (tv->tree.rowHeight < 1) {
 	tv->tree.rowHeight = 20;
     }
 
@@ -2127,6 +2127,13 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     } else {
 	state &= ~TTK_STATE_BACKGROUND;
     }
+
+    /* If striped, set alternate state */
+/*    if (item->visiblePos % 2 && tv->tree.striped) {
+	state |= TTK_STATE_ALTERNATE;
+    } else {
+	state &= ~TTK_STATE_ALTERNATE;
+    }*/
     return state;
 }
 
@@ -6850,8 +6857,8 @@ static int TreeviewCtagHasCommand(
 
     } else if (objc == 6) {	/* Test if cell has specified tag */
 	Ttk_Tag tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
-	int result = 0;
-	if (GetCellFromObj(interp, tv, objv[5], 0, NULL, &cell) != TCL_OK) {
+	bool result = false;
+	if (GetCellFromObj(interp, tv, objv[5], false, NULL, &cell) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (cell.item == tv->tree.root) {
@@ -6871,7 +6878,7 @@ static int TreeviewCtagHasCommand(
 	    }
 	}
 
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
 	return TCL_OK;
 
     } else {
@@ -7528,6 +7535,7 @@ TtkTreeview_Init(Tcl_Interp *interp) {
 	&TreeheadingIndicatorElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeheading.cell", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.row", &RowElementSpec, 0);
+    Ttk_RegisterElement(interp, theme, "Treeitem.alt", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
 	&TreeitemIndicatorElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.separator", &RowElementSpec, 0);
