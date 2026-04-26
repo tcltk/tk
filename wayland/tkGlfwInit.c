@@ -67,7 +67,7 @@ static NVGLUframebuffer* TkWaylandFBOForTkWindow(
     int *width,
     int *height) {
     TkWindow *toplevelPtr = winPtr;
-    while (toplevelPtr->parentPtr) {
+    while (!Tk_IsTopLevel(toplevelPtr)) {
 	toplevelPtr = toplevelPtr->parentPtr;
     }
     if (width) {
@@ -102,9 +102,7 @@ TkGlfwErrorCallback(int error, const char *desc)
     /* Don't print errors during shutdown. */
     if (shutdownInProgress) return;
     
-    if (glfwContext.initialized && glfwContext.mainWindow) {
-        fprintf(stderr, "GLFW Error %d: %s\n", error, desc);
-    }
+    fprintf(stderr, "GLFW Error %d: %s\n", error, desc);
 }
 
 #if 1
@@ -428,8 +426,8 @@ TkGlfwCreateWindow(
         }
     }
 
-    if (width  <= 0) width  = 200;
-    if (height <= 0) height = 200;
+    if (width  <= 1) width  = 200;
+    if (height <= 1) height = 200;
 
     /*
      * Reuse mainWindow for the first visible window.  NanoVG was created
@@ -451,18 +449,31 @@ TkGlfwCreateWindow(
         glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
         window = glfwCreateWindow(width, height, title ? title : "",
-                                  NULL, glfwContext.mainWindow); /* Share context */
+                     NULL, glfwContext.mainWindow); /* Share context */
         if (!window) return NULL;
         glfwShowWindow(window);
     }
 
     /* Create a framebuffer for the backing store of the window. */
-    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(glfwContext.vg, width,
-		       height, NVG_IMAGE_REPEATX | NVG_IMAGE_REPEATY);
+    glfwMakeContextCurrent(window);
+    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(glfwContext.vg,
+						     width, height, 0);
     if (winPtr->privatePtr->fbo == NULL) {
 		fprintf(stderr, "Could not create NanoVG framebuffer\n");
     }
+    printf("Window %s now has glfwWindow %p and framebuffer %p\n",
+	   Tk_PathName(winPtr), window, winPtr->privatePtr->fbo);
+    nvgluBindFramebuffer(winPtr->privatePtr->fbo);
+    /* Check FBO completeness for now. */
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        printf("FBO is incomplete (status=0x%x)\n", status);
+    } else {
+	printf("Window %s has complete framebuffer %p\n", Tk_PathName(winPtr),
+	   winPtr->privatePtr->fbo);
+    }
 
+    
     /* Allocate and initialize mapping. */
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
@@ -627,8 +638,11 @@ TkGlfwBeginDraw(
     int width, height;
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
     NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr, &width, &height);
-    printf("drawing window %s; backing store at %p with FBO: %d\n",
-	   Tk_PathName(winPtr), fbo, fbo->fbo);
+    // Make our GL context current.
+    WindowMapping *m = FindMappingByDrawable(drawable);
+    printf("Drawing on %s with glfwWindow %p and framebuffer %p\n",
+	   Tk_PathName(winPtr), m->glfwWindow, fbo);
+    glfwMakeContextCurrent(m->glfwWindow);
     // Bind our backing store framebuffer.
     nvgluBindFramebuffer(fbo);
     

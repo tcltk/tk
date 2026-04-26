@@ -1435,12 +1435,12 @@ static const Tk_OptionSpec IconOptionSpec[] = {
 
 static int
 TrayIconCreateCmd(
-    void *cd,
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    Tk_Window mainWindow = (Tk_Window)cd;
+    Tk_Window tkwin = (Tk_Window) clientData;
     DockIcon *icon;
     const char* windowName;
     size_t nameLen;
@@ -1461,7 +1461,7 @@ TrayIconCreateCmd(
     icon->category = CATEGORY_APPLICATION_STATUS;
     
     /* Create Tk window. */
-    icon->tkwin = Tk_CreateWindowFromPath(interp, mainWindow,
+    icon->tkwin = Tk_CreateWindowFromPath(interp, tkwin,
         Tcl_GetString(objv[1]), "");
     if (icon->tkwin == NULL) {
         ckfree((char *)icon);

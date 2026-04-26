@@ -38,19 +38,6 @@ void nvgluBindFramebuffer(NVGLUframebuffer* fb);
 void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
 
 /*
- * The TkWindow structure contains a pointer to a struct TkWindowPrivate for
- * storing information specific to a port of Tk.  We use it for GLFW and
- * NVG objects associated to the window.
- */
-
-typedef struct TkWindowPrivate {
-    GLFWwindow *glfwWindow;
-    NVGLUframebuffer *fbo;
-    NVGcontext *vg;
-} glfwData;
-
-
-/*
  *----------------------------------------------------------------------
  *
  * Window Mapping Structure
@@ -316,6 +303,24 @@ typedef struct TkWaylandPixmap {
     /* Associated window (for context) */
     WindowMapping   *windowMapping; /* Which window owns this pixmap */
 } TkWaylandPixmap;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * The TkWindow structure contains a pointer to a struct TkWindowPrivate for
+ * storing information specific to a port of Tk.  We use it for GLFW and
+ * NVG objects associated to the window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct TkWindowPrivate {
+    GLFWwindow *glfwWindow;
+    TkGlfwContext glfwContext;
+    NVGLUframebuffer *fbo;
+    NVGcontext *vg;
+} glfwData;
+
 
 /*
  *----------------------------------------------------------------------

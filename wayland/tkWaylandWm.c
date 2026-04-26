@@ -151,9 +151,7 @@ inline TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
     if (TkWaylandDrawableIsPixmap(drawable)) {
 	Tcl_Panic("Attempt to convert a pixmap drawable to a window.");
     }
-    TkWindow *result = (TkWindow *) drawable;
-    printf("result is %p\n", result);
-    return result;
+    return (TkWindow *) drawable;
 }
 
 inline Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap) {
@@ -396,7 +394,6 @@ CreateGlfwWindow(TkWindow *winPtr)
     }
 
     wmPtr->glfwWindow = (GLFWwindow *)winPtr->window;
-    
 
     /* Apply wm properties that are valid AFTER creation. */
 
@@ -790,29 +787,21 @@ Tk_MakeWindow(
 	    winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
 	}
 
-        width  = (winPtr->changes.width  > 0) ? winPtr->changes.width  : 200;
-        height = (winPtr->changes.height > 0) ? winPtr->changes.height : 200;
+        width  = (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
+        height = (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
 
         /*
          * Create the GLFW window and get a drawable ID.
          * drawable is ignored; we use winPtr->window instead.
          */
 
+	printf("Creating glfwWindow %s at size %dx%d\n",
+	       Tk_PathName(tkwin), width, height);
 	glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
         if (!glfwWindow) {
             return None;
         }
-	
-        /*
-         * Tk's window ID for a toplevel is the GLFWwindow pointer cast.
-         */
-
-	//// This is where the return value was being generated.
-        //// window = (Window)glfwWindow;
-        //// Not necessary.
-	//// winPtr->window = window;
-
         /*
          * Ensure WmInfo exists.
          */

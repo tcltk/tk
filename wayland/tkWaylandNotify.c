@@ -595,9 +595,21 @@ TkGlfwFramebufferSizeCallback(
     // Should be in window private struct.
     extern TkGlfwContext glfwContext;
     /* Rebuild the backing store */
+    glfwMakeContextCurrent(window);
     nvgluDeleteFramebuffer(winPtr->privatePtr->fbo);
     winPtr->privatePtr->fbo = nvgluCreateFramebuffer(
 	 glfwContext.vg, width, height, 0);
+    printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fbo,
+	   Tk_PathName(winPtr), winPtr->privatePtr->fbo->fbo);
+    nvgluBindFramebuffer(winPtr->privatePtr->fbo);
+    /* Check FBO completeness for now. */
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fbo, status);
+    } else {
+	printf("Window %s has framebuffer %p\n", Tk_PathName(winPtr),
+	   winPtr->privatePtr->fbo);
+    }
     winPtr->changes.width = width;
     winPtr->changes.height = height;
 
