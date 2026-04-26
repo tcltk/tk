@@ -88,6 +88,15 @@ typedef struct FontFamily {
 				 * information is (relatively) compact, but
 				 * would take longer to search than indexing
 				 * into the fontMap[][] table. */
+
+    /*
+     * cmap format-12 groups: cover supplementary-plane characters
+     * (U+10000 and above) including color emoji.  Both arrays are
+     * parallel and have groupCount entries, malloced.
+     */
+    int    groupCount;		/* Number of format-12 groups, or 0. */
+    ULONG *startGroup;		/* Inclusive start codepoint of each group. */
+    ULONG *endGroup;		/* Inclusive end codepoint of each group. */
 } FontFamily;
 
 /*
@@ -280,7 +289,9 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char* name, HFONT hFont);
 static int		LoadFontRanges(HDC hdc, HFONT hFont,
 			    USHORT **startCount, USHORT **endCount,
-			    int *symbolPtr);
+			    int *symbolPtr,
+			    ULONG **startGroup, ULONG **endGroup,
+			    int *groupCount);
 static void		MultiFontTextOut(HDC hdc, WinFont *fontPtr,
 			    const char *source, int numBytes,
 			    double x, double y, double angle);
@@ -2460,63 +2471,13 @@ MultiFontTextOut(
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
     /*
-     * Global emoji detection -
-     *
-     * If the string contains surrogate pairs → Uniscribe cannot shape it.
-     * Bypass shaping entirely and use ExtTextOutW.
-     */
-    bool hasSurrogate = false;
-    for (i = 0; i < wlen; i++) {
-	WCHAR wc = wstr[i];
-	if (wc >= 0xD800 && wc <= 0xDBFF) {
-	    hasSurrogate = true;
-	    break;
-	}
-    }
-
-    if (hasSurrogate) {
-	/* Choose fallback font inline. */
-	HFONT hEmoji = NULL;
-	static const char *const emojiFonts[] = {
-	    "Segoe UI Emoji",      /* Color emoji */
-	    "Segoe UI Symbol",     /* Monochrome emoji */
-	    "Segoe UI",
-	    "Arial Unicode MS",
-	    "Lucida Sans Unicode",
-	    NULL
-	};
-	for (int ef = 0; emojiFonts[ef]; ef++) {
-	    HFONT h = GetScreenFont(&fontPtr->font.fa,
-				    emojiFonts[ef],
-				    fontPtr->pixelSize,
-				    angle);
-	    if (h) { hEmoji = h; break; }
-	}
-	if (!hEmoji) {
-	    hEmoji = fontPtr->subFontArray[0].hFont0;
-	}
-
-	HFONT old = (HFONT)SelectObject(hdc, hEmoji);
-	SetBkMode(hdc, TRANSPARENT);
-
-	ExtTextOutW(
-	    hdc,
-	    (int)(x + 0.5), (int)(y + 0.5),
-	    0,
-	    NULL,
-	    wstr,
-	    wlen,
-	    NULL);
-
-	SelectObject(hdc, old);
-	Tcl_DStringFree(&uniStr);
-	return;
-    }
-
-    /*
      * Normal Uniscribe path -
      *
-     * Used for all non-emoji text: Arabic, Hebrew, Indic, Thai, etc.
+     * Used for all text: Arabic, Hebrew, Indic, Thai, emoji, etc.
+     * FindSubFontForChar now correctly selects Segoe UI Emoji for
+     * supplementary-plane codepoints via the format-12 group table,
+     * so the per-run color-glyph ETO_GLYPH_INDEX path below handles
+     * emoji rendering without bypassing Uniscribe.
      */
 
     TkWinShapedRun *runs = NULL;
@@ -2878,7 +2839,9 @@ AllocFontFamily(
     familyPtr->refCount = 2;
 
     familyPtr->segCount = LoadFontRanges(hdc, hFont, &familyPtr->startCount,
-	    &familyPtr->endCount, &familyPtr->isSymbolFont);
+	    &familyPtr->endCount, &familyPtr->isSymbolFont,
+	    &familyPtr->startGroup, &familyPtr->endGroup,
+	    &familyPtr->groupCount);
 
     encoding = NULL;
     if (familyPtr->isSymbolFont) {
@@ -2963,6 +2926,12 @@ FreeFontFamily(
     }
     if (familyPtr->endCount != NULL) {
 	Tcl_Free(familyPtr->endCount);
+    }
+    if (familyPtr->startGroup != NULL) {
+	Tcl_Free(familyPtr->startGroup);
+    }
+    if (familyPtr->endGroup != NULL) {
+	Tcl_Free(familyPtr->endGroup);
     }
     if (familyPtr->encoding != TkWinGetUnicodeEncoding()) {
 	Tcl_FreeEncoding(familyPtr->encoding);
@@ -3307,23 +3276,59 @@ FontMapLoadPage(
 	 * Font is Unicode. Few fonts are going to have all characters, so
 	 * examine the TrueType character existence metrics to determine what
 	 * characters actually exist in this font.
+	 *
+	 * For rows in the supplementary planes (codepoints >= U+10000) use
+	 * the format-12 group table which carries full 32-bit codepoints.
+	 * The format-4 USHORT arrays are clamped to U+FFFF and cannot
+	 * represent emoji or any other supplementary-plane character.
 	 */
 
-	segCount    = familyPtr->segCount;
-	startCount  = familyPtr->startCount;
-	endCount    = familyPtr->endCount;
+	int rowStart = row << FONTMAP_SHIFT;
+	int rowEnd   = rowStart + FONTMAP_BITSPERPAGE; /* exclusive */
 
-	j = 0;
-	end = (row + 1) << FONTMAP_SHIFT;
-	for (i = row << FONTMAP_SHIFT; i < end; i++) {
-	    for ( ; j < segCount; j++) {
-		if (endCount[j] >= i) {
-		    if (startCount[j] <= i) {
-			bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
-			subFontPtr->fontMap[row][bitOffset >> 3] |=
-				1 << (bitOffset & 7);
+	if (rowStart >= 0x10000 && familyPtr->groupCount > 0) {
+	    /*
+	     * Supplementary plane row: walk format-12 groups.
+	     * Each group covers [startGroup[g], endGroup[g]] inclusive.
+	     * We only care about the intersection with [rowStart, rowEnd).
+	     */
+	    int gc = familyPtr->groupCount;
+	    ULONG *sg = familyPtr->startGroup;
+	    ULONG *eg = familyPtr->endGroup;
+
+	    for (j = 0; j < gc; j++) {
+		if ((int)eg[j] < rowStart || (int)sg[j] >= rowEnd) {
+		    continue;
+		}
+		int lo = ((int)sg[j] > rowStart) ? (int)sg[j] : rowStart;
+		int hi = ((int)eg[j] < rowEnd)   ? (int)eg[j] : rowEnd - 1;
+		for (i = lo; i <= hi; i++) {
+		    bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
+		    subFontPtr->fontMap[row][bitOffset >> 3] |=
+			    1 << (bitOffset & 7);
+		}
+	    }
+	} else {
+	    /*
+	     * BMP row (codepoints U+0000–U+FFFF): use the format-4
+	     * USHORT segment arrays as before.
+	     */
+	    segCount    = familyPtr->segCount;
+	    startCount  = familyPtr->startCount;
+	    endCount    = familyPtr->endCount;
+
+	    j = 0;
+	    end = rowEnd;
+	    for (i = rowStart; i < end; i++) {
+		for ( ; j < segCount; j++) {
+		    if (endCount[j] >= i) {
+			if (startCount[j] <= i) {
+			    bitOffset = i & (FONTMAP_BITSPERPAGE - 1);
+			    subFontPtr->fontMap[row][bitOffset >> 3] |=
+				    1 << (bitOffset & 7);
+			}
+			break;
 		    }
-		    break;
 		}
 	    }
 	}
@@ -3825,7 +3830,12 @@ LoadFontRanges(
 				 * range information. */
     USHORT **endCountPtr,	/* Filled with malloced pointer to character
 				 * range information. */
-    int *symbolPtr)
+    int *symbolPtr,
+    ULONG **startGroupPtr,	/* Filled with malloced format-12 group
+				 * start codepoints (supplementary plane). */
+    ULONG **endGroupPtr,	/* Filled with malloced format-12 group
+				 * end codepoints. */
+    int *groupCountPtr)		/* Number of format-12 groups. */
  {
     int n, i, j, k, swapped, segCount;
     size_t cbData, offset;
@@ -3840,6 +3850,9 @@ LoadFontRanges(
     startCount = NULL;
     endCount = NULL;
     *symbolPtr = 0;
+    *startGroupPtr = NULL;
+    *endGroupPtr   = NULL;
+    *groupCountPtr = 0;
 
     hFont = (HFONT)SelectObject(hdc, hFont);
 
@@ -3880,6 +3893,71 @@ LoadFontRanges(
 	    }
 	    if (encTable.encoding == 0) {
 		*symbolPtr = 1;
+	    } else if (encTable.encoding == 10) {
+		/*
+		 * Platform 3, encoding 10: cmap format 12.
+		 * This subtable covers the full Unicode range including
+		 * supplementary planes (emoji, historic scripts, etc.).
+		 * The header at encTable.offset is:
+		 *   USHORT format   (== 12, but stored as ULONG in the
+		 *                    "fixed" 16.16 representation — high
+		 *                    USHORT is 12, low USHORT is 0)
+		 *   ULONG  length
+		 *   ULONG  language
+		 *   ULONG  nGroups
+		 * Each group is three ULONGs: startCode, endCode, startGlyphID.
+		 */
+		ULONG fmt12hdr[4];  /* format/reserved, length, language, nGroups */
+		if (GetFontData(hdc, cmapKey, (DWORD)encTable.offset,
+			fmt12hdr, sizeof(fmt12hdr)) == (DWORD)GDI_ERROR) {
+		    continue;
+		}
+		if (swapped) {
+		    SwapLong(&fmt12hdr[0]);
+		    SwapLong(&fmt12hdr[3]);
+		}
+		/* High 16 bits of fmt12hdr[0] hold the format number. */
+		if ((fmt12hdr[0] >> 16) != 12) {
+		    continue;
+		}
+		ULONG nGroups = fmt12hdr[3];
+		if (nGroups == 0 || nGroups > 0x10000) {
+		    continue;   /* sanity */
+		}
+		ULONG *sg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
+		ULONG *eg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
+		size_t groupBase = encTable.offset + sizeof(fmt12hdr);
+		int ok = 1;
+		for (ULONG g = 0; g < nGroups; g++) {
+		    ULONG rec[3];    /* startCode, endCode, startGlyphID */
+		    if (GetFontData(hdc, cmapKey,
+			    (DWORD)(groupBase + g * 12),
+			    rec, 12) == (DWORD)GDI_ERROR) {
+			ok = 0;
+			break;
+		    }
+		    if (swapped) {
+			SwapLong(&rec[0]);
+			SwapLong(&rec[1]);
+		    }
+		    sg[g] = rec[0];
+		    eg[g] = rec[1];
+		}
+		if (!ok) {
+		    Tcl_Free(sg);
+		    Tcl_Free(eg);
+		    continue;
+		}
+		/* Keep only the first (most complete) format-12 subtable. */
+		if (*groupCountPtr == 0) {
+		    *startGroupPtr = sg;
+		    *endGroupPtr   = eg;
+		    *groupCountPtr = (int)nGroups;
+		} else {
+		    Tcl_Free(sg);
+		    Tcl_Free(eg);
+		}
+		continue;
 	    } else if (encTable.encoding != 1) {
 		continue;
 	    }
