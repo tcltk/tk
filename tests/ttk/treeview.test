@@ -135,6 +135,10 @@ proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
     update idletasks
 }
 
+proc MouseMove {w item column} {
+lassign [$w bbox $item $column] x y width height
+event generate $w <Motion> -warp 1 -when now -x $x -y $y
+}
 
 # Widget Functions
 
@@ -7766,6 +7770,7 @@ test Tag_Add-78.11 {Cleanup} -body {
 
 # Tag bind
 proc cellEvent {w item col} {lassign [$w bbox $item $col] aX aY aW aH;set aX [expr {$aX + $aW / 2}];set aY [expr {$aY + $aH / 2}];event generate $w <Button-1> -x $aX -y $aY}
+set ::test ""
 
 
 test Tag_Bind-79.1 {Init} -body {
@@ -7810,19 +7815,45 @@ test Tag_Bind-79.10 {Get all bindings for tag} -body {
 	.tv tag bind newTag
     } -result {<Control-Key-q>}
 
-test Tag_Bind-79.11 {Delete tag} -body {
+test Tag_Bind-79.11 {Button event} -setup {
+	.tv tag add newTag red
+    } -body {
+	.tv tag bind newTag <Button> {set ::test "button"}
+	ButtonPress .tv red #1 10
+	set ::test
+    } -result {button}
+
+test Tag_Bind-79.12 {Key event} -body {
+	.tv tag bind newTag <Key> {set ::test "key"}
+	KeyPress .tv red #2 a
+	set ::test
+    } -result {key}
+
+test Tag_Bind-79.13 {Enter event} -body {
+	.tv tag bind newTag <Enter> {set ::test "enter"}
+	MouseMove .tv red #3
+	set ::test
+    } -result {enter}
+
+test Tag_Bind-79.14 {Leave event} -body {
+	.tv tag bind newTag <Leave> {set ::test "leave"}
+	MouseMove .tv blue #3
+	set ::test
+    } -result {leave}
+
+test Tag_Bind-79.15 {Delete tag} -body {
 	.tv tag delete newTag
 	.tv tag bind newTag
     }
 
-test Tag_Bind-79.12 {Null binding bug #3006842} -body {
+test Tag_Bind-79.16 {Null binding bug #3006842} -body {
 	.tv tag bind empty <Button-1> {}
 	.tv insert {} end -text "Click me" -tags empty
 	event generate .tv <Button-1> -x 10 -y 10
 	.tv tag bind empty
     }
 
-test Tag_Bind-79.13 {Init} -body {
+test Tag_Bind-79.17 {Init} -body {
 	.tv tag configure t1 -background red
 	.tv tag configure t2 -background blue
 	.tv tag add t1 red
@@ -7833,28 +7864,28 @@ test Tag_Bind-79.13 {Init} -body {
 	.tv tag bind t2 <Button-1> {lappend ::tagtest t2}
     }
 
-test Tag_Bind-79.14 {Item tag test} -body {
+test Tag_Bind-79.18 {Item tag test} -body {
 	cellEvent .tv red #0
 	set ::tagtest
     } -cleanup {
 	set ::tagtest {}
     } -result {t1}
 
-test Tag_Bind-79.15 {Cell tag test} -body {
+test Tag_Bind-79.19 {Cell tag test} -body {
 	cellEvent .tv pink Hex
 	set ::tagtest
     } -cleanup {
 	set ::tagtest {}
     } -result {t2}
 
-test Tag_Bind-79.16 {Item and cell tags test} -body {
+test Tag_Bind-79.20 {Item and cell tags test} -body {
 	cellEvent .tv red Hex
 	set ::tagtest
     } -cleanup {
 	set ::tagtest {}
     } -result {t1 t2}
 
-test Tag_Bind-79.17 {Cleanup} -setup {
+test Tag_Bind-79.21 {Cleanup} -setup {
 	rename cellEvent {}
     } -body {
 	destroy .tv .sx .sy
