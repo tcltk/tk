@@ -456,6 +456,8 @@ MODULE_SCOPE Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
  *----------------------------------------------------------------------
  */
 
+MODULE_SCOPE GLFWwindow *TkWaylandGetGLFWwindow(TkWindow *winPtr);
+
 MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
     TkWindow   *tkWin,
     int         width,
@@ -463,8 +465,8 @@ MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
     const char *title,
     Drawable   *drawableOut);
 
+
 MODULE_SCOPE void        TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
-MODULE_SCOPE GLFWwindow *TkGlfwGetGLFWWindow(Tk_Window tkwin);
 MODULE_SCOPE Drawable    TkGlfwGetDrawable(GLFWwindow *w);
 MODULE_SCOPE TkWindow   *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);

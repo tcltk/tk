@@ -1416,7 +1416,7 @@ CreateIMEState(Tk_Window tkwin)
     }
 
     /* Get GLFW window to access Wayland surface. */
-    glfwWindow = TkGlfwGetGLFWWindow(tkwin);
+    glfwWindow = TkWaylandGetGLFWwindow((TkWindow *) tkwin);
     if (!glfwWindow) {
         return NULL;
     }

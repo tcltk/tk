@@ -326,6 +326,7 @@ TkWmNewWindow(
     memset(wmPtr, 0, sizeof(WmInfo));
 
     wmPtr->winPtr      = winPtr;
+    //// remove this field eventually
     wmPtr->glfwWindow  = NULL;
     wmPtr->withdrawn   = 0;
     wmPtr->initialState =  NormalState;
@@ -387,7 +388,7 @@ CreateGlfwWindow(TkWindow *winPtr)
         return;
     }
 
-    /* Tk_MakeWindow already created the platform window. */
+    /* Tk_MakeWindow should have already created the platform window. */
     if (winPtr->window == None) {
         Tcl_Panic("CreateGlfwWindow: Tk window has no platform window");
         return;
@@ -802,6 +803,11 @@ Tk_MakeWindow(
         if (!glfwWindow) {
             return None;
         }
+	/*
+	 * Add the glfwWindow to the TkWindowPrivate struct.
+	 */
+	winPtr->privatePtr->glfwWindow = glfwWindow;
+	
         /*
          * Ensure WmInfo exists.
          */
@@ -811,6 +817,7 @@ Tk_MakeWindow(
 
         WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
         if (wmPtr) {
+	    //// remove this field eventually
             wmPtr->glfwWindow = glfwWindow;
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
@@ -1703,7 +1710,7 @@ WmAttributesCmd(
         return TCL_ERROR;
     }
 
-    GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     /* Set attributes */
     for (i = 0; i < objc; i += 2) {
@@ -3094,7 +3101,7 @@ WmStateCmd(
     }
 
     /* Get platform-specific handles once. */
-    GLFWwindow *glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     switch (idx) {
         case OPT_NORMAL:
@@ -3820,7 +3827,7 @@ UpdateTitle(TkWindow *winPtr)
 {
     WmInfo     *wmPtr   = (WmInfo *)winPtr->wmInfoPtr;
     const char *title   = wmPtr->title ? wmPtr->title : winPtr->nameUid;
-    GLFWwindow *glfwWin = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    GLFWwindow *glfwWin = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWin)
         glfwSetWindowTitle(glfwWin, title);
 }

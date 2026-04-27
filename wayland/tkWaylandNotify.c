@@ -613,18 +613,13 @@ TkGlfwFramebufferSizeCallback(
     winPtr->changes.width = width;
     winPtr->changes.height = height;
 
-    // Update the mapping, for now
-    WindowMapping *mapping;
-    mapping = FindMappingByTk(winPtr);
-    if (!mapping) {
-	printf("====== No mapping for Tk Window!\n");
-	return;
-    }
-
     // Reconfigure the Tk window.
     TkDoConfigureNotify(winPtr);
     /* Update ViewPort */
     glViewport(0, 0, width, height);
+    printf("TkGlFramebufferSizeCallback Expose\n");
+    TkWaylandQueueExposeEvent(winPtr,
+        0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }
 
 /*
@@ -1227,18 +1222,13 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
     recordCallback();
     TkWindow      *winPtr = TkGlfwGetTkWindow(window);
     WindowMapping *mapping;
-    int            w, h;
+    //    int            w, h;
 
     if (!winPtr) return;
 
-    mapping = FindMappingByTk(winPtr);
-    if (!mapping) return;
-
-    w = mapping->width  > 0 ? mapping->width  : winPtr->changes.width;
-    h = mapping->height > 0 ? mapping->height : winPtr->changes.height;
-
     printf("TkGlWindowRefreshCallback Expose\n");
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+    TkWaylandQueueExposeEvent(winPtr,
+        0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }
 
 /*

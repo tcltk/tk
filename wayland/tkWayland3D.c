@@ -132,7 +132,6 @@ Tk_3DVerticalBevel(
         waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
     }
 
-    printf("Tk_3DBorder\n");
     int rc = TkGlfwBeginDraw(drawable, borderPtr->bgGC, &dc);
     if (rc != TCL_OK)
         return;
@@ -224,7 +223,6 @@ Tk_3DHorizontalBevel(
     int            topBevel,
     int            relief)
 {
-    printf("Tk_3DHorizontalBevel\n");
     TkBorder               *borderPtr       = (TkBorder *) border;
     WaylandBorder          *waylandBorderPtr = (WaylandBorder *) borderPtr;
     TkWaylandDrawingContext dc;
@@ -411,10 +409,6 @@ TkpGetShadows(
     if (borderPtr->darkColorPtr) {
         waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
     }
-
-    /* Dummy non-NULL values — NanoVG doesn't use GCs but Tk checks these. */
-    borderPtr->darkGC  = (GC)1;
-    borderPtr->lightGC = (GC)1;
 
     if (stressed && borderPtr->shadow == None) {
         borderPtr->shadow = Tk_GetBitmap(NULL, tkwin, "gray50");

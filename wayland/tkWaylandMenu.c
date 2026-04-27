@@ -1392,9 +1392,9 @@ TkpDisplayMenu(
     
     /* Get parent window's GLFW window (menus are toplevels). */
     if (winPtr->parentPtr) {
-        glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr->parentPtr);
+        glfwWindow = TkWaylandGetGLFWwindow(winPtr->parentPtr);
     } else {
-        glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+        glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     }
     
     if (!glfwWindow) {
@@ -1986,7 +1986,7 @@ TkWaylandSetupMenuCallbacks(
 {
     GLFWwindow *glfwWindow;
     
-    glfwWindow = TkGlfwGetGLFWWindow(tkwin);
+    glfwWindow = TkWaylandGetGLFWwindow((TkWindow *)tkwin);
     if (!glfwWindow) {
         return;
     }

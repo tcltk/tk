@@ -56,8 +56,8 @@ TkpChangeFocus(
      * Get the GLFW window associated with this Tk window using the
      * accessor function from the header.
      */
-    GLFWwindow *glfwWin = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
-    if (glfwWin == NULL) {
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    if (glfwWindow == NULL) {
         Tcl_Panic("TkpChangeFocus: No GLFW window found for Tk window");
     }
 
@@ -82,7 +82,8 @@ TkpChangeFocus(
     /*
      * Request focus for the target window.
      */
-    glfwFocusWindow(glfwWin);
+    //// This has no effect with Wayland.
+    glfwFocusWindow(glfwWindow);
 
     /*
      * Generate a serial number to indicate focus changed.
