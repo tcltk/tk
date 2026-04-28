@@ -391,21 +391,6 @@ InitializeGlfwWindow(TkWindow *winPtr)
 	Tcl_Panic("InitializeGlfwWindow: Tk window has no platform window");
     }
 
-#if 0
-    if (wmPtr->glfwWindow != NULL) {
-	printf("%s already has a glfwWindow\n", Tk_PathName(winPtr));
-        return;
-    }
-
-    /* Tk_MakeWindow should have already created the platform window. */
-    if (winPtr->window == None) {
-        Tcl_Panic("CreateGlfwWindow: Tk window has no platform window");
-        return;
-    }
-
-    wmPtr->glfwWindow = (GLFWwindow *)winPtr->window;
-#endif
-    
     /* Apply wm properties that are valid AFTER creation. */
 
     UpdateTitle(winPtr);
@@ -504,7 +489,6 @@ TkWmMapWindow(TkWindow *winPtr)
 
     //// this test is probably not needed.
     if (glfwWindow) {
-        WindowMapping *mapping;
         int w, h;
 
         glfwShowWindow(glfwWindow);
@@ -512,31 +496,8 @@ TkWmMapWindow(TkWindow *winPtr)
         /* Get the actual window size after showing. */
         glfwGetWindowSize(glfwWindow, &w, &h);
         
-        /* Ensure we have valid dimensions. */
-        if (w <= 0) w = 640;
-        if (h <= 0) h = 480;
-
-        GLFWwindow *prev = glfwGetCurrentContext();
-        
-        /* Force an expose event to trigger widget drawing. */
-        mapping = FindMappingByTk(winPtr);
-        if (mapping != NULL) {
-            mapping->clearPending = 1;  /* Will clear on next draw */
-            w = mapping->width  > 1 ? mapping->width  : w;
-            h = mapping->height > 1 ? mapping->height : h;
-
-            winPtr->changes.width  = w;
-            winPtr->changes.height = h;
-
-            /* Queue expose for entire window. */
-            TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
-            
-            /* Process events to trigger drawing. */
-            ////TkGlfwProcessEvents();
-        }
-        
-        if (prev) glfwMakeContextCurrent(prev);
-        
+	/* Queue expose for entire window. */
+	TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
         winPtr->flags |= TK_MAPPED;
     }
 }
@@ -756,19 +717,14 @@ TkWmCleanup(
  * Tk_MakeWindow --
  *
  *      Platform-specific window creation called by Tk's generic layer.
- *      For toplevels, creates a GLFW window and registers the Tk window
- *      ID as the mapping->drawable.  For child windows, assigns a unique
- *      Tk window ID and registers it to the same WindowMapping as the
- *      toplevel so that FindMappingByDrawable() always succeeds.
+ *      For toplevels, it creates a GLFW window.
  *
  * Results:
  *      Returns a Window identifier which is assigned to the window
- *      field of the TkWindow structure by 
+ *      field of the TkWindow structure.
  *
  * Side effects:
- *      Creates a new GLFW window for toplevels.  Registers every Tk
- *      window (toplevel or child) with the correct WindowMapping so
- *      TkGlfwBeginDraw can always locate the mapping and compute offsets.
+ *      Creates a new GLFW window for toplevels.
  *
  *----------------------------------------------------------------------
  */
@@ -831,45 +787,20 @@ Tk_MakeWindow(
         if (wmPtr) {
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
-
-        /*
-         * Register the toplevel Tk window ID as the mapping->drawable.
-         * This is the key: mapping->drawable == winPtr->window.
-         */
-        WindowMapping *m = FindMappingByTk(winPtr);
-        if (m) {
-            m->drawable = result;
-            RegisterDrawableForMapping(result, m);
-        }
-
     } else {
         /*
          * -------------------------
          *     CHILD WINDOW
          * -------------------------
          *
-         * We must register the child to the SAME WindowMapping as the toplevel.
-         */
-	
-        /*
-         * Register this child drawable to the toplevel's mapping.
          */
 
-      Tk_Window toplevel = GetToplevelOfWidget((Tk_Window)winPtr);
-      TkWindow *top = (TkWindow *)toplevel;
-      WindowMapping *m = FindMappingByTk(top);
-      if (m) {
-            RegisterDrawableForMapping(result, m);
-        }
       printf("Exposing %s to %dx%d\n", Tk_PathName(winPtr),
 	     winPtr->changes.width, winPtr->changes.height);
       TkWaylandQueueExposeEvent(winPtr, 0, 0,
 				winPtr->changes.width,
 				winPtr->changes.height);
     }
-
-    printf("TkMakeWindow: returning Window %lx for TkWindow %p\n",
-	   result, winPtr);
     return result;
 }
 
@@ -4165,7 +4096,7 @@ WindowToGLFW(
 Window
 XCreateWindow(
     TCL_UNUSED(Display *),          /* display */
-    Window parent,                  /* parent drawable */
+    TCL_UNUSED(Window),             /* parent drawable */
     TCL_UNUSED(int),                /* x */
     TCL_UNUSED(int),                /* y */
     TCL_UNUSED(unsigned int),       /* width */
@@ -4177,28 +4108,7 @@ XCreateWindow(
     TCL_UNUSED(unsigned long),      /* valuemask */
     TCL_UNUSED(XSetWindowAttributes *) /* attributes */
 ){
-    /*
-     * INTERNAL CHILD WINDOW ONLY.
-     * Tk_MakeWindow is the ONLY place that creates real toplevels.
-     * XCreateWindow must NEVER create a GLFW window.
-     */
-
-    static Window nextId = 300000;
-    Window result = nextId++;
-
-    /* Inherit parent’s mapping. */
-    WindowMapping *pm = FindMappingByDrawable(parent);
-    if (pm) {
-        RegisterDrawableForMapping(result, pm);
-    }
-
-    fprintf(stderr,
-        "XCreateWindow(child): parent=%lu → child=%lu, parentMapping=%p\n",
-        (unsigned long)parent,
-        (unsigned long)result,
-        (void *)pm);
-
-    return result;
+    return None;
 }
 
 
@@ -4222,26 +4132,17 @@ XCreateWindow(
 
 Window
 XCreateSimpleWindow(
-    Display      *display,
-    Window        parent,
-    int           x,
-    int           y,
-    unsigned int  width,
-    unsigned int  height,
-    unsigned int  border_width,
-    unsigned long border,
-    unsigned long background)
+    TCL_UNUSED(Display *),          /* display */
+    TCL_UNUSED(Window),             /* parent drawable */
+    TCL_UNUSED(int),                /* x */
+    TCL_UNUSED(int),                /* y */
+    TCL_UNUSED(unsigned int),       /* width */
+    TCL_UNUSED(unsigned int),       /* height */
+    TCL_UNUSED(unsigned int),       /* border_width */
+    TCL_UNUSED(unsigned long),      /* border */
+    TCL_UNUSED(unsigned long))      /* background */
 {
-    XSetWindowAttributes attr;
-    unsigned long         mask = CWBackPixel | CWBorderPixel;
-
-    attr.background_pixel = background;
-    attr.border_pixel     = border;
-
-    return XCreateWindow(display, parent,
-                         x, y, width, height, border_width,
-                         CopyFromParent, InputOutput, CopyFromParent,
-                         mask, &attr);
+    return None;
 }
 
 /*
@@ -4249,28 +4150,22 @@ XCreateSimpleWindow(
  *
  * XDestroyWindow --
  *
- *	Destroy a window and all its subwindows.
+ *	No-op.  (Destroy a window and all its subwindows.)
  *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Destroys the GLFW window when found.
+ *	None
  *
  *----------------------------------------------------------------------
  */
 
 int
 XDestroyWindow(
-    TCL_UNUSED(Display *),
-    Window window)
+    TCL_UNUSED(Display *), /* display */
+    TCL_UNUSED(Window))    /* window */
 {
-    GLFWwindow *gw = WindowToGLFW(window);
-
-    if (gw != NULL) {
-        TkGlfwDestroyWindow(gw);
-    }
-
     return Success;
 }
 
