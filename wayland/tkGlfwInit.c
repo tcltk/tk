@@ -301,7 +301,7 @@ TkGlfwCreateWindow(
 	Tcl_Panic("TkGlfwCreateWindow called with null winPtr\n");
     }
     WindowMapping *mapping;
-    GLFWwindow    *window = NULL;
+    GLFWwindow    *glfwWindow = NULL;
     //    Tcl_Interp *interp = winPtr->mainPtr->interp
 
     /* Don't create windows during shutdown. */
@@ -317,9 +317,10 @@ TkGlfwCreateWindow(
     if (height <= 1) height = 200;
 
     if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
-        window = mainGlfwWindow;
-        glfwSetWindowSize(window, width, height);
-        glfwSetWindowTitle(window, title ? title : "");
+	/* This is the root window. */
+        glfwWindow = mainGlfwWindow;
+        glfwSetWindowSize(glfwWindow, width, height);
+        glfwSetWindowTitle(glfwWindow, title ? title : "");
     } else {
 	/* Hints apply to the next call to glfwCreateWindow. */
 	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
@@ -329,23 +330,25 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
 	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-        window = glfwCreateWindow(width, height, title ? title : "",
+        glfwWindow = glfwCreateWindow(width, height, title ? title : "",
                      NULL, mainGlfwWindow); /* Share the GL contexts */
-        if (!window) return NULL;
-	glfwMakeContextCurrent(window);
+        if (!glfwWindow) {
+	    return NULL;
+	}
+	glfwMakeContextCurrent(glfwWindow);
 	glfwSwapInterval(0);
-	glfwShowWindow(window);
+	glfwShowWindow(glfwWindow);
     }
 
     /* Create a framebuffer for the backing store of the window. */
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(glfwWindow);
     winPtr->privatePtr->fbo = nvgluCreateFramebuffer(glfwContext.vg,
 						     width, height, 0);
     if (winPtr->privatePtr->fbo == NULL) {
 		fprintf(stderr, "Could not create NanoVG framebuffer\n");
     }
     printf("Window %s now has glfwWindow %p and framebuffer %p\n",
-	   Tk_PathName(winPtr), window, winPtr->privatePtr->fbo);
+	   Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fbo);
     nvgluBindFramebuffer(winPtr->privatePtr->fbo);
     /* Check FBO completeness for now. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -361,20 +364,17 @@ TkGlfwCreateWindow(
     mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
     memset(mapping, 0, sizeof(WindowMapping));
     mapping->tkWindow     = winPtr;
-    mapping->glfwWindow   = window;
+    mapping->glfwWindow   = glfwWindow;
     mapping->drawable     = TkWaylandDrawableForTkWindow(winPtr);
-	//nextDrawableId++;
     mapping->width        = width;
     mapping->height       = height;
     mapping->clearPending = 1;
-
     AddMapping(mapping);
-#if 0 //// What is this for?  It gets reset in tkWaylandMenu.c
-    glfwSetWindowUserPointer(window, mapping);
-#endif
 
-    if (winPtr != NULL)
-        TkGlfwSetupCallbacks(window);
+    if (winPtr != NULL) {
+        TkGlfwSetupCallbacks(glfwWindow);
+	glfwSetWindowUserPointer(glfwWindow, winPtr);
+    }
 
 #if 0
     /* Wait for the compositor to confirm real dimensions. */
@@ -383,7 +383,7 @@ TkGlfwCreateWindow(
         ////glfwPollEvents();
         if (mapping->width == 0 || mapping->height == 0) {
             int w, h;
-            glfwGetWindowSize(window, &w, &h);
+            glfwGetWindowSize(glfwWindow, &w, &h);
             if (w > 0 && h > 0) {
                 mapping->width  = w;
                 mapping->height = h;
@@ -412,7 +412,7 @@ TkGlfwCreateWindow(
     TkWaylandWakeupGLFW();
 #endif
 
-    return window;
+    return glfwWindow;
 }
 
 /*
@@ -1193,7 +1193,10 @@ TkWaylandGetGLFWwindow(
     while (!Tk_IsTopLevel(toplevelPtr)) {
 	toplevelPtr = toplevelPtr->parentPtr;
     }
-    return toplevelPtr->privatePtr->glfwWindow;
+    if (toplevelPtr->privatePtr) {
+	return toplevelPtr->privatePtr->glfwWindow;
+    }
+    return NULL;
 }
 
 /*
@@ -1269,7 +1272,7 @@ TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwGetWindowFromDrawable --
+ * TkWaylandGetGLFWwindowFromDrawable --
  *
  *	Retrieves the GLFW window associated with a Drawable.
  *
@@ -1283,10 +1286,10 @@ TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
  */
 
 MODULE_SCOPE GLFWwindow *
-TkGlfwGetWindowFromDrawable(Drawable drawable)
+TkWaylandGetGLFWwindowFromDrawable(Drawable drawable)
 {
-    WindowMapping *m = FindMappingByDrawable(drawable);
-    return m ? m->glfwWindow : NULL;
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+    return TkWaylandGetGLFWwindow(winPtr);
 }
 
 
@@ -1306,11 +1309,14 @@ TkGlfwGetWindowFromDrawable(Drawable drawable)
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE TkWindow *
+MODULE_SCOPE TkWindow*
 TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
 {
+#if 0
     WindowMapping *m = FindMappingByGLFW(glfwWindow);
     return m ? m->tkWindow : NULL;
+#endif
+    return (TkWindow*) glfwGetWindowUserPointer(glfwWindow);
 }
 
 /*

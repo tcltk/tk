@@ -468,10 +468,12 @@ MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
 
 MODULE_SCOPE void        TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE Drawable    TkGlfwGetDrawable(GLFWwindow *w);
-MODULE_SCOPE TkWindow   *TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
-MODULE_SCOPE GLFWwindow *TkGlfwGetWindowFromDrawable(Drawable drawable);
-MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height);
-MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w, int width, int height);
+MODULE_SCOPE TkWindow*   TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE GLFWwindow* TkWaylandGetGLFWwindowFromDrawable(Drawable drawable);
+MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow,
+						int width, int height);
+MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
+					    int width, int height);
 
 /*
  *----------------------------------------------------------------------

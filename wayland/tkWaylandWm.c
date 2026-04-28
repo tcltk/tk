@@ -287,12 +287,17 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 static void             WmWaitMapProc(void *clientData, XEvent *eventPtr);
 
 /* GLFW integration helpers. */
-static void CreateGlfwWindow(TkWindow *winPtr);
-static void DestroyGlfwWindow(WmInfo *wmPtr);
+static void InitializeGlfwWindow(TkWindow *winPtr);
+static void DestroyGlfwWindow(TkWindow *winPtr);
 static void ConvertPhotoToGlfwIcon(TkWindow *winPtr, Tk_PhotoHandle photo);
 static void ApplyFullscreenState(TkWindow *winPtr);
 
-/* Geometry manager. */
+/*
+ * This defines the geometry manager for the window manager itself, as the
+ * container of a toplevel.  The TopLevelReqProc is called when the geometry
+ * manager being used by a toplevel requests a size change for the toplevel.
+ */
+
 static Tk_GeomMgr wmMgrType = {
     "wm",
     TopLevelReqProc,
@@ -326,8 +331,6 @@ TkWmNewWindow(
     memset(wmPtr, 0, sizeof(WmInfo));
 
     wmPtr->winPtr      = winPtr;
-    //// remove this field eventually
-    wmPtr->glfwWindow  = NULL;
     wmPtr->withdrawn   = 0;
     wmPtr->initialState =  NormalState;
     wmPtr->minWidth    = wmPtr->minHeight = 1;
@@ -356,33 +359,39 @@ TkWmNewWindow(
 
     UpdateVRootGeometry(wmPtr);
 
+    /* Assign the wmMgrType to manage the geometry of this toplevel. */
     Tk_ManageGeometry((Tk_Window)winPtr, &wmMgrType, (void *)0);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * CreateGlfwWindow --
+ * InitializeGlfwWindow --
  *
- *	Creates the GLFW window for a toplevel.  Sets up callbacks via
- *	the canonical TkGlfwSetupCallbacks so that the WindowMapping*
- *	stored by TkGlfwCreateWindow remains the sole GLFW user-pointer.
+ *      Applies attributes specified in the WmInfo struct to the GLFWwindow,
+ *      which should have been created by Tk_MakeWindow, then creates an
+ *      event handler for the window.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Creates a new GLFW window, sets up callbacks, and applies
- *	initial window properties (title, size hints, etc.).
+ *	Applies initial window properties (title, size hints, etc.).
+ *      Creates event handler.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-CreateGlfwWindow(TkWindow *winPtr)
+InitializeGlfwWindow(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    if (!glfwWindow) {
+	Tcl_Panic("InitializeGlfwWindow: Tk window has no platform window");
+    }
 
+#if 0
     if (wmPtr->glfwWindow != NULL) {
 	printf("%s already has a glfwWindow\n", Tk_PathName(winPtr));
         return;
@@ -395,24 +404,25 @@ CreateGlfwWindow(TkWindow *winPtr)
     }
 
     wmPtr->glfwWindow = (GLFWwindow *)winPtr->window;
-
+#endif
+    
     /* Apply wm properties that are valid AFTER creation. */
 
     UpdateTitle(winPtr);
     UpdateSizeHints(winPtr);
 
     if (wmPtr->attributes.alpha != 1.0) {
-        glfwSetWindowOpacity(wmPtr->glfwWindow,
+        glfwSetWindowOpacity(glfwWindow,
                              (float)wmPtr->attributes.alpha);
     }
 
     if (wmPtr->glfwIcon != NULL) {
-        glfwSetWindowIcon(wmPtr->glfwWindow,
+        glfwSetWindowIcon(glfwWindow,
                           wmPtr->glfwIconCount, wmPtr->glfwIcon);
     }
 
     if (wmPtr->x != 0 || wmPtr->y != 0) {
-        glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
+        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
     }
 
     /* Register wm event handler */
@@ -426,28 +436,29 @@ CreateGlfwWindow(TkWindow *winPtr)
  *
  * DestroyGlfwWindow --
  *
- *	Destroys the GLFW window associated with a WmInfo structure.
+ *	Destroys the GLFW window associated with a TkWindow.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The GLFW window is destroyed and the wmPtr->glfwWindow field
- *	is set to NULL.
+ *	The GLFW window is destroyed and the glfwWindow field
+ *	in the the TkWindowPrivate struct is set to NULL.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 DestroyGlfwWindow(
-    WmInfo *wmPtr)
+    TkWindow *winPtr)
 {
-    if (wmPtr->glfwWindow == NULL) {
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    if (glfwWindow == NULL) {
         return;
     }
-    TkGlfwClearCallbacks(wmPtr->glfwWindow);
-    TkGlfwDestroyWindow(wmPtr->glfwWindow);
-    wmPtr->glfwWindow = NULL;
+    TkGlfwClearCallbacks(glfwWindow);
+    TkGlfwDestroyWindow(glfwWindow);
+    winPtr->privatePtr->glfwWindow = NULL;
 }
 
 /*
@@ -474,13 +485,14 @@ TkWmMapWindow(TkWindow *winPtr)
     printf("TkWmMapWindow: %s\n", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     wmPtr->withdrawn   = 0;
     wmPtr->initialState = NormalState;
     wmPtr->flags &= ~WM_NEVER_MAPPED;
 
-    if (!Tk_IsEmbedded(winPtr) && !wmPtr->glfwWindow) {
-        CreateGlfwWindow(winPtr);
+    if (!Tk_IsEmbedded(winPtr)) {
+        InitializeGlfwWindow(winPtr);
         UpdateHints(winPtr);
         UpdateTitle(winPtr);
         UpdatePhotoIcon(winPtr);
@@ -488,14 +500,15 @@ TkWmMapWindow(TkWindow *winPtr)
 
     UpdateGeometryInfo((void *)winPtr);
 
-    if (wmPtr->glfwWindow) {
+    //// this test is probably not needed.
+    if (glfwWindow) {
         WindowMapping *mapping;
         int w, h;
 
-        glfwShowWindow(wmPtr->glfwWindow);
+        glfwShowWindow(glfwWindow);
 
         /* Get the actual window size after showing. */
-        glfwGetWindowSize(wmPtr->glfwWindow, &w, &h);
+        glfwGetWindowSize(glfwWindow, &w, &h);
         
         /* Ensure we have valid dimensions. */
         if (w <= 0) w = 640;
@@ -546,14 +559,11 @@ void
 TkWmUnmapWindow(TkWindow *winPtr)
 {
     printf("TkWmUnmapWindow: %s\n", Tk_PathName(winPtr));
-    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    if (!wmPtr) return;
-
-    if (wmPtr->glfwWindow) {
-        glfwHideWindow(wmPtr->glfwWindow);
-    }
-
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     winPtr->flags &= ~TK_MAPPED;
+    if (glfwWindow) {
+        glfwHideWindow(glfwWindow);
+    }
 }
 
 
@@ -579,6 +589,9 @@ TkWmDeadWindow(
     TkWindow *winPtr)
 {
     if (winPtr->privatePtr) {
+	if (winPtr->privatePtr->glfwWindow) {
+	    printf("Freeing privatePtr with non-null glfwWindow\n");
+	}
 	ckfree(winPtr->privatePtr);
 	winPtr->privatePtr = NULL;
     }
@@ -598,7 +611,7 @@ TkWmDeadWindow(
         Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
     }
 
-    DestroyGlfwWindow(wmPtr);
+    DestroyGlfwWindow(winPtr);
 
     if (wmPtr->wrapperPtr != NULL) {
         Tk_DestroyWindow((Tk_Window)wmPtr->wrapperPtr);
@@ -694,7 +707,7 @@ TkWmSetClass(
 
 void
 TkWmCleanup(
-	    TCL_UNUSED(TkDisplay *))
+    TCL_UNUSED(TkDisplay *))
 {
     WmInfo *wmPtr, *nextPtr;
     int     i;
@@ -730,8 +743,7 @@ TkWmCleanup(
             }
             ckfree((char *)wmPtr->glfwIcon);
         }
-
-        DestroyGlfwWindow(wmPtr);
+        //DestroyGlfwWindow(winPtr);
         ckfree((char *)wmPtr);
     }
     firstWmPtr = NULL;
@@ -769,14 +781,11 @@ Tk_MakeWindow(
     GLFWwindow *glfwWindow = NULL;
     int         width, height;
     Drawable    drawable;
-    Window      window;
+    Window      result;
 
     printf("Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
-    // This is the return value
-    window = TkWaylandDrawableForTkWindow(winPtr);
+    result = TkWaylandDrawableForTkWindow(winPtr);
 
-    //// This was being used to test for a toplevel!
-    //if (winPtr->parentPtr == NULL) {
     if (Tk_IsTopLevel(winPtr)) {
         /*
          * -------------------------
@@ -817,8 +826,6 @@ Tk_MakeWindow(
 
         WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
         if (wmPtr) {
-	    //// remove this field eventually
-            wmPtr->glfwWindow = glfwWindow;
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
 
@@ -828,8 +835,8 @@ Tk_MakeWindow(
          */
         WindowMapping *m = FindMappingByTk(winPtr);
         if (m) {
-            m->drawable = window;
-            RegisterDrawableForMapping(window, m);
+            m->drawable = result;
+            RegisterDrawableForMapping(result, m);
         }
 
     } else {
@@ -849,13 +856,18 @@ Tk_MakeWindow(
       TkWindow *top = (TkWindow *)toplevel;
       WindowMapping *m = FindMappingByTk(top);
       if (m) {
-            RegisterDrawableForMapping(window, m);
+            RegisterDrawableForMapping(result, m);
         }
+      printf("Exposing %s to %dx%d\n", Tk_PathName(winPtr),
+	     winPtr->changes.width, winPtr->changes.height);
+      TkWaylandQueueExposeEvent(winPtr, 0, 0,
+				winPtr->changes.width,
+				winPtr->changes.height);
     }
 
     printf("TkMakeWindow: returning Window %lx for TkWindow %p\n",
-	   window, winPtr);
-    return window;
+	   result, winPtr);
+    return result;
 }
 
 
@@ -2078,8 +2090,8 @@ WmGeometryCmd(
 	      int         objc,
 	      Tcl_Obj *const objv[])
 {
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    char    buf[64];
 
     if (objc > 1) {
         Tcl_WrongNumArgs(interp, 0, objv, "pathName geometry ?newGeometry?");
@@ -2089,18 +2101,14 @@ WmGeometryCmd(
     /* Return current geometry. */
     if (objc == 0) {
         int width, height;
-        
-        if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
-            glfwGetWindowSize(wmPtr->glfwWindow, &width, &height);
+        if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+            glfwGetWindowSize(glfwWindow, &width, &height);
         } else {
             width = (wmPtr->width >= 0) ? wmPtr->width : winPtr->reqWidth;
             height = (wmPtr->height >= 0) ? wmPtr->height : winPtr->reqHeight;
         }
-        
-        snprintf(buf, sizeof(buf), "%dx%d+%d+%d",
-		 width, height,
-		 wmPtr->x, wmPtr->y);
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d+%d+%d",
+		 width, height, wmPtr->x, wmPtr->y));
         return TCL_OK;
     }
     
@@ -2113,7 +2121,7 @@ WmGeometryCmd(
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
         
-        if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+        if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
             UpdateGeometryInfo((void *)winPtr);
         }
         
@@ -2127,17 +2135,14 @@ WmGeometryCmd(
 
     //// Why immediate?  X11 does this as at idle.
     /* Immediately set GLFW window size and position. */
-    if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
+    if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Set size only if positive values were provided */
         if (wmPtr->width > 0 && wmPtr->height > 0) {
-            glfwSetWindowSize(wmPtr->glfwWindow, wmPtr->width, wmPtr->height);
+            glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
-        glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
-    }
+	// This doesn't actually do anything.
+        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
 
-    //// Why immediate?  X11 does this at idle.
-    /* Force immediate update instead of waiting for idle. */
-    if (wmPtr->glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Cancel any pending idle callback */
         if (wmPtr->flags & WM_UPDATE_PENDING) {
             Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
@@ -2152,9 +2157,10 @@ WmGeometryCmd(
         
         /* Verify the change actually took effect. */
         int newWidth, newHeight;
-        glfwGetWindowSize(wmPtr->glfwWindow, &newWidth, &newHeight);
+        glfwGetWindowSize(glfwWindow, &newWidth, &newHeight);
         
-        /* If the size didn't change (e.g., constrained by min/max), update wmPtr. */
+        /* If the size didn't change (e.g., constrained by min/max),
+	 * update wmPtr. */
         if (wmPtr->width > 0 && wmPtr->width != newWidth) {
             wmPtr->width = newWidth;
         }
@@ -2362,22 +2368,19 @@ WmIconifyCmd(
 	     int         objc,
 	     Tcl_Obj *const objv[])
 {
-    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-
     if (objc != 0) {
         Tcl_WrongNumArgs(interp, 0, objv, "pathName iconify");
         return TCL_ERROR;
     }
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     /* Update Tk's internal state to IconicState. */
     TkpWmSetState(winPtr, IconicState);
 
     /* If the window is mapped and has a GLFW window, actually iconify it. */
-    if ((winPtr->flags & TK_MAPPED) && wmPtr->glfwWindow != NULL) {
-        glfwIconifyWindow(wmPtr->glfwWindow);
-
-        /* Optionally, update Tk's mapped flag if iconify implicitly hides the window. */
-        winPtr->flags &= ~TK_MAPPED;  /* Some window managers unmap on iconify. */
+    if ((winPtr->flags & TK_MAPPED) && glfwWindow != NULL) {
+        glfwIconifyWindow(glfwWindow);
+        winPtr->flags &= ~TK_MAPPED;
     }
 
     return TCL_OK;
@@ -2707,26 +2710,29 @@ WmOverrideredirectCmd(
 		      int         objc,
 		      Tcl_Obj *const objv[])
 {
-    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     int     value;
-
     if (objc > 1) {
         Tcl_WrongNumArgs(interp,0,objv,"pathName overrideredirect ?boolean?");
         return TCL_ERROR;
     }
     if (objc == 0) {
         Tcl_SetObjResult(interp,
-			 Tcl_NewBooleanObj(Tk_Attributes(tkwin)->override_redirect));
+	    Tcl_NewBooleanObj(Tk_Attributes(tkwin)->override_redirect));
         return TCL_OK;
     }
-    if (Tcl_GetBooleanFromObj(interp,objv[0],&value) != TCL_OK) return TCL_ERROR;
+    if (Tcl_GetBooleanFromObj(interp, objv[0], &value) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+
     if (value) {
         wmPtr->flags |= WM_WIDTH_NOT_RESIZABLE|WM_HEIGHT_NOT_RESIZABLE;
     } else {
         wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE|WM_HEIGHT_NOT_RESIZABLE);
     }
-    if (wmPtr->glfwWindow) {
-        glfwSetWindowAttrib(wmPtr->glfwWindow, GLFW_DECORATED,
+    if (glfwWindow) {
+        glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED,
                             value ? GLFW_FALSE : GLFW_TRUE);
     }
     return TCL_OK;
@@ -2924,10 +2930,11 @@ WmResizableCmd(
     if (h) wmPtr->flags&=~WM_HEIGHT_NOT_RESIZABLE;
     else   wmPtr->flags|= WM_HEIGHT_NOT_RESIZABLE;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
-    if (wmPtr->glfwWindow)
-        glfwSetWindowAttrib(wmPtr->glfwWindow,GLFW_RESIZABLE,
-                            (w||h)?GLFW_TRUE:GLFW_FALSE);
-    WmUpdateGeom(wmPtr,winPtr);
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    if (glfwWindow)
+        glfwSetWindowAttrib(glfwWindow, GLFW_RESIZABLE,
+                            (w || h) ? GLFW_TRUE : GLFW_FALSE);
+    WmUpdateGeom(wmPtr, winPtr);
     return TCL_OK;
 }
 
@@ -3317,8 +3324,8 @@ WmWithdrawCmd(
 
 static void
 ConvertPhotoToGlfwIcon(
-		       TkWindow        *winPtr,
-		       Tk_PhotoHandle   photo)
+    TkWindow        *winPtr,
+    Tk_PhotoHandle   photo)
 {
     WmInfo              *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     Tk_PhotoImageBlock   block;
@@ -3326,12 +3333,14 @@ ConvertPhotoToGlfwIcon(
     GLFWimage           *newIcons;
     GLFWimage           *icon;
     unsigned char       *pixels, *src, *dst;
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     Tk_PhotoGetSize(photo, &width, &height);
     Tk_PhotoGetImage(photo, &block);
 
     /* Grow icon array. */
-    newIcons = (GLFWimage *)ckalloc((wmPtr->glfwIconCount+1) * sizeof(GLFWimage));
+    newIcons = (GLFWimage *)ckalloc(
+		    (wmPtr->glfwIconCount+1) * sizeof(GLFWimage));
     if (wmPtr->glfwIcon != NULL && wmPtr->glfwIconCount > 0) {
         memcpy(newIcons, wmPtr->glfwIcon,
                wmPtr->glfwIconCount * sizeof(GLFWimage));
@@ -3366,9 +3375,8 @@ ConvertPhotoToGlfwIcon(
     icon->pixels = pixels;
     wmPtr->glfwIconCount++;
 
-    if (wmPtr->glfwWindow != NULL) {
-        glfwSetWindowIcon(wmPtr->glfwWindow,
-                          wmPtr->glfwIconCount, wmPtr->glfwIcon);
+    if (glfwWindow) {
+        glfwSetWindowIcon(glfwWindow, wmPtr->glfwIconCount, wmPtr->glfwIcon);
     }
 }
 
@@ -3392,28 +3400,29 @@ static void
 ApplyFullscreenState(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    if (wmPtr->glfwWindow == NULL) return;
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    if (glfwWindow == NULL) return;
 
-    GLFWmonitor *currentMonitor = glfwGetWindowMonitor(wmPtr->glfwWindow);
+    GLFWmonitor *currentMonitor = glfwGetWindowMonitor(glfwWindow);
     int desiredFullscreen = wmPtr->attributes.fullscreen;
 
     if (desiredFullscreen && currentMonitor == NULL) {
         /* Transitioning from windowed to fullscreen: save current geometry. */
-        glfwGetWindowPos(wmPtr->glfwWindow, &wmPtr->x, &wmPtr->y);
-        glfwGetWindowSize(wmPtr->glfwWindow, &wmPtr->width, &wmPtr->height);
+        glfwGetWindowPos(glfwWindow, &wmPtr->x, &wmPtr->y);
+        glfwGetWindowSize(glfwWindow, &wmPtr->width, &wmPtr->height);
 
         /* Switch to fullscreen on the primary monitor. */
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-        glfwSetWindowMonitor(wmPtr->glfwWindow, monitor,
-                             0, 0, mode->width, mode->height, mode->refreshRate);
+        glfwSetWindowMonitor(glfwWindow, monitor,
+            0, 0, mode->width, mode->height, mode->refreshRate);
     }
     else if (!desiredFullscreen && currentMonitor != NULL) {
         /* Transitioning from fullscreen to windowed: restore saved geometry. */
         int w = (wmPtr->width  > 0) ? wmPtr->width  : winPtr->reqWidth;
         int h = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
-        glfwSetWindowMonitor(wmPtr->glfwWindow, NULL,
-                             wmPtr->x, wmPtr->y, w, h, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(glfwWindow, NULL, wmPtr->x, wmPtr->y,
+			     w, h, GLFW_DONT_CARE);
     }
      /* No action needed if already in the desired state. */
 }
@@ -3476,29 +3485,33 @@ TkpSetMainMenubar(
 
 bool
 TkpWmSetState(
-	      TkWindow *winPtr,
-	      int       state)
+    TkWindow *winPtr,
+    int       state)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     wmPtr->initialState = state;
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	return true;
     }
-    
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     if (state == WithdrawnState) {
         wmPtr->withdrawn = 1;
         if (wmPtr->flags & WM_NEVER_MAPPED) return 1;
-        if (wmPtr->glfwWindow) glfwHideWindow(wmPtr->glfwWindow);
+        if (glfwWindow) glfwHideWindow(glfwWindow);
         WaitForMapNotify(winPtr, 0);
     } else if (state == NormalState) {
         wmPtr->withdrawn = 0;
         if (wmPtr->flags & WM_NEVER_MAPPED) return 0;
         UpdateHints(winPtr);
         Tk_MapWindow((Tk_Window)winPtr);
-        if (wmPtr->glfwWindow) {
-            if (wmPtr->attributes.fullscreen) ApplyFullscreenState(winPtr);
-            else                              glfwRestoreWindow(wmPtr->glfwWindow);
+        if (glfwWindow) {
+            if (wmPtr->attributes.fullscreen) {
+		ApplyFullscreenState(winPtr);
+	    }
+            else {
+		glfwRestoreWindow(glfwWindow);
+	    }
         }
     } else if (state == IconicState) {
         if (wmPtr->flags & WM_NEVER_MAPPED) return 1;
@@ -3506,8 +3519,8 @@ TkpWmSetState(
             UpdateHints(winPtr);
             Tk_MapWindow((Tk_Window)winPtr);
             wmPtr->withdrawn = 0;
-        } else if (wmPtr->glfwWindow) {
-            glfwIconifyWindow(wmPtr->glfwWindow);
+        } else if (glfwWindow) {
+            glfwIconifyWindow(glfwWindow);
         }
         WaitForMapNotify(winPtr, 0);
     }
@@ -3617,11 +3630,12 @@ TopLevelEventProc(
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
     switch (eventPtr->type) {
     case ConfigureNotify:
         /* Update our internal state from Tk's changes. */
-        if (wmPtr != NULL && wmPtr->glfwWindow != NULL) {
+        if (wmPtr != NULL && glfwWindow != NULL) {
             wmPtr->x = winPtr->changes.x;
             wmPtr->y = winPtr->changes.y;
             wmPtr->width = winPtr->changes.width;
@@ -3642,7 +3656,9 @@ TopLevelEventProc(
  *
  * TopLevelReqProc --
  *
- *	Geometry request handler for toplevel windows.
+ *	Geometry request handler for toplevel windows.  This proc
+ *      needs to resize the toplevel to its requested size, if a
+ *      change has been requested.
  *
  * Results:
  *	None.
@@ -3655,18 +3671,28 @@ TopLevelEventProc(
 
 static void
 TopLevelReqProc(
-		TCL_UNUSED(void *),
-		Tk_Window tkwin)
+    TCL_UNUSED(void *),
+    Tk_Window tkwin)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
-    if ((wmPtr->width >= 0) && (wmPtr->height >= 0)) return;
+    printf("TopLevelReqProc %s to %dx%d; pending = %d\n", Tk_PathName(tkwin),
+	   winPtr->reqWidth, winPtr->reqHeight,
+	   wmPtr->flags & WM_UPDATE_PENDING);
 
-    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+    // Signal to UpdateGeometryInfo to use the requested size.
+    wmPtr->width = -1;
+    wmPtr->height = -1;
+
+    /*
+     * A window which has never been mapped has no WmInfo, so its
+     * geometry cannot be updated yet.
+     */
+       
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
+        wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
         Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
-        wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
 
@@ -3675,27 +3701,33 @@ TopLevelReqProc(
  *
  * UpdateGeometryInfo --
  *
- *	Idle callback to apply pending geometry changes.
+ *	Idle task to apply pending geometry changes.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Updates window size and position via GLFW.
+ *	Updates window size and position via GLFW. (Although GLFW
+ *      is not allowed to actually change the position.)
  *
  *----------------------------------------------------------------------
  */
 
 static void
 UpdateGeometryInfo(
-		   void *clientData)
+    void *clientData)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
     int       tw, th;
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
 
-    if (wmPtr == NULL) return;
-    printf("UpdateGeometryInfo:");
+    if (wmPtr == NULL) {
+	printf("Cannot update geometry for a window with no WmInfo\n");
+	return;
+    }
+    printf("UpdateGeometryInfo: %s to %dx%d\n", Tk_PathName(winPtr),
+	   wmPtr->width, wmPtr->height);
     
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
@@ -3706,14 +3738,14 @@ UpdateGeometryInfo(
     }
 
     /* Don't proceed if window isn't ready. */
-    if (wmPtr->glfwWindow == NULL || wmPtr->withdrawn) {
-	printf("No glfw window\n");
+    if (glfwWindow == NULL || wmPtr->withdrawn) {
+	printf("Cannot No glfw window\n");
         return;
     }
 
-    /* Calculate target size. */
-    tw = (wmPtr->width  > 0) ? wmPtr->width  : winPtr->reqWidth;
-    th = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
+    /* Calculate target size. The reqProc sets negative wmPtr sizes. */
+    tw = wmPtr->width < 0 ? winPtr->reqWidth : wmPtr->width;
+    th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
     
     /* Ensure minimum size. */
     if (tw < wmPtr->minWidth) tw = wmPtr->minWidth;
@@ -3723,22 +3755,19 @@ UpdateGeometryInfo(
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
 	printf("glfwSetWindowSize %s -> %dx%d\n",
 	       Tk_PathName(winPtr), tw, th); 
-        glfwSetWindowSize(wmPtr->glfwWindow, tw, th);
-        TkGlfwUpdateWindowSize(wmPtr->glfwWindow, tw, th);
+        glfwSetWindowSize(glfwWindow, tw, th);
+        TkGlfwUpdateWindowSize(glfwWindow, tw, th);
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
         
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
     }
-
-    /* Apply position change if needed. */
+    /* Apply position change if needed, although this does nothing. */
     if ((wmPtr->flags & WM_MOVE_PENDING) ||
         wmPtr->x != winPtr->changes.x ||
         wmPtr->y != winPtr->changes.y) {
-	printf("glfwSetWindowPos %s -> %d+%d\n",
-	       Tk_PathName(winPtr), wmPtr->x, wmPtr->y); 
-        glfwSetWindowPos(wmPtr->glfwWindow, wmPtr->x, wmPtr->y);
+        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
     }
     
@@ -3787,22 +3816,19 @@ static void
 UpdateSizeHints(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    printf("UpdateSizeHints: min: %dx%d; max: %dx%d\n",
-	   wmPtr->minWidth, wmPtr->minHeight,
-	   wmPtr->maxWidth, wmPtr->maxHeight);
-
-    if (wmPtr->glfwWindow == NULL) {
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    if (glfwWindow == NULL) {
 	return;
     }
 
-    glfwSetWindowSizeLimits(wmPtr->glfwWindow,
-			    wmPtr->minWidth, wmPtr->minHeight,
-			    (wmPtr->maxWidth  > 0) ? wmPtr->maxWidth  : GLFW_DONT_CARE,
-			    (wmPtr->maxHeight > 0) ? wmPtr->maxHeight : GLFW_DONT_CARE);
+    glfwSetWindowSizeLimits(glfwWindow,
+	 wmPtr->minWidth, wmPtr->minHeight,
+	 (wmPtr->maxWidth  > 0) ? wmPtr->maxWidth  : GLFW_DONT_CARE,
+	 (wmPtr->maxHeight > 0) ? wmPtr->maxHeight : GLFW_DONT_CARE);
 
     if (wmPtr->sizeHintsFlags & WM_PAspect) {
-        glfwSetWindowAspectRatio(wmPtr->glfwWindow,
-				 wmPtr->minAspect.x, wmPtr->minAspect.y);
+        glfwSetWindowAspectRatio(glfwWindow,
+	    wmPtr->minAspect.x, wmPtr->minAspect.y);
     }
 }
 
@@ -3883,6 +3909,7 @@ UpdateVRootGeometry(WmInfo *wmPtr)
             return;
         }
     }
+    ////XXXX FIX THIS!
     wmPtr->vRootX = wmPtr->vRootY = 0;
     wmPtr->vRootWidth  = 1920;
     wmPtr->vRootHeight = 1080;
@@ -4083,9 +4110,9 @@ WmWaitMapProc(
  * WindowToGLFW --
  *
  *	Helper function to find a GLFWwindow from an opaque Window handle.
- *	A Window in this port is either:
- *	  (a) a GLFWwindow pointer cast to Window (toplevel), or
- *	  (b) a synthetic child-window ID produced in Tk_MakeWindow.
+ *	XXXXXA Window in this port is either:
+ *	XXXXX  (a) a GLFWwindow pointer cast to Window (toplevel), or
+ *	XXXXX  (b) a synthetic child-window ID produced in Tk_MakeWindow.
  *
  * Results:
  *	Pointer to the associated GLFWwindow, or NULL if not found.
@@ -4100,27 +4127,10 @@ static GLFWwindow *
 WindowToGLFW(
     Window window)
 {
-    GLFWwindow *gw;
-
-    if (window == None || window == 0) {
+    if (window == None) {
         return NULL;
     }
-
-    /* Try direct drawable lookup first. */
-    gw = TkGlfwGetWindowFromDrawable((Drawable)window);
-    if (gw != NULL) {
-        return gw;
-    }
-
-    /* Try interpreting the Window as a GLFWwindow* directly (toplevel path). */
-    gw = (GLFWwindow *)window;
-
-    /* Validate by seeing if it is registered. */
-    if (TkGlfwGetTkWindow(gw) != NULL) {
-        return gw;
-    }
-
-    return NULL;
+    return TkWaylandGetGLFWwindowFromDrawable((Drawable)window);
 }
 
 /*
@@ -4337,6 +4347,7 @@ XMapRaised(
 
     if (gw != NULL) {
         glfwShowWindow(gw);
+	//// This does nothing in Wayland, except generate an error message.
         glfwFocusWindow(gw);
     }
 

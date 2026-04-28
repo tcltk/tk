@@ -1991,9 +1991,6 @@ TkWaylandSetupMenuCallbacks(
         return;
     }
     
-    /* Store tkwin in GLFW window user pointer for callbacks. */
-    glfwSetWindowUserPointer(glfwWindow, tkwin);
-    
     /* Set up mouse callbacks. */
     glfwSetCursorPosCallback(glfwWindow, MenuCursorPosCallback);
     glfwSetMouseButtonCallback(glfwWindow, MenuMouseButtonCallback);
@@ -2012,13 +2009,11 @@ TkWaylandSetupMenuCallbacks(
 
 static void
 MenuCursorPosCallback(
-		      GLFWwindow *glfwWindow,
-		      double xpos,
-		      double ypos)
+    GLFWwindow *glfwWindow,
+    double xpos,
+    double ypos)
 {
-    Tk_Window tkwin = (Tk_Window)glfwGetWindowUserPointer(glfwWindow);
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    
+    TkWindow *winPtr = TkGlfwGetTkWindow(glfwWindow);
     if (winPtr && winPtr->instanceData) {
         TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
         MenuMouseMotion(menuPtr, (int)xpos, (int)ypos);
@@ -2027,14 +2022,12 @@ MenuCursorPosCallback(
 
 static void
 MenuMouseButtonCallback(
-			GLFWwindow *glfwWindow,
-			int button,
-			int action,
+    GLFWwindow *glfwWindow,
+    int button,
+    int action,
 			TCL_UNUSED(int)) /* mods */
 {
-    Tk_Window tkwin = (Tk_Window)glfwGetWindowUserPointer(glfwWindow);
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    
+    TkWindow *winPtr = TkGlfwGetTkWindow(glfwWindow);
     if (action == GLFW_PRESS && winPtr && winPtr->instanceData) {
         TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
         double xpos, ypos;
@@ -2047,12 +2040,10 @@ MenuMouseButtonCallback(
 
 static void
 MenuCursorEnterCallback(
-			GLFWwindow *glfwWindow,
-			int entered)
+    GLFWwindow *glfwWindow,
+    int entered)
 {
-    Tk_Window tkwin = (Tk_Window)glfwGetWindowUserPointer(glfwWindow);
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    
+    TkWindow *winPtr = TkGlfwGetTkWindow(glfwWindow);    
     if (!entered && winPtr && winPtr->instanceData) {
         TkMenu *menuPtr = (TkMenu *)winPtr->instanceData;
         MenuMouseLeave(menuPtr);

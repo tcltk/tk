@@ -147,7 +147,7 @@ CreateNVGImageFromDrawableRect(
     int imageId;
 
     /* Get GLFW window from drawable. */
-    glfwWindow = TkGlfwGetWindowFromDrawable(drawable);
+    glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     if (!glfwWindow) {
         return NULL;
     }

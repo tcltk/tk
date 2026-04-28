@@ -617,9 +617,12 @@ TkGlfwFramebufferSizeCallback(
     TkDoConfigureNotify(winPtr);
     /* Update ViewPort */
     glViewport(0, 0, width, height);
+#if 0
+    //// it looks like we can leave this to the refresh callback.
     printf("TkGlFramebufferSizeCallback Expose\n");
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+#endif
 }
 
 /*
