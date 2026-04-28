@@ -1254,7 +1254,7 @@ struct Tk_ImageType {
 				/* Next in list of all image types currently
 				 * known. Filled in by Tk, not by image
 				 * manager. */
-    char *reserved;		/* reserved for future expansion */
+    void *clientData;		/* Not used in the core, can be used by extensions */
 };
 
 /*
