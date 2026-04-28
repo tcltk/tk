@@ -452,8 +452,10 @@ static void
 DestroyGlfwWindow(
     TkWindow *winPtr)
 {
+    printf("DestroyGlfwWindow: %s\n", Tk_PathName(winPtr));
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow == NULL) {
+	printf("No glfwWindow pointer\n");
         return;
     }
     TkGlfwClearCallbacks(glfwWindow);
@@ -588,6 +590,7 @@ void
 TkWmDeadWindow(
     TkWindow *winPtr)
 {
+    DestroyGlfwWindow(winPtr);
     if (winPtr->privatePtr) {
 	if (winPtr->privatePtr->glfwWindow) {
 	    printf("Freeing privatePtr with non-null glfwWindow\n");
@@ -610,8 +613,6 @@ TkWmDeadWindow(
     if (wmPtr->flags & WM_UPDATE_PENDING) {
         Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
     }
-
-    DestroyGlfwWindow(winPtr);
 
     if (wmPtr->wrapperPtr != NULL) {
         Tk_DestroyWindow((Tk_Window)wmPtr->wrapperPtr);
@@ -815,8 +816,10 @@ Tk_MakeWindow(
 	/*
 	 * Add the glfwWindow to the TkWindowPrivate struct.
 	 */
+	printf("Setting privatePtr->glfwWindow and UserPointer\n");
 	winPtr->privatePtr->glfwWindow = glfwWindow;
-	
+	glfwSetWindowUserPointer(glfwWindow, winPtr);
+
         /*
          * Ensure WmInfo exists.
          */
