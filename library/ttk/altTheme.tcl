@@ -102,11 +102,11 @@ namespace eval ttk::theme::alt {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 3p -indicatormargin {3 1 2 1}
+	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 6.5p \
+	ttk::style configure Item -indicatorsize 6.75p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator

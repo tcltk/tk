@@ -1110,7 +1110,7 @@ static void MenubuttonArrowElementDraw(
     TCL_UNUSED(Ttk_State))
 {
     MenubuttonArrowElement *arrow = (MenubuttonArrowElement *)elementRecord;
-    ArrowDirection direction = ARROW_DOWN; 
+    ArrowDirection direction = ARROW_DOWN;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     GC gc = Tk_GCForColor(arrowColor, d);
     int size = 9;
@@ -1453,7 +1453,7 @@ static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeitemIndicator,marginObj), "1.5p 1.5p 3p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeitemIndicator,sizeObj), "3p" },
+	offsetof(TreeitemIndicator,sizeObj), "6.75p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -1477,11 +1477,7 @@ static void TreeitemIndicatorSize(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (*widthPtr < *heightPtr) {
-	*widthPtr = *heightPtr;
-    } else {
-	*heightPtr = *widthPtr;
-    }
+    if (size % 2 == 0) --size;  /* An odd size is better for the indicator. */
 }
 
 static void TreeitemIndicatorDraw(

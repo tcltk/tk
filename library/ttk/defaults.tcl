@@ -183,11 +183,11 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding 2.25p \
-	    -indicatorsize 3p -indicatormargin {3 1 2 1}
+	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 3.5p \
+	ttk::style configure Item -indicatorsize 3p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
@@ -206,11 +206,11 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -focuswidth 1p -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
 	    -background [list	disabled $colors(-frame) \
-				background $colors(-alternate) \
+				background $colors(-darker) \
 				selected $colors(-selectbg) \
 				active   $colors(-activebg)] \
 	    -foreground [list	disabled $colors(-disabledfg) \
-				background $colors(-alternate) \
+				background $colors(-selectfg) \
 				selected $colors(-selectfg) \
 				active   $colors(-foreground)]
 

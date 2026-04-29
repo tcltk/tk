@@ -71,8 +71,8 @@ namespace eval ttk::theme::winnative {
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised \
-	    -indicatorsize 3.5p -indicatormargin {3 1 2 1}
-	ttk::style configure Item -indicatorsize 6.5p \
+	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	ttk::style configure Item -indicatorsize 6.75p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator

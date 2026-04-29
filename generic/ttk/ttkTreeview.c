@@ -7284,7 +7284,7 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginsObj), "3p 1.5p 1.5p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "3.5p" },
+	offsetof(TreeheadingIndicator,sizeObj), "3p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7387,7 +7387,7 @@ static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeitemIndicator,marginsObj), "1.5p 1.5p 3p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeitemIndicator,sizeObj), "3.5p" },
+	offsetof(TreeitemIndicator,sizeObj), "3p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7444,13 +7444,13 @@ static void TreeitemIndicatorDraw(
     b = Ttk_PadBox(b, padding);
 
     switch (direction) {
-	case ARROW_DOWN:
+	case CHEVRON_DOWN:
 	    TtkArrowSize(b.width/2, direction, &cx, &cy);
 	    if ((b.height - cy) % 2 == 1) {
 		++cy;
 	    }
 	    break;
-	case ARROW_RIGHT:
+	case CHEVRON_RIGHT:
 	default:
 	    TtkArrowSize(b.height/3, direction, &cx, &cy);
 	    if ((b.width - cx) % 2 == 1) {
