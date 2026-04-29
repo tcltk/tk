@@ -1250,11 +1250,8 @@ struct Tk_ImageType {
     Tk_ImagePostscriptProc *postscriptProc;
 				/* Procedure to call to produce postscript
 				 * output for the image. */
-    struct Tk_ImageType *nextPtr;
-				/* Next in list of all image types currently
-				 * known. Filled in by Tk, not by image
-				 * manager. */
-    void *clientData;		/* Not used in the core, can be used by extensions */
+    void *reserved1;		/* reserved for future expansion */
+    char *reserved;		/* reserved for future expansion */
 };
 
 /*
