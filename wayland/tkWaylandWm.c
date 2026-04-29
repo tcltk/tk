@@ -1216,9 +1216,10 @@ TkpMakeMenuWindow(
  * TkWmFocusToplevel --
  *
  *	Returns the toplevel window for a wrapper window.
+ *      When using GLFW / Wayland, that is the toplevel itself.
  *
  * Results:
- *	Returns the toplevel TkWindow, or NULL if not applicable.
+ *	Returns the toplevel TkWindow.
  *
  * Side effects:
  *	None.
@@ -1228,12 +1229,9 @@ TkpMakeMenuWindow(
 
 TkWindow *
 TkWmFocusToplevel(
-		  TkWindow *winPtr)
+    TkWindow *winPtr)
 {
-    if (!(winPtr->flags & TK_WRAPPER)) {
-        return NULL;
-    }
-    return ((WmInfo *)winPtr->wmInfoPtr)->winPtr;
+    return winPtr;
 }
 
 /*
@@ -3475,7 +3473,9 @@ TkpWmSetState(
  *
  * TkpGetWrapperWindow --
  *
- *	Get the wrapper window for a toplevel (menubar container).
+ *	This is called by the generic focus code.  On X11 it returns the X11
+ *      wrapper window, but GLFW on Wayland has no such thing.  We return the
+ *      window itself if it is a toplevel, otherwise we return NULL.
  *
  * Results:
  *	Returns the wrapper TkWindow, or NULL.
@@ -3488,10 +3488,12 @@ TkpWmSetState(
 
 TkWindow *
 TkpGetWrapperWindow(
-		    TkWindow *winPtr)
+    TkWindow *winPtr)
 {
-    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-    return (winPtr && wmPtr) ? wmPtr->wrapperPtr : NULL;
+    if (Tk_IsTopLevel((Tk_Window) winPtr)) {
+	return winPtr;
+    }
+    return NULL;
 }
 
 /*
