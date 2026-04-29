@@ -47,11 +47,8 @@ static int GlfwIsInitialized = 0;
 
 GLFWwindow *mainGlfwWindow;
 
-static TkGlfwContext glfwContext = {NULL, NULL, 0, 0, NULL, 0, 0, NULL};
+static TkGlfwContext glfwContext = {NULL, NULL, 0, 0, NULL, 0, 0};
 static int shutdownInProgress = 0;
-
-WindowMapping *windowMappingList = NULL;
-static DrawableMapping *drawableMappingList = NULL;
 
 /*
  *----------------------------------------------------------------------
@@ -236,10 +233,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
         shutdownInProgress = 0;
         return;
     }
-
-    /* First, clean up all window mappings (this destroys GLFW windows). */
-    CleanupAllMappings();
-
+    
     /* Delete NanoVG while a context still exists. */
     if (glfwContext.vg) {
         /* Make the GL context of the root current if it still exists. */
@@ -300,9 +294,7 @@ TkGlfwCreateWindow(
     if (winPtr == NULL) {
 	Tcl_Panic("TkGlfwCreateWindow called with null winPtr\n");
     }
-    WindowMapping *mapping;
     GLFWwindow    *glfwWindow = NULL;
-    //    Tcl_Interp *interp = winPtr->mainPtr->interp
 
     /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
@@ -359,59 +351,19 @@ TkGlfwCreateWindow(
 	   winPtr->privatePtr->fbo);
     }
 
-
-    /* Allocate and initialize mapping. */
-    mapping = (WindowMapping *)ckalloc(sizeof(WindowMapping));
-    memset(mapping, 0, sizeof(WindowMapping));
-    mapping->tkWindow     = winPtr;
-    mapping->glfwWindow   = glfwWindow;
-    mapping->drawable     = TkWaylandDrawableForTkWindow(winPtr);
-    mapping->width        = width;
-    mapping->height       = height;
-    mapping->clearPending = 1;
-    AddMapping(mapping);
-
     if (winPtr != NULL) {
         TkGlfwSetupCallbacks(glfwWindow);
 	glfwSetWindowUserPointer(glfwWindow, winPtr);
+        winPtr->changes.width  = width;
+        winPtr->changes.height = height;
     }
 
-#if 0
-    /* Wait for the compositor to confirm real dimensions. */
-    int timeout = 0;
-    while ((mapping->width == 0 || mapping->height == 0) && timeout < 100) {
-        ////glfwPollEvents();
-        if (mapping->width == 0 || mapping->height == 0) {
-            int w, h;
-            glfwGetWindowSize(glfwWindow, &w, &h);
-            if (w > 0 && h > 0) {
-                mapping->width  = w;
-                mapping->height = h;
-                break;
-            }
-        }
-        timeout++;
+    if (drawableOut) {
+	*drawableOut = TkWaylandDrawableForTkWindow(winPtr);
     }
-#endif
-
-    if (mapping->width  == 0) mapping->width  = width;
-    if (mapping->height == 0) mapping->height = height;
-
     if (winPtr != NULL) {
-        winPtr->changes.width  = mapping->width;
-        winPtr->changes.height = mapping->height;
+        TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
     }
-
-    if (drawableOut) *drawableOut = mapping->drawable;
-
-    if (winPtr != NULL)
-        TkWaylandQueueExposeEvent(winPtr, 0, 0,
-	    mapping->width, mapping->height);
-#if 0
-    /* Wake up the event loop to process the expose event. */
-    TkWaylandWakeupGLFW();
-#endif
-
     return glfwWindow;
 }
 
@@ -421,7 +373,6 @@ TkGlfwCreateWindow(
  * TkGlfwDestroyWindow --
  *
  *	Destroy a GLFW window and clean up associated resources.
- *	Now safely handles destruction during shutdown.
  *
  * Results:
  *	None.
@@ -435,61 +386,18 @@ TkGlfwCreateWindow(
 MODULE_SCOPE void
 TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 {
-    WindowMapping *mapping;
-
-    if (!glfwWindow) return;
-    if (shutdownInProgress) return;  /* Let CleanupAllMappings handle it */
-
-    mapping = FindMappingByGLFW(glfwWindow);
-    if (mapping) {
-        /* Mark window as being destroyed */
-        mapping->glfwWindow = NULL;
-        RemoveMapping(mapping);
+    if (!glfwWindow) {
+	return;
     }
-
+    if (shutdownInProgress) {
+	return;
+    }
     glfwDestroyWindow(glfwWindow);
 
     /* Check if this was the last window. */
     if (Tk_GetNumMainWindows() == 0 && !shutdownInProgress) {
         /* Schedule shutdown via idle callback. */
         Tcl_DoWhenIdle(TkGlfwShutdown, NULL);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * SyncWindowSize--
- *
- * Helper function to synchronize Tk window size when
- * the framebuffer dimensions change.
- *
- * Results:
- *	Tk window size updated.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-
-MODULE_SCOPE
-void SyncWindowSize(WindowMapping *m)
-{
-
-    if (!m || !m->glfwWindow || shutdownInProgress) return;
-    int w, h;
-    int fbw, fbh;
-    glfwGetWindowSize(m->glfwWindow, &w, &h);
-    glfwGetFramebufferSize(m->glfwWindow, &fbw, &fbh);
-
-    m->width  = w;
-    m->height = h;
-
-    if (m->tkWindow) {
-        m->tkWindow->changes.width  = w;
-        m->tkWindow->changes.height = h;
     }
 }
 
@@ -522,12 +430,6 @@ TkGlfwBeginDraw(
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr, &width, &height);
     // Make our GL context current.
-#if 0
-    WindowMapping *m = FindMappingByDrawable(drawable);
-    printf("Drawable is %s with glfwWindow %p and framebuffer %p\n",
-	   Tk_PathName(winPtr), m->glfwWindow, fbo);
-    glfwMakeContextCurrent(m->glfwWindow);
-#endif
     printf("Drawable is %s with glfwWindow %p and framebuffer %p\n",
 	   Tk_PathName(winPtr), glfwWindow, fbo);
     glfwMakeContextCurrent(glfwWindow);
@@ -597,8 +499,8 @@ MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
-    WindowMapping *m = FindMappingByDrawable(dcPtr->drawable);
-    printf("TkGlfwEndDraw: %s\n", Tk_PathName(m->tkWindow));
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    printf("TkGlfwEndDraw: %s\n", Tk_PathName(winPtr));
     NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr, NULL, NULL);
     if (!dcPtr || !dcPtr->vg) {
 	printf("No drawing context!\n");
@@ -607,29 +509,13 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     printf("Binding backing store at %p\n", fbo);
     nvgluBindFramebuffer(fbo);
     int fbwidth, fbheight;
-    glfwGetFramebufferSize(m->glfwWindow, &fbwidth, &fbheight);
-    if (fbwidth == m->width && fbheight == m->height) {
-    } else {
-	printf("Buffer size mismatch\n");
-	return;
-    }
-    glViewport(0, 0, m->width, m->height);
+    glfwGetFramebufferSize(glfwWindow, &fbwidth, &fbheight);
+    glViewport(0, 0, fbwidth, fbheight);
     // All nvg drawing happens here.
     nvgEndFrame(dcPtr->vg);
-    printf("Blitting backingStore to the back buffer\n");
-    blitFBOToBack(fbo, m->width, m->height);
-    //glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
-    printf("Sending window image to the compositor.\n");
-    fprintf(stderr, "Calling glfwSwapBuffers\n");
-    glfwSwapBuffers(m->glfwWindow);
+    blitFBOToBack(fbo, fbwidth, fbheight);
+    glfwSwapBuffers(glfwWindow);
     nvgluBindFramebuffer(NULL);
-    printf("Sent\n");
-
-    /* Signal that the screen needs to be updated with the FBO's content. */
-    //// This does not make sense anymore.
-    if (m) {
-	m->needsDisplay = 1;
-    }
 }
 
 /*
@@ -680,33 +566,6 @@ TkGlfwGetNVGContextForMeasure(void)
     glfwMakeContextCurrent(mainGlfwWindow);
     return glfwContext.vg;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwProcessEvents --
- *
- *	Process pending GLFW events. Called from the Tk event loop.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Polls and dispatches GLFW events.
- *
- *----------------------------------------------------------------------
- */
-////XXXX Why is this used sometimes and glfwPollEvents used directly
-//// other times????  (It is NOT called from the event loop.)
-#if 0
-MODULE_SCOPE void
-TkGlfwProcessEvents(void)
-{
-    if (GlfwIsInitialized && !shutdownInProgress) {
-        ////glfwPollEvents();
-    }
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -897,277 +756,6 @@ TkpDisplayWarning(const char *msg, const char *title)
     }
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * FindMappingbyGLFW --
- *
- *	Searches the windowMappingList by native GLFW window handle.
- *
- * Results:
- *	Retrieves mapping entry.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-WindowMapping *
-FindMappingByGLFW(GLFWwindow *w)
-{
-    WindowMapping *c = windowMappingList;
-    while (c) { if (c->glfwWindow == w) return c; c = c->nextPtr; }
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FindMappingbyTk --
- *
- *	Searches the windowMappingList by Tk window pointer.
- *
- * Results:
- *	Retrieves mapping entry.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-WindowMapping *
-FindMappingByTk(TkWindow *w)
-{
-    WindowMapping *c = windowMappingList;
-    while (c) { if (c->tkWindow == w) return c; c = c->nextPtr; }
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FindMappingbyDrawable --
- *
- *	Searches the windowMappingList by Drawable.
- *
- * Results:
- *	Retrieves mapping entry.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-WindowMapping *
-FindMappingByDrawable(Drawable d)
-{
-    DrawableMapping *dm;
-    WindowMapping   *m;
-
-    if (d == 0 || d == None) return NULL;
-
-    /* Fast path: explicit registrations. */
-    for (dm = drawableMappingList; dm; dm = dm->next) {
-        if (dm->drawable == d)
-            return dm->mapping;
-    }
-
-    /* Toplevel whose Tk window ID matches. */
-    for (m = windowMappingList; m; m = m->nextPtr) {
-        if (m->tkWindow && (Drawable)m->tkWindow->window == d)
-            return m;
-    }
-
-    /* Drawable is a TkWindow* passed directly. */
-    for (m = windowMappingList; m; m = m->nextPtr) {
-        if (!m->tkWindow) continue;
-        TkWindow *stack[256];
-        int top = 0;
-        stack[top++] = m->tkWindow;
-        while (top > 0) {
-            TkWindow *cur = stack[--top];
-            if ((Drawable)cur == d || (Drawable)cur->window == d) {
-                RegisterDrawableForMapping(d, m);
-                return m;
-            }
-            TkWindow *child;
-            for (child = cur->childList; child && top < 255;
-                 child = child->nextPtr)
-                stack[top++] = child;
-        }
-    }
-
-    /*
-     * Drawable is a TkWaylandPixmap* that was never
-     * registered. Validate by checking that its fields look sane,
-     * then bind it to the first available mapping.
-     */
-    TkWaylandPixmap *pix = (TkWaylandPixmap *)d;
-    if (pix != NULL) {
-        /* Sanity check: type must be 0 or 1, dimensions must be
-         * plausible. This guards against random pointer misinterpretation. */
-        if ((pix->type == 0 || pix->type == 1) &&
-            pix->width  >= 0 && pix->width  < 32768 &&
-            pix->height >= 0 && pix->height < 32768) {
-            m = TkGlfwGetMappingList();
-            if (m) {
-                RegisterDrawableForMapping(d, m);
-                return m;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwGetMappingList --
- *
- *	Retrieves the entire windowMappingList.
- *
- * Results:
- *	Returns list.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-WindowMapping *
-TkGlfwGetMappingList(void)
-{
-    return windowMappingList;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * AddMapping  --
- *
- *	Add an entry to the windowMappingList.
- *
- * Results:
- *	Entry is added.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-AddMapping(WindowMapping *m)
-{
-    if (!m) return;
-    m->nextPtr  = windowMappingList;
-    windowMappingList = m;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * RemoveMappings --
- *
- *  Remove an entry from the windowMappingList.
- *
- * Results:
- *	Entry is added.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-void
-RemoveMapping(WindowMapping *m)
-{
-    WindowMapping **pp = &windowMappingList;
-
-    if (!m) {
-        fprintf(stderr, "RemoveMapping: Called with NULL mapping\n");
-        return;
-    }
-
-    while (*pp) {
-        if (*pp == m) {
-            *pp = m->nextPtr;
-
-            /* Clear the mapping before freeing to detect use-after-free. */
-            memset(m, 0, sizeof(WindowMapping));
-            ckfree((char *)m);
-            return;
-        }
-        pp = &(*pp)->nextPtr;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * CleanupAllMappings --
- *
- *	Destroy all GLFW windows and free mapping structures.
- *	Called during shutdown.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	All GLFW windows are destroyed and mappings freed.
- *
- *----------------------------------------------------------------------
- */
-
-void
-CleanupAllMappings(void)
-{
-    WindowMapping *c = windowMappingList, *n;
-
-    while (c) {
-        n = c->nextPtr;
-        if (c->glfwWindow) {
-            glfwDestroyWindow(c->glfwWindow);
-        }
-        memset(c, 0, sizeof(WindowMapping));
-        ckfree((char *)c);
-        c = n;
-    }
-    windowMappingList = NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * RegisterDrawableForMapping --
- *
- *	Adds a Drawable to the windowMappingList.
- *
- * Results:
- *	Entry added.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-RegisterDrawableForMapping(Drawable d, WindowMapping *m)
-{
-    DrawableMapping *dm = ckalloc(sizeof(DrawableMapping));
-    dm->drawable = d;
-    dm->mapping  = m;
-    dm->next     = drawableMappingList;
-    drawableMappingList = dm;
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -1197,76 +785,6 @@ TkWaylandGetGLFWwindow(
 	return toplevelPtr->privatePtr->glfwWindow;
     }
     return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwGetDrawable --
- *
- *	Retrieves the Drawable associated with a GLFW window.
- *
- * Results:
- *	Window pointer returned.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE Drawable
-TkGlfwGetDrawable(GLFWwindow *w)
-{
-    WindowMapping *m = FindMappingByGLFW(w);
-    return m ? m->drawable : 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwResizeWindow --
- *
- *	Resizes a GLFW window.
- *
- * Results:
- *	Window dimensions updated.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwResizeWindow(GLFWwindow *w, int width, int height)
-{
-    WindowMapping *m = FindMappingByGLFW(w);
-    if (m) { m->width = width; m->height = height; }
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwUpdateWindowSize --
- *
- *	Updates the side of a GLFW window.
- *
- * Results:
- *	Window dimensions updated.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow, int width, int height)
-{
-    WindowMapping *m = FindMappingByGLFW(glfwWindow);
-    if (m) { m->width = width; m->height = height; }
 }
 
 /*
@@ -1312,10 +830,6 @@ TkWaylandGetGLFWwindowFromDrawable(Drawable drawable)
 MODULE_SCOPE TkWindow*
 TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
 {
-#if 0
-    WindowMapping *m = FindMappingByGLFW(glfwWindow);
-    return m ? m->tkWindow : NULL;
-#endif
     return (TkWindow*) glfwGetWindowUserPointer(glfwWindow);
 }
 

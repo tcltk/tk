@@ -40,62 +40,6 @@ void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
 /*
  *----------------------------------------------------------------------
  *
- * Window Mapping Structure
- *
- *	Maps between Tk windows, GLFW windows, and drawable IDs.
- *	Each toplevel window has one WindowMapping structure.
- *	Child windows and pixmaps share the mapping of their parent toplevel.
- *
- *----------------------------------------------------------------------
- */
-
-struct WmInfo;
-
-typedef struct WindowMapping {
-    TkWindow *tkWindow;           /* Associated Tk window (may be NULL for
-                                   * offscreen/pixmap-only mappings) */
-    GLFWwindow *glfwWindow;       /* Associated GLFW window - all drawing
-                                   * for this mapping goes to this window */
-    Drawable drawable;            /* Tk drawable ID for this toplevel.
-                                   * Child windows and pixmaps that share
-                                   * this mapping have their own drawable IDs
-                                   * registered separately via DrawableMapping */
-    int width;                    /* Current window width in pixels
-                                   * (updated by configure events) */
-    int height;                   /* Current window height in pixels
-                                   * (updated by configure events) */
-    int clearPending;             /* Flag indicating the framebuffer needs
-                                   * to be cleared before next draw operation.
-                                   * Set to 1 when window is created/resized,
-                                   * cleared after clearing */
-    int swapPending;   	          /* 1 = buffer is ready to swap at next idle */
-    int frameOpen;                /* Is NVG frame currently open? */
-    int needsDisplay;             /* Dirty flag - needs redraw */
-    struct WindowMapping *nextPtr; /* Next mapping in global linked list */
-} WindowMapping;
-
-/*
- *----------------------------------------------------------------------
- *
- * Drawable Mapping Structure
- *
- *	Maps arbitrary drawable IDs (child windows, pixmaps) to their
- *	parent WindowMapping. This allows TkGlfwBeginDraw to find the
- *	correct GLFW window and toplevel for any drawable.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct DrawableMapping {
-    Drawable drawable;              /* Tk drawable ID (child window or pixmap) */
-    WindowMapping *mapping;         /* Pointer to the parent WindowMapping
-                                   * that owns this drawable */
-    struct DrawableMapping *next;   /* Next in global linked list */
-} DrawableMapping;
-
-/*
- *----------------------------------------------------------------------
- *
  * Core Context Structure
  *
  *	Global state for the GLFW/Wayland backend.
@@ -120,7 +64,6 @@ typedef struct TkGlfwContext {
                                    * (cached for performance) */
     int fbHeight;                 /* Framebuffer height of mainWindow
                                    * (cached for performance) */
-    WindowMapping *activeFrame;      /* Which window has open frame */
 } TkGlfwContext;
 
 /*
@@ -299,9 +242,8 @@ typedef struct TkWaylandPixmap {
     
     /* NanoVG frame state */
     int              frameOpen;     /* Is NVG frame open on this pixmap? */
-    
-    /* Associated window (for context) */
-    WindowMapping   *windowMapping; /* Which window owns this pixmap */
+    GLFWwindow      *glfwWindow;    /* GLFW window whose GL context
+				     * contains the fbo. */
 } TkWaylandPixmap;
 
 /*
@@ -416,41 +358,6 @@ MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
 /*
  *----------------------------------------------------------------------
  *
- * Window Mapping Management
- *
- *----------------------------------------------------------------------
- */
-
-/* Add a new mapping to the list. */
-void AddMapping(WindowMapping *mapping);
-
-/* Find mapping by GLFW window. */
-MODULE_SCOPE WindowMapping *FindMappingByGLFW(GLFWwindow *w);
-
-/* Find mapping by Tk window. */
-MODULE_SCOPE WindowMapping *FindMappingByTk(TkWindow *w);
-
-/* Find mapping by drawable. */
-MODULE_SCOPE WindowMapping *FindMappingByDrawable(Drawable d);
-
-/* Get the head of the mapping list. */
-MODULE_SCOPE WindowMapping *TkGlfwGetMappingList(void);
-
-/* Remove a mapping from the list. */
-void RemoveMapping(WindowMapping *m);
-
-/* Clean up all mappings. */
-MODULE_SCOPE void CleanupAllMappings(void);
-
-/* Register a drawable with a mapping. */
-MODULE_SCOPE void RegisterDrawableForMapping(Drawable d, WindowMapping *m);
-
-/* Get toplevel of a widget. */
-MODULE_SCOPE Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
-
-/*
- *----------------------------------------------------------------------
- *
  * Window Management
  *
  *----------------------------------------------------------------------
@@ -514,7 +421,6 @@ MODULE_SCOPE void TkGlfwProcessEvents(void);
 MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void TkGlfwClearCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
-MODULE_SCOPE void SyncWindowSize(WindowMapping *m);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);

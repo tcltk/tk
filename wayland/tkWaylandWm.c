@@ -3690,7 +3690,6 @@ UpdateGeometryInfo(
 	printf("glfwSetWindowSize %s -> %dx%d\n",
 	       Tk_PathName(winPtr), tw, th); 
         glfwSetWindowSize(glfwWindow, tw, th);
-        TkGlfwUpdateWindowSize(glfwWindow, tw, th);
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
         
@@ -4463,7 +4462,6 @@ XConfigureWindow(
     if (resizeNeeded) {
 	printf("XConfigureWindow -> %dx%d\n", w, h);
         glfwSetWindowSize(gw, w, h);
-        TkGlfwUpdateWindowSize(gw, w, h);
     }
 
     return Success;

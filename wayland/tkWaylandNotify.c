@@ -26,8 +26,6 @@
 #include <GLES3/gl3.h>
 #include "nanovg_gl_utils.h"
 
-extern WindowMapping *windowMappingList;
-
 /* ========================= Thread Specific Data  ========================= */
 
 typedef struct ThreadSpecificData {
@@ -585,7 +583,6 @@ TkGlfwFramebufferSizeCallback(
 {
     recordCallback();
     printf("TkGlfwFramebufferSizeCallback ");
-    TkGlfwUpdateWindowSize(window, width, height);
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	printf("No Tk window!\n");
@@ -1224,8 +1221,6 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
     recordCallback();
     TkWindow      *winPtr = TkGlfwGetTkWindow(window);
-    WindowMapping *mapping;
-    //    int            w, h;
 
     if (!winPtr) return;
 

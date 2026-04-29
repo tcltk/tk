@@ -355,6 +355,8 @@ TkWaylandCopyGC(
  *
  *      Create an off-screen drawable (pixmap) using an OpenGL FBO.
  *      This allows NanoVG to render to the pixmap just like a window.
+ *      The drawable should be a Tk window.  The pixmap will construct
+ *      the FBO in the GL context of that window.
  *
  * Results:
  *      Returns a Pixmap (Drawable) identifier.
@@ -374,18 +376,16 @@ Tk_GetPixmap(
     TCL_UNUSED(int)) /* depth */
 {
     TkWaylandPixmap *pixmap;
-    WindowMapping       *mapping;
-    GLint                oldFBO;
-    GLenum               status;
+    GLint            oldFBO;
+    GLenum           status;
     
     
     if (width <= 0 || height <= 0) {
         return None;
     }
-    
-    /* Find the window mapping to get GL context. */
-    mapping = FindMappingByDrawable(d);
-    if (!mapping || !mapping->glfwWindow) {
+
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
+    if (!glfwWindow) {
         return None;
     }
     
@@ -395,12 +395,12 @@ Tk_GetPixmap(
     pixmap->type          = 1;  /* Pixmap, not window */
     pixmap->width         = width;
     pixmap->height        = height;
-    pixmap->drawable      = (Drawable)pixmap;  /* Use pointer as ID */
-    pixmap->windowMapping = mapping;
+    pixmap->drawable      = TkWaylandDrawableForPixmap(pixmap);
     pixmap->frameOpen     = 0;
+    pixmap->glfwWindow    = glfwWindow;
     
     /* Make GL context current for FBO creation. */
-    glfwMakeContextCurrent(mapping->glfwWindow);
+    glfwMakeContextCurrent(glfwWindow);
     
     /* Save current FBO binding */
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
@@ -457,9 +457,6 @@ Tk_GetPixmap(
     /* Restore previous FBO binding. */
     glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
     
-    /* Register pixmap with drawable mapping system. */
-    RegisterDrawableForMapping(pixmap->drawable, mapping);
-    
     return pixmap->drawable;
 }
 
@@ -480,16 +477,17 @@ Tk_GetPixmap(
  */
 
 void
-Tk_FreePixmap(TCL_UNUSED(Display *),
-	      Pixmap pixmap)
+Tk_FreePixmap(
+    TCL_UNUSED(Display *),
+    Pixmap pixmap)
 {
     TkWaylandPixmap *impl = (TkWaylandPixmap *)pixmap;
     
     if (!impl || impl->type != 1) return;
     
     /* Make context current for GL cleanup. */
-    if (impl->windowMapping && impl->windowMapping->glfwWindow) {
-        glfwMakeContextCurrent(impl->windowMapping->glfwWindow);
+    if (impl->glfwWindow) {
+        glfwMakeContextCurrent(impl->glfwWindow);
     }
     
     /* Delete OpenGL resources. */
