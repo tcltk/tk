@@ -788,7 +788,7 @@ FrameWidgetObjCmd(
 			    "can't modify %s option after widget is created",
 			    arg));
 		    Tcl_SetErrorCode(interp, "TK", "FRAME", "CREATE_ONLY",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		    goto done;
 		}
@@ -1229,7 +1229,6 @@ FrameWorldChanged(
 
     if (Tk_IsMapped(tkwin)) {
 	if (!(framePtr->flags & REDRAW_PENDING)) {
-	    printf("Scheduling DisplayFrame (1)\n");
 	    Tcl_DoWhenIdle(DisplayFrame, framePtr);
 	}
 	framePtr->flags |= REDRAW_PENDING;
@@ -1281,8 +1280,8 @@ ComputeFrameGeometry(
      * Calculate the available size for the label
      */
 
-    labelframePtr->labelBox.width = labelframePtr->labelReqWidth;
-    labelframePtr->labelBox.height = labelframePtr->labelReqHeight;
+    labelframePtr->labelBox.width = (unsigned short)labelframePtr->labelReqWidth;
+    labelframePtr->labelBox.height = (unsigned short)labelframePtr->labelReqHeight;
 
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, framePtr->tkwin, framePtr->highlightWidthObj, &highlightWidth);
@@ -1308,10 +1307,10 @@ ComputeFrameGeometry(
 	}
     }
     if (labelframePtr->labelBox.width > maxWidth) {
-	labelframePtr->labelBox.width = maxWidth;
+	labelframePtr->labelBox.width = (unsigned short)maxWidth;
     }
     if (labelframePtr->labelBox.height > maxHeight) {
-	labelframePtr->labelBox.height = maxHeight;
+	labelframePtr->labelBox.height = (unsigned short)maxHeight;
     }
 
     /*
@@ -1331,23 +1330,23 @@ ComputeFrameGeometry(
     case LABELANCHOR_EN:
     case LABELANCHOR_ES:
 	labelframePtr->labelTextX = otherWidthT - padding;
-	labelframePtr->labelBox.x = otherWidth - padding;
+	labelframePtr->labelBox.x = (short)(otherWidth - padding);
 	break;
     case LABELANCHOR_N:
     case LABELANCHOR_NE:
     case LABELANCHOR_NW:
 	labelframePtr->labelTextY = padding;
-	labelframePtr->labelBox.y = padding;
+	labelframePtr->labelBox.y = (short)padding;
 	break;
     case LABELANCHOR_S:
     case LABELANCHOR_SE:
     case LABELANCHOR_SW:
 	labelframePtr->labelTextY = otherHeightT - padding;
-	labelframePtr->labelBox.y = otherHeight - padding;
+	labelframePtr->labelBox.y = (short)(otherHeight - padding);
 	break;
     default:
 	labelframePtr->labelTextX = padding;
-	labelframePtr->labelBox.x = padding;
+	labelframePtr->labelBox.x = (short)padding;
 	break;
     }
 
@@ -1359,31 +1358,31 @@ ComputeFrameGeometry(
     case LABELANCHOR_NW:
     case LABELANCHOR_SW:
 	labelframePtr->labelTextX = padding;
-	labelframePtr->labelBox.x = padding;
+	labelframePtr->labelBox.x = (short)padding;
 	break;
     case LABELANCHOR_N:
     case LABELANCHOR_S:
 	labelframePtr->labelTextX = otherWidthT / 2;
-	labelframePtr->labelBox.x = otherWidth / 2;
+	labelframePtr->labelBox.x = (short)(otherWidth / 2);
 	break;
     case LABELANCHOR_NE:
     case LABELANCHOR_SE:
 	labelframePtr->labelTextX = otherWidthT - padding;
-	labelframePtr->labelBox.x = otherWidth - padding;
+	labelframePtr->labelBox.x = (short)(otherWidth - padding);
 	break;
     case LABELANCHOR_EN:
     case LABELANCHOR_WN:
 	labelframePtr->labelTextY = padding;
-	labelframePtr->labelBox.y = padding;
+	labelframePtr->labelBox.y = (short)padding;
 	break;
     case LABELANCHOR_E:
     case LABELANCHOR_W:
 	labelframePtr->labelTextY = otherHeightT / 2;
-	labelframePtr->labelBox.y = otherHeight / 2;
+	labelframePtr->labelBox.y = (short)(otherHeight / 2);
 	break;
     default:
 	labelframePtr->labelTextY = otherHeightT - padding;
-	labelframePtr->labelBox.y = otherHeight - padding;
+	labelframePtr->labelBox.y = (short)(otherHeight - padding);
 	break;
     }
 }
@@ -1408,7 +1407,6 @@ static void
 DisplayFrame(
     void *clientData)	/* Information about widget. */
 {
-    printf("DisplayFrame\n");
     Frame *framePtr = (Frame *)clientData;
     Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2;
@@ -1616,7 +1614,6 @@ DisplayFrame(
 	    highlightWidth, highlightWidth);
     Tk_FreePixmap(framePtr->display, pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
-    printf("DisplayFrame done.\n");
 }
 
 /*
@@ -1676,18 +1673,11 @@ FrameEventProc(
     void *clientData,	/* Information about window. */
     XEvent *eventPtr)	/* Information about event. */
 {
-    printf("FrameEventProc: ");
     Frame *framePtr = (Frame *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
-	printf("%s received Expose(%d)\n", Tk_PathName(framePtr->tkwin),
-	       eventPtr->xexpose.serial);
 	goto redraw;
     } else if (eventPtr->type == ConfigureNotify) {
-	printf("%s received Configure(%d) -> %dx%d+%d+%d\n",
-	       Tk_PathName(framePtr->tkwin), eventPtr->xconfigure.serial,
-	       eventPtr->xconfigure.width, eventPtr->xconfigure.height,
-	       eventPtr->xconfigure.x, eventPtr->xconfigure.y);
 	ComputeFrameGeometry(framePtr);
 	goto redraw;
     } else if (eventPtr->type == DestroyNotify) {
@@ -1722,14 +1712,11 @@ FrameEventProc(
 	    Tcl_DeleteCommandFromToken(framePtr->interp, framePtr->widgetCmd);
 	}
 	if (framePtr->flags & REDRAW_PENDING) {
-	    printf("Cancelling DisplayFrame\n");
 	    Tcl_CancelIdleCall(DisplayFrame, framePtr);
 	}
 	Tcl_CancelIdleCall(MapFrame, framePtr);
 	Tcl_EventuallyFree(framePtr, DestroyFrame);
     } else if (eventPtr->type == FocusIn) {
-	printf("%s received FocusIn(%d)\n", Tk_PathName(framePtr->tkwin),
-	       eventPtr->xfocus.serial);
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    int highlightWidth;
 	    framePtr->flags |= GOT_FOCUS;
@@ -1739,8 +1726,6 @@ FrameEventProc(
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
-	printf("%s received FocusOut(%d)\n", Tk_PathName(framePtr->tkwin),
-	       eventPtr->xfocus.serial);
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    int highlightWidth;
 	    framePtr->flags &= ~GOT_FOCUS;
@@ -1750,25 +1735,18 @@ FrameEventProc(
 	    }
 	}
     } else if (eventPtr->type == ActivateNotify) {
-	printf("%s received Activate(%d)\n", Tk_PathName(framePtr->tkwin),
-	       eventPtr->xfocus.serial);
 	Tk_SetMainMenubar(framePtr->interp, framePtr->tkwin,
 		(framePtr->menuNameObj ? Tcl_GetString(framePtr->menuNameObj) : NULL));
-    } else {
-	printf("no events.\n");
     }
     return;
 
   redraw:
     if ((framePtr->tkwin != NULL) && !(framePtr->flags & REDRAW_PENDING)) {
-	printf("FrameEventProc: scheduling DisplayFrame for %s\n",
-	       Tk_PathName(framePtr->tkwin));
 	Tcl_DoWhenIdle(DisplayFrame, framePtr);
 	framePtr->flags |= REDRAW_PENDING;
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -2127,7 +2105,6 @@ FrameBgImageProc(
 
     if (framePtr->tkwin && Tk_IsMapped(framePtr->tkwin) &&
 	    !(framePtr->flags & REDRAW_PENDING)) {
-	printf("Scheduling DisplayFrame (3)\n");
 	Tcl_DoWhenIdle(DisplayFrame, framePtr);
 	framePtr->flags |= REDRAW_PENDING;
     }

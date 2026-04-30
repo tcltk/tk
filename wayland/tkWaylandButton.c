@@ -177,7 +177,6 @@ DrawButtonBitmap(TkButton *butPtr,
     XColor fgColorValue;
     int imageId;
     int i, j;
-    Drawable screen;
     Display *dpy;
     XImage *image = NULL;
 
@@ -192,9 +191,7 @@ DrawButtonBitmap(TkButton *butPtr,
 
     /* Get bitmap dimensions using XGetGeometry. */
     dpy = Tk_Display(butPtr->tkwin);
-    screen = Tk_WindowId(butPtr->tkwin);
-
-    if (!XGetGeometry(dpy, bitmap, &screen, &x_hot, &y_hot,
+    if (!XGetGeometry(dpy, bitmap, None, &x_hot, &y_hot,
                       &bm_width, &bm_height, &border_width, &depth)) {
         /* Geometry failed — fallback. */
         goto fallback_rect;
@@ -333,7 +330,6 @@ static void
 DrawButtonImage(TkButton *butPtr, TkWaylandDrawingContext *dc,
                  int x, int y, int width, int height, int selected)
 {
-    printf("    DrawButtonImage\n");
     if (butPtr->image) {
         /* Use Tk_RedrawImage – it eventually calls XPutImage which
          * in our Wayland port uses the NanoVG drawing context. */
@@ -368,11 +364,14 @@ DrawButtonImage(TkButton *butPtr, TkWaylandDrawingContext *dc,
 */
 
 static void
-DrawButtonText(TkButton *butPtr, TkWaylandDrawingContext *dc,
-                int x, int y)
+DrawButtonText(
+    TkButton *butPtr,
+    TkWaylandDrawingContext *dc,
+    int x,
+    int y)
 {
-    printf("    DrawButtonText\n");
     GC currentGC;
+    Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
     
     /* Select appropriate GC based on button state. */
     if (butPtr->state == STATE_DISABLED && butPtr->disabledFg) {
@@ -387,13 +386,12 @@ DrawButtonText(TkButton *butPtr, TkWaylandDrawingContext *dc,
     TkGlfwApplyGC(dc->vg, currentGC);
     
     /* Draw the text layout. */
-    Tk_DrawTextLayout(butPtr->display, (Drawable)dc, currentGC,
-                      butPtr->textLayout, x, y, 0, -1);
+    Tk_DrawTextLayout(butPtr->display, drawable, currentGC,
+		      butPtr->textLayout, x, y, 0, -1);
     
     /* Draw underline if needed. */
-    Tk_UnderlineTextLayout(butPtr->display, (Drawable)dc, currentGC,
-                           butPtr->textLayout, x, y,
-                           butPtr->underline);
+    Tk_UnderlineTextLayout(butPtr->display, drawable, currentGC,
+			   butPtr->textLayout, x, y, butPtr->underline);
 }
 
 /* 
@@ -415,8 +413,9 @@ TkpDisplayButton(void *clientData)
 {
     TkButton *butPtr = clientData;
     Tk_Window tkwin = butPtr->tkwin;
-    printf("TkpDisplayButton: %s mapped = %d\n",
-	   Tk_PathName(tkwin), Tk_IsMapped(tkwin));
+    if (!tkwin || !Tk_IsMapped(tkwin)) {
+      return;
+    }
     TkWaylandDrawingContext dc;
     GC currentGC;
     int x = 0, y = 0, relief;
@@ -427,10 +426,11 @@ TkpDisplayButton(void *clientData)
     int imageXOffset = 0, imageYOffset = 0;
     int padX, padY, bd, hl;
     int winWidth, winHeight;
-
-    if (!tkwin || !Tk_IsMapped(tkwin)) {
-      printf("Not mapped - drawing anyway.\n");
-      //return;
+    Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)tkwin);
+    int rc = TkGlfwBeginDraw(drawable, currentGC, &dc);
+    if (rc != TCL_OK) {
+        printf("Bad Drawable in TkpButton\n");
+        return;
     }
     winWidth = Tk_Width(tkwin);
     winHeight = Tk_Height(tkwin);
@@ -451,15 +451,8 @@ TkpDisplayButton(void *clientData)
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &hl);
 
     /* Background fill - using 3D border drawing. */
-    Tk_Fill3DRectangle(tkwin, (Drawable)tkwin, butPtr->normalBorder, 0, 0,
+    Tk_Fill3DRectangle(tkwin, drawable, butPtr->normalBorder, 0, 0,
 		       winWidth, winHeight, 0, TK_RELIEF_FLAT);
-
-    /* Begin drawing with NanoVG. */
-    if (TkGlfwBeginDraw((Drawable)tkwin, currentGC, &dc) != TCL_OK) {
-        printf("BeginDraw failed in TkpDisplayButton\n");
-        return;
-    }
-
     /* Determine image/bitmap size. */
     if (butPtr->image) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
@@ -467,11 +460,9 @@ TkpDisplayButton(void *clientData)
     } else if (butPtr->bitmap != None) {
         unsigned int bm_width, bm_height, border_width, depth;
         int x_hot, y_hot;
-        Drawable screen;
         Display *dpy = Tk_Display(butPtr->tkwin);
-        screen = Tk_WindowId(butPtr->tkwin);
         
-        XGetGeometry(dpy, butPtr->bitmap, &screen, &x_hot, &y_hot,
+        XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
                      &bm_width, &bm_height, &border_width, &depth);
         width = (int)bm_width;
         height = (int)bm_height;
@@ -566,7 +557,7 @@ TkpDisplayButton(void *clientData)
 
     /* Draw indicator (check/radio button). */
     if ((butPtr->type == TYPE_CHECK_BUTTON ||
-         butPtr->type == TYPE_RADIO_BUTTON) &&
+        butPtr->type == TYPE_RADIO_BUTTON) &&
         butPtr->indicatorOn &&
         butPtr->indicatorDiameter > 2 * bd) {
 
@@ -580,7 +571,7 @@ TkpDisplayButton(void *clientData)
         int ind_y = winHeight / 2;
 
         TkpDrawCheckIndicator(tkwin, butPtr->display,
-                              (Drawable)&dc,
+                              drawable,
                               ind_x, ind_y, butPtr->normalBorder,
                               butPtr->normalFg,
                               selColor,
@@ -596,14 +587,14 @@ TkpDisplayButton(void *clientData)
         int inset = hl;
         if (butPtr->defaultState == DEFAULT_ACTIVE) {
             /* Draw default ring for active default button. */
-            Tk_Draw3DRectangle(tkwin, (Drawable)&dc,
+            Tk_Draw3DRectangle(tkwin, drawable,
                                butPtr->highlightBorder,
                                inset, inset,
                                winWidth - 2*inset,
                                winHeight - 2*inset,
                                2, TK_RELIEF_FLAT);
             inset += 2;
-            Tk_Draw3DRectangle(tkwin, (Drawable)&dc,
+            Tk_Draw3DRectangle(tkwin, drawable,
                                butPtr->highlightBorder,
                                inset, inset,
                                winWidth - 2*inset,
@@ -613,7 +604,7 @@ TkpDisplayButton(void *clientData)
 
         } else if (butPtr->defaultState == DEFAULT_NORMAL) {
             /* Draw extra space for normal default button. */
-            Tk_Draw3DRectangle(tkwin, (Drawable)&dc,
+            Tk_Draw3DRectangle(tkwin, drawable,
                                butPtr->highlightBorder,
                                0, 0,
                                winWidth,
@@ -623,7 +614,7 @@ TkpDisplayButton(void *clientData)
         }
 
         /* Draw main button border. */
-        Tk_Draw3DRectangle(tkwin, (Drawable)&dc,
+        Tk_Draw3DRectangle(tkwin, drawable,
                            butPtr->normalBorder,
                            inset, inset,
                            winWidth - 2*inset,
@@ -634,18 +625,15 @@ TkpDisplayButton(void *clientData)
     /* Draw focus highlight. */
     if (hl > 0) {
         if (butPtr->defaultState == DEFAULT_NORMAL) {
-            TkDrawInsetFocusHighlight(tkwin, butPtr->normalTextGC, hl,
-                                      (Drawable)&dc, 5);
+            TkDrawInsetFocusHighlight(tkwin, butPtr->normalTextGC, hl, drawable, 5);
         } else {
-            Tk_DrawFocusHighlight(tkwin, butPtr->normalTextGC, hl,
-                                  (Drawable)&dc);
+            Tk_DrawFocusHighlight(tkwin, butPtr->normalTextGC, hl, drawable);
         }
     }
 
     /* End drawing session. */
     TkGlfwEndDraw(&dc);
     butPtr->flags &= ~REDRAW_PENDING;
-    printf("DisplayButton done.\n");
 }
 
 /* 
@@ -702,11 +690,9 @@ TkpComputeButtonGeometry(
     } else if (butPtr->bitmap != None) {
         unsigned int bm_width, bm_height, border_width, depth;
         int x_hot, y_hot;
-        Drawable screen;
         Display *dpy = Tk_Display(butPtr->tkwin);
-        screen = Tk_WindowId(butPtr->tkwin);
         
-        XGetGeometry(dpy, butPtr->bitmap, &screen, &x_hot, &y_hot,
+        XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
                      &bm_width, &bm_height, &border_width, &depth);
         width = (int)bm_width;
         height = (int)bm_height;
@@ -853,7 +839,6 @@ TkpComputeButtonGeometry(
 void
 TkpButtonWorldChanged(void *instanceData)
 {
-  printf("TkpButtonWorldChanged\n");
     XGCValues gcValues;
     GC newGC;
     unsigned long mask;
@@ -874,7 +859,6 @@ TkpButtonWorldChanged(void *instanceData)
     /* Active text GC. */
     gcValues.foreground = butPtr->activeFg->pixel;
     gcValues.background = Tk_3DBorderColor(butPtr->activeBorder)->pixel;
-    printf("Active Text fg = %lx, bg=%lx\n", gcValues.foreground, gcValues.background);
     newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
     if (butPtr->activeTextGC != NULL) {
         Tk_FreeGC(butPtr->display, butPtr->activeTextGC);
@@ -924,7 +908,6 @@ TkpButtonWorldChanged(void *instanceData)
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
             && !(butPtr->flags & REDRAW_PENDING)) {
         Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
-	printf("Setting REDRAW_PENDING\n");
         butPtr->flags |= REDRAW_PENDING;
     }
 }

@@ -1185,7 +1185,6 @@ static void glnvg__renderFlush(void* uptr)
 {
 	GLNVGcontext* gl = (GLNVGcontext*)uptr;
 	int i;
-	printf("glnvg__renderFlush: %d calls\n", gl->ncalls);
 
 	if (gl->ncalls > 0) {
 

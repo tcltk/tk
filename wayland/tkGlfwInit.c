@@ -548,7 +548,6 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    printf("TkGlfwBeginDraw: ");
     int width, height;
     TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);

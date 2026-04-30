@@ -114,7 +114,6 @@ XDrawString(
     const char *string,
     int         length)
 {
-    printf("XDrawString\n");
     TkWaylandDrawingContext dc;
     int   fontId;
     float fontSize;
@@ -171,7 +170,6 @@ XDrawImageString(
     const char *string,
     int         length)
 {
-    printf("XDrawImageString\n");
     TkWaylandDrawingContext dc;
     int   fontId;
     float fontSize;
@@ -200,7 +198,6 @@ XDrawImageString(
     {
         XGCValues v;
         if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
-	    printf("background is %lx\n", v.background);
             NVGcolor bg = TkGlfwPixelToNVG(v.background);
             nvgBeginPath(dc.vg);
             nvgRect(dc.vg, bounds[0], bounds[1],
@@ -568,7 +565,6 @@ XFillRectangles(
     XRectangle *rectangles,
     int nrectangles)
 {
-    printf("XFillRectangles: ");
     TkWaylandDrawingContext dc;
     XGCValues v;
     NVGcolor color;
@@ -579,8 +575,6 @@ XFillRectangles(
     /* Get color. */
     if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
         color = TkGlfwPixelToNVG(v.foreground);
-	printf("using fill color (%f, %f, %f, %f)\n",
-	       color.r, color.g, color.b, color.a);
     } else {
 	printf("Failed to get color from gc - using white.\n");
         color = nvgRGB(255, 255, 255);
@@ -591,11 +585,6 @@ XFillRectangles(
         return BadDrawable;
     }
     for (i = 0; i < nrectangles; i++) {
-	printf("    Filling rectangle %d: %dx%d+%d+%d.\n", i,
-	       rectangles[i].width, 
-	       rectangles[i].height,
-	       rectangles[i].x, 
-	       rectangles[i].y);
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, 
                 (float)rectangles[i].x, 
@@ -634,7 +623,6 @@ XFillRectangle(
     unsigned int width,
     unsigned int height)
 {
-    printf("XFillRectangle %ux%u+%d+%d\n", width, height, x, y);
     XRectangle rect;
     rect.x      = x;
     rect.y      = y;
