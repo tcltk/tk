@@ -235,14 +235,16 @@ TkWaylandCheckForWindowClosure(void)
  *
  * TkWaylandSetupProc --
  *
- *      Tell Tcl how long we are willing to block. Called by Tcl_DoOneEvent
- *      before blocking. Uses our wakeup fd to determine block time.
+ *      Tell Tcl how long it should block before calling TkWaylandCheckProc.
+ *      Called by Tcl_DoOneEvent if it has processed all events, run
+ *      all pending idle tasks, and run all expired timer tasks.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Sets the maximum block time based on pending events.
+ *      Processes all queued GLFW events, displays windows as
+ *      needed and sets a block time if there are no GLFW events.
  *
  *----------------------------------------------------------------------
  */
@@ -261,6 +263,14 @@ TkWaylandSetupProc(TCL_UNUSED(void *),
 	printf("SetupProc returning - shutdown in progress.\n");
         return;
     }
+
+    /*
+     * The Tcl event loop will have run all pending display procs
+     * before calling this function.  Now we can swap the GL buffers
+     * for any window on which some drawing has been done.
+     */
+    
+    TkWaylandDisplayAllWindows();
 
     /*
      * Clear the callback counter and call glfwPollEvents.
@@ -832,7 +842,7 @@ TkGlfwCursorPosCallback(
             if (lastWinPtr) {
                 memset(&event, 0, sizeof(XEvent));
                 event.type = LeaveNotify;
-                event.xcrossing.serial     = LastKnownRequestProcessed(lastWinPtr->display);
+                event.xcrossing.serial     = LastKnownRequestProcessed(lastWinPtr->display)++;
                 event.xcrossing.send_event  = False;
                 event.xcrossing.display     = lastWinPtr->display;
                 event.xcrossing.window      = Tk_WindowId((Tk_Window)lastWinPtr);
@@ -863,7 +873,7 @@ TkGlfwCursorPosCallback(
             if (lastWinPtr) {
                 memset(&event, 0, sizeof(XEvent));
                 event.type = LeaveNotify;
-                event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display);
+                event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display)++;
                 event.xcrossing.send_event = False;
                 event.xcrossing.display = lastWinPtr->display;
                 event.xcrossing.window = Tk_WindowId((Tk_Window)lastWinPtr);
@@ -886,7 +896,7 @@ TkGlfwCursorPosCallback(
         /* Send EnterNotify for current window. */
         memset(&event, 0, sizeof(XEvent));
         event.type = EnterNotify;
-        event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display);
+        event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display)++;
         event.xcrossing.send_event = False;
         event.xcrossing.display = winPtr->display;
         event.xcrossing.window = Tk_WindowId((Tk_Window)winPtr);
@@ -910,7 +920,7 @@ TkGlfwCursorPosCallback(
     /* Generate MotionNotify event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
-    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xmotion.send_event = False;
     event.xmotion.display = winPtr->display;
     event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
@@ -1019,7 +1029,9 @@ TkGlfwMouseButtonCallback(
         event.type = ButtonRelease;
     }
 
-    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display);
+    Tk_UpdatePointer((Tk_Window) winPtr, (int)xpos, (int)ypos, glfwButtonState);
+#if 0
+    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xbutton.send_event = False;
     event.xbutton.display = winPtr->display;
     event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
@@ -1035,6 +1047,7 @@ TkGlfwMouseButtonCallback(
     event.xbutton.same_screen = True;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+#endif
 }
 
 /*
@@ -1086,7 +1099,7 @@ TkGlfwScrollCallback(
     /* Generate button press */
     memset(&event, 0, sizeof(XEvent));
     event.type = ButtonPress;
-    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xbutton.send_event = False;
     event.xbutton.display = winPtr->display;
     event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
@@ -1149,11 +1162,14 @@ TkGlfwKeyCallback(GLFWwindow *window,
     focusWin = winPtr;
     if (winPtr->dispPtr->focusPtr != NULL) {
 	focusWin = winPtr->dispPtr->focusPtr;
+    } else {
+	printf("No winPtr->dispPtr->focusPtr\n");
     }
+    printf("Sending key event to window %s\n", Tk_PathName(focusWin));
 
     memset(&event, 0, sizeof(XEvent));
     event.type = (action == GLFW_PRESS) ? KeyPress : KeyRelease;
-    event.xkey.serial      = LastKnownRequestProcessed(winPtr->display);
+    event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
     event.xkey.send_event  = False;
     event.xkey.display     = winPtr->display;
     event.xkey.window      = Tk_WindowId((Tk_Window)focusWin);

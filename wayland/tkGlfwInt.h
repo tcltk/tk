@@ -424,6 +424,7 @@ MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
+MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
 
 
 /*

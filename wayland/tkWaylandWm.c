@@ -769,12 +769,6 @@ Tk_MakeWindow(
         if (!glfwWindow) {
             return None;
         }
-	/*
-	 * Add the glfwWindow to the TkWindowPrivate struct.
-	 */
-	printf("Setting privatePtr->glfwWindow and UserPointer\n");
-	winPtr->privatePtr->glfwWindow = glfwWindow;
-	glfwSetWindowUserPointer(glfwWindow, winPtr);
 
         /*
          * Ensure WmInfo exists.
