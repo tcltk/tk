@@ -905,26 +905,23 @@ static void ArrowElementDraw(
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
+    XColor *backgroundColor = Tk_GetColorFromObj(tkwin, arrow->backgroundObj);
+    XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
     Ttk_Padding padding;
     int cx = 0, cy = 0;
-    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC gc = Tk_GCForColor(arrowColor, d);
-    XColor *backgroundColor = Tk_GetColorFromObj(tkwin, arrow->backgroundObj);
-    GC bkgc = Tk_GCForColor(backgroundColor, d);
-    XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
-    GC bdgc = Tk_GCForColor(borderColor, d);
 
     /* Create container box */
-    XFillRectangle(Tk_Display(tkwin), d, bkgc, b.x, b.y, (unsigned)b.width-1,
-	(unsigned)b.height-1);
-    XDrawRectangle(Tk_Display(tkwin), d, bdgc, b.x, b.y, (unsigned)b.width-1,
-	(unsigned)b.height-1);
+    XFillRectangle(Tk_Display(tkwin), d, Tk_GCForColor(backgroundColor, d),
+	b.x, b.y, (unsigned)b.width-1, (unsigned)b.height-1);
+    XDrawRectangle(Tk_Display(tkwin), d, Tk_GCForColor(borderColor, d),
+	b.x, b.y, (unsigned)b.width-1, (unsigned)b.height-1);
 
     /* Apply scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Draw indicator */
+    /* Calc indicator size */
     switch (direction) {
 	case ARROW_UP:
 	case ARROW_DOWN:
@@ -945,8 +942,28 @@ static void ArrowElementDraw(
 	    }
 	    break;
     }
+
+    /* Anchor box */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+
+    /* Draw indicator */
+    if (direction <= ARROW_RIGHT) {
+	GC gc = Tk_GCForColor(arrowColor, d);
+	TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+    } else {
+	XGCValues gcvalues;
+	GC gc;
+	unsigned mask;
+
+	gcvalues.foreground = arrowColor->pixel;
+	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+	gcvalues.cap_style = CapRound;
+	gcvalues.join_style = JoinMiter;
+	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
+	gc = Tk_GetGC(tkwin, mask, &gcvalues);
+	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+    }
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {

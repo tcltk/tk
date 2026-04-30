@@ -1145,7 +1145,7 @@ The list of values associated with the item. Each item should have the same
 number of values as the \fB\-columns\fR widget option. If there are fewer
 values than columns, the remaining values are assumed empty. If there are more
 values than columns, the extra values are ignored.
-.IP \fB\state \fIstateSpec\fR
+.IP \fBstate \fIstateSpec\fR
 Modify or query item state. If \fIstateSpec\fR is present, sets the widget
 state: for each flag in stateSpec, sets the corresponding flag or clears it if
 prefixed by an exclamation point. Without \fIstateSpec\fR, the current states

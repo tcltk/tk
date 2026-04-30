@@ -1060,12 +1060,11 @@ static void ArrowElementDraw(
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = DEFAULT_BORDERWIDTH, relief = TK_RELIEF_RAISED;
     Ttk_Padding padding;
     int cx = 0, cy = 0;
-    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC gc = Tk_GCForColor(arrowColor, d);
 
     /* Create container box */
     TkGetScaledPixelValue(NULL, tkwin, arrow->borderWidthObj, &borderWidth);
@@ -1073,11 +1072,11 @@ static void ArrowElementDraw(
     Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    borderWidth, relief);
 
-    /* Apply scaled padding */
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Draw indicator */
+    /* Calc indicator size */
     switch (direction) {
 	case ARROW_UP:
 	case ARROW_DOWN:
@@ -1098,8 +1097,28 @@ static void ArrowElementDraw(
 	    }
 	    break;
     }
+
+    /* Anchor box */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+
+    /* Draw indicator */
+    if (direction <= ARROW_RIGHT) {
+	GC gc = Tk_GCForColor(arrowColor, d);
+	TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+    } else {
+	XGCValues gcvalues;
+	GC gc;
+	unsigned mask;
+
+	gcvalues.foreground = arrowColor->pixel;
+	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+	gcvalues.cap_style = CapRound;
+	gcvalues.join_style = JoinMiter;
+	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
+	gc = Tk_GetGC(tkwin, mask, &gcvalues);
+	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+    }
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {
@@ -1162,24 +1181,43 @@ static void BoxArrowElementDraw(
     Ttk_Padding padding;
     int cx = 0, cy = 0;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC arrowGC = Tk_GCForColor(arrowColor, d);
 
     /* Create container box */
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	borderWidth, relief);
     XDrawLine(disp, d, darkGC, b.x, b.y+1, b.x, b.y+b.height-1+w);
 
-    /* Apply scaled padding */
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Draw indicator */
+    /* Calc indicator size */
     TtkArrowSize(b.width/2, direction, &cx, &cy);
     if ((b.height - cy) % 2 == 1) {
 	++cy;
     }
+
+    /* Anchor box */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-    TtkFillArrow(disp, d, arrowGC, b, direction);
+
+    /* Draw indicator */
+    if (direction <= ARROW_RIGHT) {
+	GC arrowGC = Tk_GCForColor(arrowColor, d);
+	TtkFillArrow(disp, d, arrowGC, b, direction);
+    } else {
+	XGCValues gcvalues;
+	GC arrowGC;
+	unsigned mask;
+
+	gcvalues.foreground = arrowColor->pixel;
+	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+	gcvalues.cap_style = CapRound;
+	gcvalues.join_style = JoinMiter;
+	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
+	arrowGC = Tk_GetGC(tkwin, mask, &gcvalues);
+	TtkDrawArrow(disp, d, arrowGC, b, direction);
+	Tk_FreeGC(Tk_Display(tkwin), arrowGC);
+    }
 }
 
 static const Ttk_ElementSpec BoxArrowElementSpec = {
@@ -1258,17 +1296,35 @@ static void MenuIndicatorElementDraw(
     int size = 5;
     int width, height;
 
-    /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
-    TtkArrowSize(size, direction, &width, &height);
-
-    /* Add scaled padding */
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Draw indicator */
+    /* Calc indicator size */
+    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
+    TtkArrowSize(size, direction, &width, &height);
+
+    /* Anchor box */
     b = Ttk_StickBox(b, width, height, 0);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+
+    /* Draw indicator */
+    if (direction <= ARROW_RIGHT) {
+	GC gc = Tk_GCForColor(arrowColor, d);
+	TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+    } else {
+	XGCValues gcvalues;
+	GC gc;
+	unsigned mask;
+
+	gcvalues.foreground = arrowColor->pixel;
+	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+	gcvalues.cap_style = CapRound;
+	gcvalues.join_style = JoinMiter;
+	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
+	gc = Tk_GetGC(tkwin, mask, &gcvalues);
+	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+    }
 }
 
 static const Ttk_ElementSpec MenuIndicatorElementSpec = {

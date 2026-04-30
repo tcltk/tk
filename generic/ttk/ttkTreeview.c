@@ -7356,10 +7356,12 @@ static void TreeheadingIndicatorDraw(
     /* Draw arrow */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
     gcvalues.foreground = borderColor->pixel;
-    gcvalues.line_width = 1;
-    mask = GCForeground | GCLineWidth;
+    gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+    gcvalues.cap_style = CapRound;
+    gcvalues.join_style = JoinMiter;
+    mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+    TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 
@@ -7440,9 +7442,11 @@ static void TreeitemIndicatorDraw(
 	return;
     }
 
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+    /* Calc indicator size */
     switch (direction) {
 	case CHEVRON_DOWN:
 	    TtkArrowSize(b.width/2, direction, &cx, &cy);
@@ -7452,22 +7456,24 @@ static void TreeitemIndicatorDraw(
 	    break;
 	case CHEVRON_RIGHT:
 	default:
-	    TtkArrowSize(b.height/3, direction, &cx, &cy);
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
 	    if ((b.width - cx) % 2 == 1) {
 		++cx;
 	    }
 	    break;
     }
 
+    /* Anchor box */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
+    /* Draw indicator */
     gcvalues.foreground = borderColor->pixel;
-    gcvalues.line_width = 1;
-    mask = GCForeground | GCLineWidth;
+    gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+    gcvalues.cap_style = CapRound;
+    gcvalues.join_style = JoinMiter;
+    mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
-
     TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
-
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 

@@ -205,58 +205,46 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
  * ChevronPoints --
  *	Compute points of chevron polygon.
  */
-static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[7])
+static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[3])
 {
     int cx, cy, h;
 
     switch (direction) {
 	case CHEVRON_UP:
 	    h = (b.width - 1)/2;
-	    cx = b.x + h;
-	    cy = b.y;
+	    cx = b.x + h + 1;
+	    cy = b.y + 1;
 	    if (b.height <= h) h = b.height - 2;
-	    points[0].x = cx;		points[0].y = cy;
-	    points[1].x = cx + h;	points[1].y = cy + h;
-	    points[2].x = cx + h - 1;	points[2].y = cy + h;
-	    points[3].x = cx;		points[3].y = cy + 1;
-	    points[4].x = cx - h + 1;	points[4].y = cy + h;
-	    points[5].x = cx - h;	points[5].y = cy + h;
+	    points[0].x = cx - h;	points[0].y = cy + h;
+	    points[1].x = cx;		points[1].y = cy;
+	    points[2].x = cx + h;	points[2].y = cy + h;
 	    break;
 	case CHEVRON_DOWN:
 	    h = (b.width - 1)/2;
 	    cx = b.x + h;
 	    cy = b.y + b.height - 1;
 	    if (b.height <= h) h = b.height - 2;
-	    points[0].x = cx;		points[0].y = cy;
-	    points[1].x = cx - h;	points[1].y = cy - h;
-	    points[2].x = cx - h + 1;	points[2].y = cy - h;
-	    points[3].x = cx;		points[3].y = cy - 1;
-	    points[4].x = cx + h - 1;	points[4].y = cy - h;
-	    points[5].x = cx + h;	points[5].y = cy - h;
+	    points[0].x = cx - h;	points[0].y = cy - h - 1;
+	    points[1].x = cx;		points[1].y = cy - 1;
+	    points[2].x = cx + h;	points[2].y = cy - h - 1;
 	    break;
 	case CHEVRON_LEFT:
 	    h = (b.height - 1)/2;
 	    cx = b.x;
 	    cy = b.y + h;
 	    if (b.width <= h) h = b.width - 2;
-	    points[0].x = cx;		points[0].y = cy;
-	    points[1].x = cx + h;	points[1].y = cy - h;
-	    points[2].x = cx + h;	points[2].y = cy - h + 1;
-	    points[3].x = cx + 1;	points[3].y = cy;
-	    points[4].x = cx + h;	points[4].y = cy + h - 1;
-	    points[5].x = cx + h;	points[5].y = cy + h;
+	    points[0].x = cx + h + 1;	points[0].y = cy - h;
+	    points[1].x = cx + 1;	points[1].y = cy;
+	    points[2].x = cx + h + 1;	points[2].y = cy + h;
 	    break;
 	case CHEVRON_RIGHT:
 	    h = (b.height - 1)/2;
 	    cx = b.x + b.width - 1;
 	    cy = b.y + h;
 	    if (b.width <= h) h = b.width - 2;
-	    points[0].x = cx;		points[0].y = cy;
-	    points[1].x = cx - h;	points[1].y = cy + h;
-	    points[2].x = cx - h;	points[2].y = cy + h - 1;
-	    points[3].x = cx - 1;	points[3].y = cy;
-	    points[4].x = cx - h;	points[4].y = cy - h + 1;
-	    points[5].x = cx - h;	points[5].y = cy - h;
+	    points[0].x = cx - h - 1;	points[0].y = cy - h;
+	    points[1].x = cx - 1;	points[1].y = cy;
+	    points[2].x = cx - h - 1;	points[2].y = cy + h;
 	    break;
 	default:
 	    return;
@@ -301,20 +289,19 @@ void TtkArrowSize(int h, ArrowDirection direction, int *widthPtr, int *heightPtr
 void TtkFillArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection direction)
 {
-    XPoint points[7];
-
     /* Get points for shape, fill, and draw outline. Use XDrawPoints to */
     /* work around bug [77527326e5] - ttk artifacts on Ubuntu. */
     if (direction <= ARROW_RIGHT) {
+	XPoint points[4];
 	ArrowPoints(b, direction, points);
 	XFillPolygon(display, d, gc, points, 3, Convex, CoordModeOrigin);
 	XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
 	XDrawPoints(display, d, gc, points, 3, CoordModeOrigin);
     } else {
+	XPoint points[3];
 	ChevronPoints(b, direction, points);
-	/*XFillPolygon(display, d, gc, points, 6, Convex, CoordModeOrigin);*/
-	XDrawLines(display, d, gc, points, 7, CoordModeOrigin);
-	XDrawPoints(display, d, gc, points, 6, CoordModeOrigin);
+	XDrawLines(display, d, gc, points, 3, CoordModeOrigin);
+	XDrawPoints(display, d, gc, points, 3, CoordModeOrigin);
     }
 }
 
@@ -322,18 +309,18 @@ void TtkFillArrow(
 void TtkDrawArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection direction)
 {
-    XPoint points[7];
-
     /* Get points for shape and draw outline. Use XDrawPoints to */
     /* work around bug [77527326e5] - ttk artifacts on Ubuntu. */
     if (direction <= ARROW_RIGHT) {
+	XPoint points[4];
 	ArrowPoints(b, direction, points);
 	XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
 	XDrawPoints(display, d, gc, points, 3, CoordModeOrigin);
     } else {
+	XPoint points[3];
 	ChevronPoints(b, direction, points);
-	XDrawLines(display, d, gc, points, 7, CoordModeOrigin);
-	XDrawPoints(display, d, gc, points, 6, CoordModeOrigin);
+	XDrawLines(display, d, gc, points, 3, CoordModeOrigin);
+	XDrawPoints(display, d, gc, points, 3, CoordModeOrigin);
     }
 }
 
@@ -919,7 +906,7 @@ static void ArrowElementDraw(
     Ttk_Padding padding;
     int cx = 0, cy = 0;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC gc = Tk_GCForColor(arrowColor, d);
+    
 
     /* Draw border */
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
@@ -927,11 +914,11 @@ static void ArrowElementDraw(
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
     DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 
-    /* Apply scaled padding */
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Draw indicator */
+    /* Calc indicator size */
     switch (direction) {
 	case ARROW_UP:
 	case ARROW_DOWN:
@@ -952,8 +939,28 @@ static void ArrowElementDraw(
 	    }
 	    break;
     }
+
+    /* Anchor box */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+
+    /* Draw indicator */
+    if (direction <= ARROW_RIGHT) {
+	GC gc = Tk_GCForColor(arrowColor, d);
+	TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+    } else {
+	XGCValues gcvalues;
+	GC gc;
+	unsigned mask;
+
+	gcvalues.foreground = arrowColor->pixel;
+	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+	gcvalues.cap_style = CapRound;
+	gcvalues.join_style = JoinMiter;
+	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
+	gc = Tk_GetGC(tkwin, mask, &gcvalues);
+	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+    }
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {
@@ -1017,25 +1024,44 @@ static void BoxArrowElementDraw(
     Ttk_Padding padding;
     int cx = 0, cy = 0;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC arrowGC = Tk_GCForColor(arrowColor, d);
 
     /* Create container box */
-    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
-	    0, TK_RELIEF_FLAT);
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height, 0,
+	    TK_RELIEF_FLAT);
     DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
     XDrawLine(disp, d, darkGC, b.x, b.y+1, b.x, b.y+b.height-2+w);
 
-    /* Apply scaled padding */
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Draw indicator */
+    /* Calc indicator size */
     TtkArrowSize(b.width/2, direction, &cx, &cy);
     if ((b.height - cy) % 2 == 1) {
 	++cy;
     }
+
+    /* Anchor box */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-    TtkFillArrow(disp, d, arrowGC, b, direction);
+
+    /* Draw indicator */
+    if (direction <= ARROW_RIGHT) {
+	GC arrowGC = Tk_GCForColor(arrowColor, d);
+	TtkFillArrow(disp, d, arrowGC, b, direction);
+    } else {
+	XGCValues gcvalues;
+	GC arrowGC;
+	unsigned mask;
+
+	gcvalues.foreground = arrowColor->pixel;
+	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+	gcvalues.cap_style = CapRound;
+	gcvalues.join_style = JoinMiter;
+	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
+	arrowGC = Tk_GetGC(tkwin, mask, &gcvalues);
+	TtkDrawArrow(disp, d, arrowGC, b, direction);
+	Tk_FreeGC(Tk_Display(tkwin), arrowGC);
+    }
 }
 
 static const Ttk_ElementSpec BoxArrowElementSpec = {
@@ -1112,7 +1138,6 @@ static void MenubuttonArrowElementDraw(
     MenubuttonArrowElement *arrow = (MenubuttonArrowElement *)elementRecord;
     ArrowDirection direction = ARROW_DOWN;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    GC gc = Tk_GCForColor(arrowColor, d);
     int size = 9;
     int postDirection = POST_BELOW;
     int width = 0, height = 0;
@@ -1131,15 +1156,34 @@ static void MenubuttonArrowElementDraw(
 	case POST_FLUSH:	direction = ARROW_DOWN; break;
     }
 
-    TtkArrowSize(size, direction, &width, &height);
-
-    /* Add scaled padding */
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Draw arrow */
+    /* Calc indicator size */
+    TtkArrowSize(size, direction, &width, &height);
+
+    /* Anchor box */
     b = Ttk_AnchorBox(b, width, height, TK_ANCHOR_CENTER);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+
+    /* Draw indicator */
+    if (direction <= ARROW_RIGHT) {
+	GC gc = Tk_GCForColor(arrowColor, d);
+	TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
+    } else {
+	XGCValues gcvalues;
+	GC gc;
+	unsigned mask;
+
+	gcvalues.foreground = arrowColor->pixel;
+	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
+	gcvalues.cap_style = CapRound;
+	gcvalues.join_style = JoinMiter;
+	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
+	gc = Tk_GetGC(tkwin, mask, &gcvalues);
+	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+    }
 }
 
 static const Ttk_ElementSpec MenubuttonArrowElementSpec = {
@@ -1398,11 +1442,11 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
-    /* Shrink size based on padding */
+    /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Get arrow size */
+    /* Calc indicator size */
     if (state & TTK_STATE_SELECTED) {
 	direction = ARROW_DOWN;
 	TtkArrowSize(b.width/2, direction, &cx, &cy);
@@ -1419,8 +1463,10 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
-    /* Draw arrow */
+    /* Anchor box */
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
+
+    /* Draw indicator */
     gcvalues.foreground = borderColor->pixel;
     gcvalues.line_width = 1;
     mask = GCForeground | GCLineWidth;
