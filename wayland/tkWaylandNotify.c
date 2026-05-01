@@ -979,21 +979,22 @@ TkGlfwMouseButtonCallback(
     /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
 
+    /* Find the widget where the event occurred. */
+    Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
+			    (Tk_Window) winPtr);
+
     /* Update modifier state. */
     glfwModifierState = 0;
-
     if (mods & GLFW_MOD_SHIFT)
         glfwModifierState |= ShiftMask;
-
     if (mods & GLFW_MOD_CONTROL)
         glfwModifierState |= ControlMask;
-
     if (mods & GLFW_MOD_ALT)
         glfwModifierState |= Mod1Mask;
-
     if (mods & GLFW_MOD_SUPER)
         glfwModifierState |= Mod4Mask;
 
+    
     /* Map GLFW button to X11 button and mask. */
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
@@ -1024,17 +1025,17 @@ TkGlfwMouseButtonCallback(
     if (action == GLFW_PRESS) {
         glfwButtonState |= buttonMask;
         event.type = ButtonPress;
+	/* Clicking on a widget should give it focus. */
+	TkSetFocusWin((TkWindow *)target, 0);
     } else {
         glfwButtonState &= ~buttonMask;
         event.type = ButtonRelease;
     }
 
-    Tk_UpdatePointer((Tk_Window) winPtr, (int)xpos, (int)ypos, glfwButtonState);
-#if 0
     event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xbutton.send_event = False;
     event.xbutton.display = winPtr->display;
-    event.xbutton.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xbutton.window = Tk_WindowId(target);
     event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xbutton.subwindow = None;
     event.xbutton.time = CurrentTime;
@@ -1047,7 +1048,7 @@ TkGlfwMouseButtonCallback(
     event.xbutton.same_screen = True;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-#endif
+
 }
 
 /*
