@@ -2420,16 +2420,7 @@ TkpDrawAngledCharsInContext(
  *	This function is the sole drawing entry point.  It calls
  *	TkWinShapeString() to obtain fully shaped, bidi-reordered
  *	TkWinShapedRun buffers, then dispatches each run to the appropriate
- *	GDI rendering path:
- *
- *	  - Runs whose subfont contains color glyph tables (COLR/CPAL or CBLC,
- *	    i.e. color emoji such as Segoe UI Emoji) are drawn with
- *	    ExtTextOutW and ETO_GLYPH_INDEX.  ScriptTextOut uses the legacy
- *	    GDI monochrome rasterizer which ignores color tables entirely,
- *	    producing tofu (empty boxes) for every emoji glyph.
- *
- *	  - All other runs use ScriptTextOut as before so that Uniscribe
- *	    shaping (ligatures, mark positioning, bidi, etc.) is preserved.
+ *	GDI rendering path, ScriptTextOut.
  *
  *	If shaping fails entirely we fall back to plain GDI drawing with the
  *	base font so that text always appears.
