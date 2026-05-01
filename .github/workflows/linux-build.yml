@@ -27,7 +27,6 @@ jobs:
           - "CFLAGS=-DTK_NO_DEPRECATED=1"
           - "--disable-shared"
           - "--enable-symbols"
-          - "--enable-bidi"
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v6
@@ -42,7 +41,7 @@ jobs:
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
           sudo apt-get update
-          sudo apt-get install libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libharfbuzz-dev
+          sudo apt-get install libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev libharfbuzz-dev libharfbuzz-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -132,7 +131,6 @@ jobs:
         config:
           - ""
           - "--enable-symbols"
-          - "--enable-bidi"
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v6
