@@ -333,15 +333,15 @@ TkSetGeometryContainer(
     if (winPtr->geomMgrName != NULL) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "cannot use geometry manager %s inside %s because"
-		    " %s is already managing it's content windows",
+		    "cannot use geometry manager \"%s\" inside \"%s\":"
+		    " %s is already managing its content windows",
 		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
 
-    winPtr->geomMgrName = (char *)ckalloc(strlen(name) + 1);
+    winPtr->geomMgrName = (char *)Tcl_Alloc(strlen(name) + 1);
     strcpy(winPtr->geomMgrName, name);
     return TCL_OK;
 }
@@ -377,7 +377,7 @@ TkFreeGeometryContainer(
 		winPtr->geomMgrName, name);
     }
     if (winPtr->geomMgrName != NULL) {
-	ckfree(winPtr->geomMgrName);
+	Tcl_Free(winPtr->geomMgrName);
 	winPtr->geomMgrName = NULL;
     }
 }
@@ -464,7 +464,7 @@ Tk_MaintainGeometry(
     if (!isNew) {
 	containerPtr = (MaintainContainer *)Tcl_GetHashValue(hPtr);
     } else {
-	containerPtr = (MaintainContainer *)ckalloc(sizeof(MaintainContainer));
+	containerPtr = (MaintainContainer *)Tcl_Alloc(sizeof(MaintainContainer));
 	containerPtr->ancestor = container;
 	containerPtr->checkScheduled = 0;
 	containerPtr->contentPtr = NULL;
@@ -482,7 +482,7 @@ Tk_MaintainGeometry(
 	    goto gotContent;
 	}
     }
-    contentPtr = (MaintainContent *)ckalloc(sizeof(MaintainContent));
+    contentPtr = (MaintainContent *)Tcl_Alloc(sizeof(MaintainContent));
     contentPtr->content = window;
     contentPtr->container = container;
     contentPtr->nextPtr = containerPtr->contentPtr;
@@ -612,7 +612,7 @@ Tk_UnmaintainGeometry(
     }
     Tk_DeleteEventHandler(contentPtr->content, StructureNotifyMask,
 	    MaintainContentProc, contentPtr);
-    ckfree(contentPtr);
+    Tcl_Free(contentPtr);
     if (containerPtr->contentPtr == NULL) {
 	if (containerPtr->ancestor != NULL) {
 	    for (ancestor = container; ; ancestor = Tk_Parent(ancestor)) {
@@ -627,7 +627,7 @@ Tk_UnmaintainGeometry(
 	    Tcl_CancelIdleCall(MaintainCheckProc, containerPtr);
 	}
 	Tcl_DeleteHashEntry(hPtr);
-	ckfree(containerPtr);
+	Tcl_Free(containerPtr);
     }
 }
 

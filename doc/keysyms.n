@@ -573,7 +573,7 @@ Greek_ETA                         1991     0x7C7
 Greek_THETA                       1992     0x7C8
 Greek_IOTA                        1993     0x7C9
 Greek_KAPPA                       1994     0x7CA
-Greek_LAMDA                       1995     0x7CB
+Greek_LAMBDA                      1995     0x7CB
 Greek_MU                          1996     0x7CC
 Greek_NU                          1997     0x7CD
 Greek_XI                          1998     0x7CE
@@ -597,7 +597,7 @@ Greek_eta                         2023     0x7E7
 Greek_theta                       2024     0x7E8
 Greek_iota                        2025     0x7E9
 Greek_kappa                       2026     0x7EA
-Greek_lamda                       2027     0x7EB
+Greek_lambda                      2027     0x7EB
 Greek_mu                          2028     0x7EC
 Greek_nu                          2029     0x7ED
 Greek_xi                          2030     0x7EE
@@ -1096,6 +1096,7 @@ dead_U                           65161     0xFE89
 dead_schwa                       65162     0xFE8A
 dead_SCHWA                       65163     0xFE8B
 dead_greek                       65164     0xFE8C
+dead_hamza                       65165     0xFE8D
 dead_lowline                     65168     0xFE90
 dead_aboveverticalline           65169     0xFE91
 dead_belowverticalline           65170     0xFE92
@@ -1155,7 +1156,7 @@ Escape                           65307     0xFF1B
 Multi_key                        65312     0xFF20
 Kanji                            65313     0xFF21
 Muhenkan                         65314     0xFF22
-Henkan_Mode                      65315     0xFF23
+Henkan                           65315     0xFF23
 Romaji                           65316     0xFF24
 Hiragana                         65317     0xFF25
 Katakana                         65318     0xFF26

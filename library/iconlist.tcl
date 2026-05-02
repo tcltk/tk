@@ -453,9 +453,9 @@ package require tk
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
 	bind $canvas <Key>		[namespace code {my KeyPress %A}]
 	bind $canvas <Alt-Key>		{# nothing}
-	bind $canvas <Meta-Key> 	{# nothing}
-	bind $canvas <Control-Key> 	{# nothing}
-	bind $canvas <Command-Key> 	{# nothing}
+	bind $canvas <Meta-Key>		{# nothing}
+	bind $canvas <Control-Key>	{# nothing}
+	bind $canvas <Command-Key>	{# nothing}
 	bind $canvas <Fn-Key>		{# nothing}
 
 	bind $canvas <FocusIn>		[namespace code {my FocusIn}]

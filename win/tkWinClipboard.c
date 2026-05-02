@@ -62,7 +62,7 @@ TkSelGetSelection(
     if (!OpenClipboard(NULL)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"clipboard cannot be opened, another application grabbed it"));
-	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -204,7 +204,7 @@ TkSelGetSelection(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "%s selection doesn't exist or form \"%s\" not defined",
 	    Tk_GetAtomName(tkwin, selection), Tk_GetAtomName(tkwin, target)));
-    Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
+    Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -314,7 +314,7 @@ TkWinClipboardRender(
      * Copy the data and change EOL characters.
      */
 
-    buffer = rawText = (char *)ckalloc(length + 1);
+    buffer = rawText = (char *)Tcl_Alloc(length + 1);
     if (targetPtr != NULL) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = cbPtr->nextPtr) {
@@ -331,7 +331,7 @@ TkWinClipboardRender(
 
 	Tcl_DStringInit(&ds);
 	Tcl_UtfToWCharDString(rawText, TCL_INDEX_NONE, &ds);
-	ckfree(rawText);
+	Tcl_Free(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 		Tcl_DStringLength(&ds) + 2);
 	if (!handle) {
@@ -366,11 +366,13 @@ TkWinClipboardRender(
 void
 TkSelUpdateClipboard(
     TkWindow *winPtr,
-    TCL_UNUSED(TkClipboardTarget *))
+    clipboardOption opt)
 {
-    HWND hwnd = TkWinGetHWND(winPtr->window);
+    if (opt == CLIPBOARD_APPEND || opt == CLIPBOARD_CLEAR) {
+	HWND hwnd = TkWinGetHWND(winPtr->window);
 
-    UpdateClipboard(hwnd);
+	UpdateClipboard(hwnd);
+    }
 }
 
 /*

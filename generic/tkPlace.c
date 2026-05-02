@@ -84,7 +84,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_INDEX_NONE,
 	offsetof(Content, borderMode), TK_OPTION_ENUM_VAR, borderModeStrings, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL, NULL, offsetof(Content, heightObj),
-	offsetof(Content, height), TK_OPTION_NULL_OK, 0, 0},
+	offsetof(Content, height), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_INDEX_NONE, offsetof(Content, inTkwin),
 	0, 0, IN_MASK},
     {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, NULL,
@@ -98,11 +98,11 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0.0", TCL_INDEX_NONE,
 	offsetof(Content, relY), 0, 0, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL, NULL, offsetof(Content, widthObj),
-	offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
+	offsetof(Content, width), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Content, xObj),
-	offsetof(Content, x), 0, 0, 0},
+	offsetof(Content, x), TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Content, yObj),
-	offsetof(Content, y), 0, 0, 0},
+	offsetof(Content, y), TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
@@ -155,7 +155,7 @@ static const Tk_GeomMgr placerType = {
 static void		ContentStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
-			    Tk_OptionTable table, int objc,
+			    Tk_OptionTable table, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		PlaceInfoCommand(Tcl_Interp *interp, Tk_Window tkwin);
 static Content *		CreateContent(Tk_Window tkwin, Tk_OptionTable table);
@@ -189,7 +189,7 @@ int
 Tk_PlaceObjCmd(
     void *clientData,	/* Interpreter main window. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window main_win = (Tk_Window)clientData;
@@ -388,7 +388,7 @@ CreateContent(
      * populate it with some default values.
      */
 
-    contentPtr = (Content *)ckalloc(sizeof(Content));
+    contentPtr = (Content *)Tcl_Alloc(sizeof(Content));
     memset(contentPtr, 0, sizeof(Content));
     contentPtr->tkwin = tkwin;
     contentPtr->inTkwin = NULL;
@@ -430,7 +430,7 @@ FreeContent(
     }
     Tk_FreeConfigOptions(contentPtr, contentPtr->optionTable,
 	    contentPtr->tkwin);
-    ckfree(contentPtr);
+    Tcl_Free(contentPtr);
 }
 
 /*
@@ -541,7 +541,7 @@ CreateContainer(
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->containerTable, (char *)tkwin, &isNew);
     if (isNew) {
-	containerPtr = (Container *)ckalloc(sizeof(Container));
+	containerPtr = (Container *)Tcl_Alloc(sizeof(Container));
 	containerPtr->tkwin = tkwin;
 	containerPtr->contentPtr = NULL;
 	containerPtr->abortPtr = NULL;
@@ -593,7 +593,7 @@ FindContainer(
  *
  * ConfigureContent --
  *
- *	This function is called to process an argv/argc list to reconfigure
+ *	This function is called to process an objv/objc list to reconfigure
  *	the placement of a window.
  *
  * Results:
@@ -612,7 +612,7 @@ ConfigureContent(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Window tkwin,		/* Token for the window to manipulate. */
     Tk_OptionTable table,	/* Token for option table. */
-    int objc,			/* Number of config arguments. */
+    Tcl_Size objc,			/* Number of config arguments. */
     Tcl_Obj *const objv[])	/* Object values for arguments. */
 {
     Container *containerPtr;

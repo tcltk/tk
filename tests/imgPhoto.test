@@ -1,6 +1,5 @@
 # This file is a Tcl script to test out the "photo" image type and the other
-# procedures in the file tkImgPhoto.c. It is organized in the standard fashion
-# for Tcl tests.
+# procedures in the file tkImgPhoto.c.
 #
 # Copyright © 1994 The Australian National University
 # Copyright © 1994-1997 Sun Microsystems, Inc.
@@ -10,8 +9,9 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 
+# NOTES
 #
-# This file is somewhat caothic: the order of the tests does not
+# This file is somewhat chaotic: the order of the tests does not
 # really follow the order of the corresponding functions in
 # tkImgPhoto.c. Probably, because early versions had only a few tests
 # and over time test cases were added in bits and pieces.
@@ -21,8 +21,6 @@
 # To help keeping the overview, the table below lists where to find
 # tests for each of the functions in tkImgPhoto.c. The function are
 # listed in the order as they appear in the source file.
-#
-
 #
 # Function name                         Tests for function
 #--------------------------------------------------------------------------
@@ -55,11 +53,8 @@
 # Tk_PhotoSetMetadata:                  imgPhoto-22.*
 #--------------------------------------------------------------------------
 #
-
 #
 # Some tests are not specific to a function in tkImgPhoto.c. They are:
-#
-
 #
 # Test name(s)          Description
 #--------------------------------------------------------------------------
@@ -72,12 +67,53 @@
 # imgPhoto-13.*         Tests for separation in different interpreters
 # imgPhoto-14.*         Test GIF format. Would belong to imgGIF.test
 #                       - which does not exist.
+
+#
+# TESTFILE INITIALIZATION
 #
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-tcltest::configure {*}$argv
-tcltest::loadTestedCommands
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import image
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc checkImgTrans {img} {
+    set result {}
+    foreachPixel $img x y {
+	if {[$img transparency get $x $y]} {
+	    lappend result $x,$y
+	}
+    }
+    return $result
+}
+
+proc checkImgTransLoop {img script1 script2} {
+    set result {}
+    foreachPixel $img x y {
+	eval $script1
+	lappend result {*}[checkImgTrans $img]
+	append result :
+	eval $script2
+	lappend result {*}[checkImgTrans $img]
+	append result .
+    }
+    return $result
+}
 
 #
 # Used for imgPhoto-4.65 - imgPhoto-4.73
@@ -92,27 +128,10 @@ proc foreachPixel {img xVar yVar script} {
 	}
     }
 }
-proc checkImgTrans {img} {
-    set result {}
-    foreachPixel $img x y {
-	if {[$img transparency get $x $y]} {
-	    lappend result $x,$y
-	}
-    }
-    return $result
-}
-proc checkImgTransLoop {img script1 script2} {
-    set result {}
-    foreachPixel $img x y {
-	eval $script1
-	lappend result {*}[checkImgTrans $img]
-	append result :
-	eval $script2
-	lappend result {*}[checkImgTrans $img]
-	append result .
-    }
-    return $result
-}
+
+#
+# COMMON TEST SETUP
+#
 
 imageInit
 set README [makeFile {
@@ -122,8 +141,9 @@ set README [makeFile {
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
 
-testConstraint needsTcl867 [package vsatisfies [package provide Tcl] 8.6.7-]
-
+#
+# TESTS
+#
 
 test imgPhoto-1.1 {options for photo images} -body {
     image create photo photo1 -width 79 -height 83
@@ -192,7 +212,7 @@ test imgPhoto-1.13 {option -withalpha, normal use} -setup {
 test imgPhoto-1.14 {options for photo images - error case} -body {
     image create photo photo1 -metadata
 } -returnCodes error -result {value for "-metadata" missing}
-
+
 test imgPhoto-2.1 {ImgPhotoCreate procedure} -setup {
     imageCleanup
 } -body {
@@ -255,9 +275,7 @@ test imgPhoto-3.4 {ImgPhotoConfigureModel: -data <ppm>} -setup {
     imageCleanup
 } -result {20 20}
 # This testcase fails with Tcl < 8.6.7, due to [25842c]
-test imgPhoto-3.5 {ImgPhotoConfigureModel: -data <png>} -constraints {
-    needsTcl867
-} -setup {
+test imgPhoto-3.5 {ImgPhotoConfigureModel: -data <png>} -setup {
     image create photo photo1 -file $teapotPhotoFile
     image create photo photo2
 } -body {
@@ -275,7 +293,7 @@ test imgPhoto-3.6 {ImgPhotoConfigureModel: -data <default>} -setup {
 } -cleanup {
     imageCleanup
 } -result {20 20}
-
+
 test imgPhoto-4.1 {ImgPhotoCmd procedure} -setup {
     image create photo photo1
 } -body {
@@ -365,7 +383,7 @@ test imgPhoto-4.12 {ImgPhotoCmd procedure: copy option} -setup {
     photo1 copy blah
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {image "blah" doesn't exist or is not a photo image}
+} -result {image "blah" does not exist or is not a photo image}
 test imgPhoto-4.13 {ImgPhotoCmd procedure: copy option} -setup {
     image create photo photo1
     image create photo photo2
@@ -1018,7 +1036,7 @@ test imgPhoto-4.87 {ImgPhotoCmd, transparency set: no opt} -setup {
     photo1 transparency set 0 0 0
     photo1 transparency set 1 0 1
     list [photo1 transparency get 0 0 -alpha] \
-        [photo1 transparency get 1 0 -alpha]
+	[photo1 transparency get 1 0 -alpha]
 } -cleanup {
     imageCleanup
 } -result {255 0}
@@ -1064,17 +1082,17 @@ test imgPhoto-4.93 {ImgPhotoCmd put: data in ppm format} -setup {
     photo2 put $imgdata -format ppm
     set result {}
     if {[image width photo1] != [image width photo2] \
-            || [image height photo1] != [image height photo2]} {
-        lappend result [list [image width photo2] [image height photo2]]
+	    || [image height photo1] != [image height photo2]} {
+	lappend result [list [image width photo2] [image height photo2]]
     } else {
-        lappend result 1
+	lappend result 1
     }
     foreach point {{206 125} {67 12} {13 46} {19 184}} {
-        if {[photo1 get {*}$point] ne [photo2 get {*}$point]} {
-            lappend result [photo2 get {*}$point]
-        } else {
-            lappend result 1
-        }
+	if {[photo1 get {*}$point] ne [photo2 get {*}$point]} {
+	    lappend result [photo2 get {*}$point]
+	} else {
+	    lappend result 1
+	}
     }
     set result
 } -cleanup {
@@ -1099,7 +1117,7 @@ test imgPhoto-4.96 {ImgPhotoCmd put: "default" handler is selected} -setup {
     image create photo photo1
     image create photo photo2
     set imgData {{{1 2 3 4} {5 6 7 8} {9 10 11 12}}
-        {{13 14 15 15} {17 18 19 20} {21 22 23 24}}}
+	{{13 14 15 15} {17 18 19 20} {21 22 23 24}}}
 } -body {
     photo1 put $imgData
     photo2 put $imgData -format default
@@ -1107,8 +1125,8 @@ test imgPhoto-4.96 {ImgPhotoCmd put: "default" handler is selected} -setup {
     lappend result [list [image width photo1] [image height photo1]]
     lappend result [list [image width photo2] [image height photo2]]
     lappend result [string equal \
-        [photo1 data -format "default -colorformat rgba"] \
-        [photo2 data -format "default -colorformat rgba"]]
+	[photo1 data -format "default -colorformat rgba"] \
+	[photo2 data -format "default -colorformat rgba"]]
     set result
 } -cleanup {
     imageCleanup
@@ -1246,9 +1264,9 @@ test imgPhoto-4.111 {ImgPhotoCmd data: invalid -from coords #4} -setup {
     {coordinates for -from option extend outside image}
 test imgPhoto-4.112 {ImgPhotoCmd data: -from with 2 coords} -setup {
     image create photo photo1 -data {
-        {black black black black black}
-        {white white white white white}
-        {green green green green green}}
+	{black black black black black}
+	{white white white white white}
+	{green green green green green}}
 } -body {
     set imgData [photo1 data -from 2 1]
     list [llength [lindex $imgData 0]] [llength $imgData]
@@ -1287,9 +1305,7 @@ test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
 } -result {{{255 0 0 170} {0 128 0 255}} {{0 0 255 204} {255 255 255 221}}}
 # This testcase fails with Tcl < 8.6.7, due to [25842c]
 test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
-    results in same image as orignial } -constraints {
-        needsTcl867
-} -setup {
+    results in same image as orignial } -setup {
     image create photo teapot -file $teapotPhotoFile
     teapot copy teapot -from 50 60 70 80 -shrink
     image create photo teapotTransp -file $transpTeapotPhotoFile
@@ -1300,19 +1316,19 @@ test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     # We don't test gif here, as there seems to be a problem with
     # <imgName> data and gif format ("too many colors", probably a bug)
     foreach fmt {ppm png {default -colorformat rgba} \
-            {default -colorformat list}} {
-        set imgData [teapotTransp data -format $fmt]
-        photo1 blank
-        photo1 put $imgData
-        if { ! [string equal [photo1 data] [teapotTransp data]]} {
-            lappend result $fmt
-        }
+	    {default -colorformat list}} {
+	set imgData [teapotTransp data -format $fmt]
+	photo1 blank
+	photo1 put $imgData
+	if { ! [string equal [photo1 data] [teapotTransp data]]} {
+	    lappend result $fmt
+	}
     }
     set imgData [teapot data -format default]
     photo1 blank
     photo1 put $imgData
     if { ! [string equal [photo1 data] [teapot data]]} {
-        lappend result default
+	lappend result default
     }
     set result
 } -cleanup {
@@ -1320,7 +1336,7 @@ test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     unset result
     imageCleanup
 } -result {}
-
+
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -setup {
     destroy .c
     pack [canvas .c]
@@ -1431,7 +1447,7 @@ test imgPhoto-8.3 {ImgPhotoDelete procedure, name cleanup} -body {
     photo1 copy photo2
 } -returnCodes error -cleanup {
     imageCleanup
-} -result {image "photo2" doesn't exist or is not a photo image}
+} -result {image "photo2" does not exist or is not a photo image}
 
 test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -body {
     image create photo photo2 -file $teapotPhotoFile
@@ -1488,7 +1504,7 @@ test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     photo1 copy i1
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {image "i1" doesn't exist or is not a photo image}
+} -returnCodes error -result {image "i1" does not exist or is not a photo image}
 
 test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -body {
     image create photo p3 -file $teapotPhotoFile
@@ -1814,7 +1830,7 @@ test imgPhoto-18.1 {MatchFileFormat: "default" format not supported} -setup {
     catch {removeFile $f}
     unset f
 } -returnCodes error -result {-file option isn't supported for default images}
-
+
 test imgPhoto-19.1 {MatchStringFormat: with "-format default"} -setup {
     image create photo photo1
 } -body {
@@ -1824,7 +1840,7 @@ test imgPhoto-19.1 {MatchStringFormat: with "-format default"} -setup {
     imageCleanup
 } -result {3 2}
 test imgPhoto-19.2 {MatchStringFormat: without -format option,
-        default fmt} -body {
+	default fmt} -body {
     image create photo photo1
     photo1 put {{red} {green}}
     list [image width photo1] [image height photo1]
@@ -2062,9 +2078,9 @@ test imgPhoto-21.4 {bug daa10097: only 3 metadata list items on configure} -setu
 } -body {
     set a {}
     foreach line [photo1 configure] {
-        if {[lindex $line 0] eq {-metadata}} {
-            set a $line
-        }
+	if {[lindex $line 0] eq {-metadata}} {
+	    set a $line
+	}
     }
     set a
 } -cleanup {
@@ -2101,7 +2117,11 @@ test imgPhoto-22.3 {option -metadata, clear value} -setup {
     catch {image delete photo1}
 } -result {}
 
-# 23.x GIF images with metadata
+#
+# COMMON TEST SETUP
+#
+# For tests imgPhoto-23.* : GIF images with metadata
+#
 
 # The following gif core data is used by the following data.
 # N.B. this is the same image as test imgPhoto-18.10
@@ -2137,7 +2157,7 @@ test imgPhoto-23.2 {GIF file comment before image data (-file)} -setup {
     append data "\x21\xfe\x04" "ABCD" "\x0"
     # Trailer
     append data $::gifdata $::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts -nonewline $h $data
     close $h
@@ -2170,7 +2190,7 @@ test imgPhoto-23.4 {GIF comment after image data (-file)} -setup {
     append data "\x21\xfe\x04" "ABCD" "\x0"
     # Trailer
     append data $::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2207,7 +2227,7 @@ test imgPhoto-23.6 {Two GIF comment blocks (-file)} -setup {
     append data "\x21\xfe\x04" "ABCD" "\x0"
     # Trailer
     append data $::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2245,7 +2265,7 @@ test imgPhoto-23.8 {create: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2286,7 +2306,7 @@ test imgPhoto-23.10 {configure: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2328,7 +2348,7 @@ test imgPhoto-23.12 {configure: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2371,7 +2391,7 @@ test imgPhoto-23.14 {configure: test if shared metadata object is not preserved\
     # Trailer
     append data $::gifdata $::gifend
 
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
     set h [open $path "WRONLY BINARY CREAT"]
     puts $h $data
     close $h
@@ -2410,7 +2430,7 @@ test imgPhoto-23.16 {output data with comment (from -metadata property)}\
 test imgPhoto-23.17 {output file with comment (from -metadata property)}\
 -setup {
     set data $::gifstart$::gifdata$::gifend
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
 } -body {
     image create photo gif1 -data $data
     gif1 configure -metadata [dict create comment ABCD]
@@ -2441,7 +2461,7 @@ test imgPhoto-23.18 {configure: empty metadata parameter overwrites image metada
 test imgPhoto-23.19 {write: empty metadata parameter overwrites image metadata} -setup {
     image create photo gif1 -data $::gifstart$::gifdata$::gifend\
 	    -metadata {comment bar}
-    set path [file join [configure -tmpdir] test.gif]
+    set path [file join [tcltest::configure -tmpdir] test.gif]
 } -body {
     gif1 write $path -format gif -metadata {}
     image delete gif1
@@ -2606,10 +2626,14 @@ test imgPhoto-23.29 {GIF multiple options metadata in -index 1} -setup {
     catch {image delete gif1}
 } -result {{update region} {0 0 16 16} {delay time} 4096 {disposal method} {do not dispose} {user interaction} 1}
 
+#
+# COMMON TEST SETUP
+#
+# For tests imgPhoto-24.*
+#
 unset -nocomplain gifstart gifdata gifend
-
-
 set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+
 test imgPhoto-24.1 {Read GIF file with -from option - Bug [1576528]} -body {
     set earthPhotoFile [file join [file dirname [info script]] earth.gif]
     image create photo gif1
@@ -2658,9 +2682,15 @@ test imgPhoto-24.6 {Read GIF file with -from option, read large region from smal
 } -cleanup {
     catch {image delete gif1}
 } -result {{coordinates for -from option extend outside source image} 0 0}
-unset earthPhotoFile
 
+#
+# COMMON TEST SETUP
+#
+# For tests imgPhoto-25.*
+#
+unset earthPhotoFile
 set ousterPhotoFile [file join [file dirname [info script]] ouster.png]
+
 test imgPhoto-25.1 {Read PNG file with -from option - Bug [1576528]} -body {
     image create photo png1
     png1 read $ousterPhotoFile -from 102 62 135 97
@@ -2704,17 +2734,20 @@ test imgPhoto-25.6 {Read PNG file with -from option, read large region from smal
 } -cleanup {
     catch {image delete png1}
 } -result {{coordinates for -from option extend outside source image} 0 0}
-unset ousterPhotoFile
 
+#
+# TESTFILE CLEANUP
+#
+
+unset ousterPhotoFile
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
 catch {rename checkImgTransLoop {}}
 imageFinish
-
-# cleanup
 removeFile README-imgPhoto
+
+testutils forget image
 cleanupTests
-return
 
 # Local variables:
 # mode: tcl

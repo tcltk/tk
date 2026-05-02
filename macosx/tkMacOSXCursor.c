@@ -367,7 +367,7 @@ TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     TCL_UNUSED(Tk_Window),		/* Window in which cursor will be used. */
-    Tk_Uid string)		/* Description of cursor. See manual entry
+    const char *string)		/* Description of cursor. See manual entry
 				 * for details on legal syntax. */
 {
     TkMacOSXCursor *macCursorPtr = NULL;
@@ -381,21 +381,21 @@ TkGetCursorByName(
 
     if (Tcl_SplitList(interp, string, &argc, &argv) == TCL_OK) {
 	if (argc) {
-	    macCursorPtr = (TkMacOSXCursor *)ckalloc(sizeof(TkMacOSXCursor));
+	    macCursorPtr = (TkMacOSXCursor *)Tcl_Alloc(sizeof(TkMacOSXCursor));
 	    macCursorPtr->info.cursor = (Tk_Cursor) macCursorPtr;
 	    macCursorPtr->macCursor = nil;
 	    macCursorPtr->type = 0;
 	    FindCursorByName(macCursorPtr, argv[0]);
 	}
-	ckfree(argv);
+	Tcl_Free(argv);
     }
     if (!macCursorPtr || (!macCursorPtr->macCursor &&
 	    macCursorPtr->type != NONE)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad cursor spec \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", (char *)NULL);
 	if (macCursorPtr) {
-	    ckfree(macCursorPtr);
+	    Tcl_Free(macCursorPtr);
 	    macCursorPtr = NULL;
 	}
     }
@@ -532,11 +532,11 @@ TkMacOSXInstallCursor(
 
 void
 TkpSetCursor(
-    TkpCursor cursor)
+    Cursor cursor)
 {
-    int cursorChanged = 1;
+    bool cursorChanged = true;
 
-    if (cursor == NULL) {
+    if (cursor == None) {
 	/*
 	 * This is a little tricky. We can't really tell whether
 	 * gCurrentCursor is NULL because it was NULL last time around or
@@ -548,7 +548,7 @@ TkpSetCursor(
 	gCurrentCursor = NULL;
     } else {
 	if (gCurrentCursor == (TkMacOSXCursor *) cursor) {
-	    cursorChanged = 0;
+	    cursorChanged = false;
 	}
 	gCurrentCursor = (TkMacOSXCursor *) cursor;
     }

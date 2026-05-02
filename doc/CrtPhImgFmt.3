@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-.TH Tk_CreatePhotoImageFormat 3 8.7 Tk "Tk Library Procedures"
+.TH Tk_CreatePhotoImageFormat 3 9.0 Tk "Tk Library Procedures"
 .so man.macros
 .BS
 .SH NAME
@@ -18,17 +18,17 @@ Tk_CreatePhotoImageFormat \- define new file format for photo images
 .nf
 \fB#include <tk.h>\fR
 .sp
-.VS 8.7
+.VS 9.0
 \fBTk_CreatePhotoImageFormatVersion3\fR(\fIformatVersion3Ptr\fR)
-.VE 8.7
+.VE 9.0
 .sp
 \fBTk_CreatePhotoImageFormat\fR(\fIformatPtr\fR)
 .SH ARGUMENTS
 .AS "const Tk_PhotoImageFormatVersion3" *formatVersion3Ptr
-.VS 8.7
+.VS 9.0
 .AP "const Tk_PhotoImageFormatVersion3" *formatVersion3Ptr in
 Structure that defines the new file format including metadata functionality.
-.VE 8.7
+.VE 9.0
 .AP "const Tk_PhotoImageFormat" *formatPtr in
 Structure that defines the new file format.
 .BE
@@ -56,7 +56,7 @@ plus a \fBTk_PhotoImageFormatVersion3\fR structure, which contains the
 name of the image file format and pointers to six procedures provided
 by the handler to deal with files and strings in this format.  The
 Tk_PhotoImageFormatVersion3 structure contains the following fields:
-.VS 8.7
+.VS 9.0
 .CS
 typedef struct {
     const char *\fIname\fR;
@@ -68,7 +68,7 @@ typedef struct {
     Tk_ImageStringWriteProcVersion3 *\fIstringWriteProc\fR;
 } \fBTk_PhotoImageFormatVersion3\fR;
 .CE
-.VE 8.7
+.VE 9.0
 .PP
 The handler need not provide implementations of all six procedures.
 For example, the procedures that handle string data would not be
@@ -91,7 +91,7 @@ the \fB\-format\fR option. The first character of \fIformatPtr->name\fR
 must not be an uppercase character from the ASCII character set
 (that is, one of the characters \fBA\fR-\fBZ\fR).  Such names are used
 only for legacy interface support (see below).
-.VS 8.7
+.VS 9.0
 .SS FILEMATCHPROC
 .PP
 \fIformatPtr->fileMatchProc\fR provides the address of a procedure for
@@ -358,7 +358,7 @@ metadata within the driver.
 For example, the creation of an expensive metadata key may depend on a
 format string option or on a metadata input key.
 .PP
-.VE 8.7
+.VE 9.0
 .SH "VERSION 2 INTERFACE"
 .PP
 Version 2 Interface does not include the possibility for the driver to

@@ -59,14 +59,13 @@ static void		InitCursorObj(Tcl_Obj *objPtr);
  * option is set.
  */
 
-const TkObjType tkCursorObjType = {
-    {"cursor",			/* name */
+const Tcl_ObjType tkCursorObjType = {
+    "cursor",			/* name */
     FreeCursorObjProc,		/* freeIntRepProc */
     DupCursorObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V1(TkLengthOne)},
-    0
+    TCL_OBJTYPE_V1(TkLengthOne)
 };
 
 /*
@@ -103,7 +102,7 @@ Tk_AllocCursorFromObj(
 {
     TkCursor *cursorPtr;
 
-    if (objPtr->typePtr != &tkCursorObjType.objType) {
+    if (objPtr->typePtr != &tkCursorObjType) {
 	InitCursorObj(objPtr);
     }
     cursorPtr = (TkCursor *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -190,7 +189,7 @@ Tk_Cursor
 Tk_GetCursor(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    Tk_Uid string)		/* Description of cursor. See manual entry for
+    const char *string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
     TkCursor *cursorPtr = TkcGetCursor(interp, tkwin, string);
@@ -321,8 +320,8 @@ Tk_GetCursorFromData(
     const char *mask,		/* Bitmap data for cursor mask. */
     int width, int height,	/* Dimensions of cursor. */
     int xHot, int yHot,		/* Location of hot-spot in cursor. */
-    Tk_Uid fg,			/* Foreground color for cursor. */
-    Tk_Uid bg)			/* Background color for cursor. */
+    const char *fg,			/* Foreground color for cursor. */
+    const char *bg)			/* Background color for cursor. */
 {
     DataKey dataKey;
     Tcl_HashEntry *dataHashPtr;
@@ -341,8 +340,8 @@ Tk_GetCursorFromData(
     dataKey.height = height;
     dataKey.xHot = xHot;
     dataKey.yHot = yHot;
-    dataKey.fg = fg;
-    dataKey.bg = bg;
+    dataKey.fg = Tk_GetUid(fg);
+    dataKey.bg = Tk_GetUid(bg);
     dataKey.display = Tk_Display(tkwin);
     dataHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorDataTable,
 	    (char *) &dataKey, &isNew);
@@ -360,13 +359,13 @@ Tk_GetCursorFromData(
     if (TkParseColor(dataKey.display, Tk_Colormap(tkwin), fg, &fgColor) == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"invalid color name \"%s\"", fg));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", (char *)NULL);
 	goto error;
     }
     if (TkParseColor(dataKey.display, Tk_Colormap(tkwin), bg, &bgColor) == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"invalid color name \"%s\"", bg));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", "COLOR", (char *)NULL);
 	goto error;
     }
 
@@ -489,7 +488,7 @@ FreeCursor(
     }
     TkpFreeCursor(cursorPtr);
     if (cursorPtr->objRefCount == 0) {
-	ckfree(cursorPtr);
+	Tcl_Free(cursorPtr);
     }
 }
 
@@ -597,7 +596,7 @@ FreeCursorObj(
     if (cursorPtr != NULL) {
 	if ((cursorPtr->objRefCount-- <= 1)
 		&& (cursorPtr->resourceRefCount == 0)) {
-	    ckfree(cursorPtr);
+	    Tcl_Free(cursorPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }
@@ -700,7 +699,7 @@ GetCursorFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkCursorObjType.objType) {
+    if (objPtr->typePtr != &tkCursorObjType) {
 	InitCursorObj(objPtr);
     }
 
@@ -777,7 +776,7 @@ InitCursorObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkCursorObjType.objType;
+    objPtr->typePtr = &tkCursorObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 

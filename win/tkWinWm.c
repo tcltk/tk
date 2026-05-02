@@ -14,11 +14,9 @@
  */
 
 #include "tkWinInt.h"
-#include <windows.h>
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
-#include <shellapi.h>
 #include "tkWinIco.h"
 /*
  * These next two defines are only valid on Win2K/XP+.
@@ -303,7 +301,13 @@ typedef struct TkWmInfo {
 
 #define WM_TRANSIENT_STYLE \
 		(WS_POPUP|WS_CAPTION|WS_SYSMENU|WS_CLIPSIBLINGS|CS_DBLCLKS)
-#define EX_TRANSIENT_STYLE (WS_EX_DLGMODALFRAME)
+/*
+ * Bug 159aa5eb: Removed extended style WS_EX_DLGMODALFRAME. This style has
+ * the undocumented side effect to enable the unwanted system menu items
+ * "Resize", "Minimize" and "Maximize". "Resise" menu item may be correctly
+ * enabled by "wm resizable".
+ */
+#define EX_TRANSIENT_STYLE (0)
 
 /*
  * The following structure is the official type record for geometry management
@@ -329,7 +333,7 @@ typedef struct {
 				 * Windows brain damage where it sends the
 				 * WM_GETMINMAXINFO message before the
 				 * WM_CREATE window. */
-    int initialized;		/* Flag indicating whether thread-specific
+    bool initialized;		/* Flag indicating whether thread-specific
 				 * elements of module have been
 				 * initialized. */
     int firstWindow;		/* Flag, cleared when the first window is
@@ -344,7 +348,7 @@ static Tcl_ThreadDataKey dataKey;
  * they must be shared across threads.
  */
 
-static int initialized;		/* Flag indicating whether module has been
+static bool initialized;		/* Flag indicating whether module has been
 				 * initialized. */
 
 TCL_DECLARE_MUTEX(winWmMutex)
@@ -373,8 +377,8 @@ static void		GetMinSize(WmInfo *wmPtr,
 			    int *minWidthPtr, int *minHeightPtr);
 static TkWindow *	GetTopLevel(HWND hwnd);
 static void		InitWm(void);
-static int		InstallColormaps(HWND hwnd, int message,
-			    int isForemost);
+static bool		InstallColormaps(HWND hwnd, int message,
+			    bool isForemost);
 static void		InvalidateSubTree(TkWindow *winPtr, Colormap colormap);
 static void		InvalidateSubTreeDepth(TkWindow *winPtr);
 static int		ParseGeometry(Tcl_Interp *interp, const char *string,
@@ -543,24 +547,16 @@ MakeIconOrCursorFromResource(
      * Let the OS do the real work :)
      */
 
-    hIcon = (HICON) CreateIconFromResourceEx(lpIcon->lpBits,
-	    lpIcon->dwNumBytes, isIcon, 0x00030000,
-	    (*(LPBITMAPINFOHEADER) lpIcon->lpBits).biWidth,
-	    (*(LPBITMAPINFOHEADER) lpIcon->lpBits).biHeight/2, 0);
+    hIcon = (HICON)CreateIconFromResourceEx(lpIcon->lpBits,
+	    lpIcon->dwNumBytes, isIcon, 0x00030000, 0, 0, 0);
 
     /*
-     * It failed, odds are good we're on NT so try the non-Ex way.
+     * It failed, the non-Ex way might work as a fallback.
      */
 
     if (hIcon == NULL) {
-	/*
-	 * We would break on NT if we try with a 16bpp image.
-	 */
-
-	if (lpIcon->lpbi->bmiHeader.biBitCount != 16) {
-	    hIcon = CreateIconFromResource(lpIcon->lpBits, lpIcon->dwNumBytes,
-		    isIcon, 0x00030000);
-	}
+	hIcon = CreateIconFromResource(lpIcon->lpBits, lpIcon->dwNumBytes,
+		isIcon, 0x00030000);
     }
     return hIcon;
 }
@@ -644,7 +640,7 @@ InitWindowClass(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	tsdPtr->firstWindow = 1;
 	tsdPtr->iconPtr = NULL;
     }
@@ -653,7 +649,7 @@ InitWindowClass(
 	if (!initialized) {
 	    WNDCLASSW windowClass;
 
-	    initialized = 1;
+	    initialized = true;
 
 	    memset(&windowClass, 0, sizeof(WNDCLASSW));
 
@@ -754,7 +750,7 @@ WinSetIcon(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", Tk_PathName(tkw)));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", Tk_PathName(tkw),
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     if (Tk_WindowId(tkw) == None) {
@@ -789,7 +785,7 @@ WinSetIcon(
 	    if (InitWindowClass(titlebaricon) != TCL_OK) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"Unable to set icon", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "FAILED", NULL);
+		Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "FAILED", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	} else {
@@ -846,7 +842,7 @@ WinSetIcon(
 	    if (hwnd == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"Can't set icon; window has no wrapper.", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "WRAPPER", NULL);
+		Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "WRAPPER", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -1044,7 +1040,7 @@ ReadIconFromFile(
 
 	    size = sizeof(BlockOfIconImages)
 		    + ((res != 0) ? sizeof(ICONIMAGE) : 0);
-	    lpIR = (BlockOfIconImagesPtr)ckalloc(size);
+	    lpIR = (BlockOfIconImagesPtr)Tcl_Alloc(size);
 	    if (lpIR == NULL) {
 		if (res != 0) {
 		    DestroyIcon(sfi.hIcon);
@@ -1075,7 +1071,7 @@ ReadIconFromFile(
 	Tcl_DStringFree(&ds2);
     }
     if (lpIR != NULL) {
-	titlebaricon = (WinIconPtr)ckalloc(sizeof(WinIconInstance));
+	titlebaricon = (WinIconPtr)Tcl_Alloc(sizeof(WinIconInstance));
 	titlebaricon->iconBlock = lpIR;
 	titlebaricon->refCount = 1;
     }
@@ -1099,6 +1095,50 @@ ReadIconFromFile(
  */
 
 static BOOL
+SetSizeAndColorFromHICON(      /* Helper for AdjustIconImagePointers */
+    HICON hicon,
+    LPICONIMAGE lpImage)
+{
+    ICONINFO info;
+    BOOL bRes;
+    BITMAP bmp;
+
+    memset(&info, 0, sizeof(info));
+
+    bRes = GetIconInfo(hicon, &info);
+    if (!bRes) {
+	return FALSE;
+    }
+
+    if (info.hbmColor) {
+	const int nWrittenBytes = GetObject(info.hbmColor, sizeof(bmp), &bmp);
+
+	if (nWrittenBytes > 0) {
+	    lpImage->Width = bmp.bmWidth;
+	    lpImage->Height = bmp.bmHeight;
+	    lpImage->Colors = bmp.bmBitsPixel;
+	}
+    } else if (info.hbmMask) {
+	// Icon has no color plane, image data stored in mask
+	const int nWrittenBytes = GetObject(info.hbmMask, sizeof(bmp), &bmp);
+
+	if (nWrittenBytes > 0) {
+	    lpImage->Width = bmp.bmWidth;
+	    lpImage->Height = bmp.bmHeight / 2;
+	    lpImage->Colors = 1;
+	}
+    }
+
+    if (info.hbmColor) {
+	DeleteObject(info.hbmColor);
+    }
+    if (info.hbmMask) {
+	DeleteObject(info.hbmMask);
+    }
+    return TRUE;
+}
+
+static BOOL
 AdjustIconImagePointers(
     LPICONIMAGE lpImage)
 {
@@ -1117,24 +1157,10 @@ AdjustIconImagePointers(
     lpImage->lpbi = (LPBITMAPINFO) lpImage->lpBits;
 
     /*
-     * Width - simple enough.
+     * Width, height, and number of colors.
      */
 
-    lpImage->Width = lpImage->lpbi->bmiHeader.biWidth;
-
-    /*
-     * Icons are stored in funky format where height is doubled so account for
-     * that.
-     */
-
-    lpImage->Height = (lpImage->lpbi->bmiHeader.biHeight)/2;
-
-    /*
-     * How many colors?
-     */
-
-    lpImage->Colors = lpImage->lpbi->bmiHeader.biPlanes
-	    * lpImage->lpbi->bmiHeader.biBitCount;
+    SetSizeAndColorFromHICON(lpImage->hIcon, lpImage);
 
     /*
      * XOR bits follow the header and color table.
@@ -1147,7 +1173,7 @@ AdjustIconImagePointers(
      */
 
     lpImage->lpAND = lpImage->lpXOR +
-	    lpImage->Height*BytesPerLine((LPBITMAPINFOHEADER) lpImage->lpbi);
+	    lpImage->Height * BytesPerLine((LPBITMAPINFOHEADER) lpImage->lpbi);
     return TRUE;
 }
 
@@ -1220,7 +1246,7 @@ GetIconFromPixmap(
 	return NULL;
     }
 
-    lpIR = (BlockOfIconImagesPtr)ckalloc(sizeof(BlockOfIconImages));
+    lpIR = (BlockOfIconImagesPtr)Tcl_Alloc(sizeof(BlockOfIconImages));
     if (lpIR == NULL) {
 	DestroyIcon(hIcon);
 	return NULL;
@@ -1241,7 +1267,7 @@ GetIconFromPixmap(
     lpIR->IconImages[0].lpXOR = 0;
     lpIR->IconImages[0].lpAND = 0;
 
-    titlebaricon = (WinIconPtr)ckalloc(sizeof(WinIconInstance));
+    titlebaricon = (WinIconPtr)Tcl_Alloc(sizeof(WinIconInstance));
     titlebaricon->iconBlock = lpIR;
     titlebaricon->refCount = 1;
     return titlebaricon;
@@ -1275,7 +1301,7 @@ DecrIconRefCount(
 	}
 	titlebaricon->iconBlock = NULL;
 
-	ckfree(titlebaricon);
+	Tcl_Free(titlebaricon);
     }
 }
 
@@ -1308,13 +1334,13 @@ FreeIconBlock(
 
     for (i=0 ; i<lpIR->nNumImages ; i++) {
 	if (lpIR->IconImages[i].lpBits != NULL) {
-	    ckfree(lpIR->IconImages[i].lpBits);
+	    Tcl_Free(lpIR->IconImages[i].lpBits);
 	}
 	if (lpIR->IconImages[i].hIcon != NULL) {
 	    DestroyIcon(lpIR->IconImages[i].hIcon);
 	}
     }
-    ckfree(lpIR);
+    Tcl_Free(lpIR);
 }
 
 /*
@@ -1417,7 +1443,7 @@ ReadIconOrCursorFromFile(
     BlockOfIconImagesPtr lpIR;
     Tcl_Channel channel;
     int i;
-    DWORD dwBytesRead;
+    Tcl_Size dwBytesRead;
     LPICONDIRENTRY lpIDE;
 
     /*
@@ -1441,7 +1467,7 @@ ReadIconOrCursorFromFile(
      * Allocate memory for the resource structure
      */
 
-    lpIR = (BlockOfIconImagesPtr)ckalloc(sizeof(BlockOfIconImages));
+    lpIR = (BlockOfIconImagesPtr)Tcl_Alloc(sizeof(BlockOfIconImages));
 
     /*
      * Read in the header
@@ -1451,7 +1477,7 @@ ReadIconOrCursorFromFile(
     if (lpIR->nNumImages == -1) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("Invalid file header", TCL_INDEX_NONE));
 	Tcl_Close(NULL, channel);
-	ckfree(lpIR);
+	Tcl_Free(lpIR);
 	return NULL;
     }
 
@@ -1459,14 +1485,14 @@ ReadIconOrCursorFromFile(
      * Adjust the size of the struct to account for the images.
      */
 
-    lpIR = (BlockOfIconImagesPtr)ckrealloc(lpIR, sizeof(BlockOfIconImages)
+    lpIR = (BlockOfIconImagesPtr)Tcl_Realloc(lpIR, sizeof(BlockOfIconImages)
 	    + (lpIR->nNumImages - 1) * sizeof(ICONIMAGE));
 
     /*
      * Allocate enough memory for the icon directory entries.
      */
 
-    lpIDE = (LPICONDIRENTRY)ckalloc(lpIR->nNumImages * sizeof(ICONDIRENTRY));
+    lpIDE = (LPICONDIRENTRY)Tcl_Alloc(lpIR->nNumImages * sizeof(ICONDIRENTRY));
 
     /*
      * Read in the icon directory entries.
@@ -1474,13 +1500,13 @@ ReadIconOrCursorFromFile(
 
     dwBytesRead = Tcl_Read(channel, (char *) lpIDE,
 	    (int) (lpIR->nNumImages * sizeof(ICONDIRENTRY)));
-    if (dwBytesRead != lpIR->nNumImages * sizeof(ICONDIRENTRY)) {
+    if (dwBytesRead != lpIR->nNumImages * (Tcl_Size)sizeof(ICONDIRENTRY)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file: %s", Tcl_PosixError(interp)));
-	Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "READ", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "READ", (char *)NULL);
 	Tcl_Close(NULL, channel);
-	ckfree(lpIDE);
-	ckfree(lpIR);
+	Tcl_Free(lpIDE);
+	Tcl_Free(lpIR);
 	return NULL;
     }
 
@@ -1501,7 +1527,7 @@ ReadIconOrCursorFromFile(
 	 * Allocate memory for the resource.
 	 */
 
-	lpIR->IconImages[i].lpBits = (LPBYTE)ckalloc(lpIDE[i].dwBytesInRes);
+	lpIR->IconImages[i].lpBits = (LPBYTE)Tcl_Alloc(lpIDE[i].dwBytesInRes);
 	lpIR->IconImages[i].dwNumBytes = lpIDE[i].dwBytesInRes;
 
 	/*
@@ -1527,24 +1553,24 @@ ReadIconOrCursorFromFile(
 	}
 
 	/*
-	 * Set the internal pointers appropriately.
+	 * Create the icon from the resource, and set the internal pointers appropriately.
 	 */
 
+	lpIR->IconImages[i].hIcon =
+		MakeIconOrCursorFromResource(&lpIR->IconImages[i], isIcon);
 	if (!AdjustIconImagePointers(&lpIR->IconImages[i])) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Error converting to internal format", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "FORMAT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICON", "FORMAT", (char *)NULL);
 	    goto readError;
 	}
-	lpIR->IconImages[i].hIcon =
-		MakeIconOrCursorFromResource(&lpIR->IconImages[i], isIcon);
     }
 
     /*
      * Clean up
      */
 
-    ckfree(lpIDE);
+    Tcl_Free(lpIDE);
     Tcl_Close(NULL, channel);
     return lpIR;
 
@@ -1552,11 +1578,11 @@ ReadIconOrCursorFromFile(
     Tcl_Close(NULL, channel);
     for (i = 0; i < lpIR->nNumImages; i++) {
 	if (lpIR->IconImages[i].lpBits != NULL) {
-	    ckfree(lpIR->IconImages[i].lpBits);
+	    Tcl_Free(lpIR->IconImages[i].lpBits);
 	}
     }
-    ckfree(lpIDE);
-    ckfree(lpIR);
+    Tcl_Free(lpIDE);
+    Tcl_Free(lpIR);
     return NULL;
 }
 
@@ -1720,14 +1746,14 @@ TkWinWmCleanup(
     if (!initialized) {
 	return;
     }
-    initialized = 0;
+    initialized = false;
 
     tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	return;
     }
-    tsdPtr->initialized = 0;
+    tsdPtr->initialized = false;
 
     /*
      * COM library cleanup.
@@ -1759,7 +1785,7 @@ void
 TkWmNewWindow(
     TkWindow *winPtr)		/* Newly-created top-level window. */
 {
-    WmInfo *wmPtr = (WmInfo *)ckalloc(sizeof(WmInfo));
+    WmInfo *wmPtr = (WmInfo *)Tcl_Alloc(sizeof(WmInfo));
 
     /*
      * Initialize full structure, then set what isn't NULL
@@ -2064,7 +2090,7 @@ UpdateWrapper(
 
 	    WmInfo *wmPtr2;
 
-	    childStateInfo = (int *)ckalloc(wmPtr->numTransients * sizeof(int));
+	    childStateInfo = (int *)Tcl_Alloc(wmPtr->numTransients * sizeof(int));
 	    state = 0;
 	    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
 		    wmPtr2 = wmPtr2->nextPtr) {
@@ -2092,7 +2118,7 @@ UpdateWrapper(
 		Tk_ReqWidth((Tk_Window) winPtr),
 		Tk_ReqHeight((Tk_Window) winPtr));
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, (WPARAM) wmPtr->hMenu,
-		(LPARAM) Tk_GetMenuHWND((Tk_Window) winPtr));
+		(LPARAM) TkGetMenuHWND((Tk_Window) winPtr));
     }
 
     /*
@@ -2163,7 +2189,7 @@ UpdateWrapper(
 	    }
 	}
 
-	ckfree(childStateInfo);
+	Tcl_Free(childStateInfo);
     }
 
     /*
@@ -2320,7 +2346,7 @@ TkWmUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -2344,13 +2370,13 @@ TkpWmSetState(
     } else if (state == ZoomState) {
 	cmd = SW_SHOWMAXIMIZED;
     } else {
-    	goto setStateEnd;
+	goto setStateEnd;
     }
 
     ShowWindow(wmPtr->wrapper, cmd);
     wmPtr->flags &= ~WM_SYNC_PENDING;
 setStateEnd:
-    return 1;
+    return true;
 }
 
 /*
@@ -2463,6 +2489,14 @@ TkpWmGetState(
 
 static void CheckForPointer(TkWindow *winPtr)
 {
+    if (winPtr == NULL || winPtr->mainPtr == NULL) {
+	/*
+	 * Bug [d233f01e2a] - clipboard clean up after main window destroyed
+	 * Nothing to do.
+	 */
+	return;
+    }
+
     POINT mouse;
     int x, y;
     unsigned int state = TkWinGetModifierState();
@@ -2484,7 +2518,7 @@ static void CheckForPointer(TkWindow *winPtr)
 		break;
 	    }
 	}
-	ckfree(windows);
+	Tcl_Free(windows);
     }
 }
 
@@ -2538,14 +2572,15 @@ TkWmDeadWindow(
 	    }
 	}
     }
-    if (wmPtr->numTransients != 0)
+    if (wmPtr->numTransients != 0) {
 	Tcl_Panic("numTransients should be 0");
+    }
 
     if (wmPtr->title != NULL) {
-	ckfree(wmPtr->title);
+	Tcl_Free(wmPtr->title);
     }
     if (wmPtr->iconName != NULL) {
-	ckfree(wmPtr->iconName);
+	Tcl_Free(wmPtr->iconName);
     }
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -2554,7 +2589,7 @@ TkWmDeadWindow(
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
     }
     if (wmPtr->leaderName != NULL) {
-	ckfree(wmPtr->leaderName);
+	Tcl_Free(wmPtr->leaderName);
     }
     if (wmPtr->icon != NULL) {
 	wmPtr2 = ((TkWindow *) wmPtr->icon)->wmInfoPtr;
@@ -2573,10 +2608,10 @@ TkWmDeadWindow(
 	Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree(wmPtr->cmdArgv);
+	Tcl_Free(wmPtr->cmdArgv);
     }
     if (wmPtr->clientMachine != NULL) {
-	ckfree(wmPtr->clientMachine);
+	Tcl_Free(wmPtr->clientMachine);
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
@@ -2633,7 +2668,7 @@ TkWmDeadWindow(
      */
 
     CheckForPointer(winPtr);
-    ckfree(wmPtr);
+    Tcl_Free(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
 
@@ -2685,7 +2720,7 @@ int
 Tk_WmObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -2768,7 +2803,7 @@ Tk_WmObjCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -2890,7 +2925,7 @@ WmAspectCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->sizeHintsFlags &= ~PAspect;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[3], &numer1) != TCL_OK)
@@ -2902,7 +2937,7 @@ WmAspectCmd(
 	if ((numer1 <= 0) || (denom1 <= 0) || (numer2 <= 0) || (denom2 <= 0)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "aspect number can't be <= 0", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ASPECT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ASPECT", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	wmPtr->minAspect.x = numer1;
@@ -3021,14 +3056,14 @@ WmAttributesCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't set topmost flag on %s: it is an embedded window",
 			winPtr->pathName));
-		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "TOPMOST", NULL);
+		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "TOPMOST", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	} else if (i == 3) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad attribute \"%s\": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor",
 		    string));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "UNRECOGNIZED", (char *)NULL);
 	    return TCL_ERROR;
 	} else {
 	    goto configArgs;
@@ -3062,7 +3097,7 @@ WmAttributesCmd(
 		    }
 		    wmPtr->alpha = dval;
 		} else {			/* -transparentcolor */
-		    const char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
+		    (void)Tcl_GetStringFromObj(objv[i+1], &length);
 
 		    if (length == 0) {
 			/* reset to no transparent color */
@@ -3072,7 +3107,7 @@ WmAttributesCmd(
 			}
 		    } else {
 			XColor *cPtr =
-			    Tk_GetColor(interp, tkwin, Tk_GetUid(crefstr));
+			    Tk_AllocColorFromObj(interp, tkwin, objv[i+1]);
 			if (cPtr == NULL) {
 			    return TCL_ERROR;
 			}
@@ -3186,7 +3221,7 @@ WmAttributesCmd(
 			"can't set fullscreen attribute for \"%s\":"
 			" override-redirect flag is set", winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
-			"OVERRIDE_REDIRECT", NULL);
+			"OVERRIDE_REDIRECT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -3203,7 +3238,7 @@ WmAttributesCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't set fullscreen attribute for \"%s\":"
 			" max width/height is too small", winPtr->pathName));
-		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "SMALL_MAX", NULL);
+		Tcl_SetErrorCode(interp, "TK", "WM", "ATTR", "SMALL_MAX", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -3257,7 +3292,7 @@ WmClientCmd(
     argv3 = Tcl_GetStringFromObj(objv[3], &length);
     if (argv3[0] == 0) {
 	if (wmPtr->clientMachine != NULL) {
-	    ckfree(wmPtr->clientMachine);
+	    Tcl_Free(wmPtr->clientMachine);
 	    wmPtr->clientMachine = NULL;
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		XDeleteProperty(winPtr->display, winPtr->window,
@@ -3267,9 +3302,9 @@ WmClientCmd(
 	return TCL_OK;
     }
     if (wmPtr->clientMachine != NULL) {
-	ckfree(wmPtr->clientMachine);
+	Tcl_Free(wmPtr->clientMachine);
     }
-    wmPtr->clientMachine = (char *)ckalloc(length + 1);
+    wmPtr->clientMachine = (char *)Tcl_Alloc(length + 1);
     memcpy(wmPtr->clientMachine, argv3, length + 1);
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	XTextProperty textProp;
@@ -3337,12 +3372,12 @@ WmColormapwindowsCmd(
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    cmapList = (TkWindow**)ckalloc((windowObjc + 1) * sizeof(TkWindow*));
+    cmapList = (TkWindow**)Tcl_Alloc((windowObjc + 1) * sizeof(TkWindow*));
     gotToplevel = 0;
     for (i = 0; i < windowObjc; i++) {
 	if (TkGetWindowFromObj(interp, tkwin, windowObjv[i],
 		(Tk_Window *) winPtr2Ptr) != TCL_OK) {
-	    ckfree(cmapList);
+	    Tcl_Free(cmapList);
 	    return TCL_ERROR;
 	}
 	if (winPtr2 == winPtr) {
@@ -3362,7 +3397,7 @@ WmColormapwindowsCmd(
     }
     wmPtr->flags |= WM_COLORMAPS_EXPLICIT;
     if (wmPtr->cmapList != NULL) {
-	ckfree(wmPtr->cmapList);
+	Tcl_Free(wmPtr->cmapList);
     }
     wmPtr->cmapList = cmapList;
     wmPtr->cmapCount = windowObjc;
@@ -3372,9 +3407,9 @@ WmColormapwindowsCmd(
      */
 
     if (wmPtr == winPtr->dispPtr->foregroundWmPtr) {
-	InstallColormaps(wmPtr->wrapper, WM_QUERYNEWPALETTE, 1);
+	InstallColormaps(wmPtr->wrapper, WM_QUERYNEWPALETTE, true);
     } else {
-	InstallColormaps(wmPtr->wrapper, WM_PALETTECHANGED, 0);
+	InstallColormaps(wmPtr->wrapper, WM_PALETTECHANGED, false);
     }
     return TCL_OK;
 }
@@ -3418,14 +3453,14 @@ WmCommandCmd(
 	    char *merged = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
 
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(merged, TCL_INDEX_NONE));
-	    ckfree(merged);
+	    Tcl_Free(merged);
 	}
 	return TCL_OK;
     }
     argv3 = Tcl_GetString(objv[3]);
     if (argv3[0] == 0) {
 	if (wmPtr->cmdArgv != NULL) {
-	    ckfree(wmPtr->cmdArgv);
+	    Tcl_Free(wmPtr->cmdArgv);
 	    wmPtr->cmdArgv = NULL;
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		XDeleteProperty(winPtr->display, winPtr->window,
@@ -3438,12 +3473,12 @@ WmCommandCmd(
 	return TCL_ERROR;
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree(wmPtr->cmdArgv);
+	Tcl_Free(wmPtr->cmdArgv);
     }
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	XSetCommand(winPtr->display, winPtr->window, (char **) cmdArgv, cmdArgc);
+	XSetCommand(winPtr->display, winPtr->window, (char **) cmdArgv, (int)cmdArgc);
     }
     return TCL_OK;
 }
@@ -3483,7 +3518,7 @@ WmDeiconifyCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't deiconify %s: it is an icon for %s",
 		Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
-	Tcl_SetErrorCode(interp, "TK", "WM", "DEICONIFY", "ICON", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "DEICONIFY", "ICON", (char *)NULL);
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
@@ -3491,7 +3526,7 @@ WmDeiconifyCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't deiconify %s: the container does not support the request",
 		    winPtr->pathName));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	return TCL_OK;
@@ -3583,11 +3618,17 @@ WmForgetCmd(
 {
     Tk_Window frameWin = (Tk_Window) winPtr;
 
-    if (Tk_IsTopLevel(frameWin)) {
+    /*
+     * Tk ticket c77b426d: avoid panic on usage after wm forget
+     */
+
+    if (Tk_IsTopLevel(frameWin) && Tk_IsManageable(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
-	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
-	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	if (winPtr->parentPtr) {
+	    Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+	    RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	}
 
 	/*
 	 * Make sure wm no longer manages this window
@@ -3697,10 +3738,10 @@ WmGeometryCmd(
 	    height = winPtr->changes.height;
 	}
 	if (winPtr->flags & TK_EMBEDDED) {
-	    int result = SendMessageW(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
+	    LRESULT result = SendMessageW(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
 
-	    wmPtr->x = result >> 16;
-	    wmPtr->y = result & 0x0000ffff;
+	    wmPtr->x = (short)(result >> 16);
+	    wmPtr->y = (short)(result & 0x0000ffff);
 	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
 		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
@@ -3762,7 +3803,7 @@ WmGridCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	/*
 	 * Turn off gridding and reset the width and height to make sense as
 	 * ungridded numbers.
@@ -3787,25 +3828,25 @@ WmGridCmd(
 	if (reqWidth < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "baseWidth can't be < 0", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (reqHeight < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "baseHeight can't be < 0", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (widthInc <= 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "widthInc can't be <= 0", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (heightInc <= 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "heightInc can't be <= 0", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
@@ -3859,7 +3900,7 @@ WmGroupCmd(
     if (*argv3 == '\0') {
 	wmPtr->hints.flags &= ~WindowGroupHint;
 	if (wmPtr->leaderName != NULL) {
-	    ckfree(wmPtr->leaderName);
+	    Tcl_Free(wmPtr->leaderName);
 	}
 	wmPtr->leaderName = NULL;
     } else {
@@ -3868,11 +3909,11 @@ WmGroupCmd(
 	}
 	Tk_MakeWindowExist(tkwin2);
 	if (wmPtr->leaderName != NULL) {
-	    ckfree(wmPtr->leaderName);
+	    Tcl_Free(wmPtr->leaderName);
 	}
 	wmPtr->hints.window_group = Tk_WindowId(tkwin2);
 	wmPtr->hints.flags |= WindowGroupHint;
-	wmPtr->leaderName = (char *)ckalloc(length + 1);
+	wmPtr->leaderName = (char *)Tcl_Alloc(length + 1);
 	memcpy(wmPtr->leaderName, argv3, length + 1);
     }
     return TCL_OK;
@@ -4031,7 +4072,7 @@ WmIconbitmapCmd(
 	if (strcmp(argv3, "-default")) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "illegal option \"%s\" must be \"-default\"", argv3));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONBITMAP", "OPTION",NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONBITMAP", "OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	useWinPtr = NULL;
@@ -4161,7 +4202,7 @@ WmIconifyCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't iconify \"%s\": the container does not support the request",
 		    winPtr->pathName));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "EMBEDDED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "EMBEDDED", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4170,21 +4211,21 @@ WmIconifyCmd(
 		"can't iconify \"%s\": override-redirect flag is set",
 		winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
-		NULL);
+		(char *)NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->containerPtr != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": it is a transient",
 		winPtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "TRANSIENT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "TRANSIENT", (char *)NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->iconFor != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": it is an icon for \"%s\"",
 		winPtr->pathName, Tk_PathName(wmPtr->iconFor)));
-	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "ICON", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "ICON", (char *)NULL);
 	return TCL_ERROR;
     }
     TkpWmSetState(winPtr, IconicState);
@@ -4288,10 +4329,10 @@ WmIconnameCmd(
 	return TCL_OK;
     } else {
 	if (wmPtr->iconName != NULL) {
-	    ckfree(wmPtr->iconName);
+	    Tcl_Free(wmPtr->iconName);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->iconName = (char *)ckalloc(length + 1);
+	wmPtr->iconName = (char *)Tcl_Alloc(length + 1);
 	memcpy(wmPtr->iconName, argv3, length + 1);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    XSetIconName(winPtr->display, winPtr->window, wmPtr->iconName);
@@ -4333,7 +4374,7 @@ WmIconphotoCmd(
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
-    unsigned size;
+    size_t size;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -4360,7 +4401,7 @@ WmIconphotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't use \"%s\" as iconphoto: not a photo image",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4371,7 +4412,7 @@ WmIconphotoCmd(
      */
 
     size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE) * (objc-startObj-1));
-    lpIR = (BlockOfIconImagesPtr)attemptckalloc(size);
+    lpIR = (BlockOfIconImagesPtr)Tcl_AttemptAlloc(size);
     if (lpIR == NULL) {
 	return TCL_ERROR;
     }
@@ -4388,7 +4429,7 @@ WmIconphotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "failed to create an iconphoto with image \"%s\"",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "ICON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "ICON", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	lpIR->IconImages[i-startObj].Width = width;
@@ -4398,7 +4439,7 @@ WmIconphotoCmd(
 	lpIR->nNumImages++;
     }
 
-    titlebaricon = (WinIconPtr)ckalloc(sizeof(WinIconInstance));
+    titlebaricon = (WinIconPtr)Tcl_Alloc(sizeof(WinIconInstance));
     titlebaricon->iconBlock = lpIR;
     titlebaricon->refCount = 1;
     if (WinSetIcon(interp, titlebaricon, (Tk_Window) useWinPtr) != TCL_OK) {
@@ -4456,7 +4497,7 @@ WmIconpositionCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->hints.flags &= ~IconPositionHint;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
@@ -4510,7 +4551,7 @@ WmIconwindowCmd(
 	}
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->hints.flags &= ~IconWindowHint;
 	if (wmPtr->icon != NULL) {
 	    /*
@@ -4534,7 +4575,7 @@ WmIconwindowCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't use %s as icon window: not at top level",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWINDOW", "INNER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWINDOW", "INNER", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	wmPtr2 = ((TkWindow *) tkwin2)->wmInfoPtr;
@@ -4542,7 +4583,7 @@ WmIconwindowCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is already an icon for %s",
 		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWINDOW", "ICON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWINDOW", "ICON", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (wmPtr->icon != NULL) {
@@ -4613,7 +4654,7 @@ WmManageCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" is not manageable: must be a frame,"
 		    " labelframe or toplevel", Tk_PathName(frameWin)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	TkFocusSplit(winPtr);
@@ -4770,11 +4811,11 @@ WmOverrideredirectCmd(
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
-	curValue = SendMessageW(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1)-1;
+	curValue = (Bool)(SendMessageW(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1)-1);
 	if (curValue < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Container does not support overrideredirect", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
 	    return TCL_ERROR;
 	}
     } else {
@@ -4857,7 +4898,7 @@ WmPositionfromCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, TCL_INDEX_NONE));
 	return TCL_OK;
     }
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->sizeHintsFlags &= ~(USPosition|PPosition);
     } else {
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
@@ -4962,7 +5003,7 @@ WmProtocolCmd(
     }
     cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
-	protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
+	protPtr = (ProtocolHandler *)Tcl_Alloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
@@ -5084,7 +5125,7 @@ WmSizefromCmd(
 	return TCL_OK;
     }
 
-    if (*Tcl_GetString(objv[3]) == '\0') {
+    if (TkObjIsEmpty(objv[3])) {
 	wmPtr->sizeHintsFlags &= ~(USSize|PSize);
     } else {
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
@@ -5152,14 +5193,15 @@ WmStackorderCmd(
 			Tk_NewWindowObj((Tk_Window) *windowPtr));
 	    }
 	    Tcl_SetObjResult(interp, resultObj);
-	    ckfree(windows);
+	    Tcl_Free(windows);
 	    return TCL_OK;
 	} else {
 	    return TCL_ERROR;
 	}
     } else {
 	TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
-	int index1 = -1, index2 = -1, result;
+	Tcl_Size index1 = -1, index2 = -1;
+	int result;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[4],
 		(Tk_Window *) winPtr2Ptr) != TCL_OK) {
@@ -5170,21 +5212,21 @@ WmStackorderCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" isn't a top-level window",
 		    winPtr2->pathName));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "TOPLEVEL", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "TOPLEVEL", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
 	if (!Tk_IsMapped(winPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" isn't mapped", winPtr->pathName));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "MAPPED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "MAPPED", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
 	if (!Tk_IsMapped(winPtr2)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" isn't mapped", winPtr2->pathName));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "MAPPED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "MAPPED", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -5197,7 +5239,7 @@ WmStackorderCmd(
 	if (windows == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "TkWmStackorderToplevel failed", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -5215,7 +5257,7 @@ WmStackorderCmd(
 	    Tcl_Panic("winPtr2 window not found");
 	}
 
-	ckfree(windows);
+	Tcl_Free(windows);
 
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
 		"argument", 0, &index) != TCL_OK) {
@@ -5274,7 +5316,7 @@ WmStateCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't change state of %s: it is an icon for %s",
 		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
@@ -5306,7 +5348,7 @@ WmStateCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't change state of %s: the container does not support the request",
 			winPtr->pathName));
-		Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    return TCL_OK;
@@ -5326,7 +5368,7 @@ WmStateCmd(
 			"can't iconify \"%s\": override-redirect flag is set",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
-			"OVERRIDE_REDIRECT", NULL);
+			"OVERRIDE_REDIRECT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (wmPtr->containerPtr != NULL) {
@@ -5334,13 +5376,12 @@ WmStateCmd(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "TRANSIENT",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    TkpWmSetState(winPtr, IconicState);
 	} else if (index == OPT_WITHDRAWN) {
-	    wmPtr->flags |= WM_WITHDRAWN;
-	    TkpWmSetState(winPtr, WithdrawnState);
+	    TkpWinToplevelWithDraw(winPtr);
 	} else if (index == OPT_ZOOMED) {
 	    TkpWmSetState(winPtr, ZoomState);
 	} else {
@@ -5355,7 +5396,7 @@ WmStateCmd(
 	    int state;
 
 	    if (winPtr->flags & TK_EMBEDDED) {
-		state = SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1;
+		state = (int)(SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1);
 	    } else {
 		state = wmPtr->hints.initial_state;
 	    }
@@ -5430,10 +5471,10 @@ WmTitleCmd(
 	}
     } else {
 	if (wmPtr->title != NULL) {
-	    ckfree(wmPtr->title);
+	    Tcl_Free(wmPtr->title);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->title = (char *)ckalloc(length + 1);
+	wmPtr->title = (char *)Tcl_Alloc(length + 1);
 	memcpy(wmPtr->title, argv3, length + 1);
 
 	if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
@@ -5519,7 +5560,7 @@ WmTransientCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't make \"%s\" a transient: it is an icon for %s",
 		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -5529,7 +5570,7 @@ WmTransientCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't make \"%s\" a container: it is an icon for %s",
 		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	for (w = containerPtr; w != NULL && w->wmInfoPtr != NULL;
@@ -5538,7 +5579,7 @@ WmTransientCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't set \"%s\" as container: would cause management loop",
 		    Tk_PathName(containerPtr)));
-		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
+		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -5611,7 +5652,7 @@ WmWithdrawCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't withdraw %s: it is an icon for %s",
 		Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
-	Tcl_SetErrorCode(interp, "TK", "WM", "WITHDRAW", "ICON", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "WITHDRAW", "ICON", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -5620,12 +5661,11 @@ WmWithdrawCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't withdraw %s: the container does not support the request",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", (char *)NULL);
 	    return TCL_ERROR;
 	}
     } else {
-	wmPtr->flags |= WM_WITHDRAWN;
-	TkpWmSetState(winPtr, WithdrawnState);
+	TkpWinToplevelWithDraw(winPtr);
     }
     return TCL_OK;
 }
@@ -6341,7 +6381,7 @@ ParseGeometry(
   error:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad geometry specifier \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "GEOMETRY", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "GEOMETRY", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -6726,7 +6766,7 @@ TkWmStackorderToplevel(
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
     TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
-    windows = (TkWindow **)ckalloc((table.numEntries+1) * sizeof(TkWindow *));
+    windows = (TkWindow **)Tcl_Alloc((table.numEntries+1) * sizeof(TkWindow *));
 
     /*
      * Special cases: If zero or one toplevels were mapped there is no need to
@@ -6756,7 +6796,7 @@ TkWmStackorderToplevel(
 
     if (EnumWindows((WNDENUMPROC) TkWmStackorderToplevelEnumProc,
 	    (LPARAM) &pair) == 0) {
-	ckfree(windows);
+	Tcl_Free(windows);
 	windows = NULL;
     }
 
@@ -6858,7 +6898,7 @@ TkWmAddToColormapWindows(
 {
     TkWindow *topPtr;
     TkWindow **oldPtr, **newPtr;
-    int count, i;
+    Tcl_Size count, i;
 
     if (winPtr->window == None) {
 	return;
@@ -6902,7 +6942,7 @@ TkWmAddToColormapWindows(
      * Automatically add the toplevel itself as the last element of the list.
      */
 
-    newPtr = (TkWindow **)ckalloc((count+2) * sizeof(TkWindow *));
+    newPtr = (TkWindow **)Tcl_Alloc((count+2) * sizeof(TkWindow *));
     if (count > 0) {
 	memcpy(newPtr, oldPtr, count * sizeof(TkWindow*));
     }
@@ -6912,7 +6952,7 @@ TkWmAddToColormapWindows(
     newPtr[count-1] = winPtr;
     newPtr[count] = topPtr;
     if (oldPtr != NULL) {
-	ckfree(oldPtr);
+	Tcl_Free(oldPtr);
     }
 
     topPtr->wmInfoPtr->cmapList = newPtr;
@@ -6923,9 +6963,9 @@ TkWmAddToColormapWindows(
      */
 
     if (topPtr->wmInfoPtr == winPtr->dispPtr->foregroundWmPtr) {
-	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_QUERYNEWPALETTE, 1);
+	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_QUERYNEWPALETTE, true);
     } else {
-	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_PALETTECHANGED, 0);
+	InstallColormaps(topPtr->wmInfoPtr->wrapper, WM_PALETTECHANGED, false);
     }
 }
 
@@ -6958,7 +6998,7 @@ TkWmRemoveFromColormapWindows(
 {
     TkWindow *topPtr;
     TkWindow **oldPtr;
-    int count, i, j;
+    Tcl_Size count, i, j;
 
     for (topPtr = winPtr->parentPtr; ; topPtr = topPtr->parentPtr) {
 	if (topPtr == NULL) {
@@ -7049,7 +7089,7 @@ TkWinSetMenu(
 	}
     } else {
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, (WPARAM) hMenu,
-		(LPARAM) Tk_GetMenuHWND(tkwin));
+		(LPARAM) TkGetMenuHWND(tkwin));
     }
 }
 
@@ -7316,13 +7356,13 @@ GenerateConfigureNotify(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 InstallColormaps(
     HWND hwnd,			/* Toplevel wrapper window whose colormaps
 				 * should be installed. */
     int message,		/* Either WM_PALETTECHANGED or
 				 * WM_QUERYNEWPALETTE */
-    int isForemost)		/* 1 if window is foremost, else 0 */
+    bool isForemost)		/* true if window is foremost, else false */
 {
     Tcl_Size i;
     HDC dc;
@@ -7333,7 +7373,7 @@ InstallColormaps(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
-	return 0;
+	return false;
     }
 
     wmPtr = winPtr->wmInfoPtr;
@@ -7363,7 +7403,7 @@ InstallColormaps(
 	    RealizePalette(dc);
 	    ReleaseDC(hwnd, dc);
 	    SendMessageW(hwnd, WM_PALETTECHANGED, (WPARAM) hwnd, (LPARAM) NULL);
-	    return TRUE;
+	    return true;
 	}
     } else {
 	/*
@@ -7405,7 +7445,7 @@ InstallColormaps(
     SelectPalette(dc, oldPalette, TRUE);
     RealizePalette(dc);
     ReleaseDC(hwnd, dc);
-    return TRUE;
+    return true;
 }
 
 /*
@@ -7758,7 +7798,7 @@ TopLevelProc(
 	    winPtr->changes.height = pos->cy;
 	}
 	if (!(pos->flags & SWP_NOMOVE)) {
-	    long result = SendMessageW(winPtr->wmInfoPtr->wrapper,
+	    int result = (int)SendMessageW(winPtr->wmInfoPtr->wrapper,
 		    TK_MOVEWINDOW, -1, -1);
 	    winPtr->wmInfoPtr->x = winPtr->changes.x = result >> 16;
 	    winPtr->wmInfoPtr->y = winPtr->changes.y = result & 0xffff;
@@ -7907,7 +7947,7 @@ WmProc(
 	goto done;
 
     case WM_QUERYNEWPALETTE:
-	result = InstallColormaps(hwnd, WM_QUERYNEWPALETTE, TRUE);
+	result = InstallColormaps(hwnd, WM_QUERYNEWPALETTE, true);
 	goto done;
 
     case WM_SETTINGCHANGE:
@@ -8023,7 +8063,7 @@ WmProc(
     case WM_ENTERIDLE:
     case WM_INITMENUPOPUP:
 	if (winPtr) {
-	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window) winPtr);
+	    HWND hMenuHWnd = TkGetEmbeddedMenuHWND((Tk_Window) winPtr);
 
 	    if (hMenuHWnd) {
 		if (SendMessageW(hMenuHWnd, message, wParam, lParam)) {
@@ -8198,7 +8238,7 @@ TkpGetWrapperWindow(
 static void
 GenerateActivateEvent(TkWindow * winPtr, const int *flagPtr)
 {
-    ActivateEvent *eventPtr = (ActivateEvent *)ckalloc(sizeof(ActivateEvent));
+    ActivateEvent *eventPtr = (ActivateEvent *)Tcl_Alloc(sizeof(ActivateEvent));
 
     eventPtr->ev.proc = ActivateWindow;
     eventPtr->winPtr = winPtr;
@@ -8332,11 +8372,40 @@ TkpWinToplevelWithDraw(
     TkWindow *winPtr)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
+    int resetTempStyle = 0;
+    LONG_PTR exStyle = 0;
+
+    /*
+     * Special handling of transient toplevels (wmPtr->containerPtr != NULL),
+     * in order to work around a Windows 10 & 11 problem where withdrawn
+     * transients still appear in the thumbnail preview of the parent window,
+     * when hovering over it in the Windows taskbar.  Temporarily setting this
+     * window style to include WS_EX_TOOLWINDOW prevents it being captured in
+     * the Windows thumbnail preview.
+     * See ticket 91d0e9d8.
+     */
+
+    if (!(wmPtr->flags & WM_WITHDRAWN)
+	     && !(wmPtr->flags & TK_EMBEDDED)
+	     && !(wmPtr->flags & WM_NEVER_MAPPED)
+	     && (wmPtr->containerPtr != NULL)) {
+	exStyle = GetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE);
+	if ( !(exStyle & WS_EX_TOOLWINDOW) ) {
+	    SetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE,
+		     exStyle | WS_EX_TOOLWINDOW);
+	    resetTempStyle=1;
+	}
+    }
 
     wmPtr->flags |= WM_WITHDRAWN;
     TkpWmSetState(winPtr, WithdrawnState);
-}
 
+    if (resetTempStyle) {
+	SetWindowLongPtrW(wmPtr->wrapper, GWL_EXSTYLE,
+		exStyle & ~WS_EX_TOOLWINDOW);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -8562,7 +8631,7 @@ TkpWinToplevelDetachWindow(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (winPtr->flags & TK_EMBEDDED) {
-	int state = SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1;
+	int state = (int)(SendMessageW(wmPtr->wrapper, TK_STATE, -1, -1) - 1);
 
 	SendMessageW(wmPtr->wrapper, TK_SETMENU, 0, 0);
 	SendMessageW(wmPtr->wrapper, TK_DETACHWINDOW, 0, 0);

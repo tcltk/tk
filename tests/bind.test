@@ -1,16 +1,32 @@
 # This file is a Tcl script to test out Tk's "bind" and "bindtags"
-# commands plus the procedures in tkBind.c.  It is organized in the
-# standard fashion for Tcl tests.
+# commands plus the procedures in tkBind.c.
 #
 # Copyright © 1994 The Regents of the University of California.
 # Copyright © 1994-1995 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# COMMON TEST SETUP
+#
+
 tk useinputmethods 0
 
 toplevel .t -width 100 -height 50
@@ -25,6 +41,69 @@ foreach event [bind all] {
     bind all $event {}
 }
 
+# move the mouse pointer away of the testing area
+# otherwise some spurious events may pollute the tests
+toplevel .top
+wm geometry .top 50x50-50-50
+update
+event generate .top <Button-1> -warp 1
+controlPointerWarpTiming
+destroy .top
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc testKey {window event type mods} {
+    global keyInfo numericKeysym
+    set keyInfo {}
+    set numericKeysym {}
+    bind $window <Key> {
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericKeysym %N
+    }
+    focus -force $window
+    update
+    event generate $window $event
+    if {$keyInfo eq {}} {
+	vwait keyInfo
+    }
+    set save $keyInfo
+    set keyInfo {}
+    set injectcmd [list testinjectkeyevent $type $numericKeysym]
+    foreach {option} $mods {
+	lappend injectcmd $option
+    }
+    eval $injectcmd
+    if {$keyInfo eq {}} {
+	vwait keyInfo
+    }
+    if {$save ne $keyInfo} {
+	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
+    }
+    return pass
+}
+
+proc testKeyWithMods {window keysym type} {
+    set result [testKey $window "<$keysym>" $type {}]
+    if {$result ne "pass"} {
+	return $result
+    }
+    set result [testKey $window "<Shift-$keysym>" $type {-shift}]
+    if {$result ne "pass"} {
+	return $result
+    }
+    set result [testKey $window "<Option-$keysym>" $type {-option}]
+    if {$result ne "pass"} {
+	return $result
+    }
+    set result [testKey $window "<Shift-Option-$keysym>" $type {-shift -option}]
+    if {$result ne "pass"} {
+	return $result
+    }
+    return pass
+}
+
 proc unsetBindings {} {
     bind all <Enter> {}
     bind Test <Enter> {}
@@ -34,14 +113,9 @@ proc unsetBindings {} {
     bind .t <Enter> {}
 }
 
-# move the mouse pointer away of the testing area
-# otherwise some spurious events may pollute the tests
-toplevel .top
-wm geometry .top 50x50-50-50
-update
-event generate .top <Button-1> -warp 1
-controlPointerWarpTiming
-destroy .top
+#
+# TESTS
+#
 
 test bind-1.1 {bind command} -body {
     bind
@@ -342,11 +416,11 @@ test bind-9.2 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {a b c d} {
-        bind .t.f $i "binding for $i"
+	bind .t.f $i "binding for $i"
     }
     foreach i {b d a c} {
-        bind .t.f $i {}
-        lappend result [lsort [bind .t.f]]
+	bind .t.f $i {}
+	lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -357,11 +431,11 @@ test bind-9.3 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {<Button-1> <Meta-Button-1> <Control-Button-1> <Double-Alt-Button-1>} {
-        bind .t.f $i "binding for $i"
+	bind .t.f $i "binding for $i"
     }
     foreach i {<Control-Button-1> <Double-Alt-Button-1> <Button-1> <Meta-Button-1>} {
-        bind .t.f $i {}
-        lappend result [lsort [bind .t.f]]
+	bind .t.f $i {}
+	lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -385,7 +459,7 @@ test bind-10.2 {Tk_GetBinding procedure} -body {
 test bind-11.1 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <Key-<> <Meta-a> <Â>" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -394,7 +468,7 @@ test bind-11.1 {Tk_GetAllBindings procedure} -body {
 test bind-11.2 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-Button-1> <Triple-Button-1> <Meta-Control-a> <Double-Alt-Enter> <Button-1>" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -403,7 +477,7 @@ test bind-11.2 {Tk_GetAllBindings procedure} -body {
 test bind-11.3 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-Triple-Button-1> abcd a<Leave>b" {
-        bind .t.f $i Test
+	bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -418,7 +492,7 @@ test bind-12.1 {Tk_DeleteAllBindings procedure} -body {
 test bind-12.2 {Tk_DeleteAllBindings procedure} -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i "a b c <Meta-Button-1> <Alt-a> <Control-a>" {
-        bind .t.f $i x
+	bind .t.f $i x
     }
     destroy .t.f
 } -result {}
@@ -490,8 +564,8 @@ test bind-13.3 {Tk_BindEvent procedure} -setup {
     (command bound to event)}}
 test bind-13.4 {Tk_BindEvent procedure} -setup {
     proc foo {} {
-        set x 44
-        event generate .t.f <:>
+	set x 44
+	event generate .t.f <:>
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -936,7 +1010,7 @@ test bind-13.33 {Tk_BindEvent procedure: many C bindings cause realloc} -setup {
 } -body {
     bindtags .t.f {a b c d e f g h i j k l m n o p}
     foreach p [bindtags .t.f] {
-        bind $p <Button-1> "lappend x $p"
+	bind $p <Button-1> "lappend x $p"
     }
     event generate .t.f <Button-1>
     return $x
@@ -1019,8 +1093,8 @@ test bind-13.43 {Tk_BindEvent procedure: break in script} -setup {
 } -result  {b1}
 test bind-13.45 {Tk_BindEvent procedure: error in script} -setup {
     proc bgerror msg {
-        global x
-        lappend x $msg
+	global x
+	lappend x $msg
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6070,8 +6144,8 @@ test bind-28.15 {keysym names, Emoji} -body {
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {
     proc bgerror msg {
-        global x errorInfo
-        set x [list $msg $errorInfo]
+	global x errorInfo
+	set x [list $msg $errorInfo]
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6094,12 +6168,12 @@ test bind-29.1 {Tcl_BackgroundError procedure} -setup {
 
 test bind-29.2 {Tcl_BackgroundError procedure} -setup {
     proc do {} {
-        event generate .t.f <Button>
-        event generate .t.f <ButtonRelease>
+	event generate .t.f <Button>
+	event generate .t.f <ButtonRelease>
     }
     proc bgerror msg {
-        global x errorInfo
-        set x [list $msg $errorInfo]
+	global x errorInfo
+	set x [list $msg $errorInfo]
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6284,7 +6358,7 @@ test bind-32.2 {detection of double click should not fail} -setup {
     # that used an event ring overflowed, and the double click was not detected.
     # But new implementation should work properly.
     for {set i 0} {$i < 1000} {incr i} {
-        event generate .t.f <Expose>
+	event generate .t.f <Expose>
     }
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -6857,9 +6931,9 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     # pointer should have moved the same amount as the window moved
     set res 1
     foreach pos1 $pointerPos1 pos2 $pointerPos2 {
-        if {$pos1 != [expr {$pos2 - 400}]} {
-            set res [list $pointerPos1 $pointerPos2]
-        }
+	if {$pos1 != ($pos2 - 400)} {
+	    set res [list $pointerPos1 $pointerPos2]
+	}
     }
     set res
 } -cleanup {
@@ -6883,90 +6957,79 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     # a hot spot (which would trigger the corresponding action as an
     # unwanted effect) but will warp the pointer to the hot spot limit only.
     if {[tk windowingsystem] eq "x11"} {
-        set halo 1
+	set halo 1
     } else {
-        set halo 0
+	set halo 0
     }
     set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
     controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
-        if {$dim <= $halo} {
-            lappend res ok
-        } else {
-            lappend res $dim
-        }
+	if {$dim <= $halo} {
+	    lappend res ok
+	} else {
+	    lappend res $dim
+	}
     }
     event generate {} <Motion> -x 100 -y 100 -warp 1
     controlPointerWarpTiming
     event generate {} <Motion> -x -1 -y -1 -warp 1
     controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
-        if {$dim <= $halo} {
-            lappend res ok
-        } else {
-            lappend res $dim
-        }
+	if {$dim <= $halo} {
+	    lappend res ok
+	} else {
+	    lappend res $dim
+	}
     }
     set res
 } -cleanup {
 } -result {ok ok ok ok}
+test bind-34.4 {Pointer warp relative to the root window of the screen when the Tk root window is unmapped. (Ticket e2418ce5fe)} -setup {
+    deleteWindows
+    if {! [winfo ismapped .]} {
+	wm deiconify .
+	wm geometry . 200x200+100+100
+	after 10; update
+    }
+    event generate {} <Motion> -warp 1 -x 350 -y 200
+    controlPointerWarpTiming
+    wm withdraw .
+    assert {([winfo ismapped .] == 0) && ([winfo pointerx .] == 350) && ([winfo pointery .] == 200)}
+} -body {
+    event generate {} <Motion> -warp 1 -x 360 -y 250
+    controlPointerWarpTiming
+    winfo pointerxy .
+} -cleanup {
+    wm deiconify .
+} -result {360 250}
+test bind-34.5 {Pointer warp relative to an arbitrary toplevel when the Tk root window is unmapped. (Ticket e2418ce5fe)} -setup {
+    deleteWindows
+    if {! [winfo ismapped .]} {
+	wm deiconify .
+	wm geometry . 200x200+100+100
+	after 10; update
+    }
+    event generate {} <Motion> -warp 1 -x 350 -y 200
+    controlPointerWarpTiming
+    toplevel .one
+    wm geometry .one 200x200+100+350
+    after 10; update
+    wm withdraw .
+    assert {([winfo ismapped .] == 0) && ([winfo pointerx .] == 350) && ([winfo pointery .] == 200)}
+} -body {
+    event generate .one <Motion> -warp 1 -x 250 -y 100
+    after 10; update
+    list [expr {[winfo pointerx .one] - [winfo rootx .one]}] [expr {[winfo pointery .one] - [winfo rooty .one]}]
+} -cleanup {
+    wm deiconify .
+} -result {250 100}
 
-set keyInfo {}
-set numericKeysym {}
-proc testKey {window event type mods} {
-    global keyInfo numericKeysym
-    set keyInfo {}
-    set numericKeysym {}
-    bind $window <Key> {
-	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
-	set numericKeysym %N
-    }
-    focus -force $window
-    update
-    event generate $window $event
-    if {$keyInfo == {}} {
-        vwait keyInfo
-    }
-    set save $keyInfo
-    set keyInfo {}
-    set injectcmd [list injectkeyevent $type $numericKeysym]
-    foreach {option} $mods {
-	lappend injectcmd $option
-    }
-    eval $injectcmd
-    if {$keyInfo == {}} {
-        vwait keyInfo
-    }
-    if {$save != $keyInfo} {
-	return "[format "0x%x" $numericKeysym] ($mods): $save != $keyInfo"
-    }
-    return pass
-}
-proc testKeyWithMods {window keysym type} {
-    set result [testKey $window "<$keysym>" $type {}]
-    if {$result != {pass}} {
-	return $result
-    }
-    set result [testKey $window "<Shift-$keysym>" $type {-shift}]
-    if {$result != {pass}} {
-	return $result
-    }
-    set result [testKey $window "<Option-$keysym>" $type {-option}]
-    if {$result != {pass}} {
-	return $result
-    }
-    set result [testKey $window "<Shift-Option-$keysym>" $type {-shift -option}]
-    if {$result != {pass}} {
-	return $result
-    }
-    return pass
-}
 test bind-35.0 {Generated and real key events agree} -constraints {aqua} -body {
     foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA} {
 	set result [testKeyWithMods . $k press]
-	if {$result != "pass"} {
+	if {$result ne "pass"} {
 	    return $result
 	}
     }
@@ -6981,7 +7044,7 @@ test bind-35.1 {Key events agree for entry widgets} -constraints {aqua} -setup {
 } -body {
     foreach k {o O F2 Home Right Greek_sigma Greek_ALPHA Menu} {
 	set result [testKeyWithMods .new.e $k press]
-	if {$result != "pass"} {
+	if {$result ne "pass"} {
 	    return $result
 	}
     }
@@ -7002,7 +7065,7 @@ test bind-35.2 {Can bind to function keys} -constraints {aqua} -body {
     set numericKeysym {}
     focus -force .
     event generate . <F2>
-    injectkeyevent press $numericKeysym -function
+    testinjectkeyevent press $numericKeysym -function
     vwait keyInfo
     return $keyInfo
 } -cleanup {
@@ -7028,16 +7091,16 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
     } {
 	set keyInfo {}
 	event generate . [lindex $event 0]
-	if {$keyInfo == {}} {
+	if {$keyInfo eq {}} {
 	    vwait keyInfo
 	}
 	set save $keyInfo
-	injectkeyevent flagschanged $numericKeysym [lindex $event 1]
-	if {$keyInfo == {}} {
+	testinjectkeyevent flagschanged $numericKeysym [lindex $event 1]
+	if {$keyInfo eq {}} {
 	    vwait keyInfo
 	}
-	if {$save != $keyInfo} {
-	    return "$save != $keyInfo"
+	if {$save ne $keyInfo} {
+	    return "$save ne $keyInfo"
 	}
     }
     return pass
@@ -7051,7 +7114,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     grab release .top
     wm geometry .top 200x200+300+300
     label .top.l -height 5 -width 20 -highlightthickness 2 \
-            -highlightbackground black -bg yellow -text "My label"
+	    -highlightbackground black -bg yellow -text "My label"
     pack .top.l -side bottom
     update
     # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
@@ -7073,7 +7136,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     # success if the coords are the same with or without the grab, and if they
     # are at (10,10) inside the label widget as requested by the warping
     expr {$x1==$x2 && $y1==$y2 && $x1==[winfo rootx .top.l]+10 \
-                               && $y1==[winfo rooty .top.l]+10}
+			       && $y1==[winfo rooty .top.l]+10}
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2
@@ -7100,9 +7163,11 @@ test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [435739
     destroy .c
 } -returnCodes ok -result {}  ; # shall not crash (assertion failed)
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 cleanupTests
-return
 
 # vi:set ts=4 sw=4 et:
 # Local Variables:

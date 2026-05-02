@@ -73,9 +73,9 @@
  * Event(state)		Enter/Leave From -> To
  * ------------		----------------------
  * LastRelease(B | GB): restrict window -> anc(grab window, event window)
- * Grab(U | B): 	event window -> anc(grab window, event window)
+ * Grab(U | B):	event window -> anc(grab window, event window)
  * Grab(G):		anc(old grab window, event window) ->
- * 				anc(new grab window, event window)
+ *				anc(new grab window, event window)
  * Grab(GB):		restrict window -> anc(new grab window, event window)
  * Ungrab(G):		anc(grab window, event window) -> event window
  * Ungrab(GB):		restrict window -> event window
@@ -172,7 +172,7 @@ int
 Tk_GrabObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int globalGrab;
@@ -204,7 +204,7 @@ Tk_GrabObjCmd(
 
 	Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
 	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
-		" option ?arg ...?\"", NULL);
+		" option ?arg ...?\"", (char *)NULL);
 	/* This API not exposed:
 	 *
 	((Interp *) interp)->flags |= INTERP_ALTERNATE_WRONG_ARGS;
@@ -524,24 +524,24 @@ Tk_Grab(
     if (grabResult == GrabNotViewable) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: window not viewable", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", (char *)NULL);
     } else if (grabResult == AlreadyGrabbed) {
     alreadyGrabbed:
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: another application has grab", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", (char *)NULL);
     } else if (grabResult == GrabFrozen) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: keyboard or pointer frozen", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", (char *)NULL);
     } else if (grabResult == GrabInvalidTime) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: invalid time", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", (char *)NULL);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"grab failed for unknown reason (code %d)", grabResult));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", (char *)NULL);
     }
     return TCL_ERROR;
 }
@@ -673,8 +673,8 @@ ReleaseButtonGrab(
  *	when there is none.
  *
  * Results:
- *	If the return value is 1 it means the event should be processed (event
- *	handlers should be invoked). If the return value is 0 it means the
+ *	If the return value is true it means the event should be processed (event
+ *	handlers should be invoked). If the return value is false it means the
  *	event should be ignored in order to make grabs work correctly. In some
  *	cases this function modifies the event.
  *
@@ -687,7 +687,7 @@ ReleaseButtonGrab(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkPointerEvent(
     XEvent *eventPtr,	/* Pointer to the event. */
     TkWindow *winPtr)		/* Tk's information for window where event was
@@ -751,11 +751,11 @@ TkPointerEvent(
 	if (dispPtr->grabWinPtr != NULL) {
 	    if (outsideGrabTree && appGrabbed) {
 		if (!ancestorOfGrab) {
-		    return 0;
+		    return false;
 		}
 		switch (eventPtr->xcrossing.detail) {
 		case NotifyInferior:
-		    return 0;
+		    return false;
 		case NotifyAncestor:
 		    eventPtr->xcrossing.detail = NotifyVirtual;
 		    break;
@@ -773,24 +773,24 @@ TkPointerEvent(
 
 	    if ((dispPtr->buttonWinPtr != NULL)
 		    && (winPtr != dispPtr->buttonWinPtr)) {
-		return 0;
+		return false;
 	    }
 	}
-	return 1;
+	return true;
     }
 
     if ((eventPtr->type == MotionNotify) && !appGrabbed) {
 
-        /*
-         * Warp the mouse pointer with respect to window dispPtr->warpWindow
-         * if such a window was set in HandleEventGenerate.
-         */
+	/*
+	 * Warp the mouse pointer with respect to window dispPtr->warpWindow
+	 * if such a window was set in HandleEventGenerate.
+	 */
 
-        TkDoWarpWrtWin(dispPtr);
+	TkDoWarpWrtWin(dispPtr);
     }
 
     if (!appGrabbed) {
-	return 1;
+	return true;
     }
 
     /*
@@ -817,16 +817,16 @@ TkPointerEvent(
 	if (winPtr2 != winPtr) {
 	    TkChangeEventWindow(eventPtr, winPtr2);
 	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);
-	    return 0;
+	    return false;
 	}
 
-        /*
-         * Warp the mouse pointer with respect to window dispPtr->warpWindow
-         * if such a window was set in HandleEventGenerate.
-         */
+	/*
+	 * Warp the mouse pointer with respect to window dispPtr->warpWindow
+	 * if such a window was set in HandleEventGenerate.
+	 */
 
-        TkDoWarpWrtWin(dispPtr);
-	return 1;
+	TkDoWarpWrtWin(dispPtr);
+	return true;
     }
 
     /*
@@ -873,7 +873,7 @@ TkPointerEvent(
 		if (outsideGrabTree) {
 		    TkChangeEventWindow(eventPtr, dispPtr->grabWinPtr);
 		    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);
-		    return 0;					/* Note 2. */
+		    return false;					/* Note 2. */
 		}
 		if (!(dispPtr->grabFlags & GRAB_GLOBAL)) {	/* Note 6. */
 		    serial = NextRequest(dispPtr->display);
@@ -893,7 +893,7 @@ TkPointerEvent(
 		    }
 		}
 		dispPtr->buttonWinPtr = winPtr;
-		return 1;
+		return true;
 	    }
 	} else {
 	    if (eventPtr->xbutton.button != AnyButton &&
@@ -905,11 +905,11 @@ TkPointerEvent(
 	if (winPtr2 != winPtr) {
 	    TkChangeEventWindow(eventPtr, winPtr2);
 	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);
-	    return 0;						/* Note 3. */
+	    return false;						/* Note 3. */
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*
@@ -1362,7 +1362,7 @@ QueueGrabWindowChange(
 {
     NewGrabWinEvent *grabEvPtr;
 
-    grabEvPtr = (NewGrabWinEvent *)ckalloc(sizeof(NewGrabWinEvent));
+    grabEvPtr = (NewGrabWinEvent *)Tcl_Alloc(sizeof(NewGrabWinEvent));
     grabEvPtr->header.proc = GrabWinEventProc;
     grabEvPtr->dispPtr = dispPtr;
     if (grabWinPtr == NULL) {

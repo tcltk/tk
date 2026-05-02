@@ -61,7 +61,7 @@ static int		ReclaimColors(ColorTableId *id, int numColors);
  */
 
 static Tcl_HashTable imgPhotoColorHash;
-static int imgPhotoColorHashInitialized;
+static bool imgPhotoColorHashInitialized;
 #define N_COLOR_HASH	(sizeof(ColorTableId) / sizeof(int))
 
 /*
@@ -188,7 +188,7 @@ TkImgPhotoConfigureInstance(
 
     if ((modelPtr->flags & IMAGE_CHANGED)
 	    || (instancePtr->colorTablePtr != colorTablePtr)) {
-	TkClipBox(modelPtr->validRegion, &validBox);
+	XClipBox(modelPtr->validRegion, &validBox);
 	if ((validBox.width > 0) && (validBox.height > 0)) {
 	    TkImgDitherInstance(instancePtr, validBox.x, validBox.y,
 		    validBox.width, validBox.height);
@@ -224,7 +224,8 @@ TkImgPhotoGet(
     PhotoModel *modelPtr = (PhotoModel *)modelData;
     PhotoInstance *instancePtr;
     Colormap colormap;
-    int mono, nRed, nGreen, nBlue, numVisuals;
+    bool mono;
+    int nRed, nGreen, nBlue, numVisuals;
     XVisualInfo visualInfo, *visInfoPtr;
     char buf[TCL_INTEGER_SPACE * 3];
     XColor *white, *black;
@@ -294,7 +295,7 @@ TkImgPhotoGet(
      * a new instance of the image.
      */
 
-    instancePtr = (PhotoInstance *)ckalloc(sizeof(PhotoInstance));
+    instancePtr = (PhotoInstance *)Tcl_Alloc(sizeof(PhotoInstance));
     instancePtr->modelPtr = modelPtr;
     instancePtr->display = Tk_Display(tkwin);
     instancePtr->colormap = Tk_Colormap(tkwin);
@@ -323,7 +324,7 @@ TkImgPhotoGet(
 
     nRed = 2;
     nGreen = nBlue = 0;
-    mono = 1;
+    mono = true;
     instancePtr->visualInfo = *visInfoPtr;
 #if (!defined(_WIN32) && !defined(MAC_OSX_TK))
     gcmask = 0;
@@ -335,7 +336,7 @@ TkImgPhotoGet(
 	nRed = 1 << CountBits(visInfoPtr->red_mask);
 	nGreen = 1 << CountBits(visInfoPtr->green_mask);
 	nBlue = 1 << CountBits(visInfoPtr->blue_mask);
-	mono = 0;
+	mono = false;
 #if (!defined(_WIN32) && !defined(MAC_OSX_TK))
 	if (visInfoPtr->depth > 24) {
 	    gcValues.plane_mask = visInfoPtr->red_mask
@@ -351,14 +352,14 @@ TkImgPhotoGet(
 	    nRed = 32;
 	    nGreen = 32;
 	    nBlue = 32;
-	    mono = 0;
+	    mono = false;
 	} else if (visInfoPtr->depth >= 3) {
 	    const int *ip = paletteChoice[visInfoPtr->depth - 3];
 
 	    nRed = ip[0];
 	    nGreen = ip[1];
 	    nBlue = ip[2];
-	    mono = 0;
+	    mono = false;
 	}
 	break;
     case GrayScale:
@@ -722,7 +723,7 @@ TkImgPhotoDisplay(
 	 */
 
     fallBack:
-	TkSetRegion(display, instancePtr->gc,
+	XSetRegion(display, instancePtr->gc,
 		instancePtr->modelPtr->validRegion);
 	XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
 		drawableY - imageY);
@@ -812,7 +813,7 @@ TkImgPhotoInstanceSetSize(
     Pixmap newPixmap;
 
     modelPtr = instancePtr->modelPtr;
-    TkClipBox(modelPtr->validRegion, &validBox);
+    XClipBox(modelPtr->validRegion, &validBox);
 
     if ((instancePtr->width != modelPtr->width)
 	    || (instancePtr->height != modelPtr->height)
@@ -856,12 +857,12 @@ TkImgPhotoInstanceSetSize(
 	    || (instancePtr->error == NULL)) {
 	if (modelPtr->height > 0 && modelPtr->width > 0) {
 	    /*
-	     * TODO: use attemptckalloc() here once there is a strategy that
+	     * TODO: use Tcl_AttemptAlloc() here once there is a strategy that
 	     * will allow us to recover from failure. Right now, there's no
 	     * such possibility.
 	     */
 
-	    newError = (schar *)ckalloc(modelPtr->height * modelPtr->width
+	    newError = (schar *)Tcl_Alloc(modelPtr->height * modelPtr->width
 		    * 3 * sizeof(schar));
 
 	    /*
@@ -915,7 +916,7 @@ TkImgPhotoInstanceSetSize(
 		    errSrcPtr += instancePtr->width * 3;
 		}
 	    }
-	    ckfree(instancePtr->error);
+	    Tcl_Free(instancePtr->error);
 	}
 
 	instancePtr->error = newError;
@@ -948,7 +949,8 @@ IsValidPalette(
 				 * is to be applied. */
     const char *palette)	/* Palette specification string. */
 {
-    int nRed, nGreen, nBlue, mono, numColors;
+    int nRed, nGreen, nBlue, numColors;
+    bool mono;
     char *endp;
 
     /*
@@ -962,7 +964,7 @@ IsValidPalette(
     }
 
     if (*endp == 0) {
-	mono = 1;
+	mono = true;
 	nGreen = nBlue = nRed;
     } else {
 	palette = endp + 1;
@@ -977,7 +979,7 @@ IsValidPalette(
 		|| (nBlue > 256)) {
 	    return 0;
 	}
-	mono = 0;
+	mono = false;
     }
 
     switch (instancePtr->visualInfo.c_class) {
@@ -1081,7 +1083,7 @@ GetColorTable(
     id.gamma = instancePtr->gamma;
     if (!imgPhotoColorHashInitialized) {
 	Tcl_InitHashTable(&imgPhotoColorHash, N_COLOR_HASH);
-	imgPhotoColorHashInitialized = 1;
+	imgPhotoColorHashInitialized = true;
     }
     entry = Tcl_CreateHashEntry(&imgPhotoColorHash, (char *) &id, &isNew);
 
@@ -1096,7 +1098,7 @@ GetColorTable(
 	 * No color table currently available; need to make one.
 	 */
 
-	colorPtr = (ColorTable *)ckalloc(sizeof(ColorTable));
+	colorPtr = (ColorTable *)Tcl_Alloc(sizeof(ColorTable));
 
 	/*
 	 * The following line of code should not normally be needed due to the
@@ -1200,7 +1202,8 @@ AllocateColors(
     ColorTable *colorPtr)	/* Pointer to the color table requiring colors
 				 * to be allocated. */
 {
-    int i, r, g, b, rMult, mono;
+    int i, r, g, b, rMult;
+    bool mono;
     int numColors, nRed, nGreen, nBlue;
     double fr, fg, fb, igam;
     XColor *colors;
@@ -1257,7 +1260,7 @@ AllocateColors(
 	    } else {
 		numColors = MAX(MAX(nRed, nGreen), nBlue);
 	    }
-	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)Tcl_Alloc(numColors * sizeof(XColor));
 
 	    for (i = 0; i < numColors; ++i) {
 		if (igam == 1.0) {
@@ -1277,7 +1280,7 @@ AllocateColors(
 	     */
 
 	    numColors = (mono) ? nRed: (nRed * nGreen * nBlue);
-	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)Tcl_Alloc(numColors * sizeof(XColor));
 
 	    if (!mono) {
 		/*
@@ -1321,18 +1324,18 @@ AllocateColors(
 	 * Now try to allocate the colors we've calculated.
 	 */
 
-	pixels = (unsigned long *)ckalloc(numColors * sizeof(unsigned long));
+	pixels = (unsigned long *)Tcl_Alloc(numColors * sizeof(unsigned long));
 	for (i = 0; i < numColors; ++i) {
-	    if (!XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
-		    &colors[i])) {
+	    if (XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
+		    &colors[i]) == 0) {
 		/*
 		 * Can't get all the colors we want in the default colormap;
 		 * first try freeing colors from other unused color tables.
 		 */
 
 		if (!ReclaimColors(&colorPtr->id, numColors - i)
-			|| !XAllocColor(colorPtr->id.display,
-			colorPtr->id.colormap, &colors[i])) {
+			|| XAllocColor(colorPtr->id.display,
+			colorPtr->id.colormap, &colors[i]) == 0) {
 		    /*
 		     * Still can't allocate the color.
 		     */
@@ -1352,8 +1355,8 @@ AllocateColors(
 	    break;
 	}
 	XFreeColors(colorPtr->id.display, colorPtr->id.colormap, pixels, i, 0);
-	ckfree(colors);
-	ckfree(pixels);
+	Tcl_Free(colors);
+	Tcl_Free(pixels);
 
 	if (!mono) {
 	    if ((nRed == 2) && (nGreen == 2) && (nBlue == 2)) {
@@ -1361,7 +1364,7 @@ AllocateColors(
 		 * Fall back to 1-bit monochrome display.
 		 */
 
-		mono = 1;
+		mono = true;
 	    } else {
 		/*
 		 * Reduce the number of shades of each primary to about 3/4 of
@@ -1455,7 +1458,7 @@ AllocateColors(
 	}
     }
 
-    ckfree(colors);
+    Tcl_Free(colors);
 }
 
 /*
@@ -1490,7 +1493,7 @@ DisposeColorTable(
 		    colorPtr->pixelMap, colorPtr->numColors, 0);
 	    Tk_FreeColormap(colorPtr->id.display, colorPtr->id.colormap);
 	}
-	ckfree(colorPtr->pixelMap);
+	Tcl_Free(colorPtr->pixelMap);
     }
 
     entry = Tcl_FindHashEntry(&imgPhotoColorHash, &colorPtr->id);
@@ -1499,7 +1502,7 @@ DisposeColorTable(
     }
     Tcl_DeleteHashEntry(entry);
 
-    ckfree(colorPtr);
+    Tcl_Free(colorPtr);
 }
 
 /*
@@ -1584,7 +1587,7 @@ ReclaimColors(
 		    colorPtr->pixelMap, colorPtr->numColors, 0);
 	    numColors -= colorPtr->numColors;
 	    colorPtr->numColors = 0;
-	    ckfree(colorPtr->pixelMap);
+	    Tcl_Free(colorPtr->pixelMap);
 	    colorPtr->pixelMap = NULL;
 	}
 
@@ -1628,7 +1631,7 @@ TkImgDisposeInstance(
 	XDestroyImage(instancePtr->imagePtr);
     }
     if (instancePtr->error != NULL) {
-	ckfree(instancePtr->error);
+	Tcl_Free(instancePtr->error);
     }
     if (instancePtr->colorTablePtr != NULL) {
 	FreeColorTable(instancePtr->colorTablePtr, 1);
@@ -1644,7 +1647,7 @@ TkImgDisposeInstance(
 	prevPtr->nextPtr = instancePtr->nextPtr;
     }
     Tk_FreeColormap(instancePtr->display, instancePtr->colormap);
-    ckfree(instancePtr);
+    Tcl_Free(instancePtr);
 }
 
 /*
@@ -1674,7 +1677,8 @@ TkImgDitherInstance(
     PhotoModel *modelPtr = instancePtr->modelPtr;
     ColorTable *colorPtr = instancePtr->colorTablePtr;
     XImage *imagePtr;
-    int nLines, bigEndian, i, c, x, y, xEnd, doDithering = 1;
+    int nLines, bigEndian, i, c, x, y, xEnd;
+    bool doDithering = true;
     int bitsPerPixel, bytesPerLine, lineLength;
     unsigned char *srcLinePtr;
     schar *errLinePtr;
@@ -1693,7 +1697,7 @@ TkImgDitherInstance(
 		&nGreen, &nBlue);
 	if ((nRed >= 256)
 		&& ((result == 1) || ((nGreen >= 256) && (nBlue >= 256)))) {
-	    doDithering = 0;
+	    doDithering = false;
 	}
     }
 
@@ -1721,11 +1725,11 @@ TkImgDitherInstance(
     imagePtr->bytes_per_line = bytesPerLine;
 
     /*
-     * TODO: use attemptckalloc() here once we have some strategy for
+     * TODO: use Tcl_AttemptAlloc() here once we have some strategy for
      * recovering from the failure.
      */
 
-    imagePtr->data = (char *)ckalloc(imagePtr->bytes_per_line * nLines);
+    imagePtr->data = (char *)Tcl_Alloc(imagePtr->bytes_per_line * nLines);
     bigEndian = imagePtr->bitmap_bit_order == MSBFirst;
     firstBit = bigEndian? (1 << (imagePtr->bitmap_unit - 1)): 1;
 
@@ -1987,7 +1991,7 @@ TkImgDitherInstance(
 	yStart = yEnd;
     }
 
-    ckfree(imagePtr->data);
+    Tcl_Free(imagePtr->data);
     imagePtr->data = NULL;
 }
 

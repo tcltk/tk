@@ -11,7 +11,7 @@ Tcl and Tk are distributed under a modified BSD license:<br>
 </p>
 <ul style="list-style-type:none;">
 <li>&copy; 1987-@TK_YEAR@ Tcl Core Team and Contributers.</li>
-<li>&copy; 2011-@TK_YEAR@ Kevin Walzer/WordTech Communications LLC.</li>
+<li>&copy; 2011-@TK_YEAR@ Kevin Walzer.</li>
 <li>&copy; 2014-@TK_YEAR@ Marc Culler.</li>
 <li>&copy; 2002-2012 Daniel A. Steffen.</li>
 <li>&copy; 2001-2009 Apple Inc.</li>

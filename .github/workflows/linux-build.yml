@@ -3,8 +3,7 @@ on:
   push:
     branches:
     - "main"
-    - "core-8-branch"
-    - "core-8-6-branch"
+    - "core-9-0-branch"
     tags:
     - "core-**"
 permissions:
@@ -17,7 +16,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         compiler:
@@ -27,23 +26,22 @@ jobs:
           - ""
           - "CFLAGS=-DTK_NO_DEPRECATED=1"
           - "--disable-shared"
-          - "--disable-xft"
-          - "--disable-xss"
           - "--enable-symbols"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: tk
-      - name: Checkout Tcl 8.6
-        uses: actions/checkout@v4
+      - name: Checkout Tcl 9.1
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev libxft-dev
+          sudo apt-get update
+          sudo apt-get install libxss-dev libxft-dev libcups2-dev libatk1.0-dev libatk-bridge2.0-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -112,7 +110,7 @@ jobs:
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Tk ${{ env.VERSION }} Source distribution (snapshot)
           path: |
@@ -120,34 +118,34 @@ jobs:
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         compiler:
           - "gcc"
         config:
           - ""
-          - "--disable-xft"
           - "--enable-symbols"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: tk
-      - name: Checkout Tcl
-        uses: actions/checkout@v4
+      - name: Checkout Tcl 9.1
+        uses: actions/checkout@v5
         with:
           repository: tcltk/tcl
           ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev
+          sudo apt-get update
+          sudo apt-get install libxss-dev libxft-dev libcups2-dev xvfb libicu-dev xfonts-75dpi xfonts-100dpi xfonts-scalable libxfont2 unifont
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV

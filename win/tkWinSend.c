@@ -53,7 +53,7 @@ typedef struct SendEvent {
 
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 typedef struct {
-    int initialized;
+    bool initialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
@@ -142,15 +142,15 @@ Tk_SetAppName(
      * Initialise the COM library for this interpreter just once.
      */
 
-    if (tsdPtr->initialized == 0) {
+    if (!tsdPtr->initialized) {
 	hr = CoInitialize(0);
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "failed to initialize the COM library", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", (char *)NULL);
 	    return "";
 	}
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 	TRACE("Initialized COM library for interp 0x%" TCL_Z_MODIFIER "x\n", (size_t)interp);
     }
 
@@ -164,7 +164,7 @@ Tk_SetAppName(
     if (riPtr == NULL) {
 	LPUNKNOWN *objPtr;
 
-	riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
+	riPtr = (RegisteredInterp *)Tcl_Alloc(sizeof(RegisteredInterp));
 	memset(riPtr, 0, sizeof(RegisteredInterp));
 	riPtr->interp = interp;
 
@@ -172,7 +172,7 @@ Tk_SetAppName(
 	hr = TkWinSendCom_CreateInstance(interp, &IID_IUnknown,
 		(void **) objPtr);
 
-	Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr,
+	Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr,
 		CmdDeleteProc);
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_HideCommand(interp, "send", "send");
@@ -323,7 +323,7 @@ Tk_SendObjCmd(
     void *clientData,	/* Information about sender (only dispPtr
 				 * field is used). */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     enum {
@@ -334,7 +334,8 @@ Tk_SendObjCmd(
     };
     const char *stringRep;
     int result = TCL_OK;
-    int i, async = 0, index;
+    int async = 0, index;
+    Tcl_Size i;
 
     /*
      * Process the command options.
@@ -441,7 +442,7 @@ FindInterpreterObject(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "no application named \"%s\"", name));
 		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION",
-			    NULL);
+			    (char *)NULL);
 		    result = TCL_ERROR;
 		}
 
@@ -510,7 +511,7 @@ CmdDeleteProc(
 
     Tcl_Release(clientData);
 
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /*
@@ -884,7 +885,7 @@ TkWinSend_SetExcepInfo(
  * ----------------------------------------------------------------------
  */
 
-int
+void
 TkWinSend_QueueCommand(
     Tcl_Interp *interp,
     Tcl_Obj *cmdPtr)
@@ -893,7 +894,7 @@ TkWinSend_QueueCommand(
 
     TRACE("SendQueueCommand()\n");
 
-    evPtr = (SendEvent *)ckalloc(sizeof(SendEvent));
+    evPtr = (SendEvent *)Tcl_Alloc(sizeof(SendEvent));
     evPtr->header.proc = SendEventProc;
     evPtr->header.nextPtr = NULL;
     evPtr->interp = interp;
@@ -907,8 +908,6 @@ TkWinSend_QueueCommand(
     }
 
     Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
-
-    return 0;
 }
 
 /*

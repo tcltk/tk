@@ -1,0 +1,283 @@
+# Tests for the "testutils" command, defined in testutils.tcl
+#
+# © 2025 Erik Leunissen
+#
+# See the file "license.terms" for information on usage and redistribution of
+# this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+
+# NOTE
+#
+# All tests in this test file have been constrained with test constraint "testutils".
+# This constraint isn't set anywhere, and therefore false by default. Therefore,
+# the tests in this file are skipped in a regular invocation of the Tk test suite.
+# In order to run these test, you need to use the tcltest option
+# "-constraints testutils" in the invocation, possibly combined with the option
+# "-file testutils.test" to exclude other test files, or with
+# "-limitconstraints true" to exclude other tests.
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+assert {"testutils" in [info procs testutils]}
+
+#
+# TESTS
+#
+
+#
+# Testutils domain "generic"
+#
+
+test resetWindows-4b705991cf {Reset of root window geometry is effective. Bug #4b705991cf} -constraints testutils -setup {
+    unset -nocomplain result
+    # Beware that some windowing systems / window managers impose a minimum
+    # width or height on toplevels. The following windowing systems/window managers
+    # have been investigated for imposing such a minimum size:
+    # x11: no wm (i.e. the bare display server), e16, Fluxbox, Fvwm, Icewm,
+    #      KDE/Plasma, Metacity, Openbox, TWM, WindowMaker, Xvwm
+    # win32 and macOS/aqua. Those exhibiting such a minimum size are:
+    #
+    # ws-wm		width	height
+    # ----------------------------------
+    # win32		116	1
+    # x11-KDE/Plasma	8	33
+    # x11-WindowMaker	5	5
+    # ----------------------------------
+    #
+    # Therefore, don't use a width less than 116, or a height less than 33 for
+    # this test.
+    #
+} -body {
+    . configure -width 151 -height 94
+    wm geometry . +123+123
+    resetWindows
+    lappend result [wm geometry .]
+    pack [frame .f -width 137 -height 109 -bg blue]
+    update
+    lappend result [winfo width .] [winfo height .]
+} -cleanup {
+    unset -nocomplain result
+    destroy .f
+    resetWindows
+} -result {200x200+100+100 137 109}
+
+#
+# testutils command section 1: invalid invocations
+#
+test testutils-1.1 {invalid subcommand} -constraints testutils -body {
+    testutils foo
+} -result {invalid subCmd "foo". Usage: testutils export|import|forget ?domain domain ...?} -returnCodes error
+
+test testutils-1.2 {invalid #args for subCmd export} -constraints testutils -body {
+    testutils export foo
+} -result {invalid #args. Usage: testutils export} -returnCodes error
+
+test testutils-1.3 {invalid #args for subCmd import} -constraints testutils -body {
+    testutils import
+} -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
+
+test testutils-1.4 {invalid #args for subCmd forget} -constraints testutils -body {
+    testutils forget
+} -result {invalid #args. Usage: testutils import|forget domain ?domain ...?} -returnCodes error
+
+test testutils-1.5 {invalid domain for subCmd import} -constraints testutils -body {
+    testutils import foo
+} -result {testutils domain "foo" doesn't exist} -returnCodes error
+
+test testutils-1.6 {invalid domain for subCmd forget} -constraints testutils -body {
+    testutils forget foo
+} -result {testutils domain "foo" doesn't exist} -returnCodes error
+
+#
+# COMMON TEST SETUP
+#
+
+# Create a domain namespace for testing export, import, forget
+assert {"::tk::test::foo" ni [namespace children ::tk::test]}
+assert {"::tk::test::zez" ni [namespace children ::tk::test]}
+catch {rename init {}}
+catch {rename kuk {}}
+unset -nocomplain bar pip
+namespace eval ::tk::test::foo {
+    proc init {} {
+	variable bar 123
+	variable pip
+    }
+    proc kuk {} {}
+    testutils export
+}
+set initVars [info vars]; lappend initVars initVars
+
+#
+# testutils command section 2: Domain failures for forget and import
+#
+test testutils-2.1 {forget not-imported domain} -constraints testutils -body {
+    testutils forget foo
+} -result {testutils domain "foo" was not imported} -returnCodes error
+
+test testutils-2.2 {duplicate import} -constraints testutils -body {
+    testutils import foo
+    testutils import foo
+} -result {testutils domain "foo" was already imported} -returnCodes error -cleanup {
+    testutils forget foo
+}
+
+#
+# testutils command section 3. Import procs
+#
+test testutils-3.1 {utility proc is imported and init proc is not} -constraints testutils -body {
+    testutils import foo
+    expr {([info procs kuk] eq "kuk") && ([info procs init] eq "")}
+} -result 1 -cleanup {
+    testutils forget foo
+}
+
+test testutils-3.2 {forget removes utility proc} -constraints testutils -body {
+    testutils import foo
+    testutils forget foo
+    info procs kuk
+} -result {}
+
+test testutils-3.3 {import fails: proc already exists} -constraints testutils -setup {
+    namespace eval ::zez {
+	proc kuk {} {}
+    }
+} -body {
+    namespace eval ::zez {
+	testutils import foo
+    }
+} -result "import from testutils domain \"foo\" failed: can't import command \"kuk\": already exists" -returnCodes error -cleanup {
+    namespace delete ::zez
+}
+
+#
+# testutils command section 4. Import variables
+#
+test testutils-4.1 {associated variables are imported} -constraints testutils -body {
+    testutils import foo
+    set varNames [info vars]
+    foreach name $initVars {
+	set varNames [lremove $varNames [lsearch $varNames $name]]
+    }
+    list [lsort $varNames] [info exists bar] [info exists pip] $bar
+} -result [list {bar pip} 1 0 123] -cleanup {
+    unset -nocomplain name varNames
+    testutils forget foo
+}
+
+test testutils-4.2 {
+    Repeated initialization keeps imported variable non-existent if it was
+    defined without a value, even if a test file inadvertently assigns it
+    a value in the meantime.
+} -constraints testutils -body {
+    catch {
+	testutils import foo
+    }
+    testutils forget foo
+    set pip 11111
+    testutils import foo
+    info exists pip
+} -result 0 -cleanup {
+    testutils forget foo
+}
+
+test testutils-4.3 {import fails: variable already exists} -constraints testutils -setup {
+    #
+    # We need a pristine new namespace in which the variable bar was never imported
+    # and hence no upvar link for it exists.
+    #
+    namespace eval ::zez {
+	set bar 11
+    }
+} -body {
+    namespace eval ::zez {
+	testutils import foo
+    }
+} -result "import from testutils domain \"foo\" failed: variable \"bar\" already exists" -returnCodes error -cleanup {
+    namespace delete ::zez
+}
+
+test testutils-4.4 {repeated creation/deletion of requesting namespace doesn't fool testutils} -constraints testutils -body {
+    namespace eval ::zez {
+	testutils import foo
+	testutils forget foo
+    }
+    namespace delete ::zez
+    namespace eval ::zez {
+	set pip 22
+	testutils import foo
+	list [info exists bar] [info exists pip] $bar
+    }
+} -result {1 0 123} -cleanup {
+    namespace delete ::zez
+}
+
+#
+# Testutils domain "timing"
+#
+
+#
+# COMMON TEST SETUP
+#
+testutils import timing
+
+test dt-1.1 {Exercise a timing run, default granularity (milliseconds)} -constraints testutils -setup {
+} -body {
+    dt.reset
+    expr {[dt.get] <= 1}
+} -result 1
+
+test dt-1.2 {Exercise granularity microseconds} -constraints testutils -body {
+    dt.reset microseconds
+    expr {[dt.get] <= 1000}
+} -result 1
+
+test dt-1.3 {Exercise granularity seconds} -constraints testutils -body {
+    dt.reset seconds
+    dt.get
+} -result 0
+
+test dt-1.4 {Invalid value for granularity} -constraints testutils -body {
+    dt.reset bogus
+} -returnCodes error -result {invalid parameter "bogus", expected "microseconds", "milliseconds" or "seconds"}
+
+test progress-1.1 {Exercise a timing run for a loop, granularity microseconds} -constraints testutils -body {
+    progress.init microseconds
+    while {[incr i] < 10} {
+	progress.update
+    }
+    progress.end
+} -errorOutput "......... * microseconds\n" -match glob -cleanup {
+    unset i
+}
+
+#
+# COMMON TEST CLEANUP
+#
+testutils forget timing
+
+
+#
+# TESTFILE CLEANUP
+#
+
+namespace delete ::tk::test::foo
+unset -nocomplain bar initVars pip
+cleanupTests
+
+# EOF

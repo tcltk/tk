@@ -333,11 +333,7 @@ RefWinEventProc(
 
 static void
 DestroyBusy(
-#if TCL_MAJOR_VERSION > 8
     void *data)			/* Busy window structure record */
-#else
-    char *data)
-#endif
 {
     Busy *busyPtr = (Busy *)data;
 
@@ -354,7 +350,7 @@ DestroyBusy(
 	Tk_ManageGeometry(busyPtr->tkBusy, NULL, busyPtr);
 	Tk_DestroyWindow(busyPtr->tkBusy);
     }
-    ckfree(data);
+    Tcl_Free(data);
 }
 
 /*
@@ -533,10 +529,10 @@ CreateBusy(
     Window parent;
     Tk_FakeWin *winPtr;
 
-    busyPtr = (Busy *)ckalloc(sizeof(Busy));
+    busyPtr = (Busy *)Tcl_Alloc(sizeof(Busy));
     x = y = 0;
     length = strlen(Tk_Name(tkRef));
-    name = (char *)ckalloc(length + 6);
+    name = (char *)Tcl_Alloc(length + 6);
     if (Tk_IsTopLevel(tkRef)) {
 	fmt = "_Busy";		/* Child */
 	tkParent = tkRef;
@@ -560,7 +556,7 @@ CreateBusy(
     }
     snprintf(name, length + 6, fmt, Tk_Name(tkRef));
     tkBusy = Tk_CreateWindow(interp, tkParent, name, NULL);
-    ckfree(name);
+    Tcl_Free(name);
 
     if (tkBusy == NULL) {
 	return NULL;
@@ -697,7 +693,7 @@ GetBusy(
     hPtr = Tcl_FindHashEntry(busyTablePtr, tkwin);
     if (hPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't find busy window \"%s\"", Tcl_GetString(windowObj)));
+		"cannot find busy window \"%s\"", Tcl_GetString(windowObj)));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "BUSY",
 		Tcl_GetString(windowObj), (char *)NULL);
 	return NULL;

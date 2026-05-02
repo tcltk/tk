@@ -1,17 +1,36 @@
 # This file is a Tcl script to test out the option-handling facilities
-# of Tk.  It is organized in the standard fashion for Tcl tests.
+# of Tk.
 #
 # Copyright © 1991-1993 The Regents of the University of California.
 # Copyright © 1994 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 testConstraint appNameIsTktest [expr {[winfo name .] eq "tktest"}]
+
+#
+# COMMON TEST SETUP
+#
 
 deleteWindows
 set appName [winfo name .]
@@ -38,6 +57,10 @@ option add $appName.op2.op5.Color2 purple
 option add $appName.Class1.Class3.y brown
 option add $appName*op6*Color2 black
 option add $appName*Class1.op1.Color2 grey
+
+#
+# TESTS
+#
 
 test option-1.1 {basic option retrieval} -body {
     option get . x Color1
@@ -178,12 +201,15 @@ test option-7.6 {basic option retrieval} -body {
     option get .op2.op5 z Color2
 } -result purple
 
+#
+# COMMON TEST SETUP
+#
 
 # Now try similar tests to above, except jump around non-hierarchically
 # between windows to make sure that the option stacks are pushed and
 # popped correctly.
-
 option get . foo Foo
+
 test option-8.1 {stack pushing/popping} -body {
     option get .op2.op5 x Color1
 } -result orange
@@ -283,9 +309,12 @@ test option-12.6 {stack pushing/popping} -body {
     option get .op1 z Color2
 } -result {}
 
+#
+# COMMON TEST SETUP
+#
 # Test the major priority levels (widgetDefault, etc.)
-
 # Configurations for tests 13.*
+#
 option clear
 option add $appName.op1.a 100 100
 option add $appName.op1.A interactive interactive
@@ -309,11 +338,21 @@ test option-13.4 {priority levels} -body {
 test option-13.5 {priority levels} -body {
     option get .op1 c C
 } -result widgetDefault
+
+#
+# COMMON TEST SETUP
+#
 option add $appName.op1.B file2 widget
+
 test option-13.6 {priority levels} -body {
     option get .op1 c B
 } -result startupFile
+
+#
+# COMMON TEST SETUP
+#
 option add $appName.op1.B file2 startupFile
+
 test option-13.7 {priority levels} -body {
     option get .op1 c B
 } -result file2
@@ -358,8 +397,11 @@ test option-14.12 {error conditions} -body {
     option get .gorp.gorp a A
 } -returnCodes error -result {bad window path name ".gorp.gorp"}
 
-
+#
+# COMMON TEST SETUP
+#
 set option1 [file join [testsDirectory] option.file1]
+
 test option-15.1 {database files} -body {
     list [catch {option read non-existent} msg] [string tolower $msg]
 } -result {1 {couldn't open "non-existent": no such file or directory}}
@@ -399,9 +441,13 @@ test option-15.10 {database files} -body {
     set option2 [file join [testsDirectory] option.file2]
     option read $option2
 } -returnCodes error -result {missing colon on line 2}
-set option3 [file join [testsDirectory] option.file3]
-option read $option3
-test option-15.11 {database files} {option get . {x 4} color} brówn
+
+test option-15.11 {database files} -setup {
+    set option3 [file join [testsDirectory] option.file3]
+    option read $option3
+} -body {
+    option get . {x 4} color
+} -result brówn
 
 test option-16.1 {ReadOptionFile} -body {
     set option4 [makeFile {} option.file4]
@@ -415,29 +461,27 @@ test option-16.1 {ReadOptionFile} -body {
     removeFile $option4
 } -result {true false}
 
-set opt162val {label {
+test option-16.2 {ticket 766ef52f3} -setup {
+    set expected [split {label {
   foo bar
 }
-}
-set opt162list [split $opt162val \n]
-
-test option-16.2 {ticket 766ef52f3} -body {
+} \n]
+} -body {
     set option5 [makeFile {} option.file5]
     set file [open $option5 w]
     fconfigure $file -translation crlf
-    puts $file "*notok: $opt162list"
+    puts $file "*notok: $expected"
     close $file
     option read $option5 userDefault
-    option get . notok notok
+    expr {[option get . notok notok] eq $expected}
 } -cleanup {
     removeFile $option5
-} -result $opt162list
+    unset expected
+} -result 1
+
+#
+# TESTFILE CLEANUP
+#
 
 deleteWindows
-
-# cleanup
 cleanupTests
-return
-
-
-

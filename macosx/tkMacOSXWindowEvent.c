@@ -6,8 +6,8 @@
  *
  * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
- * Copyright © 2015 Marc Culler.
+ * Copyright © 2015 Kevin Walzer
+ * Copyright © 2015 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -26,6 +26,7 @@
 #endif
 */
 
+extern NSMutableArray<TkAccessibilityElement*> *_tkAccessibleElements;
 /*
  * Declaration of functions used only in this file
  */
@@ -34,16 +35,17 @@ static int		GenerateUpdates(
 			    CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
+static void		GenerateWMDestroyEvent(Tk_Window tkwin);
 
 #pragma mark TKApplication(TKWindowEvent)
 
 extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowWillOrderOnScreenNotification;
+extern NSString *NSWindowWillCloseNotification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
-
 
 @implementation TKApplication(TKWindowEvent)
 
@@ -52,33 +54,84 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    NSWindow *w = [notification object];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    if ([NSApp tkWillExit]) {
+	return;
+    }
+    static NSWindow *systemDialog = NULL;
+    NSWindow *win = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(win);
     NSString *name = [notification name];
-    Bool flag = [name isEqualToString:NSWindowDidBecomeKeyNotification];
-    if (winPtr && flag) {
-	NSPoint location = [NSEvent mouseLocation];
-	int x = location.x;
-	int y = floor(TkMacOSXZeroScreenHeight() - location.y);
-	/*
-	 * The Tk event target persists when there is no key window but
-	 * gets reset when a new window becomes the key window.
-	 */
+    if ([name isEqualToString:NSWindowDidResignKeyNotification]) {
+	if (![NSApp keyWindow] && [NSApp isActive]) {
+	    if (winPtr) {
+		/*
+		 * A Tk window lost focus and no window has focus anymore.
+		 */
 
-	[NSApp setTkEventTarget: winPtr];
+		TkMacOSXAssignNewKeyWindow(Tk_Interp((Tk_Window) winPtr), NULL);
+	    } else {
+		/*
+		 * A system dialog, such as a standard About dialog, lost focus.
+		 */
 
-	/*
-	 * Call Tk_UpdatePointer if the pointer is in the window.
-	 */
-
-	NSView *view = [w contentView];
-	NSPoint viewLocation = [view convertPoint:location fromView:nil];
-	if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
-	    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
+		TkMacOSXAssignNewKeyWindow(NULL, NULL);
+	    }
+	}
+	if (winPtr && Tk_IsMapped(winPtr)) {
+	    GenerateActivateEvents(winPtr, false);
 	}
     }
-    if (winPtr && Tk_IsMapped(winPtr)) {
-	GenerateActivateEvents(winPtr, flag);
+    /*
+     * On older systems the system dialogs do not send DidResignKey
+     * but the do send WillClose.
+     */
+
+    if ([name isEqualToString:NSWindowWillCloseNotification]) {
+	if (win == systemDialog) {
+	    TkMacOSXAssignNewKeyWindow(NULL, NULL);
+	}
+    }
+    if ([name isEqualToString:NSWindowDidBecomeKeyNotification]) {
+	if (winPtr) {
+	    NSPoint location = [NSEvent mouseLocation];
+	    int x = location.x;
+	    int y = floor(TkMacOSXZeroScreenHeight() - location.y);
+	    /*
+	     * The Tk event target persists when there is no key window but
+	     * gets reset when a new window becomes the key window.
+	     */
+
+	    [NSApp setTkEventTarget: winPtr];
+
+	    /*
+	     * Call Tk_UpdatePointer if the pointer is in the window.
+	     */
+
+	    NSView *view = [win contentView];
+	    NSPoint viewLocation = [view convertPoint:location fromView:nil];
+	    if (NSPointInRect(viewLocation,
+			      NSInsetRect([view bounds], 2, 2))) {
+		Tk_UpdatePointer((Tk_Window) winPtr, x, y,
+				 [NSApp tkButtonState]);
+	    }
+	} else {
+	    systemDialog = win;
+	}
+	if (winPtr && Tk_IsMapped(winPtr)) {
+	    GenerateActivateEvents(winPtr, true);
+	}
+    }
+    /*
+     * Make sure that the updated keyWindow is associated with the
+     * current TkEventTarget.
+     */
+
+    NSWindow *keyWin = [NSApp keyWindow];
+    if (keyWin) {
+	TkWindow *keyWinPtr = TkMacOSXGetTkWindow(keyWin);
+	if (keyWinPtr) {
+	    [NSApp setTkEventTarget:keyWinPtr];
+	}
     }
 }
 
@@ -116,29 +169,38 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 	flags |= TK_MACOSX_HANDLE_EVENT_IMMEDIATELY;
 	TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width, height, flags);
-    }
 
+	/*Resize accessibility frame if window is resized.*/
+	TKContentView *view = [w contentView];
+	if ([view isKindOfClass:[TKContentView class]]) {
+	    for (TkAccessibilityElement *element in view.accessibilityChildren) {
+		if  (movedOnly) {
+		    NSAccessibilityPostNotification(element, NSAccessibilityMovedNotification);
+		} else {
+		    NSAccessibilityPostNotification(element, NSAccessibilityResizedNotification);
+		}
+	    }
+	}
+    }
 }
 
 - (void) windowExpanded: (NSNotification *) notification
 {
+    // This method will be called when the asynchronous deminiaturization
+    // operation has completed.  If the window is iconified by clicking on its
+    // dock icon, as opposed to calling wm deiconify, then the Tk state of
+    // the window needs to be updated.  That is the purpose of this method.
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
+
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-    if (winPtr) {
+    if (winPtr && winPtr->wmInfoPtr->hints.initial_state == IconicState) {
 	winPtr->wmInfoPtr->hints.initial_state =
 		TkMacOSXIsWindowZoomed(winPtr) ? ZoomState : NormalState;
-	Tk_MapWindow((Tk_Window)winPtr);
-
-	/*
-	 * Process all Tk events generated by Tk_MapWindow().
-	 */
-
-	while (Tcl_ServiceEvent(0)) {}
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	TkWmMapWindow(winPtr);
 
 	/*
 	 * NSWindowDidDeminiaturizeNotification is received after
@@ -201,15 +263,26 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowCollapsed: (NSNotification *) notification
 {
+    // This method will be called when the asynchronous miniaturization
+    // operation has completed.  If the window is iconified by clicking on its
+    // yellow button, as opposed to calling wm iconify, then the Tk state of
+    // the window needs to be updated.  That is the purpose of this method.
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-    if (winPtr) {
-	winPtr->wmInfoPtr->hints.initial_state = IconicState;
-	Tk_UnmapWindow((Tk_Window)winPtr);
+    NSString *name = [notification name];
+    if (!winPtr) {
+	return;
+    }
+    if ([name isEqualToString:NSWindowWillMiniaturizeNotification]) {
+	if (winPtr && winPtr->wmInfoPtr->hints.initial_state != IconicState) {
+	    winPtr->wmInfoPtr->hints.initial_state = IconicState;
+	}
+    } else {
+	TkWmUnmapWindow(winPtr);
     }
 }
 
@@ -221,42 +294,41 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	TkGenWMDestroyEvent((Tk_Window)winPtr);
+	GenerateWMDestroyEvent((Tk_Window)winPtr);
     }
 
     /*
-     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window, so
+     * If necessary, GenerateWMDestroyEvent() handles [close]ing the window, so
      * can always return NO from -windowShouldClose: for a Tk window.
      */
 
     return (winPtr ? NO : YES);
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowBecameVisible: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *window = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(window);
     if (winPtr) {
-	TKContentView *view = [window contentView];
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	if (@available(macOS 10.14, *)) {
-	    [view viewDidChangeEffectiveAppearance];
-	}
-#endif
-	[view setTkNeedsDisplay:YES];
-	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
-	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
+	fprintf(stderr, "Window %s became visible.\n", Tk_PathName(winPtr));
     }
 }
 
+// Not used by default - may be enabled for debugging.
 - (void) windowMapped: (NSNotification *) notification
 {
+    if ([NSApp tkWillExit]) {
+	return;
+    }
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-   	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	fprintf(stderr, "Window %s was ordered on screen.\n", Tk_PathName(winPtr));
     }
 }
 
@@ -264,10 +336,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 {
     NSString *name = [notification name];
     if ([name isEqualToString:NSWindowWillStartLiveResizeNotification]) {
-	// printf("Starting live resize.\n");
+	// fprintf(stderr, "Starting live resize.\n");
     } else if ([name isEqualToString:NSWindowDidEndLiveResizeNotification]) {
 	[self setTkLiveResizeEnded:YES];
-	// printf("Ending live resize\n");
+	// fprintf(stderr, "Ending live resize\n");
     }
 }
 
@@ -283,12 +355,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-
-#if 0
-    if (winPtr) {
-	Tk_UnmapWindow((Tk_Window)winPtr);
-    }
-#endif
 }
 
 #endif /* TK_MAC_DEBUG_NOTIFICATIONS */
@@ -302,19 +368,21 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     observe(NSWindowDidBecomeKeyNotification, windowActivation:);
     observe(NSWindowDidResignKeyNotification, windowActivation:);
+    observe(NSWindowWillCloseNotification, windowActivation:);
     observe(NSWindowDidMoveNotification, windowBoundsChanged:);
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
+    observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
+#if 0
+    // These can be useful for debugging.
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
+#endif
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
-#endif
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
@@ -333,6 +401,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 static void RefocusGrabWindow(void *data) {
     TkWindow *winPtr = (TkWindow *) data;
     TkpChangeFocus(winPtr, 1);
+    Tcl_Release(winPtr);
 }
 
 #pragma mark TKApplication(TKApplicationEvent)
@@ -341,10 +410,12 @@ static void RefocusGrabWindow(void *data) {
 
 - (void) applicationActivate: (NSNotification *) notification
 {
-    (void)notification;
+    NSWindow *iconifiedWindow = nil;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
+#else
+    (void) notification;
 #endif
     [NSApp tkCheckPasteboard];
 
@@ -359,19 +430,31 @@ static void RefocusGrabWindow(void *data) {
      */
 
     for (NSWindow *win in [NSApp windows]) {
+	if (! [win isKindOfClass:[TKWindow class]]) {
+	    continue;
+	}
 	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
 	if (!winPtr || !winPtr->wmInfoPtr) {
 	    continue;
 	}
 	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
 	    [win orderOut:NSApp];
+	    [[win contentView] setOnScreen:NO];
 	}
 	if (winPtr->dispPtr->grabWinPtr == winPtr) {
+	    Tcl_Preserve(winPtr);
 	    Tcl_DoWhenIdle(RefocusGrabWindow, winPtr);
-	} else {
-	    [[self keyWindow] orderFront: self];
+	}
+	if (iconifiedWindow == nil && [win isMiniaturized]) {
+	    iconifiedWindow = win;
 	}
     }
+    if ([self keyWindow] == nil && iconifiedWindow != nil) {
+	[iconifiedWindow makeKeyAndOrderFront:self];
+    } else {
+	[[self keyWindow] orderFront:self];
+    }
+
 }
 
 - (void) applicationDeactivate: (NSNotification *) notification
@@ -449,39 +532,7 @@ static void RefocusGrabWindow(void *data) {
 @end
 
 #pragma mark -
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWillDrawWidget --
- *
- *      A widget display procedure can call this to determine whether it is
- *      being run inside of the drawRect method. If not, it may be desirable
- *      for the display procedure to simply clear the REDRAW_PENDING flag
- *      and return.  The widget can be recorded in order to schedule a
- *      redraw, via an Expose event, from within drawRect.
- *
- *      This is also needed for some tests, especially of the Text widget,
- *      which record data in a global Tcl variable and assume that display
- *      procedures will be run in a predictable sequence as Tcl idle tasks.
- *
- * Results:
- *      True if called from the drawRect method of a TKContentView with
- *      tkwin NULL or pointing to a widget in the current focusView.
- *
- * Side effects:
- *	Currently none.  One day the tkwin parameter may be recorded to
- *      handle redrawing the widget later.
- *
- *----------------------------------------------------------------------
- */
-//XXXXX This stub is not used with CGImage drawing.
-int
-TkpWillDrawWidget(Tk_Window tkwin) {
-    (void) tkwin;
-    return false;
-}
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -512,11 +563,6 @@ GenerateUpdates(
     NSView *view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
 
     TkMacOSXWinCGBounds(winPtr, &bounds);
-#if 0
-    if (!CGRectIntersectsRect(bounds, *updateBounds)) {
-	return 0;
-    }
-#endif
 
     /*
      * Compute the bounding box of the area that the damage occurred in.
@@ -789,7 +835,7 @@ TkGenWMConfigureEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkGenWMDestroyEvent --
+ * GenerateWMDestroyEvent --
  *
  *	Generate a WM Destroy event for Tk.
  *
@@ -803,7 +849,7 @@ TkGenWMConfigureEvent(
  */
 
 void
-TkGenWMDestroyEvent(
+GenerateWMDestroyEvent(
     Tk_Window tkwin)
 {
     XEvent event;
@@ -860,7 +906,7 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve(protPtr);
 	    interp = protPtr->interp;
 	    Tcl_Preserve(interp);
-	    result = Tcl_EvalEx(interp, protPtr->command, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(interp, Tcl_GetString(protPtr->commandObj), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    if (result != TCL_OK) {
 		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 			"\n    (command for \"%s\" window manager protocol)",
@@ -941,18 +987,6 @@ ExposeRestrictProc(
 	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
 
-/*
- * Restrict event processing to ConfigureNotify events.
- */
-
-static Tk_RestrictAction
-ConfigureRestrictProc(
-    TCL_UNUSED(void *),
-    XEvent *eventPtr)
-{
-    return (eventPtr->type==ConfigureNotify ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
-}
-
 @implementation TKContentView(TKWindowEvent)
 
 - (id)initWithFrame:(NSRect)frame
@@ -983,7 +1017,18 @@ ConfigureRestrictProc(
 }
 - (void) updateLayer {
     CGContextRef context = self.tkLayerBitmapContext;
-    if (context) {
+    if (context && ![NSApp tkWillExit]) {
+	/*
+	 * If this ContentView is off screen, Run any pending widget
+	 * display procs before updating the layer.
+	 */
+
+	if (! [self onScreen]) {
+	    //printf("Running event loop.\n");
+	    while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	    [self setOnScreen:YES];
+	}
+
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
@@ -996,17 +1041,9 @@ ConfigureRestrictProc(
 	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
-
-	/*
-	 * Run any pending widget display procs as part of the update.
-	 */
-
-	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	[self setTkNeedsDisplay:NO];
     }
 }
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 - (void) viewDidChangeBackingProperties
 {
 
@@ -1022,19 +1059,6 @@ ConfigureRestrictProc(
     // need to redraw
     [self generateExposeEvents: self.bounds];
 }
-#endif
-
-- (void) addTkDirtyRect: (NSRect) rect
-{
-    _tkNeedsDisplay = YES;
-    _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
-}
-
-- (void) clearTkDirtyRect
-{
-    _tkNeedsDisplay = NO;
-    _tkDirtyRect = NSZeroRect;
-}
 
 -(void) setFrameSize: (NSSize)newsize
 {
@@ -1049,10 +1073,8 @@ ConfigureRestrictProc(
     Tk_Window tkwin = (Tk_Window)winPtr;
 
     if (winPtr) {
-	unsigned int width = (unsigned int) newsize.width;
-	unsigned int height= (unsigned int) newsize.height;
-	void *oldArg;
-    	Tk_RestrictProc *oldProc;
+	unsigned int width = (unsigned int)newsize.width;
+	unsigned int height= (unsigned int)newsize.height;
 
 	/*
 	 * This function can be re-entered, so we need to make sure we don't
@@ -1067,10 +1089,6 @@ ConfigureRestrictProc(
 
 	TkGenWMConfigureEvent(tkwin, Tk_X(tkwin), Tk_Y(tkwin), width, height,
 		TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
-    	oldProc = Tk_RestrictEvents(ConfigureRestrictProc, NULL, &oldArg);
-	while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-
 
 	/*
 	 * Update Tk's window data for the new size.
@@ -1100,14 +1118,7 @@ ConfigureRestrictProc(
 	 */
 
 	[NSApp _unlockAutoreleasePool];
-
     }
-
-    /*
-     * Request a call to updateLayer.
-     */
-
-    [self setNeedsDisplay:YES];
 }
 
 /*
@@ -1139,7 +1150,7 @@ ConfigureRestrictProc(
 	 * crashes or very poor performance.  The reentered flag is
 	 * used to detect this.
 	 */
-	//fprintf(stderr, "Recursive call to generateExposeEvents\n");
+	// fprintf(stderr, "Recursive call to generateExposeEvents\n");
 	return;
     }
     reentered = 1;
@@ -1229,7 +1240,18 @@ static const char *const accentNames[] = {
 	     effectiveAppearanceName.UTF8String, accentName,
 	     highlightName);
     Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
-    [self generateExposeEvents:self.bounds];
+    // Force a redraw of the view.
+    [self setFrameSize:self.frame.size];
+
+    /*
+     * Update some style elements
+     */
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    int code = Tcl_EvalEx(interp, "after 0 ttk::AppearanceChanged",
+	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
+    }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -1332,19 +1354,25 @@ static const char *const accentNames[] = {
 }
 
 -(void) resetTkLayerBitmapContext {
-    static CGColorSpaceRef colorspace = NULL;
-    if (colorspace == NULL) {
-	colorspace = CGColorSpaceCreateDeviceRGB();
-	CGColorSpaceRetain(colorspace);
-    }
+    NSScreen *screen = [[self window] screen];
+    NSNumber *screenNumber = [[screen deviceDescription]
+				 objectForKey:@"NSScreenNumber"];
+    CGDirectDisplayID displayID = [screenNumber unsignedIntValue];
+    CGColorSpaceRef colorspace = CGDisplayCopyColorSpace(displayID);
     CGContextRef newCtx = CGBitmapContextCreate(
 	    NULL, self.layer.contentsScale * self.frame.size.width,
-	    self.layer.contentsScale * self.frame.size.height, 8, 0, colorspace,
-	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast // will also need to specify this when capturing
+	    self.layer.contentsScale * self.frame.size.height, 8, 0,
+	    colorspace,
+	    // will also need to specify this when capturing
+	    kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast
     );
-    CGContextScaleCTM(newCtx, self.layer.contentsScale, self.layer.contentsScale);
+    // CGDisplayCopyColorSpace retains the colorspace.
+    CGColorSpaceRelease(colorspace);
+    CGContextScaleCTM(newCtx, self.layer.contentsScale,
+		      self.layer.contentsScale);
 #if 0
-    fprintf(stderr, "rTkLBC %.1f %s %p %p %ld\n", (float)self.layer.contentsScale,
+    fprintf(stderr, "rTkLBC %.1f %s %p %p %ld\n",
+	    (float)self.layer.contentsScale,
 	    NSStringFromSize(self.frame.size).UTF8String, colorspace, newCtx,
 	    self.tkLayerBitmapContext ?
 	    (long)CFGetRetainCount(self.tkLayerBitmapContext) : INT_MIN);
@@ -1356,6 +1384,44 @@ static const char *const accentNames[] = {
     CGContextRelease(self.tkLayerBitmapContext);
     self.tkLayerBitmapContext = newCtx;
 }
+
+/*Add support for accessibility in TKContentView.*/
+
+NSMutableArray *_tkAccessibleElements;
+
++ (BOOL)isAccessibilityElement {
+    return NO;
+}
+
+- (NSArray *)accessibilityChildren {
+    return [_tkAccessibleElements copy];
+}
+
+
+- (void)accessibilityChildrenChanged {
+    NSAccessibilityPostNotification(self, NSAccessibilityCreatedNotification);
+}
+
+- (BOOL)accessibilityIsIgnored {
+    return YES;
+}
+
+- (void)accessibilityAddChildElement:(NSAccessibilityElement *)element {
+
+    if (!_tkAccessibleElements) {
+	_tkAccessibleElements = [[NSMutableArray alloc ] init];
+    }
+
+    if (element) {
+	[_tkAccessibleElements addObject:element];
+	[self accessibilityChildrenChanged];
+    }
+}
+
+- (void)setAccessibilityParentView:(NSView *)parentView {
+    [self setAccessibilityParent:self];
+}
+
 
 @end
 

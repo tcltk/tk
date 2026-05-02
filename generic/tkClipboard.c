@@ -1,9 +1,9 @@
 /*
  * tkClipboard.c --
  *
- * 	This file manages the clipboard for the Tk toolkit, maintaining a
- * 	collection of data buffers that will be supplied on demand to
- * 	requesting applications.
+ *	This file manages the clipboard for the Tk toolkit, maintaining a
+ *	collection of data buffers that will be supplied on demand to
+ *	requesting applications.
  *
  * Copyright © 1994 The Regents of the University of California.
  * Copyright © 1994-1997 Sun Microsystems, Inc.
@@ -266,14 +266,14 @@ Tk_ClipboardClear(
 	    targetPtr = nextTargetPtr) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = nextCbPtr) {
-	    ckfree(cbPtr->buffer);
+	    Tcl_Free(cbPtr->buffer);
 	    nextCbPtr = cbPtr->nextPtr;
-	    ckfree(cbPtr);
+	    Tcl_Free(cbPtr);
 	}
 	nextTargetPtr = targetPtr->nextPtr;
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
 		targetPtr->type);
-	ckfree(targetPtr);
+	Tcl_Free(targetPtr);
     }
     dispPtr->clipTargetPtr = NULL;
 
@@ -359,7 +359,7 @@ Tk_ClipboardAppend(
 	}
     }
     if (targetPtr == NULL) {
-	targetPtr = (TkClipboardTarget *)ckalloc(sizeof(TkClipboardTarget));
+	targetPtr = (TkClipboardTarget *)Tcl_Alloc(sizeof(TkClipboardTarget));
 	targetPtr->type = type;
 	targetPtr->format = format;
 	targetPtr->firstBufferPtr = targetPtr->lastBufferPtr = NULL;
@@ -381,7 +381,7 @@ Tk_ClipboardAppend(
      * Append a new buffer to the buffer chain.
      */
 
-    cbPtr = (TkClipboardBuffer *)ckalloc(sizeof(TkClipboardBuffer));
+    cbPtr = (TkClipboardBuffer *)Tcl_Alloc(sizeof(TkClipboardBuffer));
     cbPtr->nextPtr = NULL;
     if (targetPtr->lastBufferPtr != NULL) {
 	targetPtr->lastBufferPtr->nextPtr = cbPtr;
@@ -391,10 +391,10 @@ Tk_ClipboardAppend(
     targetPtr->lastBufferPtr = cbPtr;
 
     cbPtr->length = strlen(buffer);
-    cbPtr->buffer = (char *)ckalloc(cbPtr->length + 1);
+    cbPtr->buffer = (char *)Tcl_Alloc(cbPtr->length + 1);
     strcpy(cbPtr->buffer, buffer);
 
-    TkSelUpdateClipboard((TkWindow *) dispPtr->clipWindow, targetPtr);
+    TkSelUpdateClipboard((TkWindow *) dispPtr->clipWindow, CLIPBOARD_APPEND);
 
     return TCL_OK;
 }
@@ -420,15 +420,16 @@ int
 Tk_ClipboardObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     const char *path = NULL;
     Atom selection;
-    static const char *const optionStrings[] = { "append", "clear", "get", NULL };
-    enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET };
-    int index, i;
+    static const char *const optionStrings[] = {
+	"append", "clear", "get", NULL };
+    int index, result;
+    Tcl_Size i;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -440,7 +441,7 @@ Tk_ClipboardObjCmd(
 	return TCL_ERROR;
     }
 
-    switch ((enum options) index) {
+    switch ((clipboardOption) index) {
     case CLIPBOARD_APPEND: {
 	Atom target, format;
 	const char *targetName = NULL;
@@ -543,13 +544,16 @@ Tk_ClipboardObjCmd(
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
-	return Tk_ClipboardClear(interp, tkwin);
+	result = Tk_ClipboardClear(interp, tkwin);
+	if (result == TCL_OK) {
+	    TkSelUpdateClipboard((TkWindow *) tkwin, CLIPBOARD_CLEAR);
+	}
+	return result;
     }
     case CLIPBOARD_GET: {
 	Atom target;
 	const char *targetName = NULL;
 	Tcl_DString selBytes;
-	int result;
 	const char *string;
 	static const char *const getOptionStrings[] = {
 	    "-displayof", "-type", NULL

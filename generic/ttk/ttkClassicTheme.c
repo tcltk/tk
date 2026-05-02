@@ -501,8 +501,11 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
 };
 
 static void ArrowElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr,
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
@@ -526,8 +529,11 @@ static void ArrowElementSize(
 }
 
 static void ArrowElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b,
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
@@ -736,8 +742,11 @@ static const Ttk_ElementOptionSpec SashOptions[] = {
 };
 
 static void SashElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr,
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
     SashElement *sash = (SashElement *)elementRecord;
@@ -760,8 +769,11 @@ static void SashElementSize(
 }
 
 static void SashElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b,
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
     TCL_UNUSED(Ttk_State))
 {
     SashElement *sash = (SashElement *)elementRecord;
@@ -979,8 +991,11 @@ static void TreeitemIndicatorSize(
 
 static void TreeitemIndicatorDraw(
     TCL_UNUSED(void *), /* clientData */
-    void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
     XColor *color = Tk_GetColorFromObj(tkwin, indicator->colorObj);

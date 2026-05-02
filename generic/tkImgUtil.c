@@ -57,7 +57,7 @@ TkAlignImageData(
 	dataWidth += (alignment - (dataWidth % alignment));
     }
 
-    data = (char *)ckalloc(dataWidth * image->height);
+    data = (char *)Tcl_Alloc(dataWidth * image->height);
 
     destPtr = data;
     for (i = 0; i < image->height; i++) {

@@ -15,7 +15,7 @@
 
 /* Bit fields for OptionSpec mask field:
  */
-#define STATE_CHANGED	 	(0x100)		/* -state option changed */
+#define STATE_CHANGED		(0x100)		/* -state option changed */
 
 /*
  * Scale widget record
@@ -71,11 +71,11 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 	offsetof(Scale,scale.valueObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
 	DEF_SCALE_LENGTH, offsetof(Scale,scale.lengthObj), TCL_INDEX_NONE, 0, 0,
-    	GEOMETRY_CHANGED},
+	GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-state", "state", "State",
 	"normal", offsetof(Scale,scale.stateObj), TCL_INDEX_NONE,
-        0, 0, STATE_CHANGED},
+	0, 0, STATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -85,10 +85,10 @@ static XPoint ValueToPoint(Scale *scalePtr, double value);
 static double PointToValue(Scale *scalePtr, int x, int y);
 
 /* ScaleVariableChanged --
- * 	Variable trace procedure for scale -variable;
- * 	Updates the scale's value.
- * 	If the linked variable is not a valid double,
- * 	sets the 'invalid' state.
+ *	Variable trace procedure for scale -variable;
+ *	Updates the scale's value.
+ *	If the linked variable is not a valid double,
+ *	sets the 'invalid' state.
  */
 static void ScaleVariableChanged(void *recordPtr, const char *value)
 {
@@ -108,7 +108,7 @@ static void ScaleVariableChanged(void *recordPtr, const char *value)
 }
 
 /* ScaleInitialize --
- * 	Scale widget initialization hook.
+ *	Scale widget initialization hook.
  */
 static void ScaleInitialize(
     TCL_UNUSED(Tcl_Interp *),
@@ -130,7 +130,7 @@ static void ScaleCleanup(void *recordPtr)
 }
 
 /* ScaleConfigure --
- * 	Configuration hook.
+ *	Configuration hook.
  */
 static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
@@ -138,7 +138,7 @@ static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Tcl_Obj *varName = scale->scale.variableObj;
     Ttk_TraceHandle *vt = 0;
 
-    if (varName != NULL && *Tcl_GetString(varName) != '\0') {
+    if (!TkObjIsEmpty(varName)) {
 	vt = Ttk_TraceVariable(interp,varName, ScaleVariableChanged,recordPtr);
 	if (!vt) return TCL_ERROR;
     }
@@ -161,7 +161,7 @@ static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 }
 
 /* ScalePostConfigure --
- * 	Post-configuration hook.
+ *	Post-configuration hook.
  */
 static int ScalePostConfigure(
     TCL_UNUSED(Tcl_Interp *),
@@ -202,7 +202,7 @@ ScaleGetLayout(Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 
 /*
  * TroughBox --
- * 	Returns the inner area of the trough element.
+ *	Returns the inner area of the trough element.
  */
 static Ttk_Box TroughBox(Scale *scalePtr)
 {
@@ -211,8 +211,8 @@ static Ttk_Box TroughBox(Scale *scalePtr)
 
 /*
  * TroughRange --
- * 	Return the value area of the trough element, adjusted
- * 	for slider size.
+ *	Return the value area of the trough element, adjusted
+ *	for slider size.
  */
 static Ttk_Box TroughRange(Scale *scalePtr)
 {
@@ -256,8 +256,8 @@ static double ScaleFraction(Scale *scalePtr, double value)
 }
 
 /* $scale get ?x y? --
- * 	Returns the current value of the scale widget, or if $x and
- * 	$y are specified, the value represented by point @x,y.
+ *	Returns the current value of the scale widget, or if $x and
+ *	$y are specified, the value represented by point @x,y.
  */
 static int
 ScaleGetCommand(
@@ -271,8 +271,9 @@ ScaleGetCommand(
 	Tcl_SetObjResult(interp, scalePtr->scale.valueObj);
     } else if (objc == 4) {
 	r = Tcl_GetIntFromObj(interp, objv[2], &x);
-	if (r == TCL_OK)
+	if (r == TCL_OK) {
 	    r = Tcl_GetIntFromObj(interp, objv[3], &y);
+	}
 	if (r == TCL_OK) {
 	    value = PointToValue(scalePtr, x, y);
 	    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(value));
@@ -414,7 +415,7 @@ static void ScaleDoLayout(void *clientData)
 
 /*
  * ScaleSize --
- * 	Compute requested size of scale.
+ *	Compute requested size of scale.
  */
 static int ScaleSize(void *clientData, int *widthPtr, int *heightPtr)
 {
@@ -440,14 +441,27 @@ static double
 PointToValue(Scale *scalePtr, int x, int y)
 {
     Ttk_Box troughBox = TroughRange(scalePtr);
-    double from = 0, to = 1, fraction;
+    double value = 0, from = 0, to = 1, fraction;
 
+    Tcl_GetDoubleFromObj(NULL, scalePtr->scale.valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, scalePtr->scale.fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, scalePtr->scale.toObj, &to);
 
     if (scalePtr->scale.orient == TTK_ORIENT_HORIZONTAL) {
+	/*
+	 * Bug d25b721f: drag when trough not shown due to missing display place
+	 */
+	if (troughBox.width <= 0) {
+	    return value;
+	}
 	fraction = (double)(x - troughBox.x) / (double)troughBox.width;
     } else {
+	/*
+	 * Bug d25b721f: drag when trough not shown due to missing display place
+	 */
+	if (troughBox.height <= 0) {
+	    return value;
+	}
 	fraction = (double)(y - troughBox.y) / (double)troughBox.height;
     }
 
@@ -501,20 +515,24 @@ static const WidgetSpec ScaleWidgetSpec =
     ScaleCleanup,		/* cleanup proc */
     ScaleConfigure,		/* configure proc */
     ScalePostConfigure,		/* postConfigure */
-    ScaleGetLayout, 		/* getLayoutProc */
+    ScaleGetLayout,		/* getLayoutProc */
     ScaleSize,			/* sizeProc */
     ScaleDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
 
 TTK_BEGIN_LAYOUT(VerticalScaleLayout)
-    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )
+    TTK_GROUP("Vertical.Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
+		TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalScaleLayout)
-    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )
+    TTK_GROUP("Horizontal.Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+		TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
 TTK_END_LAYOUT
 
 /*

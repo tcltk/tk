@@ -84,7 +84,7 @@ Tk_InitStubs(
     if (actualVersion == NULL) {
 	packageName = "Tk";
 	actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp,
-    	    packageName, version, 0, &clientData);
+	    packageName, version, 0, &clientData);
 	if (actualVersion == NULL) {
 	    return NULL;
 	}

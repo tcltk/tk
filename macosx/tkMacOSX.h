@@ -29,6 +29,6 @@ typedef int (Tk_MacOSXEmbedMakeContainerExistProc) (Tk_Window window);
 typedef void (Tk_MacOSXEmbedGetClipProc) (Tk_Window window, void *rgn);
 typedef void (Tk_MacOSXEmbedGetOffsetInParentProc) (Tk_Window window, void *ulCorner);
 
-#include "tkPlatDecls.h"
+#include "tkPlatDecls.h"  /* IWYU pragma: export */
 
 #endif /* _TKMAC */

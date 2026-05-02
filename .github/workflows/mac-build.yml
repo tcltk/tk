@@ -3,8 +3,7 @@ on:
   push:
     branches:
     - "main"
-    - "core-8-branch"
-    - "core-8-6-branch"
+    - "core-9-0-branch"
     tags:
     - "core-**"
 permissions:
@@ -12,19 +11,19 @@ permissions:
 env:
   ERROR_ON_FAILURES: 1
 jobs:
-  xcode:
-    runs-on: macos-14
+  framework:
+    runs-on: macos-26
     defaults:
       run:
         shell: bash
         working-directory: tk/macosx
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: tk
-      - name: Check out Tcl 9.0
-        uses: actions/checkout@v4
+      - name: Check out Tcl 9.1
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: main
@@ -48,7 +47,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make test | tee out.txt
+          make TK_NO_STDERR=1 test | tee out.txt
           nmatches=$( grep -c "Failed	0" out.txt )
           if [ $nmatches -lt 4 ]
           then
@@ -56,8 +55,8 @@ jobs:
             exit 1
           fi
         timeout-minutes: 30
-  clang:
-    runs-on: macos-14
+  prefix:
+    runs-on: macos-26
     strategy:
       matrix:
         symbols:
@@ -65,18 +64,18 @@ jobs:
           - 'mem'
         options:
           - '--enable-aqua'
-#          - '--disable-aqua'
+          - '--disable-aqua'
     defaults:
       run:
         shell: bash
         working-directory: tk/unix
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: tk
-      - name: Check out Tcl 9.0
-        uses: actions/checkout@v4
+      - name: Check out Tcl 9.1
+        uses: actions/checkout@v6
         with:
           repository: tcltk/tcl
           ref: main
@@ -143,6 +142,7 @@ jobs:
           else
             function runXvfb {
               echo Xvfb not used, this is a --enable-aqua build
+              export TK_NO_STDERR=1
             }
           fi
           ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {

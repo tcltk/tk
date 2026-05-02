@@ -88,6 +88,13 @@ list of enabled hosts is empty.
 This means that applications cannot connect to your server unless
 they use some other form of authorization
 such as that provide by \fBxauth\fR.
+.PP
+Under macOS/aqua, the \fBsend\fR command can target an interpreter
+running in a different process, but only if the target process is
+owned by the same user and is running on the same host system as the
+sender's process.  The "winfo interps" command shows exactly which
+interpreters are valid targets for the \fBsend\fR command.
+.PP
 Under Windows, \fBsend\fR is currently disabled.  Most of the
 functionality is provided by the \fBdde\fR command instead.
 .SH EXAMPLE

@@ -23,7 +23,7 @@
  */
 
 typedef struct {
-    int initialized;
+    bool initialized;
     Tcl_HashTable uidTable;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -153,7 +153,7 @@ Tk_GetAnchor(
 
   error:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad anchor position \"%s\": must be"
+	    "bad anchor \"%s\": must be"
 	    " n, ne, e, se, s, sw, w, nw, or center", string));
     Tcl_SetErrorCode(interp, "TK", "VALUE", "ANCHOR", (char *)NULL);
     return TCL_ERROR;
@@ -501,7 +501,7 @@ FreeUidThreadExitProc(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     Tcl_DeleteHashTable(&tsdPtr->uidTable);
-    tsdPtr->initialized = 0;
+    tsdPtr->initialized = false;
 }
 
 /*
@@ -538,7 +538,7 @@ Tk_GetUid(
     if (!tsdPtr->initialized) {
 	Tcl_InitHashTable(tablePtr, TCL_STRING_KEYS);
 	Tcl_CreateThreadExitHandler(FreeUidThreadExitProc, NULL);
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
     }
     return (Tk_Uid) Tcl_GetHashKey(tablePtr,
 	    Tcl_CreateHashEntry(tablePtr, string, &dummy));

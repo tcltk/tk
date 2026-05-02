@@ -62,8 +62,8 @@ typedef struct TkTextLine {
 
 typedef struct TkTextToggle {
     struct TkTextTag *tagPtr;	/* Tag that starts or ends here. */
-    int inNodeCounts;		/* 1 means this toggle has been accounted for
-				 * in node toggle counts; 0 means it hasn't,
+    bool inNodeCounts;		/* True means this toggle has been accounted for
+				 * in node toggle counts; false means it hasn't,
 				 * yet. */
 } TkTextToggle;
 
@@ -93,7 +93,7 @@ typedef struct TkTextEmbWindowClient {
 				 * the window hasn't been created yet. */
     int chunkCount;		/* Number of display chunks that refer to this
 				 * window. */
-    int displayed;		/* Non-zero means that the window has been
+    bool displayed;		/* True means that the window has been
 				 * displayed on the screen recently. */
     struct TkTextSegment *parent;
     struct TkTextEmbWindowClient *next;
@@ -114,14 +114,13 @@ typedef struct TkTextEmbWindow {
 				 * yet. */
     TkTextLine *linePtr;	/* Line structure that contains this
 				 * window. */
-    char *create;		/* Script to create window on-demand. NULL
-				 * means no such script. Malloc-ed. */
+    Tcl_Obj *createObj;	/* Script to create window on-demand. NULL
+				 * means no such script. */
+    Tcl_Obj *padXObj, *padYObj;		/* Padding to leave around each side of window. */
     TkAlignMode align;		/* How to align window in vertical space. See
 				 * definitions in tkTextWind.c. */
-    int padX, padY;		/* Padding to leave around each side of
-				 * window, in pixels. */
-    int stretch;		/* Should window stretch to fill vertical
-				 * space of line (except for pady)? 0 or 1. */
+    bool stretch;		/* Should window stretch to fill vertical
+				 * space of line (except for pady)? false or true. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
     TkTextEmbWindowClient *clients;
@@ -140,18 +139,18 @@ typedef struct TkTextEmbImage {
 				 * text widget. This is used when the image
 				 * changes or is deleted. */
     TkTextLine *linePtr;	/* Line structure that contains this image. */
-    char *imageString;		/* Name of the image for this segment. */
-    char *imageName;		/* Name used by text widget to identify this
+    Tcl_Obj *imageObj;		/* Name of the image for this segment. */
+    Tcl_Obj *imageNameObj;	/* Name used by text widget to identify this
 				 * image. May be unique-ified. */
     char *name;			/* Name used in the hash table. Used by
 				 * "image names" to identify this instance of
 				 * the image. */
     Tk_Image image;		/* Image for this segment. NULL means that the
 				 * image hasn't been created yet. */
+    Tcl_Obj *padXObj, *padYObj;	/* Padding to leave around each side of image,
+				 * in pixels. */
     TkAlignMode align;		/* How to align image in vertical space. See
 				 * definitions in tkTextImage.c. */
-    int padX, padY;		/* Padding to leave around each side of image,
-				 * in pixels. */
     int chunkCount;		/* Number of display chunks that refer to this
 				 * image. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
@@ -206,12 +205,12 @@ typedef struct TkTextIndex {
 } TkTextIndex;
 
 /*
- * Types for procedure pointers stored in TkTextDispChunk strutures:
+ * Types for procedure pointers stored in TkTextDispChunk structures:
  */
 
 typedef struct TkTextDispChunk TkTextDispChunk;
 
-typedef void 		Tk_ChunkDisplayProc(struct TkText *textPtr,
+typedef void		Tk_ChunkDisplayProc(struct TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int height, int baseline, Display *display,
 			    Drawable dst, int screenY);
@@ -343,12 +342,7 @@ typedef struct TkTextTag {
 
     Tk_3DBorder border;		/* Used for drawing background. NULL means no
 				 * value specified here. */
-    int borderWidth;		/* Width of 3-D border for background. */
-    Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
-#if TK_MAJOR_VERSION < 9
-    char *reliefString;		/* -relief option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border for background. */
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
@@ -359,105 +353,47 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-#if TK_MAJOR_VERSION < 9
-    char *justifyString;	/* -justify option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_CENTER,
 				 * TK_JUSTIFY_LEFT, or TK_JUSTIFY_RIGHT. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *lMargin1Obj;	/* -lmargin1 option object. NULL
-				 * means option not specified. */
-#else
-    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int lMargin1;		/* Left margin for first display line of each
-				 * text line, in pixels. INT_MIN means option not specified. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *lMargin2Obj;	/* -lmargin2 option object. NULL
-				 * means option not specified. */
-#else
-    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int lMargin2;		/* Left margin for second and later display lines
-				 * of each text line, in pixels. INT_MIN means option not specified. */
+    Tcl_Obj *lMargin1Obj;	/* Left margin for first display line of each
+				 * text line, in pixels. NULL means option not specified. */
+    int lMargin1;		/* No longer used, but kept for binary compatibility. */
+    Tcl_Obj *lMargin2Obj;	/* Left margin for second and later display lines
+				 * of each text line, in pixels NULL means option not specified. */
+    int lMargin2;		/* No longer used, but kept for binary compatibility. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
 				 * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
-#else
-    char *offsetString;		/* -offset option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int offset;			/* Vertical offset of text's baseline from
+    Tcl_Obj *offsetObj;		/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
-				 * subscripts. INT_MIN means option not specified. */
-#if TK_MAJOR_VERSION < 9
-    char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
+				 * subscripts. NULL means option not specified. */
+    int offset;			/* No longer used, but kept for binary compatibility. */
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
 				 * color as foreground. */
-#if TK_MAJOR_VERSION > 8
-    Tcl_Obj *rMarginObj;	/* -rmargin option object. NULL
+    Tcl_Obj *rMarginObj;	/* Right margin for text, in pixels. NULL
 				 * means option not specified. */
-#else
-    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int rMargin;		/* Right margin for text, in pixels. INT_MIN means option not specified. */
+    int rMargin;		/* No longer used, but kept for binary compatibility. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
 				 * NULL means no value specified here. */
     XColor *selFgColor;		/* Foreground color for selected text. NULL means
 				 * no value specified here. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing1Obj;	/* -spacing1 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int spacing1;		/* Extra spacing above first display line for
-				 * text line. INT_MIN means option not specified. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing2Obj;	/* -spacing2 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int spacing2;		/* Extra spacing between display lines for the
-				 * same text line. INT_MIN means option not specified. */
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing3Obj;	/* -spacing3 option object. NULL
 				 * means option not specified. */
-#else
-    char *spacing3String;	/* -spacing3 option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int spacing3;		/* Extra spacing below last display line for
-				 * text line. INT_MIN means option not specified. */
-    Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
+    Tcl_Obj *tabStringPtr;	/* -tabs option. NULL means option not
 				 * specified. */
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
-				 * NULL. Corresponds to tabString. */
-#if TK_MAJOR_VERSION > 8
+				 * NULL. Corresponds to tabStringPtr. */
     TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
-#else
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR or NONE (if
-				 * not specified). */
-    char *underlineString;	/* -underline option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
     int underline;		/* > 0 means draw underline underneath
 				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same
@@ -466,21 +402,17 @@ typedef struct TkTextTag {
 				 * Must be TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_WORD,
 				 * TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_NULL to
 				 * use wrapmode for whole widget. */
-#if TK_MAJOR_VERSION < 9
-    char *elideString;		/* -elide option string (malloc-ed). NULL
-				 * means option not specified. */
-#endif
-    int elide;			/* > 0 means that data under this tag
+    int elide;			/* Non-zero means that data under this tag
 				 * should not be displayed. -1 means not specified. */
-    int affectsDisplay;		/* Non-zero means that this tag affects the
+    bool affectsDisplay;		/* True means that this tag affects the
 				 * way information is displayed on the screen
 				 * (so need to redisplay if tag changes). */
-    Tk_OptionTable optionTable;	/* Token representing the configuration
-				 * specifications. */
-    int affectsDisplayGeometry;	/* Non-zero means that this tag affects the
+    bool affectsDisplayGeometry;	/* True means that this tag affects the
 				 * size with which information is displayed on
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
+    Tk_OptionTable optionTable;	/* Token representing the configuration
+				 * specifications. */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -511,10 +443,10 @@ typedef struct TkTextSearch {
 				 * this segment. */
     TkTextTag *tagPtr;		/* Tag to search for (or tag found, if allTags
 				 * is non-zero). */
-    int linesLeft;		/* Lines left to search (including curIndex
+    Tcl_Size linesLeft;		/* Lines left to search (including curIndex
 				 * and stopIndex). When this becomes <= 0 the
 				 * search is over. */
-    int allTags;		/* Non-zero means ignore tag check: search for
+    bool allTags;		/* True means ignore tag check: search for
 				 * transitions on all tags. */
 } TkTextSearch;
 
@@ -583,7 +515,7 @@ typedef enum {
  */
 
 typedef struct TkSharedText {
-    Tcl_Size refCount;		/* Reference count this shared object. */
+    size_t refCount;		/* Reference count this shared object. */
     TkTextBTree tree;		/* B-tree representation of text and tags for
 				 * widget. */
     Tcl_HashTable tagTable;	/* Hash table that maps from tag names to
@@ -624,12 +556,12 @@ typedef struct TkSharedText {
      */
 
     TkUndoRedoStack *undoStack;	/* The undo/redo stack. */
-    int undo;			/* Non-zero means the undo/redo behaviour is
-				 * enabled. */
     int maxUndo;		/* The maximum depth of the undo stack
 				 * expressed as the maximum number of compound
 				 * statements. */
-    int autoSeparators;		/* Non-zero means the separators will be
+    bool undo;			/* True means the undo/redo behaviour is
+				 * enabled. */
+    bool autoSeparators;		/* True means the separators will be
 				 * inserted automatically. */
     int isDirty;		/* Flag indicating the 'dirtyness' of the
 				 * text widget. If the flag is not zero,
@@ -680,7 +612,7 @@ typedef struct TkText {
 				 * the end. */
     int pixelReference;		/* Counter into the current tree reference
 				 * index corresponding to this widget. */
-    int abortSelections;	/* Set to 1 whenever the text is modified in a
+    bool abortSelections;	/* Set to true whenever the text is modified in a
 				 * way that interferes with selection
 				 * retrieval: used to abort incremental
 				 * selection retrievals. */
@@ -709,12 +641,12 @@ typedef struct TkText {
 
     Tk_3DBorder border;		/* Structure used to draw 3-D border and
 				 * default background. */
-    int borderWidth;		/* Width of 3-D border to draw around entire
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border to draw around entire
 				 * widget. */
-    int padX, padY;		/* Padding between text and window border. */
+    Tcl_Obj *padXObj, *padYObj;		/* Padding between text and window border. */
     int relief;			/* 3-d effect for border around entire widget:
 				 * TK_RELIEF_RAISED etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;
@@ -728,13 +660,13 @@ typedef struct TkText {
 				 * font. */
     int charHeight;		/* Height of average character in default
 				 * font, including line spacing. */
-    int spacing1;		/* Default extra spacing above first display
+    Tcl_Obj *spacing1Obj;	/* Default extra spacing above first display
 				 * line for each text line. */
-    int spacing2;		/* Default extra spacing between display lines
+    Tcl_Obj *spacing2Obj;	/* Default extra spacing between display lines
 				 * for the same text line. */
-    int spacing3;		/* Default extra spacing below last display
+    Tcl_Obj *spacing3Obj;	/* Default extra spacing below last display
 				 * line for each text line. */
-    Tcl_Obj *tabOptionPtr; 	/* Value of -tabs option string. */
+    Tcl_Obj *tabOptionObj;	/* Value of -tabs option string. */
     TkTextTabArray *tabArrayPtr;
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
@@ -749,10 +681,8 @@ typedef struct TkText {
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or
 				 * TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_NULL to
 				 * use wrapmode for whole widget. */
-    int width, height;		/* Desired dimensions for window, measured in
-				 * characters. */
-    int setGrid;		/* Non-zero means pass gridding information to
-				 * window manager. */
+    int width;		/* Desired dimensions for window, measured in characters */
+    Tcl_Obj *heightObj;
     int prevWidth, prevHeight;	/* Last known dimensions of window; used to
 				 * detect changes in size. */
     TkTextIndex topIndex;	/* Identifies first character in top display
@@ -773,13 +703,10 @@ typedef struct TkText {
 				/* Border and background for selected
 				 * characters when they don't have the
 				 * focus. */
-    int selBorderWidth;		/* Width of border around selection. */
-    Tcl_Obj *selBorderWidthPtr;	/* Width of border around selection. */
+    Tcl_Obj *selBorderWidthObj;	/* Width of border around selection. */
     XColor *selFgColorPtr;	/* Foreground color for selected text. This is
 				 * a copy of information in *selTagPtr, so it
 				 * shouldn't be explicitly freed. */
-    int exportSelection;	/* Non-zero means tie "sel" tag to X
-				 * selection. */
     TkTextIndex selIndex;	/* Used during multi-pass selection
 				 * retrievals. This index identifies the next
 				 * character to be returned from the
@@ -793,8 +720,8 @@ typedef struct TkText {
 				/* Points to segment for "insert" mark. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. */
-    int insertWidth;		/* Total width of insert cursor. */
-    int insertBorderWidth;	/* Width of 3-D border around insert cursor */
+    Tcl_Obj *insertWidthObj;		/* Total width of insert cursor. */
+    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor */
     TkTextInsertUnfocussed insertUnfocussed;
 				/* How to display the insert cursor when the
 				 * text widget does not have the focus. */
@@ -816,7 +743,7 @@ typedef struct TkText {
     XEvent pickEvent;		/* The event from which the current character
 				 * was chosen. Must be saved so that we can
 				 * repick after modifications to the text. */
-    int numCurTags;		/* Number of tags associated with character at
+    Tcl_Size numCurTags;		/* Number of tags associated with character at
 				 * current mark. */
     TkTextTag **curTagArrayPtr;	/* Pointer to array of tags for current mark,
 				 * or NULL if none. */
@@ -825,40 +752,38 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-#if TK_MAJOR_VERSION > 8
     Tcl_Obj *takeFocusObj;		/* Value of -takeFocus option; not used in the
 				 * C code, but used by keyboard traversal
-				 * scripts. Malloc'ed, but may be NULL. */
+				 * scripts. May be NULL. */
     Tcl_Obj *xScrollCmdObj;		/* Prefix of command to issue to update
-				 * horizontal scrollbar when view changes. */
+				 * horizontal scrollbar when view changes. May be NULL. */
     Tcl_Obj *yScrollCmdObj;		/* Prefix of command to issue to update
-				 * vertical scrollbar when view changes. */
-#else
-    char *takeFocus;
-    char *xScrollCmd;
-    char *yScrollCmd;
-#endif
+				 * vertical scrollbar when view changes. May be NULL. */
     int flags;			/* Miscellaneous flags; see below for
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
     Tcl_Size refCount;		/* Number of cached TkTextIndex objects
 				 * refering to us. */
-    int insertCursorType;	/* 0 = standard insertion cursor, 1 = block
+    bool insertCursorType;	/* false = standard insertion cursor, true = block
 				 * cursor. */
+    bool setGrid;		/* True means pass gridding information to
+				 * window manager. */
+    bool exportSelection;	/* True means tie "sel" tag to X
+				 * selection. */
 
     /*
      * Copies of information from the shared section relating to the undo/redo
      * functonality
      */
 
-    int undo;			/* Non-zero means the undo/redo behaviour is
+    bool undo;			/* True means the undo/redo behaviour is
 				 * enabled. */
+    bool autoSeparators;		/* True means the separators will be
+				 * inserted automatically. */
     int maxUndo;		/* The maximum depth of the undo stack
 				 * expressed as the maximum number of compound
 				 * statements. */
-    int autoSeparators;		/* Non-zero means the separators will be
-				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
 				 * date */
 } TkText;
@@ -967,10 +892,10 @@ typedef int TkTextCountType;
 #define LOTSA_TAGS 1000
 typedef struct TkTextElideInfo {
     Tcl_Size numTags;		/* Total tags in widget. */
-    int elide;			/* Is the state currently elided. */
+    bool elide;			/* Is the state currently elided. */
     Tcl_Size elidePriority;			/* Tag priority controlling elide state. */
     TkTextSegment *segPtr;	/* Segment to look at next. */
-    int segOffset;		/* Offset of segment within line. */
+    Tcl_Size segOffset;		/* Offset of segment within line. */
     int deftagCnts[LOTSA_TAGS];
     TkTextTag *deftagPtrs[LOTSA_TAGS];
     int *tagCnts;		/* 0 or 1 depending if the tag with that
@@ -1057,7 +982,7 @@ MODULE_SCOPE const Tk_SegType tkTextEmbImageType;
 MODULE_SCOPE int	TkBTreeAdjustPixelHeight(const TkText *textPtr,
 			    TkTextLine *linePtr, int newPixelHeight,
 			    int mergedLogicalLines);
-MODULE_SCOPE int	TkBTreeCharTagged(const TkTextIndex *indexPtr,
+MODULE_SCOPE bool	TkBTreeCharTagged(const TkTextIndex *indexPtr,
 			    TkTextTag *tagPtr);
 MODULE_SCOPE void	TkBTreeCheck(TkTextBTree tree);
 MODULE_SCOPE TkTextBTree TkBTreeCreate(TkSharedText *sharedTextPtr);
@@ -1072,7 +997,7 @@ MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkTextBTree tree,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr);
 MODULE_SCOPE Tcl_Size	TkBTreeEpoch(TkTextBTree tree);
 MODULE_SCOPE TkTextLine *TkBTreeFindLine(TkTextBTree tree,
-			    const TkText *textPtr, int line);
+			    const TkText *textPtr, Tcl_Size line);
 MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,
 			    const TkText *textPtr, int pixels,
 			    int *pixelOffset);
@@ -1080,7 +1005,7 @@ MODULE_SCOPE TkTextTag **TkBTreeGetTags(const TkTextIndex *indexPtr,
 			    const TkText *textPtr, Tcl_Size *numTagsPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree,
 			    TkTextIndex *indexPtr, const char *string);
-MODULE_SCOPE int	TkBTreeLinesTo(const TkText *textPtr,
+MODULE_SCOPE Tcl_Size	TkBTreeLinesTo(const TkText *textPtr,
 			    TkTextLine *linePtr);
 MODULE_SCOPE int	TkBTreePixelsTo(const TkText *textPtr,
 			    TkTextLine *linePtr);
@@ -1102,7 +1027,7 @@ MODULE_SCOPE void	TkBTreeStartSearchBack(TkTextIndex *index1Ptr,
 			    TkTextSearch *searchPtr);
 MODULE_SCOPE int	TkBTreeTag(TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
-			    int add);
+			    bool add);
 MODULE_SCOPE void	TkBTreeUnlinkSegment(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 MODULE_SCOPE void	TkTextBindProc(void *clientData,
@@ -1110,10 +1035,11 @@ MODULE_SCOPE void	TkTextBindProc(void *clientData,
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
-			    int *widthPtr, int *heightPtr, int *charWidthPtr);
+			    int *widthPtr, int *heightPtr, int *charWidthPtr,
+			    int *cursorWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noBreakYet,
+			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
 MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
@@ -1140,19 +1066,19 @@ MODULE_SCOPE TkTextTabArray *TkTextGetTabs(Tcl_Interp *interp,
 MODULE_SCOPE void	TkTextFindDisplayLineEnd(TkText *textPtr,
 			    TkTextIndex *indexPtr, int end, int *xOffset);
 MODULE_SCOPE void	TkTextIndexBackChars(const TkText *textPtr,
-			    const TkTextIndex *srcPtr, int count,
+			    const TkTextIndex *srcPtr, Tcl_Size count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE int	TkTextIndexCmp(const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkTextIndexCountBytes(const TkText *textPtr,
+MODULE_SCOPE Tcl_Size	TkTextIndexCountBytes(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkTextIndexCount(const TkText *textPtr,
+MODULE_SCOPE Tcl_Size	TkTextIndexCount(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr,
 			    TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexForwChars(const TkText *textPtr,
-			    const TkTextIndex *srcPtr, int count,
+			    const TkTextIndex *srcPtr, Tcl_Size count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x,
 			    TkTextIndex *indexPtr);
@@ -1162,21 +1088,21 @@ MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(const TkTextIndex *indexPtr,
 			    Tcl_Size *offsetPtr);
 MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
-			    int lineIndex, int charIndex,
+			    Tcl_Size lineIndex, Tcl_Size charIndex,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextMeasureDown(TkText *textPtr,
 			    TkTextIndex *srcPtr, int distance);
 MODULE_SCOPE void	TkTextFreeElideInfo(TkTextElideInfo *infoPtr);
-MODULE_SCOPE int	TkTextIsElided(const TkText *textPtr,
+MODULE_SCOPE bool	TkTextIsElided(const TkText *textPtr,
 			    const TkTextIndex *indexPtr,
 			    TkTextElideInfo *infoPtr);
 MODULE_SCOPE int	TkTextMakePixelIndex(TkText *textPtr,
 			    int pixelIndex, TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextInvalidateLineMetrics(
 			    TkSharedText *sharedTextPtr, TkText *textPtr,
-			    TkTextLine *linePtr, int lineCount, TkTextInvalidateAction action);
-MODULE_SCOPE int	TkTextUpdateLineMetrics(TkText *textPtr, int lineNum,
-			    int endLine, int doThisMuch);
+			    TkTextLine *linePtr, Tcl_Size lineCount, TkTextInvalidateAction action);
+MODULE_SCOPE Tcl_Size	TkTextUpdateLineMetrics(TkText *textPtr, Tcl_Size lineNum,
+			    Tcl_Size endLine, int doThisMuch);
 MODULE_SCOPE int	TkTextUpdateOneLine(TkText *textPtr,
 			    TkTextLine *linePtr, int pixelHeight,
 			    TkTextIndex *indexPtr, int partialCalc);
@@ -1190,7 +1116,7 @@ MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
 MODULE_SCOPE Bool	TkTextPendingsync(TkText *textPtr);
 MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextPixelIndex(TkText *textPtr, int x, int y,
-			    TkTextIndex *indexPtr, int *nearest);
+			    TkTextIndex *indexPtr, bool *nearest);
 MODULE_SCOPE Tcl_Obj *	TkTextNewIndexObj(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y,
@@ -1198,7 +1124,7 @@ MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y,
 MODULE_SCOPE void	TkTextRedrawTag(TkSharedText *sharedTextPtr,
 			    TkText *textPtr, TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
-			    int withTag);
+			    bool withTag);
 MODULE_SCOPE void	TkTextRelayoutWindow(TkText *textPtr, int mask);
 MODULE_SCOPE int	TkTextScanCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
@@ -1224,7 +1150,7 @@ MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
 MODULE_SCOPE void       TkTextRunAfterSyncCmd(void *clientData);
 MODULE_SCOPE int        TkTextIndexAdjustToStartEnd(TkText *textPtr,
-			    TkTextIndex *indexPtr, int err);
+			    TkTextIndex *indexPtr, bool check);
 #endif /* _TKTEXT */
 
 /*

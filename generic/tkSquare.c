@@ -23,7 +23,6 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
-#include <stdbool.h>
 
 /*
  * A data structure of the following type is kept for each square widget
@@ -48,7 +47,7 @@ typedef struct {
      * Information used when displaying widget:
      */
 
-    Tcl_Obj *borderWidthPtr;	/* Width of 3-D border around whole widget. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around whole widget. */
     Tcl_Obj *bgBorderPtr;
     Tcl_Obj *fgBorderPtr;
     Tcl_Obj *reliefPtr;
@@ -74,7 +73,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	    "2", offsetof(Square, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
+	    "2", offsetof(Square, borderWidthObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
 	    "1", TCL_INDEX_NONE, offsetof(Square, doubleBuffer), TK_OPTION_VAR(bool) , NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
@@ -103,7 +102,7 @@ static void		SquareDisplay(void *clientData);
 static void		KeepInWindow(Square *squarePtr);
 static void		SquareObjEventProc(void *clientData,
 			    XEvent *eventPtr);
-static Tcl_ObjCmdProc SquareWidgetObjCmd;
+static Tcl_ObjCmdProc2 SquareWidgetObjCmd;
 
 /*
  *--------------------------------------------------------------
@@ -126,7 +125,7 @@ int
 SquareObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Square *squarePtr;
@@ -159,13 +158,13 @@ SquareObjCmd(
      * just the non-NULL/0 items.
      */
 
-    squarePtr = (Square *)ckalloc(sizeof(Square));
+    squarePtr = (Square *)Tcl_Alloc(sizeof(Square));
     memset(squarePtr, 0, sizeof(Square));
 
     squarePtr->tkwin = tkwin;
     squarePtr->display = Tk_Display(tkwin);
     squarePtr->interp = interp;
-    squarePtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    squarePtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd, squarePtr,
 	    SquareDeletedProc);
     squarePtr->gc = NULL;
@@ -174,7 +173,7 @@ SquareObjCmd(
     if (Tk_InitOptions(interp, squarePtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(squarePtr->tkwin);
-	ckfree(squarePtr);
+	Tcl_Free(squarePtr);
 	return TCL_ERROR;
     }
 
@@ -219,7 +218,7 @@ static int
 SquareWidgetObjCmd(
     void *clientData,	/* Information about square widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
     Square *squarePtr = (Square *)clientData;
@@ -300,7 +299,7 @@ SquareWidgetObjCmd(
  *
  * SquareConfigure --
  *
- *	This procedure is called to process an argv/argc list in conjunction
+ *	This procedure is called to process an objv/objc list in conjunction
  *	with the Tk option database to configure (or reconfigure) a square
  *	widget.
  *
@@ -346,7 +345,7 @@ SquareConfigure(
      */
 
     Tk_GeometryRequest(squarePtr->tkwin, 200, 150);
-    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthObj,
 	    &borderWidth);
     Tk_SetInternalBorder(squarePtr->tkwin, borderWidth);
     if (!squarePtr->updatePending) {
@@ -499,7 +498,7 @@ SquareDisplay(
      * Redraw the widget's background and border.
      */
 
-    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthObj,
 	    &borderWidth);
     bgBorder = Tk_Get3DBorderFromObj(squarePtr->tkwin,
 	    squarePtr->bgBorderPtr);
@@ -554,7 +553,7 @@ KeepInWindow(
     int i, bd, relief;
     int borderWidth, size;
 
-    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthObj,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->xPtr,
 	    &squarePtr->x);

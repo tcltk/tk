@@ -98,13 +98,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align),
 	TK_OPTION_ENUM_VAR, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextEmbWindow, createObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, padX), 0, 0, 0},
+	"0", offsetof(TkTextEmbWindow, padXObj), TCL_INDEX_NONE, TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, padY), 0, 0, 0},
+	"0", offsetof(TkTextEmbWindow, padYObj), TCL_INDEX_NONE, TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), 0, 0, 0},
+	"0", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, stretch), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
@@ -251,7 +251,7 @@ TkTextWindowCmd(
     }
     case WIND_CREATE: {
 	TkTextIndex index;
-	int lineIndex;
+	Tcl_Size lineIndex;
 	TkTextEmbWindowClient *client;
 	int res;
 
@@ -284,24 +284,24 @@ TkTextWindowCmd(
 	 * Create the new window segment and initialize it.
 	 */
 
-	ewPtr = (TkTextSegment *)ckalloc(EW_SEG_SIZE);
+	ewPtr = (TkTextSegment *)Tcl_Alloc(EW_SEG_SIZE);
 	ewPtr->typePtr = &tkTextEmbWindowType;
 	ewPtr->size = 1;
 	ewPtr->body.ew.sharedTextPtr = textPtr->sharedTextPtr;
 	ewPtr->body.ew.linePtr = NULL;
 	ewPtr->body.ew.tkwin = NULL;
-	ewPtr->body.ew.create = NULL;
+	ewPtr->body.ew.createObj = NULL;
 	ewPtr->body.ew.align = TK_ALIGN_CENTER;
-	ewPtr->body.ew.padX = ewPtr->body.ew.padY = 0;
-	ewPtr->body.ew.stretch = 0;
+	ewPtr->body.ew.padXObj = ewPtr->body.ew.padYObj = NULL;
+	ewPtr->body.ew.stretch = false;
 	ewPtr->body.ew.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
-	client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
+	client = (TkTextEmbWindowClient *)Tcl_Alloc(sizeof(TkTextEmbWindowClient));
 	client->next = NULL;
 	client->textPtr = textPtr;
 	client->tkwin = NULL;
 	client->chunkCount = 0;
-	client->displayed = 0;
+	client->displayed = false;
 	client->parent = ewPtr;
 	ewPtr->body.ew.clients = client;
 
@@ -461,12 +461,12 @@ EmbWinConfigure(
 		 * Have to make the new client.
 		 */
 
-		client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
+		client = (TkTextEmbWindowClient *)Tcl_Alloc(sizeof(TkTextEmbWindowClient));
 		client->next = ewPtr->body.ew.clients;
 		client->textPtr = textPtr;
 		client->tkwin = NULL;
 		client->chunkCount = 0;
-		client->displayed = 0;
+		client->displayed = false;
 		client->parent = ewPtr;
 		ewPtr->body.ew.clients = client;
 	    }
@@ -644,7 +644,7 @@ EmbWinLostContentProc(
 	}
 	loop->next = client->next;
     }
-    ckfree(client);
+    Tcl_Free(client);
 
     index.tree = ewPtr->body.ew.sharedTextPtr->tree;
     index.linePtr = ewPtr->body.ew.linePtr;
@@ -710,7 +710,7 @@ TkTextWinFreeClient(
      * Free up this client.
      */
 
-    ckfree(client);
+    Tcl_Free(client);
 }
 
 /*
@@ -763,7 +763,7 @@ EmbWinDeleteProc(
      * Free up all memory allocated.
      */
 
-    ckfree(ewPtr);
+    Tcl_Free(ewPtr);
     return 0;
 }
 
@@ -833,6 +833,7 @@ EmbWinLayoutProc(
 {
     int width, height;
     TkTextEmbWindowClient *client;
+    int padX = 0, padY = 0;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbWinLayoutProc");
@@ -845,7 +846,7 @@ EmbWinLayoutProc(
 	ewPtr->body.ew.tkwin = client->tkwin;
     }
 
-    if ((ewPtr->body.ew.tkwin == NULL) && (ewPtr->body.ew.create != NULL)) {
+    if ((ewPtr->body.ew.tkwin == NULL) && (ewPtr->body.ew.createObj != NULL)) {
 	int code, isNew;
 	Tk_Window ancestor;
 	Tcl_HashEntry *hPtr;
@@ -853,7 +854,7 @@ EmbWinLayoutProc(
 	Tcl_DString buf, *dsPtr = NULL;
 	Tcl_Obj *nameObj;
 
-	before = ewPtr->body.ew.create;
+	before = Tcl_GetString(ewPtr->body.ew.createObj);
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -878,7 +879,8 @@ EmbWinLayoutProc(
 		     * Substitute string as proper Tcl list element.
 		     */
 
-		    int spaceNeeded, cvtFlags, length;
+		    Tcl_Size spaceNeeded, length;
+		    int cvtFlags;
 		    const char *str = Tk_PathName(textPtr->tkwin);
 
 		    spaceNeeded = Tcl_ScanElement(str, &cvtFlags);
@@ -907,7 +909,7 @@ EmbWinLayoutProc(
 	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
-	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
+	    code = Tcl_EvalEx(textPtr->interp, Tcl_GetString(ewPtr->body.ew.createObj), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(textPtr->interp, code);
@@ -952,12 +954,12 @@ EmbWinLayoutProc(
 	     * now need to add to our client list.
 	     */
 
-	    client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
+	    client = (TkTextEmbWindowClient *)Tcl_Alloc(sizeof(TkTextEmbWindowClient));
 	    client->next = ewPtr->body.ew.clients;
 	    client->textPtr = textPtr;
 	    client->tkwin = NULL;
 	    client->chunkCount = 0;
-	    client->displayed = 0;
+	    client->displayed = false;
 	    client->parent = ewPtr;
 	    ewPtr->body.ew.clients = client;
 	}
@@ -988,8 +990,16 @@ EmbWinLayoutProc(
 	width = 0;
 	height = 0;
     } else {
-	width = Tk_ReqWidth(ewPtr->body.ew.tkwin) + 2*ewPtr->body.ew.padX;
-	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2*ewPtr->body.ew.padY;
+	if (ewPtr->body.ew.padXObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+
+	}
+	if (ewPtr->body.ew.padYObj) {
+	    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+
+	}
+	width = Tk_ReqWidth(ewPtr->body.ew.tkwin) + 2 * padX;
+	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2 * padY;
     }
     if ((width > (maxX - chunkPtr->x))
 	    && !noCharsYet && (textPtr->wrapMode != TEXT_WRAPMODE_NONE)) {
@@ -1006,8 +1016,8 @@ EmbWinLayoutProc(
     chunkPtr->bboxProc = EmbWinBboxProc;
     chunkPtr->numBytes = 1;
     if (ewPtr->body.ew.align == TK_ALIGN_BASELINE) {
-	chunkPtr->minAscent = height - ewPtr->body.ew.padY;
-	chunkPtr->minDescent = ewPtr->body.ew.padY;
+	chunkPtr->minAscent = height - padY;
+	chunkPtr->minDescent = padY;
 	chunkPtr->minHeight = 0;
     } else {
 	chunkPtr->minAscent = 0;
@@ -1051,7 +1061,7 @@ EmbWinCheckProc(
 	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
     if (ewPtr->size != 1) {
-	Tcl_Panic("EmbWinCheckProc: embedded window has size %" TCL_SIZE_MODIFIER "d", ewPtr->size);
+	Tcl_Panic("EmbWinCheckProc: embedded window has size %" TCL_Z_MODIFIER "d", ewPtr->size);
     }
 }
 
@@ -1135,7 +1145,7 @@ TkTextEmbWinDisplayProc(
      * the embedded window its clients will get freed.
      */
 
-    client->displayed = 1;
+    client->displayed = true;
 
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if ((windowX != Tk_X(tkwin)) || (windowY != Tk_Y(tkwin))
@@ -1190,7 +1200,7 @@ EmbWinUndisplayProc(
 	 * the unmap becomes unnecessary.
 	 */
 
-	client->displayed = 0;
+	client->displayed = false;
 	Tcl_DoWhenIdle(EmbWinDelayedUnmap, client);
     }
 }
@@ -1238,6 +1248,7 @@ EmbWinBboxProc(
     Tk_Window tkwin;
     TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
+    int padX = 0, padY = 0;
 
     if (client == NULL) {
 	tkwin = NULL;
@@ -1251,23 +1262,29 @@ EmbWinBboxProc(
 	*widthPtr = 0;
 	*heightPtr = 0;
     }
-    *xPtr = chunkPtr->x + ewPtr->body.ew.padX;
+    if (ewPtr->body.ew.padXObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padXObj, &padX);
+    }
+    if (ewPtr->body.ew.padYObj) {
+	Tk_GetPixelsFromObj(NULL, textPtr->tkwin, ewPtr->body.ew.padYObj, &padY);
+    }
+    *xPtr = chunkPtr->x + padX;
     if (ewPtr->body.ew.stretch) {
 	if (ewPtr->body.ew.align == TK_ALIGN_BASELINE) {
-	    *heightPtr = baseline - ewPtr->body.ew.padY;
+	    *heightPtr = baseline - padY;
 	} else {
-	    *heightPtr = lineHeight - 2*ewPtr->body.ew.padY;
+	    *heightPtr = lineHeight - 2 * padY;
 	}
     }
     switch (ewPtr->body.ew.align) {
     case TK_ALIGN_BOTTOM:
-	*yPtr = y + (lineHeight - *heightPtr - ewPtr->body.ew.padY);
+	*yPtr = y + (lineHeight - *heightPtr - padY);
 	break;
     case TK_ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
     case TK_ALIGN_TOP:
-	*yPtr = y + ewPtr->body.ew.padY;
+	*yPtr = y + padY;
 	break;
     case TK_ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
@@ -1357,7 +1374,7 @@ TkTextWindowIndex(
      * reachable from this text widget (it may be reachable from a peer).
      */
 
-    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, true) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 

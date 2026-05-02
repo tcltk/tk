@@ -1,16 +1,31 @@
 # This file is a Tcl script to test out the procedures in the file
-# tkCursor.c.  It is organized in the standard white-box fashion for
-# Tcl tests.
+# tkCursor.c.
 #
 # Copyright © 1998 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-namespace import ::tcltest::*
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+#
+# TESTFILE INITIALIZATION
+#
 
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+
+#
+# LOCAL UTILITY PROCS
+#
 
 # Tests 2.3 and 2.4 need a helper file with a very specific name and
 # controlled format.
@@ -47,6 +62,9 @@ proc setWincur {wincurName} {
 	set wincur(file) [makeFile $wincur(data_binary) "test file.cur" $wincur(dir)]
 }
 
+#
+# TESTS
+#
 
 test cursor-1.1 {Tk_AllocCursorFromObj - converting internal reps} -constraints {
     testcursor
@@ -839,8 +857,8 @@ test cursor-7.9 {check Windows cursor wait} -constraints win -setup {
 	destroy .b
 } -result {}
 
-# -------------------------------------------------------------------------
+#
+# TESTFILE CLEANUP
+#
 
-# cleanup
 cleanupTests
-return

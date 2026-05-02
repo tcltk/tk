@@ -1,7 +1,7 @@
 /*
  * tkMacOSXDraw.c --
  *
- *	This file contains functions that draw to windows. Many of thees
+ *	This file contains functions that draw to windows. Many of these
  *	functions emulate Xlib functions.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
@@ -14,6 +14,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
@@ -52,7 +53,7 @@ static unsigned long transparentColor;
 
 static void ClipToGC(Drawable d, GC gc, HIShapeRef *clipRgnPtr);
 static NSImage *CreateNSImageFromPixmap(Pixmap pixmap, int width, int height);
-
+static HIShapeRef GetClipRgn(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------
@@ -76,10 +77,10 @@ TkMacOSXInitCGDrawing(
     TCL_UNUSED(int),
     int limit)
 {
-    static Boolean initialized = FALSE;
+    static bool initialized = false;
 
     if (!initialized) {
-	initialized = TRUE;
+	initialized = true;
 
 	if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
 	    Tcl_ResetResult(interp);
@@ -264,8 +265,7 @@ Tk_MacOSXGetCGContextForDrawable(
 	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
-	macDraw->context = CGBitmapContextCreate(NULL,
-		(unsigned)macDraw->size.width,
+	macDraw->context = CGBitmapContextCreate(NULL, (unsigned)macDraw->size.width,
 		(unsigned)macDraw->size.height, bitsPerComponent, 0,
 		colorspace, bitmapInfo);
 	if (macDraw->context) {
@@ -324,10 +324,12 @@ TkMacOSXDrawCGImage(
 		CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 1.0);
 	    } else {
 		if (imageBackground != transparentColor) {
-		    TkMacOSXSetColorInContext(gc, imageBackground, context);
+		    TkMacOSXSetColorInContext(gc, imageBackground, context,
+			    TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 		    CGContextFillRect(context, dstBounds);
 		}
-		TkMacOSXSetColorInContext(gc, imageForeground, context);
+		TkMacOSXSetColorInContext(gc, imageForeground, context,
+			TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	    }
 	}
 
@@ -1067,109 +1069,6 @@ XFillArcs(
     return Success;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkScrollWindow --
- *
- *	Scroll a rectangle of the specified window and accumulate a damage
- *	region.
- *
- * Results:
- *	Returns 0 if the scroll generated no additional damage. Otherwise, sets
- *	the region that needs to be repainted after scrolling and returns 1.
- *      When drawRect was in use, this function used the now deprecated
- *      scrollRect method of NSView.  With the current updateLayer
- *      implementation, using a CGImage as the view's backing layer, we are
- *      able to use XCopyArea.  But both implementations are incomplete.
- *      They return a damage area which is just the source rectangle minus
- *      destination rectangle.  Other platforms, e.g. Windows, where
- *      this function is essentially provided by the windowing system,
- *      are able to add to the damage region the bounding rectangles of
- *      all subwindows which meet the source rectangle, even if they are
- *      contained in the destination rectangle.  The information needed
- *      to do that is not available in this module, as far as I know.
- *
- *      In fact, the Text widget is the only one which calls this
- *      function, and  textDisp.c compensates for this defect by using
- *      macOS-specific code.  This is possible because access to the
- *      list of all embedded windows in a Text widget is available in
- *      that module.
- *
- * Side effects:
- *	Scrolls the bits in the window.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkScrollWindow(
-    Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
-    int x, int y,		/* Position rectangle to be scrolled. */
-    int width, int height,
-    int dx, int dy,		/* Distance rectangle should be moved. */
-    Region damageRgn)		/* Region to accumulate damage in. */
-{
-    Drawable drawable = Tk_WindowId(tkwin);
-    HIShapeRef srcRgn, dstRgn;
-    HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
-    NSRect srcRect, dstRect;
-    int result = 0;
-
-    // Should behave more like TkScrollWindow on other platforms
-    if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
-	    (unsigned)width, (unsigned)height, x+dx, y+dy) == Success) {
-
-	/*
-	 * Compute the damage region, using Tk coordinates (origin at top left).
-	 */
-
-	srcRect = CGRectMake(x, y, width, height);
-	dstRect = CGRectOffset(srcRect, dx, dy);
-	srcRgn = HIShapeCreateWithRect(&srcRect);
-	dstRgn = HIShapeCreateWithRect(&dstRect);
-	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
-	CFRelease(dstRgn);
-	CFRelease(srcRgn);
-	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
-
-    }
-
-    /*
-     * Convert the HIShape dmgRgn into a TkRegion and store it.
-     */
-
-    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
-
-    CFRelease(dmgRgn);
-    return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXSetUpGraphicsPort --
- *
- *	Set up the graphics port from the given GC.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetUpGraphicsPort(
-    TCL_UNUSED(GC),			/* GC to apply to current port. */
-    TCL_UNUSED(void *))
-{
-    Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
-}
-
 
 /*
  *----------------------------------------------------------------------
@@ -1191,14 +1090,14 @@ TkMacOSXSetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
-Bool
+bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
     TkMacOSXDrawingContext *dcPtr)
 {
     MacDrawable *macDraw = (MacDrawable *)d;
-    Bool canDraw = true;
+    bool canDraw = true;
     TKContentView *view = nil;
     TkMacOSXDrawingContext dc = {};
     CGFloat drawingHeight;
@@ -1225,7 +1124,7 @@ TkMacOSXSetupDrawingContext(
      * X GC.  If the resulting region is empty, don't do any drawing.
      */
 //#if 0 // disable clipping (almost works, but windows can open up blank)
-    dc.clipRgn = TkMacOSXGetClipRgn(d);
+    dc.clipRgn = GetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
 	/*
@@ -1233,7 +1132,6 @@ TkMacOSXSetupDrawingContext(
 	 * updateLayer and return failure.
 	 */
 	canDraw = false;
-	[view setNeedsDisplay:YES];
 	goto end;
     }
 //#endif //disable clipping
@@ -1252,59 +1150,6 @@ TkMacOSXSetupDrawingContext(
 				    .ty = [view bounds].size.height};
 	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
 	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
-	}
-
-	/*
-	 * Mark the view as needing to be redisplayed, since we are drawing
-	 * to its backing layer.
-	 */
-
-	[view setTkNeedsDisplay:YES];
-
-	/*
-	 * Workaround for an Apple bug.
-	 *
-	 * Without the block below, ttk frames, labelframes and labels do not
-	 * get the correct background color on macOS 12.5 after the appearance
-	 * changes.  This function is only called when drawing, so we know that
-	 * our view is the focus view. Even though the effective appearance of
-	 * the view has been changed, the currentAppearance, i.e. the
-	 * appearance that will be used for drawing, may not have been changed
-	 * to match.
-	 *
-	 * Prior to macOS 12.0 the currentAppearance property of NSAppearance
-	 * was settable.  In macOS 12.0 currentAppearance was deprecated and
-	 * replaced by the read-only property currentDrawingAppearance.  The
-	 * ttk color issues are fixed by setting the currentAppearance to
-	 * the effectiveAppearance of the view.  So we are forced to use this
-	 * deprecated function until Apple fixes this.
-	 *
-	 * It is a mystery why this only affects the ttk widgets.  A possible
-	 * clue is that when drawing a ttk widget this function is called with
-	 * a NULL gc, whereas the gc is non-null when it is called for drawing
-	 * a Tk widget.  This means that the CGContext setup below is not done
-	 * for ttk widgets.  Perhaps that setup triggers an update of the
-	 * currentAppearance property, but that has not been verified.
-	 */
-
-	if (@available(macOS 12.0, *)) {
-	    NSAppearance *current = NSAppearance.currentDrawingAppearance;
-	    NSAppearance *effective = view.effectiveAppearance;
-	    if( current != effective) {
-		// printf("Appearances are out of sync!\n");
-		// Deprecations be damned!
-		NSAppearance.currentAppearance = effective;
-	    }
-	} else {
-	    /*
-	     *It is not clear if this is a problem before macos 12.0, but
-	     * we might as well do the update anyway.
-	     */
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 120000
-/* currentAppearance is not deprecated. */
-	    NSAppearance.currentAppearance = view.effectiveAppearance;
-#endif
 	}
     }
 
@@ -1393,7 +1238,8 @@ TkMacOSXSetupDrawingContext(
 	bool shouldAntialias = !notAA(gc->line_width);
 	double w = gc->line_width;
 
-	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context);
+	TkMacOSXSetColorInContext(gc, gc->foreground, dc.context,
+		TkMacOSXInDarkMode((Tk_Window)macDraw->winPtr));
 	if (view) {
 	    CGSize size = NSSizeToCGSize([view bounds].size);
 	    CGContextSetPatternPhase(dc.context, size);
@@ -1436,7 +1282,7 @@ TkMacOSXSetupDrawingContext(
 end:
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    if (!canDraw && macDraw->winPtr != NULL) {
+    if (!canDraw && (macDraw->winPtr != NULL)) {
 	fprintf(stderr, "Cannot draw in %s - postponing.\n",
 		Tk_PathName(macDraw->winPtr));
     }
@@ -1447,11 +1293,25 @@ end:
 	dc.clipRgn = NULL;
     }
     *dcPtr = dc;
-    // The goal is to allow immediate drawing; canDraw == 0 should happen far less often.
-    if (0) fprintf(stderr, "tkmacosxsdc canDraw %d\n", canDraw);
     return canDraw;
 }
 
+/*
+ * Idle task to schedule a call to updateLayer so the results of drawing
+ * operations become visible. The call to nextEventMatchingMask has no effect,
+ * but it provides an opportunity for the window manager to call updateLayer.
+ */
+
+MODULE_SCOPE void
+TkMacOSXUpdateViewIdleTask(void *clientData) {
+    NSView *view = (NSView *) clientData;
+    [view setNeedsDisplay:YES];
+    [NSApp nextEventMatchingMask:NSAnyEventMask
+		       untilDate:[NSDate distantPast]
+			  inMode:NSDefaultRunLoopMode
+			 dequeue:NO];
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1486,6 +1346,14 @@ TkMacOSXRestoreDrawingContext(
 	dcPtr->clipRgn = NULL;
     }
 
+    /*
+     * Schedule a call to updateLayer, since we have drawn on the view's
+     * backing layer.
+     */
+
+    Tcl_CancelIdleCall(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+    Tcl_DoWhenIdle(TkMacOSXUpdateViewIdleTask, (void *) dcPtr->view);
+
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
 #endif
@@ -1495,7 +1363,7 @@ TkMacOSXRestoreDrawingContext(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetClipRgn --
+ * GetClipRgn --
  *
  *	Get the clipping region needed to restrict drawing to the given
  *	drawable.
@@ -1510,7 +1378,7 @@ TkMacOSXRestoreDrawingContext(
  */
 
 HIShapeRef
-TkMacOSXGetClipRgn(
+GetClipRgn(
     Drawable drawable)		/* Drawable. */
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;
@@ -1551,9 +1419,9 @@ TkMacOSXGetClipRgn(
  * Tk_ClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
- *	or height are negative, reset to no clipping.bThis is called by the
- *      Text widget to display each DLine, and by the Canvas widget when it
- *      is updating a sub rectangle in the canvas.
+ *	or height are negative, reset to no clipping. This is called by the
+ *	Text widget to display each DLine, and by the Canvas widget when it
+ *	is updating a sub rectangle in the canvas.
  *
  * Results:
  *	None.
@@ -1643,32 +1511,6 @@ ClipToGC(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXMakeStippleMap --
- *
- *	Given a drawable and a stipple pattern this function draws the pattern
- *	repeatedly over the drawable. The drawable can then be used as a mask
- *	for bit-bliting a stipple pattern over an object.
- *
- * Results:
- *	A BitMap data structure.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void *
-TkMacOSXMakeStippleMap(
-    TCL_UNUSED(Drawable),	/* Window to apply stipple. */
-    TCL_UNUSED(Drawable))	/* The stipple pattern. */
-{
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * Tk_DrawHighlightBorder --
  *
  *	This procedure draws a rectangular ring around the outside of a widget
@@ -1676,7 +1518,7 @@ TkMacOSXMakeStippleMap(
  *
  *	On the Macintosh, this puts a 1 pixel border in the bgGC color between
  *	the widget and the focus ring, except in the case where highlightWidth
- *	is 1, in which case the border is left out.
+ *	is 0 or 1, in which case the border is left out.
  *
  *	For proper Mac L&F, use highlightWidth of 3.
  *
@@ -1691,19 +1533,19 @@ TkMacOSXMakeStippleMap(
  */
 
 void
-Tk_DrawHighlightBorder (
+Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,
     int highlightWidth,
     Drawable drawable)
 {
-    if (highlightWidth == 1) {
-	TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+    if (highlightWidth <= 1) {
+	TkDrawInsetFocusHighlight(tkwin, fgGC, 1, drawable, 0);
     } else {
-	TkDrawInsetFocusHighlight (tkwin, bgGC, highlightWidth, drawable, 0);
+	TkDrawInsetFocusHighlight(tkwin, bgGC, highlightWidth, drawable, 0);
 	if (fgGC != bgGC) {
-	    TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1,
+	    TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth - 1,
 		    drawable, 0);
 	}
     }

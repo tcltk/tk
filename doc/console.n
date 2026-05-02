@@ -23,7 +23,7 @@ the \fBconsole\fR command.  The behaviour of the console window is
 defined mainly through the contents of the \fIconsole.tcl\fR file in
 the Tk library. Except for TkAqua, this command is not available when
 Tk is loaded into a tclsh interpreter with
-.QW "\fBpackage require Tk\fR" ,
+.QW "\fBpackage require tk\fR" ,
 as a conventional terminal is expected to be present in that case.
 In TkAqua, this command is disabled when there is a startup script
 and stdin is \fB/dev/null\fR (as is the case e.g. when a bundled application
@@ -140,6 +140,9 @@ one character forward.
 .IP [11]
 Pressing F9 rebuilds the console window by destroying all its children
 and reloading the Tcl script that defined the console's behaviour.
+.IP [12]
+Scrolling the mouse wheel while holding Cmd (macOS) or Ctrl (other platforms)
+increases (scroll up) or decreases (scroll down) the console font size.
 .PP
 Most other behaviour is the same as a conventional text widget except
 for the way that the \fI<<Cut>>\fR event is handled identically to the

@@ -87,17 +87,10 @@ struct ColorTableId {
 struct ColorTable {
     ColorTableId id;		/* Information used in selecting this color
 				 * table. */
-#if TCL_MAJOR_VERSION > 8
     size_t	refCount;		/* Number of instances using this map. */
     size_t liveRefCount;		/* Number of instances which are actually in
 				 * use, using this map. */
     int	flags;			/* See below. */
-#else
-    int	flags;			/* See below. */
-    unsigned int	refCount;		/* Number of instances using this map. */
-    unsigned int liveRefCount;		/* Number of instances which are actually in
-				 * use, using this map. */
-#endif
     int	numColors;		/* Number of colors allocated for this map. */
 
     XVisualInfo	visualInfo;	/* Information about the visual for windows
@@ -155,8 +148,8 @@ struct PhotoModel {
     Tk_Uid palette;		/* User-specified default palette for
 				 * instances of this image. */
     double gamma;		/* Display gamma value to correct for. */
-    char *fileString;		/* Name of file to read into image. */
-    Tcl_Obj *dataString;	/* Object to use as contents of image. */
+    Tcl_Obj *fileObj;		/* Name of file to read into image. */
+    Tcl_Obj *dataObj;		/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image file
 				 * or string value. */
     Tcl_Obj *metadata;		/* User-specified metadata dict or read from
@@ -164,7 +157,7 @@ struct PhotoModel {
     unsigned char *pix32;	/* Local storage for 32-bit image. */
     int ditherX, ditherY;	/* Location of first incorrectly dithered
 				 * pixel in image. */
-    TkRegion validRegion;	/* Tk region indicating which parts of the
+    Region validRegion;	/* Tk region indicating which parts of the
 				 * image have valid image data. */
     PhotoInstance *instancePtr;	/* First in the list of instances associated
 				 * with this model. */
@@ -204,11 +197,7 @@ struct PhotoInstance {
 				 * this particular colormap. */
     PhotoInstance *nextPtr;	/* Pointer to the next instance in the list of
 				 * instances associated with this model. */
-#if TCL_MAJOR_VERSION > 8
     size_t refCount;		/* Number of instances using this structure. */
-#else
-    unsigned int refCount;	/* Number of instances using this structure. */
-#endif
     Tk_Uid palette;		/* Palette for these particular instances. */
     double gamma;		/* Gamma value for these instances. */
     Tk_Uid defaultPalette;	/* Default palette to use if a palette is not

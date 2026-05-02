@@ -130,7 +130,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(ArcItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", offsetof(ArcItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(ArcItem, outline.offsetObj), TK_CONFIG_OBJS|TK_OPTION_NEG_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(ArcItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
@@ -381,7 +381,7 @@ ArcCoords(
 	    }
 	}
 	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
- 		    &arcPtr->bbox[0]) != TCL_OK)
+		    &arcPtr->bbox[0]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
 		    &arcPtr->bbox[1]) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[2],
@@ -715,7 +715,7 @@ DeleteArc(
 
     Tk_DeleteOutline(display, &(arcPtr->outline));
     if (arcPtr->numOutlinePoints != 0) {
-	ckfree(arcPtr->outlinePtr);
+	Tcl_Free(arcPtr->outlinePtr);
     }
     if (arcPtr->fillColor != NULL) {
 	Tk_FreeColor(arcPtr->fillColor);
@@ -1631,7 +1631,7 @@ ComputeArcOutline(
      */
 
     if (arcPtr->numOutlinePoints == 0) {
-	arcPtr->outlinePtr = (double *)ckalloc(26 * sizeof(double));
+	arcPtr->outlinePtr = (double *)Tcl_Alloc(26 * sizeof(double));
 	arcPtr->numOutlinePoints = 22;
     }
     outlinePtr = arcPtr->outlinePtr;

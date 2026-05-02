@@ -143,7 +143,7 @@ Tk_CreateSelHandler(
 
     for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
 	if (selPtr == NULL) {
-	    selPtr = (TkSelHandler *)ckalloc(sizeof(TkSelHandler));
+	    selPtr = (TkSelHandler *)Tcl_Alloc(sizeof(TkSelHandler));
 	    selPtr->nextPtr = winPtr->selHandlerList;
 	    winPtr->selHandlerList = selPtr;
 	    break;
@@ -156,7 +156,7 @@ Tk_CreateSelHandler(
 	     */
 
 	    if (selPtr->proc == HandleTclCommand) {
-		ckfree(selPtr->clientData);
+		Tcl_Free(selPtr->clientData);
 	    }
 	    break;
 	}
@@ -181,7 +181,7 @@ Tk_CreateSelHandler(
 	target = winPtr->dispPtr->utf8Atom;
 	for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
 	    if (selPtr == NULL) {
-		selPtr = (TkSelHandler *)ckalloc(sizeof(TkSelHandler));
+		selPtr = (TkSelHandler *)Tcl_Alloc(sizeof(TkSelHandler));
 		selPtr->nextPtr = winPtr->selHandlerList;
 		winPtr->selHandlerList = selPtr;
 		selPtr->selection = selection;
@@ -197,7 +197,7 @@ Tk_CreateSelHandler(
 		    size_t cmdInfoLen = offsetof(CommandInfo, command) + 1 +
 			    ((CommandInfo *)clientData)->cmdLength;
 
-		    selPtr->clientData = ckalloc(cmdInfoLen);
+		    selPtr->clientData = Tcl_Alloc(cmdInfoLen);
 		    memcpy(selPtr->clientData, clientData, cmdInfoLen);
 		} else {
 		    selPtr->clientData = clientData;
@@ -324,7 +324,7 @@ Tk_DeleteSelHandler(
 	((CommandInfo *) selPtr->clientData)->interp = NULL;
 	Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
     }
-    ckfree(selPtr);
+    Tcl_Free(selPtr);
 }
 
 /*
@@ -386,7 +386,7 @@ Tk_OwnSelection(
 	}
     }
     if (infoPtr == NULL) {
-	infoPtr = (TkSelectionInfo *)ckalloc(sizeof(TkSelectionInfo));
+	infoPtr = (TkSelectionInfo *)Tcl_Alloc(sizeof(TkSelectionInfo));
 	infoPtr->selection = selection;
 	infoPtr->nextPtr = dispPtr->selectionInfoPtr;
 	dispPtr->selectionInfoPtr = infoPtr;
@@ -401,7 +401,7 @@ Tk_OwnSelection(
 	     * memory leak.
 	     */
 
-	    ckfree(infoPtr->clearData);
+	    Tcl_Free(infoPtr->clearData);
 	}
     }
 
@@ -494,7 +494,7 @@ Tk_ClearSelection(
     if (infoPtr != NULL) {
 	clearProc = infoPtr->clearProc;
 	clearData = infoPtr->clearData;
-	ckfree(infoPtr);
+	Tcl_Free(infoPtr);
     }
     XSetSelectionOwner(winPtr->display, selection, None, CurrentTime);
 
@@ -671,7 +671,7 @@ Tk_SelectionObjCmd(
     void *clientData,	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -679,7 +679,8 @@ Tk_SelectionObjCmd(
     Atom selection;
     const char *selName = NULL;
     const char *string;
-    int count, index;
+    Tcl_Size count;
+    int index;
     Tcl_Obj *const *objs;
     static const char *const optionStrings[] = {
 	"clear", "get", "handle", "own", NULL
@@ -908,7 +909,7 @@ Tk_SelectionObjCmd(
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
-	    cmdInfoPtr = (CommandInfo *)ckalloc(offsetof(CommandInfo, command)
+	    cmdInfoPtr = (CommandInfo *)Tcl_Alloc(offsetof(CommandInfo, command)
 		    + 1 + cmdLength);
 	    cmdInfoPtr->interp = interp;
 	    cmdInfoPtr->charOffset = 0;
@@ -1012,7 +1013,7 @@ Tk_SelectionObjCmd(
 	    Tk_OwnSelection(tkwin, selection, NULL, NULL);
 	    return TCL_OK;
 	}
-	lostPtr = (LostCommand *)ckalloc(sizeof(LostCommand));
+	lostPtr = (LostCommand *)Tcl_Alloc(sizeof(LostCommand));
 	lostPtr->interp = interp;
 	lostPtr->cmdObj = commandObj;
 	Tcl_IncrRefCount(commandObj);
@@ -1127,7 +1128,7 @@ TkSelDeadWindow(
 	    ((CommandInfo *) selPtr->clientData)->interp = NULL;
 	    Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
 	}
-	ckfree(selPtr);
+	Tcl_Free(selPtr);
     }
 
     /*
@@ -1139,9 +1140,9 @@ TkSelDeadWindow(
 	nextPtr = infoPtr->nextPtr;
 	if (infoPtr->owner == (Tk_Window) winPtr) {
 	    if (infoPtr->clearProc == LostSelection) {
-		ckfree(infoPtr->clearData);
+		Tcl_Free(infoPtr->clearData);
 	    }
-	    ckfree(infoPtr);
+	    Tcl_Free(infoPtr);
 	    infoPtr = prevPtr;
 	    if (prevPtr == NULL) {
 		winPtr->dispPtr->selectionInfoPtr = nextPtr;
@@ -1267,7 +1268,7 @@ TkSelClearSelection(
 	if (infoPtr->clearProc != NULL) {
 	    infoPtr->clearProc(infoPtr->clearData);
 	}
-	ckfree(infoPtr);
+	Tcl_Free(infoPtr);
     }
 }
 
@@ -1595,7 +1596,7 @@ LostSelection(
      */
 
     Tcl_DecrRefCount(lostPtr->cmdObj);
-    ckfree(lostPtr);
+    Tcl_Free(lostPtr);
     Tcl_Release(interp);
 }
 

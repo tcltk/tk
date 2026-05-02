@@ -29,7 +29,7 @@ const int tkpWinRopModes[] = {
     R2_MASKPENNOT,		/* GXandReverse */
     R2_COPYPEN,			/* GXcopy */
     R2_MASKNOTPEN,		/* GXandInverted */
-    R2_NOT,			/* GXnoop */
+    R2_NOP,			/* GXnoop */
     R2_XORPEN,			/* GXxor */
     R2_MERGEPEN,		/* GXor */
     R2_NOTMERGEPEN,		/* GXnor */
@@ -154,7 +154,7 @@ TkWinGetDrawableDC(
     if (twdPtr->type == TWD_WINDOW) {
 	TkWindow *winPtr = twdPtr->window.winPtr;
 
- 	dc = GetDC(twdPtr->window.handle);
+	dc = GetDC(twdPtr->window.handle);
 	if (winPtr == NULL) {
 	    cmap = DefaultColormap(display, DefaultScreen(display));
 	} else {
@@ -242,9 +242,9 @@ ConvertPoints(
 
     if (npoints > tsdPtr->nWinPoints) {
 	if (tsdPtr->winPoints != NULL) {
-	    ckfree(tsdPtr->winPoints);
+	    Tcl_Free(tsdPtr->winPoints);
 	}
-	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * (size_t)npoints);
+	tsdPtr->winPoints = (POINT *)Tcl_Alloc(sizeof(POINT) * (size_t)npoints);
 	if (tsdPtr->winPoints == NULL) {
 	    tsdPtr->nWinPoints = -1;
 	    return NULL;
@@ -536,7 +536,7 @@ TkPutImage(
 		|| (image->bitmap_pad != sizeof(WORD))) {
 	    data = TkAlignImageData(image, sizeof(WORD), MSBFirst);
 	    bitmap = CreateBitmap(image->width, image->height, 1, 1, data);
-	    ckfree(data);
+	    Tcl_Free(data);
 	} else {
 	    bitmap = CreateBitmap(image->width, image->height, 1, 1,
 		    image->data);
@@ -553,10 +553,10 @@ TkPutImage(
 	usePalette = (image->bits_per_pixel < 16);
 
 	if (usePalette) {
-	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER)
+	    infoPtr = (BITMAPINFO *)Tcl_Alloc(sizeof(BITMAPINFOHEADER)
 		    + sizeof(RGBQUAD)*(size_t)ncolors);
 	} else {
-	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER));
+	    infoPtr = (BITMAPINFO *)Tcl_Alloc(sizeof(BITMAPINFOHEADER));
 	}
 
 	infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -583,7 +583,7 @@ TkPutImage(
 	}
 	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);
-	ckfree(infoPtr);
+	Tcl_Free(infoPtr);
     }
     if (!bitmap) {
 	DeleteDC(dcMem);
@@ -1227,6 +1227,7 @@ DrawOrFillArc(
      * Swap the start and end if drawing clockwise.
      */
 
+    bool extent_is_360_deg = (extent >= (64*360) || extent <= -(64*360));
     start = start % (64*360);
     if (start < 0) {
 	start += (64*360);
@@ -1255,6 +1256,32 @@ DrawOrFillArc(
     ystart = (int)((yr + sin(-radian_start)*height/2.0) + 0.5);
     xend = (int)((xr + cos(radian_end)*width/2.0) + 0.5);
     yend = (int)((yr + sin(-radian_end)*height/2.0) + 0.5);
+
+    if ((xstart == xend) && (ystart == yend) && !extent_is_360_deg) {
+	/*
+	 * The extent is so small that the arc size is less than one pixel.
+	 * If the Arc, Chord, or Pie GDI function later received this, then
+	 * a complete ellipse would be drawn instead of the desired 1-pixel
+	 * size arc. The end point must be made different from the start
+	 * point. Since (at this level in the code) arcs are always drawn
+	 * counterclockwise, either xend or yend needs adjustment, depending
+	 * on the sub-range where radian_start lies (it was constrained to
+	 * the [0 ; 2*PI[ range earlier). See bug [6051a9fc]
+	 */
+	if (radian_start > PI/4) {
+	    if (radian_start < 3*PI/4) {
+		xend--;
+	    } else if (radian_start < 5*PI/4) {
+		yend++;
+	    } else if (radian_start < 7*PI/4) {
+		xend++;
+	    } else {
+		yend--;
+	    }
+	} else {
+	    yend--;
+	}
+    }
 
     /*
      * Now draw a filled or open figure. Note that we have to increase the
@@ -1385,9 +1412,9 @@ SetUpGraphicsPort(
  *	region.
  *
  * Results:
- *	Returns 0 if the scroll genereated no additional damage. Otherwise,
+ *	Returns false if the scroll genereated no additional damage. Otherwise,
  *	sets the region that needs to be repainted after scrolling and returns
- *	1.
+ *	true.
  *
  * Side effects:
  *	Scrolls the bits in the window.
@@ -1395,7 +1422,7 @@ SetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
     TCL_UNUSED(GC),			/* GC for window to be scrolled. */
@@ -1412,7 +1439,7 @@ TkScrollWindow(
     scrollRect.right = x + width;
     scrollRect.bottom = y + height;
     return (ScrollWindowEx(hwnd, dx, dy, &scrollRect, NULL, (HRGN) damageRgn,
-	    NULL, 0) == NULLREGION) ? 0 : 1;
+	    NULL, 0) != NULLREGION);
 }
 
 /*
@@ -1483,6 +1510,74 @@ Tk_DrawHighlightBorder(
     Drawable drawable)
 {
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinDrawDottedRect --
+ *
+ *      This function draws a dotted rectangle, used as focus ring of Ttk
+ *      widgets and for rendering the active element of a listbox.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      A dotted rectangle is drawn in the specified Drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWinDrawDottedRect(
+    Display *disp,		/* Display containing the dotted rectangle. */
+    Drawable d,			/* Where to draw the rectangle (typically a
+				 * pixmap for double buffering). */
+    long pixel,			/* Color to use for drawing the rectangle.  If
+				 * pixel < 0 then the black color and the
+				 * foreground mix mode R2_NOT are used. */
+    int x, int y,		/* Coordinates of the top-left corner. */
+    int width, int height)	/* Width & height, _including the border_. */
+{
+    TkWinDCState state;
+    HDC dc;
+    LOGBRUSH lb;
+    HPEN pen;
+    int widthMod2 = width % 2, heightMod2 = height % 2;
+    int x2 = x + width - 1, y2 = y + height - 1;
+
+    dc = TkWinGetDrawableDC(disp, d, &state);
+
+    lb.lbStyle = BS_SOLID;
+    lb.lbColor = pixel < 0 ? RGB(0, 0, 0) : (COLORREF)pixel;
+    lb.lbHatch = 0;
+
+    if (pixel < 0) {
+	SetROP2(dc, R2_NOT);
+	SetBkMode(dc, TRANSPARENT);
+    }
+
+    pen = ExtCreatePen(PS_COSMETIC | PS_ALTERNATE, 1, &lb, 0, NULL);
+    SelectObject(dc, pen);
+    SelectObject(dc, GetStockObject(NULL_BRUSH));
+
+    if (widthMod2 == 0 && heightMod2 == 0) {
+	MoveToEx(dc, x+1, y,  NULL);	LineTo(dc, x2,   y);	/* N */
+	MoveToEx(dc, x+2, y2, NULL);	LineTo(dc, x2+1, y2);	/* S */
+	MoveToEx(dc, x,  y+2, NULL);	LineTo(dc, x,  y2+1);	/* W */
+	MoveToEx(dc, x2, y+1, NULL);	LineTo(dc, x2, y2);	/* E */
+    } else {
+	int dx = widthMod2, dy = heightMod2;
+
+	MoveToEx(dc, x+1, y,  NULL);	LineTo(dc, x2+dx, y);	/* N */
+	MoveToEx(dc, x+1, y2, NULL);	LineTo(dc, x2+dx, y2);	/* S */
+	MoveToEx(dc, x,  y+1, NULL);	LineTo(dc, x,  y2+dy);	/* W */
+	MoveToEx(dc, x2, y+1, NULL);	LineTo(dc, x2, y2+dy);	/* E */
+    }
+
+    DeleteObject(pen);
+    TkWinReleaseDrawableDC(d, dc, &state);
 }
 
 /*

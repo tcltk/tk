@@ -98,7 +98,7 @@ TkpDefineNativeBitmaps(void)
 	name = Tk_GetUid(builtInPtr->name);
 	predefHashPtr = Tcl_CreateHashEntry(tablePtr, name, &isNew);
 	if (isNew) {
-	    TkPredefBitmap *predefPtr = (TkPredefBitmap *)ckalloc(sizeof(TkPredefBitmap));
+	    TkPredefBitmap *predefPtr = (TkPredefBitmap *)Tcl_Alloc(sizeof(TkPredefBitmap));
 
 	    predefPtr->source = UINT2PTR(builtInPtr->iconType);
 	    predefPtr->width = builtInIconSize;
@@ -343,7 +343,7 @@ int
 TkMacOSXIconBitmapObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tcl_HashEntry *hPtr;
@@ -361,7 +361,7 @@ TkMacOSXIconBitmapObjCmd(
     name = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", (char *)NULL);
 	goto end;
     }
     if (Tcl_GetIntFromObj(interp, objv[i++], &ib.width) != TCL_OK) {
@@ -377,13 +377,13 @@ TkMacOSXIconBitmapObjCmd(
     value = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", (char *)NULL);
 	goto end;
     }
 #if 0
     if ((kind == ICON_TYPE || kind == ICON_SYSTEM)) {
 	Tcl_DString ds;
- 	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
+	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
 	(void)Tcl_UtfToExternalDString(encoding, value, TCL_INDEX_NONE, &ds);
 	len = Tcl_DStringLength(&ds);
@@ -392,12 +392,12 @@ TkMacOSXIconBitmapObjCmd(
 	if (len > 4) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid bitmap value", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", (char *)NULL);
 	    goto end;
 	}
     }
 #endif
-    ib.value = (char *)ckalloc(len + 1);
+    ib.value = (char *)Tcl_Alloc(len + 1);
     strcpy(ib.value, value);
     if (!iconBitmapTable.buckets) {
 	Tcl_InitHashTable(&iconBitmapTable, TCL_STRING_KEYS);
@@ -405,9 +405,9 @@ TkMacOSXIconBitmapObjCmd(
     hPtr = Tcl_CreateHashEntry(&iconBitmapTable, name, &isNew);
     if (!isNew) {
 	iconBitmap = (IconBitmap *)Tcl_GetHashValue(hPtr);
-	ckfree(iconBitmap->value);
+	Tcl_Free(iconBitmap->value);
     } else {
-	iconBitmap = (IconBitmap *)ckalloc(sizeof(IconBitmap));
+	iconBitmap = (IconBitmap *)Tcl_Alloc(sizeof(IconBitmap));
 	Tcl_SetHashValue(hPtr, iconBitmap);
     }
     *iconBitmap = ib;

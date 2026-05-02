@@ -66,7 +66,7 @@ the standard procedures implemented by the type manager:
 .CS
 typedef struct Tk_ItemType {
     const char *\fIname\fR;
-    size_t \fIitemSize\fR;
+    Tcl_Size \fIitemSize\fR;
     Tk_ItemCreateProc *\fIcreateProc\fR;
     const Tk_ConfigSpec *\fIconfigSpecs\fR;
     Tk_ItemConfigureProc *\fIconfigProc\fR;
@@ -85,9 +85,9 @@ typedef struct Tk_ItemType {
     Tk_ItemInsertProc *\fIinsertProc\fR;
     Tk_ItemDCharsProc *\fIdCharsProc\fR;
     struct Tk_ItemType *\fInextPtr\fR;
-.VS "8.7, TIP164"
+.VS "9.0, TIP164"
     Tk_ItemRotateProc *\fIrotateProc\fR;
-.VE "8.7, TIP164"
+.VE "9.0, TIP164"
 } \fBTk_ItemType\fR;
 .CE
 .PP
@@ -210,7 +210,7 @@ typedef int \fBTk_ItemCreateProc\fR(
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
         int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[]);
+        Tcl_Obj *const *\fIobjv\fR);
 .CE
 .PP
 The \fIinterp\fR argument is the interpreter in which the canvas's
@@ -269,7 +269,7 @@ typedef int \fBTk_ItemConfigureProc\fR(
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
         int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[],
+        Tcl_Obj *const *\fIobjv\fR,
         int \fIflags\fR);
 .CE
 .PP
@@ -307,7 +307,7 @@ typedef int \fBTk_ItemCoordProc\fR(
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
         int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[]);
+        Tcl_Obj *const *\fIobjv\fR);
 .CE
 .PP
 The arguments \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR
@@ -539,7 +539,7 @@ added to each x and y coordinate within the item.
 The type manager should adjust the item's coordinates and
 update the bounding box in the item's header.
 .SS ROTATEPROC
-.VS "8.7, TIP164"
+.VS "9.0, TIP164"
 .PP
 \fItypePtr\->rotateProc\fR is invoked by Tk to rotate a canvas item
 during the \fBrotate\fR widget command.
@@ -577,7 +577,7 @@ instead be derived from them.
 Item types do not need to provide a \fItypePtr\->rotateProc\fR. If the
 \fItypePtr\->rotateProc\fR is NULL, the \fItypePtr\->coordProc\fR will be
 used instead to retrieve and update the list of coordinates.
-.VE "8.7, TIP164"
+.VE "9.0, TIP164"
 .SS INDEXPROC
 .PP
 \fItypePtr\->indexProc\fR is invoked by Tk to translate a string

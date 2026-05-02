@@ -29,7 +29,7 @@ Sizegrip widgets support the standard commands
 (see \fBttk::widget\fR).
 .SH "PLATFORM-SPECIFIC NOTES"
 .PP
-On Mac OSX, toplevel windows automatically include a built-in
+On macOS, toplevel windows automatically include a built-in
 size grip by default.
 Adding a \fBttk::sizegrip\fR there is harmless, since
 the built-in grip will just mask the widget.

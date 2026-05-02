@@ -133,8 +133,8 @@ static UniChar xvirtual2unichar[512];	/* virtual with index to unichar */
  * Flags.
  */
 
-static BOOL initialized = NO;
-static BOOL keyboardChanged = YES;
+static bool initialized = false;
+static bool keyboardChanged = true;
 
 /*
  * Prototypes for static functions used in this file.
@@ -155,7 +155,7 @@ static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
-    keyboardChanged = YES;
+    keyboardChanged = true;
     UpdateKeymaps();
 }
 @end
@@ -222,7 +222,7 @@ InitHashTables(void)
 	Tcl_SetHashValue(hPtr, INT2PTR(ksPtr->keysym));
     }
     UpdateKeymaps();
-    initialized = YES;
+    initialized = true;
 }
 
 /*
@@ -308,7 +308,7 @@ UpdateKeymaps()
  *	The parameter deadKeyStatePtr can be NULL, if no deadkey handling is
  *	needed (which is always the case here).
  *
- *	This function is called in XKeycodeToKeysym and UpdateKeymaps.
+ *	This function is called in XkbKeycodeToKeysym and UpdateKeymaps.
  *
  * Results:
  *	The number of characters generated if any, 0 if we are waiting for
@@ -348,7 +348,7 @@ KeyDataToUnicode(
 	    }
 	    CFRelease(currentKeyboardLayout);
 	}
-	keyboardChanged = 0;
+	keyboardChanged = false;
     }
     if (layoutData) {
 	OptionBits options = 0;
@@ -384,7 +384,7 @@ KeyDataToUnicode(
 /*
  *----------------------------------------------------------------------
  *
- * XKeycodeToKeysym --
+ * XkbKeycodeToKeysym --
  *
  *	This is a stub function which translates from the keycode used in an
  *      XEvent to a numerical keysym.  On macOS, the display parameter is
@@ -460,15 +460,6 @@ XkbKeycodeToKeysym(
     }
     return NoSymbol;
 }
-
-KeySym
-XKeycodeToKeysym(
-    TCL_UNUSED(Display *),
-    unsigned int keycode,
-    int index)
-{
-    return XkbKeycodeToKeysym(NULL, keycode, 0, index);
-}
 
 /*
  *----------------------------------------------------------------------
@@ -532,7 +523,7 @@ XGetModifierMapping(
 {
     XModifierKeymap *modmap;
 
-    modmap = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
+    modmap = (XModifierKeymap *)Tcl_Alloc(sizeof(XModifierKeymap));
     modmap->max_keypermod = 0;
     modmap->modifiermap = NULL;
     return modmap;
@@ -560,9 +551,9 @@ XFreeModifiermap(
     XModifierKeymap *modmap)
 {
     if (modmap->modifiermap != NULL) {
-	ckfree(modmap->modifiermap);
+	Tcl_Free(modmap->modifiermap);
     }
-    ckfree(modmap);
+    Tcl_Free(modmap);
     return Success;
 }
 
@@ -903,10 +894,10 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree(dispPtr->modKeyCodes);
+	Tcl_Free(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = NUM_MOD_KEYCODES;
-    dispPtr->modKeyCodes = (KeyCode *)ckalloc(NUM_MOD_KEYCODES * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)Tcl_Alloc(NUM_MOD_KEYCODES * sizeof(KeyCode));
     for (int i = 0; i < NUM_MOD_KEYCODES; i++) {
 	dispPtr->modKeyCodes[i] = XKeysymToKeycode(NULL, modKeyArray[i]);
     }

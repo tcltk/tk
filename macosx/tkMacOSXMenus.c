@@ -101,40 +101,40 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    nil]];
 
     _defaultWindowsMenuItems = [NSArray arrayWithObjects:
-    	    [NSMenuItem itemWithTitle:@"Minimize"
-    	    	   action:@selector(performMiniaturize:) target:nil
-    	    	   keyEquivalent:@"m"],
-    	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
-    	    	   target:nil],
+	    [NSMenuItem itemWithTitle:@"Minimize"
+		   action:@selector(performMiniaturize:) target:nil
+		   keyEquivalent:@"m"],
+	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
+		   target:nil],
 	    nil];
 
     /*
      * On OS X 10.12 we get duplicate tab control items if we create them here.
      */
 
-    if ([NSApp macOSVersion] > 101200) {
+    if ([NSApp macOSVersion] >= 101300) {
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:
 		    [NSMenuItem separatorItem],
-    	            [NSMenuItem itemWithTitle:@"Show Previous Tab"
+		    [NSMenuItem itemWithTitle:@"Show Previous Tab"
 			   action:@selector(selectPreviousTab:)
 			   target:nil
 			   keyEquivalent:@"\t"
 			   keyEquivalentModifierMask:
-		    	       NSControlKeyMask|NSShiftKeyMask],
+			       NSControlKeyMask|NSShiftKeyMask],
 		    [NSMenuItem itemWithTitle:@"Show Next Tab"
 			   action:@selector(selectNextTab:)
 			   target:nil
 			   keyEquivalent:@"\t"
 			   keyEquivalentModifierMask:NSControlKeyMask],
-    	            [NSMenuItem itemWithTitle:@"Move Tab To New Window"
-    	    	           action:@selector(moveTabToNewWindow:)
-    	    	           target:nil],
-    	            [NSMenuItem itemWithTitle:@"Merge All Windows"
-    	    	           action:@selector(mergeAllWindows:)
-    	    	           target:nil],
-    	            [NSMenuItem separatorItem],
+		    [NSMenuItem itemWithTitle:@"Move Tab To New Window"
+			   action:@selector(moveTabToNewWindow:)
+			   target:nil],
+		    [NSMenuItem itemWithTitle:@"Merge All Windows"
+			   action:@selector(mergeAllWindows:)
+			   target:nil],
+		    [NSMenuItem separatorItem],
 		    nil]];
     }
     _defaultWindowsMenuItems = [_defaultWindowsMenuItems arrayByAddingObject:
@@ -142,7 +142,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 		   action:@selector(arrangeInFront:)]];
     [_defaultWindowsMenuItems retain];
     TKMenu *windowsMenu = [TKMenu menuWithTitle:@"Window" menuItems:
-    				      _defaultWindowsMenuItems];
+				      _defaultWindowsMenuItems];
     _defaultHelpMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"%@ Help", applicationName]
@@ -203,7 +203,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
-	[super orderFrontStandardAboutPanel:nil];
+	[super orderFrontStandardAboutPanel:NSApp];
     } else {
 	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", TCL_INDEX_NONE,
 		TCL_EVAL_GLOBAL);
@@ -345,31 +345,6 @@ GetWidgetDemoPath(
     }
     Tcl_ResetResult(interp);
     return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXHandleMenuSelect --
- *
- *	Handles events that occur in the Menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXHandleMenuSelect(
-    TCL_UNUSED(short),
-    TCL_UNUSED(unsigned short),
-    TCL_UNUSED(int))
-{
-    Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
 }
 
 /*

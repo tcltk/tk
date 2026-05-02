@@ -95,7 +95,7 @@ is released, the menu is unposted.
 .PP
 Menubuttons are used to construct a \fBtk_optionMenu\fR, which is the
 preferred mechanism for allowing a user to select one item from a list
-on Mac OS X.
+on macOS.
 .PP
 Menubuttons were also typically organized into groups called menu bars
 that allow scanning:

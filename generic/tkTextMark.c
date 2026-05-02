@@ -241,7 +241,7 @@ TkTextMarkCmd(
 		}
 		TkBTreeUnlinkSegment(markPtr, markPtr->body.mark.linePtr);
 		Tcl_DeleteHashEntry(hPtr);
-		ckfree(markPtr);
+		Tcl_Free(markPtr);
 	    }
 	}
 	break;
@@ -301,7 +301,7 @@ TkTextSetMark(
 
 	if (markPtr == textPtr->insertMarkPtr) {
 	    TkTextIndex index, index2;
-	    int nblines;
+	    Tcl_Size nblines;
 
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
@@ -330,7 +330,7 @@ TkTextSetMark(
 	}
 	TkBTreeUnlinkSegment(markPtr, markPtr->body.mark.linePtr);
     } else {
-	markPtr = (TkTextSegment *)ckalloc(MSEG_SIZE);
+	markPtr = (TkTextSegment *)Tcl_Alloc(MSEG_SIZE);
 	markPtr->typePtr = &tkTextRightMarkType;
 	markPtr->size = 0;
 	markPtr->body.mark.textPtr = textPtr;
@@ -461,7 +461,7 @@ TkTextMarkNameToIndex(
      * (bug 1630271).
      */
 
-    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, true) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
@@ -623,14 +623,19 @@ TkTextInsertDisplayProc(
 
     /* TkText *textPtr = chunkPtr->clientData; */
     TkTextIndex index;
-    int halfWidth = textPtr->insertWidth/2;
+    int halfWidth, insertWidth, insertBorderWidth;
     int rightSideWidth;
-    int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0;
+    int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0, cursorWidth = 0;
 
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertWidthObj, &insertWidth);
+    Tk_GetPixelsFromObj(NULL, textPtr->tkwin, textPtr->insertBorderWidthObj, &insertBorderWidth);
+    halfWidth = insertWidth/2;
     if (textPtr->insertCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
+	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth,
+		&cursorWidth);
 	rightSideWidth = charWidth + halfWidth;
+	charWidth = cursorWidth;
     } else {
 	rightSideWidth = halfWidth;
     }
@@ -658,15 +663,19 @@ TkTextInsertDisplayProc(
     if (textPtr->flags & GOT_FOCUS) {
 	if (textPtr->flags & INSERT_ON) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
-		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		    x - halfWidth, y, charWidth + insertWidth,
+		    height, insertBorderWidth, TK_RELIEF_RAISED);
 	} else if (textPtr->selBorder == textPtr->insertBorder) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->border,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
+		    x - halfWidth, y, charWidth + insertWidth,
 		    height, 0, TK_RELIEF_FLAT);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_HOLLOW) {
-	if (textPtr->insertBorderWidth < 1) {
+	if (insertBorderWidth > 0) {
+	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
+		    x - halfWidth, y, charWidth + insertWidth,
+		    height, insertBorderWidth, TK_RELIEF_RAISED);
+	} else {
 	    /*
 	     * Hack to work around the fact that a "solid" border always
 	     * paints in black.
@@ -675,17 +684,13 @@ TkTextInsertDisplayProc(
 	    TkBorder *borderPtr = (TkBorder *) textPtr->insertBorder;
 
 	    XDrawRectangle(Tk_Display(textPtr->tkwin), dst, borderPtr->bgGC,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth - 1,
+		    x - halfWidth, y, charWidth + insertWidth - 1,
 		    height - 1);
-	} else {
-	    Tk_Draw3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		    x - halfWidth, y, charWidth + textPtr->insertWidth,
-		    height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
 	}
     } else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID) {
 	Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder,
-		x - halfWidth, y, charWidth + textPtr->insertWidth, height,
-		textPtr->insertBorderWidth, TK_RELIEF_RAISED);
+		x - halfWidth, y, charWidth + insertWidth, height,
+		insertBorderWidth, TK_RELIEF_RAISED);
     }
 }
 
@@ -794,7 +799,7 @@ MarkFindNext(
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
     TkTextSegment *segPtr;
-    int offset;
+    Tcl_Size offset;
     const char *string = Tcl_GetString(obj);
 
     if (!strcmp(string, "insert")) {
@@ -885,7 +890,7 @@ MarkFindPrev(
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
     TkTextSegment *segPtr, *seg2Ptr, *prevPtr;
-    int offset;
+    Tcl_Size offset;
     const char *string = Tcl_GetString(obj);
 
     if (!strcmp(string, "insert")) {

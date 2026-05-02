@@ -44,13 +44,6 @@
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
 #endif
-#include <X11/Xlib.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xproto.h>
-#include <X11/Xresource.h>
-#include <X11/Xutil.h>
 
 /*
  * The following macro defines the type of the mask arguments to
@@ -97,7 +90,7 @@
 #   define NBBY 8
 #endif
 
-#include "tkIntXlibDecls.h"
+#include "tkIntXlibDecls.h"  /* IWYU pragma: export */
 #define UINT unsigned int
 #define HWND void *
 #define HDC void *

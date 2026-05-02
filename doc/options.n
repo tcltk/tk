@@ -169,7 +169,7 @@ milliseconds the insertion cursor should remain
 .QW on
 in each blink cycle.
 .OP \-insertwidth insertWidth InsertWidth
-Specifies a  value indicating the total width of the insertion cursor.
+Specifies a non-negative value indicating the total width of the insertion cursor.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 If a border has been specified for the insertion
 cursor (using the \fB\-insertborderwidth\fR option), the border

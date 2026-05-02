@@ -1,17 +1,44 @@
 #
-# Tile package: entry widget tests
+# ttk::entry widget tests
 #
 
-package require tk
-package require tcltest 2.2
-namespace import -force tcltest::*
-loadTestedCommands
+# NOTES
+#
+# * Many tests in this test file build upon a previous one. This occurs
+#   systematically for groups of contiguous tests sharing the same major
+#   test number. All test files for ttk widgets exhibit this practice.
+#
+#   As a consequence, attempts to run tests selectively/individually using the
+#   tcltest options "-match", "-skip" or "-limitconstraints 1" lead to
+#   unexpected failures. Therefore, invocations using these options should be
+#   considered as "de facto invalid" for the ttk test suite.
+#
+#   As an exception, using "-match" or "-skip" to select or deselect entire
+#   groups of contiguous tests does not seem to raise problems.
+#
 
-variable scrollInfo
-proc scroll args {
-    global scrollInfo
-    set scrollInfo $args
-}
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script "main.tcl", which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import entry scroll
+
+#
+# LOCAL UTILITY PROCS
+#
 
 # Some of the tests raise background errors;
 # override default bgerror to catch them.
@@ -24,6 +51,9 @@ proc bgerror {error} {
 }
 
 #
+# TESTS
+#
+
 test entry-1.1 "Create entry widget" -body {
     ttk::entry .e
 } -result .e
@@ -91,14 +121,14 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
 	    -expand false -fill x
     update ; # no error
-    set res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
+    set res [expr {[lindex [.tsb get] 1] < 1}] ; # scrollbar did update
 } -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
-    ttk::entry .e -font fixed -width 5 -xscrollcommand scroll
+    ttk::entry .e -font fixed -width 5 -xscrollcommand setScrollInfo
     .e insert end "0123456789"
     pack .e;
-    set timeout [after 500 {set $scrollInfo "timeout"}]
+    set timeout [after 500 {set scrollInfo "timeout"}]
     vwait scrollInfo
     set scrollInfo
 } -cleanup {
@@ -238,35 +268,31 @@ test entry-5.1 {widget deletion while active} -body {
 # -textvariable tests.
 
 test entry-6.1 {Update linked variable in write trace} -body {
-    proc override args {
-	global x
-	set x "Overridden!"
-    }
     catch {destroy .e}
-    set x ""
-    trace add variable x write override
-    ttk::entry .e -textvariable x
+    set textVar ""
+    trace add variable textVar write override
+    ttk::entry .e -textvariable textVar
     .e insert 0 "Some text"
-    set result [list $x [.e get]]
+    set result [list $textVar [.e get]]
     set result
-} -result {Overridden! Overridden!} -cleanup {
-    unset x
-    rename override {}
+} -result {12345 12345} -cleanup {
+    trace remove variable textVar write override
+    unset textVar
     destroy .e
 }
 
 test entry-6.2 {-textvariable tests} -body {
     set result [list]
-    ttk::entry .e -textvariable x
-    set x "text"
+    ttk::entry .e -textvariable textVar
+    set textVar "text"
     lappend result [.e get]
-    unset x
+    unset textVar
     lappend result [.e get]
     .e insert end "newtext"
-    lappend result [.e get] [set x]
+    lappend result [.e get] $textVar
 } -result [list "text" "" "newtext" "newtext"] -cleanup {
     destroy .e
-    unset -nocomplain x
+    unset -nocomplain textVar
 }
 
 test entry-7.1 {Bad style options} -body {
@@ -407,4 +433,9 @@ test entry-12.2 "style command" -body {
     destroy .w
 } -result {customStyle.TEntry customStyle.TEntry TEntry}
 
+#
+# TESTFILE CLEANUP
+#
+
+testutils forget entry scroll
 tcltest::cleanupTests

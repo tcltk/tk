@@ -296,7 +296,7 @@ EXTERN void		Tk_GeometryRequest(Tk_Window tkwin, int reqWidth,
 				int reqHeight);
 /* 80 */
 EXTERN Tk_3DBorder	Tk_Get3DBorder(Tcl_Interp *interp, Tk_Window tkwin,
-				Tk_Uid colorName);
+				const char *colorName);
 /* 81 */
 EXTERN void		Tk_GetAllBindings(Tcl_Interp *interp,
 				Tk_BindingTable bindingTable, void *object);
@@ -321,7 +321,7 @@ EXTERN int		Tk_GetCapStyle(Tcl_Interp *interp, const char *str,
 				int *capPtr);
 /* 88 */
 EXTERN XColor *		Tk_GetColor(Tcl_Interp *interp, Tk_Window tkwin,
-				Tk_Uid name);
+				const char *name);
 /* 89 */
 EXTERN XColor *		Tk_GetColorByValue(Tk_Window tkwin, XColor *colorPtr);
 /* 90 */
@@ -329,12 +329,13 @@ EXTERN Colormap		Tk_GetColormap(Tcl_Interp *interp, Tk_Window tkwin,
 				const char *str);
 /* 91 */
 EXTERN Tk_Cursor	Tk_GetCursor(Tcl_Interp *interp, Tk_Window tkwin,
-				Tk_Uid str);
+				const char *str);
 /* 92 */
 EXTERN Tk_Cursor	Tk_GetCursorFromData(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *source,
 				const char *mask, int width, int height,
-				int xHot, int yHot, Tk_Uid fg, Tk_Uid bg);
+				int xHot, int yHot, const char *fg,
+				const char *bg);
 /* 93 */
 EXTERN Tk_Font		Tk_GetFont(Tcl_Interp *interp, Tk_Window tkwin,
 				const char *str);
@@ -484,9 +485,10 @@ EXTERN void		Tk_PhotoBlank(Tk_PhotoHandle handle);
 /* 149 */
 EXTERN void		Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr,
 				int *heightPtr);
-/* Slot 150 is reserved */
+/* 150 */
+EXTERN Tcl_Size		Tk_PointToChar(Tk_TextLayout layout, int x, int y);
 /* 151 */
-EXTERN int		Tk_PointToChar(Tk_TextLayout layout, int x, int y);
+EXTERN int		TkPointToChar_(Tk_TextLayout layout, int x, int y);
 /* 152 */
 EXTERN int		Tk_PostscriptFontName(Tk_Font tkfont,
 				Tcl_DString *dsPtr);
@@ -654,7 +656,7 @@ EXTERN int		Tk_GetReliefFromObj(Tcl_Interp *interp,
 				Tcl_Obj *objPtr, int *resultPtr);
 /* 210 */
 EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp,
-				Tcl_Size objc, Tcl_Obj *const objv[],
+				Tcl_Size objc, Tcl_Obj *const *objv,
 				double *dblPtr, int *intPtr);
 /* 211 */
 EXTERN int		Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
@@ -665,7 +667,7 @@ EXTERN void		Tk_RestoreSavedOptions(Tk_SavedOptions *savePtr);
 /* 214 */
 EXTERN int		Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
 				Tk_OptionTable optionTable, Tcl_Size objc,
-				Tcl_Obj *const objv[], Tk_Window tkwin,
+				Tcl_Obj *const *objv, Tk_Window tkwin,
 				Tk_SavedOptions *savePtr, int *maskPtr);
 /* 215 */
 EXTERN void		Tk_InitConsoleChannels(Tcl_Interp *interp);
@@ -887,6 +889,24 @@ EXTERN void		Tk_Get3DBorderColors(Tk_3DBorder border,
 				XColor *lightColorPtr);
 /* 290 */
 EXTERN Window		Tk_MakeWindow(Tk_Window tkwin, Window parent);
+/* 291 */
+EXTERN void		Tk_UnderlineCharsInContext(Display *display,
+				Drawable drawable, GC gc, Tk_Font tkfont,
+				const char *string, Tcl_Size numBytes, int x,
+				int y, Tcl_Size firstByte, Tcl_Size lastByte);
+/* 292 */
+EXTERN void		Tk_DrawCharsInContext(Display *display,
+				Drawable drawable, GC gc, Tk_Font tkfont,
+				const char *string, Tcl_Size numBytes,
+				Tcl_Size rangeStart, Tcl_Size rangeLength,
+				int x, int y);
+/* 293 */
+EXTERN int		Tk_MeasureCharsInContext(Tk_Font tkfont,
+				const char *string, Tcl_Size numBytes,
+				Tcl_Size rangeStart, Tcl_Size rangeLength,
+				int maxPixels, int flags, int *lengthPtr);
+/* 294 */
+EXTERN void		TkUnusedStubEntry(void);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -979,7 +999,7 @@ typedef struct TkStubs {
     void (*reserved77)(void);
     GC (*tk_GCForColor) (XColor *colorPtr, Drawable drawable); /* 78 */
     void (*tk_GeometryRequest) (Tk_Window tkwin, int reqWidth, int reqHeight); /* 79 */
-    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
+    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, const char *colorName); /* 80 */
     void (*tk_GetAllBindings) (Tcl_Interp *interp, Tk_BindingTable bindingTable, void *object); /* 81 */
     int (*tk_GetAnchor) (Tcl_Interp *interp, const char *str, Tk_Anchor *anchorPtr); /* 82 */
     const char * (*tk_GetAtomName) (Tk_Window tkwin, Atom atom); /* 83 */
@@ -987,11 +1007,11 @@ typedef struct TkStubs {
     Pixmap (*tk_GetBitmap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 85 */
     Pixmap (*tk_GetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const void *source, int width, int height); /* 86 */
     int (*tk_GetCapStyle) (Tcl_Interp *interp, const char *str, int *capPtr); /* 87 */
-    XColor * (*tk_GetColor) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid name); /* 88 */
+    XColor * (*tk_GetColor) (Tcl_Interp *interp, Tk_Window tkwin, const char *name); /* 88 */
     XColor * (*tk_GetColorByValue) (Tk_Window tkwin, XColor *colorPtr); /* 89 */
     Colormap (*tk_GetColormap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 90 */
-    Tk_Cursor (*tk_GetCursor) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid str); /* 91 */
-    Tk_Cursor (*tk_GetCursorFromData) (Tcl_Interp *interp, Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, Tk_Uid fg, Tk_Uid bg); /* 92 */
+    Tk_Cursor (*tk_GetCursor) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 91 */
+    Tk_Cursor (*tk_GetCursorFromData) (Tcl_Interp *interp, Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, const char *fg, const char *bg); /* 92 */
     Tk_Font (*tk_GetFont) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 93 */
     Tk_Font (*tk_GetFontFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 94 */
     void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics *fmPtr); /* 95 */
@@ -1049,8 +1069,8 @@ typedef struct TkStubs {
     void (*tk_PhotoBlank) (Tk_PhotoHandle handle); /* 147 */
     void (*reserved148)(void);
     void (*tk_PhotoGetSize) (Tk_PhotoHandle handle, int *widthPtr, int *heightPtr); /* 149 */
-    void (*reserved150)(void);
-    int (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 151 */
+    Tcl_Size (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 150 */
+    int (*tkPointToChar_) (Tk_TextLayout layout, int x, int y); /* 151 */
     int (*tk_PostscriptFontName) (Tk_Font tkfont, Tcl_DString *dsPtr); /* 152 */
     void (*tk_PreserveColormap) (Display *display, Colormap colormap); /* 153 */
     void (*tk_QueueWindowEvent) (XEvent *eventPtr, Tcl_QueuePosition position); /* 154 */
@@ -1109,11 +1129,11 @@ typedef struct TkStubs {
     int (*tk_GetMMFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 207 */
     int (*tk_GetPixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, int *intPtr); /* 208 */
     int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
-    int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
+    int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const *objv, double *dblPtr, int *intPtr); /* 210 */
     int (*tk_InitOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
     void (*reserved212)(void);
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
-    int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, Tcl_Size objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
+    int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, Tcl_Size objc, Tcl_Obj *const *objv, Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
     void (*reserved216)(void);
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
@@ -1190,6 +1210,10 @@ typedef struct TkStubs {
     Tk_Window (*tk_GetOtherWindow) (Tk_Window tkwin); /* 288 */
     void (*tk_Get3DBorderColors) (Tk_3DBorder border, XColor *bgColorPtr, XColor *darkColorPtr, XColor *lightColorPtr); /* 289 */
     Window (*tk_MakeWindow) (Tk_Window tkwin, Window parent); /* 290 */
+    void (*tk_UnderlineCharsInContext) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *string, Tcl_Size numBytes, int x, int y, Tcl_Size firstByte, Tcl_Size lastByte); /* 291 */
+    void (*tk_DrawCharsInContext) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *string, Tcl_Size numBytes, Tcl_Size rangeStart, Tcl_Size rangeLength, int x, int y); /* 292 */
+    int (*tk_MeasureCharsInContext) (Tk_Font tkfont, const char *string, Tcl_Size numBytes, Tcl_Size rangeStart, Tcl_Size rangeLength, int maxPixels, int flags, int *lengthPtr); /* 293 */
+    void (*tkUnusedStubEntry) (void); /* 294 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1499,9 +1523,10 @@ extern const TkStubs *tkStubsPtr;
 /* Slot 148 is reserved */
 #define Tk_PhotoGetSize \
 	(tkStubsPtr->tk_PhotoGetSize) /* 149 */
-/* Slot 150 is reserved */
 #define Tk_PointToChar \
-	(tkStubsPtr->tk_PointToChar) /* 151 */
+	(tkStubsPtr->tk_PointToChar) /* 150 */
+#define TkPointToChar_ \
+	(tkStubsPtr->tkPointToChar_) /* 151 */
 #define Tk_PostscriptFontName \
 	(tkStubsPtr->tk_PostscriptFontName) /* 152 */
 #define Tk_PreserveColormap \
@@ -1769,6 +1794,14 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_Get3DBorderColors) /* 289 */
 #define Tk_MakeWindow \
 	(tkStubsPtr->tk_MakeWindow) /* 290 */
+#define Tk_UnderlineCharsInContext \
+	(tkStubsPtr->tk_UnderlineCharsInContext) /* 291 */
+#define Tk_DrawCharsInContext \
+	(tkStubsPtr->tk_DrawCharsInContext) /* 292 */
+#define Tk_MeasureCharsInContext \
+	(tkStubsPtr->tk_MeasureCharsInContext) /* 293 */
+#define TkUnusedStubEntry \
+	(tkStubsPtr->tkUnusedStubEntry) /* 294 */
 
 #endif /* defined(USE_TK_STUBS) */
 
@@ -1776,6 +1809,7 @@ extern const TkStubs *tkStubsPtr;
 
 #define Tk_GetImageMasterData Tk_GetImageModelData
 
+#undef TkPointToChar_
 #ifndef MAC_OSX_TK
 #   undef Tk_ClipDrawableToRect
 #endif
@@ -1791,17 +1825,9 @@ EXTERN int Tk_Init(Tcl_Interp *interp);
 EXTERN int Tk_SafeInit(Tcl_Interp *interp);
 EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
-#if TK_MAJOR_VERSION < 9
-/* Restore 8.x signature of Tk_ConfigureWidget, but panic if TK_CONFIG_OBJS flag is not set */
-#undef Tk_ConfigureWidget
-#define Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags) \
-	((int (*)(Tcl_Interp *, Tk_Window, const Tk_ConfigSpec *, \
-	int, const char **, char *, int))(void *)(tkStubsPtr->tk_ConfigureWidget)) \
-	(((flags & TK_CONFIG_OBJS) ? interp : (Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory in Tk_ConfigureWidget"), \
-	NULL)), tkwin, specs, argc, argv, widgRec, flags)
-#endif
-
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */

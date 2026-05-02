@@ -149,9 +149,9 @@ proc ::tk_dialog {w title text bitmap default args} {
     # 7. Set a grab and claim the focus too.
 
     if {$default >= 0} {
-        set focus $w.button$default
+	set focus $w.button$default
     } else {
-        set focus $w
+	set focus $w
     }
     tk::SetFocusGrab $w $focus
 

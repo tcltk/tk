@@ -22,14 +22,13 @@
  * object, used for quickly finding a mapping in a TkStateMap.
  */
 
-const TkObjType tkStateKeyObjType = {
-    {"statekey",		/* name */
+const Tcl_ObjType tkStateKeyObjType = {
+    "statekey",		/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
-    0
+    TCL_OBJTYPE_V0
 };
 
 /*
@@ -1042,7 +1041,7 @@ TkFindStateNumObj(
      * See if the value is in the object cache.
      */
 
-    if ((keyPtr->typePtr == &tkStateKeyObjType.objType)
+    if ((keyPtr->typePtr == &tkStateKeyObjType)
 	    && (keyPtr->internalRep.twoPtrValue.ptr1 == mapPtr)) {
 	return PTR2INT(keyPtr->internalRep.twoPtrValue.ptr2);
     }
@@ -1060,7 +1059,7 @@ TkFindStateNumObj(
 	    }
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (void *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = INT2PTR(mPtr->numKey);
-	    keyPtr->typePtr = &tkStateKeyObjType.objType;
+	    keyPtr->typePtr = &tkStateKeyObjType;
 	    return mPtr->numKey;
 	}
     }

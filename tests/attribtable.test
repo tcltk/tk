@@ -1,0 +1,102 @@
+#
+# tk attribtable command tests
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
+
+test tk_attribtable-1.1 "tableName set" -body {
+    tk attribtable table
+    pack [button .btn -text Button]
+    set prevText [.btn cget -text]
+    .btn configure -text "NewText"
+    table set .btn prevText $prevText
+} -result {}
+
+test tk_attribtable-1.2 "tableName get" -body {
+    list [table get .btn prevText] [table get .btn curText]
+} -result [list Button {}]
+
+test tk_attribtable-1.3 "tableName get - all" -body {
+    table get .btn
+} -result [list prevText Button]
+
+test tk_attribtable-1.4 "tableName exists" -body {
+    list [table exists .btn prevText] [table exists .btn curText]
+} -result [list 1 0]
+
+test tk_attribtable-1.5 "tableName names" -body {
+    table names .btn
+} -result [list prevText]
+
+test tk_attribtable-1.6 "tableName pathnames" -body {
+    table pathnames
+} -result [list .btn]
+
+test tk_attribtable-1.7 "tableName unset" -body {
+    table unset .btn prevText
+} -result {}
+
+test tk_attribtable-1.8 "tableName get - after unset" -body {
+    table get .btn prevText "Default Text"
+} -result "Default Text"
+
+test tk_attribtable-1.9 "tableName exists - after unset" -body {
+    table exists .btn prevText
+} -result 0
+
+test tk_attribtable-1.10 "tableName names - after unset" -body {
+    table names .btn
+} -result [list]
+
+test tk_attribtable-1.1 "tableName pathnames - after unset" -body {
+    table pathnames
+} -result [list]
+
+
+test tk_attribtable-2.1 "tableName bad op" -body {
+    catch {table badOp .btn}
+} -result 1
+
+test tk_attribtable-2.2 "tableName bad window" -body {
+    catch {table get .bad.window.path.name prevText}
+} -result 1
+
+test tk_attribtable-2.3 "tableName set - wrong # args" -body {
+    list [catch {table set .btn}] [catch {table set .btn prevText}]
+} -result [list 1 1]
+
+test tk_attribtable-2.4 "tableName get - wrong # args" -body {
+    catch {table get .btn oldText prevText curText}
+} -result 1
+
+test tk_attribtable-2.5 "tableName exists - wrong # args" -body {
+    list [catch {table exists .btn prevText curText}] \
+	 [catch {table exists .btn oldText prevText curText}]
+} -cleanup {
+    destroy .btn
+} -result [list 1 1]
+
+#
+# TESTFILE CLEANUP
+#
+
+tcltest::cleanupTests

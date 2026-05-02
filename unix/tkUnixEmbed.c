@@ -112,7 +112,7 @@ Tk_UseWindow(
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't modify container after widget is created", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", (char *)NULL);
 	return TCL_ERROR;
     }
     if (TkpScanWindowId(interp, string, &parent) != TCL_OK) {
@@ -124,7 +124,7 @@ Tk_UseWindow(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" doesn't have -container option set",
 		usePtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -147,7 +147,7 @@ Tk_UseWindow(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "couldn't create child of window \"%s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
@@ -178,7 +178,7 @@ Tk_UseWindow(
 	}
     }
     if (containerPtr == NULL) {
-	containerPtr = (Container *)ckalloc(sizeof(Container));
+	containerPtr = (Container *)Tcl_Alloc(sizeof(Container));
 	containerPtr->parent = parent;
 	containerPtr->parentRoot = parentAtts.root;
 	containerPtr->parentPtr = NULL;
@@ -282,7 +282,7 @@ Tk_MakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = (Container *)ckalloc(sizeof(Container));
+    containerPtr = (Container *)Tcl_Alloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentRoot = RootWindowOfScreen(Tk_Screen(tkwin));
     containerPtr->parentPtr = winPtr;
@@ -1002,7 +1002,7 @@ EmbedWindowDeleted(
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}
-	ckfree(containerPtr);
+	Tcl_Free(containerPtr);
     }
 }
 
@@ -1129,7 +1129,7 @@ TkpMakeTransparentWindowExist(
     Window parent)		/* Parent window. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    long int mask = CWDontPropagate | CWEventMask;
+    unsigned long mask = CWDontPropagate | CWEventMask;
 
     /*
      * Ignore the important events while the window is mapped.

@@ -163,7 +163,7 @@ bind Listbox <<SelectAll>> {
 bind Listbox <<SelectNone>> {
     if {[%W cget -selectmode] ne "browse"} {
 	%W selection clear 0 end
-        tk::FireListboxSelectEvent %W
+	tk::FireListboxSelectEvent %W
     }
 }
 
@@ -188,15 +188,14 @@ bind Listbox <Shift-Option-MouseWheel> {
     tk::MouseWheel %W x %D -12.0 units
 }
 bind Listbox <TouchpadScroll> {
-    if {%# %% 5 != 0} {
-	return
-    }
-    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
-    if {$tk::Priv(deltaX) != 0} {
- 	%W xview scroll [expr {-$tk::Priv(deltaX)}] units
-    }
-    if {$tk::Priv(deltaY) != 0} {
-	%W yview scroll [expr {-$tk::Priv(deltaY)}] units
+    if {%# %% 5 == 0} {
+	lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	if {$tk::Priv(deltaX) != 0} {
+	    %W xview scroll [expr {-$tk::Priv(deltaX)}] units
+	}
+	if {$tk::Priv(deltaY) != 0} {
+	    %W yview scroll [expr {-$tk::Priv(deltaY)}] units
+	}
     }
 }
 
@@ -443,7 +442,7 @@ proc ::tk::ListboxDataExtend {w el} {
     if {$mode eq "extended"} {
 	$w activate $el
 	$w see $el
-        if {[$w selection includes anchor]} {
+	if {[$w selection includes anchor]} {
 	    ListboxMotion $w $el
 	}
     } elseif {$mode eq "multiple"} {
@@ -518,6 +517,6 @@ proc ::tk::ListboxSelectAll w {
 
 proc ::tk::FireListboxSelectEvent w {
     if {[$w cget -state] eq "normal"} {
-        event generate $w <<ListboxSelect>>
+	event generate $w <<ListboxSelect>>
     }
 }

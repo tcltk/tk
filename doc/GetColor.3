@@ -45,7 +45,7 @@ Token for window in which color will be used.
 .AP Tcl_Obj *objPtr in/out
 String value describes desired color; internal rep will be
 modified to cache pointer to corresponding (XColor *).
-.AP char *name in
+.AP "const char" *name in
 Same as \fIobjPtr\fR except description of color is passed as a string and
 resulting (XColor *) is not cached.
 .AP XColor *prefPtr in

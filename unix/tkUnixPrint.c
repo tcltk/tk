@@ -15,9 +15,9 @@
 #ifdef HAVE_CUPS
 #include <cups/cups.h>
 
-typedef int (CupsSubCmdOp)(Tcl_Interp *, int, Tcl_Obj *const []);
+typedef int (CupsSubCmdOp)(Tcl_Interp *, Tcl_Size, Tcl_Obj *const []);
 
-static Tcl_ObjCmdProc Cups_Cmd;
+static Tcl_ObjCmdProc2 Cups_Cmd;
 static CupsSubCmdOp DefaultPrinterOp;
 static CupsSubCmdOp GetPrintersOp;
 static CupsSubCmdOp PrintOp;
@@ -55,7 +55,7 @@ static int
 Cups_Cmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static const struct CupsCmds {
@@ -85,7 +85,7 @@ Cups_Cmd(
 static int
 DefaultPrinterOp(
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     cups_dest_t *printer;
@@ -109,7 +109,7 @@ DefaultPrinterOp(
 static int
 GetPrintersOp(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     cups_dest_t *dests;
@@ -197,7 +197,7 @@ static const struct ParseData {
 static int
 PrintOp(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     cups_dest_t *printer;
@@ -227,21 +227,21 @@ PrintOp(
     const unsigned char *buffer; Tcl_Size buflen;
 
     const Tcl_ArgvInfo argTable[] = {
-	{TCL_ARGV_GENFUNC,  "-colormode",   ParseEnumOptions, &color,
+	{TCL_ARGV_GENFUNC,  "-colormode",   (void *)ParseEnumOptions, &color,
 	    "color mode", (void *)&parseData[PARSECOLORMODE]},
 	{TCL_ARGV_INT   ,   "-copies",                  NULL, &copies,
 	    "number of copies", NULL},
-	{TCL_ARGV_GENFUNC,  "-format",      ParseEnumOptions, &format,
+	{TCL_ARGV_GENFUNC,  "-format",      (void *)ParseEnumOptions, &format,
 	    "data format", (void *)&parseData[PARSEFORMAT]},
-	{TCL_ARGV_GENFUNC,  "-margins",         ParseMargins, &marginsObj,
+	{TCL_ARGV_GENFUNC,  "-margins",         (void *)ParseMargins, &marginsObj,
 	    "media page size", NULL},
-	{TCL_ARGV_GENFUNC,  "-media",       ParseEnumOptions, &media,
+	{TCL_ARGV_GENFUNC,  "-media",       (void *)ParseEnumOptions, &media,
 	    "media page size", (void *)&parseData[PARSEMEDIA]},
-	{TCL_ARGV_GENFUNC,  "-nup",                 ParseNup, &nup,
+	{TCL_ARGV_GENFUNC,  "-nup",                 (void *)ParseNup, &nup,
 	    "pages per sheet", NULL},
-	{TCL_ARGV_GENFUNC,  "-options",         ParseOptions, &optionsObj,
+	{TCL_ARGV_GENFUNC,  "-options",         (void *)ParseOptions, &optionsObj,
 	    "generic options", NULL},
-	{TCL_ARGV_GENFUNC,  "-orientation", ParseEnumOptions, &orient,
+	{TCL_ARGV_GENFUNC,  "-orientation", (void *)ParseEnumOptions, &orient,
 	    "page orientation", (void *)&parseData[PARSEORIENTATION]},
 	{TCL_ARGV_CONSTANT, "-prettyprint",        (void *)1, &pprint,
 	    "print header", NULL},
@@ -515,7 +515,7 @@ Cups_Init(Tcl_Interp *interp)
     ns = Tcl_FindNamespace(interp, "::tk::print", NULL, TCL_GLOBAL_ONLY);
     if (!ns)
 	ns = Tcl_CreateNamespace(interp, "::tk::print", NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::cups", Cups_Cmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::print::cups", Cups_Cmd, NULL, NULL);
     Tcl_Export(interp, ns, "cups", 0);
 #else
 Cups_Init(TCL_UNUSED(Tcl_Interp *))

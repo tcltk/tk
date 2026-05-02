@@ -3,9 +3,9 @@
  *\
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
- * Copyright © 2010-2019 Kevin Walzer/WordTech Communications LLC.
- * Copyright © 2019 Marc Culler.
- * Copyright © 2010 Adrian Robert.
+ * Copyright © 2010-2019 Kevin Walzer
+ * Copyright © 2019 Marc Culler
+ * Copyright © 2010 Adrian Robert
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -126,7 +126,7 @@ ServicesEventProc(
 	[generalpasteboard declareTypes:[NSArray arrayWithObjects:pboardType, nil]
 				  owner:nil];
 	[generalpasteboard setString:pboardString forType:pboardType];
-	event = (Tcl_Event *)ckalloc(sizeof(Tcl_Event));
+	event = (Tcl_Event *)Tcl_Alloc(sizeof(Tcl_Event));
 	event->proc = ServicesEventProc;
 	Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     }

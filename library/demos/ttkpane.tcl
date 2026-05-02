@@ -67,7 +67,7 @@ set testzones {
 set zones {}
 foreach zone $testzones {
     if {![catch {clock format 0 -timezone $zone}]} {
-        lappend zones $zone
+	lappend zones $zone
     }
 }
 if {[llength $zones] < 2} { lappend zones -0200 :GMT :UTC +0200 }

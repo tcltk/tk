@@ -1,14 +1,32 @@
 # This file is a Tcl script to test out Tk's "tk_chooseColor" command.
-# It is organized in the standard fashion for Tcl tests.
 #
 # Copyright © 1996 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-namespace import -force tcltest::test
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Import utility procs for specific functional areas
+testutils import dialog
+
+#
+# LOCAL TEST CONSTRAINTS
+#
 
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
@@ -20,19 +38,19 @@ if {[testConstraint defaultPseudocolor8]} {
     canvas .c
     pack .c -expand 1 -fill both
     while {$i<$numcolors} {
-	set color \#[format "%02x%02x%02x" $i [expr $i+1] [expr $i+3]]
-	.c create rectangle [expr 10+$i] [expr 10+$i] [expr 50+$i] [expr 50+$i] -fill $color -outline $color
+	set color \#[format "%02x%02x%02x" $i [expr {$i+1}] [expr {$i+3}]]
+	.c create rectangle [expr {10+$i}] [expr {10+$i}] [expr {50+$i}] [expr {50+$i}] -fill $color -outline $color
 	incr i
     }
     set i 0
     while {$i<$numcolors} {
 	set color [.c itemcget $i -fill]
-	if {$color != ""} {
+	if {$color ne ""} {
 	    foreach {r g b} [winfo rgb . $color] {}
-	    set r [expr $r/256]
-	    set g [expr $g/256]
-	    set b [expr $b/256]
-	    if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
+	    set r [expr {$r/256}]
+	    set g [expr {$g/256}]
+	    set b [expr {$b/256}]
+	    if {"$color" ne "#[format %02x%02x%02x $r $g $b]"} {
 		testConstraint colorsLeftover 0
 	    }
 	}
@@ -43,6 +61,41 @@ if {[testConstraint defaultPseudocolor8]} {
 } else {
     testConstraint colorsLeftover 1
 }
+
+#
+# LOCAL UTILITY PROCS
+#
+
+proc ChooseColorByKey {parent r g b} {
+    set w .__tk__color
+    upvar ::tk::dialog::color::[winfo name $w] data
+
+    update
+    $data(red,entry)   delete 0 end
+    $data(green,entry) delete 0 end
+    $data(blue,entry)  delete 0 end
+
+    $data(red,entry)   insert 0 $r
+    $data(green,entry) insert 0 $g
+    $data(blue,entry)  insert 0 $b
+
+    # Manually force the refresh of the color values instead
+    # of counting on the timing of the event stream to change
+    # the values for us.
+    tk::dialog::color::HandleRGBEntry $w
+
+    SendButtonPress . ok mouse
+}
+
+proc ToChooseColorByKey {parent r g b} {
+    if {! $::dialogIsNative} {
+	after 200 ChooseColorByKey . $r $g $b
+    }
+}
+
+#
+# TESTS
+#
 
 test clrpick-1.1 {tk_chooseColor command} -body {
     tk_chooseColor -foo
@@ -73,74 +126,6 @@ test clrpick-1.6 {tk_chooseColor command} -body {
 test clrpick-1.7 {tk_chooseColor command} -body {
     tk_chooseColor -initialcolor ##badbadbaadcolor
 } -returnCodes error -result {invalid color name "##badbadbaadcolor"}
-
-
-# tests 3.1 and 3.2 fail when individually run
-# if there is no catch {tk_chooseColor -foo 1} msg
-# before setting isNative
-catch {tk_chooseColor -foo 1} msg
-set isNative [expr {[info commands tk::dialog::color::] eq ""}]
-
-proc ToPressButton {parent btn} {
-    global isNative
-    if {!$isNative} {
-	after 200 "SendButtonPress . $btn mouse"
-    }
-}
-
-proc ToChooseColorByKey {parent r g b} {
-    global isNative
-    if {!$isNative} {
-	after 200 ChooseColorByKey . $r $g $b
-    }
-}
-
-proc PressButton {btn} {
-    event generate $btn <Enter>
-    event generate $btn <Button-1> -x 5 -y 5
-    event generate $btn <ButtonRelease-1> -x 5 -y 5
-}
-
-proc ChooseColorByKey {parent r g b} {
-    set w .__tk__color
-    upvar ::tk::dialog::color::[winfo name $w] data
-
-    update
-    $data(red,entry)   delete 0 end
-    $data(green,entry) delete 0 end
-    $data(blue,entry)  delete 0 end
-
-    $data(red,entry)   insert 0 $r
-    $data(green,entry) insert 0 $g
-    $data(blue,entry)  insert 0 $b
-
-    # Manually force the refresh of the color values instead
-    # of counting on the timing of the event stream to change
-    # the values for us.
-    tk::dialog::color::HandleRGBEntry $w
-
-    SendButtonPress . ok mouse
-}
-
-proc SendButtonPress {parent btn type} {
-    set w .__tk__color
-    upvar ::tk::dialog::color::[winfo name $w] data
-
-    set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
-	update
-    }
-
-    if {$type == "mouse"} {
-	PressButton $button
-    } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <Key> -keysym Return
-    }
-}
-
 
 test clrpick-2.1 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
@@ -197,7 +182,9 @@ test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints 
     set ::scr
 } -result [winfo screen .]
 
-# cleanup
-cleanupTests
-return
+#
+# TESTFILE CLEANUP
+#
 
+testutils forget dialog
+cleanupTests

@@ -25,14 +25,10 @@
 typedef struct TkSelectionInfo {
     Atom selection;		/* Selection name, e.g. XA_PRIMARY. */
     Tk_Window owner;		/* Current owner of this selection. */
-#if TCL_MAJOR_VERSION > 8
     unsigned long serial;	/* Serial number of last XSelectionSetOwner
 				 * request made to server for this selection
 				 * (used to filter out redundant
 				 * SelectionClear events). */
-#else
-    int serial;
-#endif
     Time time;			/* Timestamp used to acquire selection. */
     Tk_LostSelProc *clearProc;	/* Procedure to call when owner loses
 				 * selection. */
@@ -127,6 +123,16 @@ typedef struct TkClipboardTarget {
 } TkClipboardTarget;
 
 /*
+ * Options enum for the TkClipboardObjCmd.  These are defined here
+ * so they can be used as an argument to TkSelUpdateClipboard.
+ */
+
+typedef enum {
+    CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET
+} clipboardOption;
+
+
+/*
  * It is possible for a Tk_SelectionProc to delete the handler that it
  * represents. If this happens, the code that is retrieving the selection
  * needs to know about it so it doesn't use the now-defunct handler structure.
@@ -164,8 +170,7 @@ MODULE_SCOPE Tcl_Size TkSelDefaultSelection(TkSelectionInfo *infoPtr,
 			    Atom target, char *buffer, Tcl_Size maxBytes,
 			    Atom *typePtr);
 #ifndef TkSelUpdateClipboard
-MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr,
-			    TkClipboardTarget *targetPtr);
+MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option);
 #endif
 
 #endif /* _TKSELECT */

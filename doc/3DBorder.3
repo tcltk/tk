@@ -67,7 +67,7 @@ must be the window for which the border was allocated).
 Pointer to value whose value describes color corresponding to
 background (flat areas).  Illuminated edges will be brighter than
 this and shadowed edges will be darker than this.
-.AP char *colorName in
+.AP "const char" *colorName in
 Same as \fIobjPtr\fR except value is supplied as a string rather
 than a value.
 .AP Drawable drawable in
@@ -185,7 +185,7 @@ compile time.
 a widget to indicate that it has received the input focus.
 On the Macintosh, this puts a 1 pixel border in the bgGC color between
 the widget and the focus ring, except in the case where highlightWidth
-is 1, in which case the border is left out.
+is 0 or 1, in which case the border is left out.
 For proper Mac L&F, use highlightWidth of 3.
 .PP
 \fBTk_Get3DBorder\fR is identical to \fBTk_Alloc3DBorderFromObj\fR except

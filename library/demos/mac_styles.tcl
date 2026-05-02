@@ -123,7 +123,7 @@ pack [ttk::radiobutton $radio.r2 -text "Radio 2" -variable .radioVar -value 2] -
 set triangle [ttk::checkbutton $buttonFrame.triangle -style Item -variable TriangleVar]
 bind $triangle <Button-1> {toggleTriangle %W}
 set bonjour [ttk::button $buttonFrame.bonjour -style ImageButton -text Bonjour \
- 		     -image {bonjour pressed bonjour1}]
+		     -image {bonjour pressed bonjour1}]
 set feather [ttk::button $buttonFrame.feather -style ImageButton -text Tk \
 		      -image {tkfeather pressed tkfeather1}]
 set gradient [ttk::frame $buttonFrame.gradient]
@@ -246,15 +246,15 @@ if { [wm attributes $w -isdark] } {
 proc beLight {f w} {
     wm attributes $w -appearance aqua
     # A small delay is needed for the appearance change to complete.
-    after 10 [list $f.dark state !selected]
-    after 10 [list $f.light state selected]
+    after 20 [list $f.dark state !selected]
+    after 20 [list $f.light state selected]
 }
 
 proc beDark {f w} {
     wm attributes $w -appearance darkaqua
     # A small delay is needed for the appearance change to complete.
-    after 10 [list $f.light state !selected]
-    after 10 [list $f.dark state selected]
+    after 20 [list $f.light state !selected]
+    after 20 [list $f.dark state selected]
 }
 $w.notebook add $appearanceFrame -text "Appearance"
 

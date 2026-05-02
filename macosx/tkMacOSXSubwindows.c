@@ -58,8 +58,8 @@ XDestroyWindow(
     MacDrawable *macWin = (MacDrawable *)window;
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
     //fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
-    // 	    Tk_PathName(macWin->winPtr),
-    // 	    Tk_PathName(macWin->winPtr->parentPtr));
+    //	    Tk_PathName(macWin->winPtr),
+    //	    Tk_PathName(macWin->winPtr->parentPtr));
 
     /*
      * Remove any dangling pointers that may exist if the window we are
@@ -90,10 +90,10 @@ XDestroyWindow(
 	}
 
 	if (macWin->toplevel->referenceCount == 0) {
-	    ckfree(macWin->toplevel);
+	    Tcl_Free(macWin->toplevel);
 	}
 	macWin->winPtr->privatePtr = NULL;
-	ckfree(macWin);
+	Tcl_Free(macWin);
 	return Success;
     }
     if (macWin->visRgn) {
@@ -117,7 +117,7 @@ XDestroyWindow(
      */
 
     if (macWin->toplevel->referenceCount == 0) {
-	ckfree(macWin->toplevel);
+	Tcl_Free(macWin->toplevel);
     }
     return Success;
 }
@@ -152,7 +152,7 @@ XMapWindow(
 	return BadWindow;
     }
     MacDrawable *macWin = (MacDrawable *)window;
-    static Bool initialized = NO;
+    static bool initialized = false;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
     //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr));
@@ -190,6 +190,7 @@ XMapWindow(
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
 		    [win makeKeyAndOrderFront:NSApp];
+		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 		} else {
 		    [win orderFrontRegardless];
 		}
@@ -201,7 +202,7 @@ XMapWindow(
 		 * visible.
 		 */
 
-		for (int try = 0; try < 20; try++) {
+		for (int count = 0; count < 20; count++) {
 		    if ([[NSApp orderedWindows] firstObject] == win) {
 			break;
 		    }
@@ -244,8 +245,8 @@ XMapWindow(
      * it in an idle task.
      */
 
-    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) view);
-    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, (void *) view);
+    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, view);
+    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, view);
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.
@@ -259,7 +260,7 @@ XMapWindow(
 	event.xvisibility.state = VisibilityUnobscured;
 	NotifyVisibility(winPtr, &event);
     } else {
-	initialized = YES;
+	initialized = true;
     }
     return Success;
 }
@@ -336,6 +337,7 @@ XUnmapWindow(
 	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
 	    [win orderOut:NSApp];
+	    [[win contentView] setOnScreen:NO];
 	    if ([win isKeyWindow]) {
 
 		/*
@@ -360,6 +362,7 @@ XUnmapWindow(
 				  wmInfoPtr->hints.initial_state != WithdrawnState);
 		    if (w != win && isOnScreen && [w canBecomeKeyWindow]) {
 			[w makeKeyAndOrderFront:NSApp];
+			[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 			break;
 		    }
 		}
@@ -472,7 +475,7 @@ XMoveResizeWindow(
 	    CGFloat YOff = (CGFloat) macWin->winPtr->wmInfoPtr->yInParent;
 	    NSRect r = NSMakeRect(
 		    X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
-	    	    Width, Height);
+		    Width, Height);
 
 	    [w setFrame:[w frameRectForContentRect:r] display:NO];
 	}
@@ -754,65 +757,6 @@ XConfigureWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetDrawingEnabled --
- *
- *	This function sets the TK_DO_NOT_DRAW flag for a given window and
- *	all of its children.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The clipping regions for the window and its children are cleared.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetDrawingEnabled(
-    TkWindow *winPtr,
-    int flag)
-{
-    TkWindow *childPtr;
-    MacDrawable *macWin = winPtr->privatePtr;
-
-    if (macWin) {
-	if (flag) {
-	    macWin->flags &= ~TK_DO_NOT_DRAW;
-	} else {
-	    macWin->flags |= TK_DO_NOT_DRAW;
-	}
-    }
-
-    /*
-     * Set the flag for all children & their descendants, excluding Toplevels.
-     * (??? Do we need to exclude Toplevels?)
-     */
-
-    childPtr = winPtr->childList;
-    while (childPtr) {
-	if (!Tk_IsTopLevel(childPtr)) {
-	    TkMacOSXSetDrawingEnabled(childPtr, flag);
-	}
-	childPtr = childPtr->nextPtr;
-    }
-
-    /*
-     * If the window is a container, set the flag for its embedded window.
-     */
-
-    if (Tk_IsContainer(winPtr)) {
-	childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
-
-	if (childPtr) {
-	    TkMacOSXSetDrawingEnabled(childPtr, flag);
-	}
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXUpdateClipRgn --
  *
  *	This function updates the clipping regions for a given window and all of
@@ -995,8 +939,7 @@ TkMacOSXVisableClipRgn(
 
 #if 0
 //This code is not currently used.  But it shows how to iterate over the
-//rectangles in a region described by an HIShape.  Probably we want to
-//replace the current dirtyRect by such a region.
+//rectangles in a region described by an HIShape.
 
 /*
  *----------------------------------------------------------------------
@@ -1035,10 +978,6 @@ InvalViewRect(
 	break;
     case kHIShapeEnumerateRect:
 	dirtyRect = NSRectFromCGRect(CGRectApplyAffineTransform(*rect, t));
-	// Cannot rely on addTkDirtyRect: to force redrawing.
-	//MC This is the only place where the rect is not the view bounds.
-	//And it kills liveResize.
-	//[view generateExposeEvents:dirtyRect];
 	break;
     }
     [view generateExposeEvents:[view bounds]];
@@ -1082,7 +1021,6 @@ TkMacOSXRedrawViewIdleTask(
     TKContentView *view = (TKContentView *) clientData;
     //    fprintf(stderr, "idle redraw for %p\n", view);
     [view generateExposeEvents:[view bounds]];
-    [view setTkNeedsDisplay:YES];
 }
 
 void
@@ -1100,10 +1038,9 @@ TkMacOSXInvalidateWindow(
     Tk_Window parent = (Tk_Window) winPtr->parentPtr;
     TkMacOSXInvalClipRgns(tkwin);
     if ((flag == TK_PARENT_WINDOW) && parent){
-     	TkMacOSXInvalClipRgns(parent);
+	TkMacOSXInvalClipRgns(parent);
     }
     [view generateExposeEvents:[view bounds]];
-    [view setTkNeedsDisplay:YES];
 }
 
 /*
@@ -1342,39 +1279,6 @@ TkMacOSXWinCGBounds(
     bounds->size.width = winPtr->changes.width;
     bounds->size.height = winPtr->changes.height;
 }
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXWinNSBounds --
- *
- *	Given a Tk window this function determines the window's bounds in
- *	the coordinate system of the TKContentView in which this Tk window
- *	is contained, which has the origin at the lower left corner.  This
- *      fills in an NSRect struct and requires the TKContentView as a
- *      parameter
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Fills in an NSRect.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXWinNSBounds(
-    TkWindow *winPtr,
-    NSView *view,
-    NSRect *bounds)
-{
-    bounds->size.width = winPtr->changes.width;
-    bounds->size.height = winPtr->changes.height;
-    bounds->origin.x = winPtr->privatePtr->xOff;
-    bounds->origin.y = ([view bounds].size.height -
-		       bounds->size.height -
-		       winPtr->privatePtr->yOff);
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1465,7 +1369,7 @@ Tk_GetPixmap(
     if (display != NULL) {
 	LastKnownRequestProcessed(display)++;
     }
-    macPix = (MacDrawable *)ckalloc(sizeof(MacDrawable));
+    macPix = (MacDrawable *)Tcl_Alloc(sizeof(MacDrawable));
     macPix->winPtr = NULL;
     macPix->xOff = 0;
     macPix->yOff = 0;
@@ -1509,7 +1413,7 @@ Tk_FreePixmap(
     if (macPix->context) {
 	CFRelease(macPix->context);
     }
-    ckfree(macPix);
+    Tcl_Free(macPix);
 }
 
 /*

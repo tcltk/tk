@@ -13,10 +13,6 @@
  */
 
 #include "tkInt.h"
-#include <X11/Xlib.h>
-#if defined(MAC_OSX_TK)
-#endif
-
 
 #define MAX_DASH_LIST_SIZE 10
 typedef struct {
@@ -44,10 +40,10 @@ static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
 
     if (clip_mask == NULL) {
-	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
+	clip_mask = (TkpClipMask *)Tcl_Alloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
     } else if (clip_mask->type == TKP_CLIP_REGION) {
-	TkDestroyRegion(clip_mask->value.region);
+	XDestroyRegion(clip_mask->value.region);
     }
     clip_mask->type = TKP_CLIP_PIXMAP;
     clip_mask->value.pixmap = None;
@@ -76,9 +72,9 @@ static void FreeClipMask(GC gc) {
 	return;
     }
     if (clip_mask->type == TKP_CLIP_REGION) {
-	TkDestroyRegion(clip_mask->value.region);
+	XDestroyRegion(clip_mask->value.region);
     }
-    ckfree(clip_mask);
+    Tcl_Free(clip_mask);
     gc->clip_mask = None;
 }
 
@@ -114,7 +110,7 @@ XCreateGC(
      * initialization.
      */
 
-    gp = (GC)ckalloc(sizeof(XGCValuesWithDash));
+    gp = (GC)Tcl_Alloc(sizeof(XGCValuesWithDash));
 
 #define InitField(name,maskbit,default) \
 	(gp->name = (mask & (maskbit)) ? values->name : (default))
@@ -234,7 +230,7 @@ int XFreeGC(
 {
     if (gc != NULL) {
 	FreeClipMask(gc);
-	ckfree(gc);
+	Tcl_Free(gc);
     }
     return Success;
 }
@@ -281,7 +277,7 @@ XSetDashes(
     TCL_UNUSED(Display *),
     GC gc,
     int dash_offset,
-    _Xconst char *dash_list,
+    const char *dash_list,
     int n)
 {
     char *p = &(gc->dashes);
@@ -381,7 +377,7 @@ XSetLineAttributes(
     int cap_style,
     int join_style)
 {
-    gc->line_width = line_width;
+    gc->line_width = (int)line_width;
     gc->line_style = line_style;
     gc->cap_style = cap_style;
     gc->join_style = join_style;
@@ -403,7 +399,7 @@ XSetClipOrigin(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetRegion, XSetClipMask, XSetClipRectangles --
+ * XSetRegion, XSetClipMask, XSetClipRectangles --
  *
  *	Sets the clipping region/pixmap for a GC.
  *
@@ -420,19 +416,19 @@ XSetClipOrigin(
  */
 
 int
-TkSetRegion(
+XSetRegion(
     TCL_UNUSED(Display *),
     GC gc,
-    TkRegion r)
+    Region r)
 {
     if (r == NULL) {
-	Tcl_Panic("must not pass NULL to TkSetRegion for compatibility with X11; use XSetClipMask instead");
+	Tcl_Panic("must not pass NULL to XSetRegion for compatibility with X11; use XSetClipMask instead");
     } else {
 	TkpClipMask *clip_mask = AllocClipMask(gc);
 
 	clip_mask->type = TKP_CLIP_REGION;
 	clip_mask->value.region = r;
-	clip_mask->value.region = TkCreateRegion();
+	clip_mask->value.region = XCreateRegion();
 	TkpCopyRegion(clip_mask->value.region, r);
     }
     return Success;
@@ -465,7 +461,7 @@ XSetClipRectangles(
     int n,
     TCL_UNUSED(int))
 {
-    TkRegion clipRgn = TkCreateRegion();
+    Region clipRgn = XCreateRegion();
     TkpClipMask * clip_mask = AllocClipMask(gc);
     clip_mask->type = TKP_CLIP_REGION;
     clip_mask->value.region = clipRgn;
@@ -473,9 +469,9 @@ XSetClipRectangles(
     while (n--) {
 	XRectangle rect = *rectangles;
 
-	rect.x += clip_x_origin;
-	rect.y += clip_y_origin;
-	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+	rect.x += (short)clip_x_origin;
+	rect.y += (short)clip_y_origin;
+	XUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
     return 1;
@@ -501,7 +497,7 @@ XDrawImageString(
     GC gc,
     int x,
     int y,
-    _Xconst char *string,
+    const char *string,
     int length)
 {
 }
@@ -590,7 +586,7 @@ int
 XQueryTextExtents(
     TCL_UNUSED(Display *),
     TCL_UNUSED(XID),
-    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(const char *),
     TCL_UNUSED(int),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
@@ -664,24 +660,6 @@ XCreateWindow(
 	return 0;
 }
 
-int
-XPointInRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-	return 0;
-}
-
-int
-XUnionRegion(
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region),
-    TCL_UNUSED(Region))
-{
-	return 0;
-}
-
 Region
 XPolygonRegion(
     TCL_UNUSED(XPoint *),
@@ -717,8 +695,8 @@ XCreateGlyphCursor(
     TCL_UNUSED(Font),
     TCL_UNUSED(unsigned int),
     TCL_UNUSED(unsigned int),
-    TCL_UNUSED(XColor _Xconst *),
-    TCL_UNUSED(XColor _Xconst *))
+    TCL_UNUSED(XColor const *),
+    TCL_UNUSED(XColor const *))
 {
     return (Cursor) NULL;
 }
@@ -726,7 +704,7 @@ XCreateGlyphCursor(
 XFontSet
 XCreateFontSet(
     TCL_UNUSED(Display *)		/* display */,
-    TCL_UNUSED(_Xconst char *)	/* base_font_name_list */,
+    TCL_UNUSED(const char *)	/* base_font_name_list */,
     TCL_UNUSED(char ***)		/* missing_charset_list */,
     TCL_UNUSED(int *)		/* missing_charset_count */,
     TCL_UNUSED(char **)		/* def_string */
@@ -768,7 +746,7 @@ XRegisterIMInstantiateCallback(
 
 Bool
 XUnregisterIMInstantiateCallback(
-    TCL_UNUSED(Display *) 		/* dpy */,
+    TCL_UNUSED(Display *)		/* dpy */,
     TCL_UNUSED(struct _XrmHashBucketRec *)	/* rdb */,
     TCL_UNUSED(char *)			/* res_name */,
     TCL_UNUSED(char *)			/* res_class */,

@@ -88,7 +88,6 @@ typedef struct TkWindowPrivate MacDrawable;
 #define TK_DRAWN_UNDER_MENU	0x08
 #define TK_IS_PIXMAP		0x10
 #define TK_IS_BW_PIXMAP		0x20
-#define TK_DO_NOT_DRAW          0x40
 #define TTK_HAS_CONTRASTING_BG  0x80
 
 /*
@@ -161,12 +160,15 @@ typedef struct TkWindowPrivate MacDrawable;
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
+MODULE_SCOPE void TkMacOSXInvalidateWindow(MacDrawable *macWin, int flag);
+MODULE_SCOPE void TkMacOSXMakeRealWindowExist(TkWindow *winPtr);
+MODULE_SCOPE void TkMacOSXSetScrollbarGrow(TkWindow *winPtr, int flag);
 
 /*
  * Include the stubbed internal platform-specific API.
  */
 
-#include "tkIntPlatDecls.h"
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
 
 #endif /* _TKMACINT */
 

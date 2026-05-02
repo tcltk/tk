@@ -94,7 +94,7 @@ Tk_MakeWindow(
 	 * Allocate sub window
 	 */
 
-	macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
+	macWin = (MacDrawable *)Tcl_Alloc(sizeof(MacDrawable));
 	if (macWin == NULL) {
 	    winPtr->privatePtr = NULL;
 	    return None;
@@ -214,7 +214,7 @@ Tk_UseWindow(
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't modify container after widget is created", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -236,14 +236,14 @@ Tk_UseWindow(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"couldn't create child of window \"%s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", (char *)NULL);
 	}
 	return TCL_ERROR;
     } else if (!(usePtr->flags & TK_CONTAINER)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" doesn't have -container option set",
 		usePtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -266,7 +266,7 @@ Tk_UseWindow(
      * Make the embedded window.
      */
 
-    macWin = (MacDrawable *)ckalloc(sizeof(MacDrawable));
+    macWin = (MacDrawable *)Tcl_Alloc(sizeof(MacDrawable));
     if (macWin == NULL) {
 	winPtr->privatePtr = NULL;
 	return TCL_ERROR;
@@ -352,7 +352,7 @@ Tk_MakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = (Container *)ckalloc(sizeof(Container));
+    containerPtr = (Container *)Tcl_Alloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentPtr = winPtr;
     containerPtr->embedded = None;
@@ -1011,9 +1011,8 @@ EmbedGeometryRequest(
      */
 
     Tk_GeometryRequest((Tk_Window)winPtr, width, height);
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {}
     if ((winPtr->changes.width != width)
-	    || (winPtr->changes.height != height)) {
+	|| (winPtr->changes.height != height)) {
 	EmbedSendConfigure(containerPtr);
     }
 }
@@ -1120,7 +1119,7 @@ EmbedWindowDeleted(
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}
-	ckfree(containerPtr);
+	Tcl_Free(containerPtr);
     }
 }
 

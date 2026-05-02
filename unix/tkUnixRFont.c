@@ -1,4 +1,4 @@
-/*
+ /*
  * tkUnixRFont.c --
  *
  *	Alternate implementation of tkUnixFont.c using Xft.
@@ -39,7 +39,7 @@ typedef struct {
 } UnixFtColorList;
 
 typedef struct {
-    TkFont font;	    	/* Stuff used by generic font package. Must be
+    TkFont font;		/* Stuff used by generic font package. Must be
 				 * first in structure. */
     UnixFtFace *faces;
     int nfaces;
@@ -48,6 +48,8 @@ typedef struct {
 
     Display *display;
     int screen;
+    Colormap colormap;
+    Visual *visual;
     XftDraw *ftDraw;
     int ncolors;
     int firstColor;
@@ -90,7 +92,7 @@ TCL_DECLARE_MUTEX(xftMutex);
 static Tcl_Size utf8ToUcs4(const char *source, FcChar32 *c, Tcl_Size numBytes)
 {
     if (numBytes >= 6) {
-    	return Tcl_UtfToUniChar(source, (int *)c);
+	return Tcl_UtfToUniChar(source, (int *)c);
     }
     return FcUtf8ToUcs4((const FcChar8 *)source, c, numBytes);
 }
@@ -190,7 +192,7 @@ GetFont(
  *---------------------------------------------------------------------------
  *
  * GetTkFontAttributes --
- * 	Fill in TkFontAttributes from an XftFont.
+ *	Fill in TkFontAttributes from an XftFont.
  */
 
 static void
@@ -245,7 +247,7 @@ GetTkFontAttributes(
  *---------------------------------------------------------------------------
  *
  * GetTkFontMetrics --
- * 	Fill in TkFontMetrics from an XftFont.
+ *	Fill in TkFontMetrics from an XftFont.
  */
 
 static void
@@ -275,7 +277,7 @@ GetTkFontMetrics(
  *	also allocates a new UnixFtFont.
  *
  * Results:
- * 	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
+ *	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
  *
  *---------------------------------------------------------------------------
  */
@@ -311,7 +313,7 @@ InitFont(
     Tk_ErrorHandler handler;
 
     if (!fontPtr) {
-	fontPtr = (UnixFtFont *)ckalloc(sizeof(UnixFtFont));
+	fontPtr = (UnixFtFont *)Tcl_Alloc(sizeof(UnixFtFont));
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -323,13 +325,13 @@ InitFont(
 
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set || set->nfont == 0) {
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
-    fontPtr->faces = (UnixFtFace *)ckalloc(set->nfont * sizeof(UnixFtFace));
+    fontPtr->faces = (UnixFtFace *)Tcl_Alloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
 
     /*
@@ -351,6 +353,8 @@ InitFont(
 
     fontPtr->display = Tk_Display(tkwin);
     fontPtr->screen = Tk_ScreenNumber(tkwin);
+    fontPtr->colormap = Tk_Colormap(tkwin);
+    fontPtr->visual = Tk_Visual(tkwin);
     fontPtr->ftDraw = 0;
     fontPtr->ncolors = 0;
     fontPtr->firstColor = -1;
@@ -361,12 +365,12 @@ InitFont(
 
     errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-		    -1, -1, -1, InitFontErrorProc, (void *) &errorFlag);
+		    -1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
     ftFont = GetFont(fontPtr, 0, 0.0);
     if ((ftFont == NULL) || errorFlag) {
 	Tk_DeleteErrorHandler(handler);
 	FinishedWithFont(fontPtr);
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
@@ -375,7 +379,7 @@ InitFont(
     Tk_DeleteErrorHandler(handler);
     if (errorFlag) {
 	FinishedWithFont(fontPtr);
-	ckfree(fontPtr);
+	Tcl_Free(fontPtr);
 	return NULL;
     }
 
@@ -403,13 +407,13 @@ InitFont(
 
 	fPtr->underlinePos = fPtr->fm.descent / 2;
 	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-			-1, -1, -1, InitFontErrorProc, (void *) &errorFlag);
+			-1, -1, -1, InitFontErrorProc, (void *)&errorFlag);
 	errorFlag = 0;
 	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
 	Tk_DeleteErrorHandler(handler);
 	if (errorFlag) {
 	    FinishedWithFont(fontPtr);
-	    ckfree(fontPtr);
+	    Tcl_Free(fontPtr);
 	    return NULL;
 	}
 	fPtr->underlineHeight = iWidth / 3;
@@ -453,7 +457,7 @@ FinishedWithFont(
 	}
     }
     if (fontPtr->faces) {
-	ckfree(fontPtr->faces);
+	Tcl_Free(fontPtr->faces);
     }
     if (fontPtr->pattern) {
 	FcPatternDestroy(fontPtr->pattern);
@@ -665,7 +669,7 @@ TkpGetSubFonts(
     resultPtr = Tcl_NewListObj(0, NULL);
 
     for (i = 0; i < fontPtr->nfaces ; ++i) {
- 	pattern = FcFontRenderPrepare(0, fontPtr->pattern,
+	pattern = FcFontRenderPrepare(0, fontPtr->pattern,
 		fontPtr->faces[i].source);
 
 	XftPatternGetString(pattern, XFT_FAMILY, 0, familyPtr);
@@ -695,7 +699,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    int c,		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -786,7 +790,8 @@ Tk_MeasureChars(
 	    LOCK;
 	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
 	    UNLOCK;
-	} else {
+	}
+	if (errorFlag) {
 	    extents.xOff = 0;
 	    errorFlag = 0;
 	}
@@ -829,7 +834,7 @@ measureCharsEnd:
 }
 
 int
-TkpMeasureCharsInContext(
+Tk_MeasureCharsInContext(
     Tk_Font tkfont,
     const char *source,
     TCL_UNUSED(Tcl_Size),
@@ -906,7 +911,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
      * Translate the pixel value to a color.  Needs a server round-trip.
      */
     xcolor.pixel = pixel;
-    XQueryColor(display, DefaultColormap(display, fontPtr->screen), &xcolor);
+    XQueryColor(display, fontPtr->colormap, &xcolor);
 
     fontPtr->colors[last].color.color.red = xcolor.red;
     fontPtr->colors[last].color.color.green = xcolor.green;
@@ -960,9 +965,8 @@ Tk_DrawChars(
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
-    } else {
+		fontPtr->visual, fontPtr->colormap);
+} else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
@@ -1097,10 +1101,9 @@ TkDrawAngledChars(
     int originX, originY;
 
     if (fontPtr->ftDraw == 0) {
-	DEBUG(("Switch to drawable 0x%x\n", drawable));
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
+		fontPtr->visual, fontPtr->colormap);
     } else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
@@ -1216,8 +1219,7 @@ TkDrawAngledChars(
     if (fontPtr->ftDraw == 0) {
 	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
-		DefaultVisual(display, fontPtr->screen),
-		DefaultColormap(display, fontPtr->screen));
+		fontPtr->visual, fontPtr->colormap);
     } else {
 	Tk_ErrorHandler handler =
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
@@ -1347,14 +1349,14 @@ TkDrawAngledChars(
 /*
  *---------------------------------------------------------------------------
  *
- * TkpDrawCharsInContext --
+ * Tk_DrawCharsInContext --
  *
  *	Draw a string of characters on the screen like Tk_DrawChars(), but
  *	with access to all the characters on the line for context. On X11 this
  *	context isn't consulted, so we just call Tk_DrawChars().
  *
  *      Note: TK_DRAW_IN_CONTEXT being currently defined only on macOS, this
- *            function is unused (and possibly unfinished). See [7655f65ae7].
+ *            function is unused.
  *
  * Results:
  *	None.
@@ -1366,7 +1368,7 @@ TkDrawAngledChars(
  */
 
 void
-TkpDrawCharsInContext(
+Tk_DrawCharsInContext(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */

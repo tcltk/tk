@@ -22,11 +22,12 @@
  * they're defined in.
  */
 
-#include "tkIntPlatDecls.h"
+#include "tkIntPlatDecls.h"  /* IWYU pragma: export */
 
 MODULE_SCOPE  int       Tktray_Init (Tcl_Interp* interp);
 MODULE_SCOPE  int       SysNotify_Init (Tcl_Interp* interp);
 MODULE_SCOPE  int       Cups_Init (Tcl_Interp* interp);
+MODULE_SCOPE  int       TkAtkAccessibility_Init (Tcl_Interp *interp) ;
 
 #endif /* _TKUNIXINT */
 

@@ -114,8 +114,9 @@ SquareDoLayout(void *clientData)
 	Ttk_Box b;
 
 	b = Ttk_ElementParcel(squareNode);
-	if (squarePtr->square.anchorObj != NULL)
+	if (squarePtr->square.anchorObj != NULL) {
 	    Tk_GetAnchorFromObj(NULL, squarePtr->square.anchorObj, &anchor);
+	}
 	b = Ttk_AnchorBox(winBox, b.width, b.height, anchor);
 
 	Ttk_PlaceElement(corePtr->layout, squareNode, b);
@@ -133,7 +134,7 @@ static const Ttk_Ensemble SquareCommands[] = {
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "state",	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
@@ -155,7 +156,7 @@ static const WidgetSpec SquareWidgetSpec =
     TtkCoreConfigure,		/* configureProc */
     TtkNullPostConfigure,		/* postConfigureProc */
     TtkWidgetGetLayout,		/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetSize,		/* sizeProc */
     SquareDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
@@ -180,13 +181,13 @@ typedef struct
 static const Ttk_ElementOptionSpec SquareElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER, offsetof(SquareElement,borderObj),
-    	DEFAULT_BACKGROUND },
+	DEFAULT_BACKGROUND },
     { "-foreground", TK_OPTION_BORDER, offsetof(SquareElement,foregroundObj),
-    	DEFAULT_BACKGROUND },
+	DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS, offsetof(SquareElement,borderWidthObj),
-    	DEFAULT_BORDERWIDTH },
+	DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF, offsetof(SquareElement,reliefObj),
-    	"raised" },
+	"raised" },
     { "-width",  TK_OPTION_PIXELS, offsetof(SquareElement,widthObj), "20"},
     { "-height", TK_OPTION_PIXELS, offsetof(SquareElement,heightObj), "20"},
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }

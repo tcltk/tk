@@ -38,7 +38,7 @@ interp alias {} EvalAttached {} consoleinterp eval
 # This procedure constructs and configures the console windows.
 #
 # Arguments:
-# 	None.
+#	None.
 
 proc ::tk::ConsoleInit {} {
     if {![consoleinterp eval {set tcl_interactive}]} {
@@ -145,7 +145,7 @@ proc ::tk::ConsoleInit {} {
     }
     ::ttk::frame .consoleframe -style ConsoleFrame
 
-    set con [text .console -yscrollcommand [list .sb set] -setgrid true \
+    set con [text .console -yscrollcommand [list .sb set] -setgrid 1 \
 		 -borderwidth 0 -highlightthickness 0 -font TkConsoleFont]
     if {[tk windowingsystem] eq "aqua"} {
 	scrollbar .sb -command [list $con yview]
@@ -158,8 +158,13 @@ proc ::tk::ConsoleInit {} {
 
     ConsoleBind $con
 
+    if {[tk windowingsystem] eq "aqua"} {
+	$con tag configure stdin -foreground systemLinkColor
+    } else {
+	$con tag configure stdin -foreground blue
+    }
+
     $con tag configure stderr	-foreground red
-    $con tag configure stdin	-foreground blue
     $con tag configure prompt	-foreground \#8F4433
     $con tag configure proc	-foreground \#008800
     $con tag configure var	-background \#FFC0D0
@@ -215,7 +220,7 @@ proc ::tk::ConsoleSource {} {
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
     if {$filename ne ""} {
-	set cmd [list source -encoding utf-8 $filename]
+	set cmd [list source $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
 	}
@@ -457,9 +462,13 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_ClearLine>>		<Control-u>
 	<<Console_SaveCommand>>		<Control-z>
 	<<Console_FontSizeIncr>>	<Control-+>
+	<<Console_FontSizeIncr>>	<Control-=>
 	<<Console_FontSizeDecr>>	<Control-minus>
+	<<Console_FontSizeDecr>>	<Control-_>
 	<<Console_FontSizeIncr>>	<Command-+>
+	<<Console_FontSizeIncr>>	<Command-=>
 	<<Console_FontSizeDecr>>	<Command-minus>
+	<<Console_FontSizeDecr>>	<Command-_>
     } {
 	event add $ev $key
 	bind Console $key {}
@@ -587,7 +596,7 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <F9> {
 	destroy {*}[winfo children .]
-	source -encoding utf-8 [file join $tk_library console.tcl]
+	source [file join $tk_library console.tcl]
     }
     bind Console <Command-q> {
 	exit
@@ -595,6 +604,27 @@ proc ::tk::ConsoleBind {w} {
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }
     bind Console <<Paste>> { ::tk::console::Paste %W }
+
+    foreach modifier {Control Command} {
+	bind Console <$modifier-MouseWheel> {
+	    if {%D > 0} {
+		event generate %W <<Console_FontSizeIncr>>
+	    } else {
+		event generate %W <<Console_FontSizeDecr>>
+	    }
+	}
+	bind Console <$modifier-TouchpadScroll> {
+	    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+	    # TouchpadScroll events fire about 60 times per second.
+	    if {$tk::Priv(deltaY) != 0 && %# %% 15 == 0} {
+		if {$tk::Priv(deltaY) > 0} {
+		    event generate %W <<Console_FontSizeIncr>>
+		} else {
+		    event generate %W <<Console_FontSizeDecr>>
+		}
+	    }
+	}
+    }
 
     bind Console <<Console_FontSizeIncr>> {
 	set size [font configure TkConsoleFont -size]
@@ -722,7 +752,7 @@ Tk $::tk_patchLevel"
 }
 
 # ::tk::console::Fontchooser* --
-# 	Let the user select the console font (TIP 324).
+#	Let the user select the console font (TIP 324).
 
 proc ::tk::console::FontchooserToggle {} {
     if {[tk fontchooser configure -visible]} {
@@ -795,8 +825,8 @@ proc ::tk::console::TagProc w {
 #
 # Arguments:
 #	w	- console text widget
-# 	c1	- first char of pair
-# 	c2	- second char of pair
+#	c1	- first char of pair
+#	c2	- second char of pair
 #
 # Calls:	::tk::console::Blink
 
@@ -887,9 +917,9 @@ proc ::tk::console::MatchQuote {w {lim 1.0}} {
 #
 # Arguments:
 #	w	- console text widget
-# 	i1	- start index to blink region
-# 	i2	- end index of blink region
-# 	dur	- duration in usecs to blink for
+#	i1	- start index to blink region
+#	i2	- end index of blink region
+#	dur	- duration in usecs to blink for
 #
 # Outputs:
 #	blinks selected characters in $w
@@ -921,7 +951,7 @@ proc ::tk::console::ConstrainBuffer {w size} {
 #
 # Arguments:
 # ARGS:	w	- text widget in which to expand str
-# 	type	- type of expansion (path / proc / variable)
+#	type	- type of expansion (path / proc / variable)
 #
 # Calls:	::tk::console::Expand(Pathname|Procname|Variable)
 #
@@ -1121,7 +1151,7 @@ proc ::tk::console::ExpandVariable str {
 #
 # Arguments:
 #	l	- list to find best unique match in
-# 	e	- currently best known unique match
+#	e	- currently best known unique match
 #
 # Returns:	longest unique match in the list
 

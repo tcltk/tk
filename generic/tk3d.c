@@ -46,14 +46,13 @@ static void		ShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
  * is set.
  */
 
-const TkObjType tkBorderObjType = {
-    {"border",			/* name */
+const Tcl_ObjType tkBorderObjType = {
+    "border",			/* name */
     FreeBorderObjProc,		/* freeIntRepProc */
     DupBorderObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
-    0
+    TCL_OBJTYPE_V0
 };
 
 /*
@@ -89,7 +88,7 @@ Tk_Alloc3DBorderFromObj(
 {
     TkBorder *borderPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType.objType) {
+    if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
     borderPtr = (TkBorder *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -184,7 +183,7 @@ Tk_Get3DBorder(
     Tcl_Interp *interp,		/* Place to store an error message. */
     Tk_Window tkwin,		/* Token for window in which border will be
 				 * drawn. */
-    Tk_Uid colorName)		/* String giving name of color for window
+    const char *colorName)	/* String giving name of color for window
 				 * background. */
 {
     Tcl_HashEntry *hashPtr;
@@ -428,9 +427,7 @@ Tk_Free3DBorder(
 
     prevPtr = (TkBorder *)Tcl_GetHashValue(borderPtr->hashPtr);
     TkpFreeBorder(borderPtr);
-    if (borderPtr->bgColorPtr != NULL) {
-	Tk_FreeColor(borderPtr->bgColorPtr);
-    }
+    Tk_FreeColor(borderPtr->bgColorPtr);
     if (borderPtr->darkColorPtr != NULL) {
 	Tk_FreeColor(borderPtr->darkColorPtr);
     }
@@ -462,7 +459,7 @@ Tk_Free3DBorder(
 	prevPtr->nextPtr = borderPtr->nextPtr;
     }
     if (borderPtr->objRefCount == 0) {
-	ckfree(borderPtr);
+	Tcl_Free(borderPtr);
     }
 }
 
@@ -534,7 +531,7 @@ FreeBorderObj(
 	borderPtr->objRefCount--;
 	if ((borderPtr->objRefCount == 0)
 		&& (borderPtr->resourceRefCount == 0)) {
-	    ckfree(borderPtr);
+	    Tcl_Free(borderPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }
@@ -677,9 +674,10 @@ Tk_GetRelief(
 	relief = TK_RELIEF_SUNKEN;
     } else {
 	if (interp) {
+	    int ambigeous = (c == 'r' || c == 's') && (name[1] == '\0');
 	    Tcl_SetObjResult(interp,
-		    Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
-		    name, "flat, groove, raised, ridge, solid, or sunken"));
+		    Tcl_ObjPrintf("%s relief \"%.50s\": must be %s",
+		    ambigeous ? "ambigeous" : "bad", name, "flat, groove, raised, ridge, solid, or sunken"));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", (char *)NULL);
 	}
 	return TCL_ERROR;
@@ -1204,9 +1202,9 @@ Intersect(
 	q = -q;
     }
     if (p < 0) {
-	iPtr->x = - ((-p + q/2)/q);
+	iPtr->x = (short)(- ((-p + q/2)/q));
     } else {
-	iPtr->x = (p + q/2)/q;
+	iPtr->x = (short)((p + q/2)/q);
     }
     p = (a1Ptr->y*dxadyb - b1Ptr->y*dxbdya + (b1Ptr->x - a1Ptr->x)*dyadyb);
     q = dxadyb - dxbdya;
@@ -1215,9 +1213,9 @@ Intersect(
 	q = -q;
     }
     if (p < 0) {
-	iPtr->y = - ((-p + q/2)/q);
+	iPtr->y = (short)(- ((-p + q/2)/q));
     } else {
-	iPtr->y = (p + q/2)/q;
+	iPtr->y = (short)((p + q/2)/q);
     }
     return 0;
 }
@@ -1252,7 +1250,7 @@ Tk_Get3DBorderFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType.objType) {
+    if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
 
@@ -1344,7 +1342,7 @@ InitBorderObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkBorderObjType.objType;
+    objPtr->typePtr = &tkBorderObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -1421,14 +1419,17 @@ Tk_Get3DBorderColors(
     XColor *darkColorPtr,
     XColor *lightColorPtr)
 {
+    TkBorder *borderPtr = (TkBorder *)border;
+    const XColor *colorPtr = borderPtr->bgColorPtr ;
+
     if (bgColorPtr) {
-	*bgColorPtr = *((TkBorder *)border)->bgColorPtr;
+	*bgColorPtr = *colorPtr;
     }
     if (darkColorPtr) {
-	*darkColorPtr = *((TkBorder *) border)->darkColorPtr;
+	*darkColorPtr = borderPtr->darkColorPtr ? *borderPtr->darkColorPtr : *colorPtr;
     }
     if (lightColorPtr) {
-	*lightColorPtr = *((TkBorder *) border)->lightColorPtr;
+	*lightColorPtr = borderPtr->lightColorPtr ? *borderPtr->lightColorPtr : *colorPtr;
     }
 }
 

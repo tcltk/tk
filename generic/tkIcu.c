@@ -1,8 +1,8 @@
 /*
  * tkIcu.c --
  *
- * 	tkIcu.c implements various Tk commands which can find
- * 	grapheme cluster and workchar bounderies in Unicode strings.
+ *	tkIcu.c implements various Tk commands which can find
+ *	grapheme cluster and workchar bounderies in Unicode strings.
  *
  * Copyright © 2021 Jan Nijtmans
  *
@@ -32,6 +32,7 @@ typedef int32_t	(*fn_icu_following)(void *, int32_t);
 typedef int32_t	(*fn_icu_previous)(void *);
 typedef int32_t	(*fn_icu_next)(void *);
 typedef void	(*fn_icu_setText)(void *, const void *, int32_t, UErrorCodex *);
+typedef int32_t (*fn_icu_canonicalize)(const char *, char *, int32_t, UErrorCodex *);
 
 static struct {
     size_t				nopen;
@@ -43,8 +44,9 @@ static struct {
     fn_icu_previous	previous;
     fn_icu_next	next;
     fn_icu_setText	setText;
+    fn_icu_canonicalize	canonicalize;
 } icu_fns = {
-    0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 #define FLAG_WORD 1
@@ -58,6 +60,7 @@ static struct {
 #define icu_previous		icu_fns.previous
 #define icu_next		icu_fns.next
 #define icu_setText		icu_fns.setText
+#define icu_canonicalize	icu_fns.canonicalize
 
 TCL_DECLARE_MUTEX(icu_mutex);
 
@@ -65,7 +68,7 @@ static int
 startEndOfCmd(
     void *clientData,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tcl_DString ds;
@@ -74,19 +77,22 @@ startEndOfCmd(
     UErrorCodex errorCode = U_ZERO_ERRORZ;
     void *it;
     Tcl_Size idx;
-    int flags = PTR2INT(clientData);
+    int flags = (int)PTR2INT(clientData);
     const uint16_t *ustr;
-    const char *locale = NULL;
+    char locale[128];
 
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
+    locale[0] = '\0';
     if (objc > 3) {
-	locale = Tcl_GetString(objv[3]);
-	if (!*locale) {
-	    locale = NULL;
+	if (!TkObjIsEmpty(objv[3]) && icu_canonicalize) {
+	    icu_canonicalize(Tcl_GetString(objv[3]), locale, sizeof(locale), &errorCode);
+	} else {
+	    strncpy(locale, Tcl_GetString(objv[3]), sizeof(locale));
 	}
+	locale[sizeof(locale) - 1] = '\0';
     }
     Tcl_DStringInit(&ds);
     str = Tcl_GetStringFromObj(objv[1], &len);
@@ -99,24 +105,26 @@ startEndOfCmd(
 	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
-    it = icu_open((UBreakIteratorTypex)(flags&3), locale,
-    		NULL, -1, &errorCode);
+    it = icu_open((UBreakIteratorTypex)(flags&3), locale[0] ? locale : NULL,
+		NULL, -1, &errorCode);
     if (it != NULL) {
 	errorCode = U_ZERO_ERRORZ;
 	ustr = (const uint16_t *)Tcl_DStringValue(&ds);
-	icu_setText(it, ustr, len, &errorCode);
+	icu_setText(it, ustr, (int32_t)len, &errorCode);
     }
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
-    	Tcl_DStringFree(&ds);
-    	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errorcode: %d", (int)errorCode));
-    	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", (char *)NULL);
-    	return TCL_ERROR;
+	Tcl_DStringFree(&ds);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errorcode: %d", (int)errorCode));
+	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", (char *)NULL);
+	return TCL_ERROR;
     }
-    if (idx > 0 && len != ulen) {
+    if (idx >= ulen) {
+	idx = len;
+    } else if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
 	for (Tcl_Size i = 0; i < idx; i++) {
-	    newIdx += 1 + (((newIdx < (Tcl_Size)len-1) && (ustr[newIdx]&0xFC00) == 0xD800) && ((ustr[newIdx+1]&0xFC00) == 0xDC00));
+	    newIdx += 1 + (((newIdx < len-1) && (ustr[newIdx]&0xFC00) == 0xD800) && ((ustr[newIdx+1]&0xFC00) == 0xDC00));
 	}
 	idx = newIdx;
     }
@@ -124,7 +132,7 @@ startEndOfCmd(
 	if ((idx < 0) && (flags & FLAG_WORD)) {
 	    idx = 0;
 	}
-	idx = icu_following(it, idx);
+	idx = icu_following(it, (int32_t)idx);
 	if ((flags & FLAG_WORD) && idx >= len) {
 	    idx = -1;
 	}
@@ -132,7 +140,7 @@ startEndOfCmd(
 	if (!(flags & FLAG_WORD)) {
 	    idx += 1 + (((ustr[idx]&0xFC00) == 0xD800) && ((ustr[idx+1]&0xFC00) == 0xDC00));
 	}
-	idx = icu_preceding(it, idx);
+	idx = icu_preceding(it, (int32_t)idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
 	    flags &= ~FLAG_WORD; /* If 0 is reached here, don't do a further search */
 	}
@@ -158,7 +166,7 @@ startEndOfCmd(
 	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
 	    Tcl_Size newIdx = 1;
 	    for (Tcl_Size i = 1; i < idx; i++) {
-    	if (((ustr[i-1]&0xFC00) != 0xD800) || ((ustr[i]&0xFC00) != 0xDC00)) newIdx++;
+	if (((ustr[i-1]&0xFC00) != 0xD800) || ((ustr[i]&0xFC00) != 0xDC00)) newIdx++;
 	    }
 	    idx = newIdx;
 	}
@@ -285,27 +293,36 @@ Icu_Init(
 	    icu_fns.name = (fn_icu_ ## name)				\
 		Tcl_FindSymbol(NULL, icu_fns.lib, symbol)
 	    ICU_SYM(open);
+	    if (!icu_fns.open && *icuversion) {
+		/* FreeBSD doesn't append the ICU version to the symbol name, see [1da19a69f8] */
+		*icuversion = 0;
+		ICU_SYM(open); /* try again without version suffix */
+	    }
 	    ICU_SYM(close);
 	    ICU_SYM(preceding);
 	    ICU_SYM(following);
 	    ICU_SYM(previous);
 	    ICU_SYM(next);
 	    ICU_SYM(setText);
+	    strcpy(symbol, "uloc_canonicalize");
+	    strcat(symbol, icuversion);
+	    icu_fns.canonicalize = (fn_icu_canonicalize)
+		    Tcl_FindSymbol(NULL, icu_fns.lib, symbol);
 #undef ICU_SYM
 	}
     }
     Tcl_MutexUnlock(&icu_mutex);
 
     if (icu_fns.lib != NULL) {
-	Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startEndOfCmd,
 		INT2PTR(0), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::startOfNextWord", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::startOfNextWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::startOfPreviousWord", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::startOfPreviousWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::endOfCluster", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", startEndOfCmd,
 		INT2PTR(FLAG_FOLLOWING), icuCleanup);
-	Tcl_CreateObjCommand(interp, "::tk::endOfWord", startEndOfCmd,
+	Tcl_CreateObjCommand2(interp, "::tk::endOfWord", startEndOfCmd,
 		INT2PTR(FLAG_WORD|FLAG_FOLLOWING|FLAG_SPACE), icuCleanup);
     icu_fns.nopen += 5;
     }

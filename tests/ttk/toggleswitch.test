@@ -1,0 +1,154 @@
+#
+# ttk::toggleswitch widget tests
+#
+
+# NOTES
+#
+# * Many tests in this test file build upon a previous one. This occurs
+#   systematically for groups of contiguous tests sharing the same major
+#   test number. All test files for ttk widgets exhibit this practice.
+#
+#   As a consequence, attempts to run tests selectively/individually using the
+#   tcltest options "-match", "-skip" or "-limitconstraints 1" lead to
+#   unexpected failures. Therefore, invocations using these options should be
+#   considered as "de facto invalid" for the ttk test suite.
+#
+#   As an exception, using "-match" or "-skip" to select or deselect entire
+#   groups of contiguous tests does not seem to raise problems.
+#
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed for "-singleproc 0"
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+#
+# TESTS
+#
+
+test toggleswitch-1.1 "Toggleswitch" -body {
+    pack [ttk::toggleswitch .sw -variable sw]
+}
+
+test toggleswitch-1.2 "Toggleswitch toggle" -body {
+    .sw toggle
+    list [set sw] [.sw instate selected] [expr {[.sw get] == [.sw get max]}]
+} -result [list 1 1 1]
+
+test toggleswitch-1.3 "Toggleswitch switchstate" -body {
+    .sw switchstate 0
+    list [set sw] [.sw instate selected] [expr {[.sw get] == [.sw get min]}]
+} -result [list 0 0 1]
+
+test toggleswitch-1.4 "Toggleswitch variable" -body {
+    set result [list]
+    set sw 1
+    lappend result [.sw instate selected] [expr {[.sw get] == [.sw get max]}]
+    set sw 0
+    lappend result [.sw instate selected] [expr {[.sw get] == [.sw get min]}]
+} -result {1 1 0 1}
+
+test toggleswitch-1.5 "Unset toggleswitch variable" -body {
+    set result [list]
+    unset sw
+    lappend result [.sw instate invalid] [info exists sw]
+    set sw 1
+    lappend result [.sw instate invalid] [info exists sw]
+} -cleanup {
+    destroy .sw
+} -result {1 0 0 1}
+
+test toggleswitch-1.6 "Toggleswitch default variable" -body {
+    set result [list]
+    ttk::toggleswitch .sw -onvalue on -offvalue off
+    lappend result [.sw cget -variable] [info exists .sw] [.sw state]
+    .sw toggle
+    lappend result [info exists .sw] [set .sw] [.sw state]
+    .sw toggle
+    lappend result [info exists .sw] [set .sw] [.sw state]
+} -cleanup {
+    destroy .sw
+} -result [list .sw 0 invalid  1 on selected  1 off {}]
+
+test toggleswitch-1.7 "Toggleswitch empty variable" -body {
+    # shall simply not crash
+    ttk::toggleswitch .sw -variable {}
+    .sw toggle
+} -cleanup {
+    destroy .sw
+} -result {}
+
+test toggleswitch-2.1 "-size option" -body {
+    ttk::toggleswitch .sw -size 1
+    set w1 [winfo reqwidth .sw]; set h1 [winfo reqheight .sw]
+    .sw configure -size 2
+    set w2 [winfo reqwidth .sw]; set h2 [winfo reqheight .sw]
+    .sw configure -size 3
+    set w3 [winfo reqwidth .sw]; set h3 [winfo reqheight .sw]
+    list [expr {$w1 < $w2 && $h1 < $h2}] [expr {$w2 < $w3 && $h2 < $h3}]
+} -cleanup {
+    destroy .sw
+} -result {1 1}
+
+test toggleswitch-2.2 "default -size and -style option values" -body {
+    ttk::toggleswitch .sw
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {2 Toggleswitch2 Toggleswitch2 Toggleswitch}
+
+test toggleswitch-2.3 "-size and -style options" -body {
+    ttk::toggleswitch .sw -size 3 -style My.Toggleswitch3
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {3 My.Toggleswitch3 My.Toggleswitch3 Toggleswitch}
+
+test toggleswitch-2.4 "-style option" -body {
+    ttk::toggleswitch .sw
+    .sw configure -style My.Toggleswitch3
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {3 My.Toggleswitch3 My.Toggleswitch3 Toggleswitch}
+
+test toggleswitch-2.5 "-size option takes precedence over -style" -body {
+    ttk::toggleswitch .sw -style My.Toggleswitch3	;# intentionally 3
+    list [.sw cget -size] [.sw cget -style] [.sw style] [winfo class .sw]
+} -cleanup {
+    destroy .sw
+} -result {2 My.Toggleswitch2 My.Toggleswitch2 Toggleswitch}
+
+test toggleswitch-3.1 "switchstate triggers the associated cmd" -body {
+    ttk::toggleswitch .sw -command { expr {10 * [.sw switchstate]} }
+    .sw switchstate 1
+} -result 10
+
+test toggleswitch-3.2 "toggle triggers the associated cmd" -body {
+    .sw toggle
+} -result 0
+
+test toggleswitch-3.3 "changing the variable doesn't trigger the cmd" -body {
+    .sw configure -offvalue OFF -onvalue ON -variable var
+    set var ON
+} -cleanup {
+    destroy .sw
+} -result ON
+
+#
+# TESTFILE CLEANUP
+#
+
+tcltest::cleanupTests

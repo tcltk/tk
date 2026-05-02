@@ -15,7 +15,7 @@ wm title $w "Themed Spinbox Demonstration"
 wm iconname $w "ttkspin"
 positionWindow $w
 
-label $w.msg -font $font -wraplength 5i -justify left -text "Three different\
+ttk::label $w.msg -font $font -wraplength 5i -justify left -text "Three different\
 	themed spin-boxes are displayed below.  You can add characters by\
 	pointing, clicking and typing.  The normal Motif editing characters\
 	are supported, along with many Emacs bindings.  For example, Backspace\
@@ -31,6 +31,10 @@ pack $w.msg -side top
 ## See Code / Dismiss buttons
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
+
+ttk::frame $w.f
+pack $w.f -fill both -expand 1
+set w $w.f
 
 set australianCities {
     Canberra Sydney Melbourne Perth Adelaide Brisbane

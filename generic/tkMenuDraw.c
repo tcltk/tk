@@ -620,7 +620,6 @@ DisplayMenu(
     TkMenuEntry *mePtr;
     Tk_Window tkwin = menuPtr->tkwin;
     Tcl_Size index;
-    int strictMotif;
     Tk_Font tkfont;
     Tk_FontMetrics menuMetrics;
     int width;
@@ -633,7 +632,7 @@ DisplayMenu(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 	    &borderWidth);
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
 
@@ -643,7 +642,10 @@ DisplayMenu(
 		Tk_Height(tkwin) - 2 * borderWidth, 0, TK_RELIEF_FLAT);
     }
 
-    strictMotif = Tk_StrictMotif(menuPtr->tkwin);
+    DrawMenuFlags drawingParameters = DRAW_MENU_ENTRY_ARROW;
+    if (Tk_StrictMotif(menuPtr->tkwin)) {
+	drawingParameters = (DrawMenuFlags)(drawingParameters | DRAW_MENU_ENTRY_STRICTMOTIF);
+    }
 
     /*
      * See note in ComputeMenuGeometry. We don't want to be doing font metrics
@@ -668,27 +670,27 @@ DisplayMenu(
 
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
 		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
-		mePtr->height, strictMotif, 1);
+		mePtr->height, drawingParameters);
 
-        if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
+	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
 
-            /*
-             * Paint the area at the right of an entry in the last column.
-             * This has zero width except after menu resizing.
-             */
+	    /*
+	     * Paint the area at the right of an entry in the last column.
+	     * This has zero width except after menu resizing.
+	     */
 
-            Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
-                    mePtr->x + mePtr->width, mePtr->y,
-                    Tk_Width(tkwin) - mePtr->x - mePtr->width - borderWidth,
-                    mePtr->height, 0, TK_RELIEF_FLAT);
-        }
+	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
+		    mePtr->x + mePtr->width, mePtr->y,
+		    Tk_Width(tkwin) - mePtr->x - mePtr->width - borderWidth,
+		    mePtr->height, 0, TK_RELIEF_FLAT);
+	}
 
 	if ((index > 0) && (menuPtr->menuType != MENUBAR)
 		&& mePtr->columnBreak) {
 
-            /*
-             * Paint the area under the last entry in a column.
-             */
+	    /*
+	     * Paint the area under the last entry in a column.
+	     */
 
 	    mePtr = menuPtr->entries[index - 1];
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
@@ -708,9 +710,9 @@ DisplayMenu(
 	} else {
 	    mePtr = menuPtr->entries[menuPtr->numEntries - 1];
 
-            /*
-             * Paint the area under the last entry of the menu.
-             */
+	    /*
+	     * Paint the area under the last entry of the menu.
+	     */
 
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
 		border, mePtr->x, mePtr->y + mePtr->height, mePtr->width,
@@ -722,10 +724,10 @@ DisplayMenu(
 	    height = Tk_Height(tkwin) - y - borderWidth;
 	}
 
-        /*
-         * Paint the area at the bottom right of the last entry.
-         * This has zero width except after menu resizing.
-         */
+	/*
+	 * Paint the area at the bottom right of the last entry.
+	 * This has zero width except after menu resizing.
+	 */
 
 	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, x, y,
 		width, height, 0, TK_RELIEF_FLAT);
@@ -988,14 +990,16 @@ AdjustMenuCoords(
 	*yPtr += mePtr->y + mePtr->height;
     } else {
 	int borderWidth, activeBorderWidth;
+	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
+	int scaled2 = (int)round(2*scalingLevel);
 
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	*xPtr += Tk_Width(menuPtr->tkwin) - borderWidth	- activeBorderWidth
-		- 2;
-	*yPtr += mePtr->y + activeBorderWidth + 2;
+		- scaled2;
+	*yPtr += mePtr->y + activeBorderWidth + scaled2;
     }
 }
 

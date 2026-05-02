@@ -48,7 +48,7 @@ typedef struct {
 TkBorder *
 TkpGetBorder(void)
 {
-    UnixBorder *borderPtr = (UnixBorder *)ckalloc(sizeof(UnixBorder));
+    UnixBorder *borderPtr = (UnixBorder *)Tcl_Alloc(sizeof(UnixBorder));
 
     borderPtr->solidGC = NULL;
     return (TkBorder *) borderPtr;
@@ -446,7 +446,7 @@ TkpGetShadows(
 
     if (borderPtr->shadow == None) {
 	borderPtr->shadow = Tk_GetBitmap(NULL, tkwin,
-		Tk_GetUid("gray50"));
+		"gray50");
 	if (borderPtr->shadow == None) {
 	    Tcl_Panic("TkpGetShadows couldn't allocate bitmap for border");
 	}

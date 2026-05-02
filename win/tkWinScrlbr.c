@@ -50,7 +50,7 @@ typedef struct WinScrollbar {
  * Cached system metrics used to determine scrollbar geometry.
  */
 
-static int initialized = 0;
+static bool initialized = false;
 static int hArrowWidth, hThumb; /* Horizontal control metrics. */
 static int vArrowHeight, vThumb; /* Vertical control metrics. */
 
@@ -76,7 +76,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,			/* worldChangedProc */
     CreateProc,			/* createProc */
-    NULL 			/* modalProc */
+    NULL			/* modalProc */
 };
 
 static void
@@ -117,11 +117,11 @@ TkpCreateScrollbar(
     if (!initialized) {
 	Tcl_MutexLock(&winScrlbrMutex);
 	UpdateScrollbarMetrics();
-	initialized = 1;
+	initialized = true;
 	Tcl_MutexUnlock(&winScrlbrMutex);
     }
 
-    scrollPtr = (WinScrollbar *)ckalloc(sizeof(WinScrollbar));
+    scrollPtr = (WinScrollbar *)Tcl_Alloc(sizeof(WinScrollbar));
     scrollPtr->winFlags = 0;
     scrollPtr->hwnd = NULL;
 
@@ -388,6 +388,7 @@ TkpComputeScrollbarGeometry(
 				 * changed. */
 {
     int fieldLength, minThumbSize;
+    int width;
 
     /*
      * Windows doesn't use focus rings on scrollbars, but we still perform
@@ -403,7 +404,7 @@ TkpComputeScrollbarGeometry(
 	fieldLength = Tk_Width(scrollPtr->tkwin);
 	minThumbSize = hThumb;
     }
-    fieldLength -= 2*scrollPtr->arrowLength;
+    fieldLength -= 2 * scrollPtr->arrowLength;
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
@@ -440,12 +441,13 @@ TkpComputeScrollbarGeometry(
      * window, if any). Then arrange for the window to be redisplayed.
      */
 
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->widthObj, &width);
     if (scrollPtr->vertical) {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		scrollPtr->width, 2*scrollPtr->arrowLength + minThumbSize);
+		width, 2 * scrollPtr->arrowLength + minThumbSize);
     } else {
 	Tk_GeometryRequest(scrollPtr->tkwin,
-		2*scrollPtr->arrowLength + minThumbSize, scrollPtr->width);
+		2 * scrollPtr->arrowLength + minThumbSize, width);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, 0);
 }
@@ -504,14 +506,13 @@ ScrollbarProc(
 	 * Bail out immediately if there isn't a command to invoke.
 	 */
 
-	if (scrollPtr->info.commandSize == 0) {
+	if (!scrollPtr->info.commandObj) {
 	    Tcl_ServiceAll();
 	    return 0;
 	}
 
 	Tcl_DStringInit(&cmdString);
-	Tcl_DStringAppend(&cmdString, scrollPtr->info.command,
-		scrollPtr->info.commandSize);
+	Tcl_DStringAppend(&cmdString, Tcl_GetString(scrollPtr->info.commandObj), TCL_INDEX_NONE);
 
 	if (command == SB_LINELEFT || command == SB_LINERIGHT) {
 	    Tcl_DStringAppendElement(&cmdString, "scroll");
@@ -600,7 +601,7 @@ TkpConfigureScrollbar(
  *
  *	This function is invoked in response to a ButtonPress event.
  *	It resends the event to the Scrollbar window procedure,
- * 	which in turn enters a modal loop.
+ *	which in turn enters a modal loop.
  *
  *----------------------------------------------------------------------
  */

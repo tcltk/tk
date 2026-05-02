@@ -2,13 +2,13 @@
  * Copyright 2004, Joe English.
  *
  * Usage:
- * 	TtkBlinkCursor(corePtr), usually called in a widget's Init hook,
- * 	arranges to periodically toggle the corePtr->flags CURSOR_ON bit
- * 	on and off (and schedule a redisplay) whenever the widget has focus.
+ *	TtkBlinkCursor(corePtr), usually called in a widget's Init hook,
+ *	arranges to periodically toggle the corePtr->flags CURSOR_ON bit
+ *	on and off (and schedule a redisplay) whenever the widget has focus.
  *
- * 	Note: Widgets may have additional logic to decide whether
- * 	to display the cursor or not (e.g., readonly or disabled states);
- * 	TtkBlinkCursor() does not account for this.
+ *	Note: Widgets may have additional logic to decide whether
+ *	to display the cursor or not (e.g., readonly or disabled states);
+ *	TtkBlinkCursor() does not account for this.
  *
  */
 
@@ -23,14 +23,14 @@
  */
 typedef struct
 {
-    WidgetCore		*owner; 	/* Widget that currently has cursor */
+    WidgetCore		*owner;	/* Widget that currently has cursor */
     Tcl_TimerToken	timer;		/* Blink timer */
-    int 		onTime;		/* #milliseconds to blink cursor on */
-    int 		offTime;	/* #milliseconds to blink cursor off */
+    int		onTime;		/* #milliseconds to blink cursor on */
+    int		offTime;	/* #milliseconds to blink cursor off */
 } CursorManager;
 
 /* CursorManagerDeleteProc --
- * 	InterpDeleteProc for cursor manager.
+ *	InterpDeleteProc for cursor manager.
  */
 static void CursorManagerDeleteProc(
     void *clientData,
@@ -41,11 +41,11 @@ static void CursorManagerDeleteProc(
     if (cm->timer) {
 	Tcl_DeleteTimerHandler(cm->timer);
     }
-    ckfree(clientData);
+    Tcl_Free(clientData);
 }
 
 /* GetCursorManager --
- * 	Look up and create if necessary the interp's cursor manager.
+ *	Look up and create if necessary the interp's cursor manager.
  */
 static CursorManager *GetCursorManager(Tcl_Interp *interp)
 {
@@ -56,7 +56,7 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
     int intValue;
 
     if (!cm) {
-	cm = (CursorManager *)ckalloc(sizeof(*cm));
+	cm = (CursorManager *)Tcl_Alloc(sizeof(*cm));
 	cm->timer = 0;
 	cm->owner = 0;
 	cm->onTime = DEF_CURSOR_ON_TIME;
@@ -97,7 +97,7 @@ CursorBlinkProc(void *clientData)
     int blinkTime;
 
     if (cm->owner->flags & CURSOR_ON) {
-	cm->owner->flags &= ~CURSOR_ON;
+	cm->owner->flags &= ~(unsigned)CURSOR_ON;
 	blinkTime = cm->offTime;
     } else {
 	cm->owner->flags |= CURSOR_ON;
@@ -108,12 +108,12 @@ CursorBlinkProc(void *clientData)
 }
 
 /* LoseCursor --
- * 	Turn cursor off, disable blink timer.
+ *	Turn cursor off, disable blink timer.
  */
 static void LoseCursor(CursorManager *cm, WidgetCore *corePtr)
 {
     if (corePtr->flags & CURSOR_ON) {
-	corePtr->flags &= ~CURSOR_ON;
+	corePtr->flags &= ~(unsigned)CURSOR_ON;
 	TtkRedisplayWidget(corePtr);
     }
     if (cm->owner == corePtr) {
@@ -126,14 +126,16 @@ static void LoseCursor(CursorManager *cm, WidgetCore *corePtr)
 }
 
 /* ClaimCursor --
- * 	Claim ownership of the insert cursor and blink on.
+ *	Claim ownership of the insert cursor and blink on.
  */
 static void ClaimCursor(CursorManager *cm, WidgetCore *corePtr)
 {
-    if (cm->owner == corePtr)
+    if (cm->owner == corePtr) {
 	return;
-    if (cm->owner)
+    }
+    if (cm->owner) {
 	LoseCursor(cm, cm->owner);
+    }
 
     corePtr->flags |= CURSOR_ON;
     TtkRedisplayWidget(corePtr);
@@ -144,9 +146,9 @@ static void ClaimCursor(CursorManager *cm, WidgetCore *corePtr)
 
 /*
  * CursorEventProc --
- * 	Event handler for FocusIn and FocusOut events;
- * 	claim/lose ownership of the insert cursor when the widget
- * 	acquires/loses keyboard focus.
+ *	Event handler for FocusIn and FocusOut events;
+ *	claim/lose ownership of the insert cursor when the widget
+ *	acquires/loses keyboard focus.
  */
 
 #define CursorEventMask (FocusChangeMask|StructureNotifyMask)
@@ -161,18 +163,21 @@ CursorEventProc(void *clientData, XEvent *eventPtr)
 
     switch (eventPtr->type) {
 	case DestroyNotify:
-	    if (cm->owner == corePtr)
+	    if (cm->owner == corePtr) {
 		LoseCursor(cm, corePtr);
+	    }
 	    Tk_DeleteEventHandler(
 		corePtr->tkwin, CursorEventMask, CursorEventProc, clientData);
 	    break;
 	case FocusIn:
-	    if (RealFocusEvent(eventPtr->xfocus.detail))
+	    if (RealFocusEvent(eventPtr->xfocus.detail)) {
 		ClaimCursor(cm, corePtr);
+	    }
 	    break;
 	case FocusOut:
-	    if (RealFocusEvent(eventPtr->xfocus.detail))
+	    if (RealFocusEvent(eventPtr->xfocus.detail)) {
 		LoseCursor(cm, corePtr);
+	    }
 	    break;
     }
 }
@@ -181,24 +186,26 @@ void TtkSetBlinkCursorOnTime(Tcl_Interp* interp, int onTime)
 {
     CursorManager* cm = GetCursorManager(interp);
 
-    if (onTime >= 0)
+    if (onTime >= 0) {
 	cm->onTime = onTime;
+    }
 }
 
 void TtkSetBlinkCursorOffTime(Tcl_Interp* interp, int offTime)
 {
     CursorManager* cm = GetCursorManager(interp);
 
-    if (offTime >= 0)
+    if (offTime >= 0) {
 	cm->offTime = offTime;
+    }
 }
 
 /*
  * TtkSetBlinkCursorTimes --
- * 	Set cursor blink on and off times from the "." style defaults
- * 	-insertontime and -insertofftime - For instance to set cursor
- * 	blinking off:
- * 	    ttk::style configure . -insertofftime 0
+ *	Set cursor blink on and off times from the "." style defaults
+ *	-insertontime and -insertofftime - For instance to set cursor
+ *	blinking off:
+ *	    ttk::style configure . -insertofftime 0
  */
 void TtkSetBlinkCursorTimes(Tcl_Interp* interp)
 {
@@ -222,8 +229,8 @@ void TtkSetBlinkCursorTimes(Tcl_Interp* interp)
 }
 /*
  * TtkBlinkCursor (main routine) --
- * 	Arrange to blink the cursor on and off whenever the
- * 	widget has focus.
+ *	Arrange to blink the cursor on and off whenever the
+ *	widget has focus.
  */
 void TtkBlinkCursor(WidgetCore *corePtr)
 {

@@ -236,7 +236,7 @@ However, if the \fB\-fill\fR option is \fBx\fR or \fBboth\fR
 then the width of the content is expanded to fill the width of the parcel,
 minus twice the \fB\-padx\fR option.
 If the \fB\-fill\fR option is \fBy\fR or \fBboth\fR
-then the height of the content is expanded to fill the width of the parcel,
+then the height of the content is expanded to fill the height of the parcel,
 minus twice the \fB\-pady\fR option.
 .IP [3]
 The packer positions the content over its parcel.

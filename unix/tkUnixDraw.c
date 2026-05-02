@@ -43,8 +43,8 @@ static Tk_RestrictProc ScrollRestrictProc;
  *	information in the specified Region.
  *
  * Results:
- *	Returns 0 if no damage additional damage was generated. Sets damageRgn
- *	to contain the damaged areas and returns 1 if GraphicsExpose events
+ *	Returns false if no damage additional damage was generated. Sets damageRgn
+ *	to contain the damaged areas and returns true if GraphicsExpose events
  *	were detected.
  *
  * Side effects:
@@ -54,7 +54,7 @@ static Tk_RestrictProc ScrollRestrictProc;
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
     GC gc,			/* GC for window to be scrolled. */
@@ -90,11 +90,7 @@ TkScrollWindow(
     }
     Tk_RestrictEvents(prevProc, prevArg, &prevArg);
 
-    if (XEmptyRegion(damageRgn)) {
-	return 0;
-    } else {
-	return 1;
-    }
+    return !XEmptyRegion(damageRgn);
 }
 
 /*
@@ -137,10 +133,10 @@ ScrollRestrictProc(
     if (eventPtr->type == NoExpose) {
 	info->done = 1;
     } else if (eventPtr->type == GraphicsExpose) {
-	rect.x = eventPtr->xgraphicsexpose.x;
-	rect.y = eventPtr->xgraphicsexpose.y;
-	rect.width = eventPtr->xgraphicsexpose.width;
-	rect.height = eventPtr->xgraphicsexpose.height;
+	rect.x = (short)eventPtr->xgraphicsexpose.x;
+	rect.y = (short)eventPtr->xgraphicsexpose.y;
+	rect.width = (unsigned short)eventPtr->xgraphicsexpose.width;
+	rect.height = (unsigned short)eventPtr->xgraphicsexpose.height;
 	XUnionRectWithRegion(&rect, info->region,
 		info->region);
 
@@ -156,14 +152,14 @@ ScrollRestrictProc(
 	 * area as damaged.
 	 */
 
-	rect.x = eventPtr->xexpose.x;
-	rect.y = eventPtr->xexpose.y;
-	rect.width = eventPtr->xexpose.width;
-	rect.height = eventPtr->xexpose.height;
+	rect.x = (short)eventPtr->xexpose.x;
+	rect.y = (short)eventPtr->xexpose.y;
+	rect.width = (unsigned short)eventPtr->xexpose.width;
+	rect.height = (unsigned short)eventPtr->xexpose.height;
 	XUnionRectWithRegion(&rect, info->region,
 		info->region);
-	rect.x += info->dx;
-	rect.y += info->dy;
+	rect.x += (short)info->dx;
+	rect.y += (short)info->dy;
 	XUnionRectWithRegion(&rect, info->region,
 		info->region);
     } else {

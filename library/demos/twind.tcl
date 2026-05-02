@@ -30,7 +30,7 @@ pack $btns -side bottom -fill x
 
 frame $w.f -highlightthickness 1 -borderwidth 1 -relief sunken
 set t $w.f.text
-text $t -yscrollcommand "$w.scroll set" -setgrid true -font $font -width 70 \
+text $t -yscrollcommand "$w.scroll set" -font $font -width 70 \
 	-height 35 -wrap word -highlightthickness 0 -borderwidth 0
 pack $t -expand  yes -fill both
 ttk::scrollbar $w.scroll -command "$t yview"
@@ -353,6 +353,6 @@ proc textSplitWindow {textW} {
 	    $w.pane add $t -stretch always
 	}
     } else {
-        return
+	return
     }
 }

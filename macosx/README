@@ -183,6 +183,15 @@ environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
 cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
 Wish remotely, they will be left open and then Wish & gdb will fight for stdin.
 
+- The Aqua port also supports the environment variable TK_NO_STDERR which, if set
+to a non-empty value, causes stderr to be redirected to /dev/null.  This is
+convenient because Apple sometimes releases a new OS without removing all of
+their commands which log debugging information.  Log messages are written to
+stderr, and hence printed in the terminal, when wish or tclsh is started from
+the terminal, or when running the tests. The messages are not only annoying,
+they can also cause tests to fail if a debugging message is written to stderr
+while a test is running tktest as a subprocess with exec or open.
+
 3. FullScreen, Split View and Tabbed Windows
 --------------------------------------------
 
@@ -361,17 +370,10 @@ The following build configurations are available:
 The Xcode projects refer to the toplevel tcl and tk source directories via the
 the TCL_SRCROOT and TK_SRCROOT user build settings, by default these are set to
 the project-relative paths '../../tcl' and '../../tk', if your source
-directories are named differently, e.g. '../../tcl8.7' and '../../tk8.7', you
+directories are named differently, e.g. '../../tcl9.1' and '../../tk9.1', you
 need to manually change the TCL_SRCROOT and TK_SRCROOT settings by editing your
 ${USER}.pbxuser file (located inside the Tk.xcodeproj bundle directory) with a
 text editor.
-
-- To enable weak-linking, set the MACOSX_DEPLOYMENT_TARGET environment variable
-to the minimal OS version the binaries should be able to run on, e.g:
-	export MACOSX_DEPLOYMENT_TARGET=10.6
-This requires at least gcc 3.1; with gcc 4 or later, set/add to CFLAGS instead:
-	export CFLAGS="-mmacosx-version-min=10.6"
-Support for weak-linking was added with 8.4.14/8.5a5.
 
 Detailed Instructions for building with macosx/GNUmakefile
 ----------------------------------------------------------
@@ -386,12 +388,12 @@ trees in a common parent directory.
 
 - The following instructions assume the Tcl and Tk source trees are named
 "tcl${ver}" and "tk${ver}" (where ${ver} is a shell variable containing the
-Tcl/Tk version number, e.g. '8.7').
+Tcl/Tk version number, e.g. '9.0').
 Setup this shell variable as follows:
-	ver="8.7"
+	ver="9.0"
 
-- Setup environment variables as desired, e.g. for a universal build on 10.5:
-	CFLAGS="-arch x86_64 -arch arm64 -mmacosx-version-min=10.5"
+- Setup environment variables as desired, e.g. for a universal build on 10.9:
+	CFLAGS="-arch x86_64 -arch arm64 -mmacosx-version-min=10.9"
 	export CFLAGS
 
 - Change to the directory containing the Tcl and Tk source trees and build:
@@ -459,7 +461,7 @@ the shared library and set the DESTDIR variable to the pathname of a staging
 directory where the frameworks will be written.  The Tcl framework must be
 built first.
 For example, running the commands:
-	make -C ../tcl8.7/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
+	make -C ../tcl9.0/macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
 	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tcl.framework
 	make -C macosx install-embedded SUBFRAMEWORK=1 DESTDIR=/tmp/tcltk \
 	DYLIB_INSTALL_DIR=/Library/Frameworks/Some.framework/Versions/X.Y/Frameworks/Tk.framework
@@ -516,17 +518,6 @@ The event collection process consists of first calling a platform
 specific SetupProc and then a platform specific CheckProc.  In
 the macOS port, these are named TkMacOSXEventsSetupProc and
 TkMacOSXEventsCheckProc.
-
-It is important to understand that the Apple window manager does not
-have the concept of an expose event.  Their replacement for an expose
-event is to have the window manager call the [NSView drawRect] method
-in any situation where an expose event for that NSView would be
-generated in X11.  The [NSView drawRect] method is a no-op which is
-expected to be overridden by any application.  In the case of Tcl, the
-replacement [NSView drawRect] method creates a Tcl expose event
-for each dirty rectangle of the NSView, and then adds the expose
-event to the Tcl queue.
-
 
 5.2 Autorelease pools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -678,7 +669,7 @@ conditional code which is only used for macOS.
 
 The 10.14 release added support for system appearance changes,
 including a "Dark Mode" that renders all window frames and menus in
-dark colors. Tk 8.7 provides three virtual events <<LightAqua>>,
+dark colors. Tk 9.0 provides three virtual events <<LightAqua>>,
 <<DarkAqua>> and <<AppearanceChanged>>, to allow you to update your Tk
 app's appearance when the system appearance changes.  These events are
 generated in [NSView effectiveAppearanceChanged], which is called by

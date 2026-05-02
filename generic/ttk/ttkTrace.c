@@ -14,7 +14,7 @@
 struct TtkTraceHandle_
 {
     Tcl_Interp		*interp;	/* Containing interpreter */
-    Tcl_Obj 		*varnameObj;	/* Name of variable being traced */
+    Tcl_Obj		*varnameObj;	/* Name of variable being traced */
     Ttk_TraceProc	callback;	/* Callback procedure */
     void		*clientData;	/* Data to pass to callback */
 };
@@ -25,7 +25,7 @@ struct TtkTraceHandle_
 static char *
 VarTraceProc(
     void *clientData,	/* Widget record pointer */
-    Tcl_Interp *interp, 	/* Interpreter containing variable. */
+    Tcl_Interp *interp,	/* Interpreter containing variable. */
     TCL_UNUSED(const char *),	/* name1 */
     TCL_UNUSED(const char *),	/* name2 */
     int flags)			/* Information about what happened. */
@@ -51,7 +51,7 @@ VarTraceProc(
 	 */
 	if (tracePtr->interp == NULL) {
 	    Tcl_DecrRefCount(tracePtr->varnameObj);
-	    ckfree(tracePtr);
+	    Tcl_Free(tracePtr);
 	    return NULL;
 	}
 	Tcl_TraceVar2(interp, name, NULL,
@@ -72,12 +72,12 @@ VarTraceProc(
 }
 
 /* Ttk_TraceVariable(interp, varNameObj, callback, clientdata) --
- * 	Attach a write trace to the specified variable,
- * 	which will pass the variable's value to 'callback'
- * 	whenever the variable is set.
+ *	Attach a write trace to the specified variable,
+ *	which will pass the variable's value to 'callback'
+ *	whenever the variable is set.
  *
- * 	When the variable is unset, passes NULL to the callback
- * 	and reattaches the trace.
+ *	When the variable is unset, passes NULL to the callback
+ *	and reattaches the trace.
  */
 Ttk_TraceHandle *Ttk_TraceVariable(
     Tcl_Interp *interp,
@@ -85,7 +85,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
     Ttk_TraceProc callback,
     void *clientData)
 {
-    Ttk_TraceHandle *h = (Ttk_TraceHandle *)ckalloc(sizeof(*h));
+    Ttk_TraceHandle *h = (Ttk_TraceHandle *)Tcl_Alloc(sizeof(*h));
     int status;
 
     h->interp = interp;
@@ -100,7 +100,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
 
     if (status != TCL_OK) {
 	Tcl_DecrRefCount(h->varnameObj);
-	ckfree(h);
+	Tcl_Free(h);
 	return NULL;
     }
 
@@ -109,7 +109,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
 
 /*
  * Ttk_UntraceVariable --
- * 	Remove previously-registered trace and free the handle.
+ *	Remove previously-registered trace and free the handle.
  */
 void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 {
@@ -154,15 +154,15 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		VarTraceProc, h);
 	Tcl_DecrRefCount(h->varnameObj);
-	ckfree(h);
+	Tcl_Free(h);
     }
 }
 
 /*
  * Ttk_FireTrace --
- * 	Executes a trace handle as if the variable has been written.
+ *	Executes a trace handle as if the variable has been written.
  *
- * 	Note: may reenter the interpreter.
+ *	Note: may reenter the interpreter.
  */
 int Ttk_FireTrace(Ttk_TraceHandle *tracePtr)
 {

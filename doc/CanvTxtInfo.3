@@ -37,22 +37,26 @@ typedef struct {
     int \fIselBorderWidth\fR;
     XColor *\fIselFgColorPtr\fR;
     Tk_Item *\fIselItemPtr\fR;
-    int \fIselectFirst\fR;
-    int \fIselectLast\fR;
+    Tcl_Size \fIselectFirst\fR;
+    Tcl_Size \fIselectLast\fR;
     Tk_Item *\fIanchorItemPtr\fR;
-    int \fIselectAnchor\fR;
+    Tcl_Size \fIselectAnchor\fR;
     Tk_3DBorder \fIinsertBorder\fR;
     int \fIinsertWidth\fR;
     int \fIinsertBorderWidth\fR;
     Tk_Item *\fIfocusItemPtr\fR;
     int \fIgotFocus\fR;
     int \fIcursorOn\fR;
+    Tcl_Obj *\fIinsertBorderWidthObj\fR;
+    Tcl_Obj *\fIinsertWidthObj\fR;
+    Tcl_Obj *\fIselBorderWidthObj\fR;
 } \fBTk_CanvasTextInfo\fR;
 .CE
 The \fBselBorder\fR field identifies a Tk_3DBorder that should be
 used for drawing the background under selected text.
 \fIselBorderWidth\fR gives the width of the raised border around
-selected text, in pixels.
+selected text, in pixels. \fIselBorderWidthObj\fR contains the
+same information, but the original Tcl_Obj * value;
 \fIselFgColorPtr\fR points to an XColor that describes the foreground
 color to be used when drawing selected text.
 \fIselItemPtr\fR points to the item that is currently selected, or
@@ -69,6 +73,8 @@ within \fIanchorItemPtr\fR.
 insertion cursor;  \fIinsertWidth\fR gives the total width of the
 insertion cursor in pixels, and \fIinsertBorderWidth\fR gives the
 width of the raised  border around the insertion cursor.
+\fIinsertWidthObj\fR and \fIinsertBorderWidthObj\fR contain the
+same information, but the original Tcl_Obj * value.
 \fIfocusItemPtr\fR identifies the item that currently has the input
 focus, or NULL if there is no such item.
 \fIgotFocus\fR is 1 if the canvas widget has the input focus and

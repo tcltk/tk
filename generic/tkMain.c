@@ -44,7 +44,7 @@ typedef struct TclIntPlatStubs {
     int magic;
     void *hooks;
     void (*dummy[16]) (void); /* dummy entries 0-15, not used */
-    int (*tclpIsAtty) (int fd); /* 16 */
+    bool (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
 extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #ifdef __cplusplus
@@ -73,10 +73,10 @@ NewNativeObj(
 
 #if defined(_WIN32) && defined(UNICODE)
     Tcl_DStringInit(&ds);
-    Tcl_WCharToUtfDString(string, wcslen(string), &ds);
+    Tcl_WCharToUtfDString(string, -1, &ds);
     str = Tcl_DStringValue(&ds);
 #else
-    str = Tcl_ExternalToUtfDString(NULL, (char *)string, strlen(string), &ds);
+    str = Tcl_ExternalToUtfDString(NULL, (char *)string, -1, &ds);
 #endif
     obj = Tcl_NewStringObj(str, Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
@@ -93,7 +93,7 @@ NewNativeObj(
 
 #if defined(_WIN32)
 #define isatty WinIsTty
-static int WinIsTty(int fd) {
+static bool WinIsTty(int fd) {
     HANDLE handle;
 
     /*
@@ -109,7 +109,7 @@ static int WinIsTty(int fd) {
 	    return tclIntPlatStubsPtr->tclpIsAtty(fd);
 	}
 #endif
-    handle = GetStdHandle(STD_INPUT_HANDLE + fd);
+    handle = GetStdHandle(STD_INPUT_HANDLE + (DWORD)fd);
 	/*
 	 * If it's a bad or closed handle, then it's been connected to a wish
 	 * console window. A character file handle is a tty by definition.
@@ -123,18 +123,18 @@ extern int		isatty(int fd);
 #endif
 
 typedef struct {
+    Tcl_Interp *interp;		/* Interpreter that evaluates interactive
+				 * commands. */
     Tcl_Channel input;		/* The standard input channel from which lines
 				 * are read. */
-    int tty;			/* Non-zero means standard input is a
-				 * terminal-like device. Zero means it's a
-				 * file. */
     Tcl_DString command;	/* Used to assemble lines of terminal input
 				 * into Tcl commands. */
     Tcl_DString line;		/* Used to read the next line from the
 				 * terminal input. */
-    int gotPartial;
-    Tcl_Interp *interp;		/* Interpreter that evaluates interactive
-				 * commands. */
+    bool tty;		/* true means standard input is a
+				 * terminal-like device. false means it's a
+				 * file. */
+    bool gotPartial;
 } InteractiveState;
 
 /*
@@ -176,7 +176,8 @@ Tk_MainEx(
     int i=0;			/* argv[i] index */
     Tcl_Obj *path, *argvPtr, *appName;
     const char *encodingName;
-    int code, nullStdin = 0;
+    int code;
+    bool nullStdin = false;
     Tcl_Channel chan;
     InteractiveState is;
 
@@ -189,12 +190,8 @@ Tk_MainEx(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
-	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
-	    abort();
-	} else {
-	    Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
-	}
+    if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
+	Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
 #if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
@@ -203,7 +200,7 @@ Tk_MainEx(
 	/* We are running win32 Tk under Cygwin, so let's check
 	 * whether the env("DISPLAY") variable or the -display
 	 * argument is set. If so, we really want to run the
-	 * Tk_MainEx function of libtcl9tk9.?.dll, not this one. */
+	 * Tk_MainEx function of cygtcl9tk9.?.dll, not this one. */
 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
 	loadCygwinTk:
 	    TkCygwinMainEx(argc, argv, appInitProc, interp);
@@ -223,7 +220,7 @@ Tk_MainEx(
     Tcl_InitMemory(interp);
 
     is.interp = interp;
-    is.gotPartial = 0;
+    is.gotPartial = false;
     Tcl_Preserve(interp);
 
 #if defined(_WIN32)
@@ -253,16 +250,13 @@ Tk_MainEx(
 	 *  -encoding ENCODING FILENAME
 	 * or like
 	 *  FILENAME
-	 * or like
-	 *  -file FILENAME (ancient history support only, removed with Tcl 9.0)
 	 */
 
 	/* mind argc is being adjusted as we proceed */
 	if ((argc >= 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
 		&& ('-' != argv[3][0])) {
 	    Tcl_Obj *value = NewNativeObj(argv[2]);
-	    Tcl_SetStartupScript(NewNativeObj(argv[3]),
-		    Tcl_GetString(value));
+	    Tcl_SetStartupScript(NewNativeObj(argv[3]), Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    i += 3;
@@ -281,7 +275,7 @@ Tk_MainEx(
     }
     Tcl_SetVar2Ex(interp, "argv0", NULL, appName, TCL_GLOBAL_ONLY);
 
-    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj((Tcl_WideInt)argc), TCL_GLOBAL_ONLY);
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj(argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
@@ -308,7 +302,7 @@ Tk_MainEx(
     }
 #endif
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
-	    Tcl_NewWideIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
+	    Tcl_NewBooleanObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -340,7 +334,7 @@ Tk_MainEx(
 	    Tcl_DeleteInterp(interp);
 	    Tcl_Exit(1);
 	}
-	is.tty = 0;
+	is.tty = false;
     } else {
 
 	/*
@@ -433,10 +427,10 @@ StdinProc(
     cmd = Tcl_DStringAppend(&isPtr->command, "\n", TCL_INDEX_NONE);
     Tcl_DStringFree(&isPtr->line);
     if (!Tcl_CommandComplete(cmd)) {
-	isPtr->gotPartial = 1;
+	isPtr->gotPartial = true;
 	goto prompt;
     }
-    isPtr->gotPartial = 0;
+    isPtr->gotPartial = false;
 
     /*
      * Disable the stdin channel handler while evaluating the command;

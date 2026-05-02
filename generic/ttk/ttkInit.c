@@ -60,7 +60,7 @@ int Ttk_GetOrientFromObj(
 {
     int orient = (int)TTK_ORIENT_HORIZONTAL;
     int result = Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
-    	    "orientation", 0, &orient);
+	    "orientation", 0, &orient);
 
     *resultPtr = (Ttk_Orient)orient;
     return result;
@@ -81,7 +81,7 @@ enum {
 };
 
 /* TtkCheckStateOption --
- * 	Handle -state compatibility option.
+ *	Handle -state compatibility option.
  *
  *	NOTE: setting -state disabled / -state enabled affects the
  *	widget state, but the internal widget state does *not* affect
@@ -201,6 +201,7 @@ MODULE_SCOPE void TtkProgressbar_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkScale_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkScrollbar_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkSeparator_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkToggleswitch_Init(Tcl_Interp *);
 MODULE_SCOPE void TtkTreeview_Init(Tcl_Interp *);
 
 #ifdef TTK_SQUARE_WIDGET
@@ -218,6 +219,7 @@ static void RegisterWidgets(Tcl_Interp *interp)
     TtkScale_Init(interp);
     TtkScrollbar_Init(interp);
     TtkSeparator_Init(interp);
+    TtkToggleswitch_Init(interp);
     TtkTreeview_Init(interp);
 #ifdef TTK_SQUARE_WIDGET
     TtkSquareWidget_Init(interp);

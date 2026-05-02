@@ -16,18 +16,14 @@
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXWm.h"
 
-
 /*
  * Forward declarations of procedures defined later in this file:
  */
 
-#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-static Tcl_ObjCmdProc DebuggerObjCmd;
-#endif
-static Tcl_ObjCmdProc PressButtonObjCmd;
-static Tcl_ObjCmdProc MoveMouseObjCmd;
-static Tcl_ObjCmdProc InjectKeyEventObjCmd;
-static Tcl_ObjCmdProc MenuBarHeightObjCmd;
+static Tcl_ObjCmdProc2 TestpressbuttonObjCmd;
+static Tcl_ObjCmdProc2 TestmovemouseObjCmd;
+static Tcl_ObjCmdProc2 TestinjectkeyeventObjCmd;
+static Tcl_ObjCmdProc2 TestmenubarheightObjCmd;
 
 
 /*
@@ -52,53 +48,26 @@ TkplatformtestInit(
     Tcl_Interp *interp)		/* Interpreter to add commands to. */
 {
     /*
+     * Set a flag indicating that testing is in progress.
+     */
+
+    testsAreRunning = true;
+
+    /*
      * Add commands for platform specific tests on MacOS here.
      */
 
-#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
-#endif
-    Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "movemouse", MoveMouseObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testinjectkeyevent", TestinjectkeyeventObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * DebuggerObjCmd --
- *
- *	This procedure simply calls the low level debugger, which was
- *      deprecated in OSX 10.8.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-static int
-DebuggerObjCmd(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tcl_Interp *),
-    TCL_UNUSED(int),
-    TCL_UNUSED(Tcl_Obj *const *))
-{
-    Debugger();
-    return TCL_OK;
-}
-#endif
-
-/*
- *----------------------------------------------------------------------
- *
- * MenuBarHeightObjCmd --
+ * TestmenubarheightObjCmd --
  *
  *	This procedure calls [NSMenu menuBarHeight] and returns the result
  *      as an integer.  Windows can never be placed to overlap the MenuBar,
@@ -114,10 +83,10 @@ DebuggerObjCmd(
  */
 
 static int
-MenuBarHeightObjCmd(
+TestmenubarheightObjCmd(
     TCL_UNUSED(void *),		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
-    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Size),				/* Not used. */
     TCL_UNUSED(Tcl_Obj *const *))		/* Not used. */
 {
     static int height = 0;
@@ -160,7 +129,7 @@ TkTestLogDisplay(
 /*
  *----------------------------------------------------------------------
  *
- * PressButtonObjCmd --
+ * TestpressbuttonObjCmd --
  *
  *	This Tcl command simulates a button press at a specific screen
  *      location.  It injects NSEvents into the NSApplication event queue, as
@@ -179,13 +148,14 @@ TkTestLogDisplay(
  */
 
 static int
-PressButtonObjCmd(
+TestpressbuttonObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    int x = 0, y = 0, i, value;
+    int x = 0, y = 0, value;
+    Tcl_Size i;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion, *press, *release;
@@ -261,7 +231,7 @@ PressButtonObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * MoveMouseObjCmd --
+ * TestmovemouseObjCmd --
  *
  *	This Tcl command simulates a mouse motion to a specific screen
  *      location.  It injects an NSEvent into the NSApplication event queue,
@@ -278,13 +248,14 @@ PressButtonObjCmd(
  */
 
 static int
-MoveMouseObjCmd(
+TestmovemouseObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    int x = 0, y = 0, i, value;
+    int x = 0, y = 0, value;
+    Tcl_Size i;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion;
@@ -338,10 +309,10 @@ MoveMouseObjCmd(
 }
 
 static int
-InjectKeyEventObjCmd(
+TestinjectkeyeventObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] = {
@@ -351,7 +322,8 @@ InjectKeyEventObjCmd(
 	"-command", "-control", "-function", "-option", "-shift", "-x", "-y", NULL};
     enum args {KEYEVENT_COMMAND, KEYEVENT_CONTROL, KEYEVENT_FUNCTION, KEYEVENT_OPTION,
 	       KEYEVENT_SHIFT, KEYEVENT_X, KEYEVENT_Y};
-    int i, index, keysym, mods = 0, x = 0, y = 0;
+    Tcl_Size i;
+    int index, keysym, mods = 0, x = 0, y = 0;
     NSString *chars = nil, *unmod = nil, *upper, *lower;
     NSEvent *keyEvent;
     NSUInteger type;
@@ -370,7 +342,7 @@ InjectKeyEventObjCmd(
     if (Tcl_GetIntFromObj(interp, objv[2], &keysym) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			 "keysym must be an integer"));
-	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEYSYM", NULL);
+	Tcl_SetErrorCode(interp, "TK", "TEST", "INJECT", "KEYSYM", (char *)NULL);
 	return TCL_ERROR;
     }
     macKC.uint = XKeysymToKeycode(NULL, keysym);

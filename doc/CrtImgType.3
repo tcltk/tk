@@ -52,7 +52,7 @@ The code that implements a new image type is called an
 It consists of a collection of procedures plus three different
 kinds of data structures.
 The first data structure is a Tk_ImageType structure, which contains
-the name of the image type and pointers to five procedures provided
+the name of the image type and pointers to six procedures provided
 by the image manager to deal with images of this type:
 .CS
 typedef struct {
@@ -62,6 +62,7 @@ typedef struct {
     Tk_ImageDisplayProc *\fIdisplayProc\fR;
     Tk_ImageFreeProc *\fIfreeProc\fR;
     Tk_ImageDeleteProc *\fIdeleteProc\fR;
+    Tk_ImagePostscriptProc *\fIpostscriptProc\fR;
 } \fBTk_ImageType\fR;
 .CE
 The fields of this structure will be described in later subsections
@@ -108,7 +109,7 @@ typedef int \fBTk_ImageCreateProc\fR(
         Tcl_Interp *\fIinterp\fR,
         const char *\fIname\fR,
         int \fIobjc\fR,
-        Tcl_Obj *const \fIobjv\fR[],
+        Tcl_Obj *const *\fIobjv\fR,
         const Tk_ImageType *\fItypePtr\fR,
         Tk_ImageModel \fImodel\fR,
         void **\fImodelDataPtr\fR);
@@ -225,6 +226,23 @@ stored in \fI*modelDataPtr\fR by \fIcreateProc\fR when the
 image was created.
 \fIdeleteProc\fR should release any resources associated with
 the image.
+.SS POSTSCRIPTPROC
+.PP
+\fItypePtr->postscriptProc\fR is a procedure that Tk invokes for
+generating postscript for the image content.
+\fIpostscriptProc\fR must match the following prototype:
+.CS
+typedef int \fBTk_ImagePostscriptProc \fR(
+        void *\fIclientData\fR,
+        Tcl_Interp *\fIinterp\fR,
+        Tk_Window \fItkwin\fR,
+        Tk_PostscriptInfo \fIpsinfo\fR,
+        int \fIx\fR,
+        int \fIy\fR,
+        int \fIwidth\fR,
+        int \fIheight\fR,
+        int \fIprepass\fR);
+.CE
 .SH TK_GETIMAGEMODELDATA
 .PP
 The procedure \fBTk_GetImageModelData\fR may be invoked to retrieve

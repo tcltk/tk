@@ -79,15 +79,23 @@ static unsigned long scrollCounter = 0;
 #define UNICODE_NOCHAR 0xFFFF
 #endif
 
+/* Miscellaneous accessibility data and functions. */
+#include <oleacc.h>
+typedef struct TkRootAccessible TkRootAccessible;
+typedef void (*MainThreadFunc)(int num_args, void **args);
+extern TkRootAccessible *GetTkAccessibleForWindow(Tk_Window win);
+extern Tk_Window GetTkWindowForHwnd(HWND hwnd);
+extern void RunOnMainThreadSync(MainThreadFunc func, int num_args, ...);
+extern void HandleWMGetObjectOnMainThread(int num_args, void **args);
+
 /*
  * Declarations of static variables used in this file.
  */
 
 static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
-static int childClassInitialized;	/* Registered child class? */
+static bool childClassInitialized;	/* Registered child class? */
 static WNDCLASSW childClass;		/* Window class for child windows. */
-static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
 					 * keyboard input */
@@ -117,7 +125,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
+static void		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -146,23 +154,43 @@ TkGetServerInfo(
     TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
-    static char buffer[32]; /* Empty string means not initialized yet. */
+    char buffer[80];
     OSVERSIONINFOW os;
+    typedef int(__stdcall getVersionProc)(void *);
 
-    if (!buffer[0]) {
-	GetVersionExW(&os);
-	/* Write the first character last, preventing multi-thread issues. */
-	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
-		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
-#ifdef _WIN64
-		"Win64"
-#else
-		"Win32"
-#endif
-	);
-	buffer[0] = 'W';
+    /*
+     * Not a performance critical so don't bother with static cache and MT
+     * synchronization
+     */
+
+    /*
+     * GetVersionExW will not return the "real" Windows version so use
+     * RtlGetVersion if available and falling back.
+     */
+    HMODULE handle = GetModuleHandleW(L"NTDLL"); /* No need to free this */
+    getVersionProc *getVersion =
+	(getVersionProc *)(void *)GetProcAddress(handle, "RtlGetVersion");
+
+    os.dwOSVersionInfoSize = sizeof(os);
+    if (getVersion == NULL || getVersion(&os) != 0) {
+	/* Should never happen but ... */
+	if (!GetVersionExW(&os)) {
+	    memset(&os, 0, sizeof(os));
+	}
     }
-    Tcl_AppendResult(interp, buffer, NULL);
+    if (os.dwMajorVersion == 10 &&
+	os.dwBuildNumber >= 22000) {
+	os.dwMajorVersion = 11;
+    }
+    snprintf(buffer, sizeof(buffer), "Windows %d.%d %d %s",
+	(int)os.dwMajorVersion, (int)os.dwMinorVersion, (int)os.dwBuildNumber,
+#ifdef _WIN64
+	"Win64"
+#else
+	"Win32"
+#endif
+    );
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 /*
@@ -238,10 +266,10 @@ TkWinXInit(
     CHARSETINFO lpCs;
     DWORD lpCP;
 
-    if (childClassInitialized != 0) {
+    if (childClassInitialized) {
 	return;
     }
-    childClassInitialized = 1;
+    childClassInitialized = true;
 
     comctl.dwSize = sizeof(INITCOMMONCONTROLSEX);
     comctl.dwICC = ICC_WIN95_CLASSES;
@@ -314,7 +342,7 @@ TkWinXCleanup(
      */
 
     if (childClassInitialized) {
-	childClassInitialized = 0;
+	childClassInitialized = false;
 	UnregisterClassW(TK_WIN_CHILD_CLASS_NAME, hInstance);
     }
 
@@ -329,69 +357,6 @@ TkWinXCleanup(
 
     TkWinWmCleanup(hInstance);
     TkWinCleanupContainerList();
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWinGetPlatformTheme --
- *
- *	Return the Windows drawing style we should be using.
- *
- * Results:
- *	The return value is one of:
- *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
- *	    TK_THEME_WIN_XP		XP not in classic mode
- *	    TK_THEME_WIN_VISTA	Vista or higher
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkWinGetPlatformTheme(void)
-{
-    if (tkWinTheme == 0) {
-	OSVERSIONINFOW os;
-
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-	GetVersionExW(&os);
-
-	if (os.dwPlatformId != VER_PLATFORM_WIN32_NT) {
-	    Tcl_Panic("Windows NT is the only supported platform");
-	}
-
-	/*
-	 * Set tkWinTheme to be TK_THEME_WIN_(CLASSIC|XP|VISTA). The
-	 * TK_THEME_WIN_CLASSIC could be set even when running under XP if the
-	 * windows classic theme was selected.
-	 */
-	if (os.dwMajorVersion == 5 && os.dwMinorVersion >= 1) {
-	    HKEY hKey;
-	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
-	    LPCWSTR szCurrent = L"Current";
-	    DWORD dwSize = 200;
-	    WCHAR pBuffer[200];
-
-	    memset(pBuffer, 0, dwSize);
-	    if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0L,
-		    KEY_READ, &hKey) != ERROR_SUCCESS) {
-		tkWinTheme = TK_THEME_WIN_XP;
-	    } else {
-		RegQueryValueExW(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
-		RegCloseKey(hKey);
-		if (wcscmp(pBuffer, L"Windows Standard") == 0) {
-		    tkWinTheme = TK_THEME_WIN_CLASSIC;
-		} else {
-		    tkWinTheme = TK_THEME_WIN_XP;
-		}
-	    }
-	} else if (os.dwMajorVersion > 5) {
-	    tkWinTheme = TK_THEME_WIN_VISTA;
-	} else {
-	    tkWinTheme = TK_THEME_WIN_CLASSIC;
-	}
-    }
-    return tkWinTheme;
 }
 
 /*
@@ -469,12 +434,12 @@ TkWinDisplayChanged(
      */
 
     screen->ext_data = (XExtData *)INT2PTR(GetDeviceCaps(dc, PLANES));
-    screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data);
+    screen->root_depth = (int)(GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data));
 
     if (screen->root_visual != NULL) {
-	ckfree(screen->root_visual);
+	Tcl_Free(screen->root_visual);
     }
-    screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
+    screen->root_visual = (Visual *)Tcl_Alloc(sizeof(Visual));
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	DefaultVisualOfScreen(screen)->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
@@ -553,7 +518,7 @@ TkpOpenDisplay(
     display = XkbOpenDisplay(display_name, NULL, NULL, NULL, NULL, NULL);
     TkWinDisplayChanged(display);
 
-    tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
+    tsdPtr->winDisplay =(TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
     memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
@@ -580,9 +545,9 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
-    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
-    TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
+    _XPrivDisplay display = (_XPrivDisplay)Tcl_Alloc(sizeof(Display));
+    Screen *screen = (Screen *)Tcl_Alloc(sizeof(Screen));
+    TkWinDrawable *twdPtr = (TkWinDrawable *)Tcl_Alloc(sizeof(TkWinDrawable));
 
     memset(screen, 0, sizeof(Screen));
     memset(display, 0, sizeof(Display));
@@ -605,7 +570,7 @@ XkbOpenDisplay(
     screen->root = (Window)twdPtr;
     screen->display = (Display *)display;
 
-    display->display_name = (char  *)ckalloc(strlen(name) + 1);
+    display->display_name = (char  *)Tcl_Alloc(strlen(name) + 1);
     strcpy(display->display_name, name);
 
     display->nscreens = 1;
@@ -654,21 +619,21 @@ TkpCloseDisplay(
     tsdPtr->winDisplay = NULL;
 
     if (display->display_name != NULL) {
-	ckfree(display->display_name);
+	Tcl_Free(display->display_name);
     }
     if (ScreenOfDisplay(display, 0) != NULL) {
 	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
-	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
+	    Tcl_Free(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	if (RootWindowOfScreen(ScreenOfDisplay(display, 0)) != None) {
-	    ckfree((void *)RootWindowOfScreen(ScreenOfDisplay(display, 0)));
+	    Tcl_Free((void *)RootWindowOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	if (DefaultColormapOfScreen(ScreenOfDisplay(display, 0)) != None) {
 	    XFreeColormap(display, DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	ckfree(ScreenOfDisplay(display, 0));
+	Tcl_Free(ScreenOfDisplay(display, 0));
     }
-    ckfree(display);
+    Tcl_Free(display);
 }
 
 /*
@@ -754,7 +719,7 @@ TkWinChildProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    LRESULT result;
+    LRESULT result = 0;
 
     switch (message) {
     case WM_INPUTLANGCHANGE:
@@ -820,6 +785,16 @@ TkWinChildProc(
 	}
 	break;
 
+     /* Handle MSAA queries. */
+    case WM_GETOBJECT:
+	if ((LONG)lParam == OBJID_CLIENT) {
+	    LRESULT resultOnMainThread = 0;
+	    MainThreadFunc func = (MainThreadFunc)HandleWMGetObjectOnMainThread;
+	    RunOnMainThreadSync(func, 4, hwnd, (void *)wParam, (void *)lParam, &resultOnMainThread);
+	    return resultOnMainThread;
+	}
+	break;
+
     default:
 	if (!TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
@@ -866,7 +841,7 @@ TkTranslateWinEvent(
 	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	if (winPtr) {
-	    TkWinClipboardRender(winPtr->dispPtr, wParam);
+	    TkWinClipboardRender(winPtr->dispPtr, (UINT)wParam);
 	}
 	return 1;
     }
@@ -1165,7 +1140,7 @@ GenerateXEvent(
 		event.key.nbytes = 0;
 		event.x.xkey.state = state;
 		event.x.xany.serial = scrollCounter++;
-		event.x.xkey.keycode = (unsigned int) delta;
+		event.x.xkey.keycode = (unsigned int) (delta & 0xffff);
 	    } else {
 		event.x.type = MouseWheelEvent;
 		event.x.xany.send_event = -1;
@@ -1196,7 +1171,7 @@ GenerateXEvent(
 		event.key.nbytes = 0;
 		event.x.xkey.state = state;
 		event.x.xany.serial = scrollCounter++;
-		event.x.xkey.keycode = (unsigned int)(-(delta << 16));
+		event.x.xkey.keycode = -((unsigned int)delta << 16);
 	    } else {
 		event.x.type = MouseWheelEvent;
 		event.x.xany.send_event = -1;
@@ -1219,7 +1194,7 @@ GenerateXEvent(
 
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -1;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
 		    WM_SYSCHAR);
 	    break;
@@ -1233,7 +1208,7 @@ GenerateXEvent(
 	     */
 
 	    event.x.type = KeyRelease;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    break;
 
@@ -1309,7 +1284,7 @@ GenerateXEvent(
 	case WM_UNICHAR: {
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -3;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
 	    event.x.type = KeyRelease;
@@ -1643,7 +1618,7 @@ HandleIMEComposition(
     n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	WCHAR *buff = (WCHAR *) ckalloc(n);
+	WCHAR *buff = (WCHAR *)Tcl_Alloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;
@@ -1697,7 +1672,7 @@ HandleIMEComposition(
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	}
 
-	ckfree(buff);
+	Tcl_Free(buff);
     }
     ImmReleaseContext(hwnd, hIMC);
     return 1;

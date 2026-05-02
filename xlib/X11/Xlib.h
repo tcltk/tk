@@ -4024,7 +4024,7 @@ EXTERN void XFreeEventData(
     XGenericEventCookie*	/* cookie*/
 );
 
-#include "tkIntXlibDecls.h"
+#include "tkIntXlibDecls.h"  /* IWYU pragma: export */
 
 #ifdef __clang__
 #pragma clang diagnostic pop

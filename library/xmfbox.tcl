@@ -315,10 +315,10 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
 #	Builds the UI components of the Motif file dialog.
 #
 # Arguments:
-# 	w		Pathname of the dialog to build.
+#	w		Pathname of the dialog to build.
 #
 # Results:
-# 	None.
+#	None.
 
 proc ::tk::MotifFDialog_BuildUI {w} {
     set dataName [lindex [split $w .] end]
@@ -476,9 +476,9 @@ proc ::tk::MotifFDialog_MakeSList {w f label cmdPrefix} {
 #	w		pathname of the dialog box.
 #
 # Results:
-# 	A list of two elements. The first element is the directory
-# 	specified # by the filter. The second element is the filter
-# 	pattern itself.
+#	A list of two elements. The first element is the directory
+#	specified # by the filter. The second element is the filter
+#	pattern itself.
 
 proc ::tk::MotifFDialog_InterpFilter {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
@@ -538,7 +538,7 @@ proc ::tk::MotifFDialog_InterpFilter {w} {
 #	boxes.
 #
 # Arguments:
-# 	w 		pathname of the dialog box.
+#	w		pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -562,7 +562,7 @@ proc ::tk::MotifFDialog_Update {w} {
 #	to the filter setting.
 #
 # Arguments:
-# 	w 		pathname of the dialog box.
+#	w		pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -623,7 +623,7 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
 #	(clicked-over) by the user.
 #
 # Arguments:
-# 	w		The pathname of the dialog box.
+#	w		The pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -669,7 +669,7 @@ proc ::tk::MotifFDialog_BrowseDList {w} {
 #	(double-clicked) by the user.
 #
 # Arguments:
-# 	w		The pathname of the dialog box.
+#	w		The pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -717,7 +717,7 @@ proc ::tk::MotifFDialog_ActivateDList {w} {
 #	(clicked-over) by the user.
 #
 # Arguments:
-# 	w		The pathname of the dialog box.
+#	w		The pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -759,7 +759,7 @@ proc ::tk::MotifFDialog_BrowseFList {w} {
 #	(double-clicked) by the user.
 #
 # Arguments:
-# 	w		The pathname of the dialog box.
+#	w		The pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -785,7 +785,7 @@ proc ::tk::MotifFDialog_ActivateFList {w} {
 #	text inside the filter entry.
 #
 # Arguments:
-# 	w		The pathname of the dialog box.
+#	w		The pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -808,7 +808,7 @@ proc ::tk::MotifFDialog_ActivateFEnt {w} {
 #	terminated.
 #
 # Arguments:
-# 	w		The pathname of the dialog box.
+#	w		The pathname of the dialog box.
 #
 # Results:
 #	None.
@@ -926,7 +926,7 @@ proc ::tk::ListBoxKeyAccel_Unset {w} {
 #	keystrokes.
 #
 # Arguments:
-# 	w		The pathname of the listbox.
+#	w		The pathname of the listbox.
 #	key		The key which the user just pressed.
 #
 # Results:

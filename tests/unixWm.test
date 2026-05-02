@@ -1,29 +1,47 @@
-# This file is a Tcl script to test out Tk's interactions with
-# the window manager, including the "wm" command.  It is organized
-# in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out interactions with the window manager
+# that are specific for the unix platform, including the "wm" command.
 #
 # Copyright © 1992-1994 The Regents of the University of California.
 # Copyright © 1994-1997 Sun Microsystems, Inc.
 # Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.2
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
+# NOTES
+#
+# * This test file is specific for the unix platform. This includes macOS.
+#   Tests regarding the window manager that are specific to the MS Windows
+#   platform go into the test file winWm.test. Tests that are platform-
+#   indifferent go into the test file wm.test. Or they may exists as each
+#   other's counterparts in both unixWm.test and winWm.test, but only if
+#   they are an integral part of a contiguous sequence of tests.
+# * This test file is skipped entirely on non-unix platforms.
+#
 
-namespace import -force ::tk::test:loadTkCommand
+#
+# TESTFILE INITIALIZATION
+#
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+package require tcltest 2.2; # needed in mode -singleproc 0
 
-proc sleep ms {
-    global x
-    after $ms {set x 1}
-    vwait x
-}
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
 
-# Procedure to set up a collection of top-level windows
+# Ensure a pristine initial window state
+resetWindows
 
+#
+# LOCAL UTILITY PROCS
+#
+
+# makeToplevels --
+#
+#	Set up a collection of top-level windows
+#
 proc makeToplevels {} {
     deleteWindows
     foreach i {.raise1 .raise2 .raise3} {
@@ -33,24 +51,34 @@ proc makeToplevels {} {
     }
 }
 
+#
+# COMMON TEST SETUP
+#
+
 # On macOS windows are not allowed to overlap the menubar at the top of the
 # screen or the dock.  So tests which move a window and then check whether it
 # got moved to the requested location should use a y coordinate larger than the
-# height of the menubar (normally 23 pixels) and an x coordinate larger than the
-# width of the dock, if it happens to be on the left.
-
+# height of the menubar (normally 23 pixels) and an x coordinate larger than
+# the width of the dock, if it happens to be on the left.  Starting with
+# macOS 15 (Sequoia) it became impossible for the y coordinate of the top
+# of a window to be less than 10 plus the menubar height (as reported by
+# [[NSApp mainMenu] menuBarHeight]).
 if {[tk windowingsystem] eq "aqua"} {
-    set mb [expr [menubarheight] + 1]
+    set mb [expr {[testmenubarheight] + 11}]
     set X  100
     set Y0 $mb
-    set Y2 [expr $mb + 2]
-    set Y5 [expr $mb + 5]
+    set Y2 [expr {$mb + 2}]
+    set Y5 [expr {$mb + 5}]
 } else {
     set X  20
     set Y0 0
     set Y2 2
     set Y5 5
 }
+
+#
+# TESTS
+#
 
 set i 1
 foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
@@ -64,12 +92,14 @@ foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
     incr i
 }
 
+#
+# COMMON TEST SETUP
+#
+
 # The tests below are tricky because window managers don't all move
 # windows correctly.  Try one motion and compute the window manager's
 # error, then factor this error into the actual tests.  In other words,
 # this just makes sure that things are consistent between moves.
-
-set i 1
 destroy .t
 toplevel .t -width 100 -height 150
 wm geom .t +200+200
@@ -77,8 +107,10 @@ update
 wm geom .t +150+150
 update
 scan [wm geom .t] %dx%d+%d+%d width height x y
-set xerr [expr 150-$x]
-set yerr [expr 150-$y]
+set xerr [expr {150-$x}]
+set yerr [expr {150-$y}]
+
+set i 1
 foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
     test unixWm-2.$i {moving window while mapped} unix {
 	wm geom .t $geom
@@ -93,7 +125,7 @@ foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
 set i 1
 foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
     test unixWm-3.$i {moving window while iconified} unix {
-        update
+	update
 	wm iconify .t
 	update idletasks
 	wm geom .t $geom
@@ -111,11 +143,11 @@ set i 1
 foreach geom "+$X+80 +$X+40 +$X+$Y0" {
     test unixWm-4.$i {moving window while withdrawn} unix {
 	wm withdraw .t
-	sleep 10
+	pause 10
 	wm geom .t $geom
 	update idletasks
 	wm deiconify .t
-	sleep 10
+	pause 10
 	wm geom .t
     } 100x150$geom
     incr i
@@ -190,11 +222,16 @@ test unixWm-5.7 {compounded state changes} {unix nonPortable} {
     list [winfo ismapped .t] [wm state .t]
 } {0 iconic}
 
+#
+# COMMON TEST SETUP
+#
+
 destroy .t
 toplevel .t -width 200 -height 100
 wm geom .t +100+$Y0
 wm minsize .t 1 1
 update
+
 test unixWm-6.1 {size changes} unix {
     .t config -width 180 -height 150
     update
@@ -248,28 +285,38 @@ test unixWm-6.5 {window initially iconic} {unix nonPortable} {
     list [winfo ismapped .t] [wm state .t]
 } {1 normal}
 
+#
+# COMMON TEST SETUP
+#
+
 destroy .m
 toplevel .m
 wm overrideredirect .m 1
 foreach i {{Test label} Another {Yet another} {Last label}} j {1 2 3} {
     label .m.$j -text $i
 }
-wm geometry .m +[expr 100 - [winfo vrootx .]]+[expr 200 - [winfo vrooty .]]
+wm geometry .m +[expr {100 - [winfo vrootx .]}]+[expr {200 - [winfo vrooty .]}]
 update
+
 test unixWm-7.1 {override_redirect and Tk_MoveTopLevelWindow} unix {
     list [winfo ismapped .m] [wm state .m] [winfo x .m] [winfo y .m]
 } {1 normal 100 200}
-wm geometry .m +[expr 150 - [winfo vrootx .]]+[expr 210 - [winfo vrooty .]]
-update
-test unixWm-7.2 {override_redirect and Tk_MoveTopLevelWindow} unix {
+
+test unixWm-7.2 {override_redirect and Tk_MoveTopLevelWindow} -constraints unix -setup {
+    wm geometry .m +[expr {150 - [winfo vrootx .]}]+[expr {210 - [winfo vrooty .]}]
+    update
+} -body {
     list [winfo ismapped .m] [wm state .m] [winfo x .m] [winfo y .m]
-} {1 normal 150 210}
-wm withdraw .m
-test unixWm-7.3 {override_redirect and Tk_MoveTopLevelWindow} unix {
+} -result {1 normal 150 210}
+
+test unixWm-7.3 {override_redirect and Tk_MoveTopLevelWindow} -constraints unix -setup {
+    wm withdraw .m
+} -body {
     list [winfo ismapped .m]
-} 0
-destroy .m
-destroy .t
+} -cleanup {
+    destroy .m
+    destroy .t
+} -result 0
 
 test unixWm-8.1 {icon windows} unix {
     destroy .t
@@ -290,7 +337,7 @@ test unixWm-8.3 {icon windows} unix {
     toplevel .t -width 100 -height 30
     list [catch {wm iconwindow .t b c} msg] $msg
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
-test unixWm-8.4 {icon windows} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-8.4 {icon windows} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -319,7 +366,7 @@ test unixWm-8.6 {icon windows} unix {
     frame .t.icon -width 50 -height 50 -bg red
     list [catch {wm iconwindow .t .t.icon} msg] $msg
 } {1 {can't use .t.icon as icon window: not at top level}}
-test unixWm-8.7 {icon windows} unix {
+test unixWm-8.7 {icon windows} -constraints unix -body {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
@@ -330,8 +377,9 @@ test unixWm-8.7 {icon windows} unix {
     set result "[wm iconwindow .t] [wm state .icon] [wm state .icon2]"
     wm iconwindow .t .icon2
     lappend result [wm iconwindow .t] [wm state .icon] [wm state .icon2]
-} {.icon icon normal .icon2 withdrawn icon}
-destroy .icon2
+} -cleanup {
+    destroy .icon2
+} -result {.icon icon normal .icon2 withdrawn icon}
 test unixWm-8.8 {icon windows} unix {
     destroy .t
     destroy .icon
@@ -470,9 +518,12 @@ test unixWm-11.4 {Tk_WmCmd procedure, miscellaneous errors} unix {
     list [catch {wm geometry .b} msg] $msg
 } {1 {window ".b" isn't a top-level window}}
 
+#
+# COMMON TEST SETUP
+#
+
 destroy .t
 destroy .icon
-
 toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update
@@ -591,6 +642,10 @@ test unixWm-14.7 {Tk_WmCmd procedure, "colormapwindows" option} unix {
     wm colormapwindows .t2 {}
     list $x [wm colormapwindows .t2]
 } {{} {}}
+
+#
+# COMMON TEST CLEANUP
+#
 destroy .t2
 
 test unixWm-15.1 {Tk_WmCmd procedure, "command" option} unix {
@@ -635,7 +690,7 @@ test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     set result
 } {1 {can't deiconify .icon: it is an icon for .t}}
-test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnCILinux failsOnXQuartz} {
     wm iconify .t
     set result {}
     lappend result [winfo ismapped .t] [wm state .t]
@@ -663,7 +718,7 @@ test unixWm-18.1 {Tk_WmCmd procedure, "frame" option} unix {
     list [catch {wm frame .t 12} msg] $msg
 } {1 {wrong # args: should be "wm frame window"}}
 test unixWm-18.2 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
-    expr [wm frame .t] == [winfo id .t]
+    expr {[wm frame .t] == [winfo id .t]}
 } 0
 test unixWm-18.3 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
     destroy .t2
@@ -671,7 +726,7 @@ test unixWm-18.3 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
     wm geom .t2 +0+0
     wm overrideredirect .t2 1
     update
-    set result [expr [wm frame .t2] == [winfo id .t2]]
+    set result [expr {[wm frame .t2] == [winfo id .t2]}]
     destroy .t2
     set result
 } 1
@@ -752,6 +807,10 @@ test unixWm-20.11 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 12 -1} msg] $msg
 } {1 {heightInc can't be <= 0}}
 
+#
+# COMMON TEST SETUP
+#
+
 destroy .t
 destroy .icon
 toplevel .t -width 100 -height 50
@@ -768,12 +827,12 @@ test unixWm-21.3 {Tk_WmCmd procedure, "group" option} {unix testwrapper} {
     set result {}
     lappend result [wm group .t]
     wm group .t .
-    set bit [format 0x%x [expr 0x40 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x40 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm group .t] $bit
     wm group .t {}
-    set bit [format 0x%x [expr 0x40 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x40 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm group .t] $bit
 } {{} . 0x40 {} 0x0}
 test unixWm-21.4 {Tk_WmCmd procedure, "group" option, make window exist} {unix testwrapper} {
@@ -782,7 +841,7 @@ test unixWm-21.4 {Tk_WmCmd procedure, "group" option, make window exist} {unix t
     wm geom .t2 +0+0
     wm group .t .t2
     set hints [testprop [testwrapper .t] WM_HINTS]
-    set result [expr [testwrapper .t2] - [lindex $hints 8]]
+    set result [expr {[testwrapper .t2] - [lindex $hints 8]}]
     destroy .t2
     set result
 } 0
@@ -795,7 +854,7 @@ test unixWm-21.5 {Tk_WmCmd procedure, "group" option, create leader wrapper} {un
     wm geometry .t2 +0+0
     set result [list [testwrapper .t2]]
     wm group .t3 .t2
-    lappend result [expr {[testwrapper .t2] == ""}]
+    lappend result [expr {[testwrapper .t2] eq ""}]
     destroy .t2 .t3
     set result
 } {{} 0}
@@ -807,23 +866,17 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
     set result {}
     lappend result [wm iconbitmap .t]
     wm iconbitmap .t questhead
-    set bit [format 0x%x [expr 0x4 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x4 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm iconbitmap .t] $bit
     wm iconbitmap .t {}
-    set bit [format 0x%x [expr 0x4 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x4 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
-if {[tk windowingsystem] eq "aqua"} {
-    set result_22_3 {0 {}}
-} else {
-    set result_22_3 {1 {bitmap "bad-bitmap" not defined}}
-}
-test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option for unix only} \
-unix {
+test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option} unix {
     list [catch {wm iconbitmap .t bad-bitmap} msg] $msg
-} $result_22_3
+} {1 {bitmap "bad-bitmap" not defined}}
 
 test unixWm-23.1 {Tk_WmCmd procedure, "iconify" option} unix {
     list [catch {wm iconify .t 12} msg] $msg
@@ -854,7 +907,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     set result
 } {1 {can't iconify ".t2": it is an icon for ".t"}}
-test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 +0+0
@@ -865,7 +918,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu fail
     destroy .t2
     set result
 } 0
-test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
@@ -885,12 +938,12 @@ test unixWm-24.2 {Tk_WmCmd procedure, "iconmask" option} {unix testwrapper} {
     set result {}
     lappend result [wm iconmask .t]
     wm iconmask .t questhead
-    set bit [format 0x%x [expr 0x20 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x20 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm iconmask .t] $bit
     wm iconmask .t {}
-    set bit [format 0x%x [expr 0x20 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x20 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm iconmask .t] $bit
 } {{} questhead 0x20 {} 0x0}
 test unixWm-24.3 {Tk_WmCmd procedure, "iconmask" option} unix {
@@ -924,10 +977,10 @@ test unixWm-26.3 {Tk_WmCmd procedure, "iconposition" option} {unix testwrapper} 
     wm iconposition .t 10 15
     set prop [testprop [testwrapper .t] WM_HINTS]
     lappend result [wm iconposition .t] [lindex $prop 5] [lindex $prop 6]
-    lappend result  [format 0x%x [expr 0x10 & [lindex $prop 0]]]
+    lappend result  [format 0x%x [expr {0x10 & [lindex $prop 0]}]]
     wm iconposition .t {} {}
-    set bit [format 0x%x [expr 0x10 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x10 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm iconposition .t] $bit
 } {{} {10 15} 0xa 0xf 0x10 {} 0x0}
 test unixWm-26.4 {Tk_WmCmd procedure, "iconposition" option} unix {
@@ -948,11 +1001,11 @@ test unixWm-27.2 {Tk_WmCmd procedure, "iconwindow" option} {unix testwrapper} {
     wm iconwindow .t .icon
     set prop [testprop [testwrapper .t] WM_HINTS]
     lappend result [wm iconwindow .t] [wm state .icon]
-    lappend result [format 0x%x [expr 0x8 & [lindex $prop 0]]]
-    lappend result [expr [testwrapper .icon] == [lindex $prop 4]]
+    lappend result [format 0x%x [expr {0x8 & [lindex $prop 0]}]]
+    lappend result [expr {[testwrapper .icon] == [lindex $prop 4]}]
     wm iconwindow .t {}
-    set bit [format 0x%x [expr 0x8 & [lindex [testprop [testwrapper .t] \
-	    WM_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x8 & [lindex [testprop [testwrapper .t] \
+	    WM_HINTS] 0]}]]
     lappend result [wm iconwindow .t]  [wm state .icon] $bit
     destroy .icon
     set result
@@ -1005,6 +1058,10 @@ test unixWm-27.7 {Tk_WmCmd procedure, "iconwindow" option, withdrawing icon} uni
     set result
 } {normal 1 icon 0}
 
+#
+# COMMON TEST SETUP
+#
+
 destroy .t
 destroy .icon
 toplevel .t -width 100 -height 50
@@ -1012,7 +1069,7 @@ wm geom .t +0+0
 update
 
 test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option, setting the
-        maxsize should update WM_NORMAL_HINTS} {testwrapper} {
+	maxsize should update WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm maxsize .t 300 300
@@ -1022,8 +1079,8 @@ test unixWm-28.1 {Tk_WmCmd procedure, "maxsize" option, setting the
 } {300 300}
 
 test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option, setting the
-        maxsize to a value smaller than the current size should
-        set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
+	maxsize to a value smaller than the current size should
+	set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 400x400
@@ -1034,9 +1091,9 @@ test unixWm-28.2 {Tk_WmCmd procedure, "maxsize" option, setting the
 } {300 300}
 
 test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option, setting the
-        maxsize to a value smaller than the current size should
-        set the maxsize in WM_NORMAL_HINTS even if the
-        interactive resizable flag is set to 0} {testwrapper} {
+	maxsize to a value smaller than the current size should
+	set the maxsize in WM_NORMAL_HINTS even if the
+	interactive resizable flag is set to 0} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 400x400
@@ -1048,7 +1105,7 @@ test unixWm-28.3 {Tk_WmCmd procedure, "maxsize" option, setting the
 } {300 300}
 
 test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option, setting the
-        minsize should update WM_NORMAL_HINTS} {testwrapper} {
+	minsize should update WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm minsize .t 300 300
@@ -1058,8 +1115,8 @@ test unixWm-29.1 {Tk_WmCmd procedure, "minsize" option, setting the
 } {300 300}
 
 test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option, setting the
-        minsize to a value larger than the current size should
-        set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
+	minsize to a value larger than the current size should
+	set the maxsize in WM_NORMAL_HINTS} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 200x200
@@ -1070,9 +1127,9 @@ test unixWm-29.2 {Tk_WmCmd procedure, "minsize" option, setting the
 } {300 300}
 
 test unixWm-29.3 {Tk_WmCmd procedure, "minsize" option, setting the
-        minsize to a value larger than the current size should
-        set the minsize in WM_NORMAL_HINTS even if the
-        interactive resizable flag is set to 0} {testwrapper} {
+	minsize to a value larger than the current size should
+	set the minsize in WM_NORMAL_HINTS even if the
+	interactive resizable flag is set to 0} {testwrapper} {
     destroy .t
     toplevel .t
     wm geom .t 200x200
@@ -1082,6 +1139,10 @@ test unixWm-29.3 {Tk_WmCmd procedure, "minsize" option, setting the
     set hints [testprop [testwrapper .t] WM_NORMAL_HINTS]
     format {%d %d} [lindex $hints 5] [lindex $hints 6]
 } {300 300}
+
+#
+# COMMON TEST SETUP
+#
 
 destroy .t .icon
 toplevel .t -width 100 -height 50
@@ -1111,13 +1172,13 @@ test unixWm-31.2 {Tk_WmCmd procedure, "positionfrom" option} {unix testwrapper} 
     lappend result [wm positionfrom .t]
     wm positionfrom .t program
     update
-    set bit [format 0x%x [expr 0x5 & [lindex [testprop [testwrapper .t] \
-	    WM_NORMAL_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x5 & [lindex [testprop [testwrapper .t] \
+	    WM_NORMAL_HINTS] 0]}]]
     lappend result [wm positionfrom .t] $bit
     wm positionfrom .t user
     update
-    set bit [format 0x%x [expr 0x5 & [lindex [testprop [testwrapper .t] \
-	    WM_NORMAL_HINTS] 0]]]
+    set bit [format 0x%x [expr {0x5 & [lindex [testprop [testwrapper .t] \
+	    WM_NORMAL_HINTS] 0]}]]
     lappend result [wm positionfrom .t] $bit
 } {user program 0x4 user 0x1}
 test unixWm-31.3 {Tk_WmCmd procedure, "positionfrom" option} unix {
@@ -1214,26 +1275,24 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
     lappend result [wm sizefrom .t]
     wm sizefrom .t program
     update
-    set bit [format 0x%x [expr 0xa & [lindex [testprop [testwrapper .t] \
-	    WM_NORMAL_HINTS] 0]]]
+    set bit [format 0x%x [expr {0xa & [lindex [testprop [testwrapper .t] \
+	    WM_NORMAL_HINTS] 0]}]]
     lappend result [wm sizefrom .t] $bit
     wm sizefrom .t user
     update
-    set bit [format 0x%x [expr 0xa & [lindex [testprop [testwrapper .t] \
-	    WM_NORMAL_HINTS] 0]]]
+    set bit [format 0x%x [expr {0xa & [lindex [testprop [testwrapper .t] \
+	    WM_NORMAL_HINTS] 0]}]]
     lappend result [wm sizefrom .t] $bit
 } {{} program 0x8 user 0x2}
 test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
-if {[tk windowingsystem] eq "aqua"} {
-    set result_35_1 {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
-} else {
-    set result_35_1 {1 {bad argument "1": must be iconic, normal, or withdrawn}}
-}
-test unixWm-35.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
+test unixWm-35.1.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
     list [catch {wm state .t 1} msg]  $msg
-} $result_35_1
+} {1 {bad argument "1": must be iconic, normal, or withdrawn}}
+test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} {unix aqua} {
+    list [catch {wm state .t 1} msg]  $msg
+} {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
 test unixWm-35.2 {Tk_WmCmd procedure, "state" option} unix {
     list [catch {wm state .t iconic 1} msg]  $msg
 } {1 {wrong # args: should be "wm state window ?state?"}}
@@ -1279,8 +1338,8 @@ test unixWm-36.2 {Tk_WmCmd procedure, "title" option} {unix testwrapper} {
     set result {}
     lappend result [wm title .t] [testprop [testwrapper .t] WM_NAME]
     wm title .t "Test window"
-    set bit [format 0x%x [expr 0xa & [lindex [testprop [testwrapper .t] \
-	    WM_NORMAL_HINTS] 0]]]
+    set bit [format 0x%x [expr {0xa & [lindex [testprop [testwrapper .t] \
+	    WM_NORMAL_HINTS] 0]}]]
     lappend result [wm title .t] [testprop [testwrapper .t] WM_NAME]
 } {t t {Test window} {Test window}}
 
@@ -1294,7 +1353,7 @@ test unixWm-37.3 {Tk_WmCmd procedure, "transient" option} {unix testwrapper} {
 	    [testprop [testwrapper .t2] WM_TRANSIENT_FOR]
     wm transient .t2 .t
     set transient [testprop [testwrapper .t2] WM_TRANSIENT_FOR]
-    lappend result [wm transient .t2] [expr [testwrapper .t] - $transient]
+    lappend result [wm transient .t2] [expr {[testwrapper .t] - $transient}]
     wm transient .t2 {}
     lappend result [wm transient .t2] \
 	    [testprop [testwrapper .t2] WM_TRANSIENT_FOR]
@@ -1321,7 +1380,7 @@ test unixWm-37.5 {Tk_WmCmd procedure, "transient" option, create toplevel wrappe
     wm geometry .t2 +0+0
     set result [list [testwrapper .t2]]
     wm transient .t3 .t2
-    lappend result [expr {[testwrapper .t2] == ""}]
+    lappend result [expr {[testwrapper .t2] eq ""}]
     destroy .t2 .t3
     set result
 } {{} 0}
@@ -1350,6 +1409,9 @@ test unixWm-39.1 {Tk_WmCmd procedure, miscellaneous} unix {
     list [catch {wm unknown .t} msg] $msg
 } {1 {bad option "unknown": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 
+#
+# COMMON TEST CLEANUP
+#
 destroy .t .icon
 
 test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on grid} {unix nonPortable} {
@@ -1399,17 +1461,17 @@ test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable testmenubar} 
     update
     set result {}
     bind .t <Configure> {
-	if {"%W" == ".t"} {
+	if {"%W" eq ".t"} {
 	    lappend result "%W: %wx%h"
 	}
     }
     bind .t.m <Configure> {lappend result "%W: %wx%h"}
     wm geometry .t 200x300
     update
-    lappend result [expr [winfo rootx .t.m] - $x] \
-	    [expr [winfo rooty .t.m] - $y] \
+    lappend result [expr {[winfo rootx .t.m] - $x}] \
+	    [expr {[winfo rooty .t.m] - $y}] \
 	    [winfo width .t.m] [winfo height .t.m] \
-	    [expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y] \
+	    [expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}] \
 	    [winfo width .t] [winfo height .t]
 } {{.t.m: 200x20} {.t: 200x300} 0 0 200 20 0 20 200 300}
 test unixWm-41.3 {ConfigureEvent procedure, synthesized Configure events} unix {
@@ -1438,7 +1500,7 @@ test unixWm-41.4 {ConfigureEvent procedure, synthesized Configure events} unix {
 # No tests for ReparentEvent or ComputeReparentGeometry; I can't figure
 # out how to exercise these procedures reliably.
 
-test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t
     toplevel .t -width 400 -height 150
     wm geometry .t +0+0
@@ -1485,7 +1547,7 @@ test unixWm-43.2 {TopLevelReqProc procedure, resize causes window to move} \
     set y [winfo y .t]
     .t configure -width 300 -height 150
     update
-    list [expr [winfo x .t] - $x] [expr [winfo y .t] - $y] \
+    list [expr {[winfo x .t] - $x}] [expr {[winfo y .t] - $y}] \
 	    [winfo width .t] [winfo height .t]
 } {-100 50 300 150}
 
@@ -1542,9 +1604,11 @@ test unixWm-44.5 {UpdateGeometryInfo procedure, negative width} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {1 72}
-destroy .t
-toplevel .t -width 80 -height 60
-test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
+
+test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} -constraints unix -setup {
+    destroy .t
+    toplevel .t -width 80 -height 60
+} -body {
     wm grid .t 18 7 10 12
     wm geometry .t +30+40
     wm overrideredirect .t 1
@@ -1552,28 +1616,44 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
     wm geometry .t 20x1
     update
     list [winfo width .t] [winfo height .t]
-} {100 1}
-destroy .t
-toplevel .t -width 80 -height 60
-test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix} {
+} -result {100 1}
+
+#
+# COMMON TEST SETUP
+#
+if {! [winfo exists .t]} {
+    # The expected results for tests 44.7 and 44.8 require that window .t exists.
+    # That might not be the case if no previous tests are being run that create
+    # the window (because of the constraint unix or because of test selection
+    # using the tcltest option "-match" or "-skip"). Therefore, we create a dummy
+    # window .t here.
+    frame .t
+}
+
+test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} -constraints unix -setup {
+    destroy .t
+    toplevel .t -width 80 -height 60
+} -body {
     wm overrideredirect .t 1
     tkwait visibility .t
     update
     wm geometry .t +5-10
     update
     list [winfo x .t] [winfo y .t]
-} [list 5 [expr [winfo screenheight .t] - 70]]
-destroy .t
-toplevel .t -width 80 -height 60
-test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} {unix} {
+} -result [list 5 [expr {[winfo screenheight .t] - 70}]]
+test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} -constraints unix -setup {
+    destroy .t
+    toplevel .t -width 80 -height 60
+} -body {
     wm overrideredirect .t 1
     tkwait visibility .t
     update
     wm geometry .t -30+$Y2
     update
     list [winfo x .t] [winfo y .t]
-} [list [expr [winfo screenwidth .t] - 110] $Y2]
-destroy .t
+} -cleanup {
+    destroy .t
+} -result [list [expr {[winfo screenwidth .t] - 110}] $Y2]
 
 test unixWm-44.9 {UpdateGeometryInfo procedure, updating fixed dimensions} {unix testwrapper} {
     destroy .t
@@ -1700,6 +1780,10 @@ test unixWm-47.1 {WaitRestrictProc procedure} {unix nonPortable} {
 
 # I don't know how to test WaitTimeoutProc, WaitForMapNotify, or UpdateHints.
 
+#
+# COMMON TEST SETUP
+#
+
 destroy .t
 toplevel .t -width 300 -height 200
 wm geometry .t +0+0
@@ -1754,7 +1838,7 @@ test unixWm-48.13 {ParseGeometry procedure, resize causes window to move} unix {
     set y [winfo y .t]
     wm geometry .t 150x300
     update
-    list [expr [winfo x .t] - $x] [expr [winfo y .t] - $y] \
+    list [expr {[winfo x .t] - $x}] [expr {[winfo y .t] - $y}] \
 	    [winfo width .t] [winfo height .t]
 } {50 -100 150 300}
 
@@ -1784,14 +1868,19 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
     place .t.f -x 10 -y 30
     testmenubar window .t .t.m
     update
-    list [expr [winfo rootx .t.m.f] - $x] [expr [winfo rooty .t.m.f] - $y] \
-	    [expr [winfo rootx .t.f] - $x] [expr [winfo rooty .t.f] - $y]
+    list [expr {[winfo rootx .t.m.f] - $x}] [expr {[winfo rooty .t.m.f] - $y}] \
+	    [expr {[winfo rootx .t.f] - $x}] [expr {[winfo rooty .t.f] - $y}]
 } {52 7 12 62}
+
+#
+# COMMON TEST SETUP
+#
 
 deleteWindows
 # Make sure that the root window is out of the way!
 wm geom . +700+700
 wm withdraw .
+
 if {[tk windowingsystem] eq "aqua"} {
     # Modern mac windows have no border.
     set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t}
@@ -1799,7 +1888,12 @@ if {[tk windowingsystem] eq "aqua"} {
     # Windows are assumed to have a border (invisible in Gnome 3).
     set result_50_1 {{} {} .t {} .t2 {} .t2 {} .t}
 }
-test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnUbuntu failsOnXQuarz} {
+
+if {[tk windowingsystem] eq "aqua"} {
+    after 1000; # Give Apple's _windowserver some time to catch up.
+}
+
+test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} {unix failsOnCILinux failsOnXQuartz} {
     update
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +100+100
@@ -1811,15 +1905,15 @@ test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, tit
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    list [winfo containing [expr $x - 30]  [expr $y + 250]] \
-	 [winfo containing [expr $x - 1]   [expr $y + 250]] \
-	 [winfo containing $x              [expr $y + 250]] \
-	 [winfo containing [expr $x + 99]  [expr $y + 250]] \
-	 [winfo containing [expr $x + 100] [expr $y + 250]] \
-	 [winfo containing [expr $x + 150] [expr $y + 90]] \
-	 [winfo containing [expr $x + 199] [expr $y + 250]] \
-	 [winfo containing [expr $x + 200] [expr $y + 250]] \
-	 [winfo containing [expr $x + 220] [expr $y + 250]] \
+    list [winfo containing [expr {$x - 30}]  [expr {$y + 250}]] \
+	 [winfo containing [expr {$x - 1}]   [expr {$y + 250}]] \
+	 [winfo containing $x              [expr {$y + 250}]] \
+	 [winfo containing [expr {$x + 99}]  [expr {$y + 250}]] \
+	 [winfo containing [expr {$x + 100}] [expr {$y + 250}]] \
+	 [winfo containing [expr {$x + 150}] [expr {$y + 90}]] \
+	 [winfo containing [expr {$x + 199}] [expr {$y + 250}]] \
+	 [winfo containing [expr {$x + 200}] [expr {$y + 250}]] \
+	 [winfo containing [expr {$x + 220}] [expr {$y + 250}]] \
 } $result_50_1
 test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and overrideredirect} unix {
     deleteWindows
@@ -1836,14 +1930,14 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
     set x [winfo rootx .t]
     set y [winfo rooty .t]
     set y2 [winfo rooty .t2]
-    list [winfo containing [expr $x +200] [expr $y - 30]] \
-	 [winfo containing [expr $x +200] [expr $y - 1]] \
-	 [winfo containing [expr $x +200] $y] \
-	 [winfo containing [expr $x +200] [expr $y2 - 1]] \
-	 [winfo containing [expr $x +200] $y2] \
-	 [winfo containing [expr $x +200] [expr $y2 + 99]] \
-	 [winfo containing [expr $x +200] [expr $y2 + 100]] \
-	 [winfo containing [expr $x +200] [expr $y + 450]]
+    list [winfo containing [expr {$x +200}] [expr {$y - 30}]] \
+	 [winfo containing [expr {$x +200}] [expr {$y - 1}]] \
+	 [winfo containing [expr {$x +200}] $y] \
+	 [winfo containing [expr {$x +200}] [expr {$y2 - 1}]] \
+	 [winfo containing [expr {$x +200}] $y2] \
+	 [winfo containing [expr {$x +200}] [expr {$y2 + 99}]] \
+	 [winfo containing [expr {$x +200}] [expr {$y2 + 100}]] \
+	 [winfo containing [expr {$x +200}] [expr {$y + 450}]]
 } {{} {} .t .t .t2 .t2 .t {}}
 test unixWm-50.3 {
     Tk_CoordsToWindow procedure, finding a toplevel with embedding
@@ -1861,19 +1955,19 @@ test unixWm-50.3 {
     child alias frameid winfo id .t.f
     child eval {
 	wm withdraw .
-        toplevel .x -width 100 -height 80 -use [frameid] -bg yellow
-        tkwait visibility .x
-        update
-        set x [winfo rootx .x]
-        set y [winfo rooty .x]
+	toplevel .x -width 100 -height 80 -use [frameid] -bg yellow
+	tkwait visibility .x
+	update
+	set x [winfo rootx .x]
+	set y [winfo rooty .x]
     }
-    set result [list [child eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
-	[child eval {winfo containing $x [expr $y + 50]}]]
+    set result [list [child eval {winfo containing [expr {$x - 1}]  [expr {$y + 50}]}] \
+	[child eval {winfo containing $x [expr {$y + 50}]}]]
     interp delete child
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    lappend result [winfo containing [expr $x + 200] [expr $y + 49]] \
-	[winfo containing [expr $x + 200] [expr $y +50]]
+    lappend result [winfo containing [expr {$x + 200}] [expr {$y + 49}]] \
+	[winfo containing [expr {$x + 200}] [expr {$y +50}]]
     set result
 } {{} .x .t .t.f}
 test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix {
@@ -1885,7 +1979,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix
     update
     interp create child
     load {} Tk child
-    child eval {wm geometry . 200x200+100+100; update}
+    child eval {wm geometry . 200x200+100+100; after 100; update}
     set result [list [winfo containing 200 200] \
 	[child eval {winfo containing 200 200}]]
     interp delete child
@@ -1905,13 +1999,13 @@ test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenu
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    list [winfo containing $x             [expr $y - 31]] \
-	 [winfo containing $x             [expr $y - 30]] \
-	 [winfo containing [expr $x + 50] [expr $y - 19]] \
-	 [winfo containing [expr $x + 50] [expr $y - 18]] \
-	 [winfo containing [expr $x + 50] $y] \
-	 [winfo containing [expr $x + 11] [expr $y + 152]] \
-	 [winfo containing [expr $x + 12] [expr $y + 152]]
+    list [winfo containing $x             [expr {$y - 31}]] \
+	 [winfo containing $x             [expr {$y - 30}]] \
+	 [winfo containing [expr {$x + 50}] [expr {$y - 19}]] \
+	 [winfo containing [expr {$x + 50}] [expr {$y - 18}]] \
+	 [winfo containing [expr {$x + 50}] $y] \
+	 [winfo containing [expr {$x + 11}] [expr {$y + 152}]] \
+	 [winfo containing [expr {$x + 12}] [expr {$y + 152}]]
 } {{} .t.menu .t.menu .t.menu.f .t .t .t.f}
 test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} unix {
     deleteWindows
@@ -1925,10 +2019,10 @@ test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} unix {
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    list [winfo containing [expr $x +149] [expr $y + 80]] \
-	    [winfo containing [expr $x +150] [expr $y +80]] \
-	    [winfo containing [expr $x +249] [expr $y +80]] \
-	    [winfo containing [expr $x +250] [expr $y +80]]
+    list [winfo containing [expr {$x +149}] [expr {$y + 80}]] \
+	    [winfo containing [expr {$x +150}] [expr {$y +80}]] \
+	    [winfo containing [expr {$x +249}] [expr {$y +80}]] \
+	    [winfo containing [expr {$x +250}] [expr {$y +80}]]
 } {.t .t2 .t2 .t}
 test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} unix {
     destroy .t
@@ -1939,13 +2033,13 @@ test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} unix {
     frame .t.f.f -width 100 -height 200 -bd 2 -relief raised
     place .t.f.f -x 0 -y 100
     tkwait visibility .t.f.f
-    set x [expr [winfo rootx .t] + 150]
+    set x [expr {[winfo rootx .t] + 150}]
     set y [winfo rooty .t]
-    list [winfo containing $x [expr $y + 50]] \
-	    [winfo containing $x [expr $y + 150]] \
-	    [winfo containing $x [expr $y + 250]] \
-	    [winfo containing $x [expr $y + 350]] \
-	    [winfo containing $x [expr $y + 450]]
+    list [winfo containing $x [expr {$y + 50}]] \
+	    [winfo containing $x [expr {$y + 150}]] \
+	    [winfo containing $x [expr {$y + 250}]] \
+	    [winfo containing $x [expr {$y + 350}]] \
+	    [winfo containing $x [expr {$y + 450}]]
 } {.t .t.f .t.f.f .t {}}
 test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
     destroy .t
@@ -1957,14 +2051,14 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
     place .t.f.f -x 100 -y 0
     update
     set x [winfo rootx .t]
-    set y [expr [winfo rooty .t] + 150]
-    list [winfo containing [expr $x + 50] $y] \
-	    [winfo containing [expr $x + 150] $y] \
-	    [winfo containing [expr $x + 250] $y] \
-	    [winfo containing [expr $x + 350] $y] \
-	    [winfo containing [expr $x + 450] $y]
+    set y [expr {[winfo rooty .t] + 150}]
+    list [winfo containing [expr {$x + 50}] $y] \
+	    [winfo containing [expr {$x + 150}] $y] \
+	    [winfo containing [expr {$x + 250}] $y] \
+	    [winfo containing [expr {$x + 350}] $y] \
+	    [winfo containing [expr {$x + 450}] $y]
 } {.t .t.f .t.f.f .t {}}
-test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu failsOnXQuarz} {
+test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnCILinux failsOnXQuartz} {
     destroy .t
     destroy .t2
     update
@@ -1997,6 +2091,10 @@ test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     update idletasks
     lappend result [winfo containing 100 100]
 } {.t.f .t}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
 wm deiconify .
 
@@ -2051,7 +2149,12 @@ test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
     list $result [winfo containing [winfo rootx .raise2] \
 	    [winfo rooty .raise2]]
 } {.raise1 .raise3}
+
+#
+# COMMON TEST CLEANUP
+#
 deleteWindows
+
 test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapped} unix {
     wm geometry . +300+300
     destroy .t
@@ -2065,7 +2168,7 @@ test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapp
     # This test assumes that .t2 is not mapped yet, but that is not really guaranteed.
     winfo containing 100 100
 } {.t}
-test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {unix failsOnXQuarz} {
+test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {unix failsOnXQuartz} {
     foreach w {.t .t2 .t3} {
 	destroy $w
 	toplevel $w -width 200 -height 200 -bg green
@@ -2099,20 +2202,22 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
     # come up at (0,0) in display coordinates, not virtual root
     # coordinates.
 
-    set x [expr 100-[winfo vrootx .]]
-    set y [expr 100-[winfo vrooty .]]
+    set x [expr {100-[winfo vrootx .]}]
+    set y [expr {100-[winfo vrooty .]}]
     set result [list [winfo containing $x $y]]
     raise .t
     lappend result [winfo containing $x $y]
     raise .t2
     lappend result [winfo containing $x $y]
 } {.t2 .t .t2}
-# The mac won't put an overrideredirect window above the root,
-if {[tk windowingsystem] eq "aqua"} {
-    wm withdraw .
-    update
-}
-test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} unix {
+
+test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} -constraints unix -setup {
+    # The mac won't put an overrideredirect window above the root,
+    if {[tk windowingsystem] eq "aqua"} {
+	wm withdraw .
+	update
+    }
+} -body {
     foreach w {.t .t2 .t3} {
 	destroy $w
 	update
@@ -2130,17 +2235,18 @@ test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} 
     # come up at (0,0) in display coordinates, not virtual root
     # coordinates.
 
-    set x [expr 100-[winfo vrootx .]]
-    set y [expr 100-[winfo vrooty .]]
+    set x [expr {100-[winfo vrootx .]}]
+    set y [expr {100-[winfo vrooty .]}]
     set result [list [winfo containing $x $y]]
     lower .t2
     update
     lappend result [winfo containing $x $y]
-} {.t2 .t3}
-if {[tk windowingsystem] eq "aqua"} {
-    wm deiconify .
-    update
-}
+} -cleanup {
+    if {[tk windowingsystem] eq "aqua"} {
+	wm deiconify .
+	update
+    }
+} -result {.t2 .t3}
 test unixWm-51.10 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
     makeToplevels
     raise .raise1
@@ -2271,8 +2377,8 @@ test unixWm-55.1 {TkUnixSetMenubar procedure} {unix testmenubar} {
     testmenubar window .t .t.f
     update
     list [winfo ismapped .t.f] [winfo geometry .t.f] \
-	    [expr [winfo rootx .t] - [winfo rootx .t.f]] \
-	    [expr [winfo rooty .t] - [winfo rooty .t.f]]
+	    [expr {[winfo rootx .t] - [winfo rootx .t.f]}] \
+	    [expr {[winfo rooty .t] - [winfo rooty .t.f]}]
 } {1 300x30+0+0 0 30}
 test unixWm-55.2 {TkUnixSetMenubar procedure, removing menubar} {unix testmenubar} {
     destroy .t
@@ -2288,10 +2394,10 @@ test unixWm-55.2 {TkUnixSetMenubar procedure, removing menubar} {unix testmenuba
     testmenubar window .t {}
     update
     list [winfo ismapped .f] [winfo geometry .f] \
-	    [expr [winfo rootx .t] - $x] \
-	    [expr [winfo rooty .t] - $y] \
-	    [expr [winfo rootx .] - [winfo rootx .f]] \
-	    [expr [winfo rooty .] - [winfo rooty .f]]
+	    [expr {[winfo rootx .t] - $x}] \
+	    [expr {[winfo rooty .t] - $y}] \
+	    [expr {[winfo rootx .] - [winfo rootx .f]}] \
+	    [expr {[winfo rooty .] - [winfo rooty .f]}]
 } {0 300x30+0+0 0 0 0 0}
 test unixWm-55.3 {TkUnixSetMenubar procedure, removing geometry manager} {unix testmenubar} {
     destroy .t
@@ -2305,10 +2411,10 @@ test unixWm-55.3 {TkUnixSetMenubar procedure, removing geometry manager} {unix t
     update
     testmenubar window .t {}
     update
-    set result "[expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]"
+    set result "[expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}]"
     .t.f configure -height 100
     update
-    lappend result [expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]
+    lappend result [expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}]
 } {0 0 0 0}
 test unixWm-55.4 {TkUnixSetMenubar procedure, toplevel not yet created} {unix testmenubar} {
     destroy .t
@@ -2318,8 +2424,8 @@ test unixWm-55.4 {TkUnixSetMenubar procedure, toplevel not yet created} {unix te
     wm geom .t +0+0
     update
     list [winfo ismapped .t.f] [winfo geometry .t.f] \
-	    [expr [winfo rootx .t] - [winfo rootx .t.f]] \
-	    [expr [winfo rooty .t] - [winfo rooty .t.f]]
+	    [expr {[winfo rootx .t] - [winfo rootx .t.f]}] \
+	    [expr {[winfo rooty .t] - [winfo rooty .t.f]}]
 } {1 300x30+0+0 0 30}
 test unixWm-55.5 {TkUnixSetMenubar procedure, changing menubar} {unix testmenubar} {
     destroy .t
@@ -2334,11 +2440,11 @@ test unixWm-55.5 {TkUnixSetMenubar procedure, changing menubar} {unix testmenuba
     update
     set result {}
     lappend result [winfo ismapped .f] [winfo ismapped .t.f]
-    lappend result [expr [winfo rooty .t.f] - $y]
+    lappend result [expr {[winfo rooty .t.f] - $y}]
     testmenubar window .t .f
     update
     lappend result [winfo ismapped .f] [winfo ismapped .t.f]
-    lappend result [expr [winfo rooty .f] - $y]
+    lappend result [expr {[winfo rooty .f] - $y}]
 } {0 1 0 1 0 0}
 test unixWm-55.6 {TkUnixSetMenubar procedure, changing menubar to self} {unix testmenubar} {
     destroy .t
@@ -2350,8 +2456,8 @@ test unixWm-55.6 {TkUnixSetMenubar procedure, changing menubar to self} {unix te
     testmenubar window .t .t.f
     update
     list [winfo ismapped .t.f] [winfo geometry .t.f] \
-	    [expr [winfo rootx .t] - [winfo rootx .t.f]] \
-	    [expr [winfo rooty .t] - [winfo rooty .t.f]]
+	    [expr {[winfo rootx .t] - [winfo rootx .t.f]}] \
+	    [expr {[winfo rooty .t] - [winfo rooty .t.f]}]
 } {1 300x30+0+0 0 30}
 test unixWm-55.7 {TkUnixSetMenubar procedure, unsetting event handler} {unix testmenubar} {
     destroy .t
@@ -2364,13 +2470,13 @@ test unixWm-55.7 {TkUnixSetMenubar procedure, unsetting event handler} {unix tes
     set y [winfo rooty .t]
     testmenubar window .t .t.f
     update
-    set result [expr [winfo rooty .t] - $y]
+    set result [expr {[winfo rooty .t] - $y}]
     testmenubar window .t .f
     update
-    lappend result [expr [winfo rooty .t] - $y]
+    lappend result [expr {[winfo rooty .t] - $y}]
     destroy .t.f
     update
-    lappend result [expr [winfo rooty .t] - $y]
+    lappend result [expr {[winfo rooty .t] - $y}]
 } {30 40 40}
 
 test unixWm-56.1 {MenubarDestroyProc procedure} {unix testmenubar} {
@@ -2382,10 +2488,10 @@ test unixWm-56.1 {MenubarDestroyProc procedure} {unix testmenubar} {
     frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
     testmenubar window .t .t.f
     update
-    set result [expr [winfo rooty .t] - $y]
+    set result [expr {[winfo rooty .t] - $y}]
     destroy .t.f
     update
-    lappend result [expr [winfo rooty .t] - $y]
+    lappend result [expr {[winfo rooty .t] - $y}]
 } {30 0}
 
 test unixWm-57.1 {MenubarReqProc procedure} {unix testmenubar} {
@@ -2398,10 +2504,10 @@ test unixWm-57.1 {MenubarReqProc procedure} {unix testmenubar} {
     frame .t.f -width 400 -height 10 -bd 2 -relief raised -bg green
     testmenubar window .t .t.f
     update
-    set result "[expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]"
+    set result "[expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}]"
     .t.f configure -height 100
     update
-    lappend result [expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]
+    lappend result [expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}]
 } {0 10 0 100}
 test unixWm-57.2 {MenubarReqProc procedure} {unix testmenubar} {
     destroy .t
@@ -2413,10 +2519,10 @@ test unixWm-57.2 {MenubarReqProc procedure} {unix testmenubar} {
     frame .t.f -width 400 -height 20 -bd 2 -relief raised -bg green
     testmenubar window .t .t.f
     update
-    set result "[expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]"
+    set result "[expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}]"
     .t.f configure -height 0
     update
-    lappend result [expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]
+    lappend result [expr {[winfo rootx .t] - $x}] [expr {[winfo rooty .t] - $y}]
 } {0 20 0 1}
 
 test unixWm-58.1 {UpdateCommand procedure, DString gets reallocated} {unix testwrapper} {
@@ -2516,18 +2622,17 @@ test unixWm-59.3 {exit processing} unix {
 # NOTE: since [wm attributes] is not guaranteed to have any effect,
 # the only thing we can really test here is the syntax.
 #
-if {[tk windowingsystem] eq "aqua"} {
-    set match_60_1 glob
-    set result_60_1 {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -isdark [01] -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
-} else {
-    set match_60_1 exact
-    set result_60_1 {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
-}
-test unixWm-60.1 {wm attributes - test} -constraints unix -body {
+test unixWm-60.1.1 {wm attributes - test} -constraints {unix notAqua} -body {
     destroy .t
     toplevel .t
     wm attributes .t
-} -match $match_60_1 -result $result_60_1
+} -match exact -result {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
+
+test unixWm-60.1.2 {wm attributes - test} -constraints {unix aqua} -body {
+    destroy .t
+    toplevel .t
+    wm attributes .t
+} -match glob -result {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -isdark [01] -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
 
 test unixWm-60.2 {wm attributes - test} -constraints unix -body {
     destroy .t
@@ -2614,7 +2719,9 @@ test unixWm-62.4 {wm attributes -type list} -constraints unix -setup {
     destroy .t
 } -result {}
 
-# cleanup
+#
+# TESTFILE CLEANUP
+#
+
 destroy .t
 cleanupTests
-return

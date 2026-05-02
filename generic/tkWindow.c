@@ -39,7 +39,7 @@ typedef struct TkHalfdeadWindow {
 } TkHalfdeadWindow;
 
 typedef struct {
-    int numMainWindows;		/* Count of numver of main windows currently
+    int numMainWindows;		/* Count of number of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;
 				/* First in list of all main windows managed
@@ -49,7 +49,7 @@ typedef struct {
 				 * windows. */
     TkDisplay *displayList;	/* List of all displays currently in use by
 				 * the current thread. */
-    int initialized;		/* 0 means the structures above need
+    bool initialized;		/* false means the structures above need
 				 * initializing. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -99,7 +99,7 @@ static const XSetWindowAttributes defAtts= {
 typedef int (TkInitProc)(Tcl_Interp *interp, void *clientData);
 typedef struct {
     const char *name;		/* Name of command. */
-    Tcl_ObjCmdProc *objProc;	/* Command's object- (or string-) based
+    Tcl_ObjCmdProc2 *objProc;	/* Command's object- (or string-) based
 				 * function, or initProc. */
     int flags;
 } TkCmd;
@@ -126,7 +126,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
-    {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
+    {"tk",		(Tcl_ObjCmdProc2 *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE|SAVEUPDATECMD},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
@@ -201,6 +201,8 @@ static const TkCmd commands[] = {
     {NULL,		NULL,			0}
 };
 
+extern int TkAccessibility_Init(Tcl_Interp *interp);
+
 /*
  * Forward declarations to functions defined later in this file:
  */
@@ -254,7 +256,7 @@ TkCloseDisplay(
     TkClipCleanup(dispPtr);
 
     if (dispPtr->name != NULL) {
-	ckfree(dispPtr->name);
+	Tcl_Free(dispPtr->name);
     }
 
     if (dispPtr->atomInit) {
@@ -270,7 +272,7 @@ TkCloseDisplay(
 		errorPtr != NULL;
 		errorPtr = dispPtr->errorPtr) {
 	    dispPtr->errorPtr = errorPtr->nextPtr;
-	    ckfree(errorPtr);
+	    Tcl_Free(errorPtr);
 	}
     }
 
@@ -285,7 +287,7 @@ TkCloseDisplay(
 
     Tcl_DeleteHashTable(&dispPtr->winTable);
 
-    ckfree(dispPtr);
+    Tcl_Free(dispPtr);
 
     /*
      * There is more to clean up, we leave it at this for the time being.
@@ -335,7 +337,7 @@ CreateTopLevelWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+	tsdPtr->initialized = true;
 
 	/*
 	 * Create built-in image types.
@@ -499,7 +501,7 @@ GetScreen(
 
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
 
-	    dispPtr->name = (char *)ckalloc(length + 1);
+	    dispPtr->name = (char *)Tcl_Alloc(length + 1);
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
 	    break;
@@ -632,7 +634,7 @@ TkAllocWindow(
 				 * inherit visual information. NULL means use
 				 * screen defaults instead of inheriting. */
 {
-    TkWindow *winPtr = (TkWindow *)ckalloc(sizeof(TkWindow));
+    TkWindow *winPtr = (TkWindow *)Tcl_Alloc(sizeof(TkWindow));
 
     winPtr->display = dispPtr->display;
     winPtr->dispPtr = dispPtr;
@@ -781,7 +783,7 @@ NameWindow(
     if ((length1 + length2 + 2) <= FIXED_SIZE) {
 	pathName = staticSpace;
     } else {
-	pathName = (char *)ckalloc(length1 + length2 + 2);
+	pathName = (char *)Tcl_Alloc(length1 + length2 + 2);
     }
     if (length1 == 1) {
 	pathName[0] = '.';
@@ -794,7 +796,7 @@ NameWindow(
     hPtr = Tcl_CreateHashEntry(&parentPtr->mainPtr->nameTable, pathName,
 	    &isNew);
     if (pathName != staticSpace) {
-	ckfree(pathName);
+	Tcl_Free(pathName);
     }
     if (!isNew) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -880,13 +882,12 @@ TkCreateMainWindow(
      */
 
     winPtr = (TkWindow *) tkwin;
-    mainPtr = (TkMainInfo *)ckalloc(sizeof(TkMainInfo));
+    mainPtr = (TkMainInfo *)Tcl_Alloc(sizeof(TkMainInfo));
     mainPtr->winPtr = winPtr;
     mainPtr->refCount = 1;
     mainPtr->interp = interp;
     Tcl_InitHashTable(&mainPtr->nameTable, TCL_STRING_KEYS);
     mainPtr->deletionEpoch = 0l;
-    TkEventInit();
     TkBindInit(mainPtr);
     TkFontPkgInit(mainPtr);
     TkStylePkgInit(mainPtr);
@@ -897,9 +898,7 @@ TkCreateMainWindow(
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
     mainPtr->tclUpdateObjProc = NULL;
-#if TCL_MAJOR_VERSION > 8
     mainPtr->tclUpdateObjProc2 = NULL;
-#endif
     if (Tcl_LinkVar(interp, "tk_strictMotif", &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
@@ -963,19 +962,18 @@ TkCreateMainWindow(
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
 	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
-#if TCL_MAJOR_VERSION > 8
 	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
-	    } else
-#endif
-	    if (!cmdInfo.objClientData) {
-		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+#ifndef TCL_NO_DEPRECATED
+	    } else if (!cmdInfo.objClientData) {
+		mainPtr->tclUpdateObjProc = (void *)cmdInfo.objProc;
+#endif /* TCL_NO_DEPRECATED */
 	    }
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
-	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
+	    Tcl_CreateObjCommand2(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
 	}
 	if (isSafe && !(cmdPtr->flags & ISSAFE)) {
@@ -1019,11 +1017,23 @@ TkCreateMainWindow(
 #ifdef USE_NMAKE
 		".nmake"
 #endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_ATK)
+		".no-atk"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !(defined(TK_USE_WAYLAND) || defined(HAVE_BIDI))
+		".no-bidi"
+#endif
 #ifdef TK_NO_DEPRECATED
 		".no-deprecate"
 #endif
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XFT) && !defined(HAVE_BIDI)
+		".no-xft"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XSS)
+		".no-xss"
 #endif
 #ifdef __OBJC__
 		".objective-c"
@@ -1040,27 +1050,21 @@ TkCreateMainWindow(
 #ifdef STATIC_BUILD
 		".static"
 #endif
+#if (defined(__MSVCRT__) || defined(_UCRT)) && (!defined(__USE_MINGW_ANSI_STDIO) || __USE_MINGW_ANSI_STDIO)
+		".stdio-mingw"
+#endif
 #if defined(_WIN32)
 		".win32"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND)
 		".x11"
-#if !defined(HAVE_XFT)
-		".no-xft"
-#endif
 #endif
 		;
-#if TCL_MAJOR_VERSION > 8
-	if (info.isNativeObjectProc == 2) {
+	if (info.isNativeObjectProc) {
 	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
-		    info.objProc2, (void *)
-		    version, NULL);
+		    info.objProc2, (void *)version, NULL);
 
-	} else
-#endif
-	Tcl_CreateObjCommand(interp, "::tk::build-info",
-		info.objProc, (void *)
-		version, NULL);
+	}
     }
 
     /*
@@ -1269,7 +1273,7 @@ Tk_CreateWindowFromPath(
     }
     numChars = (size_t)(p - pathName);
     if (numChars > FIXED_SPACE) {
-	p = (char *)ckalloc(numChars + 1);
+	p = (char *)Tcl_Alloc(numChars + 1);
     } else {
 	p = fixedSpace;
     }
@@ -1287,7 +1291,7 @@ Tk_CreateWindowFromPath(
 
     parent = Tk_NameToWindow(interp, p, tkwin);
     if (p != fixedSpace) {
-	ckfree(p);
+	Tcl_Free(p);
     }
     if (parent == NULL) {
 	return NULL;
@@ -1414,7 +1418,7 @@ Tk_DestroyWindow(
 	    (tsdPtr->halfdeadWindowList->winPtr == winPtr)) {
 	halfdeadPtr = tsdPtr->halfdeadWindowList;
     } else {
-	halfdeadPtr = (TkHalfdeadWindow *)ckalloc(sizeof(TkHalfdeadWindow));
+	halfdeadPtr = (TkHalfdeadWindow *)Tcl_Alloc(sizeof(TkHalfdeadWindow));
 	halfdeadPtr->flags = 0;
 	halfdeadPtr->winPtr = winPtr;
 	halfdeadPtr->nextPtr = tsdPtr->halfdeadWindowList;
@@ -1558,7 +1562,7 @@ Tk_DestroyWindow(
 	    } else {
 		prev_halfdeadPtr->nextPtr = halfdeadPtr->nextPtr;
 	    }
-	    ckfree(halfdeadPtr);
+	    Tcl_Free(halfdeadPtr);
 	    break;
 	}
 	prev_halfdeadPtr = halfdeadPtr;
@@ -1611,7 +1615,7 @@ Tk_DestroyWindow(
     TkSelDeadWindow(winPtr);
     TkGrabDeadWindow(winPtr);
     if (winPtr->geomMgrName != NULL) {
-	ckfree(winPtr->geomMgrName);
+	Tcl_Free(winPtr->geomMgrName);
 	winPtr->geomMgrName = NULL;
     }
     if (winPtr->mainPtr != NULL) {
@@ -1655,27 +1659,26 @@ Tk_DestroyWindow(
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
 		    if (cmdPtr->flags & SAVEUPDATECMD) {
 			/* Restore Tcl's version of [update] */
-#if TCL_MAJOR_VERSION > 8
 			if (winPtr->mainPtr->tclUpdateObjProc2 != NULL) {
 			    Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
 				    cmdPtr->name,
 				    winPtr->mainPtr->tclUpdateObjProc2,
 				    NULL, NULL);
-			} else
-#endif
-			if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
+#ifndef TCL_NO_DEPRECATED
+			} else if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
 			    Tcl_CreateObjCommand(winPtr->mainPtr->interp,
 				    cmdPtr->name,
-				    winPtr->mainPtr->tclUpdateObjProc,
+				    (Tcl_ObjCmdProc *)winPtr->mainPtr->tclUpdateObjProc,
 				    NULL, NULL);
+#endif /* TCL_NO_DEPRECATED */
 			}
 		    } else {
-			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+			Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
 					     cmdPtr->name, TkDeadAppObjCmd,
 					     NULL, NULL);
 		    }
 		}
-		Tcl_CreateObjCommand(winPtr->mainPtr->interp, "send",
+		Tcl_CreateObjCommand2(winPtr->mainPtr->interp, "send",
 			TkDeadAppObjCmd, NULL, NULL);
 		Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
 		Tcl_UnlinkVar(winPtr->mainPtr->interp,
@@ -1701,7 +1704,7 @@ Tk_DestroyWindow(
 	    if (winPtr->flags & TK_EMBEDDED) {
 		XSync(winPtr->display, False);
 	    }
-	    ckfree(winPtr->mainPtr);
+	    Tcl_Free(winPtr->mainPtr);
 
 	    /*
 	     * If no other applications are using the display, close the
@@ -2989,7 +2992,7 @@ DeleteWindowsExitProc(
 
     tsdPtr->numMainWindows = 0;
     tsdPtr->mainWindowList = NULL;
-    tsdPtr->initialized = 0;
+    tsdPtr->initialized = false;
 }
 
 #if defined(_WIN32) && !defined(STATIC_BUILD)
@@ -2997,7 +3000,7 @@ DeleteWindowsExitProc(
 static HMODULE tkcygwindll = NULL;
 
 /*
- * Run Tk_MainEx from libtcl9tk9.?.dll
+ * Run Tk_MainEx from cygtcl9tk9.?.dll
  *
  * This function is only ever called from wish9.?.exe, the cygwin port of Tcl.
  * This means that the system encoding is utf-8, so we don't have to do any
@@ -3018,16 +3021,12 @@ TkCygwinMainEx(
     size_t len;
     void (*tkmainex)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
-    /* construct "<path>/libtcl9tk9.?.dll", from "<path>/tcl9tk9?.dll" */
+    /* construct "<path>/cygtcl9tk9.?.dll", from "<path>/tcl9tk9?.dll" */
     len = GetModuleFileNameW((HINSTANCE)Tk_GetHINSTANCE(), name, MAX_PATH);
-    name[len-2] = '.';
-    name[len-1] = name[len-5];
-    wcscpy(name+len, L".dll");
-#if TCL_MAJOR_VERSION > 8
-    memcpy(name+len-12, L"libtcl9tk9", 10 * sizeof(WCHAR));
-#else
-    memcpy(name+len-8, L"libtk9", 6 * sizeof(WCHAR));
-#endif
+    name[len-2] = '.';   /* "<path>/tcl9tk9?.d.l" */
+    name[len-1] = name[len-5];   /* "<path>/tcl9tk9?.d.?" */
+    wcscpy(name+len, L".dll");   /* "<path>/tcl9tk9?.d.?.dll" */
+    memcpy(name+len-12, L"cygtcl9tk9", 10 * sizeof(WCHAR));   /* "<path>/cygtcl9tk9.?.dll" */
 
     tkcygwindll = LoadLibraryW(name);
     if (tkcygwindll) {
@@ -3226,7 +3225,7 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3235,6 +3234,14 @@ Initialize(
      */
 
     TkInitEmbeddedConfigurationInformation(interp);
+
+    /*
+     * Initalize accessibility module.
+     * Must do this early because it is bound to <Map> events,
+     * and will return an error if the commands are not
+     * available.
+     */
+     TkAccessibility_Init(interp);
 
     /*
      * Ensure that our obj-types are registered with the Tcl runtime.
@@ -3343,7 +3350,7 @@ Initialize(
 		    Tcl_NewListObj(objc-1, rest+1), TCL_GLOBAL_ONLY);
 	    Tcl_SetVar2Ex(interp, "argc", NULL,
 		    Tcl_NewWideIntObj(objc-1), TCL_GLOBAL_ONLY);
-	    ckfree(rest);
+	    Tcl_Free(rest);
 	}
 	Tcl_DecrRefCount(parseList);
 	if (code != TCL_OK) {
