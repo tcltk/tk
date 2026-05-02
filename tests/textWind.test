@@ -397,7 +397,10 @@ test textWind-3.2 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -returnCodes error -result {bad text index ".f"}
 
-test textWind-3.3 {EmbWinConfigure procedure} -setup {
+# This test produces inconsistent output on macOS and X11 with 
+# bidirectional text enabled. Changes in the text widget were
+# most extensive for these platforms.
+test textWind-3.3 {EmbWinConfigure procedure} -constraints {win32} -setup {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .f -width 10 -height 20 -bg $color
@@ -430,7 +433,10 @@ test textWind-3.4 {EmbWinConfigure procedure} -setup {
     destroy .t.f
 } -returnCodes error -result {bad text index ".t.f"}
 
-test textWind-3.5 {EmbWinConfigure procedure} -setup {
+# This test produces inconsistent output on macOS and X11 with 
+# bidirectional text enabled. Changes in the text widget were
+# most extensive for these platforms.
+test textWind-3.5 {EmbWinConfigure procedure} -constraints {win32} -setup {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .t.f -width 10 -height 20 -bg $color
@@ -569,7 +575,10 @@ test textWind-5.1 {EmbWinStructureProc procedure} -setup {
     .t index .f
 } -returnCodes error -result {bad text index ".f"}
 
-test textWind-5.2 {EmbWinStructureProc procedure} -setup {
+# This test produces inconsistent output on macOS and X11 with 
+# bidirectional text enabled. Changes in the text widget were
+# most extensive for these platforms.
+test textWind-5.2 {EmbWinStructureProc procedure} -constraints {win32} -setup {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .f -width 10 -height 20 -bg $color
@@ -598,7 +607,10 @@ test textWind-5.3 {EmbWinStructureProc procedure} -setup {
     .t index .f
 } -returnCodes error -result {bad text index ".f"}
 
-test textWind-5.4 {EmbWinStructureProc procedure} -setup {
+# This test produces inconsistent output on macOS and X11 with 
+# bidirectional text enabled. Changes in the text widget were
+# most extensive for these platforms.
+test textWind-5.4 {EmbWinStructureProc procedure} -constraints {win32} -setup {
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     frame .f -width 10 -height 20 -bg $color

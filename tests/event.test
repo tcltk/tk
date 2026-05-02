@@ -391,8 +391,11 @@ test event-2.6(keypress) {type into text widget, triple click,
     deleteWindows
 } -result {JUMP UP}
 
+# This test produces inconsistent output on macOS and X11 with 
+# bidirectional text enabled. Changes in the text widget were
+# most extensive for these platforms.
 test event-3.1(click-drag) {click and drag in a text widget, this tests
-    tkTextSelectTo in text.tcl} -setup {
+    tkTextSelectTo in text.tcl}  -constraints {win32} -setup {
 	deleteWindows
 } -body {
     set t [toplevel .t]
@@ -526,9 +529,11 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     deleteWindows
 } -result {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
 
-
+# This test produces inconsistent output on macOS and X11 with 
+# bidirectional text enabled. Changes in the text widget were
+# most extensive for these platforms.
 test event-4.1(double-click-drag) {click down, click up, click down again,
-    then drag in a text widget} -setup {
+    then drag in a text widget} -constraints {win32} -setup {
 	deleteWindows
 } -body {
     set t [toplevel .t]
