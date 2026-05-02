@@ -107,47 +107,70 @@ TkWaylandUpdateKeyboardModifiers(int glfw_mods)
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandStoreCharacterInput --
+ * TkWaylandStoreTextInput --
  *
- *      Store Unicode codepoint from character input callback.
+ *      Converts a codepoint to UTF-8 and appends the Utf-8 string to the
+ *      pendingText DString stored in the window's TkWindowPrivate struct.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Stores codepoint for later retrieval.
+ *      Stores text for later retrieval.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
-TkWaylandStoreCharacterInput(unsigned int codepoint)
+void
+TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint)
 {
-    pendingCodepoint = codepoint;
+    char buffer[7];
+    int length = Tcl_UniCharToUtf(codepoint, buffer);
+    Tcl_DStringAppend(&winPtr->privatePtr->pendingText, buffer, length);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandGetPendingCharacter --
+ * TkWaylandGetStoredText --
  *
- *      Retrieves and clears the stored Unicode codepoint.
+ *      Retrieves a pointer to the stored pending text for a toplevel.
  *
  * Results:
- *      Returns the stored codepoint, or 0 if none pending.
+ *      Returns a pointer to the pending text.
  *
  * Side effects:
- *      Clears the pending codepoint.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
-unsigned int
-TkWaylandGetPendingCharacter(void)
+char*
+TkWaylandGetStoredText(TkWindow *winPtr)
 {
-    unsigned int codepoint = pendingCodepoint;
-    pendingCodepoint = 0;
-    return codepoint;
+    return Tcl_DStringValue(&winPtr->privatePtr->pendingText);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandClearStoredTextInput --
+ *
+ *      Clears the DString holding pending text for a window.
+ *
+ * Results:
+ *      None
+ *
+ * Side effects:
+ *      Clears the pending text.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkWaylandClearStoredText(TkWindow *winPtr)
+{
+    Tcl_DStringSetLength(&winPtr->privatePtr->pendingText, 0);
 }
 
 /* ============================== Notifier  ============================== */
@@ -475,6 +498,7 @@ TkGlfwSetupCallbacks(
     glfwSetScrollCallback          (glfwWindow, TkGlfwScrollCallback);
     glfwSetWindowRefreshCallback   (glfwWindow, TkGlfwWindowRefreshCallback);
     glfwSetKeyCallback             (glfwWindow, TkGlfwKeyCallback);
+    glfwSetCharCallback            (glfwWindow, TkGlfwCharCallback);
 }
 
 MODULE_SCOPE void
@@ -493,6 +517,7 @@ TkGlfwClearCallbacks(
     glfwSetScrollCallback          (glfwWindow, NULL);
     glfwSetWindowRefreshCallback   (glfwWindow, NULL);
     glfwSetKeyCallback             (glfwWindow, NULL);
+    glfwSetCharCallback             (glfwWindow, NULL);
 }
 
 /*
@@ -1152,6 +1177,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
     double xpos, ypos;
     int x, y;
 
+    printf("TkGlfwKeyCallback\n");
     if (!winPtr || action == GLFW_REPEAT) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
@@ -1196,25 +1222,28 @@ TkGlfwKeyCallback(GLFWwindow *window,
  *
  * TkGlfwCharCallback --
  *
- *      Called when character is input.
+ *      Called with a 32-bit unicode codepoint when a composition
+ *      sequence has been completed and produced a unicode codepoint.
+ *      Store the codepoint for use by TkpGetString
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Stores character for next TkpGetString() call.
+ *      Stores codepoint for the next TkpGetString() call.
  *
  *----------------------------------------------------------------------
  */
  
 static void
 TkGlfwCharCallback(
-    TCL_UNUSED(GLFWwindow *), /* window */
+    GLFWwindow *window,
     unsigned int codepoint)
 {
+    printf("TkGlfwCharCallback with codepoint %d\n", codepoint);
     recordCallback();
-    printf("TkGlfwCharCallback\n");
-    TkWaylandStoreCharacterInput(codepoint);
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWaylandStoreText(winPtr, codepoint);
 }
 /*
  *----------------------------------------------------------------------

@@ -556,6 +556,7 @@ TkWmDeadWindow(
 	if (winPtr->privatePtr->glfwWindow) {
 	    printf("Freeing privatePtr with non-null glfwWindow\n");
 	}
+	Tcl_DStringFree(&winPtr->privatePtr->pendingText);
 	ckfree(winPtr->privatePtr);
 	winPtr->privatePtr = NULL;
     }
@@ -752,6 +753,7 @@ Tk_MakeWindow(
 
 	if (winPtr->privatePtr == NULL) {
 	    winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+	    Tcl_DStringInit(&winPtr->privatePtr->pendingText);
 	}
 
         width  = (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
@@ -1309,8 +1311,8 @@ TkWmRemoveFromColormapWindows(TCL_UNUSED(TkWindow *)) {}
 
 void
 TkpUseWindowMenu(
-		 TCL_UNUSED(TkWindow *),
-		 TCL_UNUSED(int))
+    TCL_UNUSED(TkWindow *),
+    TCL_UNUSED(int))
 {
 }
 
@@ -1332,9 +1334,9 @@ TkpUseWindowMenu(
 
 const char *
 TkpGetSystemDefault(
-		    TCL_UNUSED(Tk_Window),
-		    const char *dbClass,
-		    const char *dbName)
+    TCL_UNUSED(Tk_Window),
+    const char *dbClass,
+    const char *dbName)
 {
     static const struct { const char *cls; const char *name; const char *val; }
     defaults[] = {

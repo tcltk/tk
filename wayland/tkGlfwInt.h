@@ -251,7 +251,8 @@ typedef struct TkWaylandPixmap {
  *
  * The TkWindow structure contains a pointer to a struct TkWindowPrivate for
  * storing information specific to a port of Tk.  We use it for GLFW and
- * NVG objects associated to the window.
+ * NVG objects associated to the window and for storing a string
+ * for TkpGetString.
  *
  *----------------------------------------------------------------------
  */
@@ -259,6 +260,7 @@ typedef struct TkWaylandPixmap {
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fbo;
+    Tcl_DString pendingText;
 } glfwData;
 
 
@@ -447,8 +449,10 @@ MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void TkWaylandUpdateKeyboardModifiers(int glfw_mods);
-MODULE_SCOPE void TkWaylandStoreCharacterInput(unsigned int codepoint);
+MODULE_SCOPE void  TkWaylandUpdateKeyboardModifiers(int glfw_mods);
+MODULE_SCOPE void  TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint);
+MODULE_SCOPE char* TkWaylandGetStoredText(TkWindow *winPtr);
+MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 
 /*
  *----------------------------------------------------------------------

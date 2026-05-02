@@ -26,10 +26,9 @@
 #include <xkbcommon/xkbcommon-compose.h>
 #include <X11/keysymdef.h>
 
-//// This is a simple implementation of the two stub functions
-//// required by Tk.  The much more complicated code from
-//// the original wayland port is disabled below.
-
+//// These are implementations of the stub functions required by Tk. Some are
+//// just placeholders and some are copied from the extensive, but not
+//// currently working, code which is disabled below.
 
 /*
  * Called in tkBind.c to generate a value for the %A field in a Tk <Key>
@@ -43,24 +42,53 @@ TkpGetString(
     XEvent *eventPtr,
     Tcl_DString *dsPtr)
 {
-    printf("TkpGetString for %s: keycode is %x",
+    printf("TkpGetString for %s: event keycode is %d\n",
     	   Tk_PathName(winPtr), eventPtr->xkey.keycode);
+    const char* result;
+    TkWindow *toplevel = winPtr;
+    while (!Tk_IsTopLevel(toplevel)) {
+	toplevel = (TkWindow *) Tk_Parent(toplevel);
+    }
     Tcl_DStringInit(dsPtr);
-    return Tcl_DStringAppend(dsPtr, "X", 1);
+    result = Tcl_DStringAppend(dsPtr, TkWaylandGetStoredText(toplevel),
+			       TCL_INDEX_NONE);
+    TkWaylandClearStoredText(toplevel);
+    return result;
 }
 
 /*
- * Called in tkBind.c to generate a value for the %K in a Tk <Key> event.
- * Does not appear to get called for normal text input. This is just a
- * placeholder that returns the keysym for X.
+ * Called from tkBind.c to generate a value for the %K in a Tk <Key> event.
+ * This is just a placeholder that returns the keysym for X.
  */
 KeySym
 TkpGetKeySym(
     TkDisplay *dispPtr,         /* Display in which to map keycode. */
     XEvent *eventPtr)           /* Description of X event. */
 {
-    printf("TkpGetKeysym: keycode is %x", eventPtr->xkey.keycode);
+    printf("TkpGetKeysym: event keycode is %d\n", eventPtr->xkey.keycode);
     return 88;
+}
+
+/*
+ * **************************************************
+ * Tk_SetCaretPos --
+ *
+ *      Could record the cursor location, e.g. for popup menus to select
+ *      special characters.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      None
+ *
+ * **************************************************
+ */
+
+void
+Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
+{
+    printf("Tk_SetCaretPos: x=%d, y=%d, height=%d\n", x, y, height); 
 }
 
 /*
@@ -102,12 +130,10 @@ TkpInitKeymapInfo(TkDisplay *dispPtr)
  * **************************************************
  * TkpSetKeycodeAndState --
  *
- *      Another Stub which does not seem to be used for basic
- *      text input.
- *
  *      Given a keysym and modifier state, find an X11 keycode that will
  *      generate that keysym and write it into the event structure.
  *      Used by [event generate] and the IME surrogate-key helpers.
+ *      Does not seem to be used for basic text entry.
  *
  *      Scans the live XKB keymap to find the correct keycode for any keysym
  *      on the user's current layout, falling back to a hand-coded table of
@@ -231,7 +257,7 @@ TkpSetKeycodeAndState(TCL_UNUSED(Tk_Window),
 KeySym
 XStringToKeysym(_Xconst char *string)
 {
-    printf("XStringToKeySym\n");
+    printf("XStringToKeySym for string %s\n", string);
     xkb_keysym_t keysym;
 
     if (!string || !*string) {
@@ -276,7 +302,7 @@ XStringToKeysym(_Xconst char *string)
 char *
 XKeysymToString(KeySym keysym)
 {
-    printf("XkeysymToString\n");
+    printf("XkeysymToString for keysym %ld\n", keysym);
     static char buffer[64];
 
     /*
@@ -291,27 +317,6 @@ XKeysymToString(KeySym keysym)
     return NULL;
 }
 
-/*
- * **************************************************
- * Tk_SetCaretPos --
- *
- *      Records the cursor location, e.g. for popup menus to select
- *      special characters.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Updates IME cursor rectangle.
- *
- * **************************************************
- */
-
-void
-Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
-{
-    printf("Tk_SetCaretPos: x=%d, y=%d, height=%d\n", x, y, height); 
-}
 
 #if 0
 
