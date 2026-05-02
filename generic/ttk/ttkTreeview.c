@@ -2127,13 +2127,6 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     } else {
 	state &= ~TTK_STATE_BACKGROUND;
     }
-
-    /* If striped, set alternate state */
-/*    if (item->visiblePos % 2 && tv->tree.striped) {
-	state |= TTK_STATE_ALTERNATE;
-    } else {
-	state &= ~TTK_STATE_ALTERNATE;
-    }*/
     return state;
 }
 
@@ -7541,7 +7534,6 @@ TtkTreeview_Init(Tcl_Interp *interp) {
 	&TreeheadingIndicatorElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeheading.cell", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.row", &RowElementSpec, 0);
-    Ttk_RegisterElement(interp, theme, "Treeitem.alt", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
 	&TreeitemIndicatorElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.separator", &RowElementSpec, 0);
