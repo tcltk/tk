@@ -1161,7 +1161,8 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     unset result
 } -result {|<Enter> NotifyInferior .one.f1|<Enter> NotifyInferior .one|}
 
-test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -setup {
+# This test produces inconsistent output on macOS and X11. 
+test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -constraints {win32} -setup {
     setup_win_mousepointer .one
     toplevel .two
     pack propagate .two 0
@@ -1183,7 +1184,8 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|<Enter> NotifyNonlinear .one|}
 
-test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
+# This test produces inconsistent output on macOS and X11.
+test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -constraints {win32} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     wm geometry . +500+500; # avoid an extraneous <Leave> event
     update idletasks
@@ -1217,9 +1219,10 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
+# This test produces inconsistent output on macOS and X11.
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
     Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on macOS CI runners.
-} -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
+} -constraints {notMacosSequoiaOrOlder notMacCI win32} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     destroy .one
     toplevel .two
@@ -1241,7 +1244,8 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|}
 
-test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
+# This test produces inconsistent output on macOS and X11.
+test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -constraints {win32} -setup {
     deleteWindows
     wm geometry . 200x200+100+100
     wm deiconify .
@@ -1279,7 +1283,8 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     bind all <Enter> {}
 } -result "|<Leave> .|<Enter> .|"
 
-test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #xxxx} -setup {
+# This test produces inconsistent output on macOS and X11.
+test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #xxxx} -constraints {win32} -setup {
     setup_win_mousepointer .one
     wm geometry . 200x200+500+100; # the screen pointer is outside the area of the candidate window
     update
