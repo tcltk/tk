@@ -1159,14 +1159,13 @@ TkGlfwKeyCallback(GLFWwindow *window,
     x = floor(xpos);
     y = floor(ypos);
 
-    /* Route to focused child widget if any. */
+    /* Route the event to the focused child widget if there is one. */
     focusWin = winPtr;
     if (winPtr->dispPtr->focusPtr != NULL) {
 	focusWin = winPtr->dispPtr->focusPtr;
     } else {
 	printf("No winPtr->dispPtr->focusPtr\n");
     }
-    printf("Sending key event to window %s\n", Tk_PathName(focusWin));
 
     memset(&event, 0, sizeof(XEvent));
     event.type = (action == GLFW_PRESS) ? KeyPress : KeyRelease;
