@@ -131,22 +131,27 @@ proc ttk::theme::alt::configureNotebookStyle {style} {
     switch -- [string index $tabPos 0] {
 	n {
 	    ttk::style configure $style -tabmargins     {1.5p 1.5p 0.75p 0}
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 1.5p 0.75p 0}}
 	}
 	s {
 	    ttk::style configure $style -tabmargins     {1.5p 0 0.75p 1.5p}
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 0 0.75p 1.5p}}
 	}
 	w {
 	    ttk::style configure $style -tabmargins     {1.5p 1.5p 0 0.75p}
+	    ttk::style configure $style.Tab -padding {1.5p 3p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 1.5p 0 0.75p}}
 	}
 	e {
 	    ttk::style configure $style -tabmargins     {0 1.5p 1.5p 0.75p}
+	    ttk::style configure $style.Tab -padding {1.5p 3p}
 	    ttk::style map $style.Tab -expand {selected {0 1.5p 1.5p 0.75p}}
 	}
 	default {
 	    ttk::style configure $style -tabmargins     {1.5p 1.5p 0.75p 0}
+	    ttk::style configure $style.Tab -padding {3p 1.5p}
 	    ttk::style map $style.Tab -expand {selected {1.5p 1.5p 0.75p 0}}
 	}
     }

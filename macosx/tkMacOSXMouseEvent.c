@@ -702,9 +702,8 @@ TkpWarpPointer(
 {
     CGPoint pt;
     Window window;
-    MouseEventData med;
-    int global_x, global_y, local_x, local_y;
-    int dummy;
+    int rootx, rooty;
+    unsigned int modifierState;
 
     if (dispPtr->warpWindow) {
 	int x, y;
@@ -717,41 +716,13 @@ TkpWarpPointer(
 	pt.y = dispPtr->warpY;
 	window = None;
     }
-
     CGWarpMouseCursorPosition(pt);
-    bzero(&med, sizeof(MouseEventData));
-    XQueryPointer(NULL, window, NULL, NULL, &global_x, &global_y,
-	    &local_x, &local_y, &med.state);
-    med.global.h = global_x;
-    med.global.v = global_y;
-    med.local.h = local_x;
-    med.local.v = local_y;
-    med.window = window;
 
-#ifdef UNUSED
-
-    /*
-     * ButtonDown events will always occur in the front window. ButtonUp
-     * events, however, may occur anywhere on the screen. ButtonUp events
-     * should only be sent to Tk if in the front window or during an implicit
-     * grab.
-     */
-
-    if ((medPtr->activeNonFloating == NULL)
-	    || ((!(TkpIsWindowFloating(medPtr->whichWin))
-	    && (medPtr->activeNonFloating != medPtr->whichWin))
-	    && TkpGetCapture() == NULL)) {
-	return false;
-    }
-#endif
-
-    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display, med.window);
-
-    if (tkwin != NULL) {
-	tkwin = Tk_TopCoordsToWindow(tkwin, med.local.h, med.local.v,
-		&dummy, &dummy);
-    }
-    Tk_UpdatePointer(tkwin, med.global.h, med.global.v, med.state);
+    XQueryPointer(NULL, window, NULL, NULL, &rootx, &rooty, NULL, NULL,
+	    &modifierState);
+    Tk_Window newPointerWin = Tk_CoordsToWindow(rootx, rooty,
+	    dispPtr->warpMainwin);
+    Tk_UpdatePointer(newPointerWin, rootx, rooty, modifierState);
 }
 
 /*
