@@ -844,9 +844,9 @@ declare 6 aqua {
 declare 7 aqua {
     int TkpWmSetState(TkWindow *winPtr, int state)
 }
-declare 8 aqua {
-    unsigned int TkMacOSXButtonKeyState(void)
-}
+#
+# Slot 8 unused (WAS: TkMacOSXButtonKeyState)
+#
 declare 9 aqua {
     void TkMacOSXClearMenubarActive(void)
 }
@@ -942,9 +942,9 @@ declare 47 aqua {
 declare 49 aqua {
     Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
 }
-declare 50 aqua {
-    int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
-}
+#
+# Slot 50 unused (WAS: TkGenerateButtonEvent)
+#
 declare 51 aqua {
     void TkGenWMDestroyEvent(Tk_Window tkwin)
 }

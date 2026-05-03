@@ -489,7 +489,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpSetCursor, /* 5 */
     TkpScanWindowId, /* 6 */
     TkpWmSetState, /* 7 */
-    TkMacOSXButtonKeyState, /* 8 */
+    0, /* 8 */
     TkMacOSXClearMenubarActive, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
     TkpSetCapture, /* 11 */
@@ -531,7 +531,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpGetCapture, /* 47 */
     0, /* 48 */
     TkMacOSXGetContainer, /* 49 */
-    TkGenerateButtonEvent, /* 50 */
+    0, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
