@@ -1317,9 +1317,9 @@ test event-8a88a19654-2 {Don't consider unmapped windows for the new pointer win
 test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ticket #c3f5c85322} -setup {
     wm geometry . 200x200+100+100
     pack [frame .f -width 100 -height 200 -bg blue] -side right
-    after 10; update
+    update
     event generate {} <Motion> -warp 1 -x 50 -y 100
-    after 10; update; # opportunity to service crossing events
+    update; # opportunity to service crossing events
 
     set windowList [list "{}" . .f]
     array set coords {
@@ -1360,7 +1360,7 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
             append result "[incr i]($caseID)|"
             event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
                     -x $coords(x,$destWin,$warpWin) -y $coords($yPos,$warpWin)
-            after 10; update; # opportunity to service crossing events
+            update; # opportunity to service crossing events
         }
         if {$destWin eq [lindex $windowList end]} {
             set nextDestWin "{}"
@@ -1380,7 +1380,7 @@ test event-c3f5c85322 {Aqua: incorrect crossing events upon pointer warp. See ti
             append result "[incr i]($caseID)|"
             event generate [expr {$warpWin eq "{}"?"":$warpWin}] <Motion> -warp 1 \
                     -x $coords(x,$destWin2,$warpWin) -y $coords($yPos,$warpWin)
-            after 10; update; # opportunity to service crossing events
+            update; # opportunity to service crossing events
         }
     }
     set result
