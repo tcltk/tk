@@ -404,7 +404,7 @@ XCopyArea_PixmapToWindow(
     unsigned char *pixels = NULL; 
     NVGcontext *vg = TkGlfwGetNVGContext();
     if (!vg) {
-	return;
+	return BadDrawable;
     }
     /* Allocate buffer for pixel data. */
     pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
@@ -488,7 +488,7 @@ XCopyArea_PixmapToPixmap(
     unsigned char *pixels = NULL; 
     NVGcontext *vg = TkGlfwGetNVGContext();
     if (!vg) {
-	return;
+	return BadDrawable;
     }
     
     pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
