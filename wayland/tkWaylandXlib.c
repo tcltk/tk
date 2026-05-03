@@ -1198,7 +1198,7 @@ XKeysymToKeycode(
     TCL_UNUSED(Display *),
     TCL_UNUSED(KeySym))
 {
-    /* No-op - keyboard mapping handled by GLFW. */
+    /* No-op - we define REDO_KEYSYM_LOOKUP */
     return 0;
 }
 

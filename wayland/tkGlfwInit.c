@@ -382,6 +382,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
         GlfwIsInitialized = 0;
     }
 
+    TkWaylandKeyCleanup();
     shutdownInProgress = 0;
 }
 
@@ -814,6 +815,7 @@ int
 TkpInit(Tcl_Interp *interp)
 {
     if (TkGlfwInitialize() != TCL_OK) return TCL_ERROR;
+    TkWaylandKeyInit();
     TkWaylandMenuInit();
     Tk_WaylandSetupTkNotifier();
     Tktray_Init(interp);

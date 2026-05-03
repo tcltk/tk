@@ -32,18 +32,15 @@
 
 /*
  * Called in tkBind.c to generate a value for the %A field in a Tk <Key>
- * event.  Does not seem to be called during normal text input.  This is just
- * a placeholder that returns "X".
+ * event.
  */
  
 const char*
 TkpGetString(
     TkWindow *winPtr,
-    XEvent *eventPtr,
+    TCL_UNUSED(XEvent*), /* eventPtr*/
     Tcl_DString *dsPtr)
 {
-    printf("TkpGetString for %s: event keycode is %d\n",
-    	   Tk_PathName(winPtr), eventPtr->xkey.keycode);
     const char* result;
     TkWindow *toplevel = winPtr;
     while (!Tk_IsTopLevel(toplevel)) {
@@ -57,16 +54,16 @@ TkpGetString(
 }
 
 /*
- * Called from tkBind.c to generate a value for the %K in a Tk <Key> event.
- * This is just a placeholder that returns the keysym for X.
+ * Called from tkBind.c to generate a value for the %K field in a Tk <Key>
+ * event.
  */
+
 KeySym
 TkpGetKeySym(
-    TkDisplay *dispPtr,         /* Display in which to map keycode. */
+    TCL_UNUSED(TkDisplay*), /*dispPtr */
     XEvent *eventPtr)           /* Description of X event. */
 {
-    printf("TkpGetKeysym: event keycode is %d\n", eventPtr->xkey.keycode);
-    return 88;
+    return TkWaylandGetKeysymFromScancode(eventPtr->xkey.keycode);
 }
 
 /*
@@ -86,9 +83,13 @@ TkpGetKeySym(
  */
 
 void
-Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
+Tk_SetCaretPos(
+	       TCL_UNUSED(Tk_Window), /* tkwin */
+	       TCL_UNUSED(int),       /* x */
+	       TCL_UNUSED(int),       /* y */
+	       TCL_UNUSED(int))       /* height */
 {
-    printf("Tk_SetCaretPos: x=%d, y=%d, height=%d\n", x, y, height); 
+    //printf("Tk_SetCaretPos: x=%d, y=%d, height=%d\n", x, y, height); 
 }
 
 /*
@@ -131,9 +132,8 @@ TkpInitKeymapInfo(TkDisplay *dispPtr)
  * TkpSetKeycodeAndState --
  *
  *      Given a keysym and modifier state, find an X11 keycode that will
- *      generate that keysym and write it into the event structure.
- *      Used by [event generate] and the IME surrogate-key helpers.
- *      Does not seem to be used for basic text entry.
+ *      generate that keysym and write it into the event structure.  Used by
+ *      [event generate] and by tkBind.c.
  *
  *      Scans the live XKB keymap to find the correct keycode for any keysym
  *      on the user's current layout, falling back to a hand-coded table of
@@ -164,13 +164,31 @@ typedef struct {
 
 static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
 
-void
-TkpSetKeycodeAndState(TCL_UNUSED(Tk_Window), 
-	KeySym keysym, 
-	XEvent *eventPtr)
+KeySym
+TkWaylandGetKeysymFromScancode(
+    int scancode)
 {
+    if (xkbState.state) {
+	/*
+	 * The scancode is a kernel ev_code, but xkbcommon expects
+	 * an X11 keycode, which is the scancode offset by 8.
+	 */
+	return (KeySym) xkb_state_key_get_one_sym(xkbState.state,
+						  scancode + 8);
+    } else {
+	printf("xkbState.state is NULL\n");
+	return NoSymbol;
+    }
+}
+
+void
+TkpSetKeycodeAndState(
+    TCL_UNUSED(Tk_Window), 
+    KeySym keysym, 
+    XEvent *eventPtr)
+{
+    //// When does this get called?
     printf("TkpSetKeycodeAndState\n");
-    /* Scan the live XKB keymap for the correct keycode. */
     if (xkbState.keymap) {
         xkb_keycode_t min_kc = xkb_keymap_min_keycode(xkbState.keymap);
         xkb_keycode_t max_kc = xkb_keymap_max_keycode(xkbState.keymap);
@@ -240,13 +258,12 @@ TkpSetKeycodeAndState(TCL_UNUSED(Tk_Window),
  * **************************************************
  * XStringToKeysym --
  *
- *      Convert a keysym name string to a KeySym value.
- *      Used in tkBind.c.  Does not appear to get called
- *      during basic text input.
+ *      Convert a keysym name string to a KeySym value.  Called from tkBind.c,
+ *      which will use its own implementation if REDO_KEYSYM_LOOKUP is
+ *      defined.  We define that, so this function is a no-op.
  *
  * Results:
- *      Returns the KeySym corresponding to the name, or NoSymbol
- *      if the name is not recognized.
+ *      Returns 0, since this is never called.
  *
  * Side effects:
  *      None.
@@ -257,7 +274,8 @@ TkpSetKeycodeAndState(TCL_UNUSED(Tk_Window),
 KeySym
 XStringToKeysym(_Xconst char *string)
 {
-    printf("XStringToKeySym for string %s\n", string);
+    return NoSymbol;
+#if 0
     xkb_keysym_t keysym;
 
     if (!string || !*string) {
@@ -277,17 +295,16 @@ XStringToKeysym(_Xconst char *string)
     if (keysym == XKB_KEY_NoSymbol) {
         keysym = xkb_keysym_from_name(string, XKB_KEYSYM_CASE_INSENSITIVE);
     }
-
+    printf("XStringToKeysym: %s -> %d\n", string, keysym);
     return (KeySym)keysym;
+#endif
 }
 
 /*
  * **************************************************
  * XKeysymToString --
  *
- *      Convert a KeySym value to its string name.
- *      Called in tkBind.c.  Apparently not needed for basic
- *      text input.
+ *      Convert a KeySym value to its string name.  Called in tkBind.c.
  *
  * Results:
  *      Returns a pointer to a static string containing the keysym name,
@@ -302,13 +319,15 @@ XStringToKeysym(_Xconst char *string)
 char *
 XKeysymToString(KeySym keysym)
 {
+    //// When does this get called?
     printf("XkeysymToString for keysym %ld\n", keysym);
     static char buffer[64];
 
     /*
      * Use xkbcommon to convert keysym to string.
      */
-    int result = xkb_keysym_get_name((xkb_keysym_t)keysym, buffer, sizeof(buffer));
+    int result = xkb_keysym_get_name((xkb_keysym_t)keysym, buffer,
+				     sizeof(buffer));
     
     if (result > 0) {
         return buffer;
@@ -317,7 +336,154 @@ XKeysymToString(KeySym keysym)
     return NULL;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * XKB Keyboard Handling
+ * **************************************************
+ */
 
+/*
+ * **************************************************
+ * InitializeXKB --
+ *
+ *      Initialize XKB context for key translation.
+ *
+ * Results:
+ *      Returns 1 on success, 0 on failure.
+ *
+ * Side effects:
+ *      Creates XKB context and compose table.
+ *
+ * **************************************************
+ */
+
+static int
+InitializeXKB(void)
+{
+    printf("InitialieXKB\n");
+    const char *locale;
+
+    /* Create XKB context. */
+    xkbState.context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    if (!xkbState.context) {
+        return 0;
+    }
+
+    /* Get locale for compose sequences. */
+    locale = getenv("LC_ALL");
+    if (!locale) locale = getenv("LC_CTYPE");
+    if (!locale) locale = getenv("LANG");
+    if (!locale) locale = "C";
+
+    /* Create compose table. */
+    xkbState.compose_table = xkb_compose_table_new_from_locale(
+            xkbState.context, locale, XKB_COMPOSE_COMPILE_NO_FLAGS);
+
+    if (xkbState.compose_table) {
+        xkbState.compose_state = xkb_compose_state_new(
+                xkbState.compose_table, XKB_COMPOSE_STATE_NO_FLAGS);
+    }
+
+    /* Compile a keymap */
+
+    struct xkb_rule_names names = {
+	.rules = "evdev",
+	.model = "pc105",
+	.layout = "us",      // Change this to match your target layout
+	.variant = "",
+	.options = ""
+    };
+
+    xkbState.keymap = xkb_keymap_new_from_names(xkbState.context,
+			  &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    if (!xkbState.keymap) {
+	return 0;
+    }
+
+    /* Create the State */
+    xkbState.state = xkb_state_new(xkbState.keymap);
+    if (!xkbState.state) {
+	return 0;
+    }
+
+    return 1;
+}
+
+/*
+ * **************************************************
+ * CleanupXKB --
+ *
+ *      Clean up XKB resources.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Frees XKB context and compose state.
+ *
+ * **************************************************
+ */
+
+static void
+CleanupXKB(void)
+{
+    if (xkbState.compose_state) {
+        xkb_compose_state_unref(xkbState.compose_state);
+        xkbState.compose_state = NULL;
+    }
+    if (xkbState.compose_table) {
+        xkb_compose_table_unref(xkbState.compose_table);
+        xkbState.compose_table = NULL;
+    }
+    if (xkbState.state) {
+        xkb_state_unref(xkbState.state);
+        xkbState.state = NULL;
+    }
+    if (xkbState.keymap) {
+        xkb_keymap_unref(xkbState.keymap);
+        xkbState.keymap = NULL;
+    }
+    if (xkbState.context) {
+        xkb_context_unref(xkbState.context);
+        xkbState.context = NULL;
+    }
+}
+
+int
+TkWaylandKeyInit(void)
+{
+    if (!InitializeXKB()) {
+	printf("TkWaylandKeyInit: failed to initialize xkb.\n");
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandKeyCleanup --
+ *
+ *      Clean up XKB resources.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Frees XKB resources.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkWaylandKeyCleanup() {
+    CleanupXKB();
+}
+
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+/* Disabled code below is from the wayland branch. */
 #if 0
 
 #include <wayland-client.h>
@@ -786,6 +952,28 @@ InitializeXKB(void)
     if (xkbState.compose_table) {
         xkbState.compose_state = xkb_compose_state_new(
                 xkbState.compose_table, XKB_COMPOSE_STATE_NO_FLAGS);
+    }
+
+    /* Compile a keymap */
+
+    struct xkb_rule_names names = {
+	.rules = "evdev",
+	.model = "pc105",
+	.layout = "us",      // Change this to match your target layout
+	.variant = "",
+	.options = ""
+    };
+
+    xkbState.keymap = xkb_keymap_new_from_names(
+		          ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    if (!xkbState.keymap) {
+	return 0;
+    }
+
+    /* Create the State */
+    xkbState.state = xkb_state_new(keymap);
+    if (!xkbState.state) {
+	return 0;
     }
 
     return 1;
@@ -2410,7 +2598,6 @@ TkpGetKeySym(TCL_UNUSED(TkDisplay *), XEvent *eventPtr)
     if (eventPtr->type != KeyPress && eventPtr->type != KeyRelease) {
         return NoSymbol;
     }
-
     keyPtr = &eventPtr->xkey;
 
     /* IME commit events carry the codepoint in imeCommitCodepoint. */
@@ -2706,6 +2893,7 @@ int
 TkWaylandKeyInit(void)
 {
     if (!InitializeXKB()) {
+	printf("TkWaylandKeyInit: failed to initialize xkb.\n");
         return 0;
     }
     

@@ -19,6 +19,7 @@
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
 #include <libdecor.h>
+#include <xkbcommon/xkbcommon.h>
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
 
@@ -349,7 +350,7 @@ int TkWaylandDrawableIsPixmap(Drawable drawable);
 /*
  *----------------------------------------------------------------------
  *
- * Initialization and Cleanup
+ * GLFW Initialization and Cleanup
  *
  *----------------------------------------------------------------------
  */
@@ -427,6 +428,7 @@ MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
 MODULE_SCOPE void TkWaylandWakeupGLFW(void);
 MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
+MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);
 
 
 /*
@@ -449,6 +451,8 @@ MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
  *----------------------------------------------------------------------
  */
 
+MODULE_SCOPE int   TkWaylandKeyInit();
+MODULE_SCOPE void  TkkWaylandKeyCleanup();
 MODULE_SCOPE void  TkWaylandUpdateKeyboardModifiers(int glfw_mods);
 MODULE_SCOPE void  TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint);
 MODULE_SCOPE char* TkWaylandGetStoredText(TkWindow *winPtr);
