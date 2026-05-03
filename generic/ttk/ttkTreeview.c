@@ -2793,9 +2793,6 @@ static int TreeviewChildrenCommand(
 	TtkRedisplayWidget(&tv->core);
 
 	/* Event updates */
-	if (do_current) {
-	    /*TreeviewBindEventProc((void *)tv, MotionNotify);*/
-	}
 	if (do_focus) {
 	    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
 	}
@@ -4219,9 +4216,6 @@ static int TreeviewDetachCommand(
     Tcl_Free(items);
 
     /* Event updates */
-    if (do_current) {
-	/*TreeviewBindEventProc((void *)tv, MotionNotify);*/
-    }
     if (do_focus) {
 	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
     }
@@ -4367,9 +4361,6 @@ static int TreeviewDeleteCommand(
     TtkRedisplayWidget(&tv->core);
 
     /* Event updates */
-    if (do_current) {
-	/*TreeviewBindEventProc((void *)tv, MotionNotify);*/
-    }
     if (do_focus) {
 	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
     }
