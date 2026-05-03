@@ -14,7 +14,7 @@
 #include "tkInt.h"
 #include "tk3d.h"
 #include "tkGlfwInt.h"
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #include "nanovg.h"
 
 /*
@@ -409,10 +409,6 @@ TkpGetShadows(
     if (borderPtr->darkColorPtr) {
         waylandBorderPtr->darkColor = TkGlfwXColorToNVG(borderPtr->darkColorPtr);
     }
-
-    /* Dummy non-NULL values — NanoVG doesn't use GCs but Tk checks these. */
-    borderPtr->darkGC  = (GC)1;
-    borderPtr->lightGC = (GC)1;
 
     if (stressed && borderPtr->shadow == None) {
         borderPtr->shadow = Tk_GetBitmap(NULL, tkwin, "gray50");

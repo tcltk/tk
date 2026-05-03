@@ -516,9 +516,10 @@ Tk_MeasureCharsInContext(
         maxLength = 32767;
     }
 
+#if 0
     NVGcontext *vg = TkGlfwGetNVGContextForMeasure();
-
     if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
+#endif
         /*
          * No NVG context yet (startup before GLFW is initialised) — fall
          * back to a per-character advance estimate from stored metrics.
@@ -555,8 +556,8 @@ Tk_MeasureCharsInContext(
         }
         *lengthPtr = width;
         return (int)(p - source - rangeStart);
+#if 0
     }
-
     /* Measure using NanoVG. */
     nvgSave(vg);
     nvgFontFaceId(vg, fontPtr->nvgFontId);
@@ -645,6 +646,7 @@ Tk_MeasureCharsInContext(
 
     *lengthPtr = pixelWidth;
     return (int)(p - rangePtr);
+#endif
 }
 
 /*
@@ -767,7 +769,6 @@ TkpDrawAngledCharsInContext(
     double angle)
 {
     WaylandFont *fontPtr = (WaylandFont *) tkfont;
-
     if (rangeStart < 0 || rangeLength <= 0 ||
             rangeStart + rangeLength > numBytes) {
         return;
@@ -778,7 +779,7 @@ TkpDrawAngledCharsInContext(
 
     if (EnsureNvgFont(fontPtr, vg) < 0) return;
 
-    nvgSave(vg);
+    //nvgSave(vg);
     nvgFontFaceId(vg, fontPtr->nvgFontId);
     nvgFontSize(vg, (float) fontPtr->pixelSize);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
@@ -839,8 +840,6 @@ TkpDrawAngledCharsInContext(
             nvgStroke(vg);
         }
     }
-
-    nvgRestore(vg);
 }
 
 /*

@@ -329,6 +329,8 @@ Tk_ScaleObjCmd(
 
 
     Tk_SetClassProcs(scalePtr->tkwin, &scaleClass, scalePtr);
+    printf("Creating event handler for scale %s\n",
+	   Tk_PathName(scalePtr->tkwin));
     Tk_CreateEventHandler(scalePtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ScaleEventProc, scalePtr);
@@ -1167,6 +1169,9 @@ ScaleEventProc(
     int highlightWidth;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
+	printf("ScaleEventProc: %s received Expose(%d)\n",
+	       Tk_PathName(scalePtr->tkwin), eventPtr->xexpose.serial);
+	printf("Scheduling redraw for %s\n", Tk_PathName(scalePtr->tkwin));
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
     } else if (eventPtr->type == DestroyNotify) {
 	DestroyScale(clientData);

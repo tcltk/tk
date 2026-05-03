@@ -5,7 +5,7 @@
  *	Wayland/GLFW/NanoVG backend.
  *
  *	This file provides the central definitions of
- *	TkWaylandGCImpl and TkWaylandPixmapImpl and all TkWayland*
+ *	TkWaylandGCImpl and TkWaylandPixmap and all TkWayland*
  *	entry points declared in tkGlfwInt.h.  The Xlib-compatible
  *	wrappers (XCreateGC, XFreeGC, XCreatePixmap, etc.) forward to
  *	these entry points and live here as well.
@@ -30,8 +30,6 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
-
-extern TkGlfwContext  glfwContext;
 
 /* -----------------------------------------------------------------------
  * Display / screen initialization.
@@ -357,6 +355,8 @@ TkWaylandCopyGC(
  *
  *      Create an off-screen drawable (pixmap) using an OpenGL FBO.
  *      This allows NanoVG to render to the pixmap just like a window.
+ *      The drawable should be a Tk window.  The pixmap will construct
+ *      the FBO in the GL context of that window.
  *
  * Results:
  *      Returns a Pixmap (Drawable) identifier.
@@ -375,35 +375,32 @@ Tk_GetPixmap(
     int      height,
     TCL_UNUSED(int)) /* depth */
 {
-    TkWaylandPixmapImpl *pixmap;
-    WindowMapping       *mapping;
-    GLint                oldFBO;
-    GLenum               status;
+    TkWaylandPixmap *pixmap;
+    GLint            oldFBO;
+    GLenum           status;
     
     
     if (width <= 0 || height <= 0) {
         return None;
     }
-    
-    /* Find the window mapping to get GL context. */
-    mapping = FindMappingByDrawable(d);
-    if (!mapping || !mapping->glfwWindow) {
+
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
+    if (!glfwWindow) {
         return None;
     }
     
     /* Allocate pixmap structure. */
-    pixmap = (TkWaylandPixmapImpl *)ckalloc(sizeof(TkWaylandPixmapImpl));
-    memset(pixmap, 0, sizeof(TkWaylandPixmapImpl));
-    pixmap->magic 		  = TK_WAYLAND_PIXMAP_MAGIC; 
+    pixmap = (TkWaylandPixmap *)ckalloc(sizeof(TkWaylandPixmap));
+    memset(pixmap, 0, sizeof(TkWaylandPixmap));
     pixmap->type          = 1;  /* Pixmap, not window */
     pixmap->width         = width;
     pixmap->height        = height;
-    pixmap->drawable      = (Drawable)pixmap;  /* Use pointer as ID */
-    pixmap->windowMapping = mapping;
+    pixmap->drawable      = TkWaylandDrawableForPixmap(pixmap);
     pixmap->frameOpen     = 0;
+    pixmap->glfwWindow    = glfwWindow;
     
     /* Make GL context current for FBO creation. */
-    glfwMakeContextCurrent(mapping->glfwWindow);
+    glfwMakeContextCurrent(glfwWindow);
     
     /* Save current FBO binding */
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
@@ -454,14 +451,11 @@ Tk_GetPixmap(
     }
     
     /* Clear pixmap to white. */
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     
     /* Restore previous FBO binding. */
     glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
-    
-    /* Register pixmap with drawable mapping system. */
-    RegisterDrawableForMapping(pixmap->drawable, mapping);
     
     return pixmap->drawable;
 }
@@ -483,22 +477,17 @@ Tk_GetPixmap(
  */
 
 void
-Tk_FreePixmap(TCL_UNUSED(Display *),
-	      Pixmap pixmap)
+Tk_FreePixmap(
+    TCL_UNUSED(Display *),
+    Pixmap pixmap)
 {
-    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)pixmap;
+    TkWaylandPixmap *impl = (TkWaylandPixmap *)pixmap;
     
     if (!impl || impl->type != 1) return;
     
     /* Make context current for GL cleanup. */
-    if (impl->windowMapping && impl->windowMapping->glfwWindow) {
-        glfwMakeContextCurrent(impl->windowMapping->glfwWindow);
-    }
-    
-    /* Close any open NanoVG frame on this pixmap. */
-    if (impl->frameOpen) {
-        nvgEndFrame(glfwContext.vg);
-        impl->frameOpen = 0;
+    if (impl->glfwWindow) {
+        glfwMakeContextCurrent(impl->glfwWindow);
     }
     
     /* Delete OpenGL resources. */
@@ -514,46 +503,6 @@ Tk_FreePixmap(TCL_UNUSED(Display *),
     
     ckfree((char *)impl);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * IsPixmap --
- *
- *      Check if a drawable is a pixmap (FBO-backed).
- *
- * Results:
- *      Returns 1 if pixmap, 0 if window or invalid.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-IsPixmap(Drawable drawable)
-{
-    if (!drawable) return 0;
-    
-    /* Window IDs are small integers - cast to uintptr_t for comparison. */
-    if ((uintptr_t)drawable < 0x1000000) {
-        return 0;
-    }
-    
-    TkWaylandPixmapImpl *impl = (TkWaylandPixmapImpl *)drawable;
-    
-    /* Check type field and validate dimensions */
-    if (impl->type == 1 &&
-        impl->width > 0 && impl->width < 32768 &&
-        impl->height > 0 && impl->height < 32768 &&
-        impl->fbo != 0) {
-        return 1;
-    }
-    
-    return 0;
-}
-
 
 /*
  *----------------------------------------------------------------------

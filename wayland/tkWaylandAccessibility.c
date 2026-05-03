@@ -1850,6 +1850,8 @@ static void TkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
 
     int focused = (eventPtr->type == FocusIn);
     acc->is_focused = focused;
+////XXXXX disabling this code for now because it segfaults!!!!
+#if 0
     uint64_t old_states = acc->states;
     acc->states = ComputeStateForWidget(acc);
 
@@ -1857,7 +1859,7 @@ static void TkAccessible_FocusHandler(void *clientData, XEvent *eventPtr)
         SendStateChanged(acc, ATSPI_STATE_FOCUSED, focused);
         SendAtspiEvent(acc, ATSPI_EVENT_FOCUS, NULL);
     }
-
+#endif
     /* Handle window activation */
     if (acc->role == ATSPI_ROLE_WINDOW) {
         if (focused) {

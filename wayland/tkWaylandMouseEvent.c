@@ -130,7 +130,7 @@ XQueryPointer(
     }
     
     /* Get the GLFW window. */
-    glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (!glfwWindow) {
         return False;
     }
@@ -382,7 +382,7 @@ TkpWarpPointer(
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	
 	/* Warp cursor to new position using unified architecture. */
-	glfwWindow = TkGlfwGetGLFWWindow(dispPtr->warpWindow);
+	glfwWindow = TkWaylandGetGLFWwindow((TkWindow *)dispPtr->warpWindow);
 	if (glfwWindow) {
 	    glfwGetWindowPos(glfwWindow, &winX, &winY);
 	    targetX = x + dispPtr->warpX - winX;
@@ -430,7 +430,7 @@ TkpSetCapture(
     captureWinPtr = (Tk_Window)winPtr;
     
     /* Set GLFW cursor mode using unified architecture. */
-    glfwWindow = TkGlfwGetGLFWWindow((Tk_Window)winPtr);
+    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
 	if (winPtr) {
 	    glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

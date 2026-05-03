@@ -16,15 +16,311 @@
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-#include <xkbcommon/xkbcommon.h>
-#include <xkbcommon/xkbcommon-compose.h>
-#include <X11/keysymdef.h>
-#include <wayland-client.h>
 #include <string.h>
 #include <ctype.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <errno.h>
+
+#include <xkbcommon/xkbcommon.h>
+#include <xkbcommon/xkbcommon-compose.h>
+#include <X11/keysymdef.h>
+
+//// These are implementations of the stub functions required by Tk. Some are
+//// just placeholders and some are copied from the extensive, but not
+//// currently working, code which is disabled below.
+
+/*
+ * Called in tkBind.c to generate a value for the %A field in a Tk <Key>
+ * event.  Does not seem to be called during normal text input.  This is just
+ * a placeholder that returns "X".
+ */
+ 
+const char*
+TkpGetString(
+    TkWindow *winPtr,
+    XEvent *eventPtr,
+    Tcl_DString *dsPtr)
+{
+    printf("TkpGetString for %s: event keycode is %d\n",
+    	   Tk_PathName(winPtr), eventPtr->xkey.keycode);
+    const char* result;
+    TkWindow *toplevel = winPtr;
+    while (!Tk_IsTopLevel(toplevel)) {
+	toplevel = (TkWindow *) Tk_Parent(toplevel);
+    }
+    Tcl_DStringInit(dsPtr);
+    result = Tcl_DStringAppend(dsPtr, TkWaylandGetStoredText(toplevel),
+			       TCL_INDEX_NONE);
+    TkWaylandClearStoredText(toplevel);
+    return result;
+}
+
+/*
+ * Called from tkBind.c to generate a value for the %K in a Tk <Key> event.
+ * This is just a placeholder that returns the keysym for X.
+ */
+KeySym
+TkpGetKeySym(
+    TkDisplay *dispPtr,         /* Display in which to map keycode. */
+    XEvent *eventPtr)           /* Description of X event. */
+{
+    printf("TkpGetKeysym: event keycode is %d\n", eventPtr->xkey.keycode);
+    return 88;
+}
+
+/*
+ * **************************************************
+ * Tk_SetCaretPos --
+ *
+ *      Could record the cursor location, e.g. for popup menus to select
+ *      special characters.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      None
+ *
+ * **************************************************
+ */
+
+void
+Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
+{
+    printf("Tk_SetCaretPos: x=%d, y=%d, height=%d\n", x, y, height); 
+}
+
+/*
+ * **************************************************
+ * TkpInitKeymapInfo --
+ *
+ *      This procedure is invoked to scan keymap information to
+ *      recompute stuff that's important for binding, such as
+ *      determining what modifier is associated with "mode switch".
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Keymap-related information in dispPtr is updated.
+ *
+ * **************************************************
+ */
+
+void
+TkpInitKeymapInfo(TkDisplay *dispPtr)
+{
+    /*
+     * Set up default modifier masks for Wayland/GLFW.
+     * These correspond to standard X11 modifier assignments.
+     */
+
+    dispPtr->modeModMask = Mod5Mask;   /* AltGr / Mode_switch */
+    dispPtr->altModMask  = Mod1Mask;   /* Alt */
+    dispPtr->metaModMask = Mod4Mask;   /* Super/Windows key */
+
+    /*
+     * Lock modifiers are platform-independent.
+     */
+    dispPtr->lockUsage = LU_CAPS;
+}
+
+/*
+ * **************************************************
+ * TkpSetKeycodeAndState --
+ *
+ *      Given a keysym and modifier state, find an X11 keycode that will
+ *      generate that keysym and write it into the event structure.
+ *      Used by [event generate] and the IME surrogate-key helpers.
+ *      Does not seem to be used for basic text entry.
+ *
+ *      Scans the live XKB keymap to find the correct keycode for any keysym
+ *      on the user's current layout, falling back to a hand-coded table of
+ *      common non-printable keys only when the keymap is not yet loaded.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Updates eventPtr->xkey.keycode and eventPtr->xkey.state.
+ *
+ * **************************************************
+ */
+/*
+ * XKB keyboard state - for key translation.
+ */
+typedef struct {
+    struct xkb_context *context;
+    struct xkb_keymap *keymap;
+    struct xkb_state *state;
+    struct xkb_compose_table *compose_table;
+    struct xkb_compose_state *compose_state;
+    uint32_t modifiers_depressed;
+    uint32_t modifiers_latched;
+    uint32_t modifiers_locked;
+    uint32_t group;
+} TkXKBState;
+
+static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
+
+void
+TkpSetKeycodeAndState(TCL_UNUSED(Tk_Window), 
+	KeySym keysym, 
+	XEvent *eventPtr)
+{
+    printf("TkpSetKeycodeAndState\n");
+    /* Scan the live XKB keymap for the correct keycode. */
+    if (xkbState.keymap) {
+        xkb_keycode_t min_kc = xkb_keymap_min_keycode(xkbState.keymap);
+        xkb_keycode_t max_kc = xkb_keymap_max_keycode(xkbState.keymap);
+        xkb_keycode_t kc;
+
+        for (kc = min_kc; kc <= max_kc; kc++) {
+            xkb_layout_index_t num_layouts =
+                xkb_keymap_num_layouts_for_key(xkbState.keymap, kc);
+            xkb_layout_index_t layout;
+
+            for (layout = 0; layout < num_layouts; layout++) {
+                xkb_level_index_t num_levels =
+                    xkb_keymap_num_levels_for_key(xkbState.keymap, kc, layout);
+                xkb_level_index_t level;
+
+                for (level = 0; level < num_levels; level++) {
+                    const xkb_keysym_t *syms;
+                    int n, i;
+
+                    n = xkb_keymap_key_get_syms_by_level(
+                            xkbState.keymap, kc, layout, level, &syms);
+
+                    for (i = 0; i < n; i++) {
+                        if (syms[i] == (xkb_keysym_t)keysym) {
+                            /*
+                             * kc is an XKB/X11 keycode (evdev + 8).
+                             * Set ShiftMask if the keysym is at level 1.
+                             */
+                            eventPtr->xkey.keycode = kc;
+                            if (level == 1) {
+                                eventPtr->xkey.state |= ShiftMask;
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /*
+     * Fallback for common keys when the XKB keymap is not yet loaded.
+     * These are X11 keycodes (evdev + 8) for standard US-QWERTY layout.
+     */
+    switch (keysym) {
+    case XK_Return:    eventPtr->xkey.keycode = 36;  break;
+    case XK_Escape:    eventPtr->xkey.keycode = 9;   break;
+    case XK_BackSpace: eventPtr->xkey.keycode = 22;  break;
+    case XK_Tab:       eventPtr->xkey.keycode = 23;  break;
+    case XK_space:     eventPtr->xkey.keycode = 65;  break;
+    case XK_Left:      eventPtr->xkey.keycode = 113; break;
+    case XK_Right:     eventPtr->xkey.keycode = 114; break;
+    case XK_Up:        eventPtr->xkey.keycode = 111; break;
+    case XK_Down:      eventPtr->xkey.keycode = 116; break;
+    case XK_Home:      eventPtr->xkey.keycode = 110; break;
+    case XK_End:       eventPtr->xkey.keycode = 115; break;
+    case XK_Delete:    eventPtr->xkey.keycode = 119; break;
+    case XK_Insert:    eventPtr->xkey.keycode = 118; break;
+    default:
+        /* Last-resort: encode the low byte of the keysym. */
+        eventPtr->xkey.keycode = keysym & 0xFFu;
+        break;
+    }
+}
+
+/*
+ * **************************************************
+ * XStringToKeysym --
+ *
+ *      Convert a keysym name string to a KeySym value.
+ *      Used in tkBind.c.  Does not appear to get called
+ *      during basic text input.
+ *
+ * Results:
+ *      Returns the KeySym corresponding to the name, or NoSymbol
+ *      if the name is not recognized.
+ *
+ * Side effects:
+ *      None.
+ *
+ * **************************************************
+ */
+
+KeySym
+XStringToKeysym(_Xconst char *string)
+{
+    printf("XStringToKeySym for string %s\n", string);
+    xkb_keysym_t keysym;
+
+    if (!string || !*string) {
+        return NoSymbol;
+    }
+
+    /*
+     * Use xkbcommon to convert string to keysym.
+     * This handles standard X11 keysym names like "Right", "Left", etc.
+     */
+    keysym = xkb_keysym_from_name(string, XKB_KEYSYM_NO_FLAGS);
+
+    /*
+     * If case-sensitive lookup fails, try case-insensitive.
+     * This matches X11 XStringToKeysym behavior.
+     */
+    if (keysym == XKB_KEY_NoSymbol) {
+        keysym = xkb_keysym_from_name(string, XKB_KEYSYM_CASE_INSENSITIVE);
+    }
+
+    return (KeySym)keysym;
+}
+
+/*
+ * **************************************************
+ * XKeysymToString --
+ *
+ *      Convert a KeySym value to its string name.
+ *      Called in tkBind.c.  Apparently not needed for basic
+ *      text input.
+ *
+ * Results:
+ *      Returns a pointer to a static string containing the keysym name,
+ *      or NULL if the keysym is not recognized.
+ *
+ * Side effects:
+ *      The returned string is stored in a static buffer.
+ *
+ * **************************************************
+ */
+
+char *
+XKeysymToString(KeySym keysym)
+{
+    printf("XkeysymToString for keysym %ld\n", keysym);
+    static char buffer[64];
+
+    /*
+     * Use xkbcommon to convert keysym to string.
+     */
+    int result = xkb_keysym_get_name((xkb_keysym_t)keysym, buffer, sizeof(buffer));
+    
+    if (result > 0) {
+        return buffer;
+    }
+    
+    return NULL;
+}
+
+
+#if 0
+
+#include <wayland-client.h>
 #include "text-input-unstable-v3-client-protocol.h"
 
 /* Forward declaration of IME state structure */
@@ -729,6 +1025,7 @@ TkWaylandProcessKey(Tk_Window tkwin, unsigned int keycode, int pressed,
     TkIMEState *ime;
     TkWindow *winPtr;
     TkWindow *focusWin;
+    ////printf("TkWaylandProcessKey\n");
 
     if (!tkwin) {
         return;
@@ -1344,6 +1641,7 @@ KeyboardHandleKey(TCL_UNUSED(void *),
         uint32_t key, 
         uint32_t state)
 {
+    ////printf("KeyboardHandleKey\n");
     if (focusedTkWin) {
         /* key is a raw evdev code; TkWaylandProcessKey adds 8. */
         TkWaylandProcessKey(focusedTkWin, key,
@@ -1414,7 +1712,7 @@ CreateIMEState(Tk_Window tkwin)
     }
 
     /* Get GLFW window to access Wayland surface. */
-    glfwWindow = TkGlfwGetGLFWWindow(tkwin);
+    glfwWindow = TkWaylandGetGLFWwindow((TkWindow *) tkwin);
     if (!glfwWindow) {
         return NULL;
     }
@@ -2074,7 +2372,7 @@ void
 Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 {
     TkWaylandIMESetCursorRect(tkwin, x, y, 1, height);
-}
+ }
 
 /*
  * **************************************************
@@ -2440,7 +2738,7 @@ TkWaylandKeyCleanup(void)
     CleanupXKB();
 }
 
-
+#endif
 /*
  * Local Variables:
  * mode: c
