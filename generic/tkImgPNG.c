@@ -1023,7 +1023,7 @@ ReadChunkHeader(
 			    " \"%s\"", typeString));
 		}
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG",
-			"UNSUPPORTED_CRITICAL", NULL);
+			"UNSUPPORTED_CRITICAL", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -1037,7 +1037,7 @@ ReadChunkHeader(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "invalid chunk type", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG",
-			    "INVALID_CHUNK", NULL);
+			    "INVALID_CHUNK", (char *)NULL);
 		    return TCL_ERROR;
 		}
 	    }
@@ -2219,7 +2219,7 @@ ReadIDAT(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"extra data after end of zlib stream", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -2262,7 +2262,7 @@ ReadIDAT(
 			"extra data after final scan line of final phase",
 			-1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -2446,7 +2446,7 @@ ParseFormat(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-alpha value must be between 0.0 and 1.0", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_ALPHA",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    break;

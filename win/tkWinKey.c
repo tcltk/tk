@@ -135,7 +135,7 @@ TkpGetString(
 /*
  *----------------------------------------------------------------------
  *
- * XKeycodeToKeysym --
+ * XkbKeycodeToKeysym --
  *
  *	Translate from a system-dependent keycode to a system-independent
  *	keysym.
@@ -148,20 +148,6 @@ TkpGetString(
  *
  *----------------------------------------------------------------------
  */
-
-KeySym
-XKeycodeToKeysym(
-    TCL_UNUSED(Display *),
-    unsigned int keycode,
-    int index)
-{
-    int state = 0;
-
-    if (index & 0x01) {
-	state |= ShiftMask;
-    }
-    return KeycodeToKeysym(keycode, state, 0);
-}
 
 KeySym
 XkbKeycodeToKeysym(

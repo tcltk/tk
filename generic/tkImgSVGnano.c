@@ -460,7 +460,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"only one of -scale, -scaletoheight, -scaletowidth may be given", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    parameterScaleSeen = true;
@@ -481,7 +481,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-dpi value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_DPI",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -494,7 +494,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scale value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -507,7 +507,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scaletoheight value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -520,7 +520,7 @@ ParseSVGWithOptions(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"-scaletowidth value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
-			NULL);
+			(char *)NULL);
 		goto error;
 	    }
 	    break;
@@ -586,7 +586,7 @@ RasterizeSVG(
     if (rast == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot initialize rasterizer", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "RASTERIZER_ERROR",
-		NULL);
+		(char *)NULL);
 	goto cleanAST;
     }
 

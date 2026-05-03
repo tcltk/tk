@@ -204,7 +204,7 @@ Tk_GrabObjCmd(
 
 	Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
 	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
-		" option ?arg ...?\"", NULL);
+		" option ?arg ...?\"", (char *)NULL);
 	/* This API not exposed:
 	 *
 	((Interp *) interp)->flags |= INTERP_ALTERNATE_WRONG_ARGS;

@@ -251,7 +251,7 @@ TkTextWindowCmd(
     }
     case WIND_CREATE: {
 	TkTextIndex index;
-	int lineIndex;
+	Tcl_Size lineIndex;
 	TkTextEmbWindowClient *client;
 	int res;
 
@@ -879,7 +879,8 @@ EmbWinLayoutProc(
 		     * Substitute string as proper Tcl list element.
 		     */
 
-		    int spaceNeeded, cvtFlags, length;
+		    Tcl_Size spaceNeeded, length;
+		    int cvtFlags;
 		    const char *str = Tk_PathName(textPtr->tkwin);
 
 		    spaceNeeded = Tcl_ScanElement(str, &cvtFlags);
@@ -1060,7 +1061,7 @@ EmbWinCheckProc(
 	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
     if (ewPtr->size != 1) {
-	Tcl_Panic("EmbWinCheckProc: embedded window has size %" TCL_SIZE_MODIFIER "d", ewPtr->size);
+	Tcl_Panic("EmbWinCheckProc: embedded window has size %" TCL_Z_MODIFIER "d", ewPtr->size);
     }
 }
 
@@ -1373,7 +1374,7 @@ TkTextWindowIndex(
      * reachable from this text widget (it may be reachable from a peer).
      */
 
-    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 1) == TCL_ERROR) {
+    if (TkTextIndexAdjustToStartEnd(textPtr, indexPtr, true) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 

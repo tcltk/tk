@@ -6,8 +6,8 @@
  *      in hash tables that can be accessed on any platform. This core Tk API
  *      is backed by platform-specific implementations.
  *
- * Copyright (c) 2024-2025 Kevin Walzer
- * Copyright (c) 2024 Emiliano Gavilan
+ * Copyright © 2024-2025 Kevin Walzer
+ * Copyright © 2024 Emiliano Gavilan
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -48,7 +48,7 @@ int     Tk_GetAccessibleAction(TCL_UNUSED(void *),Tcl_Interp *ip,
 			       Tcl_Size objc, Tcl_Obj *const objv[]);
 int     Tk_GetAccessibleHelp(TCL_UNUSED(void *),Tcl_Interp *ip,
 			     Tcl_Size objc, Tcl_Obj *const objv[]);
-void    TkAccessibility_Cleanup(ClientData clientData);
+void    TkAccessibility_Cleanup(void *clientData);
 /* Cleanup proc when the window is destroyed. */
 static  Tk_EventProc WindowDestroyHandler;
 

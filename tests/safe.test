@@ -52,7 +52,7 @@ resetWindows
 set hidden_cmds [apply { {} {
     set i [interp create -safe]
     try {
-        return [interp hidden $i]
+	return [interp hidden $i]
     } finally {
 	interp delete $i
     }
@@ -61,7 +61,7 @@ set hidden_cmds [apply { {} {
 # The set of hidden commands is platform dependent:
 
 lappend hidden_cmds \
-        bell clipboard grab menu selection toplevel wm
+	bell clipboard grab menu selection toplevel wm
 if {[tk windowingsystem] ne "x11"} {
     lappend hidden_cmds tk_chooseColor tk_chooseDirectory \
 	tk_getOpenFile tk_getSaveFile tk_messageBox

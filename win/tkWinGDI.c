@@ -4001,7 +4001,7 @@ static int PrintSelectPrinter(
 	if (errorcode != 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("print failed: error %04x",
 		    errorcode));
-	    Tcl_SetErrorCode(interp, "TK", "PRINT", "DIALOG", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "PRINT", "DIALOG", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	return TCL_OK;
