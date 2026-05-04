@@ -277,12 +277,14 @@ if test $tk_aqua = no; then
             found_wayland=no
             AC_MSG_NOTICE([Wayland client libraries >= 1.18 not found])
         fi
+        AC_SUBST([WAYLAND_CFLAGS])
+        AC_SUBST([WAYLAND_LIBS])
 
         AC_MSG_CHECKING([for xkbcommon >= 0.5.0])
         if pkg-config --exists "xkbcommon >= 0.5.0"; then
             AC_MSG_RESULT([yes])
-            XKBCOMMON_CFLAGS="$(pkg-config --cflags xkbcommon)"
-            XKBCOMMON_LIBS="$(pkg-config --libs xkbcommon)"
+            XKBCOMMON_CFLAGS="`pkg-config --cflags xkbcommon`"
+            XKBCOMMON_LIBS="`pkg-config --libs xkbcommon`"
             found_xkbcommon=yes
             AC_DEFINE([HAVE_XKBCOMMON], [1], [Define if xkbcommon is available])
         else
@@ -292,6 +294,8 @@ if test $tk_aqua = no; then
             found_xkbcommon=no
             AC_MSG_NOTICE([xkbcommon >= 0.5.0 not found])
         fi
+        AC_SUBST([XKBCOMMON_CFLAGS])
+        AC_SUBST([XKBCOMMON_LIBS])
 
         AC_MSG_CHECKING([for glfw3 >= 3.3 with Wayland support])
         if pkg-config --exists "glfw3 >= 3.3"; then
@@ -315,6 +319,8 @@ if test $tk_aqua = no; then
             GLFW_LIBS=""
             AC_MSG_NOTICE([glfw3 >= 3.3 not found — backend will be disabled])
         fi
+        AC_SUBST([GLFW_CFLAGS])
+        AC_SUBST([GLFW_LIBS])
 
         #--------------------------------------------------------------------
         # Check for libdecor (client-side decorations) – hard requirement
@@ -329,8 +335,11 @@ if test $tk_aqua = no; then
         else
             AC_MSG_RESULT([no])
             AC_MSG_ERROR([libdecor-0 >= 0.1.0 is required when building the Wayland backend.
-Please install the libdecor development package (usually libdecor-0-dev on Debian/Ubuntu or libdecor-devel on Fedora).])
+Please install the libdecor development package (usually libdecor-0-dev on Debian/Ubuntu or libdecor-devel on Fedora).
+Without client-side decorations most Wayland compositors will show broken or missing window decorations.])
         fi
+        AC_SUBST([LIBDECOR_CFLAGS])
+        AC_SUBST([LIBDECOR_LIBS])
 
         # OpenGL ES support (required for NanoVG rendering)
         AC_MSG_CHECKING([for OpenGL ES 3.0 (glesv2)])
@@ -358,6 +367,8 @@ Please install the libdecor development package (usually libdecor-0-dev on Debia
                 AC_MSG_NOTICE([OpenGL ES not found — NanoVG rendering will not work])
             fi
         fi
+        AC_SUBST([GLES_CFLAGS])
+        AC_SUBST([GLES_LIBS])
 
         # sd-bus (system tray)
         AC_MSG_CHECKING([for sd-bus (system tray/status notifier support)])
@@ -366,8 +377,8 @@ Please install the libdecor development package (usually libdecor-0-dev on Debia
         found_sdbus=no
         if pkg-config --exists "libsystemd" 2>/dev/null; then
             AC_MSG_RESULT([yes])
-            SDBUSD_CFLAGS="$(pkg-config --cflags libsystemd)"
-            SDBUSD_LIBS="$(pkg-config --libs libsystemd)"
+            SDBUSD_CFLAGS="`pkg-config --cflags libsystemd`"
+            SDBUSD_LIBS="`pkg-config --libs libsystemd`"
             found_sdbus=yes
             AC_DEFINE([HAVE_SD_BUS], 1,
                 [Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)])
@@ -375,13 +386,15 @@ Please install the libdecor development package (usually libdecor-0-dev on Debia
             AC_MSG_RESULT([no])
             AC_MSG_NOTICE([sd-bus not found — system tray icon support will be unavailable on Wayland])
         fi
+        AC_SUBST([SDBUSD_CFLAGS])
+        AC_SUBST([SDBUSD_LIBS])
 
         # fontconfig
         AC_MSG_CHECKING([for fontconfig >= 2.12 (Wayland font support)])
         if pkg-config --exists "fontconfig >= 2.12"; then
             AC_MSG_RESULT([yes])
-            FONTCONFIG_CFLAGS="$(pkg-config --cflags fontconfig)"
-            FONTCONFIG_LIBS="$(pkg-config --libs fontconfig)"
+            FONTCONFIG_CFLAGS="`pkg-config --cflags fontconfig`"
+            FONTCONFIG_LIBS="`pkg-config --libs fontconfig`"
             found_fontconfig=yes
             AC_DEFINE([HAVE_FONTCONFIG], [1], [Define if fontconfig is available for Wayland])
         else
@@ -391,6 +404,8 @@ Please install the libdecor development package (usually libdecor-0-dev on Debia
             found_fontconfig=no
             AC_MSG_NOTICE([fontconfig >= 2.12 not found — font support on Wayland may be limited])
         fi
+        AC_SUBST([FONTCONFIG_CFLAGS])
+        AC_SUBST([FONTCONFIG_LIBS])
 
         # NanoVG support (required for rendering)
         AC_MSG_CHECKING([for NanoVG library])
@@ -408,6 +423,7 @@ Please install the libdecor development package (usually libdecor-0-dev on Debia
             NANOVG_LIBS=""
             found_nanovg=no
         fi
+        AC_SUBST([NANOVG_LIBS])
 
         # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
         AC_MSG_CHECKING([for wayland-scanner])
@@ -420,7 +436,7 @@ Please install the libdecor development package (usually libdecor-0-dev on Debia
         AC_MSG_CHECKING([for text-input-unstable-v3 protocol XML])
         TEXT_INPUT_XML=""
         if pkg-config --exists wayland-protocols; then
-            WAYLAND_PROTOCOLS_DIR="$(pkg-config --variable=pkgdatadir wayland-protocols)"
+            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
             TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
             if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
                 TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
@@ -439,6 +455,9 @@ Install/update wayland-protocols package.])
 Wayland backend now requires text-input-unstable-v3 for IME support.])
         fi
 
+        AC_SUBST([WAYLAND_SCANNER])
+        AC_SUBST([TEXT_INPUT_XML])
+
         # Final check — everything must be present (IME + libdecor are mandatory)
         if test "$found_wayland" = yes \
            && test "$found_xkbcommon" = yes \
@@ -451,10 +470,8 @@ Wayland backend now requires text-input-unstable-v3 for IME support.])
 
             HAVE_WAYLAND=1
 
-            # FIXED: Properly accumulate ALL libraries for linking
             WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $XKBCOMMON_LIBS $GLFW_LIBS $LIBDECOR_LIBS $GLES_LIBS $FONTCONFIG_LIBS $SDBUSD_LIBS $NANOVG_LIBS"
-
+            WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
@@ -471,28 +488,19 @@ Required (all mandatory when --enable-wayland is used):
   - glesv2 (OpenGL ES 3.0)
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
-  - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)])
+  - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
+
+On Debian/Ubuntu:
+  sudo apt install wayland-protocols libwayland-dev \
+    libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
+    libdecor-0-dev libfontconfig-dev libsystemd-dev
+])
         fi
     fi
 
     AC_SUBST([WAYLAND_CFLAGS])
     AC_SUBST([WAYLAND_LIBS])
     AC_SUBST([HAVE_WAYLAND])
-
-    # Extra safety substitutions
-    AC_SUBST([GLFW_CFLAGS])
-    AC_SUBST([GLFW_LIBS])
-    AC_SUBST([FONTCONFIG_CFLAGS])
-    AC_SUBST([FONTCONFIG_LIBS])
-    AC_SUBST([XKBCOMMON_CFLAGS])
-    AC_SUBST([XKBCOMMON_LIBS])
-    AC_SUBST([GLES_CFLAGS])
-    AC_SUBST([GLES_LIBS])
-    AC_SUBST([NANOVG_LIBS])
-    AC_SUBST([LIBDECOR_CFLAGS])
-    AC_SUBST([LIBDECOR_LIBS])
-    AC_SUBST([SDBUSD_CFLAGS])
-    AC_SUBST([SDBUSD_LIBS])
 
     # Force-disable X11 linkage variables when Wayland is active
     if test "$enable_wayland" = "yes"; then
@@ -523,9 +531,6 @@ else
         TK_WINDOWINGSYSTEM=WAYLAND
 		WAYLAND_LDFLAGS="-Wl,-Bsymbolic-functions"
 		AC_SUBST(WAYLAND_LDFLAGS)
-        # Link Wayland libraries into main build
-        LIBS="$LIBS $WAYLAND_LIBS"
-        CFLAGS="$CFLAGS $WAYLAND_CFLAGS"
     else
         TK_WINDOWINGSYSTEM=X11
         WAYLAND_LDFLAGS=""
@@ -537,15 +542,6 @@ fi
 #--------------------------------------------------------------------
 #	Various manipulations on the search path used at runtime to
 #	find shared libraries:
-#	1. If the X library binaries are in a non-standard directory,
-#	   add the X library location into that search path.
-#	2. On systems such as AIX and Ultrix that use "-L" as the
-#	   search path option, colons cannot be used to separate
-#	   directories from each other. Change colons to " -L".
-#	3. Create two sets of search flags, one for use in cc lines
-#	   and the other for when the linker is invoked directly.  In
-#	   the second case, '-Wl,' must be stripped off and commas must
-#	   be replaced by spaces.
 #--------------------------------------------------------------------
 
 if test "$TK_WINDOWINGSYSTEM" = "X11"; then
@@ -561,9 +557,7 @@ if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for the existence of various libraries.  The order here
-#	is important, so that then end up in the right order in the
-#	command line generated by make.
+#	Check for the existence of various libraries.
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
@@ -571,9 +565,7 @@ if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
 fi
 
 #--------------------------------------------------------------------
-# One more check related to the X libraries.  The standard releases
-# of Ultrix don't support the "xauth" mechanism, so send won't work
-# unless TK_NO_SECURITY is defined.
+# One more check related to the X libraries.
 #--------------------------------------------------------------------
 
 if test -d /usr/include/mit -a $tk_aqua = no; then
@@ -805,24 +797,35 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for Atk support — X11 only, explicitly excluding Wayland
+#	Check for Atk support
+#   - ONLY valid for X11
+#   - COMPLETELY disabled for Wayland and Aqua
 #--------------------------------------------------------------------
 
-if test "$tk_aqua" = no; then
-  AC_MSG_CHECKING([for ATK and Atk-bridge])
-  if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
-    AC_MSG_RESULT([yes])
-      ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
-      ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-      AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
-  else
-    AC_MSG_RESULT([no])
-    ATK_CFLAGS=""
-    ATK_LIBS=""
-  fi
-  AC_SUBST([ATK_CFLAGS])
-  AC_SUBST([ATK_LIBS])
+ATK_CFLAGS=""
+ATK_LIBS=""
+
+if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
+    AC_MSG_NOTICE([ATK support forcibly disabled (Wayland backend)])
+elif test "$tk_aqua" = yes; then
+    AC_MSG_NOTICE([ATK support disabled (Aqua backend)])
+else
+    AC_MSG_CHECKING([for ATK and Atk-bridge])
+    if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
+        AC_MSG_RESULT([yes])
+        ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+        ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+        AC_DEFINE([HAVE_ATK], [1],
+            [Define if ATK and Atk-bridge are available])
+    else
+        AC_MSG_RESULT([no])
+        ATK_CFLAGS=""
+        ATK_LIBS=""
+    fi
 fi
+
+AC_SUBST([ATK_CFLAGS])
+AC_SUBST([ATK_LIBS])
 
 #--------------------------------------------------------------------
 # XXX Do this last.
