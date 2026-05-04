@@ -452,7 +452,7 @@ MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
  */
 
 MODULE_SCOPE int   TkWaylandKeyInit();
-MODULE_SCOPE void  TkkWaylandKeyCleanup();
+MODULE_SCOPE void  TkWaylandKeyCleanup();
 MODULE_SCOPE void  TkWaylandUpdateKeyboardModifiers(int glfw_mods);
 MODULE_SCOPE void  TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint);
 MODULE_SCOPE char* TkWaylandGetStoredText(TkWindow *winPtr);
