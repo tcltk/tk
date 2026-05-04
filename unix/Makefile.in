@@ -266,11 +266,6 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
 
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ \
-	$(WAYLAND_CLIENT_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) $(GLES_LIBS) \
-	$(LIBDECOR_LIBS) $(SDBUSD_LIBS) $(FONTCONFIG_LIBS) $(NANOVG_LIBS)
-
-# Add linker flag to exclude libX11 when building for Wayland to prevent symbol collisions
 LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@
 # This ensures ATK doesn't pull in X11 dependencies
 LIBS += @WAYLAND_LDFLAGS@
@@ -347,7 +342,6 @@ NANOVG_LIBS		= @NANOVG_LIBS@
 # Combined Wayland support (all libraries together)
 WAYLAND_CFLAGS		= $(WAYLAND_CLIENT_CFLAGS) $(XKBCOMMON_CFLAGS) $(GLFW_CFLAGS) $(GLES_CFLAGS) $(LIBDECOR_CFLAGS) $(SDBUSD_CFLAGS) $(FONTCONFIG_CFLAGS)
 WAYLAND_LIBS		= $(WAYLAND_CLIENT_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) $(GLES_LIBS) $(LIBDECOR_LIBS) $(SDBUSD_LIBS) $(FONTCONFIG_LIBS) $(NANOVG_LIBS)
-
 LDFLAGS += $(WAYLAND_LIBS)
 
 # Bidi support (SheenBidi + HarfBuzz text shaping)
