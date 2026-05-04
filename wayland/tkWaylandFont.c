@@ -516,10 +516,8 @@ Tk_MeasureCharsInContext(
         maxLength = 32767;
     }
 
-#if 0
     NVGcontext *vg = TkGlfwGetNVGContextForMeasure();
     if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
-#endif
         /*
          * No NVG context yet (startup before GLFW is initialised) — fall
          * back to a per-character advance estimate from stored metrics.
@@ -556,7 +554,6 @@ Tk_MeasureCharsInContext(
         }
         *lengthPtr = width;
         return (int)(p - source - rangeStart);
-#if 0
     }
     /* Measure using NanoVG. */
     nvgSave(vg);
@@ -591,43 +588,39 @@ Tk_MeasureCharsInContext(
 
     int npos = nvgTextGlyphPositions(vg, 0, 0, rangePtr, rangeEnd,
                                      positions, nchars);
-
     float bounds[4];
     nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
     float totalWidth = bounds[2];
-
     int         pixelWidth     = 0;
     const char *lastBreak      = rangePtr;
     int         lastBreakWidth = 0;
     const char *p              = rangePtr;
-    int         pi             = 0;
+    int         pos             = 0;
 
-    while (p < rangeEnd && pi < npos) {
+    while (p < rangeEnd && pos < npos) {
         int ch;
         const char *next = p + Tcl_UtfToUniChar(p, &ch);
 
-        float glyphRight = positions[pi].maxx;
-        int   glyphWidth = (int) ceil(glyphRight - positions[pi].x);
-
-        if (maxLength >= 0 && pixelWidth + glyphWidth > maxLength) {
+        float glyphRight = positions[pos].maxx;
+        if (maxLength >= 0 && glyphRight > maxLength) {
             if ((flags & TK_WHOLE_WORDS) && lastBreak > rangePtr) {
                 p          = lastBreak;
                 pixelWidth = lastBreakWidth;
             } else if (flags & TK_PARTIAL_OK) {
-                pixelWidth += glyphWidth;
+		pixelWidth = (int) ceil(glyphRight);
                 p = next;
             }
             break;
         }
 
-        pixelWidth += glyphWidth;
+	pixelWidth = (int) ceil(glyphRight);
         if (ch == ' ' || ch == '\t') {
             lastBreak      = next;
             lastBreakWidth = pixelWidth;
         }
 
         p = next;
-        pi++;
+        pos++;
     }
 
     if ((flags & TK_AT_LEAST_ONE) && p == rangePtr && rangePtr < rangeEnd) {
@@ -646,7 +639,6 @@ Tk_MeasureCharsInContext(
 
     *lengthPtr = pixelWidth;
     return (int)(p - rangePtr);
-#endif
 }
 
 /*

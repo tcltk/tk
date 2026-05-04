@@ -20,7 +20,9 @@
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
-#include <sys/eventfd.h>
+#include <xkbcommon/xkbcommon.h>
+#include <GLFW/glfw3.h>
+//#include <sys/eventfd.h>
 #include <unistd.h>
 #include <errno.h>
 #include <GLES3/gl3.h>
@@ -1152,7 +1154,7 @@ TkGlfwScrollCallback(
  *
  * TkGlfwKeyCallback --
  *
- *      Called when key is pressed or released.
+ *      Called whenever a key is pressed or released.
  *
  * Results:
  *      None.
@@ -1166,7 +1168,7 @@ TkGlfwScrollCallback(
 static void
 TkGlfwKeyCallback(GLFWwindow *window,
 		  int key,
-		  TCL_UNUSED(int), /* scancode */
+		  int scancode,
 		  int action,
 		  int mods)
 {
@@ -1177,7 +1179,6 @@ TkGlfwKeyCallback(GLFWwindow *window,
     double xpos, ypos;
     int x, y;
 
-    printf("TkGlfwKeyCallback\n");
     if (!winPtr || action == GLFW_REPEAT) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
@@ -1212,7 +1213,11 @@ TkGlfwKeyCallback(GLFWwindow *window,
     if (mods & GLFW_MOD_SUPER)     event.xkey.state |= Mod4Mask;
     if (mods & GLFW_MOD_CAPS_LOCK) event.xkey.state |= LockMask;
     if (mods & GLFW_MOD_NUM_LOCK)  event.xkey.state |= Mod2Mask;
-    event.xkey.keycode     = key;   /* GLFW key constant, not raw scancode */
+    /*
+     * We use the scancode as the key.  TkpGetKeysym can convert that to a
+     * keysym using xkbcommon.
+     */
+    event.xkey.keycode = scancode;
     event.xkey.same_screen = True;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
@@ -1224,7 +1229,11 @@ TkGlfwKeyCallback(GLFWwindow *window,
  *
  *      Called with a 32-bit unicode codepoint when a composition
  *      sequence has been completed and produced a unicode codepoint.
- *      Store the codepoint for use by TkpGetString
+ *      (This is not called for dead keys, or action keys like Return
+ *      or Backspace, or modifiers.)
+ *
+ *      The codepoint is passed to TkWaylandStoreText to be converted
+ *      to UTF-8 and stored for use by TkpGetString.
  *
  * Results:
  *      None.
@@ -1240,7 +1249,6 @@ TkGlfwCharCallback(
     GLFWwindow *window,
     unsigned int codepoint)
 {
-    printf("TkGlfwCharCallback with codepoint %d\n", codepoint);
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     TkWaylandStoreText(winPtr, codepoint);
