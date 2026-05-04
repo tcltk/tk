@@ -1540,6 +1540,7 @@ DrawTab(
 	    }
 	}
     }
+
     /*
      * Fill the tab face with the appropriate color or gradient.  Use a solid
      * color if the tab is not selected, otherwise use the accent color with

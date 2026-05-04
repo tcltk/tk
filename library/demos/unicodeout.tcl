@@ -52,18 +52,30 @@ $w conf -cursor watch
 update
 
 ## Add the samples...
+if {[tk::build-info no-bidi]} {
+    # Using presentation forms (pre-layouted)
+    addSample $w Arabic "ﺔﻴﺑﺮﻌﻟﺍ ﺔﻤﻠﻜﻟﺍ"
+} else {
+    # Using standard text characters
 addSample $w Arabic "الكلمة العربية"
+}
 addSample $w "Trad. Chinese"  "中國的漢字"
 addSample $w "Simpl. Chinese" "汉语"
 addSample $w French "Langue française"
 addSample $w Greek "Ελληνική γλώσσα"
+if {[tk::build-info no-bidi]} {
+    # Visual order (pre-layouted)
+    addSample $w Hebrew "תירבע בתכ"
+} else {
+    # Standard logical order
 addSample $w Hebrew "כתב עברית"
+}
 addSample $w Hindi "हिन्दी भाषा"
 addSample $w Icelandic "Íslenska"
 addSample $w Japanese "日本語のひらがな, 漢字とカタカナ"
 addSample $w Korean "대한민국의 한글"
 addSample $w Russian "Русский язык"
-if {([tk windowingsystem] ne "x11") || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))} {
+if {![tk::build-info no-xft]} {
     addSample $w Emoji "😀💩👍🇳🇱"
 }
 

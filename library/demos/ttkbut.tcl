@@ -39,10 +39,8 @@ ttk::checkbutton $w.checks.c2 -text Tomato  -variable tomato
 ttk::separator   $w.checks.sep
 ttk::checkbutton $w.checks.c3 -text Basil   -variable basil
 ttk::checkbutton $w.checks.c4 -text Oregano -variable oregano
-### pack $w.checks.e $w.checks.sep1 $w.checks.c1 $w.checks.c2 $w.checks.sep2 \
-	$w.checks.c3 $w.checks.c4   -fill x -pady 1.5p
 pack $w.checks.c1 $w.checks.c2 $w.checks.sep $w.checks.c3 $w.checks.c4 \
-	-fill x -pady 1.5p
+	-fill x -padx 3p -pady 1.5p
 
 ## Set up the radiobutton group
 ttk::labelframe $w.radios -text "Radiobuttons"

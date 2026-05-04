@@ -790,13 +790,13 @@ static const Ttk_ElementSpec TabElementSpec =
 /*----------------------------------------------------------------------
  * +++  Tree indicator element.
  *
- *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
+ *	Generic element, but don't display at all if TTK_STATE_LEAF set
  */
 
 static const Ttk_StateTable header_statemap[] =
 {
     { HIS_PRESSED,	TTK_STATE_PRESSED, 0 },
-    { HIS_HOT,	TTK_STATE_ACTIVE, 0 },
+    { HIS_HOT,		TTK_STATE_ACTIVE, 0 },
     { HIS_NORMAL,	0,0 },
 };
 
