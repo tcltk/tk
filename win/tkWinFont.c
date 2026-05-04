@@ -1745,7 +1745,7 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
-        if (numBytes <= 0 || source == NULL) {
+    if (numBytes <= 0 || source == NULL) {
         return;
     }
 
@@ -1753,7 +1753,7 @@ Tk_DrawChars(
      * Delegate everything to the context-aware renderer.
      * We draw the full string as a single logical range.
      */
-    Tk_DrawCharsInContext(display, drawable, gc,tkfont,source,numBytes,0, numBytes,x, y);
+    Tk_DrawCharsInContext(display, drawable, gc, NULL ,source,numBytes,0, numBytes,x, y);
 }
 
 void
