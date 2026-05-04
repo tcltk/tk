@@ -1359,22 +1359,10 @@ GetVisualXForLogicalIndex(
  * Tk_MeasureChars --
  *
  *	Determine the number of bytes from the string that will fit in the
- *	given horizontal span. The measurement is done under the assumption
- *	that Tk_DrawChars() will be used to actually display the characters.
- *
- *	This implementation uses the Uniscribe shaping layer so that advance
- *	widths account for ligatures, kerning, and complex scripts.  Shaping
- *	is performed on the whole string first; we then walk the shaped runs
- *	summing glyph advances until we exceed maxLength.
- *
- *	If shaping fails (TkWinShapeString returns error or no runs), we fall
- *	back to plain GDI measurement with the base font.  This ensures that
- *	basic text still works.
+ *	given horizontal span. 
  *
  * Results:
- *	The return value is the number of bytes from source that fit into the
- *	span that extends from 0 to maxLength. *lengthPtr is filled with the
- *	x-coordinate of the right edge of the last character that did fit.
+ *	Calls Tk_MeasureCharsInContext.
  *
  * Side effects:
  *	None.
@@ -1407,182 +1395,8 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
-    WinFont *fontPtr;
-    HDC hdc;
-    Tcl_DString uniStr;
-    WCHAR *wstr;
-    int wlen;
-    TkWinShapedRun *runs = NULL;
-    int nRuns = 0;
-    int curX = 0;
-    int bytesFit;
-
-    if (numBytes == 0) {
-	*lengthPtr = 0;
-	return 0;
-    }
-
-    fontPtr = (WinFont *) tkfont;
-    hdc = GetDC(fontPtr->hwnd);
-
-    /*
-     * Convert UTF-8 to UTF-16 for Uniscribe.
-     */
-    Tcl_DStringInit(&uniStr);
-    Tcl_UtfToWCharDString(source, numBytes, &uniStr);
-    wstr = (WCHAR *)Tcl_DStringValue(&uniStr);
-    wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
-
-    if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
-	/* Shaping failed – fall back to plain GDI measurement with base font. */
-	SIZE size;
-	SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
-	GetTextExtentPoint32W(hdc, wstr, wlen, &size);
-	ReleaseDC(fontPtr->hwnd, hdc);
-	Tcl_DStringFree(&uniStr);
-	*lengthPtr = size.cx;
-	return (int)numBytes;
-    }
-
-    ReleaseDC(fontPtr->hwnd, hdc);
-
-    if (maxLength < 0) {
-	/*
-	 * Unbounded: all bytes fit; return total advance width.
-	 */
-	curX = TkWinShapedRunsWidth(runs, nRuns);
-	TkWinFreeShapedRuns(runs, nRuns);
-	Tcl_DStringFree(&uniStr);
-	*lengthPtr = curX;
-	return (int)numBytes;
-    }
-
-    /*
-     * Walk glyph advances to find the last run/glyph that fits.
-     * Because Uniscribe has already bidi-reordered and shaped the runs,
-     * we can simply accumulate advances left-to-right in visual order.
-     */
-    {
-	int i, g;
-	bytesFit = 0;
-
-	for (i = 0; i < nRuns; i++) {
-	    for (g = 0; g < runs[i].glyphCount; g++) {
-		int newX = curX + runs[i].advances[g];
-		if (newX > maxLength) {
-		    /*
-		     * This glyph pushes us over the limit.
-		     */
-		    if ((flags & TK_PARTIAL_OK) && (curX != maxLength)) {
-			curX = newX;
-			/* include this glyph - we still need byte count
-			 * but glyph->byte mapping is not tracked here;
-			 * fall through to return full string if partial. */
-		    }
-		    goto doneMeasure;
-		}
-		curX  = newX;
-	    }
-	}
-	/* All glyphs fit. */
-	bytesFit = (int)numBytes;
-    }
-
-  doneMeasure:
-    if (bytesFit == 0 && curX == TkWinShapedRunsWidth(runs, nRuns)) {
-	bytesFit = (int)numBytes;
-    } else if (bytesFit == 0) {
-	/*
-	 * We stopped mid-string.  Map back to a byte count by re-measuring
-	 * the UTF-8 string character by character until we match curX.
-	 * This is the same approach the legacy code uses for its
-	 * "moretomeasure" path and is correct for BMP text.
-	 */
-	const char *p = source;
-	const char *end = source + numBytes;
-	int accumX = 0;
-	bytesFit = 0;
-
-	/* Re-shape prefix substrings until we bracket curX. */
-	while (p < end) {
-	    int ch;
-	    const char *next = p + Tcl_UtfToUniChar(p, &ch);
-	    int charBytes = (int)(next - source);
-
-	    HDC hdc2 = GetDC(fontPtr->hwnd);
-	    WCHAR *ws2;
-	    int wl2;
-	    TkWinShapedRun *r2 = NULL;
-	    int nr2 = 0;
-	    Tcl_DString ds2;
-
-	    Tcl_DStringInit(&ds2);
-	    Tcl_UtfToWCharDString(source, charBytes, &ds2);
-	    ws2 = (WCHAR *)Tcl_DStringValue(&ds2);
-	    wl2 = (int)(Tcl_DStringLength(&ds2) / sizeof(WCHAR));
-	    if (TkWinShapeString(hdc2, fontPtr, ws2, wl2, &r2, &nr2) < 0 || nr2 == 0) {
-		/* Fallback to GDI */
-		SIZE size;
-		SelectObject(hdc2, fontPtr->subFontArray[0].hFont0);
-		GetTextExtentPoint32W(hdc2, ws2, wl2, &size);
-		accumX = size.cx;
-	    } else {
-		accumX = TkWinShapedRunsWidth(r2, nr2);
-		TkWinFreeShapedRuns(r2, nr2);
-	    }
-	    ReleaseDC(fontPtr->hwnd, hdc2);
-	    Tcl_DStringFree(&ds2);
-
-	    if (accumX > maxLength) {
-		if ((flags & TK_PARTIAL_OK) && curX != maxLength) {
-		    bytesFit = charBytes;
-		    curX = accumX;
-		} else if ((p == source) && (flags & TK_AT_LEAST_ONE)) {
-		    bytesFit = charBytes;
-		    curX = accumX;
-		}
-		break;
-	    }
-	    bytesFit = charBytes;
-	    curX = accumX;
-	    p = next;
-	}
-    }
-
-    TkWinFreeShapedRuns(runs, nRuns);
-    Tcl_DStringFree(&uniStr);
-
-    /*
-     * TK_WHOLE_WORDS: scan back to last word boundary and re-measure.
-     */
-    if ((flags & TK_WHOLE_WORDS) && (bytesFit < (int)numBytes)) {
-	const char *lastWordBreak = NULL;
-	const char *p = source;
-	const char *end = source + bytesFit;
-	int ch = ' ', ch2;
-
-	while (p < end) {
-	    const char *next = p + Tcl_UtfToUniChar(p, &ch2);
-	    if ((ch != ' ') && (ch2 == ' ')) {
-		lastWordBreak = p;
-	    }
-	    p = next;
-	    ch = ch2;
-	}
-	if (lastWordBreak != NULL) {
-	    return Tk_MeasureChars(tkfont, source,
-		    lastWordBreak - source, -1, 0, lengthPtr);
-	}
-	if (flags & TK_AT_LEAST_ONE) {
-	    /* bytesFit already set above. */
-	} else {
-	    bytesFit = 0;
-	    curX = 0;
-	}
-    }
-
-    *lengthPtr = curX;
-    return bytesFit;
+        return Tk_MeasureCharsInContext(tkfont, source, numBytes, 0, numBytes, 
+			maxLength, flags, lengthPtr);
 }
 
 /*
@@ -1903,17 +1717,9 @@ Tk_MeasureCharsInContext(
  *
  *	Draw a string of characters on the screen.
  *
- *	The drawing path calls TkWinShapeString() once to obtain fully shaped,
- *	bidi-reordered glyph runs, then iterates over those runs calling
- *	ScriptTextOut.  No Unicode parsing or subfont selection occurs during
- *	drawing.
- *
- *	If shaping fails, we fall back to plain GDI drawing with the base
- *	font.  This ensures that text always appears, even when Uniscribe
- *	cannot process the string.
  *
  * Results:
- *	None.
+ *	Calls Tk_DrawCharsInContext.
  *
  * Side effects:
  *	Information gets drawn on the screen.
@@ -1939,133 +1745,15 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
-    HDC dc;
-    WinFont *fontPtr;
-    TkWinDCState state;
-
-    fontPtr = (WinFont *) gc->font;
-    LastKnownRequestProcessed(display)++;
-
-    if (drawable == None) {
-	return;
+        if (numBytes <= 0 || source == NULL) {
+        return;
     }
 
-    dc = TkWinGetDrawableDC(display, drawable, &state);
-
-    SetROP2(dc, tkpWinRopModes[gc->function]);
-
-    if ((gc->clip_mask != None) &&
-	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
-    }
-
-    if ((gc->fill_style == FillStippled
-	    || gc->fill_style == FillOpaqueStippled)
-	    && gc->stipple != None) {
-	TkWinDrawable *twdPtr = (TkWinDrawable *) gc->stipple;
-	HBRUSH oldBrush, stipple;
-	HBITMAP oldBitmap, bitmap;
-	HDC dcMem;
-	TEXTMETRICW tm;
-	SIZE size;
-
-	if (twdPtr->type != TWD_BITMAP) {
-	    Tcl_Panic("unexpected drawable type in stipple");
-	}
-
-	/*
-	 * Select stipple pattern into destination dc.
-	 */
-
-	dcMem = CreateCompatibleDC(dc);
-
-	stipple = CreatePatternBrush(twdPtr->bitmap.handle);
-	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = (HBRUSH)SelectObject(dc, stipple);
-
-	SetTextAlign(dcMem, TA_LEFT | TA_BASELINE);
-	SetTextColor(dcMem, gc->foreground);
-	SetBkMode(dcMem, TRANSPARENT);
-	SetBkColor(dcMem, RGB(0, 0, 0));
-
-	/*
-	 * Compute the bounding box and create a compatible bitmap.
-	 */
-
-	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
-	GetTextMetricsW(dcMem, &tm);
-	size.cx -= tm.tmOverhang;
-	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
-
-	/*
-	 * The following code is tricky because fonts are rendered in multiple
-	 * colors. First we draw onto a black background and copy the white
-	 * bits. Then we draw onto a white background and copy the black bits.
-	 * Both the foreground and background bits of the font are ANDed with
-	 * the stipple pattern as they are copied.
-	 */
-
-	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
-		0, 0, 0xEA02E9);
-	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
-		0, 0, 0x8A0E06);
-
-	/*
-	 * Destroy the temporary bitmap and restore the device context.
-	 */
-
-	SelectObject(dcMem, oldBitmap);
-	DeleteObject(bitmap);
-	DeleteDC(dcMem);
-	SelectObject(dc, oldBrush);
-	DeleteObject(stipple);
-    } else if (gc->function == GXcopy) {
-	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
-	SetTextColor(dc, gc->foreground);
-	SetBkMode(dc, TRANSPARENT);
-	MultiFontTextOut(dc, fontPtr, source, (int)numBytes, x, y, 0.0);
-    } else {
-	HBITMAP oldBitmap, bitmap;
-	HDC dcMem;
-	TEXTMETRICW tm;
-	SIZE size;
-
-	dcMem = CreateCompatibleDC(dc);
-
-	SetTextAlign(dcMem, TA_LEFT | TA_BASELINE);
-	SetTextColor(dcMem, gc->foreground);
-	SetBkMode(dcMem, TRANSPARENT);
-	SetBkColor(dcMem, RGB(0, 0, 0));
-
-	/*
-	 * Compute the bounding box and create a compatible bitmap.
-	 */
-
-	GetTextExtentPointA(dcMem, source, (int)numBytes, &size);
-	GetTextMetricsW(dcMem, &tm);
-	size.cx -= tm.tmOverhang;
-	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
-	oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
-
-	MultiFontTextOut(dcMem, fontPtr, source, (int)numBytes, 0, tm.tmAscent,
-		0.0);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
-		0, 0, (DWORD) tkpWinBltModes[gc->function]);
-
-	/*
-	 * Destroy the temporary bitmap and restore the device context.
-	 */
-
-	SelectObject(dcMem, oldBitmap);
-	DeleteObject(bitmap);
-	DeleteDC(dcMem);
-    }
-    TkWinReleaseDrawableDC(drawable, dc, &state);
+    /*
+     * Delegate everything to the context-aware renderer.
+     * We draw the full string as a single logical range.
+     */
+    Tk_DrawCharsInContext(display, drawable, gc,tkfont,source,numBytes,0, numBytes,x, y);
 }
 
 void
