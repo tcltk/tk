@@ -289,7 +289,7 @@ test winWm-6.1 {wm attributes} -constraints win -setup {
     wm attributes .t
 } -cleanup {
     destroy .t
-} -result {-alpha 1.0 -appearance light -transparentcolor {} -disabled 0 -fullscreen 0 -toolwindow 0 -topmost 0}
+} -result {-alpha 1.0 -appearance auto -transparentcolor {} -disabled 0 -fullscreen 0 -toolwindow 0 -topmost 0}
 test winWm-6.2 {wm attributes} -constraints win -setup {
     destroy .t
 } -body {
