@@ -1661,12 +1661,9 @@ TkpGetFontAttrsForChar(
  *
  *   Measure the width of a string when drawn in the given font.
  *
- *   FIX: Track minimum and maximum logical byte boundaries to ensure
- *   returned byte counts are monotonically increasing as maxLength increases.
- *   This prevents infinite loops in the text widget's cursor-position search.
  *
  * Results:
- *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
+ *   Calls Tk_MeasureCharsinContext. 
  *
  * Side effects:
  *   None.
@@ -1682,154 +1679,8 @@ Tk_MeasureChars(
 	int flags,
 	int *lengthPtr)
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-
-    /*
-     * Fast path for Latin-only strings (ASCII through Latin Extended-B,
-     * U+0000-U+024F).  XftTextExtentsUtf8 handles the full UTF-8 encoding
-     * of these codepoints correctly with a single font face.
-     *
-     * IMPORTANT: check only the bytes we are asked to measure, not any
-     * larger surrounding buffer.  The caller may pass a slice of a
-     * mixed-script string whose other portions contain non-Latin text.
-     */
-    if (IsLatinOnly(source, (int)numBytes)) {
-        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
-        if (!ftFont) {
-            *lengthPtr = 0;
-            return 0;
-        }
-
-        /* Total width of the entire string. */
-        XGlyphInfo extents;
-        XftTextExtentsUtf8(fontPtr->display, ftFont,
-                           (const FcChar8 *)source, (int)numBytes, &extents);
-        int totalWidth = extents.xOff;
-
-        if (maxLength < 0) {
-            *lengthPtr = totalWidth;
-            return (int)numBytes;
-        }
-
-        /*
-         * Linear scan for the longest prefix that fits, advancing one
-         * full codepoint at a time.
-         *
-         * A binary search on raw byte offsets is incorrect for multi-byte
-         * UTF-8: the midpoint can land inside a sequence, making
-         * XftTextExtentsUtf8 measure a truncated, invalid sequence.
-         */
-        int best = 0, bestWidth = 0;
-        int pos = 0;
-        while (pos < (int)numBytes) {
-            FcChar32 uc;
-            int clen = FcUtf8ToUcs4((const FcChar8 *)(source + pos), &uc,
-                                    (int)numBytes - pos);
-            if (clen <= 0) clen = 1;  /* skip invalid byte */
-            int next = pos + clen;
-
-            XftTextExtentsUtf8(fontPtr->display, ftFont,
-                               (const FcChar8 *)source, next, &extents);
-            if (extents.xOff > maxLength) break;
-
-            best = next;
-            bestWidth = extents.xOff;
-            pos = next;
-        }
-
-        /* Whole-word break if requested. */
-        if ((flags & TK_WHOLE_WORDS) && best < (int)numBytes) {
-            int spacePos = -1;
-            for (int i = 0; i < best; i++) {
-                if (source[i] == ' ' || source[i] == '\t')
-                    spacePos = i;
-            }
-            if (spacePos >= 0) {
-                best = spacePos + 1;
-                XftTextExtentsUtf8(fontPtr->display, ftFont,
-                                   (const FcChar8 *)source, best, &extents);
-                bestWidth = extents.xOff;
-            }
-        }
-
-        /* At least one full codepoint if requested and nothing fit yet. */
-        if ((flags & TK_AT_LEAST_ONE) && best == 0 && (int)numBytes > 0) {
-            FcChar32 uc;
-            int clen = FcUtf8ToUcs4((const FcChar8 *)source, &uc, (int)numBytes);
-            if (clen <= 0) clen = 1;
-            best = clen;
-            XftTextExtentsUtf8(fontPtr->display, ftFont,
-                               (const FcChar8 *)source, best, &extents);
-            bestWidth = extents.xOff;
-        }
-
-        *lengthPtr = bestWidth;
-        return best;
-    }
-
-    /* Shaping path for non-Latin. */
-    ShapedGlyphBuffer buffer;
-    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &buffer)) {
-        *lengthPtr = 0;
-        return (int)numBytes;
-    }
-
-    int curX = 0;
-    int lastBreakByte = 0;
-    int lastBreakX = 0;
-
-    /*
-     * Cursor positioning with visual index:
-     * 
-     * The visualIndex maps visual (screen) positions to logical (source) byte
-     * offsets, enabling accurate cursor positioning for all text directions.
-     */
-    int prevByteEnd = 0;
-    
-    for (int i = 0; i < buffer.indexCount; i++) {
-        int glyphX = buffer.visualIndex[i].x;
-        int glyphAdvance = buffer.visualIndex[i].advanceX;
-        int glyphXEnd = glyphX + glyphAdvance;
-        int byteEnd = buffer.visualIndex[i].byteEnd;
-        
-        if (byteEnd < 0) byteEnd = 0;
-        if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
-
-        /* Record word-break opportunities based on source character. */
-        if (byteEnd > 0 && byteEnd <= (int)numBytes) {
-            if (source[byteEnd - 1] == ' ' || source[byteEnd - 1] == '\t') {
-                lastBreakByte = byteEnd;
-                lastBreakX = glyphXEnd;
-            }
-        }
-
-        if (maxLength >= 0 && glyphXEnd > maxLength) {
-            if (lastBreakByte > 0 && (flags & TK_WHOLE_WORDS)) {
-                *lengthPtr = lastBreakX;
-                return lastBreakByte;
-            }
-            
-            /* Ensure we return at least one character if TK_AT_LEAST_ONE is set. */
-            if (prevByteEnd == 0 && (flags & TK_AT_LEAST_ONE)) {
-                *lengthPtr = glyphXEnd;
-                return byteEnd;
-            }
-            
-            *lengthPtr = curX;
-            return prevByteEnd;
-        }
-
-        curX = glyphXEnd;
-        prevByteEnd = byteEnd;
-    }
-
-    /* All glyphs fit - return total. */
-    if (prevByteEnd == 0 && (int)numBytes > 0) {
-        prevByteEnd = (int)numBytes;
-    }
-
-    *lengthPtr = (maxLength < 0) ? buffer.totalAdvance : curX;
-    return prevByteEnd;
+       return Tk_MeasureCharsInContext(tkfont, source, numBytes, 0, numBytes, 
+		maxLength, flags, lengthPtr);
 }
 
 /*
@@ -2028,6 +1879,7 @@ Tk_MeasureCharsInContext(
     return bytesConsumed;
 }
 
+
 /*
  * ---------------------------------------------------------------
  * Tk_DrawChars --
@@ -2035,12 +1887,13 @@ Tk_MeasureCharsInContext(
  *   Draw a UTF-8 string using the given font.
  *
  * Results:
- *   None.
+ *   Calls Tk_DrawCharsinContext. 
  *
  * Side effects:
  *   Draws text on the specified drawable.
  * ---------------------------------------------------------------
  */
+
 
 void
 Tk_DrawChars(
@@ -2052,105 +1905,16 @@ Tk_DrawChars(
     Tcl_Size numBytes,     /* Number of bytes in string. */
     int x, int y)          /* Coordinates at which to place origin. */
 {
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    XftDraw *ftDraw = NULL;
-
-    if (numBytes <= 0) return;
-
-    /* Create a temporary XftDraw for this draw operation. */
-    ftDraw = XftDrawCreate(display, drawable,
-                          fontPtr->visual, fontPtr->colormap);
-    if (!ftDraw) return;
-
-    XGCValues values;
-    XGetGCValues(display, gc, GCForeground, &values);
-    XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
-    if (!xftcolor) {
-        XftDrawDestroy(ftDraw);
+    if (numBytes <= 0 || source == NULL) {
         return;
     }
 
-    if (tsdPtr->clipRegion) {
-        XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
-    }
-
     /*
-     * Fast path for Latin-only strings (U+0000-U+024F).
-     * Check only the bytes being drawn, not any larger buffer.
+     * Delegate everything to the context-aware renderer.
+     * We draw the full string as a single logical range.
      */
-    if (IsLatinOnly(source, (int)numBytes)) {
-        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
-        if (ftFont) {
-            XftDrawStringUtf8(ftDraw, xftcolor, ftFont,
-                              x, y, (const FcChar8 *)source, (int)numBytes);
-        }
-        goto done;
-    }
-
-    /* Full shaping path. */
-    {
-        ShapedGlyphBuffer buffer;
-        if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                                    (int)numBytes, &buffer)) {
-            goto done;
-        }
-
-        XftGlyphFontSpec specs[MAX_GLYPHS];
-        int nspec = 0;
-
-        for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
-            int faceIdx = buffer.glyphs[i].fontIndex;
-            if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
-
-            XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
-            if (!ftFont) continue;
-
-            unsigned int actualGlyph = buffer.glyphs[i].glyphId;
-
-            /* Fallback logic for missing glyphs in primary font. */
-            if (actualGlyph == 0) {
-                FcChar32 ucs4 = 0;
-                int byteOff = buffer.glyphs[i].byteOffset;
-                if (byteOff >= 0 && byteOff < (int)numBytes) {
-                    FcUtf8ToUcs4((const FcChar8 *)(source + byteOff), &ucs4,
-                                 (int)numBytes - byteOff);
-                }
-
-                if (ucs4 != 0) {
-                    XftFont *fallbackFont = GetFont(fontPtr, ucs4, 0.0);
-                    if (fallbackFont) {
-                        actualGlyph = XftCharIndex(display, fallbackFont, ucs4);
-                        if (actualGlyph != 0) ftFont = fallbackFont;
-                    }
-                }
-                if (actualGlyph == 0) continue;
-            }
-
-            specs[nspec].font  = ftFont;
-            specs[nspec].glyph = actualGlyph;
-            specs[nspec].x     = x + (int)buffer.glyphs[i].x;
-            specs[nspec].y     = y + (int)buffer.glyphs[i].y;
-            nspec++;
-        }
-
-        if (nspec > 0) {
-            LOCK;
-            XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
-            UNLOCK;
-        }
-    }
-
-done:
-    if (tsdPtr->clipRegion) {
-        XftDrawSetClip(ftDraw, NULL);
-    }
-    
-    /* Always destroy the temporary XftDraw. */
-    XftDrawDestroy(ftDraw);
+    Tk_DrawCharsInContext(display, drawable, gc,tkfont,source,numBytes,0, numBytes,x, y);
 }
-
 /*
  * ---------------------------------------------------------------
  * Tk_DrawCharsInContext --
