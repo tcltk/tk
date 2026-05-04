@@ -413,11 +413,12 @@ TkpDisplayButton(void *clientData)
 {
     TkButton *butPtr = clientData;
     Tk_Window tkwin = butPtr->tkwin;
+    butPtr->flags &= ~REDRAW_PENDING;
     if (!tkwin || !Tk_IsMapped(tkwin)) {
-      return;
+        return;
     }
     TkWaylandDrawingContext dc;
-    GC currentGC;
+    GC currentGC = butPtr->activeTextGC;
     int x = 0, y = 0, relief;
     int width = 0, height = 0;
     int fullWidth = 0, fullHeight = 0;
@@ -442,7 +443,6 @@ TkpDisplayButton(void *clientData)
             relief = butPtr->offRelief;
         }
     }
-    currentGC = butPtr->activeTextGC;
 
     /* Get padding and border values. */
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &padX);
@@ -633,7 +633,6 @@ TkpDisplayButton(void *clientData)
 
     /* End drawing session. */
     TkGlfwEndDraw(&dc);
-    butPtr->flags &= ~REDRAW_PENDING;
 }
 
 /* 
