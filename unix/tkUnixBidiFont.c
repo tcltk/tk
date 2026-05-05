@@ -1789,10 +1789,29 @@ Tk_MeasureCharsInContext(
      *   - return value is bytes consumed from rangeStart (caller does start+=result)
      *   - *lengthPtr is the pixel width of those bytes
      *
-     * We scan glyphs[] in their natural emit order (which is left-to-right
-     * across the line since runs are emitted LTR and RTL glyphs within each
-     * run are placed with x positions already accounting for direction).
-     * We accumulate the width of glyphs whose clusters fall inside the range.
+     * We iterate glyphs[] in visual left-to-right order (the shaper emits them
+     * that way), accumulating the bounding box of glyphs seen so far.  When the
+     * bounding box exceeds maxLength we stop.
+     *
+     * RTL correctness: for RTL runs, the glyph visited first in visual order
+     * has the *highest* logical byte offset (boe).  We must not interpret
+     * "first glyph visited → bytesConsumed = boe" as "all bytes consumed",
+     * because the remaining glyphs (lower logical offsets) haven't been
+     * evaluated yet.  Instead we track, separately:
+     *
+     *   visMinByte / visMaxByte: the logical byte range [visMinByte, visMaxByte)
+     *     covered by glyphs whose visual extent is within budget.  We commit
+     *     bytes to the caller only after we have processed *all* glyphs whose
+     *     x/advanceX overlaps the accepted visual region — i.e., after the full
+     *     glyph loop.
+     *
+     * For LTR this degenerates to the simple left-to-right accumulation; for
+     * RTL it correctly handles the reversed logical/visual ordering.
+     *
+     * Additionally, all pixel quantities (gx, gxe) are absolute from the
+     * shaper's origin (0).  rangePixelStart anchors the range to the left edge
+     * of the first glyph in the range; curWidth is range-relative so that
+     * comparison against maxLength (a remaining-budget value) is valid.
      */
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
@@ -1802,23 +1821,60 @@ Tk_MeasureCharsInContext(
     }
 
     /*
-     * Compute the pixel width of glyphs in [rangeStart, rangeEnd) by
-     * summing their advance widths from glyphs[].  glyphs[] is in screen
-     * left-to-right order (each run emits glyphs with monotonically
-     * increasing x).  We use x/advanceX directly rather than accumulating,
-     * so the result is independent of which glyphs we skip.
-     *
-     * For each glyph in range, rangePixelStart = min(glyph.x) and
-     * rangePixelEnd = max(glyph.x + glyph.advanceX).
-     *
-     * We also track byte progress in logical (source) order to handle the
-     * maxLength break and return value correctly.
+     * First pass: find rangePixelStart (leftmost pixel of any glyph in range).
+     * This anchors all width calculations to the range origin.
      */
     int rangePixelStart = -1;
-    int rangePixelEnd   = 0;
-    int lastBreakByte   = -1;
+    for (int i = 0; i < buffer.glyphCount; i++) {
+        int bo = buffer.glyphs[i].byteOffset;
+        if (bo < (int)rangeStart || bo >= rangeEnd) continue;
+        int gx = buffer.glyphs[i].x;
+        if (rangePixelStart < 0 || gx < rangePixelStart) rangePixelStart = gx;
+    }
+    if (rangePixelStart < 0) {
+        /* No glyphs in range at all. */
+        *lengthPtr = 0;
+        return (int)rangeLength;
+    }
+
+    if (maxLength < 0) {
+        /*
+         * Unbounded: return full range extent and all bytes.
+         */
+        int rangePixelEnd = 0;
+        for (int i = 0; i < buffer.glyphCount; i++) {
+            int bo  = buffer.glyphs[i].byteOffset;
+            if (bo < (int)rangeStart || bo >= rangeEnd) continue;
+            int gxe = buffer.glyphs[i].x + buffer.glyphs[i].advanceX;
+            if (gxe > rangePixelEnd) rangePixelEnd = gxe;
+        }
+        *lengthPtr = rangePixelEnd - rangePixelStart;
+        return (int)rangeLength;
+    }
+
+    /*
+     * Bounded path: iterate glyphs in visual order, accumulating bounding box.
+     * Stop when the bounding box exceeds maxLength.
+     *
+     * We track the accepted visual region as [rangePixelStart, acceptedPixelEnd).
+     * After each glyph we check: is the total visual span (acceptedPixelEnd -
+     * rangePixelStart) within maxLength?  If yes, tentatively accept all glyphs
+     * whose x/advanceX falls within [rangePixelStart, acceptedPixelEnd).
+     *
+     * For RTL this means we first encounter the rightmost visual glyphs; they
+     * set acceptedPixelEnd.  As we continue we encounter glyphs to their left;
+     * rangePixelStart tracks the leftmost glyph so far.  curWidth grows as we
+     * include more of the run.
+     *
+     * To correctly compute bytesConsumed for RTL, we do a second pass after
+     * the glyph loop: find the contiguous logical byte range [rangeStart, X)
+     * that is fully covered by accepted glyphs.
+     */
+    int acceptedPixelEnd = rangePixelStart; /* right edge of accepted region */
+    int acceptedPixelLeft = rangePixelStart; /* left edge (can grow left for RTL) */
+    int budgetExceeded    = 0;
+    int lastBreakByte     = -1;
     int lastBreakPixelEnd = 0;
-    int bytesConsumed   = 0;  /* bytes consumed within range, relative to rangeStart */
 
     for (int i = 0; i < buffer.glyphCount; i++) {
         int bo  = buffer.glyphs[i].byteOffset;
@@ -1826,56 +1882,80 @@ Tk_MeasureCharsInContext(
         int gx  = buffer.glyphs[i].x;
         int gxe = gx + buffer.glyphs[i].advanceX;
 
-        /* Skip glyphs outside [rangeStart, rangeEnd). */
         if (bo < (int)rangeStart || bo >= rangeEnd) continue;
 
-        /* Track pixel extent of range. */
-        if (rangePixelStart < 0 || gx  < rangePixelStart) rangePixelStart = gx;
-        if (gxe > rangePixelEnd) rangePixelEnd = gxe;
+        /* Expand bounding box to include this glyph. */
+        int newLeft  = (gx  < acceptedPixelLeft) ? gx  : acceptedPixelLeft;
+        int newRight = (gxe > acceptedPixelEnd)   ? gxe : acceptedPixelEnd;
+        int newWidth = newRight - newLeft;
 
-        /* Width of range so far = rangePixelEnd - rangePixelStart. */
-        int curWidth = rangePixelEnd - rangePixelStart;
-
-        /* Track word-break opportunities. */
-        if (boe > 0 && boe <= (int)numBytes &&
-            (source[boe-1] == ' ' || source[boe-1] == '\t')) {
-            lastBreakByte     = boe - (int)rangeStart;
-            lastBreakPixelEnd = rangePixelEnd;
-        }
-
-        /* Check if we've exceeded maxLength. */
-        if (maxLength >= 0 && curWidth > maxLength) {
-            if (lastBreakByte > 0 && (flags & TK_WHOLE_WORDS)) {
-                *lengthPtr = lastBreakPixelEnd - rangePixelStart;
-                return lastBreakByte;
+        if (newWidth > maxLength) {
+            if (acceptedPixelEnd == rangePixelStart && (flags & TK_AT_LEAST_ONE)) {
+                /* Nothing accepted yet; force this one glyph. */
+                acceptedPixelLeft = newLeft;
+                acceptedPixelEnd  = newRight;
             }
-            if (bytesConsumed == 0 && (flags & TK_AT_LEAST_ONE)) {
-                /* Force at least this one glyph. */
-                bytesConsumed = boe - (int)rangeStart;
-                *lengthPtr = curWidth;
-                return bytesConsumed;
-            }
-            if (bytesConsumed == 0) {
-                /* Nothing fit and no TK_AT_LEAST_ONE — return zero. */
-                *lengthPtr = 0;
-                return 0;
-            }
+            budgetExceeded = 1;
             break;
         }
 
-        /* Glyph fits: advance byte counter to end of this cluster. */
-        int clusterRelEnd = boe - (int)rangeStart;
-        if (clusterRelEnd > bytesConsumed) bytesConsumed = clusterRelEnd;
+        acceptedPixelLeft = newLeft;
+        acceptedPixelEnd  = newRight;
+
+        /* Track word-break opportunities (in logical byte space). */
+        if (boe > 0 && boe <= (int)numBytes &&
+            (source[boe-1] == ' ' || source[boe-1] == '\t')) {
+            lastBreakByte     = boe - (int)rangeStart;
+            lastBreakPixelEnd = newRight;
+        }
     }
 
-    if (rangePixelStart < 0) {
-        /* No glyphs in range at all. */
+    if (budgetExceeded && lastBreakByte > 0 && (flags & TK_WHOLE_WORDS)) {
+        *lengthPtr = lastBreakPixelEnd - rangePixelStart;
+        return lastBreakByte;
+    }
+
+    int totalWidth = acceptedPixelEnd - rangePixelStart;
+
+    if (acceptedPixelEnd == rangePixelStart) {
+        /* Nothing fit. */
         *lengthPtr = 0;
-        return (int)rangeLength;
+        return 0;
     }
 
-    *lengthPtr = rangePixelEnd - rangePixelStart;
+    /*
+     * Second pass: determine bytesConsumed.
+     *
+     * For LTR: bytesConsumed = highest boe of any accepted glyph.
+     * For RTL: glyphs are visited right-to-left in visual order but their
+     *   logical bytes are high-to-low.  A glyph is "accepted" if its visual
+     *   x/advanceX falls within [acceptedPixelLeft, acceptedPixelEnd).
+     *   bytesConsumed for RTL is the count of logical bytes from rangeStart
+     *   that are covered by accepted glyphs — which may not be contiguous in
+     *   the visual scan order.
+     *
+     * Simplest correct approach: collect the maximum logical byte-end among
+     * all glyphs whose pixel extent is fully within the accepted region.
+     * For a pure RTL run this gives the number of characters from the logical
+     * start whose visual representation fits.
+     */
+    int bytesConsumed = 0;
+    for (int i = 0; i < buffer.glyphCount; i++) {
+        int bo  = buffer.glyphs[i].byteOffset;
+        int boe = bo + buffer.glyphs[i].clusterLen;
+        int gx  = buffer.glyphs[i].x;
+        int gxe = gx + buffer.glyphs[i].advanceX;
+
+        if (bo < (int)rangeStart || bo >= rangeEnd) continue;
+        /* Glyph is within accepted visual region? */
+        if (gx  >= acceptedPixelLeft && gxe <= acceptedPixelEnd) {
+            int rel = boe - (int)rangeStart;
+            if (rel > bytesConsumed) bytesConsumed = rel;
+        }
+    }
     if (bytesConsumed <= 0) bytesConsumed = (int)rangeLength;
+
+    *lengthPtr = totalWidth;
     return bytesConsumed;
 }
 

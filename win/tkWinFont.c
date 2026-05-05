@@ -1582,41 +1582,71 @@ Tk_MeasureCharsInContext(
      * that max first exceeds maxLength.
      */
 
+    /*
+     * Compute rangeVisualOrigin: the visual-left pixel of the range, measured
+     * from the line origin (same coordinate system as runOriginX).  This is the
+     * minimum X contributed by the characters in [wRangeStart, wRangeEnd).
+     *
+     * maxLength from the caller (tkTextDisp.c MeasureChars) is a *remaining*
+     * pixel budget relative to chunkPtr->x, not an absolute coordinate.
+     * runOriginX[] values are absolute from the line visual-left (pixel 0).
+     * We must subtract rangeVisualOrigin before comparing against maxLength so
+     * that all comparisons are in the same (range-relative) coordinate space.
+     *
+     * For LTR ranges rangeVisualOrigin == runOriginX of the first run covering
+     * the range, which equals chunkPtr->x - baseChunkPtr->x (0 for base
+     * chunks).  For RTL ranges the visual origin is the left edge of the last
+     * logical character, which may be in the middle of a run.
+     */
+    int rangeVisualOrigin = INT_MAX;
+    for (i = 0; i < nRuns; i++) {
+	int runStart = runs[i].charStart;
+	int runEnd   = runStart + runs[i].charLen;
+	int lo = (wRangeStart > runStart) ? wRangeStart : runStart;
+	int hi = (wRangeEnd   < runEnd)   ? wRangeEnd   : runEnd;
+	if (lo >= hi) continue;
+	int xA = runOriginX[i] + runs[i].visualX[lo - runStart];
+	int xB = runOriginX[i] + runs[i].visualX[hi - runStart];
+	int xMin = (xA < xB) ? xA : xB;
+	if (xMin < rangeVisualOrigin) rangeVisualOrigin = xMin;
+    }
+    if (rangeVisualOrigin == INT_MAX) rangeVisualOrigin = 0;
+
     if (maxLength < 0) {
 	/*
 	 * Unbounded: report the full visual extent of the range and all bytes.
+	 * resultWidth is range-relative (span width), not an absolute coordinate.
 	 */
 	int maxX = 0;
 	for (i = 0; i < nRuns; i++) {
 	    int runStart = runs[i].charStart;
 	    int runEnd   = runStart + runs[i].charLen;
-	    /* Find overlap with [wRangeStart, wRangeEnd) */
 	    int lo = (wRangeStart > runStart) ? wRangeStart : runStart;
 	    int hi = (wRangeEnd   < runEnd)   ? wRangeEnd   : runEnd;
 	    if (lo >= hi) continue;
-	    /* Right edge of the last character in this overlap */
-	    int rightEdge = runOriginX[i] + runs[i].visualX[hi - runStart];
+	    int rightEdge = runOriginX[i] + runs[i].visualX[hi - runStart] - rangeVisualOrigin;
+	    int leftEdge  = runOriginX[i] + runs[i].visualX[lo - runStart] - rangeVisualOrigin;
 	    if (rightEdge > maxX) maxX = rightEdge;
-	    /* Also check left edge of first char (run may be RTL) */
-	    int leftEdge = runOriginX[i] + runs[i].visualX[lo - runStart];
-	    if (leftEdge > maxX) maxX = leftEdge;
+	    if (leftEdge  > maxX) maxX = leftEdge;
 	}
 	resultBytes = (int)rangeLength;
 	resultWidth = maxX;
     } else {
 	/*
 	 * Walk forward one UTF-16 character at a time from wRangeStart.
-	 * After including each character, compute the maximum visual X
-	 * touched by the logical set [wRangeStart, wRangeStart+wCount).
-	 * Accept the character if maxX <= maxLength, stop otherwise.
+	 * After including each character, compute the maximum visual extent
+	 * of the logical set [wRangeStart, wRangeStart+wCount), expressed as
+	 * pixels relative to rangeVisualOrigin, and stop when that first
+	 * exceeds maxLength.
 	 *
-	 * We maintain per-run running maxima incrementally: for each run
-	 * that overlaps the current prefix we track its contribution.
+	 * Because visual width is not monotone in logical character count for
+	 * BiDi text, we cannot short-circuit — we must scan all runs for
+	 * every prefix.  This is O(chars * runs) but runs is typically 1–3.
 	 */
 	const char *p   = source + rangeStart;
 	const char *end = source + rangeStart + rangeLength;
-	int wCount  = 0;		/* UTF-16 chars accepted so far */
-	int byteCount = 0;		/* UTF-8 bytes accepted */
+	int wCount    = 0;
+	int byteCount = 0;
 	int lastFitBytes = 0;
 	int lastFitWidth = 0;
 	int firstChar = 1;
@@ -1625,49 +1655,43 @@ Tk_MeasureCharsInContext(
 	    int ch;
 	    int charBytes = (int)Tcl_UtfToUniChar(p, &ch);
 	    int charW = 1;
-	    /* Surrogate pair counts as 2 UTF-16 units */
 	    if (ch > 0xFFFF) charW = 2;
 
 	    int nextWCount = wCount + charW;
 
 	    /*
-	     * Compute max visual X for logical range
-	     * [wRangeStart, wRangeStart + nextWCount).
+	     * Compute the visual span [rangeVisualOrigin, maxVisualEdge) for
+	     * the logical prefix [wRangeStart, wRangeStart+nextWCount).
+	     * Normalize to range-relative by subtracting rangeVisualOrigin.
 	     */
-	    int maxX = 0;
+	    int relMaxX = 0;
 	    for (i = 0; i < nRuns; i++) {
 		int runStart = runs[i].charStart;
 		int runEnd   = runStart + runs[i].charLen;
-		int lo = (wRangeStart          > runStart) ? wRangeStart          : runStart;
-		int hi = (wRangeStart+nextWCount < runEnd)  ? wRangeStart+nextWCount : runEnd;
+		int lo = (wRangeStart             > runStart) ? wRangeStart             : runStart;
+		int hi = (wRangeStart+nextWCount  < runEnd)   ? wRangeStart+nextWCount  : runEnd;
 		if (lo >= hi) continue;
-		/*
-		 * Both boundary X values of this overlap contribute: for RTL
-		 * runs the earlier logical index is the right visual edge.
-		 */
-		int xA = runOriginX[i] + runs[i].visualX[lo - runStart];
-		int xB = runOriginX[i] + runs[i].visualX[hi - runStart];
-		if (xA > maxX) maxX = xA;
-		if (xB > maxX) maxX = xB;
+		int xA = runOriginX[i] + runs[i].visualX[lo - runStart] - rangeVisualOrigin;
+		int xB = runOriginX[i] + runs[i].visualX[hi - runStart] - rangeVisualOrigin;
+		if (xA > relMaxX) relMaxX = xA;
+		if (xB > relMaxX) relMaxX = xB;
 	    }
 
-	    if (maxX <= maxLength) {
+	    if (relMaxX <= maxLength) {
 		lastFitBytes = byteCount + charBytes;
-		lastFitWidth = maxX;
+		lastFitWidth = relMaxX;
 		wCount     = nextWCount;
 		byteCount += charBytes;
 		p         += charBytes;
 		firstChar  = 0;
 	    } else {
-		/* This character pushes us over budget. */
 		if (firstChar && (flags & TK_AT_LEAST_ONE)) {
-		    /* Must include at least one character. */
 		    lastFitBytes = charBytes;
-		    lastFitWidth = maxX;
+		    lastFitWidth = relMaxX;
 		}
 		if (flags & TK_PARTIAL_OK) {
 		    lastFitBytes = byteCount + charBytes;
-		    lastFitWidth = maxX;
+		    lastFitWidth = relMaxX;
 		}
 		break;
 	    }
