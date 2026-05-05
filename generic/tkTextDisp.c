@@ -1684,6 +1684,28 @@ LayoutDLine(
 	}
 
 	/*
+	 * RTL overflow check: the platform font back-ends (Uniscribe on
+	 * Windows, HarfBuzz/Xft on X11) shape RTL runs as a unit and may
+	 * return the full run width even when x now exceeds maxX.  They
+	 * report bytesThatFit == maxBytes so the numBytes != maxBytes test
+	 * above never fires, the LayoutDLine loop continues, and x
+	 * accumulates without bound — producing a line that runs off the
+	 * right edge of the window with no wrap.
+	 *
+	 * If x has overshot maxX after accepting this chunk, treat it as an
+	 * end-of-display-line condition exactly as if layoutProc had returned
+	 * a short chunk.  The break-chunk machinery above has already recorded
+	 * the best word-break point found so far, so the caller's trim pass
+	 * will re-lay the chunk at that break boundary.
+	 *
+	 * We only do this when maxX >= 0 (i.e., wrapping is on) and we are
+	 * not eliding; elided chunks have zero width and cannot overshoot.
+	 */
+	if (!elide && (maxX >= 0) && (x > maxX)) {
+	    break;
+	}
+
+	/*
 	 * If we're at a new tab, adjust the layout for all the chunks
 	 * pertaining to the previous tab. Also adjust the amount of space
 	 * left in the line to account for space that will be eaten up by the
