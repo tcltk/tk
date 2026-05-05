@@ -1483,39 +1483,79 @@ RunGlyphRange(
  *---------------------------------------------------------------------------
  */
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * Tk_MeasureCharsInContext --
+ *
+ *	Determine the number of bytes from the string that will fit in the
+ *	given horizontal span, with access to the full source string for
+ *	shaping context.
+ *
+ *	This implementation shapes the full string (up to the end of the range)
+ *	and then uses the visualX offsets stored in each shaped run to map
+ *	logical character positions to visual X coordinates.  This ensures
+ *	that the measured width of a logical prefix matches the visual layout
+ *	used for drawing, eliminating the cursor “snap” in RTL scripts.
+ *
+ * Results:
+ *	The return value is the number of bytes from rangeStart that fit.
+ *	*lengthPtr is filled with the pixel width of those bytes.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
 int
 Tk_MeasureCharsInContext(
-    Tk_Font tkfont,
-    const char *source,
-    Tcl_Size numBytes,
-    Tcl_Size rangeStart,
-    Tcl_Size rangeLength,
-    int maxLength,
-    int flags,
-    int *lengthPtr)
+    Tk_Font tkfont,                 /* Font to use for measurement */
+    const char *source,             /* Full UTF-8 string (entire text) */
+    Tcl_Size numBytes,              /* Total length of source in bytes */
+    Tcl_Size rangeStart,            /* Byte offset in source of substring to measure */
+    Tcl_Size rangeLength,           /* Byte length of substring to measure */
+    int maxLength,                  /* Max pixel width, or -1 for unbounded */
+    int flags,                      /* TK_* flags (AT_LEAST_ONE, PARTIAL_OK, WHOLE_WORDS) */
+    int *lengthPtr)                 /* OUT: pixel width of the chosen prefix */
 {
-    WinFont *fontPtr = (WinFont *) tkfont;
-    HDC hdc;
-    Tcl_DString fullUni;
-    WCHAR *wfull;
-    int wfullLen;
-    TkWinShapedRun *runs = NULL;
-    int nRuns = 0;
-    int resultBytes = 0;
-    int resultWidth = 0;
-    int i;
+    WinFont *fontPtr = (WinFont *) tkfont;  /* Windows font internal structure */
+    HDC hdc;                                /* Device context for shaping */
+    Tcl_DString fullUni;                    /* Buffer for UTF‑16 conversion of the whole string */
+    WCHAR *wfull;                           /* Pointer to UTF‑16 string */
+    int wfullLen;                           /* Length of wfull in WCHARs */
+    TkWinShapedRun *runs = NULL;            /* Array of shaped runs (result of ScriptShape/ScriptPlace) */
+    int nRuns = 0;                          /* Number of shaped runs */
+    int resultBytes = 0;                    /* Bytes that fit (to be returned) */
+    int resultWidth = 0;                    /* Pixel width of those bytes (to store in *lengthPtr) */
+    int i;                                  /* Loop index */
 
+    /* If the measured range is empty, we trivially fit zero bytes. */
     if (rangeLength == 0) {
         *lengthPtr = 0;
         return 0;
     }
 
+    /*
+     * Obtain a device context and convert the entire source string from
+     * UTF‑8 to UTF‑16. The conversion is performed on the whole source
+     * because shaping may need context beyond the measured range.
+     */
     hdc = GetDC(fontPtr->hwnd);
     Tcl_DStringInit(&fullUni);
     Tcl_UtfToWCharDString(source, numBytes, &fullUni);
     wfull = (WCHAR *) Tcl_DStringValue(&fullUni);
     wfullLen = (int)(Tcl_DStringLength(&fullUni) / sizeof(WCHAR));
 
+    /*
+     * Ask the Windows Uniscribe subsystem to shape the entire UTF‑16 string.
+     * This produces one or more runs, each with logical‑to‑visual mapping,
+     * glyph advances, and precomputed visualX offsets for every character
+     * position inside the run.
+     *
+     * If shaping fails (e.g., no runs produced), fall back to the classic
+     * Tk_MeasureChars which works correctly only for LTR text.
+     */
     if (TkWinShapeString(hdc, fontPtr, wfull, wfullLen, &runs, &nRuns) < 0
         || nRuns == 0) {
         ReleaseDC(fontPtr->hwnd, hdc);
@@ -1524,7 +1564,13 @@ Tk_MeasureCharsInContext(
                maxLength, flags, lengthPtr);
     }
 
-    /* Build runOriginX[] */
+    /*
+     * Build an array runOriginX[] that holds the absolute visual X coordinate
+     * of the left edge of each shaped run (relative to the shaping origin).
+     * We iterate over runs and sum the total visual width of each previous run.
+     * The total width of a run is runs[i].visualX[runs[i].charLen] (the visual
+     * X offset after the last character in that run).
+     */
     int *runOriginX = (int *)Tcl_Alloc(sizeof(int) * nRuns);
     {
         int x = 0;
@@ -1534,7 +1580,15 @@ Tk_MeasureCharsInContext(
         }
     }
 
-    /* UTF-8 → UTF-16 range mapping */
+    /*
+     * Convert the UTF‑8 byte range [rangeStart, rangeStart+rangeLength) into
+     * UTF‑16 code unit indices (wRangeStart, wRangeEnd). This is necessary
+     * because the shaped runs work with UTF‑16 positions, while the caller
+     * works with UTF‑8 byte offsets into the source string.
+     *
+     * We convert two points: the start of the range, and the end of the range.
+     * The temporary DStrings are freed immediately after conversion.
+     */
     int wRangeStart, wRangeEnd;
     {
         Tcl_DString tmp;
@@ -1549,24 +1603,41 @@ Tk_MeasureCharsInContext(
         Tcl_DStringFree(&tmp);
     }
 
-    /* rangeVisualOrigin */
+    /*
+     * Compute rangeVisualOrigin – the leftmost visual X coordinate of any
+     * character inside the measured range. This acts as a virtual origin
+     * for the range, so that later we can compute widths relative to the
+     * range's start, not the absolute shaping origin.
+     *
+     * For a pure LTR range this will be the X of the first character.
+     * For a range that starts in the middle of an RTL run, the leftmost
+     * visual point might be at the *end* of the logical range (since RTL
+     * characters extend leftwards from the logical start).
+     */
     int rangeVisualOrigin = INT_MAX;
     for (i = 0; i < nRuns; i++) {
-        int runStart = runs[i].charStart;
-        int runEnd = runStart + runs[i].charLen;
+        int runStart = runs[i].charStart;          /* UTF‑16 index where this run starts in wfull */
+        int runEnd = runStart + runs[i].charLen;   /* UTF‑16 index after this run */
+        /* Intersection of this run with the measured [wRangeStart, wRangeEnd) interval */
         int lo = (wRangeStart > runStart) ? wRangeStart : runStart;
         int hi = (wRangeEnd < runEnd) ? wRangeEnd : runEnd;
-        if (lo >= hi) continue;
+        if (lo >= hi) continue;                    /* No overlap with this run */
 
+        /* Visual X of the leftmost boundary of this intersection within the run */
         int xA = runOriginX[i] + runs[i].visualX[lo - runStart];
         int xB = runOriginX[i] + runs[i].visualX[hi - runStart];
         int xMin = (xA < xB) ? xA : xB;
         if (xMin < rangeVisualOrigin) rangeVisualOrigin = xMin;
     }
-    if (rangeVisualOrigin == INT_MAX) rangeVisualOrigin = 0;
+    if (rangeVisualOrigin == INT_MAX) rangeVisualOrigin = 0;  /* No characters? Should not happen */
 
     if (maxLength < 0) {
-        /* Unbounded */
+        /*
+         * Unbounded measurement: the whole range fits regardless of width.
+         * Compute the overall visual extent (maxX) of the range relative to
+         * rangeVisualOrigin, i.e., the width of the entire measured substring
+         * as it would be drawn.
+         */
         int maxX = 0;
         for (i = 0; i < nRuns; i++) {
             int runStart = runs[i].charStart;
@@ -1575,40 +1646,64 @@ Tk_MeasureCharsInContext(
             int hi = (wRangeEnd < runEnd) ? wRangeEnd : runEnd;
             if (lo >= hi) continue;
 
+            /* Rightmost and leftmost X positions inside the intersection, relative to rangeVisualOrigin */
             int rightEdge = runOriginX[i] + runs[i].visualX[hi - runStart] - rangeVisualOrigin;
             int leftEdge  = runOriginX[i] + runs[i].visualX[lo - runStart]  - rangeVisualOrigin;
             if (rightEdge > maxX) maxX = rightEdge;
             if (leftEdge  > maxX) maxX = leftEdge;
         }
-        resultBytes = (int)rangeLength;
-        resultWidth = maxX;
+        resultBytes = (int)rangeLength;   /* All bytes fit */
+        resultWidth = maxX;               /* Total visual width of the range */
     } else {
-        /* Bounded measurement */
-        const char *p = source + rangeStart;
-        const char *end = source + rangeStart + rangeLength;
-        int wCount = 0;
-        int byteCount = 0;
-        int lastFitBytes = 0;
-        int lastFitWidth = 0;
-        int firstChar = 1;
+        /*
+         * Bounded measurement: we need to find the longest logical prefix
+         * of the measured range whose visual width does not exceed maxLength.
+         * We iterate character by character (UTF‑8 to Unicode, then to
+         * potentially 1 or 2 UTF‑16 code units per character). For each
+         * candidate length, we compute the visual width by consulting the
+         * shaped runs (or using ScriptCPtoX for higher precision).
+         */
+        const char *p = source + rangeStart;         /* Current position in UTF‑8 source */
+        const char *end = source + rangeStart + rangeLength; /* End of measured range */
+        int wCount = 0;                     /* Number of UTF‑16 code units consumed so far */
+        int byteCount = 0;                  /* Number of UTF‑8 bytes consumed so far */
+        int lastFitBytes = 0;               /* Bytes of the last prefix that fits */
+        int lastFitWidth = 0;               /* Width of that last fitting prefix */
+        int firstChar = 1;                  /* Flag to handle TK_AT_LEAST_ONE */
 
+        /* Walk the measured range one Unicode character at a time */
         while (p < end) {
-            int ch;
-            int charBytes = (int)Tcl_UtfToUniChar(p, &ch);
-            int charW = (ch > 0xFFFF) ? 2 : 1;
-            int nextWCount = wCount + charW;
+            int ch;                                         /* Unicode code point */
+            int charBytes = (int)Tcl_UtfToUniChar(p, &ch);  /* UTF‑8 bytes for this character */
+            int charW = (ch > 0xFFFF) ? 2 : 1;              /* UTF‑16 code units needed: 2 for supplementary, 1 for BMP */
+            int nextWCount = wCount + charW;                /* UTF‑16 position after appending this character */
 
+            /* Compute the visual width of the prefix that includes this new character */
             int relMaxX = 0;
             for (i = 0; i < nRuns; i++) {
                 TkWinShapedRun *run = &runs[i];
                 int runStart = run->charStart;
                 int runEnd = runStart + run->charLen;
 
+                /* Overlap of the prefix [wRangeStart, wRangeStart+nextWCount) with this run */
                 int lo = (wRangeStart > runStart) ? wRangeStart : runStart;
                 int hi = (wRangeStart + nextWCount < runEnd) ? wRangeStart + nextWCount : runEnd;
                 if (lo >= hi) continue;
 
-                /* Prefer ScriptCPtoX when possible */
+                /*
+                 * For the exact insertion point (where the cursor would be
+                 * after the current prefix), we can ask Uniscribe to map the
+                 * logical character index to a visual X coordinate using
+                 * ScriptCPtoX. This is more accurate than the precomputed
+                 * visualX table when characters have been reordered due to
+                 * bidirectional layout.
+                 *
+                 * However, ScriptCPtoX requires a character index inside the run.
+                 * cpInRun is the offset from runStart to the logical position
+                 * right after the prefix (i.e., the number of characters consumed
+                 * from this run, which may be less than nextWCount if the prefix
+                 * spans multiple runs).
+                 */
                 int cpInRun = (wRangeStart + wCount) - runStart;
                 int xPos = 0;
                 HRESULT hr = ScriptCPtoX(cpInRun, FALSE, run->charLen,
@@ -1616,10 +1711,18 @@ Tk_MeasureCharsInContext(
                                        NULL, run->advances, &run->sa, &xPos);
 
                 if (hr == S_OK) {
+                    /* Uniscribe gave us the exact visual X for the cursor position */
                     int visualX = runOriginX[i] + xPos - rangeVisualOrigin;
                     if (visualX > relMaxX) relMaxX = visualX;
                 } else {
-                    /* Reliable fallback using precomputed visualX */
+                    /*
+                     * Fallback to the precomputed visualX array (which is always valid,
+                     * though it might not be as precise for the cursor position inside
+                     * a complex cluster). We take the maximum X coordinate among the
+                     * left and right edges of the overlapping slice – this is safe
+                     * because the visual X of any character inside the slice cannot
+                     * exceed the max of its boundaries.
+                     */
                     int xA = runOriginX[i] + run->visualX[lo - runStart] - rangeVisualOrigin;
                     int xB = runOriginX[i] + run->visualX[hi - runStart] - rangeVisualOrigin;
                     if (xA > relMaxX) relMaxX = xA;
@@ -1627,7 +1730,9 @@ Tk_MeasureCharsInContext(
                 }
             }
 
+            /* Check if the extended prefix fits within maxLength */
             if (relMaxX <= maxLength) {
+                /* It fits – remember this as the last fitting prefix and continue */
                 lastFitBytes = byteCount + charBytes;
                 lastFitWidth = relMaxX;
                 wCount = nextWCount;
@@ -1635,11 +1740,22 @@ Tk_MeasureCharsInContext(
                 p += charBytes;
                 firstChar = 0;
             } else {
+                /*
+                 * The extended prefix is too wide. Decide what to return
+                 * based on the TK_AT_LEAST_ONE and TK_PARTIAL_OK flags.
+                 */
                 if (firstChar && (flags & TK_AT_LEAST_ONE)) {
+                    /* Even the first character doesn't fit, but we must return at least one character */
                     lastFitBytes = charBytes;
                     lastFitWidth = relMaxX;
                 }
                 if (flags & TK_PARTIAL_OK) {
+                    /*
+                     * Partial characters are allowed: return the current prefix
+                     * (which includes the character we just tried) even though
+                     * it exceeds the width. This is used for measuring how much
+                     * of a multi‑byte character fits (rare).
+                     */
                     lastFitBytes = byteCount + charBytes;
                     lastFitWidth = relMaxX;
                 }
@@ -1650,7 +1766,18 @@ Tk_MeasureCharsInContext(
         resultWidth = lastFitWidth;
     }
 
-    /* TK_WHOLE_WORDS */
+    /*
+     * TK_WHOLE_WORDS handling: if the caller requests whole‑word boundaries,
+     * and we did not fit the entire range, we need to back up to the last
+     * space (word break) that fits within the width.
+     *
+     * The algorithm scans the UTF‑8 text from the start of the range up to
+     * the currently chosen fit point (resultBytes). It remembers the position
+     * of the last space character (prevCh != ' ' && ch == ' ') before the end.
+     * If such a word break exists, we recursively measure that prefix without
+     * width limit (maxLength = -1) to obtain its exact width.
+     * If no word break is found and TK_AT_LEAST_ONE is not set, we return 0.
+     */
     if ((flags & TK_WHOLE_WORDS) && (resultBytes < (int)rangeLength)) {
         const char *p2 = source + rangeStart;
         const char *end2 = source + rangeStart + resultBytes;
@@ -1659,21 +1786,24 @@ Tk_MeasureCharsInContext(
         while (p2 < end2) {
             const char *next = p2 + Tcl_UtfToUniChar(p2, &ch);
             if (prevCh != ' ' && ch == ' ') {
-                lastWordBreak = p2;
+                lastWordBreak = p2;   /* p2 points to the space character itself */
             }
             p2 = next;
             prevCh = ch;
         }
         if (lastWordBreak != NULL) {
+            /* Re‑measure the substring up to the word break, without any width limit */
             resultBytes = Tk_MeasureCharsInContext(tkfont, source, numBytes,
                 rangeStart, lastWordBreak - (source + rangeStart),
                 -1, 0, &resultWidth);
         } else if (!(flags & TK_AT_LEAST_ONE)) {
+            /* No word break and we are not forced to return at least one character */
             resultBytes = 0;
             resultWidth = 0;
         }
     }
 
+    /* Clean up: free the run origin array, the shaped runs, the UTF‑16 buffer, and release the DC */
     Tcl_Free(runOriginX);
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&fullUni);
