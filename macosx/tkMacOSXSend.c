@@ -538,7 +538,7 @@ RegOpen(
 
     Tcl_Size dictSize;
     Tcl_DictObjSize(NULL, regPtr->appNameDict, &dictSize);
-    Tcl_Obj **deadinterps = (Tcl_Obj**) Tcl_Alloc(dictSize * sizeof(Tcl_Obj*));
+    Tcl_Obj **deadinterps = (Tcl_Obj**)Tcl_Alloc(dictSize * sizeof(Tcl_Obj*));
     int count = 0;
     Tcl_DictSearch search;
     Tcl_Obj *key, *value;
