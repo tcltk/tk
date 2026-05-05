@@ -1483,7 +1483,6 @@ RunGlyphRange(
  *---------------------------------------------------------------------------
  */
 
-
 int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
