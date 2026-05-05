@@ -449,6 +449,7 @@ typedef struct CharInfo {
     TkTextDispChunk *baseChunkPtr;
     int baseOffset;		/* Starting offset in base chunk baseChars. */
     Tcl_Size numBytes;		/* Number of bytes that belong to this chunk. */
+    int isRtl;			/* Non-zero if this chunk is right-to-left. */
     const char *chars;		/* UTF characters to display. Actually points
 				 * into the baseChars of the base chunk. Only
 				 * valid after FinalizeBaseChunk(). */
@@ -469,6 +470,85 @@ typedef struct BaseCharInfo {
 
 /* TODO: Thread safety */
 static TkTextDispChunk *baseCharChunkPtr = NULL;
+
+/*
+ * ChunkIsRtl --
+ *
+ *	Determine if a string of UTF-8 text has RTL base direction, by
+ *	scanning for the first Unicode character with a strong bidi category.
+ *	RTL strong categories: R (Arabic Letter excluded), AL, RLE, RLO, RLI.
+ *	LTR strong categories: L, LRE, LRO, LRI.
+ *	This is the Unicode P2/P3 paragraph-direction algorithm applied at
+ *	chunk level, which is sufficient for the single-script chunks that
+ *	TkTextCharLayoutProc produces.
+ *
+ * Results:
+ *	1 if the chunk is RTL, 0 if LTR or neutral.
+ */
+
+static int
+ChunkIsRtl(const char *chars, Tcl_Size numBytes)
+{
+    const char *p = chars;
+    const char *end = chars + numBytes;
+
+    while (p < end) {
+	int ch;
+	Tcl_Size chLen = Tcl_UtfToUniChar(p, &ch);
+
+	if (chLen <= 0) {
+	    break;
+	}
+
+	/*
+	 * Strong RTL ranges (Unicode 15).  We check these first, then LTR.
+	 * The first strong character determines the chunk direction (P2/P3).
+	 *
+	 *   U+0590..U+08FF  Hebrew, Arabic, Syriac, NKo, Samaritan, Mandaic,
+	 *                   Arabic Extended-A/B and all related supplements.
+	 *                   (Note: 0x0700-0x074F Syriac and 0x07C0-0x07FF NKo
+	 *                    are already contained in this single range.)
+	 *   U+0780..U+07BF  Thaana  (falls inside the range above; listed
+	 *                    separately in comments for clarity)
+	 *   U+FB1D..U+FEFF  Hebrew/Arabic Presentation Forms A and B
+	 *   U+10800..U+10FFF Historical RTL scripts (Phoenician, Aramaic, …)
+	 */
+
+	/* Hebrew, Arabic, Syriac, NKo, Thaana, Samaritan and all supplements */
+	if (ch >= 0x0590 && ch <= 0x08FF) {
+	    return 1;
+	}
+	/* Hebrew and Arabic presentation forms */
+	if (ch >= 0xFB1D && ch <= 0xFEFF) {
+	    return 1;
+	}
+	/* Historical RTL scripts */
+	if (ch >= 0x10800 && ch <= 0x10FFF) {
+	    return 1;
+	}
+
+	/*
+	 * Strong LTR: Basic Latin letters, Latin Extended, Greek, Cyrillic,
+	 * CJK Unified, Hangul, Hiragana/Katakana.  Anything alphabetic that
+	 * is not caught by the RTL ranges above is LTR for our purposes.
+	 */
+	if ((ch >= 0x0041 && ch <= 0x005A) ||   /* A-Z */
+	    (ch >= 0x0061 && ch <= 0x007A) ||   /* a-z */
+	    (ch >= 0x00C0 && ch <= 0x02AF) ||   /* Latin Extended */
+	    (ch >= 0x0370 && ch <= 0x03FF) ||   /* Greek */
+	    (ch >= 0x0400 && ch <= 0x04FF) ||   /* Cyrillic */
+	    (ch >= 0x4E00 && ch <= 0x9FFF) ||   /* CJK Unified */
+	    (ch >= 0xAC00 && ch <= 0xD7AF) ||   /* Hangul */
+	    (ch >= 0x3040 && ch <= 0x30FF)) {   /* Hiragana/Katakana */
+	    return 0;
+	}
+
+	/* Neutral character (digit, punctuation, whitespace) — keep scanning */
+	p += chLen;
+    }
+
+    return 0; /* neutral / unknown: treat as LTR */
+}
 
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
@@ -549,6 +629,8 @@ static void		FinalizeBaseChunk(TkTextDispChunk *additionalChunkPtr);
 static void		FreeBaseChunk(TkTextDispChunk *baseChunkPtr);
 static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
 static void		RemoveFromBaseChunk(TkTextDispChunk *chunkPtr);
+static int              ChunkIsRtl(const char *chars, Tcl_Size numBytes);
+
 #endif
 /*
  * Definitions of elided procs. Compiler can't inline these since we use
@@ -7825,6 +7907,7 @@ TkTextCharLayoutProc(
     ciPtr->baseOffset = lineOffset;
     ciPtr->chars = NULL;
     ciPtr->numBytes = 0;
+    ciPtr->isRtl = 0;
 
     bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
 	    lineOffset + maxBytes, lineOffset, -1, chunkPtr->x, maxX,
@@ -7926,6 +8009,15 @@ TkTextCharLayoutProc(
     if (p[bytesThatFit - 1] == '\n') {
 	ciPtr->numBytes--;
     }
+
+    /*
+     * Detect the bidi direction of this chunk.  We scan the raw storage
+     * bytes (p still points to the start of the segment slice) rather than
+     * the finalized baseChars string so that the flag is available before
+     * FinalizeBaseChunk() is called.
+     */
+    ciPtr->isRtl = ChunkIsRtl(
+	    segPtr->body.chars + byteOffset, ciPtr->numBytes);
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
     /*
@@ -8472,10 +8564,32 @@ CharMeasureProc(
     int x)			/* X-coordinate, in same coordinate system as
 				 * chunkPtr->x. */
 {
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int endX;
 
+    if (ciPtr->isRtl) {
+	/*
+	 * For RTL chunks the font renders the first logical byte at the
+	 * rightmost pixel position of the chunk and the last logical byte at
+	 * the leftmost pixel position.  Mirror x relative to the chunk
+	 * centre so that CharChunkMeasureChars (which always measures
+	 * left-to-right in storage order) returns the correct byte offset.
+	 *
+	 * chunkPtr->x                      chunkPtr->x + chunkPtr->width
+	 *   |<----------- chunk width ------------->|
+	 *   [ last-byte glyph ... first-byte glyph ]   (RTL visual order)
+	 *
+	 * Mirrored x:  x' = chunkPtr->x + (chunkPtr->x + chunkPtr->width - x)
+	 *                 = 2*chunkPtr->x + chunkPtr->width - x
+	 */
+	int mirroredX = 2 * chunkPtr->x + chunkPtr->width - x;
+
+	return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
+				     chunkPtr->x, mirroredX, 0, &endX); /* CHAR OFFSET */
+    }
+
     return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes-1,
-	    chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
+				 chunkPtr->x, x, 0, &endX); /* CHAR OFFSET */
 }
 
 /*
@@ -8504,64 +8618,18 @@ static void
 CharBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    Tcl_Size byteIndex,		/* Byte offset of desired character within the
-				 * chunk. */
-    int y,			/* Topmost pixel in area allocated for this
-				 * line. */
+    Tcl_Size byteIndex,		/* Byte offset of desired character within the chunk. */
+    int y,			/* Topmost pixel in area allocated for this line. */
     TCL_UNUSED(int),	/* Height of line, in pixels. */
-    int baseline,		/* Location of line's baseline, in pixels
-				 * measured down from y. */
-    int *xPtr, int *yPtr,	/* Gets filled in with coords of character's
-				 * upper-left pixel. X-coord is in same
-				 * coordinate system as chunkPtr->x. */
-    int *widthPtr,		/* Gets filled in with width of character, in
-				 * pixels. */
-    int *heightPtr)		/* Gets filled in with height of character, in
-				 * pixels. */
+    int baseline,		/* Location of line's baseline. */
+    int *xPtr, int *yPtr,	/* Gets filled with coords of character's upper-left pixel. */
+    int *widthPtr,		/* Gets filled with width of character. */
+    int *heightPtr)		/* Gets filled with height of character. */
 {
-	
-#ifdef _WIN32 /* MSVC prefers block - hangs on the other block. */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int maxX;
 
-    maxX = chunkPtr->width + chunkPtr->x;
-    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-	    chunkPtr->x, -1, 0, xPtr);
-
-    if (byteIndex == ciPtr->numBytes) {
-	/*
-	 * This situation only happens if the last character in a line is a
-	 * space character, in which case it absorbs all of the extra space in
-	 * the line (see TkTextCharLayoutProc).
-	 */
-
-	*widthPtr = maxX - *xPtr;
-    } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
-	/*
-	 * The desired character is a tab character that terminates a chunk;
-	 * give it all the space left in the chunk.
-	 */
-
-	*widthPtr = maxX - *xPtr;
-    } else {
-	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex+1,
-		*xPtr, -1, 0, widthPtr);
-	if (*widthPtr > maxX) {
-	    *widthPtr = maxX - *xPtr;
-	} else {
-	    *widthPtr -= *xPtr;
-	}
-    }
-    *yPtr = y + baseline - chunkPtr->minAscent;
-    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-#else /* X11 and macOS. */
-    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-    int maxX;
-
-    /*
-     * Defensive: malformed or uninitialized chunk.
-     */
+    /* Defensive checks */
     if (ciPtr == NULL || ciPtr->chars == NULL) {
         *xPtr = chunkPtr->x;
         *yPtr = y;
@@ -8570,9 +8638,6 @@ CharBboxProc(
         return;
     }
 
-    /*
-     * Clamp byteIndex to valid range to avoid overrun.
-     */
     if (byteIndex < 0) {
         byteIndex = 0;
     } else if (byteIndex > ciPtr->numBytes) {
@@ -8581,54 +8646,57 @@ CharBboxProc(
 
     maxX = chunkPtr->width + chunkPtr->x;
 
-    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-        chunkPtr->x, -1, 0, xPtr);
+    if (ciPtr->isRtl) {
+        /* ====================== RTL HANDLING ====================== */
+        int xOfEnd;   /* pixel just past glyph[byteIndex] in LTR measurement */
+        int xOfChar;  /* pixel just past glyph[byteIndex-1] */
 
-    if (byteIndex == ciPtr->numBytes) {
+        /* Width of bytes [0 .. byteIndex+1) in storage (LTR) order */
+        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
+            chunkPtr->x, -1, 0, &xOfEnd);
+
+        /* Width of bytes [0 .. byteIndex) */
+        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+            chunkPtr->x, -1, 0, &xOfChar);
+
+        int glyphWidth = xOfEnd - xOfChar;
+
         /*
-         * This situation only happens if the last character in a line is a
-         * space character, in which case it absorbs all of the extra space in
-         * the line (see TkTextCharLayoutProc).
+         * In RTL visual order, the glyph is placed from the right.
+         * x = chunkPtr->x + (total_width - width_up_to_(byteIndex+1))
          */
-        *widthPtr = maxX - *xPtr;
+        *xPtr = 2 * chunkPtr->x + chunkPtr->width - xOfEnd;
 
-    } else if (byteIndex < ciPtr->numBytes &&
-               ciPtr->chars[byteIndex] == '\t' &&
-               byteIndex == ciPtr->numBytes - 1) {
-        /*
-         * The desired character is a tab character that terminates a chunk;
-         * give it all the space left in the chunk.
-         */
-        *widthPtr = maxX - *xPtr;
-
-    } else {
-        int x2;
-
-        CharChunkMeasureChars(chunkPtr, NULL, 0,
-            byteIndex, byteIndex + 1,
-            *xPtr, -1, 0, &x2);
-
-        if (x2 > maxX) {
-            *widthPtr = maxX - *xPtr;
-        } else {
-            *widthPtr = x2 - *xPtr;
+        if (*xPtr < chunkPtr->x) {
+            *xPtr = chunkPtr->x;
         }
 
-        /*
-         * Fix: handle zero-width results from derived/bidi/elided chunks.
-         */
-        if (*widthPtr == 0 && ciPtr->numBytes > 0) {
-            int idx = byteIndex;
-
-            if (idx >= ciPtr->numBytes) {
-                idx = ciPtr->numBytes - 1;
+        if (byteIndex == ciPtr->numBytes) {
+            *widthPtr = maxX - *xPtr;
+        } else if (byteIndex < ciPtr->numBytes &&
+                   ciPtr->chars[byteIndex] == '\t' &&
+                   byteIndex == ciPtr->numBytes - 1) {
+            *widthPtr = maxX - *xPtr;
+        } else {
+            *widthPtr = glyphWidth;
+            if ((*xPtr + *widthPtr) > maxX) {
+                *widthPtr = maxX - *xPtr;
             }
-            if (idx < 0) {
-                idx = 0;
-            }
+        }
+    } else {
+        /* ====================== LTR HANDLING ====================== */
+        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+            chunkPtr->x, -1, 0, xPtr);
 
-            CharChunkMeasureChars(chunkPtr, NULL, 0,
-                idx, idx + 1,
+        if (byteIndex == ciPtr->numBytes) {
+            *widthPtr = maxX - *xPtr;
+        } else if (byteIndex < ciPtr->numBytes &&
+                   ciPtr->chars[byteIndex] == '\t' &&
+                   byteIndex == ciPtr->numBytes - 1) {
+            *widthPtr = maxX - *xPtr;
+        } else {
+            int x2;
+            CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
                 *xPtr, -1, 0, &x2);
 
             if (x2 > maxX) {
@@ -8636,12 +8704,28 @@ CharBboxProc(
             } else {
                 *widthPtr = x2 - *xPtr;
             }
+
+            /* Fix for zero-width glyphs (bidi, elided, etc.) */
+            if (*widthPtr == 0 && ciPtr->numBytes > 0) {
+                Tcl_Size idx = byteIndex;
+                if (idx >= ciPtr->numBytes) idx = ciPtr->numBytes - 1;
+                if (idx < 0) idx = 0;
+
+                CharChunkMeasureChars(chunkPtr, NULL, 0, idx, idx + 1,
+                    *xPtr, -1, 0, &x2);
+
+                if (x2 > maxX) {
+                    *widthPtr = maxX - *xPtr;
+                } else {
+                    *widthPtr = x2 - *xPtr;
+                }
+            }
         }
     }
 
+    /* Common vertical positioning */
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-#endif
 }
 
 /*
