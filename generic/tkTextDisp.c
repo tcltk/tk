@@ -7943,7 +7943,7 @@ TkTextCharLayoutProc(
 	    bytesThatFit++;
 	}
 	if (wrapMode == TEXT_WRAPMODE_WORD) {
-	    while (p[bytesThatFit] == ' ') {
+	    while (bytesThatFit < maxBytes && p[bytesThatFit] == ' ') {
 		/*
 		 * Space characters that would go at the beginning of the
 		 * next line are allocated to the current line. This gives
@@ -7952,6 +7952,11 @@ TkTextCharLayoutProc(
 		 * Note that testing for '\t' is useless here because the
 		 * chunk always includes at most one trailing \t, see
 		 * LayoutDLine.
+		 *
+		 * For RTL text the logical layout is reversed: the spaces
+		 * that visually trail the run are at the *start* of the
+		 * buffer (low byte offsets).  Those are handled in the
+		 * break-index scan below, not here.
 		 */
 
 		bytesThatFit++;
@@ -8046,22 +8051,92 @@ TkTextCharLayoutProc(
     if (wrapMode != TEXT_WRAPMODE_WORD) {
 	chunkPtr->breakIndex = chunkPtr->numBytes;
     } else {
-	for (count = bytesThatFit, p += bytesThatFit - 1; count > 0;
-		count--, p--) {
-	    /*
-	     * Don't use isspace(); effects are unpredictable and can lead to
-	     * odd word-wrapping problems on some platforms. Also don't use
-	     * Tcl_UniCharIsSpace here either, as it identifies non-breaking
-	     * spaces as places to break. What we actually want is only the
-	     * ASCII space characters, so use them explicitly...
-	     */
+	/*
+	 * Scan backwards through the chunk looking for a word-break
+	 * opportunity.  We must walk UTF-8 character boundaries rather than
+	 * raw bytes, otherwise we can mis-identify a continuation byte as an
+	 * ASCII space character (0x20 is a valid continuation byte in some
+	 * legacy encodings, and even in valid UTF-8 the original byte-level
+	 * reverse walk can start mid-character after CharChunkMeasureChars
+	 * splits the buffer at an arbitrary pixel boundary).
+	 *
+	 * Don't use isspace(); effects are unpredictable and can lead to odd
+	 * word-wrapping problems on some platforms.  Also don't use
+	 * Tcl_UniCharIsSpace here either, as it identifies non-breaking spaces
+	 * as places to break.  We only want the ASCII whitespace characters,
+	 * checked via Tcl_UtfPrev so every step lands on a character boundary.
+	 *
+	 * RTL note: for RTL chunks (Arabic, Hebrew, …) the platform font
+	 * back-end (Uniscribe on Windows, HarfBuzz/Xft on X11) returns
+	 * bytesThatFit as a logical-byte count from the start of the segment
+	 * slice.  In RTL visual order the logical-start bytes correspond to the
+	 * right-most (trailing) glyphs, so a word-boundary space at the visual
+	 * right edge sits at a *low* logical byte offset, not near bytesThatFit.
+	 * The standard backward scan from bytesThatFit will therefore miss it.
+	 *
+	 * To handle RTL text we perform two scans:
+	 *   (a) the standard backward scan from bytesThatFit – covers LTR and
+	 *       mixed text as before, now UTF-8 safe.
+	 *   (b) if (a) finds nothing and the chunk is RTL, a forward scan from
+	 *       byte 0 looking for the first ASCII space; that space is the
+	 *       visual trailing separator between the last word on this display
+	 *       line and the first word on the next wrapped line.  We absorb it
+	 *       into the current chunk so the next line starts cleanly.
+	 */
 
-	    switch (*p) {
+	const char *chunkStart = p;           /* logical byte 0 of this slice */
+	const char *chunkEnd   = p + bytesThatFit; /* one past last byte kept */
+	const char *scanPtr    = chunkEnd;
+	int         foundBreak  = 0;
+
+	while (scanPtr > chunkStart) {
+	    int ch3;
+	    const char *prevPtr = Tcl_UtfPrev(scanPtr, chunkStart);
+	    Tcl_UtfToUniChar(prevPtr, &ch3);
+	    switch (ch3) {
 	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
-		chunkPtr->breakIndex = count;
+		/* breakIndex is the byte offset *after* the space character */
+		chunkPtr->breakIndex = (Tcl_Size)(prevPtr - chunkStart) + 1;
+		foundBreak = 1;
 		goto checkForNextChunk;
 	    }
+	    scanPtr = prevPtr;
 	}
+
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	if (!foundBreak && ciPtr->isRtl) {
+	    /*
+	     * RTL forward scan: the word separator that visually trails this
+	     * run sits at a low logical byte offset.  Walk forward from byte 0;
+	     * the first ASCII space found is the break point.  Include the
+	     * space in this chunk (absorb it) so the next wrapped line begins
+	     * with a non-space character.
+	     *
+	     * This path is reached on all three platforms:
+	     *   - Windows and macOS: TK_LAYOUT_WITH_BASE_CHUNKS is always
+	     *     defined and bidi support is built-in.
+	     *   - X11: TK_LAYOUT_WITH_BASE_CHUNKS is defined when
+	     *     --enable-bidi is passed (which also defines HAVE_BIDI).
+	     * isRtl is a field of the TK_LAYOUT_WITH_BASE_CHUNKS CharInfo
+	     * variant, so this guard is both necessary and sufficient.
+	     */
+	    const char *fwdPtr = chunkStart;
+	    while (fwdPtr < chunkEnd) {
+		int ch4;
+		Tcl_Size chLen4 = Tcl_UtfToUniChar(fwdPtr, &ch4);
+		if (chLen4 <= 0) {
+		    break;
+		}
+		if (ch4 == ' ' || ch4 == '\t') {
+		    chunkPtr->breakIndex = (Tcl_Size)(fwdPtr - chunkStart) + chLen4;
+		    break;
+		}
+		fwdPtr += chLen4;
+	    }
+	}
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+	(void)foundBreak; /* suppress unused-variable warning when !TK_LAYOUT_WITH_BASE_CHUNKS */
+
     checkForNextChunk:
 	if ((bytesThatFit + byteOffset) == segPtr->size) {
 	    for (nextPtr = segPtr->nextPtr; nextPtr != NULL;
