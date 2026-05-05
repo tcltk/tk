@@ -7,19 +7,18 @@
  *
  * Copyright © 1995-1996 Microsoft Corp.
  * Copyright © 1998 Brueckner & Jarosch Ing.GmbH, Erfurt, Germany
- * Copyright © 2020 Kevin Walzer.
- * Copyright © 2020 Eric Boudaillier.
- * Copyright © 2020 Francois Vogel.
+ * Copyright © 2020 Kevin Walzer
+ * Copyright © 2020 Eric Boudaillier
+ * Copyright © 2020 Francois Vogel
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tkWinInt.h"
 #include "tkInt.h"
 #include <windows.h>
-#include <shellapi.h>
 #include "tkWin.h"
-#include "tkWinInt.h"
 #include "tkWinIco.h"
 
 /*
@@ -1149,7 +1148,7 @@ WinIcoInit(
 	return TCL_ERROR;
     }
 
-    icoInterpPtr = (IcoInterpInfo*) ckalloc(sizeof(IcoInterpInfo));
+    icoInterpPtr = (IcoInterpInfo*)ckalloc(sizeof(IcoInterpInfo));
     icoInterpPtr->counter = 0;
     icoInterpPtr->firstIcoPtr = NULL;
     icoInterpPtr->hwnd = CreateTaskbarHandlerWindow();

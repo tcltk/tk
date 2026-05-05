@@ -774,14 +774,14 @@ CreatePDFFromDrawableRect(
     /*
      * Translate so the requested rect maps to (0,0).
      */
-    
+
     CGContextTranslateCTM(ctx, -viewSrcRect.origin.x,
 			  -viewSrcRect.origin.y);
 
     /*
      * Render CALayer tree.
      */
-    
+
     [view.layer renderInContext:ctx];
 
     CGContextRestoreGState(ctx);
@@ -794,7 +794,7 @@ CreatePDFFromDrawableRect(
     /*
      * Caller owns returned CFDataRef.
      */
-    
+
     return CFBridgingRetain(pdfData);
 }
 
