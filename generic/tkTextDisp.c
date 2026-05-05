@@ -7875,7 +7875,6 @@ TkTextCharLayoutProc(
 {
     Tk_Font tkfont;
     int nextX;
-    Tcl_Size count;
     Tcl_Size bytesThatFit;
     CharInfo *ciPtr;
     char *p;
