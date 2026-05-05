@@ -4,25 +4,20 @@
  *      This module implements access to the Win32 GDI API.
  *
  * Copyright © 1991-2018 Microsoft Corp.
- * Copyright © 2009, Michael I. Schwartz.
+ * Copyright © 2009, Michael I. Schwartz
  * Copyright © 1998-2019 Harald Oehlmann, Elmicron GmbH
- * Copyright © 2021 Kevin Walzer.
+ * Copyright © 2021 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 
-#include <windows.h>
-#include <math.h>
+#include "tkWinInt.h"
 #include <wtypes.h>
 #include <winspool.h>
 #include <commdlg.h>
 #include <wingdi.h>
-
-#include <tcl.h>
-
-#include "tkWinInt.h"
 
 #define DEG2RAD(x) (0.017453292519943295 * (x))
 #define ROUND32(x) ((LONG)floor((x) + 0.5))
@@ -3054,7 +3049,7 @@ static int GdiMakePen(
     if (dashstyle != 0 && dashstyledata != 0) {
 	const char *cp;
 	size_t i;
-	char *dup = (char *) ckalloc(strlen(dashstyledata) + 1);
+	char *dup = (char *)ckalloc(strlen(dashstyledata) + 1);
 	strcpy(dup, dashstyledata);
 	/* DEBUG. */
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(

@@ -66,10 +66,10 @@ namespace eval ::tk::test::generic {
     #      happens just before the notification from the OS has been received,
     #      Tk will be using not yet updated info (e.g. mouse coordinates).
     #
-    #         Hickup, choke etc ... !
+    #	 Hickup, choke etc ... !
     #
-    #            *  the function SendInput() of the Win32 API
-    #            ** the callback function is TkWinChildProc()
+    #	    *  the function SendInput() of the Win32 API
+    #	    ** the callback function is TkWinChildProc()
     #
     #    This timing issue can be addressed by putting the Tk process on hold
     #    (do nothing at all) for a somewhat extended amount of time, while
@@ -192,7 +192,7 @@ namespace eval ::tk::test::generic {
     # Arguments:
     #    subCmd : "export", "import" or "forget"
     #    args   : a sequence of domains that need to be imported/forgotten,
-    #             unused for "export"
+    #	     unused for "export"
     #
     proc testutils {subCmd args} {
 	variable importedDomains
@@ -481,9 +481,9 @@ namespace eval ::tk::test::colors {
     # otherwise.
     #
     # Arguments:
-    #	w                : name of window in which to check.
+    #	w		: name of window in which to check.
     #	red, green, blue : intensities to use in a trial color allocation
-    #	                   to see if there are colormap entries free.
+    #			   to see if there are colormap entries free.
     #
     proc colorsFree {w {red 31} {green 245} {blue 192}} {
 	lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] r g b
@@ -656,7 +656,7 @@ namespace eval ::tk::test::dialog {
 	variable testDialogFont
 	variable iter_after
 	variable testDialog; # On MS Windows, this variable is set at the C level
-	                     # by SetTestDialog() in tkWinDialog.c
+			     # by SetTestDialog() in tkWinDialog.c
 
 	switch -- $stage {
 	    launch {

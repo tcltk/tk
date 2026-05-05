@@ -254,7 +254,7 @@ Tk_InitConsoleChannels(
      * interp for it to live in.
      */
 
-    info = (ConsoleInfo *) ckalloc(sizeof(ConsoleInfo));
+    info = (ConsoleInfo *)ckalloc(sizeof(ConsoleInfo));
     info->consoleInterp = NULL;
     info->interp = NULL;
     info->refCount = 0;

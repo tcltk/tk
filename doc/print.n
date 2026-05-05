@@ -27,7 +27,7 @@ and
 Unix commands, and the \fBtk print\fR command does not supersede that
 functionality; it builds on it. The \fBtk print\fR command is a fuller
 implementation that uses native dialogs on macOS and Windows, and a Tk-based
-dialog that provides parallel functionality on X11. 
+dialog that provides parallel functionality on X11.
 .SH PLATFORM NOTES
 .TP
 \fBmacOS\fR
