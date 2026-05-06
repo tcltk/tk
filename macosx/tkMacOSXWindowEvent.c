@@ -315,6 +315,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
+    observe(NSWindowWillMoveNotification, windowDragStart:);
+    observe(NSWindowDidOrderOffScreenNotification, windowUnmapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
 #endif
 
@@ -323,10 +325,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
 #endif
 
-#ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    observe(NSWindowWillMoveNotification, windowDragStart:);
-    observe(NSWindowDidOrderOffScreenNotification, windowUnmapped:);
-#endif
 #undef observe
 
 }
