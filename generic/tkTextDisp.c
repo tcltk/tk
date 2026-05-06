@@ -1702,6 +1702,7 @@ LayoutDLine(
 	 * not eliding; elided chunks have zero width and cannot overshoot.
 	 */
 	if (!elide && (maxX >= 0) && (x > maxX)) {
+	    fprintf(stderr, "RTL overflow triggered: x=%d maxX=%d\n", x, maxX);
 	    break;
 	}
 
