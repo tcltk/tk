@@ -37,10 +37,14 @@ static int		GenerateActivateEvents(TkWindow *winPtr,
 
 #pragma mark TKApplication(TKWindowEvent)
 
-extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowWillOrderOnScreenNotification;
 
+/* NSWindowDidOrderOnScreenNotification is an undocumented MacOS API 
+ * and thus will result in App Store rejections if included in
+ * code built with this symbol (e.g. via pyinstaller) */
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
+extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 
@@ -307,9 +311,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillMiniaturizeNotification, windowCollapsed:);
     observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
-    observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
+
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
+    observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
+#endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
