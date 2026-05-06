@@ -71,28 +71,26 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TMenubutton -relief raised \
 	    -indicatormargin {3.75p 0} -padding {3m 1m}
 
-	ttk::style configure TEntry -padding 1p -font TkTextFont -insertwidth 1p
+	ttk::style configure TEntry -padding 1 -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1p \
-	    -arrowsize 3p -arrowpadding 2.25p -insertwidth 1p \
-	    -focuswidth 1p -focuscolor black
+	ttk::style configure TCombobox -padding 1 \
+	    -arrowsize 3p -arrowpadding 2.25p
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 2.25p -arrowpadding 1.5p -insertwidth 1p \
-	    -focuswidth 1p -focuscolor black
+	    -arrowsize 2.25p -arrowpadding 2.25p
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowpadding 2p -arrowsize 3p -width 9p
+	    -arrowpadding 2.25p -arrowsize 3p -width 9p
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised \
@@ -109,7 +107,7 @@ namespace eval ttk::theme::classic {
 	ttk::style map TNotebook.Tab -background [list selected $colors(-frame)]
 
 	# Treeview
-	ttk::style configure Heading -padding {2p 1 2p 1} \
+	ttk::style configure Heading -padding {2.25p 1 2.25p 1} \
 	    -font TkHeadingFont -relief raised \
 	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
@@ -119,7 +117,7 @@ namespace eval ttk::theme::classic {
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
-	ttk::style map Item \
+	ttk::style map CheckTreeview.Item \
             -indicatorcolor [list selected $colors(-indicator)] \
             -indicatorrelief {selected sunken}
 	ttk::style configure Treeview.Separator \

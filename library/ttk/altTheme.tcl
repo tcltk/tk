@@ -58,25 +58,25 @@ namespace eval ttk::theme::alt {
 		   disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width 11p -padding 2.25p -relief raised \
-	    -arrowsize 3.25p -arrowpadding 2.25p
+	    -width -11 -padding 2.25p -relief raised \
+	    -arrowsize 3.75p -arrowpadding {2.25p 0 2.25p 0}
 
-	ttk::style configure TEntry -padding 1p -insertwidth 1p \
-	    -focuswidth 1p -focuscolor $colors(-selectbg)
+	ttk::style configure TEntry -padding 1 -insertwidth 1 \
+	    -focuswidth 2 -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1p -insertwidth 1p \
-	    -arrowsize 3p -arrowpadding 3p \
-	    -focuswidth 1p -focuscolor $colors(-selectbg)
+	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
+	    -arrowsize 3p -arrowpadding {2.25p 2.25p 3p 3p} \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 2.5p -arrowpadding {1.5p 0 1.5p 0} -insertwidth 1p \
-	    -focuswidth 1p -focuscolor $colors(-selectbg)
+	    -arrowsize 1.5p -arrowpadding {2.25p 2.25p 3p 3p} -insertwidth 1 \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -88,7 +88,7 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 3p -width 6p -arrowpadding 2p
+	    -arrowsize 2.25p -width 10.5p -arrowpadding {2.25p 2.25p 3p 3p}
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
@@ -110,13 +110,14 @@ namespace eval ttk::theme::alt {
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
-	ttk::style map Item -indicatorcolor [list disabled $colors(-frame)]
+	ttk::style map CheckTreeview.Item \
+	    -indicatorcolor [list disabled $colors(-frame)]
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) -indent 15p \
-	    -focuswidth 1p -focuscolor $colors(-selectbg)
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \

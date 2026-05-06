@@ -850,6 +850,8 @@ typedef struct {
     Tcl_Obj *paddingObj;
     Tcl_Obj *backgroundObj;
     Tcl_Obj *borderColorObj;
+    Tcl_Obj *lightColorObj;
+    Tcl_Obj *darkColorObj;
 } ArrowElement;
 
 /* Size does not include padding */
@@ -859,11 +861,15 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ArrowElement,colorObj), "black"},
     { "-arrowpadding", TK_OPTION_STRING,
-	offsetof(ArrowElement,paddingObj), "1.5p" },
+	offsetof(ArrowElement,paddingObj), "2.25p" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(ArrowElement,backgroundObj), FRAME_COLOR },
     { "-bordercolor", TK_OPTION_BORDER,
 	offsetof(ArrowElement,borderColorObj), DARKEST_COLOR },
+    { "-lightcolor", TK_OPTION_COLOR,
+	offsetof(ArrowElement,lightColorObj), LIGHT_COLOR },
+    { "-darkcolor", TK_OPTION_COLOR,
+	offsetof(ArrowElement,darkColorObj), DARK_COLOR },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -907,15 +913,14 @@ static void ArrowElementDraw(
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     XColor *backgroundColor = Tk_GetColorFromObj(tkwin, arrow->backgroundObj);
-    XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
     Ttk_Padding padding;
     int cx = 0, cy = 0;
 
     /* Create container box */
+    DrawSmoothBorder(tkwin, d, b, arrow->borderColorObj,
+	arrow->lightColorObj, arrow->darkColorObj);
     XFillRectangle(Tk_Display(tkwin), d, Tk_GCForColor(backgroundColor, d),
-	b.x, b.y, (unsigned)b.width-1, (unsigned)b.height-1);
-    XDrawRectangle(Tk_Display(tkwin), d, Tk_GCForColor(borderColor, d),
-	b.x, b.y, (unsigned)b.width-1, (unsigned)b.height-1);
+	b.x+2, b.y+2, (unsigned)b.width-4, (unsigned)b.height-4);
 
     /* Apply scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
@@ -958,7 +963,7 @@ static void ArrowElementDraw(
 	gcvalues.foreground = arrowColor->pixel;
 	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
 	gcvalues.cap_style = CapRound;
-	gcvalues.join_style = JoinMiter;
+	gcvalues.join_style = JoinRound;
 	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
 	gc = Tk_GetGC(tkwin, mask, &gcvalues);
 	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
@@ -971,6 +976,42 @@ static const Ttk_ElementSpec ArrowElementSpec = {
     sizeof(ArrowElement),
     ArrowElementOptions,
     ArrowElementSize,
+    ArrowElementDraw
+};
+
+/*
+ * Modified arrow element for comboboxes and spinboxes:
+ *	The width and height are different.
+ */
+
+static void BoxArrowElementSize(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
+{
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    Ttk_Padding padding;
+    int size = 5;
+
+    /* Get scaled size */
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);
+
+    /* Add scaled padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+}
+
+static const Ttk_ElementSpec BoxArrowElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ArrowElement),
+    ArrowElementOptions,
+    BoxArrowElementSize,
     ArrowElementDraw
 };
 
@@ -1284,11 +1325,11 @@ TtkClamTheme_Init(Tcl_Interp *interp)
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
+	    &BoxArrowElementSpec, INT2PTR(CHEVRON_UP));
     Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
+	    &BoxArrowElementSpec, INT2PTR(CHEVRON_DOWN));
     Ttk_RegisterElement(interp, theme, "Combobox.downarrow",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
+	    &BoxArrowElementSpec, INT2PTR(CHEVRON_DOWN));
 
     Ttk_RegisterElement(interp, theme, "upchevron",
 	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));

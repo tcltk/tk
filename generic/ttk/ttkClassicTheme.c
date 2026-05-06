@@ -249,7 +249,7 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-indicatorsize", TK_OPTION_PIXELS,
 	offsetof(IndicatorElement,sizeObj), "9p" },
     { "-indicatormargin", TK_OPTION_STRING,
-	offsetof(IndicatorElement,marginObj), "0 1p 3p 1p" },
+	offsetof(IndicatorElement,marginObj), "0 1.5p 3p 1.5p" },
     { "-borderwidth", TK_OPTION_PIXELS,
 	offsetof(IndicatorElement,borderWidthObj),
 	STRINGIFY(DEFAULT_BORDERWIDTH) },
@@ -416,7 +416,7 @@ static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
     { "-indicatorrelief", TK_OPTION_RELIEF,
 	offsetof(MenuIndicatorElement,reliefObj), "raised" },
     { "-indicatormargin", TK_OPTION_STRING,
-	offsetof(MenuIndicatorElement,marginObj), "5 0" },
+	offsetof(MenuIndicatorElement,marginObj), "3.75p 0" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -490,7 +490,7 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ArrowElement,colorObj), "black"},
     { "-arrowpadding", TK_OPTION_STRING,
-	offsetof(ArrowElement,paddingObj), "1.5p" },
+	offsetof(ArrowElement,paddingObj), "2.25p" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
@@ -585,6 +585,85 @@ static const Ttk_ElementSpec ArrowElementSpec = {
     ArrowElementOptions,
     ArrowElementSize,
     ArrowElementDraw
+};
+
+/*
+ * Modified arrow element for comboboxes and spinboxes:
+ *	The width and height are different, and the left edge is drawn in the
+ *	same color as the right one.
+ */
+
+static void BoxArrowElementSize(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
+{
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    Ttk_Padding padding;
+    int size = 5;
+
+    /* Get scaled size */
+    TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
+    TtkArrowSize(size, direction, widthPtr, heightPtr);
+
+    /* Add scaled padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+}
+
+static void BoxArrowElementDraw(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
+{
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
+    int borderWidth = 1, relief = TK_RELIEF_RAISED;
+    Display *disp = Tk_Display(tkwin);
+    GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
+    int w = WIN32_XDRAWLINE_HACK;
+    Ttk_Padding padding;
+    int cx = 0, cy = 0;
+    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
+    GC arrowGC = Tk_GCForColor(arrowColor, d);
+
+    /* Create container box */
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+	    borderWidth, relief);
+    XDrawLine(disp, d, darkGC, b.x, b.y+1, b.x, b.y+b.height-1+w);
+
+    /* Calc padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    b = Ttk_PadBox(b, padding);
+
+    /* Calc indicator size */
+    TtkArrowSize(b.width/2, direction, &cx, &cy);
+    if ((b.height - cy) % 2 == 1) {
+	++cy;
+    }
+
+    /* Anchor box */
+    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
+
+    /* Draw indicator */
+    TtkFillArrow(disp, d, arrowGC, b, direction);
+}
+
+static const Ttk_ElementSpec BoxArrowElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ArrowElement),
+    ArrowElementOptions,
+    BoxArrowElementSize,
+    BoxArrowElementDraw
 };
 
 /*------------------------------------------------------------------------
@@ -986,7 +1065,7 @@ static void TreeitemIndicatorSize(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (size % 2 == 0) --size;  /* An odd size is better for the indicator. */
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
 }
 
 static void TreeitemIndicatorDraw(
@@ -1158,11 +1237,11 @@ TtkClassicTheme_Init(Tcl_Interp *interp)
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_UP));
+	    &BoxArrowElementSpec, INT2PTR(ARROW_UP));
     Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
+	    &BoxArrowElementSpec, INT2PTR(ARROW_DOWN));
     Ttk_RegisterElement(interp, theme, "Combobox.downarrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
+	    &BoxArrowElementSpec, INT2PTR(ARROW_DOWN));
 
     Ttk_RegisterElement(interp, theme, "slider",
 	    &SliderElementSpec, NULL);

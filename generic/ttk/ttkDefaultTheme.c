@@ -212,9 +212,9 @@ static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[3])
     switch (direction) {
 	case CHEVRON_UP:
 	    h = (b.width - 1)/2;
-	    cx = b.x + h + 1;
-	    cy = b.y + 1;
-	    if (b.height <= h) h = b.height - 2;
+	    cx = b.x + h;
+	    cy = b.y;
+	    if (b.height <= h) h = b.height - 1;
 	    points[0].x = cx - h;	points[0].y = cy + h;
 	    points[1].x = cx;		points[1].y = cy;
 	    points[2].x = cx + h;	points[2].y = cy + h;
@@ -223,35 +223,32 @@ static void ChevronPoints(Ttk_Box b, ArrowDirection direction, XPoint points[3])
 	    h = (b.width - 1)/2;
 	    cx = b.x + h;
 	    cy = b.y + b.height - 1;
-	    if (b.height <= h) h = b.height - 2;
-	    points[0].x = cx - h;	points[0].y = cy - h - 1;
-	    points[1].x = cx;		points[1].y = cy - 1;
-	    points[2].x = cx + h;	points[2].y = cy - h - 1;
+	    if (b.height <= h) h = b.height - 1;
+	    points[0].x = cx - h;	points[0].y = cy - h;
+	    points[1].x = cx;		points[1].y = cy;
+	    points[2].x = cx + h;	points[2].y = cy - h;
 	    break;
 	case CHEVRON_LEFT:
 	    h = (b.height - 1)/2;
 	    cx = b.x;
 	    cy = b.y + h;
-	    if (b.width <= h) h = b.width - 2;
-	    points[0].x = cx + h + 1;	points[0].y = cy - h;
-	    points[1].x = cx + 1;	points[1].y = cy;
-	    points[2].x = cx + h + 1;	points[2].y = cy + h;
+	    if (b.width <= h) h = b.width - 1;
+	    points[0].x = cx + h;	points[0].y = cy - h;
+	    points[1].x = cx;		points[1].y = cy;
+	    points[2].x = cx + h;	points[2].y = cy + h;
 	    break;
 	case CHEVRON_RIGHT:
 	    h = (b.height - 1)/2;
 	    cx = b.x + b.width - 1;
 	    cy = b.y + h;
-	    if (b.width <= h) h = b.width - 2;
-	    points[0].x = cx - h - 1;	points[0].y = cy - h;
-	    points[1].x = cx - 1;	points[1].y = cy;
-	    points[2].x = cx - h - 1;	points[2].y = cy + h;
+	    if (b.width <= h) h = b.width - 1;
+	    points[0].x = cx - h;	points[0].y = cy - h;
+	    points[1].x = cx;		points[1].y = cy;
+	    points[2].x = cx - h;	points[2].y = cy + h;
 	    break;
 	default:
 	    return;
     }
-
-    points[6].x = points[0].x;
-    points[6].y = points[0].y;
 }
 
 /*public*/
@@ -260,22 +257,16 @@ void TtkArrowSize(int h, ArrowDirection direction, int *widthPtr, int *heightPtr
     switch (direction) {
 	case ARROW_UP:
 	case ARROW_DOWN:
+	case CHEVRON_UP:
+	case CHEVRON_DOWN:
 	    *widthPtr = 2*h+1;
 	    *heightPtr = h+1;
 	    break;
 	case ARROW_LEFT:
 	case ARROW_RIGHT:
-	    *widthPtr = h+1;
-	    *heightPtr = 2*h+1;
-	    break;
-	case CHEVRON_UP:
-	case CHEVRON_DOWN:
-	    *widthPtr = 2*h+1;
-	    *heightPtr = h+2;
-	    break;
 	case CHEVRON_LEFT:
 	case CHEVRON_RIGHT:
-	    *widthPtr = h+2;
+	    *widthPtr = h+1;
 	    *heightPtr = 2*h+1;
 	    break;
     }
@@ -846,7 +837,7 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ArrowElement,colorObj), "black"},
     { "-arrowpadding", TK_OPTION_STRING,
-	offsetof(ArrowElement,paddingObj), "2p 2p 3p 3p" },
+	offsetof(ArrowElement,paddingObj), "2.25p 2.25p 3p 3p" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR,
@@ -881,6 +872,8 @@ static void ArrowElementSize(
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    padding.right = padding.left + 1;
+    padding.bottom = padding.top + 1;
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
     if (*widthPtr < *heightPtr) {
@@ -906,7 +899,6 @@ static void ArrowElementDraw(
     Ttk_Padding padding;
     int cx = 0, cy = 0;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    
 
     /* Draw border */
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
@@ -916,6 +908,8 @@ static void ArrowElementDraw(
 
     /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    padding.right = padding.left + 1;
+    padding.bottom = padding.top + 1;
     b = Ttk_PadBox(b, padding);
 
     /* Calc indicator size */
@@ -955,7 +949,7 @@ static void ArrowElementDraw(
 	gcvalues.foreground = arrowColor->pixel;
 	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
 	gcvalues.cap_style = CapRound;
-	gcvalues.join_style = JoinMiter;
+	gcvalues.join_style = JoinRound;
 	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
 	gc = Tk_GetGC(tkwin, mask, &gcvalues);
 	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
@@ -996,13 +990,10 @@ static void BoxArrowElementSize(
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    padding.right = padding.left + 1;
+    padding.bottom = padding.top + 1;
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (*widthPtr < *heightPtr) {
-	*widthPtr = *heightPtr;
-    } else {
-	*heightPtr = *widthPtr;
-    }
 }
 
 static void BoxArrowElementDraw(
@@ -1033,6 +1024,8 @@ static void BoxArrowElementDraw(
 
     /* Calc padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    padding.right = padding.left + 1;
+    padding.bottom = padding.top + 1;
     b = Ttk_PadBox(b, padding);
 
     /* Calc indicator size */
@@ -1056,7 +1049,7 @@ static void BoxArrowElementDraw(
 	gcvalues.foreground = arrowColor->pixel;
 	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
 	gcvalues.cap_style = CapRound;
-	gcvalues.join_style = JoinMiter;
+	gcvalues.join_style = JoinRound;
 	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
 	arrowGC = Tk_GetGC(tkwin, mask, &gcvalues);
 	TtkDrawArrow(disp, d, arrowGC, b, direction);
@@ -1093,11 +1086,11 @@ static const Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
     { "-direction", TK_OPTION_STRING,
 	offsetof(MenubuttonArrowElement,directionObj), "below" },
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(MenubuttonArrowElement,sizeObj), "3p" },
+	offsetof(MenubuttonArrowElement,sizeObj), "3.75p" },
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(MenubuttonArrowElement,colorObj), "black" },
     { "-arrowpadding", TK_OPTION_STRING,
-	offsetof(MenubuttonArrowElement,paddingObj), "2p" },
+	offsetof(MenubuttonArrowElement,paddingObj), "2.25p 0 2.25p 0" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -1115,16 +1108,16 @@ static void MenubuttonArrowElementSize(
     /* Get scaled size */
     TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
     TtkArrowSize(size, ARROW_RIGHT, widthPtr, heightPtr);
-
-    /* Add scaled padding */
-    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
-    *widthPtr  += Ttk_PaddingWidth(padding);
-    *heightPtr += Ttk_PaddingHeight(padding);
     if (*widthPtr < *heightPtr) {
 	*widthPtr = *heightPtr;
     } else {
 	*heightPtr = *widthPtr;
     }
+
+    /* Add scaled padding */
+    Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
+    *widthPtr  += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
 }
 
 static void MenubuttonArrowElementDraw(
@@ -1178,7 +1171,7 @@ static void MenubuttonArrowElementDraw(
 	gcvalues.foreground = arrowColor->pixel;
 	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
 	gcvalues.cap_style = CapRound;
-	gcvalues.join_style = JoinMiter;
+	gcvalues.join_style = JoinRound;
 	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
 	gc = Tk_GetGC(tkwin, mask, &gcvalues);
 	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
@@ -1211,7 +1204,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-width", TK_OPTION_PIXELS,
-	offsetof(ThumbElement,sizeObj), "3.5p" },
+	offsetof(ThumbElement,sizeObj), "10.5p" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(ThumbElement,borderObj), DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR,
@@ -1306,7 +1299,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec SliderElementOptions[] = {
     { "-sliderthickness", TK_OPTION_PIXELS,
-	offsetof(SliderElement,thicknessObj), "7p" },
+	offsetof(SliderElement,thicknessObj), "11.25p" },
     { "-sliderrelief", TK_OPTION_RELIEF,
 	offsetof(SliderElement,reliefObj), "raised" },
     { "-background", TK_OPTION_BORDER,
@@ -1523,7 +1516,7 @@ static void TreeitemIndicatorSize(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (size % 2 == 0) --size;  /* An odd size is better for the indicator. */
+    if (size % 2 == 0) --size;	/* An odd size is better for the indicator. */
 }
 
 static void TreeitemIndicatorDraw(

@@ -2715,7 +2715,7 @@ static int TreeviewChildrenCommand(
     } else {
 	TreeItem **newChildren = GetItemListFromObj(interp, tv, objv[3]);
 	TreeItem *child;
-	int i, do_current = 0, do_focus = 0;
+	int i, do_focus = 0;
 
 	if (!newChildren) {
 	    return TCL_ERROR;
@@ -2785,7 +2785,6 @@ static int TreeviewChildrenCommand(
 	if (tv->tree.current && (tv->tree.current)->parent == NULL) {
 	    tv->tree.current = NULL;
 	    tv->tree.currentCol = -1;
-	    do_current = 1;
 	}
 
 	Tcl_Free(newChildren);
@@ -4161,7 +4160,7 @@ static int TreeviewDetachCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
     Tcl_Size i;
-    int do_current = 0, do_focus = 0;
+    int do_focus = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -4208,7 +4207,6 @@ static int TreeviewDetachCommand(
     if (tv->tree.current && (tv->tree.current)->parent == NULL) {
 	tv->tree.current = NULL;
 	tv->tree.currentCol = -1;
-	do_current = 1;
     }
 
     tv->tree.rowPosNeedsUpdate = 1;
@@ -4285,7 +4283,7 @@ static int TreeviewDeleteCommand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items, *delq;
     Tcl_Size i;
-    int selChange = 0, do_current = 0, do_focus = 0;
+    int selChange = 0, do_focus = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -4347,7 +4345,6 @@ static int TreeviewDeleteCommand(
 	if (tv->tree.current == delq) {
 	    tv->tree.current = NULL;
 	    tv->tree.currentCol = -1;
-	    do_current = 1;
 	}
 	FreeItem(delq);
 	delq = next;
@@ -7342,7 +7339,7 @@ static void TreeheadingIndicatorDraw(
     gcvalues.foreground = borderColor->pixel;
     gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
     gcvalues.cap_style = CapRound;
-    gcvalues.join_style = JoinMiter;
+    gcvalues.join_style = JoinRound;
     mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
     TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);

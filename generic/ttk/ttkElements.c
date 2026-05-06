@@ -1012,7 +1012,7 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(ArrowElement,colorObj), "black"},
     { "-arrowpadding", TK_OPTION_STRING,
-	offsetof(ArrowElement,paddingObj), "1.5p" },
+	offsetof(ArrowElement,paddingObj), "2.25p" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
@@ -1113,7 +1113,7 @@ static void ArrowElementDraw(
 	gcvalues.foreground = arrowColor->pixel;
 	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
 	gcvalues.cap_style = CapRound;
-	gcvalues.join_style = JoinMiter;
+	gcvalues.join_style = JoinRound;
 	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
 	gc = Tk_GetGC(tkwin, mask, &gcvalues);
 	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
@@ -1156,11 +1156,6 @@ static void BoxArrowElementSize(
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (*widthPtr < *heightPtr) {
-	*widthPtr = *heightPtr;
-    } else {
-	*heightPtr = *widthPtr;
-    }
 }
 
 static void BoxArrowElementDraw(
@@ -1212,7 +1207,7 @@ static void BoxArrowElementDraw(
 	gcvalues.foreground = arrowColor->pixel;
 	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
 	gcvalues.cap_style = CapRound;
-	gcvalues.join_style = JoinMiter;
+	gcvalues.join_style = JoinRound;
 	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
 	arrowGC = Tk_GetGC(tkwin, mask, &gcvalues);
 	TtkDrawArrow(disp, d, arrowGC, b, direction);
@@ -1244,11 +1239,11 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(MenuIndicatorElement,sizeObj), "3.5p" },
+	offsetof(MenuIndicatorElement,sizeObj), "3.75p" },
     { "-arrowcolor", TK_OPTION_COLOR,
 	offsetof(MenuIndicatorElement,colorObj), "black" },
     { "-arrowpadding", TK_OPTION_STRING,
-	offsetof(MenuIndicatorElement,paddingObj), "3" },
+	offsetof(MenuIndicatorElement,paddingObj), "2.25p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -1273,11 +1268,6 @@ static void MenuIndicatorElementSize(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &padding);
     *widthPtr  += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
-    if (*widthPtr < *heightPtr) {
-	*widthPtr = *heightPtr;
-    } else {
-	*heightPtr = *widthPtr;
-    }
 }
 
 static void MenuIndicatorElementDraw(
@@ -1291,7 +1281,6 @@ static void MenuIndicatorElementDraw(
     MenuIndicatorElement *indicator = (MenuIndicatorElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
-    GC gc = Tk_GCForColor(arrowColor, d);
     Ttk_Padding padding;
     int size = 5;
     int width, height;
@@ -1319,7 +1308,7 @@ static void MenuIndicatorElementDraw(
 	gcvalues.foreground = arrowColor->pixel;
 	gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
 	gcvalues.cap_style = CapRound;
-	gcvalues.join_style = JoinMiter;
+	gcvalues.join_style = JoinRound;
 	mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
 	gc = Tk_GetGC(tkwin, mask, &gcvalues);
 	TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
