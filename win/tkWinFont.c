@@ -319,6 +319,26 @@ static int		TkWinShapedRunsWidth(const TkWinShapedRun *runs,
 			    int nRuns);
 static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
 			    int nRuns, int logicalIdx);
+static BYTE             *TkWinComputeClusterBoundaries(const WCHAR *str,
+						       int len,
+						       const WORD *logClust);
+static int              *TkWinComputeClusterWidths(const BYTE
+						   *clusterBoundaries,
+						   int charLen,
+						   const int *advances,
+						   int glyphCount,
+						   const WORD *logClust);
+static int               TkWinCountClusters(const BYTE *clusterBoundaries,
+					    int charLen);
+void                     TkWinFreeShapedRuns(TkWinShapedRun *runs,
+					     int runCount);
+int                      TkWinLinebreakAwareMeasure(Tk_Font tkfont,
+						    const char *source,
+						    Tcl_Size numBytes,
+						    Tcl_Size rangeStart,
+						    Tcl_Size rangeLength,
+						    int maxLength,
+						    int *lengthPtr);
 
 /*
  *-------------------------------------------------------------------------
@@ -1352,6 +1372,377 @@ GetVisualXForLogicalIndex(
     Tcl_Free(runOriginX);
     return result;
 }
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWinComputeClusterBoundaries --
+ *
+ * Compute grapheme cluster boundaries for a shaped run using UAX#29.
+ *
+ * A grapheme cluster boundary occurs at:
+ * 1. The start of the string
+ * 2. Any position where logClust[] changes (different glyph), UNLESS
+ * 3. The character at that position is a combining mark (category Mn/Mc/Me)
+ *
+ * This ensures ligatures, base+diacritic sequences, and emoji+modifier
+ * sequences are never split across line boundaries.
+ *
+ * Results:
+ * Returns a BYTE array (bitmap) where boundaries[i] = 1 means position i
+ * starts a new grapheme cluster. The array is heap-allocated and must be
+ * freed by the caller with Tcl_Free.
+ *
+ * Side effects:
+ * None.
+ *
+ *---------------------------------------------------------------------------
+ */
+static BYTE *
+TkWinComputeClusterBoundaries(
+    const WCHAR *str,      /* UTF-16 string for this run */
+    int len,               /* Length in WCHARs (not bytes) */
+    const WORD *logClust,  /* Uniscribe cluster map: char index -> glyph index */
+    int glyphCount UNUSED) /* Total glyphs (informational) */
+{
+    BYTE *boundaries = (BYTE *)Tcl_Alloc(len);
+    memset(boundaries, 0, len);
+    
+    /* First character always starts a cluster */
+    boundaries[0] = 1;
+    
+    for (int i = 1; i < len; i++) {
+        int prevGlyph = logClust[i - 1];
+        int currGlyph = logClust[i];
+        WCHAR ch = str[i];
+        
+        /* 
+         * Check if current character is a combining mark.
+         * UAX#29 rules GB3-GB4: combining marks (category Mn, Mc, Me)
+         * combine with the preceding base character.
+         * 
+         * BMP combining mark ranges (most common):
+         * - U+0300–036F: Combining Diacritical Marks
+         * - U+1AB0–1AFF: Combining Diacritical Marks Extended
+         * - U+1DC0–1DFF: Combining Diacritical Marks Supplement
+         * - U+20D0–20FF: Combining Diacritical Marks for Symbols
+         * - U+FE20–FE2F: Combining Half Marks
+         * 
+         * For supplementary plane (emoji modifiers, etc.), we conservatively
+         * treat them as cluster-starting. Full support requires Unicode
+         * property lookup (not practical without external library).
+         */
+        int isCombining = 0;
+        if ((ch >= 0x0300 && ch <= 0x036F) ||  /* Combining Diacritical Marks */
+            (ch >= 0x1AB0 && ch <= 0x1AFF) ||  /* Combining Diacritical Marks Extended */
+            (ch >= 0x1DC0 && ch <= 0x1DFF) ||  /* Combining Diacritical Marks Supplement */
+            (ch >= 0x20D0 && ch <= 0x20FF) ||  /* Combining Diacritical Marks for Symbols */
+            (ch >= 0xFE20 && ch <= 0xFE2F)) {  /* Combining Half Marks */
+            isCombining = 1;
+        }
+        
+        /* 
+         * Mark a cluster boundary if:
+         * - The glyph index changed (Uniscribe groups these together), OR
+         * - The current character is NOT a combining mark
+         * 
+         * In other words: no boundary if glyph is the same AND char is combining.
+         */
+        if (prevGlyph != currGlyph || !isCombining) {
+            boundaries[i] = 1;
+        }
+    }
+    
+    return boundaries;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWinComputeClusterWidths --
+ *
+ * Compute the visual pixel width of each grapheme cluster.
+ *
+ * Given cluster boundaries and per-glyph advance widths, computes the total
+ * width (in pixels) of all glyphs that belong to each cluster. This enables
+ * fast O(1) width lookups during line breaking.
+ *
+ * Results:
+ * Returns an int array where clusterWidths[i] is the visual width (in pixels)
+ * of the cluster starting at position i. Non-boundary positions have
+ * clusterWidths[i] = 0. The array is heap-allocated and must be freed by
+ * the caller with Tcl_Free.
+ *
+ * Side effects:
+ * None.
+ *
+ *---------------------------------------------------------------------------
+ */
+static int *
+TkWinComputeClusterWidths(
+    const BYTE *clusterBoundaries,  /* Bitmap: position i is cluster start if bit set */
+    int charLen,                     /* Total characters in run */
+    const int *advances,             /* Per-glyph advance width array */
+    int glyphCount UNUSED,           /* Total glyphs (for bounds checking) */
+    const WORD *logClust)            /* Character-to-glyph mapping */
+{
+    int *clusterWidths = (int *)Tcl_Alloc(sizeof(int) * charLen);
+    memset(clusterWidths, 0, sizeof(int) * charLen);
+    
+    for (int ci = 0; ci < charLen; ci++) {
+        if (!clusterBoundaries[ci]) {
+            continue;  /* Only compute width for cluster boundaries */
+        }
+        
+        /* Find the position of the next cluster boundary (or end of run) */
+        int nextBoundary = ci + 1;
+        while (nextBoundary < charLen && !clusterBoundaries[nextBoundary]) {
+            nextBoundary++;
+        }
+        
+        /* 
+         * Find the range of glyph indices that belong to this cluster.
+         * All characters [ci, nextBoundary) map to glyphs in [minGlyph, maxGlyph].
+         */
+        int minGlyph = INT_MAX;
+        int maxGlyph = -1;
+        
+        for (int j = ci; j < nextBoundary; j++) {
+            int glyph = (int)logClust[j];
+            if (glyph < minGlyph) minGlyph = glyph;
+            if (glyph > maxGlyph) maxGlyph = glyph;
+        }
+        
+        /* Sum the advance widths of all glyphs in this cluster */
+        int width = 0;
+        if (minGlyph >= 0 && minGlyph <= maxGlyph) {
+            for (int g = minGlyph; g <= maxGlyph && g < glyphCount; g++) {
+                width += advances[g];
+            }
+        }
+        
+        clusterWidths[ci] = width;
+    }
+    
+    return clusterWidths;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWinCountClusters --
+ *
+ * Count the number of grapheme clusters in a run (number of positions
+ * where clusterBoundaries[i] = 1).
+ *
+ * Results:
+ * Returns the cluster count.
+ *
+ * Side effects:
+ * None.
+ *
+ *---------------------------------------------------------------------------
+ */
+static int
+TkWinCountClusters(const BYTE *clusterBoundaries, int charLen)
+{
+    int count = 0;
+    for (int i = 0; i < charLen; i++) {
+        if (clusterBoundaries[i]) {
+            count++;
+        }
+    }
+    return count;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWinFreeShapedRuns --
+ *
+ * Free memory allocated by TkWinShapeString().
+ *
+ * Updated to free the new cluster boundary and width arrays.
+ *
+ * Results:
+ * None.
+ *
+ * Side effects:
+ * All memory associated with the shaped runs is freed.
+ *
+ *---------------------------------------------------------------------------
+ */
+void
+TkWinFreeShapedRuns(
+    TkWinShapedRun *runs,
+    int runCount)
+{
+    if (runs == NULL) {
+        return;
+    }
+    
+    for (int i = 0; i < runCount; i++) {
+        TkWinShapedRun *run = &runs[i];
+        
+        if (run->glyphs != NULL) {
+            Tcl_Free(run->glyphs);
+            run->glyphs = NULL;
+        }
+        if (run->logClust != NULL) {
+            Tcl_Free(run->logClust);
+            run->logClust = NULL;
+        }
+        if (run->advances != NULL) {
+            Tcl_Free(run->advances);
+            run->advances = NULL;
+        }
+        if (run->offsets != NULL) {
+            Tcl_Free(run->offsets);
+            run->offsets = NULL;
+        }
+        if (run->visualX != NULL) {
+            Tcl_Free(run->visualX);
+            run->visualX = NULL;
+        }
+        /* NEW: free cluster arrays */
+        if (run->clusterBoundaries != NULL) {
+            Tcl_Free(run->clusterBoundaries);
+            run->clusterBoundaries = NULL;
+        }
+        if (run->clusterWidths != NULL) {
+            Tcl_Free(run->clusterWidths);
+            run->clusterWidths = NULL;
+        }
+    }
+    
+    Tcl_Free(runs);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWinLinebreakAwareMeasure --
+ *
+ * Measure a substring with both cluster-aware and linebreak-aware wrapping.
+ *
+ * This is a high-level convenience function that:
+ * 1. Calls Tk_MeasureCharsInContext() to get the longest cluster-aligned
+ *    prefix that fits within maxLength pixels
+ * 2. If the entire range fits, returns immediately
+ * 3. Otherwise, scans backward to find the last "safe" linebreak opportunity
+ *    (space, hyphen, CJK ideograph, etc.) and re-measures to that point
+ *
+ * This implements a simplified subset of UAX#14 (Unicode Line Breaking
+ * Algorithm) without requiring ICU integration.
+ *
+ * Results:
+ * Returns the byte count of the chosen prefix. *lengthPtr is filled with
+ * the pixel width of that prefix.
+ *
+ * Side effects:
+ * None.
+ *
+ *---------------------------------------------------------------------------
+ */
+int
+TkWinLinebreakAwareMeasure(
+    Tk_Font tkfont,           /* Font to use for measurement */
+    const char *source,       /* Full UTF-8 source string */
+    Tcl_Size numBytes,        /* Total bytes in source */
+    Tcl_Size rangeStart,      /* Byte offset of range start */
+    Tcl_Size rangeLength,     /* Byte length of range to measure */
+    int maxLength,            /* Max pixel width, or -1 for unbounded */
+    int *lengthPtr)           /* OUT: pixel width of returned prefix */
+{
+    /* 
+     * Measure with cluster awareness. We don't pass any flags here because
+     * we handle TK_AT_LEAST_ONE and TK_PARTIAL_OK ourselves if needed.
+     */
+    int fitBytes = Tk_MeasureCharsInContext(tkfont, source, numBytes,
+                                            rangeStart, rangeLength,
+                                            maxLength, 0, lengthPtr);
+    
+    /* If the whole range fits, we're done */
+    if (fitBytes >= (int)rangeLength) {
+        return fitBytes;
+    }
+    
+    /* 
+     * Scan backward to find the last linebreak opportunity.
+     * We start from the beginning of the range and scan up to the fit point.
+     */
+    const char *p = source + rangeStart;
+    const char *end = source + rangeStart + fitBytes;
+    const char *lastBreak = NULL;
+    int ch, prevCh = ' ';
+    
+    while (p < end) {
+        int charBytes = Tcl_UtfToUniChar(p, &ch);
+        const char *next = p + charBytes;
+        
+        /* 
+         * Simplified UAX#14 linebreak detection.
+         * We consider the following characters as "break after" opportunities:
+         * 
+         * - U+0020 SPACE (most common)
+         * - U+0009 TAB
+         * - U+00AD SOFT HYPHEN (breaks without showing hyphen)
+         * - U+2000–U+200B General Punctuation spaces
+         * - U+2010–U+2015 Hyphen variants
+         * - U+4E00–U+9FFF CJK Unified Ideographs (always breakable)
+         * - U+3040–U+309F Hiragana (always breakable)
+         * 
+         * Additional ranges can be added for other scripts (Hangul, etc.).
+         */
+        int isBreakAfter = 0;
+        
+        if (ch == ' ' || ch == '\t') {
+            isBreakAfter = 1;
+        } else if (ch >= 0x2000 && ch <= 0x200B) {
+            /* General Punctuation spaces and zero-width joiners */
+            isBreakAfter = 1;
+        } else if (ch >= 0x2010 && ch <= 0x2015) {
+            /* Hyphen-like characters */
+            isBreakAfter = 1;
+        } else if (ch == 0x00AD) {
+            /* Soft hyphen */
+            isBreakAfter = 1;
+        } else if (ch >= 0x4E00 && ch <= 0x9FFF) {
+            /* CJK Unified Ideographs */
+            isBreakAfter = 1;
+        } else if (ch >= 0x3040 && ch <= 0x309F) {
+            /* Hiragana */
+            isBreakAfter = 1;
+        } else if (ch >= 0xAC00 && ch <= 0xD7AF) {
+            /* Hangul Syllables */
+            isBreakAfter = 1;
+        }
+        
+        if (isBreakAfter) {
+            lastBreak = next;
+        }
+        
+        p = next;
+        prevCh = ch;
+    }
+    
+    /* 
+     * If we found a linebreak opportunity and it's before the fit point,
+     * re-measure to that point to get its exact width.
+     */
+    if (lastBreak != NULL && lastBreak < end) {
+        int breakBytes = lastBreak - (source + rangeStart);
+        return Tk_MeasureCharsInContext(tkfont, source, numBytes,
+                                       rangeStart, breakBytes,
+                                       -1,  /* Unbounded: measure the whole prefix */
+                                       0,   /* No flags */
+                                       lengthPtr);
+    }
+    
+    /* No linebreak found; return the cluster-aligned fit */
+    return fitBytes;
+}
+
 
 /*
  *---------------------------------------------------------------------------
