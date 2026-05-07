@@ -1000,39 +1000,6 @@ GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runL
  * X11Shaper_ShapeString --
  *
  *   Shape a UTF-8 string using HarfBuzz and produce glyph buffer
- *   WITH cluster boundary metadata.
- *
- *   We return cluster boundaries and advance positions
- *   so that Tk_MeasureCharsInContext can do fitting WITHOUT reshaping.
- *
- *   Shapes all runs LTR, then reverses RTL runs manually.
- *   Stores isRTL flag per-glyph for cursor movement logic.
- *
- *   For each output glyph:
- *     - glyphs[i].fontIndex identifies the UnixFtFace that produced it
- *     - glyphs[i].byteOffset records cluster start in source
- *     - glyphs[i].clusterLen records cluster length in bytes
- *     - glyphs[i].x, advanceX record pixel position from run origin
- *
- *   clusterBreaks[] records byte offsets of cluster boundaries,
- *   and clusterBreakCount is the number of breaks. These enable
- *   line-fitting without reshaping.
- *
- * Results:
- *   1 on success, 0 on failure.
- *
- * Side effects:
- *   Updates the shaper cache; buffer is filled with glyphs and clusters.
- * ---------------------------------------------------------------
- */
-
-
-
-/*
- * ---------------------------------------------------------------
- * X11Shaper_ShapeString --
- *
- *   Shape a UTF-8 string using HarfBuzz and produce glyph buffer
  *   WITH cluster boundary metadata for proper line wrapping (including RTL).
  *
  * Results:
@@ -1042,6 +1009,7 @@ GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runL
  *   Updates the shaper cache; buffer is filled with glyphs and clusters.
  * ---------------------------------------------------------------
  */
+
 static int
 X11Shaper_ShapeString(
     X11Shaper *shaper,
@@ -1405,6 +1373,7 @@ X11Shaper_ShapeString(
 
     return 1;
 }
+
 /*
  * ---------------------------------------------------------------
  * TkpFontPkgInit --
@@ -1722,7 +1691,6 @@ Tk_MeasureChars(
  * ---------------------------------------------------------------
  */
 
-#if 0
 int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
@@ -1742,7 +1710,7 @@ Tk_MeasureCharsInContext(
         return 0;
     }
 
-    /* Latin fast path */
+     /* Latin fast path */
     if (IsLatinOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (!ftFont) {
@@ -1789,205 +1757,43 @@ Tk_MeasureCharsInContext(
         return best;
     }
 
-    /* RTL / Complex path */
     ShapedGlyphBuffer buffer;
-    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                               (int)numBytes, &buffer) || buffer.glyphCount == 0) {
+    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source, (int)numBytes, &buffer) 
+        || buffer.glyphCount == 0) {
         *lengthPtr = 0;
         return (int)rangeLength;
     }
 
     if (maxLength < 0) {
-        *lengthPtr = buffer.totalAdvance;
+        int total = 0;
+        for (int i = 0; i < buffer.glyphCount; i++) {
+            if (buffer.glyphs[i].byteOffset >= (int)rangeStart && buffer.glyphs[i].byteOffset < rangeEnd)
+                total += buffer.glyphs[i].advanceX;
+        }
+        *lengthPtr = total;
         return (int)rangeLength;
     }
 
-    /* Count glyphs in range */
-    int glyphsInRange = 0;
-    for (int i = 0; i < buffer.glyphCount; i++) {
-        if (buffer.glyphs[i].byteOffset >= (int)rangeStart &&
-            buffer.glyphs[i].byteOffset < rangeEnd) {
-            glyphsInRange++;
-        }
-    }
-
-    if (glyphsInRange == 0) {
-        *lengthPtr = 0;
-        return (int)rangeLength;
-    }
-
-    int avgWidth = buffer.totalAdvance / buffer.glyphCount;
-    if (avgWidth < 1) avgWidth = 8;
-
-    int glyphsThatFit = maxLength / avgWidth;
-    if (glyphsThatFit < 1) glyphsThatFit = 1;
-    if (glyphsThatFit > glyphsInRange) glyphsThatFit = glyphsInRange;
-
-    int bestBytes = 0;
-    for (int b = 0; b < buffer.clusterBreakCount; b++) {
-        int candEnd = buffer.clusterBreaks[b];
-        if (candEnd <= (int)rangeStart) continue;
-        if (candEnd > rangeEnd) candEnd = rangeEnd;
-
-        int bytesSoFar = candEnd - (int)rangeStart;
-        int estGlyphs = (bytesSoFar * glyphsInRange) / (int)rangeLength;
-
-        if (estGlyphs <= glyphsThatFit) {
-            bestBytes = bytesSoFar;
-        } else {
-            break;
-        }
-    }
-
-    if (bestBytes == 0) bestBytes = 1;
-
-    /* Whole words */
-    if ((flags & TK_WHOLE_WORDS) && bestBytes < (int)rangeLength) {
-        for (int i = bestBytes - 1; i > 0; i--) {
-            int pos = (int)rangeStart + i;
-            if (pos < (int)numBytes && (source[pos] == ' ' || source[pos] == '\t')) {
-                bestBytes = i + 1;
-                break;
-            }
-        }
-    }
-
-#if 0
-	*lengthPtr = bestBytes * avgWidth;
-	fprintf(stderr, "lengthptr is %d\n", *lengthPtr);
-
-        /* Prevent zero-byte returns that cause redraw loops */
-    if (bestBytes == 0 && rangeLength > 0) {
-        bestBytes = 1;
-        *lengthPtr = 10;
-    }
-    return bestBytes;
-}
-#endif
-/* ... [After the WHOLE_WORDS logic] ... */
-
-    /* 
-     * Instead of: *lengthPtr = bestBytes * avgWidth;
-     * Calculate the actual width of the bytes that fit.
-     */
-    int actualWidth = 0;
-    int targetByteOffset = (int)rangeStart + bestBytes;
-
-    for (int i = 0; i < buffer.glyphCount; i++) {
-        // Only add advance for glyphs that fall within our 'bestBytes' range
-        if (buffer.glyphs[i].byteOffset >= (int)rangeStart && 
-            buffer.glyphs[i].byteOffset < targetByteOffset) {
-            actualWidth += buffer.glyphs[i].xAdvance;
-        }
-    }
-
-    *lengthPtr = actualWidth;
-
-    /* Prevent zero-byte returns */
-    if (bestBytes == 0 && rangeLength > 0) {
-        bestBytes = 1; // Or use Tcl_UtfNext
-        // Re-measure just the first character accurately if needed
-    }
-    
-    return bestBytes;
-}
-#endif
-int
-Tk_MeasureCharsInContext(
-    Tk_Font tkfont,
-    const char *source,
-    Tcl_Size numBytes,
-    Tcl_Size rangeStart,
-    Tcl_Size rangeLength,
-    int maxLength,
-    int flags,
-    int *lengthPtr)
-{
-    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
-    int rangeEnd = (int)(rangeStart + rangeLength);
-
-    if (rangeLength <= 0) {
-        *lengthPtr = 0;
-        return 0;
-    }
-
-    /* Latin fast path */
-    if (IsLatinOnly(source, (int)numBytes)) {
-        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
-        if (!ftFont) {
-            *lengthPtr = 0;
-            return (int)rangeLength;
-        }
-
-        const char *sub = source + rangeStart;
-        int subLen = (int)rangeLength;
-        XGlyphInfo extents;
-
-        if (maxLength < 0) {
-            XftTextExtentsUtf8(fontPtr->display, ftFont,
-                               (const FcChar8 *)sub, subLen, &extents);
-            *lengthPtr = extents.xOff;
-            return subLen;
-        }
-
-        int best = 0, bestWidth = 0;
-        int pos = 0;
-        while (pos < subLen) {
-            FcChar32 uc;
-            int clen = FcUtf8ToUcs4((const FcChar8 *)(sub + pos), &uc, subLen - pos);
-            if (clen <= 0) clen = 1;
-            int next = pos + clen;
-
-            XftTextExtentsUtf8(fontPtr->display, ftFont,
-                               (const FcChar8 *)sub, next, &extents);
-            if (extents.xOff > maxLength) break;
-
-            best = next;
-            bestWidth = extents.xOff;
-            pos = next;
-        }
-
-        if ((flags & TK_AT_LEAST_ONE) && best == 0 && subLen > 0) {
-            best = 1;
-            XftTextExtentsUtf8(fontPtr->display, ftFont,
-                               (const FcChar8 *)sub, 1, &extents);
-            bestWidth = extents.xOff;
-        }
-
-        *lengthPtr = bestWidth;
-        return best;
-    }
-
-    /* RTL / Complex path */
-    ShapedGlyphBuffer buffer;
-    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                               (int)numBytes, &buffer) || buffer.glyphCount == 0) {
-        *lengthPtr = 0;
-        return (int)rangeLength;
-    }
-
-    if (maxLength < 0) {
-        *lengthPtr = buffer.totalAdvance;
-        return (int)rangeLength;
-    }
-
-    /* 
-     * Use the actual shaped data to find how many bytes fit.
-     * We iterate through cluster breaks to ensure we don't break a ligature.
-     */
     int bestBytes = 0;
     int currentWidth = 0;
 
+    /*
+     * Iterate through cluster breaks in LOGICAL order.
+     * For each candidate wrap point, we sum the advances of ALL glyphs 
+     * that belong to that byte range.
+     */
     for (int b = 0; b < buffer.clusterBreakCount; b++) {
         int candEnd = buffer.clusterBreaks[b];
         if (candEnd <= (int)rangeStart) continue;
-        if (candEnd > rangeEnd) candEnd = rangeEnd;
+        if (candEnd > rangeEnd) break;
 
-        /* Calculate exact width up to this cluster break */
         int trialWidth = 0;
-        for (int i = 0; i < buffer.indexCount; i++) {
-            if (buffer.visualIndex[i].byteEnd <= candEnd) {
-                trialWidth += buffer.visualIndex[i].advanceX;
+        for (int i = 0; i < buffer.glyphCount; i++) {
+            /* Logic: In Bidi, bytes might be scattered. We sum any glyph 
+             * whose source byte falls within [rangeStart, candEnd). */
+            if (buffer.glyphs[i].byteOffset >= (int)rangeStart && 
+                buffer.glyphs[i].byteOffset < candEnd) {
+                trialWidth += buffer.glyphs[i].advanceX;
             }
         }
 
@@ -1995,32 +1801,23 @@ Tk_MeasureCharsInContext(
             bestBytes = candEnd - (int)rangeStart;
             currentWidth = trialWidth;
         } else {
-            break;
+            break; 
         }
     }
 
-    /* Handle AT_LEAST_ONE flag if nothing fit */
-    if ((flags & TK_AT_LEAST_ONE) && bestBytes == 0 && rangeLength > 0) {
-        bestBytes = buffer.clusterBreaks[0] - (int)rangeStart;
-        if (bestBytes <= 0) bestBytes = 1; 
-        
-        /* Set width to the first visual cluster */
-        currentWidth = (buffer.indexCount > 0) ? buffer.visualIndex[0].advanceX : 0;
-    }
-
-    /* Whole words logic */
+    /* Word Wrap logic */
     if ((flags & TK_WHOLE_WORDS) && bestBytes < (int)rangeLength) {
         for (int i = bestBytes - 1; i > 0; i--) {
             int pos = (int)rangeStart + i;
-            if (pos < (int)numBytes && (source[pos] == ' ' || source[pos] == '\t')) {
+            if (source[pos] == ' ' || source[pos] == '\t') {
                 bestBytes = i + 1;
-                
-                /* Recalculate precise width for the shortened word-wrap line */
+                /* Re-sum for precision */
                 currentWidth = 0;
-                int targetByte = (int)rangeStart + bestBytes;
-                for (int j = 0; j < buffer.indexCount; j++) {
-                    if (buffer.visualIndex[j].byteEnd <= targetByte) {
-                        currentWidth += buffer.visualIndex[j].advanceX;
+                int target = (int)rangeStart + bestBytes;
+                for (int j = 0; j < buffer.glyphCount; j++) {
+                    if (buffer.glyphs[j].byteOffset >= (int)rangeStart && 
+                        buffer.glyphs[j].byteOffset < target) {
+                        currentWidth += buffer.glyphs[j].advanceX;
                     }
                 }
                 break;
@@ -2028,17 +1825,21 @@ Tk_MeasureCharsInContext(
         }
     }
 
-    /* Final assignment of the precise pixel width */
-    *lengthPtr = currentWidth;
-
-    /* Prevent zero-byte returns that cause redraw loops */
-    if (bestBytes == 0 && rangeLength > 0) {
-        bestBytes = 1;
-        *lengthPtr = (buffer.indexCount > 0) ? buffer.visualIndex[0].advanceX : 10;
+    /* Final fallback to prevent redraw loops */
+    if (bestBytes == 0 && (flags & TK_AT_LEAST_ONE) && rangeLength > 0) {
+        bestBytes = (buffer.clusterBreakCount > 1) ? (buffer.clusterBreaks[1] - (int)rangeStart) : 1;
+        currentWidth = 0;
+        int target = (int)rangeStart + bestBytes;
+        for (int i = 0; i < buffer.glyphCount; i++) {
+            if (buffer.glyphs[i].byteOffset >= (int)rangeStart && buffer.glyphs[i].byteOffset < target)
+                currentWidth += buffer.glyphs[i].advanceX;
+        }
     }
 
+    *lengthPtr = currentWidth;
     return bestBytes;
 }
+
 /*
  * ---------------------------------------------------------------
  * Tk_DrawChars --
