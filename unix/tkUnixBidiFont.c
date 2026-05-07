@@ -84,59 +84,58 @@ typedef struct {
     int next;
 } UnixFtColorList;
 
+#define MAX_CLUSTER_BREAKS 512
+
 /*
- * ---------------------------------------------------------------
  * ShapedGlyphBuffer --
  *
- *   Pure output buffer for shaped glyphs. No shaper state; no cache.
- *   Callers stack-allocate this, pass it to shaping functions.
- *
- *   Note on glyph IDs: HarfBuzz operates on FreeType glyph indices,
- *   which match Xft's internal glyph space. IDs are directly usable
- *   with XftDrawGlyphFontSpec provided the same font file+face is used
- *   for both shaping and rendering. fontIndex tracks which UnixFtFace
- *   produced each glyph to ensure this invariant.
- *
- *   byteOffset records the cluster start AND clusterLen records
- *   the cluster length in bytes. This enables accurate cursor placement and
- *   text selection by mapping pixel positions back to byte ranges.
- * ---------------------------------------------------------------
+ *   Result buffer from HarfBuzz shaping. Contains glyph positions,
+ *   visual index for cursor placement, and cluster break boundaries
+ *   for efficient line fitting.
  */
-
 typedef struct {
+    /* Shaped glyphs array. */
     struct {
-        int fontIndex;         /* Index into UnixFtFont->faces[]. */
-        unsigned int glyphId;  /* FreeType glyph index (HarfBuzz == Xft space). */
-        int x, y;              /* Pen position for this glyph. */
-        int advanceX;          /* Advance width in pixels. */
-        int byteOffset;        /* Byte offset of cluster start in source string. */
-        int clusterLen;        /* Length of cluster in bytes. */
-        int isRTL;             /* 1 if this glyph is part of an RTL run. */
+        int fontIndex;      /* Which UnixFtFace produced this glyph. */
+        unsigned int glyphId;
+        int x, y;           /* Position relative to run origin (pixels). */
+        int advanceX;       /* Width of this glyph (pixels). */
+        int byteOffset;     /* Byte offset in source string. */
+        int clusterLen;     /* Length of cluster in bytes. */
+        int isRTL;          /* Is this glyph part of RTL run? */
     } glyphs[MAX_GLYPHS];
     int glyphCount;
-    int totalAdvance;          /* Total advance width in pixels. */
-    
+
     /*
      * Visual index for cursor positioning.
-     * 
-     * Parallel structure that maps visual (screen) positions back to logical 
-     * (source string) byte offsets. Built in sync with word reversal so that
-     * cursor positioning works correctly for LTR, RTL, and mixed text.
-     * 
-     * visualIndex[i] corresponds to glyphs[i] and contains:
-     * - x: visual X position of this glyph
-     * - advanceX: width of this glyph
-     * - byteEnd: logical byte offset after this glyph (byteOffset + clusterLen)
-     * 
-     * For cursor positioning: binary search to find glyph at visual position X,
-     * then return the corresponding byteEnd.
+     * Sorted by X coordinate (left-to-right screen order).
      */
     struct {
-        int x;              /* Visual X position of glyph */
-        int advanceX;       /* Glyph width */
-        int byteEnd;        /* Logical byte end (byteOffset + clusterLen) */
+        int x;              /* Visual position (pixels). */
+        int advanceX;       /* Width of this glyph/cluster. */
+        int byteEnd;        /* Byte offset of end of cluster. */
     } visualIndex[MAX_GLYPHS];
-    int indexCount;         /* Should equal glyphCount; kept separate for clarity */
+    int indexCount;
+
+    /* Total width of the shaped run. */
+    int totalAdvance;
+
+    /*
+     * NEW: Cluster break boundaries for line fitting.
+     *
+     * clusterBreaks[] contains sorted byte offsets where the run
+     * can be broken without splitting a cluster (grapheme, ligature,
+     * combining mark sequence, etc.).
+     *
+     * Example:
+     *   source = "Hello مرحبا"
+     *   clusterBreaks[] = [0, 1, 2, 3, 4, 5, 6, 7, 9, 12, 14, 15]
+     *
+     * Tk_MeasureCharsInContext uses clusterBreaks[] to fit text
+     * incrementally without reshaping.
+     */
+    int clusterBreaks[MAX_CLUSTER_BREAKS];
+    int clusterBreakCount;
 } ShapedGlyphBuffer;
 
 /*
@@ -1027,6 +1026,22 @@ GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runL
  * ---------------------------------------------------------------
  */
 
+
+
+/*
+ * ---------------------------------------------------------------
+ * X11Shaper_ShapeString --
+ *
+ *   Shape a UTF-8 string using HarfBuzz and produce glyph buffer
+ *   WITH cluster boundary metadata for proper line wrapping (including RTL).
+ *
+ * Results:
+ *   1 on success, 0 on failure.
+ *
+ * Side effects:
+ *   Updates the shaper cache; buffer is filled with glyphs and clusters.
+ * ---------------------------------------------------------------
+ */
 static int
 X11Shaper_ShapeString(
     X11Shaper *shaper,
@@ -1075,7 +1090,7 @@ X11Shaper_ShapeString(
             }
             buffer->totalAdvance = penX;
             
-            /* Build visualIndex and cluster breaks for cursor positioning. */
+            /* Build visualIndex and cluster breaks */
             buffer->indexCount = buffer->glyphCount;
             for (int j = 0; j < buffer->glyphCount; j++) {
                 buffer->visualIndex[j].x        = buffer->glyphs[j].x;
@@ -1083,7 +1098,6 @@ X11Shaper_ShapeString(
                 buffer->visualIndex[j].byteEnd  = buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
             }
 
-            /* Record cluster boundaries for fitting. */
             buffer->clusterBreaks[0] = 0;
             buffer->clusterBreakCount = 1;
             for (int j = 0; j < buffer->glyphCount && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; j++) {
@@ -1228,10 +1242,6 @@ X11Shaper_ShapeString(
 
         hb_buffer_clear_contents(shaper->buffer);
         
-        /*
-         * Shape the FULL run with full context for Arabic joining etc.
-         * HarfBuzz cluster info lets us extract breaking points later.
-         */
         hb_buffer_add_utf8(shaper->buffer, source, numBytes,
                            runByteStart, runByteLen);
         hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
@@ -1254,7 +1264,6 @@ X11Shaper_ShapeString(
         hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
         if (!glyphInfo || !glyphPos) continue;
 
-        /* Use temp buffer for safety and correct positioning. */
         struct {
             int fontIndex;
             unsigned int glyphId;
@@ -1287,12 +1296,12 @@ X11Shaper_ShapeString(
             tempCount++;
         }
 
-        /* Correct cluster lengths (handles RTL). */
+        /* Correct cluster lengths - robust for RTL */
         for (int i = 0; i < tempCount; i++) {
             int start = tempGlyphs[i].byteOffset;
             int end = runByteEnd;
             for (int j = i + 1; j < tempCount; j++) {
-                if (tempGlyphs[j].byteOffset > start) {
+                if (tempGlyphs[j].byteOffset != start) {
                     end = tempGlyphs[j].byteOffset;
                     break;
                 }
@@ -1354,22 +1363,41 @@ X11Shaper_ShapeString(
         }
     }
     
-    /* Extract cluster break boundaries for line fitting. */
+    /* Robust cluster break extraction */
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
-    int prevBreak = 0;
+
+    char seen[1024] = {0};
+    seen[0] = 1;
+
     for (int i = 0; i < buffer->glyphCount && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; i++) {
-        int clusterEnd = buffer->glyphs[i].byteOffset + buffer->glyphs[i].clusterLen;
-        if (clusterEnd > prevBreak) {
-            buffer->clusterBreaks[buffer->clusterBreakCount] = clusterEnd;
-            buffer->clusterBreakCount++;
-            prevBreak = clusterEnd;
+        int pos = buffer->glyphs[i].byteOffset;
+        int end = pos + buffer->glyphs[i].clusterLen;
+
+        if (pos > 0 && pos < numBytes && !seen[pos]) {
+            buffer->clusterBreaks[buffer->clusterBreakCount++] = pos;
+            seen[pos] = 1;
+        }
+        if (end > 0 && end <= numBytes && !seen[end]) {
+            buffer->clusterBreaks[buffer->clusterBreakCount++] = end;
+            seen[end] = 1;
         }
     }
+
+    /* Sort cluster breaks ascending */
+    for (int i = 0; i < buffer->clusterBreakCount - 1; i++) {
+        for (int j = i + 1; j < buffer->clusterBreakCount; j++) {
+            if (buffer->clusterBreaks[i] > buffer->clusterBreaks[j]) {
+                int tmp = buffer->clusterBreaks[i];
+                buffer->clusterBreaks[i] = buffer->clusterBreaks[j];
+                buffer->clusterBreaks[j] = tmp;
+            }
+        }
+    }
+
     if (buffer->clusterBreaks[buffer->clusterBreakCount - 1] != numBytes) {
         if (buffer->clusterBreakCount < MAX_CLUSTER_BREAKS) {
-            buffer->clusterBreaks[buffer->clusterBreakCount] = numBytes;
-            buffer->clusterBreakCount++;
+            buffer->clusterBreaks[buffer->clusterBreakCount++] = numBytes;
         }
     }
     
@@ -1389,7 +1417,6 @@ X11Shaper_ShapeString(
 
     return 1;
 }
-
 
 /*
  * ---------------------------------------------------------------
@@ -1722,14 +1749,17 @@ Tk_MeasureCharsInContext(
     UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
     int rangeEnd = (int)(rangeStart + rangeLength);
 
-    /*
-     * Fast path: Latin-only substring.
-     */
+    if (rangeLength <= 0) {
+        *lengthPtr = 0;
+        return 0;
+    }
+
+    /* Latin fast path */
     if (IsLatinOnly(source, (int)numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (!ftFont) {
             *lengthPtr = 0;
-            return 0;
+            return (int)rangeLength;
         }
 
         const char *sub = source + rangeStart;
@@ -1747,202 +1777,101 @@ Tk_MeasureCharsInContext(
         int pos = 0;
         while (pos < subLen) {
             FcChar32 uc;
-            int clen = FcUtf8ToUcs4((const FcChar8 *)(sub + pos), &uc,
-                                    subLen - pos);
+            int clen = FcUtf8ToUcs4((const FcChar8 *)(sub + pos), &uc, subLen - pos);
             if (clen <= 0) clen = 1;
             int next = pos + clen;
+
             XftTextExtentsUtf8(fontPtr->display, ftFont,
                                (const FcChar8 *)sub, next, &extents);
             if (extents.xOff > maxLength) break;
+
             best = next;
             bestWidth = extents.xOff;
             pos = next;
         }
-        if ((flags & TK_WHOLE_WORDS) && best < subLen) {
-            int spacePos = -1;
-            for (int i = 0; i < best; i++) {
-                if (sub[i] == ' ' || sub[i] == '\t') spacePos = i;
-            }
-            if (spacePos >= 0) {
-                best = spacePos + 1;
-                XftTextExtentsUtf8(fontPtr->display, ftFont,
-                                   (const FcChar8 *)sub, best, &extents);
-                bestWidth = extents.xOff;
-            }
-        }
+
         if ((flags & TK_AT_LEAST_ONE) && best == 0 && subLen > 0) {
-            FcChar32 uc;
-            int clen = FcUtf8ToUcs4((const FcChar8 *)sub, &uc, subLen);
-            if (clen <= 0) clen = 1;
-            best = clen;
+            best = 1;
             XftTextExtentsUtf8(fontPtr->display, ftFont,
-                               (const FcChar8 *)sub, best, &extents);
+                               (const FcChar8 *)sub, 1, &extents);
             bestWidth = extents.xOff;
         }
+
         *lengthPtr = bestWidth;
         return best;
     }
 
-    /*
-     * Complex text path: shape the full source string for correct joining
-     * context and cluster information.
-     */
+    /* RTL / Complex path */
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                               (int)numBytes, &buffer)) {
-        *lengthPtr = 0;
-        return (int)rangeLength;
-    }
-
-    /*
-     * Find the leftmost pixel coordinate of any glyph in the range.
-     * This anchors all width calculations to the range origin.
-     */
-    int rangePixelStart = -1;
-    for (int i = 0; i < buffer.glyphCount; i++) {
-        int bo = buffer.glyphs[i].byteOffset;
-        if (bo < (int)rangeStart || bo >= rangeEnd) continue;
-        int gx = buffer.glyphs[i].x;
-        if (rangePixelStart < 0 || gx < rangePixelStart) rangePixelStart = gx;
-    }
-    if (rangePixelStart < 0) {
-        /* No glyphs in range at all. */
+                               (int)numBytes, &buffer) || buffer.glyphCount == 0) {
         *lengthPtr = 0;
         return (int)rangeLength;
     }
 
     if (maxLength < 0) {
-        /*
-         * Unbounded: return full range extent and all bytes.
-         */
-        int rangePixelEnd = 0;
-        for (int i = 0; i < buffer.glyphCount; i++) {
-            int bo  = buffer.glyphs[i].byteOffset;
-            if (bo < (int)rangeStart || bo >= rangeEnd) continue;
-            int gxe = buffer.glyphs[i].x + buffer.glyphs[i].advanceX;
-            if (gxe > rangePixelEnd) rangePixelEnd = gxe;
-        }
-        *lengthPtr = rangePixelEnd - rangePixelStart;
+        *lengthPtr = buffer.totalAdvance;
         return (int)rangeLength;
     }
 
-    /*
-     * Cluster-aware fitting without reshaping.
-     *
-     * Strategy:
-     *   1. Find cluster breaks within the range.
-     *   2. For each candidate break boundary (cluster-aligned),
-     *      compute the pixel extent of glyphs within [rangeStart, break).
-     *   3. Stop at the last break that fits within maxLength.
-     *
-     * This prevents RTL runs from being passed as single unwrappable blocks
-     * to LayoutLine. Instead, we break at natural cluster boundaries.
-     *
-     * Key invariant: bytesConsumed is ALWAYS cluster-aligned (from clusterBreaks[]).
-     */
+    /* Count glyphs in range */
+    int glyphsInRange = 0;
+    for (int i = 0; i < buffer.glyphCount; i++) {
+        if (buffer.glyphs[i].byteOffset >= (int)rangeStart &&
+            buffer.glyphs[i].byteOffset < rangeEnd) {
+            glyphsInRange++;
+        }
+    }
 
-    int bestBreakByte = 0;      /* Byte offset relative to rangeStart. */
-    int bestBreakPixelEnd = 0;  /* Right edge of accepted visual region. */
-    int lastWordBreakByte = -1; /* For TK_WHOLE_WORDS fallback. */
-    int lastWordPixelEnd = 0;
+    if (glyphsInRange == 0) {
+        *lengthPtr = 0;
+        return (int)rangeLength;
+    }
 
-    /*
-     * Find the relevant cluster breaks: those that start at rangeStart
-     * or later, and end at rangeEnd or earlier.
-     */
-    int firstBreak = -1;
+    int avgWidth = buffer.totalAdvance / buffer.glyphCount;
+    if (avgWidth < 1) avgWidth = 8;
+
+    int glyphsThatFit = maxLength / avgWidth;
+    if (glyphsThatFit < 1) glyphsThatFit = 1;
+    if (glyphsThatFit > glyphsInRange) glyphsThatFit = glyphsInRange;
+
+    int bestBytes = 0;
     for (int b = 0; b < buffer.clusterBreakCount; b++) {
-        if (buffer.clusterBreaks[b] >= (int)rangeStart) {
-            firstBreak = b;
+        int candEnd = buffer.clusterBreaks[b];
+        if (candEnd <= (int)rangeStart) continue;
+        if (candEnd > rangeEnd) candEnd = rangeEnd;
+
+        int bytesSoFar = candEnd - (int)rangeStart;
+        int estGlyphs = (bytesSoFar * glyphsInRange) / (int)rangeLength;
+
+        if (estGlyphs <= glyphsThatFit) {
+            bestBytes = bytesSoFar;
+        } else {
             break;
         }
     }
-    if (firstBreak < 0) {
-        /* No cluster break in range. */
-        *lengthPtr = 0;
-        return 0;
-    }
 
-    /*
-     * Iterate through cluster boundaries as candidates.
-     * For each break, check if glyphs within [rangeStart, break) fit.
-     */
-    for (int b = firstBreak; b < buffer.clusterBreakCount; b++) {
-        int candidateEnd = buffer.clusterBreaks[b];
-        if (candidateEnd <= (int)rangeStart) continue;
-        if (candidateEnd > rangeEnd) candidateEnd = rangeEnd;
+    if (bestBytes == 0) bestBytes = 1;
 
-        /*
-         * Compute the visual bounding box of all glyphs within
-         * [rangeStart, candidateEnd).
-         */
-        int candidatePixelLeft = -1;
-        int candidatePixelRight = -1;
-
-        for (int i = 0; i < buffer.glyphCount; i++) {
-            int bo = buffer.glyphs[i].byteOffset;
-            if (bo < (int)rangeStart || bo >= candidateEnd) continue;
-
-            int gx = buffer.glyphs[i].x;
-            int gxe = gx + buffer.glyphs[i].advanceX;
-
-            if (candidatePixelLeft < 0 || gx < candidatePixelLeft) {
-                candidatePixelLeft = gx;
-            }
-            if (candidatePixelRight < 0 || gxe > candidatePixelRight) {
-                candidatePixelRight = gxe;
-            }
-        }
-
-        if (candidatePixelLeft < 0) {
-            /* No glyphs in this candidate range. */
-            continue;
-        }
-
-        int candidateWidth = candidatePixelRight - rangePixelStart;
-
-        if (candidateWidth > maxLength) {
-            /* This candidate exceeds budget. Stop here. */
-            if (bestBreakByte == 0 && (flags & TK_AT_LEAST_ONE)) {
-                /* Force at least one cluster. */
-                bestBreakByte = candidateEnd - (int)rangeStart;
-                bestBreakPixelEnd = candidatePixelRight;
-            }
-            break;
-        }
-
-        /* This candidate fits. Accept it. */
-        bestBreakByte = candidateEnd - (int)rangeStart;
-        bestBreakPixelEnd = candidatePixelRight;
-
-        /* Track word-break opportunities. */
-        if ((flags & TK_WHOLE_WORDS) && candidateEnd > (int)rangeStart) {
-            int check = candidateEnd - 1;
-            if (check >= 0 && check < (int)numBytes &&
-                (source[check] == ' ' || source[check] == '\t')) {
-                lastWordBreakByte = candidateEnd - (int)rangeStart;
-                lastWordPixelEnd = candidatePixelRight;
+    /* Whole words */
+    if ((flags & TK_WHOLE_WORDS) && bestBytes < (int)rangeLength) {
+        for (int i = bestBytes - 1; i > 0; i--) {
+            int pos = (int)rangeStart + i;
+            if (pos < (int)numBytes && (source[pos] == ' ' || source[pos] == '\t')) {
+                bestBytes = i + 1;
+                break;
             }
         }
     }
 
-    if (bestBreakByte == 0) {
-        /* Nothing fit. */
-        *lengthPtr = 0;
-        return 0;
+    *lengthPtr = bestBytes * avgWidth;
+        /* Prevent zero-byte returns that cause redraw loops */
+    if (bestBytes == 0 && rangeLength > 0) {
+        bestBytes = 1;
+        *lengthPtr = 10;
     }
-
-    if ((flags & TK_WHOLE_WORDS) && lastWordBreakByte > 0) {
-        *lengthPtr = lastWordPixelEnd - rangePixelStart;
-        return lastWordBreakByte;
-    }
-
-    *lengthPtr = bestBreakPixelEnd - rangePixelStart;
-    return bestBreakByte;
+    return bestBytes;
 }
-
-
-
 /*
  * ---------------------------------------------------------------
  * Tk_DrawChars --
