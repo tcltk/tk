@@ -1722,6 +1722,7 @@ Tk_MeasureChars(
  * ---------------------------------------------------------------
  */
 
+#if 0
 int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
@@ -1851,12 +1852,191 @@ Tk_MeasureCharsInContext(
         }
     }
 
-    *lengthPtr = bestBytes * avgWidth;
+#if 0
+	*lengthPtr = bestBytes * avgWidth;
+	fprintf(stderr, "lengthptr is %d\n", *lengthPtr);
+
         /* Prevent zero-byte returns that cause redraw loops */
     if (bestBytes == 0 && rangeLength > 0) {
         bestBytes = 1;
         *lengthPtr = 10;
     }
+    return bestBytes;
+}
+#endif
+/* ... [After the WHOLE_WORDS logic] ... */
+
+    /* 
+     * Instead of: *lengthPtr = bestBytes * avgWidth;
+     * Calculate the actual width of the bytes that fit.
+     */
+    int actualWidth = 0;
+    int targetByteOffset = (int)rangeStart + bestBytes;
+
+    for (int i = 0; i < buffer.glyphCount; i++) {
+        // Only add advance for glyphs that fall within our 'bestBytes' range
+        if (buffer.glyphs[i].byteOffset >= (int)rangeStart && 
+            buffer.glyphs[i].byteOffset < targetByteOffset) {
+            actualWidth += buffer.glyphs[i].xAdvance;
+        }
+    }
+
+    *lengthPtr = actualWidth;
+
+    /* Prevent zero-byte returns */
+    if (bestBytes == 0 && rangeLength > 0) {
+        bestBytes = 1; // Or use Tcl_UtfNext
+        // Re-measure just the first character accurately if needed
+    }
+    
+    return bestBytes;
+}
+#endif
+int
+Tk_MeasureCharsInContext(
+    Tk_Font tkfont,
+    const char *source,
+    Tcl_Size numBytes,
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    int maxLength,
+    int flags,
+    int *lengthPtr)
+{
+    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    int rangeEnd = (int)(rangeStart + rangeLength);
+
+    if (rangeLength <= 0) {
+        *lengthPtr = 0;
+        return 0;
+    }
+
+    /* Latin fast path */
+    if (IsLatinOnly(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (!ftFont) {
+            *lengthPtr = 0;
+            return (int)rangeLength;
+        }
+
+        const char *sub = source + rangeStart;
+        int subLen = (int)rangeLength;
+        XGlyphInfo extents;
+
+        if (maxLength < 0) {
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)sub, subLen, &extents);
+            *lengthPtr = extents.xOff;
+            return subLen;
+        }
+
+        int best = 0, bestWidth = 0;
+        int pos = 0;
+        while (pos < subLen) {
+            FcChar32 uc;
+            int clen = FcUtf8ToUcs4((const FcChar8 *)(sub + pos), &uc, subLen - pos);
+            if (clen <= 0) clen = 1;
+            int next = pos + clen;
+
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)sub, next, &extents);
+            if (extents.xOff > maxLength) break;
+
+            best = next;
+            bestWidth = extents.xOff;
+            pos = next;
+        }
+
+        if ((flags & TK_AT_LEAST_ONE) && best == 0 && subLen > 0) {
+            best = 1;
+            XftTextExtentsUtf8(fontPtr->display, ftFont,
+                               (const FcChar8 *)sub, 1, &extents);
+            bestWidth = extents.xOff;
+        }
+
+        *lengthPtr = bestWidth;
+        return best;
+    }
+
+    /* RTL / Complex path */
+    ShapedGlyphBuffer buffer;
+    if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                               (int)numBytes, &buffer) || buffer.glyphCount == 0) {
+        *lengthPtr = 0;
+        return (int)rangeLength;
+    }
+
+    if (maxLength < 0) {
+        *lengthPtr = buffer.totalAdvance;
+        return (int)rangeLength;
+    }
+
+    /* 
+     * Use the actual shaped data to find how many bytes fit.
+     * We iterate through cluster breaks to ensure we don't break a ligature.
+     */
+    int bestBytes = 0;
+    int currentWidth = 0;
+
+    for (int b = 0; b < buffer.clusterBreakCount; b++) {
+        int candEnd = buffer.clusterBreaks[b];
+        if (candEnd <= (int)rangeStart) continue;
+        if (candEnd > rangeEnd) candEnd = rangeEnd;
+
+        /* Calculate exact width up to this cluster break */
+        int trialWidth = 0;
+        for (int i = 0; i < buffer.indexCount; i++) {
+            if (buffer.visualIndex[i].byteEnd <= candEnd) {
+                trialWidth += buffer.visualIndex[i].advanceX;
+            }
+        }
+
+        if (trialWidth <= maxLength) {
+            bestBytes = candEnd - (int)rangeStart;
+            currentWidth = trialWidth;
+        } else {
+            break;
+        }
+    }
+
+    /* Handle AT_LEAST_ONE flag if nothing fit */
+    if ((flags & TK_AT_LEAST_ONE) && bestBytes == 0 && rangeLength > 0) {
+        bestBytes = buffer.clusterBreaks[0] - (int)rangeStart;
+        if (bestBytes <= 0) bestBytes = 1; 
+        
+        /* Set width to the first visual cluster */
+        currentWidth = (buffer.indexCount > 0) ? buffer.visualIndex[0].advanceX : 0;
+    }
+
+    /* Whole words logic */
+    if ((flags & TK_WHOLE_WORDS) && bestBytes < (int)rangeLength) {
+        for (int i = bestBytes - 1; i > 0; i--) {
+            int pos = (int)rangeStart + i;
+            if (pos < (int)numBytes && (source[pos] == ' ' || source[pos] == '\t')) {
+                bestBytes = i + 1;
+                
+                /* Recalculate precise width for the shortened word-wrap line */
+                currentWidth = 0;
+                int targetByte = (int)rangeStart + bestBytes;
+                for (int j = 0; j < buffer.indexCount; j++) {
+                    if (buffer.visualIndex[j].byteEnd <= targetByte) {
+                        currentWidth += buffer.visualIndex[j].advanceX;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    /* Final assignment of the precise pixel width */
+    *lengthPtr = currentWidth;
+
+    /* Prevent zero-byte returns that cause redraw loops */
+    if (bestBytes == 0 && rangeLength > 0) {
+        bestBytes = 1;
+        *lengthPtr = (buffer.indexCount > 0) ? buffer.visualIndex[0].advanceX : 10;
+    }
+
     return bestBytes;
 }
 /*
