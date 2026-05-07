@@ -1090,10 +1090,10 @@ static const ElementInfo ElementInfoTable[] = {
 	EP_EDITTEXT, edittext_statemap, PAD(1, 1, 1, 1), 0 },
     { "Spinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
 	SPNP_UP, spinbutton_statemap, NOPAD,
-	HALF_HEIGHT | PAD_MARGINS | (SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
+	HALF_HEIGHT | PAD_MARGINS | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
-	HALF_HEIGHT | PAD_MARGINS | (SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
+	HALF_HEIGHT | PAD_MARGINS | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { 0, 0, 0, 0, 0, NOPAD, 0 }
 };
 #undef PAD
