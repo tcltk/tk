@@ -2104,6 +2104,17 @@ Tk_DrawCharsInContext(
             goto done;
         }
 
+        /* Find X offset where rangeStart begins in the shaped output. */
+        int rangeStartX = 0;
+        if (rangeStart > 0) {
+            for (int i = 0; i < buffer.glyphCount; i++) {
+                if (buffer.glyphs[i].byteOffset >= (int)rangeStart) {
+                    rangeStartX = buffer.glyphs[i].x;
+                    break;
+                }
+            }
+        }
+
         XftGlyphFontSpec specs[MAX_GLYPHS];
         int nspec = 0;
 
@@ -2111,7 +2122,8 @@ Tk_DrawCharsInContext(
             int bo  = buffer.glyphs[i].byteOffset;
             int boe = bo + buffer.glyphs[i].clusterLen;
 
-            if (boe <= (int)rangeStart || bo >= rangeEnd) continue;
+            /* Draw glyphs whose cluster starts within the range. */
+            if (bo < (int)rangeStart || bo >= rangeEnd) continue;
 
             int faceIdx = buffer.glyphs[i].fontIndex;
             if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
@@ -2124,7 +2136,7 @@ Tk_DrawCharsInContext(
 
             specs[nspec].font  = ftFont;
             specs[nspec].glyph = glyph;
-            specs[nspec].x     = x + buffer.glyphs[i].x;
+            specs[nspec].x     = x + (buffer.glyphs[i].x - rangeStartX);
             specs[nspec].y     = y + buffer.glyphs[i].y;
             nspec++;
         }
