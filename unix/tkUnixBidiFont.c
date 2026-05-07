@@ -1054,13 +1054,12 @@ X11Shaper_ShapeString(
         return 0;
     }
 
-    /* Initialize output buffer counts to prevent garbage reads. */
     buffer->glyphCount   = 0;
     buffer->indexCount   = 0;
     buffer->totalAdvance = 0;
     buffer->clusterBreakCount = 0;
 
-    /* Latin-only fast path. */
+    /* Latin-only fast path */
     if (IsLatinOnly(source, numBytes)) {
         XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
         if (ftFont) {
@@ -1089,8 +1088,7 @@ X11Shaper_ShapeString(
                 i += clen;
             }
             buffer->totalAdvance = penX;
-            
-            /* Build visualIndex and cluster breaks */
+
             buffer->indexCount = buffer->glyphCount;
             for (int j = 0; j < buffer->glyphCount; j++) {
                 buffer->visualIndex[j].x        = buffer->glyphs[j].x;
@@ -1116,8 +1114,8 @@ X11Shaper_ShapeString(
             return 1;
         }
     }
-    
-    /* Cache check. */
+
+    /* Cache check */
     if (shaper->cache.valid &&
         shaper->cache.len == numBytes &&
         numBytes <= MAX_STRING_CACHE &&
@@ -1126,7 +1124,7 @@ X11Shaper_ShapeString(
         return 1;
     }
 
-    /* UCS-4 conversion. */
+    /* UCS-4 conversion */
     int stackCharBounds[256];
     FcChar32 stackUcs4Chars[256];
     int *charBounds = stackCharBounds;
@@ -1198,7 +1196,6 @@ X11Shaper_ShapeString(
 
         int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, runStart, runLen);
 
-        /* Lazy load HarfBuzz fonts if needed. */
         if (shaper->numFonts == 0) {
             for (int fi = 0; fi < fontPtr->nfaces && shaper->numFonts < MAX_FONTS; fi++) {
                 FcPattern *facePattern = fontPtr->faces[fi].source;
@@ -1222,9 +1219,7 @@ X11Shaper_ShapeString(
                         pixelSize = (int)ftFace->size->metrics.x_ppem;
                         XftUnlockFace(xftFont);
                     }
-                    if (pixelSize <= 0) {
-                        pixelSize = xftFont->ascent + xftFont->descent;
-                    }
+                    if (pixelSize <= 0) pixelSize = xftFont->ascent + xftFont->descent;
                     if (pixelSize <= 0) pixelSize = 12;
                     hb_font_set_scale(font, pixelSize * 64, pixelSize * 64);
                     hb_font_set_ppem(font, (unsigned)pixelSize, (unsigned)pixelSize);
@@ -1241,9 +1236,7 @@ X11Shaper_ShapeString(
         }
 
         hb_buffer_clear_contents(shaper->buffer);
-        
-        hb_buffer_add_utf8(shaper->buffer, source, numBytes,
-                           runByteStart, runByteLen);
+        hb_buffer_add_utf8(shaper->buffer, source, numBytes, runByteStart, runByteLen);
         hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
         hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 
@@ -1296,7 +1289,7 @@ X11Shaper_ShapeString(
             tempCount++;
         }
 
-        /* Correct cluster lengths - robust for RTL */
+        /* Correct cluster lengths */
         for (int i = 0; i < tempCount; i++) {
             int start = tempGlyphs[i].byteOffset;
             int end = runByteEnd;
@@ -1311,7 +1304,7 @@ X11Shaper_ShapeString(
                 tempGlyphs[i].clusterLen = 1;
         }
 
-        /* Copy to final buffer. */
+        /* Copy to final buffer - SAFE VERSION */
         for (int i = 0; i < tempCount; i++) {
             int idx = buffer->glyphCount;
             if (idx >= MAX_GLYPHS) break;
@@ -1333,7 +1326,7 @@ X11Shaper_ShapeString(
 
     buffer->totalAdvance = globalPenX;
 
-    /* Visual index for cursor positioning. */
+    /* Visual index for cursor/selection */
     buffer->indexCount = buffer->glyphCount;
     for (int i = 0; i < buffer->glyphCount; i++) {
         buffer->visualIndex[i].x        = buffer->glyphs[i].x;
@@ -1344,36 +1337,34 @@ X11Shaper_ShapeString(
         buffer->visualIndex[i].byteEnd = byteEnd;
     }
 
-    /* Sort visualIndex by X coordinate (left-to-right screen order). */
+    /* Sort visualIndex by X coordinate */
     for (int i = 0; i < buffer->indexCount - 1; i++) {
         for (int j = i + 1; j < buffer->indexCount; j++) {
             if (buffer->visualIndex[j].x < buffer->visualIndex[i].x) {
-                int temp_x = buffer->visualIndex[i].x;
-                int temp_advanceX = buffer->visualIndex[i].advanceX;
-                int temp_byteEnd = buffer->visualIndex[i].byteEnd;
-                
+                int tx = buffer->visualIndex[i].x;
+                int ta = buffer->visualIndex[i].advanceX;
+                int tb = buffer->visualIndex[i].byteEnd;
+
                 buffer->visualIndex[i].x = buffer->visualIndex[j].x;
                 buffer->visualIndex[i].advanceX = buffer->visualIndex[j].advanceX;
                 buffer->visualIndex[i].byteEnd = buffer->visualIndex[j].byteEnd;
-                
-                buffer->visualIndex[j].x = temp_x;
-                buffer->visualIndex[j].advanceX = temp_advanceX;
-                buffer->visualIndex[j].byteEnd = temp_byteEnd;
+
+                buffer->visualIndex[j].x = tx;
+                buffer->visualIndex[j].advanceX = ta;
+                buffer->visualIndex[j].byteEnd = tb;
             }
         }
     }
-    
-    /* Robust cluster break extraction */
+
+    /* Cluster breaks */
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
-
     char seen[1024] = {0};
     seen[0] = 1;
 
     for (int i = 0; i < buffer->glyphCount && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; i++) {
         int pos = buffer->glyphs[i].byteOffset;
         int end = pos + buffer->glyphs[i].clusterLen;
-
         if (pos > 0 && pos < numBytes && !seen[pos]) {
             buffer->clusterBreaks[buffer->clusterBreakCount++] = pos;
             seen[pos] = 1;
@@ -1384,7 +1375,6 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Sort cluster breaks ascending */
     for (int i = 0; i < buffer->clusterBreakCount - 1; i++) {
         for (int j = i + 1; j < buffer->clusterBreakCount; j++) {
             if (buffer->clusterBreaks[i] > buffer->clusterBreaks[j]) {
@@ -1400,10 +1390,8 @@ X11Shaper_ShapeString(
             buffer->clusterBreaks[buffer->clusterBreakCount++] = numBytes;
         }
     }
-    
-    /* Update cache. */
+
     if (numBytes <= MAX_STRING_CACHE) {
-        shaper->cache.valid = 0;
         memcpy(shaper->cache.text, source, numBytes);
         shaper->cache.len = numBytes;
         shaper->cache.buffer = *buffer;
@@ -1417,7 +1405,6 @@ X11Shaper_ShapeString(
 
     return 1;
 }
-
 /*
  * ---------------------------------------------------------------
  * TkpFontPkgInit --
@@ -1907,6 +1894,7 @@ Tk_DrawChars(
      */
     Tk_DrawCharsInContext(display, drawable, gc,tkfont,source,numBytes,0, numBytes,x, y);
 }
+
 /*
  * ---------------------------------------------------------------
  * Tk_DrawCharsInContext --
@@ -1923,7 +1911,7 @@ Tk_DrawChars(
  *   No clip rectangle is needed: we simply skip out-of-range glyphs.
  * ---------------------------------------------------------------
  */
-
+#if 0
 void
 Tk_DrawCharsInContext(
     Display *display,
@@ -2035,6 +2023,104 @@ Tk_DrawCharsInContext(
                 }
                 if (!glyph) continue;
             }
+
+            specs[nspec].font  = ftFont;
+            specs[nspec].glyph = glyph;
+            specs[nspec].x     = x + buffer.glyphs[i].x;
+            specs[nspec].y     = y + buffer.glyphs[i].y;
+            nspec++;
+        }
+
+        if (nspec > 0) {
+            LOCK;
+            XftDrawGlyphFontSpec(ftDraw, xftcolor, specs, nspec);
+            UNLOCK;
+        }
+    }
+
+done:
+    XftDrawDestroy(ftDraw);
+}
+#endif
+
+void
+Tk_DrawCharsInContext(
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    Tk_Font tkfont,
+    const char *source,
+    Tcl_Size numBytes,
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    int x, int y)
+{
+    UnixFtFont *fontPtr = (UnixFtFont *)tkfont;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    int rangeEnd = (int)(rangeStart + rangeLength);
+
+    if (rangeLength <= 0) return;
+
+    XftDraw *ftDraw = XftDrawCreate(display, drawable,
+                                    fontPtr->visual, fontPtr->colormap);
+    if (!ftDraw) return;
+
+    XGCValues values;
+    XGetGCValues(display, gc, GCForeground, &values);
+    XftColor *xftcolor = LookUpColor(display, fontPtr, values.foreground);
+    if (!xftcolor) {
+        XftDrawDestroy(ftDraw);
+        return;
+    }
+
+    if (tsdPtr->clipRegion) {
+        XftDrawSetClip(ftDraw, tsdPtr->clipRegion);
+    }
+
+    if (IsLatinOnly(source, (int)numBytes)) {
+        XftFont *ftFont = GetFaceFont(fontPtr, 0, 0.0);
+        if (ftFont) {
+            int offsetX = x;
+            if (rangeStart > 0) {
+                XGlyphInfo extents;
+                XftTextExtentsUtf8(fontPtr->display, ftFont,
+                                   (const FcChar8 *)source, (int)rangeStart, &extents);
+                offsetX = x + extents.xOff;
+            }
+            XftDrawStringUtf8(ftDraw, xftcolor, ftFont,
+                              offsetX, y,
+                              (const FcChar8 *)(source + rangeStart),
+                              (int)rangeLength);
+        }
+        goto done;
+    }
+
+    /* Complex text path */
+    {
+        ShapedGlyphBuffer buffer;
+        if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
+                                   (int)numBytes, &buffer)) {
+            goto done;
+        }
+
+        XftGlyphFontSpec specs[MAX_GLYPHS];
+        int nspec = 0;
+
+        for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
+            int bo  = buffer.glyphs[i].byteOffset;
+            int boe = bo + buffer.glyphs[i].clusterLen;
+
+            if (boe <= (int)rangeStart || bo >= rangeEnd) continue;
+
+            int faceIdx = buffer.glyphs[i].fontIndex;
+            if (faceIdx < 0 || faceIdx >= fontPtr->nfaces) faceIdx = 0;
+
+            XftFont *ftFont = GetFaceFont(fontPtr, faceIdx, 0.0);
+            if (!ftFont) continue;
+
+            unsigned int glyph = buffer.glyphs[i].glyphId;
+            if (glyph == 0) continue;
 
             specs[nspec].font  = ftFont;
             specs[nspec].glyph = glyph;
