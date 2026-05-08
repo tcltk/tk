@@ -828,7 +828,7 @@ FrontMostToplevelAtPoint(
 
 	    contentFrame.size.height = [view frame].size.height;
 	    if (NSMouseInRect(p, contentFrame, NO)) {
-		return TkMacOSXGetTkWindow(w);;
+		return TkMacOSXGetTkWindow(w);
 	    } else if (NSMouseInRect(p, windowFrame, NO)) {
 		/*
 		 * The pointer is in the title bar of the highest NSWindow
