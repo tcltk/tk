@@ -1220,18 +1220,7 @@ X11Shaper_ShapeString(
     /* Bidi analysis. */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
-
-    /* Sort runs into logical order by offset. */
-    for (int i = 0; i < numRuns - 1; i++) {
-        for (int j = i + 1; j < numRuns; j++) {
-            if (bidiRuns[j].offset < bidiRuns[i].offset) {
-                BidiRun tmp = bidiRuns[i];
-                bidiRuns[i] = bidiRuns[j];
-                bidiRuns[j] = tmp;
-            }
-        }
-    }
-
+    
     int globalPenX = 0;
 
     /* Process each bidi run. */
@@ -1257,7 +1246,7 @@ X11Shaper_ShapeString(
         }
         if (!hasVisibleChars) continue;
 
-	        /*
+	/*
 	 * Shape contiguous font-compatible spans separately.
 	 */
 	
@@ -1433,7 +1422,7 @@ X11Shaper_ShapeString(
 	            tempGlyphs[i].clusterLen = end - start;
 	            if (tempGlyphs[i].clusterLen <= 0) tempGlyphs[i].clusterLen = 1;
 	        }
-	
+	   
 	        /* Copy to main buffer. */
 	        for (int i = 0; i < tempCount; i++) {
 	            int idx = buffer->glyphCount;
@@ -1452,7 +1441,7 @@ X11Shaper_ShapeString(
 	        }
 	
 	        globalPenX += runPenX;
-			/* Advance to the next subrun. */
+	        /* Advance to the next subrun. */
 	        subrunStart = subrunEnd;
 	    }
 	}
@@ -1460,39 +1449,65 @@ X11Shaper_ShapeString(
     buffer->totalAdvance = globalPenX;
 
     /* Improved visual index to support LTR-starting mixed bidi cursor. */
-    buffer->indexCount = buffer->glyphCount;
-    for (int i = 0; i < buffer->glyphCount; i++) {
-        buffer->visualIndex[i].x        = buffer->glyphs[i].x;
-        buffer->visualIndex[i].advanceX = buffer->glyphs[i].advanceX;
-        int byteEnd = buffer->glyphs[i].byteOffset + buffer->glyphs[i].clusterLen;
-        if (byteEnd < 0) byteEnd = 0;
-        if (byteEnd > numBytes) byteEnd = numBytes;
-        buffer->visualIndex[i].byteEnd = byteEnd;
-    }
+	buffer->indexCount = 0;
 	
-	/*
-	 * DO NOT globally sort by X position.
-	 *
-	 * HarfBuzz already emitted glyphs in visual order within each bidi run,
-	 * and runs themselves were appended in paragraph visual order.
-	 *
-	 * Sorting purely by X breaks cursor traversal for mixed bidi text
-	 * that begins with LTR content because RTL subruns may overlap or
-	 * reverse geometrically while remaining logically contiguous.
-	 *
-	 * Instead preserve insertion order and only normalize duplicate
-	 * X positions locally.
-	 */
+	for (int i = 0; i < buffer->glyphCount; i++) {
 	
-	for (int i = 1; i < buffer->indexCount; i++) {
-	    if (buffer->visualIndex[i].x < buffer->visualIndex[i - 1].x &&
-	        buffer->glyphs[i].isRTL == buffer->glyphs[i - 1].isRTL) {
+	    int byteStart = buffer->glyphs[i].byteOffset;
+	    int byteEnd   = byteStart + buffer->glyphs[i].clusterLen;
 	
-	        typeof(buffer->visualIndex[0]) tmp = buffer->visualIndex[i - 1];
-	        buffer->visualIndex[i - 1] = buffer->visualIndex[i];
-	        buffer->visualIndex[i] = tmp;
+	    if (byteEnd < 0) byteEnd = 0;
+	    if (byteEnd > numBytes) byteEnd = numBytes;
+	
+	    /*
+	     * Avoid duplicate visual entries for glyphs belonging
+	     * to the same HarfBuzz cluster.
+	     *
+	     * Cursor movement must operate on grapheme clusters,
+	     * not individual glyphs.
+	     */
+	    if (buffer->indexCount > 0) {
+	        int prev =
+	            buffer->visualIndex[buffer->indexCount - 1].byteEnd;
+	
+	        if (prev == byteEnd) {
+	            continue;
+	        }
 	    }
+	
+	    int idx = buffer->indexCount++;
+	
+	    buffer->visualIndex[idx].x =
+	        buffer->glyphs[i].x;
+	
+	    buffer->visualIndex[idx].advanceX =
+	        buffer->glyphs[i].advanceX;
+	
+	    buffer->visualIndex[idx].byteEnd =
+	        byteEnd;
 	}
+		
+    /*
+     * Sort visualIndex by X coordinate for correct cursor traversal.
+     *
+     * HarfBuzz emits glyphs in visual order within each run, but runs
+     * are appended in logical order. For LTR-starting mixed bidi text,
+     * we need global X-position sorting to establish correct visual order
+     * for left-to-right cursor movement.
+     *
+     * Within RTL runs, glyphs already have decreasing X positions from
+     * HarfBuzz, so sorting by X preserves their correct visual order.
+     */
+
+    for (int i = 0; i < buffer->indexCount - 1; i++) {
+        for (int j = i + 1; j < buffer->indexCount; j++) {
+            if (buffer->visualIndex[j].x < buffer->visualIndex[i].x) {
+                typeof(buffer->visualIndex[0]) tmp = buffer->visualIndex[i];
+                buffer->visualIndex[i] = buffer->visualIndex[j];
+                buffer->visualIndex[j] = tmp;
+            }
+        }
+    }
 
     /* Cluster breaks. */
     buffer->clusterBreaks[0] = 0;
@@ -1545,7 +1560,6 @@ X11Shaper_ShapeString(
 
     return 1;
 }
-
 /*
  * ---------------------------------------------------------------
  * TkpFontPkgInit --
