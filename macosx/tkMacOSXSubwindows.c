@@ -309,7 +309,7 @@ NotifyVisibility(
  *	This X11 stub maps the given X11 Window but does not update any of
  *	The Tk structures describing the window.  Tk applications should
  *	never call this directly, but it is called by Tk_UnmapWindow and
- *      Tk_WmUnmapWindow.
+ *      TkWmUnmapWindow.
  *
  * Results:
  *	Always returns Success or BadWindow.
@@ -345,11 +345,10 @@ XUnmapWindow(
 		 * Apple's claims to the contrary.
 		 */
 
+		BOOL tkIsVisible;
 		for (NSWindow *w in [NSApp orderedWindows]) {
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
-
-		    BOOL tkIsVisible;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
 			continue;

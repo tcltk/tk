@@ -815,8 +815,8 @@ FrontMostToplevelAtPoint(
     NSPoint p = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     for (NSWindow *w in [NSApp orderedWindows]) {
-	TKContentView *view = (TKContentView *) [w contentView];
 	if ([w isMemberOfClass:[TKWindow class]] && w.isVisible) {
+	    TKContentView *view = (TKContentView *) [w contentView];
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = windowFrame;
 
@@ -828,7 +828,7 @@ FrontMostToplevelAtPoint(
 
 	    contentFrame.size.height = [view frame].size.height;
 	    if (NSMouseInRect(p, contentFrame, NO)) {
-		return TkMacOSXGetTkWindow(w);
+		return TkMacOSXGetTkWindow(w);;
 	    } else if (NSMouseInRect(p, windowFrame, NO)) {
 		/*
 		 * The pointer is in the title bar of the highest NSWindow
@@ -847,6 +847,8 @@ void TkMacOSXAssignNewKeyWindow(
     NSWindow *ignore)
 {
     TkWindow *winPtr;
+    BOOL isOnScreen;
+    WmInfo *wmPtr;
 
     /*
      * Avoid bug 5692042764: set tkEventTarget to NULL if there is no window to
@@ -854,6 +856,7 @@ void TkMacOSXAssignNewKeyWindow(
      */
 
     [NSApp setTkEventTarget: NULL];
+
     for (NSWindow *w in [NSApp orderedWindows]) {
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
@@ -864,7 +867,10 @@ void TkMacOSXAssignNewKeyWindow(
 	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
 	    continue;
 	}
-	if (w != ignore && Tk_IsMapped(winPtr) && [w canBecomeKeyWindow]) {
+	wmPtr = winPtr->wmInfoPtr;
+	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
+		      wmPtr->hints.initial_state != WithdrawnState);
+	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
 	    TKMenu *menu;
 	    [w makeKeyAndOrderFront:NSApp];
 	    /* Set the menubar for the new front window. */
@@ -1115,9 +1121,9 @@ TkWmUnmapWindow(
     if (!Tk_IsMapped(winPtr)) {
 	return;
     }
-    winPtr->flags &= ~TK_MAPPED;
     if ((winPtr->window != None)
 	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)) {
+	winPtr->flags &= ~TK_MAPPED;
 	XEvent event;
 	event.xany.serial = LastKnownRequestProcessed(winPtr->display);
 	event.xany.send_event = False;
