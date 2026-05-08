@@ -184,20 +184,6 @@ XMapWindow(
 		} else {
 		    [win orderFrontRegardless];
 		}
-
-		/*
-		 * Delay for up to 20 milliseconds until the toplevel has
-		 * actually become the highest toplevel.  This is to ensure
-		 * that the Visibility event occurs after the toplevel is
-		 * visible.
-		 */
-
-		for (int count = 0; count < 20; count++) {
-		    if ([[NSApp orderedWindows] firstObject] == win) {
-			break;
-		    }
-		    [NSThread sleepForTimeInterval:.001];
-		}
 	    } else if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
 		    (winPtr->wmInfoPtr->hints.initial_state == NormalState)) {
 
