@@ -260,6 +260,22 @@ the tab position.  The default position is \fBn\fP for the \fBaqua\fP
 theme and \fBnw\fP for all the other built-in themes.
 .RE
 .br
+\fB\-tabplacement\fP \fIplacement\fP
+.RS
+Specifies the placement (anchor) of the tabs within the tab row or column
+as a string of length 1 or 2.  The first character indicates the side as
+\fBw\fP, \fBe\fP, \fBn\fP, or \fBs\fP, while the second character (if
+present) is the sticky bit (specified as \fBs\fP, \fBn\fP, \fBe\fP, or
+\fBw\fP) within the tab placement.  For example, the tab placement \fBws\fP
+means: attach the west (left) side of each tab to the previous one and
+align the south (bottom) edges with each other.  Similarly, the tab
+placement \fBse\fP specifies to attach the south (bottom) side of each tab
+to the previous one and align the east (right) edges with each other.  The
+default placement depends on the first character of the tab position:
+\fBws\fP for \fBn*\fP, \fBwn\fP for \fBs*\fP, \fBne\fP for \fBw*\fP, and
+\fBnw\fP for \fBe*\fP.
+.RE
+.br
 .PP
 \fBTNotebook.Tab\fP styling options configurable with \fBttk::style\fP
 are:

@@ -1191,7 +1191,7 @@ ExposeRestrictProc(
  * light and dark mode or changes the accent color. The implementation
  * generates two virtual events.  The first is either <<LightAqua>> or
  * <<DarkAqua>>, depending on the view's current effective appearance.  The
- * second is <<AppearnceChanged>> and has a data string describing the
+ * second is <<AppearanceChanged>> and has a data string describing the
  * effective appearance of the view and the current accent and highlight
  * colors.
  */

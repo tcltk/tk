@@ -124,11 +124,11 @@ DisplayVerticalScale(
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->sliderLengthObj, &sliderLength);
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->vertTickRightX;
-	drawnAreaPtr->y = scalePtr->inset;
-	drawnAreaPtr->width = scalePtr->vertTroughX + scaleWidth
-		+ 2 * borderWidth - scalePtr->vertTickRightX;
-	drawnAreaPtr->height -= 2 * scalePtr->inset;
+	drawnAreaPtr->x = (short)scalePtr->vertTickRightX;
+	drawnAreaPtr->y = (short)scalePtr->inset;
+	drawnAreaPtr->width = (short)(scalePtr->vertTroughX + scaleWidth
+		+ 2 * borderWidth - scalePtr->vertTickRightX);
+	drawnAreaPtr->height -= (short)(2 * scalePtr->inset);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -344,11 +344,11 @@ DisplayHorizontalScale(
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->sliderLengthObj, &sliderLength);
     if (!(scalePtr->flags & REDRAW_OTHER)) {
-	drawnAreaPtr->x = scalePtr->inset;
-	drawnAreaPtr->y = scalePtr->horizValueY;
-	drawnAreaPtr->width -= 2*scalePtr->inset;
-	drawnAreaPtr->height = scalePtr->horizTroughY + scaleWidth
-		+ 2 * borderWidth - scalePtr->horizValueY;
+	drawnAreaPtr->x = (short)scalePtr->inset;
+	drawnAreaPtr->y = (short)scalePtr->horizValueY;
+	drawnAreaPtr->width -= (short)(2*scalePtr->inset);
+	drawnAreaPtr->height = (short)(scalePtr->horizTroughY + scaleWidth
+		+ 2 * borderWidth - scalePtr->horizValueY);
     }
     Tk_Fill3DRectangle(tkwin, drawable, scalePtr->bgBorder,
 	    drawnAreaPtr->x, drawnAreaPtr->y, drawnAreaPtr->width,
@@ -616,8 +616,8 @@ TkpDisplayScale(
 #endif /* TK_NO_DOUBLE_BUFFERING */
     drawnArea.x = 0;
     drawnArea.y = 0;
-    drawnArea.width = Tk_Width(tkwin);
-    drawnArea.height = Tk_Height(tkwin);
+    drawnArea.width = (short)Tk_Width(tkwin);
+    drawnArea.height = (short)Tk_Height(tkwin);
 
     /*
      * Much of the redisplay is done totally differently for horizontal and
