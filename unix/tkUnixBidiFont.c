@@ -264,13 +264,15 @@ IsSimpleOnly(const char *str, int len)
          *    so emoji in U+1F300+ will be mangled. Force through HarfBuzz which
          *    handles UTF-8 surrogates correctly.
          */
-        if ((uc >= 0xAC00 && uc <= 0xD7AF) ||   /* Hangul syllables */
-            (uc >= 0x1100 && uc <= 0x11FF) ||   /* Hangul Jamo */
-            (uc >= 0x0900 && uc <= 0x0DFF) ||   /* Indic: Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam */
-            (uc >= 0x0E00 && uc <= 0x0E7F) ||   /* Thai */
-            (uc >= 0x0E80 && uc <= 0x0EFF) ||   /* Lao */
-            (uc >= 0x2600 && uc <= 0x27BF) ||   /* Misc symbols (includes some emoji) */
-            (uc >= 0x1F000)) {                   /* ALL supplementary plane - includes emoji, we can't decode these properly with FcUtf8ToUcs4 */
+        if ((uc >= 0xAC00 && uc <= 0xD7AF) ||           /* Hangul */
+            (uc >= 0x1100 && uc <= 0x11FF) ||           /* Jamo */
+            (uc >= 0x0900 && uc <= 0x0DFF) ||           /* Indic */
+            (uc >= 0x0E00 && uc <= 0x0E7F) ||           /* Thai */
+            (uc >= 0x0E80 && uc <= 0x0EFF) ||           /* Lao */
+            (uc >= 0x1F000 && uc <= 0x1FAFF) ||         /* Extended emoji */
+            (uc >= 0x2600 && uc <= 0x27BF) ||           /* Misc symbols */
+            (uc >= 0x1F300 && uc <= 0x1F9FF) ||         /* More emoji */
+            uc > 0xFFFF) {                              /* Any supplementary plane */
             return 0;
         }
 
@@ -1045,6 +1047,21 @@ GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars, int runStart, int runL
  * ---------------------------------------------------------------
  */
  
+/*
+ * ---------------------------------------------------------------
+ * X11Shaper_ShapeString --
+ *
+ *   Shape a UTF-8 string using HarfBuzz and produce glyph buffer
+ *   WITH cluster boundary metadata for proper line wrapping (including RTL).
+ *
+ * Results:
+ *   1 on success, 0 on failure.
+ *
+ * Side effects:
+ *   Updates the shaper cache; buffer is filled with glyphs and clusters.
+ * ---------------------------------------------------------------
+ */
+ 
 static int
 X11Shaper_ShapeString(
 		      X11Shaper *shaper,
@@ -1065,26 +1082,14 @@ X11Shaper_ShapeString(
     buffer->clusterBreakCount = 0;
     
     /* 
-     * Fast path for simple scripts (latin, cjk, monochrome emoji).
-     * This avoids the overhead of harfbuzz shaping for straightforward text.
+     * Fast path for simple scripts (Latin, CJK, etc.).
      */
     if (IsSimpleOnly(source, numBytes)) {
 	int penX = 0;
 	int i = 0;
 
-	/*
-	 * Build a fallback fontset inline by sorting fontconfig patterns.
-	 * This creates an ordered list of fonts that can supply missing glyphs.
-	 */
 	FcResult result;
-	FcFontSet *set = FcFontSort(
-				    NULL,               /* display parameter was fixed - previously used fontPtr->display incorrectly */
-				    fontPtr->pattern,
-				    FcTrue,             /* trim to remove duplicate fonts */
-				    NULL,
-				    &result
-				    );
-
+	FcFontSet *set = FcFontSort(NULL, fontPtr->pattern, FcTrue, NULL, &result);
 	if (!set || set->nfont <= 0) {
 	    if (set) FcFontSetDestroy(set);
 	    return 0;
@@ -1093,159 +1098,73 @@ X11Shaper_ShapeString(
 	int numFonts = set->nfont;
 	XftFont **fallbackFonts = ckalloc(sizeof(XftFont*) * numFonts);
 
-	/* Convert each fontconfig pattern to an actual Xft font for rendering. */
 	for (int f = 0; f < numFonts; f++) {
-	    FcPattern *render = FcFontRenderPrepare(
-						    NULL,            /* display parameter was fixed */
-						    fontPtr->pattern,
-						    set->fonts[f]
-						    );
-
-	    fallbackFonts[f] =
-		XftFontOpenPattern(fontPtr->display, render);
+	    FcPattern *render = FcFontRenderPrepare(NULL, fontPtr->pattern, set->fonts[f]);
+	    fallbackFonts[f] = XftFontOpenPattern(fontPtr->display, render);
 	}
 
-
-	/*
-	 * Fast rendering loop that attempts to use the primary font and falls back
-	 * through the fontset when glyphs are missing.
-	 */
 	while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
 	    FcChar32 uc;
-	    int clen = FcUtf8ToUcs4(
-				    (const FcChar8 *)(source + i),
-				    &uc,
-				    numBytes - i
-				    );
+	    int clen = FcUtf8ToUcs4((const FcChar8 *)(source + i), &uc, numBytes - i);
+	    if (clen <= 0) { i++; continue; }
 
-	    if (clen <= 0) {
-		i++;
+	    unsigned int glyphId = 0;
+	    int fontIndex = -1;
+
+	    for (int f = 0; f < numFonts; f++) {
+		if (!fallbackFonts[f]) continue;
+		glyphId = XftCharIndex(fontPtr->display, fallbackFonts[f], uc);
+		if (glyphId != 0) {
+		    fontIndex = f;
+		    break;
+		}
+	    }
+
+	    if (glyphId == 0 || fontIndex < 0) {
+		i += clen;
 		continue;
 	    }
 
-	    /* Process each character, attempting to find a suitable font. */
-	    while (i < numBytes && buffer->glyphCount < MAX_GLYPHS) {
-		FcChar32 uc;
-		int clen = FcUtf8ToUcs4(
-					(const FcChar8 *)(source + i),
-					&uc,
-					numBytes - i
-					);
+	    XGlyphInfo metrics;
+	    XftGlyphExtents(fontPtr->display, fallbackFonts[fontIndex], &glyphId, 1, &metrics);
 
-		if (clen <= 0) {
-		    i++;
-		    continue;
-		}
+	    int g = buffer->glyphCount;
+	    buffer->glyphs[g].fontIndex  = fontIndex;
+	    buffer->glyphs[g].glyphId    = glyphId;
+	    buffer->glyphs[g].x          = penX;
+	    buffer->glyphs[g].y          = 0;
+	    buffer->glyphs[g].advanceX   = metrics.xOff;
+	    buffer->glyphs[g].byteOffset = i;
+	    buffer->glyphs[g].clusterLen = clen;
+	    buffer->glyphs[g].isRTL      = 0;
 
-		/*
-		 * Multi-font fallback lookup.
-		 * Search through the fontset in priority order until we find a
-		 * font that contains the current character.
-		 */
-		unsigned int glyphId = 0;
-		int fontIndex = -1;
-
-		for (int f = 0; f < numFonts; f++) {
-		    XftFont *xf = fallbackFonts[f];
-		    if (!xf) continue;
-
-		    glyphId = XftCharIndex(fontPtr->display, xf, uc);
-		    if (glyphId != 0) {
-			fontIndex = f;
-			break;
-		    }
-		}
-
-		/*
-		 * Skip characters that have no glyph representation in any
-		 * available font.
-		 */
-		if (glyphId == 0 || fontIndex < 0) {
-		    i += clen;
-		    continue;
-		}
-
-		/*
-		 * Retrieve metrics for the glyph and record it in the buffer.
-		 * The metrics tell us how much space the glyph occupies.
-		 */
-		XGlyphInfo metrics;
-		XftGlyphExtents(
-				fontPtr->display,
-				fallbackFonts[fontIndex],
-				&glyphId,
-				1,
-				&metrics
-				);
-
-		int g = buffer->glyphCount;
-
-		buffer->glyphs[g].fontIndex  = fontIndex;
-		buffer->glyphs[g].glyphId    = glyphId;
-		buffer->glyphs[g].x          = penX;
-		buffer->glyphs[g].y          = 0;
-		buffer->glyphs[g].advanceX   = metrics.xOff;
-		buffer->glyphs[g].byteOffset = i;
-		buffer->glyphs[g].clusterLen = clen;
-		buffer->glyphs[g].isRTL      = 0;
-
-		penX += metrics.xOff;
-		buffer->glyphCount++;
-
-		/* Advance the input pointer past the processed character. */
-		i += clen;
-	    }
-
-
-	    /*
-	     * Finalize the buffer by computing the total advance width and
-	     * building the visual index mapping for cursor placement.
-	     */
-	    buffer->totalAdvance = penX;
-	    buffer->indexCount   = buffer->glyphCount;
-
-	    for (int j = 0; j < buffer->glyphCount; j++) {
-		buffer->visualIndex[j].x        = buffer->glyphs[j].x;
-		buffer->visualIndex[j].advanceX = buffer->glyphs[j].advanceX;
-		buffer->visualIndex[j].byteEnd  =
-		    buffer->glyphs[j].byteOffset +
-		    buffer->glyphs[j].clusterLen;
-	    }
-	    
-	    /* After the loops that populate buffer->visualIndex: */
-
-/* SURGICAL FIX: Sort visualIndex by X coordinate to ensure linear 
- * cursor movement across the screen regardless of BiDi direction. */
-for (int i = 0; i < buffer->indexCount - 1; i++) {
-    for (int j = i + 1; j < buffer->indexCount; j++) {
-        if (buffer->visualIndex[j].x < buffer->visualIndex[i].x) {
-            /* Swap entries to maintain left-to-right screen order */
-            typeof(buffer->visualIndex[0]) tmp = buffer->visualIndex[i];
-            buffer->visualIndex[i] = buffer->visualIndex[j];
-            buffer->visualIndex[j] = tmp;
-        }
-    }
-}
-
-	    /*
-	     * Clean up fallback fonts to prevent memory leaks.
-	     * Close each font and free the associated memory structures.
-	     */
-	    for (int f = 0; f < numFonts; f++) {
-		if (fallbackFonts[f]) {
-		    XftFontClose(fontPtr->display, fallbackFonts[f]);
-		}
-	    }
-	    ckfree(fallbackFonts);
-	    FcFontSetDestroy(set);
-
-	    return 1;
+	    penX += metrics.xOff;
+	    buffer->glyphCount++;
+	    i += clen;
 	}
+
+	buffer->totalAdvance = penX;
+	buffer->indexCount   = buffer->glyphCount;
+
+	/* Build visual index. */
+	for (int j = 0; j < buffer->glyphCount; j++) {
+	    buffer->visualIndex[j].x        = buffer->glyphs[j].x;
+	    buffer->visualIndex[j].advanceX = buffer->glyphs[j].advanceX;
+	    buffer->visualIndex[j].byteEnd  = buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
+	}
+
+	/* Cleanup. */
+	for (int f = 0; f < numFonts; f++) {
+	    if (fallbackFonts[f]) XftFontClose(fontPtr->display, fallbackFonts[f]);
+	}
+	ckfree(fallbackFonts);
+	FcFontSetDestroy(set);
+
+	return 1;
     }
 
     /* 
-     * Check if we have a cached result for this exact string.
-     * This optimization avoids repeated shaping of the same text.
+     * Check cache for complex text.
      */
     if (shaper->cache.valid &&
         shaper->cache.len == numBytes &&
@@ -1255,14 +1174,13 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         return 1;
     }
 
-    /* Convert the utf-8 input to ucs-4 for easier processing. */
+    /* Convert UTF-8 to UCS-4. */
     int stackCharBounds[256];
     FcChar32 stackUcs4Chars[256];
     int *charBounds = stackCharBounds;
     FcChar32 *ucs4Chars = stackUcs4Chars;
     int needFree = 0;
 
-    /* For large strings, allocate heap memory instead of using the stack. */
     if (numBytes >= 256) {
         charBounds = (int *)malloc((numBytes + 1) * sizeof(int));
         ucs4Chars = (FcChar32 *)malloc(numBytes * sizeof(FcChar32));
@@ -1273,7 +1191,6 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         needFree = 1;
     }
 
-    /* Perform utf-8 to ucs-4 conversion, filtering out control characters. */
     charBounds[0] = 0;
     int bytePos = 0, charCount = 0;
     while (bytePos < numBytes && charCount < MAX_GLYPHS) {
@@ -1281,7 +1198,6 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         int clen = FcUtf8ToUcs4((const FcChar8 *)(source + bytePos), &uc, numBytes - bytePos);
         if (clen <= 0) { bytePos++; continue; }
 
-        /* Skip control characters except tab, newline, and carriage return. */
         if ((uc < 0x0020 && uc != 0x0009 && uc != 0x000A && uc != 0x000D) ||
             (uc >= 0x0080 && uc <= 0x009F) || uc == 0xFFFD) {
             bytePos += clen;
@@ -1294,7 +1210,6 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         charBounds[charCount] = bytePos;
     }
 
-    /* Handle empty strings after filtering. */
     if (charCount == 0) {
         if (needFree) { free(charBounds); free(ucs4Chars); }
         buffer->clusterBreaks[0] = 0;
@@ -1302,26 +1217,11 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         return 1;
     }
 
-    /* 
-     * Determine bidirectional text runs for proper left-to-right and
-     * right-to-left text layout.
-     */
+    /* Bidi analysis. */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
 
-    /*
-     * CRITICAL FIX for mixed BiDi:
-     * SheenBidi returns runs in VISUAL order (left-to-right on screen),
-     * but we must process them in LOGICAL order (original string order)
-     * to accumulate X positions correctly.
-     *
-     * Example: "Hello שלום world"
-     *   SheenBidi visual order: ["Hello ", "שלום", " world"]
-     *   Logical order needed:   ["Hello ", "שלום", " world"] (same if LTR base)
-     *
-     * BUT for RTL base or complex mixing, visual != logical.
-     * Sort by offset to get logical order.
-     */
+    /* Sort runs into logical order by offset. */
     for (int i = 0; i < numRuns - 1; i++) {
         for (int j = i + 1; j < numRuns; j++) {
             if (bidiRuns[j].offset < bidiRuns[i].offset) {
@@ -1334,7 +1234,7 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
 
     int globalPenX = 0;
 
-    /* Process each bidirectional run independently IN LOGICAL ORDER. */
+    /* Process each bidi run. */
     for (int r = 0; r < numRuns; r++) {
         int runStart = bidiRuns[r].offset;
         int runLen   = bidiRuns[r].len;
@@ -1347,7 +1247,6 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         int runByteLen   = runByteEnd - runByteStart;
         if (runByteLen <= 0) continue;
 
-        /* Check if the run contains any visible characters worth shaping. */
         int hasVisibleChars = 0;
         for (int ci = runStart; ci < runStart + runLen; ci++) {
             if (ucs4Chars[ci] >= 0x0020 || ucs4Chars[ci] == 0x0009 ||
@@ -1358,13 +1257,66 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         }
         if (!hasVisibleChars) continue;
 
-        /* Find the best font face for this run of characters. */
-        int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, runStart, runLen);
+	        /*
+	 * Shape contiguous font-compatible spans separately.
+	 */
+	
+	int subrunStart = runStart;
+	
+	while (subrunStart < runStart + runLen) {
+	
+	    int runFaceIndex = 0;
+	
+	    /*
+	     * Find first face supporting this character.
+	     */
+	    for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+	        if (fontPtr->faces[fi].charset &&
+	            FcCharSetHasChar(fontPtr->faces[fi].charset,
+	                             ucs4Chars[subrunStart])) {
+	            runFaceIndex = fi;
+	            break;
+	        }
+	    }
+	
+	    int subrunEnd = subrunStart + 1;
+	
+	    /*
+	     * Extend while subsequent chars use same fallback face.
+	     */
+	    while (subrunEnd < runStart + runLen) {
+	
+	        int nextFace = -1;
+	
+	        for (int fi = 0; fi < fontPtr->nfaces; fi++) {
+	            if (fontPtr->faces[fi].charset &&
+	                FcCharSetHasChar(fontPtr->faces[fi].charset,
+	                                 ucs4Chars[subrunEnd])) {
+	                nextFace = fi;
+	                break;
+	            }
+	        }
+	
+	        if (nextFace != runFaceIndex) {
+	            break;
+	        }
+	
+	        subrunEnd++;
+	    }
+	
+	    int shapeRunStart = subrunStart;
+	    int shapeRunLen   = subrunEnd - subrunStart;
+	
+	    int runByteStart = charBounds[shapeRunStart];
+	    int runByteEnd   = charBounds[shapeRunStart + shapeRunLen];
+	    int runByteLen   = runByteEnd - runByteStart;
+	
+	    if (runByteLen <= 0) {
+	        subrunStart = subrunEnd;
+	        continue;
+	    }
 
-        /* 
-         * Initialize harfbuzz font objects for each face if this is the
-         * first time we're shaping text.
-         */
+        /* Ensure HarfBuzz fonts are loaded. */
         if (shaper->numFonts == 0) {
             for (int fi = 0; fi < fontPtr->nfaces && shaper->numFonts < MAX_FONTS; fi++) {
                 FcPattern *facePattern = fontPtr->faces[fi].source;
@@ -1373,7 +1325,6 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
                 if (FcPatternGetString(facePattern, FC_FILE, 0, &fontFile) != FcResultMatch) continue;
                 FcPatternGetInteger(facePattern, FC_INDEX, 0, &fontIndex);
 
-                /* Create harfbuzz objects from the font file. */
                 hb_blob_t *blob = hb_blob_create_from_file_or_fail((const char *)fontFile);
                 if (!blob) continue;
                 hb_face_t *face = hb_face_create(blob, fontIndex);
@@ -1381,143 +1332,134 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
                 hb_font_t *font = hb_font_create(face);
                 if (!font) { hb_face_destroy(face); hb_blob_destroy(blob); continue; }
 
-                /* Set the font scale based on the pixel size from the Xft font. */
                 XftFont *xftFont = GetFaceFont(fontPtr, fi, 0.0);
                 if (xftFont) {
-                    int pixelSize = 0;
+                    int pixelSize = xftFont->ascent + xftFont->descent;
                     FT_Face ftFace = XftLockFace(xftFont);
                     if (ftFace && ftFace->size) {
                         pixelSize = (int)ftFace->size->metrics.x_ppem;
                         XftUnlockFace(xftFont);
                     }
-                    if (pixelSize <= 0) pixelSize = xftFont->ascent + xftFont->descent;
-                    if (pixelSize <= 0) pixelSize = 12;
                     hb_font_set_scale(font, pixelSize * 64, pixelSize * 64);
                     hb_font_set_ppem(font, (unsigned)pixelSize, (unsigned)pixelSize);
-                }
-
-                /* Store the harfbuzz objects for later use. */
-                shaper->fontMap[shaper->numFonts].hbFont = font;
-                shaper->fontMap[shaper->numFonts].faceIndex = fi;
-                fontPtr->faces[fi].hbFont = font;
-                fontPtr->faces[fi].hbBlob = blob;
-                fontPtr->faces[fi].hbFace = face;
-                fontPtr->faces[fi].isLoaded = 1;
-                shaper->numFonts++;
-            }
-        }
-
-        /* 
-         * Prepare the harfbuzz buffer with the current run of text.
-         * Set the direction and cluster level for proper shaping.
-         */
-        hb_buffer_clear_contents(shaper->buffer);
-        hb_buffer_add_utf8(shaper->buffer, source, numBytes, runByteStart, runByteLen);
-        hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
-        hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
-
-        /* Select the appropriate harfbuzz font for shaping. */
-        hb_font_t *runHbFont = NULL;
-        int shapeFaceIndex = runFaceIndex;
-        if (shapeFaceIndex < fontPtr->nfaces && fontPtr->faces[shapeFaceIndex].isLoaded)
-            runHbFont = fontPtr->faces[shapeFaceIndex].hbFont;
-        else if (shaper->numFonts > 0) {
-            runHbFont = shaper->fontMap[0].hbFont;
-            shapeFaceIndex = shaper->fontMap[0].faceIndex;
-        }
-        if (!runHbFont) continue;
-
-        /* Perform the actual text shaping with harfbuzz. */
-        hb_shape(runHbFont, shaper->buffer, NULL, 0);
-
-        /* Retrieve the shaped glyph information and positions. */
-        unsigned int glyphCount = hb_buffer_get_length(shaper->buffer);
-        hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
-        hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
-        if (!glyphInfo || !glyphPos) continue;
-
-        /* 
-         * Temporary storage for shaped glyphs within this run.
-         * We'll convert harfbuzz's 26.6 fixed-point coordinates to integers.
-         */
-        struct {
-            int fontIndex;
-            unsigned int glyphId;
-            int x, y;
-            int advanceX;
-            int byteOffset;
-            int clusterLen;
-        } tempGlyphs[MAX_GLYPHS];
-        int tempCount = 0;
-
-        int runPenX = 0;
-        XftFont *xftRunFont = GetFaceFont(fontPtr, shapeFaceIndex, 0.0);
-        for (unsigned int i = 0; i < glyphCount && tempCount < MAX_GLYPHS; i++) {
-            tempGlyphs[tempCount].fontIndex  = shapeFaceIndex;
-            tempGlyphs[tempCount].glyphId    = glyphInfo[i].codepoint;
-            tempGlyphs[tempCount].x          = globalPenX + runPenX + (int)(glyphPos[i].x_offset / 64.0 + 0.5);
-            tempGlyphs[tempCount].y          = -(int)(glyphPos[i].y_offset / 64.0 + 0.5);
-            tempGlyphs[tempCount].byteOffset = glyphInfo[i].cluster;
-
-            /* Prefer Xft metrics for advance width when available. */
-            unsigned int gid = glyphInfo[i].codepoint;
-            if (xftRunFont && gid != 0) {
-                XGlyphInfo gmetrics;
-                XftGlyphExtents(fontPtr->display, xftRunFont, &gid, 1, &gmetrics);
-                tempGlyphs[tempCount].advanceX = gmetrics.xOff;
-            } else {
-                tempGlyphs[tempCount].advanceX = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
-            }
-
-            runPenX += tempGlyphs[tempCount].advanceX;
-            tempCount++;
-        }
-
-        /* 
-         * Correct cluster lengths by looking at the next glyph's byte offset.
-         * This ensures each glyph knows how many original bytes it represents.
-         */
-        for (int i = 0; i < tempCount; i++) {
-            int start = tempGlyphs[i].byteOffset;
-            int end = runByteEnd;
-            for (int j = i + 1; j < tempCount; j++) {
-                if (tempGlyphs[j].byteOffset != start) {
-                    end = tempGlyphs[j].byteOffset;
-                    break;
-                }
-            }
-            tempGlyphs[i].clusterLen = end - start;
-            if (tempGlyphs[i].clusterLen <= 0)
-                tempGlyphs[i].clusterLen = 1;
-        }
-
-        /* Copy the temporary glyphs to the final output buffer. */
-        for (int i = 0; i < tempCount; i++) {
-            int idx = buffer->glyphCount;
-            if (idx >= MAX_GLYPHS) break;
-
-            buffer->glyphs[idx].fontIndex  = tempGlyphs[i].fontIndex;
-            buffer->glyphs[idx].glyphId    = tempGlyphs[i].glyphId;
-            buffer->glyphs[idx].x          = tempGlyphs[i].x;
-            buffer->glyphs[idx].y          = tempGlyphs[i].y;
-            buffer->glyphs[idx].advanceX   = tempGlyphs[i].advanceX;
-            buffer->glyphs[idx].byteOffset = tempGlyphs[i].byteOffset;
-            buffer->glyphs[idx].clusterLen = tempGlyphs[i].clusterLen;
-            buffer->glyphs[idx].isRTL      = runIsRTL;
-
-            buffer->glyphCount++;
-        }
-
-        globalPenX += runPenX;
-    }
-
-    /* Set the total advance width of the entire shaped string. */
+	                }
+	
+	                shaper->fontMap[shaper->numFonts].hbFont = font;
+	                shaper->fontMap[shaper->numFonts].faceIndex = fi;
+	                fontPtr->faces[fi].hbFont = font;
+	                fontPtr->faces[fi].hbBlob = blob;
+	                fontPtr->faces[fi].hbFace = face;
+	                fontPtr->faces[fi].isLoaded = 1;
+	                shaper->numFonts++;
+	            }
+	        }
+	
+	        hb_buffer_clear_contents(shaper->buffer);
+	        hb_buffer_add_utf8(shaper->buffer, source, numBytes, runByteStart, runByteLen);
+	        hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
+	        hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
+	
+	        /* Improved font fallback. */
+	        hb_font_t *runHbFont = NULL;
+	        int shapeFaceIndex = runFaceIndex;
+	
+	        if (shapeFaceIndex < fontPtr->nfaces && fontPtr->faces[shapeFaceIndex].isLoaded) {
+	            runHbFont = fontPtr->faces[shapeFaceIndex].hbFont;
+	        }
+	
+	        if (!runHbFont && shaper->numFonts > 0) {
+	            for (int fi = 0; fi < shaper->numFonts; fi++) {
+	                int fidx = shaper->fontMap[fi].faceIndex;
+	                if (fontPtr->faces[fidx].charset && 
+	                    FcCharSetHasChar(fontPtr->faces[fidx].charset, ucs4Chars[runStart])) {
+	                    runHbFont = shaper->fontMap[fi].hbFont;
+	                    shapeFaceIndex = fidx;
+	                    break;
+	                }
+	            }
+	            if (!runHbFont) {
+	                runHbFont = shaper->fontMap[0].hbFont;
+	                shapeFaceIndex = shaper->fontMap[0].faceIndex;
+	            }
+	        }
+	
+	        if (!runHbFont) continue;
+	
+	        hb_shape(runHbFont, shaper->buffer, NULL, 0);
+	
+	        unsigned int glyphCount = hb_buffer_get_length(shaper->buffer);
+	        hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
+	        hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
+	        if (!glyphInfo || !glyphPos) continue;
+	
+	        struct {
+	            int fontIndex; unsigned int glyphId; int x, y; int advanceX; int byteOffset; int clusterLen;
+	        } tempGlyphs[MAX_GLYPHS];
+	        int tempCount = 0;
+	
+	        int runPenX = 0;
+	        XftFont *xftRunFont = GetFaceFont(fontPtr, shapeFaceIndex, 0.0);
+	
+	        for (unsigned int i = 0; i < glyphCount && tempCount < MAX_GLYPHS; i++) {
+	            tempGlyphs[tempCount].fontIndex  = shapeFaceIndex;
+	            tempGlyphs[tempCount].glyphId    = glyphInfo[i].codepoint;
+	            tempGlyphs[tempCount].x          = globalPenX + runPenX + (int)(glyphPos[i].x_offset / 64.0 + 0.5);
+	            tempGlyphs[tempCount].y          = -(int)(glyphPos[i].y_offset / 64.0 + 0.5);
+	            tempGlyphs[tempCount].byteOffset = glyphInfo[i].cluster;
+	
+	            unsigned int gid = glyphInfo[i].codepoint;
+	            if (xftRunFont && gid != 0) {
+	                XGlyphInfo gmetrics;
+	                XftGlyphExtents(fontPtr->display, xftRunFont, &gid, 1, &gmetrics);
+	                tempGlyphs[tempCount].advanceX = gmetrics.xOff;
+	            } else {
+	                tempGlyphs[tempCount].advanceX = (int)(glyphPos[i].x_advance / 64.0 + 0.5);
+	            }
+	
+	            runPenX += tempGlyphs[tempCount].advanceX;
+	            tempCount++;
+	        }
+	
+	        /* Fix cluster lengths. */
+	        for (int i = 0; i < tempCount; i++) {
+	            int start = tempGlyphs[i].byteOffset;
+	            int end = runByteEnd;
+	            for (int j = i + 1; j < tempCount; j++) {
+	                if (tempGlyphs[j].byteOffset != start) {
+	                    end = tempGlyphs[j].byteOffset;
+	                    break;
+	                }
+	            }
+	            tempGlyphs[i].clusterLen = end - start;
+	            if (tempGlyphs[i].clusterLen <= 0) tempGlyphs[i].clusterLen = 1;
+	        }
+	
+	        /* Copy to main buffer. */
+	        for (int i = 0; i < tempCount; i++) {
+	            int idx = buffer->glyphCount;
+	            if (idx >= MAX_GLYPHS) break;
+	            buffer->glyphs[idx] = (typeof(buffer->glyphs[0])) {
+	                .fontIndex  = tempGlyphs[i].fontIndex,
+	                .glyphId    = tempGlyphs[i].glyphId,
+	                .x          = tempGlyphs[i].x,
+	                .y          = tempGlyphs[i].y,
+	                .advanceX   = tempGlyphs[i].advanceX,
+	                .byteOffset = tempGlyphs[i].byteOffset,
+	                .clusterLen = tempGlyphs[i].clusterLen,
+	                .isRTL      = runIsRTL
+	            };
+	            buffer->glyphCount++;
+	        }
+	
+	        globalPenX += runPenX;
+			/* Advance to the next subrun. */
+	        subrunStart = subrunEnd;
+	    }
+	}
+	
     buffer->totalAdvance = globalPenX;
 
-    /* 
-     * Build the visual index mapping for cursor and selection handling.
-     * This maps from visual positions back to character indices.
-     */
+    /* Improved visual index to support LTR-starting mixed bidi cursor. */
     buffer->indexCount = buffer->glyphCount;
     for (int i = 0; i < buffer->glyphCount; i++) {
         buffer->visualIndex[i].x        = buffer->glyphs[i].x;
@@ -1527,30 +1469,32 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         if (byteEnd > numBytes) byteEnd = numBytes;
         buffer->visualIndex[i].byteEnd = byteEnd;
     }
+	
+	/*
+	 * DO NOT globally sort by X position.
+	 *
+	 * HarfBuzz already emitted glyphs in visual order within each bidi run,
+	 * and runs themselves were appended in paragraph visual order.
+	 *
+	 * Sorting purely by X breaks cursor traversal for mixed bidi text
+	 * that begins with LTR content because RTL subruns may overlap or
+	 * reverse geometrically while remaining logically contiguous.
+	 *
+	 * Instead preserve insertion order and only normalize duplicate
+	 * X positions locally.
+	 */
+	
+	for (int i = 1; i < buffer->indexCount; i++) {
+	    if (buffer->visualIndex[i].x < buffer->visualIndex[i - 1].x &&
+	        buffer->glyphs[i].isRTL == buffer->glyphs[i - 1].isRTL) {
+	
+	        typeof(buffer->visualIndex[0]) tmp = buffer->visualIndex[i - 1];
+	        buffer->visualIndex[i - 1] = buffer->visualIndex[i];
+	        buffer->visualIndex[i] = tmp;
+	    }
+	}
 
-    /* Sort the visual index by x-coordinate to ensure correct cursor positioning. */
-    for (int i = 0; i < buffer->indexCount - 1; i++) {
-        for (int j = i + 1; j < buffer->indexCount; j++) {
-            if (buffer->visualIndex[j].x < buffer->visualIndex[i].x) {
-                int tx = buffer->visualIndex[i].x;
-                int ta = buffer->visualIndex[i].advanceX;
-                int tb = buffer->visualIndex[i].byteEnd;
-
-                buffer->visualIndex[i].x = buffer->visualIndex[j].x;
-                buffer->visualIndex[i].advanceX = buffer->visualIndex[j].advanceX;
-                buffer->visualIndex[i].byteEnd = buffer->visualIndex[j].byteEnd;
-
-                buffer->visualIndex[j].x = tx;
-                buffer->visualIndex[j].advanceX = ta;
-                buffer->visualIndex[j].byteEnd = tb;
-            }
-        }
-    }
-
-    /* 
-     * Determine cluster break positions for text selection.
-     * Cluster breaks indicate where the text can be safely split between graphemes.
-     */
+    /* Cluster breaks. */
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
     char seen[1024] = {0};
@@ -1569,7 +1513,7 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         }
     }
 
-    /* Sort the cluster breaks in ascending order. */
+    /* Sort cluster breaks. */
     for (int i = 0; i < buffer->clusterBreakCount - 1; i++) {
         for (int j = i + 1; j < buffer->clusterBreakCount; j++) {
             if (buffer->clusterBreaks[i] > buffer->clusterBreaks[j]) {
@@ -1580,17 +1524,13 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         }
     }
 
-    /* Ensure the final cluster break points to the end of the string. */
     if (buffer->clusterBreaks[buffer->clusterBreakCount - 1] != numBytes) {
         if (buffer->clusterBreakCount < MAX_CLUSTER_BREAKS) {
             buffer->clusterBreaks[buffer->clusterBreakCount++] = numBytes;
         }
     }
 
-    /* 
-     * Cache the shaped result for small strings to avoid repeated
-     * expensive shaping operations.
-     */
+    /* Cache result. */
     if (numBytes <= MAX_STRING_CACHE) {
         memcpy(shaper->cache.text, source, numBytes);
         shaper->cache.len = numBytes;
@@ -1598,7 +1538,6 @@ for (int i = 0; i < buffer->indexCount - 1; i++) {
         shaper->cache.valid = 1;
     }
 
-    /* Free heap-allocated memory if we used it. */
     if (needFree) {
         free(charBounds);
         free(ucs4Chars);
