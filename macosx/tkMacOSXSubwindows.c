@@ -151,8 +151,8 @@ XMapWindow(
     if (!window) {
 	return BadWindow;
     }
+
     MacDrawable *macWin = (MacDrawable *)window;
-    static bool initialized = false;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
 
@@ -177,22 +177,22 @@ XMapWindow(
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:YES];
-	    if (initialized) {
+	    if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
+		if (winPtr->wmInfoPtr->hints.initial_state == NormalState) {
+
+		    /*
+		     * Order the Tk root window front unless it was immediately withdrawn.
+		     */
+
+		    [win makeKeyAndOrderFront:NSApp];
+		}
+	    } else {
 		if ([win canBecomeKeyWindow]) {
 		    [win makeKeyAndOrderFront:NSApp];
 		    [NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
 		} else {
 		    [win orderFrontRegardless];
 		}
-	    } else if ((winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) && \
-		    (winPtr->wmInfoPtr->hints.initial_state == NormalState)) {
-
-		/*
-		 * Order the Tk root window front unless it was immediately withdrawn.
-		 * Doing so makes it fully mapped.
-		 */
-
-		[win makeKeyAndOrderFront:NSApp];
 	    }
 
 	    /*
@@ -237,16 +237,13 @@ XMapWindow(
      * Generate VisibilityNotify events for window and all mapped children.
      */
 
-    if (initialized) {
-	XEvent event;
-	event.xany.send_event = False;
-	event.xany.display = display;
-	event.xvisibility.type = VisibilityNotify;
-	event.xvisibility.state = VisibilityUnobscured;
-	NotifyVisibility(winPtr, &event);
-    } else {
-	initialized = true;
-    }
+    XEvent event;
+    event.xany.send_event = False;
+    event.xany.display = display;
+    event.xvisibility.type = VisibilityNotify;
+    event.xvisibility.state = VisibilityUnobscured;
+    NotifyVisibility(winPtr, &event);
+
     return Success;
 }
 
