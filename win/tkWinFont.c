@@ -222,6 +222,11 @@ typedef struct TkWinShapedRun {
 				 * index of the first glyph for UTF-16 char i
 				 * within this run.  Length = charLen.
 				 * (malloced). */
+    SCRIPT_VISATTR *visAttr;    /* Visual attributes from ScriptShape, one
+				 * entry per glyph.  Required by ScriptCPtoX
+				 * for correct cursor placement inside ligatures
+				 * and composed clusters (Arabic, Indic, etc.).
+				 * Length = glyphCount. (malloced). */
     int         *visualX;       /* Length charLen+1: visual X offsets from run
 				 * start. visualX[0] = 0, visualX[charLen] =
 				 * run width. malloced, freed in
@@ -321,7 +326,8 @@ static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
 			    int nRuns, int logicalIdx);
 static BYTE             *TkWinComputeClusterBoundaries(const WCHAR *str,
 						       int len,
-						       const WORD *logClust);
+						       const WORD *logClust,
+							   int glyphCount);
 static int              *TkWinComputeClusterWidths(const BYTE
 						   *clusterBoundaries,
 						   int charLen,
@@ -332,14 +338,6 @@ static int               TkWinCountClusters(const BYTE *clusterBoundaries,
 					    int charLen);
 void                     TkWinFreeShapedRuns(TkWinShapedRun *runs,
 					     int runCount);
-int                      TkWinLinebreakAwareMeasure(Tk_Font tkfont,
-						    const char *source,
-						    Tcl_Size numBytes,
-						    Tcl_Size rangeStart,
-						    Tcl_Size rangeLength,
-						    int maxLength,
-						    int *lengthPtr);
-
 /*
  *-------------------------------------------------------------------------
  *
@@ -1153,8 +1151,7 @@ TkWinShapeString(
 	    continue;
 	}
 
-	/* logClust and visAttr are not needed past this point. */
-	Tcl_Free(visAttr);
+	/* logClust and visAttr are now owned by the run. */
 
 	/*
 	 * Compute visualX offsets for logical character boundaries.
@@ -1235,6 +1232,7 @@ TkWinShapeString(
 	runs[nRuns].charStart   = itemStart;
 	runs[nRuns].charLen     = itemLen;
 	runs[nRuns].logClust    = logClust;
+	runs[nRuns].visAttr     = visAttr;
 	runs[nRuns].visualX     = visualX;
 	nRuns++;
     }
@@ -1271,6 +1269,7 @@ TkWinFreeShapedRuns(
 	Tcl_Free(runs[i].advances);
 	Tcl_Free(runs[i].offsets);
 	Tcl_Free(runs[i].logClust);
+	Tcl_Free(runs[i].visAttr);
 	Tcl_Free(runs[i].visualX);
     }
     Tcl_Free(runs);
@@ -1403,8 +1402,9 @@ TkWinComputeClusterBoundaries(
     const WCHAR *str,      /* UTF-16 string for this run */
     int len,               /* Length in WCHARs (not bytes) */
     const WORD *logClust,  /* Uniscribe cluster map: char index -> glyph index */
-    int glyphCount UNUSED) /* Total glyphs (informational) */
+    int glyphCount)        /* Total glyphs (informational) */
 {
+    (void)glyphCount;
     BYTE *boundaries = (BYTE *)Tcl_Alloc(len);
     memset(boundaries, 0, len);
     
@@ -1483,7 +1483,7 @@ TkWinComputeClusterWidths(
     const BYTE *clusterBoundaries,  /* Bitmap: position i is cluster start if bit set */
     int charLen,                     /* Total characters in run */
     const int *advances,             /* Per-glyph advance width array */
-    int glyphCount UNUSED,           /* Total glyphs (for bounds checking) */
+    int glyphCount,                  /* Total glyphs (for bounds checking) */
     const WORD *logClust)            /* Character-to-glyph mapping */
 {
     int *clusterWidths = (int *)Tcl_Alloc(sizeof(int) * charLen);
@@ -1554,195 +1554,6 @@ TkWinCountClusters(const BYTE *clusterBoundaries, int charLen)
     }
     return count;
 }
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkWinFreeShapedRuns --
- *
- * Free memory allocated by TkWinShapeString().
- *
- * Updated to free the new cluster boundary and width arrays.
- *
- * Results:
- * None.
- *
- * Side effects:
- * All memory associated with the shaped runs is freed.
- *
- *---------------------------------------------------------------------------
- */
-void
-TkWinFreeShapedRuns(
-    TkWinShapedRun *runs,
-    int runCount)
-{
-    if (runs == NULL) {
-        return;
-    }
-    
-    for (int i = 0; i < runCount; i++) {
-        TkWinShapedRun *run = &runs[i];
-        
-        if (run->glyphs != NULL) {
-            Tcl_Free(run->glyphs);
-            run->glyphs = NULL;
-        }
-        if (run->logClust != NULL) {
-            Tcl_Free(run->logClust);
-            run->logClust = NULL;
-        }
-        if (run->advances != NULL) {
-            Tcl_Free(run->advances);
-            run->advances = NULL;
-        }
-        if (run->offsets != NULL) {
-            Tcl_Free(run->offsets);
-            run->offsets = NULL;
-        }
-        if (run->visualX != NULL) {
-            Tcl_Free(run->visualX);
-            run->visualX = NULL;
-        }
-        /* NEW: free cluster arrays */
-        if (run->clusterBoundaries != NULL) {
-            Tcl_Free(run->clusterBoundaries);
-            run->clusterBoundaries = NULL;
-        }
-        if (run->clusterWidths != NULL) {
-            Tcl_Free(run->clusterWidths);
-            run->clusterWidths = NULL;
-        }
-    }
-    
-    Tcl_Free(runs);
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkWinLinebreakAwareMeasure --
- *
- * Measure a substring with both cluster-aware and linebreak-aware wrapping.
- *
- * This is a high-level convenience function that:
- * 1. Calls Tk_MeasureCharsInContext() to get the longest cluster-aligned
- *    prefix that fits within maxLength pixels
- * 2. If the entire range fits, returns immediately
- * 3. Otherwise, scans backward to find the last "safe" linebreak opportunity
- *    (space, hyphen, CJK ideograph, etc.) and re-measures to that point
- *
- * This implements a simplified subset of UAX#14 (Unicode Line Breaking
- * Algorithm) without requiring ICU integration.
- *
- * Results:
- * Returns the byte count of the chosen prefix. *lengthPtr is filled with
- * the pixel width of that prefix.
- *
- * Side effects:
- * None.
- *
- *---------------------------------------------------------------------------
- */
-int
-TkWinLinebreakAwareMeasure(
-    Tk_Font tkfont,           /* Font to use for measurement */
-    const char *source,       /* Full UTF-8 source string */
-    Tcl_Size numBytes,        /* Total bytes in source */
-    Tcl_Size rangeStart,      /* Byte offset of range start */
-    Tcl_Size rangeLength,     /* Byte length of range to measure */
-    int maxLength,            /* Max pixel width, or -1 for unbounded */
-    int *lengthPtr)           /* OUT: pixel width of returned prefix */
-{
-    /* 
-     * Measure with cluster awareness. We don't pass any flags here because
-     * we handle TK_AT_LEAST_ONE and TK_PARTIAL_OK ourselves if needed.
-     */
-    int fitBytes = Tk_MeasureCharsInContext(tkfont, source, numBytes,
-                                            rangeStart, rangeLength,
-                                            maxLength, 0, lengthPtr);
-    
-    /* If the whole range fits, we're done */
-    if (fitBytes >= (int)rangeLength) {
-        return fitBytes;
-    }
-    
-    /* 
-     * Scan backward to find the last linebreak opportunity.
-     * We start from the beginning of the range and scan up to the fit point.
-     */
-    const char *p = source + rangeStart;
-    const char *end = source + rangeStart + fitBytes;
-    const char *lastBreak = NULL;
-    int ch, prevCh = ' ';
-    
-    while (p < end) {
-        int charBytes = Tcl_UtfToUniChar(p, &ch);
-        const char *next = p + charBytes;
-        
-        /* 
-         * Simplified UAX#14 linebreak detection.
-         * We consider the following characters as "break after" opportunities:
-         * 
-         * - U+0020 SPACE (most common)
-         * - U+0009 TAB
-         * - U+00AD SOFT HYPHEN (breaks without showing hyphen)
-         * - U+2000–U+200B General Punctuation spaces
-         * - U+2010–U+2015 Hyphen variants
-         * - U+4E00–U+9FFF CJK Unified Ideographs (always breakable)
-         * - U+3040–U+309F Hiragana (always breakable)
-         * 
-         * Additional ranges can be added for other scripts (Hangul, etc.).
-         */
-        int isBreakAfter = 0;
-        
-        if (ch == ' ' || ch == '\t') {
-            isBreakAfter = 1;
-        } else if (ch >= 0x2000 && ch <= 0x200B) {
-            /* General Punctuation spaces and zero-width joiners */
-            isBreakAfter = 1;
-        } else if (ch >= 0x2010 && ch <= 0x2015) {
-            /* Hyphen-like characters */
-            isBreakAfter = 1;
-        } else if (ch == 0x00AD) {
-            /* Soft hyphen */
-            isBreakAfter = 1;
-        } else if (ch >= 0x4E00 && ch <= 0x9FFF) {
-            /* CJK Unified Ideographs */
-            isBreakAfter = 1;
-        } else if (ch >= 0x3040 && ch <= 0x309F) {
-            /* Hiragana */
-            isBreakAfter = 1;
-        } else if (ch >= 0xAC00 && ch <= 0xD7AF) {
-            /* Hangul Syllables */
-            isBreakAfter = 1;
-        }
-        
-        if (isBreakAfter) {
-            lastBreak = next;
-        }
-        
-        p = next;
-        prevCh = ch;
-    }
-    
-    /* 
-     * If we found a linebreak opportunity and it's before the fit point,
-     * re-measure to that point to get its exact width.
-     */
-    if (lastBreak != NULL && lastBreak < end) {
-        int breakBytes = lastBreak - (source + rangeStart);
-        return Tk_MeasureCharsInContext(tkfont, source, numBytes,
-                                       rangeStart, breakBytes,
-                                       -1,  /* Unbounded: measure the whole prefix */
-                                       0,   /* No flags */
-                                       lengthPtr);
-    }
-    
-    /* No linebreak found; return the cluster-aligned fit */
-    return fitBytes;
-}
-
 
 /*
  *---------------------------------------------------------------------------
@@ -2099,7 +1910,8 @@ Tk_MeasureCharsInContext(
                 int xPos = 0;
                 HRESULT hr = ScriptCPtoX(cpInRun, FALSE, run->charLen,
                                        run->glyphCount, run->logClust,
-                                       NULL, run->advances, &run->sa, &xPos);
+                                       run->visAttr, run->advances,
+                                       &run->sa, &xPos);
 
                 if (hr == S_OK) {
                     /* Uniscribe gave us the exact visual X for the cursor position */
@@ -2426,6 +2238,7 @@ TkDrawAngledChars(
  *---------------------------------------------------------------------------
  */
 
+#if 0
 void
 Tk_DrawCharsInContext(
     Display *display,
@@ -2502,46 +2315,55 @@ Tk_DrawCharsInContext(
     HFONT oldFont = (HFONT)GetCurrentObject(dc, OBJ_FONT);
 
     /*
-     * Walk runs in visual (paint) order.  For each run compute the pen
-     * position (x + sum of all preceding run widths), then draw only the
-     * glyph slice that falls within [wRangeStart, wRangeEnd).
+     * Build runOriginX[]: the visual-left pixel offset of each run from x.
+     * Runs are stored in logical order by TkWinShapeString; ScriptLayout
+     * has already placed them in visual order via visualX[], so summing
+     * charLen-th visualX gives each run's screen left edge.
      */
-    int penX = x;
+    int *runOriginX = (int *)Tcl_Alloc(sizeof(int) * nRuns);
+    {
+	int acc = 0;
+	for (i = 0; i < nRuns; i++) {
+	    runOriginX[i] = acc;
+	    acc += runs[i].visualX[runs[i].charLen];
+	}
+    }
+
+    /*
+     * Walk runs.  For each run that intersects [wRangeStart, wRangeEnd),
+     * draw only the glyph slice for those characters.
+     *
+     * Screen X for a run: x + runOriginX[i].
+     * ScriptTextOut advances through the glyph array using the advances[]
+     * we pass, so we pass glyphs+gFirst / advances+gFirst / offsets+gFirst
+     * and let it place glyphs from that origin.
+     *
+     * For LTR runs gFirst==0 means start at the run origin, which is correct.
+     * For RTL runs the glyphs are stored right-to-left within the array, but
+     * ScriptTextOut handles that internally via the SCRIPT_ANALYSIS fRTL flag;
+     * we still pass gFirst..gLast-1 and the run origin.
+     */
     for (i = 0; i < nRuns; i++) {
 	TkWinShapedRun *run = &runs[i];
-	int runWidth = 0, g;
-	for (g = 0; g < run->glyphCount; g++) runWidth += run->advances[g];
-
 	int runEnd = run->charStart + run->charLen;
 
 	if (runEnd <= wRangeStart || run->charStart >= wRangeEnd) {
-	    /* Run entirely outside the draw range — advance pen only. */
-	    penX += runWidth;
 	    continue;
 	}
 
-	/*
-	 * Find the glyph slice within this run that corresponds to the
-	 * character range.
-	 */
 	int charFirst = wRangeStart - run->charStart;
 	int charLast  = wRangeEnd   - run->charStart;
 	int gFirst, gLast;
 
 	if (!RunGlyphRange(run, charFirst, charLast, &gFirst, &gLast)) {
-	    penX += runWidth;
 	    continue;
 	}
-
-	/* Pixel offset to the first in-range glyph within this run. */
-	int preWidth = 0;
-	for (g = 0; g < gFirst; g++) preWidth += run->advances[g];
 
 	SelectObject(dc, run->hFont);
 	ScriptTextOut(
 	    dc,
 	    run->scriptCache,
-	    penX + preWidth, y,
+	    x + runOriginX[i], y,
 	    0, NULL,
 	    &run->sa,
 	    NULL, 0,
@@ -2550,17 +2372,303 @@ Tk_DrawCharsInContext(
 	    run->advances  + gFirst,
 	    NULL,
 	    run->offsets   + gFirst);
-
-	penX += runWidth;
     }
 
     SetBkMode(dc, oldBkMode);
     SelectObject(dc, oldFont);
+    Tcl_Free(runOriginX);
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
     TkWinReleaseDrawableDC(drawable, dc, &dcState);
 }
+#endif
 
+  void
+Tk_DrawCharsInContext(
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    Tk_Font tkfont,
+    const char *source,
+    Tcl_Size numBytes,		/* Total bytes in the full base-chunk string. */
+    Tcl_Size rangeStart,	/* Byte offset of the substring to draw. */
+    Tcl_Size rangeLength,	/* Byte length of the substring to draw. */
+    int x, int y)		/* Screen origin of byte 0 of the full string. */
+{
+    WinFont *fontPtr = (WinFont *) tkfont;
+    HDC dc;
+    TkWinDCState dcState;
+    Tcl_DString uniStr;
+    WCHAR *wstr;
+    int wlen, wRangeStart, wRangeEnd;
+    TkWinShapedRun *runs = NULL;
+    int nRuns = 0, i;
+
+    if (rangeLength <= 0 || drawable == None) {
+        return;
+    }
+
+    LastKnownRequestProcessed(display)++;
+
+    dc = TkWinGetDrawableDC(display, drawable, &dcState);
+
+    /*
+     * Convert the FULL source string to UTF-16 so Uniscribe sees the
+     * complete context across the cursor-mark chunk boundary.
+     */
+
+    Tcl_DStringInit(&uniStr);
+
+    Tcl_UtfToWCharDString(source, numBytes, &uniStr);
+
+    wstr = (WCHAR *) Tcl_DStringValue(&uniStr);
+    wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
+
+    /*
+     * Map UTF-8 byte offsets -> UTF-16 character offsets.
+     */
+
+    {
+        Tcl_DString tmp;
+
+        Tcl_DStringInit(&tmp);
+        Tcl_UtfToWCharDString(source, rangeStart, &tmp);
+
+        wRangeStart =
+            (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
+
+        Tcl_DStringFree(&tmp);
+
+        Tcl_DStringInit(&tmp);
+        Tcl_UtfToWCharDString(
+            source,
+            rangeStart + rangeLength,
+            &tmp);
+
+        wRangeEnd =
+            (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
+
+        Tcl_DStringFree(&tmp);
+    }
+
+    /*
+     * Shape the ENTIRE string.
+     */
+
+    if (TkWinShapeString(
+            dc,
+            fontPtr,
+            wstr,
+            wlen,
+            &runs,
+            &nRuns) < 0
+            || nRuns == 0) {
+
+        /*
+         * Fallback path.
+         */
+
+        int widthUntilStart;
+
+        Tcl_DStringFree(&uniStr);
+
+        TkWinReleaseDrawableDC(
+            drawable,
+            dc,
+            &dcState);
+
+        Tk_MeasureChars(
+            tkfont,
+            source,
+            rangeStart,
+            -1,
+            0,
+            &widthUntilStart);
+
+        Tk_DrawChars(
+            display,
+            drawable,
+            gc,
+            tkfont,
+            source + rangeStart,
+            rangeLength,
+            x + widthUntilStart,
+            y);
+
+        return;
+    }
+
+    SetROP2(dc, tkpWinRopModes[gc->function]);
+
+    if ((gc->clip_mask != None) &&
+        ((TkpClipMask *) gc->clip_mask)->type
+            == TKP_CLIP_REGION) {
+
+        SelectClipRgn(
+            dc,
+            (HRGN)((TkpClipMask *)gc->clip_mask)
+                ->value.region);
+    }
+
+    SetTextAlign(dc, TA_LEFT | TA_BASELINE);
+
+    SetTextColor(dc, gc->foreground);
+
+    {
+        int oldBkMode =
+            SetBkMode(dc, TRANSPARENT);
+
+        HFONT oldFont =
+            (HFONT)GetCurrentObject(dc, OBJ_FONT);
+
+        int *runOriginX;
+
+        /*
+         * Compute visual run origins.
+         */
+
+        runOriginX =
+            (int *) Tcl_Alloc(sizeof(int) * nRuns);
+
+        {
+            int acc = 0;
+
+            for (i = 0; i < nRuns; i++) {
+                runOriginX[i] = acc;
+                acc += runs[i].visualX[runs[i].charLen];
+            }
+        }
+
+        /*
+         * Draw intersecting portions of each run.
+         */
+
+        for (i = 0; i < nRuns; i++) {
+
+            TkWinShapedRun *run = &runs[i];
+
+            int runEnd =
+                run->charStart + run->charLen;
+
+            int charFirst;
+            int charLast;
+
+            int gFirst;
+            int gLast;
+
+            int glyphOffsetX;
+            int drawX;
+
+            int g;
+
+            /*
+             * Skip non-intersecting runs.
+             */
+
+            if (runEnd <= wRangeStart ||
+                run->charStart >= wRangeEnd) {
+
+                continue;
+            }
+
+            /*
+             * Clamp requested char range to this run.
+             */
+
+            charFirst =
+                wRangeStart - run->charStart;
+
+            charLast =
+                wRangeEnd - run->charStart;
+
+            if (charFirst < 0) {
+                charFirst = 0;
+            }
+
+            if (charLast > run->charLen) {
+                charLast = run->charLen;
+            }
+
+            if (charLast <= charFirst) {
+                continue;
+            }
+
+            /*
+             * Convert char range -> glyph range.
+             */
+
+            if (!RunGlyphRange(
+                    run,
+                    charFirst,
+                    charLast,
+                    &gFirst,
+                    &gLast)) {
+
+                continue;
+            }
+
+            if (gLast <= gFirst) {
+                continue;
+            }
+
+            /*
+             * IMPORTANT FIX:
+             *
+             * When drawing a sliced glyph array beginning at gFirst,
+             * we MUST advance the draw origin by the widths of all
+             * skipped glyphs.
+             *
+             * Otherwise every partial redraw starts from the run
+             * origin, producing severe spacing artifacts when the
+             * insert cursor splits redraws into multiple chunks.
+             */
+
+            glyphOffsetX = 0;
+
+            for (g = 0; g < gFirst; g++) {
+                glyphOffsetX += run->advances[g];
+            }
+
+            drawX =
+                x
+                + runOriginX[i]
+                + glyphOffsetX;
+
+            SelectObject(dc, run->hFont);
+
+            ScriptTextOut(
+                dc,
+                run->scriptCache,
+                drawX,
+                y,
+                0,
+                NULL,
+                &run->sa,
+                NULL,
+                0,
+                run->glyphs + gFirst,
+                gLast - gFirst,
+                run->advances + gFirst,
+                NULL,
+                run->offsets + gFirst);
+        }
+
+        SetBkMode(dc, oldBkMode);
+
+        SelectObject(dc, oldFont);
+
+        Tcl_Free(runOriginX);
+    }
+
+    TkWinFreeShapedRuns(runs, nRuns);
+
+    Tcl_DStringFree(&uniStr);
+
+    TkWinReleaseDrawableDC(
+        drawable,
+        dc,
+        &dcState);
+}
 void
 TkpDrawAngledCharsInContext(
     Display *display,		/* Display on which to draw. */
@@ -2575,20 +2683,130 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
-    Tcl_Size rangeStart,		/* Index of first byte to draw. */
-    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),	/* Number of bytes in string. */
+    Tcl_Size rangeStart,	/* Index of first byte to draw. */
+    Tcl_Size rangeLength,	/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
     double angle)		/* What angle to put text at, in degrees. */
 {
-    int widthUntilStart;
-    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+    WinFont *fontPtr = (WinFont *) tkfont;
+    HDC dc;
+    TkWinDCState dcState;
+    Tcl_DString uniStr;
+    WCHAR *wstr;
+    int wlen, wRangeStart, wRangeEnd;
+    TkWinShapedRun *runs = NULL;
+    int nRuns = 0, i;
+    double sinA, cosA;
 
-    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
-    TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
-	    rangeLength, x+cosA*widthUntilStart, y-sinA*widthUntilStart, angle);
+    if (rangeLength <= 0 || drawable == None) return;
+
+    LastKnownRequestProcessed(display)++;
+
+    /*
+     * Shape the full string up through rangeStart+rangeLength so that
+     * Uniscribe sees complete joining context (Arabic, Indic ligatures)
+     * across any chunk boundary.  We only draw glyphs whose clusters fall
+     * within [rangeStart, rangeStart+rangeLength).
+     */
+    dc = TkWinGetDrawableDC(display, drawable, &dcState);
+
+    Tcl_DStringInit(&uniStr);
+    Tcl_UtfToWCharDString(source, rangeStart + rangeLength, &uniStr);
+    wstr = (WCHAR *)Tcl_DStringValue(&uniStr);
+    wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
+
+    {
+	Tcl_DString tmp;
+	Tcl_DStringInit(&tmp);
+	Tcl_UtfToWCharDString(source, rangeStart, &tmp);
+	wRangeStart = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
+	Tcl_DStringFree(&tmp);
+	wRangeEnd = wlen;
+    }
+
+    sinA = sin(angle * PI / 180.0);
+    cosA = cos(angle * PI / 180.0);
+
+    if (TkWinShapeString(dc, fontPtr, wstr, wlen, &runs, &nRuns) < 0
+	    || nRuns == 0) {
+	/* Fallback: measure prefix width, offset pen, draw sub-range alone. */
+	int widthUntilStart;
+	Tcl_DStringFree(&uniStr);
+	TkWinReleaseDrawableDC(drawable, dc, &dcState);
+	Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
+	TkDrawAngledChars(display, drawable, gc, tkfont,
+		source + rangeStart, rangeLength,
+		x + cosA * widthUntilStart,
+		y - sinA * widthUntilStart,
+		angle);
+	return;
+    }
+
+    SetROP2(dc, tkpWinRopModes[gc->function]);
+    if ((gc->clip_mask != None) &&
+	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
+	SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
+    }
+    SetTextAlign(dc, TA_LEFT | TA_BASELINE);
+    SetTextColor(dc, gc->foreground);
+    int oldBkMode = SetBkMode(dc, TRANSPARENT);
+    HFONT oldFont = (HFONT)GetCurrentObject(dc, OBJ_FONT);
+
+    /* Build runOriginX[]: unrotated pixel offset of each run's left edge. */
+    int *runOriginX = (int *)Tcl_Alloc(sizeof(int) * nRuns);
+    {
+	int acc = 0;
+	for (i = 0; i < nRuns; i++) {
+	    runOriginX[i] = acc;
+	    acc += runs[i].visualX[runs[i].charLen];
+	}
+    }
+
+    for (i = 0; i < nRuns; i++) {
+	TkWinShapedRun *run = &runs[i];
+	int runEnd = run->charStart + run->charLen;
+
+	if (runEnd <= wRangeStart || run->charStart >= wRangeEnd) continue;
+
+	int charFirst = wRangeStart - run->charStart;
+	int charLast  = wRangeEnd   - run->charStart;
+	int gFirst, gLast;
+	if (!RunGlyphRange(run, charFirst, charLast, &gFirst, &gLast)) continue;
+
+	/* Rotate the run's unrotated x offset to get the screen position. */
+	double offset = (double)runOriginX[i];
+	int sx = (int)(x + cosA * offset + 0.5);
+	int sy = (int)(y - sinA * offset + 0.5);
+
+	HFONT hDrawFont = run->hFont;
+	HFONT hAngled   = NULL;
+	if (angle != 0.0) {
+	    hAngled = GetScreenFont(&fontPtr->font.fa,
+				    run->subFontPtr->familyPtr->faceName,
+				    fontPtr->pixelSize, angle);
+	    if (hAngled) hDrawFont = hAngled;
+	}
+	SelectObject(dc, hDrawFont);
+
+	ScriptTextOut(dc, run->scriptCache,
+	    sx, sy,
+	    0, NULL, &run->sa, NULL, 0,
+	    run->glyphs   + gFirst, gLast - gFirst,
+	    run->advances  + gFirst, NULL,
+	    run->offsets   + gFirst);
+
+	if (hAngled) DeleteObject(hAngled);
+    }
+
+    SetBkMode(dc, oldBkMode);
+    SelectObject(dc, oldFont);
+    Tcl_Free(runOriginX);
+    TkWinFreeShapedRuns(runs, nRuns);
+    Tcl_DStringFree(&uniStr);
+    TkWinReleaseDrawableDC(drawable, dc, &dcState);
 }
 
 /*
