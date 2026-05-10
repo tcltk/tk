@@ -1449,14 +1449,14 @@ RunGlyphRange(
 
 int
 Tk_MeasureCharsInContext(
-    Tk_Font tkfont,
-    const char *source,
-    Tcl_Size numBytes,
-    Tcl_Size rangeStart,
-    Tcl_Size rangeLength,
-    int maxLength,
-    int flags,
-    int *lengthPtr)
+	Tk_Font tkfont, 
+	const char *source, 
+	Tcl_Size numBytes, 
+	Tcl_Size rangeStart, 
+	Tcl_Size rangeLength, 
+	int maxLength, 
+	int flags, 
+	int *lengthPtr)
 {
     WinFont *fontPtr = (WinFont *) tkfont;
     HDC hdc;
@@ -1466,19 +1466,22 @@ Tk_MeasureCharsInContext(
     TkWinShapedRun *runs = NULL;
     int nRuns = 0;
 
+    /* Empty range: nothing to measure. */
     if (rangeLength <= 0) {
         *lengthPtr = 0;
         return 0;
     }
 
     hdc = GetDC(fontPtr->hwnd);
-
     Tcl_DStringInit(&fullUni);
-    Tcl_UtfToWCharDString(source, numBytes, &fullUni);
+    Tcl_UtfToWCharDString(source, numBytes, &fullUni);               /* Convert whole source to UTF‑16 (needed for BiDi shaping).*/
     wfull = (WCHAR *) Tcl_DStringValue(&fullUni);
     wfullLen = (int)(Tcl_DStringLength(&fullUni) / sizeof(WCHAR));
 
-    /* Byte range → UTF-16 range */
+    /*
+     * Convert the UTF‑8 byte range (rangeStart, rangeLength) into UTF-16
+     * character indices (wRangeStart inclusive, wRangeEnd exclusive style).
+     */
     int wRangeStart, wRangeEnd;
     {
         Tcl_DString tmp;
@@ -1486,84 +1489,81 @@ Tk_MeasureCharsInContext(
         Tcl_UtfToWCharDString(source, rangeStart, &tmp);
         wRangeStart = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
         Tcl_DStringFree(&tmp);
-
         Tcl_DStringInit(&tmp);
         Tcl_UtfToWCharDString(source, rangeStart + rangeLength, &tmp);
         wRangeEnd = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
         Tcl_DStringFree(&tmp);
     }
 
-    /* Shape full context */
+    /*
+     * Perform BiDi shaping on the full UTF-16 string. This returns a list
+     * of runs with visual (x-coordinate) information for each logical index.
+     */
     if (TkWinShapeString(hdc, fontPtr, wfull, wfullLen, &runs, &nRuns) < 0 || nRuns == 0) {
+        /* Shaping failed – fall back to simple, non‑contextual measurement. */
         ReleaseDC(fontPtr->hwnd, hdc);
         Tcl_DStringFree(&fullUni);
-        return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
-                maxLength, flags, lengthPtr);
+        return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength, maxLength, flags, lengthPtr);
     }
 
+    /* Visual X coordinate of the first character in the range (logical index wRangeStart).*/
     int startX = GetVisualXForLogicalIndex(runs, nRuns, wRangeStart);
 
-    int bestChars = 0;
-    int bestWidth = 0;
+    int bestChars = 0;  
+    int bestWidth = 0;  
 
     if (maxLength < 0) {
-        /* Unbounded */
+        /* Unbounded: measure the whole range. */
         int endX = GetVisualXForLogicalIndex(runs, nRuns, wRangeEnd);
-        bestWidth = endX - startX;
-        bestChars = (int)rangeLength;
+        bestWidth = abs(endX - startX);
+        bestChars = (int) rangeLength;  
     } else {
-        /* Bounded measurement */
+		/* 
+         * Bounded: search for the largest prefix whose visual width ≤ maxLength.
+         * Note: Because RTL runs can decrease the X coordinate, we use absolute
+         * differences (abs(endX - startX)) to compute the visual span.
+		 */
         for (int ci = wRangeStart; ci <= wRangeEnd; ci++) {
             int endX = GetVisualXForLogicalIndex(runs, nRuns, ci);
-            int width = endX - startX;
-
-            if (width > maxLength && ci > wRangeStart) {
-                break;
-            }
-
+            int width = abs(endX - startX);
+            if (width > maxLength && ci > wRangeStart) break;   
             bestChars = ci - wRangeStart;
             bestWidth = width;
-
-            if (width == maxLength) {
-                break;
-            }
+            if (width == maxLength) break;                  
         }
 
-        /* WHOLE_WORDS rollback */
+        /* TK_WHOLE_WORDS: roll back to the last complete word boundary. */
         if ((flags & TK_WHOLE_WORDS) && bestChars > 0 && bestChars < (wRangeEnd - wRangeStart)) {
             const char *p = source + rangeStart;
             const char *bestP = p + bestChars;
             const char *lastSpace = NULL;
-
             while (p < bestP) {
-                int ch;
-                int len = Tcl_UtfToUniChar(p, &ch);
-                if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
-                    lastSpace = p;
-                }
+                int ch, len = Tcl_UtfToUniChar(p, &ch);
+                if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') lastSpace = p;
                 p += len;
             }
-
             if (lastSpace != NULL) {
                 Tcl_DString tmp;
                 Tcl_DStringInit(&tmp);
-                Tcl_UtfToWCharDString(source + rangeStart,
-                    lastSpace - (source + rangeStart), &tmp);
+                Tcl_UtfToWCharDString(source + rangeStart, lastSpace - (source + rangeStart), &tmp);
                 int wc = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
                 Tcl_DStringFree(&tmp);
-
                 bestChars = wc;
-                bestWidth = GetVisualXForLogicalIndex(runs, nRuns, wRangeStart + bestChars) - startX;
+                bestWidth = abs(GetVisualXForLogicalIndex(runs, nRuns, wRangeStart + bestChars) - startX);
             }
         }
 
+        /* TK_AT_LEAST_ONE: ensure at least one character is taken, even if its width exceeds maxLength. */
         if ((flags & TK_AT_LEAST_ONE) && bestChars == 0 && wRangeEnd > wRangeStart) {
             bestChars = 1;
-            bestWidth = GetVisualXForLogicalIndex(runs, nRuns, wRangeStart + 1) - startX;
+            bestWidth = abs(GetVisualXForLogicalIndex(runs, nRuns, wRangeStart + 1) - startX);
         }
     }
 
-    /* Convert UTF-16 count back to UTF-8 byte count */
+    /*
+     * Convert the chosen number of UTF‑16 characters (bestChars) back to
+     * the corresponding number of UTF‑8 bytes from the original source range.
+     */
     Tcl_DString result;
     Tcl_DStringInit(&result);
     Tcl_WCharToUtfDString(wfull + wRangeStart, bestChars, &result);
@@ -1577,7 +1577,6 @@ Tk_MeasureCharsInContext(
     *lengthPtr = bestWidth;
     return resultBytes;
 }
-
 /*
  *---------------------------------------------------------------------------
  *
