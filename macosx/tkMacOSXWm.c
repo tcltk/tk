@@ -1136,7 +1136,10 @@ TkWmUnmapWindow(
     }
 }
 
-/* UpdatePointerWinAfterDestroy --
+/*
+ *----------------------------------------------------------------------
+ *
+ * UpdatePointerWinAfterDestroy --
  *
  *	Determine the new pointer window after the destruction of the old pointer
  *      window, and notify Tk of it.
@@ -1146,6 +1149,8 @@ TkWmUnmapWindow(
  *
  * Side effects:
  *	See description.
+ *
+ *----------------------------------------------------------------------
  */
 
 static void UpdatePointerWinAfterDestroy (
