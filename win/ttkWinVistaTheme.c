@@ -447,8 +447,8 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	elementData->hwnd = elementData->parentHwnd;
     }
 
-    elementData->hTheme = OpenThemeDataEx(elementData->hwnd,
-	    elementData->info->className, OTD_FORCE_RECT_SIZING);
+    elementData->hTheme = OpenThemeData(elementData->hwnd,
+	    elementData->info->className);
 
     if (!elementData->hTheme) {
 	return 0;
