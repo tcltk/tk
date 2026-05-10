@@ -315,8 +315,12 @@ static int		TkWinShapeString(HDC hdc, WinFont *fontPtr,
 static void		TkWinFreeShapedRuns(TkWinShapedRun *runs, int nRuns);
 static int		TkWinShapedRunsWidth(const TkWinShapedRun *runs,
 			    int nRuns);
-static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs, int nRuns, 
-				const int *runOriginX, int totalChars, int logicalIdx);
+static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
+						  int nRuns,
+						  const int *runOriginX,
+						  int totalChars,
+						  int logicalIdx);
+static int              ClampIndex(int idx, int totalChars);
 
 /*
  *-------------------------------------------------------------------------
@@ -1044,7 +1048,7 @@ TkWinShapeString(
 
 	if (FAILED(hr)) {
 	    /*
-	     * Shaping failed – try to find a fallback font for the whole
+	     * Shaping failed â€“ try to find a fallback font for the whole
 	     * item.  Pass &subFontPtr so the pointer is kept valid across
 	     * any reallocation of subFontArray.
 	     */
@@ -1060,83 +1064,57 @@ TkWinShapeString(
 			glyphs, logClust, visAttr, &glyphCount);
 	    }
 	    if (FAILED(hr)) {
-		/* Still failing – skip this item. */
+		/* Still failing â€“ skip this item. */
 		Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
 		continue;
 	    }
 	}
 
 	/*
-	 * Subfont fallback for missing glyphs.
-	 *
-	 * For each character position with a missing glyph (.notdef, index 0),
-	 * try to find a better subfont. Limit to ONE fallback attempt to avoid
-	 * O(n²) behavior and hangs on fonts with many missing glyphs.
-	 *
-	 * Skip supplementary-plane characters (U+10000+) as they're typically
-	 * emoji or rare scripts; fallback fonts are unlikely to have better support.
-	 *
-	 * Check ScriptShape result and revert on failure.
-	 * Stale logClust[] access causes crashes on complex scripts.
+	 * Subfont fallback for missing glyphs (improved).
+	 * Try ONE fallback per run to avoid O(nÂ²) behavior.
 	 */
 	{
 	    int ci;
-	    int foundMissing = 0;
 	    SubFont *origSubFont = subFontPtr;
 	    int origSubFontIdx = subFontIdx;
-	    
-	    for (ci = 0; ci < itemLen && !foundMissing; ci++) {
+	    BOOL didFallback = FALSE;
+
+	    for (ci = 0; ci < itemLen && !didFallback; ci++) {
 		int gi = logClust[ci];
-		
-		/* Check if this glyph is missing. */
-		if (glyphs[gi] != 0) {
-		    continue;  /* Glyph exists; move on. */
-		}
-		
-		/* Decode the character codepoint. */
-		int ch;
-		if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) &&
-			(ci + 1) < itemLen &&
-			IS_LOW_SURROGATE(wstr[itemStart + ci + 1])) {
-		    /* Supplementary-plane character (U+10000+). */
-		    ch = 0x10000
-			+ ((wstr[itemStart + ci]     - 0xD800) << 10)
-			+  (wstr[itemStart + ci + 1] - 0xDC00);
-		    
-		    /* Skip fallback for supplementary planes; .notdef is acceptable. */
+		if (gi >= glyphCount || glyphs[gi] != 0) {
 		    continue;
-		} else {
-		    ch = (int)(unsigned)wstr[itemStart + ci];
 		}
-		
-		/*
-		 * Try one fallback font. Pass &subFontPtr so reallocation
-		 * of subFontArray is reflected in our local pointer.
-		 */
+
+		/* Decode character (skip supplementary for now) */
+		int ch = (int)(unsigned)wstr[itemStart + ci];
+		if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) &&
+		    (ci + 1) < itemLen && IS_LOW_SURROGATE(wstr[itemStart + ci + 1])) {
+		    continue;   /* don't fallback emoji etc. */
+		}
+
 		SubFont *fb = FindSubFontForChar(fontPtr, ch, &subFontPtr);
 		if (fb != subFontPtr) {
 		    subFontPtr  = fb;
 		    subFontIdx  = (int)(subFontPtr - fontPtr->subFontArray);
 		    hFont       = subFontPtr->hFont0;
 		    SelectObject(hdc, hFont);
-		    
-		    /* Re-shape with the fallback font. */
+
+		    /* Re-shape with fallback */
 		    hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
 			    wstr + itemStart, itemLen,
 			    maxGlyphs, &item->a,
 			    glyphs, logClust, visAttr, &glyphCount);
-		    
-		    /* Check if re-shaping succeeded; if not, revert and stop trying. */
-		    if (FAILED(hr)) {
+
+		    if (SUCCEEDED(hr)) {
+			didFallback = TRUE;
+		    } else {
+			/* Restore original on failure */
 			subFontPtr = origSubFont;
 			subFontIdx = origSubFontIdx;
 			hFont = subFontPtr->hFont0;
 			SelectObject(hdc, hFont);
-			/* Keep original glyphs/logClust; treat as .notdef. */
 		    }
-		    
-		    /* One fallback attempt only. */
-		    foundMissing = 1;
 		}
 	    }
 	}
@@ -1214,6 +1192,14 @@ TkWinShapeString(
 		visualX[ci + 1] = curX;
 	    }
 	}
+	
+		/* Safety: prevent overruns */
+		if (visualX[itemLen] < 0 || glyphCount <= 0) {
+			/* Bad run - skip or fallback to simple rendering */
+			Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(advances);
+			Tcl_Free(offsets); Tcl_Free(visualX);
+			continue;
+		}
 
 	/*
 	 * Store the completed run.
@@ -1339,7 +1325,7 @@ GetVisualXForLogicalIndex(
         }
     }
 
-    /* Beyond end of all runs — should not reach here if totalChars is correct. */
+    /* Beyond end of all runs â€” should not reach here if totalChars is correct. */
     return runOriginX[nRuns-1] + runs[nRuns-1].visualX[runs[nRuns-1].charLen];
 }
 /*
@@ -1443,6 +1429,19 @@ RunGlyphRange(
     *gLastOut  = gMax + 1;
     return TRUE;
 }
+
+
+/*
+ * Helper: clamp logical index to [0, totalChars].
+ */
+static int
+ClampIndex(int idx, int totalChars)
+{
+    if (idx < 0) return 0;
+    if (idx > totalChars) return totalChars;
+    return idx;
+}
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1456,7 +1455,7 @@ RunGlyphRange(
  *	and then uses the visualX offsets stored in each shaped run to map
  *	logical character positions to visual X coordinates.  This ensures
  *	that the measured width of a logical prefix matches the visual layout
- *	used for drawing, eliminating the cursor “snap” in RTL scripts.
+ *	used for drawing, eliminating the cursor â€œsnapâ€ in RTL scripts.
  *
  * Results:
  *	The return value is the number of bytes from rangeStart that fit.
@@ -1470,14 +1469,14 @@ RunGlyphRange(
 
 int
 Tk_MeasureCharsInContext(
-	Tk_Font tkfont, 
-	const char *source, 
-	Tcl_Size numBytes, 
-	Tcl_Size rangeStart, 
-	Tcl_Size rangeLength, 
-	int maxLength, 
-	int flags, 
-	int *lengthPtr)
+    Tk_Font tkfont,
+    const char *source,
+    Tcl_Size numBytes,
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
+    int maxLength,
+    int flags,
+    int *lengthPtr)
 {
     WinFont *fontPtr = (WinFont *) tkfont;
     HDC hdc;
@@ -1487,29 +1486,36 @@ Tk_MeasureCharsInContext(
     TkWinShapedRun *runs = NULL;
     int nRuns = 0;
 
-    /* Empty range: nothing to measure. */
+    int wRangeStart, wRangeEnd;
+    int *runOriginX = NULL;
+    int totalChars;
+    int startX;
+    int bestChars = 0;
+    int bestWidth = 0;
+
+    /* Empty range */
     if (rangeLength <= 0) {
         *lengthPtr = 0;
         return 0;
     }
 
     hdc = GetDC(fontPtr->hwnd);
+
     Tcl_DStringInit(&fullUni);
     Tcl_UtfToWCharDString(source, numBytes, &fullUni);
     wfull = (WCHAR *) Tcl_DStringValue(&fullUni);
     wfullLen = (int)(Tcl_DStringLength(&fullUni) / sizeof(WCHAR));
 
     /*
-     * Convert the UTF‑8 byte range (rangeStart, rangeLength) into UTF-16
-     * character indices (wRangeStart inclusive, wRangeEnd exclusive style).
+     * Convert UTFâ€‘8 byte offsets â†’ UTFâ€‘16 offsets.
      */
-    int wRangeStart, wRangeEnd;
     {
         Tcl_DString tmp;
         Tcl_DStringInit(&tmp);
         Tcl_UtfToWCharDString(source, rangeStart, &tmp);
         wRangeStart = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
         Tcl_DStringFree(&tmp);
+
         Tcl_DStringInit(&tmp);
         Tcl_UtfToWCharDString(source, rangeStart + rangeLength, &tmp);
         wRangeEnd = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
@@ -1517,119 +1523,138 @@ Tk_MeasureCharsInContext(
     }
 
     /*
-     * Perform BiDi shaping on the full UTF-16 string.
+     * Shape the full string.
      */
-    if (TkWinShapeString(hdc, fontPtr, wfull, wfullLen, &runs, &nRuns) < 0 || nRuns == 0) {
-        /* Shaping failed – fall back to simple, non‑contextual measurement. */
+    if (TkWinShapeString(hdc, fontPtr, wfull, wfullLen, &runs, &nRuns) < 0 ||
+        nRuns == 0)
+    {
         ReleaseDC(fontPtr->hwnd, hdc);
         Tcl_DStringFree(&fullUni);
-        return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength, maxLength, flags, lengthPtr);
+        return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
+                               maxLength, flags, lengthPtr);
     }
 
     /*
-     * Pre-compute runOriginX: cumulative visual X offsets for each run.
-     * This avoids reallocating in each call to GetVisualXForLogicalIndex.
+     * Precompute runOriginX.
      */
-    int *runOriginX = (int *)Tcl_Alloc(sizeof(int) * nRuns);
-    int totalChars = 0;
-    int x = 0;
+    runOriginX = (int *) Tcl_Alloc(sizeof(int) * nRuns);
     {
         int i;
+        int x = 0;
         for (i = 0; i < nRuns; i++) {
             runOriginX[i] = x;
             x += runs[i].visualX[runs[i].charLen];
-            totalChars += runs[i].charLen;
         }
     }
 
-    /* Visual X coordinate of the first character in the range. */
-    int startX = GetVisualXForLogicalIndex(runs, nRuns, runOriginX, totalChars, wRangeStart);
+    totalChars = wfullLen;
 
-    int bestChars = 0;  
-    int bestWidth = 0;  
+    /*
+     * Visual X of start.
+     */
+    startX = GetVisualXForLogicalIndex(
+        runs, nRuns, runOriginX, totalChars,
+        ClampIndex(wRangeStart, totalChars));
 
+    /*
+     * Unbounded measurement.
+     */
     if (maxLength < 0) {
-        /* Unbounded: measure the whole range. */
-        int endX = GetVisualXForLogicalIndex(runs, nRuns, runOriginX, totalChars, wRangeEnd);
+        int endX = GetVisualXForLogicalIndex(
+            runs, nRuns, runOriginX, totalChars,
+            ClampIndex(wRangeEnd, totalChars));
         bestWidth = abs(endX - startX);
-        bestChars = (int) rangeLength;  
+        bestChars = wRangeEnd - wRangeStart;
     } else {
-	/*
-	 * Bounded: search for the largest prefix whose visual width ≤ maxLength.
-	 * Iterate from wRangeStart to wRangeEnd, checking visual width at each step.
-	 */
-        for (int ci = wRangeStart; ci <= wRangeEnd; ci++) {
-            int endX = GetVisualXForLogicalIndex(runs, nRuns, runOriginX, totalChars, ci);
+        /*
+         * Bounded search.
+         */
+        int ci;
+        for (ci = wRangeStart; ci <= wRangeEnd; ci++) {
+            int endX = GetVisualXForLogicalIndex(
+                runs, nRuns, runOriginX, totalChars,
+                ClampIndex(ci, totalChars));
             int width = abs(endX - startX);
-            
-            if (width > maxLength && bestChars > 0) {
-                /* Exceeded maxLength; stop and use the previous best. */
+
+            if (width > maxLength && bestChars > 0)
                 break;
-            }
-            
-            /* Update best fit. */
+
             bestChars = ci - wRangeStart;
             bestWidth = width;
-            
-            if (width == maxLength) {
-                /* Perfect fit; no need to search further. */
+
+            if (width == maxLength)
                 break;
-            }
         }
 
-        /* TK_WHOLE_WORDS: roll back to the last complete word boundary. */
-        if ((flags & TK_WHOLE_WORDS) && bestChars > 0 && bestChars < (wRangeEnd - wRangeStart)) {
-            const char *p = source + rangeStart;
-            const char *bestP = p + bestChars;
-            const char *lastSpace = NULL;
-            
-            while (p < bestP) {
-                int ch, len = Tcl_UtfToUniChar(p, &ch);
-                if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
-                    lastSpace = p;
+        /*
+         * TK_WHOLE_WORDS rollback (UTFâ€‘16 safe).
+         */
+        if ((flags & TK_WHOLE_WORDS) &&
+            bestChars > 0 &&
+            bestChars < (wRangeEnd - wRangeStart))
+        {
+            int lastBoundary = -1;
+            int i;
+
+            for (i = wRangeStart; i < wRangeStart + bestChars; i++) {
+                WCHAR wc = wfull[i];
+                if (wc == L' ' || wc == L'\t' || wc == L'\n' || wc == L'\r') {
+                    lastBoundary = i;
                 }
-                p += len;
             }
-            
-            if (lastSpace != NULL) {
-                Tcl_DString tmp;
-                Tcl_DStringInit(&tmp);
-                Tcl_UtfToWCharDString(source + rangeStart, lastSpace - (source + rangeStart), &tmp);
-                int wc = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
-                Tcl_DStringFree(&tmp);
-                
-                bestChars = wc;
-                int wordEndX = GetVisualXForLogicalIndex(runs, nRuns, runOriginX, totalChars, wRangeStart + wc);
-                bestWidth = abs(wordEndX - startX);
+
+            if (lastBoundary >= 0) {
+                int wcCount = lastBoundary - wRangeStart;
+                bestChars = wcCount;
+
+                {
+                    int wordEndX = GetVisualXForLogicalIndex(
+                        runs, nRuns, runOriginX, totalChars,
+                        ClampIndex(wRangeStart + wcCount, totalChars));
+                    bestWidth = abs(wordEndX - startX);
+                }
             }
         }
 
-        /* TK_AT_LEAST_ONE: ensure at least one character is taken. */
-        if ((flags & TK_AT_LEAST_ONE) && bestChars == 0 && wRangeEnd > wRangeStart) {
+        /*
+         * TK_AT_LEAST_ONE.
+         */
+        if ((flags & TK_AT_LEAST_ONE) &&
+            bestChars == 0 &&
+            wRangeEnd > wRangeStart)
+        {
             bestChars = 1;
-            int oneCharX = GetVisualXForLogicalIndex(runs, nRuns, runOriginX, totalChars, wRangeStart + 1);
-            bestWidth = abs(oneCharX - startX);
+            {
+                int oneX = GetVisualXForLogicalIndex(
+                    runs, nRuns, runOriginX, totalChars,
+                    ClampIndex(wRangeStart + 1, totalChars));
+                bestWidth = abs(oneX - startX);
+            }
         }
     }
 
     /*
-     * Convert the chosen number of UTF‑16 characters (bestChars) back to
-     * the corresponding number of UTF‑8 bytes from the original source range.
+     * Convert UTFâ€‘16 â†’ UTFâ€‘8 byte count.
      */
-    Tcl_DString result;
-    Tcl_DStringInit(&result);
-    Tcl_WCharToUtfDString(wfull + wRangeStart, bestChars, &result);
-    int resultBytes = Tcl_DStringLength(&result);
-    Tcl_DStringFree(&result);
+    {
+        Tcl_DString result;
+        Tcl_DStringInit(&result);
+        Tcl_WCharToUtfDString(wfull + wRangeStart, bestChars, &result);
+        {
+            int resultBytes = Tcl_DStringLength(&result);
 
-    TkWinFreeShapedRuns(runs, nRuns);
-    Tcl_Free(runOriginX);
-    Tcl_DStringFree(&fullUni);
-    ReleaseDC(fontPtr->hwnd, hdc);
+            TkWinFreeShapedRuns(runs, nRuns);
+            Tcl_Free(runOriginX);
+            Tcl_DStringFree(&fullUni);
+            ReleaseDC(fontPtr->hwnd, hdc);
 
-    *lengthPtr = bestWidth;
-    return resultBytes;
+            *lengthPtr = bestWidth;
+            Tcl_DStringFree(&result);
+            return resultBytes;
+        }
+    }
 }
+
 
 /*
  *---------------------------------------------------------------------------
@@ -1944,7 +1969,7 @@ Tk_DrawCharsInContext(
         }
 
         /*
-         * CORRECTED: Calculate the correct X position for drawing.
+         * Calculate the correct X position for drawing.
          * 
          * The visualX array stores visual X offsets for each logical character
          * boundary. For LTR, visualX increases left-to-right. For RTL, visualX
@@ -2918,7 +2943,7 @@ FontMapLoadPage(
 	    }
 	} else {
 	    /*
-	     * BMP row (codepoints U+0000–U+FFFF): use the format-4
+	     * BMP row (codepoints U+0000â€“U+FFFF): use the format-4
 	     * USHORT segment arrays as before.
 	     */
 	    segCount    = familyPtr->segCount;
@@ -3508,7 +3533,7 @@ LoadFontRanges(
 		 * supplementary planes (emoji, historic scripts, etc.).
 		 * The header at encTable.offset is:
 		 *   USHORT format   (== 12, but stored as ULONG in the
-		 *                    "fixed" 16.16 representation — high
+		 *                    "fixed" 16.16 representation â€” high
 		 *                    USHORT is 12, low USHORT is 0)
 		 *   ULONG  length
 		 *   ULONG  language
