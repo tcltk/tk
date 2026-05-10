@@ -7,11 +7,11 @@
 package require tk
 
 # --- Main window ---
-set w .bidi
+set w .biditext
 catch {destroy $w}
 toplevel $w
 wm title $w "Bidirectional Text Demonstration"
-wm iconname $w "bidi"
+wm iconname $w "biditext"
 positionWindow $w
 
 label $w.msg -font $font -wraplength 4i -anchor w -justify left \
@@ -62,7 +62,7 @@ canvas $main.canvas -width 240 -height 200 -bg white -relief sunken -bd 1
 pack $main.canvas -side right -fill both -expand yes -padx 10
 
 # Create a font of size 14 for the canvas
-font create BidiCanvasFont -size 14
+catch {font create BidiCanvasFont -size 14}
 
 # Three words (LTR, RTL, neutral) placed with 45° rotation
 set words { "Hello" "مرحبا" "Tk" }
