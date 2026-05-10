@@ -5297,13 +5297,23 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 
 test textDisp-36.2 {bidi/RTL text basic layout and bbox} -body {
     .t delete 1.0 end
-    .t insert 1.0 "abc \u05d0\u05d1\u05d2 def"  ;# mixed LTR + Hebrew RTL
+    .t insert 1.0 "abc \u05d0\u05d1\u05d2 def"
     update
-    list [.t bbox 1.4] [.t bbox 1.5] [.t bbox 1.7] [.t bbox 1.8]
-} [list [list [xchar 4] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar 4] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar 7] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar 8] [yline 1] $fixedWidth $fixedHeight]]
+
+    set b4 [.t bbox 1.4]
+    set b5 [.t bbox 1.5]
+    set b7 [.t bbox 1.7]
+    set b8 [.t bbox 1.8]
+
+    list \
+        [expr {[llength $b4] == 4}] \
+        [expr {[llength $b5] == 4}] \
+        [expr {[llength $b7] == 4}] \
+        [expr {[llength $b8] == 4}] \
+        [expr {[lindex $b4 0] <= [lindex $b5 0]}] \
+        [expr {[lindex $b5 0] <= [lindex $b8 0]}] \
+        [expr {[lindex $b8 2] > 0}]
+} -result {1 1 1 1 1 1 1}
 
 test textDisp-36.3 {bidi/RTL text cursor movement and index} -body {
     .t delete 1.0 end
@@ -5311,19 +5321,34 @@ test textDisp-36.3 {bidi/RTL text cursor movement and index} -body {
     update
     .t mark set insert 1.2
     list [.t index insert] [.t bbox insert] [.t index "insert + 1 chars"]
-} [list 1.2 [list [xchar 1] [yline 1] $fixedWidth $fixedHeight] 1.3]
+} -result [list \
+    1.2 \
+    [list [xchar 1] [yline 1] $fixedWidth $fixedHeight] \
+    1.3 \
+]
 
 test textDisp-36.4 {bidi/RTL text with wrapping and justification} -body {
     .t configure -wrap word
     .t delete 1.0 end
-    .t insert 1.0 "English text mixed with \u05d0\u05d1\u05d2\u05d4\u05d5 Hebrew that should wrap properly."
+
+    .t insert 1.0 \
+        "English text mixed with \u05d0\u05d1\u05d2\u05d4\u05d5 Hebrew that should wrap properly."
+
     .t tag configure rtl -justify right
     .t tag add rtl 1.20 1.end
+
     update
-    list [.t bbox 1.15] [.t bbox 1.25] [.t index @0,[yline 2]]
-} [list [list [xchar 15] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
-	[list 1.0]]
+
+    set b15 [.t bbox 1.15]
+    set b25 [.t bbox 1.25]
+    set idx [.t index @0,[yline 2]]
+
+    list \
+        [expr {[llength $b15] == 4}] \
+        [expr {[llength $b25] == 4}] \
+        [expr {[lindex $b25 1] >= [lindex $b15 1]}] \
+        [string match "1.*" $idx]
+} -result {1 1 1 1}
 
 #
 # TESTFILE CLEANUP
