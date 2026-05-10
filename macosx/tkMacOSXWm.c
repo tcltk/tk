@@ -349,6 +349,7 @@ static void		TopLevelEventProc(void *clientData,
 static void		WmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *table);
 static void		UpdateGeometryInfo(void *clientData);
+static void		UpdatePointerWinAfterDestroy(TKWindow *deadNSWindow);
 static void		UpdateSizeHints(TkWindow *winPtr);
 static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -1135,6 +1136,85 @@ TkWmUnmapWindow(
     }
 }
 
+/* UpdatePointerWinAfterDestroy --
+ *
+ *	Remove references to the Tk window from the mouse event processing
+ *	state which is recorded in the NSApplication object and notify Tk
+ *	of the new pointer window.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	See description.
+ */
+
+static void UpdatePointerWinAfterDestroy (
+    TKWindow *deadNSWindow)	/* Top-level window that's being deleted */
+{
+    Tk_Window target = NULL;
+    TkWindow *winPtr;
+    NSWindow *w;
+
+    NSPoint mouse = [NSEvent mouseLocation];
+    if (! NSPointInRect(mouse, [deadNSWindow frame])) {
+	return;
+    }
+
+    /*
+     * Determine the new window to contain the screen pointer (target window).
+     * In case that the procedure doesn't yield a result, let the root window
+     * of the screen be the new pointer window (target == NULL).
+     */
+
+    /* Step 1: Find the toplevel that will contain the screen pointer */
+    winPtr = NULL;
+    for (w in [NSApp orderedWindows]) {
+	if (w == deadNSWindow || w == NULL) {
+	    continue;
+	}
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (winPtr == NULL || ! Tk_IsMapped((Tk_Window)winPtr)) {
+	    continue;
+	}
+	if (NSPointInRect(mouse, [w frame])) {
+	    target = (Tk_Window)winPtr;
+	    break;
+	}
+    }
+
+    NSPoint local = [w tkConvertPointFromScreen: mouse];
+    int top_x = floor(local.x),
+	top_y = floor(w.frame.size.height - local.y);
+    int root_x = floor(mouse.x),
+	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
+
+    Bool doUpdatePointer = True;
+    if (target) {
+	/*
+	 * Step 2: Find the Tk internal window within the toplevel that will contain
+	 *         the screen pointer.
+	 */
+	int dummy_x, dummy_y;
+	target = Tk_TopCoordsToWindow(target, top_x, top_y, &dummy_x, &dummy_y);
+	if (! Tk_IsTopLevel(target) && (Tk_Parent(target) == NULL)) {
+	   /*
+	    * The parent of the Tk internal window is in the process of being destroyed.
+	    * Don't call Tk_UpdatePointer in this case.
+	    */
+	    doUpdatePointer = False;
+	}
+    }
+    if (doUpdatePointer) {
+	Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
+	if (target == NULL) {
+	    [NSApp setTkPointerWindow:nil];
+	} else {
+	    [NSApp setTkPointerWindow: (TkWindow *)target];
+	}
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1159,8 +1239,6 @@ void
 TkWmDeadWindow(
     TkWindow *winPtr)		/* Top-level window that's being deleted. */
 {
-    TkWindow *winPtr2;
-    NSWindow *w;
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
     TKWindow *deadNSWindow = NULL;
     if (Tk_WindowId(winPtr) == None) {
@@ -1234,68 +1312,7 @@ TkWmDeadWindow(
 	Tcl_Free(transientPtr);
     }
 
-    /*
-     * Remove references to the Tk window from the mouse event processing
-     * state which is recorded in the NSApplication object and notify Tk
-     * of the new pointer window.
-     *
-     * The procedure for finding the Tk window that will inherit the screen
-     * pointer is divided into two steps:
-     * 1. find the toplevel that will contain the screen pointer
-     * 2. find the Tk internal window within that toplevel that will contain
-     *    the screen pointer.
-     *
-     * In case that the procedure doesn't yield a result, let the root window
-     * of the screen be the new pointer window (target == NULL).
-     */
-    Tk_Window target = NULL;
-    NSPoint mouse = [NSEvent mouseLocation];
-
-    /* Step 1: the toplevel that will contain the screen pointer */
-    winPtr2 = NULL;
-    for (w in [NSApp orderedWindows]) {
-	if (w == deadNSWindow || w == NULL) {
-	    continue;
-	}
-	winPtr2 = TkMacOSXGetTkWindow(w);
-	if (winPtr2 == NULL || ! Tk_IsMapped((Tk_Window)winPtr2)) {
-	    continue;
-	}
-	if (NSPointInRect(mouse, [w frame])) {
-	    target = (Tk_Window)winPtr2;
-	    break;
-	}
-    }
-
-    NSPoint local = [w tkConvertPointFromScreen: mouse];
-    int top_x = floor(local.x),
-	top_y = floor(w.frame.size.height - local.y);
-    int root_x = floor(mouse.x),
-	root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
-
-    Bool doUpdatePointer = True;
-    if (target) {
-	/*
-	 * Step 2: Tk internal window within the toplevel.
-	 */
-	int dummy_x, dummy_y;
-	target = Tk_TopCoordsToWindow(target, top_x, top_y, &dummy_x, &dummy_y);
-	if (! Tk_IsTopLevel(target) && (Tk_Parent(target) == NULL)) {
-	   /*
-	    * The parent of the Tk internal window is in the process of being destroyed.
-	    * Don't call Tk_UpdatePointer in this case.
-	    */
-	    doUpdatePointer = False;
-	}
-    }
-    if (doUpdatePointer) {
-	Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
-	if (target == NULL) {
-	    [NSApp setTkPointerWindow:nil];
-	} else {
-	    [NSApp setTkPointerWindow: (TkWindow *)target];
-	}
-    }
+    UpdatePointerWinAfterDestroy(deadNSWindow);
 
     /*
      * Unregister the NSWindow and remove all references to it from the Tk
