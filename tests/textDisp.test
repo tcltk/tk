@@ -5104,7 +5104,7 @@ test textDisp-32.3 "NULL undisplayProc problems: #1791052" -setup {
 	R0lGODlhEgASANUAAAAAAP/////iHP/mIPrWDPraEP/eGPfOAPbKAPbOBPrS
 	CP/aFPbGAPLCAPLGAN62ANauAMylAPbCAPW/APK+AN6uALKNAPK2APK5ANal
 	AOyzArGHBZp3B+6uAHFVBFVACO6qAOqqAOalAMGMAbF+Am1QBG5QBeuiAOad
-	AM6NAJ9vBW1MBFlACFQ9CVlBCuaZAOKVANyVAZlpBMyFAKZtBJVhBEAUEP//
+	AOKVANyVAZlpBMyFAKZtBJVhBEAUEP//
 	/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAADcALAAAAAASABIAAAa+
 	wJtw+Ckah0iiZwNhODKk0icp/HAShEKBoEBgVFOkK0Iw2GyCs+BAGbGIlrIt
 	EJjXBYgL6X3zJMx1Z2d3EyEmNx9xaYGCdwgaNEUPBYt0do4XKUUOlAOCnmcD
@@ -5294,6 +5294,36 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
 } -cleanup {
     destroy .t1
 } -result {}
+
+test textDisp-36.2 {bidi/RTL text basic layout and bbox} -body {
+    .t delete 1.0 end
+    .t insert 1.0 "abc \u05d0\u05d1\u05d2 def"  ;# mixed LTR + Hebrew RTL
+    update
+    list [.t bbox 1.4] [.t bbox 1.5] [.t bbox 1.7] [.t bbox 1.8]
+} [list [list [xchar 4] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 4] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 7] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 8] [yline 1] $fixedWidth $fixedHeight]]
+
+test textDisp-36.3 {bidi/RTL text cursor movement and index} -body {
+    .t delete 1.0 end
+    .t insert 1.0 "\u05d0\u05d1\u05d2\u05d4"  ;# pure Hebrew RTL
+    update
+    .t mark set insert 1.2
+    list [.t index insert] [.t bbox insert] [.t index "insert + 1 chars"]
+} [list 1.2 [list [xchar 1] [yline 1] $fixedWidth $fixedHeight] 1.3]
+
+test textDisp-36.4 {bidi/RTL text with wrapping and justification} -body {
+    .t configure -wrap word
+    .t delete 1.0 end
+    .t insert 1.0 "English text mixed with \u05d0\u05d1\u05d2\u05d4\u05d5 Hebrew that should wrap properly."
+    .t tag configure rtl -justify right
+    .t tag add rtl 1.20 1.end
+    update
+    list [.t bbox 1.15] [.t bbox 1.25] [.t index @0,[yline 2]]
+} [list [list [xchar 15] [yline 1] $fixedWidth $fixedHeight] \
+	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight] \
+	[list 1.0]]
 
 #
 # TESTFILE CLEANUP
