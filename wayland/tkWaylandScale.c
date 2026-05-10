@@ -50,7 +50,7 @@ TkScale *
 TkpCreateScale(
     TCL_UNUSED(Tk_Window))
 {
-    return (TkScale *)Tcl_Alloc(sizeof(TkScale));
+    return Tcl_Alloc(sizeof(TkScale));
 }
 
 /*
@@ -457,11 +457,13 @@ DisplayHorizontalScale(
     if ((scalePtr->flags & REDRAW_OTHER) && (scalePtr->labelObj != NULL)) {
 	Tk_FontMetrics fm;
 	Tcl_Size labelLength;
-	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj, &labelLength);
+	const char *label = Tcl_GetStringFromObj(scalePtr->labelObj,
+						 &labelLength);
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, label, labelLength, scalePtr->inset + fm.ascent/2,
+		scalePtr->tkfont, label, labelLength,
+		     scalePtr->inset + fm.ascent/2,
 		scalePtr->horizLabelY + fm.ascent);
     }
 }
@@ -554,6 +556,7 @@ void
 TkpDisplayScale(
     void *clientData)	/* Widget record for scale. */
 {
+    printf("DisplayScale\n");
     TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
     Tcl_Interp *interp = scalePtr->interp;
@@ -563,9 +566,11 @@ TkpDisplayScale(
     XRectangle drawnArea;
     Tcl_DString buf;
     int highlightWidth, borderWidth;
+    printf("TkpDisplayScale\n");
 
     scalePtr->flags &= ~REDRAW_PENDING;
     if ((tkwin == NULL) || !Tk_IsMapped(tkwin)) {
+      printf("Not Mapped\n");
 	goto done;
     }
 
@@ -598,20 +603,7 @@ TkpDisplayScale(
 	return;
     }
     Tcl_Release(scalePtr);
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-    /*
-     * In order to avoid screen flashes, this function redraws the scale in a
-     * pixmap, then copies the pixmap to the screen in a single operation.
-     * This means that there's no point in time where the on-sreen image has
-     * been cleared.
-     */
-
-    pixmap = Tk_GetPixmap(scalePtr->display, Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
-#else
     pixmap = Tk_WindowId(tkwin);
-#endif /* TK_NO_DOUBLE_BUFFERING */
     drawnArea.x = 0;
     drawnArea.y = 0;
     drawnArea.width = Tk_Width(tkwin);
@@ -633,7 +625,8 @@ TkpDisplayScale(
      * vertical scales: border and traversal highlight.
      */
 
-    Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->highlightWidthObj,
+			&highlightWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, scalePtr->borderWidthObj, &borderWidth);
     if (scalePtr->flags & REDRAW_OTHER) {
 	if (scalePtr->relief != TK_RELIEF_FLAT) {
@@ -655,19 +648,6 @@ TkpDisplayScale(
 	    Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, pixmap);
 	}
     }
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-    /*
-     * Copy the information from the off-screen pixmap onto the screen, then
-     * delete the pixmap.
-     */
-
-    XCopyArea(scalePtr->display, pixmap, Tk_WindowId(tkwin),
-	    scalePtr->copyGC, drawnArea.x, drawnArea.y, drawnArea.width,
-	    drawnArea.height, drawnArea.x, drawnArea.y);
-    Tk_FreePixmap(scalePtr->display, pixmap);
-#endif /* TK_NO_DOUBLE_BUFFERING */
-
   done:
     scalePtr->flags &= ~REDRAW_ALL;
 }

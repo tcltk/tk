@@ -495,7 +495,7 @@ TkWmMapWindow(TkWindow *winPtr)
 
         /* Get the actual window size after showing. */
         glfwGetWindowSize(glfwWindow, &w, &h);
-        
+
 	/* Queue expose for entire window. */
 	TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
         winPtr->flags |= TK_MAPPED;
@@ -791,8 +791,9 @@ Tk_MakeWindow(
          *
          */
 
-      printf("Exposing %s to %dx%d\n", Tk_PathName(winPtr),
+      printf("Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
 	     winPtr->changes.width, winPtr->changes.height);
+
       TkWaylandQueueExposeEvent(winPtr, 0, 0,
 				winPtr->changes.width,
 				winPtr->changes.height);
@@ -1893,7 +1894,7 @@ WmDeiconifyCmd(
         Tcl_WrongNumArgs(interp, 0, objv, "pathName deiconify");
         return TCL_ERROR;
     }
-    
+
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
 
     wmPtr->withdrawn = 0;
@@ -2025,7 +2026,7 @@ WmGeometryCmd(
         Tcl_WrongNumArgs(interp, 0, objv, "pathName geometry ?newGeometry?");
         return TCL_ERROR;
     }
-    
+
     /* Return current geometry. */
     if (objc == 0) {
         int width, height;
@@ -2039,23 +2040,23 @@ WmGeometryCmd(
 		 width, height, wmPtr->x, wmPtr->y));
         return TCL_OK;
     }
-    
+
     /* Handle empty string - reset to default. */
     if (*Tcl_GetString(objv[0]) == '\0') {
         wmPtr->width = wmPtr->height = -1;
-        
+
         if (wmPtr->flags & WM_UPDATE_PENDING) {
             Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
-        
+
         if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
             UpdateGeometryInfo((void *)winPtr);
         }
-        
+
         return TCL_OK;
     }
-    
+
     /* Parse and apply new geometry. */
     if (ParseGeometry(interp, Tcl_GetString(objv[0]), winPtr) != TCL_OK) {
         return TCL_ERROR;
@@ -2076,17 +2077,17 @@ WmGeometryCmd(
             Tcl_CancelIdleCall(UpdateGeometryInfo, (void *)winPtr);
             wmPtr->flags &= ~WM_UPDATE_PENDING;
         }
-        
+
         /* Update internal Tk/GLFW state. */
         UpdateGeometryInfo((void *)winPtr);
-        
+
         /* Process events to ensure callback fires before command returns */
         ////TkGlfwProcessEvents();
-        
+
         /* Verify the change actually took effect. */
         int newWidth, newHeight;
         glfwGetWindowSize(glfwWindow, &newWidth, &newHeight);
-        
+
         /* If the size didn't change (e.g., constrained by min/max),
 	 * update wmPtr. */
         if (wmPtr->width > 0 && wmPtr->width != newWidth) {
@@ -2095,12 +2096,12 @@ WmGeometryCmd(
         if (wmPtr->height > 0 && wmPtr->height != newHeight) {
             wmPtr->height = newHeight;
         }
-        
+
         /* Update Tk's changes structure. */
         winPtr->changes.width = newWidth;
         winPtr->changes.height = newHeight;
     }
-    
+
     return TCL_OK;
 }
 
@@ -2332,9 +2333,9 @@ WmIconifyCmd(
 
 static int
 WmIconmaskCmd(
-	      TCL_UNUSED(Tk_Window), 
+	      TCL_UNUSED(Tk_Window),
 	      TCL_UNUSED(TkWindow *),
-	      TCL_UNUSED(Tcl_Interp *), 
+	      TCL_UNUSED(Tcl_Interp *),
 	      TCL_UNUSED(int),
 	      TCL_UNUSED(Tcl_Obj *const *))
 { return TCL_OK; }
@@ -2464,9 +2465,9 @@ WmIconphotoCmd(
 
 static int
 WmIconpositionCmd(
-		  TCL_UNUSED(Tk_Window), 
+		  TCL_UNUSED(Tk_Window),
 		  TCL_UNUSED(TkWindow *),
-		  TCL_UNUSED(Tcl_Interp *), 
+		  TCL_UNUSED(Tcl_Interp *),
 		  TCL_UNUSED(int),
 		  TCL_UNUSED(Tcl_Obj *const *))
 { return TCL_OK; }
@@ -2489,9 +2490,9 @@ WmIconpositionCmd(
 
 static int
 WmIconwindowCmd(
-		TCL_UNUSED(Tk_Window), 
+		TCL_UNUSED(Tk_Window),
 		TCL_UNUSED(TkWindow *),
-		TCL_UNUSED(Tcl_Interp *), 
+		TCL_UNUSED(Tcl_Interp *),
 		TCL_UNUSED(int),
 		TCL_UNUSED(Tcl_Obj *const *))
 { return TCL_OK; }
@@ -2514,10 +2515,10 @@ WmIconwindowCmd(
 
 static int
 WmManageCmd(
-	    TCL_UNUSED(Tk_Window), 
+	    TCL_UNUSED(Tk_Window),
 	    TCL_UNUSED(TkWindow *),
-	    Tcl_Interp *interp, 
-	    int objc, 
+	    Tcl_Interp *interp,
+	    int objc,
 	    Tcl_Obj *const objv[])
 {
     if (objc != 0) {
@@ -3216,9 +3217,9 @@ WmWithdrawCmd(
     if (objc != 0) {
         Tcl_WrongNumArgs(interp,0,objv,"pathName withdraw"); return TCL_ERROR;
     }
-    
+
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-  
+
     wmPtr->withdrawn = 1;
     wmPtr->initialState = WithdrawnState;
 
@@ -3621,7 +3622,7 @@ TopLevelReqProc(
      * A window which has never been mapped has no WmInfo, so its
      * geometry cannot be updated yet.
      */
-       
+
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
         wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);
         Tcl_DoWhenIdle(UpdateGeometryInfo, (void *)winPtr);
@@ -3660,7 +3661,7 @@ UpdateGeometryInfo(
     }
     printf("UpdateGeometryInfo: %s to %dx%d\n", Tk_PathName(winPtr),
 	   wmPtr->width, wmPtr->height);
-    
+
     wmPtr->flags &= ~WM_UPDATE_PENDING;
 
     /* Apply any pending size hint updates. */
@@ -3678,7 +3679,7 @@ UpdateGeometryInfo(
     /* Calculate target size. The reqProc sets negative wmPtr sizes. */
     tw = wmPtr->width < 0 ? winPtr->reqWidth : wmPtr->width;
     th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
-    
+
     /* Ensure minimum size. */
     if (tw < wmPtr->minWidth) tw = wmPtr->minWidth;
     if (th < wmPtr->minHeight) th = wmPtr->minHeight;
@@ -3686,11 +3687,11 @@ UpdateGeometryInfo(
     /* Apply size change if needed. */
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
 	printf("glfwSetWindowSize %s -> %dx%d\n",
-	       Tk_PathName(winPtr), tw, th); 
+	       Tk_PathName(winPtr), tw, th);
         glfwSetWindowSize(glfwWindow, tw, th);
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
-        
+
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
     }
@@ -3701,7 +3702,7 @@ UpdateGeometryInfo(
         glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
     }
-    
+
 }
 
 /*
@@ -3911,7 +3912,7 @@ ParseGeometry(
             goto badGeom;
         }
         p = end + 1; /* skip 'x' */
-        
+
         height = (int)strtol(p, &end, 10);
         if (end == p) {
             goto badGeom;
@@ -3949,7 +3950,7 @@ ParseGeometry(
         if (height < wmPtr->minHeight) height = wmPtr->minHeight;
         if (wmPtr->maxWidth > 0 && width > wmPtr->maxWidth) width = wmPtr->maxWidth;
         if (wmPtr->maxHeight > 0 && height > wmPtr->maxHeight) height = wmPtr->maxHeight;
-        
+
         wmPtr->width = width;
         wmPtr->height = height;
     }

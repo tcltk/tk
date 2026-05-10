@@ -275,20 +275,13 @@ TkWaylandCheckForWindowClosure(void)
  */
     
 static void
-TkWaylandSetupProc(TCL_UNUSED(void *),
-			 int flags)
+TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
+		   TCL_UNUSED(int))    /* flags */
 {
     TSD_INIT();
     Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
-    
-    if (tsdPtr->shutdownInProgress) {
-        /* Don't block during shutdown. */
-        Tcl_SetMaxBlockTime(&noBlock);
-	printf("SetupProc returning - shutdown in progress.\n");
-        return;
-    }
-
+    //Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
+    Tcl_Time oneRefresh = {0, 0};
     /*
      * The Tcl event loop will have run all pending display procs
      * before calling this function.  Now we can swap the GL buffers
@@ -433,21 +426,20 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;
     
     /* Queue it. */
-    printf("Queuing Expose(%lu)\n", event.xexpose.serial);
+    printf("Queuing Expose(%lu) for %s with count %d\n",
+	   event.xexpose.serial,
+	   Tk_PathName(winPtr),
+	   event.xexpose.count);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
-        if (!Tk_IsMapped((Tk_Window)childPtr) ||
-	    Tk_IsTopLevel((Tk_Window)childPtr)) {
-	    //if (Tk_IsTopLevel((Tk_Window)childPtr)) {
+        if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
             continue;
         }
-        TkWaylandQueueExposeEvent(childPtr, 
-                                 0, 0,
-                                 Tk_Width((Tk_Window)childPtr),
-                                 Tk_Height((Tk_Window)childPtr));
+        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
+				  Tk_Height(childPtr));
     }
 }
 
@@ -732,7 +724,7 @@ TkGlfwWindowFocusCallback(
 
     memset(&event, 0, sizeof(XEvent));
     event.type = focused ? FocusIn : FocusOut;
-    event.xfocus.serial     = LastKnownRequestProcessed(winPtr->display)++;
+    event.xfocus.serial      = LastKnownRequestProcessed(winPtr->display)++;
     event.xfocus.send_event  = False;
     event.xfocus.display     = winPtr->display;
     event.xfocus.window      = Tk_WindowId((Tk_Window)winPtr);

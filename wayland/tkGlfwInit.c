@@ -67,9 +67,9 @@ static int shutdownInProgress = 0;
  * can iterate through all GLFW windows in the application.
  */
 
-typedef enum {
-    needsDisplay = 1
-} glfwTkInfoFlag;
+/* Flag values */
+#define needsDisplay 1
+#define dontSwap     2
 
 typedef struct glfwTkInfo {
     GLFWwindow* glfwWindow;
@@ -132,6 +132,84 @@ getGlfwTkInfo(
 /*
  *----------------------------------------------------------------------
  *
+ * Tk_ClipDrawableToRect --
+ *
+ *      There are a number of places in the generic code where a complex
+ *      drawing operation is "double-buffered" copying a rectangle in
+ *      a window to a pixmap, drawing into the pixmap, and then copying
+ *      the pixmap back onto the original screen rectangle.  Platforms
+ *      such macOS and Wayland, for which drawing to a window is already
+ *      double-buffered can opt out of this behavior by defining
+ *      NO_DOUBLE_BUFFERING.  The alternative code first calls this
+ *      function with arguments describing the rectangle, then draws
+ *      directly to the screen (i.e. to the backing store for the window)
+ *      and then calls this function again with an infinite rectangle
+ *      having width and height -1.
+ *
+ *      To make this work correctly in this port we avoid calling
+ *      glfwSwapBuffers between the two calls.  In the second call
+ *      we blit the rectange from our backing store framebuffer and
+ *      the call glfwSwapBuffers.  We don't bother clipping the
+ *      drawing operations.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Calls to glfwSwapBuffers are blocked when a finite rectangle
+ *      is passed, and when an infinite rectangle is passed the original
+ *      rectangle is blitted to the backing store framebuffer and
+ *      glfwSwapBuffers is called.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+static void blitFBOToBack(NVGLUframebuffer *fbo, int width, int height) {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, width, height,
+		      0, 0, width, height,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+    glFlush();
+    glFinish();
+}
+
+void
+Tk_ClipDrawableToRect(
+    TCL_UNUSED(Display *),
+    Drawable drawable,
+    int x, int y,
+    int width, int height)
+{
+    static int X=0, Y=0, W=0, H=0;
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (width == -1 || height == -1) {
+	printf("Swapping ... ");
+	TkWindow *winPtr = glfwInfoPtr->winPtr;
+	int width, height;
+	NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr,
+	    &width, &height);
+	// We could be more efficient and only blit the rectangle here.
+	glfwMakeContextCurrent(glfwWindow);
+	blitFBOToBack(fbo, width, height);
+	glfwSwapBuffers(glfwWindow);
+	glfwInfoPtr->flags &= ~needsDisplay;
+	       printf("Clearing dontSwap\n");       
+	glfwInfoPtr->flags &= ~dontSwap;
+	X = 0; Y = 0; W = 0; H = 0;
+    } else {
+	printf("Setting dontSwap\n");
+	glfwInfoPtr->flags |= dontSwap;
+	X = x; Y = y; W = width; H = height;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandDisplayAllWindows --
  *
  *	Called by TkWaylandSetupProc to display any "dirty" windows whose
@@ -147,23 +225,16 @@ getGlfwTkInfo(
  *----------------------------------------------------------------------
  */
 
-static void blitFBOToBack(NVGLUframebuffer *fbo, int width, int height) {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, width, height,
-		      0, 0, width, height,
-		      GL_COLOR_BUFFER_BIT,
-		      GL_NEAREST);
-    glFlush();
-    glFinish();
-}
-
 MODULE_SCOPE void
 TkWaylandDisplayAllWindows()
 {
     for (glfwTkInfo* glfwTkInfoPtr = glfwTkInfoList;
-	 glfwTkInfoPtr != NULL;
-	 glfwTkInfoPtr = glfwTkInfoPtr->nextPtr) {
+	     glfwTkInfoPtr != NULL;
+	     glfwTkInfoPtr = glfwTkInfoPtr->nextPtr) {
+	if (glfwTkInfoPtr->flags & dontSwap) {
+	    printf("Skipping swap\n");
+	    continue;
+	}
 	if (glfwTkInfoPtr->flags & needsDisplay) {
 	    GLFWwindow *glfwWindow = glfwTkInfoPtr->glfwWindow;
 	    TkWindow *winPtr = glfwTkInfoPtr->winPtr;
