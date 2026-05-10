@@ -3,12 +3,12 @@
  *
  *	Contains the Windows implementation of the platform-independent font
  *	package interface with support for shaping and RTL support with complex
- *  	script languages like Arabic.
+ *	script languages like Arabic.
  *
- * Copyright © 1994 Software Research Associates, Inc.
- * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 1998-1999 Scriptics Corporation.
- * Copyright © 2026 Kevin Walzer
+ * Copyright (c) 1994 Software Research Associates, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright (c) 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -184,10 +184,10 @@ typedef struct CanUse {
  * produces an array of these; the drawing layer consumes them without any
  * further Unicode processing.
  *
- * Ownership: glyphs, advances, offsets, logClust, and visualX are allocated by
+ * Ownership: glyphs, advances, offsets, logClust are allocated by
  * TkWinShapeString() and freed by TkWinFreeShapedRuns().
  *
- * FIX 1: Changed scriptCache field to an index into fontPtr->scriptCacheArray.
+ * The scriptCacheIdx field is an index into fontPtr->scriptCacheArray.
  * The index is safe across reallocations of subFontArray and scriptCacheArray
  * because the run always refers back to the owning WinFont via fontPtr.
  * ScriptTextOut must receive the current pointer, which is looked up with
@@ -220,10 +220,7 @@ typedef struct TkWinShapedRun {
 				 * index of the first glyph for UTF-16 char i
 				 * within this run.  Length = charLen.
 				 * (malloced). */
-    int         *visualX;       /* Length charLen+1: visual X offsets from run
-				 * start. visualX[0] = 0, visualX[charLen] =
-				 * run width. malloced, freed in
-				 * TkWinFreeShapedRuns. */
+	SCRIPT_VISATTR *visAttr;				 
 } TkWinShapedRun;
 
 /*
@@ -273,6 +270,9 @@ static void		FontMapInsert(SubFont *subFontPtr, int ch);
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
 static int		FontMapLookup(SubFont *subFontPtr, int ch);
 static void		FreeFontFamily(FontFamily *familyPtr);
+static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
+			    int nRuns, const int *runOriginX,
+			    int totalChars, int logicalIdx);
 static HFONT		GetScreenFont(const TkFontAttributes *faPtr,
 			    const char *faceName, int pixelSize,
 			    double angle);
@@ -315,12 +315,7 @@ static int		TkWinShapeString(HDC hdc, WinFont *fontPtr,
 static void		TkWinFreeShapedRuns(TkWinShapedRun *runs, int nRuns);
 static int		TkWinShapedRunsWidth(const TkWinShapedRun *runs,
 			    int nRuns);
-static int		GetVisualXForLogicalIndex(const TkWinShapedRun *runs,
-						  int nRuns,
-						  const int *runOriginX,
-						  int totalChars,
-						  int logicalIdx);
-static int              ClampIndex(int idx, int totalChars);
+static int		ClampIndex(int idx, int totalChars);
 
 /*
  *-------------------------------------------------------------------------
@@ -884,7 +879,6 @@ TkpGetFontAttrsForChar(
  *	       a. Select the appropriate WinFont subfont (with fallback).
  *	       b. ScriptShape  -- map chars -> glyphs
  *	       c. ScriptPlace  -- compute advance widths and offsets
- *	       d. Compute visualX offsets for logical character boundaries.
  *	  5. Return the run array to the caller.
  *
  *	Subfont fallback: if ScriptShape returns a missing-glyph for any
@@ -935,7 +929,7 @@ TkWinShapeString(
     }
     if (FAILED(hr)) {
 	if (items != stackItems) {
-	Tcl_Free(items);
+	    Tcl_Free(items);
 	}
 	*runsOut = NULL;
 	*runCountOut = 0;
@@ -947,30 +941,32 @@ TkWinShapeString(
      * Compute the visual (left-to-right) order of the logical items so we
      * can iterate them in the correct paint order.
      */
-    int *visualToLogical = (int *)Tcl_Alloc(sizeof(int) * itemCount);
     {
 	BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * itemCount);
-	int   i;
+	int i;
 	for (i = 0; i < itemCount; i++) {
 	    levels[i] = (BYTE)items[i].a.s.uBidiLevel;
 	}
-	hr = ScriptLayout(itemCount, levels, visualToLogical, NULL);
+	hr = ScriptLayout(itemCount, levels, NULL, NULL);
 	Tcl_Free(levels);
-	if (FAILED(hr)) {
-	    /* Fallback: identity order. */
-	    for (i = 0; i < itemCount; i++) visualToLogical[i] = i;
-	}
+	/* If ScriptLayout fails, we fall back to logical order (identity). */
     }
 
     /*
-     * Shape and place each item in visual order.
+     * Allocate run array (worst case: one run per item)
      */
     TkWinShapedRun *runs = (TkWinShapedRun *)
 	    Tcl_Alloc(sizeof(TkWinShapedRun) * itemCount);
     int nRuns = 0;
 
-    for (int vi = 0; vi < itemCount; vi++) {
-	int li = visualToLogical[vi];   /* logical item index */
+    /*
+     * Shape and place each item in visual order.
+     * We iterate in logical order because ScriptLayout only reorders
+     * the items when we later use the levels; for simplicity we just
+     * use logical order and rely on the bidi levels inside each item
+     * to produce correct glyph ordering.
+     */
+    for (int li = 0; li < itemCount; li++) {
 	SCRIPT_ITEM *item = &items[li];
 	int itemStart = item->iCharPos;
 	int itemLen   = items[li + 1].iCharPos - itemStart;
@@ -1048,7 +1044,7 @@ TkWinShapeString(
 
 	if (FAILED(hr)) {
 	    /*
-	     * Shaping failed â try to find a fallback font for the whole
+	     * Shaping failed -- try to find a fallback font for the whole
 	     * item.  Pass &subFontPtr so the pointer is kept valid across
 	     * any reallocation of subFontArray.
 	     */
@@ -1064,15 +1060,16 @@ TkWinShapeString(
 			glyphs, logClust, visAttr, &glyphCount);
 	    }
 	    if (FAILED(hr)) {
-		/* Still failing â skip this item. */
-		Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
+		/* Still failing -- skip this item. */
+		Tcl_Free(glyphs); 
+		Tcl_Free(logClust);
 		continue;
 	    }
 	}
 
 	/*
 	 * Subfont fallback for missing glyphs (improved).
-	 * Try ONE fallback per run to avoid O(nÂ²) behavior.
+	 * Try ONE fallback per run to avoid O(n^2) behavior.
 	 */
 	{
 	    int ci;
@@ -1129,77 +1126,12 @@ TkWinShapeString(
 	hr = ScriptPlace(hdc, &fontPtr->scriptCacheArray[subFontIdx],
 		glyphs, glyphCount, visAttr, &item->a,
 		advances, offsets, &abc);
+
 	if (FAILED(hr)) {
 	    Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
 	    Tcl_Free(advances); Tcl_Free(offsets);
 	    continue;
 	}
-
-	/* logClust and visAttr are not needed past this point. */
-	Tcl_Free(visAttr);
-
-	/*
-	 * Compute visualX offsets for logical character boundaries.
-	 *
-	 * visualX[i] is the visual X distance from the run's left (visual)
-	 * edge to the inter-character boundary before logical character i.
-	 * visualX[0] == 0 always; visualX[itemLen] == total run width.
-	 *
-	 * For LTR runs glyph order matches logical order, so we accumulate
-	 * advances left-to-right.
-	 *
-	 * For RTL runs Uniscribe stores glyphs in visual left-to-right order
-	 * but logClust[] maps in reverse: logClust[0] is the highest glyph
-	 * index (the rightmost cluster) and logClust[itemLen-1] is the lowest
-	 * (the leftmost cluster).  visualX[ci] therefore equals the sum of
-	 * advances for glyphs 0 .. logClust[ci]-1, which are the glyphs that
-	 * appear visually to the left of logical character ci's cluster.
-	 * No array reversal is required.
-	 */
-	int *visualX = (int *)Tcl_Alloc(sizeof(int) * (itemLen + 1));
-	if (item->a.fRTL) {
-	    /*
-	     * RTL: compute total run width first, then for each logical
-	     * character position sum the advances of glyphs that are
-	     * visually to its left (i.e. glyph indices < logClust[ci]).
-	     */
-	    int totalWidth = 0;
-	    for (int g = 0; g < glyphCount; g++) totalWidth += advances[g];
-
-	    for (int ci = 0; ci < itemLen; ci++) {
-		int clusterGlyph = (int)logClust[ci];
-		int preAdv = 0;
-		for (int g = 0; g < clusterGlyph; g++) preAdv += advances[g];
-		visualX[ci] = preAdv;
-	    }
-	    visualX[itemLen] = totalWidth;
-	} else {
-	    /* LTR: simple left-to-right accumulation. */
-	    int curX = 0;
-	    visualX[0] = 0;
-	    for (int ci = 0; ci < itemLen; ci++) {
-		int firstGlyph = (int)logClust[ci];
-		int clusterAdv = 0;
-		int nextGlyph = glyphCount;
-		for (int j = ci + 1; j < itemLen; j++) {
-		    if (logClust[j] != firstGlyph) {
-			nextGlyph = (int)logClust[j];
-			break;
-		    }
-		}
-		for (int g = firstGlyph; g < nextGlyph; g++) clusterAdv += advances[g];
-		curX += clusterAdv;
-		visualX[ci + 1] = curX;
-	    }
-	}
-	
-		/* Safety: prevent overruns */
-		if (visualX[itemLen] < 0 || glyphCount <= 0) {
-			/* Bad run - skip or fallback to simple rendering */
-			Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(advances);
-			Tcl_Free(offsets); Tcl_Free(visualX);
-			continue;
-		}
 
 	/*
 	 * Store the completed run.
@@ -1220,12 +1152,11 @@ TkWinShapeString(
 	runs[nRuns].charStart   = itemStart;
 	runs[nRuns].charLen     = itemLen;
 	runs[nRuns].logClust    = logClust;
-	runs[nRuns].visualX     = visualX;
+	runs[nRuns].visAttr     = visAttr;
 	nRuns++;
     }
 
     if (items != stackItems) Tcl_Free(items);
-    Tcl_Free(visualToLogical);
 
     *runsOut     = runs;
     *runCountOut = nRuns;
@@ -1256,7 +1187,7 @@ TkWinFreeShapedRuns(
 	Tcl_Free(runs[i].advances);
 	Tcl_Free(runs[i].offsets);
 	Tcl_Free(runs[i].logClust);
-	Tcl_Free(runs[i].visualX);
+	Tcl_Free(runs[i].visAttr);
     }
     Tcl_Free(runs);
 }
@@ -1277,12 +1208,13 @@ TkWinShapedRunsWidth(const TkWinShapedRun *runs, int nRuns)
 {
     int total = 0;
     for (int i = 0; i < nRuns; i++) {
-        for (int g = 0; g < runs[i].glyphCount; g++) {
-            total += runs[i].advances[g];
-        }
+	for (int g = 0; g < runs[i].glyphCount; g++) {
+	    total += runs[i].advances[g];
+	}
     }
     return total;
 }
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1293,48 +1225,74 @@ TkWinShapedRunsWidth(const TkWinShapedRun *runs, int nRuns)
  *	coordinate (from the line origin) of the boundary after that character.
  *	If index == total characters, returns total line width.
  *
+ *	This implementation uses Uniscribe's ScriptCPtoX function for accurate
+ *	caret placement across RTL, ligatures, and combining marks.
+ *
  *---------------------------------------------------------------------------
  */
- 
 static int
 GetVisualXForLogicalIndex(
     const TkWinShapedRun *runs,
     int nRuns,
-    const int *runOriginX,        /* Pre-computed run origin X offsets */
-    int totalChars,               /* Total character count across all runs */
+    const int *runOriginX,
+    int totalChars,
     int logicalIdx)
 {
-    if (nRuns == 0) return 0;
+    int i;
+
+    /* Clamp to valid UTF-16 range */
     if (logicalIdx < 0) logicalIdx = 0;
     if (logicalIdx > totalChars) logicalIdx = totalChars;
 
-    /* Search for the run containing this logical index. */
-    for (int i = 0; i < nRuns; i++) {
-        const TkWinShapedRun *run = &runs[i];
-        int runEndIdx = run->charStart + run->charLen;
-        
-        /* Check if logicalIdx falls within this run (inclusive start, exclusive end). */
-        if (logicalIdx >= run->charStart && logicalIdx < runEndIdx) {
-            return runOriginX[i] + run->visualX[logicalIdx - run->charStart];
-        }
-        
-        /* Special case: logicalIdx == runEndIdx is the boundary between this and next run. */
-        if (logicalIdx == runEndIdx && i == nRuns - 1) {
-            /* Last run; return its end boundary. */
-            return runOriginX[i] + run->visualX[run->charLen];
-        }
+    /* Find the run containing this logical index */
+    for (i = 0; i < nRuns; i++) {
+	int start = runs[i].charStart;
+	int end   = start + runs[i].charLen;
+
+	if (logicalIdx >= start && logicalIdx <= end) {
+	    int local = logicalIdx - start;
+	    int x = 0;
+
+	    /* Use Uniscribe caret mapping */
+// Corrected call in GetVisualXForLogicalIndex
+HRESULT hr = ScriptCPtoX(
+    local,                           // iCP: Logical character position
+    FALSE,                           // fTrailing: Leading edge
+    runs[i].charLen,                 // cChars
+    runs[i].glyphCount,              // cGlyphs
+    runs[i].logClust,                // pwLogClust
+    runs[i].visAttr,                 // psva: SCRIPT_VISATTR (See Step 2 below)
+    runs[i].advances,                // piAdvance
+    &runs[i].sa,                     // psa
+    &x                               // piX: Output visual coordinate
+);
+
+	    if (FAILED(hr)) {
+		/* Fallback: treat as zero-width */
+		return runOriginX[i];
+	    }
+
+	    return runOriginX[i] + x;
+	}
     }
 
-    /* Beyond end of all runs â should not reach here if totalChars is correct. */
-    return runOriginX[nRuns-1] + runs[nRuns-1].visualX[runs[nRuns-1].charLen];
+    /* If not found, return end of last run */
+    if (nRuns > 0) {
+	int last = nRuns - 1;
+	return runOriginX[last] +
+		runs[last].abc.abcA + runs[last].abc.abcB + runs[last].abc.abcC;
+    }
+
+    return 0;
 }
+
 /*
  *---------------------------------------------------------------------------
  *
  * Tk_MeasureChars --
  *
  *	Determine the number of bytes from the string that will fit in the
- *	given horizontal span. 
+ *	given horizontal span.
  *
  * Results:
  *	Calls Tk_MeasureCharsInContext.
@@ -1370,66 +1328,9 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
-        return Tk_MeasureCharsInContext(tkfont, source, numBytes, 0, numBytes, 
-			maxLength, flags, lengthPtr);
+    return Tk_MeasureCharsInContext(tkfont, source, numBytes, 0, numBytes,
+	    maxLength, flags, lengthPtr);
 }
-
-/*
- *---------------------------------------------------------------------------
- *
- * RunGlyphRange --
- *
- *	Given a TkWinShapedRun and a UTF-16 character sub-range [charFirst,
- *	charLast) relative to the start of that run, return the contiguous
- *	glyph index range [*glyphFirstOut, *glyphLastOut) (exclusive end)
- *	that covers those characters.
- *
- *	logClust[i] is the index of the first glyph for UTF-16 character i
- *	within the run.  Clusters may be in ascending (LTR) or descending
- *	(RTL) glyph order.  We collect the min/max glyph index touched by the
- *	character range, then extend the end to the next cluster boundary.
- *
- * Results:
- *	Returns 1 and sets *glyphFirstOut/*glyphLastOut on success, 0 if the
- *	range maps to no glyphs.
- *
- *---------------------------------------------------------------------------
- */
- 
-static BOOL
-RunGlyphRange(
-    const TkWinShapedRun *run,
-    int charFirst,
-    int charLast,
-    int *gFirstOut,
-    int *gLastOut)
-{
-    if (charFirst >= charLast || charFirst >= run->charLen) {
-        return FALSE;
-    }
-    if (charLast > run->charLen) charLast = run->charLen;
-
-    int gMin = INT_MAX;
-    int gMax = -1;
-
-    for (int ci = charFirst; ci < charLast; ci++) {
-        int g = (int)run->logClust[ci];
-        if (g < gMin) gMin = g;
-        if (g > gMax) gMax = g;
-
-        /* Extend to end of cluster */
-        while (ci + 1 < charLast && run->logClust[ci+1] == g) {
-            ci++;
-        }
-    }
-
-    if (gMax < 0) return FALSE;
-
-    *gFirstOut = gMin;
-    *gLastOut  = gMax + 1;
-    return TRUE;
-}
-
 
 /*
  * Helper: clamp logical index to [0, totalChars].
@@ -1452,10 +1353,10 @@ ClampIndex(int idx, int totalChars)
  *	shaping context.
  *
  *	This implementation shapes the full string (up to the end of the range)
- *	and then uses the visualX offsets stored in each shaped run to map
- *	logical character positions to visual X coordinates.  This ensures
- *	that the measured width of a logical prefix matches the visual layout
- *	used for drawing, eliminating the cursor âsnapâ in RTL scripts.
+ *	and then uses Uniscribe's ScriptCPtoX (via GetVisualXForLogicalIndex)
+ *	to map logical character positions to visual X coordinates.  This
+ *	ensures that the measured width of a logical prefix matches the visual
+ *	layout used for drawing, eliminating the cursor "snap" in RTL scripts.
  *
  * Results:
  *	The return value is the number of bytes from rangeStart that fit.
@@ -1507,7 +1408,7 @@ Tk_MeasureCharsInContext(
     wfullLen = (int)(Tcl_DStringLength(&fullUni) / sizeof(WCHAR));
 
     /*
-     * Convert UTF-8 byte offsets to UTF‑16 offsets.
+     * Convert UTF-8 byte offsets to UTF-16 offsets.
      */
     {
         Tcl_DString tmp;
@@ -1535,16 +1436,38 @@ Tk_MeasureCharsInContext(
     }
 
     /*
-     * Precompute runOriginX.
+     * Precompute runOriginX in visual order.
+     * This matches the layout used in Tk_DrawCharsInContext.
      */
     runOriginX = (int *) Tcl_Alloc(sizeof(int) * nRuns);
     {
-        int i;
-        int x = 0;
-        for (i = 0; i < nRuns; i++) {
-            runOriginX[i] = x;
-            x += runs[i].visualX[runs[i].charLen];
+        int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
+        BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
+        
+        /* Extract BiDi levels from each run */
+        for (int i = 0; i < nRuns; i++) {
+            levels[i] = runs[i].sa.s.uBidiLevel;
         }
+        
+        /* Get visual ordering */
+        HRESULT hr = ScriptLayout(nRuns, levels, visualOrder, NULL);
+        if (FAILED(hr)) {
+            /* Fallback: logical order */
+            for (int i = 0; i < nRuns; i++) {
+                visualOrder[i] = i;
+            }
+        }
+        Tcl_Free(levels);
+        
+        /* Compute X position for each run in visual order */
+        int x = 0;
+        for (int vi = 0; vi < nRuns; vi++) {
+            int i = visualOrder[vi];  /* visual -> logical */
+            runOriginX[i] = x;
+            x += runs[i].abc.abcA + runs[i].abc.abcB + runs[i].abc.abcC;
+        }
+        
+        Tcl_Free(visualOrder);
     }
 
     totalChars = wfullLen;
@@ -1587,7 +1510,7 @@ Tk_MeasureCharsInContext(
         }
 
         /*
-         * TK_WHOLE_WORDS rollback (UTFâ16 safe).
+         * TK_WHOLE_WORDS rollback (UTF-16 safe).
          */
         if ((flags & TK_WHOLE_WORDS) &&
             bestChars > 0 &&
@@ -1634,7 +1557,7 @@ Tk_MeasureCharsInContext(
     }
 
     /*
-     * Convert UTFâ16 â UTFâ8 byte count.
+     * Convert UTF-16 -> UTF-8 byte count.
      */
     {
         Tcl_DString result;
@@ -1654,7 +1577,6 @@ Tk_MeasureCharsInContext(
         }
     }
 }
-
 
 /*
  *---------------------------------------------------------------------------
@@ -1699,7 +1621,7 @@ Tk_DrawChars(
      * Delegate everything to the context-aware renderer.
      * We draw the full string as a single logical range.
      */
-    Tk_DrawCharsInContext(display, drawable, gc, NULL ,source,numBytes,0, numBytes,x, y);
+    Tk_DrawCharsInContext(display, drawable, gc, NULL, source, numBytes, 0, numBytes, x, y);
 }
 
 void
@@ -1941,15 +1863,45 @@ Tk_DrawCharsInContext(
     SetBkMode(dc, TRANSPARENT);
     HFONT oldFont = (HFONT)GetCurrentObject(dc, OBJ_FONT);
 
-    /* Draw runs, advancing penX by full run width each time */
-    int penX = x;
+    /*
+     * Build visual ordering index for the runs.
+     * Uniscribe stores BiDi embedding level in SCRIPT_ANALYSIS.s.uBidiLevel.
+     * Even levels = LTR, odd levels = RTL.
+     * We need to reorder runs so they are laid out left-to-right on screen.
+     */
+    int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
+    int *runX = (int *)Tcl_Alloc(sizeof(int) * nRuns);  /* X position of each run in visual order */
+    BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
     for (i = 0; i < nRuns; i++) {
+        levels[i] = runs[i].sa.s.uBidiLevel;
+    }
+    
+    /* ScriptLayout produces the visual order from embedding levels */
+    HRESULT hr = ScriptLayout(nRuns, levels, visualOrder, NULL);
+    if (FAILED(hr)) {
+        /* Fallback: use logical order */
+        for (i = 0; i < nRuns; i++) {
+            visualOrder[i] = i;
+        }
+    }
+    Tcl_Free(levels);
+
+    /* Compute X position for each run in visual order */
+    int penX = x;
+    for (int vi = 0; vi < nRuns; vi++) {
+        int i = visualOrder[vi];
+        runX[i] = penX;
+        penX += TkWinShapedRunsWidth(&runs[i], 1);
+    }
+
+    /* Draw only runs that intersect the requested character range */
+    for (int vi = 0; vi < nRuns; vi++) {
+        int i = visualOrder[vi];  /* visual -> logical mapping */
         TkWinShapedRun *run = &runs[i];
         int runEnd = run->charStart + run->charLen;
 
         /* Skip runs completely outside the requested range */
         if (runEnd <= wRangeStart || run->charStart >= wRangeEnd) {
-            penX += TkWinShapedRunsWidth(run, 1);   /* single run */
             continue;
         }
 
@@ -1958,43 +1910,30 @@ Tk_DrawCharsInContext(
         if (charFirst < 0) charFirst = 0;
         if (charLast > run->charLen) charLast = run->charLen;
         if (charLast <= charFirst) {
-            penX += TkWinShapedRunsWidth(run, 1);
             continue;
         }
 
         int gFirst = 0, gLast = 0;
-        if (!RunGlyphRange(run, charFirst, charLast, &gFirst, &gLast)) {
-            penX += TkWinShapedRunsWidth(run, 1);
-            continue;
-        }
-
-        /*
-         * Calculate the correct X position for drawing.
-         * 
-         * The visualX array stores visual X offsets for each logical character
-         * boundary. For LTR, visualX increases left-to-right. For RTL, visualX
-         * decreases (because logical order is reversed relative to visual order).
-         *
-         * visualX[charFirst] gives the visual offset from run start to the
-         * beginning of the character range we want to draw.
-         *
-         * For LTR: drawX = penX + visualX[charFirst]
-         *
-         * For RTL: visualX values decrease as we advance logically, so we need
-         * to invert them. The total run width is visualX[run->charLen].
-         * drawX = penX + (totalRunWidth - visualX[charFirst])
-         *
-         * This ensures the text is drawn at the correct screen position for
-         * both LTR and RTL, and the cursor position matches the draw position.
-         */
-        int drawX;
-        if (run->sa.fRTL) {
-            /* RTL: invert the visualX offset */
-            int totalRunWidth = run->visualX[run->charLen];
-            drawX = penX + (totalRunWidth - run->visualX[charFirst]);
-        } else {
-            /* LTR: use visualX directly */
-            drawX = penX + run->visualX[charFirst];
+        int glyphOffsetX = 0;  /* X offset from run start to first visible glyph */
+        
+        /* Find glyph range for the character range using logClust */
+        {
+            int gMin = INT_MAX, gMax = -1;
+            for (int ci = charFirst; ci < charLast; ci++) {
+                int g = (int)run->logClust[ci];
+                if (g < gMin) gMin = g;
+                if (g > gMax) gMax = g;
+            }
+            if (gMax < 0) {
+                continue;
+            }
+            gFirst = gMin;
+            gLast = gMax + 1;
+            
+            /* Compute X offset to gFirst by summing advances of glyphs before it */
+            for (int g = 0; g < gFirst; g++) {
+                glyphOffsetX += run->advances[g];
+            }
         }
 
         SelectObject(dc, run->hFont);
@@ -2003,7 +1942,7 @@ Tk_DrawCharsInContext(
         ScriptTextOut(
             dc,
             &fontPtr->scriptCacheArray[run->scriptCacheIdx],
-            drawX, y,
+            runX[i] + glyphOffsetX, y,  /* Offset to first visible glyph */
             0, NULL,
             &run->sa,
             NULL, 0,
@@ -2017,6 +1956,8 @@ Tk_DrawCharsInContext(
         penX += TkWinShapedRunsWidth(run, 1);
     }
 
+    Tcl_Free(runX);
+    Tcl_Free(visualOrder);
     SelectObject(dc, oldFont);
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
@@ -2943,7 +2884,7 @@ FontMapLoadPage(
 	    }
 	} else {
 	    /*
-	     * BMP row (codepoints U+0000âU+FFFF): use the format-4
+	     * BMP row (codepoints U+0000-U+FFFF): use the format-4
 	     * USHORT segment arrays as before.
 	     */
 	    segCount    = familyPtr->segCount;
@@ -3469,7 +3410,7 @@ LoadFontRanges(
     ULONG **endGroupPtr,	/* Filled with malloced format-12 group
 				 * end codepoints. */
     int *groupCountPtr)		/* Number of format-12 groups. */
- {
+{
     int n, i, j, k, swapped, segCount;
     size_t cbData, offset;
     DWORD cmapKey;
@@ -3533,7 +3474,7 @@ LoadFontRanges(
 		 * supplementary planes (emoji, historic scripts, etc.).
 		 * The header at encTable.offset is:
 		 *   USHORT format   (== 12, but stored as ULONG in the
-		 *                    "fixed" 16.16 representation â high
+		 *                    "fixed" 16.16 representation -- high
 		 *                    USHORT is 12, low USHORT is 0)
 		 *   ULONG  length
 		 *   ULONG  language
