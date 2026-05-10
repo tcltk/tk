@@ -1048,7 +1048,7 @@ TkWinShapeString(
 
 	if (FAILED(hr)) {
 	    /*
-	     * Shaping failed â€“ try to find a fallback font for the whole
+	     * Shaping failed â try to find a fallback font for the whole
 	     * item.  Pass &subFontPtr so the pointer is kept valid across
 	     * any reallocation of subFontArray.
 	     */
@@ -1064,7 +1064,7 @@ TkWinShapeString(
 			glyphs, logClust, visAttr, &glyphCount);
 	    }
 	    if (FAILED(hr)) {
-		/* Still failing â€“ skip this item. */
+		/* Still failing â skip this item. */
 		Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
 		continue;
 	    }
@@ -1325,7 +1325,7 @@ GetVisualXForLogicalIndex(
         }
     }
 
-    /* Beyond end of all runs â€” should not reach here if totalChars is correct. */
+    /* Beyond end of all runs â should not reach here if totalChars is correct. */
     return runOriginX[nRuns-1] + runs[nRuns-1].visualX[runs[nRuns-1].charLen];
 }
 /*
@@ -1455,7 +1455,7 @@ ClampIndex(int idx, int totalChars)
  *	and then uses the visualX offsets stored in each shaped run to map
  *	logical character positions to visual X coordinates.  This ensures
  *	that the measured width of a logical prefix matches the visual layout
- *	used for drawing, eliminating the cursor â€œsnapâ€ in RTL scripts.
+ *	used for drawing, eliminating the cursor âsnapâ in RTL scripts.
  *
  * Results:
  *	The return value is the number of bytes from rangeStart that fit.
@@ -1507,7 +1507,7 @@ Tk_MeasureCharsInContext(
     wfullLen = (int)(Tcl_DStringLength(&fullUni) / sizeof(WCHAR));
 
     /*
-     * Convert UTFâ€‘8 byte offsets â†’ UTFâ€‘16 offsets.
+     * Convert UTF-8 byte offsets to UTF‑16 offsets.
      */
     {
         Tcl_DString tmp;
@@ -1587,7 +1587,7 @@ Tk_MeasureCharsInContext(
         }
 
         /*
-         * TK_WHOLE_WORDS rollback (UTFâ€‘16 safe).
+         * TK_WHOLE_WORDS rollback (UTFâ16 safe).
          */
         if ((flags & TK_WHOLE_WORDS) &&
             bestChars > 0 &&
@@ -1634,7 +1634,7 @@ Tk_MeasureCharsInContext(
     }
 
     /*
-     * Convert UTFâ€‘16 â†’ UTFâ€‘8 byte count.
+     * Convert UTFâ16 â UTFâ8 byte count.
      */
     {
         Tcl_DString result;
@@ -2943,7 +2943,7 @@ FontMapLoadPage(
 	    }
 	} else {
 	    /*
-	     * BMP row (codepoints U+0000â€“U+FFFF): use the format-4
+	     * BMP row (codepoints U+0000âU+FFFF): use the format-4
 	     * USHORT segment arrays as before.
 	     */
 	    segCount    = familyPtr->segCount;
@@ -3533,7 +3533,7 @@ LoadFontRanges(
 		 * supplementary planes (emoji, historic scripts, etc.).
 		 * The header at encTable.offset is:
 		 *   USHORT format   (== 12, but stored as ULONG in the
-		 *                    "fixed" 16.16 representation â€” high
+		 *                    "fixed" 16.16 representation â high
 		 *                    USHORT is 12, low USHORT is 0)
 		 *   ULONG  length
 		 *   ULONG  language
