@@ -476,7 +476,7 @@ TkWinSetupSystemFonts(
     interp = (Tcl_Interp *) mainPtr->interp;
     tkwin = (Tk_Window) mainPtr->winPtr;
 
-    /* force this for now */
+    /* Force this for now. */
     if (((TkWindow *) tkwin)->mainPtr == NULL) {
 	((TkWindow *) tkwin)->mainPtr = mainPtr;
     }
@@ -1083,7 +1083,7 @@ TkWinShapeString(
 		    continue;
 		}
 
-		/* Decode character (skip supplementary for now) */
+		/* Decode character (skip supplementary for now.) */
 		int ch = (int)(unsigned)wstr[itemStart + ci];
 		if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) &&
 		    (ci + 1) < itemLen && IS_LOW_SURROGATE(wstr[itemStart + ci + 1])) {
@@ -1097,7 +1097,7 @@ TkWinShapeString(
 		    hFont       = subFontPtr->hFont0;
 		    SelectObject(hdc, hFont);
 
-		    /* Re-shape with fallback */
+		    /* Re-shape with fallback. */
 		    hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
 			    wstr + itemStart, itemLen,
 			    maxGlyphs, &item->a,
@@ -1106,7 +1106,7 @@ TkWinShapeString(
 		    if (SUCCEEDED(hr)) {
 			didFallback = TRUE;
 		    } else {
-			/* Restore original on failure */
+			/* Restore original on failure. */
 			subFontPtr = origSubFont;
 			subFontIdx = origSubFontIdx;
 			hFont = subFontPtr->hFont0;
@@ -1230,8 +1230,8 @@ TkWinShapedRunsWidth(const TkWinShapedRun *runs, int nRuns)
  *
  *---------------------------------------------------------------------------
  */
-static int
-GetVisualXForLogicalIndex(
+
+static int GetVisualXForLogicalIndex(
     const TkWinShapedRun *runs,
     int nRuns,
     const int *runOriginX,
@@ -1239,52 +1239,54 @@ GetVisualXForLogicalIndex(
     int logicalIdx)
 {
     int i;
+    logicalIdx = ClampIndex(logicalIdx, totalChars);
 
-    /* Clamp to valid UTF-16 range */
-    if (logicalIdx < 0) logicalIdx = 0;
-    if (logicalIdx > totalChars) logicalIdx = totalChars;
-
-    /* Find the run containing this logical index */
     for (i = 0; i < nRuns; i++) {
-	int start = runs[i].charStart;
-	int end   = start + runs[i].charLen;
+        int start = runs[i].charStart;
+        int end = start + runs[i].charLen;
 
-	if (logicalIdx >= start && logicalIdx <= end) {
-	    int local = logicalIdx - start;
-	    int x = 0;
+        if (logicalIdx >= start && logicalIdx <= end) {
+            int local = logicalIdx - start;
+            int x = 0;
 
-	    /* Use Uniscribe caret mapping */
-// Corrected call in GetVisualXForLogicalIndex
-HRESULT hr = ScriptCPtoX(
-    local,                           // iCP: Logical character position
-    FALSE,                           // fTrailing: Leading edge
-    runs[i].charLen,                 // cChars
-    runs[i].glyphCount,              // cGlyphs
-    runs[i].logClust,                // pwLogClust
-    runs[i].visAttr,                 // psva: SCRIPT_VISATTR (See Step 2 below)
-    runs[i].advances,                // piAdvance
-    &runs[i].sa,                     // psa
-    &x                               // piX: Output visual coordinate
-);
+            /*
+             * To force LTR tracking in an RTL run, we must calculate 
+             * the distance from the visual left edge of the run.
+             */
+            if (runs[i].sa.fRTL) {
+                /*
+                 * In RTL, logical index 'local' is at the left edge 
+                 * only if it's the LAST character of the logical run.
+                 * We use fTrailing=TRUE to get the 'exit' (left) edge.
+                 */
+                ScriptCPtoX(local, TRUE, runs[i].charLen, runs[i].glyphCount, 
+                            runs[i].logClust, runs[i].visAttr, runs[i].advances, 
+                            &runs[i].sa, &x);
+                
+                /* * Flip the coordinate: Uniscribe gives X relative to the 
+                 * logical start (the right). We subtract from total width 
+                 * to get the LTR distance from the run origin.
+                 */
+                int runWidth = 0;
+                for (int g = 0; g < runs[i].glyphCount; g++) {
+                    runWidth += runs[i].advances[g];
+                }
+                x = runWidth - x;
+            } else {
+                /* Standard LTR behavior */
+                ScriptCPtoX(local, FALSE, runs[i].charLen, runs[i].glyphCount, 
+                            runs[i].logClust, runs[i].visAttr, runs[i].advances, 
+                            &runs[i].sa, &x);
+            }
 
-	    if (FAILED(hr)) {
-		/* Fallback: treat as zero-width */
-		return runOriginX[i];
-	    }
-
-	    return runOriginX[i] + x;
-	}
+            return runOriginX[i] + x;
+        }
     }
-
-    /* If not found, return end of last run */
-    if (nRuns > 0) {
-	int last = nRuns - 1;
-	return runOriginX[last] +
-		runs[last].abc.abcA + runs[last].abc.abcB + runs[last].abc.abcC;
-    }
-
+    
+    if (nRuns > 0) return TkWinShapedRunsWidth(runs, nRuns);
     return 0;
 }
+
 
 /*
  *---------------------------------------------------------------------------
@@ -1394,7 +1396,7 @@ Tk_MeasureCharsInContext(
     int bestChars = 0;
     int bestWidth = 0;
 
-    /* Empty range */
+    /* Empty range. */
     if (rangeLength <= 0) {
         *lengthPtr = 0;
         return 0;
@@ -1444,22 +1446,22 @@ Tk_MeasureCharsInContext(
         int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
         BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
         
-        /* Extract BiDi levels from each run */
+        /* Extract BiDi levels from each run. */
         for (int i = 0; i < nRuns; i++) {
             levels[i] = runs[i].sa.s.uBidiLevel;
         }
         
-        /* Get visual ordering */
+        /* Get visual ordering. */
         HRESULT hr = ScriptLayout(nRuns, levels, visualOrder, NULL);
         if (FAILED(hr)) {
-            /* Fallback: logical order */
+            /* Fallback: logical order. */
             for (int i = 0; i < nRuns; i++) {
                 visualOrder[i] = i;
             }
         }
         Tcl_Free(levels);
         
-        /* Compute X position for each run in visual order */
+        /* Compute X position for each run in visual order. */
         int x = 0;
         for (int vi = 0; vi < nRuns; vi++) {
             int i = visualOrder[vi];  /* visual -> logical */
