@@ -1138,9 +1138,8 @@ TkWmUnmapWindow(
 
 /* UpdatePointerWinAfterDestroy --
  *
- *	Remove references to the Tk window from the mouse event processing
- *	state which is recorded in the NSApplication object and notify Tk
- *	of the new pointer window.
+ *	Determine the new pointer window after the destruction of the old pointer
+ *      window, and notify Tk of it.
  *
  * Results:
  *	None
