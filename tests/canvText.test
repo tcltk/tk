@@ -725,7 +725,7 @@ test canvText-10.1 {TextToPoint procedure} -body {
     .c index test @0,0
 } -cleanup {
 	.c delete test
-} -returnCodes ok
+} -match glob -result *
 
 
 test canvText-11.1 {TextToArea procedure} -setup {
@@ -970,7 +970,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32}  -setu
     lappend results [$c index tbox2 @$x,$y2]
 } -cleanup {
     destroy .c
-} -returnCodes ok
+} -match glob -result *
 
 test canvText-20.1 {angled text bounding box} -setup {
     destroy .c
