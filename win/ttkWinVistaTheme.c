@@ -91,15 +91,23 @@ static const Ttk_StateTable pushbutton_statemap[] =
  */
 static const Ttk_StateTable checkbox_statemap[] =
 {
+    { CBS_EXCLUDEDDISABLED,	TTK_STATE_INVALID|TTK_STATE_DISABLED, 0 },
+    { CBS_EXCLUDEDNORMAL,	TTK_STATE_INVALID|TTK_STATE_READONLY, 0 },
+    { CBS_EXCLUDEDPRESSED,	TTK_STATE_INVALID|TTK_STATE_PRESSED, 0 },
+    { CBS_EXCLUDEDHOT,		TTK_STATE_INVALID|TTK_STATE_ACTIVE, 0 },
+    { CBS_EXCLUDEDNORMAL,	TTK_STATE_INVALID, 0 },
     { CBS_MIXEDDISABLED,	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0 },
+    { CBS_MIXEDNORMAL,		TTK_STATE_ALTERNATE|TTK_STATE_READONLY, 0 },
     { CBS_MIXEDPRESSED,		TTK_STATE_ALTERNATE|TTK_STATE_PRESSED, 0 },
     { CBS_MIXEDHOT,		TTK_STATE_ALTERNATE|TTK_STATE_ACTIVE, 0 },
     { CBS_MIXEDNORMAL,		TTK_STATE_ALTERNATE, 0 },
     { CBS_CHECKEDDISABLED,	TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
+    { CBS_CHECKEDNORMAL,	TTK_STATE_SELECTED|TTK_STATE_READONLY, 0 },
     { CBS_CHECKEDPRESSED,	TTK_STATE_SELECTED|TTK_STATE_PRESSED, 0 },
     { CBS_CHECKEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
     { CBS_CHECKEDNORMAL,	TTK_STATE_SELECTED, 0 },
     { CBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, 0 },
+    { CBS_UNCHECKEDNORMAL,	TTK_STATE_READONLY, 0 },
     { CBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, 0 },
     { CBS_UNCHECKEDHOT,		TTK_STATE_ACTIVE, 0 },
     { CBS_UNCHECKEDNORMAL,	0, 0 }
@@ -111,12 +119,15 @@ static const Ttk_StateTable checkbox_statemap[] =
 static const Ttk_StateTable radiobutton_statemap[] =
 {
     { RBS_UNCHECKEDDISABLED,	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0 },
+    { RBS_UNCHECKEDNORMAL,	TTK_STATE_ALTERNATE|TTK_STATE_READONLY, 0 },
     { RBS_UNCHECKEDNORMAL,	TTK_STATE_ALTERNATE, 0 },
     { RBS_CHECKEDDISABLED,	TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
+    { RBS_CHECKEDNORMAL,	TTK_STATE_SELECTED|TTK_STATE_READONLY, 0 },
     { RBS_CHECKEDPRESSED,	TTK_STATE_SELECTED|TTK_STATE_PRESSED, 0 },
     { RBS_CHECKEDHOT,		TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
     { RBS_CHECKEDNORMAL,	TTK_STATE_SELECTED, 0 },
     { RBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, 0 },
+    { RBS_UNCHECKEDNORMAL,	TTK_STATE_READONLY, 0 },
     { RBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, 0 },
     { RBS_UNCHECKEDHOT,		TTK_STATE_ACTIVE, 0 },
     { RBS_UNCHECKEDNORMAL,	0, 0 }
@@ -269,6 +280,14 @@ static const Ttk_StateTable track_statemap[] =
     { TRS_NORMAL,	0, 0 }
 };
 
+static const Ttk_StateTable pbar_statemap[] =
+{
+    { PBFS_ERROR,	TTK_STATE_INVALID, 0 },
+    { PBFS_PARTIAL,	TTK_STATE_SELECTED, 0 },
+    { PBFS_PAUSED,	TTK_STATE_ALTERNATE, 0 },
+    { PBFS_NORMAL,	0, 0 }
+};
+
 static const Ttk_StateTable tabitem_statemap[] =
 {
     { TIS_DISABLED,     TTK_STATE_DISABLED, 0 },
@@ -311,7 +330,7 @@ static const Ttk_StateTable treeitem_statemap[] =
     { LVGH_CLOSESELECTED,		TTK_STATE_SELECTED, 0 },
     { LVGH_CLOSEHOT,			TTK_STATE_ACTIVE, 0 },
     { LVGH_CLOSE,			TTK_STATE_ALTERNATE, 0 }, /* gray */
-    { 0,			0, 0 }
+    { 0,				0, 0 }
 };
 
 /* Treeview */
@@ -1012,7 +1031,7 @@ static const ElementInfo ElementInfoTable[] = {
     { "Combobox.field", &GenericElementSpec, L"EDIT",
 	EP_EDITTEXT, combotext_statemap, PAD(1, 1, 1, 1), 0 },
     { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
-	CP_DROPDOWNBUTTONRIGHT, combobox_statemap, NOPAD,
+	CP_DROPDOWNBUTTON, combobox_statemap, NOPAD,
 	(SM_CXMENUCHECK << 8) | SM_CYMENUCHECK },
     /* ttk::scrollbar elements */
     { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
@@ -1049,9 +1068,9 @@ static const ElementInfo ElementInfoTable[] = {
 	TKP_TRACKVERT, track_statemap, NOPAD, 0 },
     /* ttk::progressbar elements */
     { "Horizontal.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
-	PP_CHUNK, null_statemap, NOPAD, 0 },
+	PP_FILL, pbar_statemap, NOPAD, 0 },
     { "Vertical.Progressbar.pbar", &PbarElementSpec, L"PROGRESS",
-	PP_CHUNKVERT, null_statemap, NOPAD, 0 },
+	PP_FILLVERT, pbar_statemap, NOPAD, 0 },
     { "Horizontal.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
 	PP_BAR, null_statemap, PAD(3,3,3,3), IGNORE_THEMESIZE },
     { "Vertical.Progressbar.trough", &GenericElementSpec, L"PROGRESS",
