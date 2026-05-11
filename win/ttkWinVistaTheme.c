@@ -150,6 +150,7 @@ static const Ttk_StateTable edittext_statemap[] =
     { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { ETS_READONLY,	TTK_STATE_READONLY, 0 },
     { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
+    { ETS_SELECTED,	TTK_STATE_SELECTED, 0 },
     { ETS_HOT,		TTK_STATE_ACTIVE, 0 },
     { ETS_HOT,		TTK_STATE_HOVER, 0 },
     { ETS_NORMAL,	0, 0 }
@@ -253,7 +254,16 @@ static const Ttk_StateTable rightarrow_statemap[] =
     { ABS_RIGHTNORMAL,	0, 0 }
 };
 
-static const Ttk_StateTable spinbutton_statemap[] =
+static const Ttk_StateTable spinup_statemap[] =
+{
+    { UPS_DISABLED,	TTK_STATE_DISABLED, 0 },
+    { UPS_PRESSED,	TTK_STATE_PRESSED, 0 },
+    { UPS_HOT,		TTK_STATE_ACTIVE, 0 },
+    { UPS_HOT,		TTK_STATE_HOVER, 0 },
+    { UPS_NORMAL,	0, 0 }
+};
+
+static const Ttk_StateTable spindown_statemap[] =
 {
     { DNS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { DNS_PRESSED,	TTK_STATE_PRESSED, 0 },
@@ -1131,7 +1141,7 @@ static const ElementInfo ElementInfoTable[] = {
 	SBP_ARROWBTN, rightarrow_statemap, NOPAD,
 	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
     { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
-	TKP_THUMB, scale_statemap, NOPAD, 0 },
+	TKP_THUMBBOTTOM, scale_statemap, NOPAD, 0 },
     { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
 	TKP_THUMBVERT, scale_statemap, NOPAD, 0 },
     { "Horizontal.Scale.track", &GenericElementSpec, L"TRACKBAR",
@@ -1180,10 +1190,10 @@ static const ElementInfo ElementInfoTable[] = {
     { "Spinbox.field", &GenericElementSpec, L"EDIT",
 	EP_EDITTEXT, edittext_statemap, PAD(1, 1, 1, 1), 0 },
     { "Spinbox.uparrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_UP, spinbutton_statemap, NOPAD,
+	SPNP_UP, spinup_statemap, NOPAD,
 	HALF_HEIGHT | PAD_MARGINS | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { "Spinbox.downarrow", &GenericSizedElementSpec, L"SPIN",
-	SPNP_DOWN, spinbutton_statemap, NOPAD,
+	SPNP_DOWN, spindown_statemap, NOPAD,
 	HALF_HEIGHT | PAD_MARGINS | (SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { 0, 0, 0, 0, 0, NOPAD, 0 }
 };
