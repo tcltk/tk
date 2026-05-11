@@ -391,11 +391,8 @@ test event-2.6(keypress) {type into text widget, triple click,
     deleteWindows
 } -result {JUMP UP}
 
-# This test produces inconsistent output on macOS and X11 with 
-# bidirectional text enabled. Changes in the text widget were
-# most extensive for these platforms.
 test event-3.1(click-drag) {click and drag in a text widget, this tests
-    tkTextSelectTo in text.tcl}  -constraints {win32} -setup {
+    tkTextSelectTo in text.tcl} -setup {
 	deleteWindows
 } -body {
     set t [toplevel .t]
@@ -529,11 +526,9 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     deleteWindows
 } -result {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
 
-# This test produces inconsistent output on macOS and X11 with 
-# bidirectional text enabled. Changes in the text widget were
-# most extensive for these platforms.
+
 test event-4.1(double-click-drag) {click down, click up, click down again,
-    then drag in a text widget} -constraints {win32} -setup {
+    then drag in a text widget} -setup {
 	deleteWindows
 } -body {
     set t [toplevel .t]
@@ -1161,8 +1156,7 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     unset result
 } -result {|<Enter> NotifyInferior .one.f1|<Enter> NotifyInferior .one|}
 
-# This test produces inconsistent output on macOS and X11. 
-test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -constraints {win32} -setup {
+test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -setup {
     setup_win_mousepointer .one
     toplevel .two
     pack propagate .two 0
@@ -1184,8 +1178,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|<Enter> NotifyNonlinear .one|}
 
-# This test produces inconsistent output on macOS and X11.
-test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -constraints {win32} -setup {
+test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     wm geometry . +500+500; # avoid an extraneous <Leave> event
     update idletasks
@@ -1219,10 +1212,9 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
-# This test produces inconsistent output on macOS and X11.
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
     Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on macOS CI runners.
-} -constraints {notMacosSequoiaOrOlder notMacCI win32} -setup {
+} -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     destroy .one
     toplevel .two
@@ -1244,8 +1236,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|}
 
-# This test produces inconsistent output on macOS and X11.
-test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -constraints {win32} -setup {
+test event-86299fe7ce {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
     deleteWindows
     wm geometry . 200x200+100+100
     wm deiconify .
@@ -1282,6 +1273,7 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     bind all <Leave> {}
     bind all <Enter> {}
 } -result "|<Leave> .|<Enter> .|"
+
 test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #8a88a19654} -setup {
     setup_win_mousepointer .one
     wm geometry . 200x200+500+100; # the screen pointer is outside the area of the candidate window

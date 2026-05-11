@@ -1544,16 +1544,16 @@ test font-24.4 {Tk_ComputeTextLayout: calls Tk_MeasureChars} -body {
     list [expr {[winfo reqwidth .t.l] eq [expr {$ax * 3}]}] \
 	    [expr {[winfo reqheight .t.l] eq [expr {$ay * 2}]}]
 } -result {1 1}
-# Test has inconsistent results across platforms because of platform-specific bidi implementation. Just
-# run test to ensure no crashes.
-test font-24.5 {Tk_ComputeTextLayout: break line} -body {
+test font-24.5 {Tk_ComputeTextLayout: break line} -constraints !withXft -body {
+     # Text measurements may differ slightly from legacy Tk due to proper font shaping;
+     # skip test if compiled with Xft.
     .t.l config -text "000\t00000" -wrap [expr {9 * $ax}]
     update
     list [expr {[winfo reqwidth .t.l] eq [expr {$ax * 8}]}] \
 	    [expr {[winfo reqheight .t.l] eq [expr {$ay * 2}]}]
 } -cleanup {
     .t.l config -wrap 0
-} -match glob -result *
+} -result {1 1}
 test font-24.6 {Tk_ComputeTextLayout: normal ended on special char} -body {
     .t.l config -text "000\n000"
 } -result {}
@@ -1597,9 +1597,9 @@ test font-24.10 {Tk_ComputeTextLayout: tab caused break} -body {
 } -cleanup {
     .t.l config -wrap 0
 } -result {1 1 1 1}
-# Test has inconsistent results across platforms because of platform-specific bidi implementation. Just
-# run test to ensure no crashes.
-test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol}  -body {
+test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol} -constraints !withXft -body {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
+    # skip test if compiled with Xft.
     set x {}
     .t.l config -text "000            000" -wrap [expr {$ax * 5}]
     update
@@ -1612,10 +1612,10 @@ test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol}  -body {
     return $x
 } -cleanup {
     .t.l config -wrap 0
-} -match glob -result *
-# Test has inconsistent results across platforms because of platform-specific bidi implementation. Just
-# run test to ensure no crashes.
-test font-24.12 {Tk_ComputeTextLayout: append non-printing spaces to chunk} -body {
+} -result {1 1 1 1}
+test font-24.12 {Tk_ComputeTextLayout: append non-printing spaces to chunk} -constraints !withXft -body {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
+    # skip test if compiled with Xft.
     set x {}
     .t.l config -text "000            0000" -wrap [expr {$ax * 5}]
     update
@@ -1628,7 +1628,7 @@ test font-24.12 {Tk_ComputeTextLayout: append non-printing spaces to chunk} -bod
     return $x
 } -cleanup {
     .t.l config -wrap 0
-} -match glob -result *
+} -result {1 1 1 1}
 test font-24.13 {Tk_ComputeTextLayout: many lines -> realloc line array} -body {
     .t.l config -text "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
     update
@@ -1646,7 +1646,7 @@ test font-24.14 {Tk_ComputeTextLayout: text ended with \n} -body {
     lappend x [expr {[winfo reqwidth .t.l] eq [expr {$ax * 4}]}]
     lappend x [expr {[winfo reqheight .t.l] eq [expr {$ay * 2}]}]
     set x
-} -match glob -result *
+} -result {1 1 1 1}
 
 #
 # COMMON TEST CLEANUP
@@ -1916,9 +1916,9 @@ test font-30.5 {Tk_DistanceToTextLayout procedure: ignore newline} -body {
 } -cleanup {
     bind all <Enter> {}
 } -result {}
-# Test has inconsistent results across platforms because of platform-specific bidi implementation. Just
-# run test to ensure no crashes.
-test font-30.6 {Tk_DistanceToTextLayout procedure: ignore spaces at eol} -body {
+test font-30.6 {Tk_DistanceToTextLayout procedure: ignore spaces at eol} -constraints !withXft -body {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
+    # skip test if compiled with Xft.
     csetup "000\n000      000000000"
     .t.c itemconfig text -width [expr {$ax*10}]
     .t.c bind all <Enter> {lappend x [.t.c index current @%x,%y]}
@@ -1929,7 +1929,7 @@ test font-30.6 {Tk_DistanceToTextLayout procedure: ignore spaces at eol} -body {
     return $x
 } -cleanup {
     bind all <Enter> {}
-} -match glob -result *
+} -result {}
 
 #
 # COMMON TEST SETUP
@@ -2044,15 +2044,15 @@ test font-31.5 {Tk_IntersectTextLayout procedure: ignore newlines} -body {
     csetup "000\n0\n000"
     .t.c find overlapping $ax $ay $ax $ay
 } -result {}
-# Test has inconsistent results across platforms because of platform-specific bidi implementation. Just
-# run test to ensure no crashes.
-test font-31.6 {Tk_IntersectTextLayout procedure: ignore spaces at eol} -body {
+test font-31.6 {Tk_IntersectTextLayout procedure: ignore spaces at eol} -constraints !withXft -body {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping;
+    # skip test if compiled with Xft.
     csetup "000\n000      000000000"
     .t.c itemconfig text -width [expr {$ax*10}]
     set x [.t.c find overlapping [expr {$ax*5}] $ay [expr {$ax*5}] $ay]
     .t.c itemconfig text -width 0
     return $x
-} -match glob -result *
+} -result {}
 test font-31.7 {TkIntersectAngledTextLayout procedure: bug [514ff64dd0]} -body {
     csetup "This is line one\nand line two\nand line three here"
     .t.c itemconfigure text -angle 90
