@@ -92,7 +92,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -font		TkDefaultFont \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
-	    -insertwidth	1 \
+	    -insertwidth	0.75p \
 	    -insertcolor	$colors(-foreground) \
 	    -focuscolor		$colors(-text)
 
@@ -128,24 +128,24 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style map TMenubutton \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TEntry -insertwidth 1 \
-	    -fieldbackground $colors(-window) -padding 1 \
-	    -focuswidth 2 -focuscolor $colors(-selectbg)
+	ttk::style configure TEntry -insertwidth 0.75p \
+	    -fieldbackground $colors(-window) -padding 0.75p \
+	    -focuswidth 1.5p -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -insertwidth 1 \
+	ttk::style configure TCombobox -insertwidth 0.75p \
 	    -arrowpadding 2.25p -arrowsize 3p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding 1 \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -fieldbackground $colors(-window) -padding 0.75p \
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TSpinbox -insertwidth 1 \
+	ttk::style configure TSpinbox -insertwidth 0.75p \
 	    -arrowpadding 2.25p -arrowsize 2.25p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -203,7 +203,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
 	    -indent 15p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
 	    -background [list	disabled $colors(-frame) \
 				background $colors(-darker) \

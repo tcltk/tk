@@ -33,7 +33,7 @@ namespace eval ttk::theme::classic {
 	    -highlightcolor	$colors(-frame) \
 	    -highlightthickness	1 \
 	    -borderwidth	1 \
-	    -insertwidth	2 \
+	    -insertwidth	1.5p \
 	    -focuswidth		0
 
 	# To match pre-Xft X11 appearance, use:
@@ -71,11 +71,11 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TMenubutton -relief raised \
 	    -indicatormargin {3.75p 0} -padding {3m 1m}
 
-	ttk::style configure TEntry -padding 1 -font TkTextFont
+	ttk::style configure TEntry -padding 0.75p -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1 \
+	ttk::style configure TCombobox -padding 0.75p \
 	    -arrowsize 3p -arrowpadding 2.25p
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]

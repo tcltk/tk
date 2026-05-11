@@ -99,13 +99,13 @@ namespace eval ttk::theme::clam {
 	ttk::style configure TMenubutton -width -11 -padding 3.75p \
 	    -arrowsize 3.75p -arrowpadding 2.25p -relief raised
 
-	ttk::style configure TEntry -padding 1 -insertwidth 1
+	ttk::style configure TEntry -padding 0.75p -insertwidth 0.75p
 	ttk::style map TEntry \
 	    -background [list readonly $colors(-frame)] \
 	    -bordercolor [list focus $colors(-selectbg)] \
 	    -lightcolor [list focus #6f9dc6]
 
-	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
+	ttk::style configure TCombobox -padding 0.75p -insertwidth 0.75p \
 	    -arrowsize 3p -arrowpadding 2.25p
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
@@ -119,7 +119,7 @@ namespace eval ttk::theme::clam {
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 2.25p -arrowpadding 2.25p -insertwidth 1
+	    -arrowsize 2.25p -arrowpadding 2.25p -insertwidth 0.75p
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \

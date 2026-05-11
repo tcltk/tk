@@ -30,14 +30,14 @@ namespace eval ttk::theme::winnative {
 	    -padding {6p 3p} -arrowsize 3.75p -relief raised
 
 	ttk::style configure TEntry \
-	    -padding 2 -insertwidth 1
+	    -padding 1.5p -insertwidth 0.75p
 	ttk::style map TEntry \
 	    -fieldbackground \
 		{readonly SystemButtonFace disabled SystemButtonFace} \
 	    -selectbackground {!focus SystemWindow} \
 	    -selectforeground {!focus SystemWindowText}
 
-	ttk::style configure TCombobox -padding 1.5p
+	ttk::style configure TCombobox -padding 1.5p -insertwidth 0.75p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -54,7 +54,7 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-	ttk::style configure TSpinbox -padding {1.5p 0 12p 0}
+	ttk::style configure TSpinbox -padding {1.5p 0 12p 0} -insertwidth 0.75p
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
