@@ -272,7 +272,7 @@ align the south (bottom) edges with each other.  Similarly, the tab
 placement \fBse\fP specifies to attach the south (bottom) side of each tab
 to the previous one and align the east (right) edges with each other.  The
 default placement depends on the first character of the tab position:
-\fBws\fP for \fBn*\fP, \fBwn\fP for \fBs*\fP, \fBne\fP for \fBw*\fP, and 
+\fBws\fP for \fBn*\fP, \fBwn\fP for \fBs*\fP, \fBne\fP for \fBw*\fP, and
 \fBnw\fP for \fBe*\fP.
 .RE
 .br
