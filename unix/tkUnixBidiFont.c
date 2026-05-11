@@ -127,7 +127,7 @@ typedef struct {
     int totalAdvance;
 
     /*
-     * luster break boundaries for line fitting.
+     * Cluster break boundaries for line fitting.
      *
      * clusterBreaks[] contains sorted byte offsets where the run
      * can be broken without splitting a cluster (grapheme, ligature,
@@ -1206,7 +1206,7 @@ X11Shaper_ShapeString(
     /* 
      * Fast path for simple scripts (Latin, CJK, etc.).
      *
-     * OPTIMIZATION: Use cached faces from fontPtr->faces instead of
+     * Use cached faces from fontPtr->faces instead of
      * opening new fallback fonts every call.
      */
     if (IsSimpleOnly(source, numBytes)) {
