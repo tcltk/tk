@@ -60,8 +60,6 @@ $main.textFrame.txt configure -state normal
 $main.textFrame.txt mark set insert 0.0
 focus $main.textFrame.txt
 
-# ---- Entry widgets with 
-
 # ----- Canvas widget with three words rotated 45 degrees -----
 canvas $main.canvas -width 240 -height 200 -bg white -relief sunken -bd 1
 pack $main.canvas -side right -fill both -expand yes -padx 10
