@@ -4195,7 +4195,7 @@ test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} -setup {
     
     set bbox1 [.t bbox 1.0]
     set bbox2 [.t bbox 1.10]
-} -returnCodes ok
+} -match glob -result *
 test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
     text .tt -tabs {40 right} -wrap none -font $fixedFont
     pack .tt
