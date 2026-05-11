@@ -43,10 +43,13 @@ $main.textFrame.txt insert end \
 "1. Left‑to‑right (LTR) paragraph:\n\
    English text flows from left to right. This is the default direction for many languages.\n\n"
 
-$main.textFrame.txt insert end \
-"2. Right‑to‑left (RTL) paragraph:\n\
-   هذا النص باللغة العربية. النص يسير من اليمين إلى اليسار.\n\
-   Tk يعرضه بشكل صحيح مع دعم ثنائي الاتجاه.\n\n"
+
+set rtl_text {זהו טקסט לדוגמה בעברית שנועד לבדוק תצוגה של פסקאות מימין לשמאל. הטקסט כולל משפטים באורך שונה כדי לאפשר בדיקה של גלישת שורות, מיקום הסמן, בחירת טקסט ויישור נכון בתוך רכיבי ממשק משתמש שונים. כאשר המערכת תומכת בכיוון כתיבה תקין, כל השורות אמורות להתחיל בצד ימין ולהמשיך באופן טבעי לאורך הפסקה.
+
+    פסקה נוספת בעברית יכולה לסייע בבדיקת מעברי שורה מורכבים יותר. לעיתים מופיעות בעיות כאשר הסמן נע בין תווים או כאשר טקסט נמחק ונוסף מחדש. חשוב לבדוק גם תצוגה תחת גופנים שונים ובגדלים שונים כדי לוודא שהתנהגות המערכת נשארת עקבית.}
+
+$main.textFrame.txt insert end "2. Right-to-left (RTL) paragraph:\n"
+$main.textFrame.txt insert end $rtl_text\n
 
 $main.textFrame.txt insert end \
 "3. Mixed bidirectional paragraph:\n\
@@ -56,6 +59,8 @@ $main.textFrame.txt insert end \
 $main.textFrame.txt configure -state normal
 $main.textFrame.txt mark set insert 0.0
 focus $main.textFrame.txt
+
+# ---- Entry widgets with 
 
 # ----- Canvas widget with three words rotated 45 degrees -----
 canvas $main.canvas -width 240 -height 200 -bg white -relief sunken -bd 1
