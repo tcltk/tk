@@ -778,6 +778,7 @@ proc ::ttk::treeview::ActivateHeading {w heading} {
 #
 proc ::ttk::treeview::MouseSelect {w x y op} {
     if {![winfo exists $w] || [$w instate disabled]} return
+    focus $w
 
     if {[$w cget -selectmode] ni [list "single" "multiple" "extended"]} {
 	return
@@ -812,6 +813,7 @@ proc ::ttk::treeview::MouseSelect {w x y op} {
 #
 proc ::ttk::treeview::DoubleClick {w x y} {
     if {![winfo exists $w] || [$w instate disabled]} return
+    focus $w
 
     set region [$w identify region $x $y]
     set column [$w identify column $x $y]
@@ -977,8 +979,8 @@ proc ::ttk::treeview::ActivateHandler {w {item {}} {column {}}} {
 #
 proc ::ttk::treeview::Press {w x y} {
     if {![winfo exists $w] || [$w instate disabled]} return
-
     focus $w
+
     switch -- [$w identify region $x $y] {
 	nothing { }
 	heading { Heading.press $w $x $y }
