@@ -130,6 +130,7 @@ static void BorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -216,6 +217,7 @@ static void FieldElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -366,8 +368,12 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 };
 
 static void IndicatorElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr,
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
+    int *widthPtr,
+    int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
@@ -563,8 +569,12 @@ static const Ttk_ElementOptionSpec GripElementOptions[] = {
 };
 
 static void GripElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr,
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
+    int *widthPtr,
+    int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
 {
     Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
@@ -693,6 +703,7 @@ static void ThumbElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -767,6 +778,7 @@ static void SliderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -799,10 +811,15 @@ static const Ttk_ElementSpec SliderElementSpec = {
  * +++ Progress bar element
  */
 static void PbarElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Ttk_State state, /* state */
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
-    SliderElementSize(clientData, elementRecord, tkwin,
+    SliderElementSize(clientData, elementRecord, tkwin, state,
 	    widthPtr, heightPtr, paddingPtr);
     *paddingPtr = Ttk_UniformPadding(1);
     *widthPtr += 2;
@@ -877,6 +894,7 @@ static void ArrowElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -988,6 +1006,7 @@ static void BoxArrowElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -1045,6 +1064,7 @@ static void TabElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -1232,6 +1252,7 @@ static void ClientElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)

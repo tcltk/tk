@@ -7273,6 +7273,7 @@ static void TreeheadingIndicatorSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    Ttk_State state, /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *)) {
@@ -7280,6 +7281,13 @@ static void TreeheadingIndicatorSize(
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     Ttk_Padding padding;
     int size = 5;
+
+    /* Skip if not showing indicator */
+    if (!(state & TTK_STATE_USER1)) {
+	*widthPtr = 0;
+	*heightPtr = 0;
+	return;
+    }
 
     /* Get scaled indicator size */
     TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
@@ -7378,6 +7386,7 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *)) {
@@ -7419,7 +7428,8 @@ static void TreeitemIndicatorDraw(
     GC gc;
     unsigned mask;
 
-    if (state & TTK_STATE_LEAF) {/* don't draw anything */
+    /* Skip if not showing indicator */
+    if (state & TTK_STATE_LEAF) {
 	return;
     }
 

@@ -204,6 +204,7 @@ static void TextElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -266,6 +267,7 @@ static void cTextElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -427,6 +429,7 @@ static void ImageElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -639,6 +642,7 @@ static void LabelElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))

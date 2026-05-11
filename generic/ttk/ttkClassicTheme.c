@@ -46,6 +46,7 @@ static void HighlightElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -129,6 +130,7 @@ static void ButtonBorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -263,6 +265,7 @@ static void SquareIndicatorElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -314,6 +317,7 @@ static void DiamondIndicatorElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -424,6 +428,7 @@ static void MenuIndicatorElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -504,6 +509,7 @@ static void ArrowElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -597,6 +603,7 @@ static void BoxArrowElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -701,6 +708,7 @@ static void SliderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -824,6 +832,7 @@ static void SashElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -945,6 +954,7 @@ static void TreeheadingIndicatorSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    Ttk_State state, /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *)) {
@@ -953,6 +963,13 @@ static void TreeheadingIndicatorSize(
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
     int size = 5;
+
+    /* Skip if not showing indicator */
+    if (!(state & TTK_STATE_USER1)) {
+	*widthPtr = 0;
+	*heightPtr = 0;
+	return;
+    }
 
     /* Get scaled indicator size */
     TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
@@ -1049,6 +1066,7 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))

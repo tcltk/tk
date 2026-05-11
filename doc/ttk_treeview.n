@@ -1407,7 +1407,7 @@ Specifies the foreground color of rows that contain data values.
 .
 This is the default height for heading cells. If set to 0, the value will be
 auto calculated by measuring the heading layout with the style's settings.
-This thus picks up the font and any focus ring or padding from the theme's layout.
+This includes the font size and any padding from the theme's layout.
 .TP
 \fB\-indent\fR \fIamount\fR
 .
@@ -1428,8 +1428,8 @@ This is the background color to use for the \fB-striped\fR option.
 \fB\-rowheight\fR \fIamount\fR
 .
 This is the default height for items and cells. If set to 0, the value will be
-auto calculated by measuring the item and a cell layout with the style's settings.
-This thus picks up the font and any focus ring or padding from the theme's layout.
+auto calculated by measuring the item and cell layout with the style's settings.
+This includes the font size(s), focus ring, and padding from the theme's layout.
 .PP
 Example of how to set \fB\-rowheight\fR, adapting to a font in a similar
 way to how the default value is set:

@@ -152,6 +152,7 @@ static void FrameControlElementSize(
     void *clientData,
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -220,6 +221,7 @@ static void BorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -283,6 +285,7 @@ static void FieldElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -350,6 +353,7 @@ static void ButtonBorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -444,6 +448,7 @@ static void ComboboxFocusElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -593,6 +598,7 @@ static void ThumbElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -660,6 +666,7 @@ static void SliderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -726,6 +733,7 @@ static void TabElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -963,6 +971,7 @@ static void ClientElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)

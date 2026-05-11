@@ -1778,6 +1778,7 @@ static void ButtonElementSize(
     void *clientData,
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *minWidth,
     int *minHeight,
     Ttk_Padding *paddingPtr)
@@ -2025,6 +2026,7 @@ static void TabElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     TCL_UNUSED(Tk_Window), /* tkwin */
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *),     /* minWidth */
     TCL_UNUSED(int *),     /* minHeight */
     Ttk_Padding *paddingPtr)
@@ -2078,6 +2080,7 @@ static void PaneElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     TCL_UNUSED(Tk_Window), /* tkwin */
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *),     /* minWidth */
     TCL_UNUSED(int *),     /* minHeight */
     Ttk_Padding *paddingPtr)
@@ -2137,6 +2140,7 @@ static void GroupElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     TCL_UNUSED(Tk_Window), /* tkwin */
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *),     /* minWidth */
     TCL_UNUSED(int *),     /* minHeight */
     Ttk_Padding *paddingPtr)
@@ -2202,6 +2206,7 @@ static void EntryElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     TCL_UNUSED(Tk_Window), /* tkwin */
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *),     /* minWidth */
     TCL_UNUSED(int *),     /* minHeight */
     Ttk_Padding *paddingPtr)
@@ -2317,6 +2322,7 @@ static void ComboboxElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     TCL_UNUSED(Tk_Window), /* tkwin */
+    TCL_UNUSED(Ttk_State), /* state */
     int *minWidth,
     int *minHeight,
     Ttk_Padding *paddingPtr)
@@ -2405,6 +2411,7 @@ static void SpinButtonElementSize(
     TCL_UNUSED(void *),       /* clientdata */
     TCL_UNUSED(void *),       /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State),    /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* PaddingPtr */
@@ -2551,6 +2558,7 @@ static void TrackElementSize(
     void *clientData,
     TCL_UNUSED(void *),       /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State),    /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
@@ -2645,6 +2653,7 @@ static void SliderElementSize(
     TCL_UNUSED(void *),        /* clientData */
     TCL_UNUSED(void *),        /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State),     /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
@@ -2695,6 +2704,7 @@ static void PbarElementSize(
     TCL_UNUSED(void *),        /* clientData */
     TCL_UNUSED(void *),        /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State),     /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
@@ -2789,6 +2799,7 @@ static void TroughElementSize(
     TCL_UNUSED(void *),    /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *minWidth,
     int *minHeight,
     Ttk_Padding *paddingPtr)
@@ -2856,6 +2867,7 @@ static void ThumbElementSize(
     TCL_UNUSED(void *),        /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State),     /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
@@ -2997,6 +3009,7 @@ static void ArrowElementSize(
     TCL_UNUSED(void *),        /* clientData */
     TCL_UNUSED(void *),        /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State),     /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
@@ -3030,6 +3043,7 @@ static void SeparatorElementSize(
     TCL_UNUSED(void *),       /* clientData */
     TCL_UNUSED(void *),       /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State),    /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
@@ -3084,6 +3098,7 @@ static void SizegripElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */
@@ -3343,10 +3358,11 @@ static const Ttk_StateTable TreeHeaderAdornmentTable[] = {
     {kThemeAdornmentNone, 0, 0}
 };
 
-static void TreeAreaElementSize (
+static void TreeAreaElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     TCL_UNUSED(Tk_Window), /* tkwin */
+    TCL_UNUSED(Ttk_State), /* state */
     TCL_UNUSED(int *),     /* minWidth */
     TCL_UNUSED(int *),     /* minHeight */
     Ttk_Padding *paddingPtr)
@@ -3374,6 +3390,7 @@ static void TreeHeaderElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    Ttk_State state, /* state */
     int *minWidth,
     int *minHeight,
     Ttk_Padding *paddingPtr)
@@ -3384,8 +3401,8 @@ static void TreeHeaderElementSize(
 	*minHeight = (int)round(18.0 * scalingLevel);
 	*minWidth = 0; /* Needed to enable center and right alignment */
     } else {
-	ButtonElementSize(clientData, elementRecord, tkwin, minWidth,
-	    minHeight, paddingPtr);
+	ButtonElementSize(clientData, elementRecord, tkwin, state,
+	    minWidth, minHeight, paddingPtr);
 	*minHeight = (int)round(*minHeight * scalingLevel);
 	*minWidth = (int)round(*minWidth * scalingLevel);
     }
@@ -3442,6 +3459,7 @@ static void DisclosureElementSize(
     TCL_UNUSED(void *),    /* clientData */
     TCL_UNUSED(void *),    /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *minWidth,
     int *minHeight,
     TCL_UNUSED(Ttk_Padding *)) /* paddingPtr */

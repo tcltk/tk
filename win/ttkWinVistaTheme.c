@@ -503,6 +503,7 @@ static void GenericElementSize(
     void *clientData,
     TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     Ttk_Padding *paddingPtr)
@@ -601,6 +602,7 @@ GenericSizedElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    Ttk_State state, /* state */
     int *widthPtr,
     int *heightPtr,
     Ttk_Padding *paddingPtr)
@@ -612,7 +614,7 @@ GenericSizedElementSize(
 	return;
     }
 
-    GenericElementSize(clientData, elementRecord, tkwin,
+    GenericElementSize(clientData, elementRecord, tkwin, state,
 	widthPtr, heightPtr, paddingPtr);
 
     *widthPtr = (int)round(GetThemeSysSize(NULL,
@@ -688,6 +690,7 @@ static void PbarElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    Ttk_State state, /* state */
     int *widthPtr,
     int *heightPtr,
     Ttk_Padding *paddingPtr)
@@ -695,7 +698,7 @@ static void PbarElementSize(
     ElementData *elementData = (ElementData *)clientData;
     int nBars = 3;
 
-    GenericElementSize(clientData, elementRecord, tkwin,
+    GenericElementSize(clientData, elementRecord, tkwin, state,
 	widthPtr, heightPtr, paddingPtr);
 
     if (elementData->info->partId == PP_CHUNK) {
@@ -733,6 +736,7 @@ static void TabElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
+    Ttk_State state, /* state */
     int *widthPtr,
     int *heightPtr,
     Ttk_Padding *paddingPtr)
@@ -745,7 +749,7 @@ static void TabElementSize(
 	    (Ttk_PositionSpec) (mainInfoPtr->nbTabPlacement & 0x0f);
     }
 
-    GenericElementSize(clientData, elementRecord, tkwin,
+    GenericElementSize(clientData, elementRecord, tkwin, state,
 	    widthPtr, heightPtr, paddingPtr);
 
     *paddingPtr = Ttk_UniformPadding(3);
