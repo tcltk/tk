@@ -2127,6 +2127,11 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     } else {
 	state &= ~TTK_STATE_BACKGROUND;
     }
+
+    /* If striped, set alternate state */
+    if (tv->tree.striped && item->visiblePos % 2) {
+	state |= TTK_STATE_USER1;
+    }
     return state;
 }
 

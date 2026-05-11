@@ -329,7 +329,7 @@ static const Ttk_StateTable treeitem_statemap[] =
     { LVGH_CLOSESELECTEDNOTFOCUSED,	TTK_STATE_SELECTED|TTK_STATE_BACKGROUND, 0 },
     { LVGH_CLOSESELECTED,		TTK_STATE_SELECTED, 0 },
     { LVGH_CLOSEHOT,			TTK_STATE_ACTIVE, 0 },
-    { LVGH_CLOSE,			TTK_STATE_ALTERNATE, 0 }, /* gray */
+    { LVGH_CLOSE,			TTK_STATE_ALTERNATE, 0 }, /* none */
     { 0,				0, 0 }
 };
 
@@ -939,7 +939,7 @@ static void TreeIndicatorElementDraw(
 	newData.info = &newInfo;
 
 	/* Hot states use a different part Id */
-	if ((state & TTK_STATE_ACTIVE)) {
+	if (state & TTK_STATE_ACTIVE) {
 	    newInfo.partId = TVP_HOTGLYPH;
 	}
 	
@@ -956,6 +956,74 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec =
     TtkNullElementOptions,
     GenericElementSize,
     TreeIndicatorElementDraw
+};
+
+/*----------------------------------------------------------------------
+ * +++ Tree Row element.
+ *
+ * Used row, item, and cell drawing.
+ */
+
+static void RowElementDraw(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
+{
+    ElementData *elementData = (ElementData *)clientData;
+    unsigned stateId;
+    RECT rc;
+
+    if (!InitElementData(elementData, tkwin, d)) {
+	return;
+    }
+
+    /* Get Windows theme equivalent state for TTK state */
+    if (state & TTK_STATE_USER1) {
+	state |= TTK_STATE_ALTERNATE;
+	state &= ~TTK_STATE_USER1;
+    }
+    stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+
+    /* Apply padding */
+    if (elementData->info->flags & PAD_MARGINS) {
+	b = Ttk_PadBox(b, elementData->info->padding);
+    }
+    rc = BoxToRect(b);
+
+    /* Redraw background if partially transparent */
+    if (IsThemeBackgroundPartiallyTransparent(elementData->hTheme,
+	elementData->info->partId, stateId)) {
+	DrawThemeParentBackground(elementData->hwnd, elementData->hDC, &rc);
+    }
+
+    /* Draw row background */
+    if ((state & 0xff) != TTK_STATE_ALTERNATE) {
+	/* Drawing operations are always scaled to fit, but not exceed rect */
+	DrawThemeBackground(
+	    elementData->hTheme,	/* Theme data handle */
+	    elementData->hDC,		/* HDC to draw into */
+	    elementData->info->partId,	/* Part number to draw */
+	    stateId,			/* Fill style/state for partId */
+	    &rc,			/* Space to fill */
+	    NULL);			/* Optional clipping rect */
+    } else {
+	/* Override background color for stripes */
+	FillRect(elementData->hDC, (const RECT *)&rc, (HBRUSH) (COLOR_3DFACE+1));
+    }
+
+    FreeElementData(elementData);
+}
+
+static const Ttk_ElementSpec RowElementSpec =
+{
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    GenericElementSize,
+    RowElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -1105,7 +1173,7 @@ static const ElementInfo ElementInfoTable[] = {
 	HP_HEADERSORTARROW, treesort_statemap, PAD(1,1,1,1), 0 },
     { "Treeitem.indicator", &TreeitemIndicatorElementSpec, L"TREEVIEW",
 	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
-    { "Treeitem.row", &GenericElementSpec, L"LISTVIEW",
+    { "Treeitem.row", &RowElementSpec, L"LISTVIEW",
 	LVP_GROUPHEADER, treeitem_statemap, NOPAD, 0 },
     { "sizegrip", &GenericElementSpec, L"STATUS",
 	SP_GRIPPER, null_statemap, NOPAD, 0 },
