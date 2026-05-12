@@ -35,6 +35,8 @@
 /* Cover the full Unicode range (0x110000). */
 #define FONTMAP_NUMCHARS	0x110000
 #define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
+/* Helper macro: Check if character is whitespace that gets absorbed at EOL. */
+#define IsEOLSpace(wc) ((wc) == L' ' || (wc) == L'\t')
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -1239,6 +1241,14 @@ static int GetVisualXForLogicalIndex(
     int logicalIdx)
 {
     int i;
+    
+    /*
+     * Index 0 should always map to X=0, regardless of anchor or shaping.
+     */
+    if (logicalIdx == 0 && nRuns > 0) {
+        return 0;
+    }
+    
     logicalIdx = ClampIndex(logicalIdx, totalChars);
 
     for (i = 0; i < nRuns; i++) {
@@ -1248,33 +1258,43 @@ static int GetVisualXForLogicalIndex(
         if (logicalIdx >= start && logicalIdx <= end) {
             int local = logicalIdx - start;
             int x = 0;
+            BOOL trailing = FALSE;
 
             /*
-             * To force LTR tracking in an RTL run, we must calculate 
-             * the distance from the visual left edge of the run.
+             * Determine when to use trailing edge.
+             * - For hit testing and measurement, we want the visual position
+             *   between characters.
+             * - At run boundaries (local == charLen), use trailing edge
+             *   to get the right side of the last character.
+             * - This fixes cursor positioning issues.
              */
+            if (local == runs[i].charLen && local > 0) {
+                trailing = TRUE;
+            }
+
             if (runs[i].sa.fRTL) {
                 /*
-                 * In RTL, logical index 'local' is at the left edge 
-                 * only if it's the LAST character of the logical run.
-                 * We use fTrailing=TRUE to get the 'exit' (left) edge.
+                 * RTL run: Use trailing=TRUE for consistent LTR cursor tracking.
+                 * ScriptCPtoX returns X from the logical start (visual right),
+                 * so we flip it to get LTR distance from visual left.
                  */
                 ScriptCPtoX(local, TRUE, runs[i].charLen, runs[i].glyphCount, 
                             runs[i].logClust, runs[i].visAttr, runs[i].advances, 
                             &runs[i].sa, &x);
                 
-                /* * Flip the coordinate: Uniscribe gives X relative to the 
-                 * logical start (the right). We subtract from total width 
-                 * to get the LTR distance from the run origin.
-                 */
+                /* Compute total run width */
                 int runWidth = 0;
                 for (int g = 0; g < runs[i].glyphCount; g++) {
                     runWidth += runs[i].advances[g];
                 }
+                /* Flip to LTR coordinate system */
                 x = runWidth - x;
             } else {
-                /* Standard LTR behavior */
-                ScriptCPtoX(local, FALSE, runs[i].charLen, runs[i].glyphCount, 
+                /*
+                 * LTR run: Use the trailing flag we computed above.
+                 * This gives proper character boundaries for click-to-index.
+                 */
+                ScriptCPtoX(local, trailing, runs[i].charLen, runs[i].glyphCount, 
                             runs[i].logClust, runs[i].visAttr, runs[i].advances, 
                             &runs[i].sa, &x);
             }
@@ -1283,9 +1303,11 @@ static int GetVisualXForLogicalIndex(
         }
     }
     
+    /* Beyond all runs: return total width. */
     if (nRuns > 0) return TkWinShapedRunsWidth(runs, nRuns);
     return 0;
 }
+
 
 
 /*
@@ -1368,6 +1390,28 @@ ClampIndex(int idx, int totalChars)
  *	None.
  *
  *---------------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MeasureCharsInContext --
+ *
+ *	FIXED VERSION: Improves space handling at wrap points and
+ *	trailing space absorption for legacy Tk compatibility.
+ *
+ *	Measure a range of characters from a string, using Uniscribe
+ *	for shaping and BiDi support.
+ *
+ * Results:
+ *	The return value is the number of bytes from source that fit in
+ *	the space specified by maxLength. *lengthPtr is filled with the
+ *	x-coordinate that corresponds to the number of characters returned.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 int
@@ -1492,27 +1536,39 @@ Tk_MeasureCharsInContext(
         bestChars = wRangeEnd - wRangeStart;
     } else {
         /*
-         * Bounded search.
+         * Bounded search: find how many characters fit in maxLength pixels.
          */
         int ci;
+        
         for (ci = wRangeStart; ci <= wRangeEnd; ci++) {
             int endX = GetVisualXForLogicalIndex(
                 runs, nRuns, runOriginX, totalChars,
                 ClampIndex(ci, totalChars));
             int width = abs(endX - startX);
 
-            if (width > maxLength && bestChars > 0)
+            if (width > maxLength && bestChars > 0) {
                 break;
+            }
 
             bestChars = ci - wRangeStart;
             bestWidth = width;
 
-            if (width == maxLength)
+            if (width == maxLength) {
                 break;
+            }
         }
 
         /*
          * TK_WHOLE_WORDS rollback (UTF-16 safe).
+         * 
+         * FIX for canvText-19.1, font-24.11, font-24.12:
+         * When wrapping on word boundaries, we need to handle trailing
+         * spaces correctly according to legacy Tk behavior:
+         * - Include the breaking space in the line's character count
+         * - But absorb the space's width for the next line
+         * 
+         * Old behavior: lastBoundary pointed AT the space
+         * New behavior: we include the space in wcCount for proper indexing
          */
         if ((flags & TK_WHOLE_WORDS) &&
             bestChars > 0 &&
@@ -1521,28 +1577,61 @@ Tk_MeasureCharsInContext(
             int lastBoundary = -1;
             int i;
 
+            /* Find the last word boundary (space/tab/newline) */
             for (i = wRangeStart; i < wRangeStart + bestChars; i++) {
                 WCHAR wc = wfull[i];
-                if (wc == L' ' || wc == L'\t' || wc == L'\n' || wc == L'\r') {
+                if (IsEOLSpace(wc) || wc == L'\n' || wc == L'\r') {
                     lastBoundary = i;
                 }
             }
 
             if (lastBoundary >= 0) {
-                int wcCount = lastBoundary - wRangeStart;
-                bestChars = wcCount;
-
-                {
+                /*
+                 * CRITICAL FIX:
+                 * lastBoundary is the INDEX of the space character.
+                 * For proper wrapping behavior that matches the tests:
+                 * 
+                 * "000 000" wrapping at 5ax should:
+                 * - Line 1: "000 " (4 chars including space, but width of "000")
+                 * - Line 2: "000"
+                 * 
+                 * The space is INCLUDED in the char count but its width
+                 * is absorbed (not counted) at end of line.
+                 */
+                int wcCount;
+                WCHAR boundaryChar = wfull[lastBoundary];
+                
+                if (IsEOLSpace(boundaryChar)) {
+                    /*
+                     * Include the space in the character count.
+                     * The width calculation below will measure UP TO but
+                     * NOT INCLUDING the space's width.
+                     */
+                    wcCount = (lastBoundary + 1) - wRangeStart;
+                    
+                    /*
+                     * Measure width up to (but not including) the space.
+                     * This is the "absorb spaces at eol" behavior.
+                     */
+                    int wordEndX = GetVisualXForLogicalIndex(
+                        runs, nRuns, runOriginX, totalChars,
+                        ClampIndex(wRangeStart + wcCount - 1, totalChars));
+                    bestWidth = abs(wordEndX - startX);
+                } else {
+                    /* Newline/other: don't include it */
+                    wcCount = lastBoundary - wRangeStart;
                     int wordEndX = GetVisualXForLogicalIndex(
                         runs, nRuns, runOriginX, totalChars,
                         ClampIndex(wRangeStart + wcCount, totalChars));
                     bestWidth = abs(wordEndX - startX);
                 }
+                
+                bestChars = wcCount;
             }
         }
 
         /*
-         * TK_AT_LEAST_ONE.
+         * TK_AT_LEAST_ONE: even if nothing fits, return at least one character.
          */
         if ((flags & TK_AT_LEAST_ONE) &&
             bestChars == 0 &&
@@ -1559,7 +1648,7 @@ Tk_MeasureCharsInContext(
     }
 
     /*
-     * Convert UTF-16 -> UTF-8 byte count.
+     * Convert UTF-16 character count back to UTF-8 byte count.
      */
     {
         Tcl_DString result;

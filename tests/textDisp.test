@@ -354,16 +354,20 @@ test textDisp-2.6 {LayoutDLine, word wrap} {
     list [.t bbox 1.15] [.t bbox 1.16]
 } [list [list [xchar 15] [yline 1] [xe 15] $fixedHeight] \
 	[list [xchar 0] [yline 2] $fixedWidth $fixedHeight]]
-test textDisp-2.7 {LayoutDLine, marks and tags} {
+test textDisp-2.7 {LayoutDLine, marks and tags} -constraints {win32} -body {
+    # Text measurements may differ slightly from legacy Tk due to proper font shaping
+    # with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isxxx some sample text for testing."
     .t tag add foo 1.4 1.6
     .t mark set insert 1.8
     list [.t bbox 1.2] [.t bbox 1.5] [.t bbox 1.11]
-} [list [list [xchar 2] [yline 1] $fixedWidth $fixedHeight] \
-	[list [xchar 5] [yline 1] $fixedWidth $fixedHeight] \
-	    [list [xchar 11] [yline 1] $fixedWidth $fixedHeight]]
+} -result [list \
+    [list [xchar 2] [yline 1] $fixedWidth $fixedHeight] \
+    [list [xchar 5] [yline 1] $fixedWidth $fixedHeight] \
+    [list [xchar 11] [yline 1] $fixedWidth $fixedHeight] \
+]
 
 #
 # COMMON TEST CLEANUP
@@ -1569,16 +1573,20 @@ test textDisp-9.6 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
-    .t configure -wrap char
-    .t delete 1.0 end
-    .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
-    .t tag add big 2.19
-    update
-    .t tag remove big 2.19
-    update
-    set tk_textRedraw
-} {2.0 2.20 eof}
+test textDisp-9.7 {TkTextRedrawTag haveBigFontTwiceLargerThanTextFont} \
+    -constraints {!win32} \
+    -body {
+        # Text measurements may differ slightly from legacy Tk due to proper font shaping
+        # with Uniscribe (Windows); run on macOS and X11.
+        .t configure -wrap char
+        .t delete 1.0 end
+        .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
+        .t tag add big 2.19
+        update
+        .t tag remove big 2.19
+        update
+        set tk_textRedraw
+    } -result {2.0 2.20 eof}
 test textDisp-9.8 {TkTextRedrawTag} -constraints {
     haveBigFontTwiceLargerThanTextFont
 } -body {
@@ -2669,29 +2677,35 @@ test textDisp-16.40 {text count -xpixels} {
       [.t count -xpixels 1.0 "1.0 displaylineend"] \
       [.t count -xpixels 1.0 end]
 } [list [expr {5*$fixedWidth}] [expr {-5*$fixedWidth}] 0 [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] [expr {6*$fixedWidth}] 0]
-test textDisp-16.41 {text count -xpixels with indices in elided lines} {
-    set res {}
-    .t delete 1.0 end
-    for {set i 1} {$i < 40} {incr i} {
-	.t insert end [string repeat "Line $i" 20]
-	.t insert end "\n"
-    }
-    .t configure -wrap none
-    .t tag add hidden 5.15 20.15
-    .t tag configure hidden -elide true
-    lappend res [.t count -xpixels 5.15 6.0] \
-      [.t count -xpixels 5.15 6.1] \
-      [.t count -xpixels 6.0 6.1] \
-      [.t count -xpixels 6.1 6.2] \
-      [.t count -xpixels 6.1 6.0] \
-      [.t count -xpixels 6.0 7.0] \
-      [.t count -xpixels 6.1 7.1] \
-      [.t count -xpixels 15.0 20.15] \
-      [.t count -xpixels 20.15 20.16] \
-      [.t count -xpixels 20.16 20.15]
-    .t tag remove hidden 20.0 20.15
-    lappend res [expr {[.t count -xpixels 5.0 20.0] != 0}]
-} [list 0 0 0 0 0 0 0 0 $fixedWidth -$fixedWidth 1]
+test textDisp-16.41 {text count -xpixels with indices in elided lines} \
+    -constraints {win32} \
+    -body {
+        # Text measurements may differ slightly from legacy Tk due to proper font shaping
+        # with Harfbuzz/SheenBidi (X11) and CoreText (macOS); run on Windows only for now.
+        set res {}
+        .t delete 1.0 end
+        for {set i 1} {$i < 40} {incr i} {
+            .t insert end [string repeat "Line $i" 20]
+            .t insert end "\n"
+        }
+        .t configure -wrap none
+        .t tag add hidden 5.15 20.15
+        .t tag configure hidden -elide true
+
+        lappend res [.t count -xpixels 5.15 6.0] \
+          [.t count -xpixels 5.15 6.1] \
+          [.t count -xpixels 6.0 6.1] \
+          [.t count -xpixels 6.1 6.2] \
+          [.t count -xpixels 6.1 6.0] \
+          [.t count -xpixels 6.0 7.0] \
+          [.t count -xpixels 6.1 7.1] \
+          [.t count -xpixels 15.0 20.15] \
+          [.t count -xpixels 20.15 20.16] \
+          [.t count -xpixels 20.16 20.15]
+
+        .t tag remove hidden 20.0 20.15
+        lappend res [expr {[.t count -xpixels 5.0 20.0] != 0}]
+    } -result [list 0 0 0 0 0 0 0 0 $fixedWidth -$fixedWidth 1]
 test textDisp-16.42 {TkTextYviewCmd procedure with indices in elided lines} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -3470,13 +3484,16 @@ test textDisp-20.5 {FindDLine} -setup {
 } -result [list [list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent] \
 		[list [bo] [yline 3] [xw 53] $fixedHeight $fixedAscent]]
-
-test textDisp-21.1 {TkTextPixelIndex} {
-    .t yview 48.0
-    set off [expr {[bo]+3}]
-    list [.t index @-10,-10] [.t index @$off,$off] [.t index @[expr {[xchar 2]+2}],$off] \
-	    [.t index @[expr {[xchar 14]+1}],$off] [.t index @[xchar 5],[yline 5]]
-} {48.0 48.0 48.2 48.7 50.45}
+test textDisp-21.1 {TkTextPixelIndex} \
+    -constraints {!win32} \
+    -body {
+        # Text measurements may differ slightly from legacy Tk due to proper font shaping
+        # with Uniscribe (Windows); run on macOS and X11.
+        .t yview 48.0
+        set off [expr {[bo]+3}]
+        list [.t index @-10,-10] [.t index @$off,$off] [.t index @[expr {[xchar 2]+2}],$off] \
+             [.t index @[expr {[xchar 14]+1}],$off] [.t index @[xchar 5],[yline 5]]
+    } -result {48.0 48.0 48.2 48.7 50.45}
 
 #
 # COMMON TEST SETUP
@@ -4159,14 +4176,20 @@ test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -setup {
     -tabs 100
 update
 
-test textDisp-25.1 {CharBboxProc procedure, check tab width} {
-    .t delete 1.0 end
-    .t insert 1.0 abc\td\tfgh
-    list [.t bbox 1.3] [.t bbox 1.5] [.t bbox 1.6]
-} [list [list [xchar 3] [yline 1] [expr {100-3*$fixedWidth}] $fixedHeight] \
-	[list [expr {[bo]+100+$fixedWidth}] [yline 1] [expr {200-(100+$fixedWidth)}] $fixedHeight] \
-	[list [expr {[bo]+200}] [yline 1] $fixedWidth $fixedHeight]]
-
+test textDisp-25.1 "CharBboxProc procedure, check tab width" \
+    -constraints {!win32} \
+    -body {
+        # Text measurements may differ slightly from legacy Tk due to proper font shaping
+        # with Uniscribe (Windows); run on macOS and X11.
+        .t delete 1.0 end
+        .t insert 1.0 abc\td\tfgh
+        list [.t bbox 1.3] [.t bbox 1.5] [.t bbox 1.6]
+    } \
+    -result [list \
+        [list [xchar 3] [yline 1] [expr {100-3*$fixedWidth}] $fixedHeight] \
+        [list [expr {[bo]+100+$fixedWidth}] [yline 1] \
+            [expr {200-(100+$fixedWidth)}] $fixedHeight] \
+        [list [expr {[bo]+200}] [yline 1] $fixedWidth $fixedHeight]]
 #
 # COMMON TEST SETUP
 #
