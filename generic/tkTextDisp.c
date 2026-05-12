@@ -8734,7 +8734,7 @@ CharBboxProc(
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 
     if (ciPtr->isRtl) {
-        /* RTL: mirror the measurement */
+        /* RTL: mirror the measurement. */
         int xEnd, xStart;
         CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
                 chunkPtr->x, -1, 0, &xEnd);
@@ -8761,7 +8761,7 @@ CharBboxProc(
         }
     }
 
-    /* Zero-width fallback (common with elision / bidi) */
+    /* Zero-width fallback (common with elision / bidi). */
     if (*widthPtr == 0 && ciPtr->numBytes > 0) {
         *widthPtr = 1;  /* minimal visible width for cursor/selection */
     }
