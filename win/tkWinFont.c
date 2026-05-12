@@ -32,7 +32,7 @@
 #define FONTMAP_SHIFT	    10
 
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
-/* Cover the full Unicode range (0x110000) */
+/* Cover the full Unicode range (0x110000). */
 #define FONTMAP_NUMCHARS	0x110000
 #define FONTMAP_PAGES		(FONTMAP_NUMCHARS / FONTMAP_BITSPERPAGE)
 
@@ -810,26 +810,26 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
-    Tk_Font tkfont,		/* Font to query */
-    int c,			/* Character of interest */
-    TkFontAttributes *faPtr)	/* Output: Font attributes */
+    Tk_Window tkwin,		/* Window on the font's display. */
+    Tk_Font tkfont,		/* Font to query. */
+    int c,			/* Character of interest. */
+    TkFontAttributes *faPtr)	/* Output: Font attributes. */
 {
     WinFont *fontPtr = (WinFont *) tkfont;
-				/* Structure describing the logical font */
+				/* Structure describing the logical font. */
     HDC hdc = GetDC(fontPtr->hwnd);
-				/* GDI device context */
+				/* GDI device context. */
     SubFont *lastSubFontPtr = &fontPtr->subFontArray[0];
 				/* Pointer to subfont array in case
 				 * FindSubFontForChar needs to fix up the
-				 * memory allocation */
+				 * memory allocation. */
     SubFont *thisSubFontPtr =
 	    FindSubFontForChar(fontPtr, c, &lastSubFontPtr);
 				/* Pointer to the subfont to use for the given
-				 * character */
+				 * character. */
     FontFamily *familyPtr = thisSubFontPtr->familyPtr;
-    HFONT oldfont;		/* Saved font from the device context */
-    TEXTMETRICW tm;		/* Font metrics of the selected subfont */
+    HFONT oldfont;		/* Saved font from the device context. */
+    TEXTMETRICW tm;		/* Font metrics of the selected subfont. */
 
     /*
      * Get the font attributes.
@@ -1464,7 +1464,7 @@ Tk_MeasureCharsInContext(
         /* Compute X position for each run in visual order. */
         int x = 0;
         for (int vi = 0; vi < nRuns; vi++) {
-            int i = visualOrder[vi];  /* visual -> logical */
+            int i = visualOrder[vi];  /* visual -> logical. */
             runOriginX[i] = x;
             x += runs[i].abc.abcA + runs[i].abc.abcB + runs[i].abc.abcC;
         }
@@ -1820,13 +1820,13 @@ Tk_DrawCharsInContext(
 
     dc = TkWinGetDrawableDC(display, drawable, &dcState);
 
-    /* Convert full source string to UTF-16 (needed for shaping context) */
+    /* Convert full source string to UTF-16 (needed for shaping context). */
     Tcl_DStringInit(&uniStr);
     Tcl_UtfToWCharDString(source, numBytes, &uniStr);
     wstr = (WCHAR *)Tcl_DStringValue(&uniStr);
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
-    /* Convert byte range [rangeStart, rangeStart+rangeLength) to UTF-16 indices */
+    /* Convert byte range [rangeStart, rangeStart+rangeLength) to UTF-16 indices. */
     {
         Tcl_DString tmp;
         Tcl_DStringInit(&tmp);
@@ -1840,7 +1840,7 @@ Tk_DrawCharsInContext(
         Tcl_DStringFree(&tmp);
     }
 
-    /* Shape the full string */
+    /* Shape the full string. */
     if (TkWinShapeString(dc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
         /* Fallback */
         int widthUntilStart = 0;
@@ -1872,13 +1872,13 @@ Tk_DrawCharsInContext(
      * We need to reorder runs so they are laid out left-to-right on screen.
      */
     int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
-    int *runX = (int *)Tcl_Alloc(sizeof(int) * nRuns);  /* X position of each run in visual order */
+    int *runX = (int *)Tcl_Alloc(sizeof(int) * nRuns);  /* X position of each run in visual order. */
     BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
     for (i = 0; i < nRuns; i++) {
         levels[i] = runs[i].sa.s.uBidiLevel;
     }
     
-    /* ScriptLayout produces the visual order from embedding levels */
+    /* ScriptLayout produces the visual order from embedding levels. */
     HRESULT hr = ScriptLayout(nRuns, levels, visualOrder, NULL);
     if (FAILED(hr)) {
         /* Fallback: use logical order */
@@ -1888,7 +1888,7 @@ Tk_DrawCharsInContext(
     }
     Tcl_Free(levels);
 
-    /* Compute X position for each run in visual order */
+    /* Compute X position for each run in visual order. */
     int penX = x;
     for (int vi = 0; vi < nRuns; vi++) {
         int i = visualOrder[vi];
@@ -1896,13 +1896,13 @@ Tk_DrawCharsInContext(
         penX += TkWinShapedRunsWidth(&runs[i], 1);
     }
 
-    /* Draw only runs that intersect the requested character range */
+    /* Draw only runs that intersect the requested character range. */
     for (int vi = 0; vi < nRuns; vi++) {
-        int i = visualOrder[vi];  /* visual -> logical mapping */
+        int i = visualOrder[vi];  /* visual -> logical mapping. */
         TkWinShapedRun *run = &runs[i];
         int runEnd = run->charStart + run->charLen;
 
-        /* Skip runs completely outside the requested range */
+        /* Skip runs completely outside the requested range. */
         if (runEnd <= wRangeStart || run->charStart >= wRangeEnd) {
             continue;
         }
@@ -1916,9 +1916,9 @@ Tk_DrawCharsInContext(
         }
 
         int gFirst = 0, gLast = 0;
-        int glyphOffsetX = 0;  /* X offset from run start to first visible glyph */
+        int glyphOffsetX = 0;  /* X offset from run start to first visible glyph. */
         
-        /* Find glyph range for the character range using logClust */
+        /* Find glyph range for the character range using logClust. */
         {
             int gMin = INT_MAX, gMax = -1;
             for (int ci = charFirst; ci < charLast; ci++) {
@@ -1932,7 +1932,7 @@ Tk_DrawCharsInContext(
             gFirst = gMin;
             gLast = gMax + 1;
             
-            /* Compute X offset to gFirst by summing advances of glyphs before it */
+            /* Compute X offset to gFirst by summing advances of glyphs before it. */
             for (int g = 0; g < gFirst; g++) {
                 glyphOffsetX += run->advances[g];
             }
@@ -1944,7 +1944,7 @@ Tk_DrawCharsInContext(
         ScriptTextOut(
             dc,
             &fontPtr->scriptCacheArray[run->scriptCacheIdx],
-            runX[i] + glyphOffsetX, y,  /* Offset to first visible glyph */
+            runX[i] + glyphOffsetX, y,  /* Offset to first visible glyph. */
             0, NULL,
             &run->sa,
             NULL, 0,
@@ -1954,7 +1954,7 @@ Tk_DrawCharsInContext(
             NULL,
             run->offsets + gFirst);
 
-        /* Always advance by the full visual width of this run */
+        /* Always advance by the full visual width of this run. */
         penX += TkWinShapedRunsWidth(run, 1);
     }
 
