@@ -228,7 +228,7 @@ static void Ttk_Fill(
 
     for (x = dst.x; x < dr; x += src.width) {
 	int cw = MIN(src.width, dr - x);
-	for (y = dst.y; y <= db; y += src.height) {
+	for (y = dst.y; y < db; y += src.height) {
 	    int ch = MIN(src.height, db - y);
 	    Tk_RedrawImage(image, src.x, src.y, cw, ch, d, x, y);
 	}
@@ -275,11 +275,43 @@ typedef struct {		/* ClientData for image elements */
     Ttk_ResourceCache cache;	/* Resource cache for images */
     Ttk_StateMap imageMap;	/* State-based lookup table for images */
 #endif
+
+    Pixmap cachedPixmap;	/* Cached composed element, or None */
+    int cachedWidth;		/* Width of cached pixmap */
+    int cachedHeight;		/* Height of cached pixmap */
+    int cachedX;		/* X position of cached render */
+    int cachedY;		/* Y position of cached render */
+    Ttk_State cachedState;	/* State at which pixmap was rendered */
+    Display *cachedDisplay;	/* Display owning cachedPixmap */
 } ImageData;
+
+static void InvalidateImageCache(ImageData *imageData)
+{
+    if (imageData->cachedPixmap != None) {
+	Tk_FreePixmap(imageData->cachedDisplay, imageData->cachedPixmap);
+	imageData->cachedPixmap = None;
+	imageData->cachedWidth = 0;
+	imageData->cachedHeight = 0;
+    }
+}
+
+static void ImageElementImageChanged(
+    void *clientData,
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
+{
+    ImageData *imageData = (ImageData *)clientData;
+    InvalidateImageCache(imageData);
+}
 
 static void FreeImageData(void *clientData)
 {
     ImageData *imageData = (ImageData *)clientData;
+    InvalidateImageCache(imageData);
     if (imageData->imageSpec)	{ TtkFreeImageSpec(imageData->imageSpec); }
 #ifdef TILE_07_COMPAT
     if (imageData->imageMap)	{ Tcl_DecrRefCount(imageData->imageMap); }
@@ -346,6 +378,71 @@ static void ImageElementDraw(
     src = Ttk_MakeBox(0, 0, imgWidth, imgHeight);
     dst = Ttk_StickBox(b, imgWidth, imgHeight, imageData->sticky);
 
+    /* Fast path: blit cached pixmap if size, position, and state match. */
+    if (imageData->cachedPixmap != None
+	    && imageData->cachedWidth == dst.width
+	    && imageData->cachedHeight == dst.height
+	    && imageData->cachedX == dst.x
+	    && imageData->cachedY == dst.y
+	    && imageData->cachedState == state) {
+	XGCValues gcValues;
+	GC gc;
+
+	gcValues.function = GXcopy;
+	gcValues.graphics_exposures = False;
+	gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
+	XCopyArea(Tk_Display(tkwin), imageData->cachedPixmap, d, gc,
+		0, 0, (unsigned)dst.width, (unsigned)dst.height, dst.x, dst.y);
+	Tk_FreeGC(Tk_Display(tkwin), gc);
+	return;
+    }
+
+    /* Cache miss: render into a new cached pixmap if window is realized. */
+    if (Tk_WindowId(tkwin) != None && dst.width > 0 && dst.height > 0) {
+	Display *display = Tk_Display(tkwin);
+	Pixmap pixmap;
+
+	pixmap = Tk_GetPixmap(display, Tk_WindowId(tkwin),
+		dst.width, dst.height, Tk_Depth(tkwin));
+
+	if (pixmap != None) {
+	    XGCValues gcValues;
+	    GC gc;
+	    Ttk_Box cacheDst;
+
+	    gcValues.function = GXcopy;
+	    gcValues.graphics_exposures = False;
+	    gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
+
+	    /* Seed cache with destination content for correct alpha compositing. */
+	    XCopyArea(display, d, pixmap, gc,
+		    dst.x, dst.y, (unsigned)dst.width, (unsigned)dst.height,
+		    0, 0);
+
+	    /* Render tiled image over the background copy. */
+	    cacheDst = Ttk_MakeBox(0, 0, dst.width, dst.height);
+	    Ttk_Tile(tkwin, pixmap, image, src, cacheDst, imageData->border);
+
+	    /* Replace old cache. */
+	    InvalidateImageCache(imageData);
+	    imageData->cachedPixmap = pixmap;
+	    imageData->cachedWidth = dst.width;
+	    imageData->cachedHeight = dst.height;
+	    imageData->cachedX = dst.x;
+	    imageData->cachedY = dst.y;
+	    imageData->cachedState = state;
+	    imageData->cachedDisplay = display;
+
+	    /* Blit composited result to destination. */
+	    XCopyArea(display, pixmap, d, gc,
+		    0, 0, (unsigned)dst.width, (unsigned)dst.height,
+		    dst.x, dst.y);
+	    Tk_FreeGC(display, gc);
+	    return;
+	}
+    }
+
+    /* Fallback: window not realized or pixmap alloc failed. */
     Ttk_Tile(tkwin, d, image, src, dst, imageData->border);
 }
 
@@ -385,12 +482,17 @@ Ttk_CreateImageElement(
 	return TCL_ERROR;
     }
 
-    imageSpec = TtkGetImageSpec(interp, Tk_MainWindow(interp), objv[0]);
+    imageData = (ImageData *)ckalloc(sizeof(*imageData));
+    memset(imageData, 0, sizeof(*imageData));
+    imageData->cachedPixmap = None;
+
+    imageSpec = TtkGetImageSpecEx(interp, Tk_MainWindow(interp), objv[0],
+	    ImageElementImageChanged, imageData);
     if (!imageSpec) {
+	ckfree(imageData);
 	return TCL_ERROR;
     }
 
-    imageData = (ImageData *)Tcl_Alloc(sizeof(*imageData));
     imageData->imageSpec = imageSpec;
     imageData->minWidth = imageData->minHeight = -1;
     imageData->sticky = TTK_FILL_BOTH;
