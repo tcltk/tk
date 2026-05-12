@@ -1076,6 +1076,7 @@ Tk_MeasureCharsInContext(
     }
     if (maxLength < 0) {
 	index = len;
+	range.location = start;
 	range.length = len;
 	line = CTTypesetterCreateLine(typesetter, range);
 	width = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
@@ -1103,7 +1104,7 @@ Tk_MeasureCharsInContext(
 	 * Trim right whitespace/lineending characters.
 	 */
 
-	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
+	cs = (index <= start + len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
@@ -1120,7 +1121,7 @@ Tk_MeasureCharsInContext(
 	 * smallest word of the source string is still larger than maxWidth).
 	 */
 
-	if ((index >= start) && (index < len) &&
+	if ((index >= start) && (index < start + len) &&
 		(flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
 		![cs characterIsMember:[string characterAtIndex:index]]) {
 	    index = start;
@@ -1142,7 +1143,7 @@ Tk_MeasureCharsInContext(
 	} else {
 	    width = 0;
 	}
-	if (width < maxWidth && (flags & TK_PARTIAL_OK) && index < len) {
+	if (width < maxWidth && (flags & TK_PARTIAL_OK) && index < start + len) {
 	    range.length = ++index;
 	    line = CTTypesetterCreateLine(typesetter, range);
 	    width = CTLineGetTypographicBounds(line, NULL, NULL, NULL);

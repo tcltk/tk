@@ -8319,9 +8319,8 @@ CharChunkMeasureChars(
 		if (bend == -1) {
 		    bend = charsLen;
 		}
-		MeasureChars(tkfont, chars, charsLen, start, bend - start,
-			     startX, maxX, flags, nextXPtr);
-		return bend - start;
+		return MeasureChars(tkfont, chars, charsLen, start, bend - start,
+				    startX, maxX, flags, nextXPtr);
 	    }
 
 	    Tcl_DString *baseChars = &((BaseCharInfo *)
@@ -8784,11 +8783,12 @@ CharBboxProc(
         CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
             chunkPtr->x, -1, 0, xPtr);
 
-        if (byteIndex == ciPtr->numBytes) {
+        if (byteIndex >= ciPtr->numBytes) {
+            /* Position is at or past the end of the chunk */
             *widthPtr = maxX - *xPtr;
-        } else if (byteIndex < ciPtr->numBytes &&
-                   ciPtr->chars[byteIndex] == '\t' &&
+        } else if (ciPtr->chars[byteIndex] == '\t' &&
                    byteIndex == ciPtr->numBytes - 1) {
+            /* Tab at end of chunk spans to maxX */
             *widthPtr = maxX - *xPtr;
         } else {
             int x2;
