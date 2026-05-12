@@ -8722,106 +8722,49 @@ CharBboxProc(
     int *heightPtr)		/* Gets filled with height of character. */
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-    int maxX;
+    int maxX = chunkPtr->x + chunkPtr->width;
 
-    /* Defensive checks */
-    if (ciPtr == NULL || ciPtr->chars == NULL) {
-        *xPtr = chunkPtr->x;
-        *yPtr = y;
-        *widthPtr = 0;
-        *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
-        return;
-    }
-
-    if (byteIndex < 0) {
+    if (ciPtr == NULL || byteIndex < 0) {
         byteIndex = 0;
     } else if (byteIndex > ciPtr->numBytes) {
         byteIndex = ciPtr->numBytes;
     }
 
-    maxX = chunkPtr->width + chunkPtr->x;
+    *yPtr = y + baseline - chunkPtr->minAscent;
+    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 
     if (ciPtr->isRtl) {
-        /* ====================== RTL HANDLING ====================== */
-        int xOfEnd;   /* pixel just past glyph[byteIndex] in LTR measurement */
-        int xOfChar;  /* pixel just past glyph[byteIndex-1] */
-
-        /* Width of bytes [0 .. byteIndex+1) in storage (LTR) order */
+        /* RTL: mirror the measurement */
+        int xEnd, xStart;
         CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
-            chunkPtr->x, -1, 0, &xOfEnd);
-
-        /* Width of bytes [0 .. byteIndex) */
+                chunkPtr->x, -1, 0, &xEnd);
         CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-            chunkPtr->x, -1, 0, &xOfChar);
+                chunkPtr->x, -1, 0, &xStart);
 
-        int glyphWidth = xOfEnd - xOfChar;
+        *xPtr = chunkPtr->x + (chunkPtr->width - (xEnd - chunkPtr->x));
+        *widthPtr = xEnd - xStart;
 
-        /*
-         * In RTL visual order, the glyph is placed from the right.
-         * x = chunkPtr->x + (total_width - width_up_to_(byteIndex+1))
-         */
-        *xPtr = 2 * chunkPtr->x + chunkPtr->width - xOfEnd;
-
-        if (*xPtr < chunkPtr->x) {
-            *xPtr = chunkPtr->x;
-        }
-
-        if (byteIndex == ciPtr->numBytes) {
-            *widthPtr = maxX - *xPtr;
-        } else if (byteIndex < ciPtr->numBytes &&
-                   ciPtr->chars[byteIndex] == '\t' &&
-                   byteIndex == ciPtr->numBytes - 1) {
-            *widthPtr = maxX - *xPtr;
-        } else {
-            *widthPtr = glyphWidth;
-            if ((*xPtr + *widthPtr) > maxX) {
-                *widthPtr = maxX - *xPtr;
-            }
-        }
+        if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
+        if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
     } else {
-        /* ====================== LTR HANDLING ====================== */
+        /* LTR */
         CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-            chunkPtr->x, -1, 0, xPtr);
+                chunkPtr->x, -1, 0, xPtr);
 
         if (byteIndex >= ciPtr->numBytes) {
-            /* Position is at or past the end of the chunk */
-            *widthPtr = maxX - *xPtr;
-        } else if (ciPtr->chars[byteIndex] == '\t' &&
-                   byteIndex == ciPtr->numBytes - 1) {
-            /* Tab at end of chunk spans to maxX */
             *widthPtr = maxX - *xPtr;
         } else {
             int x2;
             CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
-                *xPtr, -1, 0, &x2);
-
-            if (x2 > maxX) {
-                *widthPtr = maxX - *xPtr;
-            } else {
-                *widthPtr = x2 - *xPtr;
-            }
-
-            /* Fix for zero-width glyphs (bidi, elided, etc.) */
-            if (*widthPtr == 0 && ciPtr->numBytes > 0) {
-                Tcl_Size idx = byteIndex;
-                if (idx >= ciPtr->numBytes) idx = ciPtr->numBytes - 1;
-                if (idx < 0) idx = 0;
-
-                CharChunkMeasureChars(chunkPtr, NULL, 0, idx, idx + 1,
                     *xPtr, -1, 0, &x2);
-
-                if (x2 > maxX) {
-                    *widthPtr = maxX - *xPtr;
-                } else {
-                    *widthPtr = x2 - *xPtr;
-                }
-            }
+            *widthPtr = (x2 > maxX) ? maxX - *xPtr : x2 - *xPtr;
         }
     }
 
-    /* Common vertical positioning */
-    *yPtr = y + baseline - chunkPtr->minAscent;
-    *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
+    /* Zero-width fallback (common with elision / bidi) */
+    if (*widthPtr == 0 && ciPtr->numBytes > 0) {
+        *widthPtr = 1;  /* minimal visible width for cursor/selection */
+    }
 }
 
 /*
@@ -9442,140 +9385,31 @@ FinalizeBaseChunk(
 				 * list yet. Used by the LayoutProc, otherwise
 				 * NULL. */
 {
-	
-#ifdef _WIN32 /* MSVC prefers this block - the next one hangs. */
-    const char *baseChars;
-    TkTextDispChunk *chunkPtr;
-    CharInfo *ciPtr;
-#ifdef TK_DRAW_IN_CONTEXT
-    int widthAdjust = 0;
-    int newwidth;
-#endif /* TK_DRAW_IN_CONTEXT */
+    if (baseCharChunkPtr == NULL) return;
 
-    if (baseCharChunkPtr == NULL) {
-	return;
-    }
+    BaseCharInfo *bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
+    const char *baseChars = Tcl_DStringValue(&bciPtr->baseChars);
 
-    baseChars = Tcl_DStringValue(
-	    &((BaseCharInfo *) baseCharChunkPtr->clientData)->baseChars);
-
-    for (chunkPtr = baseCharChunkPtr; chunkPtr != NULL;
-	    chunkPtr = chunkPtr->nextPtr) {
-#ifdef TK_DRAW_IN_CONTEXT
-	chunkPtr->x += widthAdjust;
-#endif /* TK_DRAW_IN_CONTEXT */
-
-	if (chunkPtr->displayProc != CharDisplayProc) {
-	    continue;
-	}
-	ciPtr = (CharInfo *)chunkPtr->clientData;
-	if (ciPtr->baseChunkPtr != baseCharChunkPtr) {
-	    break;
-	}
-	ciPtr->chars = baseChars + ciPtr->baseOffset;
-
-#ifdef TK_DRAW_IN_CONTEXT
-	newwidth = 0;
-	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, 0, &newwidth);
-	if (newwidth < chunkPtr->width) {
-	    widthAdjust += newwidth - chunkPtr->width;
-	    chunkPtr->width = newwidth;
-	}
-#endif /* TK_DRAW_IN_CONTEXT */
-    }
-
-    if (addChunkPtr != NULL) {
-	ciPtr = (CharInfo *)addChunkPtr->clientData;
-	ciPtr->chars = baseChars + ciPtr->baseOffset;
-
-#ifdef TK_DRAW_IN_CONTEXT
-	addChunkPtr->x += widthAdjust;
-	CharChunkMeasureChars(addChunkPtr, NULL, 0, 0, -1, 0, -1, 0,
-		&addChunkPtr->width);
-#endif /* TK_DRAW_IN_CONTEXT */
-    }
-
-    baseCharChunkPtr = NULL;
-#else /* X11 and macOS. */
-     const char *baseChars;
-    TkTextDispChunk *chunkPtr;
-    CharInfo *ciPtr;
-#ifdef TK_DRAW_IN_CONTEXT
-    int widthAdjust = 0;
-    int newwidth;
-#endif /* TK_DRAW_IN_CONTEXT */
-
-    if (baseCharChunkPtr == NULL) {
-        return;
-    }
-
-    baseChars = Tcl_DStringValue(
-        &((BaseCharInfo *) baseCharChunkPtr->clientData)->baseChars);
-
-    for (chunkPtr = baseCharChunkPtr;
+    for (TkTextDispChunk *chunkPtr = baseCharChunkPtr;
          chunkPtr != NULL;
          chunkPtr = chunkPtr->nextPtr) {
 
-#ifdef TK_DRAW_IN_CONTEXT
-        chunkPtr->x += widthAdjust;
-#endif /* TK_DRAW_IN_CONTEXT */
+        if (chunkPtr->displayProc != CharDisplayProc) break;
 
-        /*
-         * Base-char runs must be contiguous CharDisplayProc chunks.
-         * If we hit anything else, we're done.
-         */
-        if (chunkPtr->displayProc != CharDisplayProc) {
-            break;
-        }
+        CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+        if (ciPtr == NULL || ciPtr->baseChunkPtr != baseCharChunkPtr) break;
 
-        ciPtr = (CharInfo *)chunkPtr->clientData;
-
-        /*
-         * Defensive checks: malformed or partially initialized chunk.
-         * This can happen if shaping/splitting didn't fully populate CharInfo.
-         */
-        if (ciPtr == NULL || ciPtr->baseChunkPtr == NULL) {
-            break;
-        }
-
-        /*
-         * End of this base chunk group.
-         */
-        if (ciPtr->baseChunkPtr != baseCharChunkPtr) {
-            break;
-        }
-
-        /*
-         * Now safe to assign chars pointer.
-         */
         ciPtr->chars = baseChars + ciPtr->baseOffset;
-
-#ifdef TK_DRAW_IN_CONTEXT
-        newwidth = 0;
-        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, 0, &newwidth);
-        if (newwidth < chunkPtr->width) {
-            widthAdjust += newwidth - chunkPtr->width;
-            chunkPtr->width = newwidth;
-        }
-#endif /* TK_DRAW_IN_CONTEXT */
     }
 
-    if (addChunkPtr != NULL) {
-        ciPtr = (CharInfo *)addChunkPtr->clientData;
-
-        if (ciPtr != NULL && ciPtr->baseChunkPtr != NULL) {
+    if (addChunkPtr) {
+        CharInfo *ciPtr = (CharInfo *)addChunkPtr->clientData;
+        if (ciPtr && ciPtr->baseChunkPtr) {
             ciPtr->chars = baseChars + ciPtr->baseOffset;
-
-#ifdef TK_DRAW_IN_CONTEXT
-            addChunkPtr->x += widthAdjust;
-            CharChunkMeasureChars(addChunkPtr, NULL, 0, 0, -1, 0, -1, 0,
-                                  &addChunkPtr->width);
-#endif /* TK_DRAW_IN_CONTEXT */
         }
     }
 
     baseCharChunkPtr = NULL;
-#endif
 }
 
 /*
@@ -9758,97 +9592,26 @@ RemoveFromBaseChunk(
     TkTextDispChunk *chunkPtr)	/* The chunk to remove from the end of the
 				 * stretch. */
 {
-
-#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */
-	CharInfo *ciPtr;
-    BaseCharInfo *bciPtr;
-
-    if (chunkPtr->displayProc != CharDisplayProc) {
-#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
-	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk type\n");
-#endif
-	return;
-    }
-
-    /*
-     * Reinstitute this base chunk for re-layout.
-     */
-
-    ciPtr = (CharInfo *)chunkPtr->clientData;
-    baseCharChunkPtr = ciPtr->baseChunkPtr;
-
-    /*
-     * Remove the chunk data from the base chunk data.
-     */
-
-    bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
-
-#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
-    if ((ciPtr->baseOffset + ciPtr->numBytes)
-	    != Tcl_DStringLength(&bciPtr->baseChars)) {
-	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk "
-		"(not last)\n");
-    }
-#endif
-
-    Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
-
-    /*
-     * Invalidate the stored pixel width of the base chunk.
-     */
-
-    bciPtr->width = -1;
-#else /* X11 and macOS. */
-    CharInfo *ciPtr;
-    BaseCharInfo *bciPtr;
-
-    if (chunkPtr->displayProc != CharDisplayProc) {
-#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
-	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk type\n");
-#endif
-	return;
-    }
-
-    /*
-     * Defensive check: ciPtr may be NULL during teardown.
-     */
-    ciPtr = (CharInfo *)chunkPtr->clientData;
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     if (ciPtr == NULL || ciPtr->baseChunkPtr == NULL) {
-	return;
+        return;
     }
 
-    /*
-     * Reinstitute this base chunk for re-layout.
-     */
+    BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;
+    if (bciPtr == NULL) return;
+
+    /* Truncate the base string */
+    Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
+    bciPtr->width = -1;
+
+    /* Re-instate base chunk for next layout pass */
     baseCharChunkPtr = ciPtr->baseChunkPtr;
 
-    /*
-     * Remove the chunk data from the base chunk data.
-     * Guard against baseCharChunkPtr->clientData being NULL.
-     */
-    if (baseCharChunkPtr->clientData == NULL) {
-	return;
-    }
-
-    bciPtr = (BaseCharInfo *)baseCharChunkPtr->clientData;
-
-#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
-    if ((ciPtr->baseOffset + ciPtr->numBytes)
-	    != Tcl_DStringLength(&bciPtr->baseChars)) {
-	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk "
-		"(not last)\n");
-    }
-#endif
-
-    Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
-
-    /*
-     * Invalidate the stored pixel width of the base chunk.
-     */
-
-    bciPtr->width = -1;
-#endif
+    /* Detach this chunk */
+    ciPtr->baseChunkPtr = NULL;
+    ciPtr->chars = NULL;
 }
+
 #endif /*TK_LAYOUT_WITH_BASE_CHUNKS */
 
 /*
