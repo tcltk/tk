@@ -8052,6 +8052,9 @@ AppearanceIdleProc(void *clientData) {
 static int SynchronizeAppearance(TkWindow *winPtr) {
     Tk_Window tkwin = (Tk_Window) winPtr;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr == NULL) {
+	return TCL_ERROR;
+    }
     if (wmPtr->flags & WM_OVERRIDE_APPEARANCE) {
 	return TCL_OK;
     }
@@ -8060,8 +8063,10 @@ static int SynchronizeAppearance(TkWindow *winPtr) {
     bool windowIsDark;
     TkpWindowIsDark(tkwin, &windowIsDark);
     if (appsShouldBeDark == windowIsDark) {
-	//Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
-	//    Tcl_ObjPrintf("Already in sync"));
+#if 0
+	 Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
+	    Tcl_ObjPrintf("Already in sync"));
+#endif
 	return TCL_OK;
     }
     isDarkParam = appsShouldBeDark ? 1 : 0;
