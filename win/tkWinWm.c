@@ -287,7 +287,8 @@ typedef struct TkWmInfo {
  *				AUTO=0,DARK=0: light mode
  *				AUTO=0,DARK=1: dark mode
  *				AUTO=1,DARK=1: undefined, may not happen
- *				Note: auto mode always shows light decoration on MS-Win.
+ *				Note: auto mode means that the system decides.
+ * WM_APPEARANCE_PENDING	Set when an AppearanceIdleProc call is pending, 
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -306,6 +307,7 @@ typedef struct TkWmInfo {
 #define WM_FULLSCREEN			(1<<13)
 #define WM_OVERRIDE_APPEARANCE		(1<<14)
 #define WM_APPEARANCE_DARK		(1<<15)
+#define WM_APPEARANCE_PENDING		(1<<16)
 
 /*
  * Window styles for various types of toplevel windows.
@@ -2146,6 +2148,7 @@ UpdateWrapper(
     }
 
     wmPtr->flags &= ~WM_NEVER_MAPPED;
+    wmPtr->flags |= WM_APPEARANCE_PENDING;
     Tcl_DoWhenIdle(AppearanceIdleProc, (void *)winPtr);
     if (winPtr->flags & TK_EMBEDDED &&
 	    SendMessageW(wmPtr->wrapper, TK_ATTACHWINDOW, (WPARAM) child, 0)) {
@@ -2650,6 +2653,9 @@ TkWmDeadWindow(
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
+    }
+    if (wmPtr->flags & WM_APPEARANCE_PENDING) {
+	Tcl_CancelIdleCall(AppearanceIdleProc, winPtr);
     }
     if (wmPtr->containerPtr != NULL) {
 	wmPtr2 = wmPtr->containerPtr->wmInfoPtr;
@@ -8043,14 +8049,21 @@ bool AppsShouldUseLightTheme() {
       return 1;
     }
 }
+static void AppearanceIdleProc(
+    void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr) {
+	wmPtr->flags &= ~WM_APPEARANCE_PENDING;
+    }
+    SynchronizeAppearance((TkWindow *)winPtr);
+}    
 
-static void
-AppearanceIdleProc(void *clientData) {
-    SynchronizeAppearance((TkWindow *) clientData);
-}
-
-static int SynchronizeAppearance(TkWindow *winPtr) {
-    Tk_Window tkwin = (Tk_Window) winPtr;
+static int SynchronizeAppearance(
+    TkWindow *winPtr)
+{
+    Tk_Window tkwin = (Tk_Window)winPtr;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     if (wmPtr == NULL) {
 	return TCL_ERROR;
@@ -8063,7 +8076,7 @@ static int SynchronizeAppearance(TkWindow *winPtr) {
     bool windowIsDark;
     TkpWindowIsDark(tkwin, &windowIsDark);
     if (appsShouldBeDark == windowIsDark) {
-#if 0
+#if 0 /* for debugging */
 	 Tk_SendVirtualEvent(tkwin, "AppearanceChanged",
 	    Tcl_ObjPrintf("Already in sync"));
 #endif
