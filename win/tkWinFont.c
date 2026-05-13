@@ -1443,8 +1443,6 @@ Tk_MeasureCharsInContext(
     {
         ReleaseDC(fontPtr->hwnd, hdc);
         Tcl_DStringFree(&fullUni);
-        return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
-                               maxLength, flags, lengthPtr);
     }
 
     /*
