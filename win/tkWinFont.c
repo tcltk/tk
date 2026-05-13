@@ -2097,27 +2097,45 @@ MultiFontTextOut(
     wlen = (int)(Tcl_DStringLength(&uniStr) / sizeof(WCHAR));
 
     /*
-     * Normal Uniscribe path -
-     *
-     * Used for all text: Arabic, Hebrew, Indic, Thai, emoji, etc.
-     * FindSubFontForChar now correctly selects Segoe UI Emoji for
-     * supplementary-plane codepoints via the format-12 group table,
-     * so the per-run color-glyph ETO_GLYPH_INDEX path below handles
-     * emoji rendering without bypassing Uniscribe.
+     * CJK & Emoji Logic:
+     * We iterate through the string to ensure that the required subfonts 
+     * (especially for CJK and Emoji) are loaded into the cache before shaping.
+     * FindSubFontForChar is the standard Tk mechanism to find a fallback
+     * font that supports a specific Unicode point.
      */
+for (i = 0; i < wlen; i++) {
+    int ch = wstr[i];
+    
+    /* Handle surrogate pairs for Emoji/Supplementary planes */
+    if ((ch & 0xfc00) == 0xd800 && i + 1 < wlen) {
+        ch = (((ch & 0x3ff) << 10) | (wstr[i+1] & 0x3ff)) + 0x10000;
+        i++; 
+    }
+
+    /* We must pass the address of a SubFont pointer 
+     * or use the return value to ensure the fontPtr internal 
+     * array is actually expanded.
+     */
+    SubFont *subFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
+    
+    /* If subFontPtr is still the base font (index 0) and ch > 255, 
+     * then the fallback engine is failing to find a CJK match. */
+}
 
     TkWinShapedRun *runs = NULL;
     int nRuns = 0;
 
+    /* CJK/emoji text will be drawn here. */
     if (TkWinShapeString(hdc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
-	HFONT old = (HFONT)SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
-	SetBkMode(hdc, TRANSPARENT);
-	TextOutW(hdc, (int)x, (int)y, wstr, wlen);
-	SelectObject(hdc, old);
-	Tcl_DStringFree(&uniStr);
-	return;
+        HFONT old = (HFONT)SelectObject(hdc, fontPtr->subFontArray[0].hFont0);
+        SetBkMode(hdc, TRANSPARENT);
+        TextOutW(hdc, (int)x, (int)y, wstr, wlen);
+        SelectObject(hdc, old);
+        Tcl_DStringFree(&uniStr);
+        return;
     }
 
+	/* RTL text will be drawn here. */
     oldFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
     int oldBkMode = SetBkMode(hdc, TRANSPARENT);
 
@@ -2125,49 +2143,47 @@ MultiFontTextOut(
     double cosA = cos(angle * PI / 180.0);
 
     for (i = 0; i < nRuns; i++) {
-	TkWinShapedRun *run = &runs[i];
-	HFONT hDrawFont = run->hFont;
-	HFONT hAngled = NULL;
-	int runWidth = 0;
+        TkWinShapedRun *run = &runs[i];
+        HFONT hDrawFont = run->hFont;
+        HFONT hAngled = NULL;
+        int runWidth = 0;
 
-	/* Rotation support. */
-	if (angle != 0.0) {
-	    /* Look up the family name via the stable index. */
-	    const char *faceName = fontPtr->subFontArray[run->scriptCacheIdx].familyPtr->faceName;
-	    hAngled = GetScreenFont(&fontPtr->font.fa, faceName,
-				    fontPtr->pixelSize, angle);
-	    if (hAngled) {
-		hDrawFont = hAngled;
-	    }
-	}
+        /* Rotation support. */
+        if (angle != 0.0) {
+            const char *faceName = fontPtr->subFontArray[run->scriptCacheIdx].familyPtr->faceName;
+            hAngled = GetScreenFont(&fontPtr->font.fa, faceName,
+                                    fontPtr->pixelSize, angle);
+            if (hAngled) {
+                hDrawFont = hAngled;
+            }
+        }
 
-	SelectObject(hdc, hDrawFont);
+        SelectObject(hdc, hDrawFont);
 
-	/* Use scriptCacheIdx to look up the current cache pointer. */
-	ScriptTextOut(
-	    hdc,
-	    &fontPtr->scriptCacheArray[run->scriptCacheIdx],
-	    (int)(x + 0.5), (int)(y + 0.5),
-	    0,
-	    NULL,
-	    &run->sa,
-	    NULL, 0,
-	    run->glyphs,
-	    run->glyphCount,
-	    run->advances,
-	    NULL,
-	    run->offsets);
+        ScriptTextOut(
+            hdc,
+            &fontPtr->scriptCacheArray[run->scriptCacheIdx],
+            (int)(x + 0.5), (int)(y + 0.5),
+            0,
+            NULL,
+            &run->sa,
+            NULL, 0,
+            run->glyphs,
+            run->glyphCount,
+            run->advances,
+            NULL,
+            run->offsets);
 
-	for (int g = 0; g < run->glyphCount; g++) {
-	    runWidth += run->advances[g];
-	}
+        for (int g = 0; g < run->glyphCount; g++) {
+            runWidth += run->advances[g];
+        }
 
-	x += cosA * runWidth;
-	y -= sinA * runWidth;
+        x += cosA * runWidth;
+        y -= sinA * runWidth;
 
-	if (hAngled) {
-	    DeleteObject(hAngled);
-	}
+        if (hAngled) {
+            DeleteObject(hAngled);
+        }
     }
 
     SetBkMode(hdc, oldBkMode);
@@ -2175,7 +2191,6 @@ MultiFontTextOut(
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
 }
-
 /*
  *---------------------------------------------------------------------------
  *
