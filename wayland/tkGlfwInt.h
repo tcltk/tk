@@ -262,6 +262,7 @@ typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fbo;
     Tcl_DString pendingText;
+    float pixelRatio;
 } glfwData;
 
 

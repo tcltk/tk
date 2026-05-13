@@ -26,9 +26,6 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
-static NVGLUframebuffer* TkWaylandFBOForTkWindow(TkWindow *winPtr,
-    int *width, int *height);
-
 /*
  *----------------------------------------------------------------------
  *
@@ -132,6 +129,43 @@ getGlfwTkInfo(
 /*
  *----------------------------------------------------------------------
  *
+ * renderFBO --
+ *
+ *      This static function is called to draw the current contents of the
+ *      backing store framebuffer of a glfwWindow on the screen.  It uses the
+ *      glBlitFramebuffer to blit the framebuffer to the back buffer in the
+ *      window's OpenGL context and then calls glfwSwapBuffers to swap the
+ *      back buffer to the screen.  The backing store FBO is left unchanged
+ *      for subsequent drawing functions to modify.
+ * 
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      The current state of the window's backing store framebuffer
+ *      is rendered on the screen.
+ */
+
+static void renderFBO(
+    GLFWwindow *glfwWindow)
+{
+    glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+    NVGLUframebuffer *fbo = glfwInfoPtr->winPtr->privatePtr->fbo;
+    int fbWidth, fbHeight;
+    glfwMakeContextCurrent(glfwWindow);
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
+		      0, 0, fbWidth, fbHeight,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+    glfwSwapBuffers(glfwWindow);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_ClipDrawableToRect --
  *
  *      There are a number of places in the generic code where a complex
@@ -164,18 +198,6 @@ getGlfwTkInfo(
  *----------------------------------------------------------------------
  */
 
-
-static void blitFBOToBack(NVGLUframebuffer *fbo, int width, int height) {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, width, height,
-		      0, 0, width, height,
-		      GL_COLOR_BUFFER_BIT,
-		      GL_NEAREST);
-    glFlush();
-    glFinish();
-}
-
 void
 Tk_ClipDrawableToRect(
     TCL_UNUSED(Display *),
@@ -183,28 +205,24 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
-    static int X=0, Y=0, W=0, H=0;
+    (void) x; (void) y; (void) width; (void) height;
+#if 0  // This experiment seems to have failed.
+       // I don't know why.
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (width == -1 || height == -1) {
-	printf("Swapping ... ");
-	TkWindow *winPtr = glfwInfoPtr->winPtr;
-	int width, height;
-	NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr,
-	    &width, &height);
-	// We could be more efficient and only blit the rectangle here.
-	glfwMakeContextCurrent(glfwWindow);
-	blitFBOToBack(fbo, width, height);
-	glfwSwapBuffers(glfwWindow);
-	glfwInfoPtr->flags &= ~needsDisplay;
-	       printf("Clearing dontSwap\n");       
+	printf("Finished double buffer section\n");
+	renderFBO(glfwWindow);
 	glfwInfoPtr->flags &= ~dontSwap;
-	X = 0; Y = 0; W = 0; H = 0;
+	glfwInfoPtr->flags |= needsDisplay;
     } else {
-	printf("Setting dontSwap\n");
+	printf("Starting double buffer section ====> \n");
 	glfwInfoPtr->flags |= dontSwap;
-	X = x; Y = y; W = width; H = height;
+	glfwInfoPtr->flags &= ~needsDisplay;
     }
+#else
+    (void) drawable;
+#endif
 }
 
 /*
@@ -228,23 +246,14 @@ Tk_ClipDrawableToRect(
 MODULE_SCOPE void
 TkWaylandDisplayAllWindows()
 {
-    for (glfwTkInfo* glfwTkInfoPtr = glfwTkInfoList;
-	     glfwTkInfoPtr != NULL;
-	     glfwTkInfoPtr = glfwTkInfoPtr->nextPtr) {
-	if (glfwTkInfoPtr->flags & dontSwap) {
-	    printf("Skipping swap\n");
-	    continue;
-	}
-	if (glfwTkInfoPtr->flags & needsDisplay) {
-	    GLFWwindow *glfwWindow = glfwTkInfoPtr->glfwWindow;
-	    TkWindow *winPtr = glfwTkInfoPtr->winPtr;
-	    int width, height;
-	    NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr,
-		&width, &height);
-	    glfwMakeContextCurrent(glfwWindow);
-	    blitFBOToBack(fbo, width, height);
-	    glfwSwapBuffers(glfwWindow);
-	    glfwTkInfoPtr->flags &= ~needsDisplay;
+    for (glfwTkInfo* infoPtr = glfwTkInfoList;
+	 infoPtr != NULL;
+	 infoPtr = infoPtr->nextPtr) {
+	if (infoPtr->flags & needsDisplay) {
+	    GLFWwindow *glfwWindow = infoPtr->glfwWindow;
+	    printf("Displaying %s\n", Tk_PathName(infoPtr->winPtr));
+	    renderFBO(glfwWindow);
+	    infoPtr->flags &= ~needsDisplay;
 	}
     }
 }
@@ -260,31 +269,6 @@ MODULE_SCOPE TkGlfwContext*
 TkGlfwGetContext(void)
 {
     return &glfwContext;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Backing Store framebuffers
- *
- *----------------------------------------------------------------------
- */
-
-static NVGLUframebuffer* TkWaylandFBOForTkWindow(
-    TkWindow *winPtr,
-    int *width,
-    int *height) {
-    TkWindow *toplevelPtr = winPtr;
-    while (!Tk_IsTopLevel(toplevelPtr)) {
-	toplevelPtr = toplevelPtr->parentPtr;
-    }
-    if (width) {
-	*width = Tk_Width(toplevelPtr);
-    }
-    if (height) {
-	*height = Tk_Height(toplevelPtr);
-    }
-    return toplevelPtr->privatePtr->fbo;
 }
 
 /*
@@ -525,10 +509,15 @@ TkGlfwCreateWindow(
 	glfwShowWindow(glfwWindow);
     }
 
+    /* Set the initial pixel ratio for this window. */
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    winPtr->privatePtr->pixelRatio = ((float) fbWidth) / ((float) width);
+    
     /* Create a framebuffer for the backing store of the window. */
     glfwMakeContextCurrent(glfwWindow);
     winPtr->privatePtr->fbo = nvgluCreateFramebuffer(glfwContext.vg,
-						     width, height, 0);
+						     fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fbo == NULL) {
 		fprintf(stderr, "Could not create NanoVG framebuffer\n");
     }
@@ -540,8 +529,8 @@ TkGlfwCreateWindow(
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         printf("FBO is incomplete (status=0x%x)\n", status);
     } else {
-	printf("Window %s has complete framebuffer %p\n", Tk_PathName(winPtr),
-	   winPtr->privatePtr->fbo);
+	printf("Window %s has a complete framebuffer @ %p\n",
+	       Tk_PathName(winPtr), winPtr->privatePtr->fbo);
     }
 
     if (winPtr != NULL) {
@@ -620,44 +609,39 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    int width, height;
-    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr, &width, &height);
-    /* Make our GL context current. */
-    glfwMakeContextCurrent(glfwWindow);
-
-    /* Bind our backing store framebuffer. */
-    nvgluBindFramebuffer(fbo);
-
-    /* Check FBO completeness (for now). */
-    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        printf("FBO is incomplete (status=0x%x)\n", status);
+    //// This is the case where the drawable is a window.
+    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
+    TkWindow *winPtr = childPtr;
+    float x = 0, y = 0;
+    while (!Tk_IsTopLevel(winPtr)) {
+        x += winPtr->changes.x;
+	y += winPtr->changes.y;
+    	winPtr = winPtr->parentPtr;
     }
 
-    /* Set viewport to the FBO size. */
+    /*
+     * Now winPtr is the containing toplevel and the offsets of
+     * the child are given by x and y.
+     */
+    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
 
-    /* Start a NanoVG frame for drawing on the backing store. */
-    //// XXXX Watch out for hi-res displays!!!
-    //// They will need pixel ratio 2.0.
-    nvgBeginFrame(glfwContext.vg, (float) width, (float) height, 1.0f);
-
-    /* Set up the nanoVG drawing context */
+    /* Set up the nanoVG drawing context for this nvgFrame */
     dcPtr->vg = glfwContext.vg;
     dcPtr->drawable = drawable;
 
-    /* Compute offsets for child widgets. */
-    if (!Tk_IsTopLevel(winPtr)) {
-        float x = 0, y = 0;
-        while (winPtr && !Tk_IsTopLevel(winPtr)) {
-            x += winPtr->changes.x;
-            y += winPtr->changes.y;
-            winPtr = winPtr->parentPtr;
-        }
-        nvgTranslate(dcPtr->vg, x, y);
-    }
+    /* Start a NanoVG frame for drawing on the backing store. */
+    nvgBeginFrame(glfwContext.vg, (float)fbWidth, (float)fbHeight,
+		  winPtr->privatePtr->pixelRatio);
+
+    /*
+     * Import our graphics context and translate to the position
+     * of the window we are drawing into.
+     */
+    
     TkGlfwApplyGC(dcPtr->vg, gc);
+    nvgTranslate(dcPtr->vg, x, y);
     return TCL_OK;
     }
 
@@ -681,34 +665,60 @@ TkGlfwBeginDraw(
 MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    NVGLUframebuffer *fbo = TkWaylandFBOForTkWindow(winPtr, NULL, NULL);
-    int fbwidth, fbheight;
     if (!dcPtr || !dcPtr->vg) {
 	printf("No drawing context!\n");
+	return;
     }
+    //// This is the case where the drawable is a window.
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
+    TkWindow *toplevelPtr = winPtr;
+    while (!Tk_IsTopLevel(toplevelPtr)) {
+	toplevelPtr = toplevelPtr->parentPtr;
+    }
+    GLFWwindow *glfwWindow = toplevelPtr->privatePtr->glfwWindow;
+
+    /*
+     * All nvg drawing since the call to nvgBeginFrame happens when we call
+     * nvgEndFrame.  The drawing commands have just been queued.  Now they
+     * actually get executed.
+     */
+
+    /* Make our GL context current. */
+    glfwMakeContextCurrent(glfwWindow);
+
+    /* Bind our backing store framebuffer. */
+    nvgluBindFramebuffer(toplevelPtr->privatePtr->fbo);
+
+    /* Check FBO completeness (for now). */
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        printf("FBO is incomplete (status=0x%x)\n", status);
+    }
+
+    /* Set the viewport */
+    int fbwidth, fbheight;
+    glfwGetFramebufferSize(glfwWindow, &fbwidth, &fbheight);
+    glViewport(0, 0, fbwidth, fbheight);
+
+    printf("Drawing on %s\n", Tk_PathName(winPtr));
+    nvgEndFrame(dcPtr->vg);
+    nvgluBindFramebuffer(NULL);
 
     /*
      * nvgBeginFrame calls nvgSave, but nvgEndFrame does not
      * call nvgRestore.  Maybe it is not important to balance
-     * those, but we call it here just in case.
-     */
-    
+     * those, but we call nvgRestore here just in case.
+     */    
+
     nvgRestore(dcPtr->vg);
-    nvgluBindFramebuffer(fbo);
-    glfwGetFramebufferSize(glfwWindow, &fbwidth, &fbheight);
-    glViewport(0, 0, fbwidth, fbheight);
-    /*
-     * All nvg drawing since the call to nvgBeginFrame
-     * happens in this call.  The drawing commands have just
-     * been queued.  Now the actually get executed.
+
+    /* Mark the window as needing display unless we are
+     * in the middle of a Tk double-buffer section.
      */
-    nvgEndFrame(dcPtr->vg);
-    nvgluBindFramebuffer(NULL);
-    /* Mark the window as needing display. */
-    glfwTkInfo *info = getGlfwTkInfo(glfwWindow);
-    info->flags |= needsDisplay;
+    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    ////if (!(infoPtr->flags & dontSwap)) {
+    infoPtr->flags |= needsDisplay;
+    ////}
 }
 
 /*

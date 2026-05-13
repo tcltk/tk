@@ -66,12 +66,6 @@ clearCallbackCount() {
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
-/*
- * Simple single-codepoint buffer for character input.
- * In a production implementation, this should be a queue or per-window buffer.
- */
-static unsigned int pendingCodepoint = 0;
-
 /* Track last window and position for enter/leave events */
 static GLFWwindow *lastWindow = NULL;
 static double lastX = -1, lastY = -1;
@@ -463,16 +457,22 @@ TkWaylandQueueExposeEvent(
  */
 
 static void TkGlfwWindowCloseCallback(GLFWwindow *window);
-static void TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height);
-static void TkGlfwFramebufferSizeCallback(GLFWwindow *window, int width, int height);
+static void TkGlfwWindowContentScaleCallback(GLFWwindow *window,
+					     float xscale, float yscale);
+static void TkGlfwFramebufferSizeCallback(GLFWwindow *window,
+					  int width, int height);
 static void TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
 static void TkGlfwWindowFocusCallback(GLFWwindow *window, int focused);
 static void TkGlfwWindowIconifyCallback(GLFWwindow *window, int iconified);
 static void TkGlfwWindowMaximizeCallback(GLFWwindow *window, int maximized);
-static void TkGlfwCursorPosCallback(GLFWwindow *window, double xpos, double ypos);
-static void TkGlfwMouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
-static void TkGlfwScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
-static void TkGlfwKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+static void TkGlfwCursorPosCallback(GLFWwindow *window,
+				    double xpos, double ypos);
+static void TkGlfwMouseButtonCallback(GLFWwindow *window,
+				      int button, int action, int mods);
+static void TkGlfwScrollCallback(GLFWwindow *window,
+				 double xoffset, double yoffset);
+static void TkGlfwKeyCallback(GLFWwindow *window, int key,
+			      int scancode, int action, int mods);
 static void TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint);
 static void TkGlfwWindowRefreshCallback(GLFWwindow *window);
 
@@ -481,7 +481,8 @@ TkGlfwSetupCallbacks(
     GLFWwindow *glfwWindow)
 {
     glfwSetWindowCloseCallback     (glfwWindow, TkGlfwWindowCloseCallback);
-    glfwSetWindowSizeCallback      (glfwWindow, TkGlfwWindowSizeCallback);
+    glfwSetWindowContentScaleCallback (glfwWindow,
+				       TkGlfwWindowContentScaleCallback);
     glfwSetFramebufferSizeCallback (glfwWindow, TkGlfwFramebufferSizeCallback);
     glfwSetWindowPosCallback       (glfwWindow, TkGlfwWindowPosCallback);
     glfwSetWindowFocusCallback     (glfwWindow, TkGlfwWindowFocusCallback);
@@ -499,19 +500,19 @@ MODULE_SCOPE void
 TkGlfwClearCallbacks(
     GLFWwindow *glfwWindow)
 {
-    glfwSetWindowCloseCallback     (glfwWindow, NULL);
-    glfwSetWindowSizeCallback      (glfwWindow, NULL);
-    glfwSetFramebufferSizeCallback (glfwWindow, NULL);
-    glfwSetWindowPosCallback       (glfwWindow, NULL);
-    glfwSetWindowFocusCallback     (glfwWindow, NULL);
-    glfwSetWindowIconifyCallback   (glfwWindow, NULL);
-    glfwSetWindowMaximizeCallback  (glfwWindow, NULL);
-    glfwSetCursorPosCallback       (glfwWindow, NULL);
-    glfwSetMouseButtonCallback     (glfwWindow, NULL);
-    glfwSetScrollCallback          (glfwWindow, NULL);
-    glfwSetWindowRefreshCallback   (glfwWindow, NULL);
-    glfwSetKeyCallback             (glfwWindow, NULL);
-    glfwSetCharCallback             (glfwWindow, NULL);
+    glfwSetWindowCloseCallback        (glfwWindow, NULL);
+    glfwSetWindowContentScaleCallback (glfwWindow, NULL);
+    glfwSetFramebufferSizeCallback    (glfwWindow, NULL);
+    glfwSetWindowPosCallback          (glfwWindow, NULL);
+    glfwSetWindowFocusCallback        (glfwWindow, NULL);
+    glfwSetWindowIconifyCallback      (glfwWindow, NULL);
+    glfwSetWindowMaximizeCallback     (glfwWindow, NULL);
+    glfwSetCursorPosCallback          (glfwWindow, NULL);
+    glfwSetMouseButtonCallback        (glfwWindow, NULL);
+    glfwSetScrollCallback             (glfwWindow, NULL);
+    glfwSetWindowRefreshCallback      (glfwWindow, NULL);
+    glfwSetKeyCallback                (glfwWindow, NULL);
+    glfwSetCharCallback               (glfwWindow, NULL);
 }
 
 /*
@@ -541,7 +542,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     recordCallback();
-    
+
     if (winPtr) {
 	Tcl_DoWhenIdle(DestroyWindowIdleProc, winPtr);
     }
@@ -550,36 +551,36 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowSizeCallback --
+ * TkGlfwWindowContentScaleCallback --
  *
- *      Called when window size changes due to user resizing.
- *      The size reported may be smaller than the framebuffer
- *      size on a high resolution monitor when a screen logical
- *      pixel is composed of more than one monitor pixel.  This
- *      scaling is managed internally by Tk, so all drawing should
- *      be done with framebuffer pixels, not with the size provided
- *      here.  The only value to the call back is to compare
- *      the window size with the framebuffer size in order to
- *      measure the size of a logical pixel.
+ *      Called when window is moved between monitors with different
+ *      pixel densities.  This updates the pixelRatio stored in
+ *      the Tk Window struct.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Updates window geometry, generates ConfigureNotify event.
+ *      Updates the pixelRatio field in the gflwData of the
+ *      associated Tk window.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
+TkGlfwWindowContentScaleCallback(
+    GLFWwindow *window,
+    float xscale,
+    TCL_UNUSED(float)) /*yscale*/
 {
     recordCallback();
-    printf("TkGlfWindowSizeCallback\n");
-    int fbwidth, fbheight;
-    glfwGetFramebufferSize(window, &fbwidth, &fbheight);
-    float pixelRatio = (float) fbwidth / (float) width;
-    printf("This window has pixel ratio %.1f.\n", pixelRatio);
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (winPtr && winPtr->privatePtr) {
+	winPtr->privatePtr->pixelRatio = xscale;
+    }
+    
+    printf("TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
+	   winPtr->privatePtr->pixelRatio);
 }
 
 /*
@@ -589,11 +590,10 @@ TkGlfwWindowSizeCallback(GLFWwindow *window, int width, int height)
  *
  *      Called when framebuffer size changes.  Note that this is always called
  *      when a window changes size, whether by interactive resizing with the
- *      mouse or programatic resizing with wm geometry.  The
- *      WindowSizeCallback is only called for interactive resizes.  This
- *      generates a ConfigureNotify event for the window.  The subsequent
- *      WindowRefreshCallback generates ExposeNotify events for the
- *      window and all of its children.
+ *      mouse or programatic resizing with wm geometry. This generates a
+ *      ConfigureNotify event for the window.  The subsequent
+ *      WindowRefreshCallback generates ExposeNotify events for the window and
+ *      all of its children.
  *
  * Results:
  *      None.
@@ -1159,10 +1159,10 @@ TkGlfwScrollCallback(
 
 static void
 TkGlfwKeyCallback(GLFWwindow *window,
-		  int key,
-		  int scancode,
-		  int action,
-		  int mods)
+    TCL_UNUSED(int), /*key*/
+    int scancode,
+    int action,
+    int mods)
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
@@ -1296,11 +1296,11 @@ MODULE_SCOPE void
 TkWaylandWakeupGLFW(void)
 {
     TSD_INIT();
-    uint64_t u = 1;
+    ////uint64_t u = 1;
     
     if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
 	//// This should post an empty event to GLFW!!!
-        //write(tsdPtr->wakeupFd, &u, sizeof(u));
+        ////write(tsdPtr->wakeupFd, &u, sizeof(u));
     }
 }
 
