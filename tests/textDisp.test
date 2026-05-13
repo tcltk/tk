@@ -5251,6 +5251,25 @@ test textDisp-36.1 {Display bug with 'yview insert'} -constraints {knownBug} -se
     destroy .t1
 } -result {}
 
+test textDisp-37.1 {RTL text rendering in label widget} -setup {
+    label .l1 -text "\u05d0\u05d1\u05d2 \u05d3\u05d4\u05d5" -font $fixedFont
+    pack .l1
+} -body {
+    update
+} -cleanup {
+    destroy .l1
+} -result {}
+
+test textDisp-37.2 {Mixed bidi text insertion in text widget} -setup {
+    text .t1 -font $fixedFont -width 30 -height 3
+    pack .t1
+} -body {
+    .t1 insert end "English \u05d0\u05d1\u05d2 Arabic \u0627\u0644\u0639\u0631\u0628\u064a Mixed"
+    update
+} -cleanup {
+    destroy .t1
+} -result {}
+
 #
 # TESTFILE CLEANUP
 #
