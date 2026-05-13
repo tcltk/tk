@@ -1059,46 +1059,55 @@ TkWinShapeString(
 	}
 
 	/*
-	 * Fallback for missing glyphs.
-	 * We iterate through characters and force a subfont search if a glyph is 0.
-	 */
-	if (SUCCEEDED(hr)) {
-	    for (int ci = 0; ci < itemLen; ci++) {
-		int gi = logClust[ci];
-		// If glyph is 0 (missing), we need to find a font that HAS it.
-		if (gi < glyphCount && glyphs[gi] == 0) {
-		    int ch;
-		    /* Decode the character (handling surrogates for Emojis) */
-		    if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) && (ci + 1 < itemLen)) {
-			ch = 0x10000 + ((wstr[itemStart + ci] - 0xD800) << 10) 
+         * Fallback for missing glyphs.
+         * We iterate through characters and force a subfont search if a glyph is 0.
+         */
+        if (SUCCEEDED(hr)) {
+            for (int ci = 0; ci < itemLen; ci++) {
+                int gi = logClust[ci];
+                if (gi < glyphCount && glyphs[gi] == 0) {
+                    int ch;
+                    if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) && (ci + 1 < itemLen)) {
+                        ch = 0x10000 + ((wstr[itemStart + ci] - 0xD800) << 10) 
 			    + (wstr[itemStart + ci + 1] - 0xDC00);
-		    } else {
-			ch = (int)wstr[itemStart + ci];
-		    }
+                    } else {
+                        ch = (int)wstr[itemStart + ci];
+                    }
 
-		    /* FORCE a fallback search. 
-		     * This will populate fontPtr->subFontArray with a CJK/Emoji font. */
-		    SubFont *fallbackPtr = &fontPtr->subFontArray[subFontIdx];
-		    FindSubFontForChar(fontPtr, ch, &fallbackPtr);
-		    int newIdx = (int)(fallbackPtr - fontPtr->subFontArray);
+                    SubFont *fallbackPtr = &fontPtr->subFontArray[subFontIdx];
+                    FindSubFontForChar(fontPtr, ch, &fallbackPtr);
+                    int newIdx = (int)(fallbackPtr - fontPtr->subFontArray);
 
-		    if (newIdx != subFontIdx) {
-			/* We found a better font! Re-shape the whole item with it. */
-			subFontIdx = newIdx;
-			hFont = fontPtr->subFontArray[subFontIdx].hFont0;
-			SelectObject(hdc, hFont);
+                    if (newIdx != subFontIdx) {
+                        subFontIdx = newIdx;
+                        hFont = fontPtr->subFontArray[subFontIdx].hFont0;
+                        SelectObject(hdc, hFont);
 
-			hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
-					 wstr + itemStart, itemLen, maxGlyphs, &item->a,
-					 glyphs, logClust, visAttr, &glyphCount);
-                
-			/* If we re-shaped, the current 'ci' loop is invalid; 
-			 * break to move to ScriptPlace with the new font. */
-			break; 
-		    }
-		}
-	    }
-	}
+                        /*
+                         * Update the script engine.
+                         * If we switched to a CJK or Emoji font, the original 
+                         * SCRIPT_ANALYSIS might be set to SCRIPT_UNDEFINED 
+                         * or a Latin engine. Resetting eScript to 0 
+                         * (SCRIPT_UNDEFINED) forces Uniscribe to re-evaluate 
+                         * the script for the new font.
+                         */
+                        item->a.eScript = 0; 
+
+                        hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+                                         wstr + itemStart, itemLen, maxGlyphs, &item->a,
+                                         glyphs, logClust, visAttr, &glyphCount);
+                        
+                        /* If ScriptShape fails with the new font, try a simpler fallback */
+                        if (FAILED(hr)) {
+			    item->a.eScript = 0; // SCRIPT_UNDEFINED
+			    /* Retry shaping one last time */
+                        }
+                        break; 
+                    }
+                }
+            }
+        }
+		
 	if (FAILED(hr)) {
 	    Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
 	    continue;
@@ -2075,12 +2084,12 @@ TkpDrawAngledCharsInContext(
 
 static void
 MultiFontTextOut(
-    HDC hdc,
-    WinFont *fontPtr,
-    const char *source,
-    int numBytes,
-    double x, double y,
-    double angle)
+		 HDC hdc,
+		 WinFont *fontPtr,
+		 const char *source,
+		 int numBytes,
+		 double x, double y,
+		 double angle)
 {
     Tcl_DString uniStr;
     WCHAR *wstr;
@@ -2102,24 +2111,24 @@ MultiFontTextOut(
      * FindSubFontForChar is the standard Tk mechanism to find a fallback
      * font that supports a specific Unicode point.
      */
-for (i = 0; i < wlen; i++) {
-    int ch = wstr[i];
+    for (i = 0; i < wlen; i++) {
+	int ch = wstr[i];
     
-    /* Handle surrogate pairs for Emoji/Supplementary planes */
-    if ((ch & 0xfc00) == 0xd800 && i + 1 < wlen) {
-        ch = (((ch & 0x3ff) << 10) | (wstr[i+1] & 0x3ff)) + 0x10000;
-        i++; 
-    }
+	/* Handle surrogate pairs for Emoji/Supplementary planes */
+	if ((ch & 0xfc00) == 0xd800 && i + 1 < wlen) {
+	    ch = (((ch & 0x3ff) << 10) | (wstr[i+1] & 0x3ff)) + 0x10000;
+	    i++; 
+	}
 
-    /* We must pass the address of a SubFont pointer 
-     * or use the return value to ensure the fontPtr internal 
-     * array is actually expanded.
-     */
-    SubFont *subFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
+	/* We must pass the address of a SubFont pointer 
+	 * or use the return value to ensure the fontPtr internal 
+	 * array is actually expanded.
+	 */
+	SubFont *subFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
     
-    /* If subFontPtr is still the base font (index 0) and ch > 255, 
-     * then the fallback engine is failing to find a CJK match. */
-}
+	/* If subFontPtr is still the base font (index 0) and ch > 255, 
+	 * then the fallback engine is failing to find a CJK match. */
+    }
 
     TkWinShapedRun *runs = NULL;
     int nRuns = 0;
@@ -2134,7 +2143,7 @@ for (i = 0; i < wlen; i++) {
         return;
     }
 
-	/* RTL text will be drawn here. */
+    /* RTL text will be drawn here. */
     oldFont = (HFONT)GetCurrentObject(hdc, OBJ_FONT);
     int oldBkMode = SetBkMode(hdc, TRANSPARENT);
 
@@ -2160,18 +2169,18 @@ for (i = 0; i < wlen; i++) {
         SelectObject(hdc, hDrawFont);
 
         ScriptTextOut(
-            hdc,
-            &fontPtr->scriptCacheArray[run->scriptCacheIdx],
-            (int)(x + 0.5), (int)(y + 0.5),
-            0,
-            NULL,
-            &run->sa,
-            NULL, 0,
-            run->glyphs,
-            run->glyphCount,
-            run->advances,
-            NULL,
-            run->offsets);
+		      hdc,
+		      &fontPtr->scriptCacheArray[run->scriptCacheIdx],
+		      (int)(x + 0.5), (int)(y + 0.5),
+		      0,
+		      NULL,
+		      &run->sa,
+		      NULL, 0,
+		      run->glyphs,
+		      run->glyphCount,
+		      run->advances,
+		      NULL,
+		      run->offsets);
 
         for (int g = 0; g < run->glyphCount; g++) {
             runWidth += run->advances[g];
@@ -2190,6 +2199,7 @@ for (i = 0; i < wlen; i++) {
     TkWinFreeShapedRuns(runs, nRuns);
     Tcl_DStringFree(&uniStr);
 }
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -2590,33 +2600,6 @@ FreeFontFamily(
 
     Tcl_Free(familyPtr);
 }
-
-/*
- *-------------------------------------------------------------------------
- *
- * FindSubFontForChar --
- *
- *	Determine which screen font is necessary to use to display the given
- *	character. If the font object does not have a screen font that can
- *	display the character, another screen font may be loaded into the font
- *	object, following a set of preferred fallback rules.
- *
- *	Note: For characters below BASE_CHARS, we now check the base font's
- *	coverage via FontMapLookup. If the base font cannot display the
- *	character, we continue to the fallback search. This ensures that even
- *	basic ASCII can be provided by a fallback font if the base font lacks
- *	it.
- *
- * Results:
- *	The return value is the SubFont to use to display the given character.
- *
- * Side effects:
- *	The contents of fontPtr are modified to cache the results of the
- *	lookup and remember any SubFonts that were dynamically loaded.
- *
- *-------------------------------------------------------------------------
- */
-
 /*
  *-------------------------------------------------------------------------
  *
@@ -2804,22 +2787,41 @@ WinFontCanUseProc(
 
 static int
 FontMapLookup(
-    SubFont *subFontPtr,	/* Contains font mapping cache to be queried
-				 * and possibly updated. */
-    int ch)			/* Character to be tested. */
+    SubFont *subFontPtr,	/* Contains font mapping cache. */
+    int ch)			/* Character to be looked up. */
 {
-    int row, bitOffset;
+    int row, bit;
+    char *page;
 
-    if (ch < 0 || ch >= FONTMAP_NUMCHARS) {
-	return 0;
+    /*  Check the standard BMP bitmask (U+0000 to U+FFFF). */
+    if (ch <= 0xffff) {
+        row = ch >> FONTMAP_SHIFT;
+        bit = ch & (FONTMAP_BITSPERPAGE - 1);
+        page = subFontPtr->fontMap[row];
+        if (page != NULL) {
+            return (page[bit >> 3] >> (bit & 7)) & 1;
+        }
     }
 
-    row = ch >> FONTMAP_SHIFT;
-    if (subFontPtr->fontMap[row] == NULL) {
-	FontMapLoadPage(subFontPtr, row);
+    /* If not found in the BMP or character is > U+FFFF, check the Format 12 (Supplementary Plane) groups. */
+    for (int i = 0; i < subFontPtr->familyPtr->groupCount; i++) {
+        if ((ULONG)ch >= subFontPtr->familyPtr->startGroup[i] &&
+            (ULONG)ch <= subFontPtr->familyPtr->endGroup[i]) {
+            return 1;
+        }
     }
-    bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
-    return (subFontPtr->fontMap[row][bitOffset >> 3] >> (bitOffset & 7)) & 1;
+
+    /* If we still don't have an answer for a BMP character,  load the page from the system to be sure. */
+    if (ch <= 0xffff) {
+        FontMapLoadPage(subFontPtr, ch >> FONTMAP_SHIFT);
+        page = subFontPtr->fontMap[ch >> FONTMAP_SHIFT];
+        if (page != NULL) {
+            bit = ch & (FONTMAP_BITSPERPAGE - 1);
+            return (page[bit >> 3] >> (bit & 7)) & 1;
+        }
+    }
+
+    return 0;
 }
 
 /*
