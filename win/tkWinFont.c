@@ -108,14 +108,15 @@ typedef struct FontFamily {
  */
 
 typedef struct SubFont {
-    char **fontMap;		/* Pointer to font map from the FontFamily,
-				 * cached here to save a dereference. */
-    HFONT hFont0;		/* The specific screen font that will be used
-				 * when displaying/measuring chars belonging
-				 * to the FontFamily. */
-    FontFamily *familyPtr;	/* The FontFamily for this SubFont. */
-    HFONT hFontAngled;
-    double angle;
+    HFONT hFont0;		/* Reference to the screen font. */
+    FontFamily *familyPtr;	/* The family for this subfont. */
+    char **fontMap;		/* Pointer to the font map for this subfont. */
+    ULONG *startGroup;		/* Supplementary plane start codepoints. */
+    ULONG *endGroup;		/* Supplementary plane end codepoints. */
+    int groupCount;		/* Number of supplementary plane groups. */
+
+    HFONT hFontAngled;		/* The angled version of the screen font. */
+    double angle;		/* The angle of the screen font. */
 } SubFont;
 
 /*
@@ -2357,23 +2358,33 @@ ReleaseFont(
 
 static inline void
 InitSubFont(
-    HDC hdc,			/* HDC in which font can be selected. */
-    HFONT hFont,		/* The screen font. */
-    int base,			/* Non-zero if this SubFont is being used as
-				 * the base font for a font object. */
-    SubFont *subFontPtr)	/* Filled with SubFont constructed from above
-				 * attributes. */
+    HDC hdc,            /* HDC in which font can be selected. */
+    HFONT hFont,        /* The screen font. */
+    int base,           /* Non-zero if this SubFont is being used as
+                         * the base font for a font object. */
+    SubFont *subFontPtr) /* Filled with SubFont constructed from above
+                         * attributes. */
 {
-
-    subFontPtr->hFont0	    = hFont;
+    subFontPtr->hFont0      = hFont;
     subFontPtr->familyPtr   = AllocFontFamily(hdc, hFont, base);
-    subFontPtr->fontMap	    = subFontPtr->familyPtr->fontMap;
+    
+    /* * Ensure we link the subfont to the family's character maps.
+     */
+    subFontPtr->fontMap     = subFontPtr->familyPtr->fontMap;
+    
+    /*  Link the supplementary plane (Emoji/CJK) groups.
+     * Without these, the shaper and CanUseFallback will only see 
+     * the 16-bit BMP range.
+     */
+    subFontPtr->startGroup  = subFontPtr->familyPtr->startGroup;
+    subFontPtr->endGroup    = subFontPtr->familyPtr->endGroup;
+    subFontPtr->groupCount  = subFontPtr->familyPtr->groupCount;
+
     subFontPtr->hFontAngled = NULL;
-    subFontPtr->angle	    = 0.0;
+    subFontPtr->angle       = 0.0;
 
     SelectObject(hdc, hFont);
 }
-
 /*
  *-------------------------------------------------------------------------
  *
