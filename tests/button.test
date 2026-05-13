@@ -2740,6 +2740,53 @@ test button-1.274 {configuration option: "textangle" for label} -setup {
 } -cleanup {
     destroy .l
 } -result {1}
+test button-1.275 {configuration option: "textangle" for label: no value} -body {
+    label .l -textangle
+}  -returnCodes error -result {value for "-textangle" missing}
+test button-1.276 {configuration option: "textangle" for label: invalid value} -body {
+    label .l -textangle A
+}  -returnCodes error -result {expected floating-point number but got "A"}
+test button-1.277 {configuration option: "textangle" for label: out of range value} -body {
+    label .l -textangle -1
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {-1.0}
+test button-1.278 {configuration option: "textangle" for label: wrap around} -setup {
+    label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold} -text "Hello World"
+    pack .l
+    update
+} -body {
+    set w [winfo reqwidth .l]
+    set h [winfo reqheight .l]
+    .l configure -textangle 360
+    update
+    expr {[winfo reqwidth .l] == $w && [winfo reqheight .l] == $h}
+} -cleanup {
+    destroy .l
+    unset w h
+} -result {1}
+test button-1.279 {configuration option: "textangle" for label: minimum value} -body {
+    label .l -textangle 0
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {0.0}
+test button-1.280 {configuration option: "textangle" for label: maximum value} -body {
+    label .l -textangle 359.9
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {359.9}
+test button-1.281 {configuration option: "textangle" for label: default value} -body {
+    label .l
+    .l cget -textangle
+} -cleanup {
+    destroy .l
+} -result {0.0}
+test button-1.282 {configuration option: "textangle" for label: empty string not the default value} -body {
+    label .l -textangle ""
+}  -returnCodes error -result {expected floating-point number but got ""}
 
 
 test button-2.1 {ButtonCreate - not enough arguments} -body {
