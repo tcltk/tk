@@ -1060,46 +1060,45 @@ TkWinShapeString(
 
 	/*
 	 * Fallback for missing glyphs.
-	 * Track the "original" font via index, not pointer, to avoid segfaults.
+	 * We iterate through characters and force a subfont search if a glyph is 0.
 	 */
 	if (SUCCEEDED(hr)) {
-	    int originalIdx = subFontIdx;
-	    BOOL didFallback = FALSE;
-
-	    for (int ci = 0; ci < itemLen && !didFallback; ci++) {
+	    for (int ci = 0; ci < itemLen; ci++) {
 		int gi = logClust[ci];
-		if (gi >= glyphCount || glyphs[gi] != 0) continue;
-
-		int ch = (int)(unsigned)wstr[itemStart + ci];
-		if (IS_HIGH_SURROGATE(wstr[itemStart + ci])) continue;
-
-		/* Re-sync the pointer to the CURRENT array base before calling FindSubFont. */
-		subFontPtr = &fontPtr->subFontArray[subFontIdx];
-		FindSubFontForChar(fontPtr, ch, &subFontPtr);
-		int newIdx = (int)(subFontPtr - fontPtr->subFontArray);
-
-		if (newIdx != subFontIdx) {
-		    subFontIdx = newIdx;
-		    hFont = fontPtr->subFontArray[subFontIdx].hFont0;
-		    SelectObject(hdc, hFont);
-
-		    hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
-				     wstr + itemStart, itemLen,
-				     maxGlyphs, &item->a,
-				     glyphs, logClust, visAttr, &glyphCount);
-
-		    if (SUCCEEDED(hr)) {
-			didFallback = TRUE;
+		// If glyph is 0 (missing), we need to find a font that HAS it.
+		if (gi < glyphCount && glyphs[gi] == 0) {
+		    int ch;
+		    /* Decode the character (handling surrogates for Emojis) */
+		    if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) && (ci + 1 < itemLen)) {
+			ch = 0x10000 + ((wstr[itemStart + ci] - 0xD800) << 10) 
+			    + (wstr[itemStart + ci + 1] - 0xDC00);
 		    } else {
-			/* Restore to the stable original index. */
-			subFontIdx = originalIdx;
+			ch = (int)wstr[itemStart + ci];
+		    }
+
+		    /* FORCE a fallback search. 
+		     * This will populate fontPtr->subFontArray with a CJK/Emoji font. */
+		    SubFont *fallbackPtr = &fontPtr->subFontArray[subFontIdx];
+		    FindSubFontForChar(fontPtr, ch, &fallbackPtr);
+		    int newIdx = (int)(fallbackPtr - fontPtr->subFontArray);
+
+		    if (newIdx != subFontIdx) {
+			/* We found a better font! Re-shape the whole item with it. */
+			subFontIdx = newIdx;
 			hFont = fontPtr->subFontArray[subFontIdx].hFont0;
 			SelectObject(hdc, hFont);
+
+			hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+					 wstr + itemStart, itemLen, maxGlyphs, &item->a,
+					 glyphs, logClust, visAttr, &glyphCount);
+                
+			/* If we re-shaped, the current 'ci' loop is invalid; 
+			 * break to move to ScriptPlace with the new font. */
+			break; 
 		    }
 		}
 	    }
 	}
-
 	if (FAILED(hr)) {
 	    Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
 	    continue;
@@ -3143,22 +3142,36 @@ CanUseFallback(
 	}
     }
 
-    /*
+	/*
      * Load this font and see if it has the desired character.
      */
 
-    hFont = GetScreenFont(&fontPtr->font.fa, faceName, fontPtr->pixelSize,
-	    0.0);
+    hFont = GetScreenFont(&fontPtr->font.fa, faceName, fontPtr->pixelSize, 0.0);
     InitSubFont(hdc, hFont, 0, &subFont);
-    if (((ch < 256) && (subFont.familyPtr->isSymbolFont))
-	    || (FontMapLookup(&subFont, ch) == 0)) {
-	/*
-	 * Don't use a symbol font as a fallback font for characters below
-	 * 256.
-	 */
+    
+    /*
+     * Check both the standard FontMap (for BMP/CJK) and the 
+     * Format 12 groups (for Emoji/Supplementary planes).
+     */
+    int hasChar = FontMapLookup(&subFont, ch);
+    if (hasChar == 0 && ch > 0xffff) {
+        for (i = 0; i < subFont.familyPtr->groupCount; i++) {
+            if ((ULONG)ch >= subFont.familyPtr->startGroup[i] &&
+                (ULONG)ch <= subFont.familyPtr->endGroup[i]) {
+                hasChar = 1;
+                break;
+            }
+        }
+    }
 
-	ReleaseSubFont(&subFont);
-	return NULL;
+    if (((ch < 256) && (subFont.familyPtr->isSymbolFont)) || (hasChar == 0)) {
+        /*
+         * Don't use a symbol font as a fallback font for characters below
+         * 256.
+         */
+
+        ReleaseSubFont(&subFont);
+        return NULL;
     }
 
     if (fontPtr->numSubFonts >= SUBFONT_SPACE) {
@@ -3599,61 +3612,88 @@ LoadFontRanges(
 	    if (swapped) {
 		SwapShort(&subTable.any.format);
 	    }
-	    if (subTable.any.format == 4) {
-		if (swapped) {
-		    SwapShort(&subTable.segment.segCountX2);
+if (subTable.any.format == 4) {
+	    if (swapped) {
+		SwapShort(&subTable.segment.segCountX2);
+	    }
+	    segCount = subTable.segment.segCountX2 / 2;
+	    cbData = segCount * sizeof(USHORT);
+
+	    startCount = (USHORT *)Tcl_Alloc(cbData);
+	    endCount = (USHORT *)Tcl_Alloc(cbData);
+
+	    offset = encTable.offset + sizeof(subTable.segment);
+	    GetFontData(hdc, cmapKey, (DWORD) offset, endCount, (DWORD)cbData);
+	    offset += cbData + sizeof(USHORT);
+	    GetFontData(hdc, cmapKey, (DWORD) offset, startCount, (DWORD)cbData);
+	    if (swapped) {
+		for (j = 0; j < segCount; j++) {
+		    SwapShort(&endCount[j]);
+		    SwapShort(&startCount[j]);
 		}
-		segCount = subTable.segment.segCountX2 / 2;
-		cbData = segCount * sizeof(USHORT);
+	    }
+	    if (*symbolPtr != 0) {
+		/*
+		 * Empirically determined: When a symbol font is loaded,
+		 * the character existence metrics obtained from the
+		 * system are mildly wrong. If the real range of the
+		 * symbol font is from 0020 to 00FE, then the metrics are
+		 * reported as F020 to F0FE. When we load a symbol font,
+		 * we must fix the character existence metrics.
+		 */
 
-		startCount = (USHORT *)Tcl_Alloc(cbData);
-		endCount = (USHORT *)Tcl_Alloc(cbData);
-
-		offset = encTable.offset + sizeof(subTable.segment);
-		GetFontData(hdc, cmapKey, (DWORD) offset, endCount, (DWORD)cbData);
-		offset += cbData + sizeof(USHORT);
-		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, (DWORD)cbData);
-		if (swapped) {
-		    for (j = 0; j < segCount; j++) {
-			SwapShort(&endCount[j]);
-			SwapShort(&startCount[j]);
-		    }
-		}
-		if (*symbolPtr != 0) {
-		    /*
-		     * Empirically determined: When a symbol font is loaded,
-		     * the character existence metrics obtained from the
-		     * system are mildly wrong. If the real range of the
-		     * symbol font is from 0020 to 00FE, then the metrics are
-		     * reported as F020 to F0FE. When we load a symbol font,
-		     * we must fix the character existence metrics.
-		     *
-		     * Symbol fonts should only use the symbol encoding for
-		     * 8-bit characters [note Bug: 2406]
-		     */
-
-		    for (k = 0; k < segCount; k++) {
-			if (((startCount[k] & 0xff00) == 0xf000)
-				&& ((endCount[k] & 0xff00) == 0xf000)) {
-			    startCount[k] &= 0xff;
-			    endCount[k] &= 0xff;
-			}
+		for (k = 0; k < segCount; k++) {
+		    if (((startCount[k] & 0xff00) == 0xf000)
+			    && ((endCount[k] & 0xff00) == 0xf000)) {
+			startCount[k] &= 0xff;
+			endCount[k] &= 0xff;
 		    }
 		}
 	    }
 	}
-    } else if (GetTextCharset(hdc) == ANSI_CHARSET) {
-	/*
-	 * Bitmap font. We should also support ranges for the other *_CHARSET
-	 * values.
-	 */
+    }
 
+    /*
+     * CJK & Emoji Bridge:
+     * If the loop finished and we have Format 12 groups (Supplementary planes)
+     * but no Format 4 segments (BMP), or if segments are too narrow, 
+     * we must ensure segCount is at least 1 and covers the BMP range so 
+     * the font engine's page-cache allows the fallback search to proceed.
+     */
+
+    if (segCount == 0 && *groupCountPtr > 0) {
 	segCount = 1;
 	cbData = segCount * sizeof(USHORT);
 	startCount = (USHORT *)Tcl_Alloc(cbData);
 	endCount = (USHORT *)Tcl_Alloc(cbData);
 	startCount[0] = 0x0000;
-	endCount[0] = 0x00ff;
+	endCount[0] = 0xffff;
+    } else if (segCount == 0 && GetTextCharset(hdc) == ANSI_CHARSET) {
+	/* Existing fallback for bitmap/legacy fonts */
+	segCount = 1;
+	cbData = segCount * sizeof(USHORT);
+	startCount = (USHORT *)Tcl_Alloc(cbData);
+	endCount = (USHORT *)Tcl_Alloc(cbData);
+	startCount[0] = 0x0000;
+	endCount[0] = 0xffff;
+    }
+} else if (GetTextCharset(hdc) == ANSI_CHARSET) {
+        /*
+         * Bitmap font or legacy charset. To support CJK/Emoji fallback, 
+         * we must not cap the range at 0xff. By setting the endCount to 
+         * the maximum Unicode range (0x10ffff), we allow the fallback 
+         * mechanism (FindSubFontForChar) to take over for higher codepoints.
+         */
+        segCount = 1;
+        cbData = segCount * sizeof(USHORT);
+        startCount = (USHORT *)Tcl_Alloc(cbData);
+        endCount = (USHORT *)Tcl_Alloc(cbData);
+        startCount[0] = 0x0000;
+        
+        /* Cover the Basic Multilingual Plane (CJK),
+         * or use the full range if the engine supports it.
+         */
+        endCount[0] = 0xffff; 
     }
     SelectObject(hdc, hFont);
 
@@ -3661,6 +3701,7 @@ LoadFontRanges(
     *endCountPtr = endCount;
     return segCount;
 }
+
 
 /*
  *-------------------------------------------------------------------------
