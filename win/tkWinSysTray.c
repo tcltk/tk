@@ -1225,7 +1225,7 @@ WinIcoInit(
 	* This command is defined in tkWinIco.c, but that file does not have
 	* any hooks for script command creation.
 	*/
-	Tcl_CreateObjCommand(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
+	Tcl_CreateObjCommand2(interp, "::tk:::fileicon::_getwinicon", GetFileIcon,
 	    NULL, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,

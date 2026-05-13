@@ -1020,13 +1020,16 @@ TkCreateMainWindow(
 #if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(HAVE_ATK)
 		".no-atk"
 #endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !(defined(TK_USE_WAYLAND) || defined(HAVE_BIDI))
+		".no-bidi"
+#endif
 #ifdef TK_NO_DEPRECATED
 		".no-deprecate"
 #endif
 #ifndef TCL_CFG_OPTIMIZED
 		".no-optimize"
 #endif
-#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XFT)
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XFT) && !defined(HAVE_BIDI)
 		".no-xft"
 #endif
 #if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(TK_USE_WAYLAND) && !defined(HAVE_XSS)

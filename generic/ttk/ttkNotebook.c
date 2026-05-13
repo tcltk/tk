@@ -299,7 +299,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
     Tcl_Size i = 0;
     int statefirst = TTK_STATE_FIRST;
     int statelast = TTK_STATE_LAST;
-    
+
     if (nb->core.tkwin != NULL) {
 	TkMainInfo *mainInfoPtr = ((TkWindow *) nb->core.tkwin)->mainPtr;
 
@@ -313,7 +313,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
     /*
      * Flip First/last if tabs are on the bottom or right side.
      */
-    
+
     if (index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
     } else {
