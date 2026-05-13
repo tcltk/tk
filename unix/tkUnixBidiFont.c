@@ -117,19 +117,19 @@ typedef struct {
     } glyphs[MAX_GLYPHS];
     int glyphCount;
     int totalAdvance;          /* Total advance width in pixels. */
-    
+
     /*
      * Visual index for cursor positioning.
-     * 
-     * Parallel structure that maps visual (screen) positions back to logical 
+     *
+     * Parallel structure that maps visual (screen) positions back to logical
      * (source string) byte offsets. Built in sync with word reversal so that
      * cursor positioning works correctly for LTR, RTL, and mixed text.
-     * 
+     *
      * visualIndex[i] corresponds to glyphs[i] and contains:
      * - x: visual X position of this glyph
      * - advanceX: width of this glyph
      * - byteEnd: logical byte offset after this glyph (byteOffset + clusterLen)
-     * 
+     *
      * For cursor positioning: binary search to find glyph at visual position X,
      * then return the corresponding byteEnd.
      */
@@ -347,7 +347,7 @@ GetFaceFont(
             XSync(fontPtr->display, False);   /* Helps PostScript tests. */
         }
         return face->ft0Font;
-    } 
+    }
     else {
         /* Rotated font handling. */
         if (!face->ftFont || face->angle != angle) {
@@ -1076,7 +1076,7 @@ X11Shaper_ShapeString(
                 i += clen;
             }
             buffer->totalAdvance = penX;
-            
+
             /* Build visualIndex for cursor positioning. */
             buffer->indexCount = buffer->glyphCount;
             for (int j = 0; j < buffer->glyphCount; j++) {
@@ -1087,7 +1087,7 @@ X11Shaper_ShapeString(
             return 1;
         }
     }
-    
+
     /* Cache check. */
     if (shaper->cache.valid &&
         shaper->cache.len == numBytes &&
@@ -1312,18 +1312,18 @@ X11Shaper_ShapeString(
                 int temp_x = buffer->visualIndex[i].x;
                 int temp_advanceX = buffer->visualIndex[i].advanceX;
                 int temp_byteEnd = buffer->visualIndex[i].byteEnd;
-                
+
                 buffer->visualIndex[i].x = buffer->visualIndex[j].x;
                 buffer->visualIndex[i].advanceX = buffer->visualIndex[j].advanceX;
                 buffer->visualIndex[i].byteEnd = buffer->visualIndex[j].byteEnd;
-                
+
                 buffer->visualIndex[j].x = temp_x;
                 buffer->visualIndex[j].advanceX = temp_advanceX;
                 buffer->visualIndex[j].byteEnd = temp_byteEnd;
             }
         }
     }
-    
+
     /* Update cache. */
     if (numBytes <= MAX_STRING_CACHE) {
         shaper->cache.valid = 0;
@@ -1728,18 +1728,18 @@ Tk_MeasureChars(
 
     /*
      * Cursor positioning with visual index:
-     * 
+     *
      * The visualIndex maps visual (screen) positions to logical (source) byte
      * offsets, enabling accurate cursor positioning for all text directions.
      */
     int prevByteEnd = 0;
-    
+
     for (int i = 0; i < buffer.indexCount; i++) {
         int glyphX = buffer.visualIndex[i].x;
         int glyphAdvance = buffer.visualIndex[i].advanceX;
         int glyphXEnd = glyphX + glyphAdvance;
         int byteEnd = buffer.visualIndex[i].byteEnd;
-        
+
         if (byteEnd < 0) byteEnd = 0;
         if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
 
@@ -1756,13 +1756,13 @@ Tk_MeasureChars(
                 *lengthPtr = lastBreakX;
                 return lastBreakByte;
             }
-            
+
             /* Ensure we return at least one character if TK_AT_LEAST_ONE is set. */
             if (prevByteEnd == 0 && (flags & TK_AT_LEAST_ONE)) {
                 *lengthPtr = glyphXEnd;
                 return byteEnd;
             }
-            
+
             *lengthPtr = curX;
             return prevByteEnd;
         }
@@ -1913,7 +1913,7 @@ Tk_MeasureCharsInContext(
         if (byteEnd > (int)numBytes) byteEnd = (int)numBytes;
 
         /* Skip glyphs outside the range. */
-        if (byteEnd <= (int)rangeStart || 
+        if (byteEnd <= (int)rangeStart ||
             (i == 0 && buffer.glyphs[i].byteOffset >= rangeEnd)) {
             continue;
         }
@@ -1922,8 +1922,8 @@ Tk_MeasureCharsInContext(
 
         /* Record word-break opportunities. */
         if (byteEnd > 0 && byteEnd <= (int)numBytes) {
-            if (source[byteEnd - 1] == ' ' || 
-                source[byteEnd - 1] == '\t' || 
+            if (source[byteEnd - 1] == ' ' ||
+                source[byteEnd - 1] == '\t' ||
                 source[byteEnd - 1] == '\n') {
                 lastBreakPos   = byteEnd;
                 lastBreakWidth = nextWidth;
@@ -2079,7 +2079,7 @@ done:
     if (tsdPtr->clipRegion) {
         XftDrawSetClip(ftDraw, NULL);
     }
-    
+
     /* Always destroy the temporary XftDraw. */
     XftDrawDestroy(ftDraw);
 }
@@ -2117,7 +2117,7 @@ Tk_DrawCharsInContext(
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (rangeLength <= 0) return;
-    
+
     XftDraw *ftDraw = NULL;
 
     /* Create a temporary XftDraw for this draw operation. */
@@ -2323,12 +2323,12 @@ TkDrawAngledChars(
         }
         goto done;
     }
-    
+
 /*
  * Complex text: use full shaping + bidi pipeline,
  * then rotate glyph positions.
  */
-    
+
 {
     ShapedGlyphBuffer buffer;
     if (!X11Shaper_ShapeString(&fontPtr->shaper, fontPtr, source,
@@ -2378,7 +2378,7 @@ TkDrawAngledChars(
         UNLOCK;
     }
 }
-    
+
 done:
     if (tsdPtr->clipRegion) {
         XftDrawSetClip(ftDraw, NULL);

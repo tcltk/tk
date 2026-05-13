@@ -72,8 +72,15 @@ typedef struct ImageModel {
 				 * when the world is falling apart.) */
 } ImageModel;
 
+typedef struct Tk_ImageTypeList {
+	Tk_ImageType type;	/* Information about image type. */
+	struct Tk_ImageTypeList *nextPtr;
+				/* Next in list of all image types currently
+				 * known. */
+} Tk_ImageTypeList;
+
 typedef struct {
-    Tk_ImageType *imageTypeList;/* First in a list of all known image
+    Tk_ImageTypeList *imageTypeList;/* First in a list of all known image
 				 * types. */
     bool initialized;		/* Set to true if we've initialized the
 				 * structure. */
@@ -109,7 +116,7 @@ static void
 ImageTypeThreadExitProc(
     TCL_UNUSED(void *))
 {
-    Tk_ImageType *freePtr;
+    Tk_ImageTypeList *freePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -146,7 +153,7 @@ Tk_CreateImageType(
 				 * fields except "nextPtr" must be filled in
 				 * by caller. */
 {
-    Tk_ImageType *copyPtr;
+    Tk_ImageTypeList *copyPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -154,8 +161,8 @@ Tk_CreateImageType(
 	tsdPtr->initialized = true;
 	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
     }
-    copyPtr = (Tk_ImageType *)Tcl_Alloc(sizeof(Tk_ImageType));
-    *copyPtr = *typePtr;
+    copyPtr = (Tk_ImageTypeList *)Tcl_Alloc(sizeof(Tk_ImageTypeList));
+    copyPtr->type = *typePtr;
     copyPtr->nextPtr = tsdPtr->imageTypeList;
     tsdPtr->imageTypeList = copyPtr;
 }
@@ -195,7 +202,7 @@ Tk_ImageObjCmd(
     TkWindow *winPtr = (TkWindow *)clientData;
     Tcl_Size i, firstOption;
     int isNew, index;
-    Tk_ImageType *typePtr;
+    Tk_ImageTypeList *typePtr;
     ImageModel *modelPtr;
     Image *imagePtr;
     Tcl_HashEntry *hPtr;
@@ -233,8 +240,8 @@ Tk_ImageObjCmd(
 	arg = Tcl_GetString(objv[2]);
 	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
-	    if ((*arg == typePtr->name[0])
-		    && (strcmp(arg, typePtr->name) == 0)) {
+	    if ((*arg == typePtr->type.name[0])
+		    && (strcmp(arg, typePtr->type.name) == 0)) {
 		break;
 	    }
 	}
@@ -328,7 +335,7 @@ Tk_ImageObjCmd(
 	objc -= firstOption;
 	args = (Tcl_Obj **) objv;
 	Tcl_Preserve(modelPtr);
-	i = typePtr->createProc(interp, name, objc, args, typePtr,
+	i = typePtr->type.createProc(interp, name, objc, args, &typePtr->type,
 		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
 	if (i != TCL_OK){
 	    EventuallyDeleteImage(modelPtr, 0);
@@ -336,10 +343,10 @@ Tk_ImageObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_Release(modelPtr);
-	modelPtr->typePtr = typePtr;
+	modelPtr->typePtr = &typePtr->type;
 	for (imagePtr = modelPtr->instancePtr; imagePtr != NULL;
 		imagePtr = imagePtr->nextPtr) {
-	    imagePtr->instanceData = typePtr->getProc(imagePtr->tkwin,
+	    imagePtr->instanceData = typePtr->type.getProc(imagePtr->tkwin,
 		    modelPtr->modelData);
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -386,7 +393,7 @@ Tk_ImageObjCmd(
 	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		    typePtr->name, TCL_INDEX_NONE));
+		    typePtr->type.name, TCL_INDEX_NONE));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	break;
