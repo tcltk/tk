@@ -1060,7 +1060,6 @@ TkWinShapeString(
 
 	/*
          * Fallback for missing glyphs.
-         * We iterate through characters and force a subfont search if a glyph is 0.
          */
         if (SUCCEEDED(hr)) {
             for (int ci = 0; ci < itemLen; ci++) {
@@ -1083,31 +1082,25 @@ TkWinShapeString(
                         hFont = fontPtr->subFontArray[subFontIdx].hFont0;
                         SelectObject(hdc, hFont);
 
-                        /*
-                         * Update the script engine.
-                         * If we switched to a CJK or Emoji font, the original 
-                         * SCRIPT_ANALYSIS might be set to SCRIPT_UNDEFINED 
-                         * or a Latin engine. Resetting eScript to 0 
-                         * (SCRIPT_UNDEFINED) forces Uniscribe to re-evaluate 
-                         * the script for the new font.
+                        /* Reset the script analysis to force re-detection.
                          */
                         item->a.eScript = 0; 
 
+                        /* Use the scriptCacheArray slot corresponding 
+                         * to the NEW font index. Using the old cache slot 
+                         * is why the "tofu" persists.
+                         */
                         hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
                                          wstr + itemStart, itemLen, maxGlyphs, &item->a,
                                          glyphs, logClust, visAttr, &glyphCount);
                         
-                        /* If ScriptShape fails with the new font, try a simpler fallback */
-                        if (FAILED(hr)) {
-			    item->a.eScript = 0; // SCRIPT_UNDEFINED
-			    /* Retry shaping one last time */
-                        }
+                        /* If successful, we must break to prevent the ci loop 
+                         * from continuing with stale logClust data. */
                         break; 
                     }
                 }
             }
-        }
-		
+        }	
 	if (FAILED(hr)) {
 	    Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
 	    continue;
