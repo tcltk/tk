@@ -2450,14 +2450,8 @@ InitSubFont(
     subFontPtr->hFont0      = hFont;
     subFontPtr->familyPtr   = AllocFontFamily(hdc, hFont, base);
     
-    /* * Ensure we link the subfont to the family's character maps.
-     */
+    /* Critical: Link both BMP fontMap and supplementary groups */
     subFontPtr->fontMap     = subFontPtr->familyPtr->fontMap;
-    
-    /*  Link the supplementary plane (Emoji/CJK) groups.
-     * Without these, the shaper and CanUseFallback will only see 
-     * the 16-bit BMP range.
-     */
     subFontPtr->startGroup  = subFontPtr->familyPtr->startGroup;
     subFontPtr->endGroup    = subFontPtr->familyPtr->endGroup;
     subFontPtr->groupCount  = subFontPtr->familyPtr->groupCount;
@@ -2467,6 +2461,7 @@ InitSubFont(
 
     SelectObject(hdc, hFont);
 }
+
 /*
  *-------------------------------------------------------------------------
  *
@@ -2714,24 +2709,17 @@ FindSubFontForChar(
     SubFont **subFontPtrPtr)	/* Pointer to var to be fixed up if we
 				 * reallocate the subfont table. */
 {
+    int i, j;
     HDC hdc;
-    int i, j, k;
     Tcl_DString ds;
     const char *fallbackName;
     const char *const *aliases;
     const char *const *const *fontFallbacks;
     const char *const *anyFallbacks;
-    SubFont *subFontPtr;
+    SubFont *subFontPtr = NULL;
 
-    /*
-     * First, see if any already-loaded subfont can display the character.
-     *
-     * For supplementary-plane characters (emoji, CJK), check the format-12
-     * groups first before falling back to full cmap search.
-     */
-
+    /* Fast path: check already-loaded subfonts (including emoji) */
     if (ch > 0xffff) {
-        /* Fast path: check supplementary-plane groups. */
         for (i = 0; i < fontPtr->numSubFonts; i++) {
             SubFont *sf = &fontPtr->subFontArray[i];
             for (int g = 0; g < sf->groupCount; g++) {
@@ -2742,35 +2730,25 @@ FindSubFontForChar(
             }
         }
     }
-    
-    /* Regular BMP lookup (or cmap-based for supplementary if not in groups). */
+
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
 	}
     }
 
-    /*
-     * Keep track of all face names that we check, so we don't check some name
-     * multiple times if it can be reached by multiple paths.
-     */
-
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
 
     aliases = TkFontGetAliasList(fontPtr->font.fa.family);
     fontFallbacks = TkFontGetFallbacks();
+
     for (i = 0; fontFallbacks[i] != NULL; i++) {
 	for (j = 0; fontFallbacks[i][j] != NULL; j++) {
 	    fallbackName = fontFallbacks[i][j];
-	    if (strcasecmp(fallbackName, fontPtr->font.fa.family) == 0) {
+	    if (strcasecmp(fallbackName, fontPtr->font.fa.family) == 0 ||
+	        (aliases && TkFontGetAliasList(fallbackName))) {
 		goto tryfallbacks;
-	    } else if (aliases != NULL) {
-		for (k = 0; aliases[k] != NULL; k++) {
-		    if (strcasecmp(aliases[k], fallbackName) == 0) {
-			goto tryfallbacks;
-		    }
-		}
 	    }
 	}
 	continue;
@@ -2780,40 +2758,21 @@ FindSubFontForChar(
 	    fallbackName = fontFallbacks[i][j];
 	    subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
 		    ch, &ds, subFontPtrPtr);
-	    if (subFontPtr != NULL) {
-		goto end;
-	    }
+	    if (subFontPtr != NULL) goto end;
 	}
     }
-
-    /*
-     * See if we can use something from the global fallback list.
-     */
 
     anyFallbacks = TkFontGetGlobalClass();
     for (i = 0; anyFallbacks[i] != NULL; i++) {
 	fallbackName = anyFallbacks[i];
 	subFontPtr = CanUseFallbackWithAliases(hdc, fontPtr, fallbackName,
 		ch, &ds, subFontPtrPtr);
-	if (subFontPtr != NULL) {
-	    goto end;
-	}
+	if (subFontPtr != NULL) goto end;
     }
 
-    /*
-     * Try all the Fonts on the system.
-     */
-
+    /* Last resort: enumerate all system fonts */
     {
-	CanUse canUse;
-
-	canUse.hdc = hdc;
-	canUse.fontPtr = fontPtr;
-	canUse.nameTriedPtr = &ds;
-	canUse.ch = ch;
-	canUse.subFontPtr = NULL;
-	canUse.subFontPtrPtr = subFontPtrPtr;
-
+	CanUse canUse = {hdc, fontPtr, &ds, ch, NULL, subFontPtrPtr};
 	EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontCanUseProc,
 		(LPARAM) &canUse);
 	subFontPtr = canUse.subFontPtr;
@@ -2823,11 +2782,9 @@ FindSubFontForChar(
     ReleaseDC(fontPtr->hwnd, hdc);
     Tcl_DStringFree(&ds);
 
-    if (subFontPtr == NULL) {
-	return &fontPtr->subFontArray[0];
-    }
-    return subFontPtr;
+    return subFontPtr ? subFontPtr : &fontPtr->subFontArray[0];
 }
+
 static int CALLBACK
 WinFontCanUseProc(
     ENUMLOGFONTW *lfPtr,		/* Logical-font data. */
@@ -2896,7 +2853,7 @@ FontMapLookup(
     int row, bit;
     char *page;
 
-    /*  Check the standard BMP bitmask (U+0000 to U+FFFF). */
+    /* BMP range (U+0000–U+FFFF) */
     if (ch <= 0xffff) {
         row = ch >> FONTMAP_SHIFT;
         bit = ch & (FONTMAP_BITSPERPAGE - 1);
@@ -2906,15 +2863,15 @@ FontMapLookup(
         }
     }
 
-    /* If not found in the BMP or character is > U+FFFF, check the Format 12 (Supplementary Plane) groups. */
-    for (int i = 0; i < subFontPtr->familyPtr->groupCount; i++) {
-        if ((ULONG)ch >= subFontPtr->familyPtr->startGroup[i] &&
-            (ULONG)ch <= subFontPtr->familyPtr->endGroup[i]) {
+    /* Supplementary planes (emoji, CJK extensions, etc.) via format-12 */
+    for (int i = 0; i < subFontPtr->groupCount; i++) {
+        if ((ULONG)ch >= subFontPtr->startGroup[i] &&
+            (ULONG)ch <= subFontPtr->endGroup[i]) {
             return 1;
         }
     }
 
-    /* If we still don't have an answer for a BMP character,  load the page from the system to be sure. */
+    /* Lazy-load BMP page if not yet cached */
     if (ch <= 0xffff) {
         FontMapLoadPage(subFontPtr, ch >> FONTMAP_SHIFT);
         page = subFontPtr->fontMap[ch >> FONTMAP_SHIFT];
@@ -2922,22 +2879,10 @@ FontMapLookup(
             bit = ch & (FONTMAP_BITSPERPAGE - 1);
             return (page[bit >> 3] >> (bit & 7)) & 1;
         }
-    } else {
-        /* Supplementary-plane character: check format-12 groups again
-         * (with up-to-date info in case groups were just populated).
-         * The fast-path in FindSubFontForChar uses this loop too.
-         */
-        for (int i = 0; i < subFontPtr->groupCount; i++) {
-            if ((ULONG)ch >= subFontPtr->startGroup[i] &&
-                (ULONG)ch <= subFontPtr->endGroup[i]) {
-                return 1;
-            }
-        }
     }
 
     return 0;
 }
-
 /*
  *-------------------------------------------------------------------------
  *
@@ -3269,8 +3214,9 @@ CanUseFallback(
      * Check both the standard FontMap (for BMP/CJK) and the 
      * Format 12 groups (for Emoji/Supplementary planes).
      */
-    int hasChar = FontMapLookup(&subFont, ch);
+        int hasChar = FontMapLookup(&subFont, ch);
     if (hasChar == 0 && ch > 0xffff) {
+        /* Extra check for supplementary planes */
         for (i = 0; i < subFont.familyPtr->groupCount; i++) {
             if ((ULONG)ch >= subFont.familyPtr->startGroup[i] &&
                 (ULONG)ch <= subFont.familyPtr->endGroup[i]) {
@@ -3281,15 +3227,9 @@ CanUseFallback(
     }
 
     if (((ch < 256) && (subFont.familyPtr->isSymbolFont)) || (hasChar == 0)) {
-        /*
-         * Don't use a symbol font as a fallback font for characters below
-         * 256.
-         */
-
         ReleaseSubFont(&subFont);
         return NULL;
     }
-
     if (fontPtr->numSubFonts >= SUBFONT_SPACE) {
 	SubFont *newPtr;
 	SCRIPT_CACHE *newCachePtr;
