@@ -865,6 +865,60 @@ TkpGetFontAttrsForChar(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkWinPreScanForSupplementaryPlanes --
+ *
+ *	Scan a UTF-16 string for supplementary-plane codepoints (U+10000 and
+ *	above, including emoji) and eagerly load appropriate fallback fonts
+ *	so they're available during Uniscribe shaping.
+ *
+ *	This avoids the fragile .notdef-detection fallback loop inside the
+ *	shaper and ensures emoji/CJK fonts are selected before script analysis.
+ *
+ * Results:
+ *	None. Subfonts may be added to fontPtr->subFontArray.
+ *
+ * Side effects:
+ *	May allocate new SubFont entries. This is intentional and beneficial:
+ *	we want emoji fonts loaded before the shaper runs.
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+TkWinPreScanForSupplementaryPlanes(
+    HDC hdc,
+    WinFont *fontPtr,
+    const WCHAR *wstr,
+    int wlen)
+{
+    int i;
+    
+    for (i = 0; i < wlen; i++) {
+        int ch;
+        
+        /* Decode UTF-16 surrogate pair. */
+        if (IS_HIGH_SURROGATE(wstr[i]) && (i + 1 < wlen) && IS_LOW_SURROGATE(wstr[i + 1])) {
+            ch = 0x10000 + ((wstr[i] - 0xD800) << 10) + (wstr[i + 1] - 0xDC00);
+            i++;  /* Skip low surrogate. */
+        } else {
+            ch = (int)wstr[i];
+        }
+        
+        /* Only pre-load for supplementary planes. */
+        if (ch > 0xffff) {
+            SubFont *dummy = &fontPtr->subFontArray[0];
+            
+            /* FindSubFontForChar handles the full fallback search
+             * and updates dummy to point to the result. The actual
+             * subfont is stored in subFontArray; we just need it loaded.
+             */
+            (void)FindSubFontForChar(fontPtr, ch, &dummy);
+        }
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkWinShapeString --
  *
  *	Convert a UTF-8 string to a bidi-reordered, shaped array of glyph
@@ -919,6 +973,13 @@ TkWinShapeString(
         *runCountOut = 0;
         return -1;
     }
+
+    /* Pre-load fonts for supplementary-plane characters (emoji, CJK).
+     * This avoids relying on fragile .notdef detection during shaping
+     * and ensures the right fonts are available when Uniscribe does
+     * script analysis.
+     */
+    TkWinPreScanForSupplementaryPlanes(hdc, fontPtr, wstr, wlen);
 	
     /*
      * ScriptItemize:
@@ -1060,48 +1121,69 @@ TkWinShapeString(
 	}
 
 	/*
-         * Fallback for missing glyphs.
+         * Fallback for missing glyphs: improved detection with cmap checking.
          */
-	if (SUCCEEDED(hr)) {
-		for (int ci = 0; ci < itemLen; ci++) {
-			int gi = logClust[ci];
-			if (gi < glyphCount && glyphs[gi] == 0) {
-				int ch;
-				/* FCorrectly handle surrogate pairs to find the 32-bit codepoint. */
-				if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) && (ci + 1 < itemLen)) {
-					ch = 0x10000 + ((wstr[itemStart + ci] - 0xD800) << 10) 
-						+ (wstr[itemStart + ci + 1] - 0xDC00);
-				} else {
-					ch = (int)wstr[itemStart + ci];
-				}
+        if (SUCCEEDED(hr)) {
+            for (int ci = 0; ci < itemLen; ci++) {
+                int gi = logClust[ci];
+                if (gi >= glyphCount) continue;
+                
+                /* Decode the character from UTF-16. */
+                int ch;
+                if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) && 
+                    (ci + 1 < itemLen) && IS_LOW_SURROGATE(wstr[itemStart + ci + 1])) {
+                    ch = 0x10000 + ((wstr[itemStart + ci] - 0xD800) << 10) 
+                       + (wstr[itemStart + ci + 1] - 0xDC00);
+                } else {
+                    ch = (int)wstr[itemStart + ci];
+                }
+                
+                /* Check if glyph is missing. .notdef is typically glyph ID 0,
+                 * but not always. Also check if the current subfont's cmap
+                 * actually supports this character.
+                 */
+                int isMissing = (glyphs[gi] == 0);
+                
+                if (!isMissing) {
+                    /* Glyph is non-zero; verify it's in the font's cmap
+                     * to catch fonts that reserve glyph 0 for something else.
+                     */
+                    SubFont *currentSubFont = &fontPtr->subFontArray[subFontIdx];
+                    if (FontMapLookup(currentSubFont, ch)) {
+                        /* Character is in the font; trust the shaper. */
+                        continue;
+                    } else {
+                        /* Glyph was produced but character is not in cmap;
+                         * this is unusual but treat it as "missing" and try fallback.
+                         */
+                        isMissing = 1;
+                    }
+                }
+                
+                if (isMissing) {
+                    /* Character is missing or not in cmap; try fallback. */
+                    SubFont *fallbackPtr = &fontPtr->subFontArray[subFontIdx];
+                    FindSubFontForChar(fontPtr, ch, &fallbackPtr);
+                    int newIdx = (int)(fallbackPtr - fontPtr->subFontArray);
 
-				SubFont *fallbackPtr = &fontPtr->subFontArray[subFontIdx];
-				FindSubFontForChar(fontPtr, ch, &fallbackPtr);
-				int newIdx = (int)(fallbackPtr - fontPtr->subFontArray);
+                    if (newIdx != subFontIdx) {
+                        subFontIdx = newIdx;
+                        hFont = fontPtr->subFontArray[subFontIdx].hFont0;
+                        SelectObject(hdc, hFont);
 
-				if (newIdx != subFontIdx) {
-					subFontIdx = newIdx;
-					hFont = fontPtr->subFontArray[subFontIdx].hFont0;
-					SelectObject(hdc, hFont);
+                        /* Force re-analysis with new font. */
+                        item->a.eScript = 0;
 
-					/* Reset script analysis and use the NEW font's script cache slot. 
-					 * Using the old cache slot is why "tofu" boxes often persist. 
-					 */
-					item->a.eScript = 0; 
-					hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx], 
-									 wstr + itemStart, itemLen, maxGlyphs, &item->a, 
-									 glyphs, logClust, visAttr, &glyphCount);
-
-					/* If successful, we must break to re-scan with fresh logClust data */
-					if (SUCCEEDED(hr)) break; 
-				}
-			}
-			/* Skip the low surrogate so we don't process it as a separate char. */
-			if (IS_HIGH_SURROGATE(wstr[itemStart + ci]) && (ci + 1 < itemLen)) {
-				ci++;
-			}
-		}
-	}
+                        hr = ScriptShape(hdc, &fontPtr->scriptCacheArray[subFontIdx],
+                                         wstr + itemStart, itemLen, maxGlyphs, &item->a,
+                                         glyphs, logClust, visAttr, &glyphCount);
+                        
+                        /* Re-scan from the top after subfont change. */
+                        break;
+                    }
+                }
+            }
+        }	
 	if (FAILED(hr)) {
 	    Tcl_Free(glyphs); Tcl_Free(logClust); Tcl_Free(visAttr);
 	    continue;
@@ -2643,8 +2725,25 @@ FindSubFontForChar(
 
     /*
      * First, see if any already-loaded subfont can display the character.
+     *
+     * For supplementary-plane characters (emoji, CJK), check the format-12
+     * groups first before falling back to full cmap search.
      */
 
+    if (ch > 0xffff) {
+        /* Fast path: check supplementary-plane groups. */
+        for (i = 0; i < fontPtr->numSubFonts; i++) {
+            SubFont *sf = &fontPtr->subFontArray[i];
+            for (int g = 0; g < sf->groupCount; g++) {
+                if ((ULONG)ch >= sf->startGroup[g] && 
+                    (ULONG)ch <= sf->endGroup[g]) {
+                    return sf;
+                }
+            }
+        }
+    }
+    
+    /* Regular BMP lookup (or cmap-based for supplementary if not in groups). */
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
@@ -2822,6 +2921,17 @@ FontMapLookup(
         if (page != NULL) {
             bit = ch & (FONTMAP_BITSPERPAGE - 1);
             return (page[bit >> 3] >> (bit & 7)) & 1;
+        }
+    } else {
+        /* Supplementary-plane character: check format-12 groups again
+         * (with up-to-date info in case groups were just populated).
+         * The fast-path in FindSubFontForChar uses this loop too.
+         */
+        for (int i = 0; i < subFontPtr->groupCount; i++) {
+            if ((ULONG)ch >= subFontPtr->startGroup[i] &&
+                (ULONG)ch <= subFontPtr->endGroup[i]) {
+                return 1;
+            }
         }
     }
 
@@ -3475,18 +3585,18 @@ typedef union SUBTABLE {
 
 static int
 LoadFontRanges(
-    HDC hdc,            /* HDC into which font can be selected. */
-    HFONT hFont,        /* HFONT to query. */
-    USHORT **startCountPtr, /* Filled with malloced pointer to character
-                             * range information. */
-    USHORT **endCountPtr,   /* Filled with malloced pointer to character
-                             * range information. */
+    HDC hdc,			/* HDC into which font can be selected. */
+    HFONT hFont,		/* HFONT to query. */
+    USHORT **startCountPtr,	/* Filled with malloced pointer to character
+				 * range information. */
+    USHORT **endCountPtr,	/* Filled with malloced pointer to character
+				 * range information. */
     int *symbolPtr,
-    ULONG **startGroupPtr,  /* Filled with malloced format-12 group
-                             * start codepoints (supplementary plane). */
-    ULONG **endGroupPtr,    /* Filled with malloced format-12 group
-                             * end codepoints. */
-    int *groupCountPtr)     /* Number of format-12 groups. */
+    ULONG **startGroupPtr,	/* Filled with malloced format-12 group
+				 * start codepoints (supplementary plane). */
+    ULONG **endGroupPtr,	/* Filled with malloced format-12 group
+				 * end codepoints. */
+    int *groupCountPtr)		/* Number of format-12 groups. */
 {
     int n, i, j, k, swapped, segCount;
     size_t cbData, offset;
@@ -3510,159 +3620,204 @@ LoadFontRanges(
     i = 0;
     s = (char *) &i;
     *s = '\1';
-    swapped = (i == 1);
+    swapped = 0;
+
+    if (i == 1) {
+	swapped = 1;
+    }
 
     cmapKey = CMAPHEX;
     if (swapped) {
-        SwapLong(&cmapKey);
+	SwapLong(&cmapKey);
     }
 
-    /* * GetFontData returns -1 (GDI_ERROR) on failure. 
-     */
     n = GetFontData(hdc, cmapKey, 0, &cmapTable, sizeof(cmapTable));
-    if (n != -1) {
-        if (swapped) {
-            SwapShort(&cmapTable.numTables);
-        }
-        for (i = 0; i < cmapTable.numTables; i++) {
-            offset = sizeof(cmapTable) + i * sizeof(encTable);
-            GetFontData(hdc, cmapKey, (DWORD) offset, &encTable, sizeof(encTable));
-            if (swapped) {
-                SwapShort(&encTable.platform);
-                SwapShort(&encTable.encoding);
-                SwapLong(&encTable.offset);
-            }
-            
-            if (encTable.platform != 3) {
-                continue; /* Not Microsoft encoding. */
-            }
+    if (n != (int) GDI_ERROR) {
+	if (swapped) {
+	    SwapShort(&cmapTable.numTables);
+	}
+	for (i = 0; i < cmapTable.numTables; i++) {
+	    offset = sizeof(cmapTable) + i * sizeof(encTable);
+	    GetFontData(hdc, cmapKey, (DWORD) offset, &encTable,
+		    sizeof(encTable));
+	    if (swapped) {
+		SwapShort(&encTable.platform);
+		SwapShort(&encTable.encoding);
+		SwapLong(&encTable.offset);
+	    }
+	    if (encTable.platform != 3) {
+		/*
+		 * Not Microsoft encoding.
+		 */
 
-            if (encTable.encoding == 0) {
-                *symbolPtr = 1;
-            } else if (encTable.encoding == 10) {
-                /*
-                 * Platform 3, encoding 10: cmap format 12.
-                 * Supports supplementary planes (Emoji, CJK Ext, etc.)
-                 */
-                ULONG fmt12hdr[4]; 
-                if (GetFontData(hdc, cmapKey, (DWORD)encTable.offset,
-                        fmt12hdr, sizeof(fmt12hdr)) != -1) {
-                    if (swapped) {
-                        SwapLong(&fmt12hdr[0]);
-                        SwapLong(&fmt12hdr[3]);
-                    }
-                    if ((fmt12hdr[0] >> 16) == 12) {
-                        ULONG nGroups = fmt12hdr[3];
-                        if (nGroups > 0 && nGroups < 0x10000) {
-                            ULONG *sg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
-                            ULONG *eg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
-                            size_t groupBase = encTable.offset + sizeof(fmt12hdr);
-                            int ok = 1;
-                            for (ULONG g = 0; g < nGroups; g++) {
-                                ULONG rec[3]; 
-                                if (GetFontData(hdc, cmapKey, (DWORD)(groupBase + g * 12), rec, 12) == -1) {
-                                    ok = 0;
-                                    break;
-                                }
-                                if (swapped) {
-                                    SwapLong(&rec[0]);
-                                    SwapLong(&rec[1]);
-                                }
-                                sg[g] = rec[0];
-                                eg[g] = rec[1];
-                            }
-                            if (ok && *groupCountPtr == 0) {
-                                *startGroupPtr = sg;
-                                *endGroupPtr   = eg;
-                                *groupCountPtr = (int)nGroups;
-                            } else {
-                                Tcl_Free(sg);
-                                Tcl_Free(eg);
-                            }
-                        }
-                    }
-                }
-                continue;
-            } else if (encTable.encoding != 1) {
-                continue;
-            }
+		continue;
+	    }
+	    if (encTable.encoding == 0) {
+		*symbolPtr = 1;
+	    } else if (encTable.encoding == 10) {
+		/*
+		 * Platform 3, encoding 10: cmap format 12.
+		 * This subtable covers the full Unicode range including
+		 * supplementary planes (emoji, historic scripts, etc.).
+		 * The header at encTable.offset is:
+		 *   USHORT format   (== 12, but stored as ULONG in the
+		 *                    "fixed" 16.16 representation -- high
+		 *                    USHORT is 12, low USHORT is 0)
+		 *   ULONG  length
+		 *   ULONG  language
+		 *   ULONG  nGroups
+		 * Each group is three ULONGs: startCode, endCode, startGlyphID.
+		 */
+		ULONG fmt12hdr[4];  /* format/reserved, length, language, nGroups */
+		if (GetFontData(hdc, cmapKey, (DWORD)encTable.offset,
+			fmt12hdr, sizeof(fmt12hdr)) == (DWORD)GDI_ERROR) {
+		    continue;
+		}
+		if (swapped) {
+		    SwapLong(&fmt12hdr[0]);
+		    SwapLong(&fmt12hdr[3]);
+		}
+		/* High 16 bits of fmt12hdr[0] hold the format number. */
+		if ((fmt12hdr[0] >> 16) != 12) {
+		    continue;
+		}
+		ULONG nGroups = fmt12hdr[3];
+		if (nGroups == 0 || nGroups > 0x10000) {
+		    continue;   /* sanity */
+		}
+		ULONG *sg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
+		ULONG *eg = (ULONG *)Tcl_Alloc(nGroups * sizeof(ULONG));
+		size_t groupBase = encTable.offset + sizeof(fmt12hdr);
+		int ok = 1;
+		for (ULONG g = 0; g < nGroups; g++) {
+		    ULONG rec[3];    /* startCode, endCode, startGlyphID */
+		    if (GetFontData(hdc, cmapKey,
+			    (DWORD)(groupBase + g * 12),
+			    rec, 12) == (DWORD)GDI_ERROR) {
+			ok = 0;
+			break;
+		    }
+		    if (swapped) {
+			SwapLong(&rec[0]);
+			SwapLong(&rec[1]);
+		    }
+		    sg[g] = rec[0];
+		    eg[g] = rec[1];
+		}
+		if (!ok) {
+		    Tcl_Free(sg);
+		    Tcl_Free(eg);
+		    continue;
+		}
+		/* Keep only the first (most complete) format-12 subtable. */
+		if (*groupCountPtr == 0) {
+		    *startGroupPtr = sg;
+		    *endGroupPtr   = eg;
+		    *groupCountPtr = (int)nGroups;
+		} else {
+		    Tcl_Free(sg);
+		    Tcl_Free(eg);
+		}
+		continue;
+	    } else if (encTable.encoding != 1) {
+		continue;
+	    }
 
-            /* Format 4 (BMP) parsing. */
-            GetFontData(hdc, cmapKey, (DWORD) encTable.offset, &subTable, sizeof(subTable));
-            if (swapped) {
-                SwapShort(&subTable.any.format);
-            }
-            if (subTable.any.format == 4) {
-                if (swapped) {
-                    SwapShort(&subTable.segment.segCountX2);
-                }
-                segCount = subTable.segment.segCountX2 / 2;
-                cbData = segCount * sizeof(USHORT);
+	    GetFontData(hdc, cmapKey, (DWORD) encTable.offset, &subTable,
+		    sizeof(subTable));
+	    if (swapped) {
+		SwapShort(&subTable.any.format);
+	    }
+if (subTable.any.format == 4) {
+	    if (swapped) {
+		SwapShort(&subTable.segment.segCountX2);
+	    }
+	    segCount = subTable.segment.segCountX2 / 2;
+	    cbData = segCount * sizeof(USHORT);
 
-                startCount = (USHORT *)Tcl_Alloc(cbData);
-                endCount = (USHORT *)Tcl_Alloc(cbData);
+	    startCount = (USHORT *)Tcl_Alloc(cbData);
+	    endCount = (USHORT *)Tcl_Alloc(cbData);
 
-                offset = encTable.offset + sizeof(subTable.segment);
-                GetFontData(hdc, cmapKey, (DWORD) offset, endCount, (DWORD)cbData);
-                offset += cbData + sizeof(USHORT);
-                GetFontData(hdc, cmapKey, (DWORD) offset, startCount, (DWORD)cbData);
-                
-                if (swapped) {
-                    for (j = 0; j < segCount; j++) {
-                        SwapShort(&endCount[j]);
-                        SwapShort(&startCount[j]);
-                    }
-                }
-                if (*symbolPtr != 0) {
-                    for (k = 0; k < segCount; k++) {
-                        if (((startCount[k] & 0xff00) == 0xf000) && ((endCount[k] & 0xff00) == 0xf000)) {
-                            startCount[k] &= 0xff;
-                            endCount[k] &= 0xff;
-                        }
-                    }
-                }
-            }
-        }
+	    offset = encTable.offset + sizeof(subTable.segment);
+	    GetFontData(hdc, cmapKey, (DWORD) offset, endCount, (DWORD)cbData);
+	    offset += cbData + sizeof(USHORT);
+	    GetFontData(hdc, cmapKey, (DWORD) offset, startCount, (DWORD)cbData);
+	    if (swapped) {
+		for (j = 0; j < segCount; j++) {
+		    SwapShort(&endCount[j]);
+		    SwapShort(&startCount[j]);
+		}
+	    }
+	    if (*symbolPtr != 0) {
+		/*
+		 * Empirically determined: When a symbol font is loaded,
+		 * the character existence metrics obtained from the
+		 * system are mildly wrong. If the real range of the
+		 * symbol font is from 0020 to 00FE, then the metrics are
+		 * reported as F020 to F0FE. When we load a symbol font,
+		 * we must fix the character existence metrics.
+		 */
 
+		for (k = 0; k < segCount; k++) {
+		    if (((startCount[k] & 0xff00) == 0xf000)
+			    && ((endCount[k] & 0xff00) == 0xf000)) {
+			startCount[k] &= 0xff;
+			endCount[k] &= 0xff;
+		    }
+		}
+	    }
+	}
+    }
+
+    /*
+     * CJK & Emoji Bridge:
+     * If the loop finished and we have Format 12 groups (Supplementary planes)
+     * but no Format 4 segments (BMP), or if segments are too narrow, 
+     * we must ensure segCount is at least 1 and covers the BMP range so 
+     * the font engine's page-cache allows the fallback search to proceed.
+     */
+
+    if (segCount == 0 && *groupCountPtr > 0) {
+	segCount = 1;
+	cbData = segCount * sizeof(USHORT);
+	startCount = (USHORT *)Tcl_Alloc(cbData);
+	endCount = (USHORT *)Tcl_Alloc(cbData);
+	startCount[0] = 0x0000;
+	endCount[0] = 0xffff;
+    } else if (segCount == 0 && GetTextCharset(hdc) == ANSI_CHARSET) {
+	/* Existing fallback for bitmap/legacy fonts */
+	segCount = 1;
+	cbData = segCount * sizeof(USHORT);
+	startCount = (USHORT *)Tcl_Alloc(cbData);
+	endCount = (USHORT *)Tcl_Alloc(cbData);
+	startCount[0] = 0x0000;
+	endCount[0] = 0xffff;
+    }
+} else if (GetTextCharset(hdc) == ANSI_CHARSET) {
         /*
-         * CJK & Emoji Bridge:
-         * If the loop found Format 12 (high planes) but no Format 4 (BMP),
-         * we must create a dummy BMP range so the engine doesn't discard the character.
-         */
-        if (segCount == 0 && *groupCountPtr > 0) {
-            segCount = 1;
-            cbData = segCount * sizeof(USHORT);
-            startCount = (USHORT *)Tcl_Alloc(cbData);
-            endCount = (USHORT *)Tcl_Alloc(cbData);
-            startCount[0] = 0x0000;
-            endCount[0] = 0xffff;
-        } else if (segCount == 0 && GetTextCharset(hdc) == ANSI_CHARSET) {
-            segCount = 1;
-            cbData = segCount * sizeof(USHORT);
-            startCount = (USHORT *)Tcl_Alloc(cbData);
-            endCount = (USHORT *)Tcl_Alloc(cbData);
-            startCount[0] = 0x0000;
-            endCount[0] = 0xffff;
-        }
-    } else if (GetTextCharset(hdc) == ANSI_CHARSET) {
-        /*
-         * Bitmap font fallback: force the engine to allow all Unicode BMP 
-         * characters so FindSubFontForChar can handle the actual CJK/Emoji mapping.
+         * Bitmap font or legacy charset. To support CJK/Emoji fallback, 
+         * we must not cap the range at 0xff. By setting the endCount to 
+         * the maximum Unicode range (0x10ffff), we allow the fallback 
+         * mechanism (FindSubFontForChar) to take over for higher codepoints.
          */
         segCount = 1;
         cbData = segCount * sizeof(USHORT);
         startCount = (USHORT *)Tcl_Alloc(cbData);
         endCount = (USHORT *)Tcl_Alloc(cbData);
         startCount[0] = 0x0000;
+        
+        /* Cover the Basic Multilingual Plane (CJK),
+         * or use the full range if the engine supports it.
+         */
         endCount[0] = 0xffff; 
     }
-
     SelectObject(hdc, hFont);
 
     *startCountPtr = startCount;
     *endCountPtr = endCount;
     return segCount;
 }
+
 
 /*
  *-------------------------------------------------------------------------
