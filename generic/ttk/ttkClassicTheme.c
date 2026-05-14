@@ -517,7 +517,7 @@ static void ArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 5;
+    int size = 4;
 
     /* Get scaled size */
     TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
@@ -611,7 +611,7 @@ static void BoxArrowElementSize(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 5;
+    int size = 4;
 
     /* Get scaled size */
     TkGetScaledPixelValue(NULL, tkwin, arrow->sizeObj, &size);
@@ -962,7 +962,7 @@ static void TreeheadingIndicatorSize(
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Ttk_Padding padding;
-    int size = 5;
+    int size = 4;
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {

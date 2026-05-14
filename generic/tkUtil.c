@@ -1265,6 +1265,40 @@ TkScalingLevel(
 /*
  *----------------------------------------------------------------------
  *
+ * TkScalingLevel2 --
+ *
+ *	Returns the display's DPI scaling level as 0.25, 0.5, 0.75, 1.0,
+ *	1.25, 1.5, 1.75, ..., corresponding to the value of the variable
+ *	tk::scalingPct.
+ *
+ * Results:
+ *      The scaling level.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkScalingLevel2(
+    Tk_Window tkwin)
+{
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Obj *scalingPctPtr = Tcl_GetVar2Ex(interp, "::tk::scalingPct", NULL,
+	    TCL_GLOBAL_ONLY);
+    if (scalingPctPtr == NULL) {
+	return 1.0;
+    } else {
+	int scalingPct;
+	Tcl_GetIntFromObj(interp, scalingPctPtr, &scalingPct);
+	return scalingPct / 100.0;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkGetScaledPixelValue --
  *
  *	Returns a scaled pixel value for a given screen unit value.

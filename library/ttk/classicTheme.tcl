@@ -90,7 +90,7 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowpadding 2.25p -arrowsize 3p -width 9p
+	    -arrowpadding 1.5p -arrowsize 3p -width 6.75p
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised \

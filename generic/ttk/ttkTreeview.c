@@ -7284,8 +7284,13 @@ static void TreeheadingIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
+    int size = 4;						/* unscaled */
+    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
-    int size = 5;
+
+    /* Get unscaled indicator size */
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
@@ -7294,9 +7299,8 @@ static void TreeheadingIndicatorSize(
 	return;
     }
 
-    /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
-    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
+    *widthPtr  = (int)round(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)round(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
@@ -7313,13 +7317,11 @@ static void TreeheadingIndicatorDraw(
     Ttk_State state) {
 
     TreeheadingIndicator *indicator = (TreeheadingIndicator *)elementRecord;
-    ArrowDirection direction;
     Ttk_Padding padding;
-    int cx, cy;
-    XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
-    XGCValues gcvalues;
-    GC gc;
-    unsigned mask;
+    int size = 4;
+    ArrowDirection direction;
+    XColor *strokeColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    Tk_Image img;
 
     /* Skip if not showing indicator */
     if (!(state & TTK_STATE_USER1)) {
@@ -7330,33 +7332,19 @@ static void TreeheadingIndicatorDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Get arrow size */
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+
     if (state & TTK_STATE_SELECTED) {
 	direction = CHEVRON_DOWN;
-	TtkArrowSize(b.width/2, direction, &cx, &cy);
-	if ((b.height - cy) % 2 == 1) {
-	    ++cy;
-	}
     } else if (state & TTK_STATE_ALTERNATE) {
 	direction = CHEVRON_UP;
-	TtkArrowSize(b.width/2, direction, &cx, &cy);
-	if ((b.height - cy) % 2 == 1) {
-	    ++cy;
-	}
     } else {
 	return;
     }
 
-    /* Draw arrow */
-    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-    gcvalues.foreground = borderColor->pixel;
-    gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
-    gcvalues.cap_style = CapRound;
-    gcvalues.join_style = JoinRound;
-    mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
-    gc = Tk_GetGC(tkwin, mask, &gcvalues);
-    TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
-    Tk_FreeGC(Tk_Display(tkwin), gc);
+    img = makeChevronImage(size, direction, strokeColor, tkwin);
+    Tk_RedrawImage(img, 0, 0, b.width, b.height, d, b.x, b.y);
+    Tk_FreeImage(img);
 }
 
 static const Ttk_ElementSpec TreeheadingIndicatorElementSpec = {
@@ -7397,12 +7385,16 @@ static void TreeitemIndicatorSize(
     TCL_UNUSED(Ttk_Padding *)) {
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
+    int size = 4;						/* unscaled */
+    double scalingLevel = TkScalingLevel2(tkwin);
     Ttk_Padding padding;
-    int size = 5;
 
-    /* Get scaled indicator size */
-    TkGetScaledPixelValue(NULL, tkwin, indicator->sizeObj, &size);
-    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);
+    /* Get unscaled indicator size */
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+    TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
+
+    *widthPtr  = (int)round(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)round(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add padding (only scaled if not in pixels) */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
@@ -7424,53 +7416,35 @@ static void TreeitemIndicatorDraw(
     Ttk_State state) {
 
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
+    Ttk_Padding padding;
+    int size = 4;
     ArrowDirection direction =
 	(state & TTK_STATE_OPEN) ? CHEVRON_DOWN : CHEVRON_RIGHT;
-    Ttk_Padding padding;
-    int cx, cy;
-    XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
-    XGCValues gcvalues;
-    GC gc;
-    unsigned mask;
+    XColor *strokeColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
+    Tk_Image img;
+    int imgWidth, imgHeight;
 
     /* Skip if not showing indicator */
     if (state & TTK_STATE_LEAF) {
 	return;
     }
 
-    /* Calc padding */
+    /* Shrink size based on padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    /* Calc indicator size */
-    switch (direction) {
-	case CHEVRON_DOWN:
-	    TtkArrowSize(b.width/2, direction, &cx, &cy);
-	    if ((b.height - cy) % 2 == 1) {
-		++cy;
-	    }
-	    break;
-	case CHEVRON_RIGHT:
-	default:
-	    TtkArrowSize(b.width/2, direction, &cx, &cy);
-	    if ((b.width - cx) % 2 == 1) {
-		++cx;
-	    }
-	    break;
+    Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
+
+    img = makeChevronImage(size, direction, strokeColor, tkwin);
+    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+    if (direction == CHEVRON_DOWN) {
+	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+		b.x, b.y + (b.height - imgHeight)/2);
+    } else {
+	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+		b.x + (b.width - imgWidth)/2, b.y);
     }
-
-    /* Anchor box */
-    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
-
-    /* Draw indicator */
-    gcvalues.foreground = borderColor->pixel;
-    gcvalues.line_width = (int)round(1.75 * TkScalingLevel(tkwin));
-    gcvalues.cap_style = CapRound;
-    gcvalues.join_style = JoinMiter;
-    mask = GCForeground | GCLineWidth | GCCapStyle | GCJoinStyle;
-    gc = Tk_GetGC(tkwin, mask, &gcvalues);
-    TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
-    Tk_FreeGC(Tk_Display(tkwin), gc);
+    Tk_FreeImage(img);
 }
 
 static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {

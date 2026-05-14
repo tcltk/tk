@@ -75,7 +75,7 @@ namespace eval ttk::theme::alt {
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 1.5p -arrowpadding {2.25p 2.25p 3p 3p} \
+	    -arrowsize 2.25p -arrowpadding {2.25p 2.25p 3p 2.25p} \
 	    -insertwidth 0.75p -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
@@ -88,7 +88,7 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 2.25p -width 10.5p -arrowpadding {2.25p 2.25p 3p 3p}
+	    -arrowsize 3p -width 10.5p -arrowpadding {1.5p 1.5p 2.25p 2.25p}
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 

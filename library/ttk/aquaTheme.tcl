@@ -209,7 +209,7 @@ namespace eval ttk::theme::aqua {
 		selected systemListViewSortColumnBackground
 		alternate systemListViewSortColumnBackground}
 	ttk::style configure Row -focuscolor systemSelectedTextBackgroundColor \
-	    -focussolid 1 -focusthickness 0 -padding 1p
+	    -focussolid 1 -focusthickness 0 -padding 0.75p
 	ttk::style map Row -focusthickness {focus 1}
 	ttk::style configure Treeview \
 	    -background systemControlBackgroundColor \

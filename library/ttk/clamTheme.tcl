@@ -96,8 +96,12 @@ namespace eval ttk::theme::clam {
 		    disabled		  $colors(-frame)] \
 	    -indicatorforeground [list disabled $colors(-disabledfg)]
 
+	# N.B.: The values of the -arrowsize option for the styles
+	# TMenubutton, TCombobox, and TSpinbox must be specified in
+	# pixels, because they are used in SVG images for chevrons.
+
 	ttk::style configure TMenubutton -width -11 -padding 3.75p \
-	    -arrowsize 3.75p -arrowpadding 2.25p -relief raised
+	    -arrowsize 5 -arrowpadding 2.25p -relief raised
 
 	ttk::style configure TEntry -padding 0.75p -insertwidth 0.75p
 	ttk::style map TEntry \
@@ -106,7 +110,7 @@ namespace eval ttk::theme::clam {
 	    -lightcolor [list focus #6f9dc6]
 
 	ttk::style configure TCombobox -padding 0.75p -insertwidth 0.75p \
-	    -arrowsize 3p -arrowpadding 2.25p
+	    -arrowsize 4 -arrowpadding 2.25p
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
@@ -119,7 +123,7 @@ namespace eval ttk::theme::clam {
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
-	    -arrowsize 2.25p -arrowpadding 2.25p -insertwidth 0.75p
+	    -arrowsize 3 -arrowpadding {2.25p 1.5p} -insertwidth 0.75p
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
@@ -131,14 +135,18 @@ namespace eval ttk::theme::clam {
 	    -background [list selected $colors(-frame) {} $colors(-darker)] \
 	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)]
 
+	# N.B.: The values of the -indicatorsize option for the
+	# treeview-related styles Heading and Item must be specified
+	# in pixels, because they are used in SVG images for chevrons.
+
 	# Treeview
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding 2.25p \
-	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	    -indicatorsize 4 -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
-	ttk::style configure Item -indicatorsize 3p \
+	ttk::style configure Item -indicatorsize 4 \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
 	ttk::style configure CheckTreeview.Item -indicatorsize 6p  \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
@@ -168,7 +176,7 @@ namespace eval ttk::theme::clam {
 	    -borderwidth 2 -relief raised
 
 	ttk::style configure TScrollbar -gripsize 7.5p \
-	    -width 9p -arrowpadding 2.25p -arrowsize 3p \
+	    -arrowpadding 2.25p -arrowsize 3p
 
 	ttk::style configure TScale -gripsize 7.5p \
 	    -arrowsize 10.5p -sliderlength 22.5p
