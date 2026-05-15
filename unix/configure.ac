@@ -302,7 +302,8 @@ if test $tk_aqua = no; then
             AC_MSG_RESULT([glfw3 found])
             GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
             GLFW_LIBS="$(pkg-config --libs glfw3)"
-            GLFW_CFLAGS="$GLFW_CFLAGS -DGLFW_EXPOSE_NATIVE_WAYLAND"
+            GLFW_LIBS="$GLFW_LIBS -lEGL"
+            GLFW_CFLAGS="$GLFW_CFLAGS -DGLFW_EXPOSE_NATIVE_WAYLAND -DGLFW_EXPOSE_NATIVE_EGL"
             if pkg-config --exists wayland-client; then
                 found_glfw=yes
                 AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
