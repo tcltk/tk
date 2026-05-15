@@ -57,6 +57,7 @@ typedef struct TkGlfwContext {
                                    * and shared by all windows */
     int initialized;              /* GLFW initialized flag - 1 if glfwInit()
                                    * has been called successfully */
+    //// The rest of these fields are probably not needed.
     int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
                                    * currently active */
     GLFWwindow *activeWindow;     /* Window that has the current active
@@ -110,6 +111,27 @@ typedef enum {
 } WmAttribute;
 
 extern const char *const WmAttributeNames[];
+
+/*
+ * Each GLFWwindow has its WindowUserPointer set to the address of one of the
+ * following structs.  This allows finding the TkWindow which wraps a given
+ * GLFWWindow, as well as accessing other Tk specific data about the window.
+ * The structs are also stored in a linked list so the setupProc or checkProc
+ * can iterate through all GLFW windows in the application.
+ */
+
+/* Flag values */
+#define needsDisplay 1
+#define dontSwap     2
+
+typedef struct glfwTkInfo {
+    GLFWwindow *glfwWindow;
+    TkWindow *winPtr;
+    TkGlfwContext context;
+    unsigned int flags;
+    struct glfwTkInfo *nextPtr;
+} glfwTkInfo;
+
 
 /*
  *----------------------------------------------------------------------
@@ -327,16 +349,6 @@ typedef struct TkWindowPrivate {
 /*
  *----------------------------------------------------------------------
  *
- * Global State Access
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE TkGlfwContext *TkGlfwGetContext(void);
-
-/*
- *----------------------------------------------------------------------
- *
  * Windows, Pixmaps, and Drawables
  *
  *----------------------------------------------------------------------
@@ -396,7 +408,7 @@ MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
 
 MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
 MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(void);
+MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(Drawable drawable);
 MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
 
 /*

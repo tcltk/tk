@@ -654,7 +654,7 @@ Tk_MeasureCharsInContext(
 void
 Tk_DrawChars(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -662,7 +662,7 @@ Tk_DrawChars(
     int x,
     int y)
 {
-    TkpDrawAngledCharsInContext(NULL, 0, gc, tkfont,
+    TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
         source, numBytes, 0, numBytes,
         (double) x, (double) y, 0.0);
 }
@@ -680,7 +680,7 @@ Tk_DrawChars(
 void
 TkDrawAngledChars(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -707,7 +707,7 @@ TkDrawAngledChars(
 void
 Tk_DrawCharsInContext(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -717,7 +717,7 @@ Tk_DrawCharsInContext(
     int x,
     int y)
 {
-    TkpDrawAngledCharsInContext(NULL, 0, gc, tkfont,
+    TkpDrawAngledCharsInContext(NULL, drawable, gc, tkfont,
         source, numBytes,
         rangeStart, rangeLength,
         (double) x, (double) y, 0.0);
@@ -749,7 +749,7 @@ Tk_DrawCharsInContext(
 void
 TkpDrawAngledCharsInContext(
     TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
+    Drawable drawable,
     GC gc,
     Tk_Font tkfont,
     const char *source,
@@ -766,7 +766,7 @@ TkpDrawAngledCharsInContext(
         return;
     }
 
-    NVGcontext *vg = TkGlfwGetNVGContext();
+    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
     if (!vg) return;
 
     if (EnsureNvgFont(fontPtr, vg) < 0) return;

@@ -617,12 +617,18 @@ TkGlfwFramebufferSizeCallback(
 	printf("No Tk window!\n");
 	return;
     }
-    NVGcontext *vg = TkGlfwGetNVGContext();
+    glfwTkInfo *info = glfwGetWindowUserPointer(window);
+    NVGcontext *vg = info->context.vg;
+    //NVGcontext *vg = TkGlfwGetNVGContext();
     if (vg == NULL) {
+	printf("============================ NoContext!\n");
 	return;
     }
-    /* Rebuild the backing store */
     glfwMakeContextCurrent(window);
+    printf("Callback setting viewport to %dx%d\n", width, height);
+    glViewport(0, 0, width, height);
+
+    /* Rebuild the backing store FBO */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fbo);
     winPtr->privatePtr->fbo = nvgluCreateFramebuffer(vg, width, height, 0);
     printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fbo,
@@ -631,18 +637,16 @@ TkGlfwFramebufferSizeCallback(
     /* Check FBO completeness for now. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fbo, status);
+        printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fbo,
+	       status);
     } else {
-	printf("Window %s has framebuffer %p\n", Tk_PathName(winPtr),
-	   winPtr->privatePtr->fbo);
+	printf("FBO is complete.\n");
     }
     winPtr->changes.width = width;
     winPtr->changes.height = height;
 
     // Reconfigure the Tk window.
     TkDoConfigureNotify(winPtr);
-    /* Update ViewPort */
-    glViewport(0, 0, width, height);
 #if 0
     //// it looks like we can leave this to the refresh callback.
     printf("TkGlFramebufferSizeCallback Expose\n");
@@ -853,6 +857,9 @@ TkGlfwCursorPosCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (!winPtr) {
+	return;
+    }
     XEvent event;
 
     if (!winPtr) {
@@ -986,6 +993,9 @@ TkGlfwMouseButtonCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (!winPtr) {
+	return;
+    }
     XEvent event;
     double xpos, ypos;
     unsigned int buttonMask = 0;
@@ -1094,6 +1104,9 @@ TkGlfwScrollCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (!winPtr) {
+	return;
+    }
     XEvent event;
     double xpos, ypos;
     int button;
@@ -1166,7 +1179,10 @@ TkGlfwKeyCallback(GLFWwindow *window,
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    TkWindow *focusWin;
+    if (!winPtr) {
+	return;
+    }
+    TkWindow *focusWin = NULL;
     XEvent event;
     double xpos, ypos;
     int x, y;
@@ -1183,7 +1199,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
     if (winPtr->dispPtr->focusPtr != NULL) {
 	focusWin = winPtr->dispPtr->focusPtr;
     } else {
-	printf("No winPtr->dispPtr->focusPtr\n");
+	return;
     }
 
     memset(&event, 0, sizeof(XEvent));
@@ -1243,6 +1259,9 @@ TkGlfwCharCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (!winPtr) {
+	return;
+    }
     TkWaylandStoreText(winPtr, codepoint);
 }
 /*
@@ -1266,9 +1285,9 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
     recordCallback();
     TkWindow      *winPtr = TkGlfwGetTkWindow(window);
-
-    if (!winPtr) return;
-
+    if (!winPtr) {
+	return;
+    }
     printf("TkGlWindowRefreshCallback Expose\n");
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));

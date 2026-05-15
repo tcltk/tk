@@ -5,7 +5,7 @@
  *   management, window mapping, drawing context lifecycle, color
  *   conversion, and platform init/cleanup. GLFW, NanoVG and libdecor
  *   provide the native platform on which Tk's widget set and event loop
-1*   are deployed.
+ *   are deployed.
  *
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -20,11 +20,16 @@
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
 #define NANOVG_GLES3_IMPLEMENTATION
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
+
+#define GLFW_EXPOSE_NATIVE_EGL
+#include <GLFW/glfw3native.h>
+
 
 /*
  *----------------------------------------------------------------------
@@ -42,38 +47,67 @@
 static int GlfwIsInitialized = 0;
 
 /*
-  The glfwWindow for the root window
-*/
+ * The glfwWindow for the root window.
+ */
 
-GLFWwindow *mainGlfwWindow;
-
-static TkGlfwContext glfwContext = {NULL, NULL, 0, 0, NULL, 0, 0};
+static GLFWwindow *mainGlfwWindow;
+static TkGlfwContext mainGlfwContext = {0};
 static int shutdownInProgress = 0;
 
+/*
+ * Buffers for font files needed for window decorations.
+ */
+
+static size_t sans_size, bold_size, mono_size;
+static unsigned char *sans_data, *bold_data, *mono_data;
+
+static unsigned char* readFont(
+    const char* fontPath,
+    size_t* size)
+{
+    size_t fileSize;
+    FILE* file = fopen(fontPath, "rb");
+    if (!file) {
+        printf("Could not open font file %s\n", fontPath);
+        return NULL;
+    }
+    fseek(file, 0, SEEK_END);
+    fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    unsigned char* buffer = malloc(fileSize);
+    if (!buffer) {
+        fclose(file);
+        Tcl_Panic("Could not allocate memory for font data.\n");
+    }
+    if (fileSize != fread(buffer, 1, fileSize, file)) {
+	Tcl_Panic("Read failed on font file");
+    }
+    fclose(file);
+    *size = fileSize;
+    return buffer;
+}
+
+static void freeFonts()
+{
+    if (sans_data) {
+	free(sans_data);
+	sans_data = NULL;
+    }
+    if (bold_data) {
+	free(bold_data);
+	bold_data = NULL;
+    }
+    if (mono_data) {
+	free(mono_data);
+	mono_data = NULL;
+    }
+}
 
 /*
  *----------------------------------------------------------------------
  * Tk info per GLFWwindow
  *----------------------------------------------------------------------
- *
- *
- * Each GLFWwindow has its WindowUserPointer set to the address of one of the
- * following structs.  This allows finding the TkWindow which wraps a given
- * GLFWWindow, as well as accessing other Tk specific data about the window.
- * The structs are also stored in a linked list so the setupProc or checkProc
- * can iterate through all GLFW windows in the application.
  */
-
-/* Flag values */
-#define needsDisplay 1
-#define dontSwap     2
-
-typedef struct glfwTkInfo {
-    GLFWwindow* glfwWindow;
-    TkWindow *winPtr;
-    unsigned int flags;
-    struct glfwTkInfo *nextPtr;
-} glfwTkInfo;
 
 glfwTkInfo* glfwTkInfoList = NULL;
 
@@ -81,33 +115,53 @@ static glfwTkInfo* createGlfwTkInfo(
     GLFWwindow* glfwWindow,
     TkWindow* winPtr)
 {
-    glfwTkInfo *glfwTkInfoPtr = Tcl_Alloc(sizeof(glfwTkInfo));
-    *glfwTkInfoPtr = (glfwTkInfo) {
+    glfwTkInfo *infoPtr = Tcl_Alloc(sizeof(glfwTkInfo));
+    *infoPtr = (glfwTkInfo) {
 	.glfwWindow = glfwWindow,
 	.winPtr = winPtr,
 	.flags = 0,
 	.nextPtr = glfwTkInfoList};
-    glfwTkInfoList = glfwTkInfoPtr;
-    return glfwTkInfoPtr;
+    glfwTkInfoList = infoPtr;
+
+    infoPtr->context.vg = nvgCreateGLES3(NVG_ANTIALIAS
+				  | NVG_STENCIL_STROKES
+				  | NVG_DEBUG);
+    if (!infoPtr->context.vg) {
+        fprintf(stderr, "createGlfwTkInfo: nvgCreateGLES3() failed\n");
+        glfwDestroyWindow(glfwWindow);
+        glfwTerminate();
+        return NULL;
+    }
+    nvgCreateFontMem(infoPtr->context.vg, "sans", sans_data,
+		     (int)sans_size, 0);    
+    nvgCreateFontMem(infoPtr->context.vg, "sans-bold", bold_data,
+		     (int)bold_size, 0);    
+    nvgCreateFontMem(infoPtr->context.vg, "mono", mono_data,
+		     (int)mono_size, 0);    
+    return infoPtr;
 }
 
 static void destroyGlfwTkInfo(
     GLFWwindow* glfwWindow)
 {
+    printf("destroyGlfwTkInfo\n");
     glfwTkInfo* prev = NULL;
-    glfwTkInfo *glfwTkInfoPtr = glfwTkInfoList;
-    while(glfwTkInfoPtr) {
-	if (glfwTkInfoPtr->glfwWindow == glfwWindow) {
-	    if (glfwTkInfoPtr == glfwTkInfoList) {
-		glfwTkInfoList = glfwTkInfoPtr->nextPtr;
+    glfwTkInfo *infoPtr = glfwTkInfoList;
+    while(infoPtr) {
+	if (infoPtr->glfwWindow == glfwWindow) {
+	    if (infoPtr == glfwTkInfoList) {
+		glfwTkInfoList = infoPtr->nextPtr;
 	    } else {
-		prev->nextPtr = glfwTkInfoPtr->nextPtr;
+		prev->nextPtr = infoPtr->nextPtr;
 	    }
-	    Tcl_Free(glfwTkInfoPtr);
+	    glfwMakeContextCurrent(glfwWindow);
+	    glfwSetWindowUserPointer(glfwWindow, NULL);
+	    nvgDeleteGLES3(infoPtr->context.vg);
+	    Tcl_Free(infoPtr);
 	    return;
 	}
-	prev = glfwTkInfoPtr;
-	glfwTkInfoPtr = glfwTkInfoPtr->nextPtr;
+	prev = infoPtr;
+	infoPtr = infoPtr->nextPtr;
     }
     Tcl_Panic("DestroyGlfwTkInfo received unknown window");
 }
@@ -116,11 +170,11 @@ static glfwTkInfo*
 getGlfwTkInfo(
     GLFWwindow *glfwWindow)
 {
-    for (glfwTkInfo* glfwTkInfoPtr = glfwTkInfoList;
-	 glfwTkInfoPtr != NULL;
-	 glfwTkInfoPtr = glfwTkInfoPtr->nextPtr) {
-	if (glfwTkInfoPtr->glfwWindow == glfwWindow) {
-	    return glfwTkInfoPtr;
+    for (glfwTkInfo* infoPtr = glfwTkInfoList;
+	 infoPtr != NULL;
+	 infoPtr = infoPtr->nextPtr) {
+	if (infoPtr->glfwWindow == glfwWindow) {
+	    return infoPtr;
 	}
     }
     Tcl_Panic("GetGlfwTkInfo received unknown window");
@@ -149,18 +203,41 @@ getGlfwTkInfo(
 static void renderFBO(
     GLFWwindow *glfwWindow)
 {
-    glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
-    NVGLUframebuffer *fbo = glfwInfoPtr->winPtr->privatePtr->fbo;
-    int fbWidth, fbHeight;
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!infoPtr) {
+	printf("renderFBO: No UserPointer\n");
+	return;
+    } 
+    NVGLUframebuffer *fbo = infoPtr->winPtr->privatePtr->fbo;
+    int fbWidth, fbHeight, glWidth, glHeight;
     glfwMakeContextCurrent(glfwWindow);
+    /*
+     * This is a workaround for strange Wayland behavior.  The framebuffer
+     * size reported by GLFW is the same as the window size but sometimes it
+     * is different from the actual framebuffer size provided by Wayland.
+     * We can query EGL to get the actual size.
+     */
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    EGLDisplay egl_disp = glfwGetEGLDisplay();
+    EGLSurface egl_surf = glfwGetEGLSurface(glfwWindow);
+    eglQuerySurface(egl_disp, egl_surf, EGL_WIDTH, &glWidth);
+    eglQuerySurface(egl_disp, egl_surf, EGL_HEIGHT, &glHeight);
+    /*
+     * If the sizes differ we will need to redraw the window later
+     * because the blit will rescale, causing artifacts.  Using the
+     * actual size for the target makes things the right size,
+     * but blurry.
+     */
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-		      0, 0, fbWidth, fbHeight,
+		      0, 0, glWidth, glHeight,
 		      GL_COLOR_BUFFER_BIT,
 		      GL_NEAREST);
     glfwSwapBuffers(glfwWindow);
+    if (glWidth != fbWidth || glHeight != fbHeight) {
+	TkWaylandQueueExposeEvent(infoPtr->winPtr, 0, 0, fbWidth, fbHeight);	
+    }
 }
 
 /*
@@ -210,6 +287,7 @@ Tk_ClipDrawableToRect(
        // I don't know why.
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
+    //// Check for NULL
     if (width == -1 || height == -1) {
 	printf("Finished double buffer section\n");
 	renderFBO(glfwWindow);
@@ -260,20 +338,6 @@ TkWaylandDisplayAllWindows()
 /*
  *----------------------------------------------------------------------
  *
- * Accessors
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE TkGlfwContext*
-TkGlfwGetContext(void)
-{
-    return &glfwContext;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkGlfwErrorCallback --
  *
  *	GLFW error callback that prints errors to stderr.
@@ -303,15 +367,16 @@ TkGlfwErrorCallback(int error, const char *desc)
  *
  * TkGlfwInitialize --
  *
- *	Initialize the GLFW library, create a shared context window,
- *	initialize Wayland protocols, and create the global NanoVG context.
+ *	Initializes the GLFW library, and the Wayland protocols.
+ *      Creates a GFLWWindow to be used for the root window and its
+ *      NanoVG context.
  *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Initializes GLFW, creates a hidden shared GL context window,
- *	and creates the global NanoVG context.
+ *	Initializes GLFW, creates a GFLWwindow for the root,
+ *	and its NanoVG context.
  *
  *----------------------------------------------------------------------
  */
@@ -354,19 +419,28 @@ TkGlfwInitialize(void)
         return TCL_ERROR;
     }
 
+    /* Load fonts used in window decorations. */
+    sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+	 &sans_size);
+    bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+	 &bold_size);
+    mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+	 &mono_size);
+
     /*
      * A positive swap interval causes glfwSwapBuffers to wait for
-     * the end of a display cycle before swapping the buffers,
-     * and that causes artifacts when resizing windows.
+     * the end of a display cycle before swapping the buffers.
      */
     glfwMakeContextCurrent(mainGlfwWindow);
     glfwSwapInterval(1);
 
+#if 0
+    ////////////////////////////    
     /* Create one NanoVG context which is shared by all toplevels.  */
-    glfwContext.vg = nvgCreateGLES3(NVG_ANTIALIAS
+    mainGlfwContext.vg = nvgCreateGLES3(NVG_ANTIALIAS
 				  | NVG_STENCIL_STROKES
 				  | NVG_DEBUG);
-    if (!glfwContext.vg) {
+    if (!mainGlfwContext.vg) {
         fprintf(stderr, "TkGlfwInitialize: nvgCreateGLES3() failed\n");
         glfwDestroyWindow(mainGlfwWindow);
         mainGlfwWindow = NULL;
@@ -374,14 +448,15 @@ TkGlfwInitialize(void)
         return TCL_ERROR;
     }
 
-    /* Load core fonts for decoration text rendering. */
-    nvgCreateFont(glfwContext.vg, "sans",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
-    nvgCreateFont(glfwContext.vg, "sans-bold",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
-    nvgCreateFont(glfwContext.vg, "mono",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf");
-
+    nvgCreateFontMem(mainGlfwContext.vg, "sans", sans_data,
+		     (int)sans_size, 0);    
+    nvgCreateFontMem(mainGlfwContext.vg, "sans-bold", bold_data,
+		     (int)bold_size, 0);    
+    nvgCreateFontMem(mainGlfwContext.vg, "mono", mono_data,
+		     (int)mono_size, 0);    
+    ////////////////////////////
+#endif
+    
     GlfwIsInitialized = 1;
     shutdownInProgress = 0;
 
@@ -419,15 +494,16 @@ TkGlfwShutdown(TCL_UNUSED(void *))
     }
     
     /* Delete NanoVG while a context still exists. */
-    if (glfwContext.vg) {
+#if 0
+    if (mainGlfwContext.vg) {
         /* Make the GL context of the root current if it still exists. */
         if (mainGlfwWindow) {
             glfwMakeContextCurrent(mainGlfwWindow);
-            nvgDeleteGLES3(glfwContext.vg);
+            nvgDeleteGLES3(mainGlfwContext.vg);
         }
-        glfwContext.vg = NULL;
+        mainGlfwContext.vg = NULL;
     }
-
+#endif
     glfwMakeContextCurrent(NULL);
     TkGlfwClearCallbacks(mainGlfwWindow);
     glfwSetErrorCallback(NULL);
@@ -436,7 +512,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
         glfwTerminate();
         GlfwIsInitialized = 0;
     }
-
+    freeFonts();
     TkWaylandKeyCleanup();
     shutdownInProgress = 0;
 }
@@ -454,7 +530,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *	Returns the GLFWwindow pointer on success, NULL on failure.
  *
  * Side effects:
- *	Creates a new GLFW window, adds it to the window mapping list.
+ *	Creates a new GLFW window and its associated GlfwTkInfo.
  *
  *----------------------------------------------------------------------
  */
@@ -477,14 +553,12 @@ TkGlfwCreateWindow(
     if (shutdownInProgress) return NULL;
 
     if (!GlfwIsInitialized) {
-	printf("****************************** TkGlfwCreateWindow called before TkGlfwInitialize !\n");
         if (TkGlfwInitialize() != TCL_OK)
             return NULL;
     }
 
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
-
     if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
 	/* This is the root window. */
         glfwWindow = mainGlfwWindow;
@@ -507,21 +581,37 @@ TkGlfwCreateWindow(
 	glfwMakeContextCurrent(glfwWindow);
 	glfwSwapInterval(0);
 	glfwShowWindow(glfwWindow);
+	glfwSwapBuffers(glfwWindow);
     }
+    glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
+    printf("nvgContext for %s is at %p\n", Tk_PathName(winPtr),
+	   infoPtr);
+    if (glfwWindow == mainGlfwWindow) {
+	mainGlfwContext = infoPtr->context;
+    }
+    glfwSetWindowUserPointer(glfwWindow, infoPtr);
+    TkGlfwSetupCallbacks(glfwWindow);
+    winPtr->privatePtr->glfwWindow = glfwWindow;
+    winPtr->changes.width  = width;
+    winPtr->changes.height = height;
 
     /* Set the initial pixel ratio for this window. */
     int fbWidth, fbHeight;
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    winPtr->privatePtr->pixelRatio = ((float) fbWidth) / ((float) width);
+    float xscale, yscale;
+    glfwGetWindowContentScale(glfwWindow, &xscale, &yscale);
+    winPtr->privatePtr->pixelRatio = xscale;
+    printf("Initial pixel ratio for %s is %f\n",
+	   Tk_PathName(winPtr), winPtr->privatePtr->pixelRatio);
     
     /* Create a framebuffer for the backing store of the window. */
     glfwMakeContextCurrent(glfwWindow);
-    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(glfwContext.vg,
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight); 
+    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(infoPtr->context.vg,
 						     fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fbo == NULL) {
 		fprintf(stderr, "Could not create NanoVG framebuffer\n");
     }
-    printf("Window %s now has glfwWindow %p and framebuffer %p\n",
+    printf("Window %s has glfwWindow %p and framebuffer %p\n",
 	   Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fbo);
     nvgluBindFramebuffer(winPtr->privatePtr->fbo);
     /* Check FBO completeness for now. */
@@ -532,16 +622,7 @@ TkGlfwCreateWindow(
 	printf("Window %s has a complete framebuffer @ %p\n",
 	       Tk_PathName(winPtr), winPtr->privatePtr->fbo);
     }
-
-    if (winPtr != NULL) {
-	glfwSetWindowUserPointer(glfwWindow,
-	    (void *) createGlfwTkInfo(glfwWindow, winPtr));
-        TkGlfwSetupCallbacks(glfwWindow);
-	winPtr->privatePtr->glfwWindow = glfwWindow;
-        winPtr->changes.width  = width;
-        winPtr->changes.height = height;
-    }
-
+    
     if (drawableOut) {
 	*drawableOut = TkWaylandDrawableForTkWindow(winPtr);
     }
@@ -570,6 +651,7 @@ TkGlfwCreateWindow(
 MODULE_SCOPE void
 TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 {
+    printf("TkGflwDestroyWindow\n");
     if (!glfwWindow) {
 	return;
     }
@@ -609,7 +691,7 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    //// This is the case where the drawable is a window.
+    //// This is only the case where the drawable is a window.
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
@@ -624,23 +706,32 @@ TkGlfwBeginDraw(
      * the child are given by x and y.
      */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
-    int fbWidth, fbHeight;
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
     /* Set up the nanoVG drawing context for this nvgFrame */
-    dcPtr->vg = glfwContext.vg;
+    dcPtr->vg = infoPtr->context.vg;
     dcPtr->drawable = drawable;
 
-    /* Start a NanoVG frame for drawing on the backing store. */
-    nvgBeginFrame(glfwContext.vg, (float)fbWidth, (float)fbHeight,
+    /*
+     * Start a NanoVG frame for drawing on the backing store.
+     * The width and height here should be the window dimensions,
+     * not the framebuffer dimensions.
+     */
+
+    printf("BeginFrame for %s with size %dx%d and pixel ratio %f\n",
+	   Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr),
+	   winPtr->privatePtr->pixelRatio);
+
+    nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr),
 		  winPtr->privatePtr->pixelRatio);
 
     /*
-     * Import our graphics context and translate to the position
+     * Import our graphics context and translate to the origin
      * of the window we are drawing into.
      */
     
     TkGlfwApplyGC(dcPtr->vg, gc);
+    printf("translating to (%f,%f)\n", x, y);
     nvgTranslate(dcPtr->vg, x, y);
     return TCL_OK;
     }
@@ -680,27 +771,33 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
      * nvgEndFrame.  The drawing commands have just been queued.  Now they
-     * actually get executed.
+     * actually get executed.  I think the viewport size should be the same as
+     * the framebuffer size and the FBO size (the latter equality being
+     * enforced in the FramebufferSizeCallback. But that size may be a
+     * multiple of the window size, and the multiplier should be the pixel
+     * ratio.
      */
 
-    /* Make our GL context current. */
+#if 1
+    /* Make our GL context current and set the viewport. */
     glfwMakeContextCurrent(glfwWindow);
-
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
     /* Bind our backing store framebuffer. */
     nvgluBindFramebuffer(toplevelPtr->privatePtr->fbo);
+
+    printf("BeginDraw: set viewport to %dx%d\n", fbWidth, fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
 
     /* Check FBO completeness (for now). */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         printf("FBO is incomplete (status=0x%x)\n", status);
     }
-
-    /* Set the viewport */
-    int fbwidth, fbheight;
-    glfwGetFramebufferSize(glfwWindow, &fbwidth, &fbheight);
-    glViewport(0, 0, fbwidth, fbheight);
-
-    printf("Drawing on %s\n", Tk_PathName(winPtr));
+    printf("EndFrame: drawing into %s with viewport %dx%d\n",
+	   Tk_PathName(winPtr), fbWidth, fbHeight);
+#endif
+    
     nvgEndFrame(dcPtr->vg);
     nvgluBindFramebuffer(NULL);
 
@@ -726,10 +823,11 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
  *
  * TkGlfwGetNVGContext --
  *
- *	Return the global NanoVG context.
+ *	Return the NanoVG context for a drawable.
  *
  * Results:
- *	The NVGcontext pointer, or NULL if not yet initialized.
+ *	The NVGcontext pointer, or NULL if shutting down.
+ *      
  *
  * Side effects:
  *	None.
@@ -737,11 +835,21 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcontext *
-TkGlfwGetNVGContext(void)
+MODULE_SCOPE NVGcontext*
+TkGlfwGetNVGContext(
+    Drawable drawable)
 {
-    return (GlfwIsInitialized && !shutdownInProgress) ?
-            glfwContext.vg : NULL;
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+	printf("Contexts not available for pixmaps yet.\n");
+	return NULL;
+    }
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!infoPtr || shutdownInProgress) {
+	printf("TkGlfwGetNVContext: No UserPointer\n");
+	return NULL;
+    }
+    return infoPtr->context.vg;
 }
 
 /*
@@ -756,7 +864,7 @@ TkGlfwGetNVGContext(void)
  *	Returns the NanoVG context or NULL on failure.
  *
  * Side effects:
- *	Makes the shared GL context current if no context is current.
+ *	Makes the GL context for the root window current.
  *
  *----------------------------------------------------------------------
  */
@@ -764,10 +872,10 @@ TkGlfwGetNVGContext(void)
 MODULE_SCOPE NVGcontext *
 TkGlfwGetNVGContextForMeasure(void)
 {
-    if (!GlfwIsInitialized || !glfwContext.vg || shutdownInProgress)
+    if (!GlfwIsInitialized || !mainGlfwContext.vg || shutdownInProgress)
         return NULL;
     glfwMakeContextCurrent(mainGlfwWindow);
-    return glfwContext.vg;
+    return mainGlfwContext.vg;
 }
 
 /*
@@ -1034,8 +1142,17 @@ TkWaylandGetGLFWwindowFromDrawable(Drawable drawable)
 MODULE_SCOPE TkWindow*
 TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
 {
-    glfwTkInfo *info = glfwGetWindowUserPointer(glfwWindow);
-    return info-> winPtr;
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!infoPtr) {
+	printf("TkGlfwGetTkWindow: No UserPointer.\n");
+	return NULL;
+    }
+    if (!infoPtr->winPtr) {
+	printf("TkGlfwGetTkWindow: No winPtr in User data.\n");
+	return NULL;
+    }
+    
+    return infoPtr->winPtr;
 }
 
 /*

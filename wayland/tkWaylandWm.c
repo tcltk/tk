@@ -3689,6 +3689,8 @@ UpdateGeometryInfo(
 	printf("glfwSetWindowSize %s -> %dx%d\n",
 	       Tk_PathName(winPtr), tw, th);
         glfwSetWindowSize(glfwWindow, tw, th);
+	glfwPollEvents();
+
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
 

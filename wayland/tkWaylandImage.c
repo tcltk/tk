@@ -131,7 +131,7 @@ _XInitImageFuncPtrs(
  *
  *----------------------------------------------------------------------
  */
-
+////// THIS ASSUMES THE DRAWABLE IS A WINDOW!!!!!
 static NVGImageData*
 CreateNVGImageFromDrawableRect(
     Drawable drawable,
@@ -153,7 +153,7 @@ CreateNVGImageFromDrawableRect(
     }
 
     /* Get NanoVG context. */
-    vg = TkGlfwGetNVGContext();
+    vg = TkGlfwGetNVGContext(drawable);
     if (!vg) {
         return NULL;
     }
@@ -276,6 +276,7 @@ XImage* TkWaylandCreateXImageWithNVGImage(
  *----------------------------------------------------------------------
  */
 
+//////////////// THIS ASSUMES THE DRAWABLE IS A WINDOW
 XImage*
 XGetImage(
     Display *display,
@@ -306,7 +307,7 @@ XGetImage(
     }
 
     /* Get NanoVG context. */
-    vg = TkGlfwGetNVGContext();
+    vg = TkGlfwGetNVGContext(drawable);
     if (!vg) {
         nvgDeleteImage(vg, nvgImg->id);
         if (nvgImg->pixels) ckfree(nvgImg->pixels);
@@ -402,7 +403,7 @@ XCopyArea_PixmapToWindow(
     NVGpaint imgPaint;
     int rc;
     unsigned char *pixels = NULL; 
-    NVGcontext *vg = TkGlfwGetNVGContext();
+    NVGcontext *vg = TkGlfwGetNVGContext(dst);
     if (!vg) {
 	return BadDrawable;
     }
@@ -472,7 +473,9 @@ XCopyArea_PixmapToWindow(
     
     return Success;
 }
-    
+
+/////// THIS WON'T WORK BECAUSE IT ASSUMES THE DST IS A WINDOW.
+
 static int
 XCopyArea_PixmapToPixmap(
     TkWaylandPixmap *srcPixmap,
@@ -486,7 +489,7 @@ XCopyArea_PixmapToPixmap(
     int nvgImage;
     NVGpaint imgPaint;
     unsigned char *pixels = NULL; 
-    NVGcontext *vg = TkGlfwGetNVGContext();
+    NVGcontext *vg = TkGlfwGetNVGContext(TkWaylandDrawableForPixmap(dstPixmap));
     if (!vg) {
 	return BadDrawable;
     }
