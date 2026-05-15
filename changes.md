@@ -34,4 +34,3 @@ necessarily in Tk 8.
  - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
  - [MS-Win: Eliminate the "xpnative" ttk style, in favor of "vista"](https://core.tcl-lang.org/tk/tktview/441c52)
  - [No longer allow negative screen distances in most cases](https://core.tcl-lang.org/tips/doc/trunk/tip/698.md)
- - [RTL/bidirectional text is a configure option on X11 (--enable-bidi). Additionally, there are some visual artifacts with bidi strings in the text widget in cursor and selection events on all platforms](https://core.tcl-lang.org/tk/tktview/cf94f5afd)
