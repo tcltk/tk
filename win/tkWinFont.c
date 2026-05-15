@@ -1825,6 +1825,7 @@ TkDrawAngledChars(
     TkWinReleaseDrawableDC(drawable, dc, &state);
 }
 
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1890,16 +1891,74 @@ Tk_DrawCharsInContext(
         wRangeEnd = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
         Tcl_DStringFree(&tmp);
     }
-
-    /* Shape the full string. */
+	
+    /* Emergency fallback rendering when Uniscribe shaping fails. */
     if (TkWinShapeString(dc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
-        /* Fallback. */
-        int widthUntilStart = 0;
-        Tcl_DStringFree(&uniStr);
-        TkWinReleaseDrawableDC(drawable, dc, &dcState);
+	HFONT hFontToUse = NULL;
+	HFONT oldFont = NULL;
+	BOOL   weCreatedFont = FALSE;
 
-       Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
-        return;
+	/* Prefer the original Tk font (this is what we want for menus etc.) */
+	if (fontPtr && fontPtr->numSubFonts > 0 && fontPtr->subFontArray) {
+	    hFontToUse = fontPtr->subFontArray[0].hFont0;
+	}
+
+	/* If that fails, create a fallback that matches the *requested* Tk font as closely as possible. */
+	if (hFontToUse == NULL && fontPtr) {
+	    /* Use the font description stored in the WinFont structure if available. */
+	    int ptSize = 9;   /* Reasonable default. */
+
+	    hFontToUse = CreateFont(
+				    -MulDiv(ptSize, GetDeviceCaps(dc, LOGPIXELSY), 72),
+				    0, 0, 0,
+				    (fontPtr->font.fa.weight == TK_FW_BOLD) ? FW_BOLD : FW_NORMAL,
+				    (fontPtr->font.fa.slant != TK_FS_ROMAN),   /* italic */
+				    FALSE, FALSE,
+				    DEFAULT_CHARSET,
+				    OUT_DEFAULT_PRECIS,
+				    CLIP_DEFAULT_PRECIS,
+				    DEFAULT_QUALITY,
+				    DEFAULT_PITCH | FF_DONTCARE,
+				    fontPtr->font.fa.family ? fontPtr->font.fa.family : TEXT("Segoe UI")
+				    );
+
+	    if (hFontToUse) {
+		weCreatedFont = TRUE;
+	    }
+	}
+
+	/* Absolute last resort. */
+	if (hFontToUse == NULL) {
+	    hFontToUse = GetStockObject(DEFAULT_GUI_FONT);
+	}
+
+	if (hFontToUse) {
+	    oldFont = (HFONT)SelectObject(dc, hFontToUse);
+	}
+
+	/* DC setup. */
+	SetROP2(dc, tkpWinRopModes[gc->function]);
+	if (gc->clip_mask != None && ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
+	    SelectClipRgn(dc, (HRGN)((TkpClipMask *)gc->clip_mask)->value.region);
+	}
+	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
+	SetTextColor(dc, gc->foreground);
+	SetBkMode(dc, TRANSPARENT);
+
+	TextOutW(dc, x, y, wstr, wlen);
+
+	if (oldFont) {
+	    SelectObject(dc, oldFont);
+	}
+
+	/* Cleanup only the font we created ourselves. */
+	if (weCreatedFont && hFontToUse) {
+	    DeleteObject(hFontToUse);
+	}
+
+	Tcl_DStringFree(&uniStr);
+	TkWinReleaseDrawableDC(drawable, dc, &dcState);
+	return;
     }
 
     /* DC setup. */
@@ -2013,6 +2072,7 @@ Tk_DrawCharsInContext(
     Tcl_DStringFree(&uniStr);
     TkWinReleaseDrawableDC(drawable, dc, &dcState);
 }
+
 
 void
 TkpDrawAngledCharsInContext(
@@ -2633,8 +2693,7 @@ FreeFontFamily(
     Tcl_Free(familyPtr);
 }
 
-/*
- *-------------------------------------------------------------------------
+/*-------------------------------------------------------------------------
  *
  * FindSubFontForChar --
  *
@@ -2665,14 +2724,34 @@ FindSubFontForChar(
     const char *fallbackName;
     SubFont *subFontPtr = NULL;
 
-    /* Fast path for already-loaded subfonts. */
-    if (ch > 0x7f) {
-        for (i = 0; i < fontPtr->numSubFonts; i++) {
-            if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
-                return &fontPtr->subFontArray[i];
-            }
+    /*
+     * Fast path: check already-loaded subfonts.
+     * 
+     * CRITICAL: Always check base font (subFontArray[0]) first,
+     * even for ASCII characters. The base font is the one the
+     * user actually requested (e.g., "times", "courier", "arial").
+     * 
+     * Fallbacks should ONLY be used when the base font genuinely
+     * cannot display the character. This ensures:
+     *   - "font actual {times 10} a" returns "times", not "Segoe UI Emoji"
+     *   - Menu strings are drawn in the correct font
+     *   - Basic font commands work as expected
+     */
+    for (i = 0; i < fontPtr->numSubFonts; i++) {
+        if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
+            return &fontPtr->subFontArray[i];
         }
     }
+
+    /*
+     * Character not found in any already-loaded subfont.
+     * Now search for appropriate fallback fonts.
+     * 
+     * For ASCII and common Latin characters, the base font should
+     * have already matched above. If we reach here with an ASCII
+     * character, something is wrong with the base font, so we still
+     * need to find a fallback.
+     */
 
     Tcl_DStringInit(&ds);
     hdc = GetDC(fontPtr->hwnd);
@@ -2760,6 +2839,7 @@ FindSubFontForChar(
     Tcl_DStringFree(&ds);
     return subFontPtr ? subFontPtr : &fontPtr->subFontArray[0];
 }
+
 
 static int CALLBACK
 WinFontCanUseProc(
