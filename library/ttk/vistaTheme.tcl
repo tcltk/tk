@@ -205,7 +205,7 @@ namespace eval ttk::theme::vista {
 	    -focussolid 1 -focusthickness 0 -padding 0
 	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview -background SystemWindow \
-	    -stripedbackground System3dLight -indent 15p
+	    -stripedbackground SystemInactiveBorder -indent 15p
 	ttk::style configure Treeview.Separator \
 	    -background System3dLight
     }

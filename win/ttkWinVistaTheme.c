@@ -971,8 +971,21 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec =
 /*----------------------------------------------------------------------
  * +++ Tree Row element.
  *
- * Used row, item, and cell drawing.
+ * Used for row, item, and cell drawing.
  */
+ 
+typedef struct {
+    Tcl_Obj *backgroundObj;
+    Tcl_Obj *rowNumberObj;
+} RowElement;
+
+static const Ttk_ElementOptionSpec RowElementOptions[] = {
+    { "-background", TK_OPTION_COLOR,
+	offsetof(RowElement,backgroundObj), DEFAULT_BACKGROUND },
+    { "-rownumber", TK_OPTION_INT,
+	offsetof(RowElement,rowNumberObj), "0" },
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+};
 
 static void RowElementDraw(
     void *clientData,
@@ -1011,7 +1024,7 @@ static void RowElementDraw(
 
     /* Draw row background */
     if ((state & 0xff) != TTK_STATE_ALTERNATE) {
-	/* Drawing operations are always scaled to fit, but not exceed rect */
+	/* Use theme color based on stateId */
 	DrawThemeBackground(
 	    elementData->hTheme,	/* Theme data handle */
 	    elementData->hDC,		/* HDC to draw into */
@@ -1020,8 +1033,14 @@ static void RowElementDraw(
 	    &rc,			/* Space to fill */
 	    NULL);			/* Optional clipping rect */
     } else {
-	/* Override background color for stripes */
-	FillRect(elementData->hDC, (const RECT *)&rc, (HBRUSH) (COLOR_3DFACE+1));
+	/* Override background color for stripes and tags */
+	Display *disp = Tk_Display(tkwin);
+	RowElement *row = (RowElement *)elementRecord;
+	XColor *color = Tk_GetColorFromObj(tkwin, row->backgroundObj);
+	COLORREF hcolor = RGB(color->red >> 8, color->green >> 8, color->blue >> 8);
+	HBRUSH brush = CreateSolidBrush(hcolor);
+	FillRect(elementData->hDC, (const RECT *)&rc, brush);
+	DeleteObject(brush);
     }
 
     FreeElementData(elementData);
@@ -1030,8 +1049,8 @@ static void RowElementDraw(
 static const Ttk_ElementSpec RowElementSpec =
 {
     TK_STYLE_VERSION_2,
-    sizeof(NullElement),
-    TtkNullElementOptions,
+    sizeof(RowElement),
+    RowElementOptions,
     GenericElementSize,
     RowElementDraw
 };

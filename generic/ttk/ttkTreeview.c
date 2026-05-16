@@ -2127,11 +2127,6 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item) {
     } else {
 	state &= ~TTK_STATE_BACKGROUND;
     }
-
-    /* If striped, set alternate state */
-    if (tv->tree.striped && item->visiblePos % 2) {
-	state |= TTK_STATE_USER1;
-    }
     return state;
 }
 
@@ -2237,14 +2232,19 @@ static void DrawSeparators(Treeview *tv, Drawable d) {
  *	Fill in a displayItem record.
  */
 static void PrepareItem(
-    Treeview *tv, TreeItem *item, DisplayItem *displayItem, Ttk_State state) {
+    Treeview *tv, TreeItem *item, DisplayItem *displayItem, Ttk_State *state) {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
+    Tcl_Obj *colorObj;
 
     Ttk_TagSetDefaults(tv->tree.tagTable, style, displayItem);
+    colorObj = displayItem->backgroundObj;
     OverrideStriped(tv, item, displayItem);
     Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
     OverrideStriped(tv, item, displayItem);
-    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
+    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, *state, displayItem);
+    if (displayItem->backgroundObj != colorObj) {
+	*state |= TTK_STATE_USER1;
+    }
 }
 
 /* Fill in data from item to temporary storage in columns. */
@@ -2398,7 +2398,7 @@ static void DrawCells(
 static void DrawItem(
     Treeview *tv, TreeItem *item, Drawable d, int depth) {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
-    Ttk_State state = ItemState(tv, item);
+    Ttk_State state = ItemState(tv, item), state1, state2;
     DisplayItem displayItem, displayItemSel, displayItemActive;
     int x, y, h, xTitle, dispRow, rowHeight;
     Ttk_Box rowBox;
@@ -2415,9 +2415,11 @@ static void DrawItem(
     xTitle = tv->tree.treeArea.x;
     y = tv->tree.treeArea.y + h;
 
-    PrepareItem(tv, item, &displayItem, state);
-    PrepareItem(tv, item, &displayItemSel, state | TTK_STATE_SELECTED);
-    PrepareItem(tv, item, &displayItemActive, state | TTK_STATE_ACTIVE);
+    PrepareItem(tv, item, &displayItem, &state);
+    state1 = state | TTK_STATE_SELECTED;
+    PrepareItem(tv, item, &displayItemSel, &state1);
+    state2 = state | TTK_STATE_ACTIVE;
+    PrepareItem(tv, item, &displayItemActive, &state2);
 
     /* Draw row background: */
     rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y, TreeWidth(tv), rowHeight);
@@ -3466,7 +3468,7 @@ static int TreeviewHorribleIdentify(
 	    Ttk_State state = ItemState(tv, item);
 
 	    BoundingBox(tv, item, NULL, &itemBox);
-	    PrepareItem(tv, item, &displayItem, state);
+	    PrepareItem(tv, item, &displayItem, &state);
 	    if (item->textObj) { displayItem.textObj = item->textObj; }
 	    if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
@@ -3598,7 +3600,7 @@ static int TreeviewIdentifyCommand(
 		return TCL_OK;
 	    }
 	    state = ItemState(tv, item);
-	    PrepareItem(tv, item, &displayItem, state);
+	    PrepareItem(tv, item, &displayItem, &state);
 	    if (item->textObj) { displayItem.textObj = item->textObj; }
 	    if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
