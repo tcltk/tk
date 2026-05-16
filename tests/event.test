@@ -1212,6 +1212,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
+
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root.
     Due to a malfunction on macOS Sequoia and older (see bug #c494cc25c4), this test is skipped on those OS versions.  It also fails sporadically on macOS CI runners.
 } -constraints {notMacosSequoiaOrOlder notMacCI} -setup {
