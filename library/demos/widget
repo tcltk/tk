@@ -121,7 +121,7 @@ proc images {arg} {
 
 images create
 set mainClass [winfo class .]
-foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
+foreach event {<<ThemeChanged>> <<LightAppearance>> <<DarkApperance>>} {
     bind $mainClass $event { images configure }
 }
 unset mainClass event

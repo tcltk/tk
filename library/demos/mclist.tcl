@@ -65,7 +65,7 @@ proc createArrowImages {} {
 }
 
 createArrowImages
-foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
+foreach event {<<ThemeChanged>> <<LightAppearance>> <<DarkAppearance>>} {
     bind MCList $event { createArrowImages }
 }
 unset event

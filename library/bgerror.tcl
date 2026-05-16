@@ -170,7 +170,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     wm protocol $dlg WM_DELETE_WINDOW [namespace code DeleteByProtocol]
 
     if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
+	wm attributes $dlg -style docmodal
     } elseif {$windowingsystem eq "x11"} {
 	wm attributes $dlg -type dialog
     }
