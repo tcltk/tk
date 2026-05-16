@@ -1302,9 +1302,9 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
 /*
  * Unsupported commands.
  */
-
+#if 0
 MODULE_SCOPE Tcl_ObjCmdProc2 TkUnsupported1ObjCmd;
-
+#endif
 /*
  * For Tktest.
  */

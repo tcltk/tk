@@ -392,6 +392,9 @@ declare 119 {
     int XUnionRectWithRegion(XRectangle *rect,
 	    Region src, Region dr_return)
 }
+declare 120 {
+    int TkpWindowIsDark(Tk_Window tkwin, bool *isdark)
+}
 declare 121 {
     Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
 }
