@@ -352,7 +352,7 @@ The following options may be set on each column:
 .TP
 \fB\-id \fIname\fR
 .
-The column name.  This is a read-only option.
+The column name. This is a read-only option.
 For example, [\fI$pathname \fBcolumn #\fIn \fB\-id\fR]
 returns the data column associated with display column \fIn\fR.
 The tree column has \fB\-id #0\fR.
@@ -372,13 +372,13 @@ See \fBTk_GetAnchor\fR for more information.
 The minimum width of the column in pixels.
 The treeview widget will not make the column any smaller than
 \fB\-minwidth\fR when the widget is resized or the user drags a
-heading column separator.  The default is 20 pixels.
+heading column separator. The default is 20 pixels.
 .\" OPTION: -separator
 .TP
 \fB\-separator \fIboolean\fR
 .
 Specifies whether or not a column separator should be drawn to the right
-of the column.  The default is false.
+of the column. The default is false.
 .\" OPTION: -stretch
 .TP
 \fB\-stretch \fIboolean\fR
@@ -391,7 +391,7 @@ By default columns are stretchable.
 .TP
 \fB\-width \fIwidth\fR
 .
-The width of the column in pixels.  The default is 200 pixels. The specified
+The width of the column in pixels. The default is 200 pixels. The specified
 column width may be changed by Tk in order to honor \fB\-stretch\fR
 and/or \fB\-minwidth\fR, or when the widget is resized or the user drags a
 heading column separator.
@@ -403,8 +403,8 @@ Use \fIpathname \fBcolumn #0\fR to configure the tree column.
 \fIpathname \fBcurrent\fR
 .
 Returns the current item id and column id, if any, or {} if none. The current
-item is the item under the mouse pointer. Use in \fB<Enter>\fR and \fB<Leave>\fR
-event handlers to get the item and column for the event.
+item is the item under the mouse pointer. It can be used in the \fB<Enter>\fR
+and \fB<Leave>\fR event handlers to get the item and column for the event.
 .\" METHOD: delete
 .TP
 \fIpathname \fBdelete \fIitemList\fR
@@ -1037,10 +1037,10 @@ bindings for the cell's \fB\-tags\fR are evaluated as well.
 .PP
 \fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events are sent to the focus item.
 The \fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events are sent
-to the item under the mouse pointer.
-The \fB<Enter>\fR and \fB<Leave>\fR events are sent to the item under the mouse
-pointer or the last item under the mouse pointer, respectively. They are used
-to detect when the mouse pointer enters or leaves a cell.
+to the current item under the mouse pointer.
+The \fB<Enter>\fR and \fB<Leave>\fR events are sent to the current item under
+the mouse pointer or the last item under the mouse pointer, respectively. They
+are used to detect when the mouse pointer enters or leaves a cell.
 No other event types are supported.
 .PP
 The binding \fIscript\fR undergoes \fB%\fR-substitutions before evaluation;
@@ -1331,7 +1331,7 @@ The \fB<<Copy>>\fR virtual event will copy the contents of the selected items or
 .PP
 The treeview widget generates the following virtual events.
 .IP \fB<<TreeviewSelect>>\fR
-Generated whenever the selection or cellselection changes. It may also be
+Generated whenever the selection or cell selection changes. It may also be
 generated when the selection is affected but not actually changed. Furthermore,
 multiple selection changes could happen before events can be processed leading
 to multiple events with the same visible selection. Use the \fBselection\fR or
@@ -1347,11 +1347,11 @@ just after setting the current item to \fB\-open false\fR. To get the
 current item, use the detail/user_data field (\fB%d\fR) in the binding script
 (see event \fB-detail\fR option) or the \fBcurrent\fR subcommand.
 .IP \fB<<TreeviewFocus>>\fR
-Triggered by any focus change and generated
-whenever the item focus or cell focus changes including when unset.
-To get the focus item, use the detail/user_data field (\fB%d\fR) in the binding
+Triggered when the focus item or cell changes including when unset. To get the
+focus item and column, use the detail/user_data field (\fB%d\fR) in the binding
 script (see event \fB-detail\fR option) or the use the \fBfocus\fR or
-\fBcellfocus\fR subcommands to get the current focus.
+\fBcellfocus\fR subcommands to get the current focus. The former can return
+either a 1 or 2 item list with just the focus item or both the item and column.
 .PP
 .SH "STANDARD STYLES"
 .PP
@@ -1377,7 +1377,8 @@ The treeview item class name is \fBItem\fR.
 The treeview cell class name is \fBCell\fR.
 .RE
 .PP
-Dynamic states: \fBdisabled\fR, \fBselected\fR.
+Dynamic states: \fBactive\fR, \fBbackground\fR, \fBdisabled\fR, \fBfocus\fR,
+and \fBselected\fR.
 .PP
 The \fBTreeview\fR styling options configurable with \fBttk::style\fR are:
 .RS
@@ -1513,10 +1514,12 @@ Specifies the additional padding to include between the focus ring and row conte
 The default is 0.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .PP
-Example of how to set focus ring options for a spreadsheet-style focus ring:
+Example of how to set focus options for a spreadsheet-style focus ring that is
+only shown when a cell has the focus:
 .PP
 .CS
-ttk::style configure Row -focuscolor #008000 -focussolid 1 -focusthickness 2
+ttk::style configure Row -focuscolor #008000 -focussolid 1 -focusthickness 0
+ttk::style map Row -focusthickness [list focus 2]
 .CE
 .RE
 .PP
@@ -1531,11 +1534,10 @@ Specifies the foreground color of the tree items. The default is same as Treevie
 .
 Specifies the additional padding to include around the indicator.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
-The default is "2 2 4 2".
 .TP
 \fB\-indicatorsize\fR \fIpixels\fR
 .
-Specifies the size of the indicator in pixels. The default is 3.5 points.
+Specifies the size of the indicator in pixels.
 .TP
 \fB\-padding\fR \fIamount\fR
 .
