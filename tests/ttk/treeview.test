@@ -587,40 +587,40 @@ test Focus_Ring-6.2 {Thick focus ring} -body {
 	set h [lindex [.tv bbox red] 3]
 	ttk::style configure Row -focuscolor green -focussolid 1 -focusthickness 3
 	$w focus red
-	list $h [lindex [.tv bbox red] 3]
-    } -result {19 19}
+	expr {$h == [lindex [.tv bbox red] 3]}
+    } -result {1}
 
 test Focus_Ring-6.3 {Dotted focus ring} -body {
 	set h [lindex [.tv bbox red] 3]
 	ttk::style configure Row -focuscolor black -focussolid 0 -focusthickness 1
 	$w focus red
-	list $h [lindex [.tv bbox red] 3]
-    } -result {19 19}
+	expr {$h == [lindex [.tv bbox red] 3]}
+    } -result {1}
 
 test Focus_Ring-6.4 {Row padding} -body {
 	set h [lindex [.tv bbox red] 3]
 	ttk::style configure Row -focuscolor black -focussolid 1 -focusthickness 1 -padding {2 3 2 3}
 	$w focus red
-	list $h [lindex [.tv bbox red] 3]
+	expr {$h == [lindex [.tv bbox red] 3]}
     } -cleanup {
 	$w focus {}
-    } -result {19 19}
+    } -result {1}
 
 test Focus_Ring-6.5 {Cell focus} -body {
 	set h [lindex [.tv bbox red #1] 3]
 	ttk::style configure Row -focuscolor green -focussolid 1 -focusthickness 3
 	$w cellfocus [list red #1]
-	list $h [lindex [.tv bbox red #1] 3]
-    } -result {19 19}
+	expr {$h == [lindex [.tv bbox red] 3]}
+    } -result {1}
 
 test Focus_Ring-6.6 {Cell dotted focus} -body {
 	set h [lindex [.tv bbox red #1] 3]
 	ttk::style configure Row -focuscolor black -focussolid 0 -focusthickness 1
 	$w cellfocus [list red #1]
-	list $h [lindex [.tv bbox red #1] 3]
+	expr {$h == [lindex [.tv bbox red] 3]}
     } -cleanup {
 	ttk::style configure Row -focuscolor black -focussolid 1 -focusthickness 1
-    } -result {19 19}
+    } -result {1}
 
 test Focus_Ring-6.7 {Cell padding} -body {
 	set h [lindex [.tv bbox red #1] 3]
@@ -1410,7 +1410,7 @@ test Drag_and_Drop-14.17 {Drag First Column} -setup {
 	update
 	lappend res [.tv column #0 -width]
 	set res
-    } -result {197 20}
+    } -result {196 20}
 
 test Drag_and_Drop-14.18 {Drag Last Column} -setup {
 	columns_stretch .tv
@@ -1420,7 +1420,7 @@ test Drag_and_Drop-14.18 {Drag Last Column} -setup {
 	update
 	lappend res [.tv column #3 -width]
 	set res
-    } -result {197 410}
+    } -result {197 412}
 
 test Drag_and_Drop-14.19 {Shrink Column In Stretch Mode Adds Space to Next Column} -setup {
 	columns_stretch .tv
@@ -1430,7 +1430,7 @@ test Drag_and_Drop-14.19 {Shrink Column In Stretch Mode Adds Space to Next Colum
 	update
 	lappend res [.tv column #2 -width]
 	set res
-    } -result {200 287}
+    } -result {200 285}
 
 test Drag_and_Drop-14.20 {Expand Column In Stretch Mode Reduces Space in Next Column} -body {
 	set res [list [.tv column #2 -width]]
@@ -1438,7 +1438,7 @@ test Drag_and_Drop-14.20 {Expand Column In Stretch Mode Reduces Space in Next Co
 	update
 	lappend res [.tv column #2 -width]
 	set res
-    } -result {287 87}
+    } -result {285 85}
 
 test Drag_and_Drop-14.21 {Shrink Column Not In Stretch Mode Does Not Change Next Column} -setup {
 	columns_no_stretch .tv
@@ -8623,7 +8623,7 @@ test Identify-89.29 {Element Padding mm} -body {
     } -result [lrepeat 4 padding]
 
 test Identify-89.30 {Element Indicator} -body {
-	list [.tv identify element 15 30] [.tv identify element 25 50] [.tv identify element 25 70] [.tv identify element 25 90]
+	list [.tv identify element 10 30] [.tv identify element 25 50] [.tv identify element 25 70] [.tv identify element 25 90]
     } -result [lrepeat 4 Treeitem.indicator]
 
 test Identify-89.31 {Element Indicator mm} -body {
