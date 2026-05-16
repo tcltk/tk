@@ -7515,6 +7515,35 @@ RemapWindows(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpWindowIsDark --
+ *
+ *      Tests whether the given window is in "dark mode"..
+ *      Assigns true if the window is in dark mode, false if not.
+ *
+ * Results:
+ *      Returns a standard Tcl result code.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpWindowIsDark(
+    TCL_UNUSED(Tk_Window),
+    bool *isdark)
+{
+    /*
+     * Always returns false for X11.
+     */
+    *isdark = false;
+    return TCL_OK;
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

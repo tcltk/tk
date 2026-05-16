@@ -831,7 +831,7 @@ proc ttk::toggleswitch::UpdateElements_aqua_macos26 {} {
 <svg width="30" height="20" version="1.1" xmlns="http://www.w3.org/2000/svg">
  <rect x="2" y="2" width="26" height="16" rx="8" }
 
-    set darkMode    [tk::unsupported::MacWindowStyle isdark .]
+    set darkMode    [winfo isdark .]
     set selectBg    [NormalizeColor systemSelectedContentBackgroundColor]
     set accentColor [NormalizeColor systemControlAccentColor]
 
@@ -972,7 +972,7 @@ proc ttk::toggleswitch::UpdateElements_aqua_macos15 {} {
 <svg width="22" height="22" version="1.1" xmlns="http://www.w3.org/2000/svg">
  <circle cx="11" cy="11" r="10" }
 
-    set darkMode [tk::unsupported::MacWindowStyle isdark .]
+    set darkMode [winfo isdark .]
     scan $::tcl_platform(osVersion) "%d" majorOSVersion
     if {$majorOSVersion >= 18} {			;# OS X 10.14 or later
 	set selectBg    systemSelectedContentBackgroundColor
