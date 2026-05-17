@@ -1102,7 +1102,7 @@ TkWmMapWindow(
  *	None.
  *
  * Side effects:
- *	Unmaps the window.
+ *	Unmaps the window. See XUnmapWindow() for more side effects.
  *
  *----------------------------------------------------------------------
  */

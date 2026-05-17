@@ -298,6 +298,10 @@ NotifyVisibility(
  * Side effects:
  *	The subwindow or toplevel may be removed from the screen.
  *
+ *	Invokes the callback windowActivation() upon execution of [orderOut]
+ *	if the unmapped window is the key window. The callback assigns a new
+ *	key window and orders it front
+ *
  *----------------------------------------------------------------------
  */
 
