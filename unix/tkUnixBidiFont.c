@@ -275,30 +275,47 @@ IsSimpleOnly(const char *str, int len)
         }
 
         /*
-         * Force scripts that need proper shaping / cursor handling through HarfBuzz:
-         * - All CJK (Chinese + Japanese)
-         * - Korean (already was)
-         * - Indic, Thai, Emoji, etc.
+         * FORCE through HarfBuzz + Bidi for scripts that need it:
          */
-        if ((uc >= 0x4E00 && uc <= 0x9FFF) ||           /* CJK Unified Ideographs (Chinese/Japanese). */
+        if (
+            /* Right-to-Left scripts. */
+            (uc >= 0x0590 && uc <= 0x05FF) ||           /* Hebrew */
+            (uc >= 0x0600 && uc <= 0x06FF) ||           /* Arabic */
+            (uc >= 0x0750 && uc <= 0x077F) ||           /* Arabic Supplement */
+            (uc >= 0xFB50 && uc <= 0xFDFF) ||           /* Arabic Presentation Forms */
+            (uc >= 0xFE70 && uc <= 0xFEFF) ||           /* Arabic Presentation Forms-B */
+            
+            /* Other RTL scripts */
+            (uc >= 0x0700 && uc <= 0x074F) ||           /* Syriac */
+            (uc >= 0x0780 && uc <= 0x07BF) ||           /* Thaana */
+            (uc >= 0x07C0 && uc <= 0x07FF) ||           /* N'Ko */
+            (uc >= 0x0800 && uc <= 0x083F) ||           /* Samaritan */
+            (uc >= 0x0840 && uc <= 0x085F) ||           /* Mandaic */
+
+            /* CJK and others. */
+            (uc >= 0x4E00 && uc <= 0x9FFF) ||           /* CJK Unified Ideographs */
             (uc >= 0xAC00 && uc <= 0xD7AF) ||           /* Hangul (Korean) */
             (uc >= 0x1100 && uc <= 0x11FF) ||           /* Jamo */
             (uc >= 0x0900 && uc <= 0x0DFF) ||           /* Indic */
             (uc >= 0x0E00 && uc <= 0x0E7F) ||           /* Thai */
             (uc >= 0x0E80 && uc <= 0x0EFF) ||           /* Lao */
-            (uc >= 0x1F000 && uc <= 0x1FAFF) ||         /* Extended emoji */
-            (uc >= 0x2600 && uc <= 0x27BF) ||           /* Misc symbols */
-            (uc >= 0x1F300 && uc <= 0x1F9FF) ||         /* More emoji */
-            uc > 0xFFFF) {                              /* Any supplementary plane */
-            return 0;
+
+            /* Emoji and supplementary. */
+            (uc >= 0x1F000 && uc <= 0x1FAFF) ||
+            (uc >= 0x2600 && uc <= 0x27BF) ||
+            (uc >= 0x1F300 && uc <= 0x1F9FF) ||
+            uc > 0xFFFF) {
+
+            return 0;   /* Use complex shaper. */
         }
 
         /*
-         * ALLOW safe scripts (Latin + CJK punctuation + Kana).
+         * Safe scripts that can use the fast path:
+         * Latin, CJK punctuation, Hiragana, Katakana.
          */
         int isSafe =
-            (uc <= 0x024F) ||                                 /* Latin */
-            (uc >= 0x3000 && uc <= 0x30FF);                   /* CJK punctuation + Hiragana/Katakana */
+            (uc <= 0x024F) ||                                 /* Latin + extended */
+            (uc >= 0x3000 && uc <= 0x30FF);                   /* CJK punct + Kana */
 
         if (!isSafe) {
             return 0;
