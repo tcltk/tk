@@ -49,7 +49,7 @@ set rtl_text {זהו טקסט לדוגמה בעברית שנועד לבדוק ת
     פסקה נוספת בעברית יכולה לסייע בבדיקת מעברי שורה מורכבים יותר. לעיתים מופיעות בעיות כאשר הסמן נע בין תווים או כאשר טקסט נמחק ונוסף מחדש. חשוב לבדוק גם תצוגה תחת גופנים שונים ובגדלים שונים כדי לוודא שהתנהגות המערכת נשארת עקבית.}
 
 $main.textFrame.txt insert end "2. Right-to-left (RTL) paragraph:\n"
-$main.textFrame.txt insert end $rtl_text\n
+$main.textFrame.txt insert end $rtl_text\n\n
 
 $main.textFrame.txt insert end \
 "3. Mixed bidirectional paragraph:\n\
