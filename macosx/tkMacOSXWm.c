@@ -815,8 +815,8 @@ FrontMostToplevelAtPoint(
     NSPoint p = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     for (NSWindow *w in [NSApp orderedWindows]) {
+	TKContentView *view = (TKContentView *) [w contentView];
 	if ([w isMemberOfClass:[TKWindow class]] && w.isVisible) {
-	    TKContentView *view = (TKContentView *) [w contentView];
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = windowFrame;
 
@@ -847,8 +847,6 @@ void TkMacOSXAssignNewKeyWindow(
     NSWindow *ignore)
 {
     TkWindow *winPtr;
-    BOOL isOnScreen;
-    WmInfo *wmPtr;
 
     /*
      * Avoid bug 5692042764: set tkEventTarget to NULL if there is no window to
@@ -856,7 +854,6 @@ void TkMacOSXAssignNewKeyWindow(
      */
 
     [NSApp setTkEventTarget: NULL];
-
     for (NSWindow *w in [NSApp orderedWindows]) {
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (!winPtr
@@ -867,10 +864,7 @@ void TkMacOSXAssignNewKeyWindow(
 	if (interp && interp != Tk_Interp((Tk_Window) winPtr)) {
 	    continue;
 	}
-	wmPtr = winPtr->wmInfoPtr;
-	isOnScreen = (wmPtr->hints.initial_state != IconicState &&
-		      wmPtr->hints.initial_state != WithdrawnState);
-	if (w != ignore && isOnScreen && [w canBecomeKeyWindow]) {
+	if (w != ignore && Tk_IsMapped(winPtr) && [w canBecomeKeyWindow]) {
 	    TKMenu *menu;
 	    [w makeKeyAndOrderFront:NSApp];
 	    /* Set the menubar for the new front window. */
@@ -1121,18 +1115,20 @@ TkWmUnmapWindow(
     if (!Tk_IsMapped(winPtr)) {
 	return;
     }
-    if ((winPtr->window != None)
-	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)) {
+
+    if (winPtr->window != None) {
 	winPtr->flags &= ~TK_MAPPED;
-	XEvent event;
-	event.xany.serial = LastKnownRequestProcessed(winPtr->display);
-	event.xany.send_event = False;
-	event.xany.display = winPtr->display;
-	event.xunmap.type = UnmapNotify;
-	event.xunmap.window = winPtr->window;
-	event.xunmap.event = winPtr->window;
-	event.xunmap.from_configure = false;
-	Tk_HandleEvent(&event);
+	if (XUnmapWindow(winPtr->display, winPtr->window) == Success) {
+	    XEvent event;
+	    event.xany.serial = LastKnownRequestProcessed(winPtr->display);
+	    event.xany.send_event = False;
+	    event.xany.display = winPtr->display;
+	    event.xunmap.type = UnmapNotify;
+	    event.xunmap.window = winPtr->window;
+	    event.xunmap.event = winPtr->window;
+	    event.xunmap.from_configure = false;
+	    Tk_HandleEvent(&event);
+	}
     }
 }
 
