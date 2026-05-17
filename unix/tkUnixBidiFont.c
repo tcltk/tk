@@ -247,11 +247,11 @@ static hb_font_t *GetHbFont(UnixFtFont *fontPtr, int faceIndex);
  * IsSimpleOnly --
  *
  *    Returns 1 if the string consists of codepoints that can be
- *    handled without shaping. This now includes Latin,
- *    CJK (Chinese, Japanese, Korean), and common Emoji ranges.
+ *    handled without shaping. This includes primarily Latin
+ *    and kana text from the CJK (Chinese, Japanese, Korean) ranges.
  *
- *    Note: Scripts requiring complex shaping (Arabic, Indic,
- *    Thai, etc.) return 0 to ensure HarfBuzz handling.
+ *    Note: All other scripts requiring complex shaping (Arabic, Indic,
+ *    Thai, CJK, etc.) return 0 to ensure HarfBuzz handling.
  * ---------------------------------------------------------------
  */
 
@@ -275,15 +275,13 @@ IsSimpleOnly(const char *str, int len)
         }
 
         /*
-         * EXCLUDE scripts that require complex shaping:
-         * 1. Korean Hangul - needs composition/decomposition
-         * 2. All Indic scripts - require contextual shaping
-         * 3. Thai/Lao - positional forms
-         * 4. ALL emoji - FcUtf8ToUcs4 cannot decode supplementary plane (U+10000+),
-         *    so emoji in U+1F300+ will be mangled. Force through HarfBuzz which
-         *    handles supplementary-plane characters correctly.
+         * Force scripts that need proper shaping / cursor handling through HarfBuzz:
+         * - All CJK (Chinese + Japanese)
+         * - Korean (already was)
+         * - Indic, Thai, Emoji, etc.
          */
-        if ((uc >= 0xAC00 && uc <= 0xD7AF) ||           /* Hangul */
+        if ((uc >= 0x4E00 && uc <= 0x9FFF) ||           /* CJK Unified Ideographs (Chinese/Japanese). */
+            (uc >= 0xAC00 && uc <= 0xD7AF) ||           /* Hangul (Korean) */
             (uc >= 0x1100 && uc <= 0x11FF) ||           /* Jamo */
             (uc >= 0x0900 && uc <= 0x0DFF) ||           /* Indic */
             (uc >= 0x0E00 && uc <= 0x0E7F) ||           /* Thai */
@@ -296,16 +294,11 @@ IsSimpleOnly(const char *str, int len)
         }
 
         /*
-         * ALLOW:
-         *   - Latin (<= U+024F)
-         *   - CJK punctuation (U+3000–U+303F)
-         *   - Hiragana/Katakana (U+3040–U+30FF)
-         *   - CJK Unified Ideographs (U+4E00–U+9FFF)
+         * ALLOW safe scripts (Latin + CJK punctuation + Kana).
          */
         int isSafe =
             (uc <= 0x024F) ||                                 /* Latin */
-            (uc >= 0x3000 && uc <= 0x30FF) ||                 /* JP punctuation + kana */
-            (uc >= 0x4E00 && uc <= 0x9FFF);                   /* CJK ideographs */
+            (uc >= 0x3000 && uc <= 0x30FF);                   /* CJK punctuation + Hiragana/Katakana */
 
         if (!isSafe) {
             return 0;
@@ -333,14 +326,30 @@ IsSimpleOnly(const char *str, int len)
 static int
 GetVisualXForByteOffset(const ShapedGlyphBuffer *buffer, int byteOffset)
 {
-    /* Find the leftmost visual position for this logical byte offset. */
-    int bestX = 0;
+    if (byteOffset <= 0 || buffer->indexCount == 0) {
+        return 0;
+    }
+
+    /* Primary lookup. */
     for (int i = 0; i < buffer->indexCount; i++) {
-        if (buffer->visualIndex[i].byteStart <= byteOffset &&
-            byteOffset < buffer->visualIndex[i].byteEnd) {
+        if (byteOffset >= buffer->visualIndex[i].byteStart &&
+            byteOffset <  buffer->visualIndex[i].byteEnd) {
             return buffer->visualIndex[i].x;
         }
-        if (buffer->visualIndex[i].x < bestX) bestX = buffer->visualIndex[i].x; /* Fallback. */
+    }
+
+    /* Fallback: nearest cluster (handles clicks between characters). */
+    int bestX = buffer->visualIndex[0].x;
+    int minDist = abs(byteOffset - buffer->visualIndex[0].byteStart);
+
+    for (int i = 1; i < buffer->indexCount; i++) {
+        int dist = abs(byteOffset - buffer->visualIndex[i].byteStart);
+        if (dist < minDist) {
+            minDist = dist;
+            bestX = buffer->visualIndex[i].x;
+        } else if (dist > minDist * 2) {
+            break;   /* Early exit - positions are sorted. */
+        }
     }
     return bestX;
 }
@@ -1272,21 +1281,35 @@ X11Shaper_ShapeString(
             i += clen; /* Advance pointer. */
         }
         buffer->totalAdvance = penX;
-
+	
         /* 
-         * For simple LTR text, the visual order matches the logical order.
-         * We populate visualIndex to keep the drawing logic consistent.
+         * Build visualIndex properly for CJK (Chinese/Japanese) + Latin.
+         * This is critical for correct cursor movement and selection.
          */
-        buffer->indexCount = buffer->glyphCount;
-        for (int v = 0; v < buffer->indexCount; v++) {
-            buffer->visualIndex[v].x = buffer->glyphs[v].x;
-            buffer->visualIndex[v].advanceX = buffer->glyphs[v].advanceX;
-            buffer->visualIndex[v].byteStart = buffer->glyphs[v].byteOffset;
-            buffer->visualIndex[v].byteEnd = buffer->glyphs[v].byteOffset + buffer->glyphs[v].clusterLen;
-            buffer->visualIndex[v].isRTL = 0;
-        }
+        buffer->indexCount = 0;
+        int prevByteOffset = -1;
 
-        return 1;
+        for (int i = 0; i < buffer->glyphCount && buffer->indexCount < MAX_GLYPHS; i++) {
+            int bo = buffer->glyphs[i].byteOffset;
+            
+            /* Skip duplicate glyphs for the same cluster (important for CJK). */
+            if (bo == prevByteOffset) {
+                if (buffer->indexCount > 0) {
+                    buffer->visualIndex[buffer->indexCount-1].advanceX += 
+                        buffer->glyphs[i].advanceX;
+                }
+                continue;
+            }
+
+            int v = buffer->indexCount++;
+            buffer->visualIndex[v].x         = buffer->glyphs[i].x;
+            buffer->visualIndex[v].advanceX  = buffer->glyphs[i].advanceX;
+            buffer->visualIndex[v].byteStart = bo;
+            buffer->visualIndex[v].byteEnd   = bo + buffer->glyphs[i].clusterLen;
+            buffer->visualIndex[v].isRTL     = 0;
+
+            prevByteOffset = bo;
+        }
     }
 
     /* 
@@ -1570,15 +1593,17 @@ X11Shaper_ShapeString(
 	}
     }
 
-    /* Cluster breaks. */
+    /* === Cluster breaks (safe version) === */
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
+
     char seen[1024] = {0};
     seen[0] = 1;
 
-    for (int i = 0; i < buffer->glyphCount && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS; i++) {
+    for (int i = 0; i < buffer->glyphCount && buffer->clusterBreakCount < MAX_CLUSTER_BREAKS-1; i++) {
         int pos = buffer->glyphs[i].byteOffset;
         int end = pos + buffer->glyphs[i].clusterLen;
+
         if (pos > 0 && pos < numBytes && !seen[pos]) {
             buffer->clusterBreaks[buffer->clusterBreakCount++] = pos;
             seen[pos] = 1;
@@ -1589,23 +1614,36 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Sort cluster breaks. */
-    for (int i = 0; i < buffer->clusterBreakCount - 1; i++) {
-        for (int j = i + 1; j < buffer->clusterBreakCount; j++) {
-            if (buffer->clusterBreaks[i] > buffer->clusterBreaks[j]) {
-                int tmp = buffer->clusterBreaks[i];
-                buffer->clusterBreaks[i] = buffer->clusterBreaks[j];
-                buffer->clusterBreaks[j] = tmp;
-            }
-        }
-    }
-
-    if (buffer->clusterBreaks[buffer->clusterBreakCount - 1] != numBytes) {
+    /* Ensure end of string is always present */
+    if (buffer->clusterBreaks[buffer->clusterBreakCount-1] != numBytes) {
         if (buffer->clusterBreakCount < MAX_CLUSTER_BREAKS) {
             buffer->clusterBreaks[buffer->clusterBreakCount++] = numBytes;
         }
     }
 
+    /* === CRITICAL: Remove the slow bubble sort and use insertion sort or just linear pass === */
+    /* Simple linear deduplicate + sort (much safer) */
+    int n = buffer->clusterBreakCount;
+    for (int i = 1; i < n; i++) {
+        int key = buffer->clusterBreaks[i];
+        int j = i - 1;
+        while (j >= 0 && buffer->clusterBreaks[j] > key) {
+            buffer->clusterBreaks[j+1] = buffer->clusterBreaks[j];
+            j--;
+        }
+        buffer->clusterBreaks[j+1] = key;
+    }
+
+    /* Final deduplication pass */
+    int write = 1;
+    for (int i = 1; i < n; i++) {
+        if (buffer->clusterBreaks[i] != buffer->clusterBreaks[write-1]) {
+            buffer->clusterBreaks[write++] = buffer->clusterBreaks[i];
+        }
+    }
+    buffer->clusterBreakCount = write;
+    
+    
     /* Cache result (round‑robin). */
     if (numBytes <= MAX_STRING_CACHE) {
         int slot = shaper->cacheNext;
