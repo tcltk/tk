@@ -281,7 +281,7 @@ IsSimpleOnly(const char *str, int len)
          * 3. Thai/Lao - positional forms
          * 4. ALL emoji - FcUtf8ToUcs4 cannot decode supplementary plane (U+10000+),
          *    so emoji in U+1F300+ will be mangled. Force through HarfBuzz which
-         *    handles UTF-8 surrogates correctly.
+         *    handles supplementary-plane characters correctly.
          */
         if ((uc >= 0xAC00 && uc <= 0xD7AF) ||           /* Hangul */
             (uc >= 0x1100 && uc <= 0x11FF) ||           /* Jamo */

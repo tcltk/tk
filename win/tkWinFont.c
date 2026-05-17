@@ -147,7 +147,7 @@ typedef struct WinFont {
 				 * staticSubFonts.  Each slot corresponds to
 				 * the SubFont at the same index and is passed
 				 * to ScriptShape/ScriptPlace so that Uniscribe
-				 * can amortise per-font analysis work across
+				 * can amortize per-font analysis work across
 				 * calls.  Must be zero-initialised; freed with
 				 * ScriptFreeCache() in ReleaseFont(). */
     SCRIPT_CACHE *scriptCacheArray;
