@@ -1621,8 +1621,7 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* === CRITICAL: Remove the slow bubble sort and use insertion sort or just linear pass === */
-    /* Simple linear deduplicate + sort (much safer) */
+    /* Simple linear deduplicate + sort. */
     int n = buffer->clusterBreakCount;
     for (int i = 1; i < n; i++) {
         int key = buffer->clusterBreaks[i];
@@ -1634,7 +1633,7 @@ X11Shaper_ShapeString(
         buffer->clusterBreaks[j+1] = key;
     }
 
-    /* Final deduplication pass */
+    /* Final deduplication pass. */
     int write = 1;
     for (int i = 1; i < n; i++) {
         if (buffer->clusterBreaks[i] != buffer->clusterBreaks[write-1]) {
