@@ -300,7 +300,7 @@ NotifyVisibility(
  *
  *	Invokes the callback windowActivation() upon execution of [orderOut]
  *	if the unmapped window is the key window. The callback assigns a new
- *	key window and orders it front
+ *	key window and orders it front.
  *
  *----------------------------------------------------------------------
  */
