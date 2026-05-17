@@ -4272,120 +4272,120 @@ test Before-42.28 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 
-# Between
+# Range
 
 
-test Between-43.1 {Create} -body {
+test Range-43.1 {Create} -body {
 	set w [create .tv]
     } -result {.tv}
 
-test Between-43.2 {Too few args} -body {
-	.tv between
-    } -result {wrong # args: should be ".tv between ?-hidden? ?-norecurse? first last"} -returnCodes {1}
+test Range-43.2 {Too few args} -body {
+	.tv range
+    } -result {wrong # args: should be ".tv range ?-hidden? ?-norecurse? first last"} -returnCodes {1}
 
-test Between-43.3 {Too many args} -body {
-	.tv between -hidden -norecurse -bogus first last
-    } -result {wrong # args: should be ".tv between ?-hidden? ?-norecurse? first last"} -returnCodes {1}
+test Range-43.3 {Too many args} -body {
+	.tv range -hidden -norecurse -bogus first last
+    } -result {wrong # args: should be ".tv range ?-hidden? ?-norecurse? first last"} -returnCodes {1}
 
-test Between-43.4 {Invalid option} -body {
-	.tv between -bogus red blue
+test Range-43.4 {Invalid option} -body {
+	.tv range -bogus red blue
     } -result {bad option "-bogus": must be -hidden, -nohidden, -recurse, -recursive, or -norecurse} -returnCodes {1}
 
-test Between-43.5 {Invalid from item} -body {
-	.tv between bogus red
+test Range-43.5 {Invalid from item} -body {
+	.tv range bogus red
     } -result {Item bogus not found} -returnCodes {1}
 
-test Between-43.6 {Invalid to item} -body {
-	.tv between red bogus
+test Range-43.6 {Invalid to item} -body {
+	.tv range red bogus
     } -result {Item bogus not found} -returnCodes {1}
 
-test Between-43.7 {Root item} -body {
-	.tv between {} red
+test Range-43.7 {Root item} -body {
+	.tv range {} red
     }
 
-test Between-43.8 {Root items} -body {
-	.tv between {} {}
+test Range-43.8 {Root items} -body {
+	.tv range {} {}
     }
 
-test Between-43.9 {Skip hidden} -setup {
+test Range-43.9 {Skip hidden} -setup {
 	.tv hide purple
     } -body {
-	.tv between red gray
+	.tv range red gray
     } -cleanup {
 	.tv unhide purple
     } -result {red pink maroon darkred magenta green chartreuse lime olive teal blue cyan turquoise mediumblue darkblue navy orange coral yellow gold brown wheat khaki black white beige gray}
 
-test Between-43.10 {Skip collapsed} -setup {
+test Range-43.10 {Skip collapsed} -setup {
 	.tv item blue -open 0
     } -body {
-	.tv between red gray
+	.tv range red gray
     } -cleanup {
 	.tv item blue -open 1
     } -result {red pink maroon darkred magenta green chartreuse lime olive teal blue orange coral yellow gold purple brown wheat khaki black white beige gray}
 
-test Between-43.11 {All children collapsed} -setup {
+test Range-43.11 {All children collapsed} -setup {
 	.tv collapse -recurse {}
     } -body {
-	.tv between red gray
+	.tv range red gray
     } -result {red green blue orange yellow purple brown black white gray}
 
-test Between-43.12 {Subset of children} -body {
-	.tv between blue black
+test Range-43.12 {Subset of children} -body {
+	.tv range blue black
     } -result {blue orange yellow purple brown black}
 
-test Between-43.13 {Subset of children reversed} -body {
-	.tv between white blue
+test Range-43.13 {Subset of children reversed} -body {
+	.tv range white blue
     } -result {white black brown purple yellow orange blue}
 
-test Between-43.14 {All children expanded} -setup {
+test Range-43.14 {All children expanded} -setup {
 	.tv expand {}
     } -body {
-	.tv between red gray
+	.tv range red gray
     } -result {red green blue orange yellow purple brown black white gray}
 
-test Between-43.15 {Multi-level} -setup {
+test Range-43.15 {Multi-level} -setup {
 	.tv expand -recurse {}
     } -body {
-	.tv between blue yellow
+	.tv range blue yellow
     } -result [concat blue [.tv children blue] orange [.tv children orange] yellow]
 
-test Between-43.16 {3 levels} -body {
-	.tv between red blue
+test Range-43.16 {3 levels} -body {
+	.tv range red blue
     } -result {red pink maroon darkred magenta green chartreuse lime olive teal blue}
 
-test Between-43.17 {Between Detached and Attached Item} -setup {
+test Range-43.17 {Between Detached and Attached Item} -setup {
 	.tv detach white
     } -body {
-	.tv between black gray
+	.tv range black gray
     } -result {black gray}
 
-test Between-43.18 {Root item} -body {
-	.tv between {} red
+test Range-43.18 {Root item} -body {
+	.tv range {} red
     }
 
-test Between-43.19 {Get items no recurse no hidden} -setup {
+test Range-43.19 {Get items no recurse no hidden} -setup {
 	.tv item orange -hidden 1
     } -body {
-	.tv between -norecurse blue yellow
+	.tv range -norecurse blue yellow
     } -result {blue yellow}
 
-test Between-43.20 {Get items include no recurse include hidden} -body {
-	.tv between -norecurse -hidden blue yellow
+test Range-43.20 {Get items include no recurse include hidden} -body {
+	.tv range -norecurse -hidden blue yellow
     } -result {blue orange yellow}
 
-test Between-43.21 {Get items with different parents and no recurse} -setup {
+test Range-43.21 {Get items with different parents and no recurse} -setup {
 	.tv unhide -recurse {}
     } -body {
-	.tv between -norecurse pink cyan
+	.tv range -norecurse pink cyan
     } -result {pink maroon darkred magenta}
 
-test Between-43.22 {Get items includes detached item} -setup {
+test Range-43.22 {Get items includes detached item} -setup {
 	.tv detach white
     } -body {
-	.tv between white gray
+	.tv range white gray
     }
 
-test Between-43.23 {Cleanup} -body {
+test Range-43.23 {Cleanup} -body {
 	destroy .tv .sx .sy
     }
 

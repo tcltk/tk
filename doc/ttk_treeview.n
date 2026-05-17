@@ -220,14 +220,6 @@ Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclu
 Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
 If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 The \fBprev\fR method is equivalent to "\fBbefore -hidden -norecurse\fR"
-.\" METHOD: between
-.TP
-\fIpathname \fBbetween\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIfirst last\fR
-.
-Returns a list of items from \fIfirst\fR through \fIlast\fR, inclusive.
-Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
-Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
-If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .\" METHOD: cellfocus
 .TP
 \fIpathname \fBcellfocus\fR ?\fIcell\fR?
@@ -642,6 +634,14 @@ or \fB{}\fR if \fIitem\fR is at the top level of the hierarchy.
 .
 Returns the identifier of \fIitem\fR's previous sibling,
 or \fB{}\fR if \fIitem\fR is the first child of its parent.
+.\" METHOD: range
+.TP
+\fIpathname \fBrange\fR ?\fB-hidden\fR? ?\fB-norecurse\fR? \fIfirst last\fR
+.
+Returns a list of items from \fIfirst\fR through \fIlast\fR, inclusive.
+Use \fB-hidden\fR to include hidden items and \fB-nohidden\fR (default) to exclude them.
+Use \fB-recurse\fR to include descendants/ancestors of \fIitem\fR (default) and \fB-norecurse\fR to exclude them.
+If both \fB-hidden\fR and \fB-recurse\fR are used, descendants of closed items will be included.
 .\" METHOD: search
 .TP
 \fIpathname \fBsearch \fIparent\fR ?\fI\-option ...\fR? \fIpattern\fR

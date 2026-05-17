@@ -3178,10 +3178,10 @@ Tcl_Obj *GetBetweenList(
     return resultObj;
 }
 
-/* + $tv between ?-opt ...? $from $to --
+/* + $tv range ?-opt ...? $from $to --
  *	Get list of items between from and to, inclusive
  */
-static int TreeviewBetweenCommand(
+static int TreeviewRangeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *from, *to;
@@ -7148,7 +7148,6 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "after",		TreeviewAfterCommand,0 },
     { "bbox",		TreeviewBBoxCommand,0 },
     { "before",		TreeviewBeforeCommand,0 },
-    { "between",	TreeviewBetweenCommand,0 },
     { "cellfocus",	TreeviewCellFocusCommand,0 },
     { "cellselection",	TreeviewCellSelectionCommand,0 },
     { "children",	TreeviewChildrenCommand,0 },
@@ -7180,7 +7179,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "next",		TreeviewNextCommand,0 },
     { "parent",		TreeviewParentCommand,0 },
     { "prev",		TreeviewPrevCommand,0 },
-    { "range",		TreeviewBetweenCommand,0 },
+    { "range",		TreeviewRangeCommand,0 },
     { "search",		TreeviewSearchCommand,0 },
     { "see",		TreeviewSeeCommand,0 },
     { "selection",	TreeviewSelectionCommand,0 },
