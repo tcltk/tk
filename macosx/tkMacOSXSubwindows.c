@@ -317,37 +317,9 @@ XUnmapWindow(
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
-	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
+		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    [win setExcludedFromWindowsMenu:YES];
 	    [win orderOut:NSApp];
-	    if ([win isKeyWindow]) {
-
-		/*
-		 * If we are unmapping the key window then we need to make sure
-		 * that a new key window is assigned, if possible.  This is
-		 * supposed to happen when a key window is ordered out, but as
-		 * noted in tkMacOSXWm.c this does not happen, in spite of
-		 * Apple's claims to the contrary.
-		 */
-
-		BOOL tkIsVisible;
-		for (NSWindow *w in [NSApp orderedWindows]) {
-		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
-		    WmInfo *wmInfoPtr;
-
-		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
-			continue;
-		    }
-		    wmInfoPtr = winPtr2->wmInfoPtr;
-		    tkIsVisible = (wmInfoPtr->hints.initial_state != IconicState &&
-				   wmInfoPtr->hints.initial_state != WithdrawnState);
-		    if (w != win && tkIsVisible && [w canBecomeKeyWindow]) {
-			[w makeKeyAndOrderFront:NSApp];
-			[NSApp setTkEventTarget:TkMacOSXGetTkWindow(win)];
-			break;
-		    }
-		}
-	    }
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
     } else {
