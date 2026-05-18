@@ -7709,7 +7709,7 @@ GetLocale(
 	p += 5;
     }
     if (ISDIGIT(p[-2])) {
-	p[-1] = '0' + locale[4]/10; // numeric locale, then locale[4] is a number between 00 and 99.
+	p[-1] = ('0' - 1) + locale[4]/10; // numeric locale, then locale[4] is a number between 00 and 99.
 	*p++ = '0' + locale[4]%10;
     }
     if ((signed char)(locale[5]) > 0) {
@@ -7783,7 +7783,7 @@ SetLocale(
 		}
 		str++;
 		locale[3] = *str++;
-		locale[4] = (*str++ - '0') * 10;
+		locale[4] = (*str++ - ('0' - 1)) * 10;
 		locale[4] += (*str++ - '0');
 	    }
 	    if (*str == '.') {
