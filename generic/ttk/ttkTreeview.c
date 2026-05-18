@@ -7420,7 +7420,7 @@ static void TreeitemIndicatorDraw(
     Ttk_Padding padding;
     int size = 4;
     ArrowDirection direction =
-	(state & TTK_STATE_OPEN) ? CHEVRON_DOWN : CHEVRON_RIGHT;
+	    (state & TTK_STATE_OPEN) ? CHEVRON_DOWN : CHEVRON_RIGHT;
     XColor *strokeColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     Tk_Image img;
     int imgWidth, imgHeight;
@@ -7438,13 +7438,8 @@ static void TreeitemIndicatorDraw(
 
     img = makeChevronImage(size, direction, strokeColor, tkwin);
     Tk_SizeOfImage(img, &imgWidth, &imgHeight);
-    if (direction == CHEVRON_DOWN) {
-	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
-		b.x, b.y + (b.height - imgHeight)/2);
-    } else {
-	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
-		b.x + (b.width - imgWidth)/2, b.y);
-    }
+    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
     Tk_FreeImage(img);
 }
 

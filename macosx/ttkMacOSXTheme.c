@@ -232,7 +232,7 @@ static GrayPalette LookupGrayPalette(
 static CGRect NormalizeButtonBounds(
     ThemeButtonParams *params,
     CGRect bounds,
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
     /* The following doesn't scale, so skip for now. */
     /*
@@ -3509,15 +3509,33 @@ static void DisclosureElementDraw(
 	    rgba[0] = rgba[1] = rgba[2] = 0.6;
 	}
 
-	BEGIN_DRAWING(d)
-	if (state & TTK_STATE_OPEN) {
-	    DrawOpenDisclosure(dc.context, bounds, 2, bounds.size.height*0.5,
-		rgba);
+	if ([NSApp macOSVersion] >= 110000) {
+	    ArrowDirection direction =
+		(state & TTK_STATE_OPEN) ? CHEVRON_DOWN : CHEVRON_RIGHT;
+	    XColor strokeColor;
+	    Tk_Image img;
+	    int imgWidth, imgHeight;
+
+	    strokeColor.red   = (unsigned short)round(rgba[0] * 65535.0);
+	    strokeColor.green = (unsigned short)round(rgba[1] * 65535.0);
+	    strokeColor.blue  = (unsigned short)round(rgba[2] * 65535.0);
+
+	    img = makeChevronImage(4, direction, &strokeColor, tkwin);
+	    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+	    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+		 b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
+	    Tk_FreeImage(img);
 	} else {
-	    DrawClosedDisclosure(dc.context, bounds, 3, bounds.size.height*0.75,
-		rgba);
+	    BEGIN_DRAWING(d)
+	    if (state & TTK_STATE_OPEN) {
+		DrawOpenDisclosure(dc.context, bounds, 2,
+		    bounds.size.height*0.5, rgba);
+	    } else {
+		DrawClosedDisclosure(dc.context, bounds, 3,
+		    bounds.size.height*0.75, rgba);
+	    }
+	    END_DRAWING
 	}
-	END_DRAWING
     }
 }
 
