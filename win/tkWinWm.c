@@ -3031,7 +3031,7 @@ WmAttributesCmd(
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
 		" ?-alpha ?double??"
-		" ?-appearance ?light|dark??"
+		" ?-appearance ?auto|light|dark??"
 		" ?-transparentcolor ?color??"
 		" ?-disabled ?bool??"
 		" ?-fullscreen ?bool??"

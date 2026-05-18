@@ -74,9 +74,8 @@ remains at \fB1.0\fR.
 .
 Specifies whether the window is rendered in "dark mode" on Windows or
 macOS; on linux this command has no effect.  Allowed values are
-\fBauto\fR, \fBlight\fR and \fBdark\fR.  On macOS, if the setting is
-\fBauto\fR then the appearance of the window is controlled by the
-System Settings.  On Windows \fBauto\fR is equivalent to \fBlight\fR.
+\fBauto\fR, \fBlight\fR and \fBdark\fR.  If the setting is \fBauto\fR then the
+appearance of the window is controlled by the System Settings.
 .\" OPTION: -fullscreen
 .TP
 \fB\-fullscreen\fR
