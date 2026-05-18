@@ -106,7 +106,7 @@ startEndOfCmd(
     }
     locale[0] = '\0';
     if (objc > 3) {
-	if (TkObjIsEmpty(objv[3])) {
+	if (strncasecmp(Tcl_GetString(objv[3]), "TCL8", 5) == 0) {
 	    if (compatFunctions[flags]) {
 		Tcl_Obj *args[3];
 		args[0] = Tcl_NewStringObj(compatFunctions[flags], -1);

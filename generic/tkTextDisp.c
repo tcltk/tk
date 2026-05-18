@@ -7752,6 +7752,10 @@ SetLocale(
 	    } else if (!strncasecmp(str, "POSIX", 6)) {
 		locale[1] = 0;
 		goto localeC; // 'POSIX' is an alias for 'C'
+	    } else if (!strncasecmp(str, "TCL8", 5)) {
+		locale[2] = 'l';
+		locale[3] = '8';
+		goto localeComplete;
 	    } else {
 		goto wrongLocale;	
 	    }
@@ -7822,6 +7826,7 @@ SetLocale(
 			locale[5] = 10; /* Ploc */
 		}
 	}
+    localeComplete:
 	*value = GetLocale(NULL, NULL, locale, 0);
     }
 
