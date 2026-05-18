@@ -288,7 +288,7 @@ typedef struct TkWmInfo {
  *				AUTO=0,DARK=1: dark mode
  *				AUTO=1,DARK=1: undefined, may not happen
  *				Note: auto mode means that the system decides.
- * WM_APPEARANCE_PENDING	Set when an AppearanceIdleProc call is pending, 
+ * WM_APPEARANCE_PENDING	Set when an AppearanceIdleProc call is pending,
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -398,7 +398,7 @@ enum AttributeAppearances {
  * Forward declarations for functions defined in this file:
  */
 
-static bool             AppsShouldUseLightTheme();
+static bool		AppsShouldUseLightTheme();
 static inline const char *	AppearanceStringGet(int flags);
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);
@@ -3304,7 +3304,7 @@ WmAttributesCmd(
 		    "APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	
+
 	/*
 	 * Translate the appearance mode to isDark 0/1 value.  The AUTO
 	 * appearance uses the AppsUseLightTheme registry variable.
@@ -3316,7 +3316,7 @@ WmAttributesCmd(
 	    isDark = (long long) ((appearanceAttrValue == APPEARANCE_DARK) ?
 				  1 : 0);
 	};
-	
+
 	/*
 	 * The following will fail if the Window is not physically visible.
 	 * In Tcl the command line:
@@ -3330,7 +3330,7 @@ WmAttributesCmd(
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
 		&isDark,
 		sizeof(isDark));
-	if (status == 0x80070006L) {
+	if (status == (long)0x80070006L) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"too early to set appearance attribute for \"%s\"",
 		 winPtr->pathName));
@@ -3340,13 +3340,13 @@ WmAttributesCmd(
 	}
 	if (status != S_OK){
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't set appearance attribute for \"%s\": status %x",
+		"can't set appearance attribute for \"%s\": status %lx",
 		winPtr->pathName, status));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
 		"APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	
+
 	/*
 	 * On success, set the mode value
 	 */
@@ -8020,27 +8020,27 @@ bool AppsShouldUseLightTheme() {
     LPCWSTR valueName = L"AppsUseLightTheme";
 
     lResult = RegOpenKeyExW(
-        HKEY_CURRENT_USER,  // Root hive for the active user
-        subKey,             // Subkey path
-        0,                  // Reserved, must be 0
-        KEY_READ,           // Security access mask
-        &hKey               // Out handle to the open key
+	HKEY_CURRENT_USER,  // Root hive for the active user
+	subKey,	     // Subkey path
+	0,                  // Reserved, must be 0
+	KEY_READ,           // Security access mask
+	&hKey               // Out handle to the open key
     );
 
     if (lResult != ERROR_SUCCESS) {
-        return 1;
+	return 1;
     }
 
     DWORD dwValue = 0;
     DWORD dwSize = sizeof(DWORD);
 
     lResult = RegQueryValueExW(
-        hKey, 
-        valueName, 
-        NULL, 
-        NULL, 
-        (LPBYTE)&dwValue, 
-        &dwSize
+	hKey,
+	valueName,
+	NULL,
+	NULL,
+	(LPBYTE)&dwValue,
+	&dwSize
     );
     RegCloseKey(hKey);
     if (lResult == ERROR_SUCCESS) {
@@ -9000,10 +9000,10 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     long long answer = 0; /* Windows cares about the alignment. */
 
     result = DwmGetWindowAttribute(
-        GetAncestor(hwnd, GA_ROOT),
-        DWMWA_USE_IMMERSIVE_DARK_MODE,
+	GetAncestor(hwnd, GA_ROOT),
+	DWMWA_USE_IMMERSIVE_DARK_MODE,
 	&answer,
-        sizeof(answer));
+	sizeof(answer));
     if (result != S_OK) { /* Maybe we should have used the old value? */
 	result = DwmGetWindowAttribute(
 	    GetAncestor(hwnd, GA_ROOT),

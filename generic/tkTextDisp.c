@@ -7757,7 +7757,7 @@ SetLocale(
 		locale[3] = '8';
 		goto localeComplete;
 	    } else {
-		goto wrongLocale;	
+		goto wrongLocale;
 	    }
 	    // Parse second part, after the first '_';
 	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2])
