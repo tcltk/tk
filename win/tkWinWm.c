@@ -288,7 +288,7 @@ typedef struct TkWmInfo {
  *				AUTO=0,DARK=1: dark mode
  *				AUTO=1,DARK=1: undefined, may not happen
  *				Note: auto mode means that the system decides.
- * WM_APPEARANCE_PENDING	Set when an AppearanceIdleProc call is pending, 
+ * WM_APPEARANCE_PENDING	Set when an AppearanceIdleProc call is pending,
  */
 
 #define WM_NEVER_MAPPED			(1<<0)
@@ -3304,7 +3304,7 @@ WmAttributesCmd(
 		    "APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	
+
 	/*
 	 * Translate the appearance mode to isDark 0/1 value.  The AUTO
 	 * appearance uses the AppsUseLightTheme registry variable.
@@ -3316,7 +3316,7 @@ WmAttributesCmd(
 	    isDark = (long long) ((appearanceAttrValue == APPEARANCE_DARK) ?
 				  1 : 0);
 	};
-	
+
 	/*
 	 * The following will fail if the Window is not physically visible.
 	 * In Tcl the command line:
@@ -3330,7 +3330,7 @@ WmAttributesCmd(
 		DWMWA_USE_IMMERSIVE_DARK_MODE,
 		&isDark,
 		sizeof(isDark));
-	if (status == 0x80070006L) {
+	if (status == (long)0x80070006L) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"too early to set appearance attribute for \"%s\"",
 		 winPtr->pathName));
@@ -3340,13 +3340,13 @@ WmAttributesCmd(
 	}
 	if (status != S_OK){
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't set appearance attribute for \"%s\": status %x",
+		"can't set appearance attribute for \"%s\": status %lx",
 		winPtr->pathName, status));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ATTR",
 		"APPEARANCE", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	
+
 	/*
 	 * On success, set the mode value
 	 */
@@ -8035,11 +8035,11 @@ bool AppsShouldUseLightTheme() {
     DWORD dwSize = sizeof(DWORD);
 
     lResult = RegQueryValueExW(
-        hKey, 
-        valueName, 
-        NULL, 
-        NULL, 
-        (LPBYTE)&dwValue, 
+        hKey,
+        valueName,
+        NULL,
+        NULL,
+        (LPBYTE)&dwValue,
         &dwSize
     );
     RegCloseKey(hKey);
@@ -8058,7 +8058,7 @@ static void AppearanceIdleProc(
 	wmPtr->flags &= ~WM_APPEARANCE_PENDING;
     }
     SynchronizeAppearance((TkWindow *)winPtr);
-}    
+}
 
 static int SynchronizeAppearance(
     TkWindow *winPtr)
