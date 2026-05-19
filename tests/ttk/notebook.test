@@ -621,6 +621,30 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
     destroy .n
 } -result {Managed window index "3" out of bounds} -returnCodes error
 
+# Rotated tabs
+
+test notebook-9.1 {rotated labels take more space} -setup {
+    # Measure height with horizontal tabs
+    destroy .nb
+    ttk::notebook .nb -width 200 -height 100 -padding 0
+    ttk::frame .nb.f1
+    .nb add .nb.f1 -text "One"
+    set height [winfo reqheight .nb]
+} -body {
+    destroy .nb
+    ttk::notebook .nb -padding 0
+    ttk::frame .nb.f1
+    ttk::frame .nb.f2
+    .nb add .nb.f1 -text "One"
+    .nb add .nb.f2 -text "Two"
+    pack .nb
+    update
+    set heightHorizontal [winfo height .nb]
+    ttk::style configure TNotebook.Tab -textangle 90
+    update
+    expr {[winfo height .nb] > $heightHorizontal}
+} -result 1
+
 #
 # TESTFILE CLEANUP
 #
