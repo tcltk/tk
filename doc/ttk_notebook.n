@@ -333,6 +333,8 @@ to do this is to invoke the library procedure \fBttk::configureNotebookStyle\fP
 with the style name as argument, after setting the style's \fB\-tabposition\fP
 option.
 .RE
+\fB\-textangle\fP \fIAngle\fP
+.br
 .PP
 Some options are only available for specific themes.
 .PP
