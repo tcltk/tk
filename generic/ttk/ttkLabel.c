@@ -84,7 +84,15 @@ static int TextSetup(TextElement *text, Tk_Window tkwin)
     Tk_GetJustifyFromObj(NULL, text->justifyObj, &justify);
     Tk_GetPixelsFromObj(NULL, tkwin, text->wrapLengthObj, &wrapLength);
     Tcl_GetBooleanFromObj(NULL, text->embossedObj, &text->embossed);
-    Tcl_GetDoubleFromObj(NULL, text->angleObj, &text->angle);
+    if (TCL_OK != Tcl_GetDoubleFromObj(NULL, text->angleObj, &text->angle)) {
+
+	/*
+	 * Default value (empty string and invalid value (like "A")
+	 * Example: ttk::style configure TNotebook.Tab -textangle ""
+	 */
+
+	text->angle = 0;
+    }
     text->xoffset = 0.0;
     text->yoffset = 0.0;
 

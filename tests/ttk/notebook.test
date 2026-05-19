@@ -572,16 +572,19 @@ test notebook-1343984-2 "don't autoselect on destroy" -body {
 
 test notebook-198376af5a {moving tab position to a different edge} -body {
     destroy .nb
-    ttk::notebook .nb -width 200 -height 100 -padding 0
+    ttk::style configure M.TNotebook
+    ttk::notebook .nb -width 200 -height 100 -padding 0 -style M.TNotebook
     ttk::frame .nb.f1
     ttk::frame .nb.f2
     .nb add .nb.f1 -text "One"
     .nb add .nb.f2 -text "Two"
     pack .nb
     update
-    ttk::style configure TNotebook -tabposition s
+    ttk::style configure M.TNotebook -tabposition s
     update
     expr {[winfo y .nb.f1] < 10}
+} -cleanup {
+    ttk::style configure M.TNotebook -tabposition ""
 } -result 1
 
 test notebook-8.1 "style command" -body {
@@ -623,26 +626,54 @@ test notebook-9.2 "move first tab to last position by numerical index" -body {
 
 # Rotated tabs
 
-test notebook-9.1 {rotated labels take more space} -setup {
-    # Measure height with horizontal tabs
+test notebook-9.1 {rotated labels take more space} -body {
     destroy .nb
-    ttk::notebook .nb -width 200 -height 100 -padding 0
+    ttk::style configure M.TNotebook
+    ttk::notebook .nb -style M.TNotebook
     ttk::frame .nb.f1
     .nb add .nb.f1 -text "One"
-    set height [winfo reqheight .nb]
-} -body {
-    destroy .nb
-    ttk::notebook .nb -padding 0
-    ttk::frame .nb.f1
-    ttk::frame .nb.f2
-    .nb add .nb.f1 -text "One"
-    .nb add .nb.f2 -text "Two"
     pack .nb
     update
     set heightHorizontal [winfo height .nb]
-    ttk::style configure TNotebook.Tab -textangle 90
+    ttk::style configure M.TNotebook.Tab -textangle 90
     update
     expr {[winfo height .nb] > $heightHorizontal}
+} -cleanup {
+    ttk::style configure M.TNotebook.Tab -textangle ""
+} -result 1
+
+test notebook-9.2 {rotated labels default value is 0} -body {
+    destroy .nb
+    ttk::style configure M.TNotebook
+    ttk::notebook .nb -style M.TNotebook
+    ttk::frame .nb.f1
+    .nb add .nb.f1 -text "One"
+    pack .nb
+    update
+    set heightHorizontal [winfo height .nb]
+    ttk::style configure M.TNotebook.Tab -textangle 90
+    update
+    ttk::style configure M.TNotebook.Tab -textangle ""
+    update
+    expr {[winfo height .nb] == $heightHorizontal}
+} -result 1
+
+test notebook-9.3 {rotated labels invalid value is 0} -body {
+    destroy .nb
+    ttk::style configure M.TNotebook
+    ttk::notebook .nb -style M.TNotebook
+    ttk::frame .nb.f1
+    .nb add .nb.f1 -text "One"
+    pack .nb
+    update
+    set heightHorizontal [winfo height .nb]
+    ttk::style configure M.TNotebook.Tab -textangle 90
+    update
+    ttk::style configure M.TNotebook.Tab -textangle "A"
+    update
+    expr {[winfo height .nb] == $heightHorizontal}
+} -cleanup {
+    ttk::style configure M.TNotebook.Tab -textangle ""
 } -result 1
 
 #
