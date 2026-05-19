@@ -611,17 +611,18 @@ TkGlfwFramebufferSizeCallback(
     int height)
 {
     recordCallback();
-    printf("TkGlfwFramebufferSizeCallback ");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    printf("TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
+    float pixelRatio = winPtr->privatePtr->pixelRatio;
+    
     if (!winPtr) {
 	printf("No Tk window!\n");
 	return;
     }
     glfwTkInfo *info = glfwGetWindowUserPointer(window);
     NVGcontext *vg = info->context.vg;
-    //NVGcontext *vg = TkGlfwGetNVGContext();
     if (vg == NULL) {
-	printf("============================ NoContext!\n");
+	printf("============================ No Context!\n");
 	return;
     }
     glfwMakeContextCurrent(window);
@@ -642,11 +643,13 @@ TkGlfwFramebufferSizeCallback(
     } else {
 	printf("FBO is complete.\n");
     }
-    winPtr->changes.width = width;
-    winPtr->changes.height = height;
+    winPtr->changes.width = (int) (((float) width) / pixelRatio);
+    winPtr->changes.height = (int) (((float) height) / pixelRatio);
 
     // Reconfigure the Tk window.
     TkDoConfigureNotify(winPtr);
+    glfwMakeContextCurrent(NULL);
+    glFlush();
 #if 0
     //// it looks like we can leave this to the refresh callback.
     printf("TkGlFramebufferSizeCallback Expose\n");
