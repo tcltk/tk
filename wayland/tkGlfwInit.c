@@ -50,7 +50,7 @@ static int GlfwIsInitialized = 0;
  * The glfwWindow for the root window.
  */
 
-static GLFWwindow *mainGlfwWindow;
+GLFWwindow *mainGlfwWindow;
 static TkGlfwContext mainGlfwContext = {0};
 static int shutdownInProgress = 0;
 
@@ -470,30 +470,7 @@ TkGlfwInitialize(void)
      * the end of a display cycle before swapping the buffers.
      */
     glfwMakeContextCurrent(mainGlfwWindow);
-    glfwSwapInterval(1);
-
-#if 0
-    ////////////////////////////    
-    /* Create one NanoVG context which is shared by all toplevels.  */
-    mainGlfwContext.vg = nvgCreateGLES3(NVG_ANTIALIAS
-				  | NVG_STENCIL_STROKES
-				  | NVG_DEBUG);
-    if (!mainGlfwContext.vg) {
-        fprintf(stderr, "TkGlfwInitialize: nvgCreateGLES3() failed\n");
-        glfwDestroyWindow(mainGlfwWindow);
-        mainGlfwWindow = NULL;
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-
-    nvgCreateFontMem(mainGlfwContext.vg, "sans", sans_data,
-		     (int)sans_size, 0);    
-    nvgCreateFontMem(mainGlfwContext.vg, "sans-bold", bold_data,
-		     (int)bold_size, 0);    
-    nvgCreateFontMem(mainGlfwContext.vg, "mono", mono_data,
-		     (int)mono_size, 0);    
-    ////////////////////////////
-#endif
+    glfwSwapInterval(0);
     
     GlfwIsInitialized = 1;
     shutdownInProgress = 0;

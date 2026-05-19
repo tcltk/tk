@@ -612,30 +612,57 @@ TkGlfwFramebufferSizeCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    printf("TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
-    float pixelRatio = winPtr->privatePtr->pixelRatio;
-    
     if (!winPtr) {
-	printf("No Tk window!\n");
+	printf("============================ No Tk window!\n");
 	return;
     }
-    glfwTkInfo *info = glfwGetWindowUserPointer(window);
-    NVGcontext *vg = info->context.vg;
+    printf("TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+
+    /*
+     * This is a workaround for a Wayland/Mesa bug. (see
+     * https://github.com/alacritty/alacritty/issues/6069 and
+     * https://github.com/servo/servo/issues/43050.)
+     *
+     * When this callback is called, GLFW has requested and been granted a new
+     * framebuffer of the given size from wayland, but the Mesa driver has not
+     * actually allocated it yet.  If the size change was requested by a
+     * geometry manager the window will be reconfigured and redrawn as soon as
+     * possible.  The drawing will be done assuming the new window size
+     * reported in the callback arguments, but the driver will still be using
+     * the old framebuffer.  This causes serious artifacts.  At the expense of
+     * creating minor artifacts, we can force the new framebuffer to be
+     * allocated by triggering an immediate display of the window using its
+     * old backing store framebuffer.  This is not needed when the window is
+     * being resized with the mouse.  The sizeChanged flag is used to
+     * distinguish the cases when the workaround is needed from those when it
+     * is not.
+     */
+
+    if (infoPtr->flags & sizeChanged) {
+	/* Mark this window as needing display and display all windows. */
+	infoPtr->flags |= needsDisplay;
+	TkWaylandDisplayAllWindows();
+	infoPtr->flags &= ~sizeChanged;
+    }
+
+    float pixelRatio = winPtr->privatePtr->pixelRatio;
+    
+    NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
 	printf("============================ No Context!\n");
 	return;
     }
-    glfwMakeContextCurrent(window);
-    printf("Callback setting viewport to %dx%d\n", width, height);
-    glViewport(0, 0, width, height);
 
     /* Rebuild the backing store FBO */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fbo);
     winPtr->privatePtr->fbo = nvgluCreateFramebuffer(vg, width, height, 0);
     printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fbo,
 	   Tk_PathName(winPtr), winPtr->privatePtr->fbo->fbo);
+
+#if 0
+    /* Check for FBO completeness. */
     nvgluBindFramebuffer(winPtr->privatePtr->fbo);
-    /* Check FBO completeness for now. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fbo,
@@ -643,19 +670,17 @@ TkGlfwFramebufferSizeCallback(
     } else {
 	printf("FBO is complete.\n");
     }
+#endif
+
+    /* Inform Tk about the size change, taking into account the
+     * window's current pixel ratio.
+     */
+    
     winPtr->changes.width = (int) (((float) width) / pixelRatio);
     winPtr->changes.height = (int) (((float) height) / pixelRatio);
 
-    // Reconfigure the Tk window.
+    /* Reconfigure the Tk window. */
     TkDoConfigureNotify(winPtr);
-    glfwMakeContextCurrent(NULL);
-    glFlush();
-#if 0
-    //// it looks like we can leave this to the refresh callback.
-    printf("TkGlFramebufferSizeCallback Expose\n");
-    TkWaylandQueueExposeEvent(winPtr,
-        0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
-#endif
 }
 
 /*

@@ -3655,6 +3655,7 @@ UpdateGeometryInfo(
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
     int       tw, th;
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
 
     if (wmPtr == NULL) {
 	printf("Cannot update geometry for a window with no WmInfo\n");
@@ -3689,20 +3690,18 @@ UpdateGeometryInfo(
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
 	printf("UpdateGeometryInfo: calling glfwSetWindowSize %s -> %dx%d\n",
 	       Tk_PathName(winPtr), tw, th);
-	glfwMakeContextCurrent(glfwWindow);
+	/* Notify the FramebufferSizeCallback to use our workaround. */
+	infoPtr->flags |= sizeChanged;
+	/* Ask GLFW to resize the window. */
         glfwSetWindowSize(glfwWindow, tw, th);
-	int fbw = 0, fbh = 0;
-	glfwGetFramebufferSize(glfwWindow, &fbw, &fbh);
-	printf("UpdateGeometryInfo: Framebuffer now %dx%d\n", fbw, fbh);
-	
-	//glfwPollEvents();
 
+	/* Update the window. */
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
-
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
     }
+#if 0
     /* Apply position change if needed, although this does nothing. */
     if ((wmPtr->flags & WM_MOVE_PENDING) ||
         wmPtr->x != winPtr->changes.x ||
@@ -3710,6 +3709,7 @@ UpdateGeometryInfo(
         glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
         wmPtr->flags &= ~WM_MOVE_PENDING;
     }
+#endif
 
 }
 

@@ -123,6 +123,7 @@ extern const char *const WmAttributeNames[];
 /* Flag values */
 #define needsDisplay 1
 #define dontSwap     2
+#define sizeChanged  4
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
