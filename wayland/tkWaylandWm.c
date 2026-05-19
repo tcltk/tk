@@ -2067,6 +2067,7 @@ WmGeometryCmd(
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Set size only if positive values were provided */
         if (wmPtr->width > 0 && wmPtr->height > 0) {
+	    printf("GeometryCmd setting window size\n");
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
 	// This doesn't actually do anything.
@@ -3634,7 +3635,7 @@ TopLevelReqProc(
  *
  * UpdateGeometryInfo --
  *
- *	Idle task to apply pending geometry changes.
+ *	Idle task to apply pending geometry changes for a toplevel.
  *
  * Results:
  *	None.
@@ -3686,10 +3687,15 @@ UpdateGeometryInfo(
 
     /* Apply size change if needed. */
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
-	printf("glfwSetWindowSize %s -> %dx%d\n",
+	printf("UpdateGeometryInfo: calling glfwSetWindowSize %s -> %dx%d\n",
 	       Tk_PathName(winPtr), tw, th);
+	glfwMakeContextCurrent(glfwWindow);
         glfwSetWindowSize(glfwWindow, tw, th);
-	glfwPollEvents();
+	int fbw = 0, fbh = 0;
+	glfwGetFramebufferSize(glfwWindow, &fbw, &fbh);
+	printf("UpdateGeometryInfo: Framebuffer now %dx%d\n", fbw, fbh);
+	
+	//glfwPollEvents();
 
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
@@ -4461,7 +4467,7 @@ XConfigureWindow(
         glfwSetWindowPos(gw, x, y);
     }
     if (resizeNeeded) {
-	printf("XConfigureWindow -> %dx%d\n", w, h);
+	printf("XConfigureWindow: calling glfwSetWindowSize -> %dx%d\n", w, h);
         glfwSetWindowSize(gw, w, h);
     }
 

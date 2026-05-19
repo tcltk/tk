@@ -54,6 +54,32 @@ static GLFWwindow *mainGlfwWindow;
 static TkGlfwContext mainGlfwContext = {0};
 static int shutdownInProgress = 0;
 
+#if 0
+static void GLtest(GLFWwindow *window) {
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetWindowSize(window, &fbWidth, &fbHeight);
+    glfwMakeContextCurrent(window);
+    glViewport(0, 0, fbWidth, fbHeight); // Your expected new size
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // Disable any potential state traps
+    glDisable(GL_SCISSOR_TEST); 
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
+
+    // Draw a solid color screen-filling triangle
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0f, 0.0f, 0.0f); // Bright Red
+    glVertex2f(-1.0f, -1.0f);    // Bottom-Left
+    glVertex2f( 3.0f, -1.0f);    // Far Bottom-Right (extends past screen)
+    glVertex2f(-1.0f,  3.0f);    // Far Top-Left (extends past screen)
+    glEnd();
+}
+#endif
+
 /*
  * Buffers for font files needed for window decorations.
  */
@@ -209,35 +235,46 @@ static void renderFBO(
 	return;
     } 
     NVGLUframebuffer *fbo = infoPtr->winPtr->privatePtr->fbo;
-    int fbWidth, fbHeight, glWidth, glHeight;
+    int fbWidth, fbHeight;
     glfwMakeContextCurrent(glfwWindow);
-    /*
-     * This is a workaround for strange Wayland behavior.  The framebuffer
-     * size reported by GLFW is the same as the window size but sometimes it
-     * is different from the actual framebuffer size provided by Wayland.
-     * We can query EGL to get the actual size.
-     */
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    EGLDisplay egl_disp = glfwGetEGLDisplay();
-    EGLSurface egl_surf = glfwGetEGLSurface(glfwWindow);
-    eglQuerySurface(egl_disp, egl_surf, EGL_WIDTH, &glWidth);
-    eglQuerySurface(egl_disp, egl_surf, EGL_HEIGHT, &glHeight);
+    /*
+     * This is an attempted workaround for some strange Wayland behavior.
+     * The framebuffer size reported by GLFW can be different from the actual
+     * framebuffer size provided by Wayland. This has been observed for the
+     * root toplevel when a second toplevel is on the screen and the root gets
+     * resized by a call to glfwSetWindowSize.  The behavior happens only for
+     * the root (which Wayland considers to be the "main" window by virtue of
+     * having been created first). We have to query GL directly to get the
+     * the actual size.
+     */
+     glBindFramebuffer(GL_FRAMEBUFFER, fbo->fbo);
+    //glViewport(0, 0, fbWidth, fbHeight);
+    GLint glRect[4] = {0};
+    glGetIntegerv(GL_VIEWPORT, glRect);
+    printf("GLFW size: %dx%d; GL size %dx%d\n",
+    fbWidth, fbHeight, glRect[2], glRect[3]);
+    glBindVertexArray(0);
+    
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
+		      0, 0, glRect[2], glRect[3],
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+    glfwSwapBuffers(glfwWindow);
     /*
      * If the sizes differ we will need to redraw the window later
      * because the blit will rescale, causing artifacts.  Using the
      * actual size for the target makes things the right size,
      * but blurry.
      */
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-		      0, 0, glWidth, glHeight,
-		      GL_COLOR_BUFFER_BIT,
-		      GL_NEAREST);
-    glfwSwapBuffers(glfwWindow);
-    if (glWidth != fbWidth || glHeight != fbHeight) {
+#if 1
+    if (glRect[2] != fbWidth || glRect[3] != fbHeight) {
+	printf("================================= Size mismatch\n");
 	TkWaylandQueueExposeEvent(infoPtr->winPtr, 0, 0, fbWidth, fbHeight);	
     }
+#endif
 }
 
 /*
@@ -406,6 +443,7 @@ TkGlfwInitialize(void)
 
     /* Hints apply to the next call to glfwCreateWindow. */
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+    //glfwWindowHint(GLFW_OPENGL_COMPAT_PROFILE, GLFW_TRUE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
@@ -574,7 +612,8 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
 	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
         glfwWindow = glfwCreateWindow(width, height, title ? title : "",
-                     NULL, mainGlfwWindow); /* Share the GL contexts */
+				      NULL, NULL);
+	//mainGlfwWindow); /* Share the GL contexts */
         if (!glfwWindow) {
 	    return NULL;
 	}
@@ -691,8 +730,9 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    //// This is only the case where the drawable is a window.
+    //// This is only for the case where the drawable is a window.
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
+    printf("BeginDraw for %s\n", Tk_PathName(childPtr));
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
     while (!Tk_IsTopLevel(winPtr)) {
@@ -708,17 +748,26 @@ TkGlfwBeginDraw(
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
+    ////
+    ////glfwMakeContextCurrent(glfwWindow);
+    ////int fbWidth = 0, fbHeight = 0;
+    ////glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    ////glViewport(0, 0, fbWidth, fbHeight);
+    
+    ////
+    
     /* Set up the nanoVG drawing context for this nvgFrame */
     dcPtr->vg = infoPtr->context.vg;
     dcPtr->drawable = drawable;
 
+    nvgResetTransform(dcPtr->vg);
     /*
      * Start a NanoVG frame for drawing on the backing store.
      * The width and height here should be the window dimensions,
      * not the framebuffer dimensions.
      */
 
-    printf("BeginFrame for %s with size %dx%d and pixel ratio %f\n",
+    printf("BeginFrame for toplevel %s with size %dx%d and pixel ratio %f\n",
 	   Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr),
 	   winPtr->privatePtr->pixelRatio);
 
@@ -761,12 +810,14 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 	return;
     }
     //// This is the case where the drawable is a window.
-    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
-    TkWindow *toplevelPtr = winPtr;
-    while (!Tk_IsTopLevel(toplevelPtr)) {
-	toplevelPtr = toplevelPtr->parentPtr;
+    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
+    printf("EndDraw for %s\n", Tk_PathName(childPtr));
+    TkWindow *winPtr = childPtr;
+    while (!Tk_IsTopLevel(winPtr)) {
+	winPtr = winPtr->parentPtr;
     }
-    GLFWwindow *glfwWindow = toplevelPtr->privatePtr->glfwWindow;
+    /* winPtr is the toplevel containing our drawable. */
+    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
 
     /*
      * All nvg drawing since the call to nvgBeginFrame happens when we call
@@ -778,15 +829,14 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
      * ratio.
      */
 
-#if 1
     /* Make our GL context current and set the viewport. */
     glfwMakeContextCurrent(glfwWindow);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
     /* Bind our backing store framebuffer. */
-    nvgluBindFramebuffer(toplevelPtr->privatePtr->fbo);
+    nvgluBindFramebuffer(winPtr->privatePtr->fbo);
 
-    printf("BeginDraw: set viewport to %dx%d\n", fbWidth, fbHeight);
+    printf("EndDraw: setting viewport to %dx%d\n", fbWidth, fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
     /* Check FBO completeness (for now). */
@@ -794,10 +844,9 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         printf("FBO is incomplete (status=0x%x)\n", status);
     }
-    printf("EndFrame: drawing into %s with viewport %dx%d\n",
-	   Tk_PathName(winPtr), fbWidth, fbHeight);
-#endif
-    
+    //GLtest(glfwWindow);
+    printf("EndFrame: drawing %s in toplevel %s with viewport %dx%d\n",
+	   Tk_PathName(childPtr), Tk_PathName(winPtr), fbWidth, fbHeight);
     nvgEndFrame(dcPtr->vg);
     nvgluBindFramebuffer(NULL);
 
