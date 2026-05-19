@@ -1117,7 +1117,6 @@ TkWmUnmapWindow(
     }
 
     if (winPtr->window != None) {
-	winPtr->flags &= ~TK_MAPPED;
 	if (XUnmapWindow(winPtr->display, winPtr->window) == Success) {
 	    XEvent event;
 	    event.xany.serial = LastKnownRequestProcessed(winPtr->display);
