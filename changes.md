@@ -29,6 +29,7 @@ necessarily in Tk 8.
  - [Make the selection colors of the listbox widget fully native-conform](https://core.tcl-lang.org/tips/doc/trunk/tip/747.md)
  - [Add support for bidrectional text / RTL languages on Windows and X11](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)
  - [Add Mouse Wheel Zoom Support to Tk Console](https://core.tcl-lang.org/tips/doc/trunk/tip/742.md)
+ - [ttk::treeview enhancements](https://core.tcl-lang.org/tips/doc/trunk/tip/751.md)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
