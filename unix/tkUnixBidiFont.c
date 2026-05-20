@@ -1610,7 +1610,7 @@ X11Shaper_ShapeString(
 	}
     }
 
-    /* === Cluster breaks (safe version) === */
+    /* Cluster breaks (safe version). */
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
 
