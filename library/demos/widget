@@ -359,6 +359,7 @@ addFormattedText {
     @@subtitle	Labels, buttons, checkbuttons, and radiobuttons
     @@demo label	Labels (text and bitmaps)
     @@demo unicodeout	Labels and UNICODE text
+	@@demo biditext BiDirectional (RTL) text
     @@demo button	Buttons
     @@demo check	Check-buttons (select any of a group)
     @@demo radio	Radio-buttons (select one of a group)
