@@ -36,6 +36,7 @@ to the userbase.
  - [macOS/aqua: <Map> events are generated for windows that are already mapped, and wish crashes](https://core.tcl-lang.org/tk/info/d4d89d13)
  - [Block cursor in text widget may hide the character underneath](https://core.tcl-lang.org/tk/info/556606)
  - [Flip ttk::notebook tab states "first" and "last" for "-tabplacement e*|s*"](https://core.tcl-lang.org/tk/info/011533)
+ - [tk image photo svg: nanosvg "Basic style sheets support" #284](https://core.tcl-lang.org/tk/info/c8c8b724)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
