@@ -2133,24 +2133,6 @@ TkpDrawAngledCharsInContext(
  *-------------------------------------------------------------------------
  */
 
-/*
- * ----------------------------------------------------------------------
- * MultiFontTextOut --
- *
- *   Render a UTF-8 string to a device context using Uniscribe shaping,
- *   supporting complex scripts, bidirectional text, and fallback fonts.
- *   If shaping fails, an emergency fallback uses plain TextOutW.
- *   Handles rotated text via per‑run angled fonts.
- *
- * Parameters:
- *   hdc       - Device context to draw into.
- *   fontPtr   - WinFont structure containing subfonts and Uniscribe caches.
- *   source    - UTF‑8 encoded input string.
- *   numBytes  - Length of source in bytes.
- *   x, y      - Baseline starting position (logical coordinates).
- *   angle     - Rotation angle in degrees (clockwise positive).
- * ----------------------------------------------------------------------
- */
 static void
 MultiFontTextOut(
     HDC hdc,
