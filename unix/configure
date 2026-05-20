@@ -8527,35 +8527,74 @@ printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
 	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
 
         #--------------------------------------------------------------------
-        # HarfBuzz - HARD DEPENDENCY when --enable-bidi=yes
+        # HarfBuzz - version check (minimum 2.8.2)
         #--------------------------------------------------------------------
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for HarfBuzz (required for --enable-bidi)" >&5
 printf %s "checking for HarfBuzz (required for --enable-bidi)... " >&6; }
         if pkg-config --exists harfbuzz; then
-            HB_CFLAGS=`pkg-config --cflags harfbuzz`
-            HB_LIBS=`pkg-config --libs harfbuzz`
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
+            HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: found version $HB_VERSION" >&5
+printf '%s\n' "found version $HB_VERSION" >&6; }
 
-            tk_oldCFlags=$CFLAGS
-            tk_oldLibs=$LIBS
-            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
-            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+            # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
+            if test -n "$HB_VERSION"; then
+                # Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
+                HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
+                HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
+                HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
 
-            ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "#include <X11/Xlib.h>
+                REQ_MAJOR=2
+                REQ_MINOR=8
+                REQ_PATCH=2
+
+                too_old=no
+                if test $HB_MAJOR -lt $REQ_MAJOR; then
+                    too_old=yes
+                elif test $HB_MAJOR -eq $REQ_MAJOR; then
+                    if test $HB_MINOR -lt $REQ_MINOR; then
+                        too_old=yes
+                    elif test $HB_MINOR -eq $REQ_MINOR; then
+                        if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
+                            too_old=yes
+                        fi
+                    fi
+                fi
+
+                if test "$too_old" = "yes"; then
+                    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&5
+printf '%s\n' "$as_me: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&2;}
+                    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling bidirectional text support (--disable-bidi)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling bidirectional text support (--disable-bidi)." >&2;}
+                    enable_bidi=no
+                else
+                    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&5
+printf '%s\n' "HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&6; }
+                fi
+            fi
+
+            if test "$enable_bidi" = "yes"; then
+                HB_CFLAGS=`pkg-config --cflags harfbuzz`
+                HB_LIBS=`pkg-config --libs harfbuzz`
+
+                tk_oldCFlags=$CFLAGS
+                tk_oldLibs=$LIBS
+                CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+                LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+
+                ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "#include <X11/Xlib.h>
 "
 if test "x$ac_cv_header_harfbuzz_hb_h" = xyes
 then :
 
 else case e in #(
   e)
-                as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
-             ;;
+                    as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
+                 ;;
 esac
 fi
 
 
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for hb_buffer_create in -lharfbuzz" >&5
+                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for hb_buffer_create in -lharfbuzz" >&5
 printf %s "checking for hb_buffer_create in -lharfbuzz... " >&6; }
 if test ${ac_cv_lib_harfbuzz_hb_buffer_create+y}
 then :
@@ -8606,19 +8645,22 @@ then :
 
 else case e in #(
   e)
-                as_fn_error $? "HarfBuzz library (libharfbuzz) not found or unusable" "$LINENO" 5
-             ;;
+                    as_fn_error $? "HarfBuzz library (libharfbuzz) not found or unusable" "$LINENO" 5
+                 ;;
 esac
 fi
 
 
-            CFLAGS=$tk_oldCFlags
-            LIBS=$tk_oldLibs
+                CFLAGS=$tk_oldCFlags
+                LIBS=$tk_oldLibs
 
-            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+                BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
 
 
+            fi
         else
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
             as_fn_error $? "--enable-bidi requires HarfBuzz development files.
 Please install the HarfBuzz development package:
   - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
@@ -8626,8 +8668,9 @@ Please install the HarfBuzz development package:
   - Arch:            sudo pacman -S harfbuzz
   - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
         fi
+    fi
 
-    else
+    if test "$enable_bidi" = "no"; then
 	# Bidi disabled
 	BIDI_CFLAGS=""
 	HB_CFLAGS=""
