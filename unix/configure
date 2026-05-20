@@ -8668,8 +8668,9 @@ Please install the HarfBuzz development package:
   - Arch:            sudo pacman -S harfbuzz
   - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
         fi
+    fi
 
-    else
+    if test "$enable_bidi" = "no"; then
 	# Bidi disabled
 	BIDI_CFLAGS=""
 	HB_CFLAGS=""

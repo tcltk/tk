@@ -454,8 +454,9 @@ Please install the HarfBuzz development package:
   - Arch:            sudo pacman -S harfbuzz
   - macOS (Homebrew): brew install harfbuzz])
         fi
+    fi
 
-    else
+    if test "$enable_bidi" = "no"; then
 	# Bidi disabled
 	BIDI_CFLAGS=""
 	HB_CFLAGS=""
