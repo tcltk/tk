@@ -295,7 +295,8 @@ proc ::tk::MessageBox {args} {
     }
 
     if {$windowingsystem eq "aqua"} {
-	wm attributes $w -style docmodal
+	update idletasks
+	wm attributes $w -stylemask docmodal
     } elseif {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
     }
