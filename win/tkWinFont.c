@@ -883,7 +883,7 @@ TkpGetFontAttrsForChar(
  *
  *---------------------------------------------------------------------------
  */
- 
+
 static void
 TkWinPreScanForSupplementaryPlanes(
     HDC hdc,
@@ -1227,14 +1227,14 @@ static int GetVisualXForLogicalIndex(
     int logicalIdx)
 {
     int i;
-    
+
     /*
      * Index 0 should always map to X=0, regardless of anchor or shaping.
      */
     if (logicalIdx == 0 && nRuns > 0) {
         return 0;
     }
-    
+
     logicalIdx = ClampIndex(logicalIdx, totalChars);
 
     for (i = 0; i < nRuns; i++) {
@@ -1264,10 +1264,10 @@ static int GetVisualXForLogicalIndex(
                  * ScriptCPtoX returns X from the logical start (visual right),
                  * so we flip it to get LTR distance from visual left.
                  */
-                ScriptCPtoX(local, TRUE, runs[i].charLen, runs[i].glyphCount, 
-                            runs[i].logClust, runs[i].visAttr, runs[i].advances, 
+                ScriptCPtoX(local, TRUE, runs[i].charLen, runs[i].glyphCount,
+                            runs[i].logClust, runs[i].visAttr, runs[i].advances,
                             &runs[i].sa, &x);
-                
+
                 /* Compute total run width */
                 int runWidth = 0;
                 for (int g = 0; g < runs[i].glyphCount; g++) {
@@ -1280,15 +1280,15 @@ static int GetVisualXForLogicalIndex(
                  * LTR run: Use the trailing flag we computed above.
                  * This gives proper character boundaries for click-to-index.
                  */
-                ScriptCPtoX(local, trailing, runs[i].charLen, runs[i].glyphCount, 
-                            runs[i].logClust, runs[i].visAttr, runs[i].advances, 
+                ScriptCPtoX(local, trailing, runs[i].charLen, runs[i].glyphCount,
+                            runs[i].logClust, runs[i].visAttr, runs[i].advances,
                             &runs[i].sa, &x);
             }
 
             return runOriginX[i] + x;
         }
     }
-    
+
     /* Beyond all runs: return total width. */
     if (nRuns > 0) return TkWinShapedRunsWidth(runs, nRuns);
     return 0;
@@ -1389,7 +1389,7 @@ Tk_MeasureCharsInContext(
     int flags,
     int *lengthPtr)
 {
-	
+
     WinFont *fontPtr = (WinFont *) tkfont;
     HDC hdc;
     Tcl_DString fullUni;
@@ -1452,12 +1452,12 @@ Tk_MeasureCharsInContext(
     {
         int *visualOrder = (int *)Tcl_Alloc(sizeof(int) * nRuns);
         BYTE *levels = (BYTE *)Tcl_Alloc(sizeof(BYTE) * nRuns);
-        
+
         /* Extract BiDi levels from each run. */
         for (int i = 0; i < nRuns; i++) {
             levels[i] = runs[i].sa.s.uBidiLevel;
         }
-        
+
         /* Get visual ordering. */
         HRESULT hr = ScriptLayout(nRuns, levels, visualOrder, NULL);
         if (FAILED(hr)) {
@@ -1467,7 +1467,7 @@ Tk_MeasureCharsInContext(
             }
         }
         Tcl_Free(levels);
-        
+
         /* Compute X position for each run in visual order. */
         int x = 0;
         for (int vi = 0; vi < nRuns; vi++) {
@@ -1475,7 +1475,7 @@ Tk_MeasureCharsInContext(
             runOriginX[i] = x;
             x += runs[i].abc.abcA + runs[i].abc.abcB + runs[i].abc.abcC;
         }
-        
+
         Tcl_Free(visualOrder);
     }
 
@@ -1502,7 +1502,7 @@ Tk_MeasureCharsInContext(
          * Bounded search: find how many characters fit in maxLength pixels.
          */
         int ci;
-        
+
         for (ci = wRangeStart; ci <= wRangeEnd; ci++) {
             int endX = GetVisualXForLogicalIndex(
                 runs, nRuns, runOriginX, totalChars,
@@ -1523,12 +1523,12 @@ Tk_MeasureCharsInContext(
 
         /*
          * TK_WHOLE_WORDS rollback (UTF-16 safe).
-         * 
+         *
          * When wrapping on word boundaries, we need to handle trailing
          * spaces correctly according to legacy Tk behavior:
          * - Include the breaking space in the line's character count.
          * - But absorb the space's width for the next line.
-         * 
+         *
          * Old behavior: lastBoundary pointed AT the space.
          * New behavior: we include the space in wcCount for proper indexing.
          */
@@ -1552,17 +1552,17 @@ Tk_MeasureCharsInContext(
                  * CRITICAL FIX:
                  * lastBoundary is the INDEX of the space character.
                  * For proper wrapping behavior that matches the tests:
-                 * 
+                 *
                  * "000 000" wrapping at 5ax should:
                  * - Line 1: "000 " (4 chars including space, but width of "000")
                  * - Line 2: "000"
-                 * 
+                 *
                  * The space is INCLUDED in the char count but its width
                  * is absorbed (not counted) at end of line.
                  */
                 int wcCount;
                 WCHAR boundaryChar = wfull[lastBoundary];
-                
+
                 if (IsEOLSpace(boundaryChar)) {
                     /*
                      * Include the space in the character count.
@@ -1570,7 +1570,7 @@ Tk_MeasureCharsInContext(
                      * NOT INCLUDING the space's width.
                      */
                     wcCount = (lastBoundary + 1) - wRangeStart;
-                    
+
                     /*
                      * Measure width up to (but not including) the space.
                      * This is the "absorb spaces at eol" behavior.
@@ -1587,7 +1587,7 @@ Tk_MeasureCharsInContext(
                         ClampIndex(wRangeStart + wcCount, totalChars));
                     bestWidth = abs(wordEndX - startX);
                 }
-                
+
                 bestChars = wcCount;
             }
         }
@@ -1891,7 +1891,7 @@ Tk_DrawCharsInContext(
         wRangeEnd = (int)(Tcl_DStringLength(&tmp) / sizeof(WCHAR));
         Tcl_DStringFree(&tmp);
     }
-	
+
     /* Emergency fallback rendering when Uniscribe shaping fails. */
     if (TkWinShapeString(dc, fontPtr, wstr, wlen, &runs, &nRuns) < 0 || nRuns == 0) {
 	HFONT hFontToUse = NULL;
@@ -1984,7 +1984,7 @@ Tk_DrawCharsInContext(
     for (i = 0; i < nRuns; i++) {
         levels[i] = runs[i].sa.s.uBidiLevel;
     }
-    
+
     /* ScriptLayout produces the visual order from embedding levels. */
     HRESULT hr = ScriptLayout(nRuns, levels, visualOrder, NULL);
     if (FAILED(hr)) {
@@ -2024,7 +2024,7 @@ Tk_DrawCharsInContext(
 
         int gFirst = 0, gLast = 0;
         int glyphOffsetX = 0;  /* X offset from run start to first visible glyph. */
-        
+
         /* Find glyph range for the character range using logClust. */
         {
             int gMin = INT_MAX, gMax = -1;
@@ -2038,7 +2038,7 @@ Tk_DrawCharsInContext(
             }
             gFirst = gMin;
             gLast = gMax + 1;
-            
+
             /* Compute X offset to gFirst by summing advances of glyphs before it. */
             for (int g = 0; g < gFirst; g++) {
                 glyphOffsetX += run->advances[g];
@@ -2442,7 +2442,7 @@ InitSubFont(
 {
     subFontPtr->hFont0      = hFont;
     subFontPtr->familyPtr   = AllocFontFamily(hdc, hFont, base);
-    
+
     /* Critical: Link both BMP fontMap and supplementary groups */
     subFontPtr->fontMap     = subFontPtr->familyPtr->fontMap;
     subFontPtr->startGroup  = subFontPtr->familyPtr->startGroup;
@@ -2708,11 +2708,11 @@ FindSubFontForChar(
 
     /*
      * Fast path: check already-loaded subfonts.
-     * 
+     *
      * CRITICAL: Always check base font (subFontArray[0]) first,
      * even for ASCII characters. The base font is the one the
      * user actually requested (e.g., "times", "courier", "arial").
-     * 
+     *
      * Fallbacks should ONLY be used when the base font genuinely
      * cannot display the character. This ensures:
      *   - "font actual {times 10} a" returns "times", not "Segoe UI Emoji"
@@ -2728,7 +2728,7 @@ FindSubFontForChar(
     /*
      * Character not found in any already-loaded subfont.
      * Now search for appropriate fallback fonts.
-     * 
+     *
      * For ASCII and common Latin characters, the base font should
      * have already matched above. If we reach here with an ASCII
      * character, something is wrong with the base font, so we still
@@ -2899,7 +2899,7 @@ FontMapLookup(
         if (page != NULL) {
             return (page[bit >> 3] >> (bit & 7)) & 1;
         }
-        
+
         /* Lazy-load BMP page if not yet cached. */
         FontMapLoadPage(subFontPtr, row);
         page = subFontPtr->fontMap[row];
@@ -3251,7 +3251,7 @@ CanUseFallback(
 
     hFont = GetScreenFont(&fontPtr->font.fa, faceName, fontPtr->pixelSize, 0.0);
     InitSubFont(hdc, hFont, 0, &subFont);
-    
+
     /*
      * Check character support via FontMapLookup, which handles:
      * - BMP (U+0000–U+FFFF): uses fontMap with lazy-loading
@@ -3655,7 +3655,7 @@ LoadFontRanges(
 
 		continue;
 	    }
-	    
+
 	    /*
 	     * Platform 3 (Microsoft) encoding selection:
 	     * - encoding 0: Symbol fonts (do not support Unicode codepoints directly)
@@ -3669,7 +3669,7 @@ LoadFontRanges(
 	     *
 	     * We do NOT skip with continue after format-12; we read both if present.
 	     */
-	    
+
 	    if (encTable.encoding == 0) {
 		*symbolPtr = 1;
 		continue;
@@ -3739,13 +3739,13 @@ LoadFontRanges(
 		    Tcl_Free(sg);
 		    Tcl_Free(eg);
 		}
-		/* 
+		/*
 		 * IMPORTANT: Do NOT continue here. We may also have encoding 1
 		 * (format-4) which covers BMP and should be parsed below.
 		 * Some fonts have both subtables; we want both for complete coverage.
 		 */
 	    }
-	    
+
 	    if (encTable.encoding != 1) {
 		/*
 		 * We've checked symbol (0), format-12 (10), and now format-4 (1).
@@ -3802,12 +3802,12 @@ LoadFontRanges(
 
 	/*
 	 * Post-processing: Ensure we have valid character coverage data.
-	 * 
+	 *
 	 * If we found format-12 groups (supplementary planes) but no format-4
 	 * segments (BMP), we should create a synthetic BMP range to allow
 	 * the font lookup mechanism to work correctly. However, be conservative:
 	 * only do this if we have no segment data at all.
-	 * 
+	 *
 	 * Conversely, if we have format-4 but no format-12, that's fine;
 	 * supplementary-plane characters simply won't match (no emoji support).
 	 */

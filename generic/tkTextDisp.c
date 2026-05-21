@@ -8217,8 +8217,8 @@ CharChunkMeasureChars(
 				 * right border x-position of the span
 				 * here. */
 {
-  
-#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */  
+
+#ifdef _WIN32	/* MSVC prefers this block - the next block causes hangs. */
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
@@ -8547,7 +8547,7 @@ CharUndisplayProc(
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
 
-#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */
+#ifdef _WIN32	/* MSVC prefers this block - the next block causes hangs. */
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr) {
@@ -9440,7 +9440,7 @@ FreeBaseChunk(
 				 * the linked list. */
 {
 
-#ifdef _WIN32 	/* MSVC prefers this block - the next block causes hangs. */
+#ifdef _WIN32	/* MSVC prefers this block - the next block causes hangs. */
 	TkTextDispChunk *chunkPtr;
     CharInfo *ciPtr;
 
@@ -9477,7 +9477,7 @@ FreeBaseChunk(
 	    continue;
 	}
 	ciPtr = (CharInfo *)chunkPtr->clientData;
-	
+
 	/*
 	 * Defensive check: ciPtr may be NULL if chunk is being torn down
 	 * or was never fully initialized.
@@ -9485,7 +9485,7 @@ FreeBaseChunk(
 	if (ciPtr == NULL) {
 	    continue;
 	}
-	
+
 	if (ciPtr->baseChunkPtr != baseChunkPtr) {
 	    break;
 	}

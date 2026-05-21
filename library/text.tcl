@@ -710,14 +710,14 @@ proc ::tk::TextDetectAndTagRtl {w} {
     }
     # Get all lines that need checking
     set end_line [lindex [split [$w index "end-1c"] .] 0]
-    
+
     for {set line 1} {$line <= $end_line} {incr line} {
         set line_start "$line.0"
         set line_end "$line.end"
-        
+
         # Get the text content of this line
         set line_text [$w get $line_start $line_end]
-        
+
         # Skip empty lines
         if {[string length [string trim $line_text]] == 0} {
             continue
@@ -725,10 +725,10 @@ proc ::tk::TextDetectAndTagRtl {w} {
 
         # Check if this line is pure RTL
         set is_rtl [::tk::TextIsRtlLine $line_text]
-        
+
         # Remove any existing RTL tag first to avoid duplicates
         $w tag remove tk_rtl_right $line_start $line_end
-        
+
         # Apply RTL tag if pure RTL detected
         if {$is_rtl} {
             $w tag add tk_rtl_right $line_start $line_end

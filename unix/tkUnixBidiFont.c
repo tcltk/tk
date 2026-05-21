@@ -115,10 +115,10 @@ typedef struct {
 	struct {
 	    int x;              /* Visual X position (pixels). */
 	    int advanceX;       /* Width of this visual cluster. */
-	
+
 	    int byteStart;      /* Logical start byte of cluster. */
 	    int byteEnd;        /* Logical end byte of cluster. */
-	
+
 	    int isRTL;          /* Nonzero if cluster belongs to RTL run. */
 	} visualIndex[MAX_GLYPHS];
     int indexCount;
@@ -176,7 +176,7 @@ typedef struct {
         FcChar32 uc;
         int faceIdx;
     } charCache[64];
-    
+
     FcChar32 lastChar;
     int lastFace;
 
@@ -284,7 +284,7 @@ IsSimpleOnly(const char *str, int len)
             (uc >= 0x0750 && uc <= 0x077F) ||           /* Arabic Supplement */
             (uc >= 0xFB50 && uc <= 0xFDFF) ||           /* Arabic Presentation Forms */
             (uc >= 0xFE70 && uc <= 0xFEFF) ||           /* Arabic Presentation Forms-B */
-            
+
             /* Other RTL scripts */
             (uc >= 0x0700 && uc <= 0x074F) ||           /* Syriac */
             (uc >= 0x0780 && uc <= 0x07BF) ||           /* Thaana */
@@ -438,7 +438,7 @@ GetFaceFont(
             }
         }
         return face->ft0Font;
-    } 
+    }
     else {
         /* Rotated font handling. */
         if (!face->ftFont || face->angle != angle) {
@@ -1172,9 +1172,9 @@ GetRunFaceIndex(
     if (runLen <= 0 || runStart < 0) return 0;
     FcChar32 uc = ucs4Chars[runStart];
     X11Shaper *shaper = &fontPtr->shaper;
-    
+
     /* Direct-mapped hash index. */
-    int cacheIdx = uc & 63; 
+    int cacheIdx = uc & 63;
 
     /* Check cache first. */
     if (shaper->charCache[cacheIdx].uc == uc) {
@@ -1209,7 +1209,7 @@ GetRunFaceIndex(
  *   Updates the shaper cache; buffer is filled with glyphs and clusters.
  * ---------------------------------------------------------------
  */
- 
+
 static int
 X11Shaper_ShapeString(
 		      X11Shaper *shaper,
@@ -1222,14 +1222,14 @@ X11Shaper_ShapeString(
     if (!shaper->buffer || !source || numBytes <= 0 || !buffer) {
         return 0;
     }
-    
+
     /* Initialize the output buffer with default values. */
     buffer->glyphCount = 0;
     buffer->indexCount = 0;
     buffer->totalAdvance = 0;
     buffer->clusterBreakCount = 0;
-    
-    /* 
+
+    /*
      * Fast path for simple scripts (Latin, CJK, etc.).
      *
      * Use cached faces from fontPtr->faces instead of
@@ -1298,8 +1298,8 @@ X11Shaper_ShapeString(
             i += clen; /* Advance pointer. */
         }
         buffer->totalAdvance = penX;
-	
-        /* 
+
+        /*
          * Build visualIndex properly for CJK (Chinese/Japanese) + Latin.
          * This is critical for correct cursor movement and selection.
          */
@@ -1308,11 +1308,11 @@ X11Shaper_ShapeString(
 
         for (int i = 0; i < buffer->glyphCount && buffer->indexCount < MAX_GLYPHS; i++) {
             int bo = buffer->glyphs[i].byteOffset;
-            
+
             /* Skip duplicate glyphs for the same cluster (important for CJK). */
             if (bo == prevByteOffset) {
                 if (buffer->indexCount > 0) {
-                    buffer->visualIndex[buffer->indexCount-1].advanceX += 
+                    buffer->visualIndex[buffer->indexCount-1].advanceX +=
                         buffer->glyphs[i].advanceX;
                 }
                 continue;
@@ -1329,7 +1329,7 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* 
+    /*
      * Check cache for complex shaped/RTL text (multi‑entry round‑robin).
      */
     for (int slot = 0; slot < CACHE_SLOTS; slot++) {
@@ -1388,7 +1388,7 @@ X11Shaper_ShapeString(
     /* Bidi analysis. */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
-    
+
     int globalPenX = 0;
 
     /* Process each bidi run. */
@@ -1417,15 +1417,15 @@ X11Shaper_ShapeString(
 	/*
 	 * Shape contiguous font-compatible spans separately.
 	 */
-	
+
 	int subrunStart = runStart;
-	
+
 	while (subrunStart < runStart + runLen) {
-	
+
 	    int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, subrunStart, 1);
-	
+
 	    int subrunEnd = subrunStart + 1;
-	
+
 	    /*
 	     * Extend while subsequent chars use same fallback face.
 	     */
@@ -1436,14 +1436,14 @@ X11Shaper_ShapeString(
 	        }
 	        subrunEnd++;
 	    }
-	
+
 	    int shapeRunStart = subrunStart;
 	    int shapeRunLen   = subrunEnd - subrunStart;
-	
+
 	    int runByteStart = charBounds[shapeRunStart];
 	    int runByteEnd   = charBounds[shapeRunStart + shapeRunLen];
 	    int runByteLen   = runByteEnd - runByteStart;
-	
+
 	    if (runByteLen <= 0) {
 	        subrunStart = subrunEnd;
 	        continue;
@@ -1460,19 +1460,19 @@ X11Shaper_ShapeString(
 	    hb_buffer_add_utf8(shaper->buffer, source, numBytes, runByteStart, runByteLen);
 	    hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
 	    hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
-	
+
 	    hb_shape(runHbFont, shaper->buffer, NULL, 0);
-	
+
 	    unsigned int glyphCount = hb_buffer_get_length(shaper->buffer);
 	    hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
 	    hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
 	    if (!glyphInfo || !glyphPos) continue;
-	
+
 	    struct {
 		int fontIndex; unsigned int glyphId; int x, y; int advanceX; int byteOffset; int clusterLen;
 	    } tempGlyphs[MAX_GLYPHS];
 	    int tempCount = 0;
-	
+
 	    int runPenX = 0;
 	    XftFont *xftRunFont = GetFaceFont(fontPtr, runFaceIndex, 0.0);
 
@@ -1557,7 +1557,7 @@ X11Shaper_ShapeString(
 		    }
 		}
 	    }
-	   
+
 	    /* Copy to main buffer. */
 	    for (int i = 0; i < tempCount; i++) {
 		int idx = buffer->glyphCount;
@@ -1574,12 +1574,12 @@ X11Shaper_ShapeString(
 		};
 		buffer->glyphCount++;
 	    }
-	
+
 	    globalPenX += runPenX;
 	    subrunStart = subrunEnd;
 	}
     }
-	
+
     buffer->totalAdvance = globalPenX;
 
     /* Clear the index count for the final pass */
@@ -1658,8 +1658,7 @@ X11Shaper_ShapeString(
         }
     }
     buffer->clusterBreakCount = write;
-    
-    
+
     /* Cache result (round‑robin). */
     if (numBytes <= MAX_STRING_CACHE) {
         int slot = shaper->cacheNext;
@@ -1949,7 +1948,7 @@ TkpGetFontAttrsForChar(
  *
  *
  * Results:
- *   Calls Tk_MeasureCharsinContext. 
+ *   Calls Tk_MeasureCharsinContext.
  *
  * Side effects:
  *   None.
@@ -1965,7 +1964,7 @@ Tk_MeasureChars(
 	int flags,
 	int *lengthPtr)
 {
-       return Tk_MeasureCharsInContext(tkfont, source, numBytes, 0, numBytes, 
+       return Tk_MeasureCharsInContext(tkfont, source, numBytes, 0, numBytes,
 		maxLength, flags, lengthPtr);
 }
 
@@ -1974,7 +1973,7 @@ Tk_MeasureChars(
  * Tk_MeasureCharsInContext --
  *
  *   Measure a substring of a larger string, preserving shaping context.
- *   
+ *
  *   Uses cluster boundaries to do width-aware fitting WITHOUT
  *   reshaping. This prevents RTL runs from being passed to LayoutLine
  *   as single monolithic units.
@@ -2018,7 +2017,7 @@ Tk_MeasureCharsInContext(
     }
 
     /*
-     * Fast path: simple LTR/Latin/non-shaped text. 
+     * Fast path: simple LTR/Latin/non-shaped text.
      */
 
     if (IsSimpleOnly(source, (int)numBytes)) {
@@ -2346,7 +2345,7 @@ Tk_MeasureCharsInContext(
  *   Draw a UTF-8 string using the given font.
  *
  * Results:
- *   Calls Tk_DrawCharsinContext. 
+ *   Calls Tk_DrawCharsinContext.
  *
  * Side effects:
  *   Draws text on the specified drawable.
@@ -2540,9 +2539,9 @@ Tk_DrawCharsInContext(
         XftGlyphFontSpec specs[MAX_GLYPHS];
         int nspec = 0;
 
-        /* 
+        /*
          * Correct approach for bidi:
-         * Glyphs already have correct absolute visual X positions 
+         * Glyphs already have correct absolute visual X positions
          * from the start of the full string. Just filter and draw.
          */
         for (int i = 0; i < buffer.glyphCount && nspec < MAX_GLYPHS; i++) {
