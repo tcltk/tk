@@ -1722,7 +1722,7 @@ int
 Tk_WinfoObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, c_class;
@@ -1750,7 +1750,7 @@ Tk_WinfoObjCmd(
 	"screenmmheight","screenmmwidth","screenvisual","server",
 	"toplevel",	"viewable",	"visual",	"visualid",
 	"vrootheight",	"vrootwidth",	"vrootx",	"vrooty",
-	"width",	"x",		"y",
+	"width",	"x",		"y",		"isdark",
 
 	"atom",		"atomname",	"containing",	"interps",
 	"pathname",
@@ -1770,13 +1770,14 @@ Tk_WinfoObjCmd(
 	WIN_SCREENMMHEIGHT,WIN_SCREENMMWIDTH,WIN_SCREENVISUAL,WIN_SERVER,
 	WIN_TOPLEVEL,	WIN_VIEWABLE,	WIN_VISUAL,	WIN_VISUALID,
 	WIN_VROOTHEIGHT,WIN_VROOTWIDTH,	WIN_VROOTX,	WIN_VROOTY,
-	WIN_WIDTH,	WIN_X,		WIN_Y,
+	WIN_WIDTH,	WIN_X,		WIN_Y,		WIN_ISDARK,
 
 	WIN_ATOM,	WIN_ATOMNAME,	WIN_CONTAINING,	WIN_INTERPS,
 	WIN_PATHNAME,
 
 	WIN_EXISTS,	WIN_FPIXELS,	WIN_PIXELS,	WIN_RGB,
-	WIN_VISUALSAVAILABLE
+	WIN_VISUALSAVAILABLE,
+
     };
 
     if (objc < 2) {
@@ -2264,6 +2265,20 @@ Tk_WinfoObjCmd(
 	Tcl_SetObjResult(interp, resultPtr);
 	XFree(visInfoPtr);
 	break;
+    }
+    case WIN_ISDARK: {
+	bool isdark;
+	int result = TkpWindowIsDark(tkwin, &isdark);
+	if (result == TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(isdark));
+	    break;
+	} else {
+	    string = Tk_PathName(tkwin);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"could not determine appearance of %s", string));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "ISDARK", string, (char *)NULL);
+	    return TCL_ERROR;
+	}
     }
     }
     return TCL_OK;

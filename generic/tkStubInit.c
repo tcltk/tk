@@ -332,7 +332,7 @@ static const TkIntStubs tkIntStubs = {
     XRectInRegion, /* 117 */
     XSetRegion, /* 118 */
     XUnionRectWithRegion, /* 119 */
-    0, /* 120 */
+    TkpWindowIsDark, /* 120 */
     TkpCreateNativeBitmap, /* 121 */
     TkpDefineNativeBitmaps, /* 122 */
     0, /* 123 */

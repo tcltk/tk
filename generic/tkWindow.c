@@ -194,8 +194,7 @@ static const TkCmd commands[] = {
     /*
      * Misc.
      */
-
-#ifdef MAC_OSX_TK
+#if 0 //#ifdef MAC_OSX_TK
     {"::tk::unsupported::MacWindowStyle",
 			TkUnsupported1ObjCmd,	PASSMAINWINDOW|ISSAFE},
 #endif
