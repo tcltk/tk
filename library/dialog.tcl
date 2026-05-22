@@ -65,10 +65,10 @@ proc ::tk_dialog {w title text bitmap default args} {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }
 
-    if {$windowingsystem eq "aqua"} {
-	update idletasks
-	wm attributes $w -stylemask docmodal
-    } elseif {$windowingsystem eq "x11"} {
+#    if {$windowingsystem eq "aqua"} {
+#	after 100 {wm attributes $w -stylemask fullsizecontent}
+#    } else
+    if {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
     }
 
@@ -161,6 +161,10 @@ proc ::tk_dialog {w title text bitmap default args} {
     # before deleting the window, since otherwise the window manager
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
+
+    if {$windowingsystem eq "aqua"} {
+	wm attributes $w -stylemask titled
+    }
 
     vwait ::tk::Priv(button)
 
