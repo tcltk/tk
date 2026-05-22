@@ -599,7 +599,6 @@ install-pdbs:
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DTK_TEST /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(ROOT)\manifest.uuid:
@@ -621,7 +620,6 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
