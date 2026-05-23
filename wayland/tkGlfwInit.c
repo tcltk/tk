@@ -1179,7 +1179,7 @@ TkGlfwGetTkWindow(GLFWwindow *glfwWindow)
     }
     
     return infoPtr->winPtr;
-}
+} 
 
 /*
  * Local Variables:
