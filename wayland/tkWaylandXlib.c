@@ -1480,29 +1480,83 @@ XWithdrawWindow(
  *
  * XGetVisualInfo --
  *
- *	Get visual information. No-op in Wayland port.
+ *	Get visual information for the Wayland/GLFW port.
  *
  * Results:
- *	Always returns NULL, with nitems_return set to 0 if non-NULL.
+ *	Returns XVisualInfo array with visual information.
  *
  * Side effects:
- *	None.
+ *	Allocates memory for XVisualInfo structures.
  *
  *----------------------------------------------------------------------
  */
 
 XVisualInfo*
 XGetVisualInfo(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(long),
-    TCL_UNUSED(XVisualInfo *),
+    Display *display,
+    long vinfo_mask,
+    XVisualInfo *vinfo_template,
     int *nitems_return)
 {
-    /* No-op - visuals not used in Wayland port. */
-    if (nitems_return) {
-        *nitems_return = 0;
+    static XVisualInfo visualInfo;
+    static int initialized = 0;
+    
+    /* Initialize static visual info once. */
+    if (!initialized) {
+        memset(&visualInfo, 0, sizeof(XVisualInfo));
+        
+        /* Create a TrueColor visual matching what Tk expects. */
+        Visual *visual = (Visual *)ckalloc(sizeof(Visual));
+        memset(visual, 0, sizeof(Visual));
+        visual->visualid = 1;
+        visual->class = TrueColor;
+        visual->bits_per_rgb = 8;
+        visual->map_entries = 256;
+        visual->red_mask = 0x00FF0000;
+        visual->green_mask = 0x0000FF00;
+        visual->blue_mask = 0x000000FF;
+        
+        visualInfo.visual = visual;
+        visualInfo.visualid = 1;
+        visualInfo.screen = 0;
+        visualInfo.depth = 32;
+        visualInfo.class = TrueColor;
+        visualInfo.red_mask = 0x00FF0000;
+        visualInfo.green_mask = 0x0000FF00;
+        visualInfo.blue_mask = 0x000000FF;
+        visualInfo.colormap_size = 256;
+        visualInfo.bits_per_rgb = 8;
+        
+        initialized = 1;
     }
-    return NULL;
+    
+    /* Check if the requested visual matches what we have. */
+    if (vinfo_mask != 0 && vinfo_template != NULL) {
+        /* Simple matching - just return our visual if it matches the template. */
+        if ((vinfo_mask & VisualClassMask) && 
+            vinfo_template->class != visualInfo.class) {
+            if (nitems_return) *nitems_return = 0;
+            return NULL;
+        }
+        if ((vinfo_mask & VisualDepthMask) && 
+            vinfo_template->depth != visualInfo.depth) {
+            if (nitems_return) *nitems_return = 0;
+            return NULL;
+        }
+        if ((vinfo_mask & VisualIDMask) && 
+            vinfo_template->visualid != visualInfo.visualid) {
+            if (nitems_return) *nitems_return = 0;
+            return NULL;
+        }
+    }
+    
+    /* Return our visual information. */
+    if (nitems_return) {
+        *nitems_return = 1;
+    }
+    
+    /* Return a pointer to our static visual info. */
+    return &visualInfo;
 }
 
 /*
@@ -3166,27 +3220,73 @@ XSetClipRectangles(
  *
  * XGetWindowAttributes --
  *
- *	Get window attributes. No-op in Wayland port.
+ *	Fills an XWindowAttributes structure with visual, depth, and 
+ *	screen settings matching the default display configuration.
+ *
+ *	This function is critical for core Tk operations (such as 
+ *	TkImgPhotoGet) which retrieve the geometry, visual properties, 
+ *	and depths of a window before drawing images. Returning an 
+ *	uninitialized or empty structure causes a crash in photo layout.
  *
  * Results:
- *	Always returns 0 (False).
+ *	Returns 1 (True) on success, 0 (False) if attributes_return is NULL.
  *
  * Side effects:
- *	None.
+ *	Populates the attributes_return structure with pointer references 
+ *	to the display's root visual structure and dimensions.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XGetWindowAttributes(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(XWindowAttributes *))
+    Display *display,
+    Window window,
+    XWindowAttributes *attributes_return)
 {
-    /* No-op - window attributes tracked by Tk. */
-    return 0;
-}
+    if (attributes_return == NULL) {
+        return 0;
+    }
 
+    /* Clear structure memory to avoid garbage pointer data. */
+    memset(attributes_return, 0, sizeof(XWindowAttributes));
+
+    /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
+    if (display != NULL && display->screens != NULL) {
+        Screen *screen = &display->screens[display->default_screen];
+        
+        attributes_return->visual     = screen->root_visual;
+        attributes_return->depth      = screen->root_depth;
+        attributes_return->screen     = screen;
+        attributes_return->width      = screen->width;
+        attributes_return->height     = screen->height;
+        attributes_return->root       = screen->root;
+    } else {
+        /* Safe fallback constants mirroring tkWaylandGC.c defaults. */
+        static Visual fallbackVisual = {
+            .visualid     = 1,
+            .class        = TrueColor,
+            .bits_per_rgb = 8,
+            .map_entries  = 256,
+            .red_mask     = 0xFF0000,
+            .green_mask   = 0x00FF00,
+            .blue_mask    = 0x0000FF
+        };
+        attributes_return->visual = &fallbackVisual;
+        attributes_return->depth  = 24;
+    }
+
+    /* 
+     * Mock common default settings standard widgets look for 
+     * to prevent initialization failures.
+     */
+    attributes_return->map_state        = IsViewable;
+    attributes_return->backing_store    = NotUseful;
+    attributes_return->all_event_masks  = 0;
+    attributes_return->your_event_mask = 0;
+
+    return 1; /* Success */
+}
 
 /*
  *----------------------------------------------------------------------

@@ -276,7 +276,6 @@ XImage* TkWaylandCreateXImageWithNVGImage(
  *----------------------------------------------------------------------
  */
 
-//////////////// THIS ASSUMES THE DRAWABLE IS A WINDOW
 XImage*
 XGetImage(
     Display *display,
@@ -284,15 +283,11 @@ XGetImage(
     int x, int y,
     unsigned int width,
     unsigned int height,
-    unsigned long plane_mask,
-    int format)
+    TCL_UNUSED(unsigned long),  /* plane_mask */
+    TCL_UNUSED(int) /* format */
 {
-    NVGImageData *nvgImg;
-    XImage *imagePtr;
-    NVGcontext *vg;
-
-    (void)plane_mask;  /* Not used in NanoVG backend */
-    (void)format;      /* Always use ZPixmap */
+    (void)plane_mask;
+    (void)format;
 
     if (!display || !drawable) {
         return NULL;
@@ -300,14 +295,72 @@ XGetImage(
 
     LastKnownRequestProcessed(display)++;
 
-    /* Create NVG image from drawable region. */
-    nvgImg = CreateNVGImageFromDrawableRect(drawable, x, y, width, height);
+    /* Handle pixmap drawables (GPU texture -> CPU memory buffer). */
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+        TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
+        if (!pixmap || !pixmap->glfwWindow) {
+            return NULL;
+        }
+
+        XImage *imagePtr = ckalloc(sizeof(XImage));
+        if (!imagePtr) {
+            return NULL;
+        }
+        
+        unsigned char *data = ckalloc(width * height * 4);
+        if (!data) {
+            ckfree(imagePtr);
+            return NULL;
+        }
+
+        /* Ensure the correct OpenGL context is active. */
+        GLFWwindow *currentContext = glfwGetCurrentContext();
+        if (currentContext != pixmap->glfwWindow) {
+            glfwMakeContextCurrent(pixmap->glfwWindow);
+        }
+
+        /* Cache previous framebuffer state to restore it safely later. */
+        GLint prevFBO;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+
+        /* Bind the Pixmap's hardware framebuffer */
+        glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
+
+        /* * Read the pixels out of the GPU VRAM Texture.
+         * OpenGL textures read upside down (0,0 is bottom-left). If your 
+         * NanoVG backend renders images inverted, you may need a loop to flip 
+         * rows or change the pixel unpack configuration.
+         */
+        glPixelStorei(GL_PACK_ALIGNMENT, 4);
+        glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        /* Restore previous context state. */
+        glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
+        if (currentContext && currentContext != pixmap->glfwWindow) {
+            glfwMakeContextCurrent(currentContext);
+        }
+
+        /* Package raw memory payload into a standard XImage wrapper. */
+        memset(imagePtr, 0, sizeof(XImage));
+        imagePtr->width = width;
+        imagePtr->height = height;
+        imagePtr->format = ZPixmap;
+        imagePtr->data = (char*)data;
+        imagePtr->byte_order = LSBFirst;
+        imagePtr->depth = 32;
+        imagePtr->bytes_per_line = width * 4;
+        imagePtr->bits_per_pixel = 32;
+        
+        return imagePtr;
+    }
+
+    /* Fallback handler: If it's a window drawable context. */
+    NVGImageData *nvgImg = CreateNVGImageFromDrawableRect(drawable, x, y, width, height);
     if (!nvgImg) {
         return NULL;
     }
 
-    /* Get NanoVG context. */
-    vg = TkGlfwGetNVGContext(drawable);
+    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
     if (!vg) {
         nvgDeleteImage(vg, nvgImg->id);
         if (nvgImg->pixels) ckfree(nvgImg->pixels);
@@ -315,14 +368,12 @@ XGetImage(
         return NULL;
     }
 
-    /* Convert to XImage. */
-    imagePtr = TkWaylandCreateXImageWithNVGImage(vg, nvgImg, display);
+    XImage *imagePtr = TkWaylandCreateXImageWithNVGImage(vg, nvgImg, display);
 
-    /* Clean up NVG image. */
     nvgDeleteImage(vg, nvgImg->id);
     if (nvgImg->pixels) ckfree(nvgImg->pixels);
     ckfree((char*)nvgImg);
-
+    
     return imagePtr;
 }
 
