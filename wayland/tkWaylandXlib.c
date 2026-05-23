@@ -1491,72 +1491,110 @@ XWithdrawWindow(
  *----------------------------------------------------------------------
  */
 
-XVisualInfo*
+/*
+ *----------------------------------------------------------------------
+ *
+ * XGetVisualInfo --
+ *
+ *	Returns information about available visuals matching a template mask.
+ *	Dynamically allocates an array of XVisualInfo on the heap, matching 
+ *	standard Xlib semantics so that Tk can clean it up safely using XFree.
+ *
+ * Results:
+ *	An allocated array of XVisualInfo structures, or NULL on match failure 
+ *	or out-of-memory errors. The number of matching items is returned via 
+ *	nitems_return.
+ *
+ * Side effects:
+ *	Allocates memory that must be freed using XFree().
+ *
+ *----------------------------------------------------------------------
+ */
+
+XVisualInfo *
 XGetVisualInfo(
     Display *display,
     long vinfo_mask,
     XVisualInfo *vinfo_template,
     int *nitems_return)
 {
-    static XVisualInfo visualInfo;
-    static int initialized = 0;
-    
-    /* Initialize static visual info once. */
-    if (!initialized) {
-        memset(&visualInfo, 0, sizeof(XVisualInfo));
-        
-        /* Create a TrueColor visual matching what Tk expects. */
-        Visual *visual = (Visual *)ckalloc(sizeof(Visual));
-        memset(visual, 0, sizeof(Visual));
-        visual->visualid = 1;
-        visual->class = TrueColor;
-        visual->bits_per_rgb = 8;
-        visual->map_entries = 256;
-        visual->red_mask = 0x00FF0000;
-        visual->green_mask = 0x0000FF00;
-        visual->blue_mask = 0x000000FF;
-        
-        visualInfo.visual = visual;
-        visualInfo.visualid = 1;
-        visualInfo.screen = 0;
-        visualInfo.depth = 32;
-        visualInfo.class = TrueColor;
-        visualInfo.red_mask = 0x00FF0000;
-        visualInfo.green_mask = 0x0000FF00;
-        visualInfo.blue_mask = 0x000000FF;
-        visualInfo.colormap_size = 256;
-        visualInfo.bits_per_rgb = 8;
-        
-        initialized = 1;
+    static Visual *cachedVisual = NULL;
+    XVisualInfo *heapInfo;
+
+    if (nitems_return == NULL) {
+        return NULL;
     }
-    
-    /* Check if the requested visual matches what we have. */
-    if (vinfo_mask != 0 && vinfo_template != NULL) {
-        /* Simple matching - just return our visual if it matches the template. */
-        if ((vinfo_mask & VisualClassMask) && 
-            vinfo_template->class != visualInfo.class) {
-            if (nitems_return) *nitems_return = 0;
-            return NULL;
+
+    /* Lazily allocate the underlying shared Visual instance once.
+     * This keeps visual pointers consistent across multiple calls.
+     */
+    if (cachedVisual == NULL) {
+        cachedVisual = (Visual *)ckalloc(sizeof(Visual));
+        if (cachedVisual != NULL) {
+            memset(cachedVisual, 0, sizeof(Visual));
+            cachedVisual->visualid     = 1;
+            cachedVisual->class        = TrueColor;
+            cachedVisual->bits_per_rgb = 8;
+            cachedVisual->map_entries  = 256;
+            cachedVisual->red_mask     = 0x00FF0000;
+            cachedVisual->green_mask   = 0x0000FF00;
+            cachedVisual->blue_mask    = 0x000000FF;
         }
-        if ((vinfo_mask & VisualDepthMask) && 
-            vinfo_template->depth != visualInfo.depth) {
-            if (nitems_return) *nitems_return = 0;
-            return NULL;
+    }
+
+    /* ALWAYS dynamically allocate the XVisualInfo container array.
+     * Core Tk (e.g., Tk_GetVisual) owns this pointer and will call XFree() on it.
+     */
+    heapInfo = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
+    if (heapInfo == NULL) {
+        *nitems_return = 0;
+        return NULL;
+    }
+
+    /* Initialize with default properties matching our Wayland display layer */
+    memset(heapInfo, 0, sizeof(XVisualInfo));
+    heapInfo->visual        = cachedVisual;
+    heapInfo->visualid      = 1;
+    heapInfo->screen        = (display && display->screens) ? display->default_screen : 0;
+    heapInfo->depth         = 32; /* Match modern composited textures */
+    heapInfo->class         = TrueColor;
+    heapInfo->red_mask      = 0x00FF0000;
+    heapInfo->green_mask    = 0x0000FF00;
+    heapInfo->blue_mask     = 0x000000FF;
+    heapInfo->colormap_size = 256;
+    heapInfo->bits_per_rgb  = 8;
+
+    /* Handle incoming template criteria queries safely.
+     * Avoid overly-strict matching errors that can lead to layout starvation loops.
+     */
+    if (vinfo_mask != 0 && vinfo_template != NULL) {
+        if ((vinfo_mask & VisualClassMask) && 
+            vinfo_template->class != heapInfo->class) {
+            goto match_failed;
         }
         if ((vinfo_mask & VisualIDMask) && 
-            vinfo_template->visualid != visualInfo.visualid) {
-            if (nitems_return) *nitems_return = 0;
-            return NULL;
+            vinfo_template->visualid != heapInfo->visualid) {
+            goto match_failed;
+        }
+        /* Allow fallback requests matching either standard desktop 24-bit RGB 
+         * or accelerated 32-bit RGBA depth environments.
+         */
+        if (vinfo_mask & VisualDepthMask) {
+            if (vinfo_template->depth != 24 && vinfo_template->depth != 32) {
+                goto match_failed;
+            }
+            /* Dynamically align structure depth with what Tk is expecting. */
+            heapInfo->depth = vinfo_template->depth;
         }
     }
-    
-    /* Return our visual information. */
-    if (nitems_return) {
-        *nitems_return = 1;
-    }
-    
-    /* Return a pointer to our static visual info. */
-    return &visualInfo;
+
+    *nitems_return = 1;
+    return heapInfo;
+
+match_failed:
+    ckfree((char *)heapInfo);
+    *nitems_return = 0;
+    return NULL;
 }
 
 /*
