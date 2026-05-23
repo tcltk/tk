@@ -1,0 +1,279 @@
+
+
+==== event-3.1(click-drag) click and drag in a text widget, this tests
+    tkTextSelectTo in text.tcl FAILED
+==== Contents of test case:
+
+    set t [toplevel .t]
+    set e [text $t.e]
+    pack $e
+    tkwait visibility $e
+    _keypress_string $e "A Tcl/Tk selection test!"
+    set anchor 1.6
+    set selend 1.18
+
+    set result [list]
+    lappend result [$e get 1.0 1.end]
+
+    # Get the x,y coords of the second T in "Tcl/Tk"
+    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+
+    # Click down to set the insert cursor position
+    event generate $e <Enter>
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
+
+    # Save the position of the insert cursor
+    lappend result [$e index insert]
+
+    # Now drag until selend is highlighted, then click up
+
+    set current $anchor
+    while {[$e compare $current <= $selend]} {
+	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+	event generate $e <B1-Motion> -x $current_x -y $current_y
+	set current [$e index [list $current + 1 char]]
+	pause 50
+    }
+
+    event generate $e <ButtonRelease-1> -x $current_x -y $current_y
+    pause 200
+
+    # Save the position of the insert cursor
+    lappend result [$e index insert]
+
+    # Save the highlighted text
+    lappend result [_get_selection $e]
+
+    # Now click and click and drag to the left, over "Tcl/Tk selection"
+
+    event generate $e <Button-1> -x $current_x -y $current_y
+
+    while {[$e compare $current >= [list $anchor - 4 char]]} {
+	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+	event generate $e <B1-Motion> -x $current_x -y $current_y
+	set current [$e index [list $current - 1 char]]
+	pause 50
+    }
+
+    event generate $e <ButtonRelease-1> -x $current_x -y $current_y
+    pause 200
+
+    # Save the position of the insert cursor
+    lappend result [$e index insert]
+
+    # Save the highlighted text
+    lappend result [_get_selection $e]
+
+
+---- Result was:
+{A Tcl/Tk selection test!} 1.6 1.19 {Tk selection } 1.2 {Tcl/Tk selection}
+---- Result should have been (exact matching):
+{A Tcl/Tk selection test!} 1.6 1.18 {Tk selection} 1.2 {Tcl/Tk selection}
+==== event-3.1(click-drag) FAILED
+
+
+
+==== event-4.1(double-click-drag) click down, click up, click down again,
+    then drag in a text widget FAILED
+==== Contents of test case:
+
+    set t [toplevel .t]
+    set e [text $t.e]
+    pack $e
+    tkwait visibility $e
+    _keypress_string $e "Word select test"
+    set anchor 1.8
+
+    # Get the x,y coords of the second e in "select"
+    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+
+    # Click down, release, then click down again
+    event generate $e <Enter>
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
+    pause 50
+    event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
+    pause 50
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
+    pause 50
+
+    # Save the highlighted text
+    set result [list]
+    lappend result [_get_selection $e]
+
+    # Insert cursor should be at beginning of "select"
+    lappend result [$e index insert]
+
+    # Move mouse one character to the left
+    set current [$e index [list $anchor - 1 char]]
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    pause 50
+
+    # Insert cursor should be before the l in "select"
+    lappend result [$e index insert]
+
+    # Selection should still be the word "select"
+    lappend result [_get_selection $e]
+
+    # Move mouse to the space before the word "select"
+    set current [$e index [list $current - 3 char]]
+
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    pause 200
+
+    lappend result [$e index insert]
+    lappend result [_get_selection $e]
+
+    # Move mouse to the r in "Word"
+    set current 1.2
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    pause 50
+
+    # Selection should now be "Word select"
+    lappend result [_get_selection $e]
+
+    # Insert cursor should be before the r in "Word"
+    lappend result [$e index insert]
+
+    return $result
+
+---- Result was:
+select 1.5 1.6 select 1.4 { select} {Word select} 1.2
+---- Result should have been (exact matching):
+select 1.5 1.7 select 1.4 { select} {Word select} 1.2
+==== event-4.1(double-click-drag) FAILED
+
+wait for <Enter> event on . timed out (> 1000 ms)
+
+
+textDisp.test
+
+
+==== textDisp-2.7 LayoutDLine, marks and tags FAILED
+==== Contents of test case:
+
+    .t configure -wrap word
+    .t delete 1.0 end
+    .t insert 1.0 "This isxxx some sample text for testing."
+    .t tag add foo 1.4 1.6
+    .t mark set insert 1.8
+    list [.t bbox 1.2] [.t bbox 1.5] [.t bbox 1.11]
+
+---- Result was:
+{19 5 7 13} {40 5 7 13} {61 5 0 13}
+---- Result should have been (exact matching):
+{19 5 7 13} {40 5 7 13} {82 5 7 13}
+==== textDisp-2.7 FAILED
+
+
+
+==== textDisp-16.41 text count -xpixels with indices in elided lines FAILED
+==== Contents of test case:
+
+    set res {}
+    .t delete 1.0 end
+    for {set i 1} {$i < 40} {incr i} {
+	.t insert end [string repeat "Line $i" 20]
+	.t insert end "\n"
+    }
+    .t configure -wrap none
+    .t tag add hidden 5.15 20.15
+    .t tag configure hidden -elide true
+    lappend res [.t count -xpixels 5.15 6.0]  [.t count -xpixels 5.15 6.1]  [.t count -xpixels 6.0 6.1]  [.t count -xpixels 6.1 6.2]  [.t count -xpixels 6.1 6.0]  [.t count -xpixels 6.0 7.0]  [.t count -xpixels 6.1 7.1]  [.t count -xpixels 15.0 20.15]  [.t count -xpixels 20.15 20.16]  [.t count -xpixels 20.16 20.15]
+    .t tag remove hidden 20.0 20.15
+    lappend res [expr {[.t count -xpixels 5.0 20.0] != 0}]
+
+---- Result was:
+0 0 0 0 0 0 0 0 0 0 1
+---- Result should have been (exact matching):
+0 0 0 0 0 0 0 0 7 -7 1
+==== textDisp-16.41 FAILED
+
+
+
+==== textWind-3.3 EmbWinConfigure procedure FAILED
+==== Contents of test case:
+
+    .t insert 1.0 "Some sample text"
+    frame .f -width 10 -height 20 -bg $color
+    .t window create 1.3 -window .f
+    update
+    set res [winfo ismapped .f]
+    .t window configure 1.3 -window {}
+    update
+    lappend res [winfo ismapped .f] [.t bbox 1.4]
+
+---- Result was:
+1 0 {26 5 0 13}
+---- Result should have been (exact matching):
+1 0 {26 5 7 13}
+==== textWind-3.3 FAILED
+
+
+
+==== textWind-3.5 EmbWinConfigure procedure FAILED
+==== Contents of test case:
+
+    .t insert 1.0 "Some sample text"
+    frame .t.f -width 10 -height 20 -bg $color
+    .t window create 1.3 -window .t.f
+    update
+    set res [winfo ismapped .t.f]
+    .t window configure 1.3 -window {}
+    update
+    lappend res [winfo ismapped .t.f] [.t bbox 1.4]
+
+---- Result was:
+1 0 {26 5 0 13}
+---- Result should have been (exact matching):
+1 0 {26 5 7 13}
+==== textWind-3.5 FAILED
+
+
+
+==== textWind-5.2 EmbWinStructureProc procedure FAILED
+==== Contents of test case:
+
+    .t insert 1.0 "Some sample text"
+    frame .f -width 10 -height 20 -bg $color
+    .t window create 1.2 -window .f
+    update
+    destroy .f
+    catch {.t index .f}
+    list [.t bbox 1.2] [.t bbox 1.3]
+
+---- Result was:
+{19 11 0 0} {19 5 0 13}
+---- Result should have been (exact matching):
+{19 11 0 0} {19 5 7 13}
+==== textWind-5.2 FAILED
+
+
+
+==== textWind-5.4 EmbWinStructureProc procedure FAILED
+==== Contents of test case:
+
+    .t insert 1.0 "Some sample text"
+    frame .f -width 10 -height 20 -bg $color
+    .t window create 1.2 -align bottom
+    .t window configure 1.2 -window .f
+    update
+    destroy .f
+    catch {.t index .f}
+    list [.t bbox 1.2] [.t bbox 1.3]
+
+---- Result was:
+{19 18 0 0} {19 5 0 13}
+---- Result should have been (exact matching):
+{19 18 0 0} {19 5 7 13}
+==== textWind-5.4 FAILED
+
+tk.test
+unixButton.test
+unixEmbed.test
+
+

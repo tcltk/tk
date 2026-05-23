@@ -1,0 +1,13 @@
+## Basic latin
+
+I've ranted at length about mentioned my theory that open source is fundamentally incapable of handling user interface issues (and thus the continuing failure of everything from "Linux on the desktop" in general to The Gimp and OpenOffice's ability to become as usable as their proprietary counterparts) because ...  
+
+## Hebrew (with combining marks)
+
+מֵאֵימָתַי קוֹרִין אֶת שְׁמַע בָּעֲרָבִין? מִשָּׁעָה שֶׁהַכֹּהֲנִים נִכְנָסִים לֶאֱכוֹל בִּתְרוּמָתָן. עַד סוֹף הָאַשְׁמוּרָה הָרִאשׁוֹנָה. דִּבְרֵי רַבִּי אֱלִיעֶזֶר.
+
+## Hebrew (w/o combining marks)
+
+מאימתי קורין את שמע בערבין משעה שהכהנים נכנסים לאכול בתרומתן – כהנים שנטמאו וטבלו והעריב שמשן והגיע עתם לאכול בתרומה:
+
+עד סוף האשמורה הראשונה שליש הלילה כדמפרש בגמרא (דף ג.) ומשם ואילך עבר זמן דלא מקרי תו זמן שכיבה ולא קרינן ביה בשכבך ומקמי הכי נמי לאו זמן שכיבה לפיכך הקורא קודם לכן לא יצא ידי חובתו. אם כן למה קורין אותה בבית הכנסת כדי לעמוד בתפלה מתוך דברי תורה והכי תניא בבריי' בברכות ירושלמי. ולפיכך חובה עלינו לקרותה משתחשך. ובקריאת פרשה ראשונה שאדם קורא על מטתו יצא:

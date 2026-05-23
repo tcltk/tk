@@ -1,0 +1,38 @@
+I'll examine these files to understand the resize flickering issue and suggest a solution.Now I understand the issue. The flickering during resize happens because:
+
+1. **`TkGlfwFramebufferSizeCallback`** (lines 173-215 in tkWaylandEvent.c) is called continuously during resize
+2. Each callback immediately:
+   - Deletes the old framebuffer
+   - Creates a new framebuffer 
+   - Sends `ConfigureNotify` to Tk
+   - Updates viewport
+3. This triggers Tk's layout engine and expose events during the drag, causing visible redraws at intermediate sizes
+
+The solution is to **defer the actual Tk resize until the user finishes dragging**. Here's the approach:
+
+## Solution: Suppress Tk Updates During Resize
+
+Add a resize debouncing mechanism that:
+1. Tracks when resize is in progress
+2. Suppresses Tk notifications during drag
+3. Applies the final size only when resize completes## Summary
+
+The flickering happens because `TkGlfwFramebufferSizeCallback` fires continuously during interactive resize, triggering Tk's layout engine and expose events at every intermediate size.
+
+**The fix implements resize debouncing:**
+
+1. **Added resize state tracking** (lines 48-56): Tracks pending resize dimensions and debounce timer
+
+2. **Modified `TkGlfwFramebufferSizeCallback`** (lines 250-318):
+   - **Framebuffer rebuilt immediately** — prevents GL rendering errors
+   - **Tk notifications deferred** — `TkDoConfigureNotify` and `TkWaylandQueueExposeEvent` only called after resize completes
+   - **150ms debounce timer** — resets on each resize event, fires only when dragging stops
+
+3. **Added `ApplyDeferredResize`** (lines 188-233): Timer callback that commits the final size to Tk
+
+**How it works:**
+- During drag: GLFW window resizes smoothly, framebuffer rebuilds, but Tk layout engine doesn't run
+- After drag stops: 150ms timer fires, Tk receives final size, layout runs once, window redraws at correct size
+- No intermediate flicker since Tk widgets aren't being laid out at every pixel increment
+
+The GLFW window will resize smoothly during drag, and Tk will "snap" to the final size when you release the mouse. This is the standard pattern used by macOS AppKit and other modern toolkits.
