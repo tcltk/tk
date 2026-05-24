@@ -317,9 +317,8 @@ InitFont(
     NSRect bounds;
     CGFloat kern = 0.0;
     NSFontRenderingMode renderingMode = NSFontDefaultRenderingMode;
-    int ascent, descent/*, dontAA*/;
+    int ascent, descent;
     static const UniChar ch[] = {'.', 'W', ' ', 0xc4, 0xc1, 0xc2, 0xc3, 0xc7};
-			/* ., W, Space, Auml, Aacute, Acirc, Atilde, Ccedilla */
 #define nCh	(sizeof(ch) / sizeof(UniChar))
     CGGlyph glyphs[nCh];
     CGRect boundingRects[nCh];
@@ -333,13 +332,8 @@ InitFont(
     }
     fontPtr->nsFont = nsFont;
 
-    /*
-     * Some don't like antialiasing on fixed-width even if bigger than limit
-     */
-
-    // dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
-    if (antialiasedTextEnabled >= 0/* || dontAA*/) {
-	renderingMode = (antialiasedTextEnabled == 0/* || dontAA*/) ?
+    if (antialiasedTextEnabled >= 0) {
+	renderingMode = (antialiasedTextEnabled == 0) ?
 		NSFontIntegerAdvancementsRenderingMode :
 		NSFontAntialiasedRenderingMode;
     }
@@ -349,13 +343,7 @@ InitFont(
     fmPtr->ascent = (int)floor([nsFont ascender] + [nsFont leading] + 0.5);
     fmPtr->descent = (int)floor(-[nsFont descender] + 0.5);
     fmPtr->maxWidth = (int)[nsFont maximumAdvancement].width;
-    fmPtr->fixed = [nsFont isFixedPitch];   /* Does not work for all fonts */
-
-    /*
-     * The ascent, descent and fixed fields are not correct for all fonts, as
-     * a workaround deduce that info from the metrics of some typical glyphs,
-     * along with screenfont kerning (space advance difference to printer font)
-     */
+    fmPtr->fixed = [nsFont isFixedPitch];
 
     bounds = [nsFont boundingRectForFont];
     if (CTFontGetGlyphsForCharacters((CTFontRef) nsFont, ch, glyphs, nCh)) {
@@ -366,14 +354,25 @@ InitFont(
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
+
     descent = (int)floor(-bounds.origin.y + 0.5);
     ascent = (int)floor(bounds.size.height + bounds.origin.y + 0.5);
+
+    /* Simple safety net for oblique fonts (Helvetica Oblique etc.) */
+    if ([nsFont italicAngle] != 0.0) {
+        int safeDescent = (int)floor(-[nsFont descender] + 2.0);  /* +2 pixels safety */
+        if (safeDescent > descent) {
+            descent = safeDescent;
+        }
+    }
+
     if (ascent > fmPtr->ascent) {
 	fmPtr->ascent = ascent;
     }
     if (descent > fmPtr->descent) {
 	fmPtr->descent = descent;
     }
+
     nsAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
 	    nsFont, NSFontAttributeName,
 	    [NSNumber numberWithInt:faPtr->underline ?
