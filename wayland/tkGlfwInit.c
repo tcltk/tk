@@ -689,14 +689,14 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
  *
  * TkGlfwBeginDraw --
  *
- *	Prepares the NanoVG context for drawing. Uses the provided
- * dcPtr to store context-specific state.
+ * Prepares the NanoVG context for drawing. Fully preserves the existing
+ * Window tracking logic to prevent text and coordinate regression.
  *
  * Results:
- *	TCL_OK if drawing can proceed, TCL_ERROR otherwise.
+ * TCL_OK if drawing can proceed, TCL_ERROR otherwise.
  *
  * Side effects:
- *      Changes nvg and gl state.
+ * Changes nvg and gl state.
  *
  *----------------------------------------------------------------------
  */
@@ -707,74 +707,81 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    //// This is only for the case where the drawable is a window.
+    if (!dcPtr) {
+        return TCL_ERROR;
+    }
+
+	/* Pixmap drawing block. */
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+        TkWaylandPixmap *pixmapImpl = TkWaylandPixmapFromDrawable(drawable);
+        if (!pixmapImpl || !pixmapImpl->glfwWindow) {
+            return TCL_ERROR;
+        }
+
+        glfwMakeContextCurrent(pixmapImpl->glfwWindow);
+        glBindFramebuffer(GL_FRAMEBUFFER, pixmapImpl->fbo);
+        glViewport(0, 0, pixmapImpl->width, pixmapImpl->height);
+
+        glfwTkInfo *infoPtr = getGlfwTkInfo(pixmapImpl->glfwWindow);
+        dcPtr->vg = infoPtr->context.vg;
+        dcPtr->drawable = drawable;
+
+        nvgResetTransform(dcPtr->vg);
+        nvgBeginFrame(dcPtr->vg, pixmapImpl->width, pixmapImpl->height, 1.0f);
+        TkGlfwApplyGC(dcPtr->vg, gc);
+        
+        return TCL_OK;
+    }
+
+	/* Window drawing block. */
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
     printf("BeginDraw for %s\n", Tk_PathName(childPtr));
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
     while (!Tk_IsTopLevel(winPtr)) {
         x += winPtr->changes.x;
-	y += winPtr->changes.y;
-    	winPtr = winPtr->parentPtr;
+        y += winPtr->changes.y;
+        winPtr = winPtr->parentPtr;
     }
 
-    /*
-     * Now winPtr is the containing toplevel and the offsets of
-     * the child are given by x and y.
-     */
+    /* Now winPtr is the containing toplevel and the offsets of the child are given by x and y. */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
-    ////
-    ////glfwMakeContextCurrent(glfwWindow);
-    ////int fbWidth = 0, fbHeight = 0;
-    ////glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    ////glViewport(0, 0, fbWidth, fbHeight);
-    
-    ////
-    
     /* Set up the nanoVG drawing context for this nvgFrame */
     dcPtr->vg = infoPtr->context.vg;
     dcPtr->drawable = drawable;
 
     nvgResetTransform(dcPtr->vg);
-    /*
-     * Start a NanoVG frame for drawing on the backing store.
-     * The width and height here should be the window dimensions,
-     * not the framebuffer dimensions.
-     */
 
     printf("BeginFrame for toplevel %s with size %dx%d and pixel ratio %f\n",
-	   Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr),
-	   winPtr->privatePtr->pixelRatio);
+           Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr),
+           winPtr->privatePtr->pixelRatio);
 
     nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr),
-		  winPtr->privatePtr->pixelRatio);
+                  winPtr->privatePtr->pixelRatio);
 
-    /*
-     * Import our graphics context and translate to the origin
-     * of the window we are drawing into.
-     */
-    
+    /* Import our graphics context and translate to the origin of the window we are drawing into. */
     TkGlfwApplyGC(dcPtr->vg, gc);
     printf("translating to (%f,%f)\n", x, y);
     nvgTranslate(dcPtr->vg, x, y);
+    
     return TCL_OK;
-    }
+}
 
 /*
  *----------------------------------------------------------------------
  *
  * TkGlfwEndDraw --
  *
- *      End a drawing operation.
+ * End a drawing operation.
  *
  * Results:
- *      None.
+ * None.
  *
  * Side effects:
- *      Pops NanoVG state.
- *      Unbinds pixmap FBO if drawing to pixmap.
+ * Pops NanoVG state.
+ * Unbinds pixmap FBO if drawing to pixmap.
  *
  *----------------------------------------------------------------------
  */
@@ -783,33 +790,33 @@ MODULE_SCOPE void
 TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) {
-	printf("No drawing context!\n");
-	return;
+        printf("No drawing context!\n");
+        return;
     }
-    //// This is the case where the drawable is a window.
+
+	/* Pixmap termination block. */
+    if (TkWaylandDrawableIsPixmap(dcPtr->drawable)) {
+        nvgEndFrame(dcPtr->vg);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        nvgRestore(dcPtr->vg);
+        return;
+    }
+
+	/* Windows termination block. */
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
     printf("EndDraw for %s\n", Tk_PathName(childPtr));
     TkWindow *winPtr = childPtr;
     while (!Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
+        winPtr = winPtr->parentPtr;
     }
     /* winPtr is the toplevel containing our drawable. */
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
-
-    /*
-     * All nvg drawing since the call to nvgBeginFrame happens when we call
-     * nvgEndFrame.  The drawing commands have just been queued.  Now they
-     * actually get executed.  I think the viewport size should be the same as
-     * the framebuffer size and the FBO size (the latter equality being
-     * enforced in the FramebufferSizeCallback. But that size may be a
-     * multiple of the window size, and the multiplier should be the pixel
-     * ratio.
-     */
 
     /* Make our GL context current and set the viewport. */
     glfwMakeContextCurrent(glfwWindow);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    
     /* Bind our backing store framebuffer. */
     nvgluBindFramebuffer(winPtr->privatePtr->fbo);
 
@@ -821,27 +828,18 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         printf("FBO is incomplete (status=0x%x)\n", status);
     }
-    //GLtest(glfwWindow);
+    
     printf("EndFrame: drawing %s in toplevel %s with viewport %dx%d\n",
-	   Tk_PathName(childPtr), Tk_PathName(winPtr), fbWidth, fbHeight);
+           Tk_PathName(childPtr), Tk_PathName(winPtr), fbWidth, fbHeight);
+    
     nvgEndFrame(dcPtr->vg);
     nvgluBindFramebuffer(NULL);
 
-    /*
-     * nvgBeginFrame calls nvgSave, but nvgEndFrame does not
-     * call nvgRestore.  Maybe it is not important to balance
-     * those, but we call nvgRestore here just in case.
-     */    
-
     nvgRestore(dcPtr->vg);
 
-    /* Mark the window as needing display unless we are
-     * in the middle of a Tk double-buffer section.
-     */
+    /* Mark the window as needing display unless we are in the middle of a Tk double-buffer section. */
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-    ////if (!(infoPtr->flags & dontSwap)) {
     infoPtr->flags |= needsDisplay;
-    ////}
 }
 
 /*

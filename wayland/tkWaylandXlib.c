@@ -3256,48 +3256,33 @@ XGetWindowAttributes(
     Window window,
     XWindowAttributes *attributes_return)
 {
-    if (attributes_return == NULL) {
+    if (window == None || attributes_return == NULL) {
         return 0;
     }
 
-    /* Clear structure memory to avoid garbage pointer data. */
-    memset(attributes_return, 0, sizeof(XWindowAttributes));
-
-    /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
-    if (display != NULL && display->screens != NULL) {
-        Screen *screen = &display->screens[display->default_screen];
-        
-        attributes_return->visual     = screen->root_visual;
-        attributes_return->depth      = screen->root_depth;
-        attributes_return->screen     = screen;
-        attributes_return->width      = screen->width;
-        attributes_return->height     = screen->height;
-        attributes_return->root       = screen->root;
-    } else {
-        /* Safe fallback constants mirroring tkWaylandGC.c defaults. */
-        static Visual fallbackVisual = {
-            .visualid     = 1,
-            .class        = TrueColor,
-            .bits_per_rgb = 8,
-            .map_entries  = 256,
-            .red_mask     = 0xFF0000,
-            .green_mask   = 0x00FF00,
-            .blue_mask    = 0x0000FF
-        };
-        attributes_return->visual = &fallbackVisual;
-        attributes_return->depth  = 24;
+    /* Guard: If this is an off-screen pixmap, fill fallback data and return. */
+    if (TkWaylandDrawableIsPixmap((Drawable)window)) {
+        TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable((Drawable)window);
+        memset(attributes_return, 0, sizeof(XWindowAttributes));
+        attributes_return->width  = pixmap ? pixmap->width : 0;
+        attributes_return->height = pixmap ? pixmap->height : 0;
+        attributes_return->depth  = 32;
+        attributes_return->screen = (display && display->screens) ? display->screens : NULL;
+        attributes_return->map_state = IsViewable;
+        return 1;
     }
 
-    /* 
-     * Mock common default settings standard widgets look for 
-     * to prevent initialization failures.
-     */
-    attributes_return->map_state        = IsViewable;
-    attributes_return->backing_store    = NotUseful;
-    attributes_return->all_event_masks  = 0;
-    attributes_return->your_event_mask = 0;
+    /* Otherwise, proceed with standard window code safely. */
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable((Drawable)window);
+    memset(attributes_return, 0, sizeof(XWindowAttributes));
+    attributes_return->width        = Tk_Width(winPtr);
+    attributes_return->height       = Tk_Height(winPtr);
+    attributes_return->screen       = (display && display->screens) ? display->screens : NULL;
+    attributes_return->depth        = winPtr->privatePtr ? 32 : 24;
+    attributes_return->map_state    = IsViewable;
+    attributes_return->backing_store = NotUseful;
 
-    return 1; /* Success */
+    return 1;
 }
 
 /*
