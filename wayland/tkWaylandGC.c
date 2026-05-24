@@ -353,45 +353,47 @@ TkWaylandCopyGC(
  *
  * Tk_GetPixmap --
  *
- *      Create an off-screen drawable (pixmap) using an OpenGL FBO.
- *      This allows NanoVG to render to the pixmap just like a window.
- *      The drawable should be a Tk window.  The pixmap will construct
- *      the FBO in the GL context of that window.
+ * Create an off-screen drawable (pixmap) using an OpenGL FBO.
+ * This allows NanoVG to render to the pixmap just like a window.
  *
  * Results:
- *      Returns a Pixmap (Drawable) identifier.
+ * Returns a Pixmap (Drawable) identifier.
  *
  * Side effects:
- *      Allocates FBO, texture, and stencil buffer.
+ * Allocates FBO, texture, and stencil buffer.
  *
  *----------------------------------------------------------------------
  */
 
 Pixmap
 Tk_GetPixmap(
-    TCL_UNUSED(Display *),  
+    TCL_UNUSED(Display *), 
     Drawable d,
     int      width,
     int      height,
     TCL_UNUSED(int)) /* depth */
 {
     TkWaylandPixmap *pixmap;
-    GLint            oldFBO;
+    GLint            oldFBO = 0;
     GLenum           status;
-    
-    
+    GLFWwindow      *glfwWindow;
+
     if (width <= 0 || height <= 0) {
         return None;
     }
 
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
+    glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
     if (!glfwWindow) {
         return None;
     }
     
-    /* Allocate pixmap structure. */
+    /* Allocate and safely zero-out the struct layout. */
     pixmap = (TkWaylandPixmap *)ckalloc(sizeof(TkWaylandPixmap));
+    if (!pixmap) {
+        return None;
+    }
     memset(pixmap, 0, sizeof(TkWaylandPixmap));
+    
     pixmap->type          = 1;  /* Pixmap, not window */
     pixmap->width         = width;
     pixmap->height        = height;
@@ -399,13 +401,13 @@ Tk_GetPixmap(
     pixmap->frameOpen     = 0;
     pixmap->glfwWindow    = glfwWindow;
     
-    /* Make GL context current for FBO creation. */
+    /* Make GL context current for thread-safe FBO generation. */
     glfwMakeContextCurrent(glfwWindow);
     
-    /* Save current FBO binding */
+    /* Save current FBO binding to prevent clobbering existing pipeline steps. */
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
     
-    /* Create texture for color attachment */
+    /* Create color-attachment texture asset. */
     glGenTextures(1, &pixmap->texture);
     glBindTexture(GL_TEXTURE_2D, pixmap->texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
@@ -417,32 +419,28 @@ Tk_GetPixmap(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
     
-    /* Create stencil buffer (required by NanoVG). */
+    /* Create stencil buffer asset (strictly required for NanoVG geometry stenciling). */
     glGenRenderbuffers(1, &pixmap->stencil);
     glBindRenderbuffer(GL_RENDERBUFFER, pixmap->stencil);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
-                         width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
-    /* Create and configure FBO. */
+    /* Create and structure the compound target Framebuffer Object */
     glGenFramebuffers(1, &pixmap->fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
     
-    /* Attach texture as color buffer. */
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                           GL_TEXTURE_2D, pixmap->texture, 0);
     
-    /* Attach stencil buffer. */
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
                              GL_RENDERBUFFER, pixmap->stencil);
     
-    /* Check FBO completeness. */
+    /* Verify initialization success criteria. */
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
+        fprintf(stderr, "Tk_GetPixmap: FBO target configuration incomplete (status=0x%x)\n", status);
         glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
         
-        /* Cleanup on failure. */
         glDeleteFramebuffers(1, &pixmap->fbo);
         glDeleteTextures(1, &pixmap->texture);
         glDeleteRenderbuffers(1, &pixmap->stencil);
@@ -450,11 +448,11 @@ Tk_GetPixmap(
         return None;
     }
     
-    /* Clear pixmap to white. */
-    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    /* Seed a clean baseline alpha/color state across the canvas surface. */
+    glClearColor(1.0f, 1.0f, 1.0f, 0.0f); /* Transparent white fallback default. */
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     
-    /* Restore previous FBO binding. */
+    /* Unbind back safely to whichever element was writing before this allocation block. */
     glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
     
     return pixmap->drawable;
@@ -465,32 +463,44 @@ Tk_GetPixmap(
  *
  * Tk_FreePixmap --
  *
- *      Destroy a pixmap and free its OpenGL resources.
+ * Safely tear down a pixmap canvas without breaking current pipeline target bindings.
  *
  * Results:
- *      None.
+ * None.
  *
  * Side effects:
- *      Deletes FBO, texture, and stencil buffer.
+ * Deletes FBO, texture, and stencil buffers.
  *
  *----------------------------------------------------------------------
  */
 
 void
 Tk_FreePixmap(
-    TCL_UNUSED(Display *),
-    Pixmap pixmap)
+    Display *display,
+    Pixmap   pixmap)
 {
     TkWaylandPixmap *impl = (TkWaylandPixmap *)pixmap;
+    GLint            currentFBO = 0;
     
-    if (!impl || impl->type != 1) return;
+    (void)display;
     
-    /* Make context current for GL cleanup. */
-    if (impl->glfwWindow) {
-        glfwMakeContextCurrent(impl->glfwWindow);
+    if (!impl || impl->type != 1) {
+        return;
     }
     
-    /* Delete OpenGL resources. */
+    if (impl->glfwWindow) {
+        glfwMakeContextCurrent(impl->glfwWindow);
+        
+        /* Track what is currently active to avoid removing bound contexts mid-operation. */
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFBO);
+        
+        /* If the FBO slated for deletion is bound, switch execution safely to 0 first. */
+        if (currentFBO == (GLint)impl->fbo) {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+    }
+    
+    /* Disengage and erase resources from the graphic system cleanly. */
     if (impl->fbo) {
         glDeleteFramebuffers(1, &impl->fbo);
     }
@@ -501,9 +511,9 @@ Tk_FreePixmap(
         glDeleteRenderbuffers(1, &impl->stencil);
     }
     
+    /* Release emulation memory container. */
     ckfree((char *)impl);
 }
-
 /*
  *----------------------------------------------------------------------
  *

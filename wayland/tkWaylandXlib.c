@@ -171,10 +171,12 @@ XResourceManagerString(
  */
 
 int
-XFree(
-    TCL_UNUSED(void *))
+XFree(void *data)
 {
-    return 0;
+    if (data != NULL) {
+        ckfree((char *)data);
+    }
+    return 1;
 }
 
 /*
@@ -357,7 +359,7 @@ TkpSync(
  *
  * XOpenDisplay --
  *
- *	Connect to X server and build internal Display.  No-op in Wayland port.
+ *	Connect to X server and build internal Display.  Emulated in Wayland port.
  *
  * Results:
  *	None.
@@ -367,18 +369,13 @@ TkpSync(
  *
  *----------------------------------------------------------------------
  */
- 
- /* Opaque no-op display structure. */
-typedef struct {
-	int no_op; 
-} NoOpDisplay;
-
 
 Display *
 XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
 {
-    static NoOpDisplay d = {0};
-    return (Display *)&d;
+    static Display d = {0};  /* Zero-init ensures d.screens == NULL */
+    d.display_name = (char *)"wayland-0";
+    return &d;
 }
 
 /*
@@ -1480,25 +1477,9 @@ XWithdrawWindow(
  *
  * XGetVisualInfo --
  *
- *	Get visual information for the Wayland/GLFW port.
- *
- * Results:
- *	Returns XVisualInfo array with visual information.
- *
- * Side effects:
- *	Allocates memory for XVisualInfo structures.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * XGetVisualInfo --
- *
  *	Returns information about available visuals matching a template mask.
- *	Dynamically allocates an array of XVisualInfo on the heap, matching 
- *	standard Xlib semantics so that Tk can clean it up safely using XFree.
+ *	Dynamically allocates an array of XVisualInfo structures on the heap,
+ *	matching standard Xlib semantics so that Tk can clean it up via XFree.
  *
  * Results:
  *	An allocated array of XVisualInfo structures, or NULL on match failure 
@@ -1525,9 +1506,7 @@ XGetVisualInfo(
         return NULL;
     }
 
-    /* Lazily allocate the underlying shared Visual instance once.
-     * This keeps visual pointers consistent across multiple calls.
-     */
+    /* Lazily allocate the underlying shared Visual instance once. */
     if (cachedVisual == NULL) {
         cachedVisual = (Visual *)ckalloc(sizeof(Visual));
         if (cachedVisual != NULL) {
@@ -1542,21 +1521,19 @@ XGetVisualInfo(
         }
     }
 
-    /* ALWAYS dynamically allocate the XVisualInfo container array.
-     * Core Tk (e.g., Tk_GetVisual) owns this pointer and will call XFree() on it.
-     */
+    /* 2. ALWAYS dynamically allocate the XVisualInfo container array. */
     heapInfo = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
     if (heapInfo == NULL) {
         *nitems_return = 0;
         return NULL;
     }
 
-    /* Initialize with default properties matching our Wayland display layer */
+    /* Initialize with default properties matching our Wayland display layer. */
     memset(heapInfo, 0, sizeof(XVisualInfo));
     heapInfo->visual        = cachedVisual;
     heapInfo->visualid      = 1;
     heapInfo->screen        = (display && display->screens) ? display->default_screen : 0;
-    heapInfo->depth         = 32; /* Match modern composited textures */
+    heapInfo->depth         = 32; /* Default to modern composited textures. */
     heapInfo->class         = TrueColor;
     heapInfo->red_mask      = 0x00FF0000;
     heapInfo->green_mask    = 0x0000FF00;
@@ -1564,9 +1541,7 @@ XGetVisualInfo(
     heapInfo->colormap_size = 256;
     heapInfo->bits_per_rgb  = 8;
 
-    /* Handle incoming template criteria queries safely.
-     * Avoid overly-strict matching errors that can lead to layout starvation loops.
-     */
+    /* 3. Handle incoming template criteria queries safely without strict filtering traps. */
     if (vinfo_mask != 0 && vinfo_template != NULL) {
         if ((vinfo_mask & VisualClassMask) && 
             vinfo_template->class != heapInfo->class) {
@@ -1576,14 +1551,11 @@ XGetVisualInfo(
             vinfo_template->visualid != heapInfo->visualid) {
             goto match_failed;
         }
-        /* Allow fallback requests matching either standard desktop 24-bit RGB 
-         * or accelerated 32-bit RGBA depth environments.
-         */
         if (vinfo_mask & VisualDepthMask) {
             if (vinfo_template->depth != 24 && vinfo_template->depth != 32) {
                 goto match_failed;
             }
-            /* Dynamically align structure depth with what Tk is expecting. */
+            /* Dynamically match whatever bit-depth layout Tk requested. */
             heapInfo->depth = vinfo_template->depth;
         }
     }
@@ -1886,15 +1858,13 @@ XClearWindow(
 
 Display*
 XkbOpenDisplay(
-    const char *name,  /* Note: const char*, not char* */
+    TCL_UNUSED(const char *), /* name */
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *))
 {
-    /* No-op - XKB not used in Wayland port. */
-    (void)name;  /* Suppress unused parameter warning */
     return XOpenDisplay(NULL);
 }
 
