@@ -193,11 +193,11 @@ CreateNVGImageFromDrawableRect(
         return NULL;
     }
 
-    /* Configure alignment and read pixels from the active bound framebuffer, */
+    /* Configure alignment and read pixels from the active bound framebuffer. */
     glPixelStorei(GL_PACK_ALIGNMENT, 4);
     glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    /* 3. Restore the previous framebuffer binding immediately after reading */
+    /* Restore the previous framebuffer binding immediately after reading. */
     if (isPixmap) {
         glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
     }
@@ -479,40 +479,50 @@ XCopyArea_PixmapToWindow(
     NVGpaint imgPaint;
     int rc;
     unsigned char *pixels = NULL; 
-    NVGcontext *vg = TkGlfwGetNVGContext(dst);
-    if (!vg) {
-	return BadDrawable;
-    }
+    
     /* Allocate buffer for pixel data. */
     pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
-    
-    /* Close pixmap frame if open. */
-    if (srcPixmap->frameOpen) {
-        nvgRestore(vg);
-        nvgEndFrame(vg);
-        srcPixmap->frameOpen = 0;
+    if (!pixels) {
+        return BadAlloc;
     }
     
-    /* Read pixmap texture data into buffer.
-     * Bind the pixmap's FBO and read the color attachment. */
-    if (srcPixmap->fbo) {
-        glBindFramebuffer(GL_FRAMEBUFFER, srcPixmap->fbo);
-        glReadPixels(0, 0, srcPixmap->width, srcPixmap->height,
-                     GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    } else {
-        /* No FBO means no content - fill with transparent. */
-        memset(pixels, 0, srcPixmap->width * srcPixmap->height * 4);
-    }
-    
-    /* Begin drawing to destination window. */
+    /* Begin drawing to destination window. 
+     * This will safely handle the underlying window lookup internals, context mapping,
+     * and initialize dc.vg for the active drawing target. 
+     */
     rc = TkGlfwBeginDraw(dst, gc, &dc);
     if (rc != TCL_OK) {
         ckfree((char *)pixels);
         return BadDrawable;
     }
     
-    /* Wrap pixmap texture as NVG image. */
+    /* Close pixmap frame if open, using the safely resolved NanoVG context. */
+    if (srcPixmap->frameOpen) {
+        nvgRestore(dc.vg);
+        nvgEndFrame(dc.vg);
+        srcPixmap->frameOpen = 0;
+    }
+    
+    /* 
+     * Read pixmap texture data into our buffer.
+     * Bind the pixmap's FBO and read out the raw color attachment. 
+     */
+    if (srcPixmap->fbo) {
+        GLint currentFBO;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFBO);
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, srcPixmap->fbo);
+        glPixelStorei(GL_PACK_ALIGNMENT, 4);
+        glReadPixels(0, 0, srcPixmap->width, srcPixmap->height,
+                     GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                     
+        glBindFramebuffer(GL_FRAMEBUFFER, currentFBO);
+    } else {
+        /* No FBO means no valid texture content - baseline fill with transparent. */
+        memset(pixels, 0, srcPixmap->width * srcPixmap->height * 4);
+    }
+    
+    /* Wrap our raw pixel payload buffer as a local NVG image asset. */
     nvgImage = nvgCreateImageRGBA(dc.vg, srcPixmap->width, srcPixmap->height,
                                   0, pixels);
     
@@ -522,7 +532,7 @@ XCopyArea_PixmapToWindow(
         return BadDrawable;
     }
     
-    /* Create image pattern. */
+    /* Create the standard image pattern projection. */
     imgPaint = nvgImagePattern(dc.vg,
                                (float)dst_x - src_x,
                                (float)dst_y - src_y,
@@ -532,7 +542,7 @@ XCopyArea_PixmapToWindow(
                                nvgImage,
                                1.0f);
     
-    /* Draw. */
+    /* Draw the image onto the canvas surface bounds. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg,
             (float)dst_x,
@@ -542,7 +552,7 @@ XCopyArea_PixmapToWindow(
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
     
-    /* Cleanup. */
+    /* Cleanup local engine assets and release host memory allocations. */
     nvgDeleteImage(dc.vg, nvgImage);
     TkGlfwEndDraw(&dc);
     ckfree((char *)pixels);

@@ -735,7 +735,7 @@ TkGlfwBeginDraw(
 
 	/* Window drawing block. */
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
-    printf("BeginDraw for %s\n", Tk_PathName(childPtr));
+  //  printf("BeginDraw for %s\n", Tk_PathName(childPtr));
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
     while (!Tk_IsTopLevel(winPtr)) {
@@ -864,15 +864,30 @@ TkGlfwGetNVGContext(
     Drawable drawable)
 {
     if (TkWaylandDrawableIsPixmap(drawable)) {
-	printf("Contexts not available for pixmaps yet.\n");
-	return NULL;
+        printf("Contexts not available for pixmaps yet.\n");
+        return NULL;
     }
+    
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (!infoPtr || shutdownInProgress) {
-	printf("TkGlfwGetNVContext: No UserPointer\n");
-	return NULL;
+    if (!glfwWindow) {
+        /* If no valid toplevel window context is bound yet, borrow the root context. */
+        glfwWindow = mainGlfwWindow;
     }
+    
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!infoPtr) {
+        /* Fall back to the main/global framework context if this specific window isn't fully registered */
+        if (glfwWindow == mainGlfwWindow && mainGlfwContext.vg != NULL) {
+            return mainGlfwContext.vg;
+        }
+        printf("TkGlfwGetNVContext: No UserPointer available for window %p\n", (void*)glfwWindow);
+        return NULL;
+    }
+    
+    if (shutdownInProgress) {
+        return NULL;
+    }
+    
     return infoPtr->context.vg;
 }
 

@@ -31,6 +31,8 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 
+extern GLFWwindow *mainGlfwWindow;
+
 /* -----------------------------------------------------------------------
  * Display / screen initialization.
  *
@@ -382,11 +384,13 @@ Tk_GetPixmap(
         return None;
     }
 
-    glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
-    if (!glfwWindow) {
-        return None;
-    }
-    
+	if (d == 1) {
+	    /* Fall back to a cached main/global GLFW window handle to safely borrow its GL context */
+	    glfwWindow = mainGlfwWindow;
+	} else {
+	    glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
+	}
+	    
     /* Allocate and safely zero-out the struct layout. */
     pixmap = (TkWaylandPixmap *)ckalloc(sizeof(TkWaylandPixmap));
     if (!pixmap) {
@@ -425,7 +429,7 @@ Tk_GetPixmap(
     glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, width, height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
-    /* Create and structure the compound target Framebuffer Object */
+    /* Create and structure the compound target Framebuffer Object. */
     glGenFramebuffers(1, &pixmap->fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
     
