@@ -370,7 +370,7 @@ InitFont(
 
     /* Simple safety net for oblique fonts (Helvetica Oblique etc.) */
     if ([nsFont italicAngle] != 0.0) {
-        int safeDescent = (int)floor(-[nsFont descender] + 2.0);  /* +2 pixels safety */
+        int safeDescent = (int)floor(-[nsFont descender] + 3.0);  /* +3 pixels safety */
         if (safeDescent > descent) {
             descent = safeDescent;
         }
