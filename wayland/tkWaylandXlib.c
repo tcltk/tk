@@ -1478,13 +1478,11 @@ XWithdrawWindow(
  * XGetVisualInfo --
  *
  *	Returns information about available visuals matching a template mask.
- *	Dynamically allocates an array of XVisualInfo structures on the heap,
- *	matching standard Xlib semantics so that Tk can clean it up via XFree.
+ *	Dynamically maps structure definitions to survive strict mask filtering
+ *	from core Tk image layout pipelines.
  *
  * Results:
- *	An allocated array of XVisualInfo structures, or NULL on match failure 
- *	or out-of-memory errors. The number of matching items is returned via 
- *	nitems_return.
+ *	An allocated array of XVisualInfo structures, or NULL on failure.
  *
  * Side effects:
  *	Allocates memory that must be freed using XFree().
@@ -1506,7 +1504,7 @@ XGetVisualInfo(
         return NULL;
     }
 
-    /* Lazily allocate the underlying shared Visual instance once. */
+    /* Allocate the shared underlying Visual instance once. */
     if (cachedVisual == NULL) {
         cachedVisual = (Visual *)ckalloc(sizeof(Visual));
         if (cachedVisual != NULL) {
@@ -1521,19 +1519,19 @@ XGetVisualInfo(
         }
     }
 
-    /* 2. ALWAYS dynamically allocate the XVisualInfo container array. */
+    /* Dynamically allocate the XVisualInfo wrapper container. */
     heapInfo = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
     if (heapInfo == NULL) {
         *nitems_return = 0;
         return NULL;
     }
 
-    /* Initialize with default properties matching our Wayland display layer. */
+    /* Populate defaults matching baseline initialization values. */
     memset(heapInfo, 0, sizeof(XVisualInfo));
     heapInfo->visual        = cachedVisual;
-    heapInfo->visualid      = 1;
+    heapInfo->visualid      = (vinfo_template && (vinfo_mask & VisualIDMask)) ? vinfo_template->visualid : 1;
     heapInfo->screen        = (display && display->screens) ? display->default_screen : 0;
-    heapInfo->depth         = 32; /* Default to modern composited textures. */
+    heapInfo->depth         = (vinfo_template && (vinfo_mask & VisualDepthMask)) ? vinfo_template->depth : 24;
     heapInfo->class         = TrueColor;
     heapInfo->red_mask      = 0x00FF0000;
     heapInfo->green_mask    = 0x0000FF00;
@@ -1541,21 +1539,28 @@ XGetVisualInfo(
     heapInfo->colormap_size = 256;
     heapInfo->bits_per_rgb  = 8;
 
-    /* 3. Handle incoming template criteria queries safely without strict filtering traps. */
+    /* Handle criteria filters safely by mirroring incoming requirements. */
     if (vinfo_mask != 0 && vinfo_template != NULL) {
         if ((vinfo_mask & VisualClassMask) && 
             vinfo_template->class != heapInfo->class) {
             goto match_failed;
         }
-        if ((vinfo_mask & VisualIDMask) && 
-            vinfo_template->visualid != heapInfo->visualid) {
-            goto match_failed;
+        
+        /* If Tk requests a specific visual ID, dynamically mirror it into 
+         * our response structure to pass the filtering check smoothly.
+         */
+        if (vinfo_mask & VisualIDMask) {
+            heapInfo->visualid = vinfo_template->visualid;
+            if (heapInfo->visual) {
+                heapInfo->visual->visualid = vinfo_template->visualid;
+            }
         }
+
+        /* Accept standard 24-bit RGB or composited 32-bit RGBA depths. */
         if (vinfo_mask & VisualDepthMask) {
             if (vinfo_template->depth != 24 && vinfo_template->depth != 32) {
                 goto match_failed;
             }
-            /* Dynamically match whatever bit-depth layout Tk requested. */
             heapInfo->depth = vinfo_template->depth;
         }
     }
@@ -1568,7 +1573,6 @@ match_failed:
     *nitems_return = 0;
     return NULL;
 }
-
 /*
  *----------------------------------------------------------------------
  *
