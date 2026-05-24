@@ -139,6 +139,13 @@ MODULE_SCOPE const int tkpWinBltModes[];
 #define TK_3D_DARK2 TK_3D_DARK_GC+2
 
 /*
+ * Defines for tkTextDisp.c and tkFont.c
+ */
+
+#define TK_LAYOUT_WITH_BASE_CHUNKS	1
+#define TK_DRAW_IN_CONTEXT		1
+
+/*
  * Internal functions used by more than one source file.
  */
 

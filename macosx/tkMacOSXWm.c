@@ -237,10 +237,10 @@ static const tabbingMode tabbingModes[] = {
 };
 
 static const char *const appearanceStrings[] = {
-    "aqua", "auto", "darkaqua", NULL
+    "light", "dark", "auto", NULL
 };
 enum appearances {
-    APPEARANCE_AQUA, APPEARANCE_AUTO, APPEARANCE_DARKAQUA
+    APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_AUTO
 };
 
 static Bool wantsToBeTab(NSWindow *macWindow) {
@@ -298,13 +298,13 @@ static void syncLayout(NSWindow *macWindow)
 
 typedef enum {
     WMATT_ALPHA, WMATT_APPEARANCE, WMATT_BUTTONS, WMATT_FULLSCREEN,
-    WMATT_ISDARK, WMATT_MODIFIED, WMATT_NOTIFY, WMATT_TITLEPATH, WMATT_TOPMOST,
+    WMATT_MODIFIED, WMATT_NOTIFY, WMATT_TITLEPATH, WMATT_TOPMOST,
     WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS, WMATT_TABBINGID,
     WMATT_TABBINGMODE, WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
-    "-alpha", "-appearance", "-buttons", "-fullscreen", "-isdark", "-modified",
+    "-alpha", "-appearance", "-buttons", "-fullscreen", "-modified",
     "-notify", "-titlepath", "-topmost", "-transparent", "-stylemask", "-class",
     "-tabbingid", "-tabbingmode", "-type", NULL
 };
@@ -1748,11 +1748,11 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	switch ((enum appearances) index) {
-	case APPEARANCE_AQUA:
+	case APPEARANCE_LIGHT:
 	    macWindow.appearance = [NSAppearance appearanceNamed:
 		NSAppearanceNameAqua];
 	    break;
-	case APPEARANCE_DARKAQUA:
+	case APPEARANCE_DARK:
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	    if (@available(macOS 10.14, *)) {
 		macWindow.appearance = [NSAppearance appearanceNamed:
@@ -1763,6 +1763,7 @@ WmSetAttribute(
 	default:
 	    macWindow.appearance = nil;
 	}
+	Tcl_SetObjResult(interp, Tcl_NewObj());
 	break;
     }
     case WMATT_BUTTONS: {
@@ -1938,9 +1939,6 @@ WmSetAttribute(
 	placeAsTab((TKWindow *)macWindow);
 	break;
     }
-    case WMATT_ISDARK: {
-	break;
-    }
     case WMATT_TITLEPATH: {
 	const char *path = (const char *)Tcl_FSGetNativePath(value);
 	NSString *filename = @"";
@@ -2037,11 +2035,11 @@ WmGetAttribute(
 	if (appearance == nil) {
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
 	} else if (appearance == NSAppearanceNameAqua) {
-	    resultString = appearanceStrings[APPEARANCE_AQUA];
+	    resultString = appearanceStrings[APPEARANCE_LIGHT];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	} else if (@available(macOS 10.14, *)) {
 	    if (appearance == NSAppearanceNameDarkAqua) {
-		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+		resultString = appearanceStrings[APPEARANCE_DARK];
 	    }
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	}
@@ -2070,9 +2068,6 @@ WmGetAttribute(
 	break;
     case WMATT_FULLSCREEN:
 	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
-	break;
-    case WMATT_ISDARK:
-	result = Tcl_NewBooleanObj(TkMacOSXInDarkMode((Tk_Window)winPtr));
 	break;
     case WMATT_MODIFIED:
 	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);
@@ -6231,6 +6226,7 @@ TkMacOSXZoomToplevel(
     return true;
 }
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -6319,6 +6315,7 @@ TkUnsupported1ObjCmd(
 	return TCL_ERROR;
     }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -6563,11 +6560,11 @@ WmWinAppearance(
 	if (appearance == nil) {
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
 	} else if (appearance == NSAppearanceNameAqua) {
-	    resultString = appearanceStrings[APPEARANCE_AQUA];
+	    resultString = appearanceStrings[APPEARANCE_LIGHT];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	} else if (@available(macOS 10.14, *)) {
 	    if (appearance == NSAppearanceNameDarkAqua) {
-		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+		resultString = appearanceStrings[APPEARANCE_DARK];
 	    }
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	}
@@ -6584,11 +6581,11 @@ WmWinAppearance(
 	    return TCL_ERROR;
 	}
 	switch ((enum appearances) index) {
-	case APPEARANCE_AQUA:
+	case APPEARANCE_LIGHT:
 	    win.appearance = [NSAppearance appearanceNamed:
 		NSAppearanceNameAqua];
 	    break;
-	case APPEARANCE_DARKAQUA:
+	case APPEARANCE_DARK:
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	    if (@available(macOS 10.14, *)) {
 		win.appearance = [NSAppearance appearanceNamed:
@@ -7848,6 +7845,57 @@ RemapWindows(
 	    childPtr = childPtr->nextPtr) {
 	RemapWindows(childPtr, (MacDrawable *)winPtr->window);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInDarkMode --
+ *
+ *      Tests whether the given window's NSView has a DarkAqua Appearance.
+ *
+ * Results:
+ *      Returns true if the NSView is in DarkMode, false if not.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE bool
+TkMacOSXInDarkMode(Tk_Window tkwin)
+{
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if (@available(macOS 10.14, *)) {
+	TkWindow *winPtr = (TkWindow*) tkwin;
+	NSAppearanceName name;
+	NSView *view = nil;
+	if (winPtr && winPtr->privatePtr) {
+	    view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
+	}
+	if (view) {
+	    name = [[view effectiveAppearance] name];
+	} else {
+	    name = [[NSApp effectiveAppearance] name];
+	}
+	return (name == NSAppearanceNameDarkAqua);
+    }
+#else
+    (void) tkwin;
+#endif
+    return false;
+}
+
+/*
+ * This function is also used in the stub function TkpWindowIsDark, now
+ * that dark mode is available on other platforms.
+ */
+
+int TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
+    *isdark = TkMacOSXInDarkMode(tkwin);
+    return TCL_OK;
 }
 
 /*

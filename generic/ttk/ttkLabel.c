@@ -31,6 +31,7 @@ typedef struct {
     Tcl_Obj	*justifyObj;
     Tcl_Obj	*wrapLengthObj;
     Tcl_Obj	*embossedObj;
+    Tcl_Obj	*angleObj;
 
     /*
      * Computed resources:
@@ -39,7 +40,10 @@ typedef struct {
     Tk_TextLayout	textLayout;
     int		width;
     int		height;
-    int			embossed;
+    double	angle;
+    int		xoffset;
+    int		yoffset;
+    int		embossed;
 
 } TextElement;
 
@@ -47,6 +51,8 @@ typedef struct {
  * NB: Keep in sync with label element option table.
  */
 static const Ttk_ElementOptionSpec TextElementOptions[] = {
+    { "-textangle", TK_OPTION_DOUBLE,
+	offsetof(TextElement,angleObj), "0.0"},
     { "-text", TK_OPTION_STRING,
 	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
@@ -78,10 +84,25 @@ static int TextSetup(TextElement *text, Tk_Window tkwin)
     Tk_GetJustifyFromObj(NULL, text->justifyObj, &justify);
     Tk_GetPixelsFromObj(NULL, tkwin, text->wrapLengthObj, &wrapLength);
     Tcl_GetBooleanFromObj(NULL, text->embossedObj, &text->embossed);
+    if (TCL_OK != Tcl_GetDoubleFromObj(NULL, text->angleObj, &text->angle)) {
+
+	/*
+	 * Default value (empty string and invalid value (like "A")
+	 * Example: ttk::style configure TNotebook.Tab -textangle ""
+	 */
+
+	text->angle = 0;
+    }
+    text->xoffset = 0.0;
+    text->yoffset = 0.0;
 
     text->textLayout = Tk_ComputeTextLayout(
 	    text->tkfont, string, -1/*numChars*/, wrapLength, justify,
 	    0/*flags*/, &text->width, &text->height);
+    if (text->angle != 0.0) {
+	TkAdjustAngledTextLayout(text->angle, &text->width, &text->height,
+		&text->xoffset, &text->yoffset);
+    }
 
     return 1;
 }
@@ -165,11 +186,25 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     }
 
     if (text->embossed) {
-	Tk_DrawTextLayout(Tk_Display(tkwin), d, gc2,
-	    text->textLayout, b.x+1, b.y+1, 0/*firstChar*/, -1/*lastChar*/);
+	if (text->angle != 0.0) {
+	    TkDrawAngledTextLayout(Tk_Display(tkwin), d, gc2,
+		    text->textLayout, b.x+1 + text->xoffset,
+		    b.y+1 + text->yoffset, text->angle,
+		    0/*firstChar*/, -1/*lastChar*/);
+	} else {
+	    Tk_DrawTextLayout(Tk_Display(tkwin), d, gc2,
+		    text->textLayout, b.x+1, b.y+1, 0/*firstChar*/, -1/*lastChar*/);
+	}
     }
-    Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
-	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
+    if (text->angle != 0.0) {
+	TkDrawAngledTextLayout(Tk_Display(tkwin), d, gc1,
+		text->textLayout, b.x + text->xoffset,
+		b.y + text->yoffset, text->angle,
+		0/*firstChar*/, -1/*lastChar*/);
+    } else {
+	Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
+		text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
+    }
 
     if (text->underlineObj != NULL) {
 	TkGetIntForIndex(text->underlineObj, TCL_INDEX_NONE, 0, &underline);
@@ -180,11 +215,23 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 	}
 	if (underline != INT_MIN) {
 	    if (text->embossed) {
-		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
-			text->textLayout, b.x+1, b.y+1, underline);
+		if (text->angle != 0.0) {
+		    TkUnderlineAngledTextLayout(Tk_Display(tkwin), d, gc2,
+			    text->textLayout, b.x+1 + text->xoffset,
+			    b.y+1 + text->yoffset, text->angle, underline);
+		} else {
+		    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
+			    text->textLayout, b.x+1, b.y+1, underline);
+		}
 	    }
-	    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc1,
-		    text->textLayout, b.x, b.y, underline);
+	    if (text->angle != 0.0) {
+		TkUnderlineAngledTextLayout(Tk_Display(tkwin), d, gc1,
+			text->textLayout, b.x + text->xoffset,
+			b.y + text->yoffset, text->angle, underline);
+	    } else {
+		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc1,
+			text->textLayout, b.x, b.y, underline);
+	    }
 	}
     }
 
@@ -521,6 +568,8 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     /* Text element part:
      * NB: Keep in sync with TextElementOptions.
      */
+    { "-textangle", TK_OPTION_DOUBLE,
+	offsetof(LabelElement,text.angleObj), "0.0"},
     { "-text", TK_OPTION_STRING,
 	offsetof(LabelElement,text.textObj), "" },
     { "-font", TK_OPTION_FONT,
