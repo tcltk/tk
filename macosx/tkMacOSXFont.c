@@ -319,6 +319,7 @@ InitFont(
     NSFontRenderingMode renderingMode = NSFontDefaultRenderingMode;
     int ascent, descent;
     static const UniChar ch[] = {'.', 'W', ' ', 0xc4, 0xc1, 0xc2, 0xc3, 0xc7};
+    /* ., W, Space, Auml, Aacute, Acirc, Atilde, Ccedilla */
 #define nCh	(sizeof(ch) / sizeof(UniChar))
     CGGlyph glyphs[nCh];
     CGRect boundingRects[nCh];
@@ -332,6 +333,9 @@ InitFont(
     }
     fontPtr->nsFont = nsFont;
 
+     /*
+     * Some don't like antialiasing on fixed-width even if bigger than limit.
+     */
     if (antialiasedTextEnabled >= 0) {
 	renderingMode = (antialiasedTextEnabled == 0) ?
 		NSFontIntegerAdvancementsRenderingMode :
@@ -344,6 +348,12 @@ InitFont(
     fmPtr->descent = (int)floor(-[nsFont descender] + 0.5);
     fmPtr->maxWidth = (int)[nsFont maximumAdvancement].width;
     fmPtr->fixed = [nsFont isFixedPitch];
+
+    /*
+     * The ascent, descent and fixed fields are not correct for all fonts, as
+     * a workaround deduce that info from the metrics of some typical glyphs,
+     * along with screenfont kerning (space advance difference to printer font)
+     */
 
     bounds = [nsFont boundingRectForFont];
     if (CTFontGetGlyphsForCharacters((CTFontRef) nsFont, ch, glyphs, nCh)) {
