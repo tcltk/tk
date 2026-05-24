@@ -3692,6 +3692,22 @@ UpdateGeometryInfo(
 	       Tk_PathName(winPtr), tw, th);
 	/* Notify the FramebufferSizeCallback to use our workaround. */
 	infoPtr->flags |= sizeChanged;
+	/*
+	 * Wayland won't allow a window to be so narrow that the title bar
+	 * can't display all of the standard controls.  If a size change is
+	 * requested that is smaller than that, the width will be increased,
+	 * but GLFW will not know about the increase, so it won't allocate a
+	 * correctly sized back buffer or pass the correct size to the
+	 * FramebufferSizeCallback.  This causes our backing store framebuffer
+	 * to bee too small for the window, which causes part of the window to
+	 * not be drawn.  There seems to be no way for us to detect the size
+	 * increase (yet, anyway).  So as a last resort / shameless hack we
+	 * just make sure that the window is always at least 180 logical
+	 * pixels wide.
+	 */
+	if (tw < 180) {
+	    tw = 180;
+	}
 	/* Ask GLFW to resize the window. */
         glfwSetWindowSize(glfwWindow, tw, th);
 
