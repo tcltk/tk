@@ -389,6 +389,10 @@ Tk_GetPixmap(
 	    glfwWindow = mainGlfwWindow;
 	} else {
 	    glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
+	    if (!glfwWindow) {
+	        /* If the target window isn't mapped yet, fall back to main window */
+	        glfwWindow = mainGlfwWindow;
+	    }
 	}
 	    
     /* Allocate and safely zero-out the struct layout. */

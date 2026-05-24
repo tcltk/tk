@@ -189,7 +189,7 @@ static void destroyGlfwTkInfo(
 	prev = infoPtr;
 	infoPtr = infoPtr->nextPtr;
     }
-    Tcl_Panic("DestroyGlfwTkInfo received unknown window");
+    printf("destroyGlfwTkInfo: glfwWindow %p not found in list\n", (void*)glfwWindow);
 }
 
 static glfwTkInfo*
@@ -203,7 +203,7 @@ getGlfwTkInfo(
 	    return infoPtr;
 	}
     }
-    Tcl_Panic("GetGlfwTkInfo received unknown window");
+    return NULL;
 }    
 
 /*
@@ -723,6 +723,11 @@ TkGlfwBeginDraw(
         glViewport(0, 0, pixmapImpl->width, pixmapImpl->height);
 
         glfwTkInfo *infoPtr = getGlfwTkInfo(pixmapImpl->glfwWindow);
+        if (!infoPtr) {
+            printf("TkGlfwBeginDraw: pixmap glfwWindow %p not in glfwTkInfoList\n",
+                   (void*)pixmapImpl->glfwWindow);
+            return TCL_ERROR;
+        }
         dcPtr->vg = infoPtr->context.vg;
         dcPtr->drawable = drawable;
 
@@ -745,8 +750,21 @@ TkGlfwBeginDraw(
     }
 
     /* Now winPtr is the containing toplevel and the offsets of the child are given by x and y. */
+    if (!winPtr->privatePtr) {
+        printf("TkGlfwBeginDraw: toplevel %s has NULL privatePtr\n", 
+               Tk_PathName(winPtr));
+        return TCL_ERROR;
+    }
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    printf("TkGlfwBeginDraw: toplevel %s, glfwWindow=%p\n", 
+           Tk_PathName(winPtr), (void*)glfwWindow);
+    
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    if (!infoPtr) {
+        printf("TkGlfwBeginDraw: glfwWindow %p not found in glfwTkInfoList\n",
+               (void*)glfwWindow);
+        return TCL_ERROR;
+    }
 
     /* Set up the nanoVG drawing context for this nvgFrame */
     dcPtr->vg = infoPtr->context.vg;
@@ -810,7 +828,15 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         winPtr = winPtr->parentPtr;
     }
     /* winPtr is the toplevel containing our drawable. */
+    if (!winPtr->privatePtr) {
+        printf("EndDraw: toplevel %s has no privatePtr\n", Tk_PathName(winPtr));
+        return;
+    }
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    if (!glfwWindow) {
+        printf("EndDraw: toplevel %s has no glfwWindow\n", Tk_PathName(winPtr));
+        return;
+    }
 
     /* Make our GL context current and set the viewport. */
     glfwMakeContextCurrent(glfwWindow);
@@ -839,7 +865,9 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 
     /* Mark the window as needing display unless we are in the middle of a Tk double-buffer section. */
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
-    infoPtr->flags |= needsDisplay;
+    if (infoPtr) {
+        infoPtr->flags |= needsDisplay;
+    }
 }
 
 /*
@@ -870,7 +898,7 @@ TkGlfwGetNVGContext(
     
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     if (!glfwWindow) {
-        /* If no valid toplevel window context is bound yet, borrow the root context. */
+        /* If no valid toplevel window context is bound yet, borrow the root context */
         glfwWindow = mainGlfwWindow;
     }
     
