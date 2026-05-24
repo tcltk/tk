@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-9-0-branch"
+    - "rfe-b3b7e8c7c3"
     tags:
     - "core-**"
 permissions:
