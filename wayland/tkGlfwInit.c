@@ -248,8 +248,7 @@ static void renderFBO(
      * having been created first). We have to query GL directly to get the
      * the actual size.
      */
-     glBindFramebuffer(GL_FRAMEBUFFER, fbo->fbo);
-    //glViewport(0, 0, fbWidth, fbHeight);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo->fbo);
     GLint glRect[4] = {0};
     glGetIntegerv(GL_VIEWPORT, glRect);
     printf("GLFW size: %dx%d; GL size %dx%d\n",
@@ -690,7 +689,7 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
  * TkGlfwBeginDraw --
  *
  *	Prepares the NanoVG context for drawing. Uses the provided
- * dcPtr to store context-specific state.
+ *      dcPtr to store context-specific state.
  *
  * Results:
  *	TCL_OK if drawing can proceed, TCL_ERROR otherwise.
@@ -707,7 +706,14 @@ TkGlfwBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    //// This is only for the case where the drawable is a window.
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+	printf("Received a pixmap\n");
+	 TkWaylandPixmap *pixmapImpl = TkWaylandPixmapFromDrawable(drawable);
+        if (!pixmapImpl || !pixmapImpl->glfwWindow) {
+            return TCL_ERROR;
+        }
+	return TCL_OK;
+    }
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
     printf("BeginDraw for %s\n", Tk_PathName(childPtr));
     TkWindow *winPtr = childPtr;
@@ -725,19 +731,12 @@ TkGlfwBeginDraw(
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
-    ////
-    ////glfwMakeContextCurrent(glfwWindow);
-    ////int fbWidth = 0, fbHeight = 0;
-    ////glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    ////glViewport(0, 0, fbWidth, fbHeight);
-    
-    ////
-    
     /* Set up the nanoVG drawing context for this nvgFrame */
     dcPtr->vg = infoPtr->context.vg;
     dcPtr->drawable = drawable;
 
     nvgResetTransform(dcPtr->vg);
+
     /*
      * Start a NanoVG frame for drawing on the backing store.
      * The width and height here should be the window dimensions,
