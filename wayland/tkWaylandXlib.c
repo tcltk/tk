@@ -171,10 +171,12 @@ XResourceManagerString(
  */
 
 int
-XFree(
-    TCL_UNUSED(void *))
+XFree(void *data)
 {
-    return 0;
+    if (data != NULL) {
+        ckfree((char *)data);
+    }
+    return 1;
 }
 
 /*
@@ -357,7 +359,7 @@ TkpSync(
  *
  * XOpenDisplay --
  *
- *	Connect to X server and build internal Display.  No-op in Wayland port.
+ *	Connect to X server and build internal Display.  Emulated in Wayland port.
  *
  * Results:
  *	None.
@@ -367,18 +369,13 @@ TkpSync(
  *
  *----------------------------------------------------------------------
  */
- 
- /* Opaque no-op display structure. */
-typedef struct {
-	int no_op; 
-} NoOpDisplay;
-
 
 Display *
 XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
 {
-    static NoOpDisplay d = {0};
-    return (Display *)&d;
+    static Display d = {0};  /* Zero-init ensures d.screens == NULL */
+    d.display_name = (char *)"wayland-0";
+    return &d;
 }
 
 /*
@@ -1480,31 +1477,102 @@ XWithdrawWindow(
  *
  * XGetVisualInfo --
  *
- *	Get visual information. No-op in Wayland port.
+ *	Returns information about available visuals matching a template mask.
+ *	Dynamically maps structure definitions to survive strict mask filtering
+ *	from core Tk image layout pipelines.
  *
  * Results:
- *	Always returns NULL, with nitems_return set to 0 if non-NULL.
+ *	An allocated array of XVisualInfo structures, or NULL on failure.
  *
  * Side effects:
- *	None.
+ *	Allocates memory that must be freed using XFree().
  *
  *----------------------------------------------------------------------
  */
 
-XVisualInfo*
+XVisualInfo *
 XGetVisualInfo(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(long),
-    TCL_UNUSED(XVisualInfo *),
+    Display *display,
+    long vinfo_mask,
+    XVisualInfo *vinfo_template,
     int *nitems_return)
 {
-    /* No-op - visuals not used in Wayland port. */
-    if (nitems_return) {
-        *nitems_return = 0;
+    static Visual *cachedVisual = NULL;
+    XVisualInfo *heapInfo;
+
+    if (nitems_return == NULL) {
+        return NULL;
     }
+
+    /* Allocate the shared underlying Visual instance once. */
+    if (cachedVisual == NULL) {
+        cachedVisual = (Visual *)ckalloc(sizeof(Visual));
+        if (cachedVisual != NULL) {
+            memset(cachedVisual, 0, sizeof(Visual));
+            cachedVisual->visualid     = 1;
+            cachedVisual->class        = TrueColor;
+            cachedVisual->bits_per_rgb = 8;
+            cachedVisual->map_entries  = 256;
+            cachedVisual->red_mask     = 0x00FF0000;
+            cachedVisual->green_mask   = 0x0000FF00;
+            cachedVisual->blue_mask    = 0x000000FF;
+        }
+    }
+
+    /* Dynamically allocate the XVisualInfo wrapper container. */
+    heapInfo = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
+    if (heapInfo == NULL) {
+        *nitems_return = 0;
+        return NULL;
+    }
+
+    /* Populate defaults matching baseline initialization values. */
+    memset(heapInfo, 0, sizeof(XVisualInfo));
+    heapInfo->visual        = cachedVisual;
+    heapInfo->visualid      = (vinfo_template && (vinfo_mask & VisualIDMask)) ? vinfo_template->visualid : 1;
+    heapInfo->screen        = (display && display->screens) ? display->default_screen : 0;
+    heapInfo->depth         = (vinfo_template && (vinfo_mask & VisualDepthMask)) ? vinfo_template->depth : 24;
+    heapInfo->class         = TrueColor;
+    heapInfo->red_mask      = 0x00FF0000;
+    heapInfo->green_mask    = 0x0000FF00;
+    heapInfo->blue_mask     = 0x000000FF;
+    heapInfo->colormap_size = 256;
+    heapInfo->bits_per_rgb  = 8;
+
+    /* Handle criteria filters safely by mirroring incoming requirements. */
+    if (vinfo_mask != 0 && vinfo_template != NULL) {
+        if ((vinfo_mask & VisualClassMask) && 
+            vinfo_template->class != heapInfo->class) {
+            goto match_failed;
+        }
+        
+        /* If Tk requests a specific visual ID, dynamically mirror it into 
+         * our response structure to pass the filtering check smoothly.
+         */
+        if (vinfo_mask & VisualIDMask) {
+            heapInfo->visualid = vinfo_template->visualid;
+            if (heapInfo->visual) {
+                heapInfo->visual->visualid = vinfo_template->visualid;
+            }
+        }
+
+        /* Accept standard 24-bit RGB or composited 32-bit RGBA depths. */
+        if (vinfo_mask & VisualDepthMask) {
+            if (vinfo_template->depth != 24 && vinfo_template->depth != 32) {
+                goto match_failed;
+            }
+            heapInfo->depth = vinfo_template->depth;
+        }
+    }
+
+    *nitems_return = 1;
+    return heapInfo;
+
+match_failed:
+    ckfree((char *)heapInfo);
+    *nitems_return = 0;
     return NULL;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1794,15 +1862,13 @@ XClearWindow(
 
 Display*
 XkbOpenDisplay(
-    const char *name,  /* Note: const char*, not char* */
+    TCL_UNUSED(const char *), /* name */
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *),
     TCL_UNUSED(int *))
 {
-    /* No-op - XKB not used in Wayland port. */
-    (void)name;  /* Suppress unused parameter warning */
     return XOpenDisplay(NULL);
 }
 
@@ -3166,27 +3232,73 @@ XSetClipRectangles(
  *
  * XGetWindowAttributes --
  *
- *	Get window attributes. No-op in Wayland port.
+ *	Fills an XWindowAttributes structure with visual, depth, and 
+ *	screen settings matching the default display configuration.
+ *
+ *	This function is critical for core Tk operations (such as 
+ *	TkImgPhotoGet) which retrieve the geometry, visual properties, 
+ *	and depths of a window before drawing images. Returning an 
+ *	uninitialized or empty structure causes a crash in photo layout.
  *
  * Results:
- *	Always returns 0 (False).
+ *	Returns 1 (True) on success, 0 (False) if attributes_return is NULL.
  *
  * Side effects:
- *	None.
+ *	Populates the attributes_return structure with pointer references 
+ *	to the display's root visual structure and dimensions.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XGetWindowAttributes(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Window),
-    TCL_UNUSED(XWindowAttributes *))
+    Display *display,
+    Window window,
+    XWindowAttributes *attributes_return)
 {
-    /* No-op - window attributes tracked by Tk. */
-    return 0;
-}
+    if (attributes_return == NULL) {
+        return 0;
+    }
 
+    /* Clear structure memory to avoid garbage pointer data. */
+    memset(attributes_return, 0, sizeof(XWindowAttributes));
+
+    /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
+    if (display != NULL && display->screens != NULL) {
+        Screen *screen = &display->screens[display->default_screen];
+        
+        attributes_return->visual     = screen->root_visual;
+        attributes_return->depth      = screen->root_depth;
+        attributes_return->screen     = screen;
+        attributes_return->width      = screen->width;
+        attributes_return->height     = screen->height;
+        attributes_return->root       = screen->root;
+    } else {
+        /* Safe fallback constants mirroring tkWaylandGC.c defaults. */
+        static Visual fallbackVisual = {
+            .visualid     = 1,
+            .class        = TrueColor,
+            .bits_per_rgb = 8,
+            .map_entries  = 256,
+            .red_mask     = 0xFF0000,
+            .green_mask   = 0x00FF00,
+            .blue_mask    = 0x0000FF
+        };
+        attributes_return->visual = &fallbackVisual;
+        attributes_return->depth  = 24;
+    }
+
+    /* 
+     * Mock common default settings standard widgets look for 
+     * to prevent initialization failures.
+     */
+    attributes_return->map_state        = IsViewable;
+    attributes_return->backing_store    = NotUseful;
+    attributes_return->all_event_masks  = 0;
+    attributes_return->your_event_mask = 0;
+
+    return 1; /* Success */
+}
 
 /*
  *----------------------------------------------------------------------

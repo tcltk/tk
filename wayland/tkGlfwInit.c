@@ -565,12 +565,10 @@ TkGlfwCreateWindow(
 
     /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
-
     if (!GlfwIsInitialized) {
         if (TkGlfwInitialize() != TCL_OK)
             return NULL;
     }
-
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
     if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
@@ -578,7 +576,7 @@ TkGlfwCreateWindow(
         glfwWindow = mainGlfwWindow;
         glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
-    } else {
+    } else { /* A toplevel other than the root */
 	/* Hints apply to the next call to glfwCreateWindow. */
 	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
@@ -587,9 +585,11 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
 	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+	/*
+	 * Sharing the GL context makes image rendering more efficient.
+	 */
         glfwWindow = glfwCreateWindow(width, height, title ? title : "",
-				      NULL, NULL);
-	//mainGlfwWindow); /* Share the GL contexts */
+				      NULL, mainGlfwWindow);
         if (!glfwWindow) {
 	    return NULL;
 	}
