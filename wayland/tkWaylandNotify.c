@@ -885,43 +885,11 @@ TkGlfwCursorPosCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr) {
-	return;
-    }
     XEvent event;
 
-    if (!winPtr) {
-        if (lastWindow) {
-            TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
-            if (lastWinPtr) {
-                memset(&event, 0, sizeof(XEvent));
-                event.type = LeaveNotify;
-                event.xcrossing.serial     = LastKnownRequestProcessed(lastWinPtr->display)++;
-                event.xcrossing.send_event  = False;
-                event.xcrossing.display     = lastWinPtr->display;
-                event.xcrossing.window      = Tk_WindowId((Tk_Window)lastWinPtr);
-                event.xcrossing.root        = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
-                event.xcrossing.subwindow   = None;
-                event.xcrossing.time        = CurrentTime;
-                event.xcrossing.x           = (int)lastX;
-                event.xcrossing.y           = (int)lastY;
-                event.xcrossing.x_root      = lastWinPtr->changes.x + (int)lastX;
-                event.xcrossing.y_root      = lastWinPtr->changes.y + (int)lastY;
-                event.xcrossing.mode        = NotifyNormal;
-                event.xcrossing.detail      = NotifyAncestor;
-                event.xcrossing.same_screen = True;
-                event.xcrossing.focus       = False;
-                event.xcrossing.state       = glfwButtonState | glfwModifierState;
-                Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-            }
-            lastWindow = NULL;
-        }
-        return;
-    }
-
-    /* Check if mouse entered/exited window. */
+    /* Check if mouse entered or left this toplevel. */
     if (lastWindow != window) {
-        /* Send LeaveNotify for previous window if any. */
+        /* Send LeaveNotify for previous toplevel if any. */
         if (lastWindow) {
             TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
             if (lastWinPtr) {
@@ -947,7 +915,7 @@ TkGlfwCursorPosCallback(
             }
         }
         
-        /* Send EnterNotify for current window. */
+        /* Send EnterNotify for current toplevel. */
         memset(&event, 0, sizeof(XEvent));
         event.type = EnterNotify;
         event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display)++;
@@ -971,21 +939,30 @@ TkGlfwCursorPosCallback(
         lastWindow = window;
     }
     
-    /* Generate MotionNotify event. */
+    /* Generate MotionNotify event.
+     * This event needs to be sent to the widget containing the cursor.
+     */
+    Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
+			    (Tk_Window) winPtr);
+
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
     event.xmotion.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xmotion.send_event = False;
     event.xmotion.display = winPtr->display;
-    event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xmotion.window = Tk_WindowId(target);
     event.xmotion.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xmotion.subwindow = None;
     event.xmotion.time = CurrentTime;
-    event.xmotion.x = (int)xpos;
-    event.xmotion.y = (int)ypos;
-    event.xmotion.x_root = winPtr->changes.x + (int)xpos;
-    event.xmotion.y_root = winPtr->changes.y + (int)ypos;
-    /* Critical for drag operations. */
+    /* These coordinates should be relative to the target window. */
+    event.xmotion.x = (int)xpos - Tk_X(target);
+    event.xmotion.y = (int)ypos - Tk_Y(target);
+    /*
+     * The toplevel coordinates are the same as the root coordinates since we have
+     * to treat every toplevel as having position (0, 0)
+     */ 
+    event.xmotion.x_root = (int)xpos;
+    event.xmotion.y_root = (int)ypos;
     event.xmotion.state = glfwButtonState | glfwModifierState;
     event.xmotion.is_hint = NotifyNormal;
     event.xmotion.same_screen = True;
