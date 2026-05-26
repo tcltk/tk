@@ -67,8 +67,8 @@ unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
 /* Track last window and position for enter/leave events */
-static GLFWwindow *lastWindow = NULL;
-static double lastX = -1, lastY = -1;
+static TkWindow *lastWinPtr = NULL;
+//static double lastX = -1, lastY = -1;
 
 
 /*
@@ -886,33 +886,33 @@ TkGlfwCursorPosCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
+    /* Find the widget containing the mouse cursor. */
+    TkWindow *target = (TkWindow *) Tk_CoordsToWindow((int) xpos, (int) ypos,
+			    (Tk_Window) winPtr);
 
-    /* Check if mouse entered or left this toplevel. */
-    if (lastWindow != window) {
-        /* Send LeaveNotify for previous toplevel if any. */
-        if (lastWindow) {
-            TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
-            if (lastWinPtr) {
-                memset(&event, 0, sizeof(XEvent));
-                event.type = LeaveNotify;
-                event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display)++;
-                event.xcrossing.send_event = False;
-                event.xcrossing.display = lastWinPtr->display;
-                event.xcrossing.window = Tk_WindowId((Tk_Window)lastWinPtr);
-                event.xcrossing.root = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
-                event.xcrossing.subwindow = None;
-                event.xcrossing.time = CurrentTime;
-                event.xcrossing.x = (int)lastX;
-                event.xcrossing.y = (int)lastY;
-                event.xcrossing.x_root = lastWinPtr->changes.x + (int)lastX;
-                event.xcrossing.y_root = lastWinPtr->changes.y + (int)lastY;
-                event.xcrossing.mode = NotifyNormal;
-                event.xcrossing.detail = NotifyAncestor;
-                event.xcrossing.same_screen = True;
-                event.xcrossing.focus = False;
-                event.xcrossing.state = glfwButtonState | glfwModifierState;
-                Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-            }
+
+    /* Check if mouse entered or left the target widget. */
+    if (lastWinPtr != target) {
+        if (lastWinPtr) {
+	    memset(&event, 0, sizeof(XEvent));
+	    event.type = LeaveNotify;
+	    event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display)++;
+	    event.xcrossing.send_event = False;
+	    event.xcrossing.display = lastWinPtr->display;
+	    event.xcrossing.window = Tk_WindowId((Tk_Window) lastWinPtr);
+	    event.xcrossing.root = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
+	    event.xcrossing.subwindow = None;
+	    event.xcrossing.time = CurrentTime;
+	    event.xcrossing.x = (int) xpos - Tk_X(target);
+	    event.xcrossing.y = (int) ypos - Tk_Y(target);
+	    event.xcrossing.x_root = (int) xpos;
+	    event.xcrossing.y_root = (int) ypos;
+	    event.xcrossing.mode = NotifyNormal;
+	    event.xcrossing.detail = NotifyAncestor;
+	    event.xcrossing.same_screen = True;
+	    event.xcrossing.focus = False;
+	    event.xcrossing.state = glfwButtonState | glfwModifierState;
+	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         }
         
         /* Send EnterNotify for current toplevel. */
@@ -921,29 +921,26 @@ TkGlfwCursorPosCallback(
         event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display)++;
         event.xcrossing.send_event = False;
         event.xcrossing.display = winPtr->display;
-        event.xcrossing.window = Tk_WindowId((Tk_Window)winPtr);
-        event.xcrossing.root = RootWindow(winPtr->display, winPtr->screenNum);
+        event.xcrossing.window = Tk_WindowId((Tk_Window) target);
+        event.xcrossing.root = RootWindow(target->display, target->screenNum);
         event.xcrossing.subwindow = None;
         event.xcrossing.time = CurrentTime;
-        event.xcrossing.x = (int)xpos;
-        event.xcrossing.y = (int)ypos;
-        event.xcrossing.x_root = winPtr->changes.x + (int)xpos;
-        event.xcrossing.y_root = winPtr->changes.y + (int)ypos;
+        event.xcrossing.x = (int) xpos - Tk_X(target);
+        event.xcrossing.y = (int) ypos - Tk_Y(target);
+        event.xcrossing.x_root = (int) xpos;
+        event.xcrossing.y_root = (int) ypos;
         event.xcrossing.mode = NotifyNormal;
         event.xcrossing.detail = NotifyAncestor;
         event.xcrossing.same_screen = True;
         event.xcrossing.focus = False;
         event.xcrossing.state = glfwButtonState | glfwModifierState;
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-        
-        lastWindow = window;
+        lastWinPtr = target;
     }
     
     /* Generate MotionNotify event.
      * This event needs to be sent to the widget containing the cursor.
      */
-    Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
-			    (Tk_Window) winPtr);
 
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
@@ -969,8 +966,8 @@ TkGlfwCursorPosCallback(
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
     /* Update last position. */
-    lastX = xpos;
-    lastY = ypos;
+    //    lastX = xpos;
+    //    lastY = ypos;
 }
 
 /*
