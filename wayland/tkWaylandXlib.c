@@ -2345,12 +2345,44 @@ XGrabKeyboard(
 /*
  *----------------------------------------------------------------------
  *
- * XCreateImage --
+ * DestroyImage --
  *
- *	Create an X image. No-op in Wayland port.
+ *	Destroys storage associated with an image.
  *
  * Results:
- *	Always returns NULL.
+ *	None.
+ *
+ * Side effects:
+ *	Deallocates the image.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DestroyImage(
+    XImage *image)
+{
+    if (image) {
+	if (image->data) {
+	    Tcl_Free(image->data);
+	}
+	Tcl_Free(image);
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCreateImage --
+ *
+ *	Allocates an XImage with the provided pixel data.  This is called by
+ *      TkImgPhotoDisplay.  If TK_CAN_RENDER_RGBA is defined, as it is for the
+ *      Wayland port, the XImage is passed to TkpPutRGBAImage and then
+ *      destroyed.
+ *
+ * Results:
+ *	Returns a pointer an XImage.
  *
  * Side effects:
  *	None.
@@ -2358,21 +2390,72 @@ XGrabKeyboard(
  *----------------------------------------------------------------------
  */
 
-XImage*
+XImage *
 XCreateImage(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Visual *),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(char *),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    Display* display,
+    TCL_UNUSED(Visual*), /* visual */
+    unsigned int depth,
+    int format,
+    int offset,
+    char* data,
+    unsigned int width,
+    unsigned int height,
+    int bitmap_pad,
+    int bytes_per_line)
 {
-    /* No-op - X images not used in Wayland port. */
-    return NULL;
+    XImage *ximage;
+
+    LastKnownRequestProcessed(display)++;
+    ximage = (XImage *)Tcl_Alloc(sizeof(XImage));
+
+    ximage->height = height;
+    ximage->width = width;
+    ximage->depth = depth;
+    ximage->xoffset = offset;
+    ximage->format = format;
+    ximage->data = data;
+    ximage->obdata = NULL;
+
+    if (format == ZPixmap) {
+	ximage->bits_per_pixel = 32;
+	ximage->bitmap_unit = 32;
+    } else {
+	ximage->bits_per_pixel = 1;
+	ximage->bitmap_unit = 8;
+    }
+    if (bitmap_pad) {
+	ximage->bitmap_pad = bitmap_pad;
+    } else {
+	/*
+	 * Use 8 byte alignment.
+	 */
+
+	ximage->bitmap_pad = 64;
+    }
+    if (bytes_per_line) {
+	ximage->bytes_per_line = bytes_per_line;
+    } else {
+	ximage->bytes_per_line = (
+	    (width * ximage->bits_per_pixel +
+	    (ximage->bitmap_pad - 1)) >> 3) & ~((ximage->bitmap_pad >> 3) - 1);
+    }
+#ifdef WORDS_BIGENDIAN
+    ximage->byte_order = MSBFirst;
+    ximage->bitmap_bit_order = MSBFirst;
+#else
+    ximage->byte_order = LSBFirst;
+    ximage->bitmap_bit_order = LSBFirst;
+#endif
+    ximage->red_mask = 0x00FF0000;
+    ximage->green_mask = 0x0000FF00;
+    ximage->blue_mask = 0x000000FF;
+    ximage->f.create_image = NULL;
+    ximage->f.destroy_image = DestroyImage;
+    ximage->f.get_pixel = NULL; //// Implement ImageGetPixel;
+    ximage->f.put_pixel = NULL; //// Implement ImagePutPixel;
+    ximage->f.sub_image = NULL;
+    ximage->f.add_pixel = NULL;
+    return ximage;
 }
 
 /*
@@ -3253,7 +3336,7 @@ XSetClipRectangles(
 int
 XGetWindowAttributes(
     Display *display,
-    Window window,
+    TCL_UNUSED(Window), /* window */
     XWindowAttributes *attributes_return)
 {
     if (attributes_return == NULL) {

@@ -31,6 +31,8 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 
+extern GLFWwindow *mainGlfwWindow;
+
 /* -----------------------------------------------------------------------
  * Display / screen initialization.
  *
@@ -110,7 +112,12 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     display->display_name   = (char *)"wayland-0";
 
     screen->display     = (Display *)display;
-    screen->root        = 1;
+    /*
+     * This is passed as a drawable to Tk_GetPixmap by photoimages!
+     * So it cannot be odd!!! Zero means use the mainGlfwWindow.
+     * XXXX This is an issue if we want to support high-dpi pixmaps.
+     */
+    screen->root        = 0;
     screen->root_visual = visual;
     screen->root_depth  = 24;
 
@@ -349,115 +356,99 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
+ * The Pixmap XID is the unsgined int value of a pointer to a
+ * TkWaylandPixmap.
+ */
+
+static inline TkWaylandPixmap* TkWaylandPixmapFromPixmap(
+    Pixmap pixmap)
+{
+    return (TkWaylandPixmap*)pixmap;
+}
+
+static inline Pixmap PixmapFromTkWaylandPixmap(
+    TkWaylandPixmap *pixmapPtr)
+{
+    return (Pixmap)pixmapPtr;
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * Tk_GetPixmap --
  *
- *      Create an off-screen drawable (pixmap) using an OpenGL FBO.
- *      This allows NanoVG to render to the pixmap just like a window.
- *      The drawable should be a Tk window.  The pixmap will construct
- *      the FBO in the GL context of that window.
+ *      Create an off-screen drawable (pixmap), which is associated with an
+ *      NVGLUframebuffer.  The drawable should be a Tk window or None.  If a
+ *      drawable is provided, the FBO is created in the GL context of the
+ *      associated GLFWwindow.  Otherwise the context of the root window is
+ *      used.  Note that the GL context is shared between windows.
  *
  * Results:
- *      Returns a Pixmap (Drawable) identifier.
+ *      Returns a Drawable associated to a Pixmap.
  *
  * Side effects:
- *      Allocates FBO, texture, and stencil buffer.
+ *      Allocates an NVGLUframebuffer.
  *
  *----------------------------------------------------------------------
  */
 
 Pixmap
 Tk_GetPixmap(
-    TCL_UNUSED(Display *),  
-    Drawable d,
+    TCL_UNUSED(Display *),
+    Drawable drawable,
     int      width,
     int      height,
     TCL_UNUSED(int)) /* depth */
 {
-    TkWaylandPixmap *pixmap;
-    GLint            oldFBO;
+    printf("Tk_GetPixmap: drawable is %lx\n", drawable);
+    TkWaylandPixmap *pixmapPtr;
+    //GLint            oldFBO;
     GLenum           status;
-    
-    
+    GLFWwindow      *glfwWindow;
+
     if (width <= 0 || height <= 0) {
         return None;
     }
 
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(d);
-    if (!glfwWindow) {
-        return None;
+    if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
+	glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    } else {
+	glfwWindow = mainGlfwWindow;
     }
-    
-    /* Allocate pixmap structure. */
-    pixmap = (TkWaylandPixmap *)ckalloc(sizeof(TkWaylandPixmap));
-    memset(pixmap, 0, sizeof(TkWaylandPixmap));
-    pixmap->type          = 1;  /* Pixmap, not window */
-    pixmap->width         = width;
-    pixmap->height        = height;
-    pixmap->drawable      = TkWaylandDrawableForPixmap(pixmap);
-    pixmap->frameOpen     = 0;
-    pixmap->glfwWindow    = glfwWindow;
-    
-    /* Make GL context current for FBO creation. */
+    if (!glfwWindow) {
+	printf("No GLFW window!\n");
+	return None;
+    }
+
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
+    memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
+    pixmapPtr->glfwWindow = glfwWindow;
+    pixmapPtr->width = width;
+    pixmapPtr->height = height;
+    //// Figure out how to specify high-dpi pixmaps!!!!
+    //// Maybe use the pixel ratio of the drawable?
+    //// That could change if the drawable moves to a different display.
+    pixmapPtr->pixelRatio = 1.0;
+
+    /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
-    
-    /* Save current FBO binding */
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
-    
-    /* Create texture for color attachment */
-    glGenTextures(1, &pixmap->texture);
-    glBindTexture(GL_TEXTURE_2D, pixmap->texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                 width, height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    
-    /* Create stencil buffer (required by NanoVG). */
-    glGenRenderbuffers(1, &pixmap->stencil);
-    glBindRenderbuffer(GL_RENDERBUFFER, pixmap->stencil);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
-                         width, height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    
-    /* Create and configure FBO. */
-    glGenFramebuffers(1, &pixmap->fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
-    
-    /* Attach texture as color buffer. */
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                          GL_TEXTURE_2D, pixmap->texture, 0);
-    
-    /* Attach stencil buffer. */
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                             GL_RENDERBUFFER, pixmap->stencil);
-    
+    int fbWidth = (int) pixmapPtr->pixelRatio * width;
+    int fbHeight = (int) pixmapPtr->pixelRatio * height;
+    pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
+					 fbWidth, fbHeight, 0);
+
     /* Check FBO completeness. */
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
-        glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
-        
-        /* Cleanup on failure. */
-        glDeleteFramebuffers(1, &pixmap->fbo);
-        glDeleteTextures(1, &pixmap->texture);
-        glDeleteRenderbuffers(1, &pixmap->stencil);
-        ckfree((char *)pixmap);
-        return None;
     }
-    
+
     /* Clear pixmap to white. */
-    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    
-    /* Restore previous FBO binding. */
-    glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
-    
-    return pixmap->drawable;
+
+    return PixmapFromTkWaylandPixmap(pixmapPtr);
 }
 
 /*
@@ -481,27 +472,12 @@ Tk_FreePixmap(
     TCL_UNUSED(Display *),
     Pixmap pixmap)
 {
-    TkWaylandPixmap *impl = (TkWaylandPixmap *)pixmap;
-    
-    if (!impl || impl->type != 1) return;
-    
-    /* Make context current for GL cleanup. */
-    if (impl->glfwWindow) {
-        glfwMakeContextCurrent(impl->glfwWindow);
+    TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap(pixmap);
+    if (pixmapPtr->fb) {
+	glfwMakeContextCurrent(pixmapPtr->glfwWindow);
+	nvgluDeleteFramebuffer(pixmapPtr->fb);
     }
-    
-    /* Delete OpenGL resources. */
-    if (impl->fbo) {
-        glDeleteFramebuffers(1, &impl->fbo);
-    }
-    if (impl->texture) {
-        glDeleteTextures(1, &impl->texture);
-    }
-    if (impl->stencil) {
-        glDeleteRenderbuffers(1, &impl->stencil);
-    }
-    
-    ckfree((char *)impl);
+    ckfree(pixmapPtr);
 }
 
 /*

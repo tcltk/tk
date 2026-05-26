@@ -136,10 +136,11 @@ const char *const WmAttributeNames[] = {
  * To avoid the need for casting we provide functions for converting
  * between a Drawable and a pointer to one of these structs.  These
  * are functions, rather than macros, to enable the C compiler to
- * check the types of their arguments.
+ * check the types of their argument.
+ *
  */
 
-inline int TkWaylandDrawableIsPixmap(Drawable drawable) {
+inline bool TkWaylandDrawableIsPixmap(Drawable drawable) {
     return ((drawable & 1UL) == 1);
 }
 
@@ -147,22 +148,34 @@ inline Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
      return (Drawable) winPtr;
  }
 
+/*
+ * This returns a NULL pointer if passed None.
+ */
+
 inline TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
-    if (TkWaylandDrawableIsPixmap(drawable)) {
-	Tcl_Panic("Attempt to convert a pixmap drawable to a window.");
+    if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
+	printf("Attempt to convert a pixmap drawable %lx to a window.",
+	       drawable);
     }
     return (TkWindow *) drawable;
 }
 
-inline Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap) {
-     return 1 + (Drawable) pixmap;
+inline Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmapPtr) {
+    printf("~~~~~~~~~~~~~~~~~~~~~~~~ Generating drawable for %p\n", pixmapPtr);
+    if (pixmapPtr != NULL) {
+	printf("~~~~~~~~~~~~ returning drawable %lx for pixmapPtr %p\n",
+	       3 + (Drawable) pixmapPtr, pixmapPtr);
+	return 3 + (Drawable) pixmapPtr;
+    } else {
+	return None;
+    }
  }
 
 inline TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable) {
     if (!TkWaylandDrawableIsPixmap(drawable)) {
 	Tcl_Panic("Attempt to convert a window drawable to a pixmap");
     }
-    return (TkWaylandPixmap *) (drawable & ~1UL);
+    return (TkWaylandPixmap *) (drawable & ~3UL);
 }
 
 /*

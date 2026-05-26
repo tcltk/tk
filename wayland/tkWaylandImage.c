@@ -20,11 +20,11 @@
 #include "tkImgPhoto.h"
 #include "tkColor.h"
 #include "tkGlfwInt.h"
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#define NANOVG_GLES2  
+#define NANOVG_GLES3  
+#include "nanovg_gl_utils.h"
 
 /*
  * Undefine X11 macro that conflicts with our implementation.
@@ -83,6 +83,10 @@ static NVGImageData* CreateNVGImageFromDrawableRect(
     unsigned int width, unsigned int height);
 static XImage* TkWaylandCreateXImageWithNVGImage(
     NVGcontext* vg, NVGImageData* nvgImage, Display* display);
+#if 0
+//// Left over from an old implementation of XCopyArea.
+//// XCopyArea is no longer used by the generic code since
+//// we define TK_CAN_RENDER_RGBA.
 static int XCopyArea_PixmapToPixmap(
     TkWaylandPixmap *srcPixmap, TkWaylandPixmap *dstPixmap, GC gc,
     int src_x, int src_y,unsigned width, unsigned height, int dst_x, int dst_y);
@@ -90,6 +94,7 @@ static int XCopyArea_PixmapToWindow(
     TkWaylandPixmap *srcPixmap,Drawable dst,
     GC gc, int src_x, int src_y, unsigned width, unsigned height,
     int dst_x, int dst_y);
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -131,7 +136,11 @@ _XInitImageFuncPtrs(
  *
  *----------------------------------------------------------------------
  */
-////// THIS ASSUMES THE DRAWABLE IS A WINDOW!!!!!
+//// THIS ASSUMES THE DRAWABLE IS A WINDOW!!!!!
+//// Currently it is disabled and just prints a message.
+//// Called by XCopyPlane and XGetImage, both of which are
+//// also disabled and not used by the generic code.
+
 static NVGImageData*
 CreateNVGImageFromDrawableRect(
     Drawable drawable,
@@ -139,6 +148,8 @@ CreateNVGImageFromDrawableRect(
     unsigned int width,
     unsigned int height)
 {
+    printf("CreateNVGImageFromDrawableRect\n");
+#if 0
     GLFWwindow *glfwWindow;
     NVGcontext *vg;
     NVGImageData *nvgImg;
@@ -201,6 +212,47 @@ CreateNVGImageFromDrawableRect(
 	nvgImg->pixels = rgba_pixels;   /* ⭐ store CPU copy */
 
 	return nvgImg;
+#endif
+	return NULL;
+}
+
+int TkpPutRGBAImage(
+    Display* display,
+    Drawable drawable,
+    GC gc,
+    XImage* image,
+    int src_x,  // assume this is 0 for now
+    int src_y,  // assume this is 0 for now
+    int dst_x,
+    int dst_y,
+    unsigned int width,
+    unsigned int height)
+{
+    (void)display; (void)gc;
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+	printf("TkpPutRGBAImage does not support drawing to pixmaps yet.");
+    }
+    if (src_x || src_y) {
+	printf("Unexpected source offset\n");
+	return 0;
+    }
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+    TkWaylandDrawingContext dc;
+    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
+    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    if (rc != TCL_OK) {
+	printf("TkGlfwBeginDraw failed\n");
+	return TCL_ERROR;
+    }
+    int imageID = nvgCreateImageRGBA(vg, width, height, 0, image->data);
+    NVGpaint paint = nvgImagePattern(vg, 0, 0, width, height,
+				     0.0f, imageID, 1.0f);
+    nvgBeginPath(vg);
+    nvgRect(vg, dst_x, dst_y, width, height);
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+    TkGlfwEndDraw(&dc);
+    return 0;
 }
 
 /*
@@ -219,16 +271,17 @@ CreateNVGImageFromDrawableRect(
  *----------------------------------------------------------------------
  */
 
-
-XImage* TkWaylandCreateXImageWithNVGImage(
+//// Currently unused and disabled
+static XImage* TkWaylandCreateXImageWithNVGImage(
     TCL_UNUSED(NVGcontext *),
     NVGImageData* nvgImage,
     TCL_UNUSED(Display *))
 {
+    printf("TkWaylandCreateXImageWithNVGImage\n");
     if (!nvgImage || !nvgImage->pixels) {
         return NULL;
     }
-
+#if 0
     XImage *imagePtr = ckalloc(sizeof(XImage));
     if (!imagePtr) return NULL;
 
@@ -258,6 +311,8 @@ XImage* TkWaylandCreateXImageWithNVGImage(
     imagePtr->blue_mask  = 0x000000FFu;
 
     return imagePtr;
+#endif
+    return NULL;
 }
 
 /*
@@ -276,7 +331,10 @@ XImage* TkWaylandCreateXImageWithNVGImage(
  *----------------------------------------------------------------------
  */
 
-//////////////// THIS ASSUMES THE DRAWABLE IS A WINDOW
+//// THIS ASSUMES THE DRAWABLE IS A WINDOW
+//// It is called by the untested DrawButtonBitmap and by a static
+//// function in tkUnixFont.c.  Probably we will never use it but
+//// it is a stub.  Currently it just prints a message and returns.
 XImage*
 XGetImage(
     Display *display,
@@ -287,6 +345,8 @@ XGetImage(
     unsigned long plane_mask,
     int format)
 {
+    printf("XGetImage\n");
+#if 0
     NVGImageData *nvgImg;
     XImage *imagePtr;
     NVGcontext *vg;
@@ -324,6 +384,8 @@ XGetImage(
     ckfree((char*)nvgImg);
 
     return imagePtr;
+#endif
+    return NULL;
 }
 
 /*
@@ -342,6 +404,12 @@ XGetImage(
  *----------------------------------------------------------------------
  */
 
+//// XCopyArea is no longer used by the generic code since
+//// we define TK_CAN_RENDER_RGBA.  But it is a stub and may
+//// be needed by extensions.  There are two separate implementations
+//// below, both disabled.  Currently it just prints a message and
+//// returns Success.
+
 int
 XCopyArea(
     Display  *display,
@@ -352,6 +420,39 @@ XCopyArea(
     unsigned  width, unsigned height,
     int       dst_x, int dst_y)
 {
+    printf("XCopyArea: src = %lx; dst = %lx\n", src, dst);
+#if 0
+    NVGLUframebuffer *src_fb, *dst_fb;
+    GLFWwindow *glfwWindow = NULL;
+    if (TkWaylandDrawableIsPixmap(src)) {
+	TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromDrawable(src);
+	src_fb = pixmapPtr->fb;
+    } else {
+	TkWindow *winPtr = TkWaylandTkWindowFromDrawable(src); 
+	glfwWindow = winPtr->privatePtr->glfwWindow;
+	src_fb = winPtr->privatePtr->fb;
+    }	
+    if (TkWaylandDrawableIsPixmap(dst)) {
+	TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromDrawable(dst);
+	glfwWindow = pixmapPtr->glfwWindow;
+	dst_fb = pixmapPtr->fb;
+    } else {
+	TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst); 
+	glfwWindow = TkWaylandGetGLFWwindowFromDrawable(dst);
+	dst_fb = winPtr->privatePtr->fb;
+    }
+    printf("src fb is %p; dst fb is %p; glfw window is %p\n",
+	   src_fb->fbo, dst_fb->fbo, glfwWindow);
+    
+    glfwMakeContextCurrent(glfwWindow);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fb->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst_fb->fbo);
+	   glBlitFramebuffer(0, 0, width, height,
+		      0, 0, width, height,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+#endif
+#if 0
     (void)display;
     (void)gc;
     TkWindow *srcWindow = NULL;
@@ -381,12 +482,12 @@ XCopyArea(
     }
 
     //// The other two cases are not handled yet.
-
+#endif
     return Success;
 }
 
-
-    
+#if 0
+//// Currently not used.    
 /* Helper functions for XCopyArea to improve performance. */
 
 static int
@@ -419,8 +520,8 @@ XCopyArea_PixmapToWindow(
     
     /* Read pixmap texture data into buffer.
      * Bind the pixmap's FBO and read the color attachment. */
-    if (srcPixmap->fbo) {
-        glBindFramebuffer(GL_FRAMEBUFFER, srcPixmap->fbo);
+    if (srcPixmap->fb) {
+        glBindFramebuffer(GL_FRAMEBUFFER, srcPixmap->fb);
         glReadPixels(0, 0, srcPixmap->width, srcPixmap->height,
                      GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -515,7 +616,7 @@ XCopyArea_PixmapToPixmap(
     
     /* Bind destination FBO and open frame if needed. */
     if (!dstPixmap->frameOpen) {
-        glBindFramebuffer(GL_FRAMEBUFFER, dstPixmap->fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, dstPixmap->fb);
         glViewport(0, 0, dstPixmap->width, dstPixmap->height);
         
         nvgBeginFrame(vg,
@@ -565,7 +666,7 @@ XCopyArea_PixmapToPixmap(
     
     return Success;
 }
-
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -584,7 +685,9 @@ XCopyArea_PixmapToPixmap(
  *
  *----------------------------------------------------------------------
  */
-
+//// This stub is not used by the generic code but may be needed by
+//// extensions.  Currently this is disabled and just prints out a
+//// message.
 int
 XCopyPlane(
     Display      *display,
@@ -599,6 +702,8 @@ XCopyPlane(
     int           dest_y,
     TCL_UNUSED(unsigned long)) /* plane */
 {
+    printf("XCopyPlane\n");
+#if 0
     TkWaylandDrawingContext  dc;
     NVGImageData            *srcImg;
     XGCValues                gcValues;
@@ -698,6 +803,7 @@ XCopyPlane(
     nvgDeleteImage(dc.vg, imageId);
 
     TkGlfwEndDraw(&dc);
+#endif
     return Success;
 }
 
@@ -718,6 +824,8 @@ XCopyPlane(
  *----------------------------------------------------------------------
  */
 
+//// Currently disabled and not used by the generic code.
+//// This may be needed by extensions.
 int
 XPutImage(
     Display *display,
@@ -729,6 +837,8 @@ XPutImage(
     unsigned int width,
     unsigned int height)
 {
+    printf("XPutImage\n");
+#if 0
     TkWaylandDrawingContext dc;
     int imageId;
     NVGpaint imgPaint;
@@ -823,6 +933,7 @@ XPutImage(
     nvgDeleteImage(dc.vg, imageId);
 
     TkGlfwEndDraw(&dc);
+#endif
     return Success;
 }
 
@@ -846,6 +957,7 @@ int
 XDestroyImage(
     XImage *image)
 {
+    printf("XDestroyImage\n");
     if (image) {
         if (image->data) {
             ckfree(image->data);

@@ -2,10 +2,10 @@
  * tkWaylandButton.c --
  *
  *      This file implements the Wayland specific portion of the button widgets.
- * 
+ *
  *  Copyright © 1996-1997 Sun Microsystems, Inc.
  *  Copyright © 2026 Kevin Walzer
- * 
+ *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
@@ -26,7 +26,7 @@ extern void TkpDrawCheckIndicator(Tk_Window tkwin,
     Tk_3DBorder bgBorder, XColor *indicatorColor,
     XColor *selectColor, XColor *disColor, int on,
     int disabled, int mode);
-    
+
 void ImageChanged(			/* to be passed to Tk_GetImage() */
     void *clientData,
     int x, int y, int width, int height,
@@ -71,7 +71,7 @@ const Tk_ClassProcs tkpButtonProcs = {
  *
  * Side effects:
  *      None.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
  */
 
 void
@@ -83,12 +83,12 @@ ImageChanged(TCL_UNUSED(void *),
              TCL_UNUSED(int), /*imageWidth*/
              TCL_UNUSED(int)) /*imageHeight */
 {
-  
+
   /* No-op. */
-  
+
 }
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * TkpCreateButton --
  *
@@ -100,7 +100,7 @@ ImageChanged(TCL_UNUSED(void *),
  *
  * Side effects:
  *      Allocates memory.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
 */
 
 TkButton *
@@ -112,7 +112,7 @@ TkpCreateButton(
 }
 
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * ShiftByOffset --
  *
@@ -123,7 +123,7 @@ TkpCreateButton(
  *
  * Side effects:
  *      None.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
 */
 
 static void
@@ -144,7 +144,7 @@ ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
     }
 }
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * DrawButtonBitmap --
  *
@@ -156,18 +156,19 @@ ShiftByOffset(TkButton *butPtr, int relief, int *x, int *y,
  *
  * Side effects:
  *      Draws bitmap at specified location.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
 */
 
 static void
 DrawButtonBitmap(TkButton *butPtr,
-                 TkWaylandDrawingContext *dc,
                  int x,
                  int y,
                  int width,
                  int height)
 {
-    Pixmap bitmap = butPtr->bitmap; 
+    Drawable d = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
+    NVGcontext *vg = TkGlfwGetNVGContext(d);
+    Pixmap bitmap = butPtr->bitmap;
     unsigned char *bits = NULL;
     unsigned char *rgba = NULL;
     unsigned int bm_width, bm_height, border_width, depth;
@@ -182,10 +183,10 @@ DrawButtonBitmap(TkButton *butPtr,
 
     if (!bitmap) {
         /* No bitmap: draw fallback rectangle. */
-        nvgBeginPath(dc->vg);
-        nvgRect(dc->vg, x, y, width, height);
-        nvgFillColor(dc->vg, nvgRGBA(192, 192, 192, 255));
-        nvgFill(dc->vg);
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, width, height);
+        nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
+        nvgFill(vg);
         return;
     }
 
@@ -218,7 +219,7 @@ DrawButtonBitmap(TkButton *butPtr,
         fgColor = butPtr->normalFg;
     }
 
-    /* 
+    /*
      * Read bitmap pixels via XGetImage → XGetPixel
      */
     image = XGetImage(dpy, bitmap,
@@ -282,14 +283,15 @@ DrawButtonBitmap(TkButton *butPtr,
     }
 
     /* Draw via NanoVG using the RGBA image. */
-    imageId = nvgCreateImageRGBA(dc->vg, (int)bm_width, (int)bm_height, 0, rgba);
+    imageId = nvgCreateImageRGBA(vg, (int)bm_width, (int)bm_height, 0, rgba);
     if (imageId > 0) {
-        NVGpaint paint = nvgImagePattern(dc->vg, x, y, bm_width, bm_height, 0, imageId, 1);
-        nvgBeginPath(dc->vg);
-        nvgRect(dc->vg, x, y, bm_width, bm_height);
-        nvgFillPaint(dc->vg, paint);
-        nvgFill(dc->vg);
-        nvgDeleteImage(dc->vg, imageId);
+        NVGpaint paint = nvgImagePattern(vg, x, y, bm_width, bm_height, 0,
+					 imageId, 1);
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, bm_width, bm_height);
+        nvgFillPaint(vg, paint);
+        nvgFill(vg);
+        nvgDeleteImage(vg, imageId);
     }
 
 cleanup:
@@ -305,14 +307,14 @@ cleanup:
     return;
 
 fallback_rect:
-    nvgBeginPath(dc->vg);
-    nvgRect(dc->vg, x, y, width, height);
-    nvgFillColor(dc->vg, nvgRGBA(192, 192, 192, 255));
-    nvgFill(dc->vg);
+    nvgBeginPath(vg);
+    nvgRect(vg, x, y, width, height);
+    nvgFillColor(vg, nvgRGBA(192, 192, 192, 255));
+    nvgFill(vg);
     return;
 }
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * DrawButtonImage --
  *
@@ -323,33 +325,37 @@ fallback_rect:
  *
  * Side effects:
  *      Draws image at specified location.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
 */
 
 static void
-DrawButtonImage(TkButton *butPtr, TkWaylandDrawingContext *dc,
-                 int x, int y, int width, int height, int selected)
+DrawButtonImage(
+    TkButton *butPtr,
+    int x,
+    int y,
+    int width,
+    int height,
+    int selected)
 {
     if (butPtr->image) {
-        /* Use Tk_RedrawImage – it eventually calls XPutImage which
-         * in our Wayland port uses the NanoVG drawing context. */
+        Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
         if (selected && butPtr->selectImage) {
             Tk_RedrawImage(butPtr->selectImage, 0, 0, width, height,
-                           (Drawable)dc, x, y);
+                           drawable, x, y);
         } else if ((butPtr->flags & TRISTATED) && butPtr->tristateImage) {
             Tk_RedrawImage(butPtr->tristateImage, 0, 0, width, height,
-                           (Drawable)dc, x, y);
+                           drawable, x, y);
         } else {
             Tk_RedrawImage(butPtr->image, 0, 0, width, height,
-                           (Drawable)dc, x, y);
+                           drawable, x, y);
         }
     } else if (butPtr->bitmap != None) {
         /* Bitmap drawing – convert to RGBA and draw with NanoVG. */
-        DrawButtonBitmap(butPtr, dc, x, y, width, height);
+        DrawButtonBitmap(butPtr, x, y, width, height);
     }
 }
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * DrawButtonText --
  *
@@ -360,41 +366,38 @@ DrawButtonImage(TkButton *butPtr, TkWaylandDrawingContext *dc,
  *
  * Side effects:
  *      Draws text at specified location.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
 */
 
 static void
 DrawButtonText(
     TkButton *butPtr,
-    TkWaylandDrawingContext *dc,
     int x,
     int y)
 {
     GC currentGC;
     Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
-    
+
     /* Select appropriate GC based on button state. */
     if (butPtr->state == STATE_DISABLED && butPtr->disabledFg) {
         currentGC = butPtr->disabledGC;
-    } else if (butPtr->state == STATE_ACTIVE && !Tk_StrictMotif(butPtr->tkwin)) {
+    } else if (butPtr->state == STATE_ACTIVE &&
+	       !Tk_StrictMotif(butPtr->tkwin)) {
         currentGC = butPtr->activeTextGC;
     } else {
         currentGC = butPtr->normalTextGC;
     }
 
-    /* Apply GC settings for text. */
-    TkGlfwApplyGC(dc->vg, currentGC);
-    
     /* Draw the text layout. */
     Tk_DrawTextLayout(butPtr->display, drawable, currentGC,
 		      butPtr->textLayout, x, y, 0, -1);
-    
+
     /* Draw underline if needed. */
     Tk_UnderlineTextLayout(butPtr->display, drawable, currentGC,
 			   butPtr->textLayout, x, y, butPtr->underline);
 }
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * TkpDisplayButton --
  *
@@ -405,7 +408,7 @@ DrawButtonText(
  *
  * Side effects:
  *      Draws to window surface.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
  */
 
 void
@@ -461,7 +464,7 @@ TkpDisplayButton(void *clientData)
         unsigned int bm_width, bm_height, border_width, depth;
         int x_hot, y_hot;
         Display *dpy = Tk_Display(butPtr->tkwin);
-        
+
         XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
                      &bm_width, &bm_height, &border_width, &depth);
         width = (int)bm_width;
@@ -523,11 +526,11 @@ TkpDisplayButton(void *clientData)
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
         /* Draw image with offset. */
-        DrawButtonImage(butPtr, &dc, x + imageXOffset, y + imageYOffset, 
+        DrawButtonImage(butPtr, x + imageXOffset, y + imageYOffset,
                         width, height, (butPtr->flags & SELECTED));
 
         /* Draw text with offset. */
-        DrawButtonText(butPtr, &dc, x + textXOffset, y + textYOffset);
+        DrawButtonText(butPtr, x + textXOffset, y + textYOffset);
     }
 
     /* Image only. */
@@ -540,7 +543,7 @@ TkpDisplayButton(void *clientData)
 
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
-        DrawButtonImage(butPtr, &dc, x, y, width, height, 
+        DrawButtonImage(butPtr, x, y, width, height,
                         (butPtr->flags & SELECTED));
     }
 
@@ -552,7 +555,7 @@ TkpDisplayButton(void *clientData)
         x += butPtr->indicatorSpace;
         ShiftByOffset(butPtr, relief, &x, &y,
                       butPtr->textWidth, butPtr->textHeight);
-        DrawButtonText(butPtr, &dc, x, y);
+        DrawButtonText(butPtr, x, y);
     }
 
     /* Draw indicator (check/radio button). */
@@ -635,7 +638,7 @@ TkpDisplayButton(void *clientData)
     TkGlfwEndDraw(&dc);
 }
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * TkpComputeButtonGeometry --
  *
@@ -646,7 +649,7 @@ TkpDisplayButton(void *clientData)
  *
  * Side effects:
  *      May request window resize.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
  */
 
 void
@@ -690,7 +693,7 @@ TkpComputeButtonGeometry(
         unsigned int bm_width, bm_height, border_width, depth;
         int x_hot, y_hot;
         Display *dpy = Tk_Display(butPtr->tkwin);
-        
+
         XGetGeometry(dpy, butPtr->bitmap, None, &x_hot, &y_hot,
                      &bm_width, &bm_height, &border_width, &depth);
         width = (int)bm_width;
@@ -819,7 +822,7 @@ TkpComputeButtonGeometry(
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
 }
 
-/* 
+/*
  * -------------------------------------------------------------------------
  * TkpButtonWorldChanged --
  *
@@ -832,7 +835,7 @@ TkpComputeButtonGeometry(
  *
  * Side effects:
  *      GCs reallocated; display list redraw scheduled.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
  */
 
 void
@@ -864,9 +867,9 @@ TkpButtonWorldChanged(void *instanceData)
     }
     butPtr->activeTextGC = newGC;
 
-    /* 
+    /*
      * Disabled text GC - Wayland implementation
-     * 
+     *
      * On Wayland, we cannot use X11 stipple bitmaps.
      * The disabled state will be handled by the compositor
      * or through visual effects. We use the disabledFg color
@@ -882,13 +885,13 @@ TkpButtonWorldChanged(void *instanceData)
         gcValues.background = Tk_3DBorderColor(butPtr->normalBorder)->pixel;
         newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
     }
-    
+
     if (butPtr->disabledGC != NULL) {
         Tk_FreeGC(butPtr->display, butPtr->disabledGC);
     }
     butPtr->disabledGC = newGC;
 
-    /* 
+    /*
      * CRITICAL: Do NOT create gray50 stipple bitmap.
      * Set butPtr->gray to None to indicate no stipple available.
      * The stipple effect for disabled buttons will be handled
@@ -924,7 +927,7 @@ TkpButtonWorldChanged(void *instanceData)
  *
  * Side effects:
  *      Draws indicator on the specified drawable.
- * ------------------------------------------------------------------------ 
+ * ------------------------------------------------------------------------
  */
 
 void
@@ -932,7 +935,7 @@ TkpDrawCheckIndicator(
     TCL_UNUSED(Tk_Window), /* tkwin */
     TCL_UNUSED(Display *), /* display */
     Drawable d,
-    int x, 
+    int x,
     int y,
     TCL_UNUSED(Tk_3DBorder),  /* bgBorder */
     XColor *indicatorColor,
@@ -945,7 +948,7 @@ TkpDrawCheckIndicator(
     TkWaylandDrawingContext *dc = (TkWaylandDrawingContext *)d;
     int size = 0;
     int indicatorSize;
-    
+
     /* Get indicator size based on mode. */
     switch (mode) {
         case CHECK_BUTTON:
@@ -963,25 +966,25 @@ TkpDrawCheckIndicator(
         default:
             indicatorSize = 12;
     }
-    
+
     /* Scale for DPI if needed. */
     size = indicatorSize;
-    
+
     /* Center the indicator. */
     x = x - size/2;
     y = y - size/2;
-    
+
     /* Draw background. */
     nvgBeginPath(dc->vg);
     nvgRect(dc->vg, x, y, size, size);
-    
+
     if (disabled && disColor) {
         nvgFillColor(dc->vg, TkGlfwXColorToNVG(disColor));
     } else {
         nvgFillColor(dc->vg, TkGlfwXColorToNVG(indicatorColor));
     }
     nvgFill(dc->vg);
-    
+
     /* Draw indicator state (check mark, radio dot, or tristate). */
     if (on == 1) {  /* Selected */
         if (mode == CHECK_BUTTON || mode == CHECK_MENU) {

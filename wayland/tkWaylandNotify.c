@@ -655,17 +655,17 @@ TkGlfwFramebufferSizeCallback(
     }
 
     /* Rebuild the backing store FBO */
-    nvgluDeleteFramebuffer(winPtr->privatePtr->fbo);
-    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(vg, width, height, 0);
-    printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fbo,
-	   Tk_PathName(winPtr), winPtr->privatePtr->fbo->fbo);
+    nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
+    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
+    printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fb,
+	   Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
 
 #if 0
     /* Check for FBO completeness. */
-    nvgluBindFramebuffer(winPtr->privatePtr->fbo);
+    nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fbo,
+        printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
 	       status);
     } else {
 	printf("FBO is complete.\n");
