@@ -37,7 +37,7 @@ bind Treeview	<B1-Leave>		{}
 bind Treeview	<Leave>			{ ::ttk::treeview::ActivateHeading {} {}}
 bind Treeview	<Button-1>		{ ::ttk::treeview::Press %W %x %y }
 bind Treeview	<Double-Button-1>	{ ::ttk::treeview::DoubleClick %W %x %y }
-set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Alt" : "Option"}]
+set ckey [expr {[tk windowingsystem] ne "aqua" ? "Alt" : "Option"}]
 bind Treeview	<${ckey}-Double-Button-1>	{ ::ttk::treeview::AutoSizeAllColumns %W }
 bind Treeview	<B1-Motion>		{ ::ttk::treeview::Drag %W %x %y }
 bind Treeview	<ButtonRelease-1>	{ ::ttk::treeview::Release %W %x %y }
@@ -63,7 +63,7 @@ bind Treeview	<<PrevPara>>		{ ::ttk::treeview::KeyNav %W pageTop }
 bind Treeview	<<NextPara>>		{ ::ttk::treeview::KeyNav %W pageBottom }
 bind Treeview	<<SelectPrevPara>>	{ ::ttk::treeview::KeyNav %W pageTop extend }
 bind Treeview	<<SelectNextPara>>	{ ::ttk::treeview::KeyNav %W pageBottom extend }
-if {$::tcl_platform(os) ne "Darwin"} {
+if {[tk windowingsystem] ne "aqua"} {
 bind Treeview	<Alt-Up>		{ ::ttk::treeview::KeyNav %W top }
 bind Treeview	<Alt-Shift-Up>		{ ::ttk::treeview::KeyNav %W top extend }
 bind Treeview	<Alt-Down>		{ ::ttk::treeview::KeyNav %W bottom }
@@ -75,7 +75,7 @@ bind Treeview	<<LineStart>>		{ ::ttk::treeview::KeyNav %W first }
 bind Treeview	<<LineEnd>>		{ ::ttk::treeview::KeyNav %W last }
 bind Treeview	<<SelectLineStart>>	{ ::ttk::treeview::KeyNav %W first extend }
 bind Treeview	<<SelectLineEnd>>	{ ::ttk::treeview::KeyNav %W last extend }
-set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Control" : "Command"}]
+set ckey [expr {[tk windowingsystem] ne "aqua" ? "Control" : "Command"}]
 bind Treeview	<${ckey}-Home>		{ ::ttk::treeview::KeyNav %W topleft }
 bind Treeview	<${ckey}-End>		{ ::ttk::treeview::KeyNav %W bottomright }
 bind Treeview	<${ckey}-Shift-Home>	{ ::ttk::treeview::KeyNav %W topleft extend }
@@ -86,18 +86,18 @@ bind Treeview	<Prior>			{ ::ttk::treeview::PageNav %W up }
 bind Treeview	<Next>			{ ::ttk::treeview::PageNav %W down }
 bind Treeview	<Shift-Prior>		{ ::ttk::treeview::PageNav %W left }
 bind Treeview	<Shift-Next>		{ ::ttk::treeview::PageNav %W right }
-set ckey [expr {$::tcl_platform(os) ne "Darwin" ? "Control" : "Command"}]
+set ckey [expr {[tk windowingsystem] ne "aqua" ? "Control" : "Command"}]
 bind Treeview	<${ckey}-Prior>		{ ::ttk::treeview::PageNav %W pageTop }
 bind Treeview	<${ckey}-Next>		{ ::ttk::treeview::PageNav %W pageBottom }
 bind Treeview	<${ckey}-Shift-Prior>	{ ::ttk::treeview::PageNav %W pageLeft }
 bind Treeview	<${ckey}-Shift-Next>	{ ::ttk::treeview::PageNav %W pageRight }
-if {$::tcl_platform(os) ne "Darwin"} {
+if {[tk windowingsystem] ne "aqua"} {
 bind Treeview	<Alt-Prior>		{ ::ttk::treeview::PageNav %W left; break }
 bind Treeview	<Alt-Next>		{ ::ttk::treeview::PageNav %W right; break }
 }
 
 # Scroll Lock bindings
-if {$::tcl_platform(os) ne "Darwin"} {
+if {[tk windowingsystem] ne "aqua"} {
 bind Treeview	<Mod3-Up>		{ %W yview scroll -1 units }
 bind Treeview	<Mod3-Down>		{ %W yview scroll 1 units }
 bind Treeview	<Mod3-Left>		{ %W xview scroll -10 units }
@@ -117,7 +117,7 @@ bind Treeview	<<Invoke>>		{ ::ttk::treeview::InvokeItem %W }
 bind Treeview	<F2>			{ ::ttk::treeview::ActivateHandler %W }
 bind Treeview	<Return>		{ ::ttk::treeview::ActivateInvoke %W after }
 bind Treeview	<Shift-Return>		{ ::ttk::treeview::ActivateInvoke %W before }
-if {$::tcl_platform(os) ne "Darwin"} {
+if {[tk windowingsystem] ne "aqua"} {
 bind Treeview	<Control-Return>	{ ::ttk::treeview::ActivateHandler %W }
 bind Treeview	<Control-space>		{ ::ttk::treeview::ActivateInvoke %W column }
 bind Treeview	<Command-Shift-space>	{ ::ttk::treeview::SelectionSet %W all }
@@ -1464,7 +1464,7 @@ proc ::ttk::treeview::EncodeValue {string} {
 proc ::ttk::treeview::CopyToClipboard {w} {
     set data ""
     set format "STRING"
-    set type [expr {$::tcl_platform(platform) ne "windows" ? "UTF8_STRING" : "STRING"}]
+    set type [expr {[tk windowingsystem] ne "win32" ? "UTF8_STRING" : "STRING"}]
     set headers [expr {"headings" in [$w cget -show]}]
 
     if {[$w instate disabled]} return
