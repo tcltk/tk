@@ -685,10 +685,10 @@ CUPS_CFLAGS
 FONTSYSTEM
 UNIX_FONT_OBJS
 BIDI_CFLAGS
-HB_LIBS
-HB_CFLAGS
 XFT_LIBS
 XFT_CFLAGS
+HB_LIBS
+HB_CFLAGS
 XMKMF
 CPP
 LDFLAGS_DEFAULT
@@ -1458,7 +1458,7 @@ Optional Features:
   --enable-xft            use freetype/fontconfig/xft for antialiased fonts
                           (default: yes)
   --enable-bidi           enable bidirectional/RTL text support using
-                          SheenBidi + HarfBuzz (forces --enable-xft=yes)
+                          SheenBidi + HarfBuzz (default: yes)
   --enable-libcups        use libcups (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
@@ -8474,7 +8474,7 @@ fi
 if test $tk_aqua = no; then
 
     #--------------------------------------------------------------------
-    # --enable-xft (default: yes)
+    # --enable-xft (default: yes) — independent switch
     #--------------------------------------------------------------------
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use xft" >&5
 printf %s "checking whether to use xft... " >&6; }
@@ -8487,14 +8487,206 @@ else case e in #(
 esac
 fi
 
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xft" >&5
+printf '%s\n' "$enable_xft" >&6; }
 
     XFT_CFLAGS=""
     XFT_LIBS=""
 
-    if test "$enable_xft" = "no" ; then
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+    #--------------------------------------------------------------------
+    # --enable-bidi (default: yes on X11) — forces Xft when enabled
+    #--------------------------------------------------------------------
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable bidirectional (Bidi) text support" >&5
+printf %s "checking whether to enable bidirectional (Bidi) text support... " >&6; }
+    # Check whether --enable-bidi was given.
+if test ${enable_bidi+y}
+then :
+  enableval=$enable_bidi; enable_bidi=$enableval
+else case e in #(
+  e) enable_bidi="yes" ;;
+esac
+fi
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_bidi" >&5
+printf '%s\n' "$enable_bidi" >&6; }
+
+    if test "$enable_bidi" = "yes"; then
+	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: Bidi enabled: forcing Xft on as well" >&5
+printf '%s\n' "$as_me: Bidi enabled: forcing Xft on as well" >&6;}
+	if test "$enable_xft" = "no"; then
+	   enable_xft=yes
+	fi
+
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+
+printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
+
+	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz - version check (minimum 2.8.2)
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for HarfBuzz (required for --enable-bidi)" >&5
+printf %s "checking for HarfBuzz (required for --enable-bidi)... " >&6; }
+        if pkg-config --exists harfbuzz; then
+            HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: found version $HB_VERSION" >&5
+printf '%s\n' "found version $HB_VERSION" >&6; }
+
+            # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
+            if test -n "$HB_VERSION"; then
+                # Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
+                HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
+                HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
+                HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
+
+                REQ_MAJOR=2
+                REQ_MINOR=8
+                REQ_PATCH=2
+
+                too_old=no
+                if test $HB_MAJOR -lt $REQ_MAJOR; then
+                    too_old=yes
+                elif test $HB_MAJOR -eq $REQ_MAJOR; then
+                    if test $HB_MINOR -lt $REQ_MINOR; then
+                        too_old=yes
+                    elif test $HB_MINOR -eq $REQ_MINOR; then
+                        if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
+                            too_old=yes
+                        fi
+                    fi
+                fi
+
+                if test "$too_old" = "yes"; then
+                    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&5
+printf '%s\n' "$as_me: WARNING: HarfBuzz version $HB_VERSION is too old (need >= 2.8.2)." >&2;}
+                    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Disabling bidirectional text support (--disable-bidi)." >&5
+printf '%s\n' "$as_me: WARNING: Disabling bidirectional text support (--disable-bidi)." >&2;}
+                    enable_bidi=no
+                else
+                    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&5
+printf '%s\n' "HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2)." >&6; }
+                fi
+            fi
+
+            if test "$enable_bidi" = "yes"; then
+                HB_CFLAGS=`pkg-config --cflags harfbuzz`
+                HB_LIBS=`pkg-config --libs harfbuzz`
+
+                tk_oldCFlags=$CFLAGS
+                tk_oldLibs=$LIBS
+                CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+                LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+
+                ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "#include <X11/Xlib.h>
+"
+if test "x$ac_cv_header_harfbuzz_hb_h" = xyes
+then :
+
+else case e in #(
+  e)
+                    as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
+                 ;;
+esac
+fi
+
+
+                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for hb_buffer_create in -lharfbuzz" >&5
+printf %s "checking for hb_buffer_create in -lharfbuzz... " >&6; }
+if test ${ac_cv_lib_harfbuzz_hb_buffer_create+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-lharfbuzz  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char hb_buffer_create (void);
+int
+main (void)
+{
+return hb_buffer_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_harfbuzz_hb_buffer_create=yes
+else case e in #(
+  e) ac_cv_lib_harfbuzz_hb_buffer_create=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_harfbuzz_hb_buffer_create" >&5
+printf '%s\n' "$ac_cv_lib_harfbuzz_hb_buffer_create" >&6; }
+if test "x$ac_cv_lib_harfbuzz_hb_buffer_create" = xyes
+then :
+  printf '%s\n' "#define HAVE_LIBHARFBUZZ 1" >>confdefs.h
+
+  LIBS="-lharfbuzz $LIBS"
+
+else case e in #(
+  e)
+                    as_fn_error $? "HarfBuzz library (libharfbuzz) not found or unusable" "$LINENO" 5
+                 ;;
+esac
+fi
+
+
+                CFLAGS=$tk_oldCFlags
+                LIBS=$tk_oldLibs
+
+                BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+
+
+            fi
+        else
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-    else
+            as_fn_error $? "--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
+        fi
+    fi
+
+    if test "$enable_bidi" = "no"; then
+	# Bidi disabled
+	BIDI_CFLAGS=""
+	HB_CFLAGS=""
+	HB_LIBS=""
+	if test "$enable_xft" = "yes" ; then
+	   UNIX_FONT_OBJS="tkUnixRFont.o"
+
+printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
+
+	else
+	   UNIX_FONT_OBJS="tkUnixFont.o"
+	fi
+    fi
+
+    # Now actually enable Xft if requested (or forced by bidi)
+    if test "$enable_xft" = "yes" ; then
 	found_xft="yes"
 
 	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
@@ -8504,9 +8696,6 @@ printf '%s\n' "no" >&6; }
 	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
 	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
-
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $found_xft" >&5
-printf '%s\n' "$found_xft" >&6; }
 
 	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
@@ -8655,156 +8844,6 @@ printf '%s\n' "$as_me: WARNING: Can't find xft configuration or xft is unusable 
 
 
 
-
-    #--------------------------------------------------------------------
-    # --enable-bidi  (HarfBuzz is required only when enabled)
-    #--------------------------------------------------------------------
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to enable bidirectional (Bidi) text support" >&5
-printf %s "checking whether to enable bidirectional (Bidi) text support... " >&6; }
-    # Check whether --enable-bidi was given.
-if test ${enable_bidi+y}
-then :
-  enableval=$enable_bidi; enable_bidi=$enableval
-else case e in #(
-  e) enable_bidi="no" ;;
-esac
-fi
-
-
-    if test "$enable_bidi" = "yes"; then
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes (forces Xft on)" >&5
-printf '%s\n' "yes (forces Xft on)" >&6; }
-	if test "$enable_xft" = "no"; then
-	   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: --enable-bidi requested: enabling Xft as well" >&5
-printf '%s\n' "$as_me: --enable-bidi requested: enabling Xft as well" >&6;}
-	   enable_xft=yes
-	fi
-
-	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
-                     -I${TK_SRC_DIR}/unix/bidi/Source \
-                     -I${TK_SRC_DIR}/unix/bidi \
-                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
-
-printf '%s\n' "#define HAVE_BIDI 1" >>confdefs.h
-
-	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
-
-        #--------------------------------------------------------------------
-        # HarfBuzz - HARD DEPENDENCY only when --enable-bidi=yes
-        #--------------------------------------------------------------------
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for HarfBuzz (required for --enable-bidi)" >&5
-printf %s "checking for HarfBuzz (required for --enable-bidi)... " >&6; }
-        if pkg-config --exists harfbuzz; then
-            HB_CFLAGS=`pkg-config --cflags harfbuzz`
-            HB_LIBS=`pkg-config --libs harfbuzz`
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-
-            tk_oldCFlags=$CFLAGS
-            tk_oldLibs=$LIBS
-            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
-            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
-
-            ac_fn_c_check_header_compile "$LINENO" "harfbuzz/hb.h" "ac_cv_header_harfbuzz_hb_h" "#include <X11/Xlib.h>
-"
-if test "x$ac_cv_header_harfbuzz_hb_h" = xyes
-then :
-
-else case e in #(
-  e)
-                as_fn_error $? "HarfBuzz header <harfbuzz/hb.h> not found" "$LINENO" 5
-             ;;
-esac
-fi
-
-
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for hb_buffer_create in -lharfbuzz" >&5
-printf %s "checking for hb_buffer_create in -lharfbuzz... " >&6; }
-if test ${ac_cv_lib_harfbuzz_hb_buffer_create+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lharfbuzz  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char hb_buffer_create (void);
-int
-main (void)
-{
-return hb_buffer_create ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_lib_harfbuzz_hb_buffer_create=yes
-else case e in #(
-  e) ac_cv_lib_harfbuzz_hb_buffer_create=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_harfbuzz_hb_buffer_create" >&5
-printf '%s\n' "$ac_cv_lib_harfbuzz_hb_buffer_create" >&6; }
-if test "x$ac_cv_lib_harfbuzz_hb_buffer_create" = xyes
-then :
-  printf '%s\n' "#define HAVE_LIBHARFBUZZ 1" >>confdefs.h
-
-  LIBS="-lharfbuzz $LIBS"
-
-else case e in #(
-  e)
-                as_fn_error $? "HarfBuzz library (libharfbuzz) not found or unusable" "$LINENO" 5
-             ;;
-esac
-fi
-
-
-            CFLAGS=$tk_oldCFlags
-            LIBS=$tk_oldLibs
-
-            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
-
-
-        else
-            as_fn_error $? "--enable-bidi requires HarfBuzz development files.
-Please install the HarfBuzz development package:
-  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
-  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
-  - Arch:            sudo pacman -S harfbuzz
-  - macOS (Homebrew): brew install harfbuzz" "$LINENO" 5
-        fi
-
-    else
-	{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-	BIDI_CFLAGS=""
-	HB_CFLAGS=""
-	HB_LIBS=""
-	if test "$enable_xft" = "yes" ; then
-	   UNIX_FONT_OBJS="tkUnixRFont.o"
-
-printf '%s\n' "#define HAVE_XFT 1" >>confdefs.h
-
-	else
-	   UNIX_FONT_OBJS="tkUnixFont.o"
-	fi
-    fi
 
 
 

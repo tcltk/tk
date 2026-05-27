@@ -272,7 +272,7 @@ align the south (bottom) edges with each other.  Similarly, the tab
 placement \fBse\fP specifies to attach the south (bottom) side of each tab
 to the previous one and align the east (right) edges with each other.  The
 default placement depends on the first character of the tab position:
-\fBws\fP for \fBn*\fP, \fBwn\fP for \fBs*\fP, \fBne\fP for \fBw*\fP, and 
+\fBws\fP for \fBn*\fP, \fBwn\fP for \fBs*\fP, \fBne\fP for \fBw*\fP, and
 \fBnw\fP for \fBe*\fP.
 .RE
 .br
@@ -333,6 +333,8 @@ to do this is to invoke the library procedure \fBttk::configureNotebookStyle\fP
 with the style name as argument, after setting the style's \fB\-tabposition\fP
 option.
 .RE
+\fB\-textangle\fP \fIAngle\fP
+.br
 .PP
 Some options are only available for specific themes.
 .PP

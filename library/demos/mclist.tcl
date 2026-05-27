@@ -37,6 +37,45 @@ grid $w.hsb         -in $w.container -sticky nsew
 grid column $w.container 0 -weight 1
 grid row    $w.container 0 -weight 1
 
+set upArrowData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="m4 4 4-4 4 4z" fill="%s"/>
+    </svg>
+}
+
+set downArrowData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="m4 0 4 4 4-4z" fill="%s"/>
+    </svg>
+}
+
+proc createArrowImages {} {
+    set fgColor [ttk::style lookup . -foreground {} black]
+    lassign [winfo rgb . $fgColor] r g b
+    set fgColor [format "#%02x%02x%02x" \
+	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+
+    foreach dir {up down} {
+	upvar ${dir}ArrowData imgData
+	set data [format $imgData $fgColor]
+	image create photo ${dir}Arrow -format $::tk::svgFmt -data $data]
+    }
+}
+
+createArrowImages
+foreach event {<<ThemeChanged>> <<LightAppearance>> <<DarkAppearance>>} {
+    bind MCList $event { createArrowImages }
+}
+unset event
+
+image create photo noArrow -format $tk::svgFmt -data {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    </svg>
+}
+
 ## The data we're going to insert
 set data {
     Argentina		{Buenos Aires}		ARS

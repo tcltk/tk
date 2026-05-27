@@ -600,7 +600,7 @@ DefaultRotateImplementation(
 	     * Write the coordinates back into the item.
 	     */
 
-	    newObjv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
+	    newObjv = (Tcl_Obj **)Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
 	    for (i=0 ; i<objc ; i++) {
 		newObjv[i] = Tcl_NewDoubleObj(coordv[i]);
 		Tcl_IncrRefCount(newObjv[i]);

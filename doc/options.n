@@ -300,6 +300,12 @@ redefine the keyboard traversal scripts.
 Specifies a string to be displayed inside the widget.  The way in which
 the string is displayed depends on the particular widget and may be
 determined by other options, such as \fB\-anchor\fR or \fB\-justify\fR.
+.OP \-textangle textangle Angle
+Tells how many degrees to rotate the text anticlockwise
+about the positioning point for the text; it may have any floating-point value
+from 0.0 to 360.0. For example, if the option value is \fB90\fR, then the
+text will be drawn vertically from bottom to top.
+This option defaults to \fB0.0\fR.
 .OP \-textvariable textVariable Variable
 Specifies the name of a global variable.  The value of the variable is a text
 string to be displayed inside the widget;  if the variable value changes
