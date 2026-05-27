@@ -176,7 +176,6 @@ TkWaylandGetKeysymFromScancode(
 	return (KeySym) xkb_state_key_get_one_sym(xkbState.state,
 						  scancode + 8);
     } else {
-	printf("xkbState.state is NULL\n");
 	return NoSymbol;
     }
 }

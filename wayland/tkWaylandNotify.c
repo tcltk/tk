@@ -401,7 +401,7 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    printf("TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
     
     if (!winPtr) return;
     
@@ -420,7 +420,7 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;
     
     /* Queue it. */
-    printf("Queuing Expose(%lu) for %s with count %d\n",
+    fprintf(stderr, "Queuing Expose(%lu) for %s with count %d\n",
 	   event.xexpose.serial,
 	   Tk_PathName(winPtr),
 	   event.xexpose.count);
@@ -579,7 +579,7 @@ TkGlfwWindowContentScaleCallback(
 	winPtr->privatePtr->pixelRatio = xscale;
     }
     
-    printf("TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
+    fprintf(stderr, "TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
 	   winPtr->privatePtr->pixelRatio);
 }
 
@@ -613,10 +613,10 @@ TkGlfwFramebufferSizeCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
-	printf("============================ No Tk window!\n");
+	fprintf(stderr, "============================ No Tk window!\n");
 	return;
     }
-    printf("TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
 
     /*
@@ -650,14 +650,14 @@ TkGlfwFramebufferSizeCallback(
     
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
-	printf("============================ No Context!\n");
+	fprintf(stderr, "============================ No Context!\n");
 	return;
     }
 
     /* Rebuild the backing store FBO */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fb,
+    fprintf(stderr, "New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fb,
 	   Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
 
 #if 0
@@ -665,10 +665,10 @@ TkGlfwFramebufferSizeCallback(
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
+        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
 	       status);
     } else {
-	printf("FBO is complete.\n");
+	fprintf(stderr, "FBO is complete.\n");
     }
 #endif
 
@@ -713,10 +713,10 @@ TkGlfwWindowPosCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
-	printf("TkGlfwWindowPosCallback: no Tk window\n");
+	fprintf(stderr, "TkGlfwWindowPosCallback: no Tk window\n");
         return;
     }
-    printf("TkGlfwWindowPosCallback: %s -> to %d+%d\n",
+    fprintf(stderr, "TkGlfwWindowPosCallback: %s -> to %d+%d\n",
 	   Tk_PathName(winPtr), xpos, ypos);
 
     winPtr->changes.x = xpos;
@@ -746,7 +746,7 @@ TkGlfwWindowFocusCallback(
     int focused)
 {
     recordCallback();
-    printf("TkGlfwWindowFocusCallback\n");
+    fprintf(stderr, "TkGlfwWindowFocusCallback\n");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
     
@@ -790,7 +790,7 @@ TkGlfwWindowIconifyCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    printf("TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
     XEvent event;
     
     if (!winPtr) {
@@ -1070,10 +1070,10 @@ TkGlfwMouseButtonCallback(
     event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xbutton.subwindow = None;
     event.xbutton.time = CurrentTime;
-    event.xbutton.x = (int)xpos;
-    event.xbutton.y = (int)ypos;
-    event.xbutton.x_root = winPtr->changes.x + (int)xpos;
-    event.xbutton.y_root = winPtr->changes.y + (int)ypos;
+    event.xbutton.x = (int)xpos - Tk_X(target);
+    event.xbutton.y = (int)ypos - Tk_Y(target);
+    event.xbutton.x_root = (int)xpos;
+    event.xbutton.y_root = (int)ypos;
     event.xbutton.state = glfwButtonState | glfwModifierState;
     event.xbutton.button = xbutton;
     event.xbutton.same_screen = True;
@@ -1290,7 +1290,7 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
     if (!winPtr) {
 	return;
     }
-    printf("TkGlWindowRefreshCallback Expose\n");
+    fprintf(stderr, "TkGlWindowRefreshCallback Expose\n");
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }

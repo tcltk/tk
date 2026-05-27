@@ -154,16 +154,16 @@ inline Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
 
 inline TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
     if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
-	printf("Attempt to convert a pixmap drawable %lx to a window.",
+	fprintf(stderr, "Attempt to convert a pixmap drawable %lx to a window.",
 	       drawable);
     }
     return (TkWindow *) drawable;
 }
 
 inline Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmapPtr) {
-    printf("~~~~~~~~~~~~~~~~~~~~~~~~ Generating drawable for %p\n", pixmapPtr);
+    fprintf(stderr, "~~~~~~~~~~~~~~~~~~~~~~~~ Generating drawable for %p\n", pixmapPtr);
     if (pixmapPtr != NULL) {
-	printf("~~~~~~~~~~~~ returning drawable %lx for pixmapPtr %p\n",
+	fprintf(stderr, "~~~~~~~~~~~~ returning drawable %lx for pixmapPtr %p\n",
 	       3 + (Drawable) pixmapPtr, pixmapPtr);
 	return 3 + (Drawable) pixmapPtr;
     } else {
@@ -450,10 +450,10 @@ static void
 DestroyGlfwWindow(
     TkWindow *winPtr)
 {
-    printf("DestroyGlfwWindow: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "DestroyGlfwWindow: %s\n", Tk_PathName(winPtr));
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow == NULL) {
-	printf("No glfwWindow pointer\n");
+	fprintf(stderr, "No glfwWindow pointer\n");
         return;
     }
     TkGlfwClearCallbacks(glfwWindow);
@@ -482,7 +482,7 @@ DestroyGlfwWindow(
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
-    printf("TkWmMapWindow: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkWmMapWindow: %s\n", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
@@ -534,7 +534,7 @@ TkWmMapWindow(TkWindow *winPtr)
 void
 TkWmUnmapWindow(TkWindow *winPtr)
 {
-    printf("TkWmUnmapWindow: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkWmUnmapWindow: %s\n", Tk_PathName(winPtr));
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     winPtr->flags &= ~TK_MAPPED;
     if (glfwWindow) {
@@ -567,7 +567,7 @@ TkWmDeadWindow(
     DestroyGlfwWindow(winPtr);
     if (winPtr->privatePtr) {
 	if (winPtr->privatePtr->glfwWindow) {
-	    printf("Freeing privatePtr with non-null glfwWindow\n");
+	    fprintf(stderr, "Freeing privatePtr with non-null glfwWindow\n");
 	}
 	Tcl_DStringFree(&winPtr->privatePtr->pendingText);
 	ckfree(winPtr->privatePtr);
@@ -754,7 +754,7 @@ Tk_MakeWindow(
     Drawable    drawable;
     Window      result;
 
-    printf("Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
+    fprintf(stderr, "Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
     result = TkWaylandDrawableForTkWindow(winPtr);
 
     if (Tk_IsTopLevel(winPtr)) {
@@ -777,7 +777,7 @@ Tk_MakeWindow(
          * drawable is ignored; we use winPtr->window instead.
          */
 
-	printf("Creating glfwWindow %s at size %dx%d\n",
+	fprintf(stderr, "Creating glfwWindow %s at size %dx%d\n",
 	       Tk_PathName(tkwin), width, height);
 	glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
@@ -804,7 +804,7 @@ Tk_MakeWindow(
          *
          */
 
-      printf("Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
+      fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
 	     winPtr->changes.width, winPtr->changes.height);
 
       TkWaylandQueueExposeEvent(winPtr, 0, 0,
@@ -2080,7 +2080,7 @@ WmGeometryCmd(
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Set size only if positive values were provided */
         if (wmPtr->width > 0 && wmPtr->height > 0) {
-	    printf("GeometryCmd setting window size\n");
+	    fprintf(stderr, "GeometryCmd setting window size\n");
             glfwSetWindowSize(glfwWindow, wmPtr->width, wmPtr->height);
         }
 	// This doesn't actually do anything.
@@ -3624,7 +3624,7 @@ TopLevelReqProc(
     TkWindow *winPtr = (TkWindow *)tkwin;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
-    printf("TopLevelReqProc %s to %dx%d; pending = %d\n", Tk_PathName(tkwin),
+    fprintf(stderr, "TopLevelReqProc %s to %dx%d; pending = %d\n", Tk_PathName(tkwin),
 	   winPtr->reqWidth, winPtr->reqHeight,
 	   wmPtr->flags & WM_UPDATE_PENDING);
 
@@ -3671,10 +3671,10 @@ UpdateGeometryInfo(
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
 
     if (wmPtr == NULL) {
-	printf("Cannot update geometry for a window with no WmInfo\n");
+	fprintf(stderr, "Cannot update geometry for a window with no WmInfo\n");
 	return;
     }
-    printf("UpdateGeometryInfo: %s to %dx%d\n", Tk_PathName(winPtr),
+    fprintf(stderr, "UpdateGeometryInfo: %s to %dx%d\n", Tk_PathName(winPtr),
 	   wmPtr->width, wmPtr->height);
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -3687,7 +3687,7 @@ UpdateGeometryInfo(
 
     /* Don't proceed if window isn't ready. */
     if (glfwWindow == NULL || wmPtr->withdrawn) {
-	printf("Cannot No glfw window\n");
+	fprintf(stderr, "Cannot No glfw window\n");
         return;
     }
 
@@ -3701,7 +3701,7 @@ UpdateGeometryInfo(
 
     /* Apply size change if needed. */
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
-	printf("UpdateGeometryInfo: calling glfwSetWindowSize %s -> %dx%d\n",
+	fprintf(stderr, "UpdateGeometryInfo: calling glfwSetWindowSize %s -> %dx%d\n",
 	       Tk_PathName(winPtr), tw, th);
 	/* Notify the FramebufferSizeCallback to use our workaround. */
 	infoPtr->flags |= sizeChanged;
@@ -4496,7 +4496,7 @@ XConfigureWindow(
         glfwSetWindowPos(gw, x, y);
     }
     if (resizeNeeded) {
-	printf("XConfigureWindow: calling glfwSetWindowSize -> %dx%d\n", w, h);
+	fprintf(stderr, "XConfigureWindow: calling glfwSetWindowSize -> %dx%d\n", w, h);
         glfwSetWindowSize(gw, w, h);
     }
 
