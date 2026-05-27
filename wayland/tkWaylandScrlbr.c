@@ -300,17 +300,6 @@ TkpDisplayScrollbar(
 	elementBorderWidth = borderWidth;
     }
 
-    //// XXXX No!, No!, No!  We have GL to double-buffer for us!!!!
-    /*
-     * In order to avoid screen flashes, this procedure redraws the scrollbar
-     * in a pixmap, then copies the pixmap to the screen in a single
-     * operation. This means that there's no point in time where the on-sreen
-     * image has been cleared.
-     */
-#if 0
-    pixmap = Tk_GetPixmap(scrollPtr->display, Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
-#endif
     Drawable drawable = TkWaylandDrawableForTkWindow(winPtr);
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj,
 			&highlightWidth);
@@ -428,16 +417,6 @@ TkpDisplayScrollbar(
 		elementBorderWidth, relief);
     }
 
-#if 0
-    /*
-     * Copy the information from the off-screen pixmap onto the screen, then
-     * delete the pixmap.
-     */
-    XCopyArea(scrollPtr->display, pixmap, Tk_WindowId(tkwin),
-	    ((WaylandScrollbar*)scrollPtr)->copyGC, 0, 0,
-	    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin), 0, 0);
-    Tk_FreePixmap(scrollPtr->display, pixmap);
-#endif
   done:
     scrollPtr->flags &= ~REDRAW_PENDING;
 }
@@ -535,6 +514,8 @@ TkpComputeScrollbarGeometry(
  * TkpDestroyScrollbar --
  *
  *	Free data structures associated with the scrollbar control.
+ *      Called by TkScrollbarEventProc when DestroyNotify is received.
+ *      The SrollbarPtr will be freed by the event proc.
  *
  * Results:
  *	None.
@@ -554,7 +535,6 @@ TkpDestroyScrollbar(
     if (waylandScrollPtr->troughGC != NULL) {
 	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->troughGC);
     }
-    Tcl_Free((char *)waylandScrollPtr);
 }
 
 /*
@@ -591,13 +571,6 @@ TkpConfigureScrollbar(
 	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->troughGC);
     }
     waylandScrollPtr->troughGC = newGC;
-#if 0
-    if (waylandScrollPtr->copyGC == NULL) {
-	gcValues.graphics_exposures = False;
-	waylandScrollPtr->copyGC = Tk_GetGC(scrollPtr->tkwin,
-		GCGraphicsExposures, &gcValues);
-    }
-#endif
 }
 
 /*
