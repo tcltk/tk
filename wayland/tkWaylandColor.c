@@ -148,7 +148,6 @@ TkpGetColorByValue(
     TCL_UNUSED(Tk_Window), /* tkwin */
     XColor   *colorPtr)
 {
-    printf("TkpGetColorByValue\n");
     TkColor *tkColPtr;
     XColor   safeColor;
 
