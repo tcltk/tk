@@ -360,7 +360,6 @@ XKeysymToString(KeySym keysym)
 static int
 InitializeXKB(void)
 {
-    printf("InitialieXKB\n");
     const char *locale;
 
     /* Create XKB context. */
