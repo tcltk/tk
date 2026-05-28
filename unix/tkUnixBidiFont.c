@@ -1218,23 +1218,22 @@ X11Shaper_ShapeString(
 		      int numBytes,
 		      ShapedGlyphBuffer *buffer)
 {
-    /* Validate input parameters to ensure we have everything needed for shaping. */
     if (!shaper->buffer || !source || numBytes <= 0 || !buffer) {
         return 0;
     }
 
-    /* Initialize the output buffer with default values. */
     buffer->glyphCount = 0;
     buffer->indexCount = 0;
     buffer->totalAdvance = 0;
     buffer->clusterBreakCount = 0;
-
+    
     /*
      * Fast path for simple scripts (Latin, CJK, etc.).
      *
      * Use cached faces from fontPtr->faces instead of
      * opening new fallback fonts every call.
      */
+
     if (IsSimpleOnly(source, numBytes)) {
         int penX = 0;
         int i = 0;
@@ -1246,7 +1245,6 @@ X11Shaper_ShapeString(
             unsigned int glyphId = 0;
             int fontIndex = -1;
 
-            /* Check the character cache added to X11Shaper. */
             int cacheIdx = uc & 63;
             if (shaper->charCache[cacheIdx].uc == uc) {
                 fontIndex = shaper->charCache[cacheIdx].faceIdx;
@@ -1254,12 +1252,10 @@ X11Shaper_ShapeString(
                 if (ft) glyphId = XftCharIndex(fontPtr->display, ft, uc);
             }
 
-            /* Cache miss or glyph not in cached font. */
             if (glyphId == 0) {
                 for (int f = 0; f < fontPtr->nfaces; f++) {
                     if (fontPtr->faces[f].charset && !FcCharSetHasChar(fontPtr->faces[f].charset, uc))
                         continue;
-
                     XftFont *ft = GetFaceFont(fontPtr, f, 0.0);
                     if (!ft) continue;
                     glyphId = XftCharIndex(fontPtr->display, ft, uc);
@@ -1272,14 +1268,12 @@ X11Shaper_ShapeString(
                 }
             }
 
-            /* Fallback: use first face if no match. */
             if (glyphId == 0) {
                 fontIndex = 0;
                 XftFont *ft = GetFaceFont(fontPtr, 0, 0.0);
                 if (ft) glyphId = XftCharIndex(fontPtr->display, ft, uc);
             }
 
-            /* Record glyph data using the correct nested struct syntax. */
             XGlyphInfo metrics;
             XftGlyphExtents(fontPtr->display, GetFaceFont(fontPtr, fontIndex, 0.0), &glyphId, 1, &metrics);
 
@@ -1295,21 +1289,21 @@ X11Shaper_ShapeString(
 
             penX += metrics.xOff;
             buffer->glyphCount++;
-            i += clen; /* Advance pointer. */
+            i += clen;
         }
         buffer->totalAdvance = penX;
 
+        buffer->indexCount = 0;
+        int prevByteOffset = -1;
+        
         /*
          * Build visualIndex properly for CJK (Chinese/Japanese) + Latin.
          * This is critical for correct cursor movement and selection.
          */
-        buffer->indexCount = 0;
-        int prevByteOffset = -1;
 
         for (int i = 0; i < buffer->glyphCount && buffer->indexCount < MAX_GLYPHS; i++) {
             int bo = buffer->glyphs[i].byteOffset;
 
-            /* Skip duplicate glyphs for the same cluster (important for CJK). */
             if (bo == prevByteOffset) {
                 if (buffer->indexCount > 0) {
                     buffer->visualIndex[buffer->indexCount-1].advanceX +=
@@ -1344,7 +1338,6 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Convert UTF-8 to UCS-4. */
     int stackCharBounds[256];
     FcChar32 stackUcs4Chars[256];
     int *charBounds = stackCharBounds;
@@ -1387,7 +1380,7 @@ X11Shaper_ShapeString(
         return 1;
     }
 
-    /* Bidi analysis. */
+	/* Bidi analysis. */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
 
@@ -1416,30 +1409,18 @@ X11Shaper_ShapeString(
         }
         if (!hasVisibleChars) continue;
 
-        /*
-         * Split each bidi run into subruns where BOTH the script AND the
-         * fallback font face are uniform.  Script must be detected first
-         * because it governs which OpenType features HarfBuzz activates;
-         * changing the face mid-script would produce unshaped glyphs (e.g.
-         * Arabic rendered as isolated code-points instead of connected forms).
-         *
-         * The boundary rules follow Unicode's Script_Extensions data:
-         *   • HB_SCRIPT_INHERITED / HB_SCRIPT_COMMON inherit the script of
-         *     the surrounding run rather than forcing a break.
-         *   • Any genuine script change (e.g. Arabic → Latin) always starts
-         *     a new subrun even when the face would be the same.
-         */
         int subrunStart = runStart;
 
         while (subrunStart < runStart + runLen) {
 
             /*
-             * Determine the concrete script for this subrun.
+             * Detect the concrete script for this subrun.
              *
-             * Walk forward from subrunStart, skipping INHERITED/COMMON
-             * characters, to find the first character with a real script.
-             * If the whole remaining run is INHERITED/COMMON, fall back to
-             * HB_SCRIPT_LATIN so HarfBuzz still shapes it sensibly.
+             * Walk forward skipping INHERITED/COMMON to find the first
+             * character with a real script assignment.  If the entire
+             * remaining run is INHERITED/COMMON (e.g. a run of emoji,
+             * which are all HB_SCRIPT_COMMON) leave subrunScript as
+             * HB_SCRIPT_INVALID; it is resolved below.
              */
             hb_script_t subrunScript = HB_SCRIPT_INVALID;
             for (int ci = subrunStart; ci < runStart + runLen; ci++) {
@@ -1450,43 +1431,70 @@ X11Shaper_ShapeString(
                     break;
                 }
             }
-            if (subrunScript == HB_SCRIPT_INVALID) {
-                subrunScript = HB_SCRIPT_LATIN;
-            }
 
             /*
-             * Select the font face for the first real character of
-             * this script.  We anchor on the first non-INHERITED/COMMON
-             * character so that the face lookup reflects actual coverage for
-             * the script rather than a neutral punctuation mark.
+             * Resolve the script and select the anchor face.
+             *
+             * For a run that starts with real-script characters the anchor
+             * is the first such character (skipping leading COMMON/INHERITED
+             * punctuation).  For a run that is entirely COMMON (emoji, math
+             * symbols, general punctuation without a preceding context) the
+             * anchor is subrunStart itself – GetRunFaceIndex will pick the
+             * face that has charset coverage for the first codepoint, which
+             * is exactly what we want (e.g. Noto Color Emoji for U+1F600).
+             *
+             * Use HB_SCRIPT_COMMON rather than HB_SCRIPT_LATIN for the
+             * all-COMMON case so that HarfBuzz activates the correct feature
+             * set (in particular the 'CBDT'/'CBLC' and 'COLR' lookups used
+             * by colour-emoji fonts).
              */
             int anchorChar = subrunStart;
-            for (int ci = subrunStart; ci < runStart + runLen; ci++) {
-                hb_script_t s = hb_unicode_script(
-                    hb_unicode_funcs_get_default(), ucs4Chars[ci]);
-                if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
-                    anchorChar = ci;
-                    break;
+            if (subrunScript != HB_SCRIPT_INVALID) {
+                for (int ci = subrunStart; ci < runStart + runLen; ci++) {
+                    hb_script_t s = hb_unicode_script(
+                        hb_unicode_funcs_get_default(), ucs4Chars[ci]);
+                    if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
+                        anchorChar = ci;
+                        break;
+                    }
                 }
+            } else {
+                /* All-COMMON run (emoji, symbols, punctuation). */
+                subrunScript = HB_SCRIPT_COMMON;
             }
+
             int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
 
             /*
              * Extend the subrun while both script and face remain
              * consistent.
              *
-             * INHERITED and COMMON characters are absorbed into the current
-             * subrun without forcing a break; they will be shaped by
-             * HarfBuzz together with the surrounding real-script characters,
-             * which is what the Unicode shaping specs require.
+             * Key rule for INHERITED/COMMON characters: absorb them only when
+             * they map to the *same* fallback face as the current subrun.
+             * If the face differs (e.g. a Unicode emoji following a Latin
+             * word, where the emoji face is different from the Latin face)
+             * break immediately so the emoji gets its own subrun with the
+             * correct face and HB_SCRIPT_COMMON.  Without this check the
+             * emoji would be shaped with the Latin face, producing .notdef
+             * or the wrong monochrome glyph.
              */
             int subrunEnd = subrunStart + 1;
             while (subrunEnd < runStart + runLen) {
                 hb_script_t s = hb_unicode_script(
                     hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
 
-                /* Neutral characters: absorb without breaking. */
                 if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
+                    /*
+                     * Face-change check for neutral characters.
+                     * Combining marks (INHERITED) virtually always share the
+                     * base character's face, so this rarely fires for them.
+                     * Emoji (COMMON) frequently require a different face and
+                     * must be split out.
+                     */
+                    int neutralFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
+                    if (neutralFace != runFaceIndex) {
+                        break;
+                    }
                     subrunEnd++;
                     continue;
                 }
@@ -1496,10 +1504,7 @@ X11Shaper_ShapeString(
                     break;
                 }
 
-                /* 
-                 * Same script but different face → break to avoid
-                 * mixing glyphs from incompatible fonts in one HB call. 
-                 */
+                /* Same script, different face → break. */
                 int nextFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
                 if (nextFace != runFaceIndex) {
                     break;
@@ -1520,7 +1525,6 @@ X11Shaper_ShapeString(
                 continue;
             }
 
-            /* Use lazy-loaded HarfBuzz font for this face. */
             hb_font_t *runHbFont = GetHbFont(fontPtr, runFaceIndex);
             if (!runHbFont) {
                 subrunStart = subrunEnd;
@@ -1532,26 +1536,9 @@ X11Shaper_ShapeString(
                                shapeByteStart, shapeByteLen);
             hb_buffer_set_direction(shaper->buffer,
                                     runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
-
-            /*
-             * Set the detected script so HarfBuzz activates the correct
-             * OpenType features for this run (Arabic joining, Indic
-             * reordering, Hebrew cantillation marks, etc.).  Without this
-             * call HarfBuzz defaults to HB_SCRIPT_UNKNOWN and may skip
-             * mandatory GSUB/GPOS lookups entirely.
-             */
             hb_buffer_set_script(shaper->buffer, subrunScript);
-
-            /*
-             * Derive an ISO 15924 language tag from the script as a
-             * best-effort default.  Callers that know the actual language
-             * (e.g. from a Tk font -lang option) should override this.
-             * hb_language_from_string("", -1) returns the default language
-             * which is acceptable here.
-             */
             hb_buffer_set_language(shaper->buffer,
                                    hb_language_from_string("", -1));
-
             hb_buffer_set_cluster_level(shaper->buffer,
                                         HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 
@@ -1594,9 +1581,7 @@ X11Shaper_ShapeString(
                 unsigned int gid = glyphInfo[i].codepoint;
 
                 if (xftRunFont && gid != 0) {
-
                     XGlyphInfo gmetrics;
-
                     XftGlyphExtents(
                         fontPtr->display,
                         xftRunFont,
@@ -1604,11 +1589,8 @@ X11Shaper_ShapeString(
                         1,
                         &gmetrics
                     );
-
                     tempGlyphs[tempCount].advanceX = gmetrics.xOff;
-
                 } else {
-
                     tempGlyphs[tempCount].advanceX =
                         (int)(glyphPos[i].x_advance / 64.0 + 0.5);
                 }
@@ -1706,7 +1688,7 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Cluster breaks (safe version). */
+    /* Cluster breaks. */
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
 
@@ -1727,14 +1709,12 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Ensure end of string is always present. */
     if (buffer->clusterBreaks[buffer->clusterBreakCount-1] != numBytes) {
         if (buffer->clusterBreakCount < MAX_CLUSTER_BREAKS) {
             buffer->clusterBreaks[buffer->clusterBreakCount++] = numBytes;
         }
     }
 
-    /* Simple linear deduplicate + sort. */
     int n = buffer->clusterBreakCount;
     for (int i = 1; i < n; i++) {
         int key = buffer->clusterBreaks[i];
@@ -1746,7 +1726,6 @@ X11Shaper_ShapeString(
         buffer->clusterBreaks[j+1] = key;
     }
 
-    /* Final deduplication pass. */
     int write = 1;
     for (int i = 1; i < n; i++) {
         if (buffer->clusterBreaks[i] != buffer->clusterBreaks[write-1]) {
@@ -1755,7 +1734,7 @@ X11Shaper_ShapeString(
     }
     buffer->clusterBreakCount = write;
 
-    /* Cache result (round-robin). */
+    /* Cache result. */
     if (numBytes <= MAX_STRING_CACHE) {
         int slot = shaper->cacheNext;
         memcpy(shaper->cache[slot].text, source, numBytes);
