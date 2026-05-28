@@ -1218,23 +1218,22 @@ X11Shaper_ShapeString(
 		      int numBytes,
 		      ShapedGlyphBuffer *buffer)
 {
-    /* Validate input parameters to ensure we have everything needed for shaping. */
     if (!shaper->buffer || !source || numBytes <= 0 || !buffer) {
         return 0;
     }
 
-    /* Initialize the output buffer with default values. */
     buffer->glyphCount = 0;
     buffer->indexCount = 0;
     buffer->totalAdvance = 0;
     buffer->clusterBreakCount = 0;
-
+    
     /*
      * Fast path for simple scripts (Latin, CJK, etc.).
      *
      * Use cached faces from fontPtr->faces instead of
      * opening new fallback fonts every call.
      */
+
     if (IsSimpleOnly(source, numBytes)) {
         int penX = 0;
         int i = 0;
@@ -1246,7 +1245,6 @@ X11Shaper_ShapeString(
             unsigned int glyphId = 0;
             int fontIndex = -1;
 
-            /* Check the character cache added to X11Shaper. */
             int cacheIdx = uc & 63;
             if (shaper->charCache[cacheIdx].uc == uc) {
                 fontIndex = shaper->charCache[cacheIdx].faceIdx;
@@ -1254,12 +1252,10 @@ X11Shaper_ShapeString(
                 if (ft) glyphId = XftCharIndex(fontPtr->display, ft, uc);
             }
 
-            /* Cache miss or glyph not in cached font. */
             if (glyphId == 0) {
                 for (int f = 0; f < fontPtr->nfaces; f++) {
                     if (fontPtr->faces[f].charset && !FcCharSetHasChar(fontPtr->faces[f].charset, uc))
                         continue;
-
                     XftFont *ft = GetFaceFont(fontPtr, f, 0.0);
                     if (!ft) continue;
                     glyphId = XftCharIndex(fontPtr->display, ft, uc);
@@ -1272,14 +1268,12 @@ X11Shaper_ShapeString(
                 }
             }
 
-            /* Fallback: use first face if no match. */
             if (glyphId == 0) {
                 fontIndex = 0;
                 XftFont *ft = GetFaceFont(fontPtr, 0, 0.0);
                 if (ft) glyphId = XftCharIndex(fontPtr->display, ft, uc);
             }
 
-            /* Record glyph data using the correct nested struct syntax. */
             XGlyphInfo metrics;
             XftGlyphExtents(fontPtr->display, GetFaceFont(fontPtr, fontIndex, 0.0), &glyphId, 1, &metrics);
 
@@ -1295,21 +1289,21 @@ X11Shaper_ShapeString(
 
             penX += metrics.xOff;
             buffer->glyphCount++;
-            i += clen; /* Advance pointer. */
+            i += clen;
         }
         buffer->totalAdvance = penX;
 
+        buffer->indexCount = 0;
+        int prevByteOffset = -1;
+        
         /*
          * Build visualIndex properly for CJK (Chinese/Japanese) + Latin.
          * This is critical for correct cursor movement and selection.
          */
-        buffer->indexCount = 0;
-        int prevByteOffset = -1;
 
         for (int i = 0; i < buffer->glyphCount && buffer->indexCount < MAX_GLYPHS; i++) {
             int bo = buffer->glyphs[i].byteOffset;
 
-            /* Skip duplicate glyphs for the same cluster (important for CJK). */
             if (bo == prevByteOffset) {
                 if (buffer->indexCount > 0) {
                     buffer->visualIndex[buffer->indexCount-1].advanceX +=
@@ -1327,10 +1321,12 @@ X11Shaper_ShapeString(
 
             prevByteOffset = bo;
         }
+
+        return 1;
     }
 
     /*
-     * Check cache for complex shaped/RTL text (multi‑entry round‑robin).
+     * Check cache for complex shaped/RTL text (multi-entry round-robin).
      */
     for (int slot = 0; slot < CACHE_SLOTS; slot++) {
         if (shaper->cache[slot].valid &&
@@ -1342,7 +1338,6 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Convert UTF-8 to UCS-4. */
     int stackCharBounds[256];
     FcChar32 stackUcs4Chars[256];
     int *charBounds = stackCharBounds;
@@ -1385,7 +1380,7 @@ X11Shaper_ShapeString(
         return 1;
     }
 
-    /* Bidi analysis. */
+	/* Bidi analysis. */
     BidiRun bidiRuns[MAX_BIDI_RUNS];
     int numRuns = GetBidiRuns(ucs4Chars, charCount, bidiRuns, MAX_BIDI_RUNS);
 
@@ -1414,203 +1409,286 @@ X11Shaper_ShapeString(
         }
         if (!hasVisibleChars) continue;
 
-	/*
-	 * Shape contiguous font-compatible spans separately.
-	 */
+        int subrunStart = runStart;
 
-	int subrunStart = runStart;
+        while (subrunStart < runStart + runLen) {
 
-	while (subrunStart < runStart + runLen) {
+            /*
+             * Detect the concrete script for this subrun.
+             *
+             * Walk forward skipping INHERITED/COMMON to find the first
+             * character with a real script assignment.  If the entire
+             * remaining run is INHERITED/COMMON (e.g. a run of emoji,
+             * which are all HB_SCRIPT_COMMON) leave subrunScript as
+             * HB_SCRIPT_INVALID; it is resolved below.
+             */
+            hb_script_t subrunScript = HB_SCRIPT_INVALID;
+            for (int ci = subrunStart; ci < runStart + runLen; ci++) {
+                hb_script_t s = hb_unicode_script(
+                    hb_unicode_funcs_get_default(), ucs4Chars[ci]);
+                if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
+                    subrunScript = s;
+                    break;
+                }
+            }
 
-	    int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, subrunStart, 1);
+            /*
+             * Resolve the script and select the anchor face.
+             *
+             * For a run that starts with real-script characters the anchor
+             * is the first such character (skipping leading COMMON/INHERITED
+             * punctuation).  For a run that is entirely COMMON (emoji, math
+             * symbols, general punctuation without a preceding context) the
+             * anchor is subrunStart itself – GetRunFaceIndex will pick the
+             * face that has charset coverage for the first codepoint, which
+             * is exactly what we want (e.g. Noto Color Emoji for U+1F600).
+             *
+             * Use HB_SCRIPT_COMMON rather than HB_SCRIPT_LATIN for the
+             * all-COMMON case so that HarfBuzz activates the correct feature
+             * set (in particular the 'CBDT'/'CBLC' and 'COLR' lookups used
+             * by colour-emoji fonts).
+             */
+            int anchorChar = subrunStart;
+            if (subrunScript != HB_SCRIPT_INVALID) {
+                for (int ci = subrunStart; ci < runStart + runLen; ci++) {
+                    hb_script_t s = hb_unicode_script(
+                        hb_unicode_funcs_get_default(), ucs4Chars[ci]);
+                    if (s != HB_SCRIPT_INHERITED && s != HB_SCRIPT_COMMON) {
+                        anchorChar = ci;
+                        break;
+                    }
+                }
+            } else {
+                /* All-COMMON run (emoji, symbols, punctuation). */
+                subrunScript = HB_SCRIPT_COMMON;
+            }
 
-	    int subrunEnd = subrunStart + 1;
+            int runFaceIndex = GetRunFaceIndex(fontPtr, ucs4Chars, anchorChar, 1);
 
-	    /*
-	     * Extend while subsequent chars use same fallback face.
-	     */
-	    while (subrunEnd < runStart + runLen) {
-	        int nextFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
-	        if (nextFace != runFaceIndex) {
-	            break;
-	        }
-	        subrunEnd++;
-	    }
+            /*
+             * Extend the subrun while both script and face remain
+             * consistent.
+             *
+             * Key rule for INHERITED/COMMON characters: absorb them only when
+             * they map to the *same* fallback face as the current subrun.
+             * If the face differs (e.g. a Unicode emoji following a Latin
+             * word, where the emoji face is different from the Latin face)
+             * break immediately so the emoji gets its own subrun with the
+             * correct face and HB_SCRIPT_COMMON.  Without this check the
+             * emoji would be shaped with the Latin face, producing .notdef
+             * or the wrong monochrome glyph.
+             */
+            int subrunEnd = subrunStart + 1;
+            while (subrunEnd < runStart + runLen) {
+                hb_script_t s = hb_unicode_script(
+                    hb_unicode_funcs_get_default(), ucs4Chars[subrunEnd]);
 
-	    int shapeRunStart = subrunStart;
-	    int shapeRunLen   = subrunEnd - subrunStart;
+                if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
+                    /*
+                     * Face-change check for neutral characters.
+                     * Combining marks (INHERITED) virtually always share the
+                     * base character's face, so this rarely fires for them.
+                     * Emoji (COMMON) frequently require a different face and
+                     * must be split out.
+                     */
+                    int neutralFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
+                    if (neutralFace != runFaceIndex) {
+                        break;
+                    }
+                    subrunEnd++;
+                    continue;
+                }
 
-	    int runByteStart = charBounds[shapeRunStart];
-	    int runByteEnd   = charBounds[shapeRunStart + shapeRunLen];
-	    int runByteLen   = runByteEnd - runByteStart;
+                /* Real script change → always break. */
+                if (s != subrunScript) {
+                    break;
+                }
 
-	    if (runByteLen <= 0) {
-	        subrunStart = subrunEnd;
-	        continue;
-	    }
+                /* Same script, different face → break. */
+                int nextFace = GetRunFaceIndex(fontPtr, ucs4Chars, subrunEnd, 1);
+                if (nextFace != runFaceIndex) {
+                    break;
+                }
 
-	    /* Use lazy-loaded HarfBuzz font for this face. */
-	    hb_font_t *runHbFont = GetHbFont(fontPtr, runFaceIndex);
-	    if (!runHbFont) {
-		subrunStart = subrunEnd;
-		continue;
-	    }
+                subrunEnd++;
+            }
 
-	    hb_buffer_clear_contents(shaper->buffer);
-	    hb_buffer_add_utf8(shaper->buffer, source, numBytes, runByteStart, runByteLen);
-	    hb_buffer_set_direction(shaper->buffer, runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
-	    hb_buffer_set_cluster_level(shaper->buffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
+            int shapeRunStart = subrunStart;
+            int shapeRunLen   = subrunEnd - subrunStart;
 
-	    hb_shape(runHbFont, shaper->buffer, NULL, 0);
+            int shapeByteStart = charBounds[shapeRunStart];
+            int shapeByteEnd   = charBounds[shapeRunStart + shapeRunLen];
+            int shapeByteLen   = shapeByteEnd - shapeByteStart;
 
-	    unsigned int glyphCount = hb_buffer_get_length(shaper->buffer);
-	    hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
-	    hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
-	    if (!glyphInfo || !glyphPos) continue;
+            if (shapeByteLen <= 0) {
+                subrunStart = subrunEnd;
+                continue;
+            }
 
-	    struct {
-		int fontIndex; unsigned int glyphId; int x, y; int advanceX; int byteOffset; int clusterLen;
-	    } tempGlyphs[MAX_GLYPHS];
-	    int tempCount = 0;
+            hb_font_t *runHbFont = GetHbFont(fontPtr, runFaceIndex);
+            if (!runHbFont) {
+                subrunStart = subrunEnd;
+                continue;
+            }
 
-	    int runPenX = 0;
-	    XftFont *xftRunFont = GetFaceFont(fontPtr, runFaceIndex, 0.0);
+            hb_buffer_clear_contents(shaper->buffer);
+            hb_buffer_add_utf8(shaper->buffer, source, numBytes,
+                               shapeByteStart, shapeByteLen);
+            hb_buffer_set_direction(shaper->buffer,
+                                    runIsRTL ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
+            hb_buffer_set_script(shaper->buffer, subrunScript);
+            hb_buffer_set_language(shaper->buffer,
+                                   hb_language_from_string("", -1));
+            hb_buffer_set_cluster_level(shaper->buffer,
+                                        HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES);
 
-	    for (unsigned int i = 0;
-		 i < glyphCount && tempCount < MAX_GLYPHS;
-		 i++) {
+            hb_shape(runHbFont, shaper->buffer, NULL, 0);
 
-		tempGlyphs[tempCount].fontIndex  = runFaceIndex;
-		tempGlyphs[tempCount].glyphId    = glyphInfo[i].codepoint;
+            unsigned int glyphCount = hb_buffer_get_length(shaper->buffer);
+            hb_glyph_info_t *glyphInfo = hb_buffer_get_glyph_infos(shaper->buffer, NULL);
+            hb_glyph_position_t *glyphPos = hb_buffer_get_glyph_positions(shaper->buffer, NULL);
+            if (!glyphInfo || !glyphPos) {
+                subrunStart = subrunEnd;
+                continue;
+            }
 
-		tempGlyphs[tempCount].x =
-		    runPenX +
-		    (int)(glyphPos[i].x_offset / 64.0 + 0.5);
+            struct {
+                int fontIndex; unsigned int glyphId; int x, y; int advanceX;
+                int byteOffset; int clusterLen;
+            } tempGlyphs[MAX_GLYPHS];
+            int tempCount = 0;
 
-		tempGlyphs[tempCount].y =
-		    -(int)(glyphPos[i].y_offset / 64.0 + 0.5);
+            int runPenX = 0;
+            XftFont *xftRunFont = GetFaceFont(fontPtr, runFaceIndex, 0.0);
 
-		tempGlyphs[tempCount].byteOffset =
-		    glyphInfo[i].cluster;
+            for (unsigned int i = 0;
+                 i < glyphCount && tempCount < MAX_GLYPHS;
+                 i++) {
 
-		unsigned int gid = glyphInfo[i].codepoint;
+                tempGlyphs[tempCount].fontIndex  = runFaceIndex;
+                tempGlyphs[tempCount].glyphId    = glyphInfo[i].codepoint;
 
-		if (xftRunFont && gid != 0) {
+                tempGlyphs[tempCount].x =
+                    runPenX +
+                    (int)(glyphPos[i].x_offset / 64.0 + 0.5);
 
-		    XGlyphInfo gmetrics;
+                tempGlyphs[tempCount].y =
+                    -(int)(glyphPos[i].y_offset / 64.0 + 0.5);
 
-		    XftGlyphExtents(
-				    fontPtr->display,
-				    xftRunFont,
-				    &gid,
-				    1,
-				    &gmetrics
-				    );
+                tempGlyphs[tempCount].byteOffset =
+                    glyphInfo[i].cluster;
 
-		    tempGlyphs[tempCount].advanceX =
-			gmetrics.xOff;
+                unsigned int gid = glyphInfo[i].codepoint;
 
-		} else {
+                if (xftRunFont && gid != 0) {
+                    XGlyphInfo gmetrics;
+                    XftGlyphExtents(
+                        fontPtr->display,
+                        xftRunFont,
+                        &gid,
+                        1,
+                        &gmetrics
+                    );
+                    tempGlyphs[tempCount].advanceX = gmetrics.xOff;
+                } else {
+                    tempGlyphs[tempCount].advanceX =
+                        (int)(glyphPos[i].x_advance / 64.0 + 0.5);
+                }
 
-		    tempGlyphs[tempCount].advanceX =
-			(int)(glyphPos[i].x_advance / 64.0 + 0.5);
-		}
+                runPenX += tempGlyphs[tempCount].advanceX;
+                tempCount++;
+            }
 
-		runPenX += tempGlyphs[tempCount].advanceX;
+            for (int i = 0; i < tempCount; i++) {
+                tempGlyphs[i].x += globalPenX;
+            }
 
-		tempCount++;
-	    }
+            /* Fix cluster lengths. */
+            if (!runIsRTL) {
+                for (int i = 0; i < tempCount; i++) {
+                    int start = tempGlyphs[i].byteOffset;
+                    int end = shapeByteEnd;
+                    for (int j = i + 1; j < tempCount; j++) {
+                        if (tempGlyphs[j].byteOffset != start) {
+                            end = tempGlyphs[j].byteOffset;
+                            break;
+                        }
+                    }
+                    tempGlyphs[i].clusterLen = end - start;
+                    if (tempGlyphs[i].clusterLen <= 0) {
+                        tempGlyphs[i].clusterLen = 1;
+                    }
+                }
+            } else {
+                for (int i = 0; i < tempCount; i++) {
+                    int start = tempGlyphs[i].byteOffset;
+                    int end = shapeByteEnd;
+                    for (int j = i - 1; j >= 0; j--) {
+                        if (tempGlyphs[j].byteOffset != start) {
+                            end = tempGlyphs[j].byteOffset;
+                            break;
+                        }
+                    }
+                    tempGlyphs[i].clusterLen = abs(end - start);
+                    if (tempGlyphs[i].clusterLen <= 0) {
+                        tempGlyphs[i].clusterLen = 1;
+                    }
+                }
+            }
 
-	    for (int i = 0; i < tempCount; i++) {
-		tempGlyphs[i].x += globalPenX;
-	    }
+            /* Copy to main buffer. */
+            for (int i = 0; i < tempCount; i++) {
+                int idx = buffer->glyphCount;
+                if (idx >= MAX_GLYPHS) break;
+                buffer->glyphs[idx] = (typeof(buffer->glyphs[0])) {
+                    .fontIndex  = tempGlyphs[i].fontIndex,
+                    .glyphId    = tempGlyphs[i].glyphId,
+                    .x          = tempGlyphs[i].x,
+                    .y          = tempGlyphs[i].y,
+                    .advanceX   = tempGlyphs[i].advanceX,
+                    .byteOffset = tempGlyphs[i].byteOffset,
+                    .clusterLen = tempGlyphs[i].clusterLen,
+                    .isRTL      = runIsRTL
+                };
+                buffer->glyphCount++;
+            }
 
-	    /* Fix cluster lengths. */
-	    if (!runIsRTL) {
-		for (int i = 0; i < tempCount; i++) {
-		    int start = tempGlyphs[i].byteOffset;
-		    int end = runByteEnd;
-		    for (int j = i + 1; j < tempCount; j++) {
-			if (tempGlyphs[j].byteOffset != start) {
-			    end = tempGlyphs[j].byteOffset;
-			    break;
-			}
-		    }
-		    tempGlyphs[i].clusterLen = end - start;
-		    if (tempGlyphs[i].clusterLen <= 0) {
-			tempGlyphs[i].clusterLen = 1;
-		    }
-		}
-	    } else {
-		for (int i = 0; i < tempCount; i++) {
-		    int start = tempGlyphs[i].byteOffset;
-		    int end = runByteEnd;
-		    for (int j = i - 1; j >= 0; j--) {
-			if (tempGlyphs[j].byteOffset != start) {
-			    end = tempGlyphs[j].byteOffset;
-			    break;
-			}
-		    }
-		    tempGlyphs[i].clusterLen = abs(end - start);
-		    if (tempGlyphs[i].clusterLen <= 0) {
-			tempGlyphs[i].clusterLen = 1;
-		    }
-		}
-	    }
-
-	    /* Copy to main buffer. */
-	    for (int i = 0; i < tempCount; i++) {
-		int idx = buffer->glyphCount;
-		if (idx >= MAX_GLYPHS) break;
-		buffer->glyphs[idx] = (typeof(buffer->glyphs[0])) {
-		    .fontIndex  = tempGlyphs[i].fontIndex,
-		    .glyphId    = tempGlyphs[i].glyphId,
-		    .x          = tempGlyphs[i].x,
-		    .y          = tempGlyphs[i].y,
-		    .advanceX   = tempGlyphs[i].advanceX,
-		    .byteOffset = tempGlyphs[i].byteOffset,
-		    .clusterLen = tempGlyphs[i].clusterLen,
-		    .isRTL      = runIsRTL
-		};
-		buffer->glyphCount++;
-	    }
-
-	    globalPenX += runPenX;
-	    subrunStart = subrunEnd;
-	}
+            globalPenX += runPenX;
+            subrunStart = subrunEnd;
+        }
     }
 
     buffer->totalAdvance = globalPenX;
 
-    /* Clear the index count for the final pass */
+    /* Build visualIndex. */
     buffer->indexCount = 0;
 
     for (int i = 0; i < buffer->glyphCount; i++) {
-	int byteStart = buffer->glyphs[i].byteOffset;
-	int byteEnd = byteStart + buffer->glyphs[i].clusterLen;
+        int byteStart = buffer->glyphs[i].byteOffset;
+        int byteEnd = byteStart + buffer->glyphs[i].clusterLen;
 
-	if (buffer->indexCount > 0) {
-	    int last = buffer->indexCount - 1;
-	    if (buffer->visualIndex[last].byteStart == byteStart) {
-		continue;
-	    }
-	}
+        if (buffer->indexCount > 0) {
+            int last = buffer->indexCount - 1;
+            if (buffer->visualIndex[last].byteStart == byteStart) {
+                continue;
+            }
+        }
 
-	int vIdx = buffer->indexCount++;
-	buffer->visualIndex[vIdx].x = buffer->glyphs[i].x;
-	buffer->visualIndex[vIdx].advanceX = buffer->glyphs[i].advanceX;
-	buffer->visualIndex[vIdx].isRTL = buffer->glyphs[i].isRTL;
+        int vIdx = buffer->indexCount++;
+        buffer->visualIndex[vIdx].x = buffer->glyphs[i].x;
+        buffer->visualIndex[vIdx].advanceX = buffer->glyphs[i].advanceX;
+        buffer->visualIndex[vIdx].isRTL = buffer->glyphs[i].isRTL;
 
-	if (buffer->glyphs[i].isRTL) {
-	    buffer->visualIndex[vIdx].byteStart = byteEnd;
-	    buffer->visualIndex[vIdx].byteEnd = byteStart;
-	} else {
-	    buffer->visualIndex[vIdx].byteStart = byteStart;
-	    buffer->visualIndex[vIdx].byteEnd = byteEnd;
-	}
+        if (buffer->glyphs[i].isRTL) {
+            buffer->visualIndex[vIdx].byteStart = byteEnd;
+            buffer->visualIndex[vIdx].byteEnd = byteStart;
+        } else {
+            buffer->visualIndex[vIdx].byteStart = byteStart;
+            buffer->visualIndex[vIdx].byteEnd = byteEnd;
+        }
     }
 
-    /* Cluster breaks (safe version). */
+    /* Cluster breaks. */
     buffer->clusterBreaks[0] = 0;
     buffer->clusterBreakCount = 1;
 
@@ -1631,14 +1709,12 @@ X11Shaper_ShapeString(
         }
     }
 
-    /* Ensure end of string is always present */
     if (buffer->clusterBreaks[buffer->clusterBreakCount-1] != numBytes) {
         if (buffer->clusterBreakCount < MAX_CLUSTER_BREAKS) {
             buffer->clusterBreaks[buffer->clusterBreakCount++] = numBytes;
         }
     }
 
-    /* Simple linear deduplicate + sort. */
     int n = buffer->clusterBreakCount;
     for (int i = 1; i < n; i++) {
         int key = buffer->clusterBreaks[i];
@@ -1650,7 +1726,6 @@ X11Shaper_ShapeString(
         buffer->clusterBreaks[j+1] = key;
     }
 
-    /* Final deduplication pass. */
     int write = 1;
     for (int i = 1; i < n; i++) {
         if (buffer->clusterBreaks[i] != buffer->clusterBreaks[write-1]) {
@@ -1659,7 +1734,7 @@ X11Shaper_ShapeString(
     }
     buffer->clusterBreakCount = write;
 
-    /* Cache result (round‑robin). */
+    /* Cache result. */
     if (numBytes <= MAX_STRING_CACHE) {
         int slot = shaper->cacheNext;
         memcpy(shaper->cache[slot].text, source, numBytes);
@@ -1676,7 +1751,6 @@ X11Shaper_ShapeString(
 
     return 1;
 }
-
 
 /*
  * ---------------------------------------------------------------
