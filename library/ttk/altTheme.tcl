@@ -7,6 +7,7 @@ namespace eval ttk::theme::alt {
     variable colors
     array set colors {
 	-frame		"#d9d9d9"
+	-foreground	"#000000"
 	-window		"#ffffff"
 	-alternate	"#f0f0f0"
 	-darker		"#c3c3c3"
@@ -22,7 +23,7 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure "." \
 	    -background		$colors(-frame) \
-	    -foreground		black \
+	    -foreground		$colors(-foreground) \
 	    -troughcolor	$colors(-darker) \
 	    -bordercolor	$colors(-border) \
 	    -selectbackground	$colors(-selectbg) \
@@ -57,22 +58,25 @@ namespace eval ttk::theme::alt {
 		   disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -padding 2.25p -arrowsize 3.75p -relief raised
+	    -width -11 -padding 2.25p -relief raised \
+	    -arrowsize 3.75p -arrowpadding {2.25p 0 2.25p 0}
 
-	ttk::style configure TEntry -padding 1 \
-	    -focuswidth 2 -focuscolor $colors(-selectbg)
+	ttk::style configure TEntry -padding 0.75p -insertwidth 0.75p \
+	    -focuswidth 1.5p -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1 -arrowsize 10.5p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	ttk::style configure TCombobox -padding 0.75p -insertwidth 0.75p \
+	    -arrowsize 3p -arrowpadding {2.25p 2.25p 3p 3p} \
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0} \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	ttk::style configure TSpinbox -padding {1.5p 0 7.5p 0} \
+	    -arrowsize 2.25p -arrowpadding {2.25p 2.25p 3p 2.25p} \
+	    -insertwidth 0.75p -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -84,7 +88,7 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 10.5p -width 10.5p
+	    -arrowsize 3p -width 10.5p -arrowpadding {1.5p 1.5p 2.25p 2.25p}
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
@@ -95,21 +99,34 @@ namespace eval ttk::theme::alt {
 	    -background [list selected $colors(-frame)] \
 	    -expand {selected {1.5p 1.5p 0.75p 0}}
 
-	# Treeview:
-	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Item \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
-	ttk::style configure Treeview -background $colors(-window) \
-	    -stripedbackground $colors(-alternate) -indent 15p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
-	ttk::setTreeviewRowHeight
+	# Treeview
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised \
+	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Item -indicatorsize 6.75p \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
+	ttk::style map CheckTreeview.Item \
+	    -indicatorcolor [list disabled $colors(-frame)]
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
+	ttk::style configure Treeview \
+	    -background $colors(-window) \
+	    -stripedbackground $colors(-alternate) -indent 15p \
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
+	# The treeview uses the "background" state for
+	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+	    -background [list	disabled $colors(-frame) \
+				selected $colors(-selectbg) \
+				active $colors(-activebg)] \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				selected $colors(-selectfg) \
+				active $colors(-foreground)]
 
 	ttk::style configure TScale \
 	    -groovewidth 3p -troughrelief sunken \

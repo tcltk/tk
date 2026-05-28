@@ -52,6 +52,7 @@ namespace eval ttk {
 	crosshair	crosshair
 	busy		watch
 	forbidden	pirate
+	move		fleur
 
 	hresize		sb_h_double_arrow
 	vresize		sb_v_double_arrow
@@ -64,7 +65,6 @@ namespace eval ttk {
 	neresize	top_right_corner
 	swresize	bottom_left_corner
 	seresize	bottom_right_corner
-	move		fleur
 
     }
 
@@ -81,6 +81,7 @@ namespace eval ttk {
 		crosshair	crosshair
 		busy		wait
 		forbidden	no
+		move		fleur
 
 		vresize		size_ns
 		nresize		size_ns
@@ -104,8 +105,9 @@ namespace eval ttk {
 		text		ibeam
 		link		pointinghand
 		crosshair	crosshair
-		busy		watch
+		busy		wait
 		forbidden	notallowed
+		move		closedhand
 
 		hresize		resizeleftright
 		vresize		resizeupdown

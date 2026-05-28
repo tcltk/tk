@@ -1321,7 +1321,7 @@ ScalingCmd(
 	 * in sync with the new value of the scaling factor
 	 */
 
-	for (intPct = 100; 1; intPct += 25) {
+	for (intPct = 25; true; intPct += 25) {
 	    if (dblPct < intPct + 12.5) {
 		break;
 	    }

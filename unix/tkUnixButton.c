@@ -172,7 +172,7 @@ TkpDrawCheckIndicator(
 {
     const char *svgDataPtr;
     int hasBorder, hasInterior, dim;
-    double scalingLevel = TkScalingLevel(tkwin);
+    double scalingLevel = TkScalingLevel2(tkwin);
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
     char darkColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
     Tcl_Interp *interp = Tk_Interp(tkwin);
@@ -234,7 +234,7 @@ TkpDrawCheckIndicator(
 	dim = RADIO_MENU_DIM;
 	break;
     }
-    dim = (int)(dim * scalingLevel);
+    dim = (int)round(dim * scalingLevel);
 
     /*
      * Construct the color strings darkColorStr, lightColorStr,
