@@ -1412,15 +1412,35 @@ TkpDrawAngledCharsInContext(
 	clipWidth = rangeEndX - rangeStartX;
 
 	/*
+	 * Oblique (italic) fonts have glyphs whose ink extends past their
+	 * advance width — the slanted upper part of a glyph sticks out to
+	 * one side of its advance box.  CTLineGetOffsetForStringIndex
+	 * returns advance positions, so a clip rect of
+	 * [rangeStartX, rangeEndX] would cut the slanted overhang off the
+	 * leftmost and rightmost glyphs in the range.  Compensate by
+	 * widening the clip on both sides by the worst-case horizontal
+	 * extent of a slanted glyph: glyph-height * |tan(italicAngle)|.
+	 * For a 12pt Helvetica Oblique (italicAngle = -12°) this is ~3px.
+	 */
+
+	CGFloat italicOvershoot = 0.0;
+	if ([nsFont italicAngle] != 0.0) {
+	    CGFloat glyphHeight = [nsFont ascender] - [nsFont descender];
+	    italicOvershoot = ceil(glyphHeight *
+		    fabs(tan([nsFont italicAngle] * PI / 180.0)));
+	}
+
+	/*
 	 * Position the full line so that its origin aligns with textX/textY,
-	 * then clip to the requested range's visual span.
+	 * then clip to the requested range's visual span (widened by the
+	 * italic overshoot computed above).
 	 * The clip rect uses an effectively infinite height so we don't
 	 * accidentally clip ascenders/descenders.
 	 */
 	CGContextSaveGState(context);
 	CGContextClipToRect(context, CGRectMake(
-		textX + rangeStartX, textY - 32768.0,
-		clipWidth, 65536.0));
+		textX + rangeStartX - italicOvershoot, textY - 32768.0,
+		clipWidth + 2.0 * italicOvershoot, 65536.0));
 	CGContextSetTextPosition(context, textX, textY);
 	CTLineDraw(full, context);
 	CGContextRestoreGState(context);
