@@ -794,16 +794,19 @@ namespace eval ::tk::test::image {
     proc imageFinish {} {
 	variable ImageNames
 	set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	set imgs [lsearch -all -inline -glob -not $imgs ::tk::icons::chevron*]
 	if {$imgs ne $ImageNames} {
-	    return -code error "images remaining: [image names] != $ImageNames"
+	    return -code error "images remaining: $imgs != $ImageNames"
 	}
 	imageCleanup
     }
 
     proc imageInit {} {
+	package require ttk
 	variable ImageNames
 	if {![info exists ImageNames]} {
 	    set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+	    set ImageNames [lsearch -all -inline -glob -not $ImageNames ::tk::icons::chevron*]
 	}
 	imageCleanup
 	if {[lsort [image names]] ne $ImageNames} {
