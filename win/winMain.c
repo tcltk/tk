@@ -55,16 +55,7 @@ extern "C" {
 extern Tcl_LibraryInitProc Tktest_Init;
 #endif /* TK_TEST */
 
-#if !defined(TCL_USE_STATIC_PACKAGES)
-#   if TCL_MAJOR_VERSION > 8
-#	define TCL_USE_STATIC_PACKAGES 1
-#   else
-#	define TCL_USE_STATIC_PACKAGES 0
-#   endif
-#endif
-
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
-extern Tcl_LibraryInitProc Registry_Init;
+#if defined(STATIC_BUILD)
 extern Tcl_LibraryInitProc Dde_Init;
 extern Tcl_LibraryInitProc Dde_SafeInit;
 #endif
@@ -204,12 +195,7 @@ Tcl_AppInit(
     if ((Tcl_Init)(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
-    if (Registry_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticLibrary(interp, "Registry", Registry_Init, 0);
-
+#if defined(STATIC_BUILD)
     if (Dde_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }

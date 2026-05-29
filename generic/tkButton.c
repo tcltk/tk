@@ -131,6 +131,8 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
 	DEF_BUTTON_TEXT, offsetof(TkButton, textPtr), TCL_INDEX_NONE, 0, 0, 0},
+    {TK_OPTION_DOUBLE, "-textangle", "textAngle", "Angle",
+	"0.0", TCL_INDEX_NONE, offsetof(TkButton, angle), 0, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
 	DEF_BUTTON_TEXT_VARIABLE, offsetof(TkButton, textVarNamePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -726,6 +728,9 @@ ButtonCreate(
     butPtr->takeFocusPtr = NULL;
     butPtr->commandPtr = NULL;
     butPtr->flags = 0;
+    butPtr->angle = 0.0;
+    butPtr->xoffset = 0;
+    butPtr->yoffset = 0;
 
     Tk_CreateEventHandler(butPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,

@@ -1238,6 +1238,9 @@ MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);
 MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
+MODULE_SCOPE double	TkScalingLevel2(Tk_Window tkwin);
+MODULE_SCOPE int	TkGetScaledPixelValue(Tcl_Interp *interp, Tk_Window tkwin,
+			    Tcl_Obj *valuePtr, int *size);
 MODULE_SCOPE bool	TkObjIsEmpty(Tcl_Obj *objPtr);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    void *clientData);
@@ -1251,6 +1254,8 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
+MODULE_SCOPE void	TkAdjustAngledTextLayout(double angle, int *width,
+			    int *height, int *xoffset, int *yoffset);
 
 #define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj((Tcl_WideInt)(value)))
 #define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
@@ -1302,9 +1307,9 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
 /*
  * Unsupported commands.
  */
-
+#if 0
 MODULE_SCOPE Tcl_ObjCmdProc2 TkUnsupported1ObjCmd;
-
+#endif
 /*
  * For Tktest.
  */
