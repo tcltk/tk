@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "stb_image.h"
+#include "x11_cursors.h"
 
 /*
  * The following data structure is a superset of the TkCursor structure
@@ -135,51 +136,10 @@ static const struct CursorName {
 };
 
 /*
- * Built-in bitmap data for Tk cursors that don't have GLFW equivalents.
- * These are X11 XBM format strings converted to binary data.
+ * Built-in cursor database using data from x11_cursors.h.
+ * Each entry provides the bitmap data, mask data, dimensions, and hotspot.
  */
 
-/* X_cursor bitmap (16x16). */
-static unsigned char x_cursor_bits[] = {
-    0x00, 0x00, 0x18, 0x18, 0x3c, 0x3c, 0x7e, 0x7e,
-    0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18,
-    0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x7e, 0x7e,
-    0x3c, 0x3c, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00
-};
-
-/* based_arrow_down bitmap (16x16). */
-static unsigned char based_arrow_down_bits[] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
-/* cross_reverse bitmap (16x16). */
-static unsigned char cross_reverse_bits[] = {
-    0x80, 0x01, 0x40, 0x02, 0x20, 0x04, 0x10, 0x08,
-    0x08, 0x10, 0x04, 0x20, 0x02, 0x40, 0x01, 0x80,
-    0x80, 0x01, 0x40, 0x02, 0x20, 0x04, 0x10, 0x08,
-    0x08, 0x10, 0x04, 0x20, 0x02, 0x40, 0x01, 0x80
-};
-
-/* watch bitmap (16x16). */
-static unsigned char watch_bits[] = {
-    0x00, 0x00, 0xf0, 0x0f, 0x08, 0x10, 0x04, 0x20,
-    0x04, 0x20, 0x02, 0x40, 0x02, 0x40, 0x01, 0x80,
-    0x01, 0x80, 0x02, 0x40, 0x02, 0x40, 0x04, 0x20,
-    0x04, 0x20, 0x08, 0x10, 0xf0, 0x0f, 0x00, 0x00
-};
-
-/* Mask for watch cursor. */
-static unsigned char watch_mask_bits[] = {
-    0xf0, 0x0f, 0xf8, 0x1f, 0xfc, 0x3f, 0xfe, 0x7f,
-    0xfe, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x7f,
-    0xfe, 0x7f, 0xfc, 0x3f, 0xf8, 0x1f, 0xf0, 0x0f
-};
-
-/* Built-in cursor database. */
 static const struct BuiltinCursor {
     const char *name;
     unsigned char *bits;
@@ -189,11 +149,47 @@ static const struct BuiltinCursor {
     int xHot;
     int yHot;
 } builtinCursors[] = {
-    {"X_cursor", x_cursor_bits, NULL, 16, 16, 8, 8},
-    {"based_arrow_down", based_arrow_down_bits, NULL, 16, 16, 8, 15},
-    {"based_arrow_up", based_arrow_down_bits, NULL, 16, 16, 8, 0},
-    {"cross_reverse", cross_reverse_bits, NULL, 16, 16, 8, 8},
-    {"watch", watch_bits, watch_mask_bits, 16, 16, 8, 8},
+    /* Use the full definitions from x11_cursors.h */
+    {"X_cursor", X_cursor_bits, X_cursor_mask_bits, 16, 16, -7, -9},
+    {"arrow", arrow_bits, arrow_mask_bits, 16, 16, -14, -15},
+    {"based_arrow_down", based_arrow_down_bits, based_arrow_down_mask_bits, 10, 12, -4, -2},
+    {"based_arrow_up", based_arrow_up_bits, based_arrow_up_mask_bits, 10, 12, -4, -2},
+    {"bottom_tee", bottom_tee_bits, bottom_tee_mask_bits, 16, 12, -8, -2},
+    {"box_spiral", box_spiral_bits, box_spiral_mask_bits, 16, 16, -8, -8},
+    {"circle", circle_bits, circle_mask_bits, 16, 16, -8, -8},
+    {"clock", clock_bits, clock_mask_bits, 15, 16, -6, -13},
+    {"coffee_mug", coffee_mug_bits, coffee_mug_mask_bits, 16, 16, -7, -7},
+    {"cross_reverse", cross_reverse_bits, cross_reverse_mask_bits, 16, 15, -7, -8},
+    {"diamond_cross", diamond_cross_bits, diamond_cross_mask_bits, 16, 16, -7, -9},
+    {"dot", dot_bits, dot_mask_bits, 12, 12, -6, -6},
+    {"dotbox", dotbox_bits, dotbox_mask_bits, 14, 14, -7, -8},
+    {"draft_large", draft_large_bits, draft_large_mask_bits, 15, 16, -14, -16},
+    {"draft_small", draft_small_bits, draft_small_mask_bits, 15, 15, -14, -15},
+    {"draped_box", draped_box_bits, draped_box_mask_bits, 14, 14, -7, -8},
+    {"exchange", exchange_bits, exchange_mask_bits, 16, 16, -7, -9},
+    {"gobbler", gobbler_bits, gobbler_mask_bits, 16, 16, -14, -13},
+    {"gumby", gumby_bits, gumby_mask_bits, 16, 16, -2, -16},
+    {"heart", heart_bits, heart_mask_bits, 15, 14, -6, -6},
+    {"iron_cross", iron_cross_bits, iron_cross_mask_bits, 16, 16, -8, -9},
+    {"left_tee", left_tee_bits, left_tee_mask_bits, 12, 16, -1, -8},
+    {"man", man_bits, man_mask_bits, 16, 16, -14, -11},
+    {"middlebutton", middlebutton_bits, middlebutton_mask_bits, 15, 16, -8, -8},
+    {"mouse", mouse_bits, mouse_mask_bits, 16, 16, -4, -15},
+    {"pencil", pencil_bits, pencil_mask_bits, 13, 16, -11, -1},
+    {"pirate", pirate_bits, pirate_mask_bits, 16, 16, -7, -4},
+    {"question_arrow", question_arrow_bits, question_arrow_mask_bits, 11, 16, -5, -8},
+    {"right_tee", right_tee_bits, right_tee_mask_bits, 12, 16, -10, -8},
+    {"rtl_logo", rtl_logo_bits, rtl_logo_mask_bits, 16, 16, -7, -9},
+    {"sailboat", sailboat_bits, sailboat_mask_bits, 16, 16, -8, -16},
+    {"shuttle", shuttle_bits, shuttle_mask_bits, 16, 16, -11, -16},
+    {"spider", spider_bits, spider_mask_bits, 16, 16, -6, -9},
+    {"spraycan", spraycan_bits, spraycan_mask_bits, 12, 16, -10, -14},
+    {"star", star_bits, star_mask_bits, 16, 16, -7, -9},
+    {"top_tee", top_tee_bits, top_tee_mask_bits, 16, 12, -8, -11},
+    {"trek", trek_bits, trek_mask_bits, 9, 16, -4, -16},
+    {"umbrella", umbrella_bits, umbrella_mask_bits, 16, 16, -8, -14},
+    {"watch", watch_bits, watch_mask_bits, 16, 16, -15, -7},
+    {"xterm", xterm_bits, xterm_mask_bits, 9, 16, -4, -8},
     {NULL, NULL, NULL, 0, 0, 0, 0}
 };
 
@@ -298,7 +294,7 @@ ConvertXBMToRGBA(
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int byteIndex = y * ((width + 7) / 8) + (x / 8);
-            int bitIndex = 7 - (x % 8);  /* Fixed: Changed from 7 to 8 */
+            int bitIndex = 7 - (x % 8);
             int srcBit = (source[byteIndex] >> bitIndex) & 1;
             int maskBit = mask ? ((mask[byteIndex] >> bitIndex) & 1) : 1;
 
@@ -753,7 +749,7 @@ TkGetCursorByName(
         }
     }
 
-    if ((argv[0][0] != '@') && (tkCursorPtr == NULL) && (!builtinPtr->name)) {
+    if ((argv[0][0] != '@') && (tkCursorPtr == NULL) && (builtinPtr->name == NULL)) {
         /* Look for standard cursor shape. */
         const struct CursorName *namePtr;
 
@@ -789,8 +785,8 @@ TkGetCursorByName(
             /* Should have been caught by builtin check. */
             goto badString;
         }
-    } else if (builtinPtr->name) {
-        /* Create from built-in bitmap data. */
+    } else if (builtinPtr->name != NULL) {
+        /* Create from built-in bitmap data (from x11_cursors.h). */
         if (argc >= 2) {
             fgColor = ParseColor(argv[1]);
         }
