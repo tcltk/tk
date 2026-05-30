@@ -149,6 +149,13 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     bzero(dispPtr, sizeof(TkDisplay));
     dispPtr->display = (Display *)display;
+    /*
+     * dispPtr->name must be set: tkBind.c passes it to ChangeScreen as
+     * the display name component of "::tk::ScreenChanged <name>.<screen>".
+     * A NULL name causes Tcl_ObjPrintf to format "(null).0", corrupting
+     * the interp result and crashing Tcl_RestoreInterpState.
+     */
+    dispPtr->name = (char *)"wayland-0";
 
     return dispPtr;
 }

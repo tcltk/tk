@@ -1028,8 +1028,14 @@ TkpFreeCursor(
 
     if (waylandCursorPtr->cursor != NULL) {
         glfwDestroyCursor(waylandCursorPtr->cursor);
+        waylandCursorPtr->cursor = NULL;
     }
-    Tcl_Free(cursorPtr);
+    /*
+     * Do NOT free cursorPtr here. The generic FreeCursor in tkCursor.c
+     * owns the struct lifetime and calls Tcl_Free(cursorPtr) itself after
+     * TkpFreeCursor returns, when objRefCount reaches zero. Freeing here
+     * causes a double-free and heap corruption.
+     */
 }
 
 /*
