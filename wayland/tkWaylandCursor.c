@@ -12,6 +12,7 @@
  */
 
 #include "tkInt.h"
+#include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -232,6 +233,36 @@ static unsigned char* ParseXBMData(const char* data, int* width, int* height,
 static unsigned int ParseColor(const char* colorName);
 static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
       int width, int height, int xHot, int yHot);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * NextCursorId --
+ *
+ *	Returns a unique opaque integer for use as info.cursor. The generic
+ *	tkCursor.c layer uses this value as a hash key in cursorIdTable, so
+ *	it must be unique per allocated cursor. It must NOT be the raw
+ *	GLFWcursor pointer: glfwCreateStandardCursor may return the same
+ *	pointer for two independently created cursors, which would cause
+ *	TkcGetCursor to panic on "cursor already registered". The actual
+ *	GLFW handle is stored separately in TkWaylandCursor.cursor and
+ *	retrieved by TkpSetCursor.
+ *
+ * Results:
+ *	A non-zero Tk_Cursor value, unique for the lifetime of the process.
+ *
+ * Side effects:
+ *	Increments a static counter.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tk_Cursor
+NextCursorId(void)
+{
+    static Tcl_Size nextId = 1;
+    return (Tk_Cursor)(uintptr_t)(nextId++);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -675,7 +706,7 @@ CreateCursorFromImageData(
 TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    TCL_UNUSED(Tk_Window),	/* Window in which cursor will be used. */
+    Tk_Window tkwin,		/* Window in which cursor will be used. */
     const char *string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
@@ -688,6 +719,8 @@ TkGetCursorByName(
     GLFWcursor* glfwCursor = NULL;
     unsigned int fgColor = 0xFF000000; /* Black */
     unsigned int bgColor = 0xFFFFFFFF; /* White */
+
+    (void)tkwin;	/* display/hash fields set by TkcGetCursor after we return */
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
 	return NULL;
@@ -854,19 +887,34 @@ TkGetCursorByName(
             }
         }
     }
-
-    if (glfwCursor != NULL) {
+	if (glfwCursor != NULL) {
         cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
-        cursorPtr->info.cursor = (Tk_Cursor) glfwCursor;
+        /* Completely clear the structure memory layout space. */
+        memset(cursorPtr, 0, sizeof(TkWaylandCursor));
+
+        /* Explicitly safely initialize ALL TkCursor core header fields. */
+        cursorPtr->info.cursor = NextCursorId();
+        cursorPtr->info.display = (tkwin != NULL) ? Tk_Display(tkwin) : NULL;
+        cursorPtr->info.resourceRefCount = 1;
+        cursorPtr->info.objRefCount = 0;
+        cursorPtr->info.otherTable = NULL;
+        cursorPtr->info.hashPtr = NULL;
+        cursorPtr->info.idHashPtr = NULL;
+        cursorPtr->info.nextPtr = NULL;
+
+        /* Initialize platform specific driver structures. */
         cursorPtr->cursor = glfwCursor;
         cursorPtr->standardShape = standardShape;
-        cursorPtr->width = 0;
-        cursorPtr->height = 0;
-
-        /* Store dimensions for built-in cursors. */
-        if (builtinPtr->name) {
+        
+        if (builtinPtr && builtinPtr->name) {
             cursorPtr->width = builtinPtr->width;
             cursorPtr->height = builtinPtr->height;
+        } else if (strcmp(argv[0], "none") == 0) {
+            cursorPtr->width = 1;
+            cursorPtr->height = 1;
+        } else {
+            cursorPtr->width = 0;
+            cursorPtr->height = 0;
         }
     }
 
@@ -932,9 +980,21 @@ TkCreateCursorFromData(
 
     if (glfwCursor != NULL) {
         TkWaylandCursor *cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
-        cursorPtr->info.cursor = (Tk_Cursor) glfwCursor;
+        memset(cursorPtr, 0, sizeof(TkWaylandCursor));
+        
+        /* Initialize core header fields. */
+        cursorPtr->info.cursor = NextCursorId();
+        cursorPtr->info.display = NULL; /* Will be overwritten/assigned by core TkcGetCursor. */
+        cursorPtr->info.resourceRefCount = 1;
+        cursorPtr->info.objRefCount = 0;
+        cursorPtr->info.otherTable = NULL;
+        cursorPtr->info.hashPtr = NULL;
+        cursorPtr->info.idHashPtr = NULL;
+        cursorPtr->info.nextPtr = NULL;
+
+        /* Initialize custom platform properties. */
         cursorPtr->cursor = glfwCursor;
-        cursorPtr->standardShape = -1; /* Custom cursor */
+        cursorPtr->standardShape = -1; 
         cursorPtr->width = width;
         cursorPtr->height = height;
         return (TkCursor *) cursorPtr;
@@ -994,7 +1054,13 @@ TkpSetCursor(
     TkCursor *cursorPtr)	/* New cursor, or NULL for default. */
 {
     TkWaylandCursor *waylandCursorPtr = (TkWaylandCursor *) cursorPtr;
-    GLFWwindow* window = (GLFWwindow*)Tk_WindowId((Tk_Window)winPtr);
+
+    /*
+     * Tk_WindowId() returns the X Window XID (an integer), not a pointer,
+     * so it cannot be cast to GLFWwindow*. Retrieve the GLFWwindow through
+     * the backend accessor instead.
+     */
+    GLFWwindow *window = TkWaylandGetGLFWwindow(winPtr);
 
     if (window != NULL) {
         if (waylandCursorPtr != NULL && waylandCursorPtr->cursor != NULL) {

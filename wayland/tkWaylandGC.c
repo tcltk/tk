@@ -38,8 +38,7 @@ extern GLFWwindow *mainGlfwWindow;
  *
  *
  * TkpOpenDisplay is the Tk platform entry point that allocates a full
- * TkDisplay together with a TkWaylandDisplay (our Display subtype), a
- * Screen, and a Visual.  GLFW is initialized here so that the primary
+ * TkDisplay, aScreen, and a Visual.  GLFW is initialized here so that the primary
  * monitor dimensions can be queried immediately.
 
  * ----------------------------------------------------------------------- */
@@ -64,6 +63,22 @@ extern GLFWwindow *mainGlfwWindow;
 TkDisplay *
 TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
 {
+    /*
+     * Singleton: Tk_Display(tkwin) must return the same Display* for every
+     * window so that the cursor hash-table comparison in tkCursor.c:
+     *
+     *   Tk_Display(tkwin) == cursorPtr->display
+     *
+     * is always true for windows on this display.  Without this guard,
+     * multiple calls to TkpOpenDisplay (e.g. from multiple interpreters)
+     * each allocate a fresh Display*, making the comparison fail and causing
+     * tkCursor.c to walk a stale hash-chain pointer — segfault.
+     */
+    static TkDisplay *dispPtr = NULL;
+    if (dispPtr != NULL) {
+        return dispPtr;
+    }
+
     /* Allocate Display. */
     _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
     if (!display) return NULL;
@@ -130,8 +145,8 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     visual->green_mask   = 0x00FF00;
     visual->blue_mask    = 0x0000FF;
 
-    /* Allocate TkDisplay once. */
-    TkDisplay *dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+    /* Allocate TkDisplay. */
+    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     bzero(dispPtr, sizeof(TkDisplay));
     dispPtr->display = (Display *)display;
 
