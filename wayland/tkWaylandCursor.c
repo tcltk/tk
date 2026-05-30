@@ -63,6 +63,8 @@ static const struct CursorName {
     {"arrow",			GLFW_ARROW_CURSOR},
     {"based_arrow_down",	-1}, /* Will use bitmap */
     {"based_arrow_up",		-1}, /* Will use bitmap */
+    {"boat",			-1}, /* Will use bitmap */
+    {"bogosity",		-1}, /* Will use bitmap */
     {"bottom_left_corner",	GLFW_RESIZE_NESW_CURSOR},
     {"bottom_right_corner",	GLFW_RESIZE_NWSE_CURSOR},
     {"bottom_side",		GLFW_RESIZE_NS_CURSOR},
@@ -94,6 +96,7 @@ static const struct CursorName {
     {"left_ptr",		GLFW_ARROW_CURSOR},
     {"left_side",		GLFW_RESIZE_EW_CURSOR},
     {"left_tee",		-1}, /* Will use bitmap */
+    {"leftbutton",		-1}, /* Will use bitmap */
     {"ll_angle",		GLFW_RESIZE_NESW_CURSOR},
     {"lr_angle",		GLFW_RESIZE_NWSE_CURSOR},
     {"man",			-1}, /* Will use bitmap */
@@ -106,6 +109,7 @@ static const struct CursorName {
     {"right_ptr",		GLFW_ARROW_CURSOR},
     {"right_side",		GLFW_RESIZE_EW_CURSOR},
     {"right_tee",		-1}, /* Will use bitmap */
+    {"rightbutton",		-1}, /* Will use bitmap */
     {"rtl_logo",		-1}, /* Will use bitmap */
     {"sailboat",		-1}, /* Will use bitmap */
     {"sb_down_arrow",		-1}, /* Will use bitmap */
@@ -137,7 +141,7 @@ static const struct CursorName {
 
 /*
  * Built-in cursor database using data from x11_cursors.h.
- * Each entry provides the bitmap data, mask data, dimensions, and hotspot.
+ * All definitions from the header file are included here.
  */
 
 static const struct BuiltinCursor {
@@ -149,45 +153,82 @@ static const struct BuiltinCursor {
     int xHot;
     int yHot;
 } builtinCursors[] = {
-    /* Use the full definitions from x11_cursors.h */
+    /* All cursors from x11_cursors.h (excluding those with GLFW equivalents) */
     {"X_cursor", X_cursor_bits, X_cursor_mask_bits, 16, 16, -7, -9},
     {"arrow", arrow_bits, arrow_mask_bits, 16, 16, -14, -15},
     {"based_arrow_down", based_arrow_down_bits, based_arrow_down_mask_bits, 10, 12, -4, -2},
     {"based_arrow_up", based_arrow_up_bits, based_arrow_up_mask_bits, 10, 12, -4, -2},
+    {"boat", boat_bits, boat_mask_bits, 16, 9, -14, -5},
+    {"bogosity", bogosity_bits, bogosity_mask_bits, 15, 16, -7, -9},
+    {"bottom_left_corner", bottom_left_corner_bits, bottom_left_corner_mask_bits, 16, 16, -1, -2},
+    {"bottom_right_corner", bottom_right_corner_bits, bottom_right_corner_mask_bits, 16, 16, -14, -2},
+    {"bottom_side", bottom_side_bits, bottom_side_mask_bits, 15, 16, -7, -2},
     {"bottom_tee", bottom_tee_bits, bottom_tee_mask_bits, 16, 12, -8, -2},
     {"box_spiral", box_spiral_bits, box_spiral_mask_bits, 16, 16, -8, -8},
+    {"center_ptr", center_ptr_bits, center_ptr_mask_bits, 12, 16, -5, -15},
     {"circle", circle_bits, circle_mask_bits, 16, 16, -8, -8},
     {"clock", clock_bits, clock_mask_bits, 15, 16, -6, -13},
     {"coffee_mug", coffee_mug_bits, coffee_mug_mask_bits, 16, 16, -7, -7},
+    {"cross", cross_bits, cross_mask_bits, 16, 16, -7, -9},
     {"cross_reverse", cross_reverse_bits, cross_reverse_mask_bits, 16, 15, -7, -8},
+    {"crosshair", crosshair_bits, crosshair_mask_bits, 16, 16, -7, -9},
     {"diamond_cross", diamond_cross_bits, diamond_cross_mask_bits, 16, 16, -7, -9},
     {"dot", dot_bits, dot_mask_bits, 12, 12, -6, -6},
     {"dotbox", dotbox_bits, dotbox_mask_bits, 14, 14, -7, -8},
+    {"double_arrow", double_arrow_bits, double_arrow_mask_bits, 12, 16, -6, -8},
     {"draft_large", draft_large_bits, draft_large_mask_bits, 15, 16, -14, -16},
     {"draft_small", draft_small_bits, draft_small_mask_bits, 15, 15, -14, -15},
     {"draped_box", draped_box_bits, draped_box_mask_bits, 14, 14, -7, -8},
     {"exchange", exchange_bits, exchange_mask_bits, 16, 16, -7, -9},
+    {"fleur", fleur_bits, fleur_mask_bits, 16, 16, -8, -8},
     {"gobbler", gobbler_bits, gobbler_mask_bits, 16, 16, -14, -13},
     {"gumby", gumby_bits, gumby_mask_bits, 16, 16, -2, -16},
+    {"hand1", hand1_bits, hand1_mask_bits, 13, 16, -12, -16},
+    {"hand2", hand2_bits, hand2_mask_bits, 16, 16, 0, -15},
     {"heart", heart_bits, heart_mask_bits, 15, 14, -6, -6},
+    {"icon", icon_bits, icon_mask_bits, 16, 16, -8, -8},
     {"iron_cross", iron_cross_bits, iron_cross_mask_bits, 16, 16, -8, -9},
+    {"left_ptr", left_ptr_bits, left_ptr_mask_bits, 10, 16, -1, -15},
+    {"left_side", left_side_bits, left_side_mask_bits, 16, 15, -1, -8},
     {"left_tee", left_tee_bits, left_tee_mask_bits, 12, 16, -1, -8},
+    {"leftbutton", leftbutton_bits, leftbutton_mask_bits, 15, 16, -8, -8},
+    {"ll_angle", ll_angle_bits, ll_angle_mask_bits, 12, 12, -1, -2},
+    {"lr_angle", lr_angle_bits, lr_angle_mask_bits, 12, 12, -10, -2},
     {"man", man_bits, man_mask_bits, 16, 16, -14, -11},
     {"middlebutton", middlebutton_bits, middlebutton_mask_bits, 15, 16, -8, -8},
     {"mouse", mouse_bits, mouse_mask_bits, 16, 16, -4, -15},
     {"pencil", pencil_bits, pencil_mask_bits, 13, 16, -11, -1},
     {"pirate", pirate_bits, pirate_mask_bits, 16, 16, -7, -4},
+    {"plus", plus_bits, plus_mask_bits, 12, 12, -5, -6},
     {"question_arrow", question_arrow_bits, question_arrow_mask_bits, 11, 16, -5, -8},
+    {"right_ptr", right_ptr_bits, right_ptr_mask_bits, 10, 16, -8, -15},
+    {"right_side", right_side_bits, right_side_mask_bits, 16, 15, -14, -8},
     {"right_tee", right_tee_bits, right_tee_mask_bits, 12, 16, -10, -8},
+    {"rightbutton", rightbutton_bits, rightbutton_mask_bits, 15, 16, -8, -8},
     {"rtl_logo", rtl_logo_bits, rtl_logo_mask_bits, 16, 16, -7, -9},
     {"sailboat", sailboat_bits, sailboat_mask_bits, 16, 16, -8, -16},
+    {"sb_down_arrow", sb_down_arrow_bits, sb_down_arrow_mask_bits, 9, 16, -4, -1},
+    {"sb_h_double_arrow", sb_h_double_arrow_bits, sb_h_double_arrow_mask_bits, 15, 9, -7, -5},
+    {"sb_left_arrow", sb_left_arrow_bits, sb_left_arrow_mask_bits, 16, 9, 0, -5},
+    {"sb_right_arrow", sb_right_arrow_bits, sb_right_arrow_mask_bits, 16, 9, -15, -5},
+    {"sb_up_arrow", sb_up_arrow_bits, sb_up_arrow_mask_bits, 9, 16, -4, -16},
+    {"sb_v_double_arrow", sb_v_double_arrow_bits, sb_v_double_arrow_mask_bits, 9, 15, -4, -8},
     {"shuttle", shuttle_bits, shuttle_mask_bits, 16, 16, -11, -16},
+    {"sizing", sizing_bits, sizing_mask_bits, 16, 16, -8, -8},
     {"spider", spider_bits, spider_mask_bits, 16, 16, -6, -9},
     {"spraycan", spraycan_bits, spraycan_mask_bits, 12, 16, -10, -14},
     {"star", star_bits, star_mask_bits, 16, 16, -7, -9},
+    {"target", target_bits, target_mask_bits, 16, 14, -7, -7},
+    {"tcross", tcross_bits, tcross_mask_bits, 15, 15, -7, -8},
+    {"top_left_arrow", top_left_arrow_bits, top_left_arrow_mask_bits, 16, 16, -1, -15},
+    {"top_left_corner", top_left_corner_bits, top_left_corner_mask_bits, 16, 16, -1, -15},
+    {"top_right_corner", top_right_corner_bits, top_right_corner_mask_bits, 16, 16, -14, -15},
+    {"top_side", top_side_bits, top_side_mask_bits, 15, 16, -7, -15},
     {"top_tee", top_tee_bits, top_tee_mask_bits, 16, 12, -8, -11},
     {"trek", trek_bits, trek_mask_bits, 9, 16, -4, -16},
+    {"ul_angle", ul_angle_bits, ul_angle_mask_bits, 12, 12, -1, -11},
     {"umbrella", umbrella_bits, umbrella_mask_bits, 16, 16, -8, -14},
+    {"ur_angle", ur_angle_bits, ur_angle_mask_bits, 12, 12, -10, -11},
     {"watch", watch_bits, watch_mask_bits, 16, 16, -15, -7},
     {"xterm", xterm_bits, xterm_mask_bits, 9, 16, -4, -8},
     {NULL, NULL, NULL, 0, 0, 0, 0}
