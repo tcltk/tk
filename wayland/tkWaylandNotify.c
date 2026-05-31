@@ -67,10 +67,8 @@ unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
 /* Track last window and position for enter/leave events */
-static GLFWwindow *lastWindow = NULL;
-static double lastX = -1, lastY = -1;
-
-
+static TkWindow *lastWinPtr = NULL;
+//static double lastX = -1, lastY = -1;
 /*
  *----------------------------------------------------------------------
  *
@@ -401,7 +399,7 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    printf("TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
     
     if (!winPtr) return;
     
@@ -420,7 +418,7 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;
     
     /* Queue it. */
-    printf("Queuing Expose(%lu) for %s with count %d\n",
+    fprintf(stderr, "Queuing Expose(%lu) for %s with count %d\n",
 	   event.xexpose.serial,
 	   Tk_PathName(winPtr),
 	   event.xexpose.count);
@@ -475,6 +473,7 @@ static void TkGlfwKeyCallback(GLFWwindow *window, int key,
 			      int scancode, int action, int mods);
 static void TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint);
 static void TkGlfwWindowRefreshCallback(GLFWwindow *window);
+static void TkGlfwCursorEnterCallback(GLFWwindow *window, int entered);
 
 MODULE_SCOPE void
 TkGlfwSetupCallbacks(
@@ -489,6 +488,7 @@ TkGlfwSetupCallbacks(
     glfwSetWindowIconifyCallback   (glfwWindow, TkGlfwWindowIconifyCallback);
     glfwSetWindowMaximizeCallback  (glfwWindow, TkGlfwWindowMaximizeCallback);
     glfwSetCursorPosCallback       (glfwWindow, TkGlfwCursorPosCallback);
+    glfwSetCursorEnterCallback     (glfwWindow, TkGlfwCursorEnterCallback);
     glfwSetMouseButtonCallback     (glfwWindow, TkGlfwMouseButtonCallback);
     glfwSetScrollCallback          (glfwWindow, TkGlfwScrollCallback);
     glfwSetWindowRefreshCallback   (glfwWindow, TkGlfwWindowRefreshCallback);
@@ -508,6 +508,7 @@ TkGlfwClearCallbacks(
     glfwSetWindowIconifyCallback      (glfwWindow, NULL);
     glfwSetWindowMaximizeCallback     (glfwWindow, NULL);
     glfwSetCursorPosCallback          (glfwWindow, NULL);
+    glfwSetCursorEnterCallback        (glfwWindow, NULL);
     glfwSetMouseButtonCallback        (glfwWindow, NULL);
     glfwSetScrollCallback             (glfwWindow, NULL);
     glfwSetWindowRefreshCallback      (glfwWindow, NULL);
@@ -579,7 +580,7 @@ TkGlfwWindowContentScaleCallback(
 	winPtr->privatePtr->pixelRatio = xscale;
     }
     
-    printf("TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
+    fprintf(stderr, "TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
 	   winPtr->privatePtr->pixelRatio);
 }
 
@@ -613,10 +614,10 @@ TkGlfwFramebufferSizeCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
-	printf("============================ No Tk window!\n");
+	fprintf(stderr, "============================ No Tk window!\n");
 	return;
     }
-    printf("TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
 
     /*
@@ -650,25 +651,25 @@ TkGlfwFramebufferSizeCallback(
     
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
-	printf("============================ No Context!\n");
+	fprintf(stderr, "============================ No Context!\n");
 	return;
     }
 
     /* Rebuild the backing store FBO */
-    nvgluDeleteFramebuffer(winPtr->privatePtr->fbo);
-    winPtr->privatePtr->fbo = nvgluCreateFramebuffer(vg, width, height, 0);
-    printf("New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fbo,
-	   Tk_PathName(winPtr), winPtr->privatePtr->fbo->fbo);
+    nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
+    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
+    fprintf(stderr, "New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fb,
+	   Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
 
 #if 0
     /* Check for FBO completeness. */
-    nvgluBindFramebuffer(winPtr->privatePtr->fbo);
+    nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        printf("FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fbo,
+        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
 	       status);
     } else {
-	printf("FBO is complete.\n");
+	fprintf(stderr, "FBO is complete.\n");
     }
 #endif
 
@@ -713,10 +714,10 @@ TkGlfwWindowPosCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
-	printf("TkGlfwWindowPosCallback: no Tk window\n");
+	fprintf(stderr, "TkGlfwWindowPosCallback: no Tk window\n");
         return;
     }
-    printf("TkGlfwWindowPosCallback: %s -> to %d+%d\n",
+    fprintf(stderr, "TkGlfwWindowPosCallback: %s -> to %d+%d\n",
 	   Tk_PathName(winPtr), xpos, ypos);
 
     winPtr->changes.x = xpos;
@@ -746,7 +747,7 @@ TkGlfwWindowFocusCallback(
     int focused)
 {
     recordCallback();
-    printf("TkGlfwWindowFocusCallback\n");
+    fprintf(stderr, "TkGlfwWindowFocusCallback\n");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
     
@@ -790,7 +791,7 @@ TkGlfwWindowIconifyCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    printf("TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
     XEvent event;
     
     if (!winPtr) {
@@ -864,6 +865,84 @@ TkGlfwWindowMaximizeCallback(
 /*
  *----------------------------------------------------------------------
  *
+ * TkGlfwCursorEnterCallback --
+ *
+ *      Called by GLFW when the cursor enters or leaves the GLFW window
+ *      client area.  Synthesizes an EnterNotify or LeaveNotify event
+ *      targeted at the toplevel TkWindow so that Tk's generic cursor
+ *      machinery (tkCursor.c) applies the correct cursor for the window
+ *      being entered and resets it on leave.
+ *
+ *      This is distinct from the widget-level crossing logic in
+ *      TkGlfwCursorPosCallback, which tracks transitions between child
+ *      widgets while the pointer is already inside the GLFW window.
+ *      This callback handles the coarser, compositor-level event that
+ *      GLFW delivers when the pointer crosses the window border.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Queues an EnterNotify or LeaveNotify XEvent.
+ *      Resets lastWinPtr to NULL on leave so that TkGlfwCursorPosCallback
+ *      re-fires an EnterNotify for the correct child widget on re-entry.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkGlfwCursorEnterCallback(
+    GLFWwindow *window,
+    int entered)		/* GLFW_TRUE if entered, GLFW_FALSE if left */
+{
+    recordCallback();
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    XEvent event;
+    double xpos, ypos;
+    int winX, winY;
+
+    if (!winPtr) {
+        return;
+    }
+
+    glfwGetCursorPos(window, &xpos, &ypos);
+    glfwGetWindowPos(window, &winX, &winY);
+
+    memset(&event, 0, sizeof(XEvent));
+    event.type = entered ? EnterNotify : LeaveNotify;
+    event.xcrossing.serial      = LastKnownRequestProcessed(winPtr->display)++;
+    event.xcrossing.send_event  = False;
+    event.xcrossing.display     = winPtr->display;
+    event.xcrossing.window      = Tk_WindowId((Tk_Window)winPtr);
+    event.xcrossing.root        = RootWindow(winPtr->display, winPtr->screenNum);
+    event.xcrossing.subwindow   = None;
+    event.xcrossing.time        = (Time)(glfwGetTime() * 1000.0);
+    event.xcrossing.x           = (int)xpos;
+    event.xcrossing.y           = (int)ypos;
+    event.xcrossing.x_root      = winX + (int)xpos;
+    event.xcrossing.y_root      = winY + (int)ypos;
+    event.xcrossing.mode        = NotifyNormal;
+    event.xcrossing.detail      = NotifyAncestor;
+    event.xcrossing.same_screen = True;
+    event.xcrossing.focus       = True;
+    event.xcrossing.state       = glfwButtonState | glfwModifierState;
+
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+    /*
+     * On leave, clear lastWinPtr so TkGlfwCursorPosCallback generates a
+     * fresh EnterNotify for the correct child widget when the pointer
+     * re-enters, rather than suppressing it because lastWinPtr still
+     * matches the stale target from before the pointer left.
+     */
+    if (!entered) {
+        lastWinPtr = NULL;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkGlfwCursorPosCallback --
  *
  *      Called when cursor position changes.
@@ -885,115 +964,91 @@ TkGlfwCursorPosCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr) {
-	return;
-    }
     XEvent event;
+    /* Find the widget containing the mouse cursor. */
+    TkWindow *target = (TkWindow *) Tk_CoordsToWindow((int) xpos, (int) ypos,
+			    (Tk_Window) winPtr);
 
-    if (!winPtr) {
-        if (lastWindow) {
-            TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
-            if (lastWinPtr) {
-                memset(&event, 0, sizeof(XEvent));
-                event.type = LeaveNotify;
-                event.xcrossing.serial     = LastKnownRequestProcessed(lastWinPtr->display)++;
-                event.xcrossing.send_event  = False;
-                event.xcrossing.display     = lastWinPtr->display;
-                event.xcrossing.window      = Tk_WindowId((Tk_Window)lastWinPtr);
-                event.xcrossing.root        = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
-                event.xcrossing.subwindow   = None;
-                event.xcrossing.time        = CurrentTime;
-                event.xcrossing.x           = (int)lastX;
-                event.xcrossing.y           = (int)lastY;
-                event.xcrossing.x_root      = lastWinPtr->changes.x + (int)lastX;
-                event.xcrossing.y_root      = lastWinPtr->changes.y + (int)lastY;
-                event.xcrossing.mode        = NotifyNormal;
-                event.xcrossing.detail      = NotifyAncestor;
-                event.xcrossing.same_screen = True;
-                event.xcrossing.focus       = False;
-                event.xcrossing.state       = glfwButtonState | glfwModifierState;
-                Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-            }
-            lastWindow = NULL;
-        }
-        return;
-    }
 
-    /* Check if mouse entered/exited window. */
-    if (lastWindow != window) {
-        /* Send LeaveNotify for previous window if any. */
-        if (lastWindow) {
-            TkWindow *lastWinPtr = TkGlfwGetTkWindow(lastWindow);
-            if (lastWinPtr) {
-                memset(&event, 0, sizeof(XEvent));
-                event.type = LeaveNotify;
-                event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display)++;
-                event.xcrossing.send_event = False;
-                event.xcrossing.display = lastWinPtr->display;
-                event.xcrossing.window = Tk_WindowId((Tk_Window)lastWinPtr);
-                event.xcrossing.root = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
-                event.xcrossing.subwindow = None;
-                event.xcrossing.time = CurrentTime;
-                event.xcrossing.x = (int)lastX;
-                event.xcrossing.y = (int)lastY;
-                event.xcrossing.x_root = lastWinPtr->changes.x + (int)lastX;
-                event.xcrossing.y_root = lastWinPtr->changes.y + (int)lastY;
-                event.xcrossing.mode = NotifyNormal;
-                event.xcrossing.detail = NotifyAncestor;
-                event.xcrossing.same_screen = True;
-                event.xcrossing.focus = False;
-                event.xcrossing.state = glfwButtonState | glfwModifierState;
-                Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-            }
+    /* Check if mouse entered or left the target widget. */
+    if (lastWinPtr != target) {
+        if (lastWinPtr) {
+	    memset(&event, 0, sizeof(XEvent));
+	    event.type = LeaveNotify;
+	    event.xcrossing.serial = LastKnownRequestProcessed(lastWinPtr->display)++;
+	    event.xcrossing.send_event = False;
+	    event.xcrossing.display = lastWinPtr->display;
+	    event.xcrossing.window = Tk_WindowId((Tk_Window) lastWinPtr);
+	    event.xcrossing.root = RootWindow(lastWinPtr->display, lastWinPtr->screenNum);
+	    event.xcrossing.subwindow = None;
+	    event.xcrossing.time = CurrentTime;
+	    event.xcrossing.x = (int) xpos - Tk_X(lastWinPtr);
+	    event.xcrossing.y = (int) ypos - Tk_Y(lastWinPtr);
+	    event.xcrossing.x_root = (int) xpos;
+	    event.xcrossing.y_root = (int) ypos;
+	    event.xcrossing.mode = NotifyNormal;
+	    event.xcrossing.detail = NotifyAncestor;
+	    event.xcrossing.same_screen = True;
+	    event.xcrossing.focus = False;
+	    event.xcrossing.state = glfwButtonState | glfwModifierState;
+	    Tk_UpdatePointer((Tk_Window)target, event.xcrossing.x, event.xcrossing.y, event.xcrossing.state);
+	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         }
         
-        /* Send EnterNotify for current window. */
+        /* Send EnterNotify for current toplevel. */
         memset(&event, 0, sizeof(XEvent));
         event.type = EnterNotify;
         event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display)++;
         event.xcrossing.send_event = False;
         event.xcrossing.display = winPtr->display;
-        event.xcrossing.window = Tk_WindowId((Tk_Window)winPtr);
-        event.xcrossing.root = RootWindow(winPtr->display, winPtr->screenNum);
+        event.xcrossing.window = Tk_WindowId((Tk_Window) target);
+        event.xcrossing.root = RootWindow(target->display, target->screenNum);
         event.xcrossing.subwindow = None;
         event.xcrossing.time = CurrentTime;
-        event.xcrossing.x = (int)xpos;
-        event.xcrossing.y = (int)ypos;
-        event.xcrossing.x_root = winPtr->changes.x + (int)xpos;
-        event.xcrossing.y_root = winPtr->changes.y + (int)ypos;
+        event.xcrossing.x = (int) xpos - Tk_X(target);
+        event.xcrossing.y = (int) ypos - Tk_Y(target);
+        event.xcrossing.x_root = (int) xpos;
+        event.xcrossing.y_root = (int) ypos;
         event.xcrossing.mode = NotifyNormal;
         event.xcrossing.detail = NotifyAncestor;
         event.xcrossing.same_screen = True;
         event.xcrossing.focus = False;
         event.xcrossing.state = glfwButtonState | glfwModifierState;
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-        
-        lastWindow = window;
+        lastWinPtr = target;
+        Tk_UpdatePointer((Tk_Window)target, event.xcrossing.x, event.xcrossing.y, event.xcrossing.state);
     }
     
-    /* Generate MotionNotify event. */
+    /* Generate MotionNotify event.
+     * This event needs to be sent to the widget containing the cursor.
+     */
+
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
     event.xmotion.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.xmotion.send_event = False;
     event.xmotion.display = winPtr->display;
-    event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xmotion.window = Tk_WindowId(target);
     event.xmotion.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xmotion.subwindow = None;
     event.xmotion.time = CurrentTime;
-    event.xmotion.x = (int)xpos;
-    event.xmotion.y = (int)ypos;
-    event.xmotion.x_root = winPtr->changes.x + (int)xpos;
-    event.xmotion.y_root = winPtr->changes.y + (int)ypos;
-    /* Critical for drag operations. */
+    /* These coordinates should be relative to the target window. */
+    event.xmotion.x = (int)xpos - Tk_X(target);
+    event.xmotion.y = (int)ypos - Tk_Y(target);
+    /*
+     * The toplevel coordinates are the same as the root coordinates since we have
+     * to treat every toplevel as having position (0, 0)
+     */ 
+    event.xmotion.x_root = (int)xpos;
+    event.xmotion.y_root = (int)ypos;
     event.xmotion.state = glfwButtonState | glfwModifierState;
     event.xmotion.is_hint = NotifyNormal;
     event.xmotion.same_screen = True;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
     /* Update last position. */
-    lastX = xpos;
-    lastY = ypos;
+    //    lastX = xpos;
+    //    lastY = ypos;
 }
 
 /*
@@ -1096,10 +1151,10 @@ TkGlfwMouseButtonCallback(
     event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xbutton.subwindow = None;
     event.xbutton.time = CurrentTime;
-    event.xbutton.x = (int)xpos;
-    event.xbutton.y = (int)ypos;
-    event.xbutton.x_root = winPtr->changes.x + (int)xpos;
-    event.xbutton.y_root = winPtr->changes.y + (int)ypos;
+    event.xbutton.x = (int)xpos - Tk_X(target);
+    event.xbutton.y = (int)ypos - Tk_Y(target);
+    event.xbutton.x_root = (int)xpos;
+    event.xbutton.y_root = (int)ypos;
     event.xbutton.state = glfwButtonState | glfwModifierState;
     event.xbutton.button = xbutton;
     event.xbutton.same_screen = True;
@@ -1316,7 +1371,7 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
     if (!winPtr) {
 	return;
     }
-    printf("TkGlWindowRefreshCallback Expose\n");
+    fprintf(stderr, "TkGlWindowRefreshCallback Expose\n");
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }

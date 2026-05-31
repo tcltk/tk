@@ -2345,12 +2345,44 @@ XGrabKeyboard(
 /*
  *----------------------------------------------------------------------
  *
- * XCreateImage --
+ * DestroyImage --
  *
- *	Create an X image. No-op in Wayland port.
+ *	Destroys storage associated with an image.
  *
  * Results:
- *	Always returns NULL.
+ *	None.
+ *
+ * Side effects:
+ *	Deallocates the image.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+DestroyImage(
+    XImage *image)
+{
+    if (image) {
+	if (image->data) {
+	    Tcl_Free(image->data);
+	}
+	Tcl_Free(image);
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XCreateImage --
+ *
+ *	Allocates an XImage with the provided pixel data.  This is called by
+ *      TkImgPhotoDisplay.  If TK_CAN_RENDER_RGBA is defined, as it is for the
+ *      Wayland port, the XImage is passed to TkpPutRGBAImage and then
+ *      destroyed.
+ *
+ * Results:
+ *	Returns a pointer an XImage.
  *
  * Side effects:
  *	None.
@@ -2358,21 +2390,72 @@ XGrabKeyboard(
  *----------------------------------------------------------------------
  */
 
-XImage*
+XImage *
 XCreateImage(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Visual *),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(char *),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    Display* display,
+    TCL_UNUSED(Visual*), /* visual */
+    unsigned int depth,
+    int format,
+    int offset,
+    char* data,
+    unsigned int width,
+    unsigned int height,
+    int bitmap_pad,
+    int bytes_per_line)
 {
-    /* No-op - X images not used in Wayland port. */
-    return NULL;
+    XImage *ximage;
+
+    LastKnownRequestProcessed(display)++;
+    ximage = (XImage *)Tcl_Alloc(sizeof(XImage));
+
+    ximage->height = height;
+    ximage->width = width;
+    ximage->depth = depth;
+    ximage->xoffset = offset;
+    ximage->format = format;
+    ximage->data = data;
+    ximage->obdata = NULL;
+
+    if (format == ZPixmap) {
+	ximage->bits_per_pixel = 32;
+	ximage->bitmap_unit = 32;
+    } else {
+	ximage->bits_per_pixel = 1;
+	ximage->bitmap_unit = 8;
+    }
+    if (bitmap_pad) {
+	ximage->bitmap_pad = bitmap_pad;
+    } else {
+	/*
+	 * Use 8 byte alignment.
+	 */
+
+	ximage->bitmap_pad = 64;
+    }
+    if (bytes_per_line) {
+	ximage->bytes_per_line = bytes_per_line;
+    } else {
+	ximage->bytes_per_line = (
+	    (width * ximage->bits_per_pixel +
+	    (ximage->bitmap_pad - 1)) >> 3) & ~((ximage->bitmap_pad >> 3) - 1);
+    }
+#ifdef WORDS_BIGENDIAN
+    ximage->byte_order = MSBFirst;
+    ximage->bitmap_bit_order = MSBFirst;
+#else
+    ximage->byte_order = LSBFirst;
+    ximage->bitmap_bit_order = LSBFirst;
+#endif
+    ximage->red_mask = 0x00FF0000;
+    ximage->green_mask = 0x0000FF00;
+    ximage->blue_mask = 0x000000FF;
+    ximage->f.create_image = NULL;
+    ximage->f.destroy_image = DestroyImage;
+    ximage->f.get_pixel = NULL; //// Implement ImageGetPixel;
+    ximage->f.put_pixel = NULL; //// Implement ImagePutPixel;
+    ximage->f.sub_image = NULL;
+    ximage->f.add_pixel = NULL;
+    return ximage;
 }
 
 /*
@@ -3253,36 +3336,51 @@ XSetClipRectangles(
 int
 XGetWindowAttributes(
     Display *display,
-    Window window,
+    TCL_UNUSED(Window), /* window */
     XWindowAttributes *attributes_return)
 {
-    if (window == None || attributes_return == NULL) {
+    if (attributes_return == NULL) {
         return 0;
     }
 
-    /* Guard: If this is an off-screen pixmap, fill fallback data and return. */
-    if (TkWaylandDrawableIsPixmap((Drawable)window)) {
-        TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable((Drawable)window);
-        memset(attributes_return, 0, sizeof(XWindowAttributes));
-        attributes_return->width  = pixmap ? pixmap->width : 0;
-        attributes_return->height = pixmap ? pixmap->height : 0;
-        attributes_return->depth  = 32;
-        attributes_return->screen = (display && display->screens) ? display->screens : NULL;
-        attributes_return->map_state = IsViewable;
-        return 1;
+    /* Clear structure memory to avoid garbage pointer data. */
+    memset(attributes_return, 0, sizeof(XWindowAttributes));
+
+    /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
+    if (display != NULL && display->screens != NULL) {
+        Screen *screen = &display->screens[display->default_screen];
+        
+        attributes_return->visual     = screen->root_visual;
+        attributes_return->depth      = screen->root_depth;
+        attributes_return->screen     = screen;
+        attributes_return->width      = screen->width;
+        attributes_return->height     = screen->height;
+        attributes_return->root       = screen->root;
+    } else {
+        /* Safe fallback constants mirroring tkWaylandGC.c defaults. */
+        static Visual fallbackVisual = {
+            .visualid     = 1,
+            .class        = TrueColor,
+            .bits_per_rgb = 8,
+            .map_entries  = 256,
+            .red_mask     = 0xFF0000,
+            .green_mask   = 0x00FF00,
+            .blue_mask    = 0x0000FF
+        };
+        attributes_return->visual = &fallbackVisual;
+        attributes_return->depth  = 24;
     }
 
-    /* Otherwise, proceed with standard window code safely. */
-    TkWindow *winPtr = TkWaylandTkWindowFromDrawable((Drawable)window);
-    memset(attributes_return, 0, sizeof(XWindowAttributes));
-    attributes_return->width        = Tk_Width(winPtr);
-    attributes_return->height       = Tk_Height(winPtr);
-    attributes_return->screen       = (display && display->screens) ? display->screens : NULL;
-    attributes_return->depth        = winPtr->privatePtr ? 32 : 24;
-    attributes_return->map_state    = IsViewable;
-    attributes_return->backing_store = NotUseful;
+    /* 
+     * Mock common default settings standard widgets look for 
+     * to prevent initialization failures.
+     */
+    attributes_return->map_state        = IsViewable;
+    attributes_return->backing_store    = NotUseful;
+    attributes_return->all_event_masks  = 0;
+    attributes_return->your_event_mask = 0;
 
-    return 1;
+    return 1; /* Success */
 }
 
 /*

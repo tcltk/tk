@@ -20,11 +20,11 @@
 #include "tkImgPhoto.h"
 #include "tkColor.h"
 #include "tkGlfwInt.h"
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#define NANOVG_GLES2  
+#define NANOVG_GLES3  
+#include "nanovg_gl_utils.h"
 
 /*
  * Undefine X11 macro that conflicts with our implementation.
@@ -83,6 +83,10 @@ static NVGImageData* CreateNVGImageFromDrawableRect(
     unsigned int width, unsigned int height);
 static XImage* TkWaylandCreateXImageWithNVGImage(
     NVGcontext* vg, NVGImageData* nvgImage, Display* display);
+#if 0
+//// Left over from an old implementation of XCopyArea.
+//// XCopyArea is no longer used by the generic code since
+//// we define TK_CAN_RENDER_RGBA.
 static int XCopyArea_PixmapToPixmap(
     TkWaylandPixmap *srcPixmap, TkWaylandPixmap *dstPixmap, GC gc,
     int src_x, int src_y,unsigned width, unsigned height, int dst_x, int dst_y);
@@ -90,6 +94,7 @@ static int XCopyArea_PixmapToWindow(
     TkWaylandPixmap *srcPixmap,Drawable dst,
     GC gc, int src_x, int src_y, unsigned width, unsigned height,
     int dst_x, int dst_y);
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -120,19 +125,22 @@ _XInitImageFuncPtrs(
  *
  * CreateNVGImageFromDrawableRect --
  *
- * Create NanoVG image from a rectangular region of a drawable.
- * Handles both on-screen Windows and off-screen Pixmaps (FBOs).
+ *	Create NanoVG image from a rectangular region of a drawable.
  *
  * Results:
- * Pointer to NVGImageData or NULL on failure.
+ *	Pointer to NVGImageData or NULL on failure.
  *
  * Side effects:
- * Allocates memory for image data.
- * Makes the target GLFW window's GL context current.
- * Temporarily alters the GL_FRAMEBUFFER_BINDING state.
+ *	Allocates memory for image data.
+ *	Makes the GLFW window's GL context current.
  *
  *----------------------------------------------------------------------
  */
+//// THIS ASSUMES THE DRAWABLE IS A WINDOW!!!!!
+//// Currently it is disabled and just prints a message.
+//// Called by XCopyPlane and XGetImage, both of which are
+//// also disabled and not used by the generic code.
+
 static NVGImageData*
 CreateNVGImageFromDrawableRect(
     Drawable drawable,
@@ -140,29 +148,19 @@ CreateNVGImageFromDrawableRect(
     unsigned int width,
     unsigned int height)
 {
-    GLFWwindow *glfwWindow = NULL;
-    NVGcontext *vg = NULL;
+    printf("CreateNVGImageFromDrawableRect\n");
+#if 0
+    GLFWwindow *glfwWindow;
+    NVGcontext *vg;
     NVGImageData *nvgImg;
     unsigned char *pixels;
     unsigned char *rgba_pixels;
     int imageId;
-    int isPixmap = 0;
-    TkWaylandPixmap *pixmap = NULL;
-    GLint prevFBO = 0;
 
-    /* Classify the Drawable type and resolve context pointers */
-    if (TkWaylandDrawableIsPixmap(drawable)) {
-        pixmap = TkWaylandPixmapFromDrawable(drawable);
-        if (!pixmap || !pixmap->glfwWindow) {
-            return NULL;
-        }
-        glfwWindow = pixmap->glfwWindow;
-        isPixmap = 1;
-    } else {
-        glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
-        if (!glfwWindow) {
-            return NULL;
-        }
+    /* Get GLFW window from drawable. */
+    glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+    if (!glfwWindow) {
+        return NULL;
     }
 
     /* Get NanoVG context. */
@@ -174,12 +172,6 @@ CreateNVGImageFromDrawableRect(
     /* Make context current for GL operations. */
     glfwMakeContextCurrent(glfwWindow);
 
-    /* If it's a Pixmap, save the current FBO state and bind the pixmap's hardware FBO. */
-    if (isPixmap) {
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
-    }
-
     /* Allocate pixel buffers. */
     pixels = (unsigned char*)ckalloc(width * height * 4);
     rgba_pixels = (unsigned char*)ckalloc(width * height * 4);
@@ -187,48 +179,82 @@ CreateNVGImageFromDrawableRect(
     if (!pixels || !rgba_pixels) {
         if (pixels) ckfree(pixels);
         if (rgba_pixels) ckfree(rgba_pixels);
-        if (isPixmap) {
-            glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-        }
         return NULL;
     }
 
-    /* Configure alignment and read pixels from the active bound framebuffer. */
-    glPixelStorei(GL_PACK_ALIGNMENT, 4);
+    /* Read pixels from current framebuffer (OpenGL uses RGBA). */
     glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-    /* Restore the previous framebuffer binding immediately after reading. */
-    if (isPixmap) {
-        glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-    }
+    /* NanoVG expects RGBA as well, but we need to handle potential
+     * differences in coordinate system (Y inversion). */
 
-    /* NanoVG expects RGBA. Copy raw data to match GL orientation profile. */
+    /* For now, just copy the data - NanoVG uses same orientation as OpenGL. */
     memcpy(rgba_pixels, pixels, width * height * 4);
+
+    /* Create NanoVG image. */
+    imageId = nvgCreateImageRGBA(vg, width, height,
+                                  0,
+                                  rgba_pixels);
+
     ckfree(pixels);
 
-    /* Create NanoVG image inside the active drawing engine instance. */
-    imageId = nvgCreateImageRGBA(vg, width, height, 0, rgba_pixels);
-    if (imageId <= 0) {
-        ckfree(rgba_pixels);
-        return NULL;
-    }
+	nvgImg = ckalloc(sizeof(NVGImageData));
+	if (!nvgImg) {
+	    ckfree(rgba_pixels);
+	    nvgDeleteImage(vg, imageId);
+	    return NULL;
+	}
 
-    /* Build our output tracking struct encapsulation, */
-    nvgImg = ckalloc(sizeof(NVGImageData));
-    if (!nvgImg) {
-        ckfree(rgba_pixels);
-        nvgDeleteImage(vg, imageId);
-        return NULL;
-    }
+	nvgImg->id = imageId;
+	nvgImg->width = width;
+	nvgImg->height = height;
+	nvgImg->flags = 0;
+	nvgImg->pixels = rgba_pixels;   /* ⭐ store CPU copy */
 
-    nvgImg->id = imageId;
-    nvgImg->width = width;
-    nvgImg->height = height;
-    nvgImg->flags = 0;
-    nvgImg->pixels = rgba_pixels;   /* Store CPU copy */
-
-    return nvgImg;
+	return nvgImg;
+#endif
+	return NULL;
 }
+
+int TkpPutRGBAImage(
+    Display* display,
+    Drawable drawable,
+    GC gc,
+    XImage* image,
+    int src_x,  // assume this is 0 for now
+    int src_y,  // assume this is 0 for now
+    int dst_x,
+    int dst_y,
+    unsigned int width,
+    unsigned int height)
+{
+    (void)display; (void)gc;
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+	printf("TkpPutRGBAImage does not support drawing to pixmaps yet.");
+    }
+    if (src_x || src_y) {
+	printf("Unexpected source offset\n");
+	return 0;
+    }
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(drawable);
+    TkWaylandDrawingContext dc;
+    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
+    int rc = TkGlfwBeginDraw(drawable, gc, &dc);
+    if (rc != TCL_OK) {
+	printf("TkGlfwBeginDraw failed\n");
+	return TCL_ERROR;
+    }
+    int imageID = nvgCreateImageRGBA(vg, width, height, 0, image->data);
+    NVGpaint paint = nvgImagePattern(vg, 0, 0, width, height,
+				     0.0f, imageID, 1.0f);
+    nvgBeginPath(vg);
+    nvgRect(vg, dst_x, dst_y, width, height);
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+    TkGlfwEndDraw(&dc);
+    return 0;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -245,16 +271,17 @@ CreateNVGImageFromDrawableRect(
  *----------------------------------------------------------------------
  */
 
-
-XImage* TkWaylandCreateXImageWithNVGImage(
+//// Currently unused and disabled
+static XImage* TkWaylandCreateXImageWithNVGImage(
     TCL_UNUSED(NVGcontext *),
     NVGImageData* nvgImage,
     TCL_UNUSED(Display *))
 {
+    printf("TkWaylandCreateXImageWithNVGImage\n");
     if (!nvgImage || !nvgImage->pixels) {
         return NULL;
     }
-
+#if 0
     XImage *imagePtr = ckalloc(sizeof(XImage));
     if (!imagePtr) return NULL;
 
@@ -284,6 +311,8 @@ XImage* TkWaylandCreateXImageWithNVGImage(
     imagePtr->blue_mask  = 0x000000FFu;
 
     return imagePtr;
+#endif
+    return NULL;
 }
 
 /*
@@ -302,17 +331,28 @@ XImage* TkWaylandCreateXImageWithNVGImage(
  *----------------------------------------------------------------------
  */
 
+//// THIS ASSUMES THE DRAWABLE IS A WINDOW
+//// It is called by the untested DrawButtonBitmap and by a static
+//// function in tkUnixFont.c.  Probably we will never use it but
+//// it is a stub.  Currently it just prints a message and returns.
 XImage*
 XGetImage(
     Display *display,
     Drawable drawable,
-    int x, 
-    int y,
+    int x, int y,
     unsigned int width,
     unsigned int height,
-    TCL_UNUSED(unsigned long),  /* plane_mask */
-    TCL_UNUSED(int)) /* format */
+    unsigned long plane_mask,
+    int format)
 {
+    printf("XGetImage\n");
+#if 0
+    NVGImageData *nvgImg;
+    XImage *imagePtr;
+    NVGcontext *vg;
+
+    (void)plane_mask;  /* Not used in NanoVG backend */
+    (void)format;      /* Always use ZPixmap */
 
     if (!display || !drawable) {
         return NULL;
@@ -320,72 +360,14 @@ XGetImage(
 
     LastKnownRequestProcessed(display)++;
 
-    /* Handle pixmap drawables (GPU texture -> CPU memory buffer). */
-    if (TkWaylandDrawableIsPixmap(drawable)) {
-        TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
-        if (!pixmap || !pixmap->glfwWindow) {
-            return NULL;
-        }
-
-        XImage *imagePtr = ckalloc(sizeof(XImage));
-        if (!imagePtr) {
-            return NULL;
-        }
-        
-        unsigned char *data = ckalloc(width * height * 4);
-        if (!data) {
-            ckfree(imagePtr);
-            return NULL;
-        }
-
-        /* Ensure the correct OpenGL context is active. */
-        GLFWwindow *currentContext = glfwGetCurrentContext();
-        if (currentContext != pixmap->glfwWindow) {
-            glfwMakeContextCurrent(pixmap->glfwWindow);
-        }
-
-        /* Cache previous framebuffer state to restore it safely later. */
-        GLint prevFBO;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
-
-        /* Bind the Pixmap's hardware framebuffer */
-        glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fbo);
-
-        /* * Read the pixels out of the GPU VRAM Texture.
-         * OpenGL textures read upside down (0,0 is bottom-left). If your 
-         * NanoVG backend renders images inverted, you may need a loop to flip 
-         * rows or change the pixel unpack configuration.
-         */
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-        /* Restore previous context state. */
-        glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
-        if (currentContext && currentContext != pixmap->glfwWindow) {
-            glfwMakeContextCurrent(currentContext);
-        }
-
-        /* Package raw memory payload into a standard XImage wrapper. */
-        memset(imagePtr, 0, sizeof(XImage));
-        imagePtr->width = width;
-        imagePtr->height = height;
-        imagePtr->format = ZPixmap;
-        imagePtr->data = (char*)data;
-        imagePtr->byte_order = LSBFirst;
-        imagePtr->depth = 32;
-        imagePtr->bytes_per_line = width * 4;
-        imagePtr->bits_per_pixel = 32;
-        
-        return imagePtr;
-    }
-
-    /* Fallback handler: If it's a window drawable context. */
-    NVGImageData *nvgImg = CreateNVGImageFromDrawableRect(drawable, x, y, width, height);
+    /* Create NVG image from drawable region. */
+    nvgImg = CreateNVGImageFromDrawableRect(drawable, x, y, width, height);
     if (!nvgImg) {
         return NULL;
     }
 
-    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
+    /* Get NanoVG context. */
+    vg = TkGlfwGetNVGContext(drawable);
     if (!vg) {
         nvgDeleteImage(vg, nvgImg->id);
         if (nvgImg->pixels) ckfree(nvgImg->pixels);
@@ -393,13 +375,17 @@ XGetImage(
         return NULL;
     }
 
-    XImage *imagePtr = TkWaylandCreateXImageWithNVGImage(vg, nvgImg, display);
+    /* Convert to XImage. */
+    imagePtr = TkWaylandCreateXImageWithNVGImage(vg, nvgImg, display);
 
+    /* Clean up NVG image. */
     nvgDeleteImage(vg, nvgImg->id);
     if (nvgImg->pixels) ckfree(nvgImg->pixels);
     ckfree((char*)nvgImg);
-    
+
     return imagePtr;
+#endif
+    return NULL;
 }
 
 /*
@@ -418,6 +404,12 @@ XGetImage(
  *----------------------------------------------------------------------
  */
 
+//// XCopyArea is no longer used by the generic code since
+//// we define TK_CAN_RENDER_RGBA.  But it is a stub and may
+//// be needed by extensions.  There are two separate implementations
+//// below, both disabled.  Currently it just prints a message and
+//// returns Success.
+
 int
 XCopyArea(
     Display  *display,
@@ -428,6 +420,39 @@ XCopyArea(
     unsigned  width, unsigned height,
     int       dst_x, int dst_y)
 {
+    printf("XCopyArea: src = %lx; dst = %lx\n", src, dst);
+#if 0
+    NVGLUframebuffer *src_fb, *dst_fb;
+    GLFWwindow *glfwWindow = NULL;
+    if (TkWaylandDrawableIsPixmap(src)) {
+	TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromDrawable(src);
+	src_fb = pixmapPtr->fb;
+    } else {
+	TkWindow *winPtr = TkWaylandTkWindowFromDrawable(src); 
+	glfwWindow = winPtr->privatePtr->glfwWindow;
+	src_fb = winPtr->privatePtr->fb;
+    }	
+    if (TkWaylandDrawableIsPixmap(dst)) {
+	TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromDrawable(dst);
+	glfwWindow = pixmapPtr->glfwWindow;
+	dst_fb = pixmapPtr->fb;
+    } else {
+	TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst); 
+	glfwWindow = TkWaylandGetGLFWwindowFromDrawable(dst);
+	dst_fb = winPtr->privatePtr->fb;
+    }
+    printf("src fb is %p; dst fb is %p; glfw window is %p\n",
+	   src_fb->fbo, dst_fb->fbo, glfwWindow);
+    
+    glfwMakeContextCurrent(glfwWindow);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fb->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst_fb->fbo);
+	   glBlitFramebuffer(0, 0, width, height,
+		      0, 0, width, height,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+#endif
+#if 0
     (void)display;
     (void)gc;
     TkWindow *srcWindow = NULL;
@@ -457,12 +482,12 @@ XCopyArea(
     }
 
     //// The other two cases are not handled yet.
-
+#endif
     return Success;
 }
 
-
-    
+#if 0
+//// Currently not used.    
 /* Helper functions for XCopyArea to improve performance. */
 
 static int
@@ -479,50 +504,40 @@ XCopyArea_PixmapToWindow(
     NVGpaint imgPaint;
     int rc;
     unsigned char *pixels = NULL; 
-    
+    NVGcontext *vg = TkGlfwGetNVGContext(dst);
+    if (!vg) {
+	return BadDrawable;
+    }
     /* Allocate buffer for pixel data. */
     pixels = (unsigned char *)ckalloc(srcPixmap->width * srcPixmap->height * 4);
-    if (!pixels) {
-        return BadAlloc;
+    
+    /* Close pixmap frame if open. */
+    if (srcPixmap->frameOpen) {
+        nvgRestore(vg);
+        nvgEndFrame(vg);
+        srcPixmap->frameOpen = 0;
     }
     
-    /* Begin drawing to destination window. 
-     * This will safely handle the underlying window lookup internals, context mapping,
-     * and initialize dc.vg for the active drawing target. 
-     */
+    /* Read pixmap texture data into buffer.
+     * Bind the pixmap's FBO and read the color attachment. */
+    if (srcPixmap->fb) {
+        glBindFramebuffer(GL_FRAMEBUFFER, srcPixmap->fb);
+        glReadPixels(0, 0, srcPixmap->width, srcPixmap->height,
+                     GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        /* No FBO means no content - fill with transparent. */
+        memset(pixels, 0, srcPixmap->width * srcPixmap->height * 4);
+    }
+    
+    /* Begin drawing to destination window. */
     rc = TkGlfwBeginDraw(dst, gc, &dc);
     if (rc != TCL_OK) {
         ckfree((char *)pixels);
         return BadDrawable;
     }
     
-    /* Close pixmap frame if open, using the safely resolved NanoVG context. */
-    if (srcPixmap->frameOpen) {
-        nvgRestore(dc.vg);
-        nvgEndFrame(dc.vg);
-        srcPixmap->frameOpen = 0;
-    }
-    
-    /* 
-     * Read pixmap texture data into our buffer.
-     * Bind the pixmap's FBO and read out the raw color attachment. 
-     */
-    if (srcPixmap->fbo) {
-        GLint currentFBO;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFBO);
-        
-        glBindFramebuffer(GL_FRAMEBUFFER, srcPixmap->fbo);
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-        glReadPixels(0, 0, srcPixmap->width, srcPixmap->height,
-                     GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-                     
-        glBindFramebuffer(GL_FRAMEBUFFER, currentFBO);
-    } else {
-        /* No FBO means no valid texture content - baseline fill with transparent. */
-        memset(pixels, 0, srcPixmap->width * srcPixmap->height * 4);
-    }
-    
-    /* Wrap our raw pixel payload buffer as a local NVG image asset. */
+    /* Wrap pixmap texture as NVG image. */
     nvgImage = nvgCreateImageRGBA(dc.vg, srcPixmap->width, srcPixmap->height,
                                   0, pixels);
     
@@ -532,7 +547,7 @@ XCopyArea_PixmapToWindow(
         return BadDrawable;
     }
     
-    /* Create the standard image pattern projection. */
+    /* Create image pattern. */
     imgPaint = nvgImagePattern(dc.vg,
                                (float)dst_x - src_x,
                                (float)dst_y - src_y,
@@ -542,7 +557,7 @@ XCopyArea_PixmapToWindow(
                                nvgImage,
                                1.0f);
     
-    /* Draw the image onto the canvas surface bounds. */
+    /* Draw. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg,
             (float)dst_x,
@@ -552,7 +567,7 @@ XCopyArea_PixmapToWindow(
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
     
-    /* Cleanup local engine assets and release host memory allocations. */
+    /* Cleanup. */
     nvgDeleteImage(dc.vg, nvgImage);
     TkGlfwEndDraw(&dc);
     ckfree((char *)pixels);
@@ -601,7 +616,7 @@ XCopyArea_PixmapToPixmap(
     
     /* Bind destination FBO and open frame if needed. */
     if (!dstPixmap->frameOpen) {
-        glBindFramebuffer(GL_FRAMEBUFFER, dstPixmap->fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, dstPixmap->fb);
         glViewport(0, 0, dstPixmap->width, dstPixmap->height);
         
         nvgBeginFrame(vg,
@@ -651,7 +666,7 @@ XCopyArea_PixmapToPixmap(
     
     return Success;
 }
-
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -670,7 +685,9 @@ XCopyArea_PixmapToPixmap(
  *
  *----------------------------------------------------------------------
  */
-
+//// This stub is not used by the generic code but may be needed by
+//// extensions.  Currently this is disabled and just prints out a
+//// message.
 int
 XCopyPlane(
     Display      *display,
@@ -685,6 +702,8 @@ XCopyPlane(
     int           dest_y,
     TCL_UNUSED(unsigned long)) /* plane */
 {
+    printf("XCopyPlane\n");
+#if 0
     TkWaylandDrawingContext  dc;
     NVGImageData            *srcImg;
     XGCValues                gcValues;
@@ -784,6 +803,7 @@ XCopyPlane(
     nvgDeleteImage(dc.vg, imageId);
 
     TkGlfwEndDraw(&dc);
+#endif
     return Success;
 }
 
@@ -804,6 +824,8 @@ XCopyPlane(
  *----------------------------------------------------------------------
  */
 
+//// Currently disabled and not used by the generic code.
+//// This may be needed by extensions.
 int
 XPutImage(
     Display *display,
@@ -815,6 +837,8 @@ XPutImage(
     unsigned int width,
     unsigned int height)
 {
+    printf("XPutImage\n");
+#if 0
     TkWaylandDrawingContext dc;
     int imageId;
     NVGpaint imgPaint;
@@ -909,6 +933,7 @@ XPutImage(
     nvgDeleteImage(dc.vg, imageId);
 
     TkGlfwEndDraw(&dc);
+#endif
     return Success;
 }
 
@@ -932,6 +957,7 @@ int
 XDestroyImage(
     XImage *image)
 {
+    printf("XDestroyImage\n");
     if (image) {
         if (image->data) {
             ckfree(image->data);

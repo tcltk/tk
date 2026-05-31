@@ -249,27 +249,19 @@ typedef struct TkWaylandGCStruct {
  *
  * Pixmap Structure
  *
- *	Internal pixmap used by all pixmap/image operations.
+ *	A Pixmap is a wrapper for a an NVGLUframebuffer.
  *
  *----------------------------------------------------------------------
  */
 
 typedef struct TkWaylandPixmap {
-    int              type;          /* 0 = window, 1 = pixmap */
-    int              width;
-    int              height;
-    Drawable         drawable;      /* Tk's drawable ID */
-    
-    /* OpenGL FBO resources */
-    GLuint           fbo;           /* Framebuffer object */
-    GLuint           texture;       /* Color attachment */
-    GLuint           stencil;       /* Stencil buffer (for NanoVG) */
-    
-    /* NanoVG frame state */
-    int              frameOpen;     /* Is NVG frame open on this pixmap? */
-    GLFWwindow      *glfwWindow;    /* GLFW window whose GL context
-				     * contains the fbo. */
+    NVGLUframebuffer *fb;
+    GLFWwindow *glfwWindow;  /* The window whose GL context has the fbo.   */
+    int width;               /* It is simpler to cache the fb dimensions.  */
+    int height;
+    float pixelRatio;        /* We might support high-dpi pixmaps someday. */
 } TkWaylandPixmap;
+
 
 /*
  *----------------------------------------------------------------------
@@ -284,7 +276,7 @@ typedef struct TkWaylandPixmap {
 
 typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
-    NVGLUframebuffer *fbo;
+    NVGLUframebuffer *fb;
     Tcl_DString pendingText;
     float pixelRatio;
 } glfwData;
@@ -360,7 +352,7 @@ Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr);
 TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable);
 Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap);
 TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable);
-int TkWaylandDrawableIsPixmap(Drawable drawable);
+bool TkWaylandDrawableIsPixmap(Drawable drawable);
 
 /*
  *----------------------------------------------------------------------

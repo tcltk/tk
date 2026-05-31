@@ -32,7 +32,6 @@
 typedef struct WaylandScrollbar {
     TkScrollbar info;		/* Generic scrollbar info. */
     GC troughGC;		/* For drawing trough. */
-    GC copyGC;			/* Used for copying from pixmap onto screen. */
     int buttonDown;		/* Non-zero if mouse button is currently down. */
     int mouseOver;		/* Non-zero if mouse is currently over scrollbar. */
 } WaylandScrollbar;
@@ -79,7 +78,6 @@ TkpCreateScrollbar(
     WaylandScrollbar *scrollPtr = (WaylandScrollbar *)Tcl_Alloc(sizeof(WaylandScrollbar));
 
     scrollPtr->troughGC = NULL;
-    scrollPtr->copyGC = NULL;
     scrollPtr->buttonDown = 0;
     scrollPtr->mouseOver = 0;
 
@@ -280,21 +278,20 @@ TkpDisplayScrollbar(
     void *clientData)	/* Information about window. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
-    Tk_Window tkwin = scrollPtr->tkwin;
+    TkWindow *winPtr = (TkWindow *)scrollPtr->tkwin;
     XPoint points[7];
     Tk_3DBorder border;
     int relief, width, elementBorderWidth;
     int borderWidth, highlightWidth;
-    Pixmap pixmap;
 
-    if ((scrollPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
+    if ((winPtr == NULL) || !Tk_IsMapped(winPtr)) {
 	goto done;
     }
 
     if (scrollPtr->vertical) {
-	width = Tk_Width(tkwin) - 2 * scrollPtr->inset;
+	width = Tk_Width(winPtr) - 2 * scrollPtr->inset;
     } else {
-	width = Tk_Height(tkwin) - 2 * scrollPtr->inset;
+	width = Tk_Height(winPtr) - 2 * scrollPtr->inset;
     }
     Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->borderWidthObj, &borderWidth);
     if (scrollPtr->elementBorderWidthObj) {
@@ -303,37 +300,28 @@ TkpDisplayScrollbar(
 	elementBorderWidth = borderWidth;
     }
 
-    /*
-     * In order to avoid screen flashes, this procedure redraws the scrollbar
-     * in a pixmap, then copies the pixmap to the screen in a single
-     * operation. This means that there's no point in time where the on-sreen
-     * image has been cleared.
-     */
-
-    pixmap = Tk_GetPixmap(scrollPtr->display, Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
-
-    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj, &highlightWidth);
+    Drawable drawable = TkWaylandDrawableForTkWindow(winPtr);
+    Tk_GetPixelsFromObj(NULL, scrollPtr->tkwin, scrollPtr->highlightWidthObj,
+			&highlightWidth);
     if (highlightWidth > 0) {
 	GC gc;
-
 	if (scrollPtr->flags & GOT_FOCUS) {
-	    gc = Tk_GCForColor(scrollPtr->highlightColorPtr, pixmap);
+	    gc = Tk_GCForColor(scrollPtr->highlightColorPtr, drawable);
 	} else {
-	    gc = Tk_GCForColor(scrollPtr->highlightBgColorPtr, pixmap);
+	    gc = Tk_GCForColor(scrollPtr->highlightBgColorPtr, drawable);
 	}
-	Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, pixmap);
+	Tk_DrawFocusHighlight(scrollPtr->tkwin, gc, highlightWidth, drawable);
     }
-    Tk_Draw3DRectangle(tkwin, pixmap, scrollPtr->bgBorder,
-	    highlightWidth, highlightWidth,
-	    Tk_Width(tkwin) - 2 * highlightWidth,
-	    Tk_Height(tkwin) - 2 * highlightWidth,
-	    borderWidth, scrollPtr->relief);
-    XFillRectangle(scrollPtr->display, pixmap,
-	    ((WaylandScrollbar*)scrollPtr)->troughGC,
-	    scrollPtr->inset, scrollPtr->inset,
-	    (unsigned) (Tk_Width(tkwin) - 2 * scrollPtr->inset),
-	    (unsigned) (Tk_Height(tkwin) - 2 * scrollPtr->inset));
+    Tk_Draw3DRectangle(scrollPtr->tkwin, drawable, scrollPtr->bgBorder,
+		       highlightWidth, highlightWidth,
+		       Tk_Width(winPtr) - 2 * highlightWidth,
+		       Tk_Height(winPtr) - 2 * highlightWidth,
+		       borderWidth, scrollPtr->relief);
+    XFillRectangle(scrollPtr->display, drawable,
+		   ((WaylandScrollbar*)scrollPtr)->troughGC,
+		   scrollPtr->inset, scrollPtr->inset,
+		   (unsigned) (Tk_Width(winPtr) - 2 * scrollPtr->inset),
+		   (unsigned) (Tk_Height(winPtr) - 2 * scrollPtr->inset));
 
     /*
      * Draw the top or left arrow. The coordinates of the polygon points
@@ -358,7 +346,7 @@ TkpDisplayScrollbar(
 	points[1].y = points[0].y;
 	points[2].x = width/2 + scrollPtr->inset;
 	points[2].y = scrollPtr->inset - 1;
-	Tk_Fill3DPolygon(tkwin, pixmap, border, points, 3,
+	Tk_Fill3DPolygon(scrollPtr->tkwin, drawable, border, points, 3,
 		elementBorderWidth, relief);
     } else {
 	points[0].x = scrollPtr->arrowLength + scrollPtr->inset - 1;
@@ -367,7 +355,7 @@ TkpDisplayScrollbar(
 	points[1].y = width/2 + scrollPtr->inset;
 	points[2].x = points[0].x;
 	points[2].y = width + scrollPtr->inset;
-	Tk_Fill3DPolygon(tkwin, pixmap, border, points, 3,
+	Tk_Fill3DPolygon(scrollPtr->tkwin, drawable, border, points, 3,
 		elementBorderWidth, relief);
     }
 
@@ -385,23 +373,23 @@ TkpDisplayScrollbar(
     }
     if (scrollPtr->vertical) {
 	points[0].x = scrollPtr->inset;
-	points[0].y = Tk_Height(tkwin) - scrollPtr->arrowLength
+	points[0].y = Tk_Height(winPtr) - scrollPtr->arrowLength
 		- scrollPtr->inset + 1;
 	points[1].x = width/2 + scrollPtr->inset;
-	points[1].y = Tk_Height(tkwin) - scrollPtr->inset;
+	points[1].y = Tk_Height(winPtr) - scrollPtr->inset;
 	points[2].x = width + scrollPtr->inset;
 	points[2].y = points[0].y;
-	Tk_Fill3DPolygon(tkwin, pixmap, border,
+	Tk_Fill3DPolygon(scrollPtr->tkwin, drawable, border,
 		points, 3, elementBorderWidth, relief);
     } else {
-	points[0].x = Tk_Width(tkwin) - scrollPtr->arrowLength
+	points[0].x = Tk_Width(winPtr) - scrollPtr->arrowLength
 		- scrollPtr->inset + 1;
 	points[0].y = scrollPtr->inset - 1;
 	points[1].x = points[0].x;
 	points[1].y = width + scrollPtr->inset;
-	points[2].x = Tk_Width(tkwin) - scrollPtr->inset;
+	points[2].x = Tk_Width(winPtr) - scrollPtr->inset;
 	points[2].y = width/2 + scrollPtr->inset;
-	Tk_Fill3DPolygon(tkwin, pixmap, border,
+	Tk_Fill3DPolygon(scrollPtr->tkwin, drawable, border,
 		points, 3, elementBorderWidth, relief);
     }
 
@@ -418,26 +406,16 @@ TkpDisplayScrollbar(
 	relief = TK_RELIEF_RAISED;
     }
     if (scrollPtr->vertical) {
-	Tk_Fill3DRectangle(tkwin, pixmap, border,
+	Tk_Fill3DRectangle(scrollPtr->tkwin, drawable, border,
 		scrollPtr->inset, scrollPtr->sliderFirst,
 		width, scrollPtr->sliderLast - scrollPtr->sliderFirst,
 		elementBorderWidth, relief);
     } else {
-	Tk_Fill3DRectangle(tkwin, pixmap, border,
+	Tk_Fill3DRectangle(scrollPtr->tkwin, drawable, border,
 		scrollPtr->sliderFirst, scrollPtr->inset,
 		scrollPtr->sliderLast - scrollPtr->sliderFirst, width,
 		elementBorderWidth, relief);
     }
-
-    /*
-     * Copy the information from the off-screen pixmap onto the screen, then
-     * delete the pixmap.
-     */
-
-    XCopyArea(scrollPtr->display, pixmap, Tk_WindowId(tkwin),
-	    ((WaylandScrollbar*)scrollPtr)->copyGC, 0, 0,
-	    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin), 0, 0);
-    Tk_FreePixmap(scrollPtr->display, pixmap);
 
   done:
     scrollPtr->flags &= ~REDRAW_PENDING;
@@ -463,9 +441,7 @@ TkpDisplayScrollbar(
 
 extern void
 TkpComputeScrollbarGeometry(
-    TkScrollbar *scrollPtr)
-				/* Scrollbar whose geometry may have
-				 * changed. */
+    TkScrollbar *scrollPtr) /* Scrollbar whose geometry may have changed. */
 {
     int width, fieldLength;
     int borderWidth, highlightWidth;
@@ -481,12 +457,13 @@ TkpComputeScrollbarGeometry(
      */
 
     scrollPtr->arrowLength = width - 2 * scrollPtr->inset + 1;
-    fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
-	    : Tk_Width(scrollPtr->tkwin))
+    fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin) :
+		   Tk_Width(scrollPtr->tkwin))
 	    - 2 * (scrollPtr->arrowLength + scrollPtr->inset);
     if (fieldLength < 0) {
 	fieldLength = 0;
     }
+    printf("fractions: %f %f\n", scrollPtr->firstFraction, scrollPtr->lastFraction);
     scrollPtr->sliderFirst = fieldLength*scrollPtr->firstFraction;
     scrollPtr->sliderLast = fieldLength*scrollPtr->lastFraction;
 
@@ -537,6 +514,8 @@ TkpComputeScrollbarGeometry(
  * TkpDestroyScrollbar --
  *
  *	Free data structures associated with the scrollbar control.
+ *      Called by TkScrollbarEventProc when DestroyNotify is received.
+ *      The SrollbarPtr will be freed by the event proc.
  *
  * Results:
  *	None.
@@ -556,11 +535,6 @@ TkpDestroyScrollbar(
     if (waylandScrollPtr->troughGC != NULL) {
 	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->troughGC);
     }
-    if (waylandScrollPtr->copyGC != NULL) {
-	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->copyGC);
-    }
-    
-    Tcl_Free((char *)waylandScrollPtr);
 }
 
 /*
@@ -597,11 +571,6 @@ TkpConfigureScrollbar(
 	Tk_FreeGC(scrollPtr->display, waylandScrollPtr->troughGC);
     }
     waylandScrollPtr->troughGC = newGC;
-    if (waylandScrollPtr->copyGC == NULL) {
-	gcValues.graphics_exposures = False;
-	waylandScrollPtr->copyGC = Tk_GetGC(scrollPtr->tkwin,
-		GCGraphicsExposures, &gcValues);
-    }
 }
 
 /*

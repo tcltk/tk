@@ -556,7 +556,6 @@ void
 TkpDisplayScale(
     void *clientData)	/* Widget record for scale. */
 {
-    printf("DisplayScale\n");
     TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
     Tcl_Interp *interp = scalePtr->interp;
@@ -566,11 +565,9 @@ TkpDisplayScale(
     XRectangle drawnArea;
     Tcl_DString buf;
     int highlightWidth, borderWidth;
-    printf("TkpDisplayScale\n");
 
     scalePtr->flags &= ~REDRAW_PENDING;
     if ((tkwin == NULL) || !Tk_IsMapped(tkwin)) {
-      printf("Not Mapped\n");
 	goto done;
     }
 
@@ -683,8 +680,7 @@ TkpScaleElement(
     
     if (scalePtr->orient == ORIENT_VERTICAL) {
 	if ((x < scalePtr->vertTroughX)
-		|| (x >= (scalePtr->vertTroughX + 2 * borderWidth +
-		width))) {
+		|| (x >= (scalePtr->vertTroughX + 2 * borderWidth + width))) {
 	    return OTHER;
 	}
 	if ((y < scalePtr->inset)
