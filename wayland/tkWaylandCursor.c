@@ -1216,42 +1216,6 @@ TkpSetCursor(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * TkpChangeCursor --
- *
- *	Set the cursor for a window, called by the generic cursor layer
- *	when a window's cursor attribute changes.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Calls XChangeWindowAttributes with CWCursor to apply the cursor.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpChangeCursor(
-    TkWindow *winPtr,
-    TkCursor *cursorPtr)
-{
-    XSetWindowAttributes atts;
-
-    if (cursorPtr == NULL) {
-        atts.cursor = None;
-    } else {
-        atts.cursor = (Cursor)(uintptr_t) cursorPtr->cursor;
-    }
-    if (winPtr->window != None) {
-        XChangeWindowAttributes(winPtr->display, winPtr->window,
-            CWCursor, &atts);
-    }
-}
-
-
-/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
