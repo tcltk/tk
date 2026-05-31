@@ -333,25 +333,43 @@ TkWaylandHandleMouseButton(
  
 void
 TkWaylandHandleMouseMove(
-			 GLFWwindow *glfwWindow,
-			 double x,
-			 double y)
+    GLFWwindow *glfwWindow,
+    double x,
+    double y)
 {
     TkWindow *winPtr;
-
+    XEvent event;
 
     winPtr = TkGlfwGetTkWindow(glfwWindow);
     if (!winPtr) {
-	return;
+        return;
     }
-    
-    /* Pass to normal Tk motion event handling. */ 
-    unsigned int state = TkWaylandButtonKeyState(); 
-    Window window = Tk_WindowId((Tk_Window)winPtr);
 
-    TkGenerateButtonEvent((int)x, (int)y, window, state); 
+    memset(&event, 0, sizeof(XEvent));
+    event.type = MotionNotify;
+    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xmotion.send_event = False;
+    event.xmotion.display = winPtr->display;
+    event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xmotion.root = XRootWindow(winPtr->display, 0);
+	event.xmotion.time = (Time)(glfwGetTime() * 1000.0);
+    event.xmotion.x = (int)x;
+    event.xmotion.y = (int)y;
+
+    /* Compute root-relative coordinates. */
+    {
+        int winX, winY;
+        glfwGetWindowPos(glfwWindow, &winX, &winY);
+        event.xmotion.x_root = winX + (int)x;
+        event.xmotion.y_root = winY + (int)y;
+    }
+
+    event.xmotion.state = TkWaylandButtonKeyState();
+    event.xmotion.is_hint = NotifyNormal;
+    event.xmotion.same_screen = True;
+
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
-
 /*
  *----------------------------------------------------------------------
  *

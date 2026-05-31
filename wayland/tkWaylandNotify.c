@@ -69,8 +69,6 @@ unsigned int glfwModifierState = 0;
 /* Track last window and position for enter/leave events */
 static TkWindow *lastWinPtr = NULL;
 //static double lastX = -1, lastY = -1;
-
-
 /*
  *----------------------------------------------------------------------
  *
