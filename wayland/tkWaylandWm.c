@@ -4734,7 +4734,7 @@ XChangeWindowAttributes(
 
     if (valuemask & CWOverrideRedirect) {
         glfwSetWindowAttrib(gw, GLFW_DECORATED,
-            attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
+			    attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
     
     if (valuemask & CWCursor) {
@@ -4755,9 +4755,6 @@ XChangeWindowAttributes(
 	                    (unsigned long) attributes->cursor);
 		}
 	    }
-	    fprintf(stderr, "XChangeWindowAttributes CWCursor: attributes->cursor=%lu winPtr=%p cursorPtr=%p\n",
-    (unsigned long)attributes->cursor, (void*)winPtr, (void*)cursorPtr);
-	    TkpSetCursor(winPtr, cursorPtr);
 	}
     }
 

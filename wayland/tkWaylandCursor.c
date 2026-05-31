@@ -1186,7 +1186,6 @@ TkpSetCursor(
 {
     TkWaylandCursor *waylandCursorPtr = (TkWaylandCursor *) cursorPtr;
     GLFWwindow *window = NULL;
-    fprintf(stderr, "got cursor event\n");
 
     /*
      * TkWaylandGetGLFWwindow only works on toplevels. Walk up the window
