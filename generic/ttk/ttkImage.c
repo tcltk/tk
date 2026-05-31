@@ -263,16 +263,6 @@ static void Ttk_Tile(
  * +++ Image element definition.
  */
 
-/*
- * TK_CAN_XCOPYAREA_PIXMAP marks platforms whose XCopyArea accepts a Pixmap as
- * source or destination, which the element pixmap cache below relies on. The
- * macOS (Aqua) XCopyArea returns BadDrawable for a Pixmap, so it is excluded.
- */
-
-#ifndef MAC_OSX_TK
-#define TK_CAN_XCOPYAREA_PIXMAP
-#endif
-
 typedef struct {		/* ClientData for image elements */
     Ttk_ImageSpec *imageSpec;	/* Image(s) to use */
     int minWidth;		/* Minimum width; overrides image width */
@@ -286,7 +276,7 @@ typedef struct {		/* ClientData for image elements */
     Ttk_StateMap imageMap;	/* State-based lookup table for images */
 #endif
 
-#ifdef TK_CAN_XCOPYAREA_PIXMAP
+#ifndef TK_NO_DOUBLE_BUFFERING
     Pixmap cachedPixmap;	/* Cached composed element, or None */
     int cachedWidth;		/* Width of cached pixmap */
     int cachedHeight;		/* Height of cached pixmap */
@@ -297,7 +287,7 @@ typedef struct {		/* ClientData for image elements */
 #endif
 } ImageData;
 
-#ifdef TK_CAN_XCOPYAREA_PIXMAP
+#ifndef TK_NO_DOUBLE_BUFFERING
 static void InvalidateImageCache(ImageData *imageData)
 {
     if (imageData->cachedPixmap != None) {
@@ -323,12 +313,12 @@ static void ImageElementImageChanged(
     ImageData *imageData = (ImageData *)clientData;
     InvalidateImageCache(imageData);
 }
-#endif /* TK_CAN_XCOPYAREA_PIXMAP */
+#endif /* !TK_NO_DOUBLE_BUFFERING */
 
 static void FreeImageData(void *clientData)
 {
     ImageData *imageData = (ImageData *)clientData;
-#ifdef TK_CAN_XCOPYAREA_PIXMAP
+#ifndef TK_NO_DOUBLE_BUFFERING
     InvalidateImageCache(imageData);
 #endif
     if (imageData->imageSpec)	{ TtkFreeImageSpec(imageData->imageSpec); }
@@ -398,15 +388,15 @@ static void ImageElementDraw(
     src = Ttk_MakeBox(0, 0, imgWidth, imgHeight);
     dst = Ttk_StickBox(b, imgWidth, imgHeight, imageData->sticky);
 
-#ifdef TK_CAN_XCOPYAREA_PIXMAP
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Element pixmap cache.  Compiled in only where XCopyArea accepts a
      * Pixmap; on macOS it returns BadDrawable for a Pixmap source or
-     * destination, so the blits below would draw nothing and that platform
+     * destination, so the copies below would draw nothing and that platform
      * falls through to the direct draw.
      */
 
-    /* Fast path: blit cached pixmap if size, position, and state match. */
+    /* Fast path: copy cached pixmap if size, position, and state match. */
     if (imageData->cachedPixmap != None
 	    && imageData->cachedWidth == dst.width
 	    && imageData->cachedHeight == dst.height
@@ -461,7 +451,7 @@ static void ImageElementDraw(
 	    imageData->cachedState = state;
 	    imageData->cachedDisplay = display;
 
-	    /* Blit composited result to destination. */
+	    /* Copy composited result to destination. */
 	    XCopyArea(display, pixmap, d, gc,
 		    0, 0, (unsigned)dst.width, (unsigned)dst.height,
 		    dst.x, dst.y);
@@ -469,7 +459,7 @@ static void ImageElementDraw(
 	    return;
 	}
     }
-#endif /* TK_CAN_XCOPYAREA_PIXMAP */
+#endif /* !TK_NO_DOUBLE_BUFFERING */
 
     /* Direct draw: cache disabled, window not realized, or alloc failed. */
     Ttk_Tile(tkwin, d, image, src, dst, imageData->border);
@@ -514,7 +504,7 @@ Ttk_CreateImageElement(
     imageData = (ImageData *)Tcl_Alloc(sizeof(*imageData));
     memset(imageData, 0, sizeof(*imageData));
 
-#ifdef TK_CAN_XCOPYAREA_PIXMAP
+#ifndef TK_NO_DOUBLE_BUFFERING
     imageData->cachedPixmap = None;
     imageSpec = TtkGetImageSpecEx(interp, Tk_MainWindow(interp), objv[0],
 	    ImageElementImageChanged, imageData);
