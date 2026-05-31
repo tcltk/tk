@@ -4716,6 +4716,9 @@ XChangeWindowAttributes(
     unsigned long         valuemask,
     XSetWindowAttributes *attributes)
 {
+
+    fprintf(stderr, "XChangeWindowAttributes called: valuemask=0x%lx\n", valuemask);
+    fflush(stderr);
     GLFWwindow *gw;
 
     if (attributes == NULL) {
@@ -4738,6 +4741,7 @@ XChangeWindowAttributes(
          * attributes->cursor is already the platform struct cast to Cursor.
          * Pass it directly to TkpSetCursor — no hash lookup needed.
          */
+         fprintf(stderr, "got cursor via wm\n");
         TkpSetCursor(attributes->cursor);
     }
 

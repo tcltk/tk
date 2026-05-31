@@ -369,6 +369,14 @@ TkWaylandHandleMouseMove(
     event.xmotion.same_screen = True;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    
+    /* Update pointer so cursorWinPtr is current for XDefineCursor's guard. */
+    Tk_UpdatePointer((Tk_Window)winPtr, (int)event.xmotion.x_root,
+        (int)event.xmotion.y_root, TkWaylandButtonKeyState());
+        
+        fprintf(stderr, "HandleMouseMove: winPtr=%p x=%d y=%d\n",
+    (void*)winPtr, (int)x, (int)y);
+fflush(stderr);
 }
 /*
  *----------------------------------------------------------------------

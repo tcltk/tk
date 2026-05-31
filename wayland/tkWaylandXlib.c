@@ -3435,6 +3435,7 @@ XSetArcMode(
     return 0;
 }
 
+
 /*
  * Local Variables:
  * mode: c

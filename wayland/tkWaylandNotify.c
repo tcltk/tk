@@ -965,10 +965,10 @@ TkGlfwCursorPosCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
+
     /* Find the widget containing the mouse cursor. */
     TkWindow *target = (TkWindow *) Tk_CoordsToWindow((int) xpos, (int) ypos,
 			    (Tk_Window) winPtr);
-
 
     /* Check if mouse entered or left the target widget. */
     if (lastWinPtr != target) {
@@ -991,11 +991,10 @@ TkGlfwCursorPosCallback(
 	    event.xcrossing.same_screen = True;
 	    event.xcrossing.focus = False;
 	    event.xcrossing.state = glfwButtonState | glfwModifierState;
-	    Tk_UpdatePointer((Tk_Window)target, event.xcrossing.x, event.xcrossing.y, event.xcrossing.state);
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         }
-        
-        /* Send EnterNotify for current toplevel. */
+
+        /* Send EnterNotify for the newly entered widget. */
         memset(&event, 0, sizeof(XEvent));
         event.type = EnterNotify;
         event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display)++;
@@ -1015,14 +1014,22 @@ TkGlfwCursorPosCallback(
         event.xcrossing.focus = False;
         event.xcrossing.state = glfwButtonState | glfwModifierState;
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-        lastWinPtr = target;
-        Tk_UpdatePointer((Tk_Window)target, event.xcrossing.x, event.xcrossing.y, event.xcrossing.state);
-    }
-    
-    /* Generate MotionNotify event.
-     * This event needs to be sent to the widget containing the cursor.
-     */
 
+        lastWinPtr = target;
+
+        /*
+         * Update the pointer with root-relative coordinates so that
+         * cursorWinPtr in tkPointer.c is set correctly. This single call,
+         * after lastWinPtr is updated, uses root coords so that
+         * XDefineCursor's guard condition (cursorWinPtr == winPtr) passes
+         * when a cursor change is pending.
+         */
+        Tk_UpdatePointer((Tk_Window) target,
+            (int) xpos, (int) ypos,
+            glfwButtonState | glfwModifierState);
+    }
+
+    /* Generate MotionNotify event targeted at the widget under the cursor. */
     memset(&event, 0, sizeof(XEvent));
     event.type = MotionNotify;
     event.xmotion.serial = LastKnownRequestProcessed(winPtr->display)++;
@@ -1032,23 +1039,18 @@ TkGlfwCursorPosCallback(
     event.xmotion.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xmotion.subwindow = None;
     event.xmotion.time = CurrentTime;
-    /* These coordinates should be relative to the target window. */
-    event.xmotion.x = (int)xpos - Tk_X(target);
-    event.xmotion.y = (int)ypos - Tk_Y(target);
+    event.xmotion.x = (int) xpos - Tk_X(target);
+    event.xmotion.y = (int) ypos - Tk_Y(target);
     /*
-     * The toplevel coordinates are the same as the root coordinates since we have
-     * to treat every toplevel as having position (0, 0)
-     */ 
-    event.xmotion.x_root = (int)xpos;
-    event.xmotion.y_root = (int)ypos;
+     * The toplevel coordinates are the same as the root coordinates since
+     * every toplevel is treated as having position (0, 0).
+     */
+    event.xmotion.x_root = (int) xpos;
+    event.xmotion.y_root = (int) ypos;
     event.xmotion.state = glfwButtonState | glfwModifierState;
     event.xmotion.is_hint = NotifyNormal;
     event.xmotion.same_screen = True;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    
-    /* Update last position. */
-    //    lastX = xpos;
-    //    lastY = ypos;
 }
 
 /*
