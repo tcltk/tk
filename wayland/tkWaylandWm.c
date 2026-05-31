@@ -98,6 +98,8 @@ const char *const WmAttributeNames[] = {
     "-zoomed", NULL
 };
 
+extern void TkpSetCursor(TkWindow *winPtr, TkCursor *cursorPtr);
+
 /*
  *----------------------------------------------------------------------
  * XIDs, Drawables, Windows, and Pixmaps
@@ -4694,7 +4696,7 @@ XRestackWindows(
  *	Change one or more window attributes.
  *	We handle override-redirect (GLFW DECORATED hint) and the
  *	always-on-top semantic (GLFW FLOATING hint).  Other attributes
- *	such as background pixel, event mask, cursor, etc. are accepted
+ *	such as background pixel, event mask, etc. are accepted
  *	silently; they are managed by Tk's own machinery or are not
  *	meaningful in Wayland.
  *
@@ -4729,8 +4731,24 @@ XChangeWindowAttributes(
         glfwSetWindowAttrib(gw, GLFW_DECORATED,
             attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
+    
+    if (valuemask & CWCursor) {
+    TkWindow *winPtr = (TkWindow *) TkWaylandTkWindowFromDrawable(window);
+    if (winPtr != NULL) {
+        TkCursor *cursorPtr = NULL;
+        if (attributes->cursor != None) {
+            Tcl_HashEntry *hPtr = Tcl_FindHashEntry(
+                &winPtr->dispPtr->cursorIdTable,
+                (char *)(uintptr_t) attributes->cursor);
+            if (hPtr != NULL) {
+                cursorPtr = (TkCursor *) Tcl_GetHashValue(hPtr);
+            }
+        }
+        TkpSetCursor(winPtr, cursorPtr);
+    }
+}
 
-    /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, CWCursor …
+    /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
        All are maintained by Tk's own attribute tables; no GLFW action. */
 
     return Success;

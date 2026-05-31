@@ -910,6 +910,7 @@ TkGlfwCursorPosCallback(
 	    event.xcrossing.same_screen = True;
 	    event.xcrossing.focus = False;
 	    event.xcrossing.state = glfwButtonState | glfwModifierState;
+	    Tk_UpdatePointer((Tk_Window)target, event.xcrossing.x, event.xcrossing.y, event.xcrossing.state);
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         }
         
@@ -934,6 +935,7 @@ TkGlfwCursorPosCallback(
         event.xcrossing.state = glfwButtonState | glfwModifierState;
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
         lastWinPtr = target;
+        Tk_UpdatePointer((Tk_Window)target, event.xcrossing.x, event.xcrossing.y, event.xcrossing.state);
     }
     
     /* Generate MotionNotify event.

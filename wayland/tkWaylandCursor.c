@@ -36,9 +36,7 @@ typedef struct {
 } TkWaylandCursor;
 
 /*
- * Struct for the built-in X11 bitmap cursor table.  Defined here at the top
- * so the tag 'struct BuiltinCursor' is complete before cursorNames[] and the
- * forward declarations below reference it.
+ * Struct for the built-in X11 bitmap cursor table. 
  */
 
 struct BuiltinCursor {
@@ -487,6 +485,18 @@ CreateCursorFromBitmapData(
     image.pixels = rgba;
 
     GLFWcursor* cursor = glfwCreateCursor(&image, xHot, yHot);
+    
+if (!cursor) {
+    fprintf(stderr, "DEBUG: glfwCreateCursor failed for bitmap cursor\n");
+    fprintf(stderr, "  width=%d, height=%d, hotspot=(%d,%d)\n", 
+            width, height, xHot, yHot);
+    const char* glfwError;
+    int code = glfwGetError(&glfwError);
+    if (code != 0) {
+        fprintf(stderr, "  GLFW error %d: %s\n", code, glfwError);
+    }
+}
+return cursor;
 
     Tcl_Free(rgba);
     return cursor;
@@ -824,6 +834,23 @@ CreateCursorFromImageData(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetCursorByName --
+ *
+ *	Retrieve a cursor by name. Parse the cursor name into fields and
+ *	create a cursor.
+ *
+ * Results:
+ *	Returns a new cursor, or NULL on errors.
+ *
+ * Side effects:
+ *	Allocates a new cursor.
+ *
+ *----------------------------------------------------------------------
+ */
+
 TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,
@@ -839,6 +866,7 @@ TkGetCursorByName(
     GLFWcursor* glfwCursor = NULL;
     unsigned int fgColor = 0xFF000000; /* Black */
     unsigned int bgColor = 0xFFFFFFFF; /* White */
+    int fileWidth = 0, fileHeight = 0; /* Captured for '@' file cursors. */
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
         return NULL;
@@ -921,14 +949,14 @@ TkGetCursorByName(
             goto badString;
         }
         unsigned char* pixels = NULL;
-        int width, height;
-        if (!LoadImageFile(argv[0] + 1, &pixels, &width, &height)) {
+        if (!LoadImageFile(argv[0] + 1, &pixels, &fileWidth, &fileHeight)) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                     "could not load cursor file \"%s\"", argv[0] + 1));
             Tcl_SetErrorCode(interp, "TK", "CURSOR", "FILE", (char *)NULL);
             goto cleanup;
         }
-        glfwCursor = CreateCursorFromImageData(pixels, width, height, width/2, height/2);
+        glfwCursor = CreateCursorFromImageData(pixels, fileWidth, fileHeight,
+                                               fileWidth/2, fileHeight/2);
         Tcl_Free(pixels);
         standardShape = -1; /* bitmap path */
 
@@ -969,8 +997,6 @@ TkGetCursorByName(
          * These use the compositor's native cursor; do NOT hide it.
          */
         glfwCursor = glfwCreateStandardCursor(standardShape);
-        /* standardShape already set correctly — TkpSetCursor will use
-         * GLFW_CURSOR_NORMAL, leaving the compositor cursor visible. */
 
     } else if (builtinPtr != NULL) {
         /*
@@ -1011,15 +1037,33 @@ TkGetCursorByName(
         cursorPtr->cursor = glfwCursor;
         cursorPtr->standardShape = standardShape;
 
-        if (builtinPtr && builtinPtr->name) {
+        if (standardShape != -1) {
+            /*
+             * GLFW standard shape: the compositor owns the actual cursor
+             * image so there are no local bitmap dimensions to record.
+             * Use a nominal nonzero size so that no downstream caller
+             * misinterprets width==0 as an invalid or empty cursor.
+             */
+            cursorPtr->width = 16;
+            cursorPtr->height = 16;
+        } else if (builtinPtr != NULL && builtinPtr->name != NULL) {
+            /* X11 bitmap fallback: record the true bitmap dimensions. */
             cursorPtr->width = builtinPtr->width;
             cursorPtr->height = builtinPtr->height;
         } else if (strcmp(argv[0], "none") == 0) {
+            /* Invisible 1×1 cursor. */
             cursorPtr->width = 1;
             cursorPtr->height = 1;
         } else {
-            cursorPtr->width = 0;
-            cursorPtr->height = 0;
+            /*
+             * '@' file cursor or other tkCursorNames XBM path.
+             * fileWidth/fileHeight were captured during LoadImageFile;
+             * they remain 0 for the XBM tkCursorNames path (harmless,
+             * as those cursors are also compositor-hidden via
+             * standardShape == -1).
+             */
+            cursorPtr->width = fileWidth;
+            cursorPtr->height = fileHeight;
         }
     }
 
@@ -1165,7 +1209,22 @@ TkpSetCursor(
     TkCursor *cursorPtr)	/* New cursor, or NULL for default. */
 {
     TkWaylandCursor *waylandCursorPtr = (TkWaylandCursor *) cursorPtr;
-    GLFWwindow *window = TkWaylandGetGLFWwindow(winPtr);
+    GLFWwindow *window = NULL;
+    fprintf(stderr, "got cursor event\n");
+
+    /*
+     * TkWaylandGetGLFWwindow only works on toplevels. Walk up the window
+     * hierarchy to find the GLFW window, since cursor events are handled
+     * at the toplevel on Wayland.
+     */
+    TkWindow *w = winPtr;
+    while (w != NULL) {
+        window = TkWaylandGetGLFWwindow(w);
+        if (window != NULL) {
+            break;
+        }
+        w = w->parentPtr;
+    }
 
     if (window == NULL) {
         return;
@@ -1177,13 +1236,9 @@ TkpSetCursor(
         return;
     }
 
-    /* Apply the cursor (standard or custom). */
     glfwSetCursor(window, waylandCursorPtr->cursor);
-
-    /* Always use NORMAL when we have a cursor. HIDDEN is only for capture/raw input. */
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
-
 
 
 /*
