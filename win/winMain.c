@@ -55,14 +55,6 @@ extern "C" {
 extern Tcl_LibraryInitProc Tktest_Init;
 #endif /* TK_TEST */
 
-#if !defined(TCL_USE_STATIC_PACKAGES)
-#   if TCL_MAJOR_VERSION > 8
-#	define TCL_USE_STATIC_PACKAGES 1
-#   else
-#	define TCL_USE_STATIC_PACKAGES 0
-#   endif
-#endif
-
 #ifdef __cplusplus
 }
 #endif

@@ -390,7 +390,7 @@ GetMenuAccelGeometry(
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
 	double scalingLevel = TkScalingLevel(menuPtr->tkwin);
-	int arrowWidth = (int)(CASCADE_ARROW_SIZE * scalingLevel) + 1;
+	int arrowWidth = (int)round(CASCADE_ARROW_SIZE * scalingLevel) + 1;
 
 	*widthPtr = 2 * arrowWidth;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
@@ -485,7 +485,7 @@ DrawMenuEntryAccelerator(
 {
     int borderWidth, activeBorderWidth;
     double scalingLevel = TkScalingLevel(menuPtr->tkwin);
-    int arrowSize = (int)(CASCADE_ARROW_SIZE * scalingLevel);
+    int arrowSize = (int)round(CASCADE_ARROW_SIZE * scalingLevel);
     int arrowWidth = arrowSize + 1, arrowHeight = 2*arrowSize + 1;
     XPoint points[4];
 

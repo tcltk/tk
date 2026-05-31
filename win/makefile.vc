@@ -340,7 +340,7 @@ CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib oleacc.lib usp10.lib
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib oleacc.lib usp10.lib dwmapi.lib
 
 #---------------------------------------------------------------------
 # TkTest flags
@@ -599,7 +599,6 @@ install-pdbs:
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DTK_TEST /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(ROOT)\manifest.uuid:
@@ -621,7 +620,6 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c

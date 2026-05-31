@@ -3,9 +3,9 @@ on:
   push:
     branches:
     - "main"
-    - "core-9-0-branch"
+    - "core-9-1-branch"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 env:
@@ -64,7 +64,7 @@ jobs:
           - 'mem'
         options:
           - '--enable-aqua'
-          - '--disable-aqua'
+          - '--disable-aqua --disable-bidi'
     defaults:
       run:
         shell: bash
