@@ -98,7 +98,7 @@ const char *const WmAttributeNames[] = {
     "-zoomed", NULL
 };
 
-extern void TkpSetCursor(TkWindow *winPtr, TkCursor *cursorPtr);
+extern void TkpSetCursor(Cursor cursor);
 
 /*
  *----------------------------------------------------------------------
@@ -4718,11 +4718,6 @@ XChangeWindowAttributes(
 {
     GLFWwindow *gw;
 
-    fprintf(stderr, "XChangeWindowAttributes: valuemask=0x%lx CWCursor=%s drawable=%lx\n",
-    valuemask,
-    (valuemask & CWCursor) ? "YES" : "no",
-    window);
-
     if (attributes == NULL) {
         return Success;
     }
@@ -4734,28 +4729,16 @@ XChangeWindowAttributes(
 
     if (valuemask & CWOverrideRedirect) {
         glfwSetWindowAttrib(gw, GLFW_DECORATED,
-			    attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
+            attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
-    
+
     if (valuemask & CWCursor) {
-	TkWindow *winPtr = (TkWindow *) TkWaylandTkWindowFromDrawable(window);
-	if (winPtr != NULL) {
-	    TkCursor *cursorPtr = NULL;
-	    if (attributes->cursor != None) {
-		Tcl_HashEntry *hPtr = Tcl_FindHashEntry(
-							&winPtr->dispPtr->cursorIdTable,
-							(char *)(uintptr_t) attributes->cursor);
-		if (hPtr != NULL) {
-		    cursorPtr = (TkCursor *) Tcl_GetHashValue(hPtr);
-		} else {
-		    fprintf(stderr,
-	                    "XChangeWindowAttributes: cursor XID %lu not in "
-	                    "cursorIdTable — cursor was not registered through "
-	                    "the generic layer\n",
-	                    (unsigned long) attributes->cursor);
-		}
-	    }
-	}
+        /*
+         * info.cursor is set to the TkWaylandCursor pointer itself, so
+         * attributes->cursor is already the platform struct cast to Cursor.
+         * Pass it directly to TkpSetCursor — no hash lookup needed.
+         */
+        TkpSetCursor(attributes->cursor);
     }
 
     /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …

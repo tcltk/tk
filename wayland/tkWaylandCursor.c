@@ -31,6 +31,8 @@
 typedef struct {
     TkCursor info;		/* Generic cursor info used by tkCursor.c */
     GLFWcursor *cursor;		/* GLFW cursor handle */
+    GLFWwindow *glfwWindow;	/* GLFW window this cursor belongs to, captured
+				 * at allocation time by TkGetCursorByName. */
     int standardShape;		/* GLFW standard cursor shape, or -1 for custom */
     int width, height;		/* Dimensions for custom cursors */
 } TkWaylandCursor;
@@ -356,36 +358,6 @@ static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
 /*
  *----------------------------------------------------------------------
  *
- * NextCursorId --
- *
- *	Returns a unique opaque integer for use as info.cursor. The generic
- *	tkCursor.c layer uses this value as a hash key in cursorIdTable, so
- *	it must be unique per allocated cursor. It must NOT be the raw
- *	GLFWcursor pointer: glfwCreateStandardCursor may return the same
- *	pointer for two independently created cursors, which would cause
- *	TkcGetCursor to panic on "cursor already registered". The actual
- *	GLFW handle is stored separately in TkWaylandCursor.c and
- *	retrieved by TkpSetCursor.
- *
- * Results:
- *	A non-zero Tk_Cursor value, unique for the lifetime of the process.
- *
- * Side effects:
- *	Increments a static counter.
- *
- *----------------------------------------------------------------------
- */
-
-static Tk_Cursor
-NextCursorId(void)
-{
-    static Tcl_Size nextId = 1;
-    return (Tk_Cursor)(uintptr_t)(nextId++);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * ConvertXBMToRGBA --
  *
  *	Convert X11 bitmap data to RGBA format for GLFW.
@@ -485,18 +457,17 @@ CreateCursorFromBitmapData(
     image.pixels = rgba;
 
     GLFWcursor* cursor = glfwCreateCursor(&image, xHot, yHot);
-    
-if (!cursor) {
-    fprintf(stderr, "DEBUG: glfwCreateCursor failed for bitmap cursor\n");
-    fprintf(stderr, "  width=%d, height=%d, hotspot=(%d,%d)\n", 
-            width, height, xHot, yHot);
-    const char* glfwError;
-    int code = glfwGetError(&glfwError);
-    if (code != 0) {
-        fprintf(stderr, "  GLFW error %d: %s\n", code, glfwError);
+
+    if (!cursor) {
+        fprintf(stderr, "DEBUG: glfwCreateCursor failed for bitmap cursor\n");
+        fprintf(stderr, "  width=%d, height=%d, hotspot=(%d,%d)\n",
+                width, height, xHot, yHot);
+        const char* glfwError;
+        int code = glfwGetError(&glfwError);
+        if (code != 0) {
+            fprintf(stderr, "  GLFW error %d: %s\n", code, glfwError);
+        }
     }
-}
-    return cursor;
 
     Tcl_Free(rgba);
     return cursor;
@@ -1008,7 +979,12 @@ TkGetCursorByName(
         cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
 
-        cursorPtr->info.cursor = NextCursorId();
+        /*
+         * Use the struct pointer itself as the Tk_Cursor XID, matching the
+         * macOS pattern. TkpSetCursor casts it straight back — no hash
+         * lookup needed.
+         */
+        cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
         cursorPtr->info.display = (tkwin != NULL) ? Tk_Display(tkwin) : NULL;
         cursorPtr->info.resourceRefCount = 1;
         cursorPtr->info.objRefCount = 0;
@@ -1040,6 +1016,25 @@ TkGetCursorByName(
         } else {
             cursorPtr->width = fileWidth;
             cursorPtr->height = fileHeight;
+        }
+
+        /*
+         * Capture the GLFW window at allocation time by walking up to the
+         * toplevel. TkpSetCursor receives only a bare Cursor XID with no
+         * window argument, so this is the only opportunity to record which
+         * GLFW window the cursor belongs to.
+         */
+        {
+            TkWindow *w = (TkWindow *) tkwin;
+            cursorPtr->glfwWindow = NULL;
+            while (w != NULL) {
+                GLFWwindow *gw = TkWaylandGetGLFWwindow(w);
+                if (gw != NULL) {
+                    cursorPtr->glfwWindow = gw;
+                    break;
+                }
+                w = w->parentPtr;
+            }
         }
     }
 
@@ -1108,7 +1103,7 @@ TkCreateCursorFromData(
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
 
         /* Initialize core header fields. */
-        cursorPtr->info.cursor = NextCursorId();
+        cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
         cursorPtr->info.display = NULL; /* Will be overwritten/assigned by core TkcGetCursor. */
         cursorPtr->info.resourceRefCount = 1;
         cursorPtr->info.objRefCount = 0;
@@ -1119,6 +1114,7 @@ TkCreateCursorFromData(
 
         /* Initialize custom platform properties. */
         cursorPtr->cursor = glfwCursor;
+        cursorPtr->glfwWindow = NULL;	/* No tkwin available; set by caller if needed. */
         cursorPtr->standardShape = -1;
         cursorPtr->width = width;
         cursorPtr->height = height;
@@ -1168,50 +1164,62 @@ TkpFreeCursor(
  *
  * TkpSetCursor --
  *
- *	Set the cursor for a window.
+ *	Set the current cursor and install it. Called by UpdateCursor in
+ *	tkPointer.c with the Tk_Cursor XID extracted from winPtr->atts.cursor.
+ *
+ *	Since info.cursor is set to the TkWaylandCursor pointer itself
+ *	(matching the macOS pattern), we cast directly back with no hash
+ *	table lookup. The GLFW window was captured at cursor-creation time
+ *	in TkGetCursorByName, so no window argument or generic-layer access
+ *	is needed here.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Changes the window's cursor.
+ *	Changes the cursor displayed in the GLFW window.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpSetCursor(
-    TkWindow *winPtr,		/* Window to set cursor for. */
-    TkCursor *cursorPtr)	/* New cursor, or NULL for default. */
+    Cursor cursor)		/* Tk_Cursor from winPtr->atts.cursor, or None. */
 {
-    TkWaylandCursor *waylandCursorPtr = (TkWaylandCursor *) cursorPtr;
+    static TkWaylandCursor *gCurrentCursor = NULL;
+    TkWaylandCursor *waylandCursorPtr = NULL;
     GLFWwindow *window = NULL;
 
-    /*
-     * TkWaylandGetGLFWwindow only works on toplevels. Walk up the window
-     * hierarchy to find the GLFW window, since cursor events are handled
-     * at the toplevel on Wayland.
-     */
-    TkWindow *w = winPtr;
-    while (w != NULL) {
-        window = TkWaylandGetGLFWwindow(w);
-        if (window != NULL) {
-            break;
+    if (cursor == None) {
+        /*
+         * Restore the default cursor on whichever window last held a custom
+         * one, then clear the record.
+         */
+        if (gCurrentCursor != NULL && gCurrentCursor->glfwWindow != NULL) {
+            glfwSetCursor(gCurrentCursor->glfwWindow, NULL);
+            glfwSetInputMode(gCurrentCursor->glfwWindow,
+                GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
-        w = w->parentPtr;
+        gCurrentCursor = NULL;
+        return;
     }
 
+    waylandCursorPtr = (TkWaylandCursor *)(uintptr_t) cursor;
+    if (gCurrentCursor == waylandCursorPtr) {
+        return;
+    }
+    gCurrentCursor = waylandCursorPtr;
+
+    window = waylandCursorPtr->glfwWindow;
     if (window == NULL) {
         return;
     }
 
-    if (waylandCursorPtr == NULL || waylandCursorPtr->cursor == NULL) {
+    if (waylandCursorPtr->cursor == NULL) {
         glfwSetCursor(window, NULL);
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        return;
+    } else {
+        glfwSetCursor(window, waylandCursorPtr->cursor);
     }
-
-    glfwSetCursor(window, waylandCursorPtr->cursor);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
