@@ -4718,6 +4718,11 @@ XChangeWindowAttributes(
 {
     GLFWwindow *gw;
 
+    fprintf(stderr, "XChangeWindowAttributes: valuemask=0x%lx CWCursor=%s drawable=%lx\n",
+    valuemask,
+    (valuemask & CWCursor) ? "YES" : "no",
+    window);
+
     if (attributes == NULL) {
         return Success;
     }
@@ -4733,20 +4738,28 @@ XChangeWindowAttributes(
     }
     
     if (valuemask & CWCursor) {
-    TkWindow *winPtr = (TkWindow *) TkWaylandTkWindowFromDrawable(window);
-    if (winPtr != NULL) {
-        TkCursor *cursorPtr = NULL;
-        if (attributes->cursor != None) {
-            Tcl_HashEntry *hPtr = Tcl_FindHashEntry(
-                &winPtr->dispPtr->cursorIdTable,
-                (char *)(uintptr_t) attributes->cursor);
-            if (hPtr != NULL) {
-                cursorPtr = (TkCursor *) Tcl_GetHashValue(hPtr);
-            }
-        }
-        TkpSetCursor(winPtr, cursorPtr);
+	TkWindow *winPtr = (TkWindow *) TkWaylandTkWindowFromDrawable(window);
+	if (winPtr != NULL) {
+	    TkCursor *cursorPtr = NULL;
+	    if (attributes->cursor != None) {
+		Tcl_HashEntry *hPtr = Tcl_FindHashEntry(
+							&winPtr->dispPtr->cursorIdTable,
+							(char *)(uintptr_t) attributes->cursor);
+		if (hPtr != NULL) {
+		    cursorPtr = (TkCursor *) Tcl_GetHashValue(hPtr);
+		} else {
+		    fprintf(stderr,
+	                    "XChangeWindowAttributes: cursor XID %lu not in "
+	                    "cursorIdTable — cursor was not registered through "
+	                    "the generic layer\n",
+	                    (unsigned long) attributes->cursor);
+		}
+	    }
+	    fprintf(stderr, "XChangeWindowAttributes CWCursor: attributes->cursor=%lu winPtr=%p cursorPtr=%p\n",
+    (unsigned long)attributes->cursor, (void*)winPtr, (void*)cursorPtr);
+	    TkpSetCursor(winPtr, cursorPtr);
+	}
     }
-}
 
     /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
        All are maintained by Tk's own attribute tables; no GLFW action. */

@@ -364,7 +364,7 @@ static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
  *	GLFWcursor pointer: glfwCreateStandardCursor may return the same
  *	pointer for two independently created cursors, which would cause
  *	TkcGetCursor to panic on "cursor already registered". The actual
- *	GLFW handle is stored separately in TkWaylandCursor.cursor and
+ *	GLFW handle is stored separately in TkWaylandCursor.c and
  *	retrieved by TkpSetCursor.
  *
  * Results:
@@ -496,7 +496,7 @@ if (!cursor) {
         fprintf(stderr, "  GLFW error %d: %s\n", code, glfwError);
     }
 }
-return cursor;
+    return cursor;
 
     Tcl_Free(rgba);
     return cursor;
@@ -834,23 +834,6 @@ CreateCursorFromImageData(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- *
- * TkGetCursorByName --
- *
- *	Retrieve a cursor by name. Parse the cursor name into fields and
- *	create a cursor.
- *
- * Results:
- *	Returns a new cursor, or NULL on errors.
- *
- * Side effects:
- *	Allocates a new cursor.
- *
- *----------------------------------------------------------------------
- */
-
 TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,
@@ -1055,13 +1038,6 @@ TkGetCursorByName(
             cursorPtr->width = 1;
             cursorPtr->height = 1;
         } else {
-            /*
-             * '@' file cursor or other tkCursorNames XBM path.
-             * fileWidth/fileHeight were captured during LoadImageFile;
-             * they remain 0 for the XBM tkCursorNames path (harmless,
-             * as those cursors are also compositor-hidden via
-             * standardShape == -1).
-             */
             cursorPtr->width = fileWidth;
             cursorPtr->height = fileHeight;
         }
@@ -1238,6 +1214,41 @@ TkpSetCursor(
 
     glfwSetCursor(window, waylandCursorPtr->cursor);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpChangeCursor --
+ *
+ *	Set the cursor for a window, called by the generic cursor layer
+ *	when a window's cursor attribute changes.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Calls XChangeWindowAttributes with CWCursor to apply the cursor.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpChangeCursor(
+    TkWindow *winPtr,
+    TkCursor *cursorPtr)
+{
+    XSetWindowAttributes atts;
+
+    if (cursorPtr == NULL) {
+        atts.cursor = None;
+    } else {
+        atts.cursor = (Cursor)(uintptr_t) cursorPtr->cursor;
+    }
+    if (winPtr->window != None) {
+        XChangeWindowAttributes(winPtr->display, winPtr->window,
+            CWCursor, &atts);
+    }
 }
 
 

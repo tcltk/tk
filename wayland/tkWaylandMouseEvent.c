@@ -437,27 +437,18 @@ TkpWarpPointer(
  */
 
 void
-TkpSetCapture(
-    TkWindow *winPtr)		/* Capture window, or NULL. */
+TkpSetCapture(TkWindow *winPtr)
 {
-    GLFWwindow* glfwWindow;
-    
     while (winPtr && !Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
+        winPtr = winPtr->parentPtr;
     }
     captureWinPtr = (Tk_Window)winPtr;
-    
-    /* Set GLFW cursor mode using unified architecture. */
-    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    if (glfwWindow) {
-	if (winPtr) {
-	    glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	} else {
-	    glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}
-    }
+    /* 
+     * Do not change GLFW cursor mode here. Tk grab semantics keep the 
+     * cursor visible and redirect events via captureWinPtr, unlike 
+     * GLFW_CURSOR_DISABLED which hides the cursor entirely.
+     */
 }
-
 /*
  *----------------------------------------------------------------------
  *
