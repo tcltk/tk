@@ -101,7 +101,7 @@ namespace eval ttk::theme::alt {
 
 	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont -relief raised \
+	    -font TkHeadingFont -relief raised -padding {2.25p 1 2.25p 1} \
 	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Row -focuscolor black \
 	    -focussolid 1 -focusthickness 0 -padding 0
@@ -122,9 +122,11 @@ namespace eval ttk::theme::alt {
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
 	    -background [list	disabled $colors(-frame) \
+				background $colors(-darker) \
 				selected $colors(-selectbg) \
 				active $colors(-activebg)] \
 	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-selectfg) \
 				selected $colors(-selectfg) \
 				active $colors(-foreground)]
 

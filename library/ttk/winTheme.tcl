@@ -70,7 +70,7 @@ namespace eval ttk::theme::winnative {
 
 	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont -relief raised \
+	    -font TkHeadingFont -relief raised -padding {2.25p 1 2.25p 1} \
 	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
 	ttk::style configure Item -indicatorsize 6.75p \
 	    -indicatormargin {1.5p 1.5p 3p 1.5p}
