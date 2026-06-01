@@ -2783,7 +2783,7 @@ static int TreeviewChildrenCommand(
 	if (tv->tree.selAnchor && (tv->tree.selAnchor)->parent == NULL) {
 	    tv->tree.selAnchor = NULL;
 	    if (tv->tree.selAnchorColObj) {
-	        Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+		Tcl_DecrRefCount(tv->tree.selAnchorColObj);
 		tv->tree.selAnchorColObj = NULL;
 	    }
 	}
@@ -4343,7 +4343,7 @@ static int TreeviewDeleteCommand(
 	if (tv->tree.selAnchor == delq) {
 	    tv->tree.selAnchor = NULL;
 	    if (tv->tree.selAnchorColObj) {
-	        Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+		Tcl_DecrRefCount(tv->tree.selAnchorColObj);
 		tv->tree.selAnchorColObj = NULL;
 	    }
 	}
@@ -4758,7 +4758,7 @@ static int TreeviewCellFocusCommand(
 		    Tcl_BounceRefCount(listPtr);
 		}
 	    } else {
-	        Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+		Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
 	    }
 	}
     }
