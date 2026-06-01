@@ -4741,7 +4741,6 @@ XChangeWindowAttributes(
          * attributes->cursor is already the platform struct cast to Cursor.
          * Pass it directly to TkpSetCursor — no hash lookup needed.
          */
-         fprintf(stderr, "got cursor via wm\n");
         TkpSetCursor(attributes->cursor);
     }
 

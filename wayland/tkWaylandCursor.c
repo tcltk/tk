@@ -459,9 +459,6 @@ CreateCursorFromBitmapData(
     GLFWcursor* cursor = glfwCreateCursor(&image, xHot, yHot);
 
     if (!cursor) {
-        fprintf(stderr, "DEBUG: glfwCreateCursor failed for bitmap cursor\n");
-        fprintf(stderr, "  width=%d, height=%d, hotspot=(%d,%d)\n",
-                width, height, xHot, yHot);
         const char* glfwError;
         int code = glfwGetError(&glfwError);
         if (code != 0) {
@@ -812,7 +809,6 @@ TkGetCursorByName(
     const char *string)
 
 {
-    fprintf(stderr, "TkGetCursorByName: string=%s\n", string);
     fflush(stderr);
     TkWaylandCursor *cursorPtr = NULL;
     Tcl_Size argc;
@@ -1041,18 +1037,10 @@ TkGetCursorByName(
         }
     }
     
-      /* after the glfwWindow walk: */
-    fprintf(stderr, "TkGetCursorByName: cursorPtr=%p glfwWindow=%p glfwCursor=%p\n",
-        (void*)cursorPtr, (void*)cursorPtr->glfwWindow, (void*)cursorPtr->cursor);
-    fflush(stderr);
-
 cleanup:
     if (argv != NULL) {
         Tcl_Free(argv);
     }
-    fprintf(stderr, "TkGetCursorByName: returning cursorPtr=%p info.cursor=%lu\n",
-        (void*)cursorPtr, (unsigned long)cursorPtr->info.cursor);
-    fflush(stderr);
     return (TkCursor *) cursorPtr;
 
   badString:
@@ -1200,7 +1188,6 @@ TkpSetCursor(
     static TkWaylandCursor *gCurrentCursor = NULL;
     TkWaylandCursor *waylandCursorPtr = NULL;
     GLFWwindow *window = NULL;
-    fprintf(stderr, "got cursor\n");
 
     if (cursor == None) {
         /*
