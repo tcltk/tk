@@ -1042,10 +1042,10 @@ cleanup:
         Tcl_Free(argv);
     }
 
-	/* 
-	 * We have the cursor data. Force the updating and 
-	 * display of the cursor.
-	 */
+    /* 
+     * We have the cursor data. Force the updating and 
+     * display of the cursor.
+     */
     if (cursorPtr != NULL && tkwin != NULL) {
         TkpSetCursor( (Cursor) cursorPtr->info.cursor );
     }
