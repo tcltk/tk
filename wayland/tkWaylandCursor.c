@@ -354,6 +354,7 @@ static unsigned char* ParseXBMData(const char* data, int* width, int* height,
 static unsigned int ParseColor(const char* colorName);
 static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
       int width, int height, int xHot, int yHot);
+void TkpSetCursor(Cursor cursor);
 
 /*
  *----------------------------------------------------------------------
@@ -978,8 +979,8 @@ TkGetCursorByName(
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
 
         /*
-         * Use the struct pointer itself as the Tk_Cursor XID, matching the
-         * macOS pattern. TkpSetCursor casts it straight back — no hash
+         * Use the struct pointer itself as the Tk_Cursor XID. 
+         * TkpSetCursor casts it straight back — no hash
          * lookup needed.
          */
         cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
@@ -1040,6 +1041,15 @@ cleanup:
     if (argv != NULL) {
         Tcl_Free(argv);
     }
+
+	/* 
+	 * We have the cursor data. Force the updating and 
+	 * display of the cursor.
+	 */
+    if (cursorPtr != NULL && tkwin != NULL) {
+        TkpSetCursor( (Cursor) cursorPtr->info.cursor );
+    }
+
     return (TkCursor *) cursorPtr;
 
   badString:
