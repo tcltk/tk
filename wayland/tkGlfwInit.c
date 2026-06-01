@@ -612,9 +612,10 @@ TkGlfwCreateWindow(
 
     /* Set the initial pixel ratio for this window. */
     int fbWidth, fbHeight;
-    float xscale, yscale;
-    glfwGetWindowContentScale(glfwWindow, &xscale, &yscale);
-    winPtr->privatePtr->pixelRatio = xscale;
+    //float xscale, yscale;
+    //glfwGetWindowContentScale(glfwWindow, &xscale, &yscale);
+    //winPtr->privatePtr->pixelRatio = xscale;
+    winPtr->privatePtr->pixelRatio = 0;
     fprintf(stderr, "Initial pixel ratio for %s is %f\n",
 	   Tk_PathName(winPtr), winPtr->privatePtr->pixelRatio);
 

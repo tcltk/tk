@@ -333,25 +333,46 @@ TkWaylandHandleMouseButton(
  
 void
 TkWaylandHandleMouseMove(
-			 GLFWwindow *glfwWindow,
-			 double x,
-			 double y)
+    GLFWwindow *glfwWindow,
+    double x,
+    double y)
 {
     TkWindow *winPtr;
-
+    XEvent event;
 
     winPtr = TkGlfwGetTkWindow(glfwWindow);
     if (!winPtr) {
-	return;
+        return;
     }
+
+    memset(&event, 0, sizeof(XEvent));
+    event.type = MotionNotify;
+    event.xmotion.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xmotion.send_event = False;
+    event.xmotion.display = winPtr->display;
+    event.xmotion.window = Tk_WindowId((Tk_Window)winPtr);
+    event.xmotion.root = XRootWindow(winPtr->display, 0);
+	event.xmotion.time = (Time)(glfwGetTime() * 1000.0);
+    event.xmotion.x = (int)x;
+    event.xmotion.y = (int)y;
+
+    /* Compute root-relative coordinates. */
+    int winX, winY;
+    glfwGetWindowPos(glfwWindow, &winX, &winY);
+
+    event.xmotion.x_root = winX + (int)x;
+    event.xmotion.y_root = winY + (int)y;
+    event.xmotion.state = TkWaylandButtonKeyState();
+    event.xmotion.is_hint = NotifyNormal;
+    event.xmotion.same_screen = True;
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
-    /* Pass to normal Tk motion event handling. */ 
-    unsigned int state = TkWaylandButtonKeyState(); 
-    Window window = Tk_WindowId((Tk_Window)winPtr);
-
-    TkGenerateButtonEvent((int)x, (int)y, window, state); 
+    /* Update pointer so cursorWinPtr is current for XDefineCursor's guard. */
+    Tk_UpdatePointer((Tk_Window)winPtr, (int)event.xmotion.x_root,
+        (int)event.xmotion.y_root, TkWaylandButtonKeyState());
+    fprintf(stderr, "HandleMouseMove: winPtr=%p x=%d y=%d\n",
+	    (void*)winPtr, (int)x, (int)y);
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -380,8 +401,6 @@ TkpWarpPointer(
     
     if (dispPtr->warpWindow) {
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
-	
-	/* Warp cursor to new position using unified architecture. */
 	glfwWindow = TkWaylandGetGLFWwindow((TkWindow *)dispPtr->warpWindow);
 	if (glfwWindow) {
 	    glfwGetWindowPos(glfwWindow, &winX, &winY);
@@ -390,7 +409,7 @@ TkpWarpPointer(
 	    glfwSetCursorPos(glfwWindow, targetX, targetY);
 	}
     } else {
-	/* Global warp - not directly supported by GLFW. */
+	/* Global warp - not supported by Wayland. */
     }
 
     if (dispPtr->warpWindow) {
@@ -419,27 +438,13 @@ TkpWarpPointer(
  */
 
 void
-TkpSetCapture(
-    TkWindow *winPtr)		/* Capture window, or NULL. */
+TkpSetCapture(TkWindow *winPtr)
 {
-    GLFWwindow* glfwWindow;
-    
     while (winPtr && !Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
+        winPtr = winPtr->parentPtr;
     }
     captureWinPtr = (Tk_Window)winPtr;
-    
-    /* Set GLFW cursor mode using unified architecture. */
-    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    if (glfwWindow) {
-	if (winPtr) {
-	    glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	} else {
-	    glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}
-    }
 }
-
 /*
  *----------------------------------------------------------------------
  *

@@ -6,6 +6,7 @@
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
+ * Copyright (c) 2026 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -30,9 +31,25 @@
 typedef struct {
     TkCursor info;		/* Generic cursor info used by tkCursor.c */
     GLFWcursor *cursor;		/* GLFW cursor handle */
+    GLFWwindow *glfwWindow;	/* GLFW window this cursor belongs to, captured
+				 * at allocation time by TkGetCursorByName. */
     int standardShape;		/* GLFW standard cursor shape, or -1 for custom */
     int width, height;		/* Dimensions for custom cursors */
 } TkWaylandCursor;
+
+/*
+ * Struct for the built-in X11 bitmap cursor table. 
+ */
+
+struct BuiltinCursor {
+    const char *name;
+    const unsigned char *bits;
+    const unsigned char *mask;
+    int width;
+    int height;
+    int xHot;
+    int yHot;
+};
 
 /*
  * Table mapping Tk cursor names to GLFW standard cursor shapes.
@@ -141,96 +158,163 @@ static const struct CursorName {
 
 /*
  * Built-in cursor database using data from x11_cursors.h.
- * All definitions from the header file are included here.
  */
 
-static const struct BuiltinCursor {
-    const char *name;
-    unsigned char *bits;
-    unsigned char *mask;
-    int width;
-    int height;
-    int xHot;
-    int yHot;
-} builtinCursors[] = {
-    /* All cursors from x11_cursors.h (excluding those with GLFW equivalents) */
-    {"X_cursor", X_cursor_bits, X_cursor_mask_bits, 16, 16, -7, -9},
-    {"arrow", arrow_bits, arrow_mask_bits, 16, 16, -14, -15},
-    {"based_arrow_down", based_arrow_down_bits, based_arrow_down_mask_bits, 10, 12, -4, -2},
-    {"based_arrow_up", based_arrow_up_bits, based_arrow_up_mask_bits, 10, 12, -4, -2},
-    {"boat", boat_bits, boat_mask_bits, 16, 9, -14, -5},
-    {"bogosity", bogosity_bits, bogosity_mask_bits, 15, 16, -7, -9},
-    {"bottom_left_corner", bottom_left_corner_bits, bottom_left_corner_mask_bits, 16, 16, -1, -2},
-    {"bottom_right_corner", bottom_right_corner_bits, bottom_right_corner_mask_bits, 16, 16, -14, -2},
-    {"bottom_side", bottom_side_bits, bottom_side_mask_bits, 15, 16, -7, -2},
-    {"bottom_tee", bottom_tee_bits, bottom_tee_mask_bits, 16, 12, -8, -2},
-    {"box_spiral", box_spiral_bits, box_spiral_mask_bits, 16, 16, -8, -8},
-    {"center_ptr", center_ptr_bits, center_ptr_mask_bits, 12, 16, -5, -15},
-    {"circle", circle_bits, circle_mask_bits, 16, 16, -8, -8},
-    {"clock", clock_bits, clock_mask_bits, 15, 16, -6, -13},
-    {"coffee_mug", coffee_mug_bits, coffee_mug_mask_bits, 16, 16, -7, -7},
-    {"cross", cross_bits, cross_mask_bits, 16, 16, -7, -9},
-    {"cross_reverse", cross_reverse_bits, cross_reverse_mask_bits, 16, 15, -7, -8},
-    {"crosshair", crosshair_bits, crosshair_mask_bits, 16, 16, -7, -9},
-    {"diamond_cross", diamond_cross_bits, diamond_cross_mask_bits, 16, 16, -7, -9},
-    {"dot", dot_bits, dot_mask_bits, 12, 12, -6, -6},
-    {"dotbox", dotbox_bits, dotbox_mask_bits, 14, 14, -7, -8},
-    {"double_arrow", double_arrow_bits, double_arrow_mask_bits, 12, 16, -6, -8},
-    {"draft_large", draft_large_bits, draft_large_mask_bits, 15, 16, -14, -16},
-    {"draft_small", draft_small_bits, draft_small_mask_bits, 15, 15, -14, -15},
-    {"draped_box", draped_box_bits, draped_box_mask_bits, 14, 14, -7, -8},
-    {"exchange", exchange_bits, exchange_mask_bits, 16, 16, -7, -9},
-    {"fleur", fleur_bits, fleur_mask_bits, 16, 16, -8, -8},
-    {"gobbler", gobbler_bits, gobbler_mask_bits, 16, 16, -14, -13},
-    {"gumby", gumby_bits, gumby_mask_bits, 16, 16, -2, -16},
-    {"hand1", hand1_bits, hand1_mask_bits, 13, 16, -12, -16},
-    {"hand2", hand2_bits, hand2_mask_bits, 16, 16, 0, -15},
-    {"heart", heart_bits, heart_mask_bits, 15, 14, -6, -6},
-    {"icon", icon_bits, icon_mask_bits, 16, 16, -8, -8},
-    {"iron_cross", iron_cross_bits, iron_cross_mask_bits, 16, 16, -8, -9},
-    {"left_ptr", left_ptr_bits, left_ptr_mask_bits, 10, 16, -1, -15},
-    {"left_side", left_side_bits, left_side_mask_bits, 16, 15, -1, -8},
-    {"left_tee", left_tee_bits, left_tee_mask_bits, 12, 16, -1, -8},
-    {"leftbutton", leftbutton_bits, leftbutton_mask_bits, 15, 16, -8, -8},
-    {"ll_angle", ll_angle_bits, ll_angle_mask_bits, 12, 12, -1, -2},
-    {"lr_angle", lr_angle_bits, lr_angle_mask_bits, 12, 12, -10, -2},
-    {"man", man_bits, man_mask_bits, 16, 16, -14, -11},
-    {"middlebutton", middlebutton_bits, middlebutton_mask_bits, 15, 16, -8, -8},
-    {"mouse", mouse_bits, mouse_mask_bits, 16, 16, -4, -15},
-    {"pencil", pencil_bits, pencil_mask_bits, 13, 16, -11, -1},
-    {"pirate", pirate_bits, pirate_mask_bits, 16, 16, -7, -4},
-    {"plus", plus_bits, plus_mask_bits, 12, 12, -5, -6},
-    {"question_arrow", question_arrow_bits, question_arrow_mask_bits, 11, 16, -5, -8},
-    {"right_ptr", right_ptr_bits, right_ptr_mask_bits, 10, 16, -8, -15},
-    {"right_side", right_side_bits, right_side_mask_bits, 16, 15, -14, -8},
-    {"right_tee", right_tee_bits, right_tee_mask_bits, 12, 16, -10, -8},
-    {"rightbutton", rightbutton_bits, rightbutton_mask_bits, 15, 16, -8, -8},
-    {"rtl_logo", rtl_logo_bits, rtl_logo_mask_bits, 16, 16, -7, -9},
-    {"sailboat", sailboat_bits, sailboat_mask_bits, 16, 16, -8, -16},
-    {"sb_down_arrow", sb_down_arrow_bits, sb_down_arrow_mask_bits, 9, 16, -4, -1},
-    {"sb_h_double_arrow", sb_h_double_arrow_bits, sb_h_double_arrow_mask_bits, 15, 9, -7, -5},
-    {"sb_left_arrow", sb_left_arrow_bits, sb_left_arrow_mask_bits, 16, 9, 0, -5},
-    {"sb_right_arrow", sb_right_arrow_bits, sb_right_arrow_mask_bits, 16, 9, -15, -5},
-    {"sb_up_arrow", sb_up_arrow_bits, sb_up_arrow_mask_bits, 9, 16, -4, -16},
-    {"sb_v_double_arrow", sb_v_double_arrow_bits, sb_v_double_arrow_mask_bits, 9, 15, -4, -8},
-    {"shuttle", shuttle_bits, shuttle_mask_bits, 16, 16, -11, -16},
-    {"sizing", sizing_bits, sizing_mask_bits, 16, 16, -8, -8},
-    {"spider", spider_bits, spider_mask_bits, 16, 16, -6, -9},
-    {"spraycan", spraycan_bits, spraycan_mask_bits, 12, 16, -10, -14},
-    {"star", star_bits, star_mask_bits, 16, 16, -7, -9},
-    {"target", target_bits, target_mask_bits, 16, 14, -7, -7},
-    {"tcross", tcross_bits, tcross_mask_bits, 15, 15, -7, -8},
-    {"top_left_arrow", top_left_arrow_bits, top_left_arrow_mask_bits, 16, 16, -1, -15},
-    {"top_left_corner", top_left_corner_bits, top_left_corner_mask_bits, 16, 16, -1, -15},
-    {"top_right_corner", top_right_corner_bits, top_right_corner_mask_bits, 16, 16, -14, -15},
-    {"top_side", top_side_bits, top_side_mask_bits, 15, 16, -7, -15},
-    {"top_tee", top_tee_bits, top_tee_mask_bits, 16, 12, -8, -11},
-    {"trek", trek_bits, trek_mask_bits, 9, 16, -4, -16},
-    {"ul_angle", ul_angle_bits, ul_angle_mask_bits, 12, 12, -1, -11},
-    {"umbrella", umbrella_bits, umbrella_mask_bits, 16, 16, -8, -14},
-    {"ur_angle", ur_angle_bits, ur_angle_mask_bits, 12, 12, -10, -11},
-    {"watch", watch_bits, watch_mask_bits, 16, 16, -15, -7},
-    {"xterm", xterm_bits, xterm_mask_bits, 9, 16, -4, -8},
+static const struct BuiltinCursor builtinCursors[] = {
+    /* mask BBX 16 16 -7  -9  → xHot= 7, yHot= 7 */
+    {"X_cursor",           X_cursor_bits,           X_cursor_mask_bits,           16, 16,  7,  7},
+    /* mask BBX 16 16 -14 -15 → xHot=14, yHot= 1 */
+    {"arrow",              arrow_bits,              arrow_mask_bits,              16, 16, 14,  1},
+    /* mask BBX 10 12  -4  -2 → xHot= 4, yHot=10 */
+    {"based_arrow_down",   based_arrow_down_bits,   based_arrow_down_mask_bits,   10, 12,  4, 10},
+    /* mask BBX 10 12  -4  -2 → xHot= 4, yHot=10 */
+    {"based_arrow_up",     based_arrow_up_bits,     based_arrow_up_mask_bits,     10, 12,  4, 10},
+    /* mask BBX 16  9 -14  -5 → xHot=14, yHot= 4 */
+    {"boat",               boat_bits,               boat_mask_bits,               16,  9, 14,  4},
+    /* mask BBX 15 16  -7  -9 → xHot= 7, yHot= 7 */
+    {"bogosity",           bogosity_bits,           bogosity_mask_bits,           15, 16,  7,  7},
+    /* mask BBX 16 16  -1  -2 → xHot= 1, yHot=14 */
+    {"bottom_left_corner", bottom_left_corner_bits, bottom_left_corner_mask_bits, 16, 16,  1, 14},
+    /* mask BBX 16 16 -14  -2 → xHot=14, yHot=14 */
+    {"bottom_right_corner",bottom_right_corner_bits,bottom_right_corner_mask_bits,16, 16, 14, 14},
+    /* mask BBX 15 16  -7  -2 → xHot= 7, yHot=14 */
+    {"bottom_side",        bottom_side_bits,        bottom_side_mask_bits,        15, 16,  7, 14},
+    /* mask BBX 16 12  -8  -2 → xHot= 8, yHot=10 */
+    {"bottom_tee",         bottom_tee_bits,         bottom_tee_mask_bits,         16, 12,  8, 10},
+    /* mask BBX 16 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"box_spiral",         box_spiral_bits,         box_spiral_mask_bits,         16, 16,  8,  8},
+    /* mask BBX 12 16  -5 -15 → xHot= 5, yHot= 1 */
+    {"center_ptr",         center_ptr_bits,         center_ptr_mask_bits,         12, 16,  5,  1},
+    /* mask BBX 16 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"circle",             circle_bits,             circle_mask_bits,             16, 16,  8,  8},
+    /* mask BBX 15 16  -6 -13 → xHot= 6, yHot= 3 */
+    {"clock",              clock_bits,              clock_mask_bits,              15, 16,  6,  3},
+    /* mask BBX 16 16  -7  -7 → xHot= 7, yHot= 9 */
+    {"coffee_mug",         coffee_mug_bits,         coffee_mug_mask_bits,         16, 16,  7,  9},
+    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
+    {"cross",              cross_bits,              cross_mask_bits,              16, 16,  7,  7},
+    /* mask BBX 16 15  -7  -8 → xHot= 7, yHot= 7 */
+    {"cross_reverse",      cross_reverse_bits,      cross_reverse_mask_bits,      16, 15,  7,  7},
+    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
+    {"crosshair",          crosshair_bits,          crosshair_mask_bits,          16, 16,  7,  7},
+    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
+    {"diamond_cross",      diamond_cross_bits,      diamond_cross_mask_bits,      16, 16,  7,  7},
+    /* mask BBX 12 12  -6  -6 → xHot= 6, yHot= 6 */
+    {"dot",                dot_bits,                dot_mask_bits,                12, 12,  6,  6},
+    /* mask BBX 14 14  -7  -8 → xHot= 7, yHot= 6 */
+    {"dotbox",             dotbox_bits,             dotbox_mask_bits,             14, 14,  7,  6},
+    /* mask BBX 12 16  -6  -8 → xHot= 6, yHot= 8 */
+    {"double_arrow",       double_arrow_bits,       double_arrow_mask_bits,       12, 16,  6,  8},
+    /* mask BBX 15 16 -14 -16 → xHot=14, yHot= 0 */
+    {"draft_large",        draft_large_bits,        draft_large_mask_bits,        15, 16, 14,  0},
+    /* mask BBX 15 15 -14 -15 → xHot=14, yHot= 0 */
+    {"draft_small",        draft_small_bits,        draft_small_mask_bits,        15, 15, 14,  0},
+    /* mask BBX 14 14  -7  -8 → xHot= 7, yHot= 6 */
+    {"draped_box",         draped_box_bits,         draped_box_mask_bits,         14, 14,  7,  6},
+    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
+    {"exchange",           exchange_bits,           exchange_mask_bits,           16, 16,  7,  7},
+    /* mask BBX 16 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"fleur",              fleur_bits,              fleur_mask_bits,              16, 16,  8,  8},
+    /* mask BBX 16 16 -14 -13 → xHot=14, yHot= 3 */
+    {"gobbler",            gobbler_bits,            gobbler_mask_bits,            16, 16, 14,  3},
+    /* mask BBX 16 16  -2 -16 → xHot= 2, yHot= 0 */
+    {"gumby",              gumby_bits,              gumby_mask_bits,              16, 16,  2,  0},
+    /* mask BBX 13 16 -12 -16 → xHot=12, yHot= 0 */
+    {"hand1",              hand1_bits,              hand1_mask_bits,              13, 16, 12,  0},
+    /* mask BBX 16 16   0 -15 → xHot= 0, yHot= 1 */
+    {"hand2",              hand2_bits,              hand2_mask_bits,              16, 16,  0,  1},
+    /* mask BBX 15 14  -6  -6 → xHot= 6, yHot= 8 */
+    {"heart",              heart_bits,              heart_mask_bits,              15, 14,  6,  8},
+    /* mask BBX 16 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"icon",               icon_bits,               icon_mask_bits,               16, 16,  8,  8},
+    /* mask BBX 16 16  -8  -9 → xHot= 8, yHot= 7 */
+    {"iron_cross",         iron_cross_bits,         iron_cross_mask_bits,         16, 16,  8,  7},
+    /* mask BBX 10 16  -1 -15 → xHot= 1, yHot= 1 */
+    {"left_ptr",           left_ptr_bits,           left_ptr_mask_bits,           10, 16,  1,  1},
+    /* mask BBX 16 15  -1  -8 → xHot= 1, yHot= 7 */
+    {"left_side",          left_side_bits,          left_side_mask_bits,          16, 15,  1,  7},
+    /* mask BBX 12 16  -1  -8 → xHot= 1, yHot= 8 */
+    {"left_tee",           left_tee_bits,           left_tee_mask_bits,           12, 16,  1,  8},
+    /* mask BBX 15 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"leftbutton",         leftbutton_bits,         leftbutton_mask_bits,         15, 16,  8,  8},
+    /* mask BBX 12 12  -1  -2 → xHot= 1, yHot=10 */
+    {"ll_angle",           ll_angle_bits,           ll_angle_mask_bits,           12, 12,  1, 10},
+    /* mask BBX 12 12 -10  -2 → xHot=10, yHot=10 */
+    {"lr_angle",           lr_angle_bits,           lr_angle_mask_bits,           12, 12, 10, 10},
+    /* mask BBX 16 16 -14 -11 → xHot=14, yHot= 5 */
+    {"man",                man_bits,                man_mask_bits,                16, 16, 14,  5},
+    /* mask BBX 15 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"middlebutton",       middlebutton_bits,       middlebutton_mask_bits,       15, 16,  8,  8},
+    /* mask BBX 16 16  -4 -15 → xHot= 4, yHot= 1 */
+    {"mouse",              mouse_bits,              mouse_mask_bits,              16, 16,  4,  1},
+    /* mask BBX 13 16 -11  -1 → xHot=11, yHot=15 */
+    {"pencil",             pencil_bits,             pencil_mask_bits,             13, 16, 11, 15},
+    /* mask BBX 16 16  -7  -4 → xHot= 7, yHot=12 */
+    {"pirate",             pirate_bits,             pirate_mask_bits,             16, 16,  7, 12},
+    /* mask BBX 12 12  -5  -6 → xHot= 5, yHot= 6 */
+    {"plus",               plus_bits,               plus_mask_bits,               12, 12,  5,  6},
+    /* mask BBX 11 16  -5  -8 → xHot= 5, yHot= 8 */
+    {"question_arrow",     question_arrow_bits,     question_arrow_mask_bits,     11, 16,  5,  8},
+    /* mask BBX 10 16  -8 -15 → xHot= 8, yHot= 1 */
+    {"right_ptr",          right_ptr_bits,          right_ptr_mask_bits,          10, 16,  8,  1},
+    /* mask BBX 16 15 -14  -8 → xHot=14, yHot= 7 */
+    {"right_side",         right_side_bits,         right_side_mask_bits,         16, 15, 14,  7},
+    /* mask BBX 12 16 -10  -8 → xHot=10, yHot= 8 */
+    {"right_tee",          right_tee_bits,          right_tee_mask_bits,          12, 16, 10,  8},
+    /* mask BBX 15 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"rightbutton",        rightbutton_bits,        rightbutton_mask_bits,        15, 16,  8,  8},
+    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
+    {"rtl_logo",           rtl_logo_bits,           rtl_logo_mask_bits,           16, 16,  7,  7},
+    /* mask BBX 16 16  -8 -16 → xHot= 8, yHot= 0 */
+    {"sailboat",           sailboat_bits,           sailboat_mask_bits,           16, 16,  8,  0},
+    /* mask BBX  9 16  -4  -1 → xHot= 4, yHot=15 */
+    {"sb_down_arrow",      sb_down_arrow_bits,      sb_down_arrow_mask_bits,       9, 16,  4, 15},
+    /* mask BBX 15  9  -7  -5 → xHot= 7, yHot= 4 */
+    {"sb_h_double_arrow",  sb_h_double_arrow_bits,  sb_h_double_arrow_mask_bits,  15,  9,  7,  4},
+    /* mask BBX 16  9   0  -5 → xHot= 0, yHot= 4 */
+    {"sb_left_arrow",      sb_left_arrow_bits,      sb_left_arrow_mask_bits,      16,  9,  0,  4},
+    /* mask BBX 16  9 -15  -5 → xHot=15, yHot= 4 */
+    {"sb_right_arrow",     sb_right_arrow_bits,     sb_right_arrow_mask_bits,     16,  9, 15,  4},
+    /* mask BBX  9 16  -4 -16 → xHot= 4, yHot= 0 */
+    {"sb_up_arrow",        sb_up_arrow_bits,        sb_up_arrow_mask_bits,         9, 16,  4,  0},
+    /* mask BBX  9 15  -4  -8 → xHot= 4, yHot= 7 */
+    {"sb_v_double_arrow",  sb_v_double_arrow_bits,  sb_v_double_arrow_mask_bits,   9, 15,  4,  7},
+    /* mask BBX 16 16 -11 -16 → xHot=11, yHot= 0 */
+    {"shuttle",            shuttle_bits,            shuttle_mask_bits,            16, 16, 11,  0},
+    /* mask BBX 16 16  -8  -8 → xHot= 8, yHot= 8 */
+    {"sizing",             sizing_bits,             sizing_mask_bits,             16, 16,  8,  8},
+    /* mask BBX 16 16  -6  -9 → xHot= 6, yHot= 7 */
+    {"spider",             spider_bits,             spider_mask_bits,             16, 16,  6,  7},
+    /* mask BBX 12 16 -10 -14 → xHot=10, yHot= 2 */
+    {"spraycan",           spraycan_bits,           spraycan_mask_bits,           12, 16, 10,  2},
+    /* mask BBX 16 16  -7  -9 → xHot= 7, yHot= 7 */
+    {"star",               star_bits,               star_mask_bits,               16, 16,  7,  7},
+    /* mask BBX 16 14  -7  -7 → xHot= 7, yHot= 7 */
+    {"target",             target_bits,             target_mask_bits,             16, 14,  7,  7},
+    /* mask BBX 15 15  -7  -8 → xHot= 7, yHot= 7 */
+    {"tcross",             tcross_bits,             tcross_mask_bits,             15, 15,  7,  7},
+    /* mask BBX 16 16  -1 -15 → xHot= 1, yHot= 1 */
+    {"top_left_arrow",     top_left_arrow_bits,     top_left_arrow_mask_bits,     16, 16,  1,  1},
+    /* mask BBX 16 16  -1 -15 → xHot= 1, yHot= 1 */
+    {"top_left_corner",    top_left_corner_bits,    top_left_corner_mask_bits,    16, 16,  1,  1},
+    /* mask BBX 16 16 -14 -15 → xHot=14, yHot= 1 */
+    {"top_right_corner",   top_right_corner_bits,   top_right_corner_mask_bits,   16, 16, 14,  1},
+    /* mask BBX 15 16  -7 -15 → xHot= 7, yHot= 1 */
+    {"top_side",           top_side_bits,           top_side_mask_bits,           15, 16,  7,  1},
+    /* mask BBX 16 12  -8 -11 → xHot= 8, yHot= 1 */
+    {"top_tee",            top_tee_bits,            top_tee_mask_bits,            16, 12,  8,  1},
+    /* mask BBX  9 16  -4 -16 → xHot= 4, yHot= 0 */
+    {"trek",               trek_bits,               trek_mask_bits,                9, 16,  4,  0},
+    /* mask BBX 12 12  -1 -11 → xHot= 1, yHot= 1 */
+    {"ul_angle",           ul_angle_bits,           ul_angle_mask_bits,           12, 12,  1,  1},
+    /* mask BBX 16 16  -8 -14 → xHot= 8, yHot= 2 */
+    {"umbrella",           umbrella_bits,           umbrella_mask_bits,           16, 16,  8,  2},
+    /* mask BBX 12 12 -10 -11 → xHot=10, yHot= 1 */
+    {"ur_angle",           ur_angle_bits,           ur_angle_mask_bits,           12, 12, 10,  1},
+    /* mask BBX 16 16 -15  -7 → xHot=15, yHot= 9 */
+    {"watch",              watch_bits,              watch_mask_bits,              16, 16, 15,  9},
+    /* mask BBX  9 16  -4  -8 → xHot= 4, yHot= 8 */
+    {"xterm",              xterm_bits,              xterm_mask_bits,               9, 16,  4,  8},
     {NULL, NULL, NULL, 0, 0, 0, 0}
 };
 
@@ -270,36 +354,7 @@ static unsigned char* ParseXBMData(const char* data, int* width, int* height,
 static unsigned int ParseColor(const char* colorName);
 static GLFWcursor* CreateCursorFromImageData(const unsigned char* rgba,
       int width, int height, int xHot, int yHot);
-
-/*
- *----------------------------------------------------------------------
- *
- * NextCursorId --
- *
- *	Returns a unique opaque integer for use as info.cursor. The generic
- *	tkCursor.c layer uses this value as a hash key in cursorIdTable, so
- *	it must be unique per allocated cursor. It must NOT be the raw
- *	GLFWcursor pointer: glfwCreateStandardCursor may return the same
- *	pointer for two independently created cursors, which would cause
- *	TkcGetCursor to panic on "cursor already registered". The actual
- *	GLFW handle is stored separately in TkWaylandCursor.cursor and
- *	retrieved by TkpSetCursor.
- *
- * Results:
- *	A non-zero Tk_Cursor value, unique for the lifetime of the process.
- *
- * Side effects:
- *	Increments a static counter.
- *
- *----------------------------------------------------------------------
- */
-
-static Tk_Cursor
-NextCursorId(void)
-{
-    static Tcl_Size nextId = 1;
-    return (Tk_Cursor)(uintptr_t)(nextId++);
-}
+void TkpSetCursor(Cursor cursor);
 
 /*
  *----------------------------------------------------------------------
@@ -391,7 +446,7 @@ CreateCursorFromBitmapData(
     unsigned int fgColor,           /* Foreground color */
     unsigned int bgColor)           /* Background color */
 {
-    unsigned char* rgba = ConvertXBMToRGBA(source, mask, width, height, 
+    unsigned char* rgba = ConvertXBMToRGBA(source, mask, width, height,
                                           fgColor, bgColor);
     if (!rgba) {
         return NULL;
@@ -403,6 +458,14 @@ CreateCursorFromBitmapData(
     image.pixels = rgba;
 
     GLFWcursor* cursor = glfwCreateCursor(&image, xHot, yHot);
+
+    if (!cursor) {
+        const char* glfwError;
+        int code = glfwGetError(&glfwError);
+        if (code != 0) {
+            fprintf(stderr, "  GLFW error %d: %s\n", code, glfwError);
+        }
+    }
 
     Tcl_Free(rgba);
     return cursor;
@@ -624,7 +687,7 @@ LoadXBMFile(
     }
 
     /* Convert XBM to RGBA (black on white by default for XBM). */
-    *pixels = ConvertXBMToRGBA(xbmBits, NULL, *width, *height, 
+    *pixels = ConvertXBMToRGBA(xbmBits, NULL, *width, *height,
                                0xFF000000, 0xFFFFFFFF);
     Tcl_Free(xbmBits);
 
@@ -742,10 +805,10 @@ CreateCursorFromImageData(
 
 TkCursor *
 TkGetCursorByName(
-    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    Tk_Window tkwin,		/* Window in which cursor will be used. */
-    const char *string)		/* Description of cursor. See manual entry for
-				 * details on legal syntax. */
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    const char *string)
+
 {
     TkWaylandCursor *cursorPtr = NULL;
     Tcl_Size argc;
@@ -756,94 +819,77 @@ TkGetCursorByName(
     GLFWcursor* glfwCursor = NULL;
     unsigned int fgColor = 0xFF000000; /* Black */
     unsigned int bgColor = 0xFFFFFFFF; /* White */
-
-    (void)tkwin;	/* display/hash fields set by TkcGetCursor after we return */
+    int fileWidth = 0, fileHeight = 0; /* Captured for '@' file cursors. */
 
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
-	return NULL;
+        return NULL;
     }
     if (argc == 0) {
-	goto badString;
+        goto badString;
     }
 
     /*
-     * Check Tk specific table of cursor names for custom cursors.
+     * Check Tk-specific table first (currently only "none").
      */
-
     if (argv[0][0] != '@') {
-	for (tkCursorPtr = tkCursorNames; ; tkCursorPtr++) {
-	    if (tkCursorPtr->name == NULL) {
-		tkCursorPtr = NULL;
-		break;
-	    }
-	    if ((tkCursorPtr->name[0] == argv[0][0]) &&
-		    (strcmp(tkCursorPtr->name, argv[0]) == 0)) {
-		break;
-	    }
-	}
-    }
-
-    /* Check built-in cursor database. */
-    for (builtinPtr = builtinCursors; builtinPtr->name; builtinPtr++) {
-        if (strcmp(builtinPtr->name, argv[0]) == 0) {
-            break;
-        }
-    }
-
-    if ((argv[0][0] != '@') && (tkCursorPtr == NULL) && (builtinPtr->name == NULL)) {
-        /* Look for standard cursor shape. */
-        const struct CursorName *namePtr;
-
-        if (argc > 3) {
-            goto badString;
-        }
-
-        for (namePtr = cursorNames; ; namePtr++) {
-            if (namePtr->name == NULL) {
-                /* Not found, use default arrow cursor. */
-                standardShape = GLFW_ARROW_CURSOR;
+        for (tkCursorPtr = tkCursorNames; ; tkCursorPtr++) {
+            if (tkCursorPtr->name == NULL) {
+                tkCursorPtr = NULL;
                 break;
             }
-            if ((namePtr->name[0] == argv[0][0])
-                    && (strcmp(namePtr->name, argv[0]) == 0)) {
+            if ((tkCursorPtr->name[0] == argv[0][0]) &&
+                    (strcmp(tkCursorPtr->name, argv[0]) == 0)) {
+                break;
+            }
+        }
+    }
+
+    /*
+     * Check GLFW standard cursor table NEXT — these take priority over
+     * the X11 bitmap fallbacks in builtinCursors[].
+     */
+    if ((argv[0][0] != '@') && (tkCursorPtr == NULL)) {
+        const struct CursorName *namePtr;
+        for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
+            if ((namePtr->name[0] == argv[0][0]) &&
+                    (strcmp(namePtr->name, argv[0]) == 0)) {
                 standardShape = namePtr->shape;
                 break;
             }
         }
+        /* standardShape stays -1 if not found in cursorNames[] */
+    }
 
-        /* Parse colors if provided. */
-        if (argc >= 2) {
-            fgColor = ParseColor(argv[1]);
+    /*
+     * Only fall through to builtinCursors[] when:
+     *  - not a '@' file spec
+     *  - not a tkCursorNames match
+     *  - not a GLFW standard shape match (standardShape == -1) OR
+     *    the matched GLFW shape is -1 (meaning the cursorNames entry
+     *    explicitly has no GLFW equivalent and wants the bitmap).
+     */
+    if ((argv[0][0] != '@') && (tkCursorPtr == NULL) && (standardShape == -1)) {
+        for (builtinPtr = builtinCursors; builtinPtr->name != NULL; builtinPtr++) {
+            if (strcmp(builtinPtr->name, argv[0]) == 0) {
+                break;
+            }
         }
-        if (argc >= 3) {
-            bgColor = ParseColor(argv[2]);
+        if (builtinPtr->name == NULL) {
+            builtinPtr = NULL;
         }
+    }
 
-        if (standardShape != -1) {
-            /* Create standard cursor (GLFW standard cursors ignore colors). */
-            glfwCursor = glfwCreateStandardCursor(standardShape);
-        } else {
-            /* Should have been caught by builtin check. */
-            goto badString;
-        }
-    } else if (builtinPtr->name != NULL) {
-        /* Create from built-in bitmap data (from x11_cursors.h). */
-        if (argc >= 2) {
-            fgColor = ParseColor(argv[1]);
-        }
-        if (argc >= 3) {
-            bgColor = ParseColor(argv[2]);
-        }
+    /* Parse optional color arguments. */
+    if (argc >= 2) {
+        fgColor = ParseColor(argv[1]);
+    }
+    if (argc >= 3) {
+        bgColor = ParseColor(argv[2]);
+    }
 
-        glfwCursor = CreateCursorFromBitmapData(builtinPtr->bits,
-                                                builtinPtr->mask,
-                                                builtinPtr->width,
-                                                builtinPtr->height,
-                                                builtinPtr->xHot,
-                                                builtinPtr->yHot,
-                                                fgColor,
-                                                bgColor);
-    } else if (argv[0][0] == '@') {
+    /* Dispatch to the appropriate cursor-creation path. */
+
+    if (argv[0][0] == '@') {
         /* File-based cursor. */
         if (Tcl_IsSafe(interp)) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -852,38 +898,24 @@ TkGetCursorByName(
             Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", (char *)NULL);
             goto cleanup;
         }
-
         if ((argc != 2) && (argc != 4)) {
             goto badString;
         }
-
-        /* Parse colors. */
-        if (argc == 2) {
-            fgColor = ParseColor(argv[1]);
-            bgColor = fgColor;
-        } else if (argc == 4) {
-            fgColor = ParseColor(argv[2]);
-            bgColor = ParseColor(argv[3]);
-        }
-
-        /* Load image file. */
         unsigned char* pixels = NULL;
-        int width, height;
-
-        if (!LoadImageFile(argv[0] + 1, &pixels, &width, &height)) {
+        if (!LoadImageFile(argv[0] + 1, &pixels, &fileWidth, &fileHeight)) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                     "could not load cursor file \"%s\"", argv[0] + 1));
             Tcl_SetErrorCode(interp, "TK", "CURSOR", "FILE", (char *)NULL);
             goto cleanup;
         }
-
-        /* Create cursor using CreateCursorFromImageData (hotspot defaults to center). */
-        glfwCursor = CreateCursorFromImageData(pixels, width, height, width/2, height/2);
+        glfwCursor = CreateCursorFromImageData(pixels, fileWidth, fileHeight,
+                                               fileWidth/2, fileHeight/2);
         Tcl_Free(pixels);
+        standardShape = -1; /* bitmap path */
+
     } else if (tkCursorPtr != NULL) {
-        /* Custom cursor from embedded XBM data. */
+        /* Tk built-in (currently only "none"). */
         if (strcmp(argv[0], "none") == 0) {
-            /* Create invisible cursor */
             unsigned char transparent[4] = {0, 0, 0, 0};
             GLFWimage image;
             image.width = 1;
@@ -891,21 +923,10 @@ TkGetCursorByName(
             image.pixels = transparent;
             glfwCursor = glfwCreateCursor(&image, 0, 0);
         } else {
-            /* Parse XBM data. */
             int width, height, xHot, yHot;
-            unsigned char* bits = ParseXBMData(tkCursorPtr->data, 
-                                              &width, &height, &xHot, &yHot);
+            unsigned char* bits = ParseXBMData(tkCursorPtr->data,
+                                               &width, &height, &xHot, &yHot);
             if (bits) {
-                /* Parse colors if provided. */
-                if (argc >= 2) {
-                    fgColor = ParseColor(argv[1]);
-                }
-                if (argc >= 3) {
-                    bgColor = ParseColor(argv[2]);
-                } else {
-                    bgColor = 0; /* Transparent background. */
-                }
-
                 unsigned char* mask = NULL;
                 if (tkCursorPtr->mask) {
                     int maskWidth, maskHeight;
@@ -913,24 +934,56 @@ TkGetCursorByName(
                                        &maskWidth, &maskHeight,
                                        &xHot, &yHot);
                 }
-
                 glfwCursor = CreateCursorFromBitmapData(bits, mask,
                                                        width, height,
                                                        xHot, yHot,
                                                        fgColor, bgColor);
-
                 Tcl_Free(bits);
                 if (mask) Tcl_Free(mask);
             }
         }
+        standardShape = -1; /* bitmap path */
+
+    } else if (standardShape != -1) {
+        /*
+         * GLFW standard cursor. standardShape was set from cursorNames[].
+         * These use the compositor's native cursor; do NOT hide it.
+         */
+        glfwCursor = glfwCreateStandardCursor(standardShape);
+
+    } else if (builtinPtr != NULL) {
+        /*
+         * X11 bitmap fallback for cursors that have no GLFW equivalent
+         * (shape == -1 in cursorNames[]). standardShape stays -1 so
+         * TkpSetCursor knows to hide the compositor cursor.
+         */
+        glfwCursor = CreateCursorFromBitmapData(builtinPtr->bits,
+                                                builtinPtr->mask,
+                                                builtinPtr->width,
+                                                builtinPtr->height,
+                                                builtinPtr->xHot,
+                                                builtinPtr->yHot,
+                                                fgColor,
+                                                bgColor);
+        /* standardShape == -1: TkpSetCursor hides compositor cursor. */
+
+    } else {
+        /* Unknown cursor name — fall back to arrow and log it. */
+        fprintf(stderr, "tkWaylandCursor: unknown cursor \"%s\", using arrow\n", string);
+        glfwCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+        standardShape = GLFW_ARROW_CURSOR;
     }
-	if (glfwCursor != NULL) {
+
+    if (glfwCursor != NULL) {
         cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
-        /* Completely clear the structure memory layout space. */
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
 
-        /* Explicitly safely initialize ALL TkCursor core header fields. */
-        cursorPtr->info.cursor = NextCursorId();
+        /*
+         * Use the struct pointer itself as the Tk_Cursor XID. 
+         * TkpSetCursor casts it straight back — no hash
+         * lookup needed.
+         */
+        cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
         cursorPtr->info.display = (tkwin != NULL) ? Tk_Display(tkwin) : NULL;
         cursorPtr->info.resourceRefCount = 1;
         cursorPtr->info.objRefCount = 0;
@@ -939,26 +992,64 @@ TkGetCursorByName(
         cursorPtr->info.idHashPtr = NULL;
         cursorPtr->info.nextPtr = NULL;
 
-        /* Initialize platform specific driver structures. */
         cursorPtr->cursor = glfwCursor;
         cursorPtr->standardShape = standardShape;
-        
-        if (builtinPtr && builtinPtr->name) {
+
+        if (standardShape != -1) {
+            /*
+             * GLFW standard shape: the compositor owns the actual cursor
+             * image so there are no local bitmap dimensions to record.
+             * Use a nominal nonzero size so that no downstream caller
+             * misinterprets width==0 as an invalid or empty cursor.
+             */
+            cursorPtr->width = 16;
+            cursorPtr->height = 16;
+        } else if (builtinPtr != NULL && builtinPtr->name != NULL) {
+            /* X11 bitmap fallback: record the true bitmap dimensions. */
             cursorPtr->width = builtinPtr->width;
             cursorPtr->height = builtinPtr->height;
         } else if (strcmp(argv[0], "none") == 0) {
+            /* Invisible 1×1 cursor. */
             cursorPtr->width = 1;
             cursorPtr->height = 1;
         } else {
-            cursorPtr->width = 0;
-            cursorPtr->height = 0;
+            cursorPtr->width = fileWidth;
+            cursorPtr->height = fileHeight;
+        }
+
+        /*
+         * Capture the GLFW window at allocation time by walking up to the
+         * toplevel. TkpSetCursor receives only a bare Cursor XID with no
+         * window argument, so this is the only opportunity to record which
+         * GLFW window the cursor belongs to.
+         */
+        {
+            TkWindow *w = (TkWindow *) tkwin;
+            cursorPtr->glfwWindow = NULL;
+            while (w != NULL) {
+                GLFWwindow *gw = TkWaylandGetGLFWwindow(w);
+                if (gw != NULL) {
+                    cursorPtr->glfwWindow = gw;
+                    break;
+                }
+                w = w->parentPtr;
+            }
         }
     }
-
-  cleanup:
+    
+cleanup:
     if (argv != NULL) {
         Tcl_Free(argv);
     }
+
+    /* 
+     * We have the cursor data. Force the updating and 
+     * display of the cursor.
+     */
+    if (cursorPtr != NULL && tkwin != NULL) {
+        TkpSetCursor( (Cursor) cursorPtr->info.cursor );
+    }
+
     return (TkCursor *) cursorPtr;
 
   badString:
@@ -1018,9 +1109,9 @@ TkCreateCursorFromData(
     if (glfwCursor != NULL) {
         TkWaylandCursor *cursorPtr = (TkWaylandCursor *)Tcl_Alloc(sizeof(TkWaylandCursor));
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
-        
+
         /* Initialize core header fields. */
-        cursorPtr->info.cursor = NextCursorId();
+        cursorPtr->info.cursor = (Tk_Cursor) cursorPtr;
         cursorPtr->info.display = NULL; /* Will be overwritten/assigned by core TkcGetCursor. */
         cursorPtr->info.resourceRefCount = 1;
         cursorPtr->info.objRefCount = 0;
@@ -1031,7 +1122,8 @@ TkCreateCursorFromData(
 
         /* Initialize custom platform properties. */
         cursorPtr->cursor = glfwCursor;
-        cursorPtr->standardShape = -1; 
+        cursorPtr->glfwWindow = NULL;	/* No tkwin available; set by caller if needed. */
+        cursorPtr->standardShape = -1;
         cursorPtr->width = width;
         cursorPtr->height = height;
         return (TkCursor *) cursorPtr;
@@ -1080,39 +1172,63 @@ TkpFreeCursor(
  *
  * TkpSetCursor --
  *
- *	Set the cursor for a window. This is called from tkCursor.c.
+ *	Set the current cursor and install it. Called by UpdateCursor in
+ *	tkPointer.c with the Tk_Cursor XID extracted from winPtr->atts.cursor.
+ *
+ *	Since info.cursor is set to the TkWaylandCursor pointer itself
+ *	(matching the macOS pattern), we cast directly back with no hash
+ *	table lookup. The GLFW window was captured at cursor-creation time
+ *	in TkGetCursorByName, so no window argument or generic-layer access
+ *	is needed here.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Changes the window's cursor.
+ *	Changes the cursor displayed in the GLFW window.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpSetCursor(
-    TkWindow *winPtr,		/* Window to set cursor for. */
-    TkCursor *cursorPtr)	/* New cursor, or NULL for default. */
+    Cursor cursor)		/* Tk_Cursor from winPtr->atts.cursor, or None. */
 {
-    TkWaylandCursor *waylandCursorPtr = (TkWaylandCursor *) cursorPtr;
+    static TkWaylandCursor *gCurrentCursor = NULL;
+    TkWaylandCursor *waylandCursorPtr = NULL;
+    GLFWwindow *window = NULL;
 
-    /*
-     * Tk_WindowId() returns the X Window XID (an integer), not a pointer,
-     * so it cannot be cast to GLFWwindow*. Retrieve the GLFWwindow through
-     * the backend accessor instead.
-     */
-    GLFWwindow *window = TkWaylandGetGLFWwindow(winPtr);
-
-    if (window != NULL) {
-        if (waylandCursorPtr != NULL && waylandCursorPtr->cursor != NULL) {
-            glfwSetCursor(window, waylandCursorPtr->cursor);
-        } else {
-            /* Set to default arrow cursor. */
-            glfwSetCursor(window, NULL);
+    if (cursor == None) {
+        /*
+         * Restore the default cursor on whichever window last held a custom
+         * one, then clear the record.
+         */
+        if (gCurrentCursor != NULL && gCurrentCursor->glfwWindow != NULL) {
+            glfwSetCursor(gCurrentCursor->glfwWindow, NULL);
+            glfwSetInputMode(gCurrentCursor->glfwWindow,
+                GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
+        gCurrentCursor = NULL;
+        return;
     }
+
+    waylandCursorPtr = (TkWaylandCursor *)(uintptr_t) cursor;
+    if (gCurrentCursor == waylandCursorPtr) {
+        return;
+    }
+    gCurrentCursor = waylandCursorPtr;
+
+    window = waylandCursorPtr->glfwWindow;
+    if (window == NULL) {
+        return;
+    }
+
+    if (waylandCursorPtr->cursor == NULL) {
+        glfwSetCursor(window, NULL);
+    } else {
+        glfwSetCursor(window, waylandCursorPtr->cursor);
+    }
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 /*

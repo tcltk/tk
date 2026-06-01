@@ -3721,7 +3721,20 @@ UpdateGeometryInfo(
 	if (tw < 180) {
 	    tw = 180;
 	}
-	/* Ask GLFW to resize the window. */
+ 	/* When GFLW initially creates a window it assumes that the window
+ 	 * will open on a screen with pixel scale factor 1.0, even if there is
+ 	 * no such screen on the system.  If this resize happens before GLFW
+ 	 * has called the WindowContentScaleFactorCallback then GLFW will
+ 	 * allocate a back buffer that has the same size as the window.  If
+ 	 * the window has odd width or height, and if the scale factor is
+ 	 * actually 2, then Wayland will generate an error and remove the
+ 	 * window from the screen.  The actual removal is asynchronous and
+ 	 * likely to happen after the window has been fully rendered, which
+ 	 * leads to pretty bad UX.
+ 	 */
+ 	printf("Calling PollEvents\n");
+ 	glfwPollEvents();
+ 	printf("Setting WindowSize\n");
         glfwSetWindowSize(glfwWindow, tw, th);
 
 	/* Update the window. */
@@ -4685,7 +4698,6 @@ XRestackWindows(
     return Success;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -4694,7 +4706,7 @@ XRestackWindows(
  *	Change one or more window attributes.
  *	We handle override-redirect (GLFW DECORATED hint) and the
  *	always-on-top semantic (GLFW FLOATING hint).  Other attributes
- *	such as background pixel, event mask, cursor, etc. are accepted
+ *	such as background pixel, event mask, etc. are accepted
  *	silently; they are managed by Tk's own machinery or are not
  *	meaningful in Wayland.
  *
@@ -4714,6 +4726,9 @@ XChangeWindowAttributes(
     unsigned long         valuemask,
     XSetWindowAttributes *attributes)
 {
+
+    fprintf(stderr, "XChangeWindowAttributes called: valuemask=0x%lx\n", valuemask);
+    fflush(stderr);
     GLFWwindow *gw;
 
     if (attributes == NULL) {
@@ -4730,7 +4745,16 @@ XChangeWindowAttributes(
             attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
 
-    /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, CWCursor …
+    if (valuemask & CWCursor) {
+        /*
+         * info.cursor is set to the TkWaylandCursor pointer itself, so
+         * attributes->cursor is already the platform struct cast to Cursor.
+         * Pass it directly to TkpSetCursor — no hash lookup needed.
+         */
+        TkpSetCursor(attributes->cursor);
+    }
+
+    /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
        All are maintained by Tk's own attribute tables; no GLFW action. */
 
     return Success;

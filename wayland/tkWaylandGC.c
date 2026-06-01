@@ -422,9 +422,7 @@ Tk_GetPixmap(
     int      height,
     TCL_UNUSED(int)) /* depth */
 {
-    printf("Tk_GetPixmap: drawable is %lx\n", drawable);
     TkWaylandPixmap *pixmapPtr;
-    //GLint            oldFBO;
     GLenum           status;
     GLFWwindow      *glfwWindow;
 

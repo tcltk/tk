@@ -219,8 +219,9 @@ typedef struct {
     int         offsetX;     /* Offset of child widget */
     int         offsetY;     /* Offset of child widget */
     int         nestedFrame; /* Frame within frame */
+    int         isPixmap;   /* Set to 1 if drawing to an off-screen FBO, 0 for Window */
+    GLuint      pixmapFbo;  /* Stores the active Pixmap FBO handle id */
 } TkWaylandDrawingContext;
-
 /*
  *----------------------------------------------------------------------
  *
