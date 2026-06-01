@@ -576,12 +576,36 @@ TkGlfwWindowContentScaleCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (winPtr && winPtr->privatePtr) {
-	winPtr->privatePtr->pixelRatio = xscale;
+    if (!winPtr || !winPtr->privatePtr) {
+	return;
     }
-    
+    winPtr->privatePtr->pixelRatio = xscale;
+
     fprintf(stderr, "TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
 	   winPtr->privatePtr->pixelRatio);
+
+    /*
+     * Clear the scale gate set in TkGlfwCreateWindow and queue the first
+     * real Expose now that GLFW and the compositor agree on the pixel ratio.
+     * The guard on scaleUnconfirmed ensures this branch runs only once (at
+     * first map); subsequent callbacks for monitor migration take the else
+     * path and just re-expose without touching the flag.
+     */
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+    if (infoPtr && (infoPtr->flags & scaleUnconfirmed)) {
+	infoPtr->flags &= ~scaleUnconfirmed;
+	fprintf(stderr, "TkGlfwWindowContentScaleCallback: scale confirmed,"
+		" queuing initial expose for %s\n", Tk_PathName(winPtr));
+	TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	    Tk_Width(winPtr), Tk_Height(winPtr));
+    } else {
+	/*
+	 * Monitor migration: scale changed on an already-visible window.
+	 * Re-expose so the window is redrawn at the new ratio.
+	 */
+	TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	    Tk_Width(winPtr), Tk_Height(winPtr));
+    }
 }
 
 /*
@@ -621,6 +645,22 @@ TkGlfwFramebufferSizeCallback(
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
 
     /*
+     * Guard against firing before TkGlfwCreateWindow has allocated the
+     * backing store FBO.  glfwShowWindow (called from TkGlfwCreateWindow)
+     * triggers a synchronous Wayland roundtrip that can invoke this callback
+     * before nvgluCreateFramebuffer has run, leaving fb uninitialized.
+     * Passing that garbage pointer to nvgluDeleteFramebuffer causes a SIGSEGV.
+     * fbReady is set by TkGlfwCreateWindow only after nvgluCreateFramebuffer
+     * succeeds, so this single flag subsumes both the NULL/garbage-pointer
+     * check and the scaleUnconfirmed check used previously.
+     */
+    if (!(infoPtr->flags & fbReady)) {
+	fprintf(stderr, "TkGlfwFramebufferSizeCallback: fb not ready for %s,"
+		" skipping\n", Tk_PathName(winPtr));
+	return;
+    }
+
+    /*
      * This is a workaround for a Wayland/Mesa bug. (see
      * https://github.com/alacritty/alacritty/issues/6069 and
      * https://github.com/servo/servo/issues/43050.)
@@ -648,26 +688,32 @@ TkGlfwFramebufferSizeCallback(
     }
 
     float pixelRatio = winPtr->privatePtr->pixelRatio;
-    
+
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
 	fprintf(stderr, "============================ No Context!\n");
 	return;
     }
 
-    /* Rebuild the backing store FBO */
+    /* Rebuild the backing store FBO. */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    fprintf(stderr, "New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fb,
-	   Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
+    if (winPtr->privatePtr->fb == NULL) {
+	fprintf(stderr, "TkGlfwFramebufferSizeCallback: failed to create"
+		" framebuffer for %s\n", Tk_PathName(winPtr));
+	return;
+    }
+    fprintf(stderr, "New framebuffer %p for %s with id %d\n",
+	    winPtr->privatePtr->fb, Tk_PathName(winPtr),
+	    winPtr->privatePtr->fb->fbo);
 
 #if 0
     /* Check for FBO completeness. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
-	       status);
+        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n",
+		winPtr->privatePtr->fb, status);
     } else {
 	fprintf(stderr, "FBO is complete.\n");
     }
@@ -676,8 +722,7 @@ TkGlfwFramebufferSizeCallback(
     /* Inform Tk about the size change, taking into account the
      * window's current pixel ratio.
      */
-    
-    winPtr->changes.width = (int) (((float) width) / pixelRatio);
+    winPtr->changes.width  = (int) (((float) width)  / pixelRatio);
     winPtr->changes.height = (int) (((float) height) / pixelRatio);
 
     /* Reconfigure the Tk window. */

@@ -306,6 +306,7 @@ static void InitializeGlfwWindow(TkWindow *winPtr);
 static void DestroyGlfwWindow(TkWindow *winPtr);
 static void ConvertPhotoToGlfwIcon(TkWindow *winPtr, Tk_PhotoHandle photo);
 static void ApplyFullscreenState(TkWindow *winPtr);
+extern void TkpSetCursor(Cursor cursor);
 
 /*
  * This defines the geometry manager for the window manager itself, as the

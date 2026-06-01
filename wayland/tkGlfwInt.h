@@ -121,9 +121,22 @@ extern const char *const WmAttributeNames[];
  */
 
 /* Flag values */
-#define needsDisplay 1
-#define dontSwap     2
-#define sizeChanged  4
+#define needsDisplay      1
+#define dontSwap          2
+#define sizeChanged       4
+#define scaleUnconfirmed  8  /* Set at window creation; cleared by the first
+                              * ContentScaleCallback.  While set, TkGlfwBeginDraw
+                              * skips the draw so that the compositor never sees a
+                              * surface presented at the wrong (pre-negotiation)
+                              * pixel ratio. */
+#define fbReady          16  /* Set in TkGlfwCreateWindow once
+                              * nvgluCreateFramebuffer succeeds.  Guards
+                              * TkGlfwFramebufferSizeCallback against calling
+                              * nvgluDeleteFramebuffer before the backing store
+                              * FBO exists.  glfwShowWindow (called from
+                              * TkGlfwCreateWindow) triggers a synchronous
+                              * Wayland roundtrip that can fire the callback
+                              * before the FBO has been allocated. */
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
