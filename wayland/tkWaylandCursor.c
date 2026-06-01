@@ -809,7 +809,6 @@ TkGetCursorByName(
     const char *string)
 
 {
-    fflush(stderr);
     TkWaylandCursor *cursorPtr = NULL;
     Tcl_Size argc;
     const char **argv = NULL;
