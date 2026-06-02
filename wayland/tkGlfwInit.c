@@ -319,7 +319,7 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
-    (void) x; (void) y; (void) width; (void) height;
+(void) x; (void) y; (void) width; (void) height;
 #if 0  // This experiment seems to have failed.
        // I don't know why.
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
@@ -713,22 +713,41 @@ TkGlfwBeginDraw(
 	fprintf(stderr, "BeginDraw: received pixmap %p\n", pixmap);
 	return TCL_OK;
     }
-    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
-    fprintf(stderr, "BeginDraw for %s @ %p\n", Tk_PathName(childPtr), childPtr);
-    TkWindow *winPtr = childPtr;
-    float x = 0, y = 0;
-    while (!Tk_IsTopLevel(winPtr)) {
-        x += winPtr->changes.x;
-	y += winPtr->changes.y;
-    	winPtr = winPtr->parentPtr;
-    }
-    fprintf(stderr, "BeginDraw: toplevel %s @ %p\n", Tk_PathName(winPtr), winPtr);
 
-    /*
-     * Now winPtr is the containing toplevel and the offsets of
-     * the child are given by x and y.
-     */
-    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
+	if (childPtr == NULL) {
+	    fprintf(stderr, "BeginDraw Error: NULL winPtr for drawable %lu\n",
+	            (unsigned long)drawable);
+	    return TCL_ERROR;
+	}
+	/* Guard against stale drawable->TkWindow mappings. */
+	if ((Window)drawable != childPtr->window) {
+	    fprintf(stderr, "BeginDraw Error: stale winPtr %p for drawable %lu\n",
+	            childPtr, (unsigned long)drawable);
+	    return TCL_ERROR;
+	}
+	fprintf(stderr, "BeginDraw for %s @ %p\n", Tk_PathName(childPtr), childPtr);
+	TkWindow *winPtr = childPtr;
+	float x = 0, y = 0;
+	while (winPtr != NULL && !Tk_IsTopLevel(winPtr)) {
+	    x += winPtr->changes.x;
+	    y += winPtr->changes.y;
+	    winPtr = winPtr->parentPtr;
+	}
+	if (winPtr == NULL) {
+	    fprintf(stderr, "BeginDraw Error: walked off window tree for drawable %lu\n",
+	            (unsigned long)drawable);
+	    return TCL_ERROR;
+	}
+	fprintf(stderr, "BeginDraw: toplevel %s @ %p\n", Tk_PathName(winPtr), winPtr);
+	
+	if (winPtr->privatePtr == NULL || winPtr->privatePtr->glfwWindow == NULL) {
+	    fprintf(stderr, "BeginDraw Error: no glfwWindow for toplevel %s\n",
+	            Tk_PathName(winPtr));
+	    return TCL_ERROR;
+	}
+	GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
     /* Set up the nanoVG drawing context for this nvgFrame */

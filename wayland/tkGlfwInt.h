@@ -28,6 +28,10 @@
 
 typedef struct NVGLUframebuffer NVGLUframebuffer;
 
+/* OpenGL handles double-buffering for Wayland. */
+#define TK_NO_DOUBLE_BUFFERING 1
+
+
 /* Forward declarations for GLES2 backend functions. */
 //NVGcontext* nvgCreateGLES2(int flags);
 //void nvgDeleteGLES2(NVGcontext* ctx);
