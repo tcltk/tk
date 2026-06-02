@@ -6,7 +6,7 @@
  * complex text input (Chinese, Japanese, Korean, etc.).
  *
  * Copyright © 2026 Kevin Walzer
- * Copyrigyt © Marc Culler. 
+ * Copyright © 2026 Marc Culler. 
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
