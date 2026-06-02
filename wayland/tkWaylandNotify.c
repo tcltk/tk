@@ -576,15 +576,12 @@ TkGlfwWindowContentScaleCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr || !winPtr->privatePtr) {
-	return;
+    if (winPtr && winPtr->privatePtr) {
+	winPtr->privatePtr->pixelRatio = xscale;
     }
-    winPtr->privatePtr->pixelRatio = xscale;
-
+    
     fprintf(stderr, "TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
 	   winPtr->privatePtr->pixelRatio);
-	TkWaylandQueueExposeEvent(winPtr, 0, 0,
-	    Tk_Width(winPtr), Tk_Height(winPtr));
 }
 
 /*
@@ -651,32 +648,26 @@ TkGlfwFramebufferSizeCallback(
     }
 
     float pixelRatio = winPtr->privatePtr->pixelRatio;
-
+    
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
 	fprintf(stderr, "============================ No Context!\n");
 	return;
     }
 
-    /* Rebuild the backing store FBO. */
+    /* Rebuild the backing store FBO */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    if (winPtr->privatePtr->fb == NULL) {
-	fprintf(stderr, "TkGlfwFramebufferSizeCallback: failed to create"
-		" framebuffer for %s\n", Tk_PathName(winPtr));
-	return;
-    }
-    fprintf(stderr, "New framebuffer %p for %s with id %d\n",
-	    winPtr->privatePtr->fb, Tk_PathName(winPtr),
-	    winPtr->privatePtr->fb->fbo);
+    fprintf(stderr, "New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fb,
+	   Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
 
 #if 0
     /* Check for FBO completeness. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n",
-		winPtr->privatePtr->fb, status);
+        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
+	       status);
     } else {
 	fprintf(stderr, "FBO is complete.\n");
     }
@@ -685,7 +676,8 @@ TkGlfwFramebufferSizeCallback(
     /* Inform Tk about the size change, taking into account the
      * window's current pixel ratio.
      */
-    winPtr->changes.width  = (int) (((float) width)  / pixelRatio);
+    
+    winPtr->changes.width = (int) (((float) width) / pixelRatio);
     winPtr->changes.height = (int) (((float) height) / pixelRatio);
 
     /* Reconfigure the Tk window. */

@@ -747,6 +747,7 @@ TkWmCleanup(
  *----------------------------------------------------------------------
  */
 
+#if 0
 Window
 Tk_MakeWindow(
     Tk_Window tkwin,
@@ -814,6 +815,80 @@ Tk_MakeWindow(
       TkWaylandQueueExposeEvent(winPtr, 0, 0,
 				winPtr->changes.width,
 				winPtr->changes.height);
+    }
+    return result;
+}
+#endif
+Window
+Tk_MakeWindow(
+    Tk_Window tkwin,
+    TCL_UNUSED(Window))        /* parent */
+{
+    TkWindow   *winPtr     = (TkWindow *)tkwin;
+    GLFWwindow *glfwWindow = NULL;
+    int         width, height;
+    Drawable    drawable;
+    Window      result;
+
+    fprintf(stderr, "Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
+    result = TkWaylandDrawableForTkWindow(winPtr);
+
+    /*
+     * Store the window ID now, before TkGlfwCreateWindow fires any GLFW
+     * callbacks or queues expose events.  The generic layer writes the same
+     * value back after we return, which is harmless.  Without this, any
+     * draw call that arrives before Tk_MakeWindow returns will find
+     * winPtr->window == None and be rejected by TkGlfwBeginDraw's guard.
+     */
+    winPtr->window = result;
+
+    if (Tk_IsTopLevel(winPtr)) {
+        /*
+         * -------------------------
+         *   TOPLEVEL WINDOW
+         * -------------------------
+         */
+        if (winPtr->privatePtr == NULL) {
+            winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+            Tcl_DStringInit(&winPtr->privatePtr->pendingText);
+        }
+        width  = (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
+        height = (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
+
+        /*
+         * Create the GLFW window and get a drawable ID.
+         * drawable is ignored; we use winPtr->window instead.
+         */
+        fprintf(stderr, "Creating glfwWindow %s at size %dx%d\n",
+               Tk_PathName(tkwin), width, height);
+        glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
+                                        Tk_Name(tkwin), &drawable);
+        if (!glfwWindow) {
+            winPtr->window = None;
+            return None;
+        }
+
+        /*
+         * Ensure WmInfo exists.
+         */
+        if (!winPtr->wmInfoPtr) {
+            TkWmNewWindow(winPtr);
+        }
+        WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+        if (wmPtr) {
+            wmPtr->flags |= WM_NEVER_MAPPED;
+        }
+    } else {
+        /*
+         * -------------------------
+         *     CHILD WINDOW
+         * -------------------------
+         */
+        fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
+               winPtr->changes.width, winPtr->changes.height);
+        TkWaylandQueueExposeEvent(winPtr, 0, 0,
+                                  winPtr->changes.width,
+                                  winPtr->changes.height);
     }
     return result;
 }
@@ -4742,7 +4817,7 @@ XChangeWindowAttributes(
          * attributes->cursor is already the platform struct cast to Cursor.
          * Pass it directly to TkpSetCursor — no hash lookup needed.
          */
-        TkpSetCursor(attributes->cursor);
+   //     TkpSetCursor(attributes->cursor);
     }
 
     /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
