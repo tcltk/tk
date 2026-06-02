@@ -6,6 +6,7 @@
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
+ * Copyright © 2026 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -121,22 +122,9 @@ extern const char *const WmAttributeNames[];
  */
 
 /* Flag values */
-#define needsDisplay      1
-#define dontSwap          2
-#define sizeChanged       4
-#define scaleUnconfirmed  8  /* Set at window creation; cleared by the first
-                              * ContentScaleCallback.  While set, TkGlfwBeginDraw
-                              * skips the draw so that the compositor never sees a
-                              * surface presented at the wrong (pre-negotiation)
-                              * pixel ratio. */
-#define fbReady          16  /* Set in TkGlfwCreateWindow once
-                              * nvgluCreateFramebuffer succeeds.  Guards
-                              * TkGlfwFramebufferSizeCallback against calling
-                              * nvgluDeleteFramebuffer before the backing store
-                              * FBO exists.  glfwShowWindow (called from
-                              * TkGlfwCreateWindow) triggers a synchronous
-                              * Wayland roundtrip that can fire the callback
-                              * before the FBO has been allocated. */
+#define needsDisplay 1
+#define dontSwap     2
+#define sizeChanged  4
 
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;

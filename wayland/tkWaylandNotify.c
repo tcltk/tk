@@ -583,29 +583,8 @@ TkGlfwWindowContentScaleCallback(
 
     fprintf(stderr, "TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
 	   winPtr->privatePtr->pixelRatio);
-
-    /*
-     * Clear the scale gate set in TkGlfwCreateWindow and queue the first
-     * real Expose now that GLFW and the compositor agree on the pixel ratio.
-     * The guard on scaleUnconfirmed ensures this branch runs only once (at
-     * first map); subsequent callbacks for monitor migration take the else
-     * path and just re-expose without touching the flag.
-     */
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-    if (infoPtr && (infoPtr->flags & scaleUnconfirmed)) {
-	infoPtr->flags &= ~scaleUnconfirmed;
-	fprintf(stderr, "TkGlfwWindowContentScaleCallback: scale confirmed,"
-		" queuing initial expose for %s\n", Tk_PathName(winPtr));
 	TkWaylandQueueExposeEvent(winPtr, 0, 0,
 	    Tk_Width(winPtr), Tk_Height(winPtr));
-    } else {
-	/*
-	 * Monitor migration: scale changed on an already-visible window.
-	 * Re-expose so the window is redrawn at the new ratio.
-	 */
-	TkWaylandQueueExposeEvent(winPtr, 0, 0,
-	    Tk_Width(winPtr), Tk_Height(winPtr));
-    }
 }
 
 /*
@@ -643,22 +622,6 @@ TkGlfwFramebufferSizeCallback(
     }
     fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-
-    /*
-     * Guard against firing before TkGlfwCreateWindow has allocated the
-     * backing store FBO.  glfwShowWindow (called from TkGlfwCreateWindow)
-     * triggers a synchronous Wayland roundtrip that can invoke this callback
-     * before nvgluCreateFramebuffer has run, leaving fb uninitialized.
-     * Passing that garbage pointer to nvgluDeleteFramebuffer causes a SIGSEGV.
-     * fbReady is set by TkGlfwCreateWindow only after nvgluCreateFramebuffer
-     * succeeds, so this single flag subsumes both the NULL/garbage-pointer
-     * check and the scaleUnconfirmed check used previously.
-     */
-    if (!(infoPtr->flags & fbReady)) {
-	fprintf(stderr, "TkGlfwFramebufferSizeCallback: fb not ready for %s,"
-		" skipping\n", Tk_PathName(winPtr));
-	return;
-    }
 
     /*
      * This is a workaround for a Wayland/Mesa bug. (see

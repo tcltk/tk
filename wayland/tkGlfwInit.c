@@ -596,12 +596,8 @@ TkGlfwCreateWindow(
 	}
 	glfwMakeContextCurrent(glfwWindow);
 	glfwSwapInterval(0);
-	/*
-	 * Note: glfwShowWindow is called AFTER createGlfwTkInfo,
-	 * glfwSetWindowUserPointer, and TkGlfwSetupCallbacks so that
-	 * the ContentScaleCallback (which fires on map) already has a
-	 * valid infoPtr to clear the scaleUnconfirmed flag against.
-	 */
+	glfwShowWindow(glfwWindow);
+	glfwSwapBuffers(glfwWindow);
     }
     glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
     fprintf(stderr, "nvgContext for %s is at %p\n", Tk_PathName(winPtr),
@@ -611,29 +607,16 @@ TkGlfwCreateWindow(
     }
     glfwSetWindowUserPointer(glfwWindow, infoPtr);
     TkGlfwSetupCallbacks(glfwWindow);
-
-    /*
-     * Gate drawing until the compositor confirms the pixel ratio.  Set
-     * the flag here, after callbacks are registered, so the very first
-     * ContentScaleCallback (fired during glfwShowWindow below) can clear
-     * it immediately.  For the root window the flag is also set; its
-     * scale callback fires the same way.
-     */
-    infoPtr->flags |= scaleUnconfirmed;
-
-    if (glfwWindow != mainGlfwWindow) {
-	glfwShowWindow(glfwWindow);
-	glfwSwapBuffers(glfwWindow);
-    }
     winPtr->privatePtr->glfwWindow = glfwWindow;
     winPtr->changes.width  = width;
     winPtr->changes.height = height;
 
     /* Set the initial pixel ratio for this window. */
     int fbWidth, fbHeight;
-    float xscale, yscale;
-    glfwGetWindowContentScale(glfwWindow, &xscale, &yscale);
-    winPtr->privatePtr->pixelRatio = xscale;
+    //float xscale, yscale;
+    //glfwGetWindowContentScale(glfwWindow, &xscale, &yscale);
+    //winPtr->privatePtr->pixelRatio = xscale;
+    winPtr->privatePtr->pixelRatio = 0;
     fprintf(stderr, "Initial pixel ratio for %s is %f\n",
 	   Tk_PathName(winPtr), winPtr->privatePtr->pixelRatio);
 
@@ -643,15 +626,7 @@ TkGlfwCreateWindow(
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
 						     fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fb == NULL) {
-	    fprintf(stderr, "Could not create NanoVG framebuffer\n");
-    } else {
-	/*
-	 * Mark the FBO as ready.  TkGlfwFramebufferSizeCallback gates on this
-	 * flag to avoid calling nvgluDeleteFramebuffer on an uninitialized
-	 * pointer: glfwShowWindow (above) can fire the callback synchronously
-	 * via a Wayland roundtrip before we reach this line.
-	 */
-	infoPtr->flags |= fbReady;
+		fprintf(stderr, "Could not create NanoVG framebuffer\n");
     }
     fprintf(stderr, "Window %s has glfwWindow %p and framebuffer %p\n",
 	   Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fb);
@@ -668,12 +643,9 @@ TkGlfwCreateWindow(
     if (drawableOut) {
 	*drawableOut = TkWaylandDrawableForTkWindow(winPtr);
     }
-    /*
-     * Do NOT queue an Expose here.  The window is gated by scaleUnconfirmed
-     * and would be silently dropped by TkGlfwBeginDraw anyway.  The
-     * ContentScaleCallback queues the first real Expose once the compositor
-     * has confirmed the pixel ratio.
-     */
+    if (winPtr != NULL) {
+        TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
+    }
     return glfwWindow;
 }
 
@@ -759,19 +731,7 @@ TkGlfwBeginDraw(
     GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
-    /*
-     * If the compositor has not yet confirmed the pixel ratio for this
-     * window, skip the draw entirely.  The ContentScaleCallback will
-     * clear scaleUnconfirmed and queue a fresh Expose so the window is
-     * drawn correctly at the negotiated scale.
-     */
-    if (infoPtr->flags & scaleUnconfirmed) {
-	fprintf(stderr, "BeginDraw: scale not yet confirmed for %s, deferring\n",
-		Tk_PathName(winPtr));
-	return TCL_ERROR;
-    }
-
-    /* Set up the nanoVG drawing context for this nvgFrame. */
+    /* Set up the nanoVG drawing context for this nvgFrame */
     dcPtr->vg = infoPtr->context.vg; 
     dcPtr->drawable = drawable;
 

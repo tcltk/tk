@@ -319,7 +319,7 @@ char *
 XKeysymToString(KeySym keysym)
 {
     //// When does this get called?
-    printf("XkeysymToString for keysym %ld\n", keysym);
+   // printf("XkeysymToString for keysym %ld\n", keysym);
     static char buffer[64];
 
     /*
