@@ -1192,37 +1192,51 @@ TkpFreeCursor(
 
 void
 TkpSetCursor(
-    Cursor cursor)		/* Tk_Cursor from winPtr->atts.cursor, or None. */
+    Cursor cursor)		/* Tk_Cursor or None */
 {
-    static TkWaylandCursor *gCurrentCursor = NULL;
-    TkWaylandCursor *waylandCursorPtr = NULL;
-    GLFWwindow *window = NULL;
+    static Tcl_HashTable gCursorCache;
+    static int          gCursorCacheInitialized = 0;
+
+    TkWaylandCursor *waylandCursorPtr;
+    GLFWwindow *window;
+    Tcl_HashEntry *entry;
+    int isNew;
+
+    /* Initialize cursor cache on first use. */
+    if (!gCursorCacheInitialized) {
+        Tcl_InitHashTable(&gCursorCache, TCL_ONE_WORD_KEYS);
+        gCursorCacheInitialized = 1;
+    }
 
     if (cursor == None) {
-        /*
-         * Restore the default cursor on whichever window last held a custom
-         * one, then clear the record.
-         */
-        if (gCurrentCursor != NULL && gCurrentCursor->glfwWindow != NULL) {
-            glfwSetCursor(gCurrentCursor->glfwWindow, NULL);
-            glfwSetInputMode(gCurrentCursor->glfwWindow,
-                GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-        gCurrentCursor = NULL;
+        Tcl_DeleteHashTable(&gCursorCache);
+        Tcl_InitHashTable(&gCursorCache, TCL_ONE_WORD_KEYS);
         return;
     }
 
-    waylandCursorPtr = (TkWaylandCursor *)(uintptr_t) cursor;
-    if (gCurrentCursor == waylandCursorPtr) {
-        return;
-    }
-    gCurrentCursor = waylandCursorPtr;
+    waylandCursorPtr = (TkWaylandCursor *)(uintptr_t)cursor;
 
     window = waylandCursorPtr->glfwWindow;
     if (window == NULL) {
         return;
     }
 
+    /* Check cache for this specific window. */
+    entry = Tcl_FindHashEntry(&gCursorCache, (char *)window);
+    if (entry != NULL) {
+        TkWaylandCursor *cached = (TkWaylandCursor *)Tcl_GetHashValue(entry);
+        if (cached == waylandCursorPtr) {
+            return;                    /* No change — best case. */
+        }
+    }
+
+    /* If necessary, update cache. */
+    if (entry == NULL) {
+        entry = Tcl_CreateHashEntry(&gCursorCache, (char *)window, &isNew);
+    }
+    Tcl_SetHashValue(entry, waylandCursorPtr);
+
+    /* Apply cursor. */
     if (waylandCursorPtr->cursor == NULL) {
         glfwSetCursor(window, NULL);
     } else {
