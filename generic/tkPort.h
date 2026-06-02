@@ -25,6 +25,9 @@
 #	include "tkMacOSXPort.h"
 #   else
 #	include "tkUnixPort.h"
+#       if defined(TK_USE_WAYLAND)
+#            include "tkWaylandPort.h"
+#       endif
 #   endif
 #endif
 
