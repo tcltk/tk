@@ -37,45 +37,6 @@ grid $w.hsb         -in $w.container -sticky nsew
 grid column $w.container 0 -weight 1
 grid row    $w.container 0 -weight 1
 
-set upArrowData {
-    <?xml version="1.0" encoding="UTF-8"?>
-    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="m4 4 4-4 4 4z" fill="%s"/>
-    </svg>
-}
-
-set downArrowData {
-    <?xml version="1.0" encoding="UTF-8"?>
-    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="m4 0 4 4 4-4z" fill="%s"/>
-    </svg>
-}
-
-proc createArrowImages {} {
-    set fgColor [ttk::style lookup . -foreground {} black]
-    lassign [winfo rgb . $fgColor] r g b
-    set fgColor [format "#%02x%02x%02x" \
-	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
-
-    foreach dir {up down} {
-	upvar ${dir}ArrowData imgData
-	set data [format $imgData $fgColor]
-	image create photo ${dir}Arrow -format $::tk::svgFmt -data $data]
-    }
-}
-
-createArrowImages
-foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
-    bind MCList $event { createArrowImages }
-}
-unset event
-
-image create photo noArrow -format $tk::svgFmt -data {
-    <?xml version="1.0" encoding="UTF-8"?>
-    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    </svg>
-}
-
 ## The data we're going to insert
 set data {
     Argentina		{Buenos Aires}		ARS
@@ -97,10 +58,11 @@ set data {
 
 ## Code to insert the data nicely
 set font [ttk::style lookup Heading -font {} TkDefaultFont]
-set morePx [expr {[image width noArrow] + round(4 * $tk::scalingPct / 100.0)}]
+set arrowWidth [expr {2 * round(4 * $tk::scalingPct / 100.0) + 1}]
+set morePx [expr {3 + $arrowWidth + 2}]
 foreach col {country capital currency} name {Country Capital Currency} {
-    $w.tree heading $col -text $name -image noArrow -anchor w \
-	-command [list SortBy $w.tree $col 1]
+    $w.tree heading $col -text $name -anchor w \
+	-command [list SortByColumn $w.tree $col]
     $w.tree column $col -width [expr {[font measure $font $name] + $morePx}]
 }
 set font [ttk::style lookup Treeview -font {} TkDefaultFont]
@@ -114,41 +76,46 @@ foreach {country capital currency} $data {
     }
 }
 
-## Code to do the sorting of the tree contents when clicked on
-proc SortBy {tree col direction} {
-    # Determine currently sorted column and its sort direction
-    foreach c {country capital currency} {
-	set s [$tree heading $c state]
-	if {("selected" in $s || "alternate" in $s) && $col ne $c} {
-	    # Sorted column has changed
-	    $tree heading $c -image noArrow state {!selected !alternate !user1}
-	    set direction [expr {"alternate" in $s}]
+# Set column header sort direction arrow.
+#
+# States: selected is increasing, alternate is decreasing, and user1 means use
+# Aqua theme built-in sort arrows. We track last used sort direction via user6.
+proc SortDirection {tree columnId order} {
+    foreach column [$tree cget -columns] {
+	# Check if new sort column
+	if {$column eq $columnId} {
+	    if {$order eq "increasing"} {
+		set states [list !selected alternate user1 user6]
+	    } else {
+		set states [list selected !alternate user1 !user6]
+	    }
+	    $tree heading $column state $states
+	} else {
+	    $tree heading $column state [list !selected !alternate !user1]
 	}
     }
+}
 
-    # Build something we can sort
-    set data {}
-    foreach row [$tree children {}] {
-	lappend data [list [$tree set $row $col] $row]
-    }
+# Sort widget by column and order.
+proc SortByColumn {tree column} {
+    if {$column eq ""} return
+    set column [$tree column $column -id]
 
-    set dir [expr {$direction ? "-increasing" : "-decreasing"}]
-    set r -1
-
-    # Now reshuffle the rows into the sorted order
-    foreach info [lsort -dictionary -index 0 $dir $data] {
-	$tree move [lindex $info 1] {} [incr r]
-    }
-
-    # Switch the heading so that it will sort in the opposite direction
-    $tree heading $col -command [list SortBy $tree $col [expr {!$direction}]] \
-	state [expr {$direction?"!selected alternate":"selected !alternate"}]
-    if {[ttk::style theme use] eq "aqua"} {
-	# Aqua theme displays native sort arrows when user1 state is set
-	$tree heading $col state "user1"
+    # Get new sort order (opposite of current order)
+    set states [$tree heading $column state]
+    if {"alternate" in $states || "user6" in $states} {
+	set order "decreasing"
+    } elseif {"selected" in $states || "user6" ni $states} {
+	set order "increasing"
     } else {
-	$tree heading $col -image [expr {$direction?"upArrow":"downArrow"}]
+	set order "increasing"
     }
+
+    # Sort items
+    $tree sort {} -column $column -$order
+
+    # Show sort direction arrow in sort column, clear others
+    SortDirection $tree $column $order
 }
 
 set mclistGrid 0

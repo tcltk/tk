@@ -170,7 +170,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     wm protocol $dlg WM_DELETE_WINDOW [namespace code DeleteByProtocol]
 
     if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
+	after 100 {wm attributes $w -stylemask fullsizecontent}
     } elseif {$windowingsystem eq "x11" || $windowingsystem eq "wayland"} {
 	wm attributes $dlg -type dialog
     }
@@ -256,6 +256,10 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
 	if {[lindex [wm stackorder .] end] ne "$dlg"} {
 	    wm attributes $dlg -topmost 1
 	}
+    }
+    
+    if {$windowingsystem eq "aqua"} {
+		wm attributes $dlg -stylemask titled
     }
 
     # 9. Wait for the user to respond, then restore the focus and
