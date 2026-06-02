@@ -1613,8 +1613,6 @@ DisplayFrame(
 	    (unsigned) (Tk_Height(tkwin) - 2 * highlightWidth),
 	    highlightWidth, highlightWidth);
     Tk_FreePixmap(framePtr->display, pixmap);
-#else
-    Tk_ClipDrawableToRect(framePtr->display, pixmap, 0, 0, -1, -1);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 }
 

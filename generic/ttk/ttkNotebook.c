@@ -299,7 +299,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
     Tcl_Size i = 0;
     int statefirst = TTK_STATE_FIRST;
     int statelast = TTK_STATE_LAST;
-    
+
     if (nb->core.tkwin != NULL) {
 	TkMainInfo *mainInfoPtr = ((TkWindow *) nb->core.tkwin)->mainPtr;
 
@@ -313,7 +313,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
     /*
      * Flip First/last if tabs are on the bottom or right side.
      */
-    
+
     if (index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
     } else {
@@ -422,10 +422,8 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
     for (i = 0; i < Ttk_NumberContent(nb->notebook.mgr); ++i) {
 	Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, i);
 	Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, i);
-	int width
-	    = Tk_ReqWidth(window) + Ttk_PaddingWidth(tab->padding);
-	int height
-	    = Tk_ReqHeight(window) + Ttk_PaddingHeight(tab->padding);
+	int width = Tk_ReqWidth(window) + Ttk_PaddingWidth(tab->padding);
+	int height = Tk_ReqHeight(window) + Ttk_PaddingHeight(tab->padding);
 
 	clientWidth = MAX(clientWidth, width);
 	clientHeight = MAX(clientHeight, height);
@@ -1017,8 +1015,8 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (destIndex  >= nContent) {
-	destIndex  = nContent - 1;
+    if (destIndex >= nContent) {
+	destIndex = nContent - 1;
     }
     Ttk_ReorderContent(nb->notebook.mgr, srcIndex, destIndex);
 

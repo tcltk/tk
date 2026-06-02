@@ -220,7 +220,6 @@ Tk_UpdatePointer(
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    printf("Tk_UpdatePointer\n");
     TkWindow *winPtr = (TkWindow *)tkwin;
     TkWindow *targetWinPtr;
     XPoint pos;
@@ -260,7 +259,6 @@ Tk_UpdatePointer(
 	if (changes & mask) {
 	    if (state & mask) {
 		type = ButtonPress;
-		printf("ButtonPress\n");
 
 		/*
 		 * ButtonPress - Set restrict window if we aren't grabbed, or

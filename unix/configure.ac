@@ -26,7 +26,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=9.1
 TK_MAJOR_VERSION=9
 TK_MINOR_VERSION=1
-TK_PATCH_LEVEL="a2"
+TK_PATCH_LEVEL="b0"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -140,12 +140,17 @@ fi
 if test "$TCL_PREFIX" != "$prefix"; then
     AC_MSG_WARN([
 	Different --prefix selected for Tk and Tcl!
-	[package require tk] may not work correctly in tclsh.])
+	[[package require tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------
 #	Include sys/select.h if it exists and if it supplies things
 #	that appear to be useful and aren't already in sys/types.h.
+#	This appears to be true only on the RS/6000 under AIX.  Some
+#	systems like OSF/1 have a sys/select.h that's of no use, and
+#	other systems like SCO UNIX have a sys/select.h that's
+#	pernicious.  If "fd_set" isn't defined anywhere then set a
+#	special flag.
 #--------------------------------------------------------------------
 
 AC_CACHE_CHECK([for fd_set in sys/types], tcl_cv_type_fd_set, [
@@ -188,9 +193,7 @@ AC_CHECK_TYPES([intptr_t, uintptr_t],,,[[
 #-------------------------------------------
 
 AC_CACHE_CHECK([pw_gecos in struct pwd], tcl_cv_pwd_pw_gecos, [
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pwd.h>]], [[struct passwd pwd; (void)pwd.pw_gecos;]])],
-        [tcl_cv_pwd_pw_gecos=yes],
-        [tcl_cv_pwd_pw_gecos=no])])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pwd.h>]], [[struct passwd pwd; (void)pwd.pw_gecos;]])],[tcl_cv_pwd_pw_gecos=yes],[tcl_cv_pwd_pw_gecos=no])])
 if test $tcl_cv_pwd_pw_gecos = yes; then
     AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
 fi
@@ -215,7 +218,7 @@ if test "`uname -s`" = "Darwin" ; then
 	    AC_MSG_WARN([Aqua can only be used when Cocoa is available])
 	    tk_aqua=no
 	fi
-	if test "`uname -r | awk -F. '{print $1}'`" -lt 9; then
+	if test "`uname -r | awk -F. '{print [$]1}'`" -lt 9; then
 	    AC_MSG_WARN([Aqua requires Mac OS X 10.5 or later])
 	    tk_aqua=no
 	fi
@@ -235,286 +238,6 @@ else
     tk_aqua=no
 fi
 
-#--------------------------------------------------------------------
-#       Check for Wayland support (non-X11 backend)
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no; then
-    AC_MSG_CHECKING([whether to use Wayland])
-    AC_ARG_ENABLE(wayland,
-        AS_HELP_STRING([--enable-wayland],
-            [use Wayland (with GLFW) instead of X11 (default: off)]),
-        [enable_wayland=$enableval], [enable_wayland=no])
-    AC_MSG_RESULT([$enable_wayland])
-
-    WAYLAND_CFLAGS=""
-    WAYLAND_LIBS=""
-    HAVE_WAYLAND=0
-
-    if test "$enable_wayland" = "yes"; then
-        # When Wayland is enabled -> disable Xft explicitly
-        enable_xft=no
-        UNIX_FONT_OBJS=tkUnixFont.o
-        
-        # Immediately clear X11-related variables to prevent leakage
-        XLIBSW=""
-        XINCLUDES=""
-
-        # Wayland-related dependencies
-
-        AC_MSG_CHECKING([for wayland-client and wayland-cursor >= 1.18])
-        if pkg-config --exists "wayland-client >= 1.18" \
-           && pkg-config --exists "wayland-cursor >= 1.18"; then
-            AC_MSG_RESULT([yes])
-            WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor) -lwayland-client"
-            found_wayland=yes
-            AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
-        else
-            AC_MSG_RESULT([no])
-            WAYLAND_CFLAGS=""
-            WAYLAND_LIBS=""
-            found_wayland=no
-            AC_MSG_NOTICE([Wayland client libraries >= 1.18 not found])
-        fi
-        AC_SUBST([WAYLAND_CFLAGS])
-        AC_SUBST([WAYLAND_LIBS])
-
-        AC_MSG_CHECKING([for xkbcommon >= 0.5.0])
-        if pkg-config --exists "xkbcommon >= 0.5.0"; then
-            AC_MSG_RESULT([yes])
-            XKBCOMMON_CFLAGS="`pkg-config --cflags xkbcommon`"
-            XKBCOMMON_LIBS="`pkg-config --libs xkbcommon`"
-            found_xkbcommon=yes
-            AC_DEFINE([HAVE_XKBCOMMON], [1], [Define if xkbcommon is available])
-        else
-            AC_MSG_RESULT([no])
-            XKBCOMMON_CFLAGS=""
-            XKBCOMMON_LIBS=""
-            found_xkbcommon=no
-            AC_MSG_NOTICE([xkbcommon >= 0.5.0 not found])
-        fi
-        AC_SUBST([XKBCOMMON_CFLAGS])
-        AC_SUBST([XKBCOMMON_LIBS])
-
-        AC_MSG_CHECKING([for glfw3 >= 3.3 with Wayland support])
-        if pkg-config --exists "glfw3 >= 3.3"; then
-            AC_MSG_RESULT([glfw3 found])
-            GLFW_CFLAGS="$(pkg-config --cflags glfw3)"
-            GLFW_LIBS="$(pkg-config --libs glfw3)"
-            GLFW_LIBS="$GLFW_LIBS -lEGL"
-            GLFW_CFLAGS="$GLFW_CFLAGS -DGLFW_EXPOSE_NATIVE_WAYLAND -DGLFW_EXPOSE_NATIVE_EGL"
-            if pkg-config --exists wayland-client; then
-                found_glfw=yes
-                AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
-            else
-                found_glfw=no
-                AC_MSG_NOTICE([GLFW found but Wayland support not detected (missing wayland-client)])
-                GLFW_CFLAGS=""
-                GLFW_LIBS=""
-            fi
-        else
-            AC_MSG_RESULT([glfw3 not found])
-            found_glfw=no
-            GLFW_CFLAGS=""
-            GLFW_LIBS=""
-            AC_MSG_NOTICE([glfw3 >= 3.3 not found — backend will be disabled])
-        fi
-        AC_SUBST([GLFW_CFLAGS])
-        AC_SUBST([GLFW_LIBS])
-
-        #--------------------------------------------------------------------
-        # Check for libdecor (client-side decorations) – hard requirement
-        #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for libdecor-0 >= 0.1.0])
-        if pkg-config --exists "libdecor-0 >= 0.1.0"; then
-            AC_MSG_RESULT([yes])
-            LIBDECOR_CFLAGS="$(pkg-config --cflags libdecor-0)"
-            LIBDECOR_LIBS="$(pkg-config --libs libdecor-0)"
-            found_libdecor=yes
-            AC_DEFINE([HAVE_LIBDECOR], [1], [Define if libdecor-0 is available for client-side decorations on Wayland])
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([libdecor-0 >= 0.1.0 is required when building the Wayland backend.
-Please install the libdecor development package (usually libdecor-0-dev on Debian/Ubuntu or libdecor-devel on Fedora).
-Without client-side decorations most Wayland compositors will show broken or missing window decorations.])
-        fi
-        AC_SUBST([LIBDECOR_CFLAGS])
-        AC_SUBST([LIBDECOR_LIBS])
-
-        # OpenGL ES support (required for NanoVG rendering)
-        AC_MSG_CHECKING([for OpenGL ES 3.0 (glesv2)])
-        if pkg-config --exists glesv2; then
-            AC_MSG_RESULT([yes (via pkg-config)])
-            GLES_CFLAGS="$(pkg-config --cflags glesv2)"
-            GLES_LIBS="$(pkg-config --libs glesv2)"
-            found_gles=yes
-            AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
-        else
-            AC_MSG_RESULT([pkg-config not found, checking for library directly])
-            AC_CHECK_HEADER([GLES3/gl3.h], [have_gles_header=yes], [have_gles_header=no])
-            AC_CHECK_LIB([GLESv2], [glGetString], [have_gles_lib=yes], [have_gles_lib=no])
-            if test "$have_gles_header" = yes && test "$have_gles_lib" = yes; then
-                AC_MSG_NOTICE([OpenGL ES library found])
-                GLES_CFLAGS=""
-                GLES_LIBS="-lGLESv2"
-                found_gles=yes
-                AC_DEFINE([HAVE_GLES], [1], [Define if OpenGL ES is available])
-            else
-                AC_MSG_RESULT([no])
-                GLES_CFLAGS=""
-                GLES_LIBS=""
-                found_gles=no
-                AC_MSG_NOTICE([OpenGL ES not found — NanoVG rendering will not work])
-            fi
-        fi
-        AC_SUBST([GLES_CFLAGS])
-        AC_SUBST([GLES_LIBS])
-
-        # sd-bus (system tray)
-        AC_MSG_CHECKING([for sd-bus (system tray/status notifier support)])
-        SDBUSD_CFLAGS=""
-        SDBUSD_LIBS=""
-        found_sdbus=no
-        if pkg-config --exists "libsystemd" 2>/dev/null; then
-            AC_MSG_RESULT([yes])
-            SDBUSD_CFLAGS="`pkg-config --cflags libsystemd`"
-            SDBUSD_LIBS="`pkg-config --libs libsystemd`"
-            found_sdbus=yes
-            AC_DEFINE([HAVE_SD_BUS], 1,
-                [Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)])
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_NOTICE([sd-bus not found — system tray icon support will be unavailable on Wayland])
-        fi
-        AC_SUBST([SDBUSD_CFLAGS])
-        AC_SUBST([SDBUSD_LIBS])
-
-        # fontconfig
-        AC_MSG_CHECKING([for fontconfig >= 2.12 (Wayland font support)])
-        if pkg-config --exists "fontconfig >= 2.12"; then
-            AC_MSG_RESULT([yes])
-            FONTCONFIG_CFLAGS="`pkg-config --cflags fontconfig`"
-            FONTCONFIG_LIBS="`pkg-config --libs fontconfig`"
-            found_fontconfig=yes
-            AC_DEFINE([HAVE_FONTCONFIG], [1], [Define if fontconfig is available for Wayland])
-        else
-            AC_MSG_RESULT([no])
-            FONTCONFIG_CFLAGS=""
-            FONTCONFIG_LIBS=""
-            found_fontconfig=no
-            AC_MSG_NOTICE([fontconfig >= 2.12 not found — font support on Wayland may be limited])
-        fi
-        AC_SUBST([FONTCONFIG_CFLAGS])
-        AC_SUBST([FONTCONFIG_LIBS])
-
-        # NanoVG support (required for rendering)
-        AC_MSG_CHECKING([for NanoVG library])
-        AC_CHECK_LIB([nanovg], [nvgCreateGL3], [
-            have_nanovg_lib=yes
-            NANOVG_LIBS="-lnanovg"
-        ], [have_nanovg_lib=no])
-        
-        if test "$have_nanovg_lib" = yes; then
-            AC_MSG_RESULT([yes])
-            found_nanovg=yes
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_NOTICE([NanoVG library not found — assuming it will be statically linked or built separately])
-            NANOVG_LIBS=""
-            found_nanovg=no
-        fi
-        AC_SUBST([NANOVG_LIBS])
-
-        # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
-        AC_MSG_CHECKING([for wayland-scanner])
-        AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
-        if test "x$WAYLAND_SCANNER" = x; then
-            AC_MSG_ERROR([wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)])
-        fi
-        AC_MSG_RESULT([yes])
-
-        AC_MSG_CHECKING([for text-input-unstable-v3 protocol XML])
-        TEXT_INPUT_XML=""
-        if pkg-config --exists wayland-protocols; then
-            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
-            TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
-            if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
-                TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
-                AC_MSG_RESULT([yes])
-                AC_DEFINE([HAVE_TEXT_INPUT_V3], [1],
-                    [Define if text-input-unstable-v3 protocol is available (required for IME on Wayland)])
-            else
-                AC_MSG_RESULT([no])
-                AC_MSG_ERROR([text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
-Wayland backend now requires proper IME support via text-input-unstable-v3.
-Install/update wayland-protocols package.])
-            fi
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([pkg-config package 'wayland-protocols' not found.
-Wayland backend now requires text-input-unstable-v3 for IME support.])
-        fi
-
-        AC_SUBST([WAYLAND_SCANNER])
-        AC_SUBST([TEXT_INPUT_XML])
-
-        # Final check — everything must be present (IME + libdecor are mandatory)
-        if test "$found_wayland" = yes \
-           && test "$found_xkbcommon" = yes \
-           && test "$found_glfw" = yes \
-           && test "$found_libdecor" = yes \
-           && test "$found_gles" = yes \
-           && test "$found_fontconfig" = yes \
-           && test "$found_sdbus" = yes \
-           && test -n "$TEXT_INPUT_XML"; then
-
-            HAVE_WAYLAND=1
-
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
-            AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
-            TK_WINDOWINGSYSTEM=WAYLAND
-
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
-        else
-            AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
-
-Required (all mandatory when --enable-wayland is used):
-  - wayland-client >= 1.18
-  - wayland-cursor >= 1.18
-  - xkbcommon >= 0.5.0
-  - glfw3 >= 3.3 with Wayland support
-  - libdecor-0 >= 0.1.0
-  - glesv2 (OpenGL ES 3.0)
-  - fontconfig >= 2.12
-  - libsystemd (sd-bus)
-  - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
-
-On Debian/Ubuntu:
-  sudo apt install wayland-protocols libwayland-dev \
-    libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev
-])
-        fi
-    fi
-
-    AC_SUBST([WAYLAND_CFLAGS])
-    AC_SUBST([WAYLAND_LIBS])
-    AC_SUBST([HAVE_WAYLAND])
-
-    # Force-disable X11 linkage variables when Wayland is active
-    if test "$enable_wayland" = "yes"; then
-        AC_MSG_NOTICE([Wayland selected → clearing X11 linkage variables (XLIBSW, XINCLUDES)])
-        XLIBSW=""
-        XINCLUDES=""
-        enable_xft=no
-        enable_xss=no
-        AC_DEFINE([X11_BACKEND_DISABLED_FOR_WAYLAND], [1],
-            [X11 support deliberately disabled because Wayland backend is active])
-    fi
-fi  
-
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
@@ -527,18 +250,17 @@ if test $tk_aqua = yes; then
 	AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])
     fi
 else
-    # Final windowing system decision
-    if test "$enable_wayland" = "yes"; then
-        TK_WINDOWINGSYSTEM=WAYLAND
-		WAYLAND_LDFLAGS="-Wl,-Bsymbolic-functions"
-		AC_SUBST(WAYLAND_LDFLAGS)
-		
-    else
-        TK_WINDOWINGSYSTEM=X11
-        WAYLAND_LDFLAGS=""
-		AC_SUBST(WAYLAND_LDFLAGS)
-        SC_PATH_X
-    fi
+    #--------------------------------------------------------------------
+    #	Locate the X11 header files and the X11 library archive.  Try
+    #	the ac_path_x macro first, but if it doesn't find the X stuff
+    #	(e.g. because there's no xmkmf program) then check through
+    #	a list of possible directories.  Under some conditions the
+    #	autoconf macro will return an include directory that contains
+    #	no include files, so double-check its result just to be safe.
+    #--------------------------------------------------------------------
+
+    SC_PATH_X
+    TK_WINDOWINGSYSTEM=X11
 fi
 
 #--------------------------------------------------------------------
@@ -555,32 +277,46 @@ fi
 #	   be replaced by spaces.
 #--------------------------------------------------------------------
 
-if test "$TK_WINDOWINGSYSTEM" = "X11"; then
-    if test "x${x_libraries}" != "x"; then
-      if test "x${x_libraries}" != "xNONE"; then
-        LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${x_libraries}"
-      fi
-    fi
+if test "x${x_libraries}" != "x"; then
+  if test "x${x_libraries}" != "xNONE"; then
+    LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${x_libraries}"
+  fi
 fi
-
 if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
     LIB_RUNTIME_DIR=`echo ${LIB_RUNTIME_DIR} |sed -e 's/:/ -L/g'`
 fi
 
 #--------------------------------------------------------------------
-#	Check for the existence of various libraries. The order here
+#	Check for the existence of various libraries.  The order here
 #	is important, so that then end up in the right order in the
-#	command line generated by make.
+#	command line generated by make.  The -lsocket and -lnsl libraries
+#	require a couple of special tricks:
+#	1. Use "connect" and "accept" to check for -lsocket, and
+#	   "gethostbyname" to check for -lnsl.
+#	2. Use each function name only once:  can't redo a check because
+#	   autoconf caches the results of the last check and won't redo it.
+#	3. Use -lnsl and -lsocket only if they supply procedures that
+#	   aren't already present in the normal libraries.  This is because
+#	   IRIX 5.2 has libraries, but they aren't needed and they're
+#	   bogus:  they goof up name resolution if used.
+#	4. On some SVR4 systems, can't use -lsocket without -lnsl too.
+#	   To get around this problem, check for both libraries together
+#	   if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
+if test $tk_aqua = no; then
     AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
 fi
 
 #--------------------------------------------------------------------
-#       One more check related to the X libraries. The standard releases
-#       of Ultrix don't support the "xauth" mechanism, so send won't work
-#       unless TK_NO_SECURITY is defined.
+# One more check related to the X libraries.  The standard releases
+# of Ultrix don't support the "xauth" mechanism, so send won't work
+# unless TK_NO_SECURITY is defined.  However, there are usually copies
+# of the MIT X server available as well, which do support xauth.
+# Check for the MIT stuff and use it if it exists.
+#
+# Note: can't use ac_check_lib macro (at least, not in Autoconf 2.1)
+# because it can't deal with the "-" in the library name.
 #--------------------------------------------------------------------
 
 if test -d /usr/include/mit -a $tk_aqua = no; then
@@ -606,24 +342,135 @@ fi
 #	Check for freetype / fontconfig / Xft support and Bidirectional text
 #--------------------------------------------------------------------
 
-if test "$TK_WINDOWINGSYSTEM" = "X11"; then
-  if test $tk_aqua = no; then
+if test $tk_aqua = no; then
 
     #--------------------------------------------------------------------
-    # --enable-xft (default: yes)
+    # --enable-xft (default: yes) — independent switch
     #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
 	AS_HELP_STRING([--enable-xft],
 	    [use freetype/fontconfig/xft for antialiased fonts (default: yes)]),
 	[enable_xft=$enableval], [enable_xft="yes"])
+    AC_MSG_RESULT([$enable_xft])
 
     XFT_CFLAGS=""
     XFT_LIBS=""
 
-    if test "$enable_xft" = "no" ; then
-	AC_MSG_RESULT([no])
-    else
+    #--------------------------------------------------------------------
+    # --enable-bidi (default: yes on X11) — forces Xft when enabled
+    #--------------------------------------------------------------------
+    AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
+    AC_ARG_ENABLE(bidi,
+	AS_HELP_STRING([--enable-bidi],
+	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (default: yes)]),
+	[enable_bidi=$enableval], [enable_bidi="yes"])
+    AC_MSG_RESULT([$enable_bidi])
+
+    if test "$enable_bidi" = "yes"; then
+	AC_MSG_NOTICE([Bidi enabled: forcing Xft on as well])
+	if test "$enable_xft" = "no"; then
+	   enable_xft=yes
+	fi
+
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
+	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz - version check (minimum 2.8.2)
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
+        if pkg-config --exists harfbuzz; then
+            HB_VERSION=`pkg-config --modversion harfbuzz 2>/dev/null || echo "0.0.0"`
+            AC_MSG_RESULT([found version $HB_VERSION])
+
+            # Pure shell version comparison: is HB_VERSION < 2.8.2 ?
+            if test -n "$HB_VERSION"; then
+                # Normalize version strings (handle cases like 2.8.2, 3.0.0, etc.)
+                HB_MAJOR=`echo $HB_VERSION | cut -d. -f1`
+                HB_MINOR=`echo $HB_VERSION | cut -d. -f2`
+                HB_PATCH=`echo $HB_VERSION | cut -d. -f3 | cut -d- -f1`
+
+                REQ_MAJOR=2
+                REQ_MINOR=8
+                REQ_PATCH=2
+
+                too_old=no
+                if test $HB_MAJOR -lt $REQ_MAJOR; then
+                    too_old=yes
+                elif test $HB_MAJOR -eq $REQ_MAJOR; then
+                    if test $HB_MINOR -lt $REQ_MINOR; then
+                        too_old=yes
+                    elif test $HB_MINOR -eq $REQ_MINOR; then
+                        if test -n "$HB_PATCH" && test $HB_PATCH -lt $REQ_PATCH; then
+                            too_old=yes
+                        fi
+                    fi
+                fi
+
+                if test "$too_old" = "yes"; then
+                    AC_MSG_WARN([HarfBuzz version $HB_VERSION is too old (need >= 2.8.2).])
+                    AC_MSG_WARN([Disabling bidirectional text support (--disable-bidi).])
+                    enable_bidi=no
+                else
+                    AC_MSG_RESULT([HarfBuzz version $HB_VERSION is sufficient (>= 2.8.2).])
+                fi
+            fi
+
+            if test "$enable_bidi" = "yes"; then
+                HB_CFLAGS=`pkg-config --cflags harfbuzz`
+                HB_LIBS=`pkg-config --libs harfbuzz`
+
+                tk_oldCFlags=$CFLAGS
+                tk_oldLibs=$LIBS
+                CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+                LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+
+                AC_CHECK_HEADER(harfbuzz/hb.h, [], [
+                    AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
+                ], [#include <X11/Xlib.h>])
+
+                AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
+                    AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
+                ])
+
+                CFLAGS=$tk_oldCFlags
+                LIBS=$tk_oldLibs
+
+                BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+                AC_SUBST(HB_CFLAGS)
+                AC_SUBST(HB_LIBS)
+            fi
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz])
+        fi
+    fi
+
+    if test "$enable_bidi" = "no"; then
+	# Bidi disabled
+	BIDI_CFLAGS=""
+	HB_CFLAGS=""
+	HB_LIBS=""
+	if test "$enable_xft" = "yes" ; then
+	   UNIX_FONT_OBJS="tkUnixRFont.o"
+	   AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
+	else
+	   UNIX_FONT_OBJS="tkUnixFont.o"
+	fi
+    fi
+
+    # Now actually enable Xft if requested (or forced by bidi)
+    if test "$enable_xft" = "yes" ; then
 	found_xft="yes"
 
 	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
@@ -633,8 +480,6 @@ if test "$TK_WINDOWINGSYSTEM" = "X11"; then
 	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
 	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
-
-	AC_MSG_RESULT([$found_xft])
 
 	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
@@ -674,74 +519,6 @@ if test "$TK_WINDOWINGSYSTEM" = "X11"; then
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
 
-    #--------------------------------------------------------------------
-    # --enable-bidi  (HarfBuzz is required only when enabled)
-    #--------------------------------------------------------------------
-    AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
-    AC_ARG_ENABLE(bidi,
-	AS_HELP_STRING([--enable-bidi],
-	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (forces --enable-xft=yes)]),
-	[enable_bidi=$enableval], [enable_bidi="no"])
-
-    if test "$enable_bidi" = "yes"; then
-	AC_MSG_RESULT([yes (forces Xft on)])
-	if test "$enable_xft" = "no"; then
-	   AC_MSG_NOTICE([--enable-bidi requested: enabling Xft as well])
-	   enable_xft=yes
-	fi
-
-	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
-                     -I${TK_SRC_DIR}/unix/bidi/Source \
-                     -I${TK_SRC_DIR}/unix/bidi \
-                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
-	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
-	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
-
-        #--------------------------------------------------------------------
-        # HarfBuzz - HARD DEPENDENCY only when --enable-bidi=yes
-        #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
-        if pkg-config --exists harfbuzz; then
-            HB_CFLAGS=`pkg-config --cflags harfbuzz`
-            HB_LIBS=`pkg-config --libs harfbuzz`
-            AC_MSG_RESULT([yes])
-
-            tk_oldCFlags=$CFLAGS
-            tk_oldLibs=$LIBS
-            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
-            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
-
-            AC_CHECK_HEADER(harfbuzz/hb.h, [], [
-                AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
-            ], [#include <X11/Xlib.h>])
-
-            AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
-                AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
-            ])
-
-            CFLAGS=$tk_oldCFlags
-            LIBS=$tk_oldLibs
-
-            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
-            AC_SUBST(HB_CFLAGS)
-            AC_SUBST(HB_LIBS)
-        else
-            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.])
-        fi
-
-    else
-	AC_MSG_RESULT([no])
-	BIDI_CFLAGS=""
-	HB_CFLAGS=""
-	HB_LIBS=""
-	if test "$enable_xft" = "yes" ; then
-	   UNIX_FONT_OBJS="tkUnixRFont.o"
-	   AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
-	else
-	   UNIX_FONT_OBJS="tkUnixFont.o"
-	fi
-    fi
-
     AC_SUBST(BIDI_CFLAGS)
     AC_SUBST(UNIX_FONT_OBJS)
     AC_SUBST(HB_CFLAGS)
@@ -756,7 +533,7 @@ if test "$TK_WINDOWINGSYSTEM" = "X11"; then
 	FONTSYSTEM="core"
     fi
     AC_SUBST(FONTSYSTEM)
-fi
+
 else
     # Aqua (macOS) path
     enable_xft=no
@@ -770,7 +547,7 @@ else
 fi
 
 #--------------------------------------------------------------------
-#	Check for libcups support — allowed on both X11 and Wayland
+#	Check for libcups support
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
@@ -795,9 +572,9 @@ if test $tk_aqua = no; then
 	AC_MSG_RESULT([$found_cups])
 	if test "$found_cups" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $CUPS_CFLAGS"
+	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
 	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLibs $CUPS_LIBS"
+	    LIBS="$tk_oldLibs $CUPS_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(cups/cups.h, [], [
 		found_cups=no
 		CUPS_CFLAGS=""
@@ -813,42 +590,34 @@ fi
 
 #--------------------------------------------------------------------
 #	Check for Atk support
-#   - ONLY valid for X11
-#   - COMPLETELY disabled for Wayland and Aqua
 #--------------------------------------------------------------------
 
-ATK_CFLAGS=""
-ATK_LIBS=""
-
-if test "$TK_WINDOWINGSYSTEM" = "WAYLAND"; then
-    AC_MSG_NOTICE([ATK support forcibly disabled (Wayland backend)])
-elif test "$tk_aqua" = yes; then
-    AC_MSG_NOTICE([ATK support disabled (Aqua backend)])
-else
-    AC_MSG_CHECKING([for ATK and Atk-bridge])
-    if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
-        AC_MSG_RESULT([yes])
-        ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
-        ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
-        AC_DEFINE([HAVE_ATK], [1],
-            [Define if ATK and Atk-bridge are available])
-    else
-        AC_MSG_RESULT([no])
-        ATK_CFLAGS=""
-        ATK_LIBS=""
-    fi
+if test "$tk_aqua" = no; then
+  AC_MSG_CHECKING([for ATK and Atk-bridge])
+  if pkg-config --exists atk && pkg-config --exists atk-bridge-2.0; then
+    AC_MSG_RESULT([yes])
+    ATK_CFLAGS="`pkg-config --cflags atk atk-bridge-2.0`"
+    ATK_LIBS="`pkg-config --libs atk atk-bridge-2.0`"
+    AC_DEFINE([HAVE_ATK], [1], [Define if ATK and Atk-bridge are available])
+  else
+    AC_MSG_RESULT([no])
+    ATK_CFLAGS=""
+    ATK_LIBS=""
+  fi
+  AC_SUBST([ATK_CFLAGS])
+  AC_SUBST([ATK_LIBS])
 fi
-
-AC_SUBST([ATK_CFLAGS])
-AC_SUBST([ATK_LIBS])
 
 #--------------------------------------------------------------------
 # XXX Do this last.
+# It might modify XLIBSW which could affect other tests.
+#
 # Check whether the header and library for the XScreenSaver
 # extension are available, and set HAVE_XSS if so.
+# XScreenSaver is needed for Tk_GetUserInactiveTime().
 #--------------------------------------------------------------------
 
-if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
+if test $tk_aqua = no; then
     tk_oldCFlags=$CFLAGS
     CFLAGS="$CFLAGS $XINCLUDES"
     tk_oldLibs=$LIBS
@@ -891,7 +660,8 @@ if test $tk_aqua = no -a "$TK_WINDOWINGSYSTEM" = "X11"; then
 fi
 
 #--------------------------------------------------------------------
-#	Figure out whether "char" is unsigned.
+#	Figure out whether "char" is unsigned.  If so, set a
+#	#define for __CHAR_UNSIGNED__.
 #--------------------------------------------------------------------
 
 AC_C_CHAR_UNSIGNED
@@ -912,10 +682,18 @@ fi
 
 eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
+# tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
+# since on some platforms TK_LIB_FILE contains shell escapes.
+
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TCL_STUB_LIB_SPEC}"
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 fi
+
+# Note:  in the following variable, it's important to use the absolute
+# path name of the Tcl directory rather than "..":  this is because
+# AIX remembers this path and will attempt to use it at run-time to look
+# up the Tcl library.
 
 test -z "$TK_LIBRARY" && TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
 PRIVATE_INCLUDE_DIR='$(includedir)'
@@ -926,8 +704,8 @@ WISH_RSRC_FILE='wish$(VERSION).rsrc'
 
 if test "`uname -s`" = "Darwin" ; then
     SC_ENABLE_FRAMEWORK
-    TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk '{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}'`"
-    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name "${DYLIB_INSTALL_DIR}/${TK_LIB_FILE}" -unexported_symbols_list $$(f=$(TK_LIB_FILE).E && nm -gp tkMacOSX*.o 2>/dev/null | awk "/^[0-9a-f]+ . \.objc/ {print $$3}" > $$f && nm -gjp "$(TCL_BIN_DIR)"/$(TCL_STUB_LIB_FILE) | grep ^_[^_] >> $$f && echo $$f)'
+    TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk ['{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}']`"
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name "${DYLIB_INSTALL_DIR}/${TK_LIB_FILE}" -unexported_symbols_list $$(f=$(TK_LIB_FILE).E && nm -gp tkMacOSX*.o 2>/dev/null | awk "/^[[0-9a-f]]+ . \.objc/ {print \$$3}" > $$f && nm -gjp "$(TCL_BIN_DIR)"/$(TCL_STUB_LIB_FILE) | grep ^_[[^_]] >> $$f && echo $$f)'
     echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
@@ -982,6 +760,10 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
 	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Credits.html to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) Credits.html "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
+    # Don't use AC_DEFINE for the following as the framework version define
+    # needs to go into the Makefile even when using autoheader, so that we
+    # can pick up a potential make override of VERSION. Also, don't put this
+    # into CFLAGS as it should not go into tkConfig.sh
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     if test $tk_aqua = yes; then

@@ -193,6 +193,10 @@ typedef struct {
     int textHeight;		/* Height needed to display text as requested,
 				 * in pixels. */
     Tk_TextLayout textLayout;	/* Saved text layout information. */
+    double angle;		/* Value of -angle option. */
+    int xoffset;		/* offset for drawing text when angle != 0 */
+    int yoffset;
+
     int indicatorSpace;		/* Horizontal space (in pixels) allocated for
 				 * display of indicator. */
     int indicatorDiameter;	/* Diameter of indicator, in pixels. */

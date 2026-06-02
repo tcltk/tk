@@ -198,10 +198,20 @@ namespace eval ttk::theme::aqua {
 
 	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont \
-	    -foreground systemTextColor \
+	    -font TkHeadingFont -padding {2.25p 2.25p 2.25p 0} \
+	    -foreground systemPopupArrowInactive \
 	    -background systemWindowBackgroundColor
-	ttk::style configure Treeview -rowheight 18 \
+	ttk::style map Heading \
+	    -foreground {
+		selected systemControlTextColor
+		alternate systemControlTextColor} \
+	    -background {
+		selected systemListViewSortColumnBackground
+		alternate systemListViewSortColumnBackground}
+	ttk::style configure Row -focuscolor systemSelectedTextBackgroundColor \
+	    -focussolid 1 -focusthickness 0 -padding {0 0 0 0.75p}
+	ttk::style map Row -focusthickness {focus 1} -padding {focus 0}
+	ttk::style configure Treeview \
 	    -background systemControlBackgroundColor \
 	    -stripedbackground systemControlAlternatingRowColor \
 	    -foreground systemTextColor \

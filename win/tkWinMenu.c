@@ -2778,7 +2778,7 @@ TkpDrawMenuEntry(
     } else {
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		adjustedX, adjustedY, width, adjustedHeight,
-		!(DRAW_MENU_ENTRY_NOUNDERLINE));
+		!(drawingParameters & DRAW_MENU_ENTRY_NOUNDERLINE));
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 		activeBorder, adjustedX, adjustedY, width, adjustedHeight);
 	DrawMenuEntryArrow(menuPtr, mePtr, d, gc,

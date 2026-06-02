@@ -100,7 +100,7 @@ TkGetDefaultScreenName(
  *
  *----------------------------------------------------------------------
  */
-#if 0
+
 void
 Tk_UpdatePointer(
     Tk_Window tkwin,		/* Window to which pointer event is reported.
@@ -117,7 +117,6 @@ Tk_UpdatePointer(
    * This function intentionally left blank
    */
 }
-#endif
 
 /*
  *----------------------------------------------------------------------

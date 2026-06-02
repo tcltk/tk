@@ -68,6 +68,15 @@ Specifies the alpha transparency level of the toplevel. It accepts a value
 from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values outside that
 range will be constrained.  Where not supported, the \fB\-alpha\fR value
 remains at \fB1.0\fR.
+.\" OPTION: -appearance
+.TP
+\fB\-appearance\fR
+.
+Specifies whether the window is rendered in "dark mode" on Windows or
+macOS; on linux this command has no effect.  Allowed values are
+\fBauto\fR, \fBlight\fR and \fBdark\fR.  On macOS, if the setting is
+\fBauto\fR then the appearance of the window is controlled by the
+System Settings.  On Windows \fBauto\fR is equivalent to \fBlight\fR.
 .\" OPTION: -fullscreen
 .TP
 \fB\-fullscreen\fR
@@ -103,14 +112,6 @@ value accepted by \fBTk_GetColor\fR.  If the empty string is specified
 at \fB{}\fR.
 .PP
 On macOS, the following attributes may be set.
-.\" OPTION: -appearance
-.TP
-\fB\-appearance\fR
-.
-Specifies whether the window is rendered in "dark mode".  Allowed
-values are \fBauto\fR, \fBaqua\fR and \fBdarkaqua\fR.  If the setting
-is auto then the appearance of the window is controlled by the
-System Settings.
 .\" OPTION: -class
 .TP
 \fB\-class\fR
@@ -125,12 +126,6 @@ does not correspond to an existing window.  Doing that causes the
 class name to be cached for later use.  When a toplevel with that
 pathname is eventually created, the cached class name will determine which
 class is used for the underlying Aqua window.
-.\" OPTION: -isdark
-.TP
-\fB\-isdark\fR
-.
-Returns a boolean value which is true if the window is currently in
-dark mode.
 .\" OPTION: -modified
 .TP
 \fB\-modified\fR

@@ -92,7 +92,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -font		TkDefaultFont \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
-	    -insertwidth	1 \
+	    -insertwidth	0.75p \
 	    -insertcolor	$colors(-foreground) \
 	    -focuscolor		$colors(-text)
 
@@ -122,30 +122,34 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 		      pressed			$colors(-darker)]
 	}
 
+	# N.B.: The values of the -arrowsize option for the styles
+	# TMenubutton, TCombobox, and TSpinbox must be specified in
+	# pixels, because they are used in SVG images for chevrons.
+
 	ttk::style configure TMenubutton \
-	    -relief raised -arrowsize 3.75p -arrowpadding 2.25p \
+	    -relief raised -arrowsize 5 -arrowpadding 2.25p \
 	    -arrowcolor $colors(-text) -padding {7.5p 2.25p}
 	ttk::style map TMenubutton \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TEntry \
-	    -fieldbackground $colors(-window) -padding 1 \
-	    -focuswidth 2 -focuscolor $colors(-selectbg)
+	ttk::style configure TEntry -insertwidth 0.75p \
+	    -fieldbackground $colors(-window) -padding 0.75p \
+	    -focuswidth 1.5p -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox \
-	    -arrowsize 9p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding 1 \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	ttk::style configure TCombobox -insertwidth 0.75p \
+	    -arrowpadding 2.25p -arrowsize 4 -arrowcolor $colors(-text) \
+	    -fieldbackground $colors(-window) -padding 0.75p \
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TSpinbox \
-	    -arrowsize 7.5p -arrowcolor $colors(-text) \
+	ttk::style configure TSpinbox -insertwidth 0.75p \
+	    -arrowpadding {2.25p 1.5p} -arrowsize 3 -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -154,7 +158,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 9p -arrowsize 9p -arrowcolor $colors(-text)
+	    -width 6.75p -arrowpadding 1.5p -arrowsize 3p \
+	    -arrowcolor $colors(-text)
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
@@ -179,25 +184,43 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -highlight [list selected 1] \
 	    -highlightcolor [list selected $colors(-selectbg)]
 
+	# N.B.: The values of the -indicatorsize option for the
+	# treeview-related styles Heading and Item must be specified
+	# in pixels, because they are used in SVG images for chevrons.
+
 	# Treeview
-	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Item -indicatorsize 9p \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised -padding 2.25p \
+	    -indicatorsize 4 -indicatormargin {3p 1.5p 1.5p 1.5p}
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 1 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
+	ttk::style configure Item -indicatorsize 4 \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
+	ttk::style map CheckTreeview.Item -indicatorbackground \
+	    [list {selected disabled}	$colors(-disabledindicator) \
+		  selected		$colors(-indicator) \
+		  disabled		$colors(-frame)]
+	ttk::style configure Treeview.Separator \
+	    -background $colors(-alternate)
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
 	    -indent 15p \
-	    -focuswidth 1 -focuscolor $colors(-selectbg)
-	ttk::setTreeviewRowHeight
-	ttk::style configure Treeview.Separator \
-	    -background $colors(-alternate)
+	    -focuswidth 0.75p -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
-	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
-	    -foreground [list disabled $colors(-disabledfg) \
-				selected $colors(-selectfg)]
+	    -background [list	disabled $colors(-frame) \
+				background $colors(-darker) \
+				selected $colors(-selectbg) \
+				active   $colors(-activebg)] \
+	    -foreground [list	disabled $colors(-disabledfg) \
+				background $colors(-selectfg) \
+				selected $colors(-selectfg) \
+				active   $colors(-foreground)]
 
 	# Combobox popdown frame
 	ttk::style layout ComboboxPopdownFrame {
@@ -207,7 +230,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -borderwidth 1 -relief solid
 
 	#
-	# Toolbar buttons:
+	# Toolbar buttons
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {
