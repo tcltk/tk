@@ -154,10 +154,14 @@ X11_INCLUDES		= @XINCLUDES@
 
 AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 
-# Linker switch(es) to use to link with the X11 library archive (the
-# configure script will try to set this value automatically, but you
-# can override it).
-X11_LIB_SWITCHES	= $(XFT_LIBS) $(HB_LIBS) @XLIBSW@
+WAYLAND_INCLUDES    = -I$(WAYLAND_DIR)
+
+# Linker switch(es) to use to link with the X11 library archive.
+# configure zeroes @XLIBSW@, @XFT_LIBS@, and @HB_LIBS@ for Wayland builds;
+# on X11 builds @XLIBSW@ carries -lX11 etc. and @XFT_LIBS@ carries Xft.
+# HarfBuzz is in $(WAYLAND_LIBS) for Wayland; for X11 it is in @HB_LIBS@
+# below in LIBS — do not include it here to avoid double-linking.
+X11_LIB_SWITCHES	= @XFT_LIBS@ @XLIBSW@
 
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
@@ -263,8 +267,13 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ @EXTRA_WISH_LIBS@
+# On Wayland, X11_LIB_SWITCHES expands to empty (XLIBSW is cleared by configure),
+# so this definition is safe for both X11 and Wayland builds.
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ \
+	$(WAYLAND_LIBS) @WAYLAND_LDFLAGS@
+
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @ATK_LIBS@ @HB_LIBS@ \
+	$(WAYLAND_LIBS) @WAYLAND_LDFLAGS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the
@@ -292,26 +301,54 @@ WISH_RSRC_FILE		= @WISH_RSRC_FILE@
 REZ			= @REZ@
 REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 
-# support for Xft:
+# support for Xft (X11 only; configure sets both to empty for Wayland builds)
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
 
-# support for HarfBuzz (hard dependency when --enable-bidi is used)
+# support for HarfBuzz (bidi dependency; also used on X11 path)
 HB_CFLAGS		= @HB_CFLAGS@
 HB_LIBS			= @HB_LIBS@
+
+# Bidi support: SheenBidi include paths + HarfBuzz cflags
+# (configure sets BIDI_CFLAGS to empty when --disable-bidi)
+BIDI_CFLAGS		= @BIDI_CFLAGS@
 
 # support for libcups
 CUPS_CFLAGS		= @CUPS_CFLAGS@
 CUPS_LIBS		= @CUPS_LIBS@
 
-#support for atk
+# support for atk (X11 only; configure forces empty for Wayland)
 ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
 
-# Bidi support (SheenBidi + HarfBuzz text shaping)
-BIDI_CFLAGS		= @BIDI_CFLAGS@
+# support for Wayland backend - individual library components
+WAYLAND_CLIENT_CFLAGS	= @WAYLAND_CFLAGS@
+WAYLAND_CLIENT_LIBS	= @WAYLAND_LIBS@
+XKBCOMMON_CFLAGS	= @XKBCOMMON_CFLAGS@
+XKBCOMMON_LIBS		= @XKBCOMMON_LIBS@
+GLFW_CFLAGS		= @GLFW_CFLAGS@
+GLFW_LIBS		= @GLFW_LIBS@
+GLES_CFLAGS		= @GLES_CFLAGS@
+GLES_LIBS		= @GLES_LIBS@
+LIBDECOR_CFLAGS		= @LIBDECOR_CFLAGS@
+LIBDECOR_LIBS		= @LIBDECOR_LIBS@
+SDBUSD_CFLAGS		= @SDBUSD_CFLAGS@
+SDBUSD_LIBS		= @SDBUSD_LIBS@
+FONTCONFIG_CFLAGS	= @FONTCONFIG_CFLAGS@
+FONTCONFIG_LIBS		= @FONTCONFIG_LIBS@
+NANOVG_LIBS		= @NANOVG_LIBS@
 
-# Font system (core, xft, or bidi)
+# Combined Wayland flags (individual vars above must all be declared first).
+# BIDI_CFLAGS and HB_CFLAGS/HB_LIBS are included here so every Wayland
+# translation unit picks up the SheenBidi and HarfBuzz include paths.
+WAYLAND_CFLAGS		= $(WAYLAND_CLIENT_CFLAGS) $(XKBCOMMON_CFLAGS) $(GLFW_CFLAGS) \
+			  $(GLES_CFLAGS) $(LIBDECOR_CFLAGS) $(SDBUSD_CFLAGS) \
+			  $(FONTCONFIG_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
+WAYLAND_LIBS		= $(WAYLAND_CLIENT_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) \
+			  $(GLES_LIBS) $(LIBDECOR_LIBS) $(SDBUSD_LIBS) \
+			  $(FONTCONFIG_LIBS) $(NANOVG_LIBS) $(HB_LIBS)
+
+# Font system token (core | xft | wayland) — set by configure
 FONTSYSTEM		= @FONTSYSTEM@
 
 #----------------------------------------------------------------
@@ -333,6 +370,7 @@ TOOL_DIR		= $(TCLDIR)/tools
 TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
+WAYLAND_DIR		= $(TOP_DIR)/wayland
 
 #----------------------------------------------------------------
 # The information below should be usable as is.  The configure
@@ -350,8 +388,10 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
 	${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 	${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-	${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) \
-	$(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
+	${NO_DEPRECATED_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
+	${WAYLAND_CLIENT_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
+	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
+	@EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -360,8 +400,10 @@ APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
 	-I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
-	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) \
-	$(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
+	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
+	${WAYLAND_CLIENT_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
+	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
+	@EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 WISH_OBJS = tkAppInit.o
 
@@ -382,7 +424,9 @@ IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
 TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
 
-# either tkUnixFont.o (default) or tkUnixRFont.o (if --enable-xft) or tkUnixBidiFont.o (if --enable-bidi)
+# Wayland: tkWaylandFont.o (always) + SheenBidi.o (when --enable-bidi, default yes).
+# On X11: tkUnixFont.o (default), tkUnixRFont.o (--enable-xft), tkUnixBidiFont.o + SheenBidi.o (--enable-bidi).
+# @UNIX_FONT_OBJS@ is set correctly for each windowing system by configure.
 FONT_OBJS = @UNIX_FONT_OBJS@
 
 GENERIC_OBJS = tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
@@ -413,7 +457,7 @@ X11_OBJS = tkUnix.o tkUnixAccessibility.o tkUnix3d.o tkUnixButton.o\
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
-	tkUnixPrint.o
+	tkUnixPrint.o 
 
 AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -429,6 +473,21 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 	ttkMacOSXTheme.o
 
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
+
+WAYLAND_OBJS            = \
+	 nanovg.o text-input-unstable-v3-protocol.o SheenBidi.o \
+      tkGlfwInit.o tkWayland.o  \
+     tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
+     tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
+     tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
+     tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
+     tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
+     tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
+     tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
+
+# Re-use some unix files (the ones that are backend-agnostic)
+WAYLAND_UNIX_OBJS       = \
+    tkUnixPrint.o  tkUnixSysNotify.o                   
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(TTK_OBJS) \
@@ -537,7 +596,11 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
 	$(UNIX_DIR)/tkUnixSysNotify.c $(UNIX_DIR)/tkUnixSysTray.c \
 	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c \
-	$(UNIX_DIR)/tkUnixPrint.c $(UNIX_DIR)/bidi/SheenBidi.c
+	$(UNIX_DIR)/tkUnixPrint.c \
+	$(UNIX_DIR)/tkUnixFont.c \
+	$(UNIX_DIR)/tkUnixRFont.c \
+	$(UNIX_DIR)/tkUnixBidiFont.c \
+	$(UNIX_DIR)/bidi/SheenBidi.c
 
 AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXAccessibility.c \
@@ -565,7 +628,34 @@ AQUA_SRCS = \
 	$(XLIB_DIR)/xgc.c $(XLIB_DIR)/ximage.c $(XLIB_DIR)/xutil.c \
 	$(TTK_DIR)/ttkMacOSXTheme.c
 
+WAYLAND_SRCS = \
+	$(WAYLAND_DIR)/nanovg.c $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWayland.c \
+    $(WAYLAND_DIR)/tkWayland3D.c  $(WAYLAND_DIR)/tkWaylandAccessibility.c $(WAYLAND_DIR)/tkWaylandButton.c \
+    $(WAYLAND_DIR)/tkWaylandClipboard.c $(WAYLAND_DIR)/tkWaylandColor.c $(WAYLAND_DIR)/tkWaylandConfig.c \
+    $(WAYLAND_DIR)/tkWaylandCursor.c $(WAYLAND_DIR)/tkWaylandDraw.c \
+    $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandFont.c \
+    $(WAYLAND_DIR)/tkWaylandGC.c $(WAYLAND_DIR)/tkWaylandImage.c \
+    $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
+    $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
+    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
+    $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c $(WAYLAND_DIR)/tkWaylandWm.c \
+    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c \
+    $(UNIX_DIR)/bidi/SheenBidi.c \
+    $(WAYLAND_UNIX_SRCS)
+
+WAYLAND_PRIVATE_HDRS = \
+    $(WAYLAND_DIR)/tkWaylandInt.h \
+    $(WAYLAND_DIR)/tkWaylandDefaults.h \
+    $(WAYLAND_DIR)/tkGlfwInt.h \
+    $(WAYLAND_DIR)/tkWaylandPort.h \
+    $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)
+
+WAYLAND_UNIX_SRCS = \
+    $(UNIX_DIR)/tkUnixPrint.c   $(UNIX_DIR)/tkUnixSysNotify.c 
+
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
+
+
 
 ###
 # Tip 430 - ZipFS Modifications
@@ -1025,12 +1115,6 @@ tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
 ttkStubLib.o: $(TTK_DIR)/ttkStubLib.c
 	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(TTK_DIR)/ttkStubLib.c
 
-tkUnixBidiFont.o: $(UNIX_DIR)/tkUnixBidiFont.c
-	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS) $(UNIX_DIR)/tkUnixBidiFont.c
-
-SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
-	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
-
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c
 
@@ -1328,9 +1412,13 @@ tkUnixFocus.o: $(UNIX_DIR)/tkUnixFocus.c
 tkUnixFont.o: $(UNIX_DIR)/tkUnixFont.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixFont.c
 
-# NB: tkUnixRFont.o uses nondefault CFLAGS
+# X11+Xft path: selected when --enable-xft and --disable-bidi
 tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
+
+# X11+bidi path: selected when --enable-bidi (implies Xft)
+tkUnixBidiFont.o: $(UNIX_DIR)/tkUnixBidiFont.c
+	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS) $(UNIX_DIR)/tkUnixBidiFont.c
 
 tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) \
@@ -1371,6 +1459,97 @@ tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 
 tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixXId.c
+
+nanovg.o: $(WAYLAND_DIR)/nanovg.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
+
+text-input-unstable-v3-protocol.o: $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
+
+tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c
+
+tkWayland.o: $(WAYLAND_DIR)/tkWayland.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland.c
+
+tkWayland3D.o: $(WAYLAND_DIR)/tkWayland3D.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland3D.c
+
+tkWaylandAccessibility.o: $(WAYLAND_DIR)/tkWaylandAccessibility.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandAccessibility.c
+
+tkWaylandButton.o: $(WAYLAND_DIR)/tkWaylandButton.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandButton.c
+
+tkWaylandClipboard.o: $(WAYLAND_DIR)/tkWaylandClipboard.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandClipboard.c
+
+tkWaylandColor.o: $(WAYLAND_DIR)/tkWaylandColor.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandColor.c
+
+tkWaylandConfig.o: $(WAYLAND_DIR)/tkWaylandConfig.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandConfig.c
+
+tkWaylandCursor.o: $(WAYLAND_DIR)/tkWaylandCursor.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandCursor.c
+
+tkWaylandDraw.o: $(WAYLAND_DIR)/tkWaylandDraw.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandDraw.c
+
+tkWaylandEmbed.o: $(WAYLAND_DIR)/tkWaylandEmbed.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandEmbed.c
+
+tkWaylandFocus.o: $(WAYLAND_DIR)/tkWaylandFocus.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFocus.c
+
+tkWaylandFont.o: $(WAYLAND_DIR)/tkWaylandFont.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandFont.c
+
+tkWaylandGC.o: $(WAYLAND_DIR)/tkWaylandGC.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandGC.c
+
+tkWaylandImage.o: $(WAYLAND_DIR)/tkWaylandImage.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandImage.c
+
+tkWaylandKey.o: $(WAYLAND_DIR)/tkWaylandKey.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandKey.c
+
+tkWaylandMenu.o: $(WAYLAND_DIR)/tkWaylandMenu.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenu.c
+
+tkWaylandMenubu.o: $(WAYLAND_DIR)/tkWaylandMenubu.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMenubu.c
+
+tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandMouseEvent.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandMouseEvent.c
+
+tkWaylandNotify.o: $(WAYLAND_DIR)/tkWaylandNotify.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandNotify.c
+
+tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScale.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScale.c
+
+tkWaylandScrlbr.o: $(WAYLAND_DIR)/tkWaylandScrlbr.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScrlbr.c
+
+tkWaylandSend.o: $(WAYLAND_DIR)/tkWaylandSend.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSend.c
+
+tkWaylandSysTray.o: $(WAYLAND_DIR)/tkWaylandSysTray.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandSysTray.c
+
+tkWaylandXId.o: $(WAYLAND_DIR)/tkWaylandXId.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXId.c
+
+tkWaylandXlib.o: $(WAYLAND_DIR)/tkWaylandXlib.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandXlib.c
+
+tkWaylandWm.o: $(WAYLAND_DIR)/tkWaylandWm.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandWm.c 
+
+# SheenBidi unity build
+SheenBidi.o: $(UNIX_DIR)/bidi/SheenBidi.c
+	$(CC) -c $(CC_SWITCHES) $(BIDI_CFLAGS) $(UNIX_DIR)/bidi/SheenBidi.c
 
 tkMacOSXAccessibility.o: $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXAccessibility.c
@@ -1713,15 +1892,10 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
-		$(UNIX_DIR)/tkConfig.sh.in $(UNIX_DIR)/README \
+		$(UNIX_DIR)/tkConfig.sh.in $(UNIX_DIR)/install-sh \
+		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage \
 		$(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(DISTDIR)/unix
-	$(DIST_INSTALL_SCRIPT) $(UNIX_DIR)/configure $(UNIX_DIR)/install-sh \
-		$(UNIX_DIR)/installManPage $(DISTDIR)/unix
-	$(INSTALL_DATA_DIR) $(DISTDIR)/unix/bidi
-	@echo cp -r $(UNIX_DIR)/bidi $(DISTDIR)/unix/bidi
-	@( cd $(UNIX_DIR)/bidi; find . -type f -print ) \
-	    | ( cd $(UNIX_DIR)/bidi ; xargs tar cf - ) \
-	    | ( cd $(DISTDIR)/unix/bidi ; tar xfp - )
+	$(DIST_INSTALL_SCRIPT) $(UNIX_DIR)/configure $(DISTDIR)/unix
 	$(INSTALL_DATA_DIR) $(DISTDIR)/bitmaps
 	@(cd $(TOP_DIR); for i in bitmaps/* ; do \
 	    if [ -f $$i ] ; then \
@@ -1735,6 +1909,7 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
 	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/README $(DISTDIR)/generic
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/changes.md $(TOP_DIR)/README.md \
 		$(TOP_DIR)/license.terms $(DISTDIR)
+	rm -f $(DISTDIR)/generic/blt*.[ch]
 	$(INSTALL_DATA_DIR) $(DISTDIR)/generic/ttk
 	$(DIST_INSTALL_DATA) $(TTK_DIR)/*.[ch] $(TTK_DIR)/ttk.decls \
 		$(DISTDIR)/generic/ttk
@@ -1749,7 +1924,7 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
 		$(TOP_DIR)/win/*.vc $(TOP_DIR)/win/README \
 		$(TOP_DIR)/license.terms \
 		$(DISTDIR)/win
-	$(DIST_INSTALL_SCRIPT) $(TOP_DIR)/win/configure $(TOP_DIR)/win/*.tcl $(DISTDIR)/win
+	$(DIST_INSTALL_SCRIPT) $(TOP_DIR)/win/configure $(DISTDIR)/win
 	$(INSTALL_DATA_DIR) $(DISTDIR)/win/rc
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/rc/*.{rc,cur,ico} $(DISTDIR)/win/rc
 	$(INSTALL_DATA_DIR) $(DISTDIR)/macosx
@@ -1760,7 +1935,7 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in \
 		$(DISTDIR)/macosx
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/macosx
 	$(INSTALL_DATA_DIR) $(DISTDIR)/xlib
-	$(DIST_INSTALL_DATA) $(XLIB_DIR)/*.[ch] $(XLIB_DIR)/rgb.txt $(DISTDIR)/xlib
+	$(DIST_INSTALL_DATA) $(XLIB_DIR)/*.[ch] $(DISTDIR)/xlib
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/xlib
 	$(INSTALL_DATA_DIR) $(DISTDIR)/xlib/X11
 	$(DIST_INSTALL_DATA) $(XLIB_DIR)/X11/*.h $(DISTDIR)/xlib/X11

@@ -6,6 +6,7 @@
  * complex text input (Chinese, Japanese, Korean, etc.).
  *
  * Copyright © 2026 Kevin Walzer
+ * Copyrigyt © Marc Culler. 
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -273,8 +274,8 @@ TkpSetKeycodeAndState(
 KeySym
 XStringToKeysym(_Xconst char *string)
 {
-    return NoSymbol;
-#if 0
+   // return NoSymbol;
+
     xkb_keysym_t keysym;
 
     if (!string || !*string) {
@@ -294,9 +295,8 @@ XStringToKeysym(_Xconst char *string)
     if (keysym == XKB_KEY_NoSymbol) {
         keysym = xkb_keysym_from_name(string, XKB_KEYSYM_CASE_INSENSITIVE);
     }
-    printf("XStringToKeysym: %s -> %d\n", string, keysym);
+ //   printf("XStringToKeysym: %s -> %d\n", string, keysym);
     return (KeySym)keysym;
-#endif
 }
 
 /*

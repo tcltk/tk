@@ -238,20 +238,20 @@ set dark [ttk::button $appearanceFrame.dark -style ImageButton -text Dark \
 	      -image {starry pressed starry1 selected starry2} \
 	      -command "beDark $appearanceFrame $w"]
 grid $dark -row 1 -column 2 -sticky w
-if { [winfo isdark $w] } {
+if { [wm attributes $w -isdark] } {
     $dark state selected
 } else {
     $light state selected
 }
 proc beLight {f w} {
-    wm attributes $w -appearance light
+    wm attributes $w -appearance aqua
     # A small delay is needed for the appearance change to complete.
     after 20 [list $f.dark state !selected]
     after 20 [list $f.light state selected]
 }
 
 proc beDark {f w} {
-    wm attributes $w -appearance dark
+    wm attributes $w -appearance darkaqua
     # A small delay is needed for the appearance change to complete.
     after 20 [list $f.light state !selected]
     after 20 [list $f.dark state selected]

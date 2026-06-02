@@ -7,7 +7,8 @@
 # ::tk::ScalingPct --
 #
 # Returns the display's "scaling percentage" (the display resolution expressed
-# as a percentage of 96dpi), rounded to the nearest multiple of 25.
+# as a percentage of 96dpi), rounded to the nearest multiple of 25 that is at
+# least 100.
 #
 # On X11 systems (but not on SDL systems that claim to be X11), the first call
 # of the command also sets [tk scaling] and ::tk::fontScalingFactor to values
@@ -26,12 +27,12 @@ proc ::tk::ScalingPct {} {
     }
 
     #
-    # Save the value of pct rounded to the nearest
-    # multiple of 25, in the variable ::tk::scalingPct.
+    # Save the value of pct rounded to the nearest multiple
+    # of 25 that is at least 100, in the variable scalingPct.
     # See "man n tk_scalingPct" for use of ::tk::scalingPct.
     #
     variable scalingPct
-    for {set scalingPct 25} {1} {incr scalingPct 25} {
+    for {set scalingPct 100} {1} {incr scalingPct 25} {
 	if {$pct < $scalingPct + 12.5} {
 	    break
 	}

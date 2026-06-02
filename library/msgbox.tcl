@@ -294,7 +294,9 @@ proc ::tk::MessageBox {args} {
 	wm transient $w $data(-parent)
     }
 
-    if {$windowingsystem eq "x11"} {
+    if {$windowingsystem eq "aqua"} {
+	::tk::unsupported::MacWindowStyle style $w moveableModal {}
+    } elseif {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
     }
 
@@ -462,10 +464,6 @@ proc ::tk::MessageBox {args} {
 	set focus $w
     }
     ::tk::SetFocusGrab $w $focus
-
-    if {$windowingsystem eq "aqua"} {
-	wm attributes $w -stylemask titled
-    }
 
     # 10. Wait for the user to respond, then restore the focus and
     # return the index of the selected button.  Restore the focus

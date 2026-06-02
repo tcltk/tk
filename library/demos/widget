@@ -27,7 +27,7 @@ if {[info commands ::tk::accessible::check_screenreader] ne ""}  {
 
 
 wm title . [mc "Widget Demonstration"]
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     # This won't work everywhere, but there's no other way in core Tk at the
     # moment to display a coloured icon.
     image create photo TclPowered \
@@ -121,7 +121,7 @@ proc images {arg} {
 
 images create
 set mainClass [winfo class .]
-foreach event {<<ThemeChanged>> <<LightAppearance>> <<DarkApperance>>} {
+foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
     bind $mainClass $event { images configure }
 }
 unset mainClass event
@@ -359,7 +359,6 @@ addFormattedText {
     @@subtitle	Labels, buttons, checkbuttons, and radiobuttons
     @@demo label	Labels (text and bitmaps)
     @@demo unicodeout	Labels and UNICODE text
-	@@demo biditext BiDirectional (RTL) text
     @@demo button	Buttons
     @@demo check	Check-buttons (select any of a group)
     @@demo radio	Radio-buttons (select one of a group)
@@ -387,8 +386,6 @@ addFormattedText {
     @@demo sayings	A collection of famous and infamous sayings
     @@demo mclist	A multi-column list of countries
     @@demo tree		A directory browser tree
-    @@new
-    @@demo treeview	An enhanced treeview demo
 
     @@subtitle	Entries, Spin-boxes and Combo-boxes
     @@demo entry1	Entries without scrollbars

@@ -42,8 +42,7 @@ namespace eval ::tk::systray {
 	wm overrideredirect $top 1
 	wm state $top withdrawn
 	if {[tk windowingsystem] eq "aqua"}  {
-	    update idletasks
-	    wm attributes $top -stylemask docmodal
+	    ::tk::unsupported::MacWindowStyle style $top help none
 	}
 	pack [message $top._txt -aspect 10000 -text $msg]
 
@@ -323,6 +322,12 @@ proc ::tk::systray::create {args} {
 		bind ._tray <Button-1> [dict get $values -button1]
 		bind ._tray <Button-3> [dict get $values -button3]
 	    }
+		"wayland" {
+		_systray ._tray -image [dict get $values -image] -visible true
+		_balloon ._tray [dict get $values -text]
+		bind ._tray <Button-1> [dict get $values -button1]
+		bind ._tray <Button-3> [dict get $values -button3]
+	    }
 	    "aqua" {
 		_systray create [dict get $values -image] [dict get $values -text] \
 			[dict get $values -button1] [dict get $values -button3]
@@ -378,6 +383,20 @@ proc ::tk::systray::configure {args} {
 		    bind ._tray <Button-3> [dict get $args -button3]
 		}
 	    }
+		"wayland" {
+		if {[dict exists $args -image]} {
+		    ._tray configure -image [dict get $args -image]
+		}
+		if {[dict exists $args -text]} {
+		    _balloon ._tray [dict get $args -text]
+		}
+		if {[dict exists $args -button1]} {
+		    bind ._tray <Button-1> [dict get $args -button1]
+		}
+		if {[dict exists $args -button3]} {
+		    bind ._tray <Button-3> [dict get $args -button3]
+		}
+	    }
 	    "aqua" {
 		foreach {key opt} {image -image text \
 			-text b1_callback -button1 b3_callback -button3} {
@@ -411,6 +430,9 @@ proc ::tk::systray::destroy {} {
 	}
 	"x11" {
 	    ::destroy ._tray
+	}
+	"wayland" {
+	::destroy ._tray
 	}
 	"aqua" {
 	    _systray destroy
@@ -468,6 +490,13 @@ proc ::tk::sysnotify::sysnotify {title message} {
 	    } else {
 		_sysnotify $title $message
 	    }
+	}
+	"wayland" {
+		if {[info commands ::tk::sysnotify::_sysnotify] eq ""} {
+		_notifywindow $title $message
+		} else {
+		_sysnotify $title $message
+		}
 	}
 	"aqua" {
 	    _sysnotify $title $message

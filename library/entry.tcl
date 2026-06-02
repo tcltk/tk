@@ -717,7 +717,6 @@ proc ::tk::EntryScanDrag {w x} {
     # Make sure these exist, as some weird situations can trigger the
     # motion binding without the initial press.  [Bug #220269]
     if {![info exists ::tk::Priv(x)]} {set ::tk::Priv(x) $x}
-
     # allow for a delta
     if {abs($x-$::tk::Priv(x)) > 2} {
 	set ::tk::Priv(mouseMoved) 1
@@ -753,14 +752,9 @@ proc ::tk::EntryGetSelection {w} {
 # factor -	$amount/$factor = number of scroll units for $w xview scroll.
 
 proc ::tk::EntryScrollByUnits {w axis amount factor} {
-    # Make sure that the array elements ::tk::Priv(xWheelEvents)
-    # and ::tk::Priv(yWheelEvents) exist
-    variable ::tk::Priv
-    if {![info exists Priv(xWheelEvents)]} { set Priv(xWheelEvents) 0 }
-    if {![info exists Priv(yWheelEvents)]} { set Priv(yWheelEvents) 0 }
-
     # Count both the <MouseWheel> and <Shift-MouseWheel>
     # events, and ignore the non-dominant ones
+    variable ::tk::Priv
     incr Priv(${axis}WheelEvents)
     if {($Priv(xWheelEvents) + $Priv(yWheelEvents) > 10) &&
 	    ($axis eq "x" && $Priv(xWheelEvents) < $Priv(yWheelEvents) ||

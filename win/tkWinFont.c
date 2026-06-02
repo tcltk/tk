@@ -2046,7 +2046,7 @@ Tk_DrawCharsInContext(
 	ScriptTextOut(
 	    dc,
 	    &fontPtr->scriptCacheArray[run->scriptCacheIdx],
-	    runX[i] + glyphOffsetX, y,  /* Offset to first visible glyph. */
+	    runX[j] + glyphOffsetX, y,  /* Offset to first visible glyph. */
 	    0, NULL,
 	    &run->sa,
 	    NULL, 0,
