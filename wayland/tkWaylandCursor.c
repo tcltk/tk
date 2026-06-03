@@ -1241,7 +1241,6 @@ TkpSetCursor(
         glfwSetCursor(window, NULL);
     } else {
         glfwSetCursor(window, waylandCursorPtr->cursor);
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }
 
