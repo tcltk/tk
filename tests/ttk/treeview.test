@@ -481,6 +481,9 @@ test State-4.4 {Set state} -body {
     } -result {!disabled}
 
 test State-4.5 {Get state} -body {
+	# Make sure that the state won't include the hover flag
+	event generate .tv <Motion> -warp 1 -x -1 -y -1
+	update
 	.tv state
     } -result {disabled}
 
