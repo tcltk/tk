@@ -298,19 +298,28 @@ static void Ttk_Tile(
 
 #ifndef TK_NO_DOUBLE_BUFFERING
 /*
- * Rendered-element cache (per element).  The tiled element is composed once
- * into an off-screen RGBA photo (background-free) and drawn each frame with a
- * single Tk_RedrawImage, which re-composites it against the live destination.
+ * Rendered-element cache (per element).  Opaque elements are cached as a plain
+ * pixmap and blitted with XCopyArea -- fast, and correct because an opaque
+ * element fully covers its box, so the cached pixels do not depend on the
+ * background.  Translucent elements are composed into a background-free RGBA
+ * photo and drawn with Tk_RedrawImage, which re-blends them against the live
+ * destination every frame so the result is never stale.
  */
 typedef struct {
+    /* Opaque fast path: */
+    Pixmap pixmap;		/* Cached composited pixmap, or None */
+    Display *pixmapDisplay;	/* Display owning pixmap */
+    /* Translucent path: */
     Tk_PhotoHandle composed;	/* Internal composed photo, or NULL */
     Tcl_Obj *composedName;	/* Name of the internal composed photo */
     Tk_Image composedImage;	/* Drawing instance of `composed`, or NULL */
     Tk_Window composedFor;	/* Window the instance was created for */
-    int cachedWidth;		/* Width the photo was composed at */
-    int cachedHeight;		/* Height the photo was composed at */
-    Ttk_State cachedState;	/* State the photo was composed for */
-    int cachedValid;		/* Nonzero when `composed` holds the key */
+    /* Shared cache key: */
+    int cachedWidth;		/* Width the element was cached at */
+    int cachedHeight;		/* Height the element was cached at */
+    Ttk_State cachedState;	/* State the element was cached for */
+    int cachedValid;		/* Nonzero when the cache holds the key */
+    int cachedOpaque;		/* Nonzero: use pixmap; else use photo */
 } ElementImageCache;
 #endif
 
@@ -411,6 +420,9 @@ static void FreeImageCache(ImageData *imageData)
     FreeComposedInstance(cache);
     if (cache->composedName != NULL) {
 	Tcl_DecrRefCount(cache->composedName);
+    }
+    if (cache->pixmap != None) {
+	Tk_FreePixmap(cache->pixmapDisplay, cache->pixmap);
     }
     Tcl_Free(cache);
     imageData->imageCache = NULL;
@@ -586,6 +598,69 @@ static int BuildComposedPhoto(
     return 1;
 }
 
+/* SourceIsOpaque --
+ *	Return 1 if every pixel of the source photo is fully opaque (alpha
+ *	255), so the tiled element can be cached as a plain pixmap.  A photo
+ *	whose pixels cannot be read is treated as translucent (always-correct
+ *	fallback).
+ */
+static int SourceIsOpaque(Tk_PhotoHandle photo)
+{
+    Tk_PhotoImageBlock block;
+    int x, y, alphaOff;
+
+    if (!Tk_PhotoGetImage(photo, &block)) {
+	return 0;
+    }
+    if (block.pixelSize < 4) {
+	return 1;		/* No alpha channel: opaque. */
+    }
+    alphaOff = block.offset[3];
+    for (y = 0; y < block.height; y++) {
+	unsigned char *pixPtr = block.pixelPtr + y * block.pitch + alphaOff;
+	for (x = 0; x < block.width; x++) {
+	    if (*pixPtr != 255) {
+		return 0;
+	    }
+	    pixPtr += block.pixelSize;
+	}
+    }
+    return 1;
+}
+
+/* BuildOpaquePixmap --
+ *	(Re)tile an opaque element into the cache pixmap at size w x h.  No
+ *	background seed is needed: an opaque element fully covers the pixmap.
+ *	Returns 1 on success, 0 if a pixmap could not be allocated.
+ */
+static int BuildOpaquePixmap(
+    ElementImageCache *cache,
+    Tk_Window tkwin,
+    Tk_Image image,
+    Ttk_Box src,
+    int w, int h,
+    Ttk_Padding p)
+{
+    Display *display = Tk_Display(tkwin);
+    Pixmap pixmap;
+
+    if (Tk_WindowId(tkwin) == None) {
+	return 0;		/* Window not realized. */
+    }
+    pixmap = Tk_GetPixmap(display, Tk_WindowId(tkwin), w, h, Tk_Depth(tkwin));
+    if (pixmap == None) {
+	return 0;
+    }
+    Ttk_Tile(tkwin, pixmap, image, src, Ttk_MakeBox(0, 0, w, h), p);
+
+    if (cache->pixmap != None) {
+	Tk_FreePixmap(cache->pixmapDisplay, cache->pixmap);
+    }
+    cache->pixmap = pixmap;
+    cache->pixmapDisplay = display;
+    return 1;
+}
+
 /* EnsureComposedImageInstance --
  *	Make sure we hold a drawing instance of the composed photo suitable
  *	for the given window.  Recreated when the window changes.
@@ -710,28 +785,47 @@ static void ImageElementDraw(
 		&& dst.height >= p.top + p.bottom) {
 	    ElementImageCache *cache = GetImageCache(imageData);
 
-	    if (EnsureComposedPhoto(cache, interp)) {
-		if (!cache->cachedValid
-			|| cache->cachedWidth  != dst.width
-			|| cache->cachedHeight != dst.height
-			|| cache->cachedState  != state) {
-		    if (BuildComposedPhoto(cache, interp, srcPhoto, src,
+	    if (!cache->cachedValid
+		    || cache->cachedWidth  != dst.width
+		    || cache->cachedHeight != dst.height
+		    || cache->cachedState  != state) {
+		cache->cachedValid = 0;
+		cache->cachedOpaque = SourceIsOpaque(srcPhoto);
+		if (cache->cachedOpaque) {
+		    if (BuildOpaquePixmap(cache, tkwin, image, src,
 			    dst.width, dst.height, p)) {
-			cache->cachedWidth  = dst.width;
-			cache->cachedHeight = dst.height;
-			cache->cachedState  = state;
-			cache->cachedValid  = 1;
-		    } else {
-			cache->cachedValid = 0;
+			cache->cachedValid = 1;
 		    }
+		} else if (EnsureComposedPhoto(cache, interp)
+			&& BuildComposedPhoto(cache, interp, srcPhoto, src,
+				dst.width, dst.height, p)) {
+		    cache->cachedValid = 1;
 		}
+		if (cache->cachedValid) {
+		    cache->cachedWidth  = dst.width;
+		    cache->cachedHeight = dst.height;
+		    cache->cachedState  = state;
+		}
+	    }
 
-		if (cache->cachedValid
-			&& EnsureComposedImageInstance(cache, interp, tkwin)) {
-		    Tk_RedrawImage(cache->composedImage, 0, 0,
-			    dst.width, dst.height, d, dst.x, dst.y);
-		    return;
-		}
+	    if (cache->cachedValid && cache->cachedOpaque) {
+		XGCValues gcValues;
+		GC gc;
+
+		gcValues.function = GXcopy;
+		gcValues.graphics_exposures = False;
+		gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
+		XCopyArea(Tk_Display(tkwin), cache->pixmap, d, gc,
+			0, 0, (unsigned) dst.width, (unsigned) dst.height,
+			dst.x, dst.y);
+		Tk_FreeGC(Tk_Display(tkwin), gc);
+		return;
+	    }
+	    if (cache->cachedValid
+		    && EnsureComposedImageInstance(cache, interp, tkwin)) {
+		Tk_RedrawImage(cache->composedImage, 0, 0,
+			dst.width, dst.height, d, dst.x, dst.y);
+		return;
 	    }
 	}
     }
