@@ -630,7 +630,7 @@ static void		FinalizeBaseChunk(TkTextDispChunk *additionalChunkPtr);
 static void		FreeBaseChunk(TkTextDispChunk *baseChunkPtr);
 static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
 static void		RemoveFromBaseChunk(TkTextDispChunk *chunkPtr);
-static int              ChunkIsRtl(const char *chars, Tcl_Size numBytes);
+static int	      ChunkIsRtl(const char *chars, Tcl_Size numBytes);
 
 #endif
 /*
@@ -3980,7 +3980,7 @@ CalculateDisplayLineHeight(
     int pixelHeight;
 
     if (tkTextDebug) {
-	int oldtkTextDebug = tkTextDebug;
+	bool oldtkTextDebug = tkTextDebug;
 	/*
 	 * Check that the indexPtr we are given really is at the start of a
 	 * display line. The gymnastics with tkTextDebug is to prevent
@@ -3992,7 +3992,7 @@ CalculateDisplayLineHeight(
 	 */
 
 	TkTextIndex indexPtr2 = *indexPtr;
-	tkTextDebug = 0;
+	tkTextDebug = false;
 	TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 0, NULL);
 	tkTextDebug = oldtkTextDebug;
 	if (TkTextIndexCmp(&indexPtr2,indexPtr) != 0) {
@@ -4282,7 +4282,7 @@ TkTextUpdateOneLine(
     }
 
     if (!partialCalc) {
-	int changed = 0;
+	bool changed = false;
 
 	/*
 	 * Cancel any partial line height calculation state.
@@ -4298,7 +4298,7 @@ TkTextUpdateOneLine(
 	TkBTreeLinePixelEpoch(textPtr, linePtr)
 		= textPtr->dInfoPtr->lineMetricUpdateEpoch;
 	if (TkBTreeLinePixelCount(textPtr, linePtr) != pixelHeight) {
-	    changed = 1;
+	    changed = true;
 	}
 
 	if (mergedLines > 0) {
@@ -4317,7 +4317,7 @@ TkTextUpdateOneLine(
 		TkBTreeLinePixelEpoch(textPtr, mergedLinePtr)
 			= textPtr->dInfoPtr->lineMetricUpdateEpoch;
 		if (TkBTreeLinePixelCount(textPtr, mergedLinePtr) != 0) {
-		    changed = 1;
+		    changed = true;
 		}
 	    }
 	}
@@ -8423,7 +8423,9 @@ TkTextCharLayoutProc(
 	const char *chunkStart = p;           /* logical byte 0 of this slice */
 	const char *chunkEnd   = p + bytesThatFit; /* one past last byte kept */
 	const char *scanPtr    = chunkEnd;
-	int         foundBreak  = 0;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	bool foundBreak  = false;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 	while (scanPtr > chunkStart) {
 	    int ch3;
@@ -8433,7 +8435,9 @@ TkTextCharLayoutProc(
 	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
 		/* breakIndex is the byte offset *after* the space character */
 		chunkPtr->breakIndex = (Tcl_Size)(prevPtr - chunkStart) + 1;
-		foundBreak = 1;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		foundBreak = true;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		goto checkForNextChunk;
 	    }
 	    scanPtr = prevPtr;
@@ -8471,7 +8475,6 @@ TkTextCharLayoutProc(
 	    }
 	}
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-	(void)foundBreak; /* suppress unused-variable warning when !TK_LAYOUT_WITH_BASE_CHUNKS */
 
     checkForNextChunk:
 	if ((bytesThatFit + byteOffset) == segPtr->size) {
@@ -8897,7 +8900,7 @@ CharUndisplayProc(
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr == NULL) {
-        return;
+	return;
     }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -8907,38 +8910,38 @@ CharUndisplayProc(
      * Dependent chunks must NOT free CharInfo (it belongs to the base chunk).
      */
     if (chunkPtr == ciPtr->baseChunkPtr) {
-        /*
-         * This is a base chunk being removed.
-         * First disconnect all dependent chunks from this base.
-         */
-        FreeBaseChunk(chunkPtr);
+	/*
+	 * This is a base chunk being removed.
+	 * First disconnect all dependent chunks from this base.
+	 */
+	FreeBaseChunk(chunkPtr);
 
-        /*
-         * Now safe to clear and free the CharInfo since no other
-         * chunks reference it.
-         */
-        ciPtr->baseChunkPtr = NULL;
-        ciPtr->chars = NULL;
-        ciPtr->numBytes = 0;
+	/*
+	 * Now safe to clear and free the CharInfo since no other
+	 * chunks reference it.
+	 */
+	ciPtr->baseChunkPtr = NULL;
+	ciPtr->chars = NULL;
+	ciPtr->numBytes = 0;
 
-        Tcl_Free(ciPtr);
-        chunkPtr->clientData = NULL;
+	Tcl_Free(ciPtr);
+	chunkPtr->clientData = NULL;
 
     } else {
-        /*
-         * This is a dependent chunk (not the base chunk).
-         * Remove it from the base chunk's data structure if still connected.
-         * DO NOT free the CharInfo - it belongs to the base chunk.
-         */
-        if (ciPtr->baseChunkPtr != NULL) {
-            RemoveFromBaseChunk(chunkPtr);
-        }
+	/*
+	 * This is a dependent chunk (not the base chunk).
+	 * Remove it from the base chunk's data structure if still connected.
+	 * DO NOT free the CharInfo - it belongs to the base chunk.
+	 */
+	if (ciPtr->baseChunkPtr != NULL) {
+	    RemoveFromBaseChunk(chunkPtr);
+	}
 
-        /*
-         * Detach this chunk from the CharInfo to prevent stale access,
-         * but don't free the CharInfo itself.
-         */
-        chunkPtr->clientData = NULL;
+	/*
+	 * Detach this chunk from the CharInfo to prevent stale access,
+	 * but don't free the CharInfo itself.
+	 */
+	chunkPtr->clientData = NULL;
     }
 #else
     /*
@@ -9040,45 +9043,45 @@ CharBboxProc(
     int maxX = chunkPtr->x + chunkPtr->width;
 
     if (ciPtr == NULL || byteIndex < 0) {
-        byteIndex = 0;
+	byteIndex = 0;
     } else if (byteIndex > ciPtr->numBytes) {
-        byteIndex = ciPtr->numBytes;
+	byteIndex = ciPtr->numBytes;
     }
 
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 
     if (ciPtr->isRtl) {
-        /* RTL: mirror the measurement. */
-        int xEnd, xStart;
-        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
-                chunkPtr->x, -1, 0, &xEnd);
-        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-                chunkPtr->x, -1, 0, &xStart);
+	/* RTL: mirror the measurement. */
+	int xEnd, xStart;
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
+		chunkPtr->x, -1, 0, &xEnd);
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+		chunkPtr->x, -1, 0, &xStart);
 
-        *xPtr = chunkPtr->x + (chunkPtr->width - (xEnd - chunkPtr->x));
-        *widthPtr = xEnd - xStart;
+	*xPtr = chunkPtr->x + (chunkPtr->width - (xEnd - chunkPtr->x));
+	*widthPtr = xEnd - xStart;
 
-        if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
-        if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
+	if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
+	if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
     } else {
-        /* LTR */
-        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-                chunkPtr->x, -1, 0, xPtr);
+	/* LTR */
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+		chunkPtr->x, -1, 0, xPtr);
 
-        if (byteIndex >= ciPtr->numBytes) {
-            *widthPtr = maxX - *xPtr;
-        } else {
-            int x2;
-            CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
-                    *xPtr, -1, 0, &x2);
-            *widthPtr = (x2 > maxX) ? maxX - *xPtr : x2 - *xPtr;
-        }
+	if (byteIndex >= ciPtr->numBytes) {
+	    *widthPtr = maxX - *xPtr;
+	} else {
+	    int x2;
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
+		    *xPtr, -1, 0, &x2);
+	    *widthPtr = (x2 > maxX) ? maxX - *xPtr : x2 - *xPtr;
+	}
     }
 
     /* Zero-width fallback (common with elision / bidi). */
     if (*widthPtr == 0 && ciPtr->numBytes > 0) {
-        *widthPtr = 1;  /* minimal visible width for cursor/selection */
+	*widthPtr = 1;  /* minimal visible width for cursor/selection */
     }
 }
 
@@ -9706,22 +9709,22 @@ FinalizeBaseChunk(
     const char *baseChars = Tcl_DStringValue(&bciPtr->baseChars);
 
     for (TkTextDispChunk *chunkPtr = baseCharChunkPtr;
-         chunkPtr != NULL;
-         chunkPtr = chunkPtr->nextPtr) {
+	 chunkPtr != NULL;
+	 chunkPtr = chunkPtr->nextPtr) {
 
-        if (chunkPtr->displayProc != CharDisplayProc) break;
+	if (chunkPtr->displayProc != CharDisplayProc) break;
 
-        CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-        if (ciPtr == NULL || ciPtr->baseChunkPtr != baseCharChunkPtr) break;
+	CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+	if (ciPtr == NULL || ciPtr->baseChunkPtr != baseCharChunkPtr) break;
 
-        ciPtr->chars = baseChars + ciPtr->baseOffset;
+	ciPtr->chars = baseChars + ciPtr->baseOffset;
     }
 
     if (addChunkPtr) {
-        CharInfo *ciPtr = (CharInfo *)addChunkPtr->clientData;
-        if (ciPtr && ciPtr->baseChunkPtr) {
-            ciPtr->chars = baseChars + ciPtr->baseOffset;
-        }
+	CharInfo *ciPtr = (CharInfo *)addChunkPtr->clientData;
+	if (ciPtr && ciPtr->baseChunkPtr) {
+	    ciPtr->chars = baseChars + ciPtr->baseOffset;
+	}
     }
 
     baseCharChunkPtr = NULL;
@@ -9909,7 +9912,7 @@ RemoveFromBaseChunk(
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     if (ciPtr == NULL || ciPtr->baseChunkPtr == NULL) {
-        return;
+	return;
     }
 
     BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;

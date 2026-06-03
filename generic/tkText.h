@@ -958,8 +958,8 @@ typedef enum {
  * Declarations for variables shared among the text-related files:
  */
 
-MODULE_SCOPE int	tkBTreeDebug;
-MODULE_SCOPE int	tkTextDebug;
+MODULE_SCOPE bool	tkBTreeDebug;
+MODULE_SCOPE bool	tkTextDebug;
 MODULE_SCOPE const Tk_SegType tkTextCharType;
 MODULE_SCOPE const Tk_SegType tkTextLeftMarkType;
 MODULE_SCOPE const Tk_SegType tkTextRightMarkType;

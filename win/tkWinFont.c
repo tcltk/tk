@@ -5,10 +5,10 @@
  *	package interface with support for shaping and RTL support with complex
  *	script languages like Arabic.
  *
- * Copyright (c) 1994 Software Research Associates, Inc.
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 Scriptics Corporation.
- * Copyright (c) 2026 Kevin Walzer
+ * Copyright © 1994 Software Research Associates, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

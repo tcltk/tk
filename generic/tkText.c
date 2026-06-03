@@ -322,7 +322,7 @@ static int		SearchPerform(Tcl_Interp *interp,
  * executed.
  */
 
-int tkTextDebug = 0;
+bool tkTextDebug = false;
 
 /*
  * Forward declarations for functions defined later in this file:
@@ -4168,7 +4168,7 @@ TextSearchAddNextLine(
     thisLinePtr = linePtr;
 
     while (thisLinePtr != NULL) {
-	int elideWraps = 0;
+	bool elideWraps = false;
 
 	curIndex.linePtr = thisLinePtr;
 	curIndex.byteIndex = 0;
@@ -4186,7 +4186,7 @@ TextSearchAddNextLine(
 		 */
 
 		if (segPtr->nextPtr == NULL && !nothingYet) {
-		    elideWraps = 1;
+		    elideWraps = true;
 		}
 		continue;
 	    }

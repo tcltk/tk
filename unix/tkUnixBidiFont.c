@@ -4,8 +4,8 @@
  * Alternate implementation of tkUnixFont.c using Xft with proper
  * text shaping.
  *
- * Copyright (c) 2002-2003 Keith Packard
- * Copyright (c) 2026 Kevin Walzer
+ * Copyright © 2002-2003 Keith Packard
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

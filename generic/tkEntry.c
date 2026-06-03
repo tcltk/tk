@@ -1118,7 +1118,7 @@ ConfigureEntry(
     Tcl_Obj *oldValues = NULL;
     Tcl_Obj *oldFormat = NULL;
     int error;
-    int oldExport = 0;
+    bool oldExport = false;
     int valuesChanged = 0;
     double oldFrom = 0.0;
     double oldTo = 0.0;
@@ -1144,7 +1144,7 @@ ConfigureEntry(
      * value.
      */
 
-    oldExport = (entryPtr->exportSelection) && (!Tcl_IsSafe(entryPtr->interp));
+    oldExport = (entryPtr->exportSelection) && !Tcl_IsSafe(entryPtr->interp);
     if (entryPtr->type == TK_SPINBOX) {
 	oldValues = sbPtr->valueObj;
 	oldFormat = sbPtr->reqFormatObj;

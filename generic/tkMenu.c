@@ -2166,10 +2166,10 @@ ConfigureMenuCloneEntries(
 {
     TkMenuEntry *mePtr;
     TkMenu *menuListPtr;
-    int cascadeEntryChanged = 0;
     TkMenuReferences *oldCascadeMenuRefPtr, *cascadeMenuRefPtr = NULL;
     Tcl_Obj *oldCascadePtr = NULL;
     const char *newCascadeName;
+    bool cascadeEntryChanged = false;
 
     /*
      * Cascades are kind of tricky here. This is special case #3 in the
@@ -2202,11 +2202,11 @@ ConfigureMenuCloneEntries(
 	}
 
 	if ((oldCascadePtr == NULL) && (mePtr->namePtr == NULL)) {
-	    cascadeEntryChanged = 0;
+	    cascadeEntryChanged = false;
 	} else if (((oldCascadePtr == NULL) && (mePtr->namePtr != NULL))
 		|| ((oldCascadePtr != NULL)
 		&& (mePtr->namePtr == NULL))) {
-	    cascadeEntryChanged = 1;
+	    cascadeEntryChanged = true;
 	} else {
 	    oldCascadeName = Tcl_GetString(oldCascadePtr);
 	    cascadeEntryChanged = (strcmp(oldCascadeName, newCascadeName)

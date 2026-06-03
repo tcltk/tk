@@ -107,7 +107,8 @@ Tk_BellObjCmd(
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window)clientData;
     Tcl_Size i;
-    int index, nice = 0;
+    int index;
+	bool nice = false;
     Tk_ErrorHandler handler;
 
     if (objc > 4) {
@@ -132,7 +133,7 @@ Tk_BellObjCmd(
 	    }
 	    break;
 	case TK_BELL_NICE:
-	    nice = 1;
+	    nice = true;
 	    break;
 	}
     }

@@ -713,14 +713,14 @@ Tk_CreateEventHandler(
 	handlerPtr = (TkEventHandler *)Tcl_Alloc(sizeof(TkEventHandler));
 	winPtr->handlerList = handlerPtr;
     } else {
-	int found = 0;
+	bool found = false;
 
 	for (handlerPtr = winPtr->handlerList; ;
 		handlerPtr = handlerPtr->nextPtr) {
 	    if ((handlerPtr->proc == proc)
 		    && (handlerPtr->clientData == clientData)) {
 		handlerPtr->mask = mask;
-		found = 1;
+		found = true;
 	    }
 	    if (handlerPtr->nextPtr == NULL) {
 		break;
