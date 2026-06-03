@@ -4741,7 +4741,7 @@ XChangeWindowAttributes(
          * attributes->cursor is already the platform struct cast to Cursor.
          * Pass it directly to TkpSetCursor — no hash lookup needed.
          */
-   //     TkpSetCursor(attributes->cursor);
+         TkpSetCursor(attributes->cursor);
     }
 
     /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
