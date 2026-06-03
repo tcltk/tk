@@ -451,10 +451,12 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+#if 0
 static int		WmWinStyle(Tcl_Interp *interp, TkWindow *winPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		WmWinAppearance(Tcl_Interp *interp, TkWindow *winPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
+#endif
 static void		ApplyWindowAttributeFlagChanges(TkWindow *winPtr,
 			    NSWindow *macWindow, UInt64 oldAttributes,
 			    int oldFlags, int create, int initial);
@@ -6294,8 +6296,7 @@ TkUnsupported1ObjCmd(
 	return TCL_ERROR;
     }
 }
-#endif
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -6479,7 +6480,7 @@ WmWinStyle(
 
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -6580,6 +6581,7 @@ WmWinAppearance(
     return TCL_OK;
 #endif
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
