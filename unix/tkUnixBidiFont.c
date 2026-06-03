@@ -1226,7 +1226,7 @@ X11Shaper_ShapeString(
     buffer->indexCount = 0;
     buffer->totalAdvance = 0;
     buffer->clusterBreakCount = 0;
-    
+
     /*
      * Fast path for simple scripts (Latin, CJK, etc.).
      *
@@ -1295,7 +1295,7 @@ X11Shaper_ShapeString(
 
 	buffer->indexCount = 0;
 	int prevByteOffset = -1;
-	
+
 	/*
 	 * Build visualIndex properly for CJK (Chinese/Japanese) + Latin.
 	 * This is critical for correct cursor movement and selection.

@@ -122,6 +122,8 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), TK_OPTION_ENUM_VAR, 0, 0},
+    {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
+	"C", TCL_INDEX_NONE, offsetof(Entry, locale), 0, &TkLocaleOption, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	DEF_ENTRY_PLACEHOLDER, offsetof(Entry, placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -266,6 +268,8 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), TK_OPTION_ENUM_VAR, 0, 0},
+    {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
+	"C", TCL_INDEX_NONE, offsetof(Entry, locale), 0, &TkLocaleOption, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	DEF_ENTRY_PLACEHOLDER, offsetof(Entry, placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -2265,7 +2269,7 @@ DeleteChars(
     if (index + count > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
     }
-    if ((int)count <= 0) {
+    if (count <= 0) {
 	return TCL_OK;
     }
 

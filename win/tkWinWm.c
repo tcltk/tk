@@ -398,7 +398,7 @@ enum AttributeAppearances {
  * Forward declarations for functions defined in this file:
  */
 
-static bool	     AppsShouldUseLightTheme();
+static bool		AppsShouldUseLightTheme();
 static inline const char *	AppearanceStringGet(int flags);
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);

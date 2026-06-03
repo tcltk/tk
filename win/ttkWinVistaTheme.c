@@ -952,7 +952,7 @@ static void TreeIndicatorElementDraw(
 	if (state & TTK_STATE_ACTIVE) {
 	    newInfo.partId = TVP_HOTGLYPH;
 	}
-	
+
 	/* Use new Explorer style indicators */
 	SetWindowTheme(elementData->hwnd, L"Explorer", NULL);
 	GenericElementDraw((void *)&newData, elementRecord, tkwin, d, b, state);
@@ -973,7 +973,7 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec =
  *
  * Used for row, item, and cell drawing.
  */
- 
+
 typedef struct {
     Tcl_Obj *backgroundObj;
     Tcl_Obj *rowNumberObj;
@@ -1034,7 +1034,6 @@ static void RowElementDraw(
 	    NULL);			/* Optional clipping rect */
     } else {
 	/* Override background color for stripes and tags */
-	Display *disp = Tk_Display(tkwin);
 	RowElement *row = (RowElement *)elementRecord;
 	XColor *color = Tk_GetColorFromObj(tkwin, row->backgroundObj);
 	COLORREF hcolor = RGB(color->red >> 8, color->green >> 8, color->blue >> 8);
@@ -1450,7 +1449,6 @@ TtkWinVistaTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     Ttk_Theme themePtr, parentPtr;
     const ElementInfo *infoPtr;
-    HMODULE hUxtheme = LoadLibraryExW(L"uxtheme.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
 
     /*
      * Create the new style engine.

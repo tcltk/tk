@@ -842,7 +842,7 @@ Tk_Image makeChevronImage(
     if (img != NULL) {
 	return img;
     }
-    
+
     /*
      * Create an SVG photo image from svgData
      */
