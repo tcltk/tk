@@ -1772,7 +1772,7 @@ void
 TkpFontPkgInit(
     TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
-    /* Nothing to initialize. */
+    FcInit();
 }
 
 /*
