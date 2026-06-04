@@ -475,7 +475,7 @@ AQUA_OBJS = tkMacOSXAccessibility.o tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXCl
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
-	 nanovg.o text-input-unstable-v3-protocol.o SheenBidi.o \
+	 nanovg.o  SheenBidi.o \
       tkGlfwInit.o tkWayland.o  \
      tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
      tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
@@ -639,7 +639,6 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
     $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
     $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c $(WAYLAND_DIR)/tkWaylandWm.c \
-    $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c \
     $(UNIX_DIR)/bidi/SheenBidi.c \
     $(WAYLAND_UNIX_SRCS)
 
@@ -1462,9 +1461,6 @@ tkUnixXId.o: $(UNIX_DIR)/tkUnixXId.c
 
 nanovg.o: $(WAYLAND_DIR)/nanovg.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/nanovg.c
-
-text-input-unstable-v3-protocol.o: $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/text-input-unstable-v3-protocol.c
 
 tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c

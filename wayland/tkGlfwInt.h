@@ -28,13 +28,6 @@
 
 typedef struct NVGLUframebuffer NVGLUframebuffer;
 
-
-/* Forward declarations for GLES2 backend functions. */
-//NVGcontext* nvgCreateGLES2(int flags);
-//void nvgDeleteGLES2(NVGcontext* ctx);
-//int nvglCreateImageFromHandleGLES2(NVGcontext* ctx, GLuint textureId, int w, int h, int flags);
-//GLuint nvglImageHandleGLES2(NVGcontext* ctx, int image);
-
 /* Forward declarations for utils. */
 NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
 void nvgluBindFramebuffer(NVGLUframebuffer* fb);
@@ -355,6 +348,7 @@ TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable);
 Drawable TkWaylandDrawableForPixmap(TkWaylandPixmap *pixmap);
 TkWaylandPixmap* TkWaylandPixmapFromDrawable(Drawable drawable);
 bool TkWaylandDrawableIsPixmap(Drawable drawable);
+Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
 
 /*
  *----------------------------------------------------------------------
