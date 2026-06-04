@@ -1898,24 +1898,25 @@ Tk_DrawCharsInContext(
  *----------------------------------------------------------------------
  */
 
+
 void
 TkpDrawAngledCharsInContext(
-			    TCL_UNUSED(Display *),
-			    Drawable   drawable,
-			    GC         gc,
-			    Tk_Font    tkfont,
-			    const char *source,
-			    Tcl_Size   numBytes,
-			    Tcl_Size   rangeStart,
-			    Tcl_Size   rangeLength,
-			    double     x,
-			    double     y,
-			    double     angle)
+    TCL_UNUSED(Display *),
+    Drawable   drawable,
+    GC         gc,
+    Tk_Font    tkfont,
+    const char *source,
+    Tcl_Size   numBytes,
+    Tcl_Size   rangeStart,
+    Tcl_Size   rangeLength,
+    double     x,
+    double     y,
+    double     angle)
 {
     WaylandFont *fontPtr = (WaylandFont *)tkfont;
 
     if (rangeStart < 0 || rangeLength <= 0 ||
-	rangeStart + rangeLength > numBytes) return;
+        rangeStart + rangeLength > numBytes) return;
 
     NVGcontext *vg = TkGlfwGetNVGContext(drawable);
     if (!vg) return;
@@ -1928,52 +1929,53 @@ TkpDrawAngledCharsInContext(
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
     nvgFillColor(vg, ColorFromGC(gc));
 
-    int rangeEnd_i = (int)(rangeStart + rangeLength);
+    const char *rangePtr = source + rangeStart;
+    const char *rangeEnd = rangePtr + rangeLength;
 
-    /* Simple LTR path. */
+    /* Starting X for partial range. */
+    double drawX = x;
+    if (rangeStart > 0) {
+        float bounds[4];
+        nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
+        drawX += (double)bounds[2];
+    }
+
+    /* Unified rotation: positive angle = up-right. */
+    nvgSave(vg);
+    nvgTranslate(vg, (float)drawX, (float)y);
+    if (angle != 0.0) {
+        /* Note the minus sign: NanoVG is y-down, so invert to get up-right. */
+        nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
+    }
+
     if (IsSimpleOnly(source, (int)numBytes)) {
-        double drawX = x;
-        if (rangeStart > 0) {
-            float bounds[4];
-            nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
-            drawX += (double)bounds[2];
-        }
-        const char *rangePtr = source + rangeStart;
-        const char *rangeEnd = rangePtr + rangeLength;
-
-        if (angle != 0.0) {
-            nvgSave(vg);
-            nvgTranslate(vg, (float)drawX, (float)y);
-            nvgRotate(vg, (float)(angle * NVG_PI / 180.0));
-            nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
-            nvgRestore(vg);
-        } else {
-            nvgText(vg, (float)drawX, (float)y, rangePtr, rangeEnd);
-        }
+        /* Simple LTR: draw substring at (0,0) in rotated space. */
+        nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
+        nvgRestore(vg);
         goto decorations;
     }
 
-    /* Complex / RTL path: per-cluster nvgText calls. */
+    /* Complex / RTL path: shaped positions in rotated space. */
     {
         ShapedGlyphBuffer sbuf;
-        if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr, source,
-                                       (int)numBytes, &sbuf))
-            goto done;
+        if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
+                                       source, (int)numBytes, &sbuf)) {
+            nvgRestore(vg);
+            return;
+        }
 
-        double cosA = cos(angle * NVG_PI / 180.0);
-        double sinA = sin(angle * NVG_PI / 180.0);
-        int    lastFaceId = primaryId;
+        int lastFaceId = primaryId;
 
         for (int i = 0; i < sbuf.glyphCount; i++) {
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
-            if (boe <= (int)rangeStart || bo >= rangeEnd_i) continue;
-            if (sbuf.glyphs[i].clusterUtf8Len <= 0) continue;
+            if (boe <= (int)rangeStart ||
+                bo  >= (int)(rangeStart + rangeLength))
+                continue;
 
-            /* Skip duplicate-cluster glyphs (ligature components). */
             if (i > 0 &&
-		sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset)
+                sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset)
                 continue;
 
             int faceIdx = sbuf.glyphs[i].faceIndex;
@@ -1981,83 +1983,58 @@ TkpDrawAngledCharsInContext(
 
             int faceId = fontPtr->faces[faceIdx].nvgFontId;
             if (faceId < 0) faceId = primaryId;
+
             if (faceId != lastFaceId) {
                 nvgFontFaceId(vg, faceId);
                 lastFaceId = faceId;
             }
 
-            double gx = (double)sbuf.glyphs[i].x;
-            double gy = (double)sbuf.glyphs[i].y;
-            double drawX, drawY;
-
-            if (angle != 0.0) {
-                double rx = gx * cosA - gy * sinA;
-                double ry = gx * sinA + gy * cosA;
-                drawX = x + rx;
-                drawY = y - ry;
-            } else {
-                drawX = x + gx;
-                drawY = y + gy;
-            }
+            float gx = (float)sbuf.glyphs[i].x;
+            float gy = (float)sbuf.glyphs[i].y;
 
             const char *cl    = sbuf.glyphs[i].clusterUtf8;
             const char *clEnd = cl + sbuf.glyphs[i].clusterUtf8Len;
-            nvgText(vg, (float)drawX, (float)drawY, cl, clEnd);
+
+            nvgText(vg, gx, gy, cl, clEnd);
         }
     }
 
- decorations:
-    /* Underline / overstrike. */
+    nvgRestore(vg);
+
+decorations:
+    /* Decorations are still unrotated here; you can rotate them similarly if desired. */
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
-        const char *rangePtr = source + rangeStart;
-        const char *rangeEnd = rangePtr + rangeLength;
         float bounds[4];
         float runWidth;
-        double drawX = x;
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
 
-        if (rangeStart > 0) {
-            nvgTextBounds(vg, 0, 0, source, source + rangeStart, bounds);
-            drawX += (double)bounds[2];
-        }
-
-        if (angle != 0.0) {
-            nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
-            runWidth = bounds[2];
-        } else {
-            nvgTextBounds(vg, (float)drawX, (float)y, rangePtr, rangeEnd, bounds);
-            runWidth = bounds[2] - (float)drawX;
-        }
+        nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
+        runWidth = bounds[2];
 
         nvgStrokeColor(vg, ColorFromGC(gc));
         nvgStrokeWidth(vg, (float)fontPtr->barHeight);
 
         if (fontPtr->font.fa.underline) {
-            float uy = (angle != 0.0) ? (float)fontPtr->underlinePos
-		: (float)(y + fontPtr->underlinePos);
-            float ux = (angle != 0.0) ? 0.0f : (float)drawX;
+            float uy = (float)(y + fontPtr->underlinePos);
             nvgBeginPath(vg);
-            nvgMoveTo(vg, ux, uy);
-            nvgLineTo(vg, ux + runWidth, uy);
+            nvgMoveTo(vg, (float)x, uy);
+            nvgLineTo(vg, (float)(x + runWidth), uy);
             nvgStroke(vg);
         }
+
         if (fontPtr->font.fa.overstrike) {
-            float oy = (angle != 0.0)
-		? -(float)(fontPtr->font.fm.ascent / 2)
-		: (float)(y - fontPtr->font.fm.ascent / 2);
-            float ox = (angle != 0.0) ? 0.0f : (float)drawX;
+            float oy = (float)(y - fontPtr->font.fm.ascent / 2);
             nvgBeginPath(vg);
-            nvgMoveTo(vg, ox, oy);
-            nvgLineTo(vg, ox + runWidth, oy);
+            nvgMoveTo(vg, (float)x, oy);
+            nvgLineTo(vg, (float)(x + runWidth), oy);
             nvgStroke(vg);
         }
     }
-
- done:
-    return;
 }
+
+
 
 /*
  *----------------------------------------------------------------------

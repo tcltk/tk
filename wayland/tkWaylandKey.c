@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <systemd/sd-bus.h>
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-compose.h>
@@ -740,11 +741,22 @@ static int OnCommitText(
     r = IbusReadTextFromVariant(m, &text);
     if (r < 0 || !text || !*text) return 0;
 
+    /*
+     * Send to the currently focused widget, not the toplevel.
+     * ctx->tkwin is the toplevel that owns the IBus context; the actual
+     * input target is dispPtr->focusPtr, which is updated by Tk's focus
+     * manager as the user tabs between widgets.  Sending to the toplevel
+     * window ID means the text widget never sees the event.
+     */
+    TkWindow *topPtr = (TkWindow *)ctx->tkwin;
+    TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
+    Tk_Window target = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
+
     /* Clear any pending preëdit before committing. */
-    Tk_SendVirtualEvent(ctx->tkwin, "TkClearIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);
 
     /* Insert the committed text via synthetic key events. */
-    TkWaylandSendUnicodeString(ctx->tkwin, text);
+    TkWaylandSendUnicodeString(target, text);
 
     return 0;
 }
@@ -799,18 +811,26 @@ static int OnUpdatePreedit(
     r = sd_bus_message_read(m, "b", &visible);
     if (r < 0) return 0;
 
+    /*
+     * Same focus-routing fix as OnCommitText: send to dispPtr->focusPtr
+     * rather than the toplevel, so the text widget receives the events.
+     */
+    TkWindow *topPtr = (TkWindow *)ctx->tkwin;
+    TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
+    Tk_Window target = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
+
     if (text && *text && visible) {
         /* Clear any previous preëdit text. */
-        Tk_SendVirtualEvent(ctx->tkwin, "TkClearIMEMarkedText", NULL);
+        Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);
 
         /* Start the marked region. */
-        Tk_SendVirtualEvent(ctx->tkwin, "TkStartIMEMarkedText", NULL);
+        Tk_SendVirtualEvent(target, "TkStartIMEMarkedText", NULL);
 
         /* Insert the preëdit text via synthetic key events. */
-        TkWaylandSendUnicodeString(ctx->tkwin, text);
+        TkWaylandSendUnicodeString(target, text);
 
         /* End the marked region – Tk bindings will now underline/select it. */
-        Tk_SendVirtualEvent(ctx->tkwin, "TkEndIMEMarkedText", NULL);
+        Tk_SendVirtualEvent(target, "TkEndIMEMarkedText", NULL);
 
         /*
          * Note: The cursor position is not used in this simple implementation;
@@ -818,7 +838,7 @@ static int OnUpdatePreedit(
          */
     } else {
         /* Hide preëdit: clear the marked region. */
-        Tk_SendVirtualEvent(ctx->tkwin, "TkClearIMEMarkedText", NULL);
+        Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);
     }
     return 0;
 }
@@ -868,9 +888,8 @@ FreeIbusContext(IbusContext *ctx)
  *         message is left in the interpreter.
  *
  * Side effects:
- *         Connects to the IBus daemon (if not already connected), creates a
- *         new input context, subscribes to its signals, and adds the context
- *         to the global list.
+ *         Creates a new input context on the IBus daemon, subscribes to
+ *         its signals, and adds the context to the global list.
  * ----------------------------------------------------------------------------
  */
 
@@ -879,17 +898,22 @@ static int CreateIbusContext(
 			     Tk_Window tkwin)
 {
     if (!ibus_bus) {
+        fprintf(stderr, "CreateIbusContext: IBus bus not connected\n");
         Tcl_SetResult(interp, "IBus not connected", TCL_STATIC);
         return TCL_ERROR;
     }
-    if (FindContext(tkwin)) return TCL_OK; /* Already exists. */
+
+    if (FindContext(tkwin)) {
+        fprintf(stderr, "CreateIbusContext: Context already exists for %s\n",
+                Tk_PathName(tkwin));
+        return TCL_OK;
+    }
 
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *msg = NULL;
     const char *obj_path = NULL;
     int r;
 
-    /* Call IBus.CreateInputContext(string client_name) -> object path. */
     r = sd_bus_call_method(ibus_bus,
                            IBUS_SERVICE,
                            IBUS_PATH,
@@ -898,12 +922,23 @@ static int CreateIbusContext(
                            &error,
                            &msg,
                            "s", "tk_wayland_ime");
-    if (r < 0) goto fail;
+
+    if (r < 0) {
+        fprintf(stderr, "CreateIbusContext: CreateInputContext failed for %s: %s\n",
+                Tk_PathName(tkwin),
+                error.message ? error.message : strerror(-r));
+        sd_bus_error_free(&error);
+        if (msg) sd_bus_message_unref(msg);
+        return TCL_ERROR;
+    }
 
     r = sd_bus_message_read(msg, "o", &obj_path);
-    if (r < 0) goto fail;
+    if (r < 0) {
+        fprintf(stderr, "CreateIbusContext: Failed to read object path\n");
+        goto fail;
+    }
 
-    /* Allocate and fill the context structure. */
+    /* Allocate context */
     IbusContext *ctx = (IbusContext *)Tcl_Alloc(sizeof(IbusContext));
     memset(ctx, 0, sizeof(IbusContext));
     ctx->tkwin = tkwin;
@@ -913,38 +948,51 @@ static int CreateIbusContext(
 
     if (!ctx->obj_path) {
         Tcl_Free((char *)ctx);
-        Tcl_SetResult(interp, "out of memory", TCL_STATIC);
-        sd_bus_message_unref(msg);
-        sd_bus_error_free(&error);
-        return TCL_ERROR;
+        goto fail;
+    }
+    
+    if (!ctx->obj_path) {
+        Tcl_Free((char *)ctx);
+        goto fail;
     }
 
-    /* Subscribe to CommitText signals from this input context. */
-    r = sd_bus_match_signal(ibus_bus,
-                            &ctx->signal_slot,
-                            IBUS_SERVICE,
-                            ctx->obj_path,
-                            IBUS_IC_INTERFACE,
-                            IBUS_SIGNAL_COMMIT_TEXT,
-                            OnCommitText,
-                            ctx);
-    if (r < 0) goto fail_ctx;
+    /* Tell IBus which features this client supports.  Without this call,
+     * engines like Mozc treat the context as a dumb client and pass all
+     * keys through unhandled rather than starting composition. */
+#define IBUS_CAP_PREEDIT_TEXT   (1u << 0)
+#define IBUS_CAP_AUXILIARY_TEXT (1u << 1)
+#define IBUS_CAP_LOOKUP_TABLE   (1u << 2)
+#define IBUS_CAP_FOCUS          (1u << 3)
+    sd_bus_call_method(ibus_bus,
+                       IBUS_SERVICE,
+                       ctx->obj_path,
+                       IBUS_IC_INTERFACE,
+                       "SetCapabilities",
+                       NULL, NULL,
+                       "u",
+                       (uint32_t)(IBUS_CAP_PREEDIT_TEXT  |
+                                  IBUS_CAP_AUXILIARY_TEXT |
+                                  IBUS_CAP_LOOKUP_TABLE   |
+                                  IBUS_CAP_FOCUS));
 
-    /* Subscribe to UpdatePreedit signals (non-fatal if unavailable). */
-    r = sd_bus_match_signal(ibus_bus,
-                            &ctx->preedit_slot,
-                            IBUS_SERVICE,
-                            ctx->obj_path,
-                            IBUS_IC_INTERFACE,
-                            IBUS_SIGNAL_UPDATE_PREEDIT,
-                            OnUpdatePreedit,
-                            ctx);
+
+    /* Subscribe to CommitText (critical). */
+    r = sd_bus_match_signal(ibus_bus, &ctx->signal_slot,
+                            IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
+                            IBUS_SIGNAL_COMMIT_TEXT, OnCommitText, ctx);
     if (r < 0) {
-        /* Non-fatal: preëdit display is optional. */
+        fprintf(stderr, "Warning: Failed to subscribe to CommitText\n");
+    }
+
+    /* Subscribe to UpdatePreedit (optional). */
+    r = sd_bus_match_signal(ibus_bus, &ctx->preedit_slot,
+                            IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
+                            IBUS_SIGNAL_UPDATE_PREEDIT, OnUpdatePreedit, ctx);
+    if (r < 0) {
         ctx->preedit_slot = NULL;
     }
 
-    /* 5. Add to the global list. */
+    /* Add to list. */
     ctx->next = all_contexts;
     all_contexts = ctx;
 
@@ -952,12 +1000,8 @@ static int CreateIbusContext(
     sd_bus_error_free(&error);
     return TCL_OK;
 
-fail_ctx:
-    FreeIbusContext(ctx);
-    /* fall through */
 fail:
     if (msg) sd_bus_message_unref(msg);
-    Tcl_SetResult(interp, (char *)error.message, TCL_STATIC);
     sd_bus_error_free(&error);
     return TCL_ERROR;
 }
@@ -1131,17 +1175,19 @@ static int IbusProcessKeyEvent(
 }
 
 /*
- * ----------------------------------------------------
+ * ---------------------------------------------------------------------
  * Tk_SetCaretPos --
  *
  *         Called by text widgets to report the screen position of the
  *         insertion cursor.  We store it in the standard TkCaret field on
  *         the display (so Tk internals stay consistent) and then forward
- *         the screen-absolute rectangle to IBus via SetCursorLocation so
- *         the IME candidate window appears next to the caret.
+ *         the screen-absolute rectangle to IBus via SetCursorLocationRelative
+ *         so the IME candidate window appears next to the caret.
  *
- *         The x/y arguments are widget-relative; IBus expects screen-absolute
- *         coordinates, so we use Tk_GetRootCoords to convert.
+ *         On Wayland, glfwGetWindowPos is unsupported so the toplevel's true
+ *         screen position is unknown.  SetCursorLocationRelative accepts
+ *         coordinates relative to the window surface, which is exactly what
+ *         Tk_GetRootCoords returns on this backend.
  *
  *         height is the line height at the caret; we pass zero width because
  *         the caret is a point, not a selection rectangle.
@@ -1152,7 +1198,7 @@ static int IbusProcessKeyEvent(
  * Side effects:
  *         Updates dispPtr->caret.  Sends a SetCursorLocation D-Bus call to
  *         the IBus input context for the enclosing toplevel, if one exists.
- * ----------------------------------------------------
+ * ----------------------------------------------------------------------
  */
 
 void
@@ -1162,6 +1208,7 @@ Tk_SetCaretPos(
     int y,
     int height)
 {
+
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
 
@@ -1189,28 +1236,27 @@ Tk_SetCaretPos(
     if (!ctx || !ctx->obj_path) return;
 
     /*
-     * Convert widget-relative (x, y) to screen-absolute coordinates.
-     * Tk_GetRootCoords returns the screen position of the widget's origin,
-     * so we add the local offsets to get the caret's screen position.
+     * On Wayland, the compositor does not provide the toplevel window's
+     * screen position (glfwGetWindowPos is unsupported).  Tk_GetRootCoords
+     * therefore returns coordinates relative to the GLFW surface origin, not
+     * true screen-absolute coordinates.  Rather than passing wrong absolute
+     * coordinates to SetCursorLocation, use SetCursorLocationRelative, which
+     * IBus interprets as coordinates relative to the input-context window
+     * surface — exactly what Tk_GetRootCoords gives us here.
+     *
+     * SetCursorLocationRelative has the same signature: (iiii) x, y, w, h.
      */
     int rootX, rootY;
     Tk_GetRootCoords(tkwin, &rootX, &rootY);
     int screenX = rootX + x;
     int screenY = rootY + y;
 
-    /*
-     * Tell IBus where the caret is.  The candidate window will anchor
-     * itself just below (screenX, screenY + height).  Width is 0 because
-     * the insertion caret is a line, not a rectangle.
-     *
-     * Signature: SetCursorLocation(iiii) — x, y, w, h  (all int32).
-     */
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_call_method(ibus_bus,
                        IBUS_SERVICE,
                        ctx->obj_path,
                        IBUS_IC_INTERFACE,
-                       "SetCursorLocation",
+                       "SetCursorLocationRelative",
                        &error,
                        NULL,
                        "iiii",
@@ -1342,10 +1388,10 @@ TkWaylandIbusProcessKey(
  */
 
 int CmdCreateContext(
-			    ClientData clientData,
-			    Tcl_Interp *interp,
-                            int objc,
-			    Tcl_Obj *const objv[])
+		     ClientData clientData,
+		     Tcl_Interp *interp,
+		     int objc,
+		     Tcl_Obj *const objv[])
 {
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "window");
@@ -1566,52 +1612,216 @@ static void IbusEventCheck(
 
 /*
  * ----------------------------------------------------------------------------
+ * GetIbusAddress --
+ *
+ *         Resolve the IBus daemon's private D-Bus socket address.
+ *
+ *         IBus runs its own private D-Bus daemon and does NOT register on the
+ *         generic session bus (DBUS_SESSION_BUS_ADDRESS).  Its socket address
+ *         is advertised in two places, checked in order:
+ *
+ *           1. $IBUS_ADDRESS environment variable (set by ibus-daemon itself
+ *              when it starts, or exported by the user's session).
+ *
+ *           2. The address file at
+ *                ~/.config/ibus/bus/<machine-id>-unix-<suffix>
+ *              IBus uses two suffix conventions depending on version and session
+ *              type:
+ *                Wayland (modern):  <WAYLAND_DISPLAY>      e.g. "wayland-0"
+ *                Wayland (older):   <WAYLAND_DISPLAY>-0    e.g. "wayland-0-0"
+ *                X11:               <display_num>-0        e.g. "0-0"
+ *                X11 (unusual):     <display_num>          e.g. "0"
+ *              All four are tried in that order.
+ *
+ *         The returned pointer is into a static buffer; copy it before the
+ *         next call.  Returns NULL if the address cannot be found.
+ *
+ * Results:
+ *         Returns a pointer to the IBus socket address string, or NULL.
+ *
+ * Side effects:
+ *         None.
+ * ----------------------------------------------------------------------------
+ */
+
+static const char *
+GetIbusAddress(void)
+{
+    /* Prefer the environment variable set by ibus-daemon itself. */
+    const char *env = getenv("IBUS_ADDRESS");
+    if (env && *env) return env;
+
+    /*
+     * Fall back to the address file.
+     * Path: ~/.config/ibus/bus/<dbus-machine-id>-unix-<display>-0
+     */
+    static char path[PATH_MAX];
+    static char addr[4096];
+
+    /* Read the D-Bus machine ID. */
+    char machine_id[64] = "";
+    FILE *f = fopen("/var/lib/dbus/machine-id", "r");
+    if (!f) f = fopen("/etc/machine-id", "r");
+    if (f) {
+        if (fgets(machine_id, sizeof(machine_id), f)) {
+            machine_id[strcspn(machine_id, "\r\n")] = '\0';
+        }
+        fclose(f);
+    }
+    if (!machine_id[0]) return NULL;
+
+    const char *config_home = getenv("XDG_CONFIG_HOME");
+    const char *home = getenv("HOME");
+    const char *base = (config_home && *config_home) ? config_home : NULL;
+
+    /*
+     * IBus address file naming convention:
+     *
+     *   Wayland: <id>-unix-<WAYLAND_DISPLAY>          (no screen suffix)
+     *            e.g. <id>-unix-wayland-0
+     *   X11:     <id>-unix-<display_num>-<screen>
+     *            e.g. <id>-unix-0-0  (from DISPLAY=:0.0 or :0)
+     *
+     * Older IBus versions append an extra "-0" to the Wayland name too, so
+     * we try four candidates in order:
+     *   1. <id>-unix-<WAYLAND_DISPLAY>        (modern Wayland, no screen)
+     *   2. <id>-unix-<WAYLAND_DISPLAY>-0      (older Wayland, with screen)
+     *   3. <id>-unix-<display_num>-0          (X11 with screen)
+     *   4. <id>-unix-<display_num>            (X11 without screen, unusual)
+     */
+    const char *wayland_disp = getenv("WAYLAND_DISPLAY");
+    if (!wayland_disp || !*wayland_disp) wayland_disp = "wayland-0";
+
+    char x11_dnum[32] = "";
+    const char *xdisp = getenv("DISPLAY");
+    if (xdisp && *xdisp) {
+        const char *p = xdisp + (xdisp[0] == ':' ? 1 : 0);
+        const char *dot = strchr(p, '.');
+        size_t len = dot ? (size_t)(dot - p) : strlen(p);
+        if (len >= sizeof(x11_dnum)) len = sizeof(x11_dnum) - 1;
+        strncpy(x11_dnum, p, len);
+        x11_dnum[len] = '\0';
+    }
+
+    /* Build the four candidate suffixes. */
+    char wayland_noscreen[64], wayland_screen[64];
+    char x11_screen[64], x11_noscreen[64];
+    snprintf(wayland_noscreen, sizeof(wayland_noscreen), "%s",    wayland_disp);
+    snprintf(wayland_screen,   sizeof(wayland_screen),   "%s-0",  wayland_disp);
+    snprintf(x11_screen,       sizeof(x11_screen),       "%s-0",  x11_dnum);
+    snprintf(x11_noscreen,     sizeof(x11_noscreen),     "%s",    x11_dnum);
+
+    const char *suffixes[4] = {
+        wayland_noscreen,
+        wayland_screen,
+        x11_dnum[0] ? x11_screen    : NULL,
+        x11_dnum[0] ? x11_noscreen  : NULL,
+    };
+
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (!suffixes[i] || !suffixes[i][0]) continue;
+        if (base) {
+            snprintf(path, sizeof(path), "%s/ibus/bus/%s-unix-%s",
+                     base, machine_id, suffixes[i]);
+        } else {
+            if (!home) continue;
+            snprintf(path, sizeof(path), "%s/.config/ibus/bus/%s-unix-%s",
+                     home, machine_id, suffixes[i]);
+        }
+        f = fopen(path, "r");
+        if (!f) continue;
+
+        char line[4096];
+        addr[0] = '\0';
+        while (fgets(line, sizeof(line), f)) {
+            if (strncmp(line, "IBUS_ADDRESS=", 13) == 0) {
+                strncpy(addr, line + 13, sizeof(addr) - 1);
+                addr[sizeof(addr) - 1] = '\0';
+                addr[strcspn(addr, "\r\n")] = '\0';
+                break;
+            }
+        }
+        fclose(f);
+        if (addr[0]) {
+            fprintf(stderr, "IBus: Found address file: %s\n", path);
+            return addr;
+        }
+    }
+
+    return NULL;
+}
+
+/*
+ * ----------------------------------------------------------------------------
  * TkWaylandIbus_Init --
  *
- *         Initialize the IBus D-Bus connection, create the Tcl commands, and
+ *         Initialize the IBus D-Bus connection, and
  *         integrate the D-Bus event source into the Tcl event loop.
  *
- *         Availability of the IBus daemon is tested by calling GetEngine on
- *         the IBus service.  If the call fails (daemon not running), this
+ *         IBus runs a private D-Bus daemon separate from the session bus.  We
+ *         resolve its socket address via GetIbusAddress() (which checks
+ *         $IBUS_ADDRESS first, then the address file in ~/.config/ibus/bus/)
+ *         and connect directly to that socket with sd_bus_new /
+ *         sd_bus_set_address / sd_bus_start.  Connecting to the generic
+ *         session bus (sd_bus_default_user) does NOT work because IBus does
+ *         not export its objects there.
+ *
+ *         If the IBus daemon is not running (common for non-CJK users) this
  *         function returns TCL_ERROR, which the caller treats as non-fatal.
- *
- *         The commands created are:
- *           ::_ime::create_context window
- *           ::_ime::focus_in window
- *           ::_ime::focus_out window
- *           ::_ime::process_key window keyval keycode state
- *
- *         No separate commit/preedit commands are needed; the signal handlers
- *         send the standard Tk virtual events <<TkStartIMEMarkedText>>,
- *         <<TkEndIMEMarkedText>>, and <<TkClearIMEMarkedText>>, and generate
- *         synthetic key events for the text.
  *
  * Results:
  *         Returns TCL_OK on success, TCL_ERROR if IBus is unavailable.
  *
  * Side effects:
- *         Connects to the session bus, registers Tcl commands, and sets up
- *         an event source.
+ *         Connects to the IBus private bus, and sets up an event source.
  * ----------------------------------------------------------------------------
  */
 
-int TkWaylandIbus_Init(Tcl_Interp *interp)
+int
+TkWaylandIbus_Init(Tcl_Interp *interp)
 {
-    /* Connect to the session bus. */
-    int r = sd_bus_default_user(&ibus_bus);
+    int r;
+
+    const char *ibus_addr = GetIbusAddress();
+    if (!ibus_addr) {
+        fprintf(stderr, "IBus: Cannot find IBus daemon address "
+                "(IBUS_ADDRESS not set and address file not found).\n");
+        fprintf(stderr, "IME will be unavailable. To enable it, run:\n"
+                "    ibus-daemon --daemonize --replace\n");
+        return TCL_ERROR;
+    }
+
+    fprintf(stderr, "IBus: Connecting to %s\n", ibus_addr);
+
+    r = sd_bus_new(&ibus_bus);
     if (r < 0) {
-        /* Fall back to the system bus (unlikely to work for IBus). */
-        r = sd_bus_default_system(&ibus_bus);
-        if (r < 0) {
-            ibus_bus = NULL;
-            return TCL_ERROR;
-        }
+        fprintf(stderr, "IBus: sd_bus_new failed: %s\n", strerror(-r));
+        ibus_bus = NULL;
+        return TCL_ERROR;
+    }
+
+    r = sd_bus_set_address(ibus_bus, ibus_addr);
+    if (r < 0) {
+        fprintf(stderr, "IBus: sd_bus_set_address failed: %s\n", strerror(-r));
+        sd_bus_unref(ibus_bus);
+        ibus_bus = NULL;
+        return TCL_ERROR;
+    }
+
+    r = sd_bus_start(ibus_bus);
+    if (r < 0) {
+        fprintf(stderr, "IBus: sd_bus_start failed: %s\n", strerror(-r));
+        sd_bus_unref(ibus_bus);
+        ibus_bus = NULL;
+        return TCL_ERROR;
     }
 
     /*
-     * Check that the IBus daemon is available by calling GetEngine.
-     * GetEngine is a method call (not a property), so use sd_bus_call_method.
-     * We do not use the reply; we only check whether the call succeeds.
+     * Sanity-check: call GetGlobalEngine to confirm the IBus object exists.
+     * This may fail when no engine is active (e.g. right after daemon start),
+     * which is harmless.  A hard "object not found" would indicate the address
+     * was wrong, but CreateInputContext will be the definitive test.
      */
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *reply = NULL;
@@ -1619,19 +1829,18 @@ int TkWaylandIbus_Init(Tcl_Interp *interp)
                            IBUS_SERVICE,
                            IBUS_PATH,
                            IBUS_INTERFACE,
-                           "GetEngine",
-                           &error,
-                           &reply,
-                           "");
+                           "GetGlobalEngine",
+                           &error, &reply, "");
+    if (r < 0) {
+        fprintf(stderr, "IBus: GetGlobalEngine: %s (continuing anyway)\n",
+                error.message ? error.message : strerror(-r));
+    } else {
+        fprintf(stderr, "IBus: Connected and verified.\n");
+    }
     if (reply) sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
-    if (r < 0) {
-        sd_bus_unref(ibus_bus);
-        ibus_bus = NULL;
-        return TCL_ERROR;
-    }
 
-    /* Integrate sd-bus into the Tcl event loop. */
+    /* Register event source for signals. */
     Tcl_CreateEventSource(IbusEventSetup, IbusEventCheck, NULL);
 
     return TCL_OK;
