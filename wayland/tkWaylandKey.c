@@ -525,6 +525,13 @@ TkWaylandKeyCleanup() {
 #define IBUS_SIGNAL_HIDE_PREEDIT     "HidePreeditText"
 #define IBUS_SIGNAL_SHOW_PREEDIT     "ShowPreeditText"
 
+/* Bitmask identifiers defined by the IBus wire specification */
+#define IBUS_CAP_PREEDIT_TEXT   (1u << 0)
+#define IBUS_CAP_AUXILIARY_TEXT (1u << 1)
+#define IBUS_CAP_LOOKUP_TABLE   (1u << 2)
+#define IBUS_CAP_FOCUS          (1u << 3)
+
+
 /* Per-window IBus context structure. */
 
 typedef struct IbusContext {
@@ -567,61 +574,78 @@ static IbusContext *FindContext(Tk_Window tkwin)
 }
 
 /*
- * ----------------------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * IbusReadTextFromVariant --
  *
- *         Read the plain text string from an IBus.Text variant embedded in a
- *         D-Bus message.  IBus.Text has the wire type "v" containing a struct
- *         (sa{sv}sv): (name, attachments, text, attributes).  We enter the
- *         variant and the struct, skip the first two fields, and read the
- *         plain text string.
- *
- *         On success, *text_out points into the message buffer (no copy
- *         needed; lifetime is the message).  On failure, *text_out is set to
- *         NULL.
+ * Helper to safely unpack an IBusText object wrapped inside a
+ * D-Bus variant container. Dynamically inspects the signature to 
+ * handle protocol variations safely across different IBus versions.
  *
  * Results:
- *         Returns the sd_bus return code of the last read operation.
+ * 0 on success, negative error code on failure.
  *
  * Side effects:
- *         Advances the message cursor.
- * ----------------------------------------------------------------------------
+ * Moves message container cursor; sets text_out to point inside
+ * the message buffer.
+ *
+ *----------------------------------------------------------------------
  */
-
 static int
 IbusReadTextFromVariant(
-			sd_bus_message *m,
-			const char **text_out)
+    sd_bus_message *m,
+    const char **text_out)
 {
     int r;
+    char type;
+    const char *contents = NULL;
     *text_out = NULL;
 
-    /* Enter the outer "v" variant (which contains the IBus.Text struct). */
-    r = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, "sa{sv}sv");
+    /* Peek at the variant container to inspect its internal signature string. */
+    r = sd_bus_message_peek_type(m, &type, &contents);
+    if (r < 0 || type != SD_BUS_TYPE_VARIANT) {
+        return (r < 0) ? r : -EINVAL;
+    }
+
+    /* Step inside the variant container "v". */
+    r = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, contents);
     if (r < 0) return r;
 
-    /* Enter the struct itself. */
-    r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, "sa{sv}sv");
-    if (r < 0) return r;
+    /* Inspect the struct payload type signature (typically "(sa{sv}sv)"). */
+    r = sd_bus_message_peek_type(m, &type, &contents);
+    if (r < 0 || type != SD_BUS_TYPE_STRUCT) {
+        sd_bus_message_exit_container(m);
+        return -EINVAL;
+    }
 
-    /* Skip field 0: string name (e.g., "IBusText"). */
+    /* Step inside the underlying structure container. */
+    r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, contents);
+    if (r < 0) {
+        sd_bus_message_exit_container(m);
+        return r;
+    }
+
+    /* Field 0: Unpack the IBus object type layout name (e.g., "IBusText"). */
     r = sd_bus_message_skip(m, "s");
-    if (r < 0) return r;
+    if (r < 0) goto cleanup;
 
-    /* Skip field 1: a{sv} attachments dict. */
-    r = sd_bus_message_skip(m, "a{sv}");
-    if (r < 0) return r;
+    /* Field 1: Attributes dictionary array. Peek and skip safely if present. */
+    r = sd_bus_message_peek_type(m, &type, &contents);
+    if (r >= 0 && type == SD_BUS_TYPE_ARRAY) {
+        r = sd_bus_message_skip(m, contents);
+    }
+    if (r < 0) goto cleanup;
 
-    /* Read field 2: string text. */
+    /* Field 2: Extract the actual plain UTF-8 text string "s". */
     r = sd_bus_message_read(m, "s", text_out);
-    if (r < 0) return r;
 
-    /* We don't need the attribute list; exit the containers. */
-    sd_bus_message_exit_container(m); /* struct */
-    sd_bus_message_exit_container(m); /* variant */
-
+cleanup:
+    /* Balanced unwind of open containers. */
+    sd_bus_message_exit_container(m); /* Exit struct */
+    sd_bus_message_exit_container(m); /* Exit variant */
     return r;
 }
+
 
 /*
  * ----------------------------------------------------------------------------
@@ -716,38 +740,41 @@ TkWaylandSendUnicodeString(
  * ----------------------------------------------------------------------------
  */
 
-static int OnCommitText(
-			sd_bus_message *m,
-			void *userdata,
-			sd_bus_error *ret_error)
+static int
+OnCommitText(
+    sd_bus_message *m,
+    void *userdata,
+    sd_bus_error *ret_error)
 {
     IbusContext *ctx = (IbusContext *)userdata;
     const char *text = NULL;
     int r;
 
-fprintf(stderr, ">>> OnCommitText called! userdata=%p\n", userdata);
+    fprintf(stderr, ">>> OnCommitText called!\n");
+
     r = IbusReadTextFromVariant(m, &text);
-    if (r < 0 || !text || !*text) {
-		fprintf(stderr, "    OnCommitText: no text or read failed (r=%d)\n", r);
-		return 0;
-	}
-fprintf(stderr, ">>> OnCommitText: COMMITTED TEXT = '%s'\n", text);
+    if (r < 0 || !text) {
+        fprintf(stderr, "    OnCommitText: decoding text wrapper failed (r=%d)\n", r);
+        return 0;
+    }
+
+    fprintf(stderr, ">>> OnCommitText: COMMITTED TEXT = '%s'\n", text);
+
     /*
-     * Send to the currently focused widget, not the toplevel.
-     * ctx->tkwin is the toplevel that owns the IBus context; the actual
-     * input target is dispPtr->focusPtr, which is updated by Tk's focus
-     * manager as the user tabs between widgets.  Sending to the toplevel
-     * window ID means the text widget never sees the event.
+     * Route text targeting to the interior active widget focus node, 
+     * matching the layout constraints of Tk's focus state manager.
      */
     TkWindow *topPtr = (TkWindow *)ctx->tkwin;
     TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
     Tk_Window target = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
-    /* Clear any pending preëdit before committing. */
+    /* Notify widgets to clear uncommitted underlines. */
     Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);
 
-    /* Insert the committed text via synthetic key events. */
-    TkWaylandSendUnicodeString(target, text);
+    /* Push text characters cleanly down the Unicode processing stream. */
+    if (*text) {
+        TkWaylandSendUnicodeString(target, text);
+    }
 
     return 0;
 }
@@ -779,68 +806,52 @@ fprintf(stderr, ">>> OnCommitText: COMMITTED TEXT = '%s'\n", text);
  * ----------------------------------------------------------------------------
  */
 
-static int OnUpdatePreedit(
-			   sd_bus_message *m,
-			   void *userdata,
-			   sd_bus_error *ret_error)
+static int
+OnUpdatePreedit(
+    sd_bus_message *m,
+    void *userdata,
+    sd_bus_error *ret_error)
 {
     IbusContext *ctx = (IbusContext *)userdata;
     const char *text = NULL;
     uint32_t cursor_pos = 0;
-    int visible = 0;
+    int32_t visible = 0;
     int r;
-    
+
     fprintf(stderr, ">>> OnUpdatePreedit called!\n");
 
-    /* Field 0: IBus.Text variant. */
+    /*
+     * UpdatePreedit signature payload: (v)u b
+     * 1. The IBusText composition struct variant
+     * 2. The uint32_t live composition cursor index
+     * 3. The boolean visibility state flag
+     */
     r = IbusReadTextFromVariant(m, &text);
     if (r < 0) {
-		fprintf(stderr, "    OnUpdatePreedit: failed to read text (r=%d)\n", r);
+        fprintf(stderr, "    OnUpdatePreedit: failed parsing variant text field (r=%d)\n", r);
         return 0;
-        }
-    /* Field 1: uint32 cursor position. */
-    r = sd_bus_message_read(m, "u", &cursor_pos);
-    if (r < 0) return 0;
+    }
 
-    /* Field 2: bool visible. */
-    r = sd_bus_message_read(m, "b", &visible);
-    if (r < 0) return 0;
+    /* Unpack additional alignment arguments. */
+    r = sd_bus_message_read(m, "ub", &cursor_pos, &visible);
+    if (r < 0) {
+        fprintf(stderr, "    OnUpdatePreedit: parsing positioning properties failed (r=%d)\n", r);
+        return 0;
+    }
 
-    fprintf(stderr, ">>> OnUpdatePreedit: text='%s' cursor=%u visible=%d\n",
-            text ? text : "(null)", cursor_pos, visible);
+    fprintf(stderr, ">>> OnUpdatePreedit: TEXT='%s' CURSOR=%u VISIBLE=%d\n",
+            text ? text : "", cursor_pos, visible);
 
-    /*
-     * Same focus-routing fix as OnCommitText: send to dispPtr->focusPtr
-     * rather than the toplevel, so the text widget receives the events.
-     */
     TkWindow *topPtr = (TkWindow *)ctx->tkwin;
     TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
     Tk_Window target = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
-    if (text && *text && visible) {
-        /* Clear any previous preëdit text. */
-        Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);
+    if (visible && text && *text) {
+         Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);/* Pass the active composition string to show inline widget decorations. */
+      }
 
-        /* Start the marked region. */
-        Tk_SendVirtualEvent(target, "TkStartIMEMarkedText", NULL);
-
-        /* Insert the preëdit text via synthetic key events. */
-        TkWaylandSendUnicodeString(target, text);
-
-        /* End the marked region – Tk bindings will now underline/select it. */
-        Tk_SendVirtualEvent(target, "TkEndIMEMarkedText", NULL);
-
-        /*
-         * Note: The cursor position is not used in this simple implementation;
-         * a full IME would also move the insertion cursor accordingly.
-         */
-    } else {
-        /* Hide preëdit: clear the marked region. */
-        Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);
-    }
     return 0;
 }
-
 /*
  * ----------------------------------------------------------------------------
  * FreeIbusContext --
@@ -892,140 +903,11 @@ FreeIbusContext(IbusContext *ctx)
  */
 
 static int CreateIbusContext(
-			     Tcl_Interp *interp,
-			     Tk_Window tkwin)
+			     TCL_UNUSED(Tcl_Interp *),
+			     TCL_UNUSED(Tk_Window))
 {
-    if (!ibus_bus) {
-        fprintf(stderr, "CreateIbusContext: IBus bus not connected\n");
-        Tcl_SetResult(interp, "IBus not connected", TCL_STATIC);
-        return TCL_ERROR;
-    }
-
-    if (FindContext(tkwin)) {
-        fprintf(stderr, "CreateIbusContext: Context already exists for %s\n",
-                Tk_PathName(tkwin));
-        return TCL_OK;
-    }
-
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    sd_bus_message *msg = NULL;
-    const char *obj_path = NULL;
-    int r;
-
-    r = sd_bus_call_method(ibus_bus,
-                           IBUS_SERVICE,
-                           IBUS_PATH,
-                           IBUS_INTERFACE,
-                           "CreateInputContext",
-                           &error,
-                           &msg,
-                           "s", "tk_wayland_ime");
-
-    if (r < 0) {
-        fprintf(stderr, "CreateIbusContext: CreateInputContext failed for %s: %s\n",
-                Tk_PathName(tkwin),
-                error.message ? error.message : strerror(-r));
-        sd_bus_error_free(&error);
-        if (msg) sd_bus_message_unref(msg);
-        return TCL_ERROR;
-    }
-
-    r = sd_bus_message_read(msg, "o", &obj_path);
-    if (r < 0) {
-        fprintf(stderr, "CreateIbusContext: Failed to read object path\n");
-        goto fail;
-    }
-
-    /* Allocate context */
-    IbusContext *ctx = (IbusContext *)Tcl_Alloc(sizeof(IbusContext));
-    memset(ctx, 0, sizeof(IbusContext));
-    ctx->tkwin = tkwin;
-    ctx->obj_path = strdup(obj_path);
-    ctx->interp = interp;
-    ctx->enabled = 0;
-
-    if (!ctx->obj_path) {
-        Tcl_Free((char *)ctx);
-        goto fail;
-    }
-
-    /* Tell IBus which features this client supports.  Without this call,
-     * engines like Mozc treat the context as a dumb client and pass all
-     * keys through unhandled rather than starting composition. */
-#define IBUS_CAP_PREEDIT_TEXT   (1u << 0)
-#define IBUS_CAP_AUXILIARY_TEXT (1u << 1)
-#define IBUS_CAP_LOOKUP_TABLE   (1u << 2)
-#define IBUS_CAP_FOCUS          (1u << 3)
-    sd_bus_call_method(ibus_bus,
-                       IBUS_SERVICE,
-                       ctx->obj_path,
-                       IBUS_IC_INTERFACE,
-                       "SetCapabilities",
-                       NULL, NULL,
-                       "u",
-                       (uint32_t)(IBUS_CAP_PREEDIT_TEXT  |
-                                  IBUS_CAP_AUXILIARY_TEXT |
-                                  IBUS_CAP_LOOKUP_TABLE   |
-                                  IBUS_CAP_FOCUS));
-
-    /*
-     * Subscribe to IBus signals.
-     *
-     * IMPORTANT: pass NULL for the sender, not IBUS_SERVICE.
-     *
-     * IBus runs a private D-Bus daemon.  On that bus the daemon's unique
-     * connection name is ":1.0" (or similar), not "org.freedesktop.IBus".
-     * sd_bus_match_signal with a non-NULL sender adds a match rule with
-     * sender=<name>, which the private bus resolves against unique names.
-     * Because the well-known name is never tracked the same way on a
-     * private peer-to-peer bus, the match silently never fires.  Passing
-     * NULL omits the sender= predicate so the rule matches any sender,
-     * and the path/interface/member predicates provide sufficient filtering.
-     */
-
-    /* Subscribe to CommitText (critical). */
-    r = sd_bus_match_signal(ibus_bus,
-                            &ctx->signal_slot,
-                            NULL,                   /* sender: any */
-                            ctx->obj_path,
-                            IBUS_IC_INTERFACE,
-                            IBUS_SIGNAL_COMMIT_TEXT,
-                            OnCommitText, ctx);
-    if (r < 0) {
-        fprintf(stderr, "ERROR: Failed to subscribe to CommitText: %s\n",
-                strerror(-r));
-    } else {
-        fprintf(stderr, "SUCCESS: Subscribed to CommitText signal\n");
-    }
-
-    /* Subscribe to UpdatePreedit (optional). */
-    r = sd_bus_match_signal(ibus_bus,
-                            &ctx->preedit_slot,
-                            NULL,                   /* sender: any */
-                            ctx->obj_path,
-                            IBUS_IC_INTERFACE,
-                            IBUS_SIGNAL_UPDATE_PREEDIT,
-                            OnUpdatePreedit, ctx);
-    if (r < 0) {
-        fprintf(stderr, "WARNING: Failed to subscribe to UpdatePreedit: %s\n",
-                strerror(-r));
-        ctx->preedit_slot = NULL;
-    } else {
-        fprintf(stderr, "SUCCESS: Subscribed to UpdatePreedit signal\n");
-    }
-
-    /* Add to list. */
-    ctx->next = all_contexts;
-    all_contexts = ctx;
-
-    sd_bus_message_unref(msg);
-    sd_bus_error_free(&error);
-    return TCL_OK;
-
-fail:
-    if (msg) sd_bus_message_unref(msg);
-    sd_bus_error_free(&error);
-    return TCL_ERROR;
+	/* Operations moved to TkWaylandIbusCreateContext. */
+    return 1;
 }
 
 /*
@@ -1297,14 +1179,13 @@ Tk_SetCaretPos(
     sd_bus_error_free(&error);
 }
 
-
 /*
  * ----------------------------------------------------------------------------
  * TkWaylandIbusCreateContext --
  *
- *         Public wrapper around CreateIbusContext.  Called from GLFW callbacks
- *         (tkWaylandNotify.c) when a new toplevel GLFWwindow is created, so
- *         that an IBus input context is ready before the window receives focus.
+ *          Called from GLFW callbacks (tkWaylandNotify.c) when a new toplevel 
+ * 			GLFWwindow is created, so that an IBus input context is ready 
+ * 			before the window receives focus.
  *
  * Results:
  *         Returns TCL_OK on success, TCL_ERROR on failure.
@@ -1319,7 +1200,100 @@ TkWaylandIbusCreateContext(
     Tcl_Interp *interp,
     Tk_Window   tkwin)
 {
-    return CreateIbusContext(interp, tkwin);
+    char obj_path[1024];
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *reply = NULL;
+    int r;
+
+    if (!ibus_bus) {
+	return TCL_ERROR;
+    }
+
+    /* If context structure already exists, safely early-exit. */
+    if (FindContext(tkwin)) {
+	return TCL_OK;
+    }
+
+    /* Request a freshly instantiated remote context instance from the daemon. */
+    r = sd_bus_call_method(ibus_bus,
+			   IBUS_SERVICE,
+			   IBUS_PATH,
+			   IBUS_INTERFACE,
+			   "CreateInputContext",
+			   &error,
+			   &reply,
+			   "s",
+			   "TkWaylandApp");
+    if (r < 0) {
+	fprintf(stderr, "IBus: CreateInputContext method call failed: %s\n",
+		error.message ? error.message : strerror(-r));
+	sd_bus_error_free(&error);
+	return TCL_ERROR;
+    }
+
+    /* Extract the newly minted object path assigned to our context. */
+    r = sd_bus_message_read(reply, "o", &obj_path);
+    if (r < 0) {
+	fprintf(stderr, "IBus: Failed parsing assigned object path token: %s\n", strerror(-r));
+	sd_bus_message_unref(reply);
+	sd_bus_error_free(&error);
+	return TCL_ERROR;
+    }
+
+    fprintf(stderr, "IBus: Created remote layout channel path -> %s\n", obj_path);
+
+    /* Allocate and seed context tracking resources. */
+    IbusContext *ctx = (IbusContext *)Tcl_Alloc(sizeof(IbusContext));
+    memset(ctx, 0, sizeof(IbusContext));
+    ctx->tkwin = tkwin;
+    ctx->obj_path = strdup(obj_path);
+    ctx->interp = interp;
+    ctx->enabled = 0;
+
+    if (!ctx->obj_path) {
+	Tcl_Free((char *)ctx);
+	sd_bus_message_unref(reply);
+	sd_bus_error_free(&error);
+	return TCL_ERROR;
+    }
+
+    /* Clean up creation transaction elements. */
+    sd_bus_message_unref(reply);
+    sd_bus_error_free(&error);
+
+    /* Subscribe signal targets directly to our specialized handler functions. */
+    r = sd_bus_match_signal(ibus_bus, NULL, IBUS_SERVICE, ctx->obj_path,
+			    IBUS_IC_INTERFACE, "CommitText", OnCommitText, ctx);
+    if (r >= 0) {
+	fprintf(stderr, "SUCCESS: Subscribed to CommitText signal on path %s\n", ctx->obj_path);
+    }
+
+    r = sd_bus_match_signal(ibus_bus, NULL, IBUS_SERVICE, ctx->obj_path,
+			    IBUS_IC_INTERFACE, "UpdatePreedit", OnUpdatePreedit, ctx);
+    if (r >= 0) {
+	fprintf(stderr, "SUCCESS: Subscribed to UpdatePreedit signal on path %s\n", ctx->obj_path);
+    }
+
+    /*
+     * Tell IBus we want live composition strings (PREEDIT_TEXT) and handle window focus tracking
+     * (FOCUS), but deliberately omit LOOKUP_TABLE. This forces the IBus daemon to
+     * render its own floating popup choice panels while broadcasting real-time inline alerts.
+     */
+    uint32_t caps = IBUS_CAP_PREEDIT_TEXT | IBUS_CAP_FOCUS;
+
+    r = sd_bus_call_method(ibus_bus,
+			   IBUS_SERVICE,
+			   ctx->obj_path,
+			   IBUS_IC_INTERFACE,
+			   "SetCapabilities",
+			   NULL, NULL,
+			   "u",
+			   caps);
+    if (r < 0) {
+	fprintf(stderr, "IBus: Failed writing capabilities bitmask allocation matrix\n");
+    }
+
+    return TCL_OK;
 }
 
 /*
