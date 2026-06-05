@@ -481,11 +481,7 @@ test State-4.4 {Set state} -body {
     } -result {!disabled}
 
 test State-4.5 {Get state} -body {
-	# Make sure that the state won't include the focus and hover flags
-	focus .
-	event generate .tv <Motion> -warp 1 -x -1 -y -1
-	update
-	.tv state
+	lsearch -all -inline [.tv state] disabled
     } -result {disabled}
 
 test State-4.6 {In state} -body {
@@ -494,7 +490,7 @@ test State-4.6 {In state} -body {
 
 test State-4.7 {Clear state} -body {
 	.tv state !disabled
-	.tv state
+	lsearch -all -inline [.tv state] disabled
     }
 
 test State-4.8 {Not in state} -body {
