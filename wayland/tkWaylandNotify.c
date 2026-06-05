@@ -37,6 +37,17 @@ extern void TkWaylandIbusFocusIn(Tk_Window tkwin);
 extern void TkWaylandIbusFocusOut(Tk_Window tkwin);
 extern int  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
                                     uint32_t keycode, uint32_t state);
+extern TkXKBState xkbState;
+
+/*
+ * Direct reference to the IBus bus so the notifier can drain it without
+ * going through the file-handler path.  The bus is private to
+ * tkWaylandKey.c; we declare it extern here rather than exposing it in a
+ * header because only the notifier needs it.
+ */
+#include <systemd/sd-bus.h>
+extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
+                                   
 
 
 /* ========================= Thread Specific Data  ========================= */
@@ -279,26 +290,47 @@ TkWaylandCheckForWindowClosure(void)
     
 static void
 TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
-		   TCL_UNUSED(int))    /* flags */
+		   int flags)
 {
     TSD_INIT();
-    Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    //Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
-    Tcl_Time oneRefresh = {0, 0};
+
     /*
-     * The Tcl event loop will have run all pending display procs
-     * before calling this function.  Now we can swap the GL buffers
-     * for any window on which some drawing has been done.
+     * Event source contract: if TCL_WINDOW_EVENTS is not set, do nothing.
+     * Do NOT call Tcl_SetMaxBlockTime in that case.
      */
-    
+    if (!(flags & TCL_WINDOW_EVENTS)) return;
+
+    Tcl_Time noBlock    = {0, 0};
+    Tcl_Time oneRefresh = {0, 16667}; /* ~16 ms, one display frame */
+
+    /*
+     * Swap GL buffers for any window that finished drawing.
+     */
     TkWaylandDisplayAllWindows();
 
     /*
-     * Clear the callback counter and call glfwPollEvents.
-     * If there were no events, block for one display cycle.
-     * Otherwise, don't block.
+     * Drain any pending IBus D-Bus messages directly here.
+     *
+     * We cannot rely on the Tcl file handler for the IBus fd because
+     * this notifier is almost always busy: continuous expose/redraw
+     * events keep callbackCount nonzero so Tcl_SetMaxBlockTime is set
+     * to {0,0}, Tcl_WaitForEvent never actually blocks, and the file
+     * handler registered via Tcl_CreateFileHandler never fires.
+     *
+     * Draining here is safe: sd_bus_process is non-blocking when there
+     * is nothing to read, and the signal callbacks (OnCommitText,
+     * OnUpdatePreedit) only call Tk_QueueWindowEvent / Tk_SendVirtualEvent,
+     * which is legal from any context.
      */
+    if (ibus_bus) {
+        while (sd_bus_process(ibus_bus, NULL) > 0) { /* drain */ }
+    }
 
+    /*
+     * Poll GLFW for new events.  If any callback fired, don't block so
+     * those events are processed immediately.  Otherwise allow a short
+     * sleep so the CPU isn't pegged at 100 % between frames.
+     */
     clearCallbackCount();
     glfwPollEvents();
     if (tsdPtr->callbackCount) {
@@ -333,12 +365,15 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
  
 static void
 TkWaylandCheckProc(TCL_UNUSED(void *),
-	int flags) 
+	int flags)
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) {
-	fprintf(stderr, "CheckProc called without WINDOW_EVENTS\n");
-	return;
+    if (!(flags & TCL_WINDOW_EVENTS)) return;
+
+    /* Drain IBus signals that arrived while Tcl_WaitForEvent was blocking. */
+    if (ibus_bus) {
+        while (sd_bus_process(ibus_bus, NULL) > 0) { /* drain */ }
     }
+
     glfwPollEvents();
 } 
 /*
@@ -1282,34 +1317,36 @@ TkGlfwScrollCallback(
 
 static void
 TkGlfwKeyCallback(GLFWwindow *window,
-    TCL_UNUSED(int), /*key*/
-    int scancode,
-    int action,
-    int mods)
+                  int key,           /* keep this parameter */
+                  int scancode,
+                  int action,
+                  int mods)
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr || action == GLFW_REPEAT) {
-        return;
-    }
+    if (!winPtr) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
 
-    fprintf(stderr, "KeyCallback: scancode=%d action=%s mods=0x%x\n",
-            scancode, (action == GLFW_PRESS) ? "PRESS" : "RELEASE", mods);
+    /* Route to focused widget (important for text widgets) */
+    TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
+    if (!focusWin) focusWin = winPtr;
 
-    /* Route to focused widget. */
-    TkWindow *focusWin = winPtr->dispPtr->focusPtr;
-    if (!focusWin) {
-        focusWin = winPtr;
-    }
+    fprintf(stderr, "KeyCallback: scancode=%d key=%d action=%s mods=0x%x\n",
+            scancode, key, 
+            (action == GLFW_PRESS) ? "PRESS" : 
+            (action == GLFW_REPEAT) ? "REPEAT" : "RELEASE", 
+            mods);
 
-    /* IBus IME handling. */
-    if (action == GLFW_PRESS) {
+    /* ============== IBus IME Handling ============== */
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         uint32_t xkb_keycode = (uint32_t)(scancode + 8);
-        uint32_t keyval = (uint32_t)TkWaylandGetKeysymFromScancode(scancode);
-        uint32_t state = 0;
+        
+        /* Get keysym using the *live* XKB state — this is more reliable */
+        uint32_t keyval = (uint32_t) xkb_state_key_get_one_sym(
+                                xkbState.state, xkb_keycode);
 
+        uint32_t state = 0;
         if (mods & GLFW_MOD_SHIFT)     state |= ShiftMask;
         if (mods & GLFW_MOD_CONTROL)   state |= ControlMask;
         if (mods & GLFW_MOD_ALT)       state |= Mod1Mask;
@@ -1317,22 +1354,24 @@ TkGlfwKeyCallback(GLFWwindow *window,
         if (mods & GLFW_MOD_CAPS_LOCK) state |= LockMask;
         if (mods & GLFW_MOD_NUM_LOCK)  state |= Mod2Mask;
 
-        fprintf(stderr, "  → Sending to IBus: keyval=0x%x keycode=%u state=0x%x\n",
+        fprintf(stderr, "  → IBus: keyval=0x%04x keycode=%u state=0x%x\n",
                 keyval, xkb_keycode, state);
 
-        if (TkWaylandIbusProcessKey((Tk_Window)winPtr, keyval, xkb_keycode, state)) {
-            fprintf(stderr, "  → IBus HANDLED the key (IME composition active)\n");
-            return;                    /* IBus consumed it - do not generate Tk event */
-        } else {
-            fprintf(stderr, "  → IBus did NOT handle key\n");
+        if (TkWaylandIbusProcessKey((Tk_Window)focusWin, keyval, xkb_keycode, state)) {
+            fprintf(stderr, "  → IBus HANDLED key (composition active)\n");
+            return;                    /* Do NOT generate normal Tk Key event */
         }
-
     }
 
-    /* Generate normal Tk KeyPress/KeyRelease event */
+    /* ============== Normal Tk Key Event ============== */
+    if (action == GLFW_RELEASE) {
+        /* Optional: you can also forward releases, but many IMEs ignore them */
+        return;
+    }
+
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
-    event.type = (action == GLFW_PRESS) ? KeyPress : KeyRelease;
+    event.type = KeyPress;   /* GLFW_RELEASE is mostly ignored for text */
     event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
     event.xkey.send_event  = False;
     event.xkey.display     = winPtr->display;
@@ -1342,20 +1381,15 @@ TkGlfwKeyCallback(GLFWwindow *window,
 
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
-    int x = (int)xpos;
-    int y = (int)ypos;
-
-    event.xkey.x           = x;
-    event.xkey.y           = y;
-    event.xkey.x_root      = winPtr->changes.x + x;
-    event.xkey.y_root      = winPtr->changes.y + y;
+    event.xkey.x           = (int)xpos;
+    event.xkey.y           = (int)ypos;
+    event.xkey.x_root      = winPtr->changes.x + (int)xpos;
+    event.xkey.y_root      = winPtr->changes.y + (int)ypos;
     event.xkey.state       = glfwModifierState;
-    event.xkey.keycode     = scancode;           /* raw scancode */
+    event.xkey.keycode     = (KeyCode)scancode;   /* raw evdev scancode */
     event.xkey.same_screen = True;
 
-    fprintf(stderr, "  → Queuing Tk %s event\n",
-            (action == GLFW_PRESS) ? "KeyPress" : "KeyRelease");
-
+    fprintf(stderr, "  → Queuing normal Tk KeyPress (scancode %d)\n", scancode);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
 
@@ -1382,15 +1416,18 @@ TkGlfwKeyCallback(GLFWwindow *window,
  */
  
 static void
-TkGlfwCharCallback(
-    GLFWwindow *window,
-    unsigned int codepoint)
+TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr) {
-	return;
+    if (!winPtr) return;
+
+    /* Skip if IBus is likely handling composition */
+    if (xkbState.state) {
+        /* Optional: check if any compose state is active, or just always let IBus win */
+        fprintf(stderr, "CharCallback: codepoint U+%04X (may be ignored if IBus active)\n", codepoint);
     }
+
     TkWaylandStoreText(winPtr, codepoint);
 }
 /*

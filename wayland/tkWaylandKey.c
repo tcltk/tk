@@ -39,21 +39,6 @@ int TkWaylandIbus_Init(Tcl_Interp *interp);
  * Wayland.
  */
 
-/* XKB keyboard state for key translation. */
-typedef struct {
-    struct xkb_context *context;
-    struct xkb_keymap *keymap;
-    struct xkb_state *state;
-    struct xkb_compose_table *compose_table;
-    struct xkb_compose_state *compose_state;
-    uint32_t modifiers_depressed;
-    uint32_t modifiers_latched;
-    uint32_t modifiers_locked;
-    uint32_t group;
-} TkXKBState;
-
-static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
-
 /*
  * Synthetic keycode range for IME‑generated Unicode characters.
  * The high bit (0x80000000) is not used by real X11 keycodes, so we
@@ -61,6 +46,8 @@ static TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
  */
 #define SYNTHETIC_KEYCODE_BASE 0xFF000000
 #define SYNTHETIC_KEYCODE(ch)  (SYNTHETIC_KEYCODE_BASE | (ch))
+
+TkXKBState xkbState = {NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0};
 
 /*
  * ----------------------------------------------------------------------------
@@ -551,8 +538,8 @@ typedef struct IbusContext {
 } IbusContext;
 
 /* Global IBus state. */
-static sd_bus *ibus_bus = NULL;
-static IbusContext *all_contexts = NULL;
+sd_bus *ibus_bus = NULL;
+IbusContext *all_contexts = NULL;
 
 /*
  * ----------------------------------------------------------------------------
@@ -738,9 +725,13 @@ static int OnCommitText(
     const char *text = NULL;
     int r;
 
+fprintf(stderr, ">>> OnCommitText called! userdata=%p\n", userdata);
     r = IbusReadTextFromVariant(m, &text);
-    if (r < 0 || !text || !*text) return 0;
-
+    if (r < 0 || !text || !*text) {
+		fprintf(stderr, "    OnCommitText: no text or read failed (r=%d)\n", r);
+		return 0;
+	}
+fprintf(stderr, ">>> OnCommitText: COMMITTED TEXT = '%s'\n", text);
     /*
      * Send to the currently focused widget, not the toplevel.
      * ctx->tkwin is the toplevel that owns the IBus context; the actual
@@ -798,11 +789,15 @@ static int OnUpdatePreedit(
     uint32_t cursor_pos = 0;
     int visible = 0;
     int r;
+    
+    fprintf(stderr, ">>> OnUpdatePreedit called!\n");
 
     /* Field 0: IBus.Text variant. */
     r = IbusReadTextFromVariant(m, &text);
-    if (r < 0) return 0;
-
+    if (r < 0) {
+		fprintf(stderr, "    OnUpdatePreedit: failed to read text (r=%d)\n", r);
+        return 0;
+        }
     /* Field 1: uint32 cursor position. */
     r = sd_bus_message_read(m, "u", &cursor_pos);
     if (r < 0) return 0;
@@ -810,6 +805,9 @@ static int OnUpdatePreedit(
     /* Field 2: bool visible. */
     r = sd_bus_message_read(m, "b", &visible);
     if (r < 0) return 0;
+
+    fprintf(stderr, ">>> OnUpdatePreedit: text='%s' cursor=%u visible=%d\n",
+            text ? text : "(null)", cursor_pos, visible);
 
     /*
      * Same focus-routing fix as OnCommitText: send to dispPtr->focusPtr
@@ -950,11 +948,6 @@ static int CreateIbusContext(
         Tcl_Free((char *)ctx);
         goto fail;
     }
-    
-    if (!ctx->obj_path) {
-        Tcl_Free((char *)ctx);
-        goto fail;
-    }
 
     /* Tell IBus which features this client supports.  Without this call,
      * engines like Mozc treat the context as a dumb client and pass all
@@ -975,21 +968,50 @@ static int CreateIbusContext(
                                   IBUS_CAP_LOOKUP_TABLE   |
                                   IBUS_CAP_FOCUS));
 
+    /*
+     * Subscribe to IBus signals.
+     *
+     * IMPORTANT: pass NULL for the sender, not IBUS_SERVICE.
+     *
+     * IBus runs a private D-Bus daemon.  On that bus the daemon's unique
+     * connection name is ":1.0" (or similar), not "org.freedesktop.IBus".
+     * sd_bus_match_signal with a non-NULL sender adds a match rule with
+     * sender=<name>, which the private bus resolves against unique names.
+     * Because the well-known name is never tracked the same way on a
+     * private peer-to-peer bus, the match silently never fires.  Passing
+     * NULL omits the sender= predicate so the rule matches any sender,
+     * and the path/interface/member predicates provide sufficient filtering.
+     */
 
     /* Subscribe to CommitText (critical). */
-    r = sd_bus_match_signal(ibus_bus, &ctx->signal_slot,
-                            IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
-                            IBUS_SIGNAL_COMMIT_TEXT, OnCommitText, ctx);
+    r = sd_bus_match_signal(ibus_bus,
+                            &ctx->signal_slot,
+                            NULL,                   /* sender: any */
+                            ctx->obj_path,
+                            IBUS_IC_INTERFACE,
+                            IBUS_SIGNAL_COMMIT_TEXT,
+                            OnCommitText, ctx);
     if (r < 0) {
-        fprintf(stderr, "Warning: Failed to subscribe to CommitText\n");
+        fprintf(stderr, "ERROR: Failed to subscribe to CommitText: %s\n",
+                strerror(-r));
+    } else {
+        fprintf(stderr, "SUCCESS: Subscribed to CommitText signal\n");
     }
 
     /* Subscribe to UpdatePreedit (optional). */
-    r = sd_bus_match_signal(ibus_bus, &ctx->preedit_slot,
-                            IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
-                            IBUS_SIGNAL_UPDATE_PREEDIT, OnUpdatePreedit, ctx);
+    r = sd_bus_match_signal(ibus_bus,
+                            &ctx->preedit_slot,
+                            NULL,                   /* sender: any */
+                            ctx->obj_path,
+                            IBUS_IC_INTERFACE,
+                            IBUS_SIGNAL_UPDATE_PREEDIT,
+                            OnUpdatePreedit, ctx);
     if (r < 0) {
+        fprintf(stderr, "WARNING: Failed to subscribe to UpdatePreedit: %s\n",
+                strerror(-r));
         ctx->preedit_slot = NULL;
+    } else {
+        fprintf(stderr, "SUCCESS: Subscribed to UpdatePreedit signal\n");
     }
 
     /* Add to list. */
@@ -1150,6 +1172,10 @@ static int IbusProcessKeyEvent(
 			       uint32_t state)
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return 0;
+
+    fprintf(stderr, "IbusProcessKeyEvent: sending keyval=0x%04x keycode=%u state=0x%x\n", 
+            keyval, keycode, state);
+
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *reply = NULL;
     int handled = 0;
@@ -1164,13 +1190,29 @@ static int IbusProcessKeyEvent(
                            &reply,
                            "uuu",
                            keyval, keycode, state);
+
     if (r < 0) {
+        fprintf(stderr, "    ProcessKeyEvent failed: %s\n", 
+                error.message ? error.message : strerror(-r));
         sd_bus_error_free(&error);
         return 0;
     }
+
     sd_bus_message_read(reply, "b", &handled);
     sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
+
+    /*
+     * Do NOT call sd_bus_process here.  This function is called from
+     * TkGlfwKeyCallback, which runs inside glfwPollEvents, which runs
+     * inside TkWaylandSetupProc.  Calling sd_bus_process recursively
+     * here would invoke the signal handlers (OnCommitText etc.) while
+     * already inside the notifier setup proc, causing re-entrancy into
+     * Tk's event machinery.  The IbusEventSetup file handler will drain
+     * any queued IBus signals on the next Tcl event loop iteration.
+     */
+
+    fprintf(stderr, "    IBus returned handled = %d\n", handled);
     return handled;
 }
 
@@ -1526,87 +1568,53 @@ static int CmdProcessKey(ClientData clientData,
     return TCL_OK;
 }
 
-/*
- * ----------------------------------------------------------------------------
- * IbusBusHandler --
- *
- *         Tcl file handler callback for the D-Bus socket.  Called when the
- *         D-Bus file descriptor becomes readable.
- *
- * Results:
- *         None.
- *
- * Side effects:
- *         Processes pending D-Bus messages.
- * ----------------------------------------------------------------------------
- */
 
-static void IbusBusHandler(
-			   ClientData clientData,
-			   int mask)
+/* Global to track the current D-Bus file descriptor */
+static int ibus_fd = -1;
+
+static void IbusBusHandler(ClientData clientData, int mask)
 {
     sd_bus *bus = (sd_bus *)clientData;
-    if (mask & TCL_READABLE) {
-        sd_bus_process(bus, NULL);
+    if (!(mask & TCL_READABLE)) return;
+
+    fprintf(stderr, ">>> IbusBusHandler: processing IBus signals\n");
+
+    int count = 0;
+    int r;
+    while ((r = sd_bus_process(bus, NULL)) > 0) {
+        count++;
+    }
+    if (count > 0) {
+        fprintf(stderr, "    Processed %d IBus message(s)\n", count);
+    } else if (r < 0) {
+        fprintf(stderr, "    sd_bus_process error: %s\n", strerror(-r));
     }
 }
 
-/*
- * ----------------------------------------------------------------------------
- * IbusEventSetup --
- *
- *         Tcl event source setup function.  Registers a file handler for the
- *         D-Bus socket so the event loop wakes up when IBus sends a signal.
- *
- *         The file descriptor is fetched fresh each call to guard against
- *         reconnection (e.g., IBus daemon restart).
- *
- * Results:
- *         None.
- *
- * Side effects:
- *         Installs IbusBusHandler as a file handler on the D-Bus file
- *         descriptor.
- * ----------------------------------------------------------------------------
- */
-
-static void IbusEventSetup(
-			   ClientData clientData,
-			   int flags)
+static void IbusEventSetup(ClientData clientData, int flags)
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) return;
-    if (!ibus_bus) return;
+    if (!(flags & TCL_WINDOW_EVENTS) || !ibus_bus) return;
 
     int fd = sd_bus_get_fd(ibus_bus);
-    if (fd >= 0) {
+    if (fd < 0) return;
+
+    if (fd != ibus_fd) {
+        if (ibus_fd >= 0) {
+            Tcl_DeleteFileHandler(ibus_fd);
+        }
         Tcl_CreateFileHandler(fd, TCL_READABLE, IbusBusHandler, ibus_bus);
+        ibus_fd = fd;
+        fprintf(stderr, "IbusEventSetup: Registered handler for fd=%d\n", fd);
     }
 }
 
-/*
- * ----------------------------------------------------------------------------
- * IbusEventCheck --
- *
- *         Tcl event source check function.  If D-Bus events are pending,
- *         sets the maximum block time to zero so the event loop wakes
- *         immediately and the file handler can drain them.
- *
- * Results:
- *         None.
- *
- * Side effects:
- *         May set the maximum block time to zero.
- * ----------------------------------------------------------------------------
- */
-
-static void IbusEventCheck(
-			   ClientData clientData,
-			   int flags)
+static void IbusEventCheck(ClientData clientData, int flags)
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) return;
-    if (ibus_bus && sd_bus_get_events(ibus_bus) > 0) {
-        Tcl_Time zeroTime = {0, 0};
-        Tcl_SetMaxBlockTime(&zeroTime);
+    if (!(flags & TCL_WINDOW_EVENTS) || !ibus_bus) return;
+
+    if (sd_bus_get_events(ibus_bus) > 0) {
+        Tcl_Time zero = {0, 0};
+        Tcl_SetMaxBlockTime(&zero);
     }
 }
 
@@ -1842,6 +1850,9 @@ TkWaylandIbus_Init(Tcl_Interp *interp)
 
     /* Register event source for signals. */
     Tcl_CreateEventSource(IbusEventSetup, IbusEventCheck, NULL);
+    
+    /* Force initial setup */
+    IbusEventSetup(NULL, TCL_WINDOW_EVENTS);
 
     return TCL_OK;
 }

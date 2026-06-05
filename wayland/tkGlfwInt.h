@@ -434,6 +434,19 @@ MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
 MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);
 void TkWaylandIbusSetCursorLocation(Tk_Window tkwin, int x, int y, int w, int h);
 
+/* XKB keyboard state for key translation. */
+typedef struct {
+    struct xkb_context *context;
+    struct xkb_keymap *keymap;
+    struct xkb_state *state;
+    struct xkb_compose_table *compose_table;
+    struct xkb_compose_state *compose_state;
+    uint32_t modifiers_depressed;
+    uint32_t modifiers_latched;
+    uint32_t modifiers_locked;
+    uint32_t group;
+} TkXKBState;
+
 
 /*
  *----------------------------------------------------------------------
