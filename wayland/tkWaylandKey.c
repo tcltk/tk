@@ -31,6 +31,7 @@
 #include <X11/keysymdef.h>
 
 int TkWaylandIbus_Init(Tcl_Interp *interp);
+void RemoveIbusContext(Tk_Window tkwin);
 
 /*
  * Keyboard implementation.
@@ -563,16 +564,17 @@ IbusContext *all_contexts = NULL;
  * ----------------------------------------------------------------------------
  */
 
-static IbusContext *FindContext(Tk_Window tkwin)
+static IbusContext *
+FindContext(Tk_Window tkwin)
 {
     IbusContext *ctx = all_contexts;
     while (ctx) {
-        if (ctx->tkwin == tkwin) return ctx;
+        if (ctx->tkwin == tkwin)
+            return ctx;
         ctx = ctx->next;
     }
     return NULL;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -766,14 +768,13 @@ OnCommitText(
      */
     TkWindow *topPtr = (TkWindow *)ctx->tkwin;
     TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
-    Tk_Window target = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
+    Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
-    /* Notify widgets to clear uncommitted underlines. */
-    Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
 
-    /* Push text characters cleanly down the Unicode processing stream. */
     if (*text) {
-        TkWaylandSendUnicodeString(target, text);
+        /* Synthetic key events use the toplevel window ID for dispatch. */
+        TkWaylandSendUnicodeString(ctx->tkwin, text);
     }
 
     return 0;
@@ -844,11 +845,16 @@ OnUpdatePreedit(
 
     TkWindow *topPtr = (TkWindow *)ctx->tkwin;
     TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
-    Tk_Window target = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
+    Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
-    if (visible && text && *text) {
-         Tk_SendVirtualEvent(target, "TkClearIMEMarkedText", NULL);/* Pass the active composition string to show inline widget decorations. */
-      }
+    if (!visible || !text || !*text) {
+        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+    } else {
+        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+        Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+        TkWaylandSendUnicodeString(ctx->tkwin, text);
+        Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
+    }
 
     return 0;
 }
@@ -884,6 +890,35 @@ FreeIbusContext(IbusContext *ctx)
         ctx->obj_path = NULL;
     }
     Tcl_Free((char *)ctx);
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * RemoveIbusContext --
+ *
+ *         Remove a context from the global list and free it.
+ *         Called on window destruction.
+ *
+ * Results:
+ *         None.
+ * ----------------------------------------------------------------------------
+ */
+
+void
+RemoveIbusContext(Tk_Window tkwin)
+{
+    IbusContext *ctx = all_contexts;
+    IbusContext **prev = &all_contexts;
+
+    while (ctx) {
+        if (ctx->tkwin == tkwin) {
+            *prev = ctx->next;
+            FreeIbusContext(ctx);
+            return;
+        }
+        prev = &ctx->next;
+        ctx = ctx->next;
+    }
 }
 
 /*
@@ -1060,31 +1095,36 @@ static int IbusProcessKeyEvent(
 
     int r;
 
-    /* Fire-and-forget: Send the key to IBus asynchronously.
-     * This prevents single-threaded deadlocks and allows IBus to emit 
-     * CommitText/UpdatePreedit signals back to us cleanly without blocking.
-     */
-    r = sd_bus_call_method_async(ibus_bus,
-                                 NULL,               /* We don't need a specific slot handle */
-                                 IBUS_SERVICE,
-                                 ctx->obj_path,
-                                 IBUS_IC_INTERFACE,
-                                 "ProcessKeyEvent",
-                                 NULL,               /* No synchronous reply handler callback */
-                                 NULL,               /* No userdata needed */
-                                 "uuu",
-                                 keyval, keycode, state);
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *reply = NULL;
+    int handled = 0;
 
+    r = sd_bus_call_method(ibus_bus,
+                           IBUS_SERVICE,
+                           ctx->obj_path,
+                           IBUS_IC_INTERFACE,
+                           "ProcessKeyEvent",
+                           &error,
+                           &reply,
+                           "uuu",
+                           keyval, keycode, state);
     if (r < 0) {
-        fprintf(stderr, "    Async ProcessKeyEvent failed to send: %s\n", strerror(-r));
+        fprintf(stderr, "    ProcessKeyEvent failed: %s\n",
+                error.message ? error.message : strerror(-r));
+        sd_bus_error_free(&error);
         return 0;
     }
 
-    /* In an async architecture, we return 1 (handled) to tell Tk to pause 
-     * native layout insertion for this keystroke event. The real text delivery 
-     * will occur when our OnCommitText signal handler fires in the next event loop pass.
-     */
-    return 1;
+    sd_bus_message_read(reply, "b", &handled);
+    sd_bus_message_unref(reply);
+    sd_bus_error_free(&error);
+
+    fprintf(stderr, "    IBus returned handled = %d\n", handled);
+
+    /* Drain any CommitText/UpdatePreedit signals IBus queued in response. */
+    { int n; do { n = sd_bus_process(ibus_bus, NULL); } while (n > 0); }
+
+    return handled;
 }
 /*
  * ---------------------------------------------------------------------
@@ -1183,15 +1223,15 @@ Tk_SetCaretPos(
  * ----------------------------------------------------------------------------
  * TkWaylandIbusCreateContext --
  *
- *          Called from GLFW callbacks (tkWaylandNotify.c) when a new toplevel 
- * 			GLFWwindow is created, so that an IBus input context is ready 
- * 			before the window receives focus.
+ *          Called from GLFW callbacks when a new toplevel GLFWwindow is
+ *          created (and on subsequent FocusIn if no context exists).
  *
  * Results:
  *         Returns TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *         Creates a new IBus input context for tkwin.
+ *         Creates a new IBus input context, subscribes to signals,
+ *         and adds it to the global linked list.
  * ----------------------------------------------------------------------------
  */
 
@@ -1200,98 +1240,110 @@ TkWaylandIbusCreateContext(
     Tcl_Interp *interp,
     Tk_Window   tkwin)
 {
-    char obj_path[1024];
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *reply = NULL;
     int r;
 
     if (!ibus_bus) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
-    /* If context structure already exists, safely early-exit. */
+    /* If context already exists, early exit */
     if (FindContext(tkwin)) {
-	return TCL_OK;
+        fprintf(stderr, "CreateIbusContext: Context already exists for window %p\n", tkwin);
+        return TCL_OK;
     }
 
-    /* Request a freshly instantiated remote context instance from the daemon. */
+    /* Request new input context from IBus daemon */
     r = sd_bus_call_method(ibus_bus,
-			   IBUS_SERVICE,
-			   IBUS_PATH,
-			   IBUS_INTERFACE,
-			   "CreateInputContext",
-			   &error,
-			   &reply,
-			   "s",
-			   "TkWaylandApp");
+                           IBUS_SERVICE,
+                           IBUS_PATH,
+                           IBUS_INTERFACE,
+                           "CreateInputContext",
+                           &error,
+                           &reply,
+                           "s",
+                           "TkWaylandApp");
     if (r < 0) {
-	fprintf(stderr, "IBus: CreateInputContext method call failed: %s\n",
-		error.message ? error.message : strerror(-r));
-	sd_bus_error_free(&error);
-	return TCL_ERROR;
+        fprintf(stderr, "IBus: CreateInputContext failed: %s\n",
+                error.message ? error.message : strerror(-r));
+        sd_bus_error_free(&error);
+        return TCL_ERROR;
     }
 
-    /* Extract the newly minted object path assigned to our context. */
-    r = sd_bus_message_read(reply, "o", &obj_path);
-    if (r < 0) {
-	fprintf(stderr, "IBus: Failed parsing assigned object path token: %s\n", strerror(-r));
-	sd_bus_message_unref(reply);
-	sd_bus_error_free(&error);
-	return TCL_ERROR;
+    const char *path_tmp = NULL;
+    r = sd_bus_message_read(reply, "o", &path_tmp);
+    if (r < 0 || !path_tmp) {
+        fprintf(stderr, "IBus: Failed to read object path: %s\n", strerror(-r));
+        sd_bus_message_unref(reply);
+        sd_bus_error_free(&error);
+        return TCL_ERROR;
     }
 
-    fprintf(stderr, "IBus: Created remote layout channel path -> %s\n", obj_path);
+    fprintf(stderr, "IBus: Created remote input context -> %s\n", path_tmp);
 
-    /* Allocate and seed context tracking resources. */
+    /* Allocate and initialize context */
     IbusContext *ctx = (IbusContext *)Tcl_Alloc(sizeof(IbusContext));
+    if (!ctx) {
+        sd_bus_message_unref(reply);
+        sd_bus_error_free(&error);
+        return TCL_ERROR;
+    }
     memset(ctx, 0, sizeof(IbusContext));
+
     ctx->tkwin = tkwin;
-    ctx->obj_path = strdup(obj_path);
+    ctx->obj_path = strdup(path_tmp);
     ctx->interp = interp;
     ctx->enabled = 0;
 
     if (!ctx->obj_path) {
-	Tcl_Free((char *)ctx);
-	sd_bus_message_unref(reply);
-	sd_bus_error_free(&error);
-	return TCL_ERROR;
+        Tcl_Free((char *)ctx);
+        sd_bus_message_unref(reply);
+        sd_bus_error_free(&error);
+        return TCL_ERROR;
     }
 
-    /* Clean up creation transaction elements. */
     sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
 
-    /* Subscribe signal targets directly to our specialized handler functions. */
-    r = sd_bus_match_signal(ibus_bus, NULL, IBUS_SERVICE, ctx->obj_path,
-			    IBUS_IC_INTERFACE, "CommitText", OnCommitText, ctx);
-    if (r >= 0) {
-	fprintf(stderr, "SUCCESS: Subscribed to CommitText signal on path %s\n", ctx->obj_path);
+    /* Subscribe to signals */
+    {
+        char rule[512];
+
+        snprintf(rule, sizeof(rule),
+                 "type='signal',path='%s',interface='%s',member='CommitText'",
+                 ctx->obj_path, IBUS_IC_INTERFACE);
+        r = sd_bus_add_match(ibus_bus, &ctx->signal_slot, rule, OnCommitText, ctx);
+        if (r < 0) {
+            fprintf(stderr, "Warning: CommitText subscription failed: %s\n", strerror(-r));
+        }
+
+        snprintf(rule, sizeof(rule),
+                 "type='signal',path='%s',interface='%s',member='UpdatePreedit'",
+                 ctx->obj_path, IBUS_IC_INTERFACE);
+        r = sd_bus_add_match(ibus_bus, &ctx->preedit_slot, rule, OnUpdatePreedit, ctx);
+        if (r < 0) {
+            fprintf(stderr, "Warning: UpdatePreedit subscription failed: %s\n", strerror(-r));
+        }
     }
 
-    r = sd_bus_match_signal(ibus_bus, NULL, IBUS_SERVICE, ctx->obj_path,
-			    IBUS_IC_INTERFACE, "UpdatePreedit", OnUpdatePreedit, ctx);
-    if (r >= 0) {
-	fprintf(stderr, "SUCCESS: Subscribed to UpdatePreedit signal on path %s\n", ctx->obj_path);
-    }
-
-    /*
-     * Tell IBus we want live composition strings (PREEDIT_TEXT) and handle window focus tracking
-     * (FOCUS), but deliberately omit LOOKUP_TABLE. This forces the IBus daemon to
-     * render its own floating popup choice panels while broadcasting real-time inline alerts.
-     */
+    /* Set capabilities */
     uint32_t caps = IBUS_CAP_PREEDIT_TEXT | IBUS_CAP_FOCUS;
-
     r = sd_bus_call_method(ibus_bus,
-			   IBUS_SERVICE,
-			   ctx->obj_path,
-			   IBUS_IC_INTERFACE,
-			   "SetCapabilities",
-			   NULL, NULL,
-			   "u",
-			   caps);
+                           IBUS_SERVICE,
+                           ctx->obj_path,
+                           IBUS_IC_INTERFACE,
+                           "SetCapabilities",
+                           NULL, NULL, "u", caps);
     if (r < 0) {
-	fprintf(stderr, "IBus: Failed writing capabilities bitmask allocation matrix\n");
+        fprintf(stderr, "IBus: SetCapabilities failed (non-fatal): %s\n", strerror(-r));
     }
+
+    /* === CRITICAL: Insert into global linked list === */
+    ctx->next = all_contexts;
+    all_contexts = ctx;
+
+    fprintf(stderr, "CreateIbusContext: Successfully added context for window %p\n", tkwin);
 
     return TCL_OK;
 }

@@ -37,7 +37,9 @@ extern void TkWaylandIbusFocusIn(Tk_Window tkwin);
 extern void TkWaylandIbusFocusOut(Tk_Window tkwin);
 extern int  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
                                     uint32_t keycode, uint32_t state);
+extern void RemoveIbusContext(Tk_Window tkwin);
 extern TkXKBState xkbState;
+
 
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
@@ -597,7 +599,11 @@ TkGlfwClearCallbacks(
 /* Helper function to avoid type mismatch in callback. */
 static void DestroyWindowIdleProc(void *clientData)
 {
-    Tk_DestroyWindow((Tk_Window)clientData);
+	Tk_Window tkwin =  (Tk_Window)clientData;
+	if (Tk_IsTopLevel(tkwin)) {
+        RemoveIbusContext(tkwin);
+    }
+    Tk_DestroyWindow(tkwin);
 }
  
 static void
@@ -844,11 +850,19 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
     if (focused) {
         TkMainInfo *infoPtr = TkGetMainInfoList();
         if (infoPtr) {
-            /* Keep context creation logic separate from delivery. */
             TkWaylandIbusCreateContext(infoPtr->interp, (Tk_Window)winPtr);
         }
-        /* Always force focus notifications back onto the D-Bus socket */
         TkWaylandIbusFocusIn((Tk_Window)winPtr);
+        /*
+         * Drain the IBus bus immediately after FocusIn + Enable so any
+         * engine-activation signals are processed before the first keypress.
+         * Without this drain the signals sit in the socket until the next
+         * TkWaylandSetupProc pass, by which time a fast typist has already
+         * sent keys that bypass IBus.
+         */
+        if (ibus_bus) {
+            while (sd_bus_process(ibus_bus, NULL) > 0) { /* drain */ }
+        }
     } else {
         TkWaylandIbusFocusOut((Tk_Window)winPtr);
     }
@@ -1383,7 +1397,17 @@ TkGlfwKeyCallback(GLFWwindow *window,
         fprintf(stderr, "  → IBus: keyval=0x%04x keycode=%u state=0x%x\n",
                 keyval, xkb_keycode, state);
 
-        if (TkWaylandIbusProcessKey((Tk_Window)focusWin, keyval, xkb_keycode, state)) {
+        /*
+         * Pass winPtr (the GLFW toplevel) to TkWaylandIbusProcessKey, NOT
+         * focusWin.  FindContext compares ctx->tkwin by pointer; ctx->tkwin
+         * was stored from the winPtr passed to TkWaylandIbusCreateContext in
+         * TkGlfwWindowFocusCallback, which is always the GLFW toplevel.
+         * Using focusWin (.t) causes GetToplevelOfWidget to walk the parent
+         * chain, which may differ after a resize/remap cycle, returning a
+         * pointer that does not match ctx->tkwin → FindContext returns NULL →
+         * IBus is silently bypassed for every keypress.
+         */
+        if (TkWaylandIbusProcessKey((Tk_Window)winPtr, keyval, xkb_keycode, state)) {
             fprintf(stderr, "  → IBus HANDLED key (composition active)\n");
             return;                    /* Do NOT generate normal Tk Key event */
         }
