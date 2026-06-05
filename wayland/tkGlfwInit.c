@@ -449,6 +449,7 @@ TkGlfwInitialize(void)
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
         fprintf(stderr, "TkGlfwInitialize: failed to create root window\n");
@@ -585,7 +586,7 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
 	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-	/*
+	glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);	/*
 	 * Sharing the GL context makes image rendering more efficient.
 	 */
         glfwWindow = glfwCreateWindow(width, height, title ? title : "",
@@ -612,12 +613,12 @@ TkGlfwCreateWindow(
 
     /* Set the initial pixel ratio for this window. */
     int fbWidth, fbHeight;
-    //float xscale, yscale;
-    //glfwGetWindowContentScale(glfwWindow, &xscale, &yscale);
+    float scale;
+    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     //winPtr->privatePtr->pixelRatio = xscale;
-    winPtr->privatePtr->pixelRatio = 1.0;
+    //winPtr->privatePtr->pixelRatio = 1.0;
     fprintf(stderr, "Initial pixel ratio for %s is %f\n",
-	   Tk_PathName(winPtr), winPtr->privatePtr->pixelRatio);
+	   Tk_PathName(winPtr), scale);
 
     /* Create a framebuffer for the backing store of the window. */
     glfwMakeContextCurrent(glfwWindow);
@@ -741,13 +742,15 @@ TkGlfwBeginDraw(
      * The width and height here should be the window dimensions,
      * not the framebuffer dimensions.
      */
+    float scale;
+    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
 
     fprintf(stderr, "BeginFrame for toplevel %s with size %dx%d and pixel ratio %f\n",
-	   Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr),
-	   winPtr->privatePtr->pixelRatio);
+	    Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr), scale);
+    //winPtr->privatePtr->pixelRatio);
 
-    nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr),
-		  winPtr->privatePtr->pixelRatio);
+    nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
+    //		  winPtr->privatePtr->pixelRatio);
 
     /*
      * Import our graphics context and translate to the origin
