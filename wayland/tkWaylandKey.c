@@ -593,6 +593,7 @@ FindContext(Tk_Window tkwin)
  *
  *----------------------------------------------------------------------
  */
+ 
 static int
 IbusReadTextFromVariant(
     sd_bus_message *m,
@@ -601,53 +602,144 @@ IbusReadTextFromVariant(
     int r;
     char type;
     const char *contents = NULL;
+    const char *objtype = NULL;
+
     *text_out = NULL;
 
-    /* Peek at the variant container to inspect its internal signature string. */
+    /* Expect a variant. */
     r = sd_bus_message_peek_type(m, &type, &contents);
-    if (r < 0 || type != SD_BUS_TYPE_VARIANT) {
-        return (r < 0) ? r : -EINVAL;
-    }
+    fprintf(stderr,
+            "peek: r=%d type='%c' contents='%s'\n",
+            r,
+            type,
+            contents ? contents : "(null)");
 
-    /* Step inside the variant container "v". */
-    r = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, contents);
-    if (r < 0) return r;
-
-    /* Inspect the struct payload type signature (typically "(sa{sv}sv)"). */
-    r = sd_bus_message_peek_type(m, &type, &contents);
-    if (r < 0 || type != SD_BUS_TYPE_STRUCT) {
-        sd_bus_message_exit_container(m);
-        return -EINVAL;
-    }
-
-    /* Step inside the underlying structure container. */
-    r = sd_bus_message_enter_container(m, SD_BUS_TYPE_STRUCT, contents);
     if (r < 0) {
-        sd_bus_message_exit_container(m);
         return r;
     }
 
-    /* Field 0: Unpack the IBus object type layout name (e.g., "IBusText"). */
-    r = sd_bus_message_skip(m, "s");
-    if (r < 0) goto cleanup;
-
-    /* Field 1: Attributes dictionary array. Peek and skip safely if present. */
-    r = sd_bus_message_peek_type(m, &type, &contents);
-    if (r >= 0 && type == SD_BUS_TYPE_ARRAY) {
-        r = sd_bus_message_skip(m, contents);
+    if (type != SD_BUS_TYPE_VARIANT) {
+        fprintf(stderr,
+                "Expected VARIANT, got '%c'\n",
+                type);
+        return -EINVAL;
     }
-    if (r < 0) goto cleanup;
 
-    /* Field 2: Extract the actual plain UTF-8 text string "s". */
+    /* Enter variant. */
+    r = sd_bus_message_enter_container(
+            m,
+            SD_BUS_TYPE_VARIANT,
+            contents);
+    fprintf(stderr,
+            "enter variant -> r=%d\n",
+            r);
+
+    if (r < 0) {
+        return r;
+    }
+
+    /* See what's actually inside. */
+    r = sd_bus_message_peek_type(m, &type, &contents);
+    fprintf(stderr,
+            "inside variant: r=%d type='%c' contents='%s'\n",
+            r,
+            type,
+            contents ? contents : "(null)");
+
+    if (r < 0) {
+        goto cleanup_variant;
+    }
+
+    if (type != SD_BUS_TYPE_STRUCT) {
+        fprintf(stderr,
+                "Expected STRUCT inside variant, got '%c'\n",
+                type);
+        r = -EINVAL;
+        goto cleanup_variant;
+    }
+
+    /* Enter struct. */
+    r = sd_bus_message_enter_container(
+            m,
+            SD_BUS_TYPE_STRUCT,
+            NULL);
+    fprintf(stderr,
+            "enter struct -> r=%d\n",
+            r);
+
+    if (r < 0) {
+        goto cleanup_variant;
+    }
+
+    /* First field should be "IBusText". */
+    r = sd_bus_message_read(m, "s", &objtype);
+    fprintf(stderr,
+            "read object type -> r=%d value='%s'\n",
+            r,
+            objtype ? objtype : "(null)");
+
+    if (r < 0) {
+        goto cleanup_struct;
+    }
+
+    /* What comes next? */
+    r = sd_bus_message_peek_type(m, &type, &contents);
+    fprintf(stderr,
+            "after object type: r=%d type='%c' contents='%s'\n",
+            r,
+            type,
+            contents ? contents : "(null)");
+
+    if (r < 0) {
+        goto cleanup_struct;
+    }
+
+    /*
+     * Old IBus encodings typically have an a{sv}
+     * attributes dictionary here.
+     */
+    if (type == SD_BUS_TYPE_ARRAY) {
+        fprintf(stderr,
+                "skipping array '%s'\n",
+                contents ? contents : "(null)");
+
+        sd_bus_message_skip(m, "a{sv}");
+        fprintf(stderr,
+                "skip array -> r=%d\n",
+                r);
+
+        if (r < 0) {
+            goto cleanup_struct;
+        }
+    }
+
+    /* See what field follows. */
+    r = sd_bus_message_peek_type(m, &type, &contents);
+    fprintf(stderr,
+            "before text read: r=%d type='%c' contents='%s'\n",
+            r,
+            type,
+            contents ? contents : "(null)");
+
+    if (r < 0) {
+        goto cleanup_struct;
+    }
+
+    /* Try to read UTF-8 text. */
     r = sd_bus_message_read(m, "s", text_out);
+    fprintf(stderr,
+            "read text -> r=%d text='%s'\n",
+            r,
+            (r >= 0 && *text_out) ? *text_out : "(null)");
 
-cleanup:
-    /* Balanced unwind of open containers. */
-    sd_bus_message_exit_container(m); /* Exit struct */
-    sd_bus_message_exit_container(m); /* Exit variant */
+cleanup_struct:
+    sd_bus_message_exit_container(m);
+
+cleanup_variant:
+    sd_bus_message_exit_container(m);
+
     return r;
 }
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -679,6 +771,7 @@ TkWaylandSendUnicodeString(
 
     Display *display = Tk_Display(tkwin);
     Window window = Tk_WindowId(tkwin);
+    
     Tcl_Time now;
 	Tcl_GetTime(&now);
 	Time time = (Time)(now.sec * 1000 + now.usec / 1000);
@@ -720,25 +813,22 @@ TkWaylandSendUnicodeString(
     }
 }
 
+
 /*
  * ----------------------------------------------------------------------------
  * OnCommitText --
+ * 
+* 	    D-Bus signal handler for the IBus "CommitText" signal. Called when
+ * 	    the IME has finished composing a text string and it should be
+ * 	    inserted into the focused widget.
  *
- *         D-Bus signal handler for the IBus "CommitText" signal.  Called when
- *         the IME has finished composing a text string and it should be
- *         inserted into the focused widget.
- *
- *         Wire signature: CommitText(v)  where v contains an IBus.Text struct.
- *
- *         The committed text is inserted by generating synthetic KeyPress
- *         events.  Any ongoing preëdit is first cleared via the
- *         <<TkClearIMEMarkedText>> virtual event.
+ * 	    Wire signature: CommitText(v) where v contains an IBus.Text struct.
  *
  * Results:
- *         Returns 0 on success, or a negative error code on failure.
+ * 	    Returns 0 on success, or a negative error code on failure.
  *
  * Side effects:
- *         Queues key events and virtual events for the target toplevel.
+ * 	    Queues key events and virtual events for the target sub-widget.
  * ----------------------------------------------------------------------------
  */
 
@@ -752,29 +842,29 @@ OnCommitText(
     const char *text = NULL;
     int r;
 
-    fprintf(stderr, ">>> OnCommitText called!\n");
-
     r = IbusReadTextFromVariant(m, &text);
     if (r < 0 || !text) {
-        fprintf(stderr, "    OnCommitText: decoding text wrapper failed (r=%d)\n", r);
         return 0;
     }
 
-    fprintf(stderr, ">>> OnCommitText: COMMITTED TEXT = '%s'\n", text);
-
     /*
-     * Route text targeting to the interior active widget focus node, 
-     * matching the layout constraints of Tk's focus state manager.
+     * Dynamically resolve the true interior widget holding focus (e.g., .e).
+     * If we send events to the outer toplevel container wrapper, sub-widgets
+     * will fail to capture the character strings or throw dictionary errors.
      */
     TkWindow *topPtr = (TkWindow *)ctx->tkwin;
-    TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
+    TkWindow *focusPtr = (topPtr && topPtr->dispPtr) ? topPtr->dispPtr->focusPtr : NULL;
     Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
+    /* Clear ongoing preedit buffer bindings on the true targeted widget. */
     Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
 
     if (*text) {
-        /* Synthetic key events use the toplevel window ID for dispatch. */
-        TkWaylandSendUnicodeString(ctx->tkwin, text);
+        /* Pass the exact focused sub-widget window handle
+         * rather than ctx->tkwin so TkWaylandSendUnicodeString targets the 
+         * correct window ID during XEvent construction.
+         */
+        TkWaylandSendUnicodeString(focusWin, text);
     }
 
     return 0;
@@ -919,30 +1009,6 @@ RemoveIbusContext(Tk_Window tkwin)
         prev = &ctx->next;
         ctx = ctx->next;
     }
-}
-
-/*
- * ----------------------------------------------------------------------------
- * CreateIbusContext --
- *
- *         Create an IBus input context for a given Tk toplevel window.
- *
- * Results:
- *         Returns TCL_OK on success, or TCL_ERROR on failure.  An error
- *         message is left in the interpreter.
- *
- * Side effects:
- *         Creates a new input context on the IBus daemon, subscribes to
- *         its signals, and adds the context to the global list.
- * ----------------------------------------------------------------------------
- */
-
-static int CreateIbusContext(
-			     TCL_UNUSED(Tcl_Interp *),
-			     TCL_UNUSED(Tk_Window))
-{
-	/* Operations moved to TkWaylandIbusCreateContext. */
-    return 1;
 }
 
 /*
@@ -1153,6 +1219,7 @@ static int IbusProcessKeyEvent(
  * ----------------------------------------------------------------------
  */
 
+
 void
 Tk_SetCaretPos(
     Tk_Window tkwin,
@@ -1160,7 +1227,6 @@ Tk_SetCaretPos(
     int y,
     int height)
 {
-
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
 
@@ -1179,29 +1245,27 @@ Tk_SetCaretPos(
 
     if (!ibus_bus) return;
 
-    /* Walk up to the toplevel to find the IBus context. */
+    /* Crawl up parent tree elements to find the top-level container window */
     TkWindow *topPtr = winPtr;
-    while (!Tk_IsTopLevel(topPtr)) {
+    while (topPtr && !Tk_IsTopLevel(topPtr)) {
         topPtr = (TkWindow *) Tk_Parent(topPtr);
     }
+    if (!topPtr) return;
+
     IbusContext *ctx = FindContext((Tk_Window) topPtr);
     if (!ctx || !ctx->obj_path) return;
 
     /*
-     * On Wayland, the compositor does not provide the toplevel window's
-     * screen position (glfwGetWindowPos is unsupported).  Tk_GetRootCoords
-     * therefore returns coordinates relative to the GLFW surface origin, not
-     * true screen-absolute coordinates.  Rather than passing wrong absolute
-     * coordinates to SetCursorLocation, use SetCursorLocationRelative, which
-     * IBus interprets as coordinates relative to the input-context window
-     * surface — exactly what Tk_GetRootCoords gives us here.
-     *
-     * SetCursorLocationRelative has the same signature: (iiii) x, y, w, h.
+     * On Wayland, absolute screen origins are obscured. Tk_GetRootCoords 
+     * returns the sub-widget's coordinates relative to its parent toplevel's 
+     * client surface area. We accumulate the sub-window's surface offset 
+     * plus the local caret offset (x, y) to get a perfect local coordinate.
      */
     int rootX, rootY;
     Tk_GetRootCoords(tkwin, &rootX, &rootY);
-    int screenX = rootX + x;
-    int screenY = rootY + y;
+    
+    int surfaceX = rootX + x;
+    int surfaceY = rootY + y;
 
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_call_method(ibus_bus,
@@ -1212,8 +1276,8 @@ Tk_SetCaretPos(
                        &error,
                        NULL,
                        "iiii",
-                       (int32_t) screenX,
-                       (int32_t) screenY,
+                       (int32_t) surfaceX,
+                       (int32_t) surfaceY,
                        (int32_t) 0,
                        (int32_t) height);
     sd_bus_error_free(&error);
@@ -1248,7 +1312,7 @@ TkWaylandIbusCreateContext(
         return TCL_ERROR;
     }
 
-    /* If context already exists, early exit */
+    /* If context already exists, early exit. */
     if (FindContext(tkwin)) {
         fprintf(stderr, "CreateIbusContext: Context already exists for window %p\n", tkwin);
         return TCL_OK;
@@ -1306,7 +1370,7 @@ TkWaylandIbusCreateContext(
     sd_bus_message_unref(reply);
     sd_bus_error_free(&error);
 
-    /* Subscribe to signals */
+    /* Subscribe to signals. */
     {
         char rule[512];
 
@@ -1327,7 +1391,7 @@ TkWaylandIbusCreateContext(
         }
     }
 
-    /* Set capabilities */
+    /* Set capabilities. */
     uint32_t caps = IBUS_CAP_PREEDIT_TEXT | IBUS_CAP_FOCUS;
     r = sd_bus_call_method(ibus_bus,
                            IBUS_SERVICE,
@@ -1339,7 +1403,7 @@ TkWaylandIbusCreateContext(
         fprintf(stderr, "IBus: SetCapabilities failed (non-fatal): %s\n", strerror(-r));
     }
 
-    /* === CRITICAL: Insert into global linked list === */
+    /* Insert into global linked list.  */
     ctx->next = all_contexts;
     all_contexts = ctx;
 
@@ -1347,6 +1411,31 @@ TkWaylandIbusCreateContext(
 
     return TCL_OK;
 }
+
+/*
+ * ----------------------------------------------------------------------------
+ * CreateIbusContext --
+ *
+ *         Create an IBus input context for a given Tk toplevel window.
+ *
+ * Results:
+ *         Returns TCL_OK on success, or TCL_ERROR on failure.  An error
+ *         message is left in the interpreter.
+ *
+ * Side effects:
+ *         Creates a new input context on the IBus daemon, subscribes to
+ *         its signals, and adds the context to the global list.
+ * ----------------------------------------------------------------------------
+ */
+
+static int CreateIbusContext(
+			     Tcl_Interp *interp,
+			     Tk_Window tkwin)
+{
+    /* Operations moved to TkWaylandIbusCreateContext. */
+    return TkWaylandIbusCreateContext(interp, tkwin);
+}
+
 
 /*
  * ----------------------------------------------------------------------------

@@ -1368,7 +1368,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
 
     TkWaylandUpdateKeyboardModifiers(mods);
 
-    /* Route to focused widget (important for text widgets) */
+    /* Route to focused widget (important for text widgets). */
     TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
     if (!focusWin) focusWin = winPtr;
 
@@ -1382,7 +1382,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         uint32_t xkb_keycode = (uint32_t)(scancode + 8);
         
-        /* Get keysym using the *live* XKB state — this is more reliable */
+        /* Get keysym using the *live* XKB state — this is more reliable. */
         uint32_t keyval = (uint32_t) xkb_state_key_get_one_sym(
                                 xkbState.state, xkb_keycode);
 
@@ -1415,7 +1415,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
 
     /*  Normal Tk key event. */
     if (action == GLFW_RELEASE) {
-        /* Optional: you can also forward releases, but many IMEs ignore them */
+        /* Optional: you can also forward releases, but many IMEs ignore them. */
         return;
     }
 
@@ -1472,9 +1472,9 @@ TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) return;
 
-    /* Skip if IBus is likely handling composition */
+    /* Skip if IBus is likely handling composition. */
     if (xkbState.state) {
-        /* Optional: check if any compose state is active, or just always let IBus win */
+        /* Optional: check if any compose state is active, or just always let IBus win. */
         fprintf(stderr, "CharCallback: codepoint U+%04X (may be ignored if IBus active)\n", codepoint);
     }
 
