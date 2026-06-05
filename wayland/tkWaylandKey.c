@@ -1166,56 +1166,44 @@ static void IbusDisable(IbusContext *ctx)
  */
 
 static int IbusProcessKeyEvent(
-			       IbusContext *ctx,
-			       uint32_t keyval,
-                               uint32_t keycode,
-			       uint32_t state)
+                   IbusContext *ctx,
+                   uint32_t keyval,
+                   uint32_t keycode,
+                   uint32_t state)
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return 0;
 
-    fprintf(stderr, "IbusProcessKeyEvent: sending keyval=0x%04x keycode=%u state=0x%x\n", 
+    fprintf(stderr, "IbusProcessKeyEvent (Async): sending keyval=0x%04x keycode=%u state=0x%x\n", 
             keyval, keycode, state);
 
-    sd_bus_error error = SD_BUS_ERROR_NULL;
-    sd_bus_message *reply = NULL;
-    int handled = 0;
     int r;
 
-    r = sd_bus_call_method(ibus_bus,
-                           IBUS_SERVICE,
-                           ctx->obj_path,
-                           IBUS_IC_INTERFACE,
-                           "ProcessKeyEvent",
-                           &error,
-                           &reply,
-                           "uuu",
-                           keyval, keycode, state);
+    /* Fire-and-forget: Send the key to IBus asynchronously.
+     * This prevents single-threaded deadlocks and allows IBus to emit 
+     * CommitText/UpdatePreedit signals back to us cleanly without blocking.
+     */
+    r = sd_bus_call_method_async(ibus_bus,
+                                 NULL,               /* We don't need a specific slot handle */
+                                 IBUS_SERVICE,
+                                 ctx->obj_path,
+                                 IBUS_IC_INTERFACE,
+                                 "ProcessKeyEvent",
+                                 NULL,               /* No synchronous reply handler callback */
+                                 NULL,               /* No userdata needed */
+                                 "uuu",
+                                 keyval, keycode, state);
 
     if (r < 0) {
-        fprintf(stderr, "    ProcessKeyEvent failed: %s\n", 
-                error.message ? error.message : strerror(-r));
-        sd_bus_error_free(&error);
+        fprintf(stderr, "    Async ProcessKeyEvent failed to send: %s\n", strerror(-r));
         return 0;
     }
 
-    sd_bus_message_read(reply, "b", &handled);
-    sd_bus_message_unref(reply);
-    sd_bus_error_free(&error);
-
-    /*
-     * Do NOT call sd_bus_process here.  This function is called from
-     * TkGlfwKeyCallback, which runs inside glfwPollEvents, which runs
-     * inside TkWaylandSetupProc.  Calling sd_bus_process recursively
-     * here would invoke the signal handlers (OnCommitText etc.) while
-     * already inside the notifier setup proc, causing re-entrancy into
-     * Tk's event machinery.  The IbusEventSetup file handler will drain
-     * any queued IBus signals on the next Tcl event loop iteration.
+    /* In an async architecture, we return 1 (handled) to tell Tk to pause 
+     * native layout insertion for this keystroke event. The real text delivery 
+     * will occur when our OnCommitText signal handler fires in the next event loop pass.
      */
-
-    fprintf(stderr, "    IBus returned handled = %d\n", handled);
-    return handled;
+    return 1;
 }
-
 /*
  * ---------------------------------------------------------------------
  * Tk_SetCaretPos --

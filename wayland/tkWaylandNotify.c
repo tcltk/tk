@@ -365,17 +365,33 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
  
 static void
 TkWaylandCheckProc(TCL_UNUSED(void *),
-	int flags)
+                   int flags)
 {
-    if (!(flags & TCL_WINDOW_EVENTS)) return;
-
-    /* Drain IBus signals that arrived while Tcl_WaitForEvent was blocking. */
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return;
+    }
+    
     if (ibus_bus) {
-        while (sd_bus_process(ibus_bus, NULL) > 0) { /* drain */ }
+        int r;
+
+        /* Check if there are bytes waiting on the socket. 
+         * Passing 0 timeout makes this completely non-blocking for the Tcl loop,
+         * but forces sd-bus to look at the kernel socket buffer and read 
+         * incoming 'CommitText' or 'UpdatePreedit' bytes into internal memory.
+         */
+        sd_bus_wait(ibus_bus, 0);
+
+        /* Process and dispatch the read signals to your callbacks.
+         * Loop until all cached messages have been routed to OnCommitText/OnUpdatePreedit.
+         */
+        do {
+            r = sd_bus_process(ibus_bus, NULL);
+        } while (r > 0);
     }
 
     glfwPollEvents();
-} 
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -801,15 +817,26 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
     fprintf(stderr, "TkGlfwWindowFocusCallback: %s %s\n",
             Tk_PathName(winPtr), focused ? "FocusIn" : "FocusOut");
 
+    /* Initialize the entire event lifecycle structure */
     memset(&event, 0, sizeof(XEvent));
-    event.type = focused ? FocusIn : FocusOut;
-    event.xfocus.serial      = LastKnownRequestProcessed(winPtr->display)++;
-    event.xfocus.send_event  = False;
-    event.xfocus.display     = winPtr->display;
-    event.xfocus.window      = Tk_WindowId((Tk_Window)winPtr);
-    event.xfocus.mode        = NotifyNormal;
-    event.xfocus.detail      = NotifyAncestor;
+    
+    /* Base XAny Lifecycle Setup */
+    event.xany.type        = focused ? FocusIn : FocusOut;
+    event.xany.serial      = LastKnownRequestProcessed(winPtr->display)++;
+    event.xany.send_event  = False;
+    event.xany.display     = winPtr->display;
+    event.xany.window      = Tk_WindowId((Tk_Window)winPtr);
 
+    /* Specific XEvent lifecycle setup. */
+    event.xfocus.type      = event.xany.type;
+    event.xfocus.serial    = event.xany.serial;
+    event.xfocus.send_event = event.xany.send_event;
+    event.xfocus.display   = event.xany.display;
+    event.xfocus.window    = event.xany.window;
+    event.xfocus.mode      = NotifyNormal;
+    event.xfocus.detail    = NotifyAncestor;
+
+    /* Push the fully formed lifecycle event to the tail of the event queue */
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     TkGenerateActivateEvents(winPtr, focused);
 
@@ -817,11 +844,10 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
     if (focused) {
         TkMainInfo *infoPtr = TkGetMainInfoList();
         if (infoPtr) {
-            /* Ensure IBus context exists for this toplevel. */
-            int ret = TkWaylandIbusCreateContext(infoPtr->interp, (Tk_Window)winPtr);
-            fprintf(stderr, "IBus: CreateContext for %s -> %s\n",
-                    Tk_PathName(winPtr), (ret == TCL_OK) ? "OK" : "FAILED");
+            /* Keep context creation logic separate from delivery. */
+            TkWaylandIbusCreateContext(infoPtr->interp, (Tk_Window)winPtr);
         }
+        /* Always force focus notifications back onto the D-Bus socket */
         TkWaylandIbusFocusIn((Tk_Window)winPtr);
     } else {
         TkWaylandIbusFocusOut((Tk_Window)winPtr);
@@ -1338,7 +1364,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
             (action == GLFW_REPEAT) ? "REPEAT" : "RELEASE", 
             mods);
 
-    /* ============== IBus IME Handling ============== */
+    /* IBus IME handling. */
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         uint32_t xkb_keycode = (uint32_t)(scancode + 8);
         
@@ -1363,7 +1389,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
         }
     }
 
-    /* ============== Normal Tk Key Event ============== */
+    /*  Normal Tk key event. */
     if (action == GLFW_RELEASE) {
         /* Optional: you can also forward releases, but many IMEs ignore them */
         return;
