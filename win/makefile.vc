@@ -289,6 +289,7 @@ TTK_OBJS = \
 	$(TMP_DIR)\ttkLabel.obj \
 	$(TMP_DIR)\ttkLayout.obj \
 	$(TMP_DIR)\ttkManager.obj \
+	$(TMP_DIR)\ttkNodeCache.obj \
 	$(TMP_DIR)\ttkNotebook.obj \
 	$(TMP_DIR)\ttkPanedwindow.obj \
 	$(TMP_DIR)\ttkProgress.obj \

@@ -396,7 +396,8 @@ GENERIC_OBJS = tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tk
 TTK_OBJS = \
 	ttkBlink.o ttkButton.o ttkCache.o ttkClamTheme.o ttkClassicTheme.o \
 	ttkDefaultTheme.o ttkElements.o ttkEntry.o ttkFrame.o ttkImage.o \
-	ttkInit.o ttkLabel.o ttkLayout.o ttkManager.o ttkNotebook.o \
+	ttkInit.o ttkLabel.o ttkLayout.o ttkManager.o ttkNodeCache.o \
+	ttkNotebook.o \
 	ttkPanedwindow.o ttkProgress.o ttkScale.o ttkScrollbar.o ttkScroll.o \
 	ttkSeparator.o ttkSquare.o ttkState.o \
 	ttkTagSet.o ttkTheme.o ttkToggleswitch.o ttkTrace.o ttkTrack.o \
@@ -499,6 +500,7 @@ TTK_SRCS = \
 	$(TTK_DIR)/ttkLabel.c \
 	$(TTK_DIR)/ttkLayout.c \
 	$(TTK_DIR)/ttkManager.c \
+	$(TTK_DIR)/ttkNodeCache.c \
 	$(TTK_DIR)/ttkNotebook.c \
 	$(TTK_DIR)/ttkPanedwindow.c \
 	$(TTK_DIR)/ttkProgress.c \
@@ -1543,6 +1545,9 @@ ttkLabel.o: $(TTK_DIR)/ttkLabel.c
 
 ttkLayout.o: $(TTK_DIR)/ttkLayout.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkLayout.c
+
+ttkNodeCache.o: $(TTK_DIR)/ttkNodeCache.c
+	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkNodeCache.c
 
 ttkManager.o: $(TTK_DIR)/ttkManager.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkManager.c

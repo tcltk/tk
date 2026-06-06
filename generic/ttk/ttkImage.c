@@ -11,7 +11,7 @@
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
@@ -195,8 +195,8 @@ Tk_Image TtkSelectImage(
 
 #ifndef TK_NO_DOUBLE_BUFFERING
 /* TtkSelectImageName --
- *	Return the name of the state-specific image selected by
- *	TtkSelectImage, so the corresponding photo can be looked up.
+ *	Return the name of the state-specific image selected by TtkSelectImage,
+ *	so the corresponding photo can be looked up (for opacity testing).
  */
 static Tcl_Obj *TtkSelectImageName(
     Ttk_ImageSpec *imageSpec,
@@ -294,34 +294,13 @@ static void Ttk_Tile(
 
 /*------------------------------------------------------------------------
  * +++ Image element definition.
+ *
+ * The image element is a pure renderer: ImageElementDraw tiles the selected
+ * image into whatever drawable it is handed.  Caching of the composited result
+ * is owned by the layout-draw layer (the per-node cache in ttkLayout.c); this
+ * element only advertises that it is cacheable and reports its opacity and a
+ * content epoch via ImageElementCacheInfo.
  */
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-/*
- * Rendered-element cache (per element).  Opaque elements are cached as a plain
- * pixmap and blitted with XCopyArea -- fast, and correct because an opaque
- * element fully covers its box, so the cached pixels do not depend on the
- * background.  Translucent elements are composed into a background-free RGBA
- * photo and drawn with Tk_RedrawImage, which re-blends them against the live
- * destination every frame so the result is never stale.
- */
-typedef struct {
-    /* Opaque fast path: */
-    Pixmap pixmap;		/* Cached composited pixmap, or None */
-    Display *pixmapDisplay;	/* Display owning pixmap */
-    /* Translucent path: */
-    Tk_PhotoHandle composed;	/* Internal composed photo, or NULL */
-    Tcl_Obj *composedName;	/* Name of the internal composed photo */
-    Tk_Image composedImage;	/* Drawing instance of `composed`, or NULL */
-    Tk_Window composedFor;	/* Window the instance was created for */
-    /* Shared cache key: */
-    int cachedWidth;		/* Width the element was cached at */
-    int cachedHeight;		/* Height the element was cached at */
-    Ttk_State cachedState;	/* State the element was cached for */
-    int cachedValid;		/* Nonzero when the cache holds the key */
-    int cachedOpaque;		/* Nonzero: use pixmap; else use photo */
-} ElementImageCache;
-#endif
 
 typedef struct {		/* ClientData for image elements */
     Ttk_ImageSpec *imageSpec;	/* Image(s) to use */
@@ -330,104 +309,18 @@ typedef struct {		/* ClientData for image elements */
     Ttk_Sticky sticky;		/* -stickiness specification */
     Ttk_Padding border;		/* Fixed border region */
     Ttk_Padding padding;	/* Internal padding */
+    unsigned epoch;		/* Bumps when a source image's pixels change */
 
 #ifdef TILE_07_COMPAT
     Ttk_ResourceCache cache;	/* Resource cache for images */
     Ttk_StateMap imageMap;	/* State-based lookup table for images */
 #endif
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-    ElementImageCache *imageCache;	/* Rendered-element cache, or NULL */
-#endif
 } ImageData;
 
-#ifndef TK_NO_DOUBLE_BUFFERING
-/* GetImageCache --
- *	Return the element's render cache, allocating it on first use.
+/* ImageElementImageChanged --
+ *	A source image's pixels changed; bump the content epoch so the
+ *	layout-draw layer rebuilds any node pixmap caching this element.
  */
-static ElementImageCache *GetImageCache(ImageData *imageData)
-{
-    if (imageData->imageCache == NULL) {
-	imageData->imageCache = (ElementImageCache *)
-		Tcl_Alloc(sizeof(ElementImageCache));
-	memset(imageData->imageCache, 0, sizeof(ElementImageCache));
-    }
-    return imageData->imageCache;
-}
-
-/* InvalidateImageCache --
- *	Mark the composed photo stale.  The photo and drawing instance are
- *	retained and reused on the next compose.  A no-op if there is no cache.
- */
-static void InvalidateImageCache(ElementImageCache *cache)
-{
-    if (cache == NULL) {
-	return;
-    }
-    cache->cachedValid = 0;
-    cache->cachedWidth = 0;
-    cache->cachedHeight = 0;
-    cache->cachedState = 0;
-}
-
-/* ComposedWindowEventProc --
- *	Drop the cached drawing instance when the window it was created for is
- *	destroyed, so the cache never holds an image instance bound to a dead
- *	window.  Tk removes the window's event handlers itself as part of the
- *	destruction, so we do not delete this handler here.
- */
-static void ComposedWindowEventProc(void *clientData, XEvent *eventPtr)
-{
-    ElementImageCache *cache = (ElementImageCache *)clientData;
-
-    if (eventPtr->type == DestroyNotify && cache->composedImage != NULL) {
-	Tk_FreeImage(cache->composedImage);
-	cache->composedImage = NULL;
-	cache->composedFor = NULL;
-    }
-}
-
-/* FreeComposedInstance --
- *	Release the cached drawing instance (and its window event handler), if
- *	any.  composedFor is a live window whenever composedImage is non-NULL,
- *	since ComposedWindowEventProc clears both on window destruction.
- */
-static void FreeComposedInstance(ElementImageCache *cache)
-{
-    if (cache->composedImage != NULL) {
-	Tk_DeleteEventHandler(cache->composedFor, StructureNotifyMask,
-		ComposedWindowEventProc, cache);
-	Tk_FreeImage(cache->composedImage);
-	cache->composedImage = NULL;
-	cache->composedFor = NULL;
-    }
-}
-
-/* FreeImageCache --
- *	Release the composed photo's drawing instance and the cache struct.
- *	This runs only during interpreter teardown (Ttk cleanups fire from
- *	Ttk_StylePkgFree), so the composed photo image command itself is left
- *	for the interpreter to reclaim -- an explicit "image delete" there is
- *	both unnecessary and unsafe.
- */
-static void FreeImageCache(ImageData *imageData)
-{
-    ElementImageCache *cache = imageData->imageCache;
-
-    if (cache == NULL) {
-	return;
-    }
-    FreeComposedInstance(cache);
-    if (cache->composedName != NULL) {
-	Tcl_DecrRefCount(cache->composedName);
-    }
-    if (cache->pixmap != None) {
-	Tk_FreePixmap(cache->pixmapDisplay, cache->pixmap);
-    }
-    Tcl_Free(cache);
-    imageData->imageCache = NULL;
-}
-
 static void ImageElementImageChanged(
     void *clientData,
     TCL_UNUSED(int),
@@ -438,16 +331,12 @@ static void ImageElementImageChanged(
     TCL_UNUSED(int))
 {
     ImageData *imageData = (ImageData *)clientData;
-    InvalidateImageCache(imageData->imageCache);
+    imageData->epoch++;
 }
-#endif /* !TK_NO_DOUBLE_BUFFERING */
 
 static void FreeImageData(void *clientData)
 {
     ImageData *imageData = (ImageData *)clientData;
-#ifndef TK_NO_DOUBLE_BUFFERING
-    FreeImageCache(imageData);
-#endif
     if (imageData->imageSpec)	{ TtkFreeImageSpec(imageData->imageSpec); }
 #ifdef TILE_07_COMPAT
     if (imageData->imageMap)	{ Tcl_DecrRefCount(imageData->imageMap); }
@@ -456,160 +345,23 @@ static void FreeImageData(void *clientData)
 }
 
 #ifndef TK_NO_DOUBLE_BUFFERING
-/* DiscardComposedPhoto --
- *	Tear down everything tied to the current composed photo: its drawing
- *	instance, the cached name, the (now invalid) handle, and the composed
- *	content key.  Used when the photo has vanished from under us.
+/* ImageIsOpaque --
+ *	Return 1 if the named photo is fully opaque (every pixel alpha 255),
+ *	so the element's render is background-independent and can be cached as
+ *	a plain pixmap.  A non-photo image, or one whose pixels cannot be read,
+ *	is treated as translucent -- an always-correct (if unoptimized) answer.
  */
-static void DiscardComposedPhoto(ElementImageCache *cache)
+static int ImageIsOpaque(Tcl_Interp *interp, Tcl_Obj *imageName)
 {
-    FreeComposedInstance(cache);
-    if (cache->composedName != NULL) {
-	Tcl_DecrRefCount(cache->composedName);
-	cache->composedName = NULL;
-    }
-    cache->composed = NULL;
-    InvalidateImageCache(cache);
-}
-
-/* EnsureComposedPhoto --
- *	Make sure the private photo that holds the composed element exists and
- *	is still live, creating it on first use and recreating it if a script
- *	has deleted it.  Returns 1 on success, 0 if the photo is unavailable
- *	(in which case the caller falls back to direct tiling).
- */
-static int EnsureComposedPhoto(ElementImageCache *cache, Tcl_Interp *interp)
-{
-    Tcl_Obj *cmd;
-    int code;
-
-    if (interp == NULL || Tcl_InterpDeleted(interp)) {
-	return 0;
-    }
-
-    /*
-     * The composed photo is a real image command, so a script could delete
-     * (or replace) it out from under us.  Re-resolve it from its name every
-     * time rather than trusting a cached handle, which would dangle after an
-     * external "image delete".  Tk_FindPhoto is a cheap hash lookup.
-     */
-    if (cache->composedName != NULL) {
-	cache->composed = Tk_FindPhoto(interp,
-		Tcl_GetString(cache->composedName));
-	if (cache->composed != NULL) {
-	    return 1;
-	}
-	/* It vanished: discard the stale instance and key, then recreate. */
-	DiscardComposedPhoto(cache);
-    }
-
-    cache->composedName = Tcl_ObjPrintf("::ttk::_elemcache_%p", (void *)cache);
-    Tcl_IncrRefCount(cache->composedName);
-
-    cmd = Tcl_ObjPrintf("image create photo %s",
-	    Tcl_GetString(cache->composedName));
-    Tcl_IncrRefCount(cmd);
-    code = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL|TCL_EVAL_DIRECT);
-    Tcl_DecrRefCount(cmd);
-    Tcl_ResetResult(interp);
-
-    if (code != TCL_OK) {
-	Tcl_DecrRefCount(cache->composedName);
-	cache->composedName = NULL;
-	return 0;
-    }
-    cache->composed = Tk_FindPhoto(interp, Tcl_GetString(cache->composedName));
-    if (cache->composed == NULL) {
-	Tcl_DecrRefCount(cache->composedName);
-	cache->composedName = NULL;
-	return 0;
-    }
-    return 1;
-}
-
-/* PutTile --
- *	Replicate one source sub-block (cell of the 9-slice) across the
- *	corresponding destination cell of the composed photo, tiling it the
- *	same way Ttk_Fill tiles into a drawable.
- */
-static void PutTile(
-    Tcl_Interp *interp,
-    Tk_PhotoHandle dest,
-    Tk_PhotoImageBlock *srcBlock,
-    Ttk_Box sCell,
-    Ttk_Box dCell)
-{
-    Tk_PhotoImageBlock sub;
-
-    if (sCell.width <= 0 || sCell.height <= 0
-	    || dCell.width <= 0 || dCell.height <= 0) {
-	return;
-    }
-    sub = *srcBlock;
-    sub.pixelPtr = srcBlock->pixelPtr
-	    + sCell.y * srcBlock->pitch
-	    + sCell.x * srcBlock->pixelSize;
-    sub.width = sCell.width;
-    sub.height = sCell.height;
-    Tk_PhotoPutBlock(interp, dest, &sub, dCell.x, dCell.y,
-	    dCell.width, dCell.height, TK_PHOTO_COMPOSITE_SET);
-}
-
-/* BuildComposedPhoto --
- *	(Re)compose the tiled element into the cache photo at size w x h,
- *	using the same 9-slice partition as Ttk_Tile.  Returns 1 on success.
- */
-static int BuildComposedPhoto(
-    ElementImageCache *cache,
-    Tcl_Interp *interp,
-    Tk_PhotoHandle src,
-    Ttk_Box srcBox,
-    int w, int h,
-    Ttk_Padding p)
-{
-    Tk_PhotoHandle dest = cache->composed;
-    Tk_PhotoImageBlock srcBlock;
-    Ttk_Box dstBox = Ttk_MakeBox(0, 0, w, h);
-    Ttk_Box sRow, dRow;
-
-    if (!Tk_PhotoGetImage(src, &srcBlock)) {
-	return 0;
-    }
-    if (Tk_PhotoSetSize(interp, dest, w, h) != TCL_OK) {
-	return 0;
-    }
-    Tk_PhotoBlank(dest);
-
-    sRow = TPadding(srcBox, p); dRow = TPadding(dstBox, p);
-    PutTile(interp, dest, &srcBlock, LPadding(sRow,p), LPadding(dRow,p));
-    PutTile(interp, dest, &srcBlock, CPadding(sRow,p), CPadding(dRow,p));
-    PutTile(interp, dest, &srcBlock, RPadding(sRow,p), RPadding(dRow,p));
-
-    sRow = MPadding(srcBox, p); dRow = MPadding(dstBox, p);
-    PutTile(interp, dest, &srcBlock, LPadding(sRow,p), LPadding(dRow,p));
-    PutTile(interp, dest, &srcBlock, CPadding(sRow,p), CPadding(dRow,p));
-    PutTile(interp, dest, &srcBlock, RPadding(sRow,p), RPadding(dRow,p));
-
-    sRow = BPadding(srcBox, p); dRow = BPadding(dstBox, p);
-    PutTile(interp, dest, &srcBlock, LPadding(sRow,p), LPadding(dRow,p));
-    PutTile(interp, dest, &srcBlock, CPadding(sRow,p), CPadding(dRow,p));
-    PutTile(interp, dest, &srcBlock, RPadding(sRow,p), RPadding(dRow,p));
-
-    return 1;
-}
-
-/* SourceIsOpaque --
- *	Return 1 if every pixel of the source photo is fully opaque (alpha
- *	255), so the tiled element can be cached as a plain pixmap.  A photo
- *	whose pixels cannot be read is treated as translucent (always-correct
- *	fallback).
- */
-static int SourceIsOpaque(Tk_PhotoHandle photo)
-{
+    Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
     int x, y, alphaOff;
 
-    if (!Tk_PhotoGetImage(photo, &block)) {
+    if (interp == NULL || imageName == NULL) {
+	return 0;
+    }
+    photo = Tk_FindPhoto(interp, Tcl_GetString(imageName));
+    if (photo == NULL || !Tk_PhotoGetImage(photo, &block)) {
 	return 0;
     }
     if (block.pixelSize < 4) {
@@ -628,66 +380,39 @@ static int SourceIsOpaque(Tk_PhotoHandle photo)
     return 1;
 }
 
-/* BuildOpaquePixmap --
- *	(Re)tile an opaque element into the cache pixmap at size w x h.  No
- *	background seed is needed: an opaque element fully covers the pixmap.
- *	Returns 1 on success, 0 if a pixmap could not be allocated.
+/* ImageElementCacheInfo --
+ *	Report the element's content epoch and whether its render fully and
+ *	opaquely covers the parcel -- i.e. the state-selected image is opaque
+ *	AND -sticky makes it fill the whole box.  Only then is the render
+ *	background-independent; a non-filling -sticky leaves margins that show
+ *	the background, so such an element must be treated as translucent.
  */
-static int BuildOpaquePixmap(
-    ElementImageCache *cache,
+static void ImageElementCacheInfo(
+    void *clientData,
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
-    Tk_Image image,
-    Ttk_Box src,
-    int w, int h,
-    Ttk_Padding p)
+    Ttk_Box b,
+    Ttk_State state,
+    Ttk_ElementCacheInfo *info)
 {
-    Display *display = Tk_Display(tkwin);
-    Pixmap pixmap;
+    ImageData *imageData = (ImageData *)clientData;
+    Tk_Image image = TtkSelectImage(imageData->imageSpec, tkwin, state);
+    int imgWidth, imgHeight;
+    Ttk_Box dst;
 
-    if (Tk_WindowId(tkwin) == None) {
-	return 0;		/* Window not realized. */
-    }
-    pixmap = Tk_GetPixmap(display, Tk_WindowId(tkwin), w, h, Tk_Depth(tkwin));
-    if (pixmap == None) {
-	return 0;
-    }
-    Ttk_Tile(tkwin, pixmap, image, src, Ttk_MakeBox(0, 0, w, h), p);
+    info->epoch = imageData->epoch;
+    info->opaque = 0;
 
-    if (cache->pixmap != None) {
-	Tk_FreePixmap(cache->pixmapDisplay, cache->pixmap);
+    if (image == NULL) {
+	return;
     }
-    cache->pixmap = pixmap;
-    cache->pixmapDisplay = display;
-    return 1;
-}
-
-/* EnsureComposedImageInstance --
- *	Make sure we hold a drawing instance of the composed photo suitable
- *	for the given window.  Recreated when the window changes.
- */
-static int EnsureComposedImageInstance(
-    ElementImageCache *cache,
-    Tcl_Interp *interp,
-    Tk_Window tkwin)
-{
-    if (cache->composedImage != NULL && cache->composedFor == tkwin) {
-	return 1;
+    Tk_SizeOfImage(image, &imgWidth, &imgHeight);
+    dst = Ttk_StickBox(b, imgWidth, imgHeight, imageData->sticky);
+    if (dst.x == b.x && dst.y == b.y
+	    && dst.width == b.width && dst.height == b.height) {
+	info->opaque = ImageIsOpaque(Tk_Interp(tkwin),
+		TtkSelectImageName(imageData->imageSpec, state));
     }
-    /*
-     * Switching to a different window (or first use).  If an instance exists,
-     * composedFor is still a live window here: had it been destroyed,
-     * ComposedWindowEventProc would have cleared composedImage/composedFor.
-     */
-    FreeComposedInstance(cache);
-    cache->composedImage = Tk_GetImage(interp, tkwin,
-	    Tcl_GetString(cache->composedName), NullImageChanged, NULL);
-    if (cache->composedImage == NULL) {
-	return 0;
-    }
-    cache->composedFor = tkwin;
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-	    ComposedWindowEventProc, cache);
-    return 1;
 }
 #endif /* !TK_NO_DOUBLE_BUFFERING */
 
@@ -728,31 +453,19 @@ static void ImageElementDraw(
     Tk_Image image = 0;
     int imgWidth, imgHeight;
     Ttk_Box src, dst;
-#ifndef TK_NO_DOUBLE_BUFFERING
-    Tcl_Obj *imageName = NULL;
-#endif
 
 #ifdef TILE_07_COMPAT
     if (imageData->imageMap) {
 	Tcl_Obj *imageObj = Ttk_StateMapLookup(NULL,imageData->imageMap,state);
 	if (imageObj) {
 	    image = Ttk_UseImage(imageData->cache, tkwin, imageObj);
-#ifndef TK_NO_DOUBLE_BUFFERING
-	    imageName = imageObj;
-#endif
 	}
     }
     if (!image) {
 	image = TtkSelectImage(imageData->imageSpec, tkwin, state);
-#ifndef TK_NO_DOUBLE_BUFFERING
-	imageName = TtkSelectImageName(imageData->imageSpec, state);
-#endif
     }
 #else
     image = TtkSelectImage(imageData->imageSpec, tkwin, state);
-#ifndef TK_NO_DOUBLE_BUFFERING
-    imageName = TtkSelectImageName(imageData->imageSpec, state);
-#endif
 #endif
 
     if (!image) {
@@ -763,75 +476,6 @@ static void ImageElementDraw(
     src = Ttk_MakeBox(0, 0, imgWidth, imgHeight);
     dst = Ttk_StickBox(b, imgWidth, imgHeight, imageData->sticky);
 
-#ifndef TK_NO_DOUBLE_BUFFERING
-    /*
-     * Cached compose-and-blend path.  Compose the tiled element once into an
-     * off-screen RGBA photo (keyed by width, height and state -- not by
-     * position, so a moving element such as a scrollbar thumb still hits),
-     * then draw it with a single Tk_RedrawImage.  Because no background is
-     * baked in, Tk_RedrawImage re-composites it against the live destination
-     * every frame: opaque elements take the cheap copy path internally and
-     * translucent elements blend against current pixels, so the cache is
-     * never stale.  Compiled out on macOS (uses the direct draw below).
-     */
-    if (imageName != NULL && dst.width > 0 && dst.height > 0) {
-	Tcl_Interp *interp = Tk_Interp(tkwin);
-	Ttk_Padding p = imageData->border;
-	Tk_PhotoHandle srcPhoto = (interp != NULL)
-		? Tk_FindPhoto(interp, Tcl_GetString(imageName)) : NULL;
-
-	if (srcPhoto != NULL
-		&& dst.width  >= p.left + p.right
-		&& dst.height >= p.top + p.bottom) {
-	    ElementImageCache *cache = GetImageCache(imageData);
-
-	    if (!cache->cachedValid
-		    || cache->cachedWidth  != dst.width
-		    || cache->cachedHeight != dst.height
-		    || cache->cachedState  != state) {
-		cache->cachedValid = 0;
-		cache->cachedOpaque = SourceIsOpaque(srcPhoto);
-		if (cache->cachedOpaque) {
-		    if (BuildOpaquePixmap(cache, tkwin, image, src,
-			    dst.width, dst.height, p)) {
-			cache->cachedValid = 1;
-		    }
-		} else if (EnsureComposedPhoto(cache, interp)
-			&& BuildComposedPhoto(cache, interp, srcPhoto, src,
-				dst.width, dst.height, p)) {
-		    cache->cachedValid = 1;
-		}
-		if (cache->cachedValid) {
-		    cache->cachedWidth  = dst.width;
-		    cache->cachedHeight = dst.height;
-		    cache->cachedState  = state;
-		}
-	    }
-
-	    if (cache->cachedValid && cache->cachedOpaque) {
-		XGCValues gcValues;
-		GC gc;
-
-		gcValues.function = GXcopy;
-		gcValues.graphics_exposures = False;
-		gc = Tk_GetGC(tkwin, GCFunction|GCGraphicsExposures, &gcValues);
-		XCopyArea(Tk_Display(tkwin), cache->pixmap, d, gc,
-			0, 0, (unsigned) dst.width, (unsigned) dst.height,
-			dst.x, dst.y);
-		Tk_FreeGC(Tk_Display(tkwin), gc);
-		return;
-	    }
-	    if (cache->cachedValid
-		    && EnsureComposedImageInstance(cache, interp, tkwin)) {
-		Tk_RedrawImage(cache->composedImage, 0, 0,
-			dst.width, dst.height, d, dst.x, dst.y);
-		return;
-	    }
-	}
-    }
-#endif /* !TK_NO_DOUBLE_BUFFERING */
-
-    /* Direct draw: cache unavailable or non-photo source image. */
     Ttk_Tile(tkwin, d, image, src, dst, imageData->border);
 }
 
@@ -861,6 +505,7 @@ Ttk_CreateImageElement(
 
     Ttk_ImageSpec *imageSpec = 0;
     ImageData *imageData = 0;
+    Ttk_ElementClass *elementClass;
     int padding_specified = 0;
     Tcl_Size i;
 
@@ -874,12 +519,8 @@ Ttk_CreateImageElement(
     imageData = (ImageData *)Tcl_Alloc(sizeof(*imageData));
     memset(imageData, 0, sizeof(*imageData));
 
-#ifndef TK_NO_DOUBLE_BUFFERING
     imageSpec = TtkGetImageSpecEx(interp, Tk_MainWindow(interp), objv[0],
 	    ImageElementImageChanged, imageData);
-#else
-    imageSpec = TtkGetImageSpec(interp, Tk_MainWindow(interp), objv[0]);
-#endif
     if (!imageSpec) {
 	Tcl_Free(imageData);
 	return TCL_ERROR;
@@ -946,11 +587,15 @@ Ttk_CreateImageElement(
 	}
     }
 
-    if (!Ttk_RegisterElement(interp, theme, elementName, &ImageElementSpec,
-		imageData))
-    {
+    elementClass = Ttk_RegisterElement(interp, theme, elementName,
+	    &ImageElementSpec, imageData);
+    if (!elementClass) {
 	goto error;
     }
+#ifndef TK_NO_DOUBLE_BUFFERING
+    TtkSetElementCachePolicy(elementClass, TTK_ELEMENT_CACHEABLE,
+	    ImageElementCacheInfo);
+#endif
 
     Ttk_RegisterCleanup(interp, imageData, FreeImageData);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));
