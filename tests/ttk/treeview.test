@@ -118,10 +118,10 @@ proc KeyPress {w item column keysym {modifier {}} {mac_mod {}}} {
     update
     update idletasks
 
-    if {$mac_mod ne "" && $::tcl_platform(os) eq "Darwin"} {
+    if {$mac_mod ne "" && [tk windowingsystem] eq "aqua"} {
 	set modifier $mac_mod
     }
-    if {$modifier ne "" && $::tcl_platform(os) eq "Darwin"} {
+    if {$modifier ne "" && [tk windowingsystem] eq "aqua"} {
 	switch -- $modifier {
 	    "Alt" {set modifier "Option"}
 	    "Control" {set modifier "Command"}
