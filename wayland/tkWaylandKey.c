@@ -542,6 +542,7 @@ typedef struct IbusContext {
     sd_bus_slot *preedit_slot;  /* Slot for UpdatePreedit signal subscription. */
     Tcl_Interp *interp;         /* Tcl interpreter (for callbacks). */
     int enabled;                /* Whether IME is active for this window. */
+    char *preeditText;          /* Current preedit/composing text (owned) */
     struct IbusContext *next;   /* Linked list pointer. */
 } IbusContext;
 
@@ -847,24 +848,21 @@ OnCommitText(
         return 0;
     }
 
-    /*
-     * Dynamically resolve the true interior widget holding focus (e.g., .e).
-     * If we send events to the outer toplevel container wrapper, sub-widgets
-     * will fail to capture the character strings or throw dictionary errors.
-     */
     TkWindow *topPtr = (TkWindow *)ctx->tkwin;
     TkWindow *focusPtr = (topPtr && topPtr->dispPtr) ? topPtr->dispPtr->focusPtr : NULL;
     Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
-    /* Clear ongoing preedit buffer bindings on the true targeted widget. */
+    /* Clear any ongoing preedit */
     Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
 
     if (*text) {
-        /* Pass the exact focused sub-widget window handle
-         * rather than ctx->tkwin so TkWaylandSendUnicodeString targets the 
-         * correct window ID during XEvent construction.
-         */
         TkWaylandSendUnicodeString(focusWin, text);
+    }
+
+    /* Clear stored preedit on commit. */
+    if (ctx->preeditText) {
+        free(ctx->preeditText);
+        ctx->preeditText = NULL;
     }
 
     return 0;
@@ -909,45 +907,45 @@ OnUpdatePreedit(
     int32_t visible = 0;
     int r;
 
-    fprintf(stderr, ">>> OnUpdatePreedit called!\n");
-
-    /*
-     * UpdatePreedit signature payload: (v)u b
-     * 1. The IBusText composition struct variant
-     * 2. The uint32_t live composition cursor index
-     * 3. The boolean visibility state flag
-     */
     r = IbusReadTextFromVariant(m, &text);
     if (r < 0) {
-        fprintf(stderr, "    OnUpdatePreedit: failed parsing variant text field (r=%d)\n", r);
         return 0;
     }
 
-    /* Unpack additional alignment arguments. */
     r = sd_bus_message_read(m, "ub", &cursor_pos, &visible);
     if (r < 0) {
-        fprintf(stderr, "    OnUpdatePreedit: parsing positioning properties failed (r=%d)\n", r);
         return 0;
     }
-
-    fprintf(stderr, ">>> OnUpdatePreedit: TEXT='%s' CURSOR=%u VISIBLE=%d\n",
-            text ? text : "", cursor_pos, visible);
 
     TkWindow *topPtr = (TkWindow *)ctx->tkwin;
     TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
     Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
+    /* Always clear previous marked region first. */
+    Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+
     if (!visible || !text || !*text) {
-        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
-    } else {
-        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
-        Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
-        TkWaylandSendUnicodeString(ctx->tkwin, text);
-        Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
+        if (ctx->preeditText) {
+            free(ctx->preeditText);
+            ctx->preeditText = NULL;
+        }
+        return 0;
     }
+
+    /* Update stored preedit text. */
+    if (ctx->preeditText) {
+        free(ctx->preeditText);
+    }
+    ctx->preeditText = strdup(text);
+
+    /* Show new preedit. */
+    Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    TkWaylandSendUnicodeString(focusWin, text);
+    Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 
     return 0;
 }
+
 /*
  * ----------------------------------------------------------------------------
  * FreeIbusContext --
@@ -967,6 +965,11 @@ static void
 FreeIbusContext(IbusContext *ctx)
 {
     if (!ctx) return;
+
+    if (ctx->preeditText) {
+        free(ctx->preeditText);
+        ctx->preeditText = NULL;
+    }
     if (ctx->preedit_slot) {
         sd_bus_slot_unref(ctx->preedit_slot);
         ctx->preedit_slot = NULL;
@@ -1230,7 +1233,10 @@ Tk_SetCaretPos(
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
 
-    /* Skip if nothing changed. */
+    /* Mark widget as capable of text input. */
+    winPtr->flags |= TK_CAN_INPUT_TEXT;
+
+    /* Skip if nothing changed */
     if ((dispPtr->caret.winPtr == winPtr)
             && (dispPtr->caret.x == x)
             && (dispPtr->caret.y == y)
@@ -1245,7 +1251,7 @@ Tk_SetCaretPos(
 
     if (!ibus_bus) return;
 
-    /* Crawl up parent tree elements to find the top-level container window */
+    /* Find toplevel context. */
     TkWindow *topPtr = winPtr;
     while (topPtr && !Tk_IsTopLevel(topPtr)) {
         topPtr = (TkWindow *) Tk_Parent(topPtr);
@@ -1255,12 +1261,6 @@ Tk_SetCaretPos(
     IbusContext *ctx = FindContext((Tk_Window) topPtr);
     if (!ctx || !ctx->obj_path) return;
 
-    /*
-     * On Wayland, absolute screen origins are obscured. Tk_GetRootCoords 
-     * returns the sub-widget's coordinates relative to its parent toplevel's 
-     * client surface area. We accumulate the sub-window's surface offset 
-     * plus the local caret offset (x, y) to get a perfect local coordinate.
-     */
     int rootX, rootY;
     Tk_GetRootCoords(tkwin, &rootX, &rootY);
     
@@ -1278,7 +1278,7 @@ Tk_SetCaretPos(
                        "iiii",
                        (int32_t) surfaceX,
                        (int32_t) surfaceY,
-                       (int32_t) 0,
+                       (int32_t) 0,      /* width = 0 (caret) */
                        (int32_t) height);
     sd_bus_error_free(&error);
 }
@@ -1480,11 +1480,22 @@ TkWaylandIbusFocusIn(
  */
 
 void
-TkWaylandIbusFocusOut(
-    Tk_Window tkwin)
+TkWaylandIbusFocusOut(Tk_Window tkwin)
 {
     IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
     if (!ctx) return;
+
+    TkWindow *topPtr = (TkWindow *)GetToplevelOfWidget(tkwin);
+    TkWindow *focusPtr = topPtr && topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
+    Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : tkwin;
+
+    /* Cancel any ongoing composition. */
+    if (ctx->preeditText) {
+        Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+        free(ctx->preeditText);
+        ctx->preeditText = NULL;
+    }
+
     IbusFocusOut(ctx);
     IbusDisable(ctx);
 }
