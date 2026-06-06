@@ -172,6 +172,30 @@ TkWaylandGetStoredText(TkWindow *winPtr)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandSetStoredText --
+ *
+ *      Stores pending text on a toplevel window for retrieval by
+ *      TkpGetString.  Replaces any previously stored text.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Updates the pendingText DString on winPtr->privatePtr.
+ *
+ *----------------------------------------------------------------------
+ */
+ 
+void
+TkWaylandSetStoredText(TkWindow *winPtr, const char *text)
+{
+    Tcl_DStringFree(&winPtr->privatePtr->pendingText);
+    Tcl_DStringAppend(&winPtr->privatePtr->pendingText, text, TCL_INDEX_NONE);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWaylandClearStoredTextInput --
  *
  *      Clears the DString holding pending text for a window.

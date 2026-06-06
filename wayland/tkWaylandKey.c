@@ -537,11 +537,19 @@ TkWaylandKeyCleanup() {
 
 typedef struct IbusContext {
     Tk_Window tkwin;            /* Tk toplevel this context belongs to. */
+    Tk_Window focusedWidget;    /* Sub-widget currently holding keyboard focus.
+                                 * Set by TkWaylandIbusFocusIn, cleared on
+                                 * FocusOut.  Used by signal handlers instead
+                                 * of dispPtr->focusPtr, which is unreliable on
+                                 * Wayland. */
     char *obj_path;             /* D-Bus object path of the IBus input context. */
     sd_bus_slot *signal_slot;   /* Slot for CommitText signal subscription. */
     sd_bus_slot *preedit_slot;  /* Slot for UpdatePreedit signal subscription. */
     Tcl_Interp *interp;         /* Tcl interpreter (for callbacks). */
     int enabled;                /* Whether IME is active for this window. */
+    int destroyed;              /* Set to 1 when the Tk window has been
+                                 * destroyed; guards signal handlers against
+                                 * using a stale tkwin pointer. */
     char *preeditText;          /* Current preedit/composing text (owned) */
     struct IbusContext *next;   /* Linked list pointer. */
 } IbusContext;
@@ -549,6 +557,14 @@ typedef struct IbusContext {
 /* Global IBus state. */
 sd_bus *ibus_bus = NULL;
 IbusContext *all_contexts = NULL;
+
+/*
+ * Re-entrancy guard for sd_bus_process.  Set to 1 while
+ * IbusProcessKeyEvent is draining the bus synchronously so that
+ * IbusBusHandler (the Tcl file handler) does not call sd_bus_process
+ * concurrently on the same bus object.
+ */
+static int ibus_draining = 0;
 
 /*
  * ----------------------------------------------------------------------------
@@ -704,7 +720,7 @@ IbusReadTextFromVariant(
                 "skipping array '%s'\n",
                 contents ? contents : "(null)");
 
-        sd_bus_message_skip(m, "a{sv}");
+        r = sd_bus_message_skip(m, "a{sv}");
         fprintf(stderr,
                 "skip array -> r=%d\n",
                 r);
@@ -787,9 +803,20 @@ TkWaylandSendUnicodeString(
         return;
     }
 
+    /*
+     * Stored text lives on the toplevel's privatePtr->pendingText and is
+     * read by TkpGetString to populate %A in tkBind.c.  Walk up to find
+     * the toplevel so we can set it per-character before each KeyPress.
+     */
+    TkWindow *topPtr = (TkWindow *)tkwin;
+    while (topPtr && !Tk_IsTopLevel(topPtr)) {
+        topPtr = (TkWindow *)Tk_Parent(topPtr);
+    }
+    if (!topPtr) return;
+
     Display *display = Tk_Display(tkwin);
     Window window = Tk_WindowId(tkwin);
-    
+
     Tcl_Time now;
     Tcl_GetTime(&now);
     Time time = (Time)(now.sec * 1000 + now.usec / 1000);
@@ -821,14 +848,29 @@ TkWaylandSendUnicodeString(
             xEvent.xkey.state |= Mod5Mask;
     }
 
-    /* Send one synthetic KeyPress per Unicode character. */
+    /*
+     * Send one synthetic KeyPress per Unicode character.
+     *
+     * For each character we must set the toplevel's stored text to the
+     * UTF-8 bytes of that character before queuing the event.  TkpGetString
+     * reads this slot to produce %A; without it the widget sees an empty
+     * string and inserts nothing, causing committed IME text to be silently
+     * dropped even though IBus sent it correctly.
+     */
     const char *p = utf8_str;
     while (*p) {
         Tcl_UniChar ch;
-        p += Tcl_UtfToUniChar(p, &ch);
+        int len = Tcl_UtfToUniChar(p, &ch);
+
+        char buf[8];
+        memcpy(buf, p, len);
+        buf[len] = '\0';
+        TkWaylandSetStoredText(topPtr, buf);
 
         xEvent.xkey.keycode = SYNTHETIC_KEYCODE(ch);
         Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+
+        p += len;
     }
 }
 
@@ -860,23 +902,36 @@ OnCommitText(
     const char *text = NULL;
     int r;
 
+    /*
+     * Guard against signals that arrive after the Tk window has been
+     * destroyed.  RemoveIbusContext sets this flag before freeing, but
+     * in-flight D-Bus messages may still call back here.
+     */
+    if (!ctx || ctx->destroyed) {
+        return 0;
+    }
+
     r = IbusReadTextFromVariant(m, &text);
     if (r < 0 || !text) {
         return 0;
     }
 
-    TkWindow *topPtr = (TkWindow *)ctx->tkwin;
-    TkWindow *focusPtr = (topPtr && topPtr->dispPtr) ? topPtr->dispPtr->focusPtr : NULL;
-    Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
+    /*
+     * Use the focused sub-widget recorded at FocusIn time.  Do NOT
+     * dereference dispPtr->focusPtr here: on Wayland that pointer is not
+     * reliably kept in sync and may be stale, causing "not found in
+     * dictionary" errors and segfaults.
+     */
+    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
 
-    /* Clear any marked/preedit region */
+    /* Clear any marked/preedit region before inserting committed text. */
     Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
 
     if (*text) {
-        TkWaylandSendUnicodeString(focusWin, text);   /* Use focusWin */
+        TkWaylandSendUnicodeString(focusWin, text);
     }
 
-    /* Cleanup */
+    /* Discard stored preedit — composition is complete. */
     if (ctx->preeditText) {
         free(ctx->preeditText);
         ctx->preeditText = NULL;
@@ -923,6 +978,11 @@ OnUpdatePreedit(
     int32_t visible = 0;
     int r;
 
+    /* Guard against post-destruction callbacks (see OnCommitText). */
+    if (!ctx || ctx->destroyed) {
+        return 0;
+    }
+
     r = IbusReadTextFromVariant(m, &text);
     if (r < 0) {
         return 0;
@@ -933,9 +993,11 @@ OnUpdatePreedit(
         return 0;
     }
 
-    TkWindow *topPtr = (TkWindow *)ctx->tkwin;
-    TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
-    Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
+    /*
+     * Use the widget recorded at FocusIn time, not dispPtr->focusPtr.
+     * See OnCommitText for rationale.
+     */
+    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
 
     /* Always clear previous marked region first. */
     Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
@@ -1022,6 +1084,26 @@ RemoveIbusContext(Tk_Window tkwin)
     while (ctx) {
         if (ctx->tkwin == tkwin) {
             *prev = ctx->next;
+
+            /*
+             * Mark the context destroyed before draining.  Any signals that
+             * fire during the drain will see the flag and return immediately
+             * without touching tkwin or focusedWidget.
+             */
+            ctx->destroyed = 1;
+            ctx->focusedWidget = NULL;
+
+            /*
+             * Drain any signals already queued on the D-Bus file descriptor
+             * so that their handlers run while ctx is still allocated.  This
+             * prevents a use-after-free when a CommitText or UpdatePreedit
+             * signal was buffered just before the window closed.
+             */
+            if (ibus_bus) {
+                int n;
+                do { n = sd_bus_process(ibus_bus, NULL); } while (n > 0);
+            }
+
             FreeIbusContext(ctx);
             return;
         }
@@ -1206,8 +1288,21 @@ static int IbusProcessKeyEvent(
 
     fprintf(stderr, "    IBus returned handled = %d\n", handled);
 
-    /* Drain any CommitText/UpdatePreedit signals IBus queued in response. */
-    { int n; do { n = sd_bus_process(ibus_bus, NULL); } while (n > 0); }
+    /*
+     * Drain any CommitText/UpdatePreedit signals IBus queued in response.
+     *
+     * Re-entrancy guard: the Tcl file handler (IbusBusHandler) may be
+     * scheduled concurrently.  If it fires while we are draining here it
+     * would call sd_bus_process again on the same bus, which is not safe.
+     * The file-scope ibus_draining flag prevents that: IbusBusHandler
+     * checks it and returns immediately when set.
+     */
+    if (!ibus_draining) {
+        ibus_draining = 1;
+        int n;
+        do { n = sd_bus_process(ibus_bus, NULL); } while (n > 0);
+        ibus_draining = 0;
+    }
 
     return handled;
 }
@@ -1277,11 +1372,28 @@ Tk_SetCaretPos(
     IbusContext *ctx = FindContext((Tk_Window) topPtr);
     if (!ctx || !ctx->obj_path) return;
 
-    int rootX, rootY;
-    Tk_GetRootCoords(tkwin, &rootX, &rootY);
-    
-    int surfaceX = rootX + x;
-    int surfaceY = rootY + y;
+    /*
+     * Compute the caret position relative to the GLFW/Wayland surface.
+     *
+     * Tk_GetRootCoords is not used here because on this backend it returns
+     * 0,0 for child windows: child widgets share the toplevel's Wayland
+     * surface and have no independent compositor position.  Instead we
+     * accumulate the widget's position relative to the toplevel by walking
+     * the parent chain, then add the caller-supplied intra-widget offset.
+     *
+     * The result is surface-relative, which is exactly what
+     * SetCursorLocationRelative expects.
+     */
+    int relX = x;
+    int relY = y;
+    {
+        TkWindow *w = winPtr;
+        while (w && !Tk_IsTopLevel(w)) {
+            relX += w->changes.x;
+            relY += w->changes.y;
+            w = (TkWindow *) Tk_Parent(w);
+        }
+    }
 
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_call_method(ibus_bus,
@@ -1292,8 +1404,8 @@ Tk_SetCaretPos(
                        &error,
                        NULL,
                        "iiii",
-                       (int32_t) surfaceX,
-                       (int32_t) surfaceY,
+                       (int32_t) relX,
+                       (int32_t) relY,
                        (int32_t) 0,      /* width = 0 (caret) */
                        (int32_t) height);
     sd_bus_error_free(&error);
@@ -1372,9 +1484,11 @@ TkWaylandIbusCreateContext(
     memset(ctx, 0, sizeof(IbusContext));
 
     ctx->tkwin = tkwin;
+    ctx->focusedWidget = NULL;
     ctx->obj_path = strdup(path_tmp);
     ctx->interp = interp;
     ctx->enabled = 0;
+    ctx->destroyed = 0;
 
     if (!ctx->obj_path) {
         Tcl_Free((char *)ctx);
@@ -1475,6 +1589,14 @@ TkWaylandIbusFocusIn(
 {
     IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
     if (!ctx) return;
+
+    /*
+     * Record which sub-widget currently has keyboard focus so that
+     * OnCommitText and OnUpdatePreedit can route events to it directly,
+     * without trusting dispPtr->focusPtr (unreliable on Wayland).
+     */
+    ctx->focusedWidget = tkwin;
+
     IbusFocusIn(ctx);
     IbusEnable(ctx);
 }
@@ -1501,9 +1623,11 @@ TkWaylandIbusFocusOut(Tk_Window tkwin)
     IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
     if (!ctx) return;
 
-    TkWindow *topPtr = (TkWindow *)GetToplevelOfWidget(tkwin);
-    TkWindow *focusPtr = topPtr && topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
-    Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : tkwin;
+    /*
+     * Use the widget we recorded at FocusIn time for the preedit cancel.
+     * Fall back to the toplevel if no sub-widget was recorded.
+     */
+    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
 
     /* Cancel any ongoing composition. */
     if (ctx->preeditText) {
@@ -1511,6 +1635,9 @@ TkWaylandIbusFocusOut(Tk_Window tkwin)
         free(ctx->preeditText);
         ctx->preeditText = NULL;
     }
+
+    /* Clear the recorded focus widget — no sub-widget has focus now. */
+    ctx->focusedWidget = NULL;
 
     IbusFocusOut(ctx);
     IbusDisable(ctx);
@@ -1706,6 +1833,18 @@ static void IbusBusHandler(ClientData clientData, int mask)
 {
     sd_bus *bus = (sd_bus *)clientData;
     if (!(mask & TCL_READABLE)) return;
+
+    /*
+     * Re-entrancy guard: IbusProcessKeyEvent may already be draining this
+     * bus synchronously from inside a GLFW key callback.  Calling
+     * sd_bus_process concurrently on the same bus is not safe; skip here
+     * and let the in-progress drain handle any pending messages.  The Tcl
+     * file handler will fire again on the next event-loop iteration if
+     * data remains on the fd.
+     */
+    if (ibus_draining) {
+        return;
+    }
 
     fprintf(stderr, ">>> IbusBusHandler: processing IBus signals\n");
 
