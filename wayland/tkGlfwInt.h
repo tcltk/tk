@@ -474,6 +474,7 @@ MODULE_SCOPE void  TkWaylandUpdateKeyboardModifiers(int glfw_mods);
 MODULE_SCOPE void  TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint);
 char* TkWaylandGetStoredText(TkWindow *winPtr);
 void TkWaylandSetStoredText(TkWindow *winPtr, const char *text);
+int TkWaylandIbusIsComposing(Tk_Window);
 MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 
 /*

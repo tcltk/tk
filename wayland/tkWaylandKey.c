@@ -503,10 +503,14 @@ TkWaylandKeyCleanup() {
  *
  * IBus D-Bus signal signatures (real wire format):
  *
- *   CommitText      (v)   – IBus.Text variant containing the committed string
- *   UpdatePreedit   (vub) – IBus.Text variant, uint32 cursor, bool visible
- *   HidePreeditText ()
- *   ShowPreeditText ()
+ *   CommitText        (v)   – IBus.Text variant containing the committed string
+ *   UpdatePreeditText (vub) – IBus.Text variant, uint32 cursor, bool visible
+ *   HidePreeditText   ()    – hide the preedit (no arguments)
+ *   ShowPreeditText   ()    – show the preedit (no arguments)
+ *
+ * Note: the signal is named "UpdatePreeditText" (not "UpdatePreedit").
+ * Older documentation and some examples use the shorter name but modern
+ * IBus engines (including Mozc and iBus-libpinyin) emit the full name.
  *
  * IBus.Text is a D-Bus struct: (sa{sv}sv) — (name, attachments, text,
  * attributes).  We unpack only the plain text string for simplicity.
@@ -522,7 +526,7 @@ TkWaylandKeyCleanup() {
 
 /* IBus signal names. */
 #define IBUS_SIGNAL_COMMIT_TEXT      "CommitText"
-#define IBUS_SIGNAL_UPDATE_PREEDIT   "UpdatePreedit"
+#define IBUS_SIGNAL_UPDATE_PREEDIT   "UpdatePreeditText"
 #define IBUS_SIGNAL_HIDE_PREEDIT     "HidePreeditText"
 #define IBUS_SIGNAL_SHOW_PREEDIT     "ShowPreeditText"
 
@@ -544,9 +548,16 @@ typedef struct IbusContext {
                                  * Wayland. */
     char *obj_path;             /* D-Bus object path of the IBus input context. */
     sd_bus_slot *signal_slot;   /* Slot for CommitText signal subscription. */
-    sd_bus_slot *preedit_slot;  /* Slot for UpdatePreedit signal subscription. */
+    sd_bus_slot *preedit_slot;  /* Slot for UpdatePreeditText signal subscription. */
+    sd_bus_slot *hide_slot;     /* Slot for HidePreeditText signal subscription. */
+    sd_bus_slot *show_slot;     /* Slot for ShowPreeditText signal subscription. */
     Tcl_Interp *interp;         /* Tcl interpreter (for callbacks). */
     int enabled;                /* Whether IME is active for this window. */
+    int composing;              /* Non-zero while IBus owns an active composition.
+                                 * Set on UpdatePreeditText/ShowPreeditText,
+                                 * cleared on CommitText/HidePreeditText.
+                                 * Used by the GLFW char callback to suppress
+                                 * raw latin input during IME composition. */
     int destroyed;              /* Set to 1 when the Tk window has been
                                  * destroyed; guards signal handlers against
                                  * using a stale tkwin pointer. */
@@ -870,6 +881,8 @@ OnCommitText(
     const char *text = NULL;
     int r;
 
+    fprintf(stderr, ">>> OnCommitText\n");
+
     /*
      * Guard against signals that arrive after the Tk window has been
      * destroyed.  RemoveIbusContext sets this flag before freeing, but
@@ -899,11 +912,12 @@ OnCommitText(
         TkWaylandSendUnicodeString(focusWin, text);
     }
 
-    /* Discard stored preedit — composition is complete. */
+    /* Composition is complete — clear preedit state and composing flag. */
     if (ctx->preeditText) {
         free(ctx->preeditText);
         ctx->preeditText = NULL;
     }
+    ctx->composing = 0;
 
     return 0;
 }
@@ -911,10 +925,10 @@ OnCommitText(
  * ----------------------------------------------------------------------------
  * OnUpdatePreedit --
  *
- *         D-Bus signal handler for the IBus "UpdatePreedit" signal.  Called
- *         when the IME preëdit string (the ongoing composition) changes.
+ *         D-Bus signal handler for the IBus "UpdatePreeditText" signal.
+ *         Called when the IME preëdit string (the ongoing composition) changes.
  *
- *         Wire signature: UpdatePreedit(v, u, b)
+ *         Wire signature: UpdatePreeditText(v, u, b)
  *           v – IBus.Text variant (the preëdit string)
  *           u – uint32 cursor position within the preëdit
  *           b – bool visible
@@ -931,6 +945,7 @@ OnCommitText(
  *
  * Side effects:
  *         Sends virtual events and synthetic key events.
+ *         Sets ctx->composing = 1 while composition is active.
  * ----------------------------------------------------------------------------
  */
 
@@ -945,6 +960,8 @@ OnUpdatePreedit(
     uint32_t cursor_pos = 0;
     int32_t visible = 0;
     int r;
+
+    fprintf(stderr, ">>> OnUpdatePreedit\n");
 
     /* Guard against post-destruction callbacks (see OnCommitText). */
     if (!ctx || ctx->destroyed) {
@@ -975,20 +992,104 @@ OnUpdatePreedit(
             free(ctx->preeditText);
             ctx->preeditText = NULL;
         }
+        ctx->composing = 0;
         return 0;
     }
 
-    /* Update stored preedit text. */
+    /* Update stored preedit text and mark composition as active. */
     if (ctx->preeditText) {
         free(ctx->preeditText);
     }
     ctx->preeditText = strdup(text);
+    ctx->composing = 1;
 
     /* Show new preedit. */
     Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
     TkWaylandSendUnicodeString(focusWin, text);
     Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 
+    return 0;
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * OnHidePreeditText --
+ *
+ *         D-Bus signal handler for the IBus "HidePreeditText" signal.
+ *         Called when the IME wants the preëdit to be hidden (e.g., after
+ *         committing or cancelling composition).
+ *
+ *         Wire signature: HidePreeditText()  — no arguments.
+ *
+ * Results:
+ *         Returns 0.
+ *
+ * Side effects:
+ *         Sends TkClearIMEMarkedText virtual event and clears composing state.
+ * ----------------------------------------------------------------------------
+ */
+
+static int
+OnHidePreeditText(
+    sd_bus_message *m,
+    void *userdata,
+    sd_bus_error *ret_error)
+{
+    IbusContext *ctx = (IbusContext *)userdata;
+
+    fprintf(stderr, ">>> OnHidePreeditText\n");
+
+    if (!ctx || ctx->destroyed) {
+        return 0;
+    }
+
+    Tk_Window focusWin = ctx->focusedWidget ? ctx->focusedWidget : ctx->tkwin;
+    Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+
+    if (ctx->preeditText) {
+        free(ctx->preeditText);
+        ctx->preeditText = NULL;
+    }
+    ctx->composing = 0;
+
+    return 0;
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ * OnShowPreeditText --
+ *
+ *         D-Bus signal handler for the IBus "ShowPreeditText" signal.
+ *         Called when the IME wants the preëdit to be shown.  The actual
+ *         text arrives via a subsequent UpdatePreeditText signal; this
+ *         signal is informational.  We only set the composing flag here so
+ *         that the GLFW char callback suppresses raw input immediately.
+ *
+ *         Wire signature: ShowPreeditText()  — no arguments.
+ *
+ * Results:
+ *         Returns 0.
+ *
+ * Side effects:
+ *         Sets ctx->composing = 1.
+ * ----------------------------------------------------------------------------
+ */
+
+static int
+OnShowPreeditText(
+    sd_bus_message *m,
+    void *userdata,
+    sd_bus_error *ret_error)
+{
+    IbusContext *ctx = (IbusContext *)userdata;
+
+    fprintf(stderr, ">>> OnShowPreeditText\n");
+
+    if (!ctx || ctx->destroyed) {
+        return 0;
+    }
+
+    ctx->composing = 1;
     return 0;
 }
 
@@ -1016,6 +1117,14 @@ FreeIbusContext(IbusContext *ctx)
         free(ctx->preeditText);
         ctx->preeditText = NULL;
     }
+    if (ctx->show_slot) {
+        sd_bus_slot_unref(ctx->show_slot);
+        ctx->show_slot = NULL;
+    }
+    if (ctx->hide_slot) {
+        sd_bus_slot_unref(ctx->hide_slot);
+        ctx->hide_slot = NULL;
+    }
     if (ctx->preedit_slot) {
         sd_bus_slot_unref(ctx->preedit_slot);
         ctx->preedit_slot = NULL;
@@ -1039,6 +1148,9 @@ FreeIbusContext(IbusContext *ctx)
  *         Called on window destruction.
  *
  * Results:
+ *         None.
+ *
+ * Side effects:
  *         None.
  * ----------------------------------------------------------------------------
  */
@@ -1295,7 +1407,7 @@ static int IbusProcessKeyEvent(
  *         None.
  *
  * Side effects:
- *         Updates dispPtr->caret.  Sends a SetCursorLocation D-Bus call to
+ *         Updates dispPtr->caret.  Sends a SetCursorLocationRelative D-Bus call to
  *         the IBus input context for the enclosing toplevel, if one exists.
  * ----------------------------------------------------------------------
  */
@@ -1314,7 +1426,7 @@ Tk_SetCaretPos(
     /* Mark widget as capable of text input. */
     winPtr->flags |= TK_CAN_INPUT_TEXT;
 
-    /* Skip if nothing changed */
+    /* Skip if nothing changed. */
     if ((dispPtr->caret.winPtr == winPtr)
             && (dispPtr->caret.x == x)
             && (dispPtr->caret.y == y)
@@ -1413,7 +1525,7 @@ TkWaylandIbusCreateContext(
         return TCL_OK;
     }
 
-    /* Request new input context from IBus daemon */
+    /* Request new input context from IBus daemon. */
     r = sd_bus_call_method(ibus_bus,
                            IBUS_SERVICE,
                            IBUS_PATH,
@@ -1441,7 +1553,7 @@ TkWaylandIbusCreateContext(
 
     fprintf(stderr, "IBus: Created remote input context -> %s\n", path_tmp);
 
-    /* Allocate and initialize context */
+    /* Allocate and initialize context. */
     IbusContext *ctx = (IbusContext *)Tcl_Alloc(sizeof(IbusContext));
     if (!ctx) {
         sd_bus_message_unref(reply);
@@ -1489,11 +1601,27 @@ TkWaylandIbusCreateContext(
         }
 
         snprintf(rule, sizeof(rule),
-                 "type='signal',path='%s',interface='%s',member='UpdatePreedit'",
+                 "type='signal',path='%s',interface='%s',member='UpdatePreeditText'",
                  ctx->obj_path, IBUS_IC_INTERFACE);
         r = sd_bus_add_match(ibus_bus, &ctx->preedit_slot, rule, OnUpdatePreedit, ctx);
         if (r < 0) {
-            fprintf(stderr, "Warning: UpdatePreedit subscription failed: %s\n", strerror(-r));
+            fprintf(stderr, "Warning: UpdatePreeditText subscription failed: %s\n", strerror(-r));
+        }
+
+        snprintf(rule, sizeof(rule),
+                 "type='signal',path='%s',interface='%s',member='HidePreeditText'",
+                 ctx->obj_path, IBUS_IC_INTERFACE);
+        r = sd_bus_add_match(ibus_bus, &ctx->hide_slot, rule, OnHidePreeditText, ctx);
+        if (r < 0) {
+            fprintf(stderr, "Warning: HidePreeditText subscription failed: %s\n", strerror(-r));
+        }
+
+        snprintf(rule, sizeof(rule),
+                 "type='signal',path='%s',interface='%s',member='ShowPreeditText'",
+                 ctx->obj_path, IBUS_IC_INTERFACE);
+        r = sd_bus_add_match(ibus_bus, &ctx->show_slot, rule, OnShowPreeditText, ctx);
+        if (r < 0) {
+            fprintf(stderr, "Warning: ShowPreeditText subscription failed: %s\n", strerror(-r));
         }
     }
 
@@ -1631,7 +1759,33 @@ TkWaylandIbusFocusOut(Tk_Window tkwin)
 
 /*
  * ----------------------------------------------------------------------------
- * TkWaylandIbusProcessKey --
+ * TkWaylandIbusIsComposing --
+ *
+ *         Returns non-zero if the IBus context for the given window is
+ *         currently in an active composition (preedit visible).  Used by
+ *         the GLFW character callback to suppress raw latin input while
+ *         the IME owns the key stream.
+ *
+ * Results:
+ *         Returns 1 if composing, 0 otherwise.
+ *
+ * Side effects:
+ *         None.
+ * ----------------------------------------------------------------------------
+ */
+
+int
+TkWaylandIbusIsComposing(Tk_Window tkwin)
+{
+    IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
+    if (!ctx) return 0;
+    return ctx->composing;
+}
+
+
+/*
+ * ----------------------------------------------------------------------------
+ * TkWaylandIbusProcessKey -
  *
  *         Public wrapper called from TkGlfwKeyCallback.  Looks up the IBus
  *         context for the focused toplevel and forwards the key event to the
@@ -1812,10 +1966,34 @@ static int CmdProcessKey(ClientData clientData,
 }
 
 
-/* Global to track the current D-Bus file descriptor */
+/* Global to track the current D-Bus file descriptor. */
 static int ibus_fd = -1;
 
-static void IbusBusHandler(ClientData clientData, int mask)
+/*
+ *----------------------------------------------------------------------
+ *
+ * IbusBusHandler --
+ *
+ *   Tcl file handler callback for IBus D-Bus socket activity. Processes
+ *   pending D-Bus messages from the IBus daemon when the file descriptor
+ *   becomes readable. Includes re-entrancy protection to prevent concurrent
+ *   processing when IBusProcessKeyEvent is already draining the bus.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Processes incoming IBus messages (e.g., commit text, preedit updates,
+ *   key event replies). May call sd_bus_process which can invoke IBus
+ *   callbacks. Outputs debug messages to stderr when processing occurs.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+IbusBusHandler(
+    ClientData clientData,  /* sd_bus * for the IBus connection */
+    int mask)               /* TCL_READABLE when fd has data */
 {
     sd_bus *bus = (sd_bus *)clientData;
     if (!(mask & TCL_READABLE)) return;
@@ -1846,7 +2024,31 @@ static void IbusBusHandler(ClientData clientData, int mask)
     }
 }
 
-static void IbusEventSetup(ClientData clientData, int flags)
+/*
+ *----------------------------------------------------------------------
+ *
+ * IbusEventSetup --
+ *
+ *   Called by Tk's event loop integration to register or update the
+ *   Tcl file handler for the IBus D-Bus socket. Ensures the file handler
+ *   points to the current D-Bus connection file descriptor, cleaning up
+ *   any previous handler if the fd has changed.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   May delete an existing Tcl file handler on the old IBus fd and
+ *   create a new one on the current fd. Outputs debug message to stderr
+ *   when a handler is registered.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+IbusEventSetup(
+    ClientData clientData,  /* Unused (may be NULL) */
+    int flags)              /* TCL_WINDOW_EVENTS when setting up window events */
 {
     if (!(flags & TCL_WINDOW_EVENTS) || !ibus_bus) return;
 
@@ -1863,7 +2065,31 @@ static void IbusEventSetup(ClientData clientData, int flags)
     }
 }
 
-static void IbusEventCheck(ClientData clientData, int flags)
+/*
+ *----------------------------------------------------------------------
+ *
+ * IbusEventCheck --
+ *
+ *   Called by Tk's event loop integration to determine if the IBus
+ *   D-Bus socket has pending events that require processing. If events
+ *   are available, sets the maximum block time to zero to ensure the
+ *   event loop returns quickly and dispatches the file handler.
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   May call Tcl_SetMaxBlockTime(&zero) when IBus events are pending,
+ *   causing the Tcl event loop to avoid blocking and process the
+ *   IBus file handler immediately.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+IbusEventCheck(
+    ClientData clientData,  /* Unused (may be NULL) */
+    int flags)              /* TCL_WINDOW_EVENTS when checking window events */
 {
     if (!(flags & TCL_WINDOW_EVENTS) || !ibus_bus) return;
 
@@ -1872,7 +2098,6 @@ static void IbusEventCheck(ClientData clientData, int flags)
         Tcl_SetMaxBlockTime(&zero);
     }
 }
-
 /*
  * ----------------------------------------------------------------------------
  * GetIbusAddress --
@@ -2106,7 +2331,7 @@ TkWaylandIbus_Init(Tcl_Interp *interp)
     /* Register event source for signals. */
     Tcl_CreateEventSource(IbusEventSetup, IbusEventCheck, NULL);
     
-    /* Force initial setup */
+    /* Force initial setup. */
     IbusEventSetup(NULL, TCL_WINDOW_EVENTS);
 
     return TCL_OK;
