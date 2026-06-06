@@ -806,7 +806,7 @@ TkWaylandSendUnicodeString(
     /*
      * Stored text lives on the toplevel's privatePtr->pendingText and is
      * read by TkpGetString to populate %A in tkBind.c.  Walk up to find
-     * the toplevel so we can set it per-character before each KeyPress.
+     * the toplevel so we can set it before queuing the synthetic KeyPress.
      */
     TkWindow *topPtr = (TkWindow *)tkwin;
     while (topPtr && !Tk_IsTopLevel(topPtr)) {
@@ -821,7 +821,6 @@ TkWaylandSendUnicodeString(
     Tcl_GetTime(&now);
     Time time = (Time)(now.sec * 1000 + now.usec / 1000);
 
-    /* Build a complete XEvent (critical for sub-widgets like .e) */
     XEvent xEvent;
     memset(&xEvent, 0, sizeof(XEvent));
 
@@ -849,29 +848,19 @@ TkWaylandSendUnicodeString(
     }
 
     /*
-     * Send one synthetic KeyPress per Unicode character.
+     * Store the entire committed string once and send a single synthetic
+     * KeyPress to deliver it.  TkpGetString reads and clears pendingText
+     * on the first call, so per-character queuing loses all characters
+     * after the first.  A single event carrying the full string avoids
+     * that: the widget's <<Key>> binding calls TkpGetString once and gets
+     * the complete UTF-8 string.
      *
-     * For each character we must set the toplevel's stored text to the
-     * UTF-8 bytes of that character before queuing the event.  TkpGetString
-     * reads this slot to produce %A; without it the widget sees an empty
-     * string and inserts nothing, causing committed IME text to be silently
-     * dropped even though IBus sent it correctly.
+     * Codepoint 0 is used as the routing token — it is in the synthetic
+     * range and will never match a real key binding.
      */
-    const char *p = utf8_str;
-    while (*p) {
-        Tcl_UniChar ch;
-        int len = Tcl_UtfToUniChar(p, &ch);
-
-        char buf[8];
-        memcpy(buf, p, len);
-        buf[len] = '\0';
-        TkWaylandSetStoredText(topPtr, buf);
-
-        xEvent.xkey.keycode = SYNTHETIC_KEYCODE(ch);
-        Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-
-        p += len;
-    }
+    TkWaylandSetStoredText(topPtr, utf8_str);
+    xEvent.xkey.keycode = SYNTHETIC_KEYCODE(0);
+    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 }
 
 /*
@@ -1485,6 +1474,15 @@ TkWaylandIbusCreateContext(
 
     ctx->tkwin = tkwin;
     ctx->focusedWidget = NULL;
+    {
+        TkWindow *topPtr = (TkWindow *)tkwin;
+        TkWindow *focusPtr = topPtr->dispPtr ? topPtr->dispPtr->focusPtr : NULL;
+        if (focusPtr && !Tk_IsTopLevel(focusPtr)) {
+            ctx->focusedWidget = (Tk_Window)focusPtr;
+        } else {
+            ctx->focusedWidget = tkwin;
+        }
+    }
     ctx->obj_path = strdup(path_tmp);
     ctx->interp = interp;
     ctx->enabled = 0;
@@ -1536,6 +1534,14 @@ TkWaylandIbusCreateContext(
     /* Insert into global linked list.  */
     ctx->next = all_contexts;
     all_contexts = ctx;
+
+    /*
+     * Mozc and other engines require FocusIn followed by Enable immediately
+     * after context creation; without it they remain in Direct Input mode
+     * for the lifetime of the context.  IbusEnable sets ctx->enabled = 1.
+     */
+    IbusFocusIn(ctx);
+    IbusEnable(ctx);
 
     fprintf(stderr, "CreateIbusContext: Successfully added context for window %p\n", tkwin);
 
