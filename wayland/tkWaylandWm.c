@@ -3732,9 +3732,6 @@ UpdateGeometryInfo(
  	 * likely to happen after the window has been fully rendered, which
  	 * leads to pretty bad UX.
  	 */
- 	printf("Calling PollEvents\n");
- 	glfwPollEvents();
- 	printf("Setting WindowSize\n");
         glfwSetWindowSize(glfwWindow, tw, th);
 
 	/* Update the window. */

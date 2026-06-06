@@ -238,42 +238,13 @@ static void renderFBO(
     int fbWidth, fbHeight;
     glfwMakeContextCurrent(glfwWindow);
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    /*
-     * This is an attempted workaround for some strange Wayland behavior.
-     * The framebuffer size reported by GLFW can be different from the actual
-     * framebuffer size provided by Wayland. This has been observed for the
-     * root toplevel when a second toplevel is on the screen and the root gets
-     * resized by a call to glfwSetWindowSize.  The behavior happens only for
-     * the root (which Wayland considers to be the "main" window by virtue of
-     * having been created first). We have to query GL directly to get the
-     * the actual size.
-     */
-    glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
-    GLint glRect[4] = {0};
-    glGetIntegerv(GL_VIEWPORT, glRect);
-    fprintf(stderr, "GLFW size: %dx%d; GL size %dx%d\n",
-    fbWidth, fbHeight, glRect[2], glRect[3]);
-    glBindVertexArray(0);
-
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-		      0, 0, glRect[2], glRect[3],
+		      0, 0, fbWidth, fbHeight,
 		      GL_COLOR_BUFFER_BIT,
 		      GL_NEAREST);
     glfwSwapBuffers(glfwWindow);
-    /*
-     * If the sizes differ we will need to redraw the window later
-     * because the blit will rescale, causing artifacts.  Using the
-     * actual size for the target makes things the right size,
-     * but blurry.
-     */
-#if 1
-    if (glRect[2] != fbWidth || glRect[3] != fbHeight) {
-	fprintf(stderr, "================================= Size mismatch\n");
-	TkWaylandQueueExposeEvent(infoPtr->winPtr, 0, 0, fbWidth, fbHeight);
-    }
-#endif
 }
 
 /*
@@ -586,7 +557,8 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
 	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-	glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);	/*
+	glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+	/*
 	 * Sharing the GL context makes image rendering more efficient.
 	 */
         glfwWindow = glfwCreateWindow(width, height, title ? title : "",
@@ -668,7 +640,7 @@ TkGlfwCreateWindow(
 MODULE_SCOPE void
 TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 {
-    fprintf(stderr, "TkGflwDestroyWindow\n");
+    fprintf(stderr, "TkGlfwDestroyWindow\n");
     if (!glfwWindow) {
 	return;
     }
@@ -714,7 +686,6 @@ TkGlfwBeginDraw(
 	return TCL_OK;
     }
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
-    fprintf(stderr, "BeginDraw for %s @ %p\n", Tk_PathName(childPtr), childPtr);
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
     while (!Tk_IsTopLevel(winPtr)) {
@@ -722,7 +693,8 @@ TkGlfwBeginDraw(
 	y += winPtr->changes.y;
     	winPtr = winPtr->parentPtr;
     }
-    fprintf(stderr, "BeginDraw: toplevel %s @ %p\n", Tk_PathName(winPtr), winPtr);
+    fprintf(stderr, "BeginDraw: %s in toplevel %s with offset (%d, %d)\n",
+	    Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
 
     /*
      * Now winPtr is the containing toplevel and the offsets of
@@ -758,7 +730,6 @@ TkGlfwBeginDraw(
      */
 
     TkGlfwApplyGC(dcPtr->vg, gc);
-    fprintf(stderr, "translating to (%f,%f)\n", x, y);
     nvgTranslate(dcPtr->vg, x, y);
     return TCL_OK;
 }
@@ -820,12 +791,11 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     /* Check FBO completeness (for now). */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO is incomplete (status=0x%x)\n", status);
+        fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
     }
-    //GLtest(glfwWindow);
-    fprintf(stderr, "EndFrame: drawing %s in toplevel %s with viewport %dx%d\n",
-	   Tk_PathName(childPtr), Tk_PathName(winPtr), fbWidth, fbHeight);
     nvgEndFrame(dcPtr->vg);
+    fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
+	   Tk_PathName(childPtr), Tk_PathName(winPtr));
     nvgluBindFramebuffer(NULL);
 
     /*
@@ -836,8 +806,24 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
 
     nvgRestore(dcPtr->vg);
 
-    /* Mark the window as needing display unless we are
-     * in the middle of a Tk double-buffer section.
+    /*
+     * Drawing this widget probably covered up all of its children.
+     * Generate expose events for the children (and their children).
+     * Somehow this is not handled by the generic code. (????)
+     */
+#if 1
+    for (TkWindow *childPtr2 = childPtr->childList; childPtr2 != NULL;
+         childPtr2 = childPtr2->nextPtr) {
+        if (!Tk_IsMapped(childPtr2)) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
+                                  Tk_Height(childPtr2));
+    }
+#endif
+    /*
+     * Mark the window as needing display unless we are in the middle of a Tk
+     * double-buffer section.  This triggers a call to glfwSwapBuffers.
      */
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     ////if (!(infoPtr->flags & dontSwap)) {
