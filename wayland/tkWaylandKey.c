@@ -762,29 +762,8 @@ cleanup_variant:
  * ----------------------------------------------------------------------------
  * TkWaylandSendUnicodeString --
  *
- *         Generate synthetic KeyPress events for each character in a UTF-8
- *         string and queue them to the Tk event loop.  This is used to
- *         insert committed text from the IME or to display preëdit text.
- *
- *         Each synthetic event uses a keycode in the range
- *         SYNTHETIC_KEYCODE_BASE + Unicode scalar value.  The modifier state
- *         is taken from the current XKB state.
- *
- * Results:
- *         None.
- *
- * Side effects:
- *         Queues KeyPress events.
- * ----------------------------------------------------------------------------
- */
-
-/*
- * ----------------------------------------------------------------------------
- * TkWaylandSendUnicodeString --
- *
  *         Generate synthetic KeyPress events for committed or preedit text.
- *         This version builds a complete XEvent (matching macOS patterns)
- *         to avoid ".e not in entry" errors.
+ *         Builds a complete XEvent.
  *
  * Results:
  *         None.
