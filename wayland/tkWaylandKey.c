@@ -1542,6 +1542,8 @@ TkWaylandIbusCreateContext(
      */
     IbusFocusIn(ctx);
     IbusEnable(ctx);
+    sd_bus_call_method(ibus_bus, IBUS_SERVICE, ctx->obj_path, IBUS_IC_INTERFACE,
+                   "Reset", &error, NULL, "");
 
     fprintf(stderr, "CreateIbusContext: Successfully added context for window %p\n", tkwin);
 
