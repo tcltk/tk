@@ -762,58 +762,75 @@ cleanup_variant:
  * ----------------------------------------------------------------------------
  */
 
+/*
+ * ----------------------------------------------------------------------------
+ * TkWaylandSendUnicodeString --
+ *
+ *         Generate synthetic KeyPress events for committed or preedit text.
+ *         This version builds a complete XEvent (matching macOS patterns)
+ *         to avoid ".e not in entry" errors.
+ *
+ * Results:
+ *         None.
+ *
+ * Side effects:
+ *         Queues KeyPress events to the correct widget.
+ * ----------------------------------------------------------------------------
+ */
+
 static void
 TkWaylandSendUnicodeString(
-    Tk_Window tkwin,            /* Toplevel window receiving the text. */
-    const char *utf8_str)       /* UTF-8 string to insert. */
+    Tk_Window tkwin,
+    const char *utf8_str)
 {
-    if (!utf8_str || !*utf8_str) return;
-    if (!tkwin) return;
+    if (!utf8_str || !*utf8_str || !tkwin) {
+        return;
+    }
 
     Display *display = Tk_Display(tkwin);
     Window window = Tk_WindowId(tkwin);
     
     Tcl_Time now;
-	Tcl_GetTime(&now);
-	Time time = (Time)(now.sec * 1000 + now.usec / 1000);
+    Tcl_GetTime(&now);
+    Time time = (Time)(now.sec * 1000 + now.usec / 1000);
 
-    /* Obtain current modifier state from XKB. */
-    unsigned int state = 0;
-    if (xkbState.state) {
+    /* Build a complete XEvent (critical for sub-widgets like .e) */
+    XEvent xEvent;
+    memset(&xEvent, 0, sizeof(XEvent));
+
+    xEvent.xany.display = display;
+    xEvent.xany.window  = window;
+    xEvent.xany.type    = KeyPress;
+
+    xEvent.xkey.root        = XRootWindow(display, 0);
+    xEvent.xkey.time        = time;
+    xEvent.xkey.same_screen = True;
+    xEvent.xkey.state       = 0;
+
+    /* Add current modifiers from XKB if available. */
+    if (xkbState.state && xkbState.keymap) {
         xkb_mod_mask_t mods = xkb_state_serialize_mods(xkbState.state,
-                              XKB_STATE_MODS_DEPRESSED | XKB_STATE_MODS_LATCHED);
-        /* Map XKB modifier bits to X11 modifier masks. */
+                                XKB_STATE_MODS_DEPRESSED | XKB_STATE_MODS_LATCHED);
         if (mods & (1 << xkb_keymap_mod_get_index(xkbState.keymap, "Shift")))
-            state |= ShiftMask;
+            xEvent.xkey.state |= ShiftMask;
         if (mods & (1 << xkb_keymap_mod_get_index(xkbState.keymap, "Control")))
-            state |= ControlMask;
+            xEvent.xkey.state |= ControlMask;
         if (mods & (1 << xkb_keymap_mod_get_index(xkbState.keymap, "Alt")))
-            state |= Mod1Mask;
+            xEvent.xkey.state |= Mod1Mask;
         if (mods & (1 << xkb_keymap_mod_get_index(xkbState.keymap, "Mod5")))
-            state |= Mod5Mask;  /* AltGr */
-        /* Add other modifiers as needed. */
+            xEvent.xkey.state |= Mod5Mask;
     }
 
-    XEvent xEvent;
-    memset(&xEvent, 0, sizeof(xEvent));
-    xEvent.xany.display = display;
-    xEvent.xany.window = window;
-    xEvent.xkey.root = XRootWindow(display, 0);
-    xEvent.xkey.time = time;
-    xEvent.xkey.state = state;
-    xEvent.xkey.same_screen = True;
-
-    /* Convert UTF-8 to Unicode and generate events. */
+    /* Send one synthetic KeyPress per Unicode character. */
     const char *p = utf8_str;
     while (*p) {
         Tcl_UniChar ch;
         p += Tcl_UtfToUniChar(p, &ch);
+
         xEvent.xkey.keycode = SYNTHETIC_KEYCODE(ch);
-        xEvent.xany.type = KeyPress;
         Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
 }
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -852,14 +869,14 @@ OnCommitText(
     TkWindow *focusPtr = (topPtr && topPtr->dispPtr) ? topPtr->dispPtr->focusPtr : NULL;
     Tk_Window focusWin = focusPtr ? (Tk_Window)focusPtr : ctx->tkwin;
 
-    /* Clear any ongoing preedit */
+    /* Clear any marked/preedit region */
     Tk_SendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
 
     if (*text) {
-        TkWaylandSendUnicodeString(focusWin, text);
+        TkWaylandSendUnicodeString(focusWin, text);   /* Use focusWin */
     }
 
-    /* Clear stored preedit on commit. */
+    /* Cleanup */
     if (ctx->preeditText) {
         free(ctx->preeditText);
         ctx->preeditText = NULL;
@@ -867,7 +884,6 @@ OnCommitText(
 
     return 0;
 }
-
 /*
  * ----------------------------------------------------------------------------
  * OnUpdatePreedit --
