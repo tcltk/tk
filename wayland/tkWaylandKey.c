@@ -1286,8 +1286,7 @@ static int IbusProcessKeyEvent(
  *
  *         On Wayland, glfwGetWindowPos is unsupported so the toplevel's true
  *         screen position is unknown.  SetCursorLocationRelative accepts
- *         coordinates relative to the window surface, which is exactly what
- *         Tk_GetRootCoords returns on this backend.
+ *         coordinates relative to the window surface.
  *
  *         height is the line height at the caret; we pass zero width because
  *         the caret is a point, not a selection rectangle.
