@@ -3665,8 +3665,8 @@ TTK_LAYOUT("Treeview",
 TTK_LAYOUT("Heading",
     TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
     TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
-    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT | TTK_STICK_N)
-    TTK_NODE("Treeheading.text", TTK_PACK_TOP)))
+    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
+    TTK_NODE("Treeheading.text", TTK_FILL_X)))
 
 /* Tree items -- omit focus ring */
 TTK_LAYOUT("Item",

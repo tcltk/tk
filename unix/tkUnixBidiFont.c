@@ -4,8 +4,8 @@
  * Alternate implementation of tkUnixFont.c using Xft with proper
  * text shaping.
  *
- * Copyright (c) 2002-2003 Keith Packard
- * Copyright (c) 2026 Kevin Walzer
+ * Copyright © 2002-2003 Keith Packard
+ * Copyright © 2026 Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1226,7 +1226,7 @@ X11Shaper_ShapeString(
     buffer->indexCount = 0;
     buffer->totalAdvance = 0;
     buffer->clusterBreakCount = 0;
-    
+
     /*
      * Fast path for simple scripts (Latin, CJK, etc.).
      *
@@ -1295,7 +1295,7 @@ X11Shaper_ShapeString(
 
 	buffer->indexCount = 0;
 	int prevByteOffset = -1;
-	
+
 	/*
 	 * Build visualIndex properly for CJK (Chinese/Japanese) + Latin.
 	 * This is critical for correct cursor movement and selection.
@@ -1772,7 +1772,7 @@ void
 TkpFontPkgInit(
     TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
-    /* Nothing to initialize. */
+    FcInit();
 }
 
 /*

@@ -134,7 +134,7 @@ typedef struct TagInfo {
  * Variable that indicates whether to enable consistency checks for debugging.
  */
 
-int tkBTreeDebug = 0;
+bool tkBTreeDebug = false;
 
 /*
  * Macros that determine how much space to allocate for new segments:

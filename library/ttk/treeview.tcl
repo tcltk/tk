@@ -19,7 +19,7 @@ namespace eval ttk::treeview {
 
     # Track current item and cell
     array set State [list current {} currentCell {}]
-    
+
     # Scaling default
     variable scaling [tk scaling]
 }
@@ -886,7 +886,7 @@ proc ::ttk::treeview::AutoSizeColumn {w column} {
 	    set indent [expr {$indent * 2}]
 	}
     }
-    
+
     # Check each cell width
     set item [$w identifier {} first]
     while {$item ne ""} {
@@ -1537,7 +1537,7 @@ proc ::ttk::treeview::CopyToClipboard {w} {
 
 #
 # ::ttk::treeview::Create_CheckTreeview_Style
-#	Create CheckTreeview style from Treeview style. 
+#	Create CheckTreeview style from Treeview style.
 #
 proc ::ttk::treeview::Create_CheckTreeview_Style {} {
     # Copy theme configuration
@@ -1551,7 +1551,7 @@ proc ::ttk::treeview::Create_CheckTreeview_Style {} {
 		}
 		ttk::style layout $new [ttk::style layout $element]
 		ttk::style configure $new {*}[ttk::style configure $element]
-		
+
 		set list [list]
 		foreach {opt spec} [ttk::style map $element] {
 		    lappend list $opt $spec

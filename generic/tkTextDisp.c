@@ -159,6 +159,7 @@ typedef struct StyleValues {
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE or TEXT_WRAPMODE_WORD.*/
+    char locale[8];
 } StyleValues;
 
 /*
@@ -629,7 +630,7 @@ static void		FinalizeBaseChunk(TkTextDispChunk *additionalChunkPtr);
 static void		FreeBaseChunk(TkTextDispChunk *baseChunkPtr);
 static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
 static void		RemoveFromBaseChunk(TkTextDispChunk *chunkPtr);
-static int              ChunkIsRtl(const char *chars, Tcl_Size numBytes);
+static int	      ChunkIsRtl(const char *chars, Tcl_Size numBytes);
 
 #endif
 /*
@@ -864,7 +865,7 @@ GetStyle(
     Tcl_Size fgPrio, fontPrio, fgStipplePrio;
     Tcl_Size underlinePrio, elidePrio, justifyPrio, offsetPrio;
     Tcl_Size lMargin1Prio, lMargin2Prio, rMarginPrio;
-    Tcl_Size lMarginColorPrio, rMarginColorPrio;
+    Tcl_Size lMarginColorPrio, rMarginColorPrio, localePrio;
     Tcl_Size spacing1Prio, spacing2Prio, spacing3Prio;
     Tcl_Size overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
@@ -879,7 +880,7 @@ GetStyle(
     fgPrio = fontPrio = fgStipplePrio = -1;
     underlinePrio = elidePrio = justifyPrio = offsetPrio = -1;
     lMargin1Prio = lMargin2Prio = rMarginPrio = -1;
-    lMarginColorPrio = rMarginColorPrio = -1;
+    lMarginColorPrio = rMarginColorPrio = localePrio = -1;
     spacing1Prio = spacing2Prio = spacing3Prio = -1;
     overstrikePrio = tabPrio = tabStylePrio = wrapPrio = -1;
     memset(&styleValues, 0, sizeof(StyleValues));
@@ -896,6 +897,9 @@ GetStyle(
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.elide = 0;
+    if (textPtr->locale[0]) {
+	memcpy(styleValues.locale, textPtr->locale, sizeof(styleValues.locale));
+    }
     isSelected = 0;
 
     for (i = 0 ; i < numTags; i++) {
@@ -1065,6 +1069,11 @@ GetStyle(
 		|| (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) && (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
+	}
+	if ((tagPtr->locale[0])
+		&& (tagPtr->priority > localePrio)) {
+	    memcpy(styleValues.locale, tagPtr->locale, sizeof(styleValues.locale));
+	    localePrio = tagPtr->priority;
 	}
     }
     if (tagPtrs != NULL) {
@@ -3971,7 +3980,7 @@ CalculateDisplayLineHeight(
     int pixelHeight;
 
     if (tkTextDebug) {
-	int oldtkTextDebug = tkTextDebug;
+	bool oldtkTextDebug = tkTextDebug;
 	/*
 	 * Check that the indexPtr we are given really is at the start of a
 	 * display line. The gymnastics with tkTextDebug is to prevent
@@ -3983,7 +3992,7 @@ CalculateDisplayLineHeight(
 	 */
 
 	TkTextIndex indexPtr2 = *indexPtr;
-	tkTextDebug = 0;
+	tkTextDebug = false;
 	TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 0, NULL);
 	tkTextDebug = oldtkTextDebug;
 	if (TkTextIndexCmp(&indexPtr2,indexPtr) != 0) {
@@ -4273,7 +4282,7 @@ TkTextUpdateOneLine(
     }
 
     if (!partialCalc) {
-	int changed = 0;
+	bool changed = false;
 
 	/*
 	 * Cancel any partial line height calculation state.
@@ -4289,7 +4298,7 @@ TkTextUpdateOneLine(
 	TkBTreeLinePixelEpoch(textPtr, linePtr)
 		= textPtr->dInfoPtr->lineMetricUpdateEpoch;
 	if (TkBTreeLinePixelCount(textPtr, linePtr) != pixelHeight) {
-	    changed = 1;
+	    changed = true;
 	}
 
 	if (mergedLines > 0) {
@@ -4308,7 +4317,7 @@ TkTextUpdateOneLine(
 		TkBTreeLinePixelEpoch(textPtr, mergedLinePtr)
 			= textPtr->dInfoPtr->lineMetricUpdateEpoch;
 		if (TkBTreeLinePixelCount(textPtr, mergedLinePtr) != 0) {
-		    changed = 1;
+		    changed = true;
 		}
 	    }
 	}
@@ -7716,6 +7725,312 @@ TkTextIndexBbox(
 /*
  *----------------------------------------------------------------------
  *
+ * TkTextIndexLocale --
+ *
+ *	Given an index, find the locale of the screen area occupied by
+ *	the entity (character, window, image) at that index.
+ *
+ * Results:
+ *	*locale will be filled with the locale.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static const char localeScript[][4] = {
+    {'A', 'r', 'a', 'b'},
+    {'C', 'a', 'k', 'm'},
+    {'C', 'a', 'n', 's'},
+    {'C', 'h', 'e', 'r'},
+    {'C', 'y', 'r', 'l'},
+    {'D', 'e', 'v', 'a'},
+    {'E', 'u', 'r', 'o'},
+    {'H', 'a', 'n', 's'},
+    {'H', 'a', 'n', 't'},
+    {'L', 'a', 't', 'n'},
+    {'M', 'o', 'n', 'g'},
+    {'P', 'l', 'o', 'c'},
+    {'T', 'a', 'l', 'e'},
+    {'T', 'a', 'l', 'u'},
+    {'F', 'f', 'n', 'g'},
+    {'T', 'r', 'a', 'd'}
+};
+static const char localeVariant[][10] = {
+    "",
+    "adlam",
+    "cjknarrow",
+    "cyrillic",
+    "devangari",
+    "euro",
+    "iqtelif",
+    "latin",
+    "modern",
+    "tradnl",
+    "ploc",
+    "ploca",
+    "plocm",
+    "posix",
+    "preeuro",
+    "valencia"
+};
+
+#define TOUPPER(ch) ((char)((ch) & ~('a' - 'A'))) // Cheap toupper(), knowing isalpha() is true
+#define TOLOWER(ch) ((char)((ch) | ('a' - 'A')))  // Cheap tolower(), knowing isalpha() is true
+#define ISALPHA(ch) (UCHAR(TOLOWER(ch) - 'a') <= UCHAR('z' - 'a')) // Cheap isalpha()
+#define ISDIGIT(ch) (UCHAR((ch) - '0') <= UCHAR('9' - '0')) // Cheap isdigit()
+
+static Tcl_Obj *
+GetLocale(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *recordPtr,		/* Pointer to widget record. */
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the
+				 * line value. */
+{
+    char *locale = recordPtr + internalOffset;
+    char buffer[24]; // Max size is 3 + '_' + 3 + '@' + 9 + '\0'= 18 characters;
+
+    strncpy(buffer, locale, 5);
+    buffer[5] = 0;
+    if ((UCHAR(buffer[2]-'a') <= UCHAR('z' - 'a')) && buffer[4]) {
+	/* If locale[2] is a lowercase, insert an underscore '_' */
+	buffer[6] = 0;
+	buffer[5] = buffer[4];
+	buffer[4] = buffer[3];
+	buffer[3] = '_';
+    }
+    char *p = buffer + strlen(buffer);
+    if ((signed char)locale[5] < 0) {
+	if (locale[3]) {
+	    memcpy(p+2, p-3, 3);
+	    memcpy(p-2, localeScript[UCHAR(-1-locale[5])], 4);
+	} else {
+	    *p = '_';
+	    memcpy(p+1, localeScript[UCHAR(-1-locale[5])], 4);
+	}
+	p += 5;
+    }
+    if (ISDIGIT(p[-2])) {
+	p[-1] = ('0' - 1) + locale[4]/10; // numeric locale, then locale[4] is a number between 00 and 99.
+	*p++ = '0' + locale[4]%10;
+    }
+    if ((signed char)(locale[5]) > 0) {
+	*p++ = '@';
+	strcpy(p, localeVariant[UCHAR(locale[5])]);
+	p += strlen(p);
+    }
+    return Tcl_NewStringObj(buffer, p - buffer);
+}
+
+static int
+SetLocale(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
+    TCL_UNUSED(Tk_Window),	/* Window for which option is being set. */
+    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+				 * We use a pointer to the pointer because we
+				 * may need to return a value (NULL). */
+    char *recordPtr,		/* Pointer to storage for the widget record. */
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
+				 * internal value is to be stored. */
+    char *oldInternalPtr,	/* Pointer to storage for the old value. */
+    int flags)			/* Flags for the option, set Tk_SetOptions. */
+{
+    char locale[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
+	*value = NULL;
+    } else {
+	const char *str = Tcl_GetString(*value);
+	if (ISALPHA(str[0]) && ISALPHA(str[1])) {
+	    locale[0] = TOLOWER(str[0]);
+	    locale[1] = TOLOWER(str[1]);
+	    if (strchr(".@-_", str[2])) {
+		locale[2] = 0;
+		str += 2;
+	    } else if (ISALPHA(str[2]) && strchr(".@-_", str[3])) {
+		locale[2] = TOLOWER(str[2]);
+		str += 3;
+	    } else if (!strncasecmp(str, "POSIX", 6)) {
+		locale[1] = 0;
+		goto localeC; // 'POSIX' is an alias for 'C'
+	    } else if (!strncasecmp(str, "TCL8", 5)) {
+		locale[2] = 'l';
+		locale[3] = '8';
+		goto localeComplete;
+	    } else {
+		goto wrongLocale;
+	    }
+	    // Parse second part, after the first '_';
+	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2])
+		    && ISALPHA(str[3]) && ISALPHA(str[4]) && strchr(".@-_", str[5])) {
+		str++;
+		while (strncasecmp(str, localeScript[UCHAR(-1-(--locale[5]))], 4)) {
+			if (UCHAR(-(locale[5])) >= sizeof(localeScript)/sizeof(localeScript[0])) {
+				goto wrongLocale;
+			}
+		}
+		str += 4;
+	    }
+	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2]) && !ISALPHA(str[3])) {
+		if (!locale[2]) {
+		    locale[2] = '_';
+		}
+		str++;
+		locale[3] = TOUPPER(*str++);
+		locale[4] = TOUPPER(*str++);
+	    } else if (((str[0] == '_') || (str[0] == '-')) && ISDIGIT(str[1]) && ISDIGIT(str[2]) && ISDIGIT(str[3])) {
+		if (!locale[2]) {
+		    locale[2] = '_';
+		}
+		str++;
+		locale[3] = *str++;
+		locale[4] = (*str++ - ('0' - 1)) * 10;
+		locale[4] += (*str++ - '0');
+	    }
+	    if (*str == '.') {
+		while (!strchr("@", *str)) {
+		    str++; // Skip everything, until next '@' or NULL or -/_ followed by non-digit
+		    if (((*str == '-') || (*str == '_')) && !ISDIGIT(str[1])) {
+			break; /* Handle both "utf-8" and "utf8-posix" as expected */
+		    }
+		}
+	    }
+	    if (!locale[5] && ((*str == '@') || (*str == '_') || (*str == '-'))) {
+		locale[5] = sizeof(localeVariant)/sizeof(localeVariant[0]) - 1;
+		do {
+		    if (!strcasecmp(&str[1], localeVariant[UCHAR(locale[5])])) {
+			break;
+		    }
+		} while (--locale[5] != 0);
+		if (!locale[5]) {
+		    goto wrongLocale;
+		}
+	    } else if (*str) {
+		goto wrongLocale;
+	    }
+	} else if ((TOUPPER(str[0]) == 'C') && !str[1]) {
+	localeC:
+	    locale[0] = 'C';
+	} else {
+	wrongLocale:
+	    if (interp) {
+		Tcl_AppendResult(interp, "Invalid locale", (char *)NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	if (!locale[3]) {
+	    /* If there is no region, we cannot distingish between a script and a
+	     * 4-character variation. Assume the latter. Only for Euro and Ploc */
+	    if (locale[5] == (char)-7) {
+			locale[5] = 5; /* Euro */
+		} else if (locale[5] == (char)-12) {
+			locale[5] = 10; /* Ploc */
+		}
+	}
+    localeComplete:
+	*value = GetLocale(NULL, NULL, locale, 0);
+    }
+
+    if (internalOffset != TCL_INDEX_NONE) {
+	char *internalPtr = recordPtr + internalOffset;
+	memcpy(oldInternalPtr, internalPtr, sizeof(locale));
+	memcpy(internalPtr, locale, sizeof(locale));
+    }
+    return TCL_OK;
+}
+
+static void
+RestoreLocale(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *internalPtr,		/* Pointer to storage for value. */
+    char *oldInternalPtr)	/* Pointer to old value. */
+{
+    memcpy(internalPtr, oldInternalPtr, sizeof(char[8]));
+}
+
+const Tk_ObjCustomOption TkLocaleOption = {
+    "locale",		/* name */
+    SetLocale,		/* setProc */
+    GetLocale,		/* getProc */
+    RestoreLocale,	/* restoreProc */
+    NULL,			/* freeProc */
+    0
+};
+
+Tcl_Obj *
+TkTextIndexLocale(
+    TkText *textPtr,		/* Widget record for text widget. */
+    const TkTextIndex *indexPtr)/* Index whose locale is desired. */
+{
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    DLine *dlPtr;
+    TkTextDispChunk *chunkPtr;
+    int byteCount;
+
+    /*
+     * Make sure that all of the screen layout information is up to date.
+     */
+
+    if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
+	UpdateDisplayInfo(textPtr);
+    }
+
+    /*
+     * Find the display line containing the desired index.
+     */
+
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
+
+    /*
+     * Two cases shall be trapped here because the logic later really
+     * needs dlPtr to be the display line containing indexPtr:
+     *   1. if no display line contains the desired index (NULL dlPtr)
+     *   2. if indexPtr is before the first display line, in which case
+     *      dlPtr currently points to the first display line
+     */
+
+    if ((dlPtr == NULL) || (TkTextIndexCmp(&dlPtr->index, indexPtr) > 0)) {
+	if (textPtr->locale[0]) {
+	    return NULL;
+	}
+	return GetLocale(NULL, NULL, textPtr->locale, 0);
+    }
+
+    /*
+     * Find the chunk within the display line that contains the desired
+     * index. The chunks making the display line are skipped up to but not
+     * including the one crossing indexPtr. Skipping is done based on
+     * a byteCount offset possibly spanning several logical lines in case
+     * they are elided.
+     */
+
+    byteCount = TkTextIndexCountBytes(textPtr, &dlPtr->index, indexPtr);
+    for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
+	if (chunkPtr == NULL) {
+	    if (textPtr->locale[0]) {
+		return NULL;
+	    }
+	    return GetLocale(NULL, NULL, textPtr->locale, 0);;
+	}
+	if (byteCount < chunkPtr->numBytes) {
+	    break;
+	}
+	byteCount -= chunkPtr->numBytes;
+    }
+
+    if (!chunkPtr->stylePtr->sValuePtr->locale[0]) {
+	return NULL;
+    }
+    return GetLocale(NULL, NULL, chunkPtr->stylePtr->sValuePtr->locale, 0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkTextDLineInfo --
  *
  *	Given an index, return information about the display line containing
@@ -8108,7 +8423,9 @@ TkTextCharLayoutProc(
 	const char *chunkStart = p;           /* logical byte 0 of this slice */
 	const char *chunkEnd   = p + bytesThatFit; /* one past last byte kept */
 	const char *scanPtr    = chunkEnd;
-	int         foundBreak  = 0;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+	bool foundBreak  = false;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 	while (scanPtr > chunkStart) {
 	    int ch3;
@@ -8118,7 +8435,9 @@ TkTextCharLayoutProc(
 	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
 		/* breakIndex is the byte offset *after* the space character */
 		chunkPtr->breakIndex = (Tcl_Size)(prevPtr - chunkStart) + 1;
-		foundBreak = 1;
+#ifdef TK_LAYOUT_WITH_BASE_CHUNKS
+		foundBreak = true;
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 		goto checkForNextChunk;
 	    }
 	    scanPtr = prevPtr;
@@ -8156,7 +8475,6 @@ TkTextCharLayoutProc(
 	    }
 	}
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
-	(void)foundBreak; /* suppress unused-variable warning when !TK_LAYOUT_WITH_BASE_CHUNKS */
 
     checkForNextChunk:
 	if ((bytesThatFit + byteOffset) == segPtr->size) {
@@ -8582,7 +8900,7 @@ CharUndisplayProc(
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (ciPtr == NULL) {
-        return;
+	return;
     }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -8592,38 +8910,38 @@ CharUndisplayProc(
      * Dependent chunks must NOT free CharInfo (it belongs to the base chunk).
      */
     if (chunkPtr == ciPtr->baseChunkPtr) {
-        /*
-         * This is a base chunk being removed.
-         * First disconnect all dependent chunks from this base.
-         */
-        FreeBaseChunk(chunkPtr);
+	/*
+	 * This is a base chunk being removed.
+	 * First disconnect all dependent chunks from this base.
+	 */
+	FreeBaseChunk(chunkPtr);
 
-        /*
-         * Now safe to clear and free the CharInfo since no other
-         * chunks reference it.
-         */
-        ciPtr->baseChunkPtr = NULL;
-        ciPtr->chars = NULL;
-        ciPtr->numBytes = 0;
+	/*
+	 * Now safe to clear and free the CharInfo since no other
+	 * chunks reference it.
+	 */
+	ciPtr->baseChunkPtr = NULL;
+	ciPtr->chars = NULL;
+	ciPtr->numBytes = 0;
 
-        Tcl_Free(ciPtr);
-        chunkPtr->clientData = NULL;
+	Tcl_Free(ciPtr);
+	chunkPtr->clientData = NULL;
 
     } else {
-        /*
-         * This is a dependent chunk (not the base chunk).
-         * Remove it from the base chunk's data structure if still connected.
-         * DO NOT free the CharInfo - it belongs to the base chunk.
-         */
-        if (ciPtr->baseChunkPtr != NULL) {
-            RemoveFromBaseChunk(chunkPtr);
-        }
+	/*
+	 * This is a dependent chunk (not the base chunk).
+	 * Remove it from the base chunk's data structure if still connected.
+	 * DO NOT free the CharInfo - it belongs to the base chunk.
+	 */
+	if (ciPtr->baseChunkPtr != NULL) {
+	    RemoveFromBaseChunk(chunkPtr);
+	}
 
-        /*
-         * Detach this chunk from the CharInfo to prevent stale access,
-         * but don't free the CharInfo itself.
-         */
-        chunkPtr->clientData = NULL;
+	/*
+	 * Detach this chunk from the CharInfo to prevent stale access,
+	 * but don't free the CharInfo itself.
+	 */
+	chunkPtr->clientData = NULL;
     }
 #else
     /*
@@ -8725,45 +9043,45 @@ CharBboxProc(
     int maxX = chunkPtr->x + chunkPtr->width;
 
     if (ciPtr == NULL || byteIndex < 0) {
-        byteIndex = 0;
+	byteIndex = 0;
     } else if (byteIndex > ciPtr->numBytes) {
-        byteIndex = ciPtr->numBytes;
+	byteIndex = ciPtr->numBytes;
     }
 
     *yPtr = y + baseline - chunkPtr->minAscent;
     *heightPtr = chunkPtr->minAscent + chunkPtr->minDescent;
 
     if (ciPtr->isRtl) {
-        /* RTL: mirror the measurement. */
-        int xEnd, xStart;
-        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
-                chunkPtr->x, -1, 0, &xEnd);
-        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-                chunkPtr->x, -1, 0, &xStart);
+	/* RTL: mirror the measurement. */
+	int xEnd, xStart;
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex + 1,
+		chunkPtr->x, -1, 0, &xEnd);
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+		chunkPtr->x, -1, 0, &xStart);
 
-        *xPtr = chunkPtr->x + (chunkPtr->width - (xEnd - chunkPtr->x));
-        *widthPtr = xEnd - xStart;
+	*xPtr = chunkPtr->x + (chunkPtr->width - (xEnd - chunkPtr->x));
+	*widthPtr = xEnd - xStart;
 
-        if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
-        if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
+	if (*xPtr < chunkPtr->x) *xPtr = chunkPtr->x;
+	if (*xPtr + *widthPtr > maxX) *widthPtr = maxX - *xPtr;
     } else {
-        /* LTR */
-        CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
-                chunkPtr->x, -1, 0, xPtr);
+	/* LTR */
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
+		chunkPtr->x, -1, 0, xPtr);
 
-        if (byteIndex >= ciPtr->numBytes) {
-            *widthPtr = maxX - *xPtr;
-        } else {
-            int x2;
-            CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
-                    *xPtr, -1, 0, &x2);
-            *widthPtr = (x2 > maxX) ? maxX - *xPtr : x2 - *xPtr;
-        }
+	if (byteIndex >= ciPtr->numBytes) {
+	    *widthPtr = maxX - *xPtr;
+	} else {
+	    int x2;
+	    CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1,
+		    *xPtr, -1, 0, &x2);
+	    *widthPtr = (x2 > maxX) ? maxX - *xPtr : x2 - *xPtr;
+	}
     }
 
     /* Zero-width fallback (common with elision / bidi). */
     if (*widthPtr == 0 && ciPtr->numBytes > 0) {
-        *widthPtr = 1;  /* minimal visible width for cursor/selection */
+	*widthPtr = 1;  /* minimal visible width for cursor/selection */
     }
 }
 
@@ -9391,22 +9709,22 @@ FinalizeBaseChunk(
     const char *baseChars = Tcl_DStringValue(&bciPtr->baseChars);
 
     for (TkTextDispChunk *chunkPtr = baseCharChunkPtr;
-         chunkPtr != NULL;
-         chunkPtr = chunkPtr->nextPtr) {
+	 chunkPtr != NULL;
+	 chunkPtr = chunkPtr->nextPtr) {
 
-        if (chunkPtr->displayProc != CharDisplayProc) break;
+	if (chunkPtr->displayProc != CharDisplayProc) break;
 
-        CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
-        if (ciPtr == NULL || ciPtr->baseChunkPtr != baseCharChunkPtr) break;
+	CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
+	if (ciPtr == NULL || ciPtr->baseChunkPtr != baseCharChunkPtr) break;
 
-        ciPtr->chars = baseChars + ciPtr->baseOffset;
+	ciPtr->chars = baseChars + ciPtr->baseOffset;
     }
 
     if (addChunkPtr) {
-        CharInfo *ciPtr = (CharInfo *)addChunkPtr->clientData;
-        if (ciPtr && ciPtr->baseChunkPtr) {
-            ciPtr->chars = baseChars + ciPtr->baseOffset;
-        }
+	CharInfo *ciPtr = (CharInfo *)addChunkPtr->clientData;
+	if (ciPtr && ciPtr->baseChunkPtr) {
+	    ciPtr->chars = baseChars + ciPtr->baseOffset;
+	}
     }
 
     baseCharChunkPtr = NULL;
@@ -9594,7 +9912,7 @@ RemoveFromBaseChunk(
 {
     CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     if (ciPtr == NULL || ciPtr->baseChunkPtr == NULL) {
-        return;
+	return;
     }
 
     BaseCharInfo *bciPtr = (BaseCharInfo *)ciPtr->baseChunkPtr->clientData;

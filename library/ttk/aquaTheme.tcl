@@ -198,7 +198,7 @@ namespace eval ttk::theme::aqua {
 
 	# Treeview
 	ttk::style configure Heading \
-	    -font TkHeadingFont -padding {2.25p 2.25p 2.25p 0} \
+	    -font TkHeadingFont -padding {2.25p 0 2.25p 7} \
 	    -foreground systemPopupArrowInactive \
 	    -background systemWindowBackgroundColor
 	ttk::style map Heading \

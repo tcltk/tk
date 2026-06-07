@@ -1222,12 +1222,15 @@ static const char *const accentNames[] = {
     static const char *defaultColor = NULL;
     const char *newAppearance;
 
-    if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	newAppearance = "light";
-	Tk_SendVirtualEvent(tkwin, "LightAppearance", NULL);
-    } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
+    if (effectiveAppearanceName == NSAppearanceNameDarkAqua
+	    || effectiveAppearanceName == NSAppearanceNameVibrantDark
+	    || effectiveAppearanceName == NSAppearanceNameAccessibilityHighContrastDarkAqua
+	    || effectiveAppearanceName == NSAppearanceNameAccessibilityHighContrastVibrantDark) {
 	newAppearance = "dark";
 	Tk_SendVirtualEvent(tkwin, "DarkAppearance", NULL);
+    } else {
+	newAppearance = "light";
+	Tk_SendVirtualEvent(tkwin, "LightAppearance", NULL);
     }
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";

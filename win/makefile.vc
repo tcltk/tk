@@ -606,7 +606,7 @@ $(ROOT)\manifest.uuid:
    git rev-parse HEAD >>$(ROOT)\manifest.uuid
 
 $(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
-	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
+	copy /b $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
@@ -631,7 +631,7 @@ $(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
 		-Fo$@ $?
 
 $(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
-	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $(GENERICDIR)\tkWindow.c
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
