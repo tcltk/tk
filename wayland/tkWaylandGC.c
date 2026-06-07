@@ -4,11 +4,11 @@
  *	Graphics Context and Pixmap implementation for the
  *	Wayland/GLFW/NanoVG backend.
  *
- *	This file provides the central definitions of
- *	TkWaylandGCImpl and TkWaylandPixmap and all TkWayland*
- *	entry points declared in tkGlfwInt.h.  The Xlib-compatible
- *	wrappers (XCreateGC, XFreeGC, XCreatePixmap, etc.) forward to
- *	these entry points and live here as well.
+ *	This file provides the definitions of TkWaylandGC and
+ *	TkWaylandPixmap and all TkWayland* entry points declared in
+ *	tkGlfwInt.h.  The Xlib-compatible wrappers (XCreateGC, XFreeGC,
+ *	XCreatePixmap, etc.) forward to these entry points and live here as
+ *	well.
  *
  *	Also provides TkpOpenDisplay / TkpCloseDisplay (the Tk platform
  *	entry points) so that Tk can resolve screen information at startup.
@@ -207,9 +207,9 @@ TkWaylandCreateGC(
     unsigned long  valuemask,
     XGCValues     *values)
 {
-    TkWaylandGCImpl *gc;
+    TkWaylandGC *gc;
 
-    gc = (TkWaylandGCImpl *)ckalloc(sizeof(TkWaylandGCImpl));
+    gc = ckalloc(sizeof(TkWaylandGC));
     if (gc == NULL) {
         return NULL;
     }
@@ -280,21 +280,21 @@ TkWaylandGetGCValues(
     unsigned long  valuemask,
     XGCValues     *values)
 {
-    TkWaylandGCImpl *impl = (TkWaylandGCImpl *)gc;
+    TkWaylandGC *gcPtr = (TkWaylandGC*)gc;
 
-    if (impl == NULL || values == NULL) {
+    if (gcPtr == NULL || values == NULL) {
         return 0;
     }
 
-    if (valuemask & GCForeground)  values->foreground  = impl->foreground;
-    if (valuemask & GCBackground)  values->background  = impl->background;
-    if (valuemask & GCLineWidth)   values->line_width  = impl->line_width;
-    if (valuemask & GCLineStyle)   values->line_style  = impl->line_style;
-    if (valuemask & GCCapStyle)    values->cap_style   = impl->cap_style;
-    if (valuemask & GCJoinStyle)   values->join_style  = impl->join_style;
-    if (valuemask & GCFillRule)    values->fill_rule   = impl->fill_rule;
-    if (valuemask & GCArcMode)     values->arc_mode    = impl->arc_mode;
-    if (valuemask & GCFont)        values->font        = (Font)(uintptr_t)impl->font;
+    if (valuemask & GCForeground)  values->foreground  = gcPtr->foreground;
+    if (valuemask & GCBackground)  values->background  = gcPtr->background;
+    if (valuemask & GCLineWidth)   values->line_width  = gcPtr->line_width;
+    if (valuemask & GCLineStyle)   values->line_style  = gcPtr->line_style;
+    if (valuemask & GCCapStyle)    values->cap_style   = gcPtr->cap_style;
+    if (valuemask & GCJoinStyle)   values->join_style  = gcPtr->join_style;
+    if (valuemask & GCFillRule)    values->fill_rule   = gcPtr->fill_rule;
+    if (valuemask & GCArcMode)     values->arc_mode    = gcPtr->arc_mode;
+    if (valuemask & GCFont)        values->font        = (Font)(uintptr_t)gcPtr->font;
 
     return 1;
 }
@@ -321,21 +321,21 @@ TkWaylandChangeGC(
     unsigned long  valuemask,
     XGCValues     *values)
 {
-    TkWaylandGCImpl *impl = (TkWaylandGCImpl *)gc;
+    TkWaylandGC *gcPtr = (TkWaylandGC*)gc;
 
-    if (impl == NULL || values == NULL) {
+    if (gcPtr == NULL || values == NULL) {
         return 0;
     }
 
-    if (valuemask & GCForeground)  impl->foreground = values->foreground;
-    if (valuemask & GCBackground)  impl->background = values->background;
-    if (valuemask & GCLineWidth)   impl->line_width = values->line_width;
-    if (valuemask & GCLineStyle)   impl->line_style = values->line_style;
-    if (valuemask & GCCapStyle)    impl->cap_style  = values->cap_style;
-    if (valuemask & GCJoinStyle)   impl->join_style = values->join_style;
-    if (valuemask & GCFillRule)    impl->fill_rule  = values->fill_rule;
-    if (valuemask & GCArcMode)     impl->arc_mode   = values->arc_mode;
-    if (valuemask & GCFont)        impl->font       = (void *)(uintptr_t)values->font;
+    if (valuemask & GCForeground)  gcPtr->foreground = values->foreground;
+    if (valuemask & GCBackground)  gcPtr->background = values->background;
+    if (valuemask & GCLineWidth)   gcPtr->line_width = values->line_width;
+    if (valuemask & GCLineStyle)   gcPtr->line_style = values->line_style;
+    if (valuemask & GCCapStyle)    gcPtr->cap_style  = values->cap_style;
+    if (valuemask & GCJoinStyle)   gcPtr->join_style = values->join_style;
+    if (valuemask & GCFillRule)    gcPtr->fill_rule  = values->fill_rule;
+    if (valuemask & GCArcMode)     gcPtr->arc_mode   = values->arc_mode;
+    if (valuemask & GCFont)        gcPtr->font       = (void *)(uintptr_t)values->font;
 
     return 1;
 }
@@ -505,7 +505,7 @@ Tk_FreePixmap(
  *
  * XCreateGC --
  *
- *	Xlib-compatible wrapper for TkWaylandCreateGC.
+ *	Stub function called by Tk_GetGC. This calls TkWaylandCreateGC.
  *
  * Results:
  *	A newly created Graphics Context.
@@ -531,7 +531,7 @@ XCreateGC(
  *
  * XFreeGC --
  *
- *	Xlib-compatible wrapper for TkWaylandFreeGC.
+ *	Stub function called by Tk_FreeGC. Calls TkWaylandFreeGC.
  *
  * Results:
  *	Always returns Success.

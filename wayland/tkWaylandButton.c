@@ -856,6 +856,7 @@ TkpButtonWorldChanged(void *instanceData)
     newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
     if (butPtr->normalTextGC != NULL) {
         Tk_FreeGC(butPtr->display, butPtr->normalTextGC);
+	butPtr->normalTextGC = NULL;
     }
     butPtr->normalTextGC = newGC;
 
@@ -865,6 +866,7 @@ TkpButtonWorldChanged(void *instanceData)
     newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
     if (butPtr->activeTextGC != NULL) {
         Tk_FreeGC(butPtr->display, butPtr->activeTextGC);
+	butPtr->activeTextGC = NULL;
     }
     butPtr->activeTextGC = newGC;
 
@@ -889,6 +891,7 @@ TkpButtonWorldChanged(void *instanceData)
 
     if (butPtr->disabledGC != NULL) {
         Tk_FreeGC(butPtr->display, butPtr->disabledGC);
+	butPtr->disabledGC = NULL;
     }
     butPtr->disabledGC = newGC;
 

@@ -227,7 +227,7 @@ typedef struct {
  *----------------------------------------------------------------------
  */
 
-typedef struct TkWaylandGCStruct {
+typedef struct TkWaylandGC {
     unsigned long foreground; /* Foreground color (pixel value) */
     unsigned long background; /* Background color (pixel value) */
     int           line_width; /* Line width in pixels */
@@ -237,7 +237,7 @@ typedef struct TkWaylandGCStruct {
     int           fill_rule;  /* EvenOddRule or WindingRule */
     int           arc_mode;   /* ArcChord or ArcPieSlice */
     void         *font;       /* Font handle (reserved) */
-} TkWaylandGCImpl;
+} TkWaylandGC;
 
 /*
  *----------------------------------------------------------------------

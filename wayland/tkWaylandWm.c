@@ -3724,14 +3724,26 @@ UpdateGeometryInfo(
 	if (tw < 180) {
 	    tw = 180;
 	}
-	/* Ask GLFW to resize the window. */
-        glfwSetWindowSize(glfwWindow, tw, th);
 
-	/* Update the window. */
-        winPtr->changes.width = tw;
-        winPtr->changes.height = th;
-        wmPtr->configWidth  = tw;
-        wmPtr->configHeight = th;
+ 	/* When GFLW initially creates a window it assumes that the window
+ 	 * will open on a screen with pixel scale factor 1.0, even if there is
+ 	 * no such screen on the system.  If this resize happens before GLFW
+ 	 * has called the WindowContentScaleFactorCallback then GLFW will
+ 	 * allocate a back buffer that has the same size as the window.  If
+ 	 * the window has odd width or height, and if the scale factor is
+ 	 * actually 2, then Wayland will generate an error and remove the
+ 	 * window from the screen.  The actual removal is asynchronous and
+ 	 * likely to happen after the window has been fully rendered, which
+ 	 * leads to pretty bad UX.
+ 	 */
+
+		glfwSetWindowSize(glfwWindow, tw, th);
+
+		/* Update the window. */
+		winPtr->changes.width = tw;
+		winPtr->changes.height = th;
+		wmPtr->configWidth  = tw;
+		wmPtr->configHeight = th;
     }
 #if 0
     /* Apply position change if needed, although this does nothing. */
