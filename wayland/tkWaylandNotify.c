@@ -22,7 +22,6 @@
 #include "tkGlfwInt.h"
 #include <xkbcommon/xkbcommon.h>
 #include <GLFW/glfw3.h>
-//#include <sys/eventfd.h>
 #include <unistd.h>
 #include <errno.h>
 #include <GLES3/gl3.h>
@@ -90,9 +89,9 @@ clearCallbackCount() {
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
-/* Track last window and position for enter/leave events */
+/* Track last window for enter/leave events */
 static TkWindow *lastWinPtr = NULL;
-//static double lastX = -1, lastY = -1;
+
 /*
  *----------------------------------------------------------------------
  *
@@ -543,8 +542,6 @@ TkWaylandQueueExposeEvent(
  */
 
 static void TkGlfwWindowCloseCallback(GLFWwindow *window);
-static void TkGlfwWindowContentScaleCallback(GLFWwindow *window,
-					     float xscale, float yscale);
 static void TkGlfwFramebufferSizeCallback(GLFWwindow *window,
 					  int width, int height);
 static void TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
@@ -568,8 +565,6 @@ TkGlfwSetupCallbacks(
     GLFWwindow *glfwWindow)
 {
     glfwSetWindowCloseCallback     (glfwWindow, TkGlfwWindowCloseCallback);
-    glfwSetWindowContentScaleCallback (glfwWindow,
-				       TkGlfwWindowContentScaleCallback);
     glfwSetFramebufferSizeCallback (glfwWindow, TkGlfwFramebufferSizeCallback);
     glfwSetWindowPosCallback       (glfwWindow, TkGlfwWindowPosCallback);
     glfwSetWindowFocusCallback     (glfwWindow, TkGlfwWindowFocusCallback);
@@ -589,7 +584,6 @@ TkGlfwClearCallbacks(
     GLFWwindow *glfwWindow)
 {
     glfwSetWindowCloseCallback        (glfwWindow, NULL);
-    glfwSetWindowContentScaleCallback (glfwWindow, NULL);
     glfwSetFramebufferSizeCallback    (glfwWindow, NULL);
     glfwSetWindowPosCallback          (glfwWindow, NULL);
     glfwSetWindowFocusCallback        (glfwWindow, NULL);
@@ -644,41 +638,6 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowContentScaleCallback --
- *
- *      Called when window is moved between monitors with different
- *      pixel densities.  This updates the pixelRatio stored in
- *      the Tk Window struct.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Updates the pixelRatio field in the gflwData of the
- *      associated Tk window.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-TkGlfwWindowContentScaleCallback(
-    GLFWwindow *window,
-    float xscale,
-    TCL_UNUSED(float)) /*yscale*/
-{
-    recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (winPtr && winPtr->privatePtr) {
-	winPtr->privatePtr->pixelRatio = xscale;
-    }
-    
-    fprintf(stderr, "TkGlfWindowContentScaleCallback: set pixelRatio to %f\n",
-	   winPtr->privatePtr->pixelRatio);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkGlfwFramebufferSizeCallback --
  *
  *      Called when framebuffer size changes.  Note that this is always called
@@ -706,54 +665,25 @@ TkGlfwFramebufferSizeCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
-	fprintf(stderr, "============================ No Tk window!\n");
+	fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
 	return;
     }
     fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-
-    /*
-     * This is a workaround for a Wayland/Mesa bug. (see
-     * https://github.com/alacritty/alacritty/issues/6069 and
-     * https://github.com/servo/servo/issues/43050.)
-     *
-     * When this callback is called, GLFW has requested and been granted a new
-     * framebuffer of the given size from wayland, but the Mesa driver has not
-     * actually allocated it yet.  If the size change was requested by a
-     * geometry manager the window will be reconfigured and redrawn as soon as
-     * possible.  The drawing will be done assuming the new window size
-     * reported in the callback arguments, but the driver will still be using
-     * the old framebuffer.  This causes serious artifacts.  At the expense of
-     * creating minor artifacts, we can force the new framebuffer to be
-     * allocated by triggering an immediate display of the window using its
-     * old backing store framebuffer.  This is not needed when the window is
-     * being resized with the mouse.  The sizeChanged flag is used to
-     * distinguish the cases when the workaround is needed from those when it
-     * is not.
-     */
-
-    if (infoPtr->flags & sizeChanged) {
-	/* Mark this window as needing display and display all windows. */
-	infoPtr->flags |= needsDisplay;
-	TkWaylandDisplayAllWindows();
-	infoPtr->flags &= ~sizeChanged;
-    }
-
-    float pixelRatio = winPtr->privatePtr->pixelRatio;
-    
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
-	fprintf(stderr, "============================ No Context!\n");
+	fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
 	return;
     }
 
     /* Rebuild the backing store FBO. */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    fprintf(stderr, "New framebuffer %p for %s with id %d\n", winPtr->privatePtr->fb,
-	   Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
+    fprintf(stderr, "New framebuffer %p for %s with id %d\n",
+	    winPtr->privatePtr->fb,
+	    Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
 
-#if 0
+#if 1
     /* Check for FBO completeness. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -765,12 +695,13 @@ TkGlfwFramebufferSizeCallback(
     }
 #endif
 
-    /* Inform Tk about the size change, taking into account the
-     * window's current pixel ratio.
+    /*
+     * Inform Tk about the size change
      */
+
     
-    winPtr->changes.width = (int) (((float) width) / pixelRatio);
-    winPtr->changes.height = (int) (((float) height) / pixelRatio);
+    glfwGetWindowSize(window, &(winPtr->changes.width),
+		      &(winPtr->changes.height));
 
     /* Reconfigure the Tk window. */
     TkDoConfigureNotify(winPtr);

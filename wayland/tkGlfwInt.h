@@ -254,7 +254,6 @@ typedef struct TkWaylandPixmap {
     GLFWwindow *glfwWindow;  /* The window whose GL context has the fbo.   */
     int width;               /* It is simpler to cache the fb dimensions.  */
     int height;
-    float pixelRatio;        /* We might support high-dpi pixmaps someday. */
 } TkWaylandPixmap;
 
 
@@ -273,7 +272,6 @@ typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fb;
     Tcl_DString pendingText;
-    float pixelRatio;
 } glfwData;
 
 

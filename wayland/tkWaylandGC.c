@@ -446,17 +446,11 @@ Tk_GetPixmap(
     pixmapPtr->glfwWindow = glfwWindow;
     pixmapPtr->width = width;
     pixmapPtr->height = height;
-    //// Figure out how to specify high-dpi pixmaps!!!!
-    //// Maybe use the pixel ratio of the drawable?
-    //// That could change if the drawable moves to a different display.
-    pixmapPtr->pixelRatio = 1.0;
 
     /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
-    int fbWidth = (int) pixmapPtr->pixelRatio * width;
-    int fbHeight = (int) pixmapPtr->pixelRatio * height;
     pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
-					 fbWidth, fbHeight, 0);
+					 width, height, 0);
 
     /* Check FBO completeness. */
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);

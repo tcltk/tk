@@ -588,8 +588,6 @@ TkGlfwCreateWindow(
     int fbWidth, fbHeight;
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
-    //winPtr->privatePtr->pixelRatio = xscale;
-    //winPtr->privatePtr->pixelRatio = 1.0;
     fprintf(stderr, "Initial pixel ratio for %s is %f\n",
 	   Tk_PathName(winPtr), scale);
 
@@ -720,10 +718,7 @@ TkGlfwBeginDraw(
 
     fprintf(stderr, "BeginFrame for toplevel %s with size %dx%d and pixel ratio %f\n",
 	    Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr), scale);
-    //winPtr->privatePtr->pixelRatio);
-
     nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
-    //		  winPtr->privatePtr->pixelRatio);
 
     /*
      * Import our graphics context and translate to the origin
@@ -811,7 +806,11 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
      * Drawing this widget probably covered up all of its children.
      * Generate expose events for the children (and their children).
      * Somehow this is not handled by the generic code. (????)
+     * AND actually some children of siblings may be inside this
+     * widget if the -in option was provided to the geometry manager.
+     * They may have been covered too.
      */
+
 #if 1
     for (TkWindow *childPtr2 = childPtr->childList; childPtr2 != NULL;
          childPtr2 = childPtr2->nextPtr) {
