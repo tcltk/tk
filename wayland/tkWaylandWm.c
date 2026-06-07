@@ -749,8 +749,8 @@ TkWmCleanup(
 
 Window
 Tk_MakeWindow(
-    Tk_Window tkwin,
-    TCL_UNUSED(Window))        /* parent */
+	      Tk_Window tkwin,
+	      TCL_UNUSED(Window))
 {
     TkWindow   *winPtr     = (TkWindow *)tkwin;
     GLFWwindow *glfwWindow = NULL;
@@ -762,10 +762,20 @@ Tk_MakeWindow(
     result = TkWaylandDrawableForTkWindow(winPtr);
 
     if (Tk_IsTopLevel(winPtr)) {
+
         /*
-         * -------------------------
-         *   TOPLEVEL WINDOW
-         * -------------------------
+         * Guard against internal Tk toplevels that have no mainPtr —
+         * e.g. the clipboard owner window created by TkClipInit.
+         * These need a valid window ID but no real GLFW surface.
+         * Return the pre-allocated result token directly; the window
+         * will never be mapped or rendered.
+         */
+        if (!winPtr->mainPtr || !winPtr->mainPtr->interp) {
+            return result;
+        }
+
+        /*
+         * Toplevel window. 
          */
 
 	if (winPtr->privatePtr == NULL) {
@@ -782,7 +792,7 @@ Tk_MakeWindow(
          */
 
 	fprintf(stderr, "Creating glfwWindow %s at size %dx%d\n",
-	       Tk_PathName(tkwin), width, height);
+		Tk_PathName(tkwin), width, height);
 	glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
         if (!glfwWindow) {
@@ -801,19 +811,14 @@ Tk_MakeWindow(
             wmPtr->flags |= WM_NEVER_MAPPED;
         }
     } else {
-        /*
-         * -------------------------
-         *     CHILD WINDOW
-         * -------------------------
-         *
-         */
+	/* Child window. */
 
-      fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
-	     winPtr->changes.width, winPtr->changes.height);
+	fprintf(stderr, "Exposing Child %s to %dx%d\n", Tk_PathName(winPtr),
+		winPtr->changes.width, winPtr->changes.height);
 
-      TkWaylandQueueExposeEvent(winPtr, 0, 0,
-				winPtr->changes.width,
-				winPtr->changes.height);
+	TkWaylandQueueExposeEvent(winPtr, 0, 0,
+				  winPtr->changes.width,
+				  winPtr->changes.height);
     }
     return result;
 }

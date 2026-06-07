@@ -28,6 +28,9 @@ static Tk_Window tkClipboardOwner = NULL;
  * Results:
  *	TCL_OK or TCL_ERROR, with error message in interp if failed.
  *
+ * Side effects:
+ *	None.
+ *
  *----------------------------------------------------------------------
  */
 int
@@ -69,6 +72,12 @@ TkSelGetSelection(
  *	Claim ownership of the CLIPBOARD selection.
  *	We only track ownership internally — GLFW doesn't need clearing here.
  *
+ * Results:
+ *	Returns Success (0) if successful, otherwise an error code.
+ *
+ * Side effects:
+ *	Updates internal clipboard owner tracking and change counter.
+ *
  *----------------------------------------------------------------------
  */
 int
@@ -100,7 +109,13 @@ XSetSelectionOwner(
  * TkSelUpdateClipboard --
  *
  *	Push Tk clipboard content → GLFW system clipboard
- *	(called after clipboard append/clear operations)
+ *	(called after clipboard append/clear operations).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates the system clipboard via GLFW.
  *
  *----------------------------------------------------------------------
  */
@@ -156,6 +171,7 @@ TkSelUpdateClipboard(
         int len = Tcl_DStringLength(&ds);
         if (len > 0) {
             glfwSetClipboardString(NULL, Tcl_DStringValue(&ds));
+	    glfwPollEvents();
         }
 
         Tcl_DStringFree(&ds);
@@ -171,6 +187,12 @@ TkSelUpdateClipboard(
  * TkSelEventProc --
  *
  *	Handle SelectionClear events (ownership lost)
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Clears internal clipboard owner and notifies Tk of selection loss.
  *
  *----------------------------------------------------------------------
  */
@@ -192,6 +214,12 @@ TkSelEventProc(
  * TkSelPropProc --
  *
  *	Stub — not needed with GLFW backend
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
