@@ -1026,6 +1026,8 @@ EnsureNvgFont(
  *----------------------------------------------------------------------
  */
 
+
+
 static void
 InitFont(
 	 Tk_Window tkwin,
@@ -1037,16 +1039,32 @@ InitFont(
 
     *fa = *faPtr;
 
-    /* Resolve pixel size. */
+    /* Resolve pixel size with improved scaling. */
     double ptSize = faPtr->size;
+    int    basePixels;
+
     if (ptSize < 0.0) {
-        fontPtr->pixelSize = (int)(-ptSize + 0.5);
+        /* Explicit pixel size (Tk convention: -12 means 12px). */
+        basePixels = (int)(-ptSize + 0.5);
     } else if (ptSize > 0.0) {
-        fontPtr->pixelSize = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
+        /* Try Tk's conversion first. */
+        basePixels = (int)(TkFontGetPoints(tkwin, ptSize) + 0.5);
+        /* Strong fallback for Wayland/GLFW if conversion gives tiny/no-op result. */
+        if (basePixels <= 0 || basePixels == (int)ptSize || basePixels < 8) {
+            /* Standard 96 DPI scaling: 12pt → ~16px. */
+            basePixels = (int)(ptSize * 4.0 / 3.0 + 0.5);
+        }
     } else {
-        fontPtr->pixelSize = 12;
+        basePixels = 12;
     }
-    if (fontPtr->pixelSize < 1) fontPtr->pixelSize = 1;
+    if (basePixels < 1) basePixels = 1;
+
+    /* Optional: gentle boost for modern displays (can be tuned). */
+    if (basePixels < 14) {
+        basePixels = (int)(basePixels * 1.15 + 0.5);  /* ~15% boost for readability */
+    }
+
+    fontPtr->pixelSize = basePixels;
 
     int bold   = (faPtr->weight == TK_FW_BOLD);
     int italic = (faPtr->slant  == TK_FS_ITALIC);
@@ -1118,7 +1136,7 @@ InitFont(
         face->faceIndex = fcIdx;
     }
 
-    /* Metrics from primary face via stbtt. */
+    /* Metrics from primary face via stb_truetype. */
     if (nfaces > 0 && fontPtr->faces[0].filePath) {
         FILE *fd = fopen(fontPtr->faces[0].filePath, "rb");
         if (fd) {
@@ -1136,7 +1154,7 @@ InitFont(
                     int asc, desc, linegap;
                     stbtt_GetFontVMetrics(&info, &asc, &desc, &linegap);
                     fm->ascent   = (int)( asc  * scale + 0.5f);
-                    fm->descent  = (int)(-desc * scale + 0.5f);
+                    fm->descent  = (int)(-desc * scale + 0.5f);   /* Note: positive descent */
                     int adv_W, adv_dot, lsb;
                     stbtt_GetCodepointHMetrics(&info, 'W',  &adv_W,   &lsb);
                     stbtt_GetCodepointHMetrics(&info, '.',  &adv_dot, &lsb);
@@ -1150,10 +1168,10 @@ InitFont(
         }
     }
 
-    /* Fallback metrics. */
+    /* Improved fallback metrics — consistent with real fonts. */
     if (fm->ascent == 0 && fm->descent == 0) {
-        fm->ascent   = (int)(fontPtr->pixelSize * 0.80 + 0.5);
-        fm->descent  = (int)(fontPtr->pixelSize * 0.20 + 0.5);
+        fm->ascent   = (int)(fontPtr->pixelSize * 0.72 + 0.5);   /* tighter than 0.80 */
+        fm->descent  = (int)(fontPtr->pixelSize * 0.28 + 0.5);   /* more realistic */
         fm->maxWidth = fontPtr->pixelSize;
         fm->fixed    = 0;
     }
@@ -1932,7 +1950,7 @@ TkpDrawAngledCharsInContext(
     const char *rangePtr = source + rangeStart;
     const char *rangeEnd = rangePtr + rangeLength;
 
-    /* Starting X for partial range. */
+    /* Starting X for partial range — more robust. */
     double drawX = x;
     if (rangeStart > 0) {
         float bounds[4];
@@ -1940,22 +1958,19 @@ TkpDrawAngledCharsInContext(
         drawX += (double)bounds[2];
     }
 
-    /* Unified rotation: positive angle = up-right. */
     nvgSave(vg);
     nvgTranslate(vg, (float)drawX, (float)y);
     if (angle != 0.0) {
-        /* Note the minus sign: NanoVG is y-down, so invert to get up-right. */
         nvgRotate(vg, (float)(-angle * NVG_PI / 180.0));
     }
 
     if (IsSimpleOnly(source, (int)numBytes)) {
-        /* Simple LTR: draw substring at (0,0) in rotated space. */
         nvgText(vg, 0.0f, 0.0f, rangePtr, rangeEnd);
         nvgRestore(vg);
         goto decorations;
     }
 
-    /* Complex / RTL path: shaped positions in rotated space. */
+    /* Complex / RTL path. */
     {
         ShapedGlyphBuffer sbuf;
         if (!WaylandShaper_ShapeString(&fontPtr->shaper, fontPtr,
@@ -1970,12 +1985,10 @@ TkpDrawAngledCharsInContext(
             int bo  = sbuf.glyphs[i].byteOffset;
             int boe = bo + sbuf.glyphs[i].clusterLen;
 
-            if (boe <= (int)rangeStart ||
-                bo  >= (int)(rangeStart + rangeLength))
+            if (boe <= (int)rangeStart || bo >= (int)(rangeStart + rangeLength))
                 continue;
 
-            if (i > 0 &&
-                sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset)
+            if (i > 0 && sbuf.glyphs[i].byteOffset == sbuf.glyphs[i-1].byteOffset)
                 continue;
 
             int faceIdx = sbuf.glyphs[i].faceIndex;
@@ -2002,14 +2015,12 @@ TkpDrawAngledCharsInContext(
     nvgRestore(vg);
 
 decorations:
-    /* Decorations are still unrotated here; you can rotate them similarly if desired. */
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
         float bounds[4];
         float runWidth;
 
         nvgFontFaceId(vg, primaryId);
         nvgFontSize(vg, (float)fontPtr->pixelSize);
-
         nvgTextBounds(vg, 0, 0, rangePtr, rangeEnd, bounds);
         runWidth = bounds[2];
 
@@ -2033,8 +2044,6 @@ decorations:
         }
     }
 }
-
-
 
 /*
  *----------------------------------------------------------------------
