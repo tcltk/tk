@@ -692,8 +692,8 @@ XFT_CFLAGS
 XMKMF
 WAYLAND_LDFLAGS
 HAVE_WAYLAND
-TEXT_INPUT_XML
-WAYLAND_SCANNER
+WL_PASTE
+WL_COPY
 NANOVG_LIBS
 FONTCONFIG_LIBS
 FONTCONFIG_CFLAGS
@@ -8313,20 +8313,22 @@ printf '%s\n' "$as_me: NanoVG library not found — assuming it will be statical
         fi
 
 
-        # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-scanner" >&5
-printf %s "checking for wayland-scanner... " >&6; }
-        # Extract the first word of "wayland-scanner", so it can be a program name with args.
-set dummy wayland-scanner; ac_word=$2
+        #--------------------------------------------------------------------
+        # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wl-copy and wl-paste" >&5
+printf %s "checking for wl-copy and wl-paste... " >&6; }
+        # Extract the first word of "wl-copy", so it can be a program name with args.
+set dummy wl-copy; ac_word=$2
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_WAYLAND_SCANNER+y}
+if test ${ac_cv_path_WL_COPY+y}
 then :
   printf %s "(cached) " >&6
 else case e in #(
-  e) case $WAYLAND_SCANNER in
+  e) case $WL_COPY in
   [\\/]* | ?:[\\/]*)
-  ac_cv_path_WAYLAND_SCANNER="$WAYLAND_SCANNER" # Let the user override the test with a path.
+  ac_cv_path_WL_COPY="$WL_COPY" # Let the user override the test with a path.
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
@@ -8340,7 +8342,7 @@ do
   esac
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_WAYLAND_SCANNER="$as_dir$ac_word$ac_exec_ext"
+    ac_cv_path_WL_COPY="$as_dir$ac_word$ac_exec_ext"
     printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -8352,53 +8354,78 @@ IFS=$as_save_IFS
 esac ;;
 esac
 fi
-WAYLAND_SCANNER=$ac_cv_path_WAYLAND_SCANNER
-if test -n "$WAYLAND_SCANNER"; then
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WAYLAND_SCANNER" >&5
-printf '%s\n' "$WAYLAND_SCANNER" >&6; }
+WL_COPY=$ac_cv_path_WL_COPY
+if test -n "$WL_COPY"; then
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WL_COPY" >&5
+printf '%s\n' "$WL_COPY" >&6; }
 else
   { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
 fi
 
 
-        if test "x$WAYLAND_SCANNER" = x; then
-            as_fn_error $? "wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)" "$LINENO" 5
+        # Extract the first word of "wl-paste", so it can be a program name with args.
+set dummy wl-paste; ac_word=$2
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_WL_PASTE+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $WL_PASTE in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_WL_PASTE="$WL_PASTE" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_WL_PASTE="$as_dir$ac_word$ac_exec_ext"
+    printf '%s\n' "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+WL_PASTE=$ac_cv_path_WL_PASTE
+if test -n "$WL_PASTE"; then
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $WL_PASTE" >&5
+printf '%s\n' "$WL_PASTE" >&6; }
+else
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+fi
+
+
+        if test "x$WL_COPY" = x || test "x$WL_PASTE" = x; then
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            as_fn_error $? "wl-copy and wl-paste (from wl-clipboard package) are required for Wayland backend clipboard support.
+
+Please install wl-clipboard:
+  - Debian/Ubuntu:   sudo apt install wl-clipboard
+  - Fedora:          sudo dnf install wl-clipboard
+  - Arch:            sudo pacman -S wl-clipboard" "$LINENO" 5
         fi
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
 
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for text-input-unstable-v3 protocol XML" >&5
-printf %s "checking for text-input-unstable-v3 protocol XML... " >&6; }
-        TEXT_INPUT_XML=""
-        if pkg-config --exists wayland-protocols; then
-            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
-            TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
-            if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
-                TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-
-printf '%s\n' "#define HAVE_TEXT_INPUT_V3 1" >>confdefs.h
-
-            else
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-                as_fn_error $? "text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
-Wayland backend now requires proper IME support via text-input-unstable-v3.
-Install/update wayland-protocols package." "$LINENO" 5
-            fi
-        else
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-            as_fn_error $? "pkg-config package 'wayland-protocols' not found.
-Wayland backend now requires text-input-unstable-v3 for IME support." "$LINENO" 5
-        fi
 
 
-
-
-        # Final check — everything must be present (IME + libdecor are mandatory)
+        # Final check — everything must be present
         if test "$found_wayland" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
@@ -8406,7 +8433,8 @@ Wayland backend now requires text-input-unstable-v3 for IME support." "$LINENO" 
            && test "$found_gles" = yes \
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
-           && test -n "$TEXT_INPUT_XML"; then
+           && test -n "$WL_COPY" \
+           && test -n "$WL_PASTE"; then
 
             HAVE_WAYLAND=1
 
@@ -8417,8 +8445,8 @@ printf '%s\n' "#define TK_USE_WAYLAND 1" >>confdefs.h
 
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)" >&5
-printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)" >&6;}
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wl-clipboard" >&5
+printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wl-clipboard" >&6;}
         else
             as_fn_error $? "Wayland backend requested but one or more required components missing.
 
@@ -8432,11 +8460,12 @@ Required (all mandatory when --enable-wayland is used):
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
+  - wl-clipboard (wl-copy + wl-paste)
 
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev
+    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard
 " "$LINENO" 5
         fi
     fi

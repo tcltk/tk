@@ -1486,11 +1486,11 @@ MODULE_SCOPE void
 TkWaylandWakeupGLFW(void)
 {
     TSD_INIT();
-    ////uint64_t u = 1;
-    
     if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
-	//// This should post an empty event to GLFW!!!
-        ////write(tsdPtr->wakeupFd, &u, sizeof(u));
+        /* This forces glfwPollEvents() in SetupProc to wake up instantly. */
+        glfwPostEmptyEvent(); 
+        /* Alert Tcl to wake up its event loop loop immediately. */
+        Tcl_ThreadAlert(Tcl_GetCurrentThread());
     }
 }
 

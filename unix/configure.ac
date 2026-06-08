@@ -431,40 +431,26 @@ Without client-side decorations most Wayland compositors will show broken or mis
         fi
         AC_SUBST([NANOVG_LIBS])
 
-        # wayland-scanner + text-input-unstable-v3 (hard requirement for IME)
-        AC_MSG_CHECKING([for wayland-scanner])
-        AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
-        if test "x$WAYLAND_SCANNER" = x; then
-            AC_MSG_ERROR([wayland-scanner is required for Wayland backend (needed to generate text-input protocol for IME)])
+        #--------------------------------------------------------------------
+        # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for wl-copy and wl-paste])
+        AC_PATH_PROG([WL_COPY], [wl-copy])
+        AC_PATH_PROG([WL_PASTE], [wl-paste])
+        if test "x$WL_COPY" = x || test "x$WL_PASTE" = x; then
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([wl-copy and wl-paste (from wl-clipboard package) are required for Wayland backend clipboard support.
+
+Please install wl-clipboard:
+  - Debian/Ubuntu:   sudo apt install wl-clipboard
+  - Fedora:          sudo dnf install wl-clipboard
+  - Arch:            sudo pacman -S wl-clipboard])
         fi
         AC_MSG_RESULT([yes])
+        AC_SUBST([WL_COPY])
+        AC_SUBST([WL_PASTE])
 
-        AC_MSG_CHECKING([for text-input-unstable-v3 protocol XML])
-        TEXT_INPUT_XML=""
-        if pkg-config --exists wayland-protocols; then
-            WAYLAND_PROTOCOLS_DIR="`pkg-config --variable=pkgdatadir wayland-protocols`"
-            TEXT_INPUT_XML_CANDIDATE="${WAYLAND_PROTOCOLS_DIR}/unstable/text-input/text-input-unstable-v3.xml"
-            if test -f "$TEXT_INPUT_XML_CANDIDATE"; then
-                TEXT_INPUT_XML="$TEXT_INPUT_XML_CANDIDATE"
-                AC_MSG_RESULT([yes])
-                AC_DEFINE([HAVE_TEXT_INPUT_V3], [1],
-                    [Define if text-input-unstable-v3 protocol is available (required for IME on Wayland)])
-            else
-                AC_MSG_RESULT([no])
-                AC_MSG_ERROR([text-input-unstable-v3.xml not found in wayland-protocols pkgdatadir.
-Wayland backend now requires proper IME support via text-input-unstable-v3.
-Install/update wayland-protocols package.])
-            fi
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_ERROR([pkg-config package 'wayland-protocols' not found.
-Wayland backend now requires text-input-unstable-v3 for IME support.])
-        fi
-
-        AC_SUBST([WAYLAND_SCANNER])
-        AC_SUBST([TEXT_INPUT_XML])
-
-        # Final check — everything must be present (IME + libdecor are mandatory)
+        # Final check — everything must be present
         if test "$found_wayland" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
@@ -472,7 +458,8 @@ Wayland backend now requires text-input-unstable-v3 for IME support.])
            && test "$found_gles" = yes \
            && test "$found_fontconfig" = yes \
            && test "$found_sdbus" = yes \
-           && test -n "$TEXT_INPUT_XML"; then
+           && test -n "$WL_COPY" \
+           && test -n "$WL_PASTE"; then
 
             HAVE_WAYLAND=1
 
@@ -481,7 +468,7 @@ Wayland backend now requires text-input-unstable-v3 for IME support.])
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + text-input-unstable-v3 (IME)])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wl-clipboard])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
 
@@ -495,11 +482,12 @@ Required (all mandatory when --enable-wayland is used):
   - fontconfig >= 2.12
   - libsystemd (sd-bus)
   - wayland-protocols (containing unstable/text-input/text-input-unstable-v3.xml)
+  - wl-clipboard (wl-copy + wl-paste)
 
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev
+    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard
 ])
         fi
     fi
