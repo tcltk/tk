@@ -398,7 +398,7 @@ enum AttributeAppearances {
  * Forward declarations for functions defined in this file:
  */
 
-static bool             AppsShouldUseLightTheme();
+static bool		AppsShouldUseLightTheme();
 static inline const char *	AppearanceStringGet(int flags);
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);
@@ -8020,27 +8020,27 @@ bool AppsShouldUseLightTheme() {
     LPCWSTR valueName = L"AppsUseLightTheme";
 
     lResult = RegOpenKeyExW(
-        HKEY_CURRENT_USER,  // Root hive for the active user
-        subKey,             // Subkey path
-        0,                  // Reserved, must be 0
-        KEY_READ,           // Security access mask
-        &hKey               // Out handle to the open key
+	HKEY_CURRENT_USER,  // Root hive for the active user
+	subKey,	     // Subkey path
+	0,		  // Reserved, must be 0
+	KEY_READ,	   // Security access mask
+	&hKey	       // Out handle to the open key
     );
 
     if (lResult != ERROR_SUCCESS) {
-        return 1;
+	return 1;
     }
 
     DWORD dwValue = 0;
     DWORD dwSize = sizeof(DWORD);
 
     lResult = RegQueryValueExW(
-        hKey,
-        valueName,
-        NULL,
-        NULL,
-        (LPBYTE)&dwValue,
-        &dwSize
+	hKey,
+	valueName,
+	NULL,
+	NULL,
+	(LPBYTE)&dwValue,
+	&dwSize
     );
     RegCloseKey(hKey);
     if (lResult == ERROR_SUCCESS) {
@@ -9000,10 +9000,10 @@ TkpWindowIsDark(Tk_Window tkwin, bool *isdark) {
     long long answer = 0; /* Windows cares about the alignment. */
 
     result = DwmGetWindowAttribute(
-        GetAncestor(hwnd, GA_ROOT),
-        DWMWA_USE_IMMERSIVE_DARK_MODE,
+	GetAncestor(hwnd, GA_ROOT),
+	DWMWA_USE_IMMERSIVE_DARK_MODE,
 	&answer,
-        sizeof(answer));
+	sizeof(answer));
     if (result != S_OK) { /* Maybe we should have used the old value? */
 	result = DwmGetWindowAttribute(
 	    GetAncestor(hwnd, GA_ROOT),

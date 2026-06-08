@@ -1488,7 +1488,7 @@ static void DrawListHeader(
 
     if (state & TTK_TREEVIEW_STATE_SORTARROW) {
 	CGRect arrowBounds = bounds;
-	CGFloat height = round(bounds.size.height / 3.0);
+	CGFloat height = round((bounds.size.height - 4) / 3.0);
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - height*2;
 	arrowBounds.size.width = height*2;
 	if (state & TTK_STATE_ALTERNATE) {
@@ -3398,7 +3398,7 @@ static void TreeHeaderElementSize(
     double scalingLevel = TkScalingLevel(tkwin);
 
     if ([NSApp macOSVersion] > 100800) {
-	*minHeight = (int)round(18.0 * scalingLevel);
+	*minHeight = (int)round(20.0 * scalingLevel) + 4;
 	*minWidth = 0; /* Needed to enable center and right alignment */
     } else {
 	ButtonElementSize(clientData, elementRecord, tkwin, state,
@@ -3664,8 +3664,9 @@ TTK_LAYOUT("Treeview",
 /* Tree heading -- no border, fixed height */
 TTK_LAYOUT("Heading",
     TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
+    TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
     TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-    TTK_NODE("Treeheading.text", TTK_PACK_TOP))
+    TTK_NODE("Treeheading.text", TTK_FILL_X)))
 
 /* Tree items -- omit focus ring */
 TTK_LAYOUT("Item",

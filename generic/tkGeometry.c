@@ -183,14 +183,14 @@ Tk_SetInternalBorderEx(
     int top, int bottom)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    int changed = 0;
+    bool changed = false;
 
     if (left < 0) {
 	left = 0;
     }
     if (left != winPtr->internalBorderLeft) {
 	winPtr->internalBorderLeft = left;
-	changed = 1;
+	changed = true;
     }
 
     if (right < 0) {
@@ -198,7 +198,7 @@ Tk_SetInternalBorderEx(
     }
     if (right != winPtr->internalBorderRight) {
 	winPtr->internalBorderRight = right;
-	changed = 1;
+	changed = true;
     }
 
     if (top < 0) {
@@ -206,7 +206,7 @@ Tk_SetInternalBorderEx(
     }
     if (top != winPtr->internalBorderTop) {
 	winPtr->internalBorderTop = top;
-	changed = 1;
+	changed = true;
     }
 
     if (bottom < 0) {
@@ -214,7 +214,7 @@ Tk_SetInternalBorderEx(
     }
     if (bottom != winPtr->internalBorderBottom) {
 	winPtr->internalBorderBottom = bottom;
-	changed = 1;
+	changed = true;
     }
 
     /*

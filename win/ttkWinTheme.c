@@ -440,7 +440,7 @@ static const Ttk_ElementSpec ButtonBorderElementSpec = {
 };
 
 /*------------------------------------------------------------------------
-/* +++ Focus Element.
+ * +++ Focus Element.
  *	Draws a focus ring filled with the selection color
  */
 

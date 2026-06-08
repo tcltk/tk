@@ -402,7 +402,7 @@ Tk_GetDoublePixelsFromObj(
 
 	if (pixelPtr->units >= 0) {
 	    /* Internally "shimmer" to pixel units.
-	     * Doesn't support scaling changes. */ 
+	     * Doesn't support scaling changes. */
 /*	    pixelPtr->units = -1;
 	    pixelPtr->value = d;
 	    pixelPtr->scaling = WidthMMOfScreen(Tk_Screen(tkwin));

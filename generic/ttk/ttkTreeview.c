@@ -604,9 +604,9 @@ static void foreachHashEntry(Tcl_HashTable *ht, HashEntryIterator func) {
     }
 }
 
-static int CellSelectionClear(Treeview *tv) {
+static bool CellSelectionClear(Treeview *tv) {
     TreeItem *item;
-    int anyChange = 0;
+    bool anyChange = false;
     for (item=tv->tree.root; item; item = NextPreorder(item)) {
 	if (item->selObj) {
 	    Tcl_DecrRefCount(item->selObj);
@@ -1284,12 +1284,12 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     /* Set active state */
     if (event->type != KeyPress && event->type != KeyRelease && event->type != VirtualEvent) {
 	if (item != tv->tree.current || colno != tv->tree.currentCol) {
-	    int changed = 0;
+	    bool changed = false;
 
 	    /* Clear previous */
 	    if (tv->tree.current) {
 		(tv->tree.current)->state &= ~TTK_STATE_ACTIVE;
-		changed = 1;
+		changed = true;
 	    }
 
 	    /* Set current */
@@ -1297,7 +1297,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	    tv->tree.currentCol = colno;
 	    if (item) {
 		(tv->tree.current)->state |= TTK_STATE_ACTIVE;
-		changed = 1;
+		changed = true;
 	    }
 	    if (changed) {
 		TtkRedisplayWidget(&tv->core);
@@ -2783,7 +2783,7 @@ static int TreeviewChildrenCommand(
 	if (tv->tree.selAnchor && (tv->tree.selAnchor)->parent == NULL) {
 	    tv->tree.selAnchor = NULL;
 	    if (tv->tree.selAnchorColObj) {
-	        Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+		Tcl_DecrRefCount(tv->tree.selAnchorColObj);
 		tv->tree.selAnchorColObj = NULL;
 	    }
 	}
@@ -3827,8 +3827,8 @@ static int TreeviewSetCommand(
 /*
  * Recursively set items open state
  */
-int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurse) {
-    int changed = 0;
+bool TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurse) {
+    bool changed = false;
 
     if (open && !(item->state & TTK_STATE_OPEN) && item->children) {
 	/* open */
@@ -3838,7 +3838,7 @@ int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurs
 	item->openObj = openObj;
 	Tcl_IncrRefCount(item->openObj);
 	item->state |= TTK_STATE_OPEN;
-	changed = 1;
+	changed = true;
 
     } else if (!open && (item->state & TTK_STATE_OPEN)) {
 	/* close */
@@ -3848,7 +3848,7 @@ int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurs
 	item->openObj = openObj;
 	Tcl_IncrRefCount(item->openObj);
 	item->state &= ~TTK_STATE_OPEN;
-	changed = 1;
+	changed = true;
     }
 
     if (recurse && item->children) {
@@ -3933,12 +3933,12 @@ static int TreeviewExpandCommand(
 /*
  * Recursively set items hidden state
  */
-int TreeviewHideRecursive(TreeItem *item, int hide, int recurse) {
-    int changed = 0;
+bool TreeviewHideRecursive(TreeItem *item, int hide, int recurse) {
+    bool changed = false;
 
     if ((item->hidden && !hide) || (!item->hidden && hide)) {
 	item->hidden = hide;
-	changed = 1;
+	changed = true;
     }
 
     if (recurse && item->children) {
@@ -3956,8 +3956,9 @@ static int TreeviewHideUnhide(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int hide) {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
-    int hidden = 0, recurse = 0, changed = 0;
+    int hidden = 0, recurse = 0;
     Tcl_Size i = 0;
+    bool changed = false;
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
@@ -4343,7 +4344,7 @@ static int TreeviewDeleteCommand(
 	if (tv->tree.selAnchor == delq) {
 	    tv->tree.selAnchor = NULL;
 	    if (tv->tree.selAnchorColObj) {
-	        Tcl_DecrRefCount(tv->tree.selAnchorColObj);
+		Tcl_DecrRefCount(tv->tree.selAnchorColObj);
 		tv->tree.selAnchorColObj = NULL;
 	    }
 	}
@@ -4640,7 +4641,6 @@ static int TreeviewFocusCommand(
 
     } else {
 	TreeItem *item;
-	int changed;
 
 	/* Get item */
 	if (!(item = FindItem(interp, tv, objv[2]))) {
@@ -4665,7 +4665,7 @@ static int TreeviewFocusCommand(
 	}
 
 	/* Store new focus and add item state */
-	changed = (tv->tree.focus != item);
+	bool changed = (tv->tree.focus != item);
 	tv->tree.focus = item;
 	tv->tree.focusCol = NULL;
 	if (tv->tree.focus) {
@@ -4711,7 +4711,6 @@ static int TreeviewCellFocusCommand(
     } else {
 	TreeCell cell;
 	Tcl_Size len;
-	int changed;
 
 	/* Clear focus or get cell */
 	Tcl_ListObjLength(interp, objv[2], &len);
@@ -4741,7 +4740,7 @@ static int TreeviewCellFocusCommand(
 	}
 
 	/* Store new focus */
-	changed = (tv->tree.focus != cell.item || tv->tree.focusCol != cell.column);
+	bool changed = (tv->tree.focus != cell.item || tv->tree.focusCol != cell.column);
 	tv->tree.focus = cell.item;
 	tv->tree.focusCol = cell.column;
 	TtkRedisplayWidget(&tv->core);
@@ -4758,7 +4757,7 @@ static int TreeviewCellFocusCommand(
 		    Tcl_BounceRefCount(listPtr);
 		}
 	    } else {
-	        Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
+		Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewFocus", NULL);
 	    }
 	}
     }
@@ -4918,8 +4917,9 @@ static int TreeviewSelectionSet(
     Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], selOp_t selop) {
     Tcl_Size i;
     TreeItem *item, **items = NULL, *from, *to;
-    int changed = 0, hidden = 1, recurse = 1;
+    int hidden = 1, recurse = 1;
     Tcl_Obj *listObj = NULL;
+	bool changed = false;
 
     if (objc < 4 || objc > 7) {
 	Tcl_WrongNumArgs(interp, 3, objv, "?items?|?options first last?");
@@ -4977,7 +4977,7 @@ static int TreeviewSelectionSet(
 	for (item=tv->tree.root; item; item = NextPreorder(item)) {
 	    if (item->state & TTK_STATE_SELECTED) {
 		item->state &= ~TTK_STATE_SELECTED;
-		changed = 1;
+		changed = true;
 	    }
 	}
     }
@@ -4988,7 +4988,7 @@ static int TreeviewSelectionSet(
 	    for (i=0; items[i]; ++i) {
 		if (!(items[i]->state & TTK_STATE_SELECTED)) {
 		    items[i]->state |= TTK_STATE_SELECTED;
-		    changed = 1;
+		    changed = true;
 		}
 	    }
 	    break;
@@ -4997,7 +4997,7 @@ static int TreeviewSelectionSet(
 	    for (i=0; items[i]; ++i) {
 		if (items[i]->state & TTK_STATE_SELECTED) {
 		    items[i]->state &= ~TTK_STATE_SELECTED;
-		    changed = 1;
+		    changed = true;
 		}
 	    }
 	    break;
@@ -5005,14 +5005,14 @@ static int TreeviewSelectionSet(
 	    /* Set selection */
 	    for (i=0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
-		changed = 1;
+		changed = true;
 	    }
 	    break;
 	case SELECTION_TOGGLE:
 	    /* Toggle selection state */
 	    for (i=0; items[i]; ++i) {
 		items[i]->state ^= TTK_STATE_SELECTED;
-		changed = 1;
+		changed = true;
 	    }
 	    break;
 	default:
@@ -5232,11 +5232,12 @@ static int TreeviewCellSelectionSize(
 
 /* + Add, remove, or toggle cell selection
  */
-static int TreeviewCellSelect(
+static bool TreeviewCellSelect(
     Treeview *tv, TreeItem *item, TreeColumn *column, selOp_t selop) {
     Tcl_Obj **elements;
     Tcl_Size nElements;
-    int add = 0, del = 0, toggle = 0, changed = 0, found = 0;
+    int add = 0, del = 0, toggle = 0, found = 0;
+	bool changed = false;
 
     if (selop == SELECTION_ADD || selop == SELECTION_SET) {
 	add = 1;
@@ -5265,7 +5266,7 @@ static int TreeviewCellSelect(
 		    Tcl_DecrRefCount(item->selObj);
 		    item->selObj = NULL;
 		}
-		changed = 1;
+		changed = true;
 	    }
 	    found = 1;
 	    break;
@@ -5277,7 +5278,7 @@ static int TreeviewCellSelect(
 	    item->selObj = unshareObj(item->selObj);
 	}
 	Tcl_ListObjAppendElement(NULL, item->selObj, column->idObj);
-	changed = 1;
+	changed = true;
     }
     return changed;
 }
@@ -5287,9 +5288,9 @@ static int TreeviewCellSelect(
  */
 static int TreeviewCellSelectionSet(
     Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], selOp_t selop) {
-    int changed = 0, hidden = 1, recurse = 1, result = TCL_OK;
+    int hidden = 1, recurse = 1, result = TCL_OK;
     Tcl_Size i;
-
+	bool changed = false;
 
     if (objc < 4 || objc > 7) {
 	Tcl_WrongNumArgs(interp, 3, objv, "?cells?|?options first last?");
