@@ -58,32 +58,27 @@ TkSelGetSelection(
         return TCL_ERROR;
     }
 
-    /* Check if we're running under Wayland. */
-    const char *wayland_display = getenv("WAYLAND_DISPLAY");
     
-    /* Check Wayland system clipboard first. */
-    if (wayland_display && wayland_display[0]) {
-        FILE *fp = popen("wl-paste --no-newline --clipboard 2>/dev/null", "r");
-        if (fp) {
-            Tcl_DString ds;
-            Tcl_DStringInit(&ds);
-            char buf[4096];
-            size_t n;
-            while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
-                Tcl_DStringAppend(&ds, buf, (int)n);
-            }
-            int pclose_result = pclose(fp);
+    FILE *fp = popen("wl-paste --no-newline --primary  2>/dev/null", "r");
+    if (fp) {
+	Tcl_DString ds;
+	Tcl_DStringInit(&ds);
+	char buf[4096];
+	size_t n;
+	while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
+	    Tcl_DStringAppend(&ds, buf, (int)n);
+	}
+	int pclose_result = pclose(fp);
             
-            if (pclose_result == 0 && Tcl_DStringLength(&ds) > 0) {
-                int result = proc(clientData, interp, Tcl_DStringValue(&ds));
-                Tcl_DStringFree(&ds);
-                return result;
-            }
-            Tcl_DStringFree(&ds);
-        } else {
-            fprintf(stderr, "tkWaylandClipboard: Failed to run wl-paste: %s\n", 
-                    strerror(errno));
-        }
+	if (pclose_result == 0 && Tcl_DStringLength(&ds) > 0) {
+	    int result = proc(clientData, interp, Tcl_DStringValue(&ds));
+	    Tcl_DStringFree(&ds);
+	    return result;
+	}
+	Tcl_DStringFree(&ds);
+    } else {
+	fprintf(stderr, "tkWaylandClipboard: Failed to run wl-paste: %s\n", 
+		strerror(errno));
     }
 
     /* Fall back to Tk's internal clipboard. */
@@ -197,7 +192,7 @@ TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option)
     for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr;
          targetPtr; targetPtr = targetPtr->nextPtr) {
         if (targetPtr->type != XA_STRING &&
-                targetPtr->type != dispPtr->utf8Atom) continue;
+	    targetPtr->type != dispPtr->utf8Atom) continue;
 
         Tcl_DString ds;
         Tcl_DStringInit(&ds);
@@ -207,33 +202,27 @@ TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option)
         }
 
         if (Tcl_DStringLength(&ds) > 0) {
-            fprintf(stderr, "clipboard write value is %s\n", Tcl_DStringValue(&ds));
-            
-            /* Check if we're running under Wayland. */
-            const char *wayland_display = getenv("WAYLAND_DISPLAY");
-            if (wayland_display && wayland_display[0]) {
-                /* Use popen with stdin to avoid shell escaping issues. */
-                FILE *fp = popen("wl-copy --primary", "w");
-                if (fp) {
-                    size_t written = fwrite(Tcl_DStringValue(&ds), 1, 
-                                            Tcl_DStringLength(&ds), fp);
-                    if (written != (size_t)Tcl_DStringLength(&ds)) {
-                        fprintf(stderr, "tkWaylandClipboard: Failed to write all data to wl-copy\n");
-                    }
-                    int result = pclose(fp);
-                    if (result != 0) {
-                        fprintf(stderr, "tkWaylandClipboard: wl-copy failed with code %d\n", 
-                                result);
-                    }
-                } else {
-                    fprintf(stderr, "tkWaylandClipboard: Failed to run wl-copy: %s\n", 
-                            strerror(errno));
-                }
-            }
-        }
+	    /* Use popen with stdin to avoid shell escaping issues. */
+	    FILE *fp = popen("wl-copy --primary", "w");
+	    if (fp) {
+		size_t written = fwrite(Tcl_DStringValue(&ds), 1, 
+					Tcl_DStringLength(&ds), fp);
+		if (written != (size_t)Tcl_DStringLength(&ds)) {
+		    fprintf(stderr, "tkWaylandClipboard: Failed to write all data to wl-copy\n");
+		}
+		int result = pclose(fp);
+		if (result != 0) {
+		    fprintf(stderr, "tkWaylandClipboard: wl-copy failed with code %d\n", 
+			    result);
+		}
+	    } else {
+		fprintf(stderr, "tkWaylandClipboard: Failed to run wl-copy: %s\n", 
+			strerror(errno));
+	    }
+	}
 
-        Tcl_DStringFree(&ds);
-        return;
+	Tcl_DStringFree(&ds);
+	return;
     }
 }
 
