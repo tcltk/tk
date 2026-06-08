@@ -76,7 +76,6 @@ TkSelGetSelection(
             
             if (pclose_result == 0 && Tcl_DStringLength(&ds) > 0) {
                 int result = proc(clientData, interp, Tcl_DStringValue(&ds));
-                fprintf(stderr, "clipboard read value is %s\n", Tcl_DStringValue(&ds));
                 Tcl_DStringFree(&ds);
                 return result;
             }
@@ -184,7 +183,7 @@ TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option)
     if (option == CLIPBOARD_CLEAR) {
         const char *wayland_display = getenv("WAYLAND_DISPLAY");
         if (wayland_display && wayland_display[0]) {
-            int result = system("wl-copy --clipboard --clear");
+            int result = system("wl-copy --primary --clear");
             if (result != 0) {
                 fprintf(stderr, "tkWaylandClipboard: wl-copy --clear failed with code %d\n", 
                         result);
@@ -214,7 +213,7 @@ TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option)
             const char *wayland_display = getenv("WAYLAND_DISPLAY");
             if (wayland_display && wayland_display[0]) {
                 /* Use popen with stdin to avoid shell escaping issues. */
-                FILE *fp = popen("wl-copy --clipboard", "w");
+                FILE *fp = popen("wl-copy --primary", "w");
                 if (fp) {
                     size_t written = fwrite(Tcl_DStringValue(&ds), 1, 
                                             Tcl_DStringLength(&ds), fp);
