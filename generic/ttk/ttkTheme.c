@@ -254,8 +254,7 @@ NewElementClass(const char *name, const Ttk_ElementSpec *specPtr, void *clientDa
      */
     Tcl_InitHashTable(&elementClass->optMapCache, TCL_ONE_WORD_KEYS);
 
-    /* Render-cache policy: off until the element opts in.
-     */
+    /* Render-cache policy: off until the element opts in. */
     elementClass->cacheFlags = 0;
     elementClass->cacheProc = NULL;
 
@@ -263,10 +262,8 @@ NewElementClass(const char *name, const Ttk_ElementSpec *specPtr, void *clientDa
 }
 
 /* TtkSetElementCachePolicy --
- *	Record an element class's render-cache policy: whether its composited
- *	output may be cached per layout node, and an optional query reporting
- *	its opacity and content epoch.  Called once by an element after
- *	registration.
+ *	Record an element class's render-cache policy and optional cache-info
+ *	query.  Called once by an element after registration.
  */
 void TtkSetElementCachePolicy(
     Ttk_ElementClass *eclass,
@@ -1168,10 +1165,8 @@ Ttk_DrawElement(
 }
 
 /* Ttk_ElementGetCacheInfo --
- *	Query a cacheable element's opacity and content epoch for the current
- *	(tkwin, state).  Defaults to {not opaque, epoch 0} for elements that
- *	registered no cache proc, which is always a correct (if unoptimized)
- *	answer.  Used by the per-node render cache in ttkLayout.c.
+ *	Query a cacheable element's opacity and content epoch for (tkwin, state).
+ *	Defaults to {not opaque, epoch 0} when no cache proc is registered.
  */
 void
 Ttk_ElementGetCacheInfo(

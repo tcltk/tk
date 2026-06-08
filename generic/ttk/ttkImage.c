@@ -195,8 +195,7 @@ Tk_Image TtkSelectImage(
 
 #ifndef TK_NO_DOUBLE_BUFFERING
 /* TtkSelectImageName --
- *	Return the name of the state-specific image selected by TtkSelectImage,
- *	so the corresponding photo can be looked up (for opacity testing).
+ *	Name of the image TtkSelectImage would pick, for photo lookup.
  */
 static Tcl_Obj *TtkSelectImageName(
     Ttk_ImageSpec *imageSpec,
@@ -295,11 +294,10 @@ static void Ttk_Tile(
 /*------------------------------------------------------------------------
  * +++ Image element definition.
  *
- * The image element is a pure renderer: ImageElementDraw tiles the selected
- * image into whatever drawable it is handed.  Caching of the composited result
- * is owned by the layout-draw layer (the per-node cache in ttkLayout.c); this
- * element only advertises that it is cacheable and reports its opacity and a
- * content epoch via ImageElementCacheInfo.
+ * The image element is a pure renderer (ImageElementDraw tiles into the given
+ * drawable); the per-node cache owns the composited result.  This element only
+ * advertises that it is cacheable and reports opacity + epoch via
+ * ImageElementCacheInfo.
  */
 
 typedef struct {		/* ClientData for image elements */
@@ -318,8 +316,7 @@ typedef struct {		/* ClientData for image elements */
 } ImageData;
 
 /* ImageElementImageChanged --
- *	A source image's pixels changed; bump the content epoch so the
- *	layout-draw layer rebuilds any node pixmap caching this element.
+ *	A source image's pixels changed; bump the content epoch.
  */
 static void ImageElementImageChanged(
     void *clientData,
@@ -346,10 +343,8 @@ static void FreeImageData(void *clientData)
 
 #ifndef TK_NO_DOUBLE_BUFFERING
 /* ImageIsOpaque --
- *	Return 1 if the named photo is fully opaque (every pixel alpha 255),
- *	so the element's render is background-independent and can be cached as
- *	a plain pixmap.  A non-photo image, or one whose pixels cannot be read,
- *	is treated as translucent -- an always-correct (if unoptimized) answer.
+ *	Return 1 if the named photo is fully opaque (every pixel alpha 255).
+ *	Anything not a readable photo is treated as translucent.
  */
 static int ImageIsOpaque(Tcl_Interp *interp, Tcl_Obj *imageName)
 {
@@ -381,11 +376,9 @@ static int ImageIsOpaque(Tcl_Interp *interp, Tcl_Obj *imageName)
 }
 
 /* ImageElementCacheInfo --
- *	Report the element's content epoch and whether its render fully and
- *	opaquely covers the parcel -- i.e. the state-selected image is opaque
- *	AND -sticky makes it fill the whole box.  Only then is the render
- *	background-independent; a non-filling -sticky leaves margins that show
- *	the background, so such an element must be treated as translucent.
+ *	Report the element's content epoch and whether it opaquely covers the
+ *	parcel -- the selected image is opaque AND -sticky fills the box.  A
+ *	non-filling -sticky leaves margins, so it counts as translucent.
  */
 static void ImageElementCacheInfo(
     void *clientData,

@@ -23,19 +23,15 @@ MODULE_SCOPE void Ttk_DrawElement(
 	Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
 /*
- * Element render-cache policy (see the per-node cache in ttkLayout.c).
- * An element class may opt into having its composited output cached per
- * layout node, and may supply a query reporting whether it is fully opaque
- * (i.e. background-independent) at a given state.  Both default to off, so
- * elements that do not opt in keep drawing directly with no pixmap.
+ * Element render-cache policy.  An element class may opt into per-node caching
+ * of its composited output and supply a query reporting its opacity and content
+ * epoch.  Off by default.
  */
 #define TTK_ELEMENT_CACHEABLE	0x1	/* opts into per-node render caching */
 
 /*
  * Cache info an element reports for the current (tkwin, state): whether it is
- * fully opaque (so its render is background-independent), and a content epoch
- * that bumps whenever the element's own pixels change (e.g. an underlying photo
- * is rewritten) so a stale node pixmap is rebuilt.
+ * fully opaque, and a content epoch that bumps when its own pixels change.
  */
 typedef struct Ttk_ElementCacheInfo {
     int		opaque;		/* element fully opaque (bg-independent) */
@@ -53,11 +49,9 @@ MODULE_SCOPE void Ttk_ElementGetCacheInfo(
 	Tk_Window tkwin, Ttk_Box b, Ttk_State state, Ttk_ElementCacheInfo *);
 
 /*
- * Per-node element render cache (ttkCache.c).  The layout-draw traversal
- * (ttkLayout.c) opens a draw context, draws each node's element through it, and
- * closes it; the cache module owns the composited node pixmaps, the z-order
- * invalidation, and all graphics state.  Both types are opaque to the rest of
- * Ttk; a layout node stores a NodeDrawCache* slot the cache module manages.
+ * Per-node element render cache (ttkNodeCache.c).  The layout-draw traversal
+ * opens a context, draws each node's element through it, and closes it.  Both
+ * types are opaque; a layout node stores a NodeDrawCache* slot.
  */
 typedef struct NodeDrawCache NodeDrawCache;
 typedef struct NodeDrawContext NodeDrawContext;

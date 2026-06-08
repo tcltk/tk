@@ -2,29 +2,16 @@
  * ttkNodeCache.c --
  *
  *	Per-node element *render* cache for the Ttk layout-draw traversal.
- *	(Distinct from ttkCache.c, which is the theme *resource* cache for
- *	fonts, colors and images.)
+ *	ttkLayout.c walks a widget's node tree in z-order and draws each element
+ *	through this module, which caches the composited result on the layout
+ *	node -- so it is per-widget-instance -- replacing the per-tile redraw
+ *	with a single copy on a hit.  A node is reused while its size, position,
+ *	state and content epoch hold; a translucent node also rebuilds when a
+ *	lower node drawn this pass overlaps it, so a changed background shows
+ *	through.  Invalidation needs no help from widgets or elements.
  *
- *	The layout layer (ttkLayout.c) walks a widget's node tree in z-order and
- *	draws each node's element through this module.  An element is a pure
- *	renderer: it draws into whatever drawable it is handed.  This module
- *	caches the *composited* result of a cacheable element on its layout node
- *	-- so the cache is per-widget-instance, with no cross-widget
- *	contamination -- and replaces the per-tile redraw with a single blit on
- *	a cache hit.
- *
- *	Because the cache is owned here, in the one place that sees both the
- *	z-order and the live background, invalidation needs no cooperation from
- *	widgets or elements: a transparent node is rebuilt whenever a lower node
- *	drawn this pass overlaps it (so a changed background shows through), and
- *	otherwise reused while its size, position, state and content epoch are
- *	unchanged.  An opaque element that fully fills its parcel is
- *	background-independent and reused on size/position/state/epoch alone.
- *
- *	The pixmap cache is compiled in only where XCopyArea accepts a Pixmap;
- *	on platforms without double buffering (e.g. macOS, which composites
- *	efficiently via Core Graphics) every entry point degrades to a direct
- *	element draw with no caching.
+ *	Compiled in only where XCopyArea accepts a Pixmap; without double
+ *	buffering every entry point degrades to a direct element draw.
  *
  * Copyright © 2026 Tk contributors.  Freely redistributable.
  */
@@ -34,10 +21,8 @@
 
 /*
  * NodeDrawContext --
- *	Per-draw-pass state, created by TtkNodeDrawBegin and torn down by
- *	TtkNodeDrawEnd.  Carries the element-draw parameters pulled from the
- *	layout, the live destination, a shared GXcopy GC, and the set of
- *	parcels (re)drawn this pass (the dirty set driving invalidation).
+ *	Per-draw-pass state (TtkNodeDrawBegin/End): element-draw parameters, the
+ *	destination, a lazy GXcopy GC, and the parcels drawn this pass.
  */
 struct NodeDrawContext {
     Ttk_Style		style;
@@ -57,9 +42,7 @@ struct NodeDrawContext {
 
 /*
  * NodeDrawCache --
- *	One cached composited element, hung off a layout node.  Holds either the
- *	bare opaque render or, for a translucent element, the element baked over
- *	the background it was last drawn against.
+ *	One cached composited element, hung off a layout node.
  */
 struct NodeDrawCache {
     Pixmap	pixmap;		/* Cached composited element, or None */
@@ -78,9 +61,8 @@ static int BoxesIntersect(Ttk_Box a, Ttk_Box b)
 }
 
 /* DirtyOverlaps, DirtyAdd --
- *	Track the parcels (re)drawn this pass.  A transparent node whose parcel
- *	a dirty rect overlaps has a changed background and must rebuild; a node
- *	that draws marks its parcel dirty for the nodes layered above it.
+ *	The parcels drawn this pass; a translucent node rebuilds when one
+ *	overlaps its parcel.
  */
 static int DirtyOverlaps(NodeDrawContext *ctx, Ttk_Box b)
 {
@@ -118,8 +100,7 @@ static GC NodeCopyGC(NodeDrawContext *ctx)
 #endif /* !TK_NO_DOUBLE_BUFFERING */
 
 /* TtkNodeDrawBegin --
- *	Open a draw pass for one layout tree.  Captures the element-draw
- *	parameters and the destination; graphics state is allocated lazily.
+ *	Open a draw pass; graphics state is allocated lazily.
  */
 NodeDrawContext *TtkNodeDrawBegin(
     Ttk_Style style,
@@ -145,9 +126,8 @@ NodeDrawContext *TtkNodeDrawBegin(
 }
 
 /* TtkNodeDrawEnd --
- *	Close a draw pass: release the shared GC and dirty set, then the
- *	context itself.  The per-node pixmaps persist across passes and are
- *	freed with their nodes (TtkFreeNodeDrawCache).
+ *	Close a draw pass: free the shared GC and dirty set.  Node pixmaps
+ *	persist; they are freed by TtkFreeNodeDrawCache.
  */
 void TtkNodeDrawEnd(NodeDrawContext *ctx)
 {
@@ -163,8 +143,7 @@ void TtkNodeDrawEnd(NodeDrawContext *ctx)
 }
 
 /* TtkFreeNodeDrawCache --
- *	Release a node's cached pixmap and the cache record.  NULL-tolerant;
- *	called by Ttk_FreeLayoutNode for every node.
+ *	Free a node's cached pixmap and record; NULL-tolerant.
  */
 void TtkFreeNodeDrawCache(NodeDrawCache *cache)
 {
@@ -180,13 +159,9 @@ void TtkFreeNodeDrawCache(NodeDrawCache *cache)
 }
 
 /* TtkDrawCachedElement --
- *	Draw one node's element, going through its per-node render cache.  On a
- *	hit the cached composite is blitted in a single XCopyArea; on a miss the
- *	element is (re)rendered into the node pixmap -- seeded with the live
- *	background first unless it opaquely fills the parcel -- then stored and
- *	blitted.  A draw marks the parcel dirty for nodes layered above it; a
- *	hit leaves it clean.  Falls back to a direct element draw for
- *	non-cacheable elements, an unrealized window, or an allocation failure.
+ *	Draw one node's element through its per-node cache: copy the cached
+ *	pixmap on a hit, else (re)render and store it.  Falls back to a direct
+ *	draw for non-cacheable elements, an unrealized window, or alloc failure.
  */
 void TtkDrawCachedElement(
     NodeDrawContext *ctx,
@@ -209,11 +184,8 @@ void TtkDrawCachedElement(
 	Ttk_ElementGetCacheInfo(eclass, ctx->style, ctx->recordPtr,
 		ctx->optionTable, ctx->tkwin, b, state, &info);
 
-	/*
-	 * Fast path: blit the cached pixmap when size, position, state and
-	 * content epoch match and -- for a translucent element -- nothing
-	 * drawn beneath it changed this pass.
-	 */
+	/* Hit: size, position, state and epoch match, and -- if translucent
+	 * -- nothing beneath changed this pass. */
 	if (cache && cache->valid
 		&& cache->x == b.x && cache->y == b.y
 		&& cache->w == b.width && cache->h == b.height
@@ -245,8 +217,8 @@ void TtkDrawCachedElement(
 	gc = NodeCopyGC(ctx);
 	if (cache->pixmap != None && gc != NULL) {
 	    if (!info.opaque) {
-		/* Seed with the live background so translucent pixels blend
-		 * and any non-filling -sticky margins show through. */
+		/* Seed the live background for translucent pixels and
+		 * non-filling -sticky margins. */
 		XCopyArea(ctx->display, ctx->d, cache->pixmap, gc,
 			b.x, b.y, (unsigned)b.width, (unsigned)b.height, 0, 0);
 	    }

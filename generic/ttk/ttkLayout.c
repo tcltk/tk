@@ -1124,12 +1124,8 @@ void Ttk_PlaceLayout(Ttk_Layout layout, Ttk_State state, Ttk_Box b)
  * Ttk_DrawLayout --
  *	Draw a layout tree.
  *
- * Each node's element is drawn through TtkDrawCachedElement (ttkNodeCache.c), which
- * owns the per-node render cache: the composited output lives on the node (so it
- * is per-widget-instance, with no cross-widget contamination) and the cache
- * module -- which is handed the z-order context and the live background -- owns
- * hit/miss and invalidation.  Elements stay pure renderers; this file only walks
- * the tree.  Caching is a no-op on platforms without double buffering.
+ * Each node's element is drawn through TtkDrawCachedElement (ttkNodeCache.c),
+ * which owns the per-node render cache.  This file only walks the tree.
  */
 
 static void Ttk_DrawNodeList(
