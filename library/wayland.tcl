@@ -19,11 +19,9 @@ if {[tk windowingsystem] eq "wayland"} {
     # works very well.
     proc rename_wayland_clipboard {} {
 	rename clipboard tcl_clipboard
-
 	proc clipboard {cmd args} {
 	    switch -exact -- $cmd {
 		get {
-		    puts "test"
 		    if {![catch {exec wl-paste --no-newline} res]} {
 			return $res
 		    }
@@ -31,9 +29,7 @@ if {[tk windowingsystem] eq "wayland"} {
 		}
 		set - append {
 		    set data [lindex $args end]
-		    # Pipe data to wl-copy's stdin (safe for newlines/quoting)
 		    if {[catch {exec wl-copy << $data} err]} {
-			# Fallback: try argument if heredoc fails
 			catch {exec wl-copy -- $data}
 		    }
 		    return [tcl_clipboard $cmd {*}$args]
@@ -48,6 +44,80 @@ if {[tk windowingsystem] eq "wayland"} {
 	    }
 	}
 
+	bind all <<Paste>> {
+	    set _w %W
+	    if {[catch {exec wl-paste --no-newline} _text]} { set _text "" }
+	    if {$_text eq ""} break
+
+	    switch -- [winfo class $_w] {
+		Text {
+		    if {[%W tag ranges sel] ne {}} {
+			%W delete sel.first sel.last
+		    }
+		}
+		Entry - Spinbox - Combobox {
+		    if {[%W selection present]} {
+			%W delete sel.first sel.last
+		    }
+		}
+		default {
+		    break
+		}
+	    }
+	    break
+	}
+
+	bind all <<Copy>> {
+	    set _w %W
+	    switch -- [winfo class $_w] {
+		Text {
+		    if {[%W tag ranges sel] eq {}} break
+		    set _text [%W get sel.first sel.last]
+		    if {[catch {exec wl-copy << $_text} _err]} {
+			catch {exec wl-copy -- $_text}
+		    }
+		}
+		Entry - Spinbox - Combobox {
+		    if {![%W selection present]} break
+		    set _text [string range [%W get] \
+				   [%W index sel.first] [%W index sel.last]]
+		    if {[catch {exec wl-copy << $_text} _err]} {
+			catch {exec wl-copy -- $_text}
+		    }
+		}
+		default {
+		    break
+		}
+	    }
+	    break
+	}
+
+	bind all <<Cut>> {
+	    set _w %W
+	    switch -- [winfo class $_w] {
+		Text {
+		    if {[%W tag ranges sel] eq {}} break
+		    set _text [%W get sel.first sel.last]
+		    if {[catch {exec wl-copy << $_text} _err]} {
+			catch {exec wl-copy -- $_text}
+		    }
+		    %W delete sel.first sel.last
+		}
+		Entry - Spinbox - Combobox {
+		    if {![%W selection present]} break
+		    set _text [string range [%W get] \
+				   [%W index sel.first] [%W index sel.last]]
+		    if {[catch {exec wl-copy << $_text} _err]} {
+			catch {exec wl-copy -- $_text}
+		    }
+		    %W delete sel.first sel.last
+		}
+		default {
+		    break
+		}
+	    }
+	    break
+	}
     }
 
     # end of Wayland commands
