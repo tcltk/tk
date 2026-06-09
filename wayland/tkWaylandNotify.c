@@ -477,7 +477,25 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  *
  *----------------------------------------------------------------------
  */
- 
+
+/*
+ * The rules for geometry managers are designed so that drawing all widgets in
+ * the stacking order, which by definition is the depth-first order of the
+ * pathname hierarchy determined by the ordering of children, is guaranteed to
+ * produce a correctly rendered window, even though the containment hierarchy
+ * can be different from the pathname hierarchy.  The default convention is
+ * that the children of a widget are displayed inside of it and have higher
+ * stacking order.  The -in option allows deviations from this, but they are
+ * limited.  First, a container specified with the -in option must be a
+ * descendant of the parent of the content.  That is enforced at the API level
+ * but does not guarantee correct display because it allows a container to be
+ * a descendent of a sibling of the content's parent which appears later in
+ * the parent's list of children.  However, an additional unenforced rule is
+ * that the container must actually be lower in the stacking order than its
+ * content.  The following function generates expose events for a widget
+ * and its descendents in the stacking order.
+ */
+
 void
 TkWaylandQueueExposeEvent(
     TkWindow *winPtr,
@@ -490,7 +508,6 @@ TkWaylandQueueExposeEvent(
     
     if (!winPtr) return;
     
-    
     /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
@@ -502,13 +519,12 @@ TkWaylandQueueExposeEvent(
     event.xexpose.y = y;
     event.xexpose.width = width;
     event.xexpose.height = height;
-    event.xexpose.count = 0;
+    event.xexpose.count = 0;    /* This forces ttk to handle the event. */
     
     /* Queue it. */
-    fprintf(stderr, "Queuing Expose(%lu) for %s with count %d\n",
+    fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
 	   event.xexpose.serial,
-	   Tk_PathName(winPtr),
-	   event.xexpose.count);
+	   Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
     /* Recurse through the children of this window. */
@@ -1455,11 +1471,12 @@ static void
 TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
     recordCallback();
-    TkWindow      *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	return;
     }
-    fprintf(stderr, "TkGlWindowRefreshCallback Expose\n");
+    fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s\n",
+	    Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }

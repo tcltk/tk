@@ -803,16 +803,26 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     nvgRestore(dcPtr->vg);
 
     /*
-     * Drawing this widget probably covered up all of its children.
-     * Generate expose events for the children (and their children).
-     * Somehow this is not handled by the generic code. (????)
-     * AND actually some children of siblings may be inside this
-     * widget if the -in option was provided to the geometry manager.
-     * They may have been covered too.
+     * Drawing this widget covered up all of the widgets that it contains.  If
+     * we generate expose events for the children of this widget and for its
+     * siblings which are higher in the stacking order then we should have
+     * redrawn all of the widgets that we damaged.
      */
 
 #if 1
-    for (TkWindow *childPtr2 = childPtr->childList; childPtr2 != NULL;
+    /* Children */
+    for (TkWindow *childPtr2 = childPtr->childList;
+	 childPtr2 != NULL;
+         childPtr2 = childPtr2->nextPtr) {
+        if (!Tk_IsMapped(childPtr2)) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
+                                  Tk_Height(childPtr2));
+    }
+    /* Higher siblings. */
+    for (TkWindow *childPtr2 = childPtr->nextPtr;
+	 childPtr2 != NULL;
          childPtr2 = childPtr2->nextPtr) {
         if (!Tk_IsMapped(childPtr2)) {
             continue;
@@ -821,9 +831,10 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
                                   Tk_Height(childPtr2));
     }
 #endif
+
     /*
-     * Mark the window as needing display unless we are in the middle of a Tk
-     * double-buffer section.  This triggers a call to glfwSwapBuffers.
+     * Mark the toplevel as needing display (unless we are in the middle of a
+     * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
      */
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     ////if (!(infoPtr->flags & dontSwap)) {

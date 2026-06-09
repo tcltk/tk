@@ -110,10 +110,15 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
 
     /* Fill screen dimensions. */
     int sw = 1920, sh = 1080;
-    GLFWmonitor *mon = glfwGetPrimaryMonitor();
-    if (mon) {
-        const GLFWvidmode *mode = glfwGetVideoMode(mon);
-        if (mode) { sw = mode->width; sh = mode->height; }
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    if (monitor) {
+	float scale;
+	glfwGetMonitorContentScale(monitor, &scale, NULL);
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+        if (mode) {
+	    sw = (int) ((float) mode->width / scale);
+	    sh = (int) ((float) mode->height / scale);
+	}
     }
     screen->width  = sw;
     screen->height = sh;
