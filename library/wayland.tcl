@@ -18,7 +18,6 @@ if {[tk windowingsystem] eq "wayland"} {
     # C level is basically impossible. The script-level integration
     # works very well.
     proc rename_wayland_clipboard {} {
-	puts "renamed"
 	rename clipboard tcl_clipboard
 
 	proc clipboard {cmd args} {
