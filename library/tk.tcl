@@ -991,8 +991,9 @@ if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
 
-after idle rename_wayland_clipboard
-
+if {[tk windowingsystem] eq "wayland} {
+    after idle rename_wayland_clipboard
+}
 
 # Local Variables:
 # mode: tcl
