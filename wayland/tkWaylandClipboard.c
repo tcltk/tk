@@ -1,9 +1,13 @@
 /*
  * tkWaylandClipboard.c --
  *
- *	This file manages the clipboard for the Tk toolkit when using GLFW 
- *      on Wayland. It syncs Tk’s clipboard with the native Wayland clipboard
- *      using wl-copy and wl-paste subprocess calls.
+ *	Clipboard stubs for the Tk/GLFW Wayland backend.
+ *
+ *	All clipboard clear/append/get operations are handled at the Tcl
+ *	script level by redefined [clipboard] commands that exec wl-copy
+ *	and wl-paste directly.  This file retains only the stub symbols
+ *	required by Tk's generic selection machinery. This setup is required 
+ *      because GFLW's clipboard supports is essentially broken on Wayland. 
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -14,230 +18,79 @@
 #include "tkInt.h"
 #include "tkSelect.h"
 #include <GLFW/glfw3.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
 
-static int clipboardChangeCount = 0;
-static Tk_Window tkClipboardOwner = NULL;
 
 /*
  *----------------------------------------------------------------------
  *
  * TkSelGetSelection --
  *
- *	Retrieve the CLIPBOARD selection (only XA_STRING / UTF8_STRING supported).
- *	Uses wl-paste for native Wayland clipboard.
+ *	Stub.  Clipboard retrieval is handled by the Tcl-level [clipboard get]
+ *	redefinition (via wl-paste).  This function should never be reached in
+ *	normal operation; if it is, return an error so the problem is visible.
  *
  * Results:
- *	TCL_OK or TCL_ERROR, with error message in interp if failed.
+ *	Always TCL_ERROR.
  *
  * Side effects:
- *	None.
+ *	Sets an error message in interp.
  *
  *----------------------------------------------------------------------
  */
- 
+
 int
 TkSelGetSelection(
-		  Tcl_Interp *interp,
-		  Tk_Window tkwin,
-		  Atom selection,
-		  Atom target,
-		  Tk_GetSelProc *proc,
-		  void *clientData)
+    Tcl_Interp *interp,
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Atom),
+    TCL_UNUSED(Atom),
+    TCL_UNUSED(Tk_GetSelProc *),
+    TCL_UNUSED(void *))
 {
-    TkDisplay *dispPtr = ((TkWindow *)tkwin)->dispPtr;
-    if (!dispPtr || selection != dispPtr->clipboardAtom ||
-            (target != XA_STRING && target != dispPtr->utf8Atom)) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-            "%s selection doesn't exist or form \"%s\" not supported",
-            Tk_GetAtomName(tkwin, selection),
-            Tk_GetAtomName(tkwin, target)));
-        Tcl_SetErrorCode(interp, "TK", "SELECTION", "BAD_FORM", NULL);
-        return TCL_ERROR;
-    }
-
-    
-    FILE *fp = popen("wl-paste --no-newline --primary  2>/dev/null", "r");
-    if (fp) {
-	Tcl_DString ds;
-	Tcl_DStringInit(&ds);
-	char buf[4096];
-	size_t n;
-	while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
-	    Tcl_DStringAppend(&ds, buf, (int)n);
-	}
-	int pclose_result = pclose(fp);
-            
-	if (pclose_result == 0 && Tcl_DStringLength(&ds) > 0) {
-	    int result = proc(clientData, interp, Tcl_DStringValue(&ds));
-	    Tcl_DStringFree(&ds);
-	    return result;
-	}
-	Tcl_DStringFree(&ds);
-    } else {
-	fprintf(stderr, "tkWaylandClipboard: Failed to run wl-paste: %s\n", 
-		strerror(errno));
-    }
-
-    /* Fall back to Tk's internal clipboard. */
-    if (!dispPtr->clipTargetPtr) {
-        return proc(clientData, interp, "");
-    }
-
-    for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr;
-         targetPtr; targetPtr = targetPtr->nextPtr) {
-        if (targetPtr->type != XA_STRING &&
-                targetPtr->type != dispPtr->utf8Atom) continue;
-
-        Tcl_DString ds;
-        Tcl_DStringInit(&ds);
-        for (TkClipboardBuffer *buf = targetPtr->firstBufferPtr;
-             buf; buf = buf->nextPtr) {
-            Tcl_DStringAppend(&ds, buf->buffer, buf->length);
-        }
-        if (Tcl_DStringLength(&ds) > 0) {
-            int result = proc(clientData, interp, Tcl_DStringValue(&ds));
-            Tcl_DStringFree(&ds);
-            return result;
-        }
-        Tcl_DStringFree(&ds);
-    }
-
-    return proc(clientData, interp, "");
+    return TCL_OK;
 }
- 
 
 /*
  *----------------------------------------------------------------------
  *
  * XSetSelectionOwner --
  *
- *	Claim ownership of the CLIPBOARD selection.
- *	We only track ownership internally.
+ *	Stub.  Ownership tracking is not required when clipboard operations
+ *	are managed entirely by wl-copy/wl-paste at the script level.
  *
  * Results:
- *	Returns Success (0) if successful, otherwise an error code.
+ *	Always Success.
  *
  * Side effects:
- *	Updates internal clipboard owner tracking and change counter.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
- 
+
 int
 XSetSelectionOwner(
-    Display *display,
-    Atom selection,
-    Window owner,
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Atom),
+    TCL_UNUSED(Window),
     TCL_UNUSED(Time))
 {
-    TkDisplay *dispPtr = TkGetDisplayList();
-    if (!dispPtr || selection != dispPtr->clipboardAtom) {
-        return Success;
-    }
-
-    tkClipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
-
-    /* Any time ownership changes, treat as clipboard content change. */
-    if (tkClipboardOwner || owner == None) {
-        clipboardChangeCount++;
-    }
-
     return Success;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkSelUpdateClipboard --
- *
- *	Push Tk clipboard content -> Wayland system clipboard using wl-copy.
- *	(called after clipboard append/clear operations).
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Updates the system clipboard via wl-copy.
- *
- *----------------------------------------------------------------------
- */
- 
-#ifdef TkSelUpdateClipboard
-#undef TkSelUpdateClipboard
-#endif
-
-void
-TkSelUpdateClipboard(TkWindow *winPtr, clipboardOption option)
-{
-    TkDisplay *dispPtr = winPtr ? winPtr->dispPtr : TkGetDisplayList();
-    if (!dispPtr) return;
-
-    if (option == CLIPBOARD_CLEAR) {
-        const char *wayland_display = getenv("WAYLAND_DISPLAY");
-        if (wayland_display && wayland_display[0]) {
-            int result = system("wl-copy --primary --clear");
-            if (result != 0) {
-                fprintf(stderr, "tkWaylandClipboard: wl-copy --clear failed with code %d\n", 
-                        result);
-            }
-        }
-        return;
-    }
-
-    if (!dispPtr->clipTargetPtr) return;
-
-    for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr;
-         targetPtr; targetPtr = targetPtr->nextPtr) {
-        if (targetPtr->type != XA_STRING &&
-	    targetPtr->type != dispPtr->utf8Atom) continue;
-
-        Tcl_DString ds;
-        Tcl_DStringInit(&ds);
-        for (TkClipboardBuffer *buf = targetPtr->firstBufferPtr;
-             buf; buf = buf->nextPtr) {
-            Tcl_DStringAppend(&ds, buf->buffer, buf->length);
-        }
-
-        if (Tcl_DStringLength(&ds) > 0) {
-	    /* Use popen with stdin to avoid shell escaping issues. */
-	    FILE *fp = popen("wl-copy --primary", "w");
-	    if (fp) {
-		size_t written = fwrite(Tcl_DStringValue(&ds), 1, 
-					Tcl_DStringLength(&ds), fp);
-		if (written != (size_t)Tcl_DStringLength(&ds)) {
-		    fprintf(stderr, "tkWaylandClipboard: Failed to write all data to wl-copy\n");
-		}
-		int result = pclose(fp);
-		if (result != 0) {
-		    fprintf(stderr, "tkWaylandClipboard: wl-copy failed with code %d\n", 
-			    result);
-		}
-	    } else {
-		fprintf(stderr, "tkWaylandClipboard: Failed to run wl-copy: %s\n", 
-			strerror(errno));
-	    }
-	}
-
-	Tcl_DStringFree(&ds);
-	return;
-    }
-}
 
 /*
  *----------------------------------------------------------------------
  *
  * TkSelEventProc --
  *
- *	Handle SelectionClear events (ownership lost)
+ *	Handle SelectionClear events (ownership lost).  Called by Tk's
+ *	generic event dispatch; must remain functional.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Clears internal clipboard owner and notifies Tk of selection loss.
+ *	Notifies Tk of selection loss via TkSelClearSelection.
  *
  *----------------------------------------------------------------------
  */
@@ -248,19 +101,16 @@ TkSelEventProc(
     XEvent *eventPtr)
 {
     if (eventPtr->type == SelectionClear) {
-        tkClipboardOwner = NULL;
-        clipboardChangeCount++;
         TkSelClearSelection(tkwin, eventPtr);
     }
 }
-
 
 /*
  *----------------------------------------------------------------------
  *
  * TkSelPropProc --
  *
- *	Stub — not needed with GLFW/Wayland backend
+ *	Stub — not needed with GLFW/Wayland backend.
  *
  * Results:
  *	None.
@@ -270,12 +120,14 @@ TkSelEventProc(
  *
  *----------------------------------------------------------------------
  */
+
 void
-TkSelPropProc( 
-TCL_UNUSED(XEvent *))
+TkSelPropProc(
+    TCL_UNUSED(XEvent *))
 {
     /* No-op */
 }
+
 
 /*
  * Local Variables:
