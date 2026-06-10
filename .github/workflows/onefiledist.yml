@@ -162,7 +162,7 @@ jobs:
           path: ${{ env.INST_DIR }}/*.dmg
   win:
     name: Windows
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     defaults:
       run:
         shell: msys2 {0}

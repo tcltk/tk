@@ -7812,7 +7812,7 @@ GetLocale(
 	}
 	p += 5;
     }
-    if (ISDIGIT(p[-2])) {
+    if ((p > buffer + 4) && ISDIGIT(p[-2])) {
 	p[-1] = ('0' - 1) + locale[4]/10; // numeric locale, then locale[4] is a number between 00 and 99.
 	*p++ = '0' + locale[4]%10;
     }
