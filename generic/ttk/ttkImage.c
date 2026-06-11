@@ -30,21 +30,6 @@ struct TtkImageSpec {
     void		*imageChangedClientData;
 };
 
-/* NullImageChanged --
- *	Do-nothing Tk_ImageChangedProc.
- */
-static void NullImageChanged(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-    /* No-op */
-}
-
 /* ImageSpecImageChanged --
  *     Image changes should trigger a repaint.
  */
@@ -137,7 +122,7 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
 	imageSpec->states[i] = state;
 
 	imageSpec->images[i] = Tk_GetImage(
-	    interp, tkwin, imageName, NullImageChanged, NULL);
+	    interp, tkwin, imageName, ImageSpecImageChanged, imageSpec);
 	if (imageSpec->images[i] == NULL) {
 	    goto error;
 	}

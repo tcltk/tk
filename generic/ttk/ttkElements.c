@@ -191,6 +191,29 @@ static const Ttk_ElementSpec BackgroundElementSpec = {
     BackgroundElementDraw
 };
 
+#ifndef TK_NO_DOUBLE_BUFFERING
+/* BackgroundElementCacheInfo --
+ *	Cache info for the background and fill elements: a flat fill of the
+ *	resolved -background color, so fully opaque.  The resolved border is
+ *	folded into the content epoch so a changed style background still
+ *	invalidates nodes composited over it.
+ */
+static void BackgroundElementCacheInfo(
+    TCL_UNUSED(void *),
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(Ttk_Box),
+    TCL_UNUSED(Ttk_State),
+    Ttk_ElementCacheInfo *info)
+{
+    BackgroundElement *bg = (BackgroundElement *)elementRecord;
+    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, bg->backgroundObj);
+
+    info->opaque = 1;
+    info->epoch = (unsigned) ((size_t) border >> 4);
+}
+#endif /* !TK_NO_DOUBLE_BUFFERING */
+
 /*----------------------------------------------------------------------
  * +++ Border element.
  */
@@ -2121,14 +2144,29 @@ MODULE_SCOPE void
 TtkElements_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
+    Ttk_ElementClass *eclass;
 
     /*
      * Elements:
      */
-    Ttk_RegisterElement(interp, theme, "background",
+    eclass = Ttk_RegisterElement(interp, theme, "background",
 	    &BackgroundElementSpec, NULL);
+#ifndef TK_NO_DOUBLE_BUFFERING
+    if (eclass) {
+	TtkSetElementCachePolicy(eclass, TTK_ELEMENT_STABLE,
+		BackgroundElementCacheInfo);
+    }
+#endif
 
-    Ttk_RegisterElement(interp, theme, "fill", &FillElementSpec, NULL);
+    eclass = Ttk_RegisterElement(interp, theme, "fill", &FillElementSpec, NULL);
+#ifndef TK_NO_DOUBLE_BUFFERING
+    if (eclass) {
+	TtkSetElementCachePolicy(eclass, TTK_ELEMENT_STABLE,
+		BackgroundElementCacheInfo);
+    }
+#else
+    (void) eclass;
+#endif
     Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "field", &FieldElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "focus", &FocusElementSpec, NULL);

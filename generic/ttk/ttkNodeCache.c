@@ -10,6 +10,11 @@
  *	lower node drawn this pass overlaps it, so a changed background shows
  *	through.  Invalidation needs no help from widgets or elements.
  *
+ *	STABLE elements (e.g. the implicit per-widget background node) are
+ *	always drawn directly, but an unchanged draw does not dirty its
+ *	parcel -- without that, the background node would force every
+ *	translucent node above it to rebuild on every pass.
+ *
  *	Compiled in only where XCopyArea accepts a Pixmap; without double
  *	buffering every entry point degrades to a direct element draw.
  *
@@ -242,6 +247,47 @@ void TtkDrawCachedElement(
 	if (cache) {
 	    cache->valid = 0;
 	}
+    }
+
+    if (Ttk_ElementClassStable(eclass)) {
+	/* Stable element: same (parcel, state, epoch) means same pixels.
+	 * Always drawn directly -- no pixmap; the record only keeps the key
+	 * -- but an unchanged draw does not dirty its parcel, so translucent
+	 * cached nodes above it keep hitting.  The implicit per-widget
+	 * background node is the important case: without this, it would
+	 * dirty the whole widget on every pass. */
+	Ttk_ElementCacheInfo info;
+	NodeDrawCache *cache = *cacheSlot;
+	int unchanged;
+
+	Ttk_ElementGetCacheInfo(eclass, ctx->style, ctx->recordPtr,
+		ctx->optionTable, ctx->tkwin, b, state, &info);
+
+	unchanged = cache && cache->valid
+		&& cache->x == b.x && cache->y == b.y
+		&& cache->w == b.width && cache->h == b.height
+		&& cache->state == state
+		&& cache->opaque == info.opaque
+		&& cache->epoch == info.epoch
+		&& (info.opaque || !DirtyOverlaps(ctx, b));
+
+	Ttk_DrawElement(eclass, ctx->style, ctx->recordPtr,
+		ctx->optionTable, ctx->tkwin, ctx->d, b, state);
+
+	if (!unchanged) {
+	    if (cache == NULL) {
+		cache = *cacheSlot = (NodeDrawCache *)Tcl_Alloc(sizeof(*cache));
+		memset(cache, 0, sizeof(*cache));
+	    }
+	    cache->x = b.x;	cache->y = b.y;
+	    cache->w = b.width;	cache->h = b.height;
+	    cache->state = state;
+	    cache->opaque = info.opaque;
+	    cache->epoch = info.epoch;
+	    cache->valid = 1;
+	    DirtyAdd(ctx, b);
+	}
+	return;
     }
 
     /* Direct draw: non-cacheable element, unrealized window, or alloc fail. */

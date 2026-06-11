@@ -282,6 +282,15 @@ int Ttk_ElementClassCacheable(Ttk_ElementClass *eclass)
     return (eclass->cacheFlags & TTK_ELEMENT_CACHEABLE) != 0;
 }
 
+/* Ttk_ElementClassStable --
+ *	Return nonzero if the element class declared its draw deterministic
+ *	for an unchanged (parcel, state, content epoch).
+ */
+int Ttk_ElementClassStable(Ttk_ElementClass *eclass)
+{
+    return (eclass->cacheFlags & TTK_ELEMENT_STABLE) != 0;
+}
+
 /*
  * FreeElementClass --
  *	Release resources associated with an element class record.

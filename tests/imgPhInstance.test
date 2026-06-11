@@ -1,0 +1,224 @@
+# This file is a Tcl script to test out the photo image display code in
+# the file tkImgPhInstance.c (TkImgPhotoDisplay and its helpers).  Photos
+# with an alpha channel reach the screen through one of three paths:
+# a platform TkpPutRGBAImage implementation (where TK_CAN_RENDER_RGBA is
+# defined), the BlendComplexAlpha software fallback, or the validRegion
+# clip for binary alpha.  All paths implement the same Porter-Duff
+# source-over compositing, so these tests assert the same expected pixel
+# values on every platform; they regression-test the platform compositing
+# implementations against each other by construction.
+#
+# The tests read rendered pixels back with tktest's "testpixel" command
+# and therefore need a mapped, unobscured window and a TrueColor display
+# of depth >= 24 (constraint pixelProbe).
+
+#
+# TESTFILE INITIALIZATION
+#
+
+package require tcltest 2.2; # needed in mode -singleproc 0
+
+# Load the main script main.tcl, which takes care of:
+# - setup for the application and the root window
+# - importing commands from the tcltest namespace
+# - loading of the testutils mechanism along with its utility procs
+# - loading of Tk specific test constraints (additionally to constraints
+#   provided by the package tcltest)
+source [file join [tcltest::configure -testdir] main.tcl]
+
+# Ensure a pristine initial window state
+resetWindows
+
+# Local constraints
+testConstraint testpixel [expr {[llength [info commands testpixel]] > 0}]
+testConstraint pixelProbe [expr {
+    [testConstraint testpixel] && [winfo screendepth .] >= 24
+}]
+
+#
+# COMMON TEST SETUP
+#
+
+set bg #0040ff
+
+# Canvas the photos are composited onto; its -background is the known
+# destination color.
+canvas .c -width 360 -height 330 -background $bg \
+	-highlightthickness 0 -borderwidth 0
+pack .c
+wm geometry . +0+0
+raise .
+tkwait visibility .c
+update
+
+# Fully opaque, fully transparent and 50%-alpha 20x20 photos.
+image create photo photo.opaque -width 20 -height 20
+photo.opaque put #ff8000 -to 0 0 20 20
+image create photo photo.clear -width 20 -height 20
+image create photo photo.half -width 20 -height 20
+photo.half put #ff800080 -to 0 0 20 20
+
+# Binary alpha: 8px checkerboard, cells (0,0) and (8,8) opaque.
+image create photo photo.checker -width 16 -height 16
+photo.checker put #ff8000 -to 0 0 8 8
+photo.checker put #ff8000 -to 8 8 16 16
+
+# Buffer-reuse pair: a larger 50%-alpha image drawn first, then a smaller
+# two-tone one.  A platform that reuses a scratch buffer sized for the
+# first image must still address the second one's rows correctly; a stride
+# bug shows up as horizontal skew growing with the row number.
+image create photo photo.wide -width 100 -height 80
+photo.wide put #ff800080 -to 0 0 100 80
+image create photo photo.tone -width 40 -height 30
+photo.tone put #ff000080 -to 0 0 20 30
+photo.tone put #00ff0080 -to 20 0 40 30
+
+# 300x300 50%-alpha quadrants: larger than any per-draw scratch buffer a
+# platform may cache, and a position reference for scrolled (sub-rect)
+# drawing.
+image create photo photo.big -width 300 -height 300
+photo.big put #ff800080 -to 0 0 150 150
+photo.big put #00c00080 -to 150 0 300 150
+photo.big put #ffffff80 -to 0 150 150 300
+photo.big put #00000080 -to 150 150 300 300
+
+# blendOver --
+#	Expected result of compositing src at the given alpha over dst.
+proc blendOver {src dst alpha} {
+    scan $src "#%2x%2x%2x" sr sg sb
+    scan $dst "#%2x%2x%2x" dr dg db
+    set beta [expr {255 - $alpha}]
+    return [format "#%02x%02x%02x" \
+	    [expr {round(($sr*$alpha + $dr*$beta) / 255.0)}] \
+	    [expr {round(($sg*$alpha + $dg*$beta) / 255.0)}] \
+	    [expr {round(($sb*$alpha + $db*$beta) / 255.0)}]]
+}
+
+# pixelNear --
+#	1 if the window pixel at (x,y) matches color within tol per channel.
+proc pixelNear {w x y color {tol 2}} {
+    scan [testpixel $w $x $y] "#%2x%2x%2x" r g b
+    scan $color "#%2x%2x%2x" er eg eb
+    return [expr {
+	abs($r - $er) <= $tol && abs($g - $eg) <= $tol && abs($b - $eb) <= $tol
+    }]
+}
+
+#
+# TESTS
+#
+
+# 1.* -- the three alpha tiers
+
+test imgPhInstance-1.1 "fully opaque photo replaces the destination" \
+	-constraints pixelProbe -body {
+    .c create image 10 10 -anchor nw -image photo.opaque
+    update
+    list [pixelNear .c 15 15 #ff8000] [pixelNear .c 45 15 $bg]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1}
+
+test imgPhInstance-1.2 "fully transparent photo leaves the destination untouched" \
+	-constraints pixelProbe -body {
+    .c create image 10 10 -anchor nw -image photo.clear
+    update
+    pixelNear .c 15 15 $bg
+} -cleanup {
+    .c delete all
+    update
+} -result 1
+
+test imgPhInstance-1.3 "50% alpha composites source-over" \
+	-constraints pixelProbe -body {
+    .c create image 10 10 -anchor nw -image photo.half
+    update
+    pixelNear .c 15 15 [blendOver #ff8000 $bg 128]
+} -cleanup {
+    .c delete all
+    update
+} -result 1
+
+# 2.* -- binary alpha
+
+test imgPhInstance-2.1 "binary alpha: opaque cells copy, clear cells show through" \
+	-constraints pixelProbe -body {
+    .c create image 10 10 -anchor nw -image photo.checker
+    update
+    list [pixelNear .c 14 14 #ff8000] [pixelNear .c 22 14 $bg]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1}
+
+# 3.* -- scratch-buffer reuse across differently sized draws
+
+test imgPhInstance-3.1 "small blend after a larger one is not skewed" \
+	-constraints pixelProbe -body {
+    .c create image 10 10 -anchor nw -image photo.wide
+    .c create image 130 10 -anchor nw -image photo.tone
+    update
+    set red   [blendOver #ff0000 $bg 128]
+    set green [blendOver #00ff00 $bg 128]
+    list [pixelNear .c 60 50 [blendOver #ff8000 $bg 128]] \
+	    [pixelNear .c 135 12 $red]   [pixelNear .c 135 37 $red] \
+	    [pixelNear .c 165 12 $green] [pixelNear .c 165 37 $green]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1 1 1 1}
+
+# 4.* -- image larger than any cached per-draw scratch buffer
+
+test imgPhInstance-4.1 "large image composites correctly in all quadrants" \
+	-constraints pixelProbe -body {
+    .c create image 10 10 -anchor nw -image photo.big
+    update
+    list [pixelNear .c 85 85 [blendOver #ff8000 $bg 128]] \
+	    [pixelNear .c 235 85 [blendOver #00c000 $bg 128]] \
+	    [pixelNear .c 85 235 [blendOver #ffffff $bg 128]] \
+	    [pixelNear .c 235 235 [blendOver #000000 $bg 128]] \
+	    [pixelNear .c 11 11 [blendOver #ff8000 $bg 128]] \
+	    [pixelNear .c 308 308 [blendOver #000000 $bg 128]]
+} -cleanup {
+    .c delete all
+    update
+} -result {1 1 1 1 1 1}
+
+# 5.* -- drawing from interior offsets (nonzero src_x/src_y sub-rects)
+
+test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
+	-constraints pixelProbe -setup {
+    pack forget .c
+    canvas .c2 -width 120 -height 100 -background $bg \
+	    -highlightthickness 0 -borderwidth 0 -scrollregion {0 0 300 300}
+    pack .c2
+    tkwait visibility .c2
+    update
+} -body {
+    .c2 create image 0 0 -anchor nw -image photo.big
+    .c2 xview moveto 0.6
+    update
+    # viewport origin (180,0): window (10,10) shows image pixel (190,10)
+    set xScrolled [pixelNear .c2 10 10 [blendOver #00c000 $bg 128]]
+    .c2 yview moveto 0.6
+    update
+    # viewport origin (180,180): window (10,10) shows image pixel (190,190)
+    set xyScrolled [pixelNear .c2 10 10 [blendOver #000000 $bg 128]]
+    list $xScrolled $xyScrolled
+} -cleanup {
+    destroy .c2
+    pack .c
+    update
+} -result {1 1}
+
+#
+# TESTFILE CLEANUP
+#
+
+destroy .c
+image delete photo.opaque photo.clear photo.half photo.checker \
+	photo.wide photo.tone photo.big
+
+tcltest::cleanupTests

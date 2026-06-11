@@ -26,8 +26,16 @@ MODULE_SCOPE void Ttk_DrawElement(
  * Element render-cache policy.  An element class may opt into per-node caching
  * of its composited output and supply a query reporting its opacity and content
  * epoch.  Off by default.
+ *
+ * A STABLE element draws the same pixels whenever its parcel, state and
+ * content epoch are unchanged (and, if translucent, nothing beneath it was
+ * redrawn this pass).  It is always drawn directly -- never through a node
+ * pixmap -- but an unchanged draw does not dirty its parcel, so translucent
+ * cached nodes above it can keep hitting.  The implicit per-widget background
+ * node (Ttk_CreateLayout) is the important case.
  */
 #define TTK_ELEMENT_CACHEABLE	0x1	/* opts into per-node render caching */
+#define TTK_ELEMENT_STABLE	0x2	/* deterministic draw; see above */
 
 /*
  * Cache info an element reports for the current (tkwin, state): whether it is
@@ -44,6 +52,7 @@ typedef void Ttk_ElementCacheProc(void *clientData, void *elementRecord,
 MODULE_SCOPE void TtkSetElementCachePolicy(
 	Ttk_ElementClass *, unsigned cacheFlags, Ttk_ElementCacheProc *);
 MODULE_SCOPE int Ttk_ElementClassCacheable(Ttk_ElementClass *);
+MODULE_SCOPE int Ttk_ElementClassStable(Ttk_ElementClass *);
 MODULE_SCOPE void Ttk_ElementGetCacheInfo(
 	Ttk_ElementClass *, Ttk_Style, void *recordPtr, Tk_OptionTable,
 	Tk_Window tkwin, Ttk_Box b, Ttk_State state, Ttk_ElementCacheInfo *);
