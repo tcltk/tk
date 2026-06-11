@@ -4,6 +4,7 @@
 # cache policy, content epoch, opacity classification), ttkTheme.c
 # (Ttk_ElementGetCacheInfo) and ttkLayout.c (cached draw traversal).
 #
+
 # NOTES
 #
 # * The cache is observed in two ways:
@@ -39,16 +40,57 @@ source [file join [file dirname [tcltest::configure -testdir]] main.tcl]
 # Ensure a pristine initial window state
 resetWindows
 
+# Import utility procs for specific functional areas
+testutils import image
+
+imageInit
+
 # The pixel-probe tests read rendered pixels back from the live screen;
 # keep the root window on-screen and on top so nothing overlaps it.
 wm geometry . +0+0
 raise .
 
-# Local constraints
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 testConstraint testpixel [expr {[llength [info commands testpixel]] > 0}]
 testConstraint pixelProbe [expr {
     [testConstraint testpixel] && [winfo screendepth .] >= 24
 }]
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# ncExpose --
+#	Force a full redraw of a ttk widget and process it.
+proc ncExpose {w} {
+    event generate $w <Expose>
+    update idletasks
+}
+
+# ncLogged --
+#	1 if the test image's displayProc ran since the log was cleared.
+proc ncLogged {img} {
+    return [expr {[lsearch -glob $::ncLog "$img display*"] >= 0}]
+}
+
+# ncFirst --
+#	Index of the image's first display entry in the log, or -1.
+proc ncFirst {img} {
+    return [lsearch -glob $::ncLog "$img display*"]
+}
+
+# pixelNear --
+#	1 if the window pixel at (x,y) matches color within tol per channel.
+proc pixelNear {w x y color {tol 2}} {
+    scan [testpixel $w $x $y] "#%2x%2x%2x" r g b
+    scan $color "#%2x%2x%2x" er eg eb
+    return [expr {
+	abs($r - $er) <= $tol && abs($g - $eg) <= $tol && abs($b - $eb) <= $tol
+    }]
+}
 
 #
 # COMMON TEST SETUP
@@ -131,35 +173,6 @@ if {"NodeCache.del" ni [ttk::style element names]} {
     ttk::style layout NodeCacheDel.TFrame {
 	NodeCache.del -sticky nswe
     }
-}
-
-# ncExpose --
-#	Force a full redraw of a ttk widget and process it.
-proc ncExpose {w} {
-    event generate $w <Expose>
-    update idletasks
-}
-
-# ncLogged --
-#	1 if the test image's displayProc ran since the log was cleared.
-proc ncLogged {img} {
-    return [expr {[lsearch -glob $::ncLog "$img display*"] >= 0}]
-}
-
-# ncFirst --
-#	Index of the image's first display entry in the log, or -1.
-proc ncFirst {img} {
-    return [lsearch -glob $::ncLog "$img display*"]
-}
-
-# pixelNear --
-#	1 if the window pixel at (x,y) matches color within tol per channel.
-proc pixelNear {w x y color {tol 2}} {
-    scan [testpixel $w $x $y] "#%2x%2x%2x" r g b
-    scan $color "#%2x%2x%2x" er eg eb
-    return [expr {
-	abs($r - $er) <= $tol && abs($g - $eg) <= $tol && abs($b - $eb) <= $tol
-    }]
 }
 
 #
@@ -507,10 +520,6 @@ test nodecache-8.1 "Stable parcels stay cached through a layout sweep" \
 #
 
 destroy {*}[winfo children .]
-image delete nc.punder nc.checker nc.solid
-catch {image delete nc.del}
-if {[testConstraint testImageType]} {
-    image delete nc.base nc.alt nc.under nc.over
-}
+imageCleanup
 
 tcltest::cleanupTests

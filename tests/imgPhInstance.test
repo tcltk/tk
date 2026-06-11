@@ -29,11 +29,45 @@ source [file join [tcltest::configure -testdir] main.tcl]
 # Ensure a pristine initial window state
 resetWindows
 
-# Local constraints
+# Import utility procs for specific functional areas
+testutils import image
+
+imageInit
+
+#
+# LOCAL TEST CONSTRAINTS
+#
+
 testConstraint testpixel [expr {[llength [info commands testpixel]] > 0}]
 testConstraint pixelProbe [expr {
     [testConstraint testpixel] && [winfo screendepth .] >= 24
 }]
+
+#
+# LOCAL UTILITY PROCS
+#
+
+# blendOver --
+#	Expected result of compositing src at the given alpha over dst.
+proc blendOver {src dst alpha} {
+    scan $src "#%2x%2x%2x" sr sg sb
+    scan $dst "#%2x%2x%2x" dr dg db
+    set beta [expr {255 - $alpha}]
+    return [format "#%02x%02x%02x" \
+	    [expr {round(($sr*$alpha + $dr*$beta) / 255.0)}] \
+	    [expr {round(($sg*$alpha + $dg*$beta) / 255.0)}] \
+	    [expr {round(($sb*$alpha + $db*$beta) / 255.0)}]]
+}
+
+# pixelNear --
+#	1 if the window pixel at (x,y) matches color within tol per channel.
+proc pixelNear {w x y color {tol 2}} {
+    scan [testpixel $w $x $y] "#%2x%2x%2x" r g b
+    scan $color "#%2x%2x%2x" er eg eb
+    return [expr {
+	abs($r - $er) <= $tol && abs($g - $eg) <= $tol && abs($b - $eb) <= $tol
+    }]
+}
 
 #
 # COMMON TEST SETUP
@@ -81,28 +115,6 @@ photo.big put #ff800080 -to 0 0 150 150
 photo.big put #00c00080 -to 150 0 300 150
 photo.big put #ffffff80 -to 0 150 150 300
 photo.big put #00000080 -to 150 150 300 300
-
-# blendOver --
-#	Expected result of compositing src at the given alpha over dst.
-proc blendOver {src dst alpha} {
-    scan $src "#%2x%2x%2x" sr sg sb
-    scan $dst "#%2x%2x%2x" dr dg db
-    set beta [expr {255 - $alpha}]
-    return [format "#%02x%02x%02x" \
-	    [expr {round(($sr*$alpha + $dr*$beta) / 255.0)}] \
-	    [expr {round(($sg*$alpha + $dg*$beta) / 255.0)}] \
-	    [expr {round(($sb*$alpha + $db*$beta) / 255.0)}]]
-}
-
-# pixelNear --
-#	1 if the window pixel at (x,y) matches color within tol per channel.
-proc pixelNear {w x y color {tol 2}} {
-    scan [testpixel $w $x $y] "#%2x%2x%2x" r g b
-    scan $color "#%2x%2x%2x" er eg eb
-    return [expr {
-	abs($r - $er) <= $tol && abs($g - $eg) <= $tol && abs($b - $eb) <= $tol
-    }]
-}
 
 #
 # TESTS
@@ -218,7 +230,6 @@ test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
 #
 
 destroy .c
-image delete photo.opaque photo.clear photo.half photo.checker \
-	photo.wide photo.tone photo.big
+imageCleanup
 
 tcltest::cleanupTests
