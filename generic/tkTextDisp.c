@@ -15,19 +15,17 @@
  */
 
 #include "tkInt.h"
+
+#ifdef _WIN32
+#include "tkWinInt.h"
+#elif defined(MAC_OSX_TK)
+#include "tkMacOSXInt.h"
+#else
+#include "tkUnixInt.h"
+#endif
 #include "tkText.h"
 #include "tkTextTagSet.h"
 #include "tkRangeList.h"
-
-#ifdef _WIN32
-# include "tkWinInt.h"
-#elif defined(__CYGWIN__)
-# include "tkUnixInt.h"
-#endif
-
-#ifdef MAC_OSX_TK
-# include "tkMacOSXInt.h"
-#endif
 
 #include <stdlib.h>
 #include <assert.h>
@@ -14772,10 +14770,10 @@ DrawCharsInContext(
 			 * meta-characters (tabs, control characters, and newlines) should be
 			 * stripped out of the string that is passed to this function. If they are
 			 * not stripped out, they will be displayed as regular printing characters. */
-    Tcl_Size numBytes,	/* Number of bytes in string. */
+    TCL_UNUSED(Tcl_Size),	/* Number of bytes in string. */
     Tcl_Size rangeStart,	/* Index of first byte to draw. */
     Tcl_Size rangeLength,	/* Length of range to draw in bytes. */
-    int x, int y,	/* Coordinates at which to place origin of the whole (not just the range)
+    TCL_UNUSED(int) /* x */, int y,	/* Coordinates at which to place origin of the whole (not just the range)
 			 * string when drawing. */
     int xOffset)	/* Offset to x-coordinate, required for emulation of context drawing. */
 {

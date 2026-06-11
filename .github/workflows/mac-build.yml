@@ -65,7 +65,7 @@ jobs:
           - 'mem'
         options:
           - '--enable-aqua'
-          - '--disable-aqua'
+          - '--disable-aqua --disable-bidi'
     defaults:
       run:
         shell: bash

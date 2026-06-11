@@ -345,20 +345,93 @@ fi
 if test $tk_aqua = no; then
 
     #--------------------------------------------------------------------
-    # --enable-xft (default: yes)
+    # --enable-xft (default: yes) — independent switch
     #--------------------------------------------------------------------
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
 	AS_HELP_STRING([--enable-xft],
 	    [use freetype/fontconfig/xft for antialiased fonts (default: yes)]),
 	[enable_xft=$enableval], [enable_xft="yes"])
+    AC_MSG_RESULT([$enable_xft])
 
     XFT_CFLAGS=""
     XFT_LIBS=""
 
-    if test "$enable_xft" = "no" ; then
-	AC_MSG_RESULT([no])
+    #--------------------------------------------------------------------
+    # --enable-bidi (default: yes on X11) — forces Xft when enabled
+    #--------------------------------------------------------------------
+    AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
+    AC_ARG_ENABLE(bidi,
+	AS_HELP_STRING([--enable-bidi],
+	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (default: yes)]),
+	[enable_bidi=$enableval], [enable_bidi="yes"])
+    AC_MSG_RESULT([$enable_bidi])
+
+    if test "$enable_bidi" = "yes"; then
+	AC_MSG_NOTICE([Bidi enabled: forcing Xft on as well])
+	if test "$enable_xft" = "no"; then
+	   enable_xft=yes
+	fi
+
+	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
+                     -I${TK_SRC_DIR}/unix/bidi/Source \
+                     -I${TK_SRC_DIR}/unix/bidi \
+                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
+	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
+	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
+
+        #--------------------------------------------------------------------
+        # HarfBuzz - HARD DEPENDENCY when --enable-bidi=yes
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
+        if pkg-config --exists harfbuzz; then
+            HB_CFLAGS=`pkg-config --cflags harfbuzz`
+            HB_LIBS=`pkg-config --libs harfbuzz`
+            AC_MSG_RESULT([yes])
+
+            tk_oldCFlags=$CFLAGS
+            tk_oldLibs=$LIBS
+            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
+            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
+
+            AC_CHECK_HEADER(harfbuzz/hb.h, [], [
+                AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
+            ], [#include <X11/Xlib.h>])
+
+            AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
+                AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
+            ])
+
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+
+            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
+            AC_SUBST(HB_CFLAGS)
+            AC_SUBST(HB_LIBS)
+        else
+            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
+Please install the HarfBuzz development package:
+  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
+  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
+  - Arch:            sudo pacman -S harfbuzz
+  - macOS (Homebrew): brew install harfbuzz])
+        fi
+
     else
+	# Bidi disabled
+	BIDI_CFLAGS=""
+	HB_CFLAGS=""
+	HB_LIBS=""
+	if test "$enable_xft" = "yes" ; then
+	   UNIX_FONT_OBJS="tkUnixRFont.o"
+	   AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
+	else
+	   UNIX_FONT_OBJS="tkUnixFont.o"
+	fi
+    fi
+
+    # Now actually enable Xft if requested (or forced by bidi)
+    if test "$enable_xft" = "yes" ; then
 	found_xft="yes"
 
 	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
@@ -368,8 +441,6 @@ if test $tk_aqua = no; then
 	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
 	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
-
-	AC_MSG_RESULT([$found_xft])
 
 	if test "$found_xft" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
@@ -408,79 +479,6 @@ if test $tk_aqua = no; then
 
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
-
-    #--------------------------------------------------------------------
-    # --enable-bidi  (HarfBuzz is required only when enabled)
-    #--------------------------------------------------------------------
-    AC_MSG_CHECKING([whether to enable bidirectional (Bidi) text support])
-    AC_ARG_ENABLE(bidi,
-	AS_HELP_STRING([--enable-bidi],
-	    [enable bidirectional/RTL text support using SheenBidi + HarfBuzz (forces --enable-xft=yes)]),
-	[enable_bidi=$enableval], [enable_bidi="no"])
-
-    if test "$enable_bidi" = "yes"; then
-	AC_MSG_RESULT([yes (forces Xft on)])
-	if test "$enable_xft" = "no"; then
-	   AC_MSG_NOTICE([--enable-bidi requested: enabling Xft as well])
-	   enable_xft=yes
-	fi
-
-	BIDI_CFLAGS="-I${TK_SRC_DIR}/unix/bidi/Headers \
-                     -I${TK_SRC_DIR}/unix/bidi/Source \
-                     -I${TK_SRC_DIR}/unix/bidi \
-                     -DSB_CONFIG_UNITY -DSB_CONFIG_EXPERIMENTAL_TEXT_API -w"
-	AC_DEFINE(HAVE_BIDI, 1, [Define to 1 if bidirectional text support is enabled])
-	UNIX_FONT_OBJS="tkUnixBidiFont.o SheenBidi.o"
-
-        #--------------------------------------------------------------------
-        # HarfBuzz - HARD DEPENDENCY only when --enable-bidi=yes
-        #--------------------------------------------------------------------
-        AC_MSG_CHECKING([for HarfBuzz (required for --enable-bidi)])
-        if pkg-config --exists harfbuzz; then
-            HB_CFLAGS=`pkg-config --cflags harfbuzz`
-            HB_LIBS=`pkg-config --libs harfbuzz`
-            AC_MSG_RESULT([yes])
-
-            tk_oldCFlags=$CFLAGS
-            tk_oldLibs=$LIBS
-            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS $HB_CFLAGS"
-            LIBS="$tk_oldLibs $XFT_LIBS $HB_LIBS $XLIBSW"
-
-            AC_CHECK_HEADER(harfbuzz/hb.h, [], [
-                AC_MSG_ERROR([HarfBuzz header <harfbuzz/hb.h> not found])
-            ], [#include <X11/Xlib.h>])
-
-            AC_CHECK_LIB(harfbuzz, hb_buffer_create, [], [
-                AC_MSG_ERROR([HarfBuzz library (libharfbuzz) not found or unusable])
-            ])
-
-            CFLAGS=$tk_oldCFlags
-            LIBS=$tk_oldLibs
-
-            BIDI_CFLAGS="$BIDI_CFLAGS $HB_CFLAGS"
-            AC_SUBST(HB_CFLAGS)
-            AC_SUBST(HB_LIBS)
-        else
-            AC_MSG_ERROR([--enable-bidi requires HarfBuzz development files.
-Please install the HarfBuzz development package:
-  - Debian/Ubuntu:   sudo apt install libharfbuzz-dev
-  - Fedora/RHEL:     sudo dnf install harfbuzz-devel
-  - Arch:            sudo pacman -S harfbuzz
-  - macOS (Homebrew): brew install harfbuzz])
-        fi
-
-    else
-	AC_MSG_RESULT([no])
-	BIDI_CFLAGS=""
-	HB_CFLAGS=""
-	HB_LIBS=""
-	if test "$enable_xft" = "yes" ; then
-	   UNIX_FONT_OBJS="tkUnixRFont.o"
-	   AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
-	else
-	   UNIX_FONT_OBJS="tkUnixFont.o"
-	fi
-    fi
 
     AC_SUBST(BIDI_CFLAGS)
     AC_SUBST(UNIX_FONT_OBJS)
