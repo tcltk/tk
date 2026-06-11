@@ -232,4 +232,5 @@ test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
 destroy .c
 imageCleanup
 
+testutils forget image
 tcltest::cleanupTests
