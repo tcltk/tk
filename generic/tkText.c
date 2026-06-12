@@ -2380,7 +2380,22 @@ TextWidgetObjCmd(
 	break;
     }
     case TEXT_LOCALE: {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("C", -1)); // TODO: to be further implemented
+	Tcl_Obj *localeObj;
+	TkTextIndex index;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "index");
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[2], &index)) {
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	localeObj = TkTextIndexLocale(textPtr, &index);
+	if (localeObj) {
+	    Tcl_SetObjResult(interp, localeObj);
+	}
 	break;
     }
     case TEXT_MARK:

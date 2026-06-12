@@ -1981,6 +1981,8 @@ MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
 MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int extents, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr, Tcl_UniChar *thisChar);
+MODULE_SCOPE Tcl_Obj *TkTextIndexLocale(TkText *textPtr,
+			    const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    Tcl_Size byteOffset, int maxX, Tcl_Size maxBytes, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
