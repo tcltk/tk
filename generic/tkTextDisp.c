@@ -12852,8 +12852,8 @@ const Tk_ObjCustomOption TkLocaleOption = {
  *	that character.
  *
  * Results:
- *	'true' is returned if the character is on the screen. 'false' means
- *	the character isn't on the screen. If the return value is 'true', then
+ *	true is returned if the character is on the screen. false means
+ *	the character isn't on the screen. If the return value is true, then
  *	information is returned in the variables pointed to by xPtr, yPtr,
  *	widthPtr, heightPtr, and basePtr.
  *
@@ -12863,11 +12863,11 @@ const Tk_ObjCustomOption TkLocaleOption = {
  *----------------------------------------------------------------------
  */
 
-int
-TkTextGetDLineInfo(
+bool
+TkTextDLineInfo(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* Index of character whose bounding box is desired. */
-    int extents,		/* Return the extents of the bbox (the overflow, not visible on
+    bool extents,		/* Return the extents of the bbox (the overflow, not visible on
 				 * screen). */
     int *xPtr, int *yPtr,	/* Filled with line's upper-left coordinate. */
     int *widthPtr, int *heightPtr,
@@ -12902,7 +12902,7 @@ TkTextGetDLineInfo(
      */
 
     if (!dlPtr || TkTextIndexCompare(&dlPtr->index, indexPtr) > 0) {
-	return 0;
+	return false;
     }
 
     dlx = dlPtr->chunkPtr ? dlPtr->chunkPtr->x : 0;
@@ -12923,7 +12923,7 @@ TkTextGetDLineInfo(
     }
 
     *basePtr = dlPtr->baseline;
-    return 1;
+    return true;
 }
 
 /*

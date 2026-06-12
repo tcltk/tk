@@ -2601,7 +2601,7 @@ TkTextGetCursorBbox(
 	 * position "a" fails here. Now we have to test with the display line.
 	 */
 
-	if (!TkTextGetDLineInfo(textPtr, &index, 0, &ix, y, &iw, h, &base)) {
+	if (!TkTextDLineInfo(textPtr, &index, false, &ix, y, &iw, h, &base)) {
 	    return 0; /* cursor is not visible at all */
 	}
 

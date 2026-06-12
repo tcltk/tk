@@ -1985,8 +1985,8 @@ MODULE_SCOPE int	TkTextCharLayoutProc(const TkTextIndex *indexPtr, TkTextSegment
 			    Tcl_Size byteOffset, int maxX, Tcl_Size maxBytes, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
-MODULE_SCOPE int	TkTextGetDLineInfo(TkText *textPtr, const TkTextIndex *indexPtr,
-			    int extents, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr,
+MODULE_SCOPE bool	TkTextDLineInfo(TkText *textPtr, const TkTextIndex *indexPtr,
+			    bool extents, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr,
 			    int *basePtr);
 MODULE_SCOPE int	TkTextBindEvent(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
 			     TkSharedText *sharedTextPtr, Tk_BindingTable *bindingTablePtr,

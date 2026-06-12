@@ -2057,14 +2057,14 @@ TextWidgetObjCmd(
     }
     case TEXT_DLINEINFO: {
 	int x, y, width, height, base, argc = 2;
-	int extents = 0;
+	bool extents = false;
 	TkTextIndex index;
 
 	if (objc == 4) {
 	    const char* option = Tcl_GetString(objv[2]);
 
 	    if (strcmp(option, "-extents") == 0) {
-		extents = 1;
+		extents = true;
 		argc += 1;
 	    } else if (*option == '-') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -extents", option));
@@ -2081,7 +2081,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextGetDLineInfo(textPtr, &index, extents, &x, &y, &width, &height, &base)) {
+	if (TkTextDLineInfo(textPtr, &index, extents, &x, &y, &width, &height, &base)) {
 	    Tcl_Obj *listObj = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x));
