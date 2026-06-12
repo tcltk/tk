@@ -459,7 +459,7 @@ Tk_GetPixmap(
 	return None;
     }
 
-    /* Initialize hash table if not already done */
+    /* Initialize hash table if not already done. */
     if (!pixmapTableInitialized) {
         Tcl_InitHashTable(&pixmapTable, TCL_ONE_WORD_KEYS);
         pixmapTableInitialized = 1;
@@ -472,7 +472,7 @@ Tk_GetPixmap(
     pixmapPtr->width = width;
     pixmapPtr->height = height;
 
-    /* Assign a safe, unique, 32-bit friendly rolling integer ID */
+    /* Assign a safe, unique, 32-bit friendly rolling integer ID. */
     pixmapPtr->id = nextPixmapId++;
 
     /* Register the mapping from ID to pixmap pointer */
@@ -480,7 +480,7 @@ Tk_GetPixmap(
     Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(&pixmapTable, (void *)(uintptr_t)pixmapPtr->id, &isNew);
     Tcl_SetHashValue(entryPtr, pixmapPtr);
 
-    /* The GL context must be current when creating the FBO */
+    /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
     pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
 					 width, height, 0);
@@ -491,11 +491,11 @@ Tk_GetPixmap(
         fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
     }
 
-    /* Clear pixmap to white */
+    /* Clear pixmap to white. */
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    /* Return the integer ID as the Pixmap handle */
+    /* Return the integer ID as the Pixmap handle. */
     return (Pixmap)pixmapPtr->id;
 }
 
@@ -526,7 +526,7 @@ Tk_FreePixmap(
         return;
     }
 
-    /* Clean up the hash table tracking entry */
+    /* Clean up the hash table tracking entry. */
     Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable, (void *)(uintptr_t)pixmap);
     if (entryPtr) {
         Tcl_DeleteHashEntry(entryPtr);
