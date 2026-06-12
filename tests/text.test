@@ -8724,6 +8724,36 @@ test text-40.1 {Extending selection with mouse going outside the widget - Bug a9
     destroy .t
 } -result {1.0}
 
+test text-41.1 {TextChecksumCmd, single line} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t insert end "hello world"
+    string is wideinteger -strict [.t checksum]
+} -cleanup {
+    destroy .t
+} -result {1}
+test text-41.2 {TextChecksumCmd, multiple lines - used to crash} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t insert end "hello\nworld\nthird line"
+    string is wideinteger -strict [.t checksum]
+} -cleanup {
+    destroy .t
+} -result {1}
+test text-41.3 {TextChecksumCmd, same content gives same checksum} -setup {
+    destroy .t .u
+    text .t
+    text .u
+} -body {
+    .t insert end "alpha\nbeta tagged" {x}
+    .u insert end "alpha\nbeta tagged" {x}
+    expr {[.t checksum] == [.u checksum]}
+} -cleanup {
+    destroy .t .u
+} -result {1}
+
 #
 # TESTFILE CLEANUP
 #

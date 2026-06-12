@@ -8007,7 +8007,9 @@ TextChecksumCmd(
 	    break;
 	}
 	if (!(segPtr = segPtr->nextPtr)) {
-	    linePtr = linePtr->nextPtr;
+	    if (!(linePtr = linePtr->nextPtr)) {
+		break;
+	    }
 	    segPtr = linePtr->segPtr;
 	}
     }
