@@ -250,6 +250,7 @@ typedef struct TkWaylandGC {
  */
 
 typedef struct TkWaylandPixmap {
+	unsigned long id;   	/* Explicit unique XID */
     NVGLUframebuffer *fb;
     GLFWwindow *glfwWindow;  /* The window whose GL context has the fbo.   */
     int width;               /* It is simpler to cache the fb dimensions.  */

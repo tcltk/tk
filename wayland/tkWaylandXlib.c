@@ -2154,35 +2154,6 @@ XEqualRegion(
 /*
  *----------------------------------------------------------------------
  *
- * XCreateBitmapFromData --
- *
- *	Create a bitmap from data. No-op in Wayland port.
- *
- * Results:
- *	Always returns 0 (Success).
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Pixmap
-XCreateBitmapFromData(
-    TCL_UNUSED(Display *),
-    TCL_UNUSED(Drawable),
-    const char *data,  /* Note: const char*, not char* */
-    TCL_UNUSED(unsigned int),
-    TCL_UNUSED(unsigned int))
-{
-    /* No-op - bitmaps not used in Wayland port. */
-    (void)data;  /* Suppress unused parameter warning */
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XFreeModifiermap --
  *
  *	Free a modifier map. No-op in Wayland port.

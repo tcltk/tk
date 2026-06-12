@@ -30,8 +30,14 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
+#include <tcl.h>
 
 extern GLFWwindow *mainGlfwWindow;
+
+/* Hash table for pixmap ID to pointer mapping */
+static unsigned long nextPixmapId = 1;
+static Tcl_HashTable pixmapTable;
+static int pixmapTableInitialized = 0;
 
 /* -----------------------------------------------------------------------
  * Display / screen initialization.
@@ -40,7 +46,7 @@ extern GLFWwindow *mainGlfwWindow;
  * TkpOpenDisplay is the Tk platform entry point that allocates a full
  * TkDisplay, aScreen, and a Visual.  GLFW is initialized here so that the primary
  * monitor dimensions can be queried immediately.
-
+ *
  * ----------------------------------------------------------------------- */
 
 /*
@@ -383,20 +389,23 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
- * The Pixmap XID is the unsgined int value of a pointer to a
- * TkWaylandPixmap.
+ * TkWaylandPixmapFromPixmap --
+ *
+ *	Convert a Pixmap handle (which is now a rolling integer ID) back
+ *	to its TkWaylandPixmap structure pointer via the hash table.
+ *
+ * Results:
+ *	Pointer to TkWaylandPixmap or NULL if not found.
+ *
+ * Side effects:
+ *	None.
  */
-
-static inline TkWaylandPixmap* TkWaylandPixmapFromPixmap(
-    Pixmap pixmap)
+static inline TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap)
 {
-    return (TkWaylandPixmap*)pixmap;
-}
-
-static inline Pixmap PixmapFromTkWaylandPixmap(
-    TkWaylandPixmap *pixmapPtr)
-{
-    return (Pixmap)pixmapPtr;
+    if (!pixmapTableInitialized) return NULL;
+    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable, (void *)(uintptr_t)pixmap);
+    if (!entryPtr) return NULL;
+    return (TkWaylandPixmap *)Tcl_GetHashValue(entryPtr);
 }
 
 /*
@@ -410,11 +419,16 @@ static inline Pixmap PixmapFromTkWaylandPixmap(
  *      associated GLFWwindow.  Otherwise the context of the root window is
  *      used.  Note that the GL context is shared between windows.
  *
+ *      Pixmap handles are now safe, rolling integer IDs stored in a hash
+ *      table, eliminating the previous direct pointer-as-ID approach which
+ *      caused crashes when Tk incorrectly treated them as XIDs.
+ *
  * Results:
- *      Returns a Drawable associated to a Pixmap.
+ *      Returns a Drawable associated to a Pixmap (as an integer ID).
  *
  * Side effects:
- *      Allocates an NVGLUframebuffer.
+ *      Allocates an NVGLUframebuffer and registers the pixmap in the
+ *      global hash table.
  *
  *----------------------------------------------------------------------
  */
@@ -445,6 +459,12 @@ Tk_GetPixmap(
 	return None;
     }
 
+    /* Initialize hash table if not already done */
+    if (!pixmapTableInitialized) {
+        Tcl_InitHashTable(&pixmapTable, TCL_ONE_WORD_KEYS);
+        pixmapTableInitialized = 1;
+    }
+
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
     memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
@@ -452,22 +472,31 @@ Tk_GetPixmap(
     pixmapPtr->width = width;
     pixmapPtr->height = height;
 
-    /* The GL context must be current when creating the FBO. */
+    /* Assign a safe, unique, 32-bit friendly rolling integer ID */
+    pixmapPtr->id = nextPixmapId++;
+
+    /* Register the mapping from ID to pixmap pointer */
+    int isNew;
+    Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(&pixmapTable, (void *)(uintptr_t)pixmapPtr->id, &isNew);
+    Tcl_SetHashValue(entryPtr, pixmapPtr);
+
+    /* The GL context must be current when creating the FBO */
     glfwMakeContextCurrent(glfwWindow);
     pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
 					 width, height, 0);
 
-    /* Check FBO completeness. */
+    /* Check FBO completeness */
     status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
     }
 
-    /* Clear pixmap to white. */
+    /* Clear pixmap to white */
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    return PixmapFromTkWaylandPixmap(pixmapPtr);
+    /* Return the integer ID as the Pixmap handle */
+    return (Pixmap)pixmapPtr->id;
 }
 
 /*
@@ -481,7 +510,8 @@ Tk_GetPixmap(
  *      None.
  *
  * Side effects:
- *      Deletes FBO, texture, and stencil buffer.
+ *      Deletes FBO, texture, and stencil buffer. Removes the pixmap
+ *      from the global hash table.
  *
  *----------------------------------------------------------------------
  */
@@ -492,6 +522,16 @@ Tk_FreePixmap(
     Pixmap pixmap)
 {
     TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap(pixmap);
+    if (!pixmapPtr) {
+        return;
+    }
+
+    /* Clean up the hash table tracking entry */
+    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable, (void *)(uintptr_t)pixmap);
+    if (entryPtr) {
+        Tcl_DeleteHashEntry(entryPtr);
+    }
+
     if (pixmapPtr->fb) {
 	glfwMakeContextCurrent(pixmapPtr->glfwWindow);
 	nvgluDeleteFramebuffer(pixmapPtr->fb);
