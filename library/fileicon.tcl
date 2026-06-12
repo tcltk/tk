@@ -9217,18 +9217,18 @@ proc ::tk::icons::svgPhoto {name size} {
     variable cache
 
     if {![info exists svgData($name)]} {
-        error "No SVG icon named \"$name\""
+	error "No SVG icon named \"$name\""
     }
 
     set key "${name}@${size}"
 
     if {[info exists cache($key)] && [lsearch [image names] $cache($key)] >= 0} {
-        return $cache($key)
+	return $cache($key)
     }
 
     set img [image create photo \
-        -format [list svg -scaletoheight $size] \
-        -data $svgData($name)
+	-format [list svg -scaletoheight $size] \
+	-data $svgData($name)
     ]
 
     set cache($key) $img
@@ -9237,30 +9237,30 @@ proc ::tk::icons::svgPhoto {name size} {
 
 proc ::tk::fileicon {filename size} {
     if {[tk windowingsystem] eq "win32"} {
-        # Snap to closest standard Windows icon size: 16, 32, 48, 256
-        set sizes {16 32 48 256}
-        set newsize [lindex $sizes 0]
-        set mindiff [expr {abs($size - $newsize)}]
-        foreach s $sizes {
-            set diff [expr {abs($size - $s)}]
-            if {$diff < $mindiff} {
-                set mindiff $diff
-                set newsize $s
-            }
-        }
+	# Snap to closest standard Windows icon size: 16, 32, 48, 256
+	set sizes {16 32 48 256}
+	set newsize [lindex $sizes 0]
+	set mindiff [expr {abs($size - $newsize)}]
+	foreach s $sizes {
+	    set diff [expr {abs($size - $s)}]
+	    if {$diff < $mindiff} {
+		set mindiff $diff
+		set newsize $s
+	    }
+	}
 
 	# Return the same icon for all volumes, incl. the virtual filesystems
 	if {$filename in [file volumes]} {
 	    set filename "C:/"
 	}
-        return [::tk::fileicon::_getwinicon $filename $newsize]
+	return [::tk::fileicon::_getwinicon $filename $newsize]
     }
     if {[tk windowingsystem] eq "aqua"} {
 	# Return the same icon for all volumes, incl. the virtual filesystems
 	if {$filename in [file volumes]} {
 	    set filename "/"
 	}
-        return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
+	return [image create nsimage [expr {rand()}] -source $filename -as path -height $size]
     }
     if {[tk windowingsystem] eq "x11"} {
 	set ext [string tolower [file extension $filename]]
@@ -9322,5 +9322,3 @@ proc ::tk::fileicon {filename size} {
 namespace ensemble configure tk -map \
     [dict merge [namespace ensemble configure tk -map] \
 	 {fileicon ::tk::fileicon}]
-
-
