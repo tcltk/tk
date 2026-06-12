@@ -349,6 +349,21 @@ test textTag-1.40 {configuration options} -setup {
 } -cleanup {
     destroy .u
 } -result {0}
+test textTag-1.41 {configuration options, -locale} -body {
+    .t tag configure x -locale en_US
+    .t tag add x 1.0 1.3
+    list [.t locale 1.0] [.t locale 1.2] [.t locale 1.3]
+} -cleanup {
+    .t tag configure x -locale {}
+} -result {en_US en_US C}
+test textTag-1.42 {configuration options, tag -locale overrides widget -locale} -body {
+    .t configure -locale TCL8
+    .t tag configure x -locale nl_NL
+    list [.t locale 1.0] [.t locale 1.2] [.t locale 1.3]
+} -cleanup {
+    .t tag configure x -locale {}
+    .t configure -locale C
+} -result {nl_NL nl_NL tcl8}
 
 
 test textTag-2.1 {TkTextTagCmd - "add" option} -body {

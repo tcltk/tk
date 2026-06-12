@@ -258,6 +258,9 @@ letters (for example
 .QW en
 ), or an empty string, otherwise an error will be thrown.
 .RE
+.OP \-locale locale Locale
+The locale which is used for determining word and character
+boundaries within the text. The default is "C".
 .OP \-maxredo maxRedo MaxRedo
 Specifies the maximum number of redo actions on the undo stack. A zero value
 will prevent any redo action, only undoes are possible. A negative value
@@ -994,6 +997,12 @@ contain characters because they are indented by \fB\-lmargin1\fR or
 specified as an empty string, then the color used is specified by the
 \fB\-background\fR tag option (or, if this is also unspecified, by the
 \fB\-background\fR widget option).
+.TP
+\fB\-locale \fIlocale\fR
+.
+The locale which is used for determining word and character
+boundaries within the text. If this tag option is specified, it
+overrides the \fB\-locale\fR option of the text widget.
 .TP
 \fB\-offset \fIpixels\fR
 .
@@ -3353,6 +3362,10 @@ The states \fBedit modified\fR, \fBedit altered\fR, and
 \fBedit irreversible\fR will be resetted to false. Note that this operation
 cannot be undone.
 .RE
+.TP
+\fIpathName \fBlocale \fIindex\fR
+.
+Returns the locale belonging to this \fIindex\fR.
 .TP
 \fIpathName \fBmark \fIoption \fR?\fIarg ...\fR?
 .

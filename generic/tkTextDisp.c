@@ -242,6 +242,7 @@ typedef struct StyleValues {
     uint32_t overstrike:1;	/* Non-zero means draw overstrike through text. */
     uint32_t underline:1;	/* Non-zero means draw underline underneath text. */
     uint32_t elide:1;		/* Zero means draw text, otherwise not. */
+    char locale[8];		/* Locale for word boundaries (TIP 687). */
 } StyleValues;
 
 /*
@@ -1960,6 +1961,7 @@ FillStyle(
     if (tagPtr->elide >= 0)             { stylePtr->elide = tagPtr->elide; }
     if (tagPtr->langObj)                { stylePtr->lang = tagPtr->lang; }
     if (tagPtr->hyphenRulesObj)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
+    if (tagPtr->locale[0])              { memcpy(stylePtr->locale, tagPtr->locale, sizeof(stylePtr->locale)); }
 
     if (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR) { stylePtr->tabStyle = tagPtr->tabStyle; }
@@ -2038,6 +2040,9 @@ MakeStyle(
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.lang = textPtr->lang;
     styleValues.hyphenRules = textPtr->hyphenRules;
+    if (textPtr->locale[0]) {
+	memcpy(styleValues.locale, textPtr->locale, sizeof(styleValues.locale));
+    }
 
     haveFocus = !!(textPtr->flags & GOT_FOCUS);
     borderPrio = -1;
@@ -12842,6 +12847,63 @@ const Tk_ObjCustomOption TkLocaleOption = {
     0
 };
 
+Tcl_Obj *
+TkTextIndexLocale(
+    TkText *textPtr,		/* Widget record for text widget. */
+    const TkTextIndex *indexPtr)/* Index whose locale is desired. */
+{
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    DLine *dlPtr;
+    TkTextDispChunk *chunkPtr;
+    unsigned byteCount;
+
+    /*
+     * Make sure that all of the screen layout information is up to date.
+     */
+
+    if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
+	UpdateDisplayInfo(textPtr);
+    }
+
+    /*
+     * Find the display line containing the desired index. Trap the cases
+     * where the index is not displayed (no display line, or index before
+     * the first one): fall back to the widget locale.
+     */
+
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
+    if ((dlPtr == NULL) || (TkTextIndexCompare(&dlPtr->index, indexPtr) > 0)) {
+	if (textPtr->locale[0]) {
+	    return NULL;
+	}
+	return GetLocale(NULL, NULL, textPtr->locale, 0);
+    }
+
+    /*
+     * Find the chunk within the display line that contains the desired
+     * index.
+     */
+
+    byteCount = TkTextIndexCountBytes(&dlPtr->index, indexPtr);
+    for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
+	if (chunkPtr == NULL) {
+	    if (textPtr->locale[0]) {
+		return NULL;
+	    }
+	    return GetLocale(NULL, NULL, textPtr->locale, 0);
+	}
+	if (byteCount < chunkPtr->numBytes) {
+	    break;
+	}
+	byteCount -= chunkPtr->numBytes;
+    }
+
+    if (!chunkPtr->stylePtr || !chunkPtr->stylePtr->sValuePtr
+	    || !chunkPtr->stylePtr->sValuePtr->locale[0]) {
+	return NULL;
+    }
+    return GetLocale(NULL, NULL, chunkPtr->stylePtr->sValuePtr->locale, 0);
+}
 
 /*
  *----------------------------------------------------------------------
