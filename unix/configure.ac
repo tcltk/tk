@@ -547,6 +547,58 @@ else
 fi
 
 #--------------------------------------------------------------------
+#	Check for the X RENDER extension client library (Xrender), used
+#	to composite RGBA photo images server-side (TkpPutRGBAImage).
+#--------------------------------------------------------------------
+
+XRENDER_CFLAGS=""
+XRENDER_LIBS=""
+if test $tk_aqua = no; then
+    AC_MSG_CHECKING([whether to use xrender])
+    AC_ARG_ENABLE(xrender,
+	AS_HELP_STRING([--enable-xrender],
+	    [use Xrender to composite photo images with alpha (default: yes)]),
+	[enable_xrender=$enableval], [enable_xrender="yes"])
+    AC_MSG_RESULT([$enable_xrender])
+
+    if test "$enable_xrender" = "yes" ; then
+	found_xrender="yes"
+	XRENDER_CFLAGS=`pkg-config --cflags xrender 2>/dev/null` || found_xrender="no"
+	XRENDER_LIBS=`pkg-config --libs xrender 2>/dev/null` || found_xrender="no"
+	if test "$found_xrender" = "no" ; then
+	    found_xrender="yes"
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS="-lXrender"
+	fi
+
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$CFLAGS $XINCLUDES $XRENDER_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $XRENDER_LIBS $XLIBSW"
+
+	AC_CHECK_HEADER(X11/extensions/Xrender.h, [], [found_xrender=no],
+	    [#include <X11/Xlib.h>])
+	if test "$found_xrender" = "yes" ; then
+	    AC_CHECK_LIB(Xrender, XRenderQueryExtension, [], [found_xrender=no])
+	fi
+
+	CFLAGS=$tk_oldCFlags
+	LIBS=$tk_oldLibs
+
+	if test "$found_xrender" = "yes" ; then
+	    AC_DEFINE(HAVE_XRENDER, 1, [Have we turned on XRender (photo image compositing)?])
+	else
+	    AC_MSG_WARN([Can't find xrender configuration -- photo images will composite in software])
+	    enable_xrender=no
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS=""
+	fi
+    fi
+fi
+AC_SUBST(XRENDER_CFLAGS)
+AC_SUBST(XRENDER_LIBS)
+
+#--------------------------------------------------------------------
 #	Check for libcups support
 #--------------------------------------------------------------------
 

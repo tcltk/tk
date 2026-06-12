@@ -157,7 +157,7 @@ AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
-X11_LIB_SWITCHES	= $(XFT_LIBS) $(HB_LIBS) @XLIBSW@
+X11_LIB_SWITCHES	= $(XFT_LIBS) $(HB_LIBS) $(XRENDER_LIBS) @XLIBSW@
 
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
@@ -300,6 +300,10 @@ XFT_LIBS		= @XFT_LIBS@
 HB_CFLAGS		= @HB_CFLAGS@
 HB_LIBS			= @HB_LIBS@
 
+# support for Xrender (server-side photo image compositing)
+XRENDER_CFLAGS		= @XRENDER_CFLAGS@
+XRENDER_LIBS		= @XRENDER_LIBS@
+
 # support for libcups
 CUPS_CFLAGS		= @CUPS_CFLAGS@
 CUPS_LIBS		= @CUPS_LIBS@
@@ -351,7 +355,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 	${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
 	${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) \
-	$(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
+	$(XRENDER_CFLAGS) $(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -361,7 +365,7 @@ DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
 	-I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
 	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@ $(XFT_CFLAGS) $(BIDI_CFLAGS) \
-	$(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
+	$(XRENDER_CFLAGS) $(if $(filter yes,@enable_bidi@),$(HB_CFLAGS))
 
 WISH_OBJS = tkAppInit.o
 
