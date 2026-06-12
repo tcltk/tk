@@ -1048,7 +1048,7 @@ MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
-MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
+MODULE_SCOPE bool	TkTextDLineInfo(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *basePtr);
 MODULE_SCOPE void	TkTextEmbWinDisplayProc(TkText *textPtr,

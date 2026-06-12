@@ -8037,8 +8037,8 @@ TkTextIndexLocale(
  *	that character.
  *
  * Results:
- *	Zero is returned if the character is on the screen. -1 means the
- *	character isn't on the screen. If the return value is 0, then
+ *	true is returned if the character is on the screen. false means the
+ *	character isn't on the screen. If the return value is true, then
  *	information is returned in the variables pointed to by xPtr, yPtr,
  *	widthPtr, heightPtr, and basePtr.
  *
@@ -8048,7 +8048,7 @@ TkTextIndexLocale(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextDLineInfo(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* Index of character whose bounding box is
@@ -8087,7 +8087,7 @@ TkTextDLineInfo(
      */
 
     if ((dlPtr == NULL) || (TkTextIndexCmp(&dlPtr->index, indexPtr) > 0)) {
-	return -1;
+	return false;
     }
 
     dlx = (dlPtr->chunkPtr != NULL? dlPtr->chunkPtr->x: 0);
@@ -8100,7 +8100,7 @@ TkTextDLineInfo(
 	*heightPtr = dlPtr->height;
     }
     *basePtr = dlPtr->baseline;
-    return 0;
+    return true;
 }
 
 /*
