@@ -1048,7 +1048,7 @@ EmbWinLostContentProc(
     assert(!IsPreservedWindow(client));
 
     assert(client->tkwin);
-    client->displayed = 0;
+    client->displayed = false;
     Tk_DeleteEventHandler(client->tkwin, StructureNotifyMask, EmbWinStructureProc, client);
     Tcl_CancelIdleCall(EmbWinDelayedUnmap, client);
     EmbWinDelayedUnmap(client);
@@ -1260,7 +1260,7 @@ DestroyOrUnmapWindow(
 	    client->parent->body.ew.sharedTextPtr->numWindows -= 1;
 	    Tcl_DeleteHashEntry(client->hPtr);
 	    client->hPtr = NULL;
-	    client->displayed = 0;
+	    client->displayed = false;
 	}
 	Tcl_CancelIdleCall(EmbWinDelayedUnmap, client);
 	if (client->tkwin && ewPtr->body.ew.createObj) {
@@ -1670,7 +1670,7 @@ EmbWinDisplayProc(
 	 * The window is off-screen; just unmap it.
 	 */
 
-	client->displayed = 0;
+	client->displayed = false;
 	EmbWinDelayedUnmap(client);
 	return;
     }
@@ -1692,7 +1692,7 @@ EmbWinDisplayProc(
      * the embedded window its clients will get freed.
      */
 
-    client->displayed = 1;
+    client->displayed = true;
 
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if (windowX != Tk_X(tkwin)
@@ -1757,7 +1757,7 @@ EmbWinUndisplayProc(
 	 * the unmap becomes unnecessary.
 	 */
 
-	client->displayed = 0;
+	client->displayed = false;
 	Tcl_DoWhenIdle(EmbWinDelayedUnmap, client);
     }
 }
@@ -1925,9 +1925,9 @@ TkTextWindowIndex(
 
     ewPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     TkTextIndexClear(indexPtr, textPtr);
-    DEBUG(indexPtr->discardConsistencyCheck = 1);
+    DEBUG(indexPtr->discardConsistencyCheck = true);
     TkTextIndexSetSegment(indexPtr, ewPtr);
-    DEBUG(indexPtr->discardConsistencyCheck = 0);
+    DEBUG(indexPtr->discardConsistencyCheck = false);
 
     if (TkTextIndexOutsideStartEnd(indexPtr)) {
 	return false;

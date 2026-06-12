@@ -4,11 +4,11 @@ changes to the Tk source code at
 
 > [Tk Source Code](https://core.tcl-lang.org/tk/)
 
-Release Tk 9.1a2 arises from the check-in with tag `core-9-1-a2`.
+Release Tk 9.1b0 arises from the check-in with tag `core-9-1-b0`.
 
-Tk 9.1a2 continues the Tk 9.x series of releases.  The Tk 9.x series
+Tk 9.1b0 continues the Tk 9.x series of releases.  The Tk 9.x series
 do not support Tcl 8.6.  The Tk 9.1 series extends the Tcl 9.0 series.
-To make use of Tk 9.1a2, first a Tcl 9.0 or 9.1 release must be present.
+To make use of Tk 9.1b0, first a Tcl 9.0 or 9.1 release must be present.
 As new Tk features are developed, expect them to appear in Tk 9, but not
 necessarily in Tk 8.
 
@@ -29,6 +29,9 @@ necessarily in Tk 8.
  - [Make the selection colors of the listbox widget fully native-conform](https://core.tcl-lang.org/tips/doc/trunk/tip/747.md)
  - [Add support for bidrectional text / RTL languages on Windows and X11](https://core.tcl-lang.org/tk/tktview/1b81ff43a2)
  - [Add Mouse Wheel Zoom Support to Tk Console](https://core.tcl-lang.org/tips/doc/trunk/tip/742.md)
+ - [Consistent dark mode for Windows and macOS](https://core.tcl-lang.org/tips/doc/trunk/tip/750.md)
+ - [Rotated text for label widgets](https://core.tcl-lang.org/tips/doc/trunk/tip/751.md)
+ - [ttk::treeview enhancements](https://core.tcl-lang.org/tips/doc/trunk/tip/740.md)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)

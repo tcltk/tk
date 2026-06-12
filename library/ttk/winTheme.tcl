@@ -27,17 +27,17 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure TRadiobutton -padding {1.5p 3p}
 
 	ttk::style configure TMenubutton \
-	    -padding {6p 3p} -arrowsize 2.25p -relief raised
+	    -padding {6p 3p} -arrowsize 3.75p -relief raised
 
 	ttk::style configure TEntry \
-	    -padding 2 -insertwidth 1
+	    -padding 1.5p -insertwidth 0.75p
 	ttk::style map TEntry \
 	    -fieldbackground \
 		{readonly SystemButtonFace disabled SystemButtonFace} \
 	    -selectbackground {!focus SystemWindow} \
 	    -selectforeground {!focus SystemWindowText}
 
-	ttk::style configure TCombobox -padding 1.5p
+	ttk::style configure TCombobox -padding 1.5p -insertwidth 0.75p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -54,7 +54,7 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-	ttk::style configure TSpinbox -padding {1.5p 0 12p 0}
+	ttk::style configure TSpinbox -padding {1.5p 0 12p 0} -insertwidth 0.75p
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
@@ -69,17 +69,23 @@ namespace eval ttk::theme::winnative {
 	ttk::style map TNotebook.Tab -expand {selected {2 2 2 0}}
 
 	# Treeview
-	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Item \
-	    -indicatormargins {1.5p 1.5p 3p 1.5p}
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised -padding {2.25p 1 2.25p 1} \
+	    -indicatorsize 3p -indicatormargin {3p 1.5p 1.5p 1.5p}
+	ttk::style configure Item -indicatorsize 6.75p \
+	    -indicatormargin {1.5p 1.5p 3p 1.5p}
+	ttk::style configure CheckTreeview.Item \
+	    -padding {0 0.75p 0 0.75p}	;# because of Checkbutton.indicator
+	ttk::style configure Row -focuscolor black \
+	    -focussolid 0 -focusthickness 0 -padding 0
+	ttk::style map Row -focusthickness [list focus 1]
 	ttk::style configure Treeview -background SystemWindow \
 	    -stripedbackground System3dLight -indent 15p
-	ttk::setTreeviewRowHeight
 	# The treeview uses the "background" state for
 	# selected items when the widget has lost the focus.
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-				background #d9d9d9 \
+				background SystemScrollbar \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
 				background SystemWindowText \

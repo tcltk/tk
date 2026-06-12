@@ -279,6 +279,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"left", TCL_INDEX_NONE, offsetof(TkText, justify), TK_OPTION_ENUM_VAR, justifyStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-lang", "lang", "Lang",
 	 NULL, offsetof(TkText, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+    {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
+	"C", TCL_INDEX_NONE, offsetof(TkText, locale), 0, &TkLocaleOption, 0},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndoDepth), TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_INT, "-maxundosize", "maxUndoSize", "MaxUndoSize",
@@ -1400,14 +1402,14 @@ TextWidgetObjCmd(
     TkSharedText *sharedTextPtr;
     int result = TCL_OK;
     int commandIndex = -1;
-    int oldUndoStackEvent;
+    bool oldUndoStackEvent;
 
     static const char *const optionStrings[] = {
 	"tk_bindvar", "tk_textInsert", "tk_textReplace",
 	"bbox", "brks", "checksum", "cget", "clear", "compare", "configure",
 	"count", "debug", "delete", "dlineinfo", "dump", "edit", "get", "image",
 	"index", "insert", "inspect", "isclean", "isdead", "isempty", "lineno",
-	"load", "mark", "peer", "pendingsync", "replace", "scan", "search",
+	"load", "locale", "mark", "peer", "pendingsync", "replace", "scan", "search",
 	"see", "sync", "tag", "watch", "window", "xview", "yview", NULL
     };
     enum options {
@@ -1415,7 +1417,7 @@ TextWidgetObjCmd(
 	TEXT_BBOX, TEXT_BRKS, TEXT_CHECKSUM, TEXT_CGET, TEXT_CLEAR, TEXT_COMPARE, TEXT_CONFIGURE,
 	TEXT_COUNT, TEXT_DEBUG, TEXT_DELETE, TEXT_DLINEINFO, TEXT_DUMP, TEXT_EDIT, TEXT_GET, TEXT_IMAGE,
 	TEXT_INDEX, TEXT_INSERT, TEXT_INSPECT, TEXT_ISCLEAN, TEXT_ISDEAD, TEXT_ISEMPTY, TEXT_LINENO,
-	TEXT_LOAD, TEXT_MARK, TEXT_PEER, TEXT_PENDINGSYNC, TEXT_REPLACE, TEXT_SCAN, TEXT_SEARCH,
+	TEXT_LOAD, TEXT_LOCALE, TEXT_MARK, TEXT_PEER, TEXT_PENDINGSYNC, TEXT_REPLACE, TEXT_SCAN, TEXT_SEARCH,
 	TEXT_SEE, TEXT_SYNC, TEXT_TAG, TEXT_WATCH, TEXT_WINDOW, TEXT_XVIEW, TEXT_YVIEW
     };
 
@@ -1439,7 +1441,7 @@ TextWidgetObjCmd(
     textPtr->refCount += 1;
     sharedTextPtr = textPtr->sharedTextPtr;
     oldUndoStackEvent = sharedTextPtr->undoStackEvent;
-    sharedTextPtr->undoStackEvent = 0;
+    sharedTextPtr->undoStackEvent = false;
 
     /*
      * Clear saved insert cursor position.
@@ -2377,6 +2379,10 @@ TextWidgetObjCmd(
 	}
 	break;
     }
+    case TEXT_LOCALE: {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("C", -1)); // TODO: to be further implemented
+	break;
+    }
     case TEXT_MARK:
 	result = TkTextMarkCmd(textPtr, interp, objc, objv);
 	break;
@@ -3035,7 +3041,7 @@ PushUndoSeparatorIfNeeded(
 	    || (autoSeparators && sharedTextPtr->lastEditMode != currentEditMode)) {
 	PushRetainedUndoTokens(sharedTextPtr);
 	TkTextUndoPushSeparator(sharedTextPtr->undoStack, 1);
-	sharedTextPtr->pushSeparator = 0;
+	sharedTextPtr->pushSeparator = false;
 	sharedTextPtr->lastUndoTokenType = -1;
     }
 }
@@ -3340,13 +3346,13 @@ ClearText(
     TkBitClear(sharedTextPtr->affectGeometryTags);
     TkBitClear(sharedTextPtr->affectGeometryNonSelTags);
     TkBitClear(sharedTextPtr->affectLineHeightTags);
-    sharedTextPtr->isAltered = 0;
-    sharedTextPtr->isModified = 0;
-    sharedTextPtr->isIrreversible = 0;
-    sharedTextPtr->userHasSetModifiedFlag = 0;
+    sharedTextPtr->isAltered = false;
+    sharedTextPtr->isModified = false;
+    sharedTextPtr->isIrreversible = false;
+    sharedTextPtr->userHasSetModifiedFlag = false;
     sharedTextPtr->haveToSetCurrentMark = false;
     sharedTextPtr->undoLevel = 0;
-    sharedTextPtr->pushSeparator = 0;
+    sharedTextPtr->pushSeparator = false;
     sharedTextPtr->imageCount = 0;
     sharedTextPtr->tree = TkBTreeCreate(sharedTextPtr, oldEpoch + 1);
     sharedTextPtr->insertDeleteUndoTokenCount = 0;
@@ -4025,9 +4031,9 @@ TkConfigureText(
 		    TextUndoStackContentChangedCallback);
 	    TkTextUndoSetContext(sharedTextPtr->undoStack, sharedTextPtr);
 	    sharedTextPtr->undoLevel = 0;
-	    sharedTextPtr->pushSeparator = 0;
-	    sharedTextPtr->isIrreversible = 0;
-	    sharedTextPtr->isAltered = 0;
+	    sharedTextPtr->pushSeparator = false;
+	    sharedTextPtr->isIrreversible = false;
+	    sharedTextPtr->isAltered = false;
 	} else {
 	    sharedTextPtr->isIrreversible = TkTextUndoContentIsModified(sharedTextPtr->undoStack);
 	    ClearRetainedUndoTokens(sharedTextPtr);
@@ -5164,7 +5170,7 @@ InsertChars(
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	}
 	if (triggerStackEvent) {
-	    sharedTextPtr->undoStackEvent = 1; /* TkBTreeJoinUndoInsert didn't trigger */
+	    sharedTextPtr->undoStackEvent = true; /* TkBTreeJoinUndoInsert didn't trigger */
 	}
     }
 
@@ -5446,7 +5452,7 @@ static void
 TextUndoStackContentChangedCallback(
     const TkTextUndoStack stack)
 {
-    ((TkSharedText *) TkTextUndoGetContext(stack))->undoStackEvent = 1;
+    ((TkSharedText *) TkTextUndoGetContext(stack))->undoStackEvent = true;
 }
 
 /*
@@ -5472,7 +5478,7 @@ TriggerUndoStackEvent(
     TkText *textPtr;
 
     assert(sharedTextPtr->undoStackEvent);
-    sharedTextPtr->undoStackEvent = 0;
+    sharedTextPtr->undoStackEvent = false;
 
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	if (!(textPtr->flags & DESTROYED)) {
@@ -5894,7 +5900,7 @@ DeleteIndexRange(
 		    ((TkTextUndoTokenRange *) undoInfo.token)->startIndex;
 	    sharedTextPtr->prevUndoEndIndex = ((TkTextUndoTokenRange *) undoInfo.token)->endIndex;
 	    /* stack has changed anyway, but TkBTreeJoinUndoDelete didn't trigger */
-	    sharedTextPtr->undoStackEvent = 1;
+	    sharedTextPtr->undoStackEvent = true;
 	} else {
 	    assert(undoInfo.token->undoType->destroyProc);
 	    undoInfo.token->undoType->destroyProc(sharedTextPtr, undoInfo.token, 0);
@@ -8848,8 +8854,8 @@ TextEditCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
-    int setModified;
-    int oldModified;
+    bool setModified;
+    bool oldModified;
     TkSharedText *sharedTextPtr;
     static const char *const editOptionStrings[] = {
 	"altered",
@@ -9098,9 +9104,9 @@ TextEditCmd(
 
 		TkTextUndoClearStack(sharedTextPtr->undoStack);
 		sharedTextPtr->undoLevel = 0;
-		sharedTextPtr->pushSeparator = 0;
-		sharedTextPtr->isAltered = 0;
-		sharedTextPtr->isIrreversible = 0;
+		sharedTextPtr->pushSeparator = false;
+		sharedTextPtr->isAltered = false;
+		sharedTextPtr->isIrreversible = false;
 		TkTextUpdateAlteredFlag(sharedTextPtr);
 	    }
 	    return TCL_OK;
@@ -9123,9 +9129,9 @@ TextEditCmd(
 		if (stack[0] == 'u') {
 		    TkTextUndoClearUndoStack(sharedTextPtr->undoStack);
 		    sharedTextPtr->undoLevel = 0;
-		    sharedTextPtr->pushSeparator = 0;
-		    sharedTextPtr->isAltered = 0;
-		    sharedTextPtr->isIrreversible = 0;
+		    sharedTextPtr->pushSeparator = false;
+		    sharedTextPtr->isAltered = false;
+		    sharedTextPtr->isIrreversible = false;
 		    TkTextUpdateAlteredFlag(sharedTextPtr);
 		} else {
 		    TkTextUndoClearRedoStack(sharedTextPtr->undoStack);
@@ -9150,7 +9156,7 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	if (sharedTextPtr->undoStack) {
-	    sharedTextPtr->pushSeparator = 1;
+	    sharedTextPtr->pushSeparator = true;
 	    if (immediately) {
 		/* last two args are meaningless here */
 		PushUndoSeparatorIfNeeded(sharedTextPtr, sharedTextPtr->autoSeparators,
@@ -9925,13 +9931,13 @@ UpdateModifiedFlag(
     TkSharedText *sharedTextPtr,
     int flag)
 {
-    int oldModifiedFlag = sharedTextPtr->isModified;
+    bool oldModifiedFlag = sharedTextPtr->isModified;
 
     if (flag) {
-	sharedTextPtr->isModified = 1;
+	sharedTextPtr->isModified = true;
     } else if (sharedTextPtr->undoStack && !sharedTextPtr->userHasSetModifiedFlag) {
 	if (sharedTextPtr->insertDeleteUndoTokenCount > 0) {
-	    sharedTextPtr->isModified = 1;
+	    sharedTextPtr->isModified = true;
 	} else {
 	    unsigned undoDepth = TkTextUndoGetCurrentUndoStackDepth(sharedTextPtr->undoStack);
 	    sharedTextPtr->isModified = (undoDepth > 0 && undoDepth == sharedTextPtr->undoLevel);
@@ -9939,7 +9945,7 @@ UpdateModifiedFlag(
     }
 
     if (oldModifiedFlag != sharedTextPtr->isModified) {
-	sharedTextPtr->userHasSetModifiedFlag = 0;
+	sharedTextPtr->userHasSetModifiedFlag = false;
 	GenerateEvent(sharedTextPtr, "Modified");
     }
 }
@@ -9964,12 +9970,12 @@ void
 TkTextUpdateAlteredFlag(
     TkSharedText *sharedTextPtr)/* Information about text widget. */
 {
-    int oldIsAlteredFlag = sharedTextPtr->isAltered;
-    int oldIsIrreversibleFlag = sharedTextPtr->isIrreversible;
+    bool oldIsAlteredFlag = sharedTextPtr->isAltered;
+    bool oldIsIrreversibleFlag = sharedTextPtr->isIrreversible;
 
     if (sharedTextPtr->undoStack) {
 	if (TkTextUndoContentIsIrreversible(sharedTextPtr->undoStack)) {
-	    sharedTextPtr->isIrreversible = 1;
+	    sharedTextPtr->isIrreversible = true;
 	}
 	if (!sharedTextPtr->isIrreversible) {
 	    sharedTextPtr->isAltered = sharedTextPtr->undoTagListCount > 0
@@ -9977,10 +9983,10 @@ TkTextUpdateAlteredFlag(
 		    || TkTextUndoGetCurrentUndoStackDepth(sharedTextPtr->undoStack) > 0;
 	}
     } else {
-	sharedTextPtr->isIrreversible = 1;
+	sharedTextPtr->isIrreversible = true;
     }
     if (sharedTextPtr->isIrreversible) {
-	sharedTextPtr->isAltered = 1;
+	sharedTextPtr->isAltered = true;
     }
     if (oldIsAlteredFlag != sharedTextPtr->isAltered) {
 	GenerateEvent(sharedTextPtr, "Altered");

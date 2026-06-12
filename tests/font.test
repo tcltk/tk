@@ -846,7 +846,7 @@ test font-17.4 {Tk_FreeFont procedure: named font} -setup {
 test font-17.5 {Tk_FreeFont procedure: named font} -constraints {aqua} -setup {
     # Text measurements may differ slightly from legacy Tk due to proper font shaping
 	# with Harfbuzz/SheenBidi (X11) and Uniscribe (Windows); run on macOS only, which
-    # supports shaping natively. 
+    # supports shaping natively.
     destroy .t.f
     catch {font delete xyz}
     pack [label .t.f]
@@ -1548,7 +1548,7 @@ test font-24.4 {Tk_ComputeTextLayout: calls Tk_MeasureChars} -body {
 test font-24.5 {Tk_ComputeTextLayout: break line} -constraints {aqua} -body {
     # Text measurements may differ slightly from legacy Tk due to proper font shaping
 	# with Harfbuzz/SheenBidi (X11) and Uniscribe (Windows); run on macOS only, which
-    # supports shaping natively. 
+    # supports shaping natively.
     .t.l config -text "000\t00000" -wrap [expr {9 * $ax}]
     update
     list [expr {[winfo reqwidth .t.l] eq [expr {$ax * 8}]}] \
@@ -1602,7 +1602,7 @@ test font-24.10 {Tk_ComputeTextLayout: tab caused break} -body {
 test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol} -constraints {aqua} -body {
     # Text measurements may differ slightly from legacy Tk due to proper font shaping
 	# with Harfbuzz/SheenBidi (X11) and Uniscribe (Windows); run on macOS only, which
-    # supports shaping natively. 
+    # supports shaping natively.
     set x {}
     .t.l config -text "000            000" -wrap [expr {$ax * 5}]
     update
@@ -1621,7 +1621,7 @@ test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol} -constraints {aqua}
 test font-24.12 {Tk_ComputeTextLayout: append non-printing spaces to chunk} -constraints {aqua} -body {
     # Text measurements may differ slightly from legacy Tk due to proper font shaping
 	# with Harfbuzz/SheenBidi (X11) and Uniscribe (Windows); run on macOS only, which
-    # supports shaping natively. 
+    # supports shaping natively.
     set x {}
     .t.l config -text "000            0000" -wrap [expr {$ax * 5}]
     update
@@ -1925,7 +1925,7 @@ test font-30.5 {Tk_DistanceToTextLayout procedure: ignore newline} -body {
 test font-30.6 {Tk_DistanceToTextLayout procedure: ignore spaces at eol} -constraints {aqua} -body {
     # Text measurements may differ slightly from legacy Tk due to proper font shaping
 	# with Harfbuzz/SheenBidi (X11) and Uniscribe (Windows); run on macOS only, which
-    # supports shaping natively. 
+    # supports shaping natively.
     csetup "000\n000      000000000"
     .t.c itemconfig text -width [expr {$ax*10}]
     .t.c bind all <Enter> {lappend x [.t.c index current @%x,%y]}
@@ -2054,7 +2054,7 @@ test font-31.5 {Tk_IntersectTextLayout procedure: ignore newlines} -body {
 test font-31.6 {Tk_IntersectTextLayout procedure: ignore spaces at eol} -constraints {aqua} -body {
     # Text measurements may differ slightly from legacy Tk due to proper font shaping
 	# with Harfbuzz/SheenBidi (X11) and Uniscribe (Windows); run on macOS only, which
-    # supports shaping natively. 
+    # supports shaping natively.
     csetup "000\n000      000000000"
     .t.c itemconfig text -width [expr {$ax*10}]
     set x [.t.c find overlapping [expr {$ax*5}] $ay [expr {$ax*5}] $ay]

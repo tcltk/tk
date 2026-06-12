@@ -19,9 +19,10 @@ label \- Create and manipulate 'label' non-interactive text or image widgets
 \-anchor	\-foreground	\-relief
 \-background	\-highlightbackground	\-takefocus
 \-bitmap	\-highlightcolor	\-text
-\-borderwidth	\-highlightthickness	\-textvariable
-\-compound	\-image	\-underline
-\-cursor	\-justify	\-wraplength
+\-borderwidth	\-highlightthickness	\-textangle
+\-textvariable	\-compound	\-image
+\-underline	\-cursor	\-justify
+\-wraplength
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-height height Height

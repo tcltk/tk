@@ -1286,7 +1286,7 @@ MakeUndoToggleGravity(
 {
     assert(TkTextIsNormalMark(markPtr));
 
-    sharedTextPtr->undoStackEvent = 1;
+    sharedTextPtr->undoStackEvent = true;
 
     if (!markPtr->body.mark.changePtr
 	    || (!markPtr->body.mark.changePtr->setMark
@@ -1422,7 +1422,7 @@ UnsetMark(
 	redoInfo->byteSize = 0;
     }
 
-    sharedTextPtr->undoStackEvent = 1;
+    sharedTextPtr->undoStackEvent = true;
     sharedTextPtr->lastUndoTokenType = -1;
     TkBTreeUnlinkSegment(sharedTextPtr, markPtr);
     MarkDeleteProc(sharedTextPtr, markPtr, DELETE_CLEANUP);
@@ -1833,7 +1833,7 @@ SetMark(
 		(token->markPtr = markPtr)->refCount += 1;
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
 		changePtr->setMark = (TkTextUndoToken *) token;
-		sharedTextPtr->undoStackEvent = 1;
+		sharedTextPtr->undoStackEvent = true;
 		sharedTextPtr->lastUndoTokenType = -1;
 		oldTypePtr = NULL;
 	    } else {
@@ -1845,7 +1845,7 @@ SetMark(
 		token->index = undoIndex;
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
 		changePtr->moveMark = (TkTextUndoToken *) token;
-		sharedTextPtr->undoStackEvent = 1;
+		sharedTextPtr->undoStackEvent = true;
 		sharedTextPtr->lastUndoTokenType = -1;
 	    }
 	}
@@ -2037,7 +2037,7 @@ TkTextMarkSegToIndex(
 
     TkTextIndexClear(indexPtr, textPtr);
     /* disable range checks, because here it's is allowed that the index is out of range. */
-    DEBUG(indexPtr->discardConsistencyCheck = 1);
+    DEBUG(indexPtr->discardConsistencyCheck = true);
     TkTextIndexSetSegment(indexPtr, markPtr);
 }
 

@@ -1215,9 +1215,9 @@ TkTextImageIndex(
     }
     eiPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     TkTextIndexClear(indexPtr, textPtr);
-    DEBUG(indexPtr->discardConsistencyCheck = 1);
+    DEBUG(indexPtr->discardConsistencyCheck = true);
     TkTextIndexSetSegment(indexPtr, eiPtr);
-    DEBUG(indexPtr->discardConsistencyCheck = 0);
+    DEBUG(indexPtr->discardConsistencyCheck = false);
 
     if (TkTextIndexOutsideStartEnd(indexPtr)) {
 	return false;

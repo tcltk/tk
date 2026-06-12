@@ -107,7 +107,8 @@ Tk_BellObjCmd(
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window)clientData;
     Tcl_Size i;
-    int index, nice = 0;
+    int index;
+	bool nice = false;
     Tk_ErrorHandler handler;
 
     if (objc > 4) {
@@ -132,7 +133,7 @@ Tk_BellObjCmd(
 	    }
 	    break;
 	case TK_BELL_NICE:
-	    nice = 1;
+	    nice = true;
 	    break;
 	}
     }
@@ -1321,7 +1322,7 @@ ScalingCmd(
 	 * in sync with the new value of the scaling factor
 	 */
 
-	for (intPct = 100; 1; intPct += 25) {
+	for (intPct = 25; true; intPct += 25) {
 	    if (dblPct < intPct + 12.5) {
 		break;
 	    }

@@ -288,7 +288,7 @@ test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
     destroy .t.l
 } -result {1 1}
 
-# After adding Uniscribe support for RTL text, this test's assumptions about 
+# After adding Uniscribe support for RTL text, this test's assumptions about
 # space are no longer valid.
 test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constraints {
     win
@@ -309,7 +309,7 @@ test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constra
     destroy .t.l
 } -match glob -result *
 
-# After adding Uniscribe support for RTL text, this test's assumptions about 
+# After adding Uniscribe support for RTL text, this test's assumptions about
 # space are no longer valid.
 test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -constraints {
     win

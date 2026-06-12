@@ -1673,7 +1673,7 @@ TagAddRemove(
 	    tagPtr->refCount += 1;
 	    TkTextUndoPushItem(sharedTextPtr->undoStack, undoInfo.token, undoInfo.byteSize);
 	}
-	sharedTextPtr->undoStackEvent = 1;
+	sharedTextPtr->undoStackEvent = true;
     }
 
     return 1;
@@ -2553,7 +2553,7 @@ TkTextTagAddRetainedUndo(
 		sharedTextPtr->undoTagListSize * sizeof(sharedTextPtr->undoTagList[0]));
     }
     sharedTextPtr->undoTagList[sharedTextPtr->undoTagListCount] = tagPtr;
-    sharedTextPtr->undoStackEvent = 1;
+    sharedTextPtr->undoStackEvent = true;
     sharedTextPtr->lastUndoTokenType = -1;
     tagPtr->undoTagListIndex = sharedTextPtr->undoTagListCount++;
     tagPtr->refCount += 1;

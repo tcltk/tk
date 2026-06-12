@@ -3,10 +3,10 @@ on:
   push:
     branches:
     - "main"
-    - "core-9-0-branch"
+    - "core-9-1-branch"
     - "revised_text"
     tags:
-    - "core-**"
+    - "core-*"
 permissions:
   contents: read
 env:

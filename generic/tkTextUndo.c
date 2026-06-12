@@ -384,7 +384,7 @@ ResetStack(
 	stack->undoSize = 0;
 	stack->redoSize = 0;
 	stack->irreversible = irreversible;
-	stack->pushSeparator = 0;
+	stack->pushSeparator = false;
 
 	if (stack->contentChangedProc) {
 	    stack->contentChangedProc(stack);
@@ -704,7 +704,7 @@ PushSeparator(
 	}
     }
 
-    stack->pushSeparator = 0;
+    stack->pushSeparator = false;
 }
 
 
@@ -719,7 +719,7 @@ TkTextUndoPushSeparator(
 	PushSeparator(stack, 1);
     } else {
 	/* Postpone pushing a separator until next item will be pushed. */
-	stack->pushSeparator = 1;
+	stack->pushSeparator = true;
     }
 }
 

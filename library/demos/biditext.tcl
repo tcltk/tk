@@ -15,7 +15,7 @@ wm iconname $w "biditext"
 positionWindow $w
 
 label $w.msg -font $font -wraplength 4i -anchor w -justify left \
-	-text  "These are examples of bidirectional text in Tk." 
+	-text  "These are examples of bidirectional text in Tk."
 pack $w.msg -side top -pady 10
 
 ## See Code / Dismiss buttons

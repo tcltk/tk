@@ -1106,7 +1106,7 @@ Ttk_ElementSize(
     }
     eclass->specPtr->size(
 	eclass->clientData, eclass->elementRecord,
-	tkwin, widthPtr, heightPtr, paddingPtr);
+	tkwin, state, widthPtr, heightPtr, paddingPtr);
 }
 
 /*

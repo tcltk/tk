@@ -226,7 +226,7 @@ static void		UnlinkWindow(TkWindow *winPtr);
  * job is handled by the X server.
  */
 
-static int displayBeingClosed = 0;
+static bool displayBeingClosed = false;
 
 
 /*
@@ -252,7 +252,7 @@ static void
 TkCloseDisplay(
     TkDisplay *dispPtr)
 {
-    displayBeingClosed = 1;
+    displayBeingClosed = true;
     TkClipCleanup(dispPtr);
 
     if (dispPtr->name != NULL) {

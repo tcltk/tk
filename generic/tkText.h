@@ -372,7 +372,7 @@ typedef struct TkTextEmbWindowClient {
 				 * (in sharedTextPtr->windowTable). */
     size_t chunkCount;		/* Number of display chunks that refer to this
 				 * window. */
-    int displayed;		/* Non-zero means that the window has been
+    bool displayed;		/* True means that the window has been
 				 * displayed on the screen recently. */
     struct TkTextSegment *parent;
     struct TkTextEmbWindowClient *next;
@@ -543,14 +543,14 @@ typedef struct TkTextIndex {
 	TkTextLine *linePtr;	/* Pointer to line containing position of interest. */
 	TkTextSegment *segPtr;	/* Pointer to segment containing position
 				 * of interest (NULL means not yet computed). */
-	int isCharSegment;	/* Whether 'segPtr' is a char segment (if not NULL). */
+	bool isCharSegment;	/* Whether 'segPtr' is a char segment (if not NULL). */
 	int32_t byteIndex;	/* Index within line of desired character (0 means first one,
 				 * -1 means not yet computed). */
 	int32_t lineNo;		/* The line number of the line pointer. */
 	int32_t lineNoRel;	/* The line number of the line pointer in associated text widget. */
     } priv;
 
-    int discardConsistencyCheck;
+    bool discardConsistencyCheck;
 				/* This flag is for debugging only: in certain situations consistency
 				 * checks should not be done (for example when inserting or deleting
 				 * text). */
@@ -669,15 +669,15 @@ struct TkTextDispChunk {
     int32_t breakIndex;		/* Index within chunk of last acceptable position for a line
 				 * (break just before this byte index). <= 0 means don't break
 				 * during or immediately after this chunk. */
-    int wrappedAtSpace;	/* This flag will be set when the a chunk has been wrapped while
+    bool wrappedAtSpace;	/* This flag will be set when the a chunk has been wrapped while
 				 * gobbling a trailing space. */
-    int endsWithSyllable;	/* This flag will be set when the corresponding sgement for
+    bool endsWithSyllable;	/* This flag will be set when the corresponding sgement for
 				 * this chunk will be followed by a hyphen segment. */
-    int skipFirstChar;		/* This flag will be set if the first byte has to be skipped due
+    bool skipFirstChar;		/* This flag will be set if the first byte has to be skipped due
 				 * to a spelling change. */
-    int endOfLineSymbol;	/* This flag will be set if this chunk contains (only) the end of
+    bool endOfLineSymbol;	/* This flag will be set if this chunk contains (only) the end of
 				 * line symbol. */
-    int integralPart;		/* This chunk contains the start of the integral part of a numeric. */
+    bool integralPart;		/* This chunk contains the start of the integral part of a numeric. */
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
@@ -887,7 +887,7 @@ typedef struct TkTextTag {
 				/* Holds the undo information of last tag add/remove operation. */
     TkTextUndoToken *recentChangePriorityToken;
 				/* Holds the undo information of last tag lower/raise operation. */
-    int recentTagAddRemoveTokenIsNull;
+    bool recentTagAddRemoveTokenIsNull;
 				/* 'recentTagAddRemoveToken' is null, this means the pointer still
 				 * is valid, but should not be saved onto undo stack. */
     uint32_t savedPriority;	/* Contains the priority before recentChangePriorityToken will be set. */
@@ -983,10 +983,13 @@ typedef struct TkTextTag {
     bool isSelTag;		/* This tag is the special "sel" tag? */
     bool affectsDisplay;	/* True means that this tag affects the way information is
 				 * displayed on the screen (so need to redisplay if tag changes). */
-    bool affectsDisplayGeometry;/* True means that this tag affects the size with which
-				 * information is displayed on the screen (so need to recalculate
-				 * line dimensions if tag changes). */
-    Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
+    bool affectsDisplayGeometry;	/* True means that this tag affects the
+                 * size with which information is displayed on
+				 * the screen (so need to recalculate line
+				 * dimensions if tag changes). */
+    Tk_OptionTable optionTable;	/* Token representing the configuration
+				 * specifications. */
+    char locale[8];	/* locale */
 } TkTextTag;
 
 /*
@@ -1214,16 +1217,16 @@ typedef struct TkSharedText {
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
     bool autoSeparators;	/* True means the separators will be inserted automatically. */
     bool undo;			/* True means the undo/redo behaviour is enabled. */
-    int isModified;		/* Flag indicating the computed 'modified' state of the text widget. */
-    int isAltered;		/* Flag indicating the computed 'altered' state of the text widget. */
-    int isIrreversible;	/* Flag indicating the computed 'irreversible' flag. Value
+    bool isModified;		/* Flag indicating the computed 'modified' state of the text widget. */
+    bool isAltered;		/* Flag indicating the computed 'altered' state of the text widget. */
+    bool isIrreversible;	/* Flag indicating the computed 'irreversible' flag. Value
 				 * 'true' can never change to 'false', except the widget will
 				 * be cleared, or the user is clearing. */
-    int userHasSetModifiedFlag;/* Flag indicating if the user has set the 'modified' flag.
+    bool userHasSetModifiedFlag;/* Flag indicating if the user has set the 'modified' flag.
 				 * Value 'true' is superseding the computed value, but value
 				 * 'false' is only clearing to the initial state of this flag. */
-    int undoStackEvent;	/* Flag indicating whether <<UndoStack>> is already triggered. */
-    int pushSeparator;		/* Flag indicating whether a separator has to be pushed before next
+    bool undoStackEvent;	/* Flag indicating whether <<UndoStack>> is already triggered. */
+    bool pushSeparator;		/* Flag indicating whether a separator has to be pushed before next
 				 * insert/delete item. */
     bool undoTagging;		/* Global default value for TkTextTag::undo. */
     size_t undoLevel;		/* The undo level which corresponds to the unmodified state. */
@@ -1347,7 +1350,7 @@ typedef struct TkText {
 
     Tk_3DBorder border;		/* Structure used to draw 3-D border and
 				 * default background. */
-    Tcl_Obj *borderWidthObj;		/* Width of 3-D border to draw around entire
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border to draw around entire
 				 * widget. */
     Tcl_Obj *padXObj, *padYObj;		/* Padding between text and window border. */
     int relief;			/* 3-d effect for border around entire widget:
@@ -1558,12 +1561,12 @@ typedef struct TkText {
      * Support of sync command:
      */
 
-    Tcl_Obj *afterSyncCmd;	/* Commands to be executed when lines are up to date */
-
-#ifdef TK_CHECK_ALLOCS
-    size_t widgetNumber;
-#endif
+    Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
+				 * date */
+    char locale[8];	/* locale */
 } TkText;
+
+MODULE_SCOPE const Tk_ObjCustomOption TkLocaleOption;
 
 /*
  * Flag values for TkText records:

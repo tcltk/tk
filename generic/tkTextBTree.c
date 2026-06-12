@@ -4485,7 +4485,7 @@ TkBTreeInsertChars(
 	}
     }
 
-    DEBUG(indexPtr->discardConsistencyCheck = 1);
+    DEBUG(indexPtr->discardConsistencyCheck = true);
 
     /*
      * Chop the string up into lines and create a new segment for each line,
@@ -9900,7 +9900,7 @@ TkBTreeTag(
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
 	    }
 
-	    tagPtr->recentTagAddRemoveTokenIsNull = 0;
+	    tagPtr->recentTagAddRemoveTokenIsNull = false;
 	    undoToken = (UndoTokenTagChange *) tagPtr->recentTagAddRemoveToken;
 	    undoToken->undoType = &undoTokenTagType;
 	    undoToken->tagPtr = tagPtr;
@@ -9923,7 +9923,7 @@ TkBTreeTag(
 	    /* no action required */
 	    break;
 	case UNDO_ANNIHILATED:
-	    tagPtr->recentTagAddRemoveTokenIsNull = 1;
+	    tagPtr->recentTagAddRemoveTokenIsNull = true;
 	    break;
 	}
 

@@ -604,7 +604,6 @@ install-pdbs:
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DTK_TEST /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(ROOT)\manifest.uuid:
@@ -612,7 +611,7 @@ $(ROOT)\manifest.uuid:
    git rev-parse HEAD >>$(ROOT)\manifest.uuid
 
 $(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
-	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
+	copy /b $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
@@ -626,7 +625,6 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 # Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
@@ -638,7 +636,7 @@ $(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
 		-Fo$@ $?
 
 $(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
-	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $(GENERICDIR)\tkWindow.c
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported

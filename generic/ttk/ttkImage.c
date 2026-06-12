@@ -291,6 +291,7 @@ static void ImageElementSize(
     void *clientData,
     TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Ttk_State), /* state */
     int *widthPtr,
     int *heightPtr,
     Ttk_Padding *paddingPtr)

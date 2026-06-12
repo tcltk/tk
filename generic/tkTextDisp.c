@@ -3298,7 +3298,7 @@ AtEndOfLine(
     return 1;
 }
 
-static int
+static bool
 IsDecimalPointPos(
     LayoutData *data,
     const TkTextSegment *segPtr,
@@ -3360,7 +3360,7 @@ LayoutChars(
 	}
 	base = segPtr->body.chars;
 	maxBytes = segPtr->size;
-	chunkPtr->endOfLineSymbol = 1;
+	chunkPtr->endOfLineSymbol = true;
 	byteOffset = 0;
     } else if (segPtr->typePtr != &tkTextHyphenType
 		&& segPtr->sectionPtr) { /* ignore artifical segments (spelling changes) */
@@ -3424,7 +3424,7 @@ LayoutChars(
 			byteOffset += 1;
 			base += 1;
 			maxBytes -= 1; /* now may become zero */
-			chunkPtr->skipFirstChar = 1;
+			chunkPtr->skipFirstChar = true;
 		    }
 		}
 	    }
@@ -7851,9 +7851,9 @@ TkTextFindDisplayIndex(
     }
 
     /* set to first byte, not to start of line */
-    DEBUG(indexPtr->discardConsistencyCheck = 1);
+    DEBUG(indexPtr->discardConsistencyCheck = true);
     TkTextIndexSetByteIndex2(indexPtr, linePtr, 0);
-    DEBUG(indexPtr->discardConsistencyCheck = 0);
+    DEBUG(indexPtr->discardConsistencyCheck = false);
     TkrTextIndexForwBytes(textPtr, indexPtr, byteOffset, indexPtr);
 }
 
@@ -9387,8 +9387,8 @@ TkrTextChanged(
 	TkTextIndex index2 = *index2Ptr;
 
 	for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
-	    DEBUG(index1.discardConsistencyCheck = 1);
-	    DEBUG(index2.discardConsistencyCheck = 1);
+	    DEBUG(index1.discardConsistencyCheck = true);
+	    DEBUG(index2.discardConsistencyCheck = true);
 	    TkTextIndexSetPeer(&index1, textPtr);
 	    TkTextIndexSetPeer(&index2, textPtr);
 	    TextChanged(textPtr, &index1, &index2);
@@ -12602,6 +12602,247 @@ TkTextIndexBbox(
     return 1;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextIndexLocale --
+ *
+ *	Given an index, find the locale of the screen area occupied by
+ *	the entity (character, window, image) at that index.
+ *
+ * Results:
+ *	*locale will be filled with the locale.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static const char localeScript[][4] = {
+    {'A', 'r', 'a', 'b'},
+    {'C', 'a', 'k', 'm'},
+    {'C', 'a', 'n', 's'},
+    {'C', 'h', 'e', 'r'},
+    {'C', 'y', 'r', 'l'},
+    {'D', 'e', 'v', 'a'},
+    {'E', 'u', 'r', 'o'},
+    {'H', 'a', 'n', 's'},
+    {'H', 'a', 'n', 't'},
+    {'L', 'a', 't', 'n'},
+    {'M', 'o', 'n', 'g'},
+    {'P', 'l', 'o', 'c'},
+    {'T', 'a', 'l', 'e'},
+    {'T', 'a', 'l', 'u'},
+    {'F', 'f', 'n', 'g'},
+    {'T', 'r', 'a', 'd'}
+};
+static const char localeVariant[][10] = {
+    "",
+    "adlam",
+    "cjknarrow",
+    "cyrillic",
+    "devangari",
+    "euro",
+    "iqtelif",
+    "latin",
+    "modern",
+    "tradnl",
+    "ploc",
+    "ploca",
+    "plocm",
+    "posix",
+    "preeuro",
+    "valencia"
+};
+
+#define TOUPPER(ch) ((char)((ch) & ~('a' - 'A'))) // Cheap toupper(), knowing isalpha() is true
+#define TOLOWER(ch) ((char)((ch) | ('a' - 'A')))  // Cheap tolower(), knowing isalpha() is true
+#define ISALPHA(ch) (UCHAR(TOLOWER(ch) - 'a') <= UCHAR('z' - 'a')) // Cheap isalpha()
+#define ISDIGIT(ch) (UCHAR((ch) - '0') <= UCHAR('9' - '0')) // Cheap isdigit()
+
+static Tcl_Obj *
+GetLocale(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *recordPtr,		/* Pointer to widget record. */
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the
+				 * line value. */
+{
+    char *locale = recordPtr + internalOffset;
+    char buffer[24]; // Max size is 3 + '_' + 3 + '@' + 9 + '\0'= 18 characters;
+
+    strncpy(buffer, locale, 5);
+    buffer[5] = 0;
+    if ((UCHAR(buffer[2]-'a') <= UCHAR('z' - 'a')) && buffer[4]) {
+	/* If locale[2] is a lowercase, insert an underscore '_' */
+	buffer[6] = 0;
+	buffer[5] = buffer[4];
+	buffer[4] = buffer[3];
+	buffer[3] = '_';
+    }
+    char *p = buffer + strlen(buffer);
+    if ((signed char)locale[5] < 0) {
+	if (locale[3]) {
+	    memcpy(p+2, p-3, 3);
+	    memcpy(p-2, localeScript[UCHAR(-1-locale[5])], 4);
+	} else {
+	    *p = '_';
+	    memcpy(p+1, localeScript[UCHAR(-1-locale[5])], 4);
+	}
+	p += 5;
+    }
+    if ((p > buffer + 4) && ISDIGIT(p[-2])) {
+	p[-1] = ('0' - 1) + locale[4]/10; // numeric locale, then locale[4] is a number between 00 and 99.
+	*p++ = '0' + locale[4]%10;
+    }
+    if ((signed char)(locale[5]) > 0) {
+	*p++ = '@';
+	strcpy(p, localeVariant[UCHAR(locale[5])]);
+	p += strlen(p);
+    }
+    return Tcl_NewStringObj(buffer, p - buffer);
+}
+
+static int
+SetLocale(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
+    TCL_UNUSED(Tk_Window),	/* Window for which option is being set. */
+    Tcl_Obj **value,		/* Pointer to the pointer to the value object.
+				 * We use a pointer to the pointer because we
+				 * may need to return a value (NULL). */
+    char *recordPtr,		/* Pointer to storage for the widget record. */
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
+				 * internal value is to be stored. */
+    char *oldInternalPtr,	/* Pointer to storage for the old value. */
+    int flags)			/* Flags for the option, set Tk_SetOptions. */
+{
+    char locale[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    if ((flags & TK_OPTION_NULL_OK) && TkObjIsEmpty(*value)) {
+	*value = NULL;
+    } else {
+	const char *str = Tcl_GetString(*value);
+	if (ISALPHA(str[0]) && ISALPHA(str[1])) {
+	    locale[0] = TOLOWER(str[0]);
+	    locale[1] = TOLOWER(str[1]);
+	    if (strchr(".@-_", str[2])) {
+		locale[2] = 0;
+		str += 2;
+	    } else if (ISALPHA(str[2]) && strchr(".@-_", str[3])) {
+		locale[2] = TOLOWER(str[2]);
+		str += 3;
+	    } else if (!strncasecmp(str, "POSIX", 6)) {
+		locale[1] = 0;
+		goto localeC; // 'POSIX' is an alias for 'C'
+	    } else if (!strncasecmp(str, "TCL8", 5)) {
+		locale[2] = 'l';
+		locale[3] = '8';
+		goto localeComplete;
+	    } else {
+		goto wrongLocale;
+	    }
+	    // Parse second part, after the first '_';
+	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2])
+		    && ISALPHA(str[3]) && ISALPHA(str[4]) && strchr(".@-_", str[5])) {
+		str++;
+		while (strncasecmp(str, localeScript[UCHAR(-1-(--locale[5]))], 4)) {
+			if (UCHAR(-(locale[5])) >= sizeof(localeScript)/sizeof(localeScript[0])) {
+				goto wrongLocale;
+			}
+		}
+		str += 4;
+	    }
+	    if (((str[0] == '_') || (str[0] == '-')) && ISALPHA(str[1]) && ISALPHA(str[2]) && !ISALPHA(str[3])) {
+		if (!locale[2]) {
+		    locale[2] = '_';
+		}
+		str++;
+		locale[3] = TOUPPER(*str++);
+		locale[4] = TOUPPER(*str++);
+	    } else if (((str[0] == '_') || (str[0] == '-')) && ISDIGIT(str[1]) && ISDIGIT(str[2]) && ISDIGIT(str[3])) {
+		if (!locale[2]) {
+		    locale[2] = '_';
+		}
+		str++;
+		locale[3] = *str++;
+		locale[4] = (*str++ - ('0' - 1)) * 10;
+		locale[4] += (*str++ - '0');
+	    }
+	    if (*str == '.') {
+		while (!strchr("@", *str)) {
+		    str++; // Skip everything, until next '@' or NULL or -/_ followed by non-digit
+		    if (((*str == '-') || (*str == '_')) && !ISDIGIT(str[1])) {
+			break; /* Handle both "utf-8" and "utf8-posix" as expected */
+		    }
+		}
+	    }
+	    if (!locale[5] && ((*str == '@') || (*str == '_') || (*str == '-'))) {
+		locale[5] = sizeof(localeVariant)/sizeof(localeVariant[0]) - 1;
+		do {
+		    if (!strcasecmp(&str[1], localeVariant[UCHAR(locale[5])])) {
+			break;
+		    }
+		} while (--locale[5] != 0);
+		if (!locale[5]) {
+		    goto wrongLocale;
+		}
+	    } else if (*str) {
+		goto wrongLocale;
+	    }
+	} else if ((TOUPPER(str[0]) == 'C') && !str[1]) {
+	localeC:
+	    locale[0] = 'C';
+	} else {
+	wrongLocale:
+	    if (interp) {
+		Tcl_AppendResult(interp, "Invalid locale", (char *)NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	if (!locale[3]) {
+	    /* If there is no region, we cannot distingish between a script and a
+	     * 4-character variation. Assume the latter. Only for Euro and Ploc */
+	    if (locale[5] == (char)-7) {
+			locale[5] = 5; /* Euro */
+		} else if (locale[5] == (char)-12) {
+			locale[5] = 10; /* Ploc */
+		}
+	}
+    localeComplete:
+	*value = GetLocale(NULL, NULL, locale, 0);
+    }
+
+    if (internalOffset != TCL_INDEX_NONE) {
+	char *internalPtr = recordPtr + internalOffset;
+	memcpy(oldInternalPtr, internalPtr, sizeof(locale));
+	memcpy(internalPtr, locale, sizeof(locale));
+    }
+    return TCL_OK;
+}
+
+static void
+RestoreLocale(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *internalPtr,		/* Pointer to storage for value. */
+    char *oldInternalPtr)	/* Pointer to old value. */
+{
+    memcpy(internalPtr, oldInternalPtr, sizeof(char[8]));
+}
+
+const Tk_ObjCustomOption TkLocaleOption = {
+    "locale",		/* name */
+    SetLocale,		/* setProc */
+    GetLocale,		/* getProc */
+    RestoreLocale,	/* restoreProc */
+    NULL,			/* freeProc */
+    0
+};
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -14431,7 +14672,7 @@ CharChunkMeasureChars(
  *--------------------------------------------------------------
  */
 
-static int
+static bool
 EndsWithSyllable(
     TkTextSegment *segPtr)
 {
@@ -14441,7 +14682,7 @@ EndsWithSyllable(
 	    case SEG_GROUP_MARK:
 		break;
 	    case SEG_GROUP_HYPHEN:
-		return 1;
+		return true;
 	    case SEG_GROUP_BRANCH:
 		if (segPtr->typePtr == &tkTextBranchType) {
 		    segPtr = segPtr->body.branch.nextPtr;
@@ -14449,11 +14690,11 @@ EndsWithSyllable(
 		}
 		/* fallthru */
 	    default:
-		return 0;
+		return false;
 	    }
 	}
     }
-    return 0;
+    return false;
 }
 
 int
@@ -14546,7 +14787,7 @@ TkTextCharLayoutProc(
 	    bytesThatFit += 1;
 
 	    /* Do not wrap next chunk in this line. */
-	    chunkPtr->wrappedAtSpace = 1;
+	    chunkPtr->wrappedAtSpace = true;
 	}
 	if (bytesThatFit == 0) {
 	    return 0;

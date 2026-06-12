@@ -208,7 +208,7 @@ TkTextIndexSetLine(
 	    indexPtr->priv.byteIndex = 0;
 	} else {
 	    indexPtr->priv.segPtr = indexPtr->textPtr->startMarker;
-	    indexPtr->priv.isCharSegment = 0;
+	    indexPtr->priv.isCharSegment = false;
 	    indexPtr->priv.byteIndex = FindStartByteIndex(indexPtr);
 	}
     }
@@ -448,10 +448,10 @@ TkTextIndexSetSegment(
     if (segPtr->typePtr == &tkTextCharType) {
 	/* this segment is volatile, thus we need the byte index. */
 	indexPtr->priv.byteIndex = SegToIndex(indexPtr->priv.linePtr, segPtr);
-	indexPtr->priv.isCharSegment = 1;
+	indexPtr->priv.isCharSegment = true;
     } else {
 	indexPtr->priv.byteIndex = -1;
-	indexPtr->priv.isCharSegment = 0;
+	indexPtr->priv.isCharSegment = false;
     }
 
     assert(CheckByteIndex(indexPtr, segPtr->sectionPtr->linePtr, -1));
@@ -618,8 +618,8 @@ TkTextIndexSetupToStartOfText(
     indexPtr->stateEpoch = TkBTreeEpoch(tree);
     indexPtr->priv.lineNo = textPtr ? -1 : 0;
     indexPtr->priv.lineNoRel = 0;
-    indexPtr->priv.isCharSegment = 0;
-    DEBUG(indexPtr->discardConsistencyCheck = 0);
+    indexPtr->priv.isCharSegment = false;
+    DEBUG(indexPtr->discardConsistencyCheck = false);
 
     if (textPtr) {
 	indexPtr->priv.segPtr = textPtr->startMarker;
@@ -664,11 +664,11 @@ TkTextIndexSetupToEndOfText(
     indexPtr->stateEpoch = TkBTreeEpoch(tree);
     indexPtr->priv.lineNo = -1;
     indexPtr->priv.lineNoRel = -1;
-    DEBUG(indexPtr->discardConsistencyCheck = 0);
+    DEBUG(indexPtr->discardConsistencyCheck = false);
 
     if (!textPtr) {
 	indexPtr->priv.segPtr = TkBTreeGetShared(tree)->endMarker;
-	indexPtr->priv.isCharSegment = 0;
+	indexPtr->priv.isCharSegment = false;
 	indexPtr->priv.linePtr = indexPtr->priv.segPtr->sectionPtr->linePtr;
 	indexPtr->priv.byteIndex = 0;
     } else {
@@ -780,8 +780,8 @@ TkTextIndexClear(
     indexPtr->priv.byteIndex = -1;
     indexPtr->priv.lineNo = -1;
     indexPtr->priv.lineNoRel = -1;
-    indexPtr->priv.isCharSegment = 0;
-    DEBUG(indexPtr->discardConsistencyCheck = 0);
+    indexPtr->priv.isCharSegment = false;
+    DEBUG(indexPtr->discardConsistencyCheck = false);
 }
 
 /*
@@ -818,8 +818,8 @@ TkTextIndexClear2(
     indexPtr->priv.byteIndex = -1;
     indexPtr->priv.lineNo = -1;
     indexPtr->priv.lineNoRel = -1;
-    indexPtr->priv.isCharSegment = 0;
-    DEBUG(indexPtr->discardConsistencyCheck = 0);
+    indexPtr->priv.isCharSegment = false;
+    DEBUG(indexPtr->discardConsistencyCheck = false);
 }
 
 /*
@@ -3223,7 +3223,7 @@ TkTextIndexForwChars(
 		    if (charCount < segPtr->size) {
 			dstPtr->priv.byteIndex += charCount;
 			dstPtr->priv.segPtr = segPtr;
-			dstPtr->priv.isCharSegment = 0;
+			dstPtr->priv.isCharSegment = false;
 			goto forwardCharDone;
 		    }
 		    charCount -= segPtr->size;
@@ -3785,7 +3785,7 @@ TkTextIndexBackChars(
 		if (charCount <= segSize) {
 		    byteIndex -= charCount;
 		    dstPtr->priv.segPtr = segPtr;
-		    dstPtr->priv.isCharSegment = 0;
+		    dstPtr->priv.isCharSegment = false;
 		    goto backwardCharDone;
 		}
 		charCount -= segSize;

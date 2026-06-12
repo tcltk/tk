@@ -51,7 +51,7 @@ typedef struct TkTextUndoStack_ {
     unsigned redoSize;		/* Total size of redo items. */
     int doingUndo;		/* Currently an undo action is performed? */
     int doingRedo;		/* Currently a redo action is performed? */
-    int pushSeparator;		/* Push a separator before pushing a new item (iff true). */
+    bool pushSeparator;		/* Push a separator before pushing a new item (iff true). */
 } TkTextUndoStack_;
 
 #endif /* _TKTEXTUNDOPRIV */

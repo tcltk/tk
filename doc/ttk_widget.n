@@ -117,6 +117,9 @@ If there are multiple lines of text, specifies how
 the lines are laid out relative to one another.
 One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 See also \fB\-anchor\fR (for widgets supporting this option).
+.OP \-locale locale Locale
+The locale which is used for determining word and character
+boundaries within the text. The default is "C".
 .OP \-padding padding Padding
 Specifies the internal padding for the widget.
 The padding is a list of up to four length specifications
@@ -131,6 +134,12 @@ a single number specifies the same padding all the way around the widget.
 .OP \-text text Text
 Specifies a text string to be displayed inside the widget (unless overridden
 by \fB\-textvariable\fR for the widgets supporting this option).
+.OP \-textangle textangle Angle
+Tells how many degrees to rotate the text anticlockwise
+about the positioning point for the text; it may have any floating-point value
+from 0.0 to 360.0. For example, if the parameter is \fB90\fR, then the
+text will be drawn vertically from bottom to top.
+This option defaults to the empty string which is 0 degrees.
 .OP \-textvariable textVariable Variable
 Specifies the name of a global variable whose value will be used
 in place of the \fB\-text\fR resource.

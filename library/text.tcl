@@ -785,14 +785,14 @@ proc ::tk::TextDetectAndTagRtl {w} {
     }
     # Get all lines that need checking
     set end_line [lindex [split [$w index "end-1c"] .] 0]
-    
+
     for {set line 1} {$line <= $end_line} {incr line} {
         set line_start "$line.0"
         set line_end "$line.end"
-        
+
         # Get the text content of this line
         set line_text [$w get $line_start $line_end]
-        
+
         # Skip empty lines
         if {[string length [string trim $line_text]] == 0} {
             continue
@@ -800,10 +800,10 @@ proc ::tk::TextDetectAndTagRtl {w} {
 
         # Check if this line is pure RTL
         set is_rtl [::tk::TextIsRtlLine $line_text]
-        
+
         # Remove any existing RTL tag first to avoid duplicates
         $w tag remove tk_rtl_right $line_start $line_end
-        
+
         # Apply RTL tag if pure RTL detected
         if {$is_rtl} {
             $w tag add tk_rtl_right $line_start $line_end
@@ -1333,7 +1333,7 @@ proc ::tk::TextNextPos {w start op} {
     while {[$w compare $cur < end]} {
 	set end [$w index "$cur lineend + 1i"]
 	append text [$w get -displaychars $cur $end]
-	set pos [$op $text 0]
+	set pos [$op $text 0 [$w locale $cur]]
 	if {$pos >= 0} {
 	    return [$w index "$start + $pos display chars"]
 	}
@@ -1357,7 +1357,7 @@ proc ::tk::TextPrevPos {w start op} {
     while {[$w compare $cur > 1.0]} {
 	set text ""
 	append text [$w get -displaychars "$cur linestart - 1i" $cur] $succ
-	set pos [$op $text end]
+	set pos [$op $text end [$w locale $cur]]
 	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1i + $pos display chars"]
 	}
