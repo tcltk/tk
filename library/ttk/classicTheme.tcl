@@ -118,8 +118,8 @@ namespace eval ttk::theme::classic {
 	ttk::style configure CheckTreeview.Item \
 	    -indicatormargin {0 0.75p 3p 0.75p}	;# for Checkbutton.indicator
 	ttk::style map CheckTreeview.Item \
-            -indicatorcolor [list selected $colors(-indicator)] \
-            -indicatorrelief {selected sunken}
+	    -indicatorcolor [list selected $colors(-indicator)] \
+	    -indicatorrelief {selected sunken}
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
 	ttk::style configure Treeview \

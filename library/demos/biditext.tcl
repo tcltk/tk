@@ -72,8 +72,8 @@ set words { "Hello" "مرحبا" "Tk" }
 set yPos { 50 100 150 }
 foreach word $words y $yPos {
     $main.canvas create text 70 $y -text $word \
-        -font BidiCanvasFont -angle 45 -anchor center \
-        -fill navy -tags "rotatedWord"
+	-font BidiCanvasFont -angle 45 -anchor center \
+	-fill navy -tags "rotatedWord"
 }
 
 # Aadd a subtle border label for the canvas
