@@ -988,6 +988,91 @@ test btree-14.3 {Bug [bdd1f64523] - switch the -elide state of a tag} -setup {
     destroy .t
 } -result {}
 
+test btree-14.4 {Bug [ad458a3a72] - cross-toggling the -elide state of interleaved tags} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure tag_ellipse  -elide 0
+    .t tag configure tag_hidden   -elide 1
+    .t insert end "text_ellipse" tag_ellipse
+    .t insert end "text_hidden"  tag_hidden
+    .t insert end "text_ellipse" tag_ellipse
+    .t insert end "text_hidden"  tag_hidden
+    .t tag configure tag_ellipse  -elide 1  ; # used to leave dangling branch/link pairs
+    .t tag configure tag_hidden   -elide 0  ; # used to panic (sections inconsistency)
+    .t debug 0
+} -cleanup {
+    destroy .t
+} -result {}
+
+test btree-14.5 {Bug [ad458a3a72] - editing across revised elide boundaries} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure tag_ellipse  -elide 0
+    .t tag configure tag_hidden   -elide 1
+    .t insert end "text_ellipse" tag_ellipse
+    .t insert end "text_hidden"  tag_hidden
+    .t insert end "text_ellipse" tag_ellipse
+    .t insert end "text_hidden"  tag_hidden
+    .t tag configure tag_ellipse  -elide 1
+    .t tag configure tag_hidden   -elide 0
+    .t insert end "X"
+    .t tag configure tag_hidden   -elide 1
+    .t tag configure tag_ellipse  -elide 0
+    .t delete 1.5 1.20
+    .t debug 0
+    .t get 1.0 end
+} -cleanup {
+    destroy .t
+} -result "text_dentext_ellipsetext_hiddenX\n"
+
+test btree-14.6 {Bug [ad458a3a72] - cross-toggling -elide with RTL (Hebrew) content} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure tag_ellipse  -elide 0
+    .t tag configure tag_hidden   -elide 1
+    .t insert end "שלום" tag_ellipse
+    .t insert end "עולם" tag_hidden
+    .t insert end "שלום" tag_ellipse
+    .t insert end "עולם" tag_hidden
+    .t tag configure tag_ellipse  -elide 1
+    .t tag configure tag_hidden   -elide 0
+    .t tag configure tag_hidden   -elide 1
+    .t tag configure tag_ellipse  -elide 0
+    .t debug 0
+    .t get 1.0 end
+} -cleanup {
+    destroy .t
+} -result "שלוםעולםשלוםעולם\n"
+
+test btree-14.7 {Bug [ad458a3a72] - elide toggling and editing across mixed LTR/RTL boundaries} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t tag configure tag_ellipse  -elide 0
+    .t tag configure tag_hidden   -elide 1
+    .t insert end "abc" tag_ellipse
+    .t insert end "مرحبا" tag_hidden
+    .t insert end "def" tag_ellipse
+    .t insert end "مرحبا" tag_hidden
+    .t tag configure tag_ellipse  -elide 1
+    .t tag configure tag_hidden   -elide 0
+    .t insert end "X"
+    .t tag configure tag_hidden   -elide 1
+    .t tag configure tag_ellipse  -elide 0
+    .t delete 1.2 1.10
+    .t debug 0
+    .t get 1.0 end
+} -cleanup {
+    destroy .t
+} -result "abfمرحباX\n"
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {

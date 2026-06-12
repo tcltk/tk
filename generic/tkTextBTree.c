@@ -8568,6 +8568,7 @@ FindNextLink(
 	    if (sectionPtr->segPtr->typePtr == &tkTextLinkType) {
 		return sectionPtr->segPtr;
 	    }
+	    sectionPtr = sectionPtr->nextPtr;
 	}
     }
 
@@ -8606,6 +8607,10 @@ UpdateElideInfo(
     TkTextSegment *startSegPtr;
     TkTextSegment *deletedBranchPtr;
     TkTextSegment *deletedLinkPtr;
+    TkTextSegment *danglingBranchPtr;
+				/* Surviving branch whose link has been removed. */
+    TkTextSegment *danglingLinkPtr;
+				/* Surviving link whose branch has been removed. */
     TkTextSegment *endSegPtr;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
@@ -8652,6 +8657,7 @@ UpdateElideInfo(
     linePtr = (*firstSegPtr)->sectionPtr->linePtr;
     prevBranchPtr = lastBranchPtr = newBranchPtr = NULL;
     deletedBranchPtr = deletedLinkPtr = NULL;
+    danglingBranchPtr = danglingLinkPtr = NULL;
     prevLinkPtr = lastLinkPtr = NULL;
     anyChanges = 0;
     oldTextPtr = textPtr = NULL;
@@ -8676,6 +8682,26 @@ UpdateElideInfo(
     while (endSegPtr->size == 0) {
 	endSegPtr = endSegPtr->nextPtr;
 	assert(endSegPtr);
+    }
+
+    /*
+     * If the reached content segment still contains the toggled tag, then it
+     * belongs to a following range of the same tag, and the branches/links
+     * beyond it must be revised within this pass as well, otherwise they
+     * would be out of reach and become inconsistent. So extend the range up
+     * to the next content segment which is not tagged anymore.
+     */
+
+    while (tagPtr && endSegPtr->tagInfoPtr && TestTag(endSegPtr->tagInfoPtr, tagPtr)) {
+	TkTextLine *currLinePtr = endSegPtr->sectionPtr->linePtr;
+
+	if (!(endSegPtr = endSegPtr->nextPtr)) {
+	    endSegPtr = currLinePtr->nextPtr ? currLinePtr->nextPtr->segPtr : currLinePtr->segPtr;
+	}
+	while (endSegPtr->size == 0) {
+	    endSegPtr = endSegPtr->nextPtr;
+	    assert(endSegPtr);
+	}
     }
 
     /*
@@ -8814,11 +8840,28 @@ UpdateElideInfo(
 		    if (prevBranchPtr == *lastSegPtr) {
 			(*lastSegPtr = (*lastSegPtr)->nextPtr)->protectionFlag = 1;
 		    }
+		    if (prevBranchPtr == danglingBranchPtr) {
+			danglingBranchPtr = NULL;
+		    }
+		    if (prevBranchPtr->body.branch.nextPtr->sectionPtr
+			    && prevBranchPtr->body.branch.nextPtr->body.link.prevPtr == prevBranchPtr) {
+			/*
+			 * The partner link survives outside of the processed range
+			 * and has lost its branch, remember it for reconnection.
+			 */
+			danglingLinkPtr = prevBranchPtr->body.branch.nextPtr;
+		    }
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevBranchPtr);
 		    if (deletedBranchPtr) {
 			TkBTreeFreeSegment(prevBranchPtr);
 		    } else {
 			deletedBranchPtr = prevBranchPtr;
+		    }
+		    if (danglingBranchPtr && danglingLinkPtr) {
+			/* Reconnect the surviving partners with each other. */
+			danglingBranchPtr->body.branch.nextPtr = danglingLinkPtr;
+			danglingLinkPtr->body.link.prevPtr = danglingBranchPtr;
+			danglingBranchPtr = danglingLinkPtr = NULL;
 		    }
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
@@ -8835,11 +8878,28 @@ UpdateElideInfo(
 		    if (prevLinkPtr == *lastSegPtr) {
 			(*lastSegPtr = (*lastSegPtr)->nextPtr)->protectionFlag = 1;
 		    }
+		    if (prevLinkPtr == danglingLinkPtr) {
+			danglingLinkPtr = NULL;
+		    }
+		    if (prevLinkPtr->body.link.prevPtr->sectionPtr
+			    && prevLinkPtr->body.link.prevPtr->body.branch.nextPtr == prevLinkPtr) {
+			/*
+			 * The partner branch survives outside of the processed range
+			 * and has lost its link, remember it for reconnection.
+			 */
+			danglingBranchPtr = prevLinkPtr->body.link.prevPtr;
+		    }
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
 		    if (deletedLinkPtr) {
 			TkBTreeFreeSegment(prevLinkPtr);
 		    } else {
 			deletedLinkPtr = prevLinkPtr;
+		    }
+		    if (danglingBranchPtr && danglingLinkPtr) {
+			/* Reconnect the surviving partners with each other. */
+			danglingBranchPtr->body.branch.nextPtr = danglingLinkPtr;
+			danglingLinkPtr->body.link.prevPtr = danglingBranchPtr;
+			danglingBranchPtr = danglingLinkPtr = NULL;
 		    }
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
@@ -8864,6 +8924,13 @@ UpdateElideInfo(
 		     * We have to insert a link.
 		     */
 
+		    if (!lastBranchPtr && danglingBranchPtr) {
+			/*
+			 * The dangling branch is the open begin of this elided range.
+			 */
+			lastBranchPtr = danglingBranchPtr;
+			danglingBranchPtr = NULL;
+		    }
 		    if (!lastBranchPtr) {
 			/*
 			 * The related branch is starting outside of this range,
@@ -8892,6 +8959,10 @@ UpdateElideInfo(
 		    /* connect the branches */
 		    lastBranchPtr->body.branch.nextPtr = lastLinkPtr;
 		    lastLinkPtr->body.link.prevPtr = lastBranchPtr;
+		    if (lastLinkPtr == danglingLinkPtr) {
+			/* this link got a valid branch again */
+			danglingLinkPtr = NULL;
+		    }
 		    /* finally link new segment */
 		    LinkSwitch(linePtr, segPtr->prevPtr, lastLinkPtr);
 		    newBranchPtr = lastBranchPtr = NULL;
@@ -8926,6 +8997,11 @@ UpdateElideInfo(
 	 * Connect the inserted branch.
 	 */
 
+	if (!lastLinkPtr && danglingLinkPtr) {
+	    /* The dangling link is the closure of the inserted branch. */
+	    lastLinkPtr = danglingLinkPtr;
+	    danglingLinkPtr = NULL;
+	}
 	if (!lastLinkPtr) {
 	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 	    actualElided = SegmentIsElided(sharedTextPtr, endSegPtr, NULL);
@@ -8958,6 +9034,10 @@ UpdateElideInfo(
 
 	newBranchPtr->body.branch.nextPtr = lastLinkPtr;
 	lastLinkPtr->body.link.prevPtr = newBranchPtr;
+	if (lastLinkPtr == danglingLinkPtr) {
+	    /* this link got a valid branch again */
+	    danglingLinkPtr = NULL;
+	}
     }
 
     if (deletedBranchPtr) { TkBTreeFreeSegment(deletedBranchPtr); }
@@ -8993,6 +9073,8 @@ UpdateElideInfo(
 		lineNo2 - lineNo1, TK_TEXT_INVALIDATE_ELIDE);
     }
 
+    assert(!danglingBranchPtr);
+    assert(!danglingLinkPtr);
     assert(!(tagPtr && reason == ELISION_WILL_BE_REMOVED) || tagPtr->textPtr == oldTextPtr);
 }
 
