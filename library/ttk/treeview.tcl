@@ -713,7 +713,7 @@ proc ::ttk::treeview::ActivateInvoke {w fn} {
     } else {
 	switch $fn {
 	    "after" - "before" {
-	        InvokeItem $w
+		InvokeItem $w
 	    }
 	    "column" {
 		ToggleSelected $w
@@ -1162,7 +1162,7 @@ proc ::ttk::treeview::Heading.drag {w x y} {
 	if {[$w cget -cursor] eq $State(cursor)} {
 	    set cursor [ttk::cursor move]
 	    if {$cursor eq ""} {
-	        set cursor "fleur"
+		set cursor "fleur"
 	    }
 	    set State(cursor) [$w cget -cursor]
 	    ttk::setCursor $w $cursor
@@ -1483,7 +1483,7 @@ proc ::ttk::treeview::CopyToClipboard {w} {
 	if {$headers} {
 	    set list [list]
 	    foreach column $columns {
-	        lappend list [EncodeValue [$w heading $column -text]]
+		lappend list [EncodeValue [$w heading $column -text]]
 	    }
 	    append data [join $list "\t"] "\n"
 	}
@@ -1491,7 +1491,7 @@ proc ::ttk::treeview::CopyToClipboard {w} {
 	foreach item [$w selection] {
 	    set list [list]
 	    foreach column $columns {
-	        lappend list [EncodeValue [$w set $item $column]]
+		lappend list [EncodeValue [$w set $item $column]]
 	    }
 	    append data [join $list "\t"] "\n"
 	}

@@ -672,14 +672,14 @@ proc ::tk::TextKeyExtend {w index} {
 
 proc ::tk::TextAutoEnableRtl {w} {
     if {![winfo exists $w]} {
-        return
+	return
     }
 
     # Use a widget-specific flag for one-time execution
     set flag "__tk_text_rtl_auto_$w"
     upvar #0 $flag done
     if {[info exists done]} {
-        return  ;# Already auto-enabled for this widget
+	return  ;# Already auto-enabled for this widget
     }
     set done 1
 
@@ -699,7 +699,7 @@ proc ::tk::TextAutoEnableRtl {w} {
 
 proc ::tk::TextDetectAndTagRtl {w} {
     if {![winfo exists $w]} {
-        return
+	return
     }
 
     # Configure tk_rtl_right tag if not already present
@@ -710,27 +710,27 @@ proc ::tk::TextDetectAndTagRtl {w} {
     set end_line [lindex [split [$w index "end-1c"] .] 0]
 
     for {set line 1} {$line <= $end_line} {incr line} {
-        set line_start "$line.0"
-        set line_end "$line.end"
+	set line_start "$line.0"
+	set line_end "$line.end"
 
-        # Get the text content of this line
-        set line_text [$w get $line_start $line_end]
+	# Get the text content of this line
+	set line_text [$w get $line_start $line_end]
 
-        # Skip empty lines
-        if {[string length [string trim $line_text]] == 0} {
-            continue
-        }
+	# Skip empty lines
+	if {[string length [string trim $line_text]] == 0} {
+	    continue
+	}
 
-        # Check if this line is pure RTL
-        set is_rtl [::tk::TextIsRtlLine $line_text]
+	# Check if this line is pure RTL
+	set is_rtl [::tk::TextIsRtlLine $line_text]
 
-        # Remove any existing RTL tag first to avoid duplicates
-        $w tag remove tk_rtl_right $line_start $line_end
+	# Remove any existing RTL tag first to avoid duplicates
+	$w tag remove tk_rtl_right $line_start $line_end
 
-        # Apply RTL tag if pure RTL detected
-        if {$is_rtl} {
-            $w tag add tk_rtl_right $line_start $line_end
-        }
+	# Apply RTL tag if pure RTL detected
+	if {$is_rtl} {
+	    $w tag add tk_rtl_right $line_start $line_end
+	}
     }
 
     # Clear the pending flag
@@ -751,26 +751,26 @@ proc ::tk::TextIsRtlLine {line} {
     set hasLtr 0
 
     foreach char [split $line ""] {
-        set code [scan $char %c]
+	set code [scan $char %c]
 
-        # Skip whitespace and common punctuation/dashes
-        if {[string is space -strict $char] || [string match {[-_:;,.!?]} $char]} {
-            continue
-        }
+	# Skip whitespace and common punctuation/dashes
+	if {[string is space -strict $char] || [string match {[-_:;,.!?]} $char]} {
+	    continue
+	}
 
-        # Check for RTL: Hebrew (U+0590-U+05FF), Arabic (U+0600-U+06FF),
-        # Syriac (U+0700-U+074F), Thaana (U+0780-U+07BF), Nko (U+07C0-U+07FF),
-        # Samaritan (U+0800-U+083F), Mandaic (U+0840-U+085F),
-        # Arabic Extended-A (U+08A0-U+08FF)
-        if {$code >= 0x0590 && $code <= 0x08FF} {
-            set hasRtl 1
-        } else {
-            # Any non-RTL character (except whitespace/punct already skipped)
-            # counts as LTR
-            if {$code > 32 && !([string match {[-_:;,.!?]} $char])} {
-                set hasLtr 1
-            }
-        }
+	# Check for RTL: Hebrew (U+0590-U+05FF), Arabic (U+0600-U+06FF),
+	# Syriac (U+0700-U+074F), Thaana (U+0780-U+07BF), Nko (U+07C0-U+07FF),
+	# Samaritan (U+0800-U+083F), Mandaic (U+0840-U+085F),
+	# Arabic Extended-A (U+08A0-U+08FF)
+	if {$code >= 0x0590 && $code <= 0x08FF} {
+	    set hasRtl 1
+	} else {
+	    # Any non-RTL character (except whitespace/punct already skipped)
+	    # counts as LTR
+	    if {$code > 32 && !([string match {[-_:;,.!?]} $char])} {
+		set hasLtr 1
+	    }
+	}
     }
 
     # Pure RTL: has RTL characters AND no LTR characters

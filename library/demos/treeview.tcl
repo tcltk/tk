@@ -173,7 +173,7 @@ proc column_handler {w fn} {
 	set columns [$w cget -columns]
     }
     if {"tree" in [$w cget -show]} {
-        set columns [concat [list #0] $columns]
+	set columns [concat [list #0] $columns]
     }
     foreach column $columns {
 	$w column $column -stretch $bool
@@ -495,7 +495,7 @@ proc prev_cell {w} {
 	set columns [$w cget -columns]
     }
     if {"tree" in [$w cget -show]} {
-        set columns [concat [list #0] $columns]
+	set columns [concat [list #0] $columns]
     }
 
     set index [lsearch $columns $column]
@@ -520,7 +520,7 @@ proc next_cell {w} {
 	set columns [$w cget -columns]
     }
     if {"tree" in [$w cget -show]} {
-        set columns [concat [list #0] $columns]
+	set columns [concat [list #0] $columns]
     }
 
     set index [lsearch $columns $column]
