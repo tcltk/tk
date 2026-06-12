@@ -1212,8 +1212,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextDLineInfo(textPtr, indexPtr, &x, &y, &width, &height,
-		&base) == 0) {
+	if (TkTextDLineInfo(textPtr, indexPtr, &x, &y, &width, &height, &base)) {
 	    Tcl_Obj *listObj = Tcl_NewListObj(0, NULL);
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewWideIntObj(x));
