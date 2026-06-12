@@ -1980,7 +1980,7 @@ test textDisp-11.21 {TkTextSetYView, window height smaller than the line height}
     update
     .top.t see 1.0
     .top.t index @0,[expr {$lineheight - 2}]
-} {1.6}
+} {1.0}
 test textDisp-11.22 {TkTextSetYView, peer has -startline} {
     .top.t delete 1.0 end
     for {set i 1} {$i <= 50} {incr i} {
