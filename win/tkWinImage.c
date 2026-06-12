@@ -792,49 +792,12 @@ GetRGBACache(
 }
 
 /*
- * PremultiplyRGBA --
- *	Copy a w x h sub-rect of an RGBA image (alpha at byte 3) into a BGRA
- *	buffer of the given byte stride, premultiplying by alpha.  AC_SRC_ALPHA
- *	wants premultiplied data; pix32 is RGBA and GDI DIBs are BGRA, so R and
- *	B are swapped.
- */
-
-static void
-PremultiplyRGBA(
-    XImage *image,
-    int src_x, int src_y,
-    int w, int h,
-    unsigned char *dst,
-    int dstStride)
-{
-    int x, y;
-
-    for (y = 0; y < h; y++) {
-	unsigned char *s = (unsigned char *) image->data
-		+ (size_t) (src_y + y) * image->bytes_per_line
-		+ (size_t) src_x * 4;
-	unsigned char *o = dst + (size_t) y * dstStride;
-
-	for (x = 0; x < w; x++) {
-	    unsigned int a = s[3];
-
-	    o[0] = (unsigned char) ((s[2] * a + 127) / 255);	/* B */
-	    o[1] = (unsigned char) ((s[1] * a + 127) / 255);	/* G */
-	    o[2] = (unsigned char) ((s[0] * a + 127) / 255);	/* R */
-	    o[3] = (unsigned char) a;				/* A */
-	    s += 4;
-	    o += 4;
-	}
-    }
-}
-
-/*
  *----------------------------------------------------------------------
  *
  * TkpPutRGBAImage --
  *
- *	Composite an RGBA image (4 bytes/pixel, alpha at byte 3, NOT
- *	premultiplied) onto a drawable using GDI AlphaBlend (Porter-Duff
+ *	Composite an RGBA image (4 bytes/pixel, NOT premultiplied) onto a
+ *	drawable using GDI AlphaBlend (Porter-Duff
  *	source-over).  Enabled by TK_CAN_RENDER_RGBA in tkWinPort.h; called by
  *	TkImgPhotoDisplay in place of the software BlendComplexAlpha path, which
  *	reads the destination back with XGetImage and blends per pixel on the
@@ -855,8 +818,7 @@ TkpPutRGBAImage(
     Display *display,
     Drawable drawable,
     GC gc,
-    XImage *image,		/* Source image; alpha at byte 3, not
-				 * premultiplied. */
+    XImage *image,		/* Source image; RGBA, not premultiplied. */
     int src_x, int src_y,	/* Top-left of the sub-rect within image. */
     int dest_x, int dest_y,	/* Top-left within drawable. */
     unsigned int width, unsigned int height)
@@ -864,6 +826,9 @@ TkpPutRGBAImage(
     TkWinDCState state;
     HDC dstDC;
     BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+				/* AC_SRC_ALPHA wants the premultiplied BGRA
+				 * that TkPremultiplyRGBA produces, matching
+				 * the 32-bit DIB pixel layout. */
     int w = (int) width, h = (int) height;
     (void) gc;
 
@@ -887,7 +852,7 @@ TkpPutRGBAImage(
 	RGBACache *cache = GetRGBACache(dstDC, w, h);
 
 	if (cache != NULL) {
-	    PremultiplyRGBA(image, src_x, src_y, w, h,
+	    TkPremultiplyRGBA(image, src_x, src_y, w, h,
 		    (unsigned char *) cache->bits, cache->w * 4);
 	    if (!AlphaBlend(dstDC, dest_x, dest_y, w, h,
 		    cache->memDC, 0, 0, w, h, bf)) {
@@ -914,7 +879,7 @@ TkpPutRGBAImage(
 	    TkWinReleaseDrawableDC(drawable, dstDC, &state);
 	    return BadDrawable;
 	}
-	PremultiplyRGBA(image, src_x, src_y, w, h, (unsigned char *) bits, w * 4);
+	TkPremultiplyRGBA(image, src_x, src_y, w, h, (unsigned char *) bits, w * 4);
 
 	memDC = CreateCompatibleDC(dstDC);
 	oldBmp = (HBITMAP) SelectObject(memDC, dib);
