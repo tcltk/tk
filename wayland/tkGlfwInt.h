@@ -17,6 +17,8 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
+#include "tkMenu.h"
+#include "tkMenubutton.h"  /* Add this line */
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
 #include <libdecor.h>
@@ -41,14 +43,6 @@ void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
  */
 typedef struct TkWaylandPopup TkWaylandPopup;
 struct wl_seat;
-
-/*
- * Forward declaration for TkMenuButton (defined in tkMenubutton.h).
- * A duplicate typedef of an identical type is legal in C11; this lets
- * TkpMenuButtonPostMenu be declared here without pulling in
- * tkMenubutton.h.
- */
-typedef struct TkMenuButton TkMenuButton;
 
 /*
  *----------------------------------------------------------------------
@@ -592,28 +586,84 @@ MODULE_SCOPE void     TkWaylandPopupGetPosition(
 MODULE_SCOPE struct wl_seat *TkWaylandPopupGetSeat(void);
 
 /*
+ * Subsurface-mode popups (wl_subsurface, not xdg_popup).  Use for
+ * surfaces that are a permanent part of a window -- e.g. the menubar
+ * strip -- as opposed to transient, compositor-dismissed surfaces
+ * (use TkWaylandPopupCreate / xdg_popup for those).  No configure
+ * handshake; usable immediately after creation.
+ */
+MODULE_SCOPE TkWaylandPopup *TkWaylandSubsurfaceCreate(
+    GLFWwindow *parentGlfw,
+    int x, int y, int width, int height);
+MODULE_SCOPE void TkWaylandSubsurfaceReconfigure(
+    TkWaylandPopup *popup,
+    int x, int y, int width, int height);
+MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(
+    TkWaylandPopup *popup, TkWaylandPopup *sibling);
+
+/*
  *----------------------------------------------------------------------
  *
  * Menu Support
+ *
+ *	Dropdown/cascade menus are implemented as a stack of
+ *	wl_subsurface-backed popups (TkWaylandSubsurfaceCreate) with empty
+ *	input regions, so all pointer/keyboard input continues to arrive at
+ *	the toplevel's raw wl_pointer / wl_keyboard listeners
+ *	(tkGlfwInit.c) in toplevel-surface-local coordinates.  Those
+ *	listeners call the Handle* functions below, which perform hit
+ *	testing against the menu stack and dispatch to the appropriate
+ *	TkMenu, or dismiss the stack on an outside click / Escape.
+ *
+ *	This design is self-contained: it does not depend on or interact
+ *	with GLFW's own per-window callbacks (registered elsewhere via
+ *	TkGlfwSetupCallbacks).
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void TkWaylandMenuInit(void);
 
-/*
- * Dispatch entry points for menu popup input handling, called from the
- * parent toplevel's GLFW cursor/button/enter callbacks whenever
- * TkWaylandMenuPopupActive() is non-zero.  Implemented in
- * tkWaylandMenu.c.
- */
+/* Non-zero if one or more menu popups are currently posted. */
 MODULE_SCOPE int  TkWaylandMenuPopupActive(void);
-MODULE_SCOPE void TkWaylandMenuCursorPosCallback(GLFWwindow *glfwWindow,
-				   double xpos, double ypos);
-MODULE_SCOPE void TkWaylandMenuMouseButtonCallback(GLFWwindow *glfwWindow,
-				   int button, int action, int mods);
-MODULE_SCOPE void TkWaylandMenuCursorEnterCallback(GLFWwindow *glfwWindow,
-				   int entered);
+
+/*
+ * Post a menu as either the root of a new menu stack (isRoot != 0,
+ * dismisses any existing stack first) or as a cascade one level deeper
+ * than the current top of stack (isRoot == 0).  anchorX/Y/W/H are in
+ * toplevel-surface-local coordinates; the popup is placed below-left of
+ * the anchor by default, flipping above/left if it would not fit within
+ * the toplevel's current size.  popupW/H are the menu's natural size.
+ *
+ * Returns TCL_OK / TCL_ERROR.
+ */
+MODULE_SCOPE int  TkWaylandPostMenuAtAnchor(
+    Tcl_Interp *interp, TkMenu *menuPtr,
+    int anchorX, int anchorY, int anchorW, int anchorH,
+    int popupW, int popupH,
+    int isRoot);
+
+/* Dismiss the entire menu stack (all cascades + the root menu). */
+MODULE_SCOPE void TkWaylandMenuDismissAll(void);
+
+/*
+ * Raw input dispatch, called from tkGlfwInit.c's wl_pointer / wl_keyboard
+ * listeners.  x, y are toplevel-surface-local logical pixels.
+ * state follows the wl_pointer_button_state / wl_keyboard_key_state enum
+ * (0 = released, 1 = pressed).
+ */
+MODULE_SCOPE void TkWaylandMenuHandlePointerMotion(int x, int y);
+MODULE_SCOPE void TkWaylandMenuHandlePointerButton(int x, int y,
+				   int button, int state);
+MODULE_SCOPE void TkWaylandMenuHandleEscape(void);
+
+/*
+ * Returns and clears a one-shot flag set when the most recent button
+ * press dismissed the menu stack via an outside click.  Whatever file
+ * registers the GLFW mouse-button callback may call this to swallow that
+ * click rather than also activating a widget underneath.
+ */
+MODULE_SCOPE int  TkWaylandMenuConsumeDismissClick(void);
 
 /*
  *----------------------------------------------------------------------

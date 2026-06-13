@@ -79,13 +79,25 @@ static int shutdownInProgress = 0;
  *----------------------------------------------------------------------
  */
 
+/*
+ * Last known pointer position, in toplevel-surface-local logical pixels.
+ * Updated by PointerMotionTrack.  Menu popups use empty input regions
+ * (see TkWaylandSubsurfaceCreate), so the toplevel surface continues to
+ * receive all pointer motion/button events -- including while the
+ * cursor is visually over a menu -- with coordinates in this same space.
+ */
+static int lastPointerX = 0;
+static int lastPointerY = 0;
+
 static void
 PointerEnterStub(
     void *data, struct wl_pointer *pointer, uint32_t serial,
     struct wl_surface *surface, wl_fixed_t sx, wl_fixed_t sy)
 {
-    (void)data; (void)pointer; (void)serial;
-    (void)surface; (void)sx; (void)sy;
+    (void)data; (void)pointer; (void)serial; (void)surface;
+
+    lastPointerX = wl_fixed_to_int(sx);
+    lastPointerY = wl_fixed_to_int(sy);
 }
 
 static void
@@ -97,11 +109,18 @@ PointerLeaveStub(
 }
 
 static void
-PointerMotionStub(
+PointerMotionTrack(
     void *data, struct wl_pointer *pointer, uint32_t time,
     wl_fixed_t sx, wl_fixed_t sy)
 {
-    (void)data; (void)pointer; (void)time; (void)sx; (void)sy;
+    (void)data; (void)pointer; (void)time;
+
+    lastPointerX = wl_fixed_to_int(sx);
+    lastPointerY = wl_fixed_to_int(sy);
+
+    if (TkWaylandMenuPopupActive()) {
+        TkWaylandMenuHandlePointerMotion(lastPointerX, lastPointerY);
+    }
 }
 
 static void
@@ -113,6 +132,16 @@ PointerButtonSerial(
 
     if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
         TkWaylandPopupSetSerial(serial);
+
+        if (TkWaylandMenuPopupActive()) {
+            TkWaylandMenuHandlePointerButton(lastPointerX, lastPointerY,
+                                              (int)button, (int)state);
+        }
+    } else {
+        if (TkWaylandMenuPopupActive()) {
+            TkWaylandMenuHandlePointerButton(lastPointerX, lastPointerY,
+                                              (int)button, (int)state);
+        }
     }
 }
 
@@ -127,9 +156,94 @@ PointerAxisStub(
 static const struct wl_pointer_listener tkPointerSerialListener = {
     PointerEnterStub,
     PointerLeaveStub,
-    PointerMotionStub,
+    PointerMotionTrack,
     PointerButtonSerial,
     PointerAxisStub,
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Raw wl_keyboard listener -- Escape-to-dismiss for menu popups
+ *
+ *	Menu popups created via TkWaylandPostMenuAtAnchor (subsurface-based)
+ *	have no xdg_popup grab, so the compositor does not deliver an
+ *	implicit "dismiss on Escape" behaviour.  We bind our own
+ *	wl_keyboard listener (alongside GLFW's) purely to detect the
+ *	Escape key (Linux evdev keycode KEY_ESC = 1) while a menu is
+ *	posted, and call TkWaylandMenuHandleEscape() to dismiss it.
+ *
+ *	Like the pointer listener, this does not call any wl_keyboard
+ *	setter functions and cannot interfere with GLFW's own keyboard
+ *	handling or IBus.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define TK_WAYLAND_KEY_ESC 1  /* linux/input-event-codes.h: KEY_ESC */
+
+static void
+KeyboardKeymapStub(
+    void *data, struct wl_keyboard *keyboard, uint32_t format,
+    int fd, uint32_t size)
+{
+    (void)data; (void)keyboard; (void)format; (void)fd; (void)size;
+}
+
+static void
+KeyboardEnterStub(
+    void *data, struct wl_keyboard *keyboard, uint32_t serial,
+    struct wl_surface *surface, struct wl_array *keys)
+{
+    (void)data; (void)keyboard; (void)serial; (void)surface; (void)keys;
+}
+
+static void
+KeyboardLeaveStub(
+    void *data, struct wl_keyboard *keyboard, uint32_t serial,
+    struct wl_surface *surface)
+{
+    (void)data; (void)keyboard; (void)serial; (void)surface;
+}
+
+static void
+KeyboardKeyEscape(
+    void *data, struct wl_keyboard *keyboard, uint32_t serial,
+    uint32_t time, uint32_t key, uint32_t state)
+{
+    (void)data; (void)keyboard; (void)serial; (void)time;
+
+    if (key == TK_WAYLAND_KEY_ESC &&
+        state == WL_KEYBOARD_KEY_STATE_PRESSED &&
+        TkWaylandMenuPopupActive()) {
+        TkWaylandMenuHandleEscape();
+    }
+}
+
+static void
+KeyboardModifiersStub(
+    void *data, struct wl_keyboard *keyboard, uint32_t serial,
+    uint32_t modsDepressed, uint32_t modsLatched, uint32_t modsLocked,
+    uint32_t group)
+{
+    (void)data; (void)keyboard; (void)serial;
+    (void)modsDepressed; (void)modsLatched; (void)modsLocked; (void)group;
+}
+
+static void
+KeyboardRepeatInfoStub(
+    void *data, struct wl_keyboard *keyboard, int32_t rate, int32_t delay)
+{
+    (void)data; (void)keyboard; (void)rate; (void)delay;
+}
+
+static const struct wl_keyboard_listener tkKeyboardEscapeListener = {
+    KeyboardKeymapStub,
+    KeyboardEnterStub,
+    KeyboardLeaveStub,
+    KeyboardKeyEscape,
+    KeyboardModifiersStub,
+    KeyboardRepeatInfoStub,
 };
 
 /*
@@ -171,6 +285,23 @@ TkWaylandRegisterPointerListener(void)
     wl_pointer_add_listener(pointer, &tkPointerSerialListener, NULL);
     fprintf(stderr,
         "TkWaylandRegisterPointerListener: serial listener attached\n");
+
+    /*
+     * Also attach the Escape-detection keyboard listener.  This shares
+     * the same registration-order guarantee: our KeyboardKeyEscape fires
+     * before GLFW's own keyboard callback for the same event, and since
+     * it calls no wl_keyboard setters it cannot interfere with GLFW or
+     * IBus key handling.
+     */
+    struct wl_keyboard *keyboard = wl_seat_get_keyboard(seat);
+    if (!keyboard) {
+        fprintf(stderr,
+            "TkWaylandRegisterPointerListener: seat has no keyboard\n");
+        return;
+    }
+    wl_keyboard_add_listener(keyboard, &tkKeyboardEscapeListener, NULL);
+    fprintf(stderr,
+        "TkWaylandRegisterPointerListener: escape listener attached\n");
 }
 
 /*
@@ -673,6 +804,17 @@ TkGlfwInitialize(void)
     //glfwWindowHint(GLFW_OPENGL_COMPAT_PROFILE, GLFW_TRUE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    /*
+     * Force EGL-based context creation.  glfwGetEGLContext() /
+     * glfwGetEGLDisplay() (used by tkWaylandPopup.c to build shared-context
+     * EGL surfaces for native xdg_popup / wl_subsurface windows) only
+     * succeed when window->context.source == GLFW_EGL_CONTEXT_API.  The
+     * default GLFW_NATIVE_CONTEXT_API causes glfwGetEGLContext to fail
+     * with GLFW_NO_WINDOW_CONTEXT (error 65546).  On Wayland, GLFW only
+     * ever uses EGL internally anyway, so this hint is a no-op for actual
+     * context creation and purely unlocks the introspection API.
+     */
+    glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
@@ -827,6 +969,7 @@ TkGlfwCreateWindow(
 	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
 	glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
 	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);

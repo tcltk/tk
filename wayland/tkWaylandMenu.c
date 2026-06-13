@@ -15,7 +15,16 @@
 #include "tkGlfwInt.h"
 #include "tkMenu.h"
 #include <GLFW/glfw3.h>
-#include "xdg-shell-client-protocol.h"
+#include <wayland-client.h>
+#include <stdbool.h>
+
+/*
+ * wl_pointer.button reports Linux evdev button codes.  Avoid requiring
+ * <linux/input-event-codes.h> for just this one constant.
+ */
+#ifndef BTN_LEFT
+#define BTN_LEFT 0x110
+#endif
 
 /* The root GLFWwindow, defined in tkGlfwInit.c. */
 extern GLFWwindow *mainGlfwWindow;
@@ -34,6 +43,7 @@ extern GLFWwindow *mainGlfwWindow;
 #define MENU_DIVIDER_HEIGHT	2
 #define ENTRY_HELP_MENU		ENTRY_PLATFORM_FLAG1
 
+/* WmInfo flag from tkUnixWm.c */
 #ifndef WM_NEVER_MAPPED
 #define WM_NEVER_MAPPED (1<<0)
 #endif
@@ -100,19 +110,74 @@ static void MenuMouseLeave(TkMenu *menuPtr);
 void TkWaylandSetupMenuCallbacks(Tk_Window tkwin);
 
 /* Popup-based posting support. */
-static void MenuPopupDoneCallback(void *clientData);
 static void MenuDrawIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
 static void MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
+static void PlaceMenuPopup(int anchorX, int anchorY, int anchorW, int anchorH,
+			    int popupW, int popupH, int *xOut, int *yOut);
+static void MenuStackPop(int toDepth);
 
 /*
- * Module-level state for the currently posted top-level menu popup.
- * Set by TkpPostMenu / TkpMenuButtonPostMenu (tkWaylandMenubu.c) and
- * cleared by MenuPopupDoneCallback.  Used by the GLFW callback wrappers
- * to translate parent-surface coordinates into popup-surface
- * coordinates and to dispatch hover/click events to the correct menu.
+ *----------------------------------------------------------------------
+ *
+ * Menu popup stack
+ *
+ *	Each posted menu (the root dropdown plus any open cascades) occupies
+ *	one slot.  All popups are wl_subsurfaces parented directly to the
+ *	root toplevel's wl_surface (TkWaylandSubsurfaceCreate), with empty
+ *	input regions, so the rect stored here is in toplevel-surface-local
+ *	coordinates -- the same space as lastPointerX/Y in tkGlfwInit.c and
+ *	as GLFW's own per-toplevel callbacks.
+ *
+ *	Slot 0 is always the root menu (posted via TkpPostMenu /
+ *	TkpMenuButtonPostMenu).  Slots 1..depth-1 are cascades, each one
+ *	level deeper than its predecessor.  TkWaylandMenuHandlePointerMotion
+ *	/ HandlePointerButton hit-test from the top of the stack down so
+ *	that overlapping cascade regions resolve to the topmost (innermost)
+ *	menu.
+ *
+ *----------------------------------------------------------------------
  */
-static TkWaylandPopup *currentMenuPopup = NULL;
-static TkMenu         *currentMenuPtr   = NULL;
+
+#define TK_WAYLAND_MENU_STACK_MAX 16
+
+typedef struct {
+    TkMenu         *menuPtr;
+    TkWaylandPopup *popup;
+    int x, y, w, h;   /* toplevel-surface-local rect */
+} MenuStackEntry;
+
+static MenuStackEntry menuStack[TK_WAYLAND_MENU_STACK_MAX];
+static int            menuStackDepth = 0;
+
+/*
+ * Set by TkWaylandMenuHandlePointerButton when an outside click dismisses
+ * the stack, so the (unrelated) GLFW button callback for the same press
+ * can choose to swallow the click rather than also activating whatever
+ * widget is underneath.  Consumed via TkWaylandMenuConsumeDismissClick.
+ */
+static int menuDismissedByClick = 0;
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuStackFindLevel --
+ *
+ *	Return the stack index of menuPtr, or -1 if it is not currently
+ *	posted.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+MenuStackFindLevel(
+    TkMenu *menuPtr)
+{
+    int i;
+    for (i = 0; i < menuStackDepth; i++) {
+        if (menuStack[i].menuPtr == menuPtr) return i;
+    }
+    return -1;
+}
 
 /*
  *---------------------------------------------------------------------------
@@ -278,7 +343,7 @@ TkpSetWindowMenuBar(
 
     TkRecomputeMenu(menuPtr);
     int mbH = menuPtr->totalHeight;
-    if (mbH <= 0) mbH = 24;
+    if (mbH < 20) mbH = 24;
     int mbW = Tk_Width(tkwin);
     if (mbW <= 0) mbW = Tk_ReqWidth(tkwin);
     if (mbW <= 0) mbW = 200;
@@ -287,27 +352,22 @@ TkpSetWindowMenuBar(
 
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
         /*
-         * Anchor rect: a 1px-tall strip across the full width at y=0 of
-         * the toplevel surface.  Gravity BOTTOM_RIGHT makes the menubar
-         * popup hang below that strip, i.e. occupy the top of the
-         * window.
+         * The menubar is a permanent part of the toplevel, not a
+         * transient compositor-managed surface, so use a wl_subsurface
+         * (no xdg_surface/configure handshake required) anchored to the
+         * top-left corner of the toplevel at (0,0).
          */
-        wmPtr->menubarPopup = TkWaylandPopupCreate(
+        wmPtr->menubarPopup = TkWaylandSubsurfaceCreate(
             TkWaylandGetGLFWwindow(winPtr),
-            0, 0,
-            mbW, 1,
-            mbW, mbH,
-            XDG_POSITIONER_ANCHOR_BOTTOM_LEFT,
-            XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT,
-            0, 0);
+            0, 0, mbW, mbH);
 
         if (!wmPtr->menubarPopup) {
             fprintf(stderr,
-                "TkpSetWindowMenuBar: failed to create menubar popup\n");
+                "TkpSetWindowMenuBar: failed to create menubar subsurface\n");
         } else {
             MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
             fprintf(stderr,
-                "TkpSetWindowMenuBar: menubar popup %p created (%dx%d)\n",
+                "TkpSetWindowMenuBar: menubar subsurface %p (%dx%d)\n",
                 (void *)wmPtr->menubarPopup, mbW, mbH);
         }
     }
@@ -1129,18 +1189,18 @@ DrawTearoffEntry(
  *
  * TkpPostMenu --
  *
- *	Post a popup menu (right-click context menu or cascade submenu) at
- *	the specified location using a grabbed xdg_popup surface.
+ *	Post a popup menu (right-click context menu) at the specified
+ *	location as the root of a new menu stack.
  *
- *	Tearoff menus are not grabbed popups and continue to use
+ *	Tearoff menus are not part of the menu stack and continue to use
  *	TkpPostTearoffMenu.
  *
  * Results:
  *	A standard Tcl result code.
  *
  * Side effects:
- *	Creates an xdg_popup surface, renders the menu into it, and
- *	registers a dismissal callback that drives <<MenuDone>>.
+ *	Dismisses any previously posted menu stack, then posts menuPtr as
+ *	the new root via TkWaylandPostMenuAtAnchor (see below).
  *
  *---------------------------------------------------------------------------
  */
@@ -1183,60 +1243,247 @@ TkpPostMenu(
     if (popupH <= 0) popupH = 1;
 
     /*
-     * Tear down any popup this menu window already owns (e.g. from a
-     * previous post during keyboard traversal).
+     * A right-click context menu has a 1x1 "point" anchor at (x, y) with
+     * zero size; PlaceMenuPopup will open the menu down-right from that
+     * point by default, flipping up/left if it would not fit within the
+     * toplevel.
      */
-    TkWindow *menuWin = (TkWindow *)menuPtr->tkwin;
-    WmInfo   *wmPtr   = (WmInfo *)menuWin->wmInfoPtr;
-    if (wmPtr && wmPtr->popup) {
-        TkWaylandPopupDestroy(wmPtr->popup);
-        wmPtr->popup = NULL;
+    return TkWaylandPostMenuAtAnchor(interp, menuPtr,
+        x, y, 0, 0, popupW, popupH, /*isRoot=*/1);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * PlaceMenuPopup --
+ *
+ *	Compute the top-left corner of a popupW x popupH menu so that it
+ *	opens below-and-right of the given anchor rectangle, flipping
+ *	above/left if it would otherwise extend past the right or bottom
+ *	edge of the root toplevel's current size.
+ *
+ *	Coordinates are all in toplevel-surface-local logical pixels.
+ *
+ *	Caveat: Wayland deliberately does not expose a window's position on
+ *	the physical screen, so this can only avoid overflowing the
+ *	toplevel's own bounds, not the monitor's.  For windows positioned
+ *	away from a screen edge this is sufficient; for a window whose edge
+ *	coincides with a screen edge, a large menu may still be clipped by
+ *	the compositor at the screen boundary (which is a graceful, if
+ *	imperfect, fallback).
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+PlaceMenuPopup(
+    int anchorX, int anchorY, int anchorW, int anchorH,
+    int popupW, int popupH,
+    int *xOut, int *yOut)
+{
+    int toplevelW = 0, toplevelH = 0;
+
+    TkWindow *toplevel = TkGlfwGetTkWindow(mainGlfwWindow);
+    if (toplevel) {
+        toplevelW = Tk_Width((Tk_Window)toplevel);
+        toplevelH = Tk_Height((Tk_Window)toplevel);
     }
-    if (currentMenuPtr == menuPtr) {
-        currentMenuPopup = NULL;
-        currentMenuPtr   = NULL;
+    if (toplevelW <= 0) toplevelW = 200;
+    if (toplevelH <= 0) toplevelH = 200;
+
+    int x = anchorX;
+    int y = anchorY + anchorH;
+
+    if (y + popupH > toplevelH) {
+        /* Flip above the anchor. */
+        int flippedY = anchorY - popupH;
+        if (flippedY >= 0) {
+            y = flippedY;
+        }
+        /* else: leave below; will be clamped/possibly clipped. */
     }
 
+    if (x + popupW > toplevelW) {
+        /* Flip so the popup's right edge aligns with the anchor's
+         * right edge (or the anchor point itself for a point anchor). */
+        int flippedX = anchorX + anchorW - popupW;
+        if (flippedX >= 0) {
+            x = flippedX;
+        }
+    }
+
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+
+    *xOut = x;
+    *yOut = y;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuStackPop --
+ *
+ *	Destroy and remove all menu stack entries from index toDepth onward
+ *	(i.e. keep entries [0, toDepth)).  Used both to close stale cascades
+ *	when the hover moves to a different entry, and as part of
+ *	TkWaylandMenuDismissAll (toDepth == 0).
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+MenuStackPop(
+    int toDepth)
+{
+    while (menuStackDepth > toDepth) {
+        menuStackDepth--;
+        MenuStackEntry *entry = &menuStack[menuStackDepth];
+
+        if (entry->menuPtr && entry->menuPtr->postedCascade) {
+            TkPostSubmenu(entry->menuPtr->interp, entry->menuPtr, NULL);
+            entry->menuPtr->postedCascade = NULL;
+        }
+
+        if (entry->popup) {
+            TkWaylandPopupDestroy(entry->popup);
+        }
+        if (entry->menuPtr && entry->menuPtr->tkwin) {
+            TkWindow *win = (TkWindow *)entry->menuPtr->tkwin;
+            if (win->wmInfoPtr) {
+                ((WmInfo *)win->wmInfoPtr)->popup = NULL;
+            }
+            win->flags &= ~TK_MAPPED;
+        }
+
+        memset(entry, 0, sizeof(*entry));
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuDismissAll --
+ *
+ *	Tear down the entire menu stack and post <<MenuDone>> on the root
+ *	menu's window so Tk's generic unposting machinery (focus
+ *	restoration, -postcommand cleanup, etc.) runs on the Tcl event loop.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuDismissAll(void)
+{
+    if (menuStackDepth == 0) return;
+
+    TkMenu *rootMenuPtr = menuStack[0].menuPtr;
+    TkWindow *rootWin = rootMenuPtr ? (TkWindow *)rootMenuPtr->tkwin : NULL;
+
+    MenuStackPop(0);
+
+    if (rootWin) {
+        TkWaylandPostVirtualEvent(rootWin, "<<MenuDone>>");
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandPostMenuAtAnchor --
+ *
+ *	Core menu posting routine, shared by TkpPostMenu (right-click
+ *	context menus), TkpMenuButtonPostMenu (menubutton dropdowns), and
+ *	the cascade-posting code in MenuMouseClick / MenuMouseMotion.
+ *
+ *	anchorX/Y/W/H describe the rectangle the menu should open relative
+ *	to, in toplevel-surface-local coordinates (for a point anchor, pass
+ *	anchorW = anchorH = 0).  PlaceMenuPopup computes the final top-left
+ *	corner, flipping as needed to stay within the toplevel.
+ *
+ *	If isRoot is non-zero, any existing menu stack is dismissed first
+ *	and this menu becomes stack[0].  Otherwise it is pushed as the next
+ *	cascade level (stack entries beyond the current top are popped
+ *	first) and placed above its parent in the surface stack.
+ *
+ * Results:
+ *	A standard Tcl result code.
+ *
+ * Side effects:
+ *	Creates a subsurface popup, renders the menu into it, and pushes a
+ *	new entry onto menuStack.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandPostMenuAtAnchor(
+    Tcl_Interp *interp,
+    TkMenu     *menuPtr,
+    int anchorX, int anchorY, int anchorW, int anchorH,
+    int popupW, int popupH,
+    int isRoot)
+{
+    if (popupW <= 0) popupW = 1;
+    if (popupH <= 0) popupH = 1;
+
+    if (isRoot) {
+        TkWaylandMenuDismissAll();
+    }
     /*
-     * Use a 1x1 point anchor at (x, y) so the popup's top-left corner
-     * lands exactly there (subject to compositor slide/flip if it would
-     * go off-screen).
+     * For a cascade (isRoot == 0), the caller is responsible for first
+     * calling MenuStackPop(parentLevel + 1) to close any stale deeper
+     * cascades, so that menuStackDepth == parentLevel + 1 on entry here
+     * and the new entry is pushed at index parentLevel + 1.
      */
-    uint32_t serial   = TkWaylandPopupLastSerial();
-    int      grabInput = (serial != 0) ? 1 : 0;
 
-    TkWaylandPopup *popup = TkWaylandPopupCreate(
-        mainGlfwWindow,
-        x, y, 1, 1,
-        popupW, popupH,
-        XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT,
-        XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT,
-        grabInput,
-        serial);
-
-    if (!popup) {
+    if (menuStackDepth >= TK_WAYLAND_MENU_STACK_MAX) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
-            "TkpPostMenu: could not create xdg_popup surface", -1));
+            "TkWaylandPostMenuAtAnchor: menu stack overflow", -1));
         return TCL_ERROR;
     }
 
+    int x, y;
+    PlaceMenuPopup(anchorX, anchorY, anchorW, anchorH, popupW, popupH, &x, &y);
+
+    TkWaylandPopup *popup = TkWaylandSubsurfaceCreate(
+        mainGlfwWindow, x, y, popupW, popupH);
+
+    if (!popup) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+            "TkWaylandPostMenuAtAnchor: could not create subsurface", -1));
+        return TCL_ERROR;
+    }
+
+    if (!isRoot && menuStackDepth > 0) {
+        TkWaylandSubsurfacePlaceAbove(popup, menuStack[menuStackDepth - 1].popup);
+    }
+
+    TkWindow *menuWin = (TkWindow *)menuPtr->tkwin;
+    WmInfo   *wmPtr   = (WmInfo *)menuWin->wmInfoPtr;
     if (wmPtr) {
         wmPtr->popup            = popup;
         wmPtr->overrideRedirect = 1;
     }
-    currentMenuPopup = popup;
-    currentMenuPtr   = menuPtr;
-
-    TkWaylandPopupSetDoneCallback(popup, MenuPopupDoneCallback, menuPtr);
 
     Tk_MoveResizeWindow(menuPtr->tkwin, x, y, popupW, popupH);
     menuWin->flags |= TK_MAPPED;
 
+    MenuStackEntry *entry = &menuStack[menuStackDepth++];
+    entry->menuPtr = menuPtr;
+    entry->popup   = popup;
+    entry->x = x;
+    entry->y = y;
+    entry->w = popupW;
+    entry->h = popupH;
+
     MenuDrawIntoPopup(menuPtr, popup);
 
-    fprintf(stderr, "TkpPostMenu: popup %p for %s at %d,%d size %dx%d\n",
-            (void *)popup, Tk_PathName(menuPtr->tkwin),
-            x, y, popupW, popupH);
+    fprintf(stderr,
+        "TkWaylandPostMenuAtAnchor: %s subsurface %p at %d,%d size %dx%d "
+        "(depth=%d)\n",
+        isRoot ? "root" : "cascade",
+        (void *)popup, x, y, popupW, popupH, menuStackDepth);
 
     return TCL_OK;
 }
@@ -1613,54 +1860,6 @@ MenuDrawMenubarIntoPopup(
     MenuDrawIntoPopup(menuPtr, popup);
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * MenuPopupDoneCallback --
- *
- *	Invoked by tkWaylandPopup.c when the compositor sends
- *	xdg_popup.popup_done (user clicked outside, pressed Escape, the
- *	popup lost the grab, etc.).
- *
- *	The popup itself is destroyed by the popup module immediately
- *	after this callback returns, so we must not call
- *	TkWaylandPopupDestroy here.  We clear our module-level pointers and
- *	post <<MenuDone>> so Tk's generic menu unposting machinery runs on
- *	the Tcl event loop.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Posts a <<MenuDone>> virtual event to the menu's Tk window.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-MenuPopupDoneCallback(
-    void *clientData)
-{
-    TkMenu *menuPtr = (TkMenu *)clientData;
-    if (!menuPtr || !menuPtr->tkwin) return;
-
-    fprintf(stderr, "MenuPopupDoneCallback: unposting %s\n",
-            Tk_PathName(menuPtr->tkwin));
-
-    TkWindow *menuWin = (TkWindow *)menuPtr->tkwin;
-    WmInfo   *wmPtr   = (WmInfo *)menuWin->wmInfoPtr;
-    if (wmPtr) {
-        /* The popup module frees this pointer right after we return. */
-        wmPtr->popup = NULL;
-    }
-
-    if (currentMenuPtr == menuPtr) {
-        currentMenuPopup = NULL;
-        currentMenuPtr   = NULL;
-    }
-
-    TkWaylandPostVirtualEvent(menuWin, "<<MenuDone>>");
-}
 
 /*
  *----------------------------------------------------------------------
@@ -2039,57 +2238,48 @@ MenuMouseClick(
             /* Handle different entry types. */
             switch (mePtr->type) {
             case COMMAND_ENTRY:
-                /* Invoke command, then unpost the popup. */
+                /* Invoke command, then dismiss the entire menu stack. */
                 TkInvokeMenu(menuPtr->interp, menuPtr, i);
-                if (currentMenuPtr == menuPtr && currentMenuPopup) {
-                    TkWaylandPopupDestroy(currentMenuPopup);
-                    /* MenuPopupDoneCallback is NOT called by an
-                     * explicit destroy; clear state here. */
-                    if (((TkWindow *)menuPtr->tkwin)->wmInfoPtr) {
-                        ((WmInfo *)((TkWindow *)menuPtr->tkwin)->wmInfoPtr)
-                            ->popup = NULL;
-                    }
-                    currentMenuPopup = NULL;
-                    currentMenuPtr   = NULL;
-                    TkWaylandPostVirtualEvent((TkWindow *)menuPtr->tkwin,
-                                              "<<MenuDone>>");
-                }
+                TkWaylandMenuDismissAll();
                 break;
-                
+
             case CASCADE_ENTRY:
                 /* Post the cascade menu. */
                 if (mePtr->namePtr != NULL) {
                     TkMenuReferences *menuRefPtr;
-                    int cascadeX, cascadeY;
-                    
+                    int cascadeAnchorX, cascadeAnchorY;
+                    int cascadeW, cascadeH;
+                    int level = MenuStackFindLevel(menuPtr);
+
                     menuRefPtr = TkFindMenuReferencesObj(
 							 menuPtr->interp, mePtr->namePtr);
-                    
-                    if (menuRefPtr && menuRefPtr->menuPtr) {
+
+                    if (level >= 0 && menuRefPtr && menuRefPtr->menuPtr) {
                         TkMenu *cascadePtr = menuRefPtr->menuPtr;
-                        int pw, px, py;
 
                         /*
-                         * Position the cascade to the right of this
-                         * menu's popup, aligned with the entry's y.
-                         * cascadeX/Y are passed to TkpPostMenu as
-                         * parent-surface-relative anchor coordinates,
-                         * so convert from this popup's surface space
-                         * back to parent space using the popup's
-                         * compositor-confirmed position.
+                         * Close any deeper cascades first, then anchor
+                         * the new cascade to the right edge of this
+                         * menu's popup, top-aligned with the clicked
+                         * entry.  All coordinates are toplevel-surface-
+                         * local, taken directly from the stack entry.
                          */
-                        TkWaylandPopupGetSize(currentMenuPopup, &pw, NULL);
-                        TkWaylandPopupGetPosition(currentMenuPopup, &px, &py);
+                        MenuStackPop(level + 1);
 
-                        cascadeX = px + pw;
-                        cascadeY = py + mePtr->y;
-                        
+                        cascadeAnchorX = menuStack[level].x + menuStack[level].w;
+                        cascadeAnchorY = menuStack[level].y + mePtr->y;
+
+                        TkRecomputeMenu(cascadePtr);
+                        cascadeW = cascadePtr->totalWidth;
+                        cascadeH = cascadePtr->totalHeight;
+
                         menuPtr->postedCascade = mePtr;
-                        
                         TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
-                        TkpPostMenu(menuPtr->interp, cascadePtr, 
-				    cascadeX, cascadeY, 0);
-                        
+
+                        TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+                            cascadeAnchorX, cascadeAnchorY, 0, 0,
+                            cascadeW, cascadeH, /*isRoot=*/0);
+
                         TkEventuallyRedrawMenu(menuPtr, NULL);
                     }
                 }
@@ -2190,46 +2380,52 @@ MenuMouseMotion(
             
             /* Activate this entry if not already active. */
             if (menuPtr->active != i) {
-				
+
                 /* Unpost any existing cascade if moving to different entry. */
-                if (menuPtr->postedCascade != NULL && 
+                if (menuPtr->postedCascade != NULL &&
                     menuPtr->postedCascade != mePtr) {
-		    TkPostSubmenu(menuPtr->interp, menuPtr, NULL);
+                    TkPostSubmenu(menuPtr->interp, menuPtr, NULL);
                     menuPtr->postedCascade = NULL;
+
+                    int level = MenuStackFindLevel(menuPtr);
+                    if (level >= 0) {
+                        MenuStackPop(level + 1);
+                    }
                 }
-                
+
                 TkActivateMenuEntry(menuPtr, i);
-                
+
                 /* Auto-post cascade on hover. */
                 if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
                     TkMenuReferences *menuRefPtr;
-                    int cascadeX, cascadeY;
-                    
+                    int cascadeAnchorX, cascadeAnchorY;
+                    int cascadeW, cascadeH;
+                    int level = MenuStackFindLevel(menuPtr);
+
                     menuRefPtr = TkFindMenuReferencesObj(
 							 menuPtr->interp, mePtr->namePtr);
-                    
-                    if (menuRefPtr && menuRefPtr->menuPtr) {
+
+                    if (level >= 0 && menuRefPtr && menuRefPtr->menuPtr) {
                         TkMenu *cascadePtr = menuRefPtr->menuPtr;
-                        int pw, px, py;
 
-                        /*
-                         * Position cascade to the right of this menu's
-                         * popup, in parent-surface coordinates.
-                         */
-                        TkWaylandPopupGetSize(currentMenuPopup, &pw, NULL);
-                        TkWaylandPopupGetPosition(currentMenuPopup, &px, &py);
+                        MenuStackPop(level + 1);
 
-                        cascadeX = px + pw;
-                        cascadeY = py + mePtr->y;
-                        
+                        cascadeAnchorX = menuStack[level].x + menuStack[level].w;
+                        cascadeAnchorY = menuStack[level].y + mePtr->y;
+
+                        TkRecomputeMenu(cascadePtr);
+                        cascadeW = cascadePtr->totalWidth;
+                        cascadeH = cascadePtr->totalHeight;
+
                         menuPtr->postedCascade = mePtr;
-                        
                         TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
-                        TkpPostMenu(menuPtr->interp, cascadePtr,
-				    cascadeX, cascadeY, 0);
+
+                        TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+                            cascadeAnchorX, cascadeAnchorY, 0, 0,
+                            cascadeW, cascadeH, /*isRoot=*/0);
                     }
                 }
-                
+
                 TkEventuallyRedrawMenu(menuPtr, NULL);
             }
             return;
@@ -2277,18 +2473,14 @@ MenuMouseLeave(
  *
  * TkWaylandSetupMenuCallbacks --
  *
- *	Historically this registered GLFW cursor/button/enter callbacks on
- *	the menu's own GLFWwindow.  Popup menus no longer have their own
- *	GLFWwindow -- they are bare xdg_popup surfaces -- so there is
- *	nothing to register here.
- *
- *	Input on popup surfaces arrives via the parent toplevel's GLFW
- *	callbacks.  Those callbacks (registered once per toplevel by
- *	TkGlfwSetupCallbacks) detect that a menu popup is currently posted
- *	via currentMenuPopup / currentMenuPtr and forward events to
- *	TkWaylandMenuCursorPosCallback / TkWaylandMenuMouseButtonCallback /
- *	TkWaylandMenuCursorEnterCallback below, after converting parent-surface
- *	coordinates to popup-surface coordinates.
+ *	Menu popups are wl_subsurfaces with empty input regions (see
+ *	TkWaylandSubsurfaceCreate); they have no GLFWwindow and never
+ *	receive input directly.  All menu input is driven by the raw
+ *	wl_pointer / wl_keyboard listeners registered in tkGlfwInit.c
+ *	(TkWaylandRegisterPointerListener), which call
+ *	TkWaylandMenuHandlePointerMotion / HandlePointerButton /
+ *	HandleEscape below whenever TkWaylandMenuPopupActive() is true.
+ *	Nothing to register here.
  *
  * Results:
  *	None.
@@ -2311,14 +2503,10 @@ TkWaylandSetupMenuCallbacks(
  *
  * TkWaylandMenuPopupActive --
  *
- *	Query whether a grabbed menu popup is currently posted.  Called
- *	from the parent toplevel's GLFW cursor/button/enter callbacks
- *	(tkGlfwInit.c / tkWaylandEvent.c) to decide whether to forward the
- *	event to the menu dispatch functions below instead of (or in
- *	addition to) normal Tk event synthesis.
+ *	Query whether one or more menu popups are currently posted.
  *
  * Results:
- *	Non-zero if a menu popup is posted, 0 otherwise.
+ *	Non-zero if the menu stack is non-empty.
  *
  *----------------------------------------------------------------------
  */
@@ -2326,78 +2514,146 @@ TkWaylandSetupMenuCallbacks(
 MODULE_SCOPE int
 TkWaylandMenuPopupActive(void)
 {
-    return (currentMenuPtr != NULL && currentMenuPopup != NULL);
+    return menuStackDepth > 0;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandMenuCursorPosCallback / TkWaylandMenuMouseButtonCallback /
- * TkWaylandMenuCursorEnterCallback --
+ * TkWaylandMenuConsumeDismissClick --
  *
- *	Dispatch entry points called from the parent toplevel's GLFW
- *	cursor/button/enter callbacks whenever TkWaylandMenuPopupActive()
- *	returns non-zero.  Parent-surface coordinates are converted to
- *	popup-surface coordinates using the popup's compositor-confirmed
- *	position before being passed to MenuMouseMotion / MenuMouseClick.
+ *	Returns non-zero exactly once if the most recent button press
+ *	dismissed the menu stack via an outside click (set by
+ *	TkWaylandMenuHandlePointerButton).  Intended for the GLFW button
+ *	callback (in whatever file registers it) to swallow that click
+ *	rather than also activating a widget underneath.  The flag is
+ *	cleared on read.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenuConsumeDismissClick(void)
+{
+    int v = menuDismissedByClick;
+    menuDismissedByClick = 0;
+    return v;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenuHandlePointerMotion --
+ *
+ *	Called from the raw wl_pointer listener (tkGlfwInit.c) on every
+ *	motion event while the menu stack is non-empty.  (x, y) are
+ *	toplevel-surface-local logical pixels.
+ *
+ *	Hit-tests the menu stack from the topmost (innermost cascade) entry
+ *	down to the root, dispatching to the first entry whose rect
+ *	contains (x, y).  If none match, deactivates the topmost menu's
+ *	current entry (standard "moved off the menu" behaviour) without
+ *	closing the stack -- closing only happens via
+ *	HandlePointerButton / HandleEscape.
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void
-TkWaylandMenuCursorPosCallback(
-    GLFWwindow *glfwWindow,
-    double xpos,
-    double ypos)
+TkWaylandMenuHandlePointerMotion(
+    int x,
+    int y)
 {
-    (void)glfwWindow;
+    int i;
 
-    if (!currentMenuPtr || !currentMenuPopup) return;
-
-    int px, py;
-    TkWaylandPopupGetPosition(currentMenuPopup, &px, &py);
-
-    int lx = (int)xpos - px;
-    int ly = (int)ypos - py;
-
-    MenuMouseMotion(currentMenuPtr, lx, ly);
-}
-
-MODULE_SCOPE void
-TkWaylandMenuMouseButtonCallback(
-    GLFWwindow *glfwWindow,
-    int button,
-    int action,
-    int mods)
-{
-    (void)mods;
-
-    if (action != GLFW_PRESS) return;
-    if (!currentMenuPtr || !currentMenuPopup) return;
-
-    double xpos, ypos;
-    glfwGetCursorPos(glfwWindow, &xpos, &ypos);
-
-    int px, py;
-    TkWaylandPopupGetPosition(currentMenuPopup, &px, &py);
-
-    int lx = (int)xpos - px;
-    int ly = (int)ypos - py;
-
-    MenuMouseClick(currentMenuPtr, lx, ly,
-                   button == GLFW_MOUSE_BUTTON_LEFT ? 1 : 3);
-}
-
-MODULE_SCOPE void
-TkWaylandMenuCursorEnterCallback(
-    GLFWwindow *glfwWindow,
-    int entered)
-{
-    (void)glfwWindow;
-
-    if (!entered && currentMenuPtr) {
-        MenuMouseLeave(currentMenuPtr);
+    for (i = menuStackDepth - 1; i >= 0; i--) {
+        MenuStackEntry *entry = &menuStack[i];
+        if (x >= entry->x && x < entry->x + entry->w &&
+            y >= entry->y && y < entry->y + entry->h) {
+            MenuMouseMotion(entry->menuPtr, x - entry->x, y - entry->y);
+            return;
+        }
     }
+
+    /* Cursor is over none of the posted menus. */
+    if (menuStackDepth > 0) {
+        TkMenu *topMenu = menuStack[menuStackDepth - 1].menuPtr;
+        if (topMenu && topMenu->active != -1) {
+            TkActivateMenuEntry(topMenu, -1);
+            TkEventuallyRedrawMenu(topMenu, NULL);
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenuHandlePointerButton --
+ *
+ *	Called from the raw wl_pointer listener (tkGlfwInit.c) on every
+ *	button press/release while the menu stack is non-empty.  (x, y)
+ *	are toplevel-surface-local logical pixels; button/state follow the
+ *	wl_pointer enums (button: BTN_LEFT=0x110 etc. as reported by
+ *	Wayland; state: 0=released, 1=pressed).
+ *
+ *	On a press inside one of the posted menus, dispatches a click to
+ *	that menu (left button only, matching the original
+ *	MenuMouseClick(..., 1) contract).  On a press outside all posted
+ *	menus, dismisses the entire stack and sets the
+ *	dismiss-click flag so the click does not also activate a widget
+ *	underneath.
+ *
+ *	Button releases are ignored; Tk menu interaction is click-driven on
+ *	press, matching the original implementation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuHandlePointerButton(
+    int x,
+    int y,
+    int button,
+    int state)
+{
+    int i;
+
+    if (state != WL_POINTER_BUTTON_STATE_PRESSED) {
+        return;
+    }
+
+    for (i = menuStackDepth - 1; i >= 0; i--) {
+        MenuStackEntry *entry = &menuStack[i];
+        if (x >= entry->x && x < entry->x + entry->w &&
+            y >= entry->y && y < entry->y + entry->h) {
+            int tkButton = (button == BTN_LEFT) ? 1 : 3;
+            MenuMouseClick(entry->menuPtr, x - entry->x, y - entry->y,
+                           tkButton);
+            return;
+        }
+    }
+
+    /* Outside every posted menu: dismiss and swallow this click. */
+    menuDismissedByClick = 1;
+    TkWaylandMenuDismissAll();
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenuHandleEscape --
+ *
+ *	Called from the raw wl_keyboard listener (tkGlfwInit.c) when
+ *	Escape is pressed while the menu stack is non-empty.  Dismisses the
+ *	entire stack.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuHandleEscape(void)
+{
+    TkWaylandMenuDismissAll();
 }
 
 
