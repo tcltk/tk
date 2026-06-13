@@ -18,6 +18,7 @@
 #include <wayland-client.h>
 #include <stdbool.h>
 #include <math.h>
+#include <stdio.h>
 
 /*
  * wl_pointer.button reports Linux evdev button codes.  Avoid requiring
@@ -47,6 +48,14 @@ extern GLFWwindow *mainGlfwWindow;
 /* WmInfo flag from tkUnixWm.c */
 #ifndef WM_NEVER_MAPPED
 #define WM_NEVER_MAPPED (1<<0)
+#endif
+
+/* Debug macro */
+#define MENU_DEBUG 1
+#if MENU_DEBUG
+#define MENU_LOG(fmt, ...) fprintf(stderr, "MENU: " fmt "\n", ##__VA_ARGS__)
+#else
+#define MENU_LOG(fmt, ...) ((void)0)
 #endif
 
 /*
@@ -126,26 +135,23 @@ static NVGcolor TkColorToNVGColor(XColor *color) {
 }
 
 /* Helper function to setup NanoVG font from Tk_Font */
-static void SetupNanoVGFont(NVGcontext *vg, Tk_Font tkfont, float *fontSize) {
-    if (!vg || !tkfont) return;
+static void SetupNanoVGFont(NVGcontext *vg, Tk_Font tkfont) {
+    if (!vg) return;
     
-    /* Get the font name from Tk's font structure */
-    const char *fontName = Tk_NameOfFont(tkfont);
-    if (fontName && strlen(fontName) > 0) {
-        /* Parse the font name to extract family and size */
-        /* For now, use the default font family but try to get size */
+    if (tkfont) {
+        Tk_FontMetrics fm;
+        Tk_GetFontMetrics(tkfont, &fm);
+        float fontSize = (float)fm.linespace;
+        if (fontSize <= 0) fontSize = DEFAULT_FONT_SIZE;
+        
+        /* For now, use a default font face since we can't easily get the
+         * actual font family name from Tk_Font in a portable way */
         nvgFontFace(vg, DEFAULT_FONT);
+        nvgFontSize(vg, fontSize);
     } else {
         nvgFontFace(vg, DEFAULT_FONT);
+        nvgFontSize(vg, DEFAULT_FONT_SIZE);
     }
-    
-    /* Get font size from Tk font metrics */
-    Tk_FontMetrics fm;
-    Tk_GetFontMetrics(tkfont, &fm);
-    if (fontSize) {
-        *fontSize = (float)fm.linespace;
-    }
-    nvgFontSize(vg, (float)fm.linespace);
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 }
 
@@ -231,6 +237,7 @@ MenuStackFindLevel(
 int
 TkpNewMenu(TkMenu *menuPtr)
 {
+    MENU_LOG("TkpNewMenu called for menu %p", (void*)menuPtr);
     SetHelpMenu(menuPtr);
     return TCL_OK;
 }
@@ -359,6 +366,8 @@ TkpSetWindowMenuBar(
     TkWindow *winPtr = (TkWindow *)tkwin;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
+    MENU_LOG("TkpSetWindowMenuBar called");
+
     if (!wmPtr) return;
 
     if (wmPtr->menubarPopup) {
@@ -399,8 +408,7 @@ TkpSetWindowMenuBar(
                 "TkpSetWindowMenuBar: failed to create menubar subsurface\n");
         } else {
             MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
-            fprintf(stderr,
-                "TkpSetWindowMenuBar: menubar subsurface %p (%dx%d)\n",
+            MENU_LOG("TkpSetWindowMenuBar: menubar subsurface %p (%dx%d)",
                 (void *)wmPtr->menubarPopup, mbW, mbH);
         }
     }
@@ -816,14 +824,7 @@ DrawMenuEntryAccelerator(
 	ty = y + (height + fmPtr->ascent - fmPtr->descent) / 2; 
 	
 	/* Setup font from Tk font */
-	if (tkfont) {
-	    float fontSize;
-	    SetupNanoVGFont(vg, tkfont, &fontSize);
-	} else {
-	    nvgFontFace(vg, DEFAULT_FONT);
-	    nvgFontSize(vg, DEFAULT_FONT_SIZE);
-	}
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	SetupNanoVGFont(vg, tkfont);
 	nvgFillColor(vg, textColor);
 	nvgText(vg, left, ty, accel, NULL);
     } 
@@ -1092,14 +1093,7 @@ DrawMenuEntryLabel(
 	    const char *label = Tcl_GetString(mePtr->labelPtr); 
 	    
 	    /* Setup font from Tk font */
-	    if (tkfont) {
-		float fontSize;
-		SetupNanoVGFont(vg, tkfont, &fontSize);
-	    } else {
-		nvgFontFace(vg, DEFAULT_FONT);
-		nvgFontSize(vg, DEFAULT_FONT_SIZE);
-	    }
-	    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	    SetupNanoVGFont(vg, tkfont);
 	    nvgFillColor(vg, textColor);
 	    nvgText(vg, leftEdge + textXOffset, baseline + textYOffset, 
 		    label, NULL);
@@ -1284,6 +1278,8 @@ TkpPostMenu(
         return TCL_ERROR;
     }
 
+    MENU_LOG("TkpPostMenu: menu=%p, x=%d, y=%d", (void*)menuPtr, x, y);
+
     if (menuPtr->menuType == TEAROFF_MENU) {
         return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
     }
@@ -1310,6 +1306,8 @@ TkpPostMenu(
     int popupH = menuPtr->totalHeight;
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
+
+    MENU_LOG("TkpPostMenu: popup size %dx%d", popupW, popupH);
 
     /* Verify we have a valid main window before posting */
     if (!mainGlfwWindow) {
@@ -1451,6 +1449,7 @@ MenuStackPop(
 MODULE_SCOPE void
 TkWaylandMenuDismissAll(void)
 {
+    MENU_LOG("TkWaylandMenuDismissAll called");
     if (menuStackDepth == 0) return;
 
     TkMenu *rootMenuPtr = menuStack[0].menuPtr;
@@ -1512,6 +1511,9 @@ TkWaylandPostMenuAtAnchor(
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
 
+    MENU_LOG("TkWaylandPostMenuAtAnchor: menu=%p, anchor=(%d,%d,%d,%d), size=%dx%d, isRoot=%d",
+        (void*)menuPtr, anchorX, anchorY, anchorW, anchorH, popupW, popupH, isRoot);
+
     if (isRoot) {
         TkWaylandMenuDismissAll();
     }
@@ -1530,6 +1532,7 @@ TkWaylandPostMenuAtAnchor(
 
     int x, y;
     PlaceMenuPopup(anchorX, anchorY, anchorW, anchorH, popupW, popupH, &x, &y);
+    MENU_LOG("TkWaylandPostMenuAtAnchor: final position (%d,%d)", x, y);
 
     TkWaylandPopup *popup = TkWaylandSubsurfaceCreate(
         mainGlfwWindow, x, y, popupW, popupH);
@@ -1564,11 +1567,7 @@ TkWaylandPostMenuAtAnchor(
 
     MenuDrawIntoPopup(menuPtr, popup);
 
-    fprintf(stderr,
-        "TkWaylandPostMenuAtAnchor: %s subsurface %p at %d,%d size %dx%d "
-        "(depth=%d)\n",
-        isRoot ? "root" : "cascade",
-        (void *)popup, x, y, popupW, popupH, menuStackDepth);
+    MENU_LOG("TkWaylandPostMenuAtAnchor: success, depth=%d", menuStackDepth);
 
     return TCL_OK;
 }
@@ -1945,19 +1944,28 @@ MenuDrawIntoPopup(
     Tk_FontMetrics entryMetrics;
     const Tk_FontMetrics *fmPtr;
 
-    if (!popup || !menuPtr || !menuPtr->tkwin) return;
+    if (!popup || !menuPtr || !menuPtr->tkwin) {
+        MENU_LOG("MenuDrawIntoPopup: invalid parameters");
+        return;
+    }
 
     TkWaylandPopupGetSize(popup, &menuW, &menuH);
+    MENU_LOG("MenuDrawIntoPopup: menu %p, popup %p, size %dx%d", 
+        (void*)menuPtr, (void*)popup, menuW, menuH);
     
-    if (menuW <= 0 || menuH <= 0) return;
+    if (menuW <= 0 || menuH <= 0) {
+        MENU_LOG("MenuDrawIntoPopup: invalid size");
+        return;
+    }
 
     if (TkWaylandPopupBeginDraw(popup) != TCL_OK) {
-        fprintf(stderr, "MenuDrawIntoPopup: BeginDraw failed\n");
+        MENU_LOG("MenuDrawIntoPopup: BeginDraw failed");
         return;
     }
 
     NVGcontext *vg = TkWaylandPopupGetNVGContext(popup);
     if (!vg) {
+        MENU_LOG("MenuDrawIntoPopup: no NVG context");
         TkWaylandPopupEndDraw(popup);
         return;
     }
@@ -1966,15 +1974,22 @@ MenuDrawIntoPopup(
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     if (menuFont) {
         Tk_GetFontMetrics(menuFont, &menuMetrics);
+        MENU_LOG("MenuDrawIntoPopup: menu font size=%d", menuMetrics.linespace);
+    } else {
+        MENU_LOG("MenuDrawIntoPopup: no menu font, using default");
+        menuMetrics.linespace = DEFAULT_FONT_SIZE;
+        menuMetrics.ascent = DEFAULT_FONT_SIZE * 0.75;
+        menuMetrics.descent = DEFAULT_FONT_SIZE * 0.25;
     }
 
-    /* Background */
+    /* Draw background - this should at least show something */
     nvgBeginPath(vg);
     nvgRect(vg, 0, 0, (float)menuW, (float)menuH);
     nvgFillColor(vg, nvgRGB(240, 240, 240));
     nvgFill(vg);
+    MENU_LOG("MenuDrawIntoPopup: drew background");
 
-    /* Border */
+    /* Draw border */
     nvgBeginPath(vg);
     nvgRect(vg, 0.5f, 0.5f, (float)menuW - 1.0f, (float)menuH - 1.0f);
     nvgStrokeColor(vg, nvgRGB(160, 160, 160));
@@ -1982,6 +1997,8 @@ MenuDrawIntoPopup(
     nvgStroke(vg);
 
     Drawable d = Tk_WindowId(menuPtr->tkwin);
+    MENU_LOG("MenuDrawIntoPopup: drawing %d entries", menuPtr->numEntries);
+    
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
@@ -2001,6 +2018,10 @@ MenuDrawIntoPopup(
             }
         }
         
+        MENU_LOG("MenuDrawIntoPopup: drawing entry %d at (%d,%d) size %dx%d, label='%s'",
+            i, mePtr->x, mePtr->y, mePtr->width, mePtr->height,
+            mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)");
+        
         TkpDrawMenuEntry(mePtr, d, entryFont, fmPtr,
             mePtr->x, mePtr->y,
             mePtr->width, mePtr->height,
@@ -2008,6 +2029,7 @@ MenuDrawIntoPopup(
     }
 
     TkWaylandPopupEndDraw(popup);
+    MENU_LOG("MenuDrawIntoPopup: completed");
 }
 
 /*
@@ -2059,7 +2081,10 @@ TkpDisplayMenu(
     TkWindow *winPtr;
     WmInfo   *wmPtr;
 
+    MENU_LOG("TkpDisplayMenu called");
+
     if (!menuPtr || !menuPtr->tkwin) {
+        MENU_LOG("TkpDisplayMenu: invalid menu");
         return;
     }
 
@@ -2067,7 +2092,7 @@ TkpDisplayMenu(
     wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
     if (!wmPtr || !wmPtr->popup) {
-        /* Menu is not currently posted via a popup surface. */
+        MENU_LOG("TkpDisplayMenu: no popup surface");
         return;
     }
 
@@ -2098,6 +2123,7 @@ TkpDisplayMenu(
 void
 TkWaylandMenuInit(void)
 {
+    MENU_LOG("TkWaylandMenuInit called");
     TkWaylandPopupInit();
 }
 
@@ -2274,6 +2300,8 @@ TkpPostTearoffMenu(
     const GLFWvidmode *mode;
     int screenW = 1920;  /* Fallback values. */
     int screenH = 1080;
+    
+    MENU_LOG("TkpPostTearoffMenu called");
     
     /* Deactivate any currently active entry. */
     TkActivateMenuEntry(menuPtr, -1);
