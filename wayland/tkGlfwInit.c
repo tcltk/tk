@@ -1101,6 +1101,16 @@ TkGlfwBeginDraw(
 	return TCL_OK;
     }
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
+    if (!childPtr) {
+        /* Special case for menu popups/menubar which use custom drawing path. */
+        fprintf(stderr, "BeginDraw: NULL childPtr (menu popup?), skipping X path\n");
+        /* For now, just return success so drawing doesn't crash; menu uses direct NanoVG. */
+        if (dcPtr) {
+            dcPtr->vg = NULL;  /* Indicate no standard context */
+            dcPtr->drawable = drawable;
+        }
+        return TCL_OK;
+    }
     TkWindow *winPtr = childPtr;
     float x = 0, y = 0;
     while (!Tk_IsTopLevel(winPtr)) {

@@ -53,11 +53,6 @@
 
 #include "xdg-shell-client-protocol.h"
 
-/*
- * NanoVG includes - must define NVG_GLES3 before including nanovg_gl.h
- * to get the correct function declarations.
- */
-
 #define NANOVG_GLES3 1
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
