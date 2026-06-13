@@ -154,7 +154,7 @@ X11_INCLUDES		= @XINCLUDES@
 
 AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 
-WAYLAND_INCLUDES    = -I$(WAYLAND_DIR)
+WAYLAND_INCLUDES    = -I$(WAYLAND_DIR) @WAYLAND_EGL_CFLAGS@
 
 # Linker switch(es) to use to link with the X11 library archive.
 # configure zeroes @XLIBSW@, @XFT_LIBS@, and @HB_LIBS@ for Wayland builds;
@@ -322,8 +322,10 @@ ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
 
 # support for Wayland backend - individual library components
-WAYLAND_CLIENT_CFLAGS	= @WAYLAND_CFLAGS@
-WAYLAND_CLIENT_LIBS	= @WAYLAND_LIBS@
+WAYLAND_CLIENT_CFLAGS	= @WAYLAND_CLIENT_CFLAGS@
+WAYLAND_CLIENT_LIBS	= @WAYLAND_CLIENT_LIBS@
+WAYLAND_EGL_CFLAGS	= @WAYLAND_EGL_CFLAGS@
+WAYLAND_EGL_LIBS	= @WAYLAND_EGL_LIBS@
 XKBCOMMON_CFLAGS	= @XKBCOMMON_CFLAGS@
 XKBCOMMON_LIBS		= @XKBCOMMON_LIBS@
 GLFW_CFLAGS		= @GLFW_CFLAGS@
@@ -336,17 +338,16 @@ SDBUSD_CFLAGS		= @SDBUSD_CFLAGS@
 SDBUSD_LIBS		= @SDBUSD_LIBS@
 FONTCONFIG_CFLAGS	= @FONTCONFIG_CFLAGS@
 FONTCONFIG_LIBS		= @FONTCONFIG_LIBS@
-NANOVG_LIBS		= @NANOVG_LIBS@
 
 # Combined Wayland flags (individual vars above must all be declared first).
 # BIDI_CFLAGS and HB_CFLAGS/HB_LIBS are included here so every Wayland
 # translation unit picks up the SheenBidi and HarfBuzz include paths.
-WAYLAND_CFLAGS		= $(WAYLAND_CLIENT_CFLAGS) $(XKBCOMMON_CFLAGS) $(GLFW_CFLAGS) \
+WAYLAND_CFLAGS		= $(WAYLAND_CLIENT_CFLAGS) $(WAYLAND_EGL_CFLAGS) $(XKBCOMMON_CFLAGS) $(GLFW_CFLAGS) \
 			  $(GLES_CFLAGS) $(LIBDECOR_CFLAGS) $(SDBUSD_CFLAGS) \
 			  $(FONTCONFIG_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
-WAYLAND_LIBS		= $(WAYLAND_CLIENT_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) \
+WAYLAND_LIBS		= $(WAYLAND_CLIENT_LIBS) $(WAYLAND_EGL_LIBS) $(XKBCOMMON_LIBS) $(GLFW_LIBS) \
 			  $(GLES_LIBS) $(LIBDECOR_LIBS) $(SDBUSD_LIBS) \
-			  $(FONTCONFIG_LIBS) $(NANOVG_LIBS) $(HB_LIBS)
+			  $(FONTCONFIG_LIBS) $(HB_LIBS)
 
 # Font system token (core | xft | wayland) — set by configure
 FONTSYSTEM		= @FONTSYSTEM@
@@ -389,7 +390,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 	${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
 	${NO_DEPRECATED_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
-	${WAYLAND_CLIENT_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
+	${WAYLAND_CLIENT_CFLAGS} ${WAYLAND_EGL_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
 	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
 	@EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS) $(HB_CFLAGS)
 
@@ -401,7 +402,7 @@ DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
 	-I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
 	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
-	${WAYLAND_CLIENT_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
+	${WAYLAND_CLIENT_CFLAGS} ${WAYLAND_EGL_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
 	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
 	@EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS) $(HB_CFLAGS)
 
@@ -481,7 +482,7 @@ WAYLAND_OBJS            = \
      tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
      tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
      tkWaylandImage.o tkWaylandKey.o tkWaylandMenu.o tkWaylandMenubu.o \
-     tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandScale.o \
+     tkWaylandMouseEvent.o tkWaylandNotify.o tkWaylandPopup.o tkWaylandScale.o \
      tkWaylandScrlbr.o tkWaylandSend.o tkWaylandSysTray.o \
      tkWaylandXId.o tkWaylandXlib.o tkWaylandWm.o $(WAYLAND_UNIX_OBJS)
 
@@ -636,10 +637,10 @@ WAYLAND_SRCS = \
     $(WAYLAND_DIR)/tkWaylandFocus.c $(WAYLAND_DIR)/tkWaylandFont.c \
     $(WAYLAND_DIR)/tkWaylandGC.c $(WAYLAND_DIR)/tkWaylandImage.c \
     $(WAYLAND_DIR)/tkWaylandKey.c $(WAYLAND_DIR)/tkWaylandMenu.c $(WAYLAND_DIR)/tkWaylandMenubu.c \
-    $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandScale.c \
-    $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c $(WAYLAND_DIR)/tkWaylandSysTray.c \
-    $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c $(WAYLAND_DIR)/tkWaylandWm.c \
-    $(WAYLAND_DIR)/xdg-shell-protocol.c $(UNIX_DIR)/bidi/SheenBidi.c \
+    $(WAYLAND_DIR)/tkWaylandMouseEvent.c $(WAYLAND_DIR)/tkWaylandNotify.c $(WAYLAND_DIR)/tkWaylandPopup.c \
+    $(WAYLAND_DIR)/tkWaylandScale.c  $(WAYLAND_DIR)/tkWaylandScrlbr.c $(WAYLAND_DIR)/tkWaylandSend.c \
+    $(WAYLAND_DIR)/tkWaylandSysTray.c $(WAYLAND_DIR)/tkWaylandXId.c $(WAYLAND_DIR)/tkWaylandXlib.c \
+    $(WAYLAND_DIR)/tkWaylandWm.c $(WAYLAND_DIR)/xdg-shell-protocol.c $(UNIX_DIR)/bidi/SheenBidi.c \
     $(WAYLAND_UNIX_SRCS)
 
 WAYLAND_PRIVATE_HDRS = \
@@ -1086,8 +1087,8 @@ depend:
 # it is is compiled from tkAppInit.c.  Can't use the "-o" option
 # because this doesn't work on some strange compilers (e.g. UnixWare).
 # To enable concurrent parallel make of wish and tktest, this target has to
-# depend on wish, this ensures that linking of wish with tkTestInit.o does not
-# execute concurrently with the renaming and recompiling of that same object
+# depend on wish, this ensures that linking of wish with tkTestInit.o does
+# not execute concurrently with the renaming and recompiling of that same object
 # file in the target below.
 
 tkTestInit.o: $(UNIX_DIR)/tkAppInit.c ${WISH_EXE}
@@ -1522,6 +1523,10 @@ tkWaylandMouseEvent.o: $(WAYLAND_DIR)/tkWaylandMouseEvent.c
 
 tkWaylandNotify.o: $(WAYLAND_DIR)/tkWaylandNotify.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandNotify.c
+	
+tkWaylandPopup.o: $(WAYLAND_DIR)/tkWaylandPopup.c 
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandPopup.c 
+
 
 tkWaylandScale.o: $(WAYLAND_DIR)/tkWaylandScale.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandScale.c

@@ -694,7 +694,6 @@ WAYLAND_LDFLAGS
 HAVE_WAYLAND
 WL_PASTE
 WL_COPY
-NANOVG_LIBS
 FONTCONFIG_LIBS
 FONTCONFIG_CFLAGS
 SDBUSD_LIBS
@@ -707,8 +706,10 @@ GLFW_LIBS
 GLFW_CFLAGS
 XKBCOMMON_LIBS
 XKBCOMMON_CFLAGS
-WAYLAND_LIBS
-WAYLAND_CFLAGS
+WAYLAND_CLIENT_LIBS
+WAYLAND_CLIENT_CFLAGS
+WAYLAND_EGL_LIBS
+WAYLAND_EGL_CFLAGS
 CPP
 LDFLAGS_DEFAULT
 CFLAGS_DEFAULT
@@ -7990,16 +7991,85 @@ printf '%s\n' "$enable_wayland" >&6; }
         XLIBSW=""
         XINCLUDES=""
 
-        # Wayland-related dependencies
+        #--------------------------------------------------------------------
+        # Check for wayland-egl (HARD dependency)
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-egl >= 1.18" >&5
+printf %s "checking for wayland-egl >= 1.18... " >&6; }
+        if pkg-config --exists "wayland-egl >= 1.18"; then
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+            WAYLAND_EGL_CFLAGS="$(pkg-config --cflags wayland-egl)"
+            WAYLAND_EGL_LIBS="$(pkg-config --libs wayland-egl)"
+            found_wayland_egl=yes
 
+printf '%s\n' "#define HAVE_WAYLAND_EGL 1" >>confdefs.h
+
+        else
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            as_fn_error $? "wayland-egl >= 1.18 is required when building the Wayland backend.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland" "$LINENO" 5
+        fi
+
+
+
+        #--------------------------------------------------------------------
+        # Check for wayland-egl headers (must be present)
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-egl.h header" >&5
+printf %s "checking for wayland-egl.h header... " >&6; }
+        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+            #include <wayland-egl.h>
+
+int
+main (void)
+{
+
+            struct wl_egl_window *win = NULL;
+            (void)win;
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+printf '%s\n' "#define HAVE_WAYLAND_EGL_H 1" >>confdefs.h
+
+
+else case e in #(
+  e)
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+            as_fn_error $? "<wayland-egl.h> header not found.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland" "$LINENO" 5
+         ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+
+        # Wayland-related dependencies (client, cursor, protocols)
         { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for wayland-client and wayland-cursor >= 1.18" >&5
 printf %s "checking for wayland-client and wayland-cursor >= 1.18... " >&6; }
         if pkg-config --exists "wayland-client >= 1.18" \
            && pkg-config --exists "wayland-cursor >= 1.18"; then
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf '%s\n' "yes" >&6; }
-            WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor) -lwayland-client"
+            WAYLAND_CLIENT_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
+            WAYLAND_CLIENT_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
             found_wayland=yes
 
 printf '%s\n' "#define HAVE_WAYLAND 1" >>confdefs.h
@@ -8007,11 +8077,11 @@ printf '%s\n' "#define HAVE_WAYLAND 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            WAYLAND_CFLAGS=""
-            WAYLAND_LIBS=""
-            found_wayland=no
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland client libraries >= 1.18 not found" >&5
-printf '%s\n' "$as_me: Wayland client libraries >= 1.18 not found" >&6;}
+            as_fn_error $? "wayland-client >= 1.18 and wayland-cursor >= 1.18 are required when building the Wayland backend.
+Please install libwayland development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland" "$LINENO" 5
         fi
 
 
@@ -8030,11 +8100,11 @@ printf '%s\n' "#define HAVE_XKBCOMMON 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            XKBCOMMON_CFLAGS=""
-            XKBCOMMON_LIBS=""
-            found_xkbcommon=no
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: xkbcommon >= 0.5.0 not found" >&5
-printf '%s\n' "$as_me: xkbcommon >= 0.5.0 not found" >&6;}
+            as_fn_error $? "xkbcommon >= 0.5.0 is required when building the Wayland backend.
+Please install libxkbcommon development package:
+  - Debian/Ubuntu:   sudo apt install libxkbcommon-dev
+  - Fedora/RHEL:     sudo dnf install libxkbcommon-devel
+  - Arch:            sudo pacman -S libxkbcommon" "$LINENO" 5
         fi
 
 
@@ -8055,8 +8125,8 @@ printf '%s\n' "#define HAVE_GLFW 1" >>confdefs.h
 
             else
                 found_glfw=no
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: GLFW found but Wayland support not detected (missing wayland-client)" >&5
-printf '%s\n' "$as_me: GLFW found but Wayland support not detected (missing wayland-client)" >&6;}
+                as_fn_error $? "GLFW found but Wayland support not detected (missing wayland-client)
+Please rebuild GLFW with Wayland support enabled." "$LINENO" 5
                 GLFW_CFLAGS=""
                 GLFW_LIBS=""
             fi
@@ -8064,10 +8134,11 @@ printf '%s\n' "$as_me: GLFW found but Wayland support not detected (missing wayl
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: glfw3 not found" >&5
 printf '%s\n' "glfw3 not found" >&6; }
             found_glfw=no
-            GLFW_CFLAGS=""
-            GLFW_LIBS=""
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: glfw3 >= 3.3 not found — backend will be disabled" >&5
-printf '%s\n' "$as_me: glfw3 >= 3.3 not found — backend will be disabled" >&6;}
+            as_fn_error $? "glfw3 >= 3.3 with Wayland support is required when building the Wayland backend.
+Please install GLFW development package with Wayland support:
+  - Debian/Ubuntu:   sudo apt install libglfw3-dev
+  - Fedora/RHEL:     sudo dnf install glfw-devel
+  - Arch:            sudo pacman -S glfw-wayland" "$LINENO" 5
         fi
 
 
@@ -8186,8 +8257,11 @@ printf '%s\n' "no" >&6; }
                 GLES_CFLAGS=""
                 GLES_LIBS=""
                 found_gles=no
-                { printf '%s\n' "$as_me:${as_lineno-$LINENO}: OpenGL ES not found — NanoVG rendering will not work" >&5
-printf '%s\n' "$as_me: OpenGL ES not found — NanoVG rendering will not work" >&6;}
+                as_fn_error $? "OpenGL ES (glesv2) is required when building the Wayland backend.
+Please install OpenGL ES development package:
+  - Debian/Ubuntu:   sudo apt install libgles2-mesa-dev
+  - Fedora/RHEL:     sudo dnf install mesa-libGLES-devel
+  - Arch:            sudo pacman -S mesa" "$LINENO" 5
             fi
         fi
 
@@ -8211,8 +8285,11 @@ printf '%s\n' "#define HAVE_SD_BUS 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: sd-bus not found — system tray icon support will be unavailable on Wayland" >&5
-printf '%s\n' "$as_me: sd-bus not found — system tray icon support will be unavailable on Wayland" >&6;}
+            as_fn_error $? "sd-bus (libsystemd) is required when building the Wayland backend.
+Please install libsystemd development package:
+  - Debian/Ubuntu:   sudo apt install libsystemd-dev
+  - Fedora/RHEL:     sudo dnf install systemd-devel
+  - Arch:            sudo pacman -S systemd-libs" "$LINENO" 5
         fi
 
 
@@ -8232,86 +8309,20 @@ printf '%s\n' "#define HAVE_FONTCONFIG 1" >>confdefs.h
         else
             { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
-            FONTCONFIG_CFLAGS=""
-            FONTCONFIG_LIBS=""
-            found_fontconfig=no
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: fontconfig >= 2.12 not found — font support on Wayland may be limited" >&5
-printf '%s\n' "$as_me: fontconfig >= 2.12 not found — font support on Wayland may be limited" >&6;}
+            as_fn_error $? "fontconfig >= 2.12 is required when building the Wayland backend.
+Please install fontconfig development package:
+  - Debian/Ubuntu:   sudo apt install libfontconfig-dev
+  - Fedora/RHEL:     sudo dnf install fontconfig-devel
+  - Arch:            sudo pacman -S fontconfig" "$LINENO" 5
         fi
 
 
 
-        # NanoVG support (required for rendering)
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for NanoVG library" >&5
-printf %s "checking for NanoVG library... " >&6; }
-        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for nvgCreateGL3 in -lnanovg" >&5
-printf %s "checking for nvgCreateGL3 in -lnanovg... " >&6; }
-if test ${ac_cv_lib_nanovg_nvgCreateGL3+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lnanovg  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char nvgCreateGL3 (void);
-int
-main (void)
-{
-return nvgCreateGL3 ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_lib_nanovg_nvgCreateGL3=yes
-else case e in #(
-  e) ac_cv_lib_nanovg_nvgCreateGL3=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nanovg_nvgCreateGL3" >&5
-printf '%s\n' "$ac_cv_lib_nanovg_nvgCreateGL3" >&6; }
-if test "x$ac_cv_lib_nanovg_nvgCreateGL3" = xyes
-then :
-
-            have_nanovg_lib=yes
-            NANOVG_LIBS="-lnanovg"
-
-else case e in #(
-  e) have_nanovg_lib=no ;;
-esac
-fi
-
-
-        if test "$have_nanovg_lib" = yes; then
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-            found_nanovg=yes
-        else
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: NanoVG library not found — assuming it will be statically linked or built separately" >&5
-printf '%s\n' "$as_me: NanoVG library not found — assuming it will be statically linked or built separately" >&6;}
-            NANOVG_LIBS=""
-            found_nanovg=no
-        fi
-
+        #--------------------------------------------------------------------
+        # NanoVG is bundled in the wayland source tree, so no external check needed.
+        #--------------------------------------------------------------------
+        { printf '%s\n' "$as_me:${as_lineno-$LINENO}: NanoVG will be built from bundled sources in wayland/nanovg.c" >&5
+printf '%s\n' "$as_me: NanoVG will be built from bundled sources in wayland/nanovg.c" >&6;}
 
         #--------------------------------------------------------------------
         # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
@@ -8427,6 +8438,7 @@ printf '%s\n' "yes" >&6; }
 
         # Final check — everything must be present
         if test "$found_wayland" = yes \
+           && test "$found_wayland_egl" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
            && test "$found_libdecor" = yes \
@@ -8438,21 +8450,22 @@ printf '%s\n' "yes" >&6; }
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS"
 
 printf '%s\n' "#define TK_USE_WAYLAND 1" >>confdefs.h
 
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wl-clipboard" >&5
-printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wl-clipboard" >&6;}
+            { printf '%s\n' "$as_me:${as_lineno-$LINENO}: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + wl-clipboard" >&5
+printf '%s\n' "$as_me: Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + wl-clipboard" >&6;}
         else
             as_fn_error $? "Wayland backend requested but one or more required components missing.
 
 Required (all mandatory when --enable-wayland is used):
   - wayland-client >= 1.18
   - wayland-cursor >= 1.18
+  - wayland-egl >= 1.18
   - xkbcommon >= 0.5.0
   - glfw3 >= 3.3 with Wayland support
   - libdecor-0 >= 0.1.0
@@ -8465,10 +8478,13 @@ Required (all mandatory when --enable-wayland is used):
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard
+    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard \
+    libwayland-egl1-dev
 " "$LINENO" 5
         fi
     fi
+
+
 
 
 

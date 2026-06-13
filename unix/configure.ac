@@ -265,25 +265,67 @@ if test $tk_aqua = no; then
         XLIBSW=""
         XINCLUDES=""
 
-        # Wayland-related dependencies
+        #--------------------------------------------------------------------
+        # Check for wayland-egl (HARD dependency)
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for wayland-egl >= 1.18])
+        if pkg-config --exists "wayland-egl >= 1.18"; then
+            AC_MSG_RESULT([yes])
+            WAYLAND_EGL_CFLAGS="$(pkg-config --cflags wayland-egl)"
+            WAYLAND_EGL_LIBS="$(pkg-config --libs wayland-egl)"
+            found_wayland_egl=yes
+            AC_DEFINE([HAVE_WAYLAND_EGL], [1], [Define if wayland-egl is available])
+        else
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([wayland-egl >= 1.18 is required when building the Wayland backend.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland])
+        fi
+        AC_SUBST([WAYLAND_EGL_CFLAGS])
+        AC_SUBST([WAYLAND_EGL_LIBS])
 
+        #--------------------------------------------------------------------
+        # Check for wayland-egl headers (must be present)
+        #--------------------------------------------------------------------
+        AC_MSG_CHECKING([for wayland-egl.h header])
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+            #include <wayland-egl.h>
+        ]], [[
+            struct wl_egl_window *win = NULL;
+            (void)win;
+        ]])], [
+            AC_MSG_RESULT([yes])
+            AC_DEFINE([HAVE_WAYLAND_EGL_H], [1], [Define if <wayland-egl.h> is available])
+        ], [
+            AC_MSG_RESULT([no])
+            AC_MSG_ERROR([<wayland-egl.h> header not found.
+Please install libwayland-egl development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland])
+        ])
+
+        # Wayland-related dependencies (client, cursor, protocols)
         AC_MSG_CHECKING([for wayland-client and wayland-cursor >= 1.18])
         if pkg-config --exists "wayland-client >= 1.18" \
            && pkg-config --exists "wayland-cursor >= 1.18"; then
             AC_MSG_RESULT([yes])
-            WAYLAND_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
-            WAYLAND_LIBS="$(pkg-config --libs wayland-client wayland-cursor) -lwayland-client"
+            WAYLAND_CLIENT_CFLAGS="$(pkg-config --cflags wayland-client wayland-cursor)"
+            WAYLAND_CLIENT_LIBS="$(pkg-config --libs wayland-client wayland-cursor)"
             found_wayland=yes
             AC_DEFINE([HAVE_WAYLAND], [1], [Define if wayland-client and wayland-cursor are available])
         else
             AC_MSG_RESULT([no])
-            WAYLAND_CFLAGS=""
-            WAYLAND_LIBS=""
-            found_wayland=no
-            AC_MSG_NOTICE([Wayland client libraries >= 1.18 not found])
+            AC_MSG_ERROR([wayland-client >= 1.18 and wayland-cursor >= 1.18 are required when building the Wayland backend.
+Please install libwayland development package:
+  - Debian/Ubuntu:   sudo apt install libwayland-dev
+  - Fedora/RHEL:     sudo dnf install wayland-devel
+  - Arch:            sudo pacman -S wayland])
         fi
-        AC_SUBST([WAYLAND_CFLAGS])
-        AC_SUBST([WAYLAND_LIBS])
+        AC_SUBST([WAYLAND_CLIENT_CFLAGS])
+        AC_SUBST([WAYLAND_CLIENT_LIBS])
 
         AC_MSG_CHECKING([for xkbcommon >= 0.5.0])
         if pkg-config --exists "xkbcommon >= 0.5.0"; then
@@ -294,10 +336,11 @@ if test $tk_aqua = no; then
             AC_DEFINE([HAVE_XKBCOMMON], [1], [Define if xkbcommon is available])
         else
             AC_MSG_RESULT([no])
-            XKBCOMMON_CFLAGS=""
-            XKBCOMMON_LIBS=""
-            found_xkbcommon=no
-            AC_MSG_NOTICE([xkbcommon >= 0.5.0 not found])
+            AC_MSG_ERROR([xkbcommon >= 0.5.0 is required when building the Wayland backend.
+Please install libxkbcommon development package:
+  - Debian/Ubuntu:   sudo apt install libxkbcommon-dev
+  - Fedora/RHEL:     sudo dnf install libxkbcommon-devel
+  - Arch:            sudo pacman -S libxkbcommon])
         fi
         AC_SUBST([XKBCOMMON_CFLAGS])
         AC_SUBST([XKBCOMMON_LIBS])
@@ -314,16 +357,19 @@ if test $tk_aqua = no; then
                 AC_DEFINE([HAVE_GLFW], [1], [Define if glfw3 with Wayland support is available])
             else
                 found_glfw=no
-                AC_MSG_NOTICE([GLFW found but Wayland support not detected (missing wayland-client)])
+                AC_MSG_ERROR([GLFW found but Wayland support not detected (missing wayland-client)
+Please rebuild GLFW with Wayland support enabled.])
                 GLFW_CFLAGS=""
                 GLFW_LIBS=""
             fi
         else
             AC_MSG_RESULT([glfw3 not found])
             found_glfw=no
-            GLFW_CFLAGS=""
-            GLFW_LIBS=""
-            AC_MSG_NOTICE([glfw3 >= 3.3 not found — backend will be disabled])
+            AC_MSG_ERROR([glfw3 >= 3.3 with Wayland support is required when building the Wayland backend.
+Please install GLFW development package with Wayland support:
+  - Debian/Ubuntu:   sudo apt install libglfw3-dev
+  - Fedora/RHEL:     sudo dnf install glfw-devel
+  - Arch:            sudo pacman -S glfw-wayland])
         fi
         AC_SUBST([GLFW_CFLAGS])
         AC_SUBST([GLFW_LIBS])
@@ -370,7 +416,11 @@ Without client-side decorations most Wayland compositors will show broken or mis
                 GLES_CFLAGS=""
                 GLES_LIBS=""
                 found_gles=no
-                AC_MSG_NOTICE([OpenGL ES not found — NanoVG rendering will not work])
+                AC_MSG_ERROR([OpenGL ES (glesv2) is required when building the Wayland backend.
+Please install OpenGL ES development package:
+  - Debian/Ubuntu:   sudo apt install libgles2-mesa-dev
+  - Fedora/RHEL:     sudo dnf install mesa-libGLES-devel
+  - Arch:            sudo pacman -S mesa])
             fi
         fi
         AC_SUBST([GLES_CFLAGS])
@@ -390,7 +440,11 @@ Without client-side decorations most Wayland compositors will show broken or mis
                 [Define to 1 if sd-bus (libsystemd) is available (D-Bus system tray support)])
         else
             AC_MSG_RESULT([no])
-            AC_MSG_NOTICE([sd-bus not found — system tray icon support will be unavailable on Wayland])
+            AC_MSG_ERROR([sd-bus (libsystemd) is required when building the Wayland backend.
+Please install libsystemd development package:
+  - Debian/Ubuntu:   sudo apt install libsystemd-dev
+  - Fedora/RHEL:     sudo dnf install systemd-devel
+  - Arch:            sudo pacman -S systemd-libs])
         fi
         AC_SUBST([SDBUSD_CFLAGS])
         AC_SUBST([SDBUSD_LIBS])
@@ -405,31 +459,19 @@ Without client-side decorations most Wayland compositors will show broken or mis
             AC_DEFINE([HAVE_FONTCONFIG], [1], [Define if fontconfig is available for Wayland])
         else
             AC_MSG_RESULT([no])
-            FONTCONFIG_CFLAGS=""
-            FONTCONFIG_LIBS=""
-            found_fontconfig=no
-            AC_MSG_NOTICE([fontconfig >= 2.12 not found — font support on Wayland may be limited])
+            AC_MSG_ERROR([fontconfig >= 2.12 is required when building the Wayland backend.
+Please install fontconfig development package:
+  - Debian/Ubuntu:   sudo apt install libfontconfig-dev
+  - Fedora/RHEL:     sudo dnf install fontconfig-devel
+  - Arch:            sudo pacman -S fontconfig])
         fi
         AC_SUBST([FONTCONFIG_CFLAGS])
         AC_SUBST([FONTCONFIG_LIBS])
 
-        # NanoVG support (required for rendering)
-        AC_MSG_CHECKING([for NanoVG library])
-        AC_CHECK_LIB([nanovg], [nvgCreateGL3], [
-            have_nanovg_lib=yes
-            NANOVG_LIBS="-lnanovg"
-        ], [have_nanovg_lib=no])
-        
-        if test "$have_nanovg_lib" = yes; then
-            AC_MSG_RESULT([yes])
-            found_nanovg=yes
-        else
-            AC_MSG_RESULT([no])
-            AC_MSG_NOTICE([NanoVG library not found — assuming it will be statically linked or built separately])
-            NANOVG_LIBS=""
-            found_nanovg=no
-        fi
-        AC_SUBST([NANOVG_LIBS])
+        #--------------------------------------------------------------------
+        # NanoVG is bundled in the wayland source tree, so no external check needed.
+        #--------------------------------------------------------------------
+        AC_MSG_NOTICE([NanoVG will be built from bundled sources in wayland/nanovg.c])
 
         #--------------------------------------------------------------------
         # wl-copy and wl-paste (wl-clipboard) — HARD build dependency
@@ -452,6 +494,7 @@ Please install wl-clipboard:
 
         # Final check — everything must be present
         if test "$found_wayland" = yes \
+           && test "$found_wayland_egl" = yes \
            && test "$found_xkbcommon" = yes \
            && test "$found_glfw" = yes \
            && test "$found_libdecor" = yes \
@@ -463,18 +506,19 @@ Please install wl-clipboard:
 
             HAVE_WAYLAND=1
 
-            WAYLAND_CFLAGS="$WAYLAND_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
-            WAYLAND_LIBS="$WAYLAND_LIBS $LIBDECOR_LIBS"
+            WAYLAND_CFLAGS="$WAYLAND_CLIENT_CFLAGS $WAYLAND_EGL_CFLAGS $XKBCOMMON_CFLAGS $GLFW_CFLAGS $LIBDECOR_CFLAGS $GLES_CFLAGS $FONTCONFIG_CFLAGS $SDBUSD_CFLAGS"
+            WAYLAND_LIBS="$WAYLAND_CLIENT_LIBS $WAYLAND_EGL_LIBS $LIBDECOR_LIBS"
             AC_DEFINE([TK_USE_WAYLAND], [1], [Define if building with Wayland backend])
             TK_WINDOWINGSYSTEM=WAYLAND
 
-            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wl-clipboard])
+            AC_MSG_NOTICE([Wayland backend enabled with GLFW + libdecor + OpenGL ES + fontconfig + sd-bus + wayland-egl + wl-clipboard])
         else
             AC_MSG_ERROR([Wayland backend requested but one or more required components missing.
 
 Required (all mandatory when --enable-wayland is used):
   - wayland-client >= 1.18
   - wayland-cursor >= 1.18
+  - wayland-egl >= 1.18
   - xkbcommon >= 0.5.0
   - glfw3 >= 3.3 with Wayland support
   - libdecor-0 >= 0.1.0
@@ -487,13 +531,16 @@ Required (all mandatory when --enable-wayland is used):
 On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
-    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard
+    libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard \
+    libwayland-egl1-dev
 ])
         fi
     fi
 
-    AC_SUBST([WAYLAND_CFLAGS])
-    AC_SUBST([WAYLAND_LIBS])
+    AC_SUBST([WAYLAND_CLIENT_CFLAGS])
+    AC_SUBST([WAYLAND_CLIENT_LIBS])
+    AC_SUBST([WAYLAND_EGL_CFLAGS])
+    AC_SUBST([WAYLAND_EGL_LIBS])
     AC_SUBST([HAVE_WAYLAND])
 
     # Force-disable X11 linkage variables when Wayland is active

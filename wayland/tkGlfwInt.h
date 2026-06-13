@@ -34,6 +34,23 @@ void nvgluBindFramebuffer(NVGLUframebuffer* fb);
 void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
 
 /*
+ * Opaque forward declarations for the native Wayland popup primitive
+ * (implemented in tkWaylandPopup.c) and the Wayland seat object (from
+ * wayland-client.h, not included here to keep this header decoupled
+ * from the raw Wayland protocol headers).
+ */
+typedef struct TkWaylandPopup TkWaylandPopup;
+struct wl_seat;
+
+/*
+ * Forward declaration for TkMenuButton (defined in tkMenubutton.h).
+ * A duplicate typedef of an identical type is legal in C11; this lets
+ * TkpMenuButtonPostMenu be declared here without pulling in
+ * tkMenubutton.h.
+ */
+typedef struct TkMenuButton TkMenuButton;
+
+/*
  *----------------------------------------------------------------------
  *
  * Core Context Structure
@@ -153,6 +170,14 @@ typedef struct TkWmInfo {
     TkWindow    *wrapperPtr;
     Tk_Window    menubar;
     int          menuHeight;
+
+    /* Native Wayland popup surfaces (tkWaylandPopup.c). */
+    TkWaylandPopup *popup;          /* Active xdg_popup for OR / menu
+                                      * windows; NULL otherwise. */
+    TkWaylandPopup *menubarPopup;   /* Popup surface for the menubar
+                                      * strip, if any. */
+    int          overrideRedirect;  /* Mirrors wm overrideredirect /
+                                      * TkpMakeMenuWindow. */
 
     /* Size hints. */
     int          sizeHintsFlags;
@@ -433,6 +458,23 @@ MODULE_SCOPE void TkWaylandDisplayAllWindows(void);
 MODULE_SCOPE KeySym TkWaylandGetKeysymFromScancode(int scancode);
 void TkWaylandIbusSetCursorLocation(Tk_Window tkwin, int x, int y, int w, int h);
 
+/*
+ * Hit-testing and pointer-serial support for popup/menu dispatch.
+ * Implemented in tkGlfwInit.c.
+ */
+MODULE_SCOPE TkWindow  *TkWaylandWindowAtPos(GLFWwindow *glfwWindow,
+					     int x, int y);
+MODULE_SCOPE void        TkWaylandRegisterPointerListener(void);
+
+/*
+ * Post a virtual event (e.g. "<<MenuDone>>") to a Tk window's event
+ * queue.  Used to defer Tk-level cleanup (menu unposting, etc.) from
+ * Wayland protocol callbacks to the normal Tcl event loop.  Implemented
+ * in tkGlfwInit.c.
+ */
+MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr,
+					    const char *eventName);
+
 /* XKB keyboard state for key translation. */
 typedef struct {
     struct xkb_context *context;
@@ -479,12 +521,113 @@ MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 /*
  *----------------------------------------------------------------------
  *
+ * Popup Support
+ *
+ *	Native xdg_popup primitive (tkWaylandPopup.c).  This is the base
+ *	object used by menus, combobox dropdowns, tooltips, and any other
+ *	override-redirect surface.  The TkWaylandPopup struct itself is
+ *	opaque; all access goes through these functions.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Lifecycle */
+MODULE_SCOPE int   TkWaylandPopupInit(void);
+MODULE_SCOPE void  TkWaylandPopupDestroyAll(void);
+
+/*
+ * Create a popup.
+ *
+ *   parentGlfw  – GLFW window whose wl_surface is the xdg_popup parent.
+ *   anchorX,Y   – top-left of the anchor rectangle, in parent-surface
+ *                 logical pixels.
+ *   anchorW,H   – anchor rectangle size (1,1 for a point anchor).
+ *   popupW,H    – requested popup size.
+ *   anchor      – XDG_POSITIONER_ANCHOR_* value.
+ *   gravity     – XDG_POSITIONER_GRAVITY_* value.
+ *   grabInput   – non-zero to take an explicit Wayland pointer grab.
+ *   serial      – input-event serial for the grab (0 if grabInput==0).
+ */
+MODULE_SCOPE TkWaylandPopup *TkWaylandPopupCreate(
+    GLFWwindow *parentGlfw,
+    int anchorX, int anchorY,
+    int anchorW, int anchorH,
+    int popupW,  int popupH,
+    uint32_t anchor,
+    uint32_t gravity,
+    int grabInput,
+    uint32_t serial);
+
+MODULE_SCOPE void TkWaylandPopupDestroy(TkWaylandPopup *popup);
+
+/*
+ * Reposition by destroying and re-creating with new positioner
+ * parameters.  Returns the new popup; the original is freed.
+ */
+MODULE_SCOPE TkWaylandPopup *TkWaylandPopupMove(
+    TkWaylandPopup *popup,
+    GLFWwindow     *parentGlfw,
+    int anchorX, int anchorY,
+    int anchorW, int anchorH,
+    uint32_t anchor,
+    uint32_t gravity);
+
+/* Rendering */
+MODULE_SCOPE NVGcontext *TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
+MODULE_SCOPE int          TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
+MODULE_SCOPE void         TkWaylandPopupEndDraw(TkWaylandPopup *popup);
+
+/* Callbacks and queries */
+MODULE_SCOPE void TkWaylandPopupSetDoneCallback(
+    TkWaylandPopup *popup,
+    void (*callback)(void *clientData),
+    void *clientData);
+
+MODULE_SCOPE void     TkWaylandPopupSetSerial(uint32_t serial);
+MODULE_SCOPE uint32_t TkWaylandPopupLastSerial(void);
+MODULE_SCOPE void     TkWaylandPopupGetSize(
+    TkWaylandPopup *popup, int *widthOut, int *heightOut);
+MODULE_SCOPE void     TkWaylandPopupGetPosition(
+    TkWaylandPopup *popup, int *xOut, int *yOut);
+MODULE_SCOPE struct wl_seat *TkWaylandPopupGetSeat(void);
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Menu Support
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE void TkWaylandMenuInit(void);
+
+/*
+ * Dispatch entry points for menu popup input handling, called from the
+ * parent toplevel's GLFW cursor/button/enter callbacks whenever
+ * TkWaylandMenuPopupActive() is non-zero.  Implemented in
+ * tkWaylandMenu.c.
+ */
+MODULE_SCOPE int  TkWaylandMenuPopupActive(void);
+MODULE_SCOPE void TkWaylandMenuCursorPosCallback(GLFWwindow *glfwWindow,
+				   double xpos, double ypos);
+MODULE_SCOPE void TkWaylandMenuMouseButtonCallback(GLFWwindow *glfwWindow,
+				   int button, int action, int mods);
+MODULE_SCOPE void TkWaylandMenuCursorEnterCallback(GLFWwindow *glfwWindow,
+				   int entered);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Menubutton Support
+ *
+ *	Posting entry points implemented in tkWaylandMenubu.c, called from
+ *	the GLFW mouse-button dispatcher in tkGlfwInit.c.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void TkpMenuButtonMaybePost(TkWindow *winPtr);
+MODULE_SCOPE int  TkpMenuButtonPostMenu(TkMenuButton *mbPtr);
 
 /*
  *----------------------------------------------------------------------

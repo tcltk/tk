@@ -31,6 +31,14 @@
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
+/*
+ * Raw Wayland headers for the pointer-serial listener used to support
+ * grabbed xdg_popup surfaces (menus, menubuttons, comboboxes).
+ */
+#define GLFW_EXPOSE_NATIVE_WAYLAND
+#include <GLFW/glfw3native.h>
+#include <wayland-client.h>
+
 
 /*
  *----------------------------------------------------------------------
@@ -54,6 +62,254 @@ static int GlfwIsInitialized = 0;
 GLFWwindow *mainGlfwWindow;
 static TkGlfwContext mainGlfwContext = {0};
 static int shutdownInProgress = 0;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Raw wl_pointer serial listener
+ *
+ *	GLFW does not expose the Wayland serial of pointer button events
+ *	through its public API, but xdg_popup_grab requires a valid serial
+ *	from the most recent button-press event.  We attach our own
+ *	wl_pointer listener (alongside GLFW's own, which remains untouched)
+ *	purely to record the serial of each button-press event.  The
+ *	listener does not call any wl_pointer setter functions, so it
+ *	cannot interfere with GLFW's own pointer handling.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+PointerEnterStub(
+    void *data, struct wl_pointer *pointer, uint32_t serial,
+    struct wl_surface *surface, wl_fixed_t sx, wl_fixed_t sy)
+{
+    (void)data; (void)pointer; (void)serial;
+    (void)surface; (void)sx; (void)sy;
+}
+
+static void
+PointerLeaveStub(
+    void *data, struct wl_pointer *pointer, uint32_t serial,
+    struct wl_surface *surface)
+{
+    (void)data; (void)pointer; (void)serial; (void)surface;
+}
+
+static void
+PointerMotionStub(
+    void *data, struct wl_pointer *pointer, uint32_t time,
+    wl_fixed_t sx, wl_fixed_t sy)
+{
+    (void)data; (void)pointer; (void)time; (void)sx; (void)sy;
+}
+
+static void
+PointerButtonSerial(
+    void *data, struct wl_pointer *pointer, uint32_t serial,
+    uint32_t time, uint32_t button, uint32_t state)
+{
+    (void)data; (void)pointer; (void)time; (void)button;
+
+    if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+        TkWaylandPopupSetSerial(serial);
+    }
+}
+
+static void
+PointerAxisStub(
+    void *data, struct wl_pointer *pointer, uint32_t time,
+    uint32_t axis, wl_fixed_t value)
+{
+    (void)data; (void)pointer; (void)time; (void)axis; (void)value;
+}
+
+static const struct wl_pointer_listener tkPointerSerialListener = {
+    PointerEnterStub,
+    PointerLeaveStub,
+    PointerMotionStub,
+    PointerButtonSerial,
+    PointerAxisStub,
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandRegisterPointerListener --
+ *
+ *	Attach tkPointerSerialListener to the wl_pointer obtained from the
+ *	wl_seat bound by TkWaylandPopupInit().  Must be called after
+ *	TkWaylandPopupInit() has run.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Adds a listener to the seat's wl_pointer object.  Wayland dispatches
+ *	to listeners in registration order, so this listener's
+ *	PointerButtonSerial fires (and stores the serial) before GLFW's own
+ *	pointer callback is invoked for the same event.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandRegisterPointerListener(void)
+{
+    struct wl_seat *seat = TkWaylandPopupGetSeat();
+    if (!seat) {
+        fprintf(stderr,
+            "TkWaylandRegisterPointerListener: no seat available\n");
+        return;
+    }
+    struct wl_pointer *pointer = wl_seat_get_pointer(seat);
+    if (!pointer) {
+        fprintf(stderr,
+            "TkWaylandRegisterPointerListener: seat has no pointer\n");
+        return;
+    }
+    wl_pointer_add_listener(pointer, &tkPointerSerialListener, NULL);
+    fprintf(stderr,
+        "TkWaylandRegisterPointerListener: serial listener attached\n");
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandHitTest --
+ *
+ *	Recursive depth-first hit test over the Tk window tree.  Coordinates
+ *	are relative to the toplevel's surface origin (i.e. the same space
+ *	as GLFW cursor-position callbacks for that toplevel).
+ *
+ * Results:
+ *	The innermost mapped TkWindow containing (x, y), or NULL.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static TkWindow *
+TkWaylandHitTest(
+    TkWindow *winPtr,
+    int       x,
+    int       y)
+{
+    if (!(winPtr->flags & TK_MAPPED)) {
+        return NULL;
+    }
+
+    int wx = Tk_X((Tk_Window)winPtr);
+    int wy = Tk_Y((Tk_Window)winPtr);
+    int ww = Tk_Width((Tk_Window)winPtr);
+    int wh = Tk_Height((Tk_Window)winPtr);
+
+    if (x < wx || x >= wx + ww || y < wy || y >= wy + wh) {
+        return NULL;
+    }
+
+    /* Check children topmost-first (last in the sibling chain is on top). */
+    for (TkWindow *childPtr = winPtr->childList;
+         childPtr != NULL;
+         childPtr = childPtr->nextPtr) {
+        TkWindow *hit = TkWaylandHitTest(childPtr, x - wx, y - wy);
+        if (hit) {
+            return hit;
+        }
+    }
+
+    return winPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandWindowAtPos --
+ *
+ *	Find the innermost mapped Tk window under the given coordinates in
+ *	a GLFW toplevel's surface space.
+ *
+ * Results:
+ *	The TkWindow under (x, y), or NULL if none.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE TkWindow *
+TkWaylandWindowAtPos(
+    GLFWwindow *glfwWindow,
+    int         x,
+    int         y)
+{
+    TkWindow *toplevel = TkGlfwGetTkWindow(glfwWindow);
+    if (!toplevel) return NULL;
+
+    /*
+     * The hit test recurses using coordinates relative to each window's
+     * own origin; the toplevel's own x,y offset is 0 in its own surface
+     * space, so we start the recursion directly with (x, y).
+     */
+    for (TkWindow *childPtr = toplevel->childList;
+         childPtr != NULL;
+         childPtr = childPtr->nextPtr) {
+        TkWindow *hit = TkWaylandHitTest(childPtr, x, y);
+        if (hit) return hit;
+    }
+
+    if (x >= 0 && y >= 0 &&
+        x < Tk_Width((Tk_Window)toplevel) &&
+        y < Tk_Height((Tk_Window)toplevel)) {
+        return toplevel;
+    }
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandPostVirtualEvent --
+ *
+ *	Queue a virtual event (e.g. "<<MenuDone>>") for the given window on
+ *	Tk's normal event queue.  Used by tkWaylandPopup.c consumers (menus,
+ *	menubuttons) to defer cleanup from a Wayland protocol callback --
+ *	which may run during wl_display_dispatch, outside the normal Tcl
+ *	event loop -- to a point where it is safe to manipulate Tk's window
+ *	hierarchy.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Queues a TK_VIRTUALEVENT XEvent via Tk_QueueWindowEvent.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandPostVirtualEvent(
+    TkWindow   *winPtr,
+    const char *eventName)
+{
+    if (!winPtr) return;
+
+    XVirtualEvent event;
+    memset(&event, 0, sizeof(event));
+
+    event.type    = VirtualEvent;
+    event.serial  = 0;
+    event.send_event = 0;
+    event.display = winPtr->display;
+    event.event   = Tk_WindowId(winPtr);
+    event.root    = XRootWindow(winPtr->display, 0);
+    event.subwindow = None;
+    event.time    = 0;
+    event.x = event.y = 0;
+    event.x_root = event.y_root = 0;
+    event.state   = 0;
+    event.same_screen = 1;
+    event.name    = Tk_GetUid(eventName);
+
+    Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
+}
 
 #if 0
 static void GLtest(GLFWwindow *window) {
@@ -444,6 +700,20 @@ TkGlfwInitialize(void)
     glfwMakeContextCurrent(mainGlfwWindow);
     glfwSwapInterval(0);
 
+    /*
+     * Initialize the native popup module (binds wl_compositor,
+     * xdg_wm_base, wl_seat) and attach the pointer-serial listener.
+     * Both require the Wayland display to be open, which it is once
+     * mainGlfwWindow has been created above.
+     */
+    if (TkWaylandPopupInit() != TCL_OK) {
+        fprintf(stderr,
+            "TkGlfwInitialize: TkWaylandPopupInit failed; "
+            "popups/menus will not work\n");
+    } else {
+        TkWaylandRegisterPointerListener();
+    }
+
     GlfwIsInitialized = 1;
     shutdownInProgress = 0;
 
@@ -479,6 +749,9 @@ TkGlfwShutdown(TCL_UNUSED(void *))
         shutdownInProgress = 0;
         return;
     }
+
+    /* Tear down any live popup surfaces before destroying GL contexts. */
+    TkWaylandPopupDestroyAll();
 
     /* Delete NanoVG while a context still exists. */
 #if 0
