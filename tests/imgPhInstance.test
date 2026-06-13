@@ -11,6 +11,10 @@
 # The tests read rendered pixels back with tktest's "testpixel" command
 # and therefore need a mapped, unobscured window and a TrueColor display
 # of depth >= 24 (constraint pixelProbe).
+#
+# They are skipped on Aqua (constraint notAqua): the macOS path does not
+# composite through TkpPutRGBAImage/BlendComplexAlpha yet, so there is
+# nothing here for these tests to exercise on that platform.
 
 #
 # TESTFILE INITIALIZATION
@@ -123,7 +127,7 @@ photo.big put #00000080 -to 150 150 300 300
 # 1.* -- the three alpha tiers
 
 test imgPhInstance-1.1 "fully opaque photo replaces the destination" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.opaque
     update
     list [pixelNear .c 15 15 #ff8000] [pixelNear .c 45 15 $bg]
@@ -133,7 +137,7 @@ test imgPhInstance-1.1 "fully opaque photo replaces the destination" \
 } -result {1 1}
 
 test imgPhInstance-1.2 "fully transparent photo leaves the destination untouched" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.clear
     update
     pixelNear .c 15 15 $bg
@@ -143,7 +147,7 @@ test imgPhInstance-1.2 "fully transparent photo leaves the destination untouched
 } -result 1
 
 test imgPhInstance-1.3 "50% alpha composites source-over" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.half
     update
     pixelNear .c 15 15 [blendOver #ff8000 $bg 128]
@@ -155,7 +159,7 @@ test imgPhInstance-1.3 "50% alpha composites source-over" \
 # 2.* -- binary alpha
 
 test imgPhInstance-2.1 "binary alpha: opaque cells copy, clear cells show through" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.checker
     update
     list [pixelNear .c 14 14 #ff8000] [pixelNear .c 22 14 $bg]
@@ -167,7 +171,7 @@ test imgPhInstance-2.1 "binary alpha: opaque cells copy, clear cells show throug
 # 3.* -- scratch-buffer reuse across differently sized draws
 
 test imgPhInstance-3.1 "small blend after a larger one is not skewed" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.wide
     .c create image 130 10 -anchor nw -image photo.tone
     update
@@ -184,7 +188,7 @@ test imgPhInstance-3.1 "small blend after a larger one is not skewed" \
 # 4.* -- image larger than any cached per-draw scratch buffer
 
 test imgPhInstance-4.1 "large image composites correctly in all quadrants" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.big
     update
     list [pixelNear .c 85 85 [blendOver #ff8000 $bg 128]] \
@@ -201,7 +205,7 @@ test imgPhInstance-4.1 "large image composites correctly in all quadrants" \
 # 5.* -- drawing from interior offsets (nonzero src_x/src_y sub-rects)
 
 test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
-	-constraints pixelProbe -setup {
+	-constraints {pixelProbe notAqua} -setup {
     pack forget .c
     canvas .c2 -width 120 -height 100 -background $bg \
 	    -highlightthickness 0 -borderwidth 0 -scrollregion {0 0 300 300}
