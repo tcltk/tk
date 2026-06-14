@@ -39,7 +39,6 @@ typedef struct TkTextUndoStack_ {
     TkTextUndoMyAtom *last;	/* Last added undo atom. */
     TkTextUndoMyAtom *iter;	/* Current atom in iteration loop. */
     TkTextUndoMyAtom *actual;	/* Current undo/redo atom in processing. */
-    int irreversible;		/* Whether undo actions has been released due to limited depth/size. */
     unsigned maxUndoDepth;	/* Maximal depth of the undo stack. */
     int maxRedoDepth;		/* Maximal depth of the redo stack. */
     unsigned maxSize;		/* Maximal size of the stack. */
@@ -51,6 +50,7 @@ typedef struct TkTextUndoStack_ {
     unsigned redoSize;		/* Total size of redo items. */
     int doingUndo;		/* Currently an undo action is performed? */
     int doingRedo;		/* Currently a redo action is performed? */
+    bool irreversible;		/* Whether undo actions has been released due to limited depth/size. */
     bool pushSeparator;		/* Push a separator before pushing a new item (iff true). */
 } TkTextUndoStack_;
 
@@ -76,7 +76,7 @@ inline int
 TkTextUndoContentIsModified(const TkTextUndoStack stack)
 { assert(stack); return stack->undoDepth > 0 || stack->irreversible; }
 
-inline int
+inline bool
 TkTextUndoContentIsIrreversible(const TkTextUndoStack stack)
 { assert(stack); return stack->irreversible; }
 

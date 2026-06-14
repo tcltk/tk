@@ -174,7 +174,7 @@ inline unsigned TkTextUndoGetCurrentUndoSize(const TkTextUndoStack stack);
 inline unsigned TkTextUndoGetCurrentRedoSize(const TkTextUndoStack stack);
 inline unsigned TkTextUndoCountCurrentUndoItems(const TkTextUndoStack stack);
 inline unsigned TkTextUndoCountCurrentRedoItems(const TkTextUndoStack stack);
-inline int TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
+inline bool TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
 inline int TkTextUndoContentIsModified(const TkTextUndoStack stack);
 inline int TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
 inline int TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);

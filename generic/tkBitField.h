@@ -119,7 +119,7 @@ unsigned TkBitFindFirstInIntersection(const TkBitField *bf1, const TkBitField *b
 
 inline void TkBitSet(TkBitField *bf, unsigned n);
 inline void TkBitUnset(TkBitField *bf, unsigned n);
-inline void TkBitPut(TkBitField *bf, unsigned n, int value);
+inline void TkBitPut(TkBitField *bf, unsigned n, bool value);
 bool TkBitTestAndSet(TkBitField *bf, unsigned n);
 bool TkBitTestAndUnset(TkBitField *bf, unsigned n);
 void TkBitFill(TkBitField *bf);

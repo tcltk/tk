@@ -128,7 +128,7 @@ TkIntSet *TkIntSetAdd(TkIntSet *set, unsigned n) __warn_unused__;
 TkIntSet *TkIntSetErase(TkIntSet *set, unsigned n) __warn_unused__;
 TkIntSet *TkIntSetTestAndSet(TkIntSet *set, unsigned n) __warn_unused__;
 TkIntSet *TkIntSetTestAndUnset(TkIntSet *set, unsigned n) __warn_unused__;
-inline TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, int add) __warn_unused__;
+inline TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, bool add) __warn_unused__;
 TkIntSet *TkIntSetClear(TkIntSet *set) __warn_unused__;
 
 #ifndef NDEBUG

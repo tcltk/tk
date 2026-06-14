@@ -181,7 +181,7 @@ void
 TkBitPut(
     TkBitField *bf,
     unsigned n,
-    int value)
+    bool value)
 {
     if (value) {
 	TkBitSet(bf, n);

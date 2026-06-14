@@ -87,14 +87,10 @@
  */
 #ifdef _WIN32
 #   define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	NULL
+#elif defined(MAC_OSX_TK)
+#   define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	"systemSelectedTextColor"
 #else
-#   if defined(MAC_OSX_TK)
-#	define INACTIVE_SELECT_FG	"systemSelectedTextColor"
-#	define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	INACTIVE_SELECT_FG
-#   else
-#	define SELECT_FG	BLACK
-#	define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	SELECT_FG
-#   endif
+#   define DEF_TEXT_INACTIVE_SELECT_FG_COLOR	BLACK
 #endif
 
 /*

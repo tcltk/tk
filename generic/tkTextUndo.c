@@ -272,7 +272,7 @@ InsertCurrentAtom(
 		/*
 		 * We do not push this undo atom, so the content becomes irreversible.
 		 */
-		stack->irreversible = 1;
+		stack->irreversible = true;
 	    }
 	    FreeItems(stack, &stack->current->data);
 	    ResetCurrent(stack, 0);
@@ -315,7 +315,7 @@ InsertCurrentAtom(
 	stack->last = atom;
 	stack->undoSize -= atom->data.size;
 	stack->undoItems -= atom->data.arraySize;
-	stack->irreversible = 1;
+	stack->irreversible = true;
 	FreeItems(stack, &atom->data);
 	SwapCurrent(stack, atom);
 	stack->undoSize += atom->data.size;
@@ -360,7 +360,7 @@ InsertCurrentAtom(
 static int
 ResetStack(
     TkTextUndoStack stack,
-    int irreversible)
+    bool irreversible)
 {
     int contentChanged;
 
@@ -447,7 +447,7 @@ int
 TkTextUndoResetStack(
     TkTextUndoStack stack)
 {
-    return stack ? ResetStack(stack, 0) : TCL_ERROR;
+    return stack ? ResetStack(stack, false) : TCL_ERROR;
 }
 
 
@@ -483,7 +483,7 @@ TkTextUndoClearUndoStack(
 	stack->last = NULL;
 	Release(stack, atom);
 	ResetCurrent(stack, 1);
-	stack->irreversible = 1;
+	stack->irreversible = true;
 
 	if (stack->contentChangedProc) {
 	    stack->contentChangedProc(stack);
@@ -579,7 +579,7 @@ TkTextUndoSetMaxStackDepth(
 		stack->root = root;
 
 		/* We have to delete undoes, so the content becomes irreversible. */
-		stack->irreversible = 1;
+		stack->irreversible = true;
 
 		Release(stack, atom);
 	    }
@@ -666,7 +666,7 @@ TkTextUndoSetMaxStackSize(
 		/*
 		 * We have to delete undoes, so the content becomes irreversible.
 		 */
-		stack->irreversible = 1;
+		stack->irreversible = true;
 		Release(stack, atom);
 	    }
 	}
@@ -920,7 +920,7 @@ TkTextUndoDoRedo(
 		stack->root = atom->next;
 	    }
 	    Release(stack, atom);
-	    stack->irreversible = 1;
+	    stack->irreversible = true;
 	} else {
 	    FreeItems(stack, &atom->data);
 	    InsertCurrentAtom(stack);
@@ -1053,7 +1053,7 @@ extern unsigned TkTextUndoGetCurrentUndoSize(const TkTextUndoStack stack);
 extern unsigned TkTextUndoGetCurrentRedoSize(const TkTextUndoStack stack);
 extern unsigned TkTextUndoCountCurrentUndoItems(const TkTextUndoStack stack);
 extern unsigned TkTextUndoCountCurrentRedoItems(const TkTextUndoStack stack);
-extern int TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
+extern bool TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
 extern int TkTextUndoContentIsModified(const TkTextUndoStack stack);
 extern int TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
 extern int TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);

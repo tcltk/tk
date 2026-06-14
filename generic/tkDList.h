@@ -413,7 +413,7 @@ __TK_DLIST_UNUSED								\
 static void									\
 LT##_Remove(struct ElemType *elem)						\
 {										\
-    int isFirst, isLast;							\
+    bool isFirst, isLast;							\
     assert(LT##_IsLinked(elem));						\
     isFirst = LT##_IsFirst(elem);						\
     isLast = LT##_IsLast(elem);							\

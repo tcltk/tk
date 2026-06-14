@@ -255,7 +255,7 @@ TkIntSet *
 TkIntSetAddOrErase(
     TkIntSet *set,
     unsigned n,
-    int add)
+    bool add)
 {
     assert(set);
     return add ? TkIntSetAdd(set, n) : TkIntSetErase(set, n);

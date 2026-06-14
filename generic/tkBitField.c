@@ -1528,7 +1528,7 @@ extern int TkBitTest(const TkBitField *bf, unsigned n);
 extern int TkBitNone(const TkBitField *bf);
 extern void TkBitSet(TkBitField *bf, unsigned n);
 extern void TkBitUnset(TkBitField *bf, unsigned n);
-extern void TkBitPut(TkBitField *bf, unsigned n, int value);
+extern void TkBitPut(TkBitField *bf, unsigned n, bool value);
 extern unsigned TkBitAdjustSize(unsigned size);
 
 /* vi:set ts=8 sw=4: */

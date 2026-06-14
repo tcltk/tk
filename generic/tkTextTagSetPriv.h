@@ -352,7 +352,7 @@ TkTextTagSet *
 TkTextTagSetAddOrErase(
     TkTextTagSet *ts,
     unsigned n,
-    int value)
+    bool value)
 {
     assert(ts);
     return value ? TkTextTagSetAdd(ts, n) : TkTextTagSetErase(ts, n);

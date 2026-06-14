@@ -1438,7 +1438,7 @@ extern bool TkTextTagSetDisjunctiveBits(const TkTextTagSet *ts, const TkBitField
 extern bool TkTextTagSetIntersectsBits(const TkTextTagSet *ts, const TkBitField *bf);
 extern unsigned TkTextTagSetFindFirst(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetFindNext(const TkTextTagSet *ts, unsigned prev);
-extern TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, int value);
+extern TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, bool value);
 extern TkTextTagSet *TkTextTagSetAddToThis(TkTextTagSet *ts, unsigned n);
 extern TkTextTagSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n);
 extern unsigned TkTextTagSetRangeSize(const TkTextTagSet *ts);

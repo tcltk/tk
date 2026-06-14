@@ -134,7 +134,7 @@ unsigned TkTextTagSetFindFirstInIntersection(const TkTextTagSet *ts, const TkBit
 
 TkTextTagSet *TkTextTagSetAdd(TkTextTagSet *ts, unsigned n) __warn_unused__;
 TkTextTagSet *TkTextTagSetErase(TkTextTagSet *ts, unsigned n) __warn_unused__;
-inline TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, int value)
+inline TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, bool value)
     __warn_unused__;
 TkTextTagSet *TkTextTagSetTestAndSet(TkTextTagSet *ts, unsigned n) __warn_unused__;
 TkTextTagSet *TkTextTagSetTestAndUnset(TkTextTagSet *ts, unsigned n) __warn_unused__;
