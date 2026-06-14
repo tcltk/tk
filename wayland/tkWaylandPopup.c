@@ -40,6 +40,7 @@
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
+#include <stdio.h>  /* For debug output */
 
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WAYLAND
@@ -56,6 +57,9 @@
 #define NANOVG_GLES3 1
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
+
+/* Debug macro */
+#define POPUP_DEBUG(msg, ...) fprintf(stderr, "POPUP: " msg "\n", ##__VA_ARGS__)
 
 /*
  * The root GLFWwindow, defined in tkGlfwInit.c.  Used as the share-context
@@ -84,6 +88,7 @@ struct TkWaylandPopup {
                                          * popups (e.g. the menubar);
                                          * xdgSurface/xdgPopup are NULL
                                          * in that case. */
+    struct wl_surface    *parentSurface; /* Parent surface for subsurface */
 
     /* EGL objects */
     EGLDisplay  eglDisplay;
@@ -98,8 +103,10 @@ struct TkWaylandPopup {
     int width, height;          /* requested / confirmed size */
 
     /* State flags */
-    int configured;             /* 1 after first xdg_surface configure */
+    int configured;             /* 1 after first xdg_surface configure
+                                 * OR for subsurfaces (always 1) */
     int mapped;
+    int visible;                /* Track visibility state */
 
     /* Optional dismiss callback */
     void (*doneCallback)(void *clientData);
@@ -133,6 +140,72 @@ static TkWaylandPopup *popupList = NULL;
  * Forward declarations
  */
 static int BuildEGLSurface(TkWaylandPopup *popup);
+static void RestoreMainContext(void);
+static void FrameCallbackDone(void *data, struct wl_callback *cb, uint32_t time);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FrameCallbackDone --
+ *
+ *	Callback when a frame is actually displayed by the compositor.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Destroys the callback.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+FrameCallbackDone(
+    void *data,
+    struct wl_callback *cb,
+    uint32_t time)
+{
+    POPUP_DEBUG("Frame callback: surface visible at time %u", time);
+    wl_callback_destroy(cb);
+}
+
+static const struct wl_callback_listener frameListener = {
+    FrameCallbackDone
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RestoreMainContext --
+ *
+ *	Restore the main GLFW window's EGL context as current.
+ *	This must be called after any popup operation that changed
+ *	the current context to avoid leaving no context current or
+ *	a popup context current when the main window needs to draw.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Makes the main GLFW window's EGL context current.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RestoreMainContext(void)
+{
+    if (!mainGlfwWindow) return;
+
+    EGLDisplay display = glfwGetEGLDisplay();
+    EGLSurface surface = glfwGetEGLSurface(mainGlfwWindow);
+    EGLContext context = glfwGetEGLContext(mainGlfwWindow);
+
+    if (display != EGL_NO_DISPLAY && surface != EGL_NO_SURFACE &&
+        context != EGL_NO_CONTEXT) {
+        eglMakeCurrent(display, surface, surface, context);
+    }
+}
 
 /*
  *----------------------------------------------------------------------
@@ -162,19 +235,25 @@ RegistryGlobal(
 {
     (void)data; (void)version;
 
+    POPUP_DEBUG("Registry global: %s", interface);
+
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
         popupCompositor = wl_registry_bind(registry, name,
             &wl_compositor_interface, 4);
+        POPUP_DEBUG("Bound wl_compositor");
     } else if (strcmp(interface, wl_subcompositor_interface.name) == 0) {
         popupSubcompositor = wl_registry_bind(registry, name,
             &wl_subcompositor_interface, 1);
+        POPUP_DEBUG("Bound wl_subcompositor");
     } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
         popupWmBase = wl_registry_bind(registry, name,
             &xdg_wm_base_interface, 2);
+        POPUP_DEBUG("Bound xdg_wm_base");
     } else if (strcmp(interface, wl_seat_interface.name) == 0) {
         if (!popupSeat) {
             popupSeat = wl_registry_bind(registry, name,
                 &wl_seat_interface, 4);
+            POPUP_DEBUG("Bound wl_seat");
         }
     }
 }
@@ -235,6 +314,7 @@ WmBasePing(
 {
     (void)data;
     xdg_wm_base_pong(wmBase, serial);
+    POPUP_DEBUG("Ping/pong");
 }
 
 static const struct xdg_wm_base_listener wmBaseListener = {
@@ -267,12 +347,14 @@ XdgSurfaceConfigure(
 {
     TkWaylandPopup *popup = (TkWaylandPopup *)data;
 
+    POPUP_DEBUG("XdgSurfaceConfigure serial=%u", serial);
     xdg_surface_ack_configure(xdgSurface, serial);
     popup->configured = 1;
 
     if (popup->eglWindow && popup->width > 0 && popup->height > 0) {
         wl_egl_window_resize(popup->eglWindow, popup->width, popup->height,
                               0, 0);
+        POPUP_DEBUG("Resized EGL window to %dx%d", popup->width, popup->height);
     }
     wl_surface_commit(popup->surface);
     wl_display_flush(popupDisplay);
@@ -309,6 +391,7 @@ XdgPopupConfigure(
     TkWaylandPopup *popup = (TkWaylandPopup *)data;
     (void)xdgPopup;
 
+    POPUP_DEBUG("XdgPopupConfigure: pos=(%d,%d) size=%dx%d", x, y, width, height);
     popup->x = x;
     popup->y = y;
     if (width  > 0) popup->width  = width;
@@ -340,6 +423,7 @@ XdgPopupDone(
     TkWaylandPopup *popup = (TkWaylandPopup *)data;
     (void)xdgPopup;
 
+    POPUP_DEBUG("XdgPopupDone - popup dismissed by compositor");
     if (popup->doneCallback) {
         popup->doneCallback(popup->doneClientData);
     }
@@ -380,6 +464,7 @@ BuildEGLSurface(
 {
     popup->eglDisplay = glfwGetEGLDisplay();
     if (popup->eglDisplay == EGL_NO_DISPLAY) {
+        POPUP_DEBUG("No EGL display");
         return 0;
     }
 
@@ -399,18 +484,21 @@ BuildEGLSurface(
     EGLint    numConfigs;
     if (!eglChooseConfig(popup->eglDisplay, configAttribs,
                          &eglConfig, 1, &numConfigs) || numConfigs == 0) {
+        POPUP_DEBUG("eglChooseConfig failed");
         return 0;
     }
 
     popup->eglWindow = wl_egl_window_create(popup->surface,
                                              popup->width, popup->height);
     if (!popup->eglWindow) {
+        POPUP_DEBUG("wl_egl_window_create failed");
         return 0;
     }
 
     popup->eglSurface = eglCreateWindowSurface(popup->eglDisplay, eglConfig,
         (EGLNativeWindowType)popup->eglWindow, NULL);
     if (popup->eglSurface == EGL_NO_SURFACE) {
+        POPUP_DEBUG("eglCreateWindowSurface failed");
         wl_egl_window_destroy(popup->eglWindow);
         popup->eglWindow = NULL;
         return 0;
@@ -433,6 +521,7 @@ BuildEGLSurface(
                                               shareCtx, ctx2Attribs);
     }
     if (popup->eglContext == EGL_NO_CONTEXT) {
+        POPUP_DEBUG("eglCreateContext failed");
         eglDestroySurface(popup->eglDisplay, popup->eglSurface);
         wl_egl_window_destroy(popup->eglWindow);
         popup->eglSurface = EGL_NO_SURFACE;
@@ -440,6 +529,7 @@ BuildEGLSurface(
         return 0;
     }
 
+    POPUP_DEBUG("EGL surface built successfully");
     return 1;
 }
 
@@ -465,8 +555,11 @@ TkWaylandPopupInit(void)
 {
     if (popupModuleInitialized) return TCL_OK;
 
+    POPUP_DEBUG("Initializing Wayland popup module");
+
     popupDisplay = glfwGetWaylandDisplay();
     if (!popupDisplay) {
+        POPUP_DEBUG("No Wayland display");
         return TCL_ERROR;
     }
 
@@ -476,12 +569,14 @@ TkWaylandPopupInit(void)
     wl_display_roundtrip(popupDisplay);
 
     if (!popupCompositor || !popupWmBase) {
+        POPUP_DEBUG("Missing compositor or wm_base");
         return TCL_ERROR;
     }
 
     xdg_wm_base_add_listener(popupWmBase, &wmBaseListener, NULL);
 
     popupModuleInitialized = 1;
+    POPUP_DEBUG("Popup module initialized");
     return TCL_OK;
 }
 
@@ -514,6 +609,9 @@ TkWaylandPopupCreate(
 {
     (void)parentGlfw;
 
+    POPUP_DEBUG("Creating xdg_popup: anchor=(%d,%d,%d,%d) popup=%dx%d",
+                anchorX, anchorY, anchorW, anchorH, popupW, popupH);
+
     if (!popupModuleInitialized) {
         if (TkWaylandPopupInit() != TCL_OK) return NULL;
     }
@@ -526,15 +624,18 @@ TkWaylandPopupCreate(
     memset(popup, 0, sizeof(TkWaylandPopup));
     popup->width  = popupW;
     popup->height = popupH;
+    popup->visible = 0;
 
     popup->surface = wl_compositor_create_surface(popupCompositor);
     if (!popup->surface) {
+        POPUP_DEBUG("Failed to create wl_surface");
         Tcl_Free(popup);
         return NULL;
     }
 
     popup->xdgSurface = xdg_wm_base_get_xdg_surface(popupWmBase, popup->surface);
     if (!popup->xdgSurface) {
+        POPUP_DEBUG("Failed to create xdg_surface");
         wl_surface_destroy(popup->surface);
         Tcl_Free(popup);
         return NULL;
@@ -543,6 +644,7 @@ TkWaylandPopupCreate(
 
     struct xdg_positioner *pos = xdg_wm_base_create_positioner(popupWmBase);
     if (!pos) {
+        POPUP_DEBUG("Failed to create positioner");
         xdg_surface_destroy(popup->xdgSurface);
         wl_surface_destroy(popup->surface);
         Tcl_Free(popup);
@@ -563,6 +665,7 @@ TkWaylandPopupCreate(
     xdg_positioner_destroy(pos);
 
     if (!popup->xdgPopup) {
+        POPUP_DEBUG("Failed to get xdg_popup");
         xdg_surface_destroy(popup->xdgSurface);
         wl_surface_destroy(popup->surface);
         Tcl_Free(popup);
@@ -572,9 +675,11 @@ TkWaylandPopupCreate(
 
     if (grabInput && popupSeat && serial != 0) {
         xdg_popup_grab(popup->xdgPopup, popupSeat, serial);
+        POPUP_DEBUG("Grab input with serial %u", serial);
     }
 
     if (!BuildEGLSurface(popup)) {
+        POPUP_DEBUG("BuildEGLSurface failed");
         xdg_popup_destroy(popup->xdgPopup);
         xdg_surface_destroy(popup->xdgSurface);
         wl_surface_destroy(popup->surface);
@@ -585,9 +690,10 @@ TkWaylandPopupCreate(
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    RestoreMainContext();
+
     if (!popup->vg) {
-        eglMakeCurrent(popup->eglDisplay, EGL_NO_SURFACE,
-                       EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        POPUP_DEBUG("nvgCreateGLES3 failed");
         eglDestroyContext(popup->eglDisplay, popup->eglContext);
         eglDestroySurface(popup->eglDisplay, popup->eglSurface);
         wl_egl_window_destroy(popup->eglWindow);
@@ -608,9 +714,11 @@ TkWaylandPopupCreate(
     }
 
     popup->mapped = 1;
+    popup->visible = 1;
     popup->nextPtr = popupList;
     popupList = popup;
 
+    POPUP_DEBUG("xdg_popup created successfully, configured=%d", popup->configured);
     return popup;
 }
 
@@ -637,10 +745,13 @@ TkWaylandSubsurfaceCreate(
     int x, int y,
     int width, int height)
 {
+    POPUP_DEBUG("Creating subsurface popup: pos=(%d,%d) size=%dx%d", x, y, width, height);
+
     if (!popupModuleInitialized) {
         if (TkWaylandPopupInit() != TCL_OK) return NULL;
     }
     if (!popupSubcompositor) {
+        POPUP_DEBUG("No subcompositor available");
         return NULL;
     }
     if (width  <= 0) width  = 1;
@@ -648,6 +759,7 @@ TkWaylandSubsurfaceCreate(
 
     struct wl_surface *parentSurface = glfwGetWaylandWindow(parentGlfw);
     if (!parentSurface) {
+        POPUP_DEBUG("No parent surface from GLFW window");
         return NULL;
     }
 
@@ -657,9 +769,12 @@ TkWaylandSubsurfaceCreate(
     popup->height = height;
     popup->x      = x;
     popup->y      = y;
+    popup->visible = 0;
+    popup->parentSurface = parentSurface;
 
     popup->surface = wl_compositor_create_surface(popupCompositor);
     if (!popup->surface) {
+        POPUP_DEBUG("Failed to create surface");
         Tcl_Free(popup);
         return NULL;
     }
@@ -667,25 +782,28 @@ TkWaylandSubsurfaceCreate(
     popup->subsurface = wl_subcompositor_get_subsurface(
         popupSubcompositor, popup->surface, parentSurface);
     if (!popup->subsurface) {
+        POPUP_DEBUG("Failed to create subsurface");
         wl_surface_destroy(popup->surface);
         Tcl_Free(popup);
         return NULL;
     }
 
+    /* Position the subsurface. */
     wl_subsurface_set_position(popup->subsurface, x, y);
+    
+    /* Use desync mode for better performance. */
     wl_subsurface_set_desync(popup->subsurface);
+    
+    /* IMPORTANT: Place the subsurface ABOVE the parent surface. */
+    wl_subsurface_place_above(popup->subsurface, parentSurface);
+    POPUP_DEBUG("Subsurface placed above parent");
 
-    /* Make subsurface input-transparent */
-    {
-        struct wl_region *emptyRegion =
-            wl_compositor_create_region(popupCompositor);
-        if (emptyRegion) {
-            wl_surface_set_input_region(popup->surface, emptyRegion);
-            wl_region_destroy(emptyRegion);
-        }
-    }
-
+    /* Request a frame callback to know when the surface is actually displayed. */
+    struct wl_callback *callback = wl_surface_frame(popup->surface);
+    wl_callback_add_listener(callback, &frameListener, NULL);
+    
     if (!BuildEGLSurface(popup)) {
+        POPUP_DEBUG("BuildEGLSurface failed");
         wl_subsurface_destroy(popup->subsurface);
         wl_surface_destroy(popup->surface);
         Tcl_Free(popup);
@@ -695,9 +813,10 @@ TkWaylandSubsurfaceCreate(
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    RestoreMainContext();
+
     if (!popup->vg) {
-        eglMakeCurrent(popup->eglDisplay, EGL_NO_SURFACE,
-                       EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        POPUP_DEBUG("nvgCreateGLES3 failed");
         eglDestroyContext(popup->eglDisplay, popup->eglContext);
         eglDestroySurface(popup->eglDisplay, popup->eglSurface);
         wl_egl_window_destroy(popup->eglWindow);
@@ -707,12 +826,20 @@ TkWaylandSubsurfaceCreate(
         return NULL;
     }
 
+    /* FIX: For subsurfaces, we are always configured - no xdg_surface handshake */
     popup->configured = 1;
     popup->mapped     = 1;
+    popup->visible    = 1;
 
+    /* Commit the subsurface surface first - this makes it visible. */
     wl_surface_commit(popup->surface);
+    /* Force a damage region for the entire surface. */
+    wl_surface_damage(popup->surface, 0, 0, width, height);
+    /* Then commit the parent surface to make the subsurface appear. */
     wl_surface_commit(parentSurface);
     wl_display_flush(popupDisplay);
+
+    POPUP_DEBUG("Subsurface popup created and committed, configured=1");
 
     popup->nextPtr = popupList;
     popupList = popup;
@@ -744,6 +871,8 @@ TkWaylandSubsurfaceReconfigure(
 {
     if (!popup || !popup->subsurface) return;
 
+    POPUP_DEBUG("Reconfigure subsurface: pos=(%d,%d) size=%dx%d", x, y, width, height);
+
     if (width  <= 0) width  = 1;
     if (height <= 0) height = 1;
 
@@ -759,8 +888,19 @@ TkWaylandSubsurfaceReconfigure(
         popup->x = x;
         popup->y = y;
         wl_subsurface_set_position(popup->subsurface, x, y);
-        wl_surface_commit(popup->surface);
     }
+    
+    /* Damage the entire surface to force redraw. */
+    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
+    wl_surface_commit(popup->surface);
+    
+    /* Also need to commit the parent surface */
+    if (popup->parentSurface) {
+        wl_surface_commit(popup->parentSurface);
+    }
+    
+    wl_display_flush(popupDisplay);
+    RestoreMainContext();
 }
 
 /*
@@ -787,8 +927,17 @@ TkWaylandSubsurfacePlaceAbove(
     if (!popup || !popup->subsurface || !sibling || !sibling->surface) {
         return;
     }
+    POPUP_DEBUG("Place subsurface above sibling");
     wl_subsurface_place_above(popup->subsurface, sibling->surface);
     wl_surface_commit(popup->surface);
+    
+    /* Commit parent to ensure stacking takes effect */
+    if (popup->parentSurface) {
+        wl_surface_commit(popup->parentSurface);
+    }
+    
+    wl_display_flush(popupDisplay);
+    RestoreMainContext();
 }
 
 /*
@@ -813,7 +962,9 @@ TkWaylandPopupDestroy(
 {
     if (!popup) return;
 
-    /* Remove from linked list */
+    POPUP_DEBUG("Destroying popup");
+
+    /* Remove from linked list. */
     if (popupList == popup) {
         popupList = popup->nextPtr;
     } else {
@@ -833,8 +984,6 @@ TkWaylandPopupDestroy(
     }
 
     if (popup->eglContext != EGL_NO_CONTEXT) {
-        eglMakeCurrent(popup->eglDisplay, EGL_NO_SURFACE,
-                       EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroyContext(popup->eglDisplay, popup->eglContext);
         popup->eglContext = EGL_NO_CONTEXT;
     }
@@ -868,6 +1017,9 @@ TkWaylandPopupDestroy(
         wl_display_flush(popupDisplay);
     }
     Tcl_Free(popup);
+
+    /* Restore main context after popup destruction. */
+    RestoreMainContext();
 }
 
 /*
@@ -889,6 +1041,7 @@ TkWaylandPopupDestroy(
 MODULE_SCOPE void
 TkWaylandPopupDestroyAll(void)
 {
+    POPUP_DEBUG("Destroying all popups");
     while (popupList) {
         TkWaylandPopupDestroy(popupList);
     }
@@ -941,13 +1094,21 @@ MODULE_SCOPE int
 TkWaylandPopupBeginDraw(
     TkWaylandPopup *popup)
 {
-    if (!popup || !popup->vg || !popup->configured) return TCL_ERROR;
+    /* FIX: For subsurfaces, configured is always 1.
+     * For xdg_popup, we must wait for configure event. */
+    if (!popup || !popup->vg || !popup->configured) {
+        if (popup && !popup->configured) {
+            POPUP_DEBUG("BeginDraw: popup not configured yet");
+        }
+        return TCL_ERROR;
+    }
 
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
 
     glViewport(0, 0, popup->width, popup->height);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    /* Use a solid color for testing - make it bright red so it's obvious. */
+    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     nvgBeginFrame(popup->vg, (float)popup->width, (float)popup->height, 1.0f);
@@ -965,7 +1126,8 @@ TkWaylandPopupBeginDraw(
  *	None.
  *
  * Side effects:
- *	Swaps EGL buffers and flushes the Wayland display.
+ *	Swaps EGL buffers, commits the surface, and flushes the Wayland display.
+ *	Restores the main context after drawing is complete.
  *
  *----------------------------------------------------------------------
  */
@@ -977,10 +1139,34 @@ TkWaylandPopupEndDraw(
     if (!popup || !popup->vg) return;
 
     nvgEndFrame(popup->vg);
-    eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
+    
+    /* Check EGL swap buffers result. */
+    EGLBoolean swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
+    if (!swapped) {
+        POPUP_DEBUG("eglSwapBuffers failed: 0x%x", eglGetError());
+    } else {
+        POPUP_DEBUG("eglSwapBuffers succeeded");
+    }
+    
+    /* Damage the entire surface to tell compositor what changed */
+    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
+    
+    /* IMPORTANT: Commit the surface to make the drawn content visible */
+    wl_surface_commit(popup->surface);
+    POPUP_DEBUG("Surface committed");
+    
+    /* For subsurfaces, also commit the parent to ensure visibility. */
+    if (popup->subsurface && popup->parentSurface) {
+        wl_surface_commit(popup->parentSurface);
+        POPUP_DEBUG("Parent surface committed");
+    }
+    
     if (popupDisplay) {
         wl_display_flush(popupDisplay);
     }
+
+    /* Restore main context after popup drawing. */
+    RestoreMainContext();
 }
 
 /*
