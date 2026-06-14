@@ -124,6 +124,16 @@ void TkWaylandSetupMenuCallbacks(Tk_Window tkwin);
 static void MenuDrawIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
 static void MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
 static void MenuStackPop(int toDepth);
+static void RealizeMenubarPopup(TkWindow *winPtr, WmInfo *wmPtr, TkMenu *menuPtr);
+MODULE_SCOPE void TkWaylandMenuBarRealizeIfPending(TkWindow *winPtr);
+MODULE_SCOPE void TkWaylandMenubarEntriesChanged(TkMenu *menuPtr);
+
+/*
+ * Implemented in tkWaylandPopup.c.  Declared here defensively in case it
+ * is not already exposed by tkGlfwInt.h.
+ */
+MODULE_SCOPE void TkWaylandSubsurfaceReconfigure(TkWaylandPopup *popup,
+	int x, int y, int width, int height);
 
 /* Helper function to convert Tk colors to NVGcolor. */
 static NVGcolor TkColorToNVGColor(XColor *color) {
@@ -317,6 +327,16 @@ TkpConfigureMenuEntry(TkMenuEntry *mePtr)
 	    SetHelpMenu(menuRefPtr->menuPtr);
 	}
     }
+
+    /*
+     * If this entry belongs to a menubar that is already attached to a
+     * toplevel (TkpSetWindowMenuBar), the menubar's popup may have been
+     * created/drawn before this entry existed.  Recompute geometry and
+     * redraw (and resize the subsurface / toplevel margin if the
+     * menubar's height changed).
+     */
+    TkWaylandMenubarEntriesChanged(mePtr->menuPtr);
+
     return TCL_OK;
 }
 
@@ -331,22 +351,264 @@ TkpConfigureMenuEntry(TkMenuEntry *mePtr)
  *	TCL_OK always.
  *
  * Side effects:
- *	None.
+ *	If the entry's menu is an attached menubar, may trigger a recompute
+ *	and redraw of the menubar popup.
  *
  *---------------------------------------------------------------------------
  */
 
 int
-TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
+TkpMenuNewEntry(TkMenuEntry *mePtr)
 {
+    TkWaylandMenubarEntriesChanged(mePtr->menuPtr);
     return TCL_OK;
 }
 
 /*
  *---------------------------------------------------------------------------
  *
- * TkpSetWindowMenuBar --
+ * Menubar realization registry
  *
+ *	TkpSetWindowMenuBar is very often called while the toplevel still has
+ *	WM_NEVER_MAPPED set -- "<toplevel> configure -menu .menubar" normally
+ *	runs during script setup, before the toplevel's GLFWwindow/wl_surface
+ *	exist.  In that case there is nothing to create a subsurface in yet.
+ *	We remember the (menubar Tk_Window -> TkMenu *) association here so
+ *	that TkWmMapWindow (tkWaylandWm.c) can finish the job via
+ *	TkWaylandMenuBarRealizeIfPending once a real surface exists.
+ *
+ *	Likewise, menu entries are very often added/configured *after*
+ *	TkpSetWindowMenuBar has already run (or after the deferred
+ *	realization above), so any popup created at that point was drawn with
+ *	zero entries and never refreshed.  TkpMenuNewEntry and
+ *	TkpConfigureMenuEntry call TkWaylandMenubarEntriesChanged, which
+ *	consults this registry, to recompute geometry, resize the subsurface
+ *	and the toplevel's reserved top margin if needed, and redraw.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+#define TK_WAYLAND_MENUBAR_MAX 16
+
+typedef struct {
+    Tk_Window menubarWin;	/* The menu's own tkwin (== wmPtr->menubar). */
+    TkMenu   *menuPtr;
+} MenubarRegEntry;
+
+static MenubarRegEntry menubarRegistry[TK_WAYLAND_MENUBAR_MAX];
+
+static void
+MenubarRegistryRemove(
+    Tk_Window menubarWin)
+{
+    int i;
+    if (!menubarWin) return;
+    for (i = 0; i < TK_WAYLAND_MENUBAR_MAX; i++) {
+        if (menubarRegistry[i].menubarWin == menubarWin) {
+            menubarRegistry[i].menubarWin = NULL;
+            menubarRegistry[i].menuPtr    = NULL;
+        }
+    }
+}
+
+static void
+MenubarRegistryAdd(
+    Tk_Window menubarWin,
+    TkMenu   *menuPtr)
+{
+    int i, slot = -1;
+    for (i = 0; i < TK_WAYLAND_MENUBAR_MAX; i++) {
+        if (menubarRegistry[i].menubarWin == menubarWin) {
+            menubarRegistry[i].menuPtr = menuPtr;
+            return;
+        }
+        if (slot < 0 && menubarRegistry[i].menubarWin == NULL) {
+            slot = i;
+        }
+    }
+    if (slot >= 0) {
+        menubarRegistry[slot].menubarWin = menubarWin;
+        menubarRegistry[slot].menuPtr    = menuPtr;
+    }
+}
+
+static TkMenu *
+MenubarRegistryLookup(
+    Tk_Window menubarWin)
+{
+    int i;
+    if (!menubarWin) return NULL;
+    for (i = 0; i < TK_WAYLAND_MENUBAR_MAX; i++) {
+        if (menubarRegistry[i].menubarWin == menubarWin) {
+            return menubarRegistry[i].menuPtr;
+        }
+    }
+    return NULL;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * RealizeMenubarPopup --
+ *
+ *	Create wmPtr->menubarPopup -- a wl_subsurface anchored to the
+ *	top-left corner of the toplevel -- and render menuPtr's current
+ *	entries into it.  Also reserves space for the menubar via
+ *	Tk_SetInternalBorderEx, so that pack/grid/place position the
+ *	toplevel's other children starting below the menubar instead of
+ *	underneath it.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Creates wmPtr->menubarPopup and sets wmPtr->popup, wmPtr->menuHeight,
+ *	and the toplevel's internal border.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+RealizeMenubarPopup(
+    TkWindow *winPtr,
+    WmInfo   *wmPtr,
+    TkMenu   *menuPtr)
+{
+    int mbW, mbH;
+
+    if (!winPtr || !wmPtr || !menuPtr || wmPtr->menubarPopup) return;
+
+    TkRecomputeMenu(menuPtr);
+    mbH = menuPtr->totalHeight;
+    if (mbH < 20) mbH = 24;
+    mbW = Tk_Width((Tk_Window)winPtr);
+    if (mbW <= 0) mbW = Tk_ReqWidth((Tk_Window)winPtr);
+    if (mbW <= 0) mbW = 200;
+
+    wmPtr->menuHeight = mbH;
+
+    wmPtr->menubarPopup = TkWaylandSubsurfaceCreate(
+        TkWaylandGetGLFWwindow(winPtr), 0, 0, mbW, mbH);
+
+    if (!wmPtr->menubarPopup) {
+        fprintf(stderr,
+            "RealizeMenubarPopup: failed to create menubar subsurface\n");
+        return;
+    }
+
+    wmPtr->popup = wmPtr->menubarPopup;
+    Tk_SetInternalBorderEx((Tk_Window)winPtr, 0, 0, mbH, 0);
+    MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+    MENU_LOG("RealizeMenubarPopup: menubar subsurface %p (%dx%d)",
+        (void *)wmPtr->menubarPopup, mbW, mbH);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuBarRealizeIfPending --
+ *
+ *	Called from TkWmMapWindow (tkWaylandWm.c) immediately after a
+ *	toplevel's GLFWwindow/wl_surface have just been created.  If a
+ *	menubar was attached via TkpSetWindowMenuBar while the toplevel was
+ *	still WM_NEVER_MAPPED, the subsurface could not be created at that
+ *	time; finish that job now.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May create wmPtr->menubarPopup and draw the menubar.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuBarRealizeIfPending(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    TkMenu *menuPtr;
+
+    if (!wmPtr || !wmPtr->menubar || wmPtr->menubarPopup) return;
+
+    menuPtr = MenubarRegistryLookup(wmPtr->menubar);
+    if (menuPtr) {
+        RealizeMenubarPopup(winPtr, wmPtr, menuPtr);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarEntriesChanged --
+ *
+ *	Called whenever a menubar's entries are created or (re)configured.
+ *	This commonly happens after TkpSetWindowMenuBar already ran (and
+ *	either drew a popup with zero entries, or could not create one yet
+ *	because the toplevel was WM_NEVER_MAPPED).  Recomputes the menubar's
+ *	geometry; if its size changed, resizes/repositions the subsurface and
+ *	updates the toplevel's reserved top margin; then redraws.  If the
+ *	subsurface does not exist yet but the toplevel is now mapped, creates
+ *	it.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May create, resize, or redraw wmPtr->menubarPopup, and may update the
+ *	toplevel's internal border.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenubarEntriesChanged(
+    TkMenu *menuPtr)
+{
+    TkWindow *mwin, *winPtr;
+    WmInfo   *wmPtr = NULL;
+    int mbW, mbH, curW, curH;
+
+    if (!menuPtr || !menuPtr->tkwin || menuPtr->menuType != MENUBAR) return;
+
+    mwin = (TkWindow *)menuPtr->tkwin;
+    for (winPtr = mwin; winPtr->parentPtr && !Tk_IsTopLevel(winPtr);
+            winPtr = winPtr->parentPtr) {
+        /* walk up to the containing toplevel */
+    }
+    if (winPtr->wmInfoPtr) {
+        wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    }
+    if (!wmPtr || wmPtr->menubar != (Tk_Window)mwin) return;
+
+    if (!wmPtr->menubarPopup) {
+        if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+            RealizeMenubarPopup(winPtr, wmPtr, menuPtr);
+        }
+        return;
+    }
+
+    TkRecomputeMenu(menuPtr);
+    mbH = menuPtr->totalHeight;
+    if (mbH < 20) mbH = 24;
+    mbW = Tk_Width((Tk_Window)winPtr);
+    TkWaylandPopupGetSize(wmPtr->menubarPopup, &curW, &curH);
+    if (mbW <= 0) mbW = curW;
+
+    if (mbH != curH || mbW != curW) {
+        wmPtr->menuHeight = mbH;
+        TkWaylandSubsurfaceReconfigure(wmPtr->menubarPopup, 0, 0, mbW, mbH);
+        Tk_SetInternalBorderEx((Tk_Window)winPtr, 0, 0, mbH, 0);
+    }
+
+    MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+}
+
+
+/*
+ * TkpSetWindowMenuBar -
+ * 
  *	Attach or detach a menubar for a toplevel.  On Wayland there is no
  *	native menubar protocol, so the menubar is rendered into a thin
  *	horizontal xdg_popup strip anchored to the top edge of the
@@ -382,22 +644,19 @@ TkpSetWindowMenuBar(
         wmPtr->menubarPopup = NULL;
     }
 
+    if (wmPtr->menubar) {
+        MenubarRegistryRemove(wmPtr->menubar);
+    }
+
     if (!menuPtr) {
         wmPtr->menubar    = NULL;
         wmPtr->menuHeight = 0;
+        Tk_SetInternalBorderEx(tkwin, 0, 0, 0, 0);
         return;
     }
 
     wmPtr->menubar = (Tk_Window)menuPtr->tkwin;
-
-    TkRecomputeMenu(menuPtr);
-    int mbH = menuPtr->totalHeight;
-    if (mbH < 20) mbH = 24;
-    int mbW = Tk_Width(tkwin);
-    if (mbW <= 0) mbW = Tk_ReqWidth(tkwin);
-    if (mbW <= 0) mbW = 200;
-
-    wmPtr->menuHeight = mbH;
+    MenubarRegistryAdd(wmPtr->menubar, menuPtr);
 
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
         /*
@@ -406,19 +665,19 @@ TkpSetWindowMenuBar(
          * (no xdg_surface/configure handshake required) anchored to the
          * top-left corner of the toplevel at (0,0).
          */
-        wmPtr->menubarPopup = TkWaylandSubsurfaceCreate(
-            TkWaylandGetGLFWwindow(winPtr),
-            0, 0, mbW, mbH);
-
-        if (!wmPtr->menubarPopup) {
-            fprintf(stderr,
-                "TkpSetWindowMenuBar: failed to create menubar subsurface\n");
-        } else {
-            wmPtr->popup = wmPtr->menubarPopup;
-            MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
-            MENU_LOG("TkpSetWindowMenuBar: menubar subsurface %p (%dx%d)",
-                (void *)wmPtr->menubarPopup, mbW, mbH);
-        }
+        RealizeMenubarPopup(winPtr, wmPtr, menuPtr);
+    } else {
+        /*
+         * No GLFWwindow/wl_surface exists yet to create a subsurface in.
+         * TkWmMapWindow will call TkWaylandMenuBarRealizeIfPending once
+         * the toplevel is mapped.  Still record the requested height so
+         * that anything consulting wmPtr->menuHeight before then sees a
+         * reasonable value.
+         */
+        TkRecomputeMenu(menuPtr);
+        int mbH = menuPtr->totalHeight;
+        if (mbH < 20) mbH = 24;
+        wmPtr->menuHeight = mbH;
     }
 }
 
