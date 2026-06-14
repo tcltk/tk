@@ -200,13 +200,6 @@ static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 			  TkWindow *winPtr);
 static void WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
-/*
- * Implemented in tkWaylandMenu.c.  Finishes creating a menubar's
- * wl_subsurface once a toplevel that had a menubar attached while
- * WM_NEVER_MAPPED becomes mapped (see TkpSetWindowMenuBar).
- */
-MODULE_SCOPE void TkWaylandMenuBarRealizeIfPending(TkWindow *winPtr);
-
 /* wm sub-command handlers. */
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
@@ -507,14 +500,6 @@ TkWmMapWindow(TkWindow *winPtr)
         UpdateHints(winPtr);
         UpdateTitle(winPtr);
         UpdatePhotoIcon(winPtr);
-
-        /*
-         * If a menubar was attached via TkpSetWindowMenuBar while this
-         * toplevel was still WM_NEVER_MAPPED, its subsurface could not be
-         * created at that time (no wl_surface existed yet).  Finish that
-         * now that InitializeGlfwWindow has created one.
-         */
-        TkWaylandMenuBarRealizeIfPending(winPtr);
     }
 
     UpdateGeometryInfo((void *)winPtr);

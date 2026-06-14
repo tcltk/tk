@@ -39,14 +39,6 @@ extern int  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
 extern void RemoveIbusContext(Tk_Window tkwin);
 extern TkXKBState xkbState;
 
-/*
- * Forward declarations for menu click handling (implemented in
- * tkWaylandMenu.c).
- */
-extern int  TkWaylandMenubarHandleButtonPress(TkWindow *winPtr, int x, int y);
-extern int  TkWaylandMenuConsumeDismissClick(void);
-
-
 
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
@@ -1170,30 +1162,6 @@ TkGlfwMouseButtonCallback(
 
     /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
-
-    /*
-     * If the most recent press just dismissed an active menu stack via an
-     * outside click (set by TkWaylandMenuHandlePointerButton, the raw
-     * wl_pointer listener in tkGlfwInit.c), swallow this press entirely so
-     * it doesn't also activate whatever widget is underneath the
-     * now-dismissed popup.
-     */
-    if (action == GLFW_PRESS && TkWaylandMenuConsumeDismissClick()) {
-        return;
-    }
-
-    /*
-     * The menubar (if any) is drawn as a subsurface overlay, not a
-     * normally positioned/mapped Tk child window, so Tk_CoordsToWindow
-     * never resolves clicks on it.  Give the menubar first chance at
-     * left-button presses; if (x, y) is within its rectangle it handles
-     * posting/dismissing the corresponding top-level cascade itself and we
-     * stop here.
-     */
-    if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT &&
-            TkWaylandMenubarHandleButtonPress(winPtr, (int)xpos, (int)ypos)) {
-        return;
-    }
 
     /* Find the widget where the event occurred. */
     Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
