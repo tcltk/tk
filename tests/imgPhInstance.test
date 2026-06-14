@@ -3,14 +3,21 @@
 # with an alpha channel reach the screen through one of three paths:
 # a platform TkpPutRGBAImage implementation (where TK_CAN_RENDER_RGBA is
 # defined), the BlendComplexAlpha software fallback, or the validRegion
-# clip for binary alpha.  All paths implement the same Porter-Duff
-# source-over compositing, so these tests assert the same expected pixel
-# values on every platform; they regression-test the platform compositing
+# clip for binary alpha.  All paths implement Porter-Duff source-over
+# compositing; the tests regression-test the platform compositing
 # implementations against each other by construction.
 #
 # The tests read rendered pixels back with tktest's "testpixel" command
 # and therefore need a mapped, unobscured window and a TrueColor display
 # of depth >= 24 (constraint pixelProbe).
+#
+# Fully opaque and fully transparent results are identical on every
+# platform.  Partially-blended results are not: testpixel returns the
+# genuine on-screen color (converted to sRGB on Aqua), but macOS composites
+# the alpha blend in the display's color profile, so a 50%-alpha pixel
+# differs from the sRGB-space blend the other platforms produce (by up to
+# ~11/255 here).  The blend-checking tests are therefore constrained
+# notAqua; the opaque and binary-alpha tests run everywhere.
 
 #
 # TESTFILE INITIALIZATION
@@ -143,7 +150,7 @@ test imgPhInstance-1.2 "fully transparent photo leaves the destination untouched
 } -result 1
 
 test imgPhInstance-1.3 "50% alpha composites source-over" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.half
     update
     pixelNear .c 15 15 [blendOver #ff8000 $bg 128]
@@ -167,7 +174,7 @@ test imgPhInstance-2.1 "binary alpha: opaque cells copy, clear cells show throug
 # 3.* -- scratch-buffer reuse across differently sized draws
 
 test imgPhInstance-3.1 "small blend after a larger one is not skewed" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.wide
     .c create image 130 10 -anchor nw -image photo.tone
     update
@@ -184,7 +191,7 @@ test imgPhInstance-3.1 "small blend after a larger one is not skewed" \
 # 4.* -- image larger than any cached per-draw scratch buffer
 
 test imgPhInstance-4.1 "large image composites correctly in all quadrants" \
-	-constraints pixelProbe -body {
+	-constraints {pixelProbe notAqua} -body {
     .c create image 10 10 -anchor nw -image photo.big
     update
     list [pixelNear .c 85 85 [blendOver #ff8000 $bg 128]] \
@@ -201,7 +208,7 @@ test imgPhInstance-4.1 "large image composites correctly in all quadrants" \
 # 5.* -- drawing from interior offsets (nonzero src_x/src_y sub-rects)
 
 test imgPhInstance-5.1 "scrolled canvas draws the photo from interior offsets" \
-	-constraints pixelProbe -setup {
+	-constraints {pixelProbe notAqua} -setup {
     pack forget .c
     canvas .c2 -width 120 -height 100 -background $bg \
 	    -highlightthickness 0 -borderwidth 0 -scrollregion {0 0 300 300}

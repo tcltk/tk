@@ -2142,10 +2142,11 @@ TestPhotoStringMatchCmd(
     }
 }
 
+#ifndef MAC_OSX_TK
 /*
  *----------------------------------------------------------------------
  *
- * PixelChannel --
+ * PixelChannel --  (not on macOS, where testpixel reads via TkpReadPixelSRGB)
  *
  *	Extract one color channel from a pixel value using the visual's
  *	channel mask, scaled to 8 bits.
@@ -2184,6 +2185,7 @@ PixelChannel(
     }
     return (int) ((value * 255) / ((1u << bits) - 1));
 }
+#endif /* !MAC_OSX_TK */
 
 /*
  *----------------------------------------------------------------------
@@ -2214,10 +2216,7 @@ TestpixelObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin;
-    Visual *visual;
-    XImage *image;
-    unsigned long pixel;
-    int x, y;
+    int x, y, r, g, b;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 1, objv, "window x y");
@@ -2243,26 +2242,48 @@ TestpixelObjCmd(
 		x, y, Tk_PathName(tkwin)));
 	return TCL_ERROR;
     }
-    visual = Tk_Visual(tkwin);
-    if (visual->red_mask == 0) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"testpixel requires a TrueColor visual", -1));
-	return TCL_ERROR;
-    }
-    image = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), x, y, 1, 1,
-	    AllPlanes, ZPixmap);
-    if (image == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"could not read pixel from window", -1));
-	return TCL_ERROR;
-    }
-    pixel = XGetPixel(image, 0, 0);
-    XDestroyImage(image);
+#ifdef MAC_OSX_TK
+    /*
+     * macOS composites windows through the display's color profile, so a raw
+     * read-back differs from the sRGB values that were drawn.  Read and
+     * convert to sRGB so results match X11 and Windows.
+     */
+    {
+	unsigned char cr, cg, cb;
 
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x",
-	    PixelChannel(pixel, visual->red_mask),
-	    PixelChannel(pixel, visual->green_mask),
-	    PixelChannel(pixel, visual->blue_mask)));
+	if (TkpReadPixelSRGB(tkwin, x, y, &cr, &cg, &cb) != TCL_OK) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	r = cr; g = cg; b = cb;
+    }
+#else
+    {
+	Visual *visual = Tk_Visual(tkwin);
+	XImage *image;
+	unsigned long pixel;
+
+	if (visual->red_mask == 0) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "testpixel requires a TrueColor visual", -1));
+	    return TCL_ERROR;
+	}
+	image = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), x, y, 1, 1,
+		AllPlanes, ZPixmap);
+	if (image == NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "could not read pixel from window", -1));
+	    return TCL_ERROR;
+	}
+	pixel = XGetPixel(image, 0, 0);
+	r = PixelChannel(pixel, visual->red_mask);
+	g = PixelChannel(pixel, visual->green_mask);
+	b = PixelChannel(pixel, visual->blue_mask);
+	XDestroyImage(image);
+    }
+#endif
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x", r, g, b));
     return TCL_OK;
 }
 
