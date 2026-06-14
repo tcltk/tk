@@ -263,7 +263,7 @@ TkpNewMenu(TkMenu *menuPtr)
  */
 
 void
-TkpDestroyMenu(TCL_UNUSED(TkMenu *))
+TkpDestroyMenu(TCL_UNUSED(TkMenu *))  /* menuPtr */
 {
     /* Nothing to do on Wayland. */
 }
@@ -285,7 +285,7 @@ TkpDestroyMenu(TCL_UNUSED(TkMenu *))
  */
 
 void
-TkpDestroyMenuEntry(TCL_UNUSED(TkMenuEntry *))
+TkpDestroyMenuEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
 {
     /* Nothing to do on Wayland. */
 }
@@ -337,7 +337,7 @@ TkpConfigureMenuEntry(TkMenuEntry *mePtr)
  */
 
 int
-TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *))
+TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
 {
     return TCL_OK;
 }
@@ -442,8 +442,8 @@ static void
 GetMenuIndicatorGeometry(
 			 TkMenu *menuPtr,
 			 TkMenuEntry *mePtr,
-			 TCL_UNUSED(Tk_Font),
-			 TCL_UNUSED(const Tk_FontMetrics *),
+			 TCL_UNUSED(Tk_Font),  /* tkfont */
+			 TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 			 int *widthPtr,
 			 int *heightPtr)
 {
@@ -506,7 +506,7 @@ GetMenuAccelGeometry(
 		     TkMenu *menuPtr,
 		     TkMenuEntry *mePtr,
 		     Tk_Font tkfont,
-		     TCL_UNUSED(const Tk_FontMetrics *),
+		     TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		     int *widthPtr,
 		     int *heightPtr)
 {
@@ -543,10 +543,10 @@ GetMenuAccelGeometry(
 
 static void
 GetMenuSeparatorGeometry(
-			 TCL_UNUSED(TkMenu *),
-			 TCL_UNUSED(TkMenuEntry *),
+			 TCL_UNUSED(TkMenu *), /* menuPtr */
+			 TCL_UNUSED(TkMenuEntry *), /* mePtr */
 			 Tk_Font tkfont,
-			 TCL_UNUSED(const Tk_FontMetrics *),
+			 TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 			 int *widthPtr,
 			 int *heightPtr)
 {
@@ -576,9 +576,9 @@ GetMenuSeparatorGeometry(
 static void
 GetTearoffEntryGeometry(
 			TkMenu *menuPtr,
-			TCL_UNUSED(TkMenuEntry *),
+			TCL_UNUSED(TkMenuEntry *), /* mePtr */
 			Tk_Font tkfont,
-			TCL_UNUSED(const Tk_FontMetrics *),
+			TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 			int *widthPtr,
 			int *heightPtr)
 {
@@ -614,7 +614,7 @@ static void
 GetMenuLabelGeometry(
 		     TkMenuEntry *mePtr,
 		     Tk_Font tkfont,
-		     TCL_UNUSED(const Tk_FontMetrics *),
+		     TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		     int *widthPtr,
 		     int *heightPtr)
 {
@@ -859,14 +859,14 @@ DrawMenuEntryIndicator(
 		       TkMenu *menuPtr,
 		       TkMenuEntry *mePtr,
 		       NVGcontext *vg,
-		       TCL_UNUSED(Tk_3DBorder),
+		       TCL_UNUSED(Tk_3DBorder),  /* border */
 		       XColor *indicatorColor,
 		       XColor *disableColor,
-		       TCL_UNUSED(Tk_Font),
-		       TCL_UNUSED(const Tk_FontMetrics *),
+		       TCL_UNUSED(Tk_Font), /* tkfont */
+		       TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		       int x,
 		       int y,
-		       TCL_UNUSED(int),
+		       TCL_UNUSED(int), /* width */
 		       int height,
 		       NVGcolor textColor)
 {
@@ -955,10 +955,10 @@ DrawMenuEntryIndicator(
 static void
 DrawMenuSeparator(
 		  TkMenu *menuPtr,
-		  TCL_UNUSED(TkMenuEntry *),
+		  TCL_UNUSED(TkMenuEntry *), /* mePtr */
 		  NVGcontext *vg,
-		  TCL_UNUSED(Tk_Font),
-		  TCL_UNUSED(const Tk_FontMetrics *),
+		  TCL_UNUSED(Tk_Font), /* tkfont */
+		  TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		  int x,
 		  int y,
 		  int width,
@@ -1188,7 +1188,7 @@ DrawMenuUnderline(
 		  const Tk_FontMetrics *fmPtr,
 		  int x,
 		  int y,
-		  TCL_UNUSED(int),
+		  TCL_UNUSED(int), /* width */
 		  int height,
 		  NVGcolor textColor)
 {
@@ -1255,10 +1255,10 @@ DrawMenuUnderline(
 static void
 DrawTearoffEntry(
 		 TkMenu *menuPtr,
-		 TCL_UNUSED(TkMenuEntry *),
+		 TCL_UNUSED(TkMenuEntry *), /* mePtr */
 		 NVGcontext *vg,
 		 TCL_UNUSED(Tk_Font ),
-		 TCL_UNUSED(const Tk_FontMetrics *),
+		 TCL_UNUSED(const Tk_FontMetrics *), /* fmPtr */
 		 int x,
 		 int y,
 		 int width,
@@ -2172,8 +2172,8 @@ SetHelpMenu(
 
 void 
 TkpInitializeMenuBindings( 
-			  TCL_UNUSED(Tcl_Interp *),
-			  TCL_UNUSED(Tk_BindingTable))
+			  TCL_UNUSED(Tcl_Interp *), /* interp */
+			  TCL_UNUSED(Tk_BindingTable)) /* bindingTable */
 { 
     /* Nothing to do on Wayland. */ 
 }
@@ -2196,8 +2196,8 @@ TkpInitializeMenuBindings(
 
 void 
 TkpMenuNotifyToplevelCreate( 
-			    TCL_UNUSED(Tcl_Interp *),
-			    TCL_UNUSED(const char *))
+			    TCL_UNUSED(Tcl_Interp *), /* interp */
+			    TCL_UNUSED(const char *)) /* name */
 { 
     /* Nothing to do on Wayland. */ 
 }
@@ -2269,7 +2269,7 @@ TkpMenuThreadInit(void)
 
 int
 TkpPostTearoffMenu(
-		   TCL_UNUSED(Tcl_Interp *),
+		   TCL_UNUSED(Tcl_Interp *), /* interp */
 		   TkMenu *menuPtr,
 		   int x,
 		   int y,
@@ -2631,7 +2631,7 @@ MenuMouseLeave(
 
 void
 TkWaylandSetupMenuCallbacks(
-			    TCL_UNUSED(Tk_Window))
+			    TCL_UNUSED(Tk_Window)) /* tkwin */
 {
     /* No-op */
 }
