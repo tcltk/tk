@@ -172,6 +172,7 @@ typedef struct TkWmInfo {
                                       * strip, if any. */
     int          overrideRedirect;  /* Mirrors wm overrideredirect /
                                       * TkpMakeMenuWindow. */
+    TkMenu *menubarMenuPtr;
 
     /* Size hints. */
     int          sizeHintsFlags;

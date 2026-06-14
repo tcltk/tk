@@ -125,6 +125,18 @@ static void MenuDrawIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
 static void MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
 static void MenuStackPop(int toDepth);
 
+/* Menubar subsurface management. */
+static void TkWaylandMenubarCreateOrResize(TkWindow *winPtr);
+static void MenuBarDeferredSetup(void *clientData);
+static void MenubarResizeIdleProc(void *clientData);
+
+/*
+ * TkWaylandFindMenubarPopup is implemented in tkWaylandWm.c; it walks the
+ * list of toplevels looking for the one whose menubar window matches
+ * menubarWin, and returns that toplevel's menubar popup (or NULL).
+ */
+MODULE_SCOPE TkWaylandPopup *TkWaylandFindMenubarPopup(Tk_Window menubarWin);
+
 /* Helper function to convert Tk colors to NVGcolor. */
 static NVGcolor TkColorToNVGColor(XColor *color) {
     if (!color) return nvgRGBA(0, 0, 0, 255);
@@ -383,43 +395,249 @@ TkpSetWindowMenuBar(
     }
 
     if (!menuPtr) {
-        wmPtr->menubar    = NULL;
-        wmPtr->menuHeight = 0;
+        wmPtr->menubar       = NULL;
+        wmPtr->menubarMenuPtr = NULL;
+        wmPtr->menuHeight    = 0;
         return;
     }
 
-    wmPtr->menubar = (Tk_Window)menuPtr->tkwin;
+    wmPtr->menubar        = (Tk_Window)menuPtr->tkwin;
+    wmPtr->menubarMenuPtr = menuPtr;
 
     TkRecomputeMenu(menuPtr);
-    int mbH = menuPtr->totalHeight;
-    if (mbH < 20) mbH = 24;
-    int mbW = Tk_Width(tkwin);
-    if (mbW <= 0) mbW = Tk_ReqWidth(tkwin);
-    if (mbW <= 0) mbW = 200;
+    wmPtr->menuHeight = menuPtr->totalHeight;
+    if (wmPtr->menuHeight < 20) wmPtr->menuHeight = 24;
 
-    wmPtr->menuHeight = mbH;
-
-    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+    if (wmPtr->flags & WM_NEVER_MAPPED) {
         /*
-         * The menubar is a permanent part of the toplevel, not a
-         * transient compositor-managed surface, so use a wl_subsurface
-         * (no xdg_surface/configure handshake required) anchored to the
-         * top-left corner of the toplevel at (0,0).
+         * The toplevel's GLFW window doesn't exist yet, so there is
+         * nothing to create a subsurface on.  Defer creation/drawing of
+         * the menubar until the toplevel has been mapped.
+         * MenuBarDeferredSetup reschedules itself on each idle pass for
+         * as long as WM_NEVER_MAPPED remains set.
          */
+        MENU_LOG("TkpSetWindowMenuBar: deferring menubar setup "
+            "(toplevel not yet mapped)");
+        Tcl_DoWhenIdle(MenuBarDeferredSetup, (void *)winPtr);
+        return;
+    }
+
+    TkWaylandMenubarCreateOrResize(winPtr);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarCreateOrResize --
+ *
+ *	(Re)create the menubar subsurface for winPtr's toplevel so that it
+ *	spans the toplevel's full current width, and redraw the menubar's
+ *	entries into it.  Called the first time the menubar can be realized
+ *	(once the toplevel is mapped and has a GLFWwindow) and again
+ *	whenever the toplevel is resized.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May destroy and recreate wmPtr->menubarPopup; updates
+ *	wmPtr->menuHeight and redraws the menubar.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+TkWaylandMenubarCreateOrResize(
+    TkWindow *winPtr)
+{
+    WmInfo     *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    TkMenu     *menuPtr;
+    GLFWwindow *glfwWindow;
+    int         width = 0, height = 0;
+    int         curW = 0, curH = 0;
+    int         mbW, mbH;
+
+    if (!wmPtr || !wmPtr->menubar || !wmPtr->menubarMenuPtr) {
+        return;
+    }
+    menuPtr = wmPtr->menubarMenuPtr;
+
+    glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    if (glfwWindow) {
+        glfwGetWindowSize(glfwWindow, &width, &height);
+    }
+    if (width <= 0) {
+        width = Tk_Width((Tk_Window)winPtr);
+    }
+    if (width <= 0) {
+        width = Tk_ReqWidth((Tk_Window)winPtr);
+    }
+    if (width <= 0) {
+        width = 200;
+    }
+
+    TkRecomputeMenu(menuPtr);
+    mbH = menuPtr->totalHeight;
+    if (mbH < 20) mbH = 24;
+    wmPtr->menuHeight = mbH;
+    mbW = width;
+
+    if (wmPtr->menubarPopup) {
+        TkWaylandPopupGetSize(wmPtr->menubarPopup, &curW, &curH);
+    }
+
+    if (!wmPtr->menubarPopup || curW != mbW || curH != mbH) {
+        if (wmPtr->menubarPopup) {
+            if (wmPtr->popup == wmPtr->menubarPopup) {
+                wmPtr->popup = NULL;
+            }
+            TkWaylandPopupDestroy(wmPtr->menubarPopup);
+            wmPtr->menubarPopup = NULL;
+        }
+
         wmPtr->menubarPopup = TkWaylandSubsurfaceCreate(
-            TkWaylandGetGLFWwindow(winPtr),
-            0, 0, mbW, mbH);
+            glfwWindow, 0, 0, mbW, mbH);
 
         if (!wmPtr->menubarPopup) {
             fprintf(stderr,
-                "TkpSetWindowMenuBar: failed to create menubar subsurface\n");
-        } else {
-            wmPtr->popup = wmPtr->menubarPopup;
-            MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
-            MENU_LOG("TkpSetWindowMenuBar: menubar subsurface %p (%dx%d)",
-                (void *)wmPtr->menubarPopup, mbW, mbH);
+                "TkWaylandMenubarCreateOrResize: failed to create "
+                "menubar subsurface\n");
+            return;
         }
+        wmPtr->popup = wmPtr->menubarPopup;
     }
+
+    MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+
+    MENU_LOG("TkWaylandMenubarCreateOrResize: menubar subsurface %p (%dx%d)",
+        (void *)wmPtr->menubarPopup, mbW, mbH);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuBarDeferredSetup --
+ *
+ *	Tcl_DoWhenIdle callback used by TkpSetWindowMenuBar when the
+ *	toplevel still has the WM_NEVER_MAPPED flag set at the time the
+ *	menubar is attached.  If the toplevel still hasn't been mapped by
+ *	the time this idle handler runs, it reschedules itself for the next
+ *	idle pass; once mapping has completed it creates and draws the
+ *	menubar subsurface.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May create wmPtr->menubarPopup and draw the menubar.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+MenuBarDeferredSetup(
+    void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+
+    if (!wmPtr || !wmPtr->menubarMenuPtr) {
+        /* Menubar was detached before this idle handler ran. */
+        return;
+    }
+
+    if (wmPtr->flags & WM_NEVER_MAPPED) {
+        MENU_LOG("MenuBarDeferredSetup: still not mapped, "
+            "rescheduling");
+        Tcl_DoWhenIdle(MenuBarDeferredSetup, clientData);
+        return;
+    }
+
+    TkWaylandMenubarCreateOrResize(winPtr);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenubarResizeIdleProc --
+ *
+ *	Tcl_DoWhenIdle callback that performs the actual menubar subsurface
+ *	recreate/redraw on behalf of TkWaylandMenubarResize.  See that
+ *	function for why this is deferred.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May destroy/recreate wmPtr->menubarPopup and redraw the menubar.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+MenubarResizeIdleProc(
+    void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
+
+    if (!wmPtr || !wmPtr->menubarMenuPtr) {
+        return;
+    }
+    if (wmPtr->flags & WM_NEVER_MAPPED) {
+        return;
+    }
+    TkWaylandMenubarCreateOrResize(winPtr);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarResize --
+ *
+ *	Called from tkWaylandWm.c (TopLevelEventProc) whenever a toplevel's
+ *	ConfigureNotify indicates its size has changed.  No-op if the
+ *	toplevel has no menubar or is not yet mapped.
+ *
+ *	The actual resize/redraw is deferred to the next idle via
+ *	MenubarResizeIdleProc rather than performed here.
+ *	TopLevelEventProc/TkWaylandMenubarResize run synchronously inside
+ *	TkGlfwFramebufferSizeCallback, while the GL/EGL context is still
+ *	mid-resize for the main window's own framebuffer.  Destroying and
+ *	recreating the menubar's EGL surface and immediately issuing
+ *	NanoVG draw calls into it from that context corrupts NanoVG/GL
+ *	state for the outer frame (observed as eglSwapBuffers EGL_BAD_MATCH
+ *	failures followed by a SIGSEGV inside the GL driver during
+ *	nvgEndFrame).  Running it on the next idle, after Tk's normal event
+ *	processing has settled the GL context, avoids that.  Any
+ *	already-pending idle call is cancelled first so a continuous
+ *	drag-resize coalesces into a single recreate per idle pass rather
+ *	than piling one up per pixel of movement.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Schedules (and de-duplicates) an idle call.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenubarResize(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    if (!wmPtr || !wmPtr->menubarMenuPtr) {
+        return;
+    }
+    if (wmPtr->flags & WM_NEVER_MAPPED) {
+        return;
+    }
+
+    Tcl_CancelIdleCall(MenubarResizeIdleProc, (void *)winPtr);
+    Tcl_DoWhenIdle(MenubarResizeIdleProc, (void *)winPtr);
 }
 
 /*
@@ -1489,7 +1707,7 @@ TkWaylandPostMenuAtAnchor(
     int popupW, int popupH,
     int isRoot)
 {
-    /* Safety checks */
+    /* Safety checks. */
     if (!interp || !menuPtr || !menuPtr->tkwin) {
         if (interp) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -1514,7 +1732,7 @@ TkWaylandPostMenuAtAnchor(
         return TCL_ERROR;
     }
 
-    /* For popup menus, we use subsurface positioning */
+    /* For popup menus, we use subsurface positioning. */
     TkWaylandPopup *popup = TkWaylandSubsurfaceCreate(
         mainGlfwWindow, anchorX, anchorY + anchorH, popupW, popupH);
 
@@ -1801,9 +2019,17 @@ TkpDrawMenuEntry(
                                               mePtr->menuPtr->activeBorderPtr);
     }
     
-    /* Get NanoVG context from the menu's popup */
+    /* Get NanoVG context from the menu's popup.  Menubars are drawn into
+     * a subsurface owned by the toplevel they're attached to (recorded as
+     * that toplevel's wmPtr->menubarPopup), not into a popup belonging to
+     * the menubar's own window, so look that up separately. */
     TkWindow *winPtr = (TkWindow *)mePtr->menuPtr->tkwin;
-    if (winPtr && winPtr->wmInfoPtr && ((WmInfo *)winPtr->wmInfoPtr)->popup) {
+    if (mePtr->menuPtr->menuType == MENUBAR) {
+        TkWaylandPopup *mbPopup = TkWaylandFindMenubarPopup(mePtr->menuPtr->tkwin);
+        if (mbPopup) {
+            vg = TkWaylandPopupGetNVGContext(mbPopup);
+        }
+    } else if (winPtr && winPtr->wmInfoPtr && ((WmInfo *)winPtr->wmInfoPtr)->popup) {
         vg = TkWaylandPopupGetNVGContext(((WmInfo *)winPtr->wmInfoPtr)->popup);
     }
     

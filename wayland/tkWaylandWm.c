@@ -93,6 +93,14 @@
 /* Global toplevel list. */
 static WmInfo *firstWmPtr = NULL;
 
+/*
+ * TkWaylandMenubarResize is implemented in tkWaylandMenu.c.  It resizes
+ * (and redraws) a toplevel's menubar subsurface, if any, to match the
+ * toplevel's current width.  Called from TopLevelEventProc below whenever
+ * a toplevel's ConfigureNotify reports a size change.
+ */
+MODULE_SCOPE void TkWaylandMenubarResize(TkWindow *winPtr);
+
 /* Wm attribute names. */
 const char *const WmAttributeNames[] = {
     "-alpha", "-fullscreen", "-topmost", "-type",
@@ -963,6 +971,7 @@ Tk_GetRootCoords(
 		 int      *yPtr)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
+    TkWindow *origPtr = winPtr;
     int       x = 0, y = 0;
 
     while (1) {
@@ -983,6 +992,21 @@ Tk_GetRootCoords(
                 winPtr = (TkWindow *)container;
                 continue;
             }
+
+            /*
+             * Ordinary (non-menubar) descendants of a toplevel that has
+             * a menubar are drawn below the menubar strip, so their root
+             * coordinates need to be shifted down by the menubar's
+             * height.  The toplevel itself -- i.e. when tkwin was the
+             * toplevel to begin with -- and the menubar window (handled
+             * above) are not shifted.
+             */
+            if ((winPtr != origPtr) && (winPtr->wmInfoPtr != NULL)) {
+                WmInfo *tlWmPtr = (WmInfo *)winPtr->wmInfoPtr;
+                if (tlWmPtr->menubar != NULL) {
+                    y += tlWmPtr->menuHeight;
+                }
+            }
             break;
         }
 
@@ -992,6 +1016,41 @@ Tk_GetRootCoords(
 
     *xPtr = x;
     *yPtr = y;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandFindMenubarPopup --
+ *
+ *	Look up the menubar subsurface for a toplevel by its menubar
+ *	window.  Used by tkWaylandMenu.c (TkpDrawMenuEntry) to find the
+ *	NanoVG context to draw a MENUBAR-type menu's entries into, since
+ *	that context lives on the owning toplevel's WmInfo rather than on
+ *	the menubar window's own WmInfo.
+ *
+ * Results:
+ *	The owning toplevel's menubar popup, or NULL if menubarWin is not
+ *	currently registered as any toplevel's menubar.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE TkWaylandPopup *
+TkWaylandFindMenubarPopup(
+    Tk_Window menubarWin)
+{
+    WmInfo *wmPtr;
+
+    for (wmPtr = firstWmPtr; wmPtr != NULL; wmPtr = wmPtr->nextPtr) {
+        if (wmPtr->menubar == menubarWin) {
+            return wmPtr->menubarPopup;
+        }
+    }
+    return NULL;
 }
 
 /*
@@ -3595,6 +3654,15 @@ TopLevelEventProc(
             wmPtr->y = winPtr->changes.y;
             wmPtr->width = winPtr->changes.width;
             wmPtr->height = winPtr->changes.height;
+
+            /*
+             * If this toplevel has a menubar, keep its subsurface in
+             * sync with the toplevel's (possibly new) width so that it
+             * continues to span the full width of the window.
+             */
+            if (wmPtr->menubar != NULL) {
+                TkWaylandMenubarResize(winPtr);
+            }
         }
         break;
     case MapNotify:
