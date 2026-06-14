@@ -126,7 +126,17 @@ static void MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
 static void MenuStackPop(int toDepth);
 static void RealizeMenubarPopup(TkWindow *winPtr, WmInfo *wmPtr, TkMenu *menuPtr);
 MODULE_SCOPE void TkWaylandMenuBarRealizeIfPending(TkWindow *winPtr);
+MODULE_SCOPE void TkWaylandMenuBarRealizeIfPendingDeferred(TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandMenubarEntriesChanged(TkMenu *menuPtr);
+MODULE_SCOPE int TkWaylandMenubarHandleButtonPress(TkWindow *winPtr, int x, int y);
+
+/*
+ * Set by MenuDrawIntoPopup for the duration of its drawing loop, so that
+ * TkpDrawMenuEntry can find the NanoVG context to draw into.  menuPtr->tkwin
+ * is never a toplevel (not even for a menubar's own menu window), so it has
+ * no wmInfoPtr/popup of its own to look up.
+ */
+static TkWaylandPopup *currentMenuDrawPopup = NULL;
 
 /*
  * Implemented in tkWaylandPopup.c.  Declared here defensively in case it
@@ -481,7 +491,14 @@ RealizeMenubarPopup(
     TkRecomputeMenu(menuPtr);
     mbH = menuPtr->totalHeight;
     if (mbH < 20) mbH = 24;
-    mbW = Tk_Width((Tk_Window)winPtr);
+    /*
+     * On X11 the menubar spans the toplevel's full width.  Prefer
+     * wmPtr->configWidth (the width most recently applied to the
+     * GLFWwindow), since Tk_Width(winPtr) can still reflect a stale
+     * pre-packing size at the point TkpSetWindowMenuBar runs.
+     */
+    mbW = wmPtr->configWidth;
+    if (mbW <= 0) mbW = Tk_Width((Tk_Window)winPtr);
     if (mbW <= 0) mbW = Tk_ReqWidth((Tk_Window)winPtr);
     if (mbW <= 0) mbW = 200;
 
@@ -541,6 +558,47 @@ TkWaylandMenuBarRealizeIfPending(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkWaylandMenuBarRealizeIdleProc --
+ *
+ *	Tcl_DoWhenIdle wrapper for TkWaylandMenuBarRealizeIfPending.
+ *
+ *	RealizeMenubarPopup ultimately calls TkWaylandSubsurfaceCreate,
+ *	which (on first use) calls TkWaylandPopupInit, which performs
+ *	wl_display_roundtrip on the *same* Wayland display connection that
+ *	GLFW uses.  TkWmMapWindow -- and hence
+ *	TkWaylandMenuBarRealizeIfPending if called directly from it -- can
+ *	run while we are already inside GLFW's Wayland event dispatch (e.g.
+ *	while processing the toplevel's initial configure/map sequence
+ *	during "wish script.tcl" startup, before the event loop has cycled
+ *	even once).  A nested wl_display_roundtrip in that situation hangs.
+ *	Deferring to an idle callback ensures it runs from the top-level
+ *	event loop instead.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+TkWaylandMenuBarRealizeIdleProc(
+    void *clientData)
+{
+    TkWindow *winPtr = (TkWindow *)clientData;
+
+    TkWaylandMenuBarRealizeIfPending(winPtr);
+    Tcl_Release(winPtr);
+}
+
+MODULE_SCOPE void
+TkWaylandMenuBarRealizeIfPendingDeferred(
+    TkWindow *winPtr)
+{
+    if (!winPtr) return;
+    Tcl_Preserve(winPtr);
+    Tcl_DoWhenIdle(TkWaylandMenuBarRealizeIdleProc, (void *)winPtr);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkWaylandMenubarEntriesChanged --
  *
  *	Called whenever a menubar's entries are created or (re)configured.
@@ -592,7 +650,8 @@ TkWaylandMenubarEntriesChanged(
     TkRecomputeMenu(menuPtr);
     mbH = menuPtr->totalHeight;
     if (mbH < 20) mbH = 24;
-    mbW = Tk_Width((Tk_Window)winPtr);
+    mbW = wmPtr->configWidth;
+    if (mbW <= 0) mbW = Tk_Width((Tk_Window)winPtr);
     TkWaylandPopupGetSize(wmPtr->menubarPopup, &curW, &curH);
     if (mbW <= 0) mbW = curW;
 
@@ -605,10 +664,11 @@ TkWaylandMenubarEntriesChanged(
     MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
 }
 
-
 /*
- * TkpSetWindowMenuBar -
- * 
+ *---------------------------------------------------------------------------
+ *
+ * TkpSetWindowMenuBar --
+ *
  *	Attach or detach a menubar for a toplevel.  On Wayland there is no
  *	native menubar protocol, so the menubar is rendered into a thin
  *	horizontal xdg_popup strip anchored to the top edge of the
@@ -2060,12 +2120,23 @@ TkpDrawMenuEntry(
                                               mePtr->menuPtr->activeBorderPtr);
     }
     
-    /* Get NanoVG context from the menu's popup */
-    TkWindow *winPtr = (TkWindow *)mePtr->menuPtr->tkwin;
-    if (winPtr && winPtr->wmInfoPtr && ((WmInfo *)winPtr->wmInfoPtr)->popup) {
-        vg = TkWaylandPopupGetNVGContext(((WmInfo *)winPtr->wmInfoPtr)->popup);
+    /*
+     * Get NanoVG context for the popup currently being drawn into (set by
+     * MenuDrawIntoPopup).  Falling back to mePtr->menuPtr->tkwin's own
+     * wmInfoPtr/popup is wrong for both menubars and posted popups: a
+     * menu's own tkwin is never a toplevel and so never has a wmInfoPtr.
+     */
+    if (currentMenuDrawPopup) {
+        vg = TkWaylandPopupGetNVGContext(currentMenuDrawPopup);
     }
-    
+    if (!vg) {
+        /* Fallback for any other caller that may exist. */
+        TkWindow *winPtr = (TkWindow *)mePtr->menuPtr->tkwin;
+        if (winPtr && winPtr->wmInfoPtr && ((WmInfo *)winPtr->wmInfoPtr)->popup) {
+            vg = TkWaylandPopupGetNVGContext(((WmInfo *)winPtr->wmInfoPtr)->popup);
+        }
+    }
+
     if (!vg) return;
     
     /* Get the font for this entry - mirroring geometry code */
@@ -2197,6 +2268,14 @@ MenuDrawIntoPopup(
         return;
     }
 
+    /*
+     * TkpDrawMenuEntry (below) cannot find this NanoVG context on its own:
+     * menuPtr->tkwin is the menu's own window, which is never a toplevel
+     * and so never has a wmInfoPtr/popup of its own.  Record the popup
+     * we're drawing into so TkpDrawMenuEntry can retrieve the same vg.
+     */
+    currentMenuDrawPopup = popup;
+
     /* Get menu's default font - mirroring geometry code */
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     if (menuFont) {
@@ -2255,6 +2334,7 @@ MenuDrawIntoPopup(
             DRAW_MENU_ENTRY_ARROW);
     }
 
+    currentMenuDrawPopup = NULL;
     TkWaylandPopupEndDraw(popup);
     MENU_LOG("MenuDrawIntoPopup: completed");
 }
@@ -3070,6 +3150,116 @@ MODULE_SCOPE void
 TkWaylandMenuHandleEscape(void)
 {
     TkWaylandMenuDismissAll();
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenubarHandleButtonPress --
+ *
+ *	Called from TkGlfwMouseButtonCallback (tkWaylandNotify.c) for every
+ *	GLFW_PRESS of the left mouse button on a toplevel, before any normal
+ *	Tk ButtonPress event is generated.
+ *
+ *	The menubar is drawn as a wl_subsurface overlay anchored to the
+ *	toplevel's top-left corner -- it is not a normally positioned/mapped
+ *	Tk child window.  Tk_CoordsToWindow therefore never resolves clicks
+ *	on it to the menubar's own TkMenu window, so the generic
+ *	<ButtonPress-1> bindings on class Menu (library/menu.tcl) never fire
+ *	for it.  This function is that missing piece: if (x, y) (in
+ *	toplevel-surface-local logical pixels) falls within the menubar's
+ *	rectangle, it determines which top-level entry was clicked and, for
+ *	a cascade entry, posts (or, if already posted, dismisses) the
+ *	corresponding submenu directly below that entry -- mirroring what
+ *	MenuMouseClick's CASCADE_ENTRY case does for nested cascades.
+ *
+ * Results:
+ *	1 if (x, y) was inside the menubar (the click has been fully
+ *	handled and the caller should not also dispatch a normal
+ *	ButtonPress for it); 0 if (x, y) was outside the menubar, so the
+ *	caller should proceed normally.
+ *
+ * Side effects:
+ *	May post or dismiss a cascade menu and redraw the menubar.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenubarHandleButtonPress(
+    TkWindow *winPtr,
+    int x, int y)
+{
+    WmInfo *wmPtr;
+    TkMenu *menuPtr;
+    int i;
+
+    if (!winPtr) return 0;
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr || !wmPtr->menubar || !wmPtr->menubarPopup) return 0;
+    if (x < 0 || y < 0 || y >= wmPtr->menuHeight) return 0;
+
+    menuPtr = MenubarRegistryLookup(wmPtr->menubar);
+    if (!menuPtr) return 1;
+
+    TkRecomputeMenu(menuPtr);
+
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        TkMenuReferences *menuRefPtr;
+
+        if (!mePtr) continue;
+        if (x < mePtr->x || x >= mePtr->x + mePtr->width) continue;
+
+        if (mePtr->state == ENTRY_DISABLED ||
+                mePtr->type != CASCADE_ENTRY || mePtr->namePtr == NULL) {
+            return 1;
+        }
+
+        menuRefPtr = TkFindMenuReferencesObj(menuPtr->interp, mePtr->namePtr);
+        if (!menuRefPtr || !menuRefPtr->menuPtr) {
+            return 1;
+        }
+
+        /* Clicking the entry whose submenu is already posted closes it. */
+        if (menuPtr->postedCascade == mePtr && menuStackDepth > 0 &&
+                menuStack[0].menuPtr == menuRefPtr->menuPtr) {
+            TkWaylandMenuDismissAll();
+            TkActivateMenuEntry(menuPtr, -1);
+            menuPtr->postedCascade = NULL;
+            MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+            return 1;
+        }
+
+        TkActivateMenuEntry(menuPtr, -1);
+        TkRecomputeMenu(menuPtr);
+        TkPostCommand(menuPtr);
+        if (!menuPtr->tkwin) return 1;
+
+        TkActivateMenuEntry(menuPtr, i);
+        menuPtr->postedCascade = mePtr;
+        TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
+
+        TkMenu *cascadePtr = menuRefPtr->menuPtr;
+        TkRecomputeMenu(cascadePtr);
+
+        TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+            mePtr->x, 0, mePtr->width, wmPtr->menuHeight,
+            cascadePtr->totalWidth, cascadePtr->totalHeight, 1);
+
+        MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+        return 1;
+    }
+
+    /* Click inside the menubar but not on any entry: dismiss any posted
+     * top-level cascade, mirroring clicking elsewhere on a menu bar. */
+    if (menuStackDepth > 0 && menuPtr->postedCascade) {
+        TkWaylandMenuDismissAll();
+        TkActivateMenuEntry(menuPtr, -1);
+        menuPtr->postedCascade = NULL;
+        MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+    }
+    return 1;
 }
 
 
