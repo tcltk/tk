@@ -339,7 +339,7 @@ RedoLinkSegmentGetRange(
  *--------------------------------------------------------------
  */
 
-static int
+static bool
 MatchTagsOption(
     const char *opt)
 {
@@ -353,7 +353,7 @@ MatchTagsOption(
 	}
     }
 
-    return 1;
+    return true;
 }
 
 int

@@ -1317,7 +1317,7 @@ ChangeGravity(
     TkTextUndoInfo *undoInfo)		/* Undo information, can be NULL */
 {
     const Tk_SegType *oldTypePtr;
-    int isNormalMark;
+    bool isNormalMark;
 
     assert(markPtr);
     assert(markPtr->typePtr->group == SEG_GROUP_MARK);
@@ -1445,7 +1445,7 @@ UnsetMark(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 TriggerWatchCursor(
     TkText *textPtr,
     const TkTextIndex *oldCursorIndexPtr,
@@ -1459,7 +1459,7 @@ TriggerWatchCursor(
     unsigned tagArraySize;
     unsigned numTags, i;
     Tcl_DString buf;
-    int rc;
+    bool rc;
 
     assert(oldCursorIndexPtr);
     assert(!TkTextIndexIsEmpty(oldCursorIndexPtr));
@@ -1472,7 +1472,7 @@ TriggerWatchCursor(
     }
 
     if (TkTextIndexIsEqual(oldCursorIndexPtr, newCursorIndexPtr)) {
-	return 1;
+	return true;
     }
 
     Tcl_DStringInit(&buf);
@@ -1928,7 +1928,7 @@ TkTextUnsetMark(
 {
     TkTextUndoInfo undoInfo;
     TkTextUndoInfo *undoInfoPtr = NULL;
-    int isNormalMark = TkTextIsNormalMark(markPtr);
+    bool isNormalMark = TkTextIsNormalMark(markPtr);
 
     assert(TkTextIsNormalMark(markPtr));
 
@@ -1993,14 +1993,14 @@ TkTextSaveCursorIndex(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextTriggerWatchCursor(
     TkText *textPtr)
 {
     assert(textPtr->watchCmd);
 
     if (TkTextIndexIsEmpty(&textPtr->insertIndex)) {
-	return 1;
+	return true;
     }
 
     TkTextIndexRebuild(&textPtr->insertIndex);
@@ -2523,20 +2523,20 @@ MarkLayoutProc(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkTextDrawBlockCursor(
     TkText *textPtr)		/* The current text widget. */
 {
     if (textPtr->blockCursorType) {
 	if (textPtr->flags & GOT_FOCUS) {
 	    if ((textPtr->flags & INSERT_ON) || textPtr->selAttrs.border == textPtr->insertBorder) {
-		return 1;
+		return true;
 	    }
 	} else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID) {
-	    return 1;
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 /*
@@ -2555,7 +2555,7 @@ TkTextDrawBlockCursor(
  *--------------------------------------------------------------
  */
 
-int
+bool
 TkTextGetCursorBbox(
     TkText *textPtr,		/* The current text widget. */
     int *x, int *y,		/* X/Y coordinate. */
@@ -2602,7 +2602,7 @@ TkTextGetCursorBbox(
 	 */
 
 	if (!TkTextDLineInfo(textPtr, &index, false, &ix, y, &iw, h, &base)) {
-	    return 0; /* cursor is not visible at all */
+	    return false; /* cursor is not visible at all */
 	}
 
 	if (charWidth == -1) {
@@ -2630,7 +2630,7 @@ TkTextGetCursorBbox(
     }
 
     *x -= cursorExtent;
-    return 1;
+    return true;
 }
 
 /*

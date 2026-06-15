@@ -193,9 +193,9 @@ const TkTextUndoAtom *TkTextUndoFirstRedoAtom(TkTextUndoStack stack);
 const TkTextUndoAtom *TkTextUndoNextRedoAtom(TkTextUndoStack stack);
 
 /* For convenience these functions are allowing NULL for the stack argument. */
-inline int TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
-inline int TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
-int TkTextUndoStackIsFull(const TkTextUndoStack stack);
+inline bool TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
+inline bool TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
+bool TkTextUndoStackIsFull(const TkTextUndoStack stack);
 
 /*
  * Push the items. Pushing a separator will group items into compound edit

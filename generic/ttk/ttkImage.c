@@ -11,9 +11,20 @@
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
+
+/*
+ * Batched tiling (see Ttk_Fill): available where a platform RGBA composite
+ * exists -- TK_CAN_RENDER_RGBA covers macOS and Windows, HAVE_XRENDER X11.
+ */
+
+#if defined(TK_CAN_RENDER_RGBA) || defined(HAVE_XRENDER)
+#define TTK_TILE_BATCH 1
+#define TILE_BATCH_MIN_TILES	16	/* Fewer tiles: the loop is fine. */
+#define TILE_BATCH_MIN_AREA	(64*64)	/* Match the X11 composite floor. */
+#endif
 
 /*------------------------------------------------------------------------
  * +++ ImageSpec management.
@@ -21,27 +32,14 @@
 
 struct TtkImageSpec {
     Tk_Image		baseImage;	/* Base image to use */
+    Tcl_Obj		*baseName;	/* Name of base image */
     Tcl_Size		mapCount;	/* #state-specific overrides */
     Ttk_StateSpec	*states;	/* array[mapCount] of states ... */
     Tk_Image		*images;	/* ... per-state images to use */
+    Tcl_Obj		**names;	/* array[mapCount] of image names */
     Tk_ImageChangedProc *imageChanged;
     void		*imageChangedClientData;
 };
-
-/* NullImageChanged --
- *	Do-nothing Tk_ImageChangedProc.
- */
-static void NullImageChanged(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
-{
-    /* No-op */
-}
 
 /* ImageSpecImageChanged --
  *     Image changes should trigger a repaint.
@@ -85,9 +83,11 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
 
     imageSpec = (Ttk_ImageSpec *)Tcl_Alloc(sizeof(*imageSpec));
     imageSpec->baseImage = 0;
+    imageSpec->baseName = 0;
     imageSpec->mapCount = 0;
     imageSpec->states = 0;
     imageSpec->images = 0;
+    imageSpec->names = 0;
     imageSpec->imageChanged = imageChangedProc;
     imageSpec->imageChangedClientData = imageChangedClientData;
 
@@ -108,6 +108,7 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     n = (objc - 1) / 2;
     imageSpec->states = (Ttk_StateSpec *)Tcl_Alloc(n * sizeof(Ttk_StateSpec));
     imageSpec->images = (Tk_Image *)Tcl_Alloc(n * sizeof(Tk_Image));
+    imageSpec->names = (Tcl_Obj **)Tcl_Alloc(n * sizeof(Tcl_Obj *));
 
     /* Get base image:
     */
@@ -116,6 +117,8 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     if (!imageSpec->baseImage) {
 	goto error;
     }
+    imageSpec->baseName = objv[0];
+    Tcl_IncrRefCount(imageSpec->baseName);
 
     /* Extract state and image specifications:
      */
@@ -130,10 +133,12 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
 	imageSpec->states[i] = state;
 
 	imageSpec->images[i] = Tk_GetImage(
-	    interp, tkwin, imageName, NullImageChanged, NULL);
+	    interp, tkwin, imageName, ImageSpecImageChanged, imageSpec);
 	if (imageSpec->images[i] == NULL) {
 	    goto error;
 	}
+	imageSpec->names[i] = objv[2*i + 2];
+	Tcl_IncrRefCount(imageSpec->names[i]);
 	imageSpec->mapCount = i+1;
     }
 
@@ -153,11 +158,16 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 
     for (i=0; i < imageSpec->mapCount; ++i) {
 	Tk_FreeImage(imageSpec->images[i]);
+	if (imageSpec->names && imageSpec->names[i]) {
+	    Tcl_DecrRefCount(imageSpec->names[i]);
+	}
     }
 
     if (imageSpec->baseImage) { Tk_FreeImage(imageSpec->baseImage); }
+    if (imageSpec->baseName) { Tcl_DecrRefCount(imageSpec->baseName); }
     if (imageSpec->states) { Tcl_Free(imageSpec->states); }
     if (imageSpec->images) { Tcl_Free(imageSpec->images); }
+    if (imageSpec->names) { Tcl_Free(imageSpec->names); }
 
     Tcl_Free(imageSpec);
 }
@@ -178,6 +188,24 @@ Tk_Image TtkSelectImage(
     }
     return imageSpec->baseImage;
 }
+
+#if !defined(TK_NO_DOUBLE_BUFFERING) || defined(TTK_TILE_BATCH)
+/* TtkSelectImageName --
+ *	Name of the image TtkSelectImage would pick, for photo lookup.
+ */
+static Tcl_Obj *TtkSelectImageName(
+    Ttk_ImageSpec *imageSpec,
+    Ttk_State state)
+{
+    int i;
+    for (i = 0; i < imageSpec->mapCount; ++i) {
+	if (Ttk_StateMatches(state, imageSpec->states+i)) {
+	    return imageSpec->names[i];
+	}
+    }
+    return imageSpec->baseName;
+}
+#endif /* !TK_NO_DOUBLE_BUFFERING || TTK_TILE_BATCH */
 
 /*------------------------------------------------------------------------
  * +++ Drawing utilities.
@@ -207,6 +235,170 @@ static Ttk_Box MPadding(Ttk_Box b, Ttk_Padding p)
 static Ttk_Box BPadding(Ttk_Box b, Ttk_Padding p)
     { return Ttk_MakeBox(b.x, b.y+b.height-p.bottom, b.width, p.bottom); }
 
+#ifdef TTK_TILE_BATCH
+/* AssembleFill --
+ *	Client-side analogue of Ttk_Fill: tile the photo's src sub-rectangle
+ *	over the dst sub-rectangle of an RGBA buffer that is bufW x bufH
+ *	pixels, dst relative to the buffer origin.  Degenerate or
+ *	out-of-bounds regions are skipped, like the drawing path skips them.
+ */
+static void AssembleFill(
+    Tk_PhotoImageBlock *blk,
+    unsigned char *buf, int bufW, int bufH,
+    Ttk_Box src, Ttk_Box dst)
+{
+    int x, y;
+
+    if (src.width <= 0 || src.height <= 0
+	    || dst.width <= 0 || dst.height <= 0
+	    || src.x < 0 || src.y < 0
+	    || src.x + src.width > blk->width
+	    || src.y + src.height > blk->height
+	    || dst.x < 0 || dst.y < 0
+	    || dst.x + dst.width > bufW
+	    || dst.y + dst.height > bufH) {
+	return;
+    }
+
+    /*
+     * Assemble the first band (src.height rows) by horizontal tiling, then
+     * replicate whole rows for the remaining bands.
+     */
+
+    for (y = 0; y < dst.height; y++) {
+	unsigned char *o = buf + ((size_t) (dst.y + y) * bufW + dst.x) * 4;
+
+	if (y < src.height) {
+	    unsigned char *s = blk->pixelPtr
+		    + (size_t) (src.y + y) * blk->pitch
+		    + (size_t) src.x * 4;
+
+	    for (x = 0; x < dst.width; x += src.width) {
+		int cw = MIN(src.width, dst.width - x);
+		memcpy(o + (size_t) x * 4, s, (size_t) cw * 4);
+	    }
+	} else {
+	    memcpy(o, buf + ((size_t) (dst.y + y % src.height) * bufW
+		    + dst.x) * 4, (size_t) dst.width * 4);
+	}
+    }
+}
+
+/* RegionTiles --
+ *	Number of tiles Ttk_Fill would draw for one region.
+ */
+static int RegionTiles(Ttk_Box src, Ttk_Box dst)
+{
+    if (src.width <= 0 || src.height <= 0
+	    || dst.width <= 0 || dst.height <= 0) {
+	return 0;
+    }
+    return ((dst.width + src.width - 1) / src.width)
+	    * ((dst.height + src.height - 1) / src.height);
+}
+
+/* TileBatchElement --
+ *	Draw a whole 9-slice element in one operation: assemble all nine
+ *	regions client-side into a single RGBA buffer and composite it with
+ *	one TkpPutRGBAImage call, instead of one Tk_RedrawImage per tile.
+ *	Returns 1 on success, 0 to fall back to the per-tile loop.
+ *
+ *	Note: composites the photo's raw pix32, like the partial-alpha
+ *	display path does; a non-default -gamma/-palette is not applied.
+ */
+static int TileBatchElement(
+    Tk_Window tkwin,
+    Drawable d,
+    Tk_PhotoHandle photo,
+    Ttk_Box src,
+    Ttk_Box dst,
+    Ttk_Padding p)
+{
+    Tk_PhotoImageBlock blk;
+    Display *display = Tk_Display(tkwin);
+    Ttk_Box lBuf, sStripe[3], dStripe[3], src9[9], dst9[9];
+    XImage *ximg;
+    unsigned char *buf;
+    GC gc;
+    XGCValues gcv;
+    int i, tiles, result;
+
+    if (dst.width <= 0 || dst.height <= 0
+	    || dst.width * dst.height < TILE_BATCH_MIN_AREA) {
+	return 0;
+    }
+
+    Tk_PhotoGetImage(photo, &blk);
+    if (blk.pixelSize != 4
+	    || blk.offset[0] != 0 || blk.offset[1] != 1
+	    || blk.offset[2] != 2 || blk.offset[3] != 3
+	    || src.x < 0 || src.y < 0
+	    || src.x + src.width > blk.width
+	    || src.y + src.height > blk.height) {
+	return 0;
+    }
+
+    /*
+     * The nine regions Ttk_Tile/Ttk_Stripe would draw, with the destination
+     * boxes relative to the buffer origin.
+     */
+
+    lBuf = Ttk_MakeBox(0, 0, dst.width, dst.height);
+    sStripe[0] = TPadding(src, p);	dStripe[0] = TPadding(lBuf, p);
+    sStripe[1] = MPadding(src, p);	dStripe[1] = MPadding(lBuf, p);
+    sStripe[2] = BPadding(src, p);	dStripe[2] = BPadding(lBuf, p);
+    for (i = 0; i < 3; i++) {
+	src9[3*i]   = LPadding(sStripe[i], p);
+	dst9[3*i]   = LPadding(dStripe[i], p);
+	src9[3*i+1] = CPadding(sStripe[i], p);
+	dst9[3*i+1] = CPadding(dStripe[i], p);
+	src9[3*i+2] = RPadding(sStripe[i], p);
+	dst9[3*i+2] = RPadding(dStripe[i], p);
+    }
+
+    tiles = 0;
+    for (i = 0; i < 9; i++) {
+	tiles += RegionTiles(src9[i], dst9[i]);
+    }
+    if (tiles < TILE_BATCH_MIN_TILES) {
+	return 0;
+    }
+
+    /*
+     * Zeroed (fully transparent) so any pixels no region covers composite
+     * as a no-op, matching the drawing path leaving them untouched.
+     */
+
+    buf = (unsigned char *)
+	    attemptckalloc((size_t) dst.width * dst.height * 4);
+    if (buf == NULL) {
+	return 0;
+    }
+    memset(buf, 0, (size_t) dst.width * dst.height * 4);
+
+    for (i = 0; i < 9; i++) {
+	AssembleFill(&blk, buf, dst.width, dst.height, src9[i], dst9[i]);
+    }
+
+    ximg = XCreateImage(display, NULL, 32, ZPixmap, 0, (char *) buf,
+	    (unsigned) dst.width, (unsigned) dst.height, 32, 4 * dst.width);
+    if (ximg == NULL) {
+	ckfree(buf);
+	return 0;
+    }
+
+    gcv.graphics_exposures = False;
+    gc = Tk_GetGC(tkwin, GCGraphicsExposures, &gcv);
+    result = TkpPutRGBAImage(display, d, gc, ximg, 0, 0, dst.x, dst.y,
+	    (unsigned) dst.width, (unsigned) dst.height);
+    Tk_FreeGC(display, gc);
+    ximg->data = NULL;
+    XDestroyImage(ximg);
+    ckfree(buf);
+    return result == Success;
+}
+#endif /* TTK_TILE_BATCH */
+
 /* Ttk_Fill --
  *	Fill the destination area of the drawable by replicating
  *	the source area of the image.
@@ -228,7 +420,7 @@ static void Ttk_Fill(
 
     for (x = dst.x; x < dr; x += src.width) {
 	int cw = MIN(src.width, dr - x);
-	for (y = dst.y; y <= db; y += src.height) {
+	for (y = dst.y; y < db; y += src.height) {
 	    int ch = MIN(src.height, db - y);
 	    Tk_RedrawImage(image, src.x, src.y, cw, ch, d, x, y);
 	}
@@ -251,9 +443,16 @@ static void Ttk_Stripe(
  *	Fill successive horizontal stripes of the destination drawable.
  */
 static void Ttk_Tile(
-    Tk_Window tkwin, Drawable d, Tk_Image image,
+    Tk_Window tkwin, Drawable d, Tk_Image image, Tk_PhotoHandle photo,
     Ttk_Box src, Ttk_Box dst, Ttk_Padding p)
 {
+#ifdef TTK_TILE_BATCH
+    if (photo != NULL && TileBatchElement(tkwin, d, photo, src, dst, p)) {
+	return;
+    }
+#else
+    (void) photo;
+#endif
     Ttk_Stripe(tkwin, d, image, TPadding(src,p), TPadding(dst,p), p);
     Ttk_Stripe(tkwin, d, image, MPadding(src,p), MPadding(dst,p), p);
     Ttk_Stripe(tkwin, d, image, BPadding(src,p), BPadding(dst,p), p);
@@ -261,6 +460,11 @@ static void Ttk_Tile(
 
 /*------------------------------------------------------------------------
  * +++ Image element definition.
+ *
+ * The image element is a pure renderer (ImageElementDraw tiles into the given
+ * drawable); the per-node cache owns the composited result.  This element only
+ * advertises that it is cacheable and reports opacity + epoch via
+ * ImageElementCacheInfo.
  */
 
 typedef struct {		/* ClientData for image elements */
@@ -270,12 +474,29 @@ typedef struct {		/* ClientData for image elements */
     Ttk_Sticky sticky;		/* -stickiness specification */
     Ttk_Padding border;		/* Fixed border region */
     Ttk_Padding padding;	/* Internal padding */
+    unsigned epoch;		/* Bumps when a source image's pixels change */
 
 #ifdef TILE_07_COMPAT
     Ttk_ResourceCache cache;	/* Resource cache for images */
     Ttk_StateMap imageMap;	/* State-based lookup table for images */
 #endif
 } ImageData;
+
+/* ImageElementImageChanged --
+ *	A source image's pixels changed; bump the content epoch.
+ */
+static void ImageElementImageChanged(
+    void *clientData,
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
+{
+    ImageData *imageData = (ImageData *)clientData;
+    imageData->epoch++;
+}
 
 static void FreeImageData(void *clientData)
 {
@@ -286,6 +507,74 @@ static void FreeImageData(void *clientData)
 #endif
     Tcl_Free(clientData);
 }
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+/* ImageIsOpaque --
+ *	Return 1 if the named photo is fully opaque (every pixel alpha 255).
+ *	Anything not a readable photo is treated as translucent.
+ */
+static int ImageIsOpaque(Tcl_Interp *interp, Tcl_Obj *imageName)
+{
+    Tk_PhotoHandle photo;
+    Tk_PhotoImageBlock block;
+    int x, y, alphaOff;
+
+    if (interp == NULL || imageName == NULL) {
+	return 0;
+    }
+    photo = Tk_FindPhoto(interp, Tcl_GetString(imageName));
+    if (photo == NULL || !Tk_PhotoGetImage(photo, &block)) {
+	return 0;
+    }
+    if (block.pixelSize < 4) {
+	return 1;		/* No alpha channel: opaque. */
+    }
+    alphaOff = block.offset[3];
+    for (y = 0; y < block.height; y++) {
+	unsigned char *pixPtr = block.pixelPtr + y * block.pitch + alphaOff;
+	for (x = 0; x < block.width; x++) {
+	    if (*pixPtr != 255) {
+		return 0;
+	    }
+	    pixPtr += block.pixelSize;
+	}
+    }
+    return 1;
+}
+
+/* ImageElementCacheInfo --
+ *	Report the element's content epoch and whether it opaquely covers the
+ *	parcel -- the selected image is opaque AND -sticky fills the box.  A
+ *	non-filling -sticky leaves margins, so it counts as translucent.
+ */
+static void ImageElementCacheInfo(
+    void *clientData,
+    TCL_UNUSED(void *), /* elementRecord */
+    Tk_Window tkwin,
+    Ttk_Box b,
+    Ttk_State state,
+    Ttk_ElementCacheInfo *info)
+{
+    ImageData *imageData = (ImageData *)clientData;
+    Tk_Image image = TtkSelectImage(imageData->imageSpec, tkwin, state);
+    int imgWidth, imgHeight;
+    Ttk_Box dst;
+
+    info->epoch = imageData->epoch;
+    info->opaque = 0;
+
+    if (image == NULL) {
+	return;
+    }
+    Tk_SizeOfImage(image, &imgWidth, &imgHeight);
+    dst = Ttk_StickBox(b, imgWidth, imgHeight, imageData->sticky);
+    if (dst.x == b.x && dst.y == b.y
+	    && dst.width == b.width && dst.height == b.height) {
+	info->opaque = ImageIsOpaque(Tk_Interp(tkwin),
+		TtkSelectImageName(imageData->imageSpec, state));
+    }
+}
+#endif /* !TK_NO_DOUBLE_BUFFERING */
 
 static void ImageElementSize(
     void *clientData,
@@ -322,6 +611,7 @@ static void ImageElementDraw(
 {
     ImageData *imageData = (ImageData *)clientData;
     Tk_Image image = 0;
+    Tk_PhotoHandle photo = NULL;
     int imgWidth, imgHeight;
     Ttk_Box src, dst;
 
@@ -343,11 +633,29 @@ static void ImageElementDraw(
 	return;
     }
 
+#ifdef TTK_TILE_BATCH
+    /*
+     * Resolve the photo behind the spec-selected image for batched tiling.
+     * NULL (non-photo image, or a TILE_07_COMPAT map image whose name is
+     * not in the spec) keeps the per-tile loop.
+     */
+#ifdef TILE_07_COMPAT
+    if (!imageData->imageMap)
+#endif
+    {
+	Tcl_Obj *nameObj = TtkSelectImageName(imageData->imageSpec, state);
+
+	if (nameObj != NULL) {
+	    photo = Tk_FindPhoto(Tk_Interp(tkwin), Tcl_GetString(nameObj));
+	}
+    }
+#endif /* TTK_TILE_BATCH */
+
     Tk_SizeOfImage(image, &imgWidth, &imgHeight);
     src = Ttk_MakeBox(0, 0, imgWidth, imgHeight);
     dst = Ttk_StickBox(b, imgWidth, imgHeight, imageData->sticky);
 
-    Ttk_Tile(tkwin, d, image, src, dst, imageData->border);
+    Ttk_Tile(tkwin, d, image, photo, src, dst, imageData->border);
 }
 
 static const Ttk_ElementSpec ImageElementSpec =
@@ -376,6 +684,7 @@ Ttk_CreateImageElement(
 
     Ttk_ImageSpec *imageSpec = 0;
     ImageData *imageData = 0;
+    Ttk_ElementClass *elementClass;
     int padding_specified = 0;
     Tcl_Size i;
 
@@ -386,12 +695,16 @@ Ttk_CreateImageElement(
 	return TCL_ERROR;
     }
 
-    imageSpec = TtkGetImageSpec(interp, Tk_MainWindow(interp), objv[0]);
+    imageData = (ImageData *)Tcl_Alloc(sizeof(*imageData));
+    memset(imageData, 0, sizeof(*imageData));
+
+    imageSpec = TtkGetImageSpecEx(interp, Tk_MainWindow(interp), objv[0],
+	    ImageElementImageChanged, imageData);
     if (!imageSpec) {
+	Tcl_Free(imageData);
 	return TCL_ERROR;
     }
 
-    imageData = (ImageData *)Tcl_Alloc(sizeof(*imageData));
     imageData->imageSpec = imageSpec;
     imageData->minWidth = imageData->minHeight = -1;
     imageData->sticky = TTK_FILL_BOTH;
@@ -453,11 +766,15 @@ Ttk_CreateImageElement(
 	}
     }
 
-    if (!Ttk_RegisterElement(interp, theme, elementName, &ImageElementSpec,
-		imageData))
-    {
+    elementClass = Ttk_RegisterElement(interp, theme, elementName,
+	    &ImageElementSpec, imageData);
+    if (!elementClass) {
 	goto error;
     }
+#ifndef TK_NO_DOUBLE_BUFFERING
+    TtkSetElementCachePolicy(elementClass, TTK_ELEMENT_CACHEABLE,
+	    ImageElementCacheInfo);
+#endif
 
     Ttk_RegisterCleanup(interp, imageData, FreeImageData);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));

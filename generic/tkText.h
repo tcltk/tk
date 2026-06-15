@@ -1970,7 +1970,7 @@ MODULE_SCOPE void	TkTextPerformWatchCmd(TkSharedText *sharedTextPtr, TkText *tex
 			    TkTextWatchGetIndexProc index1Proc, void *index1ProcData,
 			    TkTextWatchGetIndexProc index2Proc, void *index2ProcData,
 			    const char *arg1, const char *arg2, const char *arg3, int userFlag);
-MODULE_SCOPE int	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
+MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
 			    const char *index1, const char *index2, const char *arg1, const char *arg2,
 			    const char *arg3, int userFlag);
 MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
@@ -2040,7 +2040,7 @@ MODULE_SCOPE int	TkTextAttemptToModifyDeadWidget(Tcl_Interp *interp);
 MODULE_SCOPE int	TkTextReleaseIfDestroyed(TkText *textPtr);
 MODULE_SCOPE int	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
 MODULE_SCOPE void	TkTextFreeAllTags(TkText *textPtr);
-inline int		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
+inline bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextInspectOptions(TkText *textPtr, const void *recordPtr,
@@ -2081,7 +2081,7 @@ MODULE_SCOPE int	TkTextLineIsElided(const TkSharedText *sharedTextPtr, const TkT
 			    const TkText *textPtr);
 MODULE_SCOPE int	TkTextIsElided(const TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextTestTag(const TkTextIndex *indexPtr, const TkTextTag *tagPtr);
-inline int		TkTextIsDeadPeer(const TkText *textPtr);
+inline bool		TkTextIsDeadPeer(const TkText *textPtr);
 MODULE_SCOPE void	TkTextGenerateWidgetViewSyncEvent(TkText *textPtr, int sendImmediately);
 MODULE_SCOPE void	TkTextRunAfterSyncCmd(TkText *textPtr);
 MODULE_SCOPE void	TkTextInvalidateLineMetrics(TkSharedText *sharedTextPtr, TkText *textPtr,
@@ -2098,22 +2098,22 @@ MODULE_SCOPE TkTextSegment * TkTextMakeStartEndMark(TkText *textPtr, Tk_SegType 
 MODULE_SCOPE TkTextSegment * TkTextMakeMark(TkText *textPtr, const char *name);
 MODULE_SCOPE TkTextSegment * TkTextMakeNewMark(TkSharedText *sharedTextPtr, const char *name);
 MODULE_SCOPE void	TkTextUnsetMark(TkText *textPtr, TkTextSegment *markPtr);
-inline int		TkTextIsMark(const TkTextSegment *segPtr);
-inline int		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
-inline int		TkTextIsSpecialMark(const TkTextSegment *segPtr);
-inline int		TkTextIsPrivateMark(const TkTextSegment *segPtr);
-inline int		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
-inline int		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
-inline int		TkTextIsNormalMark(const TkTextSegment *segPtr);
-inline int		TkTextIsStableMark(const TkTextSegment *segPtr);
+inline bool		TkTextIsMark(const TkTextSegment *segPtr);
+inline bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
+inline bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
+inline bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);
+inline bool		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
+inline bool		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
+inline bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
+inline bool		TkTextIsStableMark(const TkTextSegment *segPtr);
 MODULE_SCOPE const char * TkTextMarkName(const TkSharedText *sharedTextPtr, const TkText *textPtr,
 			    const TkTextSegment *markPtr);
 MODULE_SCOPE void	TkTextUpdateCurrentMark(TkSharedText *sharedTextPtr);
 MODULE_SCOPE void	TkTextSaveCursorIndex(TkText *textPtr);
-MODULE_SCOPE int	TkTextTriggerWatchCursor(TkText *textPtr);
+MODULE_SCOPE bool	TkTextTriggerWatchCursor(TkText *textPtr);
 MODULE_SCOPE void	TkTextInsertGetBBox(TkText *textPtr, int x, int y, int height, XRectangle *bbox);
-MODULE_SCOPE int	TkTextDrawBlockCursor(TkText *textPtr);
-MODULE_SCOPE int	TkTextGetCursorBbox(TkText *textPtr, int *x, int *y, int *w, int *h);
+MODULE_SCOPE bool	TkTextDrawBlockCursor(TkText *textPtr);
+MODULE_SCOPE bool	TkTextGetCursorBbox(TkText *textPtr, int *x, int *y, int *w, int *h);
 MODULE_SCOPE unsigned	TkTextGetCursorWidth(TkText *textPtr, int *x, int *offs);
 MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
 MODULE_SCOPE int	TkTextPendingSync(const TkText *textPtr);
@@ -2202,7 +2202,6 @@ MODULE_SCOPE int	TkTextIndexIsStartOfLine(const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexIsEndOfLine(const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexIsStartOfText(const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexIsEndOfText(const TkTextIndex *indexPtr);
-inline int		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 MODULE_SCOPE int	TkTextIndexIsEqual(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 MODULE_SCOPE int	TkTextIndexCompare(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 inline void		TkTextIndexSave(TkTextIndex *indexPtr);

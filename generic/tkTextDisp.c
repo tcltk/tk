@@ -4692,7 +4692,7 @@ LayoutDLine(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 TriggerWatchCursor(
     TkText *textPtr)
 {
@@ -6310,14 +6310,14 @@ DisplayDLine(
     const int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
     int xIndent, rMargin;
-    int delayBlockCursorDrawing;
+    bool delayBlockCursorDrawing;
 
     if (!dlPtr->chunkPtr) {
 	return;
     }
 
     display = Tk_Display(textPtr->tkwin);
-    delayBlockCursorDrawing = 0;
+    delayBlockCursorDrawing = false;
 
     lineHeight = dlPtr->height;
     if (lineHeight + dlPtr->y > dInfoPtr->maxY) {

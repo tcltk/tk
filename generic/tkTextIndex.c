@@ -2175,7 +2175,7 @@ TkTextSegToIndex(
  *---------------------------------------------------------------------------
  */
 
-MODULE_SCOPE int TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE bool TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const char *string, unsigned lenOfString, TkTextIndex *indexPtr);
 
 int
@@ -2228,7 +2228,7 @@ SkipSegments(
     return charIndex;
 }
 
-int
+bool
 TkpTextGetIndex(
     Tcl_Interp *interp,		/* Use this for error reporting. */
     TkSharedText *sharedTextPtr,/* Pointer to shared resource. */
@@ -2289,7 +2289,7 @@ TkpTextGetIndex(
 	if (TkTextMarkNameToIndex(textPtr, string, indexPtr)
 		|| TkTextWindowIndex(textPtr, string, indexPtr)
 		|| TkTextImageIndex(textPtr, string, indexPtr)) {
-	    return 1;
+	    return true;
 	}
     }
 #endif /* BEGIN_DOES_NOT_BELONG_TO_BASE */
@@ -2339,7 +2339,7 @@ TkpTextGetIndex(
 
     if (TkTextMarkNameToIndex(textPtr, string, indexPtr)) {
 	Tcl_DStringFree(&copy);
-	return 1;
+	return true;
     }
 
     skipMark = 1;
@@ -2429,7 +2429,7 @@ TkpTextGetIndex(
 		    "character near current position isn't tagged with \"%s\"", tagName));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName, (char *)NULL);
 	    Tcl_DStringFree(&copy);
-	    return 0;
+	    return false;
 	}
     } else {
 	TkTextSearch search;
@@ -2599,7 +2599,7 @@ TkpTextGetIndex(
     Tcl_ResetResult(interp);
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad text index \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", (char *)NULL);
-    return 0;
+    return false;
 
     /*
      *-------------------------------------------------------------------
@@ -2631,7 +2631,7 @@ TkpTextGetIndex(
     }
 
     Tcl_DStringFree(&copy);
-    return 1;
+    return true;
 }
 
 /*
@@ -3689,18 +3689,18 @@ TkTextIndexBackChars(
     }
 
     if (charCount == 0) {
-	return 0;
+	return false;
     }
 
     sharedTextPtr = TkTextIndexGetShared(srcPtr);
     checkElided = !!(type & COUNT_DISPLAY) && TkBTreeHaveElidedSegments(textPtr->sharedTextPtr);
 
     if (checkElided && TkTextIsElided(dstPtr) && !TkTextSkipElidedRegion(dstPtr)) {
-	return 0;
+	return false;
     }
 
     if (TkTextIndexIsStartOfLine(dstPtr) && !TkBTreePrevLine(textPtr, dstPtr->priv.linePtr)) {
-	return 0;
+	return false;
     }
 
     if (textPtr && textPtr->endMarker != sharedTextPtr->endMarker) {
@@ -3793,13 +3793,13 @@ TkTextIndexBackChars(
 	} else if (checkElided && segPtr->typePtr == &tkTextLinkType) {
 	    TkTextIndexSetSegment(dstPtr, segPtr = segPtr->body.link.prevPtr);
 	    if (TkTextIndexRestrictToStartRange(dstPtr) <= 0) {
-		return 1;
+		return true;
 	    }
 	    TkTextIndexToByteIndex(dstPtr);
 	    byteIndex = TkTextIndexGetByteIndex(dstPtr);
 	} else if (segPtr == startPtr) {
 	    TkTextIndexSetSegment(dstPtr, segPtr = startPtr);
-	    return 1;
+	    return true;
 	}
 
 	/*
@@ -3828,7 +3828,7 @@ TkTextIndexBackChars(
   backwardCharDone:
     dstPtr->priv.byteIndex = byteIndex;
     dstPtr->stateEpoch = TkBTreeEpoch(dstPtr->tree);
-    return 1;
+    return true;
 }
 
 /*

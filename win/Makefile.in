@@ -428,6 +428,7 @@ TTK_OBJS = \
 	ttkLabel.$(OBJEXT) \
 	ttkLayout.$(OBJEXT) \
 	ttkManager.$(OBJEXT) \
+	ttkNodeCache.$(OBJEXT) \
 	ttkNotebook.$(OBJEXT) \
 	ttkPanedwindow.$(OBJEXT) \
 	ttkProgress.$(OBJEXT) \

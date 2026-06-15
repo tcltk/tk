@@ -48,7 +48,7 @@ struct TkTextMyBTree {
 };
 
 
-MODULE_SCOPE int TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
+MODULE_SCOPE bool TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const char *string, unsigned lenOfString, TkTextIndex *indexPtr);
 
 #endif /* _TKTEXTPRIV */
@@ -74,7 +74,7 @@ MODULE_SCOPE int TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr
  */
 
 inline
-int
+bool
 TkTextIsMark(
     const TkTextSegment *segPtr)
 {
@@ -99,7 +99,7 @@ TkTextIsMark(
  */
 
 inline
-int
+bool
 TkTextIsSpecialMark(
     const TkTextSegment *segPtr)
 {
@@ -127,7 +127,7 @@ TkTextIsSpecialMark(
  */
 
 inline
-int
+bool
 TkTextIsPrivateMark(
     const TkTextSegment *segPtr)
 {
@@ -153,7 +153,7 @@ TkTextIsPrivateMark(
  */
 
 inline
-int
+bool
 TkTextIsNormalMark(
     const TkTextSegment *segPtr)
 {
@@ -179,7 +179,7 @@ TkTextIsNormalMark(
  */
 
 inline
-int
+bool
 TkTextIsStartEndMarker(
     const TkTextSegment *segPtr)
 {
@@ -206,7 +206,7 @@ TkTextIsStartEndMarker(
  */
 
 inline
-int
+bool
 TkTextIsStableMark(
     const TkTextSegment *segPtr)
 {
@@ -230,7 +230,7 @@ TkTextIsStableMark(
  */
 
 inline
-int
+bool
 TkTextIsSpecialOrPrivateMark(
     const TkTextSegment *segPtr)
 {
@@ -255,7 +255,7 @@ TkTextIsSpecialOrPrivateMark(
  */
 
 inline
-int
+bool
 TkTextIsNormalOrSpecialMark(
     const TkTextSegment *segPtr)
 {
@@ -281,7 +281,7 @@ TkTextIsNormalOrSpecialMark(
  */
 
 inline
-int
+bool
 TkTextIsDeadPeer(
     const TkText *textPtr)
 {
@@ -872,7 +872,7 @@ TkTextIndexGetSegment(
  */
 
 inline
-int
+bool
 TkTextGetIndexFromObj(
     Tcl_Interp *interp,		/* Use this for error reporting. */
     TkText *textPtr,		/* Information about text widget, can be NULL. */
@@ -913,37 +913,6 @@ TkTextIndexSave(
 {
     TkTextIndexGetLineNumber(indexPtr, indexPtr->textPtr);
     TkTextIndexGetByteIndex(indexPtr);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkTextIndexSameLines --
- *
- *	Test whether both given indicies are referring the same line.
- *
- * Results:
- *	Return true if both indices are referring the same line, otherwise
- *	false will be returned.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-inline
-int
-TkTextIndexSameLines(
-    const TkTextIndex *indexPtr1,	/* Pointer to index. */
-    const TkTextIndex *indexPtr2)	/* Pointer to index. */
-{
-    assert(indexPtr1->priv.linePtr);
-    assert(indexPtr2->priv.linePtr);
-    assert(indexPtr1->priv.linePtr->parentPtr); /* expired? */
-    assert(indexPtr2->priv.linePtr->parentPtr); /* expired? */
-
-    return indexPtr1->priv.linePtr == indexPtr2->priv.linePtr;
 }
 
 /*

@@ -208,14 +208,14 @@ SwapCurrent(
 }
 
 
-static int
+static bool
 ClearRedoStack(
     TkTextUndoStack stack)
 {
     MyUndoAtom *atom;
 
     if (stack->redoDepth == 0) {
-	return 0;
+	return false;
     }
 
     atom = stack->last ? stack->last->next : stack->root;
@@ -226,7 +226,7 @@ ClearRedoStack(
     stack->redoItems = 0;
     Release(stack, atom);
 
-    return 1;
+    return true;
 }
 
 
@@ -937,12 +937,12 @@ TkTextUndoDoRedo(
     return rc;
 }
 
-int
+bool
 TkTextUndoStackIsFull(
     const TkTextUndoStack stack)
 {
     if (!stack) {
-	return 1;
+	return true;
     }
     if (stack->doingUndo) {
 	return stack->maxRedoDepth >= 0 && (int) stack->redoDepth >= stack->maxRedoDepth;
@@ -1061,7 +1061,7 @@ extern int TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack);
 extern const TkTextUndoAtom *TkTextUndoCurrentUndoAtom(const TkTextUndoStack stack);
 extern const TkTextUndoAtom *TkTextUndoCurrentRedoAtom(const TkTextUndoStack stack);
 extern const TkTextUndoSubAtom *TkTextUndoGetLastUndoSubAtom(const TkTextUndoStack stack);
-extern int TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
-extern int TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
+extern bool TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
+extern bool TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
 
 /* vi:set ts=8 sw=4: */

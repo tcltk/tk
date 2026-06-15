@@ -144,7 +144,7 @@ DEBUG_ALLOC(extern unsigned tkTextCountDestroyUndoToken);
  * Forward declarations for functions defined later in this file:
  */
 
-static int		ChangeTagPriority(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
+static bool		ChangeTagPriority(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    unsigned newPriority, bool undo);
 static bool		TagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr, TkTextTag *tagPtr, bool add);
@@ -1667,7 +1667,7 @@ TagAddRemove(
 
     if (!TkBTreeTag(sharedTextPtr, textPtr, index1Ptr, index2Ptr, tagPtr, add,
 	    undoInfoPtr, TkTextRedrawTag)) {
-	return 0;
+	return false;
     }
 
     if (undoInfoPtr) {
@@ -1678,7 +1678,7 @@ TagAddRemove(
 	sharedTextPtr->undoStackEvent = true;
     }
 
-    return 1;
+    return true;
 }
 
 /*
@@ -2651,7 +2651,7 @@ TkTextPushTagPriorityRedo(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ChangeTagPriority(
     TkSharedText *sharedTextPtr,/* Shared text resource. */
     TkTextTag *tagPtr,		/* Tag whose priority is to be changed. */
@@ -2668,7 +2668,7 @@ ChangeTagPriority(
     assert(newPriority < sharedTextPtr->numEnabledTags);
 
     if (newPriority == tagPtr->priority) {
-	return 0;
+	return false;
     }
 
     if (undo && tagPtr->undo && !TkTextUndoStackIsFull(sharedTextPtr->undoStack)) {
@@ -2725,7 +2725,7 @@ ChangeTagPriority(
 
     tagPtr->priority = newPriority;
 
-    return 1;
+    return true;
 }
 
 /*

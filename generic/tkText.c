@@ -9851,7 +9851,7 @@ TkTextPerformWatchCmd(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextTriggerWatchCmd(
     TkText *textPtr,		/* Information about text widget. */
     const char *operation,	/* The trigger operation. */
@@ -11891,17 +11891,17 @@ extern TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
 extern TkTextLine *	TkBTreePrevLine(const TkText *textPtr, TkTextLine *linePtr);
 extern unsigned		TkBTreeCountLines(const TkTextBTree tree, const TkTextLine *linePtr1,
 			    const TkTextLine *linePtr2);
-extern int		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
+extern bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
-extern int		TkTextIsDeadPeer(const TkText *textPtr);
-extern int		TkTextIsMark(const TkTextSegment *segPtr);
-extern int		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
-extern int		TkTextIsSpecialMark(const TkTextSegment *segPtr);
-extern int		TkTextIsPrivateMark(const TkTextSegment *segPtr);
-extern int		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
-extern int		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
-extern int		TkTextIsNormalMark(const TkTextSegment *segPtr);
-extern int		TkTextIsStableMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsDeadPeer(const TkText *textPtr);
+extern bool		TkTextIsMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
+extern bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsStableMark(const TkTextSegment *segPtr);
 extern const TkTextDispChunk *TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
 extern const TkTextDispChunk *TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
 extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, size_t epoch);
@@ -11912,7 +11912,6 @@ extern void		TkTextIndexMakePersistent(TkTextIndex *indexPtr);
 extern TkTextLine *	TkTextIndexGetLine(const TkTextIndex *indexPtr);
 extern TkTextSegment *	TkTextIndexGetSegment(const TkTextIndex *indexPtr);
 extern TkSharedText *	TkTextIndexGetShared(const TkTextIndex *indexPtr);
-extern int		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 extern void		TkTextIndexSave(TkTextIndex *indexPtr);
 
 /*

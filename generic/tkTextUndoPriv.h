@@ -92,11 +92,11 @@ inline int
 TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack)
 { assert(stack); return stack->doingUndo || stack->doingRedo; }
 
-inline int
+inline bool
 TkTextUndoUndoStackIsFull(const TkTextUndoStack stack)
 { return !stack || (stack->maxUndoDepth > 0 && stack->undoDepth >= stack->maxUndoDepth); }
 
-inline int
+inline bool
 TkTextUndoRedoStackIsFull(const TkTextUndoStack stack)
 { return !stack || (stack->maxRedoDepth >= 0 && (int) stack->redoDepth >= stack->maxRedoDepth); }
 
