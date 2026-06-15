@@ -124,6 +124,8 @@ struct Ttk_ElementClass_ {
     int nResources;		/* #Element options */
     Tcl_Obj **defaultValues;	/* Array of option default values */
     Tcl_HashTable optMapCache;	/* Map: Tk_OptionTable * -> OptionMap */
+    unsigned cacheFlags;	/* Render-cache policy (TTK_ELEMENT_* flags) */
+    Ttk_ElementCacheProc *cacheProc;	/* Cache-info query, or NULL */
 };
 
 /* TTKGetOptionSpec --
@@ -252,7 +254,41 @@ NewElementClass(const char *name, const Ttk_ElementSpec *specPtr, void *clientDa
      */
     Tcl_InitHashTable(&elementClass->optMapCache, TCL_ONE_WORD_KEYS);
 
+    /* Render-cache policy: off until the element opts in. */
+    elementClass->cacheFlags = 0;
+    elementClass->cacheProc = NULL;
+
     return elementClass;
+}
+
+/* TtkSetElementCachePolicy --
+ *	Record an element class's render-cache policy and optional cache-info
+ *	query.  Called once by an element after registration.
+ */
+void TtkSetElementCachePolicy(
+    Ttk_ElementClass *eclass,
+    unsigned cacheFlags,
+    Ttk_ElementCacheProc *cacheProc)
+{
+    eclass->cacheFlags = cacheFlags;
+    eclass->cacheProc = cacheProc;
+}
+
+/* Ttk_ElementClassCacheable --
+ *	Return nonzero if the element class opted into per-node render caching.
+ */
+int Ttk_ElementClassCacheable(Ttk_ElementClass *eclass)
+{
+    return (eclass->cacheFlags & TTK_ELEMENT_CACHEABLE) != 0;
+}
+
+/* Ttk_ElementClassStable --
+ *	Return nonzero if the element class declared its draw deterministic
+ *	for an unchanged (parcel, state, content epoch).
+ */
+int Ttk_ElementClassStable(Ttk_ElementClass *eclass)
+{
+    return (eclass->cacheFlags & TTK_ELEMENT_STABLE) != 0;
 }
 
 /*
@@ -1135,6 +1171,34 @@ Ttk_DrawElement(
     eclass->specPtr->draw(
 	eclass->clientData, eclass->elementRecord,
 	tkwin, d, b, state);
+}
+
+/* Ttk_ElementGetCacheInfo --
+ *	Query a cacheable element's opacity and content epoch for (tkwin, state).
+ *	Defaults to {not opaque, epoch 0} when no cache proc is registered.
+ */
+void
+Ttk_ElementGetCacheInfo(
+    Ttk_ElementClass *eclass,
+    Ttk_Style style,
+    void *recordPtr,
+    Tk_OptionTable optionTable,
+    Tk_Window tkwin,
+    Ttk_Box b,
+    Ttk_State state,
+    Ttk_ElementCacheInfo *info)
+{
+    info->opaque = 0;
+    info->epoch = 0;
+    if (eclass->cacheProc == NULL) {
+	return;
+    }
+    if (!InitializeElementRecord(
+	    eclass, style, recordPtr, optionTable, tkwin, state)) {
+	return;
+    }
+    eclass->cacheProc(
+	eclass->clientData, eclass->elementRecord, tkwin, b, state, info);
 }
 
 /*------------------------------------------------------------------------

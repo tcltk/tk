@@ -100,6 +100,9 @@
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
 
+/* Have we turned on XRender (photo image compositing)? */
+#undef HAVE_XRENDER
+
 /* Is XScreenSaver available? */
 #undef HAVE_XSS
 

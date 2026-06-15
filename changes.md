@@ -32,6 +32,7 @@ necessarily in Tk 8.
  - [Consistent dark mode for Windows and macOS](https://core.tcl-lang.org/tips/doc/trunk/tip/750.md)
  - [Rotated text for label widgets](https://core.tcl-lang.org/tips/doc/trunk/tip/751.md)
  - [ttk::treeview enhancements](https://core.tcl-lang.org/tips/doc/trunk/tip/740.md)
+ - [Painting performance improvements for images in ttk widgets](https://core.tcl-lang.org/tk/info/7caf9e9edcfbee42)
 
 # Potential incompatibilities to 9.0
  - [MS-Win: Remove the -xpstyle option from tk_chooseDirectory and tk_getOpenFile](https://core.tcl-lang.org/tk/tktview/441c52)
