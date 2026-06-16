@@ -4132,6 +4132,32 @@ WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr)
 /*
  *----------------------------------------------------------------------
  *
+ * TkWaylandWmUpdateGeom --
+ *
+ *	MODULE_SCOPE wrapper around WmUpdateGeom for use by other
+ *	Wayland backend modules (e.g. tkWaylandMenu.c) that need to
+ *	schedule a geometry update after mutating wmPtr or winPtr fields
+ *	such as internalBorderTop.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May schedule an idle callback (UpdateGeometryInfo).
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr)
+{
+    wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
+    WmUpdateGeom(wmPtr, winPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WmWaitMapProc --
  *
  *	Event handler for waiting for a transient's container to map.

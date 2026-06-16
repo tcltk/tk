@@ -831,12 +831,19 @@ TkWaylandSubsurfaceCreate(
     popup->mapped     = 1;
     popup->visible    = 1;
 
-    /* Commit the subsurface surface first - this makes it visible. */
-    wl_surface_commit(popup->surface);
-    /* Force a damage region for the entire surface. */
+    /*
+     * Damage the entire surface first, then commit.  The damage call marks
+     * which region the compositor should treat as dirty; it must precede
+     * commit so the compositor picks it up in the same atomic update.
+     *
+     * Do NOT commit the parent here.  The parent (GLFW) has its own present
+     * loop; committing it from this call site races with that loop and can
+     * produce a blank or torn frame before our subsurface content is ready.
+     * The subsurface will appear in the compositor's scene as soon as GLFW
+     * issues its next parent commit.
+     */
     wl_surface_damage(popup->surface, 0, 0, width, height);
-    /* Then commit the parent surface to make the subsurface appear. */
-    wl_surface_commit(parentSurface);
+    wl_surface_commit(popup->surface);
     wl_display_flush(popupDisplay);
 
     POPUP_DEBUG("Subsurface popup created and committed, configured=1");
@@ -1107,11 +1114,23 @@ TkWaylandPopupBeginDraw(
                    popup->eglSurface, popup->eglContext);
 
     glViewport(0, 0, popup->width, popup->height);
-    /* Use a solid color for testing - make it bright red so it's obvious. */
-    glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    nvgBeginFrame(popup->vg, (float)popup->width, (float)popup->height, 1.0f);
+    /*
+     * The device pixel ratio must match the compositor's expectation for
+     * this output.  Hard-coding 1.0 produces blurry rendering on HiDPI
+     * displays and can cause the compositor to silently discard buffer
+     * content on some implementations.  Query the scale from GLFW using
+     * the main window (popup subsurfaces inherit the parent output's scale).
+     */
+    float xscale = 1.0f, yscale = 1.0f;
+    if (mainGlfwWindow) {
+        glfwGetWindowContentScale(mainGlfwWindow, &xscale, &yscale);
+    }
+    if (xscale <= 0.0f) xscale = 1.0f;
+
+    nvgBeginFrame(popup->vg, (float)popup->width, (float)popup->height, xscale);
     return TCL_OK;
 }
 
@@ -1151,16 +1170,29 @@ TkWaylandPopupEndDraw(
     /* Damage the entire surface to tell compositor what changed */
     wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
     
-    /* IMPORTANT: Commit the surface to make the drawn content visible */
+    /* Commit the subsurface's own surface.
+     *
+     * In desync mode (set in TkWaylandSubsurfaceCreate) the subsurface's
+     * pending state is applied to the compositor independently the moment
+     * wl_surface_commit() is called here.  We must NOT also commit the
+     * parent surface:
+     *
+     *   - Committing the parent resets the parent's pending state (including
+     *     its own damage and buffer attachment) which is still being managed
+     *     by GLFW's swap/present loop.  That races with GLFW and produces
+     *     EGL_BAD_MATCH / blank frames on at least sway and wlroots.
+     *
+     *   - On compositors that promote a desync subsurface's update into the
+     *     next parent frame anyway, the extra parent commit is a no-op at
+     *     best and a frame-drop at worst.
+     *
+     * If sync mode is ever needed instead, switch to wl_subsurface_set_sync()
+     * and add a single parent commit *after* the parent's own draw is done,
+     * not here.
+     */
     wl_surface_commit(popup->surface);
     POPUP_DEBUG("Surface committed");
-    
-    /* For subsurfaces, also commit the parent to ensure visibility. */
-    if (popup->subsurface && popup->parentSurface) {
-        wl_surface_commit(popup->parentSurface);
-        POPUP_DEBUG("Parent surface committed");
-    }
-    
+
     if (popupDisplay) {
         wl_display_flush(popupDisplay);
     }

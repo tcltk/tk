@@ -137,6 +137,14 @@ static void MenubarResizeIdleProc(void *clientData);
  */
 MODULE_SCOPE TkWaylandPopup *TkWaylandFindMenubarPopup(Tk_Window menubarWin);
 
+/*
+ * TkWaylandWmUpdateGeom is implemented in tkWaylandWm.c.  It sets
+ * WM_UPDATE_SIZE_HINTS and schedules an UpdateGeometryInfo idle pass,
+ * which is the correct way to notify the WM layer that internalBorderTop
+ * (or another geometry field) has changed.
+ */
+MODULE_SCOPE void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+
 /* Helper function to convert Tk colors to NVGcolor. */
 static NVGcolor TkColorToNVGColor(XColor *color) {
     if (!color) return nvgRGBA(0, 0, 0, 255);
@@ -395,9 +403,11 @@ TkpSetWindowMenuBar(
     }
 
     if (!menuPtr) {
-        wmPtr->menubar       = NULL;
+        wmPtr->menubar        = NULL;
         wmPtr->menubarMenuPtr = NULL;
-        wmPtr->menuHeight    = 0;
+        wmPtr->menuHeight     = 0;
+        winPtr->internalBorderTop = 0;
+        TkWaylandWmUpdateGeom(wmPtr, winPtr);
         return;
     }
 
@@ -407,6 +417,17 @@ TkpSetWindowMenuBar(
     TkRecomputeMenu(menuPtr);
     wmPtr->menuHeight = menuPtr->totalHeight;
     if (wmPtr->menuHeight < 20) wmPtr->menuHeight = 24;
+
+    /*
+     * Reserve space at the top of the toplevel for the menubar strip.
+     * This is what Tk's geometry managers (pack, grid, place) query via
+     * Tk_InternalBorderTop() to know where to start placing children.
+     * Without it, children are laid out from y=0, which is also where
+     * the menubar subsurface sits, so the subsurface is painted beneath
+     * them and never seen.
+     */
+    winPtr->internalBorderTop = wmPtr->menuHeight;
+    TkWaylandWmUpdateGeom(wmPtr, winPtr);
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
         /*
@@ -481,6 +502,17 @@ TkWaylandMenubarCreateOrResize(
     if (mbH < 20) mbH = 24;
     wmPtr->menuHeight = mbH;
     mbW = width;
+
+    /*
+     * Keep internalBorderTop in sync with the (possibly recomputed) menu
+     * height.  This matters on resize: if the font or entry count changed
+     * between calls the reserved strip must match the new subsurface height
+     * so pack/grid re-layouts itself correctly.
+     */
+    if (winPtr->internalBorderTop != mbH) {
+        winPtr->internalBorderTop = mbH;
+        TkWaylandWmUpdateGeom(wmPtr, winPtr);
+    }
 
     if (wmPtr->menubarPopup) {
         TkWaylandPopupGetSize(wmPtr->menubarPopup, &curW, &curH);
