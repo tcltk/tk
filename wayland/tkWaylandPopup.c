@@ -706,8 +706,6 @@ TkWaylandPopupCreate(
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    
-    /* Restore main context immediately after NanoVG creation. */
     RestoreMainContext();
 
     if (!popup->vg) {
@@ -816,10 +814,6 @@ TkWaylandSubsurfaceCreate(
     wl_subsurface_place_above(popup->subsurface, parentSurface);
     POPUP_DEBUG("Subsurface placed above parent");
 
-    /* Request a frame callback to know when the surface is actually displayed. */
-    struct wl_callback *callback = wl_surface_frame(popup->surface);
-    wl_callback_add_listener(callback, &frameListener, NULL);
-    
     if (!BuildEGLSurface(popup)) {
         POPUP_DEBUG("BuildEGLSurface failed");
         wl_subsurface_destroy(popup->subsurface);
@@ -832,8 +826,6 @@ TkWaylandSubsurfaceCreate(
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    
-    /* Restore main context immediately after NanoVG creation. */
     RestoreMainContext();
 
     if (!popup->vg) {
@@ -853,41 +845,29 @@ TkWaylandSubsurfaceCreate(
     popup->visible    = 1;
 
     /*
-     * Damage the entire surface first, then commit.  The damage call marks
-     * which region the compositor should treat as dirty; it must precede
-     * commit so the compositor picks it up in the same atomic update.
+     * Commit the PARENT surface only, not the subsurface itself.
      *
-     * Unlike subsequent draw calls (TkWaylandPopupEndDraw), we DO commit
-     * the parent once here at creation time.  A newly created wl_subsurface
-     * is not visible in the compositor's scene until the parent surface is
-     * committed at least once with the subsurface already attached -- the
-     * compositor needs that parent commit to register the new child in its
-     * surface tree.  After this initial commit GLFW's normal present loop
-     * will issue all future parent commits, so EndDraw must not do so (to
-     * avoid racing with that loop).
+     * A newly created wl_subsurface is not visible in the compositor's scene
+     * until the parent surface is committed at least once with the subsurface
+     * already attached to its surface tree.  We do that parent commit here.
+     *
+     * We deliberately do NOT call wl_surface_commit on popup->surface here.
+     * Mesa's Wayland EGL backend tracks whether a wl_surface has been
+     * committed without going through its buffer queue.  If we commit the
+     * raw wl_surface (even with no buffer or damage) before eglSwapBuffers
+     * has attached its first wl_buffer, Mesa detects the inconsistent surface
+     * state and returns EGL_BAD_MATCH (0x300d) on the subsequent
+     * eglSwapBuffers call in EndDraw.  The correct sequence is:
+     *
+     *   1. Parent commit here (registers subsurface in compositor scene tree)
+     *   2. First eglSwapBuffers in EndDraw (attaches buffer + commits surface)
+     *
+     * eglSwapBuffers handles damage and commit atomically via Mesa's internal
+     * wl_surface_damage_buffer + wl_surface_commit, so no separate damage
+     * call is needed here either.
      */
-    wl_surface_damage(popup->surface, 0, 0, width, height);
-    wl_surface_commit(popup->surface);
     wl_surface_commit(parentSurface);
-
-    /*
-     * Wait for the compositor to process the commits above before returning.
-     *
-     * wl_display_flush only drains the client's outgoing wire buffer; it does
-     * not block until the compositor has processed the wl_surface_commit and
-     * allocated a back buffer for the new wl_egl_window.  The caller
-     * (TkWaylandMenubarCreateOrResize) immediately calls MenuDrawMenubarIntoPopup
-     * which calls eglSwapBuffers on this new surface.  If the compositor
-     * hasn't finished its side of the handshake, eglSwapBuffers finds no
-     * valid buffer slot and returns EGL_BAD_MATCH (0x300d) -- the exact
-     * failure seen in the menubar redraw log.
-     *
-     * wl_display_roundtrip sends a wl_display.sync request and blocks until
-     * the compositor sends back the sync callback, which happens only after
-     * it has processed all pending requests including both commits above.
-     * This guarantees the EGL surface is ready for rendering before we return.
-     */
-    wl_display_roundtrip(popupDisplay);
+    wl_display_flush(popupDisplay);
 
     POPUP_DEBUG("Subsurface popup created and committed, configured=1");
 
