@@ -687,9 +687,12 @@ TkWaylandPopupCreate(
         return NULL;
     }
 
+    /* Make the popup context current to create NanoVG context */
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    
+    /* Restore main context immediately after NanoVG creation */
     RestoreMainContext();
 
     if (!popup->vg) {
@@ -810,9 +813,12 @@ TkWaylandSubsurfaceCreate(
         return NULL;
     }
 
+    /* Make the popup context current to create NanoVG context */
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+    
+    /* Restore main context immediately after NanoVG creation */
     RestoreMainContext();
 
     if (!popup->vg) {
@@ -987,11 +993,34 @@ TkWaylandPopupDestroy(
         }
     }
 
+    /* Ensure we're not current on this context before destroying resources */
+    EGLContext currentCtx = eglGetCurrentContext();
+    EGLDisplay currentDpy = eglGetCurrentDisplay();
+    EGLSurface currentDraw = eglGetCurrentSurface(EGL_DRAW);
+    EGLSurface currentRead = eglGetCurrentSurface(EGL_READ);
+    
+    if (popup->eglContext != EGL_NO_CONTEXT && 
+        currentCtx == popup->eglContext &&
+        currentDpy == popup->eglDisplay) {
+        /* We're currently using this context - unbind it first */
+        eglMakeCurrent(popup->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
     if (popup->vg) {
-        eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                       popup->eglSurface, popup->eglContext);
-        nvgDeleteGLES3(popup->vg);
-        popup->vg = NULL;
+        /* Need to make the context current to delete NanoVG */
+        if (popup->eglContext != EGL_NO_CONTEXT && 
+            popup->eglSurface != EGL_NO_SURFACE) {
+            eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
+                           popup->eglSurface, popup->eglContext);
+            nvgDeleteGLES3(popup->vg);
+            popup->vg = NULL;
+            /* Restore main context after NanoVG deletion */
+            RestoreMainContext();
+        } else {
+            /* Can't delete NanoVG safely without a valid context/surface */
+            POPUP_DEBUG("Warning: Cannot delete NanoVG - context or surface invalid");
+            popup->vg = NULL;
+        }
     }
 
     if (popup->eglContext != EGL_NO_CONTEXT) {
@@ -1080,8 +1109,15 @@ TkWaylandPopupGetNVGContext(
     TkWaylandPopup *popup)
 {
     if (!popup || !popup->vg) return NULL;
-    eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                   popup->eglSurface, popup->eglContext);
+    
+    /* Ensure the popup's EGL context is current before returning NanoVG */
+    if (popup->eglDisplay != EGL_NO_DISPLAY &&
+        popup->eglSurface != EGL_NO_SURFACE &&
+        popup->eglContext != EGL_NO_CONTEXT) {
+        eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
+                       popup->eglSurface, popup->eglContext);
+    }
+    
     return popup->vg;
 }
 
@@ -1114,8 +1150,26 @@ TkWaylandPopupBeginDraw(
         return TCL_ERROR;
     }
 
-    eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                   popup->eglSurface, popup->eglContext);
+    /* CRITICAL FIX: Always make the popup's EGL context current.
+     * This is necessary because:
+     * 1. The context may have been unbound during destruction of old surfaces
+     * 2. The main context may have been restored after previous operations
+     * 3. We need to ensure we're using the correct EGL surface
+     */
+    if (popup->eglDisplay == EGL_NO_DISPLAY ||
+        popup->eglSurface == EGL_NO_SURFACE ||
+        popup->eglContext == EGL_NO_CONTEXT) {
+        POPUP_DEBUG("BeginDraw: Invalid EGL state");
+        return TCL_ERROR;
+    }
+
+    EGLBoolean madeCurrent = eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
+                                            popup->eglSurface, popup->eglContext);
+    if (!madeCurrent) {
+        EGLint error = eglGetError();
+        POPUP_DEBUG("BeginDraw: eglMakeCurrent failed: 0x%x", error);
+        return TCL_ERROR;
+    }
 
     glViewport(0, 0, popup->width, popup->height);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -1137,23 +1191,6 @@ TkWaylandPopupBeginDraw(
     nvgBeginFrame(popup->vg, (float)popup->width, (float)popup->height, xscale);
     return TCL_OK;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandPopupEndDraw --
- *
- *	Finish the NanoVG frame and swap buffers.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Swaps EGL buffers, commits the surface, and flushes the Wayland display.
- *	Restores the main context after drawing is complete.
- *
- *----------------------------------------------------------------------
- */
 
 /*
  *----------------------------------------------------------------------
@@ -1193,7 +1230,8 @@ TkWaylandPopupEndDraw(
      */
     EGLBoolean swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
     if (!swapped) {
-        POPUP_DEBUG("eglSwapBuffers failed: 0x%x", eglGetError());
+        EGLint error = eglGetError();
+        POPUP_DEBUG("eglSwapBuffers failed: 0x%x", error);
     } else {
         POPUP_DEBUG("eglSwapBuffers succeeded");
     }

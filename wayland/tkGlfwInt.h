@@ -28,11 +28,15 @@
 #include "tkWaylandDefaults.h"
 
 #include <fontconfig/fontconfig.h>
-#include <nanovg.h>
 #include <hb.h>
 #include <SheenBidi/SheenBidi.h>
 
+/*
+ * NanoVG headers - MUST be included before any usage of NVGcontext or NVGcolor.
+ */
+#define NANOVG_GLES3 1
 #include "nanovg.h"
+#include "nanovg_gl.h"
 
 typedef struct NVGLUframebuffer NVGLUframebuffer;
 
@@ -507,8 +511,8 @@ typedef struct TkWindowPrivate {
 
 #define RESIZE_NONE     0
 #define RESIZE_LEFT     (1 << 0)
-#define RESIZE_RIGHT    (1 << 1)
-#define RESIZE_TOP      (1 << 2)
+#define RESIZE_RIGHT    (1 << 2)
+#define RESIZE_TOP      (1 << 1)
 #define RESIZE_BOTTOM   (1 << 3)
 
 /*
