@@ -370,7 +370,7 @@ static int TileBatchElement(
      */
 
     buf = (unsigned char *)
-	    attemptckalloc((size_t) dst.width * dst.height * 4);
+	    Tcl_AttemptAlloc((size_t) dst.width * dst.height * 4);
     if (buf == NULL) {
 	return 0;
     }
@@ -383,7 +383,7 @@ static int TileBatchElement(
     ximg = XCreateImage(display, NULL, 32, ZPixmap, 0, (char *) buf,
 	    (unsigned) dst.width, (unsigned) dst.height, 32, 4 * dst.width);
     if (ximg == NULL) {
-	ckfree(buf);
+	Tcl_Free(buf);
 	return 0;
     }
 
@@ -394,7 +394,7 @@ static int TileBatchElement(
     Tk_FreeGC(display, gc);
     ximg->data = NULL;
     XDestroyImage(ximg);
-    ckfree(buf);
+    Tcl_Free(buf);
     return result == Success;
 }
 #endif /* TTK_TILE_BATCH */
