@@ -584,10 +584,28 @@ TkWaylandMenubarCreateOrResize(
 
     MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
 
-    /* Extra safety redraw - force the menu to be displayed. */
-    if (wmPtr->menubarPopup) {
-        Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
-    }
+    /*
+     * Do NOT schedule an additional TkpDisplayMenu idle here.
+     *
+     * The MenuDrawMenubarIntoPopup call above drew and swapped the menubar
+     * in the correct popup.  Scheduling a redundant idle draw is harmful:
+     *
+     *   1. TkpDisplayMenu reads wmPtr->popup, which may be overwritten
+     *      (e.g. to a dropdown popup) or point to an already-destroyed
+     *      menubarPopup by the time the idle fires.
+     *
+     *   2. Each pending idle fires after the expose cascade has typically
+     *      rebuilt menubarPopup (new pointer, new EGL surface), so the idle
+     *      draw either hits a stale pointer or bails "no popup surface".
+     *
+     *   3. The resulting superfluous eglSwapBuffers calls are the primary
+     *      source of the EGL_BAD_MATCH (0x300d) errors visible in the log.
+     *
+     * If a redraw really is needed after map (e.g. the menu grew entries
+     * between CreateOrResize calls), TkEventuallyRedrawMenu will schedule
+     * it through the normal Tk expose path, which correctly resolves the
+     * current menubarPopup at the time it runs.
+     */
 
     MENU_LOG("TkWaylandMenubarCreateOrResize: menubar subsurface %p (%dx%d)",
         (void *)wmPtr->menubarPopup, mbW, mbH);
@@ -2390,7 +2408,7 @@ MenuDrawMenubarIntoPopup(
 
 static void
 TkpDisplayMenu(
-	       void *clientData)
+    void *clientData)
 {
     TkMenu   *menuPtr = (TkMenu *)clientData;
     TkWindow *winPtr;
@@ -2406,12 +2424,32 @@ TkpDisplayMenu(
     winPtr = (TkWindow *)menuPtr->tkwin;
     wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
-    if (!wmPtr || !wmPtr->popup) {
-        MENU_LOG("TkpDisplayMenu: no popup surface");
+    /*
+     * Use menubarPopup directly, not wmPtr->popup.
+     *
+     * wmPtr->popup is a shared field: it points to the menubar's subsurface
+     * normally, but is overwritten to the active dropdown's popup whenever a
+     * menu is posted.  TkpDisplayMenu is a menubar-specific callback and must
+     * always draw into wmPtr->menubarPopup.  Reading wmPtr->popup here was the
+     * cause of the "no popup surface" failures logged during the expose storm:
+     * the first CreateOrResize sets wmPtr->popup = menubarPopup, then the next
+     * resize destroys that popup and sets wmPtr->popup = NULL temporarily,
+     * so any in-flight TkpDisplayMenu idle fires against NULL.
+     *
+     * Additionally, cancel any duplicate pending calls before drawing.
+     * The expose storm schedules TkpDisplayMenu multiple times per resize
+     * cycle; all but the last are redundant and each one hits eglSwapBuffers
+     * on a surface the compositor hasn't fully committed yet.  Running the
+     * cancel-before-draw pattern collapses all pending calls into a single
+     * draw on the final, stable menubarPopup.
+     */
+    if (!wmPtr || !wmPtr->menubarPopup) {
+        MENU_LOG("TkpDisplayMenu: no menubar popup surface");
         return;
     }
 
-    MenuDrawIntoPopup(menuPtr, wmPtr->popup);
+    Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, clientData);
+    MenuDrawIntoPopup(menuPtr, wmPtr->menubarPopup);
 }
 
 /*

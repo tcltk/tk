@@ -358,9 +358,15 @@ XdgSurfaceConfigure(
     }
     wl_surface_commit(popup->surface);
     wl_display_flush(popupDisplay);
-    
-    /* FIX: Clear configuration-induced context leaks. */
-    RestoreMainContext();
+
+    /*
+     * Do NOT call RestoreMainContext here.  XdgSurfaceConfigure is a Wayland
+     * protocol callback; it involves no EGL operations and therefore cannot
+     * corrupt the current EGL context.  Calling RestoreMainContext here
+     * would clobber whatever context BeginDraw set if the compositor delivers
+     * a configure event during an active draw cycle, which is the primary
+     * cause of the "EGL context corrupted on window event" failure mode.
+     */
 }
 
 static const struct xdg_surface_listener xdgSurfaceListener = {
@@ -863,7 +869,25 @@ TkWaylandSubsurfaceCreate(
     wl_surface_damage(popup->surface, 0, 0, width, height);
     wl_surface_commit(popup->surface);
     wl_surface_commit(parentSurface);
-    wl_display_flush(popupDisplay);
+
+    /*
+     * Wait for the compositor to process the commits above before returning.
+     *
+     * wl_display_flush only drains the client's outgoing wire buffer; it does
+     * not block until the compositor has processed the wl_surface_commit and
+     * allocated a back buffer for the new wl_egl_window.  The caller
+     * (TkWaylandMenubarCreateOrResize) immediately calls MenuDrawMenubarIntoPopup
+     * which calls eglSwapBuffers on this new surface.  If the compositor
+     * hasn't finished its side of the handshake, eglSwapBuffers finds no
+     * valid buffer slot and returns EGL_BAD_MATCH (0x300d) -- the exact
+     * failure seen in the menubar redraw log.
+     *
+     * wl_display_roundtrip sends a wl_display.sync request and blocks until
+     * the compositor sends back the sync callback, which happens only after
+     * it has processed all pending requests including both commits above.
+     * This guarantees the EGL surface is ready for rendering before we return.
+     */
+    wl_display_roundtrip(popupDisplay);
 
     POPUP_DEBUG("Subsurface popup created and committed, configured=1");
 
@@ -926,7 +950,7 @@ TkWaylandSubsurfaceReconfigure(
     }
     
     wl_display_flush(popupDisplay);
-    RestoreMainContext();
+    /* No EGL operations performed; no context restore needed. */
 }
 
 /*
@@ -963,7 +987,7 @@ TkWaylandSubsurfacePlaceAbove(
     }
     
     wl_display_flush(popupDisplay);
-    RestoreMainContext();
+    /* No EGL operations performed here; no context restore needed. */
 }
 
 /*
@@ -1002,34 +1026,44 @@ TkWaylandPopupDestroy(
         }
     }
 
-    /* Ensure we're not current on this context before destroying resources. */
-    EGLContext currentCtx = eglGetCurrentContext();
-    EGLDisplay currentDpy = eglGetCurrentDisplay();
-    EGLSurface currentDraw = eglGetCurrentSurface(EGL_DRAW);
-    EGLSurface currentRead = eglGetCurrentSurface(EGL_READ);
-    
-    if (popup->eglContext != EGL_NO_CONTEXT && 
-        currentCtx == popup->eglContext &&
-        currentDpy == popup->eglDisplay) {
-        /* We're currently using this context - unbind it first. */
-        eglMakeCurrent(popup->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    }
+    /* 
+     * Unconditionally unbind whatever context is current.  This must happen
+     * before any EGL resource destruction so the driver does not try to flush
+     * pending work through surfaces/contexts we are about to delete.
+     */
+    eglMakeCurrent(popup->eglDisplay != EGL_NO_DISPLAY
+                       ? popup->eglDisplay
+                       : glfwGetEGLDisplay(),
+                   EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
     if (popup->vg) {
-        /* Need to make the context current to delete NanoVG. */
-        if (popup->eglContext != EGL_NO_CONTEXT && 
-            popup->eglSurface != EGL_NO_SURFACE) {
-            eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                           popup->eglSurface, popup->eglContext);
-            nvgDeleteGLES3(popup->vg);
-            popup->vg = NULL;
-            /* Restore main context after NanoVG deletion. */
-            RestoreMainContext();
+        /*
+         * Re-bind the popup context just long enough to delete the NanoVG
+         * context, then immediately unbind again.  Only attempt this if both
+         * the surface and context are still valid; if either has been torn
+         * down already (e.g. by a concurrent resize) we leak the NanoVG
+         * object rather than corrupting the main context.
+         */
+        if (popup->eglContext != EGL_NO_CONTEXT &&
+            popup->eglSurface != EGL_NO_SURFACE &&
+            popup->eglDisplay != EGL_NO_DISPLAY) {
+            EGLBoolean ok = eglMakeCurrent(popup->eglDisplay,
+                                           popup->eglSurface,
+                                           popup->eglSurface,
+                                           popup->eglContext);
+            if (ok) {
+                nvgDeleteGLES3(popup->vg);
+                eglMakeCurrent(popup->eglDisplay,
+                               EGL_NO_SURFACE, EGL_NO_SURFACE,
+                               EGL_NO_CONTEXT);
+            } else {
+                POPUP_DEBUG("Warning: cannot bind popup ctx for NVG delete "
+                            "(err 0x%x) — leaking NVG object", eglGetError());
+            }
         } else {
-            /* Can't delete NanoVG safely without a valid context/surface. */
             POPUP_DEBUG("Warning: Cannot delete NanoVG - context or surface invalid");
-            popup->vg = NULL;
         }
+        popup->vg = NULL;
     }
 
     if (popup->eglContext != EGL_NO_CONTEXT) {
@@ -1067,8 +1101,14 @@ TkWaylandPopupDestroy(
     }
     Tcl_Free(popup);
 
-    /* Restore main context after popup destruction. */
-    RestoreMainContext();
+    /*
+     * Leave the EGL context unbound.  Callers that need the main context
+     * restored after a Destroy (e.g. TkWaylandMenubarCreateOrResize) call
+     * RestoreMainContext themselves.  Doing it here would clobber the popup
+     * context of any sibling popup that is mid-draw when this Destroy runs,
+     * which is the "context corrupted on window event" failure mode for
+     * cascade/menubar interleaving.
+     */
 }
 
 /*
@@ -1118,15 +1158,15 @@ TkWaylandPopupGetNVGContext(
     TkWaylandPopup *popup)
 {
     if (!popup || !popup->vg) return NULL;
-    
-    /* Ensure the popup's EGL context is current before returning NanoVG. */
-    if (popup->eglDisplay != EGL_NO_DISPLAY &&
-        popup->eglSurface != EGL_NO_SURFACE &&
-        popup->eglContext != EGL_NO_CONTEXT) {
-        eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                       popup->eglSurface, popup->eglContext);
-    }
-    
+
+    /*
+     * Do NOT call eglMakeCurrent here.  The caller must have already called
+     * TkWaylandPopupBeginDraw, which owns the context switch for the entire
+     * BeginDraw → (draw commands) → EndDraw frame.  A second eglMakeCurrent
+     * in the middle of a frame forces the driver to flush pending work and
+     * can leave the surface in an inconsistent state on some Mesa versions,
+     * which is the root cause of the context-corruption-on-window-event bug.
+     */
     return popup->vg;
 }
 
