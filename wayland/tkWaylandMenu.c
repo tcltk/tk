@@ -484,8 +484,37 @@ TkWaylandMenubarCreateOrResize(
     menuPtr = wmPtr->menubarMenuPtr;
 
     glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    if (glfwWindow) {
-        glfwGetWindowSize(glfwWindow, &width, &height);
+
+    /*
+     * Determine the menubar width.  Priority order:
+     *
+     * 1. wmPtr->configWidth -- the width that UpdateGeometryInfo last
+     *    successfully applied via glfwSetWindowSize.  This is the most
+     *    reliable value because it reflects what the compositor actually
+     *    accepted, and it is available even during the deferred-setup idle
+     *    pass that fires just after WM_NEVER_MAPPED clears (before the
+     *    first user-driven resize).
+     *
+     * 2. glfwGetWindowSize -- the compositor-confirmed size for the current
+     *    frame.  On Wayland this matches configWidth once the first frame
+     *    has been presented, so it is a good cross-check on resize.
+     *
+     * 3. Tk_Width -- Tk's record of the window's last configured size.
+     *    Lags behind on the very first map.
+     *
+     * 4. winPtr->reqWidth -- the geometry-manager-requested size.  Used
+     *    only if none of the above have been set yet.
+     *
+     * 5. Hard minimum of 200 px so the subsurface is always non-trivial.
+     */
+    width = 0;
+    if (wmPtr->configWidth > 0) {
+        width = wmPtr->configWidth;
+    }
+    if (width <= 0 && glfwWindow) {
+        int gw = 0, gh = 0;
+        glfwGetWindowSize(glfwWindow, &gw, &gh);
+        if (gw > 0) width = gw;
     }
     if (width <= 0) {
         width = Tk_Width((Tk_Window)winPtr);

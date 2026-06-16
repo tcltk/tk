@@ -836,14 +836,18 @@ TkWaylandSubsurfaceCreate(
      * which region the compositor should treat as dirty; it must precede
      * commit so the compositor picks it up in the same atomic update.
      *
-     * Do NOT commit the parent here.  The parent (GLFW) has its own present
-     * loop; committing it from this call site races with that loop and can
-     * produce a blank or torn frame before our subsurface content is ready.
-     * The subsurface will appear in the compositor's scene as soon as GLFW
-     * issues its next parent commit.
+     * Unlike subsequent draw calls (TkWaylandPopupEndDraw), we DO commit
+     * the parent once here at creation time.  A newly created wl_subsurface
+     * is not visible in the compositor's scene until the parent surface is
+     * committed at least once with the subsurface already attached -- the
+     * compositor needs that parent commit to register the new child in its
+     * surface tree.  After this initial commit GLFW's normal present loop
+     * will issue all future parent commits, so EndDraw must not do so (to
+     * avoid racing with that loop).
      */
     wl_surface_damage(popup->surface, 0, 0, width, height);
     wl_surface_commit(popup->surface);
+    wl_surface_commit(parentSurface);
     wl_display_flush(popupDisplay);
 
     POPUP_DEBUG("Subsurface popup created and committed, configured=1");
@@ -1151,6 +1155,24 @@ TkWaylandPopupBeginDraw(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandPopupEndDraw --
+ *
+ *	Finish the NanoVG frame and swap buffers.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Swaps EGL buffers, which automatically damages and commits the
+ *	surface with the rendered content. Restores the main context
+ *	after drawing is complete.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE void
 TkWaylandPopupEndDraw(
     TkWaylandPopup *popup)
@@ -1159,39 +1181,22 @@ TkWaylandPopupEndDraw(
 
     nvgEndFrame(popup->vg);
     
-    /* Check EGL swap buffers result. */
+    /* 
+     * eglSwapBuffers on a wl_egl_window:
+     *   - Attaches the rendered buffer to the surface
+     *   - Damages the entire surface area
+     *   - Commits the surface atomically
+     * 
+     * DO NOT add additional wl_surface_damage or wl_surface_commit
+     * here as that would overwrite the pending state with a blank
+     * buffer, causing no visible content.
+     */
     EGLBoolean swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
     if (!swapped) {
         POPUP_DEBUG("eglSwapBuffers failed: 0x%x", eglGetError());
     } else {
         POPUP_DEBUG("eglSwapBuffers succeeded");
     }
-    
-    /* Damage the entire surface to tell compositor what changed */
-    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
-    
-    /* Commit the subsurface's own surface.
-     *
-     * In desync mode (set in TkWaylandSubsurfaceCreate) the subsurface's
-     * pending state is applied to the compositor independently the moment
-     * wl_surface_commit() is called here.  We must NOT also commit the
-     * parent surface:
-     *
-     *   - Committing the parent resets the parent's pending state (including
-     *     its own damage and buffer attachment) which is still being managed
-     *     by GLFW's swap/present loop.  That races with GLFW and produces
-     *     EGL_BAD_MATCH / blank frames on at least sway and wlroots.
-     *
-     *   - On compositors that promote a desync subsurface's update into the
-     *     next parent frame anyway, the extra parent commit is a no-op at
-     *     best and a frame-drop at worst.
-     *
-     * If sync mode is ever needed instead, switch to wl_subsurface_set_sync()
-     * and add a single parent commit *after* the parent's own draw is done,
-     * not here.
-     */
-    wl_surface_commit(popup->surface);
-    POPUP_DEBUG("Surface committed");
 
     if (popupDisplay) {
         wl_display_flush(popupDisplay);
