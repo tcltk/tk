@@ -152,24 +152,39 @@ static NVGcolor TkColorToNVGColor(XColor *color) {
                    color->blue >> 8, 255);
 }
 
-/* Helper function to setup NanoVG font from Tk_Font. */
-static void SetupNanoVGFont(NVGcontext *vg, Tk_Font tkfont) {
+/* Helper function to setup NanoVG font from real Tk_Font */
+static void
+SetupNanoVGFont(
+    NVGcontext *vg,
+    Tk_Font tkfont)
+{
     if (!vg) return;
-    
+
     if (tkfont) {
-        Tk_FontMetrics fm;
-        Tk_GetFontMetrics(tkfont, &fm);
-        float fontSize = (float)fm.linespace;
-        if (fontSize <= 0) fontSize = DEFAULT_FONT_SIZE;
+        WaylandFont *fontPtr = (WaylandFont *)tkfont;
         
-        /* For now, use a default font face since we can't easily get the
-         * actual font family name from Tk_Font in a portable way */
-        nvgFontFace(vg, DEFAULT_FONT);
+        /* Ensure the font (and its fallbacks) is loaded into this NVG context */
+        int fontId = EnsureNvgFont(fontPtr, vg);
+        if (fontId >= 0) {
+            nvgFontFaceId(vg, fontId);
+        } else {
+            /* Fallback */
+            nvgFontFace(vg, DEFAULT_FONT);
+        }
+
+        /* Use the real metrics from Tk */
+        float fontSize = (float)TkpGetFontPixelSize(tkfont);
+        if (fontSize <= 0.0f) fontSize = DEFAULT_FONT_SIZE;
+
         nvgFontSize(vg, fontSize);
+        
+        MENU_LOG("SetupNanoVGFont: Tk font -> pixelSize=%d, nvgId=%d", 
+                 (int)fontSize, fontId);
     } else {
         nvgFontFace(vg, DEFAULT_FONT);
         nvgFontSize(vg, DEFAULT_FONT_SIZE);
     }
+
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 }
 
@@ -1414,9 +1429,9 @@ DrawMenuEntryLabel(
 	}
     }
 
-    /* Draw text label using NanoVG */
+    /* Draw text label using NanoVG with proper alignment (middle). */
     if ((mePtr->compound != COMPOUND_NONE) || !haveImage) { 
-	int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2; 
+	float textY = y + height / 2.0f + textYOffset;
 	
 	if (mePtr->labelLength > 0) { 
 	    const char *label = Tcl_GetString(mePtr->labelPtr); 
@@ -1424,8 +1439,7 @@ DrawMenuEntryLabel(
 	    /* Setup font from Tk font */
 	    SetupNanoVGFont(vg, tkfont);
 	    nvgFillColor(vg, textColor);
-	    nvgText(vg, leftEdge + textXOffset, baseline + textYOffset, 
-		    label, NULL);
+	    nvgText(vg, leftEdge + textXOffset, textY, label, NULL);
 	    
 	    DrawMenuUnderline(menuPtr, mePtr, vg, tkfont, fmPtr, 
 			      x + textXOffset, y + textYOffset, width, height, 
@@ -2109,18 +2123,20 @@ TkpDrawMenuEntry(
         }
     }
     
-    /* Determine text color - use a safe default if border not available */
-    XColor *fgColor = NULL;
-    Tk_3DBorder defaultBorder = Tk_Get3DBorder(mePtr->menuPtr->interp,
-                                                mePtr->menuPtr->tkwin,
-                                                Tk_GetUid("background"));
-    if (bgBorder) {
-        fgColor = Tk_3DBorderColor(bgBorder);
-    } else if (defaultBorder) {
-        fgColor = Tk_3DBorderColor(defaultBorder);
-    }
-    NVGcolor textColor = fgColor ? TkColorToNVGColor(fgColor) : nvgRGBA(0, 0, 0, 255);
+    /* Determine text color using proper Tk foreground */
+    NVGcolor textColor = nvgRGBA(0, 0, 0, 255);
     
+    Tk_3DBorder fgBorder = NULL;
+    if (mePtr->menuPtr->borderPtr) {
+        fgBorder = Tk_Get3DBorder(mePtr->menuPtr->interp,
+                                  mePtr->menuPtr->tkwin,
+                                  Tk_GetUid("foreground"));
+    }
+    if (fgBorder) {
+        XColor *fgX = Tk_3DBorderColor(fgBorder);
+        textColor = TkColorToNVGColor(fgX);
+    }
+
     if (mePtr->state == ENTRY_DISABLED) {
         textColor = nvgRGBA(128, 128, 128, 255);
     }
@@ -2148,8 +2164,6 @@ TkpDrawMenuEntry(
 	    
 	    if (bgBorder) {
 	        indicatorColor = Tk_3DBorderColor(bgBorder);
-	    } else if (defaultBorder) {
-	        indicatorColor = Tk_3DBorderColor(defaultBorder);
 	    }
 	    
 	    disabledBorder = Tk_Get3DBorder(mePtr->menuPtr->interp,
@@ -2237,19 +2251,52 @@ MenuDrawIntoPopup(
         menuMetrics.descent = DEFAULT_FONT_SIZE * 0.25;
     }
 
+    /* === Draw background using real Tk configuration === */
+    Tk_3DBorder bgBorder = NULL;
+    if (menuPtr->borderPtr != NULL) {
+        bgBorder = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
+    }
+    if (!bgBorder) {
+        bgBorder = Tk_Get3DBorder(menuPtr->interp, menuPtr->tkwin, Tk_GetUid("Menu"));
+    }
+
+    NVGcolor bgColor = nvgRGB(240, 240, 240);
+    NVGcolor borderColor = nvgRGB(160, 160, 160);
+
+    if (bgBorder) {
+        XColor *bgColorX = Tk_3DBorderColor(bgBorder);
+        bgColor = TkColorToNVGColor(bgColorX);
+        borderColor = nvgRGB(
+            (bgColorX->red >> 8) * 0.7,
+            (bgColorX->green >> 8) * 0.7,
+            (bgColorX->blue >> 8) * 0.7
+        );
+    }
+
     /* Draw background */
     nvgBeginPath(vg);
     nvgRect(vg, 0, 0, (float)menuW, (float)menuH);
-    nvgFillColor(vg, nvgRGB(240, 240, 240));
+    nvgFillColor(vg, bgColor);
     nvgFill(vg);
     MENU_LOG("MenuDrawIntoPopup: drew background");
 
-    /* Draw border */
-    nvgBeginPath(vg);
-    nvgRect(vg, 0.5f, 0.5f, (float)menuW - 1.0f, (float)menuH - 1.0f);
-    nvgStrokeColor(vg, nvgRGB(160, 160, 160));
-    nvgStrokeWidth(vg, 1.0f);
-    nvgStroke(vg);
+    /* Draw border / separator */
+    if (menuPtr->menuType == MENUBAR) {
+        /* Subtle bottom line only for menubar */
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, 0, (float)menuH - 0.5f);
+        nvgLineTo(vg, (float)menuW, (float)menuH - 0.5f);
+        nvgStrokeColor(vg, borderColor);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
+    } else {
+        /* Full border for popup menus */
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.5f, 0.5f, (float)menuW - 1.0f, (float)menuH - 1.0f);
+        nvgStrokeColor(vg, borderColor);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
+    }
 
     Drawable d = Tk_WindowId(menuPtr->tkwin);
     MENU_LOG("MenuDrawIntoPopup: drawing %d entries", menuPtr->numEntries);

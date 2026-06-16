@@ -17,14 +17,20 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
+#include "tkFont.h"
 #include "tkMenu.h"
-#include "tkMenubutton.h"  /* Add this line */
+#include "tkMenubutton.h"
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
 #include <libdecor.h>
 #include <xkbcommon/xkbcommon.h>
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
+
+#include <fontconfig/fontconfig.h>
+#include <nanovg.h>
+#include <hb.h>
+#include <SheenBidi/SheenBidi.h>
 
 #include "nanovg.h"
 
@@ -43,6 +49,157 @@ void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
  */
 typedef struct TkWaylandPopup TkWaylandPopup;
 struct wl_seat;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Font System Structures (from tkWaylandFont.c)
+ *
+ *	Shared font structures for HarfBuzz shaping, Fontconfig fallback,
+ *	and NanoVG rendering.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Tuning constants for font shaping */
+#define MAX_FACES           64      /* Max fallback faces per logical font.  */
+#define MAX_GLYPHS          512     /* Max glyphs per shaped buffer.         */
+#define MAX_BIDI_RUNS       32      /* Max bidi level runs.                  */
+#define MAX_CLUSTER_BREAKS  512     /* Max cluster break positions.          */
+#define MAX_STRING_CACHE    1024    /* Max bytes stored in one cache slot.   */
+#define CACHE_SLOTS         8       /* Number of LRU shaper cache entries.   */
+
+/*
+ * BidiRun
+ *
+ *   One bidirectional level run produced by SheenBidi.  Offsets are in
+ *   UCS-4 character indices (not bytes); the shaper converts to bytes.
+ */
+typedef struct {
+    int offset;     /* Character index of run start in the decoded array. */
+    int len;        /* Length in characters.                              */
+    int isRTL;      /* 1 = right-to-left, 0 = left-to-right.             */
+} BidiRun;
+
+/*
+ * WaylandFtFace
+ *
+ *   One font face from Fontconfig, with lazily-loaded HarfBuzz state and
+ *   the NanoVG font id for this face.
+ */
+typedef struct WaylandFtFace {
+    FcPattern  *source;         /* FC pattern — owned by fontset, not us.   */
+    FcCharSet  *charset;        /* Character coverage — owned by us.        */
+
+    /* HarfBuzz state (loaded lazily on first shape call). */
+    hb_font_t  *hbFont;
+    hb_blob_t  *hbBlob;
+    hb_face_t  *hbFace;
+    int         isLoaded;       /* Non-zero once hbFont is ready.           */
+
+    /* NanoVG handle for this face (loaded lazily on first draw). */
+    char        nvgName[64];    /* Unique name used with nvgCreateFont.     */
+    int         nvgFontId;      /* -1 until loaded.                         */
+    char       *filePath;       /* Font file path (strdup'd).               */
+    int         faceIndex;      /* Index within font file (for TTC etc.).   */
+
+    /* Metrics (filled when hbFont is loaded). */
+    double      unitsPerEm;
+    double      ascender;
+    double      descender;
+} WaylandFtFace;
+
+/*
+ * ShapedGlyphBuffer
+ *
+ *   Output of WaylandShaper_ShapeString.  Contains per-glyph advance and
+ *   cluster information for measuring and rendering.
+ */
+typedef struct ShapedGlyphBuffer {
+    struct {
+        int          faceIndex;   /* Which WaylandFtFace produced this glyph. */
+        unsigned int glyphId;     /* HarfBuzz glyph id.                       */
+        int          x;           /* Visual X offset from string origin (px).  */
+        int          y;           /* Vertical offset (pixels, usually 0).      */
+        int          advanceX;    /* Width in pixels.                          */
+        int          byteOffset;  /* Byte offset in source UTF-8 string.       */
+        int          clusterLen;  /* Bytes in this cluster.                    */
+        int          isRTL;       /* 1 if from an RTL run.                     */
+
+        /* UTF-8 for this cluster (for nvgText rendering). */
+        char         clusterUtf8[16];
+        int          clusterUtf8Len;
+    } glyphs[MAX_GLYPHS];
+    int glyphCount;
+
+    /* Visual index: sorted by screen X for cursor placement. */
+    struct {
+        int x;
+        int advanceX;
+        int byteStart;
+        int byteEnd;
+        int isRTL;
+    } visualIndex[MAX_GLYPHS];
+    int indexCount;
+
+    int totalAdvance;            /* Total pixel width of the shaped string.   */
+
+    /* Cluster break byte offsets for line fitting. */
+    int clusterBreaks[MAX_CLUSTER_BREAKS];
+    int clusterBreakCount;
+} ShapedGlyphBuffer;
+
+/*
+ * WaylandShaper
+ * 
+ *   Persistent per-font shaping state.  
+ */
+typedef struct WaylandShaper {
+    hb_buffer_t *buffer;        /* Reused HarfBuzz buffer.                  */
+
+    /* Direct-mapped character → face cache (64 slots). */
+    struct {
+        FcChar32 uc;
+        int      faceIdx;
+    } charCache[64];
+
+    /* Multi-entry string result cache (round-robin). */
+    struct {
+        char              text[MAX_STRING_CACHE];
+        int               len;
+        ShapedGlyphBuffer buffer;
+        int               valid;
+    } cache[CACHE_SLOTS];
+    int cacheNext;
+
+    int shapeErrors;
+} WaylandShaper;
+
+/*
+ * WaylandFont
+ *
+ *   Main platform font structure.  TkFont MUST be first.
+ */
+typedef struct WaylandFont {
+    TkFont          font;           /* Generic Tk font data — MUST be first. */
+
+    /* Fontconfig multi-face array. */
+    WaylandFtFace  *faces;
+    int             nfaces;
+    FcFontSet      *fontset;        /* Owned; destroyed in DeleteFont.       */
+    FcPattern      *pattern;        /* Request pattern (owned).              */
+
+    /* Convenience: nvgFontId of faces[0], set by EnsureNvgFont. */
+    int             nvgFontId;
+
+    /* Metrics (from the primary face via stbtt). */
+    int             pixelSize;
+    int             underlinePos;
+    int             barHeight;
+
+    /* Shaper. */
+    WaylandShaper   shaper;
+} WaylandFont;
 
 /*
  *----------------------------------------------------------------------
@@ -483,6 +640,34 @@ typedef struct {
     uint32_t group;
 } TkXKBState;
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Font Functions (from tkWaylandFont.c)
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Ensure all faces of a font are loaded into NanoVG and return primary ID. */
+MODULE_SCOPE int EnsureNvgFont(WaylandFont *fontPtr, NVGcontext *vg);
+
+/* Shape a string into a ShapedGlyphBuffer with full HarfBuzz + Bidi support. */
+MODULE_SCOPE int WaylandShaper_ShapeString(
+    WaylandShaper     *shaper,
+    WaylandFont       *fontPtr,
+    const char        *source,
+    int                numBytes,
+    ShapedGlyphBuffer *buffer
+);
+
+/* Initialize a shaper structure. */
+MODULE_SCOPE void WaylandShaper_Init(WaylandShaper *s);
+
+/* Destroy a shaper structure and free resources. */
+MODULE_SCOPE void WaylandShaper_Destroy(WaylandShaper *s);
+
+/* Get the pixel size of a WaylandFont. */
+MODULE_SCOPE int TkpGetFontPixelSize(Tk_Font tkfont);
 
 /*
  *----------------------------------------------------------------------
