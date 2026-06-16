@@ -172,14 +172,13 @@ SetupNanoVGFont(
             nvgFontFace(vg, DEFAULT_FONT);
         }
 
-        /* Use the real metrics from Tk */
-        float fontSize = (float)TkpGetFontPixelSize(tkfont);
+        /* Use the real metrics from Tk - direct pixelSize access */
+        float fontSize = (float)fontPtr->pixelSize;
         if (fontSize <= 0.0f) fontSize = DEFAULT_FONT_SIZE;
 
         nvgFontSize(vg, fontSize);
         
-        MENU_LOG("SetupNanoVGFont: Tk font -> pixelSize=%d, nvgId=%d", 
-                 (int)fontSize, fontId);
+        MENU_LOG("SetupNanoVGFont: pixelSize=%d, nvgId=%d", fontPtr->pixelSize, fontId);
     } else {
         nvgFontFace(vg, DEFAULT_FONT);
         nvgFontSize(vg, DEFAULT_FONT_SIZE);
@@ -584,6 +583,11 @@ TkWaylandMenubarCreateOrResize(
     }
 
     MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+
+    /* Extra safety redraw - force the menu to be displayed */
+    if (wmPtr->menubarPopup) {
+        Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
+    }
 
     MENU_LOG("TkWaylandMenubarCreateOrResize: menubar subsurface %p (%dx%d)",
         (void *)wmPtr->menubarPopup, mbW, mbH);
@@ -1431,7 +1435,7 @@ DrawMenuEntryLabel(
 
     /* Draw text label using NanoVG with proper alignment (middle). */
     if ((mePtr->compound != COMPOUND_NONE) || !haveImage) { 
-	float textY = y + height / 2.0f + textYOffset;
+	float textY = (float)(y + height / 2 + textYOffset);
 	
 	if (mePtr->labelLength > 0) { 
 	    const char *label = Tcl_GetString(mePtr->labelPtr); 
@@ -1439,7 +1443,7 @@ DrawMenuEntryLabel(
 	    /* Setup font from Tk font */
 	    SetupNanoVGFont(vg, tkfont);
 	    nvgFillColor(vg, textColor);
-	    nvgText(vg, leftEdge + textXOffset, textY, label, NULL);
+	    nvgText(vg, (float)(leftEdge + textXOffset), textY, label, NULL);
 	    
 	    DrawMenuUnderline(menuPtr, mePtr, vg, tkfont, fmPtr, 
 			      x + textXOffset, y + textYOffset, width, height, 

@@ -1232,6 +1232,21 @@ TkWaylandPopupEndDraw(
     if (!swapped) {
         EGLint error = eglGetError();
         POPUP_DEBUG("eglSwapBuffers failed: 0x%x", error);
+        
+        /* Common recovery for BAD_MATCH */
+        if (error == EGL_BAD_MATCH && popup->eglWindow) {
+            int w, h;
+            TkWaylandPopupGetSize(popup, &w, &h);
+            if (w > 0 && h > 0) {
+                wl_egl_window_resize(popup->eglWindow, w, h, 0, 0);
+                swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
+                if (swapped) {
+                    POPUP_DEBUG("eglSwapBuffers succeeded after resize recovery");
+                } else {
+                    POPUP_DEBUG("eglSwapBuffers still failed after resize recovery");
+                }
+            }
+        }
     } else {
         POPUP_DEBUG("eglSwapBuffers succeeded");
     }
