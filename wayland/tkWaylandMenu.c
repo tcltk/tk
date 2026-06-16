@@ -163,16 +163,16 @@ SetupNanoVGFont(
     if (tkfont) {
         WaylandFont *fontPtr = (WaylandFont *)tkfont;
         
-        /* Ensure the font (and its fallbacks) is loaded into this NVG context */
+        /* Ensure the font (and its fallbacks) is loaded into this NVG context. */
         int fontId = EnsureNvgFont(fontPtr, vg);
         if (fontId >= 0) {
             nvgFontFaceId(vg, fontId);
         } else {
-            /* Fallback */
+            /* Fallback. */
             nvgFontFace(vg, DEFAULT_FONT);
         }
 
-        /* Use the real metrics from Tk - direct pixelSize access */
+        /* Use the real metrics from Tk - direct pixelSize access. */
         float fontSize = (float)fontPtr->pixelSize;
         if (fontSize <= 0.0f) fontSize = DEFAULT_FONT_SIZE;
 
@@ -584,7 +584,7 @@ TkWaylandMenubarCreateOrResize(
 
     MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
 
-    /* Extra safety redraw - force the menu to be displayed */
+    /* Extra safety redraw - force the menu to be displayed. */
     if (wmPtr->menubarPopup) {
         Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
     }
@@ -664,7 +664,10 @@ MenubarResizeIdleProc(
     if (!wmPtr || !wmPtr->menubarMenuPtr) {
         return;
     }
+    
+    /* FIX: Instead of dropping completely, reschedule if still unmapped. */
     if (wmPtr->flags & WM_NEVER_MAPPED) {
+        Tcl_DoWhenIdle(MenubarResizeIdleProc, clientData);
         return;
     }
     TkWaylandMenubarCreateOrResize(winPtr);
@@ -979,7 +982,8 @@ GetMenuLabelGeometry(
 	    *heightPtr = fm.linespace; 
 	} 
     } 
-    *heightPtr += 1; 
+    /* FIX: Increase padding tolerance explicitly for NanoVG middle-align baselines. */
+    *heightPtr += 4;
 }
 
 /*
@@ -1386,12 +1390,12 @@ DrawMenuEntryLabel(
 	} 
     } 
 
-    /* Draw image using X11 functions */
+    /* Draw image using X11 functions. */
     if (haveImage) {
 	int imageX = leftEdge + imageXOffset;
 	int imageY = y + (height - imageHeight) / 2 + imageYOffset;
 	
-	/* Ensure image stays within menu bounds */
+	/* Ensure image stays within menu bounds. */
 	if (imageX < x) imageX = x;
 	if (imageY < y) imageY = y;
 	if (imageX + imageWidth > x + width) imageX = x + width - imageWidth;
@@ -1440,7 +1444,7 @@ DrawMenuEntryLabel(
 	if (mePtr->labelLength > 0) { 
 	    const char *label = Tcl_GetString(mePtr->labelPtr); 
 	    
-	    /* Setup font from Tk font */
+	    /* Setup font from Tk font. */
 	    SetupNanoVGFont(vg, tkfont);
 	    nvgFillColor(vg, textColor);
 	    nvgText(vg, (float)(leftEdge + textXOffset), textY, label, NULL);
@@ -1451,7 +1455,7 @@ DrawMenuEntryLabel(
 	} 
     } 
 
-    /* Draw disabled overlay using stippling */
+    /* Draw disabled overlay using stippling. */
     if (mePtr->state == ENTRY_DISABLED) { 
 	nvgBeginPath(vg);
 	nvgRect(vg, x, y, width, height);
@@ -1518,11 +1522,11 @@ DrawMenuUnderline(
 	    
 	    ty = y + (height + fmPtr->ascent - fmPtr->descent) / 2; 
 	    
-	    /* Calculate underline position */
+	    /* Calculate underline position. */
 	    underlineX = leftEdge + Tk_TextWidth(tkfont, label, start - label);
 	    underlineWidth = Tk_TextWidth(tkfont, start, end - start);
 	    
-	    /* Draw underline using NanoVG */
+	    /* Draw underline using NanoVG. */
 	    nvgBeginPath(vg);
 	    nvgMoveTo(vg, underlineX, ty + 2);
 	    nvgLineTo(vg, underlineX + underlineWidth, ty + 2);
@@ -1572,7 +1576,7 @@ DrawTearoffEntry(
     py = y + height/2; 
     px = x;
 
-    /* Draw dashed line using NanoVG */
+    /* Draw dashed line using NanoVG. */
     nvgStrokeWidth(vg, 1.0f);
     nvgStrokeColor(vg, nvgRGBA(100, 100, 100, 255));
     
@@ -1620,7 +1624,7 @@ TkpPostMenu(
 {
     int result;
 
-    /* Safety checks */
+    /* Safety checks. */
     if (!interp || !menuPtr) {
         return TCL_ERROR;
     }
@@ -1656,7 +1660,7 @@ TkpPostMenu(
 
     MENU_LOG("TkpPostMenu: popup size %dx%d", popupW, popupH);
 
-    /* Verify we have a valid main window before posting */
+    /* Verify we have a valid main window before posting. */
     if (!mainGlfwWindow) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
             "Cannot post menu: no main GLFW window", -1));
@@ -2085,10 +2089,10 @@ TkpDrawMenuEntry(
     int adjustedY = y + padY; 
     int adjustedHeight = height - 2 * padY;
     
-    /* Safety check */
+    /* Safety check. */
     if (!mePtr || !mePtr->menuPtr || !mePtr->menuPtr->tkwin) return;
     
-    /* Get the actual borders from the menu */
+    /* Get the actual borders from the menu. */
     if (mePtr->menuPtr->borderPtr != NULL) {
         bgBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin, 
                                           mePtr->menuPtr->borderPtr);
@@ -2114,7 +2118,7 @@ TkpDrawMenuEntry(
     
     if (!vg) return;
     
-    /* Get the font for this entry - mirroring geometry code */
+    /* Get the font for this entry - mirroring geometry code. */
     Tk_Font entryFont = tkfont;
     Tk_FontMetrics entryMetrics;
     const Tk_FontMetrics *entryFmPtr = fmPtr;
@@ -2127,7 +2131,7 @@ TkpDrawMenuEntry(
         }
     }
     
-    /* Determine text color using proper Tk foreground */
+    /* Determine text color using proper Tk foreground. */
     NVGcolor textColor = nvgRGBA(0, 0, 0, 255);
     
     Tk_3DBorder fgBorder = NULL;
@@ -2161,7 +2165,7 @@ TkpDrawMenuEntry(
 				 activeBorder, bgBorder, x, adjustedY, width, adjustedHeight, 
 				 (drawingParameters & DRAW_MENU_ENTRY_ARROW) != 0, textColor);
 	if (!mePtr->hideMargin) { 
-	    /* For indicator, we need proper colors - get them from the borders */
+	    /* For indicator, we need proper colors - get them from the borders. */
 	    XColor *indicatorColor = NULL;
 	    XColor *disableColor = NULL;
 	    Tk_3DBorder disabledBorder = NULL;
@@ -2243,7 +2247,7 @@ MenuDrawIntoPopup(
         return;
     }
 
-    /* Get menu's default font - mirroring geometry code */
+    /* Get menu's default font - mirroring geometry code. */
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     if (menuFont) {
         Tk_GetFontMetrics(menuFont, &menuMetrics);
@@ -2277,16 +2281,16 @@ MenuDrawIntoPopup(
         );
     }
 
-    /* Draw background */
+    /* Draw background. */
     nvgBeginPath(vg);
     nvgRect(vg, 0, 0, (float)menuW, (float)menuH);
     nvgFillColor(vg, bgColor);
     nvgFill(vg);
     MENU_LOG("MenuDrawIntoPopup: drew background");
 
-    /* Draw border / separator */
+    /* Draw border / separator. */
     if (menuPtr->menuType == MENUBAR) {
-        /* Subtle bottom line only for menubar */
+        /* Subtle bottom line only for menubar. */
         nvgBeginPath(vg);
         nvgMoveTo(vg, 0, (float)menuH - 0.5f);
         nvgLineTo(vg, (float)menuW, (float)menuH - 0.5f);
@@ -2294,7 +2298,7 @@ MenuDrawIntoPopup(
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
     } else {
-        /* Full border for popup menus */
+        /* Full border for popup menus. */
         nvgBeginPath(vg);
         nvgRect(vg, 0.5f, 0.5f, (float)menuW - 1.0f, (float)menuH - 1.0f);
         nvgStrokeColor(vg, borderColor);
@@ -2309,7 +2313,7 @@ MenuDrawIntoPopup(
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
         
-        /* Determine font for this entry - mirroring geometry code */
+        /* Determine font for this entry - mirroring geometry code. */
         if (mePtr->fontPtr == NULL) {
             entryFont = menuFont;
             fmPtr = &menuMetrics;

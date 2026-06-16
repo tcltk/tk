@@ -358,6 +358,9 @@ XdgSurfaceConfigure(
     }
     wl_surface_commit(popup->surface);
     wl_display_flush(popupDisplay);
+    
+    /* FIX: Clear configuration-induced context leaks. */
+    RestoreMainContext();
 }
 
 static const struct xdg_surface_listener xdgSurfaceListener = {
@@ -424,15 +427,21 @@ XdgPopupDone(
     (void)xdgPopup;
 
     POPUP_DEBUG("XdgPopupDone - popup dismissed by compositor");
-    if (popup->doneCallback) {
-        popup->doneCallback(popup->doneClientData);
-    }
+    
+    /* Cache properties locally in case the callback alters the popup structure. */
+    void (*localCallback)(void *) = popup->doneCallback;
+    void *localData = popup->doneClientData;
 
     /*
-     * Destroy the popup. The consumer's doneCallback is responsible for
-     * any Tk-level cleanup.
+     * Perform local native resource teardown safely first to avoid
+     * double-free or use-after-free patterns if the callback touches the popup.
      */
     TkWaylandPopupDestroy(popup);
+
+    /* Invoke the high-level toolkit lifecycle notification afterward. */
+    if (localCallback) {
+        localCallback(localData);
+    }
 }
 
 static const struct xdg_popup_listener xdgPopupListener = {
@@ -687,12 +696,12 @@ TkWaylandPopupCreate(
         return NULL;
     }
 
-    /* Make the popup context current to create NanoVG context */
+    /* Make the popup context current to create NanoVG context. */
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
     
-    /* Restore main context immediately after NanoVG creation */
+    /* Restore main context immediately after NanoVG creation. */
     RestoreMainContext();
 
     if (!popup->vg) {
@@ -813,12 +822,12 @@ TkWaylandSubsurfaceCreate(
         return NULL;
     }
 
-    /* Make the popup context current to create NanoVG context */
+    /* Make the popup context current to create NanoVG context. */
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
     popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
     
-    /* Restore main context immediately after NanoVG creation */
+    /* Restore main context immediately after NanoVG creation. */
     RestoreMainContext();
 
     if (!popup->vg) {
@@ -832,7 +841,7 @@ TkWaylandSubsurfaceCreate(
         return NULL;
     }
 
-    /* FIX: For subsurfaces, we are always configured - no xdg_surface handshake */
+    /* FIX: For subsurfaces, we are always configured - no xdg_surface handshake. */
     popup->configured = 1;
     popup->mapped     = 1;
     popup->visible    = 1;
@@ -911,7 +920,7 @@ TkWaylandSubsurfaceReconfigure(
     wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
     wl_surface_commit(popup->surface);
     
-    /* Also need to commit the parent surface */
+    /* Also need to commit the parent surface. */
     if (popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
@@ -948,7 +957,7 @@ TkWaylandSubsurfacePlaceAbove(
     wl_subsurface_place_above(popup->subsurface, sibling->surface);
     wl_surface_commit(popup->surface);
     
-    /* Commit parent to ensure stacking takes effect */
+    /* Commit parent to ensure stacking takes effect. */
     if (popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
@@ -993,7 +1002,7 @@ TkWaylandPopupDestroy(
         }
     }
 
-    /* Ensure we're not current on this context before destroying resources */
+    /* Ensure we're not current on this context before destroying resources. */
     EGLContext currentCtx = eglGetCurrentContext();
     EGLDisplay currentDpy = eglGetCurrentDisplay();
     EGLSurface currentDraw = eglGetCurrentSurface(EGL_DRAW);
@@ -1002,22 +1011,22 @@ TkWaylandPopupDestroy(
     if (popup->eglContext != EGL_NO_CONTEXT && 
         currentCtx == popup->eglContext &&
         currentDpy == popup->eglDisplay) {
-        /* We're currently using this context - unbind it first */
+        /* We're currently using this context - unbind it first. */
         eglMakeCurrent(popup->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
 
     if (popup->vg) {
-        /* Need to make the context current to delete NanoVG */
+        /* Need to make the context current to delete NanoVG. */
         if (popup->eglContext != EGL_NO_CONTEXT && 
             popup->eglSurface != EGL_NO_SURFACE) {
             eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                            popup->eglSurface, popup->eglContext);
             nvgDeleteGLES3(popup->vg);
             popup->vg = NULL;
-            /* Restore main context after NanoVG deletion */
+            /* Restore main context after NanoVG deletion. */
             RestoreMainContext();
         } else {
-            /* Can't delete NanoVG safely without a valid context/surface */
+            /* Can't delete NanoVG safely without a valid context/surface. */
             POPUP_DEBUG("Warning: Cannot delete NanoVG - context or surface invalid");
             popup->vg = NULL;
         }
@@ -1110,7 +1119,7 @@ TkWaylandPopupGetNVGContext(
 {
     if (!popup || !popup->vg) return NULL;
     
-    /* Ensure the popup's EGL context is current before returning NanoVG */
+    /* Ensure the popup's EGL context is current before returning NanoVG. */
     if (popup->eglDisplay != EGL_NO_DISPLAY &&
         popup->eglSurface != EGL_NO_SURFACE &&
         popup->eglContext != EGL_NO_CONTEXT) {
@@ -1152,9 +1161,9 @@ TkWaylandPopupBeginDraw(
 
     /* CRITICAL FIX: Always make the popup's EGL context current.
      * This is necessary because:
-     * 1. The context may have been unbound during destruction of old surfaces
-     * 2. The main context may have been restored after previous operations
-     * 3. We need to ensure we're using the correct EGL surface
+     * 1. The context may have been unbound during destruction of old surfaces.
+     * 2. The main context may have been restored after previous operations.
+     * 3. We need to ensure we're using the correct EGL surface.
      */
     if (popup->eglDisplay == EGL_NO_DISPLAY ||
         popup->eglSurface == EGL_NO_SURFACE ||
@@ -1220,9 +1229,9 @@ TkWaylandPopupEndDraw(
     
     /* 
      * eglSwapBuffers on a wl_egl_window:
-     *   - Attaches the rendered buffer to the surface
-     *   - Damages the entire surface area
-     *   - Commits the surface atomically
+     *   - Attaches the rendered buffer to the surface.
+     *   - Damages the entire surface area.
+     *   - Commits the surface atomically.
      * 
      * DO NOT add additional wl_surface_damage or wl_surface_commit
      * here as that would overwrite the pending state with a blank
@@ -1233,7 +1242,7 @@ TkWaylandPopupEndDraw(
         EGLint error = eglGetError();
         POPUP_DEBUG("eglSwapBuffers failed: 0x%x", error);
         
-        /* Common recovery for BAD_MATCH */
+        /* Common recovery for BAD_MATCH. */
         if (error == EGL_BAD_MATCH && popup->eglWindow) {
             int w, h;
             TkWaylandPopupGetSize(popup, &w, &h);
