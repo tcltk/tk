@@ -120,4 +120,17 @@
 #define TkpGetPixel(p) (((((p)->red >> 8) & 0xff) \
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 
+/*
+ * Inform tkImgPhInstance.c that we implement TkpPutRGBAImage to composite RGBA
+ * images directly (via GDI AlphaBlend), so it uses that instead of the software
+ * BlendComplexAlpha path and its XGetImage read-back.
+ */
+
+#define TK_CAN_RENDER_RGBA
+
+MODULE_SCOPE int TkpPutRGBAImage(
+	Display *display, Drawable drawable, GC gc, XImage *image,
+	int src_x, int src_y, int dest_x, int dest_y,
+	unsigned int width, unsigned int height);
+
 #endif /* _WINPORT */

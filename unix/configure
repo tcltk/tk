@@ -682,6 +682,8 @@ ATK_LIBS
 ATK_CFLAGS
 CUPS_LIBS
 CUPS_CFLAGS
+XRENDER_LIBS
+XRENDER_CFLAGS
 FONTSYSTEM
 UNIX_FONT_OBJS
 BIDI_CFLAGS
@@ -802,6 +804,7 @@ enable_aqua
 with_x
 enable_xft
 enable_bidi
+enable_xrender
 enable_libcups
 enable_xss
 enable_framework
@@ -1459,6 +1462,8 @@ Optional Features:
                           (default: yes)
   --enable-bidi           enable bidirectional/RTL text support using
                           SheenBidi + HarfBuzz (default: yes)
+  --enable-xrender        use Xrender to composite photo images with alpha
+                          (default: yes)
   --enable-libcups        use libcups (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
@@ -8870,6 +8875,127 @@ else
     HB_LIBS=""
     FONTSYSTEM="core"
 
+fi
+
+#--------------------------------------------------------------------
+#	Check for the X RENDER extension client library (Xrender), used
+#	to composite RGBA photo images server-side (TkpPutRGBAImage).
+#--------------------------------------------------------------------
+
+XRENDER_CFLAGS=""
+XRENDER_LIBS=""
+if test $tk_aqua = no; then
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking whether to use xrender" >&5
+printf %s "checking whether to use xrender... " >&6; }
+    # Check whether --enable-xrender was given.
+if test ${enable_xrender+y}
+then :
+  enableval=$enable_xrender; enable_xrender=$enableval
+else case e in #(
+  e) enable_xrender="yes" ;;
+esac
+fi
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $enable_xrender" >&5
+printf '%s\n' "$enable_xrender" >&6; }
+
+    if test "$enable_xrender" = "yes" ; then
+	found_xrender="yes"
+	XRENDER_CFLAGS=`pkg-config --cflags xrender 2>/dev/null` || found_xrender="no"
+	XRENDER_LIBS=`pkg-config --libs xrender 2>/dev/null` || found_xrender="no"
+	if test "$found_xrender" = "no" ; then
+	    found_xrender="yes"
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS="-lXrender"
+	fi
+
+	tk_oldCFlags=$CFLAGS
+	CFLAGS="$CFLAGS $XINCLUDES $XRENDER_CFLAGS"
+	tk_oldLibs=$LIBS
+	LIBS="$tk_oldLibs $XRENDER_LIBS $XLIBSW"
+
+	ac_fn_c_check_header_compile "$LINENO" "X11/extensions/Xrender.h" "ac_cv_header_X11_extensions_Xrender_h" "#include <X11/Xlib.h>
+"
+if test "x$ac_cv_header_X11_extensions_Xrender_h" = xyes
+then :
+
+else case e in #(
+  e) found_xrender=no ;;
+esac
+fi
+
+	if test "$found_xrender" = "yes" ; then
+	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for XRenderQueryExtension in -lXrender" >&5
+printf %s "checking for XRenderQueryExtension in -lXrender... " >&6; }
+if test ${ac_cv_lib_Xrender_XRenderQueryExtension+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) ac_check_lib_save_LIBS=$LIBS
+LIBS="-lXrender  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.
+   The 'extern "C"' is for builds by C++ compilers;
+   although this is not generally supported in C code supporting it here
+   has little cost and some practical benefit (sr 110532).  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XRenderQueryExtension (void);
+int
+main (void)
+{
+return XRenderQueryExtension ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_Xrender_XRenderQueryExtension=yes
+else case e in #(
+  e) ac_cv_lib_Xrender_XRenderQueryExtension=no ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
+fi
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_Xrender_XRenderQueryExtension" >&5
+printf '%s\n' "$ac_cv_lib_Xrender_XRenderQueryExtension" >&6; }
+if test "x$ac_cv_lib_Xrender_XRenderQueryExtension" = xyes
+then :
+  printf '%s\n' "#define HAVE_LIBXRENDER 1" >>confdefs.h
+
+  LIBS="-lXrender $LIBS"
+
+else case e in #(
+  e) found_xrender=no ;;
+esac
+fi
+
+	fi
+
+	CFLAGS=$tk_oldCFlags
+	LIBS=$tk_oldLibs
+
+	if test "$found_xrender" = "yes" ; then
+
+printf '%s\n' "#define HAVE_XRENDER 1" >>confdefs.h
+
+	else
+	    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: WARNING: Can't find xrender configuration -- photo images will composite in software" >&5
+printf '%s\n' "$as_me: WARNING: Can't find xrender configuration -- photo images will composite in software" >&2;}
+	    enable_xrender=no
+	    XRENDER_CFLAGS=""
+	    XRENDER_LIBS=""
+	fi
+    fi
 fi
 
 #--------------------------------------------------------------------
