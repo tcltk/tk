@@ -79,40 +79,46 @@ extern GLFWwindow *mainGlfwWindow;
  */
 
 struct TkWaylandPopup {
-    /* Wayland objects */
+    /* Wayland objects. */
     struct wl_surface    *surface;
     struct wl_egl_window *eglWindow;
     struct xdg_surface   *xdgSurface;
     struct xdg_popup     *xdgPopup;
-    struct wl_subsurface *subsurface;  /* non-NULL for subsurface-mode
+    struct wl_subsurface *subsurface;   /* Non-NULL for subsurface-mode
                                          * popups (e.g. the menubar);
                                          * xdgSurface/xdgPopup are NULL
                                          * in that case. */
-    struct wl_surface    *parentSurface; /* Parent surface for subsurface */
+    struct wl_surface    *parentSurface; /* Parent surface for subsurface. */
 
-    /* EGL objects */
+    /* EGL objects. */
     EGLDisplay  eglDisplay;
     EGLSurface  eglSurface;
-    EGLContext  eglContext;     /* shares objects with mainGlfwWindow */
+    EGLContext  eglContext;     /* Shares objects with mainGlfwWindow. */
 
-    /* NanoVG */
+    /* NanoVG. */
     NVGcontext *vg;
 
-    /* Geometry (logical pixels - compositor coordinates) */
-    int x, y;                   /* position confirmed by compositor */
-    int width, height;          /* requested / confirmed size */
+    /* Geometry (logical pixels - compositor coordinates). */
+    int x, y;                   /* Position confirmed by compositor. */
+    int width, height;          /* Requested / confirmed size */
 
     /* State flags */
     int configured;             /* 1 after first xdg_surface configure
-                                 * OR for subsurfaces (always 1) */
+                                 * OR for subsurfaces (always 1). */
     int mapped;
-    int visible;                /* Track visibility state */
+    int visible;                /* Track visibility state. */
+    int needsParentCommit;      /* 1 if wl_surface_commit(parentSurface) must
+                                 * be issued after our first successful
+                                 * eglSwapBuffers.  Set in SubsurfaceCreate,
+                                 * cleared in EndDraw.  This defers the parent
+                                 * commit until the subsurface has a real
+                                 * buffer attached, preventing EGL_BAD_MATCH. */
 
-    /* Optional dismiss callback */
+    /* Optional dismiss callback. */
     void (*doneCallback)(void *clientData);
     void  *doneClientData;
 
-    /* Linked list of all live popups */
+    /* Linked list of all live popups. */
     struct TkWaylandPopup *nextPtr;
 };
 
@@ -137,7 +143,7 @@ static int popupModuleInitialized = 0;
 static TkWaylandPopup *popupList = NULL;
 
 /*
- * Forward declarations
+ * Forward declarations.
  */
 static int BuildEGLSurface(TkWaylandPopup *popup);
 static void RestoreMainContext(void);
@@ -227,13 +233,12 @@ RestoreMainContext(void)
 
 static void
 RegistryGlobal(
-    void *data,
+    TCL_UNUSED(void *), /* data */
     struct wl_registry *registry,
     uint32_t name,
     const char *interface,
-    uint32_t version)
+    TCL_UNUSED(uint32_t)) /* version */
 {
-    (void)data; (void)version;
 
     POPUP_DEBUG("Registry global: %s", interface);
 
@@ -277,11 +282,11 @@ RegistryGlobal(
 
 static void
 RegistryGlobalRemove(
-    void *data,
-    struct wl_registry *registry,
-    uint32_t name)
+    TCL_UNUSED(void  *), /* data */
+    TCL_UNUSED(struct wl_registry *), /* registry */
+    TCL_UNUSED(uint32_t)) /* name */
 {
-    (void)data; (void)registry; (void)name;
+
 }
 
 static const struct wl_registry_listener registryListener = {
@@ -308,11 +313,10 @@ static const struct wl_registry_listener registryListener = {
 
 static void
 WmBasePing(
-    void *data,
+    TCL_UNUSED(void *), /* data */
     struct xdg_wm_base *wmBase,
     uint32_t serial)
 {
-    (void)data;
     xdg_wm_base_pong(wmBase, serial);
     POPUP_DEBUG("Ping/pong");
 }
@@ -393,12 +397,11 @@ static const struct xdg_surface_listener xdgSurfaceListener = {
 static void
 XdgPopupConfigure(
     void *data,
-    struct xdg_popup *xdgPopup,
+    TCL_UNUSED(struct xdg_popup *), /* xdgPopup */
     int32_t x, int32_t y,
     int32_t width, int32_t height)
 {
     TkWaylandPopup *popup = (TkWaylandPopup *)data;
-    (void)xdgPopup;
 
     POPUP_DEBUG("XdgPopupConfigure: pos=(%d,%d) size=%dx%d", x, y, width, height);
     popup->x = x;
@@ -427,10 +430,9 @@ XdgPopupConfigure(
 static void
 XdgPopupDone(
     void *data,
-    struct xdg_popup *xdgPopup)
+    TCL_UNUSED(struct xdg_popup *)) /* xdgPopup */
 {
     TkWaylandPopup *popup = (TkWaylandPopup *)data;
-    (void)xdgPopup;
 
     POPUP_DEBUG("XdgPopupDone - popup dismissed by compositor");
     
@@ -613,7 +615,7 @@ TkWaylandPopupInit(void)
 
 MODULE_SCOPE TkWaylandPopup *
 TkWaylandPopupCreate(
-    GLFWwindow *parentGlfw,
+    TCL_UNUSED(GLFWwindow *), /* parentGlfw */
     int anchorX, int anchorY,
     int anchorW, int anchorH,
     int popupW,  int popupH,
@@ -622,7 +624,6 @@ TkWaylandPopupCreate(
     int grabInput,
     uint32_t serial)
 {
-    (void)parentGlfw;
 
     POPUP_DEBUG("Creating xdg_popup: anchor=(%d,%d,%d,%d) popup=%dx%d",
                 anchorX, anchorY, anchorW, anchorH, popupW, popupH);
@@ -839,34 +840,35 @@ TkWaylandSubsurfaceCreate(
         return NULL;
     }
 
-    /* FIX: For subsurfaces, we are always configured - no xdg_surface handshake. */
+    /* For subsurfaces, we are always configured - no xdg_surface handshake. */
     popup->configured = 1;
     popup->mapped     = 1;
     popup->visible    = 1;
 
     /*
-     * Commit the PARENT surface only, not the subsurface itself.
+     * Do NOT commit the parent surface here.
      *
-     * A newly created wl_subsurface is not visible in the compositor's scene
-     * until the parent surface is committed at least once with the subsurface
-     * already attached to its surface tree.  We do that parent commit here.
+     * The compositor processes wl_surface_commit(parentSurface) atomically
+     * with the compositor's next repaint cycle.  If we commit the parent now,
+     * the compositor sees the subsurface relationship immediately — but the
+     * subsurface's wl_surface still has no buffer attached (eglSwapBuffers
+     * hasn't run yet).  On the next main-window eglSwapBuffers (which issues
+     * wl_display_dispatch internally to collect buffer-release events), Mutter
+     * processes the parent commit and encounters the bufferless subsurface.
+     * This causes Mesa to mark the subsurface's EGL buffer queue as invalid
+     * and return EGL_BAD_MATCH (0x300d) on our subsequent eglSwapBuffers.
      *
-     * We deliberately do NOT call wl_surface_commit on popup->surface here.
-     * Mesa's Wayland EGL backend tracks whether a wl_surface has been
-     * committed without going through its buffer queue.  If we commit the
-     * raw wl_surface (even with no buffer or damage) before eglSwapBuffers
-     * has attached its first wl_buffer, Mesa detects the inconsistent surface
-     * state and returns EGL_BAD_MATCH (0x300d) on the subsequent
-     * eglSwapBuffers call in EndDraw.  The correct sequence is:
+     * The correct sequence is:
+     *   1. eglSwapBuffers in EndDraw attaches the first real wl_buffer and
+     *      commits popup->surface atomically (Mesa's internal path).
+     *   2. Immediately after that swap, EndDraw commits parentSurface so the
+     *      compositor picks up the subsurface with its first buffer present.
      *
-     *   1. Parent commit here (registers subsurface in compositor scene tree)
-     *   2. First eglSwapBuffers in EndDraw (attaches buffer + commits surface)
-     *
-     * eglSwapBuffers handles damage and commit atomically via Mesa's internal
-     * wl_surface_damage_buffer + wl_surface_commit, so no separate damage
-     * call is needed here either.
+     * needsParentCommit=1 signals EndDraw to do step 2 after the first
+     * successful swap.
      */
-    wl_surface_commit(parentSurface);
+    popup->needsParentCommit = 1;
+
     wl_display_flush(popupDisplay);
 
     POPUP_DEBUG("Subsurface popup created and committed, configured=1");
@@ -919,13 +921,19 @@ TkWaylandSubsurfaceReconfigure(
         popup->y = y;
         wl_subsurface_set_position(popup->subsurface, x, y);
     }
-    
-    /* Damage the entire surface to force redraw. */
-    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
-    wl_surface_commit(popup->surface);
-    
-    /* Also need to commit the parent surface. */
-    if (popup->parentSurface) {
+
+    /*
+     * Only commit popup->surface and the parent if the subsurface has
+     * already had its first eglSwapBuffers (needsParentCommit == 0).
+     * Before that point the surface has no buffer; a wl_surface_commit
+     * on a bufferless surface causes Mutter to invalidate the EGL buffer
+     * queue and return EGL_BAD_MATCH on the first real swap.
+     *
+     * After the first swap, Mesa's eglSwapBuffers already commits
+     * popup->surface atomically, so we only need the parent commit here
+     * to inform the compositor of any position/size change.
+     */
+    if (!popup->needsParentCommit && popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
     
@@ -959,13 +967,18 @@ TkWaylandSubsurfacePlaceAbove(
     }
     POPUP_DEBUG("Place subsurface above sibling");
     wl_subsurface_place_above(popup->subsurface, sibling->surface);
-    wl_surface_commit(popup->surface);
-    
-    /* Commit parent to ensure stacking takes effect. */
-    if (popup->parentSurface) {
+
+    /*
+     * Gate the commit on needsParentCommit being clear (i.e. at least one
+     * eglSwapBuffers has already run).  Before the first swap the surface
+     * has no buffer; committing it here causes Mutter to invalidate the
+     * EGL buffer queue.  After the first swap the stacking change is picked
+     * up on the next parent commit, which EndDraw issues automatically.
+     */
+    if (!popup->needsParentCommit && popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
-    
+
     wl_display_flush(popupDisplay);
     /* No EGL operations performed here; no context restore needed. */
 }
@@ -1170,7 +1183,7 @@ MODULE_SCOPE int
 TkWaylandPopupBeginDraw(
     TkWaylandPopup *popup)
 {
-    /* FIX: For subsurfaces, configured is always 1.
+    /* For subsurfaces, configured is always 1.
      * For xdg_popup, we must wait for configure event. */
     if (!popup || !popup->vg || !popup->configured) {
         if (popup && !popup->configured) {
@@ -1179,7 +1192,7 @@ TkWaylandPopupBeginDraw(
         return TCL_ERROR;
     }
 
-    /* CRITICAL FIX: Always make the popup's EGL context current.
+    /* Always make the popup's EGL context current.
      * This is necessary because:
      * 1. The context may have been unbound during destruction of old surfaces.
      * 2. The main context may have been restored after previous operations.
@@ -1278,6 +1291,21 @@ TkWaylandPopupEndDraw(
         }
     } else {
         POPUP_DEBUG("eglSwapBuffers succeeded");
+    }
+
+    /*
+     * First-swap parent commit for subsurfaces.
+     *
+     * After the very first successful eglSwapBuffers, the subsurface's
+     * wl_surface now has a real wl_buffer attached.  This is the earliest
+     * safe moment to commit the parent surface: the compositor will see the
+     * subsurface enter its scene tree with a valid buffer already present,
+     * which avoids the EGL_BAD_MATCH that results from committing the parent
+     * before any buffer has been swapped.
+     */
+    if (swapped && popup->needsParentCommit && popup->parentSurface) {
+        wl_surface_commit(popup->parentSurface);
+        popup->needsParentCommit = 0;
     }
 
     if (popupDisplay) {
