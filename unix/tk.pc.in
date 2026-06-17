@@ -12,5 +12,5 @@ URL: https://www.tcl-lang.org/
 Version: @TK_VERSION@@TK_PATCH_LEVEL@
 Requires: tcl >= 9.0
 Libs: -L${libdir} @TK_LIB_FLAG@ @TK_STUB_LIB_FLAG@
-Libs.private: @XFT_LIBS@ @XLIBSW@
+Libs.private: @XFT_LIBS@ @XRENDER_LIBS@ @XLIBSW@
 Cflags: -I${includedir}

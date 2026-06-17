@@ -148,4 +148,20 @@
 	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
 #endif
 
+/*
+ * Defined by configure when the Xrender client library is available.
+ * TkImgPhotoDisplay then composites partial-alpha photo images server-side
+ * with TkpPutRGBAImage instead of the XGetImage read-back + CPU blend.
+ * Unlike macOS/Windows, TK_CAN_RENDER_RGBA is deliberately NOT defined:
+ * opaque and binary-alpha photos keep the zero-transfer XCopyArea path, and
+ * the software blend remains the runtime fallback.
+ */
+
+#ifdef HAVE_XRENDER
+MODULE_SCOPE int TkpPutRGBAImage(
+	Display *display, Drawable drawable, GC gc, XImage *image,
+	int src_x, int src_y, int dest_x, int dest_y,
+	unsigned int width, unsigned int height);
+#endif
+
 #endif /* _UNIXPORT */

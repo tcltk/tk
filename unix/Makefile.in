@@ -161,7 +161,7 @@ WAYLAND_INCLUDES    = -I$(WAYLAND_DIR) @WAYLAND_EGL_CFLAGS@
 # on X11 builds @XLIBSW@ carries -lX11 etc. and @XFT_LIBS@ carries Xft.
 # HarfBuzz is in $(WAYLAND_LIBS) for Wayland; for X11 it is in @HB_LIBS@
 # below in LIBS — do not include it here to avoid double-linking.
-X11_LIB_SWITCHES	= @XFT_LIBS@ @XLIBSW@
+X11_LIB_SWITCHES	= @XFT_LIBS@ $(XRENDER_LIBS) @XLIBSW@
 
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
@@ -309,9 +309,9 @@ XFT_LIBS		= @XFT_LIBS@
 HB_CFLAGS		= @HB_CFLAGS@
 HB_LIBS			= @HB_LIBS@
 
-# Bidi support: SheenBidi include paths + HarfBuzz cflags
-# (configure sets BIDI_CFLAGS to empty when --disable-bidi)
-BIDI_CFLAGS		= @BIDI_CFLAGS@
+# support for Xrender (server-side photo image compositing)
+XRENDER_CFLAGS		= @XRENDER_CFLAGS@
+XRENDER_LIBS		= @XRENDER_LIBS@
 
 # support for libcups
 CUPS_CFLAGS		= @CUPS_CFLAGS@
@@ -320,6 +320,10 @@ CUPS_LIBS		= @CUPS_LIBS@
 # support for atk (X11 only; configure forces empty for Wayland)
 ATK_CFLAGS		= @ATK_CFLAGS@
 ATK_LIBS		= @ATK_LIBS@
+
+# Bidi support: SheenBidi include paths + HarfBuzz cflags
+# (configure sets BIDI_CFLAGS to empty when --disable-bidi)
+BIDI_CFLAGS		= @BIDI_CFLAGS@
 
 # support for Wayland backend - individual library components
 WAYLAND_CLIENT_CFLAGS	= @WAYLAND_CLIENT_CFLAGS@
@@ -392,7 +396,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${NO_DEPRECATED_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
 	${WAYLAND_CLIENT_CFLAGS} ${WAYLAND_EGL_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
 	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
-	@EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS) $(HB_CFLAGS)
+	@EXTRA_CC_SWITCHES@ $(XRENDER_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -404,7 +408,7 @@ DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 	${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${CUPS_CFLAGS} ${ATK_CFLAGS} \
 	${WAYLAND_CLIENT_CFLAGS} ${WAYLAND_EGL_CFLAGS} ${XKBCOMMON_CFLAGS} ${GLFW_CFLAGS} ${GLES_CFLAGS} \
 	${LIBDECOR_CFLAGS} ${SDBUSD_CFLAGS} ${FONTCONFIG_CFLAGS} \
-	@EXTRA_CC_SWITCHES@ $(BIDI_CFLAGS) $(HB_CFLAGS)
+	@EXTRA_CC_SWITCHES@ $(XRENDER_CFLAGS) $(BIDI_CFLAGS) $(HB_CFLAGS)
 
 WISH_OBJS = tkAppInit.o
 
@@ -441,7 +445,8 @@ GENERIC_OBJS = tk3d.o tkAccessibility.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tk
 TTK_OBJS = \
 	ttkBlink.o ttkButton.o ttkCache.o ttkClamTheme.o ttkClassicTheme.o \
 	ttkDefaultTheme.o ttkElements.o ttkEntry.o ttkFrame.o ttkImage.o \
-	ttkInit.o ttkLabel.o ttkLayout.o ttkManager.o ttkNotebook.o \
+	ttkInit.o ttkLabel.o ttkLayout.o ttkManager.o ttkNodeCache.o \
+	ttkNotebook.o \
 	ttkPanedwindow.o ttkProgress.o ttkScale.o ttkScrollbar.o ttkScroll.o \
 	ttkSeparator.o ttkSquare.o ttkState.o \
 	ttkTagSet.o ttkTheme.o ttkToggleswitch.o ttkTrace.o ttkTrack.o \
@@ -559,6 +564,7 @@ TTK_SRCS = \
 	$(TTK_DIR)/ttkLabel.c \
 	$(TTK_DIR)/ttkLayout.c \
 	$(TTK_DIR)/ttkManager.c \
+	$(TTK_DIR)/ttkNodeCache.c \
 	$(TTK_DIR)/ttkNotebook.c \
 	$(TTK_DIR)/ttkPanedwindow.c \
 	$(TTK_DIR)/ttkProgress.c \
