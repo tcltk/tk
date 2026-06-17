@@ -2536,10 +2536,9 @@ Tk_DrawCharsInContext(
 		}
 		if (fontIndex >= 0) {
 		    XGlyphInfo ext;
-		    XftGlyphExtents(display, GetFaceFont(fontPtr, fontIndex, 0.0),
-				    &(unsigned int){XftCharIndex(display,
-					    GetFaceFont(fontPtr, fontIndex, 0.0), uc)},
-				    1, &ext);
+			XftFont *ftFont = GetFaceFont(fontPtr, fontIndex, 0.0);
+			FT_UInt x = XftCharIndex(display, ftFont, uc);
+		    XftGlyphExtents(display, ftFont, &x, 1, &ext);
 		    tmpX += ext.xOff;
 		}
 		i += clen;
