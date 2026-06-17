@@ -107,12 +107,6 @@ struct TkWaylandPopup {
                                  * OR for subsurfaces (always 1). */
     int mapped;
     int visible;                /* Track visibility state. */
-    int needsParentCommit;      /* 1 if wl_surface_commit(parentSurface) must
-                                 * be issued after our first successful
-                                 * eglSwapBuffers.  Set in SubsurfaceCreate,
-                                 * cleared in EndDraw.  This defers the parent
-                                 * commit until the subsurface has a real
-                                 * buffer attached, preventing EGL_BAD_MATCH. */
 
     /* Optional dismiss callback. */
     void (*doneCallback)(void *clientData);
@@ -823,6 +817,36 @@ TkWaylandSubsurfaceCreate(
         return NULL;
     }
 
+    /*
+     * Commit the parent surface NOW - after the EGL window is created but
+     * before we ever bind the popup's EGL context.
+     *
+     * This is the only safe window to do this.  The ordering constraint is:
+     *
+     *   TOO EARLY: before wl_egl_window_create - the EGL surface doesn't
+     *              exist yet, Mesa will later see a surface committed without
+     *              its wl_egl_window and reject it (EGL_BAD_MATCH).
+     *
+     *   THIS WINDOW: after wl_egl_window_create, before eglMakeCurrent.
+     *              Mesa has not yet allocated a back buffer for this surface
+     *              (that happens on first eglMakeCurrent or eglSwapBuffers).
+     *              The compositor can safely register the wl_subsurface in
+     *              its scene tree.  It will wait for the subsurface's own
+     *              wl_surface_commit (from eglSwapBuffers) before compositing
+     *              any content from it.
+     *
+     *   TOO LATE: after eglMakeCurrent (nvgCreateGLES3) - Mesa has now
+     *              allocated a back buffer and tracks the surface as "dirty"
+     *              with unflushed GL state.  The intervening main-window
+     *              eglSwapBuffers (which fires during the expose storm between
+     *              SubsurfaceCreate and MenuDrawIntoPopup) causes the
+     *              compositor to process this parent commit and encounter the
+     *              subsurface with a dirty-but-uncommitted EGL surface.
+     *              Mesa then rejects the next eglSwapBuffers with EGL_BAD_MATCH.
+     */
+    wl_surface_commit(parentSurface);
+    wl_display_flush(popupDisplay);
+
     /* Make the popup context current to create NanoVG context. */
     eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
                    popup->eglSurface, popup->eglContext);
@@ -844,32 +868,6 @@ TkWaylandSubsurfaceCreate(
     popup->configured = 1;
     popup->mapped     = 1;
     popup->visible    = 1;
-
-    /*
-     * Do NOT commit the parent surface here.
-     *
-     * The compositor processes wl_surface_commit(parentSurface) atomically
-     * with the compositor's next repaint cycle.  If we commit the parent now,
-     * the compositor sees the subsurface relationship immediately — but the
-     * subsurface's wl_surface still has no buffer attached (eglSwapBuffers
-     * hasn't run yet).  On the next main-window eglSwapBuffers (which issues
-     * wl_display_dispatch internally to collect buffer-release events), Mutter
-     * processes the parent commit and encounters the bufferless subsurface.
-     * This causes Mesa to mark the subsurface's EGL buffer queue as invalid
-     * and return EGL_BAD_MATCH (0x300d) on our subsequent eglSwapBuffers.
-     *
-     * The correct sequence is:
-     *   1. eglSwapBuffers in EndDraw attaches the first real wl_buffer and
-     *      commits popup->surface atomically (Mesa's internal path).
-     *   2. Immediately after that swap, EndDraw commits parentSurface so the
-     *      compositor picks up the subsurface with its first buffer present.
-     *
-     * needsParentCommit=1 signals EndDraw to do step 2 after the first
-     * successful swap.
-     */
-    popup->needsParentCommit = 1;
-
-    wl_display_flush(popupDisplay);
 
     POPUP_DEBUG("Subsurface popup created and committed, configured=1");
 
@@ -921,19 +919,13 @@ TkWaylandSubsurfaceReconfigure(
         popup->y = y;
         wl_subsurface_set_position(popup->subsurface, x, y);
     }
-
-    /*
-     * Only commit popup->surface and the parent if the subsurface has
-     * already had its first eglSwapBuffers (needsParentCommit == 0).
-     * Before that point the surface has no buffer; a wl_surface_commit
-     * on a bufferless surface causes Mutter to invalidate the EGL buffer
-     * queue and return EGL_BAD_MATCH on the first real swap.
-     *
-     * After the first swap, Mesa's eglSwapBuffers already commits
-     * popup->surface atomically, so we only need the parent commit here
-     * to inform the compositor of any position/size change.
-     */
-    if (!popup->needsParentCommit && popup->parentSurface) {
+    
+    /* Damage the entire surface to force redraw. */
+    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
+    wl_surface_commit(popup->surface);
+    
+    /* Also need to commit the parent surface. */
+    if (popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
     
@@ -967,18 +959,13 @@ TkWaylandSubsurfacePlaceAbove(
     }
     POPUP_DEBUG("Place subsurface above sibling");
     wl_subsurface_place_above(popup->subsurface, sibling->surface);
-
-    /*
-     * Gate the commit on needsParentCommit being clear (i.e. at least one
-     * eglSwapBuffers has already run).  Before the first swap the surface
-     * has no buffer; committing it here causes Mutter to invalidate the
-     * EGL buffer queue.  After the first swap the stacking change is picked
-     * up on the next parent commit, which EndDraw issues automatically.
-     */
-    if (!popup->needsParentCommit && popup->parentSurface) {
+    wl_surface_commit(popup->surface);
+    
+    /* Commit parent to ensure stacking takes effect. */
+    if (popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
-
+    
     wl_display_flush(popupDisplay);
     /* No EGL operations performed here; no context restore needed. */
 }
@@ -1259,17 +1246,24 @@ TkWaylandPopupEndDraw(
     if (!popup || !popup->vg) return;
 
     nvgEndFrame(popup->vg);
-    
-    /* 
-     * eglSwapBuffers on a wl_egl_window:
-     *   - Attaches the rendered buffer to the surface.
-     *   - Damages the entire surface area.
-     *   - Commits the surface atomically.
-     * 
-     * DO NOT add additional wl_surface_damage or wl_surface_commit
-     * here as that would overwrite the pending state with a blank
-     * buffer, causing no visible content.
-     */
+
+    /* Capture the current EGL state before swapping for diagnostics. */
+    EGLDisplay currentDpy = eglGetCurrentDisplay();
+    EGLSurface currentDraw = eglGetCurrentSurface(EGL_DRAW);
+    EGLContext currentCtx = eglGetCurrentContext();
+
+    POPUP_DEBUG("PreSwap: popup->eglDisplay=%p eglSurface=%p eglContext=%p",
+                (void*)popup->eglDisplay, (void*)popup->eglSurface,
+                (void*)popup->eglContext);
+    POPUP_DEBUG("PreSwap: currentDisplay=%p currentDraw=%p currentCtx=%p",
+                (void*)currentDpy, (void*)currentDraw, (void*)currentCtx);
+    POPUP_DEBUG("PreSwap: display match=%d surface match=%d context match=%d",
+                currentDpy == popup->eglDisplay,
+                currentDraw == popup->eglSurface,
+                currentCtx == popup->eglContext);
+    POPUP_DEBUG("PreSwap: eglWindow=%p width=%d height=%d",
+                (void*)popup->eglWindow, popup->width, popup->height);
+
     EGLBoolean swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
     if (!swapped) {
         EGLint error = eglGetError();
@@ -1291,21 +1285,6 @@ TkWaylandPopupEndDraw(
         }
     } else {
         POPUP_DEBUG("eglSwapBuffers succeeded");
-    }
-
-    /*
-     * First-swap parent commit for subsurfaces.
-     *
-     * After the very first successful eglSwapBuffers, the subsurface's
-     * wl_surface now has a real wl_buffer attached.  This is the earliest
-     * safe moment to commit the parent surface: the compositor will see the
-     * subsurface enter its scene tree with a valid buffer already present,
-     * which avoids the EGL_BAD_MATCH that results from committing the parent
-     * before any buffer has been swapped.
-     */
-    if (swapped && popup->needsParentCommit && popup->parentSurface) {
-        wl_surface_commit(popup->parentSurface);
-        popup->needsParentCommit = 0;
     }
 
     if (popupDisplay) {
