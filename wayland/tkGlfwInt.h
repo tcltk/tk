@@ -39,12 +39,12 @@
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
 
-//typedef struct NVGLUframebuffer NVGLUframebuffer;
+typedef struct NVGLUframebuffer NVGLUframebuffer;
 
 /* Forward declarations for utils. */
-//NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
-//void nvgluBindFramebuffer(NVGLUframebuffer* fb);
-//void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
+NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
+void nvgluBindFramebuffer(NVGLUframebuffer* fb);
+void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
 
 /*
  * Opaque forward declarations for the native Wayland popup primitive
