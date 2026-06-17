@@ -1246,24 +1246,17 @@ TkWaylandPopupEndDraw(
     if (!popup || !popup->vg) return;
 
     nvgEndFrame(popup->vg);
-
-    /* Capture the current EGL state before swapping for diagnostics. */
-    EGLDisplay currentDpy = eglGetCurrentDisplay();
-    EGLSurface currentDraw = eglGetCurrentSurface(EGL_DRAW);
-    EGLContext currentCtx = eglGetCurrentContext();
-
-    POPUP_DEBUG("PreSwap: popup->eglDisplay=%p eglSurface=%p eglContext=%p",
-                (void*)popup->eglDisplay, (void*)popup->eglSurface,
-                (void*)popup->eglContext);
-    POPUP_DEBUG("PreSwap: currentDisplay=%p currentDraw=%p currentCtx=%p",
-                (void*)currentDpy, (void*)currentDraw, (void*)currentCtx);
-    POPUP_DEBUG("PreSwap: display match=%d surface match=%d context match=%d",
-                currentDpy == popup->eglDisplay,
-                currentDraw == popup->eglSurface,
-                currentCtx == popup->eglContext);
-    POPUP_DEBUG("PreSwap: eglWindow=%p width=%d height=%d",
-                (void*)popup->eglWindow, popup->width, popup->height);
-
+    
+    /* 
+     * eglSwapBuffers on a wl_egl_window:
+     *   - Attaches the rendered buffer to the surface.
+     *   - Damages the entire surface area.
+     *   - Commits the surface atomically.
+     * 
+     * DO NOT add additional wl_surface_damage or wl_surface_commit
+     * here as that would overwrite the pending state with a blank
+     * buffer, causing no visible content.
+     */
     EGLBoolean swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
     if (!swapped) {
         EGLint error = eglGetError();
