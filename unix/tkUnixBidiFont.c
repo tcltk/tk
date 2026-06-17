@@ -42,7 +42,7 @@
 typedef struct {
     int offset;		 /* Byte offset in original UTF-8 string. */
     int len;		    /* Length in bytes. */
-    int isRTL;		  /* 1 if this run is RTL, 0 if LTR. */
+    bool isRTL;		  /* true if this run is RTL, false if LTR. */
 } BidiRun;
 
 /*
@@ -65,7 +65,7 @@ typedef struct {
     hb_font_t *hbFont;	 /* Corresponding HarfBuzz font. */
     hb_blob_t *hbBlob;	 /* Font blob (kept alive for hbFont lifetime) */
     hb_face_t *hbFace;	 /* HarfBuzz face (kept alive for hbFont lifetime) */
-    int isLoaded;	      /* Whether hbFont was successfully loaded. */
+    bool isLoaded;	      /* Whether hbFont was successfully loaded. */
 
     /* Font metrics for scaling. */
     double unitsPerEm;	 /* For scaling glyph positions. */
@@ -104,7 +104,7 @@ typedef struct {
 	int advanceX;       /* Width of this glyph (pixels). */
 	int byteOffset;     /* Byte offset in source string. */
 	int clusterLen;     /* Length of cluster in bytes. */
-	int isRTL;	  /* Is this glyph part of RTL run? */
+	bool isRTL;	  /* Is this glyph part of RTL run? */
     } glyphs[MAX_GLYPHS];
     int glyphCount;
 
@@ -119,7 +119,7 @@ typedef struct {
 	    int byteStart;      /* Logical start byte of cluster. */
 	    int byteEnd;	/* Logical end byte of cluster. */
 
-	    int isRTL;	  /* Nonzero if cluster belongs to RTL run. */
+	    bool isRTL;	  /* True if cluster belongs to RTL run. */
 	} visualIndex[MAX_GLYPHS];
     int indexCount;
 
@@ -229,7 +229,7 @@ TCL_DECLARE_MUTEX(xftMutex);
 /* Function prototypes. */
 static void X11Shaper_Init(X11Shaper *s, UnixFtFont *fontPtr);
 static void X11Shaper_Destroy(X11Shaper *s);
-static int X11Shaper_ShapeString(X11Shaper *shaper, UnixFtFont *fontPtr,
+static bool X11Shaper_ShapeString(X11Shaper *shaper, UnixFtFont *fontPtr,
 				 const char *source, int numBytes,
 				 ShapedGlyphBuffer *buffer);
 static int GetBidiRuns(FcChar32 *ucs4, int charCount, BidiRun *runs, int maxRuns);
@@ -237,7 +237,7 @@ static XftFont * GetFont(UnixFtFont *fontPtr, FcChar32 ucs4, double angle);
 static XftFont * GetFaceFont(UnixFtFont *fontPtr, int faceIndex, double angle);
 static XftColor * LookUpColor(Display *display, UnixFtFont *fontPtr,
 			     unsigned long pixel);
-static int IsSimpleOnly(const char *str, int len);
+static bool IsSimpleOnly(const char *str, int len);
 static int GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars,
 			   int runStart, int runLen);
 static hb_font_t *GetHbFont(UnixFtFont *fontPtr, int faceIndex);
@@ -255,7 +255,7 @@ static hb_font_t *GetHbFont(UnixFtFont *fontPtr, int faceIndex);
  * ---------------------------------------------------------------
  */
 
-static int
+static bool
 IsSimpleOnly(const char *str, int len)
 {
     int i = 0;
@@ -271,7 +271,7 @@ IsSimpleOnly(const char *str, int len)
 	FcChar32 uc;
 	int clen = FcUtf8ToUcs4((const FcChar8 *)(str + i), &uc, len - i);
 	if (clen <= 0) {
-	    return 0;
+	    return false;
 	}
 
 	/*
@@ -306,7 +306,7 @@ IsSimpleOnly(const char *str, int len)
 	    (uc >= 0x1F300 && uc <= 0x1F9FF) ||
 	    uc > 0xFFFF) {
 
-	    return 0;   /* Use complex shaper. */
+	    return false;   /* Use complex shaper. */
 	}
 
 	/*
@@ -318,12 +318,12 @@ IsSimpleOnly(const char *str, int len)
 	    (uc >= 0x3000 && uc <= 0x30FF);		   /* CJK punct + Kana */
 
 	if (!isSafe) {
-	    return 0;
+	    return false;
 	}
 
 	i += clen;
     }
-    return 1;
+    return true;
 }
 
 /*
@@ -698,7 +698,7 @@ GetBidiRuns(
     if (charCount <= 0) {
 	runs[0].offset = 0;
 	runs[0].len    = 0;
-	runs[0].isRTL  = 0;
+	runs[0].isRTL  = false;
 	return 1;
     }
 
@@ -714,7 +714,7 @@ GetBidiRuns(
     if (!needsBidi) {
 	runs[0].offset = 0;
 	runs[0].len    = charCount;
-	runs[0].isRTL  = 0;
+	runs[0].isRTL  = false;
 	return 1;
     }
 
@@ -735,7 +735,7 @@ GetBidiRuns(
     for (int i = 0; i < (int)runCount && outRuns < maxRuns; i++) {
 	runs[outRuns].offset = (int)bidiRuns[i].offset;
 	runs[outRuns].len    = (int)bidiRuns[i].length;
-	runs[outRuns].isRTL  = (bidiRuns[i].level & 1);
+	runs[outRuns].isRTL  = (bidiRuns[i].level & 1) != 0;
 	outRuns++;
     }
 
@@ -835,7 +835,7 @@ InitFont(
 	fontPtr->faces[i].hbFont     = NULL;
 	fontPtr->faces[i].hbBlob     = NULL;
 	fontPtr->faces[i].hbFace     = NULL;
-	fontPtr->faces[i].isLoaded   = 0;
+	fontPtr->faces[i].isLoaded   = false;
 	fontPtr->faces[i].unitsPerEm = 0.0;
 	fontPtr->faces[i].ascender   = 0.0;
 	fontPtr->faces[i].descender  = 0.0;
@@ -1143,7 +1143,7 @@ GetHbFont(
     face->hbBlob = blob;
     face->hbFace = hbFace;
     face->hbFont = hbFont;
-    face->isLoaded = 1;
+    face->isLoaded = true;
 
     return hbFont;
 }
@@ -1210,7 +1210,7 @@ GetRunFaceIndex(
  * ---------------------------------------------------------------
  */
 
-static int
+static bool
 X11Shaper_ShapeString(
 		      X11Shaper *shaper,
 		      UnixFtFont *fontPtr,
@@ -1219,7 +1219,7 @@ X11Shaper_ShapeString(
 		      ShapedGlyphBuffer *buffer)
 {
     if (!shaper->buffer || !source || numBytes <= 0 || !buffer) {
-	return 0;
+	return false;
     }
 
     buffer->glyphCount = 0;
@@ -1285,7 +1285,7 @@ X11Shaper_ShapeString(
 	    buffer->glyphs[g].advanceX = metrics.xOff;
 	    buffer->glyphs[g].byteOffset = i;
 	    buffer->glyphs[g].clusterLen = clen;
-	    buffer->glyphs[g].isRTL = 0;
+	    buffer->glyphs[g].isRTL = false;
 
 	    penX += metrics.xOff;
 	    buffer->glyphCount++;
@@ -1317,12 +1317,12 @@ X11Shaper_ShapeString(
 	    buffer->visualIndex[v].advanceX  = buffer->glyphs[i].advanceX;
 	    buffer->visualIndex[v].byteStart = bo;
 	    buffer->visualIndex[v].byteEnd   = bo + buffer->glyphs[i].clusterLen;
-	    buffer->visualIndex[v].isRTL     = 0;
+	    buffer->visualIndex[v].isRTL     = false;
 
 	    prevByteOffset = bo;
 	}
 
-	return 1;
+	return true;
     }
 
     /*
@@ -1334,7 +1334,7 @@ X11Shaper_ShapeString(
 	    numBytes <= MAX_STRING_CACHE &&
 	    memcmp(source, shaper->cache[slot].text, numBytes) == 0) {
 	    *buffer = shaper->cache[slot].buffer;
-	    return 1;
+	    return true;
 	}
     }
 
@@ -1342,16 +1342,16 @@ X11Shaper_ShapeString(
     FcChar32 stackUcs4Chars[256];
     int *charBounds = stackCharBounds;
     FcChar32 *ucs4Chars = stackUcs4Chars;
-    int needFree = 0;
+    bool needFree = false;
 
     if (numBytes >= 256) {
 	charBounds = (int *)malloc((numBytes + 1) * sizeof(int));
 	ucs4Chars = (FcChar32 *)malloc(numBytes * sizeof(FcChar32));
 	if (!charBounds || !ucs4Chars) {
 	    free(charBounds); free(ucs4Chars);
-	    return 0;
+	    return false;
 	}
-	needFree = 1;
+	needFree = true;
     }
 
     charBounds[0] = 0;
@@ -1377,7 +1377,7 @@ X11Shaper_ShapeString(
 	if (needFree) { free(charBounds); free(ucs4Chars); }
 	buffer->clusterBreaks[0] = 0;
 	buffer->clusterBreakCount = 1;
-	return 1;
+	return true;
     }
 
 	/* Bidi analysis. */
@@ -1390,7 +1390,7 @@ X11Shaper_ShapeString(
     for (int r = 0; r < numRuns; r++) {
 	int runStart = bidiRuns[r].offset;
 	int runLen   = bidiRuns[r].len;
-	int runIsRTL = bidiRuns[r].isRTL;
+	bool runIsRTL = bidiRuns[r].isRTL;
 
 	if (runLen <= 0) continue;
 
@@ -1399,11 +1399,11 @@ X11Shaper_ShapeString(
 	int runByteLen   = runByteEnd - runByteStart;
 	if (runByteLen <= 0) continue;
 
-	int hasVisibleChars = 0;
+	bool hasVisibleChars = false;
 	for (int ci = runStart; ci < runStart + runLen; ci++) {
 	    if (ucs4Chars[ci] >= 0x0020 || ucs4Chars[ci] == 0x0009 ||
 		ucs4Chars[ci] == 0x000A || ucs4Chars[ci] == 0x000D) {
-		hasVisibleChars = 1;
+		hasVisibleChars = true;
 		break;
 	    }
 	}
@@ -1749,7 +1749,7 @@ X11Shaper_ShapeString(
 	free(ucs4Chars);
     }
 
-    return 1;
+    return true;
 }
 
 /*
