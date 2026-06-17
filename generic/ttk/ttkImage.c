@@ -236,6 +236,57 @@ static Ttk_Box BPadding(Ttk_Box b, Ttk_Padding p)
     { return Ttk_MakeBox(b.x, b.y+b.height-p.bottom, b.width, p.bottom); }
 
 #ifdef TTK_TILE_BATCH
+/* BlockIsPackedRGBA --
+ *	True if blk is tightly packed 4-byte pixels in R,G,B,A byte order, i.e.
+ *	offset[i] == i for every channel.  This is the one layout AssembleFill
+ *	can memcpy without reordering channels.
+ */
+static int BlockIsPackedRGBA(const Tk_PhotoImageBlock *blk)
+{
+    int i;
+
+    if (blk->pixelSize != 4) {
+	return 0;
+    }
+    for (i = 0; i < 4; i++) {
+	if (blk->offset[i] != i) {
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+/* SrcWithinBlock --
+ *	True if the src sub-rectangle lies entirely within blk's pixels, so it
+ *	can be read without running past the block.
+ */
+static int SrcWithinBlock(Ttk_Box src, const Tk_PhotoImageBlock *blk)
+{
+    return src.x >= 0 && src.y >= 0
+	    && src.x + src.width <= blk->width
+	    && src.y + src.height <= blk->height;
+}
+
+/* NineSlice --
+ *	Split a box into the nine regions Ttk_Tile/Ttk_Stripe would draw:
+ *	three rows (top/middle/bottom), each cut into three columns
+ *	(left/center/right), stored row-major.
+ */
+static void NineSlice(Ttk_Box b, Ttk_Padding p, Ttk_Box out[9])
+{
+    Ttk_Box row[3];
+    int r;
+
+    row[0] = TPadding(b, p);		/* top */
+    row[1] = MPadding(b, p);		/* middle */
+    row[2] = BPadding(b, p);		/* bottom */
+    for (r = 0; r < 3; r++) {
+	out[3*r + 0] = LPadding(row[r], p);	/* left */
+	out[3*r + 1] = CPadding(row[r], p);	/* center */
+	out[3*r + 2] = RPadding(row[r], p);	/* right */
+    }
+}
+
 /* AssembleFill --
  *	Client-side analogue of Ttk_Fill: tile the photo's src sub-rectangle
  *	over the dst sub-rectangle of an RGBA buffer that is bufW x bufH
@@ -251,9 +302,7 @@ static void AssembleFill(
 
     if (src.width <= 0 || src.height <= 0
 	    || dst.width <= 0 || dst.height <= 0
-	    || src.x < 0 || src.y < 0
-	    || src.x + src.width > blk->width
-	    || src.y + src.height > blk->height
+	    || !SrcWithinBlock(src, blk)
 	    || dst.x < 0 || dst.y < 0
 	    || dst.x + dst.width > bufW
 	    || dst.y + dst.height > bufH) {
@@ -316,7 +365,7 @@ static int TileBatchElement(
 {
     Tk_PhotoImageBlock blk;
     Display *display = Tk_Display(tkwin);
-    Ttk_Box lBuf, sStripe[3], dStripe[3], src9[9], dst9[9];
+    Ttk_Box src9[9], dst9[9];
     XImage *ximg;
     unsigned char *buf;
     GC gc;
@@ -329,32 +378,18 @@ static int TileBatchElement(
     }
 
     Tk_PhotoGetImage(photo, &blk);
-    if (blk.pixelSize != 4
-	    || blk.offset[0] != 0 || blk.offset[1] != 1
-	    || blk.offset[2] != 2 || blk.offset[3] != 3
-	    || src.x < 0 || src.y < 0
-	    || src.x + src.width > blk.width
-	    || src.y + src.height > blk.height) {
+    if (!BlockIsPackedRGBA(&blk) || !SrcWithinBlock(src, &blk)) {
 	return 0;
     }
 
     /*
-     * The nine regions Ttk_Tile/Ttk_Stripe would draw, with the destination
-     * boxes relative to the buffer origin.
+     * Decompose source and destination into the same nine regions
+     * Ttk_Tile/Ttk_Stripe would draw.  The destination is taken relative to
+     * the buffer origin (0,0) so each region indexes straight into buf.
      */
 
-    lBuf = Ttk_MakeBox(0, 0, dst.width, dst.height);
-    sStripe[0] = TPadding(src, p);	dStripe[0] = TPadding(lBuf, p);
-    sStripe[1] = MPadding(src, p);	dStripe[1] = MPadding(lBuf, p);
-    sStripe[2] = BPadding(src, p);	dStripe[2] = BPadding(lBuf, p);
-    for (i = 0; i < 3; i++) {
-	src9[3*i]   = LPadding(sStripe[i], p);
-	dst9[3*i]   = LPadding(dStripe[i], p);
-	src9[3*i+1] = CPadding(sStripe[i], p);
-	dst9[3*i+1] = CPadding(dStripe[i], p);
-	src9[3*i+2] = RPadding(sStripe[i], p);
-	dst9[3*i+2] = RPadding(dStripe[i], p);
-    }
+    NineSlice(src, p, src9);
+    NineSlice(Ttk_MakeBox(0, 0, dst.width, dst.height), p, dst9);
 
     tiles = 0;
     for (i = 0; i < 9; i++) {
@@ -370,7 +405,7 @@ static int TileBatchElement(
      */
 
     buf = (unsigned char *)
-	    attemptckalloc((size_t) dst.width * dst.height * 4);
+	    Tcl_AttemptAlloc((size_t) dst.width * dst.height * 4);
     if (buf == NULL) {
 	return 0;
     }
@@ -383,7 +418,7 @@ static int TileBatchElement(
     ximg = XCreateImage(display, NULL, 32, ZPixmap, 0, (char *) buf,
 	    (unsigned) dst.width, (unsigned) dst.height, 32, 4 * dst.width);
     if (ximg == NULL) {
-	ckfree(buf);
+	Tcl_Free(buf);
 	return 0;
     }
 
@@ -394,7 +429,7 @@ static int TileBatchElement(
     Tk_FreeGC(display, gc);
     ximg->data = NULL;
     XDestroyImage(ximg);
-    ckfree(buf);
+    Tcl_Free(buf);
     return result == Success;
 }
 #endif /* TTK_TILE_BATCH */
