@@ -31,6 +31,10 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 #include <tcl.h>
+ 
+#define NANOVG_GLES3 1
+#include "nanovg_gl.h"
+#include "nanovg_gl_utils.h"
 
 extern GLFWwindow *mainGlfwWindow;
 

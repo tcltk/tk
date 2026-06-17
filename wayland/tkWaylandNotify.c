@@ -20,13 +20,18 @@
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
+
+#include <GLES3/gl3.h>
+
+
+#define NANOVG_GLES3 1
+#include "nanovg_gl.h"
+#include "nanovg_gl_utils.h"
+
 #include <xkbcommon/xkbcommon.h>
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include <errno.h>
-#include <GLES3/gl3.h>
-#include "nanovg_gl_utils.h"
-
 /*
  * Forward declarations for IBus integration (implemented in tkWaylandKey.c).
  * These wrappers accept Tk_Window so this file never needs to see IbusContext*.

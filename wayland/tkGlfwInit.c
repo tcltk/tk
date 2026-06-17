@@ -17,17 +17,15 @@
  */
 
 #define GL_GLEXT_PROTOTYPES
+#define NANOVG_GLES3_IMPLEMENTATION
+#define NANOVG_FBO_IMPLEMENTATION
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
-
-#define NANOVG_GLES3_IMPLEMENTATION
-#include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"
-
+ 
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
