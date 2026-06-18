@@ -393,6 +393,7 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
+ *----------------------------------------------------------------------
  * TkWaylandPixmapFromPixmap --
  *
  *	Convert a Pixmap handle (which is now a rolling integer ID) back
@@ -403,8 +404,9 @@ TkWaylandCopyGC(
  *
  * Side effects:
  *	None.
+ *----------------------------------------------------------------------
  */
-static inline TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap)
+TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap)
 {
     if (!pixmapTableInitialized) return NULL;
     Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable, (void *)(uintptr_t)pixmap);
@@ -479,7 +481,7 @@ Tk_GetPixmap(
     /* Assign a safe, unique, 32-bit friendly rolling integer ID. */
     pixmapPtr->id = nextPixmapId++;
 
-    /* Register the mapping from ID to pixmap pointer */
+    /* Register the mapping from ID to pixmap pointer. */
     int isNew;
     Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(&pixmapTable, (void *)(uintptr_t)pixmapPtr->id, &isNew);
     Tcl_SetHashValue(entryPtr, pixmapPtr);

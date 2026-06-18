@@ -282,29 +282,47 @@ TkpSetKeycodeAndState(
 }
 
 /*
- * ----------------------------------------------------------------------------
+ *----------------------------------------------------------------------
+ *
  * XStringToKeysym --
  *
- *         Convert a keysym name string to a KeySym value.
- *
- *         NOTE: This stub is only correct when REDO_KEYSYM_LOOKUP is defined
- *         in the build, which causes tkBind.c to use its own internal
- *         implementation.  If REDO_KEYSYM_LOOKUP is ever removed, this
- *         function must be replaced with a real xkbcommon-based lookup using
- *         xkb_keysym_from_name().
+ *	Converts a human-readable keysym string name (e.g., "Right", "Return")
+ *	into its corresponding X11/XKB KeySym numeric identifier.
  *
  * Results:
- *         Always returns NoSymbol.
+ *	The resolved KeySym value, or NoSymbol (0) if the string name is
+ *	unrecognized or cannot be matched.
  *
  * Side effects:
- *         None.
- * ----------------------------------------------------------------------------
+ *	None.
+ *
+ *----------------------------------------------------------------------
  */
 
 KeySym
 XStringToKeysym(_Xconst char *string)
 {
-   return NoSymbol;
+    if (string == NULL || *string == '\0') {
+        return NoSymbol;
+    }
+
+    /*
+     * Use xkbcommon's native utility to look up the keysym from its name string.
+     * XKB_KEYSYM_NO_FLAGS ensures a strict, standard lookup matching standard names.
+     */
+    xkb_keysym_t sym = xkb_keysym_from_name(string, XKB_KEYSYM_NO_FLAGS);
+
+    if (sym == XKB_KEYCODE_INVALID) {
+        /*
+         * Fallback check: If the case-sensitive exact lookup fails, some legacy
+         * Tk scripts capitalize keysyms loosely. We can explicitly catch "Right"
+         * if needed, but xkb_keysym_from_name is generally fully compliant with 
+         * standard X11 keysym string specifications.
+         */
+        return NoSymbol;
+    }
+
+    return (KeySym) sym;
 }
 
 /*

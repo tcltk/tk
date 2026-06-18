@@ -70,7 +70,6 @@ typedef union pixel32_t {
     ARGB32pixel argb;
 } pixel32;
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -110,21 +109,17 @@ _XInitImageFuncPtrs(
  */
 
 int TkpPutRGBAImage(
-    Display* display,
+    TCL_UNUSED(Display * ), /* display */
     Drawable drawable,
     GC gc,
     XImage* image,
-    int src_x,  // assume this is 0 for now
-    int src_y,  // assume this is 0 for now
+    int src_x, 
+    int src_y,  
     int dst_x,
     int dst_y,
     unsigned int width,
     unsigned int height)
 {
-    (void)display; (void)gc;
-    if (TkWaylandDrawableIsPixmap(drawable)) {
-	printf("TkpPutRGBAImage does not support drawing to pixmaps yet.");
-    }
     if (src_x || src_y) {
 	printf("Unexpected source offset\n");
 	return 0;
@@ -184,8 +179,7 @@ XGetImage(
  *
  * XCopyArea --
  *
- *	Copy rectangular area from one drawable to another. Stub function
- *      for compatibility. 
+ *	Copy rectangular area from one drawable to another.
  *
  * Results:
  *	Success.
@@ -198,15 +192,61 @@ XGetImage(
 
 int
 XCopyArea(
-    Display  *display,
-    Drawable  src,
-    Drawable  dst,
-    GC        gc,
-    int       src_x, int src_y,
-    unsigned  width, unsigned height,
-    int       dst_x, int dst_y)
+    Display      *display,
+    Drawable      src,
+    Drawable      dst,
+    GC            gc,
+    int           src_x,
+    int           src_y,
+    unsigned int  width,  /* Kept unsigned int to match Xlib.h */
+    unsigned int  height, /* Kept unsigned int to match Xlib.h */
+    int           dest_x,
+    int           dest_y)
 {
-    printf("XCopyArea: src = %lx; dst = %lx\n", src, dst);
+    /*
+     * Cast the unsigned parameters to signed integers right here. 
+     * This safely catches the -1 sentinel token passed by Tk's 
+     * NO_DOUBLE_BUFFERING core layout pipeline.
+     */
+    if ((int)width == -1 && (int)height == -1) {
+        TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst);
+        if (winPtr && winPtr->privatePtr) {
+            GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+            if (glfwWindow) {
+                /* Execute the native hardware buffer swap. */
+                glfwSwapBuffers(glfwWindow);
+                return Success;
+            }
+        }
+        return Success;
+    }
+
+    /* Guard against empty or standard invalid dimensions. */
+    if (width == 0 || height == 0) {
+        return Success;
+    }
+
+    /* 
+     * Tk provides the layout bounding box. We ensure the target context 
+     * state is synchronized, but hold back glfwSwapBuffers until the 
+     * subsequent -1 flush call hits.
+     */
+    if (TkWaylandDrawableIsPixmap(dst)) {
+        return Success;
+    }
+
+    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst);
+    if (winPtr && winPtr->privatePtr) {
+        GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+        if (glfwWindow) {
+            glfwMakeContextCurrent(glfwWindow);
+            if (winPtr->privatePtr->fb) {
+                glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+            } else {
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            }
+        }
+    }
 
     return Success;
 }

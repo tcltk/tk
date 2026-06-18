@@ -397,7 +397,6 @@ DrawButtonText(
     Tk_UnderlineTextLayout(butPtr->display, drawable, currentGC,
 			   butPtr->textLayout, x, y, butPtr->underline);
 }
-
 /*
  * -------------------------------------------------------------------------
  * TkpDisplayButton --
@@ -417,12 +416,24 @@ TkpDisplayButton(void *clientData)
 {
     TkButton *butPtr = clientData;
     Tk_Window tkwin = butPtr->tkwin;
+
     butPtr->flags &= ~REDRAW_PENDING;
     if (!tkwin || !Tk_IsMapped(tkwin)) {
         return;
     }
-    TkWaylandDrawingContext dc;
-    GC currentGC = butPtr->activeTextGC;
+
+    TkWaylandDrawingContext dc = {0};   /* ZERO-INITIALIZE. */
+
+    Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)tkwin);
+    GC currentGC = butPtr->normalTextGC;   /* sensible default */
+
+    int rc = TkGlfwBeginDraw(drawable, currentGC, &dc);
+    if (rc != TCL_OK) {
+        fprintf(stderr, "TkpDisplayButton: BeginDraw failed for %s\n",
+                Tk_PathName(tkwin));
+        return;
+    }
+
     int x = 0, y = 0, relief;
     int width = 0, height = 0;
     int fullWidth = 0, fullHeight = 0;
@@ -431,15 +442,11 @@ TkpDisplayButton(void *clientData)
     int imageXOffset = 0, imageYOffset = 0;
     int padX, padY, bd, hl;
     int winWidth, winHeight;
-    Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)tkwin);
-    int rc = TkGlfwBeginDraw(drawable, currentGC, &dc);
-    if (rc != TCL_OK) {
-        printf("Bad Drawable in TkpButton\n");
-        return;
-    }
+
     winWidth = Tk_Width(tkwin);
     winHeight = Tk_Height(tkwin);
     relief = butPtr->relief;
+
     if (butPtr->type >= TYPE_CHECK_BUTTON && !butPtr->indicatorOn) {
         if (butPtr->flags & SELECTED) {
             relief = TK_RELIEF_SUNKEN;
@@ -454,9 +461,10 @@ TkpDisplayButton(void *clientData)
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &bd);
     Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &hl);
 
-    /* Background fill - using 3D border drawing. */
+    /* Background fill. */
     Tk_Fill3DRectangle(tkwin, drawable, butPtr->normalBorder, 0, 0,
-		       winWidth, winHeight, 0, TK_RELIEF_FLAT);
+                       winWidth, winHeight, 0, TK_RELIEF_FLAT);
+
     /* Determine image/bitmap size. */
     if (butPtr->image) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
@@ -526,11 +534,9 @@ TkpDisplayButton(void *clientData)
 
         ShiftByOffset(butPtr, relief, &x, &y, width, height);
 
-        /* Draw image with offset. */
         DrawButtonImage(butPtr, x + imageXOffset, y + imageYOffset,
                         width, height, (butPtr->flags & SELECTED));
 
-        /* Draw text with offset. */
         DrawButtonText(butPtr, x + textXOffset, y + textYOffset);
     }
 
@@ -561,7 +567,7 @@ TkpDisplayButton(void *clientData)
 
     /* Draw indicator (check/radio button). */
     if ((butPtr->type == TYPE_CHECK_BUTTON ||
-        butPtr->type == TYPE_RADIO_BUTTON) &&
+         butPtr->type == TYPE_RADIO_BUTTON) &&
         butPtr->indicatorOn &&
         butPtr->indicatorDiameter > 2 * bd) {
 
@@ -569,17 +575,14 @@ TkpDisplayButton(void *clientData)
         XColor *selColor = selBd ? selBd->bgColorPtr : NULL;
 
         int indType = (butPtr->type == TYPE_CHECK_BUTTON)
-          ? CHECK_BUTTON : RADIO_BUTTON;
+                      ? CHECK_BUTTON : RADIO_BUTTON;
 
         int ind_x = -butPtr->indicatorSpace / 2;
         int ind_y = winHeight / 2;
 
-        TkpDrawCheckIndicator(tkwin, butPtr->display,
-                              drawable,
+        TkpDrawCheckIndicator(tkwin, butPtr->display, drawable,
                               ind_x, ind_y, butPtr->normalBorder,
-                              butPtr->normalFg,
-                              selColor,
-                              butPtr->disabledFg,
+                              butPtr->normalFg, selColor, butPtr->disabledFg,
                               (butPtr->flags & SELECTED) ? 1 :
                               (butPtr->flags & TRISTATED) ? 2 : 0,
                               butPtr->state == STATE_DISABLED,
@@ -590,40 +593,23 @@ TkpDisplayButton(void *clientData)
     if (relief != TK_RELIEF_FLAT) {
         int inset = hl;
         if (butPtr->defaultState == DEFAULT_ACTIVE) {
-            /* Draw default ring for active default button. */
-            Tk_Draw3DRectangle(tkwin, drawable,
-                               butPtr->highlightBorder,
-                               inset, inset,
-                               winWidth - 2*inset,
-                               winHeight - 2*inset,
-                               2, TK_RELIEF_FLAT);
+            Tk_Draw3DRectangle(tkwin, drawable, butPtr->highlightBorder,
+                               inset, inset, winWidth - 2*inset,
+                               winHeight - 2*inset, 2, TK_RELIEF_FLAT);
             inset += 2;
-            Tk_Draw3DRectangle(tkwin, drawable,
-                               butPtr->highlightBorder,
-                               inset, inset,
-                               winWidth - 2*inset,
-                               winHeight - 2*inset,
-                               1, TK_RELIEF_SUNKEN);
+            Tk_Draw3DRectangle(tkwin, drawable, butPtr->highlightBorder,
+                               inset, inset, winWidth - 2*inset,
+                               winHeight - 2*inset, 1, TK_RELIEF_SUNKEN);
             inset += 3;
-
         } else if (butPtr->defaultState == DEFAULT_NORMAL) {
-            /* Draw extra space for normal default button. */
-            Tk_Draw3DRectangle(tkwin, drawable,
-                               butPtr->highlightBorder,
-                               0, 0,
-                               winWidth,
-                               winHeight,
-                               5, TK_RELIEF_FLAT);
+            Tk_Draw3DRectangle(tkwin, drawable, butPtr->highlightBorder,
+                               0, 0, winWidth, winHeight, 5, TK_RELIEF_FLAT);
             inset += 5;
         }
 
-        /* Draw main button border. */
-        Tk_Draw3DRectangle(tkwin, drawable,
-                           butPtr->normalBorder,
-                           inset, inset,
-                           winWidth - 2*inset,
-                           winHeight - 2*inset,
-                           bd, relief);
+        Tk_Draw3DRectangle(tkwin, drawable, butPtr->normalBorder,
+                           inset, inset, winWidth - 2*inset,
+                           winHeight - 2*inset, bd, relief);
     }
 
     /* Draw focus highlight. */
@@ -907,10 +893,10 @@ TkpButtonWorldChanged(void *instanceData)
         butPtr->gray = None;
     }
 
-    /* Recompute geometry with new settings */
+    /* Recompute geometry with new settings. */
     TkpComputeButtonGeometry(butPtr);
 
-    /* Schedule redraw if needed */
+    /* Schedule redraw if needed. */
     if ((butPtr->tkwin != NULL) && Tk_IsMapped(butPtr->tkwin)
             && !(butPtr->flags & REDRAW_PENDING)) {
         Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
@@ -936,8 +922,8 @@ TkpButtonWorldChanged(void *instanceData)
 
 void
 TkpDrawCheckIndicator(
-    TCL_UNUSED(Tk_Window), /* tkwin */
-    TCL_UNUSED(Display *), /* display */
+    Tk_Window tkwin,
+    TCL_UNUSED(Display *),
     Drawable d,
     int x,
     int y,
@@ -949,72 +935,68 @@ TkpDrawCheckIndicator(
     int disabled,
     int mode)
 {
-    TkWaylandDrawingContext *dc = (TkWaylandDrawingContext *)d;
+    TkWaylandDrawingContext dc = {0};
+
+    if (TkGlfwBeginDraw(d, NULL, &dc) != TCL_OK) {
+        return;
+    }
+
     int size = 0;
     int indicatorSize;
 
-    /* Get indicator size based on mode. */
     switch (mode) {
-        case CHECK_BUTTON:
-            indicatorSize = CHECK_BUTTON_DIM;
-            break;
-        case CHECK_MENU:
-            indicatorSize = CHECK_MENU_DIM;
-            break;
-        case RADIO_BUTTON:
-            indicatorSize = RADIO_BUTTON_DIM;
-            break;
-        case RADIO_MENU:
-            indicatorSize = RADIO_MENU_DIM;
-            break;
-        default:
-            indicatorSize = 12;
+        case CHECK_BUTTON: indicatorSize = CHECK_BUTTON_DIM; break;
+        case CHECK_MENU:   indicatorSize = CHECK_MENU_DIM;   break;
+        case RADIO_BUTTON: indicatorSize = RADIO_BUTTON_DIM; break;
+        case RADIO_MENU:   indicatorSize = RADIO_MENU_DIM;   break;
+        default:           indicatorSize = 12;
     }
 
-    /* Scale for DPI if needed. */
     size = indicatorSize;
-
-    /* Center the indicator. */
     x = x - size/2;
     y = y - size/2;
 
-    /* Draw background. */
-    nvgBeginPath(dc->vg);
-    nvgRect(dc->vg, x, y, size, size);
+    /* Background square/circle. */
+    nvgBeginPath(dc.vg);
+    if (mode == RADIO_BUTTON || mode == RADIO_MENU) {
+        nvgCircle(dc.vg, x + size/2, y + size/2, size/2);
+    } else {
+        nvgRect(dc.vg, x, y, size, size);
+    }
 
     if (disabled && disColor) {
-        nvgFillColor(dc->vg, TkGlfwXColorToNVG(disColor));
+        nvgFillColor(dc.vg, TkGlfwXColorToNVG(disColor));
     } else {
-        nvgFillColor(dc->vg, TkGlfwXColorToNVG(indicatorColor));
+        nvgFillColor(dc.vg, TkGlfwXColorToNVG(indicatorColor));
     }
-    nvgFill(dc->vg);
+    nvgFill(dc.vg);
 
-    /* Draw indicator state (check mark, radio dot, or tristate). */
-    if (on == 1) {  /* Selected */
+    /* Draw check / radio dot / tristate. */
+    if (on == 1) {
         if (mode == CHECK_BUTTON || mode == CHECK_MENU) {
-            /* Draw check mark */
-            nvgBeginPath(dc->vg);
-            nvgMoveTo(dc->vg, x + size/4, y + size/2);
-            nvgLineTo(dc->vg, x + size/2, y + 3*size/4);
-            nvgLineTo(dc->vg, x + 3*size/4, y + size/4);
-            nvgStrokeColor(dc->vg, TkGlfwXColorToNVG(selectColor));
-            nvgStrokeWidth(dc->vg, 2.0f);
-            nvgStroke(dc->vg);
-        } else {  /* Radio button */
-            nvgBeginPath(dc->vg);
-            nvgCircle(dc->vg, x + size/2, y + size/2, size/4);
-            nvgFillColor(dc->vg, TkGlfwXColorToNVG(selectColor));
-            nvgFill(dc->vg);
+            nvgBeginPath(dc.vg);
+            nvgMoveTo(dc.vg, x + size/4, y + size/2);
+            nvgLineTo(dc.vg, x + size/2, y + 3*size/4);
+            nvgLineTo(dc.vg, x + 3*size/4, y + size/4);
+            nvgStrokeColor(dc.vg, TkGlfwXColorToNVG(selectColor));
+            nvgStrokeWidth(dc.vg, 2.0f);
+            nvgStroke(dc.vg);
+        } else {
+            nvgBeginPath(dc.vg);
+            nvgCircle(dc.vg, x + size/2, y + size/2, size/4);
+            nvgFillColor(dc.vg, TkGlfwXColorToNVG(selectColor));
+            nvgFill(dc.vg);
         }
-    } else if (on == 2) {  /* Tristate */
-        /* Draw horizontal line for tristate. */
-        nvgBeginPath(dc->vg);
-        nvgMoveTo(dc->vg, x + size/4, y + size/2);
-        nvgLineTo(dc->vg, x + 3*size/4, y + size/2);
-        nvgStrokeColor(dc->vg, TkGlfwXColorToNVG(selectColor));
-        nvgStrokeWidth(dc->vg, 2.0f);
-        nvgStroke(dc->vg);
+    } else if (on == 2) {  /* tristate */
+        nvgBeginPath(dc.vg);
+        nvgMoveTo(dc.vg, x + size/4, y + size/2);
+        nvgLineTo(dc.vg, x + 3*size/4, y + size/2);
+        nvgStrokeColor(dc.vg, TkGlfwXColorToNVG(selectColor));
+        nvgStrokeWidth(dc.vg, 2.0f);
+        nvgStroke(dc.vg);
     }
+
+    TkGlfwEndDraw(&dc);
 }
 
 /*

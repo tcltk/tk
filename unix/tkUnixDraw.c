@@ -344,17 +344,17 @@ TkpPutRGBAImage(
      * TkPremultiplyRGBA writes B,G,R,A bytes; declared LSBFirst, the pixel
      * value is 0xAARRGGBB = PictStandardARGB32 regardless of client
      * endianness, and Xlib re-swaps for MSBFirst servers in XPutImage.  The
-     * buffer is ckalloc'ed, so detach it before XDestroyImage and free it
+     * buffer is Tcl_Alloc'ed, so detach it before XDestroyImage and free it
      * ourselves.
      */
 
-    buf = (char *) ckalloc((size_t) w * h * 4);
+    buf = (char *) Tcl_Alloc((size_t) w * h * 4);
     TkPremultiplyRGBA(image, src_x, src_y, w, h, (unsigned char *) buf, w * 4);
 
     argb = XCreateImage(display, NULL, 32, ZPixmap, 0, buf,
 	    width, height, 32, 4 * w);
     if (argb == NULL) {
-	ckfree(buf);
+	Tcl_Free(buf);
 	return BadDrawable;
     }
     argb->byte_order = LSBFirst;	/* Bytes were written B,G,R,A. */
@@ -365,7 +365,7 @@ TkpPutRGBAImage(
     XFreeGC(display, srcGC);
     argb->data = NULL;
     XDestroyImage(argb);
-    ckfree(buf);
+    Tcl_Free(buf);
 
     srcPic = XRenderCreatePicture(display, srcPix, srcFmt, 0, NULL);
     dstPic = XRenderCreatePicture(display, drawable, dstFmt, 0, NULL);

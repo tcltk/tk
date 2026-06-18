@@ -488,21 +488,6 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectNextPara>>	<Control-Shift-Down>
 	event add <<ToggleSelection>>	<Control-Button-1>
 
-	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
-	# returned when the user presses <Shift-Tab>. In order for tab
-	# traversal to work, we have to add these keysyms to the PrevWindow
-	# event. We use catch just in case the keysym isn't recognized.
-
-	# This is needed for XFree86 systems
-	catch { event add <<PrevWindow>> <ISO_Left_Tab> }
-	catch {
-	    event add <<Cut>> <XF86Cut>
-	    event add <<Copy>> <XF86Copy>
-	    event add <<Paste>> <XF86Paste>
-	}
-	# This seems to be correct on *some* HP systems.
-	catch { event add <<PrevWindow>> <hpBackTab> }
-
 	trace add variable ::tk_strictMotif write ::tk::EventMotifBindings
 	set ::tk_strictMotif $::tk_strictMotif
 	# On unix, we want to always display entry/text selection,

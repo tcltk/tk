@@ -135,7 +135,7 @@ XDrawString(
     nvgFontSize(dc.vg, fontSize);
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
-    /* Foreground color is already set by TkGlfwBeginDraw via TkGlfwApplyGC */
+    /* Foreground color is already set by TkGlfwBeginDraw via TkGlfwApplyGC. */
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
     ckfree(buf);
@@ -195,7 +195,7 @@ XDrawImageString(
     /* Measure text extent so we can fill the background. */
     nvgTextBounds(dc.vg, (float)x, (float)y, buf, NULL, bounds);
 
-    /* Fill background with GC background colour. */
+    /* Fill background with GC background color. */
     {
         XGCValues v;
         if (TkWaylandGetGCValues(gc, GCBackground, &v)) {
@@ -338,15 +338,15 @@ XDrawLines(
         return BadDrawable;
 
     nvgBeginPath(dc.vg);
-    nvgMoveTo(dc.vg, points[0].x, points[0].y);
+    nvgMoveTo(dc.vg, (float)points[0].x, (float)points[0].y);
 
     for (i = 1; i < npoints; i++) {
         if (mode == CoordModeOrigin) {
-            nvgLineTo(dc.vg, points[i].x, points[i].y);
+            nvgLineTo(dc.vg, (float)points[i].x, (float)points[i].y);
         } else {
             nvgLineTo(dc.vg,
-                      points[i-1].x + points[i].x,
-                      points[i-1].y + points[i].y);
+                      (float)(points[i-1].x + points[i].x),
+                      (float)(points[i-1].y + points[i].y));
         }
     }
     nvgStroke(dc.vg);
@@ -382,14 +382,16 @@ XDrawSegments(
     TkWaylandDrawingContext dc;
     int i;
 
+    if (!segments || nsegments <= 0) return BadValue;
+
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
     for (i = 0; i < nsegments; i++) {
         nvgBeginPath(dc.vg);
-        nvgMoveTo(dc.vg, segments[i].x1, segments[i].y1);
-        nvgLineTo(dc.vg, segments[i].x2, segments[i].y2);
+        nvgMoveTo(dc.vg, (float)segments[i].x1, (float)segments[i].y1);
+        nvgLineTo(dc.vg, (float)segments[i].x2, (float)segments[i].y2);
         nvgStroke(dc.vg);
     }
 
@@ -436,15 +438,15 @@ XFillPolygon(
         gcValues.fill_rule = WindingRule;
 
     nvgBeginPath(dc.vg);
-    nvgMoveTo(dc.vg, points[0].x, points[0].y);
+    nvgMoveTo(dc.vg, (float)points[0].x, (float)points[0].y);
 
     for (i = 1; i < npoints; i++) {
         if (mode == CoordModeOrigin) {
-            nvgLineTo(dc.vg, points[i].x, points[i].y);
+            nvgLineTo(dc.vg, (float)points[i].x, (float)points[i].y);
         } else {
             nvgLineTo(dc.vg,
-                      points[i-1].x + points[i].x,
-                      points[i-1].y + points[i].y);
+                      (float)(points[i-1].x + points[i].x),
+                      (float)(points[i-1].y + points[i].y));
         }
     }
     nvgClosePath(dc.vg);
@@ -493,7 +495,7 @@ XDrawRectangle(
         return BadDrawable;
     }
     nvgBeginPath(dc.vg);
-    nvgRect(dc.vg, x, y, width, height);
+    nvgRect(dc.vg, (float)x, (float)y, (float)width, (float)height);
     nvgStroke(dc.vg);
 
     TkGlfwEndDraw(&dc);
@@ -527,14 +529,19 @@ XDrawRectangles(
     TkWaylandDrawingContext dc;
     int i;
 
+    if (!rectArr || nRects <= 0) return BadValue;
+
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
     for (i = 0; i < nRects; i++) {
+        /* Skip zero-sized rectangles */
+        if (rectArr[i].width == 0 || rectArr[i].height == 0)
+            continue;
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, rectArr[i].x, rectArr[i].y,
-                rectArr[i].width, rectArr[i].height);
+        nvgRect(dc.vg, (float)rectArr[i].x, (float)rectArr[i].y,
+                (float)rectArr[i].width, (float)rectArr[i].height);
         nvgStroke(dc.vg);
     }
 
@@ -571,7 +578,7 @@ XFillRectangles(
     NVGcolor color;
     int i;
 
-    if (nrectangles < 1) return Success;
+    if (!rectangles || nrectangles < 1) return Success;
     
     /* Get color. */
     if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
@@ -582,10 +589,13 @@ XFillRectangles(
     }
 
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
-	// X11 would return 0 and generate a BadDrawable error.
+	/* X11 would return 0 and generate a BadDrawable error. */
         return BadDrawable;
     }
     for (i = 0; i < nrectangles; i++) {
+        /* Skip zero-sized rectangles. */
+        if (rectangles[i].width == 0 || rectangles[i].height == 0)
+            continue;
         nvgBeginPath(dc.vg);
         nvgRect(dc.vg, 
                 (float)rectangles[i].x, 
@@ -625,14 +635,14 @@ XFillRectangle(
     unsigned int height)
 {
     XRectangle rect;
+    
+    /* Guard against zero or negative dimensions */
+    if (width == 0 && height == 0) return Success;
+    
     rect.x      = x;
     rect.y      = y;
-    rect.width  = width;
-    rect.height = height;
-    
-    /* Ensure width and height are at least 1. */
-    if (width == 0) rect.width = 1;
-    if (height == 0) rect.height = 1;
+    rect.width  = (width == 0) ? 1 : width;
+    rect.height = (height == 0) ? 1 : height;
     
     return XFillRectangles(display, d, gc, &rect, 1);
 }
@@ -672,10 +682,10 @@ XDrawArc(
     if (rc != TCL_OK)
         return BadDrawable;
 
-    cx = x + width  / 2.0f;
-    cy = y + height / 2.0f;
-    rx = width  / 2.0f;
-    ry = height / 2.0f;
+    cx = (float)x + (float)width  / 2.0f;
+    cy = (float)y + (float)height / 2.0f;
+    rx = (float)width  / 2.0f;
+    ry = (float)height / 2.0f;
     startAngle = -radians(angle1 / 64.0);
     endAngle   = -radians((angle1 + angle2) / 64.0);
 
@@ -723,6 +733,8 @@ XDrawArcs(
     TkWaylandDrawingContext dc;
     int i;
 
+    if (!arcArr || nArcs <= 0) return BadValue;
+
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
@@ -733,10 +745,10 @@ XDrawArcs(
         if (arcArr[i].width == 0 || arcArr[i].height == 0 ||
             arcArr[i].angle2 == 0) continue;
 
-        cx = arcArr[i].x + arcArr[i].width  / 2.0f;
-        cy = arcArr[i].y + arcArr[i].height / 2.0f;
-        rx = arcArr[i].width  / 2.0f;
-        ry = arcArr[i].height / 2.0f;
+        cx = (float)arcArr[i].x + (float)arcArr[i].width  / 2.0f;
+        cy = (float)arcArr[i].y + (float)arcArr[i].height / 2.0f;
+        rx = (float)arcArr[i].width  / 2.0f;
+        ry = (float)arcArr[i].height / 2.0f;
         startAngle = -radians(arcArr[i].angle1 / 64.0);
         endAngle   = -radians((arcArr[i].angle1 + arcArr[i].angle2) / 64.0);
 
@@ -797,10 +809,10 @@ XFillArc(
     if (TkWaylandGetGCValues(gc, GCArcMode, &gcValues))
         gcValues.arc_mode = ArcPieSlice;
 
-    cx = x + width  / 2.0f;
-    cy = y + height / 2.0f;
-    rx = width  / 2.0f;
-    ry = height / 2.0f;
+    cx = (float)x + (float)width  / 2.0f;
+    cy = (float)y + (float)height / 2.0f;
+    rx = (float)width  / 2.0f;
+    ry = (float)height / 2.0f;
     startAngle = -radians(angle1 / 64.0);
     endAngle   = -radians((angle1 + angle2) / 64.0);
 
@@ -857,6 +869,8 @@ XFillArcs(
     XGCValues gcValues;
     int i;
 
+    if (!arcArr || nArcs <= 0) return BadValue;
+
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
@@ -870,10 +884,10 @@ XFillArcs(
         if (arcArr[i].width == 0 || arcArr[i].height == 0 ||
             arcArr[i].angle2 == 0) continue;
 
-        cx = arcArr[i].x + arcArr[i].width  / 2.0f;
-        cy = arcArr[i].y + arcArr[i].height / 2.0f;
-        rx = arcArr[i].width  / 2.0f;
-        ry = arcArr[i].height / 2.0f;
+        cx = (float)arcArr[i].x + (float)arcArr[i].width  / 2.0f;
+        cy = (float)arcArr[i].y + (float)arcArr[i].height / 2.0f;
+        rx = (float)arcArr[i].width  / 2.0f;
+        ry = (float)arcArr[i].height / 2.0f;
         startAngle = -radians(arcArr[i].angle1 / 64.0);
         endAngle   = -radians((arcArr[i].angle1 + arcArr[i].angle2) / 64.0);
 
@@ -927,6 +941,7 @@ Tk_DrawHighlightBorder(
     int       highlightWidth,
     Drawable  drawable)
 {
+    if (highlightWidth <= 0) return;
     if (highlightWidth <= 1) {
         TkDrawInsetFocusHighlight(tkwin, fgGC, 1, drawable, 0);
     } else {
@@ -963,10 +978,15 @@ TkpDrawFrameEx(
     int        borderWidth,
     int        relief)
 {
+    int width = Tk_Width(tkwin) - 2 * highlightWidth;
+    int height = Tk_Height(tkwin) - 2 * highlightWidth;
+    
+    /* Guard against negative dimensions. */
+    if (width <= 0 || height <= 0) return;
+    
     Tk_Fill3DRectangle(tkwin, drawable, border,
                        highlightWidth, highlightWidth,
-                       Tk_Width(tkwin)  - 2 * highlightWidth,
-                       Tk_Height(tkwin) - 2 * highlightWidth,
+                       width, height,
                        borderWidth, relief);
 }
 

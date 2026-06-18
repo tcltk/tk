@@ -1733,6 +1733,9 @@ ttkLayout.o: $(TTK_DIR)/ttkLayout.c
 
 ttkManager.o: $(TTK_DIR)/ttkManager.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkManager.c
+	
+ttkNodeCache.o: $(TTK_DIR)/ttkNodeCache.c
+	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkNodeCache.c
 
 ttkNotebook.o: $(TTK_DIR)/ttkNotebook.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkNotebook.c

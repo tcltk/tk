@@ -21,9 +21,8 @@
  *	    wl_surface, wrap it in an xdg_surface, and assign it the
  *	    xdg_popup role via xdg_surface_get_popup.
  *
- *	  - Rendering is performed with EGL + a per-popup GLES context that
- *	    shares object namespaces (textures, programs) with the main
- *	    GLFW context, plus a per-popup NanoVG context.
+ *	  - Rendering is performed with wl_shm buffers that are filled
+ *	    by the caller via glReadPixels from the main context.
  *
  *	  - Positioning follows the xdg_positioner rules.  Because
  *	    glfwSetWindowPos is a no-op on Wayland, all placement is
@@ -36,44 +35,35 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#define GL_GLEXT_PROTOTYPES
-
 #include "tkInt.h"
 #include "tkGlfwInt.h"
-#include <stdio.h>  /* For debug output */
+#include <stdio.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WAYLAND
-#define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
 #include <wayland-client.h>
-#include <wayland-egl.h>
-#include <EGL/egl.h>
-#include <GLES3/gl3.h>
-
 #include "xdg-shell-client-protocol.h"
 
-#define NANOVG_GLES3 1
-#include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"
-
-/* Debug macro */
+/* Debug macro. */
 #define POPUP_DEBUG(msg, ...) fprintf(stderr, "POPUP: " msg "\n", ##__VA_ARGS__)
 
-/*
- * The root GLFWwindow, defined in tkGlfwInit.c.  Used as the share-context
- * source for popup EGL contexts.
- */
-extern GLFWwindow *mainGlfwWindow;
+/* SHM format - ARGB8888 (same as GL_RGBA). */
+#define SHM_FORMAT WL_SHM_FORMAT_ARGB8888
+#define SHM_BYTES_PER_PIXEL 4
 
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandPopup -- the popup instance structure.
+ * TkWaylandPopup --
  *
- *	This structure must be defined here (not just in the header) because
- *	the header declares TkWaylandPopup as an opaque type.
+ *	The popup instance structure. This structure must be defined here
+ *	(not just in the header) because the header declares TkWaylandPopup
+ *	as an opaque type.
  *
  *----------------------------------------------------------------------
  */
@@ -81,7 +71,6 @@ extern GLFWwindow *mainGlfwWindow;
 struct TkWaylandPopup {
     /* Wayland objects. */
     struct wl_surface    *surface;
-    struct wl_egl_window *eglWindow;
     struct xdg_surface   *xdgSurface;
     struct xdg_popup     *xdgPopup;
     struct wl_subsurface *subsurface;   /* Non-NULL for subsurface-mode
@@ -90,19 +79,18 @@ struct TkWaylandPopup {
                                          * in that case. */
     struct wl_surface    *parentSurface; /* Parent surface for subsurface. */
 
-    /* EGL objects. */
-    EGLDisplay  eglDisplay;
-    EGLSurface  eglSurface;
-    EGLContext  eglContext;     /* Shares objects with mainGlfwWindow. */
-
-    /* NanoVG. */
-    NVGcontext *vg;
+    /* SHM buffer objects. */
+    struct wl_shm_pool   *shmPool;
+    struct wl_buffer     *shmBuffer;
+    void                 *shmData;       /* mmap'd pointer to pixel data. */
+    size_t                shmSize;       /* Total pool size in bytes. */
+    int                   stride;        /* Bytes per row. */
 
     /* Geometry (logical pixels - compositor coordinates). */
     int x, y;                   /* Position confirmed by compositor. */
-    int width, height;          /* Requested / confirmed size */
+    int width, height;          /* Requested / confirmed size. */
 
-    /* State flags */
+    /* State flags. */
     int configured;             /* 1 after first xdg_surface configure
                                  * OR for subsurfaces (always 1). */
     int mapped;
@@ -130,82 +118,16 @@ static struct wl_display      *popupDisplay      = NULL;
 static struct wl_compositor   *popupCompositor   = NULL;
 static struct wl_subcompositor *popupSubcompositor = NULL;
 static struct xdg_wm_base     *popupWmBase       = NULL;
+static struct wl_shm          *popupShm          = NULL;
 static struct wl_seat         *popupSeat         = NULL;
 static uint32_t                popupLastSerial   = 0;
 
 static int popupModuleInitialized = 0;
 static TkWaylandPopup *popupList = NULL;
 
-/*
- * Forward declarations.
- */
-static int BuildEGLSurface(TkWaylandPopup *popup);
-static void RestoreMainContext(void);
-static void FrameCallbackDone(void *data, struct wl_callback *cb, uint32_t time);
-
-/*
- *----------------------------------------------------------------------
- *
- * FrameCallbackDone --
- *
- *	Callback when a frame is actually displayed by the compositor.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Destroys the callback.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FrameCallbackDone(
-    void *data,
-    struct wl_callback *cb,
-    uint32_t time)
-{
-    POPUP_DEBUG("Frame callback: surface visible at time %u", time);
-    wl_callback_destroy(cb);
-}
-
-static const struct wl_callback_listener frameListener = {
-    FrameCallbackDone
-};
-
-/*
- *----------------------------------------------------------------------
- *
- * RestoreMainContext --
- *
- *	Restore the main GLFW window's EGL context as current.
- *	This must be called after any popup operation that changed
- *	the current context to avoid leaving no context current or
- *	a popup context current when the main window needs to draw.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Makes the main GLFW window's EGL context current.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-RestoreMainContext(void)
-{
-    if (!mainGlfwWindow) return;
-
-    EGLDisplay display = glfwGetEGLDisplay();
-    EGLSurface surface = glfwGetEGLSurface(mainGlfwWindow);
-    EGLContext context = glfwGetEGLContext(mainGlfwWindow);
-
-    if (display != EGL_NO_DISPLAY && surface != EGL_NO_SURFACE &&
-        context != EGL_NO_CONTEXT) {
-        eglMakeCurrent(display, surface, surface, context);
-    }
-}
+/* Forward declarations. */
+static int AllocateSHMBuffer(TkWaylandPopup *popup);
+static void FreeSHMBuffer(TkWaylandPopup *popup);
 
 /*
  *----------------------------------------------------------------------
@@ -213,14 +135,14 @@ RestoreMainContext(void)
  * RegistryGlobal --
  *
  *	Wayland registry global object handler. Binds compositor,
- *	xdg_wm_base, and seat interfaces when they appear in the registry.
+ *	xdg_wm_base, shm, and seat interfaces when they appear in the registry.
  *
  * Results:
  *	None.
  *
  * Side effects:
  *	Initializes popupCompositor, popupSubcompositor, popupWmBase,
- *	and popupSeat.
+ *	popupShm, and popupSeat.
  *
  *----------------------------------------------------------------------
  */
@@ -248,6 +170,10 @@ RegistryGlobal(
         popupWmBase = wl_registry_bind(registry, name,
             &xdg_wm_base_interface, 2);
         POPUP_DEBUG("Bound xdg_wm_base");
+    } else if (strcmp(interface, wl_shm_interface.name) == 0) {
+        popupShm = wl_registry_bind(registry, name,
+            &wl_shm_interface, 1);
+        POPUP_DEBUG("Bound wl_shm");
     } else if (strcmp(interface, wl_seat_interface.name) == 0) {
         if (!popupSeat) {
             popupSeat = wl_registry_bind(registry, name,
@@ -349,22 +275,8 @@ XdgSurfaceConfigure(
     xdg_surface_ack_configure(xdgSurface, serial);
     popup->configured = 1;
 
-    if (popup->eglWindow && popup->width > 0 && popup->height > 0) {
-        wl_egl_window_resize(popup->eglWindow, popup->width, popup->height,
-                              0, 0);
-        POPUP_DEBUG("Resized EGL window to %dx%d", popup->width, popup->height);
-    }
     wl_surface_commit(popup->surface);
     wl_display_flush(popupDisplay);
-
-    /*
-     * Do NOT call RestoreMainContext here.  XdgSurfaceConfigure is a Wayland
-     * protocol callback; it involves no EGL operations and therefore cannot
-     * corrupt the current EGL context.  Calling RestoreMainContext here
-     * would clobber whatever context BeginDraw set if the compositor delivers
-     * a configure event during an active draw cycle, which is the primary
-     * cause of the "EGL context corrupted on window event" failure mode.
-     */
 }
 
 static const struct xdg_surface_listener xdgSurfaceListener = {
@@ -383,7 +295,8 @@ static const struct xdg_surface_listener xdgSurfaceListener = {
  *	None.
  *
  * Side effects:
- *	Updates popup's x, y, width, and height fields.
+ *	Updates popup's x, y, width, and height fields. Reallocates SHM
+ *	buffer if size changed.
  *
  *----------------------------------------------------------------------
  */
@@ -400,8 +313,18 @@ XdgPopupConfigure(
     POPUP_DEBUG("XdgPopupConfigure: pos=(%d,%d) size=%dx%d", x, y, width, height);
     popup->x = x;
     popup->y = y;
-    if (width  > 0) popup->width  = width;
-    if (height > 0) popup->height = height;
+    
+    if (width > 0 && height > 0) {
+        if (width != popup->width || height != popup->height) {
+            /* Reallocate SHM buffer for new size. */
+            FreeSHMBuffer(popup);
+            popup->width = width;
+            popup->height = height;
+            if (!AllocateSHMBuffer(popup)) {
+                POPUP_DEBUG("Failed to reallocate SHM buffer for new size");
+            }
+        }
+    }
 }
 
 /*
@@ -454,94 +377,130 @@ static const struct xdg_popup_listener xdgPopupListener = {
 /*
  *----------------------------------------------------------------------
  *
- * BuildEGLSurface --
+ * AllocateSHMBuffer --
  *
- *	Create an EGL surface for the popup's wl_surface, sharing object
- *	namespaces with the GLES context that GLFW created for the main
- *	window.
+ *	Allocate a wl_shm buffer for the popup surface.
  *
  * Results:
  *	Returns 1 on success, 0 on failure.
  *
  * Side effects:
- *	Allocates popup->eglWindow, popup->eglSurface, popup->eglContext.
+ *	Creates shmPool, shmBuffer, and mmap's the memory.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-BuildEGLSurface(
+AllocateSHMBuffer(
     TkWaylandPopup *popup)
 {
-    popup->eglDisplay = glfwGetEGLDisplay();
-    if (popup->eglDisplay == EGL_NO_DISPLAY) {
-        POPUP_DEBUG("No EGL display");
+    if (!popup->surface || popup->width <= 0 || popup->height <= 0) {
+        return 0;
+    }
+    
+    if (!popupShm) {
+        POPUP_DEBUG("No wl_shm available");
         return 0;
     }
 
-    static const EGLint configAttribs[] = {
-        EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_RED_SIZE,        8,
-        EGL_GREEN_SIZE,      8,
-        EGL_BLUE_SIZE,       8,
-        EGL_ALPHA_SIZE,      8,
-        EGL_DEPTH_SIZE,      0,
-        EGL_STENCIL_SIZE,    8,
-        EGL_NONE
-    };
+    /* Calculate buffer size and stride. */
+    popup->stride = popup->width * SHM_BYTES_PER_PIXEL;
+    /* Align stride to 4 bytes (common requirement). */
+    int stride_align = 4;
+    popup->stride = (popup->stride + stride_align - 1) & ~(stride_align - 1);
+    popup->shmSize = popup->stride * popup->height;
 
-    EGLConfig eglConfig;
-    EGLint    numConfigs;
-    if (!eglChooseConfig(popup->eglDisplay, configAttribs,
-                         &eglConfig, 1, &numConfigs) || numConfigs == 0) {
-        POPUP_DEBUG("eglChooseConfig failed");
+    /* Create a temporary file for shared memory. */
+    char filename[] = "/tmp/wl-shm-XXXXXX";
+    int fd = mkstemp(filename);
+    if (fd < 0) {
+        POPUP_DEBUG("Failed to create temp file");
+        return 0;
+    }
+    unlink(filename);
+
+    /* Set the size of the file. */
+    if (ftruncate(fd, popup->shmSize) < 0) {
+        POPUP_DEBUG("Failed to truncate temp file");
+        close(fd);
         return 0;
     }
 
-    popup->eglWindow = wl_egl_window_create(popup->surface,
-                                             popup->width, popup->height);
-    if (!popup->eglWindow) {
-        POPUP_DEBUG("wl_egl_window_create failed");
+    /* Map the memory. */
+    popup->shmData = mmap(NULL, popup->shmSize, PROT_READ | PROT_WRITE,
+                          MAP_SHARED, fd, 0);
+    if (popup->shmData == MAP_FAILED) {
+        POPUP_DEBUG("Failed to mmap shared memory");
+        close(fd);
+        popup->shmData = NULL;
         return 0;
     }
 
-    popup->eglSurface = eglCreateWindowSurface(popup->eglDisplay, eglConfig,
-        (EGLNativeWindowType)popup->eglWindow, NULL);
-    if (popup->eglSurface == EGL_NO_SURFACE) {
-        POPUP_DEBUG("eglCreateWindowSurface failed");
-        wl_egl_window_destroy(popup->eglWindow);
-        popup->eglWindow = NULL;
+    /* Create the shm pool. */
+    popup->shmPool = wl_shm_create_pool(popupShm, fd, popup->shmSize);
+    close(fd);
+
+    if (!popup->shmPool) {
+        POPUP_DEBUG("Failed to create wl_shm_pool");
+        munmap(popup->shmData, popup->shmSize);
+        popup->shmData = NULL;
         return 0;
     }
 
-    EGLContext shareCtx = glfwGetEGLContext(mainGlfwWindow);
-
-    static const EGLint ctx3Attribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 3,
-        EGL_NONE
-    };
-    popup->eglContext = eglCreateContext(popup->eglDisplay, eglConfig,
-                                          shareCtx, ctx3Attribs);
-    if (popup->eglContext == EGL_NO_CONTEXT) {
-        static const EGLint ctx2Attribs[] = {
-            EGL_CONTEXT_CLIENT_VERSION, 2,
-            EGL_NONE
-        };
-        popup->eglContext = eglCreateContext(popup->eglDisplay, eglConfig,
-                                              shareCtx, ctx2Attribs);
-    }
-    if (popup->eglContext == EGL_NO_CONTEXT) {
-        POPUP_DEBUG("eglCreateContext failed");
-        eglDestroySurface(popup->eglDisplay, popup->eglSurface);
-        wl_egl_window_destroy(popup->eglWindow);
-        popup->eglSurface = EGL_NO_SURFACE;
-        popup->eglWindow  = NULL;
+    /* Create the buffer. */
+    popup->shmBuffer = wl_shm_pool_create_buffer(popup->shmPool, 0,
+                                                   popup->width, popup->height,
+                                                   popup->stride, SHM_FORMAT);
+    if (!popup->shmBuffer) {
+        POPUP_DEBUG("Failed to create wl_buffer");
+        wl_shm_pool_destroy(popup->shmPool);
+        popup->shmPool = NULL;
+        munmap(popup->shmData, popup->shmSize);
+        popup->shmData = NULL;
         return 0;
     }
 
-    POPUP_DEBUG("EGL surface built successfully");
+    /* Clear the buffer to transparent black. */
+    memset(popup->shmData, 0, popup->shmSize);
+    
+    POPUP_DEBUG("Allocated SHM buffer: %dx%d, stride=%d, size=%zu",
+                popup->width, popup->height, popup->stride, popup->shmSize);
     return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FreeSHMBuffer --
+ *
+ *	Free the SHM buffer and associated resources.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Destroys shmBuffer, shmPool, and unmaps memory.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+FreeSHMBuffer(
+    TkWaylandPopup *popup)
+{
+    if (popup->shmBuffer) {
+        wl_buffer_destroy(popup->shmBuffer);
+        popup->shmBuffer = NULL;
+    }
+    if (popup->shmPool) {
+        wl_shm_pool_destroy(popup->shmPool);
+        popup->shmPool = NULL;
+    }
+    if (popup->shmData) {
+        munmap(popup->shmData, popup->shmSize);
+        popup->shmData = NULL;
+        popup->shmSize = 0;
+    }
 }
 
 /*
@@ -555,8 +514,8 @@ BuildEGLSurface(
  *	Returns TCL_OK on success, TCL_ERROR on failure.
  *
  * Side effects:
- *	Binds wl_compositor, xdg_wm_base, and wl_seat from the Wayland
- *	global registry. Must be called after glfwInit().
+ *	Binds wl_compositor, xdg_wm_base, wl_shm, and wl_seat from the
+ *	Wayland global registry. Must be called after glfwInit().
  *
  *----------------------------------------------------------------------
  */
@@ -579,8 +538,8 @@ TkWaylandPopupInit(void)
     wl_display_roundtrip(popupDisplay);
     wl_display_roundtrip(popupDisplay);
 
-    if (!popupCompositor || !popupWmBase) {
-        POPUP_DEBUG("Missing compositor or wm_base");
+    if (!popupCompositor || !popupWmBase || !popupShm) {
+        POPUP_DEBUG("Missing compositor, wm_base, or shm");
         return TCL_ERROR;
     }
 
@@ -688,8 +647,9 @@ TkWaylandPopupCreate(
         POPUP_DEBUG("Grab input with serial %u", serial);
     }
 
-    if (!BuildEGLSurface(popup)) {
-        POPUP_DEBUG("BuildEGLSurface failed");
+    /* Allocate SHM buffer. */
+    if (!AllocateSHMBuffer(popup)) {
+        POPUP_DEBUG("Failed to allocate SHM buffer");
         xdg_popup_destroy(popup->xdgPopup);
         xdg_surface_destroy(popup->xdgSurface);
         wl_surface_destroy(popup->surface);
@@ -697,27 +657,13 @@ TkWaylandPopupCreate(
         return NULL;
     }
 
-    /* Make the popup context current to create NanoVG context. */
-    eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                   popup->eglSurface, popup->eglContext);
-    popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    RestoreMainContext();
-
-    if (!popup->vg) {
-        POPUP_DEBUG("nvgCreateGLES3 failed");
-        eglDestroyContext(popup->eglDisplay, popup->eglContext);
-        eglDestroySurface(popup->eglDisplay, popup->eglSurface);
-        wl_egl_window_destroy(popup->eglWindow);
-        xdg_popup_destroy(popup->xdgPopup);
-        xdg_surface_destroy(popup->xdgSurface);
-        wl_surface_destroy(popup->surface);
-        Tcl_Free(popup);
-        return NULL;
-    }
-
+    /* Attach the initial buffer. */
+    wl_surface_attach(popup->surface, popup->shmBuffer, 0, 0);
+    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
     wl_surface_commit(popup->surface);
     wl_display_flush(popupDisplay);
 
+    /* Wait for configure. */
     int waitIter = 0;
     while (!popup->configured && waitIter < 20) {
         wl_display_dispatch(popupDisplay);
@@ -805,64 +751,28 @@ TkWaylandSubsurfaceCreate(
     /* Use desync mode for better performance. */
     wl_subsurface_set_desync(popup->subsurface);
     
-    /* IMPORTANT: Place the subsurface ABOVE the parent surface. */
+    /* Place the subsurface ABOVE the parent surface. */
     wl_subsurface_place_above(popup->subsurface, parentSurface);
     POPUP_DEBUG("Subsurface placed above parent");
 
-    if (!BuildEGLSurface(popup)) {
-        POPUP_DEBUG("BuildEGLSurface failed");
+    /* Allocate SHM buffer. */
+    if (!AllocateSHMBuffer(popup)) {
+        POPUP_DEBUG("Failed to allocate SHM buffer");
         wl_subsurface_destroy(popup->subsurface);
         wl_surface_destroy(popup->surface);
         Tcl_Free(popup);
         return NULL;
     }
 
-    /*
-     * Commit the parent surface NOW - after the EGL window is created but
-     * before we ever bind the popup's EGL context.
-     *
-     * This is the only safe window to do this.  The ordering constraint is:
-     *
-     *   TOO EARLY: before wl_egl_window_create - the EGL surface doesn't
-     *              exist yet, Mesa will later see a surface committed without
-     *              its wl_egl_window and reject it (EGL_BAD_MATCH).
-     *
-     *   THIS WINDOW: after wl_egl_window_create, before eglMakeCurrent.
-     *              Mesa has not yet allocated a back buffer for this surface
-     *              (that happens on first eglMakeCurrent or eglSwapBuffers).
-     *              The compositor can safely register the wl_subsurface in
-     *              its scene tree.  It will wait for the subsurface's own
-     *              wl_surface_commit (from eglSwapBuffers) before compositing
-     *              any content from it.
-     *
-     *   TOO LATE: after eglMakeCurrent (nvgCreateGLES3) - Mesa has now
-     *              allocated a back buffer and tracks the surface as "dirty"
-     *              with unflushed GL state.  The intervening main-window
-     *              eglSwapBuffers (which fires during the expose storm between
-     *              SubsurfaceCreate and MenuDrawIntoPopup) causes the
-     *              compositor to process this parent commit and encounter the
-     *              subsurface with a dirty-but-uncommitted EGL surface.
-     *              Mesa then rejects the next eglSwapBuffers with EGL_BAD_MATCH.
-     */
+    /* Commit the parent surface. */
     wl_surface_commit(parentSurface);
     wl_display_flush(popupDisplay);
 
-    /* Make the popup context current to create NanoVG context. */
-    eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                   popup->eglSurface, popup->eglContext);
-    popup->vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
-    RestoreMainContext();
-
-    if (!popup->vg) {
-        POPUP_DEBUG("nvgCreateGLES3 failed");
-        eglDestroyContext(popup->eglDisplay, popup->eglContext);
-        eglDestroySurface(popup->eglDisplay, popup->eglSurface);
-        wl_egl_window_destroy(popup->eglWindow);
-        wl_subsurface_destroy(popup->subsurface);
-        wl_surface_destroy(popup->surface);
-        Tcl_Free(popup);
-        return NULL;
-    }
+    /* Attach the initial buffer. */
+    wl_surface_attach(popup->surface, popup->shmBuffer, 0, 0);
+    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
+    wl_surface_commit(popup->surface);
+    wl_display_flush(popupDisplay);
 
     /* For subsurfaces, we are always configured - no xdg_surface handshake. */
     popup->configured = 1;
@@ -888,7 +798,7 @@ TkWaylandSubsurfaceCreate(
  *	None.
  *
  * Side effects:
- *	Resizes the EGL window and updates the subsurface position.
+ *	Resizes the SHM buffer and updates the subsurface position.
  *
  *----------------------------------------------------------------------
  */
@@ -907,10 +817,12 @@ TkWaylandSubsurfaceReconfigure(
     if (height <= 0) height = 1;
 
     if (width != popup->width || height != popup->height) {
+        FreeSHMBuffer(popup);
         popup->width  = width;
         popup->height = height;
-        if (popup->eglWindow) {
-            wl_egl_window_resize(popup->eglWindow, width, height, 0, 0);
+        if (!AllocateSHMBuffer(popup)) {
+            POPUP_DEBUG("Failed to reallocate SHM buffer");
+            return;
         }
     }
 
@@ -920,7 +832,8 @@ TkWaylandSubsurfaceReconfigure(
         wl_subsurface_set_position(popup->subsurface, x, y);
     }
     
-    /* Damage the entire surface to force redraw. */
+    /* Attach the new buffer and damage the entire surface to force redraw. */
+    wl_surface_attach(popup->surface, popup->shmBuffer, 0, 0);
     wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
     wl_surface_commit(popup->surface);
     
@@ -930,7 +843,6 @@ TkWaylandSubsurfaceReconfigure(
     }
     
     wl_display_flush(popupDisplay);
-    /* No EGL operations performed; no context restore needed. */
 }
 
 /*
@@ -967,7 +879,6 @@ TkWaylandSubsurfacePlaceAbove(
     }
     
     wl_display_flush(popupDisplay);
-    /* No EGL operations performed here; no context restore needed. */
 }
 
 /*
@@ -981,7 +892,7 @@ TkWaylandSubsurfacePlaceAbove(
  *	None.
  *
  * Side effects:
- *	Destroys all Wayland objects, EGL resources, and the NanoVG context.
+ *	Destroys all Wayland objects and frees SHM buffer.
  *
  *----------------------------------------------------------------------
  */
@@ -1006,58 +917,8 @@ TkWaylandPopupDestroy(
         }
     }
 
-    /* 
-     * Unconditionally unbind whatever context is current.  This must happen
-     * before any EGL resource destruction so the driver does not try to flush
-     * pending work through surfaces/contexts we are about to delete.
-     */
-    eglMakeCurrent(popup->eglDisplay != EGL_NO_DISPLAY
-                       ? popup->eglDisplay
-                       : glfwGetEGLDisplay(),
-                   EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-    if (popup->vg) {
-        /*
-         * Re-bind the popup context just long enough to delete the NanoVG
-         * context, then immediately unbind again.  Only attempt this if both
-         * the surface and context are still valid; if either has been torn
-         * down already (e.g. by a concurrent resize) we leak the NanoVG
-         * object rather than corrupting the main context.
-         */
-        if (popup->eglContext != EGL_NO_CONTEXT &&
-            popup->eglSurface != EGL_NO_SURFACE &&
-            popup->eglDisplay != EGL_NO_DISPLAY) {
-            EGLBoolean ok = eglMakeCurrent(popup->eglDisplay,
-                                           popup->eglSurface,
-                                           popup->eglSurface,
-                                           popup->eglContext);
-            if (ok) {
-                nvgDeleteGLES3(popup->vg);
-                eglMakeCurrent(popup->eglDisplay,
-                               EGL_NO_SURFACE, EGL_NO_SURFACE,
-                               EGL_NO_CONTEXT);
-            } else {
-                POPUP_DEBUG("Warning: cannot bind popup ctx for NVG delete "
-                            "(err 0x%x) — leaking NVG object", eglGetError());
-            }
-        } else {
-            POPUP_DEBUG("Warning: Cannot delete NanoVG - context or surface invalid");
-        }
-        popup->vg = NULL;
-    }
-
-    if (popup->eglContext != EGL_NO_CONTEXT) {
-        eglDestroyContext(popup->eglDisplay, popup->eglContext);
-        popup->eglContext = EGL_NO_CONTEXT;
-    }
-    if (popup->eglSurface != EGL_NO_SURFACE) {
-        eglDestroySurface(popup->eglDisplay, popup->eglSurface);
-        popup->eglSurface = EGL_NO_SURFACE;
-    }
-    if (popup->eglWindow) {
-        wl_egl_window_destroy(popup->eglWindow);
-        popup->eglWindow = NULL;
-    }
+    /* Free SHM buffer. */
+    FreeSHMBuffer(popup);
 
     if (popup->xdgPopup) {
         xdg_popup_destroy(popup->xdgPopup);
@@ -1080,15 +941,6 @@ TkWaylandPopupDestroy(
         wl_display_flush(popupDisplay);
     }
     Tcl_Free(popup);
-
-    /*
-     * Leave the EGL context unbound.  Callers that need the main context
-     * restored after a Destroy (e.g. TkWaylandMenubarCreateOrResize) call
-     * RestoreMainContext themselves.  Doing it here would clobber the popup
-     * context of any sibling popup that is mid-draw when this Destroy runs,
-     * which is the "context corrupted on window event" failure mode for
-     * cascade/menubar interleaving.
-     */
 }
 
 /*
@@ -1119,35 +971,49 @@ TkWaylandPopupDestroyAll(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandPopupGetNVGContext --
+ * TkWaylandPopupGetSHMData --
  *
- *	Return the NanoVG context for a popup, making its EGL surface
- *	current first.
+ *	Return a pointer to the SHM buffer data for the popup.
  *
  * Results:
- *	Returns the NVGcontext pointer, or NULL if popup is invalid.
+ *	Returns the SHM data pointer, or NULL if popup is invalid or no buffer.
  *
  * Side effects:
- *	Makes the popup's EGL context current.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcontext *
-TkWaylandPopupGetNVGContext(
+MODULE_SCOPE void *
+TkWaylandPopupGetSHMData(
     TkWaylandPopup *popup)
 {
-    if (!popup || !popup->vg) return NULL;
+    if (!popup || !popup->shmData) return NULL;
+    return popup->shmData;
+}
 
-    /*
-     * Do NOT call eglMakeCurrent here.  The caller must have already called
-     * TkWaylandPopupBeginDraw, which owns the context switch for the entire
-     * BeginDraw → (draw commands) → EndDraw frame.  A second eglMakeCurrent
-     * in the middle of a frame forces the driver to flush pending work and
-     * can leave the surface in an inconsistent state on some Mesa versions,
-     * which is the root cause of the context-corruption-on-window-event bug.
-     */
-    return popup->vg;
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandPopupGetStride --
+ *
+ *	Return the stride (bytes per row) of the SHM buffer.
+ *
+ * Results:
+ *	Returns the stride in bytes, or 0 if popup is invalid.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandPopupGetStride(
+    TkWaylandPopup *popup)
+{
+    if (!popup) return 0;
+    return popup->stride;
 }
 
 /*
@@ -1155,70 +1021,30 @@ TkWaylandPopupGetNVGContext(
  *
  * TkWaylandPopupBeginDraw --
  *
- *	Begin a NanoVG frame for the popup.
+ *	Begin a draw cycle for the popup. Returns a pointer to the SHM buffer.
  *
  * Results:
- *	Returns TCL_OK on success, TCL_ERROR if the popup is not ready.
+ *	Returns the SHM data pointer on success, NULL if popup is not ready.
  *
  * Side effects:
- *	Makes the popup's EGL context current and calls nvgBeginFrame.
+ *	None - no EGL context operations are performed.
  *
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
-TkWaylandPopupBeginDraw(
-    TkWaylandPopup *popup)
+MODULE_SCOPE uint8_t *TkWaylandPopupBeginDraw(
+    TkWaylandPopup *popup,
+    TCL_UNUSED(int *)) /* stride */
 {
-    /* For subsurfaces, configured is always 1.
-     * For xdg_popup, we must wait for configure event. */
-    if (!popup || !popup->vg || !popup->configured) {
+    if (!popup || !popup->shmData || !popup->configured) {
         if (popup && !popup->configured) {
             POPUP_DEBUG("BeginDraw: popup not configured yet");
         }
-        return TCL_ERROR;
+        return NULL;
     }
-
-    /* Always make the popup's EGL context current.
-     * This is necessary because:
-     * 1. The context may have been unbound during destruction of old surfaces.
-     * 2. The main context may have been restored after previous operations.
-     * 3. We need to ensure we're using the correct EGL surface.
-     */
-    if (popup->eglDisplay == EGL_NO_DISPLAY ||
-        popup->eglSurface == EGL_NO_SURFACE ||
-        popup->eglContext == EGL_NO_CONTEXT) {
-        POPUP_DEBUG("BeginDraw: Invalid EGL state");
-        return TCL_ERROR;
-    }
-
-    EGLBoolean madeCurrent = eglMakeCurrent(popup->eglDisplay, popup->eglSurface,
-                                            popup->eglSurface, popup->eglContext);
-    if (!madeCurrent) {
-        EGLint error = eglGetError();
-        POPUP_DEBUG("BeginDraw: eglMakeCurrent failed: 0x%x", error);
-        return TCL_ERROR;
-    }
-
-    glViewport(0, 0, popup->width, popup->height);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    /*
-     * The device pixel ratio must match the compositor's expectation for
-     * this output.  Hard-coding 1.0 produces blurry rendering on HiDPI
-     * displays and can cause the compositor to silently discard buffer
-     * content on some implementations.  Query the scale from GLFW using
-     * the main window (popup subsurfaces inherit the parent output's scale).
-     */
-    float xscale = 1.0f, yscale = 1.0f;
-    if (mainGlfwWindow) {
-        glfwGetWindowContentScale(mainGlfwWindow, &xscale, &yscale);
-    }
-    if (xscale <= 0.0f) xscale = 1.0f;
-
-    nvgBeginFrame(popup->vg, (float)popup->width, (float)popup->height, xscale);
-    return TCL_OK;
+    
+    /* Return pointer to SHM buffer for caller to fill. */
+    return popup->shmData;
 }
 
 /*
@@ -1226,15 +1052,13 @@ TkWaylandPopupBeginDraw(
  *
  * TkWaylandPopupEndDraw --
  *
- *	Finish the NanoVG frame and swap buffers.
+ *	Finish the draw cycle and commit the SHM buffer.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Swaps EGL buffers, which automatically damages and commits the
- *	surface with the rendered content. Restores the main context
- *	after drawing is complete.
+ *	Attaches the SHM buffer to the surface and commits it.
  *
  *----------------------------------------------------------------------
  */
@@ -1243,49 +1067,18 @@ MODULE_SCOPE void
 TkWaylandPopupEndDraw(
     TkWaylandPopup *popup)
 {
-    if (!popup || !popup->vg) return;
+    if (!popup || !popup->shmBuffer || !popup->surface) return;
 
-    nvgEndFrame(popup->vg);
+    /* Attach the buffer and damage the entire surface. */
+    wl_surface_attach(popup->surface, popup->shmBuffer, 0, 0);
+    wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
+    wl_surface_commit(popup->surface);
     
-    /* 
-     * eglSwapBuffers on a wl_egl_window:
-     *   - Attaches the rendered buffer to the surface.
-     *   - Damages the entire surface area.
-     *   - Commits the surface atomically.
-     * 
-     * DO NOT add additional wl_surface_damage or wl_surface_commit
-     * here as that would overwrite the pending state with a blank
-     * buffer, causing no visible content.
-     */
-    EGLBoolean swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
-    if (!swapped) {
-        EGLint error = eglGetError();
-        POPUP_DEBUG("eglSwapBuffers failed: 0x%x", error);
-        
-        /* Common recovery for BAD_MATCH. */
-        if (error == EGL_BAD_MATCH && popup->eglWindow) {
-            int w, h;
-            TkWaylandPopupGetSize(popup, &w, &h);
-            if (w > 0 && h > 0) {
-                wl_egl_window_resize(popup->eglWindow, w, h, 0, 0);
-                swapped = eglSwapBuffers(popup->eglDisplay, popup->eglSurface);
-                if (swapped) {
-                    POPUP_DEBUG("eglSwapBuffers succeeded after resize recovery");
-                } else {
-                    POPUP_DEBUG("eglSwapBuffers still failed after resize recovery");
-                }
-            }
-        }
-    } else {
-        POPUP_DEBUG("eglSwapBuffers succeeded");
-    }
-
     if (popupDisplay) {
         wl_display_flush(popupDisplay);
     }
-
-    /* Restore main context after popup drawing. */
-    RestoreMainContext();
+    
+    POPUP_DEBUG("EndDraw: committed surface");
 }
 
 /*

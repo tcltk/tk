@@ -398,7 +398,9 @@ typedef struct {
     int         nestedFrame; /* Frame within frame */
     int         isPixmap;   /* Set to 1 if drawing to an off-screen FBO, 0 for Window */
     GLuint      pixmapFbo;  /* Stores the active Pixmap FBO handle id */
+    void 		*winPtr;    /* TkWindow pointer. */
 } TkWaylandDrawingContext;
+
 /*
  *----------------------------------------------------------------------
  *
@@ -439,7 +441,7 @@ typedef struct TkWaylandPixmap {
     int height;
 } TkWaylandPixmap;
 
-
+TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
 /*
  *----------------------------------------------------------------------
  *
@@ -757,10 +759,11 @@ MODULE_SCOPE TkWaylandPopup *TkWaylandPopupMove(
     uint32_t anchor,
     uint32_t gravity);
 
-/* Rendering */
-MODULE_SCOPE NVGcontext *TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
-MODULE_SCOPE int          TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
-MODULE_SCOPE void         TkWaylandPopupEndDraw(TkWaylandPopup *popup);
+/* wl_shm-based rendering APIs. */
+MODULE_SCOPE uint8_t *TkWaylandPopupBeginDraw(
+    TkWaylandPopup *popup,
+    int *strideOut);
+MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);
 
 /* Callbacks and queries */
 MODULE_SCOPE void TkWaylandPopupSetDoneCallback(
