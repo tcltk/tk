@@ -197,7 +197,7 @@ namespace eval ttk::theme::vista {
 	}
 
 	# Treeview
-	ttk::style configure Heading -font TkHeadingFont
+	ttk::style configure Heading -font TkHeadingFont -padding {0 0 0 1.5p}
 	ttk::style configure Item -padding {3p 0 0 0}
 	ttk::style configure CheckTreeview.Item \
 	    -padding {3p 0.75p 0 0.75p}	;# because of Checkbutton.indicator
