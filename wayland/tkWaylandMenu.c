@@ -610,7 +610,7 @@ TkpDisplayMenu(
 }
 
 /*
- *---------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * MenuDrawIntoPopup --
  *
@@ -623,7 +623,7 @@ TkpDisplayMenu(
  * Side effects:
  *	Renders menu into SHM buffer and commits the popup.
  *
- *---------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -785,33 +785,17 @@ MenuDrawIntoPopup(
 
     nvgEndFrame(vg);
 
-    /* Read back the pixels into the SHM buffer. */
-    glReadPixels(0, 0, menuW, menuH, GL_RGBA, GL_UNSIGNED_BYTE, shmData);
-
-    /* Flip the image vertically because OpenGL and SHM have different origins. */
-    uint8_t *row_buffer = (uint8_t *)malloc(stride);
-    if (row_buffer) {
-        for (int y = 0; y < menuH / 2; y++) {
-            int top_y = y;
-            int bottom_y = menuH - 1 - y;
-            
-            uint8_t *top_row = shmData + top_y * stride;
-            uint8_t *bottom_row = shmData + bottom_y * stride;
-            
-            memcpy(row_buffer, top_row, stride);
-            memcpy(top_row, bottom_row, stride);
-            memcpy(bottom_row, row_buffer, stride);
-        }
-        free(row_buffer);
-    }
-
-    /* End the drawing context and commit the popup. */
+    /* End the drawing context. */
     TkGlfwEndDraw(&dc);
+
+	/* Capture the pixels from the FBO into the SHM buffer. */
+    TkWaylandPopupCaptureGLPixels(popup, menuPtr->tkwin);
+
+    /* Commit the shared memory buffer to the compositor */
     TkWaylandPopupEndDraw(popup);
 
     MENU_LOG("MenuDrawIntoPopup: completed");
 }
-
 /*
  *---------------------------------------------------------------------------
  *

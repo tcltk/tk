@@ -795,6 +795,7 @@ MODULE_SCOPE void TkWaylandSubsurfaceReconfigure(
     int x, int y, int width, int height);
 MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(
     TkWaylandPopup *popup, TkWaylandPopup *sibling);
+MODULE_SCOPE void  TkWaylandPopupCaptureGLPixels(TkWaylandPopup *popup, void *parentTkWindow);
 
 /*
  *----------------------------------------------------------------------

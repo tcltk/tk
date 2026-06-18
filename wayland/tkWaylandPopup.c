@@ -1256,6 +1256,69 @@ TkWaylandPopupGetSeat(void)
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandPopupCaptureGLPixels --
+ *
+ *	Blits and reads back pixels from the parent window's active 
+ *	GLES3 FBO directly into the popup's top-down SHM data buffer.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Modifies the SHM buffer contents. Saves and restores the current
+ *	framebuffer binding.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandPopupCaptureGLPixels(
+    TkWaylandPopup *popup,
+    void *parentTkWindow) /* Pass winPtr or menuPtr->tkwin */
+{
+    if (!popup || !popup->shmData || popup->width <= 0 || popup->height <= 0) {
+        return;
+    }
+
+    TkWindow *winPtr = (TkWindow *)parentTkWindow;
+    GLint previousFBO = 0;
+
+    /* Save the active framebuffer binding so we don't break NanoVG state cycles. */
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previousFBO);
+
+    /* Bind the window's actual widget-filled FBO backing store */
+    if (winPtr && winPtr->privatePtr && winPtr->privatePtr->fb) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+    } else {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    }
+
+    /* Set pack alignment to 4 bytes to match ythe ARGB8888 stride metrics. */
+    glPixelStorei(GL_PACK_ALIGNMENT, 4);
+
+    /*
+     * COORDINATE SYSTEM INVERSION (GL_FLIPY):
+     * glReadPixels reads bottom-up. Wayland SHM data is mapped top-down.
+     * We invert the rows scanline-by-scanline as we copy them.
+     */
+    unsigned char *shmDest = (unsigned char *)popup->shmData;
+    int stride = popup->stride; /* Use the aligned stride calculated by AllocateSHMBuffer. */
+
+    for (int y = 0; y < popup->height; y++) {
+        /* Read rows from the bottom of the GL Framebuffer up into the top rows of SHM. */
+        glReadPixels(0, (popup->height - 1 - y), popup->width, 1, 
+                     GL_RGBA, GL_UNSIGNED_BYTE, shmDest + (y * stride));
+    }
+
+    /* Restore the previous framebuffer state. */
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, previousFBO);
+    
+    POPUP_DEBUG("Captured %dx%d pixels from parent FBO to SHM", popup->width, popup->height);
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

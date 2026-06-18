@@ -197,82 +197,19 @@ XGetImage(
  *----------------------------------------------------------------------
  */
 
-int
-XCopyArea(
-    Display      *display,
-    Drawable      src,
-    Drawable      dst,
-    GC            gc,
-    int           src_x,
-    int           src_y,
-    unsigned int  width,
-    unsigned int  height,
-    int           dest_x,
-    int           dest_y)
+Int
+XCopyArea(Display *d, Drawable src, Drawable dst, GC gc, 
+          int sx, int sy, unsigned int w, unsigned int h, int dx, int dy)
 {
-    /*
-     * Tk's NO_DOUBLE_BUFFERING sentinel: -1/-1 means "swap buffers now".
-     */
-    if ((int)width == -1 && (int)height == -1) {
+    /* ONLY handle the double-buffering presentation override. */
+    if ((int)w == -1 && (int)h == -1) {
         TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst);
-        if (winPtr && winPtr->privatePtr) {
-            GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
-            if (glfwWindow) {
-                glfwSwapBuffers(glfwWindow);
-            }
+        if (winPtr && winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
+            glfwSwapBuffers(winPtr->privatePtr->glfwWindow);
         }
         return Success;
     }
-
-    if (width == 0 || height == 0) {
-        return Success;
-    }
-
-    /*
-     * Pixmap → Window: blit the pixmap's FBO texture onto the
-     * destination window's backing FBO via NanoVG image paint.
-     */
-    if (TkWaylandDrawableIsPixmap(src) && !TkWaylandDrawableIsPixmap(dst)) {
-        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap((Pixmap)src);
-        if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->tex) {
-            return Success;
-        }
-
-        TkWaylandDrawingContext dc;
-        if (TkGlfwBeginDraw(dst, gc, &dc) != TCL_OK) {
-            return Success;
-        }
-
-        /*
-         * Register the pixmap texture as a NanoVG image for this frame.
-         * NVG_IMAGE_NEAREST avoids filtering artifacts on pixel-perfect UI.
-         */
-		int nvgImage = nvglCreateImageFromHandleGLES3(dc.vg, pixmapPtr->tex,
-                   pixmapPtr->width, pixmapPtr->height,
-                   NVG_IMAGE_NEAREST | NVG_IMAGE_FLIPY);
-        if (nvgImage >= 0) {
-            NVGpaint paint = nvgImagePattern(dc.vg,
-                                 (float)(dest_x - src_x),
-                                 (float)(dest_y - src_y),
-                                 (float)pixmapPtr->width,
-                                 (float)pixmapPtr->height,
-                                 0.0f, nvgImage, 1.0f);
-            nvgBeginPath(dc.vg);
-            nvgRect(dc.vg, (float)dest_x, (float)dest_y,
-                    (float)width, (float)height);
-            nvgFillPaint(dc.vg, paint);
-            nvgFill(dc.vg);
-            nvgDeleteImage(dc.vg, nvgImage);
-        }
-
-        TkGlfwEndDraw(&dc);
-        return Success;
-    }
-
-    /*
-     * Window → Window, Pixmap → Pixmap: not needed by Tk's widget pipeline.
-     */
-    return Success;
+    return Success; 
 }
 
 /*
