@@ -18,7 +18,6 @@
 
 #define GL_GLEXT_PROTOTYPES
 #define NANOVG_GLES3_IMPLEMENTATION
-#define NANOVG_FBO_IMPLEMENTATION
 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
@@ -956,125 +955,6 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *----------------------------------------------------------------------
  */
 
-#if 0
-MODULE_SCOPE GLFWwindow *
-TkGlfwCreateWindow(
-    TkWindow   *winPtr,
-    int         width,
-    int         height,
-    const char *title,
-    Drawable   *drawableOut)
-{
-    fprintf(stderr, "TkGlfwCreateWindow\n");
-    if (winPtr == NULL) {
-	Tcl_Panic("TkGlfwCreateWindow called with null winPtr\n");
-    }
-    GLFWwindow    *glfwWindow = NULL;
-
-    /* Don't create windows during shutdown. */
-    if (shutdownInProgress) return NULL;
-    if (!GlfwIsInitialized) {
-        if (TkGlfwInitialize() != TCL_OK)
-            return NULL;
-    }
-    if (width  <= 1) width  = 200;
-    if (height <= 1) height = 200;
-    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
-	/* This is the root window. */
-        glfwWindow = mainGlfwWindow;
-        glfwSetWindowSize(glfwWindow, width, height);
-        glfwSetWindowTitle(glfwWindow, title ? title : "");
-    } else { /* A toplevel other than the root */
-	/* Hints apply to the next call to glfwCreateWindow. */
-	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-	glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
-	glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
-	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
-	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-	glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-	/*
-	 * Sharing the GL context makes image rendering more efficient.
-	 */
-        glfwWindow = glfwCreateWindow(width, height, title ? title : "",
-				      NULL, mainGlfwWindow);
-        if (!glfwWindow) {
-	    return NULL;
-	}
-	glfwMakeContextCurrent(glfwWindow);
-	glfwSwapInterval(0);
-	glfwShowWindow(glfwWindow);
-	glfwSwapBuffers(glfwWindow);
-    }
-    glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
-    fprintf(stderr, "nvgContext for %s is at %p\n", Tk_PathName(winPtr),
-	   infoPtr);
-    if (glfwWindow == mainGlfwWindow) {
-	mainGlfwContext = infoPtr->context;
-    }
-    glfwSetWindowUserPointer(glfwWindow, infoPtr);
-    TkGlfwSetupCallbacks(glfwWindow);
-    winPtr->privatePtr->glfwWindow = glfwWindow;
-    winPtr->changes.width  = width;
-    winPtr->changes.height = height;
-
-    /* Set the initial pixel ratio for this window. */
-    int fbWidth, fbHeight;
-    float scale;
-    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
-    fprintf(stderr, "Initial pixel ratio for %s is %f\n",
-	   Tk_PathName(winPtr), scale);
-
-    /* Create a framebuffer for the backing store of the window. */
-    glfwMakeContextCurrent(glfwWindow);
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
-						     fbWidth, fbHeight, 0);
-    if (winPtr->privatePtr->fb == NULL) {
-		fprintf(stderr, "Could not create NanoVG framebuffer\n");
-    }
-    fprintf(stderr, "Window %s has glfwWindow %p and framebuffer %p\n",
-	   Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fb);
-    nvgluBindFramebuffer(winPtr->privatePtr->fb);
-    /* Check FBO completeness for now. */
-    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO is incomplete (status=0x%x)\n", status);
-    } else {
-	fprintf(stderr, "Window %s has a complete framebuffer @ %p\n",
-	       Tk_PathName(winPtr), winPtr->privatePtr->fb);
-    }
-
-    if (drawableOut) {
-	*drawableOut = TkWaylandDrawableForTkWindow(winPtr);
-    }
-    if (winPtr != NULL) {
-        TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
-    }
-    return glfwWindow;
-}
-#endif
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwCreateWindow --
- *
- *	Create a new GLFW window sharing the global GL context.
- *	Waits for the compositor's first configure event before returning
- *	so that BeginDraw always has valid dimensions.
- *
- * Results:
- *	Returns the GLFWwindow pointer on success, NULL on failure.
- *
- * Side effects:
- *	Creates a new GLFW window and its associated GlfwTkInfo.
- *
- *----------------------------------------------------------------------
- */
-
 MODULE_SCOPE GLFWwindow *
 TkGlfwCreateWindow(
     TkWindow   *winPtr,
@@ -1288,40 +1168,10 @@ TkGlfwBeginDraw(
     if (drawable <= 1) {
         return TCL_ERROR;
     }
-
-    /* Pixmap. */
+    
+    /* Pixmaps are not renderable as window contexts. */
     if (TkWaylandDrawableIsPixmap(drawable)) {
-        TkWaylandPixmap *pixmap = TkWaylandPixmapFromPixmap((Pixmap)drawable);
-
-        if (pixmap == NULL || pixmap->fb == NULL || pixmap->glfwWindow == NULL) {
-            return TCL_ERROR;
-        }
-
-        infoPtr = glfwGetWindowUserPointer(pixmap->glfwWindow);
-        if (infoPtr == NULL || infoPtr->context.vg == NULL) {
-            return TCL_ERROR;
-        }
-
-        dcPtr->vg = infoPtr->context.vg;
-        dcPtr->width = pixmap->width;
-        dcPtr->height = pixmap->height;
-        dcPtr->winPtr = NULL;
-        dcPtr->isPixmap = 1;
-
-        glfwMakeContextCurrent(pixmap->glfwWindow);
-        glBindFramebuffer(GL_FRAMEBUFFER, pixmap->fb->fbo);
-        glViewport(0, 0, pixmap->width, pixmap->height);
-
-        float scale;
-        glfwGetWindowContentScale(pixmap->glfwWindow, &scale, NULL);
-        if (scale <= 0.0f) scale = 1.0f;
-
-        /* Close any open frame before opening a new one. */
-	nvgEndFrame(infoPtr->context.vg);
-        nvgBeginFrame(infoPtr->context.vg,
-                      (float)pixmap->width, (float)pixmap->height, scale);
-
-        return TCL_OK;
+        return TCL_ERROR;
     }
 
     /* Toplevel window or child widget.  */
@@ -1370,9 +1220,8 @@ TkGlfwBeginDraw(
     dcPtr->isPixmap = 0;
 
     /* All children share the toplevel's backing FBO. */
-    NVGLUframebuffer *fb = topPtr->privatePtr->fb;
-    if (fb != NULL) {
-        glBindFramebuffer(GL_FRAMEBUFFER, fb->fbo);
+    if (topPtr->privatePtr->fb) {
+        glBindFramebuffer(GL_FRAMEBUFFER, topPtr->privatePtr->fb->fbo);
     } else {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -1388,11 +1237,7 @@ TkGlfwBeginDraw(
         }
     }
 
-    /* Close any open frame before opening a new one. NanoVG's internal
-     * state stack overflows and corrupts the C stack if nvgBeginFrame is
-     * called while a previous frame is still open (e.g. after a resize
-     * event interrupted a draw cycle). nvgEndFrame on an idle context
-     * is a safe no-op flush. */
+    /* Close any open frame before opening a new one. */
     nvgEndFrame(infoPtr->context.vg);
     nvgBeginFrame(infoPtr->context.vg, (float)width, (float)height,
                   pixelRatio);
@@ -1432,7 +1277,7 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         nvgEndFrame(dcPtr->vg);
     }
 
-    if (dcPtr->isPixmap || dcPtr->winPtr == NULL) {
+    if (dcPtr->winPtr == NULL) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }

@@ -181,11 +181,18 @@ XGetImage(
  *
  *	Copy rectangular area from one drawable to another.
  *
+ *	Behaviour:
+ *	  - If width == -1 and height == -1 (sentinel from Tk's
+ *	    NO_DOUBLE_BUFFERING pipeline), perform a buffer swap on the
+ *	    destination window if it is a window.
+ *	  - If either source or destination is a pixmap, do nothing.
+ *	  - Otherwise (window→window), do nothing; no GL blit is performed.
+ *
  * Results:
  *	Success.
  *
  * Side effects:
- *	Copies pixel data between drawables.
+ *	May swap buffers for window drawables.
  *
  *----------------------------------------------------------------------
  */
@@ -198,14 +205,14 @@ XCopyArea(
     GC            gc,
     int           src_x,
     int           src_y,
-    unsigned int  width,  /* Kept unsigned int to match Xlib.h */
-    unsigned int  height, /* Kept unsigned int to match Xlib.h */
+    unsigned int  width,
+    unsigned int  height,
     int           dest_x,
     int           dest_y)
 {
     /*
-     * Cast the unsigned parameters to signed integers right here. 
-     * This safely catches the -1 sentinel token passed by Tk's 
+     * Cast the unsigned parameters to signed integers right here.
+     * This safely catches the -1 sentinel token passed by Tk's
      * NO_DOUBLE_BUFFERING core layout pipeline.
      */
     if ((int)width == -1 && (int)height == -1) {
@@ -226,28 +233,18 @@ XCopyArea(
         return Success;
     }
 
-    /* 
-     * Tk provides the layout bounding box. We ensure the target context 
-     * state is synchronized, but hold back glfwSwapBuffers until the 
-     * subsequent -1 flush call hits.
+    /*
+     * If either src or dst is a pixmap, this is a no‑op.
+     * Pixmaps are logical objects and do not hold any pixel data.
      */
-    if (TkWaylandDrawableIsPixmap(dst)) {
+    if (TkWaylandDrawableIsPixmap(src) || TkWaylandDrawableIsPixmap(dst)) {
         return Success;
     }
 
-    TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst);
-    if (winPtr && winPtr->privatePtr) {
-        GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
-        if (glfwWindow) {
-            glfwMakeContextCurrent(glfwWindow);
-            if (winPtr->privatePtr->fb) {
-                glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
-            } else {
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            }
-        }
-    }
-
+    /*
+     * Normal window‑to‑window copy: no GL blit is performed.
+     * The rendering pipeline handles drawing directly.
+     */
     return Success;
 }
 

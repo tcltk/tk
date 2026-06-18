@@ -125,8 +125,9 @@ inline Drawable TkWaylandDrawableForTkWindow(TkWindow *winPtr) {
 
 inline TkWindow* TkWaylandTkWindowFromDrawable(Drawable drawable) {
     if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
-	fprintf(stderr, "Attempt to convert a pixmap drawable %lx to a window.",
-	       drawable);
+        fprintf(stderr, "Attempt to convert a pixmap drawable %lx to a window.\n",
+               drawable);
+        return NULL;
     }
     return (TkWindow *) drawable;
 }

@@ -419,22 +419,19 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap)
  *
  * Tk_GetPixmap --
  *
- *      Create an off-screen drawable (pixmap), which is associated with an
- *      NVGLUframebuffer.  The drawable should be a Tk window or None.  If a
- *      drawable is provided, the FBO is created in the GL context of the
- *      associated GLFWwindow.  Otherwise the context of the root window is
- *      used.  Note that the GL context is shared between windows.
+ *      Create an off-screen drawable (pixmap) as a logical object only.
+ *      The pixmap is not backed by any OpenGL resources; it is merely
+ *      a token with width, height, and an associated GLFWwindow (for
+ *      context affinity).  No FBO, texture, or stencil buffer is allocated.
  *
- *      Pixmap handles are now safe, rolling integer IDs stored in a hash
- *      table, eliminating the previous direct pointer-as-ID approach which
- *      caused crashes when Tk incorrectly treated them as XIDs.
+ *      Pixmap handles are safe, rolling integer IDs stored in a hash
+ *      table, eliminating the previous direct pointer-as-ID approach.
  *
  * Results:
  *      Returns a Drawable associated to a Pixmap (as an integer ID).
  *
  * Side effects:
- *      Allocates an NVGLUframebuffer and registers the pixmap in the
- *      global hash table.
+ *      Registers the pixmap in the global hash table.
  *
  *----------------------------------------------------------------------
  */
@@ -448,7 +445,6 @@ Tk_GetPixmap(
     TCL_UNUSED(int)) /* depth */
 {
     TkWaylandPixmap *pixmapPtr;
-    GLenum           status;
     GLFWwindow      *glfwWindow;
 
     if (width <= 0 || height <= 0) {
@@ -471,7 +467,6 @@ Tk_GetPixmap(
         pixmapTableInitialized = 1;
     }
 
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
     memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
     pixmapPtr->glfwWindow = glfwWindow;
@@ -486,21 +481,6 @@ Tk_GetPixmap(
     Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(&pixmapTable, (void *)(uintptr_t)pixmapPtr->id, &isNew);
     Tcl_SetHashValue(entryPtr, pixmapPtr);
 
-    /* The GL context must be current when creating the FBO. */
-    glfwMakeContextCurrent(glfwWindow);
-    pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
-					 width, height, 0);
-
-    /* Check FBO completeness */
-    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
-    }
-
-    /* Clear pixmap to white. */
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
     /* Return the integer ID as the Pixmap handle. */
     return (Pixmap)pixmapPtr->id;
 }
@@ -510,14 +490,14 @@ Tk_GetPixmap(
  *
  * Tk_FreePixmap --
  *
- *      Destroy a pixmap and free its OpenGL resources.
+ *      Destroy a logical pixmap and free its tracking structure.
+ *      No OpenGL resources are freed because none were allocated.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Deletes FBO, texture, and stencil buffer. Removes the pixmap
- *      from the global hash table.
+ *      Removes the pixmap from the global hash table and frees the struct.
  *
  *----------------------------------------------------------------------
  */
@@ -538,10 +518,6 @@ Tk_FreePixmap(
         Tcl_DeleteHashEntry(entryPtr);
     }
 
-    if (pixmapPtr->fb) {
-	glfwMakeContextCurrent(pixmapPtr->glfwWindow);
-	nvgluDeleteFramebuffer(pixmapPtr->fb);
-    }
     ckfree(pixmapPtr);
 }
 
