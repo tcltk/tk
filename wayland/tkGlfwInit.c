@@ -1314,7 +1314,11 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     }
 
     /* Pixmap draws use a raw GL FBO — no NVG frame was opened, no swap needed. */
+	/* Pixmap: close the NVG frame and unbind, but don't mark window dirty. */
     if (dcPtr->isPixmap) {
+        if (dcPtr->vg != NULL) {
+            nvgEndFrame(dcPtr->vg);
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }
