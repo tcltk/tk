@@ -1169,9 +1169,49 @@ TkGlfwBeginDraw(
         return TCL_ERROR;
     }
     
-    /* Pixmaps are not renderable as window contexts. */
-    if (TkWaylandDrawableIsPixmap(drawable)) {
+if (drawable <= 1) {
         return TCL_ERROR;
+    }
+
+    /* Pixmap path: bind the pixmap's own raw GL FBO. */
+    if (TkWaylandDrawableIsPixmap(drawable)) {
+        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap((Pixmap)drawable);
+        if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
+            return TCL_ERROR;
+        }
+        glfwTkInfo *infoPtr = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
+        if (!infoPtr || !infoPtr->context.vg) {
+            return TCL_ERROR;
+        }
+        glfwMakeContextCurrent(pixmapPtr->glfwWindow);
+        glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
+        glViewport(0, 0, pixmapPtr->width, pixmapPtr->height);
+
+        float pixelRatio = 1.0f;
+        {
+            int winW, winH;
+            glfwGetWindowSize(pixmapPtr->glfwWindow, &winW, &winH);
+            int fbW, fbH;
+            glfwGetFramebufferSize(pixmapPtr->glfwWindow, &fbW, &fbH);
+            if (winW > 0) {
+                pixelRatio = (float)fbW / (float)winW;
+            }
+        }
+
+        dcPtr->vg        = infoPtr->context.vg;
+        dcPtr->width     = pixmapPtr->width;
+        dcPtr->height    = pixmapPtr->height;
+        dcPtr->winPtr    = NULL;
+        dcPtr->isPixmap  = 1;
+        dcPtr->pixmapFbo = pixmapPtr->fbo;
+
+        /* Open a NVG frame sized to the pixmap. */
+        nvgEndFrame(infoPtr->context.vg);
+        nvgBeginFrame(infoPtr->context.vg,
+                      (float)pixmapPtr->width,
+                      (float)pixmapPtr->height,
+                      pixelRatio);
+        return TCL_OK;
     }
 
     /* Toplevel window or child widget.  */
@@ -1273,6 +1313,12 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         return;
     }
 
+    /* Pixmap draws use a raw GL FBO — no NVG frame was opened, no swap needed. */
+    if (dcPtr->isPixmap) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        return;
+    }
+
     if (dcPtr->vg != NULL) {
         nvgEndFrame(dcPtr->vg);
     }
@@ -1283,8 +1329,8 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
     }
 
     TkWindow *winPtr = (TkWindow *)dcPtr->winPtr;
-    if (winPtr == NULL 
-        || (uintptr_t)winPtr < 0x1000 
+    if (winPtr == NULL
+        || (uintptr_t)winPtr < 0x1000
         || ((uintptr_t)winPtr & 3) != 0) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;

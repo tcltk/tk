@@ -211,39 +211,66 @@ XCopyArea(
     int           dest_y)
 {
     /*
-     * Cast the unsigned parameters to signed integers right here.
-     * This safely catches the -1 sentinel token passed by Tk's
-     * NO_DOUBLE_BUFFERING core layout pipeline.
+     * Tk's NO_DOUBLE_BUFFERING sentinel: -1/-1 means "swap buffers now".
      */
     if ((int)width == -1 && (int)height == -1) {
         TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst);
         if (winPtr && winPtr->privatePtr) {
             GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
             if (glfwWindow) {
-                /* Execute the native hardware buffer swap. */
                 glfwSwapBuffers(glfwWindow);
-                return Success;
             }
         }
         return Success;
     }
 
-    /* Guard against empty or standard invalid dimensions. */
     if (width == 0 || height == 0) {
         return Success;
     }
 
     /*
-     * If either src or dst is a pixmap, this is a no‑op.
-     * Pixmaps are logical objects and do not hold any pixel data.
+     * Pixmap → Window: blit the pixmap's FBO texture onto the
+     * destination window's backing FBO via NanoVG image paint.
      */
-    if (TkWaylandDrawableIsPixmap(src) || TkWaylandDrawableIsPixmap(dst)) {
+    if (TkWaylandDrawableIsPixmap(src) && !TkWaylandDrawableIsPixmap(dst)) {
+        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap((Pixmap)src);
+        if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->tex) {
+            return Success;
+        }
+
+        TkWaylandDrawingContext dc;
+        if (TkGlfwBeginDraw(dst, gc, &dc) != TCL_OK) {
+            return Success;
+        }
+
+        /*
+         * Register the pixmap texture as a NanoVG image for this frame.
+         * NVG_IMAGE_NEAREST avoids filtering artifacts on pixel-perfect UI.
+         */
+		int nvgImage = nvglCreateImageFromHandleGLES3(dc.vg, pixmapPtr->tex,
+                   pixmapPtr->width, pixmapPtr->height,
+                   NVG_IMAGE_NEAREST | NVG_IMAGE_FLIPY);
+        if (nvgImage >= 0) {
+            NVGpaint paint = nvgImagePattern(dc.vg,
+                                 (float)(dest_x - src_x),
+                                 (float)(dest_y - src_y),
+                                 (float)pixmapPtr->width,
+                                 (float)pixmapPtr->height,
+                                 0.0f, nvgImage, 1.0f);
+            nvgBeginPath(dc.vg);
+            nvgRect(dc.vg, (float)dest_x, (float)dest_y,
+                    (float)width, (float)height);
+            nvgFillPaint(dc.vg, paint);
+            nvgFill(dc.vg);
+            nvgDeleteImage(dc.vg, nvgImage);
+        }
+
+        TkGlfwEndDraw(&dc);
         return Success;
     }
 
     /*
-     * Normal window‑to‑window copy: no GL blit is performed.
-     * The rendering pipeline handles drawing directly.
+     * Window → Window, Pixmap → Pixmap: not needed by Tk's widget pipeline.
      */
     return Success;
 }

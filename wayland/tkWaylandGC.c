@@ -452,16 +452,14 @@ Tk_GetPixmap(
     }
 
     if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
-	glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+        glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     } else {
-	glfwWindow = mainGlfwWindow;
+        glfwWindow = mainGlfwWindow;
     }
     if (!glfwWindow) {
-	printf("No GLFW window!\n");
-	return None;
+        return None;
     }
 
-    /* Initialize hash table if not already done. */
     if (!pixmapTableInitialized) {
         Tcl_InitHashTable(&pixmapTable, TCL_ONE_WORD_KEYS);
         pixmapTableInitialized = 1;
@@ -470,21 +468,31 @@ Tk_GetPixmap(
     pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
     memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
     pixmapPtr->glfwWindow = glfwWindow;
-    pixmapPtr->width = width;
-    pixmapPtr->height = height;
+    pixmapPtr->width      = width;
+    pixmapPtr->height     = height;
+    pixmapPtr->id         = nextPixmapId++;
 
-    /* Assign a safe, unique, 32-bit friendly rolling integer ID. */
-    pixmapPtr->id = nextPixmapId++;
+    /* Allocate a raw GL FBO + texture for this pixmap. */
+    glfwMakeContextCurrent(glfwWindow);
+    glGenFramebuffers(1, &pixmapPtr->fbo);
+    glGenTextures(1, &pixmapPtr->tex);
+    glBindTexture(GL_TEXTURE_2D, pixmapPtr->tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, pixmapPtr->tex, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
-    /* Register the mapping from ID to pixmap pointer. */
     int isNew;
-    Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(&pixmapTable, (void *)(uintptr_t)pixmapPtr->id, &isNew);
+    Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(&pixmapTable,
+                                  (void *)(uintptr_t)pixmapPtr->id, &isNew);
     Tcl_SetHashValue(entryPtr, pixmapPtr);
-
-    /* Return the integer ID as the Pixmap handle. */
     return (Pixmap)pixmapPtr->id;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -512,12 +520,21 @@ Tk_FreePixmap(
         return;
     }
 
-    /* Clean up the hash table tracking entry. */
-    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable, (void *)(uintptr_t)pixmap);
+    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable,
+                                  (void *)(uintptr_t)pixmap);
     if (entryPtr) {
         Tcl_DeleteHashEntry(entryPtr);
     }
 
+    if (pixmapPtr->glfwWindow) {
+        glfwMakeContextCurrent(pixmapPtr->glfwWindow);
+    }
+    if (pixmapPtr->fbo) {
+        glDeleteFramebuffers(1, &pixmapPtr->fbo);
+    }
+    if (pixmapPtr->tex) {
+        glDeleteTextures(1, &pixmapPtr->tex);
+    }
     ckfree(pixmapPtr);
 }
 
