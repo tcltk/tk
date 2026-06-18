@@ -15,9 +15,32 @@
 
 /*
  * This file contains the implementation of a Tcl Notifier for Wayland.
- * The design is .... WRITE THIS.
+ *
+ * The design is a single-threaded event loop integration grafting GLFW's 
+ * main-thread polling mechanics and native protocols (IBus/DBus) onto 
+ * the standard Tcl Notifier framework (Tcl_CreateEventSource).
+ *
+ * Architecture and Event Flow
+ * ----------------------------
+ *
+ * Frame Presentation
+ *   Synchronized with Tcl's idle cycle via TkWaylandDisplayAllWindows
+ *   at the start of SetupProc. FBO data is blitted to GLFW buffer 0 and swapped.
+ *
+ * IPC Message Draining
+ *   IBus/DBus messages are drained inline via sd_bus_process
+ *   in SetupProc/CheckProc to prevent input starvation during continuous redraw cycles.
+ *
+ * GLFW Event Polling
+ *   SetupProc runs glfwPollEvents(). If window callbacks fire,
+ *   Tcl is instructed not to block (Tcl_SetMaxBlockTime({0,0})). Otherwise, it
+ *   rests for one display frame (~16.6ms) to manage CPU load.
+ *
+ * Inter-Thread Wakeups
+ *   TkWaylandWakeupGLFW forces instant wakeups using
+ *   glfwPostEmptyEvent() paired with Tcl_ThreadAlert.
  */
-
+ 
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 
@@ -319,57 +342,44 @@ TkWaylandCheckForWindowClosure(void)
  */
     
 static void
-TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
-		   int flags)
+TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 {
     TSD_INIT();
 
     /*
-     * Event source contract: if TCL_WINDOW_EVENTS is not set, do nothing.
-     * Do NOT call Tcl_SetMaxBlockTime in that case.
+     * Restrict all work to window-event ticks.  Moving TkWaylandDisplayAllWindows
+     * inside this guard is the critical fix for ongoing flicker: SetupProc is
+     * called by Tcl for timer, idle, and file events too.  Calling
+     * glfwSwapBuffers on those calls presents partial frames — only some
+     * widgets have finished their expose handlers — producing visible tearing.
      */
     if (!(flags & TCL_WINDOW_EVENTS)) return;
 
     Tcl_Time noBlock    = {0, 0};
-    Tcl_Time oneRefresh = {0, 16667}; /* ~16 ms, one display frame */
+    Tcl_Time oneRefresh = {0, 16667};
 
-    /*
-     * Swap GL buffers for any window that finished drawing.
-     */
-    TkWaylandDisplayAllWindows();
-
-    /*
-     * Drain any pending IBus D-Bus messages directly here.
-     *
-     * We cannot rely on the Tcl file handler for the IBus fd because
-     * this notifier is almost always busy: continuous expose/redraw
-     * events keep callbackCount nonzero so Tcl_SetMaxBlockTime is set
-     * to {0,0}, Tcl_WaitForEvent never actually blocks, and the file
-     * handler registered via Tcl_CreateFileHandler never fires.
-     *
-     * Draining here is safe: sd_bus_process is non-blocking when there
-     * is nothing to read, and the signal callbacks (OnCommitText,
-     * OnUpdatePreedit) only call Tk_QueueWindowEvent / Tk_SendVirtualEvent,
-     * which is legal from any context.
-     */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) { /* drain */ }
     }
 
-    /*
-     * Poll GLFW for new events.  If any callback fired, don't block so
-     * those events are processed immediately.  Otherwise allow a short
-     * sleep so the CPU isn't pegged at 100 % between frames.
-     */
     clearCallbackCount();
     glfwPollEvents();
+
+    /*
+     * Present any windows that have been marked dirty by draw calls
+     * that ran during this event-loop iteration.  We do this AFTER
+     * glfwPollEvents so that any refresh callbacks queued by the compositor
+     * have already been converted to Expose events and processed — meaning
+     * by the time we get here the FBO holds the complete frame.
+     */
+    TkWaylandDisplayAllWindows();
+
     if (tsdPtr->callbackCount) {
-	Tcl_SetMaxBlockTime(&noBlock);
+        Tcl_SetMaxBlockTime(&noBlock);
     } else {
-	Tcl_SetMaxBlockTime(&oneRefresh);
+        Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -394,34 +404,31 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
  */
  
 static void
-TkWaylandCheckProc(TCL_UNUSED(void *),
-                   int flags)
+TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
     if (!(flags & TCL_WINDOW_EVENTS)) {
         return;
     }
-    
+
     if (ibus_bus) {
-        int r;
-
-        /* Check if there are bytes waiting on the socket. 
-         * Passing 0 timeout makes this completely non-blocking for the Tcl loop,
-         * but forces sd-bus to look at the kernel socket buffer and read 
-         * incoming 'CommitText' or 'UpdatePreedit' bytes into internal memory.
-         */
         sd_bus_wait(ibus_bus, 0);
-
-        /* Process and dispatch the read signals to your callbacks.
-         * Loop until all cached messages have been routed to OnCommitText/OnUpdatePreedit.
-         */
+        int r;
         do {
             r = sd_bus_process(ibus_bus, NULL);
         } while (r > 0);
     }
 
     glfwPollEvents();
-}
 
+    /*
+     * Present dirty windows here too.  Without this, expose handlers that
+     * ran between SetupProc and CheckProc (which fire during
+     * Tcl_WaitForEvent) mark windows dirty but nothing calls renderFBO
+     * until the next SetupProc — a full event-loop iteration later.
+     * That gap is where the partial-draw flicker was visible.
+     */
+    TkWaylandDisplayAllWindows();
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -686,45 +693,73 @@ TkGlfwFramebufferSizeCallback(
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
-	fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
-	return;
+        fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
+        return;
     }
-    fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
+    fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s %dx%d\n",
+            Tk_PathName(winPtr), width, height);
+
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
-	fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
-	return;
+        fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
+        return;
     }
 
-    /* Rebuild the backing store FBO. */
+    /*
+     * If a batched NVG frame is open, close it now before the FBO it was
+     * drawing into is deleted.  Flushing to a deleted FBO is undefined
+     * behaviour and causes rendering corruption or crashes on resize.
+     */
+    if (infoPtr->context.nvgFrameActive) {
+        if (winPtr->privatePtr->fb) {
+            glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+        }
+        nvgEndFrame(vg);
+        infoPtr->context.nvgFrameActive = 0;
+        infoPtr->context.activeWindow   = NULL;
+    }
+
+/* Rebuild the backing store FBO at the new size. */
+    glfwMakeContextCurrent(window);
     nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    fprintf(stderr, "New framebuffer %p for %s with id %d\n",
-	    winPtr->privatePtr->fb,
-	    Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
+    if (!winPtr->privatePtr->fb) {
+        fprintf(stderr, "FramebufferSizeCallback: nvgluCreateFramebuffer failed\n");
+        return;
+    }
 
-#if 1
-    /* Check for FBO completeness. */
+    /*
+     * Clear immediately -- the new texture's memory is uninitialized
+     * (effectively transparent) until something draws into it.  Without
+     * this, every interactive resize presents one or more transparent/
+     * white frames before the widget repaint catches up, which is the
+     * white flash seen during resizing.
+     */
+    glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    fprintf(stderr, "New framebuffer %p for %s id=%d\n",
+            winPtr->privatePtr->fb,
+            Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
+            
+    /* Store the new fb dimensions in the info context for renderFBO. */
+    infoPtr->context.fbWidth  = width;
+    infoPtr->context.fbHeight = height;
+
+    /* Verify FBO completeness. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
-	       status);
-    } else {
-	fprintf(stderr, "FBO is complete.\n");
+        fprintf(stderr, "FBO %p incomplete (0x%x)\n",
+                winPtr->privatePtr->fb, status);
     }
-#endif
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    /*
-     * Inform Tk about the size change
-     */
-
-    
-    glfwGetWindowSize(window, &(winPtr->changes.width),
-		      &(winPtr->changes.height));
-
-    /* Reconfigure the Tk window. */
+    /* Update Tk's notion of window size. */
+    glfwGetWindowSize(window, &winPtr->changes.width, &winPtr->changes.height);
     TkDoConfigureNotify(winPtr);
 }
 

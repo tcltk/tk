@@ -70,6 +70,9 @@ typedef union pixel32_t {
     ARGB32pixel argb;
 } pixel32;
 
+/* Forward declaration of your main rendering worker from tkGlfwInit.c */
+extern void renderFBO(GLFWwindow *window);
+
 /*
  *----------------------------------------------------------------------
  *
@@ -197,19 +200,39 @@ XGetImage(
  *----------------------------------------------------------------------
  */
 
-Int
-XCopyArea(Display *d, Drawable src, Drawable dst, GC gc, 
-          int sx, int sy, unsigned int w, unsigned int h, int dx, int dy)
+
+int
+XCopyArea(Display *display, 
+	  Drawable src, 
+	  Drawable dst, 
+	  GC gc, 
+          int src_x, 
+          int src_y, 
+          unsigned int width, 
+          unsigned int height, 
+          int dest_x, 
+          int dest_y)
 {
-    /* ONLY handle the double-buffering presentation override. */
-    if ((int)w == -1 && (int)h == -1) {
+
+    /* Handle Tk's NO_DOUBLE_BUFFERING presentation sentinel. */
+    if ((int)width == -1 && (int)height == -1) {
         TkWindow *winPtr = TkWaylandTkWindowFromDrawable(dst);
-        if (winPtr && winPtr->privatePtr && winPtr->privatePtr->glfwWindow) {
-            glfwSwapBuffers(winPtr->privatePtr->glfwWindow);
+        if (winPtr) {
+            TkWindow *top = winPtr;
+            while (top && !Tk_IsTopLevel(top)) {
+                if (!top->parentPtr || ((uintptr_t)top->parentPtr & 3) != 0) break;
+                top = top->parentPtr;
+            }
+            if (top && top->privatePtr && top->privatePtr->glfwWindow) {
+                glfwTkInfo *info = glfwGetWindowUserPointer(top->privatePtr->glfwWindow);
+                if (info) {
+                    info->flags |= needsDisplay; /* Tag it dirty. */
+                }
+            }
         }
         return Success;
     }
-    return Success; 
+    return 0;
 }
 
 /*
