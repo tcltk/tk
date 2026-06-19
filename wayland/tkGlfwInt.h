@@ -660,7 +660,7 @@ typedef struct {
 MODULE_SCOPE int EnsureNvgFont(WaylandFont *fontPtr, NVGcontext *vg);
 
 /* Shape a string into a ShapedGlyphBuffer with full HarfBuzz + Bidi support. */
-MODULE_SCOPE int WaylandShaper_ShapeString(
+MODULE_SCOPE bool WaylandShaper_ShapeString(
     WaylandShaper     *shaper,
     WaylandFont       *fontPtr,
     const char        *source,

@@ -729,8 +729,6 @@ TkGlfwFramebufferSizeCallback(
         infoPtr->context.activeWindow   = NULL;
     }
 
-    /* Rebuild the backing store FBO at the new size. */
-
     /* Delete old FBO. */
     if (winPtr->privatePtr->fb) {
         GLuint oldFBO = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
@@ -738,7 +736,9 @@ TkGlfwFramebufferSizeCallback(
         winPtr->privatePtr->fb = NULL;
     }
 
-    /* Create new FBO + texture. */
+    /* Create new FBO + color texture + depth+stencil renderbuffer. */
+
+    /* Color texture */
     GLuint tex = 0;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -748,11 +748,21 @@ TkGlfwFramebufferSizeCallback(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+    /* Depth+Stencil renderbuffer */
+    GLuint rbo = 0;
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                          width, height);
+
+    /* FBO */
     GLuint fbo = 0;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, tex, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                              GL_RENDERBUFFER, rbo);
 
     /* Validate. */
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -796,7 +806,6 @@ TkGlfwFramebufferSizeCallback(
                       &winPtr->changes.height);
     TkDoConfigureNotify(winPtr);
 }
-
 
 /*
  *----------------------------------------------------------------------

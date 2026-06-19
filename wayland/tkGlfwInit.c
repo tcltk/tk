@@ -628,7 +628,7 @@ renderFBO(GLFWwindow *window)
 
     glfwMakeContextCurrent(window);
 
-    /* Tk fbo is stored as a GLuint cast to void*. */
+    /* Tk FBO is stored as a GLuint cast to void*. */
     GLuint fbo = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
 
     /*
@@ -651,9 +651,17 @@ renderFBO(GLFWwindow *window)
     }
 
     /* Blit Tk fbo to the default framebuffer. */
+    #if 0
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glViewport(0, 0, fbWidth, fbHeight);
+    #endif
+    
+    //FBO magenta test
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+glClearColor(1, 0, 1, 1);
+glClear(GL_COLOR_BUFFER_BIT);
+
 
     glBlitFramebuffer(0, 0, fbWidth, fbHeight,
                       0, 0, fbWidth, fbHeight,
@@ -1041,38 +1049,15 @@ TkGlfwCreateWindow(
     fprintf(stderr, "Initial pixel ratio for %s is %f\n",
             Tk_PathName(winPtr), scale);
 
-    /*
-     * If FBO exists, clear it to opaque black so the compositor never
-     * shows uninitialized texture memory.
-     */
-    if (winPtr->privatePtr->fb == NULL) {
-        fprintf(stderr, "Could not create framebuffer\n");
-    } else {
-        GLuint myFBO = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
-
-        glfwMakeContextCurrent(glfwWindow);
-        glBindFramebuffer(GL_FRAMEBUFFER, myFBO);
-
-        /* Clear to opaque black (or background color below). */
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        /* Validate. */
-        int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            fprintf(stderr, "FBO incomplete (0x%x)\n", status);
-        }
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
     /* Return drawable. */
     if (drawableOut) {
         *drawableOut = TkWaylandDrawableForTkWindow(winPtr);
     }
 
     /*
-     * Clear to the Tk background color before first presentation.
+     * Clear to the Tk background color before first presentation,
+     * if the FBO has already been created by the framebuffer-size
+     * callback (Wayland configure / GLFW resize).
      */
     if (winPtr->privatePtr->fb) {
         GLuint myFBO = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
@@ -1087,15 +1072,20 @@ TkGlfwCreateWindow(
             1.0f);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        fprintf(stderr, "CreateWindow FBO status for %s: 0x%x\n",
+                Tk_PathName(winPtr), status);
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    /* Show window AFTER FBO is ready. */
+    /* Show window AFTER FBO is (eventually) ready. */
     if (glfwWindow != mainGlfwWindow) {
         glfwShowWindow(glfwWindow);
     }
 
-    /* Present the cleared frame. */
+    /* Present the cleared frame (or first real frame once FBO exists). */
     infoPtr->flags |= needsDisplay;
     renderFBO(glfwWindow);
 
