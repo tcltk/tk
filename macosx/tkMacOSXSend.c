@@ -49,7 +49,7 @@ typedef struct RegisteredInterp {
  * be reassigned to the path in the user's Library/Caches directory.
  */
 
-static char *appNameRegistryPath = "/tmp/TkAppnames";
+static char *appNameRegistryPath = (char *)"/tmp/TkAppnames";
 
 /*
  * Information that we record about an application.
@@ -1091,7 +1091,7 @@ void
 TkSendCleanup(
     TCL_UNUSED(TkDisplay *)) /* dispPtr */
 {
-	Tcl_Free((char *)appNameRegistryPath);
+	Tcl_Free(appNameRegistryPath);
 }
 
 

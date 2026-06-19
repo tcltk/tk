@@ -460,7 +460,7 @@ DestroyElementData(void *clientData)
  *	also initializes DC.
  *
  * Returns:
- *	1 on success, 0 on error.
+ *	true on success, false on error.
  *	Caller must later call FreeElementData() so this element
  *	can be reused.
  */
