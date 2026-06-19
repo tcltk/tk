@@ -691,77 +691,112 @@ TkGlfwFramebufferSizeCallback(
     int height)
 {
     recordCallback();
+
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
         fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
         return;
     }
+
     fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s %dx%d\n",
             Tk_PathName(winPtr), width, height);
 
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+    if (!infoPtr) {
+        fprintf(stderr, "FramebufferSizeCallback: No glfwTkInfo!\n");
+        return;
+    }
+
     NVGcontext *vg = infoPtr->context.vg;
-    if (vg == NULL) {
+    if (!vg) {
         fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
         return;
     }
 
+    glfwMakeContextCurrent(window);
+
     /*
      * If a batched NVG frame is open, close it now before the FBO it was
-     * drawing into is deleted.  Flushing to a deleted FBO is undefined
-     * behaviour and causes rendering corruption or crashes on resize.
+     * drawing into is deleted.
      */
     if (infoPtr->context.nvgFrameActive) {
         if (winPtr->privatePtr->fb) {
-            glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+            GLuint fbo = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         }
         nvgEndFrame(vg);
         infoPtr->context.nvgFrameActive = 0;
         infoPtr->context.activeWindow   = NULL;
     }
 
-/* Rebuild the backing store FBO at the new size. */
-    glfwMakeContextCurrent(window);
-    nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
+    /* Rebuild the backing store FBO at the new size. */
+
+    /* Delete old FBO. */
+    if (winPtr->privatePtr->fb) {
+        GLuint oldFBO = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
+        glDeleteFramebuffers(1, &oldFBO);
+        winPtr->privatePtr->fb = NULL;
+    }
+
+    /* Create new FBO + texture. */
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+                 width, height, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    GLuint fbo = 0;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, tex, 0);
+
+    /* Validate. */
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "FramebufferSizeCallback: FBO incomplete (0x%x)\n", status);
+    }
+
+    /* Store FBO ID. */
+    winPtr->privatePtr->fb = (void *)(uintptr_t)fbo;
+
     if (!winPtr->privatePtr->fb) {
-        fprintf(stderr, "FramebufferSizeCallback: nvgluCreateFramebuffer failed\n");
+        fprintf(stderr, "FramebufferSizeCallback: FBO creation failed\n");
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }
 
     /*
-     * Clear immediately -- the new texture's memory is uninitialized
-     * (effectively transparent) until something draws into it.  Without
-     * this, every interactive resize presents one or more transparent/
-     * white frames before the widget repaint catches up, which is the
-     * white flash seen during resizing.
+     * Clear immediately so the compositor never sees uninitialized
+     * (transparent) texture memory during interactive resize.
      */
-    glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    fprintf(stderr, "New framebuffer %p for %s id=%d\n",
+    fprintf(stderr, "New framebuffer %p for %s id=%u\n",
             winPtr->privatePtr->fb,
-            Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
-            
-    /* Store the new fb dimensions in the info context for renderFBO. */
-    infoPtr->context.fbWidth  = width;
-    infoPtr->context.fbHeight = height;
+            Tk_PathName(winPtr), fbo);
 
-    /* Verify FBO completeness. */
-    nvgluBindFramebuffer(winPtr->privatePtr->fb);
-    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    /* Verify FBO completeness again on our binding. */
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "FBO %p incomplete (0x%x)\n",
                 winPtr->privatePtr->fb, status);
     }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     /* Update Tk's notion of window size. */
-    glfwGetWindowSize(window, &winPtr->changes.width, &winPtr->changes.height);
+    glfwGetWindowSize(window,
+                      &winPtr->changes.width,
+                      &winPtr->changes.height);
     TkDoConfigureNotify(winPtr);
 }
+
 
 /*
  *----------------------------------------------------------------------

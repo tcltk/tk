@@ -612,6 +612,7 @@ getGlfwTkInfo(
  *
  *----------------------------------------------------------------------
  */
+
 void
 renderFBO(GLFWwindow *window)
 {
@@ -627,33 +628,30 @@ renderFBO(GLFWwindow *window)
 
     glfwMakeContextCurrent(window);
 
+    /* Tk fbo is stored as a GLuint cast to void*. */
+    GLuint fbo = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
+
     /*
      * Close the batched NVG frame so all widget geometry is tessellated
-     * and flushed into the backing FBO before we read from it.
+     * and flushed into MY FBO before we read from it.
      */
     if (infoPtr->context.vg && infoPtr->context.nvgFrameActive) {
-        glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         nvgEndFrame(infoPtr->context.vg);
         infoPtr->context.nvgFrameActive = 0;
         infoPtr->context.activeWindow   = NULL;
     }
 
-    /*
-     * Query the ACTUAL current framebuffer size directly from GLFW rather
-     * than a cached infoPtr->context.fbWidth/fbHeight field.  That field is
-     * never written anywhere in this codebase, so it is always 0 — which
-     * silently turned every blit below into a no-op copying zero pixels.
-     * The screen then only ever showed stale back-buffer content from the
-     * previous swap, which is what produced the flicker: the compositor
-     * kept receiving buffer submissions that never contained the new frame.
-     */
+    /* Get actual framebuffer size from GLFW. */
     int fbWidth = 0, fbHeight = 0;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     if (fbWidth <= 0 || fbHeight <= 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+    /* Blit Tk fbo to the default framebuffer. */
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glViewport(0, 0, fbWidth, fbHeight);
 
@@ -665,6 +663,8 @@ renderFBO(GLFWwindow *window)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -700,9 +700,6 @@ TkWaylandDisplayAllWindows(void)
          * Only present when (a) the window has a valid backing FBO and
          * (b) it has been marked dirty by a draw call.
          *
-         * The old code also triggered on !fb (isNewUnmapped), which caused
-         * renderFBO to clear to black on every notifier cycle for unmapped
-         * or not-yet-drawn windows, producing the initial flicker.
          */
         if (infoPtr->winPtr->privatePtr->fb &&
             (infoPtr->flags & needsDisplay)) {
@@ -711,6 +708,7 @@ TkWaylandDisplayAllWindows(void)
         }
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -846,7 +844,7 @@ TkGlfwInitialize(void)
 
     /* Hints apply to the next call to glfwCreateWindow. */
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     
     glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
@@ -981,141 +979,135 @@ TkGlfwCreateWindow(
     Drawable   *drawableOut)
 {
     fprintf(stderr, "TkGlfwCreateWindow\n");
-    if (winPtr == NULL) {
+    if (!winPtr) {
         Tcl_Panic("TkGlfwCreateWindow called with null winPtr\n");
     }
-    GLFWwindow    *glfwWindow = NULL;
 
-    /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
-    if (!GlfwIsInitialized) {
-        if (TkGlfwInitialize() != TCL_OK)
-            return NULL;
+    if (!GlfwIsInitialized && TkGlfwInitialize() != TCL_OK) {
+        return NULL;
     }
+
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
-    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
-        /* This is the root window. */
+
+    GLFWwindow *glfwWindow = NULL;
+
+    /* Root window uses existing mainGlfwWindow. */
+    if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
         glfwWindow = mainGlfwWindow;
         glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
- } else { /* A toplevel other than the root */
+    } else {
+        /* Create a new toplevel. */
         glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
-        glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE); /* stays hidden until FBO ready */
+        glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
         glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
         glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
         glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-        glfwWindow = glfwCreateWindow(width, height, title ? title : "",
+
+        glfwWindow = glfwCreateWindow(width, height,
+                                      title ? title : "",
                                       NULL, mainGlfwWindow);
-        if (!glfwWindow) {
-            return NULL;
-        }
+        if (!glfwWindow) return NULL;
+
         glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
-        /*
-         * Do NOT call glfwShowWindow or glfwSwapBuffers here.
-         * The back buffer is uninitialized at this point.  Presenting it
-         * causes a flash of garbage or black before the first real frame.
-         * We show the window below, immediately before the first renderFBO.
-         */
     }
 
+    /* Create Tk/GLFW context wrapper. */
     glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
-    fprintf(stderr, "nvgContext for %s is at %p\n", Tk_PathName(winPtr), infoPtr);
+    fprintf(stderr, "nvgContext for %s is at %p\n",
+            Tk_PathName(winPtr), infoPtr);
+
     if (glfwWindow == mainGlfwWindow) {
         mainGlfwContext = infoPtr->context;
     }
+
     glfwSetWindowUserPointer(glfwWindow, infoPtr);
     TkGlfwSetupCallbacks(glfwWindow);
+
     winPtr->privatePtr->glfwWindow = glfwWindow;
     winPtr->changes.width  = width;
     winPtr->changes.height = height;
 
+    /* Pixel ratio logging. */
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
-    fprintf(stderr, "Initial pixel ratio for %s is %f\n", Tk_PathName(winPtr), scale);
+    fprintf(stderr, "Initial pixel ratio for %s is %f\n",
+            Tk_PathName(winPtr), scale);
 
-	/* Create the backing-store FBO. */
-    int fbWidth, fbHeight;
-    glfwMakeContextCurrent(glfwWindow);
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
-                                                     fbWidth, fbHeight, 0);
+    /*
+     * If FBO exists, clear it to opaque black so the compositor never
+     * shows uninitialized texture memory.
+     */
     if (winPtr->privatePtr->fb == NULL) {
-        fprintf(stderr, "Could not create NanoVG framebuffer\n");
+        fprintf(stderr, "Could not create framebuffer\n");
     } else {
-        /*
-         * The FBO's color attachment is freshly-allocated GL texture
-         * memory and is NOT cleared by nvgluCreateFramebuffer or by
-         * nvgBeginFrame.  Left alone, it contains driver-uninitialized
-         * memory -- typically all-zero RGBA, i.e. fully TRANSPARENT
-         * black.  When that gets blitted to the screen and presented
-         * before the first widget draw finishes, it composites as
-         * white/see-through rather than the window's real background,
-         * which is exactly the white/transparent flash being seen.
-         * Clear to opaque black (or the real background once available)
-         * immediately so there is never a transparent frame to present.
-         */
-        glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+        GLuint myFBO = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
+
+        glfwMakeContextCurrent(glfwWindow);
+        glBindFramebuffer(GL_FRAMEBUFFER, myFBO);
+
+        /* Clear to opaque black (or background color below). */
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        nvgluBindFramebuffer(winPtr->privatePtr->fb);
+        /* Validate. */
         int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE) {
             fprintf(stderr, "FBO incomplete (0x%x)\n", status);
         }
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    /* Return drawable. */
     if (drawableOut) {
         *drawableOut = TkWaylandDrawableForTkWindow(winPtr);
     }
 
     /*
-     * Clear the backing FBO to the window background colour before the
-     * first presentation.  This prevents the compositor from showing
-     * uninitialised texture memory.
+     * Clear to the Tk background color before first presentation.
      */
     if (winPtr->privatePtr->fb) {
+        GLuint myFBO = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
+
         glfwMakeContextCurrent(glfwWindow);
-        glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, myFBO);
+
         glClearColor(
-            (float)(winPtr->atts.background_pixel >> 16 & 0xFF) / 255.0f,
-            (float)(winPtr->atts.background_pixel >>  8 & 0xFF) / 255.0f,
-            (float)(winPtr->atts.background_pixel       & 0xFF) / 255.0f,
+            ((winPtr->atts.background_pixel >> 16) & 0xFF) / 255.0f,
+            ((winPtr->atts.background_pixel >>  8) & 0xFF) / 255.0f,
+            ( winPtr->atts.background_pixel        & 0xFF) / 255.0f,
             1.0f);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    /*
-     * Now show the window for the first time and present the cleared frame.
-     * The compositor's first visible frame is the solid background, not
-     * garbage.  glfwShowWindow is called here, after the FBO is ready.
-     */
+    /* Show window AFTER FBO is ready. */
     if (glfwWindow != mainGlfwWindow) {
         glfwShowWindow(glfwWindow);
     }
 
+    /* Present the cleared frame. */
     infoPtr->flags |= needsDisplay;
     renderFBO(glfwWindow);
 
-    /*
-     * Flush the Wayland event queue so the compositor processes the
-     * configure/map round-trip before Tk starts laying out widgets.
-     */
+    /* Flush Wayland configure/map. */
     glfwPollEvents();
 
     TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
 
     return glfwWindow;
 }
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1191,7 +1183,7 @@ TkGlfwBeginDraw(
         return TCL_ERROR;
     }
 
-/* Pixmap path: bind the pixmap's own raw GL FBO. */
+	/* Pixmap path: bind the pixmap's own raw GL FBO. */
     if (TkWaylandDrawableIsPixmap(drawable)) {
         TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap((Pixmap)drawable);
         if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
@@ -1250,6 +1242,10 @@ TkGlfwBeginDraw(
         nvgBeginFrame(infoPtr->context.vg,
                       (float)pixmapPtr->width, (float)pixmapPtr->height,
                       pixelRatio);
+                      printf("pixmap ctx=%p current=%p\n",
+       glfwGetCurrentContext(),
+       glfwWindow);
+
         return TCL_OK;
     }
 
@@ -1292,11 +1288,13 @@ TkGlfwBeginDraw(
     dcPtr->winPtr = (void *)winPtr;
     dcPtr->isPixmap = 0;
 
-    if (topPtr->privatePtr->fb) {
-        glBindFramebuffer(GL_FRAMEBUFFER, topPtr->privatePtr->fb->fbo);
-    } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
+	/* Align window FBO with NanoVG.  */
+	if (topPtr->privatePtr->fb) {
+	    glBindFramebuffer(GL_FRAMEBUFFER,
+	        (GLuint)(uintptr_t)topPtr->privatePtr->fb);
+	} else {
+	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 
     glViewport(0, 0, width, height);
 
@@ -1307,18 +1305,27 @@ TkGlfwBeginDraw(
         pixelRatio = (float)width / (float)winW;
     }
 
-    /* * BATCHED FRAME OPEN:
+    /* BATCHED FRAME OPEN:
      * Only open a brand new NanoVG frame if one isn't already running globally
      * for this window context. Otherwise, let child widgets append safely.
      */
     if (!infoPtr->context.nvgFrameActive) {
+		/* Ensure FBO is still bound before NanoVG begins drawing. */
+		if (topPtr->privatePtr->fb) {
+		    glBindFramebuffer(GL_FRAMEBUFFER,
+		        (GLuint)(uintptr_t)topPtr->privatePtr->fb);
+		}
         nvgBeginFrame(infoPtr->context.vg, (float)width, (float)height, pixelRatio);
         infoPtr->context.nvgFrameActive = 1;
         infoPtr->context.activeWindow = glfwWindow;
+                              printf("widget ctx=%p current=%p\n",
+       glfwGetCurrentContext(),
+       glfwWindow);
     }
 
     return TCL_OK;
 }
+
 
 /*
  *----------------------------------------------------------------------

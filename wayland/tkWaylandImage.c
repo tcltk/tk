@@ -68,10 +68,7 @@ typedef struct ARGB32pixel_t {
 typedef union pixel32_t {
     unsigned int uint;
     ARGB32pixel argb;
-} pixel32;
-
-/* Forward declaration of your main rendering worker from tkGlfwInit.c */
-extern void renderFBO(GLFWwindow *window);
+} pixel32; 
 
 /*
  *----------------------------------------------------------------------
