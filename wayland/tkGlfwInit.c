@@ -1183,73 +1183,80 @@ TkGlfwBeginDraw(
         return TCL_ERROR;
     }
 
-    /* Pixmap path: bind the pixmap's own raw GL FBO. */
-    if (TkWaylandDrawableIsPixmap(drawable)) {
-        TkWaylandPixmap *pixmapPtr =
-            TkWaylandPixmapFromPixmap((Pixmap)drawable);
-        if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
-            return TCL_ERROR;
-        }
-
-        glfwTkInfo *pInfo = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
-        if (!pInfo || !pInfo->context.vg) {
-            return TCL_ERROR;
-        }
-
-        glfwMakeContextCurrent(pixmapPtr->glfwWindow);
-        glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
-        glViewport(0, 0, pixmapPtr->width, pixmapPtr->height);
-
-        float pixelRatio = 1.0f;
-        int   winW, winH, fbW, fbH;
-        glfwGetWindowSize(pixmapPtr->glfwWindow, &winW, &winH);
-        glfwGetFramebufferSize(pixmapPtr->glfwWindow, &fbW, &fbH);
-        if (winW > 0) {
-            pixelRatio = (float)fbW / (float)winW;
-        }
-
-        dcPtr->vg        = pInfo->context.vg;
-        dcPtr->width     = pixmapPtr->width;
-        dcPtr->height    = pixmapPtr->height;
-        dcPtr->winPtr    = NULL;
-        dcPtr->isPixmap  = 1;
-        dcPtr->pixmapFbo = pixmapPtr->fbo;
-
-        /*
-         * Pixmaps get their own self-contained NVG frame. If a window
-         * frame is active on this context, end it cleanly first.
-         */
-        if (pInfo->context.nvgFrameActive) {
-            if (pInfo->context.activeWindow) {
-                glfwTkInfo *activeInfo =
-                    glfwGetWindowUserPointer(pInfo->context.activeWindow);
-                if (activeInfo && activeInfo->winPtr &&
-                    activeInfo->winPtr->privatePtr &&
-                    activeInfo->winPtr->privatePtr->fb) {
-                    GLuint winFBO =
-                        (GLuint)(uintptr_t)activeInfo->winPtr->privatePtr->fb;
-                    glBindFramebuffer(GL_FRAMEBUFFER, winFBO);
-                }
-            }
-            nvgEndFrame(pInfo->context.vg);
-            pInfo->context.nvgFrameActive = 0;
-            pInfo->context.activeWindow   = NULL;
-
-            /* Re-bind the pixmap FBO after nvgEndFrame may have changed it. */
-            glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
-        }
-
-        nvgBeginFrame(pInfo->context.vg,
-                      (float)pixmapPtr->width,
-                      (float)pixmapPtr->height,
-                      pixelRatio);
-
-        printf("pixmap ctx=%p current=%p\n",
-               glfwGetCurrentContext(),
-               pixmapPtr->glfwWindow);
-
-        return TCL_OK;
-    }
+	/* Pixmap path: bind the pixmap's own raw GL FBO. */
+	if (TkWaylandDrawableIsPixmap(drawable)) {
+	    TkWaylandPixmap *pixmapPtr =
+	        TkWaylandPixmapFromPixmap((Pixmap)drawable);
+	    if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
+	        return TCL_ERROR;
+	    }
+	
+	    glfwTkInfo *pInfo =
+	        glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
+	    if (!pInfo || !pInfo->context.vg) {
+	        return TCL_ERROR;
+	    }
+	
+	    glfwMakeContextCurrent(pixmapPtr->glfwWindow);
+	
+	    /* Bind pixmap FBO. */
+	    GLuint pixFBO = pixmapPtr->fbo;
+	    glBindFramebuffer(GL_FRAMEBUFFER, pixFBO);
+	    glViewport(0, 0, pixmapPtr->width, pixmapPtr->height);
+	
+	    float pixelRatio = 1.0f;
+	    int winW, winH, fbW, fbH;
+	    glfwGetWindowSize(pixmapPtr->glfwWindow, &winW, &winH);
+	    glfwGetFramebufferSize(pixmapPtr->glfwWindow, &fbW, &fbH);
+	    if (winW > 0) {
+	        pixelRatio = (float)fbW / (float)winW;
+	    }
+	
+	    dcPtr->vg        = pInfo->context.vg;
+	    dcPtr->width     = pixmapPtr->width;
+	    dcPtr->height    = pixmapPtr->height;
+	    dcPtr->winPtr    = NULL;
+	    dcPtr->isPixmap  = 1;
+	    dcPtr->pixmapFbo = pixFBO;
+	
+	    /*
+	     * If a window NVG frame is active, close it cleanly.
+	     */
+	    if (pInfo->context.nvgFrameActive) {
+	        if (pInfo->context.activeWindow) {
+	            glfwTkInfo *activeInfo =
+	                glfwGetWindowUserPointer(pInfo->context.activeWindow);
+	
+	            if (activeInfo && activeInfo->winPtr &&
+	                activeInfo->winPtr->privatePtr &&
+	                activeInfo->winPtr->privatePtr->fb) {
+	
+	                /* fb is a GLuint, not a struct */
+	                GLuint winFBO =
+	                    (GLuint)(uintptr_t)activeInfo->winPtr->privatePtr->fb;
+	                glBindFramebuffer(GL_FRAMEBUFFER, winFBO);
+	            }
+	        }
+	
+	        nvgEndFrame(pInfo->context.vg);
+	        pInfo->context.nvgFrameActive = 0;
+	        pInfo->context.activeWindow   = NULL;
+	
+	        /* Re-bind pixmap FBO. */
+	        glBindFramebuffer(GL_FRAMEBUFFER, pixFBO);
+	    }
+	
+	    nvgBeginFrame(pInfo->context.vg,
+	                  (float)pixmapPtr->width,
+	                  (float)pixmapPtr->height,
+	                  pixelRatio);
+	
+	    printf("pixmap ctx=%p current=%p\n",
+	           glfwGetCurrentContext(),
+	           pixmapPtr->glfwWindow);
+	
+	    return TCL_OK;
+	}
 
     /* Window / widget path */
     winPtr = TkWaylandTkWindowFromDrawable(drawable);
