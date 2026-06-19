@@ -484,10 +484,10 @@ static TkTextDispChunk *baseCharChunkPtr = NULL;
  *	TkTextCharLayoutProc produces.
  *
  * Results:
- *	1 if the chunk is RTL, 0 if LTR or neutral.
+ *	true if the chunk is RTL, false if LTR or neutral.
  */
 
-static int
+static bool
 ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 {
     const char *p = chars;
@@ -517,15 +517,15 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 
 	/* Hebrew, Arabic, Syriac, NKo, Thaana, Samaritan and all supplements */
 	if (ch >= 0x0590 && ch <= 0x08FF) {
-	    return 1;
+	    return true;
 	}
 	/* Hebrew and Arabic presentation forms */
 	if (ch >= 0xFB1D && ch <= 0xFEFF) {
-	    return 1;
+	    return true;
 	}
 	/* Historical RTL scripts */
 	if (ch >= 0x10800 && ch <= 0x10FFF) {
-	    return 1;
+	    return true;
 	}
 
 	/*
@@ -541,14 +541,14 @@ ChunkIsRtl(const char *chars, Tcl_Size numBytes)
 	    (ch >= 0x4E00 && ch <= 0x9FFF) ||   /* CJK Unified */
 	    (ch >= 0xAC00 && ch <= 0xD7AF) ||   /* Hangul */
 	    (ch >= 0x3040 && ch <= 0x30FF)) {   /* Hiragana/Katakana */
-	    return 0;
+	    return false;
 	}
 
 	/* Neutral character (digit, punctuation, whitespace) — keep scanning */
 	p += chLen;
     }
 
-    return 0; /* neutral / unknown: treat as LTR */
+    return false; /* neutral / unknown: treat as LTR */
 }
 
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -628,9 +628,9 @@ static void		CharUndisplayProc(TkText *textPtr,
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 static void		FinalizeBaseChunk(TkTextDispChunk *additionalChunkPtr);
 static void		FreeBaseChunk(TkTextDispChunk *baseChunkPtr);
-static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
+static bool		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
 static void		RemoveFromBaseChunk(TkTextDispChunk *chunkPtr);
-static int	      ChunkIsRtl(const char *chars, Tcl_Size numBytes);
+static bool	      ChunkIsRtl(const char *chars, Tcl_Size numBytes);
 
 #endif
 /*
@@ -698,7 +698,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(void *clientData);
-static int		IsStartOfNotMergedLine(const TkText *textPtr,
+static bool		IsStartOfNotMergedLine(const TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 
 /*
@@ -1799,7 +1799,7 @@ LayoutDLine(
     }
     if ((breakChunkPtr != NULL) && ((lastChunkPtr != breakChunkPtr)
 	    || (breakByteOffset != lastChunkPtr->numBytes))) {
-	while (1) {
+	while (true) {
 	    chunkPtr = breakChunkPtr->nextPtr;
 	    if (chunkPtr == NULL) {
 		break;
@@ -1980,7 +1980,7 @@ UpdateDisplayInfo(
     prevPtr = NULL;
     y = dInfoPtr->y - dInfoPtr->newTopPixelOffset;
     maxY = dInfoPtr->maxY;
-    while (1) {
+    while (true) {
 	DLine *newPtr;
 
 	if (index.linePtr == lastLinePtr) {
@@ -2350,7 +2350,7 @@ UpdateDisplayInfo(
 	if ((dlPtr->flags & HAS_3D_BORDER) && !(dlPtr->flags & TOP_LINE)) {
 	    dlPtr->flags |= OLD_Y_INVALID;
 	}
-	while (1) {
+	while (true) {
 	    if ((dlPtr->flags & TOP_LINE) && (dlPtr != dInfoPtr->dLinePtr)
 		    && (dlPtr->flags & HAS_3D_BORDER)) {
 		dlPtr->flags |= OLD_Y_INVALID;
@@ -3435,7 +3435,7 @@ TkTextUpdateLineMetrics(
 	return endLine;
     }
 
-    while (1) {
+    while (true) {
 
 	/*
 	 * Get a suitable line.
@@ -3845,7 +3845,7 @@ TkTextFindDisplayLineEnd(
     index.byteIndex = 0;
     index.textPtr = NULL;
 
-    while (1) {
+    while (true) {
 	TkTextIndex endOfLastLine;
 
 	if (TkTextIndexBackBytes(textPtr, &index, 1, &endOfLastLine)) {
@@ -3875,7 +3875,7 @@ TkTextFindDisplayLineEnd(
 	index.byteIndex = 0;
     }
 
-    while (1) {
+    while (true) {
 	DLine *dlPtr;
 	Tcl_Size byteCount;
 	TkTextIndex nextLineStart;
@@ -4075,7 +4075,7 @@ TkTextIndexYPixels(
      */
 
     index = *indexPtr;
-    while (1) {
+    while (true) {
 	TkTextFindDisplayLineEnd(textPtr, &index, 0, NULL);
 	if (index.byteIndex == 0) {
 	    break;
@@ -4102,7 +4102,7 @@ TkTextIndexYPixels(
      * go along, until we go past 'indexPtr'.
      */
 
-    while (1) {
+    while (true) {
 	int bytes, height, compare;
 
 	/*
@@ -4215,7 +4215,7 @@ TkTextUpdateOneLine(
     displayLines = 0;
     mergedLines = 0;
 
-    while (1) {
+    while (true) {
 	int bytes, height, logicalLines;
 
 	/*
@@ -4531,7 +4531,7 @@ DisplayText(
 	 * copied.
 	 */
 
-	while (1) {
+	while (true) {
 	    /*
 	     * The DLine already has OLD_Y_INVALID cleared.
 	     */
@@ -5346,7 +5346,7 @@ TextRedrawTag(
      * in the range.
      */
 
-    while (1) {
+    while (true) {
 	/*
 	 * Find the first DLine structure in the range. Note: if the desired
 	 * character isn't the first in its text line, then look for the
@@ -6857,7 +6857,7 @@ GetYPixelCount(
 	    TkTextIndex index;
 	    int notFirst = 0;
 
-	    while (1) {
+	    while (true) {
 		TkTextIndexForwBytes(textPtr, &dlPtr->index,
 			dlPtr->byteCount, &index);
 		if (notFirst) {
@@ -6958,7 +6958,7 @@ GetYView(
 	 * 'totalPixels' and not 'totalPixels-1'.
 	 */
 
-	while (1) {
+	while (true) {
 	    int extra;
 
 	    count += dlPtr->height;
@@ -7220,7 +7220,7 @@ FindDLine(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 IsStartOfNotMergedLine(
       const TkText *textPtr,		/* Widget record for text widget. */
       const TkTextIndex *indexPtr)	/* Index to check. */
@@ -7231,24 +7231,24 @@ IsStartOfNotMergedLine(
 	/*
 	 * Not the start of a logical line.
 	 */
-	return 0;
+	return false;
     }
 
     if (TkTextIndexBackBytes(textPtr, indexPtr, 1, &indexPtr2)) {
 	/*
 	 * indexPtr is the first index of the text widget.
 	 */
-	return 1;
+	return true;
     }
 
     if (!TkTextIsElided(textPtr, &indexPtr2, NULL)) {
 	/*
 	 * The eol of the line just before indexPtr is elided.
 	 */
-	return 1;
+	return true;
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -9842,7 +9842,7 @@ FreeBaseChunk(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 IsSameFGStyle(
     TextStyle *style1,
     TextStyle *style2)
@@ -9851,7 +9851,7 @@ IsSameFGStyle(
     StyleValues *sv2;
 
     if (style1 == style2) {
-	return 1;
+	return true;
     }
 
 #ifndef TK_DRAW_IN_CONTEXT
@@ -9863,7 +9863,7 @@ IsSameFGStyle(
 	    style1->fgGC->foreground != style2->fgGC->foreground
 #endif
 	    ) {
-	return 0;
+	return false;
     }
 #endif /* !TK_DRAW_IN_CONTEXT */
 

@@ -380,7 +380,7 @@ DisplayHorizontalScale(
 		tickInterval *= ticks / maxTicks;
 	    }
 	    tickValue = scalePtr->fromValue;
-	    while (1) {
+	    while (true) {
 		/*
 		 * The TkRoundValueToResolution call gets rid of accumulated
 		 * round-off errors, if any.

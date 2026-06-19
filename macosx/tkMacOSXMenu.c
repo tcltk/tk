@@ -944,7 +944,7 @@ TkpPostMenu(
     TkWindow *realWinPtr;
     NSView *realWinView;
 
-    while (1) {
+    while (true) {
 	if (realWin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -1288,7 +1288,7 @@ ParseAccelerator(
     int i;
 
     *maskPtr = 0;
-    while (1) {
+    while (true) {
 	i = 0;
 	while (allModifiers[i].name) {
 	    size_t l = allModifiers[i].len;

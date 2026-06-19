@@ -320,9 +320,9 @@ enum options {
  * Prototypes for static functions in this file:
  */
 
-static int		CheckForLoops(Tcl_Interp *interp, const char *name,
+static bool		CheckForLoops(Tcl_Interp *interp, const char *name,
 			    TkMenu *menuPtr);
-static int		CheckForLoops0(Tcl_Interp *interp, const char *pathName,
+static bool		CheckForLoops0(Tcl_Interp *interp, const char *pathName,
 			    const char *name);
 static int		CloneMenu(TkMenu *menuPtr, Tcl_Obj *newMenuName,
 			    Tcl_Obj *newMenuTypeString);
@@ -1637,7 +1637,7 @@ ConfigureMenu(
 		 * Work out if we are the child of a menubar or a popup.
 		 */
 
-		while (1) {
+		while (true) {
 		    Tk_Window parent = Tk_Parent(tkwin);
 
 		    if (parent == NULL ||
@@ -2038,7 +2038,7 @@ ConfigureMenuEntry(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 CheckForLoops0(
     Tcl_Interp *interp,		/* Used for lookups. */
     const char *pathName,	/* Current menu to look for cascade. */
@@ -2048,7 +2048,7 @@ CheckForLoops0(
 
     menuRefPtr = TkFindMenuReferences(interp, pathName);
     if (menuRefPtr == NULL) {
-	return 0;
+	return false;
     }
     if (menuRefPtr->menuPtr != NULL) {
 	TkMenu *menuPtr = menuRefPtr->menuPtr;
@@ -2057,13 +2057,13 @@ CheckForLoops0(
 	if (menuPtr->tkwin != NULL) {
 	    parentName = Tk_PathName(menuPtr->tkwin);
 	    if (strcmp(name, parentName) == 0) {
-		return 1;
+		return true;
 	    }
 	    if ((menuPtr->mainMenuPtr != menuPtr) &&
 		    (menuPtr->mainMenuPtr->tkwin != NULL)) {
 		parentName = Tk_PathName(menuPtr->mainMenuPtr->tkwin);
 		if (strcmp(name, parentName) == 0) {
-		    return 1;
+		    return true;
 		}
 	    }
 	}
@@ -2076,14 +2076,14 @@ CheckForLoops0(
 	    cascadeName = Tcl_GetString(cascadePtr->namePtr);
 	    if ((strcmp(pathName, cascadeName) != 0) &&
 		    CheckForLoops0(interp, cascadeName, name)) {
-		return 1;
+		return true;
 	    }
 	    if ((cascadePtr->menuPtr != NULL) &&
 		    (cascadePtr->menuPtr->tkwin != NULL)) {
 		cascadeName = Tk_PathName(cascadePtr->menuPtr->tkwin);
 		if ((strcmp(pathName, cascadeName) != 0) &&
 			CheckForLoops0(interp, cascadeName, name)) {
-		    return 1;
+		    return true;
 		}
 	    }
 	    if (cascadePtr->menuPtr != NULL) {
@@ -2094,7 +2094,7 @@ CheckForLoops0(
 		    cascadeName = Tk_PathName(mainMenuPtr->tkwin);
 		    if ((strcmp(pathName, cascadeName) != 0) &&
 			    CheckForLoops0(interp, cascadeName, name)) {
-			return 1;
+			return true;
 		    }
 		}
 	    }
@@ -2102,10 +2102,10 @@ CheckForLoops0(
 	    cascadePtr = cascadePtr->nextCascadePtr;
 	}
     }
-    return 0;
+    return false;
 }
 
-static int
+static bool
 CheckForLoops(
     Tcl_Interp *interp,		/* Used for lookups. */
     const char *name,		/* Value of -menu option to check. */
@@ -2116,12 +2116,12 @@ CheckForLoops(
     if (menuPtr->tkwin != NULL) {
 	pathName = Tk_PathName(menuPtr->tkwin);
 	if (strcmp(name, pathName) == 0) {
-	    return 1;
+	    return true;
 	}
     }
     if (pathName != NULL) {
 if (CheckForLoops0(interp, pathName, name)) {
-	    return 1;
+	    return true;
 	}
     }
     pathName = NULL;
@@ -2129,15 +2129,15 @@ if (CheckForLoops0(interp, pathName, name)) {
 	    (menuPtr->mainMenuPtr->tkwin != NULL)) {
 	pathName = Tk_PathName(menuPtr->mainMenuPtr->tkwin);
 	if (strcmp(name, pathName) == 0) {
-	    return 1;
+	    return true;
 	}
     }
     if (pathName != NULL) {
 	if (CheckForLoops0(interp, pathName, name)) {
-	    return 1;
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 /*

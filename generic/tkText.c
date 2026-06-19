@@ -933,7 +933,7 @@ TextWidgetObjCmd(
 		}
 		index.linePtr = indexFromPtr->linePtr;
 		index.byteIndex = 0;
-		while (1) {
+		while (true) {
 		    TkTextFindDisplayLineEnd(textPtr, &index, 1, NULL);
 		    if (TkTextIndexCmp(&index,indexFromPtr) >= 0) {
 			break;
@@ -945,7 +945,7 @@ TextWidgetObjCmd(
 		if (indexToPtr->linePtr != lastPtr) {
 		    index.linePtr = indexToPtr->linePtr;
 		    index.byteIndex = 0;
-		    while (1) {
+		    while (true) {
 			TkTextFindDisplayLineEnd(textPtr, &index, 1, NULL);
 			if (TkTextIndexCmp(&index,indexToPtr) >= 0) {
 			    break;
@@ -3461,7 +3461,7 @@ TextFetchSelection(
      */
 
     count = 0;
-    while (1) {
+    while (true) {
 	/*
 	 * Find the end of the current range of selected text.
 	 */
@@ -3476,7 +3476,7 @@ TextFetchSelection(
 	 * this range of text.
 	 */
 
-	while (1) {
+	while (true) {
 	    if (maxBytes == 0) {
 		goto fetchDone;
 	    }
@@ -4338,7 +4338,7 @@ TextSearchFoundMatch(
      */
 
     leftToScan = matchOffset;
-    while (1) {
+    while (true) {
 	curIndex.linePtr = linePtr;
 	curIndex.byteIndex = 0;
 
@@ -5424,7 +5424,7 @@ TextGetText(
 	    indexPtr1->byteIndex, &tmpIndex);
 
     if (TkTextIndexCmp(indexPtr1, indexPtr2) < 0) {
-	while (1) {
+	while (true) {
 	    Tcl_Size offset;
 	    TkTextSegment *segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
 	    Tcl_Size last = segPtr->size, last2;
@@ -6042,7 +6042,7 @@ SearchCore(
 			 * searches.
 			 */
 
-			while (1) {
+			while (true) {
 			    lastFullLine = lastTotal;
 
 			    if (lineNum+extraLines>=searchSpecPtr->numLines) {
@@ -6248,7 +6248,7 @@ SearchCore(
 		     * searches.
 		     */
 
-		    while (1) {
+		    while (true) {
 			prevFullLine = lastTotal;
 
 			/*
