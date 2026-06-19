@@ -1669,7 +1669,7 @@ Tk_DrawChars(
      * Delegate everything to the context-aware renderer.
      * We draw the full string as a single logical range.
      */
-    Tk_DrawCharsInContext(display, drawable, gc, (Tk_Font)gc->font, 
+    Tk_DrawCharsInContext(display, drawable, gc, (Tk_Font)gc->font,
 			  source, numBytes, 0, numBytes, x, y);
 }
 

@@ -7421,7 +7421,7 @@ UpdateCommand(
  *	toplevel window.
  *
  * Results:
- *	0 on error, 1 otherwise
+ *	false on error, true otherwise
  *
  * Side effects:
  *	May minimize, restore, or withdraw a window.
