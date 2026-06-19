@@ -379,7 +379,7 @@ DisplayHorizontalScale(
 		tickInterval *= ticks / maxTicks;
 	    }
 	    tickValue = scalePtr->fromValue;
-	    while (1) {
+	    while (true) {
 		/*
 		 * The TkRoundValueToResolution call gets rid of accumulated
 		 * round-off errors, if any.
@@ -678,7 +678,7 @@ TkpScaleElement(
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->widthObj, &width);
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->sliderLengthObj, &sliderLength);
-    
+
     if (scalePtr->orient == ORIENT_VERTICAL) {
 	if ((x < scalePtr->vertTroughX)
 		|| (x >= (scalePtr->vertTroughX + 2 * borderWidth + width))) {

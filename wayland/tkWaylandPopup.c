@@ -91,10 +91,10 @@ struct TkWaylandPopup {
     int width, height;          /* Requested / confirmed size. */
 
     /* State flags. */
-    int configured;             /* 1 after first xdg_surface configure
-                                 * OR for subsurfaces (always 1). */
-    int mapped;
-    int visible;                /* Track visibility state. */
+    bool configured;             /* true after first xdg_surface configure
+                                 * OR for subsurfaces (always true). */
+    bool mapped;
+    bool visible;                /* Track visibility state. */
 
     /* Optional dismiss callback. */
     void (*doneCallback)(void *clientData);
@@ -122,11 +122,11 @@ static struct wl_shm          *popupShm          = NULL;
 static struct wl_seat         *popupSeat         = NULL;
 static uint32_t                popupLastSerial   = 0;
 
-static int popupModuleInitialized = 0;
+static bool popupModuleInitialized = false;
 static TkWaylandPopup *popupList = NULL;
 
 /* Forward declarations. */
-static int AllocateSHMBuffer(TkWaylandPopup *popup);
+static bool AllocateSHMBuffer(TkWaylandPopup *popup);
 static void FreeSHMBuffer(TkWaylandPopup *popup);
 
 /*
@@ -273,7 +273,7 @@ XdgSurfaceConfigure(
 
     POPUP_DEBUG("XdgSurfaceConfigure serial=%u", serial);
     xdg_surface_ack_configure(xdgSurface, serial);
-    popup->configured = 1;
+    popup->configured = true;
 
     wl_surface_commit(popup->surface);
     wl_display_flush(popupDisplay);
@@ -313,7 +313,7 @@ XdgPopupConfigure(
     POPUP_DEBUG("XdgPopupConfigure: pos=(%d,%d) size=%dx%d", x, y, width, height);
     popup->x = x;
     popup->y = y;
-    
+
     if (width > 0 && height > 0) {
         if (width != popup->width || height != popup->height) {
             /* Reallocate SHM buffer for new size. */
@@ -352,7 +352,7 @@ XdgPopupDone(
     TkWaylandPopup *popup = (TkWaylandPopup *)data;
 
     POPUP_DEBUG("XdgPopupDone - popup dismissed by compositor");
-    
+
     /* Cache properties locally in case the callback alters the popup structure. */
     void (*localCallback)(void *) = popup->doneCallback;
     void *localData = popup->doneClientData;
@@ -382,7 +382,7 @@ static const struct xdg_popup_listener xdgPopupListener = {
  *	Allocate a wl_shm buffer for the popup surface.
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *	Returns true on success, false on failure.
  *
  * Side effects:
  *	Creates shmPool, shmBuffer, and mmap's the memory.
@@ -390,17 +390,17 @@ static const struct xdg_popup_listener xdgPopupListener = {
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 AllocateSHMBuffer(
     TkWaylandPopup *popup)
 {
     if (!popup->surface || popup->width <= 0 || popup->height <= 0) {
-        return 0;
+        return false;
     }
-    
+
     if (!popupShm) {
         POPUP_DEBUG("No wl_shm available");
-        return 0;
+        return false;
     }
 
     /* Calculate buffer size and stride. */
@@ -415,7 +415,7 @@ AllocateSHMBuffer(
     int fd = mkstemp(filename);
     if (fd < 0) {
         POPUP_DEBUG("Failed to create temp file");
-        return 0;
+        return false;
     }
     unlink(filename);
 
@@ -423,7 +423,7 @@ AllocateSHMBuffer(
     if (ftruncate(fd, popup->shmSize) < 0) {
         POPUP_DEBUG("Failed to truncate temp file");
         close(fd);
-        return 0;
+        return false;
     }
 
     /* Map the memory. */
@@ -433,7 +433,7 @@ AllocateSHMBuffer(
         POPUP_DEBUG("Failed to mmap shared memory");
         close(fd);
         popup->shmData = NULL;
-        return 0;
+        return false;
     }
 
     /* Create the shm pool. */
@@ -444,7 +444,7 @@ AllocateSHMBuffer(
         POPUP_DEBUG("Failed to create wl_shm_pool");
         munmap(popup->shmData, popup->shmSize);
         popup->shmData = NULL;
-        return 0;
+        return false;
     }
 
     /* Create the buffer. */
@@ -457,15 +457,15 @@ AllocateSHMBuffer(
         popup->shmPool = NULL;
         munmap(popup->shmData, popup->shmSize);
         popup->shmData = NULL;
-        return 0;
+        return false;
     }
 
     /* Clear the buffer to transparent black. */
     memset(popup->shmData, 0, popup->shmSize);
-    
+
     POPUP_DEBUG("Allocated SHM buffer: %dx%d, stride=%d, size=%zu",
                 popup->width, popup->height, popup->stride, popup->shmSize);
-    return 1;
+    return true;
 }
 
 /*
@@ -545,7 +545,7 @@ TkWaylandPopupInit(void)
 
     xdg_wm_base_add_listener(popupWmBase, &wmBaseListener, NULL);
 
-    popupModuleInitialized = 1;
+    popupModuleInitialized = true;
     POPUP_DEBUG("Popup module initialized");
     return TCL_OK;
 }
@@ -593,7 +593,7 @@ TkWaylandPopupCreate(
     memset(popup, 0, sizeof(TkWaylandPopup));
     popup->width  = popupW;
     popup->height = popupH;
-    popup->visible = 0;
+    popup->visible = false;
 
     popup->surface = wl_compositor_create_surface(popupCompositor);
     if (!popup->surface) {
@@ -670,8 +670,8 @@ TkWaylandPopupCreate(
         waitIter++;
     }
 
-    popup->mapped = 1;
-    popup->visible = 1;
+    popup->mapped  = true;
+    popup->visible = true;
     popup->nextPtr = popupList;
     popupList = popup;
 
@@ -726,7 +726,7 @@ TkWaylandSubsurfaceCreate(
     popup->height = height;
     popup->x      = x;
     popup->y      = y;
-    popup->visible = 0;
+    popup->visible = false;
     popup->parentSurface = parentSurface;
 
     popup->surface = wl_compositor_create_surface(popupCompositor);
@@ -747,10 +747,10 @@ TkWaylandSubsurfaceCreate(
 
     /* Position the subsurface. */
     wl_subsurface_set_position(popup->subsurface, x, y);
-    
+
     /* Use desync mode for better performance. */
     wl_subsurface_set_desync(popup->subsurface);
-    
+
     /* Place the subsurface ABOVE the parent surface. */
     wl_subsurface_place_above(popup->subsurface, parentSurface);
     POPUP_DEBUG("Subsurface placed above parent");
@@ -775,9 +775,9 @@ TkWaylandSubsurfaceCreate(
     wl_display_flush(popupDisplay);
 
     /* For subsurfaces, we are always configured - no xdg_surface handshake. */
-    popup->configured = 1;
-    popup->mapped     = 1;
-    popup->visible    = 1;
+    popup->configured = true;
+    popup->mapped     = true;
+    popup->visible    = true;
 
     POPUP_DEBUG("Subsurface popup created and committed, configured=1");
 
@@ -831,17 +831,17 @@ TkWaylandSubsurfaceReconfigure(
         popup->y = y;
         wl_subsurface_set_position(popup->subsurface, x, y);
     }
-    
+
     /* Attach the new buffer and damage the entire surface to force redraw. */
     wl_surface_attach(popup->surface, popup->shmBuffer, 0, 0);
     wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
     wl_surface_commit(popup->surface);
-    
+
     /* Also need to commit the parent surface. */
     if (popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
-    
+
     wl_display_flush(popupDisplay);
 }
 
@@ -872,12 +872,12 @@ TkWaylandSubsurfacePlaceAbove(
     POPUP_DEBUG("Place subsurface above sibling");
     wl_subsurface_place_above(popup->subsurface, sibling->surface);
     wl_surface_commit(popup->surface);
-    
+
     /* Commit parent to ensure stacking takes effect. */
     if (popup->parentSurface) {
         wl_surface_commit(popup->parentSurface);
     }
-    
+
     wl_display_flush(popupDisplay);
 }
 
@@ -1042,7 +1042,7 @@ MODULE_SCOPE uint8_t *TkWaylandPopupBeginDraw(
         }
         return NULL;
     }
-    
+
     /* Return pointer to SHM buffer for caller to fill. */
     return popup->shmData;
 }
@@ -1073,11 +1073,11 @@ TkWaylandPopupEndDraw(
     wl_surface_attach(popup->surface, popup->shmBuffer, 0, 0);
     wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
     wl_surface_commit(popup->surface);
-    
+
     if (popupDisplay) {
         wl_display_flush(popupDisplay);
     }
-    
+
     POPUP_DEBUG("EndDraw: committed surface");
 }
 
@@ -1260,7 +1260,7 @@ TkWaylandPopupGetSeat(void)
  *
  * TkWaylandPopupCaptureGLPixels --
  *
- *	Blits and reads back pixels from the parent window's active 
+ *	Blits and reads back pixels from the parent window's active
  *	GLES3 FBO directly into the popup's top-down SHM data buffer.
  *
  * Results:
@@ -1308,13 +1308,13 @@ TkWaylandPopupCaptureGLPixels(
 
     for (int y = 0; y < popup->height; y++) {
         /* Read rows from the bottom of the GL Framebuffer up into the top rows of SHM. */
-        glReadPixels(0, (popup->height - 1 - y), popup->width, 1, 
+        glReadPixels(0, (popup->height - 1 - y), popup->width, 1,
                      GL_RGBA, GL_UNSIGNED_BYTE, shmDest + (y * stride));
     }
 
     /* Restore the previous framebuffer state. */
     glBindFramebuffer(GL_READ_FRAMEBUFFER, previousFBO);
-    
+
     POPUP_DEBUG("Captured %dx%d pixels from parent FBO to SHM", popup->width, popup->height);
 }
 

@@ -9,7 +9,7 @@
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2018-2019 Marc Culler
  * Copyright © 2015-2026 Kevin Walzer
- 
+
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
@@ -119,10 +119,10 @@ ScrollbarEvent(
         wsPtr->buttonDown = 1;
         int where = TkpScrollbarPosition(scrollPtr,
             eventPtr->xbutton.x, eventPtr->xbutton.y);
-        
+
         /* Update active field based on where mouse was pressed. */
         scrollPtr->activeField = where;
-        
+
         /* Handle different parts of the scrollbar. */
         switch (where) {
             case TOP_ARROW:
@@ -132,15 +132,15 @@ ScrollbarEvent(
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("-1", -1));
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("units", -1));
                     Tcl_IncrRefCount(resultObj);
-                    
+
                     if (Tcl_EvalObjEx(scrollPtr->interp, resultObj, 0) != TCL_OK) {
                         /* Handle error. */
                     }
-                    
+
                     Tcl_DecrRefCount(resultObj);
                 }
                 break;
-                
+
             case BOTTOM_ARROW:
                 /* Scroll down/right. */
                 if (scrollPtr->commandObj) {
@@ -148,15 +148,15 @@ ScrollbarEvent(
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("1", -1));
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("units", -1));
                     Tcl_IncrRefCount(resultObj);
-                    
+
                     if (Tcl_EvalObjEx(scrollPtr->interp, resultObj, 0) != TCL_OK) {
                         /* Handle error. */
                     }
-                    
+
                     Tcl_DecrRefCount(resultObj);
                 }
                 break;
-                
+
             case TOP_GAP:
                 /* Page up/left. */
                 if (scrollPtr->commandObj) {
@@ -164,15 +164,15 @@ ScrollbarEvent(
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("-1", -1));
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("pages", -1));
                     Tcl_IncrRefCount(resultObj);
-                    
+
                     if (Tcl_EvalObjEx(scrollPtr->interp, resultObj, 0) != TCL_OK) {
                         /* Handle error */
                     }
-                    
+
                     Tcl_DecrRefCount(resultObj);
                 }
                 break;
-                
+
             case BOTTOM_GAP:
                 /* Page down/right. */
                 if (scrollPtr->commandObj) {
@@ -180,15 +180,15 @@ ScrollbarEvent(
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("1", -1));
                     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("pages", -1));
                     Tcl_IncrRefCount(resultObj);
-                    
+
                     if (Tcl_EvalObjEx(scrollPtr->interp, resultObj, 0) != TCL_OK) {
                         /* Handle error. */
                     }
-                    
+
                     Tcl_DecrRefCount(resultObj);
                 }
                 break;
-                
+
             case SLIDER:
                 /* Start slider dragging (would need additional state). */
                 break;
@@ -212,7 +212,7 @@ ScrollbarEvent(
             scrollPtr->activeField = OUTSIDE;
         }
     }
-    
+
     TkScrollbarEventuallyRedraw(scrollPtr);
     return TCL_OK;
 }

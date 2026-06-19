@@ -175,7 +175,7 @@ Tk_3DVerticalBevel(
             nvgFill(dc.vg);
 
             nvgBeginPath(dc.vg);
-            nvgRect(dc.vg, (float)(x + half), (float)y, 
+            nvgRect(dc.vg, (float)(x + half), (float)y,
                     (float)(width - half), (float)height);
             nvgFillColor(dc.vg, rightColor);
             nvgFill(dc.vg);

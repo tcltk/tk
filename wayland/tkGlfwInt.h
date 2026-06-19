@@ -6,7 +6,7 @@
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
- * Copyright © 2026 Marc Culler. 
+ * Copyright © 2026 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -156,8 +156,8 @@ typedef struct ShapedGlyphBuffer {
 
 /*
  * WaylandShaper
- * 
- *   Persistent per-font shaping state.  
+ *
+ *   Persistent per-font shaping state.
  */
 typedef struct WaylandShaper {
     hb_buffer_t *buffer;        /* Reused HarfBuzz buffer.                  */
@@ -398,7 +398,7 @@ typedef struct {
     int         nestedFrame; /* Frame within frame */
     int         isPixmap;   /* Set to 1 if drawing to an off-screen FBO, 0 for Window */
     GLuint      pixmapFbo;  /* Stores the active Pixmap FBO handle id */
-    void 		*winPtr;    /* TkWindow pointer. */
+    void		*winPtr;    /* TkWindow pointer. */
 } TkWaylandDrawingContext;
 
 /*
@@ -595,9 +595,9 @@ MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
 
 MODULE_SCOPE GC   TkWaylandCreateGC(unsigned long valuemask, XGCValues *values);
 MODULE_SCOPE void TkWaylandFreeGC(GC gc);
-MODULE_SCOPE int  TkWaylandGetGCValues(GC gc, unsigned long valuemask, XGCValues *values);
-MODULE_SCOPE int  TkWaylandChangeGC(GC gc, unsigned long valuemask, XGCValues *values);
-MODULE_SCOPE int  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
+MODULE_SCOPE bool  TkWaylandGetGCValues(GC gc, unsigned long valuemask, XGCValues *values);
+MODULE_SCOPE bool  TkWaylandChangeGC(GC gc, unsigned long valuemask, XGCValues *values);
+MODULE_SCOPE bool  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
 
 /*
  *----------------------------------------------------------------------
@@ -697,13 +697,12 @@ MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int   TkWaylandKeyInit();
+MODULE_SCOPE bool  TkWaylandKeyInit();
 MODULE_SCOPE void  TkWaylandKeyCleanup();
 MODULE_SCOPE void  TkWaylandUpdateKeyboardModifiers(int glfw_mods);
 MODULE_SCOPE void  TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint);
 char* TkWaylandGetStoredText(TkWindow *winPtr);
 void TkWaylandSetStoredText(TkWindow *winPtr, const char *text);
-int TkWaylandIbusIsComposing(Tk_Window);
 MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 
 /*

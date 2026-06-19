@@ -31,7 +31,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xlibint.h>
 #include <tcl.h>
- 
+
 #define NANOVG_GLES3 1
 #include "nanovg_gl.h"
 #include "nanovg_gl_utils.h"
@@ -90,31 +90,31 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     }
 
     /* Allocate Display. */
-    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
+    _XPrivDisplay display = (_XPrivDisplay)Tcl_Alloc(sizeof(Display));
     if (!display) return NULL;
     bzero(display, sizeof(Display));
 
     /* Allocate Screen. */
-    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
+    Screen *screen = (Screen *)Tcl_Alloc(sizeof(Screen));
     if (!screen) {
-        ckfree(display);
+        Tcl_Free(display);
         return NULL;
     }
 
     /* Allocate Visual. */
-    Visual *visual = (Visual *)ckalloc(sizeof(Visual));
+    Visual *visual = (Visual *)Tcl_Alloc(sizeof(Visual));
     if (!visual) {
-        ckfree(screen);
-        ckfree(display);
+        Tcl_Free(screen);
+        Tcl_Free(display);
         return NULL;
     }
     bzero(visual, sizeof(Visual));
 
     /* Initialize GLFW (Wayland support). */
     if (!glfwInit()) {
-        ckfree(visual);
-        ckfree(screen);
-        ckfree(display);
+        Tcl_Free(visual);
+        Tcl_Free(screen);
+        Tcl_Free(display);
         return NULL;
     }
 
@@ -161,7 +161,7 @@ TkpOpenDisplay(TCL_UNUSED(const char *)) /* displayName */
     visual->blue_mask    = 0x0000FF;
 
     /* Allocate TkDisplay. */
-    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
+    dispPtr = (TkDisplay *)Tcl_Alloc(sizeof(TkDisplay));
     bzero(dispPtr, sizeof(TkDisplay));
     dispPtr->display = (Display *)display;
     /*
@@ -224,7 +224,7 @@ TkWaylandCreateGC(
 {
     TkWaylandGC *gc;
 
-    gc = ckalloc(sizeof(TkWaylandGC));
+    gc = (TkWaylandGC *)Tcl_Alloc(sizeof(TkWaylandGC));
     if (gc == NULL) {
         return NULL;
     }
@@ -269,7 +269,7 @@ TkWaylandFreeGC(
     GC gc)
 {
     if (gc != NULL) {
-        ckfree((char *)gc);
+        Tcl_Free(gc);
     }
 }
 
@@ -289,7 +289,7 @@ TkWaylandFreeGC(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+MODULE_SCOPE bool
 TkWaylandGetGCValues(
     GC             gc,
     unsigned long  valuemask,
@@ -298,7 +298,7 @@ TkWaylandGetGCValues(
     TkWaylandGC *gcPtr = (TkWaylandGC*)gc;
 
     if (gcPtr == NULL || values == NULL) {
-        return 0;
+        return false;
     }
 
     if (valuemask & GCForeground)  values->foreground  = gcPtr->foreground;
@@ -311,7 +311,7 @@ TkWaylandGetGCValues(
     if (valuemask & GCArcMode)     values->arc_mode    = gcPtr->arc_mode;
     if (valuemask & GCFont)        values->font        = (Font)(uintptr_t)gcPtr->font;
 
-    return 1;
+    return true;
 }
 
 /*
@@ -322,7 +322,7 @@ TkWaylandGetGCValues(
  *	Write fields into a GC from an XGCValues struct.
  *
  * Results:
- *	1 on success, 0 if gc or values is NULL.
+ *	true on success, false if gc or values is NULL.
  *
  * Side effects:
  *	Updates GC fields in place.
@@ -330,7 +330,7 @@ TkWaylandGetGCValues(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+MODULE_SCOPE bool
 TkWaylandChangeGC(
     GC             gc,
     unsigned long  valuemask,
@@ -339,7 +339,7 @@ TkWaylandChangeGC(
     TkWaylandGC *gcPtr = (TkWaylandGC*)gc;
 
     if (gcPtr == NULL || values == NULL) {
-        return 0;
+        return false;
     }
 
     if (valuemask & GCForeground)  gcPtr->foreground = values->foreground;
@@ -352,7 +352,7 @@ TkWaylandChangeGC(
     if (valuemask & GCArcMode)     gcPtr->arc_mode   = values->arc_mode;
     if (valuemask & GCFont)        gcPtr->font       = (void *)(uintptr_t)values->font;
 
-    return 1;
+    return true;
 }
 
 /*
@@ -371,7 +371,7 @@ TkWaylandChangeGC(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+MODULE_SCOPE bool
 TkWaylandCopyGC(
     GC            src,
     unsigned long valuemask,
@@ -380,14 +380,14 @@ TkWaylandCopyGC(
     XGCValues tmp;
 
     if (src == NULL || dst == NULL) {
-        return 0;
+        return false;
     }
 
     /* Read from src, write to dst via the canonical helpers. */
     TkWaylandGetGCValues(src, valuemask, &tmp);
     TkWaylandChangeGC(dst, valuemask, &tmp);
 
-    return 1;
+    return true;
 }
 
 /* Pixmap functions. */
@@ -465,7 +465,7 @@ Tk_GetPixmap(
         pixmapTableInitialized = 1;
     }
 
-    pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
+    pixmapPtr = (TkWaylandPixmap *)Tcl_Alloc(sizeof(TkWaylandPixmap));
     memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
     pixmapPtr->glfwWindow = glfwWindow;
     pixmapPtr->width      = width;
@@ -535,7 +535,7 @@ Tk_FreePixmap(
     if (pixmapPtr->tex) {
         glDeleteTextures(1, &pixmapPtr->tex);
     }
-    ckfree(pixmapPtr);
+    Tcl_Free(pixmapPtr);
 }
 
 /*
@@ -702,7 +702,7 @@ XGetGCValues(
     unsigned long  valuemask,
     XGCValues     *values)
 {
-    return TkWaylandGetGCValues(gc, valuemask, values);
+    return TkWaylandGetGCValues(gc, valuemask, values) ? 1 : 0;
 }
 
 /*

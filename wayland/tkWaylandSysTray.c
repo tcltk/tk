@@ -3,7 +3,7 @@
  *
  *	System tray/notification icon support for Wayland using the
  *      StatusNotifierItem protocol via sd-bus
- *	with GLFW integration. Implements a "systray" Tcl command which 
+ *	with GLFW integration. Implements a "systray" Tcl command which
  *      permits changing the system tray icon and posting system notifications.
  *
  * Copyright © 2005 Anton Kovalenko
@@ -70,42 +70,42 @@ typedef struct {
     /* Image to be drawn. */
     Tk_Image image;
     int imageWidth, imageHeight;
-    
+
     /* GLFW window for fallback/drawing support. */
     GLFWwindow* glfwWindow;
     Drawable drawable;
-    
+
     /* SD-Bus connection. */
     sd_bus *bus;
     char *bus_name;
     char *object_path;
     Tcl_TimerToken busTimer;  /* Timer for processing DBus events */
-    
+
     /* Cached icon information. */
     char *tempIconPath;  /* Path to temporary icon file */
     time_t lastIconUpdate; /* Last time icon was updated */
-    
+
     /* Tcl bindings for mouse events */
     Tcl_Obj *b1Command;  /* Command for button-1 press */
     Tcl_Obj *b3Command;  /* Command for button-3 press */
-    
+
     int flags;
     int msgid;
     int item_id;  /* Unique ID for this tray item */
-    
+
     int width, height;
     int visible;
     int docked;
     Tcl_Obj *imageObj;
     Tcl_Obj *classObj;
-    
+
     char* trayAppId;  /* App ID for Wayland */
     char* iconName;   /* Name of the icon (filename or themed icon name) */
     char* iconPath;   /* Path to icon file if using file-based icon */
     char* status;     /* Status: "active", "passive", "attention" */
     char* tooltip;    /* Tooltip text */
     char* title;      /* Title/name */
-    
+
     /* Properties for StatusNotifierItem interface. */
     CategoryDBus category;
     StatusDBus dbus_status;
@@ -158,32 +158,32 @@ InvokeButtonCommand(
     Tcl_Obj *cmdObj = NULL;
     Tcl_Obj *script;
     int result;
-    
+
     /* Select command based on button. */
     if (button == 1 && icon->b1Command) {
         cmdObj = icon->b1Command;
     } else if (button == 3 && icon->b3Command) {
         cmdObj = icon->b3Command;
     }
-    
+
     if (!cmdObj) {
         return;
     }
-    
+
     /* Build script with coordinates appended. */
     script = Tcl_DuplicateObj(cmdObj);
     Tcl_IncrRefCount(script);
-    
+
     Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(x));
     Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(y));
-    
+
     /* Evaluate script. */
     result = Tcl_EvalObjEx(icon->interp, script, TCL_EVAL_GLOBAL);
-    
+
     if (result != TCL_OK) {
         Tcl_BackgroundError(icon->interp);
     }
-    
+
     Tcl_DecrRefCount(script);
 }
 
@@ -203,14 +203,14 @@ method_activate(
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
-    
+
     if (sd_bus_message_read(m, "ii", &x, &y) < 0) {
         return sd_bus_reply_method_return(m, "");
     }
-    
+
     /* Invoke button-1 command. */
     InvokeButtonCommand(icon, 1, x, y);
-    
+
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -222,14 +222,14 @@ method_secondary_activate(
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
-    
+
     if (sd_bus_message_read(m, "ii", &x, &y) < 0) {
         return sd_bus_reply_method_return(m, "");
     }
-    
+
     /* Invoke button-3 command. */
     InvokeButtonCommand(icon, 3, x, y);
-    
+
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -241,14 +241,14 @@ method_context_menu(
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
-    
+
     if (sd_bus_message_read(m, "ii", &x, &y) < 0) {
         return sd_bus_reply_method_return(m, "");
     }
-    
+
     /* Also invoke button-3 command for context menu. */
     InvokeButtonCommand(icon, 3, x, y);
-    
+
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -260,13 +260,13 @@ method_scroll(
 {
     int delta;
     const char *orientation;
-    
+
     if (sd_bus_message_read(m, "is", &delta, &orientation) < 0) {
         return sd_bus_reply_method_return(m, "");
     }
-    
+
     /* TODO: Handle scroll event if needed */
-    
+
     return sd_bus_reply_method_return(m, "");
 }
 
@@ -290,7 +290,7 @@ property_get_category(
 {
     DockIcon *icon = userdata;
     const char *category_str;
-    
+
     switch (icon->category) {
         case CATEGORY_APPLICATION_STATUS:
             category_str = "ApplicationStatus";
@@ -307,7 +307,7 @@ property_get_category(
         default:
             category_str = "ApplicationStatus";
     }
-    
+
     return sd_bus_message_append(reply, "s", category_str);
 }
 
@@ -323,7 +323,7 @@ property_get_status(
 {
     DockIcon *icon = userdata;
     const char *status_str;
-    
+
     switch (icon->dbus_status) {
         case STATUS_PASSIVE:
             status_str = "Passive";
@@ -337,7 +337,7 @@ property_get_status(
         default:
             status_str = "Active";
     }
-    
+
     return sd_bus_message_append(reply, "s", status_str);
 }
 
@@ -353,14 +353,14 @@ property_get_icon_name(
 {
     DockIcon *icon = userdata;
     const char *name = "";
-    
+
     /* Prefer temp icon path, then iconName. */
     if (icon->tempIconPath) {
         name = icon->tempIconPath;
     } else if (icon->iconName) {
         name = icon->iconName;
     }
-    
+
     return sd_bus_message_append(reply, "s", name);
 }
 
@@ -376,17 +376,17 @@ property_get_icon_pixmap(
 {
     DockIcon *icon = userdata;
     int r;
-    
+
     /* Open array of pixmaps: a(iiay). */
     r = sd_bus_message_open_container(reply, 'a', "(iiay)");
     if (r < 0) return r;
-    
+
     if (icon->tempIconPath) {
         /* Load PNG and send pixmap data. */
         int width, height, channels;
-        unsigned char *data = stbi_load(icon->tempIconPath, &width, &height, 
+        unsigned char *data = stbi_load(icon->tempIconPath, &width, &height,
                                         &channels, 4);
-        
+
         if (data) {
             /* Open pixmap struct: (iiay). */
             r = sd_bus_message_open_container(reply, 'r', "iiay");
@@ -394,23 +394,23 @@ property_get_icon_pixmap(
                 stbi_image_free(data);
                 return r;
             }
-            
+
             /* Width and height. */
             r = sd_bus_message_append(reply, "ii", width, height);
             if (r < 0) {
                 stbi_image_free(data);
                 return r;
             }
-            
+
             /* Convert RGBA to ARGB and append as byte array. */
             r = sd_bus_message_open_container(reply, 'a', "y");
             if (r < 0) {
                 stbi_image_free(data);
                 return r;
             }
-            
+
             /* Write ARGB data. */
-            unsigned char *argb = (unsigned char *)ckalloc(width * height * 4);
+            unsigned char *argb = (unsigned char *)Tcl_Alloc(width * height * 4);
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     int idx = (y * width + x) * 4;
@@ -421,18 +421,18 @@ property_get_icon_pixmap(
                     argb[out_idx + 3] = data[idx + 2];  /* B */
                 }
             }
-            
+
             r = sd_bus_message_append_array(reply, 'y', argb, width * height * 4);
-            ckfree((char *)argb);
+            Tcl_Free(argb);
             stbi_image_free(data);
-            
+
             if (r < 0) return r;
-            
+
             sd_bus_message_close_container(reply);  /* Close byte array */
             sd_bus_message_close_container(reply);  /* Close struct */
         }
     }
-    
+
     sd_bus_message_close_container(reply);  /* Close array */
     return 0;
 }
@@ -449,26 +449,26 @@ property_get_tooltip(
 {
     DockIcon *icon = userdata;
     int r;
-    
+
     /* ToolTip is (sa(iiay)ss): icon_name, icon_pixmap, title, description. */
     r = sd_bus_message_open_container(reply, 'r', "sa(iiay)ss");
     if (r < 0) return r;
-    
+
     /* Icon name. */
     r = sd_bus_message_append(reply, "s", icon->iconName ? icon->iconName : "");
     if (r < 0) return r;
-    
+
     /* Icon pixmap (empty array). */
     r = sd_bus_message_open_container(reply, 'a', "(iiay)");
     if (r < 0) return r;
     sd_bus_message_close_container(reply);
-    
+
     /* Title and description. */
     r = sd_bus_message_append(reply, "ss",
                               icon->title ? icon->title : "",
                               icon->tooltip ? icon->tooltip : "");
     if (r < 0) return r;
-    
+
     sd_bus_message_close_container(reply);
     return 0;
 }
@@ -531,13 +531,13 @@ ProcessDBusEvents(
     void *clientData)
 {
     DockIcon *icon = (DockIcon *)clientData;
-    
+
     if (icon->bus) {
         /* Process pending DBus messages. */
         while (sd_bus_process(icon->bus, NULL) > 0) {
             /* Keep processing. */
         }
-        
+
         /* Re-schedule timer. */
         icon->busTimer = Tcl_CreateTimerHandler(50, ProcessDBusEvents, icon);
     }
@@ -571,7 +571,7 @@ TrayIconObjectCmd(
     int i;
     int bbox[4] = {0, 0, 24, 24};  /* Standard tray icon size */
     Tcl_Obj* bboxObj;
-    
+
     enum {XWC_CONFIGURE = 0, XWC_CGET, XWC_BALLOON, XWC_CANCEL,
         XWC_BBOX, XWC_DOCKED, XWC_ORIENTATION, XWC_BIND};
     const char *st_wcmd[] = {"configure", "cget", "balloon", "cancel",
@@ -581,7 +581,7 @@ TrayIconObjectCmd(
         Tcl_WrongNumArgs(interp, 1, objv, "subcommand ?args?");
         return TCL_ERROR;
     }
-    
+
     if (Tcl_GetIndexFromObj(interp, objv[1], st_wcmd,
             "subcommand", TCL_EXACT, &wcmd) != TCL_OK) {
         return TCL_ERROR;
@@ -593,12 +593,12 @@ TrayIconObjectCmd(
 
     case XWC_CGET: {
         Tcl_Obj* optionValue;
-        
+
         if (objc != 3) {
             Tcl_WrongNumArgs(interp,2,objv,"option");
             return TCL_ERROR;
         }
-        
+
         optionValue = Tk_GetOptionValue(interp,(char*)icon,
             icon->options,objv[2],icon->tkwin);
         if (optionValue) {
@@ -612,29 +612,29 @@ TrayIconObjectCmd(
     case XWC_BIND: {
         int button;
         const char *sequence;
-        
+
         if (objc < 3 || objc > 4) {
             Tcl_WrongNumArgs(interp, 2, objv, "sequence ?command?");
             return TCL_ERROR;
         }
-        
+
         sequence = Tcl_GetString(objv[2]);
-        
+
         /* Parse button sequence (e.g., "<Button-1>" or "<Button-3>"). */
-        if (strcmp(sequence, "<Button-1>") == 0 || 
+        if (strcmp(sequence, "<Button-1>") == 0 ||
             strcmp(sequence, "<1>") == 0 ||
             strcmp(sequence, "1") == 0) {
             button = 1;
-        } else if (strcmp(sequence, "<Button-3>") == 0 || 
+        } else if (strcmp(sequence, "<Button-3>") == 0 ||
                    strcmp(sequence, "<3>") == 0 ||
                    strcmp(sequence, "3") == 0) {
             button = 3;
         } else {
-            Tcl_SetObjResult(interp, 
+            Tcl_SetObjResult(interp,
                 Tcl_NewStringObj("only <Button-1> and <Button-3> supported", -1));
             return TCL_ERROR;
         }
-        
+
         if (objc == 3) {
             /* Query binding. */
             Tcl_Obj *cmd = (button == 1) ? icon->b1Command : icon->b3Command;
@@ -643,7 +643,7 @@ TrayIconObjectCmd(
             }
             return TCL_OK;
         }
-        
+
         /* Set binding. */
         if (button == 1) {
             if (icon->b1Command) {
@@ -658,43 +658,43 @@ TrayIconObjectCmd(
             icon->b3Command = objv[3];
             Tcl_IncrRefCount(icon->b3Command);
         }
-        
+
         return TCL_OK;
     }
 
     case XWC_BALLOON: {
         const char* title;
         const char* message;
-        
+
         if ((objc != 3) && (objc != 4) && (objc != 5)) {
             Tcl_WrongNumArgs(interp, 2, objv, "message ?title? ?timeout?");
             return TCL_ERROR;
         }
-        
+
         message = Tcl_GetString(objv[2]);
         title = (objc >= 4) ? Tcl_GetString(objv[3]) : "Notification";
-        
+
 		/* Free old strings if they exist to prevent memory leaks. */
-		if (icon->title) ckfree(icon->title);
-		if (icon->tooltip) ckfree(icon->tooltip);
-		
+		if (icon->title) Tcl_Free(icon->title);
+		if (icon->tooltip) Tcl_Free(icon->tooltip);
+
 		/* Allocate and copy new values.*/
-		icon->title = ckalloc(strlen(title) + 1);
+		icon->title = (char *)Tcl_Alloc(strlen(title) + 1);
 		strcpy(icon->title, title);
-		
-		icon->tooltip = ckalloc(strlen(message) + 1);
+
+		icon->tooltip = (char *)Tcl_Alloc(strlen(message) + 1);
 		strcpy(icon->tooltip, message);
-        
+
         /* Update indicator status to "attention". */
         if (icon->status) {
-            ckfree(icon->status);
+            Tcl_Free(icon->status);
         }
-        icon->status = ckalloc(strlen("attention") + 1);
+        icon->status = (char *)Tcl_Alloc(strlen("attention") + 1);
         strcpy(icon->status, "attention");
-        
+
         /* Update DBus status */
         UpdateIndicatorStatus(icon);
-        
+
         Tcl_SetObjResult(interp, Tcl_NewIntObj(++icon->msgid));
         return TCL_OK;
     }
@@ -702,11 +702,11 @@ TrayIconObjectCmd(
     case XWC_CANCEL:
         /* Set status back to active. */
         if (icon->status) {
-            ckfree(icon->status);
+            Tcl_Free(icon->status);
         }
-        icon->status = ckalloc(strlen("active") + 1);
+        icon->status = (char *)Tcl_Alloc(strlen("active") + 1);
         strcpy(icon->status, "active");
-        
+
         UpdateIndicatorStatus(icon);
         return TCL_OK;
 
@@ -731,7 +731,7 @@ TrayIconObjectCmd(
         Tcl_SetObjResult(interp, Tcl_NewStringObj("horizontal", -1));
         return TCL_OK;
     }
-    
+
     return TCL_OK;
 }
 
@@ -762,67 +762,67 @@ SaveTkImageToFile(
     char template[] = "/tmp/tktray_XXXXXX.png";
     int fd;
     int success;
-    
+
     if (!icon->image || !icon->imageObj) {
         return 0;
     }
-    
+
     /* Get image dimensions. */
     Tk_SizeOfImage(icon->image, &icon->imageWidth, &icon->imageHeight);
-    
+
     if (icon->imageWidth <= 0 || icon->imageHeight <= 0) {
         return 0;
     }
-    
+
     /* Get Photo handle. */
     photo = Tk_FindPhoto(icon->interp, Tcl_GetString(icon->imageObj));
     if (!photo) {
         return 0;
     }
-    
+
     /* Allocate buffer for image data. */
     stride = icon->imageWidth * 4;  /* RGBA */
-    pixels = (unsigned char *)ckalloc(icon->imageHeight * stride);
+    pixels = (unsigned char *)Tcl_Alloc(icon->imageHeight * stride);
     if (!pixels) {
         return 0;
     }
-    
+
     /* Set up image block. */
     Tk_PhotoGetImage(photo, &block);
-    
+
     /* Copy image data. */
     memcpy(pixels, block.pixelPtr, icon->imageHeight * stride);
-    
+
     /* Clean up old temp file. */
     if (icon->tempIconPath) {
         unlink(icon->tempIconPath);
-        ckfree(icon->tempIconPath);
+        Tcl_Free(icon->tempIconPath);
         icon->tempIconPath = NULL;
     }
-    
+
     /* Create temporary file. */
     fd = mkstemps(template, 4);  /* 4 for ".png" */
     if (fd < 0) {
-        ckfree((char *)pixels);
+        Tcl_Free(pixels);
         return 0;
     }
     close(fd);
-    
+
     /* Write PNG file. */
-    success = stbi_write_png(template, icon->imageWidth, icon->imageHeight, 
+    success = stbi_write_png(template, icon->imageWidth, icon->imageHeight,
                              4, pixels, stride);
-    
-    ckfree((char *)pixels);
-    
+
+    Tcl_Free(pixels);
+
     if (!success) {
         unlink(template);
         return 0;
     }
-    
-    icon->tempIconPath = ckalloc(strlen(template) + 1);
+
+    icon->tempIconPath = (char *)Tcl_Alloc(strlen(template) + 1);
     strcpy(icon->tempIconPath, template);
     icon->lastIconUpdate = time(NULL);
-    
+
     return 1;
 }
 
@@ -849,7 +849,7 @@ RegisterStatusNotifierItem(
     int r;
     sd_bus_message *m = NULL;
     sd_bus_error error = SD_BUS_ERROR_NULL;
-    
+
     if (!icon->bus) {
         /* Connect to session bus. */
         r = sd_bus_open_user(&icon->bus);
@@ -858,26 +858,26 @@ RegisterStatusNotifierItem(
             return r;
         }
     }
-    
+
     /* Generate unique object path. */
     if (!icon->object_path) {
-        icon->object_path = ckalloc(64);
+        icon->object_path = (char *)Tcl_Alloc(64);
         snprintf(icon->object_path, 64, "/TrayIcon/%d", icon->item_id);
     }
-    
+
     /* Generate unique bus name. */
     if (!icon->bus_name) {
-        icon->bus_name = ckalloc(64);
+        icon->bus_name = (char *)Tcl_Alloc(64);
         snprintf(icon->bus_name, 64, "org.tk.TrayIcon%d", icon->item_id);
     }
-    
+
     /* Request bus name. */
     r = sd_bus_request_name(icon->bus, icon->bus_name, 0);
     if (r < 0) {
         fprintf(stderr, "Failed to request bus name: %s\n", strerror(-r));
         return r;
     }
-    
+
     /* Add object with StatusNotifierItem interface. */
     r = sd_bus_add_object_vtable(icon->bus,
                                  NULL,
@@ -889,7 +889,7 @@ RegisterStatusNotifierItem(
         fprintf(stderr, "Failed to add object vtable: %s\n", strerror(-r));
         return r;
     }
-    
+
     /* Register on StatusNotifierWatcher. */
     r = sd_bus_call_method(icon->bus,
                           "org.kde.StatusNotifierWatcher",
@@ -900,19 +900,19 @@ RegisterStatusNotifierItem(
                           &m,
                           "s",
                           icon->bus_name);
-    
+
     if (r < 0) {
-        fprintf(stderr, "Failed to register StatusNotifierItem: %s\n", 
+        fprintf(stderr, "Failed to register StatusNotifierItem: %s\n",
                 error.message);
         sd_bus_error_free(&error);
         return r;
     }
-    
+
     sd_bus_message_unref(m);
-    
+
     /* Start DBus event processing. */
     icon->busTimer = Tcl_CreateTimerHandler(50, ProcessDBusEvents, icon);
-    
+
     return 0;
 }
 
@@ -939,17 +939,17 @@ UnregisterStatusNotifierItem(
     sd_bus_message *m = NULL;
     sd_bus_error error = SD_BUS_ERROR_NULL;
     int r;
-    
+
     /* Cancel timer. */
     if (icon->busTimer) {
         Tcl_DeleteTimerHandler(icon->busTimer);
         icon->busTimer = NULL;
     }
-    
+
     if (!icon->bus) {
         return 0;
     }
-    
+
     r = sd_bus_call_method(icon->bus,
                           "org.kde.StatusNotifierWatcher",
                           "/StatusNotifierWatcher",
@@ -959,25 +959,25 @@ UnregisterStatusNotifierItem(
                           &m,
                           "s",
                           icon->bus_name);
-    
+
     if (r < 0) {
         fprintf(stderr, "Failed to unregister: %s\n", error.message);
         sd_bus_error_free(&error);
     }
-    
+
     if (m) {
         sd_bus_message_unref(m);
     }
-    
+
     /* Release bus name. */
     sd_bus_release_name(icon->bus, icon->bus_name);
-    
+
     /* Close bus connection. */
     sd_bus_flush(icon->bus);
     sd_bus_close(icon->bus);
     sd_bus_unref(icon->bus);
     icon->bus = NULL;
-    
+
     return 0;
 }
 
@@ -1004,14 +1004,14 @@ UpdateIndicatorIcon(
     if (!icon->bus) {
         return 0;
     }
-    
+
     /* Emit NewIcon signal. */
     sd_bus_emit_signal(icon->bus,
                        icon->object_path,
                        "org.kde.StatusNotifierItem",
                        "NewIcon",
                        "");
-    
+
     return 1;
 }
 
@@ -1036,11 +1036,11 @@ UpdateIndicatorStatus(
     DockIcon *icon)
 {
     const char *status_str;
-    
+
     if (!icon->bus) {
         return 0;
     }
-    
+
     /* Map status string to DBus status. */
     if (icon->status) {
         if (strcmp(icon->status, "active") == 0) {
@@ -1060,7 +1060,7 @@ UpdateIndicatorStatus(
         icon->dbus_status = STATUS_ACTIVE;
         status_str = "Active";
     }
-    
+
     /* Emit NewStatus signal. */
     sd_bus_emit_signal(icon->bus,
                        icon->object_path,
@@ -1068,7 +1068,7 @@ UpdateIndicatorStatus(
                        "NewStatus",
                        "s",
                        status_str);
-    
+
     return 1;
 }
 
@@ -1095,14 +1095,14 @@ UpdateTooltip(
     if (!icon->bus) {
         return 0;
     }
-    
+
     /* Emit NewToolTip signal. */
     sd_bus_emit_signal(icon->bus,
                        icon->object_path,
                        "org.kde.StatusNotifierItem",
                        "NewToolTip",
                        "");
-    
+
     return 1;
 }
 
@@ -1127,46 +1127,46 @@ CreateTrayIconWindow(
     DockIcon *icon)
 {
     TkWindow *winPtr;
-    
+
     if (!icon->tkwin) {
         return 0;
     }
-    
+
     /* Assign unique ID. */
     icon->item_id = ++global_item_id;
-    
+
     /* Set default title if not set. */
     if (!icon->title) {
         const char *window_name = Tk_Name(icon->tkwin);
-        icon->title = ckalloc(strlen(window_name) + 1);
+        icon->title = (char *)Tcl_Alloc(strlen(window_name) + 1);
         strcpy(icon->title, window_name);
     }
-    
+
     /* Set default category. */
     icon->category = CATEGORY_APPLICATION_STATUS;
-    
+
     /* Register on DBus. */
     if (RegisterStatusNotifierItem(icon) < 0) {
         fprintf(stderr, "Failed to register StatusNotifierItem\n");
         return 0;
     }
-    
+
     /* Update icon from Tk image if available. */
     if (icon->image) {
         SaveTkImageToFile(icon);
         UpdateIndicatorIcon(icon);
     }
-    
+
     /* Update status. */
     UpdateIndicatorStatus(icon);
-    
+
     /* Update tooltip. */
     UpdateTooltip(icon);
-    
+
     /* Create GLFW window for compatibility. */
     if (!icon->glfwWindow) {
         winPtr = (TkWindow *)icon->tkwin;
-        icon->glfwWindow = TkGlfwCreateWindow(winPtr, 
+        icon->glfwWindow = TkGlfwCreateWindow(winPtr,
             icon->imageWidth > 0 ? icon->imageWidth : 64,
             icon->imageHeight > 0 ? icon->imageHeight : 64,
             icon->trayAppId, &icon->drawable);
@@ -1174,7 +1174,7 @@ CreateTrayIconWindow(
             glfwHideWindow(icon->glfwWindow);
         }
     }
-    
+
     return 1;
 }
 
@@ -1199,7 +1199,7 @@ RemoveTrayIconWindow(
     DockIcon *icon)
 {
     UnregisterStatusNotifierItem(icon);
-    
+
     if (icon->glfwWindow) {
         TkGlfwDestroyWindow(icon->glfwWindow);
         icon->glfwWindow = NULL;
@@ -1235,12 +1235,12 @@ TrayIconUpdate(
                 UpdateIndicatorIcon(icon);
             }
         }
-        
+
         if (icon->glfwWindow) {
             glfwPostEmptyEvent();
         }
     }
-    
+
     if (mask & ICON_CONF_REDISPLAY) {
         if (icon->docked && !icon->bus) {
             CreateTrayIconWindow(icon);
@@ -1294,26 +1294,26 @@ TrayIconConfigureMethod(
             icon->tkwin, &saved, &mask) != TCL_OK) {
         return TCL_ERROR;
     }
-    
+
     mask |= addflags;
-    
+
     if (mask & ICON_CONF_IMAGE) {
         if (icon->imageObj) {
-            newImage = Tk_GetImage(interp, icon->tkwin, 
+            newImage = Tk_GetImage(interp, icon->tkwin,
                 Tcl_GetString(icon->imageObj), NULL, icon);
             if (!newImage) {
                 Tk_RestoreSavedOptions(&saved);
                 return TCL_ERROR;
             }
         }
-        
+
         if (icon->image) {
             Tk_FreeImage(icon->image);
             icon->image = NULL;
         }
         icon->image = newImage;
     }
-    
+
     Tk_FreeSavedOptions(&saved);
     TrayIconUpdate(icon, mask);
     return TCL_OK;
@@ -1340,63 +1340,63 @@ TrayIconDeleteProc(
     void *cd)
 {
     DockIcon *icon = (DockIcon *)cd;
-    
+
     RemoveTrayIconWindow(icon);
-    
+
     if (icon->image) {
         Tk_FreeImage(icon->image);
     }
-    
+
     if (icon->tempIconPath) {
         unlink(icon->tempIconPath);
-        ckfree(icon->tempIconPath);
+        Tcl_Free(icon->tempIconPath);
     }
-    
+
     if (icon->b1Command) {
         Tcl_DecrRefCount(icon->b1Command);
     }
-    
+
     if (icon->b3Command) {
         Tcl_DecrRefCount(icon->b3Command);
     }
-    
+
     if (icon->options) {
         Tk_DeleteOptionTable(icon->options);
     }
-    
+
     if (icon->trayAppId) {
-        ckfree(icon->trayAppId);
+        Tcl_Free(icon->trayAppId);
     }
-    
+
     if (icon->iconName) {
-        ckfree(icon->iconName);
+        Tcl_Free(icon->iconName);
     }
-    
+
     if (icon->iconPath) {
-        ckfree(icon->iconPath);
+        Tcl_Free(icon->iconPath);
     }
-    
+
     if (icon->status) {
-        ckfree(icon->status);
+        Tcl_Free(icon->status);
     }
-    
+
     if (icon->tooltip) {
-        ckfree(icon->tooltip);
+        Tcl_Free(icon->tooltip);
     }
-    
+
     if (icon->title) {
-        ckfree(icon->title);
+        Tcl_Free(icon->title);
     }
-    
+
     if (icon->bus_name) {
-        ckfree(icon->bus_name);
+        Tcl_Free(icon->bus_name);
     }
-    
+
     if (icon->object_path) {
-        ckfree(icon->object_path);
+        Tcl_Free(icon->object_path);
     }
-    
-    ckfree((char *)icon);
+
+    Tcl_Free(icon);
 }
 
 /* Option specifications. */
@@ -1450,46 +1450,46 @@ TrayIconCreateCmd(
         return TCL_ERROR;
     }
 
-    icon = (DockIcon*)ckalloc(sizeof(DockIcon));
+    icon = (DockIcon*)Tcl_Alloc(sizeof(DockIcon));
     if (!icon) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj("out of memory", -1));
         return TCL_ERROR;
     }
-    
+
     memset(icon, 0, sizeof(*icon));
     icon->dbus_status = STATUS_ACTIVE;
     icon->category = CATEGORY_APPLICATION_STATUS;
-    
+
     /* Create Tk window. */
     icon->tkwin = Tk_CreateWindowFromPath(interp, tkwin,
         Tcl_GetString(objv[1]), "");
     if (icon->tkwin == NULL) {
-        ckfree((char *)icon);
+        Tcl_Free(icon);
         return TCL_ERROR;
     }
-    
+
     Tk_SetClass(icon->tkwin, Tk_GetUid("TrayIcon"));
-    
+
     /* Initialize options. */
     icon->options = Tk_CreateOptionTable(interp, IconOptionSpec);
     if (Tk_InitOptions(interp, (char*)icon, icon->options, icon->tkwin) != TCL_OK) {
         Tk_DestroyWindow(icon->tkwin);
-        ckfree((char *)icon);
+        Tcl_Free(icon);
         return TCL_ERROR;
     }
-    
+
     icon->interp = interp;
-    
+
     /* Generate app ID. */
     windowName = Tk_Name(icon->tkwin);
     nameLen = strlen(windowName);
-    icon->trayAppId = (char *)ckalloc(nameLen + 1);
+    icon->trayAppId = (char *)Tcl_Alloc(nameLen + 1);
     strcpy(icon->trayAppId, windowName);
-    
+
     /* Set default status */
-    icon->status = ckalloc(strlen("active") + 1);
+    icon->status = (char *)Tcl_Alloc(strlen("active") + 1);
     strcpy(icon->status, "active");
-    
+
     /* Configure initial options. */
     if (objc > 3) {
         if (TrayIconConfigureMethod(icon, interp, objc-2, objv+2,
@@ -1498,16 +1498,16 @@ TrayIconCreateCmd(
             return TCL_ERROR;
         }
     }
-    
+
     /* Create command. */
     icon->widgetCmd = Tcl_CreateObjCommand2(interp, Tcl_GetString(objv[1]),
         TrayIconObjectCmd, icon, TrayIconDeleteProc);
-    
+
     if (!icon->widgetCmd) {
         TrayIconDeleteProc(icon);
         return TCL_ERROR;
     }
-    
+
     Tcl_SetObjResult(interp, objv[1]);
     return TCL_OK;
 }

@@ -1654,7 +1654,7 @@ Tk_UpdateObjCmd(
      * from tkwin after calling Tcl_DoOneEvent.
      */
 
-    while (1) {
+    while (true) {
 	while (Tcl_DoOneEvent(flags) != 0) {
 	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
 		code = TCL_ERROR;

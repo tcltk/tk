@@ -3105,7 +3105,7 @@ Tk_IntersectTextLayout(
  *---------------------------------------------------------------------------
  */
 
-static inline int
+static inline bool
 PointInQuadrilateral(
     double qx[],
     double qy[],
@@ -3121,13 +3121,13 @@ PointInQuadrilateral(
 	double dy = y - qy[i];
 
 	if (sideDX*dy < sideDY*dx) {
-	    return 0;
+	    return false;
 	}
     }
-    return 1;
+    return true;
 }
 
-static inline int
+static inline bool
 SidesIntersect(
     double ax1, double ay1, double ax2, double ay2,
     double bx1, double by1, double bx2, double by2)
@@ -3143,7 +3143,7 @@ SidesIntersect(
     r3 = (a1 * bx1) + (b1 * by1) + c1;
     r4 = (a1 * bx2) + (b1 * by2) + c1;
     if ((r3 != 0.0) && (r4 != 0.0) && (r3*r4 > 0.0)) {
-	return 0;
+	return false;
     }
 
     a2 = by2 - by1;
@@ -3152,7 +3152,7 @@ SidesIntersect(
     r1 = (a2 * ax1) + (b2 * ay1) + c2;
     r2 = (a2 * ax2) + (b2 * ay2) + c2;
     if ((r1 != 0.0) && (r2 != 0.0) && (r1*r2 > 0.0)) {
-	return 0;
+	return false;
     }
 
     denom = (a1 * b2) - (a2 * b1);
@@ -3173,14 +3173,14 @@ SidesIntersect(
     dx1 = bx1 - ax1;
     dy1 = by1 - ay1;
     if ((dx*dy1-dy*dx1 > 0.0) == (dx*(by2-ay1)-dy*(bx2-ax1) > 0.0)) {
-	return 0;
+	return false;
     }
     dx = bx2 - bx1;
     dy = by2 - by1;
     if ((dy*dx1-dx*dy1 > 0.0) == (dx*(ay2-by1)-dy*(ax2-bx1) > 0.0)) {
-	return 0;
+	return false;
     }
-    return 1;
+    return true;
 #endif
 }
 

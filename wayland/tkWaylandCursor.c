@@ -38,7 +38,7 @@ typedef struct {
 } TkWaylandCursor;
 
 /*
- * Struct for the built-in X11 bitmap cursor table. 
+ * Struct for the built-in X11 bitmap cursor table.
  */
 
 struct BuiltinCursor {
@@ -345,9 +345,9 @@ static const struct TkCursorName {
 static GLFWcursor* CreateCursorFromBitmapData(const unsigned char* source,
     const unsigned char* mask, int width, int height, int xHot, int yHot,
     unsigned int fgColor, unsigned int bgColor);
-static int LoadImageFile(const char* filename, unsigned char** pixels,
+static bool LoadImageFile(const char* filename, unsigned char** pixels,
     int* width, int* height);
-static int LoadXBMFile(const char* filename, unsigned char** pixels,
+static bool LoadXBMFile(const char* filename, unsigned char** pixels,
     int* width, int* height);
 static unsigned char* ParseXBMData(const char* data, int* width, int* height,
     int* xHot, int* yHot);
@@ -480,7 +480,7 @@ CreateCursorFromBitmapData(
  *	Load an image file (PNG or XBM) for cursor creation.
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *	Returns true on success, false on failure.
  *
  * Side effects:
  *	Allocates pixel data.
@@ -488,7 +488,7 @@ CreateCursorFromBitmapData(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 LoadImageFile(
     const char* filename,
     unsigned char** pixels,
@@ -503,9 +503,9 @@ LoadImageFile(
             *pixels = stbi_load(filename, width, height, &channels, 4);
             if (*pixels) {
                 /* stbi_load returns RGBA, which is what we need. */
-                return 1;
+                return true;
             }
-            return 0;
+            return false;
         } else if (strcasecmp(ext, ".xbm") == 0) {
             /* Use LoadXBMFile for .xbm files. */
             return LoadXBMFile(filename, pixels, width, height);
@@ -616,7 +616,7 @@ ParseXBMData(
  *	Load an XBM file specifically.
  *
  * Results:
- *	Returns 1 on success, 0 on failure.
+ *	Returns true on success, false on failure.
  *
  * Side effects:
  *	Allocates pixel data.
@@ -624,7 +624,7 @@ ParseXBMData(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 LoadXBMFile(
     const char* filename,
     unsigned char** pixels,
@@ -633,30 +633,30 @@ LoadXBMFile(
 {
     FILE* fp = fopen(filename, "r");
     if (!fp) {
-        return 0;
+        return false;
     }
 
     /* Read entire file. */
     if (fseek(fp, 0, SEEK_END) != 0) {
         fclose(fp);
-        return 0;
+        return false;
     }
 
     long fileSizeLong = ftell(fp);
     if (fileSizeLong < 0) {
         fclose(fp);
-        return 0;
+        return false;
     }
 
     if (fseek(fp, 0, SEEK_SET) != 0) {
         fclose(fp);
-        return 0;
+        return false;
     }
 
     /* Prevent overflow. */
     if ((unsigned long)fileSizeLong > SIZE_MAX - 1) {
         fclose(fp);
-        return 0;
+        return false;
     }
 
     size_t fileSize = (size_t)fileSizeLong;
@@ -664,7 +664,7 @@ LoadXBMFile(
     char *fileData = Tcl_Alloc(fileSize + 1);
     if (!fileData) {
         fclose(fp);
-        return 0;
+        return false;
     }
 
     size_t bytesRead = fread(fileData, 1, fileSize, fp);
@@ -672,7 +672,7 @@ LoadXBMFile(
 
     if (bytesRead != fileSize) {
         Tcl_Free(fileData);
-        return 0;
+        return false;
     }
 
     fileData[fileSize] = '\0';
@@ -683,7 +683,7 @@ LoadXBMFile(
     Tcl_Free(fileData);
 
     if (!xbmBits) {
-        return 0;
+        return false;
     }
 
     /* Convert XBM to RGBA (black on white by default for XBM). */
@@ -979,7 +979,7 @@ TkGetCursorByName(
         memset(cursorPtr, 0, sizeof(TkWaylandCursor));
 
         /*
-         * Use the struct pointer itself as the Tk_Cursor XID. 
+         * Use the struct pointer itself as the Tk_Cursor XID.
          * TkpSetCursor casts it straight back — no hash
          * lookup needed.
          */
@@ -1036,14 +1036,14 @@ TkGetCursorByName(
             }
         }
     }
-    
+
 cleanup:
     if (argv != NULL) {
         Tcl_Free(argv);
     }
 
-    /* 
-     * We have the cursor data. Force the updating and 
+    /*
+     * We have the cursor data. Force the updating and
      * display of the cursor.
      */
     if (cursorPtr != NULL && tkwin != NULL) {

@@ -23,7 +23,7 @@
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 
-#define NANOVG_GLES3  
+#define NANOVG_GLES3
 #include "nanovg_gl_utils.h"
 
 /*
@@ -68,7 +68,7 @@ typedef struct ARGB32pixel_t {
 typedef union pixel32_t {
     unsigned int uint;
     ARGB32pixel argb;
-} pixel32; 
+} pixel32;
 
 /*
  *----------------------------------------------------------------------
@@ -113,8 +113,8 @@ int TkpPutRGBAImage(
     Drawable drawable,
     GC gc,
     XImage* image,
-    int src_x, 
-    int src_y,  
+    int src_x,
+    int src_y,
     int dst_x,
     int dst_y,
     unsigned int width,
@@ -199,15 +199,15 @@ XGetImage(
 
 
 int
-XCopyArea(Display *display, 
-	  Drawable src, 
-	  Drawable dst, 
-	  GC gc, 
-          int src_x, 
-          int src_y, 
-          unsigned int width, 
-          unsigned int height, 
-          int dest_x, 
+XCopyArea(Display *display,
+	  Drawable src,
+	  Drawable dst,
+	  GC gc,
+          int src_x,
+          int src_y,
+          unsigned int width,
+          unsigned int height,
+          int dest_x,
           int dest_y)
 {
 
@@ -237,7 +237,7 @@ XCopyArea(Display *display,
  *
  * XCreateBitmapFromData --
  *
- *	Constructs a 1-bit deep Pixmap from raw inline byte data. 
+ *	Constructs a 1-bit deep Pixmap from raw inline byte data.
  *	Used heavily by Tk's text engine to instantiate stippling structures.
  *
  * Results:
@@ -259,7 +259,7 @@ XCreateBitmapFromData(
 {
     /* We pass 1 for the depth parameter since this is a 1-bit bitmap. */
     Pixmap bitmap = Tk_GetPixmap(display, d, (int)width, (int)height, 1);
-     
+
     return bitmap;
 }
 
@@ -305,7 +305,7 @@ XCopyPlane(
  *
  * XPutImage --
  *
- *	Copy XImage data to drawable. Stub image for compatbility. 
+ *	Copy XImage data to drawable. Stub image for compatbility.
  *
  * Results:
  *	Success.
@@ -352,9 +352,9 @@ XDestroyImage(
 {
     if (image) {
         if (image->data) {
-            ckfree(image->data);
+            Tcl_Free(image->data);
         }
-        ckfree((char*)image);
+        Tcl_Free(image);
     }
     return 0;
 }

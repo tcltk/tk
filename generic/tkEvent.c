@@ -203,14 +203,14 @@ static unsigned long    GetEventMaskFromXEvent(XEvent *eventPtr);
 static TkWindow *	GetTkWindowFromXEvent(XEvent *eventPtr);
 static void		InvokeClientMessageHandlers(ThreadSpecificData *tsdPtr,
 			    Tk_Window tkwin, XEvent *eventPtr);
-static int		InvokeFocusHandlers(TkWindow **winPtrPtr,
+static bool		InvokeFocusHandlers(TkWindow **winPtrPtr,
 			    unsigned long mask, XEvent *eventPtr);
-static int		InvokeGenericHandlers(ThreadSpecificData *tsdPtr,
+static bool		InvokeGenericHandlers(ThreadSpecificData *tsdPtr,
 			    XEvent *eventPtr);
-static int		InvokeMouseHandlers(TkWindow *winPtr,
+static bool		InvokeMouseHandlers(TkWindow *winPtr,
 			    unsigned long mask, XEvent *eventPtr);
 static Window		ParentXId(Display *display, Window w);
-static int		RefreshKeyboardMappingIfNeeded(XEvent *eventPtr);
+static bool		RefreshKeyboardMappingIfNeeded(XEvent *eventPtr);
 static int		TkXErrorHandler(void *clientData,
 			    XErrorEvent *errEventPtr);
 static int		WindowEventProc(Tcl_Event *evPtr, int flags);
@@ -225,8 +225,8 @@ static void		CreateXIC(TkWindow *winPtr);
  *	events; depending on its return value, ignore the event.
  *
  * Results:
- *	0 further processing can be done on the event.
- *	1 we are done with the event passed.
+ *	false further processing can be done on the event.
+ *	true we are done with the event passed.
  *
  * Side effects:
  *	The *winPtrPtr in the caller may be changed to the TkWindow for the
@@ -235,7 +235,7 @@ static void		CreateXIC(TkWindow *winPtr);
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 InvokeFocusHandlers(
     TkWindow **winPtrPtr,
     unsigned long mask,
@@ -243,7 +243,7 @@ InvokeFocusHandlers(
 {
     if ((mask & (FocusChangeMask|EnterWindowMask|LeaveWindowMask))
 	    && (TkFocusFilterEvent(*winPtrPtr, eventPtr) == 0)) {
-	return 1;
+	return true;
     }
 
     /*
@@ -254,11 +254,11 @@ InvokeFocusHandlers(
 	(*winPtrPtr)->dispPtr->lastEventTime = eventPtr->xkey.time;
 	*winPtrPtr = TkFocusKeyEvent(*winPtrPtr, eventPtr);
 	if (*winPtrPtr == NULL) {
-	    return 1;
+	    return true;
 	}
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -270,8 +270,8 @@ InvokeFocusHandlers(
  *	events.
  *
  * Results:
- *	0 further processing can be done on the event.
- *	1 we are done with the event passed.
+ *	false further processing can be done on the event.
+ *	true we are done with the event passed.
  *
  * Side effects:
  *	New events may be queued from TkPointerEvent and grabs may be added
@@ -281,7 +281,7 @@ InvokeFocusHandlers(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 InvokeMouseHandlers(
     TkWindow *winPtr,
     unsigned long mask,
@@ -304,11 +304,11 @@ InvokeMouseHandlers(
 	     * comment for TkPointerEvent states).
 	     */
 
-	    return 1;
+	    return true;
 	}
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -494,7 +494,7 @@ GetEventMaskFromXEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 RefreshKeyboardMappingIfNeeded(
     XEvent *eventPtr)
 {
@@ -506,9 +506,9 @@ RefreshKeyboardMappingIfNeeded(
 	    XRefreshKeyboardMapping(&eventPtr->xmapping);
 	    dispPtr->bindInfoStale = 1;
 	}
-	return 1;
+	return true;
     }
-    return 0;
+    return false;
 }
 
 /*
@@ -621,7 +621,7 @@ InvokeClientMessageHandlers(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 InvokeGenericHandlers(
     ThreadSpecificData *tsdPtr,
     XEvent *eventPtr)
@@ -651,10 +651,10 @@ InvokeGenericHandlers(
 		continue;
 	    }
 	} else {
-	    int done;
+	    bool done;
 
 	    tsdPtr->handlersActive++;
-	    done = curPtr->proc(curPtr->clientData, eventPtr);
+	    done = curPtr->proc(curPtr->clientData, eventPtr) != 0;
 	    tsdPtr->handlersActive--;
 	    if (done) {
 		return done;
@@ -663,7 +663,7 @@ InvokeGenericHandlers(
 	prevPtr = curPtr;
 	curPtr = curPtr->nextPtr;
     }
-    return 0;
+    return false;
 }
 
 /*
@@ -1164,7 +1164,7 @@ Tk_HandleEvent(
     }
 
     if (winPtr->mainPtr != NULL) {
-	int result;
+	bool result;
 
 	interp = winPtr->mainPtr->interp;
 

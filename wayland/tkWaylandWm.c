@@ -564,7 +564,7 @@ TkWmNewWindow(
 {
     WmInfo *wmPtr;
 
-    wmPtr = (WmInfo *)ckalloc(sizeof(WmInfo));
+    wmPtr = (WmInfo *)Tcl_Alloc(sizeof(WmInfo));
     memset(wmPtr, 0, sizeof(WmInfo));
 
     wmPtr->winPtr      = winPtr;
@@ -823,7 +823,7 @@ TkWmDeadWindow(
     DestroyGlfwWindow(winPtr);
     if (winPtr->privatePtr) {
 	Tcl_DStringFree(&winPtr->privatePtr->pendingText);
-	ckfree(winPtr->privatePtr);
+	Tcl_Free(winPtr->privatePtr);
 	winPtr->privatePtr = NULL;
     }
 
@@ -840,26 +840,26 @@ TkWmDeadWindow(
         wmPtr->wrapperPtr = NULL;
     }
 
-    if (wmPtr->title)         ckfree(wmPtr->title);
-    if (wmPtr->iconName)      ckfree(wmPtr->iconName);
-    if (wmPtr->leaderName)    ckfree(wmPtr->leaderName);
+    if (wmPtr->title)         Tcl_Free(wmPtr->title);
+    if (wmPtr->iconName)      Tcl_Free(wmPtr->iconName);
+    if (wmPtr->leaderName)    Tcl_Free(wmPtr->leaderName);
     if (wmPtr->menubar)       Tk_DestroyWindow(wmPtr->menubar);
     if (wmPtr->icon)          Tk_DestroyWindow(wmPtr->icon);
-    if (wmPtr->iconDataPtr)   ckfree((char *)wmPtr->iconDataPtr);
+    if (wmPtr->iconDataPtr)   Tcl_Free(wmPtr->iconDataPtr);
 
     if (wmPtr->glfwIcon != NULL) {
         for (i = 0; i < wmPtr->glfwIconCount; i++) {
             if (wmPtr->glfwIcon[i].pixels != NULL) {
-                ckfree((char *)wmPtr->glfwIcon[i].pixels);
+                Tcl_Free(wmPtr->glfwIcon[i].pixels);
             }
         }
-        ckfree((char *)wmPtr->glfwIcon);
+        Tcl_Free(wmPtr->glfwIcon);
     }
 
     while (wmPtr->protPtr != NULL) {
         ProtocolHandler *protPtr = wmPtr->protPtr;
         wmPtr->protPtr = protPtr->nextPtr;
-        Tcl_EventuallyFree((void *)protPtr, TCL_DYNAMIC);
+        Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
     }
 
     if (wmPtr->cmdArgv != NULL) {
@@ -867,9 +867,9 @@ TkWmDeadWindow(
         for (j = 0; j < wmPtr->cmdArgc; j++) {
             Tcl_DecrRefCount(wmPtr->cmdArgv[j]);
         }
-        ckfree((char *)wmPtr->cmdArgv);
+        Tcl_Free(wmPtr->cmdArgv);
     }
-    if (wmPtr->clientMachine)  ckfree(wmPtr->clientMachine);
+    if (wmPtr->clientMachine)  Tcl_Free(wmPtr->clientMachine);
 
     /* Remove from global list. */
     if (wmPtr == firstWmPtr) {
@@ -884,7 +884,7 @@ TkWmDeadWindow(
     }
 
     winPtr->wmInfoPtr = NULL;
-    ckfree((char *)wmPtr);
+    Tcl_Free(wmPtr);
 }
 
 /*
@@ -942,35 +942,35 @@ TkWmCleanup(
             wmPtr->popup = NULL;
         }
 
-        if (wmPtr->title)          ckfree(wmPtr->title);
-        if (wmPtr->iconName)       ckfree(wmPtr->iconName);
-        if (wmPtr->iconDataPtr)    ckfree((char *)wmPtr->iconDataPtr);
-        if (wmPtr->leaderName)     ckfree(wmPtr->leaderName);
+        if (wmPtr->title)          Tcl_Free(wmPtr->title);
+        if (wmPtr->iconName)       Tcl_Free(wmPtr->iconName);
+        if (wmPtr->iconDataPtr)    Tcl_Free(wmPtr->iconDataPtr);
+        if (wmPtr->leaderName)     Tcl_Free(wmPtr->leaderName);
         if (wmPtr->menubar)        Tk_DestroyWindow(wmPtr->menubar);
         if (wmPtr->wrapperPtr)     Tk_DestroyWindow((Tk_Window)wmPtr->wrapperPtr);
-        if (wmPtr->clientMachine)  ckfree(wmPtr->clientMachine);
+        if (wmPtr->clientMachine)  Tcl_Free(wmPtr->clientMachine);
 
         while (wmPtr->protPtr != NULL) {
             ProtocolHandler *p = wmPtr->protPtr;
             wmPtr->protPtr = p->nextPtr;
-            Tcl_EventuallyFree((void *)p, TCL_DYNAMIC);
+            Tcl_EventuallyFree(p, TCL_DYNAMIC);
         }
         if (wmPtr->cmdArgv != NULL) {
             Tcl_Size j;
             for (j = 0; j < wmPtr->cmdArgc; j++) {
                 Tcl_DecrRefCount(wmPtr->cmdArgv[j]);
             }
-            ckfree((char *)wmPtr->cmdArgv);
+            Tcl_Free(wmPtr->cmdArgv);
         }
         if (wmPtr->glfwIcon != NULL) {
             for (i = 0; i < wmPtr->glfwIconCount; i++) {
                 if (wmPtr->glfwIcon[i].pixels != NULL) {
-                    ckfree((char *)wmPtr->glfwIcon[i].pixels);
+                    Tcl_Free(wmPtr->glfwIcon[i].pixels);
                 }
             }
-            ckfree((char *)wmPtr->glfwIcon);
+            Tcl_Free(wmPtr->glfwIcon);
         }
-        ckfree((char *)wmPtr);
+        Tcl_Free(wmPtr);
     }
     firstWmPtr = NULL;
 }
@@ -1023,7 +1023,7 @@ Tk_MakeWindow(
          */
 
 	if (winPtr->privatePtr == NULL) {
-	    winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+	    winPtr->privatePtr = (glfwData*)Tcl_Alloc(sizeof(glfwData));
 	    Tcl_DStringInit(&winPtr->privatePtr->pendingText);
 	}
 
@@ -1203,7 +1203,7 @@ Tk_GetRootCoords(
     TkWindow *origPtr = winPtr;
     int       x = 0, y = 0;
 
-    while (1) {
+    while (true) {
         x += winPtr->changes.x + winPtr->changes.border_width;
         y += winPtr->changes.y + winPtr->changes.border_width;
 
@@ -2038,8 +2038,8 @@ WmClientCmd(
         return TCL_OK;
     }
     name = Tcl_GetString(objv[0]);
-    if (wmPtr->clientMachine) ckfree(wmPtr->clientMachine);
-    wmPtr->clientMachine = ckalloc(strlen(name)+1);
+    if (wmPtr->clientMachine) Tcl_Free(wmPtr->clientMachine);
+    wmPtr->clientMachine = (char *)Tcl_Alloc(strlen(name)+1);
     strcpy(wmPtr->clientMachine, name);
     return TCL_OK;
 }
@@ -2119,7 +2119,7 @@ WmCommandCmd(
         for (j = 0; j < wmPtr->cmdArgc; j++) {
             Tcl_DecrRefCount(wmPtr->cmdArgv[j]);
         }
-        ckfree((char *)wmPtr->cmdArgv);
+        Tcl_Free(wmPtr->cmdArgv);
         wmPtr->cmdArgv = NULL;
         wmPtr->cmdArgc = 0;
     }
@@ -2130,7 +2130,7 @@ WmCommandCmd(
     }
 
     wmPtr->cmdArgc  = count;
-    wmPtr->cmdArgv  = (Tcl_Obj **)ckalloc(count * sizeof(Tcl_Obj *));
+    wmPtr->cmdArgv  = (Tcl_Obj **)Tcl_Alloc(count * sizeof(Tcl_Obj *));
     for (j = 0; j < count; j++) {
         wmPtr->cmdArgv[j] = elems[j];
         Tcl_IncrRefCount(elems[j]);
@@ -2470,8 +2470,8 @@ WmGroupCmd(
         return TCL_OK;
     }
     path = Tcl_GetString(objv[0]);
-    if (wmPtr->leaderName) ckfree(wmPtr->leaderName);
-    wmPtr->leaderName = ckalloc(strlen(path)+1);
+    if (wmPtr->leaderName) Tcl_Free(wmPtr->leaderName);
+    wmPtr->leaderName = (char *)Tcl_Alloc(strlen(path)+1);
     strcpy(wmPtr->leaderName, path);
     return TCL_OK;
 }
@@ -2635,8 +2635,8 @@ WmIconnameCmd(
         return TCL_OK;
     }
     name = Tcl_GetStringFromObj(objv[0],&len);
-    if (wmPtr->iconName) ckfree(wmPtr->iconName);
-    wmPtr->iconName = ckalloc(len+1);
+    if (wmPtr->iconName) Tcl_Free(wmPtr->iconName);
+    wmPtr->iconName = (char *)Tcl_Alloc(len+1);
     strcpy(wmPtr->iconName, name);
     return TCL_OK;
 }
@@ -2685,9 +2685,9 @@ WmIconphotoCmd(
     if (wmPtr->glfwIcon != NULL) {
         for (i = 0; i < wmPtr->glfwIconCount; i++) {
             if (wmPtr->glfwIcon[i].pixels)
-                ckfree((char *)wmPtr->glfwIcon[i].pixels);
+                Tcl_Free(wmPtr->glfwIcon[i].pixels);
         }
-        ckfree((char *)wmPtr->glfwIcon);
+        Tcl_Free(wmPtr->glfwIcon);
         wmPtr->glfwIcon = NULL; wmPtr->glfwIconCount = 0;
     }
 
@@ -3063,7 +3063,7 @@ WmProtocolCmd(
             if (protPtr->protocol==protocol) {
                 if (prevPtr) prevPtr->nextPtr=protPtr->nextPtr;
                 else         wmPtr->protPtr  =protPtr->nextPtr;
-                Tcl_EventuallyFree((void *)protPtr,TCL_DYNAMIC);
+                Tcl_EventuallyFree(protPtr,TCL_DYNAMIC);
                 break;
             }
         }
@@ -3073,13 +3073,13 @@ WmProtocolCmd(
             if (protPtr->protocol==protocol) break;
         }
         if (protPtr==NULL) {
-            protPtr=(ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
+            protPtr=(ProtocolHandler *)Tcl_Alloc(HANDLER_SIZE(cmdLength));
             protPtr->protocol=protocol;
             protPtr->nextPtr =wmPtr->protPtr;
             wmPtr->protPtr   =protPtr;
             protPtr->interp  =interp;
         } else {
-            protPtr=(ProtocolHandler *)ckrealloc((char *)protPtr,
+            protPtr=(ProtocolHandler *)Tcl_Realloc(protPtr,
                 HANDLER_SIZE(cmdLength));
             if (prevPtr) prevPtr->nextPtr=protPtr;
             else         wmPtr->protPtr  =protPtr;
@@ -3229,7 +3229,7 @@ WmStackorderCmd(
             for (wp=windows; *wp; wp++)
                 Tcl_ListObjAppendElement(NULL,result,
                     Tcl_NewStringObj((*wp)->pathName,-1));
-            ckfree((char *)windows);
+            Tcl_Free(windows);
             Tcl_SetObjResult(interp,result);
         }
         return TCL_OK;
@@ -3389,8 +3389,8 @@ WmTitleCmd(
         return TCL_OK;
     }
     t = Tcl_GetStringFromObj(objv[0],&len);
-    if (wmPtr->title) ckfree(wmPtr->title);
-    wmPtr->title = ckalloc(len+1);
+    if (wmPtr->title) Tcl_Free(wmPtr->title);
+    wmPtr->title = (char *)Tcl_Alloc(len+1);
     strcpy(wmPtr->title, t);
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) UpdateTitle(winPtr);
     return TCL_OK;
@@ -3543,12 +3543,12 @@ ConvertPhotoToGlfwIcon(
     Tk_PhotoGetImage(photo, &block);
 
     /* Grow icon array. */
-    newIcons = (GLFWimage *)ckalloc(
+    newIcons = (GLFWimage *)Tcl_Alloc(
         (wmPtr->glfwIconCount+1) * sizeof(GLFWimage));
     if (wmPtr->glfwIcon != NULL && wmPtr->glfwIconCount > 0) {
         memcpy(newIcons, wmPtr->glfwIcon,
                wmPtr->glfwIconCount * sizeof(GLFWimage));
-        ckfree((char *)wmPtr->glfwIcon);
+        Tcl_Free(wmPtr->glfwIcon);
     }
     wmPtr->glfwIcon = newIcons;
 
@@ -3557,7 +3557,7 @@ ConvertPhotoToGlfwIcon(
     icon->height = height;
 
     pixelCount = width * height;
-    pixels = (unsigned char *)ckalloc(pixelCount * 4);
+    pixels = (unsigned char *)Tcl_Alloc(pixelCount * 4);
 
     src = (unsigned char *)block.pixelPtr;
     dst = pixels;
@@ -3780,7 +3780,7 @@ TkWmStackorderToplevel(
     }
     if (count == 0) return NULL;
 
-    windows = (TkWindow **)ckalloc((count+1) * sizeof(TkWindow *));
+    windows = (TkWindow **)Tcl_Alloc((count+1) * sizeof(TkWindow *));
     wp = windows;
     for (wmPtr=firstWmPtr; wmPtr; wmPtr=wmPtr->nextPtr) {
         if (wmPtr->winPtr->mainPtr == parentPtr->mainPtr)

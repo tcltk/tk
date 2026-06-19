@@ -979,7 +979,7 @@ GetIndex(
 
   gotBase:
     cp = endOfBase;
-    while (1) {
+    while (true) {
 	while (isspace(UCHAR(*cp))) {
 	    cp++;
 	}
@@ -1495,7 +1495,7 @@ TkTextIndexForwBytes(
 
     *dstPtr = *srcPtr;
     dstPtr->byteIndex += byteCount;
-    while (1) {
+    while (true) {
 	/*
 	 * Compute the length of the current line.
 	 */
@@ -1594,7 +1594,7 @@ TkTextIndexForwChars(
 	segPtr = TkTextIndexToSeg(dstPtr, &byteOffset);
     }
 
-    while (1) {
+    while (true) {
 	/*
 	 * Go through each segment in line looking for specified character
 	 * index.
@@ -1844,7 +1844,7 @@ TkTextIndexCount(
 	elide = TkTextIsElided(textPtr, indexPtr1, infoPtr);
     }
 
-    while (1) {
+    while (true) {
 	/*
 	 * Go through each segment in line adding up the number of characters.
 	 */
@@ -2140,7 +2140,7 @@ TkTextIndexBackChars(
      * Now segPtr points to the segment containing the starting index.
      */
 
-    while (1) {
+    while (true) {
 	/*
 	 * If we do need to pay attention to the visibility of
 	 * characters/indices, check that first. If the current segment isn't
@@ -2388,7 +2388,7 @@ StartEnd(
 		    COUNT_DISPLAY_INDICES);
 	}
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
-	while (1) {
+	while (true) {
 	    Tcl_Size chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
@@ -2433,7 +2433,7 @@ StartEnd(
 	 */
 
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
-	while (1) {
+	while (true) {
 	    Tcl_Size chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {

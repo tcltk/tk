@@ -124,9 +124,9 @@ XDrawString(
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
-        return BadDrawable;            
+        return BadDrawable;
 
-    buf = (char *)ckalloc(length + 1);
+    buf = (char *)Tcl_Alloc(length + 1);
     memcpy(buf, string, length);
     buf[length] = '\0';
 
@@ -138,7 +138,7 @@ XDrawString(
     /* Foreground color is already set by TkGlfwBeginDraw via TkGlfwApplyGC. */
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
-    ckfree(buf);
+    Tcl_Free(buf);
     TkGlfwEndDraw(&dc);
     return Success;
 }
@@ -177,13 +177,13 @@ XDrawImageString(
     float bounds[4];
     char *buf;
 
-    if (!string || length <= 0) return Success; 
+    if (!string || length <= 0) return Success;
 
     int rc = TkGlfwBeginDraw(drawable, gc, &dc);
     if (rc != TCL_OK)
         return BadDrawable;
 
-    buf = (char *)ckalloc(length + 1);
+    buf = (char *)Tcl_Alloc(length + 1);
     memcpy(buf, string, length);
     buf[length] = '\0';
 
@@ -215,7 +215,7 @@ XDrawImageString(
     nvgTextAlign(dc.vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
     nvgText(dc.vg, (float)x, (float)y, buf, NULL);
 
-    ckfree(buf);
+    Tcl_Free(buf);
     TkGlfwEndDraw(&dc);
     return Success;
 }
@@ -579,7 +579,7 @@ XFillRectangles(
     int i;
 
     if (!rectangles || nrectangles < 1) return Success;
-    
+
     /* Get color. */
     if (TkWaylandGetGCValues(gc, GCForeground, &v)) {
         color = TkGlfwPixelToNVG(v.foreground);
@@ -597,10 +597,10 @@ XFillRectangles(
         if (rectangles[i].width == 0 || rectangles[i].height == 0)
             continue;
         nvgBeginPath(dc.vg);
-        nvgRect(dc.vg, 
-                (float)rectangles[i].x, 
+        nvgRect(dc.vg,
+                (float)rectangles[i].x,
                 (float)rectangles[i].y,
-                (float)rectangles[i].width, 
+                (float)rectangles[i].width,
                 (float)rectangles[i].height);
 	nvgFillColor(dc.vg, color);
 	nvgFill(dc.vg);
@@ -608,7 +608,7 @@ XFillRectangles(
     TkGlfwEndDraw(&dc);
     return Success;
 }
-                
+
 /*
  *----------------------------------------------------------------------
  *
@@ -635,15 +635,15 @@ XFillRectangle(
     unsigned int height)
 {
     XRectangle rect;
-    
+
     /* Guard against zero or negative dimensions */
     if (width == 0 && height == 0) return Success;
-    
+
     rect.x      = x;
     rect.y      = y;
     rect.width  = (width == 0) ? 1 : width;
     rect.height = (height == 0) ? 1 : height;
-    
+
     return XFillRectangles(display, d, gc, &rect, 1);
 }
 
@@ -980,10 +980,10 @@ TkpDrawFrameEx(
 {
     int width = Tk_Width(tkwin) - 2 * highlightWidth;
     int height = Tk_Height(tkwin) - 2 * highlightWidth;
-    
+
     /* Guard against negative dimensions. */
     if (width <= 0 || height <= 0) return;
-    
+
     Tk_Fill3DRectangle(tkwin, drawable, border,
                        highlightWidth, highlightWidth,
                        width, height,
@@ -1020,7 +1020,7 @@ TkScrollWindow(
     TCL_UNUSED(int),
     TCL_UNUSED(TkRegion))
 {
-    return 1;
+    return true;
 }
 
 /*

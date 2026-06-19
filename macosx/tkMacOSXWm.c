@@ -5297,7 +5297,7 @@ Tk_GetRootCoords(
      */
 
     x = y = 0;
-    while (1) {
+    while (true) {
 	x += winPtr->changes.x + winPtr->changes.border_width;
 	y += winPtr->changes.y + winPtr->changes.border_width;
 	if (winPtr->flags & TK_TOP_LEVEL) {
@@ -5381,7 +5381,7 @@ Tk_CoordsToWindow(
 
     x = rootX - winPtr->wmInfoPtr->xInParent;
     y = rootY - winPtr->wmInfoPtr->yInParent;
-    while (1) {
+    while (true) {
 	x -= winPtr->changes.x;
 	y -= winPtr->changes.y;
 	nextPtr = NULL;
@@ -5477,7 +5477,7 @@ Tk_TopCoordsToWindow(
     winPtr = (TkWindow *)tkwin;
     x = rootX;
     y = rootY;
-    while (1) {
+    while (true) {
 	nextPtr = NULL;
 
 	/*

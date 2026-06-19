@@ -1091,7 +1091,7 @@ void
 TkSendCleanup(
     TCL_UNUSED(TkDisplay *)) /* dispPtr */
 {
-	Tcl_Free((char *)appNameRegistryPath);
+	Tcl_Free(appNameRegistryPath);
 }
 
 

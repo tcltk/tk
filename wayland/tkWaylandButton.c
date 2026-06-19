@@ -108,7 +108,7 @@ TkButton *
 TkpCreateButton(
     TCL_UNUSED(Tk_Window))
 {
-    TkButton* ButtonPtr = (TkButton*) ckalloc(sizeof(TkButton));
+    TkButton* ButtonPtr = (TkButton*)Tcl_Alloc(sizeof(TkButton));
     return ButtonPtr;
 }
 
@@ -234,7 +234,7 @@ DrawButtonBitmap(TkButton *butPtr,
 
     /* Allocate buffer for packed bitmap data (1 bit per pixel, MSB-first). */
     int packedSize = ((int)bm_width * (int)bm_height + 7) / 8;
-    bits = (unsigned char *)ckalloc(packedSize);
+    bits = (unsigned char *)Tcl_Alloc(packedSize);
     if (!bits) {
         goto cleanup;
     }
@@ -259,7 +259,7 @@ DrawButtonBitmap(TkButton *butPtr,
     }
 
     /* Allocate RGBA buffer (premultiplied or straight alpha — NanoVG handles both). */
-    rgba = (unsigned char *)ckalloc(bm_width * bm_height * 4);
+    rgba = (unsigned char *)Tcl_Alloc(bm_width * bm_height * 4);
     if (!rgba) {
         goto cleanup;
     }

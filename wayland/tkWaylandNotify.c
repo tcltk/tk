@@ -16,8 +16,8 @@
 /*
  * This file contains the implementation of a Tcl Notifier for Wayland.
  *
- * The design is a single-threaded event loop integration grafting GLFW's 
- * main-thread polling mechanics and native protocols (IBus/DBus) onto 
+ * The design is a single-threaded event loop integration grafting GLFW's
+ * main-thread polling mechanics and native protocols (IBus/DBus) onto
  * the standard Tcl Notifier framework (Tcl_CreateEventSource).
  *
  * Architecture and Event Flow
@@ -40,7 +40,7 @@
  *   TkWaylandWakeupGLFW forces instant wakeups using
  *   glfwPostEmptyEvent() paired with Tcl_ThreadAlert.
  */
- 
+
 #include "tkInt.h"
 #include "tkGlfwInt.h"
 
@@ -62,7 +62,7 @@
 extern int  TkWaylandIbusCreateContext(Tcl_Interp *interp, Tk_Window tkwin);
 extern void TkWaylandIbusFocusIn(Tk_Window tkwin);
 extern void TkWaylandIbusFocusOut(Tk_Window tkwin);
-extern int  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
+extern bool  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
                                     uint32_t keycode, uint32_t state);
 extern void RemoveIbusContext(Tk_Window tkwin);
 extern TkXKBState xkbState;
@@ -76,7 +76,7 @@ extern TkXKBState xkbState;
  */
 #include <systemd/sd-bus.h>
 extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
-                                   
+
 
 
 /* ========================= Thread Specific Data  ========================= */
@@ -212,7 +212,7 @@ TkWaylandGetStoredText(TkWindow *winPtr)
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 TkWaylandSetStoredText(TkWindow *winPtr, const char *text)
 {
@@ -223,7 +223,7 @@ TkWaylandSetStoredText(TkWindow *winPtr, const char *text)
 /*
  *----------------------------------------------------------------------
  *
- * TkWaylandClearStoredTextInput --
+ * TkWaylandClearStoredText --
  *
  *      Clears the DString holding pending text for a window.
  *
@@ -269,7 +269,7 @@ static void TkWaylandCheckForWindowClosure(void);
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 Tk_WaylandSetupTkNotifier(void)
 {
@@ -284,7 +284,7 @@ Tk_WaylandSetupTkNotifier(void)
                               TkWaylandCheckProc, NULL);
         TkCreateExitHandler(TkWaylandNotifyExitHandler, NULL);
     }
-    
+
     /* Wake up the event loop. */
     TkWaylandWakeupGLFW();
 }
@@ -310,13 +310,13 @@ static void
 TkWaylandCheckForWindowClosure(void)
 {
     TSD_INIT();
-    
+
     if (tsdPtr->shutdownInProgress) return;
-    
+
     /* If there are no Tk main windows left, start shutdown. */
     if (Tk_GetNumMainWindows() == 0) {
         tsdPtr->shutdownInProgress = 1;
-        
+
         /* Schedule cleanup as idle callback. */
         Tcl_DoWhenIdle(TkWaylandNotifyExitHandler, NULL);
     }
@@ -340,7 +340,7 @@ TkWaylandCheckForWindowClosure(void)
  *
  *----------------------------------------------------------------------
  */
-    
+
 static void
 TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 {
@@ -402,7 +402,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
@@ -448,7 +448,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
 {
@@ -467,7 +467,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
                           TkWaylandCheckProc, NULL);
 
     tsdPtr->initialized = false;
-    
+
     /* Note: We don't call TkGlfwShutdown here. */
     //// Why not?
 }
@@ -517,9 +517,9 @@ TkWaylandQueueExposeEvent(
     XEvent event;
     TkWindow *childPtr;
     fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
-    
+
     if (!winPtr) return;
-    
+
     /* Create expose event. */
     memset(&event, 0, sizeof(XEvent));
     event.type = Expose;
@@ -532,13 +532,13 @@ TkWaylandQueueExposeEvent(
     event.xexpose.width = width;
     event.xexpose.height = height;
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
-    
+
     /* Queue it. */
     fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
 	   event.xexpose.serial,
 	   Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    
+
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
@@ -641,7 +641,7 @@ TkGlfwClearCallbacks(
  *
  *----------------------------------------------------------------------
  */
- 
+
 /* Helper function to avoid type mismatch in callback. */
 static void DestroyWindowIdleProc(void *clientData)
 {
@@ -651,7 +651,7 @@ static void DestroyWindowIdleProc(void *clientData)
     }
     Tk_DestroyWindow(tkwin);
 }
- 
+
 static void
 TkGlfwWindowCloseCallback(GLFWwindow *window)
 {
@@ -679,7 +679,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
  *      None.
  *
  * Side effects:
- *      Rebuilds the backing store framebuffer. 
+ *      Rebuilds the backing store framebuffer.
  *
  *----------------------------------------------------------------------
  */
@@ -818,7 +818,7 @@ TkGlfwFramebufferSizeCallback(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkGlfwWindowPosCallback(
     GLFWwindow *window,
@@ -854,14 +854,14 @@ TkGlfwWindowPosCallback(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
-    
+
     if (!winPtr) {
         return;
     }
@@ -871,7 +871,7 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
 
     /* Initialize the entire event lifecycle structure */
     memset(&event, 0, sizeof(XEvent));
-    
+
     /* Base XAny Lifecycle Setup */
     event.xany.type        = focused ? FocusIn : FocusOut;
     event.xany.serial      = LastKnownRequestProcessed(winPtr->display)++;
@@ -938,7 +938,7 @@ TkGlfwWindowIconifyCallback(
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     fprintf(stderr, "TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
     XEvent event;
-    
+
     if (!winPtr) {
         return;
     }
@@ -993,17 +993,17 @@ TkGlfwWindowMaximizeCallback(
 {
     recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    
+
     if (!winPtr) {
         return;
     }
-    
+
     /* Update WmInfo zoomed state if WM info exists. */
     if (winPtr->wmInfoPtr) {
         WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
         wmPtr->attributes.zoomed = maximized;
     }
-    
+
     /* Note: No X event needed for maximize state changes. */
 }
 
@@ -1100,7 +1100,7 @@ TkGlfwCursorEnterCallback(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkGlfwCursorPosCallback(
     GLFWwindow *window,
@@ -1213,7 +1213,7 @@ TkGlfwCursorPosCallback(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkGlfwMouseButtonCallback(
     GLFWwindow *window,
@@ -1253,7 +1253,7 @@ TkGlfwMouseButtonCallback(
     if (mods & GLFW_MOD_SUPER)
         glfwModifierState |= Mod4Mask;
 
-    
+
     /* Map GLFW button to X11 button and mask. */
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
@@ -1279,7 +1279,7 @@ TkGlfwMouseButtonCallback(
     }
 
     memset(&event, 0, sizeof(XEvent));
-    
+
     /* Update button state. */
     if (action == GLFW_PRESS) {
         glfwButtonState |= buttonMask;
@@ -1340,7 +1340,7 @@ TkGlfwScrollCallback(
     XEvent event;
     double xpos, ypos;
     int button;
-    
+
     if (!winPtr) {
         return;
     }
@@ -1419,15 +1419,15 @@ TkGlfwKeyCallback(GLFWwindow *window,
     if (!focusWin) focusWin = winPtr;
 
     fprintf(stderr, "KeyCallback: scancode=%d key=%d action=%s mods=0x%x\n",
-            scancode, key, 
-            (action == GLFW_PRESS) ? "PRESS" : 
-            (action == GLFW_REPEAT) ? "REPEAT" : "RELEASE", 
+            scancode, key,
+            (action == GLFW_PRESS) ? "PRESS" :
+            (action == GLFW_REPEAT) ? "REPEAT" : "RELEASE",
             mods);
 
     /* IBus IME handling. */
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         uint32_t xkb_keycode = (uint32_t)(scancode + 8);
-        
+
         /* Get keysym using the *live* XKB state — this is more reliable. */
         uint32_t keyval = (uint32_t) xkb_state_key_get_one_sym(
                                 xkbState.state, xkb_keycode);
@@ -1510,7 +1510,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
 {
@@ -1580,7 +1580,7 @@ TkWaylandWakeupGLFW(void)
     TSD_INIT();
     if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
         /* This forces glfwPollEvents() in SetupProc to wake up instantly. */
-        glfwPostEmptyEvent(); 
+        glfwPostEmptyEvent();
         /* Alert Tcl to wake up its event loop loop immediately. */
         Tcl_ThreadAlert(Tcl_GetCurrentThread());
     }

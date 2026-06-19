@@ -8,7 +8,7 @@
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2026 Kevin Walzer
  * Copyright © 2026 Marc Culler
- * 
+ *
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -29,7 +29,7 @@ typedef struct {
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
-static int GenerateButtonEvent(MouseEventData *medPtr);
+static void GenerateButtonEvent(MouseEventData *medPtr);
 
 /*
  *----------------------------------------------------------------------
@@ -52,13 +52,13 @@ unsigned int
 TkWaylandButtonKeyState(void)
 {
     unsigned int state = 0;
-    
+
     /* Get current focused GLFW window. */
     GLFWwindow* window = glfwGetCurrentContext();
     if (!window) {
         return 0;
     }
-    
+
     /* Check mouse buttons. */
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         state |= Tk_GetButtonMask(Button1);
@@ -69,7 +69,7 @@ TkWaylandButtonKeyState(void)
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
         state |= Tk_GetButtonMask(Button2);
     }
-    
+
     /* Check keyboard modifiers. */
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
         glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) {
@@ -86,7 +86,7 @@ TkWaylandButtonKeyState(void)
     if (glfwGetKey(window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) {
         state |= LockMask;
     }
-    
+
     return state;
 }
 
@@ -126,20 +126,20 @@ XQueryPointer(
     int getGlobal = (root_x_return && root_y_return);
     int getLocal = (win_x_return && win_y_return && w != None);
     TkWindow *winPtr = (TkWindow *)w;
-    
+
     if (!winPtr) {
         return False;
     }
-    
+
     /* Get the GLFW window. */
     glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (!glfwWindow) {
         return False;
     }
-    
+
     if (getGlobal || getLocal) {
         glfwGetCursorPos(glfwWindow, &cursorX, &cursorY);
-        
+
         if (getGlobal) {
             /* Get window position for global coordinates. */
             int winX, winY;
@@ -147,17 +147,17 @@ XQueryPointer(
             *root_x_return = winX + (int)cursorX;
             *root_y_return = winY + (int)cursorY;
         }
-        
+
         if (getLocal) {
             *win_x_return = (int)cursorX;
             *win_y_return = (int)cursorY;
         }
     }
-    
+
     if (mask_return) {
         *mask_return = TkWaylandButtonKeyState();
     }
-    
+
     return True;
 }
 
@@ -179,7 +179,7 @@ XQueryPointer(
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+static void
 TkGenerateButtonEventForXPointer(
     Window window)		/* X Window containing button event. */
 {
@@ -195,7 +195,7 @@ TkGenerateButtonEventForXPointer(
     med.localY = local_y;
     med.window = window;
 
-    return GenerateButtonEvent(&med);
+    GenerateButtonEvent(&med);
 }
 
 /*
@@ -217,7 +217,7 @@ TkGenerateButtonEventForXPointer(
  *----------------------------------------------------------------------
  */
 
-int
+static void
 TkGenerateButtonEvent(
     int x,			/* X location of mouse, */
     int y,			/* Y location of mouse. */
@@ -234,7 +234,7 @@ TkGenerateButtonEvent(
     med.localX = x;
     med.localY = y;
 
-    return GenerateButtonEvent(&med);
+    GenerateButtonEvent(&med);
 }
 
 /*
@@ -255,7 +255,7 @@ TkGenerateButtonEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static void
 GenerateButtonEvent(
     MouseEventData *medPtr)
 {
@@ -269,7 +269,6 @@ GenerateButtonEvent(
 	tkwin = Tk_CoordsToWindow(medPtr->localX, medPtr->localY, tkwin);
     }
     Tk_UpdatePointer(tkwin, medPtr->globalX, medPtr->globalY, medPtr->state);
-    return 1;
 }
 
 /*
@@ -283,11 +282,11 @@ GenerateButtonEvent(
  *	None
  *
  * Side effects:
- *	Interactions with window elements. 
+ *	Interactions with window elements.
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 TkWaylandHandleMouseButton(
 			   GLFWwindow *glfwWindow,
@@ -306,13 +305,13 @@ TkWaylandHandleMouseButton(
     /* Get cursor position. */
     glfwGetCursorPos(glfwWindow, &x, &y);
 
-    /* 
-     * Pass to normal Tk event handling. 
+    /*
+     * Pass to normal Tk event handling.
      * Convert GLFW button to Tk button.
      */
     unsigned int state = TkWaylandButtonKeyState(); Window window = Tk_WindowId((Tk_Window)winPtr);
 
-    TkGenerateButtonEvent((int)x, (int)y, window, state); 
+    TkGenerateButtonEvent((int)x, (int)y, window, state);
 
 }
 
@@ -328,11 +327,11 @@ TkWaylandHandleMouseButton(
  *	None
  *
  * Side effects:
- *	Interactions with window elements. 
+ *	Interactions with window elements.
  *
  *----------------------------------------------------------------------
  */
- 
+
 void
 TkWaylandHandleMouseMove(
     GLFWwindow *glfwWindow,
@@ -371,11 +370,11 @@ TkWaylandHandleMouseMove(
     event.xmotion.same_screen = True;
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    
+
     /* Update pointer so cursorWinPtr is current for XDefineCursor's guard. */
     Tk_UpdatePointer((Tk_Window)winPtr, (int)event.xmotion.x_root,
         (int)event.xmotion.y_root, TkWaylandButtonKeyState());
-        
+
         fprintf(stderr, "HandleMouseMove: winPtr=%p x=%d y=%d\n",
     (void*)winPtr, (int)x, (int)y);
 fflush(stderr);
@@ -405,10 +404,10 @@ TkpWarpPointer(
     int x, y;
     int winX, winY;
     double targetX, targetY;
-    
+
     if (dispPtr->warpWindow) {
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
-	
+
 	/* Warp cursor to new position using unified architecture. */
 	glfwWindow = TkWaylandGetGLFWwindow((TkWindow *)dispPtr->warpWindow);
 	if (glfwWindow) {
@@ -453,9 +452,9 @@ TkpSetCapture(TkWindow *winPtr)
         winPtr = winPtr->parentPtr;
     }
     captureWinPtr = (Tk_Window)winPtr;
-    /* 
-     * Do not change GLFW cursor mode here. Tk grab semantics keep the 
-     * cursor visible and redirect events via captureWinPtr, unlike 
+    /*
+     * Do not change GLFW cursor mode here. Tk grab semantics keep the
+     * cursor visible and redirect events via captureWinPtr, unlike
      * GLFW_CURSOR_DISABLED which hides the cursor entirely.
      */
 }

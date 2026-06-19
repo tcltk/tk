@@ -316,7 +316,7 @@ XStringToKeysym(_Xconst char *string)
         /*
          * Fallback check: If the case-sensitive exact lookup fails, some legacy
          * Tk scripts capitalize keysyms loosely. We can explicitly catch "Right"
-         * if needed, but xkb_keysym_from_name is generally fully compliant with 
+         * if needed, but xkb_keysym_from_name is generally fully compliant with
          * standard X11 keysym string specifications.
          */
         return NoSymbol;
@@ -362,7 +362,7 @@ XKeysymToString(KeySym keysym)
  * ----------------------------------------------------------------------------
  */
 
-static int
+static bool
 InitializeXKB(void)
 {
     const char *locale;
@@ -370,7 +370,7 @@ InitializeXKB(void)
     /* Create an XKB context. */
     xkbState.context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!xkbState.context) {
-        return 0;
+        return false;
     }
 
     /* Obtain the locale for compose sequences. */
@@ -400,16 +400,16 @@ InitializeXKB(void)
     xkbState.keymap = xkb_keymap_new_from_names(xkbState.context,
                           &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
     if (!xkbState.keymap) {
-        return 0;
+        return false;
     }
 
     /* Create the XKB state object. */
     xkbState.state = xkb_state_new(xkbState.keymap);
     if (!xkbState.state) {
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
 /*
@@ -463,7 +463,7 @@ CleanupXKB(void)
  *         correctly via XKB alone.
  *
  * Results:
- *         Returns 1 on success, 0 on failure (XKB failure only).
+ *         Returns true on success, false on failure (XKB failure only).
  *
  * Side effects:
  *         Creates the XKB context and attempts to start the IBus D-Bus
@@ -471,17 +471,17 @@ CleanupXKB(void)
  * ----------------------------------------------------------------------------
  */
 
-int
+bool
 TkWaylandKeyInit(void)
 {
     if (!InitializeXKB()) {
         fprintf(stderr, "TkWaylandKeyInit: failed to initialize xkb.\n");
-        return 0;
+        return false;
     }
     TkMainInfo *info = TkGetMainInfoList();
     /* IBus failure is non-fatal; keyboard works without it. */
     TkWaylandIbus_Init(info->interp);
-    return 1;
+    return true;
 }
 
 /*
@@ -627,7 +627,7 @@ FindContext(Tk_Window tkwin)
  * IbusReadTextFromVariant --
  *
  * Helper to safely unpack an IBusText object wrapped inside a
- * D-Bus variant container. Dynamically inspects the signature to 
+ * D-Bus variant container. Dynamically inspects the signature to
  * handle protocol variations safely across different IBus versions.
  *
  * Results:
@@ -639,7 +639,7 @@ FindContext(Tk_Window tkwin)
  *
  *----------------------------------------------------------------------
  */
- 
+
 static int
 IbusReadTextFromVariant(
     sd_bus_message *m,
@@ -874,18 +874,18 @@ TkWaylandSendUnicodeString(
 /*
  * ----------------------------------------------------------------------------
  * OnCommitText --
- * 
-* 	    D-Bus signal handler for the IBus "CommitText" signal. Called when
- * 	    the IME has finished composing a text string and it should be
- * 	    inserted into the focused widget.
  *
- * 	    Wire signature: CommitText(v) where v contains an IBus.Text struct.
+ *	    D-Bus signal handler for the IBus "CommitText" signal. Called when
+ *	    the IME has finished composing a text string and it should be
+ *	    inserted into the focused widget.
+ *
+ *	    Wire signature: CommitText(v) where v contains an IBus.Text struct.
  *
  * Results:
- * 	    Returns 0 on success, or a negative error code on failure.
+ *	    Returns 0 on success, or a negative error code on failure.
  *
  * Side effects:
- * 	    Queues key events and virtual events for the target sub-widget.
+ *	    Queues key events and virtual events for the target sub-widget.
  * ----------------------------------------------------------------------------
  */
 
@@ -1155,7 +1155,7 @@ FreeIbusContext(IbusContext *ctx)
         free(ctx->obj_path);
         ctx->obj_path = NULL;
     }
-    Tcl_Free((char *)ctx);
+    Tcl_Free(ctx);
 }
 
 /*
@@ -1355,7 +1355,7 @@ static int IbusProcessKeyEvent(
 {
     if (!ctx || !ibus_bus || !ctx->obj_path) return 0;
 
-    fprintf(stderr, "IbusProcessKeyEvent (Async): sending keyval=0x%04x keycode=%u state=0x%x\n", 
+    fprintf(stderr, "IbusProcessKeyEvent (Async): sending keyval=0x%04x keycode=%u state=0x%x\n",
             keyval, keycode, state);
 
     int r;
@@ -1597,7 +1597,7 @@ TkWaylandIbusCreateContext(
     ctx->destroyed = 0;
 
     if (!ctx->obj_path) {
-        Tcl_Free((char *)ctx);
+        Tcl_Free(ctx);
         sd_bus_message_unref(reply);
         sd_bus_error_free(&error);
         return TCL_ERROR;
@@ -1777,32 +1777,6 @@ TkWaylandIbusFocusOut(Tk_Window tkwin)
 
 /*
  * ----------------------------------------------------------------------------
- * TkWaylandIbusIsComposing --
- *
- *         Returns non-zero if the IBus context for the given window is
- *         currently in an active composition (preedit visible).  Used by
- *         the GLFW character callback to suppress raw latin input while
- *         the IME owns the key stream.
- *
- * Results:
- *         Returns 1 if composing, 0 otherwise.
- *
- * Side effects:
- *         None.
- * ----------------------------------------------------------------------------
- */
-
-int
-TkWaylandIbusIsComposing(Tk_Window tkwin)
-{
-    IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
-    if (!ctx) return 0;
-    return ctx->composing;
-}
-
-
-/*
- * ----------------------------------------------------------------------------
  * TkWaylandIbusProcessKey -
  *
  *         Public wrapper called from TkGlfwKeyCallback.  Looks up the IBus
@@ -1810,15 +1784,15 @@ TkWaylandIbusIsComposing(Tk_Window tkwin)
  *         IBus daemon.
  *
  * Results:
- *         Returns 1 if IBus consumed the key event (caller should suppress the
- *         normal Tk KeyPress event), 0 otherwise.
+ *         Returns true if IBus consumed the key event (caller should suppress the
+ *         normal Tk KeyPress event), false otherwise.
  *
  * Side effects:
  *         May start or advance IME composition.
  * ----------------------------------------------------------------------------
  */
 
-int
+bool
 TkWaylandIbusProcessKey(
     Tk_Window tkwin,
     uint32_t  keyval,
@@ -1826,8 +1800,8 @@ TkWaylandIbusProcessKey(
     uint32_t  state)
 {
     IbusContext *ctx = FindContext(GetToplevelOfWidget(tkwin));
-    if (!ctx) return 0;
-    return IbusProcessKeyEvent(ctx, keyval, keycode, state);
+    if (!ctx) return false;
+    return IbusProcessKeyEvent(ctx, keyval, keycode, state) != 0;
 }
 
 /*
@@ -1871,7 +1845,7 @@ int CmdCreateContext(
  * ----------------------------------------------------------------------------
  * CmdFocusIn --
  *
- *         Informs IBus that a toplevel window  (or a widget inside it) 
+ *         Informs IBus that a toplevel window  (or a widget inside it)
  *		   has gained focus, and enables the IME.
  *
  *
@@ -2348,7 +2322,7 @@ TkWaylandIbus_Init(Tcl_Interp *interp)
 
     /* Register event source for signals. */
     Tcl_CreateEventSource(IbusEventSetup, IbusEventCheck, NULL);
-    
+
     /* Force initial setup. */
     IbusEventSetup(NULL, TCL_WINDOW_EVENTS);
 

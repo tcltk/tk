@@ -59,7 +59,7 @@ typedef struct RegisteredInterp {
  * containing two Tcl_IntObj items whose integer values are, respectively, the
  * pprocess id of the process and the thread id of the thread which registered
  * the interpreter.
- * 
+ *
  */
 
 static char *appNameRegistryPath;
@@ -157,7 +157,7 @@ static Tcl_ThreadDataKey dataKey;
   */
 
 static struct {
-    int sendDebug;		 /* This can be set while debugging to 
+    int sendDebug;		 /* This can be set while debugging to
 				  * add print statements, for example. */
     mqd_t qd;                    /* Descriptor for the mqueue. */
     char qname[NAME_MAX];        /* Path name of mqueue. */
@@ -312,7 +312,7 @@ SendInit(Tcl_Interp *interp)
 	const char *home = getenv("HOME");
 	const char *dir = "/.cache/tksend";
 	const char *file = "/appnames";
-	appNameRegistryPath = ckalloc(strlen(home) + strlen(dir)
+	appNameRegistryPath = (char *)Tcl_Alloc(strlen(home) + strlen(dir)
 				      + strlen(file) + 1);
 	strcpy(appNameRegistryPath, home);
 	strcat(appNameRegistryPath, dir);
@@ -337,7 +337,7 @@ SendInit(Tcl_Interp *interp)
     /*
      * Initialize per-thread data.
      */
-    
+
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     tsdPtr->asyncToken = Tcl_AsyncCreate(mqueueAsyncProc, NULL);
@@ -345,7 +345,7 @@ SendInit(Tcl_Interp *interp)
     /*
      * Install a signal handler for the realtime signal TK_MQUEUE_SIGNAL.
      */
-    
+
     // Do we need to worry about the old action?  Presumably it is the default
     // action, which just kills the process.
     struct sigaction oldaction, action = {
@@ -402,7 +402,7 @@ TkSendCleanup(
 {
     (void) dispPtr;  /* Specified in stub table. */
     if (appNameRegistryPath) {
-        ckfree(appNameRegistryPath);
+        Tcl_Free(appNameRegistryPath);
     }
     mq_close(staticData.qd);
     mq_unlink(staticData.qname);
@@ -418,7 +418,7 @@ loadAppNameRegistry(
     size_t length, bytesRead;
     char *bytes = NULL;
     Tcl_Obj *result;
-    
+
     FILE *appNameFile = fopen(path, "ab+");
     if (appNameFile == NULL) {
 	Tcl_Panic("fopen failed on %s", path);
@@ -435,7 +435,7 @@ loadAppNameRegistry(
     length = ftell(appNameFile);
     if (length > 0) {
 	fseek(appNameFile, 0, SEEK_SET);
-	bytes = ckalloc(length);
+	bytes = (char *)Tcl_Alloc(length);
 	bytesRead = fread(bytes, 1, length, appNameFile);
     }
     flock(fileno(appNameFile), LOCK_UN);
@@ -448,7 +448,7 @@ loadAppNameRegistry(
 		length, bytesRead);
     }
     result = Tcl_NewStringObj(bytes, length);
-    ckfree(bytes);
+    Tcl_Free(bytes);
     /*
      * Convert the string object to a dict. If that fails the file
      * must be corrupt, so all we can do is return an empty dict.
@@ -519,7 +519,7 @@ RegOpen(
 				 * opened. */
 {
     NameRegistry *regPtr;
-    regPtr = (NameRegistry *)ckalloc(sizeof(NameRegistry));
+    regPtr = (NameRegistry *)Tcl_Alloc(sizeof(NameRegistry));
     regPtr->dispPtr = dispPtr;
     regPtr->modified = 0;
 
@@ -541,7 +541,7 @@ RegOpen(
 
     Tcl_Size dictSize;
     Tcl_DictObjSize(NULL, regPtr->appNameDict, &dictSize);
-    Tcl_Obj **deadinterps = (Tcl_Obj**) ckalloc(dictSize * sizeof(Tcl_Obj*));
+    Tcl_Obj **deadinterps = (Tcl_Obj**)Tcl_Alloc(dictSize * sizeof(Tcl_Obj*));
     int count = 0;
     Tcl_DictSearch search;
     Tcl_Obj *key, *value;
@@ -561,7 +561,7 @@ RegOpen(
     for (i = 0; i < count; i++) {
 	Tcl_DictObjRemove(NULL, regPtr->appNameDict, deadinterps[i]);
     }
-    ckfree(deadinterps);
+    Tcl_Free(deadinterps);
     return regPtr;
 }
 
@@ -592,7 +592,7 @@ RegClose(
     if (regPtr->modified) {
 	saveAppNameRegistry(regPtr->appNameDict, appNameRegistryPath);
     }
-    ckfree(regPtr);
+    Tcl_Free(regPtr);
 }
 
 
@@ -777,7 +777,7 @@ Tk_SetAppName(
 	     * to the structure later.
 	     */
 
-	    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
+	    riPtr = (RegisteredInterp *)Tcl_Alloc(sizeof(RegisteredInterp));
 	    riPtr->interp = interp;
 	    riPtr->dispPtr = winPtr->dispPtr;
 	    riPtr->nextPtr = tsdPtr->interpListPtr;
@@ -798,7 +798,7 @@ Tk_SetAppName(
 
 	    if (riPtr->name) {
 		RegDeleteName(regPtr, riPtr->name);
-		ckfree(riPtr->name);
+		Tcl_Free(riPtr->name);
 	    }
 	    break;
 	}
@@ -839,7 +839,7 @@ Tk_SetAppName(
 
     RegAddName(regPtr, actualName);
     RegClose(regPtr);
-    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
+    riPtr->name = (char *)Tcl_Alloc(strlen(actualName) + 1);
     strcpy(riPtr->name, actualName);
     if (actualName != name) {
 	Tcl_DStringFree(&dString);
@@ -848,7 +848,7 @@ Tk_SetAppName(
     /*
      * Record the id if the thread which is registering this interpreter.
      */
-    
+
     return riPtr->name;
 }
 
@@ -865,10 +865,10 @@ Tk_SetAppName(
  *     payload is replaced by an absolute path to the temporary file.
  *
  *     Results:
- *         Returns a pointer to a ckalloc'ed message with payload.
+ *         Returns a pointer to a Tcl_Alloc'ed message with payload.
  *
  *     Side effects:
- 
+
  *         The size of the message is stored in the size_t referenced by
  *         sizePtr.  A temporary file containing the payload may be created.
  *----------------------------------------------------------------------
@@ -885,7 +885,7 @@ static message *packMessage (
     message *result;
     size_t sizesSize = strCount * sizeof(size_t);
     size_t payloadSize = sizesSize;
-    size_t *sizes = (size_t *) ckalloc(sizesSize);
+    size_t *sizes = (size_t *)Tcl_Alloc(sizesSize);
     Tcl_MutexLock(&dynamicData.mutex);
     message header = {
 	.serial = dynamicData.sendSerial,
@@ -900,22 +900,22 @@ static message *packMessage (
 	char tempName[] = "/tmp/tksend_XXXXXX";
 	int tempNameSize = strlen(tempName) + 1;
 	int fd = mkstemp(tempName);
-	FILE *tempFile = fdopen(fd, "w"); 
+	FILE *tempFile = fdopen(fd, "w");
 	header.flags |= PAYLOAD_IS_PATH;
 	fwrite((char *) sizes, 1, sizesSize, tempFile);
 	for(i = 0 ; i < strCount ; i++) {
 	    fwrite(strArray[i], 1, sizes[i], tempFile);
 	}
 	fclose(tempFile);
-	p = ckalloc(sizeof(message) + tempNameSize);
+	p = (char *)Tcl_Alloc(sizeof(message) + tempNameSize);
 	*sizePtr = sizeof(message) + tempNameSize;
 	result = (message*) p;
 	p = (char *) memcpy(p, (char *) &header, sizeof(message)) +
 	            sizeof(message);
 	memcpy(p, tempName, tempNameSize);
-	ckfree(p);
+	Tcl_Free(p);
     } else {
-	p = ckalloc(sizeof(message) + payloadSize);
+	p = (char *)Tcl_Alloc(sizeof(message) + payloadSize);
 	*sizePtr = sizeof(message) + payloadSize;
 	result = (message*) p;
 	p = (char *) memcpy(p, (char *)&header, sizeof(message));
@@ -927,7 +927,7 @@ static message *packMessage (
 	}
     }
     if (sizes) {
-	ckfree(sizes);
+	Tcl_Free(sizes);
     }
     return result;
 }
@@ -941,7 +941,7 @@ static message *packMessage (
  *     found in the header.
  *
  *     Results:
- *         None 
+ *         None
  *
  *     Side effects:
  *         Allocates memory for an array of char pointers and for the strings
@@ -960,14 +960,14 @@ static void unpackMessage(
     size_t *sizes;
     int strCount = msgPtr->count;
     memcpy((char *) header, (char *) msgPtr, sizeof(message));
-    *strArrayPtr = (char **) ckalloc(strCount * sizeof(char *));
+    *strArrayPtr = (char **)Tcl_Alloc(strCount * sizeof(char *));
     char **strArray = *strArrayPtr;
     if (msgPtr->flags & PAYLOAD_IS_PATH) {
 	FILE *payloadFile = fopen(msgPtr->payload, "r");
 	fseek(payloadFile, 0, SEEK_END);
 	size_t payloadSize = ftell(payloadFile);
 	fseek(payloadFile, 0, SEEK_SET);
-	msgPtr2 = (message *) ckalloc(sizeof(message) + payloadSize);
+	msgPtr2 = (message *)Tcl_Alloc(sizeof(message) + payloadSize);
 	memcpy((char *) msgPtr2, msgPtr, sizeof(message));
 	size_t bytes_read = fread(msgPtr2->payload, 1, payloadSize,
 				  payloadFile);
@@ -983,12 +983,12 @@ static void unpackMessage(
 	p = msgPtr->payload + strCount * sizeof(size_t);
     }
     for (int i = 0 ; i < strCount ; i++) {
-	strArray[i] = ckalloc(sizes[i]);
+	strArray[i] = (char *)Tcl_Alloc(sizes[i]);
 	strncpy(strArray[i], p, sizes[i]);
 	p += sizes[i];
     }
     if (msgPtr2) {
-	ckfree(msgPtr2);
+	Tcl_Free(msgPtr2);
     }
 }
 
@@ -1030,7 +1030,7 @@ sendRequest(
     message *m = packMessage(0, 3, strings, &messageSize);
     m->flags |= MESSAGE_IS_REQUEST;
     int status = mq_send(qd, (char *) m, messageSize, priority);
-    ckfree(m);
+    Tcl_Free(m);
     mq_close(qd);
     if (status == -1) {
 	// This does not mean that the message was not sent.
@@ -1061,7 +1061,7 @@ sendRequest(
 	fprintf(stderr, "failed to open queue %s\n", qnameReply);
 	goto error;
     }
-    
+
     // TODO
     // This is incomplete.
     // The code belose waits 5 seconds for a response to the request and gives
@@ -1076,7 +1076,7 @@ sendRequest(
      * Force the Async proc to run.  It seems we only need this when the
      * target thread is in this process.
      */
-    
+
     if (tid) {
 	// Warning: this assumes that Tcl_ThreadId can be cast to pthread_t.
 	pthread_kill((pthread_t) tid, TK_MQUEUE_SIGNAL);
@@ -1146,7 +1146,7 @@ static int sendEventProc(Tcl_Event *eventPtr, int flags) {
 	    break;
 	}
     }
-    
+
     Tcl_Preserve(riPtr);
     code = Tcl_EvalEx(riPtr->interp, strings[requestCommand],
 		      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -1164,7 +1164,7 @@ static int sendEventProc(Tcl_Event *eventPtr, int flags) {
 	}
 	int status = mq_send(replyQd, (char *) m, messageSize, 1);
 	mq_close(replyQd);
-	ckfree(m);
+	Tcl_Free(m);
 	if (status == -1) {
 	    // Does this have any effect here?
 	    Tcl_SetErrno(errno);
@@ -1173,9 +1173,9 @@ static int sendEventProc(Tcl_Event *eventPtr, int flags) {
     }
     Tcl_Release(riPtr);
     for (int i = 0 ; i < header->count ; i++) {
-	ckfree(strings[i]);
+	Tcl_Free(strings[i]);
     }
-    ckfree(strings);
+    Tcl_Free(strings);
     return 1;  /* The event was processed, not deferred. */
 }
 
@@ -1213,18 +1213,18 @@ int mqueueAsyncProc(
 	    break;
 	}
 	/* Allocate a sendEvent */
-	eventPtr = ckalloc(sizeof(sendEvent));
+	eventPtr = (sendEvent *)Tcl_Alloc(sizeof(sendEvent));
 	eventPtr->header.proc = sendEventProc;
-	/* Receive a message and unpack it into the sendEvent. */ 
-	msgPtr = (message *) ckalloc(attr.mq_msgsize);
+	/* Receive a message and unpack it into the sendEvent. */
+	msgPtr = (message *)Tcl_Alloc(attr.mq_msgsize);
 	mq_receive(staticData.qd, (char *) msgPtr, attr.mq_msgsize,
 		   &priority);
 	unpackMessage(msgPtr, &eventPtr->msg, &eventPtr->strings);
-	ckfree(msgPtr);
+	Tcl_Free(msgPtr);
 	Tcl_ThreadId tid = getTid(eventPtr->strings[requestRecipient]);
 	/* Queue the sendEvent for the target thread. */
 	Tcl_ThreadQueueEvent(tid, (Tcl_Event *) eventPtr,
-			     TCL_QUEUE_TAIL | TCL_QUEUE_ALERT_IF_EMPTY); 
+			     TCL_QUEUE_TAIL | TCL_QUEUE_ALERT_IF_EMPTY);
     }
     return code;
 }
@@ -1266,7 +1266,7 @@ static void mqueueHandler(
     (void) ucontext;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));    
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     if (!Tcl_AsyncMarkFromSignal(tsdPtr->asyncToken, TK_MQUEUE_SIGNAL)) {
 	Tcl_Panic("Tcl_ASyncMarkFromSignal returned false!!!");
     }
@@ -1274,7 +1274,7 @@ static void mqueueHandler(
 
     /*
      * The current notification registration will be canceled when
-     * this function returns.  The man page recommends renewing 
+     * this function returns.  The man page recommends renewing
      * the registration before emptying the queue, as another process
      * is allowed to register as soon as the queue becomes empty.
      * We will empty the queue as soon as possible, namely when
@@ -1479,7 +1479,7 @@ Tk_SendObjCmd(
     // When async is 0, the call below blocks until a reply is received.
     // Perhaps we should run a background thread to process timer events?
     char *replyName = NULL;
-    if (async) {	
+    if (async) {
 	code = sendRequest(interp, info.pid, "", (const char*) destName,
 			       Tcl_DStringValue(&request2));
     } else {
@@ -1606,7 +1606,7 @@ DeleteProc(
 	    }
 	}
     }
-    ckfree(riPtr->name);
+    Tcl_Free(riPtr->name);
     riPtr->interp = NULL;
     Tcl_EventuallyFree(riPtr, TCL_DYNAMIC);
 }

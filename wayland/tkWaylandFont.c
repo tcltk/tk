@@ -44,7 +44,7 @@ static int  emojiFontId   = -1;    /* NanoVG id for the bundled emoji font. */
 /* Forward declarations of static helper functions. */
 static int        GetBidiRuns(FcChar32 *ucs4, int charCount,
 			      BidiRun *runs, int maxRuns);
-static int        IsSimpleOnly(const char *str, int len);
+static bool       IsSimpleOnly(const char *str, int len);
 static int        GetRunFaceIndex(WaylandFont *fontPtr, FcChar32 *ucs4Chars,
 				  int runStart, int runLen);
 static hb_font_t *GetHbFont(WaylandFont *fontPtr, int faceIndex);
@@ -67,14 +67,14 @@ static NVGcolor   ColorFromGC(GC gc);
  *   Mirrors the identical function in tkUnixBidiFont.c.
  *
  * Results:
- *   1 if the string is simple (fast path), 0 otherwise.
+ *   true if the string is simple (fast path), false otherwise.
  *
  * Side effects:
  *   None.
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 IsSimpleOnly(const char *str, int len)
 {
     int i = 0;
@@ -114,18 +114,18 @@ IsSimpleOnly(const char *str, int len)
             (uc >= 0x1F300 && uc <= 0x1F9FF) ||
             uc > 0xFFFF
 	    ) {
-            return 0;
+            return false;
         }
 
         /* Safe for fast path: Latin extended, CJK punctuation + Kana. */
         int isSafe =
             (uc <= 0x024F) ||
             (uc >= 0x3000 && uc <= 0x30FF);
-        if (!isSafe) return 0;
+        if (!isSafe) return false;
 
         i += clen;
     }
-    return 1;
+    return true;
 }
 
 /*
@@ -370,14 +370,14 @@ WaylandShaper_Destroy(WaylandShaper *s)
  *   Advances are left at 0 and filled in by NanoVG during measurement/draw.
  *
  * Results:
- *   1 on success, 0 on failure.
+ *   true on success, false on failure.
  *
  * Side effects:
  *   Updates the shaper's string cache.
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int
+MODULE_SCOPE bool
 WaylandShaper_ShapeString(
 			  WaylandShaper     *shaper,
 			  WaylandFont       *fontPtr,
@@ -453,7 +453,7 @@ WaylandShaper_ShapeString(
             buffer->clusterBreaks[buffer->clusterBreakCount++] =
                 buffer->glyphs[j].byteOffset + buffer->glyphs[j].clusterLen;
         }
-        return 1;
+        return true;
     }
 
     /* Cache lookup for complex/RTL text. */
@@ -463,7 +463,7 @@ WaylandShaper_ShapeString(
 	    numBytes <= MAX_STRING_CACHE &&
 	    memcmp(source, shaper->cache[slot].text, numBytes) == 0) {
             *buffer = shaper->cache[slot].buffer;
-            return 1;
+            return true;
         }
     }
 
@@ -472,16 +472,16 @@ WaylandShaper_ShapeString(
     FcChar32  stackUcs4[256];
     int      *charBounds = stackCharBounds;
     FcChar32 *ucs4Chars  = stackUcs4;
-    int       needFree   = 0;
+    bool       needFree   = false;
 
     if (numBytes >= 256) {
         charBounds = (int *)    malloc((numBytes + 1) * sizeof(int));
         ucs4Chars  = (FcChar32*)malloc( numBytes       * sizeof(FcChar32));
         if (!charBounds || !ucs4Chars) {
             free(charBounds); free(ucs4Chars);
-            return 0;
+            return false;
         }
-        needFree = 1;
+        needFree = true;
     }
 
     charBounds[0] = 0;
@@ -510,7 +510,7 @@ WaylandShaper_ShapeString(
         if (needFree) { free(charBounds); free(ucs4Chars); }
         buffer->clusterBreaks[0]  = 0;
         buffer->clusterBreakCount = 1;
-        return 1;
+        return true;
     }
 
     /* BiDi analysis. */
@@ -760,7 +760,7 @@ WaylandShaper_ShapeString(
     }
 
     if (needFree) { free(charBounds); free(ucs4Chars); }
-    return 1;
+    return true;
 }
 
 /*
@@ -1027,7 +1027,7 @@ InitFont(
                     fa->size     = (double)(-fontPtr->pixelSize);
                 }
             }
-            if (buf) Tcl_Free((char *)buf);
+            if (buf) Tcl_Free(buf);
             fclose(fd);
         }
     }
@@ -1079,7 +1079,7 @@ DeleteFont(WaylandFont *fontPtr)
         if (face->filePath) { free(face->filePath);            face->filePath = NULL; }
     }
     if (fontPtr->faces) {
-        Tcl_Free((char *)fontPtr->faces);
+        Tcl_Free(fontPtr->faces);
         fontPtr->faces  = NULL;
         fontPtr->nfaces = 0;
     }
@@ -1566,7 +1566,7 @@ Tk_MeasureCharsInContext(
             p = next;
         }
 
-        if (positions != stackPos) Tcl_Free((char *)positions);
+        if (positions != stackPos) Tcl_Free(positions);
         nvgRestore(vg);
         *lengthPtr = pixelWidth;
         return (int)(p - rangePtr);

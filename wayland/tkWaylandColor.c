@@ -27,11 +27,11 @@
  */
 
 /* Forward declarations. */
-static int  ParseColorString(const char *name, NVGcolor *color);
-static int  LookupNamedColor(const char *name, NVGcolor *color);
-static int  ParseGrayScale(const char *name, NVGcolor *color);
-static int  ParseX11ColorVariant(const char *name, NVGcolor *color);
-static int  ParseHexColor(const char *name, NVGcolor *color);
+static bool  ParseColorString(const char *name, NVGcolor *color);
+static bool  LookupNamedColor(const char *name, NVGcolor *color);
+static bool  ParseGrayScale(const char *name, NVGcolor *color);
+static bool  ParseX11ColorVariant(const char *name, NVGcolor *color);
+static bool  ParseHexColor(const char *name, NVGcolor *color);
 
 /*
  *----------------------------------------------------------------------
@@ -234,18 +234,18 @@ TkpCmapStressed(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ParseHexColor(const char *name, NVGcolor *color)
 {
     if (name[0] != '#') {
-        return 0;
+        return false;
     }
 
     unsigned int hex = 0;
     int len = strlen(name + 1);
 
     if (sscanf(name + 1, "%x", &hex) != 1) {
-        return 0;
+        return false;
     }
 
     if (len == 3) {         /* #RGB — expand each nibble */
@@ -253,21 +253,21 @@ ParseHexColor(const char *name, NVGcolor *color)
         color->g = ((((hex >> 4) & 0xF) * 0x11)) / 255.0f;
         color->b = ((( hex       & 0xF) * 0x11)) / 255.0f;
         color->a = 1.0f;
-        return 1;
+        return true;
     }
     if (len == 6) {         /* #RRGGBB */
         color->r = ((hex >> 16) & 0xFF) / 255.0f;
         color->g = ((hex >>  8) & 0xFF) / 255.0f;
         color->b = ( hex        & 0xFF) / 255.0f;
         color->a = 1.0f;
-        return 1;
+        return true;
     }
     if (len == 8) {         /* #RRGGBBAA */
         color->r = ((hex >> 24) & 0xFF) / 255.0f;
         color->g = ((hex >> 16) & 0xFF) / 255.0f;
         color->b = ((hex >>  8) & 0xFF) / 255.0f;
         color->a = ( hex        & 0xFF) / 255.0f;
-        return 1;
+        return true;
     }
     if (len == 12) {        /* #RRRRGGGGBBBB (X11 16-bit per channel) */
         unsigned int r, g, b;
@@ -276,10 +276,10 @@ ParseHexColor(const char *name, NVGcolor *color)
             color->g = g / 65535.0f;
             color->b = b / 65535.0f;
             color->a = 1.0f;
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 /*
@@ -299,21 +299,21 @@ ParseHexColor(const char *name, NVGcolor *color)
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ParseGrayScale(const char *name, NVGcolor *color)
 {
     int n = -1;
-    
+
     if (sscanf(name, "gray%d", &n) == 1 || sscanf(name, "grey%d", &n) == 1) {
         if (n >= 0 && n <= 100) {
             float v = n / 100.0f;
             color->r = color->g = color->b = v;
             color->a = 1.0f;
-            return 1;
+            return true;
         }
     }
-    
-    return 0;
+
+    return false;
 }
 
 /*
@@ -330,7 +330,7 @@ ParseGrayScale(const char *name, NVGcolor *color)
  *        4 → 0.545
  *
  * Results:
- *      1 if the color string was successfully parsed, 0 otherwise.
+ *      true if the color string was successfully parsed, false otherwise.
  *
  * Side effects:
  *      The NVGcolor structure pointed to by 'color' is filled with the
@@ -339,7 +339,7 @@ ParseGrayScale(const char *name, NVGcolor *color)
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ParseX11ColorVariant(const char *name, NVGcolor *color)
 {
     static const float scale[4] = { 1.000f, 0.933f, 0.804f, 0.545f };
@@ -348,7 +348,7 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
     int  len  = (int)strlen(name);
 
     if (len <= 1 || len >= 64) {
-        return 0;
+        return false;
     }
 
     /* Walk backwards over trailing digits. */
@@ -359,7 +359,7 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
     dstart++; /* Index of first digit character. */
 
     if (sscanf(name + dstart, "%d", &n) != 1 || n < 1 || n > 4) {
-        return 0;
+        return false;
     }
 
     /* Extract the base name (everything before the digits). */
@@ -369,7 +369,7 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
     /* Recurse to parse the base name. */
     NVGcolor base;
     if (!ParseColorString(basename, &base)) {
-        return 0;
+        return false;
     }
 
     float s  = scale[n - 1];
@@ -377,7 +377,7 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
     color->g = base.g * s;
     color->b = base.b * s;
     color->a = base.a;
-    return 1;
+    return true;
 }
 
 /*
@@ -391,7 +391,7 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
  *      RGB values normalized to [0.0, 1.0] range.
  *
  * Results:
- *      1 if the color name was found, 0 otherwise.
+ *      true if the color name was found, false otherwise.
  *
  * Side effects:
  *      The NVGcolor structure pointed to by 'color' is filled with the
@@ -400,7 +400,7 @@ ParseX11ColorVariant(const char *name, NVGcolor *color)
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 LookupNamedColor(const char *name, NVGcolor *color)
 {
     /* Complete X11 color database. */
@@ -869,7 +869,7 @@ LookupNamedColor(const char *name, NVGcolor *color)
         { "yellow3",                0.804f, 0.804f, 0.000f },
         { "yellow4",                0.545f, 0.545f, 0.000f },
         { "yellowGreen",            0.604f, 0.804f, 0.196f },
-        
+
         /* System colors (platform-specific defaults) */
         { "SystemButtonFace",       0.878f, 0.878f, 0.878f },
         { "SystemButtonText",       0.000f, 0.000f, 0.000f },
@@ -877,7 +877,7 @@ LookupNamedColor(const char *name, NVGcolor *color)
         { "SystemHighlightText",    1.000f, 1.000f, 1.000f },
         { "SystemWindow",           1.000f, 1.000f, 1.000f },
         { "SystemWindowText",       0.000f, 0.000f, 0.000f },
-        
+
         { NULL, 0, 0, 0 }
     };
 
@@ -887,11 +887,11 @@ LookupNamedColor(const char *name, NVGcolor *color)
             color->g = named[i].g;
             color->b = named[i].b;
             color->a = 1.0f;
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 /*
@@ -917,7 +917,7 @@ LookupNamedColor(const char *name, NVGcolor *color)
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 ParseColorString(const char *name, NVGcolor *color)
 {
     /* Hexadecimal strings. */
@@ -927,20 +927,20 @@ ParseColorString(const char *name, NVGcolor *color)
 
     /* Gray/grey scale (grayN, greyN). */
     if (ParseGrayScale(name, color)) {
-        return 1;
+        return true;
     }
 
     /* Named colors from X11. */
     if (LookupNamedColor(name, color)) {
-        return 1;
+        return true;
     }
 
     /* X11 color variants (name1..name4). */
     if (ParseX11ColorVariant(name, color)) {
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 /*

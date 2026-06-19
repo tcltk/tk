@@ -465,7 +465,7 @@ DestroyElementData(void *clientData)
  *	can be reused.
  */
 
-static int
+static bool
 InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
@@ -480,7 +480,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	    elementData->info->className);
 
     if (!elementData->hTheme) {
-	return 0;
+	return false;
     }
 
     elementData->drawable = d;
@@ -489,7 +489,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 		&elementData->dcState);
     }
 
-    return 1;
+    return true;
 }
 
 static void

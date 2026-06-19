@@ -27,7 +27,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * at-spi definitions. 
+ * at-spi definitions.
  *
  *----------------------------------------------------------------------
  */
@@ -101,7 +101,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * Core structures for Tk accessibility and at-spi data. 
+ * Core structures for Tk accessibility and at-spi data.
  *
  *----------------------------------------------------------------------
  */
@@ -125,20 +125,20 @@ struct TkAccessible {
     int x, y, width, height;
     int is_focused;
     int ref_count;
-    
+
     /* D-Bus object path for this accessible. */
     char *dbus_path;
-    
+
     /* Parent and children tracking. */
     struct TkAccessible *parent;
     AccessibleList *children;        /* For virtual children only. */
-    
+
     /* Virtual child support. */
     int is_virtual;
     int virtual_index;
     char *virtual_name;
     struct TkAccessible *virtual_parent;
-    
+
     /* D-Bus slot for this object (for cleanup) */
     sd_bus_slot *vtable_slot;
 };
@@ -150,7 +150,7 @@ typedef struct {
     Tcl_HashTable *tk_to_accessible_map;   /* key = Tk_Window, value = TkAccessible*. */
     AccessibleList *toplevel_accessibles;
     TkAccessible *root_accessible;
-    
+
     /* For Tcl event loop integration. */
     int bus_fd;
     int file_handler;    /* dummy, just to know it's set */
@@ -159,7 +159,7 @@ typedef struct {
 /*
  *----------------------------------------------------------------------
  *
- * Forward declarations of functions defined in this file.  
+ * Forward declarations of functions defined in this file.
  *
  *----------------------------------------------------------------------
  */
@@ -299,7 +299,7 @@ static AtspiConnection *atspi_conn = NULL;
 extern Tcl_HashTable *TkAccessibilityObject;  /* from tkAccessibility.c */
 
 /*
- * D-Bus vtables - these map functions to the ati-spi API. 
+ * D-Bus vtables - these map functions to the ati-spi API.
  */
 
 /* org.a11y.atspi.Accessible interface. */
@@ -385,8 +385,8 @@ Tcl_Strdup(const char *s)
 /*
  *----------------------------------------------------------------------
  *
- * D-Bus interface functions. These do the heavy lifting of mapping Tk to 
- * at-spi functionality. 
+ * D-Bus interface functions. These do the heavy lifting of mapping Tk to
+ * at-spi functionality.
  *
  *----------------------------------------------------------------------
  */
@@ -396,9 +396,9 @@ Tcl_Strdup(const char *s)
  * objects from native Tk widgets (buttons, entries, etc.), map them them to
  * the appropriate role, and track them.
  */
- 
+
 static int dbus_method_get_children(
-	sd_bus_message *m, 
+	sd_bus_message *m,
 	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
@@ -447,8 +447,8 @@ static int dbus_method_get_children(
 }
 
 static int dbus_method_get_child_at_index(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -513,7 +513,7 @@ static int dbus_method_get_child_at_index(
 }
 
 static int dbus_method_get_attributes(
-sd_bus_message *m, 
+sd_bus_message *m,
 	TCL_UNUSED(void *), /* userdata */
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
@@ -530,8 +530,8 @@ sd_bus_message *m,
 }
 
 static int dbus_method_get_states(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -547,8 +547,8 @@ static int dbus_method_get_states(
 }
 
 static int dbus_method_get_role(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -563,8 +563,8 @@ static int dbus_method_get_role(
 }
 
 static int dbus_method_get_name(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -590,8 +590,8 @@ static int dbus_method_get_name(
 }
 
 static int dbus_method_get_description(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -615,8 +615,8 @@ static int dbus_method_get_description(
 }
 
 static int dbus_method_get_parent(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -635,8 +635,8 @@ static int dbus_method_get_parent(
 }
 
 static int dbus_method_grab_focus(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -667,8 +667,8 @@ static int dbus_method_grab_focus(
 }
 
 static int dbus_method_get_index_in_parent(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -703,8 +703,8 @@ static int dbus_method_get_index_in_parent(
 }
 
 static int dbus_method_get_interfaces(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -743,8 +743,8 @@ static int dbus_method_get_interfaces(
  */
 
 static int dbus_method_component_get_extents(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -780,8 +780,8 @@ static int dbus_method_component_get_extents(
 }
 
 static int dbus_method_component_get_position(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -815,8 +815,8 @@ static int dbus_method_component_get_position(
 }
 
 static int dbus_method_component_get_size(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -831,8 +831,8 @@ static int dbus_method_component_get_size(
 }
 
 static int dbus_method_component_contains(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -874,8 +874,8 @@ static int dbus_method_component_grab_focus(sd_bus_message *m, void *userdata, s
 */
 
 static int dbus_method_action_get_n_actions(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -897,8 +897,8 @@ static int dbus_method_action_get_n_actions(
 }
 
 static int dbus_method_action_do_action(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -940,8 +940,8 @@ static int dbus_method_action_do_action(
 }
 
 static int dbus_method_action_get_name(
-	sd_bus_message *m, 
-	void *userdata, 
+	sd_bus_message *m,
+	void *userdata,
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -970,7 +970,7 @@ static int dbus_method_action_get_name(
 }
 
 static int dbus_method_action_get_description(
-	sd_bus_message *m, 
+	sd_bus_message *m,
 	TCL_UNUSED(void *), /* userdata */
 	TCL_UNUSED(sd_bus_error *))/* ret_error */
 {
@@ -978,7 +978,7 @@ static int dbus_method_action_get_description(
 }
 
 static int dbus_method_action_get_key_binding(
-	sd_bus_message *m, 
+	sd_bus_message *m,
 	TCL_UNUSED(void *), /* userdata */
 	TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -986,12 +986,12 @@ static int dbus_method_action_get_key_binding(
 }
 
 /*
- * at-spi/D-Bus method implementations: Value interface. Returns float. 
+ * at-spi/D-Bus method implementations: Value interface. Returns float.
 */
 
 static int dbus_method_value_get_current(
-    sd_bus_message *m, 
-    void *userdata, 
+    sd_bus_message *m,
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -1007,8 +1007,8 @@ static int dbus_method_value_get_current(
 }
 
 static int dbus_method_value_get_minimum(
-    sd_bus_message *m, 
-    void *userdata, 
+    sd_bus_message *m,
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -1026,8 +1026,8 @@ static int dbus_method_value_get_minimum(
 }
 
 static int dbus_method_value_get_maximum(
-    sd_bus_message *m, 
-    void *userdata, 
+    sd_bus_message *m,
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -1045,8 +1045,8 @@ static int dbus_method_value_get_maximum(
 }
 
 static int dbus_method_value_set_current(
-    sd_bus_message *m, 
-    void *userdata, 
+    sd_bus_message *m,
+    void *userdata,
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     TkAccessible *acc = (TkAccessible *)userdata;
@@ -1069,12 +1069,12 @@ static int dbus_method_value_set_current(
 }
 
 /*
- * at-spi/D-Bus method implementations: Text interface (stubs). Text processing is handled at the 
- * Tcl script level. 
+ * at-spi/D-Bus method implementations: Text interface (stubs). Text processing is handled at the
+ * Tcl script level.
  */
 
 static int dbus_method_text_get_text(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1082,7 +1082,7 @@ static int dbus_method_text_get_text(
 }
 
 static int dbus_method_text_get_caret_offset(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1090,7 +1090,7 @@ static int dbus_method_text_get_caret_offset(
 }
 
 static int dbus_method_text_get_character_count(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1102,7 +1102,7 @@ static int dbus_method_text_get_character_count(
  */
 
 static int dbus_method_selection_get_n_selections(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1110,7 +1110,7 @@ static int dbus_method_selection_get_n_selections(
 }
 
 static int dbus_method_selection_get_selection(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1118,7 +1118,7 @@ static int dbus_method_selection_get_selection(
 }
 
 static int dbus_method_selection_is_selected(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1126,7 +1126,7 @@ static int dbus_method_selection_is_selected(
 }
 
 static int dbus_method_selection_select_all(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1134,7 +1134,7 @@ static int dbus_method_selection_select_all(
 }
 
 static int dbus_method_selection_clear_selection(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1142,7 +1142,7 @@ static int dbus_method_selection_clear_selection(
 }
 
 static int dbus_method_selection_add_selection(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1150,7 +1150,7 @@ static int dbus_method_selection_add_selection(
 }
 
 static int dbus_method_selection_remove_selection(
-    sd_bus_message *m, 
+    sd_bus_message *m,
     TCL_UNUSED(void *), /* userdata */
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
@@ -1158,13 +1158,13 @@ static int dbus_method_selection_remove_selection(
 }
 
 /*
- * D-Bus object registration. This makes Tk's accessibility visible to the system. 
+ * D-Bus object registration. This makes Tk's accessibility visible to the system.
  */
 
-static int RegisterDbusObject(TkAccessible *acc)
+static bool RegisterDbusObject(TkAccessible *acc)
 {
     if (!atspi_conn || !atspi_conn->bus || !acc) {
-        return 0;
+        return false;
     }
 
     /* Generate a unique object path if not already set */
@@ -1194,7 +1194,7 @@ static int RegisterDbusObject(TkAccessible *acc)
                                       acc);
     if (r < 0) {
         /* g_warning not available; we ignore for now. */
-        return 0;
+        return false;
     }
     acc->vtable_slot = slot;
 
@@ -1228,11 +1228,11 @@ static int RegisterDbusObject(TkAccessible *acc)
                                   ATSPI_SELECTION_INTERFACE, selection_vtable, acc);
     }
 
-    return 1;
+    return true;
 }
 
 /*
- * Event emission. Send notifications of state changes, actions, and more. 
+ * Event emission. Send notifications of state changes, actions, and more.
  */
 
 static void SendAtspiEvent(TkAccessible *acc, const char *event_type, const char *detail)
@@ -1307,7 +1307,7 @@ static void SendActiveDescendantChanged(TkAccessible *container, TkAccessible *d
 }
 
 /*
- * Tcl event loop integration. D-Bus will be come a custom event source for Tcl. 
+ * Tcl event loop integration. D-Bus will be come a custom event source for Tcl.
  */
 
 static void BusFileHandlerProc(void *clientData, int mask)
@@ -1351,7 +1351,7 @@ static void TclEventCheckProc(void *clientData, int flags)
 
 /*
  * Tk Accessible object lifecycle: create, register, track, and free accessible objects
- * in toplevel windows and child widgets. 
+ * in toplevel windows and child widgets.
  */
 
 static TkAccessible *CreateAccessible(Tcl_Interp *interp, Tk_Window tkwin, const char *path)
@@ -1607,7 +1607,7 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin)
 }
 
 /*
- * Track accessibility roles and determine/update state. 
+ * Track accessibility roles and determine/update state.
 */
 
 static int GetRoleForWidget(Tk_Window tkwin)
@@ -1725,7 +1725,7 @@ static uint64_t ComputeStateForWidget(TkAccessible *acc)
 }
 
 /*
- * Attribute getters from Tk - pull data from the central AccessibleObject hash table. 
+ * Attribute getters from Tk - pull data from the central AccessibleObject hash table.
  */
 
 static char *GetNameForWidget(Tk_Window tkwin)
@@ -1979,9 +1979,8 @@ static int IsScreenReaderActive(void)
 static int AddAccessibleCmd(
 	TCL_UNUSED(void *),
 	Tcl_Interp *interp,
-	int objc, 
-	Tcl_Obj 
-	*const objv[])
+	int objc,
+	Tcl_Obj*const objv[])
 {
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "window");
@@ -2007,10 +2006,10 @@ static int AddAccessibleCmd(
 }
 
 static int EmitSelectionChangedCmd(
-	TCL_UNUSED(void *),  
+	TCL_UNUSED(void *),
 	Tcl_Interp *interp,
-	int objc, Tcl_Obj 
-	*const objv[])
+	int objc,
+    Tcl_Obj*const objv[])
 {
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "window");
@@ -2076,7 +2075,7 @@ static int IsScreenReaderRunningCmd(
  * Module initialization.
 */
 
-static int
+static bool
 InitializeAtspiConnection(void)
 {
     sd_bus *bus = NULL;
@@ -2085,12 +2084,12 @@ InitializeAtspiConnection(void)
     int r;
 
     if (atspi_conn && atspi_conn->is_initialized) {
-        return 1;
+        return true;
     }
 
     atspi_conn = (AtspiConnection *)Tcl_Alloc(sizeof(AtspiConnection));
     if (!atspi_conn) {
-        return 0;
+        return false;
     }
     memset(atspi_conn, 0, sizeof(AtspiConnection));
 
@@ -2101,7 +2100,7 @@ InitializeAtspiConnection(void)
         if (r < 0) {
             Tcl_Free(atspi_conn);
             atspi_conn = NULL;
-            return 0;
+            return false;
         }
     }
     atspi_conn->bus = bus;
@@ -2112,7 +2111,7 @@ InitializeAtspiConnection(void)
         sd_bus_unref(bus);
         Tcl_Free(atspi_conn);
         atspi_conn = NULL;
-        return 0;
+        return false;
     }
     Tcl_InitHashTable(atspi_conn->tk_to_accessible_map, TCL_ONE_WORD_KEYS);
 
@@ -2139,7 +2138,7 @@ InitializeAtspiConnection(void)
         sd_bus_unref(bus);
         Tcl_Free(atspi_conn);
         atspi_conn = NULL;
-        return 0;
+        return false;
     }
 
     /* Registry exists → clean up temp message. */
@@ -2154,7 +2153,7 @@ InitializeAtspiConnection(void)
         sd_bus_unref(bus);
         Tcl_Free(atspi_conn);
         atspi_conn = NULL;
-        return 0;
+        return false;
     }
     memset(atspi_conn->root_accessible, 0, sizeof(TkAccessible));
 
@@ -2170,7 +2169,7 @@ InitializeAtspiConnection(void)
     /* Integrate with Tcl event loop for DBus handling. */
     Tcl_CreateEventSource(TclEventSetupProc, TclEventCheckProc, atspi_conn);
 
-    return 1;
+    return true;
 }
 
 int TkWaylandAccessibility_Init(Tcl_Interp *interp)

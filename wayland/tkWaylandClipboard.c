@@ -6,8 +6,8 @@
  *	All clipboard clear/append/get operations are handled at the Tcl
  *	script level by redefined [clipboard] commands that exec wl-copy
  *	and wl-paste directly.  This file retains only the stub symbols
- *	required by Tk's generic selection machinery. This setup is required 
- *      because GFLW's clipboard supports is essentially broken on Wayland. 
+ *	required by Tk's generic selection machinery. This setup is required
+ *      because GFLW's clipboard supports is essentially broken on Wayland.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer

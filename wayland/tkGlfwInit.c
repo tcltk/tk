@@ -24,7 +24,7 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
- 
+
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
@@ -846,7 +846,7 @@ TkGlfwInitialize(void)
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    
+
     glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
@@ -1161,7 +1161,7 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
  *	or its context could not be safely resolved.
  *
  * Side effects:
- *	Changes the current OpenGL context, updates active framebuffer 
+ *	Changes the current OpenGL context, updates active framebuffer
  *	bindings, and populates the fields in dcPtr.
  *
  *----------------------------------------------------------------------
@@ -1190,20 +1190,20 @@ TkGlfwBeginDraw(
 	    if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
 	        return TCL_ERROR;
 	    }
-	
+
 	    glfwTkInfo *pInfo =
 	        glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
 	    if (!pInfo || !pInfo->context.vg) {
 	        return TCL_ERROR;
 	    }
-	
+
 	    glfwMakeContextCurrent(pixmapPtr->glfwWindow);
-	
+
 	    /* Bind pixmap FBO. */
 	    GLuint pixFBO = pixmapPtr->fbo;
 	    glBindFramebuffer(GL_FRAMEBUFFER, pixFBO);
 	    glViewport(0, 0, pixmapPtr->width, pixmapPtr->height);
-	
+
 	    float pixelRatio = 1.0f;
 	    int winW, winH, fbW, fbH;
 	    glfwGetWindowSize(pixmapPtr->glfwWindow, &winW, &winH);
@@ -1211,14 +1211,14 @@ TkGlfwBeginDraw(
 	    if (winW > 0) {
 	        pixelRatio = (float)fbW / (float)winW;
 	    }
-	
+
 	    dcPtr->vg        = pInfo->context.vg;
 	    dcPtr->width     = pixmapPtr->width;
 	    dcPtr->height    = pixmapPtr->height;
 	    dcPtr->winPtr    = NULL;
 	    dcPtr->isPixmap  = 1;
 	    dcPtr->pixmapFbo = pixFBO;
-	
+
 	    /*
 	     * If a window NVG frame is active, close it cleanly.
 	     */
@@ -1226,35 +1226,35 @@ TkGlfwBeginDraw(
 	        if (pInfo->context.activeWindow) {
 	            glfwTkInfo *activeInfo =
 	                glfwGetWindowUserPointer(pInfo->context.activeWindow);
-	
+
 	            if (activeInfo && activeInfo->winPtr &&
 	                activeInfo->winPtr->privatePtr &&
 	                activeInfo->winPtr->privatePtr->fb) {
-	
+
 	                /* fb is a GLuint, not a struct */
 	                GLuint winFBO =
 	                    (GLuint)(uintptr_t)activeInfo->winPtr->privatePtr->fb;
 	                glBindFramebuffer(GL_FRAMEBUFFER, winFBO);
 	            }
 	        }
-	
+
 	        nvgEndFrame(pInfo->context.vg);
 	        pInfo->context.nvgFrameActive = 0;
 	        pInfo->context.activeWindow   = NULL;
-	
+
 	        /* Re-bind pixmap FBO. */
 	        glBindFramebuffer(GL_FRAMEBUFFER, pixFBO);
 	    }
-	
+
 	    nvgBeginFrame(pInfo->context.vg,
 	                  (float)pixmapPtr->width,
 	                  (float)pixmapPtr->height,
 	                  pixelRatio);
-	
+
 	    printf("pixmap ctx=%p current=%p\n",
 	           glfwGetCurrentContext(),
 	           pixmapPtr->glfwWindow);
-	
+
 	    return TCL_OK;
 	}
 
@@ -1343,16 +1343,16 @@ TkGlfwBeginDraw(
  * TkGlfwEndDraw --
  *
  *	Concludes a NanoVG drawing transaction on a Wayland window surface.
- *	Unbinds the offscreen backing store FBO. If the window is flagged 
- *	as dirty (needsDisplay), this function bypasses event-loop delay 
- *	and forces an immediate hardware frame synchronization to resolve 
+ *	Unbinds the offscreen backing store FBO. If the window is flagged
+ *	as dirty (needsDisplay), this function bypasses event-loop delay
+ *	and forces an immediate hardware frame synchronization to resolve
  *	Wayland composition configuration stalls.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Restores the default framebuffer binding. May blit backing FBO 
+ *	Restores the default framebuffer binding. May blit backing FBO
  *	and invoke glfwSwapBuffers immediately on top-level structures.
  *
  *----------------------------------------------------------------------

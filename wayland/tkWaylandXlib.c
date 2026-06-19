@@ -5,7 +5,7 @@
  *  These functions are mainly no-op for compatibility. Some Xlib
  *  emulation functions are contained in other files where they are
  *  more relevant or contain acutal functionality (tkWaylandWm.c,
- *  tkWaylandGC.c. 
+ *  tkWaylandGC.c.
  *
  *
  * Copyright © 1993-1997 The Regents of the University of California /
@@ -174,7 +174,7 @@ int
 XFree(void *data)
 {
     if (data != NULL) {
-        ckfree((char *)data);
+        Tcl_Free(data);
     }
     return 1;
 }
@@ -396,7 +396,7 @@ XOpenDisplay(TCL_UNUSED(const char *)) /* display_name */
 
 int
 XCloseDisplay(TCL_UNUSED(Display *))
-{ 
+{
    return 0;
 }
 
@@ -1507,7 +1507,7 @@ XGetVisualInfo(
 
     /* Allocate the shared underlying Visual instance once. */
     if (cachedVisual == NULL) {
-        cachedVisual = (Visual *)ckalloc(sizeof(Visual));
+        cachedVisual = (Visual *)Tcl_Alloc(sizeof(Visual));
         if (cachedVisual != NULL) {
             memset(cachedVisual, 0, sizeof(Visual));
             cachedVisual->visualid     = 1;
@@ -1521,7 +1521,7 @@ XGetVisualInfo(
     }
 
     /* Dynamically allocate the XVisualInfo wrapper container. */
-    heapInfo = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
+    heapInfo = (XVisualInfo *)Tcl_Alloc(sizeof(XVisualInfo));
     if (heapInfo == NULL) {
         *nitems_return = 0;
         return NULL;
@@ -1542,12 +1542,12 @@ XGetVisualInfo(
 
     /* Handle criteria filters safely by mirroring incoming requirements. */
     if (vinfo_mask != 0 && vinfo_template != NULL) {
-        if ((vinfo_mask & VisualClassMask) && 
+        if ((vinfo_mask & VisualClassMask) &&
             vinfo_template->class != heapInfo->class) {
             goto match_failed;
         }
-        
-        /* If Tk requests a specific visual ID, dynamically mirror it into 
+
+        /* If Tk requests a specific visual ID, dynamically mirror it into
          * our response structure to pass the filtering check smoothly.
          */
         if (vinfo_mask & VisualIDMask) {
@@ -1570,7 +1570,7 @@ XGetVisualInfo(
     return heapInfo;
 
 match_failed:
-    ckfree((char *)heapInfo);
+    Tcl_Free(heapInfo);
     *nitems_return = 0;
     return NULL;
 }
@@ -3287,19 +3287,19 @@ XSetClipRectangles(
  *
  * XGetWindowAttributes --
  *
- *	Fills an XWindowAttributes structure with visual, depth, and 
+ *	Fills an XWindowAttributes structure with visual, depth, and
  *	screen settings matching the default display configuration.
  *
- *	This function is critical for core Tk operations (such as 
- *	TkImgPhotoGet) which retrieve the geometry, visual properties, 
- *	and depths of a window before drawing images. Returning an 
+ *	This function is critical for core Tk operations (such as
+ *	TkImgPhotoGet) which retrieve the geometry, visual properties,
+ *	and depths of a window before drawing images. Returning an
  *	uninitialized or empty structure causes a crash in photo layout.
  *
  * Results:
  *	Returns 1 (True) on success, 0 (False) if attributes_return is NULL.
  *
  * Side effects:
- *	Populates the attributes_return structure with pointer references 
+ *	Populates the attributes_return structure with pointer references
  *	to the display's root visual structure and dimensions.
  *
  *----------------------------------------------------------------------
@@ -3321,7 +3321,7 @@ XGetWindowAttributes(
     /* Populate fields using screen definitions initialized in TkpOpenDisplay. */
     if (display != NULL && display->screens != NULL) {
         Screen *screen = &display->screens[display->default_screen];
-        
+
         attributes_return->visual     = screen->root_visual;
         attributes_return->depth      = screen->root_depth;
         attributes_return->screen     = screen;
@@ -3343,8 +3343,8 @@ XGetWindowAttributes(
         attributes_return->depth  = 24;
     }
 
-    /* 
-     * Mock common default settings standard widgets look for 
+    /*
+     * Mock common default settings standard widgets look for
      * to prevent initialization failures.
      */
     attributes_return->map_state        = IsViewable;

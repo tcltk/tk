@@ -141,7 +141,7 @@ extern void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 /* Helper function to convert Tk colors to NVGcolor. */
 static NVGcolor TkColorToNVGColor(XColor *color) {
     if (!color) return nvgRGBA(0, 0, 0, 255);
-    return nvgRGBA(color->red >> 8, color->green >> 8, 
+    return nvgRGBA(color->red >> 8, color->green >> 8,
                    color->blue >> 8, 255);
 }
 
@@ -155,7 +155,7 @@ SetupNanoVGFont(
 
     if (tkfont) {
         WaylandFont *fontPtr = (WaylandFont *)tkfont;
-        
+
         /* Ensure the font (and its fallbacks) is loaded into this NVG context. */
         int fontId = EnsureNvgFont(fontPtr, vg);
         if (fontId >= 0) {
@@ -170,7 +170,7 @@ SetupNanoVGFont(
         if (fontSize <= 0.0f) fontSize = DEFAULT_FONT_SIZE;
 
         nvgFontSize(vg, fontSize);
-        
+
         MENU_LOG("SetupNanoVGFont: pixelSize=%d, nvgId=%d", fontPtr->pixelSize, fontId);
     } else {
         nvgFontFace(vg, DEFAULT_FONT);
@@ -488,7 +488,7 @@ MenuDrawMenubarInWindow(
     Tk_Font menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     Tk_FontMetrics menuMetrics;
     Tk_FontMetrics *fmPtr;
-    
+
     if (menuFont) {
         Tk_GetFontMetrics(menuFont, &menuMetrics);
     } else {
@@ -647,9 +647,9 @@ MenuDrawIntoPopup(
     }
 
     TkWaylandPopupGetSize(popup, &menuW, &menuH);
-    MENU_LOG("MenuDrawIntoPopup: menu %p, popup %p, size %dx%d", 
+    MENU_LOG("MenuDrawIntoPopup: menu %p, popup %p, size %dx%d",
         (void*)menuPtr, (void*)popup, menuW, menuH);
-    
+
     if (menuW <= 0 || menuH <= 0) {
         MENU_LOG("MenuDrawIntoPopup: invalid size");
         return;
@@ -697,7 +697,7 @@ MenuDrawIntoPopup(
 
     /* Set up the viewport for the popup size. */
     glViewport(0, 0, menuW, menuH);
-    
+
     /* Clear the FBO to transparent. */
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -761,7 +761,7 @@ MenuDrawIntoPopup(
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
-        
+
         /* Determine font for this entry. */
         if (mePtr->fontPtr == NULL) {
             entryFont = menuFont;
@@ -776,7 +776,7 @@ MenuDrawIntoPopup(
                 fmPtr = &menuMetrics;
             }
         }
-        
+
         TkpDrawMenuEntry(mePtr, d, entryFont, fmPtr,
             mePtr->x, mePtr->y,
             mePtr->width, mePtr->height,
@@ -810,75 +810,75 @@ MenuDrawIntoPopup(
  *     Updates geometry fields of menu entries.
  *
  *---------------------------------------------------------------------------
- */ 
-void 
-TkpComputeMenubarGeometry( 
-			  TkMenu *menuPtr) 
-{ 
-    Tk_Font tkfont; 
-    Tk_FontMetrics menuMetrics; 
-    Tk_FontMetrics entryMetrics; 
-    Tk_FontMetrics *fmPtr; 
-    int x; 
-    int y; 
-    int height; 
-    int width; 
-    int i; 
-    int borderWidth; 
-    int activeBorderWidth; 
-    TkMenuEntry *mePtr; 
-    if (menuPtr->tkwin == NULL) { 
-	return; 
-    } 
-    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr); 
-    Tk_GetFontMetrics(tkfont, &menuMetrics); 
-    x = y = borderWidth = activeBorderWidth = 0; 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj, 
-			&borderWidth); 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, 
-			menuPtr->activeBorderWidthPtr, &activeBorderWidth); 
-    x = y = borderWidth; 
-    height = 0; 
-    for (i = 0; i < menuPtr->numEntries; i++) { 
-	mePtr = menuPtr->entries[i]; 
-	if (mePtr->fontPtr == NULL) { 
-	    fmPtr = &menuMetrics; 
-	} else { 
-	    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, mePtr->fontPtr); 
-	    Tk_GetFontMetrics(tkfont, &entryMetrics); 
-	    fmPtr = &entryMetrics; 
-	} 
-	GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height); 
-	mePtr->height = height + 2 * activeBorderWidth + 10; 
-	if (mePtr->type == SEPARATOR_ENTRY) { 
-	    mePtr->width = 10; 
-	} else { 
-	    mePtr->width = width + 2 * activeBorderWidth + 10; 
-	} 
-	mePtr->x = x; 
-	mePtr->y = y; 
-	x += mePtr->width; 
-	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) { 
-	    x = borderWidth; 
-	    y += mePtr->height; 
-	} 
-    } 
-    menuPtr->totalWidth = 0; 
-    for (i = 0; i < menuPtr->numEntries; i++) { 
-	x = menuPtr->entries[i]->x + menuPtr->entries[i]->width; 
-	if (x > menuPtr->totalWidth) { 
-	    menuPtr->totalWidth = x; 
-	} 
-    } 
-    height = 0; 
-    for (i = 0; i < menuPtr->numEntries; i++) { 
-	y = menuPtr->entries[i]->y + menuPtr->entries[i]->height; 
-	if (y > height) { 
-	    height = y; 
-	} 
-    } 
-    menuPtr->totalWidth += borderWidth; 
-    menuPtr->totalHeight = height + borderWidth; 
+ */
+void
+TkpComputeMenubarGeometry(
+			  TkMenu *menuPtr)
+{
+    Tk_Font tkfont;
+    Tk_FontMetrics menuMetrics;
+    Tk_FontMetrics entryMetrics;
+    Tk_FontMetrics *fmPtr;
+    int x;
+    int y;
+    int height;
+    int width;
+    int i;
+    int borderWidth;
+    int activeBorderWidth;
+    TkMenuEntry *mePtr;
+    if (menuPtr->tkwin == NULL) {
+	return;
+    }
+    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
+    Tk_GetFontMetrics(tkfont, &menuMetrics);
+    x = y = borderWidth = activeBorderWidth = 0;
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+			&borderWidth);
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+			menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+    x = y = borderWidth;
+    height = 0;
+    for (i = 0; i < menuPtr->numEntries; i++) {
+	mePtr = menuPtr->entries[i];
+	if (mePtr->fontPtr == NULL) {
+	    fmPtr = &menuMetrics;
+	} else {
+	    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, mePtr->fontPtr);
+	    Tk_GetFontMetrics(tkfont, &entryMetrics);
+	    fmPtr = &entryMetrics;
+	}
+	GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height);
+	mePtr->height = height + 2 * activeBorderWidth + 10;
+	if (mePtr->type == SEPARATOR_ENTRY) {
+	    mePtr->width = 10;
+	} else {
+	    mePtr->width = width + 2 * activeBorderWidth + 10;
+	}
+	mePtr->x = x;
+	mePtr->y = y;
+	x += mePtr->width;
+	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
+	    x = borderWidth;
+	    y += mePtr->height;
+	}
+    }
+    menuPtr->totalWidth = 0;
+    for (i = 0; i < menuPtr->numEntries; i++) {
+	x = menuPtr->entries[i]->x + menuPtr->entries[i]->width;
+	if (x > menuPtr->totalWidth) {
+	    menuPtr->totalWidth = x;
+	}
+    }
+    height = 0;
+    for (i = 0; i < menuPtr->numEntries; i++) {
+	y = menuPtr->entries[i]->y + menuPtr->entries[i]->height;
+	if (y > height) {
+	    height = y;
+	}
+    }
+    menuPtr->totalWidth += borderWidth;
+    menuPtr->totalHeight = height + borderWidth;
 }
 
 /*
@@ -897,104 +897,104 @@ TkpComputeMenubarGeometry(
  *---------------------------------------------------------------------------
  */
 
-void 
-TkpComputeStandardMenuGeometry( 
-			       TkMenu *menuPtr) 
-{ 
-    Tk_Font tkfont; 
-    Tk_Font menuFont; 
-    Tk_FontMetrics menuMetrics; 
-    Tk_FontMetrics entryMetrics; 
-    Tk_FontMetrics *fmPtr; 
-    int x; 
-    int y; 
-    int height; 
-    int width; 
-    int indicatorSpace; 
-    int labelWidth; 
-    int accelWidth; 
-    int borderWidth; 
-    int activeBorderWidth; 
-    int i; 
-    int j; 
-    int lastColumnBreak = 0; 
-    TkMenuEntry *mePtr; 
-    if (menuPtr->tkwin == NULL) { 
-	return; 
-    } 
-    x = y = borderWidth = activeBorderWidth = 0; 
-    indicatorSpace = labelWidth = accelWidth = 0; 
-    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin, 
-			menuPtr->borderWidthObj, &borderWidth); 
-    x = y = borderWidth; 
-    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin, 
-			menuPtr->activeBorderWidthPtr, &activeBorderWidth); 
-    menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr); 
-    Tk_GetFontMetrics(menuFont, &menuMetrics); 
-    for (i = 0; i < menuPtr->numEntries; i++) { 
-	mePtr = menuPtr->entries[i]; 
-	if (mePtr->fontPtr == NULL) { 
-	    tkfont = menuFont; 
-	    fmPtr = &menuMetrics; 
-	} else { 
-	    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, mePtr->fontPtr); 
-	    Tk_GetFontMetrics(tkfont, &entryMetrics); 
-	    fmPtr = &entryMetrics; 
-	} 
-	if ((i == 0) || mePtr->entryFlags & ENTRY_LAST_COLUMN) { 
-	    if (i != 0) { 
-		for (j = lastColumnBreak; j < i; j++) { 
-		    menuPtr->entries[j]->indicatorSpace = indicatorSpace; 
-		    menuPtr->entries[j]->labelWidth = labelWidth; 
-		    menuPtr->entries[j]->width = indicatorSpace + labelWidth 
-			+ accelWidth + 2 * activeBorderWidth; 
-		} 
-	    } 
-	    indicatorSpace = labelWidth = accelWidth = 0; 
-	    lastColumnBreak = i; 
-	    y = borderWidth; 
-	} 
-	if (mePtr->type == SEPARATOR_ENTRY) { 
-	    GetMenuSeparatorGeometry(menuPtr, mePtr, tkfont, fmPtr, 
-				     &width, &height); 
-	    mePtr->height = height; 
-	} else if (mePtr->type == TEAROFF_ENTRY) { 
-	    GetTearoffEntryGeometry(menuPtr, mePtr, tkfont, fmPtr, 
-				    &width, &height); 
-	    mePtr->height = height; 
-	} else { 
-	    GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height); 
-	    mePtr->height = height; 
-	    if (width > labelWidth) { 
-		labelWidth = width; 
-	    } 
-	    GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont, fmPtr, 
-				     &width, &height); 
-	    if (width > indicatorSpace) { 
-		indicatorSpace = width; 
-	    } 
-	    GetMenuAccelGeometry(menuPtr, mePtr, tkfont, fmPtr, 
-				 &width, &height); 
-	    if (width > accelWidth) { 
-		accelWidth = width; 
-	    } 
-	    mePtr->height += 2 * activeBorderWidth + MENU_DIVIDER_HEIGHT; 
-	} 
-	mePtr->x = x; 
-	mePtr->y = y; 
-	y += mePtr->height; 
-    } 
-    for (j = lastColumnBreak; j < menuPtr->numEntries; j++) { 
-	menuPtr->entries[j]->indicatorSpace = indicatorSpace; 
-	menuPtr->entries[j]->labelWidth = labelWidth; 
-	menuPtr->entries[j]->width = indicatorSpace + labelWidth 
-	    + accelWidth + 2 * activeBorderWidth; 
-    } 
-    width = x + indicatorSpace + labelWidth + accelWidth 
-	+ 2 * activeBorderWidth + 2 * borderWidth; 
-    height = y + borderWidth; 
-    menuPtr->totalWidth = width; 
-    menuPtr->totalHeight = height; 
+void
+TkpComputeStandardMenuGeometry(
+			       TkMenu *menuPtr)
+{
+    Tk_Font tkfont;
+    Tk_Font menuFont;
+    Tk_FontMetrics menuMetrics;
+    Tk_FontMetrics entryMetrics;
+    Tk_FontMetrics *fmPtr;
+    int x;
+    int y;
+    int height;
+    int width;
+    int indicatorSpace;
+    int labelWidth;
+    int accelWidth;
+    int borderWidth;
+    int activeBorderWidth;
+    int i;
+    int j;
+    int lastColumnBreak = 0;
+    TkMenuEntry *mePtr;
+    if (menuPtr->tkwin == NULL) {
+	return;
+    }
+    x = y = borderWidth = activeBorderWidth = 0;
+    indicatorSpace = labelWidth = accelWidth = 0;
+    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
+			menuPtr->borderWidthObj, &borderWidth);
+    x = y = borderWidth;
+    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
+			menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+    menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
+    Tk_GetFontMetrics(menuFont, &menuMetrics);
+    for (i = 0; i < menuPtr->numEntries; i++) {
+	mePtr = menuPtr->entries[i];
+	if (mePtr->fontPtr == NULL) {
+	    tkfont = menuFont;
+	    fmPtr = &menuMetrics;
+	} else {
+	    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, mePtr->fontPtr);
+	    Tk_GetFontMetrics(tkfont, &entryMetrics);
+	    fmPtr = &entryMetrics;
+	}
+	if ((i == 0) || mePtr->entryFlags & ENTRY_LAST_COLUMN) {
+	    if (i != 0) {
+		for (j = lastColumnBreak; j < i; j++) {
+		    menuPtr->entries[j]->indicatorSpace = indicatorSpace;
+		    menuPtr->entries[j]->labelWidth = labelWidth;
+		    menuPtr->entries[j]->width = indicatorSpace + labelWidth
+			+ accelWidth + 2 * activeBorderWidth;
+		}
+	    }
+	    indicatorSpace = labelWidth = accelWidth = 0;
+	    lastColumnBreak = i;
+	    y = borderWidth;
+	}
+	if (mePtr->type == SEPARATOR_ENTRY) {
+	    GetMenuSeparatorGeometry(menuPtr, mePtr, tkfont, fmPtr,
+				     &width, &height);
+	    mePtr->height = height;
+	} else if (mePtr->type == TEAROFF_ENTRY) {
+	    GetTearoffEntryGeometry(menuPtr, mePtr, tkfont, fmPtr,
+				    &width, &height);
+	    mePtr->height = height;
+	} else {
+	    GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height);
+	    mePtr->height = height;
+	    if (width > labelWidth) {
+		labelWidth = width;
+	    }
+	    GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont, fmPtr,
+				     &width, &height);
+	    if (width > indicatorSpace) {
+		indicatorSpace = width;
+	    }
+	    GetMenuAccelGeometry(menuPtr, mePtr, tkfont, fmPtr,
+				 &width, &height);
+	    if (width > accelWidth) {
+		accelWidth = width;
+	    }
+	    mePtr->height += 2 * activeBorderWidth + MENU_DIVIDER_HEIGHT;
+	}
+	mePtr->x = x;
+	mePtr->y = y;
+	y += mePtr->height;
+    }
+    for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
+	menuPtr->entries[j]->indicatorSpace = indicatorSpace;
+	menuPtr->entries[j]->labelWidth = labelWidth;
+	menuPtr->entries[j]->width = indicatorSpace + labelWidth
+	    + accelWidth + 2 * activeBorderWidth;
+    }
+    width = x + indicatorSpace + labelWidth + accelWidth
+	+ 2 * activeBorderWidth + 2 * borderWidth;
+    height = y + borderWidth;
+    menuPtr->totalWidth = width;
+    menuPtr->totalHeight = height;
 }
 
 /*
@@ -1013,38 +1013,38 @@ TkpComputeStandardMenuGeometry(
  *---------------------------------------------------------------------------
  */
 
-void 
-TkpDrawMenuEntry( 
-		 TkMenuEntry *mePtr, 
-		 Drawable d, 
+void
+TkpDrawMenuEntry(
+		 TkMenuEntry *mePtr,
+		 Drawable d,
 		 Tk_Font tkfont,
 		 const Tk_FontMetrics *fmPtr,
-		 int x, 
-		 int y, 
-		 int width, 
+		 int x,
+		 int y,
+		 int width,
 		 int height,
 		 DrawMenuFlags drawingParameters)	/* Flags */
-{ 
-    Tk_3DBorder bgBorder = NULL; 
-    Tk_3DBorder activeBorder = NULL; 
+{
+    Tk_3DBorder bgBorder = NULL;
+    Tk_3DBorder activeBorder = NULL;
     NVGcontext *vg = NULL;
-    int padY = (mePtr->menuPtr->menuType == MENUBAR) ? 3 : 0; 
-    int adjustedY = y + padY; 
+    int padY = (mePtr->menuPtr->menuType == MENUBAR) ? 3 : 0;
+    int adjustedY = y + padY;
     int adjustedHeight = height - 2 * padY;
-    
+
     /* Safety check. */
     if (!mePtr || !mePtr->menuPtr || !mePtr->menuPtr->tkwin) return;
-    
+
     /* Get the actual borders from the menu. */
     if (mePtr->menuPtr->borderPtr != NULL) {
-        bgBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin, 
+        bgBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
                                           mePtr->menuPtr->borderPtr);
     }
     if (mePtr->menuPtr->activeBorderPtr != NULL) {
         activeBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
                                               mePtr->menuPtr->activeBorderPtr);
     }
-    
+
     /* Get NanoVG context from the main window's drawing context. */
     TkWaylandDrawingContext dc;
     if (TkGlfwBeginDraw(d, NULL, &dc) == TCL_OK) {
@@ -1054,7 +1054,7 @@ TkpDrawMenuEntry(
             Tk_Font entryFont = tkfont;
             Tk_FontMetrics entryMetrics;
             const Tk_FontMetrics *entryFmPtr = fmPtr;
-            
+
             if (mePtr->fontPtr != NULL) {
                 entryFont = Tk_GetFontFromObj(mePtr->menuPtr->tkwin, mePtr->fontPtr);
                 if (entryFont) {
@@ -1062,10 +1062,10 @@ TkpDrawMenuEntry(
                     entryFmPtr = &entryMetrics;
                 }
             }
-            
+
             /* Determine text color. */
             NVGcolor textColor = nvgRGBA(0, 0, 0, 255);
-            
+
             Tk_3DBorder fgBorder = NULL;
             if (mePtr->menuPtr->borderPtr) {
                 fgBorder = Tk_Get3DBorder(mePtr->menuPtr->interp,
@@ -1080,44 +1080,44 @@ TkpDrawMenuEntry(
             if (mePtr->state == ENTRY_DISABLED) {
                 textColor = nvgRGBA(128, 128, 128, 255);
             }
-            
-            DrawMenuEntryBackground(mePtr->menuPtr, mePtr, vg, 
-                                    activeBorder, bgBorder, x, y, width, height); 
-            
-            if (mePtr->type == SEPARATOR_ENTRY) { 
-                DrawMenuSeparator(mePtr->menuPtr, mePtr, vg, 
-                                  entryFont, entryFmPtr, x, adjustedY, width, adjustedHeight); 
-            } else if (mePtr->type == TEAROFF_ENTRY) { 
-                DrawTearoffEntry(mePtr->menuPtr, mePtr, vg, 
-                                 entryFont, entryFmPtr, x, adjustedY, width, adjustedHeight); 
-            } else { 
-                DrawMenuEntryLabel(mePtr->menuPtr, mePtr, vg, entryFont, entryFmPtr, 
-                                   x, adjustedY, width, adjustedHeight, textColor); 
-                DrawMenuEntryAccelerator(mePtr->menuPtr, mePtr, vg, entryFont, entryFmPtr, 
-                                         activeBorder, bgBorder, x, adjustedY, width, adjustedHeight, 
+
+            DrawMenuEntryBackground(mePtr->menuPtr, mePtr, vg,
+                                    activeBorder, bgBorder, x, y, width, height);
+
+            if (mePtr->type == SEPARATOR_ENTRY) {
+                DrawMenuSeparator(mePtr->menuPtr, mePtr, vg,
+                                  entryFont, entryFmPtr, x, adjustedY, width, adjustedHeight);
+            } else if (mePtr->type == TEAROFF_ENTRY) {
+                DrawTearoffEntry(mePtr->menuPtr, mePtr, vg,
+                                 entryFont, entryFmPtr, x, adjustedY, width, adjustedHeight);
+            } else {
+                DrawMenuEntryLabel(mePtr->menuPtr, mePtr, vg, entryFont, entryFmPtr,
+                                   x, adjustedY, width, adjustedHeight, textColor);
+                DrawMenuEntryAccelerator(mePtr->menuPtr, mePtr, vg, entryFont, entryFmPtr,
+                                         activeBorder, bgBorder, x, adjustedY, width, adjustedHeight,
                                          (drawingParameters & DRAW_MENU_ENTRY_ARROW) != 0, textColor);
-                if (!mePtr->hideMargin) { 
+                if (!mePtr->hideMargin) {
                     XColor *indicatorColor = NULL;
                     XColor *disableColor = NULL;
                     Tk_3DBorder disabledBorder = NULL;
-                    
+
                     if (bgBorder) {
                         indicatorColor = Tk_3DBorderColor(bgBorder);
                     }
-                    
+
                     disabledBorder = Tk_Get3DBorder(mePtr->menuPtr->interp,
                                                      mePtr->menuPtr->tkwin,
                                                      Tk_GetUid("disabledForeground"));
                     if (disabledBorder) {
                         disableColor = Tk_3DBorderColor(disabledBorder);
                     }
-                    
-                    DrawMenuEntryIndicator(mePtr->menuPtr, mePtr, vg, 
+
+                    DrawMenuEntryIndicator(mePtr->menuPtr, mePtr, vg,
                                            bgBorder, indicatorColor, disableColor,
-                                           entryFont, entryFmPtr, x, adjustedY, width, adjustedHeight, 
-                                           textColor); 
-                } 
-            } 
+                                           entryFont, entryFmPtr, x, adjustedY, width, adjustedHeight,
+                                           textColor);
+                }
+            }
         }
         TkGlfwEndDraw(&dc);
     }
@@ -1407,10 +1407,10 @@ TkWaylandPostMenuAtAnchor(
  *---------------------------------------------------------------------------
  */
 
-void 
-TkpMenuInit(void) 
-{ 
-    /* NanoVG context and fonts assumed to be set up elsewhere. */ 
+void
+TkpMenuInit(void)
+{
+    /* NanoVG context and fonts assumed to be set up elsewhere. */
 }
 
 /*
@@ -1429,10 +1429,10 @@ TkpMenuInit(void)
  *---------------------------------------------------------------------------
  */
 
-void 
-TkpMenuThreadInit(void) 
-{ 
-    /* Nothing to do on Wayland. */ 
+void
+TkpMenuThreadInit(void)
+{
+    /* Nothing to do on Wayland. */
 }
 
 /*
@@ -1470,12 +1470,12 @@ TkpPostTearoffMenu(
     const GLFWvidmode *mode;
     int screenW = 1920;
     int screenH = 1080;
-    
+
     MENU_LOG("TkpPostTearoffMenu called");
-    
+
     TkActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
-    
+
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
         return result;
@@ -1534,7 +1534,7 @@ TkpPostTearoffMenu(
     Tk_MoveWindow(menuPtr->tkwin, x, y);
     Tk_ResizeWindow(menuPtr->tkwin, reqW, reqH);
     Tk_MapWindow(menuPtr->tkwin);
-    
+
     Tcl_DoWhenIdle((Tcl_IdleProc *)TkpDisplayMenu, menuPtr);
 
     return TCL_OK;
@@ -1568,26 +1568,26 @@ MenuMouseClick(
 	       int button)
 {
     int i;
-    
+
     if (!menuPtr) return;
-    
+
     if (button != 1) {
         return;
     }
-    
+
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
 
         if (x >= mePtr->x && x < mePtr->x + mePtr->width &&
             y >= mePtr->y && y < mePtr->y + mePtr->height) {
-            
-            if (mePtr->state == ENTRY_DISABLED || 
+
+            if (mePtr->state == ENTRY_DISABLED ||
                 mePtr->type == SEPARATOR_ENTRY ||
                 mePtr->type == TEAROFF_ENTRY) {
                 return;
             }
-            
+
             switch (mePtr->type) {
             case COMMAND_ENTRY:
                 TkInvokeMenu(menuPtr->interp, menuPtr, i);
@@ -1627,7 +1627,7 @@ MenuMouseClick(
                     }
                 }
                 break;
-                
+
             case CHECK_BUTTON_ENTRY:
                 if (mePtr->entryFlags & ENTRY_SELECTED) {
                     mePtr->entryFlags &= ~ENTRY_SELECTED;
@@ -1637,7 +1637,7 @@ MenuMouseClick(
                 TkInvokeMenu(menuPtr->interp, menuPtr, i);
                 TkEventuallyRedrawMenu(menuPtr, NULL);
                 break;
-                
+
             case RADIO_BUTTON_ENTRY:
                 if (!(mePtr->entryFlags & ENTRY_SELECTED)) {
                     if (mePtr->namePtr != NULL) {
@@ -1690,24 +1690,24 @@ MenuMouseMotion(
 {
     int i;
     int foundEntry = 0;
-    
+
     if (!menuPtr) return;
-    
+
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
 
         if (x >= mePtr->x && x < mePtr->x + mePtr->width &&
             y >= mePtr->y && y < mePtr->y + mePtr->height) {
-            
+
             foundEntry = 1;
-            
+
             if (mePtr->state == ENTRY_DISABLED ||
                 mePtr->type == SEPARATOR_ENTRY ||
                 mePtr->type == TEAROFF_ENTRY) {
                 continue;
             }
-            
+
             if (menuPtr->active != i) {
 
                 if (menuPtr->postedCascade != NULL &&
@@ -1758,7 +1758,7 @@ MenuMouseMotion(
             return;
         }
     }
-    
+
     if (!foundEntry && menuPtr->active != -1) {
         TkActivateMenuEntry(menuPtr, -1);
         TkEventuallyRedrawMenu(menuPtr, NULL);
@@ -1786,7 +1786,7 @@ MenuMouseLeave(
 	       TkMenu *menuPtr)
 {
     if (!menuPtr) return;
-    
+
     if (menuPtr->postedCascade == NULL) {
         if (menuPtr->active != -1) {
             TkActivateMenuEntry(menuPtr, -1);
@@ -2006,13 +2006,13 @@ TkWaylandMenuHandleEscape(void)
  *
  * TkWaylandMenuInit --
  *
- *   Initializes menu structures. 
+ *   Initializes menu structures.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None. 
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -2039,12 +2039,12 @@ TkWaylandMenuInit(void)
  *---------------------------------------------------------------------------
  */
 
-MODULE_SCOPE void 
-TkpInitializeMenuBindings( 
+MODULE_SCOPE void
+TkpInitializeMenuBindings(
 			  TCL_UNUSED(Tcl_Interp *), /* interp */
 			  TCL_UNUSED(Tk_BindingTable)) /* bindingTable */
-{ 
-    /* Nothing to do on Wayland. */ 
+{
+    /* Nothing to do on Wayland. */
 }
 
 /*
@@ -2063,12 +2063,12 @@ TkpInitializeMenuBindings(
  *---------------------------------------------------------------------------
  */
 
-MODULE_SCOPE void 
-TkpMenuNotifyToplevelCreate( 
+MODULE_SCOPE void
+TkpMenuNotifyToplevelCreate(
 			    TCL_UNUSED(Tcl_Interp *), /* interp */
 			    TCL_UNUSED(const char *)) /* name */
-{ 
-    /* Nothing to do on Wayland. */ 
+{
+    /* Nothing to do on Wayland. */
 }
 
 /*
@@ -2164,14 +2164,14 @@ GetMenuAccelGeometry(
     Tk_GetFontMetrics(tkfont, &fm);
     *heightPtr = fm.linespace;
 
-    if (mePtr->type == CASCADE_ENTRY) { 
-	*widthPtr = 2 * CASCADE_ARROW_WIDTH; 
-    } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) { 
-	const char *accel = Tcl_GetString(mePtr->accelPtr); 
-	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength); 
-    } else { 
-	*widthPtr = 0; 
-    } 
+    if (mePtr->type == CASCADE_ENTRY) {
+	*widthPtr = 2 * CASCADE_ARROW_WIDTH;
+    } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
+	const char *accel = Tcl_GetString(mePtr->accelPtr);
+	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
+    } else {
+	*widthPtr = 0;
+    }
 }
 
 /*
@@ -2202,8 +2202,8 @@ GetMenuSeparatorGeometry(
     Tk_FontMetrics fm;
 
     Tk_GetFontMetrics(tkfont, &fm);
-    *widthPtr = 0; 
-    *heightPtr = fm.linespace; 
+    *widthPtr = 0;
+    *heightPtr = fm.linespace;
 }
 
 /*
@@ -2233,14 +2233,14 @@ GetTearoffEntryGeometry(
 {
     Tk_FontMetrics fm;
 
-    if (menuPtr->menuType != MAIN_MENU) { 
-	*heightPtr = 0; 
-	*widthPtr = 0; 
-    } else { 
+    if (menuPtr->menuType != MAIN_MENU) {
+	*heightPtr = 0;
+	*widthPtr = 0;
+    } else {
 	Tk_GetFontMetrics(tkfont, &fm);
-	*heightPtr = fm.linespace; 
-	*widthPtr = Tk_TextWidth(tkfont, "W", 1); 
-    } 
+	*heightPtr = fm.linespace;
+	*widthPtr = Tk_TextWidth(tkfont, "W", 1);
+    }
 }
 
 /*
@@ -2272,64 +2272,64 @@ GetMenuLabelGeometry(
     int imageWidth = 0;
     int imageHeight = 0;
 
-    if (mePtr->image != NULL) { 
-	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight); 
-	*widthPtr = imageWidth; 
-	*heightPtr = imageHeight; 
-	haveImage = 1; 
-    } else if (mePtr->bitmapPtr != NULL) { 
-	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin, 
-					    mePtr->bitmapPtr); 
-	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap, 
-			&imageWidth, &imageHeight); 
-	haveImage = 1; 
-	*widthPtr = imageWidth; 
-	*heightPtr = imageHeight; 
-    } else { 
-	*heightPtr = 0; 
-	*widthPtr = 0; 
-    } 
+    if (mePtr->image != NULL) {
+	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	*widthPtr = imageWidth;
+	*heightPtr = imageHeight;
+	haveImage = 1;
+    } else if (mePtr->bitmapPtr != NULL) {
+	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
+					    mePtr->bitmapPtr);
+	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap,
+			&imageWidth, &imageHeight);
+	haveImage = 1;
+	*widthPtr = imageWidth;
+	*heightPtr = imageHeight;
+    } else {
+	*heightPtr = 0;
+	*widthPtr = 0;
+    }
 
-    if (haveImage && (mePtr->compound == COMPOUND_NONE)) { 
-	/* Already set above. */ 
-    } else { 
-	int textWidth = 0; 
-	int textHeight = 0; 
-	
-	if (mePtr->labelPtr != NULL) { 
-	    const char *label = Tcl_GetString(mePtr->labelPtr); 
+    if (haveImage && (mePtr->compound == COMPOUND_NONE)) {
+	/* Already set above. */
+    } else {
+	int textWidth = 0;
+	int textHeight = 0;
+
+	if (mePtr->labelPtr != NULL) {
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
 	    Tk_GetFontMetrics(tkfont, &fm);
-	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength); 
-	    textHeight = fm.linespace; 
-	    
-	    if ((mePtr->compound != COMPOUND_NONE) && haveImage) { 
-		switch ((enum compound) mePtr->compound) { 
-		case COMPOUND_TOP: 
-		case COMPOUND_BOTTOM: 
-		    *heightPtr = imageHeight + textHeight + 2; 
-		    *widthPtr = (imageWidth > textWidth ? imageWidth : textWidth); 
-		    break; 
-		case COMPOUND_LEFT: 
-		case COMPOUND_RIGHT: 
-		    *heightPtr = (imageHeight > textHeight ? imageHeight : textHeight); 
-		    *widthPtr = imageWidth + textWidth + 2; 
-		    break; 
-		case COMPOUND_CENTER: 
-		    *heightPtr = (imageHeight > textHeight ? imageHeight : textHeight); 
-		    *widthPtr = (imageWidth > textWidth ? imageWidth : textWidth); 
-		    break; 
-		case COMPOUND_NONE: 
-		    break; 
-		} 
-	    } else { 
-		*heightPtr = textHeight; 
-		*widthPtr = textWidth; 
-	    } 
-	} else { 
+	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
+	    textHeight = fm.linespace;
+
+	    if ((mePtr->compound != COMPOUND_NONE) && haveImage) {
+		switch ((enum compound) mePtr->compound) {
+		case COMPOUND_TOP:
+		case COMPOUND_BOTTOM:
+		    *heightPtr = imageHeight + textHeight + 2;
+		    *widthPtr = (imageWidth > textWidth ? imageWidth : textWidth);
+		    break;
+		case COMPOUND_LEFT:
+		case COMPOUND_RIGHT:
+		    *heightPtr = (imageHeight > textHeight ? imageHeight : textHeight);
+		    *widthPtr = imageWidth + textWidth + 2;
+		    break;
+		case COMPOUND_CENTER:
+		    *heightPtr = (imageHeight > textHeight ? imageHeight : textHeight);
+		    *widthPtr = (imageWidth > textWidth ? imageWidth : textWidth);
+		    break;
+		case COMPOUND_NONE:
+		    break;
+		}
+	    } else {
+		*heightPtr = textHeight;
+		*widthPtr = textWidth;
+	    }
+	} else {
 	    Tk_GetFontMetrics(tkfont, &fm);
-	    *heightPtr = fm.linespace; 
-	} 
-    } 
+	    *heightPtr = fm.linespace;
+	}
+    }
     /* FIX: Increase padding tolerance explicitly for NanoVG middle-align baselines. */
     *heightPtr += 4;
 }
@@ -2364,28 +2364,28 @@ DrawMenuEntryBackground(
 {
     Tk_3DBorder border = bgBorder;
     NVGcolor fillColor;
-    
+
     if (mePtr->state == ENTRY_ACTIVE) {
 	border = activeBorder;
 	fillColor = TkColorToNVGColor(Tk_3DBorderColor(activeBorder));
     } else {
 	fillColor = TkColorToNVGColor(Tk_3DBorderColor(bgBorder));
     }
-    
+
     /* Fill background. */
     nvgBeginPath(vg);
     nvgRect(vg, x, y, width, height);
     nvgFillColor(vg, fillColor);
     nvgFill(vg);
-    
+
     /* Draw border if needed. */
     if (menuPtr->menuType != MENUBAR || mePtr->state == ENTRY_ACTIVE) {
 	int relief = TK_RELIEF_FLAT;
 	int activeBorderWidth;
-	
+
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 			    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
-	
+
 	if ((menuPtr->menuType == MENUBAR)
 	    && ((menuPtr->postedCascade == NULL)
 		|| (menuPtr->postedCascade != mePtr))) {
@@ -2393,7 +2393,7 @@ DrawMenuEntryBackground(
 	} else {
 	    relief = menuPtr->activeRelief;
 	}
-	
+
 	if (relief != TK_RELIEF_FLAT && activeBorderWidth > 0) {
 	    nvgBeginPath(vg);
 	    nvgRect(vg, x, y, width, height);
@@ -2439,28 +2439,28 @@ DrawMenuEntryAccelerator(
     int borderWidth;
     int activeBorderWidth;
 
-    if (menuPtr->menuType == MENUBAR) { 
-	return; 
-    } 
+    if (menuPtr->menuType == MENUBAR) {
+	return;
+    }
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj, 
-			&borderWidth); 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr, 
-			&activeBorderWidth); 
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
+			&borderWidth);
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
+			&activeBorderWidth);
 
-    if ((mePtr->type == CASCADE_ENTRY) && drawArrow) { 
+    if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
 	int px, py;
-	
-	px = x + width - borderWidth - activeBorderWidth - CASCADE_ARROW_WIDTH; 
-	py = y + (height - CASCADE_ARROW_HEIGHT)/2; 
-	
+
+	px = x + width - borderWidth - activeBorderWidth - CASCADE_ARROW_WIDTH;
+	py = y + (height - CASCADE_ARROW_HEIGHT)/2;
+
 	/* Draw cascade arrow as filled triangle using NanoVG. */
 	nvgBeginPath(vg);
 	nvgMoveTo(vg, px, py);
 	nvgLineTo(vg, px, py + CASCADE_ARROW_HEIGHT);
 	nvgLineTo(vg, px + CASCADE_ARROW_WIDTH, py + CASCADE_ARROW_HEIGHT/2);
 	nvgClosePath(vg);
-	
+
 	/* Use appropriate color based on active state. */
 	if (mePtr->state == ENTRY_ACTIVE) {
 	    nvgFillColor(vg, TkColorToNVGColor(Tk_3DBorderColor(activeBorder)));
@@ -2468,24 +2468,24 @@ DrawMenuEntryAccelerator(
 	    nvgFillColor(vg, TkColorToNVGColor(Tk_3DBorderColor(bgBorder)));
 	}
 	nvgFill(vg);
-	
-    } else if (mePtr->accelPtr != NULL) { 
-	const char *accel = Tcl_GetString(mePtr->accelPtr); 
-	int left = x + mePtr->labelWidth + activeBorderWidth 
-	    + mePtr->indicatorSpace; 
-	int ty; 
-	
-	if (menuPtr->menuType == MENUBAR) { 
-	    left += 5; 
-	} 
-	
-	ty = y + (height + fmPtr->ascent - fmPtr->descent) / 2; 
-	
+
+    } else if (mePtr->accelPtr != NULL) {
+	const char *accel = Tcl_GetString(mePtr->accelPtr);
+	int left = x + mePtr->labelWidth + activeBorderWidth
+	    + mePtr->indicatorSpace;
+	int ty;
+
+	if (menuPtr->menuType == MENUBAR) {
+	    left += 5;
+	}
+
+	ty = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
+
 	/* Setup font from Tk font. */
 	SetupNanoVGFont(vg, tkfont);
 	nvgFillColor(vg, textColor);
 	nvgText(vg, left, ty, accel, NULL);
-    } 
+    }
 }
 
 /*
@@ -2526,23 +2526,23 @@ DrawMenuEntryIndicator(
 	int activeBorderWidth;
 	NVGcolor color;
 
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, 
-			    menuPtr->activeBorderWidthPtr, &activeBorderWidth); 
-	top = y + height/2; 
-	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
-	size = PTR2INT(mePtr->platformEntryData); 
-	
-	color = (mePtr->state == ENTRY_DISABLED) ? 
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+			    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	top = y + height/2;
+	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2;
+	size = PTR2INT(mePtr->platformEntryData);
+
+	color = (mePtr->state == ENTRY_DISABLED) ?
 	    TkColorToNVGColor(disableColor) : TkColorToNVGColor(indicatorColor);
-	
+
 	/* Draw checkbox square. */
 	nvgBeginPath(vg);
 	nvgRect(vg, left - size/2, top - size/2, size, size);
 	nvgStrokeWidth(vg, 1.0f);
 	nvgStrokeColor(vg, color);
 	nvgStroke(vg);
-	
-	if (mePtr->entryFlags & ENTRY_SELECTED) { 
+
+	if (mePtr->entryFlags & ENTRY_SELECTED) {
 	    /* Draw check mark using NanoVG lines. */
 	    nvgBeginPath(vg);
 	    nvgMoveTo(vg, left - size/3, top);
@@ -2551,39 +2551,39 @@ DrawMenuEntryIndicator(
 	    nvgStrokeWidth(vg, 1.5f);
 	    nvgStrokeColor(vg, color);
 	    nvgStroke(vg);
-	} 
-    } 
+	}
+    }
 
-    /* Draw radio-button indicator. */ 
-    if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn) { 
-	int top, left, radius; 
-	int activeBorderWidth; 
+    /* Draw radio-button indicator. */
+    if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn) {
+	int top, left, radius;
+	int activeBorderWidth;
 	NVGcolor color;
-	
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, 
-			    menuPtr->activeBorderWidthPtr, &activeBorderWidth); 
-	top = y + height/2; 
-	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
-	radius = PTR2INT(mePtr->platformEntryData) / 2; 
-	
-	color = (mePtr->state == ENTRY_DISABLED) ? 
+
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+			    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	top = y + height/2;
+	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2;
+	radius = PTR2INT(mePtr->platformEntryData) / 2;
+
+	color = (mePtr->state == ENTRY_DISABLED) ?
 	    TkColorToNVGColor(disableColor) : TkColorToNVGColor(indicatorColor);
-	
+
 	/* Draw radio circle. */
 	nvgBeginPath(vg);
 	nvgCircle(vg, left, top, radius);
 	nvgStrokeWidth(vg, 1.0f);
 	nvgStrokeColor(vg, color);
 	nvgStroke(vg);
-	
-	if (mePtr->entryFlags & ENTRY_SELECTED) { 
+
+	if (mePtr->entryFlags & ENTRY_SELECTED) {
 	    /* Fill inner circle. */
 	    nvgBeginPath(vg);
 	    nvgCircle(vg, left, top, radius/2);
 	    nvgFillColor(vg, color);
 	    nvgFill(vg);
-	} 
-    } 
+	}
+    }
 }
 
 /*
@@ -2670,85 +2670,85 @@ DrawMenuEntryLabel(
     int textXOffset = 0;
     int textYOffset = 0;
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr, 
-			&activeBorderWidth); 
-    leftEdge = x + indicatorSpace + activeBorderWidth; 
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
+			&activeBorderWidth);
+    leftEdge = x + indicatorSpace + activeBorderWidth;
 
-    if (menuPtr->menuType == MENUBAR) { 
-	leftEdge += 5; 
-    } 
+    if (menuPtr->menuType == MENUBAR) {
+	leftEdge += 5;
+    }
 
-    /* Determine what to draw. */ 
-    if (mePtr->image != NULL) { 
-	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight); 
-	haveImage = 1; 
+    /* Determine what to draw. */
+    if (mePtr->image != NULL) {
+	Tk_SizeOfImage(mePtr->image, &imageWidth, &imageHeight);
+	haveImage = 1;
 	MENU_LOG("DrawMenuEntryLabel: has image %dx%d", imageWidth, imageHeight);
-    } else if (mePtr->bitmapPtr != NULL) { 
-	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr); 
-	Tk_SizeOfBitmap(menuPtr->display, bitmap, &imageWidth, &imageHeight); 
-	haveImage = 1; 
+    } else if (mePtr->bitmapPtr != NULL) {
+	Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin, mePtr->bitmapPtr);
+	Tk_SizeOfBitmap(menuPtr->display, bitmap, &imageWidth, &imageHeight);
+	haveImage = 1;
 	MENU_LOG("DrawMenuEntryLabel: has bitmap %dx%d", imageWidth, imageHeight);
-    } 
+    }
 
-    if (!haveImage || (mePtr->compound != COMPOUND_NONE)) { 
-	if (mePtr->labelLength > 0) { 
-	    const char *label = Tcl_GetString(mePtr->labelPtr); 
-	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength); 
-	    textHeight = fmPtr->linespace; 
-	    haveText = 1; 
-	} 
-    } 
+    if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
+	if (mePtr->labelLength > 0) {
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
+	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
+	    textHeight = fmPtr->linespace;
+	    haveText = 1;
+	}
+    }
 
-    /* Calculate relative positions for compound display. */ 
-    if (haveImage && haveText) { 
-	int fullWidth = (imageWidth > textWidth ? imageWidth : textWidth); 
-	switch ((enum compound) mePtr->compound) { 
-	case COMPOUND_TOP: 
-	    textXOffset = (fullWidth - textWidth)/2; 
-	    textYOffset = imageHeight/2 + 2; 
-	    imageXOffset = (fullWidth - imageWidth)/2; 
-	    imageYOffset = -textHeight/2; 
-	    break; 
-	case COMPOUND_BOTTOM: 
-	    textXOffset = (fullWidth - textWidth)/2; 
-	    textYOffset = -imageHeight/2; 
-	    imageXOffset = (fullWidth - imageWidth)/2; 
-	    imageYOffset = textHeight/2 + 2; 
-	    break; 
-	case COMPOUND_LEFT: 
-	    textXOffset = imageWidth + 2; 
-	    textYOffset = 0; 
-	    imageXOffset = 0; 
-	    imageYOffset = 0; 
-	    break; 
-	case COMPOUND_RIGHT: 
-	    textXOffset = 0; 
-	    textYOffset = 0; 
-	    imageXOffset = textWidth + 2; 
-	    imageYOffset = 0; 
-	    break; 
-	case COMPOUND_CENTER: 
-	    textXOffset = (fullWidth - textWidth)/2; 
-	    textYOffset = 0; 
-	    imageXOffset = (fullWidth - imageWidth)/2; 
-	    imageYOffset = 0; 
-	    break; 
-	case COMPOUND_NONE: 
-	    break; 
-	} 
-    } 
+    /* Calculate relative positions for compound display. */
+    if (haveImage && haveText) {
+	int fullWidth = (imageWidth > textWidth ? imageWidth : textWidth);
+	switch ((enum compound) mePtr->compound) {
+	case COMPOUND_TOP:
+	    textXOffset = (fullWidth - textWidth)/2;
+	    textYOffset = imageHeight/2 + 2;
+	    imageXOffset = (fullWidth - imageWidth)/2;
+	    imageYOffset = -textHeight/2;
+	    break;
+	case COMPOUND_BOTTOM:
+	    textXOffset = (fullWidth - textWidth)/2;
+	    textYOffset = -imageHeight/2;
+	    imageXOffset = (fullWidth - imageWidth)/2;
+	    imageYOffset = textHeight/2 + 2;
+	    break;
+	case COMPOUND_LEFT:
+	    textXOffset = imageWidth + 2;
+	    textYOffset = 0;
+	    imageXOffset = 0;
+	    imageYOffset = 0;
+	    break;
+	case COMPOUND_RIGHT:
+	    textXOffset = 0;
+	    textYOffset = 0;
+	    imageXOffset = textWidth + 2;
+	    imageYOffset = 0;
+	    break;
+	case COMPOUND_CENTER:
+	    textXOffset = (fullWidth - textWidth)/2;
+	    textYOffset = 0;
+	    imageXOffset = (fullWidth - imageWidth)/2;
+	    imageYOffset = 0;
+	    break;
+	case COMPOUND_NONE:
+	    break;
+	}
+    }
 
     /* Draw image using X11 functions. */
     if (haveImage) {
 	int imageX = leftEdge + imageXOffset;
 	int imageY = y + (height - imageHeight) / 2 + imageYOffset;
-	
+
 	/* Ensure image stays within menu bounds. */
 	if (imageX < x) imageX = x;
 	if (imageY < y) imageY = y;
 	if (imageX + imageWidth > x + width) imageX = x + width - imageWidth;
 	if (imageY + imageHeight > y + height) imageY = y + height - imageHeight;
-	
+
 	if (mePtr->image != NULL) {
 	    TkWindow *winPtr = (TkWindow *)menuPtr->tkwin;
 	    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
@@ -2786,30 +2786,30 @@ DrawMenuEntryLabel(
     }
 
     /* Draw text label using NanoVG with proper alignment (middle). */
-    if ((mePtr->compound != COMPOUND_NONE) || !haveImage) { 
+    if ((mePtr->compound != COMPOUND_NONE) || !haveImage) {
 	float textY = (float)(y + height / 2 + textYOffset);
-	
-	if (mePtr->labelLength > 0) { 
-	    const char *label = Tcl_GetString(mePtr->labelPtr); 
-	    
+
+	if (mePtr->labelLength > 0) {
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
+
 	    /* Setup font from Tk font. */
 	    SetupNanoVGFont(vg, tkfont);
 	    nvgFillColor(vg, textColor);
 	    nvgText(vg, (float)(leftEdge + textXOffset), textY, label, NULL);
-	    
-	    DrawMenuUnderline(menuPtr, mePtr, vg, tkfont, fmPtr, 
-			      x + textXOffset, y + textYOffset, width, height, 
-			      textColor); 
-	} 
-    } 
+
+	    DrawMenuUnderline(menuPtr, mePtr, vg, tkfont, fmPtr,
+			      x + textXOffset, y + textYOffset, width, height,
+			      textColor);
+	}
+    }
 
     /* Draw disabled overlay using stippling. */
-    if (mePtr->state == ENTRY_DISABLED) { 
+    if (mePtr->state == ENTRY_DISABLED) {
 	nvgBeginPath(vg);
 	nvgRect(vg, x, y, width, height);
 	nvgFillColor(vg, nvgRGBA(200, 200, 200, 128));
 	nvgFill(vg);
-    } 
+    }
 }
 
 /*
@@ -2845,35 +2845,35 @@ DrawMenuUnderline(
 	int len;
 	len = Tcl_GetCharLength(mePtr->labelPtr);
 
-	if (mePtr->underline < len && mePtr->underline >= -len) { 
-	    int activeBorderWidth; 
-	    int leftEdge; 
-	    int ch; 
-	    const char *label; 
-	    const char *start; 
-	    const char *end; 
+	if (mePtr->underline < len && mePtr->underline >= -len) {
+	    int activeBorderWidth;
+	    int leftEdge;
+	    int ch;
+	    const char *label;
+	    const char *start;
+	    const char *end;
 	    int underlineX, underlineWidth;
-	    int ty; 
-	    
-	    label = Tcl_GetString(mePtr->labelPtr); 
-	    start = Tcl_UtfAtIndex(label, 
-				   (mePtr->underline < 0) ? mePtr->underline + len : mePtr->underline); 
-	    end = start + Tcl_UtfToUniChar(start, &ch); 
-	    
-	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, 
-				menuPtr->activeBorderWidthPtr, &activeBorderWidth); 
-	    leftEdge = x + mePtr->indicatorSpace + activeBorderWidth; 
-	    
-	    if (menuPtr->menuType == MENUBAR) { 
-		leftEdge += 5; 
-	    } 
-	    
-	    ty = y + (height + fmPtr->ascent - fmPtr->descent) / 2; 
-	    
+	    int ty;
+
+	    label = Tcl_GetString(mePtr->labelPtr);
+	    start = Tcl_UtfAtIndex(label,
+				   (mePtr->underline < 0) ? mePtr->underline + len : mePtr->underline);
+	    end = start + Tcl_UtfToUniChar(start, &ch);
+
+	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+				menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	    leftEdge = x + mePtr->indicatorSpace + activeBorderWidth;
+
+	    if (menuPtr->menuType == MENUBAR) {
+		leftEdge += 5;
+	    }
+
+	    ty = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
+
 	    /* Calculate underline position. */
 	    underlineX = leftEdge + Tk_TextWidth(tkfont, label, start - label);
 	    underlineWidth = Tk_TextWidth(tkfont, start, end - start);
-	    
+
 	    /* Draw underline using NanoVG. */
 	    nvgBeginPath(vg);
 	    nvgMoveTo(vg, underlineX, ty + 2);
@@ -2881,8 +2881,8 @@ DrawMenuUnderline(
 	    nvgStrokeWidth(vg, 1.0f);
 	    nvgStrokeColor(vg, textColor);
 	    nvgStroke(vg);
-	} 
-    } 
+	}
+    }
 }
 
 /*
@@ -2917,28 +2917,28 @@ DrawTearoffEntry(
     int px;
     int py;
 
-    if (menuPtr->menuType != MAIN_MENU) { 
-	return; 
-    } 
+    if (menuPtr->menuType != MAIN_MENU) {
+	return;
+    }
 
-    py = y + height/2; 
+    py = y + height/2;
     px = x;
 
     /* Draw dashed line using NanoVG. */
     nvgStrokeWidth(vg, 1.0f);
     nvgStrokeColor(vg, nvgRGBA(100, 100, 100, 255));
-    
-    while (px < x + width - 1) { 
-	int ex = px + segmentWidth; 
-	if (ex > x + width - 1) { 
-	    ex = x + width - 1; 
-	} 
+
+    while (px < x + width - 1) {
+	int ex = px + segmentWidth;
+	if (ex > x + width - 1) {
+	    ex = x + width - 1;
+	}
 	nvgBeginPath(vg);
 	nvgMoveTo(vg, px, py);
 	nvgLineTo(vg, ex, py);
 	nvgStroke(vg);
-	px += 2 * segmentWidth; 
-    } 
+	px += 2 * segmentWidth;
+    }
 }
 
 /*
@@ -2957,49 +2957,49 @@ DrawTearoffEntry(
  *---------------------------------------------------------------------------
  */
 
-MODULE_SCOPE void 
-SetHelpMenu( 
-	    TkMenu *menuPtr) 
-{ 
-    TkMenuEntry *cascadeEntryPtr; 
-    int useMotifHelp = 0; 
-    const char *option = NULL; 
-    if (menuPtr->tkwin) { 
-	option = Tk_GetOption(menuPtr->tkwin, "useMotifHelp", "UseMotifHelp"); 
-	if (option != NULL) { 
-	    Tcl_GetBoolean(NULL, option, &useMotifHelp); 
-	} 
-    } 
-    if (!useMotifHelp) { 
-	return; 
-    } 
-    for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr; 
-	 cascadeEntryPtr != NULL; 
-	 cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) { 
-	if ((cascadeEntryPtr->menuPtr->menuType == MENUBAR) 
-	    && (cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin != NULL) 
-	    && (menuPtr->mainMenuPtr->tkwin != NULL)) { 
-	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr; 
-	    char *helpMenuName = (char *)ckalloc(strlen(Tk_PathName( 
-								    mainMenuPtr->tkwin)) + strlen(".help") + 1); 
-	    strcpy(helpMenuName, Tk_PathName(mainMenuPtr->tkwin)); 
-	    strcat(helpMenuName, ".help"); 
-	    if (strcmp(helpMenuName, 
-		       Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) { 
-		cascadeEntryPtr->entryFlags |= ENTRY_HELP_MENU; 
-	    } else { 
-		cascadeEntryPtr->entryFlags &= ~ENTRY_HELP_MENU; 
-	    } 
-	    ckfree(helpMenuName); 
-	} 
-    } 
+MODULE_SCOPE void
+SetHelpMenu(
+	    TkMenu *menuPtr)
+{
+    TkMenuEntry *cascadeEntryPtr;
+    int useMotifHelp = 0;
+    const char *option = NULL;
+    if (menuPtr->tkwin) {
+	option = Tk_GetOption(menuPtr->tkwin, "useMotifHelp", "UseMotifHelp");
+	if (option != NULL) {
+	    Tcl_GetBoolean(NULL, option, &useMotifHelp);
+	}
+    }
+    if (!useMotifHelp) {
+	return;
+    }
+    for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
+	 cascadeEntryPtr != NULL;
+	 cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
+	if ((cascadeEntryPtr->menuPtr->menuType == MENUBAR)
+	    && (cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin != NULL)
+	    && (menuPtr->mainMenuPtr->tkwin != NULL)) {
+	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
+	    char *helpMenuName = (char *)Tcl_Alloc(strlen(Tk_PathName(
+								    mainMenuPtr->tkwin)) + strlen(".help") + 1);
+	    strcpy(helpMenuName, Tk_PathName(mainMenuPtr->tkwin));
+	    strcat(helpMenuName, ".help");
+	    if (strcmp(helpMenuName,
+		       Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
+		cascadeEntryPtr->entryFlags |= ENTRY_HELP_MENU;
+	    } else {
+		cascadeEntryPtr->entryFlags &= ~ENTRY_HELP_MENU;
+	    }
+	    Tcl_Free(helpMenuName);
+	}
+    }
 }
 
 
-/* 
- * Local Variables: 
- * mode: c 
- * c-basic-offset: 4 
- * fill-column: 78 
- * End: 
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
  */
