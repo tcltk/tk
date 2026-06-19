@@ -279,7 +279,7 @@ if test $tk_aqua = no; then
             AC_MSG_RESULT([no])
             AC_MSG_ERROR([wayland-egl >= 1.18 is required when building the Wayland backend.
 Please install libwayland-egl development package:
-  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland])
         fi
@@ -302,7 +302,7 @@ Please install libwayland-egl development package:
             AC_MSG_RESULT([no])
             AC_MSG_ERROR([<wayland-egl.h> header not found.
 Please install libwayland-egl development package:
-  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland])
         ])
@@ -532,7 +532,7 @@ On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
     libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard \
-    libwayland-egl1-dev
+    libwayland-egl1
 ])
         fi
     fi
