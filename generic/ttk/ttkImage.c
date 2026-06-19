@@ -350,12 +350,12 @@ static int RegionTiles(Ttk_Box src, Ttk_Box dst)
  *	Draw a whole 9-slice element in one operation: assemble all nine
  *	regions client-side into a single RGBA buffer and composite it with
  *	one TkpPutRGBAImage call, instead of one Tk_RedrawImage per tile.
- *	Returns 1 on success, 0 to fall back to the per-tile loop.
+ *	Returns true on success, false to fall back to the per-tile loop.
  *
  *	Note: composites the photo's raw pix32, like the partial-alpha
  *	display path does; a non-default -gamma/-palette is not applied.
  */
-static int TileBatchElement(
+static bool TileBatchElement(
     Tk_Window tkwin,
     Drawable d,
     Tk_PhotoHandle photo,
@@ -374,12 +374,12 @@ static int TileBatchElement(
 
     if (dst.width <= 0 || dst.height <= 0
 	    || dst.width * dst.height < TILE_BATCH_MIN_AREA) {
-	return 0;
+	return false;
     }
 
     Tk_PhotoGetImage(photo, &blk);
     if (!BlockIsPackedRGBA(&blk) || !SrcWithinBlock(src, &blk)) {
-	return 0;
+	return false;
     }
 
     /*
@@ -396,7 +396,7 @@ static int TileBatchElement(
 	tiles += RegionTiles(src9[i], dst9[i]);
     }
     if (tiles < TILE_BATCH_MIN_TILES) {
-	return 0;
+	return false;
     }
 
     /*
@@ -407,7 +407,7 @@ static int TileBatchElement(
     buf = (unsigned char *)
 	    Tcl_AttemptAlloc((size_t) dst.width * dst.height * 4);
     if (buf == NULL) {
-	return 0;
+	return false;
     }
     memset(buf, 0, (size_t) dst.width * dst.height * 4);
 
@@ -419,7 +419,7 @@ static int TileBatchElement(
 	    (unsigned) dst.width, (unsigned) dst.height, 32, 4 * dst.width);
     if (ximg == NULL) {
 	Tcl_Free(buf);
-	return 0;
+	return false;
     }
 
     gcv.graphics_exposures = False;
