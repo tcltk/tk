@@ -8015,7 +8015,7 @@ printf '%s\n' "#define HAVE_WAYLAND_EGL 1" >>confdefs.h
 printf '%s\n' "no" >&6; }
             as_fn_error $? "wayland-egl >= 1.18 is required when building the Wayland backend.
 Please install libwayland-egl development package:
-  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland" "$LINENO" 5
         fi
@@ -8058,7 +8058,7 @@ else case e in #(
 printf '%s\n' "no" >&6; }
             as_fn_error $? "<wayland-egl.h> header not found.
 Please install libwayland-egl development package:
-  - Debian/Ubuntu:   sudo apt install libwayland-egl1-dev
+  - Debian/Ubuntu:   sudo apt install libwayland-egl1
   - Fedora/RHEL:     sudo dnf install wayland-devel
   - Arch:            sudo pacman -S wayland" "$LINENO" 5
          ;;
@@ -8484,7 +8484,7 @@ On Debian/Ubuntu:
   sudo apt install wayland-protocols libwayland-dev \
     libxkbcommon-dev libglfw3-dev libgles2-mesa-dev \
     libdecor-0-dev libfontconfig-dev libsystemd-dev wl-clipboard \
-    libwayland-egl1-dev
+    libwayland-egl1
 " "$LINENO" 5
         fi
     fi
