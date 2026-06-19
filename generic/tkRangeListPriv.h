@@ -31,7 +31,7 @@ TkRangeSpan(
 
 
 inline
-int
+bool
 TkRangeTest(
     const TkRange *range,
     int value)
@@ -42,7 +42,7 @@ TkRangeTest(
 
 
 inline
-int
+bool
 TkRangeListIsEmpty(
     const TkRangeList *ranges)
 {
@@ -116,7 +116,7 @@ TkRangeListAccess(
 
 
 inline
-int
+bool
 TkRangeListContains(
     const TkRangeList *ranges,
     int value)
@@ -126,7 +126,7 @@ TkRangeListContains(
 
 
 inline
-int
+bool
 TkRangeListContainsRange(
     const TkRangeList *ranges,
     int low,

@@ -2037,8 +2037,8 @@ MODULE_SCOPE void	TkTextFontHeightChanged(TkText *textPtr);
 MODULE_SCOPE int	TkTextTestRelation(Tcl_Interp *interp, int relation, const char *op);
 MODULE_SCOPE int	TkTextAttemptToModifyDisabledWidget(Tcl_Interp *interp);
 MODULE_SCOPE int	TkTextAttemptToModifyDeadWidget(Tcl_Interp *interp);
-MODULE_SCOPE int	TkTextReleaseIfDestroyed(TkText *textPtr);
-MODULE_SCOPE int	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
+MODULE_SCOPE bool	TkTextReleaseIfDestroyed(TkText *textPtr);
+MODULE_SCOPE bool	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
 MODULE_SCOPE void	TkTextFreeAllTags(TkText *textPtr);
 inline bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
@@ -2064,7 +2064,7 @@ MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr, const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, unsigned len,
 			    const char *lang, char *brks);
-MODULE_SCOPE int	TkTextTestLangCode(Tcl_Interp *interp, Tcl_Obj *langCodePtr);
+MODULE_SCOPE bool	TkTextTestLangCode(Tcl_Interp *interp, Tcl_Obj *langCodePtr);
 MODULE_SCOPE int	TkTextParseHyphenRules(TkText *textPtr, Tcl_Obj *objPtr, int *rulesPtr);
 MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE void	TkTextPushUndoToken(TkSharedText *sharedTextPtr, void *token,
@@ -2205,7 +2205,7 @@ MODULE_SCOPE int	TkTextIndexIsEndOfText(const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexIsEqual(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 MODULE_SCOPE int	TkTextIndexCompare(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
 inline void		TkTextIndexSave(TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkTextIndexRebuild(TkTextIndex *indexPtr);
+MODULE_SCOPE bool	TkTextIndexRebuild(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToStartRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToEndRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexOutsideStartEnd(TkTextIndex *indexPtr);

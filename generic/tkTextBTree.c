@@ -554,25 +554,25 @@ GetByteLength(
     return objPtr->length;
 }
 
-static int
+static bool
 SegIsAtStartOfLine(
     const TkTextSegment *segPtr)
 {
     /* NOTE: we do not consider elided segments here. */
 
-    while (1) {
+    while (true) {
 	if (!(segPtr = segPtr->prevPtr)) {
-	    return 1;
+	    return true;
 	}
 	if (segPtr->size > 0) {
-	    return 0;
+	    return false;
 	}
     }
-    return 1; /* never reached */
+    return false; /* never reached */
 }
 
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
-static int
+static bool
 SegIsAtEndOfLine(
     const TkTextSegment *segPtr)
 {
@@ -913,11 +913,11 @@ TagSetTestAndSet(
     return TkTextTagSetTestAndSet(tagInfoPtr, tagIndex);
 }
 
-static int
+static bool
 LineTestAllSegments(
     const TkTextLine *linePtr,
     const TkTextTag *tagPtr,
-    int tagged)
+    bool tagged)
 {
     unsigned tagIndex = tagPtr->index;
 
@@ -925,7 +925,7 @@ LineTestAllSegments(
 	    && (!tagged || !TkTextTagSetTest(linePtr->tagoffPtr, tagIndex));
 }
 
-static int
+static bool
 LineTestIfAnyIsTagged(
     TkTextSegment *firstPtr,
     TkTextSegment *lastPtr,
@@ -935,14 +935,14 @@ LineTestIfAnyIsTagged(
 
     for ( ; firstPtr != lastPtr; firstPtr = firstPtr->nextPtr) {
 	if (firstPtr->tagInfoPtr && TkTextTagSetTest(firstPtr->tagInfoPtr, tagIndex)) {
-	    return 1;
+	    return true;
 	}
     }
 
-    return 0;
+    return false;
 }
 
-static int
+static bool
 LineTestIfAnyIsUntagged(
     TkTextSegment *firstSegPtr,
     TkTextSegment *lastSegPtr,
@@ -953,15 +953,15 @@ LineTestIfAnyIsUntagged(
     for ( ; firstSegPtr != lastSegPtr; firstSegPtr = firstSegPtr->nextPtr) {
 	if (firstSegPtr->tagInfoPtr) {
 	    if (!TkTextTagSetTest(firstSegPtr->tagInfoPtr, tagIndex)) {
-		return 1;
+		return true;
 	    }
 	}
     }
 
-    return 0;
+    return false;
 }
 
-static int
+static bool
 LineTestIfToggleIsOpen(
     const TkTextLine *linePtr,	/* can be NULL */
     unsigned tagIndex)
@@ -969,7 +969,7 @@ LineTestIfToggleIsOpen(
     return linePtr && TkTextTagSetTest(linePtr->lastPtr->tagInfoPtr, tagIndex);
 }
 
-static int
+static bool
 LineTestIfToggleIsClosed(
     const TkTextLine *linePtr,	/* can be NULL */
     unsigned tagIndex)
@@ -977,11 +977,11 @@ LineTestIfToggleIsClosed(
     return !linePtr || !TkTextTagSetTest(GetFirstTagInfoSegment(NULL, linePtr)->tagInfoPtr, tagIndex);
 }
 
-static int
+static bool
 LineTestToggleFwd(
     const TkTextLine *linePtr,
     unsigned tagIndex,
-    int testTagon)
+    bool testTagon)
 {
     assert(linePtr);
 
@@ -7514,8 +7514,8 @@ DeleteRange(
 	    }
 	    if (peer->endLine) {
 		TkTextLine *endLinePtr = peer->endMarker->sectionPtr->linePtr;
-		int atEndOfLine = SegIsAtEndOfLine(peer->endMarker);
-		int atStartOfLine = SegIsAtStartOfLine(peer->endMarker);
+		bool atEndOfLine = SegIsAtEndOfLine(peer->endMarker);
+		bool atStartOfLine = SegIsAtStartOfLine(peer->endMarker);
 
 		if ((!atEndOfLine || atStartOfLine) && peer->startLine != endLinePtr) {
 		    TkTextIndex index;
@@ -11729,7 +11729,7 @@ NextTag(
 	const TkTextLine *lastPtr;
 
 	if (segPtr) {
-	    int wholeLine;
+	    bool wholeLine;
 
 	    /*
 	     * Check for more tags on the current line.

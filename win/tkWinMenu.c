@@ -228,7 +228,7 @@ GetNewID(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     WORD curID = tsdPtr->lastCommandID;
 
-    while (1) {
+    while (true) {
 	Tcl_HashEntry *commandEntryPtr;
 	int isNew;
 

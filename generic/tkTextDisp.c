@@ -764,7 +764,7 @@ static void		InvokeAsyncUpdateYScrollbar(TkText *textPtr);
 static void		AsyncUpdateYScrollbar(void *clientData);
 static void		AsyncUpdateLineMetrics(void *clientData);
 static void		UpdateLineMetrics(TkText *textPtr, unsigned doThisMuch);
-static int		TestIfLinesUpToDate(const TkTextIndex *indexPtr);
+static bool		TestIfLinesUpToDate(const TkTextIndex *indexPtr);
 static void		SaveDisplayLines(TkText *textPtr, DisplayInfo *info, int append);
 static TkTextLine *	ComputeDisplayLineInfo(TkText *textPtr, const TkTextIndex *indexPtr,
 			    DisplayInfo *info);
@@ -799,7 +799,7 @@ static int		MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size maxBytes, 
 static CharInfo *	AllocCharInfo(TkText *textPtr);
 static void		FreeCharInfo(TkText *textPtr, CharInfo *ciPtr);
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
-static int		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
+static bool		IsSameFGStyle(TextStyle *style1, TextStyle *style2);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
 static const TkTextDispChunkProcs layoutCharProcs = {
@@ -1432,7 +1432,7 @@ TkTextPendingSync(
  *--------------------------------------------------------------
  */
 
-static int
+static bool
 TestIfLinesUpToDate(
     const TkTextIndex *indexPtr)	/* last line of range (inclusive) */
 {
@@ -1443,10 +1443,10 @@ TestIfLinesUpToDate(
     ranges = indexPtr->textPtr->dInfoPtr->lineMetricUpdateRanges;
 
     if (TkRangeListIsEmpty(ranges)) {
-	return 1;
+	return true;
     }
 
-    return (int) TkTextIndexGetLineNumber(indexPtr, indexPtr->textPtr) < TkRangeListLow(ranges);
+    return (int)TkTextIndexGetLineNumber(indexPtr, indexPtr->textPtr) < TkRangeListLow(ranges);
 }
 
 /*
@@ -2347,7 +2347,7 @@ IsStartOfNotMergedLine(
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 
-static int
+static bool
 IsSameFGStyle(
     TextStyle *style1,
     TextStyle *style2)
@@ -2356,7 +2356,7 @@ IsSameFGStyle(
     StyleValues *sv2;
 
     if (style1 == style2) {
-	return 1;
+	return true;
     }
 
     sv1 = style1->sValuePtr;
@@ -3273,14 +3273,14 @@ LayoutSetupChunk(
     }
 }
 
-static int
+static bool
 AtEndOfLine(
     TkTextSegment *segPtr,
     int offset)
 {
     assert(segPtr);
     if (offset < segPtr->size) {
-	return 0;
+	return false;
     }
     while ((segPtr = segPtr->nextPtr)) {
 	switch (segPtr->typePtr->group) {
@@ -3288,7 +3288,7 @@ AtEndOfLine(
 	case SEG_GROUP_HYPHEN:
 	case SEG_GROUP_IMAGE:
 	case SEG_GROUP_WINDOW:
-	    return 0;
+	    return false;
 	case SEG_GROUP_BRANCH:
 	    if (segPtr->typePtr == &tkTextBranchType) {
 		segPtr = segPtr->body.branch.nextPtr;
@@ -3300,7 +3300,7 @@ AtEndOfLine(
 	    break;
 	}
     }
-    return 1;
+    return true;
 }
 
 static bool
@@ -3312,7 +3312,7 @@ IsDecimalPointPos(
     return segPtr == data->decimalPointPos.segPtr && offset == data->decimalPointPos.offset;
 }
 
-static int
+static bool
 IsNumericalEndPos(
     LayoutData *data,
     const TkTextSegment *segPtr,
@@ -3321,7 +3321,7 @@ IsNumericalEndPos(
     return segPtr == data->lastNumericalPos.segPtr && offset == data->lastNumericalPos.offset;
 }
 
-static int
+static bool
 LayoutChars(
     LayoutData *data,
     TkTextSegment *segPtr,
@@ -3516,7 +3516,7 @@ LayoutChars(
 	assert(chunkPtr->skipFirstChar);
 	data->chunkPtr->layoutProcs = &layoutElideProcs;
 	data->chunkPtr->numBytes = 1; /* must have size 1, see above */
-	return 1;
+	return true;
     }
 
     maxX = data->maxX - data->tabSize;
@@ -3560,7 +3560,7 @@ LayoutChars(
 		data->shiftToNextLine -= n;
 		if ((maxBytes -= n) == 0) {
 		    data->isNumericTab = 0;
-		    return 0;
+		    return false;
 		}
 		gotTab = 0;
 	    }
@@ -3570,7 +3570,7 @@ LayoutChars(
 	}
     } else if (data->isRightTab) {
 	if (data->shiftToNextLine == 0) {
-	    return 0;
+	    return false;
 	}
 	if (data->numBytesSoFar > 0
 		&& segPtr == data->shiftToNextLinePos.segPtr
@@ -3585,7 +3585,7 @@ LayoutChars(
 		n = MIN(n, (int) maxBytes);
 		if ((maxBytes -= n) == 0) {
 		    data->isRightTab = 0;
-		    return 0;
+		    return false;
 		}
 		gotTab = 0;
 	    }
@@ -3603,7 +3603,7 @@ LayoutChars(
 	 */
 
 	chunkPtr->numSpaces = 0;
-	return 0;
+	return false;
     }
 
     if (numBytes == chunkPtr->numBytes) {
@@ -3686,15 +3686,15 @@ LayoutChars(
 	    case LEFT:
 	    case CENTER:
 		if (data->tabSize >= data->maxX - data->x) {
-		    return 0; /* end of display line reached */
+		    return false; /* end of display line reached */
 		}
 		break;
 	    case RIGHT:
 		if (data->tabSize > data->maxX - data->x) {
-		    return 0; /* end of display line reached */
+		    return false; /* end of display line reached */
 		}
 		if (data->displayLineNo == 0 && data->tabX >= 2*data->maxX) {
-		    return 0; /* end of display line reached */
+		    return false; /* end of display line reached */
 		}
 		if (data->tabX > data->maxX) {
 		    ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
@@ -3702,7 +3702,7 @@ LayoutChars(
 		break;
 	    case NUMERIC:
 		if (data->tabSize - data->maxX + data->x >= data->maxX) {
-		    return 0; /* end of display line reached */
+		    return false; /* end of display line reached */
 		}
 		if (data->tabSize >= data->maxX - data->x) {
 		    ComputeShiftForNumericTab(data, segPtr, chunkPtr->numBytes + byteOffset);
@@ -3712,15 +3712,15 @@ LayoutChars(
 	}
     }
 
-    return 1;
+    return true;
 }
 
-static int
+static bool
 LayoutHyphen(
     LayoutData *data,
     TkTextSegment *segPtr)
 {
-    int rc;
+    bool rc;
 
     assert(segPtr->sectionPtr); /* don't works with artificial segments */
 
@@ -3736,7 +3736,7 @@ LayoutHyphen(
 	data->chunkPtr->numBytes = segPtr->size;
 	data->chunkPtr->hyphenRules = segPtr->body.hyphen.rules;
 	segPtr->refCount += 1;
-	rc = 1;
+	rc = true;
     } else {
 	SetupHyphenChars(segPtr, 0);
 	rc = LayoutChars(data, segPtr, segPtr->body.hyphen.textSize, 0);
@@ -3747,7 +3747,7 @@ LayoutHyphen(
     return rc;
 }
 
-static int
+static bool
 LayoutEmbedded(
     LayoutData *data,
     TkTextSegment *segPtr)
@@ -3763,7 +3763,7 @@ LayoutEmbedded(
 
     if (segPtr->typePtr->layoutProc(&data->index, segPtr, 0, maxX, 0, data->countVisibleChunks == 0,
 	    data->wrapMode, data->textPtr->spaceMode, chunkPtr) != 1) {
-	return 0;
+	return false;
     }
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -3788,10 +3788,10 @@ LayoutEmbedded(
 	data->textPtr->dInfoPtr->countWindows += 1;
     }
 
-    return 1;
+    return true;
 }
 
-static int
+static bool
 LayoutMark(
     LayoutData *data,
     TkTextSegment *segPtr)
@@ -3801,17 +3801,17 @@ LayoutMark(
     assert(segPtr->typePtr->layoutProc);
 
     if (segPtr != data->textPtr->insertMarkPtr) {
-	return 0;
+	return false;
     }
     LayoutMakeNewChunk(data);
 
     maxX = data->maxX - (data->isNumericTab ? data->x : data->tabSize);
     segPtr->typePtr->layoutProc(&data->index, segPtr, 0, maxX, 0, data->countVisibleChunks == 0,
 	    data->wrapMode, data->textPtr->spaceMode, data->chunkPtr);
-    return 1;
+    return true;
 }
 
-static int
+static bool
 LayoutLogicalLine(
     LayoutData *data,
     DLine *dlPtr)
@@ -3931,7 +3931,7 @@ LayoutLogicalLine(
 		data->chunkPtr->numBytes = numBytes;
 		if (!cont) {
 		    LayoutFinalizeChunk(data);
-		    return 0;
+		    return false;
 		}
 		TkrTextIndexForwBytes(data->textPtr, &data->index,
 			data->chunkPtr->numBytes, &data->index);
@@ -3975,7 +3975,7 @@ LayoutLogicalLine(
 		if (!LayoutChars(data, segPtr, segPtr->size, byteOffset)) {
 		    /* finished with this display line */
 		    LayoutFinalizeChunk(data);
-		    return 0;
+		    return false;
 		}
 		assert(data->chunkPtr);
 		byteIndex += data->chunkPtr->numBytes;
@@ -3995,7 +3995,7 @@ LayoutLogicalLine(
 		if (!LayoutHyphen(data, segPtr)) {
 		    /* finished with this display line */
 		    LayoutFinalizeChunk(data);
-		    return 0;
+		    return false;
 		}
 		byteIndex += segPtr->size;
 		data->skipSpaces = 0;
@@ -4005,7 +4005,7 @@ LayoutLogicalLine(
 		if (!LayoutEmbedded(data, segPtr)) {
 		    /* finished with this display line */
 		    LayoutFinalizeChunk(data);
-		    return 0;
+		    return false;
 		}
 		byteIndex += segPtr->size;
 		data->skipSpaces = 0;
@@ -4049,12 +4049,12 @@ LayoutLogicalLine(
 	}
 	if (!segPtr) {
 	    LayoutFinalizeChunk(data);
-	    return 1;
+	    return true;
 	}
 	TkTextIndexSetPosition(&data->index, byteIndex, segPtr);
     }
 
-    return 0; /* never reached */
+    return false; /* never reached */
 }
 
 static void
@@ -5920,7 +5920,7 @@ UpdateDisplayInfo(
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 LineIsOutsideOfPeer(
     const TkText *textPtr,
     const TkTextIndex *indexPtr)
@@ -5933,7 +5933,7 @@ LineIsOutsideOfPeer(
 	int no2 = TkBTreeLinesTo(sharedTextPtr->tree, NULL, linePtr, NULL);
 
 	if (no1 < no2) {
-	    return 1;
+	    return true;
 	}
     }
     if (textPtr->endMarker != sharedTextPtr->endMarker) {
@@ -5942,10 +5942,10 @@ LineIsOutsideOfPeer(
 	int no2 = TkBTreeLinesTo(sharedTextPtr->tree, NULL, linePtr, NULL);
 
 	if (no1 > no2) {
-	    return 1;
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 static void
@@ -7665,8 +7665,8 @@ TkTextFindDisplayIndex(
     TkTextLine *linePtr;
     TkTextLine *lastLinePtr;
     unsigned byteOffset;
-    int upToDate;
     int myXOffset;
+    bool upToDate;
 
     assert(textPtr);
 
@@ -10895,7 +10895,7 @@ ScrollUp(
     TkTextLine *linePtr;
     unsigned byteOffset;
     DisplayInfo info;
-    int upToDate;
+    bool upToDate;
 
     assert(offset > 0);
 
@@ -10975,7 +10975,7 @@ ScrollDown(
     TkTextLine *linePtr;
     unsigned byteOffset;
     DisplayInfo info;
-    int upToDate;
+    bool upToDate;
 
     assert(offset > 0);
 

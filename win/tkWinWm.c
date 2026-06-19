@@ -6371,7 +6371,7 @@ UpdateGeometryInfo(
 	reqHeight = height + wmPtr->borderHeight;
 	reqWidth = width + wmPtr->borderWidth;
 
-	while (1) {
+	while (true) {
 	    MoveWindow(wmPtr->wrapper, x, y, reqWidth, reqHeight, TRUE);
 	    GetWindowRect(wmPtr->wrapper, &windowRect);
 	    newHeight = windowRect.bottom - windowRect.top;

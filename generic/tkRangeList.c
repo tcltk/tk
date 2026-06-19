@@ -230,7 +230,7 @@ TkRangeListClear(
 }
 
 
-int
+bool
 TkRangeListContainsAny(
     const TkRangeList *ranges,
     int low,
@@ -245,11 +245,11 @@ TkRangeListContainsAny(
     entry = LowerBound((TkRange *) ranges->items, (TkRange *) last, low);
 
     if (entry == last) {
-	return 0;
+	return false;
     }
 
     if (entry->high == low + 1 && ++entry == last) {
-	return 0;
+	return false;
     }
 
     return high >= entry->low;
@@ -696,7 +696,7 @@ TkRangeListPrint(
 
 /* Additionally we need stand-alone object code. */
 extern int TkRangeSpan(const TkRange *range);
-extern int TkRangeTest(const TkRange *range, int value);
+extern bool TkRangeTest(const TkRange *range, int value);
 extern int TkRangeListLow(const TkRangeList *ranges);
 extern int TkRangeListHigh(const TkRangeList *ranges);
 extern unsigned TkRangeListSpan(const TkRangeList *ranges);
@@ -705,8 +705,8 @@ extern unsigned TkRangeListSize(const TkRangeList *ranges);
 extern const TkRange *TkRangeListAccess(const TkRangeList *ranges, unsigned index);
 extern const TkRange *TkRangeListFirst(const TkRangeList *ranges);
 extern const TkRange *TkRangeListNext(const TkRangeList *ranges, const TkRange *item);
-extern int TkRangeListIsEmpty(const TkRangeList *ranges);
-extern int TkRangeListContains(const TkRangeList *ranges, int value);
-extern int TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
+extern bool TkRangeListIsEmpty(const TkRangeList *ranges);
+extern bool TkRangeListContains(const TkRangeList *ranges, int value);
+extern bool TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
 
 /* vi:set ts=8 sw=4: */

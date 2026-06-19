@@ -3557,7 +3557,7 @@ ExpandPercents(
     const char *string;
     char numStorage[2*TCL_INTEGER_SPACE];
 
-    while (1) {
+    while (true) {
 	if (*before == '\0') {
 	    break;
 	}

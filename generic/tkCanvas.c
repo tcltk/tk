@@ -4103,7 +4103,7 @@ TagSearchScanExpr(
 		 * Remove trailing whitespace.
 		 */
 
-		while (1) {
+		while (true) {
 		    c = *--tag;
 
 		    /*
@@ -4799,7 +4799,7 @@ FindItems(
 	    return TCL_OK;
 	}
 	closestDist = ItemPoint(canvasPtr, itemPtr, coords, halo);
-	while (1) {
+	while (true) {
 	    double newDist;
 
 	    /*
@@ -4819,7 +4819,7 @@ FindItems(
 	     * the starting item.
 	     */
 
-	    while (1) {
+	    while (true) {
 		itemPtr = itemPtr->nextPtr;
 		if (itemPtr == NULL) {
 		    itemPtr = canvasPtr->firstItemPtr;

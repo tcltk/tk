@@ -17,7 +17,7 @@
 #ifndef _TKBITFIELDPRIV
 #define _TKBITFIELDPRIV
 
-MODULE_SCOPE int TkBitNone_(const size_t *buf, unsigned words);
+MODULE_SCOPE bool TkBitNone_(const size_t *buf, unsigned words);
 
 #endif /* _TKBITFIELDPRIV */
 
@@ -121,7 +121,7 @@ TkBitSize(
 
 
 inline
-int
+bool
 TkBitIsEmpty(
     const TkBitField *bf)
 {
@@ -131,7 +131,7 @@ TkBitIsEmpty(
 
 
 inline
-int
+bool
 TkBitNone(
     const TkBitField *bf)
 {
@@ -141,7 +141,7 @@ TkBitNone(
 
 
 inline
-int
+bool
 TkBitTest(
     const TkBitField *bf,
     unsigned n)

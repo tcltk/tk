@@ -241,26 +241,26 @@ static Ttk_Box BPadding(Ttk_Box b, Ttk_Padding p)
  *	offset[i] == i for every channel.  This is the one layout AssembleFill
  *	can memcpy without reordering channels.
  */
-static int BlockIsPackedRGBA(const Tk_PhotoImageBlock *blk)
+static bool BlockIsPackedRGBA(const Tk_PhotoImageBlock *blk)
 {
     int i;
 
     if (blk->pixelSize != 4) {
-	return 0;
+	return false;
     }
     for (i = 0; i < 4; i++) {
 	if (blk->offset[i] != i) {
-	    return 0;
+	    return false;
 	}
     }
-    return 1;
+    return true;
 }
 
 /* SrcWithinBlock --
  *	True if the src sub-rectangle lies entirely within blk's pixels, so it
  *	can be read without running past the block.
  */
-static int SrcWithinBlock(Ttk_Box src, const Tk_PhotoImageBlock *blk)
+static bool SrcWithinBlock(Ttk_Box src, const Tk_PhotoImageBlock *blk)
 {
     return src.x >= 0 && src.y >= 0
 	    && src.x + src.width <= blk->width

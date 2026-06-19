@@ -2986,7 +2986,7 @@ ExpandPercents(
 	string = numStorage;						\
     }
 
-    while (1) {
+    while (true) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
 	long long number;     /* signed */
@@ -4946,7 +4946,7 @@ ParseEventDescription(
 	    char field[512];
 	    Tcl_HashEntry *hPtr;
 
-	    while (1) {
+	    while (true) {
 		ModInfo *modPtr;
 
 		p = GetField(p, field, sizeof(field));

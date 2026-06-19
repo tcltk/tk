@@ -228,7 +228,7 @@ TkBitCheckAllocs()
 #endif /* TK_CHECK_ALLOCS */
 
 
-static int
+static bool
 IsEqual(
     const size_t *s,
     const size_t *t,
@@ -238,10 +238,10 @@ IsEqual(
 
     for ( ; s < e; ++s, ++t) {
 	if (*s != *t) {
-	    return 0;
+	    return false;
 	}
     }
-    return 1;
+    return true;
 }
 
 
@@ -690,7 +690,7 @@ TkBitClear(
 }
 
 
-int
+bool
 TkBitNone_(
     const size_t *bits,
     unsigned words)
@@ -701,14 +701,14 @@ TkBitNone_(
 
     for (i = 0; i < words; ++i) {
 	if (bits[i]) {
-	    return 0;
+	    return false;
 	}
     }
-    return 1;
+    return true;
 }
 
 
-int
+bool
 TkBitAny(
     const TkBitField *bf)
 {
@@ -720,15 +720,15 @@ TkBitAny(
 
     for (i = 0; i < words; ++i) {
 	if (bf->bits[i]) {
-	    return 1;
+	    return true;
 	}
     }
 
-    return 0;
+    return false;
 }
 
 
-int
+bool
 TkBitComplete(
     const TkBitField *bf)
 {
@@ -744,16 +744,16 @@ TkBitComplete(
 
 	for (i = 0; i < n; ++i) {
 	    if (bf->bits[i] != ~((size_t) 0)) {
-		return 0;
+		return false;
 	    }
 	}
 
 	if (bf->bits[words - 1] != BIT_SPAN(0, BIT_INDEX(bf->size - 1))) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 
@@ -768,7 +768,7 @@ TkBitIsEqual(
     assert(bf2);
 
     if (bf1 == bf2) {
-	return 1;
+	return true;
     }
 
     if (bf1->size > bf2->size) {
@@ -780,7 +780,7 @@ TkBitIsEqual(
     words1 = NWORDS(bf1->size);
 
     if (!IsEqual(bf1->bits, bf2->bits, words1)) {
-	return 0;
+	return false;
     }
 
     return TkBitNone_(bf2->bits + words1, NWORDS(bf2->size) - words1);
@@ -1522,10 +1522,10 @@ extern unsigned TkBitByteSize(const TkBitField *bf);
 extern unsigned TkBitRefCount(const TkBitField *bf);
 extern void TkBitIncrRefCount(TkBitField *bf);
 extern unsigned TkBitDecrRefCount(TkBitField *bf);
-extern int TkBitIsEmpty(const TkBitField *bf);
+extern bool TkBitIsEmpty(const TkBitField *bf);
 extern size_t TkBitSize(const TkBitField *bf);
-extern int TkBitTest(const TkBitField *bf, unsigned n);
-extern int TkBitNone(const TkBitField *bf);
+extern bool TkBitTest(const TkBitField *bf, unsigned n);
+extern bool TkBitNone(const TkBitField *bf);
 extern void TkBitSet(TkBitField *bf, unsigned n);
 extern void TkBitUnset(TkBitField *bf, unsigned n);
 extern void TkBitPut(TkBitField *bf, unsigned n, bool value);

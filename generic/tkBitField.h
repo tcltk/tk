@@ -94,14 +94,14 @@ void TkBitJoin2ComplementToIntersection(TkBitField *dst,
 /* dst := (dst - bf1) + (bf1 - bf2) */
 void TkBitJoinOfDifferences(TkBitField *dst, const TkBitField *bf1, const TkBitField *bf2);
 
-inline int TkBitIsEmpty(const TkBitField *bf);
+inline bool TkBitIsEmpty(const TkBitField *bf);
 inline size_t TkBitSize(const TkBitField *bf);
 size_t TkBitCount(const TkBitField *bf);
 
-inline int TkBitTest(const TkBitField *bf, unsigned n);
-inline int TkBitNone(const TkBitField *bf);
-int TkBitAny(const TkBitField *bf);
-int TkBitComplete(const TkBitField *bf);
+inline bool TkBitTest(const TkBitField *bf, unsigned n);
+inline bool TkBitNone(const TkBitField *bf);
+bool TkBitAny(const TkBitField *bf);
+bool TkBitComplete(const TkBitField *bf);
 
 bool TkBitIsEqual(const TkBitField *bf1, const TkBitField *bf2);
 bool TkBitContains(const TkBitField *bf1, const TkBitField *bf2);

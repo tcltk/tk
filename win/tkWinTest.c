@@ -459,7 +459,7 @@ TestfindwindowObjCmd(
     /* We want find a window the belongs to us and not some other process */
     hwnd = NULL;
     myPid = GetCurrentProcessId();
-    while (1) {
+    while (true) {
 	DWORD pid, tid;
 	hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
 	if (hwnd == NULL) {

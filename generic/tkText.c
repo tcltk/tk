@@ -1287,7 +1287,7 @@ TestIfTriggerUserMod(
     return sharedTextPtr->triggerWatchCmd && strcmp(Tcl_GetString(indexObjPtr), "insert") == 0;
 }
 
-static int
+static bool
 TestIfPerformingUndoRedo(
     Tcl_Interp *interp,
     const TkSharedText *sharedTextPtr,
@@ -1303,12 +1303,12 @@ TestIfPerformingUndoRedo(
 	if (result) {
 	    *result = TCL_ERROR;
 	}
-	return 1;
+	return true;
     }
-    return 0;
+    return false;
 }
 
-static int
+static bool
 TestIfDisabled(
     Tcl_Interp *interp,
     const TkText *textPtr,
@@ -1317,13 +1317,13 @@ TestIfDisabled(
     assert(result);
 
     if (textPtr->state != TK_TEXT_STATE_DISABLED) {
-	return 0;
+	return false;
     }
     *result = TkTextAttemptToModifyDisabledWidget(interp);
-    return 1;
+    return true;
 }
 
-static int
+static bool
 TestIfDead(
     Tcl_Interp *interp,
     const TkText *textPtr,
@@ -1332,10 +1332,10 @@ TestIfDead(
     assert(result);
 
     if (!TkTextIsDeadPeer(textPtr)) {
-	return 0;
+	return false;
     }
     *result = TkTextAttemptToModifyDeadWidget(interp);
-    return 1;
+    return true;
 }
 
 static Tcl_Obj *
@@ -1363,31 +1363,31 @@ AppendScript(
 }
 
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
-static int
+static bool
 MatchOpt(
     const char *opt,
     const char *pattern,
     unsigned minMatchLen)
 {
     if (strncmp(opt, pattern, minMatchLen) != 0) {
-	return 0;
+	return false;
     }
     opt += minMatchLen;
     pattern += minMatchLen;
     while (1) {
 	if (*opt == '\0') {
-	    return 1;
+	    return true;
 	}
 	if (*pattern == '\0') {
-	    return 0;
+	    return false;
 	}
 	if (*opt != *pattern) {
-	    return 0;
+	    return false;
 	}
 	opt += 1;
 	pattern += 1;
     }
-    return 0; /* never reached */
+    return false; /* never reached */
 }
 #endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
@@ -3686,7 +3686,7 @@ DestroyText(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextDecrRefCountAndTestIfDestroyed(
     TkText *textPtr)
 {
@@ -3695,7 +3695,7 @@ TkTextDecrRefCountAndTestIfDestroyed(
 	assert(textPtr->flags & MEM_RELEASED);
 	Tcl_Free(textPtr);
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
-	return 1;
+	return true;
     }
     return !!(textPtr->flags & DESTROYED);
 }
@@ -3718,20 +3718,20 @@ TkTextDecrRefCountAndTestIfDestroyed(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextReleaseIfDestroyed(
     TkText *textPtr)
 {
     if (!(textPtr->flags & DESTROYED)) {
 	assert(textPtr->refCount > 0);
-	return 0;
+	return false;
     }
     if (--textPtr->refCount == 0) {
 	assert(textPtr->flags & MEM_RELEASED);
 	Tcl_Free(textPtr);
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
     }
-    return 1;
+    return true;
 }
 
 /*
@@ -3752,7 +3752,7 @@ TkTextReleaseIfDestroyed(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextTestLangCode(
     Tcl_Interp *interp,
     Tcl_Obj *langCodePtr)
@@ -3769,9 +3769,9 @@ TkTextTestLangCode(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad lang \"%s\": "
 		"must have the form of an ISO 639-1 language code, or empty", lang));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "LANG", (char *)NULL);
-	return 0;
+	return false;
     }
-    return 1;
+    return true;
 }
 
 /*
@@ -5850,8 +5850,8 @@ DeleteIndexRange(
     if (triggerWatchDelete) {
 	Tcl_Obj *delObj = TextGetText(textPtr, &index1, &index2, NULL, NULL, UINT_MAX, 0, 1);
 	char const *deleted = Tcl_GetString(delObj);
-	int unchanged;
 	int rc;
+	bool unchanged;
 
 	TkTextIndexSave(&index1);
 	TkTextIndexSave(&index2);

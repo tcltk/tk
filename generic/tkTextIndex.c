@@ -99,7 +99,7 @@ TkTextIndexIsEmpty(
  */
 
 #ifndef NDEBUG
-static int
+static bool
 CheckLine(
     const TkTextIndex *indexPtr,
     const TkTextLine *linePtr)
@@ -109,17 +109,17 @@ CheckLine(
     if (indexPtr->stateEpoch == TkBTreeEpoch(indexPtr->tree)) {
 	if (indexPtr->priv.segPtr
 		&& indexPtr->priv.segPtr->sectionPtr->linePtr != indexPtr->priv.linePtr) {
-	    return 0;
+	    return false;
 	}
 	if (indexPtr->priv.lineNo != -1
 		&& indexPtr->priv.lineNo !=
 		(int) TkBTreeLinesTo(indexPtr->tree, NULL, indexPtr->priv.linePtr, NULL)) {
-	    return 0;
+	    return false;
 	}
 	if (indexPtr->priv.lineNoRel != -1
 		&& indexPtr->priv.lineNoRel !=
 		(int) TkBTreeLinesTo(indexPtr->tree, indexPtr->textPtr, indexPtr->priv.linePtr, NULL)) {
-	    return 0;
+	    return false;
 	}
     }
 
@@ -129,14 +129,14 @@ CheckLine(
 	int lineNo = TkBTreeLinesTo(indexPtr->tree, NULL, linePtr, NULL);
 
 	if (lineNo < (int) TkBTreeLinesTo(indexPtr->tree, NULL, startLine, NULL)) {
-	    return 0;
+	    return false;
 	}
 	if (lineNo > (int) TkBTreeLinesTo(indexPtr->tree, NULL, endLine, NULL)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 #endif /* NDEBUG */
 
@@ -232,7 +232,7 @@ TkTextIndexSetLine(
  */
 
 #ifndef NDEBUG
-static int
+static bool
 CheckByteIndex(
     const TkTextIndex *indexPtr,
     const TkTextLine *linePtr,
@@ -249,7 +249,7 @@ CheckByteIndex(
     if (!indexPtr->discardConsistencyCheck && textPtr) {
 	if (linePtr == textPtr->startMarker->sectionPtr->linePtr) {
 	    if (byteIndex < FindStartByteIndex(indexPtr)) {
-		return 0;
+		return false;
 	    }
 	}
 	if (linePtr == textPtr->endMarker->sectionPtr->linePtr) {
@@ -891,21 +891,21 @@ TkTextIndexGetLineNumber(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextIndexRebuild(
     TkTextIndex *indexPtr)
 {
     TkTextLine *linePtr;
     int byteIndex;
     int lineNo;
-    int rc;
+    bool rc;
 
     assert(indexPtr->tree);
     assert(indexPtr->priv.lineNo >= 0 || indexPtr->priv.lineNoRel >= 0);
     assert(indexPtr->priv.byteIndex >= 0);
 
     if (indexPtr->stateEpoch == TkBTreeEpoch(indexPtr->tree)) {
-	return 1; /* still up-to-date */
+	return true; /* still up-to-date */
     }
 
     if (indexPtr->priv.lineNo >= 0) {
@@ -923,7 +923,7 @@ TkTextIndexRebuild(
     }
     byteIndex = MIN(indexPtr->priv.byteIndex, FindEndByteIndex(indexPtr));
     if (byteIndex != indexPtr->priv.byteIndex) {
-	rc = 0;
+	rc = false;
     }
     indexPtr->priv.byteIndex = byteIndex;
     indexPtr->priv.segPtr = NULL;
@@ -2592,7 +2592,7 @@ TkpTextGetIndex(
 	    || TkTextWindowIndex(textPtr, string, indexPtr)
 	    || TkTextImageIndex(textPtr, string, indexPtr)) {
 	Tcl_DStringFree(&copy);
-	return 1;
+	return true;
     }
 
     Tcl_DStringFree(&copy);
