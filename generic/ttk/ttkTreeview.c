@@ -1495,8 +1495,12 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask) {
  *	Set item options.
  */
 static int ConfigureItem(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *item,
-    Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Tcl_Interp *interp,
+    Treeview *tv,
+    TreeItem *item,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Tk_SavedOptions savedOptions;
     int mask;
     Ttk_ImageSpec *newImageSpec = NULL;
@@ -1599,8 +1603,11 @@ error:
  *	Set column options.
  */
 static int ConfigureColumn(
-    Tcl_Interp *interp, Treeview *tv, TreeColumn *column,
-    Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Tcl_Interp *interp,
+    Treeview *tv,
+    TreeColumn *column,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv) {
     Tk_SavedOptions savedOptions;
     int mask;
 
@@ -1638,8 +1645,12 @@ error:
  *	Set heading options.
  */
 static int ConfigureHeading(
-    Tcl_Interp *interp, Treeview *tv, TreeColumn *column,
-    Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Tcl_Interp *interp,
+    Treeview *tv,
+    TreeColumn *column,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Tk_SavedOptions savedOptions;
     int mask;
 
@@ -2699,7 +2710,11 @@ static TreeItem *DeleteItems(TreeItem *item, TreeItem *delq) {
  *	Return the list of children associated with $item
  */
 static int TreeviewChildrenCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
     Tcl_Obj *resultObj;
@@ -2722,7 +2737,8 @@ static int TreeviewChildrenCommand(
     } else {
 	TreeItem **newChildren = GetItemListFromObj(interp, tv, objv[3]);
 	TreeItem *child;
-	int i, do_focus = 0;
+	int i;
+	bool do_focus = false;
 
 	if (!newChildren) {
 	    return TCL_ERROR;
@@ -2776,7 +2792,7 @@ static int TreeviewChildrenCommand(
 	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	    tv->tree.focus = NULL;
 	    tv->tree.focusCol = NULL;
-	    do_focus = 1;
+	    do_focus = true;
 	}
 
 	/* If selection anchor item is detached, unset it */
@@ -2810,7 +2826,11 @@ static int TreeviewChildrenCommand(
  *	Return boolean for whether item has children or not
  */
 static int TreeviewHasChildrenCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
 
@@ -2853,20 +2873,26 @@ static const char *const optionStrings[] = {
 	"-hidden", "-nohidden", "-recurse", "-recursive", "-norecurse", NULL };
 
 static int GetHiddenRecurseOptions(
-    Tcl_Interp *interp, Tcl_Obj *const objv[], Tcl_Size start, Tcl_Size last, int *hidden, int *recurse) {
+    Tcl_Interp *interp,
+	Tcl_Obj *const *objv,
+	Tcl_Size start,
+	Tcl_Size last,
+	bool *hidden,
+	bool *recurse)
+{
     Tcl_Size i, option;
 
     for (i = start; i < last; ++i) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
 		sizeof(char *), "option", 0, &option) == TCL_OK) {
 	    if (option == OPT_HIDDEN) {
-		*hidden = 1;
+		*hidden = true;
 	    } else if (option == OPT_NOHIDDEN) {
-		*hidden = 0;
+		*hidden = false;
 	    } else if (option != OPT_NORECURSE) {
-		*recurse = 1;
+		*recurse = true;
 	    } else {
-		*recurse = 0;
+		*recurse = false;
 	    }
 	} else {
 	    return TCL_ERROR;
@@ -2881,11 +2907,15 @@ static int GetHiddenRecurseOptions(
  *	-recurse, all sub children. With -hidden, include hidden items.
  */
 static int TreeviewSizeCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int hidden = 0, recurse = 0;
     Tcl_Size count;
+    bool hidden = false, recurse = false;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-recurse? item");
@@ -2912,7 +2942,11 @@ static int TreeviewSizeCommand(
  *	Return the item ID of $item's parent.
  */
 static int TreeviewParentCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
 
@@ -2935,7 +2969,11 @@ static int TreeviewParentCommand(
  *	Return the number of levels between item and root where root would be 0.
  */
 static int TreeviewDepthCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
 
@@ -2956,7 +2994,11 @@ static int TreeviewDepthCommand(
  *	Return the ID of $item's next sibling.
  */
 static int TreeviewNextCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
 
@@ -2979,7 +3021,11 @@ static int TreeviewNextCommand(
  *	Return the ID of $item's previous sibling.
  */
 static int TreeviewPrevCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
 
@@ -3035,10 +3081,14 @@ TreeItem *GetPrevItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
  *	Get item before $item in view, which may be a sibling or parent
  */
 static int TreeviewBeforeCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *before;
-    int hidden = 0, recurse = 1;
+    bool hidden = false, recurse = true;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
@@ -3070,7 +3120,7 @@ static int TreeviewBeforeCommand(
 /* + GetNextItem --
  *	Return the next visible item in widget view
  */
-TreeItem *GetNextItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
+TreeItem *GetNextItem(TreeItem *root, TreeItem *item, bool hidden, bool recurse) {
     TreeItem *current = item;
 
     if (!current || !root) {
@@ -3112,10 +3162,14 @@ TreeItem *GetNextItem(TreeItem *root, TreeItem *item, int hidden, int recurse) {
  *	Get item after $item in view, which may be a child, sibling, or sibling of ancestor
  */
 static int TreeviewAfterCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *after;
-    int hidden = 0, recurse = 1;
+    bool hidden = false, recurse = true;
 
     if (objc < 3 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? item");
@@ -3148,9 +3202,9 @@ static int TreeviewAfterCommand(
  *	Get a list of items between from and to in widget
  */
 Tcl_Obj *GetBetweenList(
-    Tcl_Interp *interp, Treeview *tv, TreeItem *from, TreeItem *to, int hidden, int recurse) {
+    Tcl_Interp *interp, Treeview *tv, TreeItem *from, TreeItem *to, bool hidden, bool recurse) {
     TreeItem *item = from;
-    int forwards;
+    bool forwards;
     Tcl_Obj *resultObj = Tcl_NewListObj(0,0);
     if (!resultObj) {
 	return NULL;
@@ -3159,7 +3213,7 @@ Tcl_Obj *GetBetweenList(
     if (tv->tree.rowPosNeedsUpdate) {
 	UpdatePositionTree(tv);
     }
-    forwards = (from->itemPos < to->itemPos) ? 1 : 0;
+    forwards = from->itemPos < to->itemPos;
 
     while (item && item != to) {
 	if (Tcl_ListObjAppendElement(interp, resultObj, item->idObj) != TCL_OK) {
@@ -3182,11 +3236,15 @@ Tcl_Obj *GetBetweenList(
  *	Get list of items between from and to, inclusive
  */
 static int TreeviewRangeCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *from, *to;
     Tcl_Obj *resultObj;
-    int hidden = 0, recurse = 1;
+    bool hidden = false, recurse = true;
 
     if (objc < 3 || objc > 6) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-hidden? ?-norecurse? first last");
@@ -3308,7 +3366,11 @@ static int FindItemByIndex(
  *	Return the id of the item at index in parent $item.
  */
 static int TreeviewIdentifierCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *found;
 
@@ -3334,7 +3396,11 @@ static int TreeviewIdentifierCommand(
  *	the index of the item at position index.
  */
 static int TreeviewIndexCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
     Tcl_Size index = 0;
@@ -3370,7 +3436,11 @@ static int TreeviewIndexCommand(
  *	Test if the specified item id is present in the tree.
  */
 static int TreeviewExistsCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Tcl_HashEntry *entryPtr;
 
@@ -3388,7 +3458,11 @@ static int TreeviewExistsCommand(
  *	Return bounding box [x y width height] of specified item.
  */
 static int TreeviewBBoxCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item = NULL;
     TreeColumn *column = NULL;
@@ -3425,7 +3499,7 @@ static int TreeviewBBoxCommand(
 static int TreeviewHorribleIdentify(
     Tcl_Interp *interp,
     TCL_UNUSED(Tcl_Size), /* objc */
-    Tcl_Obj *const objv[],
+    Tcl_Obj *const *objv,
     Treeview *tv) {
     const char *what = "nothing", *detail = NULL;
     TreeItem *item = NULL;
@@ -3503,13 +3577,15 @@ done:
  */
 
 static int TreeviewIdentifyCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     static const char *const submethodStrings[] =
 	 { "region", "item", "column", "row", "element", "cell", NULL };
-    enum { I_REGION, I_ITEM, I_COLUMN, I_ROW, I_ELEMENT, I_CELL };
-
+    enum { I_REGION, I_ITEM, I_COLUMN, I_ROW, I_ELEMENT, I_CELL } submethod;
     Treeview *tv = (Treeview *)recordPtr;
-    int submethod;
     int x, y;
 
     TreeRegion region;
@@ -3625,7 +3701,11 @@ static int TreeviewIdentifyCommand(
  *	Query or configure item options.
  */
 static int TreeviewItemCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
 
@@ -3653,7 +3733,11 @@ static int TreeviewItemCommand(
  *	Column data accessor
  */
 static int TreeviewColumnCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeColumn *column;
 
@@ -3680,7 +3764,11 @@ static int TreeviewColumnCommand(
  *	Heading data accessor
  */
 static int TreeviewHeadingCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Tk_OptionTable optionTable = tv->tree.headingOptionTable;
     Tk_Window tkwin = tv->core.tkwin;
@@ -3709,7 +3797,11 @@ static int TreeviewHeadingCommand(
  *	Query or configure cell values
  */
 static int TreeviewSetCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
     TreeColumn *column = NULL;
@@ -3827,7 +3919,7 @@ static int TreeviewSetCommand(
 /*
  * Recursively set items open state
  */
-bool TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurse) {
+bool TreeviewOpenRecursive(TreeItem *item, bool open, Tcl_Obj *openObj, bool recurse) {
     bool changed = false;
 
     if (open && !(item->state & TTK_STATE_OPEN) && item->children) {
@@ -3863,12 +3955,17 @@ bool TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recur
  *	Collapse/expand items and with -recurse all child items
  */
 static int TreeviewCollapseExpand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int open) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    bool open)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
-    int hidden = 0, recurse = 0, changed = 0;
     Tcl_Obj *openObj;
     Tcl_Size i = 0;
+    bool hidden = false, recurse = false, changed = false;
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
@@ -3918,22 +4015,30 @@ static int TreeviewCollapseExpand(
  *	Collapse items and with -recurse all child items
  */
 static int TreeviewCollapseCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
-    return TreeviewCollapseExpand(recordPtr, interp, objc, objv, 0);
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
+    return TreeviewCollapseExpand(recordPtr, interp, objc, objv, false);
 }
 
 /* + $tv expand ?-recurse? $items --
  *	Expand items and with -recurse all child items
  */
 static int TreeviewExpandCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
-    return TreeviewCollapseExpand(recordPtr, interp, objc, objv, 1);
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
+    return TreeviewCollapseExpand(recordPtr, interp, objc, objv, true);
 }
 
 /*
  * Recursively set items hidden state
  */
-bool TreeviewHideRecursive(TreeItem *item, int hide, int recurse) {
+bool TreeviewHideRecursive(TreeItem *item, bool hide, bool recurse) {
     bool changed = false;
 
     if ((item->hidden && !hide) || (!item->hidden && hide)) {
@@ -3953,12 +4058,16 @@ bool TreeviewHideRecursive(TreeItem *item, int hide, int recurse) {
  *	Hide/unhide items and with -recurse all child items
  */
 static int TreeviewHideUnhide(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int hide) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    bool hide)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
-    int hidden = 0, recurse = 0;
     Tcl_Size i = 0;
-    bool changed = false;
+    bool hidden = false, recurse = false, changed = false;
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
@@ -4003,23 +4112,35 @@ static int TreeviewHideUnhide(
  *	Hide items and with -recurse all child items
  */
 static int TreeviewHideCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
-    return TreeviewHideUnhide(recordPtr, interp, objc, objv, 1);
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
+    return TreeviewHideUnhide(recordPtr, interp, objc, objv, true);
 }
 
 /* + $tv unhide ?-recurse? $items --
  *	Unhide items and with -recurse all child items
  */
 static int TreeviewUnhideCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
-    return TreeviewHideUnhide(recordPtr, interp, objc, objv, 0);
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
+    return TreeviewHideUnhide(recordPtr, interp, objc, objv, false);
 }
 
 /* $tree visible $item --
  *	Return if item is visible or not.
  */
 static int TreeviewVisibleCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *parent;
 
@@ -4063,7 +4184,11 @@ static const char *const insertStrings[] = {
  *	Insert new item before or after $item.
  */
 static int TreeviewInsertCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent, *sibling, *newItem;
     Tcl_HashEntry *entryPtr;
@@ -4164,11 +4289,15 @@ static int TreeviewInsertCommand(
  *	Unlink each item in $items from the tree.
  */
 static int TreeviewDetachCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
     Tcl_Size i;
-    int do_focus = 0;
+    bool do_focus = false;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -4199,7 +4328,7 @@ static int TreeviewDetachCommand(
 	(tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	tv->tree.focus = NULL;
 	tv->tree.focusCol = NULL;
-	do_focus = 1;
+	do_focus = true;
     }
 
     /* If selection anchor item is detached, unset it */
@@ -4233,7 +4362,11 @@ static int TreeviewDetachCommand(
  *	$item. With -all, will return detached items and all of their descendants.
  */
 static int TreeviewDetachedCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
     int (*fnPtr)(Treeview*, TreeItem*) = IsDetached;
@@ -4287,11 +4420,15 @@ static int TreeviewDetachedCommand(
  */
 
 static int TreeviewDeleteCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items, *delq;
     Tcl_Size i;
-    int selChange = 0, do_focus = 0;
+    bool selChange = false, do_focus = false;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -4317,12 +4454,12 @@ static int TreeviewDeleteCommand(
     delq = 0;
     for (i = 0; items[i]; ++i) {
 	if (items[i]->state & TTK_STATE_SELECTED) {
-	    selChange = 1;
+	    selChange = true;
 	} else if (items[i]->selObj) {
 	    Tcl_Size length;
 	    Tcl_ListObjLength(interp, items[i]->selObj, &length);
 	    if (length > 0) {
-		selChange = 1;
+		selChange = true;
 	    }
 	}
 	delq = DeleteItems(items[i], delq);
@@ -4337,7 +4474,7 @@ static int TreeviewDeleteCommand(
 	    (tv->tree.focus)->state &= ~TTK_STATE_FOCUS;
 	    tv->tree.focus = NULL;
 	    tv->tree.focusCol = NULL;
-	    do_focus = 1;
+	    do_focus = true;
 	}
 
 	/* If item has selection anchor, unset it */
@@ -4378,7 +4515,11 @@ static int TreeviewDeleteCommand(
  *	Move $item to before or after $otherItem.
  */
 static int TreeviewMoveCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *parent;
     TreeItem *sibling;
@@ -4455,13 +4596,21 @@ static int TreeviewMoveCommand(
  * +++ Widget commands -- scrolling
  */
 static int TreeviewXViewCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     return TtkScrollviewCommand(interp, objc, objv, tv->tree.xscrollHandle);
 }
 
 static int TreeviewYViewCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     return TtkScrollviewCommand(interp, objc, objv, tv->tree.yscrollHandle);
 }
@@ -4470,7 +4619,11 @@ static int TreeviewYViewCommand(
  *	Ensure that $item is visible.
  */
 static int TreeviewSeeCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item, *parent;
     int scrollRow1, scrollRow2, visibleRows, xpos, width;
@@ -4568,7 +4721,11 @@ static int TreeviewSeeCommand(
  *	Set right edge of display column $column to x position $X
  */
 static int TreeviewDragCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     int left = tv->tree.treeArea.x - tv->tree.xscroll.first;
     Tcl_Size i = FirstColumn(tv);
@@ -4607,7 +4764,11 @@ static int TreeviewDragCommand(
 }
 
 static int TreeviewDropCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc != 2) {
@@ -4626,7 +4787,11 @@ static int TreeviewDropCommand(
 /* + $tree focus ?item?
  */
 static int TreeviewFocusCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc < 2 || objc > 3) {
@@ -4688,7 +4853,11 @@ static int TreeviewFocusCommand(
 /* + $tree cellfocus ?cell?
  */
 static int TreeviewCellFocusCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc < 2 || objc > 3) {
@@ -4767,7 +4936,11 @@ static int TreeviewCellFocusCommand(
 /* + $tree current
  */
 static int TreeviewCurrentCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc != 2) {
@@ -4795,7 +4968,11 @@ static int TreeviewCurrentCommand(
 /* + $tree selection anchor ?item?
  */
 static int TreeviewSelectionAnchor(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 3, objv, "?item?");
@@ -4827,7 +5004,11 @@ static int TreeviewSelectionAnchor(
 /* + $tree selection has|includes items
  */
 static int TreeviewSelectionIncludes(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Tcl_Size i, len;
     TreeItem *item;
     Tcl_Obj *idObj;
@@ -4861,8 +5042,12 @@ static int TreeviewSelectionIncludes(
 /* + $tree selection present
  */
 static int TreeviewSelectionPresent(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
-    int present = 0;
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
+    bool present = false;
     TreeItem *item;
 
     if (objc != 3) {
@@ -4872,7 +5057,7 @@ static int TreeviewSelectionPresent(
 
     for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 	if (item->state & TTK_STATE_SELECTED) {
-	    present = 1;
+	    present = true;
 	    break;
 	}
     }
@@ -4883,7 +5068,11 @@ static int TreeviewSelectionPresent(
 /* + $tree selection size
  */
 static int TreeviewSelectionSize(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Tcl_Size count = 0;
     TreeItem *item;
 
@@ -4914,12 +5103,16 @@ static const char *const selopStrings[] = {
 /* + $tree selection add|remove|set|toggle ?items?|?options first last?
  */
 static int TreeviewSelectionSet(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], selOp_t selop) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv,
+    selOp_t selop)
+{
     Tcl_Size i;
     TreeItem *item, **items = NULL, *from, *to;
-    int hidden = 1, recurse = 1;
     Tcl_Obj *listObj = NULL;
-	bool changed = false;
+    bool hidden = true, recurse = true, changed = false;
 
     if (objc < 4 || objc > 7) {
 	Tcl_WrongNumArgs(interp, 3, objv, "?items?|?options first last?");
@@ -5035,9 +5228,14 @@ static int TreeviewSelectionSet(
 /* + $tree selection ?selop $items|$from $to?
  */
 static int TreeviewSelectionCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
-    int selop, result = TCL_OK;
+    selOp_t selop;
+    int result = TCL_OK;
     TreeItem *item;
 
     /* Get selection */
@@ -5084,7 +5282,11 @@ static int TreeviewSelectionCommand(
 /* + $tree cellselection anchor ?cell?
  */
 static int TreeviewCellSelectionAnchor(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 3, objv, "?cell?");
@@ -5130,7 +5332,11 @@ static int TreeviewCellSelectionAnchor(
 /* + $tree cellselection has|includes cells
  */
 static int TreeviewCellSelectionIncludes(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Tcl_Size i, j, len, nElements;
     TreeItem *item;
     Tcl_Obj *idObj;
@@ -5182,7 +5388,11 @@ static int TreeviewCellSelectionIncludes(
 /* + $tree cellselection present
  */
 static int TreeviewCellSelectionPresent(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     int present = 0;
     TreeItem *item;
 
@@ -5209,7 +5419,11 @@ static int TreeviewCellSelectionPresent(
 /* + $tree cellselection size
  */
 static int TreeviewCellSelectionSize(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    Treeview *tv,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Tcl_Size count = 0;
     TreeItem *item;
 
@@ -5287,10 +5501,15 @@ static bool TreeviewCellSelect(
 /* + $tree cellselection add|remove|set|toggle ?items?|?options first last?
  */
 static int TreeviewCellSelectionSet(
-    Treeview *tv, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], selOp_t selop) {
-    int hidden = 1, recurse = 1, result = TCL_OK;
+    Treeview *tv,
+	Tcl_Interp *interp,
+	Tcl_Size objc,
+	Tcl_Obj *const *objv,
+	selOp_t selop)
+{
     Tcl_Size i;
-	bool changed = false;
+    int result = TCL_OK;
+    bool hidden = true, recurse = true, changed = false;
 
     if (objc < 4 || objc > 7) {
 	Tcl_WrongNumArgs(interp, 3, objv, "?cells?|?options first last?");
@@ -5385,10 +5604,15 @@ static int TreeviewCellSelectionSet(
 /* + $tree cellselection ?add|remove|set|toggle $items?
  */
 static int TreeviewCellSelectionCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
 
     Treeview *tv = (Treeview *)recordPtr;
-    int selop, result = TCL_OK;
+    selOp_t selop;
+    int result = TCL_OK;
 
     /* Get selected cells */
     if (objc == 2) {
@@ -5461,7 +5685,8 @@ static int TreeviewSearchCommand(
     void *recordPtr,		/* Treeview data */
     Tcl_Interp *interp,		/* Current interpreter */
     Tcl_Size objc,		/* Number of arguments */
-    Tcl_Obj *const objv[]) {	/* Argument values */
+    Tcl_Obj *const *objv)	/* Argument values */
+{
 
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent, *startItem = NULL, *stopItem = NULL, *item;
@@ -5473,8 +5698,10 @@ static int TreeviewSearchCommand(
     Tcl_Obj *emptyObj = NULL, *startObj = NULL, *stopObj = NULL;
     Tcl_WideInt intVal;
     double doubleVal;
-    int index, all = 0, forwards = 1, hidden = 0, nocase = 0, not = 0, recurse = 0;
-    int *intArray = NULL, matches = 0, type = 1, wrap = 0;
+    int index;
+	bool all = false, forwards = true, hidden = false, nocase = false, notb = false, recurse = false;
+    int *intArray = NULL, matches = 0, type = 1;
+	bool wrap = false;
     Tcl_RegExp regexp = NULL;
 
     enum {
@@ -5514,14 +5741,14 @@ static int TreeviewSearchCommand(
 
 	switch (index) {
 	    case SEARCH_ALL:
-		all = 1;
+		all = true;
 		break;
 	    case SEARCH_ASCII:
 	    case SEARCH_UNICODE:
 		dataType = TYPE_ASCII;
 		break;
 	    case SEARCH_BACKWARDS:
-		forwards = 0;
+		forwards = false;
 		break;
 	    case SEARCH_CELL:
 		type = 0;
@@ -5536,35 +5763,35 @@ static int TreeviewSearchCommand(
 		break;
 	    case SEARCH_DICTIONARY:
 		dataType = TYPE_DICTIONARY;
-		nocase = 1;
+		nocase = true;
 		break;
 	    case SEARCH_EXACT:
 		matchType = SEARCH_EXACT;
 		break;
 	    case SEARCH_FORWARDS:
-		forwards = 1;
+		forwards = true;
 		break;
 	    case SEARCH_GLOB:
 		matchType = SEARCH_GLOB;
 		break;
 	    case SEARCH_HIDDEN:
-		hidden = 1;
+		hidden = true;
 		break;
 	    case SEARCH_INTEGER:
 		dataType = TYPE_INTEGER;
 		break;
 	    case SEARCH_NOCASE:
-		nocase = 1;
+		nocase = true;
 		break;
 	    case SEARCH_NOT:
-		not = 1;
+		notb = true;
 		break;
 	    case SEARCH_REAL:
 		dataType = TYPE_REAL;
 		break;
 	    case SEARCH_RECURSE:
 	    case SEARCH_RECURSIVE:
-		recurse = 1;
+		recurse = true;
 		break;
 	    case SEARCH_REGEXP:
 		matchType = SEARCH_REGEXP;
@@ -5586,7 +5813,7 @@ static int TreeviewSearchCommand(
 		stopObj = objv[++i];
 		break;
 	    case SEARCH_WRAP:
-		wrap = 1;
+		wrap = true;
 		break;
 	}
     }
@@ -5649,7 +5876,7 @@ static int TreeviewSearchCommand(
 		startItem = parent->lastChild;
 	    }
 	}
-	wrap = 0; /* No wrap-around if starting at first or last */
+	wrap = false; /* No wrap-around if starting at first or last */
     }
     item = startItem;
 
@@ -5664,7 +5891,7 @@ static int TreeviewSearchCommand(
 	    return TCL_ERROR;
 	}
 	if (stopItem == startItem) {
-	    wrap = 0;
+	    wrap = false;
 	}
     }
 
@@ -5863,7 +6090,7 @@ static int TreeviewSearchCommand(
 		}
 
 		/* If match, add item or cell id to result list */
-		if (match == !not) {
+		if (match == !notb) {
 		    match = 1;
 		    if (type) {
 			if (Tcl_ListObjAppendElement(interp, resultObj,
@@ -5944,7 +6171,7 @@ static int TreeviewSearchCommand(
 		    }
 		}
 	    }
-	    wrap = 0;
+	    wrap = false;
 	}
     }
 
@@ -6506,7 +6733,8 @@ static int TreeviewSortCommand(
     void *recordPtr,		/* Treeview data */
     Tcl_Interp *interp,		/* Current interpreter */
     Tcl_Size objc,		/* Number of arguments */
-    Tcl_Obj *const objv[]) {	/* Argument values */
+    Tcl_Obj *const *objv)	/* Argument values */
+{
 
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *parent;
@@ -6666,7 +6894,11 @@ static int TreeviewSortCommand(
 /* + $tv tag bind $tag ?$sequence ?$script??
  */
 static int TreeviewTagBindCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_TagTable tagTable = tv->tree.tagTable;
     Tk_BindingTable bindingTable = tv->tree.bindingTable;
@@ -6716,7 +6948,11 @@ static int TreeviewTagBindCommand(
 /* + $tv tag configure $tag ?-option ?value -option value...??
  */
 static int TreeviewTagConfigureCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_TagTable tagTable = tv->tree.tagTable;
     Ttk_Tag tag;
@@ -6747,7 +6983,11 @@ static int TreeviewTagConfigureCommand(
 /* + $tv tag delete $tag
  */
 static int TreeviewTagDeleteCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_TagTable tagTable = tv->tree.tagTable;
     TreeItem *item = tv->tree.root;
@@ -6775,7 +7015,11 @@ static int TreeviewTagDeleteCommand(
 /* + $tv tag has $tag ?$item?
  */
 static int TreeviewTagHasCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc == 4) {	/* Return list of all items with tag */
@@ -6812,7 +7056,11 @@ static int TreeviewTagHasCommand(
 /* + $tv tag cell has $tag ?$cell?
  */
 static int TreeviewCtagHasCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     TreeCell cell;
     Tcl_Size i, columnNumber;
@@ -6879,7 +7127,11 @@ static int TreeviewCtagHasCommand(
 /* + $tv tag names
  */
 static int TreeviewTagNamesCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
 
     if (objc != 3) {
@@ -6902,7 +7154,11 @@ static void AddTag(TreeItem *item, Ttk_Tag tag) {
 }
 
 static int TreeviewTagAddCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Tag tag;
     TreeItem **items;
@@ -6967,7 +7223,11 @@ static void AllocCellTagSets(Treeview *tv, TreeItem *item, Tcl_Size columnNumber
 /* + $tv tag cell add $tag $cells
  */
 static int TreeviewCtagAddCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Tag tag;
     TreeCell *cells;
@@ -7033,7 +7293,11 @@ static void RemoveTagFromCellsAtItem(TreeItem *item, Ttk_Tag tag) {
 }
 
 static int TreeviewTagRemoveCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Tag tag;
 
@@ -7075,7 +7339,11 @@ static int TreeviewTagRemoveCommand(
 /* + $tv tag cell remove $tag ?$cells?
  */
 static int TreeviewCtagRemoveCommand(
-    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]) {
+    void *recordPtr,
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const *objv)
+{
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Tag tag;
     TreeCell *cells;
