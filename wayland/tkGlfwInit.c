@@ -1173,39 +1173,42 @@ TkGlfwBeginDraw(
     GC                       gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    TkWindow *winPtr;
-    TkWindow *topPtr;
+    TkWindow   *winPtr;
+    TkWindow   *topPtr;
     GLFWwindow *glfwWindow;
     glfwTkInfo *infoPtr;
-    int width, height;
+    int         width, height;
 
     if (dcPtr == NULL || drawable <= 1) {
         return TCL_ERROR;
     }
 
-	/* Pixmap path: bind the pixmap's own raw GL FBO. */
+    /* Pixmap path: bind the pixmap's own raw GL FBO. */
     if (TkWaylandDrawableIsPixmap(drawable)) {
-        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap((Pixmap)drawable);
+        TkWaylandPixmap *pixmapPtr =
+            TkWaylandPixmapFromPixmap((Pixmap)drawable);
         if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
             return TCL_ERROR;
         }
-        glfwTkInfo *infoPtr = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
-        if (!infoPtr || !infoPtr->context.vg) {
+
+        glfwTkInfo *pInfo = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
+        if (!pInfo || !pInfo->context.vg) {
             return TCL_ERROR;
         }
+
         glfwMakeContextCurrent(pixmapPtr->glfwWindow);
         glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
         glViewport(0, 0, pixmapPtr->width, pixmapPtr->height);
 
         float pixelRatio = 1.0f;
-        int winW, winH, fbW, fbH;
+        int   winW, winH, fbW, fbH;
         glfwGetWindowSize(pixmapPtr->glfwWindow, &winW, &winH);
         glfwGetFramebufferSize(pixmapPtr->glfwWindow, &fbW, &fbH);
         if (winW > 0) {
             pixelRatio = (float)fbW / (float)winW;
         }
 
-        dcPtr->vg        = infoPtr->context.vg;
+        dcPtr->vg        = pInfo->context.vg;
         dcPtr->width     = pixmapPtr->width;
         dcPtr->height    = pixmapPtr->height;
         dcPtr->winPtr    = NULL;
@@ -1213,38 +1216,37 @@ TkGlfwBeginDraw(
         dcPtr->pixmapFbo = pixmapPtr->fbo;
 
         /*
-         * Pixmaps get their own self-contained NVG frame.  We must NOT
-         * close any window frame that may be open on this context — pixmap
-         * draws are independent.  If a window frame is active on the same
-         * NVG context, end it cleanly first so state doesn't bleed through,
-         * then open the pixmap frame.
+         * Pixmaps get their own self-contained NVG frame. If a window
+         * frame is active on this context, end it cleanly first.
          */
-        if (infoPtr->context.nvgFrameActive) {
-            /* Close the window batch before switching to pixmap. */
-            TkWindow *activeWinPtr = NULL;
-            if (infoPtr->context.activeWindow) {
-                glfwTkInfo *activeInfo = glfwGetWindowUserPointer(
-                    infoPtr->context.activeWindow);
+        if (pInfo->context.nvgFrameActive) {
+            if (pInfo->context.activeWindow) {
+                glfwTkInfo *activeInfo =
+                    glfwGetWindowUserPointer(pInfo->context.activeWindow);
                 if (activeInfo && activeInfo->winPtr &&
                     activeInfo->winPtr->privatePtr &&
                     activeInfo->winPtr->privatePtr->fb) {
-                    glBindFramebuffer(GL_FRAMEBUFFER,
-                        activeInfo->winPtr->privatePtr->fb->fbo);
+                    GLuint winFBO =
+                        (GLuint)(uintptr_t)activeInfo->winPtr->privatePtr->fb;
+                    glBindFramebuffer(GL_FRAMEBUFFER, winFBO);
                 }
             }
-            nvgEndFrame(infoPtr->context.vg);
-            infoPtr->context.nvgFrameActive = 0;
-            infoPtr->context.activeWindow   = NULL;
+            nvgEndFrame(pInfo->context.vg);
+            pInfo->context.nvgFrameActive = 0;
+            pInfo->context.activeWindow   = NULL;
+
             /* Re-bind the pixmap FBO after nvgEndFrame may have changed it. */
             glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
         }
 
-        nvgBeginFrame(infoPtr->context.vg,
-                      (float)pixmapPtr->width, (float)pixmapPtr->height,
+        nvgBeginFrame(pInfo->context.vg,
+                      (float)pixmapPtr->width,
+                      (float)pixmapPtr->height,
                       pixelRatio);
-                      printf("pixmap ctx=%p current=%p\n",
-       glfwGetCurrentContext(),
-       glfwWindow);
+
+        printf("pixmap ctx=%p current=%p\n",
+               glfwGetCurrentContext(),
+               pixmapPtr->glfwWindow);
 
         return TCL_OK;
     }
@@ -1257,22 +1259,24 @@ TkGlfwBeginDraw(
 
     topPtr = winPtr;
     while (topPtr != NULL && ((uintptr_t)topPtr & 3) == 0) {
-        if (topPtr->privatePtr != NULL && topPtr->privatePtr->glfwWindow != NULL) {
+        if (topPtr->privatePtr != NULL &&
+            topPtr->privatePtr->glfwWindow != NULL) {
             break;
         }
         topPtr = topPtr->parentPtr;
     }
-    if (topPtr == NULL || ((uintptr_t)topPtr & 3) != 0 || topPtr->privatePtr == NULL) {
+    if (topPtr == NULL || ((uintptr_t)topPtr & 3) != 0 ||
+        topPtr->privatePtr == NULL) {
         return TCL_ERROR;
     }
 
     glfwWindow = topPtr->privatePtr->glfwWindow;
-    if (glfwWindow == NULL) {
+    if (!glfwWindow) {
         return TCL_ERROR;
     }
 
     infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (infoPtr == NULL || infoPtr->context.vg == NULL) {
+    if (!infoPtr || !infoPtr->context.vg) {
         return TCL_ERROR;
     }
 
@@ -1282,50 +1286,49 @@ TkGlfwBeginDraw(
         return TCL_ERROR;
     }
 
-    dcPtr->vg = infoPtr->context.vg;
-    dcPtr->width = width;
-    dcPtr->height = height;
-    dcPtr->winPtr = (void *)winPtr;
+    dcPtr->vg      = infoPtr->context.vg;
+    dcPtr->width   = width;
+    dcPtr->height  = height;
+    dcPtr->winPtr  = (void *)winPtr;
     dcPtr->isPixmap = 0;
 
-	/* Align window FBO with NanoVG.  */
-	if (topPtr->privatePtr->fb) {
-	    glBindFramebuffer(GL_FRAMEBUFFER,
-	        (GLuint)(uintptr_t)topPtr->privatePtr->fb);
-	} else {
-	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
+    /* Align window FBO with NanoVG. */
+    if (topPtr->privatePtr->fb) {
+        GLuint fbo = (GLuint)(uintptr_t)topPtr->privatePtr->fb;
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    } else {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     glViewport(0, 0, width, height);
 
     float pixelRatio = 1.0f;
-    int winW, winH;
+    int   winW, winH;
     glfwGetWindowSize(glfwWindow, &winW, &winH);
     if (winW > 0) {
         pixelRatio = (float)width / (float)winW;
     }
 
-    /* BATCHED FRAME OPEN:
-     * Only open a brand new NanoVG frame if one isn't already running globally
-     * for this window context. Otherwise, let child widgets append safely.
-     */
+    /* BATCHED FRAME OPEN */
     if (!infoPtr->context.nvgFrameActive) {
-		/* Ensure FBO is still bound before NanoVG begins drawing. */
-		if (topPtr->privatePtr->fb) {
-		    glBindFramebuffer(GL_FRAMEBUFFER,
-		        (GLuint)(uintptr_t)topPtr->privatePtr->fb);
-		}
-        nvgBeginFrame(infoPtr->context.vg, (float)width, (float)height, pixelRatio);
+        if (topPtr->privatePtr->fb) {
+            GLuint fbo = (GLuint)(uintptr_t)topPtr->privatePtr->fb;
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        }
+        nvgBeginFrame(infoPtr->context.vg,
+                      (float)width,
+                      (float)height,
+                      pixelRatio);
         infoPtr->context.nvgFrameActive = 1;
-        infoPtr->context.activeWindow = glfwWindow;
-                              printf("widget ctx=%p current=%p\n",
-       glfwGetCurrentContext(),
-       glfwWindow);
+        infoPtr->context.activeWindow   = glfwWindow;
+
+        printf("widget ctx=%p current=%p\n",
+               glfwGetCurrentContext(),
+               glfwWindow);
     }
 
     return TCL_OK;
 }
-
 
 /*
  *----------------------------------------------------------------------
