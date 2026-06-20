@@ -55,6 +55,7 @@
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include <errno.h>
+
 /*
  * Forward declarations for IBus integration (implemented in tkWaylandKey.c).
  * These wrappers accept Tk_Window so this file never needs to see IbusContext*.
@@ -67,7 +68,6 @@ extern bool  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
 extern void RemoveIbusContext(Tk_Window tkwin);
 extern TkXKBState xkbState;
 
-
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
  * going through the file-handler path.  The bus is private to
@@ -78,8 +78,7 @@ extern TkXKBState xkbState;
 extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
 
 
-
-/* ========================= Thread Specific Data  ========================= */
+/* Thread-specific data for the event loop. */
 
 typedef struct ThreadSpecificData {
     bool           initialized;
@@ -107,18 +106,20 @@ clearCallbackCount() {
     tsdPtr->callbackCount = 0;
 }
 
-/* ========================== Global State Data  ========================== */
 
 /*
  * Global state for mouse buttons and modifiers.
  * These are used across callbacks to maintain consistent state.
- //// This should be thread local!
  */
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
-/* Track last window for enter/leave events */
+/* Track last window for enter/leave events. */
 static TkWindow *lastWinPtr = NULL;
+
+/*
+ * Utility functions for keyboard/input method support. 
+ */
 
 /*
  *----------------------------------------------------------------------
@@ -166,7 +167,7 @@ TkWaylandUpdateKeyboardModifiers(int glfw_mods)
  *----------------------------------------------------------------------
  */
 
-void
+void 
 TkWaylandStoreText(TkWindow *winPtr, unsigned int codepoint)
 {
     char buffer[7];
@@ -242,7 +243,9 @@ TkWaylandClearStoredText(TkWindow *winPtr)
     Tcl_DStringSetLength(&winPtr->privatePtr->pendingText, 0);
 }
 
-/* ============================== Notifier  ============================== */
+/*
+ * Notifier / event loop functions. 
+ */
 
 static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandSetupProc(void *clientData, int flags);
@@ -358,6 +361,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
     Tcl_Time noBlock    = {0, 0};
     Tcl_Time oneRefresh = {0, 16667};
 
+    /* Drain IBus messages to prevent input starvation. */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) { /* drain */ }
     }
@@ -380,6 +384,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
         Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -410,6 +415,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
         return;
     }
 
+    /* Drain any pending IBus messages. */
     if (ibus_bus) {
         sd_bus_wait(ibus_bus, 0);
         int r;
@@ -429,6 +435,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
      */
     TkWaylandDisplayAllWindows();
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -467,12 +474,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
                           TkWaylandCheckProc, NULL);
 
     tsdPtr->initialized = false;
-
-    /* Note: We don't call TkGlfwShutdown here. */
-    //// Why not?
 }
-
-/* ========================== XEvents  ========================== */
 
 /*
  *----------------------------------------------------------------------
@@ -550,7 +552,10 @@ TkWaylandQueueExposeEvent(
     }
 }
 
-/* ========================== GLFW Callbacks ========================== */
+/* 
+ * GLFW callbacks. These functions integrate the native GFLW events
+ * with Tk's event loop.
+ */
 
 /*
  *----------------------------------------------------------------------
@@ -721,7 +726,7 @@ TkGlfwFramebufferSizeCallback(
      */
     if (infoPtr->context.nvgFrameActive) {
         if (winPtr->privatePtr->fb) {
-            GLuint fbo = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
+            GLuint fbo = winPtr->privatePtr->fb->fbo;
             glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         }
         nvgEndFrame(vg);
@@ -729,49 +734,13 @@ TkGlfwFramebufferSizeCallback(
         infoPtr->context.activeWindow   = NULL;
     }
 
-    /* Delete old FBO. */
+    /* Destroy the old backing store and create a new one. */
     if (winPtr->privatePtr->fb) {
-        GLuint oldFBO = (GLuint)(uintptr_t)winPtr->privatePtr->fb;
-        glDeleteFramebuffers(1, &oldFBO);
+        TkGlfwDestroyBackingStore(winPtr->privatePtr->fb);
         winPtr->privatePtr->fb = NULL;
     }
 
-    /* Create new FBO + color texture + depth+stencil renderbuffer. */
-
-    /* Color texture */
-    GLuint tex = 0;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-                 width, height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    /* Depth+Stencil renderbuffer */
-    GLuint rbo = 0;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-                          width, height);
-
-    /* FBO */
-    GLuint fbo = 0;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, tex, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                              GL_RENDERBUFFER, rbo);
-
-    /* Validate. */
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FramebufferSizeCallback: FBO incomplete (0x%x)\n", status);
-    }
-
-    /* Store FBO ID. */
-    winPtr->privatePtr->fb = (void *)(uintptr_t)fbo;
+    winPtr->privatePtr->fb = TkGlfwCreateBackingStore(width, height);
 
     if (!winPtr->privatePtr->fb) {
         fprintf(stderr, "FramebufferSizeCallback: FBO creation failed\n");
@@ -779,32 +748,14 @@ TkGlfwFramebufferSizeCallback(
         return;
     }
 
-    /*
-     * Clear immediately so the compositor never sees uninitialized
-     * (transparent) texture memory during interactive resize.
-     */
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    fprintf(stderr, "New framebuffer %p for %s id=%u\n",
-            winPtr->privatePtr->fb,
-            Tk_PathName(winPtr), fbo);
-
-    /* Verify FBO completeness again on our binding. */
-    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO %p incomplete (0x%x)\n",
-                winPtr->privatePtr->fb, status);
-    }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     /* Update Tk's notion of window size. */
     glfwGetWindowSize(window,
                       &winPtr->changes.width,
                       &winPtr->changes.height);
     TkDoConfigureNotify(winPtr);
+
+    /* Mark dirty for next display cycle. */
+    infoPtr->flags |= needsDisplay;
 }
 
 /*
@@ -897,7 +848,7 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
     event.xfocus.mode      = NotifyNormal;
     event.xfocus.detail    = NotifyAncestor;
 
-    /* Push the fully formed lifecycle event to the tail of the event queue */
+    /* Push the fully formed lifecycle event to the tail of the event queue. */
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     TkGenerateActivateEvents(winPtr, focused);
 
@@ -922,6 +873,7 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
         TkWaylandIbusFocusOut((Tk_Window)winPtr);
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1468,7 +1420,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
         }
     }
 
-    /*  Normal Tk key event. */
+    /* Normal Tk key event. */
     if (action == GLFW_RELEASE) {
         /* Optional: you can also forward releases, but many IMEs ignore them. */
         return;
@@ -1535,6 +1487,7 @@ TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
 
     TkWaylandStoreText(winPtr, codepoint);
 }
+
 /*
  *----------------------------------------------------------------------
  *

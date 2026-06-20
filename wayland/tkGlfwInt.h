@@ -8,8 +8,8 @@
  * Copyright © 2026 Kevin Walzer
  * Copyright © 2026 Marc Culler
  *
- * See the file "license.terms" for information on usage and redistribution of
- * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #ifndef _TKGLFWINT_H
@@ -54,6 +54,28 @@ void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
  */
 typedef struct TkWaylandPopup TkWaylandPopup;
 struct wl_seat;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Backing Store Structure
+ *
+ *	This structure holds the OpenGL framebuffer object and associated
+ *	resources for a window's backing store.  It is allocated as a
+ *	pointer in TkWindowPrivate so that tkWaylandPopup.c can safely
+ *	dereference it to access the raw GLuint fbo handle without
+ *	invalid memory access.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct TkGlfwBackingStore {
+    GLuint fbo;              /* The actual OpenGL Framebuffer Object ID */
+    GLuint colorTex;         /* Texture where pixels/widgets are drawn */
+    GLuint depthStencilRbo;  /* Renderbuffer needed for NanoVG masking/stencil strokes */
+    int width;               /* Cache the pixel width of this FBO allocation */
+    int height;              /* Cache the pixel height of this FBO allocation */
+} TkGlfwBackingStore;
 
 /*
  *----------------------------------------------------------------------
@@ -225,7 +247,6 @@ typedef struct TkGlfwContext {
                                    * and shared by all windows */
     int initialized;              /* GLFW initialized flag - 1 if glfwInit()
                                    * has been called successfully */
-    //// The rest of these fields are probably not needed.
     int nvgFrameActive;           /* Flag indicating if a NanoVG frame is
                                    * currently active */
     GLFWwindow *activeWindow;     /* Window that has the current active
@@ -448,16 +469,16 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
  *
  * The TkWindow structure contains a pointer to a struct TkWindowPrivate for
  * storing information specific to a port of Tk.  We use it for GLFW and
- * NVG objects associated to the window and for storing a string
+ * OpenGL objects associated to the window and for storing a string
  * for TkpGetString.
  *
  *----------------------------------------------------------------------
  */
 
 typedef struct TkWindowPrivate {
-    GLFWwindow *glfwWindow;
-    NVGLUframebuffer *fb;
-    Tcl_DString pendingText;
+    GLFWwindow          *glfwWindow;
+    TkGlfwBackingStore  *fb;  /* Backing store FBO structure pointer */
+    Tcl_DString          pendingText;
 } glfwData;
 
 
@@ -571,6 +592,17 @@ MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow,
 						int width, int height);
 MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
 					    int width, int height);
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Backing Store Helpers
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE TkGlfwBackingStore *TkGlfwCreateBackingStore(int width, int height);
+MODULE_SCOPE void                TkGlfwDestroyBackingStore(TkGlfwBackingStore *store);
 
 /*
  *----------------------------------------------------------------------
