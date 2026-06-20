@@ -119,6 +119,5 @@ if {[tk windowingsystem] eq "wayland"} {
 	    break
 	}
     }
-
     # end of Wayland commands
 }

@@ -704,6 +704,7 @@ DestroyGlfwWindow(
  *----------------------------------------------------------------------
  */
 
+
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
@@ -735,13 +736,41 @@ TkWmMapWindow(TkWindow *winPtr)
 
     UpdateGeometryInfo((void *)winPtr);
 
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
         int w, h;
 
-        glfwShowWindow(glfwWindow);
+        /* Get the current dimensions GLFW is holding. */
         glfwGetWindowSize(glfwWindow, &w, &h);
 
+        /* If GLFW is holding the initial 200x200 fallback, or if Tk's 
+         * geometry managers have calculated a specific size request, override
+         * the fallback dimension before mapping the window to Wayland.
+         */
+        if (w == 200 && h == 200) {
+            int reqW = (wmPtr->width > 0) ? wmPtr->width : winPtr->reqWidth;
+            int reqH = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
+
+            /* Only override if we have a valid calculated layout size. */
+            if (reqW > 1 && reqH > 1) {
+                glfwSetWindowSize(glfwWindow, reqW, reqH);
+                w = reqW;
+                h = reqH;
+            }
+        } else if (winPtr->changes.width > 1 && winPtr->changes.height > 1) {
+            /* If changes structure holds an explicit updated target, sync it. */
+            glfwSetWindowSize(glfwWindow, winPtr->changes.width, winPtr->changes.height);
+            w = winPtr->changes.width;
+            h = winPtr->changes.height;
+        }
+
+        glfwShowWindow(glfwWindow);
+
+        /* Synchronize Tk's internal variables with the configured size. */
+        winPtr->changes.width = w;
+        winPtr->changes.height = h;
+
+        /* Queue the expose pass with the correct dimensions. */
         TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
         winPtr->flags |= TK_MAPPED;
     }

@@ -696,66 +696,66 @@ TkGlfwFramebufferSizeCallback(
     int height)
 {
     recordCallback();
-
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
         fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
         return;
     }
-
-    fprintf(stderr, "TkGlfwFramebufferSizeCallback: %s %dx%d\n",
-            Tk_PathName(winPtr), width, height);
-
+    
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-    if (!infoPtr) {
-        fprintf(stderr, "FramebufferSizeCallback: No glfwTkInfo!\n");
-        return;
-    }
-
-    NVGcontext *vg = infoPtr->context.vg;
-    if (!vg) {
+    if (!infoPtr || !infoPtr->context.vg) {
         fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
         return;
     }
 
-    glfwMakeContextCurrent(window);
-
-    /*
-     * If a batched NVG frame is open, close it now before the FBO it was
-     * drawing into is deleted.
+    /* During early initialization maps (e.g. via accessibility passes),
+     * this resize event can be dispatched before privatePtr or its nested fb structure 
+     * are allocated. We must guard against uninitialized garbage addresses.
      */
-    if (infoPtr->context.nvgFrameActive) {
-        if (winPtr->privatePtr->fb) {
+    if (winPtr->privatePtr != NULL && winPtr->privatePtr->fb != NULL) {
+        /* Verify that we aren't dereferencing an early memory ghost (like 0x300000001).
+         * A safe boundaries check guarantees the pointer addresses a real structural block.
+         */
+        if ((uintptr_t)(winPtr->privatePtr->fb) > 0x10000) {
             GLuint fbo = winPtr->privatePtr->fb->fbo;
-            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+            
+            /* Delete the old texture/renderbuffer bindings attached to this FBO. */
+            if (fbo > 0) {
+                glDeleteFramebuffers(1, &fbo);
+            }
+            
+            /* Free private framebuffer. */
+            ckfree(winPtr->privatePtr->fb);
+            winPtr->privatePtr->fb = NULL;
         }
-        nvgEndFrame(vg);
-        infoPtr->context.nvgFrameActive = 0;
-        infoPtr->context.activeWindow   = NULL;
     }
 
-    /* Destroy the old backing store and create a new one. */
-    if (winPtr->privatePtr->fb) {
-        TkGlfwDestroyBackingStore(winPtr->privatePtr->fb);
-        winPtr->privatePtr->fb = NULL;
+    /* Allocate and bind private FBO matching the new dimensions. */
+    TkGlfwBackingStore *newFb = (TkGlfwBackingStore *)ckalloc(sizeof(TkGlfwBackingStore));
+    if (newFb != NULL) {
+        GLuint newFbo = 0;
+        glGenFramebuffers(1, &newFbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, newFbo);
+        
+        newFb->fbo = newFbo;
+        winPtr->privatePtr->fb = newFb;
+
+        /* Check for complete viewport configuration status. */
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            fprintf(stderr, "Direct FBO id %d is incomplete.\n", newFbo);
+        }
     }
 
-    winPtr->privatePtr->fb = TkGlfwCreateBackingStore(width, height);
+    /* Synchronize Tk's geometry structures with the true window bounds */
+    glfwGetWindowSize(window, &(winPtr->changes.width), &(winPtr->changes.height));
 
-    if (!winPtr->privatePtr->fb) {
-        fprintf(stderr, "FramebufferSizeCallback: FBO creation failed\n");
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        return;
-    }
-
-    /* Update Tk's notion of window size. */
-    glfwGetWindowSize(window,
-                      &winPtr->changes.width,
-                      &winPtr->changes.height);
+    /* Alert the generic core to reconfigure internal container metrics */
     TkDoConfigureNotify(winPtr);
 
-    /* Mark dirty for next display cycle. */
-    infoPtr->flags |= needsDisplay;
+    /* Queue the full window exposure pass. This forces NanoVG and the geometry 
+     * layout managers to map and stretch widgets to their correct targeted footprint.
+     */
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, winPtr->changes.width, winPtr->changes.height);
 }
 
 /*
@@ -1504,6 +1504,7 @@ TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
  *----------------------------------------------------------------------
  */
 
+#if 0
 static void
 TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
@@ -1516,6 +1517,49 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
 	    Tk_PathName(winPtr));
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
+}
+#endif
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGlfwWindowRefreshCallback --
+ *
+ * Called when the Wayland compositor requests that the window surface
+ * refresh or redraw its contents.
+ *
+ * Results:
+ * None.
+ *
+ * Side effects:
+ * Queues an Expose event matching the synchronized geometry changes.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkGlfwWindowRefreshCallback(GLFWwindow *window)
+{
+    recordCallback();
+    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    if (!winPtr) {
+        return;
+    }
+    
+    /*
+     * FIX THE FLICKER & HANG: Do not use Tk_Width/Tk_Height here. 
+     * During active configuration sweeps, those macros return stale sizes 
+     * that conflict with active geometry requests, trapping the widget tree.
+     * Use the validated changes boundaries instead.
+     */
+    int w = winPtr->changes.width;
+    int h = winPtr->changes.height;
+
+    fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s at verified size: %dx%d\n",
+            Tk_PathName(winPtr), w, h);
+
+    if (w > 1 && h > 1) {
+        TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+    }
 }
 
 /*
