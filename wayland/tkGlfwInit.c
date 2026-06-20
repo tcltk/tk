@@ -463,52 +463,57 @@ TkWaylandPostVirtualEvent(
 MODULE_SCOPE TkGlfwBackingStore *
 TkGlfwCreateBackingStore(int width, int height)
 {
-    if (width <= 0 || height <= 0) return NULL;
-
-    TkGlfwBackingStore *store = (TkGlfwBackingStore *)Tcl_Alloc(sizeof(TkGlfwBackingStore));
-    memset(store, 0, sizeof(TkGlfwBackingStore));
-    store->width = width;
-    store->height = height;
-
-    /* Generate color texture */
-    glGenTextures(1, &store->colorTex);
-    glBindTexture(GL_TEXTURE_2D, store->colorTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    /* Generate depth+stencil renderbuffer */
-    glGenRenderbuffers(1, &store->depthStencilRbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, store->depthStencilRbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-
-    /* Generate framebuffer and attach both */
-    glGenFramebuffers(1, &store->fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, store->fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, store->colorTex, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                              GL_RENDERBUFFER, store->depthStencilRbo);
-
-    /* Validate */
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "TkGlfwCreateBackingStore: FBO incomplete (0x%x)\n", status);
-        TkGlfwDestroyBackingStore(store);
+    TkGlfwBackingStore *store = (TkGlfwBackingStore *)ckalloc(sizeof(TkGlfwBackingStore));
+    if (!store) {
         return NULL;
     }
 
-    /* Clear to black */
-    glViewport(0, 0, width, height);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    store->width = width;
+    store->height = height;
 
+    /* Generate and bind the Framebuffer Object. */
+    glGenFramebuffers(1, &store->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, store->fbo);
+
+    /* Generate, bind, and configure the Color Texture Attachment. */
+    glGenTextures(1, &store->colorTex);
+    glBindTexture(GL_TEXTURE_2D, store->colorTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+
+     /* Explicitly set filtering and clamping options on colorTex. */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    /* Attach the color texture map to the frame container. */
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, store->colorTex, 0);
+    glGenRenderbuffers(1, &store->depthStencilRbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, store->depthStencilRbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    
+    /* Attach our combined depth/stencil buffer layout to the frame container. */
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, store->depthStencilRbo);
+
+    /* Validate structural stability. */
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    printf("CreateWindow FBO status for .: 0x%x\n", status);
+    fflush(stdout);
+
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "CRITICAL ERROR: Failed to finalize FBO backing store mapping. Code: 0x%x\n", status);
+        /* Clean up. */
+        glDeleteTextures(1, &store->colorTex);
+        glDeleteRenderbuffers(1, &store->depthStencilRbo);
+        glDeleteFramebuffers(1, &store->fbo);
+        ckfree((char *)store);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        return NULL;
+    }
+
+    /* Unbind and clear context tracking. */
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    fprintf(stderr, "TkGlfwCreateBackingStore: created FBO %u (%dx%d)\n",
-            store->fbo, width, height);
-
     return store;
 }
 
@@ -532,20 +537,19 @@ TkGlfwCreateBackingStore(int width, int height)
 MODULE_SCOPE void
 TkGlfwDestroyBackingStore(TkGlfwBackingStore *store)
 {
-    if (!store) return;
-
-    fprintf(stderr, "TkGlfwDestroyBackingStore: destroying FBO %u\n", store->fbo);
-
-    if (store->fbo) {
-        glDeleteFramebuffers(1, &store->fbo);
+    if (!store) {
+        return;
     }
-    if (store->colorTex) {
-        glDeleteTextures(1, &store->colorTex);
-    }
+    printf("TkGlfwDestroyBackingStore: destroying FBO %u\n", store->fbo);
+    fflush(stdout);
+
+    /* Delete. */
+    glDeleteTextures(1, &store->colorTex);
     if (store->depthStencilRbo) {
         glDeleteRenderbuffers(1, &store->depthStencilRbo);
     }
-    Tcl_Free((char *)store);
+    glDeleteFramebuffers(1, &store->fbo);
+    ckfree((char *)store);
 }
 
 #if 0
@@ -705,19 +709,19 @@ getGlfwTkInfo(
  *
  * renderFBO --
  *
- * This function is called to draw the current contents of the
- * backing store framebuffer of a glfwWindow on the screen.  It uses
- * glBlitFramebuffer to blit the framebuffer to the back buffer in the
- * window's OpenGL context and then calls glfwSwapBuffers to swap the
- * back buffer to the screen.  The backing store FBO is left unchanged
- * for subsequent drawing functions to modify.
+ * 	This function is called to draw the current contents of the
+ * 	backing store framebuffer of a glfwWindow on the screen.  It uses
+ * 	glBlitFramebuffer to blit the framebuffer to the back buffer in the
+ * 	window's OpenGL context and then calls glfwSwapBuffers to swap the
+ * 	back buffer to the screen.  The backing store FBO is left unchanged
+ * 	for subsequent drawing functions to modify.
  *
  * Results:
- * None.
+ * 	None.
  *
  * Side effects:
- * The current state of the window's backing store framebuffer
- * is rendered on the screen.
+ * 	The current state of the window's backing store framebuffer
+ * 	is rendered on the screen.
  *
  *----------------------------------------------------------------------
  */
@@ -731,40 +735,27 @@ renderFBO(GLFWwindow *window)
     }
 
     TkWindow *winPtr = infoPtr->winPtr;
-    TkGlfwBackingStore *store = winPtr->privatePtr->fb;
-    if (!store) {
+    glfwMakeContextCurrent(window);
+
+    /* Fallback layout: clear to standard Tk Gray if backing store is missing. */
+    if (!winPtr->privatePtr->fb) {
+        glClearColor(0.8509f, 0.8509f, 0.8509f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glfwSwapBuffers(window);
         return;
     }
 
-    glfwMakeContextCurrent(window);
+    TkGlfwBackingStore *store = winPtr->privatePtr->fb;
 
     int fbWidth = 0, fbHeight = 0;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     if (fbWidth <= 0 || fbHeight <= 0) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }
 
-    /*
-     * Close the batched NVG frame so all widget geometry is tessellated
-     * and flushed into the backing store FBO before we read from it.
-     */
-    if (infoPtr->context.nvgFrameActive) {
-        glBindFramebuffer(GL_FRAMEBUFFER, store->fbo);
-        nvgEndFrame(infoPtr->context.vg);
-        infoPtr->context.nvgFrameActive = 0;
-        infoPtr->context.activeWindow   = NULL;
-    }
-
-    /*
-     * CRITICAL FIX: Disable scissor test which may have been left enabled
-     * by widget drawing operations.  If scissor test is enabled, it will
-     * clip the blit operation and cause the magenta test or other content
-     * to be cut off.
-     */
     glDisable(GL_SCISSOR_TEST);
 
-    /* Blit Tk backing store FBO to the default framebuffer (screen). */
+    /* Blit completed opaque FBO texture map directly onto native surface. */
     glBindFramebuffer(GL_READ_FRAMEBUFFER, store->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
@@ -773,7 +764,6 @@ renderFBO(GLFWwindow *window)
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     glfwSwapBuffers(window);
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -782,16 +772,16 @@ renderFBO(GLFWwindow *window)
  *
  * TkWaylandDisplayAllWindows --
  *
- * Called by TkWaylandSetupProc to display any "dirty" windows whose
- * backing store framebuffer has been changed by a display proc run by
- * Tcl_DoOneEvent since the last call to the SetupProc. The framebuffer
- * is blitted to the GL back buffer and then glfwSwapBuffers is called.
+ * 	Called by TkWaylandSetupProc to display any "dirty" windows whose
+ * 	backing store framebuffer has been changed by a display proc run by
+ * 	Tcl_DoOneEvent since the last call to the SetupProc. The framebuffer
+ * 	is blitted to the GL back buffer and then glfwSwapBuffers is called.
  *
  * Results:
- * None.
+ * 	None.
  *
  * Side effects:
- * Updates windows on the screen.
+ * 	Updates windows on the screen.
  *
  *----------------------------------------------------------------------
  */
@@ -807,18 +797,19 @@ TkWaylandDisplayAllWindows(void)
             continue;
         }
 
-        /*
-         * Only present when (a) the window has a valid backing FBO and
-         * (b) it has been marked dirty by a draw call.
+        /* 
+         * Only present the window buffer if the layouts are modified (needsDisplay) 
+         * and we are completely clear of an active double-buffer lock (!dontSwap).
          */
-        if (infoPtr->winPtr->privatePtr->fb &&
-            (infoPtr->flags & needsDisplay)) {
+        if (infoPtr->winPtr->privatePtr->fb && 
+            (infoPtr->flags & needsDisplay) && 
+            !(infoPtr->flags & dontSwap)) {
+            
             renderFBO(infoPtr->glfwWindow);
             infoPtr->flags &= ~needsDisplay;
         }
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -858,10 +849,11 @@ void
 Tk_ClipDrawableToRect(
     TCL_UNUSED(Display *),
     Drawable drawable,
-    int x, int y,
+    TCL_UNUSED(int), /* x */
+    TCL_UNUSED(int), /* y */
     int width, int height)
 {
-    (void)x; (void)y;
+	
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     if (!glfwWindow) {
         return;
@@ -872,33 +864,13 @@ Tk_ClipDrawableToRect(
         return;
     }
 
-    /*
-     * When called with width == -1 and height == -1, this signals the
-     * end of the double-buffered drawing section.  We finalize the
-     * rendering by calling renderFBO to blit the backing store to the
-     * screen and then clear the dontSwap flag.
-     */
     if (width == -1 || height == -1) {
-        fprintf(stderr, "Finished double buffer section\n");
-
-        /* Render the current FBO contents to the screen. */
-        renderFBO(glfwWindow);
-
-        /* Clear the dontSwap flag so subsequent draws swap normally. */
+        /* Double buffer segment complete: release lock, flag frame ready. */
         glfwInfoPtr->flags &= ~dontSwap;
-
-        /* Mark the window as needing display for the next frame. */
         glfwInfoPtr->flags |= needsDisplay;
     } else {
-        /*
-         * Start of a double-buffered drawing section.  We set the
-         * dontSwap flag to prevent renderFBO from swapping buffers
-         * until the entire drawing sequence is complete.  This avoids
-         * partial renders appearing on screen during complex operations.
-         */
-        fprintf(stderr, "Starting double buffer section ====> \n");
+        /* Double buffer segment starting: lock down presentation swaps. */
         glfwInfoPtr->flags |= dontSwap;
-        glfwInfoPtr->flags &= ~needsDisplay;
     }
 }
 
@@ -1282,7 +1254,6 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
     }
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1311,18 +1282,30 @@ TkGlfwBeginDraw(
     GC                       gc,
     TkWaylandDrawingContext *dcPtr)
 {
+    TkWindow *winPtr;
+    TkWindow *topPtr;
+    GLFWwindow *glfwWindow;
+    glfwTkInfo *infoPtr;
+    int width, height;
+
     if (dcPtr == NULL || drawable <= 1) {
         return TCL_ERROR;
     }
 
-    /* Pixmap path: bind the pixmap's own raw GL FBO. */
+    dcPtr->vg = NULL;
+    dcPtr->width = 0;
+    dcPtr->height = 0;
+    dcPtr->winPtr = NULL;
+    dcPtr->isPixmap = 0;
+
+    /* Pixmap rendering path. */
     if (TkWaylandDrawableIsPixmap(drawable)) {
         TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap((Pixmap)drawable);
         if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
             return TCL_ERROR;
         }
-        glfwTkInfo *infoPtr = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
-        if (!infoPtr || !infoPtr->context.vg) {
+        glfwTkInfo *pInfo = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
+        if (!pInfo || !pInfo->context.vg) {
             return TCL_ERROR;
         }
         glfwMakeContextCurrent(pixmapPtr->glfwWindow);
@@ -1337,103 +1320,97 @@ TkGlfwBeginDraw(
             pixelRatio = (float)fbW / (float)winW;
         }
 
-        dcPtr->vg        = infoPtr->context.vg;
+        dcPtr->vg        = pInfo->context.vg;
         dcPtr->width     = pixmapPtr->width;
         dcPtr->height    = pixmapPtr->height;
         dcPtr->winPtr    = NULL;
         dcPtr->isPixmap  = 1;
         dcPtr->pixmapFbo = pixmapPtr->fbo;
 
-        if (infoPtr->context.nvgFrameActive) {
-            /* Close the window batch cleanly before switching context to pixmap. */
-            if (infoPtr->context.activeWindow) {
-                glfwTkInfo *activeInfo = glfwGetWindowUserPointer(infoPtr->context.activeWindow);
-                if (activeInfo && activeInfo->winPtr &&
-                    activeInfo->winPtr->privatePtr &&
-                    activeInfo->winPtr->privatePtr->fb) {
-                    glBindFramebuffer(GL_FRAMEBUFFER, activeInfo->winPtr->privatePtr->fb->fbo);
-                }
-            }
-            nvgEndFrame(infoPtr->context.vg);
-            infoPtr->context.nvgFrameActive = 0;
-            infoPtr->context.activeWindow   = NULL;
-            glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
+        if (pInfo->context.nvgFrameActive) {
+            nvgEndFrame(pInfo->context.vg);
+            pInfo->context.nvgFrameActive = 0;
         }
 
-        nvgResetTransform(infoPtr->context.vg);
-        nvgBeginFrame(infoPtr->context.vg, (float)pixmapPtr->width, (float)pixmapPtr->height, pixelRatio);
+        nvgResetTransform(pInfo->context.vg);
+        nvgResetScissor(pInfo->context.vg);
+        nvgBeginFrame(pInfo->context.vg, (float)pixmapPtr->width, (float)pixmapPtr->height, pixelRatio);
         return TCL_OK;
     }
 
-    /* Window / widget path. */
-    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
-    if (childPtr == NULL || ((uintptr_t)childPtr & 3) != 0) {
+    /* Window / widget hierarchy path. */
+    winPtr = TkWaylandTkWindowFromDrawable(drawable);
+    if (winPtr == NULL || ((uintptr_t)winPtr & 3) != 0) {
         return TCL_ERROR;
     }
 
-    /* Compute child widget offset relative to toplevel window. */
-    TkWindow *winPtr = childPtr;
-    float x = 0.0f, y = 0.0f;
-    while (!Tk_IsTopLevel(winPtr)) {
-        x += winPtr->changes.x;
-        y += winPtr->changes.y;
-        winPtr = winPtr->parentPtr;
-        if (!winPtr || ((uintptr_t)winPtr & 3) != 0) return TCL_ERROR;
+    /* Walk up parent tree to establish layout positioning matrices. */
+    TkWindow *curr = winPtr;
+    float xOffset = 0.0f, yOffset = 0.0f;
+    while (curr != NULL && !Tk_IsTopLevel(curr)) {
+        xOffset += curr->changes.x;
+        yOffset += curr->changes.y;
+        curr = curr->parentPtr;
+        if (curr && ((uintptr_t)curr & 3) != 0) return TCL_ERROR;
     }
-
-    if (!winPtr->privatePtr || !winPtr->privatePtr->glfwWindow) {
+    
+    topPtr = curr;
+    if (topPtr == NULL || topPtr->privatePtr == NULL) {
         return TCL_ERROR;
     }
 
-    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (!infoPtr || !infoPtr->context.vg) {
+    glfwWindow = topPtr->privatePtr->glfwWindow;
+    if (glfwWindow == NULL) {
         return TCL_ERROR;
     }
 
-    /* Bind physical execution context. */
+    infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (infoPtr == NULL || infoPtr->context.vg == NULL) {
+        return TCL_ERROR;
+    }
+
     glfwMakeContextCurrent(glfwWindow);
-    if (winPtr->privatePtr->fb) {
-        glBindFramebuffer(GL_FRAMEBUFFER, winPtr->privatePtr->fb->fbo);
+    if (topPtr->privatePtr->fb) {
+        glBindFramebuffer(GL_FRAMEBUFFER, topPtr->privatePtr->fb->fbo);
     } else {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    /* Match the native FBO resolution boundaries. */
-    int fbW = 0, fbH = 0;
-    glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
-    glViewport(0, 0, fbW, fbH);
+    glfwGetFramebufferSize(glfwWindow, &width, &height);
+    if (width <= 0 || height <= 0) {
+        return TCL_ERROR;
+    }
+    glViewport(0, 0, width, height);
 
-    /* Populate export context metrics. */
     dcPtr->vg = infoPtr->context.vg;
-    dcPtr->width = fbW;
-    dcPtr->height = fbH;
-    dcPtr->winPtr = (void *)childPtr;
+    dcPtr->width = width;
+    dcPtr->height = height;
+    dcPtr->winPtr = (void *)winPtr;
     dcPtr->isPixmap = 0;
 
-    /* Open the master frame batch - only once per cycle. */
-    if (!infoPtr->context.nvgFrameActive) {
-        float scale = 1.0f;
-        glfwGetWindowContentScale(glfwWindow, &scale, NULL);
-
-        /* Initialize projection coordinates using the topLevel point space bounds. */
-        nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
-        infoPtr->context.nvgFrameActive = 1;
-        infoPtr->context.activeWindow = glfwWindow;
+    /* 
+     * Open a local widget-bounded frame. This guarantees NanoVG has an active,
+     * working draw context right now without clobbering global timelines.
+     */
+    int winW = 0, winH = 0;
+    float pixelRatio = 1.0f;
+    glfwGetWindowSize(glfwWindow, &winW, &winH);
+    if (winW > 0) {
+        pixelRatio = (float)width / (float)winW;
     }
 
-    /*
-     * Persistent translation isolated stack entry:
-     * We MUST preserve the global projection coordinate system initiated by the master
-     * window frame batch. Instead of resetting the matrix completely, we snapshot the 
-     * clean base viewport and apply local widget translations relative to the canvas origin.
-     */
-    nvgSave(dcPtr->vg);
-    TkGlfwApplyGC(dcPtr->vg, gc);
-    nvgTranslate(dcPtr->vg, x, y);
+    nvgBeginFrame(infoPtr->context.vg, (float)winW, (float)winH, pixelRatio);
+
+    nvgResetTransform(infoPtr->context.vg);
+    nvgResetScissor(infoPtr->context.vg);
+    if (gc != NULL) {
+        TkGlfwApplyGC(infoPtr->context.vg, gc);
+    }
+    nvgTranslate(infoPtr->context.vg, xOffset, yOffset);
 
     return TCL_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1462,7 +1439,7 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         return;
     }
 
-    /* Pixmap: close the NVG frame, unbind, done. */
+    /* Pixmap rendering path cleanup. */
     if (dcPtr->isPixmap) {
         if (dcPtr->vg != NULL) {
             nvgEndFrame(dcPtr->vg);
@@ -1471,39 +1448,21 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
         return;
     }
 
-    /*
-     * Restoring isolated transformation stack states:
-     * Pop the local child widget translation boundaries off the canvas matrix.
-     * This resets our relative position tracking back to the root window scale 
-     * for subsequent rendering steps.
-     */
-    if (dcPtr->vg != NULL) {
-        nvgRestore(dcPtr->vg);
-    }
-
-    /*
-     * Window path: the NVG frame is intentionally left open for batching
-     * across all sibling widget draws in this expose cycle.  nvgEndFrame
-     * is called by renderFBO once all widgets have drawn.
-     *
-     * Critically: do NOT unbind the backing FBO here.  If we unbind it,
-     * nvgEndFrame in renderFBO flushes NVG's tessellated geometry to
-     * framebuffer 0 (the screen back buffer) instead of the backing store,
-     * so the blit in renderFBO copies a stale / empty FBO.
-     *
-     * We do need to mark the toplevel dirty so renderFBO is scheduled.
-     */
     if (dcPtr->winPtr == NULL) {
         return;
     }
 
+    /* Flush drawing commands into the bound FBO texture right now. */
+    if (dcPtr->vg != NULL) {
+        nvgEndFrame(dcPtr->vg);
+    }
+
     TkWindow *winPtr = (TkWindow *)dcPtr->winPtr;
-    if (winPtr == NULL || (uintptr_t)winPtr < 0x1000 ||
-        ((uintptr_t)winPtr & 3) != 0 || winPtr->privatePtr == NULL) {
+    if (winPtr == NULL || (uintptr_t)winPtr < 0x1000 || ((uintptr_t)winPtr & 3) != 0 || winPtr->privatePtr == NULL) {
         return;
     }
 
-    /* Walk to toplevel and mark needsDisplay. */
+    /* Tag the toplevel layout as modified/dirty. */
     TkWindow *top = winPtr;
     while (top && !Tk_IsTopLevel(top)) {
         if (!top->parentPtr || ((uintptr_t)top->parentPtr & 3) != 0) break;
@@ -1516,8 +1475,6 @@ TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
             info->flags |= needsDisplay;
         }
     }
-
-    /* Leave FBO bound — renderFBO will unbind it after the blit. */
 }
 
 /*
