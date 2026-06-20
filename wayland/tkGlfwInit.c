@@ -790,26 +790,33 @@ MODULE_SCOPE void
 TkWaylandDisplayAllWindows(void)
 {
     for (glfwTkInfo *infoPtr = glfwTkInfoList;
-         infoPtr != NULL;
+         infoPtr;
          infoPtr = infoPtr->nextPtr) {
 
-        if (!infoPtr->winPtr || !infoPtr->winPtr->privatePtr) {
+        if (!infoPtr->winPtr ||
+            !infoPtr->winPtr->privatePtr) {
             continue;
         }
 
-        /* 
-         * Only present the window buffer if the layouts are modified (needsDisplay) 
-         * and we are completely clear of an active double-buffer lock (!dontSwap).
-         */
-        if (infoPtr->winPtr->privatePtr->fb && 
-            (infoPtr->flags & needsDisplay) && 
-            !(infoPtr->flags & dontSwap)) {
-            
-            renderFBO(infoPtr->glfwWindow);
-            infoPtr->flags &= ~needsDisplay;
+        if (!(infoPtr->flags & needsDisplay)) {
+            continue;
         }
+
+        if (infoPtr->flags & dontSwap) {
+            continue;
+        }
+
+        if (infoPtr->context.nvgFrameActive) {
+            nvgEndFrame(infoPtr->context.vg);
+            infoPtr->context.nvgFrameActive = 0;
+        }
+
+        renderFBO(infoPtr->glfwWindow);
+
+        infoPtr->flags &= ~needsDisplay;
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1278,135 +1285,180 @@ TkGlfwDestroyWindow(GLFWwindow *glfwWindow)
 
 MODULE_SCOPE int
 TkGlfwBeginDraw(
-    Drawable                 drawable,
-    GC                       gc,
+    Drawable drawable,
+    GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
     TkWindow *winPtr;
     TkWindow *topPtr;
     GLFWwindow *glfwWindow;
     glfwTkInfo *infoPtr;
-    int width, height;
+    int fbWidth, fbHeight;
+    int winWidth, winHeight;
+    float pixelRatio;
+    float xOffset = 0.0f;
+    float yOffset = 0.0f;
 
-    if (dcPtr == NULL || drawable <= 1) {
+    if (!dcPtr || drawable <= 1) {
         return TCL_ERROR;
     }
 
-    dcPtr->vg = NULL;
-    dcPtr->width = 0;
-    dcPtr->height = 0;
-    dcPtr->winPtr = NULL;
-    dcPtr->isPixmap = 0;
+    memset(dcPtr, 0, sizeof(*dcPtr));
 
-    /* Pixmap rendering path. */
+    /*
+     * Pixmap path.
+     */
+
     if (TkWaylandDrawableIsPixmap(drawable)) {
-        TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap((Pixmap)drawable);
+        TkWaylandPixmap *pixmapPtr =
+            TkWaylandPixmapFromPixmap((Pixmap)drawable);
+
         if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
             return TCL_ERROR;
         }
-        glfwTkInfo *pInfo = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
-        if (!pInfo || !pInfo->context.vg) {
+
+        infoPtr = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
+        if (!infoPtr || !infoPtr->context.vg) {
             return TCL_ERROR;
         }
+
         glfwMakeContextCurrent(pixmapPtr->glfwWindow);
+
         glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
         glViewport(0, 0, pixmapPtr->width, pixmapPtr->height);
 
-        float pixelRatio = 1.0f;
-        int winW, winH, fbW, fbH;
-        glfwGetWindowSize(pixmapPtr->glfwWindow, &winW, &winH);
-        glfwGetFramebufferSize(pixmapPtr->glfwWindow, &fbW, &fbH);
-        if (winW > 0) {
-            pixelRatio = (float)fbW / (float)winW;
+        glfwGetWindowSize(
+            pixmapPtr->glfwWindow,
+            &winWidth,
+            &winHeight);
+
+        glfwGetFramebufferSize(
+            pixmapPtr->glfwWindow,
+            &fbWidth,
+            &fbHeight);
+
+        pixelRatio = 1.0f;
+        if (winWidth > 0) {
+            pixelRatio = (float)fbWidth / (float)winWidth;
         }
 
-        dcPtr->vg        = pInfo->context.vg;
+        if (!infoPtr->context.nvgFrameActive) {
+            nvgBeginFrame(
+                infoPtr->context.vg,
+                (float)pixmapPtr->width,
+                (float)pixmapPtr->height,
+                pixelRatio);
+
+            infoPtr->context.nvgFrameActive = 1;
+        }
+
+        dcPtr->vg        = infoPtr->context.vg;
         dcPtr->width     = pixmapPtr->width;
         dcPtr->height    = pixmapPtr->height;
-        dcPtr->winPtr    = NULL;
-        dcPtr->isPixmap  = 1;
         dcPtr->pixmapFbo = pixmapPtr->fbo;
+        dcPtr->isPixmap  = 1;
 
-        if (pInfo->context.nvgFrameActive) {
-            nvgEndFrame(pInfo->context.vg);
-            pInfo->context.nvgFrameActive = 0;
-        }
+        nvgResetTransform(dcPtr->vg);
+        nvgResetScissor(dcPtr->vg);
 
-        nvgResetTransform(pInfo->context.vg);
-        nvgResetScissor(pInfo->context.vg);
-        nvgBeginFrame(pInfo->context.vg, (float)pixmapPtr->width, (float)pixmapPtr->height, pixelRatio);
         return TCL_OK;
     }
 
-    /* Window / widget hierarchy path. */
+    /*
+     * Window path.
+     */
+
     winPtr = TkWaylandTkWindowFromDrawable(drawable);
-    if (winPtr == NULL || ((uintptr_t)winPtr & 3) != 0) {
+    if (!winPtr) {
         return TCL_ERROR;
     }
 
-    /* Walk up parent tree to establish layout positioning matrices. */
-    TkWindow *curr = winPtr;
-    float xOffset = 0.0f, yOffset = 0.0f;
-    while (curr != NULL && !Tk_IsTopLevel(curr)) {
-        xOffset += curr->changes.x;
-        yOffset += curr->changes.y;
-        curr = curr->parentPtr;
-        if (curr && ((uintptr_t)curr & 3) != 0) return TCL_ERROR;
+    topPtr = winPtr;
+
+    while (topPtr && !Tk_IsTopLevel(topPtr)) {
+        xOffset += topPtr->changes.x;
+        yOffset += topPtr->changes.y;
+        topPtr = topPtr->parentPtr;
     }
-    
-    topPtr = curr;
-    if (topPtr == NULL || topPtr->privatePtr == NULL) {
+
+    if (!topPtr || !topPtr->privatePtr) {
         return TCL_ERROR;
     }
 
     glfwWindow = topPtr->privatePtr->glfwWindow;
-    if (glfwWindow == NULL) {
+    if (!glfwWindow) {
         return TCL_ERROR;
     }
 
     infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (infoPtr == NULL || infoPtr->context.vg == NULL) {
+    if (!infoPtr || !infoPtr->context.vg) {
         return TCL_ERROR;
     }
 
     glfwMakeContextCurrent(glfwWindow);
+
     if (topPtr->privatePtr->fb) {
-        glBindFramebuffer(GL_FRAMEBUFFER, topPtr->privatePtr->fb->fbo);
+        glBindFramebuffer(
+            GL_FRAMEBUFFER,
+            topPtr->privatePtr->fb->fbo);
     } else {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    glfwGetFramebufferSize(glfwWindow, &width, &height);
-    if (width <= 0 || height <= 0) {
+    glfwGetFramebufferSize(
+        glfwWindow,
+        &fbWidth,
+        &fbHeight);
+
+    if (fbWidth <= 0 || fbHeight <= 0) {
         return TCL_ERROR;
     }
-    glViewport(0, 0, width, height);
 
-    dcPtr->vg = infoPtr->context.vg;
-    dcPtr->width = width;
-    dcPtr->height = height;
-    dcPtr->winPtr = (void *)winPtr;
-    dcPtr->isPixmap = 0;
+    glfwGetWindowSize(
+        glfwWindow,
+        &winWidth,
+        &winHeight);
 
-    /* 
-     * Open a local widget-bounded frame. This guarantees NanoVG has an active,
-     * working draw context right now without clobbering global timelines.
-     */
-    int winW = 0, winH = 0;
-    float pixelRatio = 1.0f;
-    glfwGetWindowSize(glfwWindow, &winW, &winH);
-    if (winW > 0) {
-        pixelRatio = (float)width / (float)winW;
+    pixelRatio = 1.0f;
+    if (winWidth > 0) {
+        pixelRatio = (float)fbWidth / (float)winWidth;
     }
 
-    nvgBeginFrame(infoPtr->context.vg, (float)winW, (float)winH, pixelRatio);
+    glViewport(0, 0, fbWidth, fbHeight);
+
+    /*
+     * IMPORTANT:
+     * One NanoVG frame per window repaint.
+     */
+
+    if (!infoPtr->context.nvgFrameActive) {
+
+        nvgBeginFrame(
+            infoPtr->context.vg,
+            (float)winWidth,
+            (float)winHeight,
+            pixelRatio);
+
+        infoPtr->context.nvgFrameActive = 1;
+    }
 
     nvgResetTransform(infoPtr->context.vg);
     nvgResetScissor(infoPtr->context.vg);
-    if (gc != NULL) {
+
+    if (gc) {
         TkGlfwApplyGC(infoPtr->context.vg, gc);
     }
-    nvgTranslate(infoPtr->context.vg, xOffset, yOffset);
+
+    nvgTranslate(
+        infoPtr->context.vg,
+        xOffset,
+        yOffset);
+
+    dcPtr->vg       = infoPtr->context.vg;
+    dcPtr->width    = fbWidth;
+    dcPtr->height   = fbHeight;
+    dcPtr->winPtr   = winPtr;
+    dcPtr->isPixmap = 0;
 
     return TCL_OK;
 }
@@ -1433,50 +1485,56 @@ TkGlfwBeginDraw(
  */
 
 void
-TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr)
+TkGlfwEndDraw(
+    TkWaylandDrawingContext *dcPtr)
 {
-    if (dcPtr == NULL) {
+    TkWindow *top;
+    glfwTkInfo *info;
+
+    if (!dcPtr) {
         return;
     }
 
-    /* Pixmap rendering path cleanup. */
+    /*
+     * Pixmaps are self-contained.
+     */
+
     if (dcPtr->isPixmap) {
-        if (dcPtr->vg != NULL) {
-            nvgEndFrame(dcPtr->vg);
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return;
     }
 
-    if (dcPtr->winPtr == NULL) {
+    if (!dcPtr->winPtr) {
         return;
     }
 
-    /* Flush drawing commands into the bound FBO texture right now. */
-    if (dcPtr->vg != NULL) {
-        nvgEndFrame(dcPtr->vg);
-    }
+    top = (TkWindow *)dcPtr->winPtr;
 
-    TkWindow *winPtr = (TkWindow *)dcPtr->winPtr;
-    if (winPtr == NULL || (uintptr_t)winPtr < 0x1000 || ((uintptr_t)winPtr & 3) != 0 || winPtr->privatePtr == NULL) {
-        return;
-    }
-
-    /* Tag the toplevel layout as modified/dirty. */
-    TkWindow *top = winPtr;
     while (top && !Tk_IsTopLevel(top)) {
-        if (!top->parentPtr || ((uintptr_t)top->parentPtr & 3) != 0) break;
         top = top->parentPtr;
     }
 
-    if (top && top->privatePtr && top->privatePtr->glfwWindow) {
-        glfwTkInfo *info = glfwGetWindowUserPointer(top->privatePtr->glfwWindow);
-        if (info) {
-            info->flags |= needsDisplay;
-        }
+    if (!top ||
+        !top->privatePtr ||
+        !top->privatePtr->glfwWindow) {
+        return;
     }
-}
 
+    info = glfwGetWindowUserPointer(
+        top->privatePtr->glfwWindow);
+
+    if (!info) {
+        return;
+    }
+
+    /*
+     * Do NOT call nvgEndFrame here.
+     *
+     * Multiple widgets may still be drawing into the
+     * same window during this display cycle.
+     */
+
+    info->flags |= needsDisplay;
+}
 /*
  *----------------------------------------------------------------------
  *
