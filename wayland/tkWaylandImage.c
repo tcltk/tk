@@ -35,10 +35,11 @@
  *
  * _XInitImageFuncPtrs --
  *
- *	Initialize XImage function pointers (Xlib compatibility).
+ *	Stub implementation for Xlib image initialization. Required for
+ *	compatibility with Tk's X11 emulation layer; does nothing on Wayland.
  *
  * Results:
- *	Returns 0.
+ *	Always returns 0 (success).
  *
  * Side effects:
  *	None.
@@ -60,7 +61,7 @@ _XInitImageFuncPtrs(
  *
  *	Accepts a raw image container from Tk, performs a single-pass
  *	swizzle from ARGB to native NanoVG RGBA spacing, and draws it
- *	safely into the active, open NanoVG rendering frame.
+ *	safely using the current Wayland window drawing frame context and FBO.
  *
  * Results:
  *	Returns 0 on success, TCL_ERROR on failure.
@@ -88,12 +89,15 @@ TkpPutRGBAImage(
         return 0;
     }
 
+    /* Resolve drawing context. This automatically tracks the underlying 
+     * Tk Wayland window FBO backing store and uses the open NanoVG frame.
+     */
     TkWaylandDrawingContext dc;
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return TCL_ERROR;
     }
 
-    /* Allocate temporary workspace memory for the swizzle conversion */
+    /* Allocate workspace memory for pixel matrix transformation */
     size_t numPixels = (size_t)width * (size_t)height;
     unsigned char *rgbaData = (unsigned char *)Tcl_Alloc(numPixels * 4);
     if (!rgbaData) {
@@ -101,8 +105,10 @@ TkpPutRGBAImage(
         return TCL_ERROR;
     }
 
-    /* * Perform a single-pass matrix swizzle conversion.
-     * Tk provides ARGB [B,G,R,A] bytes. Convert them to NanoVG RGBA [R,G,B,A].
+    /*
+     * Single-pass swizzle matrix pass. 
+     * Tk standard photo allocations store bits as ARGB [B,G,R,A] byte streams. 
+     * Swizzle them to match NanoVG's hardware-native RGBA [R,G,B,A] byte format.
      */
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
@@ -118,7 +124,7 @@ TkpPutRGBAImage(
         }
     }
 
-    /* Create a transient NanoVG texture safely within the open window frame context */
+    /* Generate a temporary texture inside the bound FBO NanoVG context layer */
     int imageID = nvgCreateImageRGBA(dc.vg, width, height, 0, rgbaData);
     Tcl_Free((char *)rgbaData);
 
@@ -127,15 +133,17 @@ TkpPutRGBAImage(
         return TCL_ERROR;
     }
 
-    /* Render the texture pattern directly onto the destination coordinates */
+    /* Construct the image pattern brush to draw content from source space */
     NVGpaint paint = nvgImagePattern(dc.vg, (float)(dst_x - src_x), (float)(dst_y - src_y), 
                                      (float)width, (float)height, 0.0f, imageID, 1.0f);
+    
+    /* Paint the texture rect directly to the current FBO target canvas coordinates */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)dst_x, (float)dst_y, (float)width, (float)height);
     nvgFillPaint(dc.vg, paint);
     nvgFill(dc.vg);
 
-    /* Delete the transient texture object immediately to avoid running out of GL resources */
+    /* Delete the temporary texture object instantly to prevent GPU memory resource leaks */
     nvgDeleteImage(dc.vg, imageID);
 
     TkGlfwEndDraw(&dc);
@@ -147,7 +155,15 @@ TkpPutRGBAImage(
  *
  * XGetImage --
  *
- *	Stub function for compatibility.
+ *	Stub implementation for XGetImage. This function is not used by
+ *	Tk's core image rendering on Wayland; retained only for Xlib
+ *	compatibility.
+ *
+ * Results:
+ *	Always returns NULL.
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -166,12 +182,16 @@ XGetImage(
  *
  * XCopyArea --
  *
- *	Lightweight synchronization metadata handler. Safely intercepts
- *	Tk's internal double-buffering presentation sentinels without
- *	introducing raw OpenGL state mutations that break the backing store.
+ *	Intercepts Tk's internal double‑buffering presentation sentinels
+ *	and handles them without introducing raw OpenGL state mutations.
+ *	All other calls are no‑ops; actual drawing is performed through
+ *	the NanoVG‑based rendering pipeline.
  *
  * Results:
- *	Success.
+ *	Always returns Success.
+ *
+ * Side effects:
+ *	None (the function is a synchronization pass‑through).
  *
  *----------------------------------------------------------------------
  */
@@ -181,8 +201,9 @@ XCopyArea(Display *display, Drawable src, Drawable dst, GC gc,
           int src_x, int src_y, unsigned int width, unsigned int height,
           int dest_x, int dest_y)
 {
-    /* * Safely intercept and isolate Tk's internal presentation sentinels.
-     * Returning Success here prevents the startup rendering loop from breaking.
+    /*
+     * Safely intercept and isolate Tk's internal presentation sentinels.
+     * Returning Success here maintains stable startup window geometry.
      */
     if ((int)width == -1 && (int)height == -1) {
         return Success;
@@ -196,7 +217,15 @@ XCopyArea(Display *display, Drawable src, Drawable dst, GC gc,
  *
  * XCreateBitmapFromData --
  *
- *	Constructs a 1-bit deep Pixmap from raw inline byte data.
+ *	Constructs a 1‑bit deep Pixmap from raw inline bitmap data.
+ *	This is a compatibility wrapper that allocates a new pixmap
+ *	of the requested size and depth 1.
+ *
+ * Results:
+ *	Returns a new Pixmap handle on success, or None on failure.
+ *
+ * Side effects:
+ *	Allocates a new pixmap resource.
  *
  *----------------------------------------------------------------------
  */
@@ -217,7 +246,14 @@ XCreateBitmapFromData(
  *
  * XCopyPlane --
  *
- *	Stub function for compatibility.
+ *	Stub implementation for XCopyPlane. Not used in the Wayland
+ *	backend; provided solely for Xlib compatibility.
+ *
+ * Results:
+ *	Always returns Success.
+ *
+ * Side effects:
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -236,11 +272,15 @@ XCopyPlane(
  *
  * XPutImage --
  *
- *	Standard Xlib routing entry-point. Passes the incoming image
- *	data directly down to our optimized swizzling pipeline.
+ *	Standard Xlib entry point for image drawing. This function
+ *	dispatches directly to TkpPutRGBAImage, which performs the
+ *	actual swizzling and NanoVG rendering onto the Wayland surface.
  *
  * Results:
- *	Success.
+ *	Returns Success on success, or BadAlloc on allocation failure.
+ *
+ * Side effects:
+ *	Draws the image onto the specified drawable.
  *
  *----------------------------------------------------------------------
  */
@@ -268,7 +308,14 @@ XPutImage(
  *
  * XDestroyImage --
  *
- *	Free XImage structure and data.
+ *	Releases the memory associated with an XImage structure and its
+ *	associated pixel data. Both the structure and the data are freed.
+ *
+ * Results:
+ *	Always returns 0 (success).
+ *
+ * Side effects:
+ *	Frees heap memory.
  *
  *----------------------------------------------------------------------
  */
@@ -285,3 +332,11 @@ XDestroyImage(
     }
     return 0;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

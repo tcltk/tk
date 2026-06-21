@@ -726,58 +726,7 @@ getGlfwTkInfo(
  *----------------------------------------------------------------------
  */
 
-#if 0
-void
-renderFBO(GLFWwindow *window)
-{
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-    if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) {
-        fprintf(stderr, "[DIAG] renderFBO: bailing, no infoPtr/winPtr/privatePtr (window=%p)\n",
-                (void *)window);
-        return;
-    }
 
-    TkWindow *winPtr = infoPtr->winPtr;
-    glfwMakeContextCurrent(window);
-
-    /* Fallback layout: clear to standard Tk Gray if backing store is missing. */
-    if (!winPtr->privatePtr->fb) {
-        fprintf(stderr, "[DIAG] renderFBO: %s FALLBACK gray clear (no fb)\n",
-                Tk_PathName(winPtr));
-        glClearColor(0.8509f, 0.8509f, 0.8509f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glfwSwapBuffers(window);
-        return;
-    }
-
-    TkGlfwBackingStore *store = winPtr->privatePtr->fb;
-
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
-    if (fbWidth <= 0 || fbHeight <= 0) {
-        fprintf(stderr, "[DIAG] renderFBO: %s bailing, fbWidth/fbHeight <= 0 (%dx%d)\n",
-                Tk_PathName(winPtr), fbWidth, fbHeight);
-        return;
-    }
-
-    fprintf(stderr, "[DIAG] renderFBO: %s blitting store=%dx%d -> fb=%dx%d, visible=%d\n",
-            Tk_PathName(winPtr), store->width, store->height, fbWidth, fbHeight,
-            glfwGetWindowAttrib(window, GLFW_VISIBLE));
-
-    glDisable(GL_SCISSOR_TEST);
-
-    /* Blit completed opaque FBO texture map directly onto native surface. */
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, store->fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-    glBlitFramebuffer(0, 0, store->width, store->height,
-                      0, 0, fbWidth, fbHeight,
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-    glfwSwapBuffers(window);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-#endif
 void
 renderFBO(GLFWwindow *window)
 {

@@ -704,7 +704,6 @@ DestroyGlfwWindow(
  *----------------------------------------------------------------------
  */
 
-
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
@@ -736,33 +735,29 @@ TkWmMapWindow(TkWindow *winPtr)
 
     UpdateGeometryInfo((void *)winPtr);
 
-GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
         int w, h;
 
-        /* Get the current dimensions GLFW is holding. */
+        /* Query the actual underlying size GLFW is currently initialized with. */
         glfwGetWindowSize(glfwWindow, &w, &h);
 
-        /* If GLFW is holding the initial 200x200 fallback, or if Tk's 
-         * geometry managers have calculated a specific size request, override
-         * the fallback dimension before mapping the window to Wayland.
+        /* 
+	 * Do not lock evaluation to a hardcoded target match like 'w == 200 && h == 200'.
+         * We always calculate the real size requested by Tk's geometry tree, and enforce
+         * it immediately before showing the window to the Wayland compositor.
          */
-        if (w == 200 && h == 200) {
-            int reqW = (wmPtr->width > 0) ? wmPtr->width : winPtr->reqWidth;
-            int reqH = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
+        int reqW = (wmPtr->width > 0) ? wmPtr->width : winPtr->reqWidth;
+        int reqH = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
 
-            /* Only override if we have a valid calculated layout size. */
-            if (reqW > 1 && reqH > 1) {
-                glfwSetWindowSize(glfwWindow, reqW, reqH);
-                w = reqW;
-                h = reqH;
-            }
-        } else if (winPtr->changes.width > 1 && winPtr->changes.height > 1) {
-            /* If changes structure holds an explicit updated target, sync it. */
-            glfwSetWindowSize(glfwWindow, winPtr->changes.width, winPtr->changes.height);
-            w = winPtr->changes.width;
-            h = winPtr->changes.height;
-        }
+        /* Provide a reasonable safety window fallback if geometry hierarchy calculation is empty. */
+        if (reqW <= 1) reqW = (w > 1) ? w : 400;
+        if (reqH <= 1) reqH = (h > 1) ? h : 300;
+
+        /* Explicit sync to GLFW context */
+        glfwSetWindowSize(glfwWindow, reqW, reqH);
+        w = reqW;
+        h = reqH;
 
         glfwShowWindow(glfwWindow);
 
@@ -3903,12 +3898,13 @@ TopLevelReqProc(
     }
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
  * UpdateGeometryInfo --
  *
- *	Idle task to apply pending geometry changes for a toplevel.
+ *	Schedules or updates geometry changes calculated for a toplevel.
  *
  * Results:
  *	None.
@@ -3924,8 +3920,8 @@ UpdateGeometryInfo(
     void *clientData)
 {
     TkWindow *winPtr = (TkWindow *)clientData;
-    WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
-    int       tw, th;
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    int tw, th;
 
     if (wmPtr == NULL) {
         return;
@@ -3951,19 +3947,27 @@ UpdateGeometryInfo(
         return;
     }
 
+    /* Track explicitly specified size constraints first, otherwise evaluate widget requests. */
     tw = wmPtr->width < 0 ? winPtr->reqWidth : wmPtr->width;
     th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
 
+    /* Guard against falling completely beneath the registered minimum limits. */
     if (tw < wmPtr->minWidth) tw = wmPtr->minWidth;
     if (th < wmPtr->minHeight) th = wmPtr->minHeight;
 
+    /* * If the desired calculated bounds diverge from the last configured surface parameters, 
+     * push the layout downstream to the Wayland server.
+     */
     if (tw != wmPtr->configWidth || th != wmPtr->configHeight) {
-        if (tw < 180) tw = 180;
-        glfwSetWindowSize(glfwWindow, tw, th);
+        /* Prevent layout clipping on exceptionally tight layouts */
+        if (tw < 1) tw = 1;
+        if (th < 1) th = 1;
 
+        glfwSetWindowSize(glfwWindow, tw, th);
+        
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
-        wmPtr->configWidth  = tw;
+        wmPtr->configWidth = tw;
         wmPtr->configHeight = th;
     }
 }
