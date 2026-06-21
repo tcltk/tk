@@ -59,9 +59,9 @@ _XInitImageFuncPtrs(
  *
  * TkpPutRGBAImage --
  *
- *	Accepts a raw image container from Tk, performs a single-pass
- *	swizzle from ARGB to native NanoVG RGBA spacing, and draws it
- *	safely using the current Wayland window drawing frame context and FBO.
+ *	Accepts a raw image container from Tk, extracts the requested 
+ *	sub-region, converts pixel formats from ARGB to native NanoVG RGBA, 
+ *	and draws it safely onto the target drawable surface.
  *
  * Results:
  *	Returns 0 on success, TCL_ERROR on failure.
@@ -89,15 +89,23 @@ TkpPutRGBAImage(
         return 0;
     }
 
-    /* Resolve drawing context. This automatically tracks the underlying 
-     * Tk Wayland window FBO backing store and uses the open NanoVG frame.
-     */
+    /* Validate source coordinates against image bounds to prevent buffer overreads */
+    if (src_x < 0 || src_y < 0 ||
+        src_x + (int)width > image->width ||
+        src_y + (int)height > image->height) {
+        return TCL_ERROR;
+    }
+
     TkWaylandDrawingContext dc;
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return TCL_ERROR;
     }
 
-    /* Allocate workspace memory for pixel matrix transformation */
+    if (gc) {
+        TkGlfwApplyGC(dc.vg, gc);
+    }
+
+    /* Allocate workspace memory for the extracted sub-region. */
     size_t numPixels = (size_t)width * (size_t)height;
     unsigned char *rgbaData = (unsigned char *)Tcl_Alloc(numPixels * 4);
     if (!rgbaData) {
@@ -105,51 +113,62 @@ TkpPutRGBAImage(
         return TCL_ERROR;
     }
 
-    /*
-     * Single-pass swizzle matrix pass. 
-     * Tk standard photo allocations store bits as ARGB [B,G,R,A] byte streams. 
-     * Swizzle them to match NanoVG's hardware-native RGBA [R,G,B,A] byte format.
-     */
-    for (unsigned int y = 0; y < height; ++y) {
-        for (unsigned int x = 0; x < width; ++x) {
-            unsigned char *src = (unsigned char *)image->data
-                               + (src_y + y) * image->bytes_per_line
-                               + (src_x + x) * 4;
-            unsigned char *dst = rgbaData + (y * width + x) * 4;
+    /* Extract specified region and perform explicit ARGB -> RGBA mapping. */
+    if (image->bits_per_pixel == 32) {
+        for (unsigned int j = 0; j < height; j++) {
+            unsigned char *src_ptr = (unsigned char*)image->data +
+                                     ((src_y + j) * image->bytes_per_line) +
+                                     (src_x * 4);
+            unsigned char *dst_ptr = rgbaData + (j * width * 4);
 
-            dst[0] = src[2]; /* Red */
-            dst[1] = src[1]; /* Green */
-            dst[2] = src[0]; /* Blue */
-            dst[3] = src[3]; /* Alpha */
+            for (unsigned int i = 0; i < width; i++) {
+                /* Extract channels accurately matching standard Tk core structures. */
+                unsigned char a = src_ptr[i * 4 + 0];
+                unsigned char r = src_ptr[i * 4 + 1];
+                unsigned char g = src_ptr[i * 4 + 2];
+                unsigned char b = src_ptr[i * 4 + 3];
+
+                /* Map cleanly to NanoVG's hardware native ordering. */
+                dst_ptr[i * 4 + 0] = r;
+                dst_ptr[i * 4 + 1] = g;
+                dst_ptr[i * 4 + 2] = b;
+                dst_ptr[i * 4 + 3] = a;
+            }
+        }
+    } else {
+        /* Fallback direct copy if data format matches exactly. */
+        for (unsigned int j = 0; j < height; j++) {
+            memcpy(rgbaData + (j * width * 4),
+                   (unsigned char*)image->data + ((src_y + j) * image->bytes_per_line) + (src_x * (image->bits_per_pixel / 8)),
+                   width * 4);
         }
     }
 
-    /* Generate a temporary texture inside the bound FBO NanoVG context layer */
+    /* Generate a temporary texture inside the NanoVG context. */
     int imageID = nvgCreateImageRGBA(dc.vg, width, height, 0, rgbaData);
     Tcl_Free((char *)rgbaData);
 
-    if (imageID == 0) {
+    if (imageID <= 0) {
         TkGlfwEndDraw(&dc);
         return TCL_ERROR;
     }
 
-    /* Construct the image pattern brush to draw content from source space */
-    NVGpaint paint = nvgImagePattern(dc.vg, (float)(dst_x - src_x), (float)(dst_y - src_y), 
+    /* Construct image pattern brush relative to destination coordinates. */
+    NVGpaint paint = nvgImagePattern(dc.vg, (float)dst_x, (float)dst_y, 
                                      (float)width, (float)height, 0.0f, imageID, 1.0f);
     
-    /* Paint the texture rect directly to the current FBO target canvas coordinates */
+    /* Paint texture rect to canvas. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)dst_x, (float)dst_y, (float)width, (float)height);
     nvgFillPaint(dc.vg, paint);
     nvgFill(dc.vg);
 
-    /* Delete the temporary texture object instantly to prevent GPU memory resource leaks */
+    /* Safely destroy texture to prevent GPU leaks. */
     nvgDeleteImage(dc.vg, imageID);
 
     TkGlfwEndDraw(&dc);
     return 0;
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -273,8 +292,7 @@ XCopyPlane(
  * XPutImage --
  *
  *	Standard Xlib entry point for image drawing. This function
- *	dispatches directly to TkpPutRGBAImage, which performs the
- *	actual swizzling and NanoVG rendering onto the Wayland surface.
+ *	dispatches directly to TkpPutRGBAImage.
  *
  * Results:
  *	Returns Success on success, or BadAlloc on allocation failure.
@@ -302,7 +320,6 @@ XPutImage(
                              src_x, src_y, dest_x, dest_y, width, height);
     return (rc == 0) ? Success : BadAlloc;
 }
-
 /*
  *----------------------------------------------------------------------
  *

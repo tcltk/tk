@@ -1468,14 +1468,14 @@ TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
  *
  * TkGlfwWindowRefreshCallback --
  *
- * Called when the Wayland compositor requests that the window surface
- * refresh or redraw its contents.
+ * Called by GLFW when a window needs a redraw. Generates a safe
+ * Expose event matching validated widget layout dimensions.
  *
  * Results:
  * None.
  *
  * Side effects:
- * Queues an Expose event matching the synchronized geometry changes.
+ * Queues an Expose event for the client area.
  *
  *----------------------------------------------------------------------
  */
@@ -1488,38 +1488,31 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
     if (!winPtr) {
         return;
     }
-    
-    /*
-     * FIX THE FLICKER & HANG: Do not use Tk_Width/Tk_Height here. 
-     * During active configuration sweeps, those macros return stale sizes 
-     * that conflict with active geometry requests, trapping the widget tree.
-     * Use the validated changes boundaries instead.
+
+    /* Using native geometry macros ensures we wait for finalized boundaries,
+     * allowing container widgets and layout managers to align perfectly.
      */
-    int w = winPtr->changes.width;
-    int h = winPtr->changes.height;
+    int w = Tk_Width(winPtr);
+    int h = Tk_Height(winPtr);
 
-    fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s at verified size: %dx%d\n",
-            Tk_PathName(winPtr), w, h);
-
-    if (w > 1 && h > 1) {
+    if (w > 0 && h > 0) {
         TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
     }
 }
+
 
 /*
  *----------------------------------------------------------------------
  *
  * TkWaylandWakeupGLFW --
  *
- *      Public function to wake up the GLFW event loop from another
- *      thread or context. Used by GLFW callbacks to ensure Tcl
- *      processes events promptly.
+ * Public function to wake up the GLFW event loop safely.
  *
  * Results:
- *      None.
+ * None.
  *
  * Side effects:
- *      Writes to the eventfd, causing the file handler to trigger.
+ * Posts an empty event to the GLFW window manager event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -1529,10 +1522,8 @@ TkWaylandWakeupGLFW(void)
 {
     TSD_INIT();
     if (tsdPtr->initialized && !tsdPtr->shutdownInProgress) {
-        /* This forces glfwPollEvents() in SetupProc to wake up instantly. */
+        /* Forces glfwPollEvents() to wake up cleanly without interrupting current thread states. */
         glfwPostEmptyEvent();
-        /* Alert Tcl to wake up its event loop loop immediately. */
-        Tcl_ThreadAlert(Tcl_GetCurrentThread());
     }
 }
 
