@@ -726,11 +726,14 @@ getGlfwTkInfo(
  *----------------------------------------------------------------------
  */
 
+#if 0
 void
 renderFBO(GLFWwindow *window)
 {
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) {
+        fprintf(stderr, "[DIAG] renderFBO: bailing, no infoPtr/winPtr/privatePtr (window=%p)\n",
+                (void *)window);
         return;
     }
 
@@ -739,6 +742,8 @@ renderFBO(GLFWwindow *window)
 
     /* Fallback layout: clear to standard Tk Gray if backing store is missing. */
     if (!winPtr->privatePtr->fb) {
+        fprintf(stderr, "[DIAG] renderFBO: %s FALLBACK gray clear (no fb)\n",
+                Tk_PathName(winPtr));
         glClearColor(0.8509f, 0.8509f, 0.8509f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glfwSwapBuffers(window);
@@ -750,8 +755,14 @@ renderFBO(GLFWwindow *window)
     int fbWidth = 0, fbHeight = 0;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     if (fbWidth <= 0 || fbHeight <= 0) {
+        fprintf(stderr, "[DIAG] renderFBO: %s bailing, fbWidth/fbHeight <= 0 (%dx%d)\n",
+                Tk_PathName(winPtr), fbWidth, fbHeight);
         return;
     }
+
+    fprintf(stderr, "[DIAG] renderFBO: %s blitting store=%dx%d -> fb=%dx%d, visible=%d\n",
+            Tk_PathName(winPtr), store->width, store->height, fbWidth, fbHeight,
+            glfwGetWindowAttrib(window, GLFW_VISIBLE));
 
     glDisable(GL_SCISSOR_TEST);
 
@@ -766,7 +777,45 @@ renderFBO(GLFWwindow *window)
     glfwSwapBuffers(window);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+#endif
 
+void
+renderFBO(GLFWwindow *window)
+{
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+    if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) {
+        return;
+    }
+
+    TkWindow *winPtr = infoPtr->winPtr;
+    glfwMakeContextCurrent(window);
+
+    TkGlfwBackingStore *store = winPtr->privatePtr->fb;
+
+    if (!store) {
+        /* Fallback: clear to Tk gray */
+        glClearColor(0.85f, 0.85f, 0.85f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glfwSwapBuffers(window);
+        return;
+    }
+
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    if (fbWidth <= 0 || fbHeight <= 0) return;
+
+    glDisable(GL_SCISSOR_TEST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, store->fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    glBlitFramebuffer(0, 0, store->width, store->height,
+                      0, 0, fbWidth, fbHeight,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glfwSwapBuffers(window);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -789,9 +838,15 @@ renderFBO(GLFWwindow *window)
 MODULE_SCOPE void
 TkWaylandDisplayAllWindows(void)
 {
+    static int callCount = 0;
+    int considered = 0, rendered = 0;
+    callCount++;
+
     for (glfwTkInfo *infoPtr = glfwTkInfoList;
          infoPtr;
          infoPtr = infoPtr->nextPtr) {
+
+        considered++;
 
         if (!infoPtr->winPtr ||
             !infoPtr->winPtr->privatePtr) {
@@ -811,9 +866,15 @@ TkWaylandDisplayAllWindows(void)
             infoPtr->context.nvgFrameActive = 0;
         }
 
+        rendered++;
         renderFBO(infoPtr->glfwWindow);
 
         infoPtr->flags &= ~needsDisplay;
+    }
+
+    if (callCount <= 20) {
+        fprintf(stderr, "[DIAG] TkWaylandDisplayAllWindows call #%d: considered=%d rendered=%d\n",
+                callCount, considered, rendered);
     }
 }
 
@@ -1086,7 +1147,8 @@ TkGlfwCreateWindow(
     const char *title,
     Drawable   *drawableOut)
 {
-    fprintf(stderr, "TkGlfwCreateWindow\n");
+    fprintf(stderr, "[DIAG] TkGlfwCreateWindow: title=%s requested=%dx%d winPtr=%p\n",
+            title ? title : "(null)", width, height, (void *)winPtr);
     if (!winPtr) {
         Tcl_Panic("TkGlfwCreateWindow called with null winPtr\n");
     }
@@ -1103,10 +1165,14 @@ TkGlfwCreateWindow(
 
     /* Root window uses existing mainGlfwWindow. */
     if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
+        fprintf(stderr, "[DIAG] TkGlfwCreateWindow: ROOT branch, resizing mainGlfwWindow to %dx%d\n",
+                width, height);
         glfwWindow = mainGlfwWindow;
         glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
     } else {
+        fprintf(stderr, "[DIAG] TkGlfwCreateWindow: NON-ROOT branch, creating new window %dx%d\n",
+                width, height);
         /* Create a new toplevel. */
         glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -1153,6 +1219,8 @@ TkGlfwCreateWindow(
         /* Get current framebuffer size from GLFW */
         int fbW = 0, fbH = 0;
         glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
+        fprintf(stderr, "[DIAG] TkGlfwCreateWindow: glfwGetFramebufferSize returned %dx%d (requested was %dx%d)\n",
+                fbW, fbH, width, height);
         if (fbW > 0 && fbH > 0) {
             winPtr->privatePtr->fb = TkGlfwCreateBackingStore(fbW, fbH);
         } else {
@@ -1199,15 +1267,21 @@ TkGlfwCreateWindow(
 
     /* Show window AFTER FBO is (eventually) ready. */
     if (glfwWindow != mainGlfwWindow) {
+        fprintf(stderr, "[DIAG] TkGlfwCreateWindow: calling glfwShowWindow (non-root)\n");
         glfwShowWindow(glfwWindow);
+    } else {
+        fprintf(stderr, "[DIAG] TkGlfwCreateWindow: ROOT window NOT shown here (left hidden)\n");
     }
 
     /* Present the cleared frame (or first real frame once FBO exists). */
     infoPtr->flags |= needsDisplay;
     renderFBO(glfwWindow);
 
+    fprintf(stderr, "[DIAG] TkGlfwCreateWindow: about to glfwPollEvents (window=%s)\n",
+            Tk_PathName(winPtr));
     /* Flush Wayland configure/map. */
     glfwPollEvents();
+    fprintf(stderr, "[DIAG] TkGlfwCreateWindow: glfwPollEvents returned\n");
 
     TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
 

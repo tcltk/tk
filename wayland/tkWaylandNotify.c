@@ -689,6 +689,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
  *----------------------------------------------------------------------
  */
 
+
 static void
 TkGlfwFramebufferSizeCallback(
     GLFWwindow *window,
@@ -701,60 +702,52 @@ TkGlfwFramebufferSizeCallback(
         fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
         return;
     }
-    
+   
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
     if (!infoPtr || !infoPtr->context.vg) {
         fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
         return;
     }
 
-    /* During early initialization maps (e.g. via accessibility passes),
-     * this resize event can be dispatched before privatePtr or its nested fb structure 
-     * are allocated. We must guard against uninitialized garbage addresses.
-     */
+    /* During early initialization maps, maintain a guard. */
     if (winPtr->privatePtr != NULL && winPtr->privatePtr->fb != NULL) {
-        /* Verify that we aren't dereferencing an early memory ghost (like 0x300000001).
-         * A safe boundaries check guarantees the pointer addresses a real structural block.
-         */
         if ((uintptr_t)(winPtr->privatePtr->fb) > 0x10000) {
             GLuint fbo = winPtr->privatePtr->fb->fbo;
-            
-            /* Delete the old texture/renderbuffer bindings attached to this FBO. */
             if (fbo > 0) {
                 glDeleteFramebuffers(1, &fbo);
             }
-            
-            /* Free private framebuffer. */
             ckfree(winPtr->privatePtr->fb);
             winPtr->privatePtr->fb = NULL;
         }
     }
 
-    /* Allocate and bind private FBO matching the new dimensions. */
-    TkGlfwBackingStore *newFb = (TkGlfwBackingStore *)ckalloc(sizeof(TkGlfwBackingStore));
-    if (newFb != NULL) {
-        GLuint newFbo = 0;
-        glGenFramebuffers(1, &newFbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, newFbo);
-        
-        newFb->fbo = newFbo;
-        winPtr->privatePtr->fb = newFb;
-
-        /* Check for complete viewport configuration status. */
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            fprintf(stderr, "Direct FBO id %d is incomplete.\n", newFbo);
+    /* Fully rebuild frame buffer. */
+    if (winPtr->privatePtr) {
+        winPtr->privatePtr->fb = TkGlfwCreateBackingStore(width, height);
+        if (!winPtr->privatePtr->fb) {
+            fprintf(stderr, "Failed to create backing store for %s\n", Tk_PathName(winPtr));
+        } else {
+            /* Clear it to background immediately, but no extra queue/render. */
+            TkGlfwBackingStore *store = winPtr->privatePtr->fb;
+            glfwMakeContextCurrent(window);
+            glBindFramebuffer(GL_FRAMEBUFFER, store->fbo);
+            glClearColor(
+                ((winPtr->atts.background_pixel >> 16) & 0xFF) / 255.0f,
+                ((winPtr->atts.background_pixel >>  8) & 0xFF) / 255.0f,
+                (winPtr->atts.background_pixel & 0xFF) / 255.0f,
+                1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     }
 
-    /* Synchronize Tk's geometry structures with the true window bounds */
+    /* Synchronize Tk's geometry structures with the true window bounds. */
     glfwGetWindowSize(window, &(winPtr->changes.width), &(winPtr->changes.height));
 
-    /* Alert the generic core to reconfigure internal container metrics */
+    /* Alert the generic core to reconfigure internal container metrics. */
     TkDoConfigureNotify(winPtr);
 
-    /* Queue the full window exposure pass. This forces NanoVG and the geometry 
-     * layout managers to map and stretch widgets to their correct targeted footprint.
-     */
+    /* Queue the full window exposure pass. */
     TkWaylandQueueExposeEvent(winPtr, 0, 0, winPtr->changes.width, winPtr->changes.height);
 }
 
