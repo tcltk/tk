@@ -824,7 +824,7 @@ TkWaylandDisplayAllWindows(void)
         infoPtr->flags &= ~needsDisplay;
     }
 
-    if (callCount <= 20) {
+    if (callCount <= 200) {
         fprintf(stderr, "[DIAG] TkWaylandDisplayAllWindows call #%d: considered=%d rendered=%d\n",
                 callCount, considered, rendered);
     }
@@ -1395,8 +1395,13 @@ TkGlfwBeginDraw(
 
     winPtr = TkWaylandTkWindowFromDrawable(drawable);
     if (!winPtr) {
+        fprintf(stderr, "[DIAG] TkGlfwBeginDraw: no TkWindow for drawable=%lu\n",
+                (unsigned long)drawable);
         return TCL_ERROR;
     }
+
+    fprintf(stderr, "[DIAG] TkGlfwBeginDraw: drawable=%lu winPtr=%s\n",
+            (unsigned long)drawable, Tk_PathName(winPtr));
 
     topPtr = winPtr;
 
@@ -1480,10 +1485,26 @@ TkGlfwBeginDraw(
         yOffset);
 
     dcPtr->vg       = infoPtr->context.vg;
-    dcPtr->width    = fbWidth;
-    dcPtr->height   = fbHeight;
+    /*
+     * dcPtr->width/height must be expressed in the same coordinate
+     * space as the NanoVG frame just opened above, which is logical
+     * (window) units -- nvgBeginFrame was called with winWidth/winHeight,
+     * not fbWidth/fbHeight. Callers such as TkpPutRGBAImage use these
+     * fields directly as nvgRect/nvgImagePattern arguments, so handing
+     * out framebuffer-pixel dimensions here puts every such draw call
+     * in the wrong units whenever pixelRatio != 1.0 (HiDPI / fractional
+     * scaling), causing images to be mis-sized, mis-positioned, or
+     * drawn entirely off-canvas.
+     */
+    dcPtr->width    = winWidth;
+    dcPtr->height   = winHeight;
     dcPtr->winPtr   = winPtr;
     dcPtr->isPixmap = 0;
+
+    fprintf(stderr,
+        "[DIAG] TkGlfwBeginDraw: returning TCL_OK for %s, dc.width=%d dc.height=%d "
+        "xOffset=%.1f yOffset=%.1f\n",
+        Tk_PathName(winPtr), dcPtr->width, dcPtr->height, xOffset, yOffset);
 
     return TCL_OK;
 }

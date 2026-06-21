@@ -33,6 +33,48 @@
 /*
  *----------------------------------------------------------------------
  *
+ * DeferredImageDelete --
+ *
+ *	NanoVG is a deferred/retained-mode renderer: nvgFill() and similar
+ *	calls do not rasterize immediately, they record a draw command
+ *	(referencing the image/paint by its integer id) into the current
+ *	frame's command buffer. The actual GL texture bind and draw happens
+ *	later, when nvgEndFrame() flushes the frame -- which in this backend
+ *	happens once per display cycle, in TkWaylandDisplayAllWindows(), not
+ *	inside TkpPutRGBAImage() itself.
+ *
+ *	Deleting the image synchronously right after nvgFill() therefore
+ *	destroys the texture (and frees its NanoVG-internal id slot for
+ *	reuse) before the frame that references it has ever been flushed,
+ *	producing missing images and, if the freed id gets recycled by a
+ *	later nvgCreateImageRGBA() call in the same frame, cross-talk
+ *	between unrelated draws.
+ *
+ *	Scheduling the delete with Tcl_DoWhenIdle defers it until control
+ *	returns to the event loop, which is always after the current
+ *	display/expose cycle (and its nvgEndFrame flush) has completed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct {
+    NVGcontext *vg;
+    int         imageID;
+} DeferredImageDeleteData;
+
+static void
+DeferredImageDelete(ClientData clientData)
+{
+    DeferredImageDeleteData *data = (DeferredImageDeleteData *)clientData;
+    if (data->vg && data->imageID > 0) {
+        nvgDeleteImage(data->vg, data->imageID);
+    }
+    Tcl_Free((char *)data);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * _XInitImageFuncPtrs --
  *
  *	Stub implementation for Xlib image initialization. Required for
@@ -85,21 +127,23 @@ TkpPutRGBAImage(
     unsigned int width,
     unsigned int height)
 {
-    int imageId;
-    NVGpaint imgPaint;
+    fprintf(stderr,
+        "[DIAG] TkpPutRGBAImage: drawable=%lu src=(%d,%d) dst=(%d,%d) size=%ux%u "
+        "image=%p bpp=%d\n",
+        (unsigned long)drawable, src_x, src_y, dst_x, dst_y, width, height,
+        (void *)image, image ? image->bits_per_pixel : -1);
 
     if (!image || !image->data) {
         return 0;
     }
 
-    /* Validate source coordinates against image bounds to prevent buffer overreads. */
+    /* Validate source coordinates against image bounds */
     if (src_x < 0 || src_y < 0 ||
         src_x + (int)width > image->width ||
         src_y + (int)height > image->height) {
         return TCL_ERROR;
     }
 
-    /* Secure and bind the target OpenGL / NanoVG drawing surface context. */
     TkWaylandDrawingContext dc;
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return TCL_ERROR;
@@ -109,31 +153,33 @@ TkpPutRGBAImage(
         TkGlfwApplyGC(dc.vg, gc);
     }
 
-    /* Allocate workspace memory for the extracted sub-region. */
     size_t numPixels = (size_t)width * (size_t)height;
-    unsigned char *rgbaData = (unsigned char *)ckalloc(numPixels * 4);
+    unsigned char *rgbaData = (unsigned char *)Tcl_Alloc(numPixels * 4);
     if (!rgbaData) {
         TkGlfwEndDraw(&dc);
         return TCL_ERROR;
     }
 
-    /* Extract sub-region and map internal Tk pixel layout to hardware-native RGBA.*/
+    /* Extract specified region and handle precise byte swizzling */
     if (image->bits_per_pixel == 32) {
         for (unsigned int j = 0; j < height; j++) {
-            /* Map source row accounting for vertical offset and explicit line pitch. */
+            /* Fix: Account for image->xoffset to handle sub-region image sheets correctly */
             unsigned char *src_ptr = (unsigned char*)image->data +
                                      ((src_y + j) * image->bytes_per_line) +
-                                     (src_x * 4);
+                                     ((src_x + image->xoffset) * 4);
             unsigned char *dst_ptr = rgbaData + (j * width * 4);
 
             for (unsigned int i = 0; i < width; i++) {
-                /* Correctly swizzle channels matching Tk's standard photo formats. */
+                /*
+                 * Fix: Correct channel mapping from packed XImage format.
+                 * Tk stores data as BGRA in standard little-endian X11 emulations.
+                 */
                 unsigned char b = src_ptr[i * 4 + 0];
                 unsigned char g = src_ptr[i * 4 + 1];
                 unsigned char r = src_ptr[i * 4 + 2];
                 unsigned char a = src_ptr[i * 4 + 3];
 
-                /* Pack directly into NanoVG expected ordering. */
+                /* Map accurately to NanoVG's hardware native RGBA ordering */
                 dst_ptr[i * 4 + 0] = r;
                 dst_ptr[i * 4 + 1] = g;
                 dst_ptr[i * 4 + 2] = b;
@@ -141,7 +187,7 @@ TkpPutRGBAImage(
             }
         }
     } else {
-        /* Fallback linear block memory copy if bit depth is unmanaged. */
+        /* Fallback direct copy */
         for (unsigned int j = 0; j < height; j++) {
             memcpy(rgbaData + (j * width * 4),
                    (unsigned char*)image->data + ((src_y + j) * image->bytes_per_line) + (src_x * (image->bits_per_pixel / 8)),
@@ -149,29 +195,36 @@ TkpPutRGBAImage(
         }
     }
 
-    /* Create the texture atlas inside the active GLES NanoVG context. */
-    imageId = nvgCreateImageRGBA(dc.vg, width, height, 0, rgbaData);
-    ckfree(rgbaData);
+    int imageID = nvgCreateImageRGBA(dc.vg, width, height, 0, rgbaData);
+    Tcl_Free((char *)rgbaData);
 
-    if (imageId <= 0) {
+    if (imageID <= 0) {
         TkGlfwEndDraw(&dc);
         return TCL_ERROR;
     }
 
-    /* Construct the texture pattern brush positioned relative to destination offsets. */
-    imgPaint = nvgImagePattern(dc.vg, (float)dst_x, (float)dst_y, 
-                                (float)width, (float)height, 0.0f, imageId, 1.0f);
+    NVGpaint paint = nvgImagePattern(dc.vg, (float)dst_x, (float)dst_y, 
+                                     (float)width, (float)height, 0.0f, imageID, 1.0f);
     
-    /* Draw the texture path onto the active canvas window. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)dst_x, (float)dst_y, (float)width, (float)height);
-    nvgFillPaint(dc.vg, imgPaint);
+    nvgFillPaint(dc.vg, paint);
     nvgFill(dc.vg);
 
-    /* Delete the temporary texture reference to completely avoid memory/VRAM leaks. */
-    nvgDeleteImage(dc.vg, imageId);
+    /*
+     * Do NOT delete the image here. nvgFill() above only recorded a draw
+     * command referencing imageID; the actual GPU draw happens later
+     * when nvgEndFrame() flushes this display cycle. Schedule the
+     * delete for idle time so it runs after that flush.
+     */
+    {
+        DeferredImageDeleteData *deferred =
+            (DeferredImageDeleteData *)Tcl_Alloc(sizeof(DeferredImageDeleteData));
+        deferred->vg      = dc.vg;
+        deferred->imageID = imageID;
+        Tcl_DoWhenIdle(DeferredImageDelete, deferred);
+    }
 
-    /* Finalize context pass, swap buffers, and flush layout changes. */
     TkGlfwEndDraw(&dc);
     return 0;
 }
@@ -323,6 +376,11 @@ XPutImage(
     unsigned int  width,
     unsigned int  height)
 {
+    fprintf(stderr,
+        "[DIAG] XPutImage: drawable=%lu src=(%d,%d) dst=(%d,%d) size=%ux%u image=%p\n",
+        (unsigned long)drawable, src_x, src_y, dest_x, dest_y, width, height,
+        (void *)image);
+
     int rc = TkpPutRGBAImage(display, drawable, gc, image,
                              src_x, src_y, dest_x, dest_y, width, height);
     return (rc == 0) ? Success : BadAlloc;

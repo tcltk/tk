@@ -723,8 +723,28 @@ TkGlfwFramebufferSizeCallback(
         }
     }
 
-    /* Synchronize Tk's geometry structures with the true window bounds. */
-    glfwGetWindowSize(window, &(winPtr->changes.width), &(winPtr->changes.height));
+    /*
+     * Synchronize Tk's geometry structures with the true window bounds.
+     *
+     * Do NOT issue a second, independent glfwGetWindowSize query here.
+     * This callback already received the authoritative framebuffer size
+     * (width, height) for the resize that triggered it; a separate
+     * glfwGetWindowSize call races against the same in-flight Wayland
+     * configure sequence and can observe a different generation of the
+     * window state, producing layout distortion/size skew. Instead,
+     * derive the logical (window-coordinate) size from the callback's
+     * own framebuffer size via the window's content scale, which GLFW
+     * guarantees is consistent with the width/height just delivered.
+     */
+    {
+        float xScale = 1.0f, yScale = 1.0f;
+        glfwGetWindowContentScale(window, &xScale, &yScale);
+
+        winPtr->changes.width  = (xScale > 0.0f)
+            ? (int)((width  / xScale) + 0.5f) : width;
+        winPtr->changes.height = (yScale > 0.0f)
+            ? (int)((height / yScale) + 0.5f) : height;
+    }
 
     /* Alert the generic core to reconfigure internal container metrics. */
     TkDoConfigureNotify(winPtr);
