@@ -1112,8 +1112,8 @@ TTK_LAYOUT("Heading",
     TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
 	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-	    TTK_NODE("Treeheading.text", TTK_FILL_X)
-	    TTK_NODE("Treeheading.indicator", TTK_PACK_TOP))))
+	    TTK_NODE("Treeheading.text", TTK_FILL_X))
+	TTK_NODE("Treeheading.indicator", TTK_PACK_TOP)))
 
 TTK_END_LAYOUT_TABLE
 
