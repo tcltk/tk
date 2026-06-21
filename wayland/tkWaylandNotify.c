@@ -252,6 +252,18 @@ static void TkWaylandSetupProc(void *clientData, int flags);
 static void TkWaylandCheckProc(void *clientData, int flags);
 static void TkWaylandCheckForWindowClosure(void);
 
+/* ======================================================================
+ * REPLACEMENT: Idle Loop Presentation Architecture
+ * ====================================================================== */
+static int displayIdleQueued = 0;
+
+static void
+TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
+{
+    displayIdleQueued = 0;
+    TkWaylandDisplayAllWindows();
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -330,16 +342,8 @@ TkWaylandCheckForWindowClosure(void)
  *
  * TkWaylandSetupProc --
  *
- *      Tell Tcl how long it should block before calling TkWaylandCheckProc.
- *      Called by Tcl_DoOneEvent if it has processed all events, run
- *      all pending idle tasks, and run all expired timer tasks.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Processes all queued GLFW events, displays windows as
- *      needed and sets a block time if there are no GLFW events.
+ *      Schedules presentation loops safely at idle and updates max block 
+ *      times based on pending background callback evaluations.
  *
  *----------------------------------------------------------------------
  */
@@ -349,34 +353,29 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 {
     TSD_INIT();
 
-    /*
-     * Restrict all work to window-event ticks.  Moving TkWaylandDisplayAllWindows
-     * inside this guard is the critical fix for ongoing flicker: SetupProc is
-     * called by Tcl for timer, idle, and file events too.  Calling
-     * glfwSwapBuffers on those calls presents partial frames — only some
-     * widgets have finished their expose handlers — producing visible tearing.
-     */
-    if (!(flags & TCL_WINDOW_EVENTS)) return;
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return;
+    }
 
     Tcl_Time noBlock    = {0, 0};
     Tcl_Time oneRefresh = {0, 16667};
 
-    /* Drain IBus messages to prevent input starvation. */
+    /* Drain pending system communication layers inline */
     if (ibus_bus) {
-        while (sd_bus_process(ibus_bus, NULL) > 0) { /* drain */ }
+        while (sd_bus_process(ibus_bus, NULL) > 0) { /* Clear out events */ }
     }
 
     clearCallbackCount();
     glfwPollEvents();
 
-    /*
-     * Present any windows that have been marked dirty by draw calls
-     * that ran during this event-loop iteration.  We do this AFTER
-     * glfwPollEvents so that any refresh callbacks queued by the compositor
-     * have already been converted to Expose events and processed — meaning
-     * by the time we get here the FBO holds the complete frame.
+    /* * FIX FLICKER & TEARING: Queue presentation onto the idle ring.
+     * This ensures all intermediate layout expose evaluations have
+     * completed rendering into the backing store before we swap buffers.
      */
-    TkWaylandDisplayAllWindows();
+    if (!displayIdleQueued) {
+        displayIdleQueued = 1;
+        Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
+    }
 
     if (tsdPtr->callbackCount) {
         Tcl_SetMaxBlockTime(&noBlock);
@@ -390,20 +389,7 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
  *
  * TkWaylandCheckProc --
  *
- *      Called by Tcl_DoOneEvent after calling Tcl_WaitForEvent, which
- *      will call tclNotifierHooks.waitForEventProc if it is defined.
- *      We are using the default waitForEventProc (I think).
- *
- *      The SetupProc already processed all events that were in the
- *      queue.  If there were none then it will have requested a block
- *      for a few milliseconds.  So there could be some events in the
- *      queue by now.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      May generate some X events when callbacks are called.
+ *      Post-blocking fallback check loop to collect trailing platform messages.
  *
  *----------------------------------------------------------------------
  */
@@ -415,7 +401,6 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
         return;
     }
 
-    /* Drain any pending IBus messages. */
     if (ibus_bus) {
         sd_bus_wait(ibus_bus, 0);
         int r;
@@ -426,14 +411,13 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 
     glfwPollEvents();
 
-    /*
-     * Present dirty windows here too.  Without this, expose handlers that
-     * ran between SetupProc and CheckProc (which fire during
-     * Tcl_WaitForEvent) mark windows dirty but nothing calls renderFBO
-     * until the next SetupProc — a full event-loop iteration later.
-     * That gap is where the partial-draw flicker was visible.
+    /* * FIX THE HANG: Coalesce trailing window operations into the same
+     * idle presentation path rather than dropping into infinite synchronous loops.
      */
-    TkWaylandDisplayAllWindows();
+    if (!displayIdleQueued) {
+        displayIdleQueued = 1;
+        Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
+    }
 }
 
 /*
@@ -481,13 +465,8 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
  *
  * TkWaylandQueueExposeEvent --
  *
- *      Queue Expose events for a window and all of its children.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Queues an expose event for processing.
+ *      Pushes target exposed layout parameters down to the Tk loop.
+ *      Recurses through sub-widgets using verified constraint geometries.
  *
  *----------------------------------------------------------------------
  */
@@ -518,7 +497,6 @@ TkWaylandQueueExposeEvent(
 {
     XEvent event;
     TkWindow *childPtr;
-    fprintf(stderr, "TkWaylandQueueExposeEvent: %s\n", Tk_PathName(winPtr));
 
     if (!winPtr) return;
 
@@ -536,9 +514,6 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
 
     /* Queue it. */
-    fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
-	   event.xexpose.serial,
-	   Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
     /* Recurse through the children of this window. */
@@ -547,8 +522,15 @@ TkWaylandQueueExposeEvent(
         if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
             continue;
         }
-        TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
-				  Tk_Height(childPtr));
+        /* * FIX THE DISTORTION: Never extract layout sizing using standard Tk_Width
+         * macros here. During asynchronous Wayland configuration sweeps, those return 
+         * unverified or zero states. Use changes structures directly.
+         */
+        int cw = childPtr->changes.width;
+        int ch = childPtr->changes.height;
+        if (cw > 1 && ch > 1) {
+            TkWaylandQueueExposeEvent(childPtr, 0, 0, cw, ch);
+        }
     }
 }
 
@@ -1481,37 +1463,6 @@ TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
     TkWaylandStoreText(winPtr, codepoint);
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkGlfwWindowRefreshCallback --
- *
- *      Called by GLFW when window needs redraw. Generates Expose event.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Queues Expose event for client area.
- *
- *----------------------------------------------------------------------
- */
-
-#if 0
-static void
-TkGlfwWindowRefreshCallback(GLFWwindow *window)
-{
-    recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    if (!winPtr) {
-	return;
-    }
-    fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s\n",
-	    Tk_PathName(winPtr));
-    TkWaylandQueueExposeEvent(winPtr,
-        0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
-}
-#endif
 /*
  *----------------------------------------------------------------------
  *

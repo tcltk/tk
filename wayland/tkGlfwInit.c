@@ -778,7 +778,6 @@ renderFBO(GLFWwindow *window)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 #endif
-
 void
 renderFBO(GLFWwindow *window)
 {
@@ -790,21 +789,24 @@ renderFBO(GLFWwindow *window)
     TkWindow *winPtr = infoPtr->winPtr;
     glfwMakeContextCurrent(window);
 
-    TkGlfwBackingStore *store = winPtr->privatePtr->fb;
-
-    if (!store) {
-        /* Fallback: clear to Tk gray */
-        glClearColor(0.85f, 0.85f, 0.85f, 1.0f);
+    if (!winPtr->privatePtr->fb) {
+        glClearColor(0.8509f, 0.8509f, 0.8509f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glfwSwapBuffers(window);
         return;
     }
 
+    TkGlfwBackingStore *store = winPtr->privatePtr->fb;
+
     int fbWidth = 0, fbHeight = 0;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
-    if (fbWidth <= 0 || fbHeight <= 0) return;
+    if (fbWidth <= 0 || fbHeight <= 0) {
+        return;
+    }
 
     glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, store->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -816,6 +818,7 @@ renderFBO(GLFWwindow *window)
     glfwSwapBuffers(window);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1138,7 +1141,7 @@ TkGlfwShutdown(TCL_UNUSED(void *))
  *
  *----------------------------------------------------------------------
  */
-
+ 
 MODULE_SCOPE GLFWwindow *
 TkGlfwCreateWindow(
     TkWindow   *winPtr,
@@ -1287,7 +1290,6 @@ TkGlfwCreateWindow(
 
     return glfwWindow;
 }
-
 
 /*
  *----------------------------------------------------------------------
