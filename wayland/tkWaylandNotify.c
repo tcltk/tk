@@ -1489,13 +1489,17 @@ TkGlfwWindowRefreshCallback(GLFWwindow *window)
         return;
     }
 
-    /* Using native geometry macros ensures we wait for finalized boundaries,
-     * allowing container widgets and layout managers to align perfectly.
+    /* Do not use Tk_Width/Tk_Height here.
+     * Use the validated configuration changes bounds instead, ensuring 
+     * layout container rules don't get trapped with stale 1x1 dimensions.
      */
-    int w = Tk_Width(winPtr);
-    int h = Tk_Height(winPtr);
+    int w = winPtr->changes.width;
+    int h = winPtr->changes.height;
 
-    if (w > 0 && h > 0) {
+    fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s at verified size: %dx%d\n",
+            Tk_PathName(winPtr), w, h);
+
+    if (w > 1 && h > 1) {
         TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
     }
 }

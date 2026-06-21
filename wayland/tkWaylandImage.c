@@ -61,7 +61,7 @@ _XInitImageFuncPtrs(
  *
  *	Accepts a raw image container from Tk, extracts the requested 
  *	sub-region, converts pixel formats from ARGB to native NanoVG RGBA, 
- *	and draws it safely onto the target drawable surface.
+ *	and draws it safely onto the target drawable surface using NanoVG.
  *
  * Results:
  *	Returns 0 on success, TCL_ERROR on failure.
@@ -85,17 +85,21 @@ TkpPutRGBAImage(
     unsigned int width,
     unsigned int height)
 {
+    int imageId;
+    NVGpaint imgPaint;
+
     if (!image || !image->data) {
         return 0;
     }
 
-    /* Validate source coordinates against image bounds to prevent buffer overreads */
+    /* Validate source coordinates against image bounds to prevent buffer overreads. */
     if (src_x < 0 || src_y < 0 ||
         src_x + (int)width > image->width ||
         src_y + (int)height > image->height) {
         return TCL_ERROR;
     }
 
+    /* Secure and bind the target OpenGL / NanoVG drawing surface context. */
     TkWaylandDrawingContext dc;
     if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return TCL_ERROR;
@@ -107,28 +111,29 @@ TkpPutRGBAImage(
 
     /* Allocate workspace memory for the extracted sub-region. */
     size_t numPixels = (size_t)width * (size_t)height;
-    unsigned char *rgbaData = (unsigned char *)Tcl_Alloc(numPixels * 4);
+    unsigned char *rgbaData = (unsigned char *)ckalloc(numPixels * 4);
     if (!rgbaData) {
         TkGlfwEndDraw(&dc);
         return TCL_ERROR;
     }
 
-    /* Extract specified region and perform explicit ARGB -> RGBA mapping. */
+    /* Extract sub-region and map internal Tk pixel layout to hardware-native RGBA.*/
     if (image->bits_per_pixel == 32) {
         for (unsigned int j = 0; j < height; j++) {
+            /* Map source row accounting for vertical offset and explicit line pitch. */
             unsigned char *src_ptr = (unsigned char*)image->data +
                                      ((src_y + j) * image->bytes_per_line) +
                                      (src_x * 4);
             unsigned char *dst_ptr = rgbaData + (j * width * 4);
 
             for (unsigned int i = 0; i < width; i++) {
-                /* Extract channels accurately matching standard Tk core structures. */
-                unsigned char a = src_ptr[i * 4 + 0];
-                unsigned char r = src_ptr[i * 4 + 1];
-                unsigned char g = src_ptr[i * 4 + 2];
-                unsigned char b = src_ptr[i * 4 + 3];
+                /* Correctly swizzle channels matching Tk's standard photo formats. */
+                unsigned char b = src_ptr[i * 4 + 0];
+                unsigned char g = src_ptr[i * 4 + 1];
+                unsigned char r = src_ptr[i * 4 + 2];
+                unsigned char a = src_ptr[i * 4 + 3];
 
-                /* Map cleanly to NanoVG's hardware native ordering. */
+                /* Pack directly into NanoVG expected ordering. */
                 dst_ptr[i * 4 + 0] = r;
                 dst_ptr[i * 4 + 1] = g;
                 dst_ptr[i * 4 + 2] = b;
@@ -136,7 +141,7 @@ TkpPutRGBAImage(
             }
         }
     } else {
-        /* Fallback direct copy if data format matches exactly. */
+        /* Fallback linear block memory copy if bit depth is unmanaged. */
         for (unsigned int j = 0; j < height; j++) {
             memcpy(rgbaData + (j * width * 4),
                    (unsigned char*)image->data + ((src_y + j) * image->bytes_per_line) + (src_x * (image->bits_per_pixel / 8)),
@@ -144,31 +149,33 @@ TkpPutRGBAImage(
         }
     }
 
-    /* Generate a temporary texture inside the NanoVG context. */
-    int imageID = nvgCreateImageRGBA(dc.vg, width, height, 0, rgbaData);
-    Tcl_Free((char *)rgbaData);
+    /* Create the texture atlas inside the active GLES NanoVG context. */
+    imageId = nvgCreateImageRGBA(dc.vg, width, height, 0, rgbaData);
+    ckfree(rgbaData);
 
-    if (imageID <= 0) {
+    if (imageId <= 0) {
         TkGlfwEndDraw(&dc);
         return TCL_ERROR;
     }
 
-    /* Construct image pattern brush relative to destination coordinates. */
-    NVGpaint paint = nvgImagePattern(dc.vg, (float)dst_x, (float)dst_y, 
-                                     (float)width, (float)height, 0.0f, imageID, 1.0f);
+    /* Construct the texture pattern brush positioned relative to destination offsets. */
+    imgPaint = nvgImagePattern(dc.vg, (float)dst_x, (float)dst_y, 
+                                (float)width, (float)height, 0.0f, imageId, 1.0f);
     
-    /* Paint texture rect to canvas. */
+    /* Draw the texture path onto the active canvas window. */
     nvgBeginPath(dc.vg);
     nvgRect(dc.vg, (float)dst_x, (float)dst_y, (float)width, (float)height);
-    nvgFillPaint(dc.vg, paint);
+    nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
 
-    /* Safely destroy texture to prevent GPU leaks. */
-    nvgDeleteImage(dc.vg, imageID);
+    /* Delete the temporary texture reference to completely avoid memory/VRAM leaks. */
+    nvgDeleteImage(dc.vg, imageId);
 
+    /* Finalize context pass, swap buffers, and flush layout changes. */
     TkGlfwEndDraw(&dc);
     return 0;
 }
+
 /*
  *----------------------------------------------------------------------
  *
