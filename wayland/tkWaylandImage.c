@@ -123,8 +123,10 @@ ImageGetPixel(
     switch (image->bits_per_pixel) {
     case 32:
     case 24:
-        /* Map standard byte streams. */
-        pixel = (srcPtr[2] << 16) | (srcPtr[1] << 8) | srcPtr[0];
+        /* Map standard byte streams - R, G, B order. */
+        pixel = ((unsigned long)srcPtr[0] << 16) |  /* R */
+                ((unsigned long)srcPtr[1] << 8)  |  /* G */
+                (unsigned long)srcPtr[2];           /* B */
         break;
     case 16:
         pixel = ((((unsigned short*)srcPtr)[0] & 0xF800) >> 8) |
@@ -172,12 +174,13 @@ PutPixel(
 
     switch (image->bits_per_pixel) {
     case 32:
-        destPtr[3] = (unsigned char)((pixel >> 24) & 0xFF);
-        /* FALLTHRU */
     case 24:
-        destPtr[0] = (unsigned char)(pixel & 0xFF);         /* Blue channel */
-        destPtr[1] = (unsigned char)((pixel >> 8) & 0xFF);  /* Green channel */
-        destPtr[2] = (unsigned char)((pixel >> 16) & 0xFF); /* Red channel */
+        destPtr[0] = (unsigned char)((pixel >> 16) & 0xFF); /* R */
+        destPtr[1] = (unsigned char)((pixel >> 8)  & 0xFF); /* G */
+        destPtr[2] = (unsigned char)(pixel & 0xFF);         /* B */
+        if (image->bits_per_pixel == 32) {
+            destPtr[3] = 0xFF;  /* Opaque if no alpha in pixel value. */
+        }
         break;
     case 16:
         (*(unsigned short*)destPtr) = (unsigned short)(
@@ -268,6 +271,7 @@ XCreateImage(
 
     return imagePtr;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -307,8 +311,8 @@ _XInitImageFuncPtrs(
  * TkpPutRGBAImage --
  *
  *	Accepts a raw image container from Tk, extracts the requested 
- *	sub-region, converts pixel formats from ARGB to native NanoVG RGBA, 
- *	and draws it safely onto the target drawable surface using NanoVG.
+ *	sub-region, converts pixel formats from Tk's XImage layout to 
+ *	native NanoVG RGBA, and draws it using NanoVG.
  *
  * Results:
  *	Returns 0 on success, TCL_ERROR on failure.
@@ -364,7 +368,7 @@ TkpPutRGBAImage(
         return TCL_ERROR;
     }
 
-    /* Extract sub-region and map internal Tk pixel layout to hardware-native RGBA.*/
+    /* Extract sub-region and map Tk XImage (RGBA) to NanoVG RGBA. */
     if (image->bits_per_pixel == 32) {
         for (unsigned int j = 0; j < height; j++) {
             /* Map source row accounting for vertical offset and explicit line pitch. */
@@ -374,24 +378,20 @@ TkpPutRGBAImage(
             unsigned char *dst_ptr = rgbaData + (j * width * 4);
 
             for (unsigned int i = 0; i < width; i++) {
-                /* Correctly swizzle channels matching Tk's standard photo formats. */
-                unsigned char b = src_ptr[i * 4 + 0];
-                unsigned char g = src_ptr[i * 4 + 1];
-                unsigned char r = src_ptr[i * 4 + 2];
-                unsigned char a = src_ptr[i * 4 + 3];
-
-                /* Pack directly into NanoVG expected ordering. */
-                dst_ptr[i * 4 + 0] = r;
-                dst_ptr[i * 4 + 1] = g;
-                dst_ptr[i * 4 + 2] = b;
-                dst_ptr[i * 4 + 3] = a;
+                /* Direct copy - no R/B swap (Tk XImage is RGBA). */
+                dst_ptr[i * 4 + 0] = src_ptr[i * 4 + 0]; /* R */
+                dst_ptr[i * 4 + 1] = src_ptr[i * 4 + 1]; /* G */
+                dst_ptr[i * 4 + 2] = src_ptr[i * 4 + 2]; /* B */
+                dst_ptr[i * 4 + 3] = src_ptr[i * 4 + 3]; /* A */
             }
         }
     } else {
         /* Fallback linear block memory copy if bit depth is unmanaged. */
         for (unsigned int j = 0; j < height; j++) {
             memcpy(rgbaData + (j * width * 4),
-                   (unsigned char*)image->data + ((src_y + j) * image->bytes_per_line) + (src_x * (image->bits_per_pixel / 8)),
+                   (unsigned char*)image->data + 
+                   ((src_y + j) * image->bytes_per_line) + 
+                   (src_x * (image->bits_per_pixel / 8)),
                    width * 4);
         }
     }
@@ -415,8 +415,8 @@ TkpPutRGBAImage(
     nvgFillPaint(dc.vg, imgPaint);
     nvgFill(dc.vg);
 
-    /* Delete the temporary texture reference to completely avoid memory/VRAM leaks. */
-    //  nvgDeleteImage(dc.vg, imageId);
+    /* Note: Consider keeping nvgDeleteImage if you see VRAM growth. */
+    // nvgDeleteImage(dc.vg, imageId);
 
     /* Finalize context pass, swap buffers, and flush layout changes. */
     TkGlfwEndDraw(&dc);
@@ -485,10 +485,11 @@ XGetImage(
                 unsigned char *dstRow = (unsigned char *)imagePtr->data + (yy * imagePtr->bytes_per_line);
 
                 for (unsigned int xx = 0; xx < width; xx++) {
-                    dstRow[xx * 4 + 0] = srcRow[xx * 4 + 2]; /* Blue channel */
-                    dstRow[xx * 4 + 1] = srcRow[xx * 4 + 1]; /* Green channel */
-                    dstRow[xx * 4 + 2] = srcRow[xx * 4 + 0]; /* Red channel */
-                    dstRow[xx * 4 + 3] = srcRow[xx * 4 + 3]; /* Alpha channel */
+                    /* Store as RGBA to match TkpPutRGBAImage. */
+                    dstRow[xx * 4 + 0] = srcRow[xx * 4 + 0]; /* R */
+                    dstRow[xx * 4 + 1] = srcRow[xx * 4 + 1]; /* G */
+                    dstRow[xx * 4 + 2] = srcRow[xx * 4 + 2]; /* B */
+                    dstRow[xx * 4 + 3] = srcRow[xx * 4 + 3]; /* A */
                 }
             }
             ckfree(glBuffer);
@@ -647,4 +648,3 @@ XPutImage(
  * fill-column: 78
  * End:
  */
-
