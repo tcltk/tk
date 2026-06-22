@@ -522,7 +522,7 @@ TkWaylandQueueExposeEvent(
         if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
             continue;
         }
-        /* * FIX THE DISTORTION: Never extract layout sizing using standard Tk_Width
+        /* Never extract layout sizing using standard Tk_Width
          * macros here. During asynchronous Wayland configuration sweeps, those return 
          * unverified or zero states. Use changes structures directly.
          */
