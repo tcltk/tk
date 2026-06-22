@@ -2626,8 +2626,7 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
 	/* Clean up the temporary resources */
 	Tk_FreePixmap(Tk_Display(tkwin), p);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
-	
-#elseif defined(MAC_OSX_TK)
+#elif defined(MAC_OSX_TK)
 	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
 	Ttk_Theme aquaTheme = Ttk_GetTheme(tv->core.interp, "aqua");
 	if (currentTheme == aquaTheme && [NSApp macOSVersion] > 100800) {
