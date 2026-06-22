@@ -12,7 +12,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 
 /*

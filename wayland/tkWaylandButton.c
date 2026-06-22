@@ -14,7 +14,7 @@
 #include "tkInt.h"
 #include "tkButton.h"
 #include "tk3d.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLES2/gl2.h>
 #include "nanovg.h"
 #include <X11/Xlib.h>
@@ -168,7 +168,7 @@ DrawButtonBitmap(TkButton *butPtr,
                  int height)
 {
     Drawable d = TkWaylandDrawableForTkWindow((TkWindow *) butPtr->tkwin);
-    NVGcontext *vg = TkGlfwGetNVGContext(d);
+    NVGcontext *vg = TkWaylandGetNVGContext(d);
     Pixmap bitmap = butPtr->bitmap;
     unsigned char *bits = NULL;
     unsigned char *rgba = NULL;
@@ -427,7 +427,7 @@ TkpDisplayButton(void *clientData)
     Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)tkwin);
     GC currentGC = butPtr->normalTextGC;   /* sensible default */
 
-    int rc = TkGlfwBeginDraw(drawable, currentGC, &dc);
+    int rc = TkWaylandBeginDraw(drawable, currentGC, &dc);
     if (rc != TCL_OK) {
         fprintf(stderr, "TkpDisplayButton: BeginDraw failed for %s\n",
                 Tk_PathName(tkwin));
@@ -622,7 +622,7 @@ TkpDisplayButton(void *clientData)
     }
 
     /* End drawing session. */
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 }
 
 /*
@@ -937,7 +937,7 @@ TkpDrawCheckIndicator(
 {
     TkWaylandDrawingContext dc = {0};
 
-    if (TkGlfwBeginDraw(d, NULL, &dc) != TCL_OK) {
+    if (TkWaylandBeginDraw(d, NULL, &dc) != TCL_OK) {
         return;
     }
 
@@ -965,9 +965,9 @@ TkpDrawCheckIndicator(
     }
 
     if (disabled && disColor) {
-        nvgFillColor(dc.vg, TkGlfwXColorToNVG(disColor));
+        nvgFillColor(dc.vg, TkWaylandXColorToNVG(disColor));
     } else {
-        nvgFillColor(dc.vg, TkGlfwXColorToNVG(indicatorColor));
+        nvgFillColor(dc.vg, TkWaylandXColorToNVG(indicatorColor));
     }
     nvgFill(dc.vg);
 
@@ -978,25 +978,25 @@ TkpDrawCheckIndicator(
             nvgMoveTo(dc.vg, x + size/4, y + size/2);
             nvgLineTo(dc.vg, x + size/2, y + 3*size/4);
             nvgLineTo(dc.vg, x + 3*size/4, y + size/4);
-            nvgStrokeColor(dc.vg, TkGlfwXColorToNVG(selectColor));
+            nvgStrokeColor(dc.vg, TkWaylandXColorToNVG(selectColor));
             nvgStrokeWidth(dc.vg, 2.0f);
             nvgStroke(dc.vg);
         } else {
             nvgBeginPath(dc.vg);
             nvgCircle(dc.vg, x + size/2, y + size/2, size/4);
-            nvgFillColor(dc.vg, TkGlfwXColorToNVG(selectColor));
+            nvgFillColor(dc.vg, TkWaylandXColorToNVG(selectColor));
             nvgFill(dc.vg);
         }
     } else if (on == 2) {  /* tristate */
         nvgBeginPath(dc.vg);
         nvgMoveTo(dc.vg, x + size/4, y + size/2);
         nvgLineTo(dc.vg, x + 3*size/4, y + size/2);
-        nvgStrokeColor(dc.vg, TkGlfwXColorToNVG(selectColor));
+        nvgStrokeColor(dc.vg, TkWaylandXColorToNVG(selectColor));
         nvgStrokeWidth(dc.vg, 2.0f);
         nvgStroke(dc.vg);
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 }
 
 /*

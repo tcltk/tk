@@ -36,7 +36,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>

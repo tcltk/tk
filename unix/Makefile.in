@@ -482,7 +482,7 @@ AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 WAYLAND_OBJS            = \
 	 nanovg.o  SheenBidi.o xdg-shell-protocol.o \
-      tkGlfwInit.o tkWayland.o  \
+      tkWaylandInit.o tkWayland.o  \
      tkWayland3D.o tkWaylandAccessibility.o tkWaylandButton.o tkWaylandColor.o \
      tkWaylandConfig.o tkWaylandClipboard.o tkWaylandCursor.o tkWaylandDraw.o \
      tkWaylandEmbed.o tkWaylandFocus.o tkWaylandFont.o tkWaylandGC.o \
@@ -636,7 +636,7 @@ AQUA_SRCS = \
 	$(TTK_DIR)/ttkMacOSXTheme.c
 
 WAYLAND_SRCS = \
-	$(WAYLAND_DIR)/nanovg.c $(WAYLAND_DIR)/tkGlfwInit.c $(WAYLAND_DIR)/tkWayland.c \
+	$(WAYLAND_DIR)/nanovg.c $(WAYLAND_DIR)/tkWaylandInit.c $(WAYLAND_DIR)/tkWayland.c \
     $(WAYLAND_DIR)/tkWayland3D.c  $(WAYLAND_DIR)/tkWaylandAccessibility.c $(WAYLAND_DIR)/tkWaylandButton.c \
     $(WAYLAND_DIR)/tkWaylandClipboard.c $(WAYLAND_DIR)/tkWaylandColor.c $(WAYLAND_DIR)/tkWaylandConfig.c \
     $(WAYLAND_DIR)/tkWaylandCursor.c $(WAYLAND_DIR)/tkWaylandDraw.c \
@@ -652,7 +652,7 @@ WAYLAND_SRCS = \
 WAYLAND_PRIVATE_HDRS = \
     $(WAYLAND_DIR)/tkWaylandInt.h \
     $(WAYLAND_DIR)/tkWaylandDefaults.h \
-    $(WAYLAND_DIR)/tkGlfwInt.h \
+    $(WAYLAND_DIR)/tkWaylandInt.h \
     $(WAYLAND_DIR)/tkWaylandPort.h \
     $(WAYLAND_DIR)/$(TEXT_INPUT_CLIENT_HEADER)
 
@@ -1470,8 +1470,8 @@ nanovg.o: $(WAYLAND_DIR)/nanovg.c
 xdg-shell-protocol.o: $(WAYLAND_DIR)/xdg-shell-protocol.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/xdg-shell-protocol.c
 
-tkGlfwInit.o: $(WAYLAND_DIR)/tkGlfwInit.c
-	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkGlfwInit.c
+tkWaylandInit.o: $(WAYLAND_DIR)/tkWaylandInit.c
+	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWaylandInit.c
 
 tkWayland.o: $(WAYLAND_DIR)/tkWayland.c
 	$(CC) -c $(CC_SWITCHES) $(WAYLAND_DIR)/tkWayland.c

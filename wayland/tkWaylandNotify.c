@@ -42,7 +42,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 #include <GLES3/gl3.h>
 
@@ -542,7 +542,7 @@ TkWaylandQueueExposeEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwSetupCallbacks --
+ * TkWaylandSetupCallbacks --
  *
  *      Register the standard GLFW callbacks for a window.  Called by
  *      glfwCreateWindow.
@@ -556,46 +556,46 @@ TkWaylandQueueExposeEvent(
  *----------------------------------------------------------------------
  */
 
-static void TkGlfwWindowCloseCallback(GLFWwindow *window);
-static void TkGlfwFramebufferSizeCallback(GLFWwindow *window,
+static void TkWaylandWindowCloseCallback(GLFWwindow *window);
+static void TkWaylandFramebufferSizeCallback(GLFWwindow *window,
 					  int width, int height);
-static void TkGlfwWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
-static void TkGlfwWindowFocusCallback(GLFWwindow *window, int focused);
-static void TkGlfwWindowIconifyCallback(GLFWwindow *window, int iconified);
-static void TkGlfwWindowMaximizeCallback(GLFWwindow *window, int maximized);
-static void TkGlfwCursorPosCallback(GLFWwindow *window,
+static void TkWaylandWindowPosCallback(GLFWwindow *window, int xpos, int ypos);
+static void TkWaylandWindowFocusCallback(GLFWwindow *window, int focused);
+static void TkWaylandWindowIconifyCallback(GLFWwindow *window, int iconified);
+static void TkWaylandWindowMaximizeCallback(GLFWwindow *window, int maximized);
+static void TkWaylandCursorPosCallback(GLFWwindow *window,
 				    double xpos, double ypos);
-static void TkGlfwMouseButtonCallback(GLFWwindow *window,
+static void TkWaylandMouseButtonCallback(GLFWwindow *window,
 				      int button, int action, int mods);
-static void TkGlfwScrollCallback(GLFWwindow *window,
+static void TkWaylandScrollCallback(GLFWwindow *window,
 				 double xoffset, double yoffset);
-static void TkGlfwKeyCallback(GLFWwindow *window, int key,
+static void TkWaylandKeyCallback(GLFWwindow *window, int key,
 			      int scancode, int action, int mods);
-static void TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint);
-static void TkGlfwWindowRefreshCallback(GLFWwindow *window);
-static void TkGlfwCursorEnterCallback(GLFWwindow *window, int entered);
+static void TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint);
+static void TkWaylandWindowRefreshCallback(GLFWwindow *window);
+static void TkWaylandCursorEnterCallback(GLFWwindow *window, int entered);
 
 MODULE_SCOPE void
-TkGlfwSetupCallbacks(
+TkWaylandSetupCallbacks(
     GLFWwindow *glfwWindow)
 {
-    glfwSetWindowCloseCallback     (glfwWindow, TkGlfwWindowCloseCallback);
-    glfwSetFramebufferSizeCallback (glfwWindow, TkGlfwFramebufferSizeCallback);
-    glfwSetWindowPosCallback       (glfwWindow, TkGlfwWindowPosCallback);
-    glfwSetWindowFocusCallback     (glfwWindow, TkGlfwWindowFocusCallback);
-    glfwSetWindowIconifyCallback   (glfwWindow, TkGlfwWindowIconifyCallback);
-    glfwSetWindowMaximizeCallback  (glfwWindow, TkGlfwWindowMaximizeCallback);
-    glfwSetCursorPosCallback       (glfwWindow, TkGlfwCursorPosCallback);
-    glfwSetCursorEnterCallback     (glfwWindow, TkGlfwCursorEnterCallback);
-    glfwSetMouseButtonCallback     (glfwWindow, TkGlfwMouseButtonCallback);
-    glfwSetScrollCallback          (glfwWindow, TkGlfwScrollCallback);
-    glfwSetWindowRefreshCallback   (glfwWindow, TkGlfwWindowRefreshCallback);
-    glfwSetKeyCallback             (glfwWindow, TkGlfwKeyCallback);
-    glfwSetCharCallback            (glfwWindow, TkGlfwCharCallback);
+    glfwSetWindowCloseCallback     (glfwWindow, TkWaylandWindowCloseCallback);
+    glfwSetFramebufferSizeCallback (glfwWindow, TkWaylandFramebufferSizeCallback);
+    glfwSetWindowPosCallback       (glfwWindow, TkWaylandWindowPosCallback);
+    glfwSetWindowFocusCallback     (glfwWindow, TkWaylandWindowFocusCallback);
+    glfwSetWindowIconifyCallback   (glfwWindow, TkWaylandWindowIconifyCallback);
+    glfwSetWindowMaximizeCallback  (glfwWindow, TkWaylandWindowMaximizeCallback);
+    glfwSetCursorPosCallback       (glfwWindow, TkWaylandCursorPosCallback);
+    glfwSetCursorEnterCallback     (glfwWindow, TkWaylandCursorEnterCallback);
+    glfwSetMouseButtonCallback     (glfwWindow, TkWaylandMouseButtonCallback);
+    glfwSetScrollCallback          (glfwWindow, TkWaylandScrollCallback);
+    glfwSetWindowRefreshCallback   (glfwWindow, TkWaylandWindowRefreshCallback);
+    glfwSetKeyCallback             (glfwWindow, TkWaylandKeyCallback);
+    glfwSetCharCallback            (glfwWindow, TkWaylandCharCallback);
 }
 
 MODULE_SCOPE void
-TkGlfwClearCallbacks(
+TkWaylandClearCallbacks(
     GLFWwindow *glfwWindow)
 {
     glfwSetWindowCloseCallback        (glfwWindow, NULL);
@@ -616,7 +616,7 @@ TkGlfwClearCallbacks(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowCloseCallback --
+ * TkWaylandWindowCloseCallback --
  *
  *      Called when user requests window close.
  *
@@ -640,9 +640,9 @@ static void DestroyWindowIdleProc(void *clientData)
 }
 
 static void
-TkGlfwWindowCloseCallback(GLFWwindow *window)
+TkWaylandWindowCloseCallback(GLFWwindow *window)
 {
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     recordCallback();
 
     if (winPtr) {
@@ -653,7 +653,7 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwFramebufferSizeCallback --
+ * TkWaylandFramebufferSizeCallback --
  *
  *      Called when framebuffer size changes.  Note that this is always called
  *      when a window changes size, whether by interactive resizing with the
@@ -673,13 +673,13 @@ TkGlfwWindowCloseCallback(GLFWwindow *window)
 
 
 static void
-TkGlfwFramebufferSizeCallback(
+TkWaylandFramebufferSizeCallback(
     GLFWwindow *window,
     int width,
     int height)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
         fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
         return;
@@ -705,12 +705,12 @@ TkGlfwFramebufferSizeCallback(
 
     /* Fully rebuild frame buffer. */
     if (winPtr->privatePtr) {
-        winPtr->privatePtr->fb = TkGlfwCreateBackingStore(width, height);
+        winPtr->privatePtr->fb = TkWaylandCreateBackingStore(width, height);
         if (!winPtr->privatePtr->fb) {
             fprintf(stderr, "Failed to create backing store for %s\n", Tk_PathName(winPtr));
         } else {
             /* Clear it to background immediately, but no extra queue/render. */
-            TkGlfwBackingStore *store = winPtr->privatePtr->fb;
+            TkWaylandBackingStore *store = winPtr->privatePtr->fb;
             glfwMakeContextCurrent(window);
             glBindFramebuffer(GL_FRAMEBUFFER, store->fbo);
             glClearColor(
@@ -756,7 +756,7 @@ TkGlfwFramebufferSizeCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowPosCallback --
+ * TkWaylandWindowPosCallback --
  *
  *      This is never called on Wayland, according to GLFW.
  *      Wayland hides the position of an app on the screen.
@@ -775,18 +775,18 @@ TkGlfwFramebufferSizeCallback(
  */
 
 static void
-TkGlfwWindowPosCallback(
+TkWaylandWindowPosCallback(
     GLFWwindow *window,
     int xpos,
     int ypos)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
-	fprintf(stderr, "TkGlfwWindowPosCallback: no Tk window\n");
+	fprintf(stderr, "TkWaylandWindowPosCallback: no Tk window\n");
         return;
     }
-    fprintf(stderr, "TkGlfwWindowPosCallback: %s -> to %d+%d\n",
+    fprintf(stderr, "TkWaylandWindowPosCallback: %s -> to %d+%d\n",
 	   Tk_PathName(winPtr), xpos, ypos);
 
     winPtr->changes.x = xpos;
@@ -797,7 +797,7 @@ TkGlfwWindowPosCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowFocusCallback --
+ * TkWaylandWindowFocusCallback --
  *
  *      Called when window gains or loses focus.
  *
@@ -811,17 +811,17 @@ TkGlfwWindowPosCallback(
  */
 
 static void
-TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
+TkWaylandWindowFocusCallback(GLFWwindow *window, int focused)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
 
     if (!winPtr) {
         return;
     }
 
-    fprintf(stderr, "TkGlfwWindowFocusCallback: %s %s\n",
+    fprintf(stderr, "TkWaylandWindowFocusCallback: %s %s\n",
             Tk_PathName(winPtr), focused ? "FocusIn" : "FocusOut");
 
     /* Initialize the entire event lifecycle structure */
@@ -872,7 +872,7 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowIconifyCallback --
+ * TkWaylandWindowIconifyCallback --
  *
  *      Called when window is iconified or restored.
  *
@@ -886,13 +886,13 @@ TkGlfwWindowFocusCallback(GLFWwindow *window, int focused)
  */
 
 static void
-TkGlfwWindowIconifyCallback(
+TkWaylandWindowIconifyCallback(
     GLFWwindow *window,
     int iconified)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
-    fprintf(stderr, "TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
+    fprintf(stderr, "TkWaylandWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
     XEvent event;
 
     if (!winPtr) {
@@ -929,7 +929,7 @@ TkGlfwWindowIconifyCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowMaximizeCallback --
+ * TkWaylandWindowMaximizeCallback --
  *
  *      Called when window is maximized or restored.
  *
@@ -943,12 +943,12 @@ TkGlfwWindowIconifyCallback(
  */
 
 static void
-TkGlfwWindowMaximizeCallback(
+TkWaylandWindowMaximizeCallback(
     GLFWwindow *window,
     int maximized)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
 
     if (!winPtr) {
         return;
@@ -966,7 +966,7 @@ TkGlfwWindowMaximizeCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwCursorEnterCallback --
+ * TkWaylandCursorEnterCallback --
  *
  *      Called by GLFW when the cursor enters or leaves the GLFW window
  *      client area.  Synthesizes an EnterNotify or LeaveNotify event
@@ -975,7 +975,7 @@ TkGlfwWindowMaximizeCallback(
  *      being entered and resets it on leave.
  *
  *      This is distinct from the widget-level crossing logic in
- *      TkGlfwCursorPosCallback, which tracks transitions between child
+ *      TkWaylandCursorPosCallback, which tracks transitions between child
  *      widgets while the pointer is already inside the GLFW window.
  *      This callback handles the coarser, compositor-level event that
  *      GLFW delivers when the pointer crosses the window border.
@@ -985,19 +985,19 @@ TkGlfwWindowMaximizeCallback(
  *
  * Side effects:
  *      Queues an EnterNotify or LeaveNotify XEvent.
- *      Resets lastWinPtr to NULL on leave so that TkGlfwCursorPosCallback
+ *      Resets lastWinPtr to NULL on leave so that TkWaylandCursorPosCallback
  *      re-fires an EnterNotify for the correct child widget on re-entry.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-TkGlfwCursorEnterCallback(
+TkWaylandCursorEnterCallback(
     GLFWwindow *window,
     int entered)		/* GLFW_TRUE if entered, GLFW_FALSE if left */
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
     double xpos, ypos;
     int winX, winY;
@@ -1031,7 +1031,7 @@ TkGlfwCursorEnterCallback(
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
     /*
-     * On leave, clear lastWinPtr so TkGlfwCursorPosCallback generates a
+     * On leave, clear lastWinPtr so TkWaylandCursorPosCallback generates a
      * fresh EnterNotify for the correct child widget when the pointer
      * re-enters, rather than suppressing it because lastWinPtr still
      * matches the stale target from before the pointer left.
@@ -1044,7 +1044,7 @@ TkGlfwCursorEnterCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwCursorPosCallback --
+ * TkWaylandCursorPosCallback --
  *
  *      Called when cursor position changes.
  *
@@ -1058,13 +1058,13 @@ TkGlfwCursorEnterCallback(
  */
 
 static void
-TkGlfwCursorPosCallback(
+TkWaylandCursorPosCallback(
     GLFWwindow *window,
     double xpos,
     double ypos)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
 
     /* Find the widget containing the mouse cursor. */
@@ -1157,7 +1157,7 @@ TkGlfwCursorPosCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwMouseButtonCallback --
+ * TkWaylandMouseButtonCallback --
  *
  *      Called when mouse button is pressed or released.
  *
@@ -1171,14 +1171,14 @@ TkGlfwCursorPosCallback(
  */
 
 static void
-TkGlfwMouseButtonCallback(
+TkWaylandMouseButtonCallback(
     GLFWwindow *window,
     int button,
     int action,
     int mods)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	return;
     }
@@ -1269,7 +1269,7 @@ TkGlfwMouseButtonCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwScrollCallback --
+ * TkWaylandScrollCallback --
  *
  *      Called when scroll wheel is used.
  *
@@ -1283,13 +1283,13 @@ TkGlfwMouseButtonCallback(
  */
 
 static void
-TkGlfwScrollCallback(
+TkWaylandScrollCallback(
     GLFWwindow *window,
     double xoffset,
     double yoffset)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	return;
     }
@@ -1343,7 +1343,7 @@ TkGlfwScrollCallback(
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwKeyCallback --
+ * TkWaylandKeyCallback --
  *
  *      Called whenever a key is pressed or released.
  *
@@ -1358,14 +1358,14 @@ TkGlfwScrollCallback(
  */
 
 static void
-TkGlfwKeyCallback(GLFWwindow *window,
+TkWaylandKeyCallback(GLFWwindow *window,
                   int key,           /* keep this parameter */
                   int scancode,
                   int action,
                   int mods)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
@@ -1403,7 +1403,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
          * Pass winPtr (the GLFW toplevel) to TkWaylandIbusProcessKey, NOT
          * focusWin.  FindContext compares ctx->tkwin by pointer; ctx->tkwin
          * was stored from the winPtr passed to TkWaylandIbusCreateContext in
-         * TkGlfwWindowFocusCallback, which is always the GLFW toplevel.
+         * TkWaylandWindowFocusCallback, which is always the GLFW toplevel.
          * Using focusWin (.t) causes GetToplevelOfWidget to walk the parent
          * chain, which may differ after a resize/remap cycle, returning a
          * pointer that does not match ctx->tkwin → FindContext returns NULL →
@@ -1448,7 +1448,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwCharCallback --
+ * TkWaylandCharCallback --
  *
  *      Called with a 32-bit unicode codepoint when a composition
  *      sequence has been completed and produced a unicode codepoint.
@@ -1468,10 +1468,10 @@ TkGlfwKeyCallback(GLFWwindow *window,
  */
 
 static void
-TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
+TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) return;
 
     /* Skip if IBus is likely handling composition. */
@@ -1486,7 +1486,7 @@ TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
 /*
  *----------------------------------------------------------------------
  *
- * TkGlfwWindowRefreshCallback --
+ * TkWaylandWindowRefreshCallback --
  *
  * Called by GLFW when a window needs a redraw. Generates a safe
  * Expose event matching validated widget layout dimensions.
@@ -1501,10 +1501,10 @@ TkGlfwCharCallback(GLFWwindow *window, unsigned int codepoint)
  */
 
 static void
-TkGlfwWindowRefreshCallback(GLFWwindow *window)
+TkWaylandWindowRefreshCallback(GLFWwindow *window)
 {
     recordCallback();
-    TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
         return;
     }

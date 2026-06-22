@@ -16,7 +16,7 @@
 
 #include "tkInt.h"
 #include "tkPort.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #include <GLES2/gl2.h>
 #include <string.h>
@@ -27,7 +27,7 @@
 
 /*
  * Wm attribute names - defined here for use by the attributes subcommand.
- * This matches the declaration in tkGlfwInt.h.
+ * This matches the declaration in tkWaylandInt.h.
  */
 const char *const WmAttributeNames[] = {
     "-alpha", "-fullscreen", "-topmost", "-type",
@@ -681,8 +681,8 @@ DestroyGlfwWindow(
     if (glfwWindow == NULL) {
         return;
     }
-    TkGlfwClearCallbacks(glfwWindow);
-    TkGlfwDestroyWindow(glfwWindow);
+    TkWaylandClearCallbacks(glfwWindow);
+    TkWaylandDestroyWindow(glfwWindow);
     winPtr->privatePtr->glfwWindow = NULL;
 }
 
@@ -1058,7 +1058,7 @@ Tk_MakeWindow(
          * Create the GLFW window and get a drawable ID.
          * drawable is ignored; we use winPtr->window instead.
          */
-	glfwWindow = TkGlfwCreateWindow(winPtr, width, height,
+	glfwWindow = TkWaylandCreateWindow(winPtr, width, height,
                                         Tk_Name(tkwin), &drawable);
         if (!glfwWindow) {
             return None;

@@ -14,7 +14,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 #include <fontconfig/fontconfig.h>
 #include <nanovg.h>
@@ -1107,7 +1107,7 @@ ColorFromGC(GC gc)
     if (gc) {
         XGCValues vals;
         TkWaylandGetGCValues(gc, GCForeground, &vals);
-        return TkGlfwPixelToNVG(vals.foreground);
+        return TkWaylandPixelToNVG(vals.foreground);
     }
     return nvgRGBA(0, 0, 0, 255);
 }
@@ -1469,7 +1469,7 @@ Tk_MeasureCharsInContext(
 
     /* Simple LTR path: nvgTextGlyphPositions. */
     if (IsSimpleOnly(source, (int)numBytes)) {
-        NVGcontext *vg = TkGlfwGetNVGContextForMeasure();
+        NVGcontext *vg = TkWaylandGetNVGContextForMeasure();
         if (!vg || EnsureNvgFont(fontPtr, vg) < 0) {
             /* No NVG context: rough per-character estimate. */
             int         width          = 0;
@@ -1800,7 +1800,7 @@ TkpDrawAngledCharsInContext(
     if (rangeStart < 0 || rangeLength <= 0 ||
         rangeStart + rangeLength > numBytes) return;
 
-    NVGcontext *vg = TkGlfwGetNVGContext(drawable);
+    NVGcontext *vg = TkWaylandGetNVGContext(drawable);
     if (!vg) return;
 
     int primaryId = EnsureNvgFont(fontPtr, vg);

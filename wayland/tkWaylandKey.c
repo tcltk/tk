@@ -14,7 +14,7 @@
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <string.h>
@@ -1703,7 +1703,7 @@ static int CreateIbusContext(
  * ----------------------------------------------------------------------------
  * TkWaylandIbusFocusIn --
  *
- *         Public wrapper called from TkGlfwWindowFocusCallback when a window
+ *         Public wrapper called from TkWaylandWindowFocusCallback when a window
  *         gains focus.  Looks up the IBus context for the toplevel and calls
  *         IbusFocusIn + IbusEnable so callers need not see IbusContext*.
  *
@@ -1737,7 +1737,7 @@ TkWaylandIbusFocusIn(
  * ----------------------------------------------------------------------------
  * TkWaylandIbusFocusOut --
  *
- *         Public wrapper called from TkGlfwWindowFocusCallback when a window
+ *         Public wrapper called from TkWaylandWindowFocusCallback when a window
  *         loses focus.  Looks up the IBus context and calls IbusFocusOut +
  *         IbusDisable.
  *
@@ -1779,7 +1779,7 @@ TkWaylandIbusFocusOut(Tk_Window tkwin)
  * ----------------------------------------------------------------------------
  * TkWaylandIbusProcessKey -
  *
- *         Public wrapper called from TkGlfwKeyCallback.  Looks up the IBus
+ *         Public wrapper called from TkWaylandKeyCallback.  Looks up the IBus
  *         context for the focused toplevel and forwards the key event to the
  *         IBus daemon.
  *

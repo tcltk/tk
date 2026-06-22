@@ -19,7 +19,7 @@
 #include "tkPort.h"
 #include "tkImgPhoto.h"
 #include "tkColor.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 
@@ -352,19 +352,19 @@ TkpPutRGBAImage(
 
     /* Secure and bind the target OpenGL / NanoVG drawing surface context. */
     TkWaylandDrawingContext dc;
-    if (TkGlfwBeginDraw(drawable, gc, &dc) != TCL_OK) {
+    if (TkWaylandBeginDraw(drawable, gc, &dc) != TCL_OK) {
         return TCL_ERROR;
     }
 
     if (gc) {
-        TkGlfwApplyGC(dc.vg, gc);
+        TkWaylandApplyGC(dc.vg, gc);
     }
 
     /* Allocate workspace memory for the extracted sub-region. */
     size_t numPixels = (size_t)width * (size_t)height;
     unsigned char *rgbaData = (unsigned char *)ckalloc(numPixels * 4);
     if (!rgbaData) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return TCL_ERROR;
     }
 
@@ -401,7 +401,7 @@ TkpPutRGBAImage(
     ckfree(rgbaData);
 
     if (imageId <= 0) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return TCL_ERROR;
     }
 
@@ -419,7 +419,7 @@ TkpPutRGBAImage(
     // nvgDeleteImage(dc.vg, imageId);
 
     /* Finalize context pass, swap buffers, and flush layout changes. */
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     return 0;
 }
 
@@ -469,7 +469,7 @@ XGetImage(
     memset(imagePtr->data, 0, size);
 
     /* Bind context to securely read current screen surface framebuffers. */
-    if (TkGlfwBeginDraw(drawable, NULL, &dc) == TCL_OK) {
+    if (TkWaylandBeginDraw(drawable, NULL, &dc) == TCL_OK) {
         /*
          * Note: OpenGL coordinates are bottom-left relative.
          * glReadPixels reads native RGBA, but we must store it back mapped
@@ -494,7 +494,7 @@ XGetImage(
             }
             ckfree(glBuffer);
         }
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
     }
 
     return imagePtr;

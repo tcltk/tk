@@ -1,5 +1,5 @@
 /*
- * tkGlfwInt.h --
+ * tkWaylandInt.h --
  *
  *	This file contains declarations that are shared among the
  *	GLFW/Wayland-specific parts of Tk.
@@ -12,8 +12,8 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#ifndef _TKGLFWINT_H
-#define _TKGLFWINT_H
+#ifndef _TkWaylandINT_H
+#define _TkWaylandINT_H
 
 #include "tkInt.h"
 #include "tkUnixInt.h"
@@ -69,13 +69,13 @@ struct wl_seat;
  *----------------------------------------------------------------------
  */
 
-typedef struct TkGlfwBackingStore {
+typedef struct TkWaylandBackingStore {
     GLuint fbo;              /* The actual OpenGL Framebuffer Object ID */
     GLuint colorTex;         /* Texture where pixels/widgets are drawn */
     GLuint depthStencilRbo;  /* Renderbuffer needed for NanoVG masking/stencil strokes */
     int width;               /* Cache the pixel width of this FBO allocation */
     int height;              /* Cache the pixel height of this FBO allocation */
-} TkGlfwBackingStore;
+} TkWaylandBackingStore;
 
 /*
  *----------------------------------------------------------------------
@@ -240,7 +240,7 @@ typedef struct WaylandFont {
  *----------------------------------------------------------------------
  */
 
-typedef struct TkGlfwContext {
+typedef struct TkWaylandContext {
     GLFWwindow *mainWindow;      /* Hidden shared context window - all
                                    * application windows share this context */
     NVGcontext *vg;               /* Global NanoVG context - created once
@@ -255,7 +255,7 @@ typedef struct TkGlfwContext {
                                    * (cached for performance) */
     int fbHeight;                 /* Framebuffer height of mainWindow
                                    * (cached for performance) */
-} TkGlfwContext;
+} TkWaylandContext;
 
 /*
  *----------------------------------------------------------------------
@@ -317,7 +317,7 @@ extern const char *const WmAttributeNames[];
 typedef struct glfwTkInfo {
     GLFWwindow *glfwWindow;
     TkWindow *winPtr;
-    TkGlfwContext context;
+    TkWaylandContext context;
     unsigned int flags;
     struct glfwTkInfo *nextPtr;
 } glfwTkInfo;
@@ -477,7 +477,7 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
 
 typedef struct TkWindowPrivate {
     GLFWwindow          *glfwWindow;
-    TkGlfwBackingStore  *fb;  /* Backing store FBO structure pointer */
+    TkWaylandBackingStore  *fb;  /* Backing store FBO structure pointer */
     Tcl_DString          pendingText;
 } glfwData;
 
@@ -563,8 +563,8 @@ Tk_Window GetToplevelOfWidget(Tk_Window tkwin);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int  TkGlfwInitialize(void);
-MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
+MODULE_SCOPE int  TkWaylandInitialize(void);
+MODULE_SCOPE void TkWaylandShutdown(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -576,7 +576,7 @@ MODULE_SCOPE void TkGlfwShutdown(ClientData clientData);
 
 MODULE_SCOPE GLFWwindow *TkWaylandGetGLFWwindow(TkWindow *winPtr);
 
-MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
+MODULE_SCOPE GLFWwindow *TkWaylandCreateWindow(
     TkWindow   *tkWin,
     int         width,
     int         height,
@@ -584,13 +584,13 @@ MODULE_SCOPE GLFWwindow *TkGlfwCreateWindow(
     Drawable   *drawableOut);
 
 
-MODULE_SCOPE void        TkGlfwDestroyWindow(GLFWwindow *glfwWindow);
-MODULE_SCOPE Drawable    TkGlfwGetDrawable(GLFWwindow *w);
-MODULE_SCOPE TkWindow*   TkGlfwGetTkWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE void        TkWaylandDestroyWindow(GLFWwindow *glfwWindow);
+MODULE_SCOPE Drawable    TkWaylandGetDrawable(GLFWwindow *w);
+MODULE_SCOPE TkWindow*   TkWaylandGetTkWindow(GLFWwindow *glfwWindow);
 MODULE_SCOPE GLFWwindow* TkWaylandGetGLFWwindowFromDrawable(Drawable drawable);
-MODULE_SCOPE void        TkGlfwUpdateWindowSize(GLFWwindow *glfwWindow,
+MODULE_SCOPE void        TkWaylandUpdateWindowSize(GLFWwindow *glfwWindow,
 						int width, int height);
-MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
+MODULE_SCOPE void        TkWaylandResizeWindow(GLFWwindow *w,
 					    int width, int height);
 
 /*
@@ -601,8 +601,8 @@ MODULE_SCOPE void        TkGlfwResizeWindow(GLFWwindow *w,
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE TkGlfwBackingStore *TkGlfwCreateBackingStore(int width, int height);
-MODULE_SCOPE void                TkGlfwDestroyBackingStore(TkGlfwBackingStore *store);
+MODULE_SCOPE TkWaylandBackingStore *TkWaylandCreateBackingStore(int width, int height);
+MODULE_SCOPE void                TkWaylandDestroyBackingStore(TkWaylandBackingStore *store);
 
 /*
  *----------------------------------------------------------------------
@@ -612,10 +612,10 @@ MODULE_SCOPE void                TkGlfwDestroyBackingStore(TkGlfwBackingStore *s
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int         TkGlfwBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE void        TkGlfwEndDraw(TkWaylandDrawingContext *dcPtr);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContext(Drawable drawable);
-MODULE_SCOPE NVGcontext *TkGlfwGetNVGContextForMeasure(void);
+MODULE_SCOPE int         TkWaylandBeginDraw(Drawable drawable, GC gc, TkWaylandDrawingContext *dcPtr);
+MODULE_SCOPE void        TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr);
+MODULE_SCOPE NVGcontext *TkWaylandGetNVGContext(Drawable drawable);
+MODULE_SCOPE NVGcontext *TkWaylandGetNVGContextForMeasure(void);
 
 /*
  *----------------------------------------------------------------------
@@ -639,9 +639,9 @@ MODULE_SCOPE bool  TkWaylandCopyGC(GC src, unsigned long valuemask, GC dst);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void TkGlfwProcessEvents(void);
-MODULE_SCOPE void TkGlfwSetupCallbacks(GLFWwindow *glfwWindow);
-MODULE_SCOPE void TkGlfwClearCallbacks(GLFWwindow *glfwWindow);
+MODULE_SCOPE void TkWaylandProcessEvents(void);
+MODULE_SCOPE void TkWaylandSetupCallbacks(GLFWwindow *glfwWindow);
+MODULE_SCOPE void TkWaylandClearCallbacks(GLFWwindow *glfwWindow);
 MODULE_SCOPE void Tk_WaylandSetupTkNotifier(void);
 MODULE_SCOPE void TkWaylandQueueExposeEvent(TkWindow *winPtr, int x, int y,
 					    int width, int height);
@@ -652,7 +652,7 @@ void TkWaylandIbusSetCursorLocation(Tk_Window tkwin, int x, int y, int w, int h)
 
 /*
  * Hit-testing and pointer-serial support for popup/menu dispatch.
- * Implemented in tkGlfwInit.c.
+ * Implemented in tkWaylandInit.c.
  */
 MODULE_SCOPE TkWindow  *TkWaylandWindowAtPos(GLFWwindow *glfwWindow,
 					     int x, int y);
@@ -662,7 +662,7 @@ MODULE_SCOPE void        TkWaylandRegisterPointerListener(void);
  * Post a virtual event (e.g. "<<MenuDone>>") to a Tk window's event
  * queue.  Used to defer Tk-level cleanup (menu unposting, etc.) from
  * Wayland protocol callbacks to the normal Tcl event loop.  Implemented
- * in tkGlfwInit.c.
+ * in tkWaylandInit.c.
  */
 MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr,
 					    const char *eventName);
@@ -717,9 +717,9 @@ MODULE_SCOPE int TkpGetFontPixelSize(Tk_Font tkfont);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE NVGcolor TkGlfwXColorToNVG(XColor *xcolor);
-MODULE_SCOPE NVGcolor TkGlfwPixelToNVG(unsigned long pixel);
-MODULE_SCOPE void     TkGlfwApplyGC(NVGcontext *vg, GC gc);
+MODULE_SCOPE NVGcolor TkWaylandXColorToNVG(XColor *xcolor);
+MODULE_SCOPE NVGcolor TkWaylandPixelToNVG(unsigned long pixel);
+MODULE_SCOPE void     TkWaylandApplyGC(NVGcontext *vg, GC gc);
 
 /*
  *----------------------------------------------------------------------
@@ -837,14 +837,14 @@ MODULE_SCOPE void  TkWaylandPopupCaptureGLPixels(TkWaylandPopup *popup, void *pa
  *	wl_subsurface-backed popups (TkWaylandSubsurfaceCreate) with empty
  *	input regions, so all pointer/keyboard input continues to arrive at
  *	the toplevel's raw wl_pointer / wl_keyboard listeners
- *	(tkGlfwInit.c) in toplevel-surface-local coordinates.  Those
+ *	(tkWaylandInit.c) in toplevel-surface-local coordinates.  Those
  *	listeners call the Handle* functions below, which perform hit
  *	testing against the menu stack and dispatch to the appropriate
  *	TkMenu, or dismiss the stack on an outside click / Escape.
  *
  *	This design is self-contained: it does not depend on or interact
  *	with GLFW's own per-window callbacks (registered elsewhere via
- *	TkGlfwSetupCallbacks).
+ *	TkWaylandSetupCallbacks).
  *
  *----------------------------------------------------------------------
  */
@@ -874,7 +874,7 @@ MODULE_SCOPE int  TkWaylandPostMenuAtAnchor(
 MODULE_SCOPE void TkWaylandMenuDismissAll(void);
 
 /*
- * Raw input dispatch, called from tkGlfwInit.c's wl_pointer / wl_keyboard
+ * Raw input dispatch, called from tkWaylandInit.c's wl_pointer / wl_keyboard
  * listeners.  x, y are toplevel-surface-local logical pixels.
  * state follows the wl_pointer_button_state / wl_keyboard_key_state enum
  * (0 = released, 1 = pressed).
@@ -898,7 +898,7 @@ MODULE_SCOPE int  TkWaylandMenuConsumeDismissClick(void);
  * Menubutton Support
  *
  *	Posting entry points implemented in tkWaylandMenubu.c, called from
- *	the GLFW mouse-button dispatcher in tkGlfwInit.c.
+ *	the GLFW mouse-button dispatcher in tkWaylandInit.c.
  *
  *----------------------------------------------------------------------
  */
@@ -914,7 +914,7 @@ MODULE_SCOPE int  TkpMenuButtonPostMenu(TkMenuButton *mbPtr);
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void TkGlfwErrorCallback(int error, const char *description);
+MODULE_SCOPE void TkWaylandErrorCallback(int error, const char *description);
 
 /*
  *----------------------------------------------------------------------
@@ -962,7 +962,7 @@ MODULE_SCOPE int SysNotify_Init(Tcl_Interp *interp);
 MODULE_SCOPE int Cups_Init(Tcl_Interp *interp);
 MODULE_SCOPE int TkWaylandAccessibility_Init(Tcl_Interp *interp);
 
-#endif /* _TKGLFWINT_H */
+#endif /* _TkWaylandINT_H */
 
 /*
  * Local Variables:

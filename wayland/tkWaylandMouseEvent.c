@@ -15,7 +15,7 @@
  */
 
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 
 typedef struct {
@@ -297,7 +297,7 @@ TkWaylandHandleMouseButton(
     TkWindow *winPtr;
     double x, y;
 
-    winPtr = TkGlfwGetTkWindow(glfwWindow);
+    winPtr = TkWaylandGetTkWindow(glfwWindow);
     if (!winPtr) {
 	return;
     }
@@ -341,7 +341,7 @@ TkWaylandHandleMouseMove(
     TkWindow *winPtr;
     XEvent event;
 
-    winPtr = TkGlfwGetTkWindow(glfwWindow);
+    winPtr = TkWaylandGetTkWindow(glfwWindow);
     if (!winPtr) {
         return;
     }

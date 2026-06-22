@@ -22,7 +22,7 @@
 #include <systemd/sd-bus.h>
 #include <wayland-client.h>
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 
 /*
  *----------------------------------------------------------------------

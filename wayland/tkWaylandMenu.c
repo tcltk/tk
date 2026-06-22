@@ -12,7 +12,7 @@
 
 #include <tcl.h>
 #include "tkInt.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include "tkMenu.h"
 #include <GLFW/glfw3.h>
 #include <wayland-client.h>
@@ -31,7 +31,7 @@
 #define BTN_LEFT 0x110
 #endif
 
-/* The root GLFWwindow, defined in tkGlfwInit.c. */
+/* The root GLFWwindow, defined in tkWaylandInit.c. */
 extern GLFWwindow *mainGlfwWindow;
 
 /* Default font definitions for NanoVG */
@@ -464,13 +464,13 @@ MenuDrawMenubarInWindow(
     /* Use the main window's drawing context. */
     TkWaylandDrawingContext dc;
     Drawable drawable = TkWaylandDrawableForTkWindow(winPtr);
-    if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
+    if (TkWaylandBeginDraw(drawable, NULL, &dc) != TCL_OK) {
         return;
     }
 
     NVGcontext *vg = dc.vg;
     if (!vg) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return;
     }
 
@@ -478,7 +478,7 @@ MenuDrawMenubarInWindow(
     int menuH = wmPtr->menuHeight;
 
     if (menuW <= 0 || menuH <= 0) {
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         return;
     }
 
@@ -553,7 +553,7 @@ MenuDrawMenubarInWindow(
             DRAW_MENU_ENTRY_ARROW);
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
     MENU_LOG("MenuDrawMenubarInWindow: completed");
 }
 
@@ -681,8 +681,8 @@ MenuDrawIntoPopup(
 
     TkWaylandDrawingContext dc;
     Drawable drawable = TkWaylandDrawableForTkWindow((TkWindow *)menuPtr->tkwin);
-    if (TkGlfwBeginDraw(drawable, NULL, &dc) != TCL_OK) {
-        MENU_LOG("MenuDrawIntoPopup: TkGlfwBeginDraw failed");
+    if (TkWaylandBeginDraw(drawable, NULL, &dc) != TCL_OK) {
+        MENU_LOG("MenuDrawIntoPopup: TkWaylandBeginDraw failed");
         TkWaylandPopupEndDraw(popup);
         return;
     }
@@ -690,7 +690,7 @@ MenuDrawIntoPopup(
     vg = dc.vg;
     if (!vg) {
         MENU_LOG("MenuDrawIntoPopup: no NanoVG context");
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
         TkWaylandPopupEndDraw(popup);
         return;
     }
@@ -786,7 +786,7 @@ MenuDrawIntoPopup(
     nvgEndFrame(vg);
 
     /* End the drawing context. */
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 
 	/* Capture the pixels from the FBO into the SHM buffer. */
     TkWaylandPopupCaptureGLPixels(popup, menuPtr->tkwin);
@@ -1047,7 +1047,7 @@ TkpDrawMenuEntry(
 
     /* Get NanoVG context from the main window's drawing context. */
     TkWaylandDrawingContext dc;
-    if (TkGlfwBeginDraw(d, NULL, &dc) == TCL_OK) {
+    if (TkWaylandBeginDraw(d, NULL, &dc) == TCL_OK) {
         vg = dc.vg;
         if (vg) {
             /* Draw the entry. */
@@ -1119,7 +1119,7 @@ TkpDrawMenuEntry(
                 }
             }
         }
-        TkGlfwEndDraw(&dc);
+        TkWaylandEndDraw(&dc);
     }
 }
 
@@ -1802,7 +1802,7 @@ MenuMouseLeave(
  *
  *	Menu popups are xdg_popups with the Wayland compositor handling
  *	input routing.  All menu input is driven by the raw wl_pointer /
- *	wl_keyboard listeners registered in tkGlfwInit.c
+ *	wl_keyboard listeners registered in tkWaylandInit.c
  *	(TkWaylandRegisterPointerListener), which call
  *	TkWaylandMenuHandlePointerMotion / HandlePointerButton /
  *	HandleEscape below whenever TkWaylandMenuPopupActive() is true.
@@ -1874,7 +1874,7 @@ TkWaylandMenuConsumeDismissClick(void)
  *
  * TkWaylandMenuHandlePointerMotion --
  *
- *	Called from the raw wl_pointer listener (tkGlfwInit.c) on every
+ *	Called from the raw wl_pointer listener (tkWaylandInit.c) on every
  *	motion event while the menu stack is non-empty.  (x, y) are
  *	toplevel-surface-local logical pixels.
  *
@@ -1924,7 +1924,7 @@ TkWaylandMenuHandlePointerMotion(
  *
  * TkWaylandMenuHandlePointerButton --
  *
- *	Called from the raw wl_pointer listener (tkGlfwInit.c) on every
+ *	Called from the raw wl_pointer listener (tkWaylandInit.c) on every
  *	button press/release while the menu stack is non-empty.  (x, y)
  *	are toplevel-surface-local logical pixels; button/state follow the
  *	wl_pointer enums (button: BTN_LEFT=0x110 etc. as reported by
@@ -1982,7 +1982,7 @@ TkWaylandMenuHandlePointerButton(
  *
  * TkWaylandMenuHandleEscape --
  *
- *	Called from the raw wl_keyboard listener (tkGlfwInit.c) when
+ *	Called from the raw wl_keyboard listener (tkWaylandInit.c) when
  *	Escape is pressed while the menu stack is non-empty.  Dismisses the
  *	entire stack.
  *

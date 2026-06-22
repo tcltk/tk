@@ -6,7 +6,7 @@
  *
  *	This file provides the definitions of TkWaylandGC and
  *	TkWaylandPixmap and all TkWayland* entry points declared in
- *	tkGlfwInt.h.  The Xlib-compatible wrappers (XCreateGC, XFreeGC,
+ *	tkWaylandInt.h.  The Xlib-compatible wrappers (XCreateGC, XFreeGC,
  *	XCreatePixmap, etc.) forward to these entry points and live here as
  *	well.
  *
@@ -23,7 +23,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <stdlib.h>
 #include <string.h>
 #include <X11/Xlib.h>

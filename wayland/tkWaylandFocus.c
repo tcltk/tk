@@ -11,7 +11,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkGlfwInt.h"  /* Changed from tkUnixInt.h */
+#include "tkWaylandInt.h"  /* Changed from tkUnixInt.h */
 #include <GLFW/glfw3.h>
 
 /*
@@ -67,7 +67,7 @@ TkpChangeFocus(
          */
         GLFWwindow *currentFocused = glfwGetCurrentContext();
         if (currentFocused != NULL) {
-            TkWindow *currentWinPtr = TkGlfwGetTkWindow(currentFocused);
+            TkWindow *currentWinPtr = TkWaylandGetTkWindow(currentFocused);
             if (currentWinPtr == NULL || currentWinPtr->mainPtr != winPtr->mainPtr) {
                 return serial;
             }
@@ -93,7 +93,7 @@ TkpChangeFocus(
     /*
      * Process pending events to ensure focus request is handled.
      */
-    //    TkGlfwProcessEvents();  /* Use the header's event processing function */
+    //    TkWaylandProcessEvents();  /* Use the header's event processing function */
 
     return serial;
 }

@@ -28,7 +28,7 @@
 
 #include "tkInt.h"
 #include "tkMenubutton.h"
-#include "tkGlfwInt.h"
+#include "tkWaylandInt.h"
 #include <GLFW/glfw3.h>
 
 /*
@@ -192,7 +192,7 @@ TkpDisplayMenuButton(
     Tk_GetPixelsFromObj(NULL, mbPtr->tkwin, mbPtr->padYObj, &padY);
 
     TkWaylandDrawingContext dc;
-    if (TkGlfwBeginDraw(Tk_WindowId(tkwin), gc, &dc) != TCL_OK) {
+    if (TkWaylandBeginDraw(Tk_WindowId(tkwin), gc, &dc) != TCL_OK) {
         return;
     }
 
@@ -350,7 +350,7 @@ TkpDisplayMenuButton(
         Tk_DrawFocusHighlight(tkwin, gc, highlightWidth, Tk_WindowId(tkwin));
     }
 
-    TkGlfwEndDraw(&dc);
+    TkWaylandEndDraw(&dc);
 }
 
 /*
@@ -362,11 +362,11 @@ TkpDisplayMenuButton(
  *	route input events to TkpMenuButtonPostMenu.
  *
  *	This must be called once after the parent GLFWwindow is created,
- *	typically from TkWaylandSetupCallbacks in tkGlfwInit.c.
+ *	typically from TkWaylandSetupCallbacks in tkWaylandInit.c.
  *
  *	NOTE: On Wayland, mouse events on child widgets arrive via the
  *	parent GLFW window's callbacks.  We do NOT set per-menubutton
- *	callbacks; instead the main mouse-button callback in tkGlfwInit.c
+ *	callbacks; instead the main mouse-button callback in tkWaylandInit.c
  *	performs a hit-test and calls TkpMenuButtonMaybePost (below) when
  *	the click lands on a menubutton widget.
  *
@@ -378,7 +378,7 @@ TkpSetupMenuButtonCallbacks(
     TCL_UNUSED(Tk_Window))
 {
     /*
-     * No-op: the main GLFW mouse-button callback in tkGlfwInit.c handles
+     * No-op: the main GLFW mouse-button callback in tkWaylandInit.c handles
      * dispatching to TkpMenuButtonMaybePost.  Nothing to register here.
      */
 }
@@ -388,7 +388,7 @@ TkpSetupMenuButtonCallbacks(
  *
  * TkpMenuButtonMaybePost --
  *
- *	Called from the main GLFW mouse-button callback in tkGlfwInit.c
+ *	Called from the main GLFW mouse-button callback in tkWaylandInit.c
  *	when a button-1 press has been hit-tested to a menubutton widget.
  *
  *	The caller must have already called TkWaylandPopupSetSerial()
