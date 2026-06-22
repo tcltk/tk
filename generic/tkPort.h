@@ -21,6 +21,8 @@
 #   include "tkWinPort.h"
 #elif defined(MAC_OSX_TK)
 #   include "tkMacOSXPort.h"
+#elif defined(HAVE_WAYLAND)
+#   include "tkWaylandPort.h"
 #else
 #   include "tkUnixPort.h"
 #endif

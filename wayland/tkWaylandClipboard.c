@@ -128,6 +128,36 @@ TkSelPropProc(
     /* No-op */
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkSelUpdateClipboard --
+ *
+ *	This function is called to force the clipboard to be updated after new
+ *	data is added or the clipboard has been cleared.
+ *
+ *      The nil Object is declared to be the owner.  This is done in a way
+ *      which triggers an incremeent of the pasteboard's changeCount property,
+ *      notifying clipboard managers that the value has changed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Ownership contents and attributes of the general NSPasteboard
+ *      may change.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkSelUpdateClipboard(
+    TCL_UNUSED(TkWindow*),		/* Window associated with clipboard. */
+    TCL_UNUSED(clipboardOption)) /* option passed to clipboard command */
+{
+   /* no-op */
+}
+
 
 /*
  * Local Variables:
