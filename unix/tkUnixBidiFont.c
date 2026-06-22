@@ -1203,7 +1203,7 @@ GetRunFaceIndex(
  *   WITH cluster boundary metadata for proper line wrapping (including RTL).
  *
  * Results:
- *   1 on success, 0 on failure.
+ *   true on success, false on failure.
  *
  * Side effects:
  *   Updates the shaper cache; buffer is filled with glyphs and clusters.

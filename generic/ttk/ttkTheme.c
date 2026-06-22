@@ -980,14 +980,14 @@ int Ttk_RegisterElementSpec(Ttk_Theme theme,
  * AllocateResource --
  *	Extra initialization for element options like TK_OPTION_COLOR, etc.
  *
- * Returns: 1 if OK, 0 on failure.
+ * Returns: true if OK, false on failure.
  *
  * Note: if resource allocation fails at this point (just prior
  * to drawing an element), there's really no good place to
  * report the error.  Instead we just silently fail.
  */
 
-static int AllocateResource(
+static bool AllocateResource(
     Ttk_ResourceCache cache,
     Tk_Window tkwin,
     Tcl_Obj **destPtr,
@@ -1005,7 +1005,7 @@ static int AllocateResource(
 	    return (*destPtr = Ttk_UseBorder(cache, tkwin, resource)) != NULL;
 	default:
 	    /* no-op; always succeeds */
-	    return 1;
+	    return true;
     }
 }
 
@@ -1020,14 +1020,14 @@ static int AllocateResource(
  *	otherwise the default value specified at registration time.
  *
  * Returns:
- *	1 if OK, 0 if an error is detected.
+ *	true if OK, false if an error is detected.
  *
  * NOTES:
  *	Tcl_Obj * reference counts are _NOT_ adjusted.
  */
 
 static
-int InitializeElementRecord(
+bool InitializeElementRecord(
     Ttk_ElementClass *eclass,	/* Element instance to initialize */
     Ttk_Style style,		/* Style table */
     void *widgetRecord,		/* Source of widget option values */
@@ -1065,11 +1065,11 @@ int InitializeElementRecord(
 	}
 
 	if (!AllocateResource(cache, tkwin, dest, elementOption->type)) {
-	    return 0;
+	    return false;
 	}
     }
 
-    return 1;
+    return true;
 }
 
 /*------------------------------------------------------------------------

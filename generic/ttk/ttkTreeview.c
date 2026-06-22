@@ -1821,21 +1821,21 @@ static int DisplayRow(int row, Treeview *tv) {
 }
 
 /* Is an item detached? The root is never detached. */
-static int IsDetached(Treeview* tv, TreeItem* item) {
+static bool IsDetached(Treeview* tv, TreeItem* item) {
     return item->next == NULL && item->prev == NULL &&
 	item->parent == NULL && item != tv->tree.root;
 }
 
 /* Is an item or one of its ancestors detached? */
-static int IsItemOrAncestorDetached(Treeview* tv, TreeItem* item) {
+static bool IsItemOrAncestorDetached(Treeview* tv, TreeItem* item) {
     TreeItem *parent;
 
     for (parent = item; parent; parent = parent->parent) {
 	if (IsDetached(tv, parent)) {
-	    return 1;
+	    return true;
 	}
     }
-    return 0;
+    return false;
 }
 
 /* + BoundingBox --
@@ -2626,7 +2626,7 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
 	/* Clean up the temporary resources */
 	Tk_FreePixmap(Tk_Display(tkwin), p);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
-#else
+#elif defined(MAC_OSX_TK)
 	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
 	Ttk_Theme aquaTheme = Ttk_GetTheme(tv->core.interp, "aqua");
 	if (currentTheme == aquaTheme && [NSApp macOSVersion] > 100800) {
@@ -4369,7 +4369,7 @@ static int TreeviewDetachedCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int (*fnPtr)(Treeview*, TreeItem*) = IsDetached;
+    bool (*fnPtr)(Treeview*, TreeItem*) = IsDetached;
 
     if (objc < 2 || objc > 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-all|item?");
@@ -5699,9 +5699,9 @@ static int TreeviewSearchCommand(
     Tcl_WideInt intVal;
     double doubleVal;
     int index;
-	bool all = false, forwards = true, hidden = false, nocase = false, notb = false, recurse = false;
-    int *intArray = NULL, matches = 0, type = 1;
-	bool wrap = false;
+    bool all = false, forwards = true, hidden = false, nocase = false, notb = false, recurse = false;
+    int *intArray = NULL, matches = 0;
+    bool wrap = false, type = true;
     Tcl_RegExp regexp = NULL;
 
     enum {
@@ -5721,7 +5721,7 @@ static int TreeviewSearchCommand(
     sortModes_t dataType = TYPE_ASCII;
 
     /* Use this to have type default to -selecttype value. */
-    /* type = strcmp(Tcl_GetString(tv->tree.selectTypeObj), "cell");*/
+    /* type = strcmp(Tcl_GetString(tv->tree.selectTypeObj), "cell") != 0;*/
 
     if (objc < 4 || objc > 25) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent ?-options ...? pattern");
@@ -5751,7 +5751,7 @@ static int TreeviewSearchCommand(
 		forwards = false;
 		break;
 	    case SEARCH_CELL:
-		type = 0;
+		type = false;
 		break;
 	    case SEARCH_COLUMNS:
 		if (i == objc - 2) {
@@ -6243,7 +6243,7 @@ DictionaryCompare(
     int diff, zeros;
     int secondaryDiff = 0;
 
-    while (1) {
+    while (true) {
 	if (isdigit(UCHAR(*right)) && isdigit(UCHAR(*left))) {	/* INTL: digit */
 	    /*
 	     * There are decimal numbers embedded in the two strings. Compare
@@ -6273,7 +6273,7 @@ DictionaryCompare(
 	     */
 
 	    diff = 0;
-	    while (1) {
+	    while (true) {
 		if (diff == 0) {
 		    diff = UCHAR(*left) - UCHAR(*right);
 		}

@@ -413,7 +413,7 @@ __TK_DLIST_UNUSED								\
 static void									\
 LT##_Remove(struct ElemType *elem)						\
 {										\
-    int isFirst, isLast;							\
+    bool isFirst, isLast;							\
     assert(LT##_IsLinked(elem));						\
     isFirst = LT##_IsFirst(elem);						\
     isLast = LT##_IsLast(elem);							\
@@ -440,7 +440,7 @@ static void									\
 LT##_Free(struct ElemType *elem)						\
 {										\
     LT##_Remove(elem);								\
-    Tcl_Free((void *)elem);							\
+    Tcl_Free(elem);							\
 }										\
 										\
 __TK_DLIST_UNUSED								\
@@ -508,7 +508,7 @@ LT##_Clear(LT *head)								\
     assert(head);								\
     for (p = head->first; p; p = next) {					\
 	next = LT##_Next(p);							\
-	Tcl_Free((void *)p);							\
+	Tcl_Free(p);							\
     }										\
     LT##_Init(head);								\
 }										\

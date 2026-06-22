@@ -1279,7 +1279,7 @@ CleanupLine(
      * Repeat until eventually there are no changes.
      */
 
-    while (1) {
+    while (true) {
 	anyChanges = 0;
 	for (prevPtrPtr = &linePtr->segPtr, segPtr = *prevPtrPtr;
 		segPtr != NULL;
@@ -2859,10 +2859,10 @@ TkBTreeStartSearchBack(
  *	the call to TkBTreeStartSearch.
  *
  * Results:
- *	The return value is 1 if another toggle was found that met the
+ *	The return value is true if another toggle was found that met the
  *	criteria specified in the call to TkBTreeStartSearch; in this case
  *	searchPtr->curIndex gives the toggle's position and
- *	searchPtr->curTagPtr points to its segment. 0 is returned if no more
+ *	searchPtr->curTagPtr points to its segment. false is returned if no more
  *	matching tag transitions were found; in this case searchPtr->curIndex
  *	is the same as searchPtr->stopIndex.
  *
@@ -2873,7 +2873,7 @@ TkBTreeStartSearchBack(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkBTreeNextTag(
     TkTextSearch *searchPtr)
 				/* Information about search in progress; must
@@ -2895,7 +2895,7 @@ TkBTreeNextTag(
      */
 
     segPtr = searchPtr->nextPtr;
-    while (1) {
+    while (true) {
 	/*
 	 * Check for more tags on the current line.
 	 */
@@ -2911,7 +2911,7 @@ TkBTreeNextTag(
 		searchPtr->segPtr = segPtr;
 		searchPtr->nextPtr = segPtr->nextPtr;
 		searchPtr->tagPtr = segPtr->body.toggle.tagPtr;
-		return 1;
+		return true;
 	    }
 	    searchPtr->curIndex.byteIndex += segPtr->size;
 	}
@@ -2943,7 +2943,7 @@ TkBTreeNextTag(
 	 * chunks of lines.
 	 */
 
-	while (1) {
+	while (true) {
 	    while (nodePtr->nextPtr == NULL) {
 		if (nodePtr->parentPtr == NULL ||
 		    nodePtr->parentPtr == searchPtr->tagPtr->tagRootPtr) {
@@ -3010,7 +3010,7 @@ TkBTreeNextTag(
   searchOver:
     searchPtr->linesLeft = 0;
     searchPtr->segPtr = NULL;
-    return 0;
+    return false;
 }
 
 /*
@@ -3024,10 +3024,10 @@ TkBTreeNextTag(
  *	from the B-tree since the call to TkBTreeStartSearch.
  *
  * Results:
- *	The return value is 1 if another toggle was found that met the
+ *	The return value is true if another toggle was found that met the
  *	criteria specified in the call to TkBTreeStartSearch; in this case
  *	searchPtr->curIndex gives the toggle's position and
- *	searchPtr->curTagPtr points to its segment. 0 is returned if no more
+ *	searchPtr->curTagPtr points to its segment. false is returned if no more
  *	matching tag transitions were found; in this case searchPtr->curIndex
  *	is the same as searchPtr->stopIndex.
  *
@@ -3038,7 +3038,7 @@ TkBTreeNextTag(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkBTreePrevTag(
     TkTextSearch *searchPtr)
 				/* Information about search in progress; must
@@ -3063,7 +3063,7 @@ TkBTreePrevTag(
      * that we can look at.
      */
 
-    while (1) {
+    while (true) {
 	/*
 	 * Check for the last toggle before the current segment on this line.
 	 */
@@ -3108,7 +3108,7 @@ TkBTreePrevTag(
 	    searchPtr->segPtr = prevPtr;
 	    searchPtr->nextPtr = prevPtr;
 	    searchPtr->tagPtr = prevPtr->body.toggle.tagPtr;
-	    return 1;
+	    return true;
 	}
 
 	searchPtr->linesLeft--;
@@ -3147,7 +3147,7 @@ TkBTreePrevTag(
 	 * prevNodePtr that don't have tag state increment linesSkipped.
 	 */
 
-	while (1) {
+	while (true) {
 	    for (prevNodePtr = NULL, linesSkipped = 0,
 		    node2Ptr = nodePtr->parentPtr->children.nodePtr ;
 		    node2Ptr != nodePtr;  node2Ptr = node2Ptr->nextPtr) {
@@ -3232,7 +3232,7 @@ TkBTreePrevTag(
   searchOver:
     searchPtr->linesLeft = 0;
     searchPtr->segPtr = NULL;
-    return 0;
+    return false;
 }
 
 /*
@@ -4134,7 +4134,7 @@ Rebalance(
 	 */
 
 	if (nodePtr->numChildren > MAX_CHILDREN) {
-	    while (1) {
+	    while (true) {
 		/*
 		 * If the node being split is the root node, then make a new
 		 * root node above it first.

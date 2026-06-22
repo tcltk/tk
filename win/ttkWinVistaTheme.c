@@ -460,12 +460,12 @@ DestroyElementData(void *clientData)
  *	also initializes DC.
  *
  * Returns:
- *	1 on success, 0 on error.
+ *	true on success, false on error.
  *	Caller must later call FreeElementData() so this element
  *	can be reused.
  */
 
-static int
+static bool
 InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 {
     Window win = Tk_WindowId(tkwin);
@@ -480,7 +480,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 	    elementData->info->className);
 
     if (!elementData->hTheme) {
-	return 0;
+	return false;
     }
 
     elementData->drawable = d;
@@ -489,7 +489,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 		&elementData->dcState);
     }
 
-    return 1;
+    return true;
 }
 
 static void
@@ -519,7 +519,6 @@ static void GenericElementSize(
     Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
-    double scalingLevel = TkScalingLevel(tkwin);
     HRESULT result;
     SIZE size;
 
@@ -538,8 +537,14 @@ static void GenericElementSize(
 	    &size);			/* Returned size */
 
 	if (SUCCEEDED(result)) {
-	    *widthPtr = (int)round(size.cx * scalingLevel);
-	    *heightPtr = (int)round(size.cy * scalingLevel);
+	    /*
+	     * The process is PerMonitorV2 DPI-aware (see wish.exe.manifest),
+	     * so the Visual Styles API already reports sizes scaled to the
+	     * monitor DPI.  Do not scale again here; doing so over-sizes the
+	     * element box and forces DrawThemeBackground to stretch the part.
+	     */
+	    *widthPtr = size.cx;
+	    *heightPtr = size.cy;
 	}
     }
 
@@ -618,7 +623,6 @@ GenericSizedElementSize(
     Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
-    double scalingLevel = TkScalingLevel(tkwin);
 
     if (!InitElementData(elementData, tkwin, 0)) {
 	return;
@@ -627,10 +631,15 @@ GenericSizedElementSize(
     GenericElementSize(clientData, elementRecord, tkwin, state,
 	widthPtr, heightPtr, paddingPtr);
 
-    *widthPtr = (int)round(GetThemeSysSize(NULL,
-	(elementData->info->flags >> 8) & 0xff) * scalingLevel);
-    *heightPtr = (int)round(GetThemeSysSize(NULL,
-	elementData->info->flags & 0xff) * scalingLevel);
+    /*
+     * GetThemeSysSize (and the GetSystemMetrics it calls through to) already
+     * returns values for the monitor DPI under PerMonitorV2 awareness, so the
+     * results are used as-is rather than scaled again by TkScalingLevel.
+     */
+    *widthPtr = GetThemeSysSize(NULL,
+	(elementData->info->flags >> 8) & 0xff);
+    *heightPtr = GetThemeSysSize(NULL,
+	elementData->info->flags & 0xff);
     if (elementData->info->flags & HALF_HEIGHT) {
 	*heightPtr /= 2;
     }
@@ -912,7 +921,33 @@ static void TreeSortElementDraw(
     Ttk_State state)
 {
     if ((state & TTK_STATE_USER1)) {
-	GenericElementDraw(clientData, elementRecord, tkwin, d, b, state);
+	/* GenericElementDraw(clientData, elementRecord, tkwin, d, b, state); */
+
+	/*
+	 * Unfortunately, the DrawThemeBackground() function, called by
+	 * GenericElementDraw(), draws the sort indicator element with the
+	 * wrong background color if the display's scaling is 150% or 175%.
+	 * As a workaround we use our makeChevronImage() function instead.
+	 */
+
+	ArrowDirection direction;
+	XColor *strokeColor = Tk_GetColor(NULL, tkwin, "#808080");
+	Tk_Image img;
+	int imgWidth, imgHeight;
+
+	if (state & TTK_STATE_ALTERNATE) {
+	    direction = CHEVRON_UP;
+	} else if (state & TTK_STATE_SELECTED) {
+	    direction = CHEVRON_DOWN;
+	} else {
+	    return;
+	}
+
+	img = makeChevronImage(3, direction, strokeColor, tkwin);
+	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
+	Tk_FreeImage(img);
     }
 }
 
@@ -1103,8 +1138,8 @@ TTK_LAYOUT("Heading",
     TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
 	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-	    TTK_NODE("Treeheading.text", TTK_FILL_X)
-	    TTK_NODE("Treeheading.indicator", TTK_PACK_TOP))))
+	    TTK_NODE("Treeheading.text", TTK_FILL_X))
+	TTK_NODE("Treeheading.indicator", TTK_PACK_TOP)))
 
 TTK_END_LAYOUT_TABLE
 

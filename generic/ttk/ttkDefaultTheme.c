@@ -774,7 +774,7 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
 
 static const char chevronDataFmt[] = "\
     <svg width='%d' height='%d' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <path d='%s' fill='none' stroke='#%s' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/>\n\
+     <path d='%s' fill='none' stroke='#%s' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.2'/>\n\
     </svg>";
 
 static void makeChevronData(

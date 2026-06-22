@@ -127,7 +127,7 @@ static void		GenerateXEvent(HWND hwnd, UINT message,
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
 static void		GetTranslatedKey(TkKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
-static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
+static bool		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
 /*
  *----------------------------------------------------------------------
@@ -729,7 +729,7 @@ TkWinChildProc(
 
     case WM_IME_COMPOSITION:
 	result = 0;
-	if (HandleIMEComposition(hwnd, lParam) == 0) {
+	if (!HandleIMEComposition(hwnd, lParam)) {
 	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
@@ -1584,8 +1584,8 @@ TkWinGetUnicodeEncoding(void)
  *	UNICODE values of the composed characters to TK's event queue.
  *
  * Results:
- *	If this function has processed the composition data, returns 1.
- *	Otherwise returns 0.
+ *	If this function has processed the composition data, returns true.
+ *	Otherwise returns false.
  *
  * Side effects:
  *	Key events are put into the TK event queue.
@@ -1593,7 +1593,7 @@ TkWinGetUnicodeEncoding(void)
  *----------------------------------------------------------------------
  */
 
-static int
+static bool
 HandleIMEComposition(
     HWND hwnd,			/* Window receiving the message. */
     LPARAM lParam)		/* Flags for the WM_IME_COMPOSITION message */
@@ -1607,12 +1607,12 @@ HandleIMEComposition(
 	 * Composition is not finished yet.
 	 */
 
-	return 0;
+	return false;
     }
 
     hIMC = ImmGetContext(hwnd);
     if (!hIMC) {
-	return 0;
+	return false;
     }
 
     n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
@@ -1675,7 +1675,7 @@ HandleIMEComposition(
 	Tcl_Free(buff);
     }
     ImmReleaseContext(hwnd, hIMC);
-    return 1;
+    return true;
 }
 
 /*

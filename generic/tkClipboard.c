@@ -85,7 +85,7 @@ ClipboardHandler(
     srcPtr = cbPtr->buffer + (offset - scanned);
     destPtr = buffer;
     length = cbPtr->length - (offset - scanned);
-    while (1) {
+    while (true) {
 	if (length > freeCount) {
 	    strncpy(destPtr, srcPtr, freeCount);
 	    return maxBytes;

@@ -4271,7 +4271,7 @@ ReparentEvent(
 
     handler = Tk_CreateErrorHandler(wrapperPtr->display, -1,-1,-1, NULL,NULL);
     wmPtr->reparent = reparentEventPtr->parent;
-    while (1) {
+    while (true) {
 	if (XQueryTree(wrapperPtr->display, wmPtr->reparent, &dummy2,
 		&ancestor, &children, &dummy) == 0) {
 	    Tk_DeleteErrorHandler(handler);
@@ -5411,7 +5411,7 @@ WaitForMapNotify(
     XEvent event;
     int code;
 
-    while (1) {
+    while (true) {
 	if (mapped) {
 	    if (winPtr->flags & TK_MAPPED) {
 		break;
@@ -5765,7 +5765,7 @@ Tk_GetRootCoords(
      */
 
     x = y = 0;
-    while (1) {
+    while (true) {
 	x += winPtr->changes.x + winPtr->changes.border_width;
 	y += winPtr->changes.y + winPtr->changes.border_width;
 	if ((winPtr->wmInfoPtr != NULL)
@@ -5909,7 +5909,7 @@ Tk_CoordsToWindow(
      */
 
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1, NULL, NULL);
-    while (1) {
+    while (true) {
 	if (XTranslateCoordinates(Tk_Display(tkwin), parent, window,
 		x, y, &childX, &childY, &child) == False) {
 	    /*
@@ -6012,7 +6012,7 @@ Tk_CoordsToWindow(
      * process on that child.
      */
 
-    while (1) {
+    while (true) {
 	nextPtr = NULL;
 	for (childPtr = winPtr->childList; childPtr != NULL;
 		childPtr = childPtr->nextPtr) {
@@ -7421,7 +7421,7 @@ UpdateCommand(
  *	toplevel window.
  *
  * Results:
- *	0 on error, 1 otherwise
+ *	false on error, true otherwise
  *
  * Side effects:
  *	May minimize, restore, or withdraw a window.

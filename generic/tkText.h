@@ -1017,12 +1017,12 @@ MODULE_SCOPE void	TkBTreeLinkSegment(TkTextSegment *segPtr,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextLine *TkBTreeNextLine(const TkText *textPtr,
 			    TkTextLine *linePtr);
-MODULE_SCOPE int	TkBTreeNextTag(TkTextSearch *searchPtr);
+MODULE_SCOPE bool	TkBTreeNextTag(TkTextSearch *searchPtr);
 MODULE_SCOPE int	TkBTreeNumPixels(TkTextBTree tree,
 			    const TkText *textPtr);
 MODULE_SCOPE TkTextLine *TkBTreePreviousLine(TkText *textPtr,
 			    TkTextLine *linePtr);
-MODULE_SCOPE int	TkBTreePrevTag(TkTextSearch *searchPtr);
+MODULE_SCOPE bool	TkBTreePrevTag(TkTextSearch *searchPtr);
 MODULE_SCOPE void	TkBTreeStartSearch(TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
 			    TkTextSearch *searchPtr);
