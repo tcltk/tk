@@ -1265,18 +1265,20 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     /* Use Motion to generate internal Enter and Leave events */
     if ((event->type == MotionNotify) || (event->type == ButtonRelease)) {
 	if (item != tv->tree.current || colno != tv->tree.currentCol) {
+	    XEvent copyevent = *event;
+
 	    /* Leave */
 	    if (tv->tree.current) {
-		event->type = LeaveNotify;
-		event->xcrossing.detail = NotifyAncestor; /* May discard without this */
-		TreeviewProcessEvent(tv, event, tv->tree.current, tv->tree.currentCol);
+		copyevent.type = LeaveNotify;
+		copyevent.xcrossing.detail = NotifyAncestor; /* May discard without this */
+		TreeviewProcessEvent(tv, &copyevent, tv->tree.current, tv->tree.currentCol);
 	    }
 
 	    /* Enter */
 	    if (item) {
-		event->type = EnterNotify;
-		event->xcrossing.detail = NotifyAncestor; /* May discard without this */
-		TreeviewProcessEvent(tv, event, item, colno);
+		copyevent.type = EnterNotify;
+		copyevent.xcrossing.detail = NotifyAncestor; /* May discard without this */
+		TreeviewProcessEvent(tv, &copyevent, item, colno);
 	    }
 	}
     }
@@ -2626,7 +2628,7 @@ static void TreeviewDisplay(void *clientData, Drawable d) {
 	/* Clean up the temporary resources */
 	Tk_FreePixmap(Tk_Display(tkwin), p);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
-#else
+#elif defined(MAC_OSX_TK)
 	Ttk_Theme currentTheme = Ttk_GetCurrentTheme(tv->core.interp);
 	Ttk_Theme aquaTheme = Ttk_GetTheme(tv->core.interp, "aqua");
 	if (currentTheme == aquaTheme && [NSApp macOSVersion] > 100800) {

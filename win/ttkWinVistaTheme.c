@@ -913,15 +913,41 @@ static const Ttk_ElementSpec TabElementSpec =
  */
 
 static void TreeSortElementDraw(
-    void *clientData,
-    void *elementRecord,
+    TCL_UNUSED(void *) /* clientData */,
+    TCL_UNUSED(void *) /* elementRecord */,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
     Ttk_State state)
 {
     if ((state & TTK_STATE_USER1)) {
-	GenericElementDraw(clientData, elementRecord, tkwin, d, b, state);
+	/* GenericElementDraw(clientData, elementRecord, tkwin, d, b, state); */
+
+	/*
+	 * Unfortunately, the DrawThemeBackground() function, called by
+	 * GenericElementDraw(), draws the sort indicator element with the
+	 * wrong background color if the display's scaling is 150% or 175%.
+	 * As a workaround we use our makeChevronImage() function instead.
+	 */
+
+	ArrowDirection direction;
+	XColor *strokeColor = Tk_GetColor(NULL, tkwin, "#808080");
+	Tk_Image img;
+	int imgWidth, imgHeight;
+
+	if (state & TTK_STATE_ALTERNATE) {
+	    direction = CHEVRON_UP;
+	} else if (state & TTK_STATE_SELECTED) {
+	    direction = CHEVRON_DOWN;
+	} else {
+	    return;
+	}
+
+	img = makeChevronImage(3, direction, strokeColor, tkwin);
+	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
+	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
+	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
+	Tk_FreeImage(img);
     }
 }
 
@@ -1112,8 +1138,8 @@ TTK_LAYOUT("Heading",
     TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
 	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-	    TTK_NODE("Treeheading.text", TTK_FILL_X)
-	    TTK_NODE("Treeheading.indicator", TTK_PACK_TOP))))
+	    TTK_NODE("Treeheading.text", TTK_FILL_X))
+	TTK_NODE("Treeheading.indicator", TTK_PACK_TOP)))
 
 TTK_END_LAYOUT_TABLE
 
