@@ -1265,18 +1265,20 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     /* Use Motion to generate internal Enter and Leave events */
     if ((event->type == MotionNotify) || (event->type == ButtonRelease)) {
 	if (item != tv->tree.current || colno != tv->tree.currentCol) {
+	    XEvent copyevent = *event;
+
 	    /* Leave */
 	    if (tv->tree.current) {
-		event->type = LeaveNotify;
-		event->xcrossing.detail = NotifyAncestor; /* May discard without this */
-		TreeviewProcessEvent(tv, event, tv->tree.current, tv->tree.currentCol);
+		copyevent.type = LeaveNotify;
+		copyevent.xcrossing.detail = NotifyAncestor; /* May discard without this */
+		TreeviewProcessEvent(tv, &copyevent, tv->tree.current, tv->tree.currentCol);
 	    }
 
 	    /* Enter */
 	    if (item) {
-		event->type = EnterNotify;
-		event->xcrossing.detail = NotifyAncestor; /* May discard without this */
-		TreeviewProcessEvent(tv, event, item, colno);
+		copyevent.type = EnterNotify;
+		copyevent.xcrossing.detail = NotifyAncestor; /* May discard without this */
+		TreeviewProcessEvent(tv, &copyevent, item, colno);
 	    }
 	}
     }
