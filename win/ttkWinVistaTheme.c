@@ -944,6 +944,7 @@ static void TreeSortElementDraw(
 	}
 
 	img = TtkMakeChevronImage(3, direction, strokeColor, tkwin);
+	Tk_FreeColor(strokeColor);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
