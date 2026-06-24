@@ -991,7 +991,7 @@ static void ArrowElementDraw(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 
 	/* Draw indicator */
-	img = makeChevronImage(size, direction, arrowColor, tkwin);
+	img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);

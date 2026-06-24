@@ -7621,7 +7621,7 @@ static void TreeheadingIndicatorDraw(
 	return;
     }
 
-    img = makeChevronImage(size, direction, strokeColor, tkwin);
+    img = TtkMakeChevronImage(size, direction, strokeColor, tkwin);
     Tk_RedrawImage(img, 0, 0, b.width, b.height, d, b.x, b.y);
     Tk_FreeImage(img);
 }
@@ -7714,7 +7714,7 @@ static void TreeitemIndicatorDraw(
 
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
-    img = makeChevronImage(size, direction, strokeColor, tkwin);
+    img = TtkMakeChevronImage(size, direction, strokeColor, tkwin);
     Tk_SizeOfImage(img, &imgWidth, &imgHeight);
     Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);

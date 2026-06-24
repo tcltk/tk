@@ -1158,7 +1158,7 @@ static void ArrowElementDraw(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 
 	/* Draw indicator */
-	img = makeChevronImage(size, direction, arrowColor, tkwin);
+	img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
@@ -1243,7 +1243,7 @@ static void BoxArrowElementDraw(
     Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 
     /* Draw indicator */
-    img = makeChevronImage(size, direction, arrowColor, tkwin);
+    img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
     Tk_SizeOfImage(img, &imgWidth, &imgHeight);
     Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	b.x, b.y + (b.height - imgHeight)/2);
@@ -1354,7 +1354,7 @@ static void MenuIndicatorElementDraw(
 	Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
 
 	/* Draw indicator */
-	img = makeChevronImage(size, direction, arrowColor, tkwin);
+	img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
 	Tk_RedrawImage(img, 0, 0, b.width, b.height, d, b.x, b.y);
 	Tk_FreeImage(img);
     }
