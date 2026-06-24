@@ -1209,6 +1209,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
     int unused;
     Tcl_Size colno = -1;
     TreeColumn *column = NULL;
+    bool do_leave_enter = false;
 
     /* Get item and column for the event. */
     switch (event->type) {
@@ -1262,28 +1263,22 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	    break;
     }
 
-    /* Use Motion to generate internal Enter and Leave events */
+    /* Use Motion to generate internal Leave event. Do before set active so
+       a query of the current item will use the previous item. */
     if ((event->type == MotionNotify) || (event->type == ButtonRelease)) {
 	if (item != tv->tree.current || colno != tv->tree.currentCol) {
 	    XEvent copyevent = *event;
+	    do_leave_enter = true;
 
-	    /* Leave */
 	    if (tv->tree.current) {
 		copyevent.type = LeaveNotify;
 		copyevent.xcrossing.detail = NotifyAncestor; /* May discard without this */
 		TreeviewProcessEvent(tv, &copyevent, tv->tree.current, tv->tree.currentCol);
 	    }
-
-	    /* Enter */
-	    if (item) {
-		copyevent.type = EnterNotify;
-		copyevent.xcrossing.detail = NotifyAncestor; /* May discard without this */
-		TreeviewProcessEvent(tv, &copyevent, item, colno);
-	    }
 	}
     }
 
-    /* Set active state */
+    /* Define current item (under pointer) and set it to the active state */
     if (event->type != KeyPress && event->type != KeyRelease && event->type != VirtualEvent) {
 	if (item != tv->tree.current || colno != tv->tree.currentCol) {
 	    bool changed = false;
@@ -1304,6 +1299,18 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event) {
 	    if (changed) {
 		TtkRedisplayWidget(&tv->core);
 	    }
+	}
+    }
+
+    /* Use Motion to generate internal Enter event. Do after set active so a
+       query of the current item will use the new item. */
+    if (do_leave_enter) {
+	XEvent copyevent = *event;
+
+	if (item) {
+	    copyevent.type = EnterNotify;
+	    copyevent.xcrossing.detail = NotifyAncestor; /* May discard without this */
+	    TreeviewProcessEvent(tv, &copyevent, item, colno);
 	}
     }
 }
