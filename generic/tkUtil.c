@@ -1345,6 +1345,7 @@ TkFormatDouble(
 {
     int length = snprintf(buffer, size, format, value);
     const char *decimal = localeconv()->decimal_point;
+    const char *thousands = localeconv()->thousands_sep;
 
     /*
      * snprintf() above honours LC_NUMERIC.  If that locale uses a single-byte
@@ -1360,6 +1361,14 @@ TkFormatDouble(
 
 	if (p != NULL) {
 	    *p = '.';
+	}
+    }
+    if (length > 0 && thousands[0] != '_' && thousands[1] == '\0') {
+	size_t scan = ((size_t)length < size) ? (size_t)length : size - 1;
+	char *p = (char *)memchr(buffer, thousands[0], scan);
+	while (p != NULL) {
+	    *p = '_';
+	    p = (char *)memchr(p + 1, thousands[0], scan - (p - buffer) - 1);
 	}
     }
     return length;

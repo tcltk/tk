@@ -2131,9 +2131,15 @@ PrintArrowShape(
 {
     LineItem *linePtr = (LineItem *) recordPtr;
     char *buffer = (char *)ckalloc(120);
+    char arrowShapeA[TCL_DOUBLE_SPACE];
+    char arrowShapeB[TCL_DOUBLE_SPACE];
+    char arrowShapeC[TCL_DOUBLE_SPACE];
 
-    snprintf(buffer, 120, "%.5g %.5g %.5g", linePtr->arrowShapeA,
-	    linePtr->arrowShapeB, linePtr->arrowShapeC);
+    TkFormatDouble(arrowShapeA, sizeof(arrowShapeA), "%.5g", linePtr->arrowShapeA);
+    TkFormatDouble(arrowShapeB, sizeof(arrowShapeB), "%.5g", linePtr->arrowShapeB);
+    TkFormatDouble(arrowShapeC, sizeof(arrowShapeC), "%.5g", linePtr->arrowShapeC);
+
+    snprintf(buffer, 120, "%s %s %s", arrowShapeA, arrowShapeB, arrowShapeC);
     *freeProcPtr = TCL_DYNAMIC;
     return buffer;
 }
