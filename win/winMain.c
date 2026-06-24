@@ -35,7 +35,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
-#include <locale.h>
 #include <stdlib.h>
 #include <tchar.h>
 #if (TCL_MAJOR_VERSION < 9)
