@@ -913,8 +913,8 @@ static const Ttk_ElementSpec TabElementSpec =
  */
 
 static void TreeSortElementDraw(
-    void *clientData,
-    void *elementRecord,
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
