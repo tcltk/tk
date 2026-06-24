@@ -39,6 +39,7 @@ to the userbase.
  - [tk image photo svg: nanosvg "Basic style sheets support" #284](https://core.tcl-lang.org/tk/info/c8c8b724)
  - [Error in ::tk::ScrollByUnits](https://core.tcl-lang.org/tk/info/082a30)
  - [Tk_FindPhoto crash](https://core.tcl-lang.org/tk/info/0beaef)
+ - [scale, spinbox and place format floating-point values using the LC_NUMERIC locale](https://core.tcl-lang.org/tk/info/348b48)
 
 Release Tk 9.0.3 arises from the check-in with tag `core-9-0-3`.
 
