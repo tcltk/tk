@@ -1612,7 +1612,7 @@ test Bbox-15.19 {Title Rows No Scroll} -setup {
 	set res [list [cell_bbox .tv red]]
 	.tv yview 400
 	update
-
+	
 	lappend res [cell_bbox .tv red]
 	return $res
     } -match {glob} -result {{{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}} {{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}}}
@@ -7841,19 +7841,31 @@ test Tag_Bind-79.14 {Leave event} -body {
 	set ::test
     } -result {leave}
 
-test Tag_Bind-79.15 {Delete tag} -body {
+test Tag_Bind-79.15 {Enter event} -body {
+	.tv tag bind newTag <Enter> {set ::test [%W current]}
+	MouseMove .tv red #3
+	set ::test
+    } -result {red Decimal}
+
+test Tag_Bind-79.16 {Leave event} -body {
+	.tv tag bind newTag <Leave> {set ::test [%W current]}
+	MouseMove .tv blue #3
+	set ::test
+    } -result {red Decimal}
+
+test Tag_Bind-79.17 {Delete tag} -body {
 	.tv tag delete newTag
 	.tv tag bind newTag
     }
 
-test Tag_Bind-79.16 {Null binding bug #3006842} -body {
+test Tag_Bind-79.18 {Null binding bug #3006842} -body {
 	.tv tag bind empty <Button-1> {}
 	.tv insert {} end -text "Click me" -tags empty
 	event generate .tv <Button-1> -x 10 -y 10
 	.tv tag bind empty
     }
 
-test Tag_Bind-79.17 {Init} -body {
+test Tag_Bind-79.19 {Init} -body {
 	.tv tag configure t1 -background red
 	.tv tag configure t2 -background blue
 	.tv tag add t1 red
@@ -7864,28 +7876,28 @@ test Tag_Bind-79.17 {Init} -body {
 	.tv tag bind t2 <Button-1> {lappend ::tagtest t2}
     }
 
-test Tag_Bind-79.18 {Item tag test} -body {
+test Tag_Bind-79.20 {Item tag test} -body {
 	cellEvent .tv red #0
 	set ::tagtest
     } -cleanup {
 	set ::tagtest {}
     } -result {t1}
 
-test Tag_Bind-79.19 {Cell tag test} -body {
+test Tag_Bind-79.21 {Cell tag test} -body {
 	cellEvent .tv pink Hex
 	set ::tagtest
     } -cleanup {
 	set ::tagtest {}
     } -result {t2}
 
-test Tag_Bind-79.20 {Item and cell tags test} -body {
+test Tag_Bind-79.22 {Item and cell tags test} -body {
 	cellEvent .tv red Hex
 	set ::tagtest
     } -cleanup {
 	set ::tagtest {}
     } -result {t1 t2}
 
-test Tag_Bind-79.21 {Cleanup} -setup {
+test Tag_Bind-79.23 {Cleanup} -setup {
 	rename cellEvent {}
     } -body {
 	destroy .tv .sx .sy
