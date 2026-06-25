@@ -820,6 +820,7 @@ Tk_Image TtkMakeChevronImage(
 
     const char *cmdFmt;
     char svgData[300];
+    char scalingLevelStr[TCL_DOUBLE_SPACE];
     size_t scriptSize;
     char *script;
     int code;
@@ -836,8 +837,9 @@ Tk_Image TtkMakeChevronImage(
 	default:		return NULL;
     }
     ColorToStr(strokeColor, strokeColorStr);
-    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%.2f_%s",
-	     dirStr, size, TkScalingLevel2(tkwin), strokeColorStr);
+    TkFormatDouble(scalingLevelStr, sizeof(scalingLevelStr), "%.2f", TkScalingLevel2(tkwin));
+    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%s_%s",
+	     dirStr, size, scalingLevelStr, strokeColorStr);
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img != NULL) {
 	return img;
