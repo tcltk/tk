@@ -37,6 +37,18 @@ static char tkLibPath[PATH_MAX + 1] = "";
 static char scriptPath[PATH_MAX + 1] = "";
 
 /*
+ * Delete Proc for _eventInterp.
+ */
+
+static void InterpDeleteProc(
+    void *clientData,
+    Tcl_Interp *interp) {
+    (void) clientData;
+    (void) interp;
+    [NSApp _clearEventInterp];
+}
+
+/*
  * Forward declarations...
  */
 
@@ -228,12 +240,18 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
 	 }];
 }
 
+- (void) _clearEventInterp
+{
+    _eventInterp = NULL;
+}
+
 - (void) _setup: (Tcl_Interp *) interp
 {
     /*
      * Remember our interpreter.
      */
     _eventInterp = interp;
+    Tcl_CallWhenDeleted(interp, InterpDeleteProc, NULL);
 
     /*
      * Install the global autoreleasePool.
