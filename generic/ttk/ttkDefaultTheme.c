@@ -777,7 +777,7 @@ static const char chevronDataFmt[] = "\
      <path d='%s' fill='none' stroke='#%s' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.2'/>\n\
     </svg>";
 
-static void makeChevronData(
+static void MakeChevronData(
     int h, ArrowDirection direction, const char *strokeColorStr,
     char *resultStr, size_t resultSize)
 {
@@ -808,7 +808,7 @@ static void makeChevronData(
 }
 
 /*public*/
-Tk_Image makeChevronImage(
+Tk_Image TtkMakeChevronImage(
     int size, ArrowDirection direction, const XColor *strokeColor,
     Tk_Window tkwin)
 {
@@ -820,6 +820,7 @@ Tk_Image makeChevronImage(
 
     const char *cmdFmt;
     char svgData[300];
+    char scalingLevelStr[TCL_DOUBLE_SPACE];
     size_t scriptSize;
     char *script;
     int code;
@@ -836,8 +837,9 @@ Tk_Image makeChevronImage(
 	default:		return NULL;
     }
     ColorToStr(strokeColor, strokeColorStr);
-    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%.2f_%s",
-	     dirStr, size, TkScalingLevel2(tkwin), strokeColorStr);
+    TkFormatDouble(scalingLevelStr, sizeof(scalingLevelStr), "%.2f", TkScalingLevel2(tkwin));
+    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%s_%s",
+	     dirStr, size, scalingLevelStr, strokeColorStr);
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img != NULL) {
 	return img;
@@ -847,7 +849,7 @@ Tk_Image makeChevronImage(
      * Create an SVG photo image from svgData
      */
     cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
-    makeChevronData(size, direction, strokeColorStr, svgData, sizeof(svgData));
+    MakeChevronData(size, direction, strokeColorStr, svgData, sizeof(svgData));
     scriptSize = strlen(cmdFmt) + strlen(imgName) + strlen(svgData);
     script = (char *)Tcl_AttemptAlloc(scriptSize);
     if (script == NULL) {
@@ -1009,7 +1011,7 @@ static void ArrowElementDraw(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 
 	/* Draw indicator */
-	img = makeChevronImage(size, direction, arrowColor, tkwin);
+	img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);

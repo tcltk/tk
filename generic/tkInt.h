@@ -1241,6 +1241,8 @@ MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
 MODULE_SCOPE double	TkScalingLevel2(Tk_Window tkwin);
 MODULE_SCOPE int	TkGetScaledPixelValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj *valuePtr, int *size);
+MODULE_SCOPE int	TkFormatDouble(char *buffer, size_t size,
+			    const char *format, double value);
 MODULE_SCOPE bool	TkObjIsEmpty(Tcl_Obj *objPtr);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    void *clientData);

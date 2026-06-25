@@ -3520,7 +3520,7 @@ static void DisclosureElementDraw(
 	    strokeColor.green = (unsigned short)round(rgba[1] * 65535.0);
 	    strokeColor.blue  = (unsigned short)round(rgba[2] * 65535.0);
 
-	    img = makeChevronImage(4, direction, &strokeColor, tkwin);
+	    img = TtkMakeChevronImage(4, direction, &strokeColor, tkwin);
 	    Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	    Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 		 b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);

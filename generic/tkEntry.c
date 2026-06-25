@@ -1389,7 +1389,8 @@ ConfigureEntry(
 	    } else if (dvalue < sbPtr->fromValue) {
 		dvalue = sbPtr->fromValue;
 	    }
-	    snprintf(sbPtr->formatBuf, formatSpace, sbPtr->valueFormat, dvalue);
+	    TkFormatDouble(sbPtr->formatBuf, formatSpace, sbPtr->valueFormat,
+		    dvalue);
 
 	    /*
 	     * No check for error return here as well, because any possible
@@ -4507,7 +4508,8 @@ SpinboxInvoke(
 		    dvalue = sbPtr->toValue;
 		}
 	    }
-	    snprintf(sbPtr->formatBuf, TCL_DOUBLE_SPACE, sbPtr->valueFormat, dvalue);
+	    TkFormatDouble(sbPtr->formatBuf, TCL_DOUBLE_SPACE, sbPtr->valueFormat,
+		    dvalue);
 	    code = EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
     }
