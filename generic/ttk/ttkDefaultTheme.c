@@ -813,8 +813,9 @@ Tk_Image TtkMakeChevronImage(
     Tk_Window tkwin)
 {
     const char *dirStr;
+    char scalingLevelStr[TCL_DOUBLE_SPACE];
     char strokeColorStr[7];
-    char imgName[40];
+    char imgName[80];
     Tcl_Interp *interp = Tk_Interp(tkwin);
     Tk_Image img;
 
@@ -835,9 +836,11 @@ Tk_Image TtkMakeChevronImage(
 	case CHEVRON_RIGHT:	dirStr = "right"; break;
 	default:		return NULL;
     }
+    TkFormatDouble(scalingLevelStr, sizeof(scalingLevelStr), "%.2f",
+	    TkScalingLevel2(tkwin));
     ColorToStr(strokeColor, strokeColorStr);
-    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%.2f_%s",
-	     dirStr, size, TkScalingLevel2(tkwin), strokeColorStr);
+    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%s_%s",
+	     dirStr, size, scalingLevelStr, strokeColorStr);
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img != NULL) {
 	return img;
