@@ -1296,7 +1296,7 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #   define TkUnionRectWithRegion XUnionRectWithRegion
 #endif
 
-#ifdef HAVE_XFT
+#if defined(HAVE_XFT) || defined(HAVE_BIDI)
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
