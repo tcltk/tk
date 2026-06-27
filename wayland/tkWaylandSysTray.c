@@ -28,11 +28,6 @@
 #include <systemd/sd-bus.h>
 #include <systemd/sd-bus-protocol.h>
 
-/* stb_image for image processing. */
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-#include "stb_image.h"
-
 /* Flags of widget configuration options. */
 #define ICON_CONF_IMAGE         (1<<0)
 #define ICON_CONF_REDISPLAY     (1<<1)
@@ -81,9 +76,10 @@ typedef struct {
     char *object_path;
     Tcl_TimerToken busTimer;  /* Timer for processing DBus events */
 
-    /* Cached icon information. */
-    char *tempIconPath;  /* Path to temporary icon file */
-    time_t lastIconUpdate; /* Last time icon was updated */
+    /* Icon pixels captured from the Tk photo, held as SNI ARGB32
+     * (network byte order) ready to hand straight to D-Bus. */
+    unsigned char *iconArgb;
+    int iconArgbW, iconArgbH;
 
     /* Tcl bindings for mouse events */
     Tcl_Obj *b1Command;  /* Command for button-1 press */
@@ -100,8 +96,6 @@ typedef struct {
     Tcl_Obj *classObj;
 
     char* trayAppId;  /* App ID for Wayland */
-    char* iconName;   /* Name of the icon (filename or themed icon name) */
-    char* iconPath;   /* Path to icon file if using file-based icon */
     char* status;     /* Status: "active", "passive", "attention" */
     char* tooltip;    /* Tooltip text */
     char* title;      /* Title/name */
@@ -109,6 +103,7 @@ typedef struct {
     /* Properties for StatusNotifierItem interface. */
     CategoryDBus category;
     StatusDBus dbus_status;
+    int redisplayPending;   /* Tcl_DoWhenIdle coalescing flag */
 } DockIcon;
 
 /* Forward declarations. */
@@ -123,7 +118,7 @@ static void RemoveTrayIconWindow(DockIcon *icon);
 static int UpdateIndicatorIcon(DockIcon *icon);
 static int UpdateIndicatorStatus(DockIcon *icon);
 static int UpdateTooltip(DockIcon *icon);
-static int SaveTkImageToFile(DockIcon *icon);
+static int CaptureIconPixmap(DockIcon *icon);
 static int RegisterStatusNotifierItem(DockIcon *icon);
 static int UnregisterStatusNotifierItem(DockIcon *icon);
 static void ProcessDBusEvents(void *clientData);
@@ -351,17 +346,9 @@ property_get_icon_name(
     void *userdata,
     TCL_UNUSED(sd_bus_error *)) /*error */
 {
-    DockIcon *icon = userdata;
-    const char *name = "";
-
-    /* Prefer temp icon path, then iconName. */
-    if (icon->tempIconPath) {
-        name = icon->tempIconPath;
-    } else if (icon->iconName) {
-        name = icon->iconName;
-    }
-
-    return sd_bus_message_append(reply, "s", name);
+    /* The icon is delivered through IconPixmap; there is no themed name. */
+    (void)userdata;
+    return sd_bus_message_append(reply, "s", "");
 }
 
 static int
@@ -377,60 +364,19 @@ property_get_icon_pixmap(
     DockIcon *icon = userdata;
     int r;
 
-    /* Open array of pixmaps: a(iiay). */
+    /* IconPixmap is a(iiay): an array of (width, height, ARGB32-bytes). */
     r = sd_bus_message_open_container(reply, 'a', "(iiay)");
     if (r < 0) return r;
 
-    if (icon->tempIconPath) {
-        /* Load PNG and send pixmap data. */
-        int width, height, channels;
-        unsigned char *data = stbi_load(icon->tempIconPath, &width, &height,
-                                        &channels, 4);
-
-        if (data) {
-            /* Open pixmap struct: (iiay). */
-            r = sd_bus_message_open_container(reply, 'r', "iiay");
-            if (r < 0) {
-                stbi_image_free(data);
-                return r;
-            }
-
-            /* Width and height. */
-            r = sd_bus_message_append(reply, "ii", width, height);
-            if (r < 0) {
-                stbi_image_free(data);
-                return r;
-            }
-
-            /* Convert RGBA to ARGB and append as byte array. */
-            r = sd_bus_message_open_container(reply, 'a', "y");
-            if (r < 0) {
-                stbi_image_free(data);
-                return r;
-            }
-
-            /* Write ARGB data. */
-            unsigned char *argb = (unsigned char *)Tcl_Alloc(width * height * 4);
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    int idx = (y * width + x) * 4;
-                    int out_idx = idx;
-                    argb[out_idx + 0] = data[idx + 3];  /* A */
-                    argb[out_idx + 1] = data[idx + 0];  /* R */
-                    argb[out_idx + 2] = data[idx + 1];  /* G */
-                    argb[out_idx + 3] = data[idx + 2];  /* B */
-                }
-            }
-
-            r = sd_bus_message_append_array(reply, 'y', argb, width * height * 4);
-            Tcl_Free(argb);
-            stbi_image_free(data);
-
-            if (r < 0) return r;
-
-            sd_bus_message_close_container(reply);  /* Close byte array */
-            sd_bus_message_close_container(reply);  /* Close struct */
-        }
+    if (icon->iconArgb && icon->iconArgbW > 0 && icon->iconArgbH > 0) {
+        r = sd_bus_message_open_container(reply, 'r', "iiay");
+        if (r < 0) return r;
+        r = sd_bus_message_append(reply, "ii", icon->iconArgbW, icon->iconArgbH);
+        if (r < 0) return r;
+        r = sd_bus_message_append_array(reply, 'y', icon->iconArgb,
+                                        icon->iconArgbW * icon->iconArgbH * 4);
+        if (r < 0) return r;
+        sd_bus_message_close_container(reply);  /* Close (iiay) struct */
     }
 
     sd_bus_message_close_container(reply);  /* Close array */
@@ -454,8 +400,8 @@ property_get_tooltip(
     r = sd_bus_message_open_container(reply, 'r', "sa(iiay)ss");
     if (r < 0) return r;
 
-    /* Icon name. */
-    r = sd_bus_message_append(reply, "s", icon->iconName ? icon->iconName : "");
+    /* Icon name (empty: the tooltip carries its image through the pixmap). */
+    r = sd_bus_message_append(reply, "s", "");
     if (r < 0) return r;
 
     /* Icon pixmap (empty array). */
@@ -502,9 +448,9 @@ static const sd_bus_vtable status_notifier_item_vtable[] = {
     SD_BUS_PROPERTY("IconThemePath", "s", NULL, 0, SD_BUS_VTABLE_PROPERTY_CONST | SD_BUS_VTABLE_HIDDEN),
     SD_BUS_PROPERTY("IconName", "s", property_get_icon_name, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
     SD_BUS_PROPERTY("IconPixmap", "a(iiay)", property_get_icon_pixmap, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
-    SD_BUS_PROPERTY("OverlayIconPixmap", "a(iiay)", NULL, 0, SD_BUS_VTABLE_HIDDEN),
-    SD_BUS_PROPERTY("AttentionIconPixmap", "a(iiay)", NULL, 0, SD_BUS_VTABLE_HIDDEN),
-    SD_BUS_PROPERTY("AttentionMovieName", "s", NULL, 0, SD_BUS_VTABLE_PROPERTY_CONST | SD_BUS_VTABLE_HIDDEN),
+    /* Removed OverlayIconPixmap/AttentionIconPixmap/AttentionMovieName:
+     * complex-type SD_BUS_PROPERTY with NULL getter is rejected by sd-bus
+     * (-EINVAL at sd_bus_add_object_vtable). SNI spec marks them optional. */
     SD_BUS_PROPERTY("ToolTip", "(sa(iiay)ss)", property_get_tooltip, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
     SD_BUS_PROPERTY("Menu", "o", property_get_menu, 0, SD_BUS_VTABLE_PROPERTY_CONST),
     SD_BUS_VTABLE_END
@@ -738,91 +684,68 @@ TrayIconObjectCmd(
 /*
  *----------------------------------------------------------------------
  *
- * SaveTkImageToFile --
+ * CaptureIconPixmap --
  *
- *	Save Tk image to PNG file using stb_image_write.
+ *	Capture the current Tk photo pixels into the icon's ARGB32 buffer,
+ *	the form StatusNotifierItem's IconPixmap property hands to D-Bus.
  *
  * Results:
  *	1 on success, 0 on failure.
  *
  * Side effects:
- *	Creates temporary PNG file.
+ *	Replaces icon->iconArgb with a freshly allocated buffer.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-SaveTkImageToFile(
+CaptureIconPixmap(
     DockIcon *icon)
 {
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    unsigned char *pixels;
-    int stride;
-    char template[] = "/tmp/tktray_XXXXXX.png";
-    int fd;
-    int success;
+    unsigned char *argb;
+    int w, h, x, y;
 
     if (!icon->image || !icon->imageObj) {
         return 0;
     }
 
-    /* Get image dimensions. */
     Tk_SizeOfImage(icon->image, &icon->imageWidth, &icon->imageHeight);
-
     if (icon->imageWidth <= 0 || icon->imageHeight <= 0) {
         return 0;
     }
 
-    /* Get Photo handle. */
     photo = Tk_FindPhoto(icon->interp, Tcl_GetString(icon->imageObj));
     if (!photo) {
         return 0;
     }
-
-    /* Allocate buffer for image data. */
-    stride = icon->imageWidth * 4;  /* RGBA */
-    pixels = (unsigned char *)Tcl_Alloc(icon->imageHeight * stride);
-    if (!pixels) {
-        return 0;
-    }
-
-    /* Set up image block. */
     Tk_PhotoGetImage(photo, &block);
 
-    /* Copy image data. */
-    memcpy(pixels, block.pixelPtr, icon->imageHeight * stride);
+    w = icon->imageWidth;
+    h = icon->imageHeight;
+    argb = (unsigned char *)Tcl_Alloc(w * h * 4);
 
-    /* Clean up old temp file. */
-    if (icon->tempIconPath) {
-        unlink(icon->tempIconPath);
-        Tcl_Free(icon->tempIconPath);
-        icon->tempIconPath = NULL;
+    /* Repack the photo's pixels into SNI ARGB32 (network byte order),
+     * honouring the block's pitch and channel offsets. */
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            unsigned char *src = block.pixelPtr + y * block.pitch
+                                                + x * block.pixelSize;
+            unsigned char *dst = argb + (y * w + x) * 4;
+            dst[0] = (block.pixelSize >= 4) ? src[block.offset[3]] : 255; /* A */
+            dst[1] = src[block.offset[0]];  /* R */
+            dst[2] = src[block.offset[1]];  /* G */
+            dst[3] = src[block.offset[2]];  /* B */
+        }
     }
 
-    /* Create temporary file. */
-    fd = mkstemps(template, 4);  /* 4 for ".png" */
-    if (fd < 0) {
-        Tcl_Free(pixels);
-        return 0;
+    if (icon->iconArgb) {
+        Tcl_Free((char *)icon->iconArgb);
     }
-    close(fd);
-
-    /* Write PNG file. */
-    success = stbi_write_png(template, icon->imageWidth, icon->imageHeight,
-                             4, pixels, stride);
-
-    Tcl_Free(pixels);
-
-    if (!success) {
-        unlink(template);
-        return 0;
-    }
-
-    icon->tempIconPath = (char *)Tcl_Alloc(strlen(template) + 1);
-    strcpy(icon->tempIconPath, template);
-    icon->lastIconUpdate = time(NULL);
-
+    icon->iconArgb = argb;
+    icon->iconArgbW = w;
+    icon->iconArgbH = h;
     return 1;
 }
 
@@ -859,10 +782,13 @@ RegisterStatusNotifierItem(
         }
     }
 
-    /* Generate unique object path. */
+    /* SNI spec object path: hosts (KDE Plasma, ubuntu-appindicators, ayatana)
+     * look up /StatusNotifierItem when the client passes only a bus name to
+     * RegisterStatusNotifierItem. Exporting at /TrayIcon/N leaves the
+     * watcher's entry pointing at no object, so the icon never renders. */
     if (!icon->object_path) {
         icon->object_path = (char *)Tcl_Alloc(64);
-        snprintf(icon->object_path, 64, "/TrayIcon/%d", icon->item_id);
+        snprintf(icon->object_path, 64, "/StatusNotifierItem");
     }
 
     /* Generate unique bus name. */
@@ -1153,7 +1079,7 @@ CreateTrayIconWindow(
 
     /* Update icon from Tk image if available. */
     if (icon->image) {
-        SaveTkImageToFile(icon);
+        CaptureIconPixmap(icon);
         UpdateIndicatorIcon(icon);
     }
 
@@ -1163,17 +1089,17 @@ CreateTrayIconWindow(
     /* Update tooltip. */
     UpdateTooltip(icon);
 
-    /* Create GLFW window for compatibility. */
-    if (!icon->glfwWindow) {
-        winPtr = (TkWindow *)icon->tkwin;
-        icon->glfwWindow = TkWaylandCreateWindow(winPtr,
-            icon->imageWidth > 0 ? icon->imageWidth : 64,
-            icon->imageHeight > 0 ? icon->imageHeight : 64,
-            icon->trayAppId, &icon->drawable);
-        if (icon->glfwWindow) {
-            glfwHideWindow(icon->glfwWindow);
+    /* SNI renders the icon entirely server-side via D-Bus. Tk_CreateWindowFromPath
+     * already created a glfwWindow for icon->tkwin; calling TkWaylandCreateWindow
+     * again here (as the original code did) segfaulted. But we still need to
+     * hide that auto-created window or it shows as an empty 200x200 surface. */
+    {
+        GLFWwindow *gw = TkWaylandGetGLFWwindow((TkWindow *)icon->tkwin);
+        if (gw) {
+            glfwHideWindow(gw);
         }
     }
+    (void)winPtr;
 
     return 1;
 }
@@ -1230,7 +1156,7 @@ TrayIconUpdate(
 {
     if (mask & ICON_CONF_IMAGE) {
         if (icon->image) {
-            SaveTkImageToFile(icon);
+            CaptureIconPixmap(icon);
             if (icon->bus) {
                 UpdateIndicatorIcon(icon);
             }
@@ -1247,6 +1173,43 @@ TrayIconUpdate(
         } else if (!icon->docked && icon->bus) {
             RemoveTrayIconWindow(icon);
         }
+    }
+}
+
+/*
+ * Tk_ImageChangedProc callback. Tk_GetImage was passing NULL here, so the
+ * first put on the photo image after `tk systray create` segfaulted in
+ * Tk_ImageChanged. Re-export the icon (size and pixmap) on every change.
+ */
+static void
+TrayIconRedisplayIdle(void *cd)
+{
+    DockIcon *icon = (DockIcon *)cd;
+    icon->redisplayPending = 0;
+    if (icon->image && icon->bus) {
+        CaptureIconPixmap(icon);
+        UpdateIndicatorIcon(icon);
+    }
+}
+
+static void
+TrayIconImageChanged(
+    void *cd, int x, int y, int w, int h, int imgw, int imgh)
+{
+    DockIcon *icon = (DockIcon *)cd;
+    (void)x; (void)y; (void)w; (void)h;
+    if (imgw <= 0 || imgh <= 0) {
+        return;
+    }
+    icon->imageWidth = imgw;
+    icon->imageHeight = imgh;
+    /* Defer the re-export: Tk_FindPhoto from inside this callback crashes
+     * during shutdown (TkDeleteAllImages → DeleteImage notifies instances
+     * while the master is half-destroyed). Tcl_DoWhenIdle drops the work
+     * if the event loop never runs again, so shutdown is clean. */
+    if (!icon->redisplayPending) {
+        icon->redisplayPending = 1;
+        Tcl_DoWhenIdle(TrayIconRedisplayIdle, icon);
     }
 }
 
@@ -1300,7 +1263,7 @@ TrayIconConfigureMethod(
     if (mask & ICON_CONF_IMAGE) {
         if (icon->imageObj) {
             newImage = Tk_GetImage(interp, icon->tkwin,
-                Tcl_GetString(icon->imageObj), NULL, icon);
+                Tcl_GetString(icon->imageObj), TrayIconImageChanged, icon);
             if (!newImage) {
                 Tk_RestoreSavedOptions(&saved);
                 return TCL_ERROR;
@@ -1347,9 +1310,8 @@ TrayIconDeleteProc(
         Tk_FreeImage(icon->image);
     }
 
-    if (icon->tempIconPath) {
-        unlink(icon->tempIconPath);
-        Tcl_Free(icon->tempIconPath);
+    if (icon->iconArgb) {
+        Tcl_Free((char *)icon->iconArgb);
     }
 
     if (icon->b1Command) {
@@ -1366,14 +1328,6 @@ TrayIconDeleteProc(
 
     if (icon->trayAppId) {
         Tcl_Free(icon->trayAppId);
-    }
-
-    if (icon->iconName) {
-        Tcl_Free(icon->iconName);
-    }
-
-    if (icon->iconPath) {
-        Tcl_Free(icon->iconPath);
     }
 
     if (icon->status) {

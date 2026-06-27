@@ -704,13 +704,39 @@ DestroyGlfwWindow(
  *----------------------------------------------------------------------
  */
 
+/* Defer glfwShowWindow until the current Tcl script returns to the event loop.
+ * Otherwise a script that calls `package require Tk` then `wm withdraw .`
+ * (the common pattern for tray-only / hidden-root apps like dictate.tcl)
+ * sees a one-frame flash of the main window: glfwShowWindow commits the
+ * wayland surface synchronously, and the compositor renders it before
+ * TkWmUnmapWindow fires. Tcl_DoWhenIdle ensures Show runs only if Unmap
+ * hasn't already cancelled it. */
+static void
+DoDeferredMap(void *cd)
+{
+    TkWindow *winPtr = (TkWindow *)cd;
+    if (!(winPtr->flags & TK_MAPPED)) return;
+    GLFWwindow *gw = TkWaylandGetGLFWwindow(winPtr);
+    if (!gw) return;
+    glfwShowWindow(gw);
+    int w, h;
+    glfwGetWindowSize(gw, &w, &h);
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+}
+
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
 
-    wmPtr->withdrawn   = 0;
+    /* Respect a prior `wm withdraw`. Tk's init can call Tk_MapWindow more
+     * than once; without this guard the second call resets wmPtr->withdrawn
+     * to 0 and the user's withdraw is silently undone. */
+    if (wmPtr->withdrawn) {
+        return;
+    }
+
     wmPtr->initialState = NormalState;
     wmPtr->flags &= ~WM_NEVER_MAPPED;
 
@@ -759,15 +785,15 @@ TkWmMapWindow(TkWindow *winPtr)
         w = reqW;
         h = reqH;
 
-        glfwShowWindow(glfwWindow);
-
         /* Synchronize Tk's internal variables with the configured size. */
         winPtr->changes.width = w;
         winPtr->changes.height = h;
 
-        /* Queue the expose pass with the correct dimensions. */
-        TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
         winPtr->flags |= TK_MAPPED;
+
+        /* Defer glfwShowWindow + expose to idle so a following `wm withdraw`
+         * cancels it before the surface ever reaches the compositor. */
+        Tcl_DoWhenIdle(DoDeferredMap, winPtr);
     }
 }
 
@@ -793,6 +819,7 @@ TkWmUnmapWindow(TkWindow *winPtr)
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) return;
 
+    Tcl_CancelIdleCall(DoDeferredMap, winPtr);
     winPtr->flags &= ~TK_MAPPED;
 
     /* For popup windows, destroy the popup. */
