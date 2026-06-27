@@ -913,8 +913,8 @@ static const Ttk_ElementSpec TabElementSpec =
  */
 
 static void TreeSortElementDraw(
-    void *clientData,
-    void *elementRecord,
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -927,7 +927,7 @@ static void TreeSortElementDraw(
 	 * Unfortunately, the DrawThemeBackground() function, called by
 	 * GenericElementDraw(), draws the sort indicator element with the
 	 * wrong background color if the display's scaling is 150% or 175%.
-	 * As a workaround we use our makeChevronImage() function instead.
+	 * As a workaround use our TtkMakeChevronImage() function instead.
 	 */
 
 	ArrowDirection direction;
@@ -943,7 +943,8 @@ static void TreeSortElementDraw(
 	    return;
 	}
 
-	img = makeChevronImage(3, direction, strokeColor, tkwin);
+	img = TtkMakeChevronImage(3, direction, strokeColor, tkwin);
+	Tk_FreeColor(strokeColor);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);

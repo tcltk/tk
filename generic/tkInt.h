@@ -1243,6 +1243,8 @@ MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
 MODULE_SCOPE double	TkScalingLevel2(Tk_Window tkwin);
 MODULE_SCOPE int	TkGetScaledPixelValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj *valuePtr, int *size);
+MODULE_SCOPE int	TkFormatDouble(char *buffer, size_t size,
+			    const char *format, double value);
 MODULE_SCOPE bool	TkObjIsEmpty(Tcl_Obj *objPtr);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    void *clientData);
@@ -1294,7 +1296,7 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #   define TkUnionRectWithRegion XUnionRectWithRegion
 #endif
 
-#ifdef HAVE_XFT
+#if defined(HAVE_XFT) || defined(HAVE_BIDI) || defined(HAVE_WAYLAND)
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 

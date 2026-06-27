@@ -2004,6 +2004,14 @@ TkpMeasureCharsInContext(
 				    maxLength, flags, lengthPtr);
 }
 
+/* Stub function for compatibility. */
+void
+TkUnixSetXftClipRegion(
+    TCL_UNUSED(Region)) /* clipRegion */
+{
+ /* no-op */
+}
+
 /*
  * Local Variables:
  * mode: c
