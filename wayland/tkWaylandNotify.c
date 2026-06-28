@@ -13,21 +13,73 @@
  *
  */
 
+
 /*
  * This file contains the implementation of a Tcl Notifier for Wayland.
- * The design is .... WRITE THIS.
+ *
+ * The design is a single-threaded event loop integration grafting GLFW's
+ * main-thread polling mechanics and native protocols (IBus/DBus) onto
+ * the standard Tcl Notifier framework (Tcl_CreateEventSource).
+ *
+ * Architecture and Event Flow
+ * ----------------------------
+ *
+ * Frame Presentation
+ *   Synchronized with Tcl's idle cycle via TkWaylandDisplayAllWindows
+ *   at the start of SetupProc. FBO data is blitted to GLFW buffer 0 and swapped.
+ *
+ * IPC Message Draining
+ *   IBus/DBus messages are drained inline via sd_bus_process
+ *   in SetupProc/CheckProc to prevent input starvation during continuous redraw cycles.
+ *
+ * GLFW Event Polling
+ *   SetupProc runs glfwPollEvents(). If window callbacks fire,
+ *   Tcl is instructed not to block (Tcl_SetMaxBlockTime({0,0})). Otherwise, it
+ *   rests for one display frame (~16.6ms) to manage CPU load.
+ *
+ * Inter-Thread Wakeups
+ *   TkWaylandWakeupGLFW forces instant wakeups using
+ *   glfwPostEmptyEvent() paired with Tcl_ThreadAlert.
  */
 
 #include "tkInt.h"
 #include "tkWaylandInt.h"
+
+#include <GLES3/gl3.h>
+
+
+#define NANOVG_GLES3 1
+#include "nanovg_gl.h"
+#include "nanovg_gl_utils.h"
+
 #include <xkbcommon/xkbcommon.h>
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include <errno.h>
-#include <GLES3/gl3.h>
-#include "nanovg_gl_utils.h"
 
-/* ========================= Thread Specific Data  ========================= */
+/*
+ * Forward declarations for IBus integration (implemented in tkWaylandKey.c).
+ * These wrappers accept Tk_Window so this file never needs to see IbusContext*.
+ */
+extern int  TkWaylandIbusCreateContext(Tcl_Interp *interp, Tk_Window tkwin);
+extern void TkWaylandIbusFocusIn(Tk_Window tkwin);
+extern void TkWaylandIbusFocusOut(Tk_Window tkwin);
+extern bool  TkWaylandIbusProcessKey(Tk_Window tkwin, uint32_t keyval,
+                                    uint32_t keycode, uint32_t state);
+extern void RemoveIbusContext(Tk_Window tkwin);
+extern TkXKBState xkbState;
+
+/*
+ * Direct reference to the IBus bus so the notifier can drain it without
+ * going through the file-handler path.  The bus is private to
+ * tkWaylandKey.c; we declare it extern here rather than exposing it in a
+ * header because only the notifier needs it.
+ */
+#include <systemd/sd-bus.h>
+extern sd_bus *ibus_bus;      /* defined in tkWaylandKey.c */
+
+
+/* Thread-specific data for the event loop. */
 
 typedef struct ThreadSpecificData {
     bool           initialized;
@@ -55,18 +107,19 @@ clearCallbackCount() {
     tsdPtr->callbackCount = 0;
 }
 
-/* ========================== Global State Data  ========================== */
-
 /*
  * Global state for mouse buttons and modifiers.
  * These are used across callbacks to maintain consistent state.
- //// This should be thread local!
  */
 unsigned int glfwButtonState = 0;
 unsigned int glfwModifierState = 0;
 
 /* Track last window for enter/leave events */
 static TkWindow *lastWinPtr = NULL;
+
+/*
+ * Utility functions for keyboard/input method support. 
+ */
 
 /*
  *----------------------------------------------------------------------
@@ -190,12 +243,25 @@ TkWaylandClearStoredText(TkWindow *winPtr)
     Tcl_DStringSetLength(&winPtr->privatePtr->pendingText, 0);
 }
 
-/* ============================== Notifier  ============================== */
+/*
+ * Notifier / event loop functions. 
+ */
 
 static void TkWaylandNotifyExitHandler(void *clientData);
 static void TkWaylandSetupProc(void *clientData, int flags);
 static void TkWaylandCheckProc(void *clientData, int flags);
 static void TkWaylandCheckForWindowClosure(void);
+
+/* Idle loop presentation architecture. */
+
+static int displayIdleQueued = 0;
+
+static void
+TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
+{
+    displayIdleQueued = 0;
+    TkWaylandDisplayAllWindows();
+}
 
 /*
  *----------------------------------------------------------------------
@@ -290,36 +356,40 @@ TkWaylandCheckForWindowClosure(void)
  */
     
 static void
-TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
-		   TCL_UNUSED(int))    /* flags */
+TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 {
     TSD_INIT();
-    Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    //Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
-    Tcl_Time oneRefresh = {0, 0};
-    /*
-     * The Tcl event loop will have run all pending display procs
-     * before calling this function.  Now we can swap the GL buffers
-     * for any window on which some drawing has been done.
-     */
-    
-    TkWaylandDisplayAllWindows();
 
-    /*
-     * Clear the callback counter and call glfwPollEvents.
-     * If there were no events, block for one display cycle.
-     * Otherwise, don't block.
-     */
+    if (!(flags & TCL_WINDOW_EVENTS)) {
+        return;
+    }
+
+    Tcl_Time noBlock    = {0, 0};
+    Tcl_Time oneRefresh = {0, 16667};
+
+    /* Drain pending system communication layers inline */
+    if (ibus_bus) {
+        while (sd_bus_process(ibus_bus, NULL) > 0) { /* Clear out events */ }
+    }
 
     clearCallbackCount();
     glfwPollEvents();
+
+    /* Queue presentation onto the idle ring.
+     * This ensures all intermediate layout expose evaluations have
+     * completed rendering into the backing store before we swap buffers.
+     */
+    if (!displayIdleQueued) {
+        displayIdleQueued = 1;
+        Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
+    }
+
     if (tsdPtr->callbackCount) {
-	Tcl_SetMaxBlockTime(&noBlock);
+        Tcl_SetMaxBlockTime(&noBlock);
     } else {
-	Tcl_SetMaxBlockTime(&oneRefresh);
+        Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
-
 /*
  *----------------------------------------------------------------------
  *
@@ -344,15 +414,30 @@ TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
  */
  
 static void
-TkWaylandCheckProc(TCL_UNUSED(void *),
-	int flags) 
+TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
 {
     if (!(flags & TCL_WINDOW_EVENTS)) {
-	fprintf(stderr, "CheckProc called without WINDOW_EVENTS\n");
-	return;
+        return;
     }
+
+    if (ibus_bus) {
+        sd_bus_wait(ibus_bus, 0);
+        int r;
+        do {
+            r = sd_bus_process(ibus_bus, NULL);
+        } while (r > 0);
+    }
+
     glfwPollEvents();
-} 
+
+    /* Coalesce trailing window operations into the same
+     * idle presentation path rather than dropping into infinite synchronous loops.
+     */
+    if (!displayIdleQueued) {
+        displayIdleQueued = 1;
+        Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
+    }
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -474,7 +559,10 @@ TkWaylandQueueExposeEvent(
     }
 }
 
-/* ========================== GLFW Callbacks ========================== */
+/* 
+ * GLFW callbacks. These functions integrate the native GFLW events
+ * with Tk's event loop.
+ */
 
 /*
  *----------------------------------------------------------------------
