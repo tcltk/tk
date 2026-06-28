@@ -719,9 +719,17 @@ DoDeferredMap(void *cd)
     GLFWwindow *gw = TkWaylandGetGLFWwindow(winPtr);
     if (!gw) return;
     glfwShowWindow(gw);
-    int w, h;
-    glfwGetWindowSize(gw, &w, &h);
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, w, h);
+    /*
+     * Use winPtr->changes.width/height written by UpdateGeometryInfo (via
+     * glfwSetWindowSize) rather than calling glfwGetWindowSize here.
+     * glfwGetWindowSize races against the Wayland configure sequence: the
+     * compositor may not have processed the resize yet, and we would read
+     * the stale creation-time dimensions (200×200) instead of the layout-
+     * computed size.  changes.width/height are the authoritative logical
+     * dimensions we just committed.
+     */
+    TkWaylandQueueExposeEvent(winPtr, 0, 0,
+	winPtr->changes.width, winPtr->changes.height);
 }
 
 void
@@ -759,36 +767,22 @@ TkWmMapWindow(TkWindow *winPtr)
         UpdatePhotoIcon(winPtr);
     }
 
+    /*
+     * Force configWidth/configHeight stale so UpdateGeometryInfo always
+     * pushes the current reqWidth/reqHeight to GLFW unconditionally.
+     * Without this, if the creation-time size happened to equal the
+     * layout-computed size (e.g. both 200×200), the change-detect guard
+     * in UpdateGeometryInfo would skip the glfwSetWindowSize call and
+     * winPtr->changes.width/height would reflect the creation size rather
+     * than the geometry-manager result.
+     */
+    wmPtr->configWidth  = -1;
+    wmPtr->configHeight = -1;
+
     UpdateGeometryInfo((void *)winPtr);
 
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
     if (glfwWindow) {
-        int w, h;
-
-        /* Query the actual underlying size GLFW is currently initialized with. */
-        glfwGetWindowSize(glfwWindow, &w, &h);
-
-        /* 
-	 * Do not lock evaluation to a hardcoded target match like 'w == 200 && h == 200'.
-         * We always calculate the real size requested by Tk's geometry tree, and enforce
-         * it immediately before showing the window to the Wayland compositor.
-         */
-        int reqW = (wmPtr->width > 0) ? wmPtr->width : winPtr->reqWidth;
-        int reqH = (wmPtr->height > 0) ? wmPtr->height : winPtr->reqHeight;
-
-        /* Provide a reasonable safety window fallback if geometry hierarchy calculation is empty. */
-        if (reqW <= 1) reqW = (w > 1) ? w : 400;
-        if (reqH <= 1) reqH = (h > 1) ? h : 300;
-
-        /* Explicit sync to GLFW context */
-        glfwSetWindowSize(glfwWindow, reqW, reqH);
-        w = reqW;
-        h = reqH;
-
-        /* Synchronize Tk's internal variables with the configured size. */
-        winPtr->changes.width = w;
-        winPtr->changes.height = h;
-
         winPtr->flags |= TK_MAPPED;
 
         /* Defer glfwShowWindow + expose to idle so a following `wm withdraw`
@@ -3916,8 +3910,17 @@ TopLevelReqProc(
     TkWindow *winPtr = (TkWindow *)tkwin;
     WmInfo   *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
-    wmPtr->width = -1;
+    wmPtr->width  = -1;
     wmPtr->height = -1;
+
+    /*
+     * Invalidate the last-configured size so that UpdateGeometryInfo's
+     * change-detect guard does not suppress the update when the new
+     * reqWidth/reqHeight happens to equal the previous configWidth/configHeight
+     * (e.g. after a withdraw/deiconify cycle at the same size).
+     */
+    wmPtr->configWidth  = -1;
+    wmPtr->configHeight = -1;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING | WM_NEVER_MAPPED))) {
         wmPtr->flags |= (WM_UPDATE_PENDING | WM_UPDATE_SIZE_HINTS);

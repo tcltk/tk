@@ -671,7 +671,6 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  *----------------------------------------------------------------------
  */
 
-
 static void
 TkWaylandFramebufferSizeCallback(
     GLFWwindow *window,
@@ -679,6 +678,7 @@ TkWaylandFramebufferSizeCallback(
     int height)
 {
     recordCallback();
+    
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
         fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
@@ -691,7 +691,48 @@ TkWaylandFramebufferSizeCallback(
         return;
     }
 
-    /* During early initialization maps, maintain a guard. */
+    /*
+     * Stale echo guard — must run before any FBO or geometry work.
+     *
+     * When glfwShowWindow commits a Wayland surface, the compositor may
+     * re-issue a configure event at the surface's creation size (e.g.
+     * 200×200) even after a successful resize to the layout-computed size
+     * has already been acknowledged.  This happens while a synchronous
+     * D-Bus call (IBus CreateInputContext, FocusIn, etc.) is blocking:
+     * sd_bus's internal poll delivers the Wayland configure inline, firing
+     * this callback with stale creation-time dimensions.
+     *
+     * wmPtr->configWidth/configHeight record the size last committed by
+     * UpdateGeometryInfo via glfwSetWindowSize.  If the logical size
+     * derived from this callback is smaller in both dimensions than that
+     * watermark, the callback is a stale compositor echo and must be
+     * discarded entirely — including the FBO rebuild below, which would
+     * otherwise replace the correct backing store with a 200×200 one and
+     * cause all subsequent rendering to clip to the creation size even
+     * though winPtr->changes.width/height are still correct.
+     */
+
+    if (winPtr->wmInfoPtr != NULL) {
+        WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+        if (wmPtr->configWidth > 0 && wmPtr->configHeight > 0) {
+            float xScale = 1.0f, yScale = 1.0f;
+            glfwGetWindowContentScale(window, &xScale, &yScale);
+            int logW = (xScale > 0.0f) ? (int)((width  / xScale) + 0.5f) : width;
+            int logH = (yScale > 0.0f) ? (int)((height / yScale) + 0.5f) : height;
+            if (logW < wmPtr->configWidth - 1 && logH < wmPtr->configHeight - 1) {
+                fprintf(stderr,
+                    "FramebufferSizeCallback: stale echo suppressed for %s "
+                    "(fb logical %dx%d < committed %dx%d)\n",
+                    Tk_PathName(winPtr), logW, logH,
+                    wmPtr->configWidth, wmPtr->configHeight);
+                return;
+            }
+        }
+	}
+
+
+
+    /* Destroy the existing FBO before rebuilding at the new size. */
     if (winPtr->privatePtr != NULL && winPtr->privatePtr->fb != NULL) {
         if ((uintptr_t)(winPtr->privatePtr->fb) > 0x10000) {
             GLuint fbo = winPtr->privatePtr->fb->fbo;
@@ -703,7 +744,7 @@ TkWaylandFramebufferSizeCallback(
         }
     }
 
-    /* Fully rebuild frame buffer. */
+    /* Fully rebuild frame buffer at the confirmed new size. */
     if (winPtr->privatePtr) {
         winPtr->privatePtr->fb = TkWaylandCreateBackingStore(width, height);
         if (!winPtr->privatePtr->fb) {
@@ -724,22 +765,12 @@ TkWaylandFramebufferSizeCallback(
     }
 
     /*
-     * Synchronize Tk's geometry structures with the true window bounds.
-     *
-     * Do NOT issue a second, independent glfwGetWindowSize query here.
-     * This callback already received the authoritative framebuffer size
-     * (width, height) for the resize that triggered it; a separate
-     * glfwGetWindowSize call races against the same in-flight Wayland
-     * configure sequence and can observe a different generation of the
-     * window state, producing layout distortion/size skew. Instead,
-     * derive the logical (window-coordinate) size from the callback's
-     * own framebuffer size via the window's content scale, which GLFW
-     * guarantees is consistent with the width/height just delivered.
+     * Derive the logical (window-coordinate) size from the framebuffer
+     * size via the window's content scale and synchronize Tk's geometry.
      */
     {
         float xScale = 1.0f, yScale = 1.0f;
         glfwGetWindowContentScale(window, &xScale, &yScale);
-
         winPtr->changes.width  = (xScale > 0.0f)
             ? (int)((width  / xScale) + 0.5f) : width;
         winPtr->changes.height = (yScale > 0.0f)
@@ -1482,6 +1513,7 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 
     TkWaylandStoreText(winPtr, codepoint);
 }
+
 
 /*
  *----------------------------------------------------------------------

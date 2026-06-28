@@ -25,9 +25,6 @@
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
-#define GLFW_EXPOSE_NATIVE_EGL
-#include <GLFW/glfw3native.h>
-
 /*
  * Raw Wayland headers for the pointer-serial listener used to support
  * grabbed xdg_popup surfaces (menus, menubuttons, comboboxes).
@@ -552,32 +549,6 @@ TkWaylandDestroyBackingStore(TkWaylandBackingStore *store)
     ckfree((char *)store);
 }
 
-#if 0
-static void GLtest(GLFWwindow *window) {
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetWindowSize(window, &fbWidth, &fbHeight);
-    glfwMakeContextCurrent(window);
-    glViewport(0, 0, fbWidth, fbHeight); // Your expected new size
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    // Disable any potential state traps
-    glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_DEPTH_TEST);
-
-    // Draw a solid color screen-filling triangle
-    glBegin(GL_TRIANGLES);
-    glColor3f(1.0f, 0.0f, 0.0f); // Bright Red
-    glVertex2f(-1.0f, -1.0f);    // Bottom-Left
-    glVertex2f( 3.0f, -1.0f);    // Far Bottom-Right (extends past screen)
-    glVertex2f(-1.0f,  3.0f);    // Far Top-Left (extends past screen)
-    glEnd();
-}
-#endif
-
 /*
  * Buffers for font files needed for window decorations.
  */
@@ -726,7 +697,6 @@ getGlfwTkInfo(
  *----------------------------------------------------------------------
  */
 
-
 void
 renderFBO(GLFWwindow *window)
 {
@@ -767,6 +737,7 @@ renderFBO(GLFWwindow *window)
     glfwSwapBuffers(window);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -974,6 +945,7 @@ TkWaylandInitialize(void)
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR,      GLFW_TRUE);   /* NEW: Force scale awareness */
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
         fprintf(stderr, "TkWaylandInitialize: failed to create root window\n");
@@ -1049,17 +1021,6 @@ TkWaylandShutdown(TCL_UNUSED(void *))
     /* Tear down any live popup surfaces before destroying GL contexts. */
     TkWaylandPopupDestroyAll();
 
-    /* Delete NanoVG while a context still exists. */
-#if 0
-    if (mainGlfwContext.vg) {
-        /* Make the GL context of the root current if it still exists. */
-        if (mainGlfwWindow) {
-            glfwMakeContextCurrent(mainGlfwWindow);
-            nvgDeleteGLES3(mainGlfwContext.vg);
-        }
-        mainGlfwContext.vg = NULL;
-    }
-#endif
     glfwMakeContextCurrent(NULL);
     TkWaylandClearCallbacks(mainGlfwWindow);
     glfwSetErrorCallback(NULL);
@@ -1072,6 +1033,7 @@ TkWaylandShutdown(TCL_UNUSED(void *))
     TkWaylandKeyCleanup();
     shutdownInProgress = 0;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1435,32 +1397,71 @@ TkWaylandBeginDraw(
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    glfwGetFramebufferSize(
-        glfwWindow,
-        &fbWidth,
-        &fbHeight);
+    /*
+     * HIDPI FIX: Get the pixel ratio from GLFW's content scale.
+     * This is the authoritative source for HiDPI scaling on Wayland.
+     * GLFW's content scale is set by the compositor and reflects the
+     * actual scaling factor (e.g., 2.0 on a 200% HiDPI display).
+     */
+    float scaleX, scaleY;
+    glfwGetWindowContentScale(glfwWindow, &scaleX, &scaleY);
+    pixelRatio = scaleX;  /* Assume uniform scaling */
+
+    /*
+     * Get the framebuffer size (physical pixels).
+     * The FBO should always be created at the physical pixel size.
+     */
+    if (topPtr->privatePtr->fb) {
+        fbWidth = topPtr->privatePtr->fb->width;
+        fbHeight = topPtr->privatePtr->fb->height;
+    } else {
+        glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    }
 
     if (fbWidth <= 0 || fbHeight <= 0) {
         return TCL_ERROR;
     }
 
-    glfwGetWindowSize(
-        glfwWindow,
-        &winWidth,
-        &winHeight);
+    /*
+     * Compute logical size from physical size and pixel ratio.
+     * This gives us the CSS/logical pixel dimensions that Tk expects.
+     * On HiDPI, this will be smaller than the framebuffer size.
+     * For example: fb=978x764, pixelRatio=2.0 -> logical=489x382.
+     */
+    winWidth = (int)((float)fbWidth / pixelRatio + 0.5f);
+    winHeight = (int)((float)fbHeight / pixelRatio + 0.5f);
 
-    pixelRatio = 1.0f;
-    if (winWidth > 0) {
-        pixelRatio = (float)fbWidth / (float)winWidth;
+    if (winWidth <= 0 || winHeight <= 0) {
+        /* Fallback: use framebuffer size as logical size if pixelRatio is bogus. */
+        winWidth = fbWidth;
+        winHeight = fbHeight;
+        pixelRatio = 1.0f;
+    }
+
+    /*
+     * Update Tk's changes if needed to keep them in sync with the
+     * actual logical size. This handles the case where the compositor's
+     * configure event hasn't been processed by Tk's geometry manager yet.
+     */
+    if (topPtr->changes.width != winWidth || topPtr->changes.height != winHeight) {
+        fprintf(stderr, "[DIAG] TkWaylandBeginDraw: updating changes from %dx%d to %dx%d (pixelRatio=%.3f, fb=%dx%d)\n",
+                topPtr->changes.width, topPtr->changes.height,
+                winWidth, winHeight, pixelRatio, fbWidth, fbHeight);
+        topPtr->changes.width = winWidth;
+        topPtr->changes.height = winHeight;
     }
 
     glViewport(0, 0, fbWidth, fbHeight);
 
+    fprintf(stderr, "[DIAG] TkWaylandBeginDraw: %s: logical %dx%d, fb %dx%d, pixelRatio %.3f\n",
+            Tk_PathName(topPtr), winWidth, winHeight, fbWidth, fbHeight, pixelRatio);
+
     /*
      * IMPORTANT:
      * One NanoVG frame per window repaint.
+     * nvgBeginFrame takes the logical size (CSS pixels) and the pixel ratio.
+     * All subsequent drawing commands are in logical pixel coordinates.
      */
-
     if (!infoPtr->context.nvgFrameActive) {
 
         nvgBeginFrame(
