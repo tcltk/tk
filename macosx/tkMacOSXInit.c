@@ -37,7 +37,19 @@ static char tkLibPath[PATH_MAX + 1] = "";
 static char scriptPath[PATH_MAX + 1] = "";
 
 /*
- * Delete Proc for _eventInterp.
+ * The first Tcl interpreter created when initializing the NSApplication is
+ * saved as the attribute _eventInterp and used in a few places by Tk apps.
+ * For instance, it is used by the default "File -> Run Widget Demo" menu item
+ * to look up the path to the demo script, and to look up the definitions of
+ * the "::tk::mac::OnShow" and "::tk::mac::OnHide" procedures.
+ */
+
+static NSWindow *firstRootNSWindow = NULL;
+static void showRootWindow(void *clientData);
+
+/*
+ * This is the delete proc for the interpreter saved as _eventInterp, which
+ * can be deleted by a Tcl script after loading the Tk package.
  */
 
 static void InterpDeleteProc(
@@ -45,7 +57,23 @@ static void InterpDeleteProc(
     Tcl_Interp *interp) {
     (void) clientData;
     (void) interp;
-    [NSApp _clearEventInterp];
+
+    /*
+     * It is possible for the interpreter to be deleted before its root window
+     * has been ordered front.  Deleting the interpreter will destroy the
+     * window, and cause the idle task which orders it front to crash.  So we
+     * cancel that idle task, if it has not run yet.
+     */
+    
+    Tcl_CancelIdleCall(showRootWindow, firstRootNSWindow);
+
+    /*
+     * To avoid use-after-free crashes, we set the _eventInterp attribute to
+     * NULL when the interpreter it points to is deleted.  This will disable
+     * the features which use that interpreter.
+     */
+
+     [NSApp _clearEventInterp];
 }
 
 /*
@@ -250,6 +278,7 @@ static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
     /*
      * Remember our interpreter.
      */
+
     _eventInterp = interp;
     Tcl_CallWhenDeleted(interp, InterpDeleteProc, NULL);
 
@@ -427,11 +456,6 @@ TCL_NORETURN void TkpExitProc(
     void *clientdata)
 {
     bool doCleanup = doCleanupFromExit;
-    if (doCleanupFromExit) {
-	doCleanupFromExit = false; /* prevent possible recursive call. */
-	closePanels();
-    }
-
     /*
      * At this point it is too late to be looking up the Tk window associated
      * to any NSWindows, but it can happen.  This makes sure the answer is None
@@ -441,6 +465,12 @@ TCL_NORETURN void TkpExitProc(
      */
 
     [NSApp setTkWillExit:YES];
+
+    if (doCleanupFromExit) {
+	doCleanupFromExit = false; /* prevent possible recursive call. */
+	closePanels();
+    }
+    
     for (TKWindow *w in [NSApp orderedWindows]) {
 	if ([w respondsToSelector: @selector (tkWindow)]) {
 	    [w setTkWindow: None];
@@ -681,6 +711,7 @@ TkpInit(
 		 */
 
 		Tcl_DoWhenIdle(showRootWindow, window);
+		firstRootNSWindow = window;
 		break;
 	    }
 	}
