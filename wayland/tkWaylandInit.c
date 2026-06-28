@@ -8,9 +8,8 @@
  *   are deployed.
  *
  *
- * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2026  Kevin Walzer
- * Copyright © 2026 Marc Culler
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 2026  Kevin Walzer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -25,13 +24,10 @@
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
-/*
- * Raw Wayland headers for the pointer-serial listener used to support
- * grabbed xdg_popup surfaces (menus, menubuttons, comboboxes).
- */
-#define GLFW_EXPOSE_NATIVE_WAYLAND
+
+
+#define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
-#include <wayland-client.h>
 
 
 /*
@@ -57,497 +53,31 @@ GLFWwindow *mainGlfwWindow;
 static TkWaylandContext mainGlfwContext = {0};
 static int shutdownInProgress = 0;
 
-/*
- *----------------------------------------------------------------------
- *
- * Raw wl_pointer serial listener
- *
- *	GLFW does not expose the Wayland serial of pointer button events
- *	through its public API, but xdg_popup_grab requires a valid serial
- *	from the most recent button-press event.  We attach our own
- *	wl_pointer listener (alongside GLFW's own, which remains untouched)
- *	purely to record the serial of each button-press event.  The
- *	listener does not call any wl_pointer setter functions, so it
- *	cannot interfere with GLFW's own pointer handling.
- *
- *----------------------------------------------------------------------
- */
+#if 0
+static void GLtest(GLFWwindow *window) {
+    int fbWidth = 0, fbHeight = 0;
+    glfwGetWindowSize(window, &fbWidth, &fbHeight);
+    glfwMakeContextCurrent(window);
+    glViewport(0, 0, fbWidth, fbHeight); // Your expected new size
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-/*
- * Last known pointer position, in toplevel-surface-local logical pixels.
- * Updated by PointerMotionTrack.  Menu popups use empty input regions
- * (see TkWaylandSubsurfaceCreate), so the toplevel surface continues to
- * receive all pointer motion/button events -- including while the
- * cursor is visually over a menu -- with coordinates in this same space.
- */
-static int lastPointerX = 0;
-static int lastPointerY = 0;
+    // Disable any potential state traps
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_STENCIL_TEST);
+    glDisable(GL_DEPTH_TEST);
 
-static void
-PointerEnterStub(
-    void *data, struct wl_pointer *pointer, uint32_t serial,
-    struct wl_surface *surface, wl_fixed_t sx, wl_fixed_t sy)
-{
-    (void)data; (void)pointer; (void)serial; (void)surface;
-
-    lastPointerX = wl_fixed_to_int(sx);
-    lastPointerY = wl_fixed_to_int(sy);
+    // Draw a solid color screen-filling triangle
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0f, 0.0f, 0.0f); // Bright Red
+    glVertex2f(-1.0f, -1.0f);    // Bottom-Left
+    glVertex2f( 3.0f, -1.0f);    // Far Bottom-Right (extends past screen)
+    glVertex2f(-1.0f,  3.0f);    // Far Top-Left (extends past screen)
+    glEnd();
 }
-
-static void
-PointerLeaveStub(
-    void *data, struct wl_pointer *pointer, uint32_t serial,
-    struct wl_surface *surface)
-{
-    (void)data; (void)pointer; (void)serial; (void)surface;
-}
-
-static void
-PointerMotionTrack(
-    void *data, struct wl_pointer *pointer, uint32_t time,
-    wl_fixed_t sx, wl_fixed_t sy)
-{
-    (void)data; (void)pointer; (void)time;
-
-    lastPointerX = wl_fixed_to_int(sx);
-    lastPointerY = wl_fixed_to_int(sy);
-
-    if (TkWaylandMenuPopupActive()) {
-        TkWaylandMenuHandlePointerMotion(lastPointerX, lastPointerY);
-    }
-}
-
-static void
-PointerButtonSerial(
-    void *data, struct wl_pointer *pointer, uint32_t serial,
-    uint32_t time, uint32_t button, uint32_t state)
-{
-    (void)data; (void)pointer; (void)time; (void)button;
-
-    if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-        TkWaylandPopupSetSerial(serial);
-
-        if (TkWaylandMenuPopupActive()) {
-            TkWaylandMenuHandlePointerButton(lastPointerX, lastPointerY,
-                                              (int)button, (int)state);
-        }
-    } else {
-        if (TkWaylandMenuPopupActive()) {
-            TkWaylandMenuHandlePointerButton(lastPointerX, lastPointerY,
-                                              (int)button, (int)state);
-        }
-    }
-}
-
-static void
-PointerAxisStub(
-    void *data, struct wl_pointer *pointer, uint32_t time,
-    uint32_t axis, wl_fixed_t value)
-{
-    (void)data; (void)pointer; (void)time; (void)axis; (void)value;
-}
-
-static const struct wl_pointer_listener tkPointerSerialListener = {
-    PointerEnterStub,
-    PointerLeaveStub,
-    PointerMotionTrack,
-    PointerButtonSerial,
-    PointerAxisStub,
-};
-
-/*
- *----------------------------------------------------------------------
- *
- * Raw wl_keyboard listener -- Escape-to-dismiss for menu popups
- *
- *	Menu popups created via TkWaylandPostMenuAtAnchor (subsurface-based)
- *	have no xdg_popup grab, so the compositor does not deliver an
- *	implicit "dismiss on Escape" behavior.  We bind our own
- *	wl_keyboard listener (alongside GLFW's) purely to detect the
- *	Escape key (Linux evdev keycode KEY_ESC = 1) while a menu is
- *	posted, and call TkWaylandMenuHandleEscape() to dismiss it.
- *
- *	Like the pointer listener, this does not call any wl_keyboard
- *	setter functions and cannot interfere with GLFW's own keyboard
- *	handling or IBus.
- *
- *----------------------------------------------------------------------
- */
-
-#define TK_WAYLAND_KEY_ESC 1  /* linux/input-event-codes.h: KEY_ESC */
-
-static void
-KeyboardKeymapStub(
-    void *data, struct wl_keyboard *keyboard, uint32_t format,
-    int fd, uint32_t size)
-{
-    (void)data; (void)keyboard; (void)format; (void)fd; (void)size;
-}
-
-static void
-KeyboardEnterStub(
-    void *data, struct wl_keyboard *keyboard, uint32_t serial,
-    struct wl_surface *surface, struct wl_array *keys)
-{
-    (void)data; (void)keyboard; (void)serial; (void)surface; (void)keys;
-}
-
-static void
-KeyboardLeaveStub(
-    void *data, struct wl_keyboard *keyboard, uint32_t serial,
-    struct wl_surface *surface)
-{
-    (void)data; (void)keyboard; (void)serial; (void)surface;
-}
-
-static void
-KeyboardKeyEscape(
-    void *data, struct wl_keyboard *keyboard, uint32_t serial,
-    uint32_t time, uint32_t key, uint32_t state)
-{
-    (void)data; (void)keyboard; (void)serial; (void)time;
-
-    if (key == TK_WAYLAND_KEY_ESC &&
-        state == WL_KEYBOARD_KEY_STATE_PRESSED &&
-        TkWaylandMenuPopupActive()) {
-        TkWaylandMenuHandleEscape();
-    }
-}
-
-static void
-KeyboardModifiersStub(
-    void *data, struct wl_keyboard *keyboard, uint32_t serial,
-    uint32_t modsDepressed, uint32_t modsLatched, uint32_t modsLocked,
-    uint32_t group)
-{
-    (void)data; (void)keyboard; (void)serial;
-    (void)modsDepressed; (void)modsLatched; (void)modsLocked; (void)group;
-}
-
-static void
-KeyboardRepeatInfoStub(
-    void *data, struct wl_keyboard *keyboard, int32_t rate, int32_t delay)
-{
-    (void)data; (void)keyboard; (void)rate; (void)delay;
-}
-
-static const struct wl_keyboard_listener tkKeyboardEscapeListener = {
-    KeyboardKeymapStub,
-    KeyboardEnterStub,
-    KeyboardLeaveStub,
-    KeyboardKeyEscape,
-    KeyboardModifiersStub,
-    KeyboardRepeatInfoStub,
-};
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandRegisterPointerListener --
- *
- *	Attach tkPointerSerialListener to the wl_pointer obtained from the
- *	wl_seat bound by TkWaylandPopupInit().  Must be called after
- *	TkWaylandPopupInit() has run.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Adds a listener to the seat's wl_pointer object.  Wayland dispatches
- *	to listeners in registration order, so this listener's
- *	PointerButtonSerial fires (and stores the serial) before GLFW's own
- *	pointer callback is invoked for the same event.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandRegisterPointerListener(void)
-{
-    struct wl_seat *seat = TkWaylandPopupGetSeat();
-    if (!seat) {
-        fprintf(stderr,
-            "TkWaylandRegisterPointerListener: no seat available\n");
-        return;
-    }
-    struct wl_pointer *pointer = wl_seat_get_pointer(seat);
-    if (!pointer) {
-        fprintf(stderr,
-            "TkWaylandRegisterPointerListener: seat has no pointer\n");
-        return;
-    }
-    wl_pointer_add_listener(pointer, &tkPointerSerialListener, NULL);
-    fprintf(stderr,
-        "TkWaylandRegisterPointerListener: serial listener attached\n");
-
-    /*
-     * Also attach the Escape-detection keyboard listener.  This shares
-     * the same registration-order guarantee: our KeyboardKeyEscape fires
-     * before GLFW's own keyboard callback for the same event, and since
-     * it calls no wl_keyboard setters it cannot interfere with GLFW or
-     * IBus key handling.
-     */
-    struct wl_keyboard *keyboard = wl_seat_get_keyboard(seat);
-    if (!keyboard) {
-        fprintf(stderr,
-            "TkWaylandRegisterPointerListener: seat has no keyboard\n");
-        return;
-    }
-    wl_keyboard_add_listener(keyboard, &tkKeyboardEscapeListener, NULL);
-    fprintf(stderr,
-        "TkWaylandRegisterPointerListener: escape listener attached\n");
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandHitTest --
- *
- *	Recursive depth-first hit test over the Tk window tree.  Coordinates
- *	are relative to the toplevel's surface origin (i.e. the same space
- *	as GLFW cursor-position callbacks for that toplevel).
- *
- * Results:
- *	The innermost mapped TkWindow containing (x, y), or NULL.
- *
- *----------------------------------------------------------------------
- */
-
-static TkWindow *
-TkWaylandHitTest(
-    TkWindow *winPtr,
-    int       x,
-    int       y)
-{
-    if (!(winPtr->flags & TK_MAPPED)) {
-        return NULL;
-    }
-
-    int wx = Tk_X((Tk_Window)winPtr);
-    int wy = Tk_Y((Tk_Window)winPtr);
-    int ww = Tk_Width((Tk_Window)winPtr);
-    int wh = Tk_Height((Tk_Window)winPtr);
-
-    if (x < wx || x >= wx + ww || y < wy || y >= wy + wh) {
-        return NULL;
-    }
-
-    /* Check children topmost-first (last in the sibling chain is on top). */
-    for (TkWindow *childPtr = winPtr->childList;
-         childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        TkWindow *hit = TkWaylandHitTest(childPtr, x - wx, y - wy);
-        if (hit) {
-            return hit;
-        }
-    }
-
-    return winPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWindowAtPos --
- *
- *	Find the innermost mapped Tk window under the given coordinates in
- *	a GLFW toplevel's surface space.
- *
- * Results:
- *	The TkWindow under (x, y), or NULL if none.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE TkWindow *
-TkWaylandWindowAtPos(
-    GLFWwindow *glfwWindow,
-    int         x,
-    int         y)
-{
-    TkWindow *toplevel = TkWaylandGetTkWindow(glfwWindow);
-    if (!toplevel) return NULL;
-
-    /*
-     * The hit test recurses using coordinates relative to each window's
-     * own origin; the toplevel's own x,y offset is 0 in its own surface
-     * space, so we start the recursion directly with (x, y).
-     */
-    for (TkWindow *childPtr = toplevel->childList;
-         childPtr != NULL;
-         childPtr = childPtr->nextPtr) {
-        TkWindow *hit = TkWaylandHitTest(childPtr, x, y);
-        if (hit) return hit;
-    }
-
-    if (x >= 0 && y >= 0 &&
-        x < Tk_Width((Tk_Window)toplevel) &&
-        y < Tk_Height((Tk_Window)toplevel)) {
-        return toplevel;
-    }
-    return NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandPostVirtualEvent --
- *
- *	Queue a virtual event (e.g. "<<MenuDone>>") for the given window on
- *	Tk's normal event queue.  Used by tkWaylandPopup.c consumers (menus,
- *	menubuttons) to defer cleanup from a Wayland protocol callback --
- *	which may run during wl_display_dispatch, outside the normal Tcl
- *	event loop -- to a point where it is safe to manipulate Tk's window
- *	hierarchy.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Queues a TK_VIRTUALEVENT XEvent via Tk_QueueWindowEvent.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandPostVirtualEvent(
-    TkWindow   *winPtr,
-    const char *eventName)
-{
-    if (!winPtr) return;
-
-    XVirtualEvent event;
-    memset(&event, 0, sizeof(event));
-
-    event.type    = VirtualEvent;
-    event.serial  = 0;
-    event.send_event = 0;
-    event.display = winPtr->display;
-    event.event   = Tk_WindowId(winPtr);
-    event.root    = XRootWindow(winPtr->display, 0);
-    event.subwindow = None;
-    event.time    = 0;
-    event.x = event.y = 0;
-    event.x_root = event.y_root = 0;
-    event.state   = 0;
-    event.same_screen = 1;
-    event.name    = Tk_GetUid(eventName);
-
-    Tk_QueueWindowEvent((XEvent *)&event, TCL_QUEUE_TAIL);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandCreateBackingStore --
- *
- *	Allocate a new backing store FBO with the specified dimensions.
- *	Creates a color texture, depth+stencil renderbuffer, and a
- *	framebuffer object with both attachments.  All GL resources are
- *	wrapped in a TkWaylandBackingStore structure for safe access by
- *	popup code.
- *
- * Results:
- *	Returns a pointer to the new TkWaylandBackingStore structure, or
- *	NULL if allocation failed.
- *
- * Side effects:
- *	Allocates OpenGL texture, renderbuffer, and framebuffer objects.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE TkWaylandBackingStore *
-TkWaylandCreateBackingStore(int width, int height)
-{
-    TkWaylandBackingStore *store = (TkWaylandBackingStore *)ckalloc(sizeof(TkWaylandBackingStore));
-    if (!store) {
-        return NULL;
-    }
-
-    store->width = width;
-    store->height = height;
-
-    /* Generate and bind the Framebuffer Object. */
-    glGenFramebuffers(1, &store->fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, store->fbo);
-
-    /* Generate, bind, and configure the Color Texture Attachment. */
-    glGenTextures(1, &store->colorTex);
-    glBindTexture(GL_TEXTURE_2D, store->colorTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-
-     /* Explicitly set filtering and clamping options on colorTex. */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    /* Attach the color texture map to the frame container. */
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, store->colorTex, 0);
-    glGenRenderbuffers(1, &store->depthStencilRbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, store->depthStencilRbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    
-    /* Attach our combined depth/stencil buffer layout to the frame container. */
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, store->depthStencilRbo);
-
-    /* Validate structural stability. */
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    printf("CreateWindow FBO status for .: 0x%x\n", status);
-    fflush(stdout);
-
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "CRITICAL ERROR: Failed to finalize FBO backing store mapping. Code: 0x%x\n", status);
-        /* Clean up. */
-        glDeleteTextures(1, &store->colorTex);
-        glDeleteRenderbuffers(1, &store->depthStencilRbo);
-        glDeleteFramebuffers(1, &store->fbo);
-        ckfree((char *)store);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        return NULL;
-    }
-
-    /* Unbind and clear context tracking. */
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    return store;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandDestroyBackingStore --
- *
- *	Free all OpenGL resources associated with a backing store and
- *	free the structure itself.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Deletes OpenGL framebuffer, texture, and renderbuffer objects.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandDestroyBackingStore(TkWaylandBackingStore *store)
-{
-    if (!store) {
-        return;
-    }
-    printf("TkWaylandDestroyBackingStore: destroying FBO %u\n", store->fbo);
-    fflush(stdout);
-
-    /* Delete. */
-    glDeleteTextures(1, &store->colorTex);
-    if (store->depthStencilRbo) {
-        glDeleteRenderbuffers(1, &store->depthStencilRbo);
-    }
-    glDeleteFramebuffers(1, &store->fbo);
-    ckfree((char *)store);
-}
+#endif
 
 /*
  * Buffers for font files needed for window decorations.
@@ -680,125 +210,40 @@ getGlfwTkInfo(
  *
  * renderFBO --
  *
- * 	This function is called to draw the current contents of the
- * 	backing store framebuffer of a glfwWindow on the screen.  It uses
- * 	glBlitFramebuffer to blit the framebuffer to the back buffer in the
- * 	window's OpenGL context and then calls glfwSwapBuffers to swap the
- * 	back buffer to the screen.  The backing store FBO is left unchanged
- * 	for subsequent drawing functions to modify.
+ *      This static function is called to draw the current contents of the
+ *      backing store framebuffer of a glfwWindow on the screen.  It uses the
+ *      glBlitFramebuffer to blit the framebuffer to the back buffer in the
+ *      window's OpenGL context and then calls glfwSwapBuffers to swap the
+ *      back buffer to the screen.  The backing store FBO is left unchanged
+ *      for subsequent drawing functions to modify.
  *
  * Results:
- * 	None.
+ *      None.
  *
  * Side effects:
- * 	The current state of the window's backing store framebuffer
- * 	is rendered on the screen.
- *
- *----------------------------------------------------------------------
+ *      The current state of the window's backing store framebuffer
+ *      is rendered on the screen.
  */
 
-void
-renderFBO(GLFWwindow *window)
+static void renderFBO(
+    GLFWwindow *glfwWindow)
 {
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-    if (!infoPtr || !infoPtr->winPtr || !infoPtr->winPtr->privatePtr) {
-        return;
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    if (!infoPtr) {
+	fprintf(stderr, "renderFBO: No UserPointer\n");
+	return;
     }
-
-    TkWindow *winPtr = infoPtr->winPtr;
-    glfwMakeContextCurrent(window);
-
-    if (!winPtr->privatePtr->fb) {
-        glClearColor(0.8509f, 0.8509f, 0.8509f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glfwSwapBuffers(window);
-        return;
-    }
-
-    TkWaylandBackingStore *store = winPtr->privatePtr->fb;
-
-    int fbWidth = 0, fbHeight = 0;
-    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
-    if (fbWidth <= 0 || fbHeight <= 0) {
-        return;
-    }
-
-    glDisable(GL_SCISSOR_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_DEPTH_TEST);
-
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, store->fbo);
+    NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
+    int fbWidth, fbHeight;
+    glfwMakeContextCurrent(glfwWindow);
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-    glBlitFramebuffer(0, 0, store->width, store->height,
-                      0, 0, fbWidth, fbHeight,
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-    glfwSwapBuffers(window);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandDisplayAllWindows --
- *
- * 	Called by TkWaylandSetupProc to display any "dirty" windows whose
- * 	backing store framebuffer has been changed by a display proc run by
- * 	Tcl_DoOneEvent since the last call to the SetupProc. The framebuffer
- * 	is blitted to the GL back buffer and then glfwSwapBuffers is called.
- *
- * Results:
- * 	None.
- *
- * Side effects:
- * 	Updates windows on the screen.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-TkWaylandDisplayAllWindows(void)
-{
-    static int callCount = 0;
-    int considered = 0, rendered = 0;
-    callCount++;
-
-    for (glfwTkInfo *infoPtr = glfwTkInfoList;
-         infoPtr;
-         infoPtr = infoPtr->nextPtr) {
-
-        considered++;
-
-        if (!infoPtr->winPtr ||
-            !infoPtr->winPtr->privatePtr) {
-            continue;
-        }
-
-        if (!(infoPtr->flags & needsDisplay)) {
-            continue;
-        }
-
-        if (infoPtr->flags & dontSwap) {
-            continue;
-        }
-
-        if (infoPtr->context.nvgFrameActive) {
-            nvgEndFrame(infoPtr->context.vg);
-            infoPtr->context.nvgFrameActive = 0;
-        }
-
-        rendered++;
-        renderFBO(infoPtr->glfwWindow);
-
-        infoPtr->flags &= ~needsDisplay;
-    }
-
-    if (callCount <= 200) {
-        fprintf(stderr, "[DIAG] TkWaylandDisplayAllWindows call #%d: considered=%d rendered=%d\n",
-                callCount, considered, rendered);
-    }
+    glBlitFramebuffer(0, 0, fbWidth, fbHeight,
+		      0, 0, fbWidth, fbHeight,
+		      GL_COLOR_BUFFER_BIT,
+		      GL_NEAREST);
+    glfwSwapBuffers(glfwWindow);
 }
 
 /*
@@ -820,8 +265,8 @@ TkWaylandDisplayAllWindows(void)
  *
  *      To make this work correctly in this port we avoid calling
  *      glfwSwapBuffers between the two calls.  In the second call
- *      we blit the rectangle from our backing store framebuffer and
- *      then call glfwSwapBuffers.  We don't bother clipping the
+ *      we blit the rectange from our backing store framebuffer and
+ *      the call glfwSwapBuffers.  We don't bother clipping the
  *      drawing operations.
  *
  * Results:
@@ -840,31 +285,62 @@ void
 Tk_ClipDrawableToRect(
     TCL_UNUSED(Display *),
     Drawable drawable,
-    TCL_UNUSED(int), /* x */
-    TCL_UNUSED(int), /* y */
+    int x, int y,
     int width, int height)
 {
-	
+    (void) x; (void) y; (void) width; (void) height;
+#if 0  // This experiment seems to have failed.
+       // I don't know why.
     GLFWwindow *glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
-    if (!glfwWindow) {
-        return;
-    }
-
     glfwTkInfo *glfwInfoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (!glfwInfoPtr) {
-        return;
-    }
-
+    //// Check for NULL
     if (width == -1 || height == -1) {
-        /* Double buffer segment complete: release lock, flag frame ready. */
-        glfwInfoPtr->flags &= ~dontSwap;
-        glfwInfoPtr->flags |= needsDisplay;
+	fprintf(stderr, "Finished double buffer section\n");
+	renderFBO(glfwWindow);
+	glfwInfoPtr->flags &= ~dontSwap;
+	glfwInfoPtr->flags |= needsDisplay;
     } else {
-        /* Double buffer segment starting: lock down presentation swaps. */
-        glfwInfoPtr->flags |= dontSwap;
+	fprintf(stderr, "Starting double buffer section ====> \n");
+	glfwInfoPtr->flags |= dontSwap;
+	glfwInfoPtr->flags &= ~needsDisplay;
     }
+#else
+    (void) drawable;
+#endif
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandDisplayAllWindows --
+ *
+ *	Called by TkWaylandSetupProc to display any "dirty" windows whose
+ *      backing store framebuffer has been changed by a display proc run by
+ *      Tcl_DoOneEvent since the last call to the SetupProc.  The framebuffer
+ *      is blitted to the GL back buffer and then gflwSwapBuffers is called.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates windows on the screen.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandDisplayAllWindows()
+{
+    for (glfwTkInfo* infoPtr = glfwTkInfoList;
+	 infoPtr != NULL;
+	 infoPtr = infoPtr->nextPtr) {
+	if (infoPtr->flags & needsDisplay) {
+	    GLFWwindow *glfwWindow = infoPtr->glfwWindow;
+	    fprintf(stderr, "Displaying %s\n", Tk_PathName(infoPtr->winPtr));
+	    renderFBO(glfwWindow);
+	    infoPtr->flags &= ~needsDisplay;
+	}
+    }
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -935,17 +411,15 @@ TkWaylandInitialize(void)
      */
 
     /* Hints apply to the next call to glfwCreateWindow. */
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+    //glfwWindowHint(GLFW_OPENGL_COMPAT_PROFILE, GLFW_TRUE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-    glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
     glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR,      GLFW_TRUE);   /* NEW: Force scale awareness */
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
         fprintf(stderr, "TkWaylandInitialize: failed to create root window\n");
@@ -967,20 +441,6 @@ TkWaylandInitialize(void)
      */
     glfwMakeContextCurrent(mainGlfwWindow);
     glfwSwapInterval(0);
-
-    /*
-     * Initialize the native popup module (binds wl_compositor,
-     * xdg_wm_base, wl_seat) and attach the pointer-serial listener.
-     * Both require the Wayland display to be open, which it is once
-     * mainGlfwWindow has been created above.
-     */
-    if (TkWaylandPopupInit() != TCL_OK) {
-        fprintf(stderr,
-            "TkWaylandInitialize: TkWaylandPopupInit failed; "
-            "popups/menus will not work\n");
-    } else {
-        TkWaylandRegisterPointerListener();
-    }
 
     GlfwIsInitialized = 1;
     shutdownInProgress = 0;
@@ -1018,9 +478,17 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         return;
     }
 
-    /* Tear down any live popup surfaces before destroying GL contexts. */
-    TkWaylandPopupDestroyAll();
-
+    /* Delete NanoVG while a context still exists. */
+#if 0
+    if (mainGlfwContext.vg) {
+        /* Make the GL context of the root current if it still exists. */
+        if (mainGlfwWindow) {
+            glfwMakeContextCurrent(mainGlfwWindow);
+            nvgDeleteGLES3(mainGlfwContext.vg);
+        }
+        mainGlfwContext.vg = NULL;
+    }
+#endif
     glfwMakeContextCurrent(NULL);
     TkWaylandClearCallbacks(mainGlfwWindow);
     glfwSetErrorCallback(NULL);
@@ -1033,7 +501,6 @@ TkWaylandShutdown(TCL_UNUSED(void *))
     TkWaylandKeyCleanup();
     shutdownInProgress = 0;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -1052,7 +519,7 @@ TkWaylandShutdown(TCL_UNUSED(void *))
  *
  *----------------------------------------------------------------------
  */
- 
+
 MODULE_SCOPE GLFWwindow *
 TkWaylandCreateWindow(
     TkWindow   *winPtr,
@@ -1061,144 +528,93 @@ TkWaylandCreateWindow(
     const char *title,
     Drawable   *drawableOut)
 {
-    fprintf(stderr, "[DIAG] TkWaylandCreateWindow: title=%s requested=%dx%d winPtr=%p\n",
-            title ? title : "(null)", width, height, (void *)winPtr);
-    if (!winPtr) {
-        Tcl_Panic("TkWaylandCreateWindow called with null winPtr\n");
+    fprintf(stderr, "TkWaylandCreateWindow\n");
+    if (winPtr == NULL) {
+	Tcl_Panic("TkWaylandCreateWindow called with null winPtr\n");
     }
+    GLFWwindow    *glfwWindow = NULL;
 
+    /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
-    if (!GlfwIsInitialized && TkWaylandInitialize() != TCL_OK) {
-        return NULL;
+    if (!GlfwIsInitialized) {
+        if (TkWaylandInitialize() != TCL_OK)
+            return NULL;
     }
-
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
-
-    GLFWwindow *glfwWindow = NULL;
-
-    /* Root window uses existing mainGlfwWindow. */
-    if (winPtr == (TkWindow *)Tk_MainWindow(winPtr->mainPtr->interp)) {
-        fprintf(stderr, "[DIAG] TkWaylandCreateWindow: ROOT branch, resizing mainGlfwWindow to %dx%d\n",
-                width, height);
+    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
+	/* This is the root window. */
         glfwWindow = mainGlfwWindow;
         glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
-    } else {
-        fprintf(stderr, "[DIAG] TkWaylandCreateWindow: NON-ROOT branch, creating new window %dx%d\n",
-                width, height);
-        /* Create a new toplevel. */
-        glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-        glfwWindowHint(GLFW_CONTEXT_CREATION_API,  GLFW_EGL_CONTEXT_API);
-        glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-        glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
-        glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
-        glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-
-        glfwWindow = glfwCreateWindow(width, height,
-                                      title ? title : "",
-                                      NULL, mainGlfwWindow);
-        if (!glfwWindow) return NULL;
-
-        glfwMakeContextCurrent(glfwWindow);
-        glfwSwapInterval(0);
+    } else { /* A toplevel other than the root */
+	/* Hints apply to the next call to glfwCreateWindow. */
+	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+	glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+	/*
+	 * Sharing the GL context makes image rendering more efficient.
+	 */
+        glfwWindow = glfwCreateWindow(width, height, title ? title : "",
+				      NULL, mainGlfwWindow);
+        if (!glfwWindow) {
+	    return NULL;
+	}
+	glfwMakeContextCurrent(glfwWindow);
+	glfwSwapInterval(0);
+	glfwShowWindow(glfwWindow);
+	glfwSwapBuffers(glfwWindow);
     }
-
-    /* Create Tk/GLFW context wrapper. */
     glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
-    fprintf(stderr, "nvgContext for %s is at %p\n",
-            Tk_PathName(winPtr), infoPtr);
-
+    fprintf(stderr, "nvgContext for %s is at %p\n", Tk_PathName(winPtr),
+	   infoPtr);
     if (glfwWindow == mainGlfwWindow) {
-        mainGlfwContext = infoPtr->context;
+	mainGlfwContext = infoPtr->context;
     }
-
     glfwSetWindowUserPointer(glfwWindow, infoPtr);
     TkWaylandSetupCallbacks(glfwWindow);
-
     winPtr->privatePtr->glfwWindow = glfwWindow;
     winPtr->changes.width  = width;
     winPtr->changes.height = height;
 
-    /*
-     * Allocate the backing store FBO structure.  The framebuffer size
-     * callback will create the actual GL resources, but we need the
-     * structure allocated now so popup code can safely dereference
-     * winPtr->privatePtr->fb.
-     */
-    if (winPtr->privatePtr) {
-        /* Get current framebuffer size from GLFW */
-        int fbW = 0, fbH = 0;
-        glfwGetFramebufferSize(glfwWindow, &fbW, &fbH);
-        fprintf(stderr, "[DIAG] TkWaylandCreateWindow: glfwGetFramebufferSize returned %dx%d (requested was %dx%d)\n",
-                fbW, fbH, width, height);
-        if (fbW > 0 && fbH > 0) {
-            winPtr->privatePtr->fb = TkWaylandCreateBackingStore(fbW, fbH);
-        } else {
-            /* Fallback: allocate with the requested window size */
-            winPtr->privatePtr->fb = TkWaylandCreateBackingStore(width, height);
-        }
-    }
-
-    /* Pixel ratio logging. */
+    /* Set the initial pixel ratio for this window. */
+    int fbWidth, fbHeight;
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     fprintf(stderr, "Initial pixel ratio for %s is %f\n",
-            Tk_PathName(winPtr), scale);
+	   Tk_PathName(winPtr), scale);
 
-    /* Return drawable. */
-    if (drawableOut) {
-        *drawableOut = TkWaylandDrawableForTkWindow(winPtr);
+    /* Create a framebuffer for the backing store of the window. */
+    glfwMakeContextCurrent(glfwWindow);
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
+						     fbWidth, fbHeight, 0);
+    if (winPtr->privatePtr->fb == NULL) {
+		fprintf(stderr, "Could not create NanoVG framebuffer\n");
     }
-
-    /*
-     * Clear to the Tk background color before first presentation,
-     * if the FBO has already been created.
-     */
-    if (winPtr->privatePtr->fb) {
-        TkWaylandBackingStore *store = winPtr->privatePtr->fb;
-
-        glfwMakeContextCurrent(glfwWindow);
-        glBindFramebuffer(GL_FRAMEBUFFER, store->fbo);
-
-        glClearColor(
-            ((winPtr->atts.background_pixel >> 16) & 0xFF) / 255.0f,
-            ((winPtr->atts.background_pixel >>  8) & 0xFF) / 255.0f,
-            ( winPtr->atts.background_pixel        & 0xFF) / 255.0f,
-            1.0f);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        fprintf(stderr, "CreateWindow FBO status for %s: 0x%x\n",
-                Tk_PathName(winPtr), status);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-
-    /* Show window AFTER FBO is (eventually) ready. */
-    if (glfwWindow != mainGlfwWindow) {
-        fprintf(stderr, "[DIAG] TkWaylandCreateWindow: calling glfwShowWindow (non-root)\n");
-        glfwShowWindow(glfwWindow);
+    fprintf(stderr, "Window %s has glfwWindow %p and framebuffer %p\n",
+	   Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fb);
+    nvgluBindFramebuffer(winPtr->privatePtr->fb);
+    /* Check FBO completeness for now. */
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "FBO is incomplete (status=0x%x)\n", status);
     } else {
-        fprintf(stderr, "[DIAG] TkWaylandCreateWindow: ROOT window NOT shown here (left hidden)\n");
+	fprintf(stderr, "Window %s has a complete framebuffer @ %p\n",
+	       Tk_PathName(winPtr), winPtr->privatePtr->fb);
     }
 
-    /* Present the cleared frame (or first real frame once FBO exists). */
-    infoPtr->flags |= needsDisplay;
-    renderFBO(glfwWindow);
-
-    fprintf(stderr, "[DIAG] TkWaylandCreateWindow: about to glfwPollEvents (window=%s)\n",
-            Tk_PathName(winPtr));
-    /* Flush Wayland configure/map. */
-    glfwPollEvents();
-    fprintf(stderr, "[DIAG] TkWaylandCreateWindow: glfwPollEvents returned\n");
-
-    TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
-
+    if (drawableOut) {
+	*drawableOut = TkWaylandDrawableForTkWindow(winPtr);
+    }
+    if (winPtr != NULL) {
+        TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
+    }
     return glfwWindow;
 }
 
@@ -1228,16 +644,6 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
     if (shutdownInProgress) {
 	return;
     }
-
-    /* Destroy the backing store FBO before destroying the window. */
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (infoPtr && infoPtr->winPtr && infoPtr->winPtr->privatePtr) {
-        if (infoPtr->winPtr->privatePtr->fb) {
-            TkWaylandDestroyBackingStore(infoPtr->winPtr->privatePtr->fb);
-            infoPtr->winPtr->privatePtr->fb = NULL;
-        }
-    }
-
     destroyGlfwTkInfo(glfwWindow);
     glfwDestroyWindow(glfwWindow);
 
@@ -1253,19 +659,14 @@ TkWaylandDestroyWindow(GLFWwindow *glfwWindow)
  *
  * TkWaylandBeginDraw --
  *
- *	Prepares a drawing context for rendering into a given Drawable.
- *	Resolves whether the target is an on-screen Window or a rolling
- *	integer ID mapped to a hardware-accelerated Pixmap FBO.
- *	Makes the associated OpenGL context current, binds the correct
- *	framebuffer, and configures NanoVG canvas bounds.
+ *	Prepares the NanoVG context for drawing. Uses the provided
+ *      dcPtr to store context-specific state.
  *
  * Results:
- *	TCL_OK on success, TCL_ERROR if the drawable is invalid, unmapped,
- *	or its context could not be safely resolved.
+ *	TCL_OK if drawing can proceed, TCL_ERROR otherwise.
  *
  * Side effects:
- *	Changes the current OpenGL context, updates active framebuffer
- *	bindings, and populates the fields in dcPtr.
+ *      Changes nvg and gl state.
  *
  *----------------------------------------------------------------------
  */
@@ -1276,237 +677,54 @@ TkWaylandBeginDraw(
     GC gc,
     TkWaylandDrawingContext *dcPtr)
 {
-    TkWindow *winPtr;
-    TkWindow *topPtr;
-    GLFWwindow *glfwWindow;
-    glfwTkInfo *infoPtr;
-    int fbWidth, fbHeight;
-    int winWidth, winHeight;
-    float pixelRatio;
-    float xOffset = 0.0f;
-    float yOffset = 0.0f;
-
-    if (!dcPtr || drawable <= 1) {
-        return TCL_ERROR;
-    }
-
-    memset(dcPtr, 0, sizeof(*dcPtr));
-
-    /*
-     * Pixmap path.
-     */
-
     if (TkWaylandDrawableIsPixmap(drawable)) {
-        TkWaylandPixmap *pixmapPtr =
-            TkWaylandPixmapFromPixmap((Pixmap)drawable);
-
-        if (!pixmapPtr || !pixmapPtr->fbo || !pixmapPtr->glfwWindow) {
-            return TCL_ERROR;
-        }
-
-        infoPtr = glfwGetWindowUserPointer(pixmapPtr->glfwWindow);
-        if (!infoPtr || !infoPtr->context.vg) {
-            return TCL_ERROR;
-        }
-
-        glfwMakeContextCurrent(pixmapPtr->glfwWindow);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
-        glViewport(0, 0, pixmapPtr->width, pixmapPtr->height);
-
-        glfwGetWindowSize(
-            pixmapPtr->glfwWindow,
-            &winWidth,
-            &winHeight);
-
-        glfwGetFramebufferSize(
-            pixmapPtr->glfwWindow,
-            &fbWidth,
-            &fbHeight);
-
-        pixelRatio = 1.0f;
-        if (winWidth > 0) {
-            pixelRatio = (float)fbWidth / (float)winWidth;
-        }
-
-        if (!infoPtr->context.nvgFrameActive) {
-            nvgBeginFrame(
-                infoPtr->context.vg,
-                (float)pixmapPtr->width,
-                (float)pixmapPtr->height,
-                pixelRatio);
-
-            infoPtr->context.nvgFrameActive = 1;
-        }
-
-        dcPtr->vg        = infoPtr->context.vg;
-        dcPtr->width     = pixmapPtr->width;
-        dcPtr->height    = pixmapPtr->height;
-        dcPtr->pixmapFbo = pixmapPtr->fbo;
-        dcPtr->isPixmap  = 1;
-
-        nvgResetTransform(dcPtr->vg);
-        nvgResetScissor(dcPtr->vg);
-
-        return TCL_OK;
+	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
+	fprintf(stderr, "BeginDraw: received pixmap %p\n", pixmap);
+	return TCL_OK;
     }
+    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
+    TkWindow *winPtr = childPtr;
+    float x = 0, y = 0;
+    while (!Tk_IsTopLevel(winPtr)) {
+        x += winPtr->changes.x;
+	y += winPtr->changes.y;
+    	winPtr = winPtr->parentPtr;
+    }
+    fprintf(stderr, "BeginDraw: %s in toplevel %s with offset (%d, %d)\n",
+	    Tk_PathName(childPtr), Tk_PathName(winPtr), (int)x, (int)y);
 
     /*
-     * Window path.
+     * Now winPtr is the containing toplevel and the offsets of
+     * the child are given by x and y.
      */
+    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
+    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
 
-    winPtr = TkWaylandTkWindowFromDrawable(drawable);
-    if (!winPtr) {
-        fprintf(stderr, "[DIAG] TkWaylandBeginDraw: no TkWindow for drawable=%lu\n",
-                (unsigned long)drawable);
-        return TCL_ERROR;
-    }
+    /* Set up the nanoVG drawing context for this nvgFrame */
+    dcPtr->vg = infoPtr->context.vg; 
+    dcPtr->drawable = drawable;
 
-    fprintf(stderr, "[DIAG] TkWaylandBeginDraw: drawable=%lu winPtr=%s\n",
-            (unsigned long)drawable, Tk_PathName(winPtr));
-
-    topPtr = winPtr;
-
-    while (topPtr && !Tk_IsTopLevel(topPtr)) {
-        xOffset += topPtr->changes.x;
-        yOffset += topPtr->changes.y;
-        topPtr = topPtr->parentPtr;
-    }
-
-    if (!topPtr || !topPtr->privatePtr) {
-        return TCL_ERROR;
-    }
-
-    glfwWindow = topPtr->privatePtr->glfwWindow;
-    if (!glfwWindow) {
-        return TCL_ERROR;
-    }
-
-    infoPtr = glfwGetWindowUserPointer(glfwWindow);
-    if (!infoPtr || !infoPtr->context.vg) {
-        return TCL_ERROR;
-    }
-
-    glfwMakeContextCurrent(glfwWindow);
-
-    if (topPtr->privatePtr->fb) {
-        glBindFramebuffer(
-            GL_FRAMEBUFFER,
-            topPtr->privatePtr->fb->fbo);
-    } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
+    nvgResetTransform(dcPtr->vg);
 
     /*
-     * HIDPI FIX: Get the pixel ratio from GLFW's content scale.
-     * This is the authoritative source for HiDPI scaling on Wayland.
-     * GLFW's content scale is set by the compositor and reflects the
-     * actual scaling factor (e.g., 2.0 on a 200% HiDPI display).
+     * Start a NanoVG frame for drawing on the backing store.
+     * The width and height here should be the window dimensions,
+     * not the framebuffer dimensions.
      */
-    float scaleX, scaleY;
-    glfwGetWindowContentScale(glfwWindow, &scaleX, &scaleY);
-    pixelRatio = scaleX;  /* Assume uniform scaling */
+    float scale;
+    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
+
+    fprintf(stderr, "BeginFrame for toplevel %s with size %dx%d and pixel ratio %f\n",
+	    Tk_PathName(winPtr), Tk_Width(winPtr), Tk_Height(winPtr), scale);
+    nvgBeginFrame(dcPtr->vg, Tk_Width(winPtr), Tk_Height(winPtr), scale);
 
     /*
-     * Get the framebuffer size (physical pixels).
-     * The FBO should always be created at the physical pixel size.
+     * Import our graphics context and translate to the origin
+     * of the window we are drawing into.
      */
-    if (topPtr->privatePtr->fb) {
-        fbWidth = topPtr->privatePtr->fb->width;
-        fbHeight = topPtr->privatePtr->fb->height;
-    } else {
-        glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
-    }
 
-    if (fbWidth <= 0 || fbHeight <= 0) {
-        return TCL_ERROR;
-    }
-
-    /*
-     * Compute logical size from physical size and pixel ratio.
-     * This gives us the CSS/logical pixel dimensions that Tk expects.
-     * On HiDPI, this will be smaller than the framebuffer size.
-     * For example: fb=978x764, pixelRatio=2.0 -> logical=489x382.
-     */
-    winWidth = (int)((float)fbWidth / pixelRatio + 0.5f);
-    winHeight = (int)((float)fbHeight / pixelRatio + 0.5f);
-
-    if (winWidth <= 0 || winHeight <= 0) {
-        /* Fallback: use framebuffer size as logical size if pixelRatio is bogus. */
-        winWidth = fbWidth;
-        winHeight = fbHeight;
-        pixelRatio = 1.0f;
-    }
-
-    /*
-     * Update Tk's changes if needed to keep them in sync with the
-     * actual logical size. This handles the case where the compositor's
-     * configure event hasn't been processed by Tk's geometry manager yet.
-     */
-    if (topPtr->changes.width != winWidth || topPtr->changes.height != winHeight) {
-        fprintf(stderr, "[DIAG] TkWaylandBeginDraw: updating changes from %dx%d to %dx%d (pixelRatio=%.3f, fb=%dx%d)\n",
-                topPtr->changes.width, topPtr->changes.height,
-                winWidth, winHeight, pixelRatio, fbWidth, fbHeight);
-        topPtr->changes.width = winWidth;
-        topPtr->changes.height = winHeight;
-    }
-
-    glViewport(0, 0, fbWidth, fbHeight);
-
-    fprintf(stderr, "[DIAG] TkWaylandBeginDraw: %s: logical %dx%d, fb %dx%d, pixelRatio %.3f\n",
-            Tk_PathName(topPtr), winWidth, winHeight, fbWidth, fbHeight, pixelRatio);
-
-    /*
-     * IMPORTANT:
-     * One NanoVG frame per window repaint.
-     * nvgBeginFrame takes the logical size (CSS pixels) and the pixel ratio.
-     * All subsequent drawing commands are in logical pixel coordinates.
-     */
-    if (!infoPtr->context.nvgFrameActive) {
-
-        nvgBeginFrame(
-            infoPtr->context.vg,
-            (float)winWidth,
-            (float)winHeight,
-            pixelRatio);
-
-        infoPtr->context.nvgFrameActive = 1;
-    }
-
-    nvgResetTransform(infoPtr->context.vg);
-    nvgResetScissor(infoPtr->context.vg);
-
-    if (gc) {
-        TkWaylandApplyGC(infoPtr->context.vg, gc);
-    }
-
-    nvgTranslate(
-        infoPtr->context.vg,
-        xOffset,
-        yOffset);
-
-    dcPtr->vg       = infoPtr->context.vg;
-    /*
-     * dcPtr->width/height must be expressed in the same coordinate
-     * space as the NanoVG frame just opened above, which is logical
-     * (window) units -- nvgBeginFrame was called with winWidth/winHeight,
-     * not fbWidth/fbHeight. Callers such as TkpPutRGBAImage use these
-     * fields directly as nvgRect/nvgImagePattern arguments, so handing
-     * out framebuffer-pixel dimensions here puts every such draw call
-     * in the wrong units whenever pixelRatio != 1.0 (HiDPI / fractional
-     * scaling), causing images to be mis-sized, mis-positioned, or
-     * drawn entirely off-canvas.
-     */
-    dcPtr->width    = winWidth;
-    dcPtr->height   = winHeight;
-    dcPtr->winPtr   = winPtr;
-    dcPtr->isPixmap = 0;
-
-    fprintf(stderr,
-        "[DIAG] TkWaylandBeginDraw: returning TCL_OK for %s, dc.width=%d dc.height=%d "
-        "xOffset=%.1f yOffset=%.1f\n",
-        Tk_PathName(winPtr), dcPtr->width, dcPtr->height, xOffset, yOffset);
-
+    TkWaylandApplyGC(dcPtr->vg, gc);
+    nvgTranslate(dcPtr->vg, x, y);
     return TCL_OK;
 }
 
@@ -1515,73 +733,113 @@ TkWaylandBeginDraw(
  *
  * TkWaylandEndDraw --
  *
- *	Concludes a NanoVG drawing transaction on a Wayland window surface.
- *	Unbinds the offscreen backing store FBO. If the window is flagged
- *	as dirty (needsDisplay), this function bypasses event-loop delay
- *	and forces an immediate hardware frame synchronization to resolve
- *	Wayland composition configuration stalls.
+ *      End a drawing operation.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Restores the default framebuffer binding. May blit backing FBO
- *	and invoke glfwSwapBuffers immediately on top-level structures.
+ *      Pops NanoVG state.
+ *      Unbinds pixmap FBO if drawing to pixmap.
  *
  *----------------------------------------------------------------------
  */
 
-void
-TkWaylandEndDraw(
-    TkWaylandDrawingContext *dcPtr)
+MODULE_SCOPE void
+TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 {
-    TkWindow *top;
-    glfwTkInfo *info;
-
-    if (!dcPtr) {
-        return;
+    if (!dcPtr || !dcPtr->vg) {
+	fprintf(stderr, "No drawing context!\n");
+	return;
     }
+    //// This is the case where the drawable is a window.
+    TkWindow *childPtr = TkWaylandTkWindowFromDrawable(dcPtr->drawable);
+    fprintf(stderr, "EndDraw for %s\n", Tk_PathName(childPtr));
+    TkWindow *winPtr = childPtr;
+    while (!Tk_IsTopLevel(winPtr)) {
+	winPtr = winPtr->parentPtr;
+    }
+    /* winPtr is the toplevel containing our drawable. */
+    GLFWwindow *glfwWindow = winPtr->privatePtr->glfwWindow;
 
     /*
-     * Pixmaps are self-contained.
+     * All nvg drawing since the call to nvgBeginFrame happens when we call
+     * nvgEndFrame.  The drawing commands have just been queued.  Now they
+     * actually get executed.  I think the viewport size should be the same as
+     * the framebuffer size and the FBO size (the latter equality being
+     * enforced in the FramebufferSizeCallback. But that size may be a
+     * multiple of the window size, and the multiplier should be the pixel
+     * ratio.
      */
 
-    if (dcPtr->isPixmap) {
-        return;
+    /* Make our GL context current and set the viewport. */
+    glfwMakeContextCurrent(glfwWindow);
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    /* Bind our backing store framebuffer. */
+    nvgluBindFramebuffer(winPtr->privatePtr->fb);
+
+    fprintf(stderr, "EndDraw: setting viewport to %dx%d\n", fbWidth, fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
+
+    /* Check FBO completeness (for now). */
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
     }
-
-    if (!dcPtr->winPtr) {
-        return;
-    }
-
-    top = (TkWindow *)dcPtr->winPtr;
-
-    while (top && !Tk_IsTopLevel(top)) {
-        top = top->parentPtr;
-    }
-
-    if (!top ||
-        !top->privatePtr ||
-        !top->privatePtr->glfwWindow) {
-        return;
-    }
-
-    info = glfwGetWindowUserPointer(
-        top->privatePtr->glfwWindow);
-
-    if (!info) {
-        return;
-    }
+    nvgEndFrame(dcPtr->vg);
+    fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
+	   Tk_PathName(childPtr), Tk_PathName(winPtr));
+    nvgluBindFramebuffer(NULL);
 
     /*
-     * Do NOT call nvgEndFrame here.
-     *
-     * Multiple widgets may still be drawing into the
-     * same window during this display cycle.
+     * nvgBeginFrame calls nvgSave, but nvgEndFrame does not
+     * call nvgRestore.  Maybe it is not important to balance
+     * those, but we call nvgRestore here just in case.
      */
 
-    info->flags |= needsDisplay;
+    nvgRestore(dcPtr->vg);
+
+    /*
+     * Drawing this widget covered up all of the widgets that it contains.  If
+     * we generate expose events for the children of this widget and for its
+     * siblings which are higher in the stacking order then we should have
+     * redrawn all of the widgets that we damaged.
+     */
+
+#if 1
+    /* Children */
+    for (TkWindow *childPtr2 = childPtr->childList;
+	 childPtr2 != NULL;
+         childPtr2 = childPtr2->nextPtr) {
+        if (!Tk_IsMapped(childPtr2)) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
+                                  Tk_Height(childPtr2));
+    }
+    /* Higher siblings. */
+    for (TkWindow *childPtr2 = childPtr->nextPtr;
+	 childPtr2 != NULL;
+         childPtr2 = childPtr2->nextPtr) {
+        if (!Tk_IsMapped(childPtr2)) {
+            continue;
+        }
+        TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
+                                  Tk_Height(childPtr2));
+    }
+#endif
+
+    /*
+     * Mark the toplevel as needing display (unless we are in the middle of a
+     * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
+     */
+    glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
+    ////if (!(infoPtr->flags & dontSwap)) {
+    infoPtr->flags |= needsDisplay;
+    ////}
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1591,6 +849,7 @@ TkWaylandEndDraw(
  *
  * Results:
  *	The NVGcontext pointer, or NULL if shutting down.
+ *
  *
  * Side effects:
  *	None.

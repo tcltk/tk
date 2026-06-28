@@ -35,6 +35,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#if 0  //no-op for now
 #include "tkInt.h"
 #include "tkWaylandInt.h"
 #include <stdio.h>
@@ -1317,6 +1318,7 @@ TkWaylandPopupCaptureGLPixels(
 
     POPUP_DEBUG("Captured %dx%d pixels from parent FBO to SHM", popup->width, popup->height);
 }
+#endif
 
 /*
  * Local Variables:

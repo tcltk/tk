@@ -393,25 +393,20 @@ TkWaylandCopyGC(
 /* Pixmap functions. */
 
 /*
- *----------------------------------------------------------------------
- * TkWaylandPixmapFromPixmap --
- *
- *	Convert a Pixmap handle (which is now a rolling integer ID) back
- *	to its TkWaylandPixmap structure pointer via the hash table.
- *
- * Results:
- *	Pointer to TkWaylandPixmap or NULL if not found.
- *
- * Side effects:
- *	None.
- *----------------------------------------------------------------------
+ * The Pixmap XID is the unsgined int value of a pointer to a
+ * TkWaylandPixmap.
  */
-TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap)
+
+TkWaylandPixmap* TkWaylandPixmapFromPixmap(
+    Pixmap pixmap)
 {
-    if (!pixmapTableInitialized) return NULL;
-    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable, (void *)(uintptr_t)pixmap);
-    if (!entryPtr) return NULL;
-    return (TkWaylandPixmap *)Tcl_GetHashValue(entryPtr);
+    return (TkWaylandPixmap*)pixmap;
+}
+
+static inline Pixmap PixmapFromTkWaylandPixmap(
+    TkWaylandPixmap *pixmapPtr)
+{
+    return (Pixmap)pixmapPtr;
 }
 
 /*
@@ -419,19 +414,17 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap)
  *
  * Tk_GetPixmap --
  *
- *      Create an off-screen drawable (pixmap) as a logical object only.
- *      The pixmap is not backed by any OpenGL resources; it is merely
- *      a token with width, height, and an associated GLFWwindow (for
- *      context affinity).  No FBO, texture, or stencil buffer is allocated.
- *
- *      Pixmap handles are safe, rolling integer IDs stored in a hash
- *      table, eliminating the previous direct pointer-as-ID approach.
+ *      Create an off-screen drawable (pixmap), which is associated with an
+ *      NVGLUframebuffer.  The drawable should be a Tk window or None.  If a
+ *      drawable is provided, the FBO is created in the GL context of the
+ *      associated GLFWwindow.  Otherwise the context of the root window is
+ *      used.  Note that the GL context is shared between windows.
  *
  * Results:
- *      Returns a Drawable associated to a Pixmap (as an integer ID).
+ *      Returns a Drawable associated to a Pixmap.
  *
  * Side effects:
- *      Registers the pixmap in the global hash table.
+ *      Allocates an NVGLUframebuffer.
  *
  *----------------------------------------------------------------------
  */
@@ -445,6 +438,7 @@ Tk_GetPixmap(
     TCL_UNUSED(int)) /* depth */
 {
     TkWaylandPixmap *pixmapPtr;
+    GLenum           status;
     GLFWwindow      *glfwWindow;
 
     if (width <= 0 || height <= 0) {
@@ -452,60 +446,52 @@ Tk_GetPixmap(
     }
 
     if (drawable && TkWaylandDrawableIsPixmap(drawable)) {
-        glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
+	glfwWindow = TkWaylandGetGLFWwindowFromDrawable(drawable);
     } else {
-        glfwWindow = mainGlfwWindow;
+	glfwWindow = mainGlfwWindow;
     }
     if (!glfwWindow) {
-        return None;
+	printf("No GLFW window!\n");
+	return None;
     }
 
-    if (!pixmapTableInitialized) {
-        Tcl_InitHashTable(&pixmapTable, TCL_ONE_WORD_KEYS);
-        pixmapTableInitialized = 1;
-    }
-
-    pixmapPtr = (TkWaylandPixmap *)Tcl_Alloc(sizeof(TkWaylandPixmap));
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
+    pixmapPtr = ckalloc(sizeof(TkWaylandPixmap));
     memset(pixmapPtr, 0, sizeof(TkWaylandPixmap));
     pixmapPtr->glfwWindow = glfwWindow;
-    pixmapPtr->width      = width;
-    pixmapPtr->height     = height;
-    pixmapPtr->id         = nextPixmapId++;
+    pixmapPtr->width = width;
+    pixmapPtr->height = height;
 
-    /* Allocate a raw GL FBO + texture for this pixmap. */
+    /* The GL context must be current when creating the FBO. */
     glfwMakeContextCurrent(glfwWindow);
-    glGenFramebuffers(1, &pixmapPtr->fbo);
-    glGenTextures(1, &pixmapPtr->tex);
-    glBindTexture(GL_TEXTURE_2D, pixmapPtr->tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindFramebuffer(GL_FRAMEBUFFER, pixmapPtr->fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                           GL_TEXTURE_2D, pixmapPtr->tex, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    pixmapPtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
+					 width, height, 0);
 
-    int isNew;
-    Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(&pixmapTable,
-                                  (void *)(uintptr_t)pixmapPtr->id, &isNew);
-    Tcl_SetHashValue(entryPtr, pixmapPtr);
-    return (Pixmap)pixmapPtr->id;
+    /* Check FBO completeness. */
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "Tk_GetPixmap: FBO incomplete (status=0x%x)\n", status);
+    }
+
+    /* Clear pixmap to white. */
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    return PixmapFromTkWaylandPixmap(pixmapPtr);
 }
+
 /*
  *----------------------------------------------------------------------
  *
  * Tk_FreePixmap --
  *
- *      Destroy a logical pixmap and free its tracking structure.
- *      No OpenGL resources are freed because none were allocated.
+ *      Destroy a pixmap and free its OpenGL resources.
  *
  * Results:
  *      None.
  *
  * Side effects:
- *      Removes the pixmap from the global hash table and frees the struct.
+ *      Deletes FBO, texture, and stencil buffer.
  *
  *----------------------------------------------------------------------
  */
@@ -516,26 +502,11 @@ Tk_FreePixmap(
     Pixmap pixmap)
 {
     TkWaylandPixmap *pixmapPtr = TkWaylandPixmapFromPixmap(pixmap);
-    if (!pixmapPtr) {
-        return;
+    if (pixmapPtr->fb) {
+	glfwMakeContextCurrent(pixmapPtr->glfwWindow);
+	nvgluDeleteFramebuffer(pixmapPtr->fb);
     }
-
-    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&pixmapTable,
-                                  (void *)(uintptr_t)pixmap);
-    if (entryPtr) {
-        Tcl_DeleteHashEntry(entryPtr);
-    }
-
-    if (pixmapPtr->glfwWindow) {
-        glfwMakeContextCurrent(pixmapPtr->glfwWindow);
-    }
-    if (pixmapPtr->fbo) {
-        glDeleteFramebuffers(1, &pixmapPtr->fbo);
-    }
-    if (pixmapPtr->tex) {
-        glDeleteTextures(1, &pixmapPtr->tex);
-    }
-    Tcl_Free(pixmapPtr);
+    ckfree(pixmapPtr);
 }
 
 /*

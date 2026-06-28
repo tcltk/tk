@@ -46,36 +46,7 @@ NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imag
 void nvgluBindFramebuffer(NVGLUframebuffer* fb);
 void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
 
-/*
- * Opaque forward declarations for the native Wayland popup primitive
- * (implemented in tkWaylandPopup.c) and the Wayland seat object (from
- * wayland-client.h, not included here to keep this header decoupled
- * from the raw Wayland protocol headers).
- */
-typedef struct TkWaylandPopup TkWaylandPopup;
-struct wl_seat;
 
-/*
- *----------------------------------------------------------------------
- *
- * Backing Store Structure
- *
- *	This structure holds the OpenGL framebuffer object and associated
- *	resources for a window's backing store.  It is allocated as a
- *	pointer in TkWindowPrivate so that tkWaylandPopup.c can safely
- *	dereference it to access the raw GLuint fbo handle without
- *	invalid memory access.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct TkWaylandBackingStore {
-    GLuint fbo;              /* The actual OpenGL Framebuffer Object ID */
-    GLuint colorTex;         /* Texture where pixels/widgets are drawn */
-    GLuint depthStencilRbo;  /* Renderbuffer needed for NanoVG masking/stencil strokes */
-    int width;               /* Cache the pixel width of this FBO allocation */
-    int height;              /* Cache the pixel height of this FBO allocation */
-} TkWaylandBackingStore;
 
 /*
  *----------------------------------------------------------------------
@@ -348,15 +319,6 @@ typedef struct TkWmInfo {
     Tk_Window    menubar;
     int          menuHeight;
 
-    /* Native Wayland popup surfaces (tkWaylandPopup.c). */
-    TkWaylandPopup *popup;          /* Active xdg_popup for OR / menu
-                                      * windows; NULL otherwise. */
-    TkWaylandPopup *menubarPopup;   /* Popup surface for the menubar
-                                      * strip, if any. */
-    int          overrideRedirect;  /* Mirrors wm overrideredirect /
-                                      * TkpMakeMenuWindow. */
-    TkMenu *menubarMenuPtr;
-
     /* Size hints. */
     int          sizeHintsFlags;
     int          minWidth, minHeight;
@@ -455,13 +417,12 @@ typedef struct TkWaylandGC {
  */
 
 typedef struct TkWaylandPixmap {
-    unsigned long  id;
-    GLFWwindow    *glfwWindow;
-    int            width;
-    int            height;
-    GLuint         fbo;       /* Raw GL framebuffer object */
-    GLuint         tex;       /* Color attachment texture */
+    NVGLUframebuffer *fb;
+    GLFWwindow *glfwWindow;  /* The window whose GL context has the fbo.   */
+    int width;               /* It is simpler to cache the fb dimensions.  */
+    int height;
 } TkWaylandPixmap;
+
 
 TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
 /*
@@ -477,7 +438,7 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
 
 typedef struct TkWindowPrivate {
     GLFWwindow          *glfwWindow;
-    TkWaylandBackingStore  *fb;  /* Backing store FBO structure pointer */
+    NVGLUframebuffer *fb;;  /* Backing store FBO structure pointer */
     Tcl_DString          pendingText;
 } glfwData;
 
@@ -593,16 +554,6 @@ MODULE_SCOPE void        TkWaylandUpdateWindowSize(GLFWwindow *glfwWindow,
 MODULE_SCOPE void        TkWaylandResizeWindow(GLFWwindow *w,
 					    int width, int height);
 
-/*
- *----------------------------------------------------------------------
- *
- * Backing Store Helpers
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE TkWaylandBackingStore *TkWaylandCreateBackingStore(int width, int height);
-MODULE_SCOPE void                TkWaylandDestroyBackingStore(TkWaylandBackingStore *store);
 
 /*
  *----------------------------------------------------------------------
@@ -737,174 +688,7 @@ char* TkWaylandGetStoredText(TkWindow *winPtr);
 void TkWaylandSetStoredText(TkWindow *winPtr, const char *text);
 MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 
-/*
- *----------------------------------------------------------------------
- *
- * Popup Support
- *
- *	Native xdg_popup primitive (tkWaylandPopup.c).  This is the base
- *	object used by menus, combobox dropdowns, tooltips, and any other
- *	override-redirect surface.  The TkWaylandPopup struct itself is
- *	opaque; all access goes through these functions.
- *
- *----------------------------------------------------------------------
- */
 
-/* Lifecycle */
-MODULE_SCOPE int   TkWaylandPopupInit(void);
-MODULE_SCOPE void  TkWaylandPopupDestroyAll(void);
-
-/*
- * Create a popup.
- *
- *   parentGlfw  – GLFW window whose wl_surface is the xdg_popup parent.
- *   anchorX,Y   – top-left of the anchor rectangle, in parent-surface
- *                 logical pixels.
- *   anchorW,H   – anchor rectangle size (1,1 for a point anchor).
- *   popupW,H    – requested popup size.
- *   anchor      – XDG_POSITIONER_ANCHOR_* value.
- *   gravity     – XDG_POSITIONER_GRAVITY_* value.
- *   grabInput   – non-zero to take an explicit Wayland pointer grab.
- *   serial      – input-event serial for the grab (0 if grabInput==0).
- */
-MODULE_SCOPE TkWaylandPopup *TkWaylandPopupCreate(
-    GLFWwindow *parentGlfw,
-    int anchorX, int anchorY,
-    int anchorW, int anchorH,
-    int popupW,  int popupH,
-    uint32_t anchor,
-    uint32_t gravity,
-    int grabInput,
-    uint32_t serial);
-
-MODULE_SCOPE void TkWaylandPopupDestroy(TkWaylandPopup *popup);
-
-/*
- * Reposition by destroying and re-creating with new positioner
- * parameters.  Returns the new popup; the original is freed.
- */
-MODULE_SCOPE TkWaylandPopup *TkWaylandPopupMove(
-    TkWaylandPopup *popup,
-    GLFWwindow     *parentGlfw,
-    int anchorX, int anchorY,
-    int anchorW, int anchorH,
-    uint32_t anchor,
-    uint32_t gravity);
-
-/* wl_shm-based rendering APIs. */
-MODULE_SCOPE uint8_t *TkWaylandPopupBeginDraw(
-    TkWaylandPopup *popup,
-    int *strideOut);
-MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);
-
-/* Callbacks and queries */
-MODULE_SCOPE void TkWaylandPopupSetDoneCallback(
-    TkWaylandPopup *popup,
-    void (*callback)(void *clientData),
-    void *clientData);
-
-MODULE_SCOPE void     TkWaylandPopupSetSerial(uint32_t serial);
-MODULE_SCOPE uint32_t TkWaylandPopupLastSerial(void);
-MODULE_SCOPE void     TkWaylandPopupGetSize(
-    TkWaylandPopup *popup, int *widthOut, int *heightOut);
-MODULE_SCOPE void     TkWaylandPopupGetPosition(
-    TkWaylandPopup *popup, int *xOut, int *yOut);
-MODULE_SCOPE struct wl_seat *TkWaylandPopupGetSeat(void);
-
-/*
- * Subsurface-mode popups (wl_subsurface, not xdg_popup).  Use for
- * surfaces that are a permanent part of a window -- e.g. the menubar
- * strip -- as opposed to transient, compositor-dismissed surfaces
- * (use TkWaylandPopupCreate / xdg_popup for those).  No configure
- * handshake; usable immediately after creation.
- */
-MODULE_SCOPE TkWaylandPopup *TkWaylandSubsurfaceCreate(
-    GLFWwindow *parentGlfw,
-    int x, int y, int width, int height);
-MODULE_SCOPE void TkWaylandSubsurfaceReconfigure(
-    TkWaylandPopup *popup,
-    int x, int y, int width, int height);
-MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(
-    TkWaylandPopup *popup, TkWaylandPopup *sibling);
-MODULE_SCOPE void  TkWaylandPopupCaptureGLPixels(TkWaylandPopup *popup, void *parentTkWindow);
-
-/*
- *----------------------------------------------------------------------
- *
- * Menu Support
- *
- *	Dropdown/cascade menus are implemented as a stack of
- *	wl_subsurface-backed popups (TkWaylandSubsurfaceCreate) with empty
- *	input regions, so all pointer/keyboard input continues to arrive at
- *	the toplevel's raw wl_pointer / wl_keyboard listeners
- *	(tkWaylandInit.c) in toplevel-surface-local coordinates.  Those
- *	listeners call the Handle* functions below, which perform hit
- *	testing against the menu stack and dispatch to the appropriate
- *	TkMenu, or dismiss the stack on an outside click / Escape.
- *
- *	This design is self-contained: it does not depend on or interact
- *	with GLFW's own per-window callbacks (registered elsewhere via
- *	TkWaylandSetupCallbacks).
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void TkWaylandMenuInit(void);
-
-/* Non-zero if one or more menu popups are currently posted. */
-MODULE_SCOPE int  TkWaylandMenuPopupActive(void);
-
-/*
- * Post a menu as either the root of a new menu stack (isRoot != 0,
- * dismisses any existing stack first) or as a cascade one level deeper
- * than the current top of stack (isRoot == 0).  anchorX/Y/W/H are in
- * toplevel-surface-local coordinates; the popup is placed below-left of
- * the anchor by default, flipping above/left if it would not fit within
- * the toplevel's current size.  popupW/H are the menu's natural size.
- *
- * Returns TCL_OK / TCL_ERROR.
- */
-MODULE_SCOPE int  TkWaylandPostMenuAtAnchor(
-    Tcl_Interp *interp, TkMenu *menuPtr,
-    int anchorX, int anchorY, int anchorW, int anchorH,
-    int popupW, int popupH,
-    int isRoot);
-
-/* Dismiss the entire menu stack (all cascades + the root menu). */
-MODULE_SCOPE void TkWaylandMenuDismissAll(void);
-
-/*
- * Raw input dispatch, called from tkWaylandInit.c's wl_pointer / wl_keyboard
- * listeners.  x, y are toplevel-surface-local logical pixels.
- * state follows the wl_pointer_button_state / wl_keyboard_key_state enum
- * (0 = released, 1 = pressed).
- */
-MODULE_SCOPE void TkWaylandMenuHandlePointerMotion(int x, int y);
-MODULE_SCOPE void TkWaylandMenuHandlePointerButton(int x, int y,
-				   int button, int state);
-MODULE_SCOPE void TkWaylandMenuHandleEscape(void);
-
-/*
- * Returns and clears a one-shot flag set when the most recent button
- * press dismissed the menu stack via an outside click.  Whatever file
- * registers the GLFW mouse-button callback may call this to swallow that
- * click rather than also activating a widget underneath.
- */
-MODULE_SCOPE int  TkWaylandMenuConsumeDismissClick(void);
-
-/*
- *----------------------------------------------------------------------
- *
- * Menubutton Support
- *
- *	Posting entry points implemented in tkWaylandMenubu.c, called from
- *	the GLFW mouse-button dispatcher in tkWaylandInit.c.
- *
- *----------------------------------------------------------------------
- */
-
-MODULE_SCOPE void TkpMenuButtonMaybePost(TkWindow *winPtr);
-MODULE_SCOPE int  TkpMenuButtonPostMenu(TkMenuButton *mbPtr);
 
 /*
  *----------------------------------------------------------------------
@@ -961,6 +745,7 @@ MODULE_SCOPE int Tktray_Init(Tcl_Interp *interp);
 MODULE_SCOPE int SysNotify_Init(Tcl_Interp *interp);
 MODULE_SCOPE int Cups_Init(Tcl_Interp *interp);
 MODULE_SCOPE int TkWaylandAccessibility_Init(Tcl_Interp *interp);
+void TkWaylandMenuInit(void);
 
 #endif /* _TkWaylandINT_H */
 
