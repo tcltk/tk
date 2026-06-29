@@ -101,8 +101,9 @@ exception will be thrown if one of the given rules is not defined. See
 section for more details \fBHYPHENATION RULES\fR about the defined rules.
 .RS
 .PP
-If also option \fB\-lang\fR is specified for a particular soft hyphen, then
-only the rules belonging to this language will be applied to this soft
+If also option \fB\-locale\fR is specified for a particular soft hyphen, and
+it is not set to "C", then
+only the rules belonging to this locale will be applied to this soft
 hyphen. This supports simpler hyphenators, not knowing spelling changes.
 .PP
 This is the way how the hyphen rules will be applied (
@@ -118,7 +119,7 @@ applied to this hyphen. Example: the German word
 .QW Druc\e+ker
 hyphenates into
 .QW Druk-ker .
-This rule belongs to language German (de).
+This rule belongs to German locale (de).
 .IP "\fBgemination\fR"
 If the soft hyphen is the left neighbor of a geminated letter 'l' (or 'L'),
 then the \fBgemination\fR hyphenation rule will be applied. Example: the
@@ -126,7 +127,7 @@ Catalan word
 .QW para\e+l\N'183'lel
 hyphenates into
 .QW paral-lel .
-This rule belongs to the Catalan language (ca).
+This rule belongs to the Catalan locale (ca).
 .IP "\fBdoublevowel\fR"
 If the soft hyphen is the right neighbor of any vowel, and the right
 neighbor is the same vowel, then the \fBdoublevowel\fR hyphenation rule will
@@ -140,9 +141,9 @@ and
 .QW cafee\e+tje
 becomes
 .QW caf\['e]-tje .
-This rule belongs to the Dutch language (nl).
+This rule belongs to the Dutch locale (nl).
 .IP "\fBdoubledigraph\fR"
-In Polish language the following spelling change will be applied with this
+In Polish locale the following spelling change will be applied with this
 rule:
 .QW c\e+cs
 becomes
@@ -179,7 +180,7 @@ be applied to this hyphen. Example: the Dutch word
 .QW re\e+\[:e]el
 hyphenates into
 .QW re-eel .
-This rule belongs to the Dutch language (nl).
+This rule belongs to the Dutch locale (nl).
 .IP "\fBtripleconsonant\fR"
 If the soft hyphen is the right neighbor of a double consonant, and the
 right neighbor is the same consonant, and this consonant is followed by a
@@ -201,8 +202,8 @@ and the Norwegian word
 .QW buss\e+sj\[oa]f\[/o]r
 becomes
 .QW "bussj\[oa]f\[/o]r" .
-This rule belongs to languages German (de), Norwegian (no, nb, nn), and
-Swedish (sv).
+This rule belongs to German (de), Norwegian (no, nb, nn), and
+Swedish (sv) locales.
 .RE
 .OP \-hyphens hyphens Hyphens
 Specifies a boolean indicating whether the hyphenation support will be
@@ -247,9 +248,8 @@ even gap on each side of each line.
 .RE
 .OP \-lang lang Lang
 Setting the language code of the text content. The language code will be
-used for line breaking (but only if option \fB\-useunibreak\fR is also set),
-and it may be used to restrict the hyphenation rules (see
-\fB\-hyphenrules\fR). An empty string is unsetting the language.
+used for line breaking (but only if option \fB\-useunibreak\fR is also set).
+An empty string is unsetting the language.
 .RS
 .PP
 The language code will be specified as ISO 639-1 code. The language code
@@ -261,6 +261,8 @@ letters (for example
 .OP \-locale locale Locale
 The locale which is used for determining word and character
 boundaries within the text. The default is "C".
+It may be used to restrict the hyphenation rules (see
+\fB\-hyphenrules\fR).
 .OP \-maxredo maxRedo MaxRedo
 Specifies the maximum number of redo actions on the undo stack. A zero value
 will prevent any redo action, only undoes are possible. A negative value
