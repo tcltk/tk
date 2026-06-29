@@ -3628,9 +3628,10 @@ TopLevelReqProc(
 	   winPtr->reqWidth, winPtr->reqHeight,
 	   wmPtr->flags & WM_UPDATE_PENDING);
 
-    // Signal to UpdateGeometryInfo to use the requested size.
+    /* Signal to UpdateGeometryInfo to use the requested size. */
     wmPtr->width = -1;
     wmPtr->height = -1;
+    
 
     /*
      * A window which has never been mapped has no WmInfo, so its
@@ -3692,8 +3693,9 @@ UpdateGeometryInfo(
     }
 
     /* Calculate target size. The reqProc sets negative wmPtr sizes. */
-    tw = wmPtr->width < 0 ? winPtr->reqWidth : wmPtr->width;
-    th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
+	  tw = wmPtr->width < 0 ? winPtr->reqWidth : wmPtr->width;
+      th = wmPtr->height < 0 ? winPtr->reqHeight : wmPtr->height;
+
 
     /* Ensure minimum size. */
     if (tw < wmPtr->minWidth) tw = wmPtr->minWidth;
@@ -3734,7 +3736,7 @@ UpdateGeometryInfo(
  	 */
         glfwSetWindowSize(glfwWindow, tw, th);
 
-	/* Update the window. */
+		/* Update the window. */
         winPtr->changes.width = tw;
         winPtr->changes.height = th;
         wmPtr->configWidth  = tw;

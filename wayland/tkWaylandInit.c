@@ -774,15 +774,14 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     glfwMakeContextCurrent(glfwWindow);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    fprintf(stderr, "Framebuffer size is now %d x %d\n", fbWidth, fbHeight);
     /* Bind our backing store framebuffer. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
-
 
     fprintf(stderr, "EndDraw: setting viewport to %dx%d\n", fbWidth, fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
     /* Check FBO completeness (for now). */
-
 
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -1035,13 +1034,13 @@ int
 TkpInit(Tcl_Interp *interp)
 {
     if (TkWaylandInitialize() != TCL_OK) return TCL_ERROR;
-    TkWaylandKeyInit();
     TkWaylandMenuInit();
     Tk_WaylandSetupTkNotifier();
     Tktray_Init(interp);
     SysNotify_Init(interp);
     Cups_Init(interp);
     TkWaylandAccessibility_Init(interp);
+    TkWaylandKeyInit();
 
     return TCL_OK;
 }

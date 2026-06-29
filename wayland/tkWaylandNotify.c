@@ -722,7 +722,7 @@ TkWaylandFramebufferSizeCallback(
 	fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
 	return;
     }
-
+    
     /* Rebuild the backing store FBO */
     nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
@@ -739,19 +739,21 @@ TkWaylandFramebufferSizeCallback(
 	       status);
     } else {
 	fprintf(stderr, "FBO is complete.\n");
+	fprintf(stderr, "Framebuffer size is %d x %d\n", width, height);
     }
 #endif
 
     /*
      * Inform Tk about the size change
      */
-
     
-    glfwGetWindowSize(window, &(winPtr->changes.width),
-		      &(winPtr->changes.height));
+   glfwGetWindowSize(window, &(winPtr->changes.width),
+		     &(winPtr->changes.height));
+
+   fprintf(stderr, "After new framebuffer window size is %d x %d\n", winPtr->changes.width, winPtr->changes.height);
 
     /* Reconfigure the Tk window. */
-    TkDoConfigureNotify(winPtr);
+	TkDoConfigureNotify(winPtr);
 }
 
 
@@ -855,6 +857,7 @@ TkWaylandWindowFocusCallback(
 
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     TkGenerateActivateEvents(winPtr, focused);
+    
 }
 
 /*
@@ -1498,9 +1501,13 @@ TkWaylandWindowRefreshCallback(GLFWwindow *window)
     }
     fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s\n",
 	    Tk_PathName(winPtr));
+//	glfwSetWindowSize(window, Tk_Width(winPtr), Tk_Height(winPtr));
+	fprintf(stderr, "Setting toplevel size to %d x %d\n", Tk_Width(winPtr), Tk_Height(winPtr));
+	
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }
+
 /*
  *----------------------------------------------------------------------
  *
