@@ -31,6 +31,13 @@
 #include <hb.h>
 #include <SheenBidi/SheenBidi.h>
 
+#include <systemd/sd-bus.h>
+
+#ifdef SD_BUS_ERROR_NULL
+extern int    ibus_fd;
+extern sd_bus *ibus_bus;
+#endif
+
 /*
  * NanoVG headers - MUST be included before any usage of NVGcontext or NVGcolor.
  */
@@ -45,8 +52,6 @@ typedef struct NVGLUframebuffer NVGLUframebuffer;
 NVGLUframebuffer* nvgluCreateFramebuffer(NVGcontext* ctx, int w, int h, int imageFlags);
 void nvgluBindFramebuffer(NVGLUframebuffer* fb);
 void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -631,6 +636,9 @@ typedef struct {
     uint32_t group;
 } TkXKBState;
 
+/* Variable for IME. */
+extern int ibus_fd;
+extern sd_bus *ibus_bus;
 /*
  *----------------------------------------------------------------------
  *

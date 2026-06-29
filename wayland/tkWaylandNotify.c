@@ -549,6 +549,7 @@ TkWaylandQueueExposeEvent(
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
     /* Recurse through the children of this window. */
+    #if 1
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
         if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
@@ -557,6 +558,7 @@ TkWaylandQueueExposeEvent(
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
 				  Tk_Height(childPtr));
     }
+    #endif
 }
 
 /* 
@@ -743,6 +745,7 @@ TkWaylandFramebufferSizeCallback(
     TkDoConfigureNotify(winPtr);
 }
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -812,6 +815,24 @@ TkWaylandWindowFocusCallback(
     
     if (!winPtr) {
         return;
+    }
+
+    if (focused) {
+        /*
+         * Create an IBus input context for this toplevel if one does not
+         * exist yet.  This is the correct point to do it: the window is
+         * mapped and the compositor has given it focus, so the IBus daemon
+         * can associate the context with the correct surface.
+         * TkWaylandIbusCreateContext is idempotent (returns TCL_OK if the
+         * context already exists).
+         */
+        TkMainInfo *info = TkGetMainInfoList();
+        if (info) {
+            TkWaylandIbusCreateContext(info->interp, (Tk_Window)winPtr);
+        }
+        TkWaylandIbusFocusIn((Tk_Window)winPtr);
+    } else {
+        TkWaylandIbusFocusOut((Tk_Window)winPtr);
     }
 
     memset(&event, 0, sizeof(XEvent));
@@ -1309,68 +1330,97 @@ TkWaylandScrollCallback(
  *      None.
  *
  * Side effects:
- *      Generates KeyPress/KeyRelease event.
+ *      Generates KeyPress/KeyRelease events. Gives IBus first chance
+ *      to handle the key for IME composition.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 TkWaylandKeyCallback(GLFWwindow *window,
-    TCL_UNUSED(int), /*key*/
-    int scancode,
-    int action,
-    int mods)
+                  int key,           /* keep this parameter */
+                  int scancode,
+                  int action,
+                  int mods)
 {
     recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    if (!winPtr) {
-	return;
-    }
-    TkWindow *focusWin = NULL;
-    XEvent event;
-    double xpos, ypos;
-    int x, y;
-
-    if (!winPtr || action == GLFW_REPEAT) return;
+    if (!winPtr) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
-    glfwGetCursorPos(window, &xpos, &ypos);
-    x = floor(xpos);
-    y = floor(ypos);
 
-    /* Route the event to the focused child widget if there is one. */
-    focusWin = winPtr;
-    if (winPtr->dispPtr->focusPtr != NULL) {
-	focusWin = winPtr->dispPtr->focusPtr;
-    } else {
-	return;
+    /* Route to focused widget (important for text widgets). */
+    TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
+    if (!focusWin) focusWin = winPtr;
+
+    fprintf(stderr, "KeyCallback: scancode=%d key=%d action=%s mods=0x%x\n",
+            scancode, key,
+            (action == GLFW_PRESS) ? "PRESS" :
+            (action == GLFW_REPEAT) ? "REPEAT" : "RELEASE",
+            mods);
+
+    /* IBus IME handling. */
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        uint32_t xkb_keycode = (uint32_t)(scancode + 8);
+
+        /* Get keysym using the *live* XKB state — this is more reliable. */
+        uint32_t keyval = (uint32_t) xkb_state_key_get_one_sym(
+                                xkbState.state, xkb_keycode);
+
+        uint32_t state = 0;
+        if (mods & GLFW_MOD_SHIFT)     state |= ShiftMask;
+        if (mods & GLFW_MOD_CONTROL)   state |= ControlMask;
+        if (mods & GLFW_MOD_ALT)       state |= Mod1Mask;
+        if (mods & GLFW_MOD_SUPER)     state |= Mod4Mask;
+        if (mods & GLFW_MOD_CAPS_LOCK) state |= LockMask;
+        if (mods & GLFW_MOD_NUM_LOCK)  state |= Mod2Mask;
+
+        fprintf(stderr, "  → IBus: keyval=0x%04x keycode=%u state=0x%x\n",
+                keyval, xkb_keycode, state);
+
+        /*
+         * Pass winPtr (the GLFW toplevel) to TkWaylandIbusProcessKey, NOT
+         * focusWin.  FindContext compares ctx->tkwin by pointer; ctx->tkwin
+         * was stored from the winPtr passed to TkWaylandIbusCreateContext in
+         * TkWaylandWindowFocusCallback, which is always the GLFW toplevel.
+         * Using focusWin (.t) causes GetToplevelOfWidget to walk the parent
+         * chain, which may differ after a resize/remap cycle, returning a
+         * pointer that does not match ctx->tkwin → FindContext returns NULL →
+         * IBus is silently bypassed for every keypress.
+         */
+        if (TkWaylandIbusProcessKey((Tk_Window)winPtr, keyval, xkb_keycode, state)) {
+            fprintf(stderr, "  → IBus HANDLED key (composition active)\n");
+            return;                    /* Do NOT generate normal Tk Key event */
+        }
     }
 
+    /* Normal Tk key event. */
+    if (action == GLFW_RELEASE) {
+        /* Optional: you can also forward releases, but many IMEs ignore them. */
+        return;
+    }
+
+    XEvent event;
     memset(&event, 0, sizeof(XEvent));
-    event.type = (action == GLFW_PRESS) ? KeyPress : KeyRelease;
+    event.type = KeyPress;   /* GLFW_RELEASE is mostly ignored for text */
     event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
     event.xkey.send_event  = False;
     event.xkey.display     = winPtr->display;
     event.xkey.window      = Tk_WindowId((Tk_Window)focusWin);
     event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
     event.xkey.time        = CurrentTime;
-    event.xkey.x           = x;
-    event.xkey.y           = y;
-    event.xkey.x_root      = winPtr->changes.x + x;
-    event.xkey.y_root      = winPtr->changes.y + y;
-    event.xkey.state       = 0;
-    if (mods & GLFW_MOD_SHIFT)     event.xkey.state |= ShiftMask;
-    if (mods & GLFW_MOD_CONTROL)   event.xkey.state |= ControlMask;
-    if (mods & GLFW_MOD_ALT)       event.xkey.state |= Mod1Mask;
-    if (mods & GLFW_MOD_SUPER)     event.xkey.state |= Mod4Mask;
-    if (mods & GLFW_MOD_CAPS_LOCK) event.xkey.state |= LockMask;
-    if (mods & GLFW_MOD_NUM_LOCK)  event.xkey.state |= Mod2Mask;
-    /*
-     * We use the scancode as the key.  TkpGetKeysym can convert that to a
-     * keysym using xkbcommon.
-     */
-    event.xkey.keycode = scancode;
+
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    event.xkey.x           = (int)xpos;
+    event.xkey.y           = (int)ypos;
+    event.xkey.x_root      = winPtr->changes.x + (int)xpos;
+    event.xkey.y_root      = winPtr->changes.y + (int)ypos;
+    event.xkey.state       = glfwModifierState;
+    event.xkey.keycode     = (KeyCode)scancode;   /* raw evdev scancode */
     event.xkey.same_screen = True;
+
+    fprintf(stderr, "  → Queuing normal Tk KeyPress (scancode %d)\n", scancode);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
 
@@ -1395,19 +1445,24 @@ TkWaylandKeyCallback(GLFWwindow *window,
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
-TkWaylandCharCallback(
-    GLFWwindow *window,
-    unsigned int codepoint)
+TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 {
     recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    if (!winPtr) {
-	return;
+    if (!winPtr) return;
+
+    /* Skip if IBus is likely handling composition. */
+    if (xkbState.state) {
+        /* Optional: check if any compose state is active, or just always let IBus win. */
+        fprintf(stderr, "CharCallback: codepoint U+%04X (may be ignored if IBus active)\n", codepoint);
     }
+
     TkWaylandStoreText(winPtr, codepoint);
 }
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1437,7 +1492,6 @@ TkWaylandWindowRefreshCallback(GLFWwindow *window)
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }
-
 /*
  *----------------------------------------------------------------------
  *

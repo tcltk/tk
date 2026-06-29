@@ -1959,7 +1959,7 @@ static int CmdProcessKey(ClientData clientData,
 
 
 /* Global to track the current D-Bus file descriptor. */
-static int ibus_fd = -1;
+int ibus_fd = -1;
 
 /*
  *----------------------------------------------------------------------

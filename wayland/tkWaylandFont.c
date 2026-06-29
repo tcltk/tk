@@ -117,10 +117,8 @@ IsSimpleOnly(const char *str, int len)
             return false;
         }
 
-        /* Safe for fast path: Latin extended, CJK punctuation + Kana. */
-        int isSafe =
-            (uc <= 0x024F) ||
-            (uc >= 0x3000 && uc <= 0x30FF);
+        /* Safe for fast path: Latin extended. */
+        int isSafe = (uc <= 0x024F);
         if (!isSafe) return false;
 
         i += clen;

@@ -24,11 +24,8 @@
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
 
-
-
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
-
 
 /*
  *----------------------------------------------------------------------
@@ -449,27 +446,9 @@ TkWaylandInitialize(void)
     return TCL_OK;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandShutdown --
- *
- *	Orderly cleanup of GLFW resources on app shutdown.
- *	Now safely handles both exit command and root window closure.
- *
- * Results:
- *	GLFW is closed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
 MODULE_SCOPE void
 TkWaylandShutdown(TCL_UNUSED(void *))
 {
-    /* Prevent recursive shutdown. */
     if (shutdownInProgress) return;
     shutdownInProgress = 1;
 
@@ -478,17 +457,19 @@ TkWaylandShutdown(TCL_UNUSED(void *))
         return;
     }
 
-    /* Delete NanoVG while a context still exists. */
-#if 0
-    if (mainGlfwContext.vg) {
-        /* Make the GL context of the root current if it still exists. */
-        if (mainGlfwWindow) {
-            glfwMakeContextCurrent(mainGlfwWindow);
-            nvgDeleteGLES3(mainGlfwContext.vg);
-        }
-        mainGlfwContext.vg = NULL;
+    /* Remove the IBus file handler first so the event loop stops
+     * delivering stale signals after windows begin to be destroyed. */
+    extern int ibus_fd;          /* defined in tkWaylandKey.c */
+    extern sd_bus *ibus_bus;
+    if (ibus_fd >= 0) {
+        Tcl_DeleteFileHandler(ibus_fd);
+        ibus_fd = -1;
     }
-#endif
+    if (ibus_bus) {
+        sd_bus_unref(ibus_bus);
+        ibus_bus = NULL;
+    }
+
     glfwMakeContextCurrent(NULL);
     TkWaylandClearCallbacks(mainGlfwWindow);
     glfwSetErrorCallback(NULL);
@@ -818,7 +799,7 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
         TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
                                   Tk_Height(childPtr2));
     }
-    /* Higher siblings. */
+
     for (TkWindow *childPtr2 = childPtr->nextPtr;
 	 childPtr2 != NULL;
          childPtr2 = childPtr2->nextPtr) {
