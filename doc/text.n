@@ -246,23 +246,11 @@ that the text flush with both margins.
 The text is aligned to neither the left nor the right margin, there is an
 even gap on each side of each line.
 .RE
-.OP \-lang lang Lang
-Setting the language code of the text content. The language code will be
-used for line breaking (but only if option \fB\-useunibreak\fR is also set).
-An empty string is unsetting the language.
-.RS
-.PP
-The language code will be specified as ISO 639-1 code. The language code
-will not be verified, but it must be a string with two consecutive lowercase
-letters (for example
-.QW en
-), or an empty string, otherwise an error will be thrown.
-.RE
 .OP \-locale locale Locale
 The locale which is used for determining word and character
-boundaries within the text. The default is "C".
-It may be used to restrict the hyphenation rules (see
-\fB\-hyphenrules\fR).
+boundaries within the text. The language code will be used for line breaking
+(but only if option \fB\-useunibreak\fR is also set). The default is "C".
+It may be used to restrict the hyphenation rules (see \fB\-hyphenrules\fR).
 .OP \-maxredo maxRedo MaxRedo
 Specifies the maximum number of redo actions on the undo stack. A zero value
 will prevent any redo action, only undoes are possible. A negative value
@@ -533,8 +521,8 @@ based on Unicode code points, and conforms exactly (with \fIlibunibreak\fR) or
 mostly (with internal algorithm) to the recommendations of the Unicode
 consortium. If option \fB\-useunibreak\fR is set, then the unibreak library
 (from Wu Yongwei) will be used for the line break computation. This library
-even supports language dependent line breaking (see option \fB\-lang\fR for
-language support). Otherwise, if \fB\-useunibreak\fR is not set, or if the
+even supports language dependent line breaking (see option \fB\-locale\fR for
+locale support). Otherwise, if \fB\-useunibreak\fR is not set, or if the
 unibreak library is not available, a simpler algorithm \- also based on the
 recommendations of the Unicode consortium, but restricted to Latin-1 and
 most non-language dependent characters, without regarding combined marks,
@@ -963,13 +951,6 @@ option has been specified, then justify determines how to justify the line.
 It must be one of \fBleft\fR, \fBright\fR, \fBfull\fR, or \fBcenter\fR. If a
 line wraps, then the justification for each line on the display is
 determined by the first non-elided character of that display line.
-.TP
-\fB\-lang \fIcode\fR
-.
-Setting the language code of the text content inside the tagged region. If
-this tag option is specified, it overrides the \fB\-lang\fR option for the
-text widget. For a detailed description of this option see widget option
-\fB\-lang\fR.
 .TP
 \fB\-lmargin1 \fIpixels\fR
 .
@@ -1457,9 +1438,9 @@ The sequence
 .QW \e+
 will be replaced by the soft hyphen character, and, provided that no tagged
 list of rules is given (in \fItagList\fR), a special tag with all known hyphen
-rules (regarding option \fB\-lang\fR) will be attached to this hyphen (this
+rules (regarding option \fB\-locale\fR) will be attached to this hyphen (this
 means that all known hyphenation rules will be applied to this hyphen \-
-probably restricted by option \fB\-lang\fR).
+probably restricted by option \fB\-locale\fR).
 .IP \(bu 3
 The sequence
 .QW \e:\fIRULE\fR:
@@ -2143,8 +2124,8 @@ integers. This list has exactly the character length of the given string,
 and integer value 1 in this list denotes a potential line break point at
 this character position, value 2 denotes a mandatory line break point, and
 value 0 (zero) denotes no line break at this character position. If the
-optional language code is specified (see widget option \fB\-lang\fR for
-language codes), then the external library \fIlibunibreak\fR (from Wu
+optional locale is specified (see widget option \fB\-locale\fR),
+then the external library \fIlibunibreak\fR (from Wu
 Yongwei) will be used for the line break computation; an error will be
 thrown if this library is not available. If no language code is specified,
 then the internal wrap algorithm will be used: also based on the
@@ -2159,7 +2140,7 @@ It provides a simple check whether \fIlibunibreak\fR is available or not
 (even an empty string, and any language code, e.g.
 .QW xx ,
 works for this check). An error will be thrown if \fIlibunibreak\fR
-is not available, but a language code has been specified (\fB\-lang\fR).
+is not available, but a locale has been specified (\fB\-locale\fR).
 .IP [2] 4
 For a proof of the line break algorithm, especially for testing the internal
 algorithm.

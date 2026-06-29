@@ -277,8 +277,6 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_INSERT_WIDTH, offsetof(TkText, insertWidthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-justify", "justify", "Justify",
 	"left", TCL_INDEX_NONE, offsetof(TkText, justify), TK_OPTION_ENUM_VAR, justifyStrings, TK_TEXT_LINE_GEOMETRY},
-    {TK_OPTION_STRING, "-lang", "lang", "Lang",
-	 NULL, offsetof(TkText, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
 	"C", TCL_INDEX_NONE, offsetof(TkText, locale), 0, &TkLocaleOption, 0},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
@@ -1527,16 +1525,19 @@ TextWidgetObjCmd(
     case TEXT_BRKS: {
 	Tcl_Obj *arrPtr;
 	unsigned length, i;
-	char const *lang = NULL;
+	char const *locale = NULL;
 	char buf[1];
 
 	if (objc != 3 && objc != 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index");
+	    Tcl_WrongNumArgs(interp, 2, objv, "index ?locale?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
+
 	if (objc == 4) {
-	    if (!TkTextTestLangCode(interp, objv[3])) {
+		char dummy[24];
+		Tcl_Obj *objv3 = objv[3];
+	    if (!TkLocaleOption.setProc(NULL, interp, NULL, &objv3, dummy, 0, NULL, 0)) {
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1545,13 +1546,13 @@ TextWidgetObjCmd(
 		result = TCL_ERROR;
 		goto done;
 	    }
-	    lang = Tcl_GetString(objv[3]);
+	    locale = Tcl_GetString(objv[3]);
 	}
 	if ((length = GetByteLength(objv[2])) < textPtr->brksBufferSize) {
 	    textPtr->brksBufferSize = MAX(length, textPtr->brksBufferSize + 512);
 	    textPtr->brksBuffer = (char *)Tcl_Realloc(textPtr->brksBuffer, textPtr->brksBufferSize);
 	}
-	TkTextComputeBreakLocations(interp, Tcl_GetString(objv[2]), length, lang, textPtr->brksBuffer);
+	TkTextComputeBreakLocations(interp, Tcl_GetString(objv[2]), length, locale, textPtr->brksBuffer);
 	arrPtr = Tcl_NewObj();
 
 	for (i = 0; i < length; ++i) {
@@ -3737,46 +3738,6 @@ TkTextReleaseIfDestroyed(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextTestLangCode --
- *
- *	Test the given language code, whether it satsifies ISO 539-1,
- *	and set an error message if the code is invalid.
- *
- * Results:
- *	The return value is 'tue' if given language code will be accepted,
- *	otherwise 'false' will be returned.
- *
- * Side effects:
- *	An error message in the interpreter may be set.
- *
- *----------------------------------------------------------------------
- */
-
-bool
-TkTextTestLangCode(
-    Tcl_Interp *interp,
-    Tcl_Obj *langCodePtr)
-{
-    char const *lang = Tcl_GetString(langCodePtr);
-
-    if (UCHAR(lang[0]) >= 0x80
-	    || UCHAR(lang[1]) >= 0x80
-	    || !isalpha(UCHAR(lang[0]))
-	    || !isalpha(UCHAR(lang[1]))
-	    || !islower(UCHAR(lang[0]))
-	    || !islower(UCHAR(lang[1]))
-	    || lang[2] != '\0') {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad lang \"%s\": "
-		"must have the form of an ISO 639-1 language code, or empty", lang));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "LANG", (char *)NULL);
-	return false;
-    }
-    return true;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkConfigureText --
  *
  *	This function is called to process an objv/objc list, plus the Tk
@@ -4128,19 +4089,6 @@ TkConfigureText(
 	    Tcl_AddErrorInfo(interp, "\n    (while processing -tabs option)");
 	    goto error;
 	}
-    }
-
-    /*
-     * Check language support.
-     */
-
-    if (textPtr->langObj) {
-	if (!TkTextTestLangCode(interp, textPtr->langObj)) {
-	    goto error;
-	}
-	memcpy(textPtr->lang, Tcl_GetString(textPtr->langObj), 3);
-    } else {
-	memset(textPtr->lang, 0, 3);
     }
 
     /*

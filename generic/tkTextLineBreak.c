@@ -123,19 +123,20 @@ LoadLibUnibreak(
 static ComputeBreakLocationsFunc
 GetLineBreakFunc(
     Tcl_Interp *interp,
-    char const *lang)
+    char const *locale)
 {
 #ifdef __UNIX__
-    if (lang) {
-	static int loaded = 0;
+    if (locale && (strcmp(locale, "C") == 0)) {
+	static bool loaded = false;
 
 	if (!loaded) {
 	    LoadLibUnibreak(interp);
+	    loaded = true;
 	}
     }
 #else
     (void)interp;
-    (void)lang;
+    (void)locale;
 #endif
     return libLinebreakFunc;
 }
@@ -148,8 +149,8 @@ GetLineBreakFunc(
  *	Compute break locations in UTF-8 text. This function expects
  *	a nul-terminated string (this mean that the character at position
  *	'len' must be NUL). Thus it is also required that the break buffer
- *	'brks' has at least size 'len+1'. If 'lang' is not NULL, then the
- *	external library linunibreak will be used for the line break
+ *	'brks' has at least size 'len+1'. If 'locale' is not NULL and not "C",
+ *	then the external library linunibreak will be used for the line break
  *	computation, but only if this library is loadable, otherwise the
  *	internal algorithm will be used.
  *
@@ -164,24 +165,25 @@ GetLineBreakFunc(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextComputeBreakLocations(
     Tcl_Interp *interp,
     const char *text,	/* must be nul-terminated */
-    unsigned len,	/* without trailing nul byte */
-    const char *lang,	/* can be NULL */
+    size_t len,	/* without trailing nul byte */
+    const char *locale,	/* can be NULL */
     char *brks)
 {
     ComputeBreakLocationsFunc func;
-    int lastBreakablePos = -1;
-    unsigned i;
+    Tcl_Size lastBreakablePos = -1;
+    size_t i;
+	char lang[3] = {locale[0], locale[1], '\0'};
 
     assert(text);
     assert(brks);
     assert(text[len] == '\0');
-    assert(!lang || (isalpha(lang[0]) && isalpha(lang[1]) && !lang[2]));
+    assert(!locale || (isalpha(locale[0]) && isalpha(locale[1])));
 
-    func = GetLineBreakFunc(interp, lang);
+    func = GetLineBreakFunc(interp, locale);
 
     /*
      * The algorithm don't give us a break value for the last character if we do
@@ -189,7 +191,7 @@ TkTextComputeBreakLocations(
      */
 
     len += 1;
-    (*func)((const unsigned char *) text, len, lang, brks);
+    (*func)((const unsigned char *) text, len, (locale && strchr(" _", locale[2])) ? lang : NULL, brks);
     len -= 1;
 
     for (i = 0; i < len; ++i) {
@@ -245,8 +247,8 @@ TkTextComputeBreakLocations(
 		 * (a suggestion from Wu Yongwei).
 		 */
 
-		if (lastBreakablePos >= (int) i - 2
-			|| (i > 40u && lastBreakablePos >= (int) i - 7 && text[i - 1] == '/')) {
+		if (lastBreakablePos >= (Tcl_Size)i - 2
+			|| (i > 40u && lastBreakablePos >= (Tcl_Size)i - 7 && text[i - 1] == '/')) {
 		    continue;
 		}
 

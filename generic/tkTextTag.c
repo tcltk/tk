@@ -80,8 +80,6 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	TCL_INDEX_NONE, offsetof(TkTextTag, indentBg), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, justifyStrings, 0},
-    {TK_OPTION_STRING, "-lang", NULL, NULL,
-	NULL, offsetof(TkTextTag, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
 	NULL, offsetof(TkTextTag, lMargin1Obj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
@@ -1140,15 +1138,6 @@ TkConfigureTag(
 
     tagPtr->attrs.borderWidth = MAX(0, tagPtr->attrs.borderWidth);
 
-    if (tagPtr->langObj) {
-	if (!TkTextTestLangCode(interp, tagPtr->langObj)) {
-	    rc = TCL_ERROR;
-	} else {
-	    memcpy(tagPtr->lang, Tcl_GetString(tagPtr->langObj), 3);
-	}
-    } else {
-	memset(tagPtr->lang, 0, 3);
-    }
     if (tagPtr->relief != TK_RELIEF_NULL) {
     } else if (relief != TK_RELIEF_NULL) {
 	SetupDefaultRelief(textPtr, tagPtr);

@@ -964,9 +964,6 @@ typedef struct TkTextTag {
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
     int elide;			/* > 0 means that data under this tag
 				 * should not be displayed. -1 means not specified. */
-    Tcl_Obj *langObj;		/* -lang option string. NULL means option not specified. */
-    char lang[3];		/* The specified language for the text content, only enabled if not
-				 * NUL. */
     bool undo;			/* True means that any change of tagging with this tag will be pushed
 				 * on the undo stack (if undo stack is enabled), otherwise this tag
 				 * will not regarded in the undo/redo process. */
@@ -1388,9 +1385,6 @@ typedef struct TkText {
 				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. */
     Tcl_Obj *hyphenRulesObj;	/* The hyphen rules string. */
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
-    Tcl_Obj *langObj;		/* -lang option string. NULL means option not specified. */
-    char lang[3];		/* The specified language for the text content, only enabled if not
-				 * NUL. */
 
     /*
      * Additional information used for displaying:
@@ -1895,7 +1889,7 @@ inline TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr, TkTextSortMethod 
 MODULE_SCOPE TkTextTag * TkBTreeGetSegmentTags(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr, const TkText *textPtr,
 			    TkTextSortMethod sortMeth, int *flags);
-MODULE_SCOPE const char * TkBTreeGetLang(const TkText *textPtr, const TkTextSegment *segPtr);
+MODULE_SCOPE const char * TkBTreeGetLocale(const TkText *textPtr, const TkTextSegment *segPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree, TkTextIndex *indexPtr, const char *string,
 			    union TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr,
 			    TkTextUndoInfo *undoInfo);
@@ -2062,9 +2056,8 @@ MODULE_SCOPE bool	TkTextIndexForwChars(const TkText *textPtr, const TkTextIndex 
 			    Tcl_Size count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr, const TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, unsigned len,
-			    const char *lang, char *brks);
-MODULE_SCOPE bool	TkTextTestLangCode(Tcl_Interp *interp, Tcl_Obj *langCodePtr);
+MODULE_SCOPE bool	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, size_t len,
+			    const char *locale, char *brks);
 MODULE_SCOPE int	TkTextParseHyphenRules(TkText *textPtr, Tcl_Obj *objPtr, int *rulesPtr);
 MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE void	TkTextPushUndoToken(TkSharedText *sharedTextPtr, void *token,
