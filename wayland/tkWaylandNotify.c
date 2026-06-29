@@ -366,6 +366,15 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 
     Tcl_Time noBlock    = {0, 0};
     Tcl_Time oneRefresh = {0, 16667};
+    
+     /*
+     * The Tcl event loop will have run all pending display procs
+     * before calling this function.  Now we can swap the GL buffers
+     * for any window on which some drawing has been done.
+     */
+
+    TkWaylandDisplayAllWindows();
+
 
     /* Drain pending system communication layers inline */
     if (ibus_bus) {

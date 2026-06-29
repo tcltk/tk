@@ -446,6 +446,23 @@ TkWaylandInitialize(void)
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandShutdown --
+ *
+ *	Orderly cleanup of GLFW resources on app shutdown.
+ *	Now safely handles both exit command and root window closure.
+ *
+ * Results:
+ *	GLFW is closed.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE void
 TkWaylandShutdown(TCL_UNUSED(void *))
 {
@@ -760,17 +777,22 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
     /* Bind our backing store framebuffer. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
 
+
     fprintf(stderr, "EndDraw: setting viewport to %dx%d\n", fbWidth, fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
     /* Check FBO completeness (for now). */
+
+
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
+
         fprintf(stderr, "FBO is incomplete! (status=0x%x)\n", status);
     }
     nvgEndFrame(dcPtr->vg);
     fprintf(stderr, "EndFrame: drew %s in toplevel %s\n",
 	   Tk_PathName(childPtr), Tk_PathName(winPtr));
+
     nvgluBindFramebuffer(NULL);
 
     /*
@@ -794,12 +816,15 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 	 childPtr2 != NULL;
          childPtr2 = childPtr2->nextPtr) {
         if (!Tk_IsMapped(childPtr2)) {
+
+
             continue;
         }
+
         TkWaylandQueueExposeEvent(childPtr2, 0, 0, Tk_Width(childPtr2),
                                   Tk_Height(childPtr2));
     }
-
+    /* Higher siblings. */
     for (TkWindow *childPtr2 = childPtr->nextPtr;
 	 childPtr2 != NULL;
          childPtr2 = childPtr2->nextPtr) {
@@ -812,14 +837,17 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 #endif
 
     /*
+
      * Mark the toplevel as needing display (unless we are in the middle of a
      * Tk double-buffer section).  This triggers a call to glfwSwapBuffers.
      */
+
     glfwTkInfo *infoPtr = getGlfwTkInfo(glfwWindow);
     ////if (!(infoPtr->flags & dontSwap)) {
     infoPtr->flags |= needsDisplay;
     ////}
 }
+
 
 /*
  *----------------------------------------------------------------------
