@@ -758,6 +758,17 @@ Tk_MakeWindow(
     result = TkWaylandDrawableForTkWindow(winPtr);
 
     if (Tk_IsTopLevel(winPtr)) {
+		
+	    /*
+         * Guard against internal Tk toplevels that have no mainPtr —
+         * e.g. the clipboard owner window created by TkClipInit.
+         * These need a valid window ID but no real GLFW surface.
+         * Return the pre-allocated result token directly; the window
+         * will never be mapped or rendered.
+         */
+        if (!winPtr->mainPtr || !winPtr->mainPtr->interp) {
+            return result;
+        }
         /*
          * -------------------------
          *   TOPLEVEL WINDOW
