@@ -1932,6 +1932,7 @@ Tk_GetUserInactiveTime(
      TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
+    DWORD inactive;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1942,7 +1943,17 @@ Tk_GetUserInactiveTime(
      * Last input info is in milliseconds, since restart time.
      */
 
-    return (GetTickCount()-li.dwTime);
+    inactive = GetTickCount() - li.dwTime;
+
+    /*
+     * "long" is 32-bit on Windows, so clamp to its maximum to avoid returning
+     * a large inactivity interval as a negative value.
+     */
+
+    if (inactive > 0x7fffffff) {
+	return 0x7fffffff;
+    }
+    return (long)inactive;
 }
 
 /*
