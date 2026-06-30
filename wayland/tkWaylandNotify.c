@@ -70,6 +70,17 @@ extern void RemoveIbusContext(Tk_Window tkwin);
 extern TkXKBState xkbState;
 
 /*
+ * Forward declarations for menu popup input routing (tkWaylandMenu.c).
+ * These are called from the GLFW mouse callbacks below when the menu
+ * stack is active, routing events to the menu system before Tk sees them.
+ */
+extern int  TkWaylandMenuPopupActive(void);
+extern void TkWaylandMenuHandlePointerButton(int x, int y,
+                                             int button, int state);
+extern void TkWaylandMenuHandlePointerMotion(int x, int y);
+extern void TkWaylandMenubarResize(TkWindow *winPtr);
+
+/*
  * Direct reference to the IBus bus so the notifier can drain it without
  * going through the file-handler path.  The bus is private to
  * tkWaylandKey.c; we declare it extern here rather than exposing it in a
@@ -844,6 +855,17 @@ TkWaylandFramebufferSizeCallback(
     /* Update window size in Tk */
     winPtr->changes.width = width;
     winPtr->changes.height = height;
+
+    /*
+     * Notify the menubar subsurface to recreate itself at the new width.
+     * This must happen before TkDoConfigureNotify so that internalBorderTop
+     * is already accurate when Tk re-lays out children in response to the
+     * configure event.  MenubarResizeIdleProc defers the actual EGL
+     * surface recreate to the next idle pass to avoid corrupting the GL
+     * state mid-resize.
+     */
+    TkWaylandMenubarResize(winPtr);
+
     TkDoConfigureNotify(winPtr);
 }
 
@@ -1148,7 +1170,17 @@ TkWaylandCursorPosCallback(
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
 
-    /* Find the widget containing the mouse cursor. */
+    /*
+     * Menu intercept: while a popup menu stack is active all pointer motion
+     * is forwarded to the menu hit-test logic.  The menu subsurfaces have no
+     * GLFW window and receive no direct input, so this callback is their sole
+     * source of motion events.  We return immediately so the normal
+     * widget-crossing machinery does not also fire.
+     */
+    if (TkWaylandMenuPopupActive()) {
+        TkWaylandMenuHandlePointerMotion((int)xpos, (int)ypos);
+        return;
+    }
     TkWindow *target = (TkWindow *) Tk_CoordsToWindow((int) xpos, (int) ypos,
 			    (Tk_Window) winPtr);
 
@@ -1275,7 +1307,28 @@ TkWaylandMouseButtonCallback(
     /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    /* Find the widget where the event occurred. */
+    /*
+     * Menu intercept: while a popup menu stack is active, button presses
+     * are routed exclusively to the menu hit-test / dismiss logic.
+     * TkWaylandMenuHandlePointerButton only acts on press (not release);
+     * releases are swallowed so they don't also activate a widget under
+     * the now-dismissed stack.
+     *
+     * evdev button codes: left=0x110, right=0x111, middle=0x112.
+     * wl_pointer delivers these directly; we map from GLFW here.
+     */
+    if (TkWaylandMenuPopupActive()) {
+        if (action == GLFW_PRESS) {
+            int evdevBtn = (button == GLFW_MOUSE_BUTTON_LEFT)   ? 0x110 :
+                           (button == GLFW_MOUSE_BUTTON_RIGHT)  ? 0x111 : 0x112;
+            TkWaylandMenuHandlePointerButton(
+                (int)xpos, (int)ypos,
+                evdevBtn,
+                WL_POINTER_BUTTON_STATE_PRESSED);
+        }
+        /* Swallow both press and release — do not deliver to Tk widgets. */
+        return;
+    }
     Tk_Window target = Tk_CoordsToWindow((int) xpos, (int) ypos,
 			    (Tk_Window) winPtr);
 

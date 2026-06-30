@@ -42,6 +42,18 @@
 
 static int GlfwIsInitialized = 0;
 
+
+/*
+ * Global Wayland objects - defined here and shared with other modules.
+ */
+struct wl_display *waylandDisplay = NULL;
+struct wl_compositor *waylandCompositor = NULL;
+struct wl_subcompositor *waylandSubcompositor = NULL;
+struct xdg_wm_base *waylandWmBase = NULL;
+struct wl_seat *waylandSeat = NULL;
+EGLDisplay eglDisplay = EGL_NO_DISPLAY;
+EGLContext eglContext = EGL_NO_CONTEXT;
+
 /*
  * The glfwWindow for the root window.
  */
@@ -1100,6 +1112,7 @@ TkpInit(Tcl_Interp *interp)
     Cups_Init(interp);
     TkWaylandAccessibility_Init(interp);
     TkWaylandKeyInit();
+    TkWaylandPopupInit();
 
     return TCL_OK;
 }
