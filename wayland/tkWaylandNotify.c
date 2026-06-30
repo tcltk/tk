@@ -552,9 +552,8 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
     
     /* Queue it. */
-    fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
-	   event.xexpose.serial,
-	   Tk_PathName(winPtr), width, height);
+   fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
+		event.xexpose.serial, Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     
     /* Recurse through the children of this window. */
@@ -703,6 +702,7 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  *----------------------------------------------------------------------
  */
 
+#if 0
 static void
 TkWaylandFramebufferSizeCallback(
     GLFWwindow *window,
@@ -712,50 +712,140 @@ TkWaylandFramebufferSizeCallback(
     recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
-	fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
-	return;
+        fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
+        return;
     }
+    
+    /* Check if privatePtr is initialized. */
+    if (!winPtr->privatePtr) {
+        fprintf(stderr, "FramebufferSizeCallback: privatePtr is NULL for %s\n", 
+                Tk_PathName(winPtr));
+        return;
+    }
+    
     fprintf(stderr, "TkWaylandFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+    if (!infoPtr) {
+        fprintf(stderr, "FramebufferSizeCallback: infoPtr is NULL\n");
+        return;
+    }
+    
     NVGcontext *vg = infoPtr->context.vg;
     if (vg == NULL) {
-	fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
-	return;
+        fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
+        return;
     }
     
     /* Rebuild the backing store FBO */
-    nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    fprintf(stderr, "New framebuffer %p for %s with id %d\n",
-	    winPtr->privatePtr->fb,
-	    Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
-
-#if 1
-    /* Check for FBO completeness. */
-    nvgluBindFramebuffer(winPtr->privatePtr->fb);
-    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", winPtr->privatePtr->fb,
-	       status);
-    } else {
-	fprintf(stderr, "FBO is complete.\n");
-	fprintf(stderr, "Framebuffer size is %d x %d\n", width, height);
+    if (winPtr->privatePtr->fb) {
+        nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
     }
-#endif
+    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
+    
+    if (winPtr->privatePtr->fb) {
+        fprintf(stderr, "New framebuffer %p for %s with id %d\n",
+                winPtr->privatePtr->fb,
+                Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
+
+        /* Check for FBO completeness. */
+        nvgluBindFramebuffer(winPtr->privatePtr->fb);
+        int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", 
+                    winPtr->privatePtr->fb, status);
+        } else {
+            fprintf(stderr, "FBO is complete.\n");
+            fprintf(stderr, "Framebuffer size is %d x %d\n", width, height);
+        }
+    } else {
+        fprintf(stderr, "FramebufferSizeCallback: Failed to create FBO\n");
+        return;
+    }
 
     /*
      * Inform Tk about the size change
      */
-    
-   glfwGetWindowSize(window, &(winPtr->changes.width),
-		     &(winPtr->changes.height));
+    glfwGetWindowSize(window, &(winPtr->changes.width),
+                      &(winPtr->changes.height));
 
-   fprintf(stderr, "After new framebuffer window size is %d x %d\n", winPtr->changes.width, winPtr->changes.height);
+    fprintf(stderr, "After new framebuffer window size is %d x %d\n", 
+            winPtr->changes.width, winPtr->changes.height);
 
     /* Reconfigure the Tk window. */
-	TkDoConfigureNotify(winPtr);
+    TkDoConfigureNotify(winPtr);
 }
-
+#endif
+static void
+TkWaylandFramebufferSizeCallback(
+    GLFWwindow *window,
+    int width,
+    int height)
+{
+    recordCallback();
+    
+    /* Validate parameters */
+    if (width <= 0 || height <= 0) {
+        fprintf(stderr, "FramebufferSizeCallback: invalid size %dx%d\n", width, height);
+        return;
+    }
+    
+    TkWindow *winPtr = TkWaylandGetTkWindow(window);
+    if (!winPtr) {
+        fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
+        return;
+    }
+    
+    if (!winPtr->privatePtr) {
+        fprintf(stderr, "FramebufferSizeCallback: privatePtr is NULL for %s\n", 
+                Tk_PathName(winPtr));
+        return;
+    }
+    
+    fprintf(stderr, "TkWaylandFramebufferSizeCallback: %s %dx%d\n", 
+            Tk_PathName(winPtr), width, height);
+    
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
+    if (!infoPtr) {
+        fprintf(stderr, "FramebufferSizeCallback: infoPtr is NULL\n");
+        return;
+    }
+    
+    NVGcontext *vg = infoPtr->context.vg;
+    if (vg == NULL) {
+        fprintf(stderr, "FramebufferSizeCallback: No NVG context!\n");
+        return;
+    }
+    
+    /* Delete old FBO if it exists */
+    if (winPtr->privatePtr->fb) {
+        nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
+        winPtr->privatePtr->fb = NULL;
+    }
+    
+    /* Create new FBO with error checking */
+    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
+    if (!winPtr->privatePtr->fb) {
+        fprintf(stderr, "FramebufferSizeCallback: Failed to create FBO\n");
+        return;
+    }
+    
+    /* Check FBO completeness */
+    nvgluBindFramebuffer(winPtr->privatePtr->fb);
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "FBO incomplete (status=0x%x)\n", status);
+        nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
+        winPtr->privatePtr->fb = NULL;
+        return;
+    }
+    
+    fprintf(stderr, "FBO created successfully: %dx%d\n", width, height);
+    
+    /* Update window size in Tk */
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
+    TkDoConfigureNotify(winPtr);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1501,9 +1591,7 @@ TkWaylandWindowRefreshCallback(GLFWwindow *window)
     }
     fprintf(stderr, "TkGlWindowRefreshCallback Exposing %s\n",
 	    Tk_PathName(winPtr));
-//	glfwSetWindowSize(window, Tk_Width(winPtr), Tk_Height(winPtr));
-	fprintf(stderr, "Setting toplevel size to %d x %d\n", Tk_Width(winPtr), Tk_Height(winPtr));
-	
+	    	
     TkWaylandQueueExposeEvent(winPtr,
         0, 0, Tk_Width(winPtr), Tk_Height(winPtr));
 }

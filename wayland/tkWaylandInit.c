@@ -222,24 +222,73 @@ getGlfwTkInfo(
  *      is rendered on the screen.
  */
 
+
 static void renderFBO(
     GLFWwindow *glfwWindow)
 {
     glfwTkInfo *infoPtr = glfwGetWindowUserPointer(glfwWindow);
     if (!infoPtr) {
-	fprintf(stderr, "renderFBO: No UserPointer\n");
-	return;
+        fprintf(stderr, "renderFBO: No UserPointer\n");
+        return;
     }
+    
+    /* Check if winPtr or privatePtr is NULL. */
+    if (!infoPtr->winPtr) {
+        fprintf(stderr, "renderFBO: winPtr is NULL\n");
+        return;
+    }
+    
+    if (!infoPtr->winPtr->privatePtr) {
+        fprintf(stderr, "renderFBO: privatePtr is NULL\n");
+        return;
+    }
+    
     NVGLUframebuffer *fb = infoPtr->winPtr->privatePtr->fb;
+    
+    /* Check if framebuffer exists. */
+    if (!fb) {
+        fprintf(stderr, "renderFBO: framebuffer is NULL - creating one\n");
+        
+        /* Try to create a framebuffer. */
+        int fbWidth, fbHeight;
+        glfwMakeContextCurrent(glfwWindow);
+        glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+        
+        if (fbWidth <= 0) fbWidth = 200;
+        if (fbHeight <= 0) fbHeight = 200;
+        
+        fb = nvgluCreateFramebuffer(infoPtr->context.vg, fbWidth, fbHeight, 0);
+        if (!fb) {
+            fprintf(stderr, "renderFBO: failed to create framebuffer\n");
+            return;
+        }
+        infoPtr->winPtr->privatePtr->fb = fb;
+        fprintf(stderr, "renderFBO: created framebuffer %p (%dx%d)\n", 
+                fb, fbWidth, fbHeight);
+    }
+    
     int fbWidth, fbHeight;
     glfwMakeContextCurrent(glfwWindow);
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    
+    /* Ensure framebuffer is valid by checking its fbo ID. */
+    if (fb->fbo == 0) {
+        fprintf(stderr, "renderFBO: framebuffer has invalid fbo ID - recreating\n");
+        nvgluDeleteFramebuffer(fb);
+        fb = nvgluCreateFramebuffer(infoPtr->context.vg, fbWidth, fbHeight, 0);
+        if (!fb) {
+            fprintf(stderr, "renderFBO: failed to recreate framebuffer\n");
+            return;
+        }
+        infoPtr->winPtr->privatePtr->fb = fb;
+    }
+    
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, fbWidth, fbHeight,
-		      0, 0, fbWidth, fbHeight,
-		      GL_COLOR_BUFFER_BIT,
-		      GL_NEAREST);
+                      0, 0, fbWidth, fbHeight,
+                      GL_COLOR_BUFFER_BIT,
+                      GL_NEAREST);
     glfwSwapBuffers(glfwWindow);
 }
 
@@ -328,14 +377,24 @@ MODULE_SCOPE void
 TkWaylandDisplayAllWindows()
 {
     for (glfwTkInfo* infoPtr = glfwTkInfoList;
-	 infoPtr != NULL;
-	 infoPtr = infoPtr->nextPtr) {
-	if (infoPtr->flags & needsDisplay) {
-	    GLFWwindow *glfwWindow = infoPtr->glfwWindow;
-	    fprintf(stderr, "Displaying %s\n", Tk_PathName(infoPtr->winPtr));
-	    renderFBO(glfwWindow);
-	    infoPtr->flags &= ~needsDisplay;
-	}
+         infoPtr != NULL;
+         infoPtr = infoPtr->nextPtr) {
+        if (infoPtr->flags & needsDisplay) {
+            /* Skip if window or framebuffer is not ready. */
+            if (!infoPtr->winPtr || !infoPtr->winPtr->privatePtr || 
+                !infoPtr->winPtr->privatePtr->fb) {
+                /* Clear the flag to avoid repeated attempts. */
+                infoPtr->flags &= ~needsDisplay;
+                fprintf(stderr, "TkWaylandDisplayAllWindows: skipping %s (no FBO)\n",
+                        infoPtr->winPtr ? Tk_PathName(infoPtr->winPtr) : "unknown");
+                continue;
+            }
+            
+            GLFWwindow *glfwWindow = infoPtr->glfwWindow;
+            fprintf(stderr, "Displaying %s\n", Tk_PathName(infoPtr->winPtr));
+            renderFBO(glfwWindow);
+            infoPtr->flags &= ~needsDisplay;
+        }
     }
 }
 /*
