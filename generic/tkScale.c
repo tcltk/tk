@@ -450,6 +450,7 @@ ScaleWidgetObjCmd(
     case COMMAND_GET: {
 	double value;
 	int x, y;
+	char string[TCL_DOUBLE_SPACE];
 
 	if ((objc != 2) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "get ?x y?");
@@ -464,7 +465,8 @@ ScaleWidgetObjCmd(
 	    }
 	    value = TkScalePixelToValue(scalePtr, x, y);
 	}
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(scalePtr->valueFormat, value));
+	TkFormatDouble(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat, value);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(string, -1));
 	break;
     }
     case COMMAND_IDENTIFY: {
@@ -1057,13 +1059,13 @@ ComputeScaleGeometry(
      * whichever length is longer.
      */
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
             scalePtr->fromValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     valuePixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
             scalePtr->toValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
@@ -1076,13 +1078,13 @@ ComputeScaleGeometry(
      * Now do the same thing for the tick values
      */
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
             scalePtr->fromValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     tickPixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+    if (TkFormatDouble(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
             scalePtr->toValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
@@ -1493,7 +1495,7 @@ ScaleSetVariable(
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
 
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
+        if (TkFormatDouble(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
                 scalePtr->value) < 0) {
             string[TCL_DOUBLE_SPACE - 1] = '\0';
         }

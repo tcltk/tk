@@ -226,7 +226,7 @@ TkpOpenDisplay(
 	display->proto_minor_version = [[cgVers objectAtIndex:2] integerValue];
     }
     if (!vendor[0]) {
-	snprintf(vendor, sizeof(vendor), "Apple AppKit %g",
+	TkFormatDouble(vendor, sizeof(vendor), "Apple AppKit %g",
 		NSAppKitVersionNumber);
     }
     display->vendor = vendor;

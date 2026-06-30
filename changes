@@ -8354,3 +8354,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2026-04-13 (bug) [011533] Flip ttk::notebook tab states "first" and "last" for "-tabplacement e*|s*" (werner)
 
 - Released 8.6.18, May 11, 2026 - https://core.tcl-lang.org/tk/ for details
+
+2026-06-30 (bug) [348b48] scale, spinbox and place format floating-point values using
+	the LC_NUMERIC locale (nijtmans)
