@@ -55,6 +55,12 @@ EGLDisplay eglDisplay = EGL_NO_DISPLAY;
 EGLContext eglContext = EGL_NO_CONTEXT;
 
 /*
+ * Font data for popup rendering - shared with tkWaylandPopup.c
+ */
+size_t sans_size = 0, bold_size = 0, mono_size = 0;
+unsigned char *sans_data = NULL, *bold_data = NULL, *mono_data = NULL;
+
+/*
  * The glfwWindow for the root window.
  */
 
@@ -88,12 +94,6 @@ static void GLtest(GLFWwindow *window) {
 }
 #endif
 
-/*
- * Buffers for font files needed for window decorations.
- */
-
-static size_t sans_size, bold_size, mono_size;
-static unsigned char *sans_data, *bold_data, *mono_data;
 
 static unsigned char* readFont(
     const char* fontPath,
@@ -124,16 +124,19 @@ static unsigned char* readFont(
 static void freeFonts()
 {
     if (sans_data) {
-	free(sans_data);
-	sans_data = NULL;
+        free(sans_data);
+        sans_data = NULL;
+        sans_size = 0;
     }
     if (bold_data) {
-	free(bold_data);
-	bold_data = NULL;
+        free(bold_data);
+        bold_data = NULL;
+        bold_size = 0;
     }
     if (mono_data) {
-	free(mono_data);
-	mono_data = NULL;
+        free(mono_data);
+        mono_data = NULL;
+        mono_size = 0;
     }
 }
 
@@ -442,8 +445,8 @@ TkWaylandErrorCallback(int error, const char *desc)
  * TkWaylandInitialize --
  *
  *	Initializes the GLFW library, and the Wayland protocols.
- *      Creates a GFLWWindow to be used for the root window and its
- *      NanoVG context.
+ *  Creates a GFLWWindow to be used for the root window and its
+ *  NanoVG context.
  *
  * Results:
  *	TCL_OK on success, TCL_ERROR on failure.
@@ -494,6 +497,26 @@ TkWaylandInitialize(void)
         glfwTerminate();
         return TCL_ERROR;
     }
+    
+    /* Get Wayland display to initialize Wayland globals for popups. */
+    waylandDisplay = glfwGetWaylandDisplay();
+		if (!waylandDisplay) {
+		fprintf(stderr, "TkWaylandInitialize: glfwGetWaylandDisplay() failed\n");
+		glfwTerminate();
+		return TCL_ERROR;
+	}
+
+    /*
+     * Tell the popup/menu module which GLFW window owns the shared
+     * EGL context and Wayland connection, so that
+     * TkWaylandPopupGetEGLDisplay() can retrieve a real
+     * Wayland-platform EGLDisplay via glfwGetEGLDisplay() instead of
+     * falling back to eglGetDisplay(EGL_DEFAULT_DISPLAY), which is
+     * not guaranteed to be compatible with wl_egl_window native
+     * windows and causes eglCreateWindowSurface() to fail with
+     * EGL_BAD_NATIVE_WINDOW for menubars and popup menus.
+     */
+    TkWaylandPopupSetMainWindow(mainGlfwWindow);
 
     /* Load fonts used in window decorations. */
     sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -1105,14 +1128,13 @@ int
 TkpInit(Tcl_Interp *interp)
 {
     if (TkWaylandInitialize() != TCL_OK) return TCL_ERROR;
-    TkWaylandMenuInit();
     Tk_WaylandSetupTkNotifier();
     Tktray_Init(interp);
     SysNotify_Init(interp);
     Cups_Init(interp);
     TkWaylandAccessibility_Init(interp);
     TkWaylandKeyInit();
-    TkWaylandPopupInit();
+    TkWaylandMenuInit();
 
     return TCL_OK;
 }

@@ -731,6 +731,7 @@ MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 /* Lifecycle */
 MODULE_SCOPE int   TkWaylandPopupInit(void);
 MODULE_SCOPE void  TkWaylandPopupDestroyAll(void);
+MODULE_SCOPE void  TkWaylandPopupSetMainWindow(GLFWwindow *window);
 
 /*
  * Create a popup.
@@ -803,7 +804,8 @@ MODULE_SCOPE void TkWaylandSubsurfaceReconfigure(
     int x, int y, int width, int height);
 MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(
     TkWaylandPopup *popup, TkWaylandPopup *sibling);
-
+MODULE_SCOPE int TkWaylandPopupResize(
+    TkWaylandPopup *popup, int width, int height);
 /*
  *----------------------------------------------------------------------
  *

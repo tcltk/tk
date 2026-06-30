@@ -62,6 +62,7 @@ MODULE_SCOPE int TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupEndDraw(TkWaylandPopup *popup);
 MODULE_SCOPE NVGcontext* TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
 MODULE_SCOPE void TkWaylandPopupGetSize(TkWaylandPopup *popup, int *width, int *height);
+MODULE_SCOPE int TkWaylandPopupResize(TkWaylandPopup *popup, int width, int height);
 MODULE_SCOPE TkWaylandPopup* TkWaylandSubsurfaceCreate(GLFWwindow *window, int x, int y, int width, int height);
 MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(TkWaylandPopup *popup, TkWaylandPopup *above);
 MODULE_SCOPE void TkWaylandPopupDestroy(TkWaylandPopup *popup);
@@ -72,6 +73,7 @@ MODULE_SCOPE void TkpDisplayMenuButton(void *clientData);
 MODULE_SCOPE NVGcontext* TkWaylandGetNVGContext(Drawable d);
 MODULE_SCOPE NVGcolor TkWaylandXColorToNVG(XColor *xcolor);
 MODULE_SCOPE NVGcolor TkWaylandPixelToNVG(unsigned long pixel);
+MODULE_SCOPE void TkWaylandMenubarDestroy(TkWindow *winPtr);
 
 /*
  * Menu popup stack
@@ -175,22 +177,73 @@ TkpNewMenu(TkMenu *menuPtr)
  * TkpDestroyMenu --
  *
  *	Clean up platform-specific menu resources.
+ *	Only destroys when the menu is actually being destroyed.
+ *	Prevents cascading destruction of the main window.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None (nothing to do on Wayland).
+ *	Cleans up menu resources and removes from stack.
  *
  *---------------------------------------------------------------------------
  */
 
 void
-TkpDestroyMenu(TCL_UNUSED(TkMenu *))  /* menuPtr */
+TkpDestroyMenu(TkMenu *menuPtr)
 {
-    /* Nothing to do on Wayland. */
+    TkWindow *winPtr;
+    WmInfo *wmPtr;
+    int i;
+    
+    if (!menuPtr) return;
+    
+    MENU_LOG("TkpDestroyMenu called for menu %p", (void*)menuPtr);
+    
+    winPtr = (TkWindow *)menuPtr->tkwin;
+    if (!winPtr) return;
+    
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr) return;
+    
+    /* Check if this is the menubar menu - if so, just clean up without destroying the parent. */
+    if (wmPtr->menubarMenuPtr == menuPtr) {
+        MENU_LOG("TkpDestroyMenu: destroying menubar menu, cleaning up popup only");
+        if (wmPtr->menubarPopup) {
+            if (wmPtr->popup == wmPtr->menubarPopup) {
+                wmPtr->popup = NULL;
+            }
+            TkWaylandPopupDestroy(wmPtr->menubarPopup);
+            wmPtr->menubarPopup = NULL;
+        }
+        wmPtr->menubar = NULL;
+        wmPtr->menubarMenuPtr = NULL;
+        wmPtr->menuHeight = 0;
+        if (winPtr) {
+            winPtr->internalBorderTop = 0;
+        }
+        /* Do NOT destroy the main window - just clean up the menubar resources. */
+        return;
+    }
+    
+    /* Clean up this menu from the menu stack. */
+    for (i = 0; i < menuStackDepth; i++) {
+        if (menuStack[i].menuPtr == menuPtr) {
+            if (menuStack[i].popup) {
+                TkWaylandPopupDestroy(menuStack[i].popup);
+            }
+            menuStack[i].menuPtr = NULL;
+            menuStack[i].popup = NULL;
+            break;
+        }
+    }
+    
+    /* For non-menubar menus, just clean up the popup. */
+    if (wmPtr->popup) {
+        TkWaylandPopupDestroy(wmPtr->popup);
+        wmPtr->popup = NULL;
+    }
 }
-
 /*
  *---------------------------------------------------------------------------
  *
@@ -202,7 +255,7 @@ TkpDestroyMenu(TCL_UNUSED(TkMenu *))  /* menuPtr */
  *	None.
  *
  * Side effects:
- *	None (nothing to do on Wayland).
+ *	Nothing to do on Wayland.
  *
  *---------------------------------------------------------------------------
  */
@@ -788,12 +841,13 @@ GetMenuLabelGeometry(
  * TkpSetWindowMenuBar --
  *
  *	Attach or detach a menubar for a toplevel.
+ *	Preserves the menubar popup if it already exists.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Creates or destroys wmPtr->menubarPopup.
+ *	Creates or updates wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -810,15 +864,15 @@ TkpSetWindowMenuBar(
 
     if (!wmPtr) return;
 
-    if (wmPtr->menubarPopup) {
-        if (wmPtr->popup == wmPtr->menubarPopup) {
-            wmPtr->popup = NULL;
-        }
-        TkWaylandPopupDestroy(wmPtr->menubarPopup);
-        wmPtr->menubarPopup = NULL;
-    }
-
+    /* Only destroy menubar popup if we're actually removing the menubar */
     if (!menuPtr) {
+        if (wmPtr->menubarPopup) {
+            if (wmPtr->popup == wmPtr->menubarPopup) {
+                wmPtr->popup = NULL;
+            }
+            TkWaylandPopupDestroy(wmPtr->menubarPopup);
+            wmPtr->menubarPopup = NULL;
+        }
         wmPtr->menubar        = NULL;
         wmPtr->menubarMenuPtr = NULL;
         wmPtr->menuHeight     = 0;
@@ -827,6 +881,23 @@ TkpSetWindowMenuBar(
         return;
     }
 
+    /* If we already have a menubar, just update it without destroying */
+    if (wmPtr->menubarMenuPtr == menuPtr && wmPtr->menubarPopup) {
+        MENU_LOG("TkpSetWindowMenuBar: updating existing menubar");
+        TkRecomputeMenu(menuPtr);
+        wmPtr->menuHeight = menuPtr->totalHeight;
+        if (wmPtr->menuHeight < 20) wmPtr->menuHeight = 24;
+        winPtr->internalBorderTop = wmPtr->menuHeight;
+        TkWaylandWmUpdateGeom(wmPtr, winPtr);
+        
+        /* Just resize/redraw the existing popup */
+        if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+            TkWaylandMenubarCreateOrResize(winPtr);
+        }
+        return;
+    }
+
+    /* New menubar - create it */
     wmPtr->menubar        = (Tk_Window)menuPtr->tkwin;
     wmPtr->menubarMenuPtr = menuPtr;
 
@@ -852,13 +923,14 @@ TkpSetWindowMenuBar(
  *
  * TkWaylandMenubarCreateOrResize --
  *
- *	(Re)create the menubar subsurface.
+ *	Create or resize the menubar subsurface.
+ *	Preserves the existing popup if size hasn't changed.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	May destroy and recreate wmPtr->menubarPopup.
+ *	May resize or recreate wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -908,13 +980,30 @@ TkWaylandMenubarCreateOrResize(
         TkWaylandWmUpdateGeom(wmPtr, winPtr);
     }
 
+    /* Check if we already have a valid popup */
     if (wmPtr->menubarPopup) {
         int curW, curH;
         TkWaylandPopupGetSize(wmPtr->menubarPopup, &curW, &curH);
+        
+        /* If size matches, just redraw and return */
         if (curW == mbW && curH == mbH) {
             MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+            wmPtr->popup = wmPtr->menubarPopup;
             return;
         }
+        
+        /* Size changed - try to resize the popup */
+        MENU_LOG("TkWaylandMenubarCreateOrResize: resizing popup from %dx%d to %dx%d",
+                 curW, curH, mbW, mbH);
+        
+        if (TkWaylandPopupResize(wmPtr->menubarPopup, mbW, mbH) == TCL_OK) {
+            MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+            wmPtr->popup = wmPtr->menubarPopup;
+            return;
+        }
+        
+        /* If resize failed, destroy and recreate */
+        MENU_LOG("TkWaylandMenubarCreateOrResize: resize failed, recreating popup");
         if (wmPtr->popup == wmPtr->menubarPopup) {
             wmPtr->popup = NULL;
         }
@@ -922,6 +1011,7 @@ TkWaylandMenubarCreateOrResize(
         wmPtr->menubarPopup = NULL;
     }
 
+    /* Create new popup */
     wmPtr->menubarPopup = TkWaylandSubsurfaceCreate(
         glfwWindow, 0, 0, mbW, mbH);
 
@@ -945,7 +1035,7 @@ TkWaylandMenubarCreateOrResize(
  *	None.
  *
  * Side effects:
- *	May create wmPtr->menubarPopup.
+ *	May create or update wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -981,7 +1071,7 @@ MenuBarDeferredSetup(
  *	None.
  *
  * Side effects:
- *	May destroy/recreate wmPtr->menubarPopup.
+ *	May resize or recreate wmPtr->menubarPopup.
  *
  *---------------------------------------------------------------------------
  */
@@ -2062,12 +2152,13 @@ MenuStackPop(
  * TkWaylandMenuDismissAll --
  *
  *	Tear down the entire menu stack.
+ *	Does NOT destroy the menubar popup.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Destroys all menu popups.
+ *	Destroys all popup menus.
  *
  *---------------------------------------------------------------------------
  */
@@ -2084,6 +2175,52 @@ TkWaylandMenuDismissAll(void)
     MenuStackPop(0);
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarDestroy --
+ *
+ *	Explicitly destroy the menubar popup.
+ *	This should only be called when the toplevel is actually being destroyed.
+ *	Preserves the main window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Destroys wmPtr->menubarPopup.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenubarDestroy(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr;
+    
+    if (!winPtr) return;
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    if (!wmPtr) return;
+    
+    MENU_LOG("TkWaylandMenubarDestroy: destroying menubar popup for %s", 
+             Tk_PathName((Tk_Window)winPtr));
+    
+    if (wmPtr->menubarPopup) {
+        if (wmPtr->popup == wmPtr->menubarPopup) {
+            wmPtr->popup = NULL;
+        }
+        TkWaylandPopupDestroy(wmPtr->menubarPopup);
+        wmPtr->menubarPopup = NULL;
+    }
+    wmPtr->menubar = NULL;
+    wmPtr->menubarMenuPtr = NULL;
+    wmPtr->menuHeight = 0;
+    if (winPtr) {
+        winPtr->internalBorderTop = 0;
+    }
+    /* Do NOT destroy the main window. */
+}
 /*
  *---------------------------------------------------------------------------
  *
@@ -3018,23 +3155,6 @@ TkWaylandMenuHandleEscape(void)
 }
 
 /* Helper functions for menus. */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandWmUpdateGeom --
- *
- *	Notify the WM layer that geometry has changed and schedule an
- *	UpdateGeometryInfo idle pass.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Sets WM_UPDATE_SIZE_HINTS and schedules geometry update.
- *
- *----------------------------------------------------------------------
- */
 
 /*
  *----------------------------------------------------------------------

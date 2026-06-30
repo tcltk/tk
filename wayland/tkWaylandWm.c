@@ -743,6 +743,44 @@ TkWmCleanup(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MakeWindow --
+ *
+ *      Platform-specific window creation called by Tk's generic layer.
+ *      For toplevels, it creates a GLFW window.
+ *      For menu windows, it uses the subsurface path instead.
+ *
+ * Results:
+ *      Returns a Window identifier which is assigned to the window
+ *      field of the TkWindow structure.
+ *
+ * Side effects:
+ *      Creates a new GLFW window for toplevels, or subsurface for menus.
+ *
+ *----------------------------------------------------------------------
+ */
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_MakeWindow --
+ *
+ *      Platform-specific window creation called by Tk's generic layer.
+ *      For toplevels, it creates a GLFW window.
+ *      For menu windows, it uses the subsurface path instead.
+ *
+ * Results:
+ *      Returns a Window identifier which is assigned to the window
+ *      field of the TkWindow structure.
+ *
+ * Side effects:
+ *      Creates a new GLFW window for toplevels, or subsurface for menus.
+ *
+ *----------------------------------------------------------------------
+ */
+
 Window
 Tk_MakeWindow(
     Tk_Window tkwin,
@@ -759,7 +797,7 @@ Tk_MakeWindow(
 
     if (Tk_IsTopLevel(winPtr)) {
 		
-	    /*
+        /*
          * Guard against internal Tk toplevels that have no mainPtr —
          * e.g. the clipboard owner window created by TkClipInit.
          * These need a valid window ID but no real GLFW surface.
@@ -769,9 +807,33 @@ Tk_MakeWindow(
         if (!winPtr->mainPtr || !winPtr->mainPtr->interp) {
             return result;
         }
+        
+        /*
+         * Check if this is a menu window by its class.
+         * Menu windows should use subsurfaces, not full GLFW windows.
+         * Skip GLFW window creation entirely for menu windows.
+         */
+        if (winPtr->classUid == Tk_GetUid("Menu") ||
+            winPtr->classUid == Tk_GetUid("Menubar")) {
+            
+            fprintf(stderr, "Tk_MakeWindow: %s is a menu (class=%s), skipping GLFW window creation\n", 
+                    Tk_PathName(tkwin), Tk_GetUid(winPtr->classUid));
+            
+            /* Ensure private data exists */
+            if (winPtr->privatePtr == NULL) {
+                winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
+                Tcl_DStringInit(&winPtr->privatePtr->pendingText);
+                winPtr->privatePtr->glfwWindow = NULL;
+                winPtr->privatePtr->fb = NULL;
+            }
+            
+            /* No GLFW window for menu - will use subsurface via menu system */
+            return result;
+        }
+
         /*
          * -------------------------
-         *   TOPLEVEL WINDOW
+         *   TOPLEVEL WINDOW (non-menu)
          * -------------------------
          */
 
@@ -824,8 +886,6 @@ Tk_MakeWindow(
     }
     return result;
 }
-
-
 
 /*
  *----------------------------------------------------------------------
