@@ -1157,10 +1157,14 @@ test wm-maxsize-1.6 {usage} -setup {
 } -cleanup {
     destroy .t2
 } -result {300 200}
-test wm-maxsize-1.7 {maxsize must be <= screen size} -setup {
+test wm-maxsize-1.7 {toplevel windows must be <= display screen size\
+	(this test will fail when more than one monitor is used\
+	as windows are then allowed to be larger than a single screen)} -setup {
     destroy .t
 } -body {
     toplevel .t
+    # note, maxsize will be larger the the screen in dual-monitor setup
+    # and Tk has no reliable way to detext this situation:
     lassign [wm maxsize .t] t_width t_height
     set s_width [winfo screenwidth .t]
     set s_height [winfo screenheight .t]
