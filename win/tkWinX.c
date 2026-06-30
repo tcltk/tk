@@ -1076,7 +1076,7 @@ GenerateXEvent(
 	event.x.type = SelectionClear;
 	event.x.xselectionclear.selection =
 		Tk_InternAtom((Tk_Window)winPtr, "CLIPBOARD");
-	event.x.xselectionclear.time = TkpGetMS();
+	event.x.xselectionclear.time = TkGetMS();
 	break;
 
     case WM_MOUSEWHEEL:
@@ -1088,7 +1088,7 @@ GenerateXEvent(
     case WM_KEYDOWN:
     case WM_KEYUP: {
 	unsigned int state = GetState(message, wParam, lParam);
-	Time time = TkpGetMS();
+	Time time = TkGetMS();
 	POINT clientPoint;
 	union {DWORD msgpos; POINTS point;} root;	/* Note: POINT and POINTS are different */
 
@@ -1646,7 +1646,7 @@ HandleIMEComposition(
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
 	event.xkey.subwindow = None;
 	event.xkey.state = TkWinGetModifierState();
-	event.xkey.time = TkpGetMS();
+	event.xkey.time = TkGetMS();
 	event.xkey.same_screen = True;
 
 	for (i=0; i<n; ) {
@@ -1763,7 +1763,7 @@ TkWinResendEvent(
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetMS --
+ * TkGetMS --
  *
  *	Return a relative time in milliseconds. It doesn't matter when the
  *	epoch was.
@@ -1778,7 +1778,7 @@ TkWinResendEvent(
  */
 
 unsigned long
-TkpGetMS(void)
+TkGetMS(void)
 {
     return GetTickCount();
 }

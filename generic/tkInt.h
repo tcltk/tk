@@ -1202,6 +1202,7 @@ MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
 			    void *clientData);
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    void *clientData);
+MODULE_SCOPE unsigned long TkGetMS(void);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
 MODULE_SCOPE Tcl_ExitProc	TkFinalizeThread;
 MODULE_SCOPE void	TkpBuildRegionFromAlphaData(Region region,

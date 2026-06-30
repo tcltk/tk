@@ -1202,7 +1202,7 @@ Tk_GetUserInactiveTime(
      * If the idle time reported by the system is larger than the elapsed
      * time since the last reset, return the elapsed time.
      */
-    long elapsed = (long)(TkpGetMS() - lastInactivityReset);
+    long elapsed = (long)(TkGetMS() - lastInactivityReset);
     if (ret > elapsed) {
 	ret = elapsed;
     }
@@ -1231,7 +1231,7 @@ void
 Tk_ResetUserInactiveTime(
     TCL_UNUSED(Display *))
 {
-    lastInactivityReset = TkpGetMS();
+    lastInactivityReset = TkGetMS();
 }
 
 /*

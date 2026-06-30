@@ -132,7 +132,6 @@ TkpPrintWindowId(
 #	define Tk_GetHWND 0
 #	define Tk_HWNDToWindow 0
 #	define TkAlignImageData 0
-#	define TkpGetMS 0
 #	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
 #	define TkpSetCapture 0
@@ -396,7 +395,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkCreateXEventSource, /* 0 */
     TkAboutDlg, /* 1 */
     TkGenerateActivateEvents, /* 2 */
-    TkpGetMS, /* 3 */
+    0, /* 3 */
     TkPointerDeadWindow, /* 4 */
     TkpPrintWindowId, /* 5 */
     TkpScanWindowId, /* 6 */
@@ -446,7 +445,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 0 */
     TkAboutDlg, /* 1 */
     TkGenerateActivateEvents, /* 2 */
-    TkpGetMS, /* 3 */
+    0, /* 3 */
     TkPointerDeadWindow, /* 4 */
     0, /* 5 */
     TkpScanWindowId, /* 6 */

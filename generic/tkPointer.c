@@ -76,7 +76,7 @@ InitializeEvent(
     eventPtr->xany.display = winPtr->display;
 
     eventPtr->xcrossing.root = RootWindow(winPtr->display, winPtr->screenNum);
-    eventPtr->xcrossing.time = TkpGetMS();
+    eventPtr->xcrossing.time = TkGetMS();
     eventPtr->xcrossing.x_root = x;
     eventPtr->xcrossing.y_root = y;
 
