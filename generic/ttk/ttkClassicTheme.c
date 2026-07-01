@@ -21,6 +21,12 @@
   #define WIN32_XDRAWLINE_HACK 0
 #endif
 
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+  #define X11_XDRAWRECTANGLE_HACK 1
+#else
+  #define X11_XDRAWRECTANGLE_HACK 0
+#endif
+
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
  *	Draw a solid highlight border to indicate focus.
