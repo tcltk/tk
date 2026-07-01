@@ -65,6 +65,19 @@ doNothing(void)
 #   define TkAboutDlg ((void (*)(void))(void *)doNothing)
 #endif
 
+#define TkGetUserInactiveTime GetUserInactiveTime
+MODULE_SCOPE long
+TkGetUserInactiveTime(Display *dpy)
+{
+    long long inactive = Tk_GetUserInactiveTime(dpy);
+    if (inactive > LONG_MAX) {
+	inactive = LONG_MAX;
+    } else if (inactive < 0) {
+	inactive = -1;
+    }
+    return (long)inactive;
+}
+
 #ifdef _WIN32
 
 #undef TkpCmapStressed
@@ -965,7 +978,7 @@ const TkStubs tkStubs = {
     Tk_InitConsoleChannels, /* 215 */
     0, /* 216 */
     Tk_CreateSmoothMethod, /* 217 */
-    0, /* 218 */
+    Tk_GetUserInactiveTime, /* 218 */
     0, /* 219 */
     Tk_GetDash, /* 220 */
     Tk_CreateOutline, /* 221 */
@@ -1016,7 +1029,7 @@ const TkStubs tkStubs = {
     Tk_PhotoPutBlock, /* 266 */
     Tk_PhotoPutZoomedBlock, /* 267 */
     Tk_PhotoSetSize, /* 268 */
-    Tk_GetUserInactiveTime, /* 269 */
+    TkGetUserInactiveTime, /* 269 */
     Tk_ResetUserInactiveTime, /* 270 */
     Tk_Interp, /* 271 */
     0, /* 272 */
