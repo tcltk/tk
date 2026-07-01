@@ -73,7 +73,7 @@ extern "C" {
 #   define TK_RELEASE_SERIAL	4
 
 #   define TK_VERSION		"9.0"
-#   define TK_PATCH_LEVEL		"9.0.4"
+#   define TK_PATCH_LEVEL		"9.0.5"
 #endif /* TK_MAJOR_VERSION */
 
 /*
