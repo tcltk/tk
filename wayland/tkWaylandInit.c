@@ -23,9 +23,8 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_EGL
 #include <GLFW/glfw3native.h>
+#include <wayland-egl.h>
 
-#define GLFW_EXPOSE_NATIVE_EGL
-#include <GLFW/glfw3native.h>
 
 /*
  *----------------------------------------------------------------------
@@ -53,6 +52,8 @@ struct xdg_wm_base *waylandWmBase = NULL;
 struct wl_seat *waylandSeat = NULL;
 EGLDisplay eglDisplay = EGL_NO_DISPLAY;
 EGLContext eglContext = EGL_NO_CONTEXT;
+EGLConfig  eglConfig  = NULL;
+
 
 /*
  * Font data for popup rendering - shared with tkWaylandPopup.c
@@ -458,6 +459,128 @@ TkWaylandErrorCallback(int error, const char *desc)
  *----------------------------------------------------------------------
  */
 
+#if 0
+MODULE_SCOPE int
+TkWaylandInitialize(void)
+{
+    if (GlfwIsInitialized) return TCL_OK;
+
+    glfwSetErrorCallback(TkWaylandErrorCallback);
+
+#ifdef GLFW_PLATFORM_WAYLAND
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+#endif
+
+    if (!glfwInit()) {
+        fprintf(stderr, "TkWaylandInitialize: glfwInit() failed\n");
+        return TCL_ERROR;
+    }
+
+    /* Create hidden root GLFW window. */
+    glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+    glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+
+    mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
+    if (!mainGlfwWindow) {
+        fprintf(stderr, "TkWaylandInitialize: failed to create root window\n");
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    /* Get Wayland display for popups. */
+    waylandDisplay = glfwGetWaylandDisplay();
+    if (!waylandDisplay) {
+        fprintf(stderr, "TkWaylandInitialize: glfwGetWaylandDisplay() failed\n");
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    /*
+     * EGL globals for popup surfaces ONLY.
+     * We do NOT bind EGL to the root GLFW window here.
+     */
+    eglDisplay = eglGetDisplay((EGLNativeDisplayType) waylandDisplay);
+    if (eglDisplay == EGL_NO_DISPLAY) {
+        fprintf(stderr, "TkWaylandInitialize: eglGetDisplay failed\n");
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    if (!eglInitialize(eglDisplay, NULL, NULL)) {
+        fprintf(stderr, "TkWaylandInitialize: eglInitialize failed: 0x%x\n",
+                eglGetError());
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    EGLint configAttribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 16,
+        EGL_STENCIL_SIZE, 8,
+        EGL_NONE
+    };
+
+    EGLConfig eglConfig;
+    EGLint numConfigs = 0;
+
+    if (!eglChooseConfig(eglDisplay, configAttribs, &eglConfig, 1, &numConfigs)
+        || numConfigs == 0) {
+        fprintf(stderr, "TkWaylandInitialize: eglChooseConfig failed\n");
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    EGLint ctxAttribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    eglContext = eglCreateContext(eglDisplay, eglConfig,
+                                  EGL_NO_CONTEXT, ctxAttribs);
+    if (eglContext == EGL_NO_CONTEXT) {
+        fprintf(stderr, "TkWaylandInitialize: eglCreateContext failed: 0x%x\n",
+                eglGetError());
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    /*
+     * Tell the popup module which GLFW window owns the shared EGL context
+     * and Wayland connection. It will create its own wl_egl_window +
+     * EGLSurface per popup and call eglMakeCurrent there.
+     */
+    TkWaylandPopupSetMainWindow(mainGlfwWindow);
+
+    /* Load fonts used in window decorations. */
+    sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                         &sans_size);
+    bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                         &bold_size);
+    mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+                         &mono_size);
+
+    /* Use GLFW’s GL context for the root window. */
+    glfwMakeContextCurrent(mainGlfwWindow);
+    glfwSwapInterval(0);
+
+    GlfwIsInitialized = 1;
+    shutdownInProgress = 0;
+
+    Tcl_CreateExitHandler(TkWaylandShutdown, NULL);
+    return TCL_OK;
+}
+#endif
 MODULE_SCOPE int
 TkWaylandInitialize(void)
 {
@@ -475,15 +598,10 @@ TkWaylandInitialize(void)
     }
 
     /*
-     * The glfwWindow for the Tk root is created here.
-     * For all other toplevels the glfwWindow shares the GL context
-     * of the root.  The window is created hidden.  It will be
-     * shown in Tk_MakeWindow.
+     * Create the hidden root GLFW window. It will be shown later
+     * in Tk_MakeWindow / TkWaylandCreateWindow.
      */
-
-    /* Hints apply to the next call to glfwCreateWindow. */
     glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-    //glfwWindowHint(GLFW_OPENGL_COMPAT_PROFILE, GLFW_TRUE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
@@ -491,44 +609,104 @@ TkWaylandInitialize(void)
     glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
     glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
     glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+
     mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
     if (!mainGlfwWindow) {
         fprintf(stderr, "TkWaylandInitialize: failed to create root window\n");
         glfwTerminate();
         return TCL_ERROR;
     }
-    
-    /* Get Wayland display to initialize Wayland globals for popups. */
+
+    /*
+     * Get Wayland display for popup / menu module.
+     */
     waylandDisplay = glfwGetWaylandDisplay();
-		if (!waylandDisplay) {
-		fprintf(stderr, "TkWaylandInitialize: glfwGetWaylandDisplay() failed\n");
-		glfwTerminate();
-		return TCL_ERROR;
-	}
+    if (!waylandDisplay) {
+        fprintf(stderr, "TkWaylandInitialize: glfwGetWaylandDisplay() failed\n");
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    /*
+     * ----------------------------------------------------------------------
+     * EGL INITIALIZATION FOR POPUPS ONLY
+     * ----------------------------------------------------------------------
+     *
+     * We create a global EGLDisplay + EGLContext that popup surfaces
+     * can share. We do NOT bind EGL to the root GLFW window here; the
+     * main Tk drawing path continues to use GLFW's own GL ES context.
+     */
+
+    eglDisplay = eglGetDisplay((EGLNativeDisplayType) waylandDisplay);
+    if (eglDisplay == EGL_NO_DISPLAY) {
+        fprintf(stderr, "TkWaylandInitialize: eglGetDisplay failed\n");
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    if (!eglInitialize(eglDisplay, NULL, NULL)) {
+        fprintf(stderr, "TkWaylandInitialize: eglInitialize failed: 0x%x\n",
+                eglGetError());
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    EGLint configAttribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 16,
+        EGL_STENCIL_SIZE, 8,
+        EGL_NONE
+    };
+
+    EGLConfig eglConfig;
+    EGLint numConfigs = 0;
+
+    if (!eglChooseConfig(eglDisplay, configAttribs, &eglConfig, 1, &numConfigs)
+        || numConfigs == 0) {
+        fprintf(stderr, "TkWaylandInitialize: eglChooseConfig failed\n");
+        glfwTerminate();
+        return TCL_ERROR;
+    }
+
+    EGLint ctxAttribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    eglContext = eglCreateContext(eglDisplay, eglConfig,
+                                  EGL_NO_CONTEXT, ctxAttribs);
+    if (eglContext == EGL_NO_CONTEXT) {
+        fprintf(stderr, "TkWaylandInitialize: eglCreateContext failed: 0x%x\n",
+                eglGetError());
+        glfwTerminate();
+        return TCL_ERROR;
+    }
 
     /*
      * Tell the popup/menu module which GLFW window owns the shared
-     * EGL context and Wayland connection, so that
-     * TkWaylandPopupGetEGLDisplay() can retrieve a real
-     * Wayland-platform EGLDisplay via glfwGetEGLDisplay() instead of
-     * falling back to eglGetDisplay(EGL_DEFAULT_DISPLAY), which is
-     * not guaranteed to be compatible with wl_egl_window native
-     * windows and causes eglCreateWindowSurface() to fail with
-     * EGL_BAD_NATIVE_WINDOW for menubars and popup menus.
+     * Wayland connection and EGL context. It will create its own
+     * wl_egl_window + EGLSurface per popup and call eglMakeCurrent
+     * there, without touching the root window.
      */
     TkWaylandPopupSetMainWindow(mainGlfwWindow);
 
-    /* Load fonts used in window decorations. */
+    /*
+     * Load fonts used in window decorations and popups.
+     */
     sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-	 &sans_size);
+                         &sans_size);
     bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-	 &bold_size);
+                         &bold_size);
     mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-	 &mono_size);
+                         &mono_size);
 
     /*
-     * A positive swap interval causes glfwSwapBuffers to wait for
-     * the end of a display cycle before swapping the buffers.
+     * Use GLFW's GL ES context for the root window.
      */
     glfwMakeContextCurrent(mainGlfwWindow);
     glfwSwapInterval(0);
@@ -539,6 +717,8 @@ TkWaylandInitialize(void)
     Tcl_CreateExitHandler(TkWaylandShutdown, NULL);
     return TCL_OK;
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -611,7 +791,7 @@ TkWaylandShutdown(TCL_UNUSED(void *))
  *
  *----------------------------------------------------------------------
  */
-
+#if 0
 MODULE_SCOPE GLFWwindow *
 TkWaylandCreateWindow(
     TkWindow   *winPtr,
@@ -622,54 +802,72 @@ TkWaylandCreateWindow(
 {
     fprintf(stderr, "TkWaylandCreateWindow\n");
     if (winPtr == NULL) {
-	Tcl_Panic("TkWaylandCreateWindow called with null winPtr\n");
+        Tcl_Panic("TkWaylandCreateWindow called with null winPtr\n");
     }
-    GLFWwindow    *glfwWindow = NULL;
 
     /* Don't create windows during shutdown. */
     if (shutdownInProgress) return NULL;
     if (!GlfwIsInitialized) {
-        if (TkWaylandInitialize() != TCL_OK)
+        if (TkWaylandInitialize() != TCL_OK) {
             return NULL;
+        }
     }
+
     if (width  <= 1) width  = 200;
     if (height <= 1) height = 200;
-    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
-	/* This is the root window. */
+
+    GLFWwindow *glfwWindow = NULL;
+
+    /*
+     * Root window detection: a top-level with no parent.
+     * This avoids relying on Tk_MainWindow being pre-created.
+     */
+    if (Tk_IsTopLevel(winPtr) && winPtr->parentPtr == NULL) {
+        /* This is the root window. */
         glfwWindow = mainGlfwWindow;
         glfwSetWindowSize(glfwWindow, width, height);
         glfwSetWindowTitle(glfwWindow, title ? title : "");
-    } else { /* A toplevel other than the root */
-	/* Hints apply to the next call to glfwCreateWindow. */
-	glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-	glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-	glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
-	glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
-	glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-	glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-	/*
-	 * Sharing the GL context makes image rendering more efficient.
-	 */
+
+        /* Make sure the root window is actually shown and current. */
+        glfwShowWindow(glfwWindow);
+        glfwMakeContextCurrent(glfwWindow);
+        glfwSwapInterval(0);
+        glfwSwapBuffers(glfwWindow);
+    } else {
+        /* A toplevel other than the root: create a new GLFW window
+         * sharing the GL context of the root.
+         */
+        glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+        glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+
         glfwWindow = glfwCreateWindow(width, height, title ? title : "",
-				      NULL, mainGlfwWindow);
+                                      NULL, mainGlfwWindow);
         if (!glfwWindow) {
-	    return NULL;
-	}
-	glfwMakeContextCurrent(glfwWindow);
-	glfwSwapInterval(0);
-	glfwShowWindow(glfwWindow);
-	glfwSwapBuffers(glfwWindow);
+            return NULL;
+        }
+
+        glfwMakeContextCurrent(glfwWindow);
+        glfwSwapInterval(0);
+        glfwShowWindow(glfwWindow);
+        glfwSwapBuffers(glfwWindow);
     }
+
+    /* Per-window Tk/GLFW/NanoVG bookkeeping. */
     glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
     fprintf(stderr, "nvgContext for %s is at %p\n", Tk_PathName(winPtr),
-	   infoPtr);
+            infoPtr);
     if (glfwWindow == mainGlfwWindow) {
-	mainGlfwContext = infoPtr->context;
+        mainGlfwContext = infoPtr->context;
     }
     glfwSetWindowUserPointer(glfwWindow, infoPtr);
     TkWaylandSetupCallbacks(glfwWindow);
+
     winPtr->privatePtr->glfwWindow = glfwWindow;
     winPtr->changes.width  = width;
     winPtr->changes.height = height;
@@ -679,36 +877,180 @@ TkWaylandCreateWindow(
     float scale;
     glfwGetWindowContentScale(glfwWindow, &scale, NULL);
     fprintf(stderr, "Initial pixel ratio for %s is %f\n",
-	   Tk_PathName(winPtr), scale);
+            Tk_PathName(winPtr), scale);
 
     /* Create a framebuffer for the backing store of the window. */
     glfwMakeContextCurrent(glfwWindow);
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
-						     fbWidth, fbHeight, 0);
+                                                    fbWidth, fbHeight, 0);
     if (winPtr->privatePtr->fb == NULL) {
-		fprintf(stderr, "Could not create NanoVG framebuffer\n");
+        fprintf(stderr, "Could not create NanoVG framebuffer\n");
     }
     fprintf(stderr, "Window %s has glfwWindow %p and framebuffer %p\n",
-	   Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fb);
+            Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fb);
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
+
     /* Check FBO completeness for now. */
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "FBO is incomplete (status=0x%x)\n", status);
     } else {
-	fprintf(stderr, "Window %s has a complete framebuffer @ %p\n",
-	       Tk_PathName(winPtr), winPtr->privatePtr->fb);
+        fprintf(stderr, "Window %s has a complete framebuffer @ %p\n",
+                Tk_PathName(winPtr), winPtr->privatePtr->fb);
     }
 
     if (drawableOut) {
-	*drawableOut = TkWaylandDrawableForTkWindow(winPtr);
+        *drawableOut = TkWaylandDrawableForTkWindow(winPtr);
     }
-    if (winPtr != NULL) {
-        TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
-    }
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
+
     return glfwWindow;
 }
+#endif
+MODULE_SCOPE GLFWwindow *
+TkWaylandCreateWindow(
+    TkWindow   *winPtr,
+    int         width,
+    int         height,
+    const char *title,
+    Drawable   *drawableOut)
+{
+    fprintf(stderr, "TkWaylandCreateWindow\n");
+    if (winPtr == NULL) {
+        Tcl_Panic("TkWaylandCreateWindow called with null winPtr\n");
+    }
+
+    /* Don't create windows during shutdown. */
+    if (shutdownInProgress) {
+        return NULL;
+    }
+    if (!GlfwIsInitialized) {
+        if (TkWaylandInitialize() != TCL_OK) {
+            return NULL;
+        }
+    }
+
+    if (width  <= 1) width  = 200;
+    if (height <= 1) height = 200;
+
+    GLFWwindow *glfwWindow = NULL;
+
+    if (winPtr == (TkWindow *) Tk_MainWindow(winPtr->mainPtr->interp)) {
+        /*
+         * Root window: ensure we have a GL ES context and that it is current.
+         * If this is the first time, create mainGlfwWindow here.
+         */
+        if (mainGlfwWindow == NULL) {
+            glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+            glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+            glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+            glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+            glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+            glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+
+            mainGlfwWindow = glfwCreateWindow(width, height,
+                                              title ? title : "",
+                                              NULL, NULL);
+            if (!mainGlfwWindow) {
+                return NULL;
+            }
+        }
+
+        glfwWindow = mainGlfwWindow;
+
+        /* Make sure the root window’s context is current and configured. */
+        glfwMakeContextCurrent(glfwWindow);
+        glfwSwapInterval(0);
+        glfwSetWindowSize(glfwWindow, width, height);
+        glfwSetWindowTitle(glfwWindow, title ? title : "");
+        glfwShowWindow(glfwWindow);
+        glfwSwapBuffers(glfwWindow);
+    } else {
+        /*
+         * A toplevel other than the root.
+         * Share the GL context with the main window for efficient rendering.
+         */
+        glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
+        glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
+        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
+
+        glfwWindow = glfwCreateWindow(width, height,
+                                      title ? title : "",
+                                      NULL, mainGlfwWindow);
+        if (!glfwWindow) {
+            return NULL;
+        }
+
+        glfwMakeContextCurrent(glfwWindow);
+        glfwSwapInterval(0);
+        glfwShowWindow(glfwWindow);
+        glfwSwapBuffers(glfwWindow);
+    }
+
+    glfwTkInfo *infoPtr = createGlfwTkInfo(glfwWindow, winPtr);
+    fprintf(stderr, "nvgContext for %s is at %p\n",
+            Tk_PathName(winPtr), infoPtr);
+
+    if (glfwWindow == mainGlfwWindow) {
+        mainGlfwContext = infoPtr->context;
+    }
+
+    glfwSetWindowUserPointer(glfwWindow, infoPtr);
+    TkWaylandSetupCallbacks(glfwWindow);
+
+    winPtr->privatePtr->glfwWindow = glfwWindow;
+    winPtr->changes.width  = width;
+    winPtr->changes.height = height;
+
+    /* Set the initial pixel ratio for this window. */
+    int fbWidth, fbHeight;
+    float scale;
+    glfwGetWindowContentScale(glfwWindow, &scale, NULL);
+    fprintf(stderr, "Initial pixel ratio for %s is %f\n",
+            Tk_PathName(winPtr), scale);
+
+    /* Create a framebuffer for the backing store of the window. */
+    glfwMakeContextCurrent(glfwWindow);
+    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    winPtr->privatePtr->fb = nvgluCreateFramebuffer(infoPtr->context.vg,
+                                                     fbWidth, fbHeight, 0);
+    if (winPtr->privatePtr->fb == NULL) {
+        fprintf(stderr, "Could not create NanoVG framebuffer\n");
+    }
+
+    fprintf(stderr, "Window %s has glfwWindow %p and framebuffer %p\n",
+            Tk_PathName(winPtr), glfwWindow, winPtr->privatePtr->fb);
+
+    nvgluBindFramebuffer(winPtr->privatePtr->fb);
+
+    /* Check FBO completeness for now. */
+    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "FBO is incomplete (status=0x%x)\n", status);
+    } else {
+        fprintf(stderr, "Window %s has a complete framebuffer @ %p\n",
+                Tk_PathName(winPtr), winPtr->privatePtr->fb);
+    }
+
+    if (drawableOut) {
+        *drawableOut = TkWaylandDrawableForTkWindow(winPtr);
+    }
+
+    TkWaylandQueueExposeEvent(winPtr, 0, 0, width, height);
+
+    return glfwWindow;
+}
+
+
+
 
 /*
  *----------------------------------------------------------------------
