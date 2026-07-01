@@ -815,44 +815,100 @@ EnsureNvgFaceFont(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ * EnsureNvgFont --
+ *
+ *   Ensure all faces are loaded into the NanoVG context.
+ *   CRITICAL FIX: Font IDs are per-NVG-context. We must track which
+ *   fonts have been loaded for each context separately.
+ *
+ * Results:
+ *   NanoVG ID of the primary font, or -1 on failure.
+ *
+ * Side effects:
+ *   Loads fonts into NanoVG context and tracks them per-context.
+ *----------------------------------------------------------------------
+ */
+
 MODULE_SCOPE int
 EnsureNvgFont(
 	      WaylandFont *fontPtr,
 	      NVGcontext *vg)
 {
     if (!vg) return -1;
+    if (!fontPtr) return -1;
 
-    /* Bundled emoji font. */
-    int emojiId = nvgFindFont(vg, "emoji");
-    if (emojiId < 0) {
-        emojiId = nvgCreateFontMem(vg, "emoji",
-                                   NotoEmoji_Regular_ttf,
-                                   NotoEmoji_Regular_ttf_len, 0);
-        if (emojiId < 0)
-            fprintf(stderr, "tkWaylandFont: failed to load bundled emoji\n");
-    }
-    emojiFontId = emojiId;
-
-    /* Load each face. */
-    int primaryId = -1;
-    for (int i = 0; i < fontPtr->nfaces; i++) {
-        int id = EnsureNvgFaceFont(fontPtr, i, vg);
-        if (i == 0) primaryId = id;
-    }
-
-    /* Wire fallback chain on the primary face. */
-    if (primaryId >= 0) {
-        for (int i = 1; i < fontPtr->nfaces; i++) {
-            int fb = fontPtr->faces[i].nvgFontId;
-            if (fb >= 0) nvgAddFallbackFontId(vg, primaryId, fb);
+    /* Check if already loaded for this specific NVG context. */
+    NvgFontContext *ctx = fontPtr->nvgContexts;
+    while (ctx) {
+        if (ctx->vg == vg) {
+            return ctx->fontId;
         }
-        if (emojiId >= 0) nvgAddFallbackFontId(vg, primaryId, emojiId);
+        ctx = ctx->next;
     }
 
-    fontPtr->nvgFontId = primaryId;
+    /* Not loaded for this context - load it. */
+    int primaryId = -1;
+    
+    /* Try to load the font using the file path from the first face. */
+    if (fontPtr->nfaces > 0 && fontPtr->faces[0].filePath) {
+        char name[64];
+        snprintf(name, sizeof(name), "__wlfont_%p", (void*)vg);
+        primaryId = nvgCreateFont(vg, name, fontPtr->faces[0].filePath);
+        if (primaryId >= 0) {
+            fprintf(stderr, "EnsureNvgFont: loaded font from %s id=%d for context %p\n",
+                     fontPtr->faces[0].filePath, primaryId, (void*)vg);
+        }
+    }
+    
+    /* Fallback to system fonts. */
+    if (primaryId < 0) {
+        const char *fallback_paths[] = {
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+            "/usr/share/fonts/TTF/DejaVuSans.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans.ttf"
+        };
+        for (int i = 0; i < sizeof(fallback_paths)/sizeof(fallback_paths[0]); i++) {
+            if (fallback_paths[i] && access(fallback_paths[i], R_OK) == 0) {
+                char name[64];
+                snprintf(name, sizeof(name), "__fallback_%p", (void*)vg);
+                primaryId = nvgCreateFont(vg, name, fallback_paths[i]);
+                if (primaryId >= 0) {
+                    fprintf(stderr, "EnsureNvgFont: loaded fallback font from %s id=%d\n",
+                             fallback_paths[i], primaryId);
+                    break;
+                }
+            }
+        }
+    }
+    
+    /* Also try "sans" as a last resort. */
+    if (primaryId < 0) {
+        primaryId = nvgFindFont(vg, "sans");
+        if (primaryId < 0) {
+            primaryId = nvgCreateFont(vg, "sans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+        }
+    }
+
+    /* Store the loaded font ID for this context. */
+    if (primaryId >= 0) {
+        NvgFontContext *newCtx = (NvgFontContext*)calloc(1, sizeof(NvgFontContext));
+        if (newCtx) {
+            newCtx->vg = vg;
+            newCtx->fontId = primaryId;
+            newCtx->next = fontPtr->nvgContexts;
+            fontPtr->nvgContexts = newCtx;
+            fontPtr->nvgContextCount++;
+        }
+        /* Also store in the font struct for quick access. */
+        fontPtr->nvgFontId = primaryId;
+    }
+
     return primaryId;
 }
-
 /*
  *----------------------------------------------------------------------
  * TkpGetFontPixelSize --

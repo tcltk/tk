@@ -122,6 +122,17 @@ typedef struct WaylandFtFace {
 } WaylandFtFace;
 
 /*
+ * Per-NVG-context font registration
+ * CRITICAL: NanoVG font IDs are context-local!
+ */
+typedef struct NvgFontContext {
+    NVGcontext *vg;
+    int fontId;
+    struct NvgFontContext *next;
+} NvgFontContext;
+
+
+/*
  * ShapedGlyphBuffer
  *
  *   Output of WaylandShaper_ShapeString.  Contains per-glyph advance and
@@ -211,6 +222,10 @@ typedef struct WaylandFont {
 
     /* Shaper. */
     WaylandShaper   shaper;
+    
+    /* Fonts are stored per context. */
+    NvgFontContext *nvgContexts;
+    int             nvgContextCount;
 } WaylandFont;
 
 /*
