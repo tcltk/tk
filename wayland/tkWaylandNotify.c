@@ -79,6 +79,8 @@ extern void TkWaylandMenuHandlePointerButton(int x, int y,
                                              int button, int state);
 extern void TkWaylandMenuHandlePointerMotion(int x, int y);
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
+extern int  TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
+                                             int button);
 
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
@@ -1306,6 +1308,22 @@ TkWaylandMouseButtonCallback(
 
     /* Get cursor position. */
     glfwGetCursorPos(window, &xpos, &ypos);
+
+    /*
+     * Menubar intercept: a click on the menubar strip itself is handled
+     * here first, *before* the popup-stack check below. The menubar is
+     * always-visible toplevel chrome, not a posted popup, so it is never
+     * part of the menu popup stack and TkWaylandMenuPopupActive() is false
+     * the first time a user clicks e.g. "File" (no stack posted yet). If
+     * we only checked TkWaylandMenuPopupActive() here, that first click
+     * would fall straight through to Tk_CoordsToWindow() below and be
+     * delivered as an ordinary click to whatever widget is underneath the
+     * menubar, and no cascade would ever post.
+     */
+    if (action == GLFW_PRESS &&
+        TkWaylandMenubarHandleClick(winPtr, (int)xpos, (int)ypos, 1)) {
+        return;
+    }
 
     /*
      * Menu intercept: while a popup menu stack is active, button presses

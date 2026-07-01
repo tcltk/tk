@@ -108,6 +108,8 @@ static void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 /* Forward declarations for MODULE_SCOPE functions implemented at end of file. */
 MODULE_SCOPE void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
+MODULE_SCOPE int TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
+    int button);
 
 /* Geometry helper functions. */
 static void GetMenuIndicatorGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
@@ -3045,6 +3047,119 @@ TkWaylandMenuConsumeDismissClick(void)
     int v = menuDismissedByClick;
     menuDismissedByClick = 0;
     return v;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenubarHandleClick --
+ *
+ *	Hit-test a button press against the menubar of winPtr and, if it
+ *	lands on a cascade entry, post the corresponding top-level menu.
+ *
+ *	This is intentionally independent of menuStack[]/MenuStackFindLevel:
+ *	the menubar itself is never pushed onto the popup stack (it is not
+ *	a popup, it's always-visible chrome owned by the toplevel), so the
+ *	stack-relative cascade-posting logic used by MenuMouseClick /
+ *	MenuMouseMotion for submenu-of-submenu clicks does not apply here.
+ *	Posting with isRoot=1 makes the clicked top-level menu become
+ *	menuStack[0], so everything below it (submenus of submenus) is
+ *	handled normally by the existing stack-based logic afterward.
+ *
+ * Results:
+ *	1 if the click landed on the menubar (whether or not it hit a
+ *	postable cascade entry), 0 if the click was outside the menubar
+ *	and should be handled as an ordinary Tk event.
+ *
+ * Side effects:
+ *	May post a new root menu (TkWaylandPostMenuAtAnchor), which
+ *	dismisses any previously posted menu stack.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenubarHandleClick(
+    TkWindow *winPtr,
+    int x, int y,
+    int button)
+{
+    WmInfo *wmPtr;
+    TkMenu *menuPtr;
+    int i;
+
+    if (!winPtr) {
+        return 0;
+    }
+    wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+
+    if (!wmPtr || !wmPtr->menubarMenuPtr || !wmPtr->menubarPopup) {
+        return 0;
+    }
+    if (button != 1) {
+        return 0;
+    }
+    if (x < 0 || y < 0 || y >= wmPtr->menuHeight) {
+        return 0;
+    }
+
+    menuPtr = wmPtr->menubarMenuPtr;
+
+    MENU_LOG("TkWaylandMenubarHandleClick: x=%d y=%d menuHeight=%d",
+             x, y, wmPtr->menuHeight);
+
+    for (i = 0; i < menuPtr->numEntries; i++) {
+        TkMenuEntry *mePtr = menuPtr->entries[i];
+        if (!mePtr) {
+            continue;
+        }
+        if (x < mePtr->x || x >= mePtr->x + mePtr->width) {
+            continue;
+        }
+
+        /* Click landed on entry i of the menubar. */
+        if (mePtr->state == ENTRY_DISABLED) {
+            return 1;
+        }
+
+        if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
+            TkMenuReferences *menuRefPtr = TkFindMenuReferencesObj(
+                menuPtr->interp, mePtr->namePtr);
+
+            if (menuRefPtr && menuRefPtr->menuPtr) {
+                TkMenu *cascadePtr = menuRefPtr->menuPtr;
+                int cascadeW, cascadeH;
+
+                TkRecomputeMenu(cascadePtr);
+                cascadeW = cascadePtr->totalWidth;
+                cascadeH = cascadePtr->totalHeight;
+                if (cascadeW <= 0) cascadeW = 1;
+                if (cascadeH <= 0) cascadeH = 1;
+
+                TkActivateMenuEntry(menuPtr, i);
+                menuPtr->postedCascade = mePtr;
+
+                MENU_LOG("TkWaylandMenubarHandleClick: posting cascade "
+                         "'%s' at (%d,%d) %dx%d",
+                         Tcl_GetString(mePtr->namePtr),
+                         mePtr->x, wmPtr->menuHeight, cascadeW, cascadeH);
+
+                /*
+                 * isRoot=1: dismisses any existing stack and pushes
+                 * cascadePtr as menuStack[0].
+                 */
+                TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+                    mePtr->x, wmPtr->menuHeight, 0, 0,
+                    cascadeW, cascadeH, /*isRoot=*/1);
+
+                TkEventuallyRedrawMenu(menuPtr, NULL);
+            }
+        }
+
+        return 1;
+    }
+
+    return 0;
 }
 
 /*

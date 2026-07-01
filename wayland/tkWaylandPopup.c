@@ -67,6 +67,14 @@ extern EGLDisplay eglDisplay;
 extern EGLContext eglContext;
 extern EGLConfig  eglConfig;
 
+/*
+ * Global Wayland objects from tkWaylandInit.c.
+ */
+extern struct wl_display *waylandDisplay;
+extern struct wl_compositor *waylandCompositor;
+extern struct wl_subcompositor *waylandSubcompositor;
+extern struct xdg_wm_base *waylandWmBase;
+extern struct wl_seat *waylandSeat;
 
 /*
  * Internal popup structure (opaque in tkWaylandInt.h).
@@ -78,6 +86,7 @@ struct TkWaylandPopup {
     struct xdg_popup      *xdgPopup;
     struct wl_subsurface  *subsurface;
     struct wl_region      *inputRegion;
+    struct wl_surface     *parentSurface;
     
     /* EGL. */
     EGLSurface             eglSurface;
@@ -119,16 +128,6 @@ static struct {
     .lastSerial = 0,
     .registryBound = 0
 };
-
-/*
- * Global Wayland objects (defined in tkWaylandInit.c).
- * We use these to get the shared Wayland objects.
- */
-extern struct wl_display *waylandDisplay;
-extern struct wl_compositor *waylandCompositor;
-extern struct wl_subcompositor *waylandSubcompositor;
-extern struct xdg_wm_base *waylandWmBase;
-extern struct wl_seat *waylandSeat;
 
 /*
  * Forward declarations for static functions.
@@ -725,6 +724,7 @@ TkWaylandPopupCreate(
     }
     
     popup->parentGlfw = parentGlfw;
+    popup->parentSurface = parentSurface;
     popup->width = popupW;
     popup->height = popupH;
     popup->x = anchorX;
@@ -935,6 +935,7 @@ TkWaylandSubsurfaceCreate(
     }
     
     popup->parentGlfw = parentGlfw;
+    popup->parentSurface = parentSurface;
     popup->width = width;
     popup->height = height;
     popup->x = x;
@@ -1183,6 +1184,11 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
         } else {
             POPUP_LOG("TkWaylandPopupEndDraw: eglSwapBuffers succeeded");
         }
+    }
+    
+    /* Commit the surface so the compositor shows the new content. */
+    if (popup->surface) {
+        wl_surface_commit(popup->surface);
     }
     
     popup->drawing = 0;
