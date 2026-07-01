@@ -62,6 +62,13 @@ doNothing(void)
 #   define TkpGetNativeAppBitmap ((Pixmap (*)(Display *, const char *, int *, int *))(void *)doNothing)
 #endif
 
+#define TkGetUserInactiveTime GetUserInactiveTime
+MODULE_SCOPE long long
+TkGetUserInactiveTime(Display *dpy)
+{
+    return Tk_GetUserInactiveTime(dpy);
+}
+
 #ifdef _WIN32
 
 int
@@ -1169,7 +1176,7 @@ const TkStubs tkStubs = {
     Tk_InitConsoleChannels, /* 215 */
     0, /* 216 */
     Tk_CreateSmoothMethod, /* 217 */
-    0, /* 218 */
+    TkGetUserInactiveTime, /* 218 */
     0, /* 219 */
     Tk_GetDash, /* 220 */
     Tk_CreateOutline, /* 221 */

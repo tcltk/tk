@@ -670,7 +670,8 @@ EXTERN void		Tk_InitConsoleChannels(Tcl_Interp *interp);
 /* 217 */
 EXTERN void		Tk_CreateSmoothMethod(Tcl_Interp *interp,
 				const Tk_SmoothMethod *method);
-/* Slot 218 is reserved */
+/* 218 */
+EXTERN long long	TkGetUserInactiveTime(Display *dpy);
 /* Slot 219 is reserved */
 /* 220 */
 EXTERN int		Tk_GetDash(Tcl_Interp *interp, const char *value,
@@ -1132,7 +1133,7 @@ typedef struct TkStubs {
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
     void (*reserved216)(void);
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
-    void (*reserved218)(void);
+    long long (*tkGetUserInactiveTime) (Display *dpy); /* 218 */
     void (*reserved219)(void);
     int (*tk_GetDash) (Tcl_Interp *interp, const char *value, Tk_Dash *dash); /* 220 */
     void (*tk_CreateOutline) (Tk_Outline *outline); /* 221 */
@@ -1651,7 +1652,8 @@ extern const TkStubs *tkStubsPtr;
 /* Slot 216 is reserved */
 #define Tk_CreateSmoothMethod \
 	(tkStubsPtr->tk_CreateSmoothMethod) /* 217 */
-/* Slot 218 is reserved */
+#define TkGetUserInactiveTime \
+	(tkStubsPtr->tkGetUserInactiveTime) /* 218 */
 /* Slot 219 is reserved */
 #define Tk_GetDash \
 	(tkStubsPtr->tk_GetDash) /* 220 */
@@ -1836,6 +1838,7 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#undef TkGetUserInactiveTime
 #undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */

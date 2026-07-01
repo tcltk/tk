@@ -798,9 +798,9 @@ declare 215 {
 declare 217 {
     void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
 }
-#declare 218 {
-#    void Tk_CreateCanvasVisitor(Tcl_Interp *interp, void *typePtr)
-#}
+declare 218 {
+    long long TkGetUserInactiveTime(Display *dpy)
+}
 #declare 219 {
 #    void *Tk_GetCanvasVisitor(Tcl_Interp *interp, const char *name)
 #}
