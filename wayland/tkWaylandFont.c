@@ -802,10 +802,97 @@ EnsureNvgFaceFont(
 
 /*
  *----------------------------------------------------------------------
+ * gNvgFontRegistry --
+ *
+ *   Cross-font side table recording, for every (WaylandFont, NVGcontext)
+ *   pair cached in a WaylandFont's own nvgContexts list, which WaylandFont
+ *   owns that cache entry. This lets TkWaylandFontContextDestroyed() purge
+ *   every stale cache entry for a given NVGcontext* across ALL fonts right
+ *   before that context's address can be recycled by a later
+ *   nvgCreateGLES3() call (see comment there for why this matters).
+ *
+ *   This does not require any changes to the WaylandFont/NvgFontContext
+ *   struct layout in tkWaylandInt.h - it is a purely additive, self
+ *   contained registry local to this file.
+ */
+typedef struct NvgFontRegEntry {
+    NVGcontext *vg;
+    WaylandFont *owner;
+    struct NvgFontRegEntry *next;
+} NvgFontRegEntry;
+
+static NvgFontRegEntry *gNvgFontRegistry = NULL;
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandFontContextDestroyed --
+ *
+ *   Must be called BEFORE an NVGcontext created via nvgCreateGLES3() is
+ *   handed to nvgDeleteGLES3()/freed. Purges every cached NvgFontContext
+ *   entry (across every WaylandFont) that refers to this context pointer.
+ *
+ *   Why this is necessary: EnsureNvgFont() caches loaded font IDs keyed
+ *   by raw NVGcontext* pointer identity. Popup menus destroy and
+ *   recreate their NVGcontext on essentially every open/close/resize
+ *   (TkWaylandPopupCreateRenderer/DestroyRenderer). Because these
+ *   allocations are all the same size and happen in a tight churn, a
+ *   freed context's heap address is frequently reused by the very next
+ *   nvgCreateGLES3() call. Without this purge, EnsureNvgFont() sees a
+ *   pointer match against the stale cache entry and returns a fontId
+ *   that was never loaded into the NEW (visually unrelated) context's
+ *   font atlas. nvgFontFaceId() then silently selects nothing, so text
+ *   stops rendering - reproducing exactly as "works the first time,
+ *   blank on every subsequent open."
+ *
+ * Results:
+ *   None.
+ *
+ * Side effects:
+ *   Frees the matching NvgFontContext node(s) and registry entries.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandFontContextDestroyed(
+    NVGcontext *vg)
+{
+    if (!vg) return;
+
+    NvgFontRegEntry **pp = &gNvgFontRegistry;
+    while (*pp) {
+        NvgFontRegEntry *entry = *pp;
+        if (entry->vg == vg) {
+            WaylandFont *fontPtr = entry->owner;
+            NvgFontContext **fpp = &fontPtr->nvgContexts;
+            while (*fpp) {
+                if ((*fpp)->vg == vg) {
+                    NvgFontContext *dead = *fpp;
+                    *fpp = dead->next;
+                    free(dead);
+                    if (fontPtr->nvgContextCount > 0) {
+                        fontPtr->nvgContextCount--;
+                    }
+                    break;
+                }
+                fpp = &(*fpp)->next;
+            }
+            *pp = entry->next;
+            free(entry);
+            continue;
+        }
+        pp = &entry->next;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
  * EnsureNvgFont --
  *
  *   Ensure all faces are loaded into the NanoVG context and wire up the
  *   fallback chain: face[0] → face[1] → … → emoji.
+ *
+ *   CRITICAL FIX: Font IDs are per-NVG-context. We must track which
+ *   fonts have been loaded for each context separately.
  *
  * Results:
  *   NanoVG ID of the primary (face[0]) font, or -1 on failure.
@@ -815,54 +902,31 @@ EnsureNvgFaceFont(
  *----------------------------------------------------------------------
  */
 
-/*
- *----------------------------------------------------------------------
- * EnsureNvgFont --
- *
- *   Ensure all faces are loaded into the NanoVG context.
- *   CRITICAL FIX: Font IDs are per-NVG-context. We must track which
- *   fonts have been loaded for each context separately.
- *
- * Results:
- *   NanoVG ID of the primary font, or -1 on failure.
- *
- * Side effects:
- *   Loads fonts into NanoVG context and tracks them per-context.
- *----------------------------------------------------------------------
- */
-
 MODULE_SCOPE int
 EnsureNvgFont(
 	      WaylandFont *fontPtr,
 	      NVGcontext *vg)
 {
-    if (!vg) return -1;
-    if (!fontPtr) return -1;
+    if (!vg || !fontPtr) return -1;
 
     /* Check if already loaded for this specific NVG context. */
     NvgFontContext *ctx = fontPtr->nvgContexts;
     while (ctx) {
         if (ctx->vg == vg) {
+            fontPtr->nvgFontId = ctx->fontId;
             return ctx->fontId;
         }
         ctx = ctx->next;
     }
 
-    /* Not loaded for this context - load it. */
+    /* Load each face into this context. */
     int primaryId = -1;
-    
-    /* Try to load the font using the file path from the first face. */
-    if (fontPtr->nfaces > 0 && fontPtr->faces[0].filePath) {
-        char name[64];
-        snprintf(name, sizeof(name), "__wlfont_%p", (void*)vg);
-        primaryId = nvgCreateFont(vg, name, fontPtr->faces[0].filePath);
-        if (primaryId >= 0) {
-            fprintf(stderr, "EnsureNvgFont: loaded font from %s id=%d for context %p\n",
-                     fontPtr->faces[0].filePath, primaryId, (void*)vg);
-        }
+    for (int i = 0; i < fontPtr->nfaces; i++) {
+        int id = EnsureNvgFaceFont(fontPtr, i, vg);
+        if (i == 0) primaryId = id;
     }
-    
-    /* Fallback to system fonts. */
+
+    /* If primary failed, try system fallbacks. */
     if (primaryId < 0) {
         const char *fallback_paths[] = {
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -877,20 +941,36 @@ EnsureNvgFont(
                 snprintf(name, sizeof(name), "__fallback_%p", (void*)vg);
                 primaryId = nvgCreateFont(vg, name, fallback_paths[i]);
                 if (primaryId >= 0) {
-                    fprintf(stderr, "EnsureNvgFont: loaded fallback font from %s id=%d\n",
-                             fallback_paths[i], primaryId);
                     break;
                 }
             }
         }
-    }
-    
-    /* Also try "sans" as a last resort. */
-    if (primaryId < 0) {
-        primaryId = nvgFindFont(vg, "sans");
         if (primaryId < 0) {
-            primaryId = nvgCreateFont(vg, "sans", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+            primaryId = nvgFindFont(vg, "sans");
+            if (primaryId < 0) {
+                primaryId = nvgCreateFont(vg, "sans", 
+                                          "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+            }
         }
+    }
+
+    /* Wire fallback chain on the primary face. */
+    if (primaryId >= 0) {
+        for (int i = 1; i < fontPtr->nfaces; i++) {
+            int fb = fontPtr->faces[i].nvgFontId;
+            if (fb >= 0) nvgAddFallbackFontId(vg, primaryId, fb);
+        }
+        /* Bundled emoji font. */
+        int emojiId = nvgFindFont(vg, "emoji");
+        if (emojiId < 0) {
+            emojiId = nvgCreateFontMem(vg, "emoji",
+                                       NotoEmoji_Regular_ttf,
+                                       NotoEmoji_Regular_ttf_len, 0);
+            if (emojiId < 0)
+                fprintf(stderr, "tkWaylandFont: failed to load bundled emoji\n");
+        }
+        emojiFontId = emojiId;
+        if (emojiId >= 0) nvgAddFallbackFontId(vg, primaryId, emojiId);
     }
 
     /* Store the loaded font ID for this context. */
@@ -902,13 +982,24 @@ EnsureNvgFont(
             newCtx->next = fontPtr->nvgContexts;
             fontPtr->nvgContexts = newCtx;
             fontPtr->nvgContextCount++;
+
+            /* Register in the cross-font registry so a future
+             * TkWaylandFontContextDestroyed(vg) call can find and
+             * purge this entry before its address gets recycled. */
+            NvgFontRegEntry *reg = (NvgFontRegEntry*)malloc(sizeof(NvgFontRegEntry));
+            if (reg) {
+                reg->vg = vg;
+                reg->owner = fontPtr;
+                reg->next = gNvgFontRegistry;
+                gNvgFontRegistry = reg;
+            }
         }
-        /* Also store in the font struct for quick access. */
         fontPtr->nvgFontId = primaryId;
     }
 
     return primaryId;
 }
+
 /*
  *----------------------------------------------------------------------
  * TkpGetFontPixelSize --
@@ -1123,6 +1214,28 @@ static void
 DeleteFont(WaylandFont *fontPtr)
 {
     WaylandShaper_Destroy(&fontPtr->shaper);
+
+    /* Remove registry entries for this font. */
+    NvgFontRegEntry **pp = &gNvgFontRegistry;
+    while (*pp) {
+        if ((*pp)->owner == fontPtr) {
+            NvgFontRegEntry *dead = *pp;
+            *pp = dead->next;
+            free(dead);
+            continue;
+        }
+        pp = &(*pp)->next;
+    }
+
+    /* Free per-context font IDs. */
+    NvgFontContext *ctx = fontPtr->nvgContexts;
+    while (ctx) {
+        NvgFontContext *dead = ctx;
+        ctx = ctx->next;
+        free(dead);
+    }
+    fontPtr->nvgContexts = NULL;
+    fontPtr->nvgContextCount = 0;
 
     for (int i = 0; i < fontPtr->nfaces; i++) {
         WaylandFtFace *face = &fontPtr->faces[i];
@@ -2064,6 +2177,42 @@ TkUnixSetXftClipRegion(
     TCL_UNUSED(Region)) /* clipRegion */
 {
  /* no-op */
+}
+
+/*
+ *----------------------------------------------------------------------
+ * TkWaylandLoadNamedFontIntoContext --
+ *
+ *   Loads a Tk named font (or creates one on demand) into a specific
+ *   NVG context. This is the unified entry point for all drawing code.
+ *
+ * Results:
+ *   NanoVG font ID (>=0) on success.
+ * 
+ * Side effects:
+ *   None.
+ *----------------------------------------------------------------------
+ */
+MODULE_SCOPE int
+TkWaylandLoadNamedFontIntoContext(
+    NVGcontext *vg,
+    const char *tkFontName)   /* e.g. "TkMenuFont", "TkDefaultFont", "sans" */
+{
+    if (!vg || !tkFontName) return -1;
+
+    TkFontAttributes fa;
+    TkInitFontAttributes(&fa);
+    fa.family = Tk_GetUid(tkFontName);
+    fa.size   = -12.0;   /* reasonable default */
+
+    TkFont *tkfont = TkpGetFontFromAttributes(NULL, NULL, &fa);
+    if (!tkfont) return -1;
+
+    WaylandFont *fontPtr = (WaylandFont *)tkfont;
+    int id = EnsureNvgFont(fontPtr, vg);
+
+    /* Don't delete the font — it's cached by Tk */
+    return id;
 }
 
 /*

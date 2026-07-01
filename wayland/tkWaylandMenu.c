@@ -75,6 +75,7 @@ MODULE_SCOPE NVGcontext* TkWaylandGetNVGContext(Drawable d);
 MODULE_SCOPE NVGcolor TkWaylandXColorToNVG(XColor *xcolor);
 MODULE_SCOPE NVGcolor TkWaylandPixelToNVG(unsigned long pixel);
 MODULE_SCOPE void TkWaylandMenubarDestroy(TkWindow *winPtr);
+MODULE_SCOPE int TkWaylandLoadNamedFontIntoContext(NVGcontext *vg, const char *tkFontName);
 
 /*
  * Menu popup stack
@@ -1277,10 +1278,18 @@ TkpDrawMenuEntry(
         }
     }
     
-    /* Get text color from the menu's border. */
+    /*
+     * Get the text foreground color. NOTE: this must come from the
+     * menu's -foreground/-activeforeground/-disabledforeground colors,
+     * NOT from bgBorder. bgBorder is the same color used to fill the
+     * entry's background in DrawMenuEntryBackground(); using it here
+     * made text color == background color, i.e. invisible text even
+     * though every draw call succeeded.
+     */
     NVGcolor textColor = nvgRGBA(0, 0, 0, 255);
-    if (bgBorder) {
-        XColor *fgX = Tk_3DBorderColor(bgBorder);
+    if (mePtr->state == ENTRY_ACTIVE && mePtr->menuPtr->activeFgPtr) {
+        XColor *fgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin,
+                                          mePtr->menuPtr->activeFgPtr);
         if (fgX) {
             textColor = TkWaylandXColorToNVG(fgX);
         }
@@ -1507,11 +1516,18 @@ DrawMenuEntryAccelerator(
 	        nvgFillColor(vg, textColor);
 	        nvgText(vg, (float)left, (float)ty, accel, NULL);
 	    } else {
-	        nvgFontFace(vg, "sans");
-	        nvgFontSize(vg, (float)fontPtr->pixelSize);
-	        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-	        nvgFillColor(vg, textColor);
-	        nvgText(vg, (float)left, (float)ty, accel, NULL);
+	        /* Use Tk font system as fallback - no hard-coded paths! */
+	        int fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
+	        if (fallbackId < 0) {
+	            fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
+	        }
+	        if (fallbackId >= 0) {
+	            nvgFontFaceId(vg, fallbackId);
+	            nvgFontSize(vg, (float)fontPtr->pixelSize);
+	            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+	            nvgFillColor(vg, textColor);
+	            nvgText(vg, (float)left, (float)ty, accel, NULL);
+	        }
 	    }
 	}
     }
@@ -1838,12 +1854,18 @@ DrawMenuEntryLabel(
 	        nvgFillColor(vg, textColor);
 	        nvgText(vg, (float)(leftEdge + textXOffset), (float)textY, label, NULL);
 	    } else {
-	        /* Fallback: try "sans" font. */
-	        nvgFontFace(vg, "sans");
-	        nvgFontSize(vg, (float)fontPtr->pixelSize);
-	        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-	        nvgFillColor(vg, textColor);
-	        nvgText(vg, (float)(leftEdge + textXOffset), (float)textY, label, NULL);
+	        /* Use Tk font system as fallback - no hard-coded paths! */
+	        int fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
+	        if (fallbackId < 0) {
+	            fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
+	        }
+	        if (fallbackId >= 0) {
+	            nvgFontFaceId(vg, fallbackId);
+	            nvgFontSize(vg, (float)fontPtr->pixelSize);
+	            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+	            nvgFillColor(vg, textColor);
+	            nvgText(vg, (float)(leftEdge + textXOffset), (float)textY, label, NULL);
+	        }
 	    }
 	}
 		    
@@ -2365,6 +2387,22 @@ TkWaylandPostMenuAtAnchor(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuDrawIntoPopup --
+ *
+ *	Render all entries of menuPtr into the given TkWaylandPopup.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Issues NanoVG drawing commands and swaps the popup's buffer.
+ *
+ *----------------------------------------------------------------------
+ */
+
 static void
 MenuDrawIntoPopup(
     TkMenu *menuPtr,
@@ -2376,6 +2414,7 @@ MenuDrawIntoPopup(
     Tk_Font entryFont;
     Tk_FontMetrics entryMetrics;
     const Tk_FontMetrics *fmPtr;
+    int currentFontId = -1;
     
     if (!popup || !menuPtr || !menuPtr->tkwin) {
         MENU_LOG("MenuDrawIntoPopup: invalid parameters");
@@ -2404,40 +2443,40 @@ MenuDrawIntoPopup(
     }
 
     /*
-     * Load fonts into this specific NVG context.
-     * The font must be loaded into the popup's NVG context before drawing.
+     * Load menu font using the Tk font system - NO HARD-CODED PATHS!
      */
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     if (menuFont) {
         Tk_GetFontMetrics(menuFont, &menuMetrics);
         MENU_LOG("MenuDrawIntoPopup: menu font size=%d", menuMetrics.linespace);
         
-        /* Ensure font is loaded in this NVG context */
+        /* Ensure font is loaded in this NVG context using the real Tk system */
         WaylandFont *fontPtr = (WaylandFont *)menuFont;
         int fontId = EnsureNvgFont(fontPtr, vg);
         MENU_LOG("MenuDrawIntoPopup: EnsureNvgFont returned fontId=%d", fontId);
         
-        /* Verify the font is actually loaded */
         if (fontId >= 0) {
             nvgFontFaceId(vg, fontId);
+            currentFontId = fontId;
             MENU_LOG("MenuDrawIntoPopup: set font face id %d", fontId);
-        } else {
-            MENU_LOG("MenuDrawIntoPopup: WARNING - font not loaded, using fallback");
-            /* Try loading a font directly */
-            const char *font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-            if (access(font_path, R_OK) == 0) {
-                fontId = nvgCreateFont(vg, "sans", font_path);
-                if (fontId >= 0) {
-                    nvgFontFaceId(vg, fontId);
-                    MENU_LOG("MenuDrawIntoPopup: loaded fallback font id=%d", fontId);
-                }
-            }
         }
-    } else {
-        MENU_LOG("MenuDrawIntoPopup: no menu font, using default");
-        menuMetrics.linespace = 16;
-        menuMetrics.ascent = 12;
-        menuMetrics.descent = 4;
+    }
+    
+    if (currentFontId < 0) {
+        /* Last resort fallback - use Tk font system, NOT hard-coded paths */
+        int fontId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
+        if (fontId < 0) {
+            fontId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
+        }
+        if (fontId >= 0) {
+            nvgFontFaceId(vg, fontId);
+            currentFontId = fontId;
+        } else {
+            MENU_LOG("MenuDrawIntoPopup: WARNING - no font available!");
+            menuMetrics.linespace = 16;
+            menuMetrics.ascent = 12;
+            menuMetrics.descent = 4;
+        }
     }
     
     /* Set font size and alignment. */
@@ -2483,7 +2522,18 @@ MenuDrawIntoPopup(
         nvgStroke(vg);
     }
 
-    Drawable d = Tk_WindowId(menuPtr->tkwin);
+    /*
+     * Popups render into their own private offscreen FBO/NVGcontext
+     * (obtained above via TkWaylandPopupGetNVGContext), which is NOT
+     * registered in the drawable->NVGcontext lookup table used by
+     * TkWaylandGetNVGContext()/Tk_DrawCharsInContext(). Passing a real
+     * Drawable here would send text drawing down the "d != 0" path in
+     * DrawMenuEntryLabel/DrawMenuEntryAccelerator, which resolves to
+     * that (non-existent, for popups) context and silently draws
+     * nothing. Force d == None so all sub-draws take the direct-NanoVG
+     * (vg-based) path using the popup's own context.
+     */
+    Drawable d = None;
     MENU_LOG("MenuDrawIntoPopup: drawing %d entries", menuPtr->numEntries);
    
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -2500,8 +2550,9 @@ MenuDrawIntoPopup(
                 fmPtr = &entryMetrics;
                 WaylandFont *fontPtr = (WaylandFont *)entryFont;
                 int fontId = EnsureNvgFont(fontPtr, vg);
-                if (fontId >= 0) {
+                if (fontId >= 0 && fontId != currentFontId) {
                     nvgFontFaceId(vg, fontId);
+                    currentFontId = fontId;
                     nvgFontSize(vg, (float)entryMetrics.linespace);
                 }
             } else {
@@ -2523,7 +2574,6 @@ MenuDrawIntoPopup(
     TkWaylandPopupEndDraw(popup);
     MENU_LOG("MenuDrawIntoPopup: completed");
 }
-
 
 /*
  *----------------------------------------------------------------------

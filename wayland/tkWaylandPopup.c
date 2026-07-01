@@ -1,5 +1,5 @@
 /*
- * tkWaylandPopupShm.c --
+ * tkWaylandPopup.c --
  *
  *	Native Wayland popup/sub-surface primitive for Tk using wl_shm.
  *	
@@ -59,6 +59,12 @@ extern struct wl_compositor *waylandCompositor;
 extern struct wl_subcompositor *waylandSubcompositor;
 extern struct xdg_wm_base *waylandWmBase;
 extern struct wl_seat *waylandSeat;
+
+/*
+ * Forward declarations from tkWaylandFont.c
+ */
+MODULE_SCOPE int TkWaylandLoadNamedFontIntoContext(NVGcontext *vg, const char *tkFontName);
+MODULE_SCOPE void TkWaylandFontContextDestroyed(NVGcontext *vg);
 
 /*
  * Software renderer context - uses NanoVG with a custom renderer
@@ -181,7 +187,6 @@ static void TkWaylandPopupDestroyShmBuffer(WlShmBuffer *buffer);
 static void TkWaylandPopupReleaseBuffer(void *data, struct wl_buffer *buffer);
 static int TkWaylandPopupAttachBuffer(TkWaylandPopup *popup, WlShmBuffer *buffer);
 static void TkWaylandPopupCopyPixelsToBuffer(TkWaylandPopup *popup, WlShmBuffer *buffer);
-static int TkWaylandPopupShareFonts(NVGcontext *popupVg);
 
 /* wl_buffer listener for release events */
 static const struct wl_buffer_listener buffer_listener = {
@@ -209,84 +214,6 @@ static const struct wl_registry_listener popup_registry_listener = {
     .global = popup_registry_global,
     .global_remove = popup_registry_global_remove,
 };
-
-/*
- *----------------------------------------------------------------------
- * TkWaylandPopupShareFonts --
- *
- *	Load fonts directly into a popup NVG context.
- *	Fonts are context-local - each context needs its own registration.
- *
- * Results:
- *	1 on success, 0 on failure.
- *
- * Side effects:
- *	Registers fonts in the popup context.
- *----------------------------------------------------------------------
- */
-
-static int
-TkWaylandPopupShareFonts(
-    NVGcontext *popupVg)
-{
-    if (!popupVg) return 0;
-    
-    POPUP_LOG("TkWaylandPopupShareFonts: loading fonts into popup context %p", 
-              (void*)popupVg);
-    
-    const char *font_paths[] = {
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
-        "/usr/share/fonts/TTF/DejaVuSans.ttf",
-        "/usr/share/fonts/dejavu/DejaVuSans.ttf"
-    };
-    
-    int font_loaded = 0;
-    for (int i = 0; i < sizeof(font_paths)/sizeof(font_paths[0]); i++) {
-        if (font_paths[i] && access(font_paths[i], R_OK) == 0) {
-            /* CRITICAL: Use a unique name per context */
-            char name[64];
-            snprintf(name, sizeof(name), "__popup_font_%p", (void*)popupVg);
-            int id = nvgCreateFont(popupVg, name, font_paths[i]);
-            if (id >= 0) {
-                POPUP_LOG("TkWaylandPopupShareFonts: loaded font from %s (id=%d)", 
-                          font_paths[i], id);
-                font_loaded = 1;
-                break;
-            }
-        }
-    }
-    
-    /* Also register as "sans" for easier lookup */
-    for (int i = 0; i < sizeof(font_paths)/sizeof(font_paths[0]); i++) {
-        if (font_paths[i] && access(font_paths[i], R_OK) == 0) {
-            int id = nvgCreateFont(popupVg, "sans", font_paths[i]);
-            if (id >= 0) {
-                POPUP_LOG("TkWaylandPopupShareFonts: registered 'sans' from %s", font_paths[i]);
-                break;
-            }
-        }
-    }
-    
-    /* Also register as "TkMenuFont" */
-    for (int i = 0; i < sizeof(font_paths)/sizeof(font_paths[0]); i++) {
-        if (font_paths[i] && access(font_paths[i], R_OK) == 0) {
-            int id = nvgCreateFont(popupVg, "TkMenuFont", font_paths[i]);
-            if (id >= 0) {
-                POPUP_LOG("TkWaylandPopupShareFonts: registered 'TkMenuFont' from %s", font_paths[i]);
-                break;
-            }
-        }
-    }
-    
-    if (!font_loaded) {
-        POPUP_LOG("TkWaylandPopupShareFonts: WARNING - no system fonts found");
-        return 0;
-    }
-    
-    return 1;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -391,40 +318,15 @@ TkWaylandPopupCreateRenderer(
     if (renderer->vg) {
         POPUP_LOG("TkWaylandPopupCreateRenderer: NanoVG context %p created", (void*)renderer->vg);
         
-
-	/* Load fonts directly into this context - fonts are context-local. */
-	const char *font_paths[] = {
-	    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-	    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-	    "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
-	    "/usr/share/fonts/TTF/DejaVuSans.ttf",
-	    "/usr/share/fonts/dejavu/DejaVuSans.ttf"
-	};
-	
-	int font_loaded = 0;
-	for (int i = 0; i < sizeof(font_paths)/sizeof(font_paths[0]); i++) {
-	    if (font_paths[i] && access(font_paths[i], R_OK) == 0) {
-	        int id = nvgCreateFont(renderer->vg, "sans", font_paths[i]);
-	        if (id >= 0) {
-	            POPUP_LOG("TkWaylandPopupCreateRenderer: loaded font from %s (id=%d)", 
-	                      font_paths[i], id);
-	            font_loaded = 1;
-	            break;
-	        }
-	    }
-	}
-	
-	/* Also try to load as "TkMenuFont" for menu use */
-	for (int i = 0; i < sizeof(font_paths)/sizeof(font_paths[0]); i++) {
-	    if (font_paths[i] && access(font_paths[i], R_OK) == 0) {
-	        int id = nvgCreateFont(renderer->vg, "TkMenuFont", font_paths[i]);
-	        if (id >= 0) {
-	            POPUP_LOG("TkWaylandPopupCreateRenderer: loaded TkMenuFont from %s (id=%d)", 
-	                      font_paths[i], id);
-	            break;
-	        }
-	    }
-	}
+        /* 
+         * Load fonts using the Tk font system - NO HARD-CODED PATHS!
+         * The fonts will be loaded on demand by EnsureNvgFont.
+         */
+        TkWaylandLoadNamedFontIntoContext(renderer->vg, "sans");
+        TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkDefaultFont");
+        TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkMenuFont");
+        
+        POPUP_LOG("TkWaylandPopupCreateRenderer: fonts registered using Tk font system");
         
         /* Initialize the NanoVG context for the renderer size */
         glViewport(0, 0, width, height);
@@ -470,6 +372,14 @@ TkWaylandPopupDestroyRenderer(
     POPUP_LOG("TkWaylandPopupDestroyRenderer: destroying renderer %p", (void*)renderer);
     
     if (renderer->vg) {
+        /*
+         * Must happen before nvgDeleteGLES3(): once the context is
+         * freed, its address may be reused by the very next popup's
+         * nvgCreateGLES3() call, and any stale EnsureNvgFont() cache
+         * entries still pointing at this address would then be
+         * mistaken for entries belonging to the new context.
+         */
+        TkWaylandFontContextDestroyed(renderer->vg);
         nvgDeleteGLES3(renderer->vg);
         renderer->vg = NULL;
     }
