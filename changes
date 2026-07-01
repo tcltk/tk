@@ -8357,3 +8357,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2026-06-30 (bug) [348b48] scale, spinbox and place format floating-point values using
 	the LC_NUMERIC locale (nijtmans)
+
+2026-07-01 (bug) [3cb7c4] tk inactive returns a negative value on Windows for long inactivity (nijtmans)

@@ -171,7 +171,7 @@ TkGetServerInfo(
 		"Win32"
 #endif
 	);
-    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 /*
@@ -890,7 +890,7 @@ Tk_TranslateWinEvent(
 	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	if (winPtr) {
-	    TkWinClipboardRender(winPtr->dispPtr, wParam);
+	    TkWinClipboardRender(winPtr->dispPtr, (UINT)wParam);
 	}
 	return 1;
     }
@@ -1246,7 +1246,7 @@ GenerateXEvent(
 
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -1;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
 	            WM_SYSCHAR);
 	    break;
@@ -1260,7 +1260,7 @@ GenerateXEvent(
 	     */
 
 	    event.x.type = KeyRelease;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    break;
 
@@ -1336,7 +1336,7 @@ GenerateXEvent(
 	case WM_UNICHAR: {
 	    event.x.type = KeyPress;
 	    event.x.xany.send_event = -3;
-	    event.x.xkey.keycode = wParam;
+	    event.x.xkey.keycode = (unsigned)wParam;
 	    event.key.nbytes = 0;
 	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
 	    event.x.type = KeyRelease;
@@ -2008,6 +2008,7 @@ Tk_GetUserInactiveTime(
      TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
+    DWORD inactive;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -2018,7 +2019,17 @@ Tk_GetUserInactiveTime(
      * Last input info is in milliseconds, since restart time.
      */
 
-    return (GetTickCount()-li.dwTime);
+    inactive = GetTickCount() - li.dwTime;
+
+    /*
+     * "long" is 32-bit on Windows, so clamp to its maximum to avoid returning
+     * a large inactivity interval as a negative value.
+     */
+
+    if (inactive > LONG_MAX) {
+	return LONG_MAX;
+    }
+    return (long)inactive;
 }
 
 /*
