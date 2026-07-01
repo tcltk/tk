@@ -2,6 +2,7 @@
  * tkWaylandMenu.c --
  *
  * This module implements the Wayland/GLFW platform-specific features of menus.
+ * All rendering uses the shared GL context and NanoVG context owned by GLFW.
  *
  * Copyright © 1996-1998 Sun Microsystems, Inc.
  * Copyright © 2026 Kevin Walzer
@@ -30,6 +31,9 @@
 
 /* The root GLFWwindow, defined in TkWaylandInit.c. */
 extern GLFWwindow *mainGlfwWindow;
+
+/* Global NanoVG context - shared across all rendering. */
+extern NVGcontext *globalNanoVGContext;
 
 /* Menu constants. */
 #define MENU_MARGIN_WIDTH	2
@@ -1162,13 +1166,13 @@ MenuStackFindLevel(
  *
  * TkpDrawMenuEntry --
  *
- *     Renders a complete menu entry.
+ *     Renders a complete menu entry using the shared NanoVG context.
  *
  * Results:
  *     None.
  *
  * Side effects:
- *     Calls sub-drawing routines to render into the NanoVG context.
+ *     Calls sub-drawing routines to render into the shared NanoVG context.
  *
  *---------------------------------------------------------------------------
  */
@@ -1225,7 +1229,10 @@ TkpDrawMenuEntry(
     if (!popup) return;
     
     vg = TkWaylandPopupGetNVGContext(popup);
-    if (!vg) return;
+    if (!vg) {
+        MENU_LOG("TkpDrawMenuEntry: no NVG context available");
+        return;
+    }
     
     /* Get the font for this entry. */
     Tk_Font entryFont = tkfont;
