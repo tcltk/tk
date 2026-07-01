@@ -53,11 +53,10 @@ extern struct xdg_wm_base *waylandWmBase;
 extern struct wl_seat *waylandSeat;
 
 /*
- * Global NanoVG context from main rendering system.
- * Popups use this shared context for all rendering.
- * This is defined in tkWaylandInit.c and initialized there.
+ * REMOVED: globalNanoVGContext - no longer used
+ * Each window owns its own context via glfwTkInfo
+ * We now get the context from the main window's glfwTkInfo
  */
-extern NVGcontext *globalNanoVGContext;
 
 /*
  * Internal popup structure (opaque in tkWaylandInt.h).
@@ -87,7 +86,7 @@ struct TkWaylandPopup {
     void                  (*doneCallback)(void *clientData);
     void                   *doneClientData;
     
-    /* Shared NanoVG context - points to global. */
+    /* NanoVG context - points to the main window's context. */
     NVGcontext            *vg;
 };
 
@@ -128,6 +127,7 @@ static void popup_registry_global_remove(void *data,
     struct wl_registry *registry, uint32_t name);
 static struct wl_surface *TkWaylandPopupGetWLSurface(GLFWwindow *window);
 static int TkWaylandPopupBindGlobals(void);
+static NVGcontext* TkWaylandPopupGetMainContext(void);
 
 /* xdg_popup listener. */
 static const struct xdg_popup_listener popup_xdg_popup_listener = {
@@ -150,6 +150,45 @@ static const struct wl_registry_listener popup_registry_listener = {
     .global = popup_registry_global,
     .global_remove = popup_registry_global_remove,
 };
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandPopupGetMainContext --
+ *
+ *	Get the NanoVG context from the main GLFW window.
+ *
+ * Results:
+ *	NVGcontext pointer or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static NVGcontext*
+TkWaylandPopupGetMainContext(void)
+{
+    if (!popupGlobals.mainWindow) {
+        POPUP_LOG("TkWaylandPopupGetMainContext: no main window");
+        return NULL;
+    }
+    
+    /* Get the glfwTkInfo from the main window's user pointer */
+    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(popupGlobals.mainWindow);
+    if (!infoPtr) {
+        POPUP_LOG("TkWaylandPopupGetMainContext: no glfwTkInfo for main window");
+        return NULL;
+    }
+    
+    if (!infoPtr->context.vg) {
+        POPUP_LOG("TkWaylandPopupGetMainContext: main window has no NanoVG context");
+        return NULL;
+    }
+    
+    return infoPtr->context.vg;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -604,13 +643,12 @@ TkWaylandPopupCreate(
     popup->drawing = 0;
     popup->serial = serial;
     
-    /* Use global NanoVG context. */
-    if (globalNanoVGContext) {
-        popup->vg = globalNanoVGContext;
-        POPUP_LOG("TkWaylandPopupCreate: using global NanoVG context");
+    /* Get the main window's NanoVG context */
+    popup->vg = TkWaylandPopupGetMainContext();
+    if (popup->vg) {
+        POPUP_LOG("TkWaylandPopupCreate: using main window's NanoVG context");
     } else {
-        POPUP_LOG("TkWaylandPopupCreate: WARNING - no global NanoVG context available");
-        popup->vg = NULL;
+        POPUP_LOG("TkWaylandPopupCreate: WARNING - no main window context available");
     }
     
     /* Create wl_surface. */
@@ -764,13 +802,12 @@ TkWaylandSubsurfaceCreate(
     popup->configured = 1;
     popup->drawing = 0;
     
-    /* Use global NanoVG context. */
-    if (globalNanoVGContext) {
-        popup->vg = globalNanoVGContext;
-        POPUP_LOG("TkWaylandSubsurfaceCreate: using global NanoVG context");
+    /* Get the main window's NanoVG context */
+    popup->vg = TkWaylandPopupGetMainContext();
+    if (popup->vg) {
+        POPUP_LOG("TkWaylandSubsurfaceCreate: using main window's NanoVG context");
     } else {
-        POPUP_LOG("TkWaylandSubsurfaceCreate: WARNING - no global NanoVG context available");
-        popup->vg = NULL;
+        POPUP_LOG("TkWaylandSubsurfaceCreate: WARNING - no main window context available");
     }
     
     /* Create wl_surface. */
@@ -887,25 +924,24 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
         return TCL_ERROR;
     }
     
-    /* Ensure global NanoVG context exists. */
-    if (!globalNanoVGContext) {
-        POPUP_LOG("TkWaylandPopupBeginDraw: global NanoVG context not initialized");
-        return TCL_ERROR;
+    /* Ensure we have a NanoVG context */
+    if (!popup->vg) {
+        /* Try to get it from the main window */
+        popup->vg = TkWaylandPopupGetMainContext();
+        if (!popup->vg) {
+            POPUP_LOG("TkWaylandPopupBeginDraw: no NanoVG context available");
+            return TCL_ERROR;
+        }
+        POPUP_LOG("TkWaylandPopupBeginDraw: obtained context from main window");
     }
     
-    /* Use GLFW to make the main context current. */
+    /* Use GLFW to make the main context current */
     if (popupGlobals.mainWindow) {
         glfwMakeContextCurrent(popupGlobals.mainWindow);
         POPUP_LOG("TkWaylandPopupBeginDraw: made GLFW context current");
     } else {
         POPUP_LOG("TkWaylandPopupBeginDraw: no main window for context");
         return TCL_ERROR;
-    }
-    
-    /* Use the global NanoVG context. */
-    if (!popup->vg) {
-        popup->vg = globalNanoVGContext;
-        POPUP_LOG("TkWaylandPopupBeginDraw: using global NanoVG context");
     }
     
     /* Begin the NanoVG frame. */
@@ -966,7 +1002,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
  *
  * TkWaylandPopupGetNVGContext --
  *
- *	Return the popup's NanoVG context (the global shared context).
+ *	Return the popup's NanoVG context (the main window's context).
  *
  * Results:
  *	The NVGcontext pointer, or NULL.
@@ -984,9 +1020,9 @@ TkWaylandPopupGetNVGContext(TkWaylandPopup *popup)
         return NULL;
     }
     
-    /* Return the global context. */
-    if (!popup->vg && globalNanoVGContext) {
-        popup->vg = globalNanoVGContext;
+    /* If we don't have a context, try to get it from the main window */
+    if (!popup->vg) {
+        popup->vg = TkWaylandPopupGetMainContext();
     }
     
     return popup->vg;

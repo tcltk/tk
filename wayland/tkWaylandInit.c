@@ -41,12 +41,6 @@
 
 static int GlfwIsInitialized = 0;
 
-/*
- * Global NanoVG context - shared between main window and popups.
- * This is defined here and used by the popup module.
- */
-NVGcontext *globalNanoVGContext = NULL;
-
 
 /*
  * Global Wayland objects - defined here and shared with other modules.
@@ -465,152 +459,7 @@ TkWaylandErrorCallback(int error, const char *desc)
  *----------------------------------------------------------------------
  */
 
-#if 0
-MODULE_SCOPE int
-TkWaylandInitialize(void)
-{
-    if (GlfwIsInitialized) return TCL_OK;
 
-    glfwSetErrorCallback(TkWaylandErrorCallback);
-
-#ifdef GLFW_PLATFORM_WAYLAND
-    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-#endif
-
-    if (!glfwInit()) {
-        fprintf(stderr, "TkWaylandInitialize: glfwInit() failed\n");
-        return TCL_ERROR;
-    }
-
-    /*
-     * Create the hidden root GLFW window. It will be shown later
-     * in Tk_MakeWindow / TkWaylandCreateWindow.
-     */
-    glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_VISIBLE,               GLFW_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE,             GLFW_TRUE);
-    glfwWindowHint(GLFW_FOCUS_ON_SHOW,         GLFW_TRUE);
-    glfwWindowHint(GLFW_AUTO_ICONIFY,          GLFW_FALSE);
-    glfwWindowHint(GLFW_SCALE_FRAMEBUFFER,     GLFW_TRUE);
-glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
-    mainGlfwWindow = glfwCreateWindow(200, 200, "Tk", NULL, NULL);
-    if (!mainGlfwWindow) {
-        fprintf(stderr, "TkWaylandInitialize: failed to create root window\n");
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-    
-   glfwMakeContextCurrent(mainGlfwWindow);
-glfwPollEvents();   // critical on Wayland
-
-glfwHideWindow(mainGlfwWindow); 
-
-fprintf(stderr, "GL_VENDOR   = %s\n", glGetString(GL_VENDOR));
-fprintf(stderr, "GL_RENDERER = %s\n", glGetString(GL_RENDERER));
-fprintf(stderr, "GL_VERSION  = %s\n", glGetString(GL_VERSION));
-    /*
-     * Get Wayland display for popup / menu module.
-     */
-    waylandDisplay = glfwGetWaylandDisplay();
-    if (!waylandDisplay) {
-        fprintf(stderr, "TkWaylandInitialize: glfwGetWaylandDisplay() failed\n");
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-
-    /*
-     * ----------------------------------------------------------------------
-     * EGL INITIALIZATION FOR POPUPS ONLY
-     * ----------------------------------------------------------------------
-     *
-     * We create a global EGLDisplay + EGLContext that popup surfaces
-     * can share. We do NOT bind EGL to the root GLFW window here; the
-     * main Tk drawing path continues to use GLFW's own GL ES context.
-     */
-
-    eglDisplay = eglGetDisplay((EGLNativeDisplayType) waylandDisplay);
-    if (eglDisplay == EGL_NO_DISPLAY) {
-        fprintf(stderr, "TkWaylandInitialize: eglGetDisplay failed\n");
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-
-    if (!eglInitialize(eglDisplay, NULL, NULL)) {
-        fprintf(stderr, "TkWaylandInitialize: eglInitialize failed: 0x%x\n",
-                eglGetError());
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-
-    EGLint configAttribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 16,
-        EGL_STENCIL_SIZE, 8,
-        EGL_NONE
-    };
-
-    EGLConfig eglConfig;
-    EGLint numConfigs = 0;
-
-    if (!eglChooseConfig(eglDisplay, configAttribs, &eglConfig, 1, &numConfigs)
-        || numConfigs == 0) {
-        fprintf(stderr, "TkWaylandInitialize: eglChooseConfig failed\n");
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-
-    EGLint ctxAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-
-    eglContext = eglCreateContext(eglDisplay, eglConfig,
-                                  EGL_NO_CONTEXT, ctxAttribs);
-    if (eglContext == EGL_NO_CONTEXT) {
-        fprintf(stderr, "TkWaylandInitialize: eglCreateContext failed: 0x%x\n",
-                eglGetError());
-        glfwTerminate();
-        return TCL_ERROR;
-    }
-
-    /*
-     * Tell the popup/menu module which GLFW window owns the shared
-     * Wayland connection and EGL context. It will create its own
-     * wl_egl_window + EGLSurface per popup and call eglMakeCurrent
-     * there, without touching the root window.
-     */
-    TkWaylandPopupSetMainWindow(mainGlfwWindow);
-
-    /*
-     * Load fonts used in window decorations and popups.
-     */
-    sans_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-                         &sans_size);
-    bold_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                         &bold_size);
-    mono_data = readFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
-                         &mono_size);
-
-    /*
-     * Use GLFW's GL ES context for the root window.
-     */
-    glfwMakeContextCurrent(mainGlfwWindow);
-    glfwSwapInterval(0);
-
-    GlfwIsInitialized = 1;
-    shutdownInProgress = 0;
-
-    Tcl_CreateExitHandler(TkWaylandShutdown, NULL);
-    return TCL_OK;
-}
-#endif
 MODULE_SCOPE int
 TkWaylandInitialize(void)
 {
@@ -663,7 +512,7 @@ TkWaylandInitialize(void)
     fprintf(stderr, "GL_VERSION  = %s\n", glGetString(GL_VERSION));
 
     /*
-     * We hide AFTER context is fully initialized (Wayland-safe pattern)
+     * We hide AFTER context is fully initialized (Wayland-safe pattern).
      */
     glfwHideWindow(mainGlfwWindow);
 
@@ -677,10 +526,6 @@ TkWaylandInitialize(void)
         return TCL_ERROR;
     }
 
-    /*
-     * ❌ DO NOT create your own EGLDisplay/EGLContext here.
-     * GLFW already owns it.
-     */
 
     /*
      * Popup system only needs:

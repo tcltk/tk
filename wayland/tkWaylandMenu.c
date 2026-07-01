@@ -32,8 +32,7 @@
 /* The root GLFWwindow, defined in TkWaylandInit.c. */
 extern GLFWwindow *mainGlfwWindow;
 
-/* Global NanoVG context - shared across all rendering. */
-extern NVGcontext *globalNanoVGContext;
+/* REMOVED: globalNanoVGContext - no longer used */
 
 /* Menu constants. */
 #define MENU_MARGIN_WIDTH	2
