@@ -695,6 +695,10 @@ static void TroughElementDraw(
 	(unsigned)b.height-1);
     XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y, (unsigned)b.width-1,
 	(unsigned)b.height-1);
+    if (X11_XDRAWRECTANGLE_HACK) {
+	XDrawPoint(Tk_Display(tkwin), d, gcb, b.x+(unsigned)b.width-1,
+	    b.y+(unsigned)b.height-1);
+    }
 }
 
 static const Ttk_ElementSpec TroughElementSpec = {
