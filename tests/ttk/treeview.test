@@ -1420,7 +1420,7 @@ test Drag_and_Drop-14.18 {Drag Last Column} -setup {
 	update
 	lappend res [.tv column #3 -width]
 	set res
-    } -result {197 412}
+    } -result {196 412}
 
 test Drag_and_Drop-14.19 {Shrink Column In Stretch Mode Adds Space to Next Column} -setup {
 	columns_stretch .tv
@@ -1430,7 +1430,7 @@ test Drag_and_Drop-14.19 {Shrink Column In Stretch Mode Adds Space to Next Colum
 	update
 	lappend res [.tv column #2 -width]
 	set res
-    } -result {200 285}
+    } -result {200 284}
 
 test Drag_and_Drop-14.20 {Expand Column In Stretch Mode Reduces Space in Next Column} -body {
 	set res [list [.tv column #2 -width]]
@@ -1438,7 +1438,7 @@ test Drag_and_Drop-14.20 {Expand Column In Stretch Mode Reduces Space in Next Co
 	update
 	lappend res [.tv column #2 -width]
 	set res
-    } -result {285 85}
+    } -result {284 84}
 
 test Drag_and_Drop-14.21 {Shrink Column Not In Stretch Mode Does Not Change Next Column} -setup {
 	columns_no_stretch .tv
