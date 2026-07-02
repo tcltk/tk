@@ -78,6 +78,19 @@ doNothing(void)
 #   define TkAboutDlg ((void (*)(void))(void *)doNothing)
 #endif
 
+#define TkGetUserInactiveTime GetUserInactiveTime
+MODULE_SCOPE long
+TkGetUserInactiveTime(Display *dpy)
+{
+    long long inactive = Tk_GetUserInactiveTime(dpy);
+    if (inactive > LONG_MAX) {
+	inactive = LONG_MAX;
+    } else if (inactive < 0) {
+	inactive = -1;
+    }
+    return (long)inactive;
+}
+
 #ifdef _WIN32
 
 #undef TkpCmapStressed
@@ -145,7 +158,6 @@ TkpPrintWindowId(
 #	define Tk_GetHWND 0
 #	define Tk_HWNDToWindow 0
 #	define TkAlignImageData 0
-#	define TkpGetMS 0
 #	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
 #	define TkpSetCapture 0
@@ -409,7 +421,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkCreateXEventSource, /* 0 */
     TkAboutDlg, /* 1 */
     TkGenerateActivateEvents, /* 2 */
-    TkpGetMS, /* 3 */
+    0, /* 3 */
     TkPointerDeadWindow, /* 4 */
     TkpPrintWindowId, /* 5 */
     TkpScanWindowId, /* 6 */
@@ -459,7 +471,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 0 */
     TkAboutDlg, /* 1 */
     TkGenerateActivateEvents, /* 2 */
-    TkpGetMS, /* 3 */
+    0, /* 3 */
     TkPointerDeadWindow, /* 4 */
     0, /* 5 */
     TkpScanWindowId, /* 6 */
@@ -979,7 +991,7 @@ const TkStubs tkStubs = {
     Tk_InitConsoleChannels, /* 215 */
     0, /* 216 */
     Tk_CreateSmoothMethod, /* 217 */
-    0, /* 218 */
+    Tk_GetUserInactiveTime, /* 218 */
     0, /* 219 */
     Tk_GetDash, /* 220 */
     Tk_CreateOutline, /* 221 */
@@ -1030,7 +1042,7 @@ const TkStubs tkStubs = {
     Tk_PhotoPutBlock, /* 266 */
     Tk_PhotoPutZoomedBlock, /* 267 */
     Tk_PhotoSetSize, /* 268 */
-    Tk_GetUserInactiveTime, /* 269 */
+    TkGetUserInactiveTime, /* 269 */
     Tk_ResetUserInactiveTime, /* 270 */
     Tk_Interp, /* 271 */
     0, /* 272 */

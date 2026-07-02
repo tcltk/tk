@@ -659,7 +659,7 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
     xEvent->xany.window = Tk_WindowId(tkwin);
 
     xEvent->xkey.root = XRootWindow(display, 0);
-    xEvent->xkey.time = TkpGetMS();
+    xEvent->xkey.time = TkGetMS();
     xEvent->xkey.state = state;
     xEvent->xkey.same_screen = true;
     /* No need to initialize other fields implicitly here,
