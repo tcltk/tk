@@ -137,6 +137,11 @@ struct TkWaylandPopup {
     WlShmBuffer           *pending_buffer;
     struct wl_list        buffers;
     int                    buffer_count;
+    
+    /* Border configuration */
+    int                    drawBorder;
+    unsigned char          borderR, borderG, borderB, borderA;
+    int                    drawShadow;
 };
 
 /* Global state for this module. */
@@ -1132,6 +1137,14 @@ TkWaylandPopupCreate(
     wl_list_init(&popup->buffers);
     popup->buffer_count = 0;
     
+    /* Initialize border settings - default to enabled with light gray */
+    popup->drawBorder = 1;
+    popup->borderR = 200;
+    popup->borderG = 200;
+    popup->borderB = 200;
+    popup->borderA = 255;
+    popup->drawShadow = 1;
+    
     /* Create the software renderer */
     popup->renderer = TkWaylandPopupCreateRenderer(popupW, popupH);
     if (!popup->renderer) {
@@ -1332,6 +1345,14 @@ TkWaylandSubsurfaceCreate(
     popup->shm = popupGlobals.shm;
     wl_list_init(&popup->buffers);
     popup->buffer_count = 0;
+    
+    /* Initialize border settings - default to enabled with light gray */
+    popup->drawBorder = 1;
+    popup->borderR = 200;
+    popup->borderG = 200;
+    popup->borderB = 200;
+    popup->borderA = 255;
+    popup->drawShadow = 1;
     
     /* Create the software renderer */
     popup->renderer = TkWaylandPopupCreateRenderer(width, height);
@@ -1537,6 +1558,106 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
              popup->width, popup->height, (void*)popup->renderer->vg);
     
     return TCL_OK;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandPopupDrawBorderWithShadow --
+ *
+ *	Draw a hairline border with a subtle shadow effect around the popup.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws a 1px border with shadow using NanoVG.
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandPopupDrawBorderWithShadow(
+    TkWaylandPopup *popup)
+{
+    if (!popup || !popup->renderer || !popup->renderer->vg) {
+        return;
+    }
+    
+    /* Skip if border drawing is disabled */
+    if (!popup->drawBorder) {
+        return;
+    }
+    
+    NVGcontext *vg = popup->renderer->vg;
+    float w = (float)popup->width;
+    float h = (float)popup->height;
+    
+    nvgSave(vg);
+    
+    /* Main border */
+    nvgStrokeColor(vg, nvgRGBA(popup->borderR, popup->borderG, 
+                               popup->borderB, popup->borderA));
+    nvgStrokeWidth(vg, 1.0f);
+    nvgBeginPath(vg);
+    nvgRect(vg, 0.5f, 0.5f, w - 1.0f, h - 1.0f);
+    nvgStroke(vg);
+    
+    /* Subtle shadow on bottom and right edges */
+    if (popup->drawShadow) {
+        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 30));
+        nvgStrokeWidth(vg, 1.0f);
+        nvgBeginPath(vg);
+        /* Bottom edge */
+        nvgMoveTo(vg, 0.5f, h - 0.5f);
+        nvgLineTo(vg, w - 0.5f, h - 0.5f);
+        /* Right edge */
+        nvgMoveTo(vg, w - 0.5f, 0.5f);
+        nvgLineTo(vg, w - 0.5f, h - 0.5f);
+        nvgStroke(vg);
+    }
+    
+    nvgRestore(vg);
+    
+    POPUP_LOG("TkWaylandPopupDrawBorderWithShadow: drew border at (0,0) %dx%d", 
+              popup->width, popup->height);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandPopupSetBorder --
+ *
+ *	Configure the popup border appearance.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets border color and enabled state.
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandPopupSetBorder(
+    TkWaylandPopup *popup,
+    int enabled,
+    unsigned char r,
+    unsigned char g,
+    unsigned char b,
+    unsigned char a,
+    int shadow)
+{
+    if (!popup) return;
+    
+    popup->drawBorder = enabled;
+    popup->borderR = r;
+    popup->borderG = g;
+    popup->borderB = b;
+    popup->borderA = a;
+    popup->drawShadow = shadow;
+    
+    POPUP_LOG("TkWaylandPopupSetBorder: border %s, color=(%d,%d,%d,%d), shadow=%d",
+              enabled ? "enabled" : "disabled", r, g, b, a, shadow);
 }
 
 /*
