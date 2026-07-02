@@ -324,8 +324,8 @@ TkWaylandPopupCreateRenderer(
         POPUP_LOG("TkWaylandPopupCreateRenderer: NanoVG context %p created", (void*)renderer->vg);
         
         /* 
-         * Load fonts using the Tk font system - NO HARD-CODED PATHS!
-         * The fonts will be loaded on demand by EnsureNvgFont.
+         * Load fonts using the Tk font system.
+         * The fonts will be loaded on demand.
          */
         TkWaylandLoadNamedFontIntoContext(renderer->vg, "sans");
         TkWaylandLoadNamedFontIntoContext(renderer->vg, "TkDefaultFont");
@@ -333,7 +333,7 @@ TkWaylandPopupCreateRenderer(
         
         POPUP_LOG("TkWaylandPopupCreateRenderer: fonts registered using Tk font system");
         
-        /* Initialize the NanoVG context for the renderer size */
+        /* Initialize the NanoVG context for the renderer size. */
         glViewport(0, 0, width, height);
         nvgBeginFrame(renderer->vg, width, height, 1.0f);
         nvgBeginPath(renderer->vg);
@@ -345,7 +345,7 @@ TkWaylandPopupCreateRenderer(
         POPUP_LOG("TkWaylandPopupCreateRenderer: WARNING - no NanoVG context created");
     }
     
-    /* Don't leave our FBO bound */
+    /* Don't leave our FBO bound. */
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     POPUP_LOG("TkWaylandPopupCreateRenderer: renderer %p created (fbo=%u texture=%u)",
@@ -535,7 +535,7 @@ TkWaylandPopupCreateShmBuffer(
         return NULL;
     }
     
-    /* Create a temporary file for shared memory */
+    /* Create a temporary file for shared memory. */
     char filename[] = "/tmp/wl-popup-shm-XXXXXX";
     fd = mkstemp(filename);
     if (fd < 0) {
@@ -543,17 +543,17 @@ TkWaylandPopupCreateShmBuffer(
         return NULL;
     }
     
-    /* Unlink the file immediately */
+    /* Unlink the file immediately. */
     unlink(filename);
     
-    /* Set the size of the file */
+    /* Set the size of the file. */
     if (ftruncate(fd, size) < 0) {
         POPUP_LOG("TkWaylandPopupCreateShmBuffer: ftruncate failed: %s", strerror(errno));
         close(fd);
         return NULL;
     }
     
-    /* Map the file into memory */
+    /* Map the file into memory. */
     data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (data == MAP_FAILED) {
         POPUP_LOG("TkWaylandPopupCreateShmBuffer: mmap failed: %s", strerror(errno));
@@ -561,7 +561,7 @@ TkWaylandPopupCreateShmBuffer(
         return NULL;
     }
     
-    /* Create a wl_shm_pool */
+    /* Create a wl_shm_pool. */
     pool = wl_shm_create_pool(shm, fd, size);
     if (!pool) {
         POPUP_LOG("TkWaylandPopupCreateShmBuffer: wl_shm_create_pool failed");
@@ -570,7 +570,7 @@ TkWaylandPopupCreateShmBuffer(
         return NULL;
     }
     
-    /* Create the wl_buffer */
+    /* Create the wl_buffer. */
     struct wl_buffer *wl_buf = wl_shm_pool_create_buffer(
         pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
     
@@ -583,7 +583,7 @@ TkWaylandPopupCreateShmBuffer(
         return NULL;
     }
     
-    /* Allocate and initialize the buffer structure */
+    /* Allocate and initialize the buffer structure. */
     buffer = (WlShmBuffer *)calloc(1, sizeof(WlShmBuffer));
     if (!buffer) {
         POPUP_LOG("TkWaylandPopupCreateShmBuffer: malloc failed");
@@ -600,7 +600,7 @@ TkWaylandPopupCreateShmBuffer(
     buffer->size = size;
     buffer->in_use = 0;
     
-    /* Add buffer listener */
+    /* Add buffer listener. */
     wl_buffer_add_listener(wl_buf, &buffer_listener, buffer);
     
     POPUP_LOG("TkWaylandPopupCreateShmBuffer: created buffer %p size %dx%d", 
@@ -842,7 +842,7 @@ popup_xdg_surface_configure(
     popup->pendingSerial = serial;
     popup->configured = 0;
     
-    /* Acknowledge the configure - CRITICAL for surface mapping */
+    /* Acknowledge the configure - CRITICAL for surface mapping. */
     if (popup->xdgSurface) {
         xdg_surface_ack_configure(popup->xdgSurface, serial);
         popup->configured = 1;
@@ -957,7 +957,7 @@ TkWaylandPopupBindGlobals(void)
         POPUP_LOG("Got waylandSeat from main module");
     }
     
-    /* If we have all needed objects, we're done */
+    /* If we have all needed objects, we're done. */
     if (popupGlobals.wlDisplay && popupGlobals.compositor &&
         popupGlobals.subcompositor && popupGlobals.wmBase &&
         popupGlobals.seat && popupGlobals.shm) {
@@ -1137,7 +1137,7 @@ TkWaylandPopupCreate(
     wl_list_init(&popup->buffers);
     popup->buffer_count = 0;
     
-    /* Initialize border settings - default to enabled with light gray */
+    /* Initialize border settings - default to enabled with light gray. */
     popup->drawBorder = 1;
     popup->borderR = 200;
     popup->borderG = 200;
@@ -1145,7 +1145,7 @@ TkWaylandPopupCreate(
     popup->borderA = 255;
     popup->drawShadow = 1;
     
-    /* Create the software renderer */
+    /* Create the software renderer. */
     popup->renderer = TkWaylandPopupCreateRenderer(popupW, popupH);
     if (!popup->renderer) {
         POPUP_LOG("TkWaylandPopupCreate: failed to create renderer");
@@ -1154,7 +1154,7 @@ TkWaylandPopupCreate(
         return NULL;
     }
     
-    /* Clear the renderer to transparent */
+    /* Clear the renderer to transparent. */
     TkWaylandPopupRendererClear(popup->renderer, 0, 0, 0, 0);
     
     /* Create wl_surface. */
@@ -1203,7 +1203,7 @@ TkWaylandPopupCreate(
         XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_FLIP_X |
         XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_FLIP_Y);
     
-    /* Create xdg_popup */
+    /* Create xdg_popup. */
     popup->xdgPopup = xdg_surface_get_popup(popup->xdgSurface,
         parentXdgSurface, positioner);
     
@@ -1225,7 +1225,7 @@ TkWaylandPopupCreate(
         xdg_popup_grab(popup->xdgPopup, popupGlobals.seat, serial);
     }
     
-    /* Create initial SHM buffers */
+    /* Create initial SHM buffers. */
     WlShmBuffer *buffer = TkWaylandPopupCreateShmBuffer(
         popupGlobals.shm, popupW, popupH);
     if (!buffer) {
@@ -1243,10 +1243,10 @@ TkWaylandPopupCreate(
     popup->buffer_count = 1;
     popup->current_buffer = buffer;
     
-    /* Copy renderer pixels to buffer */
+    /* Copy renderer pixels to buffer. */
     TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
     
-    /* Attach the buffer to the surface */
+    /* Attach the buffer to the surface. */
     TkWaylandPopupAttachBuffer(popup, buffer);
     
     /* Set input region (empty = no input). */
@@ -1257,7 +1257,7 @@ TkWaylandPopupCreate(
         popup->inputRegion = NULL;
     }
     
-    /* Commit parent surface */
+    /* Commit parent surface. */
     wl_surface_commit(parentSurface);
     
     POPUP_LOG("TkWaylandPopupCreate: xdg_popup created successfully");
@@ -1346,7 +1346,7 @@ TkWaylandSubsurfaceCreate(
     wl_list_init(&popup->buffers);
     popup->buffer_count = 0;
     
-    /* Initialize border settings - default to enabled with light gray */
+    /* Initialize border settings - default to enabled with light gray. */
     popup->drawBorder = 1;
     popup->borderR = 200;
     popup->borderG = 200;
@@ -1362,7 +1362,7 @@ TkWaylandSubsurfaceCreate(
         return NULL;
     }
     
-    /* Clear the renderer to transparent */
+    /* Clear the renderer to transparent. */
     TkWaylandPopupRendererClear(popup->renderer, 0, 0, 0, 0);
     
     /* Create wl_surface. */
@@ -1394,7 +1394,7 @@ TkWaylandSubsurfaceCreate(
         wl_surface_commit(popup->parentSurface);
     }
     
-    /* Create SHM buffer */
+    /* Create SHM buffer. */
     WlShmBuffer *buffer = TkWaylandPopupCreateShmBuffer(
         popupGlobals.shm, width, height);
     if (!buffer) {
@@ -1410,10 +1410,10 @@ TkWaylandSubsurfaceCreate(
     popup->buffer_count = 1;
     popup->current_buffer = buffer;
     
-    /* Copy renderer pixels to buffer */
+    /* Copy renderer pixels to buffer. */
     TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
     
-    /* Attach the buffer */
+    /* Attach the buffer. */
     TkWaylandPopupAttachBuffer(popup, buffer);
     
     /* Set input region (empty = no input). */
@@ -1424,7 +1424,7 @@ TkWaylandSubsurfaceCreate(
         popup->inputRegion = NULL;
     }
     
-    /* Commit parent surface */
+    /* Commit parent surface. */
     wl_surface_commit(parentSurface);
     
     POPUP_LOG("TkWaylandSubsurfaceCreate: subsurface created successfully");
@@ -1458,7 +1458,7 @@ TkWaylandPopupDestroy(
         TkWaylandPopupEndDraw(popup);
     }
     
-    /* Destroy all SHM buffers */
+    /* Destroy all SHM buffers. */
     WlShmBuffer *buffer, *tmp;
     wl_list_for_each_safe(buffer, tmp, &popup->buffers, link) {
         wl_list_remove(&buffer->link);
@@ -1468,7 +1468,7 @@ TkWaylandPopupDestroy(
     popup->current_buffer = NULL;
     popup->pending_buffer = NULL;
     
-    /* Destroy renderer */
+    /* Destroy renderer. */
     if (popup->renderer) {
         TkWaylandPopupDestroyRenderer(popup->renderer);
         popup->renderer = NULL;
@@ -1583,7 +1583,7 @@ TkWaylandPopupDrawBorderWithShadow(
         return;
     }
     
-    /* Skip if border drawing is disabled */
+    /* Skip if border drawing is disabled. */
     if (!popup->drawBorder) {
         return;
     }
@@ -1594,7 +1594,7 @@ TkWaylandPopupDrawBorderWithShadow(
     
     nvgSave(vg);
     
-    /* Main border */
+    /* Main border. */
     nvgStrokeColor(vg, nvgRGBA(popup->borderR, popup->borderG, 
                                popup->borderB, popup->borderA));
     nvgStrokeWidth(vg, 1.0f);
@@ -1602,7 +1602,7 @@ TkWaylandPopupDrawBorderWithShadow(
     nvgRect(vg, 0.5f, 0.5f, w - 1.0f, h - 1.0f);
     nvgStroke(vg);
     
-    /* Subtle shadow on bottom and right edges */
+    /* Subtle shadow on bottom and right edges. */
     if (popup->drawShadow) {
         nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 30));
         nvgStrokeWidth(vg, 1.0f);
@@ -1695,7 +1695,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
                          GL_RGBA, GL_UNSIGNED_BYTE, 
                          popup->renderer->pixels);
             
-            /* Vertical flip */
+            /* Vertical flip. */
             unsigned char *temp_row = (unsigned char *)malloc(popup->renderer->stride);
             if (temp_row) {
                 for (int y = 0; y < popup->height / 2; y++) {
@@ -1709,11 +1709,11 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
             }
         }
         
-        /* Unbind our FBO */
+        /* Unbind our FBO. */
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
     
-    /* Find or create buffer */
+    /* Find or create buffer. */
     buffer = NULL;
     WlShmBuffer *b;
     wl_list_for_each(b, &popup->buffers, link) {
@@ -1734,7 +1734,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
     if (buffer && buffer->data) {
         TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
         
-        /* STRONG ATTACH + DAMAGE + COMMIT */
+        /* STRONG ATTACH + DAMAGE + COMMIT. */
         if (popup->surface) {
             wl_surface_attach(popup->surface, buffer->buffer, 0, 0);
             wl_surface_damage(popup->surface, 0, 0, popup->width, popup->height);
@@ -1744,7 +1744,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
             POPUP_LOG("TkWaylandPopupEndDraw: committed surface with buffer %p", (void*)buffer);
         }
         
-        /* Force parent commit for subsurface */
+        /* Force parent commit for subsurface. */
         if (popup->isSubsurface && popup->parentSurface) {
             wl_surface_damage(popup->parentSurface, popup->x, popup->y, popup->width, popup->height);
             wl_surface_commit(popup->parentSurface);
@@ -2083,7 +2083,7 @@ TkWaylandPopupResize(
     popup->width = width;
     popup->height = height;
     
-    /* Recreate renderer with new size */
+    /* Recreate renderer with new size. */
     if (popup->renderer) {
         TkWaylandPopupDestroyRenderer(popup->renderer);
         popup->renderer = TkWaylandPopupCreateRenderer(width, height);
@@ -2092,7 +2092,7 @@ TkWaylandPopupResize(
         }
     }
     
-    /* Create a new buffer for the new size */
+    /* Create a new buffer for the new size. */
     if (popup->shm) {
         WlShmBuffer *buffer = TkWaylandPopupCreateShmBuffer(
             popup->shm, width, height);
@@ -2100,7 +2100,7 @@ TkWaylandPopupResize(
             wl_list_insert(&popup->buffers, &buffer->link);
             popup->buffer_count++;
             
-            /* Copy renderer pixels to buffer */
+            /* Copy renderer pixels to buffer. */
             if (popup->renderer) {
                 TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
             }

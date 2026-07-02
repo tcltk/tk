@@ -398,6 +398,7 @@ typedef struct TkWmInfo {
     struct TkWmInfo *nextPtr;
 } WmInfo;
 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -475,11 +476,14 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
  *----------------------------------------------------------------------
  */
 
-typedef struct TkWindowPrivate {
-    GLFWwindow          *glfwWindow;
-    NVGLUframebuffer *fb;;  /* Backing store FBO structure pointer */
-    Tcl_DString          pendingText;
+typedef struct glfwData {
+    GLFWwindow *glfwWindow;
+    NVGLUframebuffer *fb;
+    Tcl_DString pendingText;
+    TkWaylandPopup *popup;   
+    int isPopup;           
 } glfwData;
+
 
 
 /*

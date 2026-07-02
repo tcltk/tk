@@ -196,6 +196,10 @@ static void WaitForMapNotify(TkWindow *winPtr, int mapped);
 static int  ParseGeometry(Tcl_Interp *interp, const char *string,
 			  TkWindow *winPtr);
 static void WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+static void InitializePopupWindow(TkWindow *winPtr);
+static void DestroyPopupWindow(TkWindow *winPtr);
+static void MapPopupWindow(TkWindow *winPtr);
+static void UnmapPopupWindow(TkWindow *winPtr);
 
 /* wm sub-command handlers. */
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -317,6 +321,13 @@ static Tk_GeomMgr wmMgrType = {
     NULL,
 };
 
+/* Helper to get glfwData from a TkWindow's privatePtr. */
+static inline glfwData *
+GetGlfwData(TkWindow *winPtr)
+{
+    return (glfwData *)winPtr->privatePtr;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -376,6 +387,173 @@ TkWmNewWindow(
     Tk_ManageGeometry((Tk_Window)winPtr, &wmMgrType, (void *)0);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitializePopupWindow --
+ *
+ *      Creates a popup/subsurface window using the SHM rendering path
+ *      for borderless/overrideredirect windows.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Creates a TkWaylandPopup surface instead of a GLFW window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+InitializePopupWindow(TkWindow *winPtr)
+{
+    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    GLFWwindow *parentGlfw;
+    int width, height;
+    TkWaylandPopup *popup;
+    glfwData *data;
+
+    fprintf(stderr, "InitializePopupWindow: %s\n", Tk_PathName(winPtr));
+
+    parentGlfw = TkWaylandGetGLFWwindow(winPtr->parentPtr);
+    if (!parentGlfw) {
+	fprintf(stderr, "InitializePopupWindow: No parent GLFW window\n");
+	return;
+    }
+
+    width = (winPtr->changes.width > 1) ? winPtr->changes.width : 200;
+    height = (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
+
+    int parentX, parentY;
+    glfwGetWindowPos(parentGlfw, &parentX, &parentY);
+
+    popup = TkWaylandSubsurfaceCreate(
+	parentGlfw,
+	wmPtr->x - parentX,
+	wmPtr->y - parentY,
+	width, height);
+
+    if (!popup) {
+	fprintf(stderr, "InitializePopupWindow: Failed to create subsurface\n");
+	return;
+    }
+
+    data = GetGlfwData(winPtr);
+    if (data == NULL) {
+	winPtr->privatePtr = ckalloc(sizeof(glfwData));
+	data = GetGlfwData(winPtr);
+	Tcl_DStringInit(&data->pendingText);
+	data->glfwWindow = NULL;
+	data->fb = NULL;
+	data->popup = NULL;
+	data->isPopup = 0;
+    }
+    data->popup = popup;
+    data->isPopup = 1;
+
+    if (TkWaylandPopupBeginDraw(popup) == TCL_OK) {
+	NVGcontext *vg = TkWaylandPopupGetNVGContext(popup);
+	if (vg) {
+	    nvgBeginPath(vg);
+	    nvgRect(vg, 0, 0, width, height);
+	    nvgFillColor(vg, nvgRGBA(0, 0, 0, 0));
+	    nvgFill(vg);
+	}
+	TkWaylandPopupEndDraw(popup);
+    }
+
+    wmPtr->flags &= ~WM_NEVER_MAPPED;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DestroyPopupWindow --
+ *
+ *	Destroys a popup/subsurface window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Frees the popup resources.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DestroyPopupWindow(TkWindow *winPtr)
+{
+    glfwData *data = GetGlfwData(winPtr);
+    if (data && data->popup) {
+	TkWaylandPopupDestroy(data->popup);
+	data->popup = NULL;
+	data->isPopup = 0;
+    }
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * MapPopupWindow --
+ *
+ *	Maps a popup window (makes it visible).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Shows the popup surface.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MapPopupWindow(TkWindow *winPtr)
+{
+    glfwData *data = GetGlfwData(winPtr);
+    if (data && data->popup) {
+	TkWaylandPopupEndDraw(data->popup);
+	winPtr->flags |= TK_MAPPED;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * UnmapPopupWindow --
+ *
+ *	Unmaps a popup window (hides it).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Hides the popup surface.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+UnmapPopupWindow(TkWindow *winPtr)
+{
+    glfwData *data = GetGlfwData(winPtr);
+    if (data && data->popup) {
+	TkWaylandPopup *popup = data->popup;
+	int w, h;
+	TkWaylandPopupGetSize(popup, &w, &h);
+	if (TkWaylandPopupBeginDraw(popup) == TCL_OK) {
+	    NVGcontext *vg = TkWaylandPopupGetNVGContext(popup);
+	    if (vg) {
+		nvgBeginPath(vg);
+		nvgRect(vg, 0, 0, w, h);
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 0));
+		nvgFill(vg);
+	    }
+	    TkWaylandPopupEndDraw(popup);
+	}
+	winPtr->flags &= ~TK_MAPPED;
+    }
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -450,15 +628,17 @@ static void
 DestroyGlfwWindow(
     TkWindow *winPtr)
 {
+    glfwData *data;
+
     fprintf(stderr, "DestroyGlfwWindow: %s\n", Tk_PathName(winPtr));
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
-    if (glfwWindow == NULL) {
+    data = GetGlfwData(winPtr);
+    if (data == NULL || data->glfwWindow == NULL) {
 	fprintf(stderr, "No glfwWindow pointer\n");
         return;
     }
-    TkWaylandClearCallbacks(glfwWindow);
-    TkWaylandDestroyWindow(glfwWindow);
-    winPtr->privatePtr->glfwWindow = NULL;
+    TkWaylandClearCallbacks(data->glfwWindow);
+    TkWaylandDestroyWindow(data->glfwWindow);
+    data->glfwWindow = NULL;
 }
 
 /*
@@ -482,10 +662,19 @@ DestroyGlfwWindow(
 void
 TkWmMapWindow(TkWindow *winPtr)
 {
+    glfwData *data;
     fprintf(stderr, "TkWmMapWindow: %s\n", Tk_PathName(winPtr));
     WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
     if (!wmPtr) Tcl_Panic("TkWmMapWindow: No WmInfo");
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+
+    /* Check if this is a popup window */
+    data = GetGlfwData(winPtr);
+    if (data && data->isPopup) {
+	MapPopupWindow(winPtr);
+	return;
+    }
+
+    GLFWwindow *glfwWindow = data ? data->glfwWindow : NULL;
 
     wmPtr->withdrawn   = 0;
     wmPtr->initialState = NormalState;
@@ -500,7 +689,6 @@ TkWmMapWindow(TkWindow *winPtr)
 
     UpdateGeometryInfo((void *)winPtr);
 
-    //// this test is probably not needed.
     if (glfwWindow) {
         int w, h;
 
@@ -534,8 +722,18 @@ TkWmMapWindow(TkWindow *winPtr)
 void
 TkWmUnmapWindow(TkWindow *winPtr)
 {
+    glfwData *data;
+
     fprintf(stderr, "TkWmUnmapWindow: %s\n", Tk_PathName(winPtr));
-    GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
+
+    /* Check if this is a popup window */
+    data = GetGlfwData(winPtr);
+    if (data && data->isPopup) {
+	UnmapPopupWindow(winPtr);
+	return;
+    }
+
+    GLFWwindow *glfwWindow = data ? data->glfwWindow : NULL;
     winPtr->flags &= ~TK_MAPPED;
     if (glfwWindow) {
         glfwHideWindow(glfwWindow);
@@ -564,15 +762,34 @@ void
 TkWmDeadWindow(
     TkWindow *winPtr)
 {
+    glfwData *data;
+
+    /* Check if this is a popup window */
+    data = GetGlfwData(winPtr);
+    if (data && data->isPopup) {
+	DestroyPopupWindow(winPtr);
+	if (winPtr->privatePtr) {
+	    Tcl_DStringFree(&data->pendingText);
+	    ckfree(winPtr->privatePtr);
+	    winPtr->privatePtr = NULL;
+	}
+	goto cleanup_wminfo;
+    }
+
     DestroyGlfwWindow(winPtr);
     if (winPtr->privatePtr) {
-	if (winPtr->privatePtr->glfwWindow) {
+	data = GetGlfwData(winPtr);
+	if (data && data->glfwWindow) {
 	    fprintf(stderr, "Freeing privatePtr with non-null glfwWindow\n");
 	}
-	Tcl_DStringFree(&winPtr->privatePtr->pendingText);
+	if (data) {
+	    Tcl_DStringFree(&data->pendingText);
+	}
 	ckfree(winPtr->privatePtr);
 	winPtr->privatePtr = NULL;
     }
+
+cleanup_wminfo:
     WmInfo *wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
     WmInfo *wmPtr2;
     int     i;
@@ -719,7 +936,6 @@ TkWmCleanup(
             }
             ckfree((char *)wmPtr->glfwIcon);
         }
-        //DestroyGlfwWindow(winPtr);
         ckfree((char *)wmPtr);
     }
     firstWmPtr = NULL;
@@ -732,24 +948,6 @@ TkWmCleanup(
  *
  *      Platform-specific window creation called by Tk's generic layer.
  *      For toplevels, it creates a GLFW window.
- *
- * Results:
- *      Returns a Window identifier which is assigned to the window
- *      field of the TkWindow structure.
- *
- * Side effects:
- *      Creates a new GLFW window for toplevels.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MakeWindow --
- *
- *      Platform-specific window creation called by Tk's generic layer.
- *      For toplevels, it creates a GLFW window.
  *      For menu windows, it uses the subsurface path instead.
  *
  * Results:
@@ -757,26 +955,8 @@ TkWmCleanup(
  *      field of the TkWindow structure.
  *
  * Side effects:
- *      Creates a new GLFW window for toplevels, or subsurface for menus.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_MakeWindow --
- *
- *      Platform-specific window creation called by Tk's generic layer.
- *      For toplevels, it creates a GLFW window.
- *      For menu windows, it uses the subsurface path instead.
- *
- * Results:
- *      Returns a Window identifier which is assigned to the window
- *      field of the TkWindow structure.
- *
- * Side effects:
- *      Creates a new GLFW window for toplevels, or subsurface for menus.
+ *      Creates a new GLFW window for toplevels, or subsurface for menus
+ *      or overrideredirect windows.
  *
  *----------------------------------------------------------------------
  */
@@ -791,6 +971,7 @@ Tk_MakeWindow(
     int         width, height;
     Drawable    drawable;
     Window      result;
+    glfwData   *data;
 
     fprintf(stderr, "Tk_MakeWindow: %s\n", Tk_PathName(tkwin));
     result = TkWaylandDrawableForTkWindow(winPtr);
@@ -821,10 +1002,13 @@ Tk_MakeWindow(
             
             /* Ensure private data exists */
             if (winPtr->privatePtr == NULL) {
-                winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
-                Tcl_DStringInit(&winPtr->privatePtr->pendingText);
-                winPtr->privatePtr->glfwWindow = NULL;
-                winPtr->privatePtr->fb = NULL;
+                winPtr->privatePtr = ckalloc(sizeof(glfwData));
+                data = (glfwData *)winPtr->privatePtr;
+                Tcl_DStringInit(&data->pendingText);
+                data->glfwWindow = NULL;
+                data->fb = NULL;
+                data->popup = NULL;
+                data->isPopup = 0;
             }
             
             /* No GLFW window for menu - will use subsurface via menu system */
@@ -838,12 +1022,32 @@ Tk_MakeWindow(
          */
 
 	if (winPtr->privatePtr == NULL) {
-	    winPtr->privatePtr = (glfwData*) ckalloc(sizeof(glfwData));
-	    Tcl_DStringInit(&winPtr->privatePtr->pendingText);
+	    winPtr->privatePtr = ckalloc(sizeof(glfwData));
+	    data = (glfwData *)winPtr->privatePtr;
+	    Tcl_DStringInit(&data->pendingText);
+	    data->popup = NULL;
+	    data->isPopup = 0;
 	}
+	data = (glfwData *)winPtr->privatePtr;
 
         width  = (winPtr->changes.width  > 1) ? winPtr->changes.width  : 200;
         height = (winPtr->changes.height > 1) ? winPtr->changes.height : 200;
+
+        /*
+         * Check if this is an override-redirect (borderless) window.
+         * If so, use the popup/subsurface path instead of a full GLFW window.
+         */
+        if (winPtr->atts.override_redirect) {
+	    fprintf(stderr, "Tk_MakeWindow: %s is override-redirect, using popup subsystem\n",
+		    Tk_PathName(tkwin));
+
+	    if (!winPtr->wmInfoPtr) {
+		TkWmNewWindow(winPtr);
+	    }
+
+	    InitializePopupWindow(winPtr);
+            return result;
+        }
 
         /*
          * Create the GLFW window and get a drawable ID.
@@ -857,6 +1061,8 @@ Tk_MakeWindow(
         if (!glfwWindow) {
             return None;
         }
+
+	data->glfwWindow = glfwWindow;
 
         /*
          * Ensure WmInfo exists.
@@ -2146,7 +2352,6 @@ WmGeometryCmd(
         return TCL_ERROR;
     }
 
-    //// Why immediate?  X11 does this as at idle.
     /* Immediately set GLFW window size and position. */
     if (glfwWindow != NULL && !(wmPtr->flags & WM_NEVER_MAPPED)) {
         /* Set size only if positive values were provided */
@@ -2165,9 +2370,6 @@ WmGeometryCmd(
 
         /* Update internal Tk/GLFW state. */
         UpdateGeometryInfo((void *)winPtr);
-
-        /* Process events to ensure callback fires before command returns */
-        ////TkWaylandProcessEvents();
 
         /* Verify the change actually took effect. */
         int newWidth, newHeight;
@@ -2725,6 +2927,8 @@ WmOverrideredirectCmd(
 		      Tcl_Obj *const objv[])
 {
     int     value;
+    glfwData *data;
+
     if (objc > 1) {
         Tcl_WrongNumArgs(interp,0,objv,"pathName overrideredirect ?boolean?");
         return TCL_ERROR;
@@ -2745,7 +2949,17 @@ WmOverrideredirectCmd(
     } else {
         wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE|WM_HEIGHT_NOT_RESIZABLE);
     }
-    if (glfwWindow) {
+
+    /* For popup windows, we need to recreate the surface */
+    data = GetGlfwData(winPtr);
+    if (data && data->isPopup) {
+	/* Destroy and recreate the popup with new border state */
+	DestroyPopupWindow(winPtr);
+	InitializePopupWindow(winPtr);
+	if (wmPtr->flags & WM_NEVER_MAPPED) {
+	    MapPopupWindow(winPtr);
+	}
+    } else if (glfwWindow) {
         glfwSetWindowAttrib(glfwWindow, GLFW_DECORATED,
                             value ? GLFW_FALSE : GLFW_TRUE);
     }
@@ -3813,16 +4027,6 @@ UpdateGeometryInfo(
         wmPtr->configWidth  = tw;
         wmPtr->configHeight = th;
     }
-#if 0
-    /* Apply position change if needed, although this does nothing. */
-    if ((wmPtr->flags & WM_MOVE_PENDING) ||
-        wmPtr->x != winPtr->changes.x ||
-        wmPtr->y != winPtr->changes.y) {
-        glfwSetWindowPos(glfwWindow, wmPtr->x, wmPtr->y);
-        wmPtr->flags &= ~WM_MOVE_PENDING;
-    }
-#endif
-
 }
 
 /*
@@ -4814,17 +5018,6 @@ XChangeWindowAttributes(
         glfwSetWindowAttrib(gw, GLFW_DECORATED,
             attributes->override_redirect ? GLFW_FALSE : GLFW_TRUE);
     }
-
-#if 0
-    if (valuemask & CWCursor) {
-        /*
-         * info.cursor is set to the TkWaylandCursor pointer itself, so
-         * attributes->cursor is already the platform struct cast to Cursor.
-         * Pass it directly to TkpSetCursor — no hash lookup needed.
-         */
-        TkpSetCursor(attributes->cursor);
-    }
-    #endif
 
     /* CWBackPixel, CWBorderPixel, CWEventMask, CWColormap, …
        All are maintained by Tk's own attribute tables; no GLFW action. */
