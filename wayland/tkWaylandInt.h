@@ -476,7 +476,7 @@ TkWaylandPixmap* TkWaylandPixmapFromPixmap(Pixmap pixmap);
  *----------------------------------------------------------------------
  */
 
-typedef struct glfwData {
+typedef struct TkWindowPrivate {
     GLFWwindow *glfwWindow;
     NVGLUframebuffer *fb;
     Tcl_DString pendingText;
@@ -751,6 +751,7 @@ MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 MODULE_SCOPE int   TkWaylandPopupInit(void);
 MODULE_SCOPE void  TkWaylandPopupDestroyAll(void);
 MODULE_SCOPE void  TkWaylandPopupSetMainWindow(GLFWwindow *window);
+void Tk_InitWaylandPopupSupport(Tcl_Interp *interp);
 
 /*
  * Create a popup.

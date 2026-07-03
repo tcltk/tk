@@ -416,6 +416,8 @@ SetHelpMenu(
  * TkpComputeMenubarGeometry --
  *
  *     Computes the size and layout of a menubar.
+ *     Menubar entries are distributed across the full width.
+ *     Height is minimized to just fit the font.
  *
  * Results:
  *     None.
@@ -441,6 +443,9 @@ TkpComputeMenubarGeometry(
     int borderWidth; 
     int activeBorderWidth; 
     TkMenuEntry *mePtr; 
+    int totalEntryWidths = 0;
+    int numVisibleEntries = 0;
+    int maxHeight = 0;
     
     if (menuPtr->tkwin == NULL) { 
 	return; 
@@ -454,9 +459,7 @@ TkpComputeMenubarGeometry(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, 
 			menuPtr->activeBorderWidthPtr, &activeBorderWidth); 
     
-    x = y = borderWidth; 
-    height = 0; 
-    
+    /* First pass: calculate natural widths and count visible entries */
     for (i = 0; i < menuPtr->numEntries; i++) { 
 	mePtr = menuPtr->entries[i]; 
 	if (mePtr->fontPtr == NULL) { 
@@ -469,45 +472,83 @@ TkpComputeMenubarGeometry(
 	
 	GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height); 
 	
-	/* Make sure height is at least the font height + some padding */
-	int minHeight = fmPtr->linespace + 10;
+	/* Minimal height - just font height plus small padding */
+	int minHeight = fmPtr->linespace + 4;
 	if (height < minHeight) {
 	    height = minHeight;
 	}
 	
-	mePtr->height = height + 2 * activeBorderWidth + 10; 
+	if (height > maxHeight) {
+	    maxHeight = height;
+	}
+	
+	mePtr->height = height + 4; /* minimal padding */ 
 	if (mePtr->type == SEPARATOR_ENTRY) { 
 	    mePtr->width = 10; 
 	} else { 
-	    mePtr->width = width + 2 * activeBorderWidth + 10; 
-	} 
+	    mePtr->width = width + 10; /* minimal padding */ 
+	}
+	
+	if (mePtr->type != SEPARATOR_ENTRY) {
+	    totalEntryWidths += mePtr->width;
+	    numVisibleEntries++;
+	}
+    }
+    
+    /* Get the actual window width */
+    int windowWidth = Tk_Width(menuPtr->tkwin);
+    if (windowWidth <= 0) {
+	windowWidth = Tk_ReqWidth(menuPtr->tkwin);
+    }
+    if (windowWidth <= 0) {
+	windowWidth = 800;
+    }
+    
+    MENU_LOG("TkpComputeMenubarGeometry: windowWidth=%d, totalEntryWidths=%d, numVisibleEntries=%d, maxHeight=%d",
+             windowWidth, totalEntryWidths, numVisibleEntries, maxHeight);
+    
+    /* Distribute extra space evenly among visible entries */
+    int extraSpace = 0;
+    int extraPerEntry = 0;
+    int remainder = 0;
+    
+    if (numVisibleEntries > 0 && totalEntryWidths < windowWidth) {
+	extraSpace = windowWidth - totalEntryWidths;
+	extraPerEntry = extraSpace / numVisibleEntries;
+	remainder = extraSpace % numVisibleEntries;
+	MENU_LOG("TkpComputeMenubarGeometry: extraSpace=%d, extraPerEntry=%d, remainder=%d",
+	         extraSpace, extraPerEntry, remainder);
+    }
+    
+    /* Second pass: layout entries with distributed width */
+    x = borderWidth;
+    y = 0;
+    int remCount = 0;
+    
+    for (i = 0; i < menuPtr->numEntries; i++) { 
+	mePtr = menuPtr->entries[i]; 
+	if (mePtr->type != SEPARATOR_ENTRY && numVisibleEntries > 0) {
+	    int extra = extraPerEntry + (remCount < remainder ? 1 : 0);
+	    mePtr->width += extra;
+	    remCount++;
+	}
+	
 	mePtr->x = x; 
 	mePtr->y = y; 
 	x += mePtr->width; 
-	if (mePtr->entryFlags & ENTRY_LAST_COLUMN) { 
-	    x = borderWidth; 
-	    y += mePtr->height; 
-	} 
+	
+	/* Force all entries to be in one row */
+	mePtr->entryFlags &= ~ENTRY_LAST_COLUMN;
     } 
     
-    menuPtr->totalWidth = 0; 
+    /* Use maxHeight for all entries */
     for (i = 0; i < menuPtr->numEntries; i++) { 
-	x = menuPtr->entries[i]->x + menuPtr->entries[i]->width; 
-	if (x > menuPtr->totalWidth) { 
-	    menuPtr->totalWidth = x; 
-	} 
-    } 
+	mePtr = menuPtr->entries[i];
+	mePtr->height = maxHeight + 4;
+    }
     
-    height = 0; 
-    for (i = 0; i < menuPtr->numEntries; i++) { 
-	y = menuPtr->entries[i]->y + menuPtr->entries[i]->height; 
-	if (y > height) { 
-	    height = y; 
-	} 
-    } 
-    
-    menuPtr->totalWidth += borderWidth; 
-    menuPtr->totalHeight = height + borderWidth; 
+    menuPtr->totalWidth = windowWidth;
+    menuPtr->totalHeight = maxHeight + 6;
     
     MENU_LOG("TkpComputeMenubarGeometry: totalWidth=%d, totalHeight=%d, numEntries=%d", 
              menuPtr->totalWidth, menuPtr->totalHeight, menuPtr->numEntries);
@@ -898,7 +939,7 @@ GetMenuLabelGeometry(
 	    *heightPtr = fm.linespace; 
 	} 
     } 
-    *heightPtr += 4;
+    *heightPtr += 2;
 }
 
 /*
@@ -952,7 +993,7 @@ TkpSetWindowMenuBar(
         MENU_LOG("TkpSetWindowMenuBar: updating existing menubar");
         TkRecomputeMenu(menuPtr);
         wmPtr->menuHeight = menuPtr->totalHeight;
-        if (wmPtr->menuHeight < 20) wmPtr->menuHeight = 24;
+        if (wmPtr->menuHeight < 18) wmPtr->menuHeight = 20;
         winPtr->internalBorderTop = wmPtr->menuHeight;
         TkWaylandWmUpdateGeom(wmPtr, winPtr);
         
@@ -969,7 +1010,7 @@ TkpSetWindowMenuBar(
 
     TkRecomputeMenu(menuPtr);
     wmPtr->menuHeight = menuPtr->totalHeight;
-    if (wmPtr->menuHeight < 20) wmPtr->menuHeight = 24;
+    if (wmPtr->menuHeight < 18) wmPtr->menuHeight = 20;
 
     winPtr->internalBorderTop = wmPtr->menuHeight;
     TkWaylandWmUpdateGeom(wmPtr, winPtr);
@@ -1035,9 +1076,10 @@ TkWaylandMenubarCreateOrResize(
     }
     width = gw;
 
+    /* Recompute menu geometry with the actual window width */
     TkRecomputeMenu(menuPtr);
     mbH = menuPtr->totalHeight;
-    if (mbH < 20) mbH = 24;
+    if (mbH < 18) mbH = 20;
     wmPtr->menuHeight = mbH;
     mbW = width;
 
@@ -1798,7 +1840,6 @@ DrawMenuEntryLabel(
     int textXOffset = 0;
     int textYOffset = 0;
 
-    /* DEBUG: Log entry info */
     MENU_LOG("DrawMenuEntryLabel: ENTRY - menuType=%d, labelPtr=%p, labelLength=%d, label='%s'",
              menuPtr->menuType, (void*)mePtr->labelPtr, mePtr->labelLength,
              mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)");
@@ -1824,20 +1865,14 @@ DrawMenuEntryLabel(
     /* For menubar, ALWAYS try to draw text */
     if (menuPtr->menuType == MENUBAR) {
 	haveText = 1;
-	MENU_LOG("DrawMenuEntryLabel: MENUBAR - forcing haveText=1");
 	
 	if (mePtr->labelPtr != NULL) {
 	    const char *label = Tcl_GetString(mePtr->labelPtr);
-	    /* If labelLength is 0, fix it */
 	    if (mePtr->labelLength == 0) {
 		mePtr->labelLength = strlen(label);
-		MENU_LOG("DrawMenuEntryLabel: MENUBAR - fixed labelLength to %d", mePtr->labelLength);
 	    }
 	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength); 
 	    textHeight = fmPtr->linespace; 
-	    MENU_LOG("DrawMenuEntryLabel: MENUBAR - textWidth=%d, textHeight=%d", textWidth, textHeight);
-	} else {
-	    MENU_LOG("DrawMenuEntryLabel: MENUBAR - labelPtr is NULL!");
 	}
     } else if (!haveImage || (mePtr->compound != COMPOUND_NONE)) { 
 	if (mePtr->labelLength > 0 && mePtr->labelPtr != NULL) { 
@@ -1897,56 +1932,46 @@ DrawMenuEntryLabel(
 	if (imageX + imageWidth > x + width) imageX = x + width - imageWidth;
 	if (imageY + imageHeight > y + height) imageY = y + height - imageHeight;
 	
-	if (mePtr->image != NULL) {
-	    /* Skip image drawing for popups - we don't have a drawable */
-	} else if (mePtr->bitmapPtr != NULL) {
-	    /* Skip bitmap drawing for popups - we don't have a drawable */
-	}
+	/* Draw image placeholder */
+	nvgBeginPath(vg);
+	nvgRect(vg, imageX, imageY, imageWidth, imageHeight);
+	nvgStrokeWidth(vg, 1.0f);
+	nvgStrokeColor(vg, nvgRGBA(150, 150, 150, 255));
+	nvgStroke(vg);
+	
+	/* Draw an "X" inside the image placeholder */
+	nvgBeginPath(vg);
+	nvgMoveTo(vg, imageX + 2, imageY + 2);
+	nvgLineTo(vg, imageX + imageWidth - 2, imageY + imageHeight - 2);
+	nvgMoveTo(vg, imageX + imageWidth - 2, imageY + 2);
+	nvgLineTo(vg, imageX + 2, imageY + imageHeight - 2);
+	nvgStrokeWidth(vg, 1.0f);
+	nvgStrokeColor(vg, nvgRGBA(200, 200, 200, 255));
+	nvgStroke(vg);
     }
 
     /* Draw text label - ALWAYS use NVG directly */
-    /* For menubar, ALWAYS draw text - this condition must be true */
     if (menuPtr->menuType == MENUBAR || (mePtr->compound != COMPOUND_NONE) || !haveImage) { 
 	int textY;
 	
-	MENU_LOG("DrawMenuEntryLabel: Drawing text block - menuType=%d", menuPtr->menuType);
-	
 	/* For menubar, use a simpler vertical alignment */
 	if (menuPtr->menuType == MENUBAR) {
-	    textY = y + fmPtr->ascent + 4;
-	    MENU_LOG("DrawMenuEntryLabel: menubar text at y=%d, ascent=%d, height=%d", 
-		     textY, fmPtr->ascent, height);
+	    textY = y + fmPtr->ascent + 2;
 	} else {
 	    textY = y + height / 2 + textYOffset + (fmPtr->ascent - fmPtr->descent) / 2;
 	}
 	
-	/* Check if we have a label to draw */
 	if (mePtr->labelPtr != NULL) { 
 	    const char *label = Tcl_GetString(mePtr->labelPtr); 
 	    int labelLen = mePtr->labelLength;
 	    
-	    /* If labelLength is 0, use the full string */
 	    if (labelLen == 0 && label != NULL) {
 		labelLen = strlen(label);
-		MENU_LOG("DrawMenuEntryLabel: labelLength was 0, using %d", labelLen);
 	    }
 	    
 	    if (labelLen > 0 && label != NULL && strlen(label) > 0) {
-		/* For menubar, ensure we have a visible text color */
-		if (menuPtr->menuType == MENUBAR) {
-		    /* Force black text for menubar if no color is set */
-		    if (textColor.r == 0 && textColor.g == 0 && textColor.b == 0 && textColor.a == 0) {
-			textColor = nvgRGBA(0, 0, 0, 255);
-		    }
-		    MENU_LOG("DrawMenuEntryLabel: menubar text '%s' at x=%d, y=%d, color=(%d,%d,%d)",
-			     label, leftEdge + textXOffset, textY,
-			     (int)(textColor.r*255), (int)(textColor.g*255), (int)(textColor.b*255));
-		}
-		
-		/* For popup menus, use the NVG context directly */
 		WaylandFont *fontPtr = (WaylandFont *)tkfont;
 		
-		/* Ensure font is loaded and set. */
 		int fontId = EnsureNvgFont(fontPtr, vg);
 		if (fontId >= 0) {
 		    nvgFontFaceId(vg, fontId);
@@ -1954,10 +1979,7 @@ DrawMenuEntryLabel(
 		    nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 		    nvgFillColor(vg, textColor);
 		    nvgText(vg, (float)(leftEdge + textXOffset), (float)textY, label, NULL);
-		    MENU_LOG("DrawMenuEntryLabel: drew text '%s' at %d,%d using font id %d", 
-			     label, leftEdge + textXOffset, textY, fontId);
 		} else {
-		    /* Use Tk font system as fallback - no hard-coded paths! */
 		    int fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
 		    if (fallbackId < 0) {
 			fallbackId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
@@ -1968,24 +1990,14 @@ DrawMenuEntryLabel(
 			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 			nvgFillColor(vg, textColor);
 			nvgText(vg, (float)(leftEdge + textXOffset), (float)textY, label, NULL);
-			MENU_LOG("DrawMenuEntryLabel: drew text '%s' using fallback font", label);
-		    } else {
-			MENU_LOG("DrawMenuEntryLabel: FAILED to load any font!");
 		    }
 		}
 		    
 		DrawMenuUnderline(menuPtr, mePtr, vg, tkfont, fmPtr, 
 				  x + textXOffset, y + textYOffset, width, height, 
 				  textColor); 
-	    } else {
-		MENU_LOG("DrawMenuEntryLabel: labelLen is 0 or label is empty for '%s'", label);
 	    }
-	} else {
-	    MENU_LOG("DrawMenuEntryLabel: mePtr->labelPtr is NULL");
 	}
-    } else {
-	MENU_LOG("DrawMenuEntryLabel: SKIPPED - conditions not met: menuType=%d, compound=%d, haveImage=%d",
-		 menuPtr->menuType, mePtr->compound, haveImage);
     }
 
     /* Draw disabled overlay using stippling. */
@@ -2540,30 +2552,23 @@ MenuDrawIntoPopup(
     }
 
     /*
-     * Load menu font using the Tk font system - NO HARD-CODED PATHS!
+     * Load menu font using the Tk font system
      */
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
     if (menuFont) {
         Tk_GetFontMetrics(menuFont, &menuMetrics);
-        MENU_LOG("MenuDrawIntoPopup: menu font size=%d, ascent=%d, descent=%d", 
-                 menuMetrics.linespace, menuMetrics.ascent, menuMetrics.descent);
         
-        /* Ensure font is loaded in this NVG context using the real Tk system */
         WaylandFont *fontPtr = (WaylandFont *)menuFont;
         int fontId = EnsureNvgFont(fontPtr, vg);
-        MENU_LOG("MenuDrawIntoPopup: EnsureNvgFont returned fontId=%d", fontId);
         
         if (fontId >= 0) {
             nvgFontFaceId(vg, fontId);
             currentFontId = fontId;
             nvgFontSize(vg, (float)menuMetrics.linespace);
-            MENU_LOG("MenuDrawIntoPopup: set font face id %d, size %d", 
-                     fontId, menuMetrics.linespace);
         }
     }
     
     if (currentFontId < 0) {
-        /* Last resort fallback - use Tk font system, NOT hard-coded paths */
         int fontId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
         if (fontId < 0) {
             fontId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
@@ -2576,14 +2581,12 @@ MenuDrawIntoPopup(
             menuMetrics.ascent = 11;
             menuMetrics.descent = 3;
         } else {
-            MENU_LOG("MenuDrawIntoPopup: WARNING - no font available!");
             menuMetrics.linespace = 16;
             menuMetrics.ascent = 12;
             menuMetrics.descent = 4;
         }
     }
     
-    /* Set font size and alignment. */
     nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
     /* Draw background using real Tk configuration. */
@@ -2611,24 +2614,17 @@ MenuDrawIntoPopup(
 
     /* Draw border. */
     if (isMenubar) {
-        /* For menubar, draw a thin line at the bottom */
         nvgBeginPath(vg);
         nvgMoveTo(vg, 0, (float)menuH - 0.5f);
         nvgLineTo(vg, (float)menuW, (float)menuH - 0.5f);
         nvgStrokeColor(vg, borderColor);
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
-        MENU_LOG("MenuDrawIntoPopup: drew menubar bottom line");
     } else {
-        /* Draw border using the popup's border function */
         TkWaylandPopupDrawBorderWithShadow(popup);
     }
 
-    /*
-     * Always draw directly with NanoVG - no X11 drawable needed.
-     */
     Drawable d = None;
-    MENU_LOG("MenuDrawIntoPopup: drawing %d entries", menuPtr->numEntries);
    
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
@@ -2655,10 +2651,6 @@ MenuDrawIntoPopup(
             }
         }
        
-        MENU_LOG("MenuDrawIntoPopup: drawing entry %d at (%d,%d) size %dx%d, label='%s'",
-            i, mePtr->x, mePtr->y, mePtr->width, mePtr->height,
-            mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)");
-       
         TkpDrawMenuEntry(mePtr, d, entryFont, fmPtr,
             mePtr->x, mePtr->y,
             mePtr->width, mePtr->height,
@@ -2666,7 +2658,6 @@ MenuDrawIntoPopup(
     }
     
     TkWaylandPopupEndDraw(popup);
-    MENU_LOG("MenuDrawIntoPopup: completed");
 }
 
 /*
@@ -2702,9 +2693,64 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
     Tk_FontMetrics fm;
     Tk_GetFontMetrics(tkfont, &fm);
 
-    /* Hard-coded text color for now; refine later if needed. */
+    /* Get colors from menu configuration */
+    NVGcolor bgColor = nvgRGB(230, 230, 230);
     NVGcolor textColor = nvgRGB(0, 0, 0);
+    NVGcolor activeBgColor = nvgRGB(200, 200, 200);
+    
+    if (menuPtr->borderPtr != NULL) {
+        Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, menuPtr->borderPtr);
+        if (border) {
+            XColor *color = Tk_3DBorderColor(border);
+            if (color) {
+                bgColor = TkWaylandXColorToNVG(color);
+            }
+        }
+    }
+    
+    if (menuPtr->fgPtr != NULL) {
+        XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->fgPtr);
+        if (color) {
+            textColor = TkWaylandXColorToNVG(color);
+        }
+    }
+    
+    if (menuPtr->activeBorderPtr != NULL) {
+        Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, menuPtr->activeBorderPtr);
+        if (border) {
+            XColor *color = Tk_3DBorderColor(border);
+            if (color) {
+                activeBgColor = TkWaylandXColorToNVG(color);
+            }
+        }
+    }
 
+    /* Draw background */
+    int menuW, menuH;
+    TkWaylandPopupGetSize(popup, &menuW, &menuH);
+    
+    nvgBeginPath(vg);
+    nvgRect(vg, 0, 0, menuW, menuH);
+    nvgFillColor(vg, bgColor);
+    nvgFill(vg);
+
+    /* Ensure font is loaded */
+    WaylandFont *fontPtr = (WaylandFont *)tkfont;
+    int fontId = EnsureNvgFont(fontPtr, vg);
+    if (fontId < 0) {
+        fontId = TkWaylandLoadNamedFontIntoContext(vg, "sans");
+        if (fontId < 0) {
+            fontId = TkWaylandLoadNamedFontIntoContext(vg, "TkDefaultFont");
+        }
+    }
+    
+    if (fontId >= 0) {
+        nvgFontFaceId(vg, fontId);
+        nvgFontSize(vg, (float)fm.linespace);
+        nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
+    }
+
+    /* Draw each entry */
     for (int i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
@@ -2714,13 +2760,22 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
         int w = mePtr->width;
         int h = mePtr->height;
 
-        /* Simple flat background */
-        nvgBeginPath(vg);
-        nvgRect(vg, x, y, w, h);
-        nvgFillColor(vg, nvgRGB(230, 230, 230));
-        nvgFill(vg);
+        /* Draw active background if active */
+        if (mePtr->state == ENTRY_ACTIVE) {
+            nvgBeginPath(vg);
+            nvgRect(vg, x, y, w, h);
+            nvgFillColor(vg, activeBgColor);
+            nvgFill(vg);
+            
+            /* Draw border for active entry */
+            nvgBeginPath(vg);
+            nvgRect(vg, x, y, w, h);
+            nvgStrokeWidth(vg, 1.0f);
+            nvgStrokeColor(vg, nvgRGB(150, 150, 150));
+            nvgStroke(vg);
+        }
 
-        /* Label text */
+        /* Draw label */
         if (mePtr->labelPtr) {
             const char *label = Tcl_GetString(mePtr->labelPtr);
             int len = mePtr->labelLength;
@@ -2728,20 +2783,33 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
                 len = (int)strlen(label);
             }
 
-            nvgFontSize(vg, (float)fm.linespace);
-            nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-            nvgFillColor(vg, textColor);
+            NVGcolor labelColor = textColor;
+            if (mePtr->state == ENTRY_DISABLED) {
+                labelColor = nvgRGBA(128, 128, 128, 255);
+            } else if (mePtr->state == ENTRY_ACTIVE && menuPtr->activeFgPtr) {
+                XColor *color = Tk_GetColorFromObj(tkwin, menuPtr->activeFgPtr);
+                if (color) {
+                    labelColor = TkWaylandXColorToNVG(color);
+                }
+            }
 
-            float tx = (float)(x + 8);
-            float ty = (float)(y + h / 2);
-            nvgText(vg, tx, ty, label, label + len);
+            if (fontId >= 0 && len > 0) {
+                nvgFillColor(vg, labelColor);
+                float tx = (float)(x + 8);
+                float ty = (float)(y + fm.ascent + 2);
+                nvgText(vg, tx, ty, label, label + len);
+            }
         }
     }
+
+    /* Draw bottom line */
+    nvgBeginPath(vg);
+    nvgMoveTo(vg, 0, (float)menuH - 0.5f);
+    nvgLineTo(vg, (float)menuW, (float)menuH - 0.5f);
+    nvgStrokeWidth(vg, 1.0f);
+    nvgStrokeColor(vg, nvgRGB(180, 180, 180));
+    nvgStroke(vg);
 }
-
-
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -3408,10 +3476,6 @@ TkWaylandMenubarHandleClick(
                          Tcl_GetString(mePtr->namePtr),
                          mePtr->x, wmPtr->menuHeight, cascadeW, cascadeH);
 
-                /*
-                 * isRoot=1: dismisses any existing stack and pushes
-                 * cascadePtr as menuStack[0].
-                 */
                 TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
                     mePtr->x, wmPtr->menuHeight, 0, 0,
                     cascadeW, cascadeH, /*isRoot=*/1);
@@ -3563,7 +3627,6 @@ TkWaylandWmUpdateGeom(
     
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     
-    /* Validate config values before applying. */
     int width = wmPtr->configWidth;
     int height = wmPtr->configHeight;
     
@@ -3578,17 +3641,13 @@ TkWaylandWmUpdateGeom(
         wmPtr->configHeight = height;
     }
     
-    /* Apply geometry changes immediately if possible. */
     if (width > 0 && height > 0 && width <= 10000 && height <= 10000) {
         GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
         if (glfwWindow) {
             glfwSetWindowSize(glfwWindow, width, height);
-            MENU_LOG("TkWaylandWmUpdateGeom: set size to %dx%d", 
-                     width, height);
         }
     }
     
-    /* Schedule the idle callback for any other updates. */
     Tcl_CancelIdleCall((Tcl_IdleProc *)TkWaylandWmUpdateGeometryInfo, (void *)wmPtr);
     Tcl_DoWhenIdle((Tcl_IdleProc *)TkWaylandWmUpdateGeometryInfo, (void *)wmPtr);
 }
@@ -3623,13 +3682,10 @@ TkWaylandWmUpdateGeometryInfo(
     
     wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
     
-    /* Apply the geometry changes. */
     if (wmPtr->configWidth > 0 && wmPtr->configHeight > 0) {
         GLFWwindow *glfwWindow = TkWaylandGetGLFWwindow(winPtr);
         if (glfwWindow) {
             glfwSetWindowSize(glfwWindow, wmPtr->configWidth, wmPtr->configHeight);
-            MENU_LOG("TkWaylandWmUpdateGeometryInfo: set size to %dx%d", 
-                     wmPtr->configWidth, wmPtr->configHeight);
         }
     }
 }
@@ -3674,14 +3730,12 @@ TkWaylandPostVirtualEvent(
     }
     interp = info->interp;
     
-    /* Remove leading "<<" and trailing ">>" from event name */
     eventNameWithoutBrackets = eventName + 2;
     len = strlen(eventNameWithoutBrackets);
     if (len > 0 && eventNameWithoutBrackets[len-1] == '>') {
         len--;
     }
     
-    /* Build the Tcl script to post the virtual event */
     eventScript = (char *)ckalloc(len + 64);
     if (!eventScript) {
         MENU_LOG("TkWaylandPostVirtualEvent: memory allocation failed");

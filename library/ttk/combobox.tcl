@@ -16,16 +16,17 @@
 #	window managers (even though the older ICCCM spec says
 #	it's meaningless).
 #
-#       On OSX: The native combobox uses a popup menu to display the
-#       combobox choices.  So this implementation does that as well,
-#       rather than construc a Tk listbox.  Since the window manager
-#       takes care of scrolling and making sure that the menu can be
-#       displayed even when the button is close to the bottom of the
-#       screen, this actually simplifies the implementation.  The Post
-#       and PopupWindow procs have separate implementations for Aqua
-#       and other systems.  The configuration of the menu is handled
-#       by a different proc than the one which configures the listbox
-#       on other platforms -- ConfigureAquaMenu instead of
+#       On OSX and Wayland: The native combobox uses a popup menu to
+#       display the combobox choices.  So this implementation does that
+#       as well, rather than construct a Tk listbox.  Since the window
+#       manager (or, on Wayland, the compositor) takes care of scrolling
+#       and making sure that the menu can be displayed even when the
+#       button is close to the bottom of the screen, this actually
+#       simplifies the implementation.  The Post and PlacePopdownMenu
+#       procs have separate implementations for the menu-based platforms
+#       (Aqua, Wayland) and other systems.  The configuration of the menu
+#       is handled by a different proc than the one which configures the
+#       listbox on other platforms -- ConfigureMenu instead of
 #       ConfigureListbox.
 #
 
@@ -85,8 +86,9 @@ switch -- [tk windowingsystem] {
 	# NB: *only* do this on Windows (see #1814778)
 	bind ComboboxListbox <FocusOut>		{ ttk::combobox::LBCancel %W }
     }
-    aqua {
-	bind TCombobox <Destroy>		{ ttk::combobox::AquaCleanup %W }
+    aqua -
+    wayland {
+	bind TCombobox <Destroy>		{ ttk::combobox::MenuCleanup %W }
     }
 }
 
@@ -274,7 +276,7 @@ proc ttk::combobox::UnmapPopdown {w} {
 #	creating it if necessary.
 #
 
-if {[tk windowingsystem] ne "aqua"} {
+if {[tk windowingsystem] ni {aqua wayland}} {
     proc ttk::combobox::PopdownWindow {cb} {
 	if {![winfo exists $cb.popdown]} {
 	    set poplevel [PopdownToplevel $cb.popdown]
@@ -307,15 +309,31 @@ if {[tk windowingsystem] ne "aqua"} {
 } else {
     proc ttk::combobox::PopdownWindow {cb} {
 	if {![winfo exists $cb.popdown]} {
-	    set poplevel [PopdownToplevel $cb.popdown]
+	    # No wrapping toplevel here: on Aqua and Wayland the popdown
+	    # *is* the menu.  An intervening toplevel (even one created
+	    # with -alpha 0) is an extra surface, and on Wayland the
+	    # compositor will happily draw that surface on top of the
+	    # real menu popup -- so we create the menu directly at
+	    # $cb.popdown instead of nesting it inside a toplevel wrapper.
+	    #
 	    # The menu should be (at least) the same length as the button.
 	    # Since there is no direct way to control the width of a menu
 	    # in Tk, we fake it by using an invisible image in a disabled
 	    # menu item, adjusting the image size to make the menu be the
 	    # correct width.
-	    image create nsimage $cb.spacer -source NSStatusNone -as name \
-		-alpha 0
-	    set menu [menu $cb.popdown.menu -tearoff 0]
+	    switch -- [tk windowingsystem] {
+		aqua {
+		    image create nsimage $cb.spacer -source NSStatusNone \
+			-as name -alpha 0
+		}
+		wayland {
+		    # There's no native "invisible named image" source on
+		    # Wayland; a blank photo image resized to the required
+		    # width serves the same purpose.
+		    image create photo $cb.spacer -width 1 -height 1
+		}
+	    }
+	    menu $cb.popdown -tearoff 0
 	}
 	return $cb.popdown
     }
@@ -323,6 +341,8 @@ if {[tk windowingsystem] ne "aqua"} {
 
 ## PopdownToplevel -- Create toplevel window for the combobox popdown
 #
+#	Used only for the listbox-based popdown (x11, win32); on Aqua
+#	and Wayland the popdown is a menu widget, not a toplevel.
 #	See also <<NOTE-WM-TRANSIENT>>
 #
 proc ttk::combobox::PopdownToplevel {w} {
@@ -339,10 +359,6 @@ proc ttk::combobox::PopdownToplevel {w} {
 	    $w configure -relief flat -borderwidth 0
 	    wm overrideredirect $w true
 	    wm attributes $w -topmost 1
-	}
-	aqua {
-	    wm overrideredirect $w true
-	    wm attributes $w -alpha 0
 	}
     }
     return $w
@@ -378,14 +394,19 @@ proc ttk::combobox::ConfigureListbox {cb} {
     $popdown.l configure -height $height
 }
 
-proc ttk::combobox::ConfigureAquaMenu {cb width} {
+## ConfigureMenu --
+#	Populate the popdown menu (used on Aqua and Wayland instead of
+#	a listbox) and size its entries so the menu is at least as wide
+#	as the combobox entry widget.
+#
+proc ttk::combobox::ConfigureMenu {cb width} {
     set popdown [PopdownWindow $cb]
     set values [$cb cget -values]
     set current [$cb current]
     if {$current < 0} {
 	set current 0		;# no current entry, highlight first one
     }
-    $cb.popdown.menu delete 0 end
+    $cb.popdown delete 0 end
     $cb.spacer configure -width [expr {$width - 40}] -height 1
     set i 0
     foreach item $values {
@@ -396,10 +417,10 @@ proc ttk::combobox::ConfigureAquaMenu {cb width} {
 	    while {[font measure $menufont $stretch] < [expr {$width - 32}]} {
 		set stretch "$stretch "
 	    }
-	    $cb.popdown.menu add command -label "$stretch" \
+	    $cb.popdown add command -label "$stretch" \
 		-command "ttk::combobox::SelectEntry $cb $i"
 	} else {
-	    $cb.popdown.menu add command -label "$item" \
+	    $cb.popdown add command -label "$item" \
 		-command "ttk::combobox::SelectEntry $cb $i"
 	}
 	incr i
@@ -407,7 +428,7 @@ proc ttk::combobox::ConfigureAquaMenu {cb width} {
     if { $i == 0 } {
 	# There are no items.  To make an empty menu appear add a dummy item
 	# containing a transparent image of the right width.
-	$cb.popdown.menu add command -label {} -image $cb.spacer -state disabled
+	$cb.popdown add command -label {} -image $cb.spacer -state disabled
     }
 }
 
@@ -439,7 +460,13 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
     wm geometry $popdown ${w}x${H}+${x}+${Y}
 }
 
-proc ttk::combobox::AquaPlacePopdown {cb popdown} {
+## PlacePopdownMenu --
+#	Compute the screen position at which to post the popdown menu
+#	(used on Aqua and Wayland). Unlike PlacePopdown, this does not
+#	set any toplevel geometry -- popdown is a menu widget here, not
+#	a toplevel -- it just returns the coordinates for [$popdown post].
+#
+proc ttk::combobox::PlacePopdownMenu {cb popdown} {
     set x [winfo rootx $cb]
     set y [winfo rooty $cb]
     set w [winfo width $cb]
@@ -449,14 +476,13 @@ proc ttk::combobox::AquaPlacePopdown {cb popdown} {
     foreach var {x y w h} delta $postoffset {
 	incr $var $delta
     }
-    wm geometry $popdown ${w}x${h}+${x}+${y}
     return [list $x $y $w $h]
 }
 
 ## Post $cb --
 #	Pop down the associated listbox or menu.
 #
-if {[tk windowingsystem] ne "aqua"} {
+if {[tk windowingsystem] ni {aqua wayland}} {
     proc ttk::combobox::Post {cb} {
 	# Don't do anything if disabled:
 	#
@@ -499,14 +525,14 @@ if {[tk windowingsystem] ne "aqua"} {
 
 	# Configure the menu
 
-	foreach {x y width height} [AquaPlacePopdown $cb $popdown] { break }
-	ConfigureAquaMenu $cb [winfo width $cb]
+	foreach {x y width height} [PlacePopdownMenu $cb $popdown] { break }
+	ConfigureMenu $cb [winfo width $cb]
 
 	# Post the menu.  It will have a disclosure indicator if it is too
 	# close to the bottom of the screen, and it may be posted above the
 	# button if necessary to be visible.
 
-	$popdown.menu post [expr {$x + 2}] [expr {$y + $height + 2}]
+	$popdown post [expr {$x + 2}] [expr {$y + $height + 2}]
     }
 }
 
@@ -515,7 +541,11 @@ if {[tk windowingsystem] ne "aqua"} {
 #
 proc ttk::combobox::Unpost {cb} {
     if {[winfo exists $cb.popdown]} {
-	wm withdraw $cb.popdown
+	if {[tk windowingsystem] ni {aqua wayland}} {
+	    wm withdraw $cb.popdown
+	} else {
+	    $cb.popdown unpost
+	}
     }
     grab release $cb.popdown ;# in case of stuck or unexpected grab [#1239190]
 }
@@ -551,7 +581,12 @@ proc ttk::combobox::LBCleanup {lb} {
     unset Values([LBMain $lb])
 }
 
-proc ttk::combobox::AquaCleanup {cb} {
+## MenuCleanup --
+#	<Destroy> binding for the combobox itself when using the
+#	menu-based popdown (Aqua, Wayland).  Removes the width-spacer
+#	image created in PopdownWindow.
+#
+proc ttk::combobox::MenuCleanup {cb} {
     catch {image delete $cb.spacer}
 }
 
