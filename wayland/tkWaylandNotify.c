@@ -1110,6 +1110,19 @@ TkWaylandCursorEnterCallback(
     if (!winPtr) {
         return;
     }
+    
+    if (TkWaylandMenuPopupActive()) {
+        TkWaylandMenuHandlePointerMotion((int)xpos, (int)ypos);
+        
+        /*
+         * After handling menu motion, force a redraw of
+         * the popup surface to show highlight changes. The menu handler
+         * updates the menu state but doesn't trigger the redraw itself.
+         */
+        TkWaylandMenuRedrawActive();
+        
+        return;
+    }
 
     glfwGetCursorPos(window, &xpos, &ypos);
     glfwGetWindowPos(window, &winX, &winY);

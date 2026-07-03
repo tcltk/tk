@@ -333,13 +333,14 @@ TkWaylandPopupCreateRenderer(
         
         POPUP_LOG("TkWaylandPopupCreateRenderer: fonts registered using Tk font system");
         
-        /* Initialize the NanoVG context for the renderer size. */
+        /* Initialize the FBO's contents to actual transparent. A
+         * transparent-alpha nvgFill() would be a no-op under normal
+         * alpha blending (src.a=0 leaves dst untouched), so use a
+         * real GL clear instead. */
         glViewport(0, 0, width, height);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
         nvgBeginFrame(renderer->vg, width, height, 1.0f);
-        nvgBeginPath(renderer->vg);
-        nvgRect(renderer->vg, 0, 0, width, height);
-        nvgFillColor(renderer->vg, nvgRGBA(0, 0, 0, 0));
-        nvgFill(renderer->vg);
         nvgEndFrame(renderer->vg);
     } else {
         POPUP_LOG("TkWaylandPopupCreateRenderer: WARNING - no NanoVG context created");
@@ -433,7 +434,8 @@ TkWaylandPopupRendererClear(
 {
     if (!renderer || !renderer->pixels) return;
     
-    unsigned int color = (a << 24) | (b << 16) | (g << 8) | r;
+    /* WL_SHM_FORMAT_ARGB8888 packs, from MSB to LSB, as A,R,G,B. */
+    unsigned int color = (a << 24) | (r << 16) | (g << 8) | b;
     unsigned int *pixels = (unsigned int *)renderer->pixels;
     int count = renderer->size / 4;
     
@@ -471,9 +473,28 @@ TkWaylandPopupCopyPixelsToBuffer(
     if (copy_size > buffer->size) {
         copy_size = buffer->size;
     }
-    
-    memcpy(buffer->data, popup->renderer->pixels, copy_size);
-    POPUP_LOG("TkWaylandPopupCopyPixelsToBuffer: copied %d bytes", copy_size);
+
+    /*
+     * renderer->pixels comes straight out of glReadPixels(GL_RGBA), so
+     * each pixel is stored in memory as R,G,B,A. wl_shm's ARGB8888
+     * format (the only alpha format every compositor is guaranteed to
+     * support) is defined MSB-to-LSB as A,R,G,B, which in little-endian
+     * memory bytes is B,G,R,A. A straight memcpy leaves red and blue
+     * swapped on screen, so swap them per pixel on the way in instead.
+     */
+    int pixelCount = copy_size / 4;
+    const unsigned char *src = popup->renderer->pixels;
+    unsigned char *dst = (unsigned char *)buffer->data;
+    for (int i = 0; i < pixelCount; i++) {
+        dst[0] = src[2];  /* B */
+        dst[1] = src[1];  /* G */
+        dst[2] = src[0];  /* R */
+        dst[3] = src[3];  /* A */
+        src += 4;
+        dst += 4;
+    }
+
+    POPUP_LOG("TkWaylandPopupCopyPixelsToBuffer: copied %d bytes (R/B swapped for ARGB8888)", copy_size);
 }
 
 /*
@@ -1530,10 +1551,9 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
         return TCL_ERROR;
     }
     
-    /* Make the GL context current if we have a main window */
+    /* Make the GL context current if we have a main window. */
     if (popupGlobals.mainWindow) {
         glfwMakeContextCurrent(popupGlobals.mainWindow);
-        POPUP_LOG("TkWaylandPopupBeginDraw: made GL context current");
     } else {
         POPUP_LOG("TkWaylandPopupBeginDraw: no main window for context");
         return TCL_ERROR;
@@ -1549,17 +1569,21 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
     }
     glBindFramebuffer(GL_FRAMEBUFFER, popup->renderer->fbo);
     glViewport(0, 0, popup->width, popup->height);
-    
-    /* Begin the NanoVG frame */
+
+    /*
+     * Clear to fully transparent before every frame.
+     * This prevents any window border or previous content from
+     * bleeding through.
+     */
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    /* Begin the NanoVG frame. */
     nvgBeginFrame(popup->renderer->vg, popup->width, popup->height, 1.0f);
     popup->drawing = 1;
     
-    POPUP_LOG("TkWaylandPopupBeginDraw: began drawing %dx%d with NanoVG context %p", 
-             popup->width, popup->height, (void*)popup->renderer->vg);
-    
     return TCL_OK;
 }
-
 /*
  *---------------------------------------------------------------------------
  *

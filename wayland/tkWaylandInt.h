@@ -484,8 +484,6 @@ typedef struct TkWindowPrivate {
     int isPopup;           
 } glfwData;
 
-
-
 /*
  *----------------------------------------------------------------------
  *
@@ -851,6 +849,7 @@ MODULE_SCOPE void TkWaylandMenuInit(void);
 
 /* Non-zero if one or more menu popups are currently posted. */
 MODULE_SCOPE int  TkWaylandMenuPopupActive(void);
+MODULE_SCOPE void TkWaylandMenuRedrawActive(void);
 
 /*
  * Post a menu as either the root of a new menu stack (isRoot != 0,
@@ -889,6 +888,7 @@ MODULE_SCOPE void TkWaylandMenuHandleEscape(void);
  * click rather than also activating a widget underneath.
  */
 MODULE_SCOPE int  TkWaylandMenuConsumeDismissClick(void);
+
 
 /*
  *----------------------------------------------------------------------

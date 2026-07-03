@@ -1931,23 +1931,73 @@ DrawMenuEntryLabel(
 	if (imageY < y) imageY = y;
 	if (imageX + imageWidth > x + width) imageX = x + width - imageWidth;
 	if (imageY + imageHeight > y + height) imageY = y + height - imageHeight;
-	
-	/* Draw image placeholder */
-	nvgBeginPath(vg);
-	nvgRect(vg, imageX, imageY, imageWidth, imageHeight);
-	nvgStrokeWidth(vg, 1.0f);
-	nvgStrokeColor(vg, nvgRGBA(150, 150, 150, 255));
-	nvgStroke(vg);
-	
-	/* Draw an "X" inside the image placeholder */
-	nvgBeginPath(vg);
-	nvgMoveTo(vg, imageX + 2, imageY + 2);
-	nvgLineTo(vg, imageX + imageWidth - 2, imageY + imageHeight - 2);
-	nvgMoveTo(vg, imageX + imageWidth - 2, imageY + 2);
-	nvgLineTo(vg, imageX + 2, imageY + imageHeight - 2);
-	nvgStrokeWidth(vg, 1.0f);
-	nvgStrokeColor(vg, nvgRGBA(200, 200, 200, 255));
-	nvgStroke(vg);
+
+	int drewRealImage = 0;
+
+	/*
+	 * Try to render actual pixel content. This only works for photo
+	 * images (the common case for menu -image); other Tk_Image types
+	 * have no portable way to get raw pixels without a Drawable, so
+	 * they fall through to the placeholder below.
+	 */
+	if (mePtr->image != NULL && mePtr->imagePtr != NULL) {
+	    Tk_PhotoHandle photo = Tk_FindPhoto(mePtr->menuPtr->interp,
+						 Tcl_GetString(mePtr->imagePtr));
+	    if (photo != NULL) {
+		Tk_PhotoImageBlock block;
+		if (Tk_PhotoGetImage(photo, &block) && block.width > 0 && block.height > 0) {
+		    int bw = block.width, bh = block.height;
+		    unsigned char *rgba = (unsigned char *)ckalloc((size_t)bw * bh * 4);
+		    if (rgba) {
+			int row, col;
+			for (row = 0; row < bh; row++) {
+			    unsigned char *src = block.pixelPtr + row * block.pitch;
+			    unsigned char *dst = rgba + row * bw * 4;
+			    for (col = 0; col < bw; col++) {
+				unsigned char *sp = src + col * block.pixelSize;
+				unsigned char *dp = dst + col * 4;
+				dp[0] = sp[block.offset[0]];
+				dp[1] = sp[block.offset[1]];
+				dp[2] = sp[block.offset[2]];
+				dp[3] = (block.pixelSize >= 4) ? sp[block.offset[3]] : 255;
+			    }
+			}
+
+			int nvgImg = nvgCreateImageRGBA(vg, bw, bh, 0, rgba);
+			if (nvgImg != 0) {
+			    NVGpaint paint = nvgImagePattern(vg, (float)imageX, (float)imageY,
+							      (float)imageWidth, (float)imageHeight,
+							      0.0f, nvgImg, 1.0f);
+			    nvgBeginPath(vg);
+			    nvgRect(vg, imageX, imageY, imageWidth, imageHeight);
+			    nvgFillPaint(vg, paint);
+			    nvgFill(vg);
+			    nvgDeleteImage(vg, nvgImg);
+			    drewRealImage = 1;
+			}
+			ckfree(rgba);
+		    }
+		}
+	    }
+	}
+
+	if (!drewRealImage) {
+	    /* Placeholder for non-photo images (e.g. bitmap-backed Tk_Image). */
+	    nvgBeginPath(vg);
+	    nvgRect(vg, imageX, imageY, imageWidth, imageHeight);
+	    nvgStrokeWidth(vg, 1.0f);
+	    nvgStrokeColor(vg, nvgRGBA(150, 150, 150, 255));
+	    nvgStroke(vg);
+
+	    nvgBeginPath(vg);
+	    nvgMoveTo(vg, imageX + 2, imageY + 2);
+	    nvgLineTo(vg, imageX + imageWidth - 2, imageY + imageHeight - 2);
+	    nvgMoveTo(vg, imageX + imageWidth - 2, imageY + 2);
+	    nvgLineTo(vg, imageX + 2, imageY + imageHeight - 2);
+	    nvgStrokeWidth(vg, 1.0f);
+	    nvgStrokeColor(vg, nvgRGBA(200, 200, 200, 255));
+	    nvgStroke(vg);
+	}
     }
 
     /* Draw text label - ALWAYS use NVG directly */
@@ -2823,7 +2873,6 @@ MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup)
  *
  * Side effects:
  *	Renders menu using NanoVG into the menu's xdg_popup surface.
- *
  *----------------------------------------------------------------------
  */
 
@@ -2845,13 +2894,85 @@ TkpDisplayMenu(
     winPtr = (TkWindow *)menuPtr->tkwin;
     wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
 
-    if (!wmPtr || !wmPtr->menubarPopup) {
-        MENU_LOG("TkpDisplayMenu: no menubar popup surface");
+    Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, clientData);
+
+    if (!wmPtr) {
+        MENU_LOG("TkpDisplayMenu: no wmInfoPtr");
         return;
     }
 
-    Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, clientData);
-    MenuDrawIntoPopup(menuPtr, wmPtr->menubarPopup);
+    /*
+     * A menu window is either a menubar strip (drawn into
+     * wmPtr->menubarPopup via MenuDrawMenubarIntoPopup) or a posted
+     * dropdown/popup menu (drawn into wmPtr->popup via MenuDrawIntoPopup).
+     * Route to whichever surface actually exists so that hover
+     * activation and entryconfigure changes (-font/-foreground/
+     * -background) are ever actually repainted.
+     */
+    if (menuPtr->menuType == MENUBAR && wmPtr->menubarPopup) {
+        MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+    } else if (wmPtr->popup) {
+        MenuDrawIntoPopup(menuPtr, wmPtr->popup);
+    } else if (wmPtr->menubarPopup) {
+        /* Fallback for menus reached only via wmPtr->menubarMenuPtr. */
+        MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+    } else {
+        MENU_LOG("TkpDisplayMenu: no popup surface available for menu %p", (void *)menuPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------  
+ * TkWaylandMenuRedrawActive --
+ *
+ *      Force a redraw of the currently active menu popup.
+ *      Called after mouse motion to update hover highlights.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Redraws the active menu.
+ *----------------------------------------------------------------------
+ */
+ 
+/*
+ *----------------------------------------------------------------------  
+ * TkWaylandMenuRedrawActive --
+ *
+ *      Force a redraw of the currently active menu popup.
+ *      Called after mouse motion to update hover highlights.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Redraws the active menu.
+ *----------------------------------------------------------------------
+ */
+ 
+MODULE_SCOPE void
+TkWaylandMenuRedrawActive(void)
+{
+    if (menuStackDepth == 0) {
+        return;
+    }
+    
+    /* Get the topmost active menu from the stack. */
+    MenuStackEntry *entry = &menuStack[menuStackDepth - 1];
+    if (!entry || !entry->menuPtr || !entry->popup) {
+        return;
+    }
+    
+    TkMenu *menuPtr = entry->menuPtr;
+    TkWaylandPopup *popup = entry->popup;
+    
+    /* Redraw the menu content. */
+    if (menuPtr->menuType == MENUBAR) {
+        MenuDrawMenubarIntoPopup(menuPtr, popup);
+    } else {
+        MenuDrawIntoPopup(menuPtr, popup);
+    }
 }
 
 /*
