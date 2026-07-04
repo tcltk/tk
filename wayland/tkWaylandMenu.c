@@ -2081,6 +2081,7 @@ DrawMenuEntryLabel(
 	nvgFill(vg);
     } 
 }
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -2530,8 +2531,46 @@ TkWaylandPostMenuAtAnchor(
         return TCL_ERROR;
     }
 
+    /*
+     * IMPORTANT: For cascade menus, we need to use the main GLFW window
+     * as the parent, NOT the menu's own window (which doesn't have a GLFW
+     * window). The menu's tkwin is a menu window, not a toplevel.
+     */
+    GLFWwindow *parentWindow = mainGlfwWindow;
+    
+    /* Try to get the toplevel's GLFW window from the menu's parent chain */
+    TkWindow *menuWin = (TkWindow *)menuPtr->tkwin;
+    TkWindow *toplevel = menuWin;
+    while (toplevel->parentPtr && !Tk_IsTopLevel(toplevel)) {
+        toplevel = toplevel->parentPtr;
+    }
+    GLFWwindow *toplevelGlfw = TkWaylandGetGLFWwindow(toplevel);
+    if (toplevelGlfw) {
+        parentWindow = toplevelGlfw;
+    }
+
+    if (!parentWindow) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+            "TkWaylandPostMenuAtAnchor: no GLFW parent window", -1));
+        return TCL_ERROR;
+    }
+
+    /*
+     * Get the root coordinates of the parent toplevel so we can position
+     * the menu correctly in screen space.
+     */
+    int rootX, rootY;
+    Tk_GetRootCoords((Tk_Window)toplevel, &rootX, &rootY);
+    
+    /* The anchor coordinates are already in screen space, so use them directly */
+    int screenX = anchorX;
+    int screenY = anchorY;
+
+    MENU_LOG("TkWaylandPostMenuAtAnchor: parent window toplevel %s at root (%d,%d), anchor screen (%d,%d)",
+             Tk_PathName((Tk_Window)toplevel), rootX, rootY, screenX, screenY);
+
     TkWaylandPopup *popup = TkWaylandSubsurfaceCreate(
-        mainGlfwWindow, anchorX, anchorY + anchorH, popupW, popupH);
+        parentWindow, screenX, screenY, popupW, popupH);
 
     if (!popup) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2543,22 +2582,24 @@ TkWaylandPostMenuAtAnchor(
         TkWaylandSubsurfacePlaceAbove(popup, menuStack[menuStackDepth - 1].popup);
     }
 
-    TkWindow *menuWin = (TkWindow *)menuPtr->tkwin;
-    WmInfo   *wmPtr   = (WmInfo *)menuWin->wmInfoPtr;
-    if (wmPtr) {
-        wmPtr->popup            = popup;
+    /* Store popup reference in the menu's wmInfo if available */
+    if (menuWin->wmInfoPtr) {
+        WmInfo *wmPtr = (WmInfo *)menuWin->wmInfoPtr;
+        wmPtr->popup = popup;
         wmPtr->overrideRedirect = 1;
     }
 
-    Tk_MoveResizeWindow(menuPtr->tkwin, anchorX, anchorY + anchorH, popupW, popupH);
-
+    /* Push onto stack */
     MenuStackEntry *entry = &menuStack[menuStackDepth++];
     entry->menuPtr = menuPtr;
     entry->popup   = popup;
-    entry->x = anchorX;
-    entry->y = anchorY + anchorH;
+    entry->x = screenX;
+    entry->y = screenY;
     entry->w = popupW;
     entry->h = popupH;
+
+    MENU_LOG("TkWaylandPostMenuAtAnchor: stack entry %d at (%d,%d) size %dx%d",
+             menuStackDepth - 1, entry->x, entry->y, entry->w, entry->h);
 
     MenuDrawIntoPopup(menuPtr, popup);
 
@@ -3355,6 +3396,9 @@ MenuMouseMotion(
     
     if (!menuPtr) return;
     
+    MENU_LOG("MenuMouseMotion: menu=%p, x=%d, y=%d, numEntries=%d, stackDepth=%d",
+             (void*)menuPtr, x, y, menuPtr->numEntries, menuStackDepth);
+    
     for (i = 0; i < menuPtr->numEntries; i++) {
         TkMenuEntry *mePtr = menuPtr->entries[i];
         if (!mePtr) continue;
@@ -3364,16 +3408,23 @@ MenuMouseMotion(
             
             foundEntry = 1;
             
+            MENU_LOG("MenuMouseMotion: hit entry %d, label='%s', type=%d, state=%d",
+                     i, mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
+                     mePtr->type, mePtr->state);
+            
             if (mePtr->state == ENTRY_DISABLED ||
                 mePtr->type == SEPARATOR_ENTRY ||
                 mePtr->type == TEAROFF_ENTRY) {
+                MENU_LOG("MenuMouseMotion: entry %d is disabled/separator/tearoff, skipping", i);
                 continue;
             }
             
             if (menuPtr->active != i) {
 
+                /* If there's a different cascade posted, unpost it */
                 if (menuPtr->postedCascade != NULL &&
                     menuPtr->postedCascade != mePtr) {
+                    MENU_LOG("MenuMouseMotion: unposting previous cascade");
                     TkPostSubmenu(menuPtr->interp, menuPtr, NULL);
                     menuPtr->postedCascade = NULL;
 
@@ -3385,51 +3436,76 @@ MenuMouseMotion(
 
                 TkActivateMenuEntry(menuPtr, i);
 
+                /* Handle cascade entries */
                 if (mePtr->type == CASCADE_ENTRY && mePtr->namePtr != NULL) {
                     TkMenuReferences *menuRefPtr;
                     int cascadeAnchorX, cascadeAnchorY;
                     int cascadeW, cascadeH;
                     int level = MenuStackFindLevel(menuPtr);
 
-                    MENU_LOG("MenuMouseMotion: cascade entry '%s' hit, level=%d",
-                             Tcl_GetString(mePtr->labelPtr), level);
+                    MENU_LOG("MenuMouseMotion: CASCADE entry '%s' (name='%s'), level=%d",
+                             Tcl_GetString(mePtr->labelPtr),
+                             Tcl_GetString(mePtr->namePtr), level);
+
+                    if (level < 0) {
+                        MENU_LOG("MenuMouseMotion: level < 0, menu not found in stack!");
+                        return;
+                    }
 
                     menuRefPtr = TkFindMenuReferencesObj(
-							 menuPtr->interp, mePtr->namePtr);
+                             menuPtr->interp, mePtr->namePtr);
 
-                    if (level >= 0 && menuRefPtr && menuRefPtr->menuPtr) {
-                        TkMenu *cascadePtr = menuRefPtr->menuPtr;
-                        TkWaylandPopup *parentPopup = menuStack[level].popup;
-                        int parentX = menuStack[level].x;
-                        int parentY = menuStack[level].y;
+                    if (!menuRefPtr || !menuRefPtr->menuPtr) {
+                        MENU_LOG("MenuMouseMotion: menuRefPtr or menuPtr is NULL");
+                        return;
+                    }
 
-                        MENU_LOG("MenuMouseMotion: posting cascade '%s' at (%d,%d)",
-                                 Tcl_GetString(mePtr->namePtr),
-                                 parentX + menuStack[level].w, parentY + mePtr->y);
+                    TkMenu *cascadePtr = menuRefPtr->menuPtr;
+                    
+                    if (!cascadePtr->tkwin) {
+                        MENU_LOG("MenuMouseMotion: cascadePtr->tkwin is NULL!");
+                        return;
+                    }
 
-                        MenuStackPop(level + 1);
+                    MENU_LOG("MenuMouseMotion: cascadePtr=%p, tkwin=%s",
+                             (void*)cascadePtr, Tk_PathName(cascadePtr->tkwin));
 
-                        /* Compute cascade position: to the right of the parent */
-                        cascadeAnchorX = parentX + menuStack[level].w;
-                        cascadeAnchorY = parentY + mePtr->y;
+                    /* Pop any existing submenus below this level */
+                    MenuStackPop(level + 1);
 
-                        TkRecomputeMenu(cascadePtr);
-                        cascadeW = cascadePtr->totalWidth;
-                        cascadeH = cascadePtr->totalHeight;
-                        if (cascadeW <= 0) cascadeW = 1;
-                        if (cascadeH <= 0) cascadeH = 1;
+                    /* Recompute level after popping */
+                    int newLevel = MenuStackFindLevel(menuPtr);
+                    if (newLevel < 0) {
+                        MENU_LOG("MenuMouseMotion: parent menu no longer in stack after pop!");
+                        return;
+                    }
+                    level = newLevel;
 
-                        menuPtr->postedCascade = mePtr;
-                        TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
+                    /* Compute cascade position: to the right of the parent, aligned with entry */
+                    cascadeAnchorX = menuStack[level].x + menuStack[level].w;
+                    cascadeAnchorY = menuStack[level].y + mePtr->y;
 
-                        TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
-                            cascadeAnchorX, cascadeAnchorY, 0, 0,
-                            cascadeW, cascadeH, 0);
-                    } else {
-                        MENU_LOG("MenuMouseMotion: cascade '%s' could not be resolved (menuRefPtr=%p, cascadePtr=%p)",
-                                 Tcl_GetString(mePtr->namePtr),
-                                 (void*)menuRefPtr,
-                                 (void*)(menuRefPtr ? menuRefPtr->menuPtr : NULL));
+                    TkRecomputeMenu(cascadePtr);
+                    cascadeW = cascadePtr->totalWidth;
+                    cascadeH = cascadePtr->totalHeight;
+                    if (cascadeW <= 0) cascadeW = 1;
+                    if (cascadeH <= 0) cascadeH = 1;
+
+                    MENU_LOG("MenuMouseMotion: posting cascade at (%d,%d) size %dx%d",
+                             cascadeAnchorX, cascadeAnchorY, cascadeW, cascadeH);
+
+                    menuPtr->postedCascade = mePtr;
+                    TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
+
+                    int result = TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+                        cascadeAnchorX, cascadeAnchorY, 0, 0,
+                        cascadeW, cascadeH, 0);
+                    
+                    MENU_LOG("MenuMouseMotion: TkWaylandPostMenuAtAnchor returned %d", result);
+                    
+                    if (result == TCL_OK) {
+                        /* Force redraw the parent to show cascade highlight */
+                        TkEventuallyRedrawMenu(menuPtr, NULL);
                     }
                 }
 
@@ -3440,6 +3516,7 @@ MenuMouseMotion(
     }
     
     if (!foundEntry && menuPtr->active != -1) {
+        MENU_LOG("MenuMouseMotion: no entry found, deactivating");
         TkActivateMenuEntry(menuPtr, -1);
         TkEventuallyRedrawMenu(menuPtr, NULL);
     }
@@ -3671,14 +3748,20 @@ TkWaylandMenuHandlePointerMotion(
 {
     int i;
 
+    MENU_LOG("TkWaylandMenuHandlePointerMotion: x=%d, y=%d, stackDepth=%d", x, y, menuStackDepth);
+
     for (i = menuStackDepth - 1; i >= 0; i--) {
         MenuStackEntry *entry = &menuStack[i];
         if (x >= entry->x && x < entry->x + entry->w &&
             y >= entry->y && y < entry->y + entry->h) {
+            MENU_LOG("TkWaylandMenuHandlePointerMotion: hit stack entry %d at (%d,%d) size %dx%d",
+                     i, entry->x, entry->y, entry->w, entry->h);
             MenuMouseMotion(entry->menuPtr, x - entry->x, y - entry->y);
             return;
         }
     }
+
+    MENU_LOG("TkWaylandMenuHandlePointerMotion: no menu hit at (%d,%d)", x, y);
 
     if (menuStackDepth > 0) {
         TkMenu *topMenu = menuStack[menuStackDepth - 1].menuPtr;
