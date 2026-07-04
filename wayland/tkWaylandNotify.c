@@ -78,6 +78,7 @@ extern int  TkWaylandMenuPopupActive(void);
 extern void TkWaylandMenuHandlePointerButton(int x, int y,
                                              int button, int state);
 extern void TkWaylandMenuHandlePointerMotion(int x, int y);
+extern void TkWaylandMenuRedrawActive(void);
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
 extern int  TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
                                              int button);
@@ -715,79 +716,6 @@ TkWaylandWindowCloseCallback(GLFWwindow *window)
  *----------------------------------------------------------------------
  */
 
-#if 0
-static void
-TkWaylandFramebufferSizeCallback(
-    GLFWwindow *window,
-    int width,
-    int height)
-{
-    recordCallback();
-    TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    if (!winPtr) {
-        fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
-        return;
-    }
-    
-    /* Check if privatePtr is initialized. */
-    if (!winPtr->privatePtr) {
-        fprintf(stderr, "FramebufferSizeCallback: privatePtr is NULL for %s\n", 
-                Tk_PathName(winPtr));
-        return;
-    }
-    
-    fprintf(stderr, "TkWaylandFramebufferSizeCallback: %s\n", Tk_PathName(winPtr));
-    glfwTkInfo *infoPtr = glfwGetWindowUserPointer(window);
-    if (!infoPtr) {
-        fprintf(stderr, "FramebufferSizeCallback: infoPtr is NULL\n");
-        return;
-    }
-    
-    NVGcontext *vg = infoPtr->context.vg;
-    if (vg == NULL) {
-        fprintf(stderr, "FramebufferSizeCallback: No Context!\n");
-        return;
-    }
-    
-    /* Rebuild the backing store FBO */
-    if (winPtr->privatePtr->fb) {
-        nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
-    }
-    winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
-    
-    if (winPtr->privatePtr->fb) {
-        fprintf(stderr, "New framebuffer %p for %s with id %d\n",
-                winPtr->privatePtr->fb,
-                Tk_PathName(winPtr), winPtr->privatePtr->fb->fbo);
-
-        /* Check for FBO completeness. */
-        nvgluBindFramebuffer(winPtr->privatePtr->fb);
-        int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            fprintf(stderr, "FBO %p is incomplete (status=0x%x)\n", 
-                    winPtr->privatePtr->fb, status);
-        } else {
-            fprintf(stderr, "FBO is complete.\n");
-            fprintf(stderr, "Framebuffer size is %d x %d\n", width, height);
-        }
-    } else {
-        fprintf(stderr, "FramebufferSizeCallback: Failed to create FBO\n");
-        return;
-    }
-
-    /*
-     * Inform Tk about the size change
-     */
-    glfwGetWindowSize(window, &(winPtr->changes.width),
-                      &(winPtr->changes.height));
-
-    fprintf(stderr, "After new framebuffer window size is %d x %d\n", 
-            winPtr->changes.width, winPtr->changes.height);
-
-    /* Reconfigure the Tk window. */
-    TkDoConfigureNotify(winPtr);
-}
-#endif
 static void
 TkWaylandFramebufferSizeCallback(
     GLFWwindow *window,
@@ -1110,22 +1038,26 @@ TkWaylandCursorEnterCallback(
     if (!winPtr) {
         return;
     }
-    
-    if (TkWaylandMenuPopupActive()) {
-        TkWaylandMenuHandlePointerMotion((int)xpos, (int)ypos);
-        
-        /*
-         * After handling menu motion, force a redraw of
-         * the popup surface to show highlight changes. The menu handler
-         * updates the menu state but doesn't trigger the redraw itself.
-         */
-        TkWaylandMenuRedrawActive();
-        
-        return;
-    }
 
     glfwGetCursorPos(window, &xpos, &ypos);
     glfwGetWindowPos(window, &winX, &winY);
+    
+    /*
+     * Menu intercept: while a popup menu stack is active, cursor enter/leave
+     * events are forwarded to the menu hit-test logic. This ensures that
+     * menu highlights update even if the cursor briefly leaves the GLFW
+     * window and re-enters.
+     */
+    if (TkWaylandMenuPopupActive()) {
+        TkWaylandMenuHandlePointerMotion((int)xpos, (int)ypos);
+        /* Force immediate redraw of the menu to show highlight changes */
+        TkWaylandMenuRedrawActive();
+        
+        /*
+         * Even though we handled the menu event, still process Enter/Leave
+         * events for Tk widgets below the menu so they don't get stuck.
+         */
+    }
 
     memset(&event, 0, sizeof(XEvent));
     event.type = entered ? EnterNotify : LeaveNotify;
@@ -1189,13 +1121,15 @@ TkWaylandCursorPosCallback(
      * Menu intercept: while a popup menu stack is active all pointer motion
      * is forwarded to the menu hit-test logic.  The menu subsurfaces have no
      * GLFW window and receive no direct input, so this callback is their sole
-     * source of motion events.  We return immediately so the normal
-     * widget-crossing machinery does not also fire.
+     * source of motion events.
      */
     if (TkWaylandMenuPopupActive()) {
         TkWaylandMenuHandlePointerMotion((int)xpos, (int)ypos);
+        /* Force immediate redraw of the menu to show highlight changes */
+        TkWaylandMenuRedrawActive();
         return;
     }
+    
     TkWindow *target = (TkWindow *) Tk_CoordsToWindow((int) xpos, (int) ypos,
 			    (Tk_Window) winPtr);
 
@@ -1356,6 +1290,8 @@ TkWaylandMouseButtonCallback(
                 (int)xpos, (int)ypos,
                 evdevBtn,
                 WL_POINTER_BUTTON_STATE_PRESSED);
+            /* Force redraw after button click to update state */
+            TkWaylandMenuRedrawActive();
         }
         /* Swallow both press and release — do not deliver to Tk widgets. */
         return;
