@@ -93,6 +93,7 @@ typedef struct WlShmBuffer {
     int stride;
     int size;
     int in_use;
+    int compositor_destroyed;  /* Set when compositor has destroyed the buffer */
     struct wl_list link;
 } WlShmBuffer;
 
@@ -502,12 +503,14 @@ TkWaylandPopupCopyPixelsToBuffer(
  * TkWaylandPopupReleaseBuffer --
  *
  *	Callback when the compositor releases a buffer.
+ *	The compositor has destroyed the buffer; we should NOT call
+ *	wl_buffer_destroy on it.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Marks the buffer as available for reuse.
+ *	Marks the buffer as no longer in use and sets compositor_destroyed flag.
  *----------------------------------------------------------------------
  */
 
@@ -519,7 +522,9 @@ TkWaylandPopupReleaseBuffer(
     WlShmBuffer *buf = (WlShmBuffer *)data;
     if (buf) {
         buf->in_use = 0;
-        POPUP_LOG("TkWaylandPopupReleaseBuffer: released buffer %p", (void*)buf);
+        buf->compositor_destroyed = 1;
+        buf->buffer = NULL;  /* Compositor owns the buffer now */
+        POPUP_LOG("TkWaylandPopupReleaseBuffer: released buffer %p (compositor destroyed it)", (void*)buf);
     }
     (void)buffer;
 }
@@ -620,6 +625,7 @@ TkWaylandPopupCreateShmBuffer(
     buffer->stride = stride;
     buffer->size = size;
     buffer->in_use = 0;
+    buffer->compositor_destroyed = 0;
     
     /* Add buffer listener. */
     wl_buffer_add_listener(wl_buf, &buffer_listener, buffer);
@@ -635,12 +641,13 @@ TkWaylandPopupCreateShmBuffer(
  * TkWaylandPopupDestroyShmBuffer --
  *
  *	Destroy a wl_shm buffer and free its resources.
+ *	Only destroy the wl_buffer if the compositor hasn't already done so.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Frees shared memory and destroys wl_buffer.
+ *	Frees shared memory and destroys wl_buffer if still valid.
  *----------------------------------------------------------------------
  */
 
@@ -652,12 +659,21 @@ TkWaylandPopupDestroyShmBuffer(
     
     POPUP_LOG("TkWaylandPopupDestroyShmBuffer: destroying buffer %p", (void*)buffer);
     
-    if (buffer->buffer) {
+    /* Only destroy the wl_buffer if the compositor hasn't already */
+    if (!buffer->compositor_destroyed && buffer->buffer) {
+        /* The buffer is still valid - destroy it */
         wl_buffer_destroy(buffer->buffer);
+    } else {
+        POPUP_LOG("TkWaylandPopupDestroyShmBuffer: buffer %p already destroyed by compositor", (void*)buffer);
     }
+    
+    /* Free the shared memory */
     if (buffer->data) {
         munmap(buffer->data, buffer->size);
+        buffer->data = NULL;
     }
+    
+    buffer->buffer = NULL;
     free(buffer);
 }
 
@@ -830,8 +846,17 @@ popup_xdg_popup_done(
     
     POPUP_LOG("xdg_popup popup_done callback");
     
-    if (popup && popup->doneCallback) {
-        popup->doneCallback(popup->doneClientData);
+    if (popup) {
+        /* Mark that the popup has been dismissed by the compositor. */
+        popup->xdgPopup = NULL;
+        popup->surfaceMapped = 0;
+        /* The subsurface is also destroyed by the compositor. */
+        popup->subsurface = NULL;
+        popup->surface = NULL;
+        
+        if (popup->doneCallback) {
+            popup->doneCallback(popup->doneClientData);
+        }
     }
 }
 
@@ -1471,6 +1496,8 @@ MODULE_SCOPE void
 TkWaylandPopupDestroy(
     TkWaylandPopup *popup)
 {
+    WlShmBuffer *buffer, *tmp;
+    
     if (!popup) return;
     
     POPUP_LOG("TkWaylandPopupDestroy: destroying popup %p", (void*)popup);
@@ -1479,8 +1506,7 @@ TkWaylandPopupDestroy(
         TkWaylandPopupEndDraw(popup);
     }
     
-    /* Destroy all SHM buffers. */
-    WlShmBuffer *buffer, *tmp;
+    /* Destroy all SHM buffers using the safe destroy function */
     wl_list_for_each_safe(buffer, tmp, &popup->buffers, link) {
         wl_list_remove(&buffer->link);
         TkWaylandPopupDestroyShmBuffer(buffer);
@@ -1495,6 +1521,10 @@ TkWaylandPopupDestroy(
         popup->renderer = NULL;
     }
     
+    /* 
+     * Destroy Wayland objects in the correct order.
+     * Check if they still exist - they may have been destroyed by the compositor.
+     */
     if (popup->xdgPopup) {
         xdg_popup_destroy(popup->xdgPopup);
         popup->xdgPopup = NULL;
@@ -1506,12 +1536,10 @@ TkWaylandPopupDestroy(
     }
     
     if (popup->subsurface) {
-        wl_subsurface_destroy(popup->subsurface);
         popup->subsurface = NULL;
     }
     
     if (popup->surface) {
-        wl_surface_destroy(popup->surface);
         popup->surface = NULL;
     }
     
@@ -1741,7 +1769,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
     buffer = NULL;
     WlShmBuffer *b;
     wl_list_for_each(b, &popup->buffers, link) {
-        if (!b->in_use && b->width == popup->width && b->height == popup->height) {
+        if (!b->in_use && b->width == popup->width && b->height == popup->height && !b->compositor_destroyed) {
             buffer = b;
             break;
         }
@@ -1755,7 +1783,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
         }
     }
     
-    if (buffer && buffer->data) {
+    if (buffer && buffer->data && !buffer->compositor_destroyed) {
         TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
         
         /* STRONG ATTACH + DAMAGE + COMMIT. */
