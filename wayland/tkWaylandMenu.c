@@ -1831,23 +1831,6 @@ DrawMenuSeparator(
  *---------------------------------------------------------------------------
  */
 
-/*
- *---------------------------------------------------------------------------
- *
- * DrawMenuEntryLabel --
- *
- *	Draw the label (text and/or image) for a menu entry.
- *	Always uses NanoVG directly for popup rendering.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Renders the label and handles compound positioning, disabled stippling.
- *
- *---------------------------------------------------------------------------
- */
-
 static void
 DrawMenuEntryLabel(
 		   TkMenu *menuPtr,
