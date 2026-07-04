@@ -1677,12 +1677,13 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryIndicator --
  *
  *	Draw check button or radio button indicator for a menu entry.
+ *	Uses the text foreground color for the indicator strokes.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Renders the check/radio indicator and selection mark.
+ *	Renders the check/radio indicator and selection mark using textColor.
  *
  *---------------------------------------------------------------------------
  */
@@ -1715,10 +1716,12 @@ DrawMenuEntryIndicator(
 	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
 	size = PTR2INT(mePtr->platformEntryData); 
 	
+	/* Use textColor for the indicator color */
 	if (mePtr->state == ENTRY_DISABLED) {
-	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
+	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGBA(128, 128, 128, 255);
 	} else {
-	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
+	    /* Use textColor as the primary indicator color */
+	    color = textColor;
 	}
 	
 	/* Draw checkbox square. */
@@ -1752,10 +1755,12 @@ DrawMenuEntryIndicator(
 	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
 	radius = PTR2INT(mePtr->platformEntryData) / 2; 
 	
+	/* Use textColor for the indicator color */
 	if (mePtr->state == ENTRY_DISABLED) {
-	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
+	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGBA(128, 128, 128, 255);
 	} else {
-	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
+	    /* Use textColor as the primary indicator color */
+	    color = textColor;
 	}
 	
 	/* Draw radio circle. */
@@ -3760,23 +3765,33 @@ TkWaylandMenuHandlePointerButton(
 {
     int i;
 
-    if (state != WL_POINTER_BUTTON_STATE_PRESSED) {
-        return;
-    }
-
+    /* Check if click is on any menu entry */
     for (i = menuStackDepth - 1; i >= 0; i--) {
         MenuStackEntry *entry = &menuStack[i];
         if (x >= entry->x && x < entry->x + entry->w &&
             y >= entry->y && y < entry->y + entry->h) {
             int tkButton = (button == BTN_LEFT) ? 1 : 3;
-            MenuMouseClick(entry->menuPtr, x - entry->x, y - entry->y,
-                           tkButton);
+            
+            /* On button press, handle the click */
+            if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+                MenuMouseClick(entry->menuPtr, x - entry->x, y - entry->y,
+                               tkButton);
+            }
             return;
         }
     }
 
-    menuDismissedByClick = 1;
-    TkWaylandMenuDismissAll();
+    /*
+     * Click outside any menu: dismiss on button release, not press.
+     * This matches standard GUI behavior where menus dismiss when
+     * the mouse button is released outside the menu area.
+     */
+    if (state == WL_POINTER_BUTTON_STATE_RELEASED) {
+        menuDismissedByClick = 1;
+        TkWaylandMenuDismissAll();
+        TkWaylandPostVirtualEvent((TkWindow *)menuStack[0].menuPtr->tkwin,
+                                  "<<MenuDone>>");
+    }
 }
 
 /*
