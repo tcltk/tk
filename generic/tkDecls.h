@@ -675,7 +675,8 @@ EXTERN void		Tk_InitConsoleChannels(Tcl_Interp *interp);
 /* 217 */
 EXTERN void		Tk_CreateSmoothMethod(Tcl_Interp *interp,
 				const Tk_SmoothMethod *method);
-/* Slot 218 is reserved */
+/* 218 */
+EXTERN long long	Tk_GetUserInactiveTime(Display *dpy);
 /* Slot 219 is reserved */
 /* 220 */
 EXTERN int		Tk_GetDash(Tcl_Interp *interp, const char *value,
@@ -834,7 +835,7 @@ EXTERN int		Tk_PhotoPutZoomedBlock(Tcl_Interp *interp,
 EXTERN int		Tk_PhotoSetSize(Tcl_Interp *interp,
 				Tk_PhotoHandle handle, int width, int height);
 /* 269 */
-EXTERN long		Tk_GetUserInactiveTime(Display *dpy);
+EXTERN long		TkGetUserInactiveTime(Display *dpy);
 /* 270 */
 EXTERN void		Tk_ResetUserInactiveTime(Display *dpy);
 /* 271 */
@@ -1137,7 +1138,7 @@ typedef struct TkStubs {
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
     void (*reserved216)(void);
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
-    void (*reserved218)(void);
+    long long (*tk_GetUserInactiveTime) (Display *dpy); /* 218 */
     void (*reserved219)(void);
     int (*tk_GetDash) (Tcl_Interp *interp, const char *value, Tk_Dash *dash); /* 220 */
     void (*tk_CreateOutline) (Tk_Outline *outline); /* 221 */
@@ -1188,7 +1189,7 @@ typedef struct TkStubs {
     int (*tk_PhotoPutBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 266 */
     int (*tk_PhotoPutZoomedBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 267 */
     int (*tk_PhotoSetSize) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 268 */
-    long (*tk_GetUserInactiveTime) (Display *dpy); /* 269 */
+    long (*tkGetUserInactiveTime) (Display *dpy); /* 269 */
     void (*tk_ResetUserInactiveTime) (Display *dpy); /* 270 */
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*reserved272)(void);
@@ -1656,7 +1657,8 @@ extern const TkStubs *tkStubsPtr;
 /* Slot 216 is reserved */
 #define Tk_CreateSmoothMethod \
 	(tkStubsPtr->tk_CreateSmoothMethod) /* 217 */
-/* Slot 218 is reserved */
+#define Tk_GetUserInactiveTime \
+	(tkStubsPtr->tk_GetUserInactiveTime) /* 218 */
 /* Slot 219 is reserved */
 #define Tk_GetDash \
 	(tkStubsPtr->tk_GetDash) /* 220 */
@@ -1752,8 +1754,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_PhotoPutZoomedBlock) /* 267 */
 #define Tk_PhotoSetSize \
 	(tkStubsPtr->tk_PhotoSetSize) /* 268 */
-#define Tk_GetUserInactiveTime \
-	(tkStubsPtr->tk_GetUserInactiveTime) /* 269 */
+#define TkGetUserInactiveTime \
+	(tkStubsPtr->tkGetUserInactiveTime) /* 269 */
 #define Tk_ResetUserInactiveTime \
 	(tkStubsPtr->tk_ResetUserInactiveTime) /* 270 */
 #define Tk_Interp \
@@ -1828,6 +1830,7 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#undef TkGetUserInactiveTime
 #undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */

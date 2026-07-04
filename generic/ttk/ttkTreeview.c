@@ -7549,7 +7549,7 @@ static const Ttk_ElementOptionSpec TreeheadingIndicatorOptions[] = {
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(TreeheadingIndicator,marginsObj), "3p 1.5p 1.5p 1.5p" },
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(TreeheadingIndicator,sizeObj), "3p" },
+	offsetof(TreeheadingIndicator,sizeObj), "4" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -7578,8 +7578,9 @@ static void TreeheadingIndicatorSize(
 	return;
     }
 
-    *widthPtr  = (int)round(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)round(*heightPtr * scalingLevel);		/* scaled */
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);
@@ -7672,8 +7673,9 @@ static void TreeitemIndicatorSize(
     Tcl_GetIntFromObj(NULL, indicator->sizeObj, &size);
     TtkArrowSize(size, CHEVRON_DOWN, widthPtr, heightPtr);	/* unscaled */
 
-    *widthPtr  = (int)round(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)round(*heightPtr * scalingLevel);		/* scaled */
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add padding (only scaled if not in pixels) */
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &padding);

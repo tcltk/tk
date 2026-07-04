@@ -243,7 +243,7 @@ TkpBuildRegionFromAlphaData(
  *----------------------------------------------------------------------
  */
 
-long
+long long
 Tk_GetUserInactiveTime(
     TCL_UNUSED(Display*))	/* Unused with GLFW */
 {
