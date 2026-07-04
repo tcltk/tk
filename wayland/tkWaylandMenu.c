@@ -1669,6 +1669,8 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryIndicator --
  *
  *	Draw check button or radio button indicator for a menu entry.
+ *      Uses the text color (foreground) for the outline and checkmark
+ *      to ensure visibility, rather than the often-faint border color.
  *
  * Results:
  *	None.
@@ -1707,10 +1709,15 @@ DrawMenuEntryIndicator(
 	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
 	size = PTR2INT(mePtr->platformEntryData); 
 	
+	/* Use the text color for the indicator outline and checkmark.
+	 * If disabled, use a gray tone. This makes it visible even if the
+	 * background border color is light.
+	 */
 	if (mePtr->state == ENTRY_DISABLED) {
 	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
 	} else {
-	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
+	    /* Prefer the text color for the indicator */
+	    color = textColor;
 	}
 	
 	/* Draw checkbox square. */
@@ -1747,7 +1754,7 @@ DrawMenuEntryIndicator(
 	if (mePtr->state == ENTRY_DISABLED) {
 	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
 	} else {
-	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
+	    color = textColor;
 	}
 	
 	/* Draw radio circle. */
@@ -1971,19 +1978,9 @@ DrawMenuEntryLabel(
 	if (mePtr->image != NULL) {
 	    Tk_PhotoHandle photo = NULL;
 	    
-	    /* Try to get photo handle from imagePtr first */
+	    /* Try to get photo handle from imagePtr */
 	    if (mePtr->imagePtr != NULL) {
 		photo = Tk_FindPhoto(mePtr->menuPtr->interp, Tcl_GetString(mePtr->imagePtr));
-	    }
-	    
-	    /* Fallback: try to get the image name from the Tk_Image handle */
-	    if (!photo && mePtr->image != NULL) {
-		/* Use Tk_GetImageMasterData to get the image name if possible */
-		/* Or try using Tk_GetImageType to identify the image type */
-		/* For now, just try to get the name from the imagePtr if available */
-		if (mePtr->imagePtr != NULL) {
-		    /* Already tried above */
-		}
 	    }
 
 	    if (photo != NULL) {
@@ -3411,20 +3408,33 @@ MenuMouseMotion(
                     int cascadeW, cascadeH;
                     int level = MenuStackFindLevel(menuPtr);
 
+                    MENU_LOG("MenuMouseMotion: cascade entry '%s' hit, level=%d",
+                             Tcl_GetString(mePtr->labelPtr), level);
+
                     menuRefPtr = TkFindMenuReferencesObj(
 							 menuPtr->interp, mePtr->namePtr);
 
                     if (level >= 0 && menuRefPtr && menuRefPtr->menuPtr) {
                         TkMenu *cascadePtr = menuRefPtr->menuPtr;
+                        TkWaylandPopup *parentPopup = menuStack[level].popup;
+                        int parentX = menuStack[level].x;
+                        int parentY = menuStack[level].y;
+
+                        MENU_LOG("MenuMouseMotion: posting cascade '%s' at (%d,%d)",
+                                 Tcl_GetString(mePtr->namePtr),
+                                 parentX + menuStack[level].w, parentY + mePtr->y);
 
                         MenuStackPop(level + 1);
 
-                        cascadeAnchorX = menuStack[level].x + menuStack[level].w;
-                        cascadeAnchorY = menuStack[level].y + mePtr->y;
+                        /* Compute cascade position: to the right of the parent */
+                        cascadeAnchorX = parentX + menuStack[level].w;
+                        cascadeAnchorY = parentY + mePtr->y;
 
                         TkRecomputeMenu(cascadePtr);
                         cascadeW = cascadePtr->totalWidth;
                         cascadeH = cascadePtr->totalHeight;
+                        if (cascadeW <= 0) cascadeW = 1;
+                        if (cascadeH <= 0) cascadeH = 1;
 
                         menuPtr->postedCascade = mePtr;
                         TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
@@ -3432,6 +3442,11 @@ MenuMouseMotion(
                         TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
                             cascadeAnchorX, cascadeAnchorY, 0, 0,
                             cascadeW, cascadeH, 0);
+                    } else {
+                        MENU_LOG("MenuMouseMotion: cascade '%s' could not be resolved (menuRefPtr=%p, cascadePtr=%p)",
+                                 Tcl_GetString(mePtr->namePtr),
+                                 (void*)menuRefPtr,
+                                 (void*)(menuRefPtr ? menuRefPtr->menuPtr : NULL));
                     }
                 }
 
