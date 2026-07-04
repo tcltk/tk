@@ -37,6 +37,10 @@ extern GLFWwindow *mainGlfwWindow;
 #define MENU_DIVIDER_HEIGHT	2
 #define ENTRY_HELP_MENU		ENTRY_PLATFORM_FLAG1
 
+/* Cascade arrow size */
+#define CASCADE_ARROW_WIDTH 10
+#define CASCADE_ARROW_HEIGHT 12
+
 /* WmInfo flag from tkUnixWm.c */
 #ifndef WM_NEVER_MAPPED
 #define WM_NEVER_MAPPED (1<<0)
@@ -113,6 +117,7 @@ MODULE_SCOPE void TkWaylandWmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 MODULE_SCOPE void TkWaylandPostVirtualEvent(TkWindow *winPtr, const char *eventName);
 MODULE_SCOPE int TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
     int button);
+MODULE_SCOPE void TkWaylandMenuRedrawActive(void);
 
 /* Geometry helper functions. */
 static void GetMenuIndicatorGeometry(TkMenu *menuPtr, TkMenuEntry *mePtr,
@@ -1605,23 +1610,26 @@ DrawMenuEntryAccelerator(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr, 
 			&activeBorderWidth); 
 
-    if ((mePtr->type == CASCADE_ENTRY) && drawArrow) { 
+    /* Draw cascade arrow for CASCADE_ENTRY types using the defined constants */
+    if (mePtr->type == CASCADE_ENTRY) { 
 	int px, py;
+	int arrowW = CASCADE_ARROW_WIDTH;
+	int arrowH = CASCADE_ARROW_HEIGHT;
 	
-	px = x + width - borderWidth - activeBorderWidth - CASCADE_ARROW_WIDTH; 
-	py = y + (height - CASCADE_ARROW_HEIGHT)/2; 
+	px = x + width - borderWidth - activeBorderWidth - arrowW - 2; 
+	py = y + (height - arrowH)/2; 
 	
 	/* Draw cascade arrow as filled triangle using NanoVG. */
 	nvgBeginPath(vg);
 	nvgMoveTo(vg, px, py);
-	nvgLineTo(vg, px, py + CASCADE_ARROW_HEIGHT);
-	nvgLineTo(vg, px + CASCADE_ARROW_WIDTH, py + CASCADE_ARROW_HEIGHT/2);
+	nvgLineTo(vg, px, py + arrowH);
+	nvgLineTo(vg, px + arrowW, py + arrowH/2);
 	nvgClosePath(vg);
 	
 	if (mePtr->state == ENTRY_ACTIVE) {
 	    nvgFillColor(vg, activeBorder ? TkWaylandXColorToNVG(Tk_3DBorderColor(activeBorder)) : nvgRGB(0, 0, 0));
 	} else {
-	    nvgFillColor(vg, bgBorder ? TkWaylandXColorToNVG(Tk_3DBorderColor(bgBorder)) : nvgRGB(0, 0, 0));
+	    nvgFillColor(vg, textColor);
 	}
 	nvgFill(vg);
 	
@@ -1669,8 +1677,6 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryIndicator --
  *
  *	Draw check button or radio button indicator for a menu entry.
- *      Uses the text color (foreground) for the outline and checkmark
- *      to ensure visibility, rather than the often-faint border color.
  *
  * Results:
  *	None.
@@ -1709,15 +1715,10 @@ DrawMenuEntryIndicator(
 	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
 	size = PTR2INT(mePtr->platformEntryData); 
 	
-	/* Use the text color for the indicator outline and checkmark.
-	 * If disabled, use a gray tone. This makes it visible even if the
-	 * background border color is light.
-	 */
 	if (mePtr->state == ENTRY_DISABLED) {
 	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
 	} else {
-	    /* Prefer the text color for the indicator */
-	    color = textColor;
+	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
 	}
 	
 	/* Draw checkbox square. */
@@ -1754,7 +1755,7 @@ DrawMenuEntryIndicator(
 	if (mePtr->state == ENTRY_DISABLED) {
 	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
 	} else {
-	    color = textColor;
+	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
 	}
 	
 	/* Draw radio circle. */
@@ -2531,46 +2532,8 @@ TkWaylandPostMenuAtAnchor(
         return TCL_ERROR;
     }
 
-    /*
-     * IMPORTANT: For cascade menus, we need to use the main GLFW window
-     * as the parent, NOT the menu's own window (which doesn't have a GLFW
-     * window). The menu's tkwin is a menu window, not a toplevel.
-     */
-    GLFWwindow *parentWindow = mainGlfwWindow;
-    
-    /* Try to get the toplevel's GLFW window from the menu's parent chain */
-    TkWindow *menuWin = (TkWindow *)menuPtr->tkwin;
-    TkWindow *toplevel = menuWin;
-    while (toplevel->parentPtr && !Tk_IsTopLevel(toplevel)) {
-        toplevel = toplevel->parentPtr;
-    }
-    GLFWwindow *toplevelGlfw = TkWaylandGetGLFWwindow(toplevel);
-    if (toplevelGlfw) {
-        parentWindow = toplevelGlfw;
-    }
-
-    if (!parentWindow) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(
-            "TkWaylandPostMenuAtAnchor: no GLFW parent window", -1));
-        return TCL_ERROR;
-    }
-
-    /*
-     * Get the root coordinates of the parent toplevel so we can position
-     * the menu correctly in screen space.
-     */
-    int rootX, rootY;
-    Tk_GetRootCoords((Tk_Window)toplevel, &rootX, &rootY);
-    
-    /* The anchor coordinates are already in screen space, so use them directly */
-    int screenX = anchorX;
-    int screenY = anchorY;
-
-    MENU_LOG("TkWaylandPostMenuAtAnchor: parent window toplevel %s at root (%d,%d), anchor screen (%d,%d)",
-             Tk_PathName((Tk_Window)toplevel), rootX, rootY, screenX, screenY);
-
     TkWaylandPopup *popup = TkWaylandSubsurfaceCreate(
-        parentWindow, screenX, screenY, popupW, popupH);
+        mainGlfwWindow, anchorX, anchorY + anchorH, popupW, popupH);
 
     if (!popup) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2582,24 +2545,22 @@ TkWaylandPostMenuAtAnchor(
         TkWaylandSubsurfacePlaceAbove(popup, menuStack[menuStackDepth - 1].popup);
     }
 
-    /* Store popup reference in the menu's wmInfo if available */
-    if (menuWin->wmInfoPtr) {
-        WmInfo *wmPtr = (WmInfo *)menuWin->wmInfoPtr;
-        wmPtr->popup = popup;
+    TkWindow *menuWin = (TkWindow *)menuPtr->tkwin;
+    WmInfo   *wmPtr   = (WmInfo *)menuWin->wmInfoPtr;
+    if (wmPtr) {
+        wmPtr->popup            = popup;
         wmPtr->overrideRedirect = 1;
     }
 
-    /* Push onto stack */
+    Tk_MoveResizeWindow(menuPtr->tkwin, anchorX, anchorY + anchorH, popupW, popupH);
+
     MenuStackEntry *entry = &menuStack[menuStackDepth++];
     entry->menuPtr = menuPtr;
     entry->popup   = popup;
-    entry->x = screenX;
-    entry->y = screenY;
+    entry->x = anchorX;
+    entry->y = anchorY + anchorH;
     entry->w = popupW;
     entry->h = popupH;
-
-    MENU_LOG("TkWaylandPostMenuAtAnchor: stack entry %d at (%d,%d) size %dx%d",
-             menuStackDepth - 1, entry->x, entry->y, entry->w, entry->h);
 
     MenuDrawIntoPopup(menuPtr, popup);
 
@@ -3506,6 +3467,8 @@ MenuMouseMotion(
                     if (result == TCL_OK) {
                         /* Force redraw the parent to show cascade highlight */
                         TkEventuallyRedrawMenu(menuPtr, NULL);
+                        /* Also redraw the cascade entry specifically if needed */
+                        TkWaylandMenuRedrawActive();
                     }
                 }
 
