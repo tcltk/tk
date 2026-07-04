@@ -2733,9 +2733,20 @@ TkDrawAngledChars(
 	    }
 
 	    XftFont *ftFont = GetFaceFont(fontPtr, fontIndex, angle);
+	    /*
+	     * Measure the advance using the UNROTATED base font. ftFont
+	     * already has a rotation matrix baked in (see GetFaceFont), so
+	     * XftGlyphExtents on ftFont would return an advance that is
+	     * already rotated into device space. Rotating that a second
+	     * time below (rx/ry) would double-rotate the pen position,
+	     * compounding with every glyph and blowing up at larger angles.
+	     * The base font gives us the natural, unrotated advance, which
+	     * we then rotate exactly once.
+	     */
+	    XftFont *baseFont = GetFaceFont(fontPtr, fontIndex, 0.0);
 	    unsigned int glyphId = XftCharIndex(display, ftFont, uc);
 	    XGlyphInfo ext;
-	    XftGlyphExtents(display, ftFont, &glyphId, 1, &ext);
+	    XftGlyphExtents(display, baseFont, &glyphId, 1, &ext);
 
 	    /* Rotate position. */
 	    double gx = penX;
