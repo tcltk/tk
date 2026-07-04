@@ -1328,45 +1328,48 @@ TkpDrawMenuEntry(
         bgBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin, 
                                           mePtr->menuPtr->borderPtr);
     }
+    if (!bgBorder) {
+        bgBorder = Tk_Get3DBorder(mePtr->menuPtr->interp, mePtr->menuPtr->tkwin, Tk_GetUid("Menu"));
+    }
     if (mePtr->menuPtr->activeBorderPtr != NULL) {
         activeBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
                                               mePtr->menuPtr->activeBorderPtr);
     }
+    if (!activeBorder) {
+        activeBorder = Tk_Get3DBorder(mePtr->menuPtr->interp, mePtr->menuPtr->tkwin, Tk_GetUid("Menu"));
+    }
     
-    /* Get NanoVG context from the menu's popup. */
-    TkWindow *winPtr = (TkWindow *)mePtr->menuPtr->tkwin;
-    if (!winPtr || !winPtr->wmInfoPtr) return;
-    
-    WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+    /* Find the popup for this menu. */
     TkWaylandPopup *popup = NULL;
     
-    if (mePtr->menuPtr->menuType == MENUBAR) {
-        TkWindow *tw = (TkWindow *)Tk_Parent((Tk_Window)winPtr);
-        while (tw && !(tw->flags & TK_TOP_LEVEL))
-            tw = (TkWindow *)Tk_Parent((Tk_Window)tw);
-        if (tw && tw->wmInfoPtr) {
-            popup = ((WmInfo *)tw->wmInfoPtr)->menubarPopup;
-            isMenubar = 1;
+    /* Search the menu stack for this menu's popup. */
+    for (int i = 0; i < menuStackDepth; i++) {
+        if (menuStack[i].menuPtr == mePtr->menuPtr) {
+            popup = menuStack[i].popup;
+            break;
         }
-    } else {
-        popup = wmPtr->popup;
     }
     
-    /* Also check if this is the menubar menu */
-    if (!isMenubar && wmPtr && wmPtr->menubarMenuPtr == mePtr->menuPtr) {
-        isMenubar = 1;
-        popup = wmPtr->menubarPopup;
-        MENU_LOG("TkpDrawMenuEntry: menu is menubar via wmPtr->menubarMenuPtr");
-    }
-    
-    /* For menubar entries, if we can't find the popup via normal means,
-     * try getting it from the menubarPopup */
-    if (!popup && isMenubar) {
-        popup = wmPtr->menubarPopup;
+    /* If not in the stack, check if it's the menubar of a toplevel. */
+    if (!popup) {
+        TkWindow *winPtr = (TkWindow *)mePtr->menuPtr->tkwin;
+        if (winPtr) {
+            TkWindow *tw = (TkWindow *)Tk_Parent((Tk_Window)winPtr);
+            while (tw && !(tw->flags & TK_TOP_LEVEL)) {
+                tw = (TkWindow *)Tk_Parent((Tk_Window)tw);
+            }
+            if (tw && tw->wmInfoPtr) {
+                WmInfo *wmPtr = (WmInfo *)tw->wmInfoPtr;
+                if (wmPtr->menubarMenuPtr == mePtr->menuPtr) {
+                    popup = wmPtr->menubarPopup;
+                    isMenubar = 1;
+                }
+            }
+        }
     }
     
     if (!popup) {
-        MENU_LOG("TkpDrawMenuEntry: no popup found!");
+        MENU_LOG("TkpDrawMenuEntry: no popup found for menu %p!", (void*)mePtr->menuPtr);
         return;
     }
     
@@ -1516,12 +1519,14 @@ DrawMenuEntryBackground(
 {
     Tk_3DBorder border = bgBorder;
     NVGcolor fillColor;
+    NVGcolor defaultBg = nvgRGB(240, 240, 240);
+    NVGcolor defaultActive = nvgRGB(200, 200, 220);
     
     if (mePtr->state == ENTRY_ACTIVE) {
-	border = activeBorder;
-	fillColor = TkWaylandXColorToNVG(Tk_3DBorderColor(activeBorder));
+	border = activeBorder ? activeBorder : bgBorder;
+	fillColor = border ? TkWaylandXColorToNVG(Tk_3DBorderColor(border)) : defaultActive;
     } else {
-	fillColor = TkWaylandXColorToNVG(Tk_3DBorderColor(bgBorder));
+	fillColor = border ? TkWaylandXColorToNVG(Tk_3DBorderColor(border)) : defaultBg;
     }
     
     /* Fill background. */
@@ -1550,7 +1555,7 @@ DrawMenuEntryBackground(
 	    nvgBeginPath(vg);
 	    nvgRect(vg, x, y, width, height);
 	    nvgStrokeWidth(vg, activeBorderWidth);
-	    nvgStrokeColor(vg, TkWaylandXColorToNVG(Tk_3DBorderColor(border)));
+	    nvgStrokeColor(vg, border ? TkWaylandXColorToNVG(Tk_3DBorderColor(border)) : nvgRGB(150, 150, 150));
 	    nvgStroke(vg);
 	}
     }
@@ -1614,9 +1619,9 @@ DrawMenuEntryAccelerator(
 	nvgClosePath(vg);
 	
 	if (mePtr->state == ENTRY_ACTIVE) {
-	    nvgFillColor(vg, TkWaylandXColorToNVG(Tk_3DBorderColor(activeBorder)));
+	    nvgFillColor(vg, activeBorder ? TkWaylandXColorToNVG(Tk_3DBorderColor(activeBorder)) : nvgRGB(0, 0, 0));
 	} else {
-	    nvgFillColor(vg, TkWaylandXColorToNVG(Tk_3DBorderColor(bgBorder)));
+	    nvgFillColor(vg, bgBorder ? TkWaylandXColorToNVG(Tk_3DBorderColor(bgBorder)) : nvgRGB(0, 0, 0));
 	}
 	nvgFill(vg);
 	
@@ -1702,8 +1707,11 @@ DrawMenuEntryIndicator(
 	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
 	size = PTR2INT(mePtr->platformEntryData); 
 	
-	color = (mePtr->state == ENTRY_DISABLED) ? 
-	    TkWaylandXColorToNVG(disableColor) : TkWaylandXColorToNVG(indicatorColor);
+	if (mePtr->state == ENTRY_DISABLED) {
+	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
+	} else {
+	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
+	}
 	
 	/* Draw checkbox square. */
 	nvgBeginPath(vg);
@@ -1736,8 +1744,11 @@ DrawMenuEntryIndicator(
 	left = x + activeBorderWidth + 2 + mePtr->indicatorSpace/2; 
 	radius = PTR2INT(mePtr->platformEntryData) / 2; 
 	
-	color = (mePtr->state == ENTRY_DISABLED) ? 
-	    TkWaylandXColorToNVG(disableColor) : TkWaylandXColorToNVG(indicatorColor);
+	if (mePtr->state == ENTRY_DISABLED) {
+	    color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
+	} else {
+	    color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : nvgRGB(0, 0, 0);
+	}
 	
 	/* Draw radio circle. */
 	nvgBeginPath(vg);
@@ -1795,6 +1806,23 @@ DrawMenuSeparator(
     nvgStrokeColor(vg, nvgRGBA(160, 160, 160, 255));
     nvgStroke(vg);
 }
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DrawMenuEntryLabel --
+ *
+ *	Draw the label (text and/or image) for a menu entry.
+ *	Always uses NanoVG directly for popup rendering.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Renders the label and handles compound positioning, disabled stippling.
+ *
+ *---------------------------------------------------------------------------
+ */
 
 /*
  *---------------------------------------------------------------------------
@@ -1940,9 +1968,24 @@ DrawMenuEntryLabel(
 	 * have no portable way to get raw pixels without a Drawable, so
 	 * they fall through to the placeholder below.
 	 */
-	if (mePtr->image != NULL && mePtr->imagePtr != NULL) {
-	    Tk_PhotoHandle photo = Tk_FindPhoto(mePtr->menuPtr->interp,
-						 Tcl_GetString(mePtr->imagePtr));
+	if (mePtr->image != NULL) {
+	    Tk_PhotoHandle photo = NULL;
+	    
+	    /* Try to get photo handle from imagePtr first */
+	    if (mePtr->imagePtr != NULL) {
+		photo = Tk_FindPhoto(mePtr->menuPtr->interp, Tcl_GetString(mePtr->imagePtr));
+	    }
+	    
+	    /* Fallback: try to get the image name from the Tk_Image handle */
+	    if (!photo && mePtr->image != NULL) {
+		/* Use Tk_GetImageMasterData to get the image name if possible */
+		/* Or try using Tk_GetImageType to identify the image type */
+		/* For now, just try to get the name from the imagePtr if available */
+		if (mePtr->imagePtr != NULL) {
+		    /* Already tried above */
+		}
+	    }
+
 	    if (photo != NULL) {
 		Tk_PhotoImageBlock block;
 		if (Tk_PhotoGetImage(photo, &block) && block.width > 0 && block.height > 0) {
@@ -2058,7 +2101,6 @@ DrawMenuEntryLabel(
 	nvgFill(vg);
     } 
 }
-
 /*
  *---------------------------------------------------------------------------
  *
@@ -2880,9 +2922,9 @@ static void
 TkpDisplayMenu(
     void *clientData)
 {
-    TkMenu   *menuPtr = (TkMenu *)clientData;
-    TkWindow *winPtr;
-    WmInfo   *wmPtr;
+    TkMenu *menuPtr = (TkMenu *)clientData;
+    TkWaylandPopup *popup = NULL;
+    int isMenubar = 0;
 
     MENU_LOG("TkpDisplayMenu called");
 
@@ -2891,51 +2933,48 @@ TkpDisplayMenu(
         return;
     }
 
-    winPtr = (TkWindow *)menuPtr->tkwin;
-    wmPtr  = (WmInfo *)winPtr->wmInfoPtr;
-
     Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu, clientData);
 
-    if (!wmPtr) {
-        MENU_LOG("TkpDisplayMenu: no wmInfoPtr");
+    /* 
+     * Find the popup for this menu. 
+     * Do NOT rely on wmInfoPtr, as cascade menus are regular windows 
+     * and do not have a wmInfoPtr.
+     */
+    for (int i = 0; i < menuStackDepth; i++) {
+        if (menuStack[i].menuPtr == menuPtr) {
+            popup = menuStack[i].popup;
+            break;
+        }
+    }
+
+    /* If not in stack, check if it's the menubar of a toplevel. */
+    if (!popup) {
+        TkWindow *tw = (TkWindow *)menuPtr->tkwin;
+        while (tw && !(tw->flags & TK_TOP_LEVEL)) {
+            tw = tw->parentPtr;
+        }
+        if (tw && tw->wmInfoPtr) {
+            WmInfo *wmPtr = (WmInfo *)tw->wmInfoPtr;
+            if (wmPtr->menubarMenuPtr == menuPtr) {
+                popup = wmPtr->menubarPopup;
+                isMenubar = 1;
+            }
+        }
+    }
+
+    if (!popup) {
+        MENU_LOG("TkpDisplayMenu: no popup surface available for menu %p", (void *)menuPtr);
         return;
     }
 
-    /*
-     * A menu window is either a menubar strip (drawn into
-     * wmPtr->menubarPopup via MenuDrawMenubarIntoPopup) or a posted
-     * dropdown/popup menu (drawn into wmPtr->popup via MenuDrawIntoPopup).
-     * Route to whichever surface actually exists so that hover
-     * activation and entryconfigure changes (-font/-foreground/
-     * -background) are ever actually repainted.
-     */
-    if (menuPtr->menuType == MENUBAR && wmPtr->menubarPopup) {
-        MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
-    } else if (wmPtr->popup) {
-        MenuDrawIntoPopup(menuPtr, wmPtr->popup);
-    } else if (wmPtr->menubarPopup) {
-        /* Fallback for menus reached only via wmPtr->menubarMenuPtr. */
-        MenuDrawMenubarIntoPopup(menuPtr, wmPtr->menubarPopup);
+    /* Route to the correct drawing function. */
+    if (isMenubar || menuPtr->menuType == MENUBAR) {
+        MenuDrawMenubarIntoPopup(menuPtr, popup);
     } else {
-        MENU_LOG("TkpDisplayMenu: no popup surface available for menu %p", (void *)menuPtr);
+        MenuDrawIntoPopup(menuPtr, popup);
     }
 }
 
-/*
- *----------------------------------------------------------------------  
- * TkWaylandMenuRedrawActive --
- *
- *      Force a redraw of the currently active menu popup.
- *      Called after mouse motion to update hover highlights.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Redraws the active menu.
- *----------------------------------------------------------------------
- */
- 
 /*
  *----------------------------------------------------------------------  
  * TkWaylandMenuRedrawActive --
