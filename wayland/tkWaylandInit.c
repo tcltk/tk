@@ -49,6 +49,7 @@ int shutdownInProgress = 0;
 struct wl_display *waylandDisplay = NULL;
 struct wl_compositor *waylandCompositor = NULL;
 struct wl_subcompositor *waylandSubcompositor = NULL;
+struct wl_shm *waylandShm = NULL;
 struct xdg_wm_base *waylandWmBase = NULL;
 struct wl_seat *waylandSeat = NULL;
 EGLDisplay eglDisplay = EGL_NO_DISPLAY;
@@ -526,7 +527,6 @@ TkWaylandInitialize(void)
         return TCL_ERROR;
     }
 
-
     /*
      * Popup system only needs:
      * - wl_display (from GLFW)
@@ -678,7 +678,7 @@ TkWaylandCreateWindow(
 
         glfwWindow = mainGlfwWindow;
 
-        /* Make sure the root window’s context is current and configured. */
+        /* Make sure the root window's context is current and configured. */
         glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
         glfwSetWindowSize(glfwWindow, width, height);

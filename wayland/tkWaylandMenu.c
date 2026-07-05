@@ -105,6 +105,10 @@ static void MenuStackPop(int toDepth);
 static void MenuMouseClick(TkMenu *menuPtr, int x, int y, int button);
 static void MenuMouseMotion(TkMenu *menuPtr, int x, int y);
 static void MenuMouseLeave(TkMenu *menuPtr);
+static void TkWaylandGetToplevelContentSize(int *widthPtr, int *heightPtr);
+static void TkWaylandClampPopupGeometry(int *xPtr, int *yPtr, int *wPtr, int *hPtr);
+static void TkWaylandComputeCascadeAnchor(int level, TkMenuEntry *mePtr,
+    int cascadeW, int cascadeH, int *outX, int *outY);
 static void TkpDisplayMenu(void *clientData);
 static void TkWaylandMenubarCreateOrResize(TkWindow *winPtr);
 static void MenuBarDeferredSetup(void *clientData);
@@ -2468,6 +2472,158 @@ TkWaylandMenubarDestroy(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkWaylandGetToplevelContentSize --
+ *
+ *	Return the content-area size of the main toplevel GLFW window, in
+ *	the same surface-local coordinate space that menu/cascade anchors
+ *	are expressed in. All menu popups are wl_subsurfaces parented by
+ *	this toplevel, so this size is the hard bound within which every
+ *	popup, submenu, and cascade must be drawn.
+ *
+ * Results:
+ *	None. *widthPtr/*heightPtr are set to 0 if the size cannot be
+ *	determined (e.g. no main window yet), which callers treat as
+ *	"don't clamp".
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+TkWaylandGetToplevelContentSize(
+    int *widthPtr,
+    int *heightPtr)
+{
+    *widthPtr  = 0;
+    *heightPtr = 0;
+
+    if (!mainGlfwWindow) {
+        return;
+    }
+
+    glfwGetWindowSize(mainGlfwWindow, widthPtr, heightPtr);
+
+    if (*widthPtr < 0)  *widthPtr  = 0;
+    if (*heightPtr < 0) *heightPtr = 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandClampPopupGeometry --
+ *
+ *	Constrain a popup rectangle, expressed in toplevel-surface-local
+ *	coordinates, so that it lies entirely within the toplevel's content
+ *	area. Used as the single choke point for every menu popup (root
+ *	context menus, menubutton menus, cascades, and menubar-posted
+ *	top-level menus) so that none of them can ever be positioned or
+ *	sized outside the toplevel that owns them.
+ *
+ *	If the popup is larger than the toplevel in either dimension, it is
+ *	shrunk to fit rather than left to overflow; this is a defensive
+ *	fallback and callers with a preferred flip position (e.g. cascades)
+ *	should compute a better *xPtr/*yPtr themselves before calling this.
+ *
+ * Results:
+ *	None. *xPtr, *yPtr, *wPtr, *hPtr are adjusted in place.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+TkWaylandClampPopupGeometry(
+    int *xPtr,
+    int *yPtr,
+    int *wPtr,
+    int *hPtr)
+{
+    int toplevelW, toplevelH;
+
+    TkWaylandGetToplevelContentSize(&toplevelW, &toplevelH);
+
+    if (toplevelW <= 0 || toplevelH <= 0) {
+        /* Toplevel size not yet known; nothing sane to clamp against. */
+        return;
+    }
+
+    if (*wPtr > toplevelW) *wPtr = toplevelW;
+    if (*hPtr > toplevelH) *hPtr = toplevelH;
+    if (*wPtr < 1) *wPtr = 1;
+    if (*hPtr < 1) *hPtr = 1;
+
+    if (*xPtr + *wPtr > toplevelW) *xPtr = toplevelW - *wPtr;
+    if (*xPtr < 0) *xPtr = 0;
+
+    if (*yPtr + *hPtr > toplevelH) *yPtr = toplevelH - *hPtr;
+    if (*yPtr < 0) *yPtr = 0;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandComputeCascadeAnchor --
+ *
+ *	Compute the position at which a cascade (submenu) should be posted
+ *	relative to its parent menu, which is menuStack[level].
+ *
+ *	The preferred position is immediately to the right of the parent,
+ *	aligned with the cascade entry. If that would run past the right
+ *	edge of the toplevel but the mirrored position to the left of the
+ *	parent fits instead, the cascade is flipped to the left, matching
+ *	standard desktop menu behavior. Vertical placement is left to the
+ *	generic TkWaylandClampPopupGeometry() backstop applied afterward in
+ *	TkWaylandPostMenuAtAnchor.
+ *
+ * Results:
+ *	*outX/*outY are set to the chosen toplevel-surface-local anchor.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+TkWaylandComputeCascadeAnchor(
+    int level,
+    TkMenuEntry *mePtr,
+    int cascadeW,
+    int cascadeH,
+    int *outX,
+    int *outY)
+{
+    int toplevelW, toplevelH;
+    int parentX, parentW, parentY;
+    int rightX, leftX;
+
+    TkWaylandGetToplevelContentSize(&toplevelW, &toplevelH);
+    (void)cascadeH;
+
+    parentX = menuStack[level].x;
+    parentW = menuStack[level].w;
+    parentY = menuStack[level].y;
+
+    rightX = parentX + parentW;
+    leftX  = parentX - cascadeW;
+
+    if (toplevelW > 0 && rightX + cascadeW > toplevelW && leftX >= 0) {
+        /* Doesn't fit to the right, but does fit to the left: flip. */
+        *outX = leftX;
+    } else {
+        *outX = rightX;
+    }
+
+    *outY = parentY + (mePtr ? mePtr->y : 0);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkWaylandPostMenuAtAnchor --
  *
  *	Core menu posting routine.
@@ -2490,6 +2646,8 @@ TkWaylandPostMenuAtAnchor(
     int popupW, int popupH,
     int isRoot)
 {
+    int postX, postY;
+
     if (!interp || !menuPtr || !menuPtr->tkwin) {
         if (interp) {
             Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2501,8 +2659,24 @@ TkWaylandPostMenuAtAnchor(
     if (popupW <= 0) popupW = 1;
     if (popupH <= 0) popupH = 1;
 
-    MENU_LOG("TkWaylandPostMenuAtAnchor: menu=%p, anchor=(%d,%d,%d,%d), size=%dx%d, isRoot=%d",
-        (void*)menuPtr, anchorX, anchorY, anchorW, anchorH, popupW, popupH, isRoot);
+    postX = anchorX;
+    postY = anchorY + anchorH;
+
+    /*
+     * Constrain the popup so that it is never positioned or sized outside
+     * the toplevel that owns it. This applies uniformly to root context
+     * menus, menubutton menus, menubar-posted menus, and cascades; callers
+     * that want smarter-than-clamp behavior (e.g. cascades flipping to the
+     * opposite side of their parent) compute a better postX beforehand via
+     * TkWaylandComputeCascadeAnchor(), and this call still guarantees the
+     * final rectangle fits.
+     */
+    TkWaylandClampPopupGeometry(&postX, &postY, &popupW, &popupH);
+
+    MENU_LOG("TkWaylandPostMenuAtAnchor: menu=%p, anchor=(%d,%d,%d,%d), size=%dx%d, "
+        "post=(%d,%d), isRoot=%d",
+        (void*)menuPtr, anchorX, anchorY, anchorW, anchorH, popupW, popupH,
+        postX, postY, isRoot);
 
     if (isRoot) {
         TkWaylandMenuDismissAll();
@@ -2515,7 +2689,7 @@ TkWaylandPostMenuAtAnchor(
     }
 
     TkWaylandPopup *popup = TkWaylandSubsurfaceCreate(
-        mainGlfwWindow, anchorX, anchorY + anchorH, popupW, popupH);
+        mainGlfwWindow, postX, postY, popupW, popupH);
 
     if (!popup) {
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2534,13 +2708,13 @@ TkWaylandPostMenuAtAnchor(
         wmPtr->overrideRedirect = 1;
     }
 
-    Tk_MoveResizeWindow(menuPtr->tkwin, anchorX, anchorY + anchorH, popupW, popupH);
+    Tk_MoveResizeWindow(menuPtr->tkwin, postX, postY, popupW, popupH);
 
     MenuStackEntry *entry = &menuStack[menuStackDepth++];
     entry->menuPtr = menuPtr;
     entry->popup   = popup;
-    entry->x = anchorX;
-    entry->y = anchorY + anchorH;
+    entry->x = postX;
+    entry->y = postY;
     entry->w = popupW;
     entry->h = popupH;
 
@@ -3258,12 +3432,15 @@ MenuMouseClick(
 
                         MenuStackPop(level + 1);
 
-                        cascadeAnchorX = menuStack[level].x + menuStack[level].w;
-                        cascadeAnchorY = menuStack[level].y + mePtr->y;
-
                         TkRecomputeMenu(cascadePtr);
                         cascadeW = cascadePtr->totalWidth;
                         cascadeH = cascadePtr->totalHeight;
+                        if (cascadeW <= 0) cascadeW = 1;
+                        if (cascadeH <= 0) cascadeH = 1;
+
+                        TkWaylandComputeCascadeAnchor(level, mePtr,
+                            cascadeW, cascadeH,
+                            &cascadeAnchorX, &cascadeAnchorY);
 
                         menuPtr->postedCascade = mePtr;
                         TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
@@ -3424,15 +3601,18 @@ MenuMouseMotion(
                     }
                     level = newLevel;
 
-                    /* Compute cascade position: to the right of the parent, aligned with entry */
-                    cascadeAnchorX = menuStack[level].x + menuStack[level].w;
-                    cascadeAnchorY = menuStack[level].y + mePtr->y;
-
+                    /* Compute cascade position: to the right of the parent
+                     * unless that would overflow the toplevel, in which
+                     * case flip to the left, aligned with the entry. */
                     TkRecomputeMenu(cascadePtr);
                     cascadeW = cascadePtr->totalWidth;
                     cascadeH = cascadePtr->totalHeight;
                     if (cascadeW <= 0) cascadeW = 1;
                     if (cascadeH <= 0) cascadeH = 1;
+
+                    TkWaylandComputeCascadeAnchor(level, mePtr,
+                        cascadeW, cascadeH,
+                        &cascadeAnchorX, &cascadeAnchorY);
 
                     MENU_LOG("MenuMouseMotion: posting cascade at (%d,%d) size %dx%d",
                              cascadeAnchorX, cascadeAnchorY, cascadeW, cascadeH);

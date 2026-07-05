@@ -22,7 +22,6 @@
 #include "tkMenubutton.h"
 #include <GLFW/glfw3.h>
 #include <GLES3/gl3.h>
-#include <libdecor.h>
 #include <xkbcommon/xkbcommon.h>
 #include "tkIntPlatDecls.h"
 #include "tkWaylandDefaults.h"
@@ -54,14 +53,21 @@ void nvgluBindFramebuffer(NVGLUframebuffer* fb);
 void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
 
 /*
- * Opaque forward declarations for the native Wayland popup primitive
- * (implemented in tkWaylandPopup.c) and the Wayland seat object (from
- * wayland-client.h, not included here to keep this header decoupled
- * from the raw Wayland protocol headers).
+ * Opaque forward declaration for the Wayland subsurface popup primitive
+ * (implemented in tkWaylandPopup.c).
  */
 typedef struct TkWaylandPopup TkWaylandPopup;
-struct wl_seat;
 extern int shutdownInProgress;
+
+/*
+ * Global Wayland objects - defined in tkWaylandInit.c and shared with other modules.
+ */
+extern struct wl_display *waylandDisplay;
+extern struct wl_compositor *waylandCompositor;
+extern struct wl_subcompositor *waylandSubcompositor;
+extern struct wl_shm *waylandShm;
+extern struct xdg_wm_base *waylandWmBase;
+extern struct wl_seat *waylandSeat;
 
 /*
  *----------------------------------------------------------------------
@@ -350,10 +356,10 @@ typedef struct TkWmInfo {
     int          menuHeight;
     
 
-    /* Native Wayland popup surfaces (tkWaylandPopup.c). */
-    TkWaylandPopup *popup;          /* Active xdg_popup for OR / menu
-                                      * windows; NULL otherwise. */
-    TkWaylandPopup *menubarPopup;   /* Popup surface for the menubar
+    /* Subsurface popup for OR / menu windows. */
+    TkWaylandPopup *popup;          /* Active subsurface popup for OR
+                                      * / menu windows; NULL otherwise. */
+    TkWaylandPopup *menubarPopup;   /* Subsurface popup for the menubar
                                       * strip, if any. */
     int          overrideRedirect;  /* Mirrors wm overrideredirect /
                                       * TkpMakeMenuWindow. */
@@ -736,11 +742,11 @@ MODULE_SCOPE void  TkWaylandClearStoredText(TkWindow *winPtr);
 /*
  *----------------------------------------------------------------------
  *
- * Popup Support
+ * Popup Support (wl_subsurface only)
  *
- *	Native xdg_popup primitive (tkWaylandPopup.c).  This is the base
- *	object used by menus, combobox dropdowns, tooltips, and any other
- *	override-redirect surface.  The TkWaylandPopup struct itself is
+ *	Native Wayland subsurface primitive (tkWaylandPopup.c). This is the
+ *	base object used by menus, combobox dropdowns, tooltips, and any
+ *	other override-redirect surface. The TkWaylandPopup struct itself is
  *	opaque; all access goes through these functions.
  *
  *----------------------------------------------------------------------
@@ -753,78 +759,46 @@ MODULE_SCOPE void  TkWaylandPopupSetMainWindow(GLFWwindow *window);
 void Tk_InitWaylandPopupSupport(Tcl_Interp *interp);
 
 /*
- * Create a popup.
+ * Create a subsurface popup.
  *
- *   parentGlfw  – GLFW window whose wl_surface is the xdg_popup parent.
- *   anchorX,Y   – top-left of the anchor rectangle, in parent-surface
- *                 logical pixels.
- *   anchorW,H   – anchor rectangle size (1,1 for a point anchor).
- *   popupW,H    – requested popup size.
- *   anchor      – XDG_POSITIONER_ANCHOR_* value.
- *   gravity     – XDG_POSITIONER_GRAVITY_* value.
- *   grabInput   – non-zero to take an explicit Wayland pointer grab.
- *   serial      – input-event serial for the grab (0 if grabInput==0).
+ *   parentGlfw  – GLFW window whose wl_surface is the parent.
+ *   x, y        – position relative to parent surface (logical pixels).
+ *   width, height – requested popup size.
  */
-MODULE_SCOPE TkWaylandPopup *TkWaylandPopupCreate(
+MODULE_SCOPE TkWaylandPopup *TkWaylandSubsurfaceCreate(
     GLFWwindow *parentGlfw,
-    int anchorX, int anchorY,
-    int anchorW, int anchorH,
-    int popupW,  int popupH,
-    uint32_t anchor,
-    uint32_t gravity,
-    int grabInput,
-    uint32_t serial);
+    int x, int y, int width, int height);
 
+/* Destroy a popup. */
 MODULE_SCOPE void TkWaylandPopupDestroy(TkWaylandPopup *popup);
 
-/*
- * Reposition by destroying and re-creating with new positioner
- * parameters.  Returns the new popup; the original is freed.
- */
-MODULE_SCOPE TkWaylandPopup *TkWaylandPopupMove(
+/* Reconfigure a subsurface (move/resize). */
+MODULE_SCOPE void TkWaylandSubsurfaceReconfigure(
     TkWaylandPopup *popup,
-    GLFWwindow     *parentGlfw,
-    int anchorX, int anchorY,
-    int anchorW, int anchorH,
-    uint32_t anchor,
-    uint32_t gravity);
+    int x, int y, int width, int height);
+
+/* Place this subsurface above another (or above the parent). */
+MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(
+    TkWaylandPopup *popup, TkWaylandPopup *sibling);
+
+/* Resize an existing subsurface popup (recreates renderer and buffer). */
+MODULE_SCOPE int TkWaylandPopupResize(TkWaylandPopup *popup, int width, int height);
 
 /* Rendering */
 MODULE_SCOPE NVGcontext *TkWaylandPopupGetNVGContext(TkWaylandPopup *popup);
 MODULE_SCOPE int          TkWaylandPopupBeginDraw(TkWaylandPopup *popup);
 MODULE_SCOPE void         TkWaylandPopupEndDraw(TkWaylandPopup *popup);
-
-/* Callbacks and queries */
-MODULE_SCOPE void TkWaylandPopupSetDoneCallback(
+MODULE_SCOPE void         TkWaylandPopupDrawBorderWithShadow(TkWaylandPopup *popup);
+MODULE_SCOPE void         TkWaylandPopupSetBorder(
     TkWaylandPopup *popup,
-    void (*callback)(void *clientData),
-    void *clientData);
+    int enabled,
+    unsigned char r, unsigned char g, unsigned char b, unsigned char a,
+    int shadow);
 
-MODULE_SCOPE void     TkWaylandPopupSetSerial(uint32_t serial);
-MODULE_SCOPE uint32_t TkWaylandPopupLastSerial(void);
-MODULE_SCOPE void     TkWaylandPopupGetSize(
-    TkWaylandPopup *popup, int *widthOut, int *heightOut);
-MODULE_SCOPE void     TkWaylandPopupGetPosition(
-    TkWaylandPopup *popup, int *xOut, int *yOut);
-MODULE_SCOPE struct wl_seat *TkWaylandPopupGetSeat(void);
+/* Query size and position. */
+MODULE_SCOPE void TkWaylandPopupGetSize(TkWaylandPopup *popup, int *widthOut, int *heightOut);
+MODULE_SCOPE void TkWaylandPopupGetPosition(TkWaylandPopup *popup, int *xOut, int *yOut);
 
-/*
- * Subsurface-mode popups (wl_subsurface, not xdg_popup).  Use for
- * surfaces that are a permanent part of a window -- e.g. the menubar
- * strip -- as opposed to transient, compositor-dismissed surfaces
- * (use TkWaylandPopupCreate / xdg_popup for those).  No configure
- * handshake; usable immediately after creation.
- */
-MODULE_SCOPE TkWaylandPopup *TkWaylandSubsurfaceCreate(
-    GLFWwindow *parentGlfw,
-    int x, int y, int width, int height);
-MODULE_SCOPE void TkWaylandSubsurfaceReconfigure(
-    TkWaylandPopup *popup,
-    int x, int y, int width, int height);
-MODULE_SCOPE void TkWaylandSubsurfacePlaceAbove(
-    TkWaylandPopup *popup, TkWaylandPopup *sibling);
-MODULE_SCOPE int TkWaylandPopupResize(
-    TkWaylandPopup *popup, int width, int height);
 /*
  *----------------------------------------------------------------------
  *
