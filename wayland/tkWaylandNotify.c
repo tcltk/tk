@@ -56,6 +56,9 @@
 #include <GLFW/glfw3.h>
 #include <unistd.h>
 #include <errno.h>
+#include "GLFW/glfw3native.h"
+#include <poll.h>
+	
 
 /*
  * Forward declarations for IBus integration (implemented in tkWaylandKey.c).
@@ -99,27 +102,12 @@ typedef struct ThreadSpecificData {
     bool           initialized;
     bool           waylandInitialized;
     int            shutdownInProgress; /* flag to prevent recursive shutdown */
-    int            callbackCount;  /* used by the setup proc to check for events. */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
 
 #define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
     Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
-
-/* Called by the callback functions to tell the setup proc not to block. */
-static void
-recordCallback() {
-    TSD_INIT();
-    tsdPtr->callbackCount++;
-}
-
-/* Called by the setup proc to reset the callback counter. */
-static void
-clearCallbackCount() {
-    TSD_INIT();
-    tsdPtr->callbackCount = 0;
-}
 
 /*
  * Global state for mouse buttons and modifiers.
@@ -368,7 +356,7 @@ TkWaylandCheckForWindowClosure(void)
  *
  *----------------------------------------------------------------------
  */
-    
+
 static void
 TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 {
@@ -378,10 +366,19 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
         return;
     }
 
-    Tcl_Time noBlock    = {0, 0};
-    Tcl_Time oneRefresh = {0, 16667};
-    
-     /*
+    static Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
+    static Tcl_Time oneVsync = {0, 16667}; /* ~ 1/60 sec */
+    struct wl_display* display = glfwGetWaylandDisplay();
+    int fd = wl_display_get_fd(display);
+    struct pollfd fds[1] = {
+	{
+	.fd = fd,
+	.events = POLLIN,
+	.revents = 0
+	}
+    };
+
+    /*
      * The Tcl event loop will have run all pending display procs
      * before calling this function.  Now we can swap the GL buffers
      * for any window on which some drawing has been done.
@@ -389,13 +386,11 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 
     TkWaylandDisplayAllWindows();
 
-
     /* Drain pending system communication layers inline */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) { /* Clear out events */ }
     }
 
-    clearCallbackCount();
     glfwPollEvents();
 
     /* Queue presentation onto the idle ring.
@@ -407,10 +402,10 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
         Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
     }
 
-    if (tsdPtr->callbackCount) {
+    if (poll(fds, 1, 0) > 0 && fds[0].revents) {
         Tcl_SetMaxBlockTime(&noBlock);
     } else {
-        Tcl_SetMaxBlockTime(&oneRefresh);
+        Tcl_SetMaxBlockTime(&oneVsync);
     }
 }
 /*
@@ -452,15 +447,9 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
     }
 
     glfwPollEvents();
-
-    /* Coalesce trailing window operations into the same
-     * idle presentation path rather than dropping into infinite synchronous loops.
-     */
-    if (!displayIdleQueued) {
-        displayIdleQueued = 1;
-        Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
-    }
+    TkWaylandDisplayAllWindows();
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -566,10 +555,11 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
     
     /* Queue it. */
-   fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
+    printf("Queuing Expose(%lu) for %s in %dx%d\n",
 		event.xexpose.serial, Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-    
+
+#if 0
     /* Recurse through the children of this window. */
     #if 1
     for (childPtr = winPtr->childList; childPtr != NULL;
@@ -580,7 +570,8 @@ TkWaylandQueueExposeEvent(
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
 				  Tk_Height(childPtr));
     }
-    #endif
+#endif
+#endif
 }
 
 /* 
@@ -688,8 +679,6 @@ static void
 TkWaylandWindowCloseCallback(GLFWwindow *window)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
-    recordCallback();
-
     if (winPtr) {
 	Tcl_DoWhenIdle(DestroyWindowIdleProc, winPtr);
     }
@@ -722,7 +711,6 @@ TkWaylandFramebufferSizeCallback(
     int width,
     int height)
 {
-    recordCallback();
     
     /* Validate parameters */
     if (width <= 0 || height <= 0) {
@@ -826,7 +814,6 @@ TkWaylandWindowPosCallback(
     int xpos,
     int ypos)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	fprintf(stderr, "TkWaylandWindowPosCallback: no Tk window\n");
@@ -861,7 +848,6 @@ TkWaylandWindowFocusCallback(
     GLFWwindow *window,
     int focused)
 {
-    recordCallback();
     fprintf(stderr, "TkWaylandWindowFocusCallback\n");
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
@@ -923,7 +909,6 @@ TkWaylandWindowIconifyCallback(
     GLFWwindow *window,
     int iconified)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     fprintf(stderr, "TkWaylandWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
     XEvent event;
@@ -980,7 +965,6 @@ TkWaylandWindowMaximizeCallback(
     GLFWwindow *window,
     int maximized)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     
     if (!winPtr) {
@@ -1029,7 +1013,6 @@ TkWaylandCursorEnterCallback(
     GLFWwindow *window,
     int entered)		/* GLFW_TRUE if entered, GLFW_FALSE if left */
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
     double xpos, ypos;
@@ -1113,7 +1096,6 @@ TkWaylandCursorPosCallback(
     double xpos,
     double ypos)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     XEvent event;
 
@@ -1239,7 +1221,6 @@ TkWaylandMouseButtonCallback(
     int action,
     int mods)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	return;
@@ -1389,7 +1370,6 @@ TkWaylandScrollCallback(
     double xoffset,
     double yoffset)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	return;
@@ -1465,7 +1445,6 @@ TkWaylandKeyCallback(GLFWwindow *window,
                   int action,
                   int mods)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) return;
 
@@ -1571,7 +1550,6 @@ TkWaylandKeyCallback(GLFWwindow *window,
 static void
 TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) return;
 
@@ -1604,7 +1582,6 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 static void
 TkWaylandWindowRefreshCallback(GLFWwindow *window)
 {
-    recordCallback();
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) {
 	return;
