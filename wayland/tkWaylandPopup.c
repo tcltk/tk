@@ -1,5 +1,5 @@
 /*
- * tkWaylandPopup.c --
+ * tkWaylandPopup.c -- 
  *
  *	Native Wayland popup/sub-surface primitive for Tk using wl_shm.
  *	
@@ -93,7 +93,6 @@ typedef struct WlShmBuffer {
     int stride;
     int size;
     int in_use;
-    int compositor_destroyed;  /* Set when compositor has destroyed the buffer */
     struct wl_list link;
 } WlShmBuffer;
 
@@ -503,14 +502,12 @@ TkWaylandPopupCopyPixelsToBuffer(
  * TkWaylandPopupReleaseBuffer --
  *
  *	Callback when the compositor releases a buffer.
- *	The compositor has destroyed the buffer; we should NOT call
- *	wl_buffer_destroy on it.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Marks the buffer as no longer in use and sets compositor_destroyed flag.
+ *	Marks the buffer as available for reuse.
  *----------------------------------------------------------------------
  */
 
@@ -522,9 +519,7 @@ TkWaylandPopupReleaseBuffer(
     WlShmBuffer *buf = (WlShmBuffer *)data;
     if (buf) {
         buf->in_use = 0;
-        buf->compositor_destroyed = 1;
-        buf->buffer = NULL;  /* Compositor owns the buffer now */
-        POPUP_LOG("TkWaylandPopupReleaseBuffer: released buffer %p (compositor destroyed it)", (void*)buf);
+        POPUP_LOG("TkWaylandPopupReleaseBuffer: released buffer %p", (void*)buf);
     }
     (void)buffer;
 }
@@ -625,7 +620,6 @@ TkWaylandPopupCreateShmBuffer(
     buffer->stride = stride;
     buffer->size = size;
     buffer->in_use = 0;
-    buffer->compositor_destroyed = 0;
     
     /* Add buffer listener. */
     wl_buffer_add_listener(wl_buf, &buffer_listener, buffer);
@@ -641,13 +635,12 @@ TkWaylandPopupCreateShmBuffer(
  * TkWaylandPopupDestroyShmBuffer --
  *
  *	Destroy a wl_shm buffer and free its resources.
- *	Only destroy the wl_buffer if the compositor hasn't already done so.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Frees shared memory and destroys wl_buffer if still valid.
+ *	Frees shared memory and destroys wl_buffer.
  *----------------------------------------------------------------------
  */
 
@@ -655,25 +648,46 @@ static void
 TkWaylandPopupDestroyShmBuffer(
     WlShmBuffer *buffer)
 {
-    if (!buffer) return;
-    
-    POPUP_LOG("TkWaylandPopupDestroyShmBuffer: destroying buffer %p", (void*)buffer);
-    
-    /* Only destroy the wl_buffer if the compositor hasn't already */
-    if (!buffer->compositor_destroyed && buffer->buffer) {
-        /* The buffer is still valid - destroy it */
-        wl_buffer_destroy(buffer->buffer);
-    } else {
-        POPUP_LOG("TkWaylandPopupDestroyShmBuffer: buffer %p already destroyed by compositor", (void*)buffer);
+    struct wl_buffer *wlBuffer;
+    void *data;
+    size_t size;
+
+    if (buffer == NULL) {
+        return;
     }
-    
-    /* Free the shared memory */
-    if (buffer->data) {
-        munmap(buffer->data, buffer->size);
-        buffer->data = NULL;
-    }
-    
+
+    POPUP_LOG("TkWaylandPopupDestroyShmBuffer: destroying buffer %p",
+              (void *)buffer);
+
+    /*
+     * Save state and clear pointers first to reduce the chance of
+     * accidental double-destruction.
+     */
+    wlBuffer = buffer->buffer;
+    data = buffer->data;
+    size = buffer->size;
+
     buffer->buffer = NULL;
+    buffer->data = NULL;
+    buffer->size = 0;
+
+    /*
+     * Don't send Wayland protocol requests once shutdown has begun.
+     */
+	wlBuffer = buffer->buffer;
+	buffer->buffer = NULL;
+	
+	if (!shutdownInProgress && wlBuffer != NULL) {
+	    wl_buffer_destroy(wlBuffer);
+	}
+
+    /*
+     * These are client-side resources and should always be released.
+     */
+    if (data != NULL) {
+        munmap(data, size);
+    }
+
     free(buffer);
 }
 
@@ -846,17 +860,8 @@ popup_xdg_popup_done(
     
     POPUP_LOG("xdg_popup popup_done callback");
     
-    if (popup) {
-        /* Mark that the popup has been dismissed by the compositor. */
-        popup->xdgPopup = NULL;
-        popup->surfaceMapped = 0;
-        /* The subsurface is also destroyed by the compositor. */
-        popup->subsurface = NULL;
-        popup->surface = NULL;
-        
-        if (popup->doneCallback) {
-            popup->doneCallback(popup->doneClientData);
-        }
+    if (popup && popup->doneCallback) {
+        popup->doneCallback(popup->doneClientData);
     }
 }
 
@@ -1478,74 +1483,77 @@ TkWaylandSubsurfaceCreate(
     return popup;
 }
 
-/*
- *----------------------------------------------------------------------
- * TkWaylandPopupDestroy --
- *
- *	Destroy a popup and free all resources.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Destroys Wayland objects and frees SHM buffers.
- *----------------------------------------------------------------------
- */
-
 MODULE_SCOPE void
 TkWaylandPopupDestroy(
     TkWaylandPopup *popup)
 {
-    WlShmBuffer *buffer, *tmp;
-    
-    if (!popup) return;
-    
-    POPUP_LOG("TkWaylandPopupDestroy: destroying popup %p", (void*)popup);
-    
+    if (popup == NULL) {
+        return;
+    }
+
+    POPUP_LOG("TkWaylandPopupDestroy: destroying popup %p", (void *)popup);
+
     if (popup->drawing) {
         TkWaylandPopupEndDraw(popup);
     }
-    
-    /* Destroy all SHM buffers using the safe destroy function */
-    wl_list_for_each_safe(buffer, tmp, &popup->buffers, link) {
-        wl_list_remove(&buffer->link);
-        TkWaylandPopupDestroyShmBuffer(buffer);
+
+    /*
+     * Destroy all SHM buffers.
+     */
+    if (!wl_list_empty(&popup->buffers)) {
+        WlShmBuffer *buffer, *tmp;
+
+        wl_list_for_each_safe(buffer, tmp, &popup->buffers, link) {
+            wl_list_remove(&buffer->link);
+            wl_list_init(&buffer->link);
+            TkWaylandPopupDestroyShmBuffer(buffer);
+        }
+
+        wl_list_init(&popup->buffers);
     }
+
     popup->buffer_count = 0;
     popup->current_buffer = NULL;
     popup->pending_buffer = NULL;
-    
-    /* Destroy renderer. */
+
+    /*
+     * Destroy renderer.
+     */
     if (popup->renderer) {
         TkWaylandPopupDestroyRenderer(popup->renderer);
         popup->renderer = NULL;
     }
-    
-    /* 
-     * Destroy Wayland objects in the correct order.
-     * Check if they still exist - they may have been destroyed by the compositor.
+
+    /*
+     * During application shutdown, the Wayland connection may already
+     * have been torn down. Avoid issuing protocol requests in that case.
      */
-    if (popup->xdgPopup) {
-        xdg_popup_destroy(popup->xdgPopup);
-        popup->xdgPopup = NULL;
+    if (!shutdownInProgress) {
+
+        if (popup->xdgPopup) {
+            xdg_popup_destroy(popup->xdgPopup);
+        }
+
+        if (popup->xdgSurface) {
+            xdg_surface_destroy(popup->xdgSurface);
+        }
+
+        if (popup->subsurface) {
+            wl_subsurface_destroy(popup->subsurface);
+        }
+
+        if (popup->surface) {
+            wl_surface_destroy(popup->surface);
+        }
     }
-    
-    if (popup->xdgSurface) {
-        xdg_surface_destroy(popup->xdgSurface);
-        popup->xdgSurface = NULL;
-    }
-    
-    if (popup->subsurface) {
-        popup->subsurface = NULL;
-    }
-    
-    if (popup->surface) {
-        popup->surface = NULL;
-    }
-    
+
+    popup->xdgPopup = NULL;
+    popup->xdgSurface = NULL;
+    popup->subsurface = NULL;
+    popup->surface = NULL;
+
     free(popup);
 }
-
 /*
  *---------------------------------------------------------------------------
  *
@@ -1769,7 +1777,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
     buffer = NULL;
     WlShmBuffer *b;
     wl_list_for_each(b, &popup->buffers, link) {
-        if (!b->in_use && b->width == popup->width && b->height == popup->height && !b->compositor_destroyed) {
+        if (!b->in_use && b->width == popup->width && b->height == popup->height) {
             buffer = b;
             break;
         }
@@ -1783,7 +1791,7 @@ TkWaylandPopupEndDraw(TkWaylandPopup *popup)
         }
     }
     
-    if (buffer && buffer->data && !buffer->compositor_destroyed) {
+    if (buffer && buffer->data) {
         TkWaylandPopupCopyPixelsToBuffer(popup, buffer);
         
         /* STRONG ATTACH + DAMAGE + COMMIT. */

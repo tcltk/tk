@@ -40,6 +40,7 @@
  */
 
 static int GlfwIsInitialized = 0;
+int shutdownInProgress = 0;
 
 
 /*
@@ -67,7 +68,6 @@ unsigned char *sans_data = NULL, *bold_data = NULL, *mono_data = NULL;
 
 GLFWwindow *mainGlfwWindow;
 static TkWaylandContext mainGlfwContext = {0};
-static int shutdownInProgress = 0;
 
 #if 0
 static void GLtest(GLFWwindow *window) {
@@ -604,7 +604,6 @@ TkWaylandShutdown(TCL_UNUSED(void *))
     }
     freeFonts();
     TkWaylandKeyCleanup();
-    shutdownInProgress = 0;
 }
 
 /*

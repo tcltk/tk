@@ -61,6 +61,7 @@ void nvgluDeleteFramebuffer(NVGLUframebuffer* fb);
  */
 typedef struct TkWaylandPopup TkWaylandPopup;
 struct wl_seat;
+extern int shutdownInProgress;
 
 /*
  *----------------------------------------------------------------------
