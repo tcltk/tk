@@ -973,13 +973,13 @@ TkWaylandSubsurfaceCreate(
     wl_list_init(&popup->buffers);
     popup->buffer_count = 0;
     
-    /* Initialize border settings - default to enabled with light gray. */
-    popup->drawBorder = 1;
-    popup->borderR = 200;
-    popup->borderG = 200;
-    popup->borderB = 200;
-    popup->borderA = 255;
-    popup->drawShadow = 1;
+	/* Initialize border settings - default to enabled with visible gray. */
+	popup->drawBorder = 1;
+	popup->borderR = 180;  /* Visible gray */
+	popup->borderG = 180;
+	popup->borderB = 180;
+	popup->borderA = 255;
+	popup->drawShadow = 1;
     
     /* Create the software renderer */
     popup->renderer = TkWaylandPopupCreateRenderer(width, height);
@@ -1205,13 +1205,15 @@ TkWaylandPopupBeginDraw(TkWaylandPopup *popup)
  *
  * TkWaylandPopupDrawBorderWithShadow --
  *
- *	Draw a hairline border with a subtle shadow effect around the popup.
+ *	Draw a consistent thin hairline border around the popup with
+ *	a subtle shadow effect. Borders are inset by 1 pixel so they
+ *	show up on all sides.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Draws a 1px border with shadow using NanoVG.
+ *	Draws a 1px border around all edges with subtle shadow.
  *---------------------------------------------------------------------------
  */
 
@@ -1234,31 +1236,53 @@ TkWaylandPopupDrawBorderWithShadow(
     
     nvgSave(vg);
     
-    /* Main border. */
+    /* 
+     * Draw a thin consistent hairline border, inset 1 full pixel from
+     * the surface edge (so it isn't lost when the shadow is drawn at
+     * the true outer edge below).
+     *
+     * The path is placed at *.5 coordinates rather than integer ones.
+     * NanoVG centers a stroke on its path, so a 1px stroke on an
+     * integer-aligned path (e.g. y = 1.0) straddles two pixel rows and
+     * anti-aliases into a blurry ~2px smear. Aligning the path to a
+     * half-pixel (y = 1.5) makes the full-weight coverage land on a
+     * single pixel row/column, giving a crisp hairline.
+     */
     nvgStrokeColor(vg, nvgRGBA(popup->borderR, popup->borderG, 
                                popup->borderB, popup->borderA));
     nvgStrokeWidth(vg, 1.0f);
     nvgBeginPath(vg);
-    nvgRect(vg, 0.5f, 0.5f, w - 1.0f, h - 1.0f);
+    nvgRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f);
     nvgStroke(vg);
     
-    /* Subtle shadow on bottom and right edges. */
+    /*
+     * Subtle shadow along the bottom and right edges. This is drawn at
+     * the true outer edge of the surface (w-0.5 / h-0.5), one pixel
+     * further out than the border above, so it reads as a soft drop
+     * shadow cast *beyond* the border rather than an overlapping
+     * second stroke painted on the same pixels as the border itself.
+     */
     if (popup->drawShadow) {
-        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 30));
+        /* Bottom shadow - subtle, at the true outer edge */
+        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 25));
         nvgStrokeWidth(vg, 1.0f);
         nvgBeginPath(vg);
-        /* Bottom edge */
-        nvgMoveTo(vg, 0.5f, h - 0.5f);
-        nvgLineTo(vg, w - 0.5f, h - 0.5f);
-        /* Right edge */
-        nvgMoveTo(vg, w - 0.5f, 0.5f);
-        nvgLineTo(vg, w - 0.5f, h - 0.5f);
+        nvgMoveTo(vg, 2.0f, h - 0.5f);
+        nvgLineTo(vg, w - 2.0f, h - 0.5f);
+        nvgStroke(vg);
+        
+        /* Right shadow - subtle, at the true outer edge */
+        nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 20));
+        nvgStrokeWidth(vg, 1.0f);
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, w - 0.5f, 2.0f);
+        nvgLineTo(vg, w - 0.5f, h - 2.0f);
         nvgStroke(vg);
     }
     
     nvgRestore(vg);
     
-    POPUP_LOG("TkWaylandPopupDrawBorderWithShadow: drew border at (0,0) %dx%d", 
+    POPUP_LOG("TkWaylandPopupDrawBorderWithShadow: drew consistent border at (0,0) %dx%d", 
               popup->width, popup->height);
 }
 

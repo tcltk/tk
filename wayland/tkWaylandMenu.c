@@ -1687,8 +1687,9 @@ DrawMenuEntryIndicator(
 		       int height,
 		       NVGcolor textColor)
 {
-    /* Draw check-button indicator. */
-    if ((mePtr->type == CHECK_BUTTON_ENTRY) && mePtr->indicatorOn) {
+    /* Draw check-button indicator -- only when actually checked. */
+    if ((mePtr->type == CHECK_BUTTON_ENTRY) && mePtr->indicatorOn
+	    && (mePtr->entryFlags & ENTRY_SELECTED)) {
 	int top, left, size;
 	int activeBorderWidth;
 	NVGcolor color;
@@ -1713,20 +1714,19 @@ DrawMenuEntryIndicator(
 	nvgStrokeColor(vg, color);
 	nvgStroke(vg);
 	
-	if (mePtr->entryFlags & ENTRY_SELECTED) { 
-	    /* Draw check mark using NanoVG lines. */
-	    nvgBeginPath(vg);
-	    nvgMoveTo(vg, left - size/3, top);
-	    nvgLineTo(vg, left - size/6, top + size/3);
-	    nvgLineTo(vg, left + size/3, top - size/3);
-	    nvgStrokeWidth(vg, 1.5f);
-	    nvgStrokeColor(vg, color);
-	    nvgStroke(vg);
-	} 
+	/* Draw check mark using NanoVG lines. */
+	nvgBeginPath(vg);
+	nvgMoveTo(vg, left - size/3, top);
+	nvgLineTo(vg, left - size/6, top + size/3);
+	nvgLineTo(vg, left + size/3, top - size/3);
+	nvgStrokeWidth(vg, 1.5f);
+	nvgStrokeColor(vg, color);
+	nvgStroke(vg);
     } 
 
-    /* Draw radio-button indicator. */ 
-    if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn) { 
+    /* Draw radio-button indicator -- only when actually selected. */ 
+    if ((mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn
+	    && (mePtr->entryFlags & ENTRY_SELECTED)) { 
 	int top, left, radius; 
 	int activeBorderWidth; 
 	NVGcolor color;
@@ -1751,13 +1751,11 @@ DrawMenuEntryIndicator(
 	nvgStrokeColor(vg, color);
 	nvgStroke(vg);
 	
-	if (mePtr->entryFlags & ENTRY_SELECTED) { 
-	    /* Fill inner circle. */
-	    nvgBeginPath(vg);
-	    nvgCircle(vg, left, top, radius/2);
-	    nvgFillColor(vg, color);
-	    nvgFill(vg);
-	} 
+	/* Fill inner circle. */
+	nvgBeginPath(vg);
+	nvgCircle(vg, left, top, radius/2);
+	nvgFillColor(vg, color);
+	nvgFill(vg);
     } 
 }
 
@@ -2842,18 +2840,6 @@ MenuDrawIntoPopup(
     nvgFillColor(vg, bgColor);
     nvgFill(vg);
 
-    /* Draw border. */
-    if (isMenubar) {
-        nvgBeginPath(vg);
-        nvgMoveTo(vg, 0, (float)menuH - 0.5f);
-        nvgLineTo(vg, (float)menuW, (float)menuH - 0.5f);
-        nvgStrokeColor(vg, borderColor);
-        nvgStrokeWidth(vg, 1.0f);
-        nvgStroke(vg);
-    } else {
-        TkWaylandPopupDrawBorderWithShadow(popup);
-    }
-
     Drawable d = None;
    
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -2885,6 +2871,29 @@ MenuDrawIntoPopup(
             mePtr->x, mePtr->y,
             mePtr->width, mePtr->height,
             DRAW_MENU_ENTRY_ARROW);
+    }
+
+    /*
+     * Draw the border/shadow LAST, on top of the entries.
+     *
+     * Entry backgrounds are opaque filled rectangles (see
+     * DrawMenuEntryBackground), and depending on each entry's exact
+     * margins they can end up painting directly over the border on
+     * one or more edges (typically the left and bottom, since the
+     * trailing slack reserved there is easy to get wrong in the
+     * geometry pass). Drawing the border after all entries guarantees
+     * it is always the topmost layer and is visible on all four
+     * edges regardless of any entry-geometry margin quirks.
+     */
+    if (isMenubar) {
+        nvgBeginPath(vg);
+        nvgMoveTo(vg, 0, (float)menuH - 0.5f);
+        nvgLineTo(vg, (float)menuW, (float)menuH - 0.5f);
+        nvgStrokeColor(vg, borderColor);
+        nvgStrokeWidth(vg, 1.0f);
+        nvgStroke(vg);
+    } else {
+        TkWaylandPopupDrawBorderWithShadow(popup);
     }
     
     TkWaylandPopupEndDraw(popup);
@@ -3455,33 +3464,34 @@ MenuMouseClick(
                 break;
                 
             case CHECK_BUTTON_ENTRY:
-                if (mePtr->entryFlags & ENTRY_SELECTED) {
-                    mePtr->entryFlags &= ~ENTRY_SELECTED;
-                } else {
-                    mePtr->entryFlags |= ENTRY_SELECTED;
-                }
+                /*
+                 * Do NOT manually flip ENTRY_SELECTED here. TkInvokeMenu()
+                 * (generic/core Tk) is the authority on checkbutton state:
+                 * it reads the entry's *current* ENTRY_SELECTED bit to
+                 * decide whether to write the on-value or off-value into
+                 * the entry's linked Tcl variable, and a variable trace
+                 * then re-syncs ENTRY_SELECTED to match. Pre-flipping the
+                 * bit here corrupts the "current" state right before
+                 * TkInvokeMenu reads it, so it computes the toggle in the
+                 * wrong direction and the trace flips it right back --
+                 * net effect, the checkbutton never visibly changes.
+                 */
                 TkInvokeMenu(menuPtr->interp, menuPtr, i);
                 TkEventuallyRedrawMenu(menuPtr, NULL);
                 break;
                 
             case RADIO_BUTTON_ENTRY:
-                if (!(mePtr->entryFlags & ENTRY_SELECTED)) {
-                    if (mePtr->namePtr != NULL) {
-                        int j;
-                        for (j = 0; j < menuPtr->numEntries; j++) {
-                            TkMenuEntry *otherPtr = menuPtr->entries[j];
-                            if (otherPtr && otherPtr->type == RADIO_BUTTON_ENTRY &&
-                                otherPtr->namePtr != NULL &&
-                                strcmp(Tcl_GetString(otherPtr->namePtr),
-				       Tcl_GetString(mePtr->namePtr)) == 0) {
-                                otherPtr->entryFlags &= ~ENTRY_SELECTED;
-                            }
-                        }
-                    }
-                    mePtr->entryFlags |= ENTRY_SELECTED;
-                    TkInvokeMenu(menuPtr->interp, menuPtr, i);
-                    TkEventuallyRedrawMenu(menuPtr, NULL);
-                }
+                /*
+                 * Same reasoning as CHECK_BUTTON_ENTRY above: TkInvokeMenu()
+                 * already handles setting the shared -variable to this
+                 * entry's -value, and every other entry sharing that
+                 * variable naturally clears its own ENTRY_SELECTED bit via
+                 * its own variable trace once the value no longer matches.
+                 * Manually toggling flags for this entry (and clearing
+                 * siblings) here duplicates and fights that logic.
+                 */
+                TkInvokeMenu(menuPtr->interp, menuPtr, i);
+                TkEventuallyRedrawMenu(menuPtr, NULL);
                 break;
             }
             return;
@@ -3627,10 +3637,28 @@ MenuMouseMotion(
                     MENU_LOG("MenuMouseMotion: TkWaylandPostMenuAtAnchor returned %d", result);
                     
                     if (result == TCL_OK) {
-                        /* Force redraw the parent to show cascade highlight */
-                        TkEventuallyRedrawMenu(menuPtr, NULL);
-                        /* Also redraw the cascade entry specifically if needed */
-                        TkWaylandMenuRedrawActive();
+                        /*
+                         * TkWaylandPostMenuAtAnchor() just pushed the new
+                         * cascade popup onto the top of menuStack (and
+                         * already drew it once internally), so
+                         * TkWaylandMenuRedrawActive() -- which always
+                         * redraws menuStack[menuStackDepth - 1] -- would
+                         * only repaint that same child popup again. It
+                         * does nothing for the *parent* popup, which is
+                         * what actually needs to show "mePtr" (e.g.
+                         * "Colors") highlighted instead of the previously
+                         * active entry above it.
+                         *
+                         * Redraw the parent's own popup synchronously
+                         * here so its highlight is committed in the same
+                         * frame as the cascade, rather than leaving it to
+                         * a deferred TkEventuallyRedrawMenu() idle call
+                         * that lags behind the cascade's own immediate
+                         * paint.
+                         */
+                        Tcl_CancelIdleCall((Tcl_IdleProc *)TkpDisplayMenu,
+                            (void *)menuPtr);
+                        TkpDisplayMenu((void *)menuPtr);
                     }
                 }
 
