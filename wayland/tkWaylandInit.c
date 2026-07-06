@@ -830,7 +830,28 @@ TkWaylandBeginDraw(
 {
     if (TkWaylandDrawableIsPixmap(drawable)) {
 	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(drawable);
+	glfwTkInfo *infoPtr = getGlfwTkInfo(pixmap->glfwWindow);
 	fprintf(stderr, "BeginDraw: received pixmap %p\n", pixmap);
+
+	dcPtr->vg = infoPtr->context.vg;
+	dcPtr->drawable = drawable;
+	dcPtr->glfwWindow = pixmap->glfwWindow;
+	dcPtr->width = pixmap->width;
+	dcPtr->height = pixmap->height;
+	dcPtr->offsetX = dcPtr->offsetY = 0;
+	dcPtr->nestedFrame = 0;
+	dcPtr->isPixmap = 1;
+	dcPtr->pixmapFbo = pixmap->fb ? pixmap->fb->fbo : 0;
+	dcPtr->winPtr = NULL;
+
+	/* Bind the pixmap's FBO so reads (XGetImage) and the flush in
+	 * TkWaylandEndDraw both target the off-screen surface. */
+	glfwMakeContextCurrent(pixmap->glfwWindow);
+	nvgluBindFramebuffer(pixmap->fb);
+	glViewport(0, 0, pixmap->width, pixmap->height);
+	nvgResetTransform(dcPtr->vg);
+	nvgBeginFrame(dcPtr->vg, pixmap->width, pixmap->height, 1.0f);
+	TkWaylandApplyGC(dcPtr->vg, gc);
 	return TCL_OK;
     }
     TkWindow *childPtr = TkWaylandTkWindowFromDrawable(drawable);
@@ -901,6 +922,16 @@ TkWaylandEndDraw(TkWaylandDrawingContext *dcPtr)
 {
     if (!dcPtr || !dcPtr->vg) {
 	fprintf(stderr, "No drawing context!\n");
+	return;
+    }
+    if (TkWaylandDrawableIsPixmap(dcPtr->drawable)) {
+	TkWaylandPixmap *pixmap = TkWaylandPixmapFromDrawable(dcPtr->drawable);
+	glfwMakeContextCurrent(pixmap->glfwWindow);
+	nvgluBindFramebuffer(pixmap->fb);
+	glViewport(0, 0, pixmap->width, pixmap->height);
+	nvgEndFrame(dcPtr->vg);
+	nvgluBindFramebuffer(NULL);
+	nvgRestore(dcPtr->vg);
 	return;
     }
     //// This is the case where the drawable is a window.

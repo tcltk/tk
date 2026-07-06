@@ -400,13 +400,18 @@ TkWaylandCopyGC(
 TkWaylandPixmap* TkWaylandPixmapFromPixmap(
     Pixmap pixmap)
 {
-    return (TkWaylandPixmap*)pixmap;
+    return (TkWaylandPixmap*)(pixmap & ~3UL);
 }
+
+/*
+ * A Pixmap is a Drawable, so it must carry the low-bit tag that
+ * TkWaylandDrawableIsPixmap tests; see the XID scheme in tkWaylandWm.c.
+ */
 
 static inline Pixmap PixmapFromTkWaylandPixmap(
     TkWaylandPixmap *pixmapPtr)
 {
-    return (Pixmap)pixmapPtr;
+    return pixmapPtr ? 3 + (Pixmap)pixmapPtr : None;
 }
 
 /*
