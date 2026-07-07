@@ -1455,6 +1455,23 @@ TkWaylandScrollCallback(
  *
  *----------------------------------------------------------------------
  */
+ 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandKeyCallback --
+ *
+ *      Called whenever a key is pressed or released.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Generates KeyPress/KeyRelease events. Gives IBus first chance
+ *      to handle the key for IME composition.
+ *
+ *----------------------------------------------------------------------
+ */
 static void
 TkWaylandKeyCallback(GLFWwindow *window,
                   int key,           /* keep this parameter */
@@ -1474,7 +1491,9 @@ TkWaylandKeyCallback(GLFWwindow *window,
     if (TkWaylandMenuActive()) {
         Tk_Window menuWin = TkWaylandMenuGetTopmostWindow();
         if (menuWin) {
-            /* Only handle press and repeat; release is ignored by menu bindings. */
+            TkMenu *menuPtr = (TkMenu *)((TkWindow *)menuWin)->instanceData;
+
+            /* Handle Escape specially */
             if ((action == GLFW_PRESS) &&
                 xkb_state_key_get_one_sym(xkbState.state, scancode + 8) == XKB_KEY_Escape) {
                 TkWaylandMenuHandleEscape();
@@ -1482,6 +1501,8 @@ TkWaylandKeyCallback(GLFWwindow *window,
             }
 
             if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                KeySym keysym = xkb_state_key_get_one_sym(xkbState.state, scancode + 8);
+
                 XEvent event;
                 memset(&event, 0, sizeof(XEvent));
                 event.type = KeyPress;
@@ -1496,15 +1517,46 @@ TkWaylandKeyCallback(GLFWwindow *window,
                 event.xkey.x_root      = 0;
                 event.xkey.y_root      = 0;
                 event.xkey.state       = glfwModifierState;
-                /* GLFW scancode is evdev; X11 keycode = evdev + 8 */
                 event.xkey.keycode     = (KeyCode)(scancode + 8);
                 event.xkey.same_screen = True;
 
                 Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
+                /* === Explicit menu navigation for arrow keys === */
+                if (keysym == XKB_KEY_Up || keysym == XKB_KEY_KP_Up) {
+                    if (menuPtr->active > 0) {
+                        TkActivateMenuEntry(menuPtr, menuPtr->active - 1);
+                    } else {
+                        TkActivateMenuEntry(menuPtr, menuPtr->numEntries - 1);  /* wrap around */
+                    }
+                } else if (keysym == XKB_KEY_Down || keysym == XKB_KEY_KP_Down) {
+                    if (menuPtr->active < menuPtr->numEntries - 1) {
+                        TkActivateMenuEntry(menuPtr, menuPtr->active + 1);
+                    } else {
+                        TkActivateMenuEntry(menuPtr, 0);  /* wrap around */
+                    }
+                } else if (keysym == XKB_KEY_Left || keysym == XKB_KEY_KP_Left) {
+                    /* Could pop to parent menu if in submenu */
+                    TkWaylandMenuDismissAll();
+                } else if (keysym == XKB_KEY_Right || keysym == XKB_KEY_KP_Right) {
+                    if (menuPtr->active >= 0) {
+                        TkMenuEntry *mePtr = menuPtr->entries[menuPtr->active];
+                        if (mePtr && mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
+                            TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
+                        }
+                    }
+                } else if (keysym == XKB_KEY_Return || keysym == XKB_KEY_KP_Enter || keysym == XKB_KEY_space) {
+                    if (menuPtr->active >= 0) {
+                        TkInvokeMenu(menuPtr->interp, menuPtr, menuPtr->active);
+                        TkWaylandMenuDismissAll();
+                    }
+                }
+
+                /* Force redraw after navigation */
+                TkWaylandMenuRedrawActive();
             }
             return;   /* Menu consumes the key event entirely. */
         }
-        /* If we somehow have active menu but no window, fall through. */
     }
 
     /* IBus IME handling (only if no menu is active). */
@@ -1548,7 +1600,6 @@ TkWaylandKeyCallback(GLFWwindow *window,
         event.xkey.x_root      = winPtr->changes.x + (int)xpos;
         event.xkey.y_root      = winPtr->changes.y + (int)ypos;
         event.xkey.state       = glfwModifierState;
-        /* GLFW scancode is evdev; X11 keycode = evdev + 8 */
         event.xkey.keycode     = (KeyCode)(scancode + 8);
         event.xkey.same_screen = True;
 
