@@ -241,6 +241,7 @@ static bool IsSimpleOnly(const char *str, int len);
 static int GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars,
 			   int runStart, int runLen);
 static hb_font_t *GetHbFont(UnixFtFont *fontPtr, int faceIndex);
+static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
 
 /*
  * ---------------------------------------------------------------
@@ -2069,6 +2070,61 @@ Tk_MeasureChars(
  * ---------------------------------------------------------------
  */
 
+/*
+ * ---------------------------------------------------------------
+ * GetSimpleCharWidth --
+ *
+ *   Return the on-screen advance width of a single codepoint in the
+ *   "simple" (non-shaped) rendering path, using the same font-fallback
+ *   and glyph-existence check that Tk_DrawCharsInContext uses to decide
+ *   what actually gets painted.
+ *
+ *   If no loaded face has a real glyph for this codepoint (e.g. control
+ *   characters such as '\n' or '\r', which are never drawn), this
+ *   returns 0. This mirrors Tk_DrawCharsInContext's simple-path draw
+ *   loop, which silently skips such characters (no glyph emitted, no
+ *   advance). Measurement and drawing must agree on this, or pixel
+ *   positions derived from measurement (such as the insertion cursor's
+ *   x coordinate) drift away from where characters are actually painted
+ *   -- accumulating by one phantom glyph width for every such character
+ *   that precedes the measured point.
+ *
+ * Results:
+ *   Pixel advance width, or 0 if the codepoint has no real glyph.
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
+
+static int
+GetSimpleCharWidth(
+    UnixFtFont *fontPtr,
+    FcChar32 uc)
+{
+    for (int f = 0; f < fontPtr->nfaces; f++) {
+	if (fontPtr->faces[f].charset &&
+	    !FcCharSetHasChar(fontPtr->faces[f].charset, uc)) {
+	    continue;
+	}
+
+	XftFont *ft = GetFaceFont(fontPtr, f, 0.0);
+	if (!ft) {
+	    continue;
+	}
+
+	unsigned int glyphId = XftCharIndex(fontPtr->display, ft, uc);
+	if (glyphId != 0) {
+	    XGlyphInfo ext;
+	    XftGlyphExtents(fontPtr->display, ft, &glyphId, 1, &ext);
+	    return ext.xOff;
+	}
+    }
+
+    /* No face has a real glyph for this codepoint: zero-width. */
+    return 0;
+}
+
 int
 Tk_MeasureCharsInContext(
     Tk_Font tkfont,
@@ -2106,21 +2162,43 @@ Tk_MeasureCharsInContext(
 	const char *sub = source + start;
 	int subLen = (int)rangeLength;
 
-	XGlyphInfo extents;
-
 	/*
 	 * Unlimited measurement.
+	 *
+	 * Walk character-by-character using GetSimpleCharWidth(), which
+	 * applies the same font-fallback/glyph-existence check as
+	 * Tk_DrawCharsInContext, instead of handing the whole substring
+	 * to XftTextExtentsUtf8(). That whole-string call would silently
+	 * substitute the font's .notdef glyph (usually non-zero width)
+	 * for any codepoint with no mapped glyph -- e.g. a literal '\n'
+	 * pasted into an entry -- while the draw path skips such
+	 * characters entirely (zero width, nothing painted). Measuring
+	 * and drawing must agree, or every such character preceding the
+	 * measured point adds one phantom glyph width to the result,
+	 * which is exactly what drives the insertion cursor out of sync
+	 * with the rendered text.
 	 */
 
 	if (maxLength < 0) {
-	    XftTextExtentsUtf8(
-		fontPtr->display,
-		ftFont,
-		(const FcChar8 *)sub,
-		subLen,
-		&extents);
+	    int width = 0;
+	    int pos = 0;
 
-	    *lengthPtr = extents.xOff;
+	    while (pos < subLen) {
+		FcChar32 uc;
+		int clen = FcUtf8ToUcs4(
+		    (const FcChar8 *)(sub + pos),
+		    &uc,
+		    subLen - pos);
+
+		if (clen <= 0) {
+		    clen = 1;
+		}
+
+		width += GetSimpleCharWidth(fontPtr, uc);
+		pos += clen;
+	    }
+
+	    *lengthPtr = width;
 	    return subLen;
 	}
 
@@ -2131,6 +2209,7 @@ Tk_MeasureCharsInContext(
 	int bestBytes = 0;
 	int bestWidth = 0;
 
+	int width = 0;
 	int pos = 0;
 
 	while (pos < subLen) {
@@ -2145,23 +2224,17 @@ Tk_MeasureCharsInContext(
 		clen = 1;
 	    }
 
-	    int next = pos + clen;
+	    int nextWidth = width + GetSimpleCharWidth(fontPtr, uc);
 
-	    XftTextExtentsUtf8(
-		fontPtr->display,
-		ftFont,
-		(const FcChar8 *)sub,
-		next,
-		&extents);
-
-	    if (extents.xOff > maxLength) {
+	    if (nextWidth > maxLength) {
 		break;
 	    }
 
-	    bestBytes = next;
-	    bestWidth = extents.xOff;
+	    width = nextWidth;
+	    bestBytes = pos + clen;
+	    bestWidth = width;
 
-	    pos = next;
+	    pos += clen;
 	}
 
 	/*
@@ -2187,14 +2260,26 @@ Tk_MeasureCharsInContext(
 	    }
 
 	    if (rollback > 0 && rollback < bestBytes) {
-		XftTextExtentsUtf8(
-		    fontPtr->display,
-		    ftFont,
-		    (const FcChar8 *)sub,
-		    rollback,
-		    &extents);
+		int rbWidth = 0;
+		int rpos = 0;
+
+		while (rpos < rollback) {
+		    FcChar32 uc;
+		    int clen = FcUtf8ToUcs4(
+			(const FcChar8 *)(sub + rpos),
+			&uc,
+			rollback - rpos);
+
+		    if (clen <= 0) {
+			clen = 1;
+		    }
+
+		    rbWidth += GetSimpleCharWidth(fontPtr, uc);
+		    rpos += clen;
+		}
+
 		bestBytes = rollback;
-		bestWidth = extents.xOff;
+		bestWidth = rbWidth;
 	    }
 	}
 
@@ -2217,14 +2302,8 @@ Tk_MeasureCharsInContext(
 		clen = 1;
 	    }
 
-	    XftTextExtentsUtf8(
-		fontPtr->display,
-		ftFont,
-		(const FcChar8 *)sub,
-		clen,
-		&extents);
 	    bestBytes = clen;
-	    bestWidth = extents.xOff;
+	    bestWidth = GetSimpleCharWidth(fontPtr, uc);
 	}
 
 	*lengthPtr = bestWidth;
