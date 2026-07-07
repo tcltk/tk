@@ -967,7 +967,7 @@ option add *Scale.sliderLength		22.5p widgetDefault
 option add *Scale.width			11.25p widgetDefault
 
 # Scale the default scrollbar width on X11 and Wayland
-if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "Wayland"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland"} {
     option add *Scrollbar.width		8.25p widgetDefault
 }
 

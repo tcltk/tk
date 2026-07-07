@@ -56,22 +56,27 @@ static void       DeleteFont(WaylandFont *fontPtr);
 static NVGcolor   ColorFromGC(GC gc);
 
 /*
- *----------------------------------------------------------------------
  * IsSimpleOnly --
  *
- *   Returns 1 if the string consists entirely of codepoints that do not
- *   require complex shaping: ASCII, Latin extended, basic CJK punctuation,
- *   Hiragana, and Katakana.  All RTL scripts, Indic, Thai, emoji, and any
- *   supplementary-plane characters return 0 to force HarfBuzz/SheenBidi.
+ *   Fast-path classifier for text that does NOT require HarfBuzz shaping
+ *   or SheenBidi analysis. This function now reflects the modern Wayland
+ *   shaping pipeline: only pure ASCII, Latin-1/Latin Extended, and
+ *   Hiragana/Katakana are considered "simple". Everything else—including
+ *   CJK ideographs, Hangul, Jamo, all RTL scripts, Indic/Thai/Lao, emoji,
+ *   and any supplementary-plane characters—forces the full HarfBuzz +
+ *   SheenBidi shaping path.
  *
- *   Mirrors the identical function in tkUnixBidiFont.c.
+ *   The fast path is intentionally narrow. It exists only to avoid the
+ *   overhead of HarfBuzz for trivially shaped, strictly LTR text where
+ *   glyph IDs map 1:1 to Unicode codepoints and no OpenType features,
+ *   fallback segmentation, or cluster-level logic are required.
  *
  * Results:
- *   true if the string is simple (fast path), false otherwise.
+ *   true if the string is simple (eligible for the fast path),
+ *   false if the string must be shaped by HarfBuzz.
  *
  * Side effects:
  *   None.
- *----------------------------------------------------------------------
  */
 
 static bool

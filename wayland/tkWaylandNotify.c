@@ -85,6 +85,11 @@ extern void TkWaylandMenuRedrawActive(void);
 extern void TkWaylandMenubarResize(TkWindow *winPtr);
 extern int  TkWaylandMenubarHandleClick(TkWindow *winPtr, int x, int y,
                                              int button);
+/*
+ * Additional menu functions for keyboard routing.
+ */
+extern int  TkWaylandMenuActive(void);
+extern Tk_Window TkWaylandMenuGetTopmostWindow(void);
 
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
@@ -386,17 +391,13 @@ TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 
     TkWaylandDisplayAllWindows();
 
-    /* Drain pending system communication layers inline */
+    /* Drain pending system communication layers inline. */
     if (ibus_bus) {
         while (sd_bus_process(ibus_bus, NULL) > 0) { /* Clear out events */ }
     }
 
     glfwPollEvents();
 
-    /* Queue presentation onto the idle ring.
-     * This ensures all intermediate layout expose evaluations have
-     * completed rendering into the backing store before we swap buffers.
-     */
     if (!displayIdleQueued) {
         displayIdleQueued = 1;
         Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
@@ -493,7 +494,7 @@ TkWaylandNotifyExitHandler(TCL_UNUSED(void *))
     //// Why not?
 }
 
-/* ========================== XEvents  ========================== */
+/* XEvents. */
 
 /*
  *----------------------------------------------------------------------
@@ -570,7 +571,7 @@ TkWaylandQueueExposeEvent(
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
 				  Tk_Height(childPtr));
     }
-#endif
+    #endif
 #endif
 }
 
@@ -712,7 +713,7 @@ TkWaylandFramebufferSizeCallback(
     int height)
 {
     
-    /* Validate parameters */
+    /* Validate parameters. */
     if (width <= 0 || height <= 0) {
         fprintf(stderr, "FramebufferSizeCallback: invalid size %dx%d\n", width, height);
         return;
@@ -745,20 +746,20 @@ TkWaylandFramebufferSizeCallback(
         return;
     }
     
-    /* Delete old FBO if it exists */
+    /* Delete old FBO if it exists. */
     if (winPtr->privatePtr->fb) {
         nvgluDeleteFramebuffer(winPtr->privatePtr->fb);
         winPtr->privatePtr->fb = NULL;
     }
     
-    /* Create new FBO with error checking */
+    /* Create new FBO with error checking. */
     winPtr->privatePtr->fb = nvgluCreateFramebuffer(vg, width, height, 0);
     if (!winPtr->privatePtr->fb) {
         fprintf(stderr, "FramebufferSizeCallback: Failed to create FBO\n");
         return;
     }
     
-    /* Check FBO completeness */
+    /* Check FBO completeness. */
     nvgluBindFramebuffer(winPtr->privatePtr->fb);
     int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -770,7 +771,7 @@ TkWaylandFramebufferSizeCallback(
     
     fprintf(stderr, "FBO created successfully: %dx%d\n", width, height);
     
-    /* Update window size in Tk */
+    /* Update window size in Tk. */
     winPtr->changes.width = width;
     winPtr->changes.height = height;
 
@@ -1396,7 +1397,7 @@ TkWaylandScrollCallback(
         button = 7;  /* Scroll left */
     }
 
-    /* Generate button press */
+    /* Generate button press. */
     memset(&event, 0, sizeof(XEvent));
     event.type = ButtonPress;
     event.xbutton.serial = LastKnownRequestProcessed(winPtr->display)++;
@@ -1438,6 +1439,22 @@ TkWaylandScrollCallback(
  *----------------------------------------------------------------------
  */
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandKeyCallback --
+ *
+ *      Called whenever a key is pressed or released.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Generates KeyPress/KeyRelease events. Gives IBus first chance
+ *      to handle the key for IME composition.
+ *
+ *----------------------------------------------------------------------
+ */
 static void
 TkWaylandKeyCallback(GLFWwindow *window,
                   int key,           /* keep this parameter */
@@ -1450,21 +1467,49 @@ TkWaylandKeyCallback(GLFWwindow *window,
 
     TkWaylandUpdateKeyboardModifiers(mods);
 
-    /* Route to focused widget (important for text widgets). */
-    TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
-    if (!focusWin) focusWin = winPtr;
+    /*
+     * If a menu is posted, direct all key events to the topmost menu.
+     * Bypass IBus and normal focus routing.
+     */
+    if (TkWaylandMenuActive()) {
+        Tk_Window menuWin = TkWaylandMenuGetTopmostWindow();
+        if (menuWin) {
+            /* Only handle press and repeat; release is ignored by menu bindings. */
+            if ((action == GLFW_PRESS) &&
+                xkb_state_key_get_one_sym(xkbState.state, scancode + 8) == XKB_KEY_Escape) {
+                TkWaylandMenuHandleEscape();
+                return;
+            }
 
-    fprintf(stderr, "KeyCallback: scancode=%d key=%d action=%s mods=0x%x\n",
-            scancode, key,
-            (action == GLFW_PRESS) ? "PRESS" :
-            (action == GLFW_REPEAT) ? "REPEAT" : "RELEASE",
-            mods);
+            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                XEvent event;
+                memset(&event, 0, sizeof(XEvent));
+                event.type = KeyPress;
+                event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
+                event.xkey.send_event  = False;
+                event.xkey.display     = winPtr->display;
+                event.xkey.window      = Tk_WindowId(menuWin);
+                event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
+                event.xkey.time        = CurrentTime;
+                event.xkey.x           = 0;
+                event.xkey.y           = 0;
+                event.xkey.x_root      = 0;
+                event.xkey.y_root      = 0;
+                event.xkey.state       = glfwModifierState;
+                /* GLFW scancode is evdev; X11 keycode = evdev + 8 */
+                event.xkey.keycode     = (KeyCode)(scancode + 8);
+                event.xkey.same_screen = True;
 
-    /* IBus IME handling. */
+                Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+            }
+            return;   /* Menu consumes the key event entirely. */
+        }
+        /* If we somehow have active menu but no window, fall through. */
+    }
+
+    /* IBus IME handling (only if no menu is active). */
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         uint32_t xkb_keycode = (uint32_t)(scancode + 8);
-
-        /* Get keysym using the *live* XKB state — this is more reliable. */
         uint32_t keyval = (uint32_t) xkb_state_key_get_one_sym(
                                 xkbState.state, xkb_keycode);
 
@@ -1476,53 +1521,39 @@ TkWaylandKeyCallback(GLFWwindow *window,
         if (mods & GLFW_MOD_CAPS_LOCK) state |= LockMask;
         if (mods & GLFW_MOD_NUM_LOCK)  state |= Mod2Mask;
 
-        fprintf(stderr, "  → IBus: keyval=0x%04x keycode=%u state=0x%x\n",
-                keyval, xkb_keycode, state);
-
-        /*
-         * Pass winPtr (the GLFW toplevel) to TkWaylandIbusProcessKey, NOT
-         * focusWin.  FindContext compares ctx->tkwin by pointer; ctx->tkwin
-         * was stored from the winPtr passed to TkWaylandIbusCreateContext in
-         * TkWaylandWindowFocusCallback, which is always the GLFW toplevel.
-         * Using focusWin (.t) causes GetToplevelOfWidget to walk the parent
-         * chain, which may differ after a resize/remap cycle, returning a
-         * pointer that does not match ctx->tkwin → FindContext returns NULL →
-         * IBus is silently bypassed for every keypress.
-         */
         if (TkWaylandIbusProcessKey((Tk_Window)winPtr, keyval, xkb_keycode, state)) {
-            fprintf(stderr, "  → IBus HANDLED key (composition active)\n");
-            return;                    /* Do NOT generate normal Tk Key event */
+            return;   /* IBus consumed the key. */
         }
     }
 
-    /* Normal Tk key event. */
-    if (action == GLFW_RELEASE) {
-        /* Optional: you can also forward releases, but many IMEs ignore them. */
-        return;
+    /* Normal Tk key event (only press/repeat). */
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
+        if (!focusWin) focusWin = winPtr;
+
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = KeyPress;
+        event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
+        event.xkey.send_event  = False;
+        event.xkey.display     = winPtr->display;
+        event.xkey.window      = Tk_WindowId((Tk_Window)focusWin);
+        event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
+        event.xkey.time        = CurrentTime;
+
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        event.xkey.x           = (int)xpos;
+        event.xkey.y           = (int)ypos;
+        event.xkey.x_root      = winPtr->changes.x + (int)xpos;
+        event.xkey.y_root      = winPtr->changes.y + (int)ypos;
+        event.xkey.state       = glfwModifierState;
+        /* GLFW scancode is evdev; X11 keycode = evdev + 8 */
+        event.xkey.keycode     = (KeyCode)(scancode + 8);
+        event.xkey.same_screen = True;
+
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
-
-    XEvent event;
-    memset(&event, 0, sizeof(XEvent));
-    event.type = KeyPress;   /* GLFW_RELEASE is mostly ignored for text */
-    event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
-    event.xkey.send_event  = False;
-    event.xkey.display     = winPtr->display;
-    event.xkey.window      = Tk_WindowId((Tk_Window)focusWin);
-    event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
-    event.xkey.time        = CurrentTime;
-
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
-    event.xkey.x           = (int)xpos;
-    event.xkey.y           = (int)ypos;
-    event.xkey.x_root      = winPtr->changes.x + (int)xpos;
-    event.xkey.y_root      = winPtr->changes.y + (int)ypos;
-    event.xkey.state       = glfwModifierState;
-    event.xkey.keycode     = (KeyCode)scancode;   /* raw evdev scancode */
-    event.xkey.same_screen = True;
-
-    fprintf(stderr, "  → Queuing normal Tk KeyPress (scancode %d)\n", scancode);
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 }
 
 /*
@@ -1552,6 +1583,11 @@ TkWaylandCharCallback(GLFWwindow *window, unsigned int codepoint)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) return;
+
+    /* Do not store text if a menu is active. */
+    if (TkWaylandMenuActive()) {
+        return;
+    }
 
     /* Skip if IBus is likely handling composition. */
     if (xkbState.state) {

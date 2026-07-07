@@ -15,6 +15,7 @@
 
 #include "tkInt.h"
 #include "tkWaylandInt.h"
+#include "tkMenu.h"          /* for TkMenu/TkMenuEntry definitions */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +24,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <errno.h>
+#include <ctype.h>           /* for isalnum, isspace */
 
 /* SD-Bus includes. */
 #include <systemd/sd-bus.h>
@@ -31,7 +33,10 @@
 /* Flags of widget configuration options. */
 #define ICON_CONF_IMAGE         (1<<0)
 #define ICON_CONF_REDISPLAY     (1<<1)
+#define ICON_CONF_TOOLTIP       (1<<2)
+#define ICON_CONF_BUTTON1       (1<<3)
 #define ICON_CONF_FIRST_TIME    (1<<4)
+#define ICON_CONF_BUTTON3       (1<<5)
 
 /* Widget states */
 #define ICON_FLAG_REDRAW_PENDING    (1<<0)
@@ -85,6 +90,15 @@ typedef struct {
     Tcl_Obj *b1Command;  /* Command for button-1 press */
     Tcl_Obj *b3Command;  /* Command for button-3 press */
 
+    /* Option-table-managed mirrors of the above, settable via
+     * -button1/-button3 configure options (in addition to the
+     * "bind" widget subcommand). */
+    Tcl_Obj *button1Obj;
+    Tcl_Obj *button3Obj;
+
+    /* Option-table-managed tooltip text, settable via -text. */
+    Tcl_Obj *tooltipObj;
+
     int flags;
     int msgid;
     int item_id;  /* Unique ID for this tray item */
@@ -104,6 +118,10 @@ typedef struct {
     CategoryDBus category;
     StatusDBus dbus_status;
     int redisplayPending;   /* Tcl_DoWhenIdle coalescing flag */
+
+    /* dbusmenu support – automatically detected from -button3/-button1 callback */
+    TkMenu *menuPtr;         /* resolved TkMenu pointer */
+    char *menu_path;         /* D-Bus object path for the menu interface */
 } DockIcon;
 
 /* Forward declarations. */
@@ -123,9 +141,91 @@ static int RegisterStatusNotifierItem(DockIcon *icon);
 static int UnregisterStatusNotifierItem(DockIcon *icon);
 static void ProcessDBusEvents(void *clientData);
 static void InvokeButtonCommand(DockIcon *icon, int button, int x, int y);
+static void DetectMenuFromCallback(DockIcon *icon, Tcl_Obj *cmdObj);
 
 /* Global item ID counter. */
 static int global_item_id = 0;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DetectMenuFromCallback --
+ *
+ *	Heuristically detect if the callback script contains a tk_popup
+ *	command and extract the menu path. If found, resolve the menu
+ *	and store it in icon->menuPtr for dbusmenu export.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Updates icon->menuPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DetectMenuFromCallback(
+    DockIcon *icon,
+    Tcl_Obj *cmdObj)
+{
+    const char *script;
+    const char *p, *q;
+    char *menuName = NULL;
+    TkMenu *menu = NULL;
+    TkWindow *winPtr;
+
+    if (!cmdObj) {
+        icon->menuPtr = NULL;
+        return;
+    }
+
+    script = Tcl_GetString(cmdObj);
+    if (!script) {
+        icon->menuPtr = NULL;
+        return;
+    }
+
+    /* Search for "tk_popup" in the script. */
+    p = strstr(script, "tk_popup");
+    if (!p) {
+        icon->menuPtr = NULL;
+        return;
+    }
+
+    /* Skip "tk_popup" and whitespace. */
+    p += strlen("tk_popup");
+    while (*p && isspace((unsigned char)*p)) p++;
+    if (!*p) {
+        icon->menuPtr = NULL;
+        return;
+    }
+
+    /* Extract the menu name: next token (alnum, '.', '_', ':' etc.) */
+    q = p;
+    while (*q && (isalnum((unsigned char)*q) || *q == '.' || *q == '_' || *q == ':' || *q == '-')) {
+        q++;
+    }
+    if (q == p) {
+        icon->menuPtr = NULL;
+        return;
+    }
+
+    /* Allocate and copy the menu path. */
+    menuName = (char *)Tcl_Alloc(q - p + 1);
+    memcpy(menuName, p, q - p);
+    menuName[q - p] = '\0';
+
+    /* Resolve the Tk menu using Tk_NameToWindow. */
+    winPtr = (TkWindow *)Tk_NameToWindow(icon->interp, menuName, icon->tkwin);
+    if (winPtr && winPtr->instanceData) {
+        /* The menu widget stores its TkMenu pointer in instanceData */
+        menu = (TkMenu *)winPtr->instanceData;
+    }
+    
+    Tcl_Free(menuName);
+    icon->menuPtr = menu;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -153,7 +253,9 @@ InvokeButtonCommand(
     Tcl_Obj *cmdObj = NULL;
     Tcl_Obj *script;
     int result;
-
+    Tcl_Size argc;
+    Tcl_Obj **argv;
+    
     /* Select command based on button. */
     if (button == 1 && icon->b1Command) {
         cmdObj = icon->b1Command;
@@ -165,12 +267,22 @@ InvokeButtonCommand(
         return;
     }
 
-    /* Build script with coordinates appended. */
-    script = Tcl_DuplicateObj(cmdObj);
-    Tcl_IncrRefCount(script);
-
-    Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(x));
-    Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(y));
+    /* Check if command already has arguments - if it's a list, preserve them */
+    if (Tcl_ListObjGetElements(icon->interp, cmdObj, &argc, &argv) == TCL_OK && argc > 0) {
+        /* Command is a list, duplicate it and append coordinates */
+        script = Tcl_DuplicateObj(cmdObj);
+        Tcl_IncrRefCount(script);
+        
+        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(x));
+        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(y));
+    } else {
+        /* Command is a simple string, build a list with it */
+        script = Tcl_NewListObj(0, NULL);
+        Tcl_IncrRefCount(script);
+        Tcl_ListObjAppendElement(icon->interp, script, cmdObj);
+        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(x));
+        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(y));
+    }
 
     /* Evaluate script. */
     result = Tcl_EvalObjEx(icon->interp, script, TCL_EVAL_GLOBAL);
@@ -181,11 +293,10 @@ InvokeButtonCommand(
 
     Tcl_DecrRefCount(script);
 }
-
 /*
  *----------------------------------------------------------------------
  *
- * DBus Method Callbacks.
+ * DBus Method Callbacks (SNI).
  *
  *----------------------------------------------------------------------
  */
@@ -194,16 +305,18 @@ static int
 method_activate(
     sd_bus_message *m,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *))
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
+    int r;
 
-    if (sd_bus_message_read(m, "ii", &x, &y) < 0) {
+    r = sd_bus_message_read(m, "ii", &x, &y);
+    if (r < 0) {
         return sd_bus_reply_method_return(m, "");
     }
 
-    /* Invoke button-1 command. */
+    /* Invoke button-1 command with coordinates */
     InvokeButtonCommand(icon, 1, x, y);
 
     return sd_bus_reply_method_return(m, "");
@@ -213,16 +326,18 @@ static int
 method_secondary_activate(
     sd_bus_message *m,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *))
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
+    int r;
 
-    if (sd_bus_message_read(m, "ii", &x, &y) < 0) {
+    r = sd_bus_message_read(m, "ii", &x, &y);
+    if (r < 0) {
         return sd_bus_reply_method_return(m, "");
     }
 
-    /* Invoke button-3 command. */
+    /* Invoke button-3 command with coordinates */
     InvokeButtonCommand(icon, 3, x, y);
 
     return sd_bus_reply_method_return(m, "");
@@ -232,16 +347,18 @@ static int
 method_context_menu(
     sd_bus_message *m,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *))
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     DockIcon *icon = (DockIcon *)userdata;
     int x, y;
+    int r;
 
-    if (sd_bus_message_read(m, "ii", &x, &y) < 0) {
+    r = sd_bus_message_read(m, "ii", &x, &y);
+    if (r < 0) {
         return sd_bus_reply_method_return(m, "");
     }
 
-    /* Also invoke button-3 command for context menu. */
+    /* Also invoke button-3 command for context menu */
     InvokeButtonCommand(icon, 3, x, y);
 
     return sd_bus_reply_method_return(m, "");
@@ -250,13 +367,15 @@ method_context_menu(
 static int
 method_scroll(
     sd_bus_message *m,
-    TCL_UNUSED(void *),
-     TCL_UNUSED(sd_bus_error *))
+    TCL_UNUSED(void *), /* userdata */
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     int delta;
     const char *orientation;
+    int r;
 
-    if (sd_bus_message_read(m, "is", &delta, &orientation) < 0) {
+    r = sd_bus_message_read(m, "is", &delta, &orientation);
+    if (r < 0) {
         return sd_bus_reply_method_return(m, "");
     }
 
@@ -268,7 +387,7 @@ method_scroll(
 /*
  *----------------------------------------------------------------------
  *
- * DBus Property Getters.
+ * DBus Property Getters (SNI).
  *
  *----------------------------------------------------------------------
  */
@@ -277,11 +396,11 @@ static int
 property_get_category(
     TCL_UNUSED(sd_bus *), /* bus */
     TCL_UNUSED(const char *), /* path */
-    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* interface */
     TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *)) /*error */
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     DockIcon *icon = userdata;
     const char *category_str;
@@ -310,11 +429,11 @@ static int
 property_get_status(
     TCL_UNUSED(sd_bus *), /* bus */
     TCL_UNUSED(const char *), /* path */
-    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* interface */
     TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *)) /*error */
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     DockIcon *icon = userdata;
     const char *status_str;
@@ -340,11 +459,11 @@ static int
 property_get_icon_name(
     TCL_UNUSED(sd_bus *), /* bus */
     TCL_UNUSED(const char *), /* path */
-    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* interface */
     TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *)) /*error */
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     /* The icon is delivered through IconPixmap; there is no themed name. */
     (void)userdata;
@@ -355,11 +474,11 @@ static int
 property_get_icon_pixmap(
     TCL_UNUSED(sd_bus *), /* bus */
     TCL_UNUSED(const char *), /* path */
-    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* interface */
     TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *)) /*error */
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     DockIcon *icon = userdata;
     int r;
@@ -387,14 +506,16 @@ static int
 property_get_tooltip(
     TCL_UNUSED(sd_bus *), /* bus */
     TCL_UNUSED(const char *), /* path */
-    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* interface */
     TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
     void *userdata,
-    TCL_UNUSED(sd_bus_error *)) /*error */
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
     DockIcon *icon = userdata;
     int r;
+    const char *tooltip_text = icon->tooltip ? icon->tooltip : "";
+    const char *title_text = icon->title ? icon->title : "";
 
     /* ToolTip is (sa(iiay)ss): icon_name, icon_pixmap, title, description. */
     r = sd_bus_message_open_container(reply, 'r', "sa(iiay)ss");
@@ -410,9 +531,7 @@ property_get_tooltip(
     sd_bus_message_close_container(reply);
 
     /* Title and description. */
-    r = sd_bus_message_append(reply, "ss",
-                              icon->title ? icon->title : "",
-                              icon->tooltip ? icon->tooltip : "");
+    r = sd_bus_message_append(reply, "ss", title_text, tooltip_text);
     if (r < 0) return r;
 
     sd_bus_message_close_container(reply);
@@ -423,14 +542,15 @@ static int
 property_get_menu(
     TCL_UNUSED(sd_bus *), /* bus */
     TCL_UNUSED(const char *), /* path */
-    TCL_UNUSED(const char *), /*interface */
+    TCL_UNUSED(const char *), /* interface */
     TCL_UNUSED(const char *), /* property */
     sd_bus_message *reply,
-    TCL_UNUSED(void *), /* userdat */
-    TCL_UNUSED(sd_bus_error *)) /*error */
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *)) /* error */
 {
-    /* No menu support for now - return empty object path. */
-    return sd_bus_message_append(reply, "o", "/");
+    DockIcon *icon = userdata;
+    const char *menu_path = icon->menu_path ? icon->menu_path : "/";
+    return sd_bus_message_append(reply, "o", menu_path);
 }
 
 /* VTable for StatusNotifierItem interface. */
@@ -455,6 +575,282 @@ static const sd_bus_vtable status_notifier_item_vtable[] = {
     SD_BUS_PROPERTY("Menu", "o", property_get_menu, 0, SD_BUS_VTABLE_PROPERTY_CONST),
     SD_BUS_VTABLE_END
 };
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * dbusmenu support (com.canonical.dbusmenu)
+ *
+ *----------------------------------------------------------------------
+ */
+
+/* Forward declarations for dbusmenu methods. */
+static int dbusmenu_get_layout(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbusmenu_about_to_show(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbusmenu_event(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbusmenu_get_group_properties(sd_bus_message *m, void *userdata, sd_bus_error *ret_error);
+static int dbusmenu_property_get_version(sd_bus *bus, const char *path, const char *interface,
+                                         const char *property, sd_bus_message *reply, void *userdata,
+                                         sd_bus_error *ret_error);
+
+/* dbusmenu vtable */
+static const sd_bus_vtable dbusmenu_vtable[] = {
+    SD_BUS_VTABLE_START(0),
+    SD_BUS_METHOD("GetLayout", "iuas", "ua(ia{sv})", dbusmenu_get_layout, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("AboutToShow", "i", "", dbusmenu_about_to_show, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("Event", "iisv", "", dbusmenu_event, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("GetGroupProperties", "aas", "aa{sv}", dbusmenu_get_group_properties, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_PROPERTY("Version", "u", dbusmenu_property_get_version, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+    SD_BUS_VTABLE_END
+};
+
+/* Helper to walk menu entries and find an entry by its D-Bus ID. */
+static TkMenuEntry *
+FindMenuEntryByID(TkMenu *menu, int id)
+{
+    Tcl_Size i;
+    TkMenuEntry *mePtr;
+    
+    if (!menu || !menu->entries) return NULL;
+    
+    for (i = 0; i < menu->numEntries; i++) {
+        mePtr = menu->entries[i];
+        /* Use the entry's address as a stable ID. */
+        if ((int)(intptr_t)mePtr == id) {
+            return mePtr;
+        }
+    }
+    return NULL;
+}
+
+/* Helper to build the layout for a menu. Returns 0 on success, negative on error. */
+static int
+BuildMenuLayout(TkMenu *menu, int parentId, int depth,
+                sd_bus_message *reply, DockIcon *icon)
+{
+    Tcl_Size i;
+    TkMenuEntry *mePtr;
+    int childId;
+    int r;
+
+    (void)parentId;
+    (void)depth;
+    (void)icon;
+
+    if (!menu || !menu->entries) return 0;
+
+    /* Iterate through entries */
+    for (i = 0; i < menu->numEntries; i++) {
+        mePtr = menu->entries[i];
+        
+        /* Assign a stable ID based on the entry's address. */
+        childId = (int)(intptr_t)mePtr;
+
+        /* Open a struct for this entry: (id, properties) */
+        r = sd_bus_message_open_container(reply, 'r', "ia{sv}");
+        if (r < 0) return r;
+
+        r = sd_bus_message_append(reply, "i", childId);
+        if (r < 0) return r;
+
+        /* Open the properties dict. */
+        r = sd_bus_message_open_container(reply, 'a', "{sv}");
+        if (r < 0) return r;
+
+        /* Common properties: type, label, enabled, sensitive */
+        const char *type = "standard";
+        const char *label = "";
+        int enabled = 1;
+        int sensitive = 1;
+        const char *toggle_type = NULL;
+        int toggle_state = 0;
+        const char *children_display = NULL;
+
+        /* Determine entry type from TkMenuEntry fields */
+        if (mePtr->type == SEPARATOR_ENTRY) {
+            type = "separator";
+            label = "";
+        } else if (mePtr->type == CASCADE_ENTRY) {
+            type = "standard";
+            if (mePtr->labelPtr) {
+                label = Tcl_GetString(mePtr->labelPtr);
+            }
+            children_display = "submenu";
+        } else {
+            /* Standard, check, radio */
+            type = "standard";
+            if (mePtr->labelPtr) {
+                label = Tcl_GetString(mePtr->labelPtr);
+            }
+            if (mePtr->type == CHECK_BUTTON_ENTRY) {
+                toggle_type = "checkmark";
+                toggle_state = (mePtr->entryFlags & ENTRY_SELECTED) ? 1 : 0;
+            } else if (mePtr->type == RADIO_BUTTON_ENTRY) {
+                toggle_type = "radio";
+                toggle_state = (mePtr->entryFlags & ENTRY_SELECTED) ? 1 : 0;
+            }
+        }
+
+        /* Check if disabled. */
+        if (mePtr->state & ENTRY_DISABLED) {
+            enabled = 0;
+            sensitive = 0;
+        }
+
+        /* Append properties. */
+        r = sd_bus_message_append(reply, "{sv}", "type", "s", type);
+        if (r < 0) return r;
+        if (label && *label) {
+            r = sd_bus_message_append(reply, "{sv}", "label", "s", label);
+            if (r < 0) return r;
+        }
+        r = sd_bus_message_append(reply, "{sv}", "enabled", "b", enabled);
+        if (r < 0) return r;
+        r = sd_bus_message_append(reply, "{sv}", "sensitive", "b", sensitive);
+        if (r < 0) return r;
+        if (toggle_type) {
+            r = sd_bus_message_append(reply, "{sv}", "toggle-type", "s", toggle_type);
+            if (r < 0) return r;
+            r = sd_bus_message_append(reply, "{sv}", "toggle-state", "i", toggle_state);
+            if (r < 0) return r;
+        }
+        if (children_display) {
+            r = sd_bus_message_append(reply, "{sv}", "children-display", "s", children_display);
+            if (r < 0) return r;
+        }
+
+        /* Close properties dict. */
+        r = sd_bus_message_close_container(reply);
+        if (r < 0) return r;
+
+        /* Close the struct. */
+        r = sd_bus_message_close_container(reply);
+        if (r < 0) return r;
+    }
+
+    return 0;
+}
+
+/* dbusmenu method: GetLayout */
+static int
+dbusmenu_get_layout(
+    sd_bus_message *m,
+    void *userdata,
+    sd_bus_error *ret_error)
+{
+    DockIcon *icon = (DockIcon *)userdata;
+    int parentId, depth;
+    sd_bus_message *reply = NULL;
+    int r;
+
+    r = sd_bus_message_read(m, "iuas", &parentId, &depth, NULL);
+    if (r < 0) {
+        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Failed to read arguments");
+    }
+
+    /* Create reply message. */
+    r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+
+    /* Append revision (we'll use 0) and layout array. */
+    r = sd_bus_message_append(reply, "u", 0); /* revision */
+    if (r < 0) return r;
+
+    /* Open layout array: (ia{sv}) */
+    r = sd_bus_message_open_container(reply, 'a', "(ia{sv})");
+    if (r < 0) return r;
+
+    if (icon->menuPtr) {
+        BuildMenuLayout(icon->menuPtr, parentId, depth, reply, icon);
+    }
+
+    r = sd_bus_message_close_container(reply);
+    if (r < 0) return r;
+
+    return sd_bus_send(NULL, reply, NULL);
+}
+
+/* dbusmenu method: AboutToShow */
+static int
+dbusmenu_about_to_show(
+    sd_bus_message *m,
+    TCL_UNUSED(void *), /* userdata */
+    TCL_UNUSED(sd_bus_error *)) /* ret_error */
+{
+    int id;
+    int r = sd_bus_message_read(m, "i", &id);
+    if (r < 0) return r;
+
+    /* We could invoke a Tcl -postcommand for the menu if needed.
+     * For now, just return success. */
+    return sd_bus_reply_method_return(m, "");
+}
+
+/* dbusmenu method: Event */
+static int
+dbusmenu_event(
+    sd_bus_message *m,
+    void *userdata,
+    TCL_UNUSED(sd_bus_error *)) /* ret_error */
+{
+    DockIcon *icon = (DockIcon *)userdata;
+    int id, eventId;
+    const char *data;
+    uint32_t timestamp;
+    int r;
+
+    r = sd_bus_message_read(m, "iisv", &id, &eventId, &data, &timestamp);
+    if (r < 0) return r;
+
+    /* Find the TkMenuEntry corresponding to the ID. */
+    TkMenuEntry *mePtr = FindMenuEntryByID(icon->menuPtr, id);
+    if (!mePtr) {
+        return sd_bus_reply_method_return(m, "");
+    }
+
+    /* We only handle activation. If the entry has a command, execute it. */
+    if (mePtr->commandPtr) {
+        int result = Tcl_EvalObjEx(icon->interp, mePtr->commandPtr, TCL_EVAL_GLOBAL);
+        if (result != TCL_OK) {
+            Tcl_BackgroundError(icon->interp);
+        }
+    }
+
+    return sd_bus_reply_method_return(m, "");
+}
+
+/* dbusmenu method: GetGroupProperties */
+static int
+dbusmenu_get_group_properties(
+    sd_bus_message *m,
+    TCL_UNUSED(void *), /* userdata */
+    TCL_UNUSED(sd_bus_error *)) /* ret_error */
+{
+    /* Not needed, but must exist. Return empty array. */
+    sd_bus_message *reply;
+    int r = sd_bus_message_new_method_return(m, &reply);
+    if (r < 0) return r;
+    r = sd_bus_message_open_container(reply, 'a', "a{sv}");
+    if (r < 0) return r;
+    /* No groups, close. */
+    r = sd_bus_message_close_container(reply);
+    if (r < 0) return r;
+    return sd_bus_send(NULL, reply, NULL);
+}
+
+/* dbusmenu property: Version */
+static int
+dbusmenu_property_get_version(
+    TCL_UNUSED(sd_bus *), /* bus */
+    TCL_UNUSED(const char *), /* path */
+    TCL_UNUSED(const char *), /* interface */
+    TCL_UNUSED(const char *), /* property */
+    sd_bus_message *reply,
+    TCL_UNUSED(void *), /* userdata */
+    TCL_UNUSED(sd_bus_error *)) /* error */
+{
+    return sd_bus_message_append(reply, "u", 3); /* dbusmenu version 3 */
+}
 
 /*
  *----------------------------------------------------------------------
@@ -605,6 +1001,13 @@ TrayIconObjectCmd(
             Tcl_IncrRefCount(icon->b3Command);
         }
 
+        /* Re-detect menu from the updated callback. */
+        if (button == 3) {
+            DetectMenuFromCallback(icon, icon->b3Command);
+        } else if (button == 1) {
+            DetectMenuFromCallback(icon, icon->b1Command);
+        }
+
         return TCL_OK;
     }
 
@@ -620,16 +1023,16 @@ TrayIconObjectCmd(
         message = Tcl_GetString(objv[2]);
         title = (objc >= 4) ? Tcl_GetString(objv[3]) : "Notification";
 
-		/* Free old strings if they exist to prevent memory leaks. */
-		if (icon->title) Tcl_Free(icon->title);
-		if (icon->tooltip) Tcl_Free(icon->tooltip);
+        /* Free old strings if they exist to prevent memory leaks. */
+        if (icon->title) Tcl_Free(icon->title);
+        if (icon->tooltip) Tcl_Free(icon->tooltip);
 
-		/* Allocate and copy new values.*/
-		icon->title = (char *)Tcl_Alloc(strlen(title) + 1);
-		strcpy(icon->title, title);
+        /* Allocate and copy new values.*/
+        icon->title = (char *)Tcl_Alloc(strlen(title) + 1);
+        strcpy(icon->title, title);
 
-		icon->tooltip = (char *)Tcl_Alloc(strlen(message) + 1);
-		strcpy(icon->tooltip, message);
+        icon->tooltip = (char *)Tcl_Alloc(strlen(message) + 1);
+        strcpy(icon->tooltip, message);
 
         /* Update indicator status to "attention". */
         if (icon->status) {
@@ -640,6 +1043,9 @@ TrayIconObjectCmd(
 
         /* Update DBus status */
         UpdateIndicatorStatus(icon);
+
+        /* Tell the host the ToolTip property changed */
+        UpdateTooltip(icon);
 
         Tcl_SetObjResult(interp, Tcl_NewIntObj(++icon->msgid));
         return TCL_OK;
@@ -784,8 +1190,7 @@ RegisterStatusNotifierItem(
 
     /* SNI spec object path: hosts (KDE Plasma, ubuntu-appindicators, ayatana)
      * look up /StatusNotifierItem when the client passes only a bus name to
-     * RegisterStatusNotifierItem. Exporting at /TrayIcon/N leaves the
-     * watcher's entry pointing at no object, so the icon never renders. */
+     * RegisterStatusNotifierItem. */
     if (!icon->object_path) {
         icon->object_path = (char *)Tcl_Alloc(64);
         snprintf(icon->object_path, 64, "/StatusNotifierItem");
@@ -814,6 +1219,22 @@ RegisterStatusNotifierItem(
     if (r < 0) {
         fprintf(stderr, "Failed to add object vtable: %s\n", strerror(-r));
         return r;
+    }
+
+    /* ---- Add dbusmenu interface on a separate path ---- */
+    if (!icon->menu_path) {
+        icon->menu_path = (char *)Tcl_Alloc(64);
+        snprintf(icon->menu_path, 64, "/Menu%d", icon->item_id);
+    }
+    r = sd_bus_add_object_vtable(icon->bus,
+                                 NULL,
+                                 icon->menu_path,
+                                 "com.canonical.dbusmenu",
+                                 dbusmenu_vtable,
+                                 icon);
+    if (r < 0) {
+        fprintf(stderr, "Failed to add dbusmenu vtable: %s\n", strerror(-r));
+        /* Continue anyway; menu won't work but SNI still might. */
     }
 
     /* Register on StatusNotifierWatcher. */
@@ -1089,10 +1510,7 @@ CreateTrayIconWindow(
     /* Update tooltip. */
     UpdateTooltip(icon);
 
-    /* SNI renders the icon entirely server-side via D-Bus. Tk_CreateWindowFromPath
-     * already created a glfwWindow for icon->tkwin; calling TkWaylandCreateWindow
-     * again here (as the original code did) segfaulted. But we still need to
-     * hide that auto-created window or it shows as an empty 200x200 surface. */
+    /* SNI renders the icon entirely server-side via D-Bus. Hide the auto-created window. */
     {
         GLFWwindow *gw = TkWaylandGetGLFWwindow((TkWindow *)icon->tkwin);
         if (gw) {
@@ -1167,6 +1585,46 @@ TrayIconUpdate(
         }
     }
 
+    if (mask & ICON_CONF_TOOLTIP) {
+        /* -text was (re)configured: refresh the plain-C tooltip string */
+        if (icon->tooltip) {
+            Tcl_Free(icon->tooltip);
+            icon->tooltip = NULL;
+        }
+        if (icon->tooltipObj) {
+            const char *text = Tcl_GetString(icon->tooltipObj);
+            icon->tooltip = (char *)Tcl_Alloc(strlen(text) + 1);
+            strcpy(icon->tooltip, text);
+        }
+        if (icon->bus) {
+            UpdateTooltip(icon);
+        }
+    }
+
+    if (mask & ICON_CONF_BUTTON1) {
+        if (icon->b1Command) {
+            Tcl_DecrRefCount(icon->b1Command);
+            icon->b1Command = NULL;
+        }
+        if (icon->button1Obj) {
+            icon->b1Command = icon->button1Obj;
+            Tcl_IncrRefCount(icon->b1Command);
+        }
+        DetectMenuFromCallback(icon, icon->b1Command);
+    }
+
+    if (mask & ICON_CONF_BUTTON3) {
+        if (icon->b3Command) {
+            Tcl_DecrRefCount(icon->b3Command);
+            icon->b3Command = NULL;
+        }
+        if (icon->button3Obj) {
+            icon->b3Command = icon->button3Obj;
+            Tcl_IncrRefCount(icon->b3Command);
+        }
+        DetectMenuFromCallback(icon, icon->b3Command);
+    }
+
     if (mask & ICON_CONF_REDISPLAY) {
         if (icon->docked && !icon->bus) {
             CreateTrayIconWindow(icon);
@@ -1177,9 +1635,7 @@ TrayIconUpdate(
 }
 
 /*
- * Tk_ImageChangedProc callback. Tk_GetImage was passing NULL here, so the
- * first put on the photo image after `tk systray create` segfaulted in
- * Tk_ImageChanged. Re-export the icon (size and pixmap) on every change.
+ * Tk_ImageChangedProc callback.
  */
 static void
 TrayIconRedisplayIdle(void *cd)
@@ -1203,10 +1659,6 @@ TrayIconImageChanged(
     }
     icon->imageWidth = imgw;
     icon->imageHeight = imgh;
-    /* Defer the re-export: Tk_FindPhoto from inside this callback crashes
-     * during shutdown (TkDeleteAllImages → DeleteImage notifies instances
-     * while the master is half-destroyed). Tcl_DoWhenIdle drops the work
-     * if the event loop never runs again, so shutdown is clean. */
     if (!icon->redisplayPending) {
         icon->redisplayPending = 1;
         Tcl_DoWhenIdle(TrayIconRedisplayIdle, icon);
@@ -1350,6 +1802,10 @@ TrayIconDeleteProc(
         Tcl_Free(icon->object_path);
     }
 
+    if (icon->menu_path) {
+        Tcl_Free(icon->menu_path);
+    }
+
     Tcl_Free(icon);
 }
 
@@ -1359,6 +1815,15 @@ static const Tk_OptionSpec IconOptionSpec[] = {
         NULL, offsetof(DockIcon, imageObj), -1,
         TK_OPTION_NULL_OK, NULL,
         ICON_CONF_IMAGE | ICON_CONF_REDISPLAY},
+    {TK_OPTION_STRING,"-text","text","Text",
+        NULL, offsetof(DockIcon, tooltipObj), -1,
+        TK_OPTION_NULL_OK, NULL, ICON_CONF_TOOLTIP},
+    {TK_OPTION_STRING,"-button1","button1","Button1",
+        NULL, offsetof(DockIcon, button1Obj), -1,
+        TK_OPTION_NULL_OK, NULL, ICON_CONF_BUTTON1},
+    {TK_OPTION_STRING,"-button3","button3","Button3",
+        NULL, offsetof(DockIcon, button3Obj), -1,
+        TK_OPTION_NULL_OK, NULL, ICON_CONF_BUTTON3},
     {TK_OPTION_STRING,"-class","class","Class",
         "TrayIcon", offsetof(DockIcon, classObj), -1,
         0, NULL, 0},
@@ -1452,6 +1917,10 @@ TrayIconCreateCmd(
             return TCL_ERROR;
         }
     }
+
+    /* After initial config, detect menu from any button callbacks. */
+    DetectMenuFromCallback(icon, icon->b1Command);
+    DetectMenuFromCallback(icon, icon->b3Command);
 
     /* Create command. */
     icon->widgetCmd = Tcl_CreateObjCommand2(interp, Tcl_GetString(objv[1]),

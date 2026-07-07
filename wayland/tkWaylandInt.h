@@ -129,8 +129,8 @@ typedef struct WaylandFtFace {
 } WaylandFtFace;
 
 /*
- * Per-NVG-context font registration
- * CRITICAL: NanoVG font IDs are context-local!
+ * Per-NVG-context font registration.
+ * NanoVG font IDs are context-local.
  */
 typedef struct NvgFontContext {
     NVGcontext *vg;
@@ -807,8 +807,7 @@ MODULE_SCOPE void TkWaylandPopupGetPosition(TkWaylandPopup *popup, int *xOut, in
  *	Dropdown/cascade menus are implemented as a stack of
  *	wl_subsurface-backed popups (TkWaylandSubsurfaceCreate) with empty
  *	input regions, so all pointer/keyboard input continues to arrive at
- *	the toplevel's raw wl_pointer / wl_keyboard listeners
- *	(tkGlfwInit.c) in toplevel-surface-local coordinates.  Those
+ *	the toplevel in toplevel-surface-local coordinates.  Those
  *	listeners call the Handle* functions below, which perform hit
  *	testing against the menu stack and dispatch to the appropriate
  *	TkMenu, or dismiss the stack on an outside click / Escape.
@@ -846,10 +845,7 @@ MODULE_SCOPE int  TkWaylandPostMenuAtAnchor(
 MODULE_SCOPE void TkWaylandMenuDismissAll(void);
 
 /*
- * Raw input dispatch, called from tkGlfwInit.c's wl_pointer / wl_keyboard
- * listeners.  x, y are toplevel-surface-local logical pixels.
- * state follows the wl_pointer_button_state / wl_keyboard_key_state enum
- * (0 = released, 1 = pressed).
+ * Pointer/button management. 
  */
 MODULE_SCOPE void TkWaylandMenuHandlePointerMotion(int x, int y);
 MODULE_SCOPE void TkWaylandMenuHandlePointerButton(int x, int y,
@@ -864,6 +860,13 @@ MODULE_SCOPE void TkWaylandMenuHandleEscape(void);
  */
 MODULE_SCOPE int  TkWaylandMenuConsumeDismissClick(void);
 
+/*
+ * Additional menu functions for keyboard navigation.
+ * These allow the key callback to route key events to the active menu
+ * without involving IBus or normal focus.
+ */
+MODULE_SCOPE int TkWaylandMenuActive(void);
+MODULE_SCOPE Tk_Window TkWaylandMenuGetTopmostWindow(void);
 
 /*
  *----------------------------------------------------------------------

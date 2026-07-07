@@ -98,6 +98,7 @@ static int            menuStackDepth = 0;
 static int menuDismissedByClick = 0;
 
 /* Forward declarations for static functions. */
+static void MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr);
 static void SetHelpMenu(TkMenu *menuPtr);
 static void MenuDrawIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
 static void MenuDrawMenubarIntoPopup(TkMenu *menuPtr, TkWaylandPopup *popup);
@@ -363,6 +364,41 @@ int
 TkpMenuNewEntry(TCL_UNUSED(TkMenuEntry *)) /* mePtr */
 {
     return TCL_OK;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * MenuStackWindowEventProc --
+ *
+ * Force-pop a menu entry. 
+ *
+ * Results:
+ * None.
+ *
+ * Side effects:
+ * Pops the entry back onto the stack. 
+ *
+ *---------------------------------------------------------------------------
+ */
+static void
+MenuStackWindowEventProc(ClientData clientData, XEvent *eventPtr)
+{
+    TkMenu *menuPtr = (TkMenu *)clientData;
+    int i;
+
+    if (eventPtr->type != UnmapNotify && eventPtr->type != DestroyNotify) {
+        return;
+    }
+
+    for (i = 0; i < menuStackDepth; i++) {
+        if (menuStack[i].menuPtr == menuPtr) {
+            MENU_LOG("MenuStackWindowEventProc: menu %p unmapped/destroyed "
+                     "out from under us at depth %d, forcing pop", (void*)menuPtr, i);
+            MenuStackPop(i);   /* pops i, i+1, ... back down to i */
+            break;
+        }
+    }
 }
 
 /*
@@ -1332,15 +1368,25 @@ TkpDrawMenuEntry(
              mePtr->labelPtr ? Tcl_GetString(mePtr->labelPtr) : "(null)",
              mePtr->menuPtr->menuType, x, y, width, height, mePtr->type);
 
-    /* Get the actual borders from the menu. */
-    if (mePtr->menuPtr->borderPtr != NULL) {
+    /*
+     * Get the actual borders, checking the per-entry -background/
+     * -activebackground options first and falling back to the menu-wide
+     * -background/-activebackground, mirroring tkUnixMenu.c.
+     */
+    if (mePtr->borderPtr != NULL) {
+        bgBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
+                                          mePtr->borderPtr);
+    } else if (mePtr->menuPtr->borderPtr != NULL) {
         bgBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
                                           mePtr->menuPtr->borderPtr);
     }
     if (!bgBorder) {
         bgBorder = Tk_Get3DBorder(mePtr->menuPtr->interp, mePtr->menuPtr->tkwin, Tk_GetUid("Menu"));
     }
-    if (mePtr->menuPtr->activeBorderPtr != NULL) {
+    if (mePtr->activeBorderPtr != NULL) {
+        activeBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
+                                              mePtr->activeBorderPtr);
+    } else if (mePtr->menuPtr->activeBorderPtr != NULL) {
         activeBorder = Tk_Get3DBorderFromObj(mePtr->menuPtr->tkwin,
                                               mePtr->menuPtr->activeBorderPtr);
     }
@@ -1402,29 +1448,63 @@ TkpDrawMenuEntry(
     }
 
     /*
-     * Get the text foreground color.
+     * Get the text foreground color. Per-entry -foreground/-activeforeground
+     * take priority over the menu-wide -foreground/-activeforeground,
+     * mirroring tkUnixMenu.c's fallback chain.
      */
     NVGcolor textColor = nvgRGBA(0, 0, 0, 255);
-    if (mePtr->state == ENTRY_ACTIVE && mePtr->menuPtr->activeFgPtr) {
-        XColor *fgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin,
-                                          mePtr->menuPtr->activeFgPtr);
-        if (fgX) {
-            textColor = TkWaylandXColorToNVG(fgX);
+    if (mePtr->state == ENTRY_ACTIVE) {
+        XColor *activeFgX = NULL;
+        if (mePtr->activeFgPtr) {
+            activeFgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin, mePtr->activeFgPtr);
+        } else if (mePtr->menuPtr->activeFgPtr) {
+            activeFgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin,
+                                            mePtr->menuPtr->activeFgPtr);
         }
-    } else if (mePtr->menuPtr->fgPtr) {
-        XColor *fgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin, mePtr->menuPtr->fgPtr);
+        if (activeFgX) {
+            textColor = TkWaylandXColorToNVG(activeFgX);
+        }
+    } else {
+        XColor *fgX = NULL;
+        if (mePtr->fgPtr) {
+            fgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin, mePtr->fgPtr);
+        } else if (mePtr->menuPtr->fgPtr) {
+            fgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin, mePtr->menuPtr->fgPtr);
+        }
         if (fgX) {
             textColor = TkWaylandXColorToNVG(fgX);
         }
     }
 
     if (mePtr->state == ENTRY_DISABLED) {
-        textColor = nvgRGBA(128, 128, 128, 255);
+        XColor *disabledFgX = NULL;
+        if (mePtr->menuPtr->disabledFgPtr) {
+            disabledFgX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin,
+                                              mePtr->menuPtr->disabledFgPtr);
+        }
+        textColor = disabledFgX ? TkWaylandXColorToNVG(disabledFgX)
+                                 : nvgRGBA(128, 128, 128, 255);
     }
 
     /* Make sure text color is visible. */
     if (textColor.r == 0 && textColor.g == 0 && textColor.b == 0 && textColor.a == 0) {
         textColor = nvgRGBA(0, 0, 0, 255);
+    }
+
+    /*
+     * Resolve the per-entry -selectcolor (indicator color) for checkbutton/
+     * radiobutton entries. There is no menu-wide equivalent in Tk, so this
+     * falls back to NULL (and DrawMenuEntryIndicator falls back to
+     * textColor) when the entry doesn't set one.
+     */
+    XColor *indicatorColorX = NULL;
+    if (mePtr->indicatorFgPtr) {
+        indicatorColorX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin, mePtr->indicatorFgPtr);
+    }
+    XColor *disabledIndicatorColorX = NULL;
+    if (mePtr->menuPtr->disabledFgPtr) {
+        disabledIndicatorColorX = Tk_GetColorFromObj(mePtr->menuPtr->tkwin,
+                                                       mePtr->menuPtr->disabledFgPtr);
     }
 
     DrawMenuEntryBackground(mePtr->menuPtr, mePtr, vg,
@@ -1446,7 +1526,7 @@ TkpDrawMenuEntry(
 
         if (!mePtr->hideMargin) {
             DrawMenuEntryIndicator(mePtr->menuPtr, mePtr, vg,
-                                   bgBorder, NULL, NULL,
+                                   bgBorder, indicatorColorX, disabledIndicatorColorX,
                                    entryFont, entryFmPtr, x, y, width, height,
                                    textColor);
         }
@@ -1471,7 +1551,7 @@ TkpDrawMenuEntry(
                                  (drawingParameters & DRAW_MENU_ENTRY_ARROW) != 0, textColor);
         if (!mePtr->hideMargin) {
             DrawMenuEntryIndicator(mePtr->menuPtr, mePtr, vg,
-                                   bgBorder, NULL, NULL,
+                                   bgBorder, indicatorColorX, disabledIndicatorColorX,
                                    entryFont, entryFmPtr, x, y, width, height,
                                    textColor);
         }
@@ -1703,8 +1783,8 @@ DrawMenuEntryIndicator(
         if (mePtr->state == ENTRY_DISABLED) {
             color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
         } else {
-            /* Use textColor for indicators instead of indicatorColor. */
-            color = textColor;
+            /* Honor per-entry -selectcolor when set, else fall back to textColor. */
+            color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : textColor;
         }
 
         /* Draw checkbox square. */
@@ -1740,8 +1820,8 @@ DrawMenuEntryIndicator(
         if (mePtr->state == ENTRY_DISABLED) {
             color = disableColor ? TkWaylandXColorToNVG(disableColor) : nvgRGB(128, 128, 128);
         } else {
-            /* Use textColor for indicators instead of indicatorColor. */
-            color = textColor;
+            /* Honor per-entry -selectcolor when set, else fall back to textColor. */
+            color = indicatorColor ? TkWaylandXColorToNVG(indicatorColor) : textColor;
         }
 
         /* Draw radio circle. */
@@ -2388,6 +2468,10 @@ MenuStackPop(
         }
 
         memset(entry, 0, sizeof(*entry));
+        if (entry->menuPtr && entry->menuPtr->tkwin) {
+			Tk_DeleteEventHandler(entry->menuPtr->tkwin, StructureNotifyMask,
+            MenuStackWindowEventProc, (ClientData)entry->menuPtr);
+}
     }
 }
 
@@ -2715,6 +2799,9 @@ TkWaylandPostMenuAtAnchor(
     entry->y = postY;
     entry->w = popupW;
     entry->h = popupH;
+    
+    Tk_CreateEventHandler(menuPtr->tkwin, StructureNotifyMask,
+                       MenuStackWindowEventProc, (ClientData)menuPtr);
 
     MenuDrawIntoPopup(menuPtr, popup);
 
@@ -4158,6 +4245,51 @@ TkWaylandPostVirtualEvent(
     }
 
     ckfree(eventScript);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenuActive --
+ *
+ *      Returns non-zero if any menu popup is currently posted.
+ *
+ * Results:
+ *      1 if menu stack is non-empty, 0 otherwise.
+ *
+ * Side effects:
+ *      None.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenuActive(void)
+{
+    return menuStackDepth > 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWaylandMenuGetTopmostWindow --
+ *
+ *      Returns the Tk_Window of the topmost posted menu, or NULL if none.
+ *
+ * Results:
+ *      Tk_Window of the topmost menu, or NULL.
+ *
+ * Side effects:
+ *      None.
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE Tk_Window
+TkWaylandMenuGetTopmostWindow(void)
+{
+    if (menuStackDepth > 0) {
+        return (Tk_Window)menuStack[menuStackDepth - 1].menuPtr->tkwin;
+    }
+    return NULL;
 }
 
 /*
