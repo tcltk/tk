@@ -152,12 +152,6 @@ AC_CHECK_TYPE([uintptr_t], [
 
 SC_ENABLE_SYMBOLS
 
-#--------------------------------------------------------------------
-# Embed the manifest if we can determine how
-#--------------------------------------------------------------------
-
-SC_EMBED_MANIFEST(wish.exe.manifest)
-
 SC_BUILD_TCLSH
 SC_PROG_TCLSH
 
