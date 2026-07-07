@@ -241,7 +241,6 @@ static bool IsSimpleOnly(const char *str, int len);
 static int GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars,
 			   int runStart, int runLen);
 static hb_font_t *GetHbFont(UnixFtFont *fontPtr, int faceIndex);
-static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
 
 /*
  * ---------------------------------------------------------------
@@ -2045,33 +2044,6 @@ Tk_MeasureChars(
 
 /*
  * ---------------------------------------------------------------
- * Tk_MeasureCharsInContext --
- *
- *   Measure a substring of a larger string, preserving shaping context.
- *
- *   Uses cluster boundaries to do width-aware fitting WITHOUT
- *   reshaping. This prevents RTL runs from being passed to LayoutLine
- *   as single monolithic units.
- *
- *   Algorithm:
- *   1. Shape the full source string once (HarfBuzz shaping with full context).
- *   2. Use cluster boundaries from the shaped buffer to find the longest
- *      fitting subrange that starts at rangeStart.
- *   3. Return bytes consumed and pixel width.
- *
- *   No reshaping happens during the fitting loop — we use the glyph
- *   positions and cluster boundaries already computed by shaping.
- *
- * Results:
- *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
- *
- * Side effects:
- *   None.
- * ---------------------------------------------------------------
- */
-
-/*
- * ---------------------------------------------------------------
  * GetSimpleCharWidth --
  *
  *   Return the on-screen advance width of a single codepoint in the
@@ -2124,6 +2096,33 @@ GetSimpleCharWidth(
     /* No face has a real glyph for this codepoint: zero-width. */
     return 0;
 }
+
+/*
+ * ---------------------------------------------------------------
+ * Tk_MeasureCharsInContext --
+ *
+ *   Measure a substring of a larger string, preserving shaping context.
+ *
+ *   Uses cluster boundaries to do width-aware fitting WITHOUT
+ *   reshaping. This prevents RTL runs from being passed to LayoutLine
+ *   as single monolithic units.
+ *
+ *   Algorithm:
+ *   1. Shape the full source string once (HarfBuzz shaping with full context).
+ *   2. Use cluster boundaries from the shaped buffer to find the longest
+ *      fitting subrange that starts at rangeStart.
+ *   3. Return bytes consumed and pixel width.
+ *
+ *   No reshaping happens during the fitting loop — we use the glyph
+ *   positions and cluster boundaries already computed by shaping.
+ *
+ * Results:
+ *   Returns number of bytes consumed; *lengthPtr filled with pixel width.
+ *
+ * Side effects:
+ *   None.
+ * ---------------------------------------------------------------
+ */
 
 int
 Tk_MeasureCharsInContext(
