@@ -241,6 +241,7 @@ static bool IsSimpleOnly(const char *str, int len);
 static int GetRunFaceIndex(UnixFtFont *fontPtr, FcChar32 *ucs4Chars,
 			   int runStart, int runLen);
 static hb_font_t *GetHbFont(UnixFtFont *fontPtr, int faceIndex);
+static int GetSimpleCharWidth(UnixFtFont *fontPtr, FcChar32 uc);
 
 /*
  * ---------------------------------------------------------------
