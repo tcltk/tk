@@ -1612,7 +1612,7 @@ test Bbox-15.19 {Title Rows No Scroll} -setup {
 	set res [list [cell_bbox .tv red]]
 	.tv yview 400
 	update
-	
+
 	lappend res [cell_bbox .tv red]
 	return $res
     } -match {glob} -result {{{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}} {{0 2? 200 20} {-200 2? 200 20} {0 2? 200 20} {200 2? 200 20}}}
