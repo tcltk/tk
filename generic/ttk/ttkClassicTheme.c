@@ -21,6 +21,12 @@
   #define WIN32_XDRAWLINE_HACK 0
 #endif
 
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+  #define X11_XDRAWRECTANGLE_HACK 1
+#else
+  #define X11_XDRAWRECTANGLE_HACK 0
+#endif
+
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
  *	Draw a solid highlight border to indicate focus.
@@ -1109,7 +1115,10 @@ static void TreeitemIndicatorDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width - 1, b.height - 1);
+    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
+    if (X11_XDRAWRECTANGLE_HACK) {
+	XDrawPoint(Tk_Display(tkwin), d, gc, b.x+b.width-1, b.y+b.height-1);
+    }
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;

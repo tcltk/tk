@@ -1348,9 +1348,9 @@ GetSecondLastCharInChunk(
 static int
 FilterHyphenRules(
     int hyphenRules,
-    const char *lang)
+    const char *locale)
 {
-    if (lang && hyphenRules) {
+    if (locale && hyphenRules && strchr(" _", locale[2]) != NULL) {
 	enum {
 	    CA_RULES = (1 << TK_TEXT_HYPHEN_GEMINATION),
 	    DE_RULES = (1 << TK_TEXT_HYPHEN_CK)|(1 << TK_TEXT_HYPHEN_TRIPLE_CONSONANT),
@@ -1361,14 +1361,14 @@ FilterHyphenRules(
 	    SV_RULES = (1 << TK_TEXT_HYPHEN_TRIPLE_CONSONANT)
 	};
 
-	switch (lang[0]) {
-	case 'c': if (lang[1] == 'a') { hyphenRules &= CA_RULES; }; break;
-	case 'd': if (lang[1] == 'e') { hyphenRules &= DE_RULES; }; break;
-	case 'h': if (lang[1] == 'u') { hyphenRules &= HU_RULES; }; break;
-	case 'p': if (lang[1] == 'l') { hyphenRules &= PL_RULES; }; break;
-	case 's': if (lang[1] == 'v') { hyphenRules &= SV_RULES; }; break;
+	switch (locale[0]) {
+	case 'c': if (locale[1] == 'a') { hyphenRules &= CA_RULES; }; break;
+	case 'd': if (locale[1] == 'e') { hyphenRules &= DE_RULES; }; break;
+	case 'h': if (locale[1] == 'u') { hyphenRules &= HU_RULES; }; break;
+	case 'p': if (locale[1] == 'l') { hyphenRules &= PL_RULES; }; break;
+	case 's': if (locale[1] == 'v') { hyphenRules &= SV_RULES; }; break;
 	case 'n':
-	    switch (lang[1]) {
+	    switch (locale[1]) {
 	    case 'b': /* fallthru */
 	    case 'n': /* fallthru */
 	    case 'o': hyphenRules &= NO_RULES; break;
@@ -2737,7 +2737,7 @@ LayoutApplyHyphenRules(
     data->increaseNumBytes = 0;
     data->decreaseNumBytes = 0;
     SetupHyphenChars(hyphenPtr, 0);
-    hyphenRules = FilterHyphenRules(hyphenRules, sValPtr->lang);
+    hyphenRules = FilterHyphenRules(hyphenRules, sValPtr->locale);
 
     if (hyphenRules) {
 	const CharInfo *prevCiPtr;
@@ -3422,7 +3422,7 @@ LayoutChars(
 		     */
 
 		    const StyleValues *sValPtr = data->lastChunkPtr->stylePtr->sValuePtr;
-		    int hyphenRules = FilterHyphenRules(sValPtr->hyphenRules, sValPtr->lang);
+		    int hyphenRules = FilterHyphenRules(sValPtr->hyphenRules, sValPtr->locale);
 
 		    if (hyphenRules & (1 << TK_TEXT_HYPHEN_TRIPLE_CONSONANT)) {
 			/* Schi(ff-f)ahrt -> Schi(ff)ahrt */

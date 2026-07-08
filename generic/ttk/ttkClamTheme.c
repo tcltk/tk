@@ -18,6 +18,12 @@
   #define WIN32_XDRAWLINE_HACK 0
 #endif
 
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+  #define X11_XDRAWRECTANGLE_HACK 1
+#else
+  #define X11_XDRAWRECTANGLE_HACK 0
+#endif
+
 #define STR(x) StR(x)
 #define StR(x) #x
 
@@ -689,6 +695,10 @@ static void TroughElementDraw(
 	(unsigned)b.height-1);
     XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y, (unsigned)b.width-1,
 	(unsigned)b.height-1);
+    if (X11_XDRAWRECTANGLE_HACK) {
+	XDrawPoint(Tk_Display(tkwin), d, gcb, b.x+(unsigned)b.width-1,
+	    b.y+(unsigned)b.height-1);
+    }
 }
 
 static const Ttk_ElementSpec TroughElementSpec = {
@@ -915,8 +925,9 @@ static void ArrowElementSize(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 	TtkArrowSize(size, direction, widthPtr, heightPtr);	/* unscaled */
 
-	*widthPtr  = (int)round(*widthPtr * scalingLevel);	/* scaled */
-	*heightPtr = (int)round(*heightPtr * scalingLevel);	/* scaled */
+	/* Scale and then round up */
+	*widthPtr  = (int)ceil(*widthPtr * scalingLevel);	/* scaled */
+	*heightPtr = (int)ceil(*heightPtr * scalingLevel);	/* scaled */
     }
 
     /* Add scaled padding */
@@ -991,7 +1002,7 @@ static void ArrowElementDraw(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 
 	/* Draw indicator */
-	img = makeChevronImage(size, direction, arrowColor, tkwin);
+	img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
@@ -1031,8 +1042,9 @@ static void BoxArrowElementSize(
     Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
     TtkArrowSize(size, direction, widthPtr, heightPtr);		/* unscaled */
 
-    *widthPtr  = (int)round(*widthPtr * scalingLevel);		/* scaled */
-    *heightPtr = (int)round(*heightPtr * scalingLevel);		/* scaled */
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);		/* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);		/* scaled */
 
     /* Add scaled padding */
     Ttk_GetPaddingFromObj(NULL, tkwin, arrow->paddingObj, &padding);
@@ -1349,15 +1361,15 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     /* Menubutton */
 
     Ttk_RegisterElement(interp, theme, "uparrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_UP));
+	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
     Ttk_RegisterElement(interp, theme, "downarrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
+	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
      Ttk_RegisterElement(interp, theme, "leftarrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_LEFT));
+	    &ArrowElementSpec, INT2PTR(CHEVRON_LEFT));
     Ttk_RegisterElement(interp, theme, "rightarrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
+	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
     Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, INT2PTR(ARROW_UP));
+	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
 
     Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
 	    &BoxArrowElementSpec, INT2PTR(CHEVRON_UP));
@@ -1365,15 +1377,6 @@ TtkClamTheme_Init(Tcl_Interp *interp)
 	    &BoxArrowElementSpec, INT2PTR(CHEVRON_DOWN));
     Ttk_RegisterElement(interp, theme, "Combobox.downarrow",
 	    &BoxArrowElementSpec, INT2PTR(CHEVRON_DOWN));
-
-    Ttk_RegisterElement(interp, theme, "upchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
-    Ttk_RegisterElement(interp, theme, "downchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
-     Ttk_RegisterElement(interp, theme, "leftchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_LEFT));
-    Ttk_RegisterElement(interp, theme, "rightchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
 
     Ttk_RegisterElement(interp, theme, "tab", &TabElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "client", &ClientElementSpec, NULL);

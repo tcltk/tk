@@ -123,8 +123,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	}
 
 	# N.B.: The values of the -arrowsize option for the styles
-	# TMenubutton, TCombobox, and TSpinbox must be specified in
-	# pixels, because they are used in SVG images for chevrons.
+	# TMenubutton, TCombobox, TSpinbox, and TScrollbar must be specified
+	# in pixels, because they are used in SVG images for chevrons.
 
 	ttk::style configure TMenubutton \
 	    -relief raised -arrowsize 5 -arrowpadding 2.25p \
@@ -158,7 +158,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 6.75p -arrowpadding 1.5p -arrowsize 3p \
+	    -width 6.75p -arrowpadding 1.5p -arrowsize 4 \
 	    -arrowcolor $colors(-text)
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg)]

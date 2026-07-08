@@ -24,6 +24,7 @@
 #else
   #define WIN32_XDRAWLINE_HACK 0
 #endif
+
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
   #define X11_XDRAWRECTANGLE_HACK 1
 #else
@@ -434,6 +435,9 @@ static void FieldElementDraw(
 	     */
 	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
 	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	    if (X11_XDRAWRECTANGLE_HACK) {
+		XDrawPoint(disp, d, focusGC, b.x+b.width-1, b.y+b.height-1);
+	    }
 
 	    /*
 	     * Fill the inner rectangle
@@ -777,7 +781,7 @@ static const char chevronDataFmt[] = "\
      <path d='%s' fill='none' stroke='#%s' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.2'/>\n\
     </svg>";
 
-static void makeChevronData(
+static void MakeChevronData(
     int h, ArrowDirection direction, const char *strokeColorStr,
     char *resultStr, size_t resultSize)
 {
@@ -808,13 +812,14 @@ static void makeChevronData(
 }
 
 /*public*/
-Tk_Image makeChevronImage(
+Tk_Image TtkMakeChevronImage(
     int size, ArrowDirection direction, const XColor *strokeColor,
     Tk_Window tkwin)
 {
     const char *dirStr;
+    char scalingLevelStr[TCL_DOUBLE_SPACE];
     char strokeColorStr[7];
-    char imgName[40];
+    char imgName[80];
     Tcl_Interp *interp = Tk_Interp(tkwin);
     Tk_Image img;
 
@@ -835,9 +840,11 @@ Tk_Image makeChevronImage(
 	case CHEVRON_RIGHT:	dirStr = "right"; break;
 	default:		return NULL;
     }
+    TkFormatDouble(scalingLevelStr, sizeof(scalingLevelStr), "%.2f",
+	    TkScalingLevel2(tkwin));
     ColorToStr(strokeColor, strokeColorStr);
-    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%.2f_%s",
-	     dirStr, size, TkScalingLevel2(tkwin), strokeColorStr);
+    snprintf(imgName, sizeof(imgName), "::tk::icons::chevron_%s%d_%s_%s",
+	     dirStr, size, scalingLevelStr, strokeColorStr);
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img != NULL) {
 	return img;
@@ -847,7 +854,7 @@ Tk_Image makeChevronImage(
      * Create an SVG photo image from svgData
      */
     cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
-    makeChevronData(size, direction, strokeColorStr, svgData, sizeof(svgData));
+    MakeChevronData(size, direction, strokeColorStr, svgData, sizeof(svgData));
     scriptSize = strlen(cmdFmt) + strlen(imgName) + strlen(svgData);
     script = (char *)Tcl_AttemptAlloc(scriptSize);
     if (script == NULL) {
@@ -927,8 +934,9 @@ static void ArrowElementSize(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 	TtkArrowSize(size, direction, widthPtr, heightPtr);	/* unscaled */
 
-	*widthPtr  = (int)round(*widthPtr * scalingLevel);	/* scaled */
-	*heightPtr = (int)round(*heightPtr * scalingLevel);	/* scaled */
+	/* Scale and then round up */
+	*widthPtr  = (int)ceil(*widthPtr * scalingLevel);	/* scaled */
+	*heightPtr = (int)ceil(*heightPtr * scalingLevel);	/* scaled */
     }
 
     /* Add scaled padding */
@@ -1009,7 +1017,7 @@ static void ArrowElementDraw(
 	Tcl_GetIntFromObj(NULL, arrow->sizeObj, &size);
 
 	/* Draw indicator */
-	img = makeChevronImage(size, direction, arrowColor, tkwin);
+	img = TtkMakeChevronImage(size, direction, arrowColor, tkwin);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
@@ -1583,7 +1591,10 @@ static void TreeitemIndicatorDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width - 1, b.height - 1);
+    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
+    if (X11_XDRAWRECTANGLE_HACK) {
+	XDrawPoint(Tk_Display(tkwin), d, gc, b.x+b.width-1, b.y+b.height-1);
+    }
 
     cx = b.x + (b.width - 1) / 2;
     cy = b.y + (b.height - 1) / 2;
@@ -1646,15 +1657,6 @@ TtkAltTheme_Init(Tcl_Interp *interp)
 	    &BoxArrowElementSpec, INT2PTR(ARROW_DOWN));
     Ttk_RegisterElement(interp, theme, "Combobox.downarrow",
 	    &BoxArrowElementSpec, INT2PTR(ARROW_DOWN));
-
-    Ttk_RegisterElement(interp, theme, "upchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_UP));
-    Ttk_RegisterElement(interp, theme, "downchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_DOWN));
-     Ttk_RegisterElement(interp, theme, "leftchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_LEFT));
-    Ttk_RegisterElement(interp, theme, "rightchevron",
-	    &ArrowElementSpec, INT2PTR(CHEVRON_RIGHT));
 
     Ttk_RegisterElement(interp, theme, "Treeheading.indicator",
 	    &TreeheadingIndicatorElementSpec, INT2PTR(ARROW_DOWN));

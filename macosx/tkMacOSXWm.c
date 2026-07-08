@@ -7088,7 +7088,7 @@ TkMacOSXWindowOffset(
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetMS --
+ * TkGetMS --
  *
  *	Return a relative time in milliseconds. It doesn't matter when the
  *	epoch was.
@@ -7103,7 +7103,7 @@ TkMacOSXWindowOffset(
  */
 
 unsigned long
-TkpGetMS(void)
+TkGetMS(void)
 {
     Tcl_Time now;
 

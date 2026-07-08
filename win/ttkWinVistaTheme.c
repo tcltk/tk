@@ -912,9 +912,31 @@ static const Ttk_ElementSpec TabElementSpec =
  *	Generic element, but only display if TTK_STATE_USER1 is set
  */
 
+#define TREE_SORT_CHEVRON_SIZE	3
+#define TREE_SORT_CHEVRON_COLOR	"#808080"
+
+static void TreeSortElementSize(
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
+    Tk_Window tkwin,
+    TCL_UNUSED(Ttk_State), /* state */
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
+{
+    double scalingLevel = TkScalingLevel2(tkwin);
+
+    /* Get unscaled indicator size */
+    TtkArrowSize(TREE_SORT_CHEVRON_SIZE, CHEVRON_DOWN, widthPtr, heightPtr);
+
+    /* Scale and then round up */
+    *widthPtr  = (int)ceil(*widthPtr * scalingLevel);           /* scaled */
+    *heightPtr = (int)ceil(*heightPtr * scalingLevel);          /* scaled */
+}
+
 static void TreeSortElementDraw(
-    TCL_UNUSED(void *) /* clientData */,
-    TCL_UNUSED(void *) /* elementRecord */,
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -927,11 +949,11 @@ static void TreeSortElementDraw(
 	 * Unfortunately, the DrawThemeBackground() function, called by
 	 * GenericElementDraw(), draws the sort indicator element with the
 	 * wrong background color if the display's scaling is 150% or 175%.
-	 * As a workaround we use our makeChevronImage() function instead.
+	 * As a workaround use our TtkMakeChevronImage() function instead.
 	 */
 
 	ArrowDirection direction;
-	XColor *strokeColor = Tk_GetColor(NULL, tkwin, "#808080");
+	XColor *strokeColor = Tk_GetColor(NULL, tkwin, TREE_SORT_CHEVRON_COLOR);
 	Tk_Image img;
 	int imgWidth, imgHeight;
 
@@ -943,7 +965,9 @@ static void TreeSortElementDraw(
 	    return;
 	}
 
-	img = makeChevronImage(3, direction, strokeColor, tkwin);
+	img = TtkMakeChevronImage(TREE_SORT_CHEVRON_SIZE, direction,
+	    strokeColor, tkwin);
+	Tk_FreeColor(strokeColor);
 	Tk_SizeOfImage(img, &imgWidth, &imgHeight);
 	Tk_RedrawImage(img, 0, 0, imgWidth, imgHeight, d,
 	    b.x + (b.width - imgWidth)/2, b.y + (b.height - imgHeight)/2);
@@ -956,7 +980,7 @@ static const Ttk_ElementSpec TreeheadingIndicatorElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    GenericElementSize,
+    TreeSortElementSize,
     TreeSortElementDraw
 };
 

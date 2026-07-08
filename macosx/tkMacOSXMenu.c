@@ -1633,7 +1633,7 @@ MenuSelectEvent(
     event.virt.event = Tk_WindowId(menuPtr->tkwin);
     event.virt.root = XRootWindow(menuPtr->display, 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
     XQueryPointer(NULL, None, NULL, NULL, &event.virt.x_root, &event.virt.y_root, NULL,
 	    NULL, &event.virt.state);
     event.virt.same_screen = true;

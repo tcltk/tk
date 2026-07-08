@@ -3167,7 +3167,7 @@ MenuSelectEvent(
     event.virt.event = Tk_WindowId(menuPtr->tkwin);
     event.virt.root = XRootWindow(menuPtr->display, 0);
     event.virt.subwindow = None;
-    event.virt.time = TkpGetMS();
+    event.virt.time = TkGetMS();
 
     root.msgpos = GetMessagePos();
     event.virt.x_root = root.point.x;

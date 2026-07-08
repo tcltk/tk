@@ -953,22 +953,22 @@ test text-1.92 {configuration option: "hyphens"} -setup {
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
-test text-1.93 {configuration option: "lang"} -setup {
+test text-1.93 {configuration option: "locale"} -setup {
     text .t
     pack .t
     update
 } -body {
-    .t configure -lang en
-    .t cget -lang
+    .t configure -locale en_US
+    .t cget -locale
 } -cleanup {
     destroy .t
-} -result {en}
-test text-1.94 {configuration option: "lang"} -setup {
+} -result {en_US}
+test text-1.94 {configuration option: "locale"} -setup {
     text .t
     pack .t
     update
 } -body {
-    .t configure -lang gorp
+    .t configure -locale gorp
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
