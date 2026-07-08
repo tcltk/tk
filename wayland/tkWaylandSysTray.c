@@ -91,8 +91,7 @@ typedef struct {
     Tcl_Obj *b3Command;  /* Command for button-3 press */
 
     /* Option-table-managed mirrors of the above, settable via
-     * -button1/-button3 configure options (in addition to the
-     * "bind" widget subcommand). */
+     * -button1/-button3 configure options. */
     Tcl_Obj *button1Obj;
     Tcl_Obj *button3Obj;
 
@@ -230,6 +229,75 @@ DetectMenuFromCallback(
 /*
  *----------------------------------------------------------------------
  *
+ * SubstituteButtonPercents --
+ *
+ *	Expand %X, %Y, and %% in a button command's string rep, the same
+ *	way Tk's "bind" mechanism expands percent sequences in a binding
+ *	script. %X/%Y are replaced with the screen coordinates of the
+ *	click (as supplied by the SNI host over D-Bus); %% is a literal
+ *	percent. Any other "%c" sequence is left untouched, matching
+ *	bind's behavior for unrecognized substitutions.
+ *
+ *	This keeps -button1/-button3 scripts portable across platform
+ *	backends: a script written with %X/%Y works the same on X11,
+ *	Wayland, etc., rather than depending on a per-backend variable.
+ *
+ * Results:
+ *	A new Tcl_Obj (refcount 0) with substitutions applied. Caller owns
+ *	the reference.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tcl_Obj *
+SubstituteButtonPercents(
+    Tcl_Obj *cmdObj,
+    int x,
+    int y)
+{
+    const char *src = Tcl_GetString(cmdObj);
+    const char *p = src;
+    const char *span = src;
+    Tcl_Obj *result = Tcl_NewObj();
+    char buf[16];
+
+    while (*p) {
+        if (p[0] == '%' && (p[1] == 'X' || p[1] == 'Y' || p[1] == '%')) {
+            if (p > span) {
+                Tcl_AppendToObj(result, span, (int)(p - span));
+            }
+            switch (p[1]) {
+            case 'X':
+                snprintf(buf, sizeof(buf), "%d", x);
+                Tcl_AppendToObj(result, buf, -1);
+                break;
+            case 'Y':
+                snprintf(buf, sizeof(buf), "%d", y);
+                Tcl_AppendToObj(result, buf, -1);
+                break;
+            case '%':
+                Tcl_AppendToObj(result, "%", 1);
+                break;
+            }
+            p += 2;
+            span = p;
+        } else {
+            p++;
+        }
+    }
+    if (p > span) {
+        Tcl_AppendToObj(result, span, (int)(p - span));
+    }
+
+    return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * InvokeButtonCommand --
  *
  *	Invoke Tcl command bound to button press.
@@ -253,9 +321,7 @@ InvokeButtonCommand(
     Tcl_Obj *cmdObj = NULL;
     Tcl_Obj *script;
     int result;
-    Tcl_Size argc;
-    Tcl_Obj **argv;
-    
+
     /* Select command based on button. */
     if (button == 1 && icon->b1Command) {
         cmdObj = icon->b1Command;
@@ -267,24 +333,13 @@ InvokeButtonCommand(
         return;
     }
 
-    /* Check if command already has arguments - if it's a list, preserve them */
-    if (Tcl_ListObjGetElements(icon->interp, cmdObj, &argc, &argv) == TCL_OK && argc > 0) {
-        /* Command is a list, duplicate it and append coordinates */
-        script = Tcl_DuplicateObj(cmdObj);
-        Tcl_IncrRefCount(script);
-        
-        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(x));
-        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(y));
-    } else {
-        /* Command is a simple string, build a list with it */
-        script = Tcl_NewListObj(0, NULL);
-        Tcl_IncrRefCount(script);
-        Tcl_ListObjAppendElement(icon->interp, script, cmdObj);
-        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(x));
-        Tcl_ListObjAppendElement(icon->interp, script, Tcl_NewIntObj(y));
-    }
+    /* Expand %X/%Y (screen coordinates of the click, as supplied by the
+     * SNI host over D-Bus) and %% the same way "bind" would, so scripts
+     * written the traditional way run unmodified on this backend too. A
+     * command with no percent sequences is left exactly as configured. */
+    script = SubstituteButtonPercents(cmdObj, x, y);
+    Tcl_IncrRefCount(script);
 
-    /* Evaluate script. */
     result = Tcl_EvalObjEx(icon->interp, script, TCL_EVAL_GLOBAL);
 
     if (result != TCL_OK) {
@@ -596,7 +651,10 @@ static int dbusmenu_property_get_version(sd_bus *bus, const char *path, const ch
 /* dbusmenu vtable */
 static const sd_bus_vtable dbusmenu_vtable[] = {
     SD_BUS_VTABLE_START(0),
-    SD_BUS_METHOD("GetLayout", "iuas", "ua(ia{sv})", dbusmenu_get_layout, SD_BUS_VTABLE_UNPRIVILEGED),
+    /* GetLayout returns (revision, root-node), where each node is the
+     * recursive tuple (ia{sv}av): id, properties, children. This matches
+     * the com.canonical.dbusmenu spec exactly -- it is NOT a flat array. */
+    SD_BUS_METHOD("GetLayout", "iias", "u(ia{sv}av)", dbusmenu_get_layout, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("AboutToShow", "i", "", dbusmenu_about_to_show, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("Event", "iisv", "", dbusmenu_event, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetGroupProperties", "aas", "aa{sv}", dbusmenu_get_group_properties, SD_BUS_VTABLE_UNPRIVILEGED),
@@ -604,81 +662,59 @@ static const sd_bus_vtable dbusmenu_vtable[] = {
     SD_BUS_VTABLE_END
 };
 
-/* Helper to walk menu entries and find an entry by its D-Bus ID. */
+/* Helper to walk menu entries (including nested cascade submenus) and find
+ * an entry by its D-Bus ID. */
 static TkMenuEntry *
 FindMenuEntryByID(TkMenu *menu, int id)
 {
     Tcl_Size i;
     TkMenuEntry *mePtr;
-    
+
     if (!menu || !menu->entries) return NULL;
-    
+
     for (i = 0; i < menu->numEntries; i++) {
         mePtr = menu->entries[i];
         /* Use the entry's address as a stable ID. */
         if ((int)(intptr_t)mePtr == id) {
             return mePtr;
         }
+        if (mePtr->type == CASCADE_ENTRY && mePtr->childMenuRefPtr &&
+                mePtr->childMenuRefPtr->menuPtr) {
+            TkMenuEntry *found = FindMenuEntryByID(mePtr->childMenuRefPtr->menuPtr, id);
+            if (found) {
+                return found;
+            }
+        }
     }
     return NULL;
 }
 
-/* Helper to build the layout for a menu. Returns 0 on success, negative on error. */
+/* Append the dbusmenu property dict "a{sv}" for one entry. mePtr may be
+ * NULL, which represents the synthetic root node (id 0) -- it gets a bare,
+ * empty-ish property set since only its children matter. */
 static int
-BuildMenuLayout(TkMenu *menu, int parentId, int depth,
-                sd_bus_message *reply, DockIcon *icon)
+AppendEntryProperties(sd_bus_message *reply, TkMenuEntry *mePtr)
 {
-    Tcl_Size i;
-    TkMenuEntry *mePtr;
-    int childId;
     int r;
+    const char *type = "standard";
+    const char *label = "";
+    int enabled = 1;
+    int sensitive = 1;
+    const char *toggle_type = NULL;
+    int toggle_state = 0;
+    const char *children_display = NULL;
 
-    (void)parentId;
-    (void)depth;
-    (void)icon;
-
-    if (!menu || !menu->entries) return 0;
-
-    /* Iterate through entries */
-    for (i = 0; i < menu->numEntries; i++) {
-        mePtr = menu->entries[i];
-        
-        /* Assign a stable ID based on the entry's address. */
-        childId = (int)(intptr_t)mePtr;
-
-        /* Open a struct for this entry: (id, properties) */
-        r = sd_bus_message_open_container(reply, 'r', "ia{sv}");
-        if (r < 0) return r;
-
-        r = sd_bus_message_append(reply, "i", childId);
-        if (r < 0) return r;
-
-        /* Open the properties dict. */
-        r = sd_bus_message_open_container(reply, 'a', "{sv}");
-        if (r < 0) return r;
-
-        /* Common properties: type, label, enabled, sensitive */
-        const char *type = "standard";
-        const char *label = "";
-        int enabled = 1;
-        int sensitive = 1;
-        const char *toggle_type = NULL;
-        int toggle_state = 0;
-        const char *children_display = NULL;
-
-        /* Determine entry type from TkMenuEntry fields */
+    if (mePtr) {
         if (mePtr->type == SEPARATOR_ENTRY) {
             type = "separator";
-            label = "";
         } else if (mePtr->type == CASCADE_ENTRY) {
-            type = "standard";
             if (mePtr->labelPtr) {
                 label = Tcl_GetString(mePtr->labelPtr);
             }
-            children_display = "submenu";
+            if (mePtr->childMenuRefPtr && mePtr->childMenuRefPtr->menuPtr) {
+                children_display = "submenu";
+            }
         } else {
-            /* Standard, check, radio */
-            type = "standard";
             if (mePtr->labelPtr) {
                 label = Tcl_GetString(mePtr->labelPtr);
             }
@@ -691,44 +727,86 @@ BuildMenuLayout(TkMenu *menu, int parentId, int depth,
             }
         }
 
-        /* Check if disabled. */
         if (mePtr->state & ENTRY_DISABLED) {
             enabled = 0;
             sensitive = 0;
         }
+    }
 
-        /* Append properties. */
-        r = sd_bus_message_append(reply, "{sv}", "type", "s", type);
-        if (r < 0) return r;
-        if (label && *label) {
-            r = sd_bus_message_append(reply, "{sv}", "label", "s", label);
-            if (r < 0) return r;
-        }
-        r = sd_bus_message_append(reply, "{sv}", "enabled", "b", enabled);
-        if (r < 0) return r;
-        r = sd_bus_message_append(reply, "{sv}", "sensitive", "b", sensitive);
-        if (r < 0) return r;
-        if (toggle_type) {
-            r = sd_bus_message_append(reply, "{sv}", "toggle-type", "s", toggle_type);
-            if (r < 0) return r;
-            r = sd_bus_message_append(reply, "{sv}", "toggle-state", "i", toggle_state);
-            if (r < 0) return r;
-        }
-        if (children_display) {
-            r = sd_bus_message_append(reply, "{sv}", "children-display", "s", children_display);
-            if (r < 0) return r;
-        }
+    r = sd_bus_message_open_container(reply, 'a', "{sv}");
+    if (r < 0) return r;
 
-        /* Close properties dict. */
-        r = sd_bus_message_close_container(reply);
+    r = sd_bus_message_append(reply, "{sv}", "type", "s", type);
+    if (r < 0) return r;
+    if (label && *label) {
+        r = sd_bus_message_append(reply, "{sv}", "label", "s", label);
         if (r < 0) return r;
-
-        /* Close the struct. */
-        r = sd_bus_message_close_container(reply);
+    }
+    r = sd_bus_message_append(reply, "{sv}", "enabled", "b", enabled);
+    if (r < 0) return r;
+    r = sd_bus_message_append(reply, "{sv}", "sensitive", "b", sensitive);
+    if (r < 0) return r;
+    if (toggle_type) {
+        r = sd_bus_message_append(reply, "{sv}", "toggle-type", "s", toggle_type);
+        if (r < 0) return r;
+        r = sd_bus_message_append(reply, "{sv}", "toggle-state", "i", toggle_state);
+        if (r < 0) return r;
+    }
+    if (children_display) {
+        r = sd_bus_message_append(reply, "{sv}", "children-display", "s", children_display);
         if (r < 0) return r;
     }
 
-    return 0;
+    return sd_bus_message_close_container(reply);
+}
+
+/* Recursively append the dbusmenu children array "av" for childMenu's
+ * entries. Each element is a variant wrapping a nested (ia{sv}av) node,
+ * per the com.canonical.dbusmenu spec. depth < 0 means recurse without
+ * limit; depth == 0 means list these entries but go no deeper; depth > 0
+ * decrements by one level as it recurses. */
+static int
+BuildMenuChildren(TkMenu *childMenu, int depth, sd_bus_message *reply)
+{
+    int r;
+
+    r = sd_bus_message_open_container(reply, 'a', "v");
+    if (r < 0) return r;
+
+    if (childMenu && childMenu->entries && depth != 0) {
+        Tcl_Size i;
+        int nextDepth = (depth > 0) ? depth - 1 : depth;
+
+        for (i = 0; i < childMenu->numEntries; i++) {
+            TkMenuEntry *childPtr = childMenu->entries[i];
+            int childId = (int)(intptr_t)childPtr;
+            TkMenu *grandchildMenu = NULL;
+
+            if (childPtr->type == CASCADE_ENTRY && childPtr->childMenuRefPtr &&
+                    childPtr->childMenuRefPtr->menuPtr) {
+                grandchildMenu = childPtr->childMenuRefPtr->menuPtr;
+            }
+
+            r = sd_bus_message_open_container(reply, 'v', "(ia{sv}av)");
+            if (r < 0) return r;
+            r = sd_bus_message_open_container(reply, 'r', "ia{sv}av");
+            if (r < 0) return r;
+
+            r = sd_bus_message_append(reply, "i", childId);
+            if (r < 0) return r;
+            r = AppendEntryProperties(reply, childPtr);
+            if (r < 0) return r;
+            r = BuildMenuChildren(grandchildMenu, nextDepth, reply);
+            if (r < 0) return r;
+
+            r = sd_bus_message_close_container(reply); /* struct */
+            if (r < 0) return r;
+            r = sd_bus_message_close_container(reply); /* variant */
+            if (r < 0) return r;
+        }
+    }
+
+    return sd_bus_message_close_container(reply); /* children array */
 }
 
 /* dbusmenu method: GetLayout */
@@ -736,38 +814,68 @@ static int
 dbusmenu_get_layout(
     sd_bus_message *m,
     void *userdata,
-    sd_bus_error *ret_error)
+    TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     DockIcon *icon = (DockIcon *)userdata;
     int parentId, depth;
+    char **property_names = NULL;
     sd_bus_message *reply = NULL;
+    TkMenuEntry *targetEntry = NULL;
+    TkMenu *childMenu = NULL;
     int r;
 
-    r = sd_bus_message_read(m, "iuas", &parentId, &depth, NULL);
+    /* Read arguments: parentId (i), depth (i), propertyNames (as) */
+    r = sd_bus_message_read(m, "ii", &parentId, &depth);
     if (r < 0) {
-        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Failed to read arguments");
+        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Failed to read int arguments");
+    }
+    r = sd_bus_message_read_strv(m, &property_names);
+    if (r < 0) {
+        return sd_bus_reply_method_errorf(m, SD_BUS_ERROR_INVALID_ARGS, "Failed to read property names");
+    }
+    free(property_names);  /* we ignore them */
+
+    /* parentId 0 means "the root of the whole menu"; there is no real
+     * TkMenuEntry for that, so targetEntry stays NULL and its children
+     * are icon->menuPtr's top-level entries. Any other id must resolve
+     * to an actual (possibly nested) cascade entry. */
+    if (parentId == 0) {
+        childMenu = icon->menuPtr;
+    } else {
+        targetEntry = FindMenuEntryByID(icon->menuPtr, parentId);
+        if (targetEntry && targetEntry->type == CASCADE_ENTRY &&
+                targetEntry->childMenuRefPtr && targetEntry->childMenuRefPtr->menuPtr) {
+            childMenu = targetEntry->childMenuRefPtr->menuPtr;
+        }
     }
 
     /* Create reply message. */
     r = sd_bus_message_new_method_return(m, &reply);
     if (r < 0) return r;
 
-    /* Append revision (we'll use 0) and layout array. */
-    r = sd_bus_message_append(reply, "u", 0); /* revision */
+    /* revision */
+    r = sd_bus_message_append(reply, "u", 0);
     if (r < 0) return r;
 
-    /* Open layout array: (ia{sv}) */
-    r = sd_bus_message_open_container(reply, 'a', "(ia{sv})");
+    /* Root of the returned tree: the single (ia{sv}av) node for parentId
+     * itself, with its own properties followed by its children array. */
+    r = sd_bus_message_open_container(reply, 'r', "ia{sv}av");
     if (r < 0) return r;
 
-    if (icon->menuPtr) {
-        BuildMenuLayout(icon->menuPtr, parentId, depth, reply, icon);
-    }
-
-    r = sd_bus_message_close_container(reply);
+    r = sd_bus_message_append(reply, "i", parentId);
+    if (r < 0) return r;
+    r = AppendEntryProperties(reply, targetEntry);
+    if (r < 0) return r;
+    r = BuildMenuChildren(childMenu, depth, reply);
     if (r < 0) return r;
 
-    return sd_bus_send(NULL, reply, NULL);
+    r = sd_bus_message_close_container(reply); /* struct */
+    if (r < 0) return r;
+
+    /* Send the reply and return 0 on success, negative on error */
+    r = sd_bus_send(NULL, reply, NULL);
+    if (r < 0) return r;
+    return 0;
 }
 
 /* dbusmenu method: AboutToShow */
@@ -835,7 +943,10 @@ dbusmenu_get_group_properties(
     /* No groups, close. */
     r = sd_bus_message_close_container(reply);
     if (r < 0) return r;
-    return sd_bus_send(NULL, reply, NULL);
+    /* Send and return 0 on success */
+    r = sd_bus_send(NULL, reply, NULL);
+    if (r < 0) return r;
+    return 0;
 }
 
 /* dbusmenu property: Version */
@@ -915,9 +1026,9 @@ TrayIconObjectCmd(
     Tcl_Obj* bboxObj;
 
     enum {XWC_CONFIGURE = 0, XWC_CGET, XWC_BALLOON, XWC_CANCEL,
-        XWC_BBOX, XWC_DOCKED, XWC_ORIENTATION, XWC_BIND};
+        XWC_BBOX, XWC_DOCKED, XWC_ORIENTATION};
     const char *st_wcmd[] = {"configure", "cget", "balloon", "cancel",
-        "bbox", "docked", "orientation", "bind", NULL};
+        "bbox", "docked", "orientation", NULL};
 
     if (objc<2) {
         Tcl_WrongNumArgs(interp, 1, objv, "subcommand ?args?");
@@ -949,66 +1060,6 @@ TrayIconObjectCmd(
         } else {
             return TCL_ERROR;
         }
-    }
-
-    case XWC_BIND: {
-        int button;
-        const char *sequence;
-
-        if (objc < 3 || objc > 4) {
-            Tcl_WrongNumArgs(interp, 2, objv, "sequence ?command?");
-            return TCL_ERROR;
-        }
-
-        sequence = Tcl_GetString(objv[2]);
-
-        /* Parse button sequence (e.g., "<Button-1>" or "<Button-3>"). */
-        if (strcmp(sequence, "<Button-1>") == 0 ||
-            strcmp(sequence, "<1>") == 0 ||
-            strcmp(sequence, "1") == 0) {
-            button = 1;
-        } else if (strcmp(sequence, "<Button-3>") == 0 ||
-                   strcmp(sequence, "<3>") == 0 ||
-                   strcmp(sequence, "3") == 0) {
-            button = 3;
-        } else {
-            Tcl_SetObjResult(interp,
-                Tcl_NewStringObj("only <Button-1> and <Button-3> supported", -1));
-            return TCL_ERROR;
-        }
-
-        if (objc == 3) {
-            /* Query binding. */
-            Tcl_Obj *cmd = (button == 1) ? icon->b1Command : icon->b3Command;
-            if (cmd) {
-                Tcl_SetObjResult(interp, cmd);
-            }
-            return TCL_OK;
-        }
-
-        /* Set binding. */
-        if (button == 1) {
-            if (icon->b1Command) {
-                Tcl_DecrRefCount(icon->b1Command);
-            }
-            icon->b1Command = objv[3];
-            Tcl_IncrRefCount(icon->b1Command);
-        } else {
-            if (icon->b3Command) {
-                Tcl_DecrRefCount(icon->b3Command);
-            }
-            icon->b3Command = objv[3];
-            Tcl_IncrRefCount(icon->b3Command);
-        }
-
-        /* Re-detect menu from the updated callback. */
-        if (button == 3) {
-            DetectMenuFromCallback(icon, icon->b3Command);
-        } else if (button == 1) {
-            DetectMenuFromCallback(icon, icon->b1Command);
-        }
-
-        return TCL_OK;
     }
 
     case XWC_BALLOON: {
@@ -1257,6 +1308,9 @@ RegisterStatusNotifierItem(
 
     sd_bus_message_unref(m);
 
+    /* Flush all pending operations to ensure the host sees the new objects and signals */
+    sd_bus_flush(icon->bus);
+
     /* Start DBus event processing. */
     icon->busTimer = Tcl_CreateTimerHandler(50, ProcessDBusEvents, icon);
 
@@ -1295,21 +1349,6 @@ UnregisterStatusNotifierItem(
 
     if (!icon->bus) {
         return 0;
-    }
-
-    r = sd_bus_call_method(icon->bus,
-                          "org.kde.StatusNotifierWatcher",
-                          "/StatusNotifierWatcher",
-                          "org.kde.StatusNotifierWatcher",
-                          "UnregisterStatusNotifierItem",
-                          &error,
-                          &m,
-                          "s",
-                          icon->bus_name);
-
-    if (r < 0) {
-        fprintf(stderr, "Failed to unregister: %s\n", error.message);
-        sd_bus_error_free(&error);
     }
 
     if (m) {
@@ -1358,6 +1397,9 @@ UpdateIndicatorIcon(
                        "org.kde.StatusNotifierItem",
                        "NewIcon",
                        "");
+
+    /* Flush to ensure the host receives the signal promptly */
+    sd_bus_flush(icon->bus);
 
     return 1;
 }
@@ -1416,6 +1458,9 @@ UpdateIndicatorStatus(
                        "s",
                        status_str);
 
+    /* Flush to ensure the host receives the signal promptly */
+    sd_bus_flush(icon->bus);
+
     return 1;
 }
 
@@ -1449,6 +1494,9 @@ UpdateTooltip(
                        "org.kde.StatusNotifierItem",
                        "NewToolTip",
                        "");
+
+    /* Flush to ensure the host receives the signal promptly */
+    sd_bus_flush(icon->bus);
 
     return 1;
 }

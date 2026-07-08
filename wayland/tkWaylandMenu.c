@@ -2444,7 +2444,7 @@ TkpMenuButtonPostMenu(
  *---------------------------------------------------------------------------
  */
 
-static void
+MODULE_SCOPE void
 MenuStackPop(
     int toDepth)
 {
@@ -2469,9 +2469,9 @@ MenuStackPop(
 
         memset(entry, 0, sizeof(*entry));
         if (entry->menuPtr && entry->menuPtr->tkwin) {
-			Tk_DeleteEventHandler(entry->menuPtr->tkwin, StructureNotifyMask,
+            Tk_DeleteEventHandler(entry->menuPtr->tkwin, StructureNotifyMask,
             MenuStackWindowEventProc, (ClientData)entry->menuPtr);
-}
+        }
     }
 }
 
@@ -4085,6 +4085,153 @@ MODULE_SCOPE void
 TkWaylandMenuHandleEscape(void)
 {
     TkWaylandMenuDismissAll();
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuOpenCascade --
+ *
+ *      Open a cascade (submenu) from a menu entry.
+ *      Called from keyboard navigation (Right arrow).
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Posts the cascade submenu.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuOpenCascade(
+    TkMenu *menuPtr,
+    TkMenuEntry *mePtr)
+{
+    TkMenuReferences *menuRefPtr;
+    int cascadeAnchorX, cascadeAnchorY;
+    int cascadeW, cascadeH;
+    int level;
+
+    if (!menuPtr || !mePtr || mePtr->type != CASCADE_ENTRY) {
+        return;
+    }
+
+    level = MenuStackFindLevel(menuPtr);
+    if (level < 0) {
+        return;
+    }
+
+    menuRefPtr = TkFindMenuReferencesObj(menuPtr->interp, mePtr->namePtr);
+    if (!menuRefPtr || !menuRefPtr->menuPtr) {
+        return;
+    }
+
+    TkMenu *cascadePtr = menuRefPtr->menuPtr;
+
+    /* Pop any existing submenus below this level. */
+    MenuStackPop(level + 1);
+
+    /* Recompute level after popping. */
+    int newLevel = MenuStackFindLevel(menuPtr);
+    if (newLevel < 0) {
+        return;
+    }
+    level = newLevel;
+
+    /* Compute cascade position. */
+    TkRecomputeMenu(cascadePtr);
+    cascadeW = cascadePtr->totalWidth;
+    cascadeH = cascadePtr->totalHeight;
+    if (cascadeW <= 0) cascadeW = 1;
+    if (cascadeH <= 0) cascadeH = 1;
+
+    TkWaylandComputeCascadeAnchor(level, mePtr,
+        cascadeW, cascadeH,
+        &cascadeAnchorX, &cascadeAnchorY);
+
+    menuPtr->postedCascade = mePtr;
+    TkPostSubmenu(menuPtr->interp, menuPtr, mePtr);
+
+    TkWaylandPostMenuAtAnchor(menuPtr->interp, cascadePtr,
+        cascadeAnchorX, cascadeAnchorY, 0, 0,
+        cascadeW, cascadeH, 0);
+
+    /* Redraw the parent menu to show the cascade highlight. */
+    TkEventuallyRedrawMenu(menuPtr, NULL);
+    
+    /* Redraw the cascade menu. */
+    TkWaylandMenuRedrawActive();
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuGetDepth --
+ *
+ *      Returns the current menu stack depth.
+ *
+ * Results:
+ *      Current depth of the menu stack.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkWaylandMenuGetDepth(void)
+{
+    return menuStackDepth;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuPopToDepth --
+ *
+ *      Pop the menu stack down to the specified depth.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Destroys all menus above the specified depth.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkWaylandMenuPopToDepth(int depth)
+{
+    MenuStackPop(depth);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkWaylandMenuGetParentWindow --
+ *
+ *      Returns the Tk_Window of the parent menu (depth-1).
+ *
+ * Results:
+ *      Tk_Window of parent menu, or NULL if none.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE Tk_Window
+TkWaylandMenuGetParentWindow(void)
+{
+    if (menuStackDepth >= 2) {
+        return (Tk_Window)menuStack[menuStackDepth - 2].menuPtr->tkwin;
+    }
+    return NULL;
 }
 
 /* Helper functions for menus. */
