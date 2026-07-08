@@ -8018,6 +8018,8 @@ TextChecksumCmd(
 	case SEG_GROUP_BRANCH:
 	    if (segPtr->typePtr == &tkTextBranchType && (what & TK_DUMP_DISPLAY)) {
 		segPtr = segPtr->body.branch.nextPtr;
+		/* The link may live on a later line. */
+		linePtr = segPtr->sectionPtr->linePtr;
 	    }
 	    break;
 	}
