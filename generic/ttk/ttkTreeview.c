@@ -1483,9 +1483,16 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask) {
 	    tv->tree.showObj,showStrings, &tv->tree.showFlags) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if ((mask & TYPE_CHANGED) && GetEnumSetFromObj(interp,tv->tree.selectTypeObj,
-	    SelectTypeStrings, &tv->tree.typeFlags) != TCL_OK) {
-	return TCL_ERROR;
+    if (mask & TYPE_CHANGED) {
+	/* -selecttype is a single choice, not a set; read it as a scalar index
+	 * so [cget -selecttype] does not return a one-element list. */
+	int index;
+	if (Tcl_GetIndexFromObjStruct(interp, tv->tree.selectTypeObj,
+		SelectTypeStrings, sizeof(char *), "value", TCL_EXACT,
+		&index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	tv->tree.typeFlags = 1 << index;
     }
 
     if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
