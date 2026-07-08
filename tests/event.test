@@ -1274,6 +1274,60 @@ test event-86299fe7ce {Generate window crossing events immediately upon pointer 
     bind all <Enter> {}
 } -result "|<Leave> .|<Enter> .|"
 
+test event-86299fe7ce.new {Generate window crossing events immediately upon pointer warp. See ticket #86299fe7ce} -setup {
+    testutils import pointer timing
+    deleteWindows
+    wm deiconify .
+    update
+    set initPointerWin [getPointerWin]
+    set MOUSE_TIMER_INTERVAL 250; # cf. win/tkWinPointer.c
+} -body {
+    #
+    # Let the screen pointer perform a back and forth warp in quick succession,
+    # providing opportunity for the event loop to service crossing events upon
+    # each warp.
+    #
+    # Use timeout values for "waitForWindowEvent" larger than MOUSE_TIMER_INTERVAL
+    # to allow this test to be executed with Tk versions that don't have the
+    # improvement of ticket 86299fe7ce.
+    #
+    puts WAIT_START
+    dt.reset microseconds
+    if {$initPointerWin eq "."} {
+	event generate . <Motion> -warp 1 -x -50 -y 50
+	waitForWindowEvent . <Leave> 1000
+	event generate . <Motion> -warp 1 -x 50 -y 50
+	waitForWindowEvent . <Enter> 1000
+    } else {
+	event generate . <Motion> -warp 1 -x 50 -y 50
+	waitForWindowEvent . <Enter> 1000
+	event generate . <Motion> -warp 1 -x -50 -y 50
+	waitForWindowEvent . <Leave> 1000
+    }
+    set delta [dt.get]
+    puts WAIT_END
+    #
+    # On MS Windows without the fix for ticket 86299fe7ce, the TkWinPointerEvent
+    # mechanism is programmed to detect crossing events no sooner than the next
+    # MOUSE_TIMER_INTERVAL, i.e. after 250 ms. Waiting twice for a crossing
+    # event as in the above scenario, we expect the MOUSE_TIMER_INTERVAL to
+    # become exceeded.
+    # However, deltas as short as 50 ms have been observed in practice (when
+    # the screen pointer initially resided inside the Tk root win). I don't
+    # understand this non-exceedance of 250 ms.
+    # To decide whether pointer warps induce crossing events immediately (i.e.
+    # the fixed/improved scenario for ticket 86299fe7ce), we use a maximum of
+    # 20000 microseconds which may not be exceeded. This value is still much
+    # larger than typical deltas of a few thousand microseconds which have
+    # been observed in the cases where the fix/improvement is applied.
+    #
+    puts "delta = $delta microseconds, initPointerWin = [expr {$initPointerWin eq ""?"{}":$initPointerWin}]"
+    expr {$delta < 20000}
+} -cleanup {
+    unset -nocomplain delta MOUSE_TIMER_INTERVAL
+    testutils forget pointer timing
+} -result 1
+
 test event-8a88a19654-1 {Don't consider unmapped windows for the new pointer window after toplevel destroy (outside). See ticket #8a88a19654} -setup {
     setup_win_mousepointer .one
     wm geometry . 200x200+500+100; # the screen pointer is outside the area of the candidate window

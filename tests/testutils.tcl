@@ -826,6 +826,14 @@ namespace eval ::tk::test::image {
     testutils export
 }
 
+namespace eval ::tk::test::pointer {
+    proc getPointerWin {{w .}} {
+	return [winfo containing [winfo pointerx $w] [winfo pointery $w]]
+    }
+
+    testutils export
+}
+
 namespace eval ::tk::test::scroll {
 
     # init --

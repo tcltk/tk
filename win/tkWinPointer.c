@@ -118,6 +118,7 @@ TkWinPointerEvent(
     POINT pos;
     int state;
     Tk_Window tkwin;
+    static int callCount = 0;
 
     pos.x = x;
     pos.y = y;
@@ -145,6 +146,8 @@ TkWinPointerEvent(
 
     state = (int)TkWinGetModifierState();
 
+    callCount++;
+    printf("TkWinPointerEvent calls Tk_UpdatePointer, count = %i\n", callCount);
     Tk_UpdatePointer(tkwin, pos.x, pos.y, state);
 
     if ((captured || tkwin) && !mouseTimerSet) {
@@ -153,7 +156,7 @@ TkWinPointerEvent(
 		MouseTimerProc, NULL);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
