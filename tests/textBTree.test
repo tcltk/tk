@@ -1105,6 +1105,22 @@ test btree-14.9 {tag delete of overlapping elided tags keeps the B-tree consiste
     destroy .t
 } -result "aaabbbccc\n"
 
+test btree-14.10 {enclosing elide tag over an already elided inner range} -setup {
+    destroy .t
+    text .t
+} -body {
+    .t debug 1
+    .t insert end "aaaXXXbbbccc"
+    .t tag add A 1.3 1.6
+    .t tag configure A -elide 1
+    .t tag add B 1.1 1.9
+    .t tag configure B -elide 1  ; # enclosing elide used to abort (SegmentIsElided)
+    .t debug 0
+    .t get -displaychars 1.0 end
+} -cleanup {
+    destroy .t
+} -result "accc\n"
+
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {

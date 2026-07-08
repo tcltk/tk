@@ -8935,6 +8935,16 @@ UpdateElideInfo(
 			lastBranchPtr = danglingBranchPtr;
 			danglingBranchPtr = NULL;
 		    }
+		    if (!lastBranchPtr && newBranchPtr) {
+			/*
+			 * A branch inserted earlier in this pass opens the current
+			 * elided range (an enclosing elide tag placed over an inner
+			 * elided range whose branch was just removed). Reuse it,
+			 * otherwise the search below would start from a segment which
+			 * is elided only by the tag being processed.
+			 */
+			lastBranchPtr = newBranchPtr;
+		    }
 		    if (!lastBranchPtr) {
 			/*
 			 * The related branch is starting outside of this range,
