@@ -26,9 +26,6 @@
 #include <errno.h>
 #include <GLES3/gl3.h>
 #include "nanovg_gl_utils.h"
-#include "GLFW/glfw3native.h"
-#include <poll.h>
-	
 
 /* ========================= Thread Specific Data  ========================= */
 
@@ -36,12 +33,27 @@ typedef struct ThreadSpecificData {
     bool           initialized;
     bool           waylandInitialized;
     int            shutdownInProgress; /* flag to prevent recursive shutdown */
+    int            callbackCount;  /* used by the setup proc to check for events. */
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
 
 #define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
     Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
+
+/* Called by the callback functions to tell the setup proc not to block. */
+static void
+recordCallback() {
+    TSD_INIT();
+    tsdPtr->callbackCount++;
+}
+
+/* Called by the setup proc to reset the callback counter. */
+static void
+clearCallbackCount() {
+    TSD_INIT();
+    tsdPtr->callbackCount = 0;
+}
 
 /* ========================== Global State Data  ========================== */
 
@@ -252,26 +264,35 @@ TkWaylandCheckForWindowClosure(void)
  *
  *----------------------------------------------------------------------
  */
-
+    
 static void
 TkWaylandSetupProc(TCL_UNUSED(void *), /* clientData */
 		   TCL_UNUSED(int))    /* flags */
 {
-    static Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    static Tcl_Time oneVsync = {0, 16667}; /* ~ 1/60 sec */
-    struct wl_display* display = glfwGetWaylandDisplay();
-    int fd = wl_display_get_fd(display);
-    struct pollfd fds[1] = {
-	{
-	.fd = fd,
-	.events = POLLIN,
-	.revents = 0
-	}
-    };
-    if (poll(fds, 1, 0) > 0 && fds[0].revents) {
+    TSD_INIT();
+    Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
+    //Tcl_Time oneRefresh = {0, 16667}; /* ~ 1/60 sec */
+    Tcl_Time oneRefresh = {0, 0};
+    /*
+     * The Tcl event loop will have run all pending display procs
+     * before calling this function.  Now we can swap the GL buffers
+     * for any window on which some drawing has been done.
+     */
+    
+    TkWaylandDisplayAllWindows();
+
+    /*
+     * Clear the callback counter and call glfwPollEvents.
+     * If there were no events, block for one display cycle.
+     * Otherwise, don't block.
+     */
+
+    clearCallbackCount();
+    glfwPollEvents();
+    if (tsdPtr->callbackCount) {
 	Tcl_SetMaxBlockTime(&noBlock);
     } else {
-	Tcl_SetMaxBlockTime(&oneVsync);
+	Tcl_SetMaxBlockTime(&oneRefresh);
     }
 }
 
@@ -307,9 +328,7 @@ TkWaylandCheckProc(TCL_UNUSED(void *),
 	return;
     }
     glfwPollEvents();
-    TkWaylandDisplayAllWindows();
 } 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -415,12 +434,11 @@ TkWaylandQueueExposeEvent(
     event.xexpose.count = 0;    /* This forces ttk to handle the event. */
     
     /* Queue it. */
-    printf("Queuing Expose(%lu) for %s in %dx%d\n",
+    fprintf(stderr, "Queuing Expose(%lu) for %s in %dx%d\n",
 	   event.xexpose.serial,
 	   Tk_PathName(winPtr), width, height);
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-#if 0
+    
     /* Recurse through the children of this window. */
     for (childPtr = winPtr->childList; childPtr != NULL;
          childPtr = childPtr->nextPtr) {
@@ -430,7 +448,6 @@ TkWaylandQueueExposeEvent(
         TkWaylandQueueExposeEvent(childPtr, 0, 0, Tk_Width(childPtr),
 				  Tk_Height(childPtr));
     }
-#endif
 }
 
 /* ========================== GLFW Callbacks ========================== */
@@ -535,6 +552,8 @@ static void
 TkGlfwWindowCloseCallback(GLFWwindow *window)
 {
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
+    recordCallback();
+
     if (winPtr) {
 	Tcl_DoWhenIdle(DestroyWindowIdleProc, winPtr);
     }
@@ -567,6 +586,7 @@ TkGlfwFramebufferSizeCallback(
     int width,
     int height)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	fprintf(stderr, "FramebufferSizeCallback: No Tk window!\n");
@@ -638,6 +658,7 @@ TkGlfwWindowPosCallback(
     int xpos,
     int ypos)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	fprintf(stderr, "TkGlfwWindowPosCallback: no Tk window\n");
@@ -672,6 +693,7 @@ TkGlfwWindowFocusCallback(
     GLFWwindow *window,
     int focused)
 {
+    recordCallback();
     fprintf(stderr, "TkGlfwWindowFocusCallback\n");
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
@@ -714,6 +736,7 @@ TkGlfwWindowIconifyCallback(
     GLFWwindow *window,
     int iconified)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     fprintf(stderr, "TkGlfwWindowIconifyCallback: %s\n", Tk_PathName(winPtr));
     XEvent event;
@@ -770,6 +793,7 @@ TkGlfwWindowMaximizeCallback(
     GLFWwindow *window,
     int maximized)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     
     if (!winPtr) {
@@ -818,6 +842,7 @@ TkGlfwCursorEnterCallback(
     GLFWwindow *window,
     int entered)		/* GLFW_TRUE if entered, GLFW_FALSE if left */
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
     double xpos, ypos;
@@ -884,6 +909,7 @@ TkGlfwCursorPosCallback(
     double xpos,
     double ypos)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     XEvent event;
 
@@ -997,6 +1023,7 @@ TkGlfwMouseButtonCallback(
     int action,
     int mods)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	return;
@@ -1107,6 +1134,7 @@ TkGlfwScrollCallback(
     double xoffset,
     double yoffset)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	return;
@@ -1181,6 +1209,7 @@ TkGlfwKeyCallback(GLFWwindow *window,
     int action,
     int mods)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	return;
@@ -1260,6 +1289,7 @@ TkGlfwCharCallback(
     GLFWwindow *window,
     unsigned int codepoint)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	return;
@@ -1285,6 +1315,7 @@ TkGlfwCharCallback(
 static void
 TkGlfwWindowRefreshCallback(GLFWwindow *window)
 {
+    recordCallback();
     TkWindow *winPtr = TkGlfwGetTkWindow(window);
     if (!winPtr) {
 	return;
