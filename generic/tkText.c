@@ -3381,6 +3381,22 @@ ClearText(
 	TkBitClear(sharedTextPtr->usedTags);
 	DEBUG(memset(sharedTextPtr->tagLookup, 0,
 		TkBitSize(sharedTextPtr->usedTags)*sizeof(TkTextTag *)));
+    } else {
+	/*
+	 * The tree has been replaced with a fresh (empty) one, but the tags are
+	 * being preserved (e.g. [load]). Their rootPtr still points into the
+	 * destroyed tree; reset it so AddTagToNode rebuilds it on reload.
+	 */
+	Tcl_HashSearch search;
+	Tcl_HashEntry *hPtr;
+
+	for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
+		hPtr; hPtr = Tcl_NextHashEntry(&search)) {
+	    ((TkTextTag *)Tcl_GetHashValue(hPtr))->rootPtr = NULL;
+	}
+	for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
+	    tPtr->selTagPtr->rootPtr = NULL;
+	}
     }
 
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
