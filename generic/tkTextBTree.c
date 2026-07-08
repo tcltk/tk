@@ -8851,6 +8851,8 @@ UpdateElideInfo(
 			 */
 			danglingLinkPtr = prevBranchPtr->body.branch.nextPtr;
 		    }
+		    /* Clear the transient protection before parking for reuse. */
+		    prevBranchPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevBranchPtr);
 		    if (deletedBranchPtr) {
 			TkBTreeFreeSegment(prevBranchPtr);
@@ -8889,6 +8891,8 @@ UpdateElideInfo(
 			 */
 			danglingBranchPtr = prevLinkPtr->body.link.prevPtr;
 		    }
+		    /* Clear the transient protection before parking for reuse. */
+		    prevLinkPtr->protectionFlag = 0;
 		    UnlinkSegmentAndCleanup(sharedTextPtr, prevLinkPtr);
 		    if (deletedLinkPtr) {
 			TkBTreeFreeSegment(prevLinkPtr);
