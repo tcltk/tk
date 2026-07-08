@@ -280,7 +280,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-lang", "lang", "Lang",
 	 NULL, offsetof(TkText, langObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_CUSTOM, "-locale", "locale", "Locale",
-	"C", TCL_INDEX_NONE, offsetof(TkText, locale), 0, &TkLocaleOption, 0},
+	"C", TCL_INDEX_NONE, offsetof(TkText, locale), 0, &TkLocaleOption, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndoDepth), TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_INT, "-maxundosize", "maxUndoSize", "MaxUndoSize",
