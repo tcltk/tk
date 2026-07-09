@@ -2,9 +2,9 @@
  * tkWaylandSysTray.c --
  *
  *	System tray/notification icon support for Wayland using the
- *      StatusNotifierItem protocol via sd-bus
- *	with GLFW integration. Implements a "systray" Tcl command which
- *      permits changing the system tray icon and posting system notifications.
+ *  StatusNotifierItem protocol via sd-bus with GLFW integration. 
+ *  Implements a "systray" Tcl command which permits changing the system 
+ *  tray icon and posting system notifications.
  *
  * Copyright © 2005 Anton Kovalenko
  * Copyright © 2020-2026 Kevin Walzer
@@ -154,11 +154,15 @@ static int global_item_id = 0;
  *	command and extract the menu path. If found, resolve the menu
  *	and store it in icon->menuPtr for dbusmenu export.
  *
+ *	IMPORTANT: This function only sets icon->menuPtr when it
+ *	successfully finds a menu. It never clears it, to avoid
+ *	one callback destroying the menu detected from another.
+ *
  * Results:
  *	None.
  *
  * Side effects:
- *	Updates icon->menuPtr.
+ *	May update icon->menuPtr if a menu is found.
  *
  *----------------------------------------------------------------------
  */
@@ -175,20 +179,17 @@ DetectMenuFromCallback(
     TkWindow *winPtr;
 
     if (!cmdObj) {
-        icon->menuPtr = NULL;
         return;
     }
 
     script = Tcl_GetString(cmdObj);
     if (!script) {
-        icon->menuPtr = NULL;
         return;
     }
 
     /* Search for "tk_popup" in the script. */
     p = strstr(script, "tk_popup");
     if (!p) {
-        icon->menuPtr = NULL;
         return;
     }
 
@@ -196,7 +197,6 @@ DetectMenuFromCallback(
     p += strlen("tk_popup");
     while (*p && isspace((unsigned char)*p)) p++;
     if (!*p) {
-        icon->menuPtr = NULL;
         return;
     }
 
@@ -206,7 +206,6 @@ DetectMenuFromCallback(
         q++;
     }
     if (q == p) {
-        icon->menuPtr = NULL;
         return;
     }
 
@@ -223,7 +222,11 @@ DetectMenuFromCallback(
     }
     
     Tcl_Free(menuName);
-    icon->menuPtr = menu;
+    
+    /* Only set menuPtr if we actually found a valid menu. */
+    if (menu) {
+        icon->menuPtr = menu;
+    }
 }
 
 /*
@@ -330,13 +333,20 @@ InvokeButtonCommand(
     }
 
     if (!cmdObj) {
+        fprintf(stderr, "SNI: No command bound for button %d\n", button);
         return;
     }
 
-    /* Expand %X/%Y (screen coordinates of the click, as supplied by the
-     * SNI host over D-Bus) and %% the same way "bind" would, so scripts
-     * written the traditional way run unmodified on this backend too. A
-     * command with no percent sequences is left exactly as configured. */
+    /* Only skip local execution for tk_popup commands (menu handled via dbusmenu) */
+    const char *cmdText = Tcl_GetString(cmdObj);
+    if (strstr(cmdText, "tk_popup") != NULL) {
+        fprintf(stderr, "SNI: tk_popup detected for button %d — menu handled via dbusmenu\n", button);
+        return;
+    }
+
+    fprintf(stderr, "SNI: Executing button %d command at (%d,%d): %s\n",
+            button, x, y, Tcl_GetString(cmdObj));
+
     script = SubstituteButtonPercents(cmdObj, x, y);
     Tcl_IncrRefCount(script);
 
@@ -366,10 +376,14 @@ method_activate(
     int x, y;
     int r;
 
+    fprintf(stderr, "SNI: Activate method called \n");
+
     r = sd_bus_message_read(m, "ii", &x, &y);
     if (r < 0) {
+        fprintf(stderr, "SNI: Activate called, but failed to read x,y (r=%d)\n", r);
         return sd_bus_reply_method_return(m, "");
     }
+    fprintf(stderr, "SNI: Activate called at (%d, %d)\n", x, y);
 
     /* Invoke button-1 command with coordinates */
     InvokeButtonCommand(icon, 1, x, y);
@@ -387,10 +401,14 @@ method_secondary_activate(
     int x, y;
     int r;
 
+    fprintf(stderr, "SNI: SecondaryActivate method called \n");
+
     r = sd_bus_message_read(m, "ii", &x, &y);
     if (r < 0) {
+        fprintf(stderr, "SNI: SecondaryActivate called, but failed to read x,y (r=%d)\n", r);
         return sd_bus_reply_method_return(m, "");
     }
+    fprintf(stderr, "SNI: SecondaryActivate called at (%d, %d)\n", x, y);
 
     /* Invoke button-3 command with coordinates */
     InvokeButtonCommand(icon, 3, x, y);
@@ -408,10 +426,14 @@ method_context_menu(
     int x, y;
     int r;
 
+    fprintf(stderr, "SNI: ContextMenu method called \n");
+
     r = sd_bus_message_read(m, "ii", &x, &y);
     if (r < 0) {
+        fprintf(stderr, "SNI: ContextMenu called, but failed to read x,y (r=%d)\n", r);
         return sd_bus_reply_method_return(m, "");
     }
+    fprintf(stderr, "SNI: ContextMenu called at (%d, %d)\n", x, y);
 
     /* Also invoke button-3 command for context menu */
     InvokeButtonCommand(icon, 3, x, y);
@@ -656,7 +678,7 @@ static const sd_bus_vtable dbusmenu_vtable[] = {
      * the com.canonical.dbusmenu spec exactly -- it is NOT a flat array. */
     SD_BUS_METHOD("GetLayout", "iias", "u(ia{sv}av)", dbusmenu_get_layout, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("AboutToShow", "i", "", dbusmenu_about_to_show, SD_BUS_VTABLE_UNPRIVILEGED),
-    SD_BUS_METHOD("Event", "iisv", "", dbusmenu_event, SD_BUS_VTABLE_UNPRIVILEGED),
+    SD_BUS_METHOD("Event", "isvu", "", dbusmenu_event, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_METHOD("GetGroupProperties", "aas", "aa{sv}", dbusmenu_get_group_properties, SD_BUS_VTABLE_UNPRIVILEGED),
     SD_BUS_PROPERTY("Version", "u", dbusmenu_property_get_version, 0, SD_BUS_VTABLE_PROPERTY_CONST),
     SD_BUS_VTABLE_END
@@ -835,6 +857,9 @@ dbusmenu_get_layout(
     }
     free(property_names);  /* we ignore them */
 
+    fprintf(stderr, "dbusmenu: GetLayout called (parentId=%d, depth=%d, menuPtr=%p)\n",
+            parentId, depth, (void *)icon->menuPtr);
+
     /* parentId 0 means "the root of the whole menu"; there is no real
      * TkMenuEntry for that, so targetEntry stays NULL and its children
      * are icon->menuPtr's top-level entries. Any other id must resolve
@@ -889,6 +914,8 @@ dbusmenu_about_to_show(
     int r = sd_bus_message_read(m, "i", &id);
     if (r < 0) return r;
 
+    fprintf(stderr, "dbusmenu: AboutToShow called (id=%d)\n", id);
+
     /* We could invoke a Tcl -postcommand for the menu if needed.
      * For now, just return success. */
     return sd_bus_reply_method_return(m, "");
@@ -902,13 +929,37 @@ dbusmenu_event(
     TCL_UNUSED(sd_bus_error *)) /* ret_error */
 {
     DockIcon *icon = (DockIcon *)userdata;
-    int id, eventId;
-    const char *data;
+    int id;
+    const char *eventId;
     uint32_t timestamp;
     int r;
 
-    r = sd_bus_message_read(m, "iisv", &id, &eventId, &data, &timestamp);
-    if (r < 0) return r;
+    /* Real dbusmenu Event signature is (i id, s eventId, v data, u
+     * timestamp). eventId is a string ("clicked", "hovered", "opened",
+     * "closed") -- not an int -- and data is a variant whose contents we
+     * don't need, so it's skipped rather than read into anything. */
+    r = sd_bus_message_read(m, "is", &id, &eventId);
+    if (r < 0) {
+        fprintf(stderr, "dbusmenu: Event read (id, eventId) failed (r=%d)\n", r);
+        return r;
+    }
+    r = sd_bus_message_skip(m, "v");
+    if (r < 0) {
+        fprintf(stderr, "dbusmenu: Event failed to skip data variant (r=%d)\n", r);
+        return r;
+    }
+    r = sd_bus_message_read(m, "u", &timestamp);
+    if (r < 0) {
+        fprintf(stderr, "dbusmenu: Event read timestamp failed (r=%d)\n", r);
+        return r;
+    }
+    fprintf(stderr, "dbusmenu: Event called (id=%d, eventId=%s)\n", id, eventId);
+
+    /* Only "clicked" should actually invoke the entry's command; hover/
+     * open/close notifications must not fire it. */
+    if (strcmp(eventId, "clicked") != 0) {
+        return sd_bus_reply_method_return(m, "");
+    }
 
     /* Find the TkMenuEntry corresponding to the ID. */
     TkMenuEntry *mePtr = FindMenuEntryByID(icon->menuPtr, id);
@@ -1042,6 +1093,9 @@ TrayIconObjectCmd(
 
     switch (wcmd) {
     case XWC_CONFIGURE:
+        fprintf(stderr, "Tray configure: button1Obj=%p button3Obj=%p\n",
+                (void*)icon->button1Obj, (void*)icon->button3Obj);
+
         return TrayIconConfigureMethod(icon,interp,objc-2,objv+2,0);
 
     case XWC_CGET: {
@@ -1272,7 +1326,7 @@ RegisterStatusNotifierItem(
         return r;
     }
 
-    /* ---- Add dbusmenu interface on a separate path ---- */
+    /* Add dbusmenu interface on a separate path. */
     if (!icon->menu_path) {
         icon->menu_path = (char *)Tcl_Alloc(64);
         snprintf(icon->menu_path, 64, "/Menu%d", icon->item_id);
@@ -1308,7 +1362,7 @@ RegisterStatusNotifierItem(
 
     sd_bus_message_unref(m);
 
-    /* Flush all pending operations to ensure the host sees the new objects and signals */
+    /* Flush all pending operations to ensure the host sees the new objects and signals. */
     sd_bus_flush(icon->bus);
 
     /* Start DBus event processing. */
@@ -1560,10 +1614,12 @@ CreateTrayIconWindow(
 
     /* SNI renders the icon entirely server-side via D-Bus. Hide the auto-created window. */
     {
+		#if 0
         GLFWwindow *gw = TkWaylandGetGLFWwindow((TkWindow *)icon->tkwin);
         if (gw) {
             glfwHideWindow(gw);
         }
+        #endif
     }
     (void)winPtr;
 
@@ -1966,7 +2022,9 @@ TrayIconCreateCmd(
         }
     }
 
-    /* After initial config, detect menu from any button callbacks. */
+    /* After initial config, detect menu from any button callbacks.
+     * We explicitly start with NULL and only set it if we find a menu. */
+    icon->menuPtr = NULL;
     DetectMenuFromCallback(icon, icon->b1Command);
     DetectMenuFromCallback(icon, icon->b3Command);
 

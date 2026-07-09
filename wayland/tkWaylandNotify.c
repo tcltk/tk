@@ -95,6 +95,8 @@ extern int  TkWaylandMenuGetDepth(void);
 extern void TkWaylandMenuPopToDepth(int depth);
 extern Tk_Window TkWaylandMenuGetParentWindow(void);
 extern void TkWaylandMenuOpenCascade(TkMenu *menuPtr, TkMenuEntry *mePtr);
+extern void TkWaylandMenuHandleEscape(void);
+extern void TkWaylandMenuDismissAll(void);
 
 /*
  * Direct reference to the IBus bus so the notifier can drain it without
@@ -276,6 +278,13 @@ TkWaylandDisplayIdleCallback(TCL_UNUSED(void *))
 }
 
 /*
+ * Dummy function for pending redraw check – can be extended later.
+ */
+static inline int TkWaylandHasPendingRedraw(void) {
+    return 0;  /* currently we redraw synchronously in every iteration */
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * Tk_WaylandSetupTkNotifier --
@@ -370,57 +379,55 @@ TkWaylandCheckForWindowClosure(void)
 static void
 TkWaylandSetupProc(TCL_UNUSED(void *), int flags)
 {
-    TSD_INIT();
-
     if (!(flags & TCL_WINDOW_EVENTS)) {
         return;
     }
 
-    static Tcl_Time noBlock = {0, 0};        /* secs, microsecs */
-    static Tcl_Time oneVsync = {0, 16667}; /* ~ 1/60 sec */
-    struct wl_display* display = glfwGetWaylandDisplay();
-    
-    /* Add a safety check to ensure the Wayland display pointer is valid. */
+    static Tcl_Time noBlock   = {0, 0};
+    static Tcl_Time tinyBlock = {0, 1000};   /* 1ms fallback */
+
+    struct wl_display *display = glfwGetWaylandDisplay();
     if (!display) {
+        /* No Wayland display: poll GLFW but do NOT block Tcl */
         glfwPollEvents();
+        Tcl_SetMaxBlockTime(&noBlock);
         return;
     }
-    
+
     int fd = wl_display_get_fd(display);
-    
 
-    struct pollfd fds[1] = {
-	{
-	.fd = fd,
-	.events = POLLIN,
-	.revents = 0
-	}
-    };
-
-    /*
-     * The Tcl event loop will have run all pending display procs
-     * before calling this function.  Now we can swap the GL buffers
-     * for any window on which some drawing has been done.
-     */
-
+    /* Always drain pending redraw before deciding block time */
     TkWaylandDisplayAllWindows();
 
-    /* Drain pending system communication layers inline. */
+    /* Drain IME/IBus messages without blocking */
     if (ibus_bus) {
-        while (sd_bus_process(ibus_bus, NULL) > 0) { /* Clear out events */ }
+        while (sd_bus_process(ibus_bus, NULL) > 0) {}
     }
 
+    /* Poll GLFW once per cycle — never inside CheckProc */
     glfwPollEvents();
 
-    if (!displayIdleQueued) {
-        displayIdleQueued = 1;
-        Tcl_DoWhenIdle(TkWaylandDisplayIdleCallback, NULL);
+    /* Schedule display idle only when needed */
+    if (TkWaylandHasPendingRedraw()) {
+        Tcl_SetMaxBlockTime(&noBlock);
+        return;
     }
 
-    if (poll(fds, 1, 0) > 0 && fds[0].revents) {
+    /* Check Wayland fd readiness */
+    struct pollfd pfd = {
+        .fd      = fd,
+        .events  = POLLIN,
+        .revents = 0
+    };
+
+    int r = poll(&pfd, 1, 0);
+
+    if (r > 0 && (pfd.revents & POLLIN)) {
+        /* Wayland has events — do not block */
         Tcl_SetMaxBlockTime(&noBlock);
     } else {
-        Tcl_SetMaxBlockTime(&oneVsync);
+        /* Nothing pending — allow a tiny sleep */
+        Tcl_SetMaxBlockTime(&tinyBlock);
     }
 }
 
@@ -455,17 +462,21 @@ TkWaylandCheckProc(TCL_UNUSED(void *), int flags)
         return;
     }
 
+    /* Drain IME/IBus messages — never block */
     if (ibus_bus) {
-        sd_bus_wait(ibus_bus, 0);
-        int r;
-        do {
-            r = sd_bus_process(ibus_bus, NULL);
-        } while (r > 0);
+        while (sd_bus_process(ibus_bus, NULL) > 0) {}
     }
 
-    glfwPollEvents();
+    /* Drain Wayland events */
+    struct wl_display *display = glfwGetWaylandDisplay();
+    if (display) {
+        wl_display_dispatch_pending(display);
+    }
+
+    /* Drain redraw */
     TkWaylandDisplayAllWindows();
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -1449,47 +1460,14 @@ TkWaylandScrollCallback(
  *      None.
  *
  * Side effects:
- *      Generates KeyPress/KeyRelease events. Gives IBus first chance
- *      to handle the key for IME composition.
- *
- *----------------------------------------------------------------------
- */
- 
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandKeyCallback --
- *
- *      Called whenever a key is pressed or released.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      Generates KeyPress/KeyRelease events. Gives IBus first chance
- *      to handle the key for IME composition. Handles menu navigation.
- *
- *----------------------------------------------------------------------
- */
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWaylandKeyCallback --
- *
- *      Called whenever a key is pressed or released.
- *
- * Results:
- *      None.
- *
- * Side effects:
  *      Generates KeyPress/KeyRelease events + full menu keyboard navigation.
  *
  *----------------------------------------------------------------------
  */
+ 
 static void
 TkWaylandKeyCallback(GLFWwindow *window,
-                  int key,           /* keep this parameter */
+                  int key,         
                   int scancode,
                   int action,
                   int mods)
@@ -1498,9 +1476,14 @@ TkWaylandKeyCallback(GLFWwindow *window,
     if (!winPtr) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
+    
+    fprintf(stderr,
+    "GLFW key=%d scancode=%d action=%d mods=%d\n",
+    key, scancode, action, mods);
+
 
     /* IBus IME handling - ALWAYS give IBus first chance */
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+    if (action == GLFW_PRESS) {
         uint32_t xkb_keycode = (uint32_t)(scancode + 8);
         uint32_t keyval = (uint32_t) xkb_state_key_get_one_sym(
                                 xkbState.state, xkb_keycode);

@@ -1365,7 +1365,8 @@ proc ::tk_popup {menu x y {entry {}}} {
 	tk::MenuUnpost {}
     }
     tk::PostOverPoint $menu $x $y $entry
-    if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland" && [winfo viewable $menu]} {
+    if {([tk windowingsystem] eq "x11" || [tk windowingsystem] eq "wayland") \
+	    && [winfo viewable $menu]} {
 	tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu

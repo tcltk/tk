@@ -388,14 +388,15 @@ InitializeXKB(void)
                 xkbState.compose_table, XKB_COMPOSE_STATE_NO_FLAGS);
     }
 
-    /* Compile a keymap (default US layout as a starting point). */
-    struct xkb_rule_names names = {
-        .rules = "evdev",
-        .model = "pc105",
-        .layout = "us",
-        .variant = "",
-        .options = ""
-    };
+    /* Compile a keymap. */
+	struct xkb_rule_names names = {
+	    .rules = "evdev",
+	    .model = "pc105",
+	    .layout = NULL,     /* use compositor layout */
+	    .variant = NULL,
+	    .options = NULL
+	};
+
 
     xkbState.keymap = xkb_keymap_new_from_names(xkbState.context,
                           &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
