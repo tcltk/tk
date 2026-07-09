@@ -707,8 +707,6 @@ TkWaylandCreateWindow(
         }
 
         glfwMakeContextCurrent(glfwWindow);
-
-        glfwMakeContextCurrent(glfwWindow);
         glfwSwapInterval(0);
         glfwShowWindow(glfwWindow);
         glfwSwapBuffers(glfwWindow);

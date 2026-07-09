@@ -1464,29 +1464,34 @@ TkWaylandScrollCallback(
  *
  *----------------------------------------------------------------------
  */
- 
+
 static void
 TkWaylandKeyCallback(GLFWwindow *window,
-                  int key,         
-                  int scancode,
-                  int action,
-                  int mods)
+                     int key,
+                     int scancode,
+                     int action,
+                     int mods)
 {
     TkWindow *winPtr = TkWaylandGetTkWindow(window);
     if (!winPtr) return;
 
     TkWaylandUpdateKeyboardModifiers(mods);
-    
+
     fprintf(stderr,
-    "GLFW key=%d scancode=%d action=%d mods=%d\n",
-    key, scancode, action, mods);
+        "GLFW key=%d scancode=%d action=%d mods=%d\n",
+        key, scancode, action, mods);
 
+    uint32_t xkb_keycode = (uint32_t)(scancode + 8);
+    KeySym keysym = xkb_state_key_get_one_sym(xkbState.state, xkb_keycode);
 
-    /* IBus IME handling - ALWAYS give IBus first chance */
+    char name[64];
+    xkb_keysym_get_name(keysym, name, sizeof(name));
+    fprintf(stderr, "keysym = 0x%lx (%s)\n",
+            (unsigned long)keysym, name);
+	
+	/* IME handling. */
     if (action == GLFW_PRESS) {
-        uint32_t xkb_keycode = (uint32_t)(scancode + 8);
-        uint32_t keyval = (uint32_t) xkb_state_key_get_one_sym(
-                                xkbState.state, xkb_keycode);
+        uint32_t keyval = (uint32_t)keysym;
 
         uint32_t state = 0;
         if (mods & GLFW_MOD_SHIFT)     state |= ShiftMask;
@@ -1496,31 +1501,125 @@ TkWaylandKeyCallback(GLFWwindow *window,
         if (mods & GLFW_MOD_CAPS_LOCK) state |= LockMask;
         if (mods & GLFW_MOD_NUM_LOCK)  state |= Mod2Mask;
 
-        if (TkWaylandIbusProcessKey((Tk_Window)winPtr, keyval, xkb_keycode, state)) {
-            return;
+        /* IME must NOT swallow function keys */
+        if (!(keysym >= XKB_KEY_F1 && keysym <= XKB_KEY_F35)) {
+            if (TkWaylandIbusProcessKey((Tk_Window)winPtr, keyval, xkb_keycode, state)) {
+                return;
+            }
         }
     }
 
-    if (TkWaylandMenuActive()) {
-        Tk_Window menuWin = TkWaylandMenuGetTopmostWindow();
-        if (menuWin) {
-            TkMenu *menuPtr = (TkMenu *)((TkWindow *)menuWin)->instanceData;
-            int stackDepth = TkWaylandMenuGetDepth();
+	/* F10 - toggle or activate menubar. */
+    if (action == GLFW_PRESS && keysym == XKB_KEY_F10) {
 
-            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                KeySym keysym = xkb_state_key_get_one_sym(xkbState.state, scancode + 8);
+        /* Toggle: if active, dismiss. */
+        if (TkWaylandMenuActive()) {
+            TkWaylandMenuDismissAll();
+            return;
+        }
 
-                if (keysym == XKB_KEY_Escape) {
-                    TkWaylandMenuHandleEscape();
-                    return;
+        /* Activate menubar. */
+        if (winPtr->wmInfoPtr) {
+            WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
+            TkMenu *mb = wmPtr->menubarMenuPtr;
+
+            if (mb) {
+                int first = -1;
+                for (int i = 0; i < mb->numEntries; i++) {
+                    TkMenuEntry *me = mb->entries[i];
+                    if (me && me->type != SEPARATOR_ENTRY) {
+                        first = i;
+                        break;
+                    }
                 }
 
-                switch (keysym) {
-                    case XKB_KEY_Up:
-                    case XKB_KEY_KP_Up: {
+                if (first >= 0) {
+                    TkActivateMenuEntry(mb, first);
+                    TkMenuEntry *me = mb->entries[first];
+
+                    if (me && me->type == CASCADE_ENTRY && me->namePtr) {
+                        TkWaylandMenuOpenCascade(mb, me);
+                    }
+
+                    TkWaylandMenuRedrawActive();
+                }
+            }
+        }
+        return;
+    }
+
+	/* Full keyboard navigation if menu active. */
+    if (TkWaylandMenuActive()) {
+        Tk_Window menuWin = TkWaylandMenuGetTopmostWindow();
+        if (!menuWin) return;
+
+        TkMenu *menuPtr = (TkMenu *)((TkWindow *)menuWin)->instanceData;
+        int stackDepth = TkWaylandMenuGetDepth();
+
+        if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+
+            /* Escape dismisses. */
+            if (keysym == XKB_KEY_Escape) {
+                TkWaylandMenuHandleEscape();
+                return;
+            }
+
+            switch (keysym) {
+
+                /* Up. */
+                case XKB_KEY_Up:
+                case XKB_KEY_KP_Up: {
+                    int current = menuPtr->active;
+                    int count = menuPtr->numEntries;
+                    int newIdx = current;
+
+                    for (int i = 1; i <= count; i++) {
+                        int idx = (current - i + count) % count;
+                        TkMenuEntry *me = menuPtr->entries[idx];
+                        if (me && me->type != SEPARATOR_ENTRY) {
+                            newIdx = idx;
+                            break;
+                        }
+                    }
+
+                    if (newIdx != current) {
+                        TkActivateMenuEntry(menuPtr, newIdx);
+                        TkWaylandMenuRedrawActive();
+                    }
+                    break;
+                }
+
+               /* Down. */
+                case XKB_KEY_Down:
+                case XKB_KEY_KP_Down: {
+                    int current = menuPtr->active;
+                    int count = menuPtr->numEntries;
+                    int newIdx = current;
+
+                    for (int i = 1; i <= count; i++) {
+                        int idx = (current + i) % count;
+                        TkMenuEntry *me = menuPtr->entries[idx];
+                        if (me && me->type != SEPARATOR_ENTRY) {
+                            newIdx = idx;
+                            break;
+                        }
+                    }
+
+                    if (newIdx != current) {
+                        TkActivateMenuEntry(menuPtr, newIdx);
+                        TkWaylandMenuRedrawActive();
+                    }
+                    break;
+                }
+
+                /* Left. */
+                case XKB_KEY_Left:
+                case XKB_KEY_KP_Left:
+                    if (menuPtr->menuType == MENUBAR) {
                         int current = menuPtr->active;
                         int count = menuPtr->numEntries;
                         int newIdx = current;
+
                         for (int i = 1; i <= count; i++) {
                             int idx = (current - i + count) % count;
                             TkMenuEntry *me = menuPtr->entries[idx];
@@ -1529,18 +1628,31 @@ TkWaylandKeyCallback(GLFWwindow *window,
                                 break;
                             }
                         }
+
                         if (newIdx != current) {
                             TkActivateMenuEntry(menuPtr, newIdx);
+                            TkMenuEntry *me = menuPtr->entries[newIdx];
+
+                            if (me && me->type == CASCADE_ENTRY && me->namePtr) {
+                                TkWaylandMenuOpenCascade(menuPtr, me);
+                            }
+
                             TkWaylandMenuRedrawActive();
                         }
-                        break;
+                    } else if (stackDepth > 1) {
+                        TkWaylandMenuPopToDepth(stackDepth - 1);
+                        TkWaylandMenuRedrawActive();
                     }
+                    break;
 
-                    case XKB_KEY_Down:
-                    case XKB_KEY_KP_Down: {
+                /* Right. */
+                case XKB_KEY_Right:
+                case XKB_KEY_KP_Right:
+                    if (menuPtr->menuType == MENUBAR) {
                         int current = menuPtr->active;
                         int count = menuPtr->numEntries;
                         int newIdx = current;
+
                         for (int i = 1; i <= count; i++) {
                             int idx = (current + i) % count;
                             TkMenuEntry *me = menuPtr->entries[idx];
@@ -1549,161 +1661,61 @@ TkWaylandKeyCallback(GLFWwindow *window,
                                 break;
                             }
                         }
+
                         if (newIdx != current) {
                             TkActivateMenuEntry(menuPtr, newIdx);
+                            TkMenuEntry *me = menuPtr->entries[newIdx];
+
+                            if (me && me->type == CASCADE_ENTRY && me->namePtr) {
+                                TkWaylandMenuOpenCascade(menuPtr, me);
+                            }
+
                             TkWaylandMenuRedrawActive();
                         }
-                        break;
+                    } else if (menuPtr->active >= 0) {
+                        TkMenuEntry *mePtr = menuPtr->entries[menuPtr->active];
+                        if (mePtr && mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
+                            TkWaylandMenuOpenCascade(menuPtr, mePtr);
+                        }
                     }
+                    break;
 
-                    case XKB_KEY_Left:
-                    case XKB_KEY_KP_Left:
-                        if (menuPtr->menuType == MENUBAR) {
-                            /* Left on menubar */
-                            int current = menuPtr->active;
-                            int count = menuPtr->numEntries;
-                            int newIdx = current;
-                            for (int i = 1; i <= count; i++) {
-                                int idx = (current - i + count) % count;
-                                TkMenuEntry *me = menuPtr->entries[idx];
-                                if (me && me->type != SEPARATOR_ENTRY) {
-                                    newIdx = idx;
-                                    break;
-                                }
-                            }
-                            if (newIdx != current) {
-                                TkActivateMenuEntry(menuPtr, newIdx);
-                                TkMenuEntry *me = menuPtr->entries[newIdx];
-                                if (me && me->type == CASCADE_ENTRY && me->namePtr) {
-                                    TkWaylandMenuOpenCascade(menuPtr, me);
-                                } else {
-                                    TkWaylandMenuRedrawActive();
-                                }
-                            }
-                        } else if (stackDepth > 1) {
-                            /* Close submenu, return to parent */
-                            TkWaylandMenuPopToDepth(stackDepth - 1);
-                            Tk_Window parentWin = TkWaylandMenuGetParentWindow();
-                            if (parentWin) {
-                                TkMenu *parentMenu = (TkMenu *)((TkWindow *)parentWin)->instanceData;
-                                if (parentMenu->postedCascade) {
-                                    /* Find index of the cascade entry */
-                                    int idx;
-                                    for (idx = 0; idx < parentMenu->numEntries; idx++) {
-                                        if (parentMenu->entries[idx] == parentMenu->postedCascade) {
-                                            TkActivateMenuEntry(parentMenu, idx);
-                                            break;
-                                        }
-                                    }
-                                }
-                                TkWaylandMenuRedrawActive();
-                            }
+               /* Invoke. */
+                case XKB_KEY_Return:
+                case XKB_KEY_KP_Enter:
+                case XKB_KEY_space:
+                    if (menuPtr->active >= 0) {
+                        TkMenuEntry *mePtr = menuPtr->entries[menuPtr->active];
+                        if (mePtr && mePtr->type != SEPARATOR_ENTRY) {
+                            TkInvokeMenu(menuPtr->interp, menuPtr, menuPtr->active);
+                            TkWaylandMenuDismissAll();
                         }
-                        break;
+                    }
+                    break;
 
-                    case XKB_KEY_Right:
-                    case XKB_KEY_KP_Right:
-                        if (menuPtr->menuType == MENUBAR) {
-                            /* Right on menubar */
-                            int current = menuPtr->active;
-                            int count = menuPtr->numEntries;
-                            int newIdx = current;
-                            for (int i = 1; i <= count; i++) {
-                                int idx = (current + i) % count;
-                                TkMenuEntry *me = menuPtr->entries[idx];
-                                if (me && me->type != SEPARATOR_ENTRY) {
-                                    newIdx = idx;
-                                    break;
-                                }
-                            }
-                            if (newIdx != current) {
-                                TkActivateMenuEntry(menuPtr, newIdx);
-                                TkMenuEntry *me = menuPtr->entries[newIdx];
-                                if (me && me->type == CASCADE_ENTRY && me->namePtr) {
-                                    TkWaylandMenuOpenCascade(menuPtr, me);
-                                } else {
-                                    TkWaylandMenuRedrawActive();
-                                }
-                            }
-                        } else if (menuPtr->active >= 0) {
-                            TkMenuEntry *mePtr = menuPtr->entries[menuPtr->active];
-                            if (mePtr && mePtr->type == CASCADE_ENTRY && mePtr->namePtr) {
-                                TkWaylandMenuOpenCascade(menuPtr, mePtr);
-                            }
-                        }
-                        break;
-
-                    case XKB_KEY_Return:
-                    case XKB_KEY_KP_Enter:
-                    case XKB_KEY_space:
-                        if (menuPtr->active >= 0) {
-                            TkMenuEntry *mePtr = menuPtr->entries[menuPtr->active];
-                            if (mePtr && mePtr->type != SEPARATOR_ENTRY) {
-                                TkInvokeMenu(menuPtr->interp, menuPtr, menuPtr->active);
-                                TkWaylandMenuDismissAll();
-                            }
-                        }
-                        break;
-
-                    default:
-                        /* Pass through */
-                        {
-                            XEvent event;
-                            memset(&event, 0, sizeof(XEvent));
-                            event.type = KeyPress;
-                            event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
-                            event.xkey.send_event  = False;
-                            event.xkey.display     = winPtr->display;
-                            event.xkey.window      = Tk_WindowId(menuWin);
-                            event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
-                            event.xkey.time        = CurrentTime;
-                            event.xkey.x           = 0;
-                            event.xkey.y           = 0;
-                            event.xkey.x_root      = 0;
-                            event.xkey.y_root      = 0;
-                            event.xkey.state       = glfwModifierState;
-                            event.xkey.keycode     = (KeyCode)(scancode + 8);
-                            event.xkey.same_screen = True;
-                            Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-                        }
-                        break;
+                /* Fall through. */
+                default: {
+                    XEvent event;
+                    memset(&event, 0, sizeof(XEvent));
+                    event.type = KeyPress;
+                    event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
+                    event.xkey.send_event  = False;
+                    event.xkey.display     = winPtr->display;
+                    event.xkey.window      = Tk_WindowId(menuWin);
+                    event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
+                    event.xkey.time        = CurrentTime;
+                    event.xkey.state       = glfwModifierState;
+                    event.xkey.keycode     = (KeyCode)xkb_keycode;
+                    event.xkey.same_screen = True;
+                    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
                 }
+                break;
             }
-            return;
         }
+        return;
     }
 
-    /* F10: activate menubar */
-    if (action == GLFW_PRESS) {
-        KeySym keysym = xkb_state_key_get_one_sym(xkbState.state, scancode + 8);
-        if (keysym == XKB_KEY_F10) {
-            if (winPtr->wmInfoPtr) {
-                WmInfo *wmPtr = (WmInfo *)winPtr->wmInfoPtr;
-                TkMenu *mb = wmPtr->menubarMenuPtr;
-                if (mb) {
-                    int first = -1;
-                    for (int i = 0; i < mb->numEntries; i++) {
-                        if (mb->entries[i] && mb->entries[i]->type != SEPARATOR_ENTRY) {
-                            first = i;
-                            break;
-                        }
-                    }
-                    if (first >= 0) {
-                        TkActivateMenuEntry(mb, first);
-                        TkMenuEntry *me = mb->entries[first];
-                        if (me && me->type == CASCADE_ENTRY && me->namePtr) {
-                            TkWaylandMenuOpenCascade(mb, me);
-                        } else {
-                            TkWaylandMenuRedrawActive();
-                        }
-                    }
-                }
-            }
-            return;
-        }
-    }
-
-    /* Normal Tk key event */
+	/* Normal Tk keypress events. */
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
         if (!focusWin) focusWin = winPtr;
@@ -1725,7 +1737,35 @@ TkWaylandKeyCallback(GLFWwindow *window,
         event.xkey.x_root      = winPtr->changes.x + (int)xpos;
         event.xkey.y_root      = winPtr->changes.y + (int)ypos;
         event.xkey.state       = glfwModifierState;
-        event.xkey.keycode     = (KeyCode)(scancode + 8);
+        event.xkey.keycode     = (KeyCode)xkb_keycode;
+        event.xkey.same_screen = True;
+
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    }
+
+	/* Normal Tk keyrelease events. */
+    if (action == GLFW_RELEASE) {
+        TkWindow *focusWin = winPtr->dispPtr ? winPtr->dispPtr->focusPtr : winPtr;
+        if (!focusWin) focusWin = winPtr;
+
+        XEvent event;
+        memset(&event, 0, sizeof(XEvent));
+        event.type = KeyRelease;
+        event.xkey.serial      = LastKnownRequestProcessed(winPtr->display)++;
+        event.xkey.send_event  = False;
+        event.xkey.display     = winPtr->display;
+        event.xkey.window      = Tk_WindowId((Tk_Window)focusWin);
+        event.xkey.root        = RootWindow(winPtr->display, winPtr->screenNum);
+        event.xkey.time        = CurrentTime;
+
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        event.xkey.x           = (int)xpos;
+        event.xkey.y           = (int)ypos;
+        event.xkey.x_root      = winPtr->changes.x + (int)xpos;
+        event.xkey.y_root      = winPtr->changes.y + (int)ypos;
+        event.xkey.state       = glfwModifierState;
+        event.xkey.keycode     = (KeyCode)xkb_keycode;
         event.xkey.same_screen = True;
 
         Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);

@@ -324,10 +324,8 @@ proc ::tk::systray::create {args} {
 		bind ._tray <Button-3> [dict get $values -button3]
 	    }
 		"wayland" {
-		_systray ._tray -image [dict get $values -image] -visible true
-		_balloon ._tray [dict get $values -text]
-		bind ._tray <Button-1> [dict get $values -button1]
-		bind ._tray <Button-3> [dict get $values -button3]
+		_systray create [dict get $values -image] [dict get $values -text] \
+        [dict get $values -button1] [dict get $values -button3]
 	    }
 	    "aqua" {
 		_systray create [dict get $values -image] [dict get $values -text] \
@@ -385,18 +383,18 @@ proc ::tk::systray::configure {args} {
 		}
 	    }
 		"wayland" {
-		if {[dict exists $args -image]} {
-		    ._tray configure -image [dict get $args -image]
-		}
-		if {[dict exists $args -text]} {
-		    _balloon ._tray [dict get $args -text]
-		}
-		if {[dict exists $args -button1]} {
-		    bind ._tray <Button-1> [dict get $args -button1]
-		}
-		if {[dict exists $args -button3]} {
-		    bind ._tray <Button-3> [dict get $args -button3]
-		}
+	   if {[dict exists $args -image]} {
+	        _systray modify image [dict get $args -image]
+	    }
+	    if {[dict exists $args -text]} {
+	        _systray modify text [dict get $args -text]
+	    }
+	    if {[dict exists $args -button1]} {
+	        _systray modify b1_callback [dict get $args -button1]
+	    }
+	    if {[dict exists $args -button3]} {
+	        _systray modify b3_callback [dict get $args -button3]
+	    }
 	    }
 	    "aqua" {
 		foreach {key opt} {image -image text \
@@ -433,7 +431,7 @@ proc ::tk::systray::destroy {} {
 	    ::destroy ._tray
 	}
 	"wayland" {
-	::destroy ._tray
+    _systray destroy
 	}
 	"aqua" {
 	    _systray destroy
